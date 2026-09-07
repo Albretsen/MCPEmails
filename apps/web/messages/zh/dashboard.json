@@ -45,7 +45,7 @@
       "step1": "在 Cline 面板中，点击 MCP Servers 图标，然后打开 \"Remote Servers\" 选项卡。",
       "step2": "输入名称并粘贴上方的 URL。",
       "step3": "将 Transport Type 设置为 \"Streamable HTTP\"，然后点击 \"Add Server\"。",
-      "step4": "使用你的 API 密钥添加一个 \"Authorization: Bearer '<'key>\" 标头。"
+      "step4": "使用你的 API 密钥添加一个 \"Authorization: Bearer YOUR_KEY\" 标头。"
     },
     "windsurf": {
       "step1": "打开 Cascade 的 MCP 设置，或编辑 ~/.codeium/windsurf/mcp_config.json。",
@@ -65,7 +65,7 @@
     "jetbrains": {
       "step1": "打开 Settings → Tools → AI Assistant → Model Context Protocol (MCP)。",
       "step2": "点击 \"Add\" 并选择 \"Streamable HTTP\" 作为连接类型。",
-      "step3": "粘贴上方的 URL，然后使用你的 API 密钥添加一个 \"Authorization: Bearer '<'key>\" 标头。"
+      "step3": "粘贴上方的 URL，然后使用你的 API 密钥添加一个 \"Authorization: Bearer YOUR_KEY\" 标头。"
     },
     "raycast": {
       "step1": "运行 \"Install MCP Server\" 命令（或 \"Manage MCP Servers\"）。",
