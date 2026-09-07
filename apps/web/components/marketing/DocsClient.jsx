@@ -612,6 +612,7 @@ const TOOLS = [
       { name: 'signature_html',       type: 'string',        required: false },
       { name: 'signature_enabled',    type: 'boolean',       required: false },
       { name: 'signature_reply_mode', type: 'enum',          required: false },
+      { name: 'sender_name',          type: 'string',        required: false },
     ],
     example: {
       request: `{
@@ -622,12 +623,14 @@ const TOOLS = [
       "action": "set",
       "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
       "signature_text": "Bob Chen\\nHead of Sales · Acme Inc.",
-      "signature_reply_mode": "first_only"
+      "signature_reply_mode": "first_only",
+      "sender_name": "Bob Chen"
     }
   }
 }`,
       response: `{
   "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+  "sender_name": "Bob Chen",
   "signature_enabled": true,
   "signature_reply_mode": "first_only",
   "signature_source": "manual",

@@ -173,6 +173,16 @@
       "lastCall": "Last successful call",
       "lastCallNone": "No successful calls in the last {days} days",
       "disconnect": "Disconnect",
+      "senderName": {
+        "title": "Sender name",
+        "help": "The name recipients see next to your address.",
+        "placeholder": "e.g. Acme Support",
+        "previewLabel": "From:",
+        "emptyHint": "Without a name, some clients show only \"{localPart}\".",
+        "save": "Save name",
+        "saving": "Saving…",
+        "tooLong": "Sender name is too long (max 100 characters)."
+      },
       "signature": {
         "title": "Email signature",
         "enabled": "Enabled",

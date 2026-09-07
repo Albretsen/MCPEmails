@@ -31,6 +31,8 @@ import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1";
 import {
   buildDraftMime,
   buildMimeMessage,
+  encodeMimeDisplayName,
+  formatMailbox,
   mimeMessageToBase64url,
   stripBccHeader,
 } from "./mime-build.ts";
@@ -217,4 +219,96 @@ Deno.test("stripBccHeader leaves a message with no Bcc alone", () => {
 Deno.test("stripBccHeader does not touch a body line that looks like a header", () => {
   const raw = "From: a@example.com\r\nTo: b@example.com\r\n\r\nBcc: notaheader@example.com\r\n";
   assertEquals(stripBccHeader(raw), raw);
+});
+
+// ---------------------------------------------------------------------------
+// From display names.
+//
+// `inboxes.display_name` is written into the From header of every outgoing
+// message. encodeMimeHeaderValue passes ASCII through verbatim, so a name with
+// a comma ("Albretsen, Asgeir") was emitted as an unquoted phrase, which a
+// strict parser reads as two mailboxes. encodeMimeDisplayName is the encoder
+// for that position: bare atoms stay bare, ASCII specials get a quoted-string,
+// non-ASCII gets RFC 2047 encoded-words.
+// ---------------------------------------------------------------------------
+
+Deno.test("plain ASCII atoms stay bare in a display name", () => {
+  assertEquals(encodeMimeDisplayName("Evancoe Bot"), "Evancoe Bot");
+  assertEquals(formatMailbox("Evancoe Bot", "bot@evancoe.com"), "Evancoe Bot <bot@evancoe.com>");
+});
+
+Deno.test("ASCII specials force a quoted-string", () => {
+  assertEquals(encodeMimeDisplayName("Albretsen, Asgeir"), '"Albretsen, Asgeir"');
+  assertEquals(encodeMimeDisplayName("Bot (Prod)"), '"Bot (Prod)"');
+  assertEquals(encodeMimeDisplayName("Asgeir B. Albretsen"), '"Asgeir B. Albretsen"');
+  assertEquals(encodeMimeDisplayName("Ops: Alerts"), '"Ops: Alerts"');
+  assertEquals(encodeMimeDisplayName("support@example.com"), '"support@example.com"');
+  assertEquals(
+    formatMailbox("Albretsen, Asgeir", "asgeir@example.com"),
+    '"Albretsen, Asgeir" <asgeir@example.com>',
+  );
+});
+
+Deno.test("quotes and backslashes inside a quoted-string are escaped", () => {
+  assertEquals(encodeMimeDisplayName('The "Bot"'), '"The \\"Bot\\""');
+  assertEquals(encodeMimeDisplayName("A\\B"), '"A\\\\B"');
+});
+
+Deno.test("a bare name can never look like an encoded-word", () => {
+  assertEquals(encodeMimeDisplayName("=?UTF-8?B?x?="), '"=?UTF-8?B?x?="');
+});
+
+Deno.test("non-ASCII becomes one RFC 2047 encoded-word", () => {
+  const encoded = encodeMimeDisplayName("Åsgeir Bjelland");
+  assertEquals(encoded, "=?UTF-8?B?w4VzZ2VpciBCamVsbGFuZA==?=");
+  assertEquals(
+    formatMailbox("Åsgeir Bjelland", "asgeir@example.com"),
+    "=?UTF-8?B?w4VzZ2VpciBCamVsbGFuZA==?= <asgeir@example.com>",
+  );
+  // Round trip: the base64 decodes back to the UTF-8 bytes of the name.
+  const b64 = encoded.slice("=?UTF-8?B?".length, -"?=".length);
+  const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  assertEquals(new TextDecoder().decode(bytes), "Åsgeir Bjelland");
+});
+
+Deno.test("a long non-ASCII name is split into 75-char encoded-words on character boundaries", () => {
+  const name = "Ærlig Ørn Åsgeir ".repeat(6).trim(); // 101 chars, many 2-byte sequences
+  const encoded = encodeMimeDisplayName(name);
+  const words = encoded.split(" ");
+  assert(words.length > 1, "expected more than one encoded-word");
+  let decoded = "";
+  for (const word of words) {
+    assert(word.length <= 75, `encoded-word exceeds 75 chars: ${word}`);
+    assert(word.startsWith("=?UTF-8?B?") && word.endsWith("?="), word);
+    const b64 = word.slice("=?UTF-8?B?".length, -"?=".length);
+    // Each word must decode on its own, i.e. no UTF-8 sequence was split.
+    decoded += new TextDecoder("utf-8", { fatal: true }).decode(
+      Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)),
+    );
+  }
+  assertEquals(decoded, name);
+});
+
+Deno.test("control characters in a display name cannot inject a header", () => {
+  assertEquals(
+    encodeMimeDisplayName("Bot\r\nBcc: attacker@example.com"),
+    '"Bot Bcc: attacker@example.com"',
+  );
+});
+
+Deno.test("an empty or null name yields the bare address", () => {
+  assertEquals(formatMailbox(null, "bot@evancoe.com"), "bot@evancoe.com");
+  assertEquals(formatMailbox("", "bot@evancoe.com"), "bot@evancoe.com");
+  assertEquals(formatMailbox("  \r\n ", "bot@evancoe.com"), "bot@evancoe.com");
+});
+
+Deno.test("buildMimeMessage writes the quoted display name into From", () => {
+  const mime = buildMimeMessage({
+    from: formatMailbox("Albretsen, Asgeir", "asgeir@example.com"),
+    to: ["to@example.com"],
+    subject: "Hi",
+    textBody: "hello",
+    messageId: "test-message-id",
+  });
+  assertStringIncludes(mime, 'From: "Albretsen, Asgeir" <asgeir@example.com>\r\n');
 });

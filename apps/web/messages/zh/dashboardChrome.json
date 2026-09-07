@@ -37,6 +37,8 @@
     "inboxDisconnectFailed": "断开收件箱连接失败。",
     "signatureSaved": "签名已保存。",
     "signatureSaveFailed": "保存签名失败。",
+    "senderNameSaved": "发件人名称已保存。",
+    "senderNameSaveFailed": "保存发件人名称失败。",
     "connectionCheckFailed": "连接检查失败。",
     "connectionCheckFailedRetry": "连接检查失败，请重试。",
     "connectionHealthy": "连接状态正常。",

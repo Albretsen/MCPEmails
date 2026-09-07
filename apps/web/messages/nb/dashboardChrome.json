@@ -37,6 +37,8 @@
     "inboxDisconnectFailed": "Kunne ikke koble fra innboksen.",
     "signatureSaved": "Signatur lagret.",
     "signatureSaveFailed": "Kunne ikke lagre signaturen.",
+    "senderNameSaved": "Avsendernavn lagret.",
+    "senderNameSaveFailed": "Kunne ikke lagre avsendernavnet.",
     "connectionCheckFailed": "Tilkoblingssjekken mislyktes.",
     "connectionCheckFailedRetry": "Tilkoblingssjekken mislyktes. Prøv igjen.",
     "connectionHealthy": "Tilkoblingen er i orden.",

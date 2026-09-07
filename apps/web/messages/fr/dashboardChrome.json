@@ -37,6 +37,8 @@
     "inboxDisconnectFailed": "Échec de la déconnexion de la boîte.",
     "signatureSaved": "Signature enregistrée.",
     "signatureSaveFailed": "Échec de l'enregistrement de la signature.",
+    "senderNameSaved": "Nom d’expéditeur enregistré.",
+    "senderNameSaveFailed": "Échec de l’enregistrement du nom d’expéditeur.",
     "connectionCheckFailed": "La vérification de la connexion a échoué.",
     "connectionCheckFailedRetry": "La vérification de la connexion a échoué. Veuillez réessayer.",
     "connectionHealthy": "La connexion est saine.",

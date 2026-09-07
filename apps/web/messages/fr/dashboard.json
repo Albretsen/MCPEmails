@@ -173,6 +173,16 @@
       "lastCall": "Dernier appel réussi",
       "lastCallNone": "Aucun appel réussi au cours des {days} derniers jours",
       "disconnect": "Déconnecter",
+      "senderName": {
+        "title": "Nom d’expéditeur",
+        "help": "Le nom que les destinataires voient à côté de votre adresse.",
+        "placeholder": "ex. Acme Support",
+        "previewLabel": "De :",
+        "emptyHint": "Sans nom, certains clients n’affichent que « {localPart} ».",
+        "save": "Enregistrer le nom",
+        "saving": "Enregistrement…",
+        "tooLong": "Le nom d’expéditeur est trop long (max 100 caractères)."
+      },
       "signature": {
         "title": "Signature e-mail",
         "enabled": "Activée",

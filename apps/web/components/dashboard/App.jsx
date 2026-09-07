@@ -508,6 +508,48 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   };
 
   /**
+   * Saves the per-inbox sender display name via PATCH /api/inboxes/[id]
+   * (`{ display_name }`). Deliberately a separate call from onSaveSignature:
+   * the two forms are independent, so saving one never resubmits the other.
+   *
+   * `value` is the normalised name or null to clear it. On success the
+   * server-confirmed `display_name` is merged into local state together with
+   * `label`, which the inbox list derives from it (falling back to the
+   * address local-part, exactly as the server-side model does). Returns a
+   * Promise so the editor can hold its in-flight state and stay open on error.
+   */
+  const onSaveSenderName = async (id, value) => {
+    let data = {};
+    try {
+      const res = await fetch(`/api/inboxes/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ display_name: value ?? '' }),
+      });
+      try { data = await res.json(); } catch { /* ignore JSON parse failure */ }
+      if (!res.ok) {
+        const message = typeof data?.error === 'string' ? data.error : tr('app.senderNameSaveFailed');
+        toast({ message, variant: 'error' });
+        throw new Error(message);
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message) throw err;
+      const message = tr('app.senderNameSaveFailed');
+      toast({ message, variant: 'error' });
+      throw new Error(message);
+    }
+    const displayName = typeof data.display_name === 'string' && data.display_name.length > 0
+      ? data.display_name
+      : null;
+    setInboxes(xs => xs.map(x => (
+      x.id === id
+        ? { ...x, displayName, label: displayName ?? String(x.address ?? '').split('@')[0] }
+        : x
+    )));
+    toast({ message: tr('app.senderNameSaved'), variant: 'success' });
+  };
+
+  /**
    * Restarts the OAuth (or app-password) flow for an errored inbox.
    *
    * For OAuth inboxes: navigate to the provider's server-side initiation
@@ -797,7 +839,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         )}
 
         {route === "overview" && <OverviewPage key={guideResumeKey} inboxes={inboxes} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} />}
-        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onGoToKeys={() => setRoute("keys")} />}
+        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onGoToKeys={() => setRoute("keys")} />}
         {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} workspaceName={workspace?.displayName ?? workspace?.display_name ?? workspace?.slug ?? ''} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onResendInvite={onResendInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} onLeave={onLeaveWorkspace} />}
         {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} />}

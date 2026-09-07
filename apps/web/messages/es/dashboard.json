@@ -173,6 +173,16 @@
       "lastCall": "Última llamada correcta",
       "lastCallNone": "Sin llamadas correctas en los últimos {days} días",
       "disconnect": "Desconectar",
+      "senderName": {
+        "title": "Nombre del remitente",
+        "help": "El nombre que ven los destinatarios junto a tu dirección.",
+        "placeholder": "p. ej. Acme Support",
+        "previewLabel": "De:",
+        "emptyHint": "Sin nombre, algunos clientes muestran solo \"{localPart}\".",
+        "save": "Guardar nombre",
+        "saving": "Guardando…",
+        "tooLong": "El nombre del remitente es demasiado largo (máx. 100 caracteres)."
+      },
       "signature": {
         "title": "Firma de correo",
         "enabled": "Activada",

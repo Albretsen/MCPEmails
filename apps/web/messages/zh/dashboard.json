@@ -173,6 +173,16 @@
       "lastCall": "最近一次成功调用",
       "lastCallNone": "过去 {days} 天内没有成功调用",
       "disconnect": "断开连接",
+      "senderName": {
+        "title": "发件人名称",
+        "help": "收件人在你的地址旁看到的名称。",
+        "placeholder": "例如 Acme Support",
+        "previewLabel": "发件人：",
+        "emptyHint": "不设置名称时，部分客户端只显示“{localPart}”。",
+        "save": "保存名称",
+        "saving": "保存中…",
+        "tooLong": "发件人名称过长（最多 100 个字符）。"
+      },
       "signature": {
         "title": "邮件签名",
         "enabled": "已启用",
