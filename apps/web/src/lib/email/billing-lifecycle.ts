@@ -74,6 +74,7 @@ import { Resend } from 'resend';
 import { PLANS, planDisplayName, type PlanId } from '@/lib/stripe/plans';
 import { formatAmount } from '@/lib/email/purchase-confirmation';
 import { lifecycleFrom, unsubscribeUrl } from '@/lib/email/lifecycle';
+import { POSTAL_ADDRESS_LINE } from '@/lib/email/legal';
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -489,6 +490,7 @@ function shell(options: ShellOptions): string {
             <td style="background:#f8fafc;padding:20px 40px;border-top:1px solid #e2e8f0;">
               <p style="margin:0;font-size:13px;color:#64748b;line-height:1.6;">${options.footerNote}</p>
               ${unsub}
+              <p style="margin:14px 0 0;font-size:11px;color:#94a3b8;line-height:1.6;">${escapeHtml(POSTAL_ADDRESS_LINE)}</p>
             </td>
           </tr>
         </table>
@@ -520,6 +522,14 @@ function facts(rows: Array<[string, string]>): string {
   return `<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin:0 0 24px;">${cells}</table>`;
 }
 
+/**
+ * The human footers. Neither carries the postal address: `shell()` renders
+ * POSTAL_ADDRESS_LINE beneath whichever of these it was given, and every
+ * plain-text body ends with the same line, so the legal identifier reaches all
+ * nine templates from one place instead of nine. Adding it to the copy here
+ * would put a registration number in the middle of a sentence written to sound
+ * like a person.
+ */
 const SUPPORT_FOOTER = `Something look wrong, or is this a bad time? Reply to this email or write to <a href="mailto:${SUPPORT_ADDRESS}" style="color:#3b82f6;">${SUPPORT_ADDRESS}</a>. A person reads it, and at our size that person is the one who wrote the software.`;
 
 const SUPPORT_FOOTER_TEXT = `Something look wrong, or is this a bad time? Reply to this email or write to ${SUPPORT_ADDRESS}. A person reads it, and at our size that person is the one who wrote the software.`;
@@ -635,6 +645,8 @@ export function composeBillingEmail(
         '',
         'MCPEmails',
         base,
+        '',
+        POSTAL_ADDRESS_LINE,
       );
       blocks.push(
         h('Fix it in about a minute'),
@@ -681,6 +693,8 @@ export function composeBillingEmail(
         '',
         'MCPEmails',
         base,
+        '',
+        POSTAL_ADDRESS_LINE,
       ]
         .filter((line, i, all) => !(line === '' && all[i - 1] === ''))
         .join('\n');
@@ -722,6 +736,8 @@ export function composeBillingEmail(
         '',
         'MCPEmails',
         base,
+        '',
+        POSTAL_ADDRESS_LINE,
       ]
         .filter((line, i, all) => !(line === '' && all[i - 1] === ''))
         .join('\n');
@@ -763,6 +779,8 @@ export function composeBillingEmail(
         '',
         'MCPEmails',
         base,
+        '',
+        POSTAL_ADDRESS_LINE,
       ]
         .filter((line, i, all) => !(line === '' && all[i - 1] === ''))
         .join('\n');
@@ -829,6 +847,8 @@ export function composeBillingEmail(
         '',
         'MCPEmails',
         base,
+        '',
+        POSTAL_ADDRESS_LINE,
       ].join('\n');
 
       return {
@@ -874,6 +894,8 @@ export function composeBillingEmail(
         '',
         'MCPEmails',
         base,
+        '',
+        POSTAL_ADDRESS_LINE,
       ].join('\n');
 
       return {
@@ -913,6 +935,8 @@ export function composeBillingEmail(
         '',
         'MCPEmails',
         base,
+        '',
+        POSTAL_ADDRESS_LINE,
       ].join('\n');
 
       return {
@@ -952,6 +976,8 @@ export function composeBillingEmail(
         '',
         'MCPEmails',
         base,
+        '',
+        POSTAL_ADDRESS_LINE,
       ].join('\n');
 
       return {

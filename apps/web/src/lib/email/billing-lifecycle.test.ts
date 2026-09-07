@@ -34,6 +34,11 @@ import {
   type BillingTemplate,
   type LifecyclePayload,
 } from '@/lib/email/billing-lifecycle';
+import {
+  LEGAL_ENTITY_NAME,
+  LEGAL_ORG_NUMBER,
+  POSTAL_ADDRESS_LINE,
+} from '@/lib/email/legal';
 import { PLANS } from '@/lib/stripe/plans';
 
 const TO = 'customer@example.com';
@@ -127,6 +132,10 @@ test('a win-back carries the one-click opt-out URL', () => {
     assert.ok(email.unsubscribeUrl?.includes(TOKEN), 'the token must be in the URL');
     assert.ok(email.unsubscribeUrl?.includes('c=lifecycle'), 'category must be lifecycle');
     assert.ok(email.body.includes(email.unsubscribeUrl!), 'plain text needs the link too');
+    assert.ok(
+      email.htmlBody.includes(email.unsubscribeUrl!),
+      'the html part needs the link too: almost nobody reads the text part, and a reader who cannot find an opt-out reaches for the spam button instead',
+    );
   }
 });
 
@@ -229,6 +238,59 @@ test('no em dashes anywhere in any customer-facing string', () => {
       assert.ok(!text.includes('—'), `${template} ${label} contains an em dash`);
     }
   }
+});
+
+// ---------------------------------------------------------------------------
+// Legal identification
+// ---------------------------------------------------------------------------
+
+test('every template carries the physical postal address, in both parts', () => {
+  // CAN-SPAM 15 U.S.C. 7704(a)(5) and ehandelsloven section 8. Two winback_*
+  // templates and the dunning series are sending today, so a footer without an
+  // address is a live defect, not a nit. Matched on the street and the postcode
+  // rather than on the whole sentence: this has to fail if someone deletes the
+  // address while leaving a company name behind, which is the failure that
+  // actually happened.
+  for (const template of BILLING_TEMPLATES) {
+    const email = composeBillingEmail(template, payload());
+    assert.ok(email, `${template} must compose`);
+    for (const [label, text] of [
+      ['body', email.body],
+      ['html', email.htmlBody],
+    ] as const) {
+      assert.ok(
+        text.includes('Håsteins gate 9'),
+        `${template} ${label} is missing the street address`,
+      );
+      assert.ok(
+        text.includes('5160 Laksevåg'),
+        `${template} ${label} is missing the postcode`,
+      );
+      assert.ok(
+        text.includes(LEGAL_ENTITY_NAME),
+        `${template} ${label} is missing the legal entity name`,
+      );
+      assert.ok(
+        text.includes(LEGAL_ORG_NUMBER),
+        `${template} ${label} is missing the organisation number`,
+      );
+    }
+  }
+});
+
+test('the address is the one on the marketing site, character for character', () => {
+  // If this drifts from messages/{en,nb}/home.json, /privacy and /terms, a
+  // reader who checks two of them sees two different registered addresses.
+  assert.equal(
+    POSTAL_ADDRESS_LINE,
+    'MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.',
+  );
+});
+
+test('the address does not add a question to the cancellation email', () => {
+  // The one-question rule is asserted below too. This exists so the reason the
+  // legal line has to stay declarative is written down next to the line itself.
+  assert.ok(!POSTAL_ADDRESS_LINE.includes('?'));
 });
 
 test('the internal plan ids never leak', () => {
