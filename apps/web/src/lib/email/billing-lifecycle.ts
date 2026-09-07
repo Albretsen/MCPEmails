@@ -14,7 +14,7 @@
  * MARKETING-ADJACENT (winback_14, winback_30)
  *   Sent to somebody who has already left. Carries List-Unsubscribe and
  *   List-Unsubscribe-Post for one-click opt-out, and the dispatcher checks
- *   `email_suppressions` before every send.
+ *   `users.unsubscribed_at` / `unsubscribed_categories` before every send.
  *
  * The two categories cannot be confused by accident: `billing_email_sends`
  * derives `category` from the template name in a GENERATED column, so
