@@ -66,25 +66,6 @@ function calm(): AttentionInput {
       truncated: false,
       mode: 'live',
     },
-    gmail: {
-      used: 70,
-      cap: 100,
-      remaining: 30,
-      percent: 70,
-      ratePerMonth: 5.5,
-      projectedExhaustion: '2026-11',
-      level: 'ok',
-    },
-    pressure: {
-      capped_workspaces: 120,
-      at_ceiling: 59,
-      at_ceiling_activated: 4,
-      capped_activated: 40,
-      grandfathered_workspaces: 151,
-      grandfathered_over_free: 30,
-      comped_workspaces: 1,
-      paid_workspaces: 6,
-    },
     lifecycle: {
       value_activated: 169,
       one_and_done: 40,
@@ -150,19 +131,6 @@ test('churn only fires when it actually beat new business', () => {
   assert.match(item.title, /\$5/);
 });
 
-test('the inbox ceiling counts only workspaces that already used a mailbox', () => {
-  const input = calm();
-  // Plenty standing at the ceiling, but almost none of them ever read a
-  // message: that is a population that left, not a thwarted customer.
-  input.pressure = { ...input.pressure!, at_ceiling: 90, at_ceiling_activated: 2 };
-  assert.equal(attentionReport(input, NOW).items.some((entry) => entry.id === 'inbox-ceiling'), false);
-
-  input.pressure = { ...input.pressure!, at_ceiling_activated: ATTENTION_THRESHOLDS.ceilingActivated };
-  const item = attentionReport(input, NOW).items.find((entry) => entry.id === 'inbox-ceiling');
-  assert.ok(item);
-  assert.match(item.population, /never be charged/);
-});
-
 test('one-and-done is not computed at all below its minimum denominator', () => {
   const input = calm();
   // 8 of 10 is 80%, well past the share threshold, and still says nothing.
@@ -200,7 +168,7 @@ test('items sort act before watch and keep declaration order within a severity',
   const input = calm();
   input.cash = { ...input.cash!, mode: 'test', truncated: true };
   input.revenue = { ...revenue, atRiskMinor: 1500, atRiskCustomers: 2 };
-  input.gmail = { ...input.gmail!, level: 'warn' };
+  input.checkout = { ...input.checkout!, abandoned: 10 };
   const ids = attentionReport(input, NOW).items.map((entry) => entry.id);
-  assert.deepEqual(ids, ['stripe-mode', 'mrr-at-risk', 'gmail-cap', 'figures-are-floors']);
+  assert.deepEqual(ids, ['stripe-mode', 'mrr-at-risk', 'abandoned-checkouts', 'figures-are-floors']);
 });

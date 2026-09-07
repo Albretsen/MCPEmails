@@ -32,8 +32,7 @@
  */
 
 import type { CashCollected, CheckoutFunnel } from './kiosk-revenue.ts';
-import type { GmailCapProjection } from './growth-metrics.ts';
-import type { GrowthErrorRow, GrowthLifecycleRow, GrowthUpgradePressureRow } from './growth-types.ts';
+import type { GrowthErrorRow, GrowthLifecycleRow } from './growth-types.ts';
 import type { HealthLevel } from './health-math.ts';
 import type { RevenueSummary } from './revenue-math.ts';
 import { daysBetween } from './growth-records.ts';
@@ -92,8 +91,6 @@ export type AttentionInput = {
   revenue: RevenueSummary | null;
   checkout: CheckoutFunnel | null;
   cash: CashCollected | null;
-  gmail: GmailCapProjection | null;
-  pressure: GrowthUpgradePressureRow | null;
   lifecycle: GrowthLifecycleRow | null;
   health: AttentionHealth | null;
   incidents: AttentionIncident[] | null;
@@ -111,12 +108,6 @@ export type AttentionInput = {
  * once before the company either worked or did not.
  */
 export const ATTENTION_THRESHOLDS = {
-  /**
-   * Free workspaces standing at the inbox ceiling that have ALREADY used a
-   * mailbox. Ten rather than one because at one this fires forever and stops
-   * being read; the population it counts has been in the dozens all year.
-   */
-  ceilingActivated: 10,
   /** Days with no completed checkout before the quiet is worth a line. */
   quietSaleDays: 30,
   /** Abandoned checkouts before the count is a finding rather than noise. */
@@ -304,25 +295,6 @@ const quietSaleRule: Rule = ({ checkout }, now) => {
   };
 };
 
-/**
- * People standing at the inbox ceiling who have actually used a mailbox.
- *
- * The `at_ceiling_activated` column and not `at_ceiling`: a free workspace
- * that hit the cap without ever reading a message is not a thwarted customer,
- * it is someone who left. This is the only number on the page that names a
- * population which is both reachable and demonstrably interested.
- */
-const ceilingRule: Rule = ({ pressure }) => {
-  if (!pressure) return BLOCKED;
-  if (pressure.at_ceiling_activated < ATTENTION_THRESHOLDS.ceilingActivated) return null;
-  return {
-    id: 'inbox-ceiling',
-    severity: 'act',
-    title: `${formatCount(pressure.at_ceiling_activated)} free workspaces have used a mailbox and cannot connect another.`,
-    population: `Live free workspaces the inbox cap applies to (${formatCount(pressure.capped_workspaces)} in total), now. Grandfathered and comped accounts are excluded and can never be charged.`,
-  };
-};
-
 /** Checkouts opened and never finished: money left on Stripe's page. */
 const abandonedRule: Rule = ({ checkout }) => {
   if (!checkout) return BLOCKED;
@@ -354,19 +326,6 @@ const oneAndDoneRule: Rule = ({ lifecycle }) => {
     severity: 'watch',
     title: `${formatPercent(share)} of everyone who reached a mailbox used it on exactly one day.`,
     population: `${formatCount(lifecycle.one_and_done)} of ${formatCount(activated)} value-activated workspaces, all time, that day now past.`,
-  };
-};
-
-/** Google's cap on the unverified OAuth client: the one hard calendar deadline. */
-const gmailCapRule: Rule = ({ gmail }) => {
-  if (!gmail) return BLOCKED;
-  if (gmail.level === 'ok') return null;
-  const when = gmail.projectedExhaustion ? `full around ${gmail.projectedExhaustion}` : 'not currently filling';
-  return {
-    id: 'gmail-cap',
-    severity: gmail.level === 'danger' ? 'act' : 'watch',
-    title: `Gmail OAuth cap: ${formatCount(gmail.used)} of ${formatCount(gmail.cap)} slots used, ${when}.`,
-    population: `Distinct Gmail grants ever, deleted inboxes included, at ${gmail.ratePerMonth} per month. Verification plus the CASA assessment take weeks and the cap does not pause for them.`,
   };
 };
 
@@ -430,11 +389,9 @@ const RULES: Rule[] = [
   atRiskRule,
   leavingRule,
   churnRule,
-  ceilingRule,
   abandonedRule,
   quietSaleRule,
   oneAndDoneRule,
-  gmailCapRule,
   errorConcentrationRule,
   floorRule,
 ];

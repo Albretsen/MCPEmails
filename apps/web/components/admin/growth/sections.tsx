@@ -144,12 +144,11 @@ const STAGE_LABELS: Record<string, string> = {
 /* ============================================ the verdict, money and to-do */
 
 export async function TopSection({ days }: { days: number }) {
-  const [revenue, cash, checkout, gmail, pressure, lifecycle, errors, health, incidents, signups, daily] =
+  const [revenue, cash, checkout, pressure, lifecycle, errors, health, incidents, signups, daily] =
     await Promise.all([
       fetchRecurringRevenue(days),
       fetchCashCollected(),
       fetchCheckoutFunnel(),
-      fetchGmailCapSummary(),
       fetchUpgradePressure(),
       fetchLifecycleCounts(),
       fetchErrorBreakdown(days),
@@ -159,7 +158,6 @@ export async function TopSection({ days }: { days: number }) {
       fetchDailyMetrics(DAILY_DAYS),
     ]);
 
-  const capSummary = orNull(gmail);
   const mrr = orNull(revenue);
   // Nulls rather than dead-panel markers: a rule whose data failed has to be
   // counted as blocked, never as satisfied, or a Stripe outage quietly turns
@@ -168,8 +166,6 @@ export async function TopSection({ days }: { days: number }) {
     revenue: mrr,
     checkout: orNull(checkout),
     cash: orNull(cash),
-    gmail: capSummary ? gmailCapProjection(capSummary) : null,
-    pressure: orNull(pressure),
     lifecycle: orNull(lifecycle),
     health,
     incidents,
