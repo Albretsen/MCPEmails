@@ -85,6 +85,18 @@ const EHLO_DOMAIN = "mcpemails.com";
 const SMTP_TIMEOUT_MS = 20_000;
 
 /**
+ * Ceiling on one socket write, matching {@link SMTP_TIMEOUT_MS} in spirit.
+ *
+ * Writes had no timeout at all while they were single-shot: a `write` that the
+ * kernel accepted into the send buffer returns immediately whether or not the
+ * peer ever reads it. {@link writeAllBytes} now loops, and the second and later
+ * iterations of that loop are exactly where a stalled peer parks forever, so
+ * the loop needs its own bound. Larger than the read timeout because a full
+ * DATA payload can legitimately take several round trips to drain.
+ */
+const SMTP_WRITE_TIMEOUT_MS = 60_000;
+
+/**
  * Total submission attempts, each on a brand new connection.
  *
  * WHY THIS EXISTS. This function runs on Supabase Edge Functions, whose
@@ -290,6 +302,70 @@ function b64(value: string): string {
   return btoa(String.fromCharCode(...new TextEncoder().encode(value)));
 }
 
+/**
+ * A `Deno.Conn`, reduced to the one method the writer below needs so a test can
+ * stand in a socket that accepts short writes the way a real one does.
+ */
+export interface SmtpByteSink {
+  write(bytes: Uint8Array): Promise<number>;
+}
+
+/**
+ * Write every byte, however many calls that takes.
+ *
+ * ── THE BUG THIS EXISTS TO PREVENT ─────────────────────────────────────────
+ * `Deno.Conn.write` is a THIN wrapper over the platform write syscall and is
+ * explicitly allowed to accept only part of the buffer, returning how much it
+ * took. Until 2026-09-07 both callers here ignored that number. For a command
+ * line ("MAIL FROM:<...>") the buffer is tens of bytes and always fits, so the
+ * bug was invisible. For the DATA payload it is the whole message, and once the
+ * message grew past the socket's send buffer the write returned short and the
+ * tail — including the terminating `<CRLF>.<CRLF>` — was never sent.
+ *
+ * The server then sat waiting for an end-of-data marker that would never come,
+ * `expect(250)` hit the 20-second read timeout, and because that happens AFTER
+ * the 354 the failure surfaced as the deliberately conservative "the message
+ * may or may not have been delivered. Do not retry automatically." A forward
+ * carrying one ~60 KB PDF was enough to cross the line; the same forward with
+ * `include_attachments: false` was a few kilobytes and always worked. That is
+ * the entire "undocumented size ceiling roughly an order of magnitude below the
+ * documented 10 MB budget" reported on 2026-09-07.
+ *
+ * A short write is not an error and must not be retried as one: the accepted
+ * prefix IS on the wire. The only correct response is to advance and write the
+ * rest, which is what this does.
+ */
+export async function writeAllBytes(
+  conn: SmtpByteSink,
+  bytes: Uint8Array,
+  timeoutMs: number = SMTP_WRITE_TIMEOUT_MS,
+): Promise<void> {
+  let offset = 0;
+  while (offset < bytes.length) {
+    const written = await withTimeout(
+      conn.write(bytes.subarray(offset)),
+      timeoutMs,
+      "write",
+    );
+    // Zero would spin this loop forever against a socket that is going nowhere.
+    if (written <= 0) throw new Error("SMTP socket accepted no bytes of the message");
+    offset += written;
+  }
+}
+
+/**
+ * The exact bytes that follow a 354: CRLF-normalised, dot-stuffed, terminated.
+ *
+ * Split out of {@link SmtpSession.writeData} so the byte count the socket has
+ * to carry is something a test can assert on directly.
+ */
+export function smtpDataPayload(rawMessage: string): Uint8Array {
+  const normalized = rawMessage.replace(/\r?\n/g, "\r\n");
+  // Dot-stuffing: any line starting with '.' gets an extra leading '.'.
+  const stuffed = normalized.replace(/^\./gm, "..");
+  return new TextEncoder().encode(stuffed + "\r\n.\r\n");
+}
+
 class SmtpSession {
   private conn: Deno.Conn;
   private buffer = "";
@@ -347,7 +423,7 @@ class SmtpSession {
 
   /** Send a command and return the parsed reply without asserting. */
   async commandRaw(line: string): Promise<SmtpReply> {
-    await this.conn.write(this.encoder.encode(line + "\r\n"));
+    await writeAllBytes(this.conn, this.encoder.encode(line + "\r\n"));
     return this.readReply();
   }
 
@@ -362,10 +438,7 @@ class SmtpSession {
 
   /** Write the DATA payload with dot-stuffing and the terminating <CRLF>.<CRLF>. */
   async writeData(rawMessage: string): Promise<void> {
-    const normalized = rawMessage.replace(/\r?\n/g, "\r\n");
-    // Dot-stuffing: any line starting with '.' gets an extra leading '.'.
-    const stuffed = normalized.replace(/^\./gm, "..");
-    await this.conn.write(this.encoder.encode(stuffed + "\r\n.\r\n"));
+    await writeAllBytes(this.conn, smtpDataPayload(rawMessage));
   }
 
   /** Read a (possibly multi-line) SMTP reply and return its code + joined text. */
@@ -560,10 +633,10 @@ async function connectWithTimeout(cfg: SmtpConfig): Promise<Deno.Conn> {
   }
 }
 
-async function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+async function withTimeout<T>(p: Promise<T>, ms: number, what = "read"): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(new Error("SMTP read timeout")), ms);
+    timer = setTimeout(() => reject(new Error(`SMTP ${what} timeout`)), ms);
   });
   try {
     return await Promise.race([p, timeout]);

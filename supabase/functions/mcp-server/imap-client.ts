@@ -772,12 +772,14 @@ export class ImapClient {
   /**
    * Write every byte of `bytes`, looping until the socket has taken them all.
    *
-   * `Deno.Conn.write` is allowed to accept only part of the buffer. Nothing
-   * else in this file loops (a short write on a small command line has never
-   * been observed), but a literal is the one place where a partial write is not
+   * `Deno.Conn.write` is allowed to accept only part of the buffer. Command
+   * lines do not loop (a short write on a small command line has never been
+   * observed), but a literal is the one place where a partial write is not
    * merely a truncated command: the server is counting octets, so the missing
    * tail would be read as the beginning of the next command and desynchronise
-   * the connection for the rest of its life.
+   * the connection for the rest of its life. Every literal goes through here,
+   * APPEND included — that one was still calling `conn.write` directly until
+   * 2026-09-07, which silently truncated any Sent copy over a socket buffer.
    */
   private async writeAll(bytes: Uint8Array): Promise<void> {
     let offset = 0;
@@ -914,7 +916,10 @@ export class ImapClient {
         return false;
       }
 
-      await this.conn.write(bytes);
+      // writeAll, not conn.write: an APPEND literal is the same octet-counted
+      // payload as a SEARCH literal, and a short write here truncates the Sent
+      // copy and desynchronises the connection. See writeAll's own note.
+      await this.writeAll(bytes);
       await this.write(CRLF);
       const resp = await this.readTagged(tag);
       return resp.status === "OK";
@@ -949,7 +954,7 @@ export class ImapClient {
       if (!cont.startsWith("+")) {
         return { ok: false };
       }
-      await this.conn.write(bytes);
+      await this.writeAll(bytes);
       await this.write(CRLF);
       const resp = await this.readTagged(tag);
       if (resp.status !== "OK") return { ok: false };
