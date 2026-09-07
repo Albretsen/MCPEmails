@@ -12,9 +12,16 @@
    whenever deploys were landing. Custom properties inherit, so declaring them
    on the board's own root element covers everything inside it, and this sheet
    is render-blocking, so it applies before anything is drawn. The effect in
-   KioskLive is left alone: it still pins the document outside the board. */
+   KioskLive is left alone: it still pins the document outside the board.
+
+   `.gb` is the operator board at /admin/growth, which since 2026-09-07 wears
+   the same dark ground for the same reason and gets it the same way: no
+   effect, no flash, and no dependence on whoever last touched the theme
+   toggle. It has no hydration to wait for at all, being server-rendered
+   throughout. */
 html[data-theme="dark"],
-.kiosk {
+.kiosk,
+.gb {
   --bg-page:     #0B1020;     /* ink-900 */
   --bg-surface:  #131932;     /* slightly elevated */
   --bg-sunken:   #1B2244;     /* code blocks, wells */

@@ -1,0 +1,661 @@
+/* admin-growth.css: the operator board at /admin/growth.
+
+   WHAT CHANGED AND WHY, 2026-09-07. The page this replaces was a light,
+   12px, hairline-and-white-card report. The verdict on it was that it was
+   "impossibly hard to use, boring, and ugly", and that the kiosk hanging on
+   the wall two metres away was none of those things. So this sheet stops
+   inventing a second visual language for the same numbers: the board is the
+   kiosk, in the one place the kiosk cannot go, on a laptop where there is a
+   pointer, a scrollbar, and room for the panels a wall display has to leave
+   out.
+
+   CONCRETELY THAT MEANS THREE THINGS.
+
+   1. THE TILES ARE THE KIOSK'S TILES. `.kiosk-tile` and everything inside it
+      come from admin-kiosk.css, unmodified and unforked, and this file only
+      lays them out and gives them the affordances a wall board has no use
+      for: a hover state, a focus ring, selectable text. A number that reads
+      one way on the wall and another way on the laptop is how two people end
+      up quoting different figures for the same week.
+
+   2. THE CHARTS KEEP THEIR CODE AND LOSE THEIR CHROME. CalendarHeat, the
+      cohort heatmap and the stacked bar series are good and were never the
+      problem; what made them look like a different product was `.ac-card`,
+      a white 12px frame with its own title style. The block at the bottom of
+      this file re-dresses that frame as a kiosk tile. Not one line of
+      components/admin/charts changed.
+
+   3. IT IS DARK, AND NOT BY EFFECT. `.gb` is listed beside `.kiosk` in
+      theme.css's dark block, so the tokens are already right in the first
+      paint whatever the visitor's stored preference is. There is no flash and
+      no `useEffect`, and the whole page remains a Server Component.
+
+   WHAT THIS FILE MUST NOT DO: touch admin-board.css. That sheet still dresses
+   /admin/growth/experiments and /admin/growth/dunning, which are ordinary
+   light report pages and are fine as they are. Everything here is scoped
+   under `.gb`. */
+
+.gb {
+  /* Same names as the kiosk's, so a tile moved between the two surfaces
+     cannot pick up a different accent on the way. */
+  --kiosk-accent: var(--cobalt-300);
+  --kiosk-good:   var(--mint-500);
+  --kiosk-warn:   var(--amber-500);
+  --kiosk-bad:    var(--red-500);
+  --kiosk-gap:    12px;
+  --kiosk-radius: 14px;
+
+  --gb-gap: 12px;
+
+  min-height: 100dvh;
+  /* Painted rather than inherited: the document may still be in light mode,
+     and a dark board on a white page is worse than either. */
+  background:
+    radial-gradient(120% 70% at 50% -25%, rgba(37, 71, 229, 0.20), transparent 60%),
+    var(--bg-page);
+  color: var(--fg-1);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+.gb-inner {
+  max-width: 1680px;
+  margin: 0 auto;
+  padding: 0 clamp(14px, 2vw, 30px) 80px;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+
+/* Sticky, because the window switcher is the one control on the page and the
+   page is now long enough that it would otherwise be four scrolls away from
+   most of the numbers it re-scopes. */
+.gb-head {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 14px 0 12px;
+  margin-bottom: 4px;
+  background: color-mix(in srgb, var(--bg-page) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-1);
+}
+.gb-wordmark {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6em;
+  min-width: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+.gb-wordmark em {
+  font-style: normal;
+  font-weight: 500;
+  font-size: 0.53em;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gb-tools { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+.gb-tools form { margin: 0; }
+
+/* The window switcher, shaped like the kiosk's view strip: the active one is
+   FILLED rather than underlined, which is the difference between a control you
+   can read the state of and one you have to look twice at. */
+.gb-windows { display: flex; align-items: center; gap: 3px; padding: 3px; border-radius: 999px; background: var(--bg-sunken); border: 1px solid var(--border-1); }
+.gb-windows a {
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg-3);
+  text-decoration: none;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+.gb-windows a:hover { color: var(--fg-1); }
+.gb-windows a[aria-current="true"] { background: color-mix(in srgb, var(--kiosk-accent) 82%, transparent); color: #fff; }
+
+.gb-link, .gb-tools button {
+  padding: 5px 12px;
+  border: 1px solid var(--border-1);
+  border-radius: 999px;
+  background: var(--bg-surface);
+  color: var(--fg-2);
+  font: inherit;
+  font-size: 12.5px;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 120ms ease, color 120ms ease, background-color 120ms ease;
+}
+.gb-link:hover, .gb-tools button:hover { color: var(--fg-1); border-color: var(--border-2); background: var(--bg-sunken); }
+
+/* ── The grid ───────────────────────────────────────────────────────────── */
+
+.gb-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--gb-gap);
+  align-items: stretch;
+}
+.gb-grid > * { min-width: 0; }
+
+/* EVERY TILE SITS IN A `.gb-cell` WRAPPER, including the ones that could have
+   spanned columns themselves. The chart components draw their own `.ac-card`
+   with a fixed class attribute and no way to be handed a span, so without a
+   wrapper the grid would need two different placement mechanisms and the two
+   would drift. One wrapper, one rule, and the cell owns the geometry while the
+   tile inside it owns nothing but its own content. */
+.gb-cell { display: flex; min-width: 0; min-height: 178px; }
+.gb-cell > * { flex: 1; min-width: 0; height: 100%; box-sizing: border-box; }
+
+/* Heights are set HERE and not by the tiles, because a row of tiles that each
+   sized itself to its own content is exactly the ragged bottom edge that made
+   the page this replaces look accidental. Three steps, and every cell picks
+   one. */
+.gb-h2 { min-height: 272px; }
+.gb-h3 { min-height: 348px; }
+
+/* The pointer affordance the wall board has no use for. Deliberately small:
+   the tile lifts a pixel and its edge brightens, which is enough to say "this
+   is a thing" without the page appearing to breathe when the mouse crosses it. */
+.gb-cell > .kiosk-tile,
+.gb-cell > .ac-card,
+.gb-hero {
+  transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+}
+.gb-cell > .kiosk-tile:hover,
+.gb-cell > .ac-card:hover,
+.gb-hero:hover {
+  border-color: var(--border-2);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28);
+}
+@media (prefers-reduced-motion: reduce) {
+  .gb-cell > .kiosk-tile, .gb-cell > .ac-card, .gb-hero { transition: none; }
+  .gb-cell > .kiosk-tile:hover, .gb-cell > .ac-card:hover, .gb-hero:hover { transform: none; }
+}
+
+/* Holds a cell open at the right shape while its band streams in, so the grid
+   never jumps as boundaries resolve. */
+.gb-skeleton {
+  border: 1px solid var(--border-1);
+  border-radius: var(--kiosk-radius);
+  background: color-mix(in srgb, var(--bg-surface) 60%, transparent);
+}
+
+/* The kiosk suppresses selection because a wall panel has no reason to have
+   text highlighted on it. A laptop does: these numbers get pasted into
+   messages. */
+.gb .kiosk-tile { user-select: text; }
+
+/* A headline number with no trend chart under it sat at the top of a tile that
+   is taller here than it is on the wall, leaving a third of the tile empty.
+   Centred, the number is where the eye goes. A tile that DOES carry a spark is
+   unaffected: the spark still takes the slack through its own `flex: 1`. */
+.gb .kiosk-big { justify-content: center; }
+
+/* Names get more room than they do on the wall. `email_read · IMAP_TIMEOUT`
+   and `Personal monthly` both ellipsed at the kiosk's 7.5em, and this surface
+   is read at arm's length where the full string is the point. */
+.gb .kiosk-bars li { grid-template-columns: minmax(0, 11.5em) 1fr auto; }
+
+/* Fact rows centre in their tile for the same reason headline numbers do: on
+   this surface a tile is taller than the four or five short facts inside it,
+   and top-aligned they leave a visible hole under themselves. */
+.gb .kiosk-facts { flex: 1; align-content: center; row-gap: 12px; }
+
+.gb-w3  { grid-column: span 3; }
+.gb-w4  { grid-column: span 4; }
+.gb-w5  { grid-column: span 5; }
+.gb-w6  { grid-column: span 6; }
+.gb-w7  { grid-column: span 7; }
+.gb-w8  { grid-column: span 8; }
+.gb-w9  { grid-column: span 9; }
+.gb-w12 { grid-column: span 12; }
+
+/* A band label: a rule with a word on it, plus the question the band answers.
+   The wording matches the kiosk's five views on purpose, so "the money view"
+   means one thing in this building. */
+.gb-band {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 26px 0 -2px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+.gb-band em {
+  font-style: normal;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--fg-4);
+}
+.gb-band::after { content: ""; flex: 1; height: 1px; background: var(--border-1); align-self: center; }
+.gb-band:first-child { margin-top: 12px; }
+
+.gb-foot { margin: 34px 0 0; font-size: 11px; line-height: 1.6; color: var(--fg-4); max-width: 90ch; }
+
+/* ── The hero ───────────────────────────────────────────────────────────── */
+
+/* One panel, five weights. MRR is the number; the annual figure, what each
+   customer is worth and the notional valuation are a line under it; cash is a
+   second figure at half the size because it answers a different question; the
+   movements are chips; the month bars are the shape. An earlier version of
+   this page opened with five equal stat cards, which is a list, not a
+   hierarchy. */
+.gb-hero {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: clamp(16px, 2.4vw, 40px);
+  padding: clamp(16px, 2dvh, 26px) clamp(18px, 1.6vw, 30px);
+  border: 1px solid var(--border-1);
+  border-radius: calc(var(--kiosk-radius) + 4px);
+  background:
+    radial-gradient(90% 140% at 0% 0%, color-mix(in srgb, var(--kiosk-accent) 13%, transparent), transparent 65%),
+    var(--bg-surface);
+}
+.gb-hero-left { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.gb-hero-label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+.gb-hero-row { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.gb-hero-value {
+  font-size: clamp(44px, 6.6vw, 76px);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  color: var(--fg-1);
+}
+.gb-hero-unit { font-size: 15px; color: var(--fg-3); font-weight: 550; }
+
+/* Satellites: the three figures that are the same money said differently.
+   They are a row of small facts rather than three more tiles, because every
+   one of them is derived from the number above and a tile would imply it was
+   independently measured. */
+.gb-sats { display: flex; flex-wrap: wrap; gap: 10px 26px; margin: 0; padding: 0; }
+.gb-sats div { display: flex; flex-direction: column; gap: 2px; }
+.gb-sats dt { font-size: 10px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--fg-4); }
+.gb-sats dd { margin: 0; font-size: 19px; font-weight: 650; letter-spacing: -0.02em; color: var(--fg-1); }
+.gb-sats dd small { font-size: 11px; font-weight: 500; color: var(--fg-3); margin-left: 5px; letter-spacing: 0; }
+
+/* Movements, never netted. A net of zero cannot tell a quiet month from one
+   sale cancelling one churn, and only one of those needs a reply. Zero chips
+   still render, faded, because "nothing churned" and "we do not measure
+   churn" must not look the same. */
+.gb-moves { display: flex; flex-wrap: wrap; gap: 7px; margin: 0; padding: 0; list-style: none; }
+.gb-moves li {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 5px 11px;
+  border: 1px solid var(--border-1);
+  border-radius: 999px;
+  background: var(--bg-sunken);
+  font-size: 11.5px;
+  color: var(--fg-3);
+}
+.gb-moves li b { color: var(--fg-1); font-weight: 650; }
+.gb-moves li i { width: 7px; height: 7px; border-radius: 50%; background: var(--fg-4); }
+.gb-moves .is-new i    { background: var(--kiosk-good); }
+.gb-moves .is-churn i  { background: var(--kiosk-bad); }
+.gb-moves .is-risk i, .gb-moves .is-leaving i { background: var(--kiosk-warn); }
+.gb-moves .is-zero { opacity: 0.5; }
+
+.gb-hero-right { display: flex; flex-direction: column; gap: 8px; min-width: 0; min-height: 190px; }
+.gb-hero-right > .kiosk-chart { flex: 1; min-height: 0; }
+.gb-hero-note { margin: 0; font-size: 11.5px; line-height: 1.5; color: var(--fg-4); }
+.gb-hero-flag {
+  margin: 0;
+  padding: 6px 11px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--kiosk-warn) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--kiosk-warn) 40%, transparent);
+  font-size: 11.5px;
+  color: var(--fg-1);
+}
+
+/* ── The verdict strip ──────────────────────────────────────────────────── */
+
+/* Health, in the header of the page rather than in a tile at the bottom of it.
+   Like the kiosk's alarm it has NO GREEN STATE beyond a single quiet line: a
+   permanent "all systems operational" banner is wallpaper by the end of the
+   week, and a bar nobody has seen before is read every time it appears. */
+.gb-verdict {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  border-radius: var(--kiosk-radius);
+  border: 1px solid var(--border-1);
+  background: var(--bg-surface);
+  font-size: 12.5px;
+  color: var(--fg-3);
+}
+.gb-verdict b { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-2); }
+.gb-verdict .gb-verdict-reason { flex: 1; min-width: 240px; color: var(--fg-3); }
+.gb-verdict.is-ok b { color: var(--kiosk-good); }
+.gb-verdict.is-degraded, .gb-verdict.is-unknown {
+  background: color-mix(in srgb, var(--kiosk-warn) 14%, transparent);
+  border-color: color-mix(in srgb, var(--kiosk-warn) 45%, transparent);
+}
+.gb-verdict.is-degraded b, .gb-verdict.is-unknown b { color: var(--kiosk-warn); }
+.gb-verdict.is-down {
+  background: color-mix(in srgb, var(--kiosk-bad) 20%, transparent);
+  border-color: color-mix(in srgb, var(--kiosk-bad) 60%, transparent);
+}
+.gb-verdict.is-down b { color: var(--kiosk-bad); }
+
+/* ── Needs attention ────────────────────────────────────────────────────── */
+
+.gb-todo { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; flex: 1; min-height: 0; overflow: hidden; }
+.gb-todo li {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: var(--bg-sunken);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.gb-todo li i { width: 8px; height: 8px; border-radius: 50%; background: var(--fg-4); }
+.gb-todo .is-act { background: color-mix(in srgb, var(--kiosk-bad) 16%, transparent); }
+.gb-todo .is-act i { background: var(--kiosk-bad); }
+.gb-todo .is-watch { background: color-mix(in srgb, var(--kiosk-warn) 13%, transparent); }
+.gb-todo .is-watch i { background: var(--kiosk-warn); }
+.gb-todo-title { color: var(--fg-1); }
+.gb-todo-pop { color: var(--fg-4); }
+.gb-clear { margin: auto 0; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--fg-2); }
+.gb-clear b { color: var(--kiosk-good); font-size: 15px; }
+.gb-clear span { color: var(--fg-4); font-size: 11.5px; }
+
+/* ── Milestones ─────────────────────────────────────────────────────────── */
+
+/* THE PART THAT WAS ASKED FOR, AND THE PART THAT WAS UGLY.
+
+   The previous version was a grid of three rings over a wrapped soup of
+   coloured pills, and the pills carried a date each. The information was
+   right; the shape said nothing. What a founder is actually reading here is a
+   RATE: whether the last three rungs took longer than the three before. So
+   the reached half is now a time axis. One column per calendar month since the
+   first thing was ever reached, the month's milestones stacked inside it, and
+   empty months left visibly empty. A busy August beside a bare September is
+   the finding, and it is impossible to see in a wrapped list of chips.
+
+   STILL NOT A GAME. No trophies, no tiers, no points, no rarity, no confetti,
+   no emoji. The satisfaction on offer is the shape of the track. */
+.gb-miles { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: clamp(14px, 2vw, 30px); }
+.gb-miles-label {
+  margin: 0 0 10px;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+/* Next up. Three rungs, biggest ring first. */
+.gb-next { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+.gb-next li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 13px;
+  padding: 10px 13px;
+  border-radius: var(--kiosk-radius);
+  background: var(--bg-sunken);
+  /* Dashed, exactly like the kiosk's goal tile: the number inside is a target
+     and a solid frame would let it read as an achievement. */
+  border: 1px dashed color-mix(in srgb, var(--kiosk-accent) 45%, var(--border-1));
+}
+.gb-next-title { margin: 0; font-size: 14px; font-weight: 650; color: var(--fg-1); letter-spacing: -0.01em; }
+.gb-next-detail { margin: 2px 0 0; font-size: 11px; color: var(--fg-4); line-height: 1.4; }
+.gb-next-remaining { margin: 4px 0 0; font-size: 11.5px; color: var(--kiosk-accent); font-weight: 600; }
+
+/* The track. Horizontal scroll rather than wrap: a wrapped time axis is not a
+   time axis. */
+.gb-track { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: thin; }
+.gb-month {
+  flex: 0 0 auto;
+  min-width: 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gb-month-rail { height: 3px; border-radius: 999px; background: var(--border-1); }
+.gb-month.is-live .gb-month-rail { background: color-mix(in srgb, var(--kiosk-accent) 70%, transparent); }
+.gb-month-name { font-size: 10.5px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--fg-4); white-space: nowrap; }
+.gb-month.is-live .gb-month-name { color: var(--fg-2); }
+.gb-month ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.gb-mile {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: var(--bg-sunken);
+  border-left: 3px solid var(--fg-4);
+}
+.gb-mile b { font-size: 12px; font-weight: 620; color: var(--fg-1); white-space: nowrap; }
+.gb-mile span { font-size: 10px; color: var(--fg-4); }
+.gb-mile.is-money       { border-left-color: var(--kiosk-good); }
+.gb-mile.is-people      { border-left-color: var(--kiosk-accent); }
+.gb-mile.is-usage       { border-left-color: var(--kiosk-warn); }
+.gb-mile.is-reliability { border-left-color: var(--fg-3); }
+.gb-month-empty { font-size: 10.5px; color: var(--fg-4); opacity: 0.5; }
+
+/* Undated rungs and the far-off ones, both as quiet chips. They are history
+   and homework respectively, and neither is worth the width of a track slot. */
+.gb-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; }
+.gb-chips li {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-1);
+  background: var(--bg-sunken);
+  font-size: 11.5px;
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+.gb-chips li b { color: var(--fg-2); font-weight: 600; }
+
+.gb-drawer { margin-top: 12px; }
+.gb-drawer > summary { font-size: 11.5px; color: var(--fg-3); cursor: pointer; list-style: none; user-select: none; }
+.gb-drawer > summary::-webkit-details-marker { display: none; }
+.gb-drawer > summary::before { content: "\25B8 "; color: var(--fg-4); }
+.gb-drawer[open] > summary::before { content: "\25BE "; }
+.gb-drawer > summary:hover { color: var(--fg-1); }
+
+/* The rings. Same component as before; the colour is now the board's accent
+   and the track is the sunken well rather than a light grey. */
+.gb-ring { position: relative; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.gb-ring-svg { display: block; }
+.gb-ring-track { stroke: color-mix(in srgb, var(--fg-4) 30%, transparent); }
+.gb-ring-center {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 650; color: var(--fg-1);
+}
+
+/* ── Channel quality ────────────────────────────────────────────────────── */
+
+/* The panel this board did not have. The donut it replaces answered "where do
+   signups come from", which is the wrong question: a channel that sends fifty
+   people who never connect an inbox is worth less than one that sends five who
+   pay. Each row is one channel, drawn as a stacked share of its own signups so
+   the shape of the row IS the quality of the channel. */
+.gb-chan { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; justify-content: center; gap: 9px; flex: 1; min-height: 0; }
+.gb-chan li { display: grid; grid-template-columns: minmax(0, 8em) minmax(0, 1fr) auto; align-items: center; gap: 11px; }
+.gb-chan-name { font-size: 12.5px; color: var(--fg-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gb-chan-track { position: relative; display: flex; height: 13px; border-radius: 999px; background: var(--bg-sunken); overflow: hidden; }
+.gb-chan-seg { display: block; height: 100%; }
+.gb-chan-seg.is-paying    { background: var(--kiosk-good); }
+.gb-chan-seg.is-activated { background: color-mix(in srgb, var(--kiosk-accent) 78%, transparent); }
+.gb-chan-seg.is-cold      { background: color-mix(in srgb, var(--fg-4) 40%, transparent); }
+.gb-chan-num { font-size: 12px; font-weight: 650; color: var(--fg-1); white-space: nowrap; }
+.gb-chan-num small { color: var(--fg-4); font-weight: 500; margin-left: 5px; }
+
+/* ── Tables below the fold ──────────────────────────────────────────────── */
+
+/* The one part of this page that names accounts, and the reason the kiosk does
+   not have it. It stays a plain dense table: it is read up close, one row at a
+   time, and a "designed" table is a table that is harder to scan. It scrolls
+   sideways through `.bd-scroll` inside the card, so nothing here adds a second
+   scroll container around it. */
+.gb .bd-table { font-size: 12px; }
+.gb .bd-table thead th { color: var(--fg-3); }
+
+/* ── Re-dressing the chart cards ────────────────────────────────────────── */
+
+/* components/admin/charts draws its own `.ac-card`. Rather than fork six chart
+   components to make them tiles, the frame is restyled here to BE a tile. The
+   selectors are all `.gb .ac-*`, so /admin/growth/experiments and the dunning
+   page keep the light card they were designed against. */
+.gb .ac-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-1);
+  border-radius: var(--kiosk-radius);
+  background: var(--bg-surface);
+  padding: 13px 16px 12px;
+  overflow: hidden;
+}
+.gb .ac-head { margin-bottom: 9px; }
+.gb .ac-title {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+.gb .ac-sub { font-size: 11.5px; color: var(--fg-4); margin-top: 3px; }
+.gb .ac-body { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; }
+.gb .ac-foot { font-size: 10.5px; color: var(--fg-4); }
+.gb .ac-legend { margin-top: 7px; }
+.gb .ac-legend-item { font-size: 11px; }
+
+/* The exact-numbers drawer every chart carries. It is the reason these charts
+   are allowed on a board at all, so it keeps working; it just stops looking
+   like a link on a white page. */
+.gb .ac-details { border-top-color: var(--border-1); }
+.gb .ac-summary { color: var(--fg-3); font-size: 11.5px; }
+.gb .ac-summary:hover { color: var(--fg-1); }
+.gb .ac-table { font-size: 11.5px; }
+.gb .ac-table thead th { background: var(--bg-surface); }
+
+/* ── Narrower viewports ─────────────────────────────────────────────────── */
+
+/* Below a wide laptop the board becomes halves and wholes, never thirds. The
+   intermediate step is what put three tiles on a row and stranded the fourth
+   beside a third of a row of nothing on the page this replaces. */
+@media (max-width: 1360px) {
+  .gb-w3, .gb-w4, .gb-w5, .gb-w7 { grid-column: span 6; }
+  .gb-w8, .gb-w9 { grid-column: span 12; }
+}
+@media (max-width: 1040px) {
+  .gb-hero { grid-template-columns: minmax(0, 1fr); }
+  .gb-miles { grid-template-columns: minmax(0, 1fr); }
+  .gb-w3, .gb-w4, .gb-w5, .gb-w6, .gb-w7, .gb-w8 { grid-column: span 12; }
+}
+
+/* ── Phones ─────────────────────────────────────────────────────────────── */
+
+/* THE BOARD HAS TO WORK ON A PHONE, because the question it answers is asked
+   away from the desk at least as often as at it. What changes below is only
+   what has to: the grid collapses to one column, the two split panels stack,
+   and the header stops being a row.
+
+   WHAT DOES NOT CHANGE: the tiles, the type scale and the numbers. The kiosk
+   sheet sizes everything in `clamp(floor, dvh, ceiling)`, and a phone held in
+   the hand has roughly the dvh of a laptop, so the headline numbers arrive at
+   a sensible size on their own without a single override here. */
+@media (max-width: 760px) {
+  .gb-inner { padding: 0 12px 48px; }
+
+  /* Still sticky, but as two short rows rather than one tall one. The window
+     switcher is the only control on the page and scrolling back up to reach it
+     on a board this long is worse than the 70px it costs. */
+  .gb-head { padding: 10px 0 9px; gap: 8px; }
+  .gb-wordmark { font-size: 18px; }
+  /* The board's own name survives; the question it answers does not fit beside
+     it and is the half a reader already knows. */
+  .gb-wordmark em { display: none; }
+  .gb-tools { width: 100%; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .gb-tools::-webkit-scrollbar { display: none; }
+  .gb-link, .gb-tools button { padding: 5px 10px; font-size: 12px; }
+
+  .gb-grid { gap: 10px; }
+  .gb-cell { grid-column: span 12 !important; min-height: 150px; }
+  .gb-h2 { min-height: 232px; }
+  /* The milestone track is the one panel that genuinely needs the height, and
+     it is also the one that scrolls sideways under its own steam. */
+  .gb-h3 { min-height: 0; }
+
+  .gb-band { margin: 18px 0 -2px; font-size: 10px; }
+
+  .gb-hero { padding: 16px 14px; gap: 18px; }
+  .gb-hero-value { font-size: clamp(38px, 13vw, 56px); }
+  /* Two columns rather than a wrapping row: four satellites at four different
+     natural widths wrapped into a 3 + 1 that read as a mistake. */
+  .gb-sats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; }
+  .gb-sats dd { font-size: 17px; }
+  .gb-sats dd small { display: block; margin-left: 0; }
+  .gb-hero-right { min-height: 170px; }
+
+  /* A column, not a wrapping row. The three parts have very different natural
+     widths, and as flex items the short third one floated up beside the
+     headline and left a hole under it. */
+  .gb-verdict { display: block; padding: 10px 13px; }
+  .gb-verdict b { display: block; margin-bottom: 3px; }
+  .gb-verdict .gb-verdict-reason { display: block; min-width: 0; }
+  .gb-verdict > span:last-child { display: block; margin-top: 3px; color: var(--fg-4); }
+
+  /* Rings shrink with the tile they sit in, and the "next up" rows become the
+     full width of the phone rather than a 340px column of it. */
+  .gb-next li { padding: 9px 11px; gap: 10px; }
+  .gb-month { min-width: 84px; }
+
+  /* A channel name at 8em plus a bar plus a count does not fit 375 logical
+     pixels. The name gives way first; the bar is the panel. */
+  .gb-chan li { grid-template-columns: minmax(0, 5.5em) minmax(0, 1fr) auto; gap: 8px; }
+  .gb-chan-num small { display: none; }
+
+  /* The year of daily cells is 52 columns wide and cannot be made narrower
+     without becoming unreadable, so it scrolls rather than shrinking. */
+  .gb .bd-heat { overflow-x: auto; }
+
+  .gb-foot { font-size: 10.5px; }
+}
+
+/* Narrow phones. The satellite grid holds two columns down to about 360
+   logical pixels; below that a currency figure and its caption stop fitting
+   side by side and the pair starts hyphenating. */
+@media (max-width: 400px) {
+  .gb-moves li { font-size: 11px; padding: 4px 9px; }
+}
+@media (max-width: 359px) {
+  .gb-sats { grid-template-columns: minmax(0, 1fr); }
+}
