@@ -257,11 +257,13 @@ function sum(values: number[]): number {
 /**
  * The default ARR multiple behind the board's valuation figure.
  *
- * Four, chosen 2026-09-01 and deliberately a round number rather than a
- * modelled one. Small bootstrapped B2B SaaS changes hands on the acquisition
- * marketplaces at roughly three to five times ARR, and at this size the honest
- * precision of the estimate is "one significant figure": a 4.2x would imply a
- * confidence that four paying customers cannot support.
+ * Three, moved down from four on 2026-09-07 and deliberately a round number
+ * rather than a modelled one. Small bootstrapped B2B SaaS changes hands on the
+ * acquisition marketplaces at roughly three to five times ARR, and at this size
+ * the honest precision of the estimate is "one significant figure": a 3.2x would
+ * imply a confidence that a handful of paying customers cannot support. Three is
+ * the bottom of that band, which is the right end to sit at while the revenue is
+ * this young.
  *
  * Overridable with `COMPANY_VALUATION_ARR_MULTIPLE` so the number can be moved
  * without a deploy. See `valuationMultiple()` in kiosk-revenue.ts for the
@@ -269,7 +271,7 @@ function sum(values: number[]): number {
  * variable is the one thing that would stop it being unit testable without a
  * process.
  */
-export const DEFAULT_VALUATION_ARR_MULTIPLE = 4;
+export const DEFAULT_VALUATION_ARR_MULTIPLE = 3;
 
 export type Valuation = {
   /** ARR times the multiple, minor units. */
