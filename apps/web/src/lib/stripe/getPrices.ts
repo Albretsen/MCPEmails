@@ -19,6 +19,22 @@ import { PLANS } from '@/lib/stripe/plans';
 export interface StripePlanPrices {
   monthlyCents: number | null;
   yearlyCents: number | null;
+  /**
+   * Whether a Stripe price ID is configured for that interval, which is the
+   * only thing that decides whether checkout can actually sell it.
+   *
+   * The cent amounts above CANNOT answer that question: when an ID is missing
+   * this helper falls back to the static catalogue value, so `yearlyCents` is a
+   * real number for a plan that has no yearly price to buy. A surface that
+   * offered an interval on the strength of the amount alone would render a buy
+   * button whose only possible outcome is `price_not_configured`, which is the
+   * exact failure /pricing shipped once already.
+   *
+   * Both flags are computed from PLANS, the same source `runCheckout` resolves
+   * the price from, so a button that is shown is a button that can be paid.
+   */
+  monthlyPriceConfigured: boolean;
+  yearlyPriceConfigured: boolean;
 }
 
 export type StripePricesMap = Record<string, StripePlanPrices>;
@@ -57,7 +73,12 @@ async function _fetchStripePrices(): Promise<StripePricesMap> {
         }
       }
 
-      result[plan.id] = { monthlyCents, yearlyCents };
+      result[plan.id] = {
+        monthlyCents,
+        yearlyCents,
+        monthlyPriceConfigured: Boolean(plan.stripePriceIdMonthly),
+        yearlyPriceConfigured: Boolean(plan.stripePriceIdYearly),
+      };
     }),
   );
 
@@ -84,6 +105,11 @@ const priceIdFingerprint = Object.values(PLANS)
 
 export const fetchStripePrices: () => Promise<StripePricesMap> = unstable_cache(
   _fetchStripePrices,
-  ['stripe-prices', priceIdFingerprint],
+  // 'v2' is a SHAPE version, not a price version. The entries cached before
+  // the two `*PriceConfigured` flags existed are still valid amounts, and an
+  // undefined flag reads as "not purchasable", so without bumping the key an
+  // annual option could stay hidden for up to an hour after a deploy for no
+  // reason a reader of this file could see. Bump it whenever a field is added.
+  ['stripe-prices', 'v2', priceIdFingerprint],
   { revalidate: 3600 },
 );

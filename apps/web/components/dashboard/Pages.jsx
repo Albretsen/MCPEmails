@@ -17,6 +17,11 @@ import { AutomationsPanel } from './AutomationsPanel';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 import { checkoutStartHref } from '@/lib/billing/upgrade-intent.mjs';
 import { inboxCapOffer } from '@/lib/billing/inbox-cap-offer.mjs';
+import UpgradeIntervalChoice, {
+  IntervalToggle,
+  annualOfferForPlan,
+  upgradeCtaLabel,
+} from './UpgradeIntervalChoice';
 
 /* Pages.jsx: Overview, Inboxes, Keys, Usage, Settings, Security. */
 
@@ -1011,18 +1016,27 @@ export function WorkflowsPage({ mcpUrl }) {
   );
 }
 
-export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onGoToKeys }) {
+export function InboxesPage({ inboxes, planLimits, stripePrices = null, onConnect, onRemove, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onGoToKeys }) {
   // The analytics window this plan buys. Every per-inbox call count on this
   // page is scoped to it server-side, so the label has to quote the same
   // number or the column silently means something different per plan.
   const historyDays = planLimits?.historyDays ?? 30;
   const t = useTranslations('dashboard');
+  // The cap notice's interval copy lives beside the modal's, in
+  // dashboardChrome, so the two surfaces cannot word the same choice
+  // differently. Both namespaces are loaded for the whole app realm.
+  const trc = useTranslations('dashboardChrome');
   // Count errored inboxes to conditionally show a page-level warning banner.
   const erroredCount = inboxes.filter(ib => ib.status === "error").length;
 
   // Determine if the workspace is at its inbox cap.
   const maxInboxes = planLimits?.maxInboxes ?? null; // null = unlimited
   const atInboxLimit = maxInboxes !== null && inboxes.length >= maxInboxes;
+  // MONTHLY by default, and the notice buys monthly for anyone who does not
+  // touch the choice: exactly what this CTA did before the choice existed.
+  // Hoisted to the component body rather than kept inside the notice, because
+  // the notice is rendered from a conditional IIFE and hooks cannot live there.
+  const [capInterval, setCapInterval] = useState('month');
   // inbox object pending disconnect confirmation, or null
   const [confirmInbox, setConfirmInbox] = useState(null);
   // true while the DELETE API call is in flight
@@ -1137,6 +1151,9 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
         // surfaces can never quote different plans for the same block.
         const offer = inboxCapOffer(maxInboxes);
         const personal = offer.plan === 'personal';
+        // Null when annual cannot be sold for this plan, in which case the
+        // notice keeps the monthly-only shape it has always had.
+        const annual = annualOfferForPlan(stripePrices, offer.plan);
         return (
           <div style={{
             display: 'flex',
@@ -1168,6 +1185,18 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
               }}>
                 {personal ? t('inboxes.capBodyPersonal') : t('inboxes.capBodyPro')}
               </div>
+              {/* The same choice, in the same words, as the modal's panel.
+                  Renders nothing when the plan has no yearly price. */}
+              {annual && (
+                <div style={{ marginTop: 10 }}>
+                  <UpgradeIntervalChoice
+                    offer={annual}
+                    value={capInterval}
+                    onChange={setCapInterval}
+                    size="sm"
+                  />
+                </div>
+              )}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               {/* Locale-aware Link, unlike the checkout CTA below: /pricing is
@@ -1193,7 +1222,7 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
                   would open Stripe Checkout sessions for people who never
                   clicked. Same contract as the modal's CTA. */}
               <a
-                href={checkoutStartHref(offer.plan, false)}
+                href={checkoutStartHref(offer.plan, capInterval === 'year')}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -1210,7 +1239,12 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
                   whiteSpace: 'nowrap',
                 }}
               >
-                {personal ? t('inboxes.capCtaPersonal') : t('inboxes.capCtaPro')}
+                {upgradeCtaLabel(trc, {
+                  offer: annual,
+                  interval: capInterval,
+                  planName: planDisplayName(offer.plan),
+                  monthlyLabel: personal ? t('inboxes.capCtaPersonal') : t('inboxes.capCtaPro'),
+                })}
               </a>
             </div>
           </div>
@@ -4552,14 +4586,17 @@ function BillingSection({
     currentPlan === 'pro' ||
     currentPlan === 'enterprise';
 
-  // GRANDFATHERING. The pre-repricing cohort is stored with plan = 'free' but
-  // already holds unlimited inboxes permanently, so Personal (three inboxes)
-  // is a paid DOWNGRADE for them and must never be offered. Pro and Team stay
-  // on offer: those buy members, team roles, SSO, the audit log and a support
-  // tier, none of which the grandfather grant includes.
-  const offeredPlans = grandfathered
-    ? BILLING_PLANS.filter(plan => plan.id !== 'personal')
-    : BILLING_PLANS;
+  // GRANDFATHERING. Every plan is offered to every account, including the
+  // pre-repricing cohort. This used to filter Personal out for them, matching a
+  // 409 in checkout-core, on the theory that three inboxes would be a downgrade
+  // from unlimited. Both are gone as of 2026-09-07 and neither should come
+  // back: the grant lifts `maxInboxes` and nothing else, it survives onto a
+  // paid plan (nothing clears the entitlement when a subscription activates),
+  // and Personal raises their action ceiling 5,000 to 25,000, their burst rate
+  // 60/min to 120/min, and adds the billing portal and email support. So it is
+  // a strict upgrade for them, and hiding the card meant the cohort could not
+  // buy at all: the card was the only way to reach the checkout.
+  const offeredPlans = BILLING_PLANS;
 
   // The tiers this customer can actually move UP to.
   //
@@ -4592,9 +4629,9 @@ function BillingSection({
     // offered, which is the same test the cards below render from. That one
     // check covers every case that must not open a payment off a URL: the plan
     // already held, a downgrade, a comped grant (which resolves to an effective
-    // 'pro' and so has nothing above it), a legacy plan, and ?upgrade=personal
-    // arriving for a grandfathered account that already has unlimited inboxes
-    // for nothing.
+    // 'pro' and so has nothing above it), and a legacy plan. A grandfathered
+    // account is NOT one of these cases: ?upgrade=personal from one of them is
+    // a real upgrade and is honoured, see the offeredPlans note above.
     //
     // It deliberately no longer refuses every paid plan: `?upgrade=solo` sent
     // from a Personal customer's inbox-cap prompt is the intended path, and it
@@ -4611,11 +4648,11 @@ function BillingSection({
   // Report back from GET /api/stripe/checkout/start.
   //
   // The fast buy path never renders this page on the way to Stripe, so when it
-  // refuses (a comped grant, a grandfathered account asking for Personal, an
-  // unconfigured price) or when it swaps an existing subscriber's price in
-  // place, it lands the buyer here carrying the reason on the URL. Without this
-  // a refusal would arrive as a billing screen that silently did nothing, which
-  // reads as a broken product at the worst possible moment.
+  // refuses (a comped grant, an unconfigured price) or when it swaps an
+  // existing subscriber's price in place, it lands the buyer here carrying the
+  // reason on the URL. Without this a refusal would arrive as a billing screen
+  // that silently did nothing, which reads as a broken product at the worst
+  // possible moment.
   //
   // Params are consumed once and stripped, exactly like ?upgrade= above, so a
   // refresh or a back button cannot replay the toast.
@@ -4840,28 +4877,19 @@ function BillingSection({
              instead of it, because the portal on this Stripe account cannot
              offer a plan list at all. */
           <>
-            {/* Interval toggle */}
-            <div style={{ display: 'flex', gap: 0, alignSelf: 'flex-start', borderRadius: 8, border: '1px solid var(--border-1)', overflow: 'hidden' }}>
-              {[{ value: 'month', label: t('billing.monthly') }, { value: 'year', label: t('billing.annual') }].map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => setInterval(opt.value)}
-                  style={{
-                    padding: '6px 14px',
-                    fontFamily: 'var(--font-sans)',
-                    fontSize: 12.5,
-                    fontWeight: 500,
-                    border: 'none',
-                    cursor: 'pointer',
-                    background: interval === opt.value ? 'var(--brand)' : 'transparent',
-                    color: interval === opt.value ? '#fff' : 'var(--fg-2)',
-                    transition: 'background 120ms, color 120ms',
-                  }}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+            {/* Interval toggle. The markup that used to be written out here is
+                now IntervalToggle, shared with the two inbox-cap paywalls, so
+                the dashboard draws this control once instead of three times.
+                The copy and the annual default are unchanged. */}
+            <IntervalToggle
+              value={interval}
+              onChange={setInterval}
+              ariaLabel={t('billing.title')}
+              options={[
+                { value: 'month', label: t('billing.monthly') },
+                { value: 'year', label: t('billing.annual') },
+              ]}
+            />
 
             {/* Plan upgrade cards */}
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
