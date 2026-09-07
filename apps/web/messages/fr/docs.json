@@ -223,12 +223,13 @@
     },
     "email_compose": {
       "title": "Rédiger un e-mail",
-      "desc": "Envoyer un nouveau message ou répondre à des messages existants. Définissez action : 'send' pour un nouvel e-mail (to/subject/body, éventuellement cc/bcc/html_body/reply_to/attachments), 'reply' pour répondre à un message_id (les en-têtes de fil sont définis automatiquement ; éventuellement reply_all), ou 'forward' pour transférer un message_id à de nouveaux destinataires (en réattachant éventuellement les fichiers d'origine). La signature de la boîte est ajoutée automatiquement : sur les réponses et les transferts, elle se place après votre texte et avant le bloc cité, selon le mode de réponse de la signature ; passez include_signature: false pour la supprimer sur un message court ponctuel. Les trois sont irréversibles une fois envoyées.",
+      "desc": "Envoyer un nouveau message ou répondre à des messages existants. Définissez action : 'send' pour un nouvel e-mail (to/subject/body, éventuellement cc/bcc/html_body/reply_to/attachments), 'reply' pour répondre à un message_id (les en-têtes de fil sont définis automatiquement ; éventuellement reply_all), ou 'forward' pour transférer un message_id à de nouveaux destinataires (en réattachant éventuellement les fichiers d'origine). La signature de la boîte est ajoutée automatiquement : sur les réponses et les transferts, elle se place après votre texte et avant le bloc cité, selon le mode de réponse de la signature ; passez include_signature: false pour la supprimer sur un message court ponctuel. Les trois sont irréversibles une fois envoyées. 'forward' accepte aussi message_ids pour jusqu'à 50 messages en un appel, rapportés un par un. Pour joindre un fichier déjà présent dans cette boîte, référencez-le par '{' source_message_id, attachment_index '}' plutôt que de le lire et de le réencoder.",
       "params": {
         "action": "Quelle opération effectuer : \"send\", \"reply\" ou \"forward\". Détermine quels autres arguments s'appliquent.",
         "inbox_id": "UUID de la boîte depuis laquelle envoyer. Facultatif : résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
         "inbox": "Adresse e-mail de la boîte à utiliser, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
         "message_id": "ID de message du fournisseur du message d'origine (action 'reply' ou 'forward'), issu d'un list, read ou search précédent.",
+        "message_ids": "Jusqu'à 50 ID de message à transférer aux mêmes destinataires en un seul appel (action 'forward'), à la place de message_id. Ils sont transférés un par un et le résultat rend compte de chacun séparément, de sorte qu'un échec en cours de route indique toujours lesquels ont été envoyés. Les doublons sont supprimés.",
         "to": "Adresses e-mail des destinataires (requis pour 'send' et 'forward'). Max 50.",
         "subject": "Objet de l'e-mail (action 'send'). Max 998 caractères. En reply/forward, il est dérivé de l'original.",
         "body": "Corps en texte brut. Pour 'reply', c'est votre réponse ; pour 'forward', une note facultative ajoutée au-dessus du message transféré.",
@@ -239,7 +240,7 @@
         "reply_all": "Répondre à tous les destinataires d'origine, To + Cc (action 'reply'). Par défaut false.",
         "include_attachments": "Réattacher les pièces jointes du message d'origine (action 'forward'). Les fichiers dépassant le budget de 10 Mo sont omis. Par défaut false.",
         "include_signature": "Indique s'il faut ajouter la signature configurée de la boîte à ce message. Par défaut true ; mettez false pour envoyer ce seul message sans la signature.",
-        "attachments": "Pièces jointes. Chaque élément : '{' filename, mime_type, data (base64) '}'. Max 20 éléments, 10 Mo au total.",
+        "attachments": "Pièces jointes. Chaque élément est soit des octets en ligne '{' filename, mime_type, data (base64) '}', soit une référence à un fichier déjà présent dans cette boîte '{' source_message_id, attachment_index '}', que le serveur recopie sans faire passer les octets par le modèle. Max 20 éléments, 10 Mo au total.",
         "idempotency_key": "Clé opaque facultative (1–200 caractères) pour une seule requête sortante logique. Ne la réutilisez que pour réessayer exactement la même action avec les mêmes arguments dans les 24 heures ; une réutilisation avec des arguments différents est rejetée."
       }
     },
@@ -291,7 +292,7 @@
         "bcc": "Destinataires en copie cachée (action 'create'). Par défaut [].",
         "html_body": "Version HTML facultative du corps (action 'create').",
         "reply_to": "Adresse facultative de l'en-tête Reply-To (action 'create').",
-        "attachments": "Pièces jointes (action 'create'). Même schéma que l'action send. Max 20 éléments, 10 Mo au total.",
+        "attachments": "Pièces jointes (action 'create'). Octets en ligne uniquement : '{' filename, mime_type, data (base64) '}'. La forme par référence source_message_id existe sur email_compose, pas ici. Max 20 éléments, 10 Mo au total.",
         "scheduled_send_id": "UUID de l'envoi programmé à annuler (action 'cancel').",
         "limit": "Nombre maximal de résultats (action 'list'). Par défaut 20, max 100.",
         "idempotency_key": "Clé opaque facultative pour la création d’un seul envoi programmé. Ne la réutilisez que pour réessayer exactement la même requête de création dans les 24 heures."

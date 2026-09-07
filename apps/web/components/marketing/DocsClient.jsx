@@ -354,6 +354,7 @@ const TOOLS = [
       { name: 'inbox_id',            type: 'string (uuid)', required: false },
       { name: 'inbox',               type: 'string',        required: false },
       { name: 'message_id',          type: 'string',        required: false },
+      { name: 'message_ids',         type: 'array[string]', required: false },
       { name: 'to',                  type: 'array[string]', required: false },
       { name: 'subject',             type: 'string',        required: false },
       { name: 'body',                type: 'string',        required: false },
