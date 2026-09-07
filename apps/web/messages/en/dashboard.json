@@ -45,7 +45,7 @@
       "step1": "In the Cline panel, click the MCP Servers icon, then open the \"Remote Servers\" tab.",
       "step2": "Enter a name and paste the URL above.",
       "step3": "Set Transport Type to \"Streamable HTTP\", then click \"Add Server\".",
-      "step4": "Add an \"Authorization: Bearer <key>\" header using your API key."
+      "step4": "Add an \"Authorization: Bearer '<'key>\" header using your API key."
     },
     "windsurf": {
       "step1": "Open Cascade’s MCP settings, or edit ~/.codeium/windsurf/mcp_config.json.",
@@ -65,7 +65,7 @@
     "jetbrains": {
       "step1": "Open Settings → Tools → AI Assistant → Model Context Protocol (MCP).",
       "step2": "Click \"Add\" and select \"Streamable HTTP\" as the connection type.",
-      "step3": "Paste the URL above, then add an \"Authorization: Bearer <key>\" header with your API key."
+      "step3": "Paste the URL above, then add an \"Authorization: Bearer '<'key>\" header with your API key."
     },
     "raycast": {
       "step1": "Run the \"Install MCP Server\" command (or \"Manage MCP Servers\").",
