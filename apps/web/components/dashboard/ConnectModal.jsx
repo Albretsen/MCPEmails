@@ -8,6 +8,11 @@ import { useInboxPaywallView } from '@/lib/analytics/use-inbox-paywall.mjs';
 import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
 import { checkoutStartHref } from '@/lib/billing/upgrade-intent.mjs';
 import { inboxCapOffer } from '@/lib/billing/inbox-cap-offer.mjs';
+import UpgradeIntervalChoice, {
+  annualOfferForPlan,
+  upgradeCtaLabel,
+} from './UpgradeIntervalChoice';
+import { planDisplayName } from './Pages';
 import {
   IMAP_PRESETS,
   GENERIC_IMAP_DEFAULTS,
@@ -282,6 +287,10 @@ const OAUTH_ROUTES = {
  *                                 Never the internal slug.
  * @param {number}  inboxCount   - Inboxes connected right now.
  * @param {number|null} maxInboxes - The plan's cap, or null for unlimited.
+ * @param {object|null} stripePrices - Live Stripe amounts per plan, plus which
+ *   intervals have a configured price ID. Absent means the panel sells monthly
+ *   only, which is what it did before the interval choice existed: an interval
+ *   is never offered on a guess about whether it can be bought.
  */
 export function ConnectModal({
   onClose,
@@ -290,6 +299,7 @@ export function ConnectModal({
   planName = 'Free',
   inboxCount = null,
   maxInboxes = null,
+  stripePrices = null,
   reconnect = null,
 }) {
   const tr = useTranslations('dashboardChrome');
@@ -449,6 +459,17 @@ export function ConnectModal({
   // inboxCapOffer, shared verbatim with the cap notice on the Inboxes page, so
   // the two surfaces can never quote different plans for the same block.
   const upgradeCopy = inboxCapOffer(limitMaxInboxes);
+
+  // MONTHLY, deliberately, and it stays monthly unless the person picks
+  // otherwise. This panel used to have no interval at all and always bought
+  // monthly, so anyone who ignores the new control is charged exactly what the
+  // same click charged them before it existed. Defaulting to annual would turn
+  // a $5 decision into a $48 one without the buyer changing anything they did.
+  const [upgradeInterval, setUpgradeInterval] = useState('month');
+  // Null whenever annual cannot be sold for this plan (no configured yearly
+  // Stripe price, or no live prices on this surface at all), in which case the
+  // control renders nothing and the CTA below stays the monthly one.
+  const annual = annualOfferForPlan(stripePrices, upgradeCopy.plan);
 
   // ── Provider categories ─────────────────────────────────────────────────────
 
@@ -1214,6 +1235,15 @@ export function ConnectModal({
                   {tr(fKey)}
                 </div>
               ))}
+
+              {/* The interval choice, under the offer it applies to and above
+                  the button that acts on it. Renders nothing at all when the
+                  plan has no yearly price to sell. */}
+              <UpgradeIntervalChoice
+                offer={annual}
+                value={upgradeInterval}
+                onChange={setUpgradeInterval}
+              />
             </div>
           )}
 
@@ -2052,18 +2082,34 @@ export function ConnectModal({
 
         </div>
 
-        {/* Footer */}
-        <div className="modal-foot">
-          {/* Plan limit reached: go straight to Stripe Checkout for Personal
-              monthly. /api/stripe/checkout/start creates the session server
-              side and redirects to Stripe, so this is one click from blocked
-              to card form with no dashboard render in between. It must stay a
-              plain anchor: a next/link prefetch would open checkout sessions
-              for people who never clicked.
+        {/* Footer.
+            The wrap is inline, local to this modal, and applied ONLY to the
+            paywall panel with the annual interval chosen. That row is three
+            items wide (Cancel, Compare all plans, the buy CTA) and the CTA
+            carries a price, so the annual label is the one that does not fit:
+            in Norwegian "Oppgrader til Personal, $48/år" pushed Cancel out
+            through the left edge of the dialog, with no way back to it.
+            Everything else, including the monthly default, keeps the single
+            row it has always had. */}
+        <div
+          className="modal-foot"
+          style={
+            showLimitPanel && upgradeInterval === 'year'
+              ? { flexWrap: 'wrap' }
+              : undefined
+          }
+        >
+          {/* Plan limit reached: go straight to Stripe Checkout, at the
+              interval chosen in the panel above and monthly until someone
+              chooses otherwise. /api/stripe/checkout/start creates the session
+              server side and redirects to Stripe, so this is one click from
+              blocked to card form with no dashboard render in between. It must
+              stay a plain anchor: a next/link prefetch would open checkout
+              sessions for people who never clicked.
 
               Personal, not Pro: the cap this panel answers is the Free plan's
               single inbox, and the cheapest plan that clears it is Personal at
-              $5. Sending someone to $29 Pro to add a second mailbox prices the
+              $5. Sending someone to Pro to add a second mailbox prices the
               upgrade well above the problem. Anyone who genuinely needs
               unlimited mailboxes finds Pro through "Compare all plans", which
               stays as the secondary link.
@@ -2091,7 +2137,7 @@ export function ConnectModal({
                 {tr('connect.comparePlans')}
               </a>
               <a
-                href={checkoutStartHref(upgradeCopy.plan, false)}
+                href={checkoutStartHref(upgradeCopy.plan, upgradeInterval === 'year')}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -2109,7 +2155,12 @@ export function ConnectModal({
                 }}
               >
                 <Icon name="zap" size={13} color="#fff" />
-                {tr(upgradeCopy.ctaKey)}
+                {upgradeCtaLabel(tr, {
+                  offer: annual,
+                  interval: upgradeInterval,
+                  planName: planDisplayName(upgradeCopy.plan),
+                  monthlyLabel: tr(upgradeCopy.ctaKey),
+                })}
               </a>
             </>
           )}

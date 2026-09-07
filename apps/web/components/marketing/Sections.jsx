@@ -6,7 +6,6 @@ import { Link, usePathname } from '@/i18n/navigation';
 import { MBtn, MIcon } from '../MarketingPrimitives';
 import { CLIENT_LOGOS, MCP_CLIENT_BRANDS } from '../dashboard/clientLogos';
 import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
-import { createClient } from '@/lib/supabase/client';
 
 // Rich-text tag handlers shared across sections (inline code + bold).
 const RICH = {
@@ -682,112 +681,17 @@ export function Quote() {
   );
 }
 
-/**
- * True when the signed-in visitor holds the permanent `unlimited_inboxes`
- * grandfather grant.
- *
- * Every pre-repricing account keeps unlimited inboxes for free, so for that
- * cohort Personal (three inboxes, $5) is a paid downgrade. The checkout API
- * refuses it with a 409 and the dashboard hides it there. The public marketing
- * pages still SHOW the card (the hero and the comparison table both describe
- * Personal, so removing only the card contradicted the rest of the page); they
- * swap its buy link for a plain, non-interactive line saying the visitor
- * already has unlimited inboxes.
- *
- * `/` and `/pricing` are public and CDN-cached, so the entitlement CANNOT be
- * resolved on the server without making the page per-user for everybody. It is
- * read client-side after hydration through the same browser Supabase client
- * these pages already use to resolve the session, against the row-level
- * "select own entitlement" policy on `user_usage_entitlements`. No endpoint
- * exposes the flag over HTTP, and adding one would create a new public surface
- * for a purely cosmetic decision.
- *
- * Fails OPEN in every uncertain case (anonymous visitor, no entitlement row,
- * network or policy error): the 409 is the real protection, and withholding
- * the buy link from someone who could legitimately buy it costs a sale.
- *
- * @param {import('@supabase/supabase-js').User | null | undefined} knownUser
- *   The already-resolved visitor, or `undefined` to resolve it here.
- */
-export function useGrandfatheredUnlimited(knownUser) {
-  const [entitledUserId, setEntitledUserId] = useState(null);
-  const [ownUser, setOwnUser] = useState(null);
-  const resolveOwnUser = knownUser === undefined;
+// The `useGrandfatheredUnlimited` hook and the `PlanCtaStatus` component that
+// used to live here are deleted (2026-09-07). Together they read
+// `user_usage_entitlements.unlimited_inboxes` client-side and replaced the
+// Personal buy link with a non-interactive "you already have unlimited
+// inboxes" line for the pre-repricing cohort, mirroring a 409 in
+// checkout-core.ts. That premise was wrong: the grant lifts `maxInboxes` and
+// nothing else, it survives onto a paid plan, and Personal raises the action
+// ceiling, the burst rate, the billing portal and the support tier, so it is
+// an upgrade for that cohort rather than a downgrade. Do not reintroduce
+// either one. See the offeredPlans note in components/dashboard/Pages.jsx.
 
-  // Callers that already track the session (the pricing page, for its nav)
-  // hand it over; the home page teaser has none, so it resolves its own.
-  useEffect(() => {
-    if (!resolveOwnUser) return undefined;
-    let cancelled = false;
-    (async () => {
-      try {
-        const { data } = await createClient().auth.getUser();
-        if (!cancelled) setOwnUser(data?.user ?? null);
-      } catch {
-        /* stay anonymous, which shows the normal buy CTA */
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [resolveOwnUser]);
-
-  const userId = (resolveOwnUser ? ownUser : knownUser)?.id ?? null;
-
-  useEffect(() => {
-    if (!userId) return undefined;
-    let cancelled = false;
-    (async () => {
-      try {
-        const { data, error } = await createClient()
-          .from('user_usage_entitlements')
-          .select('unlimited_inboxes')
-          .eq('user_id', userId)
-          .maybeSingle();
-        if (cancelled || error) return;
-        if (data?.unlimited_inboxes === true) setEntitledUserId(userId);
-      } catch {
-        /* leave the normal buy CTA in place */
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [userId]);
-
-  // Derived rather than stored, so signing out or switching account falls back
-  // to the normal buy CTA without a synchronous setState inside the effect.
-  return userId !== null && entitledUserId === userId;
-}
-
-/**
- * The Personal card's call to action for a visitor who already holds the
- * grandfathered unlimited-inbox grant. Plain text, not a link or a button:
- * there is nothing here to activate, so there must be nothing focusable
- * either. A check mark and muted type keep it reading as a status rather than
- * a greyed-out button that invites a click. `minHeight` matches the button it
- * replaces so the card does not resize when the entitlement resolves.
- *
- * @param {{ children: React.ReactNode, minHeight: number }} props
- */
-export function PlanCtaStatus({ children, minHeight }) {
-  return (
-    <p
-      style={{
-        margin: 0,
-        minHeight,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-        textAlign: 'center',
-        fontFamily: 'var(--font-sans)',
-        fontSize: 13.5,
-        lineHeight: 1.45,
-        color: 'var(--fg-3)',
-      }}
-    >
-      <MIcon name="check" size={14} color="var(--mint-600)" />
-      {children}
-    </p>
-  );
-}
 
 /* ============== PRICING ============== */
 /**
@@ -822,12 +726,6 @@ export function Pricing({ onGetStarted, stripePrices }) {
     { msgKey: 'team',     priceKey: 'pro',      price: '$79', per: t('pricing.perMonth'),   accent: false, ctaHref: pricingUpgradeHref('pro', false, false) },
   ];
 
-  // Grandfathered visitors already have unlimited inboxes for free, so Personal
-  // would be a paid downgrade for them. Every visitor still sees all four
-  // cards; only the Personal CTA changes, into a plain status line. Resolved
-  // after hydration and defaulting to false, so the cached anonymous HTML and
-  // the first client render both carry the ordinary buy link.
-  const grandfathered = useGrandfatheredUnlimited();
   const tiers = allTiers;
   return (
     <section className="section" id="pricing">
@@ -861,19 +759,19 @@ export function Pricing({ onGetStarted, stripePrices }) {
                     <li key={f}><MIcon name="check" size={14} color="var(--mint-600)"/>{f}</li>
                   ))}
                 </ul>
-                {grandfathered && tier.priceKey === 'personal' ? (
-                  <PlanCtaStatus minHeight={36}>
-                    {t('pricing.tiers.personal.ctaGrandfathered')}
-                  </PlanCtaStatus>
-                ) : (
-                  <a
-                    className={"btn " + (tier.accent ? "btn-primary" : "btn-secondary")}
-                    href={tier.ctaHref}
-                    onClick={tier.priceKey === 'free' ? onGetStarted : undefined}
-                  >
-                    {t(`pricing.tiers.${tier.msgKey}.cta`)}
-                  </a>
-                )}
+                {/* Every tier gets an ordinary buy link, for every visitor.
+                    The Personal CTA used to become a non-interactive status
+                    line for anyone holding `unlimited_inboxes`. See the
+                    offeredPlans note in dashboard/Pages.jsx: Personal is a
+                    strict upgrade for that cohort, not a downgrade, so the
+                    status line was withholding the only buy link they had. */}
+                <a
+                  className={"btn " + (tier.accent ? "btn-primary" : "btn-secondary")}
+                  href={tier.ctaHref}
+                  onClick={tier.priceKey === 'free' ? onGetStarted : undefined}
+                >
+                  {t(`pricing.tiers.${tier.msgKey}.cta`)}
+                </a>
               </div>
             );
           })}
