@@ -163,6 +163,11 @@ import {
   TRIAGE_MAX_MESSAGES_PER_RUN,
 } from "./triage-engine.ts";
 import { sendViaSmtp, SmtpAuthError, SmtpNotSentError } from "./smtp-client.ts";
+import {
+  collectForwardAttachments,
+  FORWARD_ATTACHMENT_MAX_BYTES,
+  ForwardAttachmentError,
+} from "./forward-attachments.ts";
 import { isSelfSenderIdentity, senderIdentityErrorCode } from "./sender-identity.ts";
 import { normaliseSenderName, SENDER_NAME_MAX_CHARS } from "./sender-name.ts";
 import {
@@ -183,8 +188,16 @@ import {
   bulkFailureMessage,
   isBadGmailMessageIdStatus,
   MESSAGE_NOT_FOUND,
-  targetUnresolvedMessage,
 } from "./message-id-errors.ts";
+import {
+  DELIVERY_STATUS_NOT_SENT,
+  DELIVERY_STATUS_UNKNOWN,
+  PreTransmissionError,
+  preTransmission,
+  preTransmissionMessage,
+  preTransmissionSync,
+  TargetUnresolvedError,
+} from "./send-stages.ts";
 import { attachResultNote, withResultNotesProperty } from "./result-notes.ts";
 import { buildUsageLimitText, USAGE_LIMIT_SUPPORT_EMAIL } from "./usage-limit-message.ts";
 import {
@@ -406,7 +419,12 @@ function notSentResult(
           `submission from MCP Emails.`,
       }],
       isError: true,
-    },
+      // The machine-readable half of the same sentence. `provider_error` sets
+      // this to "unknown" and warns against retrying; an agent that branches on
+      // the field rather than the prose must get the opposite answer here, not
+      // no answer.
+      delivery_status: DELIVERY_STATUS_NOT_SENT,
+    } as ToolErrorResult["result"],
     logStatus: "error",
     logErrorCode: PROVIDER_NOT_SENT_ERROR_CODE,
   };
@@ -504,55 +522,44 @@ function providerFailure(input: {
 }
 
 /**
- * A send that failed while READING the message it was asked to act on.
+ * Standard tool result for a {@link PreTransmissionError}: the send died on the
+ * "source" or "compose" stage, so no byte of it ever reached the provider.
  *
- * Distinct from every other failure a reply can hit, because it happens before
- * the reply is composed: no MIME was built, no send endpoint was called, and
- * nothing can have been delivered. The generic provider_error branch below
- * cannot tell that from a failure at the send step and so tells the caller the
- * message "may or may not have been delivered. Do not retry automatically" —
- * true of a send that died mid-flight, and the exact opposite of the truth here.
+ * Both stages are enumerated in send-stages.ts, which also owns the two
+ * sentences and the reason they may never hedge. This is the only place that
+ * turns one into a tool result, so the delivery statement, the log code and the
+ * text cannot drift apart:
  *
- * Carried as a class rather than a string prefix for the same reason
- * SmtpNotSentError is: the handler's decision is "which phase did this die in",
- * and a phase is not something to re-derive by matching on provider prose that
- * the provider is free to reword.
+ *  - `delivery_status: "not_sent"` is the machine-readable half. Its absence is
+ *    what let eight forwards on 2026-09-07 report "unknown" for failures that
+ *    had transmitted nothing, and cost the caller a Sent-folder audit per
+ *    failure to find that out.
+ *  - PROVIDER_NOT_SENT_ERROR_CODE already means exactly this - "the provider
+ *    refused before receiving any of it" - with the idempotency ledger
+ *    releasing the key rather than consuming it, so the safe retry the text
+ *    promises is actually available.
  */
-class TargetUnresolvedError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "TargetUnresolvedError";
-  }
-}
-
-/**
- * Standard tool result for {@link TargetUnresolvedError}. See
- * targetUnresolvedMessage in message-id-errors.ts for what it says and why.
- *
- * Logged as PROVIDER_NOT_SENT_ERROR_CODE, which already means exactly this:
- * "the provider refused before receiving any of it", with the idempotency
- * ledger releasing the key rather than consuming it so the safe retry the text
- * promises is actually available.
- */
-function targetUnresolvedResult(
+function preTransmissionResult(
   operation: string,
   provider: string,
   inboxId: string,
-  reason: string,
+  err: PreTransmissionError,
 ): ToolErrorResult {
-  console.warn(`[mcp-server] ${operation}: target_unresolved`, {
+  console.warn(`[mcp-server] ${operation}: pre_transmission_${err.stage}`, {
     inbox_id: inboxId,
     provider,
-    error: reason,
+    stage: err.stage,
+    error: err.message,
   });
   return {
     result: {
       content: [{
         type: "text",
-        text: targetUnresolvedMessage(operation, provider, reason),
+        text: preTransmissionMessage(operation, provider, err.stage, err.message),
       }],
       isError: true,
-    },
+      delivery_status: DELIVERY_STATUS_NOT_SENT,
+    } as ToolErrorResult["result"],
     logStatus: "error",
     logErrorCode: PROVIDER_NOT_SENT_ERROR_CODE,
   };
@@ -4075,8 +4082,11 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           type: "boolean",
           default: false,
           description:
-            "Re-attach the original's attachments. Anything past the 10 MB budget " +
-            "is dropped silently.",
+            "Re-attach the original's attachments, up to 10 MB per file and 10 MB " +
+            "shared across the message. A file over that is never dropped quietly: " +
+            "the forward is refused with attachment_too_large naming the file, and " +
+            "nothing is sent. Read such a file on its own with email_read action: " +
+            "attachment (25 MB cap) and attach it to a plain send instead.",
         },
         include_signature: INCLUDE_SIGNATURE_PROPERTY,
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
@@ -9069,6 +9079,7 @@ const ATTACHMENT_DATA_BUDGET = 10 * 1024 * 1024;
  */
 const BULK_ATTACHMENT_MAX_BYTES = 2 * 1024 * 1024;
 
+
 // ---------------------------------------------------------------------------
 // Generic IMAP provider — email_list
 // ---------------------------------------------------------------------------
@@ -9216,6 +9227,14 @@ async function readImapMessage(
    * reply/forward quoting paths) that only ever read one.
    */
   sharedSession?: ImapSession<ImapClient>,
+  /**
+   * Override the per-file ceiling that would otherwise be derived from
+   * `attachmentBudgetBytes` and `selectOnlyIndex`.
+   *
+   * Set only by the forward path, which needs the bytes it is about to
+   * retransmit rather than a preview of them. See FORWARD_ATTACHMENT_MAX_BYTES.
+   */
+  perFileMaxBytes?: number,
 ): Promise<ReadEmailResult> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
     throw new Error("imap_auth_failed");
@@ -9252,19 +9271,29 @@ async function readImapMessage(
     // attachment. On the bulk path the per-file cap is clamped to 2 MB so a heavy
     // message never base64-encodes several MB at once (OOM); the single-file path
     // (selectOnlyIndex set) encodes ONLY that attachment up to its 25 MB cap.
-    const perFileCap = selectOnlyIndex === undefined
+    // The forward path overrides the clamp (perFileMaxBytes) because it is going
+    // to transmit these bytes, not preview them.
+    const perFileCap = perFileMaxBytes ?? (selectOnlyIndex === undefined
       ? Math.min(attachmentBudgetBytes, BULK_ATTACHMENT_MAX_BYTES)
-      : attachmentBudgetBytes;
-    const attachments: ReadEmailAttachmentMeta[] = parsed.attachments.map((a, i) => ({
-      filename: a.filename,
-      mime_type: a.mimeType,
-      size_bytes: a.size,
-      data: includeAttachments &&
-          (selectOnlyIndex === undefined || i === selectOnlyIndex) &&
-          a.size <= perFileCap
-        ? bytesToBase64(a.content)
-        : null,
-    }));
+      : attachmentBudgetBytes);
+    // Gmail and Outlook have always spent a RUNNING budget across the message;
+    // IMAP only ever checked the per-file cap, so with the clamp lifted a
+    // message of several large files could encode well past attachmentBudgetBytes
+    // in one isolate. Spend the same budget here.
+    let budgetRemaining = attachmentBudgetBytes;
+    const attachments: ReadEmailAttachmentMeta[] = parsed.attachments.map((a, i) => {
+      const wanted = includeAttachments &&
+        (selectOnlyIndex === undefined || i === selectOnlyIndex) &&
+        a.size <= perFileCap &&
+        a.size <= budgetRemaining;
+      if (wanted) budgetRemaining -= a.size;
+      return {
+        filename: a.filename,
+        mime_type: a.mimeType,
+        size_bytes: a.size,
+        data: wanted ? bytesToBase64(a.content) : null,
+      };
+    });
 
     return {
       id: messageId,
@@ -9606,26 +9635,34 @@ async function sendImapMessage(
   inbox: InboxRow,
   params: SendEmailParams,
 ): Promise<SendEmailResult> {
-  const messageId = crypto.randomUUID();
-  const mime = buildMimeMessage({
-    from: formatMailbox(inbox.display_name, inbox.email_address),
-    to: params.to,
-    cc: params.cc.length ? params.cc : undefined,
-    subject: params.subject,
-    textBody: params.textBody,
-    htmlBody: params.htmlBody,
-    attachments: params.attachments.map((a) => ({
-      filename: a.filename,
-      mimeType: a.mime_type,
-      data: a.data,
-    })),
-    replyTo: params.replyTo,
-    messageId,
-  });
+  // STAGE "compose" (see send-stages.ts): everything up to the SMTP session.
+  // imapSmtpSend below is transmission and answers "unknown"; this does not.
+  const { messageId, mime, recipients } = preTransmissionSync("compose", () => {
+    const messageId = crypto.randomUUID();
+    const mime = buildMimeMessage({
+      from: formatMailbox(inbox.display_name, inbox.email_address),
+      to: params.to,
+      cc: params.cc.length ? params.cc : undefined,
+      subject: params.subject,
+      textBody: params.textBody,
+      htmlBody: params.htmlBody,
+      attachments: params.attachments.map((a) => ({
+        filename: a.filename,
+        mimeType: a.mime_type,
+        data: a.data,
+      })),
+      replyTo: params.replyTo,
+      messageId,
+    });
 
-  const recipients = [...params.to, ...params.cc, ...params.bcc]
-    .map((e) => parseEmailAddress(e).email)
-    .filter(Boolean);
+    return {
+      messageId,
+      mime,
+      recipients: [...params.to, ...params.cc, ...params.bcc]
+        .map((e) => parseEmailAddress(e).email)
+        .filter(Boolean),
+    };
+  });
   await imapSmtpSend(inbox, mime, recipients);
   await appendToSentFolder(inbox, mime);
 
@@ -9648,97 +9685,106 @@ async function replyImapMessage(
   originalMessageId: string,
   params: ReplyToEmailParams,
 ): Promise<ReplyToEmailResult> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
-    throw new Error("imap_auth_failed");
-  }
-  // Place the signature into the new reply text BEFORE the original is quoted
-  // below (buildReplyTextBody appends the quote after params.body).
-  applyReplyForwardSignature(params, inbox, {
-    include_signature: params.include_signature,
-  });
-  const { folder, uid } = decodeImapId(originalMessageId);
-  if (!Number.isFinite(uid) || uid <= 0) throw new Error("message_not_found");
-  const password = await decryptStoredToken(inbox.imap_password);
+  // Everything down to imapSmtpSend is pre-transmission: the credential, the
+  // original, the recipients and the MIME. Stage "source" — reading the
+  // original over IMAP is what fails here, and the message_not_found and
+  // imap_auth_failed sentinels inside survive the wrapper unchanged.
+  const { mime, messageId, recipients, replySubject, origMessageId, uid } =
+    await preTransmission("source", async () => {
+      if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+        throw new Error("imap_auth_failed");
+      }
+      // Place the signature into the new reply text BEFORE the original is quoted
+      // below (buildReplyTextBody appends the quote after params.body).
+      applyReplyForwardSignature(params, inbox, {
+        include_signature: params.include_signature,
+      });
+      const { folder, uid } = decodeImapId(originalMessageId);
+      if (!Number.isFinite(uid) || uid <= 0) throw new Error("message_not_found");
+      const password = await decryptStoredToken(inbox.imap_password);
 
-  // Read the original message for threading headers + recipients.
-  let original: ReturnType<typeof parseEmail> | null = null;
-  let client: ImapClient | null = null;
-  try {
-    client = await ImapClient.connect({
-      host: inbox.imap_host,
-      port: inbox.imap_port,
-      security: inbox.imap_security ?? "tls",
-      email: imapAuthUser(inbox),
-      password,
+      // Read the original message for threading headers + recipients.
+      let original: ReturnType<typeof parseEmail> | null = null;
+      let client: ImapClient | null = null;
+      try {
+        client = await ImapClient.connect({
+          host: inbox.imap_host,
+          port: inbox.imap_port,
+          security: inbox.imap_security ?? "tls",
+          email: imapAuthUser(inbox),
+          password,
+        });
+        await client.selectMailbox(imapFolderName(folder));
+        const msg = await client.fetchMessageRaw(uid);
+        if (!msg) throw new Error("message_not_found");
+        original = parseEmail(msg.raw);
+      } catch (err) {
+        if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+        throw err;
+      } finally {
+        if (client) await client.logout().catch(() => {});
+      }
+
+      if (!original) throw new Error("message_not_found");
+      const h = original.headers;
+      const origMessageId = getHeader(h, "message-id") ?? "";
+      const origReferences = getHeader(h, "references") ?? "";
+      const origSubject = decodeEncodedWords(getHeader(h, "subject") ?? "(no subject)");
+      const replySubject = /^re:/i.test(origSubject.trim()) ? origSubject : `Re: ${origSubject}`;
+      const origFromHeader = decodeEncodedWords(getHeader(h, "from") ?? "");
+      const origDateHeader = getHeader(h, "date") ?? "";
+      const origBodyText = original.text ?? (original.html ? stripHtmlToText(original.html) : "");
+
+      const fromAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "from") ?? ""));
+      const toAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "to") ?? ""));
+      const ccAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "cc") ?? ""));
+
+      // Recipient selection (including the self-addressed fallback) lives in
+      // recipient-rules.ts so this path, the Gmail/Outlook reply paths, draft_reply
+      // and the approval summary cannot drift apart again.
+      const resolvedReply = computeReplyRecipients({
+        from: fromAddrs,
+        to: toAddrs,
+        cc: ccAddrs,
+        ownAddresses: inboxOwnAddresses(inbox),
+        replyAll: params.replyAll,
+      });
+      if (!resolvedReply.ok) {
+        throw new Error(replyNoRecipientsMessage("email_reply"));
+      }
+      const recipients: EmailAddressEntry[] = resolvedReply.recipients.map(
+        toEmailAddressEntry,
+      );
+
+      const references = [origReferences, origMessageId].filter(Boolean).join(" ").trim();
+      const messageId = crypto.randomUUID();
+      const toStrings = recipients.map((a) =>
+        formatMailbox(a.name, a.email)
+      );
+
+      const mime = buildMimeMessage({
+        from: formatMailbox(inbox.display_name, inbox.email_address),
+        to: toStrings,
+        subject: replySubject,
+        textBody: buildReplyTextBody(
+          params.body,
+          origFromHeader,
+          origDateHeader,
+          origBodyText,
+        ),
+        htmlBody: params.htmlBody,
+        attachments: params.attachments.map((a) => ({
+          filename: a.filename,
+          mimeType: a.mime_type,
+          data: a.data,
+        })),
+        messageId,
+        inReplyTo: origMessageId || undefined,
+        references: references || undefined,
+      });
+
+      return { mime, messageId, recipients, replySubject, origMessageId, uid };
     });
-    await client.selectMailbox(imapFolderName(folder));
-    const msg = await client.fetchMessageRaw(uid);
-    if (!msg) throw new Error("message_not_found");
-    original = parseEmail(msg.raw);
-  } catch (err) {
-    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
-    throw err;
-  } finally {
-    if (client) await client.logout().catch(() => {});
-  }
-
-  if (!original) throw new Error("message_not_found");
-  const h = original.headers;
-  const origMessageId = getHeader(h, "message-id") ?? "";
-  const origReferences = getHeader(h, "references") ?? "";
-  const origSubject = decodeEncodedWords(getHeader(h, "subject") ?? "(no subject)");
-  const replySubject = /^re:/i.test(origSubject.trim()) ? origSubject : `Re: ${origSubject}`;
-  const origFromHeader = decodeEncodedWords(getHeader(h, "from") ?? "");
-  const origDateHeader = getHeader(h, "date") ?? "";
-  const origBodyText = original.text ?? (original.html ? stripHtmlToText(original.html) : "");
-
-  const fromAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "from") ?? ""));
-  const toAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "to") ?? ""));
-  const ccAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "cc") ?? ""));
-
-  // Recipient selection (including the self-addressed fallback) lives in
-  // recipient-rules.ts so this path, the Gmail/Outlook reply paths, draft_reply
-  // and the approval summary cannot drift apart again.
-  const resolvedReply = computeReplyRecipients({
-    from: fromAddrs,
-    to: toAddrs,
-    cc: ccAddrs,
-    ownAddresses: inboxOwnAddresses(inbox),
-    replyAll: params.replyAll,
-  });
-  if (!resolvedReply.ok) {
-    throw new Error(replyNoRecipientsMessage("email_reply"));
-  }
-  const recipients: EmailAddressEntry[] = resolvedReply.recipients.map(
-    toEmailAddressEntry,
-  );
-
-  const references = [origReferences, origMessageId].filter(Boolean).join(" ").trim();
-  const messageId = crypto.randomUUID();
-  const toStrings = recipients.map((a) =>
-    formatMailbox(a.name, a.email)
-  );
-
-  const mime = buildMimeMessage({
-    from: formatMailbox(inbox.display_name, inbox.email_address),
-    to: toStrings,
-    subject: replySubject,
-    textBody: buildReplyTextBody(
-      params.body,
-      origFromHeader,
-      origDateHeader,
-      origBodyText,
-    ),
-    htmlBody: params.htmlBody,
-    attachments: params.attachments.map((a) => ({
-      filename: a.filename,
-      mimeType: a.mime_type,
-      data: a.data,
-    })),
-    messageId,
-    inReplyTo: origMessageId || undefined,
-    references: references || undefined,
-  });
 
   await imapSmtpSend(inbox, mime, recipients.map((a) => a.email));
   await appendToSentFolder(inbox, mime);
@@ -10325,6 +10371,14 @@ async function readGmailMessage(
   markAsRead: boolean,
   attachmentBudgetBytes: number = ATTACHMENT_DATA_BUDGET,
   selectOnlyIndex?: number,
+  /**
+   * Override the per-file ceiling that would otherwise be derived from
+   * `attachmentBudgetBytes` and `selectOnlyIndex`.
+   *
+   * Set only by the forward path, which needs the bytes it is about to
+   * retransmit rather than a preview of them. See FORWARD_ATTACHMENT_MAX_BYTES.
+   */
+  perFileMaxBytes?: number,
 ): Promise<ReadEmailResult> {
   const accessToken = await withFreshGmailToken(inbox);
 
@@ -10364,9 +10418,9 @@ async function readGmailMessage(
   // up to its own cap can be fetched. On the bulk path the per-file ceiling is
   // clamped to 2 MB so a heavy message can't OOM the isolate.
   let budgetRemaining = attachmentBudgetBytes;
-  const perFileCap = selectOnlyIndex === undefined
+  const perFileCap = perFileMaxBytes ?? (selectOnlyIndex === undefined
     ? Math.min(attachmentBudgetBytes, BULK_ATTACHMENT_MAX_BYTES)
-    : attachmentBudgetBytes;
+    : attachmentBudgetBytes);
 
   const attachments: ReadEmailAttachmentMeta[] = await Promise.all(
     attachmentRefs.map(async (ref, idx) => {
@@ -10516,6 +10570,14 @@ async function readOutlookMessage(
   markAsRead: boolean,
   attachmentBudgetBytes: number = ATTACHMENT_DATA_BUDGET,
   selectOnlyIndex?: number,
+  /**
+   * Override the per-file ceiling that would otherwise be derived from
+   * `attachmentBudgetBytes` and `selectOnlyIndex`.
+   *
+   * Set only by the forward path, which needs the bytes it is about to
+   * retransmit rather than a preview of them. See FORWARD_ATTACHMENT_MAX_BYTES.
+   */
+  perFileMaxBytes?: number,
 ): Promise<ReadEmailResult> {
   const accessToken = await withFreshOutlookToken(inbox);
 
@@ -10628,9 +10690,11 @@ async function readOutlookMessage(
         const sizeBytes = att.size ?? 0;
         // Bulk path clamps the per-file ceiling to 2 MB (large files fetched
         // individually); the single-file path allows up to its 25 MB cap.
-        const perFileCap = selectOnlyIndex === undefined
-          ? Math.min(budgetRemaining, BULK_ATTACHMENT_MAX_BYTES)
-          : budgetRemaining;
+        const perFileCap = perFileMaxBytes === undefined
+          ? (selectOnlyIndex === undefined
+            ? Math.min(budgetRemaining, BULK_ATTACHMENT_MAX_BYTES)
+            : budgetRemaining)
+          : Math.min(perFileMaxBytes, budgetRemaining);
         let data: string | null = null;
         if (
           includeAttachments &&
@@ -12355,29 +12419,34 @@ async function sendGmailMessage(
   inbox: InboxRow,
   params: SendEmailParams,
 ): Promise<SendEmailResult> {
-  const accessToken = await withFreshGmailToken(inbox);
-  const messageId = crypto.randomUUID();
+  // STAGE "compose" (see send-stages.ts): the token, the id and the MIME. A
+  // throw from in here is not_sent — the fetch below is the first byte on the
+  // wire and the only thing that can make delivery genuinely unknown.
+  const { accessToken, messageId, rawBase64url } = await preTransmission("compose", async () => {
+    const accessToken = await withFreshGmailToken(inbox);
+    const messageId = crypto.randomUUID();
 
-  const mimeMessage = buildMimeMessage({
-    from: formatMailbox(inbox.display_name, inbox.email_address),
-    to: params.to,
-    cc: params.cc.length ? params.cc : undefined,
-    // The Bcc header is Gmail's ONLY recipient channel for a `raw` send.
-    bcc: params.bcc.length ? params.bcc : undefined,
-    includeBccHeader: true,
-    subject: params.subject,
-    textBody: params.textBody,
-    htmlBody: params.htmlBody,
-    attachments: params.attachments.map((a) => ({
-      filename: a.filename,
-      mimeType: a.mime_type,
-      data: a.data,
-    })),
-    replyTo: params.replyTo,
-    messageId,
+    const mimeMessage = buildMimeMessage({
+      from: formatMailbox(inbox.display_name, inbox.email_address),
+      to: params.to,
+      cc: params.cc.length ? params.cc : undefined,
+      // The Bcc header is Gmail's ONLY recipient channel for a `raw` send.
+      bcc: params.bcc.length ? params.bcc : undefined,
+      includeBccHeader: true,
+      subject: params.subject,
+      textBody: params.textBody,
+      htmlBody: params.htmlBody,
+      attachments: params.attachments.map((a) => ({
+        filename: a.filename,
+        mimeType: a.mime_type,
+        data: a.data,
+      })),
+      replyTo: params.replyTo,
+      messageId,
+    });
+
+    return { accessToken, messageId, rawBase64url: mimeMessageToBase64url(mimeMessage) };
   });
-
-  const rawBase64url = mimeMessageToBase64url(mimeMessage);
 
   const resp = await fetch(
     "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
@@ -12442,72 +12511,78 @@ async function sendOutlookMessage(
   inbox: InboxRow,
   params: SendEmailParams,
 ): Promise<SendEmailResult> {
-  const accessToken = await withFreshOutlookToken(inbox);
+  // STAGE "compose" (see send-stages.ts): the token and the Graph message body.
+  // The sendMail POST below is transmission; nothing above it is.
+  const { accessToken, message } = await preTransmission("compose", async () => {
+    const accessToken = await withFreshOutlookToken(inbox);
 
-  const toRecipients = params.to.map((email) => {
-    const parsed = parseEmailAddress(email);
-    return {
-      emailAddress: {
-        ...(parsed.name ? { name: parsed.name } : {}),
-        address: parsed.email,
-      },
+    const toRecipients = params.to.map((email) => {
+      const parsed = parseEmailAddress(email);
+      return {
+        emailAddress: {
+          ...(parsed.name ? { name: parsed.name } : {}),
+          address: parsed.email,
+        },
+      };
+    });
+
+    const ccRecipients = params.cc.map((email) => {
+      const parsed = parseEmailAddress(email);
+      return {
+        emailAddress: {
+          ...(parsed.name ? { name: parsed.name } : {}),
+          address: parsed.email,
+        },
+      };
+    });
+
+    const bccRecipients = params.bcc.map((email) => {
+      const parsed = parseEmailAddress(email);
+      return {
+        emailAddress: {
+          ...(parsed.name ? { name: parsed.name } : {}),
+          address: parsed.email,
+        },
+      };
+    });
+
+    // Graph only supports a single body content type per message.
+    // When html_body is provided, send HTML (the plain text is visible in the
+    // HTML itself). When only body is provided, send text/plain.
+    const body = params.htmlBody
+      ? { contentType: "HTML", content: params.htmlBody }
+      : { contentType: "Text", content: params.textBody };
+
+    const message: Record<string, unknown> = {
+      subject: params.subject,
+      body,
+      toRecipients,
+      ccRecipients,
+      bccRecipients,
     };
+
+    if (params.replyTo) {
+      const parsed = parseEmailAddress(params.replyTo);
+      message.replyTo = [{
+        emailAddress: {
+          ...(parsed.name ? { name: parsed.name } : {}),
+          address: parsed.email,
+        },
+      }];
+    }
+
+    if (params.attachments.length > 0) {
+      message.attachments = params.attachments.map((att) => ({
+        "@odata.type": "#microsoft.graph.fileAttachment",
+        name: att.filename,
+        contentType: att.mime_type,
+        // Graph accepts standard base64 for contentBytes
+        contentBytes: att.data.replace(/\s/g, ""),
+      }));
+    }
+
+    return { accessToken, message };
   });
-
-  const ccRecipients = params.cc.map((email) => {
-    const parsed = parseEmailAddress(email);
-    return {
-      emailAddress: {
-        ...(parsed.name ? { name: parsed.name } : {}),
-        address: parsed.email,
-      },
-    };
-  });
-
-  const bccRecipients = params.bcc.map((email) => {
-    const parsed = parseEmailAddress(email);
-    return {
-      emailAddress: {
-        ...(parsed.name ? { name: parsed.name } : {}),
-        address: parsed.email,
-      },
-    };
-  });
-
-  // Graph only supports a single body content type per message.
-  // When html_body is provided, send HTML (the plain text is visible in the
-  // HTML itself). When only body is provided, send text/plain.
-  const body = params.htmlBody
-    ? { contentType: "HTML", content: params.htmlBody }
-    : { contentType: "Text", content: params.textBody };
-
-  const message: Record<string, unknown> = {
-    subject: params.subject,
-    body,
-    toRecipients,
-    ccRecipients,
-    bccRecipients,
-  };
-
-  if (params.replyTo) {
-    const parsed = parseEmailAddress(params.replyTo);
-    message.replyTo = [{
-      emailAddress: {
-        ...(parsed.name ? { name: parsed.name } : {}),
-        address: parsed.email,
-      },
-    }];
-  }
-
-  if (params.attachments.length > 0) {
-    message.attachments = params.attachments.map((att) => ({
-      "@odata.type": "#microsoft.graph.fileAttachment",
-      name: att.filename,
-      contentType: att.mime_type,
-      // Graph accepts standard base64 for contentBytes
-      contentBytes: att.data.replace(/\s/g, ""),
-    }));
-  }
 
   const resp = await fetch(
     "https://graph.microsoft.com/v1.0/me/sendMail",
@@ -12620,120 +12695,138 @@ async function replyGmailMessage(
   originalMessageId: string,
   params: ReplyToEmailParams,
 ): Promise<ReplyToEmailResult> {
-  // Sign the new reply text before the original is quoted (buildReplyTextBody
-  // appends the quote after params.body).
-  applyReplyForwardSignature(params, inbox, {
-    include_signature: params.include_signature,
-  });
-  const accessToken = await withFreshGmailToken(inbox);
+  // Everything down to the fetch below is pre-transmission: the token, the
+  // original, its body, the recipients and the MIME. Stage "source" because
+  // reading the original is what fails here in practice, and because the two
+  // TargetUnresolvedError throws inside keep their own classification.
+  const { accessToken, sendBody, newMessageId, replyAddresses, replySubject, origThreadId } =
+    await preTransmission("source", async () => {
+      // Sign the new reply text before the original is quoted (buildReplyTextBody
+      // appends the quote after params.body).
+      applyReplyForwardSignature(params, inbox, {
+        include_signature: params.include_signature,
+      });
+      const accessToken = await withFreshGmailToken(inbox);
 
-  // ── Step 1: Fetch original message metadata ───────────────────────────────
-  const mp = new URLSearchParams({ format: "metadata" });
-  for (const h of ["From", "To", "Cc", "Subject", "Date", "Message-ID", "References"]) {
-    mp.append("metadataHeaders", h);
-  }
-  const origResp = await fetch(
-    `https://gmail.googleapis.com/gmail/v1/users/me/messages/${originalMessageId}?${mp}`,
-    { headers: { Authorization: `Bearer ${accessToken}` } },
-  );
-  if (!origResp.ok) {
-    if (origResp.status === 401) throw new Error("gmail_auth_failed");
-    // The same rule readGmailMessage applies, and for the same reason: Gmail
-    // answers a malformed id with 400 "Invalid id value" and a well-formed but
-    // absent one with 404, and both are permanent facts about the id. Mapping
-    // only 404 here is what made a bogus message_id report as an ambiguous send
-    // — action 'forward' resolves its original through readGmailMessage and so
-    // returned the correct not-found error for the very same id.
-    if (isBadGmailMessageIdStatus(origResp.status)) throw new Error(MESSAGE_NOT_FOUND);
-    const errBody = (await origResp.json()) as { error?: { message?: string } };
-    // Everything left is a failure to READ the original: quota, a 5xx, a scope
-    // Gmail declined. Nothing has been composed and nothing sent, so this must
-    // not reach the branch that warns against retrying a possible delivery.
-    throw new TargetUnresolvedError(
-      `Gmail API error fetching original: ${errBody.error?.message ?? origResp.statusText}`,
-    );
-  }
+      // ── Step 1: Fetch original message metadata ───────────────────────────────
+      const mp = new URLSearchParams({ format: "metadata" });
+      for (const h of ["From", "To", "Cc", "Subject", "Date", "Message-ID", "References"]) {
+        mp.append("metadataHeaders", h);
+      }
+      const origResp = await fetch(
+        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${originalMessageId}?${mp}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } },
+      );
+      if (!origResp.ok) {
+        if (origResp.status === 401) throw new Error("gmail_auth_failed");
+        // The same rule readGmailMessage applies, and for the same reason: Gmail
+        // answers a malformed id with 400 "Invalid id value" and a well-formed but
+        // absent one with 404, and both are permanent facts about the id. Mapping
+        // only 404 here is what made a bogus message_id report as an ambiguous send
+        // — action 'forward' resolves its original through readGmailMessage and so
+        // returned the correct not-found error for the very same id.
+        if (isBadGmailMessageIdStatus(origResp.status)) throw new Error(MESSAGE_NOT_FOUND);
+        const errBody = (await origResp.json()) as { error?: { message?: string } };
+        // Everything left is a failure to READ the original: quota, a 5xx, a scope
+        // Gmail declined. Nothing has been composed and nothing sent, so this must
+        // not reach the branch that warns against retrying a possible delivery.
+        throw new TargetUnresolvedError(
+          `Gmail API error fetching original: ${errBody.error?.message ?? origResp.statusText}`,
+        );
+      }
 
-  const origMsg = (await origResp.json()) as GmailMessageMeta & { threadId?: string };
-  const hdrs: Record<string, string> = {};
-  for (const h of origMsg.payload?.headers ?? []) {
-    hdrs[h.name.toLowerCase()] = h.value;
-  }
+      const origMsg = (await origResp.json()) as GmailMessageMeta & { threadId?: string };
+      const hdrs: Record<string, string> = {};
+      for (const h of origMsg.payload?.headers ?? []) {
+        hdrs[h.name.toLowerCase()] = h.value;
+      }
 
-  const origRfc5322MessageId = hdrs["message-id"] ?? "";
-  const origReferences = hdrs["references"] ?? "";
-  const origSubject = hdrs["subject"] ?? "(no subject)";
-  const origFromHeader = hdrs["from"] ?? "";
-  const origDateHeader = hdrs["date"] ?? "";
+      const origRfc5322MessageId = hdrs["message-id"] ?? "";
+      const origReferences = hdrs["references"] ?? "";
+      const origSubject = hdrs["subject"] ?? "(no subject)";
+      const origFromHeader = hdrs["from"] ?? "";
+      const origDateHeader = hdrs["date"] ?? "";
 
-  // Fetch the original body so the reply can quote it (parity with forward).
-  // Best-effort: if the body read fails, fall back to no quote rather than
-  // failing the whole reply.
-  let origBodyText = "";
-  try {
-    const origRead = await readGmailMessage(inbox, originalMessageId, false, false, false);
-    origBodyText = origRead.body_text ?? "";
-  } catch {
-    origBodyText = "";
-  }
+      // Fetch the original body so the reply can quote it (parity with forward).
+      // Best-effort: if the body read fails, fall back to no quote rather than
+      // failing the whole reply.
+      let origBodyText = "";
+      try {
+        const origRead = await readGmailMessage(inbox, originalMessageId, false, false, false);
+        origBodyText = origRead.body_text ?? "";
+      } catch {
+        origBodyText = "";
+      }
 
-  // Build RFC 5322 References chain: existing refs + original Message-ID.
-  const referencesChain = origReferences
-    ? `${origReferences} ${origRfc5322MessageId}`
-    : origRfc5322MessageId;
+      // Build RFC 5322 References chain: existing refs + original Message-ID.
+      const referencesChain = origReferences
+        ? `${origReferences} ${origRfc5322MessageId}`
+        : origRfc5322MessageId;
 
-  // ── Step 2: Resolve reply recipients ─────────────────────────────────────
-  // One shared rule for every reply path (see recipient-rules.ts): the sender,
-  // plus To and Cc when reply_all is set, minus this inbox's own addresses,
-  // except when that filter would leave nobody at all - self-addressed mail
-  // replies to itself rather than erroring.
-  const resolvedReply = computeReplyRecipients({
-    from: [parseEmailAddress(hdrs["from"] ?? "")],
-    to: parseAddressList(hdrs["to"] ?? ""),
-    cc: parseAddressList(hdrs["cc"] ?? ""),
-    ownAddresses: inboxOwnAddresses(inbox),
-    replyAll: params.replyAll,
-  });
-  if (!resolvedReply.ok) {
-    throw new Error(replyNoRecipientsMessage("email_reply"));
-  }
-  const replyAddresses: string[] = resolvedReply.recipients.map((e) =>
-    formatMailbox(e.name, e.email)
-  );
+      // ── Step 2: Resolve reply recipients ─────────────────────────────────────
+      // One shared rule for every reply path (see recipient-rules.ts): the sender,
+      // plus To and Cc when reply_all is set, minus this inbox's own addresses,
+      // except when that filter would leave nobody at all - self-addressed mail
+      // replies to itself rather than erroring.
+      const resolvedReply = computeReplyRecipients({
+        from: [parseEmailAddress(hdrs["from"] ?? "")],
+        to: parseAddressList(hdrs["to"] ?? ""),
+        cc: parseAddressList(hdrs["cc"] ?? ""),
+        ownAddresses: inboxOwnAddresses(inbox),
+        replyAll: params.replyAll,
+      });
+      if (!resolvedReply.ok) {
+        throw new Error(replyNoRecipientsMessage("email_reply"));
+      }
+      const replyAddresses: string[] = resolvedReply.recipients.map((e) =>
+        formatMailbox(e.name, e.email)
+      );
 
-  // ── Step 3: Build reply subject ───────────────────────────────────────────
-  const replySubject = /^re:/i.test(origSubject.trim())
-    ? origSubject
-    : `Re: ${origSubject}`;
+      // ── Step 3: Build reply subject ───────────────────────────────────────────
+      const replySubject = /^re:/i.test(origSubject.trim())
+        ? origSubject
+        : `Re: ${origSubject}`;
 
-  // ── Step 4: Construct MIME reply with threading headers ───────────────────
-  const newMessageId = crypto.randomUUID();
-  const mimeMessage = buildMimeMessage({
-    from: formatMailbox(inbox.display_name, inbox.email_address),
-    to: replyAddresses,
-    subject: replySubject,
-    textBody: buildReplyTextBody(
-      params.body,
-      origFromHeader,
-      origDateHeader,
-      origBodyText,
-    ),
-    htmlBody: params.htmlBody,
-    attachments: params.attachments.map((a) => ({
-      filename: a.filename,
-      mimeType: a.mime_type,
-      data: a.data,
-    })),
-    messageId: newMessageId,
-    inReplyTo: origRfc5322MessageId || undefined,
-    references: referencesChain || undefined,
-  });
+      // ── Step 4: Construct MIME reply with threading headers ───────────────────
+      const newMessageId = crypto.randomUUID();
+      const mimeMessage = buildMimeMessage({
+        from: formatMailbox(inbox.display_name, inbox.email_address),
+        to: replyAddresses,
+        subject: replySubject,
+        textBody: buildReplyTextBody(
+          params.body,
+          origFromHeader,
+          origDateHeader,
+          origBodyText,
+        ),
+        htmlBody: params.htmlBody,
+        attachments: params.attachments.map((a) => ({
+          filename: a.filename,
+          mimeType: a.mime_type,
+          data: a.data,
+        })),
+        messageId: newMessageId,
+        inReplyTo: origRfc5322MessageId || undefined,
+        references: referencesChain || undefined,
+      });
 
-  const rawBase64url = mimeMessageToBase64url(mimeMessage);
+      const rawBase64url = mimeMessageToBase64url(mimeMessage);
 
-  // ── Step 5: Send with threadId to keep Gmail thread continuity ────────────
-  const sendBody: Record<string, string> = { raw: rawBase64url };
-  if (origMsg.threadId) sendBody["threadId"] = origMsg.threadId;
+      // ── Step 5: Body for the send, carrying the original threadId so Gmail
+      // keeps the reply in the same conversation. Building it is still compose;
+      // the POST that follows the wrapper is the transmission.
+      const sendBody: Record<string, string> = { raw: rawBase64url };
+      if (origMsg.threadId) sendBody["threadId"] = origMsg.threadId;
+
+      return {
+        accessToken,
+        sendBody,
+        newMessageId,
+        replyAddresses,
+        replySubject,
+        origThreadId: origMsg.threadId,
+      };
+    });
 
   const sendResp = await fetch(
     "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
@@ -12767,7 +12860,7 @@ async function replyGmailMessage(
 
   return {
     message_id: sent.id ?? newMessageId,
-    thread_id: sent.threadId ?? origMsg.threadId ?? newMessageId,
+    thread_id: sent.threadId ?? origThreadId ?? newMessageId,
     sent_at: sentAt,
     in_reply_to: originalMessageId,
     to: replyAddresses.map((e) => parseEmailAddress(e)),
@@ -12795,141 +12888,156 @@ async function replyOutlookMessage(
   originalMessageId: string,
   params: ReplyToEmailParams,
 ): Promise<ReplyToEmailResult> {
-  // Sign the new reply text before the original is quoted (buildReplyTextBody
-  // appends the quote after params.body; the HTML path sends params.htmlBody raw).
-  applyReplyForwardSignature(params, inbox, {
-    include_signature: params.include_signature,
-  });
-  const accessToken = await withFreshOutlookToken(inbox);
+  // Everything down to the sendMail POST is pre-transmission: the token, the
+  // original, the recipients and the Graph message body. Stage "source" for
+  // the same reason as the Gmail path — reading the original is what fails
+  // here, and the TargetUnresolvedError inside keeps its own classification.
+  const { accessToken, message, toRecipients, replySubject, conversationId } =
+    await preTransmission("source", async () => {
+      // Sign the new reply text before the original is quoted (buildReplyTextBody
+      // appends the quote after params.body; the HTML path sends params.htmlBody raw).
+      applyReplyForwardSignature(params, inbox, {
+        include_signature: params.include_signature,
+      });
+      const accessToken = await withFreshOutlookToken(inbox);
 
-  // ── Step 1: Fetch original message ────────────────────────────────────────
-  const selectFields = [
-    "from",
-    "toRecipients",
-    "ccRecipients",
-    "subject",
-    "conversationId",
-    "internetMessageId",
-    "internetMessageHeaders",
-    "body",
-    "receivedDateTime",
-  ].join(",");
+      // ── Step 1: Fetch original message ────────────────────────────────────────
+      const selectFields = [
+        "from",
+        "toRecipients",
+        "ccRecipients",
+        "subject",
+        "conversationId",
+        "internetMessageId",
+        "internetMessageHeaders",
+        "body",
+        "receivedDateTime",
+      ].join(",");
 
-  const origResp = await fetch(
-    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(originalMessageId)}?$select=${selectFields}`,
-    { headers: { Authorization: `Bearer ${accessToken}` } },
-  );
+      const origResp = await fetch(
+        `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(originalMessageId)}?$select=${selectFields}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } },
+      );
 
-  if (!origResp.ok) {
-    if (origResp.status === 401) throw new Error("outlook_auth_failed");
-    if (origResp.status === 404) throw new Error(MESSAGE_NOT_FOUND);
-    const errBody = (await origResp.json()) as { error?: { message?: string } };
-    // Pre-send, exactly as in the Gmail path above: this read the original and
-    // failed, so no reply exists to have been delivered. Graph's 400s are NOT
-    // folded into not-found here — unlike Gmail's, they cover a malformed
-    // $select and a bad folder id as well as a bad message id, so the honest
-    // answer is the provider's own words plus the fact that nothing was sent.
-    throw new TargetUnresolvedError(
-      `Outlook Graph API error: ${errBody.error?.message ?? origResp.statusText}`,
-    );
-  }
+      if (!origResp.ok) {
+        if (origResp.status === 401) throw new Error("outlook_auth_failed");
+        if (origResp.status === 404) throw new Error(MESSAGE_NOT_FOUND);
+        const errBody = (await origResp.json()) as { error?: { message?: string } };
+        // Pre-send, exactly as in the Gmail path above: this read the original and
+        // failed, so no reply exists to have been delivered. Graph's 400s are NOT
+        // folded into not-found here — unlike Gmail's, they cover a malformed
+        // $select and a bad folder id as well as a bad message id, so the honest
+        // answer is the provider's own words plus the fact that nothing was sent.
+        throw new TargetUnresolvedError(
+          `Outlook Graph API error: ${errBody.error?.message ?? origResp.statusText}`,
+        );
+      }
 
-  const origMsg = (await origResp.json()) as {
-    from?: { emailAddress?: { name?: string; address?: string } };
-    toRecipients?: { emailAddress?: { name?: string; address?: string } }[];
-    ccRecipients?: { emailAddress?: { name?: string; address?: string } }[];
-    subject?: string;
-    conversationId?: string;
-    internetMessageId?: string;
-    internetMessageHeaders?: { name: string; value: string }[];
-    body?: { contentType?: string; content?: string };
-    receivedDateTime?: string;
-  };
+      const origMsg = (await origResp.json()) as {
+        from?: { emailAddress?: { name?: string; address?: string } };
+        toRecipients?: { emailAddress?: { name?: string; address?: string } }[];
+        ccRecipients?: { emailAddress?: { name?: string; address?: string } }[];
+        subject?: string;
+        conversationId?: string;
+        internetMessageId?: string;
+        internetMessageHeaders?: { name: string; value: string }[];
+        body?: { contentType?: string; content?: string };
+        receivedDateTime?: string;
+      };
 
-  const origSubject = origMsg.subject ?? "(no subject)";
-  const replySubject = /^re:/i.test(origSubject.trim())
-    ? origSubject
-    : `Re: ${origSubject}`;
-  const origFromStr = origMsg.from?.emailAddress
-    ? (origMsg.from.emailAddress.name
-      ? `${origMsg.from.emailAddress.name} <${origMsg.from.emailAddress.address ?? ""}>`
-      : (origMsg.from.emailAddress.address ?? ""))
-    : "";
-  const origDateStr = origMsg.receivedDateTime ?? "";
-  const origBodyText = origMsg.body
-    ? (origMsg.body.contentType?.toLowerCase() === "html"
-      ? stripHtmlToText(origMsg.body.content ?? "")
-      : (origMsg.body.content ?? ""))
-    : "";
+      const origSubject = origMsg.subject ?? "(no subject)";
+      const replySubject = /^re:/i.test(origSubject.trim())
+        ? origSubject
+        : `Re: ${origSubject}`;
+      const origFromStr = origMsg.from?.emailAddress
+        ? (origMsg.from.emailAddress.name
+          ? `${origMsg.from.emailAddress.name} <${origMsg.from.emailAddress.address ?? ""}>`
+          : (origMsg.from.emailAddress.address ?? ""))
+        : "";
+      const origDateStr = origMsg.receivedDateTime ?? "";
+      const origBodyText = origMsg.body
+        ? (origMsg.body.contentType?.toLowerCase() === "html"
+          ? stripHtmlToText(origMsg.body.content ?? "")
+          : (origMsg.body.content ?? ""))
+        : "";
 
-  const origMsgId = origMsg.internetMessageId ?? "";
-  const refsHeader =
-    origMsg.internetMessageHeaders?.find(
-      (h) => h.name.toLowerCase() === "references",
-    )?.value ?? "";
-  const referencesChain = refsHeader
-    ? `${refsHeader} ${origMsgId}`
-    : origMsgId;
+      const origMsgId = origMsg.internetMessageId ?? "";
+      const refsHeader =
+        origMsg.internetMessageHeaders?.find(
+          (h) => h.name.toLowerCase() === "references",
+        )?.value ?? "";
+      const referencesChain = refsHeader
+        ? `${refsHeader} ${origMsgId}`
+        : origMsgId;
 
-  // ── Step 2: Resolve reply recipients ─────────────────────────────────────
-  type GraphRecipient = { emailAddress?: { name?: string; address?: string } };
-  const fromGraph = (r: GraphRecipient) => ({
-    name: r.emailAddress?.name ?? "",
-    email: r.emailAddress?.address ?? "",
-  });
-  // Same shared rule as the Gmail and IMAP reply paths (recipient-rules.ts),
-  // including the self-addressed fallback.
-  const resolvedReply = computeReplyRecipients({
-    from: origMsg.from?.emailAddress ? [fromGraph({ emailAddress: origMsg.from.emailAddress })] : [],
-    to: (origMsg.toRecipients ?? []).map(fromGraph),
-    cc: (origMsg.ccRecipients ?? []).map(fromGraph),
-    ownAddresses: inboxOwnAddresses(inbox),
-    replyAll: params.replyAll,
-  });
-  if (!resolvedReply.ok) {
-    throw new Error(replyNoRecipientsMessage("email_reply"));
-  }
-  const toRecipients: GraphRecipient[] = resolvedReply.recipients.map((r) => ({
-    emailAddress: { ...(r.name ? { name: r.name } : {}), address: r.email },
-  }));
+      // ── Step 2: Resolve reply recipients ─────────────────────────────────────
+      type GraphRecipient = { emailAddress?: { name?: string; address?: string } };
+      const fromGraph = (r: GraphRecipient) => ({
+        name: r.emailAddress?.name ?? "",
+        email: r.emailAddress?.address ?? "",
+      });
+      // Same shared rule as the Gmail and IMAP reply paths (recipient-rules.ts),
+      // including the self-addressed fallback.
+      const resolvedReply = computeReplyRecipients({
+        from: origMsg.from?.emailAddress ? [fromGraph({ emailAddress: origMsg.from.emailAddress })] : [],
+        to: (origMsg.toRecipients ?? []).map(fromGraph),
+        cc: (origMsg.ccRecipients ?? []).map(fromGraph),
+        ownAddresses: inboxOwnAddresses(inbox),
+        replyAll: params.replyAll,
+      });
+      if (!resolvedReply.ok) {
+        throw new Error(replyNoRecipientsMessage("email_reply"));
+      }
+      const toRecipients: GraphRecipient[] = resolvedReply.recipients.map((r) => ({
+        emailAddress: { ...(r.name ? { name: r.name } : {}), address: r.email },
+      }));
 
-  // ── Step 3: Build and send the reply ─────────────────────────────────────
-  const body = params.htmlBody
-    ? { contentType: "HTML", content: params.htmlBody }
-    : {
-      contentType: "Text",
-      content: buildReplyTextBody(
-        params.body,
-        origFromStr,
-        origDateStr,
-        origBodyText,
-      ),
-    };
+      // ── Step 3: Build and send the reply ─────────────────────────────────────
+      const body = params.htmlBody
+        ? { contentType: "HTML", content: params.htmlBody }
+        : {
+          contentType: "Text",
+          content: buildReplyTextBody(
+            params.body,
+            origFromStr,
+            origDateStr,
+            origBodyText,
+          ),
+        };
 
-  const message: Record<string, unknown> = {
-    subject: replySubject,
-    body,
-    toRecipients: toRecipients.map((r) => ({
-      emailAddress: {
-        ...(r.emailAddress?.name ? { name: r.emailAddress.name } : {}),
-        address: r.emailAddress?.address ?? "",
-      },
-    })),
-    // Threading headers — Graph supports setting these via internetMessageHeaders.
-    internetMessageHeaders: [
-      ...(origMsgId ? [{ name: "In-Reply-To", value: origMsgId }] : []),
-      ...(referencesChain ? [{ name: "References", value: referencesChain }] : []),
-    ],
-  };
+      const message: Record<string, unknown> = {
+        subject: replySubject,
+        body,
+        toRecipients: toRecipients.map((r) => ({
+          emailAddress: {
+            ...(r.emailAddress?.name ? { name: r.emailAddress.name } : {}),
+            address: r.emailAddress?.address ?? "",
+          },
+        })),
+        // Threading headers — Graph supports setting these via internetMessageHeaders.
+        internetMessageHeaders: [
+          ...(origMsgId ? [{ name: "In-Reply-To", value: origMsgId }] : []),
+          ...(referencesChain ? [{ name: "References", value: referencesChain }] : []),
+        ],
+      };
 
-  if (params.attachments.length > 0) {
-    message.attachments = params.attachments.map((att) => ({
-      "@odata.type": "#microsoft.graph.fileAttachment",
-      name: att.filename,
-      contentType: att.mime_type,
-      contentBytes: att.data.replace(/\s/g, ""),
-    }));
-  }
+      if (params.attachments.length > 0) {
+        message.attachments = params.attachments.map((att) => ({
+          "@odata.type": "#microsoft.graph.fileAttachment",
+          name: att.filename,
+          contentType: att.mime_type,
+          contentBytes: att.data.replace(/\s/g, ""),
+        }));
+      }
+
+      return {
+        accessToken,
+        message,
+        toRecipients,
+        replySubject,
+        conversationId: origMsg.conversationId,
+      };
+    });
 
   const sendResp = await fetch(
     "https://graph.microsoft.com/v1.0/me/sendMail",
@@ -12963,7 +13071,7 @@ async function replyOutlookMessage(
 
   return {
     message_id: "",
-    thread_id: origMsg.conversationId ?? "",
+    thread_id: conversationId ?? "",
     sent_at: sentAt,
     in_reply_to: originalMessageId,
     to: toRecipients.map((r) => ({
@@ -13109,45 +13217,62 @@ async function forwardImapMessage(
   originalMessageId: string,
   params: ForwardEmailParams,
 ): Promise<ForwardEmailResult> {
-  // Sign the forward intro before the original is appended below
-  // (buildForwardedTextBody places the forwarded block after params.body).
-  applyReplyForwardSignature(params, inbox, {
-    include_signature: params.include_signature,
+  // STAGE "source" (see send-stages.ts): reading the original, and when
+  // include_attachments is set, fetching its attachment BYTES. This is where
+  // the eight forwards of 2026-09-07 died, and not one of them transmitted
+  // anything — so whatever shape a throw from in here arrives in, it is
+  // not_sent, and the caller may retry it immediately.
+  const original = await preTransmission("source", () => {
+    // Sign the forward intro before the original is appended below
+    // (buildForwardedTextBody places the forwarded block after params.body).
+    applyReplyForwardSignature(params, inbox, {
+      include_signature: params.include_signature,
+    });
+    return readImapMessage(
+      inbox,
+      originalMessageId,
+      false,
+      params.includeAttachments,
+      false,
+      ATTACHMENT_DATA_BUDGET,
+      undefined,
+      undefined,
+      // Lift the 2 MB bulk preview clamp: these bytes are the payload, not a peek.
+      params.includeAttachments ? FORWARD_ATTACHMENT_MAX_BYTES : undefined,
+    );
   });
-  const original = await readImapMessage(
-    inbox,
-    originalMessageId,
-    false,
-    params.includeAttachments,
-    false,
-  );
 
-  const fwdSubject = makeForwardSubject(original.subject);
-  const origFromStr = original.from.name
-    ? `${original.from.name} <${original.from.email}>`
-    : original.from.email;
-  const origToStr = original.to
-    .map((a) => (a.name ? `${a.name} <${a.email}>` : a.email))
-    .join(", ");
+  // STAGE "compose": assembling the message. Still nothing on the wire — the
+  // provider send below is the first thing that can leave delivery unknown.
+  const { fwdSubject, textBody, attachments } = preTransmissionSync("compose", () => {
+    const fwdSubject = makeForwardSubject(original.subject);
+    const origFromStr = original.from.name
+      ? `${original.from.name} <${original.from.email}>`
+      : original.from.email;
+    const origToStr = original.to
+      .map((a) => (a.name ? `${a.name} <${a.email}>` : a.email))
+      .join(", ");
 
-  const textBody = buildForwardedTextBody(
-    params.body,
-    origFromStr,
-    original.date,
-    original.subject,
-    origToStr,
-    original.body_text ?? "",
-  );
-
-  const attachments = params.includeAttachments
-    ? original.attachments
-        .filter((a) => a.data !== null)
-        .map((a) => ({
-          filename: a.filename,
-          mime_type: a.mime_type,
-          data: a.data as string,
-        }))
-    : [];
+    return {
+      fwdSubject,
+      textBody: buildForwardedTextBody(
+        params.body,
+        origFromStr,
+        original.date,
+        original.subject,
+        origToStr,
+        original.body_text ?? "",
+      ),
+      // Refuses rather than dropping a file the read could not carry — see
+      // ForwardAttachmentError for why a silently attachment-less forward is
+      // worse than a failed one. It is a PreTransmissionError itself, so it
+      // passes through this wrapper with its own type and its own message.
+      attachments: collectForwardAttachments(
+        original.attachments,
+        params.includeAttachments,
+      ),
+    };
+  });
 
   const sendResult = await sendImapMessage(inbox, {
     to: params.to,
@@ -13187,45 +13312,60 @@ async function forwardGmailMessage(
   originalMessageId: string,
   params: ForwardEmailParams,
 ): Promise<ForwardEmailResult> {
-  // Sign the forward intro before the original is appended below
-  // (buildForwardedTextBody places the forwarded block after params.body).
-  applyReplyForwardSignature(params, inbox, {
-    include_signature: params.include_signature,
+  // STAGE "source" (see send-stages.ts): reading the original, and when
+  // include_attachments is set, fetching its attachment BYTES. This is where
+  // the eight forwards of 2026-09-07 died, and not one of them transmitted
+  // anything — so whatever shape a throw from in here arrives in, it is
+  // not_sent, and the caller may retry it immediately.
+  const original = await preTransmission("source", () => {
+    // Sign the forward intro before the original is appended below
+    // (buildForwardedTextBody places the forwarded block after params.body).
+    applyReplyForwardSignature(params, inbox, {
+      include_signature: params.include_signature,
+    });
+    return readGmailMessage(
+      inbox,
+      originalMessageId,
+      false,
+      params.includeAttachments,
+      false,
+      ATTACHMENT_DATA_BUDGET,
+      undefined,
+      params.includeAttachments ? FORWARD_ATTACHMENT_MAX_BYTES : undefined,
+    );
   });
-  const original = await readGmailMessage(
-    inbox,
-    originalMessageId,
-    false,
-    params.includeAttachments,
-    false,
-  );
 
-  const fwdSubject = makeForwardSubject(original.subject);
-  const origFromStr = original.from.name
-    ? `${original.from.name} <${original.from.email}>`
-    : original.from.email;
-  const origToStr = original.to
-    .map((a) => (a.name ? `${a.name} <${a.email}>` : a.email))
-    .join(", ");
+  // STAGE "compose": assembling the message. Still nothing on the wire — the
+  // provider send below is the first thing that can leave delivery unknown.
+  const { fwdSubject, textBody, attachments } = preTransmissionSync("compose", () => {
+    const fwdSubject = makeForwardSubject(original.subject);
+    const origFromStr = original.from.name
+      ? `${original.from.name} <${original.from.email}>`
+      : original.from.email;
+    const origToStr = original.to
+      .map((a) => (a.name ? `${a.name} <${a.email}>` : a.email))
+      .join(", ");
 
-  const textBody = buildForwardedTextBody(
-    params.body,
-    origFromStr,
-    original.date,
-    original.subject,
-    origToStr,
-    original.body_text ?? "",
-  );
-
-  const attachments = params.includeAttachments
-    ? original.attachments
-        .filter((a) => a.data !== null)
-        .map((a) => ({
-          filename: a.filename,
-          mime_type: a.mime_type,
-          data: a.data as string,
-        }))
-    : [];
+    return {
+      fwdSubject,
+      textBody: buildForwardedTextBody(
+        params.body,
+        origFromStr,
+        original.date,
+        original.subject,
+        origToStr,
+        original.body_text ?? "",
+      ),
+      // Refuses rather than dropping a file the read could not carry — see
+      // ForwardAttachmentError for why a silently attachment-less forward is
+      // worse than a failed one. It is a PreTransmissionError itself, so it
+      // passes through this wrapper with its own type and its own message.
+      attachments: collectForwardAttachments(
+        original.attachments,
+        params.includeAttachments,
+      ),
+    };
+  });
 
   const sendResult = await sendGmailMessage(inbox, {
     to: params.to,
@@ -13265,45 +13405,60 @@ async function forwardOutlookMessage(
   originalMessageId: string,
   params: ForwardEmailParams,
 ): Promise<ForwardEmailResult> {
-  // Sign the forward intro before the original is appended below
-  // (buildForwardedTextBody places the forwarded block after params.body).
-  applyReplyForwardSignature(params, inbox, {
-    include_signature: params.include_signature,
+  // STAGE "source" (see send-stages.ts): reading the original, and when
+  // include_attachments is set, fetching its attachment BYTES. This is where
+  // the eight forwards of 2026-09-07 died, and not one of them transmitted
+  // anything — so whatever shape a throw from in here arrives in, it is
+  // not_sent, and the caller may retry it immediately.
+  const original = await preTransmission("source", () => {
+    // Sign the forward intro before the original is appended below
+    // (buildForwardedTextBody places the forwarded block after params.body).
+    applyReplyForwardSignature(params, inbox, {
+      include_signature: params.include_signature,
+    });
+    return readOutlookMessage(
+      inbox,
+      originalMessageId,
+      false,
+      params.includeAttachments,
+      false,
+      ATTACHMENT_DATA_BUDGET,
+      undefined,
+      params.includeAttachments ? FORWARD_ATTACHMENT_MAX_BYTES : undefined,
+    );
   });
-  const original = await readOutlookMessage(
-    inbox,
-    originalMessageId,
-    false,
-    params.includeAttachments,
-    false,
-  );
 
-  const fwdSubject = makeForwardSubject(original.subject);
-  const origFromStr = original.from.name
-    ? `${original.from.name} <${original.from.email}>`
-    : original.from.email;
-  const origToStr = original.to
-    .map((a) => (a.name ? `${a.name} <${a.email}>` : a.email))
-    .join(", ");
+  // STAGE "compose": assembling the message. Still nothing on the wire — the
+  // provider send below is the first thing that can leave delivery unknown.
+  const { fwdSubject, textBody, attachments } = preTransmissionSync("compose", () => {
+    const fwdSubject = makeForwardSubject(original.subject);
+    const origFromStr = original.from.name
+      ? `${original.from.name} <${original.from.email}>`
+      : original.from.email;
+    const origToStr = original.to
+      .map((a) => (a.name ? `${a.name} <${a.email}>` : a.email))
+      .join(", ");
 
-  const textBody = buildForwardedTextBody(
-    params.body,
-    origFromStr,
-    original.date,
-    original.subject,
-    origToStr,
-    original.body_text ?? "",
-  );
-
-  const attachments = params.includeAttachments
-    ? original.attachments
-        .filter((a) => a.data !== null)
-        .map((a) => ({
-          filename: a.filename,
-          mime_type: a.mime_type,
-          data: a.data as string,
-        }))
-    : [];
+    return {
+      fwdSubject,
+      textBody: buildForwardedTextBody(
+        params.body,
+        origFromStr,
+        original.date,
+        original.subject,
+        origToStr,
+        original.body_text ?? "",
+      ),
+      // Refuses rather than dropping a file the read could not carry — see
+      // ForwardAttachmentError for why a silently attachment-less forward is
+      // worse than a failed one. It is a PreTransmissionError itself, so it
+      // passes through this wrapper with its own type and its own message.
+      attachments: collectForwardAttachments(
+        original.attachments,
+        params.includeAttachments,
+      ),
+    };
+  });
 
   const sendResult = await sendOutlookMessage(inbox, {
     to: params.to,
@@ -13573,6 +13728,45 @@ async function executeForwardEmail(
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
 
+    // Nothing was transmitted: the refusal happens while assembling the parts,
+    // before any provider send call. Say so plainly, because the generic branch
+    // at the bottom says the opposite ("may or may not have been delivered").
+    if (err instanceof ForwardAttachmentError) {
+      const limitMb = Math.round(err.limitBytes / (1024 * 1024));
+      console.error("[mcp-server] email_forward: attachment_too_large", {
+        inbox_id: inboxId,
+        provider: inbox.provider,
+        filename: err.filename,
+        size_bytes: err.sizeBytes,
+        limit_bytes: err.limitBytes,
+        kind: err.kind,
+      });
+      return {
+        result: {
+          content: [{
+            type: "text",
+            text: err.kind === "too_large"
+              ? `email_forward: "${err.filename}" is ${err.sizeBytes} bytes, over the ` +
+                `${limitMb} MB per-file limit for forwarding attachments. Nothing was ` +
+                "sent: the forward was refused rather than delivered without the file. " +
+                "Read the file on its own with email_read action: attachment (25 MB cap) " +
+                "and attach it to an email_compose action: send, or forward with " +
+                "include_attachments: false."
+              : `email_forward: the bytes of "${err.filename}" (${err.sizeBytes} bytes) ` +
+                "could not be retrieved, so the forward was refused rather than sent " +
+                `without it. The message's attachments share a ${limitMb} MB budget; if ` +
+                "this message carries several files, forward them individually, or read " +
+                "the file with email_read action: attachment and send it explicitly.",
+          }],
+          isError: true,
+          delivery_status: "not_sent",
+        } as ToolErrorResult["result"],
+        logStatus: "error",
+        logErrorCode: "attachment_too_large",
+      };
+    }
+
+
     if (message === "message_not_found") {
       return {
         result: {
@@ -13621,6 +13815,15 @@ async function executeForwardEmail(
       return notSentResult("email_forward", inbox.provider, inboxId, message);
     }
 
+    // Died on an enumerated pre-transmission stage — reading the original (and
+    // its attachment bytes) or assembling the message. Nothing reached the
+    // provider, so this reports not_sent and invites the retry the branch below
+    // forbids. See send-stages.ts for why this is the DEFAULT for those stages
+    // rather than something each throw site has to remember.
+    if (err instanceof PreTransmissionError) {
+      return preTransmissionResult("email_forward", inbox.provider, inboxId, err);
+    }
+
     // Unknown provider error — do not include raw error detail.
     //
     // LEDGER BOUNDARY: the code stays `provider_error`, which is what maps this
@@ -13637,7 +13840,7 @@ async function executeForwardEmail(
         `An error occurred while forwarding the message via ${inbox.provider}. ` +
         "The message may or may not have been delivered. " +
         "Do not retry automatically to avoid duplicate delivery.",
-      resultExtra: { delivery_status: "unknown" },
+      resultExtra: { delivery_status: DELIVERY_STATUS_UNKNOWN },
     });
   }
 
@@ -14001,10 +14204,13 @@ async function executeReplyToEmail(
       return notSentResult("email_reply", inbox.provider, inboxId, message);
     }
 
-    // Failed while reading the original, which is two steps before anything is
-    // sent. Same guarantee as the branch above, reached a different way.
-    if (err instanceof TargetUnresolvedError) {
-      return targetUnresolvedResult("email_reply", inbox.provider, inboxId, message);
+    // Died on an enumerated pre-transmission stage — reading the original (and
+    // its attachment bytes) or assembling the message. Nothing reached the
+    // provider, so this reports not_sent and invites the retry the branch below
+    // forbids. See send-stages.ts for why this is the DEFAULT for those stages
+    // rather than something each throw site has to remember.
+    if (err instanceof PreTransmissionError) {
+      return preTransmissionResult("email_reply", inbox.provider, inboxId, err);
     }
 
     // Unknown provider error — do not include raw error detail.
@@ -14019,7 +14225,7 @@ async function executeReplyToEmail(
         `An error occurred while sending the reply via ${inbox.provider}. ` +
         "The message may or may not have been delivered. " +
         "Do not retry automatically to avoid duplicate delivery.",
-      resultExtra: { delivery_status: "unknown" },
+      resultExtra: { delivery_status: DELIVERY_STATUS_UNKNOWN },
     });
   }
 
@@ -14791,6 +14997,15 @@ async function executeSendEmail(
       return notSentResult("email_send", inbox.provider, inboxId, message);
     }
 
+    // Died on an enumerated pre-transmission stage — reading the original (and
+    // its attachment bytes) or assembling the message. Nothing reached the
+    // provider, so this reports not_sent and invites the retry the branch below
+    // forbids. See send-stages.ts for why this is the DEFAULT for those stages
+    // rather than something each throw site has to remember.
+    if (err instanceof PreTransmissionError) {
+      return preTransmissionResult("email_send", inbox.provider, inboxId, err);
+    }
+
     // Unknown provider error — log it but do NOT include raw error detail
     // in the response (may contain provider internals or account info).
     // LEDGER BOUNDARY: see the matching branch in executeForwardEmail.
@@ -14806,6 +15021,7 @@ async function executeSendEmail(
         "The message delivery status is unknown — do NOT retry automatically " +
         "as this may result in duplicate sends. Check your Sent folder to " +
         "confirm whether the message was delivered.",
+      resultExtra: { delivery_status: DELIVERY_STATUS_UNKNOWN },
     });
   }
 
@@ -20846,62 +21062,72 @@ async function imapSendDraft(
   inbox: InboxRow,
   draftId: string,
 ): Promise<DraftSendResult> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
-    throw new Error("imap_auth_failed");
-  }
-  const { folder, uid } = decodeImapId(draftId);
-  if (!Number.isFinite(uid) || uid <= 0) throw new Error("draft_not_found");
-  const password = await decryptStoredToken(inbox.imap_password);
+  // Steps 1-3 are pre-transmission: fetch the draft's MIME, parse its
+  // recipients, strip the Bcc header. imapSmtpSend below is the first byte on
+  // the wire; anything that fails above it left the draft in Drafts untouched
+  // and sent nothing (see send-stages.ts).
+  const { sentMime, recipients, parsed, folder, uid, password } =
+    await preTransmission("source", async () => {
+      if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+        throw new Error("imap_auth_failed");
+      }
+      const { folder, uid } = decodeImapId(draftId);
+      if (!Number.isFinite(uid) || uid <= 0) throw new Error("draft_not_found");
+      const password = await decryptStoredToken(inbox.imap_password);
 
-  // Step 1: Fetch the raw MIME from the Drafts folder.
-  let rawMime: string | null = null;
-  let client: ImapClient | null = null;
-  try {
-    client = await ImapClient.connect({
-      host: inbox.imap_host,
-      port: inbox.imap_port,
-      security: inbox.imap_security ?? "tls",
-      email: imapAuthUser(inbox),
-      password,
+      // Step 1: Fetch the raw MIME from the Drafts folder.
+      let rawMime: string | null = null;
+      let client: ImapClient | null = null;
+      try {
+        client = await ImapClient.connect({
+          host: inbox.imap_host,
+          port: inbox.imap_port,
+          security: inbox.imap_security ?? "tls",
+          email: imapAuthUser(inbox),
+          password,
+        });
+        // Use the RAW folder (decoded from draft_id), not imapFolderName(folder);
+        // see imapUpdateDraft's comment above for why re-normalizing it is wrong.
+        await client.selectMailbox(folder);
+        const msg = await client.fetchMessageRaw(uid);
+        if (!msg) throw new Error("draft_not_found");
+        rawMime = msg.raw;
+      } catch (err) {
+        if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+        throw err;
+      } finally {
+        if (client) await client.logout().catch(() => {});
+      }
+
+      if (!rawMime) throw new Error("draft_not_found");
+
+      // Step 2: Parse recipients from headers.
+      const parsed = parseEmail(rawMime);
+      const h = parsed.headers;
+      const toAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "to") ?? ""));
+      const ccAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "cc") ?? ""));
+      const bccAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "bcc") ?? ""));
+      const recipients = [...toAddrs, ...ccAddrs, ...bccAddrs]
+        .map((a) => a.email)
+        .filter(Boolean);
+
+      // Same gate as the Gmail/Outlook pre-flight in executeSendDraft, applied here
+      // because this path already holds the draft's own MIME. Nothing has been
+      // transmitted at this point and the draft is still in Drafts untouched.
+      if (!draftIsSendable({ to: recipients })) {
+        throw new Error("draft_has_no_recipients");
+      }
+
+      // Step 3: Send via SMTP. The BCC addresses parsed above are included in the
+      // envelope (RCPT TO via `recipients`), but the transmitted message body MUST
+      // NOT contain a Bcc header — strip it so To/Cc recipients never see the BCC
+      // addresses. (The draft still in the Drafts folder may keep its Bcc header;
+      // that's the user's own copy.)
+      const sentMime = stripBccHeader(rawMime);
+
+      return { sentMime, recipients, parsed, folder, uid, password };
     });
-    // Use the RAW folder (decoded from draft_id), not imapFolderName(folder);
-    // see imapUpdateDraft's comment above for why re-normalizing it is wrong.
-    await client.selectMailbox(folder);
-    const msg = await client.fetchMessageRaw(uid);
-    if (!msg) throw new Error("draft_not_found");
-    rawMime = msg.raw;
-  } catch (err) {
-    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
-    throw err;
-  } finally {
-    if (client) await client.logout().catch(() => {});
-  }
 
-  if (!rawMime) throw new Error("draft_not_found");
-
-  // Step 2: Parse recipients from headers.
-  const parsed = parseEmail(rawMime);
-  const h = parsed.headers;
-  const toAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "to") ?? ""));
-  const ccAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "cc") ?? ""));
-  const bccAddrs = parseAddressList(decodeEncodedWords(getHeader(h, "bcc") ?? ""));
-  const recipients = [...toAddrs, ...ccAddrs, ...bccAddrs]
-    .map((a) => a.email)
-    .filter(Boolean);
-
-  // Same gate as the Gmail/Outlook pre-flight in executeSendDraft, applied here
-  // because this path already holds the draft's own MIME. Nothing has been
-  // transmitted at this point and the draft is still in Drafts untouched.
-  if (!draftIsSendable({ to: recipients })) {
-    throw new Error("draft_has_no_recipients");
-  }
-
-  // Step 3: Send via SMTP. The BCC addresses parsed above are included in the
-  // envelope (RCPT TO via `recipients`), but the transmitted message body MUST
-  // NOT contain a Bcc header — strip it so To/Cc recipients never see the BCC
-  // addresses. (The draft still in the Drafts folder may keep its Bcc header;
-  // that's the user's own copy.)
-  const sentMime = stripBccHeader(rawMime);
   await imapSmtpSend(inbox, sentMime, recipients);
 
   // Step 4: Append to Sent folder (best-effort). Use the BCC-stripped copy so
@@ -20909,11 +21135,11 @@ async function imapSendDraft(
   await appendToSentFolder(inbox, sentMime);
 
   // Step 5: Delete the draft (best-effort — failure must not fail the send).
-  client = null;
+  let client: ImapClient | null = null;
   try {
     client = await ImapClient.connect({
-      host: inbox.imap_host,
-      port: inbox.imap_port,
+      host: inbox.imap_host!,
+      port: inbox.imap_port!,
       security: inbox.imap_security ?? "tls",
       email: imapAuthUser(inbox),
       password,
@@ -21188,7 +21414,10 @@ async function gmailSendDraft(
   inbox: InboxRow,
   draftId: string,
 ): Promise<DraftSendResult> {
-  const token = await withFreshGmailToken(inbox);
+  // The token refresh is the whole of this path's pre-transmission work: Gmail
+  // holds the draft, so drafts.send below is both compose and transmit. A token
+  // failure here sent nothing (see send-stages.ts).
+  const token = await preTransmission("compose", () => withFreshGmailToken(inbox));
   const resp = await fetch(
     "https://gmail.googleapis.com/gmail/v1/users/me/drafts/send",
     {
@@ -21409,7 +21638,9 @@ async function outlookSendDraft(
   inbox: InboxRow,
   draftId: string,
 ): Promise<DraftSendResult> {
-  const token = await withFreshOutlookToken(inbox);
+  // As in gmailSendDraft: Graph holds the draft, so the token refresh is the
+  // only stage that runs before transmission, and a failure in it sent nothing.
+  const token = await preTransmission("compose", () => withFreshOutlookToken(inbox));
   const resp = await fetch(
     `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(draftId)}/send`,
     {
@@ -22027,16 +22258,21 @@ async function executeSendDraft(
         return authFailedResult(inbox.provider, inbox.id, "access");
       }
       // LEDGER BOUNDARY: draft_send is in IDEMPOTENT_OUTBOUND_OPERATIONS, so
-      // this code settles the ledger even though the failure happened in the
-      // preflight read, before anything could be sent.
+      // this code settles the ledger. The failure happened in the preflight
+      // read, before anything could be sent, so it settles it as not-sent:
+      // that releases the key rather than consuming it, which is what makes the
+      // "retry shortly" the text promises actually work with the same
+      // idempotency_key. See send-stages.ts.
       return providerFailure({
         tool: "draft_send",
         provider: inbox.provider,
         inboxId: inbox.id,
         error: err,
         boundary: "ledger",
+        fallbackCode: PROVIDER_NOT_SENT_ERROR_CODE,
         text: `draft_send: could not read draft ${draftId} to check its recipients. Nothing was sent; retry shortly.`,
         logContext: { phase: "preflight" },
+        resultExtra: { delivery_status: DELIVERY_STATUS_NOT_SENT },
       });
     }
     if (!stored) {
@@ -22114,6 +22350,15 @@ async function executeSendDraft(
       return notSentResult("draft_send", inbox.provider, inbox.id, message);
     }
 
+    // Died on an enumerated pre-transmission stage — reading the original (and
+    // its attachment bytes) or assembling the message. Nothing reached the
+    // provider, so this reports not_sent and invites the retry the branch below
+    // forbids. See send-stages.ts for why this is the DEFAULT for those stages
+    // rather than something each throw site has to remember.
+    if (err instanceof PreTransmissionError) {
+      return preTransmissionResult("draft_send", inbox.provider, inbox.id, err);
+    }
+
     // LEDGER BOUNDARY: see the matching branch in executeForwardEmail.
     return providerFailure({
       tool: "draft_send",
@@ -22122,6 +22367,7 @@ async function executeSendDraft(
       error: err,
       boundary: "ledger",
       text: `An error occurred while sending the draft via ${inbox.provider}. The message may or may not have been delivered. Do not retry automatically to avoid duplicate delivery.`,
+      resultExtra: { delivery_status: DELIVERY_STATUS_UNKNOWN },
     });
   }
 
