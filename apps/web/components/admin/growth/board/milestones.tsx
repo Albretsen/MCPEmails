@@ -66,13 +66,15 @@ export function Milestones({ report }: { report: AchievementReport }) {
               <li key={badge.id}>
                 <Ring
                   progress={badge.progress}
-                  size={58}
+                  size={38}
                   center={formatPercent(clampFraction(badge.progress))}
                   label={`${badge.title}: ${formatPercent(clampFraction(badge.progress))} of the way there.`}
                 />
-                <div>
+                {/* Title and distance only. The ladder's `detail` clause was a
+                    third line of grey prose on every rung that restated the
+                    title; it survives as the row's `title` attribute. */}
+                <div title={badge.detail}>
                   <p className="gb-next-title">{badge.title}</p>
-                  <p className="gb-next-detail">{badge.detail}</p>
                   <p className="gb-next-remaining">{remainingLabel(badge)}</p>
                 </div>
               </li>

@@ -88,7 +88,6 @@ import {
   GrowthSection,
   MilestoneSection,
   MoneySection,
-  PulseSection,
   StickinessSection,
   TablesSection,
   TopSection,
@@ -123,8 +122,35 @@ function resolveWindow(raw: string | undefined): WindowKey {
   return raw === '7d' || raw === '90d' ? raw : '28d';
 }
 
+/**
+ * A band heading.
+ *
+ * A REAL HEADING, not a tab stop. What this replaces was a 10.5px uppercase
+ * grey label on a hairline, indistinguishable at a glance from a tile label,
+ * which is why the board read as one undifferentiated field of cards and drew
+ * "hard to differentiate sections". The `id` is what the header links jump to.
+ */
+function Band({ id, title, question }: { id: string; title: string; question: string }) {
+  return (
+    <h2 className="gb-band" id={id}>
+      <b>{title}</b>
+      <em>{question}</em>
+    </h2>
+  );
+}
+
+/** The bands, in page order. The header renders these as jump links. */
+const BANDS = [
+  { id: 'money', title: 'Money', question: 'what have we earned' },
+  { id: 'milestones', title: 'Milestones', question: 'how far, and how fast' },
+  { id: 'growth', title: 'Growth', question: 'who is arriving' },
+  { id: 'stickiness', title: 'Stickiness', question: 'who stays' },
+  { id: 'uptime', title: 'Uptime', question: 'is it working' },
+  { id: 'accounts', title: 'Accounts', question: 'who they actually are' },
+] as const;
+
 /** Holds a cell open while its band loads, so the grid never jumps. */
-function Skeleton({ span, tall }: { span: number; tall?: 2 | 3 }) {
+function Skeleton({ span, tall }: { span: 4 | 6 | 8 | 12; tall?: 2 | 3 }) {
   return (
     <div className={`gb-cell gb-w${span}${tall ? ` gb-h${tall}` : ''}`} aria-hidden="true">
       <div className="gb-skeleton" />
@@ -146,9 +172,12 @@ export default async function GrowthBoardPage({
     <div className="gb">
       <main className="gb-inner">
         <header className="gb-head">
-          <h1 className="gb-wordmark">
-            Growth <em>how are we doing &middot; last {days} days</em>
-          </h1>
+          <h1 className="gb-wordmark">Growth</h1>
+          <nav className="gb-jump" aria-label="Sections">
+            {BANDS.map((band) => (
+              <a key={band.id} href={`#${band.id}`}>{band.title}</a>
+            ))}
+          </nav>
           <div className="gb-tools">
             <nav className="gb-windows" aria-label="Reporting window">
               {(Object.keys(WINDOWS) as WindowKey[]).map((key) => (
@@ -174,38 +203,21 @@ export default async function GrowthBoardPage({
             fallback={
               <>
                 <Skeleton span={12} />
-                <Skeleton span={12} tall={2} />
-                <Skeleton span={7} tall={2} />
-                <Skeleton span={5} tall={2} />
+                <Skeleton span={8} tall={3} />
+                <Skeleton span={4} tall={3} />
               </>
             }
           >
             <TopSection days={days} />
           </Suspense>
 
+          <Band id="money" title="Money" question="what have we earned" />
           <Suspense
             fallback={
               <>
-                <Skeleton span={3} />
-                <Skeleton span={3} />
-                <Skeleton span={3} />
-                <Skeleton span={3} />
-              </>
-            }
-          >
-            <PulseSection days={days} />
-          </Suspense>
-
-          <p className="gb-band">
-            Money <em>what have we earned</em>
-          </p>
-          <Suspense
-            fallback={
-              <>
-                <Skeleton span={3} />
-                <Skeleton span={3} />
-                <Skeleton span={3} />
-                <Skeleton span={3} />
+                <Skeleton span={4} />
+                <Skeleton span={4} />
+                <Skeleton span={4} />
                 <Skeleton span={6} tall={2} />
                 <Skeleton span={6} tall={2} />
               </>
@@ -214,35 +226,28 @@ export default async function GrowthBoardPage({
             <MoneySection days={days} />
           </Suspense>
 
-          <p className="gb-band">
-            Milestones <em>how far, and how fast</em>
-          </p>
+          <Band id="milestones" title="Milestones" question="how far, and how fast" />
           <Suspense fallback={<Skeleton span={12} tall={3} />}>
             <MilestoneSection />
           </Suspense>
 
-          <p className="gb-band">
-            Growth <em>who is arriving</em>
-          </p>
+          <Band id="growth" title="Growth" question="who is arriving" />
           <Suspense
             fallback={
               <>
-                <Skeleton span={7} tall={2} />
-                <Skeleton span={5} tall={2} />
-                <Skeleton span={7} tall={2} />
-                <Skeleton span={5} tall={2} />
-                <Skeleton span={4} />
-                <Skeleton span={4} />
-                <Skeleton span={4} />
+                <Skeleton span={6} tall={2} />
+                <Skeleton span={6} tall={2} />
+                <Skeleton span={8} tall={2} />
+                <Skeleton span={4} tall={2} />
+                <Skeleton span={6} />
+                <Skeleton span={6} />
               </>
             }
           >
             <GrowthSection days={days} />
           </Suspense>
 
-          <p className="gb-band">
-            Stickiness <em>who stays</em>
-          </p>
+          <Band id="stickiness" title="Stickiness" question="who stays" />
           <Suspense
             fallback={
               <>
@@ -257,18 +262,16 @@ export default async function GrowthBoardPage({
             <StickinessSection days={days} />
           </Suspense>
 
-          <p className="gb-band">
-            Uptime <em>is it working</em>
-          </p>
+          <Band id="uptime" title="Uptime" question="is it working" />
           <Suspense
             fallback={
               <>
-                <Skeleton span={3} />
-                <Skeleton span={3} />
-                <Skeleton span={3} />
-                <Skeleton span={3} />
-                <Skeleton span={5} tall={2} />
-                <Skeleton span={7} tall={2} />
+                <Skeleton span={4} />
+                <Skeleton span={4} />
+                <Skeleton span={4} />
+                <Skeleton span={4} tall={2} />
+                <Skeleton span={8} tall={2} />
+                <Skeleton span={12} tall={2} />
                 <Skeleton span={12} tall={2} />
               </>
             }
@@ -276,9 +279,7 @@ export default async function GrowthBoardPage({
             <UptimeSection days={days} />
           </Suspense>
 
-          <p className="gb-band">
-            Accounts <em>who they actually are</em>
-          </p>
+          <Band id="accounts" title="Accounts" question="who they actually are" />
           <Suspense fallback={<Skeleton span={12} />}>
             <TablesSection days={days} />
           </Suspense>
