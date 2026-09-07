@@ -485,7 +485,7 @@
     "inboxesUnlimited": "Unlimited connected inboxes",
     "inboxesCount": "{count} connected right now",
     "grandfatheredTitle": "Unlimited inboxes, kept",
-    "grandfatheredBody": "You were already here before inboxes became a paid limit, so your account keeps unlimited connected inboxes at no cost, permanently. The Personal plan tops out at three inboxes, so it would be a step down for you. Pro and Team are worth it only if you want the higher burst limit or team features.",
+    "grandfatheredBody": "You were already here before inboxes became a paid limit, so your account keeps unlimited connected inboxes at no cost, permanently, on whatever plan you are on. Upgrading does not take that away: Personal keeps your unlimited inboxes and adds a higher monthly action ceiling, a faster burst limit, the billing portal and email support.",
     "planChanged": "You are now on {plan}.",
     "perMonthWord": "per month",
     "perYearWord": "per year",

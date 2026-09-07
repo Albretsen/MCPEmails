@@ -26,9 +26,9 @@ import {
  *
  * NOTHING may be forked between the two callers. This is live billing code with
  * real subscribers: two divergent checkout paths would eventually disagree
- * about who is allowed to be charged, and the entitlement guards below are the
- * only thing standing between a grandfathered or comped account and a bill for
- * access they already have for nothing.
+ * about who is allowed to be charged, and the comped guard below is the only
+ * thing standing between a comped account and a bill for access it already has
+ * for nothing.
  *
  * The callers own only presentation: JSON body vs redirect target. Every
  * decision (validation, entitlement guards, price resolution, funnel recording,
@@ -80,7 +80,11 @@ export type CheckoutReason =
   | 'workspace_not_found'
   | 'price_not_configured'
   | 'comped'
-  | 'grandfathered_personal'
+  // 'grandfathered_personal' was removed on 2026-09-07. It is no longer
+  // reachable: holding `unlimited_inboxes` does not refuse any purchase (see
+  // the note in runCheckout). The `billing.checkoutErrors.grandfathered_personal`
+  // string is deliberately kept in messages/*/dashboard.json so a bookmarked or
+  // in-flight ?checkout_error= URL still renders instead of throwing.
   | 'plan_not_self_service'
   | 'already_on_plan'
   | 'already_on_plan_interval'
@@ -365,7 +369,7 @@ export async function runCheckout(input: {
   // and pay for what they were given for nothing.
   const { data: entitlement } = await supabase
     .from('user_usage_entitlements')
-    .select('kind, expires_at, unlimited_inboxes')
+    .select('kind, expires_at')
     .eq('user_id', user.id)
     .maybeSingle();
 
@@ -385,28 +389,36 @@ export async function runCheckout(input: {
     );
   }
 
-  // GRANDFATHERING (2026-08-19 repricing). The pre-repricing cohort keeps
-  // unlimited connected inboxes permanently, and that grant lives in
-  // user_usage_entitlements while they stay stored as plan 'free' with no
-  // subscription. So a request for {planId:'personal'} from one of them passes
-  // every other check here and charges $5/mo for THREE inboxes: a paid
-  // DOWNGRADE. The dashboard already hides the Personal card for them, but a
-  // stale tab, a cached bundle, or a shared buy link defeats a client-side
-  // rule, and this is the money path.
+  // GRANDFATHERING (2026-08-19 repricing). There is deliberately NO check here
+  // against `entitlement.unlimited_inboxes`. Until 2026-09-07 this spot held a
+  // 409 `grandfathered_personal` that refused {planId:'personal'} from anyone
+  // holding the grant, on the theory that Personal's three inboxes would be a
+  // paid DOWNGRADE from unlimited. That theory was wrong, and it was refusing
+  // money from every remaining grandfathered account. Do not put it back. The
+  // three facts that make Personal a strict UPGRADE for this cohort:
   //
-  // Only Personal is refused. Pro and Team stay purchasable, because they buy
-  // members, team roles, SSO, the audit log and a support tier, none of which
-  // the grandfather grant includes.
-  if (planId === 'personal' && entitlement?.unlimited_inboxes === true) {
-    await recordAttempt('subscription_exists');
-    return fail(
-      'grandfathered_personal',
-      409,
-      'Your account already has unlimited inboxes at no charge, so ' +
-        `${plan.name} would be a downgrade. Contact us if you need to change it.`,
-      'subscription_not_self_service',
-    );
-  }
+  //   1. The grant is inbox-only. `resolvePlanLimits` (see plans.ts) spreads
+  //      exactly `{ maxInboxes: Infinity }` for it and touches no other field,
+  //      so a grandfathered user is still living under Free's other limits.
+  //   2. The grant SURVIVES the plan change. Nothing anywhere clears or ignores
+  //      `unlimited_inboxes` when a subscription activates: the only writes to
+  //      that column in the entire codebase are the two grandfather migrations
+  //      (20260819170500 and 20260901120000), the Stripe webhook never touches
+  //      user_usage_entitlements, and `effective_workspace_plan` returns the
+  //      column unconditionally rather than gating it on the plan. So a buyer
+  //      resolves to Personal's limits with maxInboxes still Infinity.
+  //   3. Personal therefore ADDS four things they do not have: the monthly
+  //      action ceiling goes 5,000 to 25,000, the burst rate 60/min to 120/min,
+  //      `billingPortalEnabled` false to true, and support community to email.
+  //
+  // Nothing is given up in exchange, because the one thing the grant provides
+  // is the one thing Personal cannot take away from them. The refusal cost us
+  // the whole cohort at the cheapest paid tier, and the last time an equivalent
+  // 409 was lifted a full-price annual sale followed 2h15m later.
+  //
+  // The comped guard above is a different case and correctly stays: a comped
+  // grant resolves to Pro with an uncapped action ceiling, so for those users
+  // Personal really would be less than they already hold for free.
 
   const entitledStatuses = ['active', 'trialing', 'past_due', 'unpaid'];
   const hasEntitledSubscription =

@@ -3,7 +3,7 @@
 import { useEffect, useState, Fragment } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { Nav, Footer, PlanCtaStatus, useGrandfatheredUnlimited } from './Sections';
+import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 import { createClient } from '@/lib/supabase/client';
 import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
@@ -158,13 +158,13 @@ function BillingToggle({ annual, onChange }) {
  */
 function PlanCards({ annual, stripePrices, user }) {
   const t = useTranslations('pricing');
-  // Grandfathered visitors keep unlimited inboxes for free, so Personal is a
-  // paid downgrade for them and checkout answers 409. They still see the card:
-  // the hero and the comparison table both describe Personal, so removing only
-  // the card made the page argue with itself. Just its CTA becomes a status.
-  // The check resolves after hydration and defaults to false, so the cached
-  // anonymous page and the first client render are exactly what they were.
-  const grandfathered = useGrandfatheredUnlimited(user);
+  // No entitlement is read here any more. The Personal CTA used to become a
+  // non-interactive status line for a visitor holding `unlimited_inboxes`,
+  // matching a 409 in checkout-core. Both are gone: the grant lifts only
+  // maxInboxes, it survives onto a paid plan, and Personal raises the action
+  // ceiling, the burst rate, the billing portal and the support tier, so it is
+  // an upgrade for that cohort. See the offeredPlans note in
+  // dashboard/Pages.jsx before reinstating either half.
   return (
     <div className="price-grid">
       {PLANS.map(plan => {
@@ -215,11 +215,7 @@ function PlanCards({ annual, stripePrices, user }) {
                 <li key={f}><MIcon name="check" size={14} color="var(--mint-600)" />{f}</li>
               ))}
             </ul>
-            {grandfathered && plan.key === 'personal' ? (
-              <PlanCtaStatus minHeight={44}>
-                {t('plans.personal.ctaGrandfathered')}
-              </PlanCtaStatus>
-            ) : plan.key === 'free' ? (
+            {plan.key === 'free' ? (
               <a
                 className={'btn btn-lg ' + (plan.ctaPrimary ? 'btn-primary' : 'btn-secondary')}
                 href={user ? '/dashboard' : plan.ctaHref}

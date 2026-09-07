@@ -485,7 +485,7 @@
     "inboxesUnlimited": "Boîtes connectées illimitées",
     "inboxesCount": "{count} connectées actuellement",
     "grandfatheredTitle": "Boîtes illimitées, conservées",
-    "grandfatheredBody": "Vous étiez déjà là avant que les boîtes ne deviennent une limite payante, donc votre compte conserve des boîtes connectées illimitées sans frais, de façon permanente. Aucune formule payante n'ajoutera de boîtes à ce que vous avez déjà : Pro ne vaut le coup que pour la limite de pointe supérieure, et Team pour les fonctionnalités d'équipe.",
+    "grandfatheredBody": "Vous étiez déjà là avant que les boîtes ne deviennent une limite payante, donc votre compte conserve des boîtes connectées illimitées sans frais, de façon permanente, quelle que soit votre formule. Passer à une formule payante ne vous l'enlève pas : Personal conserve vos boîtes illimitées et ajoute un plafond d'actions mensuel plus élevé, une limite de pointe plus rapide, le portail de facturation et l'assistance par e-mail.",
     "planChanged": "Vous êtes maintenant sur {plan}.",
     "perMonthWord": "par mois",
     "perYearWord": "par an",

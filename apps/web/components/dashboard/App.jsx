@@ -839,7 +839,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         )}
 
         {route === "overview" && <OverviewPage key={guideResumeKey} inboxes={inboxes} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} />}
-        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onGoToKeys={() => setRoute("keys")} />}
+        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onGoToKeys={() => setRoute("keys")} />}
         {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} workspaceName={workspace?.displayName ?? workspace?.display_name ?? workspace?.slug ?? ''} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onResendInvite={onResendInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} onLeave={onLeaveWorkspace} />}
         {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} />}
@@ -852,7 +852,12 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
 
       {/* atInboxLimit is false whenever maxInboxes is null, which is how every
           paid, comped, and grandfathered account arrives here: no cap, no
-          upgrade panel, straight to the provider picker. */}
+          upgrade panel, straight to the provider picker.
+
+          `stripePrices` is what lets the cap panel offer the annual interval
+          and quote its real saving. It also carries the only signal that says
+          whether a yearly price exists to be bought at all, so without it the
+          panel sells monthly and nothing else. */}
       {showConnect && (
         <ConnectModal
           reconnect={reconnectInbox}
@@ -862,6 +867,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           planName={planDisplayName(workspace?.plan)}
           inboxCount={inboxes.length}
           maxInboxes={planLimits?.maxInboxes ?? null}
+          stripePrices={stripePrices}
         />
       )}
 

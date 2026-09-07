@@ -485,7 +485,7 @@
     "inboxesUnlimited": "Ubegrenset antall tilkoblede innbokser",
     "inboxesCount": "{count} tilkoblet akkurat nå",
     "grandfatheredTitle": "Ubegrensede innbokser, beholdt",
-    "grandfatheredBody": "Du var her allerede før innbokser ble en betalt grense, så kontoen din beholder ubegrenset antall tilkoblede innbokser gratis, permanent. Personal er ikke noe for deg, den planen har tak på tre innbokser. Av de betalte planene er det bare Pro og Team som er verdt det, hvis du vil ha høyere burst-grense eller teamfunksjoner.",
+    "grandfatheredBody": "Du var her allerede før innbokser ble en betalt grense, så kontoen din beholder ubegrenset antall tilkoblede innbokser gratis, permanent, uansett hvilken plan du er på. Å oppgradere tar det ikke fra deg: Personal beholder de ubegrensede innboksene dine og legger til høyere månedlig handlingstak, høyere burst-grense, fakturaportalen og e-poststøtte.",
     "planChanged": "Du er nå på {plan}.",
     "perMonthWord": "per måned",
     "perYearWord": "per år",

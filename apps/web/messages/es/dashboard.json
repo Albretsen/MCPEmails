@@ -485,7 +485,7 @@
     "inboxesUnlimited": "Bandejas conectadas ilimitadas",
     "inboxesCount": "{count} conectadas ahora mismo",
     "grandfatheredTitle": "Bandejas ilimitadas, conservadas",
-    "grandfatheredBody": "Ya estabas aquí antes de que las bandejas pasaran a ser un límite de pago, así que tu cuenta conserva bandejas conectadas ilimitadas sin coste, de forma permanente. Los planes de pago solo valen la pena si quieres el límite de ráfaga más alto o funciones de equipo: Pro para ti solo, Team para trabajar con más personas.",
+    "grandfatheredBody": "Ya estabas aquí antes de que las bandejas pasaran a ser un límite de pago, así que tu cuenta conserva bandejas conectadas ilimitadas sin coste, de forma permanente, en cualquier plan que tengas. Mejorar de plan no te lo quita: Personal mantiene tus bandejas ilimitadas y añade un límite mensual de acciones más alto, un límite de ráfaga más rápido, el portal de facturación y soporte por correo.",
     "planChanged": "Ya estás en {plan}.",
     "perMonthWord": "al mes",
     "perYearWord": "al año",
