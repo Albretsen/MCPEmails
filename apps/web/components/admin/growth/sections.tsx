@@ -45,7 +45,6 @@ import {
   fetchProviderFunnel,
   fetchProviderMix,
   fetchRetentionCurve,
-  fetchRevenueCounts,
   fetchUpgradePressure,
   fetchUserSignupDays,
   gmailCapProjection,
@@ -59,7 +58,6 @@ import {
 } from '@/lib/analytics/kiosk-revenue';
 import { fetchRevenueDetail } from '@/lib/analytics/operator-revenue';
 import { fetchRecentIncidents, fetchSystemHealth } from '@/lib/analytics/kiosk-health';
-import { attentionReport } from '@/lib/analytics/growth-attention';
 import { achievementReport } from '@/lib/analytics/growth-achievements';
 import { agoLabel, formatDayKey, recordDay, streak } from '@/lib/analytics/growth-records';
 import { valuationFromArr } from '@/lib/analytics/revenue-math';
@@ -68,6 +66,7 @@ import {
   BarSeries,
   CohortHeatmap,
   LineChart,
+  NO_DATA,
   formatCount,
   formatMoney,
   formatPercent,
@@ -77,7 +76,6 @@ import {
   BarList,
   BigNumber,
   EventList,
-  FactRow,
   FunnelSteps,
   Gauge,
   GroupedColumns,
@@ -94,10 +92,9 @@ import {
   returningWorkspaces,
   signupWeeks,
   sum,
-  trend,
 } from '../kiosk/shared';
 import { CalendarHeat } from './CalendarHeat';
-import { Attention, ChannelQuality, Hero, Verdict } from './board/panels';
+import { ChannelQuality, Rail, StatStrip, Verdict, type RailRow } from './board/panels';
 import { Milestones } from './board/milestones';
 import { Tables } from './Tables';
 
@@ -125,56 +122,64 @@ function orNull<T>(result: GrowthResult<T>): T | null {
   return result.ok ? result.data : null;
 }
 
-/** A grid cell. See admin-growth.css for why every tile gets one. */
-function Cell({ span, tall, children }: { span: number; tall?: 2 | 3; children: React.ReactNode }) {
+/**
+ * A grid cell.
+ *
+ * FOUR SPANS ONLY, all of which divide twelve. The version this replaces also
+ * offered 3, 5, 7 and 9, and that is most of what made the board "messy": no
+ * two rows shared a rhythm and every row ended ragged. See admin-growth.css
+ * for why every tile needs a wrapper at all.
+ */
+function Cell({ span, tall, children }: { span: 4 | 6 | 8 | 12; tall?: 2 | 3; children: React.ReactNode }) {
   return <div className={`gb-cell gb-w${span}${tall ? ` gb-h${tall}` : ''}`}>{children}</div>;
 }
 
-/** Stage ids as a person would say them. */
-const STAGE_LABELS: Record<string, string> = {
-  signup: 'Signed up',
-  client_selected: 'Picked a client',
-  inbox_connected: 'Connected an inbox',
-  connection_verified: 'Verified',
-  credential_issued: 'Key issued',
-  technical_activation: 'First call',
-  value_activation: 'Reached a mailbox',
-};
 
-/* ============================================ the verdict, money and to-do */
+/* ================================================== the overview and rail */
 
+/**
+ * The top of the board: one card carrying the six numbers the business turns
+ * on and the chart that explains them, and one narrow card carrying the money
+ * movements and the records.
+ *
+ * WHAT THIS REPLACED, 2026-09-07. A 76px MRR "hero" spanning twelve columns, a
+ * row of four KPI tiles each with its own sparkline, a "Needs attention" panel
+ * and a five-column Records tile. That was a full screen and a half before the
+ * first band, it was the source of "everything looks far too large", and the
+ * four KPI tiles implied their numbers had nothing to do with the chart three
+ * rows below them. Plausible puts all of it in one card; so does this.
+ *
+ * THE STRIP IS SIX WIDE AND THAT IS THE BUDGET. A seventh metric means one of
+ * these is not a headline, and the honest fix is to put it in a band below
+ * rather than to squeeze the strip.
+ */
 export async function TopSection({ days }: { days: number }) {
-  const [revenue, cash, checkout, pressure, lifecycle, errors, health, incidents, signups, daily] =
-    await Promise.all([
-      fetchRecurringRevenue(days),
-      fetchCashCollected(),
-      fetchCheckoutFunnel(),
-      fetchUpgradePressure(),
-      fetchLifecycleCounts(),
-      fetchErrorBreakdown(days),
-      fetchSystemHealth(),
-      fetchRecentIncidents(6),
-      fetchUserSignupDays(DURABLE_DAYS),
-      fetchDailyMetrics(DAILY_DAYS),
-    ]);
+  const [revenue, cash, checkout, lifecycle, health, incidents, people, signups, daily] = await Promise.all([
+    fetchRecurringRevenue(days),
+    fetchCashCollected(),
+    fetchCheckoutFunnel(),
+    fetchLifecycleCounts(),
+    fetchSystemHealth(),
+    fetchRecentIncidents(6),
+    fetchPeopleCounts(days),
+    fetchUserSignupDays(DURABLE_DAYS),
+    fetchDailyMetrics(DAILY_DAYS),
+  ]);
 
   const mrr = orNull(revenue);
-  // Nulls rather than dead-panel markers: a rule whose data failed has to be
-  // counted as blocked, never as satisfied, or a Stripe outage quietly turns
-  // "money at risk" into "nothing to do".
-  const report = attentionReport({
-    revenue: mrr,
-    checkout: orNull(checkout),
-    cash: orNull(cash),
-    lifecycle: orNull(lifecycle),
-    health,
-    incidents,
-    errors: orNull(errors),
-    windowDays: days,
-  });
-
+  const banked = orNull(cash);
+  const life = orNull(lifecycle);
+  const head = orNull(people);
   const signupRows = signups.ok ? signups.data : [];
   const dailyRows = daily.ok ? daily.data : [];
+  const cumulative = signupRows[signupRows.length - 1]?.cumulative_users ?? 0;
+  const weeks = signupWeeks(signupRows, CHART_WEEKS);
+
+  const money = (minor: number) => formatMoney(minor, mrr?.currency ?? 'usd');
+  const recentCalls = sum(dailyRows.slice(-days), 'calls');
+  const priorCalls = sum(dailyRows.slice(-days * 2, -days), 'calls');
+  const rate = attemptRate(sum(dailyRows, 'successes'), sum(dailyRows, 'calls'), sum(dailyRows, 'rate_limited'));
+
   const signupDays = signupRows.map((row) => ({ day: row.day, count: row.new_users }));
   const callDays = dailyRows.map((row) => ({ day: row.day, count: row.calls }));
   const signupStreak = streak(signupDays);
@@ -183,65 +188,116 @@ export async function TopSection({ days }: { days: number }) {
 
   return (
     <>
-      <Verdict
-        level={health.level}
-        headline={health.headline}
-        reason={health.reason}
-        checkedAt={health.checkedAt}
-        openIncidents={incidents.filter((incident) => incident.status === 'open').length}
-      />
+      <Verdict level={health.level} headline={health.headline} reason={health.reason} />
 
-      <Hero
-        revenue={mrr}
-        revenueError={revenue.ok ? null : revenue.error}
-        cash={orNull(cash)}
-        valuationMinor={mrr ? valuationFromArr(mrr.arrMinor, valuationMultiple()).valuationMinor : null}
-        valuationMultiple={valuationMultiple()}
-        lastSaleAt={checkout.ok ? checkout.data.lastCompletedAt : null}
-        windowDays={days}
-      />
-
-      <Cell span={7} tall={2}>
-        <Tile
-          label="Needs attention"
-          aside={report.items.length === 0 ? 'nothing crossed' : `${formatCount(report.items.length)} open`}
-          tone={report.items.some((item) => item.severity === 'act') ? 'bad' : 'good'}
-        >
-          <Attention report={report} />
+      <Cell span={8} tall={3}>
+        <Tile label="The business" aside={`last ${days} days · ${formatCount(incidents.filter((i) => i.status === 'open').length)} incidents open`}>
+          <StatStrip
+            stats={[
+              {
+                label: 'MRR',
+                value: mrr ? money(mrr.mrrMinor) : NO_DATA,
+                note: mrr ? `${money(mrr.arrMinor)} a year` : 'Stripe unavailable',
+              },
+              {
+                label: 'Paying',
+                value: mrr ? formatCount(mrr.payingCustomers) : NO_DATA,
+                note: mrr && mrr.payingCustomers > 0 ? `${money(mrr.arpaMinor)} each` : 'nobody yet',
+              },
+              {
+                label: 'Cash',
+                value: banked ? money(banked.allTimeMinor) : NO_DATA,
+                note: banked ? `${money(banked.last30Minor)} in 30d` : 'Stripe unavailable',
+              },
+              {
+                label: 'Signed up',
+                value: formatCount(cumulative),
+                deltaPercent: head ? deltaPercent(head.new_users, head.prev_new_users) : null,
+                note: head ? `${formatCount(head.new_users)} in ${days}d` : undefined,
+              },
+              {
+                label: 'Active 7d',
+                value: formatCount(life?.active_7d ?? 0),
+                deltaPercent: head ? deltaPercent(head.active_users, head.prev_active_users) : null,
+                note: life ? `${formatCount(life.active_28d)} in 28d` : undefined,
+              },
+              {
+                label: 'Tool calls',
+                value: formatCount(recentCalls),
+                deltaPercent: deltaPercent(recentCalls, priorCalls),
+                note: rate === null ? 'none attempted' : `${formatPercent(rate, 1)} succeeded`,
+              },
+            ]}
+          />
+          {weeks.length > 0 ? (
+            <GroupedColumns
+              buckets={weeks}
+              series={[
+                { name: 'Signed up', color: 'var(--cobalt-300)' },
+                { name: 'Reached a mailbox', color: 'var(--mint-500)' },
+              ]}
+            />
+          ) : (
+            <p className="kiosk-empty">No signup week has any rows behind it.</p>
+          )}
         </Tile>
       </Cell>
 
-      {/* Records exist for one reason: everything else on this page is a level
-          or a rate, and neither can tell you that last Tuesday was the best day
-          this product has ever had. A best-ever is the only figure here that is
-          allowed to be simply pleasant to look at, and it is still a counted
-          fact with a date on it. */}
-      <Cell span={5} tall={2}>
-        <Tile label="Records" aside="all time, from the series read">
-          {/* Five facts and no sentence. The signup records read the durable
-              user table and really are all time; the call record is bounded at
-              the 90 day purge, which the tile's own aside covers. */}
-          <FactRow
-            facts={[
+      {/* Baremetrics' rail. Movements are never netted into one figure: a net
+          of zero cannot tell a quiet month from one sale cancelling one churn,
+          and only one of those needs a reply. Zero rows still render, faded,
+          because "nothing churned" and "we do not measure churn" must not look
+          the same. */}
+      <Cell span={4} tall={3}>
+        <Tile label="Movements and records" aside={`${days}d`}>
+          <Rail
+            groups={[
               {
-                label: 'Best signup day',
-                value: bestSignupDay ? `${formatCount(bestSignupDay.count)} · ${formatDayKey(bestSignupDay.day) ?? ''}` : '—',
+                title: 'Recurring revenue',
+                rows: mrr
+                  ? [
+                      move('new', mrr.newCustomers, 'New', mrr.newMrrMinor, money, 'good'),
+                      move('churn', mrr.churnedCustomers, 'Churned', -mrr.churnedMrrMinor, money, 'bad'),
+                      move('risk', mrr.atRiskCustomers, 'Card failing', mrr.atRiskMinor, money, 'warn'),
+                      move('leaving', mrr.leavingCustomers, 'Set to stop', mrr.leavingMinor, money, 'warn'),
+                      {
+                        key: 'valuation',
+                        label: `Worth at ${valuationMultiple()}\u00d7 ARR`,
+                        value: money(valuationFromArr(mrr.arrMinor, valuationMultiple()).valuationMinor),
+                      },
+                    ]
+                  : [{ key: 'none', label: 'Stripe could not be read', value: NO_DATA }],
               },
               {
-                label: 'Signup streak',
-                value: signupStreak.current > 0 ? `${formatCount(signupStreak.current)} days` : 'broken',
-              },
-              { label: 'Longest ever', value: `${formatCount(signupStreak.longest)} days` },
-              {
-                label: 'Busiest call day',
-                value: busiestCallDay ? `${formatCount(busiestCallDay.count)} · ${formatDayKey(busiestCallDay.day) ?? ''}` : '—',
-              },
-              {
-                label: 'Last sale',
-                value:
-                  checkout.ok && checkout.data.lastCompletedAt
-                    ? (agoLabel(checkout.data.lastCompletedAt) ?? '—')
-                    : 'never',
+                title: 'Records',
+                rows: [
+                  {
+                    key: 'best',
+                    count: bestSignupDay ? formatCount(bestSignupDay.count) : NO_DATA,
+                    label: 'Best signup day',
+                    value: bestSignupDay ? (formatDayKey(bestSignupDay.day) ?? '') : '',
+                  },
+                  {
+                    key: 'streak',
+                    count: formatCount(signupStreak.current),
+                    label: 'Signup streak, days',
+                    value: `best ${formatCount(signupStreak.longest)}`,
+                  },
+                  {
+                    key: 'busiest',
+                    count: busiestCallDay ? formatCount(busiestCallDay.count) : NO_DATA,
+                    label: 'Busiest call day',
+                    value: busiestCallDay ? (formatDayKey(busiestCallDay.day) ?? '') : '',
+                  },
+                  {
+                    key: 'sale',
+                    label: 'Last sale',
+                    value:
+                      checkout.ok && checkout.data.lastCompletedAt
+                        ? (agoLabel(checkout.data.lastCompletedAt) ?? NO_DATA)
+                        : 'never',
+                  },
+                ],
               },
             ]}
           />
@@ -251,119 +307,52 @@ export async function TopSection({ days }: { days: number }) {
   );
 }
 
-/* ====================================================== the four headlines */
+/** One MRR movement row. Churn is passed negative so it reads as a loss. */
+function move(
+  key: string,
+  count: number,
+  label: string,
+  minor: number,
+  money: (minor: number) => string,
+  tone: RailRow['tone'],
+): RailRow {
+  return {
+    key,
+    count: formatCount(count),
+    label,
+    value: money(minor),
+    tone: minor === 0 ? undefined : tone,
+    zero: minor === 0,
+  };
+}
 
-export async function PulseSection({ days }: { days: number }) {
-  const [people, signups, daily, lifecycle] = await Promise.all([
-    fetchPeopleCounts(days),
-    fetchUserSignupDays(DURABLE_DAYS),
-    fetchDailyMetrics(DAILY_DAYS),
-    fetchLifecycleCounts(),
-  ]);
-
-  const signupRows = signups.ok ? signups.data : [];
-  const dailyRows = daily.ok ? daily.data : [];
-  const life = orNull(lifecycle);
-  const head = orNull(people);
-  const cumulative = signupRows[signupRows.length - 1]?.cumulative_users ?? 0;
-
-  const calls = sum(dailyRows, 'calls');
-  const successes = sum(dailyRows, 'successes');
-  const throttled = sum(dailyRows, 'rate_limited');
-  const rate = attemptRate(successes, calls, throttled);
-
-  // Two equal halves of the window, so a delta needs no second query. The
-  // recent half is the one on screen.
-  const recentCalls = sum(dailyRows.slice(-days), 'calls');
-  const priorCalls = sum(dailyRows.slice(-days * 2, -days), 'calls');
-
-  return (
-    <>
-      <Cell span={3}>
-        <Tile label="Signed up" aside="people, all time" tone="good">
-          <BigNumber
-            value={cumulative}
-            trend={head ? trend(head.new_users, head.prev_new_users, 'up') : null}
-            caption={
-              head
-                ? <><strong>{formatCount(head.new_users)}</strong> in {days}d · {formatCount(head.internal_users)} of ours excluded</>
-                : 'People counts unavailable.'
-            }
-            spark={signupRows.slice(-60).map((row) => row.new_users)}
-          />
-        </Tile>
-      </Cell>
-
-      <Cell span={3}>
-        <Tile label="Reached a mailbox" aside="ever" tone="good">
-          <BigNumber
-            value={life?.value_activated ?? 0}
-            caption={
-              life
-                ? <><strong>{ratio(life.value_activated, cumulative)}</strong> of everyone who signed up</>
-                : 'Lifecycle counts unavailable.'
-            }
-            spark={signupRows.slice(-60).map((row) => row.activated_users)}
-            sparkColor="var(--mint-500)"
-          />
-        </Tile>
-      </Cell>
-
-      <Cell span={3}>
-        <Tile label="Active this week" aside="7 days" tone={(life?.active_7d ?? 0) > 0 ? 'good' : 'warn'}>
-          <BigNumber
-            value={life?.active_7d ?? 0}
-            trend={head ? trend(head.active_users, head.prev_active_users, 'up') : null}
-            caption={
-              life
-                ? <><strong>{formatCount(life.active_28d)}</strong> active in 28d</>
-                : 'Lifecycle counts unavailable.'
-            }
-            spark={dailyRows.map((row) => row.active_7d)}
-          />
-        </Tile>
-      </Cell>
-
-      <Cell span={3}>
-        <Tile label={`Tool calls, ${days}d`} aside={rate === null ? 'no attempts' : formatPercent(rate, 1)}>
-          <BigNumber
-            value={recentCalls}
-            trend={trend(recentCalls, priorCalls, 'up')}
-            caption={
-              // Attempted, not raw: a rate-limited call never reached a tool.
-              // Dividing by raw calls is what made a board tile read 56.7% on
-              // an hour where every real call succeeded.
-              rate === null
-                ? 'Nothing was attempted.'
-                : <><strong>{formatPercent(rate, 1)}</strong> succeeded, our own monitor included</>
-            }
-            spark={dailyRows.map((row) => row.calls)}
-            sparkColor="var(--amber-500)"
-          />
-        </Tile>
-      </Cell>
-    </>
-  );
+/**
+ * Percentage change, or null.
+ *
+ * A previous period of zero means no honest comparison exists: dividing by it
+ * would render every first-ever signup as an infinite improvement.
+ */
+function deltaPercent(current: number, previous: number | null | undefined): number | null {
+  if (previous === null || previous === undefined || previous === 0) return null;
+  return ((current - previous) / previous) * 100;
 }
 
 /* ============================================================= money band */
 
 export async function MoneySection({ days }: { days: number }) {
-  const [revenue, counts, checkout, pressure, bands] = await Promise.all([
+  const [revenue, checkout, pressure, bands] = await Promise.all([
     fetchRecurringRevenue(days),
-    fetchRevenueCounts(),
     fetchCheckoutFunnel(),
     fetchUpgradePressure(),
     fetchInboxDistribution(),
   ]);
 
   const mrr = orNull(revenue);
-  const money = orNull(counts);
   const bandRows = bands.ok ? [...bands.data].sort((a, b) => a.band_index - b.band_index) : [];
 
   return (
     <>
-      <Cell span={3}>
+      <Cell span={4}>
         {mrr && mrr.byPlan.length > 0 ? (
           <Tile label="Which tier pays" aside={`${formatMoney(mrr.arrMinor, mrr.currency)}/yr`}>
             <BarList
@@ -379,7 +368,7 @@ export async function MoneySection({ days }: { days: number }) {
         )}
       </Cell>
 
-      <Cell span={3}>
+      <Cell span={4}>
         {mrr ? (
           <Tile
             label="Money at risk"
@@ -404,25 +393,11 @@ export async function MoneySection({ days }: { days: number }) {
         )}
       </Cell>
 
-      <Cell span={3}>
-        {money ? (
-          <Tile label="Still to convert" aside="free workspaces">
-            <BigNumber
-              value={money.free_workspaces}
-              caption={
-                <>
-                  <strong>{formatCount(money.paying_workspaces)}</strong> pay ·{' '}
-                  {formatCount(money.comped_workspaces)} comped · {formatCount(money.internal_workspaces)} ours
-                </>
-              }
-            />
-          </Tile>
-        ) : (
-          <TileError label="Still to convert" message={counts.ok ? 'unavailable' : counts.error} />
-        )}
-      </Cell>
-
-      <Cell span={3}>
+      {/* "Still to convert" lived here and was cut: the free-workspace count
+          is already the denominator of the checkout funnel one card to the
+          right, and stating it twice is what a reader has to reconcile rather
+          than read. */}
+      <Cell span={4}>
         {pressure.ok ? (
           <Tile
             label="At the inbox ceiling"
@@ -548,7 +523,7 @@ export async function GrowthSection({ days }: { days: number }) {
 
   return (
     <>
-      <Cell span={7} tall={2}>
+      <Cell span={6} tall={2}>
         {signups.ok && weeks.length > 0 ? (
           <Tile label="Signups and first mailboxes" aside={`${CHART_WEEKS} calendar weeks`}>
             <GroupedColumns
@@ -567,7 +542,7 @@ export async function GrowthSection({ days }: { days: number }) {
         )}
       </Cell>
 
-      <Cell span={5} tall={2}>
+      <Cell span={6} tall={2}>
         {channels.ok ? (
           <Tile
             label="Which channels produce customers"
@@ -598,7 +573,7 @@ export async function GrowthSection({ days }: { days: number }) {
         )}
       </Cell>
 
-      <Cell span={7} tall={2}>
+      <Cell span={8} tall={2}>
         <CalendarHeat
           title="Signups by day"
           subtitle={`Every UTC day of the last ${HEAT_WEEKS} weeks.`}
@@ -608,7 +583,7 @@ export async function GrowthSection({ days }: { days: number }) {
         />
       </Cell>
 
-      <Cell span={5} tall={2}>
+      <Cell span={4} tall={2}>
         {funnel.ok ? (
           <Tile label="Road to a paying customer" aside="workspaces, all accounts">
             <FunnelSteps
@@ -629,7 +604,7 @@ export async function GrowthSection({ days }: { days: number }) {
         )}
       </Cell>
 
-      <Cell span={4}>
+      <Cell span={6}>
         {providers.ok ? (
           <Tile label="Connected inboxes" aside="live, by provider">
             <BarList
@@ -642,7 +617,7 @@ export async function GrowthSection({ days }: { days: number }) {
         )}
       </Cell>
 
-      <Cell span={4}>
+      <Cell span={6}>
         {providerFunnel.ok ? (
           <Tile label="Connection attempts" aside={`${days}d, by provider`}>
             <BarList
@@ -662,19 +637,9 @@ export async function GrowthSection({ days }: { days: number }) {
         )}
       </Cell>
 
-      <Cell span={4}>
-        {funnel.ok ? (
-          <Tile label="Onboarding, step by step" aside="workspaces, all time">
-            <FunnelSteps
-              steps={[...funnel.data]
-                .sort((a, b) => a.stage_index - b.stage_index)
-                .map((stage) => ({ label: STAGE_LABELS[stage.stage] ?? stage.stage, value: stage.workspaces }))}
-            />
-          </Tile>
-        ) : (
-          <TileError label="Onboarding, step by step" message={funnel.error} />
-        )}
-      </Cell>
+      {/* The "Onboarding, step by step" ladder lived here and was cut: every
+          rung of it is already the first three rungs of "Road to a paying
+          customer" above, drawn from the same RPC. */}
     </>
   );
 }
@@ -803,7 +768,7 @@ export async function UptimeSection({ days }: { days: number }) {
 
   return (
     <>
-      <Cell span={3}>
+      <Cell span={4}>
         {daily.ok ? (
           <Tile
             label="Success rate"
@@ -823,7 +788,7 @@ export async function UptimeSection({ days }: { days: number }) {
         )}
       </Cell>
 
-      <Cell span={3}>
+      <Cell span={4}>
         {daily.ok ? (
           <Tile label="Calls" aside={`${days}d`}>
             <BigNumber
@@ -837,7 +802,7 @@ export async function UptimeSection({ days }: { days: number }) {
         )}
       </Cell>
 
-      <Cell span={3}>
+      <Cell span={4}>
         {daily.ok ? (
           <Tile label="Failures" aside={`${days}d`} tone={failures > 0 ? 'warn' : 'good'}>
             <BigNumber
@@ -852,7 +817,7 @@ export async function UptimeSection({ days }: { days: number }) {
         )}
       </Cell>
 
-      <Cell span={3}>
+      <Cell span={4} tall={2}>
         {gmail.ok && projection ? (
           <Tile
             label="Gmail OAuth headroom"
@@ -874,7 +839,7 @@ export async function UptimeSection({ days }: { days: number }) {
         )}
       </Cell>
 
-      <Cell span={5} tall={2}>
+      <Cell span={8} tall={2}>
         {errors.ok ? (
           <Tile label="What is failing" aside={`${days}d, by tool and code`}>
             <BarList
@@ -891,7 +856,7 @@ export async function UptimeSection({ days }: { days: number }) {
         )}
       </Cell>
 
-      <Cell span={7} tall={2}>
+      <Cell span={12} tall={2}>
         {daily.ok ? (
           <BarSeries
             title="Calls by outcome"
