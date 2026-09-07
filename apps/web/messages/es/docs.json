@@ -223,12 +223,13 @@
     },
     "email_compose": {
       "title": "Redactar correo",
-      "desc": "Envía correo nuevo o responde a mensajes existentes. Define action: 'send' para un correo nuevo (to/subject/body, opcionalmente cc/bcc/html_body/reply_to/attachments), 'reply' para responder a un message_id (las cabeceras de hilo se establecen automáticamente; opcionalmente reply_all), o 'forward' para reenviar un message_id a nuevos destinatarios (opcionalmente readjuntando los archivos originales). La firma de la bandeja se añade automáticamente: en respuestas y reenvíos va después de tu texto y antes del bloque citado, regida por el modo de respuesta de la firma; pasa include_signature: false para suprimirla en un único mensaje escueto. Las tres son irreversibles una vez enviadas.",
+      "desc": "Envía correo nuevo o responde a mensajes existentes. Define action: 'send' para un correo nuevo (to/subject/body, opcionalmente cc/bcc/html_body/reply_to/attachments), 'reply' para responder a un message_id (las cabeceras de hilo se establecen automáticamente; opcionalmente reply_all), o 'forward' para reenviar un message_id a nuevos destinatarios (opcionalmente readjuntando los archivos originales). La firma de la bandeja se añade automáticamente: en respuestas y reenvíos va después de tu texto y antes del bloque citado, regida por el modo de respuesta de la firma; pasa include_signature: false para suprimirla en un único mensaje escueto. Las tres son irreversibles una vez enviadas. 'forward' también acepta message_ids para hasta 50 mensajes en una llamada, informados uno a uno. Para adjuntar un archivo que ya está en esta bandeja, refiérelo como '{' source_message_id, attachment_index '}' en lugar de leerlo y volver a codificarlo.",
       "params": {
         "action": "Qué operación realizar: \"send\", \"reply\" o \"forward\". Determina qué otros argumentos se aplican.",
         "inbox_id": "UUID de la bandeja desde la que enviar. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
         "inbox": "Dirección de correo de la bandeja a usar, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id.",
         "message_id": "ID de mensaje del proveedor del mensaje original (action 'reply' o 'forward'), de un list, read o search previo.",
+        "message_ids": "Hasta 50 ID de mensaje para reenviar a los mismos destinatarios en una sola llamada (action 'forward'), en lugar de message_id. Se reenvían de uno en uno y el resultado informa de cada uno por separado, de modo que un fallo a mitad de camino sigue indicando cuáles se enviaron. Los duplicados se eliminan.",
         "to": "Direcciones de correo de los destinatarios (obligatorio para 'send' y 'forward'). Máx. 50.",
         "subject": "Asunto del correo (action 'send'). Máx. 998 caracteres. En reply/forward se deriva del original.",
         "body": "Cuerpo de texto. Para 'reply' es tu respuesta; para 'forward' una nota opcional antepuesta al mensaje reenviado.",
@@ -239,7 +240,7 @@
         "reply_all": "Responder a todos los destinatarios originales, To + Cc (action 'reply'). Por defecto false.",
         "include_attachments": "Readjuntar los adjuntos del mensaje original (action 'forward'). Los archivos que superen el presupuesto de 10 MB se omiten. Por defecto false.",
         "include_signature": "Si añadir la firma configurada de la bandeja a este mensaje. Por defecto true; ponlo en false para enviar este único mensaje sin la firma.",
-        "attachments": "Archivos adjuntos. Cada elemento: '{' filename, mime_type, data (base64) '}'. Máx. 20 elementos, 10 MB en total.",
+        "attachments": "Archivos adjuntos. Cada elemento es o bien bytes en línea '{' filename, mime_type, data (base64) '}' o una referencia a un archivo que ya está en esta bandeja '{' source_message_id, attachment_index '}', que el servidor copia sin que los bytes pasen por el modelo. Máx. 20 elementos, 10 MB en total.",
         "idempotency_key": "Clave opaca opcional (1–200 caracteres) para una única solicitud saliente lógica. Reutilízala solo para reintentar exactamente la misma acción con los mismos argumentos en un plazo de 24 horas; una reutilización con argumentos distintos se rechaza."
       }
     },
@@ -291,7 +292,7 @@
         "bcc": "Destinatarios en copia oculta (action 'create'). Por defecto [].",
         "html_body": "Versión HTML opcional del cuerpo (action 'create').",
         "reply_to": "Dirección opcional de la cabecera Reply-To (action 'create').",
-        "attachments": "Archivos adjuntos (action 'create'). Mismo esquema que la acción send. Máx. 20 elementos, 10 MB en total.",
+        "attachments": "Archivos adjuntos (action 'create'). Solo bytes en línea: '{' filename, mime_type, data (base64) '}'. La forma por referencia source_message_id está en email_compose, no aquí. Máx. 20 elementos, 10 MB en total.",
         "scheduled_send_id": "UUID del envío programado a cancelar (action 'cancel').",
         "limit": "Número máximo de resultados (action 'list'). Por defecto 20, máx. 100.",
         "idempotency_key": "Clave opaca opcional para la creación de un único envío programado. Reutilízala solo para reintentar exactamente la misma solicitud de creación en un plazo de 24 horas."

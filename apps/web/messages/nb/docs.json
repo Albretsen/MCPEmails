@@ -223,12 +223,13 @@
     },
     "email_compose": {
       "title": "Skriv e-post",
-      "desc": "Send ny e-post eller svar på eksisterende meldinger. Sett action: 'send' for en ny e-post (to/subject/body, valgfritt cc/bcc/html_body/reply_to/attachments), 'reply' for å svare på en message_id (trådingsoverskrifter settes automatisk; valgfritt reply_all), eller 'forward' for å videresende en message_id til nye mottakere (valgfritt med de opprinnelige filene). Innboksens signatur legges til automatisk: ved svar og videresending plasseres den etter teksten din og før det siterte blokken, styrt av signaturens svarmodus; oppgi include_signature: false for å undertrykke den for én enkelt kort melding. Alle tre kan ikke angres når de er sendt.",
+      "desc": "Send ny e-post eller svar på eksisterende meldinger. Sett action: 'send' for en ny e-post (to/subject/body, valgfritt cc/bcc/html_body/reply_to/attachments), 'reply' for å svare på en message_id (trådingsoverskrifter settes automatisk; valgfritt reply_all), eller 'forward' for å videresende en message_id til nye mottakere (valgfritt med de opprinnelige filene). Innboksens signatur legges til automatisk: ved svar og videresending plasseres den etter teksten din og før det siterte blokken, styrt av signaturens svarmodus; oppgi include_signature: false for å undertrykke den for én enkelt kort melding. Alle tre kan ikke angres når de er sendt. 'forward' tar også message_ids for inntil 50 meldinger i ett kall, rapportert én for én. For å legge ved en fil som allerede ligger i denne innboksen, referer til den som '{' source_message_id, attachment_index '}' i stedet for å lese og kode den på nytt.",
       "params": {
         "action": "Hvilken operasjon som skal utføres: \"send\", \"reply\" eller \"forward\". Avgjør hvilke andre argumenter som gjelder.",
         "inbox_id": "UUID for innboksen det skal sendes fra. Valgfritt, løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox. Kall inbox_list for å hente tilgjengelige inbox-ID-er.",
         "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt.",
         "message_id": "Leverandørens meldings-ID for den opprinnelige meldingen (action 'reply' eller 'forward'), fra en tidligere list, read eller search.",
+        "message_ids": "Inntil 50 meldings-ID-er som videresendes til de samme mottakerne i ett kall (action 'forward'), i stedet for message_id. De sendes én om gangen, og svaret rapporterer hver enkelt separat, slik at en feil underveis fortsatt viser hvilke som ble sendt. Duplikater fjernes.",
         "to": "Mottakernes e-postadresser (påkrevd for 'send' og 'forward'). Maks 50.",
         "subject": "Emnefeltet for e-posten (action 'send'). Maks 998 tegn. Ved reply/forward avledes det fra originalen.",
         "body": "Tekstkropp. For 'reply' er dette svaret ditt; for 'forward' et valgfritt notat som settes inn over den videresendte meldingen.",
@@ -239,7 +240,7 @@
         "reply_all": "Svar til alle opprinnelige mottakere, både To og Cc (action 'reply'). Standard false.",
         "include_attachments": "Legg ved den opprinnelige meldingens vedlegg på nytt (action 'forward'). Filer over 10 MB-budsjettet utelates. Standard false.",
         "include_signature": "Om innboksens konfigurerte signatur skal legges til denne meldingen. Standard true; sett false for å sende denne ene meldingen uten signaturen.",
-        "attachments": "Filvedlegg. Hvert element: '{' filename, mime_type, data (base64) '}'. Maks 20 elementer, 10 MB totalt.",
+        "attachments": "Filvedlegg. Hvert element er enten innebygde byte '{' filename, mime_type, data (base64) '}' eller en referanse til en fil som allerede ligger i denne innboksen '{' source_message_id, attachment_index '}', som serveren kopierer over uten at bytene går gjennom modellen. Maks 20 elementer, 10 MB totalt.",
         "idempotency_key": "Valgfri ugjennomsiktig nøkkel (1–200 tegn) for én logisk utgående forespørsel. Gjenbruk den bare for å prøve nøyaktig samme handling og argumenter på nytt innen 24 timer; gjenbruk med andre argumenter avvises."
       }
     },
@@ -291,7 +292,7 @@
         "bcc": "BCC-mottakere (action 'create'). Standard [].",
         "html_body": "Valgfri HTML-versjon av kroppen (action 'create').",
         "reply_to": "Valgfri Reply-To-overskriftsadresse (action 'create').",
-        "attachments": "Filvedlegg (action 'create'). Samme skjema som send-handlingen. Maks 20 elementer, 10 MB totalt.",
+        "attachments": "Filvedlegg (action 'create'). Kun innebygde byte: '{' filename, mime_type, data (base64) '}'. Referanseformen source_message_id finnes på email_compose, ikke her. Maks 20 elementer, 10 MB totalt.",
         "scheduled_send_id": "UUID for den planlagte sendingen som skal avbrytes (action 'cancel').",
         "limit": "Maks antall resultater (action 'list'). Standard 20, maks 100.",
         "idempotency_key": "Valgfri ugjennomsiktig nøkkel for opprettelsen av én planlagt sending. Gjenbruk den bare for å prøve nøyaktig samme create-forespørsel på nytt innen 24 timer."
