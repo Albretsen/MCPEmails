@@ -11,6 +11,7 @@ import {
   runTolerantly,
   selectTolerantly,
 } from '@/lib/approvals/columns';
+import { normalizeSenderName } from '@/lib/inboxes/sender-name';
 import {
   canManageInboxes,
   canManageWorkspace,
@@ -322,6 +323,20 @@ export async function PATCH(
     update.signature_reply_mode = mode;
   }
 
+  // Sender display name. The MCP edge function writes `display_name` verbatim
+  // into the From header (`"<display_name>" <address>`) for every provider, so
+  // the value is normalised here as a header boundary: control characters
+  // (CR/LF included) and angle brackets are stripped, whitespace is collapsed,
+  // and the result is capped at 100 chars. An empty name clears the column
+  // (NULL), which makes the dashboard fall back to the address local-part.
+  if ('display_name' in input) {
+    const normalized = normalizeSenderName(input.display_name);
+    if (!normalized.ok) {
+      return NextResponse.json({ error: normalized.error }, { status: 400 });
+    }
+    update.display_name = normalized.value;
+  }
+
   // Three-way review mode: off | inline | dashboard.
   //  - off        → the assistant sends without a human decision
   //  - inline     → a review card appears in the AI conversation; approving it
@@ -432,7 +447,8 @@ export async function PATCH(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       selectTolerantly<any>(
         ['signature_text', 'signature_html', 'signature_enabled', 'signature_reply_mode',
-          'signature_source', 'signature_updated_at', 'send_approval_required', 'send_review_mode'],
+          'signature_source', 'signature_updated_at', 'send_approval_required', 'send_review_mode',
+          'display_name'],
         PENDING_INBOX_COLUMNS,
         (columns) =>
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -459,5 +475,8 @@ export async function PATCH(
     sendApprovalRequired,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     sendReviewMode: (saved as any).send_review_mode ?? (sendApprovalRequired ? 'dashboard' : 'off'),
+    // The sender display name after normalisation; null when unset/cleared.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    display_name: (saved as any).display_name ?? null,
   });
 }

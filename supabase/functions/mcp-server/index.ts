@@ -84,7 +84,7 @@ import {
 import {
   buildDraftMime,
   buildMimeMessage,
-  encodeMimeHeaderValue,
+  formatMailbox,
   mimeMessageToBase64url,
   stripBccHeader,
 } from "./mime-build.ts";
@@ -164,6 +164,7 @@ import {
 } from "./triage-engine.ts";
 import { sendViaSmtp, SmtpAuthError, SmtpNotSentError } from "./smtp-client.ts";
 import { isSelfSenderIdentity, senderIdentityErrorCode } from "./sender-identity.ts";
+import { normaliseSenderName, SENDER_NAME_MAX_CHARS } from "./sender-name.ts";
 import {
   type ActionMisplacement,
   buildInvalidArgumentsText,
@@ -4851,9 +4852,11 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     description:
       "Read the email signature configured for an inbox. Returns the signature " +
       "HTML and plain text, whether it is enabled, the reply/forward mode " +
-      "('always' | 'first_only' | 'never'), and its source ('manual', " +
-      "'gmail_import', or null when none is set). The signature is appended " +
-      "server-side on send/reply/forward/draft/scheduled messages.",
+      "('always' | 'first_only' | 'never'), its source ('manual', " +
+      "'gmail_import', or null when none is set), and `sender_name`, the " +
+      "display name recipients see in the From header (null when unset). The " +
+      "signature is appended server-side on send/reply/forward/draft/scheduled " +
+      "messages.",
     requiredScope: "read:email",
     inputSchema: {
       type: "object",
@@ -4878,7 +4881,10 @@ const LEGACY_TOOLS: ToolDefinition[] = [
       "deleting the text) and `signature_reply_mode` ('always' = sign every " +
       "reply/forward, 'first_only' = only the first message in a thread, 'never' = " +
       "never sign replies/forwards). Setting a signature marks its source as " +
-      "'manual', which permanently overrides Gmail auto-import for that inbox.",
+      "'manual', which permanently overrides Gmail auto-import for that inbox. " +
+      "`sender_name` sets the display name recipients see in the From header, " +
+      "e.g. \"Evancoe Bot <bot@evancoe.com>\"; it can be set on its own without " +
+      "touching the signature.",
     requiredScope: "send:email",
     inputSchema: {
       type: "object",
@@ -4908,6 +4914,15 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           enum: ["always", "first_only", "never"],
           description:
             "Signature on replies and forwards; 'first_only' is the default.",
+        },
+        sender_name: {
+          type: "string",
+          maxLength: SENDER_NAME_MAX_CHARS,
+          description:
+            "Display name recipients see in the From header, e.g. 'Evancoe Bot' " +
+            "gives \"Evancoe Bot <bot@evancoe.com>\". Omit to keep, empty string " +
+            "to clear. Whitespace is collapsed; control characters and angle " +
+            "brackets are removed.",
         },
       },
       required: [],
@@ -5768,6 +5783,7 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     properties: {
       inbox_id: { type: "string" },
       email_address: { type: "string" },
+      sender_name: { type: ["string", "null"] },
       signature_enabled: { type: "boolean" },
       signature_reply_mode: { type: "string", enum: ["always", "first_only", "never"] },
     },
@@ -5779,6 +5795,7 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
       saved: { type: "boolean" },
       inbox_id: { type: "string" },
       email_address: { type: "string" },
+      sender_name: { type: ["string", "null"] },
       signature_enabled: { type: "boolean" },
       signature_reply_mode: { type: "string", enum: ["always", "first_only", "never"] },
     },
@@ -6267,9 +6284,10 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
     title: "Signature",
     description:
       "Read or set an inbox's signature, which the server appends on " +
-      "send/reply/forward/draft/scheduled mail. Setting one marks the source " +
-      "'manual', which overrides Gmail auto-import. 'get' needs read:email, " +
-      "'set' needs send:email.",
+      "send/reply/forward/draft/scheduled mail, and the inbox's sender_name " +
+      "(the display name in the From header). Setting a signature marks the " +
+      "source 'manual', which overrides Gmail auto-import. 'get' needs " +
+      "read:email, 'set' needs send:email.",
     // Both actions are idempotent: 'set' writes the whole signature, so
     // repeating a call lands on the same stored state rather than appending to
     // it. readOnlyHint stays false because 'set' does write.
@@ -6278,12 +6296,12 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       get: {
         legacy: "signature_get",
         scope: "read:email",
-        hint: "current signature_html and text, enabled flag, reply_mode and source",
+        hint: "current signature_html and text, enabled flag, reply_mode, source and sender_name",
       },
       set: {
         legacy: "signature_set",
         scope: "send:email",
-        hint: "write signature_text and/or signature_html",
+        hint: "write signature_text and/or signature_html, and/or sender_name",
       },
     },
   },
@@ -9590,9 +9608,7 @@ async function sendImapMessage(
 ): Promise<SendEmailResult> {
   const messageId = crypto.randomUUID();
   const mime = buildMimeMessage({
-    from: inbox.display_name
-      ? `${encodeMimeHeaderValue(inbox.display_name)} <${inbox.email_address}>`
-      : inbox.email_address,
+    from: formatMailbox(inbox.display_name, inbox.email_address),
     to: params.to,
     cc: params.cc.length ? params.cc : undefined,
     subject: params.subject,
@@ -9700,13 +9716,11 @@ async function replyImapMessage(
   const references = [origReferences, origMessageId].filter(Boolean).join(" ").trim();
   const messageId = crypto.randomUUID();
   const toStrings = recipients.map((a) =>
-    a.name ? `${encodeMimeHeaderValue(a.name)} <${a.email}>` : a.email
+    formatMailbox(a.name, a.email)
   );
 
   const mime = buildMimeMessage({
-    from: inbox.display_name
-      ? `${encodeMimeHeaderValue(inbox.display_name)} <${inbox.email_address}>`
-      : inbox.email_address,
+    from: formatMailbox(inbox.display_name, inbox.email_address),
     to: toStrings,
     subject: replySubject,
     textBody: buildReplyTextBody(
@@ -12345,9 +12359,7 @@ async function sendGmailMessage(
   const messageId = crypto.randomUUID();
 
   const mimeMessage = buildMimeMessage({
-    from: inbox.display_name
-      ? `${encodeMimeHeaderValue(inbox.display_name)} <${inbox.email_address}>`
-      : inbox.email_address,
+    from: formatMailbox(inbox.display_name, inbox.email_address),
     to: params.to,
     cc: params.cc.length ? params.cc : undefined,
     // The Bcc header is Gmail's ONLY recipient channel for a `raw` send.
@@ -12686,7 +12698,7 @@ async function replyGmailMessage(
     throw new Error(replyNoRecipientsMessage("email_reply"));
   }
   const replyAddresses: string[] = resolvedReply.recipients.map((e) =>
-    e.name ? `${encodeMimeHeaderValue(e.name)} <${e.email}>` : e.email
+    formatMailbox(e.name, e.email)
   );
 
   // ── Step 3: Build reply subject ───────────────────────────────────────────
@@ -12697,9 +12709,7 @@ async function replyGmailMessage(
   // ── Step 4: Construct MIME reply with threading headers ───────────────────
   const newMessageId = crypto.randomUUID();
   const mimeMessage = buildMimeMessage({
-    from: inbox.display_name
-      ? `${encodeMimeHeaderValue(inbox.display_name)} <${inbox.email_address}>`
-      : inbox.email_address,
+    from: formatMailbox(inbox.display_name, inbox.email_address),
     to: replyAddresses,
     subject: replySubject,
     textBody: buildReplyTextBody(
@@ -20670,9 +20680,7 @@ async function imapCreateDraft(
   }
   const password = await decryptStoredToken(inbox.imap_password);
   const messageId = crypto.randomUUID();
-  const from = inbox.display_name
-    ? `${encodeMimeHeaderValue(inbox.display_name)} <${inbox.email_address}>`
-    : inbox.email_address;
+  const from = formatMailbox(inbox.display_name, inbox.email_address);
 
   const mime = buildDraftMime({
     from,
@@ -20759,9 +20767,7 @@ async function imapUpdateDraft(
   const { folder, uid: oldUid } = decodeImapId(draftId);
   if (!Number.isFinite(oldUid) || oldUid <= 0) throw new Error("draft_not_found");
   const messageId = crypto.randomUUID();
-  const from = inbox.display_name
-    ? `${encodeMimeHeaderValue(inbox.display_name)} <${inbox.email_address}>`
-    : inbox.email_address;
+  const from = formatMailbox(inbox.display_name, inbox.email_address);
 
   const mime = buildDraftMime({
     from,
@@ -21078,9 +21084,7 @@ async function gmailCreateDraft(
 ): Promise<DraftCreateResult> {
   const token = await withFreshGmailToken(inbox);
   const messageId = crypto.randomUUID();
-  const from = inbox.display_name
-    ? `${encodeMimeHeaderValue(inbox.display_name)} <${inbox.email_address}>`
-    : inbox.email_address;
+  const from = formatMailbox(inbox.display_name, inbox.email_address);
 
   const mime = buildDraftMime({
     from,
@@ -21134,9 +21138,7 @@ async function gmailUpdateDraft(
 ): Promise<DraftUpdateResult> {
   const token = await withFreshGmailToken(inbox);
   const messageId = crypto.randomUUID();
-  const from = inbox.display_name
-    ? `${encodeMimeHeaderValue(inbox.display_name)} <${inbox.email_address}>`
-    : inbox.email_address;
+  const from = formatMailbox(inbox.display_name, inbox.email_address);
 
   const mime = buildDraftMime({
     from,
@@ -23303,6 +23305,7 @@ async function executeGetSignature(
     result: jsonOk({
       inbox_id: inbox.id,
       email_address: inbox.email_address,
+      sender_name: inbox.display_name,
       signature_html: inbox.signature_html,
       signature_text: inbox.signature_text,
       signature_enabled: inbox.signature_enabled,
@@ -23319,9 +23322,11 @@ async function executeGetSignature(
  *
  * Scope: send:email. Writes whichever of signature_text / signature_html the
  * caller supplied (the send path derives the missing half), plus optional
- * signature_enabled and signature_reply_mode. Always sets
+ * signature_enabled and signature_reply_mode. Any signature write sets
  * signature_source = 'manual' and signature_updated_at = now() so a later
- * Gmail import never overwrites the user's choice.
+ * Gmail import never overwrites the user's choice. Also accepts
+ * `sender_name`, written to inboxes.display_name (the From header name); a
+ * call that only sets sender_name leaves every signature column alone.
  */
 async function executeSetSignature(
   rawArgs: unknown,
@@ -23397,9 +23402,25 @@ async function executeSetSignature(
     update["signature_reply_mode"] = mode;
   }
 
+  // Every key collected so far is a signature column. sender_name is not: it
+  // lands in inboxes.display_name (the From header), so it must not stamp
+  // signature_source/updated_at. Decide that before it is added.
+  const signatureTouched = Object.keys(update).length > 0;
+
+  if ("sender_name" in args) {
+    const name = normaliseSenderName(args["sender_name"]);
+    if (!name.ok) {
+      return {
+        result: { content: [{ type: "text", text: name.message }], isError: true },
+        logStatus: "error", logErrorCode: "-32602",
+      };
+    }
+    update["display_name"] = name.value;
+  }
+
   if (Object.keys(update).length === 0) {
     return {
-      result: { content: [{ type: "text", text: "signature_set: provide at least one of signature_text, signature_html, signature_enabled, signature_reply_mode." }], isError: true },
+      result: { content: [{ type: "text", text: "signature_set: provide at least one of signature_text, signature_html, signature_enabled, signature_reply_mode, sender_name." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -23408,11 +23429,13 @@ async function executeSetSignature(
   if (!resolved.ok) return inboxResolutionError(resolved, "signature_set");
   const inbox = resolved.inbox;
 
-  // Any manual write pins the signature as user-owned so Gmail auto-import
-  // (maybeImportGmailSignature) never overwrites it on a later send.
-  const now = new Date().toISOString();
-  update["signature_source"] = "manual";
-  update["signature_updated_at"] = now;
+  // Any manual signature write pins the signature as user-owned so Gmail
+  // auto-import (maybeImportGmailSignature) never overwrites it on a later
+  // send. A sender_name-only call leaves the signature columns untouched.
+  if (signatureTouched) {
+    update["signature_source"] = "manual";
+    update["signature_updated_at"] = new Date().toISOString();
+  }
 
   const { error: updateErr } = await supabase
     .from("inboxes")
@@ -23438,12 +23461,13 @@ async function executeSetSignature(
       saved: true,
       inbox_id: inbox.id,
       email_address: inbox.email_address,
+      sender_name: merged.display_name,
       signature_html: merged.signature_html,
       signature_text: merged.signature_text,
       signature_enabled: merged.signature_enabled,
       signature_reply_mode: merged.signature_reply_mode,
-      signature_source: "manual",
-      signature_updated_at: now,
+      signature_source: merged.signature_source,
+      signature_updated_at: merged.signature_updated_at,
     }, true),
     logStatus: "success", logErrorCode: null,
   };

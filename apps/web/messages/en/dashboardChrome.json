@@ -37,6 +37,8 @@
     "inboxDisconnectFailed": "Failed to disconnect inbox.",
     "signatureSaved": "Signature saved.",
     "signatureSaveFailed": "Failed to save signature.",
+    "senderNameSaved": "Sender name saved.",
+    "senderNameSaveFailed": "Failed to save sender name.",
     "connectionCheckFailed": "Connection check failed.",
     "connectionCheckFailedRetry": "Connection check failed. Please try again.",
     "connectionHealthy": "Connection is healthy.",

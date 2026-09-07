@@ -173,6 +173,16 @@
       "lastCall": "Siste vellykkede kall",
       "lastCallNone": "Ingen vellykkede kall de siste {days} dagene",
       "disconnect": "Koble fra",
+      "senderName": {
+        "title": "Avsendernavn",
+        "help": "Navnet mottakere ser ved siden av adressen din.",
+        "placeholder": "f.eks. Acme Support",
+        "previewLabel": "Fra:",
+        "emptyHint": "Uten navn viser noen klienter bare «{localPart}».",
+        "save": "Lagre navn",
+        "saving": "Lagrer…",
+        "tooLong": "Avsendernavnet er for langt (maks 100 tegn)."
+      },
       "signature": {
         "title": "E-postsignatur",
         "enabled": "På",

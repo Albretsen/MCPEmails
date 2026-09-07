@@ -37,6 +37,8 @@
     "inboxDisconnectFailed": "No se pudo desconectar la bandeja de entrada.",
     "signatureSaved": "Firma guardada.",
     "signatureSaveFailed": "No se pudo guardar la firma.",
+    "senderNameSaved": "Nombre del remitente guardado.",
+    "senderNameSaveFailed": "No se pudo guardar el nombre del remitente.",
     "connectionCheckFailed": "La comprobación de la conexión falló.",
     "connectionCheckFailedRetry": "La comprobación de la conexión falló. Inténtalo de nuevo.",
     "connectionHealthy": "La conexión está en buen estado.",

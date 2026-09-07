@@ -56,6 +56,77 @@ export function encodeMimeHeaderValue(value: string): string {
 }
 
 /**
+ * Characters allowed bare in an RFC 5322 `phrase`: atext plus the space that
+ * separates atoms. Anything else (`,` `.` `(` `)` `:` `;` `"` `\` `@` `[` `]`
+ * `<` `>`) is a special and forces a quoted-string. `=?` is excluded too so a
+ * bare name can never be mistaken for an encoded-word.
+ */
+const BARE_PHRASE_RE = /^[A-Za-z0-9!#$%&'*+\-/=^_`{|}~ ]*$/;
+
+/**
+ * Longest base64 payload that keeps one encoded-word within RFC 2047's 75
+ * character cap: 75 minus `=?UTF-8?B?` (10) minus `?=` (2) is 63, rounded down
+ * to a multiple of 4. 60 base64 characters carry 45 bytes.
+ */
+const ENCODED_WORD_MAX_BYTES = 45;
+
+/**
+ * Encode a display name so it is valid in the `display-name` position of an
+ * RFC 5322 mailbox (`From: <name> <address>`).
+ *
+ * `encodeMimeHeaderValue` is the wrong tool for that position: it passes ASCII
+ * through verbatim, and an unquoted comma or period in a phrase is a special
+ * that splits the mailbox list or trips strict parsers ("Albretsen, Asgeir"
+ * reads as two mailboxes). Three shapes come out of here:
+ *
+ *   * plain atoms ("Evancoe Bot")            -> bare, unchanged
+ *   * ASCII with specials ("Bot (Prod)")     -> quoted-string, `"` and `\` escaped
+ *   * anything non-ASCII ("Åsgeir Bjelland") -> RFC 2047 encoded-word(s), each
+ *     at most 75 characters, never split inside a UTF-8 sequence
+ *
+ * Control characters (CR/LF included) are collapsed to a space first, so a
+ * stored name can never inject a header. Not for Subject or parameter values;
+ * those keep using encodeMimeHeaderValue.
+ */
+export function encodeMimeDisplayName(name: string): string {
+  // deno-lint-ignore no-control-regex
+  const sanitized = name.replace(/[\x00-\x1F\x7F]+/g, " ").trim();
+  if (sanitized.length === 0) return "";
+  // deno-lint-ignore no-control-regex
+  if (/^[\x00-\x7F]*$/.test(sanitized)) {
+    if (BARE_PHRASE_RE.test(sanitized) && !sanitized.includes("=?")) return sanitized;
+    return `"${sanitized.replace(/["\\]/g, (c) => `\\${c}`)}"`;
+  }
+  const words: string[] = [];
+  const encoder = new TextEncoder();
+  let chunk: number[] = [];
+  for (const ch of sanitized) {
+    const bytes = Array.from(encoder.encode(ch));
+    if (chunk.length + bytes.length > ENCODED_WORD_MAX_BYTES) {
+      words.push(encodedWord(chunk));
+      chunk = [];
+    }
+    chunk.push(...bytes);
+  }
+  if (chunk.length > 0) words.push(encodedWord(chunk));
+  return words.join(" ");
+}
+
+function encodedWord(bytes: number[]): string {
+  return `=?UTF-8?B?${btoa(bytes.map((b) => String.fromCharCode(b)).join(""))}?=`;
+}
+
+/**
+ * Format one RFC 5322 mailbox: `name <address>` with the name encoded by
+ * encodeMimeDisplayName, or the bare address when there is no name. The
+ * address must already have passed isValidEmailAddress (no CR/LF, no `<>`).
+ */
+export function formatMailbox(name: string | null | undefined, address: string): string {
+  const encoded = name ? encodeMimeDisplayName(name) : "";
+  return encoded ? `${encoded} <${address}>` : address;
+}
+
+/**
  * Split base64 attachment data into 76-character lines per MIME spec.
  * Strips existing whitespace before re-chunking.
  */

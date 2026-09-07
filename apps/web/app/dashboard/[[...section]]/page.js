@@ -178,6 +178,9 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
     id: row.id,
     // Use display_name when set; fall back to the local-part of the email address.
     label: row.display_name ?? row.email_address.split('@')[0],
+    // Raw sender display name (null when unset). Edited from the inbox detail
+    // modal; the MCP edge function puts it in the From header when set.
+    displayName: row.display_name ?? null,
     address: row.email_address,
     // Branded IMAP inboxes (iCloud, Yahoo, Zoho, Yandex) are stored as
     // provider 'imap' with the brand in `service`. Surface the brand so the

@@ -11,6 +11,7 @@ import { CLIENT_LOGOS } from './clientLogos';
 import { useToast } from './Toast';
 import SignatureRichEditor from './SignatureRichEditor';
 import { sanitizeSignatureHtml } from '@/lib/sanitizeSignatureHtml';
+import { normalizeSenderName } from '@/lib/inboxes/sender-name';
 import { ApprovalsPanel } from './ApprovalsPanel';
 import { AutomationsPanel } from './AutomationsPanel';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
@@ -1010,7 +1011,7 @@ export function WorkflowsPage({ mcpUrl }) {
   );
 }
 
-export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconnect, onCheck, onSaveSignature, onGoToKeys }) {
+export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onGoToKeys }) {
   // The analytics window this plan buys. Every per-inbox call count on this
   // page is scoped to it server-side, so the label has to quote the same
   // number or the column silently means something different per plan.
@@ -1466,6 +1467,7 @@ export function InboxesPage({ inboxes, planLimits, onConnect, onRemove, onReconn
           onCheck={(ib) => handleCheck(ib)}
           onDisconnect={(ib) => { setDetailInbox(null); handleDisconnectRequest(ib); }}
           onSaveSignature={onSaveSignature}
+          onSaveSenderName={onSaveSenderName}
           historyDays={historyDays}
         />
       )}
@@ -1705,6 +1707,110 @@ function ReviewModeSelector({ value, onChange, disabled }) {
   );
 }
 
+/* Sender display name editor. Kept independent of SignatureEditor on purpose:
+   the name is one column (`inboxes.display_name`) with its own save, so a user
+   can fix "bot" -> "Evancoe Bot" without resubmitting the signature form. The
+   MCP edge function puts the saved name in the From header on every send,
+   for every provider; the preview below shows that header as recipients see
+   it. Normalisation (control chars and angle brackets stripped, whitespace
+   collapsed, 100-char cap) is shared with the PATCH route so the preview and
+   the stored value never disagree. */
+function SenderNameEditor({ inbox, onSave, t }) {
+  const [value, setValue] = useState(inbox.displayName ?? '');
+  const [saving, setSaving] = useState(false);
+
+  // Re-seed when a different inbox opens, and after a save (the server echoes
+  // the normalised form, e.g. collapsed whitespace, which should win).
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setValue(inbox.displayName ?? '');
+  }, [inbox.id, inbox.displayName]);
+
+  const normalized = normalizeSenderName(value);
+  const nextName = normalized.ok ? normalized.value : null;
+  const dirty = normalized.ok && nextName !== (inbox.displayName ?? null);
+  const address = String(inbox.address ?? '');
+  const localPart = address.split('@')[0];
+  const inputId = `sender-name-${inbox.id}`;
+
+  const handleSave = async () => {
+    if (saving || !dirty) return;
+    setSaving(true);
+    try {
+      await onSave(inbox.id, nextName);
+    } catch {
+      // App.jsx already showed an error toast; keep the input as-is for retry.
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const label = { fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)' };
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <label
+        htmlFor={inputId}
+        style={{ display: 'block', margin: '0 0 2px', fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: 'var(--fg-1)' }}
+      >
+        {t('inboxes.detail.senderName.title')}
+      </label>
+      <div style={{ ...label, marginBottom: 8, color: 'var(--fg-2)' }}>
+        {t('inboxes.detail.senderName.help')}
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <input
+          id={inputId}
+          className="input"
+          type="text"
+          maxLength={100}
+          autoComplete="off"
+          spellCheck={false}
+          placeholder={t('inboxes.detail.senderName.placeholder')}
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              handleSave();
+            }
+          }}
+          disabled={saving}
+          style={{ flex: 1, minWidth: 0, height: 32, padding: '0 10px' }}
+        />
+        <Btn
+          variant="primary"
+          size="sm"
+          disabled={!dirty || saving}
+          onClick={handleSave}
+        >
+          {saving ? t('inboxes.detail.senderName.saving') : t('inboxes.detail.senderName.save')}
+        </Btn>
+      </div>
+
+      {/* Live From-line preview: exactly what a mail client renders. */}
+      <div
+        aria-live="polite"
+        style={{ ...label, marginTop: 6, fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--fg-2)', overflowWrap: 'anywhere' }}
+      >
+        <span style={{ color: 'var(--fg-3)' }}>{t('inboxes.detail.senderName.previewLabel')} </span>
+        {nextName ? `${nextName} <${address}>` : address}
+      </div>
+      {!normalized.ok && (
+        <div style={{ ...label, marginTop: 4, color: 'var(--red-500)' }} role="alert">
+          {t('inboxes.detail.senderName.tooLong')}
+        </div>
+      )}
+      {normalized.ok && !nextName && (
+        <div style={{ ...label, marginTop: 4 }}>
+          {t('inboxes.detail.senderName.emptyHint', { localPart })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SignatureEditor({ inbox, onSave, t }) {
   const wasImported = inbox.signatureSource === 'gmail_import';
 
@@ -1897,7 +2003,7 @@ const InboxDetailRow = ({ label, children }) => (
   </div>
 );
 
-function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature, historyDays = 30 }) {
+function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature, onSaveSenderName, historyDays = 30 }) {
   const t = useTranslations('dashboard');
   if (!inbox) return null;
 
@@ -2007,7 +2113,8 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
                 <span>Signature &amp; sending</span>
                 <span>{t(`approvals.mode.${resolveReviewMode(inbox)}`)}</span>
               </summary>
-              <p>Set the signature and choose where a prepared send waits for a human decision.</p>
+              <p>Set the sender name and signature, and choose where a prepared send waits for a human decision.</p>
+              {onSaveSenderName && <SenderNameEditor inbox={inbox} onSave={onSaveSenderName} t={t} />}
               <SignatureEditor inbox={inbox} onSave={onSaveSignature} t={t} />
             </details>
           )}
