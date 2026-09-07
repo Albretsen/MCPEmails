@@ -1520,6 +1520,9 @@ export type Database = {
           display_name: string | null
           email: string
           id: string
+          unsubscribe_token: string
+          unsubscribed_at: string | null
+          unsubscribed_categories: string[]
           updated_at: string
         }
         Insert: {
@@ -1528,6 +1531,9 @@ export type Database = {
           display_name?: string | null
           email: string
           id: string
+          unsubscribe_token?: string
+          unsubscribed_at?: string | null
+          unsubscribed_categories?: string[]
           updated_at?: string
         }
         Update: {
@@ -1536,9 +1542,116 @@ export type Database = {
           display_name?: string | null
           email?: string
           id?: string
+          unsubscribe_token?: string
+          unsubscribed_at?: string | null
+          unsubscribed_categories?: string[]
           updated_at?: string
         }
         Relationships: []
+      }
+      lifecycle_email_sends: {
+        Row: {
+          detail: string | null
+          email: string
+          provider_message_id: string | null
+          sent_at: string
+          status: string
+          template: string
+          trigger_key: string
+          user_id: string
+        }
+        Insert: {
+          detail?: string | null
+          email: string
+          provider_message_id?: string | null
+          sent_at?: string
+          status?: string
+          template: string
+          trigger_key: string
+          user_id: string
+        }
+        Update: {
+          detail?: string | null
+          email?: string
+          provider_message_id?: string | null
+          sent_at?: string
+          status?: string
+          template?: string
+          trigger_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      billing_email_sends: {
+        Row: {
+          attempts: number
+          cancel_reason: string | null
+          cancelled_at: string | null
+          category: string | null
+          claimed_at: string | null
+          created_at: string
+          id: number
+          last_error: string | null
+          payload: Json
+          recipient: string
+          resend_id: string | null
+          scope_key: string
+          send_after: string
+          sent_at: string | null
+          stripe_customer_id: string
+          template: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          attempts?: number
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          category?: string | null
+          claimed_at?: string | null
+          created_at?: string
+          id?: never
+          last_error?: string | null
+          payload?: Json
+          recipient: string
+          resend_id?: string | null
+          scope_key: string
+          send_after: string
+          sent_at?: string | null
+          stripe_customer_id: string
+          template: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          attempts?: number
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          category?: string | null
+          claimed_at?: string | null
+          created_at?: string
+          id?: never
+          last_error?: string | null
+          payload?: Json
+          recipient?: string
+          resend_id?: string | null
+          scope_key?: string
+          send_after?: string
+          sent_at?: string | null
+          stripe_customer_id?: string
+          template?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_email_sends_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       workspace_invites: {
         Row: {
@@ -2029,7 +2142,11 @@ export type Database = {
       my_workspace_ids: { Args: never; Returns: string[] }
       effective_workspace_plan: {
         Args: { p_workspace_id: string }
-        Returns: { plan: string; comped_scale: boolean; unlimited_inboxes: boolean }[]
+        Returns: {
+          plan: string
+          comped_scale: boolean
+          unlimited_inboxes: boolean
+        }[]
       }
       revoke_user_session: {
         Args: { p_session_id: string }
@@ -2040,6 +2157,35 @@ export type Database = {
       rate_limit_check: {
         Args: { p_key: string; p_max_count: number; p_window_ms: number }
         Returns: boolean
+      }
+      claim_billing_emails: {
+        Args: { p_limit?: number }
+        Returns: {
+          attempts: number
+          cancel_reason: string | null
+          cancelled_at: string | null
+          category: string | null
+          claimed_at: string | null
+          created_at: string
+          id: number
+          last_error: string | null
+          payload: Json
+          recipient: string
+          resend_id: string | null
+          scope_key: string
+          send_after: string
+          sent_at: string | null
+          stripe_customer_id: string
+          template: string
+          updated_at: string
+          user_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "billing_email_sends"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
     }
     Enums: {
