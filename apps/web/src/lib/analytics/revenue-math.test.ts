@@ -157,20 +157,26 @@ test('plans are ranked by the money in them', () => {
 /* ------------------------------------------------------------- valuation */
 
 test('valuation is ARR times the multiple, and says which multiple it used', () => {
-  // $48 ARR at the default 4x, which is the figure on the wall board today.
-  assert.deepEqual(valuationFromArr(4800, 4), {
-    valuationMinor: 19_200,
-    multiple: 4,
+  // $48 ARR at the default 3x, which is the figure on the wall board today.
+  assert.deepEqual(valuationFromArr(4800, 3), {
+    valuationMinor: 14_400,
+    multiple: 3,
     arrMinor: 4800,
   });
+});
+
+test('the default multiple is the one the board actually prints', () => {
+  // The board reads the default through valuationMultiple(); pin it here so a
+  // change to the headline figure has to be a deliberate edit to this file.
+  assert.equal(DEFAULT_VALUATION_ARR_MULTIPLE, 3);
 });
 
 test('no recurring revenue is worth nothing, with no floor invented for it', () => {
   // The one edit that would turn this from an arithmetic aid into a flattering
   // lie is a minimum. A business with no recurring revenue is worth zero on
   // this convention and the board must be willing to print that.
-  assert.equal(valuationFromArr(0, 4).valuationMinor, 0);
-  assert.equal(valuationFromArr(-100, 4).valuationMinor, 0);
+  assert.equal(valuationFromArr(0, 3).valuationMinor, 0);
+  assert.equal(valuationFromArr(-100, 3).valuationMinor, 0);
 });
 
 test('a fat-fingered multiple is clamped rather than believed', () => {
