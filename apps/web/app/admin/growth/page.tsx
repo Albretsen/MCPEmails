@@ -2,8 +2,8 @@
  * /admin/growth: the internal growth board.
  *
  * ONE READER, ONCE A WEEK, ON A LAPTOP, asking how the business is doing and
- * what to do about it. Three designs have been judged and two rejected, and
- * the verdicts are worth keeping here because they are the whole specification.
+ * what to do about it. Four designs have been judged and three rejected, and
+ * the verdicts are the whole specification.
  *
  *   The first was eleven sections of product usage, with everything that
  *   decides whether this becomes a business below the fold.
@@ -14,23 +14,58 @@
  *
  *   The third threw the cards away for a hairline-ruled sheet of prose and
  *   figures, and was "a wall of text, horrible to look at, and super boring".
- *   That was the wrong lesson drawn from the second verdict: the boxes and the
- *   graphs were never the problem.
+ *   The boxes and the graphs were never the problem.
  *
- * So this one keeps the graphs and the boxes, both of them literally: every
- * chart is a component from components/admin/charts, each of which draws its
- * own bordered card. What changes is the LAYOUT and the AMOUNT OF PROSE. It is
- * a twelve column bento: cards span three to twelve columns by how much they
- * matter, tiling into rows of two, three and four, so the eye gets a shape
- * rather than a column. Nothing on the page is a paragraph. A card gets a
- * title, one line of subtitle, and a footnote only where a number would
- * otherwise mislead.
+ *   The fourth put the boxes back as a light twelve column bento, and is what
+ *   this replaces. The verdict on it, 2026-09-07: "impossibly hard to use,
+ *   boring, and ugly", with the milestone board singled out as the ugliest UI
+ *   in the building despite being the part worth keeping.
  *
- * THE MILESTONE BOARD IS HERE BECAUSE IT WAS ASKED FOR. Achievements and the
- * distance to the next one are the part of the previous design the operator
- * liked, and they are a real statistics feature: every rung is a counted fact,
- * dated wherever a series can prove the day it was crossed. It is deliberately
- * not gamified: no points, no trophies, no confetti, no emoji.
+ * THE ANSWER WAS TWO METRES AWAY THE WHOLE TIME. The kiosk hanging on the wall
+ * reads the same RPCs and is none of those things, and there was never a
+ * reason for this page to speak a second visual language about the same
+ * numbers. So this board IS the kiosk: the same tiles from
+ * components/admin/kiosk/primitives, the same dark ground, the same funnel
+ * arithmetic out of kiosk/shared, sized for a laptop instead of a wall.
+ *
+ * WHAT A LAPTOP ADDS, and why this is not simply the kiosk at a URL:
+ *
+ *   - A POINTER, so tiles have hover states, charts keep their exact-numbers
+ *     drawers, and every number on the page is selectable text. The wall board
+ *     suppresses all three because a display nobody touches has no use for
+ *     them.
+ *   - A SCROLLBAR, so all five kiosk views can be on one page at once as
+ *     bands, rather than five buttons that hide four fifths of the board. The
+ *     kiosk switches views because it has exactly one screen; this does not.
+ *   - AN AUTHENTICATED OPERATOR, so it can carry the two things the kiosk must
+ *     never carry: the account roster and the Stripe customer detail, both of
+ *     which name people. The wall is reachable with a shared token by anyone
+ *     in the room.
+ *   - ROOM FOR THE PANELS A GLANCE CANNOT USE: the cohort grid, the year of
+ *     daily signup cells, the computed to-do list, and the milestone track.
+ *
+ * WHAT IS NEW HERE AND IS ON NEITHER OF THE OLD BOARDS, because a founder
+ * reading this weekly needs it and neither surface had it:
+ *
+ *   - WHICH CHANNELS PRODUCE CUSTOMERS. The donut this replaces ranked sources
+ *     by signup count, which is the wrong question: a source that sends fifty
+ *     people who never connect an inbox is worth less than one that sends five
+ *     who pay. The acquisition RPC has carried the activated and paying counts
+ *     per channel all along and nothing drew them.
+ *   - RECORDS. Best signup day, current and longest signup streak, busiest
+ *     call day, days since the last sale. Every other figure on the page is a
+ *     level or a rate, and none of them can say that last Tuesday was the best
+ *     day this product has ever had.
+ *   - THE MONEY SAID FOUR WAYS in one panel: MRR, the year of it, what each
+ *     paying customer is worth, and the notional valuation the kiosk already
+ *     showed but this page did not.
+ *
+ * THE MILESTONE BOARD IS STILL HERE AND WAS REDRAWN, not removed. It was asked
+ * for, it is the part of the old page the operator liked, and it is a real
+ * statistics feature: every rung is a counted fact, dated wherever a series can
+ * prove the day it was crossed. It is still deliberately not gamified: no
+ * points, no trophies, no confetti, no emoji. See board/milestones.tsx for why
+ * the reached half is now a time axis rather than a wrapped list of pills.
  *
  * WHAT IS DELIBERATELY ABSENT, so it is not helpfully re-added:
  *   - A jump nav. It was a patch on a page that was too long and too uniform.
@@ -41,24 +76,31 @@
  *   - The MCP client mix, which reads "unknown, 100%" on every render.
  *   - Any figure stated twice.
  *
- * PRIVACY. Everything is an aggregate except the two tables in the last card,
+ * PRIVACY. Everything is an aggregate except the two tables in the last band,
  * which name accounts and sit behind the ADMIN_EMAILS session. No credential,
  * message content, subject, recipient or IP address appears here. The kiosk
- * board carries neither table and must not gain one: it hangs on a wall behind
- * a shared token.
+ * board carries neither table and must not gain one.
  */
 
 import { Suspense } from 'react';
 import { requireAdmin } from '@/lib/admin/require-admin';
 import {
   GrowthSection,
-  HealthSection,
   MilestoneSection,
   MoneySection,
   PulseSection,
+  StickinessSection,
   TablesSection,
+  TopSection,
+  UptimeSection,
 } from '../../../components/admin/growth/sections';
 import '../../../styles/admin-board.css';
+import '../../../styles/admin-board-parts.css';
+// The tiles on this board ARE the kiosk's tiles, so the kiosk's sheet is
+// what dresses them. admin-growth.css only lays them out and adds the
+// pointer affordances a wall display has no use for.
+import '../../../styles/admin-kiosk.css';
+import '../../../styles/admin-growth.css';
 
 export const metadata = { title: 'Growth analytics · MCP Emails', robots: { index: false, follow: false } };
 
@@ -69,10 +111,10 @@ export const metadata = { title: 'Growth analytics · MCP Emails', robots: { ind
  * window would divide real counts into a denominator that decays as history
  * ages out.
  *
- * The funnels, the milestones and the retention curve ignore this control and
- * say so in their own subtitles: they read durable timestamp columns and are
- * all-time whatever is selected. A switch that appeared to apply to numbers it
- * does not touch would be worse than no switch.
+ * The funnels, the milestones, the records and the retention curve ignore this
+ * control and say so in their own captions: they read durable timestamp columns
+ * and are all-time whatever is selected. A switch that appeared to apply to
+ * numbers it does not touch would be worse than no switch.
  */
 const WINDOWS = { '7d': 7, '28d': 28, '90d': 90 } as const;
 type WindowKey = keyof typeof WINDOWS;
@@ -82,8 +124,12 @@ function resolveWindow(raw: string | undefined): WindowKey {
 }
 
 /** Holds a cell open while its band loads, so the grid never jumps. */
-function Cell({ span, height }: { span: number; height: number }) {
-  return <div className={`bd-w${span} bd-skeleton`} style={{ minHeight: height }} aria-hidden="true" />;
+function Skeleton({ span, tall }: { span: number; tall?: 2 | 3 }) {
+  return (
+    <div className={`gb-cell gb-w${span}${tall ? ` gb-h${tall}` : ''}`} aria-hidden="true">
+      <div className="gb-skeleton" />
+    </div>
+  );
 }
 
 export default async function GrowthBoardPage({
@@ -97,110 +143,154 @@ export default async function GrowthBoardPage({
   const days = WINDOWS[windowKey];
 
   return (
-    <main className="board">
-      <header className="bd-head">
-        <div>
-          <h1>Growth</h1>
-          <p className="bd-head-sub">
-            Money from Stripe, everything else from the product database. UTC. Cached ten minutes.
+    <div className="gb">
+      <main className="gb-inner">
+        <header className="gb-head">
+          <h1 className="gb-wordmark">
+            Growth <em>how are we doing &middot; last {days} days</em>
+          </h1>
+          <div className="gb-tools">
+            <nav className="gb-windows" aria-label="Reporting window">
+              {(Object.keys(WINDOWS) as WindowKey[]).map((key) => (
+                <a key={key} href={`/admin/growth?window=${key}`} aria-current={key === windowKey ? 'true' : undefined}>
+                  {WINDOWS[key]}d
+                </a>
+              ))}
+            </nav>
+            <a className="gb-link" href="/admin/growth/kiosk">Kiosk</a>
+            <a className="gb-link" href="/admin/growth/experiments">Experiments</a>
+            <a className="gb-link" href="/admin/growth/dunning">Dunning</a>
+            {/* A route handler rather than a Server Action: the action-ID lookup
+                failed on every submission in production (verified live
+                2026-08-30), and a URL is not a build-generated hash. */}
+            <form action="/admin/growth/refresh" method="POST">
+              <button type="submit">Refresh</button>
+            </form>
+          </div>
+        </header>
+
+        <div className="gb-grid">
+          <Suspense
+            fallback={
+              <>
+                <Skeleton span={12} />
+                <Skeleton span={12} tall={2} />
+                <Skeleton span={7} tall={2} />
+                <Skeleton span={5} tall={2} />
+              </>
+            }
+          >
+            <TopSection days={days} />
+          </Suspense>
+
+          <Suspense
+            fallback={
+              <>
+                <Skeleton span={3} />
+                <Skeleton span={3} />
+                <Skeleton span={3} />
+                <Skeleton span={3} />
+              </>
+            }
+          >
+            <PulseSection days={days} />
+          </Suspense>
+
+          <p className="gb-band">
+            Money <em>what have we earned</em>
           </p>
+          <Suspense
+            fallback={
+              <>
+                <Skeleton span={3} />
+                <Skeleton span={3} />
+                <Skeleton span={3} />
+                <Skeleton span={3} />
+                <Skeleton span={6} tall={2} />
+                <Skeleton span={6} tall={2} />
+              </>
+            }
+          >
+            <MoneySection days={days} />
+          </Suspense>
+
+          <p className="gb-band">
+            Milestones <em>how far, and how fast</em>
+          </p>
+          <Suspense fallback={<Skeleton span={12} tall={3} />}>
+            <MilestoneSection />
+          </Suspense>
+
+          <p className="gb-band">
+            Growth <em>who is arriving</em>
+          </p>
+          <Suspense
+            fallback={
+              <>
+                <Skeleton span={7} tall={2} />
+                <Skeleton span={5} tall={2} />
+                <Skeleton span={7} tall={2} />
+                <Skeleton span={5} tall={2} />
+                <Skeleton span={4} />
+                <Skeleton span={4} />
+                <Skeleton span={4} />
+              </>
+            }
+          >
+            <GrowthSection days={days} />
+          </Suspense>
+
+          <p className="gb-band">
+            Stickiness <em>who stays</em>
+          </p>
+          <Suspense
+            fallback={
+              <>
+                <Skeleton span={6} tall={2} />
+                <Skeleton span={6} tall={2} />
+                <Skeleton span={4} />
+                <Skeleton span={4} />
+                <Skeleton span={4} />
+              </>
+            }
+          >
+            <StickinessSection days={days} />
+          </Suspense>
+
+          <p className="gb-band">
+            Uptime <em>is it working</em>
+          </p>
+          <Suspense
+            fallback={
+              <>
+                <Skeleton span={3} />
+                <Skeleton span={3} />
+                <Skeleton span={3} />
+                <Skeleton span={3} />
+                <Skeleton span={5} tall={2} />
+                <Skeleton span={7} tall={2} />
+                <Skeleton span={12} tall={2} />
+              </>
+            }
+          >
+            <UptimeSection days={days} />
+          </Suspense>
+
+          <p className="gb-band">
+            Accounts <em>who they actually are</em>
+          </p>
+          <Suspense fallback={<Skeleton span={12} />}>
+            <TablesSection days={days} />
+          </Suspense>
         </div>
-        <div className="bd-tools">
-          <nav aria-label="Reporting window">
-            {(Object.keys(WINDOWS) as WindowKey[]).map((key) => (
-              <a key={key} href={`/admin/growth?window=${key}`} aria-current={key === windowKey ? 'true' : undefined}>
-                {WINDOWS[key]}d
-              </a>
-            ))}
-          </nav>
-          <a href="/admin/growth/kiosk">Kiosk</a>
-          <a href="/admin/growth/experiments">Experiments</a>
-          <a href="/admin/growth/dunning">Dunning</a>
-          {/* A route handler rather than a Server Action: the action-ID lookup
-              failed on every submission in production (verified live
-              2026-08-30), and a URL is not a build-generated hash. */}
-          <form action="/admin/growth/refresh" method="POST">
-            <button type="submit">Refresh</button>
-          </form>
-        </div>
-      </header>
 
-      <div className="bd-grid">
-        <Suspense
-          fallback={
-            <>
-              <Cell span={5} height={300} />
-              <Cell span={7} height={300} />
-            </>
-          }
-        >
-          <MoneySection days={days} />
-        </Suspense>
-
-        <Suspense
-          fallback={
-            <>
-              <Cell span={3} height={150} />
-              <Cell span={3} height={150} />
-              <Cell span={3} height={150} />
-              <Cell span={3} height={150} />
-            </>
-          }
-        >
-          <PulseSection days={days} />
-        </Suspense>
-
-        <p className="bd-band">Milestones</p>
-        <Suspense fallback={<Cell span={12} height={220} />}>
-          <MilestoneSection />
-        </Suspense>
-
-        <p className="bd-band">Who arrives, and where they stop</p>
-        <Suspense
-          fallback={
-            <>
-              <Cell span={7} height={300} />
-              <Cell span={5} height={300} />
-              <Cell span={5} height={240} />
-              <Cell span={3} height={240} />
-              <Cell span={4} height={240} />
-              <Cell span={4} height={260} />
-              <Cell span={4} height={260} />
-              <Cell span={4} height={260} />
-              <Cell span={6} height={260} />
-              <Cell span={6} height={260} />
-            </>
-          }
-        >
-          <GrowthSection days={days} />
-        </Suspense>
-
-        <p className="bd-band">Reliability and ceilings</p>
-        <Suspense
-          fallback={
-            <>
-              <Cell span={4} height={230} />
-              <Cell span={4} height={230} />
-              <Cell span={4} height={230} />
-              <Cell span={4} height={270} />
-              <Cell span={8} height={270} />
-            </>
-          }
-        >
-          <HealthSection days={days} />
-        </Suspense>
-
-        <p className="bd-band">Accounts</p>
-        <Suspense fallback={<Cell span={12} height={110} />}>
-          <TablesSection days={days} />
-        </Suspense>
-      </div>
-
-      <p className="bd-foot">
-        Money is priced from Stripe because Postgres stores no amount, interval or coupon. Anything
-        derived from activity_log is bounded at 90 days, because that is when it is purged. Comped and
-        internal accounts are excluded from customer counts and reported separately.
-      </p>
-    </main>
+        <p className="gb-foot">
+          Money is priced from Stripe because Postgres stores no amount, interval or coupon. Anything derived
+          from activity_log is bounded at 90 days, because that is when it is purged. Comped and internal
+          accounts are excluded from customer counts and reported separately. UTC throughout, cached ten
+          minutes.
+        </p>
+      </main>
+    </div>
   );
 }

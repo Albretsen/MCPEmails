@@ -69,6 +69,18 @@ export type Achievement = {
   unlockedOn: string | null;
   /** Days at the recent pace until `target`. Null when not projectable. */
   daysToGo: number | null;
+  /**
+   * How `target`, `current` and any distance derived from them must be
+   * printed.
+   *
+   * `money` means both are MINOR units of `currency`, which is the whole
+   * reason this field exists: the money ladders are stored in cents so they
+   * can be compared against `mrrMinor` directly, and a card that ran
+   * `formatCount(target - current)` over them printed "4,000 to go" on a rung
+   * whose own title says $50. The title has always been formatted by the
+   * ladder; the distance was not, and had no way to be.
+   */
+  format: { kind: 'count' } | { kind: 'money'; currency: string };
 };
 
 export type AchievementReport = {
@@ -206,6 +218,8 @@ type Ladder = {
   dateFor?: (target: number) => string | null;
   /** Days to cover `remaining`, for the two ladders with an honest pace. */
   paceFor?: (remaining: number) => number | null;
+  /** Defaults to a plain count. Set only by the ladders stored in minor units. */
+  format?: Achievement['format'];
 };
 
 /**
@@ -229,6 +243,7 @@ function ladders(input: AchievementInput, now: number): Ladder[] {
       current: finite(input.revenue.mrrMinor),
       title: (target) => `${formatMoney(target, currency)} MRR`,
       detail: 'Normalised MRR from live Stripe subscriptions, external only.',
+      format: { kind: 'money', currency },
       // No series: Stripe is read as a snapshot, so there is no month in which
       // MRR first crossed $25 available to this module at any price.
     });
@@ -252,6 +267,7 @@ function ladders(input: AchievementInput, now: number): Ladder[] {
       current: finite(input.cash.allTimeMinor),
       title: (target) => (target === 1 ? 'First dollar' : `${formatMoney(target, currency)} collected`),
       detail: 'Net cash after refunds, all time. Dated to the month it crossed.',
+      format: { kind: 'money', currency },
       /*
        * The cash series is monthly, so the honest answer to "when" is a month.
        * A month key is already `YYYY-MM-01`, which fits the ISO day field
@@ -390,6 +406,7 @@ function buildLadder(ladder: Ladder): Achievement[] {
       // An unlocked rung has no distance left, and printing "0 days to go" on
       // something cleared in June reads as a countdown rather than as history.
       daysToGo: unlocked ? null : (ladder.paceFor?.(target - current) ?? null),
+      format: ladder.format ?? { kind: 'count' },
     };
   });
 }

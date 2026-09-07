@@ -10,7 +10,9 @@
  * starts telling two stories about the same number.
  */
 
+import type { CheckoutFunnel } from '@/lib/analytics/kiosk-revenue';
 import type { GrowthDailyRow, GrowthUserSignupDayRow } from '@/lib/analytics/growth-types';
+import type { RevenueSummary } from '@/lib/analytics/revenue-math';
 
 /** The board's default reporting window. */
 export const KIOSK_WINDOW_DAYS = 28;
@@ -234,6 +236,177 @@ export function signupWeeks(rows: GrowthUserSignupDayRow[], weeks = CHART_WEEKS)
 /** The same shape from the workspace-level daily series, for the views that use it. */
 export function workspaceWeeks(rows: GrowthDailyRow[], weeks = CHART_WEEKS): WeekBucket[] {
   return calendarWeekBuckets(rows, weeks, (row) => [row.new_workspaces, row.value_activations]);
+}
+
+
+/* ------------------------------------------------- funnels shared by boards */
+
+/*
+ * The two ladders and their arithmetic, moved here from board.tsx on
+ * 2026-09-07 when /admin/growth started drawing the same two funnels.
+ *
+ * They live in this module for the reason the module exists: a funnel whose
+ * rungs are defined twice is a funnel that reports two different conversion
+ * rates for the same week, and the seam is invisible because both copies look
+ * right on their own page. Everything below is pure and reads only its
+ * arguments.
+ */
+
+export function stageOf(funnel: { stage: string; workspaces: number }[], name: string): number {
+  return funnel.find((row) => row.stage === name)?.workspaces ?? 0;
+}
+
+export function medianOf(values: number[]): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.floor(sorted.length / 2)];
+}
+
+/**
+ * Workspaces that came back at least once.
+ *
+ * The engagement RPC buckets by active days as '1', '2–3', '4–7', '8+', so
+ * everything except the first band is a workspace that returned on a different
+ * day. Matching on "not 1" rather than listing the other three keeps this
+ * correct if a band is ever added.
+ */
+export function returningWorkspaces(rows: { metric: string; band: string; workspaces: number }[]): number {
+  return rows
+    .filter((row) => row.metric === 'active_days' && row.band !== '1')
+    .reduce((total, row) => total + row.workspaces, 0);
+}
+
+/**
+ * The milestone ladder, ending at the step that is actually in play.
+ *
+ * The last three rungs come from outside the activation funnel on purpose: the
+ * funnel stops at first value, and the interesting question now is what happens
+ * after it.
+ *
+ * WHY "HIT A PLAN LIMIT" IS GONE. It was the right rung when actions were the
+ * value metric. Since the 2026-08-19 repricing the paywall is the inbox count
+ * and the action ceiling is a silent abuse guard nobody is meant to reach, so
+ * the rung was a permanent zero measuring a paywall that no longer exists. The
+ * two rungs that replace it measure the paywall that does.
+ *
+ * THE ABANDONMENT NOTE IS THE POINT OF THE PANEL. Everything above it is about
+ * getting people to want the product. The gap between "started a checkout" and
+ * "paid" is the only step where someone had already decided to pay and we lost
+ * them anyway, and it is the only number here that can be fixed in an
+ * afternoon.
+ *
+ * TWO SEAMS, both marked in the notes rather than hidden. The first three rungs
+ * come from the activation RPC and count WORKSPACES including our own; the
+ * pricing and checkout rungs are filtered in Node and exclude ours. Our
+ * accounts are roughly a twentieth of signups, so the ladder still reads true;
+ * the cleaner fix is to teach `growth_activation_funnel` the same exclusion.
+ * The second seam is the window: the pricing and checkout rungs are all-time,
+ * "came back" is the rolling 28 days.
+ */
+export function milestoneSteps(
+  funnel: { stage: string; workspaces: number }[],
+  retention: { returning: number; oneAndDone: number | null },
+  checkout: CheckoutFunnel | null,
+  mrr: RevenueSummary | null,
+  /**
+   * The window `returning` was counted over. A parameter rather than the kiosk
+   * constant since /admin/growth reads the same ladder under a switchable 7,
+   * 28 or 90 day window, and a note that said "last 28d" beside a 7 day count
+   * would be the one line on the panel that is simply false.
+   */
+  windowDays: number = KIOSK_WINDOW_DAYS,
+) {
+  const { returning, oneAndDone } = retention;
+  const paid = checkout?.checkoutCompleted ?? 0;
+  const stillPaying = mrr?.payingCustomers ?? 0;
+  return [
+    // "Created a workspace", not "Signed up", and the aside says "workspaces".
+    // The headline tile three columns to the left says "Signed up 315" and this
+    // rung says 308, because they count different things: that one counts
+    // external PEOPLE and this one counts WORKSPACES including our own. Both
+    // are right and the difference is small, which is precisely what makes it
+    // dangerous on a wall — two numbers under the same word, four tiles apart,
+    // that never quite agree. Naming the unit is cheaper than reconciling them,
+    // and reconciling them properly means teaching growth_activation_funnel the
+    // internal exclusion, which is a change to a shared RPC that /admin/growth
+    // also reads.
+    { label: 'Created a workspace', value: stageOf(funnel, 'signup') },
+    { label: 'Connected an inbox', value: stageOf(funnel, 'inbox_connected') },
+    { label: 'Used their mailbox', value: stageOf(funnel, 'value_activation') },
+    {
+      label: 'Came back',
+      value: returning,
+      note: returning === 0
+        ? 'nobody yet'
+        : oneAndDone === null
+          ? `2+ days, last ${windowDays}d`
+          : `2+ days; ${oneAndDone} tried once and left`,
+    },
+    {
+      label: 'Looked at the plans',
+      value: checkout?.pricingViewed ?? 0,
+      note: checkout ? 'signed in, ever' : 'unavailable',
+    },
+    {
+      label: 'Started a checkout',
+      value: checkout?.checkoutStarted ?? 0,
+      note: !checkout
+        ? 'unavailable'
+        : checkout.abandoned > 0
+          ? `${checkout.abandoned} left without paying`
+          : 'none abandoned',
+    },
+    {
+      label: 'Paid',
+      value: paid,
+      note: paid === 0
+        ? 'the first one is still out there'
+        // Ever-paid against still-paying: with the counts this small, one
+        // cancellation is the whole retention story and hiding it behind a
+        // single number would be the flattering choice.
+        : stillPaying === paid ? 'all still paying' : `${stillPaying} still paying`,
+    },
+  ];
+}
+
+/**
+ * The checkout ladder on its own, for the Money view.
+ *
+ * Shares no code with `milestoneSteps` because it deliberately starts later:
+ * everything before "looked at the plans" is a product question and this panel
+ * is about the four steps after somebody has started thinking about paying.
+ */
+export function checkoutSteps(funnel: CheckoutFunnel, mrr: RevenueSummary | null) {
+  const stillPaying = mrr?.payingCustomers ?? 0;
+  return [
+    { label: 'Looked at the plans', value: funnel.pricingViewed, note: 'signed in, ever' },
+    {
+      label: 'Started a checkout',
+      value: funnel.checkoutStarted,
+      note: funnel.checkoutFailed > 0 ? `${funnel.checkoutFailed} could not start` : 'ever',
+    },
+    {
+      label: 'Abandoned on Stripe',
+      value: funnel.abandoned,
+      // Reached is forced false: this rung is the LOSS, and the funnel paints a
+      // reached rung in the accent colour, which would make the board's worst
+      // number its most confident-looking one.
+      reached: false,
+      note: funnel.abandoned > 0 ? 'had already decided to pay' : 'nobody',
+    },
+    {
+      label: 'Paid',
+      value: funnel.checkoutCompleted,
+      note: funnel.checkoutCompleted === 0
+        ? 'the first one is still out there'
+        : stillPaying === funnel.checkoutCompleted ? 'all still paying' : `${stillPaying} still paying`,
+    },
+    {
+      label: 'Opened the billing portal',
+      value: funnel.portalOpened,
+      note: 'existing subscribers',
+    },
+  ];
 }
 
 /* ---------------------------------------------------------------- providers */
