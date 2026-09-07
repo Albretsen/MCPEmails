@@ -295,13 +295,15 @@ export function returningWorkspaces(rows: { metric: string; band: string; worksp
  * them anyway, and it is the only number here that can be fixed in an
  * afternoon.
  *
- * TWO SEAMS, both marked in the notes rather than hidden. The first three rungs
- * come from the activation RPC and count WORKSPACES including our own; the
- * pricing and checkout rungs are filtered in Node and exclude ours. Our
- * accounts are roughly a twentieth of signups, so the ladder still reads true;
- * the cleaner fix is to teach `growth_activation_funnel` the same exclusion.
- * The second seam is the window: the pricing and checkout rungs are all-time,
- * "came back" is the rolling 28 days.
+ * ONE SEAM, marked in the notes rather than hidden: the window. The pricing
+ * and checkout rungs are all-time, "came back" is the rolling 28 days.
+ *
+ * The other seam is gone. Every rung now excludes the accounts we operate
+ * ourselves: the first three because `growth_activation_funnel` learned the
+ * exclusion once the address list moved into `public.internal_accounts` (see
+ * the 20260907 canonical-signup-count migration), the rest because they were
+ * already filtered in Node. The ladder and the headline tile no longer differ
+ * by a mystery ten.
  */
 export function milestoneSteps(
   funnel: { stage: string; workspaces: number }[],
@@ -320,16 +322,15 @@ export function milestoneSteps(
   const paid = checkout?.checkoutCompleted ?? 0;
   const stillPaying = mrr?.payingCustomers ?? 0;
   return [
-    // "Created a workspace", not "Signed up", and the aside says "workspaces".
-    // The headline tile three columns to the left says "Signed up 315" and this
-    // rung says 308, because they count different things: that one counts
-    // external PEOPLE and this one counts WORKSPACES including our own. Both
-    // are right and the difference is small, which is precisely what makes it
-    // dangerous on a wall — two numbers under the same word, four tiles apart,
-    // that never quite agree. Naming the unit is cheaper than reconciling them,
-    // and reconciling them properly means teaching growth_activation_funnel the
-    // internal exclusion, which is a change to a shared RPC that /admin/growth
-    // also reads.
+    // "Created a workspace", not "Signed up", and the aside says "workspaces,
+    // not people". Both now exclude our own accounts, so the only thing left
+    // between this rung and the headline tile is the unit, and the unit is
+    // load-bearing: someone who deleted their workspace still signed up, and
+    // someone with two has not signed up twice. The headline is the number to
+    // celebrate, this is the number to act on. Two numbers under the same word
+    // four tiles apart is how a wall board lies without saying anything false,
+    // which is why the difference is named on the tile rather than reconciled
+    // away.
     { label: 'Created a workspace', value: stageOf(funnel, 'signup') },
     { label: 'Connected an inbox', value: stageOf(funnel, 'inbox_connected') },
     { label: 'Used their mailbox', value: stageOf(funnel, 'value_activation') },
