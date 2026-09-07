@@ -226,7 +226,7 @@ async function PulseBoard({ days }: { days: number }) {
       <SignupsChartTile signups={signups} span={7} />
 
       {funnel.ok ? (
-        <Tile label="Road to a paying customer" aside="workspaces, all accounts" span={5} detail="activation">
+        <Tile label="Road to a paying customer" aside="workspaces, not people" span={5} detail="activation">
           <FunnelSteps
             steps={milestoneSteps(
               funnel.data,
