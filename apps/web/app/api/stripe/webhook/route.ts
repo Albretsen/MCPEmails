@@ -15,6 +15,25 @@
  *   customer.subscription.created     : sub created (e.g. outside Checkout)
  *   customer.subscription.updated     : sub changed (upgrade/downgrade/renew/status)
  *   customer.subscription.deleted     : sub fully cancelled; revert to free
+ *   invoice.payment_failed            : a renewal was declined; start dunning
+ *   invoice.payment_succeeded         : a charge landed; STOP any dunning
+ *
+ * Billing lifecycle email (added 2026-09-02):
+ *   The four subscription events above still do all the entitlement work; the
+ *   two invoice events do NO entitlement work at all and exist only to start
+ *   and stop email sequences. `invoice.payment_failed` materialises the
+ *   four-email dunning sequence into `billing_email_sends`;
+ *   `invoice.payment_succeeded` cancels whatever is still pending for that
+ *   invoice, which is the primary guarantee that a "your payment failed" email
+ *   never lands after the retry already worked.
+ *
+ *   `customer.subscription.updated` is EXTENDED rather than duplicated: when it
+ *   carries cancel_at_period_end = true it also queues the one-question
+ *   cancellation email plus the two win-backs, scheduled from the period end.
+ *
+ *   Everything is gated on BILLING_LIFECYCLE_EMAILS (off | queue_only | on).
+ *   The default is `off`, so merging this file changes nothing that a customer
+ *   can see. See src/lib/billing/lifecycle-queue.ts.
  *
  * Dunning grace period (Change 3):
  *   `past_due` and `unpaid` are treated as STILL ENTITLED — Stripe is retrying
@@ -60,6 +79,18 @@ import {
 } from '@/lib/stripe/plans';
 import { sendPurchaseConfirmationEmail } from '@/lib/email/purchase-confirmation';
 import {
+  cancelDunningForCustomer,
+  cancelOpenSequence,
+  hasCancellationSeries,
+  isGrandfathered,
+  queueCancellationSequence,
+  queueDunningSequence,
+  resolveRecipient,
+  resolveUserId,
+} from '@/lib/billing/lifecycle-queue';
+import type { LifecyclePayload } from '@/lib/email/billing-lifecycle';
+import { lifecycleQueueingEnabled } from '@/lib/billing/lifecycle-mode';
+import {
   billingTarget,
   primaryWorkspaceId,
   recordCheckoutCompleted,
@@ -77,6 +108,28 @@ export const maxDuration = 30;
 // ---------------------------------------------------------------------------
 
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
+
+/**
+ * Billing lifecycle email mode. THE PRODUCTION KILL SWITCH.
+ *
+ *   off        (default) Queue nothing, cancel nothing. This file behaves
+ *              exactly as it did before lifecycle email existed, which is why
+ *              it is safe to merge and deploy before the copy has been signed
+ *              off.
+ *   queue_only Write the queue rows so the exact sequence, recipient and
+ *              schedule can be inspected in the database, but the dispatcher
+ *              sends nothing. This is the review mode.
+ *   on         Live.
+ *
+ * Deliberately a three-state string and not a boolean: the interesting state is
+ * the middle one, where the trigger logic runs against real Stripe events and
+ * produces rows to read, with no possibility of a customer receiving anything.
+ *
+ * READ AT CALL TIME, never captured into a const at module scope. See the long
+ * WHY in src/lib/billing/lifecycle-mode.ts: a module-scope capture is evaluated
+ * once per warm lambda, so flipping the variable in the Vercel dashboard would
+ * appear to work and change nothing until the next deploy.
+ */
 
 /** Subscription statuses that should keep the user ENTITLED to their paid plan. */
 const ENTITLED_STATUSES: ReadonlySet<Stripe.Subscription.Status> = new Set([
@@ -186,7 +239,22 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   //
   // Exempting it is safe: it writes the plan its own session paid for, and the
   // per-event-id ledger above still makes a redelivery a no-op.
-  if (customerIdForEvent && event.type !== 'checkout.session.completed') {
+  //
+  // The two `invoice.*` events are exempt for the same reason, and it is not a
+  // theoretical concern: Stripe emits `customer.subscription.updated`
+  // (status -> past_due) alongside `invoice.payment_failed` for the same
+  // decline, with second-granularity timestamps that can land in either order.
+  // If the subscription event won that race the invoice event would read as
+  // stale and return here, and the dunning sequence would never be queued at
+  // all. Exempting them is safe because neither one changes plan state: they
+  // only start and stop email sequences, both keyed on the invoice id.
+  const EXEMPT_FROM_STALENESS: ReadonlySet<string> = new Set([
+    'checkout.session.completed',
+    'invoice.payment_failed',
+    'invoice.payment_succeeded',
+  ]);
+
+  if (customerIdForEvent && !EXEMPT_FROM_STALENESS.has(event.type)) {
     const { data: newer } = await supabase
       .from('stripe_webhook_events')
       .select('event_id')
@@ -218,6 +286,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         await handleSubscriptionUpserted(
           event.data.object as Stripe.Subscription,
         );
+        break;
+
+      case 'invoice.payment_failed':
+        await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
+        break;
+
+      case 'invoice.payment_succeeded':
+        await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
         break;
 
       case 'customer.subscription.deleted':
@@ -517,6 +593,104 @@ async function handleSubscriptionUpserted(
     currentPeriodEnd: subscription.items.data[0]?.current_period_end ?? null,
     source: 'customer.subscription.upserted',
   });
+
+  // ── Cancellation save + win-back ─────────────────────────────────────────
+  //
+  // EXTENDING this handler rather than adding a branch to the switch, as asked.
+  // `cancel_at_period_end = true` is not a distinct Stripe event; it is a field
+  // on the subscription that this handler already receives, so a new case would
+  // have had to listen to the same event type twice.
+  //
+  // No previous_attributes check, deliberately. Stripe emits
+  // customer.subscription.updated for a great many reasons and this flag stays
+  // true on every one of them until the period ends, so this queue call runs
+  // repeatedly during a cancellation. That is fine and is the design: the
+  // sequence is keyed on (customer, template, subscription:period_end), so the
+  // first call inserts and every later one conflicts and does nothing. Relying
+  // on the constraint rather than on previous_attributes also survives the case
+  // where the flag was set outside a webhook we saw at all.
+  if (lifecycleQueueingEnabled()) {
+    await maybeQueueCancellation(subscription, resolved.plan.id);
+  }
+
+  // Un-cancelled: they clicked "renew" in the portal before the period ended.
+  // Kill the pending question and both win-backs. Cheap, and the alternative is
+  // asking a paying customer why they left.
+  if (lifecycleQueueingEnabled() && subscription.cancel_at_period_end === false && customerId) {
+    await cancelOpenSequence({
+      db: createServiceRoleClient(),
+      stripeCustomerId: customerId,
+      templates: ['cancel_ask', 'winback_14', 'winback_30'],
+      reason: 'subscription_reactivated',
+    });
+  }
+}
+
+/**
+ * Queue the cancellation question and the two win-backs, if this subscription
+ * is on its way out.
+ *
+ * Split out of handleSubscriptionUpserted so that the entitlement path above
+ * stays readable, and so that every failure in here is contained: this function
+ * cannot throw, because it is called AFTER applyUserPlan has already written the
+ * customer's plan and a throw would roll the webhook's ledger row back and
+ * re-run that write.
+ */
+async function maybeQueueCancellation(
+  subscription: Stripe.Subscription,
+  planId: PlanId,
+): Promise<void> {
+  try {
+    if (!subscription.cancel_at_period_end) return;
+
+    const customerId =
+      typeof subscription.customer === 'string'
+        ? subscription.customer
+        : subscription.customer.id;
+
+    const db = createServiceRoleClient();
+    const userId = await resolveUserId(
+      db,
+      customerId,
+      subscription.metadata?.user_id ?? null,
+    );
+
+    // The customer object is retrieved rather than read off the event, because
+    // the event is serialised at the ENDPOINT's pinned API version while the
+    // SDK is pinned to a newer one, and the billing email address is the one
+    // field here we cannot afford to read from the wrong shape.
+    const email = await stripeCustomerEmail(customerId);
+    const recipient = await resolveRecipient(db, email, userId);
+    if (!recipient) {
+      console.error(
+        `[stripe-webhook] cancellation for ${customerId}: no usable recipient; nothing queued.`,
+      );
+      return;
+    }
+
+    const item = subscription.items.data[0];
+    const periodEnd = item?.current_period_end ?? subscription.cancel_at ?? null;
+
+    const payload: LifecyclePayload = {
+      planId,
+      amountCents: item?.price?.unit_amount ?? null,
+      currency: subscription.currency ?? null,
+      periodEnd: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
+      grandfathered: await isGrandfathered(db, userId),
+    };
+
+    await queueCancellationSequence({
+      db,
+      target: { stripeCustomerId: customerId, userId, recipient },
+      subscriptionId: subscription.id,
+      periodEndSeconds: periodEnd,
+      payload,
+    });
+  } catch (err) {
+    console.error('[stripe-webhook] maybeQueueCancellation failed, swallowed:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 /**
@@ -543,11 +717,402 @@ async function handleSubscriptionDeleted(
     subscriptionStatus: 'canceled',
     source: 'customer.subscription.deleted',
   });
+
+  // The subscription is gone, so any dunning still queued for it is now a lie:
+  // "update your card and this carries on" is not true once there is nothing
+  // left to carry on. The win-backs are deliberately NOT cancelled here, since
+  // this event is exactly when a cancelled subscription reaches its end and the
+  // win-back schedule starts to make sense.
+  if (lifecycleQueueingEnabled() && customerId) {
+    await cancelDunningForCustomer(
+      createServiceRoleClient(),
+      customerId,
+      'subscription_deleted',
+    );
+
+    // And queue the cancellation series if nothing queued it already.
+    //
+    // The normal route in is `customer.subscription.updated` with
+    // cancel_at_period_end = true, which covers a customer who cancels in the
+    // portal. It does NOT cover a subscription deleted outright: cancelled
+    // immediately from the dashboard, or closed by Stripe when the retries on a
+    // dead card run out. Those customers passed through no cancel_at_period_end
+    // state, so before this they received neither the question nor a win-back,
+    // and churn from a dead card is precisely the churn a win-back is for.
+    await maybeQueueCancellationOnDelete(subscription, customerId);
+  }
+}
+
+/**
+ * The cancellation series, queued from the DELETE event, for a subscription that
+ * never advertised its cancellation in advance.
+ *
+ * Cannot throw, for the same reason maybeQueueCancellation cannot: it runs after
+ * applyUserPlan has already written the plan, and a throw here would take the
+ * webhook's ledger row with it and re-run that write.
+ */
+async function maybeQueueCancellationOnDelete(
+  subscription: Stripe.Subscription,
+  customerId: string,
+): Promise<void> {
+  try {
+    const db = createServiceRoleClient();
+    if (await hasCancellationSeries(db, customerId, subscription.id)) return;
+
+    const userId = await resolveUserId(
+      db,
+      customerId,
+      subscription.metadata?.user_id ?? null,
+    );
+    const recipient = await resolveRecipient(
+      db,
+      await stripeCustomerEmail(customerId),
+      userId,
+    );
+    if (!recipient) {
+      console.error(
+        `[stripe-webhook] subscription.deleted ${subscription.id}: no usable recipient; nothing queued.`,
+      );
+      return;
+    }
+
+    const item = subscription.items.data[0];
+    const resolved = item?.price?.id ? getPlanByStripePriceId(item.price.id) : null;
+
+    // The period they paid for. `ended_at` is when the subscription actually
+    // stopped, which for an immediate cancellation is now and for a
+    // cancel-at-period-end is the period boundary. It is the honest anchor for
+    // "14 days after you stopped having the product"; current_period_end is the
+    // fallback for the events that carry one and no ended_at.
+    const periodEnd =
+      subscription.ended_at ?? item?.current_period_end ?? subscription.canceled_at ?? null;
+
+    await queueCancellationSequence({
+      db,
+      target: { stripeCustomerId: customerId, userId, recipient },
+      subscriptionId: subscription.id,
+      periodEndSeconds: periodEnd,
+      payload: {
+        planId: resolved?.plan.id ?? null,
+        amountCents: item?.price?.unit_amount ?? null,
+        currency: subscription.currency ?? null,
+        periodEnd: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
+        grandfathered: await isGrandfathered(db, userId),
+      },
+    });
+  } catch (err) {
+    console.error('[stripe-webhook] maybeQueueCancellationOnDelete failed, swallowed:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
+/**
+ * invoice.payment_failed
+ *
+ * A charge on an invoice was declined. Starts the four-email dunning sequence.
+ *
+ * DOES NO ENTITLEMENT WORK, ON PURPOSE. The customer's plan and status are
+ * already handled by the `customer.subscription.updated` that Stripe emits
+ * alongside this (status -> past_due), and that path deliberately keeps a
+ * failing customer ENTITLED while the card is retried. Duplicating any of that
+ * here would give two events the ability to write the same state, which is the
+ * class of bug the out-of-order guard exists to prevent. This handler queues
+ * email and nothing else.
+ *
+ * WHAT IT REFUSES TO DUN
+ *
+ *   billing_reason !== subscription_cycle / subscription_update
+ *     `subscription_create` is a card declined AT CHECKOUT. That person never
+ *     had the product, is very likely still sitting on the checkout page
+ *     watching the same error, and emailing them "your payment failed, your
+ *     agent will lose inboxes 2 and 3" describes a subscription that never
+ *     existed. It is a failed signup, not churn, and it belongs to a different
+ *     piece of work.
+ *
+ *   collection_method !== charge_automatically
+ *     A `send_invoice` customer is being billed by invoice, so there is no card
+ *     to update and the entire sequence is wrong for them.
+ *
+ *   amount_due <= 0
+ *     A $0 invoice cannot fail in a way the customer can fix, and the comped
+ *     accounts are all $0.
+ *
+ *   next_payment_attempt === null AND attempt_count <= 1
+ *     Stripe scheduled no retry and has barely tried. Rather than start a
+ *     fourteen-day sequence on an invoice nothing is going to happen to, this
+ *     falls through to the log. See the review notes: this case also means
+ *     Smart Retries is off, which is a configuration problem, not an email one.
+ */
+async function handleInvoicePaymentFailed(invoice: Stripe.Invoice): Promise<void> {
+  if (!lifecycleQueueingEnabled()) return;
+
+  const customerId =
+    typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id ?? null;
+  if (!customerId || !invoice.id) return;
+
+  const reason = invoice.billing_reason;
+  if (reason !== 'subscription_cycle' && reason !== 'subscription_update') {
+    console.log(
+      `[stripe-webhook] invoice.payment_failed ${invoice.id}: billing_reason=${reason}; not a renewal, no dunning.`,
+    );
+    return;
+  }
+  if (invoice.collection_method !== 'charge_automatically') {
+    console.log(
+      `[stripe-webhook] invoice.payment_failed ${invoice.id}: collection_method=${invoice.collection_method}; no card to fix, no dunning.`,
+    );
+    return;
+  }
+  if ((invoice.amount_due ?? 0) <= 0) {
+    console.log(
+      `[stripe-webhook] invoice.payment_failed ${invoice.id}: amount_due is 0; no dunning.`,
+    );
+    return;
+  }
+  // Stripe scheduled no retry and has barely tried. The whole sequence asserts
+  // that "the card gets retried automatically over the next two weeks", so
+  // starting it on an invoice nothing is going to happen to would put a
+  // falsehood in four emails. Deliberately narrow: a null next_payment_attempt
+  // on a SECOND or later attempt is the normal end of a retry schedule and
+  // still deserves the sequence.
+  if (invoice.next_payment_attempt == null && (invoice.attempt_count ?? 0) <= 1) {
+    console.log(
+      `[stripe-webhook] invoice.payment_failed ${invoice.id}: no retry scheduled after ${invoice.attempt_count ?? 0} attempt(s); no dunning. Check that Smart Retries is enabled.`,
+    );
+    return;
+  }
+
+  const db = createServiceRoleClient();
+
+  // Resolve the owner through user_billing; an invoice carries no user_id.
+  const userId = await resolveUserId(db, customerId, null);
+  const recipient = await resolveRecipient(
+    db,
+    invoice.customer_email ?? (await stripeCustomerEmail(customerId)),
+    userId,
+  );
+  if (!recipient) {
+    console.error(
+      `[stripe-webhook] invoice.payment_failed ${invoice.id}: no usable recipient; nothing queued.`,
+    );
+    return;
+  }
+
+  // The plan the failing invoice was for. Resolved from the price on the line
+  // item, exactly as the subscription handlers do, so a legacy price still maps.
+  const priceId = invoiceLinePriceId(invoice);
+  const resolved = priceId ? getPlanByStripePriceId(priceId) : null;
+  if (!resolved) {
+    // Not fatal: the sequence is still worth sending, and the composer omits the
+    // consequence sentence rather than guessing. Loud, though, because an
+    // unresolved price means every email in this sequence names the wrong plan
+    // unless the composer is given null, which is what happens here.
+    console.error(
+      `[stripe-webhook] invoice.payment_failed ${invoice.id}: could not resolve a plan from price ${priceId ?? 'none'}; queueing without a plan name.`,
+    );
+  }
+
+  const payload: LifecyclePayload = {
+    planId: resolved?.plan.id ?? null,
+    amountCents: invoice.amount_due ?? null,
+    currency: invoice.currency ?? null,
+    declineCode: await invoiceDeclineCode(invoice),
+    // The one-click "pay this exact invoice" page. Better than the billing
+    // portal for a customer whose only problem is that one charge.
+    hostedInvoiceUrl: invoice.hosted_invoice_url ?? null,
+    grandfathered: await isGrandfathered(db, userId),
+  };
+
+  await queueDunningSequence({
+    db,
+    target: { stripeCustomerId: customerId, userId, recipient },
+    invoiceId: invoice.id,
+    payload,
+  });
+}
+
+/**
+ * invoice.payment_succeeded
+ *
+ * THE STOP SIGNAL. Cancels every unsent dunning email for this invoice.
+ *
+ * This is the primary answer to "an email must never land after the charge
+ * already succeeded": a retry that works on day 2 kills the day-3, day-7 and
+ * day-14 emails before they are ever due. It is not the only answer, because
+ * it depends on receiving an event, and the whole reason dunning did not exist
+ * until now is that this endpoint was subscribed to no invoice events at all.
+ * The dispatcher therefore re-reads the invoice from Stripe immediately before
+ * every send and refuses to send against a paid one. Either mechanism alone is
+ * sufficient; both are cheap.
+ *
+ * It also cancels the win-backs for this customer. A successful charge means
+ * they are a paying customer again, whatever the subscription record said when
+ * the sequence was queued.
+ */
+async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<void> {
+  if (!lifecycleQueueingEnabled()) return;
+
+  const customerId =
+    typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id ?? null;
+  if (!customerId) return;
+
+  const db = createServiceRoleClient();
+
+  if (invoice.id) {
+    await cancelOpenSequence({
+      db,
+      stripeCustomerId: customerId,
+      scopeKey: invoice.id,
+      reason: 'payment_recovered',
+    });
+  }
+
+  await cancelOpenSequence({
+    db,
+    stripeCustomerId: customerId,
+    templates: ['winback_14', 'winback_30'],
+    reason: 'subscription_reactivated',
+  });
 }
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * The billing email Stripe holds for a customer.
+ *
+ * Retrieved rather than read off the event object. The live webhook endpoint is
+ * pinned to an older API version than src/lib/stripe/client.ts, so an event
+ * payload and this SDK's TypeScript types do not necessarily describe the same
+ * shape. A retrieve goes through the SDK's own pinned version, which is the one
+ * the types match. Never throws: no email is a skip, not a failure.
+ */
+async function stripeCustomerEmail(customerId: string): Promise<string | null> {
+  try {
+    const customer = await stripe.customers.retrieve(customerId);
+    if (customer.deleted) return null;
+    return customer.email ?? null;
+  } catch (err) {
+    console.error(`[stripe-webhook] could not retrieve customer ${customerId}:`, {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return null;
+  }
+}
+
+/**
+ * The issuer's decline code for a failed invoice, or null.
+ *
+ * Worth the extra API call because it is the difference between "your payment
+ * failed" and "your bank said there was not enough in the account", and the
+ * second one gets fixed in a minute while the first one gets ignored.
+ *
+ * IT HAS TO RETRIEVE, AND IT HAS TO EXPAND. Verified against a real declined
+ * invoice in Stripe test mode on 2026-09-02: on the pinned API version an
+ * invoice carries NEITHER `payment_intent` (removed after basil) NOR `payments`
+ * unless `payments` is explicitly expanded. Reading the webhook's payload alone
+ * therefore yields null every single time, which would have shipped a dunning
+ * email that silently never explains why the card failed. The expanded path is:
+ *
+ *   invoice.payments.data[].payment.payment_intent.last_payment_error
+ *
+ * The event payload is still probed first, because it is free and because the
+ * live endpoint is pinned to an OLDER API version than this SDK, where
+ * `invoice.payment_intent` does exist.
+ *
+ * Never throws. A null here costs one sentence of copy; an exception here costs
+ * the whole dunning sequence.
+ */
+async function invoiceDeclineCode(invoice: Stripe.Invoice): Promise<string | null> {
+  try {
+    // 1. The old shape, present when the endpoint is on an older API version.
+    const raw = invoice as unknown as Record<string, unknown>;
+    const direct = raw.payment_intent;
+    let paymentIntentId: string | null = null;
+    if (typeof direct === 'string') paymentIntentId = direct;
+    else if (direct && typeof direct === 'object' && 'id' in direct) {
+      paymentIntentId = String((direct as { id: unknown }).id);
+    }
+    if (paymentIntentId) {
+      const intent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      return declineFrom(intent.last_payment_error);
+    }
+
+    if (!invoice.id) return null;
+
+    // 2. The current shape. One call: expanding through to the intent means the
+    //    error is already on the object and no second retrieve is needed.
+    const full = await stripe.invoices.retrieve(invoice.id, {
+      expand: ['payments.data.payment.payment_intent'],
+    });
+
+    const payments = (full as unknown as { payments?: { data?: unknown[] } }).payments;
+    for (const entry of payments?.data ?? []) {
+      const payment = (entry as { payment?: Record<string, unknown> })?.payment;
+      const intent = payment?.payment_intent;
+      if (intent && typeof intent === 'object' && 'last_payment_error' in intent) {
+        const code = declineFrom(
+          (intent as { last_payment_error?: Stripe.PaymentIntent.LastPaymentError | null })
+            .last_payment_error,
+        );
+        if (code) return code;
+      }
+    }
+    return null;
+  } catch (err) {
+    console.error('[stripe-webhook] could not resolve decline code:', {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return null;
+  }
+}
+
+/**
+ * decline_code is the issuer's specific reason; code is Stripe's generic
+ * classification. Prefer the specific one and accept either, because the copy
+ * table only recognises the informative values and maps the rest to no reason
+ * block at all.
+ */
+function declineFrom(
+  error: Stripe.PaymentIntent.LastPaymentError | null | undefined,
+): string | null {
+  return error?.decline_code ?? error?.code ?? null;
+}
+
+/**
+ * The price id on the first line of an invoice, across API versions.
+ *
+ * The live webhook endpoint is pinned to its own API version, which is not
+ * necessarily the one src/lib/stripe/client.ts is pinned to, and the shape of a
+ * line item changed: `line.pricing.price_details.price` is the current form and
+ * `line.price` / `line.plan` are what older versions serialise. Reading only the
+ * current form returns null on an older endpoint, and a null price id means a
+ * null plan id, which the composer renders as "Personal" for every customer,
+ * including a Team subscriber at $79.
+ *
+ * All three shapes are probed, most-current first, because the cost of being
+ * wrong is naming the wrong plan in an email about money.
+ */
+function invoiceLinePriceId(invoice: Stripe.Invoice): string | null {
+  const line = invoice.lines?.data?.[0] as unknown as Record<string, unknown> | undefined;
+  if (!line) return null;
+
+  const idOf = (value: unknown): string | null => {
+    if (typeof value === 'string') return value;
+    if (value && typeof value === 'object' && 'id' in value) {
+      const id = (value as { id: unknown }).id;
+      return typeof id === 'string' ? id : null;
+    }
+    return null;
+  };
+
+  const pricing = line.pricing as { price_details?: { price?: unknown } } | undefined;
+  return (
+    idOf(pricing?.price_details?.price) ?? idOf(line.price) ?? idOf(line.plan) ?? null
+  );
+}
 
 /** Best-effort extraction of the Stripe customer id from any event object. */
 function extractCustomerId(event: Stripe.Event): string | null {
