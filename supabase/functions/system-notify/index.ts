@@ -49,9 +49,7 @@ type GrowthStats = {
 };
 
 async function fetchGrowthStats(supabase: SupabaseClient): Promise<GrowthStats> {
-  const now = Date.now();
-  const since24h = new Date(now - 24 * 60 * 60 * 1000).toISOString();
-  const since7d = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
   // PromiseLike, not Promise: a PostgREST builder is thenable but not a Promise.
   const count = async (query: PromiseLike<{ count: number | null; error: unknown }>) => {
@@ -63,11 +61,26 @@ async function fetchGrowthStats(supabase: SupabaseClient): Promise<GrowthStats> 
     }
   };
 
-  const [totalUsers, last24h, last7d] = await Promise.all([
-    count(supabase.from("users").select("*", { count: "exact", head: true })),
-    count(supabase.from("users").select("*", { count: "exact", head: true }).gte("created_at", since24h)),
-    count(supabase.from("users").select("*", { count: "exact", head: true }).gte("created_at", since7d)),
-  ]);
+  // THE headline number, and the only place it is defined: signup_scoreboard()
+  // counts rows in `users` whose address is not one of ours. This used to be
+  // three raw head counts, which is why the email said 422 while the growth
+  // board said 412 -- the email was counting our own ten accounts as
+  // customers, and had no way not to, because the list of them lived in the
+  // Next.js app's environment where an edge function cannot see it. It lives
+  // in public.internal_accounts now. See the 20260907 canonical-signup-count
+  // migration.
+  const scoreboard = await (async () => {
+    try {
+      const { data, error } = await supabase.rpc("signup_scoreboard").single();
+      return error ? null : (data as { total: number; last_24h: number; last_7d: number } | null);
+    } catch {
+      return null;
+    }
+  })();
+
+  const totalUsers = scoreboard?.total ?? null;
+  const last24h = scoreboard?.last_24h ?? null;
+  const last7d = scoreboard?.last_7d ?? null;
 
   // Of the workspaces created in the last 7 days, how many have connected an
   // inbox yet -- a cheap read of the existing analytics_first_inbox_connected_at
@@ -200,16 +213,22 @@ async function buildTemplate(eventType: string, payload: Record<string, unknown>
         ? "unknown"
         : `${stats.recentWorkspacesConnected} of ${stats.recentWorkspaces}`;
 
+    // "people", not "users", and the same word the growth board and the kiosk
+    // print above the same number. The three surfaces disagreed for weeks
+    // because they counted three different things under one word; they now
+    // read one function and say one thing.
     const subject =
       stats.totalUsers === null
         ? `New signup: ${email}`
-        : `New signup - you're at ${stats.totalUsers} users now`;
+        : `New signup - that's ${stats.totalUsers} people`;
 
     const body = [
       `Nice, another one. ${email} just signed up.`,
       "",
       "THE HEADLINE",
-      stats.totalUsers === null ? "Total users: unknown" : `You're now at ${stats.totalUsers} users total.`,
+      stats.totalUsers === null
+        ? "Signed up: unknown"
+        : `${stats.totalUsers} people have signed up. That is the number on the kiosk and on /admin/growth: everyone except the accounts we run ourselves.`,
       "",
       "MOMENTUM",
       `Last 24 hours: ${plural(stats.last24h, "new signup")}`,
