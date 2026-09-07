@@ -62,8 +62,8 @@ import {
   fetchRecurringRevenue,
   valuationMultiple,
 } from '@/lib/analytics/kiosk-revenue';
-import type { CashCollected, CheckoutFunnel } from '@/lib/analytics/kiosk-revenue';
-import { valuationFromArr, type RevenueSummary } from '@/lib/analytics/revenue-math';
+import type { CashCollected } from '@/lib/analytics/kiosk-revenue';
+import { planSplit, valuationFromArr, type RevenueSummary } from '@/lib/analytics/revenue-math';
 import { fetchRecentIncidents } from '@/lib/analytics/kiosk-health';
 import type { MonitorIncident } from '@/lib/analytics/kiosk-health';
 import { NO_DATA, formatCount, formatMoney, formatPercent, ratio } from '../charts';
@@ -75,6 +75,7 @@ import {
   FunnelSteps,
   Gauge,
   GroupedColumns,
+  SplitList,
   Tile,
   TileError,
 } from './primitives';
@@ -82,22 +83,44 @@ import { KioskHealthTile } from './KioskHealth';
 import {
   attemptRate,
   CHART_WEEKS,
+  checkoutSteps,
   DAILY_DAYS,
   FUNNEL_DAYS,
   KIOSK_WINDOW_DAYS,
+  medianOf,
+  milestoneSteps,
   prettyChannel,
   prettyProvider,
+  returningWorkspaces,
   signupWeeks,
+  stageOf,
   sum,
   sumBy,
   trend,
   type KioskViewId,
 } from './shared';
+import {
+  activityDays,
+  isPeopleCapped,
+  PEOPLE_MAX_DAYS,
+  peopleDays,
+  windowShort,
+} from './windows';
 
 // Re-exported because detail.tsx and the page have imported it from here since
 // the board shipped, and moving a constant is not worth breaking two call
 // sites over.
 export { KIOSK_WINDOW_DAYS };
+
+/**
+ * Plan rows the subscriber tile can hold.
+ *
+ * Five is what the slack under a headline in a tile three of twelve columns
+ * wide actually fits at the panel's size, measured rather than guessed. Past
+ * that `planSplit` folds the tail into one counted row, so the fit never costs
+ * a subscriber.
+ */
+const PLAN_ROWS = 5;
 
 /**
  * The dispatcher.
@@ -107,20 +130,40 @@ export { KIOSK_WINDOW_DAYS };
  * `any` to hold them, which would let a typo in a view id render nothing at all
  * on a screen nobody is watching.
  */
-export async function KioskBoard({ view }: { view: KioskViewId }) {
+export async function KioskBoard({ view, days }: { view: KioskViewId; days: number }) {
   switch (view) {
     case 'money':
-      return <MoneyBoard />;
+      return <MoneyBoard days={days} />;
     case 'growth':
-      return <GrowthBoard />;
+      return <GrowthBoard days={days} />;
     case 'stickiness':
-      return <StickinessBoard />;
+      return <StickinessBoard days={days} />;
     case 'uptime':
-      return <UptimeBoard />;
+      return <UptimeBoard days={days} />;
     default:
-      return <PulseBoard />;
+      return <PulseBoard days={days} />;
   }
 }
+
+/**
+ * THE WINDOW IS A PROP, not a constant, since 2026-09-07.
+ *
+ * Every board takes the same `days` and every one of them has to be careful
+ * with it in the same two places, so the rule is written once here rather than
+ * five times below:
+ *
+ *   - `activityDays(days)` for anything derived from `activity_log`. Rows past
+ *     90 days are deleted, so a wider window there returns real workspace
+ *     counts beside zeroed activity, and every rate computed against that
+ *     stretch is an invention that looks exactly like a collapse.
+ *   - `peopleDays(days)` for `fetchPeopleCounts`. It reports the window AND the
+ *     window before it, so it clamps itself at 45 days, silently. A tile that
+ *     labelled that answer with the switch's own label would attribute six
+ *     weeks of signups to the whole run.
+ *
+ * Tiles whose subject has no window at all (a live Stripe subscription, a
+ * provider mix, an inbox ceiling) keep saying what they actually measure.
+ */
 
 /* ========================================================== PULSE (default) */
 
@@ -132,23 +175,23 @@ export async function KioskBoard({ view }: { view: KioskViewId }) {
  * it, how many pay, what that is worth), the eight week trend, and the ladder
  * to a paying customer. Everything below is supporting.
  */
-async function PulseBoard() {
-  const days = KIOSK_WINDOW_DAYS;
+async function PulseBoard({ days }: { days: number }) {
+  const activity = activityDays(days);
 
   const [
     people, signups, daily, lifecycle, counts, funnel, bands,
     gmail, providers, usage, recurring, checkout, cash,
   ] = await Promise.all([
-    fetchPeopleCounts(days),
+    fetchPeopleCounts(peopleDays(days)),
     fetchUserSignupDays(DAILY_DAYS),
-    fetchDailyMetrics(days),
+    fetchDailyMetrics(activity),
     fetchLifecycleCounts(),
     fetchRevenueCounts(),
     fetchActivationFunnel(FUNNEL_DAYS),
-    fetchEngagementBands(days),
+    fetchEngagementBands(activity),
     fetchGmailCapSummary(),
     fetchProviderMix(),
-    fetchUsageVolume(days),
+    fetchUsageVolume(activity),
     fetchRecurringRevenue(days),
     fetchCheckoutFunnel(),
     fetchCashCollected(),
@@ -176,14 +219,14 @@ async function PulseBoard() {
 
       <SubscribersTile recurring={recurring} money={money} />
 
-      <RevenueTile recurring={recurring} money={money} cash={cash.ok ? cash.data : null} />
+      <RevenueTile recurring={recurring} money={money} cash={cash.ok ? cash.data : null} days={days} />
 
       {/* ---- Row 3: the two panels worth standing still for ---- */}
 
       <SignupsChartTile signups={signups} span={7} />
 
       {funnel.ok ? (
-        <Tile label="Road to a paying customer" aside="workspaces, all accounts" span={5}>
+        <Tile label="Road to a paying customer" aside="workspaces, all accounts" span={5} detail="activation">
           <FunnelSteps
             steps={milestoneSteps(
               funnel.data,
@@ -213,7 +256,7 @@ async function PulseBoard() {
           board's five minute one. */}
       <KioskHealthTile baselineRate={attemptRate(successes, calls, throttled)} baselineDays={days} />
 
-      <WorkDoneTile volume={volume} ok={usage.ok} days={days} />
+      <WorkDoneTile volume={volume} ok={usage.ok} days={activity} />
 
       <ProvidersTile providers={providers} />
     </>
@@ -234,8 +277,7 @@ async function PulseBoard() {
  * either claims the business earns twelve times what it recurringly does, or
  * hides every dollar that has ever arrived.
  */
-async function MoneyBoard() {
-  const days = KIOSK_WINDOW_DAYS;
+async function MoneyBoard({ days }: { days: number }) {
 
   const [recurring, cash, checkout, counts, pressure] = await Promise.all([
     fetchRecurringRevenue(days),
@@ -251,7 +293,7 @@ async function MoneyBoard() {
 
   return (
     <>
-      <RevenueTile recurring={recurring} money={money} cash={collected} />
+      <RevenueTile recurring={recurring} money={money} cash={collected} days={days} />
 
       <ValuationTile mrr={mrr} error={recurring.ok ? null : recurring.error} />
 
@@ -269,6 +311,7 @@ async function MoneyBoard() {
           aside={collected && collected.mode === 'test' ? 'TEST MODE' : 'net of refunds'}
           span={7}
           tone={collected && collected.mode === 'test' ? 'warn' : 'default'}
+          detail="cash"
         >
           {collected && collected.months.length > 0 ? (
             <GroupedColumns
@@ -294,6 +337,7 @@ async function MoneyBoard() {
           label="Where the money is lost"
           aside={checkout.data.lastCompletedAt ? `last sale ${daysAgo(checkout.data.lastCompletedAt)}` : 'no sale yet'}
           span={5}
+          detail="checkout"
         >
           <FunnelSteps steps={checkoutSteps(checkout.data, mrr)} />
         </Tile>
@@ -304,7 +348,7 @@ async function MoneyBoard() {
       {/* ---- strip ---- */}
 
       {recurring.ok && mrr ? (
-        <Tile label="Which tier pays" aside={`${formatMoney(mrr.arrMinor, mrr.currency)}/yr`} span={3} className="kiosk-strip">
+        <Tile label="Which tier pays" aside={`${formatMoney(mrr.arrMinor, mrr.currency)}/yr`} span={3} className="kiosk-strip" detail="subscribers">
           <BarList
             rows={mrr.byPlan.map((plan) => ({ name: plan.label, count: plan.customers }))}
             emptyLabel="No paid subscription is live"
@@ -326,6 +370,7 @@ async function MoneyBoard() {
           span={3}
           className="kiosk-strip"
           tone={pressure.data.at_ceiling_activated > 0 ? 'goal' : 'default'}
+          detail="inbox-ceiling"
         >
           <BigNumber
             value={pressure.data.at_ceiling}
@@ -353,6 +398,7 @@ async function MoneyBoard() {
           span={3}
           className="kiosk-strip"
           tone={mrr.atRiskMinor > 0 ? 'bad' : mrr.leavingMinor > 0 ? 'warn' : 'good'}
+          detail="at-risk"
         >
           <BigNumber
             value={formatMoney(mrr.atRiskMinor + mrr.leavingMinor, mrr.currency)}
@@ -372,7 +418,7 @@ async function MoneyBoard() {
       )}
 
       {counts.ok ? (
-        <Tile label="Still to convert" aside="free plans" span={3} className="kiosk-strip">
+        <Tile label="Still to convert" aside="free plans" span={3} className="kiosk-strip" detail="convert">
           <BigNumber
             value={counts.data.free_workspaces}
             caption={
@@ -404,11 +450,10 @@ async function MoneyBoard() {
  * funnel, which is the point: on Pulse the arrival numbers have to share a row
  * with the money, and when arrivals are the question that is the wrong trade.
  */
-async function GrowthBoard() {
-  const days = KIOSK_WINDOW_DAYS;
+async function GrowthBoard({ days }: { days: number }) {
 
   const [people, signups, channels, providers, clients, gmail, funnel] = await Promise.all([
-    fetchPeopleCounts(days),
+    fetchPeopleCounts(peopleDays(days)),
     fetchUserSignupDays(DAILY_DAYS),
     fetchAcquisitionChannels(days),
     fetchProviderMix(),
@@ -425,7 +470,7 @@ async function GrowthBoard() {
       <SignedUpTile people={head} error={peopleError} days={days} signups={signups.ok ? signups.data : null} />
 
       {head ? (
-        <Tile label={`New this ${days}d`} aside="people" span={3} tone={head.new_users > head.prev_new_users ? 'good' : 'default'}>
+        <Tile label={`New this ${peopleDays(days)}d`} aside="people" span={3} tone={head.new_users > head.prev_new_users ? 'good' : 'default'} detail="signups">
           <BigNumber
             value={head.new_users}
             trend={trend(head.new_users, head.prev_new_users, 'up')}
@@ -434,11 +479,11 @@ async function GrowthBoard() {
           />
         </Tile>
       ) : (
-        <TileError label={`New this ${days}d`} message={peopleError ?? 'unavailable'} span={3} />
+        <TileError label={`New this ${peopleDays(days)}d`} message={peopleError ?? 'unavailable'} span={3} />
       )}
 
       {head ? (
-        <Tile label="Reached a mailbox" aside="ever" span={3} tone="good">
+        <Tile label="Reached a mailbox" aside="ever" span={3} tone="good" detail="activation">
           <BigNumber
             value={head.activated_users}
             caption={<>{ratio(head.activated_users, head.total_users)} of everyone who signed up</>}
@@ -459,7 +504,7 @@ async function GrowthBoard() {
           rows have to sum to the signup count or they will eventually be read
           as if they did. */}
       {channels.ok ? (
-        <Tile label="Where they come from" aside={`${days}d, first touch`} span={5}>
+        <Tile label="Where they come from" aside={`${windowShort(days)}, first touch`} span={5} detail="channels">
           <BarList
             rows={channels.data
               .slice()
@@ -484,7 +529,7 @@ async function GrowthBoard() {
       <ProvidersTile providers={providers} />
 
       {clients.ok ? (
-        <Tile label="MCP client on first success" aside="all time" span={3} className="kiosk-strip">
+        <Tile label="MCP client on first success" aside="all time" span={3} className="kiosk-strip" detail="clients">
           <BarList
             rows={clients.data
               .slice()
@@ -506,7 +551,7 @@ async function GrowthBoard() {
           activation RPC, which counts workspaces and includes our own. Said in
           the aside rather than silently mixed with the human counts above. */}
       {funnel.ok ? (
-        <Tile label="Onboarding" aside="workspaces, all" span={3} className="kiosk-strip">
+        <Tile label="Onboarding" aside="workspaces, all" span={3} className="kiosk-strip" detail="activation">
           <FunnelSteps
             steps={[
               { label: 'Created a workspace', value: stageOf(funnel.data, 'signup') },
@@ -532,15 +577,15 @@ async function GrowthBoard() {
  * who tried the product once and never came back, because that is the number
  * the rest of the wall is best at hiding.
  */
-async function StickinessBoard() {
-  const days = KIOSK_WINDOW_DAYS;
+async function StickinessBoard({ days }: { days: number }) {
+  const activity = activityDays(days);
 
   const [people, lifecycle, bands, retention, usage, providers] = await Promise.all([
-    fetchPeopleCounts(days),
+    fetchPeopleCounts(peopleDays(days)),
     fetchLifecycleCounts(),
-    fetchEngagementBands(days),
+    fetchEngagementBands(activity),
     fetchRetentionCurve(8),
-    fetchUsageVolume(days),
+    fetchUsageVolume(activity),
     fetchProviderMix(),
   ]);
 
@@ -554,7 +599,7 @@ async function StickinessBoard() {
       <ActiveUsersTile people={head} error={peopleError} days={days} />
 
       {head ? (
-        <Tile label="Active this week" aside="7d" span={3} tone="good">
+        <Tile label="Active this week" aside="7d" span={3} tone="good" detail="active-users">
           <BigNumber
             value={head.active_users_7d}
             caption={<>{ratio(head.active_users_7d, head.active_users)} of the {days} day set</>}
@@ -564,7 +609,7 @@ async function StickinessBoard() {
         <TileError label="Active this week" message={peopleError ?? 'unavailable'} span={3} />
       )}
 
-      <Tile label="Came back" aside={`${days}d`} span={3} tone={returning > 0 ? 'good' : 'goal'}>
+      <Tile label="Came back" aside={windowShort(activity)} span={3} tone={returning > 0 ? 'good' : 'goal'} detail="returning">
         <BigNumber
           value={bands.ok ? returning : NO_DATA}
           caption="Workspaces active on two or more separate days"
@@ -581,6 +626,7 @@ async function StickinessBoard() {
           aside="ever"
           span={3}
           tone={life.one_and_done > life.active_28d ? 'bad' : 'warn'}
+          detail="retention"
         >
           <BigNumber
             value={life.one_and_done}
@@ -594,7 +640,7 @@ async function StickinessBoard() {
       {/* A workspace only enters `eligible` once its whole week has elapsed, so
           the last bar is never a half-lived week pretending to be a cliff. */}
       {retention.ok ? (
-        <Tile label="Retention after the first mailbox" aside="external accounts" span={7}>
+        <Tile label="Retention after the first mailbox" aside="external accounts" span={7} detail="retention">
           {retention.data.length === 0 ? (
             <p className="kiosk-empty">No cohort has aged into a full week yet.</p>
           ) : (
@@ -615,7 +661,7 @@ async function StickinessBoard() {
       )}
 
       {bands.ok ? (
-        <Tile label="How many days people showed up" aside={`${days}d`} span={5}>
+        <Tile label="How many days people showed up" aside={windowShort(activity)} span={5} detail="engagement">
           <BarList
             rows={bands.data
               .filter((row) => row.metric === 'active_days')
@@ -636,7 +682,7 @@ async function StickinessBoard() {
       {/* ---- strip ---- */}
 
       {life ? (
-        <Tile label="Going quiet" aside="14d silent" span={3} className="kiosk-strip" tone={life.at_risk > 0 ? 'warn' : 'good'}>
+        <Tile label="Going quiet" aside="14d silent" span={3} className="kiosk-strip" tone={life.at_risk > 0 ? 'warn' : 'good'} detail="engagement">
           <BigNumber
             value={life.at_risk}
             caption="Used it on two or more days, then stopped"
@@ -647,7 +693,7 @@ async function StickinessBoard() {
       )}
 
       {head ? (
-        <Tile label="Reached a mailbox" aside="ever" span={3} className="kiosk-strip">
+        <Tile label="Reached a mailbox" aside="ever" span={3} className="kiosk-strip" detail="activation">
           <BigNumber
             value={head.activated_users}
             caption={<>{ratio(head.activated_users, head.total_users)} of <strong>{formatCount(head.total_users)}</strong> signups</>}
@@ -657,7 +703,7 @@ async function StickinessBoard() {
         <TileError label="Reached a mailbox" message={peopleError ?? 'unavailable'} span={3} className="kiosk-strip" />
       )}
 
-      <WorkDoneTile volume={usage.ok ? usage.data : null} ok={usage.ok} days={days} />
+      <WorkDoneTile volume={usage.ok ? usage.data : null} ok={usage.ok} days={activity} />
 
       <ProvidersTile providers={providers} />
     </>
@@ -681,14 +727,14 @@ async function StickinessBoard() {
  * answer; a red rate with a passing monitor is a regression the monitor's four
  * steps happen not to cover. Neither is legible without the other.
  */
-async function UptimeBoard() {
-  const days = KIOSK_WINDOW_DAYS;
+async function UptimeBoard({ days }: { days: number }) {
+  const activity = activityDays(days);
 
   const [daily, errors, incidents, usage, providers] = await Promise.all([
-    fetchDailyMetrics(days),
-    fetchErrorBreakdown(days),
+    fetchDailyMetrics(activity),
+    fetchErrorBreakdown(activity),
     fetchRecentIncidents(8),
-    fetchUsageVolume(days),
+    fetchUsageVolume(activity),
     fetchProviderMix(),
   ]);
 
@@ -720,9 +766,10 @@ async function UptimeBoard() {
         return (
           <Tile
             label="Success rate"
-            aside={`${days}d`}
+            aside={windowShort(activity)}
             span={3}
             tone={rate === null ? 'default' : rate >= 0.99 ? 'good' : rate >= 0.95 ? 'warn' : 'bad'}
+            detail="reliability"
           >
             <BigNumber
               value={rate === null ? NO_DATA : formatPercent(rate, 2)}
@@ -740,7 +787,7 @@ async function UptimeBoard() {
       )}
 
       {daily.ok ? (
-        <Tile label="Calls" aside={`${days}d`} span={3}>
+        <Tile label="Calls" aside={windowShort(activity)} span={3} detail="usage">
           <BigNumber
             value={calls}
             trend={trend(yesterday?.calls ?? 0, dayBefore?.calls ?? null, 'up')}
@@ -763,7 +810,7 @@ async function UptimeBoard() {
           above now excludes it from the denominator for exactly this reason: an
           abuse guard doing its job must not be read as an outage. */}
       {daily.ok ? (
-        <Tile label="Failures" aside={`${days}d`} span={3} tone={failures > 0 ? 'warn' : 'good'}>
+        <Tile label="Failures" aside={windowShort(activity)} span={3} tone={failures > 0 ? 'warn' : 'good'} detail="errors">
           <BigNumber
             value={failures}
             caption={throttled > 0
@@ -778,7 +825,7 @@ async function UptimeBoard() {
       )}
 
       {errors.ok ? (
-        <Tile label="What is failing" aside={`${days}d`} span={7}>
+        <Tile label="What is failing" aside={windowShort(activity)} span={7} detail="errors">
           <BarList
             rows={errors.data.slice(0, 6).map((row) => ({
               name: `${row.tool_name}${row.error_code ? ` · ${row.error_code}` : ''}`,
@@ -803,6 +850,7 @@ async function UptimeBoard() {
         aside={incidentAside(incidents)}
         span={5}
         tone={incidents.some((row) => row.status === 'open') ? 'bad' : 'default'}
+        detail="incidents"
       >
         <EventList
           rows={incidents.map((incident) => ({
@@ -818,10 +866,10 @@ async function UptimeBoard() {
 
       {/* ---- strip ---- */}
 
-      <WorkDoneTile volume={usage.ok ? usage.data : null} ok={usage.ok} days={days} />
+      <WorkDoneTile volume={usage.ok ? usage.data : null} ok={usage.ok} days={activity} />
 
       {daily.ok ? (
-        <Tile label="Busiest day" aside={`last ${days}d`} span={3} className="kiosk-strip">
+        <Tile label="Busiest day" aside={`last ${windowShort(activity)}`} span={3} className="kiosk-strip" detail="usage">
           <BigNumber
             value={Math.max(0, ...rows.map((row) => row.calls))}
             caption={<>Calls in a single UTC day. Median <strong>{formatCount(medianOf(rows.map((row) => row.calls)))}</strong>.</>}
@@ -832,7 +880,7 @@ async function UptimeBoard() {
       )}
 
       {daily.ok ? (
-        <Tile label="Quietest day" aside={`last ${days}d`} span={3} className="kiosk-strip">
+        <Tile label="Quietest day" aside={`last ${windowShort(activity)}`} span={3} className="kiosk-strip" detail="usage">
           <BigNumber
             value={rows.length === 0 ? NO_DATA : Math.min(...rows.map((row) => row.calls))}
             caption="A genuinely quiet night exists at this volume and is not an outage"
@@ -884,7 +932,7 @@ function SignedUpTile({
     return <TileError label="Signed up" message={error ?? 'People counts unavailable.'} span={3} />;
   }
   return (
-    <Tile label="Signed up" aside="all time" span={3} tone="good">
+    <Tile label="Signed up" aside="all time" span={3} tone="good" detail="signups">
       <BigNumber
         value={people.total_users}
         trend={trend(people.total_users, people.total_users_prior, 'up')}
@@ -933,7 +981,13 @@ function ActiveUsersTile({
     return <TileError label="Active users" message={error ?? 'People counts unavailable.'} span={3} />;
   }
   return (
-    <Tile label="Active users" aside={`${days}d`} span={3} tone={people.active_users > 0 ? 'good' : 'warn'}>
+    <Tile
+      label="Active users"
+      aside={isPeopleCapped(days) ? `${PEOPLE_MAX_DAYS}d max` : windowShort(days)}
+      span={3}
+      tone={people.active_users > 0 ? 'good' : 'warn'}
+      detail="active-users"
+    >
       <BigNumber
         value={people.active_users}
         trend={trend(people.active_users, people.prev_active_users, 'up')}
@@ -994,6 +1048,7 @@ function SubscribersTile({
       aside={mrr.compedCustomers > 0 ? `${mrr.compedCustomers} comped` : 'paid plans'}
       span={3}
       tone={mrr.payingCustomers > 0 ? 'good' : 'goal'}
+      detail="subscribers"
     >
       <BigNumber
         value={mrr.payingCustomers}
@@ -1007,6 +1062,17 @@ function SubscribersTile({
             : trend(mrr.payingCustomers, mrr.payingCustomers - mrr.newCustomers + mrr.churnedCustomers, 'up')
         }
         caption={subscriberCaption(mrr, money)}
+      />
+      {/* THE TIER MIX, as rows rather than as a sentence.
+          It used to be the tail of the caption: the first three plans, comma
+          separated, and then nothing. With four tiers sold monthly and yearly
+          that is up to eight groups, so on 2026-09-07 this tile read 10 above a
+          line naming 8 of them, with nothing to say two people were missing.
+          Rows fit the slack the tile already had, and `planSplit` folds
+          anything past the fifth into one counted "Other" row, so the column
+          always adds up to the number above it. */}
+      <SplitList
+        rows={planSplit(mrr.byPlan, PLAN_ROWS).map((plan) => ({ label: plan.label, count: plan.customers }))}
       />
     </Tile>
   );
@@ -1045,10 +1111,13 @@ function RevenueTile({
   recurring,
   money,
   cash,
+  days,
 }: {
   recurring: MoneyResult;
   money: { free_workspaces: number } | null;
   cash: CashCollected | null;
+  /** The window the movement line speaks about. */
+  days: number;
 }) {
   const mrr = recurring.ok ? recurring.data ?? null : null;
   if (!mrr) {
@@ -1062,7 +1131,7 @@ function RevenueTile({
   }
   const valuation = valuationFromArr(mrr.arrMinor, valuationMultiple());
   return (
-    <Tile label="Recurring revenue" aside={revenueAside(mrr)} span={3} tone={revenueTone(mrr)}>
+    <Tile label="Recurring revenue" aside={revenueAside(mrr)} span={3} tone={revenueTone(mrr)} detail="revenue">
       <BigNumber
         value={formatMoney(mrr.mrrMinor, mrr.currency)}
         suffix="/mo"
@@ -1071,7 +1140,7 @@ function RevenueTile({
         // upgraded or downgraded, which is true today and is noted in
         // revenue-math.ts as the thing to revisit once it is not.
         trend={mrr.netNewMrrMinor === 0 ? null : trend(mrr.mrrMinor, mrr.mrrMinor - mrr.netNewMrrMinor, 'up')}
-        caption={revenueCaption(mrr, money)}
+        caption={revenueCaption(mrr, money, days)}
       />
       <FactRow
         facts={[
@@ -1104,7 +1173,7 @@ function ValuationTile({ mrr, error }: { mrr: RevenueSummary | null; error: stri
   }
   const valuation = valuationFromArr(mrr.arrMinor, valuationMultiple());
   return (
-    <Tile label="Company valuation" aside={`${valuation.multiple}x ARR`} span={3} tone="goal">
+    <Tile label="Company valuation" aside={`${valuation.multiple}x ARR`} span={3} tone="goal" detail="valuation">
       <BigNumber
         value={formatMoney(valuation.valuationMinor, mrr.currency)}
         caption={
@@ -1148,6 +1217,7 @@ function CashTile({ cash }: { cash: { ok: boolean; data?: CashCollected; error?:
       aside={test ? 'TEST MODE' : data.truncated ? 'at least' : 'all time'}
       span={3}
       tone={test ? 'warn' : data.allTimeMinor > 0 ? 'good' : 'goal'}
+      detail="cash"
     >
       <BigNumber
         value={formatMoney(data.allTimeMinor, data.currency)}
@@ -1179,7 +1249,7 @@ function SignupsChartTile({
     return <TileError label="Signups and activations" message={signups.error ?? 'unavailable'} span={span} />;
   }
   return (
-    <Tile label="Signups and activations" aside={`${CHART_WEEKS} calendar weeks`} span={span}>
+    <Tile label="Signups and activations" aside={`${CHART_WEEKS} calendar weeks`} span={span} detail="signups">
       <GroupedColumns
         buckets={signupWeeks(signups.data)}
         series={[
@@ -1202,7 +1272,7 @@ function WorkDoneTile({
   days: number;
 }) {
   return (
-    <Tile label="Work done for customers" aside={`${days}d`} span={3} className="kiosk-strip">
+    <Tile label="Work done for customers" aside={windowShort(days)} span={3} className="kiosk-strip" detail="usage">
       <BigNumber
         value={volume?.billable_actions ?? (ok ? 0 : NO_DATA)}
         caption={volume
@@ -1236,6 +1306,7 @@ function ProvidersTile({
       aside={`${sumBy(providers.data, (row) => row.inboxes)} live`}
       span={3}
       className="kiosk-strip"
+      detail="providers"
     >
       <BarList
         rows={providers.data
@@ -1271,6 +1342,7 @@ function GmailTile({ summary }: { summary: GmailCapSummaryRow }) {
       span={3}
       className="kiosk-strip"
       tone={projection.level === 'ok' ? 'default' : projection.level === 'warn' ? 'warn' : 'bad'}
+      detail="gmail-cap"
     >
       <Gauge value={projection.used} max={GMAIL_OAUTH_USER_CAP} unit="grants" />
       <FactRow
@@ -1287,156 +1359,6 @@ function GmailTile({ summary }: { summary: GmailCapSummaryRow }) {
 const MONTH_LABEL = new Intl.DateTimeFormat('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' });
 
 /* ---------------------------------------------------------------- helpers */
-
-function stageOf(funnel: { stage: string; workspaces: number }[], name: string): number {
-  return funnel.find((row) => row.stage === name)?.workspaces ?? 0;
-}
-
-function medianOf(values: number[]): number {
-  if (values.length === 0) return 0;
-  const sorted = [...values].sort((a, b) => a - b);
-  return sorted[Math.floor(sorted.length / 2)];
-}
-
-/**
- * Workspaces that came back at least once.
- *
- * The engagement RPC buckets by active days as '1', '2–3', '4–7', '8+', so
- * everything except the first band is a workspace that returned on a different
- * day. Matching on "not 1" rather than listing the other three keeps this
- * correct if a band is ever added.
- */
-function returningWorkspaces(rows: { metric: string; band: string; workspaces: number }[]): number {
-  return rows
-    .filter((row) => row.metric === 'active_days' && row.band !== '1')
-    .reduce((total, row) => total + row.workspaces, 0);
-}
-
-/**
- * The milestone ladder, ending at the step that is actually in play.
- *
- * The last three rungs come from outside the activation funnel on purpose: the
- * funnel stops at first value, and the interesting question now is what happens
- * after it.
- *
- * WHY "HIT A PLAN LIMIT" IS GONE. It was the right rung when actions were the
- * value metric. Since the 2026-08-19 repricing the paywall is the inbox count
- * and the action ceiling is a silent abuse guard nobody is meant to reach, so
- * the rung was a permanent zero measuring a paywall that no longer exists. The
- * two rungs that replace it measure the paywall that does.
- *
- * THE ABANDONMENT NOTE IS THE POINT OF THE PANEL. Everything above it is about
- * getting people to want the product. The gap between "started a checkout" and
- * "paid" is the only step where someone had already decided to pay and we lost
- * them anyway, and it is the only number here that can be fixed in an
- * afternoon.
- *
- * TWO SEAMS, both marked in the notes rather than hidden. The first three rungs
- * come from the activation RPC and count WORKSPACES including our own; the
- * pricing and checkout rungs are filtered in Node and exclude ours. Our
- * accounts are roughly a twentieth of signups, so the ladder still reads true;
- * the cleaner fix is to teach `growth_activation_funnel` the same exclusion.
- * The second seam is the window: the pricing and checkout rungs are all-time,
- * "came back" is the rolling 28 days.
- */
-function milestoneSteps(
-  funnel: { stage: string; workspaces: number }[],
-  retention: { returning: number; oneAndDone: number | null },
-  checkout: CheckoutFunnel | null,
-  mrr: RevenueSummary | null,
-) {
-  const { returning, oneAndDone } = retention;
-  const paid = checkout?.checkoutCompleted ?? 0;
-  const stillPaying = mrr?.payingCustomers ?? 0;
-  return [
-    // "Created a workspace", not "Signed up", and the aside says "workspaces".
-    // The headline tile three columns to the left says "Signed up 315" and this
-    // rung says 308, because they count different things: that one counts
-    // external PEOPLE and this one counts WORKSPACES including our own. Both
-    // are right and the difference is small, which is precisely what makes it
-    // dangerous on a wall — two numbers under the same word, four tiles apart,
-    // that never quite agree. Naming the unit is cheaper than reconciling them,
-    // and reconciling them properly means teaching growth_activation_funnel the
-    // internal exclusion, which is a change to a shared RPC that /admin/growth
-    // also reads.
-    { label: 'Created a workspace', value: stageOf(funnel, 'signup') },
-    { label: 'Connected an inbox', value: stageOf(funnel, 'inbox_connected') },
-    { label: 'Used their mailbox', value: stageOf(funnel, 'value_activation') },
-    {
-      label: 'Came back',
-      value: returning,
-      note: returning === 0
-        ? 'nobody yet'
-        : oneAndDone === null
-          ? `2+ days, last ${KIOSK_WINDOW_DAYS}d`
-          : `2+ days; ${oneAndDone} tried once and left`,
-    },
-    {
-      label: 'Looked at the plans',
-      value: checkout?.pricingViewed ?? 0,
-      note: checkout ? 'signed in, ever' : 'unavailable',
-    },
-    {
-      label: 'Started a checkout',
-      value: checkout?.checkoutStarted ?? 0,
-      note: !checkout
-        ? 'unavailable'
-        : checkout.abandoned > 0
-          ? `${checkout.abandoned} left without paying`
-          : 'none abandoned',
-    },
-    {
-      label: 'Paid',
-      value: paid,
-      note: paid === 0
-        ? 'the first one is still out there'
-        // Ever-paid against still-paying: with the counts this small, one
-        // cancellation is the whole retention story and hiding it behind a
-        // single number would be the flattering choice.
-        : stillPaying === paid ? 'all still paying' : `${stillPaying} still paying`,
-    },
-  ];
-}
-
-/**
- * The checkout ladder on its own, for the Money view.
- *
- * Shares no code with `milestoneSteps` because it deliberately starts later:
- * everything before "looked at the plans" is a product question and this panel
- * is about the four steps after somebody has started thinking about paying.
- */
-function checkoutSteps(funnel: CheckoutFunnel, mrr: RevenueSummary | null) {
-  const stillPaying = mrr?.payingCustomers ?? 0;
-  return [
-    { label: 'Looked at the plans', value: funnel.pricingViewed, note: 'signed in, ever' },
-    {
-      label: 'Started a checkout',
-      value: funnel.checkoutStarted,
-      note: funnel.checkoutFailed > 0 ? `${funnel.checkoutFailed} could not start` : 'ever',
-    },
-    {
-      label: 'Abandoned on Stripe',
-      value: funnel.abandoned,
-      // Reached is forced false: this rung is the LOSS, and the funnel paints a
-      // reached rung in the accent colour, which would make the board's worst
-      // number its most confident-looking one.
-      reached: false,
-      note: funnel.abandoned > 0 ? 'had already decided to pay' : 'nobody',
-    },
-    {
-      label: 'Paid',
-      value: funnel.checkoutCompleted,
-      note: funnel.checkoutCompleted === 0
-        ? 'the first one is still out there'
-        : stillPaying === funnel.checkoutCompleted ? 'all still paying' : `${stillPaying} still paying`,
-    },
-    {
-      label: 'Opened the billing portal',
-      value: funnel.portalOpened,
-      note: 'existing subscribers',
-    },
-  ];
-}
 
 /**
  * The tone and the aside of the money tile.
@@ -1473,7 +1395,7 @@ function revenueAside(mrr: RevenueSummary): string {
  * row underneath now carries the derived figures and repeating ARPA there and
  * here would spend two of the tile's four lines on one number.
  */
-function revenueCaption(mrr: RevenueSummary, counts: { free_workspaces: number } | null) {
+function revenueCaption(mrr: RevenueSummary, counts: { free_workspaces: number } | null, days: number) {
   if (mrr.payingCustomers === 0) {
     return (
       <>
@@ -1483,7 +1405,7 @@ function revenueCaption(mrr: RevenueSummary, counts: { free_workspaces: number }
       </>
     );
   }
-  return <>{movement(mrr)}</>;
+  return <>{movement(mrr, days)}</>;
 }
 
 /** One line under the money-at-risk headline. */
@@ -1498,16 +1420,18 @@ function riskCaption(mrr: RevenueSummary) {
 }
 
 /**
- * One line under the subscriber count: which tiers those people are on.
+ * One line under the subscriber count: what is left to convert.
  *
- * The tier mix is the whole reason a count is worth wall space beside the
- * money. Two subscribers on Personal and two on Team are the same headline here
- * and a six times difference in what the business is; the plan labels are the
- * only thing on the board that tells them apart.
+ * IT USED TO BE THE TIER MIX, as a sentence, capped at three plans. That was
+ * the right information in the wrong shape: with four tiers sold monthly and
+ * yearly there are up to eight groups, and a comma separated list that stops
+ * at three simply dropped subscribers off the end of itself. The mix now has
+ * its own rows below the headline (see `SplitList` and `planSplit`), where
+ * every plan appears and the column adds up to the number above it.
  *
- * Capped at three plans. There are four tiers and the caption is two lines of
- * clamped text in a tile three of twelve columns wide, so a fourth would push
- * the first out of view rather than appear beneath it.
+ * What is left for the caption is the thing the mix cannot say: the size of
+ * the population these people were converted OUT of, which is what makes a
+ * count of ten mean something.
  */
 function subscriberCaption(mrr: RevenueSummary, counts: { free_workspaces: number } | null) {
   if (mrr.payingCustomers === 0) {
@@ -1515,28 +1439,21 @@ function subscriberCaption(mrr: RevenueSummary, counts: { free_workspaces: numbe
       ? <>Nobody yet. <strong>{formatCount(counts.free_workspaces)}</strong> free workspaces to convert.</>
       : <>Nobody is on a paid plan yet.</>;
   }
-  const mix = mrr.byPlan
-    .slice(0, 3)
-    .map((plan) => `${plan.label} ${formatCount(plan.customers)}`)
-    .join(', ');
-  return (
-    <>
-      {mix || 'Plan unknown'}
-      {mrr.compedCustomers > 0 ? `, plus ${mrr.compedCustomers} comped` : ''}.
-    </>
-  );
+  return counts
+    ? <><strong>{formatCount(counts.free_workspaces)}</strong> free workspaces still to convert</>
+    : <>On a paid plan right now</>;
 }
 
 /** What arrived and what left inside the window, in words rather than a delta. */
-function movement(mrr: RevenueSummary): string {
+function movement(mrr: RevenueSummary, days: number): string {
   const gained = formatMoney(mrr.newMrrMinor, mrr.currency);
   const lost = formatMoney(mrr.churnedMrrMinor, mrr.currency);
   if (mrr.newCustomers > 0 && mrr.churnedCustomers > 0) {
-    return `${gained} won and ${lost} lost in ${KIOSK_WINDOW_DAYS}d.`;
+    return `${gained} won and ${lost} lost in ${days}d.`;
   }
-  if (mrr.newCustomers > 0) return `${gained} of it arrived in the last ${KIOSK_WINDOW_DAYS}d.`;
-  if (mrr.churnedCustomers > 0) return `${lost} lost in the last ${KIOSK_WINDOW_DAYS}d.`;
-  return `Unchanged for ${KIOSK_WINDOW_DAYS} days.`;
+  if (mrr.newCustomers > 0) return `${gained} of it arrived in the last ${days}d.`;
+  if (mrr.churnedCustomers > 0) return `${lost} lost in the last ${days}d.`;
+  return `Unchanged for ${days} days.`;
 }
 
 /**

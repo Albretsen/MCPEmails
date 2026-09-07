@@ -5,6 +5,7 @@ import {
   monthlyFromInterval,
   netMonthlyMinor,
   summarizeSubscriptions,
+  planSplit,
   valuationFromArr,
   NO_DISCOUNT,
   type SubscriptionFacts,
@@ -153,6 +154,48 @@ test('plans are ranked by the money in them', () => {
   ]);
 });
 
+
+/* ------------------------------------------------------------ plan split */
+
+test('the plan split adds up to the headline, even when it does not fit', () => {
+  // The bug this exists to stop: the subscriber tile printed the first three
+  // plans and stopped, so a board reading 10 subscribers listed 8 of them and
+  // said nothing about the other 2.
+  const byPlan = [
+    { label: 'Personal monthly', customers: 5 },
+    { label: 'Pro monthly', customers: 2 },
+    { label: 'Personal yearly', customers: 2 },
+    { label: 'Pro yearly', customers: 1 },
+  ];
+  const rows = planSplit(byPlan, 3);
+  assert.deepEqual(rows, [
+    { label: 'Personal monthly', customers: 5 },
+    { label: 'Pro monthly', customers: 2 },
+    { label: 'Other 2 plans', customers: 3 },
+  ]);
+  assert.equal(
+    rows.reduce((total, row) => total + row.customers, 0),
+    byPlan.reduce((total, row) => total + row.customers, 0),
+  );
+});
+
+test('a mix that fits is passed through untouched', () => {
+  const byPlan = [
+    { label: 'Pro monthly', customers: 2 },
+    { label: 'Personal monthly', customers: 5 },
+  ];
+  assert.deepEqual(planSplit(byPlan, 5), byPlan);
+  // Exactly at the limit is a fit, not an overflow: collapsing the last row
+  // into "Other 1 plans" would hide a plan to save a row it already had.
+  assert.deepEqual(planSplit(byPlan, 2), byPlan);
+});
+
+test('an empty mix is empty, and one row is still one row', () => {
+  assert.deepEqual(planSplit([], 4), []);
+  assert.deepEqual(planSplit([{ label: 'Pro monthly', customers: 1 }], 1), [
+    { label: 'Pro monthly', customers: 1 },
+  ]);
+});
 
 /* ------------------------------------------------------------- valuation */
 

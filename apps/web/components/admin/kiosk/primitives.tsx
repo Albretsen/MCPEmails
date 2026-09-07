@@ -27,14 +27,24 @@ import type { ReactNode } from 'react';
 // client bundle by the health tile, which would drag all of them with it for
 // the sake of two pure functions.
 import { NO_DATA, formatCount } from '../charts/format';
+import { TileLink } from './TileLink';
 
-/** A framed tile. Everything on the board sits in one of these. */
+/**
+ * A framed tile. Everything on the board sits in one of these.
+ *
+ * `detail` is what makes it tappable, added 2026-09-07. A tile with one opens
+ * its full-screen panel when touched anywhere on it; a tile without one is
+ * inert, which is the right default for the several that have nothing more to
+ * say than the number already on them. The panel is a URL, so a tapped tile
+ * survives the refresh timer and the back button behaves.
+ */
 export function Tile({
   label,
   aside,
   span,
   tone,
   className,
+  detail,
   children,
 }: {
   label: string;
@@ -45,11 +55,13 @@ export function Tile({
   tone?: 'default' | 'good' | 'warn' | 'bad' | 'goal';
   /** Extra classes, in practice only `kiosk-strip` (see the stylesheet). */
   className?: string;
+  /** Id of the detail panel this tile opens. Omit to leave the tile inert. */
+  detail?: string;
   children: ReactNode;
 }) {
   return (
     <section
-      className={`kiosk-tile is-${tone ?? 'default'}${className ? ` ${className}` : ''}`}
+      className={`kiosk-tile is-${tone ?? 'default'}${detail ? ' is-tappable' : ''}${className ? ` ${className}` : ''}`}
       style={span ? { gridColumn: `span ${span}` } : undefined}
     >
       <header className="kiosk-tile-head">
@@ -57,6 +69,7 @@ export function Tile({
         {aside && <span className="kiosk-tile-aside">{aside}</span>}
       </header>
       <div className="kiosk-tile-body">{children}</div>
+      {detail && <TileLink detail={detail} label={label} />}
     </section>
   );
 }
@@ -283,6 +296,35 @@ export function Gauge({
         <span className="kiosk-gauge-fill" style={{ width: `${fraction * 100}%` }} />
       </div>
     </div>
+  );
+}
+
+/**
+ * A plain label/count column: the plan mix under the subscriber headline.
+ *
+ * Deliberately NOT a BarList. The bars answer "which is biggest", which the
+ * Money view already asks in its own tile; this one answers "who is on what"
+ * and its rows have to stay readable from across a room in a tile three of
+ * twelve columns wide, where a track between the name and the count is the
+ * first thing to eat the space the name needs.
+ *
+ * The rows are expected to sum to the headline above them (see `planSplit` in
+ * revenue-math.ts, which folds the tail into one counted row rather than
+ * dropping it). It takes the tile's slack and no more: overflow is hidden,
+ * because a row bleeding past a tile edge on a wall panel is worse than a row
+ * that is not shown.
+ */
+export function SplitList({ rows }: { rows: { label: string; count: number }[] }) {
+  if (rows.length === 0) return null;
+  return (
+    <dl className="kiosk-split">
+      {rows.map((row) => (
+        <div key={row.label}>
+          <dt>{row.label}</dt>
+          <dd>{formatCount(row.count)}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 

@@ -4,20 +4,31 @@
  * It is a different product from /admin/growth, not a stylesheet on top of it.
  * That page is a reporting tool: eleven sections, drill-downs, info dots,
  * exact-number tables, a window switcher. This one is read at a glance by
- * someone walking past a 10 inch panel, so it shows ten numbers, fills the
- * screen exactly once, and has exactly one control.
+ * someone walking past a 10 inch panel, so it shows ten numbers and fills the
+ * screen exactly once.
  *
- * THAT ONE CONTROL, added 2026-09-01, needs defending, because this file used
- * to say "no controls at all" and meant it. The argument for zero still holds
- * for the panel's resting state: nobody presses anything, and a board that must
- * be configured before it says something true is a board that eventually says
- * something stale. What changed is that the single screen was being asked five
- * different questions and the tile that gave way was always whichever answered
- * the one nobody had asked that morning. So the default view still shows the
- * whole business and is what the panel returns to on its own after ten idle
- * minutes (see KioskLive); the other four exist for the two minutes somebody is
- * standing in front of it. Nothing about the unattended behaviour changed: left
- * alone, this is still a board with no controls.
+ * ITS CONTROLS NEED DEFENDING, because this file used to say "no controls at
+ * all" and meant it. The argument for zero still holds for the panel's resting
+ * state: nobody presses anything, and a board that must be configured before it
+ * says something true is a board that eventually says something stale. What
+ * changed is that the single screen was being asked several different questions
+ * and the tile that gave way was always whichever answered the one nobody had
+ * asked that morning. There are now three controls, each earning its place the
+ * same way:
+ *
+ *   - the VIEW switch (2026-09-01), five boards for five questions;
+ *   - the WINDOW switch (2026-09-07), because "are we up" means this week and
+ *     "is it working" means the whole run, and one 28 day window silently
+ *     reframed both;
+ *   - the TILES THEMSELVES (2026-09-07), which open a full-screen panel when
+ *     touched, so the follow-up question ("up from what?") is one tap away
+ *     instead of on a laptop in another room.
+ *
+ * Nothing about the unattended behaviour changed. The default view at the
+ * default window with no panel open is home, it is what the Pi's autostart line
+ * points at, and it is what the board returns to on its own after ten idle
+ * minutes (see KioskLive). Left alone, this is still a board with nothing
+ * pressed.
  *
  * Four constraints shape it.
  *
@@ -57,8 +68,12 @@ import { KioskBoard } from '../../../../components/admin/kiosk/board';
 import { KioskDetail } from '../../../../components/admin/kiosk/detail';
 import { KioskLive } from '../../../../components/admin/kiosk/KioskLive';
 import { KioskViewSwitch } from '../../../../components/admin/kiosk/KioskViewSwitch';
+import { KioskWindowSwitch } from '../../../../components/admin/kiosk/KioskWindowSwitch';
+import { KioskMetricDetail } from '../../../../components/admin/kiosk/KioskMetricDetail';
+import { resolveKioskDetail } from '../../../../components/admin/kiosk/details/registry';
+import { resolveKioskWindow, windowLabel } from '../../../../components/admin/kiosk/windows';
 import { KioskAlarm, KioskHealthProvider } from '../../../../components/admin/kiosk/KioskHealth';
-import { KIOSK_VIEWS, KIOSK_WINDOW_DAYS, resolveKioskView } from '../../../../components/admin/kiosk/shared';
+import { KIOSK_VIEWS, resolveKioskView } from '../../../../components/admin/kiosk/shared';
 import '../../../../styles/admin-kiosk.css';
 
 export const metadata = {
@@ -91,7 +106,7 @@ export const dynamic = 'force-dynamic';
 export default async function GrowthKioskPage({
   searchParams,
 }: {
-  searchParams: Promise<{ k?: string; view?: string }>;
+  searchParams: Promise<{ k?: string; view?: string; days?: string; detail?: string }>;
 }) {
   const params = await searchParams;
   await requireKioskAccess(params.k);
@@ -102,6 +117,11 @@ export default async function GrowthKioskPage({
   // wall rather than an error page nobody is present to dismiss.
   const view = resolveKioskView(params.view);
   const meta = KIOSK_VIEWS.find((entry) => entry.id === view) ?? KIOSK_VIEWS[0];
+  // Same forgiving resolution for the other two pieces of URL state: an
+  // unknown window falls back to 28 days and an unknown panel opens nothing,
+  // because every one of these can arrive from a hand-typed autostart line.
+  const reportWindow = resolveKioskWindow(params.days);
+  const detail = resolveKioskDetail(params.detail);
 
   const generatedAt = new Date().toISOString();
 
@@ -120,17 +140,22 @@ export default async function GrowthKioskPage({
         <header className="kiosk-head">
           <div className="kiosk-head-top">
             <h1 className="kiosk-wordmark">
-              MCP Emails <em>{meta.question} · last {KIOSK_WINDOW_DAYS} days</em>
+              MCP Emails <em>{meta.question} · {windowLabel(reportWindow.days)}</em>
             </h1>
             {/* The switch sits between the wordmark and the clock so the two
                 things that never move on this board stay at the two edges,
                 which is what makes a changed view legible from a distance:
                 the strip is the only part of the header that lights up. */}
-            <KioskViewSwitch current={view} token={params.k} />
+            <div className="kiosk-controls">
+              <KioskViewSwitch current={view} days={reportWindow.days} token={params.k} />
+              <KioskWindowSwitch view={view} days={reportWindow.days} token={params.k} />
+            </div>
             <KioskLive
               generatedAt={generatedAt}
               deployment={currentDeployment()}
               view={view}
+              days={reportWindow.days}
+              detail={detail}
               token={params.k}
             />
           </div>
@@ -148,16 +173,24 @@ export default async function GrowthKioskPage({
         {/* Keyed on the view so switching swaps the whole board in one paint
             rather than reconciling ten tiles into ten different ones, which on
             a wall reads as the numbers scrambling in place. */}
-        <Suspense key={view} fallback={<BoardSkeleton />}>
-          <KioskBoard view={view} />
+        <Suspense key={`${view}:${reportWindow.days}`} fallback={<BoardSkeleton />}>
+          <KioskBoard view={view} days={reportWindow.days} />
         </Suspense>
 
         <p className="kiosk-scroll-hint" aria-hidden="true">Swipe up for detail</p>
       </div>
 
       <Suspense fallback={null}>
-        <KioskDetail />
+        <KioskDetail days={reportWindow.days} />
       </Suspense>
+
+      {/* The tapped tile's panel, over everything. Rendered last so it needs no
+          stacking context of its own beyond its z-index, and keyed on the
+          metric so tapping one tile then another swaps the panel in a single
+          paint rather than reconciling one set of tiles into a different set. */}
+      {detail && (
+        <KioskMetricDetail key={detail} id={detail} view={view} days={reportWindow.days} token={params.k} />
+      )}
     </KioskHealthProvider>
   );
 }
