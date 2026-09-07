@@ -53,6 +53,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { DEFAULT_KIOSK_WINDOW_DAYS } from './windows';
 
 const REFRESH_MS = 5 * 60 * 1000;
 const HARD_RELOAD_MS = 24 * 60 * 60 * 1000;
@@ -70,6 +71,8 @@ export function KioskLive({
   generatedAt,
   deployment,
   view,
+  days,
+  detail,
   token,
 }: {
   generatedAt: string;
@@ -77,6 +80,16 @@ export function KioskLive({
   deployment: string;
   /** Which board is on screen. Only used to decide whether to walk home. */
   view?: string;
+  /**
+   * The window on screen, and whether a tile's detail panel is open.
+   *
+   * Both are part of "somebody was standing here", which is the only thing the
+   * walk-home timer is about. Before these existed the timer watched the view
+   * alone, so a panel left open on a 90 day window sat on the wall overnight
+   * while the board underneath it had already been declared idle.
+   */
+  days?: number;
+  detail?: string | null;
   /**
    * The `?k=` bootstrap token, when this request carried one.
    *
@@ -157,7 +170,10 @@ export function KioskLive({
   // goes home) or make the timing depend on where in the refresh cycle the tap
   // landed.
   useEffect(() => {
-    if (!view || view === 'pulse') return;
+    // Nothing to walk home FROM: the default view, at the default window, with
+    // no panel open, is home.
+    const away = (view && view !== 'pulse') || (days !== undefined && days !== DEFAULT_KIOSK_WINDOW_DAYS) || Boolean(detail);
+    if (!away) return;
 
     let timer: ReturnType<typeof setTimeout>;
     const home = token
@@ -184,7 +200,7 @@ export function KioskLive({
       window.removeEventListener('touchstart', restart);
       window.removeEventListener('scroll', restart);
     };
-  }, [router, view, token]);
+  }, [router, view, days, detail, token]);
 
   return (
     <div className="kiosk-head-right">

@@ -163,8 +163,49 @@
   background: color-mix(in srgb, var(--kiosk-accent) 82%, transparent);
   color: #fff;
 }
+
+/* THE STICKY TOUCH HOVER, killed here rather than globally.
+   colors_and_type.css sets `a:hover { text-decoration: underline }` for the
+   whole site, and `a:hover` (0,1,1) outranks `.kiosk-view` (0,1,0), so it won.
+   On a mouse that is a hover state nobody sees for long; on this panel a tap
+   leaves the element hovered until something else is touched, so every tab
+   the operator pressed stayed underlined afterwards. Scoped to the kiosk so
+   the rest of the site keeps its link affordance, and written for every link
+   on the board because the tiles became tappable in the same change. */
+.kiosk-board a:hover,
+.kiosk-more a:hover,
+.kiosk-detail a:hover {
+  text-decoration: none;
+}
+.kiosk-view:hover, .kiosk-view:focus { color: var(--fg-3); text-decoration: none; }
+.kiosk-view.is-active:hover, .kiosk-view.is-active:focus { color: #fff; }
+
+/* The tap's own answer, drawn before the navigation starts.
+   A view change is a full server render of a dozen cached RPCs, so the gap
+   between finger and new board is a second or two. Without this the strip
+   sits completely still through all of it and the tap reads as ignored, which
+   is what gets it pressed three more times. `is-pending` paints the tapped
+   pill as active immediately and the client component clears it when the new
+   board's `current` arrives. */
+.kiosk-view.is-pending {
+  background: color-mix(in srgb, var(--kiosk-accent) 82%, transparent);
+  color: #fff;
+  /* No transition on the way in: the whole point is that it is already there
+     by the time the finger lifts. */
+  transition: none;
+  animation: kiosk-view-wait 1.1s ease-in-out 220ms infinite;
+}
+@keyframes kiosk-view-wait {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.62; }
+}
+
+/* No grey flash on tap, on any of the board's touch targets. */
+.kiosk-board, .kiosk-more, .kiosk-detail { -webkit-tap-highlight-color: transparent; }
+
 @media (prefers-reduced-motion: reduce) {
   .kiosk-view { transition: none; }
+  .kiosk-view.is-pending { animation: none; }
 }
 
 /* Under an outage the accent-blue active pill is the second most saturated
@@ -326,6 +367,9 @@
 /* ---------- Tiles ---------- */
 
 .kiosk-tile {
+  /* Positioned since 2026-09-07 so a tappable tile can stretch a link over
+     itself without any of its contents moving. See TileLink.tsx. */
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: clamp(3px, 0.6dvh, 8px);
@@ -491,6 +535,14 @@
 .kiosk-facts dt { font-size: clamp(8px, 1.2dvh, 11px); text-transform: uppercase; letter-spacing: 0.07em; color: var(--fg-4); }
 .kiosk-facts dd { margin: 0; font-size: clamp(11px, 1.8dvh, 18px); font-weight: 650; font-variant-numeric: tabular-nums; color: var(--fg-1); }
 
+/* The plan mix under the subscriber headline: label left, count right, one
+   row per plan. Sized to be read across a room, and allowed to shrink into
+   whatever slack the tile has rather than push a row past its edge. */
+.kiosk-split { margin: clamp(4px, 0.8dvh, 10px) 0 0; padding: 0; display: flex; flex-direction: column; gap: clamp(2px, 0.5dvh, 6px); min-height: 0; overflow: hidden; }
+.kiosk-split div { display: flex; align-items: baseline; justify-content: space-between; gap: clamp(6px, 0.8vw, 14px); }
+.kiosk-split dt { font-size: clamp(9px, 1.45dvh, 14px); color: var(--fg-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kiosk-split dd { margin: 0; font-size: clamp(10px, 1.5dvh, 15px); font-weight: 650; font-variant-numeric: tabular-nums; color: var(--fg-2); }
+
 /* ---------- Charts ---------- */
 
 .kiosk-chart { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: clamp(3px, 0.6dvh, 8px); }
@@ -503,6 +555,203 @@
 .kiosk-error { margin: auto 0; display: flex; flex-direction: column; gap: 3px; font-size: clamp(9px, 1.3dvh, 13px); }
 .kiosk-error strong { color: var(--kiosk-bad); }
 .kiosk-error span { color: var(--fg-4); overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+
+/* The two switches travel together in the middle of the header, so the two
+   things that never move (the wordmark and the clock) stay at the two edges. */
+.kiosk-controls { display: flex; align-items: center; gap: clamp(4px, 0.6vw, 10px); flex: 0 0 auto; min-width: 0; }
+
+/* ---------- Window switch ---------- */
+
+/* Smaller than the view strip on purpose: the view is what the board is
+   about, the window is a qualifier on it, and two identical pill groups side
+   by side in a header read as one control with nine options. */
+.kiosk-windows {
+  display: flex;
+  align-items: center;
+  gap: clamp(1px, 0.2vw, 3px);
+  flex: 0 0 auto;
+  padding: 2px;
+  border-radius: 999px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border-1);
+}
+.kiosk-window {
+  display: inline-block;
+  padding: clamp(2px, 0.5dvh, 6px) clamp(5px, 0.65vw, 11px);
+  border-radius: 999px;
+  font-size: clamp(8px, 1.2dvh, 12px);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  color: var(--fg-3);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+.kiosk-window.is-active { background: var(--bg-surface); color: var(--fg-1); }
+.kiosk-window:hover, .kiosk-window:focus { text-decoration: none; color: var(--fg-3); }
+.kiosk-window.is-active:hover, .kiosk-window.is-active:focus { color: var(--fg-1); }
+.kiosk-window.is-pending {
+  background: var(--bg-surface);
+  color: var(--fg-1);
+  transition: none;
+  animation: kiosk-view-wait 1.1s ease-in-out 220ms infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .kiosk-window { transition: none; }
+  .kiosk-window.is-pending { animation: none; }
+}
+
+/* ---------- Tappable tiles ---------- */
+
+/* The hit area covers the whole tile, which is the only sensible target size
+   for a thumb on a ten inch panel, and carries no visible box of its own: the
+   tile is the affordance. */
+.kiosk-tile-hit {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  text-decoration: none;
+  /* Above the tile's contents so nothing inside can swallow the touch, but
+     below the alarm banner, which must always be reachable. */
+  z-index: 1;
+  transition: background-color 90ms ease;
+}
+/* The press, painted before the navigation the press started. A server render
+   of several RPCs is a second away and the tile has to answer the finger in
+   the meantime, or the tap reads as ignored and gets repeated. */
+.kiosk-tile-hit.is-pressed { background: rgba(255, 255, 255, 0.07); }
+
+/* The only mark that says a tile has more behind it: a corner notch, quiet
+   enough to disappear from across the room and present enough to be found by
+   somebody standing at the panel wondering what is tappable. */
+.kiosk-tile-hint {
+  position: absolute;
+  right: clamp(6px, 0.7vw, 12px);
+  bottom: clamp(5px, 0.8dvh, 10px);
+  width: clamp(5px, 0.8dvh, 8px);
+  height: clamp(5px, 0.8dvh, 8px);
+  border-right: 1.5px solid var(--fg-4);
+  border-bottom: 1.5px solid var(--fg-4);
+  transform: rotate(-45deg);
+  opacity: 0.55;
+}
+
+/* ---------- The detail layer ---------- */
+
+/* Over the board rather than instead of it: the board underneath is already
+   painted, so closing this is a paint and not another trip through a dozen
+   RPCs. Fixed and its own scroller, because a panel is allowed to be longer
+   than the screen in a way the board never is. */
+.kiosk-detail {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(120% 90% at 50% -20%, rgba(37, 71, 229, 0.22), transparent 62%),
+    var(--bg-page);
+  padding: clamp(8px, 1.4dvh, 18px) clamp(10px, 1.6vw, 26px) 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  animation: kiosk-detail-in 140ms ease-out;
+}
+@keyframes kiosk-detail-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+.kiosk-detail-head {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(8px, 1.4vw, 22px);
+  padding-bottom: clamp(6px, 1dvh, 12px);
+  border-bottom: 1px solid var(--border-1);
+  flex: 0 0 auto;
+}
+.kiosk-detail-title { display: flex; align-items: baseline; gap: 0.6em; min-width: 0; }
+.kiosk-detail-title h2 {
+  margin: 0;
+  font-size: clamp(15px, 2.5dvh, 26px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+.kiosk-detail-title p {
+  margin: 0;
+  font-size: clamp(9px, 1.4dvh, 14px);
+  color: var(--fg-3);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kiosk-detail-window {
+  margin-left: auto;
+  font-size: clamp(9px, 1.35dvh, 13px);
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+/* A target sized for a thumb, not for a cursor. */
+.kiosk-detail-close {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(30px, 4.6dvh, 46px);
+  height: clamp(30px, 4.6dvh, 46px);
+  border-radius: 999px;
+  border: 1px solid var(--border-1);
+  background: var(--bg-surface);
+  color: var(--fg-2);
+  font-size: clamp(13px, 2dvh, 20px);
+  line-height: 1;
+  text-decoration: none;
+}
+.kiosk-detail-close:active { background: var(--bg-sunken); }
+
+/* Twelve columns like the board, but rows sized by content and scrolled,
+   because a panel is read standing at the glass rather than from a doorway. */
+.kiosk-detail-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--kiosk-gap);
+  padding: var(--kiosk-gap) 0 clamp(14px, 3dvh, 34px);
+  align-content: start;
+}
+.kiosk-detail-body > * { grid-column: span 6; min-width: 0; }
+/* Read up close, so tiles get a comfortable fixed height rather than a share
+   of a viewport, and their text is allowed to be selected and read. */
+.kiosk-detail-body .kiosk-tile { min-height: clamp(150px, 26dvh, 260px); -webkit-user-select: text; user-select: text; }
+.kiosk-detail-body .kiosk-tile-head h2 { font-size: clamp(9px, 1.4dvh, 13px); }
+.kiosk-detail-body .kiosk-table { font-size: clamp(11px, 1.7dvh, 15px); }
+.kiosk-detail-body .kiosk-bar-name, .kiosk-detail-body .kiosk-bar-count { font-size: clamp(10px, 1.6dvh, 15px); }
+/* Names get room here that they cannot have on the board. A bar label on a
+   tile is read from a doorway and is one word; in a panel it is a funnel step
+   read at arm's length, and "Never picked a client" ellipsised to "Never
+   picked a ..." is a row that says nothing at all. */
+.kiosk-detail-body .kiosk-bars li { grid-template-columns: minmax(0, 14em) 1fr auto; }
+/* Tiles may grow past their floor when their content needs it, rather than
+   leaving the bottom half of a 1200px panel empty while a table scrolls. */
+.kiosk-detail-body { grid-auto-rows: minmax(clamp(150px, 26dvh, 260px), auto); }
+/* A panel's own note: the sentence under a chart that says what it is not. */
+.kiosk-detail-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: clamp(10px, 1.5dvh, 14px);
+  color: var(--fg-4);
+  line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kiosk-detail { animation: none; }
+}
 
 /* ---------- Below the fold ---------- */
 

@@ -248,6 +248,35 @@ function groupByPlan(rows: { sub: SubscriptionFacts; monthly: number }[]) {
     .sort((a, b) => b.mrrMinor - a.mrrMinor || a.label.localeCompare(b.label));
 }
 
+/**
+ * The plan mix, trimmed to what a wall tile can hold WITHOUT LOSING ANYBODY.
+ *
+ * The subscriber tile used to print the first three plans in a sentence and
+ * stop. With four tiers each sold monthly and yearly there are up to eight
+ * groups, so on 2026-09-07 the board was reading "Pro monthly 2, Personal
+ * monthly 5, Pro yearly 1" under a headline of 10: two subscribers had simply
+ * fallen off the end of the string, and nothing said so.
+ *
+ * The rule here is that the rows must always add up to the headline. When
+ * there are more groups than rows, the tail collapses into one "Other plans"
+ * row carrying its own count rather than being dropped, so the column still
+ * sums to the number above it and the operator can see that something is
+ * hidden. Groups arrive sorted by MRR, so the tail is always the cheapest end.
+ */
+export function planSplit(
+  byPlan: { label: string; customers: number }[],
+  maxRows: number,
+): { label: string; customers: number }[] {
+  const rows = Math.max(1, Math.floor(maxRows));
+  if (byPlan.length <= rows) return byPlan.map(({ label, customers }) => ({ label, customers }));
+  const shown = byPlan.slice(0, rows - 1).map(({ label, customers }) => ({ label, customers }));
+  const rest = byPlan.slice(rows - 1);
+  return [
+    ...shown,
+    { label: `Other ${rest.length} plans`, customers: sum(rest.map((plan) => plan.customers)) },
+  ];
+}
+
 function sum(values: number[]): number {
   return values.reduce((total, value) => total + value, 0);
 }

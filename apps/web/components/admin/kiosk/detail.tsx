@@ -27,18 +27,26 @@ import type { MonitorIncident } from '@/lib/analytics/kiosk-health';
 import { NO_DATA, formatCount, formatMoney, ratio } from '../charts';
 import { BarList, FactRow, Tile, TileError } from './primitives';
 import { KIOSK_WINDOW_DAYS } from './shared';
+import { activityDays, windowShort } from './windows';
 
 /** Weeks of the retention curve to show. Twelve is one quarter. */
 const RETENTION_WEEKS = 12;
 
-export async function KioskDetail() {
+/**
+ * `days` is the board's window, carried down so the fold does not contradict
+ * the screen above it. The two activity-derived sections are asked for
+ * `activityDays(days)` instead: rows older than 90 days are deleted, so a
+ * wider window there would return real counts beside zeroed activity.
+ */
+export async function KioskDetail({ days = KIOSK_WINDOW_DAYS }: { days?: number }) {
+  const activity = activityDays(days);
   const [retention, bands, clients, errors, checkout, recurring, incidents] = await Promise.all([
     fetchRetentionCurve(RETENTION_WEEKS),
-    fetchEngagementBands(KIOSK_WINDOW_DAYS),
+    fetchEngagementBands(activity),
     fetchClientMix(),
-    fetchErrorBreakdown(KIOSK_WINDOW_DAYS),
+    fetchErrorBreakdown(activity),
     fetchCheckoutFunnel(),
-    fetchRecurringRevenue(KIOSK_WINDOW_DAYS),
+    fetchRecurringRevenue(days),
     fetchRecentIncidents(),
   ]);
 
@@ -175,7 +183,7 @@ export async function KioskDetail() {
       )}
 
       {bands.ok ? (
-        <Tile label="How many days people showed up" aside={`${KIOSK_WINDOW_DAYS}d`}>
+        <Tile label="How many days people showed up" aside={windowShort(activity)}>
           <BarList
             rows={bands.data
               .filter((row) => row.metric === 'active_days')
@@ -255,7 +263,7 @@ export async function KioskDetail() {
       </Tile>
 
       {errors.ok ? (
-        <Tile label="What is failing" aside={`${KIOSK_WINDOW_DAYS}d`}>
+        <Tile label="What is failing" aside={windowShort(activity)}>
           {errors.data.length === 0 ? (
             <p className="kiosk-empty">No failures recorded in the window.</p>
           ) : (

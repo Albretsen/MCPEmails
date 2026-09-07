@@ -273,6 +273,10 @@ export function KioskHealthTile({
       span={span}
       className={className}
       tone={toneFor(health.level)}
+      // The one tile whose panel somebody opens while something is wrong, so
+      // it is tappable like the rest: the 60 minute headline here is the
+      // question, and what is failing and for how long is the answer.
+      detail="reliability"
     >
       <BigNumber
         value={headline === null ? NO_DATA : formatPercent(headline, 1)}
