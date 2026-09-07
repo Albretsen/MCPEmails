@@ -165,6 +165,11 @@ export function homeJsonLd(
         applicationSubCategory: 'Email',
         operatingSystem: 'Web',
         publisher: { '@id': orgId },
+        // This node carries `offers`, so Google's Merchant listings validator
+        // reads it as a product and wants a brand it can name. The Organization
+        // node is in this same @graph, so an `@id` reference resolves to a real
+        // name here (unlike on /pricing, where it would dangle).
+        brand: { '@id': orgId },
         // These are concrete, shipped capabilities rather than a duplicate of
         // the tool catalogue. Keeping this as one product-level list lets
         // search engines and assistants discover important workflows without
