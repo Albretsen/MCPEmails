@@ -2,20 +2,39 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PROVIDERS } from './providers.mjs';
 import {
-  RELEASE_WAVES, isReleased, releasedProviders, relatedProviders,
+  RELEASE_WAVES, isReleased, isHeld, releasedProviders, relatedProviders,
   releasedProviderParams, releaseStatus,
 } from './release.mjs';
+
+/** Waves parked with no date, and the providers sitting in them. */
+const heldWaves = Object.keys(RELEASE_WAVES).filter((w) => isHeld(w)).map(Number);
+const heldProviders = PROVIDERS.filter((p) => heldWaves.includes(p.wave));
 
 const before = new Date('2026-08-30T00:00:00.000Z');
 const wave1 = new Date('2026-09-01T00:00:00.000Z');
 const wave3 = new Date('2026-09-15T00:00:00.000Z');
 const after = new Date('2026-12-01T00:00:00.000Z');
 
-test('every provider is assigned a wave that has a date', () => {
+test('every provider is assigned a wave the schedule knows about', () => {
+  // A wave may legitimately have no date (it is held for review). A wave the
+  // schedule has never heard of is a data error, and would leave the page
+  // permanently unreachable with nothing saying so.
   for (const p of PROVIDERS) {
     assert.ok(p.wave, `${p.slug} has no wave`);
-    assert.ok(RELEASE_WAVES[p.wave], `${p.slug} wave ${p.wave} has no date`);
+    assert.ok(Object.hasOwn(RELEASE_WAVES, p.wave), `${p.slug} wave ${p.wave} is not in the schedule`);
   }
+});
+
+test('a held wave never becomes public by the passage of time', () => {
+  // The hold exists because someone has to read those pages first. A date-based
+  // gate would quietly publish them on a deadline instead.
+  assert.ok(heldProviders.length > 0, 'expected at least one held provider');
+  for (const p of heldProviders) {
+    assert.equal(isReleased(p, after), false, `${p.slug} released itself`);
+  }
+  const params = releasedProviderParams(after);
+  const held = new Set(heldProviders.map((p) => p.slug));
+  assert.ok(!params.some(({ provider }) => held.has(provider)), 'a held provider got a route');
 });
 
 test('the six providers already in production are in wave 1', () => {
@@ -26,12 +45,12 @@ test('the six providers already in production are in wave 1', () => {
   }
 });
 
-test('waves open in order and everything is public at the end', () => {
+test('waves open in order, and everything not held is public at the end', () => {
   assert.equal(releasedProviders(before).length, 0);
   const w1 = releasedProviders(wave1).length;
   const w3 = releasedProviders(wave3).length;
   assert.ok(w1 > 0 && w3 > w1, `expected growth, got ${w1} then ${w3}`);
-  assert.equal(releasedProviders(after).length, PROVIDERS.length);
+  assert.equal(releasedProviders(after).length, PROVIDERS.length - heldProviders.length);
 });
 
 test('siblings never link into an unreleased wave', () => {
@@ -73,18 +92,30 @@ test('generated params cover only released providers, in their own locales', () 
   }
 });
 
-test('waves are spread rather than back-loaded into one drop', () => {
+test('no cohort is large enough to hide a systematic error', () => {
+  // Waves no longer meter the rollout, but they still bound blast radius: a bad
+  // hostname or a wrong ISP status shows up in one reviewable batch.
   const status = releaseStatus(after);
   const counts = status.map((w) => w.count);
   assert.ok(Math.max(...counts) <= 15, `largest wave is ${Math.max(...counts)}`);
   assert.equal(counts.reduce((a, b) => a + b, 0), PROVIDERS.length);
 });
 
-test('wave dates are strictly increasing', () => {
-  const dates = Object.keys(RELEASE_WAVES)
-    .sort((a, b) => Number(a) - Number(b))
-    .map((k) => new Date(RELEASE_WAVES[k]).getTime());
-  for (let i = 1; i < dates.length; i += 1) {
-    assert.ok(dates[i] > dates[i - 1], `wave ${i + 1} is not after wave ${i}`);
+test('wave dates never go backwards, and held waves come last', () => {
+  // Several waves now share a date: the number identifies the cohort a page was
+  // generated in, not its turn in a queue. What must never happen is a later
+  // cohort opening before an earlier one, which would publish the weaker-sourced
+  // pages ahead of the stronger ones.
+  const waves = Object.keys(RELEASE_WAVES).sort((a, b) => Number(a) - Number(b));
+  let previous = 0;
+  let seenHeld = false;
+  for (const wave of waves) {
+    const date = RELEASE_WAVES[wave];
+    if (date === null) { seenHeld = true; continue; }
+    assert.equal(seenHeld, false, `wave ${wave} is scheduled after a held wave`);
+    const time = new Date(`${date}T00:00:00.000Z`).getTime();
+    assert.ok(Number.isFinite(time), `wave ${wave} has an unparseable date: ${date}`);
+    assert.ok(time >= previous, `wave ${wave} opens before the wave before it`);
+    previous = time;
   }
 });
