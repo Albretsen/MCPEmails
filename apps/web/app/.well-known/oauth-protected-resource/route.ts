@@ -11,6 +11,8 @@
  *
  * No authentication required. Cached for 1 hour.
  */
+import { canonicalResource, oauthIssuerBase } from '@/lib/oauth/resource';
+
 // CORS — discovery documents must be readable cross-origin by browser-based
 // MCP clients during the OAuth flow. Unauthenticated, no cookies → wildcard.
 const CORS_HEADERS = {
@@ -24,11 +26,13 @@ export function OPTIONS() {
 }
 
 export async function GET() {
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com';
+  const base = oauthIssuerBase();
 
   return Response.json(
     {
-      resource: `${base}/api/mcp`,
+      // The single resource this AS issues tokens for. The same helper backs
+      // RFC 8707 `resource` validation on /authorize and /api/oauth/token.
+      resource: canonicalResource(),
       authorization_servers: [base],
       bearer_methods_supported: ['header'],
       scopes_supported: [

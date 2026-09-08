@@ -1226,6 +1226,7 @@ export type Database = {
           id: string
           inbox_ids: string[] | null
           redirect_uri: string
+          resource: string | null
           scopes: string[]
           user_id: string
           workspace_id: string
@@ -1241,6 +1242,7 @@ export type Database = {
           id?: string
           inbox_ids?: string[] | null
           redirect_uri: string
+          resource?: string | null
           scopes?: string[]
           user_id: string
           workspace_id: string
@@ -1256,6 +1258,7 @@ export type Database = {
           id?: string
           inbox_ids?: string[] | null
           redirect_uri?: string
+          resource?: string | null
           scopes?: string[]
           user_id?: string
           workspace_id?: string
@@ -1373,6 +1376,7 @@ export type Database = {
           id: string
           inbox_ids: string[] | null
           refresh_hash: string
+          resource: string | null
           revoked_at: string | null
           scopes: string[]
           user_id: string
@@ -1387,6 +1391,7 @@ export type Database = {
           id?: string
           inbox_ids?: string[] | null
           refresh_hash: string
+          resource?: string | null
           revoked_at?: string | null
           scopes?: string[]
           user_id: string
@@ -1401,6 +1406,7 @@ export type Database = {
           id?: string
           inbox_ids?: string[] | null
           refresh_hash?: string
+          resource?: string | null
           revoked_at?: string | null
           scopes?: string[]
           user_id?: string
