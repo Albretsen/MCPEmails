@@ -331,6 +331,7 @@ function DoneScreen({ client, grantCount, totalInboxes, allInboxes }) {
  *  - oauthState     string: opaque state param to echo back in the redirect
  *  - codeChallenge  string: PKCE code_challenge
  *  - challengeMethod string: must be 'S256'
+ *  - resource       string|null: RFC 8707 resource indicator (validated by page.js)
  *
  * The "Allow access" button posts to /api/oauth/authorize (task 15.2).
  * Until that endpoint exists it shows a granting spinner and transitions
@@ -345,6 +346,7 @@ export function AuthorizeApp({
   oauthState,
   codeChallenge,
   challengeMethod,
+  resource = null,
   csrfToken,
   preApproved = false,
 }) {
@@ -461,6 +463,9 @@ export function AuthorizeApp({
           state:            oauthState,
           code_challenge:   codeChallenge,
           challenge_method: challengeMethod,
+          // RFC 8707 resource indicator, already validated by the page; null
+          // when the client did not send one.
+          resource:         resource,
           scopes:           selectedScopes.map((s) => s.scope),
           // null = all inboxes (including future ones); array = explicit allowlist.
           all_inboxes:      allInboxes,
