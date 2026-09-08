@@ -2,8 +2,8 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "com.mcpemails/emails",
   "title": "MCP Emails",
-  "description": "Read, search, send, organize, draft and schedule email across your inboxes from any MCP client.",
-  "version": "1.0.4",
+  "description": "Never-stored live email: read, send, organize, schedule and auto-triage Gmail or any IMAP mailbox.",
+  "version": "1.0.5",
   "websiteUrl": "https://mcpemails.com",
   "icons": [
     {
@@ -35,7 +35,7 @@
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "mcpemails",
-      "version": "1.0.4",
+      "version": "1.0.5",
       "transport": {
         "type": "stdio"
       },
