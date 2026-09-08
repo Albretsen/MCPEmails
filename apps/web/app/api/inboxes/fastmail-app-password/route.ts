@@ -77,15 +77,22 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     error: userError,
   } = await supabase.auth.getUser();
 
+  // The dashboard can only tell an expired session from a broken mail server if
+  // this answer is machine-readable. Without a code it fell through to the
+  // client's generic "Connection failed. Please try again.", which is advice
+  // that can never work: the fix is signing in again, and the user retried the
+  // mailbox instead. The `error` sentence is unchanged.
   if (userError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized', error_code: 'session_expired' }, { status: 401 });
   }
 
   // 2. Resolve the active workspace (cookie-aware, multi-workspace safe).
   const workspaceId = await resolveActiveWorkspaceId(supabase, user.id);
 
   if (!workspaceId) {
-    return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
+  // Same reason as the 401 above: a code the client can turn into a sentence
+  // about the workspace rather than about the mail server.
+    return NextResponse.json({ error: 'Workspace not found.', error_code: 'workspace_not_found' }, { status: 403 });
   }
   // 2b. Membership is not permission. resolveActiveWorkspaceId only proves the
   //     caller belongs to this workspace, and connecting a mailbox attaches a
@@ -125,8 +132,28 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'A valid email address is required.' }, { status: 422 });
   }
 
-  if (!appPassword || appPassword.length < 8) {
-    return NextResponse.json({ error: 'App password is required.' }, { status: 422 });
+  // Two different situations, and the client can only say the right thing about
+  // either if they are separated. An empty value is a field the user has not
+  // filled in; anything shorter than 8 characters is a token that was cut off
+  // in the copy, which is the case worth naming, because the value LOOKS
+  // present in a field of dots. The single "App password is required." sentence
+  // arrived with no code at all and rendered as the generic connection failure,
+  // pointing the user at a mail server that was never contacted.
+  if (!appPassword) {
+    return NextResponse.json(
+      { error: 'An app password is required.', error_code: 'password_required' },
+      { status: 422 },
+    );
+  }
+  if (appPassword.length < 8) {
+    return NextResponse.json(
+      {
+        error:
+          'That app password is too short to be a complete one. App passwords are at least 8 characters; paste the whole value.',
+        error_code: 'app_password_too_short',
+      },
+      { status: 422 },
+    );
   }
 
   // 4. Enforce the plan inbox cap, but only for a brand-new address. A
@@ -345,7 +372,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       workspaceId,
     });
     return NextResponse.json(
-      { error: 'Failed to save inbox. Please try again.' },
+      { error: 'Failed to save inbox. Please try again.', error_code: 'save_failed' },
       { status: 500 }
     );
   }

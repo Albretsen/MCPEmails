@@ -97,11 +97,19 @@ export const MAX_TRANSPORT_ATTEMPTS = 3;
 /**
  * Build the ordered list of transports to try for one protocol.
  *
- * The requested combination is always first and always present, even when it is
- * not one of the standard ones: a host that serves IMAP on 1993 exists, and
- * silently ignoring what the user typed in favour of a guess would be worse
- * than the bug this module fixes. The standard alternatives follow, deduplicated
+ * The requested combination is always first: a user who deliberately set an
+ * unusual security mode gets it tried before anything we guess, rather than
+ * being silently overruled. The standard alternatives follow, deduplicated
  * against it, capped at MAX_TRANSPORT_ATTEMPTS.
+ *
+ * This used to claim the same for a non-standard PORT ("a host that serves IMAP
+ * on 1993 exists"), which was never true of the running system: every connect
+ * route calls guardMailHost before it gets here, and ALLOWED_MAIL_PORTS in
+ * lib/email/host-guard.ts refuses anything outside imap {143, 993} and smtp
+ * {25, 465, 587} with `port_not_allowed`. A 1993 request is a 422 several
+ * steps before this function is reached, so the requested port is always one of
+ * the standard ones and the plan never actually contains a non-standard entry.
+ * The connect form now offers only those ports for the same reason.
  */
 export function transportPlan(
   protocol: 'imap' | 'smtp',
@@ -122,11 +130,16 @@ export function transportPlan(
  * Wall-clock budget for one protocol's whole detection run, and the per-attempt
  * timeouts inside it.
  *
- * The route has no maxDuration override, so it runs on the platform default and
- * has to stay comfortably inside it; IMAP and SMTP are detected in sequence, so
- * the request's worst case is roughly twice PROTOCOL_BUDGET_MS plus the database
- * round trips. The budget is checked BEFORE each attempt rather than racing it,
- * so an attempt already in flight always finishes on its own timeout.
+ * IMAP and SMTP are detected in sequence, so the request's worst case is roughly
+ * twice PROTOCOL_BUDGET_MS plus the database round trips: about 40 seconds of
+ * connecting inside the 60 the connect routes declare as `maxDuration`. (The
+ * note here used to say the route had no maxDuration override and ran on the
+ * platform default; all three connect routes have declared `maxDuration = 60`
+ * since the autodetect loop landed.) That 40 seconds is also what the connect
+ * modal's busy state has to be honest about, which is why it says the check can
+ * take up to a minute rather than inventing per-protocol stages it cannot see.
+ * The budget is checked BEFORE each attempt rather than racing it, so an attempt
+ * already in flight always finishes on its own timeout.
  *
  * The first attempt keeps the original 10s: it is the combination most likely to
  * be right, and shortening it would start failing slow-but-working servers that

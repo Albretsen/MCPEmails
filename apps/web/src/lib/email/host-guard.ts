@@ -66,10 +66,12 @@
  *     a scanner pointed at the public internet (our egress IP hitting anyone's
  *     port 22), and it is the cheapest half of the fix. Verified against
  *     production first: of 216 live inboxes, every IMAP row is on 993 and every
- *     SMTP row is on 465 or 587, so no real customer is affected. The wider set
- *     below matches lib/email/transport-autodetect.ts exactly, because that
- *     module retries a failed connection on the other standard transports and
- *     an allowlist narrower than its retry set would reject our own retries.
+ *     SMTP row is on 465 or 587, so no real customer is affected. The set is
+ *     ALLOWED_MAIL_PORTS in `./mail-ports.ts` (re-exported below, and imported
+ *     by the connect form so the field can offer exactly what this accepts). It
+ *     matches lib/email/transport-autodetect.ts exactly, because that module
+ *     retries a failed connection on the other standard transports and an
+ *     allowlist narrower than its retry set would reject our own retries.
  *
  * This module is deliberately dependency-free (node built-ins only) and holds
  * no app-alias imports, so it is unit-testable under a plain `node --test`.
@@ -77,27 +79,18 @@
 
 import { promises as dns } from 'node:dns';
 
-export type MailProtocol = 'imap' | 'smtp';
-
 /**
- * The only ports a mail host may be dialled on.
- *
- * IMAP: 993 implicit TLS, 143 STARTTLS.
- * SMTP: 465 implicit TLS, 587 submission STARTTLS, 25 legacy submission (kept
- * because a handful of small hosts still only offer it, and because
- * transport-autodetect tries it).
- *
- * Anything else is refused. A user with a genuinely non-standard mail port is a
- * support ticket; an unrestricted port field is an internal port scanner.
+ * The port allowlist (rule 4 above) now lives in `./mail-ports.ts` and is
+ * re-exported here unchanged, so every existing import of it from this module
+ * still resolves. It moved because the connect form has to offer exactly these
+ * ports, and this file cannot be imported from a browser bundle: `node:dns` is
+ * a hard dependency of the resolution rules below.
  */
-export const ALLOWED_MAIL_PORTS: Readonly<Record<MailProtocol, ReadonlySet<number>>> = {
-  imap: new Set([143, 993]),
-  smtp: new Set([25, 465, 587]),
-};
+export type { MailProtocol } from './mail-ports.ts';
+export { ALLOWED_MAIL_PORTS, isAllowedMailPort, allowedMailPorts } from './mail-ports.ts';
 
-export function isAllowedMailPort(protocol: MailProtocol, port: unknown): boolean {
-  return typeof port === 'number' && Number.isInteger(port) && ALLOWED_MAIL_PORTS[protocol].has(port);
-}
+import type { MailProtocol } from './mail-ports.ts';
+import { isAllowedMailPort } from './mail-ports.ts';
 
 /* ──────────────────────────────────────────────────────────────────────────
  * IPv4
@@ -410,7 +403,7 @@ export const HOST_GUARD_MESSAGES: Record<HostGuardCode, string> = {
   host_not_found:
     'That server name does not exist. Check it for a typo: it is the mail host from your provider, which is often different from your website address.',
   port_not_allowed:
-    'Mail servers are reached on their standard ports: 143 or 993 for IMAP, and 25, 465 or 587 for SMTP. Enter one of those under Advanced settings.',
+    'Mail servers are reached on their standard ports: 143 or 993 for IMAP, and 25, 465 or 587 for SMTP. Enter one of those in the port field.',
 };
 
 export type HostGuardResult =
