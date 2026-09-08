@@ -20,11 +20,17 @@ import {
   ZOHO_REGIONS,
   DEFAULT_ZOHO_REGION,
   DEFAULT_ZOHO_ACCOUNT_TYPE,
+  zohoSettingsFromHost,
   portForSecurity,
   securityForPort,
   normalizeAppPassword,
 } from '@/lib/email-providers/imap-presets';
-import { prefillFromEmail } from '@/lib/email-providers/host-presets';
+// The server's port allowlist, imported rather than restated. It lives in its
+// own module because host-guard.ts, where the policy is enforced, depends on
+// node:dns and cannot be pulled into a client bundle.
+import { ALLOWED_MAIL_PORTS, allowedMailPorts } from '@/lib/email/mail-ports';
+import { useToast } from './Toast';
+import { emailDomain, prefillFromDomain } from '@/lib/email-providers/host-presets';
 import {
   identifyAppPasswordProvider,
   checkAppPasswordShape,
@@ -128,12 +134,93 @@ const ERROR_HEADLINE_KEYS = {
   // Advanced settings would point at the wrong field.
   host_not_found: 'connect.errorHostNotFoundShort',
   login_already_connected: 'connect.errorLoginTakenShort',
+  // ── The SSRF guard's own refusals (lib/email/host-guard.ts) ──────────────
+  // All three were reaching the user as "Connection failed. Please try again."
+  // with the guard's actual sentence folded behind a disclosure that stayed
+  // shut, which is the worst possible reading of a refusal that never touched a
+  // mail server at all.
+  port_not_allowed: 'connect.errorPortNotAllowedShort',
+  host_not_allowed: 'connect.errorHostNotAllowedShort',
+  host_invalid: 'connect.errorHostInvalidShort',
+  // ── Refusals from before the mail server is ever contacted ───────────────
+  // A viewer of somebody else's workspace (lib/workspace/roles.ts). No port,
+  // password or hostname can fix it, and the generic headline sent people
+  // round the loop of retyping a credential that was never the problem.
+  insufficient_role: 'connect.errorInsufficientRoleShort',
+  // 401 from any of the three connect routes. The dominant real-world case is
+  // a modal that has been open long enough for the session to lapse, and it
+  // reads as a broken mail server unless it is named. The alert grows a sign-in
+  // link for this one code; see SESSION_EXPIRED_CODE below.
+  session_expired: 'connect.errorSessionExpiredShort',
+  workspace_not_found: 'connect.errorWorkspaceNotFoundShort',
+  // 422 from the two app-password routes when the token is under 8 characters.
+  // The client's own shape rule catches most of these first, but it speaks only
+  // once per value, and a provider we have no shape rule for reaches the server.
+  app_password_too_short: 'connect.errorAppPasswordTooShortShort',
+  password_required: 'connect.errorPasswordRequired',
+  // The upsert failed after both logins succeeded. The credential is right and
+  // retyping it is pointless, so the headline says what actually happened.
+  save_failed: 'connect.errorSaveFailedShort',
 };
 
 /**
- * Failures whose fix lives in Advanced settings (port / security mode). When
- * one of these comes back, the section is opened so the fields the user has to
- * change are actually on screen.
+ * The one code whose fix is not in this modal at all.
+ *
+ * An expired session is repaired by signing in again, so the alert carries the
+ * app's normal re-auth affordance (/login?redirect=, the same shape the
+ * dashboard's own server-side guard and the invite screen use) rather than
+ * leaving the user to work out that the mailbox was never the problem.
+ */
+const SESSION_EXPIRED_CODE = 'session_expired';
+
+/**
+ * The app's ordinary "sign in and come back here" link.
+ *
+ * `/login?redirect=<path>` is what the dashboard's own server-side guard, the
+ * approvals page and the invite screen all use, and app/(auth)/login/page.js
+ * only honours a value that begins with a single slash, so the current path is
+ * passed through verbatim and nothing else is invented. A whole-document
+ * anchor rather than a router push: the destination is behind the auth
+ * boundary, and the session that would have carried a client navigation is the
+ * thing that just expired.
+ */
+function signInHref() {
+  if (typeof window === 'undefined') return '/login';
+  const here = window.location.pathname + window.location.search;
+  return here.startsWith('/') && !here.startsWith('//')
+    ? `/login?redirect=${encodeURIComponent(here)}`
+    : '/login';
+}
+
+/**
+ * The failure code for a response that carried none.
+ *
+ * Three routes answer with a bare `{ error }` on several paths, and every one
+ * of them used to arrive here as `connection_failed`: an expired session, a
+ * workspace lookup that found nothing, and a save that failed AFTER both logins
+ * succeeded all read to the user as a mail server that would not answer. They
+ * do carry codes now, but the status is the more durable signal (it cannot be
+ * dropped by an older deployment of a route, and this modal ships separately
+ * from them), so the status decides whenever a code is missing.
+ *
+ * 422 stays generic on purpose: the route's own sentence is the specific thing
+ * to say there, and it is now shown rather than hidden.
+ */
+function failureCode(status, data) {
+  const code = typeof data?.error_code === 'string' ? data.error_code.trim() : '';
+  if (code) return code;
+  if (status === 401) return SESSION_EXPIRED_CODE;
+  if (status === 403) return 'workspace_not_found';
+  if (status >= 500) return 'save_failed';
+  return 'connection_failed';
+}
+
+/**
+ * Failures whose fix is a transport setting. When one of these comes back the
+ * Advanced settings section is opened, because that is where the security mode
+ * lives and the security mode is the half of the fix that is not already on
+ * screen. The other half, the port, now sits beside its host on the form
+ * itself, so these failures put the whole fix in view rather than half of it.
  */
 const TRANSPORT_ERROR_CODES = new Set([
   'connection_refused',
@@ -145,6 +232,13 @@ const TRANSPORT_ERROR_CODES = new Set([
   'imap_protocol_error',
   'smtp_protocol_error',
   'auth_mechanism_unsupported',
+  // A port the server will not dial. The fix is the port field, which is on the
+  // form itself now, but the security select beside it moves with the port and
+  // has to be visible while the user changes one: picking 143 with implicit TLS
+  // still selected is the next failure. This code was absent entirely, so the
+  // one refusal that is unambiguously about a transport setting was the one
+  // that opened nothing.
+  'port_not_allowed',
 ]);
 
 /**
@@ -211,6 +305,50 @@ export function splitHostPort(raw) {
 }
 
 /**
+ * The port field: a choice among the ports the server will actually dial.
+ *
+ * It was a free `<input type="number">`, and `connect.errorPortRange` promised
+ * 1 to 65535 to match it. The server has never accepted that: ALLOWED_MAIL_PORTS
+ * is imap {143, 993} and smtp {25, 465, 587}, and anything else is refused by
+ * guardMailHost with `port_not_allowed` before a socket is opened. So someone
+ * who typed 2525 or 1993 passed every check the browser made, waited out a full
+ * IMAP-then-SMTP verification, and was answered with a code this modal had no
+ * headline for. The list here is imported from that same allowlist rather than
+ * restated, so the promise and the policy cannot drift apart again.
+ *
+ * The options are the allowlist, plus the current value when it is not in it.
+ * That extra entry never invents a port: it only mirrors a value the form
+ * already holds, which is how a reconnect of a row stored on a non-standard
+ * port still shows the number it is about to submit rather than an empty box.
+ *
+ * `disabled` rather than `readOnly` because a select has no readOnly: the
+ * attribute exists on the element but does nothing. Reconnect locks it either
+ * way, and a disabled control is what the security selects beside it already
+ * use for the same reason.
+ */
+function PortSelect({ id, protocol, value, onChange, disabled }) {
+  const current = Number(value);
+  const options = allowedMailPorts(protocol);
+  if (Number.isFinite(current) && current > 0 && !options.includes(current)) {
+    options.push(current);
+    options.sort((a, b) => a - b);
+  }
+  return (
+    <select
+      id={id}
+      className="input"
+      value={String(value)}
+      onChange={e => onChange(e.target.value)}
+      disabled={disabled}
+    >
+      {options.map(port => (
+        <option key={port} value={String(port)}>{port}</option>
+      ))}
+    </select>
+  );
+}
+
+/**
  * ConnectModal.jsx: inbox connection modal.
  *
  * Step 1: Provider selection.
@@ -252,6 +390,44 @@ const PROVIDERS = [
   // shown LAST, greyed out / non-selectable with a "coming soon" flag until it ships.
   { k: 'outlook',  label: 'Outlook',  subKey: 'connect.subOutlook',     logoKind: 'outlook', disabled: true },
 ];
+
+/**
+ * The props that tell a browser and a password manager that this is NOT a
+ * sign-in form for mcpemails.com.
+ *
+ * It looked exactly like one: a real `<form>` on the same origin as /login,
+ * with `autoComplete="email"` on the address and `autoComplete="current-password"`
+ * on the secret. Chrome, Safari and 1Password all read that pair as "sign in to
+ * this site" and offer the saved mcpemails.com password. A user who accepts it
+ * has just sent their account password to their MAIL provider, and that is not
+ * a hypothetical failure mode: it is `account_password_used`, the largest
+ * classified sub-case of auth_failed (see lib/email/auth-failure.ts), and the
+ * one the shape rule in this file exists to catch after the fact.
+ *
+ * The code already knew this was dangerous. The reconnect path locks its fields
+ * for exactly this reason, with a comment saying so, and it was fixing the
+ * narrower half of the problem: a locked field cannot be autofilled, but every
+ * FIRST connection was still being offered the wrong credential.
+ *
+ * Four things, because no one of them is enough on its own:
+ *  - `autoComplete="off"`, which Chrome honours on a field it has not already
+ *    decided is a login field;
+ *  - a `name` that does not read as one, which is the signal the heuristics
+ *    fall back on when the attribute is ignored ("password", "email" and
+ *    "username" are the names that trip them);
+ *  - `data-1p-ignore` and `data-lpignore`, the per-manager opt-outs 1Password
+ *    and LastPass document;
+ *  - `data-form-type="other"`, which Dashlane reads the same way.
+ *
+ * The reveal toggle and the select-on-focus-after-rejection behaviour are
+ * untouched: nothing here changes what the field IS, only who offers to fill it.
+ */
+const NOT_A_LOGIN_FIELD = {
+  autoComplete: 'off',
+  'data-1p-ignore': '',
+  'data-lpignore': 'true',
+  'data-form-type': 'other',
+};
 
 /** Everything the focus trap treats as a stop inside the dialog. */
 const FOCUSABLE_SELECTOR =
@@ -303,6 +479,10 @@ export function ConnectModal({
   reconnect = null,
 }) {
   const tr = useTranslations('dashboardChrome');
+  // The toast lives in ToastProvider, above this modal in App.jsx, so it
+  // survives the modal being closed. That is what makes it safe to let someone
+  // walk away from a verification that is still running: see `deliverOutcome`.
+  const { toast } = useToast();
   // Reconnect mode: re-open the form this inbox was created with, identity
   // pre-filled and locked, so only the password is re-entered. Map the stored
   // service back to a modal provider: 'generic' (or a missing service) → the
@@ -327,8 +507,29 @@ export function ConnectModal({
     imapSecurity: reconnect?.imapSecurity ?? (reconnect?.imapPort === 143 ? 'starttls' : 'tls'),
     smtpSecurity: reconnect?.smtpSecurity ?? (reconnect?.smtpPort === 587 ? 'starttls' : 'tls'),
   }));
-  const [zohoRegion, setZohoRegion] = useState(DEFAULT_ZOHO_REGION);
-  const [zohoAccountType, setZohoAccountType] = useState(DEFAULT_ZOHO_ACCOUNT_TYPE);
+  /**
+   * Zoho's data center and account class, recovered from the stored host on a
+   * reconnect.
+   *
+   * These two selects decide the hostname (see zohoHosts in imap-presets), and
+   * they were the only identity fields in this form that a reconnect neither
+   * seeded nor locked: they came up as the global data center and a personal
+   * mailbox no matter what the row said. For the mailbox that motivated this,
+   * a Zoho EU custom-domain account stored on imappro.zoho.eu, that meant the
+   * reconnect resubmitted imap.zoho.com and a personal account type, which
+   * cannot authenticate. Worse, had it authenticated, the connect route's
+   * upsert writes imap_host unconditionally, so a successful reconnect would
+   * have replaced a correct host with a wrong one.
+   *
+   * `zohoSettingsFromHost` is the exact inverse of `zohoHosts`, and it returns
+   * null rather than guessing for a host it does not recognise, so an unknown
+   * host falls back to the same defaults a fresh connect starts from.
+   */
+  const reconnectZoho = isReconnect ? zohoSettingsFromHost(reconnect?.imapHost) : null;
+  const [zohoRegion, setZohoRegion] = useState(reconnectZoho?.region ?? DEFAULT_ZOHO_REGION);
+  const [zohoAccountType, setZohoAccountType] = useState(
+    reconnectZoho?.accountType ?? DEFAULT_ZOHO_ACCOUNT_TYPE
+  );
   // Optional login override for Yandex 360 custom-domain accounts whose IMAP
   // login differs from the email address. Blank → authenticate with the email.
   // On a reconnect of a Yandex inbox, seed it with the stored login.
@@ -388,6 +589,18 @@ export function ConnectModal({
   // cannot be this provider's app password). Null whenever the last failure was
   // not about a credential at all.
   const [authReason, setAuthReason] = useState(null);
+  /**
+   * True when the LAST failure was a 401.
+   *
+   * Its own flag rather than a read of `lastFailure.code`, which survives
+   * deliberately: `lastFailure` is the repeat counter, so it has to outlive one
+   * rejection to notice the same code twice. Keying the sign-in link off it
+   * meant a 401 followed by a dropped connection printed "Network error" with
+   * a "Sign in again" link underneath it, which is the wrong instruction. This
+   * flag is cleared by `showError` alongside `authReason`, so it belongs to
+   * exactly one rejection.
+   */
+  const [sessionExpired, setSessionExpired] = useState(false);
   // The exact secret we have already warned about the shape of.
   //
   // The shape rule is evidence, not a gate. It is right often enough to be
@@ -407,13 +620,15 @@ export function ConnectModal({
    * submit is hidden from them.
    */
   const [advancedOpen, setAdvancedOpen] = useState(() => {
-    const imapPort = Number(reconnect?.imapPort ?? GENERIC_IMAP_DEFAULTS.imapPort);
-    const smtpPort = Number(reconnect?.smtpPort ?? GENERIC_IMAP_DEFAULTS.smtpPort);
     const imapSecurity = reconnect?.imapSecurity ?? (reconnect?.imapPort === 143 ? 'starttls' : 'tls');
     const smtpSecurity = reconnect?.smtpSecurity ?? (reconnect?.smtpPort === 587 ? 'starttls' : 'tls');
+    // A non-default PORT is deliberately not in this test any more. It used to
+    // be, and it had to be, because the port field lived inside the panel and
+    // a reconnect on 143 would otherwise have hidden the number it was about
+    // to submit. The ports are now on the form itself, always visible, so
+    // opening the panel for one would open it to point at a field that is not
+    // in it. Only the two things still inside can force it open.
     return (
-      imapPort !== GENERIC_IMAP_DEFAULTS.imapPort ||
-      smtpPort !== GENERIC_IMAP_DEFAULTS.smtpPort ||
       imapSecurity !== 'tls' ||
       smtpSecurity !== GENERIC_IMAP_DEFAULTS.smtpSecurity ||
       Boolean(reconnect?.username)
@@ -433,6 +648,24 @@ export function ConnectModal({
   // credentials, show a discard confirmation instead of closing outright so
   // an accidental click doesn't wipe what they entered.
   const [confirmingClose, setConfirmingClose] = useState(false);
+
+  /**
+   * Whether this component is still on screen.
+   *
+   * A verification takes up to about 40 seconds of connecting (IMAP then SMTP,
+   * PROTOCOL_BUDGET_MS of 20s each, in sequence), and the modal can be gone
+   * before the answer arrives. Writing state after that is a React warning at
+   * best and, in the failure path, a `showError` into a component that no
+   * longer exists. Every post-await write goes through this flag, and the
+   * outcome is delivered as a toast instead when it is false.
+   */
+  const mountedRef = useRef(true);
+  /** True while the open discard confirmation is the one guarding a check. */
+  const confirmOpenedDuringCheck = useRef(false);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   // The upgrade panel replaces the provider picker and the credentials form,
   // whether the cap was known up front (prop) or learned from a 402 (state).
@@ -483,7 +716,32 @@ export function ConnectModal({
     isPreset || isGeneric || provider === 'fastmail';
 
   /**
-   * Fill the server fields in from the address, when we recognise the provider.
+   * True once the user has set a port themselves, in any of the three ways
+   * they can: typing in a port field, choosing a security mode (which moves
+   * the port to the matching standard), or pasting a host with a port glued to
+   * it. From that moment detection may still fill in a HOST, but it must never
+   * touch a port or a security mode again.
+   *
+   * A ref rather than state because nothing renders from it and because the
+   * value has to be readable inside a fetch callback that closed over an older
+   * render.
+   */
+  const portsTouched = useRef(false);
+
+  /**
+   * The domain the last detection ran for, and a monotonic run id.
+   *
+   * Detection is asynchronous and the user keeps typing, so two answers can be
+   * in flight for two different addresses. The run id is what makes the older
+   * one a no-op instead of a value that lands half a second after the user has
+   * moved on to a different domain.
+   */
+  const detectRunRef = useRef(0);
+  const detectedDomainRef = useRef(null);
+
+  /**
+   * Fill the server fields in from the address, when we can work out where the
+   * mailbox lives.
    *
    * The generic form asks for two hostnames, two ports and two security modes,
    * and a user who does not have them in front of them has no way to produce
@@ -492,14 +750,16 @@ export function ConnectModal({
    * alternating between the two standard pairs. Every entry in the lookup table
    * is a provider that produced repeated failures like it.
    *
-   * Only ever fills EMPTY fields. A host the user typed came from their
-   * provider's own documentation and is better than our table by definition,
-   * and silently rewriting it would be the same class of bug as a browser
-   * autofilling the wrong login.
+   * Only ever fills EMPTY fields, and the check is made inside the state
+   * updater rather than against a captured render, because a network answer
+   * arrives after the user has had time to type into them. A host the user
+   * typed came from their provider's own documentation and is better than
+   * anything we can derive by definition, and silently rewriting it would be
+   * the same class of bug as a browser autofilling the wrong login.
    */
-  const applyEmailPrefill = () => {
-    if (!isGeneric || isReconnect) return;
-    const match = prefillFromEmail(form.email.trim());
+  const applyDiscovery = (match, run) => {
+    // A stale answer: the address changed while this one was in flight.
+    if (run !== detectRunRef.current) return;
     if (!match) { setHostPrefill(null); return; }
     // Recognising the provider and filling the fields are two different things,
     // and only the second one is unsafe to repeat. This used to return before
@@ -510,18 +770,98 @@ export function ConnectModal({
       label: match.label,
       requiresAppPassword: match.requiresAppPassword,
       appPasswordHelpUrl: match.appPasswordHelpUrl,
+      source: match.source ?? 'table',
     });
-    if (form.imapHost.trim() || form.smtpHost.trim()) return;
-    setForm(prev => ({
-      ...prev,
-      imapHost: match.imapHost,
-      imapPort: match.imapPort,
-      imapSecurity: match.imapSecurity,
-      smtpHost: match.smtpHost,
-      smtpPort: match.smtpPort,
-      smtpSecurity: match.smtpSecurity,
-    }));
+    setForm(prev => {
+      if (prev.imapHost.trim() || prev.smtpHost.trim()) return prev;
+      const ports = portsTouched.current
+        ? null
+        : {
+            imapPort: match.imapPort,
+            imapSecurity: match.imapSecurity,
+            smtpPort: match.smtpPort,
+            smtpSecurity: match.smtpSecurity,
+          };
+      return { ...prev, imapHost: match.imapHost, smtpHost: match.smtpHost, ...ports };
+    });
   };
+
+  /**
+   * Work out where the address's mail lives: table first, then the domain's own
+   * DNS records through /api/inboxes/autodiscover.
+   *
+   * The table is consulted here, in the browser, before anything is sent. It
+   * is the answer for every address on a provider's own domain, it is instant,
+   * and asking a server for something the client already knows would put a
+   * round trip in front of the common case for no gain. The request only goes
+   * out for the case the table cannot serve, which is the one the whole
+   * feature exists for: a custom domain whose mail is delegated somewhere we
+   * would recognise if only we could see it. hello@mcpemails.com is that case
+   * exactly, and its answer comes back from the domain's own SRV records.
+   *
+   * Never blocks, never raises, and shows nothing when DNS has nothing to say.
+   * A user typing an address into a form does not need to be told that their
+   * domain publishes no service records; they need the fields they were always
+   * going to fill in themselves.
+   */
+  const detectMailSettings = (rawEmail) => {
+    if (!isGeneric || isReconnect) return;
+    const domain = emailDomain(String(rawEmail ?? '').trim());
+    // Not an address yet, or a domain still being typed. `example.` and
+    // `example` are both "keep going", not "no such provider".
+    if (!domain || !domain.includes('.') || domain.endsWith('.')) return;
+    if (detectedDomainRef.current === domain) return;
+    detectedDomainRef.current = domain;
+    const run = detectRunRef.current + 1;
+    detectRunRef.current = run;
+
+    const local = prefillFromDomain(domain);
+    if (local) { applyDiscovery({ ...local, source: 'table' }, run); return; }
+
+    fetch('/api/inboxes/autodiscover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      // The DOMAIN, not the address. Nothing in the lookup uses the local
+      // part, so there is no reason for a mailbox name to travel to a route
+      // whose whole job is to ask public DNS a question.
+      body: JSON.stringify({ domain }),
+    })
+      .then(response => {
+        // A refusal is not an answer about the domain. Forget that we asked, so
+        // that a later blur on the same address can try again rather than the
+        // domain being permanently marked as "already looked up" on the
+        // strength of one 429 or one dropped connection.
+        if (!response.ok) { detectedDomainRef.current = null; return null; }
+        return response.json();
+      })
+      .then(data => { applyDiscovery(data?.found ? data.settings : null, run); })
+      .catch(() => {
+        /* detection is an assist, never a gate */
+        detectedDomainRef.current = null;
+      });
+  };
+
+  /**
+   * Run detection while the user is still typing, not only when they leave the
+   * field.
+   *
+   * Waiting for blur was the whole reason the old prefill so often did nothing:
+   * the fields it fills sit directly below the address, so the natural next act
+   * after typing an address is to look down at an empty IMAP host, not to tab.
+   *
+   * 500ms of stillness, and not one keystroke sooner. Reacting per character
+   * would match half-typed domains, and on the network path it would be a DNS
+   * query per keystroke. `detectMailSettings` also remembers the last domain it
+   * ran for, so the blur handler and this timer cannot produce two lookups for
+   * the same address.
+   */
+  useEffect(() => {
+    if (!isGeneric || isReconnect || step !== 2) return undefined;
+    const email = form.email;
+    const timer = setTimeout(() => detectMailSettings(email), 500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.email, isGeneric, isReconnect, step]);
 
   /**
    * Keep the transport security and the port consistent in the generic form.
@@ -536,6 +876,9 @@ export function ConnectModal({
    * implies nothing, so the user's explicit choice is left untouched.
    */
   const setSecurity = (protocol, security) => {
+    // Choosing a security mode moves the port with it, so this counts as the
+    // user having set the port. Detection must not move it back afterwards.
+    portsTouched.current = true;
     setForm(prev => ({
       ...prev,
       [protocol === 'imap' ? 'imapSecurity' : 'smtpSecurity']: security,
@@ -544,6 +887,10 @@ export function ConnectModal({
   };
 
   const setPort = (protocol, value) => {
+    // Every caller of this is the user: the port inputs, and the lift of a port
+    // out of a pasted host. Either way the port is now theirs, and autodiscovery
+    // is barred from touching it or its security mode from here on.
+    portsTouched.current = true;
     // Any deliberate edit of a port field supersedes the "moved your port here"
     // note, which is only ever about the value that was just lifted for them.
     setPortNote(null);
@@ -570,30 +917,45 @@ export function ConnectModal({
   const normalizeHostField = protocol => {
     const key = protocol === 'imap' ? 'imapHost' : 'smtpHost';
     const parsed = splitHostPort(form[key]);
+    // A port lifted out of a host is rejected on the same rule the port select
+    // offers and the same rule the server enforces: an impossible number (0, or
+    // above 65535) or a possible one the mail guard will not dial. Pasting
+    // `mail.example.com:2525` used to sail through every client-side check and
+    // come back forty seconds later as an unexplained failure, because
+    // `port_not_allowed` had no headline and no way to open the field.
+    const portRejected =
+      parsed.portError === 'range' ||
+      (parsed.port !== null && !ALLOWED_MAIL_PORTS[protocol].has(parsed.port));
+    const result = { ...parsed, portRejected };
     // Reconnect locks the server fields: nothing to rewrite, and the stored
     // host is the row's identity.
-    if (isReconnect) return parsed;
+    if (isReconnect) return result;
     if (parsed.host !== form[key]) {
       setForm(prev => ({ ...prev, [key]: parsed.host }));
     }
-    if (parsed.port !== null) {
+    if (parsed.port !== null && !portRejected) {
       // Reuse the port setter so the security mode still follows a standard
-      // port, exactly as if the value had been typed into the port field.
+      // port, exactly as if the value had been chosen in the port field.
       setPort(protocol, String(parsed.port));
-      setAdvancedOpen(true);
+      // No setAdvancedOpen here any more: the port field the value just moved
+      // into is on screen, directly to the right of the host it came out of,
+      // so the note below points at something the user can already see.
       setPortNote({ protocol, port: parsed.port });
     }
-    // An impossible port is named on the spot. The alternative is what the
-    // field used to do: keep the digits on the hostname, hand the whole string
-    // to DNS, and answer with "could not reach that server", which sends the
-    // user hunting for a network fault that does not exist.
-    if (parsed.portError === 'range') {
+    // A port we cannot use is named on the spot, and named as the same thing
+    // whichever way it was unusable: the user's question is "what may I put
+    // here", and the answer is the five ports, not a distinction between "not a
+    // number at all" and "a number we will not dial". The alternative is what
+    // the field used to do: keep the digits on the hostname, hand the whole
+    // string to DNS, and answer with "could not reach that server", which sends
+    // the user hunting for a network fault that does not exist.
+    if (portRejected) {
       setPortNote(null);
       setPortRangeError(protocol);
     } else if (portRangeError === protocol) {
       setPortRangeError(null);
     }
-    return parsed;
+    return result;
   };
 
   /** Replace the alert with a single sentence and no expandable detail. */
@@ -605,6 +967,7 @@ export function ConnectModal({
     // would attach "your normal password will not work here" to the next
     // failure, which may be a hostname.
     setAuthReason(null);
+    setSessionExpired(false);
   };
 
   // ── Step 1: the provider radiogroup ────────────────────────────────────────
@@ -670,21 +1033,42 @@ export function ConnectModal({
    * the secondary one leaves no other trace: counting only the app-password
    * clicks would make the new default look better than it is precisely
    * because the people who rejected it are the ones who went missing.
+   *
+   * NOT awaited by any caller, and deliberately not `async` any more, so that
+   * a caller cannot accidentally start awaiting it again. This function used
+   * to await its own POST, and every route out of step 1 awaited this
+   * function, which put a full round trip to /api/onboarding in front of a
+   * state change that needs no server at all. Signed out that route answers
+   * 401 in ~20ms; signed in it does getUser, resolves the active workspace,
+   * writes two workspace columns and records a funnel row before it answers,
+   * and that is the second the user spent watching a button they had already
+   * pressed.
+   *
+   * `keepalive: true` is what makes it safe to fire and forget on the paths
+   * that navigate away in the very next statement: the fetch spec lets a
+   * keepalive request outlive the document that started it. Verified against
+   * this app rather than taken on trust — the request reaches the route and is
+   * logged there even when `window.location.href` is assigned on the next
+   * line. The try/catch is still here because a rejected promise with no
+   * handler is an unhandled rejection, which is noisier than the analytics row
+   * is valuable.
    */
-  const recordProviderSelected = async (chosen) => {
+  const recordProviderSelected = (chosen) => {
     trackProductEvent('inbox_connect_started', { provider: chosen === 'generic' ? 'imap' : chosen });
     try {
-      await fetch('/api/onboarding', {
+      fetch('/api/onboarding', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'provider_selected', provider: chosen === 'generic' ? 'generic_imap' : chosen }),
         keepalive: true,
-      });
+      }).catch(() => { /* the connection remains available if analytics is unavailable */ });
     } catch { /* the connection remains available if analytics is unavailable */ }
   };
 
-  const handleConnect = async () => {
-    await recordProviderSelected(provider);
+  const handleConnect = () => {
+    recordProviderSelected(provider);
     if (usesAppPassword) {
+      // Synchronous, in the click's own task. Nothing about opening the
+      // credentials form depends on an answer from the server.
       setStep(2);
       return;
     }
@@ -694,8 +1078,8 @@ export function ConnectModal({
   };
 
   /** The secondary Gmail route: Google sign-in, unchanged, one click down. */
-  const handleGmailOauth = async () => {
-    await recordProviderSelected('gmail');
+  const handleGmailOauth = () => {
+    recordProviderSelected('gmail');
     // A whole-document navigation, not a router push: /auth/gmail is a server
     // route handler that answers with a redirect to Google's consent screen,
     // not a page this app renders.
@@ -815,10 +1199,10 @@ export function ConnectModal({
       // they typed must not be thrown away.
       const imapParsed = normalizeHostField('imap');
       const smtpParsed = normalizeHostField('smtp');
-      // Digits that cannot be a port were just stripped off a host field.
-      // Submitting anyway would connect on the default port, which is not what
-      // the user asked for, so stop and say what was wrong with the number.
-      if (imapParsed.portError === 'range' || smtpParsed.portError === 'range') {
+      // Digits that cannot be used as a port were just stripped off a host
+      // field. Submitting anyway would connect on the default port, which is
+      // not what the user asked for, so stop and say which ports are accepted.
+      if (imapParsed.portRejected || smtpParsed.portRejected) {
         showError(tr('connect.errorPortRange'));
         return;
       }
@@ -894,6 +1278,12 @@ export function ConnectModal({
         // carries the offer. Only the numbers come from the response; the
         // sentences come from the message catalogue.
         if (data.error_code === 'inbox_limit_reached') {
+          // Nothing below this point may touch state if the modal has gone:
+          // the whole branch renders a panel that is no longer on screen.
+          if (!mountedRef.current) {
+            toast({ message: tr('app.inboxLimitReached', { plan: planName }), variant: 'warning' });
+            return;
+          }
           setLastFailure({ code: null, count: 0 });
           showError(null);
           setServerLimit({
@@ -904,9 +1294,9 @@ export function ConnectModal({
           });
           return;
         }
-        const code = data.error_code ?? 'connection_failed';
+        // The status decides when the body carried no code; see failureCode.
+        const code = failureCode(response.status, data);
         const count = lastFailure.code === code ? lastFailure.count + 1 : 1;
-        setLastFailure({ code, count });
 
         // One sentence leads. The route's own paragraph is real diagnostic
         // detail, so it is kept, but folded into "What to check" underneath
@@ -919,12 +1309,9 @@ export function ConnectModal({
           code === 'auth_failed' && AUTH_REASON_HEADLINE_KEYS[data.auth_reason]
             ? data.auth_reason
             : null;
-        setAuthReason(reason);
-        setFormError(
-          reason
-            ? tr(AUTH_REASON_HEADLINE_KEYS[reason], { provider: appPasswordProvider })
-            : tr(ERROR_HEADLINE_KEYS[code] ?? 'connect.errorConnectionFailed')
-        );
+        const headline = reason
+          ? tr(AUTH_REASON_HEADLINE_KEYS[reason], { provider: appPasswordProvider })
+          : tr(ERROR_HEADLINE_KEYS[code] ?? 'connect.errorConnectionFailed');
         const details = [];
         // The route's own sentence is English-only (it is the validator's
         // message, not a catalogue key). When we have a classified reason the
@@ -932,14 +1319,40 @@ export function ConnectModal({
         // the untranslated one is dropped rather than stacked on top of it.
         if (!reason && typeof data.error === 'string' && data.error.trim()) details.push(data.error.trim());
         if (count >= 2) details.push(tr('connect.errorRepeatHint'));
-        setErrorDetail(details.length > 0 ? details.join(' ') : null);
+        const detail = details.length > 0 ? details.join(' ') : null;
+
+        // The modal is gone: the person closed it while this was in flight and
+        // was told the answer would arrive as a notification. Deliver it, and
+        // touch no state. Without this the failure path wrote into an unmounted
+        // component and the user got nothing at all.
+        if (!mountedRef.current) {
+          toast({
+            message: tr('connect.toastVerifyFailed', { email, reason: detail ? `${headline} ${detail}` : headline }),
+            variant: 'error',
+          });
+          return;
+        }
+
+        setLastFailure({ code, count });
+        setAuthReason(reason);
+        setSessionExpired(code === SESSION_EXPIRED_CODE);
+        setFormError(headline);
+        setErrorDetail(detail);
         // Open on a classified credential failure: that is the case where the
         // next step and the link to the generator are the whole point, and
         // leaving them one click away is what left people retyping.
-        setErrorDetailOpen(Boolean(reason));
+        //
+        // And open whenever there is no classified reason but the route did
+        // send a sentence. That covers every refusal decided before the mail
+        // server was reached: a viewer's role, an expired session, a port the
+        // guard will not dial. All of them arrived as a generic headline with
+        // the one sentence that explains them folded behind a disclosure that
+        // stayed shut, which is how "Workspace viewers cannot connect an inbox"
+        // became "Connection failed. Please try again."
+        setErrorDetailOpen(Boolean(reason) || Boolean(detail));
 
-        // A port/security failure is fixed in Advanced settings, so put those
-        // fields on screen rather than leaving the fix behind a closed section.
+        // A transport failure is fixed by a port (already on screen) or by a
+        // security mode (not), so open the section holding the second one.
         if (isGeneric && TRANSPORT_ERROR_CODES.has(code)) setAdvancedOpen(true);
 
         // A login name the server did not recognise is fixed in a different
@@ -973,11 +1386,24 @@ export function ConnectModal({
       // there's no display name.
       const optimisticProvider = provider === 'generic' ? 'imap' : provider;
       const optimisticLabel = email.split('@')[0] || email;
+      // Called whether or not this modal is still mounted. The parent owns the
+      // inbox list and the success toast, and it is still on screen either way:
+      // a connection that succeeded after the user walked away is still a
+      // connection, and the row has to appear.
       onConnect({ provider: optimisticProvider, address: email, label: optimisticLabel });
     } catch {
-      showError(tr('connect.errorNetwork'));
+      // A dropped connection or an aborted request. Same rule as above: say so
+      // where the user can see it, wherever that now is.
+      if (mountedRef.current) {
+        showError(tr('connect.errorNetwork'));
+      } else {
+        toast({
+          message: tr('connect.toastVerifyFailed', { email, reason: tr('connect.errorNetwork') }),
+          variant: 'error',
+        });
+      }
     } finally {
-      setSubmitting(false);
+      if (mountedRef.current) setSubmitting(false);
     }
   };
 
@@ -993,18 +1419,38 @@ export function ConnectModal({
    */
   const hasUnsavedInput = () =>
     step === 2 &&
-    !submitting &&
     // The credentials form is no longer on screen once the upgrade panel
     // takes over, so there is nothing for a discard prompt to protect.
     !showLimitPanel &&
     Boolean(
-      form.email.trim() ||
+      // `submitting` USED TO SUPPRESS this guard, which made the in-flight
+      // state the one moment a stray Escape or scrim click closed the modal
+      // with no question asked. That is the worst possible moment for it: a
+      // verification runs for up to about 40 seconds, the answer was on its way,
+      // and the person who dismissed the dialog by accident was never told what
+      // happened. It now counts as unsaved input in its own right, so the same
+      // confirmation stands in front of it, with copy that says what is at
+      // stake (see `confirmingCloseDuringCheck` below).
+      submitting ||
+        form.email.trim() ||
         form.username.trim() ||
         form.password ||
         form.imapHost.trim() ||
         form.smtpHost.trim() ||
         yandexLogin.trim()
     );
+
+  /**
+   * True when the confirmation on screen is guarding a check that is still
+   * running, rather than a form that is merely filled in.
+   *
+   * The two need different words. A filled-in form is losing typed text; an
+   * in-flight check is losing an ANSWER, and the answer is not actually lost,
+   * because the request outlives this component and reports through the toast
+   * that lives above it. Saying so is what makes "Close anyway" a real choice
+   * rather than a gamble.
+   */
+  const confirmingCloseDuringCheck = confirmingClose && submitting;
 
   /**
    * The one way out of this modal. Every close affordance goes through here:
@@ -1015,11 +1461,31 @@ export function ConnectModal({
    */
   const requestClose = () => {
     if (hasUnsavedInput()) {
+      // Remember whether this confirmation is guarding a running check, so the
+      // effect below knows whether its premise can expire.
+      confirmOpenedDuringCheck.current = submitting;
       setConfirmingClose(true);
       return;
     }
     onClose();
   };
+
+  /**
+   * Take the "Still checking" confirmation away once the check has answered.
+   *
+   * Its whole premise is "close now and you will not see the outcome here". A
+   * check that lands while it is on screen removes that premise: the answer is
+   * on the form directly behind the prompt, and leaving the prompt up would
+   * leave the user choosing between waiting for something that has already
+   * happened and discarding something they have not been shown. Only ever
+   * dismisses a confirmation that was opened DURING a check; one opened over a
+   * filled-in form is guarding typed text, which does not expire.
+   */
+  useEffect(() => {
+    if (submitting || !confirmingClose || !confirmOpenedDuringCheck.current) return;
+    confirmOpenedDuringCheck.current = false;
+    setConfirmingClose(false);
+  }, [submitting, confirmingClose]);
 
   // Bring a new error into view. `nearest` scrolls the minimum distance, which
   // keeps the password field on screen as well: on this form the two are close
@@ -1505,11 +1971,21 @@ export function ConnectModal({
               {provider === 'zoho' && (
                 <div className="field">
                   <label htmlFor="cm-zoho-account-type">{tr('connect.zohoAccountTypeLabel')}</label>
+                  {/* Locked on reconnect, like every other field that decides
+                      which mailbox this is. Account type and region together
+                      ARE the hostname (zohoHosts in imap-presets), so leaving
+                      them editable made them the two identity fields a
+                      reconnect could silently change: the form came up as
+                      personal/global whatever the row said, and on success the
+                      connect route's upsert writes imap_host from them. The
+                      values above are read back out of the stored host, so what
+                      is locked here is what the inbox actually uses. */}
                   <select
                     id="cm-zoho-account-type"
                     className="input"
                     value={zohoAccountType}
                     onChange={e => setZohoAccountType(e.target.value)}
+                    disabled={isReconnect}
                   >
                     {ZOHO_ACCOUNT_TYPES.map(t => (
                       <option key={t.value} value={t.value}>{tr(t.labelKey)}</option>
@@ -1524,11 +2000,14 @@ export function ConnectModal({
               {provider === 'zoho' && (
                 <div className="field">
                   <label htmlFor="cm-zoho-region">{tr('connect.zohoRegionLabel')}</label>
+                  {/* Locked on reconnect for the same reason as the account
+                      type above: the pair decides the host. */}
                   <select
                     id="cm-zoho-region"
                     className="input"
                     value={zohoRegion}
                     onChange={e => setZohoRegion(e.target.value)}
+                    disabled={isReconnect}
                   >
                     {ZOHO_REGIONS.map(r => (
                       <option key={r.value} value={r.value}>{r.label}</option>
@@ -1552,20 +2031,39 @@ export function ConnectModal({
                   // On blur rather than on change: reacting mid-typing would
                   // match a half-typed domain and fill the server fields with
                   // someone else's provider.
-                  onBlur={applyEmailPrefill}
-                  autoComplete="email"
+                  // Blur runs it as well as the debounce below, because a
+                  // user who types fast and tabs immediately should not have to
+                  // wait out a timer that the tab just made pointless.
+                  onBlur={e => detectMailSettings(e.target.value)}
+                  // The mailbox being connected, not an account on this site.
+                  // See NOT_A_LOGIN_FIELD: `autoComplete="email"` here, beside a
+                  // current-password field, is what asked the browser to offer
+                  // the saved mcpemails.com login.
+                  name="mcpe-mailbox-address"
+                  {...NOT_A_LOGIN_FIELD}
                   // Reconnect: the address is the row's identity — never change it,
                   // and lock it so the browser can't autofill another saved login.
                   readOnly={isReconnect}
                   aria-readonly={isReconnect || undefined}
                   autoFocus={!isReconnect}
                 />
+                {/* Where the settings on screen came from. Naming the provider
+                    is the part that matters: it is the difference between "the
+                    form filled itself in" and "we found Migadu on your domain",
+                    and only the second one tells the user whether to trust it.
+                    A DNS answer we cannot attribute to a provider we know says
+                    so plainly rather than inventing a name for it. */}
                 {isGeneric && hostPrefill && (
                   <span role="status" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--brand)' }}>
-                    {tr('connect.hostPrefillNote', { provider: hostPrefill.label })}
+                    {hostPrefill.label
+                      ? tr(
+                          hostPrefill.source === 'table' ? 'connect.hostPrefillNote' : 'connect.hostDetectedProviderNote',
+                          { provider: hostPrefill.label }
+                        )
+                      : tr('connect.hostDetectedNote')}
                   </span>
                 )}
-                {isGeneric && hostPrefill?.requiresAppPassword && (
+                {isGeneric && hostPrefill?.requiresAppPassword && hostPrefill.label && (
                   <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
                     {tr('connect.hostPrefillAppPassword', { provider: hostPrefill.label })}
                   </span>
@@ -1593,7 +2091,9 @@ export function ConnectModal({
                     placeholder={tr('connect.yandexLoginPlaceholder')}
                     value={yandexLogin}
                     onChange={e => setYandexLogin(e.target.value)}
-                    autoComplete="username"
+                    // Yandex 360's own login, not an account here.
+                    name="mcpe-yandex-login"
+                    {...NOT_A_LOGIN_FIELD}
                     readOnly={isReconnect}
                     aria-readonly={isReconnect || undefined}
                   />
@@ -1604,67 +2104,102 @@ export function ConnectModal({
                 </>
               )}
 
-              {/* The common path: the two hosts, nothing else. Ports, security
-                  modes and the optional login username are protocol detail that
-                  99% of mailboxes never need, and having them inline (with two
-                  unlabelled TLS/STARTTLS selects bracketing the host rows, so
-                  neither obviously belonged to IMAP or to SMTP) is what made
-                  this form read as a wall of settings. They now live in
-                  Advanced settings, below the password. */}
+              {/* Host and port, one row per protocol.
+                  The ports used to live inside Advanced settings, on the
+                  reasoning that 99% of mailboxes never change them. That is
+                  true of CHANGING them and false of SEEING them: a port is
+                  half of "where does this connect to", it is the field a
+                  provider's setup page names in the same breath as the host,
+                  and hiding it meant a user copying documented settings had to
+                  discover a disclosure to finish the job. Both halves of one
+                  answer now sit on one line, and the port column is sized for
+                  the five digits it can ever hold rather than taking a full
+                  row of its own.
+
+                  What stayed behind the disclosure is the part that really is
+                  rare: the security modes and the separate login username. */}
               {isGeneric && (
                 <>
-                  <div className="field">
-                    <label htmlFor="cm-imap-host">{tr('connect.imapHostLabel')}</label>
-                    <input
-                      id="cm-imap-host"
-                      className="input"
-                      type="text"
-                      placeholder="imap.example.com"
-                      value={form.imapHost}
-                      onChange={e => { setPortNote(null); setPortRangeError(null); setForm(prev => ({ ...prev, imapHost: e.target.value })); }}
-                      onBlur={() => normalizeHostField('imap')}
-                      readOnly={isReconnect}
-                      aria-readonly={isReconnect || undefined}
-                    />
-                    <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
-                      {tr('connect.hostPasteHint')}
+                  <div className="host-port-row">
+                    <div className="field host-field">
+                      <label htmlFor="cm-imap-host">{tr('connect.imapHostLabel')}</label>
+                      <input
+                        id="cm-imap-host"
+                        className="input"
+                        type="text"
+                        placeholder="imap.example.com"
+                        value={form.imapHost}
+                        onChange={e => { setPortNote(null); setPortRangeError(null); setForm(prev => ({ ...prev, imapHost: e.target.value })); }}
+                        onBlur={() => normalizeHostField('imap')}
+                        readOnly={isReconnect}
+                        aria-readonly={isReconnect || undefined}
+                      />
+                    </div>
+                    <div className="field port-field">
+                      <label htmlFor="cm-imap-port">{tr('connect.imapPortLabel')}</label>
+                      <PortSelect
+                        id="cm-imap-port"
+                        protocol="imap"
+                        value={form.imapPort}
+                        onChange={value => setPort('imap', value)}
+                        disabled={isReconnect}
+                      />
+                    </div>
+                  </div>
+                  {/* The hints belong to the row, not to the host box: with the
+                      port beside it, a hint nested inside the host field would
+                      be indented under a column rather than under the pair it
+                      describes. */}
+                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)', marginTop: -6 }}>
+                    {tr('connect.hostPasteHint')}
+                  </span>
+                  {portNote?.protocol === 'imap' && (
+                    <span role="status" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--brand)', marginTop: -6 }}>
+                      {tr('connect.portMovedNote', { port: String(portNote.port), protocol: 'IMAP' })}
                     </span>
-                    {portNote?.protocol === 'imap' && (
-                      <span role="status" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--brand)' }}>
-                        {tr('connect.portMovedNote', { port: String(portNote.port), protocol: 'IMAP' })}
-                      </span>
-                    )}
-                    {portRangeError === 'imap' && (
-                      <span role="alert" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--red-700)' }}>
-                        {tr('connect.errorPortRange')}
-                      </span>
-                    )}
-                  </div>
+                  )}
+                  {portRangeError === 'imap' && (
+                    <span role="alert" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--red-700)', marginTop: -6 }}>
+                      {tr('connect.errorPortRange')}
+                    </span>
+                  )}
 
-                  <div className="field">
-                    <label htmlFor="cm-smtp-host">{tr('connect.smtpHostLabel')}</label>
-                    <input
-                      id="cm-smtp-host"
-                      className="input"
-                      type="text"
-                      placeholder="smtp.example.com"
-                      value={form.smtpHost}
-                      onChange={e => { setPortNote(null); setPortRangeError(null); setForm(prev => ({ ...prev, smtpHost: e.target.value })); }}
-                      onBlur={() => normalizeHostField('smtp')}
-                      readOnly={isReconnect}
-                      aria-readonly={isReconnect || undefined}
-                    />
-                    {portNote?.protocol === 'smtp' && (
-                      <span role="status" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--brand)' }}>
-                        {tr('connect.portMovedNote', { port: String(portNote.port), protocol: 'SMTP' })}
-                      </span>
-                    )}
-                    {portRangeError === 'smtp' && (
-                      <span role="alert" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--red-700)' }}>
-                        {tr('connect.errorPortRange')}
-                      </span>
-                    )}
+                  <div className="host-port-row">
+                    <div className="field host-field">
+                      <label htmlFor="cm-smtp-host">{tr('connect.smtpHostLabel')}</label>
+                      <input
+                        id="cm-smtp-host"
+                        className="input"
+                        type="text"
+                        placeholder="smtp.example.com"
+                        value={form.smtpHost}
+                        onChange={e => { setPortNote(null); setPortRangeError(null); setForm(prev => ({ ...prev, smtpHost: e.target.value })); }}
+                        onBlur={() => normalizeHostField('smtp')}
+                        readOnly={isReconnect}
+                        aria-readonly={isReconnect || undefined}
+                      />
+                    </div>
+                    <div className="field port-field">
+                      <label htmlFor="cm-smtp-port">{tr('connect.smtpPortLabel')}</label>
+                      <PortSelect
+                        id="cm-smtp-port"
+                        protocol="smtp"
+                        value={form.smtpPort}
+                        onChange={value => setPort('smtp', value)}
+                        disabled={isReconnect}
+                      />
+                    </div>
                   </div>
+                  {portNote?.protocol === 'smtp' && (
+                    <span role="status" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--brand)', marginTop: -6 }}>
+                      {tr('connect.portMovedNote', { port: String(portNote.port), protocol: 'SMTP' })}
+                    </span>
+                  )}
+                  {portRangeError === 'smtp' && (
+                    <span role="alert" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--red-700)', marginTop: -6 }}>
+                      {tr('connect.errorPortRange')}
+                    </span>
+                  )}
                 </>
               )}
 
@@ -1705,7 +2240,12 @@ export function ConnectModal({
                       selectPasswordOnFocus.current = false;
                       e.target.select();
                     }}
-                    autoComplete="current-password"
+                    // The mail provider's credential, never this site's. See
+                    // NOT_A_LOGIN_FIELD: `autoComplete="current-password"` on a
+                    // same-origin form is precisely the pattern every password
+                    // manager treats as a sign-in prompt for mcpemails.com.
+                    name="mcpe-mailbox-secret"
+                    {...NOT_A_LOGIN_FIELD}
                     autoFocus={isReconnect}
                   />
                   <button
@@ -1831,11 +2371,14 @@ export function ConnectModal({
               </div>
 
               {/* ── Advanced settings (generic IMAP only) ──────────────────
+                  What is left in here after the ports moved up to the host
+                  rows: the two transport security modes and the optional login
+                  username.
+
                   Closed by default, but opened automatically whenever it holds
-                  a value that differs from the default, whenever a port is
-                  lifted out of a host field, and whenever a failure comes back
-                  that can only be fixed in here. Nothing that is about to be
-                  submitted is ever hidden. */}
+                  a value that differs from the default, and whenever a failure
+                  comes back that is fixed by one of the controls inside it.
+                  Nothing that is about to be submitted is ever hidden. */}
               {isGeneric && (
                 <div style={{ borderTop: '1px solid var(--border-1)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <button
@@ -1846,10 +2389,11 @@ export function ConnectModal({
                     // is open, so the id it pointed at was absent exactly when
                     // the attribute mattered, and a reference to nothing is
                     // worse than no reference. Keeping the panel mounted and
-                    // hidden instead would put a fieldset of ports into the
-                    // form for every mailbox that never needs it, which is the
-                    // thing the disclosure exists to avoid. aria-expanded on
-                    // the button is the part that carries the state.
+                    // hidden instead would put two transport selects and a
+                    // login-name box into the form for every mailbox that never
+                    // needs them, which is the thing the disclosure exists to
+                    // avoid. aria-expanded on the button is the part that
+                    // carries the state.
                     className="plain-focus"
                     style={{
                       display: 'flex',
@@ -1891,7 +2435,13 @@ export function ConnectModal({
                           placeholder={tr('connect.usernamePlaceholder')}
                           value={form.username}
                           onChange={e => setForm(prev => ({ ...prev, username: e.target.value }))}
-                          autoComplete="username"
+                          // The SASL login the MAIL server issued. Named
+                          // `username` with autoComplete="username" it was the
+                          // third of the three fields that made this look like a
+                          // sign-in form, and it is the field the wrong-mailbox
+                          // incident was traced to.
+                          name="mcpe-mailbox-login"
+                          {...NOT_A_LOGIN_FIELD}
                           // Locked on reconnect: this was the root cause of the
                           // wrong-mailbox bug — a blank username field autofilled with
                           // another account's saved login. Identity stays fixed.
@@ -1903,10 +2453,11 @@ export function ConnectModal({
                         </span>
                       </div>
 
-                      {/* Each control sits under the protocol it belongs to.
-                          Previously the two security selects sat at opposite
-                          ends of the form and neither said which half it
-                          governed. */}
+                      {/* One control each, but still one fieldset each. The
+                          two security selects used to sit at opposite ends of
+                          the form with nothing saying which half either
+                          governed, and losing the legends when the ports moved
+                          out to the host rows would put that ambiguity back. */}
                       <fieldset style={{ border: '1px solid var(--border-1)', borderRadius: 8, padding: 12, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
                         <legend style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--fg-2)', padding: '0 6px' }}>
                           {tr('connect.imapSectionLabel')}
@@ -1920,18 +2471,6 @@ export function ConnectModal({
                           <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
                             {tr('connect.securityPortNote')}
                           </span>
-                        </div>
-                        <div className="field">
-                          <label htmlFor="cm-imap-port">{tr('connect.imapPortLabel')}</label>
-                          <input
-                            id="cm-imap-port"
-                            className="input"
-                            type="number"
-                            value={form.imapPort}
-                            onChange={e => setPort('imap', e.target.value)}
-                            readOnly={isReconnect}
-                            aria-readonly={isReconnect || undefined}
-                          />
                         </div>
                       </fieldset>
 
@@ -1949,21 +2488,45 @@ export function ConnectModal({
                             {tr('connect.securityPortNote')}
                           </span>
                         </div>
-                        <div className="field">
-                          <label htmlFor="cm-smtp-port">{tr('connect.smtpPortLabel')}</label>
-                          <input
-                            id="cm-smtp-port"
-                            className="input"
-                            type="number"
-                            value={form.smtpPort}
-                            onChange={e => setPort('smtp', e.target.value)}
-                            readOnly={isReconnect}
-                            aria-readonly={isReconnect || undefined}
-                          />
-                        </div>
                       </fieldset>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* What is happening, while it happens.
+                  The only feedback used to be a disabled button that LOST its
+                  icon, for a check that runs up to about 40 seconds (IMAP then
+                  SMTP in sequence, PROTOCOL_BUDGET_MS of 20s each; the routes
+                  declare maxDuration = 60). The button now spins, and this line
+                  says what the spin is for and roughly how long it can last.
+
+                  Deliberately ONE line with no stages and no bar. The browser
+                  cannot see which protocol the server is on, how many
+                  transports the autodetect loop has tried, or how far through
+                  the budget it is; every one of those would be a number made up
+                  here. The upper bound is not made up: it is what the route's
+                  own budget allows. */}
+              {submitting && (
+                <div
+                  role="status"
+                  aria-live="polite"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '10px 12px',
+                    background: 'var(--bg-sunken)',
+                    border: '1px solid var(--border-1)',
+                    borderRadius: 8,
+                    fontFamily: 'var(--font-sans)',
+                    fontSize: 12.5,
+                    lineHeight: 1.5,
+                    color: 'var(--fg-2)',
+                  }}
+                >
+                  <span className="cm-check-spinner" aria-hidden="true" />
+                  {tr('connect.verifyingStep')}
                 </div>
               )}
 
@@ -1993,6 +2556,28 @@ export function ConnectModal({
                   }}
                 >
                   <span>{formError}</span>
+
+                  {/* The one failure whose fix is not in this form. It leads,
+                      outside the disclosure, because a link the user has to
+                      expand a section to find is a link that does not exist for
+                      the person who has just been told their connection
+                      failed. */}
+                  {sessionExpired && (
+                    <a
+                      href={signInHref()}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 5,
+                        color: 'var(--red-700)',
+                        fontWeight: 600,
+                        width: 'fit-content',
+                      }}
+                    >
+                      <Icon name="logout" size={12} />
+                      {tr('connect.errorSessionExpiredSignIn')}
+                    </a>
+                  )}
 
                   {(errorDetail || appPasswordUrl) && (
                     <>
@@ -2083,22 +2668,21 @@ export function ConnectModal({
         </div>
 
         {/* Footer.
-            The wrap is inline, local to this modal, and applied ONLY to the
-            paywall panel with the annual interval chosen. That row is three
-            items wide (Cancel, Compare all plans, the buy CTA) and the CTA
-            carries a price, so the annual label is the one that does not fit:
-            in Norwegian "Oppgrader til Personal, $48/år" pushed Cancel out
-            through the left edge of the dialog, with no way back to it.
-            Everything else, including the monthly default, keeps the single
-            row it has always had. */}
-        <div
-          className="modal-foot"
-          style={
-            showLimitPanel && upgradeInterval === 'year'
-              ? { flexWrap: 'wrap' }
-              : undefined
-          }
-        >
+            The wrap used to be an inline style applied ONLY to the paywall
+            panel with the annual interval chosen, on the reading that the
+            annual CTA's price label was the thing that did not fit. That was
+            measured in English. In Norwegian the MONTHLY row needs about 480px
+            ("Avbryt" + "Sammenlign alle planer" + "Oppgrader til Personal,
+            $5/md"), the modal is about 360px wide at a 375px viewport, .btn and
+            both anchors are white-space: nowrap and .modal is overflow: hidden,
+            so Cancel was clipped through the left edge of the dialog at the
+            product's single revenue moment, with no way back to it.
+
+            It is a class now (.modal-foot-limit, plus an unconditional wrap
+            under 480px for every modal footer) and it is unconditional: with
+            justify-content flex-end a row that fits still renders on one line,
+            so wrapping costs the wide case nothing. */}
+        <div className={'modal-foot' + (showLimitPanel ? ' modal-foot-limit' : '')}>
           {/* Plan limit reached: go straight to Stripe Checkout, at the
               interval chosen in the panel above and monthly until someone
               chooses otherwise. /api/stripe/checkout/start creates the session
@@ -2179,14 +2763,24 @@ export function ConnectModal({
           {!showLimitPanel && step === 2 && (
             <>
               {/* Reconnect mode has no provider-selection step to return to, so the
-                  secondary action cancels instead of going "back". */}
-              <Btn variant="ghost" onClick={isReconnect ? onClose : handleBackToProviders}>
-                {isReconnect ? tr('connect.cancel') : tr('connect.back')}
+                  secondary action cancels instead of going "back".
+
+                  Both go through `requestClose`, never `onClose`: this button
+                  discards exactly the same typed credentials as the X, the
+                  scrim and Escape, and it was the one way out that skipped the
+                  confirmation. While a check is running there is no "back" to
+                  go to without abandoning it, so the label says Cancel and the
+                  guard explains what closing costs. */}
+              <Btn
+                variant="ghost"
+                onClick={submitting || isReconnect ? requestClose : handleBackToProviders}
+              >
+                {submitting || isReconnect ? tr('connect.cancel') : tr('connect.back')}
               </Btn>
               <Btn
                 variant="primary"
-                icon={submitting ? undefined : 'shield'}
-                disabled={submitting}
+                icon="shield"
+                busy={submitting}
                 onClick={handleAppPasswordSubmit}
               >
                 {submitting ? tr('connect.verifying') : tr('connect.connectInbox')}
@@ -2215,15 +2809,19 @@ export function ConnectModal({
             aria-labelledby="cm-discard-title"
           >
             <div className="modal-h">
-              <h2 id="cm-discard-title" style={{ margin: 0 }}>{tr('connect.discardTitle')}</h2>
-              <div className="sub" style={{ marginTop: 4 }}>{tr('connect.discardBody')}</div>
+              <h2 id="cm-discard-title" style={{ margin: 0 }}>
+                {confirmingCloseDuringCheck ? tr('connect.discardTitleVerifying') : tr('connect.discardTitle')}
+              </h2>
+              <div className="sub" style={{ marginTop: 4 }}>
+                {confirmingCloseDuringCheck ? tr('connect.discardBodyVerifying') : tr('connect.discardBody')}
+              </div>
             </div>
             <div className="modal-foot">
               <Btn variant="secondary" onClick={() => setConfirmingClose(false)}>
-                {tr('connect.keepEditing')}
+                {confirmingCloseDuringCheck ? tr('connect.keepWaiting') : tr('connect.keepEditing')}
               </Btn>
               <Btn variant="danger" onClick={() => { setConfirmingClose(false); onClose(); }}>
-                {tr('connect.discardConfirm')}
+                {confirmingCloseDuringCheck ? tr('connect.closeAnyway') : tr('connect.discardConfirm')}
               </Btn>
             </div>
           </div>

@@ -6,6 +6,9 @@ import {
   portForSecurity,
   securityForPort,
   normalizeAppPassword,
+  ZOHO_REGIONS,
+  zohoHosts,
+  zohoSettingsFromHost,
 } from './imap-presets.ts';
 
 test('security and port stay paired on the standard ports', () => {
@@ -29,6 +32,16 @@ test('a non-standard port implies nothing, so the user choice stands', () => {
   // implicit-TLS port and carries no meaning for IMAP.
   assert.equal(securityForPort('imap', 465), null);
   assert.equal(securityForPort('smtp', 993), null);
+});
+
+test('SMTP port 25 is STARTTLS, because the form can now offer it', () => {
+  // 25 is the third port host-guard allows for SMTP and the port select now
+  // lists it. Returning null would leave the security mode wherever it was,
+  // which for a form defaulting to implicit TLS is a certain handshake
+  // failure. transport-autodetect already pairs the two the same way.
+  assert.equal(securityForPort('smtp', 25), 'starttls');
+  // IMAP has no third port, and 25 means nothing there.
+  assert.equal(securityForPort('imap', 25), null);
 });
 
 test('app passwords survive the ways they get copied', () => {
@@ -76,4 +89,54 @@ test('every branded preset pairs its port with its security mode', () => {
     assert.equal(preset.imapPort, portForSecurity('imap', 'tls'), preset.service);
     assert.equal(preset.smtpPort, portForSecurity('smtp', preset.smtpSecurity), preset.service);
   }
+});
+
+test('a stored Zoho host reads back as the region and account type that produced it', () => {
+  // The reconnect form has nothing but imap_host to work from. Every pair the
+  // forward mapping can emit has to come back out of it, or a reconnect
+  // resubmits the wrong data center and the route's upsert rewrites the host.
+  for (const region of ZOHO_REGIONS) {
+    for (const accountType of ['personal', 'organization'] as const) {
+      const hosts = zohoHosts(region.value, accountType);
+      assert.deepEqual(
+        zohoSettingsFromHost(hosts.imapHost),
+        { region: region.value, accountType },
+        hosts.imapHost
+      );
+      // The SMTP host of the same pair carries the same two answers: the
+      // prefixes differ (smtp/smtppro), the data-center suffix does not.
+      assert.deepEqual(
+        zohoSettingsFromHost(hosts.smtpHost),
+        { region: region.value, accountType },
+        hosts.smtpHost
+      );
+    }
+  }
+});
+
+test('the EU custom-domain case, which is the bug this exists for', () => {
+  assert.deepEqual(zohoSettingsFromHost('imappro.zoho.eu'), { region: 'eu', accountType: 'organization' });
+  // Not the same mailbox: same data center, free/personal class.
+  assert.deepEqual(zohoSettingsFromHost('imap.zoho.eu'), { region: 'eu', accountType: 'personal' });
+  // Canada's data center does not follow the `zoho.<tld>` shape, so it is the
+  // one most likely to be missed by a prefix/suffix rule written by hand.
+  assert.deepEqual(zohoSettingsFromHost('imappro.zohocloud.ca'), { region: 'ca', accountType: 'organization' });
+});
+
+test('an unknown host is null, never a default', () => {
+  // Answering "personal on .com" here would be exactly the bug: a confident
+  // wrong answer that overwrites a correct stored host.
+  assert.equal(zohoSettingsFromHost('imap.gmail.com'), null);
+  assert.equal(zohoSettingsFromHost('mail.example.com'), null);
+  // A data center Zoho adds after this build must also be null, not a guess.
+  assert.equal(zohoSettingsFromHost('imap.zoho.sa'), null);
+  assert.equal(zohoSettingsFromHost(''), null);
+  assert.equal(zohoSettingsFromHost(null), null);
+  assert.equal(zohoSettingsFromHost(undefined), null);
+});
+
+test('stored hosts are matched case-insensitively and whitespace-tolerantly', () => {
+  // imap_host is written lowercased by the connect routes, but rows predate
+  // that and a reconnect must not be defeated by a capital letter.
+  assert.deepEqual(zohoSettingsFromHost('  IMAPPRO.Zoho.EU '), { region: 'eu', accountType: 'organization' });
 });

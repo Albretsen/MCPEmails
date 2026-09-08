@@ -42,6 +42,35 @@ export interface MailHostPreset {
    * their mail host because their host told them, but not the port.
    */
   hostSuffixes?: readonly string[];
+  /**
+   * MX hostnames this provider publishes, matched the same way as
+   * `hostSuffixes`. Only present where the MX name cannot be reached through
+   * `hostSuffixes`, which is most of the table: Migadu answers MX with
+   * aspmx1.migadu.com and Zoho with mx.zoho.com, both of which already end in
+   * a listed suffix, so they need nothing here.
+   *
+   * The two that do are the two that matter most for a business mailbox on a
+   * custom domain, and they were checked against live DNS rather than
+   * documentation:
+   *   dig MX stripe.com  -> aspmx.l.google.com, alt1.aspmx.l.google.com
+   *   dig MX icloud.com  -> mx01.mail.icloud.com, mx02.mail.icloud.com
+   * Neither name shares a label with the provider's IMAP host, so without this
+   * field a Google Workspace domain resolves to nothing and the user is left
+   * guessing at settings we already know.
+   */
+  mxSuffixes?: readonly string[];
+  /**
+   * Set when an MX name that matches this entry does NOT identify it, so MX
+   * lookup must skip it. Exactly one entry needs this: OVH serves both Hosted
+   * Exchange and shared hosting from mail.ovh.net, the two need different SMTP
+   * settings (Exchange does not listen on 465 at all), and the MX name alone
+   * cannot tell them apart. Skipping the Exchange entry lets an ambiguous
+   * .mail.ovh.net MX fall through to the shared-hosting one, which is the far
+   * more common mailbox and whose settings the transport fallback can recover
+   * from; filling in Exchange's host for a shared-hosting customer could not
+   * be recovered from, because the hostname itself would be wrong.
+   */
+  mxAmbiguous?: boolean;
   imapHost: string;
   imapPort: number;
   imapSecurity: MailSecurity;
@@ -94,6 +123,7 @@ export const MAIL_HOST_PRESETS: readonly MailHostPreset[] = [
     id: 'ovh-exchange',
     label: 'OVH Hosted Exchange',
     hostSuffixes: ['.mail.ovh.net'],
+    mxAmbiguous: true,
     imapHost: 'ex.mail.ovh.net',
     imapPort: 993,
     imapSecurity: 'tls',
@@ -261,6 +291,9 @@ export const MAIL_HOST_PRESETS: readonly MailHostPreset[] = [
     label: 'Gmail',
     domains: ['gmail.com', 'googlemail.com'],
     hostSuffixes: ['.gmail.com', '.googlemail.com'],
+    // What a Workspace domain publishes: aspmx.l.google.com and its alt1..alt4
+    // siblings, plus the newer single-record smtp.google.com.
+    mxSuffixes: ['.l.google.com', 'smtp.google.com', '.googlemail.com'],
     imapHost: 'imap.gmail.com',
     imapPort: 993,
     imapSecurity: 'tls',
@@ -275,6 +308,8 @@ export const MAIL_HOST_PRESETS: readonly MailHostPreset[] = [
     label: 'iCloud Mail',
     domains: ['icloud.com', 'me.com', 'mac.com'],
     hostSuffixes: ['.mail.me.com'],
+    // iCloud+ Custom Email Domain publishes mx01/mx02.mail.icloud.com.
+    mxSuffixes: ['.mail.icloud.com'],
     imapHost: 'imap.mail.me.com',
     imapPort: 993,
     imapSecurity: 'tls',
@@ -366,10 +401,40 @@ export function findMailHostPreset(input: { email?: string | null; host?: string
 }
 
 /**
+ * Find the provider from an MX hostname the domain publishes.
+ *
+ * Separate from findMailHostPreset because an MX name is a different kind of
+ * evidence from a mail host. It is authoritative about who RECEIVES the
+ * domain's mail, which for every provider in this table is the same company
+ * that serves its IMAP, but the name itself is usually not one a user would
+ * ever type: nobody connects to aspmx.l.google.com. So `mxSuffixes` is checked
+ * first (it exists precisely for names that share nothing with the IMAP host),
+ * and only then does it fall back to the ordinary host match, which the
+ * majority of the table already satisfies (aspmx1.migadu.com ends in
+ * ".migadu.com", mx.zoho.com in ".zoho.com", in1-smtp.messagingengine.com in
+ * ".messagingengine.com").
+ *
+ * Entries flagged `mxAmbiguous` are excluded: see the field's own comment for
+ * the one case, which is OVH.
+ */
+export function findMailHostPresetByMx(exchange: string): MailHostPreset | null {
+  const host = normalizeHostname(String(exchange ?? ''));
+  if (!host) return null;
+  const byMx = MAIL_HOST_PRESETS.find(
+    (preset) =>
+      preset.mxSuffixes?.some((suffix) =>
+        suffix.startsWith('.') ? host.endsWith(suffix) : host === suffix
+      ) === true
+  );
+  if (byMx) return byMx;
+  return MAIL_HOST_PRESETS.find((preset) => !preset.mxAmbiguous && matchesHost(preset, host)) ?? null;
+}
+
+/**
  * The connect-form values implied by a recognised provider: both hosts, both
  * ports and both security modes, ready to prefill.
  */
-export function prefillFromEmail(email: string): {
+export interface MailHostPrefill {
   provider: string;
   label: string;
   imapHost: string;
@@ -380,9 +445,10 @@ export function prefillFromEmail(email: string): {
   smtpSecurity: MailSecurity;
   requiresAppPassword: boolean;
   appPasswordHelpUrl: string | null;
-} | null {
-  const preset = findMailHostPreset({ email });
-  if (!preset) return null;
+}
+
+/** The same shape, from a preset that was found by some other route. */
+export function prefillFromPreset(preset: MailHostPreset): MailHostPrefill {
   return {
     provider: preset.id,
     label: preset.label,
@@ -395,4 +461,21 @@ export function prefillFromEmail(email: string): {
     requiresAppPassword: preset.requiresAppPassword === true,
     appPasswordHelpUrl: preset.appPasswordHelpUrl ?? null,
   };
+}
+
+/**
+ * The table lookup keyed by the address domain alone.
+ *
+ * The autodiscovery route never receives the local part of an address (there
+ * is nothing it could do with one), so it needs a way in that does not require
+ * inventing a fake mailbox name to satisfy `prefillFromEmail`.
+ */
+export function prefillFromDomain(domain: string): MailHostPrefill | null {
+  const preset = findMailHostPreset({ email: `x@${normalizeHostname(String(domain ?? ''))}` });
+  return preset ? prefillFromPreset(preset) : null;
+}
+
+export function prefillFromEmail(email: string): MailHostPrefill | null {
+  const preset = findMailHostPreset({ email });
+  return preset ? prefillFromPreset(preset) : null;
 }
