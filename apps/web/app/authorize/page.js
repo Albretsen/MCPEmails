@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { issueCsrfToken } from '@/lib/oauth/csrf';
 import { storeStateNonce } from '@/lib/oauth/state';
 import { isValidRedirectUri } from '@/lib/oauth/redirect-uri';
+import { validateResourceIndicator } from '@/lib/oauth/resource';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { AuthorizeApp } from '../../components/auth/AuthorizeApp';
 import '../../styles/marketing.css';
@@ -53,6 +54,7 @@ export default async function AuthorizePage({ searchParams }) {
   const state           = params.state                  ?? '';
   const codeChallenge   = params.code_challenge         ?? '';
   const challengeMethod = params.code_challenge_method  ?? '';
+  const rawResource     = params.resource               ?? '';
 
   // ── 1. Validate client_id is present ─────────────────────────────────────
   if (!clientId) {
@@ -66,6 +68,17 @@ export default async function AuthorizePage({ searchParams }) {
   if (challengeMethod && challengeMethod !== 'S256') {
     return <ErrorPage title="Unsupported PKCE method" message="Only code_challenge_method=S256 is supported. The plain method is rejected." />;
   }
+
+  // ── 2b. RFC 8707 resource indicator ──────────────────────────────────────
+  // Optional (older MCP clients omit it), but when present it must name the
+  // one resource this server issues tokens for. The OAuth error is
+  // `invalid_target`; rendered inline like every other request error here,
+  // since we never redirect an error to a redirect_uri we have not validated.
+  const resourceCheck = validateResourceIndicator(rawResource);
+  if (!resourceCheck.ok) {
+    return <ErrorPage title="Invalid resource (invalid_target)" message={resourceCheck.description} />;
+  }
+  const resource = resourceCheck.resource;
 
   // ── 3. Look up client (including deactivated_at check) ───────────────────
   const supabase = await createClient();
@@ -127,7 +140,7 @@ export default async function AuthorizePage({ searchParams }) {
 
   if (!user) {
     const qs = new URLSearchParams();
-    ['client_id','redirect_uri','scope','state','code_challenge','code_challenge_method'].forEach(k => {
+    ['client_id','redirect_uri','scope','state','code_challenge','code_challenge_method','resource'].forEach(k => {
       if (params[k]) qs.set(k, params[k]);
     });
     // Encode the whole return path as ONE value. Without this, the nested query
@@ -208,6 +221,7 @@ export default async function AuthorizePage({ searchParams }) {
       oauthState={state}
       codeChallenge={codeChallenge}
       challengeMethod={challengeMethod || 'S256'}
+      resource={resource}
       csrfToken={csrfToken}
       preApproved={preApproved}
     />
