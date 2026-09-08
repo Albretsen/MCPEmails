@@ -1016,6 +1016,29 @@ export function WorkflowsPage({ mcpUrl }) {
   );
 }
 
+/**
+ * The two inbox states whose only cure is re-entering credentials.
+ *
+ * 'error' is a connection that failed (a bad app password, an IMAP host that
+ * stopped answering, an OAuth refresh that came back invalid_grant). 'revoked'
+ * is the state the badge calls "Expired": the credential columns have been
+ * nulled, so there is nothing left to retry with.
+ *
+ * Both list layouts used to offer Reconnect on 'error' only, which left an
+ * expired row with a "check connection" button that can only ever confirm what
+ * the badge already said. The detail modal has always shown Reconnect
+ * regardless of status; this is the list agreeing with it.
+ *
+ * onReconnect (App.jsx's onReconnectInbox) branches on the inbox's transport,
+ * not on its status: an IMAP row re-opens the connect form it was created
+ * with, an OAuth row goes to /auth/gmail or /auth/outlook. `hasImap` comes off
+ * imap_host, which the disconnect path does NOT null, so a revoked IMAP row
+ * still routes to the right form.
+ */
+function needsReconnect(status) {
+  return status === 'error' || status === 'revoked';
+}
+
 export function InboxesPage({ inboxes, planLimits, stripePrices = null, onConnect, onRemove, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onGoToKeys }) {
   // The analytics window this plan buys. Every per-inbox call count on this
   // page is scoped to it server-side, so the label has to quote the same
@@ -1363,7 +1386,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, onConnec
                   </td>
                   <td className="mono">{ib.calls.toLocaleString()}</td>
                   <td className="right" onClick={e => e.stopPropagation()}>
-                    {ib.status === "error" ? (
+                    {needsReconnect(ib.status) ? (
                       <Btn
                         variant="secondary"
                         size="sm"
@@ -1404,6 +1427,10 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, onConnec
           <div className="inbox-list-mobile">
             {inboxes.map(ib => {
               const isError = ib.status === 'error';
+              // Separate from isError on purpose: only a real error has a
+              // message to print under the card, but both states get the
+              // Reconnect button instead of "check connection".
+              const canReconnect = needsReconnect(ib.status);
               const status = ib.status === 'active' ? <Badge tone="live" dot="live">{t('inboxes.statusConnected')}</Badge>
                 : ib.status === 'pending' ? <Badge tone="neutral">{t('inboxes.statusPending')}</Badge>
                 : isError ? <Badge tone="red" dot="red">{t('inboxes.statusError')}</Badge>
@@ -1433,7 +1460,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, onConnec
                   {isError && ib.lastError ? <p className="inbox-mobile-error">{ib.lastError}</p> : null}
                   <div className="inbox-mobile-actions" onClick={e => e.stopPropagation()}>
                     <Btn variant="secondary" size="sm" onClick={() => setDetailInbox(ib)}>View details</Btn>
-                    {isError ? (
+                    {canReconnect ? (
                       <Btn variant="secondary" size="sm" icon="refresh" onClick={() => onReconnect(ib)}>{t('inboxes.reconnect')}</Btn>
                     ) : (
                       <Btn variant="ghost" size="sm" icon="refresh" className={checkingId === ib.id ? 'is-checking' : ''} disabled={checkingId === ib.id} onClick={() => handleCheck(ib)}>{t('inboxes.checkConnection')}</Btn>
@@ -2003,12 +2030,16 @@ function SignatureEditor({ inbox, onSave, t }) {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
         <span style={label}>{t('inboxes.detail.signature.replyModeLabel')}</span>
+        {/* This is the one select in the dashboard that sets its own padding
+            inline, and an inline style beats the padding-right that
+            select.input reserves for the dropdown caret. Reserve it here too,
+            or the caret sits on top of the last letter of the option label. */}
         <select
           className="input"
           value={replyMode}
           onChange={e => setReplyMode(e.target.value)}
           disabled={saving}
-          style={{ height: 32, padding: '0 8px', flex: '0 0 auto', width: 'auto' }}
+          style={{ height: 32, padding: '0 28px 0 8px', flex: '0 0 auto', width: 'auto' }}
         >
           <option value="always">{t('inboxes.detail.signature.replyModeAlways')}</option>
           <option value="first_only">{t('inboxes.detail.signature.replyModeFirstOnly')}</option>

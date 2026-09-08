@@ -6,7 +6,12 @@ export const EVENT_SCHEMA = Object.freeze({
   signup_started: { method: ['password', 'google', 'github'] },
   signup_completed: { method: ['password', 'google', 'github'] },
   inbox_connect_started: { provider: ['gmail', 'outlook', 'fastmail', 'icloud', 'yahoo', 'zoho', 'yandex', 'imap'] },
-  inbox_connected: { provider: ['gmail', 'outlook', 'fastmail', 'icloud', 'yahoo', 'zoho', 'yandex', 'imap'], connection_method: ['oauth', 'app_password'] },
+  // `connection_method` gained 'imap'. It was 'oauth' | 'app_password', and the
+  // dashboard sent 'app_password' for the generic IMAP connector too, which is
+  // the single largest provider bucket on this event: the split was wrong for
+  // the majority of the rows it had. The generic connector takes an ordinary
+  // mailbox password, not a generated app password, so it is its own method.
+  inbox_connected: { provider: ['gmail', 'outlook', 'fastmail', 'icloud', 'yahoo', 'zoho', 'yandex', 'imap'], connection_method: ['oauth', 'app_password', 'imap'] },
   mcp_connection_started: { client: ['claude', 'chatgpt', 'cursor', 'vscode', 'cline', 'windsurf', 'gemini', 'zed', 'jetbrains', 'raycast', 'warp', 'curl', 'unknown'] },
   mcp_connection_authorized: { client: ['claude', 'chatgpt', 'cursor', 'vscode', 'cline', 'windsurf', 'gemini', 'zed', 'jetbrains', 'raycast', 'warp', 'curl', 'unknown'], scope_profile: ['read_only', 'read_send', 'custom'] },
   api_key_revealed: { scope_profile: ['read_only', 'read_send', 'custom'] },

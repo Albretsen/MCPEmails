@@ -435,7 +435,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'success', category: funnelProvider(service), phase: 'complete', connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
-  return NextResponse.json({ success: true });
+  // The same success shape /api/inboxes/imap answers with. A branded card hides
+  // its ports rather than showing them, so nobody typed the numbers here, but
+  // the autodetect loop can still land somewhere other than the preset (a
+  // network that blocks 993 falls through to 143/STARTTLS), and what is stored
+  // is what worked. One shape across all three connect routes is what lets the
+  // dashboard say so with one code path instead of three.
+  return NextResponse.json({
+    success: true,
+    transport_adjusted: imapDetection.adjusted || smtpDetection.adjusted,
+    imap_port: resolvedImapPort,
+    imap_security: resolvedImapSecurity,
+    smtp_port: resolvedSmtpPort,
+    smtp_security: resolvedSmtpSecurity,
+  });
 }
 
 /**

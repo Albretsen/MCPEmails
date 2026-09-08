@@ -10,6 +10,9 @@ test('accepts documented low-cardinality event properties', () => {
   for (const provider of ['gmail', 'icloud', 'yahoo', 'zoho', 'yandex', 'fastmail', 'imap']) {
     assert.doesNotThrow(() => assertSafeAnalyticsEvent('inbox_connected', { provider, connection_method: 'app_password' }));
   }
+  // The generic connector reports itself. It used to be recorded as
+  // 'app_password', which it is not: it takes an ordinary mailbox password.
+  assert.doesNotThrow(() => assertSafeAnalyticsEvent('inbox_connected', { provider: 'imap', connection_method: 'imap' }));
 });
 
 test('rejects undeclared events and sensitive properties', () => {
