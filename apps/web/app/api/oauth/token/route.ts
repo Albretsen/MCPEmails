@@ -5,6 +5,7 @@ import { getActiveApiKeyNames, disambiguateApiKeyName } from '@/lib/api-keys/uni
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { sha256hex, computeS256Challenge, generateRefreshToken } from '@/lib/oauth/crypto';
 import { oauthError } from '@/lib/oauth/errors';
+import { resourceMatchesGrant, validateResourceIndicator } from '@/lib/oauth/resource';
 import { checkRateLimit } from '@/lib/rate-limit';
 import type { Json } from '@/types/database.types';
 
@@ -18,6 +19,21 @@ import type { Json } from '@/types/database.types';
  * Access tokens are short-lived mcpe_ API keys (1 hour).
  * Refresh tokens are mcpr_ values stored as SHA-256 hashes in oauth_refresh_tokens.
  * Refresh token rotation is enforced: each refresh issues a new pair and revokes the old one.
+ *
+ * RFC 8707 resource indicators (MCP authorization spec 2025-06-18+): an
+ * optional `resource` is accepted on both grants. When present it must be the
+ * canonical MCP endpoint (else `invalid_target`) and must agree with the
+ * resource recorded on the code or refresh-token chain (else `invalid_grant`).
+ * When absent the request behaves as before, so pre-2025-06-18 clients keep
+ * working, and the absence is recorded as NULL rather than defaulted.
+ *
+ * Why the resource server (the mcp-server edge function) does not itself check
+ * a token's audience: this AS issues tokens for exactly ONE resource, the MCP
+ * endpoint the Protected Resource Metadata advertises, and every token it
+ * mints is an mcpe_ API key that only that endpoint accepts. There is no
+ * second resource server a token could be replayed against, so the audience
+ * binding is total by construction; the explicit `resource` validation here
+ * is what keeps that true when a client asks for a token for somewhere else.
  *
  * Machine-to-machine: no user session required. Service-role client throughout.
  */
@@ -97,6 +113,14 @@ export async function POST(req: NextRequest): Promise<Response> {
   if (!grantType) return oauthError('invalid_request', 'grant_type is required.');
   if (!clientId)  return oauthError('invalid_request', 'client_id is required.');
 
+  // RFC 8707 §2: a resource we do not serve is `invalid_target`, decided
+  // before any lookup so it never depends on whether the client or code exists.
+  const resourceCheck = validateResourceIndicator(body['resource']);
+  if (!resourceCheck.ok) {
+    return oauthError(resourceCheck.error, resourceCheck.description);
+  }
+  const requestedResource = resourceCheck.resource;
+
   const service = createServiceRoleClient();
 
   // ── Client status check ────────────────────────────────────────────────────
@@ -126,7 +150,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     const { data: authCode, error: lookupErr } = await service
       .from('oauth_auth_codes')
-      .select('id, client_id, workspace_id, user_id, client_name, redirect_uri, code_challenge, code_challenge_method, scopes, inbox_ids')
+      .select('id, client_id, workspace_id, user_id, client_name, redirect_uri, code_challenge, code_challenge_method, scopes, inbox_ids, resource')
       .eq('code_hash', codeHash)
       .eq('client_id', clientId)
       .gt('expires_at', new Date().toISOString())
@@ -149,6 +173,13 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (authCode.code_challenge_method !== 'S256') {
       return oauthError('invalid_grant', 'Only S256 PKCE is supported.');
     }
+
+    // Audience binding (RFC 8707 §2.1): the resource named now must be the one
+    // the code was issued for. Either side may be absent (older client).
+    if (!resourceMatchesGrant(requestedResource, authCode.resource)) {
+      return oauthError('invalid_grant', 'resource does not match the authorization request.');
+    }
+    const boundResource = requestedResource ?? authCode.resource;
 
     // PKCE verification: BASE64URL(SHA-256(code_verifier)) must equal stored challenge
     const computedChallenge = computeS256Challenge(codeVerifier);
@@ -216,6 +247,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       inbox_ids:    authCode.inbox_ids ?? null,
       expires_at:   refreshExpiresAt,
       api_key_id:   keyRow.id,
+      resource:     boundResource,
     });
 
     await recordProductFunnelEvent(service, { workspaceId: authCode.workspace_id, stage: 'credential_created', outcome: 'success', category: 'oauth' });
@@ -225,6 +257,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       key_prefix: keyPrefix,
       scopes:     authCode.scopes,
       workspace_id: authCode.workspace_id,
+      resource:   boundResource,
     });
 
     return Response.json(
@@ -249,7 +282,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     const { data: rt, error: rtLookupErr } = await service
       .from('oauth_refresh_tokens')
-      .select('id, client_id, workspace_id, user_id, client_name, scopes, inbox_ids, expires_at, api_key_id')
+      .select('id, client_id, workspace_id, user_id, client_name, scopes, inbox_ids, expires_at, api_key_id, resource')
       .eq('refresh_hash', refreshHash)
       .eq('client_id', clientId)
       .is('revoked_at', null)
@@ -263,6 +296,14 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (!rt) {
       return oauthError('invalid_grant', 'Refresh token is invalid, revoked, or expired.');
     }
+
+    // Audience binding survives rotation: a refresh naming a different
+    // resource than the chain was issued for is refused, and the resource
+    // (or its recorded absence) carries forward onto the new token.
+    if (!resourceMatchesGrant(requestedResource, rt.resource)) {
+      return oauthError('invalid_grant', 'resource does not match the grant this refresh token belongs to.');
+    }
+    const boundResource = requestedResource ?? rt.resource;
 
     // Crash-safe rotation: we mint the new pair and persist the new refresh
     // token FIRST, then rotate the access token in place, and only revoke the
@@ -290,6 +331,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         inbox_ids:    rt.inbox_ids ?? null,
         expires_at:   newRefreshExpiresAt,
         api_key_id:   rt.api_key_id,
+        resource:     boundResource,
       })
       .select('id')
       .single();
@@ -369,6 +411,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       key_prefix: keyPrefix,
       scopes:     rt.scopes,
       workspace_id: rt.workspace_id,
+      resource:   boundResource,
     });
 
     return Response.json(
