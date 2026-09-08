@@ -44,6 +44,10 @@ export const metadata = {
   // pick the SVG below; it exists mainly because crawlers and directory sites
   // (Smithery, the Docker MCP catalog) fetch the literal /favicon.ico path and
   // fall back to a third-party favicon proxy when it 404s.
+  // The mark is deliberately full-bleed (no rounded corners, no transparent
+  // edge). Favicon proxies flatten onto white, so rounded corners came back as
+  // white wedges on every dark-themed directory page; platforms that want a
+  // rounded tile mask it themselves.
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any', type: 'image/x-icon' },
