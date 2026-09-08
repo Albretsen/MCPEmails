@@ -148,7 +148,6 @@
     "statusConnected": "Conectada",
     "statusPending": "Pendiente",
     "statusError": "Error",
-    "statusExpired": "Caducada",
     "reconnect": "Reconectar",
     "checkConnection": "Comprobar conexión",
     "disconnectInbox": "Desconectar bandeja",

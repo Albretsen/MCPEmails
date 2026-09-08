@@ -148,7 +148,6 @@
     "statusConnected": "Connectée",
     "statusPending": "En attente",
     "statusError": "Erreur",
-    "statusExpired": "Expirée",
     "reconnect": "Reconnecter",
     "checkConnection": "Vérifier la connexion",
     "disconnectInbox": "Déconnecter la boîte",

@@ -148,7 +148,6 @@
     "statusConnected": "Tilkoblet",
     "statusPending": "Venter",
     "statusError": "Feil",
-    "statusExpired": "Utløpt",
     "reconnect": "Koble til på nytt",
     "checkConnection": "Sjekk tilkobling",
     "disconnectInbox": "Koble fra innboks",

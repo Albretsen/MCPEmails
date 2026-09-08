@@ -1017,26 +1017,31 @@ export function WorkflowsPage({ mcpUrl }) {
 }
 
 /**
- * The two inbox states whose only cure is re-entering credentials.
+ * The one inbox state whose cure is re-entering credentials.
  *
- * 'error' is a connection that failed (a bad app password, an IMAP host that
- * stopped answering, an OAuth refresh that came back invalid_grant). 'revoked'
- * is the state the badge calls "Expired": the credential columns have been
- * nulled, so there is nothing left to retry with.
+ * 'error' is a connection that failed: a bad app password, an IMAP host that
+ * stopped answering, an OAuth refresh that came back invalid_grant. Those rows
+ * get Reconnect instead of the "check connection" button, which can only ever
+ * confirm what the badge already said.
  *
- * Both list layouts used to offer Reconnect on 'error' only, which left an
- * expired row with a "check connection" button that can only ever confirm what
- * the badge already said. The detail modal has always shown Reconnect
- * regardless of status; this is the list agreeing with it.
+ * There is deliberately NO branch for 'revoked' here, and no "Expired" badge
+ * anywhere in this file any more. 'revoked' cannot reach this list: all three
+ * writers of it (inboxes/[id], workspaces/[id], user/delete-account) set
+ * deleted_at in the same update, and every query behind this page filters
+ * `.is('deleted_at', null)`. Checked against production on 2026-09-08: 40 rows
+ * carry status 'revoked' and every one of them is soft-deleted, against 356
+ * live inboxes. The failures that actually mean "this credential stopped
+ * working", including the Gmail token refresh, write 'error'. A revoked row
+ * that somehow arrived would fall through to the neutral badge that prints the
+ * raw status, which is honest about not knowing rather than inventing a state
+ * name for it.
  *
  * onReconnect (App.jsx's onReconnectInbox) branches on the inbox's transport,
  * not on its status: an IMAP row re-opens the connect form it was created
- * with, an OAuth row goes to /auth/gmail or /auth/outlook. `hasImap` comes off
- * imap_host, which the disconnect path does NOT null, so a revoked IMAP row
- * still routes to the right form.
+ * with, an OAuth row goes to /auth/gmail or /auth/outlook.
  */
 function needsReconnect(status) {
-  return status === 'error' || status === 'revoked';
+  return status === 'error';
 }
 
 export function InboxesPage({ inboxes, planLimits, stripePrices = null, onConnect, onRemove, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onGoToKeys }) {
@@ -1382,7 +1387,6 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, onConnec
                         ) : null}
                       </div>
                     ) : null}
-                    {ib.status === "revoked" ? <Badge tone="amber"   dot="amber">{t('inboxes.statusExpired')}</Badge>   : null}
                   </td>
                   <td className="mono">{ib.calls.toLocaleString()}</td>
                   <td className="right" onClick={e => e.stopPropagation()}>
@@ -1427,14 +1431,10 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, onConnec
           <div className="inbox-list-mobile">
             {inboxes.map(ib => {
               const isError = ib.status === 'error';
-              // Separate from isError on purpose: only a real error has a
-              // message to print under the card, but both states get the
-              // Reconnect button instead of "check connection".
               const canReconnect = needsReconnect(ib.status);
               const status = ib.status === 'active' ? <Badge tone="live" dot="live">{t('inboxes.statusConnected')}</Badge>
                 : ib.status === 'pending' ? <Badge tone="neutral">{t('inboxes.statusPending')}</Badge>
                 : isError ? <Badge tone="red" dot="red">{t('inboxes.statusError')}</Badge>
-                : ib.status === 'revoked' ? <Badge tone="amber" dot="amber">{t('inboxes.statusExpired')}</Badge>
                 : <Badge tone="neutral">{ib.status}</Badge>;
               return (
                 <article
@@ -2081,14 +2081,12 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
     inbox.status === 'active'  ? t('inboxes.statusConnected') :
     inbox.status === 'pending' ? t('inboxes.statusPending')   :
     inbox.status === 'error'   ? t('inboxes.statusError')     :
-    inbox.status === 'revoked' ? t('inboxes.statusExpired')   :
     inbox.status;
 
   const statusBadge =
     inbox.status === 'active'  ? <Badge tone="live"    dot="live">{statusLabel}</Badge> :
     inbox.status === 'pending' ? <Badge tone="neutral">{statusLabel}</Badge> :
     inbox.status === 'error'   ? <Badge tone="red"     dot="red">{statusLabel}</Badge> :
-    inbox.status === 'revoked' ? <Badge tone="amber"   dot="amber">{statusLabel}</Badge> :
     <Badge tone="neutral">{statusLabel}</Badge>;
 
   return (
