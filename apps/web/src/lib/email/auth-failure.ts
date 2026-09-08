@@ -19,6 +19,8 @@ import {
  *     wants a generated app password (which itself requires 2FA to be on);
  *   - the account password was submitted where an app password belongs, which
  *     the credential's own shape gives away;
+ *   - a real app password that was only half-copied, which the same shape check
+ *     tells apart from the case above by WHICH rule it broke;
  *   - the host issues a login name that is not the email address;
  *   - and, finally, an ordinary wrong password.
  *
@@ -40,6 +42,20 @@ export type AuthFailureReason =
   | 'app_password_required'
   /** What was submitted is shaped like an account password, not a generated token. */
   | 'account_password_used'
+  /**
+   * The right alphabet but the wrong number of characters: a truncated or
+   * doubled paste of a real app password.
+   *
+   * Its own reason rather than a sub-case of `account_password_used`, because
+   * the browser already decides exactly this before submitting and calls it
+   * `app_password_length`. Collapsing the two here is what let one truncated
+   * token produce two contradictory sentences on two consecutive clicks: the
+   * client's own rule speaks once (`shapeWarnedFor` in ConnectModal), so the
+   * second Connect reached the server and came back saying the value looked
+   * like a normal account password, about a string the first click had already
+   * named as an incomplete app password.
+   */
+  | 'app_password_length'
   /** The server did not recognise the login name (which may not be the address). */
   | 'login_username_required'
   /** Nothing more specific: the credential was simply refused. */
@@ -115,12 +131,20 @@ export function classifyAuthFailure(input: AuthFailureInput): AuthFailureReason 
   // 4. We can see what they typed, and it is not one of this provider's tokens.
   //    Only for providers that refuse account passwords outright: elsewhere an
   //    unusual-looking password is just a password.
+  //
+  //    WHICH rule it broke is carried through rather than flattened. A string
+  //    of the right characters and the wrong length is a real app password that
+  //    was cut off in the copy, and telling that person they submitted their
+  //    normal password is both wrong and unactionable: the fix is to paste the
+  //    whole token, not to go and generate a different one. The shape module
+  //    already separates the two problems, and the client already has copy for
+  //    both, so the only thing missing was carrying the distinction across.
   if (
     input.policy?.requiresAppPassword &&
     input.shape &&
     input.shape.ok === false
   ) {
-    return 'account_password_used';
+    return input.shape.problem === 'wrong_length' ? 'app_password_length' : 'account_password_used';
   }
 
   // 5. The provider refuses account passwords, and the server told us nothing

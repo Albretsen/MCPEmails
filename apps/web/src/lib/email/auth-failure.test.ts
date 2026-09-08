@@ -70,9 +70,44 @@ test('a submitted account password is named as one', () => {
   // typed rather than about the provider in general.
   assert.equal(classify('Sommer2024!', 'icloud', 'NO [AUTHENTICATIONFAILED] Authentication failed'), 'account_password_used');
   assert.equal(classify('MyYahooPw2024', 'yahoo', 'NO (#MBR1212) Incorrect username or password.'), 'account_password_used');
-  // A half-pasted token is also not app-password-shaped, and the sub-case is
-  // still "this is not a usable app password".
-  assert.equal(classify('qwertyuiop', 'yahoo', 'NO Invalid credentials'), 'account_password_used');
+});
+
+test('a half-pasted token is named as a length problem, not as an account password', () => {
+  // The two shape problems are different mistakes with different fixes: one
+  // person has to paste the rest of the token they already hold, the other has
+  // to go and generate one. They used to collapse into `account_password_used`
+  // here, which is how one truncated string got two contradictory diagnoses on
+  // two consecutive clicks: the browser's own rule (ConnectModal's
+  // `shapeWarnedFor`) speaks once and says "not a complete app password", then
+  // the second Connect reached this classifier and came back saying it looked
+  // like a normal password.
+  assert.equal(classify('qwertyuiop', 'yahoo', 'NO Invalid credentials'), 'app_password_length');
+  // Right alphabet, too MANY characters: a doubled paste is the same problem.
+  assert.equal(classify('abcdefghijklmnopqrstuvwxyz', 'icloud', 'NO [AUTHENTICATIONFAILED] Authentication failed'), 'app_password_length');
+  // Apple displays its token hyphenated, so the separators must not be counted
+  // as the thing that made it the wrong length.
+  assert.equal(classify('abcd-efgh-ijkl-mnop', 'icloud', 'NO [AUTHENTICATIONFAILED] Authentication failed'), 'app_password_required');
+  // And the distinction survives the route-level wrapper, which is what the
+  // dashboard actually reads: it maps the reason to its own headline, and
+  // `app_password_length` has a different one from `account_password_used`.
+  const { reason, fields } = explainAuthFailure({
+    detail: 'NO (#MBR1212) Incorrect username or password.',
+    email: 'someone@yahoo.com',
+    host: 'imap.mail.yahoo.com',
+    secret: 'qwertyuiop',
+  });
+  assert.equal(reason, 'app_password_length');
+  assert.equal(fields.auth_reason, 'app_password_length');
+  assert.equal(fields.auth_provider, 'yahoo');
+});
+
+test('a length problem still needs a provider that fixes a format', () => {
+  // Zoho publishes no format, so nothing is claimed about the string's length
+  // and the answer stays the policy-level one.
+  assert.equal(classify('qwertyuiop', 'zoho', 'NO Invalid credentials'), 'app_password_required');
+  // An unidentified host has no shape rule at all, so an odd-length password is
+  // just a password.
+  assert.equal(classify('qwertyuiop', null, 'NO Invalid credentials'), 'password_rejected');
 });
 
 test('a well-formed token on an app-password provider still says an app password is required', () => {

@@ -1119,9 +1119,105 @@ body { background: var(--bg-page); }
   width: 100%;
   box-sizing: border-box;
 }
+/**
+ * `appearance: none` strips the native dropdown arrow, and for a long time
+ * nothing replaced it: every select in the dashboard rendered as a plain box
+ * indistinguishable from a text input beside it. That is worst in the connect
+ * modal, which now has six of them (two ports, two transport-security pickers,
+ * Zoho region and Zoho account type, plus a Yandex account type on that
+ * branch), and where a port select sitting next to a host TEXT field silently
+ * invited people to type a number into it.
+ *
+ * The caret is a background image rather than a pseudo-element because a
+ * <select> is a replaced element: ::after on it is not rendered by any engine,
+ * and wrapping every select in a positioned container would mean touching the
+ * markup of files this change does not own. background-image works everywhere
+ * and needs no JSX at all.
+ *
+ * currentColor cannot appear inside a data: URI (the SVG is a separate
+ * document and does not inherit the page's colour), so the caret ships as a
+ * variable holding one URI per theme: --ink-500 on light, the dark theme's
+ * --fg-3 (#8389A6) on dark. Both are the muted-text colour, which is what the
+ * native caret approximates.
+ *
+ * padding-right reserves the caret's column so a long option label ends before
+ * the arrow instead of running under it. 30px = 10px inset + 12px glyph + 8px
+ * gap, and it is set on the shorthand-free property so a rule that only sets
+ * `padding` on one specific select does not have to know the number.
+ */
 select.input {
   -webkit-appearance: none;
   appearance: none;
+  --select-caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%23626A7D' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E");
+  padding-right: 30px;
+  background-image: var(--select-caret);
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px 12px;
+}
+html[data-theme="dark"] select.input {
+  --select-caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%238389A6' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E");
+}
+/* A disabled select (the identity fields the connect modal locks on reconnect)
+   keeps the caret, because it is still a select and still says so; it is only
+   dimmed, so "you cannot change this" and "this is a dropdown" both read. */
+select.input:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* === Touch targets ====================================================== */
+/**
+ * Everything clickable in the dashboard was sized for a mouse: .btn is 34px
+ * tall (28px at .btn-sm), the icon-only variants are ~34px wide, and .input is
+ * 36px. Only .inbox-mobile-actions .btn had a mobile bump, to 36px. All of
+ * that is under the 44px minimum a finger needs, which on a phone is every
+ * modal footer, every row action and every field.
+ *
+ * The controls take a REAL 44x44 minimum, rather than the invisible ::after
+ * overlay that would have kept every button looking 34px tall. The overlay was
+ * built and measured first, and it was abandoned because an overlay does not
+ * reflow: it reaches over whatever sits next to the button, and the LAST
+ * overlay in DOM order wins the overlap. Measured with elementFromPoint at
+ * 375px, the two action rows that wrap (the inbox cards' and the inbox detail
+ * modal's) each handed a strip under one button to the button below it, and in
+ * the inbox table's action cell, where the pair stacks with a ZERO gap once
+ * the column is narrow, the disconnect button's overlay covered the bottom 8px
+ * of the Reconnect button itself. Enlarging a target must not hand a tap to
+ * the destructive control beside it, so the controls take the space rather
+ * than borrow it.
+ *
+ * min-height/min-width rather than a fixed size: a button that is already
+ * wider than 44px keeps its width, and only the short axis grows. Buttons
+ * therefore get taller on a phone (34px -> 44px, 28px for .btn-sm) and
+ * icon-only buttons get wider (34px -> 44px). That is the point.
+ *
+ * Scoped to coarse pointers and to phone widths, so a desktop window with a
+ * mouse is untouched.
+ */
+@media (pointer: coarse), (max-width: 767px) {
+  .btn,
+  .menu-btn,
+  .toast-close,
+  .toast-action {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .input,
+  select.input,
+  textarea.input {
+    min-height: 44px;
+  }
+  /* The sidebar rows and the two topbar controls. All of them are full-width
+     or fixed-width rows that only grow downwards, and the topbar is 60px tall,
+     so a 44px control still sits inside it with room to spare. */
+  .nav-item,
+  .ws-switcher-btn,
+  .ws-menu-item,
+  .topbar .search,
+  .topbar .mcp-link {
+    min-height: 44px;
+  }
 }
 
 /* === Host/port row in ConnectModal (generic IMAP) ======================= */
@@ -1434,7 +1530,11 @@ select.input {
   .inbox-mobile-meta span { display: inline-flex; align-items: center; gap: 5px; }
   .inbox-mobile-error { margin: 10px 0 0; color: var(--red-700); font: 12px/1.45 var(--font-sans); }
   .inbox-mobile-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
-  .inbox-mobile-actions .btn { min-height: 36px; }
+  /* 44px, not the 36px this bump started at. It is more specific than the
+     `.btn` minimum in the touch-target rules above, so leaving it at 36 would
+     have made the inbox cards the one row in the dashboard still under the
+     minimum, which is the opposite of what it was added for. */
+  .inbox-mobile-actions .btn { min-height: 44px; }
 
   /* Provider grid: 2 columns on mobile so chips aren't tiny */
   .provider-grid {
@@ -1455,9 +1555,14 @@ select.input {
   .topbar .mcp-link .mcp-link-url {
     display: none;
   }
+  /* 44, not the 36 this started at. With the URL text hidden this is a bare
+     icon button, and it sits later in the file than the touch-target minimum
+     above at the same specificity, so 36 would have quietly won and left the
+     topbar's only action under the minimum. The topbar is 60px tall, so 44
+     still fits inside it. */
   .topbar .mcp-link {
-    min-width: 36px;
-    min-height: 36px;
+    min-width: 44px;
+    min-height: 44px;
     padding: 0 10px;
   }
 

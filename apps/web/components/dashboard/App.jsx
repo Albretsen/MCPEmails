@@ -37,6 +37,33 @@ const SEED_ACTIVITY = [
   { tool: "email_compose",  account: "personal",     time: "14m ago",  ok: true },
 ];
 
+/**
+ * The name a person would recognise for a transport security mode.
+ *
+ * Reads the connect modal's own two labels rather than inventing a second pair,
+ * so the toast that reports which mode a mailbox connected on and the select the
+ * user chose it in cannot end up calling the same thing two different names.
+ * Anything that is not STARTTLS is implicit TLS: those are the only two values
+ * the routes and the database column carry.
+ */
+function securityLabel(tr, security) {
+  return tr(security === 'starttls' ? 'connect.securityStarttls' : 'connect.securityTls');
+}
+
+/**
+ * How a provider's inbox was connected, for the `inbox_connected` event.
+ *
+ * Only the OAuth callbacks come back through a query parameter, so this answers
+ * for that path alone: Gmail and Outlook are the two providers with a consent
+ * screen, and everything else that redirects here arrived with a credential.
+ * The in-app connect path does not guess: ConnectModal knows which endpoint it
+ * called and says so directly.
+ */
+function connectionMethodForCallback(provider) {
+  if (provider === 'gmail' || provider === 'outlook') return 'oauth';
+  return provider === 'generic' || provider === 'imap' ? 'imap' : 'app_password';
+}
+
 function readQuery(searchParams, key) {
   return searchParams?.get(key) || null;
 }
@@ -261,7 +288,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     if (connectedParam) {
       trackProductEvent('inbox_connected', {
         provider: connectedParam === 'generic' ? 'imap' : connectedParam,
-        connection_method: ['gmail', 'outlook'].includes(connectedParam) ? 'oauth' : 'app_password',
+        connection_method: connectionMethodForCallback(connectedParam),
       });
       const label = connectedParam.charAt(0).toUpperCase() + connectedParam.slice(1);
       toast({ message: tr('app.connectedSuccess', { provider: label }), variant: 'success' });
@@ -641,8 +668,29 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     toast({ message: tr('app.apiKeyUpdated'), variant: 'success' });
   };
 
-  const onConnect = ({ label, provider, address }) => {
-    trackProductEvent('inbox_connected', { provider, connection_method: 'app_password' });
+  /**
+   * A mailbox has just been verified and saved.
+   *
+   * `connectionMethod` and `transport` both come from ConnectModal, which is
+   * the only place that knows them: it picked the endpoint, and it read the
+   * route's answer.
+   *
+   * @param {'imap'|'app_password'} [connectionMethod] - Which connector was
+   *   used. Falls back to 'app_password' only for a caller that predates the
+   *   field; every current caller sends one.
+   * @param {object|null} [transport] - Present only when the route reports that
+   *   the settings it connected on are not the ones that were submitted.
+   */
+  const onConnect = ({ label, provider, address, connectionMethod, transport }) => {
+    // This used to say 'app_password' unconditionally, which is wrong for the
+    // generic IMAP connector: 'imap' is the largest provider bucket on this
+    // event, so the connection-method split was wrong for most of the rows it
+    // had. It is not a cosmetic label either. It is the field that says
+    // whether the app-password default is carrying the traffic OAuth used to.
+    trackProductEvent('inbox_connected', {
+      provider,
+      connection_method: connectionMethod ?? 'app_password',
+    });
     // Optimistic update: the real row will appear on next page load via router.refresh().
     const next = { id: String(Date.now()), label, address: address || label, provider, status: "active", calls: 0 };
     // On a reconnect the row already exists — update it in place (clear the error,
@@ -658,7 +706,34 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     });
     setReconnectInbox(null);
     setShowConnect(false);
-    toast({ message: tr('app.inboxConnectedSuccess', { label }), variant: 'success' });
+    // Say which settings the mailbox is actually on, when they are not the ones
+    // the user submitted. All three connect routes autodetect the transport and
+    // store what worked, and they have always reported it back; nothing read
+    // the answer, so someone who typed 993 implicit TLS and was connected on
+    // 143 STARTTLS closed a form still showing 993 and heard only "connected".
+    //
+    // Still a success toast, and it still leads with the connection working.
+    // The settings are stated, not apologised for: nothing went wrong, and the
+    // only person who needs the sentence is the one who would otherwise find a
+    // different number on the Inboxes page later and have to work out why.
+    if (transport) {
+      toast({
+        message: tr('app.inboxConnectedAdjusted', {
+          label,
+          imapPort: String(transport.imapPort),
+          imapSecurity: securityLabel(tr, transport.imapSecurity),
+          smtpPort: String(transport.smtpPort),
+          smtpSecurity: securityLabel(tr, transport.smtpSecurity),
+        }),
+        variant: 'success',
+        // Longer than the default: it carries four values a reader may want to
+        // note down, and the default success dismissal is tuned for a sentence
+        // with none.
+        duration: 10000,
+      });
+    } else {
+      toast({ message: tr('app.inboxConnectedSuccess', { label }), variant: 'success' });
+    }
     if (firstrun || onboardingClient) {
       // Continue the chosen-client guide instead of dropping every provider
       // into a generic API-key screen.
