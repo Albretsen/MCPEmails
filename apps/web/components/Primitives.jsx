@@ -52,11 +52,29 @@ export function Badge({ tone = "neutral", dot, children }) {
   );
 }
 
-export function Btn({ variant = "primary", size = "md", icon, children, onClick, type, className = "", disabled = false, title, "aria-label": ariaLabel }) {
-  const cls = "btn btn-" + variant + (size === "sm" ? " btn-sm" : "") + (disabled ? " btn-disabled" : "") + " " + className;
+/**
+ * `busy`: a request started by this button is still in flight.
+ *
+ * This button had no busy state at all, which is what left the connect modal
+ * showing a disabled button and nothing else for the up-to-40 seconds a mail
+ * server check can take (lib/email/transport-autodetect.ts: two protocols in
+ * sequence, PROTOCOL_BUDGET_MS of 20s each). The caller's own workaround was to
+ * drop the icon while submitting, so the button silently got NARROWER at the
+ * exact moment it needed to say more.
+ *
+ * A spinner replaces the icon rather than sitting next to it, so the button's
+ * width does not jump, and `aria-busy` says the same thing to a screen reader
+ * that the animation says to everyone else. Busy implies disabled: a second
+ * click on a request that is already running is never what the user meant.
+ */
+export function Btn({ variant = "primary", size = "md", icon, children, onClick, type, className = "", disabled = false, busy = false, title, "aria-label": ariaLabel }) {
+  const inert = disabled || busy;
+  const cls = "btn btn-" + variant + (size === "sm" ? " btn-sm" : "") + (inert ? " btn-disabled" : "") + " " + className;
   return (
-    <button type={type || "button"} className={cls.trim()} onClick={onClick} disabled={disabled} title={title} aria-label={ariaLabel}>
-      {icon ? <Icon name={icon} size={size === "sm" ? 13 : 14} className="btn-ico" /> : null}
+    <button type={type || "button"} className={cls.trim()} onClick={onClick} disabled={inert} aria-busy={busy || undefined} title={title} aria-label={ariaLabel}>
+      {busy
+        ? <span className="btn-spinner" aria-hidden="true" />
+        : icon ? <Icon name={icon} size={size === "sm" ? 13 : 14} className="btn-ico" /> : null}
       {children}
     </button>
   );

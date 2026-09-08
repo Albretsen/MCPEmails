@@ -228,6 +228,47 @@ export function zohoHosts(
   return { imapHost: r.imapHost, smtpHost: r.smtpHost };
 }
 
+/**
+ * Read a stored Zoho IMAP host back into the two choices that produced it.
+ *
+ * `zohoHosts()` above is a one-way function: region plus account type in, a
+ * hostname out, and the hostname is the only one of the three that is
+ * persisted (inboxes.imap_host). Nothing stores which data center or which
+ * account class the user picked, so a reconnect form had no way to re-offer
+ * their answers and defaulted to the global data center and a personal
+ * mailbox for everyone. For a Zoho EU custom-domain mailbox on
+ * imappro.zoho.eu that meant resubmitting imap.zoho.com / personal, which
+ * cannot authenticate, and which the connect route's upsert would then have
+ * written over the correct host.
+ *
+ * This is the inverse. It is exact rather than a guess, because the forward
+ * mapping is exact: the account type is carried by the `imappro`/`smtppro`
+ * prefix and the region by the suffix that follows it, and every pair in
+ * ZOHO_REGIONS is distinct. A host that is not one this table can produce
+ * (another provider, or a Zoho data center added after this build) returns
+ * null, which the caller must read as "we do not know", never as "personal on
+ * .com".
+ *
+ * Accepts an IMAP or an SMTP host: the prefixes differ, the suffixes do not.
+ *
+ * @returns { region, accountType } or null when the host is not a known Zoho host.
+ */
+export function zohoSettingsFromHost(
+  host: string | null | undefined
+): { region: string; accountType: ZohoAccountType } | null {
+  const normalized = String(host ?? '').trim().toLowerCase();
+  if (!normalized) return null;
+  for (const region of ZOHO_REGIONS) {
+    for (const accountType of ['personal', 'organization'] as const) {
+      const hosts = zohoHosts(region.value, accountType);
+      if (normalized === hosts.imapHost || normalized === hosts.smtpHost) {
+        return { region: region.value, accountType };
+      }
+    }
+  }
+  return null;
+}
+
 /** Type guard: is the given string a branded service with a fixed preset? */
 export function isBrandedImapService(value: string): value is BrandedImapService {
   return (
@@ -280,6 +321,15 @@ export function securityForPort(protocol: 'imap' | 'smtp', port: number): SmtpSe
   const ports = MAIL_PORTS[protocol];
   if (port === ports.tls) return 'tls';
   if (port === ports.starttls) return 'starttls';
+  // 25 is the third port the server will accept for SMTP (see
+  // ALLOWED_MAIL_PORTS in lib/email/host-guard.ts) and the connect form now
+  // offers it, so it has to carry its pairing here or picking it would leave
+  // implicit TLS selected against a plaintext listener: a guaranteed handshake
+  // failure. It is not in MAIL_PORTS because that table is the "which port
+  // does this security mode use" direction and 25 is not the port either mode
+  // picks. The pairing itself is the one lib/email/transport-autodetect.ts
+  // already retries on: { port: 25, security: 'starttls' }.
+  if (protocol === 'smtp' && port === 25) return 'starttls';
   return null;
 }
 

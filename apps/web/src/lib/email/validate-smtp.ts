@@ -280,7 +280,7 @@ export async function validateSmtpCredential(cred: SmtpCredential): Promise<Smtp
       if (error.code === 'ECONNREFUSED') return { ok: false, code: 'CONNECTION_REFUSED', message: 'Nothing is listening for outgoing mail on that server. Check the SMTP host.', phase };
       // Not retryable on another port: DNS has no answer regardless of port.
       if (error.code === 'ENOTFOUND' || error.code === 'EAI_AGAIN') return { ok: false, code: 'HOST_NOT_FOUND', message: SMTP_HOST_NOT_FOUND_MESSAGE, phase };
-      if (phase === 'tls' || error.code?.startsWith('ERR_TLS') || error.code?.includes('CERT')) return { ok: false, code: 'TLS_HANDSHAKE_FAILED', message: 'The outgoing server would not start an encrypted session on any standard submission port. If your provider gave you a non-standard port, enter it under Advanced settings.', phase };
+      if (phase === 'tls' || error.code?.startsWith('ERR_TLS') || error.code?.includes('CERT')) return { ok: false, code: 'TLS_HANDSHAKE_FAILED', message: 'The outgoing server would not start an encrypted session on any standard submission port. If your provider gave you a non-standard port, enter it in the SMTP port field.', phase };
       return { ok: false, code: 'SMTP_PROTOCOL_ERROR', message: 'The outgoing server answered with something that is not SMTP. Check that the host is the SMTP host rather than a webmail or website address.', phase };
     }
   })();

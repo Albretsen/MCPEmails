@@ -82,7 +82,7 @@ export const IMAP_VALIDATION_MESSAGES: Record<ImapValidationErrorCode, string> =
   CONNECTION_REFUSED: 'Nothing is listening for mail on that server. Check the host name against the settings your provider published.',
   CONNECTION_TIMEOUT: 'The server never answered, on any of the standard mail ports. That usually means the host name is wrong, or a firewall is blocking the connection.',
   HOST_NOT_FOUND: 'That server name does not exist. Check it for a typo: it is the mail host from your provider, which is often different from your website address.',
-  TLS_HANDSHAKE_FAILED: 'The server would not start an encrypted session on any standard mail port. If your provider gave you a non-standard port, enter it under Advanced settings.',
+  TLS_HANDSHAKE_FAILED: 'The server would not start an encrypted session on any standard mail port. If your provider gave you a non-standard port, enter it in the IMAP port field.',
   IMAP_PROTOCOL_ERROR: 'The server answered with something that is not IMAP. Check that the host is the IMAP host rather than a webmail or website address.',
 };
 

@@ -241,6 +241,43 @@ body { background: var(--bg-page); }
 .btn.is-checking .btn-ico { animation: mcp-spin 0.7s linear infinite; transform-origin: 50% 50%; }
 @keyframes mcp-spin { to { transform: rotate(360deg); } }
 
+/* Btn's `busy` state: a ring in the icon's slot, so the button neither loses
+   its icon nor changes width while a request is running. It sits in the same
+   14px box .btn-ico occupies, and it borrows currentColor so it reads on the
+   primary, secondary and ghost variants without a per-variant rule. */
+.btn .btn-spinner {
+  width: 14px; height: 14px; flex-shrink: 0;
+  border-radius: 999px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: mcp-spin 0.7s linear infinite;
+}
+.btn-sm .btn-spinner { width: 13px; height: 13px; border-width: 1.75px; }
+/* A busy button is disabled, but it must not read as "off": it is the only
+   thing on screen saying the click landed, and .btn-disabled's 0.48 leaves the
+   spinner too faint to notice on a 34px button. */
+.btn[aria-busy="true"] { opacity: 0.75; cursor: progress; }
+/* Reduced motion: slowed rather than stopped. A ring that does not turn says
+   nothing at all, which is the state this whole affordance exists to end. */
+@media (prefers-reduced-motion: reduce) {
+  .btn .btn-spinner { animation-duration: 2.4s; }
+}
+
+/* The same ring, at text scale, for the connect modal's in-progress line. It
+   sits in the body where the button is not always in view: the modal body
+   scrolls independently of the footer, so on a long form the spinning button
+   can be off screen while the user is looking at the fields. */
+.cm-check-spinner {
+  width: 13px; height: 13px; flex-shrink: 0;
+  border-radius: 999px;
+  border: 2px solid var(--brand);
+  border-top-color: transparent;
+  animation: mcp-spin 0.7s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cm-check-spinner { animation-duration: 2.4s; }
+}
+
 /* === Badges === */
 .badge { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px;
   border-radius: 999px; font-family: var(--font-sans); font-size: 12px; font-weight: 500; line-height: 1;
@@ -282,6 +319,28 @@ body { background: var(--bg-page); }
 .modal > form { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
 .modal-body { padding: 16px 24px 24px; display: flex; flex-direction: column; gap: 12px; flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 .modal-foot { padding: 16px 24px; background: var(--ink-25); border-top: 1px solid var(--border-1); display: flex; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
+/* The paywall footer, which is the widest row any modal has: Cancel, "Compare
+   all plans" and a CTA that carries a plan name and a price. Every item in it
+   is white-space: nowrap (.btn is, and the two anchors set it themselves), the
+   row does not wrap by default, and .modal is overflow: hidden, so anything
+   that does not fit is CUT OFF rather than scrolled to. Cancel is the item at
+   the flex-start end, so Cancel is what disappears.
+
+   The wrap used to be an inline style applied only when the annual interval was
+   chosen, on the reasoning that "$48/yr" was the label that did not fit. That
+   was measured in English. The Norwegian monthly row needs about 480px
+   ("Avbryt" + "Sammenlign alle planer" + "Oppgrader til Personal, $5/md") and
+   the modal is ~360px wide at a 375px viewport, so the default interval clipped
+   Cancel too. Wrapping unconditionally costs nothing when the row fits: with
+   justify-content flex-end, a row that fits on one line still renders on one
+   line. */
+.modal-foot-limit { flex-wrap: wrap; }
+/* And at phone widths the same is true of every modal footer, not only the
+   paywall one: a two-button row of translated labels can exceed 312px of
+   content box. Wrapping is always better than clipping an action. */
+@media (max-width: 479px) {
+  .modal-foot { flex-wrap: wrap; }
+}
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes pop  { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }
 
@@ -1067,17 +1126,43 @@ select.input {
 
 /* === Host/port row in ConnectModal (generic IMAP) ======================= */
 /**
- * On wide screens the host field and the port field sit side-by-side.
- * On ≤479px they stack vertically so neither overflows the modal.
+ * A host and its port are one answer, so they sit on one line: the host takes
+ * whatever width is left and the port takes a fixed column wide enough for the
+ * five digits a port can have, plus the number spinner.
+ *
+ * `align-items: flex-start` because the two columns are label-over-input pairs
+ * of different heights; without it the shorter one stretches and its input
+ * grows taller than its neighbour.
+ *
+ * `min-width: 0` on the host column is what stops the row overflowing: a flex
+ * item's default minimum width is its content, so a long placeholder or a long
+ * pasted hostname would push the port off the edge of the modal rather than
+ * shrink. The row still fits at 375px, where the modal is 96vw and the two
+ * columns share ~312px.
  */
 .host-port-row {
   display: flex;
+  align-items: flex-start;
   gap: 10px;
   flex-wrap: nowrap;
 }
+.host-port-row .host-field {
+  flex: 1 1 auto;
+  min-width: 0;
+}
 .host-port-row .port-field {
-  width: 96px;
+  width: 92px;
   flex-shrink: 0;
+}
+/* Below 375px there is no longer room for a usable host box beside the port,
+   so the pair stacks. 375px itself is checked and stays side-by-side. */
+@media (max-width: 359px) {
+  .host-port-row {
+    flex-direction: column;
+  }
+  .host-port-row .port-field {
+    width: 100%;
+  }
 }
 
 /* === Overview two-column layout ========================================= */
@@ -1291,13 +1376,6 @@ select.input {
     max-width: 96vw;
   }
 
-  /* Host/port fields: stack vertically on very small screens */
-  .host-port-row {
-    flex-direction: column;
-  }
-  .host-port-row .port-field {
-    width: 100%;
-  }
 }
 
 /* =========================================================================

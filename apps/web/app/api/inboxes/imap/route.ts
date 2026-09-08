@@ -60,14 +60,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     error: userError,
   } = await supabase.auth.getUser();
 
+  // The dashboard can only tell an expired session from a broken mail server if
+  // this answer is machine-readable. Without a code it fell through to the
+  // client's generic "Connection failed. Please try again.", which is advice
+  // that can never work: the fix is signing in again, and the user retried the
+  // mailbox instead. The `error` sentence is unchanged.
   if (userError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized', error_code: 'session_expired' }, { status: 401 });
   }
 
   // 2. Resolve the active workspace.
   const workspaceId = await resolveActiveWorkspaceId(supabase, user.id);
   if (!workspaceId) {
-    return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
+  // Same reason as the 401 above: a code the client can turn into a sentence
+  // about the workspace rather than about the mail server.
+    return NextResponse.json({ error: 'Workspace not found.', error_code: 'workspace_not_found' }, { status: 403 });
   }
   // 2b. Membership is not permission. resolveActiveWorkspaceId only proves the
   //     caller belongs to this workspace, and connecting a mailbox attaches a
@@ -389,7 +396,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       reason: 'inbox_upsert_failed',
       workspaceId,
     });
-    return NextResponse.json({ error: 'Failed to save inbox. Please try again.' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to save inbox. Please try again.', error_code: 'save_failed' }, { status: 500 });
   }
 
   await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'success', category: 'generic_imap', phase: 'complete', connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
