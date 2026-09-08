@@ -60,7 +60,7 @@ MCP 邮件服务器用**动作**取而代之。代理看不见协议。它看到
 一次真实的交互长这样。比如你让 Claude 帮你了解一下收件箱的近况：
 
 1. 代理调用 \`inbox_list\`，找到你的工作 Gmail。
-2. 它带上 \`action: "list"\` 和 \`unread_only: true\` 调用 \`email_read\`，拿到有哪些新邮件。
+2. 它带上 \`action: "list"\` 和 \`unread: true\` 调用 \`email_read\`，拿到有哪些新邮件。
 3. 对任何看起来重要的邮件，它带上 \`action: "read"\` 调用 \`email_read\` 拉取完整正文。
 4. 它做总结，并且如果你已批准发送权限，它可以用 \`email_compose\`（\`action: "reply"\`）起草一封回复——这会自动设置好线程头，让回复落进正确的会话里。
 

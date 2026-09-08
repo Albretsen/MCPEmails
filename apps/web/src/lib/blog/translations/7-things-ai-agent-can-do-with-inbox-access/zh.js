@@ -21,7 +21,7 @@ const translation = {
 
 > 检查我的工作收件箱里过去 24 小时的未读邮件。把它们分成"今天得回复""仅供参考"和"新闻通讯/自动邮件"三组。对第一组，每封给我一句话说清对方想要什么。
 
-在底层，智能体会对 \`inbox_list\` 返回的那个收件箱调用 \`email_read\` 并带上 list 动作和 \`unread_only: true\`，再用 \`email_read\`（read 动作）读那几封看起来重要的，其余跳过。它可以把明显的噪音标为已读，免得继续撑大未读数。想要这套的更深入版本，[整理与总结收件箱实操手册](/blog/ai-agent-triage-summarize-inbox)逐个工具讲了一遍。
+在底层，智能体会对 \`inbox_list\` 返回的那个收件箱调用 \`email_read\` 并带上 list 动作和 \`unread: true\`，再用 \`email_read\`（read 动作）读那几封看起来重要的，其余跳过。它可以把明显的噪音标为已读，免得继续撑大未读数。想要这套的更深入版本，[整理与总结收件箱实操手册](/blog/ai-agent-triage-summarize-inbox)逐个工具讲了一遍。
 
 ### 2. 总结一条长邮件串
 

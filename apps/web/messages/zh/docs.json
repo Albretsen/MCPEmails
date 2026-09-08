@@ -63,7 +63,7 @@
     "infoFormat": "响应格式：<b>JSON-RPC 2.0</b>，成功的结果还会携带一个带类型的 <code>structuredContent</code> 对象",
     "handshakeLabel": "初始化握手",
     "pollingHeading": "轮询，而非推送",
-    "pollingBody": "MCPEmails 仅采用请求/响应模式：每个结果都来自你的智能体发起的工具调用。<b>没有 webhook、推送通知或由服务器发起的事件</b>，收到新邮件本身绝不会触发智能体调用。要对新邮件作出响应，请让你的智能体按计划<b>轮询</b>，例如按工作流所需的间隔调用 <code>email_read</code> 并设置 <code>action: \"list\"</code> 和 <code>unread_only: true</code>（注意上面的速率限制）。"
+    "pollingBody": "MCPEmails 仅采用请求/响应模式：每个结果都来自你的智能体发起的工具调用。<b>没有 webhook、推送通知或由服务器发起的事件</b>，收到新邮件本身绝不会触发智能体调用。要对新邮件作出响应，请让你的智能体按计划<b>轮询</b>，例如按工作流所需的间隔调用 <code>email_read</code> 并设置 <code>action: \"list\"</code> 和 <code>unread: true</code>（注意上面的速率限制）。"
   },
   "operations": {
     "eyebrow": "为真实的收件箱工作而建",
@@ -144,7 +144,6 @@
         "attachment_index": "要下载的附件的 0 基索引（action 'attachment'），与 'read' 返回的附件列表顺序一致。优先于 filename。当邮件恰好只有一个附件时两者均可省略。",
         "filename": "要下载的附件名称（action 'attachment'），不区分大小写的精确匹配。若已提供 attachment_index 则忽略。",
         "folder": "要列出的文件夹（action 'list'）。默认 \"INBOX\"。其他值：\"SENT\"、\"DRAFTS\"、\"TRASH\"。",
-        "unread_only": "仅返回未读邮件（action 'list'）。默认 false。",
         "limit": "要返回的最大结果数（action 'list' 或 'search'）。默认 20，最大 100。",
         "offset": "从零开始的分页偏移量（action 'list' 或 'search'）。默认 0。",
         "include_html": "包含净化后的 HTML 正文（action 'read'/'read_batch'）。默认 false。",
@@ -159,7 +158,7 @@
         "subject": "要在主题行中匹配的文本（action 'search'）。多词短语按原样匹配。",
         "body": "要在邮件正文中查找的自由文本（action 'search'）。（在 Gmail 上，这会匹配整封邮件，而不仅是正文。）",
         "text": "要在邮件任意位置匹配的自由文本，涵盖标头和正文（action 'search'）。",
-        "unread": "action 'search'：true = 仅未读邮件；false = 仅已读邮件；省略则两者皆可。",
+        "unread": "action 'list' 和 'search'：true = 仅未读邮件；false = 仅已读邮件；省略则两者皆可。",
         "has_attachment": "action 'search'：true = 仅含附件的邮件。通用 IMAP 不支持（在那里被忽略）。",
         "flagged": "action 'search'：true = 仅已标记/加星的邮件。Outlook/Graph 不支持（在那里被忽略）。",
         "since": "ISO 8601 日期或日期时间（action 'search'）；返回在该时刻当时或之后（>=）收到的邮件。例如 \"2026-06-01\"。",
@@ -279,7 +278,7 @@
     },
     "schedule": {
       "title": "定时发送",
-      "desc": "通过服务器端队列安排邮件在未来发送。设置 action：'create'（to/subject/body 加上 ISO 8601 格式的 send_at 时间戳，收件人和正文会立即校验，无效的发送不会入队）、'list'（待发送的定时任务，最近的优先，可按收件箱筛选），或 'cancel'（scheduled_send_id，只能取消仍为 'pending' 的发送）。调度器每分钟运行一次，因此实际投递可能在 send_at 之后最多 60 秒。",
+      "desc": "通过服务器端队列安排邮件在未来发送。设置 action：'create'（to/subject/body 加上 ISO 8601 格式的 send_at 时间戳，收件人和正文会立即校验，无效的发送不会入队）、'list'（待发送的定时任务，最近的优先，可按收件箱筛选），或 'cancel'（id，只能取消仍为 'pending' 的发送）。调度器每分钟运行一次，因此实际投递可能在 send_at 之后最多 60 秒。",
       "params": {
         "action": "要执行的操作：\"create\"、\"list\" 或 \"cancel\"。决定其他哪些参数适用。",
         "inbox_id": "要从中发送（action 'create'）或用于筛选（action 'list'）的收件箱的 UUID。可选：当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
@@ -293,7 +292,7 @@
         "html_body": "正文的可选 HTML 版本（action 'create'）。",
         "reply_to": "可选的 Reply-To 标头地址（action 'create'）。",
         "attachments": "文件附件（action 'create'）。仅支持内联字节：'{' filename、mime_type、data（base64）'}'。source_message_id 引用形式仅在 email_compose 中可用，此处不支持。最多 20 项，共 10 MB。",
-        "scheduled_send_id": "要取消的定时发送的 UUID（action 'cancel'）。",
+        "id": "要取消的定时发送的 UUID（action 'cancel'），即 'create' 或 'list' 返回的值。",
         "limit": "最大结果数（action 'list'）。默认 20，最大 100。",
         "idempotency_key": "可选的不透明键，用于创建单次定时发送。仅在 24 小时内重试完全相同的创建请求时才可重复使用。"
       }
@@ -394,7 +393,8 @@
     "retryableNo": "否",
     "exampleLabel": "错误响应示例",
     "rows": {
-      "auth": "API 密钥缺失、格式错误、已撤销或已过期。当 API 密钥缺少所调用工具所需的权限范围时也会返回。",
+      "auth": "API 密钥缺失、格式错误、已撤销或已过期（HTTP 401）。",
+      "scope": "密钥有效，但缺少所调用工具操作所需的权限范围（HTTP 403）。data.error_code 为 \"insufficient_scope\"，data.required_scopes 列出可授权该调用的范围；WWW-Authenticate 响应头会重复该信息，以便 OAuth 客户端申请更多权限。",
       "method": "未知的 JSON-RPC 方法（例如调用 initialize、tools/list、tools/call 以外的方法）",
       "param": "未知的工具名称，或 tools/call 中缺少 / 无效的参数",
       "rate": "超出每密钥或每工作区的速率限制（HTTP 429）。data.error_code 始终为 \"rate_limit_exceeded\"。重试前请等待 data.retry_after 秒，或读取 Retry-After 响应头。",

@@ -257,6 +257,17 @@ import {
   idempotencyResultSnapshot,
   noNewEffectPhrase,
 } from "./idempotency-replay.ts";
+import { SERVER_VERSION } from "./server-version.ts";
+import {
+  KNOWN_PROTOCOL_VERSIONS,
+  readProtocolVersionHeader,
+} from "./protocol-version-header.ts";
+import { normalizeArgumentAliases } from "./argument-aliases.ts";
+import {
+  buildInsufficientScopeChallenge,
+  insufficientScopeErrorData,
+  isInsufficientScopeError,
+} from "./scope-challenge.ts";
 
 // ---------------------------------------------------------------------------
 // Supabase service-role client
@@ -824,12 +835,12 @@ const SERVER_INSTRUCTIONS =
   "inboxes do I have?', call `inbox_list`.\n\n" +
   "TOOL SHAPE: Tools are grouped by resource and take an `action` argument:\n" +
   "• inbox_list — list the accessible inboxes.\n" +
-  "• email_read — action: list | read | read_batch | search | attachment.\n" +
+  "• email_read — action: list | read | read_batch | search | attachment | extract | original.\n" +
   "• email_organize — action: move | move_batch | copy | copy_batch | flag | archive | search_and_move.\n" +
   "• email_delete — action: delete | delete_batch | search_and_delete (destructive — your client may ask you to confirm).\n" +
   "• email_compose — action: send | reply | forward.\n" +
   "• folder — action: list | create | rename | delete.\n" +
-  "• draft — action: list | create | update | send.\n" +
+  "• draft — action: list | create | reply | update | send | delete.\n" +
   "• schedule — action: create | list | cancel.\n" +
   "• signature — action: get | set (read or configure the inbox's auto-appended signature).\n" +
   "• automation (action: create | list | get | update | enable | disable | delete | runs | preview). " +
@@ -872,10 +883,30 @@ const RPC_INVALID_PARAMS = -32602;
 const RPC_RESOURCE_NOT_FOUND = -32002;
 
 /**
- * MCPEmails custom code: invalid, expired, or revoked API key.
- * Same code used for scope violations — deliberately vague to prevent oracle attacks.
+ * MCPEmails custom code: invalid, expired, or revoked API key. Every
+ * authentication failure shares this one code and one message so the response
+ * is not an oracle that distinguishes "not found" from "revoked" from
+ * "expired". Always paired with HTTP 401.
+ *
+ * Until 2026-09-08 this code was also used for scope violations; those now
+ * have their own code, RPC_INSUFFICIENT_SCOPE, because the two need different
+ * client behaviour (get a new token vs. step up the existing one).
  */
 const RPC_INVALID_API_KEY = -32001;
+
+/**
+ * MCPEmails custom code: the key is valid but does not carry a scope the
+ * requested tool action needs. Paired with HTTP 403 and a WWW-Authenticate
+ * challenge (`error="insufficient_scope"`, RFC 6750 §3.1) so an OAuth client
+ * can re-consent for the missing scope rather than discarding its token,
+ * which is what a 401 would make it do. Inside the -32019..-32000
+ * implementation-defined sub-range for the same reason as
+ * RPC_RATE_LIMIT_EXCEEDED, and clear of -32000..-32003.
+ *
+ * Callers should branch on data.error_code === "insufficient_scope" rather
+ * than this numeric code, which is implementation detail.
+ */
+const RPC_INSUFFICIENT_SCOPE = -32004;
 
 /**
  * MCPEmails custom code: rate limit exceeded. Covers both the per-key rolling
@@ -3186,11 +3217,11 @@ const LEGACY_TOOLS: ToolDefinition[] = [
             "a folder or label name, or a folder id. Names and aliases resolve for " +
             "you, case-insensitively, so a label you just created by name works here.",
         },
-        unread_only: {
-          type: "boolean",
-          default: false,
-          description: "Return only unread messages.",
-        },
+        // The same tri-state as search's `unread`, under the same name, so the
+        // consolidated email_read advertises ONE property for the idea. The
+        // retired `unread_only` is still accepted on the wire; see
+        // argument-aliases.ts.
+        unread: { type: "boolean", description: searchDesc("unread") },
       },
       required: [],
       additionalProperties: false,
@@ -4925,29 +4956,21 @@ const LEGACY_TOOLS: ToolDefinition[] = [
       "Cancel a pending scheduled email send. Sets the status to 'cancelled' so the " +
       "dispatcher will not send the message. Only messages with status 'pending' can be " +
       "cancelled — messages already in 'sending', 'sent', or 'error' state cannot be " +
-      "cancelled. Use schedule_list to find the id. Pass either `id` (as returned by " +
-      "schedule_create / schedule_list) or its alias `scheduled_send_id` — both work.",
+      "cancelled. Use schedule_list to find the id. Pass `id` as returned by " +
+      "schedule_create / schedule_list.",
     requiredScope: "schedule:email",
     inputSchema: {
       type: "object",
       properties: {
+        // The retired alias `scheduled_send_id` is still accepted on the wire
+        // for clients holding a cached schema; see argument-aliases.ts.
         id: {
           type: "string",
           format: "uuid",
-          description: "Scheduled send UUID from a create or list call. Alias: " +
-            "scheduled_send_id.",
-        },
-        scheduled_send_id: {
-          type: "string",
-          format: "uuid",
-          description: "Alias of `id`; pass either one.",
+          description: "Scheduled send UUID from a create or list call.",
         },
       },
-      // Either `id` or `scheduled_send_id` satisfies the requirement.
-      anyOf: [
-        { required: ["id"] },
-        { required: ["scheduled_send_id"] },
-      ],
+      required: ["id"],
       additionalProperties: false,
     },
   },
@@ -6140,7 +6163,7 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       list: {
         legacy: "email_list",
         scope: "read:email",
-        hint: "recent messages, optionally by folder or unread",
+        hint: "recent messages, optionally by folder or unread (true/false/omit)",
       },
       read: {
         legacy: "email_read",
@@ -6389,7 +6412,21 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
   },
   schedule: {
     title: "Scheduled Send",
-    description: "Queue mail for later delivery, and manage what is queued.",
+    description:
+      "Queue a message from one inbox for delivery at a future time, and list " +
+      "or cancel what is queued. Use email_compose to send now; use this only " +
+      "when the user names a later time. send_at is an ISO 8601 timestamp WITH " +
+      "a timezone offset (\"2026-06-02T09:00:00+02:00\" or a trailing Z), in " +
+      "the future; the server dispatches within about 60 seconds of it, so it " +
+      "is not for second-precise timing. Recipients and body are validated at " +
+      "create time and an invalid message is never queued. Attachments here " +
+      "are inline base64 { filename, mime_type, data } only, 10 MB total; the " +
+      "{ source_message_id, attachment_index } reference form belongs to " +
+      "email_compose. 'list' returns pending sends earliest first with the " +
+      "`id` that 'cancel' takes; only a send still 'pending' can be cancelled. " +
+      "Every action needs the schedule:email scope. list and cancel results " +
+      "are your own queued data, not mailbox content, so they carry no " +
+      "untrusted_content flag.",
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     actions: {
       create: {
@@ -6405,7 +6442,7 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       cancel: {
         legacy: "schedule_cancel",
         scope: "schedule:email",
-        hint: "a pending send by `id`, alias `scheduled_send_id`",
+        hint: "a pending send by `id`",
       },
     },
   },
@@ -8649,7 +8686,8 @@ async function listGmailMessages(
   folder: string,
   limit: number,
   offset: number,
-  unreadOnly: boolean,
+  /** true = unread only; false = read only; undefined = both. */
+  unread: boolean | undefined,
 ): Promise<ListInboxResult> {
   const accessToken = await withFreshGmailToken(inbox);
   const label = gmailFolderToLabel(folder);
@@ -8672,7 +8710,8 @@ async function listGmailMessages(
       // Gmail's per-page maximum of 500.
       maxResults: String(Math.min(target - allRefs.length, 500)),
     });
-    if (unreadOnly) params.set("q", "is:unread");
+    if (unread === true) params.set("q", "is:unread");
+    else if (unread === false) params.set("q", "is:read");
     if (pageToken) params.set("pageToken", pageToken);
 
     const listResp = await fetch(
@@ -8730,8 +8769,13 @@ async function listGmailMessages(
             messagesTotal?: number;
             messagesUnread?: number;
           };
-          const exact = unreadOnly
+          const exact = unread === true
             ? labelData.messagesUnread
+            : unread === false
+            ? (typeof labelData.messagesTotal === "number" &&
+                typeof labelData.messagesUnread === "number"
+              ? labelData.messagesTotal - labelData.messagesUnread
+              : undefined)
             : labelData.messagesTotal;
           // Gmail does not maintain these counters for every label — some
           // system/virtual labels report 0 regardless of contents, which is how
@@ -9009,7 +9053,8 @@ async function listOutlookMessages(
   folder: string,
   limit: number,
   offset: number,
-  unreadOnly: boolean,
+  /** true = unread only; false = read only; undefined = both. */
+  unread: boolean | undefined,
 ): Promise<ListInboxResult> {
   const accessToken = await withFreshOutlookToken(inbox);
   const folderName = outlookWellKnownFolder(folder);
@@ -9022,7 +9067,8 @@ async function listOutlookMessages(
     $orderby: "receivedDateTime desc",
     $count: "true",
   });
-  if (unreadOnly) params.set("$filter", "isRead eq false");
+  if (unread === true) params.set("$filter", "isRead eq false");
+  else if (unread === false) params.set("$filter", "isRead eq true");
 
   const resp = await fetch(
     `https://graph.microsoft.com/v1.0/me/mailFolders/${folderName}/messages?${params}`,
@@ -9294,7 +9340,8 @@ async function listImapMessages(
   folder: string,
   limit: number,
   offset: number,
-  unreadOnly: boolean,
+  /** true = unread only; false = read only; undefined = both. */
+  unread: boolean | undefined,
 ): Promise<ListInboxResult> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
     throw new Error("imap_auth_failed");
@@ -9313,7 +9360,9 @@ async function listImapMessages(
 
     await client.selectMailbox(imapFolderName(folder));
 
-    const allUids = await client.uidSearch(unreadOnly ? "UNSEEN" : "ALL");
+    const allUids = await client.uidSearch(
+      unread === true ? "UNSEEN" : unread === false ? "SEEN" : "ALL",
+    );
     const total = allUids.length;
 
     // Newest first: highest UID first.
@@ -9973,7 +10022,8 @@ interface ListInboxArgs {
   limit?: number;
   offset?: number;
   folder?: string;
-  unread_only?: boolean;
+  /** true = unread only; false = read only; absent = both. */
+  unread?: boolean;
 }
 
 /**
@@ -10073,7 +10123,9 @@ async function executeListInbox(
   const offset = typeof args["offset"] === "number" ? args["offset"] : 0;
   const folder =
     typeof args["folder"] === "string" ? args["folder"] : "INBOX";
-  const unreadOnly = args["unread_only"] === true;
+  // Tri-state, shared with search: true = unread only, false = read only,
+  // absent = both. (`unread_only` was rewritten to this before dispatch.)
+  const unread = typeof args["unread"] === "boolean" ? args["unread"] : undefined;
 
   // ── Inbox resolution + access control ─────────────────────────────────────
   const resolved = await resolveInboxArg(args, apiKey);
@@ -10115,7 +10167,7 @@ async function executeListInbox(
           listFolder,
           limit,
           offset,
-          unreadOnly,
+          unread,
         );
         break;
       case "outlook":
@@ -10124,7 +10176,7 @@ async function executeListInbox(
           listFolder,
           limit,
           offset,
-          unreadOnly,
+          unread,
         );
         break;
       case "imap":
@@ -10133,7 +10185,7 @@ async function executeListInbox(
           listFolder,
           limit,
           offset,
-          unreadOnly,
+          unread,
         );
         break;
       default:
@@ -23936,7 +23988,8 @@ async function executeListScheduled(
  * `schedule_cancel` — set status='cancelled' on a pending scheduled send.
  *
  * Scope: schedule:email
- * Required params: scheduled_send_id (UUID)
+ * Required params: id (UUID; the retired alias scheduled_send_id is rewritten
+ * to id before dispatch)
  *
  * Only rows with status 'pending' can be cancelled.  The UPDATE uses an
  * optimistic `.eq("status", "pending")` guard so a row that is already
@@ -23960,15 +24013,17 @@ async function executeCancelScheduled(
   }
   const args = rawArgs as Record<string, unknown>;
 
-  // Accept either `id` (as returned by schedule_create / schedule_list) or its
-  // alias `scheduled_send_id`, so a caller can round-trip the id field directly.
+  // `id` as returned by schedule_create / schedule_list. The retired alias
+  // `scheduled_send_id` is rewritten to `id` before dispatch (argument-
+  // aliases.ts); the fallback read here is belt-and-braces for any path that
+  // reaches this handler without going through handleToolsCall.
   const scheduledSendId =
-    (typeof args["scheduled_send_id"] === "string" && args["scheduled_send_id"]) ||
     (typeof args["id"] === "string" && args["id"]) ||
+    (typeof args["scheduled_send_id"] === "string" && args["scheduled_send_id"]) ||
     null;
   if (!scheduledSendId) {
     return {
-      result: { content: [{ type: "text", text: "schedule_cancel: an id is required and must be a UUID string. Provide either `id` or `scheduled_send_id`." }], isError: true },
+      result: { content: [{ type: "text", text: "schedule_cancel: `id` is required and must be a UUID string, as returned by schedule create or list." }], isError: true },
       logStatus: "error", logErrorCode: "-32602",
     };
   }
@@ -24388,7 +24443,7 @@ async function handleInitialize(
     },
     serverInfo: {
       name: "mcpemails",
-      version: "1.0.0",
+      version: SERVER_VERSION,
     },
     instructions: SERVER_INSTRUCTIONS,
   };
@@ -24838,9 +24893,10 @@ function acquireByteHeavySlot(dispatchName: string, apiKeyId: string): ByteHeavy
  * the audit trail is guaranteed to be complete even if the client disconnects.
  *
  * **Scope checking** is enforced before the tool runs: a key without the
- * required scope receives a -32001 error and the attempt is still logged with
- * status "error" and error_code "-32001". This ensures the audit log captures
- * all access-control violations.
+ * required scope receives a -32004 (RPC_INSUFFICIENT_SCOPE) error, which
+ * handleRequest sends as HTTP 403 with a WWW-Authenticate challenge, and the
+ * attempt is still logged with status "error" and error_code "-32004". This
+ * ensures the audit log captures all access-control violations.
  *
  * **Inbox ID** is extracted from the tool arguments when present. All current
  * MCPEmails tools include an `inbox_id` argument. If the argument is absent or
@@ -24937,6 +24993,21 @@ async function handleToolsCall(
       rawArgs !== null && typeof rawArgs === "object" && !Array.isArray(rawArgs)
         ? rawArgs as Record<string, unknown>
         : {};
+
+    // ── Retired argument names ──────────────────────────────────────────────
+    // `unread_only` → `unread`, `scheduled_send_id` → `id`. Rewritten first,
+    // in place, because everything below (the sibling-argument review, the
+    // schema validator, the handlers) reads this object and none of them know
+    // the old names any more. See argument-aliases.ts.
+    const appliedAliases = normalizeArgumentAliases(toolName, argsObj);
+    if (appliedAliases.length > 0) {
+      console.info("[mcp-server] tools/call: normalized_argument_aliases", {
+        key_id: apiKey.id,
+        tool_name: toolName,
+        aliases: appliedAliases,
+      });
+    }
+
     const rawAction = argsObj["action"];
     const action = typeof rawAction === "string" ? rawAction : null;
     // The selector is resolved rather than looked up. An exact enum member
@@ -25097,7 +25168,11 @@ async function handleToolsCall(
       inboxId,
       toolName: dispatchName,
       status: "error",
-      errorCode: String(RPC_INVALID_API_KEY),
+      // Was "-32001" until 2026-09-08, when scope denial got its own code.
+      // Auth failures never reach activity_log (they fail before it), so the
+      // old rows under "-32001" were all scope denials too; a query that wants
+      // the full history unions the two.
+      errorCode: String(RPC_INSUFFICIENT_SCOPE),
       durationMs: null,
       ipAddress: ctx.ipAddress,
       userAgent: ctx.userAgent,
@@ -25117,11 +25192,16 @@ async function handleToolsCall(
       ? `one of the '${acceptedScopes.join("', '")}' scopes is`
       : `the '${effectiveScope}' scope is`;
 
+    // handleRequest turns this into HTTP 403 + WWW-Authenticate; the JSON
+    // body is what a non-OAuth client (an API-key user) reads. `data` keeps
+    // the pre-2026-09-08 keys alongside the documented ones so a client that
+    // branched on `required_scope` keeps working.
     return jsonRpcErrorBody(
       id,
-      RPC_INVALID_API_KEY,
+      RPC_INSUFFICIENT_SCOPE,
       `Insufficient scope: ${scopeList} required to call ${toolName}.`,
       {
+        ...insufficientScopeErrorData(acceptedScopes, apiKey.scopes),
         required_scope: effectiveScope,
         accepted_scopes: acceptedScopes,
         key_scopes: apiKey.scopes,
@@ -27045,17 +27125,56 @@ async function handleRequest(req: Request): Promise<Response> {
   // Extract request ID early — needed for auth error responses.
   const requestId = rpcRequest.id ?? null;
 
+  // ── MCP-Protocol-Version header ───────────────────────────────────────────
+  // Streamable HTTP clients send the negotiated version on every request after
+  // initialize. The spec answers an UNSUPPORTED value with HTTP 400 and treats
+  // a missing header as 2025-03-26. Every published revision is accepted here
+  // (the server behaves identically under all of them); only a value naming no
+  // revision at all is refused. Values other than the one we echo are logged
+  // so the real client distribution can be read before this ever tightens.
+  // See protocol-version-header.ts.
+  const protocolHeader = readProtocolVersionHeader(req.headers.get("mcp-protocol-version"));
+  if (protocolHeader.kind === "unsupported") {
+    console.warn("[mcp-server] unsupported_protocol_version_header", {
+      received: protocolHeader.received,
+      well_formed: protocolHeader.wellFormed,
+      method: rpcRequest.method,
+      user_agent: ctx.userAgent,
+    });
+    return jsonResponse(
+      jsonRpcErrorBody(
+        requestId,
+        RPC_INVALID_REQUEST,
+        `Unsupported MCP-Protocol-Version header: ${protocolHeader.received}`,
+        {
+          error_code: "unsupported_protocol_version",
+          received: protocolHeader.received,
+          supported: KNOWN_PROTOCOL_VERSIONS,
+        },
+      ),
+      400,
+    );
+  }
+  if (protocolHeader.kind === "supported" && protocolHeader.version !== SUPPORTED_PROTOCOL_VERSION) {
+    console.log("[mcp-server] protocol_version_header", {
+      version: protocolHeader.version,
+      method: rpcRequest.method,
+      user_agent: ctx.userAgent,
+    });
+  }
+
   // ── Notifications (no id) ─────────────────────────────────────────────────
-  // MCP notifications are fire-and-forget: acknowledge with HTTP 204 and no body.
-  // Notifications are still authenticated — an unauthenticated sender should not
-  // receive a 204 that implies the notification was accepted.
+  // MCP notifications are fire-and-forget: the Streamable HTTP transport says
+  // to acknowledge with HTTP 202 Accepted and no body (it was 204 here until
+  // 2026-09-08). Notifications are still authenticated — an unauthenticated
+  // sender should not receive a 202 that implies the notification was accepted.
   if (isNotification(rpcRequest)) {
     const authResult = await authenticateRequest(req, null);
     if (authResult instanceof Response) {
       return authResult;
     }
     console.log(`[mcp-server] notification received: ${rpcRequest.method}`);
-    return new Response(null, { status: 204, headers: CORS_HEADERS });
+    return new Response(null, { status: 202, headers: CORS_HEADERS });
   }
 
   // ── Introspection mode (opt-in, never on in production) ──────────────────
@@ -27256,6 +27375,24 @@ async function handleRequest(req: Request): Promise<Response> {
   const response = normalizeResponseContentMeta(
     await routeMethod(rpcRequest, apiKey, ctx),
   );
+
+  // ── Scope denial → HTTP 403 + WWW-Authenticate ────────────────────────────
+  // The handler returns a plain JSON-RPC error (so it stays testable and the
+  // activity log sees it like any other rejection); the HTTP dressing the MCP
+  // authorization spec asks for is applied here, at the one place every
+  // response leaves. The /api/mcp proxy passes the status and header through.
+  // See scope-challenge.ts.
+  if (isInsufficientScopeError(response)) {
+    const http = jsonResponse(response, 403);
+    http.headers.set(
+      "WWW-Authenticate",
+      buildInsufficientScopeChallenge(
+        response.error.data.required_scopes,
+        `${APP_URL}/.well-known/oauth-protected-resource`,
+      ),
+    );
+    return http;
+  }
   return jsonResponse(response);
 }
 

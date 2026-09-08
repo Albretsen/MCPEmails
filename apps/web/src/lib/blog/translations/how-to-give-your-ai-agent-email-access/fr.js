@@ -55,14 +55,14 @@ Une poignée d'outils consolidés, basés sur des actions, couvrent toute la sur
 - \`email_compose\` (action \`reply\`) — pareil, et il définit pour vous les en-têtes de fil de discussion (In-Reply-To, References)
 - \`email_organize\` — déplacer, supprimer, marquer ou archiver (une action par appel)
 
-Une limitation honnête qui mérite d'être énoncée d'emblée : il s'agit de **scrutation, pas de notification poussée**. Il n'y a pas de webhooks. Pour réagir aux nouveaux e-mails, votre agent interroge selon un calendrier, par exemple \`email_read\` (action \`list\`) avec \`unread_only: true\`. Tout répondeur automatique que vous construisez fonctionne sur une minuterie, pas sur un déclencheur instantané. Le [guide de construction d'un répondeur automatique](/blog/build-email-auto-responder-mcp-agent) montre comment bien le faire.
+Une limitation honnête qui mérite d'être énoncée d'emblée : il s'agit de **scrutation, pas de notification poussée**. Il n'y a pas de webhooks. Pour réagir aux nouveaux e-mails, votre agent interroge selon un calendrier, par exemple \`email_read\` (action \`list\`) avec \`unread: true\`. Tout répondeur automatique que vous construisez fonctionne sur une minuterie, pas sur un déclencheur instantané. Le [guide de construction d'un répondeur automatique](/blog/build-email-auto-responder-mcp-agent) montre comment bien le faire.
 
 Une exécution de tri matinal se lit ainsi :
 
 \`\`\`json
 {
   "step1": "inbox_list                  → finds your work Gmail",
-  "step2": "email_read (action list)    → last 24h, unread_only",
+  "step2": "email_read (action list)    → last 24h, unread: true",
   "step3": "email_read (action read)    → full body for anything urgent",
   "step4": "email_compose (action reply) → draft, or just summarize and wait"
 }

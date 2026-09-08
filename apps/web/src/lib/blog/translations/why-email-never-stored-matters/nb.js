@@ -60,7 +60,7 @@ Vil du ha den dypere mekanikken bak legitimasjonsmodellen — OAuth-tokens kontr
 
 Aldri-lagret er ikke gratis. Det er en reell kostnad, og jeg vil heller navngi den enn å late som den ikke finnes.
 
-Fordi vi ikke holder på en lokal indeks, kjører søk mot leverandørens søk hver gang. Du får [leverandør-eget søk](/docs) — Gmail-operatorer, Outlook KQL, IMAP-tekstsøk — som er kraftig, men det er deres ventetid og deres spørringssemantikk, ikke en egen indeks finjustert av oss. Og det er ingen push: vi kan ikke varsle agenten din i det øyeblikket post ankommer, fordi vi ikke overvåker en synkronisert kopi. For å reagere på ny post poller agenten din (for eksempel \`email_read\` med handling \`list\` og \`unread_only: true\` etter en tidsplan).
+Fordi vi ikke holder på en lokal indeks, kjører søk mot leverandørens søk hver gang. Du får [leverandør-eget søk](/docs) — Gmail-operatorer, Outlook KQL, IMAP-tekstsøk — som er kraftig, men det er deres ventetid og deres spørringssemantikk, ikke en egen indeks finjustert av oss. Og det er ingen push: vi kan ikke varsle agenten din i det øyeblikket post ankommer, fordi vi ikke overvåker en synkronisert kopi. For å reagere på ny post poller agenten din (for eksempel \`email_read\` med handling \`list\` og \`unread: true\` etter en tidsplan).
 
 For de fleste er det en enkel avveining. Litt tregere søk og en pollesløyfe, i bytte mot aldri å lage en andre kopi av dine mest sensitive data. Det tar jeg gjerne.
 

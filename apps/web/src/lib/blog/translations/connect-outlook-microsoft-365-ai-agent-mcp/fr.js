@@ -64,7 +64,7 @@ Le seul endroit où la réalité s'impose, c'est l'écran de consentement sur le
 Votre agent obtient les outils principaux consolidés, plus les extras qu'Outlook prend en charge :
 
 - \`inbox_list\` — appelez toujours celui-ci en premier. Il renvoie vos boîtes connectées et leurs UUID \`inbox_id\`, pour que l'agent ne devine jamais un identifiant.
-- \`email_read\` — un seul outil, plusieurs actions : \`list\` (du plus récent au plus ancien, paginé, avec des filtres comme \`unread_only\`), \`read\` (texte brut analysé, HTML assaini en option, pièces jointes en option) et \`search\` (voir la note sur la recherche ci-dessous).
+- \`email_read\` — un seul outil, plusieurs actions : \`list\` (du plus récent au plus ancien, paginé, avec des filtres comme \`unread\`), \`read\` (texte brut analysé, HTML assaini en option, pièces jointes en option) et \`search\` (voir la note sur la recherche ci-dessous).
 - \`email_compose\` — l'action \`send\` compose avec CC/BCC, HTML et pièces jointes jusqu'à 10 MB au total ; les actions \`reply\` et \`forward\` s'enchaînent correctement dans le fil avec les bons en-têtes.
 - \`email_organize\` — marquage lu/non lu, indicateurs, archivage, suppression et déplacement, chacun via sa propre \`action\`.
 
@@ -78,7 +78,7 @@ La recherche Outlook n'est pas la recherche Gmail. Là où Gmail accepte des op�
 
 Voici une boucle de tri que je fais tourner sur une boîte Microsoft 365. Une ou deux fois par heure, l'agent :
 
-1. Appelle \`email_read\` avec l'action \`list\` et \`unread_only: true\`.
+1. Appelle \`email_read\` avec l'action \`list\` et \`unread: true\`.
 2. Lit tout ce qui semble sensible au temps avec l'action \`read\` de \`email_read\`.
 3. Résume le lot et rédige des brouillons de réponse pour ceux auxquels je répondrais à l'évidence.
 4. Laisse tout en non lu jusqu'à ce que je confirme.

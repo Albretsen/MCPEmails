@@ -19,7 +19,9 @@ import { NextRequest, NextResponse } from 'next/server';
  *   When a request arrives with no bearer token, or the upstream returns 401,
  *   the response includes WWW-Authenticate with a resource_metadata pointer.
  *   MCP clients use this to auto-discover the authorization server and begin
- *   the OAuth 2.0 Authorization Code + PKCE flow.
+ *   the OAuth 2.0 Authorization Code + PKCE flow. A 403 scope denial from the
+ *   upstream carries its own WWW-Authenticate (error="insufficient_scope"
+ *   with the scopes required) and is passed through untouched.
  *
  * API keys may be sent in the Authorization header or, for backwards
  * compatibility with existing integrations, as a `key` or `api_key` query
@@ -152,6 +154,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const body = await request.text();
   const contentType = request.headers.get('content-type') ?? 'application/json';
+  // Streamable HTTP clients send the negotiated protocol version on every
+  // request after initialize, and the upstream answers an unsupported value
+  // with HTTP 400 (and logs the rest). Until 2026-09-08 this proxy dropped the
+  // header, so the upstream had never seen a real client's value.
+  const protocolVersion = request.headers.get('mcp-protocol-version');
 
   // Both the request and the body read are guarded. The Edge Function's isolate
   // is capped at 256MB and Supabase kills it on breach (HTTP 546,
@@ -165,6 +172,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       headers: {
         'Content-Type': contentType,
         Authorization: authorization,
+        ...(protocolVersion ? { 'MCP-Protocol-Version': protocolVersion } : {}),
       },
       body,
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
@@ -175,16 +183,26 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       'Content-Type': upstream.headers.get('content-type') ?? 'application/json',
     };
 
-    // If the upstream rejects the token, add the discovery header so the client
-    // can re-initiate the OAuth flow rather than showing a generic 401 error.
-    if (upstream.status === 401) {
+    // The upstream's own challenge wins when it sends one. Today that is the
+    // 403 scope denial (`Bearer error="insufficient_scope", scope=...`), which
+    // an OAuth client reads to step up for the missing scope; replacing it
+    // with the generic discovery pointer would lose the scope list.
+    const upstreamChallenge = upstream.headers.get('www-authenticate');
+    if (upstreamChallenge) {
+      responseHeaders['WWW-Authenticate'] = upstreamChallenge;
+    } else if (upstream.status === 401) {
+      // If the upstream rejects the token, add the discovery header so the
+      // client can re-initiate the OAuth flow rather than showing a generic
+      // 401 error.
       responseHeaders['WWW-Authenticate'] = WWW_AUTHENTICATE;
     }
 
-    // 204 No Content: Fetch spec forbids a body on this status. Return before
-    // calling upstream.text() to avoid "Invalid response status code 204".
-    if (upstream.status === 204) {
-      return new NextResponse(null, { status: 204, headers: responseHeaders });
+    // 202 Accepted is the notification acknowledgement and carries no body;
+    // 204 No Content forbids one outright (Fetch throws "Invalid response
+    // status code 204" if given one). Return before calling upstream.text()
+    // for both.
+    if (upstream.status === 202 || upstream.status === 204) {
+      return new NextResponse(null, { status: upstream.status, headers: responseHeaders });
     }
 
     const responseBody = await upstream.text();

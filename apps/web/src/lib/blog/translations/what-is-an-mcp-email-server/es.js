@@ -60,7 +60,7 @@ El modelo de capacidad-no-credencial es también la razón por la que puedes [re
 Una interacción real tiene este aspecto. Pongamos que le pides a Claude que te ponga al día de tu bandeja de entrada:
 
 1. El agente llama a \`inbox_list\` y encuentra tu Gmail del trabajo.
-2. Llama a \`email_read\` con \`action: "list"\` y \`unread_only: true\` para obtener las novedades.
+2. Llama a \`email_read\` con \`action: "list"\` y \`unread: true\` para obtener las novedades.
 3. Para cualquier cosa que parezca importante, llama a \`email_read\` con \`action: "read"\` para extraer el cuerpo completo.
 4. Resume, y si has aprobado el acceso de envío, puede redactar una respuesta con \`email_compose\` (\`action: "reply"\`) —que fija las cabeceras de hilo automáticamente para que la respuesta caiga en la conversación correcta—.
 

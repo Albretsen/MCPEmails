@@ -60,7 +60,7 @@ Si quieres la mecánica más profunda del modelo de credenciales —tokens de OA
 
 Lo de nunca almacenar no sale gratis. Hay un coste real, y prefiero nombrarlo a fingir que no existe.
 
-Como no tenemos un índice local, la búsqueda se ejecuta contra la búsqueda de tu proveedor cada vez. Obtienes la [búsqueda nativa del proveedor](/docs) —operadores de Gmail, KQL de Outlook, búsqueda de texto de IMAP—, que es potente, pero es su latencia y su semántica de consultas, no un índice a medida ajustado por nosotros. Y no hay push: no podemos avisar a tu agente en el instante en que llega el correo porque no estamos vigilando una copia sincronizada. Para reaccionar al correo nuevo, tu agente hace polling (por ejemplo, \`email_read\` con la acción \`list\` y \`unread_only: true\` de forma programada).
+Como no tenemos un índice local, la búsqueda se ejecuta contra la búsqueda de tu proveedor cada vez. Obtienes la [búsqueda nativa del proveedor](/docs) —operadores de Gmail, KQL de Outlook, búsqueda de texto de IMAP—, que es potente, pero es su latencia y su semántica de consultas, no un índice a medida ajustado por nosotros. Y no hay push: no podemos avisar a tu agente en el instante en que llega el correo porque no estamos vigilando una copia sincronizada. Para reaccionar al correo nuevo, tu agente hace polling (por ejemplo, \`email_read\` con la acción \`list\` y \`unread: true\` de forma programada).
 
 Para la mayoría de la gente es un intercambio fácil. Una búsqueda algo más lenta y un bucle de polling, a cambio de no crear nunca una segunda copia de tus datos más sensibles. Yo lo acepto encantado.
 

@@ -71,7 +71,7 @@ curl -s https://www.mcpemails.com/api/mcp \\
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 \`\`\`
 
-Si te devuelve una lista de herramientas, estás conectado. Un error \`-32001\` significa que la clave es incorrecta o le falta un permiso; ese no se puede reintentar, así que arregla la clave en vez de meterte en un bucle. No subas la clave al repositorio. Léela desde una variable de entorno y mantenla fuera de git. Si estás sopesando qué modelo de autenticación usar en cada sitio, [OAuth frente a API keys para el acceso al correo con IA](/blog/oauth-vs-api-keys-ai-email-access) expone las ventajas y desventajas.
+Si te devuelve una lista de herramientas, estás conectado. Un error \`-32001\` significa que la clave es incorrecta, y un \`-32004\` (HTTP 403) que le falta un permiso que la herramienta necesita; ninguno se puede reintentar, así que arregla la clave en vez de meterte en un bucle. No subas la clave al repositorio. Léela desde una variable de entorno y mantenla fuera de git. Si estás sopesando qué modelo de autenticación usar en cada sitio, [OAuth frente a API keys para el acceso al correo con IA](/blog/oauth-vs-api-keys-ai-email-access) expone las ventajas y desventajas.
 
 ## Las herramientas que recibe tu agente
 
@@ -94,13 +94,13 @@ Clasificación matutina, escrita directamente en el panel de chat:
 
 > Llama a inbox_list y luego lista los no leídos de mi bandeja de entrada de trabajo de las últimas 12 horas. Agrúpalos: necesita respuesta, para tu información y ruido. En el grupo de para tu información dame una línea por cada uno.
 
-El agente ejecuta \`inbox_list\`, luego \`email_read\` con la acción \`list\` y \`unread_only\` activado, lee los que importan y devuelve un resumen ordenado. Cuando veo uno que quiero responder, le digo:
+El agente ejecuta \`inbox_list\`, luego \`email_read\` con la acción \`list\` y \`unread\` activado, lee los que importan y devuelve un resumen ordenado. Cuando veo uno que quiero responder, le digo:
 
 > Responde al mensaje del contratista de diseño confirmando que el jueves a las 14:00 va bien, que sea breve.
 
 Llama a \`email_compose\` con la acción \`reply\`, el hilado se gestiona solo y la respuesta sale a través de mi propio Gmail, así que llega desde mi dirección y con la reputación de mi dominio, no la de algún relay. Para un tratamiento más a fondo de los prompts de clasificación, mira [cómo hacer que un agente de IA clasifique y resuma tu bandeja de entrada](/blog/ai-agent-triage-summarize-inbox).
 
-Una limitación honesta: no hay webhooks. El servidor no te envía el correo nuevo. Si quieres que el agente reaccione a los mensajes entrantes, haces polling: \`email_read\` con la acción \`list\` y \`unread_only: true\` de forma periódica. Es una decisión de diseño deliberada, y condiciona cómo construyes cualquier cosa reactiva, como un [autocontestador sobre MCP](/blog/build-email-auto-responder-mcp-agent).
+Una limitación honesta: no hay webhooks. El servidor no te envía el correo nuevo. Si quieres que el agente reaccione a los mensajes entrantes, haces polling: \`email_read\` con la acción \`list\` y \`unread: true\` de forma periódica. Es una decisión de diseño deliberada, y condiciona cómo construyes cualquier cosa reactiva, como un [autocontestador sobre MCP](/blog/build-email-auto-responder-mcp-agent).
 
 ## Límites de tasa para el acceso por scripts
 

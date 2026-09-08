@@ -71,7 +71,7 @@ curl -s https://www.mcpemails.com/api/mcp \\
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 \`\`\`
 
-Får du en verktøyliste tilbake, er du tilkoblet. En \`-32001\`-feil betyr at nøkkelen er ugyldig eller mangler et omfang — den er ikke gjentakbar, så fiks nøkkelen i stedet for å gå i loop. Ikke commit nøkkelen. Les den fra en miljøvariabel og hold den utenfor git. Veier du hvilken autentiseringsmodell du skal bruke hvor, legger [OAuth vs API-nøkler for AI-e-posttilgang](/blog/oauth-vs-api-keys-ai-email-access) frem avveiningene.
+Får du en verktøyliste tilbake, er du tilkoblet. En \`-32001\`-feil betyr at nøkkelen er ugyldig, og en \`-32004\` (HTTP 403) at den mangler et omfang verktøyet trenger — ingen av dem er gjentakbare, så fiks nøkkelen i stedet for å gå i loop. Ikke commit nøkkelen. Les den fra en miljøvariabel og hold den utenfor git. Veier du hvilken autentiseringsmodell du skal bruke hvor, legger [OAuth vs API-nøkler for AI-e-posttilgang](/blog/oauth-vs-api-keys-ai-email-access) frem avveiningene.
 
 ## Verktøyene agenten din får
 
@@ -94,13 +94,13 @@ Morgensortering, skrevet rett inn i chatpanelet:
 
 > Kall inbox_list, og list så ulest fra arbeidsinnboksen min de siste 12 timene. Grupper dem: trenger svar, FYI og støy. For FYI-bunken, gi meg én linje hver.
 
-Agenten kjører \`inbox_list\`, deretter \`email_read\` med handling \`list\` og \`unread_only\` satt, leser de som betyr noe, og leverer tilbake et sortert sammendrag. Når jeg ser en jeg vil ha besvart, følger jeg opp:
+Agenten kjører \`inbox_list\`, deretter \`email_read\` med handling \`list\` og \`unread\` satt, leser de som betyr noe, og leverer tilbake et sortert sammendrag. Når jeg ser en jeg vil ha besvart, følger jeg opp:
 
 > Svar på meldingen fra designkonsulenten og bekreft at torsdag klokken 14 fungerer, hold det kort.
 
 Den kaller \`email_compose\` med handling \`reply\`, trådingen er håndtert, og svaret går ut gjennom min egen Gmail — så det lander fra adressen min med domenets omdømme, ikke et eller annet relé. For en grundigere behandling av sorteringsledetekster, se [hvordan du får en AI-agent til å sortere og oppsummere innboksen din](/blog/ai-agent-triage-summarize-inbox).
 
-En ærlig begrensning: det finnes ingen webhooks. Serveren dytter ikke ny post til deg. Vil du at agenten skal reagere på innkommende meldinger, må du polle — \`email_read\` med handling \`list\` og \`unread_only: true\` etter en plan. Det er et bevisst designvalg, og det former hvordan du bygger noe som helst reaktivt, som en [autosvarer over MCP](/blog/build-email-auto-responder-mcp-agent).
+En ærlig begrensning: det finnes ingen webhooks. Serveren dytter ikke ny post til deg. Vil du at agenten skal reagere på innkommende meldinger, må du polle — \`email_read\` med handling \`list\` og \`unread: true\` etter en plan. Det er et bevisst designvalg, og det former hvordan du bygger noe som helst reaktivt, som en [autosvarer over MCP](/blog/build-email-auto-responder-mcp-agent).
 
 ## Ratebegrensninger for skriptet tilgang
 

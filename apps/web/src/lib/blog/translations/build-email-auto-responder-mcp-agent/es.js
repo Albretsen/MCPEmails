@@ -50,7 +50,7 @@ while True:
     unread = email_read(
         action="list",
         inbox_id=inbox["inbox_id"],
-        unread_only=True,
+        unread=True,
         limit=20,
     )
 
@@ -79,7 +79,7 @@ while True:
     sleep(60)
 \`\`\`
 
-Fíjate en tres cosas. Primera, el agente llama a \`inbox_list\` para descubrir el \`inbox_id\` en lugar de pegar un UUID en el código: ese es el patrón de descubrimiento primero, y mantiene el script funcionando si reconectas una bandeja. Segunda, \`unread_only: true\` es lo que convierte esto en un respondedor de *correo nuevo* en vez de una máquina de re-responder-a-todos. Tercera, cada mensaje pasa por los guardarraíles antes de que se envíe nada.
+Fíjate en tres cosas. Primera, el agente llama a \`inbox_list\` para descubrir el \`inbox_id\` en lugar de pegar un UUID en el código: ese es el patrón de descubrimiento primero, y mantiene el script funcionando si reconectas una bandeja. Segunda, \`unread: true\` es lo que convierte esto en un respondedor de *correo nuevo* en vez de una máquina de re-responder-a-todos. Tercera, cada mensaje pasa por los guardarraíles antes de que se envíe nada.
 
 ### Marcar mensajes como gestionados
 
@@ -143,7 +143,7 @@ Dale al modelo de redacción instrucciones ajustadas y un tope de longitud. Para
 Si fuera a lanzar esto para una bandeja real mañana, empezaría pequeño y aburrido:
 
 1. API key con \`read:email\` y \`send:email\`, acotada a una bandeja.
-2. Sondear \`email_read(action: "list", unread_only: true)\` cada dos minutos.
+2. Sondear \`email_read(action: "list", unread: true)\` cada dos minutos.
 3. Lista de permitidos con exactamente un alias de soporte.
 4. Solo modo borrador: crea borradores, no envíes nada de forma automática.
 5. Tras una semana leyendo los borradores, activa el envío automático para los casos obvios y sigue redactando el resto.

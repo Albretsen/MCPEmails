@@ -21,7 +21,7 @@ Morgeninnboksen er stort sett støy med tre ting begravd i seg som faktisk betyr
 
 > Sjekk jobbinnboksen min for ulest post fra de siste 24 timene. Del den inn i «trenger svar i dag», «til orientering» og «nyhetsbrev/automatisk». For den første gruppen, gi meg én linje hver på hva de vil ha.
 
-Under panseret kaller agenten \`email_read\` med handlingen list og \`unread_only: true\` på innboksen \`inbox_list\` returnerte, leser de få som ser viktige ut med \`email_read\` igjen (handlingen read), og hopper over resten. Den kan markere åpenbar støy som lest så den slutter å fylle opp telleren. For en grundigere versjon av dette går [triagering- og oppsummeringsoppskriften](/blog/ai-agent-triage-summarize-inbox) verktøy for verktøy.
+Under panseret kaller agenten \`email_read\` med handlingen list og \`unread: true\` på innboksen \`inbox_list\` returnerte, leser de få som ser viktige ut med \`email_read\` igjen (handlingen read), og hopper over resten. Den kan markere åpenbar støy som lest så den slutter å fylle opp telleren. For en grundigere versjon av dette går [triagering- og oppsummeringsoppskriften](/blog/ai-agent-triage-summarize-inbox) verktøy for verktøy.
 
 ### 2. Oppsummer en lang tråd
 

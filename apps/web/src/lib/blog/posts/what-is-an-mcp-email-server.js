@@ -67,7 +67,7 @@ The capability-not-credential model is also why you can [revoke a connection in 
 A real interaction looks like this. Say you ask Claude to catch you up on your inbox:
 
 1. The agent calls \`inbox_list\` and finds your work Gmail.
-2. It calls \`email_read\` with \`action: "list"\` and \`unread_only: true\` to get what's new.
+2. It calls \`email_read\` with \`action: "list"\` and \`unread: true\` to get what's new.
 3. For anything that looks important, it calls \`email_read\` with \`action: "read"\` to pull the full body.
 4. It summarizes, and if you've approved send access, it can draft a reply with \`email_compose\` (\`action: "reply"\`) — which sets the threading headers automatically so the reply lands in the right conversation.
 

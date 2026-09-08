@@ -60,7 +60,7 @@ Le modèle « capacité plutôt qu’identifiant » est aussi la raison pour laq
 Une vraie interaction ressemble à ceci. Imaginons que vous demandiez à Claude de vous faire un point sur votre boîte de réception :
 
 1. L’agent appelle \`inbox_list\` et trouve votre Gmail professionnel.
-2. Il appelle \`email_read\` avec \`action: "list"\` et \`unread_only: true\` pour voir les nouveautés.
+2. Il appelle \`email_read\` avec \`action: "list"\` et \`unread: true\` pour voir les nouveautés.
 3. Pour tout ce qui semble important, il appelle \`email_read\` avec \`action: "read"\` pour récupérer le corps complet.
 4. Il résume, et si vous avez approuvé l’accès en envoi, il peut rédiger une réponse avec \`email_compose\` (\`action: "reply"\`) — qui définit automatiquement les en-têtes de fil pour que la réponse atterrisse dans la bonne conversation.
 

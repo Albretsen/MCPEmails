@@ -64,7 +64,7 @@ Det ene stedet virkeligheten trenger seg på er samtykkeskjermen på jobb-/skole
 Agenten din får de konsoliderte kjerneverktøyene pluss det ekstra Outlook støtter:
 
 - \`inbox_list\` — kall alltid dette først. Det returnerer de tilkoblede postkassene dine og deres \`inbox_id\`-UUID-er, slik at agenten aldri gjetter en ID.
-- \`email_read\` — ett verktøy, flere handlinger: \`list\` (nyeste først, paginert, med filtre som \`unread_only\`), \`read\` (tolket ren tekst, valgfri renset HTML, valgfrie vedlegg) og \`search\` (se søkenotatet nedenfor).
+- \`email_read\` — ett verktøy, flere handlinger: \`list\` (nyeste først, paginert, med filtre som \`unread\`), \`read\` (tolket ren tekst, valgfri renset HTML, valgfrie vedlegg) og \`search\` (se søkenotatet nedenfor).
 - \`email_compose\` — \`send\`-handlingen skriver med CC/BCC, HTML og vedlegg på opptil 10 MB totalt; \`reply\`- og \`forward\`-handlingene trådes riktig med de korrekte hodene.
 - \`email_organize\` — merke som lest/ulest, flagge, arkivere, slette og flytte, hver via sin egen \`action\`.
 
@@ -78,7 +78,7 @@ Outlook-søk er ikke Gmail-søk. Der Gmail tar operatorer som \`from:\` og \`is:
 
 Her er en triage-løkke jeg kjører mot en Microsoft 365-innboks. En eller to ganger i timen gjør agenten:
 
-1. Kaller \`email_read\` med \`list\`-handlingen og \`unread_only: true\`.
+1. Kaller \`email_read\` med \`list\`-handlingen og \`unread: true\`.
 2. Leser alt som ser tidssensitivt ut med \`read\`-handlingen til \`email_read\`.
 3. Oppsummerer bunken og skriver utkast til svar på de jeg åpenbart ville besvart.
 4. Lar alt stå ulest til jeg bekrefter.

@@ -63,7 +63,7 @@
     "infoFormat": "Response format: <b>JSON-RPC 2.0</b>. Successful results also carry a typed <code>structuredContent</code> object",
     "handshakeLabel": "Initialize handshake",
     "pollingHeading": "Polling, not push",
-    "pollingBody": "MCPEmails is request/response only: every result comes from a tool call your agent makes. There are <b>no webhooks, push notifications, or server-initiated events</b>, so an incoming email never triggers an agent call on its own. To react to new mail, have your agent <b>poll</b> on a schedule, e.g. call <code>email_read</code> with <code>action: \"list\"</code> and <code>unread_only: true</code> at whatever interval your workflow needs (mind the rate limits above)."
+    "pollingBody": "MCPEmails is request/response only: every result comes from a tool call your agent makes. There are <b>no webhooks, push notifications, or server-initiated events</b>, so an incoming email never triggers an agent call on its own. To react to new mail, have your agent <b>poll</b> on a schedule, e.g. call <code>email_read</code> with <code>action: \"list\"</code> and <code>unread: true</code> at whatever interval your workflow needs (mind the rate limits above)."
   },
   "operations": {
     "eyebrow": "Built for real inbox work",
@@ -144,7 +144,6 @@
         "attachment_index": "0-based index of the attachment to download (action 'attachment'), matching the order in 'read'’s attachments list. Takes precedence over filename. Omit both when the message has exactly one attachment.",
         "filename": "Name of the attachment to download (action 'attachment'), case-insensitive exact match. Ignored if attachment_index is given.",
         "folder": "Folder to list (action 'list'). Default \"INBOX\". Other values: \"SENT\", \"DRAFTS\", \"TRASH\".",
-        "unread_only": "Return only unread messages (action 'list'). Default false.",
         "limit": "Max results to return (action 'list' or 'search'). Default 20, max 100.",
         "offset": "Zero-based pagination offset (action 'list' or 'search'). Default 0.",
         "include_html": "Include sanitized HTML body (action 'read'/'read_batch'). Default false.",
@@ -159,7 +158,7 @@
         "subject": "Text to match in the subject line (action 'search'). Multi-word phrases are matched as-is.",
         "body": "Free text to find in the message body (action 'search'). (On Gmail this matches the whole message, not body-only.)",
         "text": "Free text to match anywhere in the message, in headers and body (action 'search').",
-        "unread": "Action 'search': true = only unread messages; false = only read messages; omit for either.",
+        "unread": "Actions 'list' and 'search': true = only unread messages; false = only read messages; omit for both.",
         "has_attachment": "Action 'search': true = only messages with an attachment. Not supported on generic IMAP (ignored there).",
         "flagged": "Action 'search': true = only flagged/starred messages. Not supported on Outlook/Graph (ignored there).",
         "since": "ISO 8601 date or datetime (action 'search'); return messages received on/after (>=) this instant. E.g. \"2026-06-01\".",
@@ -279,7 +278,7 @@
     },
     "schedule": {
       "title": "Scheduled Send",
-      "desc": "Schedule mail for future delivery via a server-side queue. Set action: 'create' (to/subject/body plus a send_at ISO 8601 timestamp; recipients and body are validated immediately, and invalid sends are not queued), 'list' (pending scheduled sends, earliest first, optionally filtered by inbox), or 'cancel' (scheduled_send_id; only sends still 'pending' can be cancelled). The dispatcher runs every minute, so delivery may be up to 60 seconds after send_at.",
+      "desc": "Schedule mail for future delivery via a server-side queue. Set action: 'create' (to/subject/body plus a send_at ISO 8601 timestamp; recipients and body are validated immediately, and invalid sends are not queued), 'list' (pending scheduled sends, earliest first, optionally filtered by inbox), or 'cancel' (id; only sends still 'pending' can be cancelled). The dispatcher runs every minute, so delivery may be up to 60 seconds after send_at.",
       "params": {
         "action": "Which operation to perform: \"create\", \"list\", or \"cancel\". Determines which other arguments apply.",
         "inbox_id": "UUID of the inbox to send from (action 'create') or to filter by (action 'list'). Optional: auto-resolved when the key has exactly one inbox; otherwise pass this or inbox. Call inbox_list to get available inbox IDs.",
@@ -293,7 +292,7 @@
         "html_body": "Optional HTML version of the body (action 'create').",
         "reply_to": "Optional Reply-To header address (action 'create').",
         "attachments": "File attachments (action 'create'). Inline bytes only: '{' filename, mime_type, data (base64) '}'. The source_message_id reference form is available on email_compose, not here. Max 20 items, 10 MB total.",
-        "scheduled_send_id": "UUID of the scheduled send to cancel (action 'cancel').",
+        "id": "UUID of the scheduled send to cancel (action 'cancel'), as returned by 'create' or 'list'.",
         "limit": "Maximum number of results (action 'list'). Default 20, max 100.",
         "idempotency_key": "Optional opaque key for one scheduled-send creation. Reuse it only to retry the exact same create request within 24 hours."
       }
@@ -394,7 +393,8 @@
     "retryableNo": "No",
     "exampleLabel": "Example error responses",
     "rows": {
-      "auth": "Missing, malformed, revoked, or expired API key. Also returned when the API key lacks the required scope for the called tool.",
+      "auth": "Missing, malformed, revoked, or expired API key (HTTP 401).",
+      "scope": "The key is valid but lacks a scope the called tool action needs (HTTP 403). data.error_code is \"insufficient_scope\" and data.required_scopes lists what would authorise the call; the WWW-Authenticate header repeats it so OAuth clients can step up.",
       "method": "Unknown JSON-RPC method (e.g. calling a method other than initialize, tools/list, tools/call)",
       "param": "Unknown tool name, or missing / invalid parameter in tools/call",
       "rate": "Per-key or per-workspace rate limit exceeded (HTTP 429). data.error_code is always \"rate_limit_exceeded\". Wait data.retry_after seconds, or read the Retry-After header, before retrying.",

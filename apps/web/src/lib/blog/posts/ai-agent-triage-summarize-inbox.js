@@ -10,7 +10,7 @@ const post = {
   updatedAt: "2026-04-23T09:00:00.000Z",
   tags: ['Workflows', 'Claude', 'Tutorial', 'AI agents'],
   featured: false,
-  content: `The fastest way to get an AI agent to triage your inbox is to lean on two tools in order: \`inbox_list\` to find your mailbox, then \`email_read\` — with \`action: list\` and \`unread_only: true\` to pull what's new, then \`action: read\` for the handful that look important — and then a plain-English instruction to summarize and rank them. That's the whole loop. If you want it to draft or send responses, you add \`email_compose\` with \`action: reply\` at the end.
+  content: `The fastest way to get an AI agent to triage your inbox is to lean on two tools in order: \`inbox_list\` to find your mailbox, then \`email_read\` — with \`action: list\` and \`unread: true\` to pull what's new, then \`action: read\` for the handful that look important — and then a plain-English instruction to summarize and rank them. That's the whole loop. If you want it to draft or send responses, you add \`email_compose\` with \`action: reply\` at the end.
 
 This post gives you the exact prompts I use, what good output looks like, and how to run the same loop on a schedule so your morning triage happens before you sit down. It assumes your agent already has email access through [MCP Emails](/blog/how-to-give-your-ai-agent-email-access). If you haven't connected an inbox yet, the [under-two-minutes connect guide](/blog/connect-email-to-ai-agent-under-2-minutes) gets you there first.
 
@@ -19,7 +19,7 @@ This post gives you the exact prompts I use, what good output looks like, and ho
 Every triage session is the same five steps. Your agent figures out the order on its own once you describe the goal, but it helps to know what's happening under the hood:
 
 1. \`inbox_list\` — discover connected inboxes and their \`inbox_id\` UUIDs. The agent never hardcodes a UUID; it looks one up here.
-2. \`email_read\` with \`action: list\` and \`unread_only: true\` — pull the unread queue for one inbox, newest first.
+2. \`email_read\` with \`action: list\` and \`unread: true\` — pull the unread queue for one inbox, newest first.
 3. \`email_read\` with \`action: read\` — open the full body for the few messages worth reading in detail.
 4. Summarize and prioritize — pure reasoning, no tool call. The model groups, ranks, and explains.
 5. \`email_compose\` with \`action: reply\` (optional) — draft or send for the ones that need an answer.
@@ -85,7 +85,7 @@ If you want to take the next step and remove yourself from the loop entirely, th
 
 ## Running triage on a schedule
 
-Here's the honest limitation: MCP is **poll, not push.** MCP Emails has no webhooks and sends no server-initiated events. Your agent doesn't get pinged when mail arrives. To do ongoing triage, something has to call \`email_read\` with \`action: list\` and \`unread_only: true\` on a timer.
+Here's the honest limitation: MCP is **poll, not push.** MCP Emails has no webhooks and sends no server-initiated events. Your agent doesn't get pinged when mail arrives. To do ongoing triage, something has to call \`email_read\` with \`action: list\` and \`unread: true\` on a timer.
 
 In practice that means one of two setups:
 
