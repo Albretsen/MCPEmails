@@ -20,7 +20,7 @@
   },
   "compare": {
     "title": "Auto-alojado frente a alojado",
-    "intro": "El servidor MCP completo y las diez herramientas están en ambos. Auto-alojar cambia la comodidad gestionada por control total.",
+    "intro": "El servidor MCP completo y las once herramientas están en ambos. Auto-alojar cambia la comodidad gestionada por control total.",
     "thFeature": "",
     "thSelf": "Auto-alojado",
     "thHosted": "Alojado",
@@ -31,7 +31,7 @@
         "hosted": "Gratis, $5, $15 o $79"
       },
       {
-        "feature": "El servidor MCP y las 10 herramientas",
+        "feature": "El servidor MCP y las 11 herramientas",
         "self": "Sí",
         "hosted": "Sí"
       },
