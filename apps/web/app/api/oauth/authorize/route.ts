@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { validateCsrfToken } from '@/lib/oauth/csrf';
 import { consumeStateNonce } from '@/lib/oauth/state';
+import { validateResourceIndicator } from '@/lib/oauth/resource';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 
 /**
@@ -63,6 +64,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     state,
     code_challenge,
     challenge_method,
+    resource,
     scopes,
     inbox_ids,
     all_inboxes,
@@ -90,6 +92,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (challenge_method !== 'S256') {
     return NextResponse.json({ error: 'Only code_challenge_method=S256 is supported.' }, { status: 400 });
   }
+
+  // ── RFC 8707 resource indicator ───────────────────────────────────────────
+  // Re-validated here (never trust the page's forwarded value): optional, but
+  // when present it must be the one resource this server issues tokens for.
+  const resourceCheck = validateResourceIndicator(resource);
+  if (!resourceCheck.ok) {
+    return NextResponse.json(
+      { error: resourceCheck.error, error_description: resourceCheck.description },
+      { status: 400 },
+    );
+  }
+  const boundResource = resourceCheck.resource;
 
   const oauthState  = typeof state    === 'string' ? state    : '';
 
@@ -196,6 +210,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     code_challenge_method: 'S256',
     scopes:               approvedScopes,
     inbox_ids:            effectiveInboxIds,
+    // null records "the client sent no resource" (pre-2025-06-18 MCP clients);
+    // the token endpoint compares its own `resource` against this.
+    resource:             boundResource,
   });
 
   if (insertError) {
@@ -227,6 +244,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       client_id:  oauthClient.client_id,
       scopes:     approvedScopes,
       inbox_ids:  effectiveInboxIds,
+      resource:   boundResource,
     },
   });
 
