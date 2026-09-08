@@ -20,6 +20,7 @@
 // ---------------------------------------------------------------------------
 
 import { REVIEW_CARD_HTML } from "./ui/review-card.html.ts";
+import { advertisedInputSchema } from "./advertised-schema.ts";
 
 /**
  * The mimeType that marks a resource as an MCP App rather than plain HTML.
@@ -366,6 +367,10 @@ export type ListedTool = {
  * Optional fields are omitted entirely rather than emitted as `undefined`, so
  * a tool without an output schema, annotations, or UI metadata produces
  * byte-identical JSON to before MCP Apps existed.
+ *
+ * The input schema goes out WITHOUT its action-specific `allOf` rules
+ * (advertised-schema.ts says why); the registry entry keeps them for the
+ * validator, and a tool that has none serialises exactly as before.
  */
 export function serializeToolForList(
   tool: ListedTool,
@@ -374,7 +379,7 @@ export function serializeToolForList(
     name: tool.name,
     title: tool.title,
     description: tool.description,
-    inputSchema: tool.inputSchema,
+    inputSchema: advertisedInputSchema(tool.inputSchema),
     ...(tool.outputSchema ? { outputSchema: tool.outputSchema } : {}),
     ...(tool.annotations ? { annotations: tool.annotations } : {}),
     ...(tool._meta ? { _meta: tool._meta } : {}),
