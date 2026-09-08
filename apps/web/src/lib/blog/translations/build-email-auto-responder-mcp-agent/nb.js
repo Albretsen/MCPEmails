@@ -50,7 +50,7 @@ while True:
     unread = email_read(
         action="list",
         inbox_id=inbox["inbox_id"],
-        unread_only=True,
+        unread=True,
         limit=20,
     )
 
@@ -79,7 +79,7 @@ while True:
     sleep(60)
 \`\`\`
 
-Tre ting å legge merke til. For det første kaller agenten \`inbox_list\` for å oppdage \`inbox_id\` i stedet for å lime en UUID inn i koden — det er oppdag-først-mønsteret, og det holder skriptet i gang hvis du kobler til en innboks på nytt. For det andre er \`unread_only: true\` det som gjør dette til en svarer for *ny e-post* i stedet for en maskin som svarer alle på nytt. For det tredje går hver melding gjennom sikringer før noe sendes.
+Tre ting å legge merke til. For det første kaller agenten \`inbox_list\` for å oppdage \`inbox_id\` i stedet for å lime en UUID inn i koden — det er oppdag-først-mønsteret, og det holder skriptet i gang hvis du kobler til en innboks på nytt. For det andre er \`unread: true\` det som gjør dette til en svarer for *ny e-post* i stedet for en maskin som svarer alle på nytt. For det tredje går hver melding gjennom sikringer før noe sendes.
 
 ### Markere meldinger som håndtert
 
@@ -143,7 +143,7 @@ Gi utkast-modellen stramme instruksjoner og et lengdetak. For support-svar slår
 Hvis jeg skulle satt dette i drift for en ekte innboks i morgen, ville jeg startet smått og kjedelig:
 
 1. API-nøkkel med \`read:email\` og \`send:email\`, avgrenset til én innboks.
-2. Poll \`email_read(action: "list", unread_only: true)\` hvert annet minutt.
+2. Poll \`email_read(action: "list", unread: true)\` hvert annet minutt.
 3. Tillatelsesliste med nøyaktig ett support-alias.
 4. Kun utkastmodus — opprett utkast, send ingenting automatisk.
 5. Etter en uke med å lese utkastene, slå på automatisk sending for de åpenbare tilfellene og fortsett å lage utkast for resten.

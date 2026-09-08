@@ -77,7 +77,7 @@ The one place reality intrudes is the consent screen on work/school accounts. If
 Your agent gets the core consolidated tools plus the extras Outlook supports:
 
 - \`inbox_list\` — always call this first. It returns your connected mailboxes and their \`inbox_id\` UUIDs so the agent never guesses an ID.
-- \`email_read\` — one tool, several actions: \`list\` (newest-first, paginated, with filters like \`unread_only\`), \`read\` (parsed plain text, optional sanitized HTML, optional attachments), and \`search\` (see the search note below).
+- \`email_read\` — one tool, several actions: \`list\` (newest-first, paginated, with filters like \`unread\`), \`read\` (parsed plain text, optional sanitized HTML, optional attachments), and \`search\` (see the search note below).
 - \`email_compose\` — the \`send\` action composes with CC/BCC, HTML, and attachments up to 10 MB total; the \`reply\` and \`forward\` actions thread correctly with the right headers.
 - \`email_organize\` — marking read/unread, flagging, archiving, deleting, and moving, each via its own \`action\`.
 
@@ -91,7 +91,7 @@ Outlook search isn't Gmail search. Where Gmail takes operators like \`from:\` an
 
 Here's a triage loop I run against a Microsoft 365 inbox. Once or twice an hour, the agent:
 
-1. Calls \`email_read\` with the \`list\` action and \`unread_only: true\`.
+1. Calls \`email_read\` with the \`list\` action and \`unread: true\`.
 2. Reads anything that looks time-sensitive with \`email_read\`'s \`read\` action.
 3. Summarizes the batch and drafts replies for the ones I'd obviously answer.
 4. Leaves everything unread until I confirm.

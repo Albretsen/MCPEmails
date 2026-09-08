@@ -63,7 +63,7 @@
     "infoFormat": "Format de réponse : <b>JSON-RPC 2.0</b> : les résultats réussis comportent aussi un objet typé <code>structuredContent</code>",
     "handshakeLabel": "Handshake d'initialisation",
     "pollingHeading": "Interrogation, pas push",
-    "pollingBody": "MCPEmails fonctionne uniquement en requête/réponse : chaque résultat provient d'un appel d'outil effectué par votre agent. <b>Il n'y a ni webhooks, ni notifications push, ni événements initiés par le serveur</b> : un e-mail entrant ne déclenche jamais un appel d'agent de lui-même. Pour réagir aux nouveaux messages, faites <b>interroger</b> votre agent périodiquement, p. ex. en appelant <code>email_read</code> avec <code>action: \"list\"</code> et <code>unread_only: true</code> à l'intervalle dont votre flux a besoin (attention aux limites de débit ci-dessus)."
+    "pollingBody": "MCPEmails fonctionne uniquement en requête/réponse : chaque résultat provient d'un appel d'outil effectué par votre agent. <b>Il n'y a ni webhooks, ni notifications push, ni événements initiés par le serveur</b> : un e-mail entrant ne déclenche jamais un appel d'agent de lui-même. Pour réagir aux nouveaux messages, faites <b>interroger</b> votre agent périodiquement, p. ex. en appelant <code>email_read</code> avec <code>action: \"list\"</code> et <code>unread: true</code> à l'intervalle dont votre flux a besoin (attention aux limites de débit ci-dessus)."
   },
   "operations": {
     "eyebrow": "Conçu pour le vrai travail de boîte mail",
@@ -144,7 +144,6 @@
         "attachment_index": "Index (base 0) de la pièce jointe à télécharger (action 'attachment'), correspondant à l'ordre de la liste des pièces jointes de 'read'. Prioritaire sur filename. Omettez les deux lorsque le message ne comporte qu'une seule pièce jointe.",
         "filename": "Nom de la pièce jointe à télécharger (action 'attachment'), correspondance exacte insensible à la casse. Ignoré si attachment_index est fourni.",
         "folder": "Dossier à lister (action 'list'). Par défaut \"INBOX\". Autres valeurs : \"SENT\", \"DRAFTS\", \"TRASH\".",
-        "unread_only": "Ne renvoyer que les messages non lus (action 'list'). Par défaut false.",
         "limit": "Nombre max de résultats à renvoyer (action 'list' ou 'search'). Par défaut 20, max 100.",
         "offset": "Décalage de pagination commençant à zéro (action 'list' ou 'search'). Par défaut 0.",
         "include_html": "Inclure le corps HTML assaini (action 'read'/'read_batch'). Par défaut false.",
@@ -159,7 +158,7 @@
         "subject": "Texte à faire correspondre dans l'objet (action 'search'). Les expressions de plusieurs mots sont prises telles quelles.",
         "body": "Texte libre à trouver dans le corps du message (action 'search'). (Sur Gmail, cela correspond à l'ensemble du message, pas seulement au corps.)",
         "text": "Texte libre à faire correspondre n'importe où dans le message, en-têtes et corps (action 'search').",
-        "unread": "Action 'search' : true = uniquement les messages non lus ; false = uniquement les lus ; omettez pour les deux.",
+        "unread": "Actions 'list' et 'search' : true = uniquement les messages non lus ; false = uniquement les lus ; omettez pour les deux.",
         "has_attachment": "Action 'search' : true = uniquement les messages avec pièce jointe. Non pris en charge sur IMAP générique (ignoré ici).",
         "flagged": "Action 'search' : true = uniquement les messages marqués/suivis. Non pris en charge sur Outlook/Graph (ignoré ici).",
         "since": "Date ou date-heure ISO 8601 (action 'search') ; renvoie les messages reçus le/après (>=) cet instant. P. ex. \"2026-06-01\".",
@@ -279,7 +278,7 @@
     },
     "schedule": {
       "title": "Envoi programmé",
-      "desc": "Programmer un e-mail pour une livraison ultérieure via une file d'attente côté serveur. Définissez action : 'create' (to/subject/body plus un horodatage send_at au format ISO 8601 : les destinataires et le corps sont validés immédiatement, et les envois invalides ne sont pas mis en file), 'list' (envois programmés en attente, les plus proches d'abord, éventuellement filtrés par boîte) ou 'cancel' (scheduled_send_id, seuls les envois encore 'pending' peuvent être annulés). Le distributeur s'exécute chaque minute, la livraison peut donc avoir lieu jusqu'à 60 secondes après send_at.",
+      "desc": "Programmer un e-mail pour une livraison ultérieure via une file d'attente côté serveur. Définissez action : 'create' (to/subject/body plus un horodatage send_at au format ISO 8601 : les destinataires et le corps sont validés immédiatement, et les envois invalides ne sont pas mis en file), 'list' (envois programmés en attente, les plus proches d'abord, éventuellement filtrés par boîte) ou 'cancel' (id, seuls les envois encore 'pending' peuvent être annulés). Le distributeur s'exécute chaque minute, la livraison peut donc avoir lieu jusqu'à 60 secondes après send_at.",
       "params": {
         "action": "Quelle opération effectuer : \"create\", \"list\" ou \"cancel\". Détermine quels autres arguments s'appliquent.",
         "inbox_id": "UUID de la boîte depuis laquelle envoyer (action 'create') ou par laquelle filtrer (action 'list'). Facultatif : résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
@@ -293,7 +292,7 @@
         "html_body": "Version HTML facultative du corps (action 'create').",
         "reply_to": "Adresse facultative de l'en-tête Reply-To (action 'create').",
         "attachments": "Pièces jointes (action 'create'). Octets en ligne uniquement : '{' filename, mime_type, data (base64) '}'. La forme par référence source_message_id existe sur email_compose, pas ici. Max 20 éléments, 10 Mo au total.",
-        "scheduled_send_id": "UUID de l'envoi programmé à annuler (action 'cancel').",
+        "id": "UUID de l'envoi programmé à annuler (action 'cancel'), tel que renvoyé par 'create' ou 'list'.",
         "limit": "Nombre maximal de résultats (action 'list'). Par défaut 20, max 100.",
         "idempotency_key": "Clé opaque facultative pour la création d’un seul envoi programmé. Ne la réutilisez que pour réessayer exactement la même requête de création dans les 24 heures."
       }
@@ -394,7 +393,8 @@
     "retryableNo": "Non",
     "exampleLabel": "Exemples de réponses d'erreur",
     "rows": {
-      "auth": "Clé API manquante, mal formée, révoquée ou expirée. Également renvoyé lorsque la clé API n'a pas la portée requise pour l'outil appelé.",
+      "auth": "Clé API manquante, mal formée, révoquée ou expirée (HTTP 401).",
+      "scope": "La clé est valide mais n'a pas une portée requise par l'action de l'outil (HTTP 403). data.error_code vaut \"insufficient_scope\" et data.required_scopes liste ce qui autoriserait l'appel ; l'en-tête WWW-Authenticate le répète pour que les clients OAuth puissent demander la portée manquante.",
       "method": "Méthode JSON-RPC inconnue (par ex. appel d'une méthode autre qu'initialize, tools/list, tools/call)",
       "param": "Nom d'outil inconnu, ou paramètre manquant / invalide dans tools/call",
       "rate": "Limite de débit par clé ou par espace de travail dépassée (HTTP 429). data.error_code vaut toujours « rate_limit_exceeded ». Attendez data.retry_after secondes, ou lisez l'en-tête Retry-After, avant de réessayer.",

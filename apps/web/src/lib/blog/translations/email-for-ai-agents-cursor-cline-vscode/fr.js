@@ -71,7 +71,7 @@ curl -s https://www.mcpemails.com/api/mcp \\
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 \`\`\`
 
-Si vous récupérez une liste d’outils, vous êtes connecté. Une erreur \`-32001\` signifie que la clé est mauvaise ou qu’il lui manque un scope — celle-là n’est pas réessayable, alors corrigez la clé plutôt que de boucler. Ne committez pas la clé. Lisez-la depuis une variable d’environnement et gardez-la hors de git. Si vous hésitez sur le modèle d’authentification à utiliser et où, [OAuth contre clés API pour l’accès e-mail des IA](/blog/oauth-vs-api-keys-ai-email-access) expose les compromis.
+Si vous récupérez une liste d’outils, vous êtes connecté. Une erreur \`-32001\` signifie que la clé est mauvaise, et une \`-32004\` (HTTP 403) qu’il lui manque un scope requis par l’outil — aucune des deux n’est réessayable, alors corrigez la clé plutôt que de boucler. Ne committez pas la clé. Lisez-la depuis une variable d’environnement et gardez-la hors de git. Si vous hésitez sur le modèle d’authentification à utiliser et où, [OAuth contre clés API pour l’accès e-mail des IA](/blog/oauth-vs-api-keys-ai-email-access) expose les compromis.
 
 ## Les outils dont dispose votre agent
 
@@ -94,13 +94,13 @@ Tri matinal, tapé directement dans le panneau de chat :
 
 > Appelle inbox_list, puis liste les non lus de ma boîte pro des 12 dernières heures. Range-les : à répondre, pour info, et bruit. Pour le groupe « pour info », donne-moi une ligne chacun.
 
-L’agent exécute \`inbox_list\`, puis \`email_read\` avec l’action \`list\` et \`unread_only\` activé, lit ceux qui comptent et me rend un récapitulatif trié. Quand j’en repère un auquel je veux répondre, j’enchaîne :
+L’agent exécute \`inbox_list\`, puis \`email_read\` avec l’action \`list\` et \`unread\` activé, lit ceux qui comptent et me rend un récapitulatif trié. Quand j’en repère un auquel je veux répondre, j’enchaîne :
 
 > Réponds au message du prestataire en design pour confirmer que jeudi 14h convient, fais court.
 
 Il appelle \`email_compose\` avec l’action \`reply\`, le fil est géré, et la réponse part via mon propre Gmail — elle arrive donc depuis mon adresse avec la réputation de mon domaine, pas un relais quelconque. Pour un traitement plus poussé des prompts de tri, voyez [comment faire trier et résumer votre boîte de réception par un agent IA](/blog/ai-agent-triage-summarize-inbox).
 
-Une limitation honnête : il n’y a pas de webhooks. Le serveur ne vous pousse pas de nouveau courrier. Si vous voulez que l’agent réagisse aux messages entrants, vous interrogez le serveur — \`email_read\` avec l’action \`list\` et \`unread_only: true\` selon un planning. C’est un choix de conception délibéré, et il façonne la manière dont vous construisez tout ce qui est réactif, comme un [répondeur automatique via MCP](/blog/build-email-auto-responder-mcp-agent).
+Une limitation honnête : il n’y a pas de webhooks. Le serveur ne vous pousse pas de nouveau courrier. Si vous voulez que l’agent réagisse aux messages entrants, vous interrogez le serveur — \`email_read\` avec l’action \`list\` et \`unread: true\` selon un planning. C’est un choix de conception délibéré, et il façonne la manière dont vous construisez tout ce qui est réactif, comme un [répondeur automatique via MCP](/blog/build-email-auto-responder-mcp-agent).
 
 ## Limites de débit pour l’accès scripté
 

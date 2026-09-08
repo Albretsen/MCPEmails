@@ -62,14 +62,14 @@ A handful of consolidated, action-based tools cover the whole surface area: read
 - \`email_compose\` (action \`reply\`) — same, and it sets the threading headers (In-Reply-To, References) for you
 - \`email_organize\` — move, delete, flag, or archive (one action per call)
 
-One honest limitation worth stating up front: this is **polling, not push**. There are no webhooks. To react to new mail, your agent polls on a schedule, for example \`email_read\` (action \`list\`) with \`unread_only: true\`. Any auto-responder you build works on a timer, not an instant trigger. The [auto-responder build guide](/blog/build-email-auto-responder-mcp-agent) shows how to do this well.
+One honest limitation worth stating up front: this is **polling, not push**. There are no webhooks. To react to new mail, your agent polls on a schedule, for example \`email_read\` (action \`list\`) with \`unread: true\`. Any auto-responder you build works on a timer, not an instant trigger. The [auto-responder build guide](/blog/build-email-auto-responder-mcp-agent) shows how to do this well.
 
 A morning-triage run reads like this:
 
 \`\`\`json
 {
   "step1": "inbox_list                  → finds your work Gmail",
-  "step2": "email_read (action list)    → last 24h, unread_only",
+  "step2": "email_read (action list)    → last 24h, unread: true",
   "step3": "email_read (action read)    → full body for anything urgent",
   "step4": "email_compose (action reply) → draft, or just summarize and wait"
 }

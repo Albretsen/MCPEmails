@@ -63,7 +63,7 @@
     "infoFormat": "Formato de respuesta: <b>JSON-RPC 2.0</b>. Los resultados correctos también incluyen un objeto tipado <code>structuredContent</code>",
     "handshakeLabel": "Handshake de inicialización",
     "pollingHeading": "Sondeo, no push",
-    "pollingBody": "MCPEmails es solo de petición/respuesta: cada resultado proviene de una llamada a una herramienta que hace tu agente. <b>No hay webhooks, notificaciones push ni eventos iniciados por el servidor</b>: un correo entrante nunca activa por sí solo una llamada del agente. Para reaccionar al correo nuevo, haz que tu agente <b>sondee</b> de forma periódica, p. ej. llamando a <code>email_read</code> con <code>action: \"list\"</code> y <code>unread_only: true</code> al intervalo que necesite tu flujo (ten en cuenta los límites de tasa anteriores)."
+    "pollingBody": "MCPEmails es solo de petición/respuesta: cada resultado proviene de una llamada a una herramienta que hace tu agente. <b>No hay webhooks, notificaciones push ni eventos iniciados por el servidor</b>: un correo entrante nunca activa por sí solo una llamada del agente. Para reaccionar al correo nuevo, haz que tu agente <b>sondee</b> de forma periódica, p. ej. llamando a <code>email_read</code> con <code>action: \"list\"</code> y <code>unread: true</code> al intervalo que necesite tu flujo (ten en cuenta los límites de tasa anteriores)."
   },
   "operations": {
     "eyebrow": "Diseñado para el trabajo real con el correo",
@@ -144,7 +144,6 @@
         "attachment_index": "Índice (base 0) del adjunto a descargar (action 'attachment'), según el orden de la lista de adjuntos de 'read'. Tiene prioridad sobre filename. Omite ambos cuando el mensaje tiene exactamente un adjunto.",
         "filename": "Nombre del adjunto a descargar (action 'attachment'), coincidencia exacta sin distinción de mayúsculas y minúsculas. Se ignora si se indica attachment_index.",
         "folder": "Carpeta a listar (action 'list'). Por defecto \"INBOX\". Otros valores: \"SENT\", \"DRAFTS\", \"TRASH\".",
-        "unread_only": "Devolver solo mensajes no leídos (action 'list'). Por defecto false.",
         "limit": "Máximo de resultados a devolver (action 'list' o 'search'). Por defecto 20, máx. 100.",
         "offset": "Desplazamiento de paginación basado en cero (action 'list' o 'search'). Por defecto 0.",
         "include_html": "Incluir el cuerpo HTML saneado (action 'read'/'read_batch'). Por defecto false.",
@@ -159,7 +158,7 @@
         "subject": "Texto a coincidir en el asunto (action 'search'). Las frases de varias palabras se coinciden tal cual.",
         "body": "Texto libre a encontrar en el cuerpo del mensaje (action 'search'). (En Gmail esto coincide con todo el mensaje, no solo el cuerpo.)",
         "text": "Texto libre a coincidir en cualquier parte del mensaje: cabeceras y cuerpo (action 'search').",
-        "unread": "Action 'search': true = solo mensajes no leídos; false = solo leídos; omítelo para ambos.",
+        "unread": "Acciones 'list' y 'search': true = solo mensajes no leídos; false = solo leídos; omítelo para ambos.",
         "has_attachment": "Action 'search': true = solo mensajes con adjunto. No admitido en IMAP genérico (se ignora ahí).",
         "flagged": "Action 'search': true = solo mensajes marcados/destacados. No admitido en Outlook/Graph (se ignora ahí).",
         "since": "Fecha o fecha-hora ISO 8601 (action 'search'); devuelve mensajes recibidos en/después de (>=) este instante. P. ej. \"2026-06-01\".",
@@ -279,7 +278,7 @@
     },
     "schedule": {
       "title": "Envío programado",
-      "desc": "Programa correo para entrega futura mediante una cola en el servidor. Define action: 'create' (to/subject/body más una marca de tiempo send_at en ISO 8601; los destinatarios y el cuerpo se validan de inmediato, y los envíos inválidos no se encolan), 'list' (envíos programados pendientes, los más próximos primero, opcionalmente filtrados por bandeja) o 'cancel' (scheduled_send_id, solo se pueden cancelar los envíos que sigan 'pending'). El despachador se ejecuta cada minuto, por lo que la entrega puede ocurrir hasta 60 segundos después de send_at.",
+      "desc": "Programa correo para entrega futura mediante una cola en el servidor. Define action: 'create' (to/subject/body más una marca de tiempo send_at en ISO 8601; los destinatarios y el cuerpo se validan de inmediato, y los envíos inválidos no se encolan), 'list' (envíos programados pendientes, los más próximos primero, opcionalmente filtrados por bandeja) o 'cancel' (id, solo se pueden cancelar los envíos que sigan 'pending'). El despachador se ejecuta cada minuto, por lo que la entrega puede ocurrir hasta 60 segundos después de send_at.",
       "params": {
         "action": "Qué operación realizar: \"create\", \"list\" o \"cancel\". Determina qué otros argumentos se aplican.",
         "inbox_id": "UUID de la bandeja desde la que enviar (action 'create') o por la que filtrar (action 'list'). Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
@@ -293,7 +292,7 @@
         "html_body": "Versión HTML opcional del cuerpo (action 'create').",
         "reply_to": "Dirección opcional de la cabecera Reply-To (action 'create').",
         "attachments": "Archivos adjuntos (action 'create'). Solo bytes en línea: '{' filename, mime_type, data (base64) '}'. La forma por referencia source_message_id está en email_compose, no aquí. Máx. 20 elementos, 10 MB en total.",
-        "scheduled_send_id": "UUID del envío programado a cancelar (action 'cancel').",
+        "id": "UUID del envío programado a cancelar (action 'cancel'), tal como lo devolvió 'create' o 'list'.",
         "limit": "Número máximo de resultados (action 'list'). Por defecto 20, máx. 100.",
         "idempotency_key": "Clave opaca opcional para la creación de un único envío programado. Reutilízala solo para reintentar exactamente la misma solicitud de creación en un plazo de 24 horas."
       }
@@ -394,7 +393,8 @@
     "retryableNo": "No",
     "exampleLabel": "Ejemplos de respuestas de error",
     "rows": {
-      "auth": "Clave de API ausente, malformada, revocada o caducada. También se devuelve cuando la clave de API carece del alcance requerido para la herramienta llamada.",
+      "auth": "Clave de API ausente, malformada, revocada o caducada (HTTP 401).",
+      "scope": "La clave es válida pero carece de un alcance que la acción de la herramienta requiere (HTTP 403). data.error_code es \"insufficient_scope\" y data.required_scopes enumera lo que autorizaría la llamada; la cabecera WWW-Authenticate lo repite para que los clientes OAuth puedan ampliar el acceso.",
       "method": "Método JSON-RPC desconocido (p. ej. llamar a un método distinto de initialize, tools/list, tools/call)",
       "param": "Nombre de herramienta desconocido, o parámetro ausente / inválido en tools/call",
       "rate": "Límite de tasa por clave o por espacio de trabajo superado (HTTP 429). data.error_code es siempre \"rate_limit_exceeded\". Espera data.retry_after segundos, o consulta la cabecera Retry-After, antes de reintentar.",

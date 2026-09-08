@@ -60,7 +60,7 @@ Evne-ikke-legitimasjon-modellen er også grunnen til at du kan [tilbakekalle en 
 En reell interaksjon ser slik ut. Si at du ber Claude om å oppdatere deg på innboksen din:
 
 1. Agenten kaller \`inbox_list\` og finner jobb-Gmailen din.
-2. Den kaller \`email_read\` med \`action: "list"\` og \`unread_only: true\` for å hente det som er nytt.
+2. Den kaller \`email_read\` med \`action: "list"\` og \`unread: true\` for å hente det som er nytt.
 3. For alt som ser viktig ut, kaller den \`email_read\` med \`action: "read"\` for å hente hele innholdet.
 4. Den oppsummerer, og hvis du har godkjent sendetilgang, kan den utforme et svar med \`email_compose\` (\`action: "reply"\`) — som setter tråd-headerne automatisk slik at svaret havner i riktig samtale.
 

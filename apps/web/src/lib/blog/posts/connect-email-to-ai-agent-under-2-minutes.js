@@ -117,7 +117,7 @@ Whichever provider you picked, the agent's first move is always the same. Have i
 }
 \`\`\`
 
-A good smoke test: ask your agent "summarize my three most recent unread emails." It'll run \`inbox_list\`, then \`email_read\` with \`action: "list"\` and \`unread_only: true\`, then \`email_read\` with \`action: "read"\` on each. If that works, your connection is live.
+A good smoke test: ask your agent "summarize my three most recent unread emails." It'll run \`inbox_list\`, then \`email_read\` with \`action: "list"\` and \`unread: true\`, then \`email_read\` with \`action: "read"\` on each. If that works, your connection is live.
 
 One honest caveat worth setting up front: MCP Emails is poll-based. There are no webhooks or push events, so an agent reacts to new mail by checking on a schedule rather than getting pinged. That's the right model for most workflows, and it's how the [inbox triage and summarize](/blog/ai-agent-triage-summarize-inbox) patterns work.
 
@@ -226,7 +226,7 @@ Sea cual sea el proveedor que elijas, el primer movimiento del agente siempre es
 }
 \`\`\`
 
-Una buena prueba rápida: pídele al agente "resume mis tres correos sin leer más recientes". Ejecutará \`inbox_list\`, luego \`email_read\` con \`action: "list"\` y \`unread_only: true\` y después \`email_read\` con \`action: "read"\` en cada uno. Si eso funciona, tu conexión está activa.
+Una buena prueba rápida: pídele al agente "resume mis tres correos sin leer más recientes". Ejecutará \`inbox_list\`, luego \`email_read\` con \`action: "list"\` y \`unread: true\` y después \`email_read\` con \`action: "read"\` en cada uno. Si eso funciona, tu conexión está activa.
 
 Una advertencia honesta que conviene dejar clara desde el principio: MCP Emails funciona por sondeo. No hay webhooks ni eventos push, así que un agente reacciona al correo nuevo comprobándolo según una programación, no recibiendo un aviso. Es el modelo adecuado para la mayoría de flujos, y así funcionan los patrones de [clasificación y resumen del buzón](/blog/ai-agent-triage-summarize-inbox).
 

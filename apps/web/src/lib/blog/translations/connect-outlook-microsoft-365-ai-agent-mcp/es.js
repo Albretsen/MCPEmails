@@ -64,7 +64,7 @@ El único punto donde se cuela la realidad es la pantalla de consentimiento en l
 Tu agente obtiene las herramientas básicas consolidadas más los extras que admite Outlook:
 
 - \`inbox_list\` — llámala siempre primero. Devuelve tus buzones conectados y sus UUID \`inbox_id\` para que el agente nunca adivine un ID.
-- \`email_read\` — una sola herramienta con varias acciones: \`list\` (los más recientes primero, paginado, con filtros como \`unread_only\`), \`read\` (texto plano parseado, HTML saneado opcional, adjuntos opcionales) y \`search\` (consulta la nota sobre búsqueda más abajo).
+- \`email_read\` — una sola herramienta con varias acciones: \`list\` (los más recientes primero, paginado, con filtros como \`unread\`), \`read\` (texto plano parseado, HTML saneado opcional, adjuntos opcionales) y \`search\` (consulta la nota sobre búsqueda más abajo).
 - \`email_compose\` — la acción \`send\` redacta con CC/CCO, HTML y adjuntos de hasta 10 MB en total; las acciones \`reply\` y \`forward\` mantienen el hilo con las cabeceras correctas.
 - \`email_organize\` — marcar como leído/no leído, marcar con bandera, archivar, eliminar y mover, cada una mediante su propia \`action\`.
 
@@ -78,7 +78,7 @@ La búsqueda de Outlook no es la búsqueda de Gmail. Donde Gmail acepta operador
 
 Este es un bucle de triaje que ejecuto contra una bandeja de Microsoft 365. Una o dos veces por hora, el agente:
 
-1. Llama a \`email_read\` con la acción \`list\` y \`unread_only: true\`.
+1. Llama a \`email_read\` con la acción \`list\` y \`unread: true\`.
 2. Lee con la acción \`read\` de \`email_read\` cualquier cosa que parezca urgente.
 3. Resume el lote y redacta borradores de respuesta para los que yo respondería sin dudar.
 4. Deja todo como no leído hasta que yo confirme.

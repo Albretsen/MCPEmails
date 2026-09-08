@@ -3,7 +3,7 @@ const translation = {
   description:
     'Guía práctica para clasificar la bandeja de entrada con un agente de IA: prompts listos para copiar que listan el correo no leído, leen lo importante, resumen y priorizan, y consultan según un horario.',
   coverAlt: 'Un agente de IA clasifica y resume una bandeja de entrada a través de MCP — MCP Emails',
-  content: `La forma más rápida de que un agente de IA clasifique tu bandeja de entrada es apoyarte en dos herramientas en orden: \`inbox_list\` para encontrar tu buzón, y luego \`email_read\` — con \`action: list\` y \`unread_only: true\` para sacar lo nuevo, y después \`action: read\` para los pocos que parezcan importantes — y luego una instrucción en lenguaje natural para que los resuma y los ordene por prioridad. Ese es todo el bucle. Si quieres que redacte o envíe respuestas, añades \`email_compose\` con \`action: reply\` al final.
+  content: `La forma más rápida de que un agente de IA clasifique tu bandeja de entrada es apoyarte en dos herramientas en orden: \`inbox_list\` para encontrar tu buzón, y luego \`email_read\` — con \`action: list\` y \`unread: true\` para sacar lo nuevo, y después \`action: read\` para los pocos que parezcan importantes — y luego una instrucción en lenguaje natural para que los resuma y los ordene por prioridad. Ese es todo el bucle. Si quieres que redacte o envíe respuestas, añades \`email_compose\` con \`action: reply\` al final.
 
 Este artículo te da los prompts exactos que uso, qué aspecto tiene un buen resultado y cómo ejecutar el mismo bucle según un horario para que tu clasificación matinal ocurra antes de que te sientes. Da por hecho que tu agente ya tiene acceso al correo a través de [MCP Emails](/blog/how-to-give-your-ai-agent-email-access). Si todavía no has conectado una bandeja de entrada, la [guía de conexión en menos de dos minutos](/blog/connect-email-to-ai-agent-under-2-minutes) te pone al día primero.
 
@@ -12,7 +12,7 @@ Este artículo te da los prompts exactos que uso, qué aspecto tiene un buen res
 Cada sesión de clasificación son los mismos cinco pasos. Tu agente decide el orden por su cuenta en cuanto le describes el objetivo, pero ayuda saber qué pasa por debajo:
 
 1. \`inbox_list\` — descubre las bandejas conectadas y sus UUID de \`inbox_id\`. El agente nunca pone un UUID a fuego; lo busca aquí.
-2. \`email_read\` con \`action: list\` y \`unread_only: true\` — saca la cola de no leídos de una bandeja, los más recientes primero.
+2. \`email_read\` con \`action: list\` y \`unread: true\` — saca la cola de no leídos de una bandeja, los más recientes primero.
 3. \`email_read\` con \`action: read\` — abre el cuerpo completo de los pocos mensajes que merece la pena leer en detalle.
 4. Resumir y priorizar — puro razonamiento, sin llamada a herramienta. El modelo agrupa, ordena y explica.
 5. \`email_compose\` con \`action: reply\` (opcional) — redacta o envía para los que necesitan respuesta.
@@ -78,7 +78,7 @@ Si quieres dar el siguiente paso y salirte del bucle por completo, eso es otra f
 
 ## Ejecutar la clasificación según un horario
 
-Aquí está la limitación honesta: MCP es **consulta, no inserción.** MCP Emails no tiene webhooks ni envía eventos iniciados por el servidor. Tu agente no recibe un aviso cuando llega correo. Para hacer clasificación continua, algo tiene que llamar a \`email_read\` con \`action: list\` y \`unread_only: true\` con un temporizador.
+Aquí está la limitación honesta: MCP es **consulta, no inserción.** MCP Emails no tiene webhooks ni envía eventos iniciados por el servidor. Tu agente no recibe un aviso cuando llega correo. Para hacer clasificación continua, algo tiene que llamar a \`email_read\` con \`action: list\` y \`unread: true\` con un temporizador.
 
 En la práctica eso significa una de dos configuraciones:
 

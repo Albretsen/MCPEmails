@@ -3,7 +3,7 @@ const translation = {
   description:
     '一份关于 AI 智能体收件箱分拣的实操指南：可直接复制粘贴的提示词，列出未读邮件、阅读要紧的内容、总结并排定优先级，还能按计划定时轮询。',
   coverAlt: 'AI 智能体通过 MCP 分拣并总结收件箱 — MCP Emails',
-  content: `让 AI 智能体分拣收件箱最快的办法，是按顺序倚重两个工具：用 \`inbox_list\` 找到你的邮箱，然后用 \`email_read\` —— 以 \`action: list\` 加 \`unread_only: true\` 拉取新邮件，再以 \`action: read\` 读那几封看起来重要的 —— 然后给一句大白话指令让它总结并排序。整个循环就这么多。如果你想让它起草或发送回复，只需在最后加上带 \`action: reply\` 的 \`email_compose\`。
+  content: `让 AI 智能体分拣收件箱最快的办法，是按顺序倚重两个工具：用 \`inbox_list\` 找到你的邮箱，然后用 \`email_read\` —— 以 \`action: list\` 加 \`unread: true\` 拉取新邮件，再以 \`action: read\` 读那几封看起来重要的 —— 然后给一句大白话指令让它总结并排序。整个循环就这么多。如果你想让它起草或发送回复，只需在最后加上带 \`action: reply\` 的 \`email_compose\`。
 
 这篇文章给你我自己用的确切提示词，告诉你好的输出长什么样，以及如何按计划定时跑同一个循环，让早晨的分拣在你坐下之前就已经完成。这里假设你的智能体已经通过 [MCP Emails](/blog/how-to-give-your-ai-agent-email-access) 拿到了邮件访问权限。如果你还没连接收件箱，[两分钟以内的连接指南](/blog/connect-email-to-ai-agent-under-2-minutes) 会先帮你搞定这一步。
 
@@ -12,7 +12,7 @@ const translation = {
 每一次分拣会话都是同样的五步。一旦你描述好目标，智能体会自己琢磨出顺序，但了解底层发生了什么会有帮助：
 
 1. \`inbox_list\` —— 发现已连接的收件箱及其 \`inbox_id\` UUID。智能体从不硬编码 UUID，而是在这里查出来。
-2. 带 \`action: list\` 和 \`unread_only: true\` 的 \`email_read\` —— 拉取某个收件箱的未读队列，最新的排在前面。
+2. 带 \`action: list\` 和 \`unread: true\` 的 \`email_read\` —— 拉取某个收件箱的未读队列，最新的排在前面。
 3. 带 \`action: read\` 的 \`email_read\` —— 对那几封值得细读的邮件打开完整正文。
 4. 总结并排序 —— 纯推理，不调用工具。模型负责归类、排序并给出解释。
 5. 带 \`action: reply\` 的 \`email_compose\`（可选）—— 为需要回复的邮件起草或发送。
@@ -78,7 +78,7 @@ calendar, LinkedIn, 6 marketing blasts.
 
 ## 按计划定时跑分拣
 
-这里有个老实话要说：MCP 是**轮询，不是推送。** MCP Emails 没有 webhook，也不发送任何由服务器发起的事件。新邮件到达时你的智能体不会被通知到。要做持续的分拣，就必须有某个东西按定时器去调用带 \`action: list\` 和 \`unread_only: true\` 的 \`email_read\`。
+这里有个老实话要说：MCP 是**轮询，不是推送。** MCP Emails 没有 webhook，也不发送任何由服务器发起的事件。新邮件到达时你的智能体不会被通知到。要做持续的分拣，就必须有某个东西按定时器去调用带 \`action: list\` 和 \`unread: true\` 的 \`email_read\`。
 
 实际上这意味着两种方案之一：
 

@@ -48,8 +48,13 @@ export const ERROR_CODE_EXPLANATIONS: Record<string, ErrorExplanation> = {
   },
   '-32001': {
     title: 'Request rejected',
-    detail: 'A server-defined rejection: the key lacked the scope the tool needs, a guard refused the operation, or a limit was hit. Check the scope table before assuming a bug.',
+    detail: 'A server-defined rejection: the key lacked the scope the tool needs (rows before 2026-09-08; since then those log as -32004), a guard refused the operation, or a limit was hit. Check the scope table before assuming a bug.',
     blame: 'server',
+  },
+  '-32004': {
+    title: 'Insufficient scope',
+    detail: 'The key is valid but does not carry the scope the called tool action needs. Sent as HTTP 403 with a WWW-Authenticate challenge. Usually a key issued with read scopes being asked to send, move or delete: the user chose the scopes, so this is a configuration mismatch, not a bug.',
+    blame: 'client',
   },
 
   // ---- Application codes ----

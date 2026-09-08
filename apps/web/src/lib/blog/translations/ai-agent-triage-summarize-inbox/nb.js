@@ -3,7 +3,7 @@ const translation = {
   description:
     'En praktisk veiledning for innbokssortering med AI-agent: ferdige prompter som lister ulest e-post, leser det som betyr noe, oppsummerer og prioriterer, og poller på fast plan.',
   coverAlt: 'AI-agent sorterer og oppsummerer en innboks over MCP — MCP Emails',
-  content: `Den raskeste måten å få en AI-agent til å sortere innboksen din på er å lene deg på to verktøy i rekkefølge: \`inbox_list\` for å finne postkassen din, og så \`email_read\` — med \`action: list\` og \`unread_only: true\` for å hente det nye, deretter \`action: read\` for de få som ser viktige ut — og så en instruksjon på vanlig norsk om å oppsummere og rangere dem. Det er hele løkka. Vil du at den skal skrive utkast til eller sende svar, legger du til \`email_compose\` med \`action: reply\` til slutt.
+  content: `Den raskeste måten å få en AI-agent til å sortere innboksen din på er å lene deg på to verktøy i rekkefølge: \`inbox_list\` for å finne postkassen din, og så \`email_read\` — med \`action: list\` og \`unread: true\` for å hente det nye, deretter \`action: read\` for de få som ser viktige ut — og så en instruksjon på vanlig norsk om å oppsummere og rangere dem. Det er hele løkka. Vil du at den skal skrive utkast til eller sende svar, legger du til \`email_compose\` med \`action: reply\` til slutt.
 
 Dette innlegget gir deg de eksakte promptene jeg bruker, hvordan god output ser ut, og hvordan du kjører den samme løkka på fast plan slik at morgensorteringen er gjort før du setter deg ned. Det forutsetter at agenten din allerede har e-posttilgang via [MCP Emails](/blog/how-to-give-your-ai-agent-email-access). Har du ikke koblet til en innboks ennå, tar [koble-til-guiden på under to minutter](/blog/connect-email-to-ai-agent-under-2-minutes) deg dit først.
 
@@ -12,7 +12,7 @@ Dette innlegget gir deg de eksakte promptene jeg bruker, hvordan god output ser 
 Hver sorteringsøkt er de samme fem stegene. Agenten finner ut rekkefølgen selv når du beskriver målet, men det hjelper å vite hva som skjer under panseret:
 
 1. \`inbox_list\` — finn tilkoblede innbokser og deres \`inbox_id\`-UUID-er. Agenten hardkoder aldri en UUID; den slår den opp her.
-2. \`email_read\` med \`action: list\` og \`unread_only: true\` — hent den uleste køen for én innboks, nyeste først.
+2. \`email_read\` med \`action: list\` og \`unread: true\` — hent den uleste køen for én innboks, nyeste først.
 3. \`email_read\` med \`action: read\` — åpne hele meldingsteksten for de få meldingene som er verdt å lese i detalj.
 4. Oppsummer og prioriter — ren resonnering, ingen verktøykall. Modellen grupperer, rangerer og forklarer.
 5. \`email_compose\` med \`action: reply\` (valgfritt) — skriv utkast eller send for dem som trenger et svar.
@@ -78,7 +78,7 @@ Vil du ta neste steg og fjerne deg selv fra løkka helt, er det en annen form fo
 
 ## Kjøre sortering på fast plan
 
-Her er den ærlige begrensningen: MCP er **poll, ikke push.** MCP Emails har ingen webhooks og sender ingen serverinitierte hendelser. Agenten din får ikke et pling når post kommer. For å gjøre løpende sortering må noe kalle \`email_read\` med \`action: list\` og \`unread_only: true\` på en timer.
+Her er den ærlige begrensningen: MCP er **poll, ikke push.** MCP Emails har ingen webhooks og sender ingen serverinitierte hendelser. Agenten din får ikke et pling når post kommer. For å gjøre løpende sortering må noe kalle \`email_read\` med \`action: list\` og \`unread: true\` på en timer.
 
 I praksis betyr det ett av to oppsett:
 

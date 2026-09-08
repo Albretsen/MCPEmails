@@ -100,7 +100,7 @@ Quel que soit le fournisseur choisi, le premier geste de l’agent est toujours 
 }
 \`\`\`
 
-Un bon test rapide : demandez à votre agent « résume mes trois e-mails non lus les plus récents ». Il exécutera \`inbox_list\`, puis \`email_read\` avec \`action: "list"\` et \`unread_only: true\`, puis \`email_read\` avec \`action: "read"\` sur chacun. Si cela fonctionne, votre connexion est active.
+Un bon test rapide : demandez à votre agent « résume mes trois e-mails non lus les plus récents ». Il exécutera \`inbox_list\`, puis \`email_read\` avec \`action: "list"\` et \`unread: true\`, puis \`email_read\` avec \`action: "read"\` sur chacun. Si cela fonctionne, votre connexion est active.
 
 Une réserve honnête à poser d’emblée : MCP Emails fonctionne par sondage. Il n’y a pas de webhooks ni d’événements push, un agent réagit donc au nouveau courrier en le vérifiant selon une planification plutôt qu’en recevant une notification. C’est le bon modèle pour la plupart des flux de travail, et c’est ainsi que fonctionnent les modèles de [tri et résumé de la boîte de réception](/blog/ai-agent-triage-summarize-inbox).
 
