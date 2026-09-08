@@ -2,6 +2,11 @@
 
 **Give your AI agent an inbox.** A hosted [Model Context Protocol](https://modelcontextprotocol.io) server that lets Claude, Cursor, or any MCP‑compatible client read, search, send, organize, and schedule email through your existing mailboxes — without ever storing your mail.
 
+[![Glama quality grade](https://glama.ai/mcp/servers/Albretsen/MCPEmails/badge)](https://glama.ai/mcp/servers/Albretsen/MCPEmails)
+[![npm version](https://img.shields.io/npm/v/mcpemails)](https://www.npmjs.com/package/mcpemails)
+[![MCP registry](https://img.shields.io/badge/MCP%20registry-com.mcpemails%2Femails-blue)](https://registry.modelcontextprotocol.io/v0/servers?search=mcpemails)
+[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
+
 > Connect a mailbox once, paste one URL into your agent, and it can work your inbox live. Email is fetched on demand and never retained; credentials are encrypted at rest and decrypted only at call time inside an isolated edge function.
 
 🔗 **[mcpemails.com](https://mcpemails.com)** · 📚 **[Docs](https://mcpemails.com/docs)** · 💳 **[Pricing](https://mcpemails.com/pricing)**
@@ -61,6 +66,12 @@ Permissions are scoped per key, so you can hand an agent `read:email` only, or g
 
 The protocol is JSON‑RPC 2.0 over HTTP (MCP `2025-06-18`, Streamable transport). Start every session with `inbox_list` — it returns the inboxes the key can reach, their per‑provider capabilities, and a versioned compatibility profile. The profile marks normalized operations as `exact`, `different`, or `unavailable`, so agents can preserve provider differences rather than silently weakening a request.
 
+### Setup guides
+
+Copy‑paste instructions per client, including where each one keeps its config file: **[mcpemails.com/docs/clients](https://mcpemails.com/docs/clients)**.
+
+[Claude](https://mcpemails.com/docs/claude) · [Claude Code](https://mcpemails.com/docs/claude-code) · [ChatGPT](https://mcpemails.com/docs/chatgpt) · [Cursor](https://mcpemails.com/docs/cursor) · [VS Code](https://mcpemails.com/docs/vscode) · [Cline](https://mcpemails.com/docs/cline) · [Windsurf](https://mcpemails.com/docs/windsurf) · [Gemini CLI](https://mcpemails.com/docs/gemini-cli) · [Zed](https://mcpemails.com/docs/zed) · [JetBrains](https://mcpemails.com/docs/jetbrains) · [Raycast](https://mcpemails.com/docs/raycast) · [Warp](https://mcpemails.com/docs/warp) · [curl](https://mcpemails.com/docs/curl)
+
 ## Capabilities
 
 - **Live, never stored** — email is read straight from your provider on each call; no message bodies are persisted.
@@ -75,6 +86,18 @@ The protocol is JSON‑RPC 2.0 over HTTP (MCP `2025-06-18`, Streamable transport
 ## Tools
 
 11 tools. Most are resource-oriented and take an `action` argument that selects the specific operation (and, for actions that need different privileges, the required scope):
+
+- `inbox_list` - Lists the inboxes the key can reach, with each one's provider capabilities.
+- `email_read` - Lists, reads and searches messages, in batches, plus attachments, extracted attachment text and the original `.eml`.
+- `email_organize` - Moves, copies, flags and archives messages, singly, in batches, or by search.
+- `email_delete` - Trashes or permanently deletes messages, singly, in batches, or by search.
+- `email_compose` - Sends, replies and forwards through your own provider, from your real address.
+- `folder` - Lists, creates, renames and deletes folders (labels on Gmail).
+- `draft` - Lists, creates, updates, sends and deletes drafts, including provider‑native replies.
+- `schedule` - Queues a message for future delivery, lists what is queued, and cancels it.
+- `signature` - Reads and sets the signature appended to outbound mail.
+- `automation` - Creates and manages unattended triage rules, with no model in the loop.
+- `contact_search` - Looks up contacts by scanning recent mail live, with no stored address book.
 
 | Tool | Actions | Scope(s) |
 | --- | --- | --- |

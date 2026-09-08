@@ -2,6 +2,11 @@
 
 Email for AI agents. Read, search, send, organize, draft and schedule email across your inboxes from any MCP client.
 
+[![Glama quality grade](https://glama.ai/mcp/servers/Albretsen/MCPEmails/badge)](https://glama.ai/mcp/servers/Albretsen/MCPEmails)
+[![npm version](https://img.shields.io/npm/v/mcpemails)](https://www.npmjs.com/package/mcpemails)
+[![MCP registry](https://img.shields.io/badge/MCP%20registry-com.mcpemails%2Femails-blue)](https://registry.modelcontextprotocol.io/v0/servers?search=mcpemails)
+[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](https://github.com/Albretsen/MCPEmails/blob/main/LICENSE)
+
 This package is a **stdio bridge**. [MCP Emails](https://mcpemails.com) is a hosted MCP server that speaks JSON-RPC over HTTPS, and many MCP clients can only launch a local command and talk over stdin/stdout. `mcpemails` sits between the two: it forwards every JSON-RPC message from your client to `https://mcpemails.com/api/mcp` and writes every response straight back. It adds nothing to the protocol.
 
 Works with Gmail, Fastmail, iCloud, Yahoo, Zoho, Yandex, and any IMAP/SMTP mailbox you connect at [mcpemails.com](https://mcpemails.com).
@@ -18,9 +23,11 @@ Nothing to install. `npx -y mcpemails` fetches the package on first run.
 
 Every client below uses the same three things: the command `npx`, the args `["-y", "mcpemails"]`, and your key in the `MCPEMAILS_API_KEY` environment variable. Replace `mcpe_your_key_here` with your own key.
 
+The five clients below are the common ones. Setup pages for thirteen clients, including ChatGPT, VS Code, Gemini CLI, Zed, JetBrains, Raycast, Warp and plain `curl`, live at [mcpemails.com/docs/clients](https://mcpemails.com/docs/clients).
+
 ### Claude Desktop
 
-Edit `claude_desktop_config.json` (Settings, Developer, Edit Config):
+Full guide: [mcpemails.com/docs/claude](https://mcpemails.com/docs/claude). Edit `claude_desktop_config.json` (Settings, Developer, Edit Config):
 
 - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
@@ -43,7 +50,7 @@ Restart Claude Desktop. The email tools appear under the connectors icon.
 
 ### Cursor
 
-Edit `~/.cursor/mcp.json` for every project, or `.cursor/mcp.json` inside one project:
+Full guide: [mcpemails.com/docs/cursor](https://mcpemails.com/docs/cursor). Edit `~/.cursor/mcp.json` for every project, or `.cursor/mcp.json` inside one project:
 
 ```json
 {
@@ -63,7 +70,7 @@ Then open Settings, MCP, and confirm the server shows a green status.
 
 ### Cline
 
-Open the MCP Servers panel, choose Configure MCP Servers, and add this to `cline_mcp_settings.json`:
+Full guide: [mcpemails.com/docs/cline](https://mcpemails.com/docs/cline). Open the MCP Servers panel, choose Configure MCP Servers, and add this to `cline_mcp_settings.json`:
 
 ```json
 {
@@ -85,7 +92,7 @@ Leaving `autoApprove` empty means Cline asks before every call. Add read-only to
 
 ### Windsurf
 
-Edit `~/.codeium/windsurf/mcp_config.json`:
+Full guide: [mcpemails.com/docs/windsurf](https://mcpemails.com/docs/windsurf). Edit `~/.codeium/windsurf/mcp_config.json`:
 
 ```json
 {
@@ -104,6 +111,8 @@ Edit `~/.codeium/windsurf/mcp_config.json`:
 Then press Refresh in the Cascade MCP panel.
 
 ### Claude Code
+
+Full guide: [mcpemails.com/docs/claude-code](https://mcpemails.com/docs/claude-code).
 
 ```bash
 claude mcp add mcpemails --env MCPEMAILS_API_KEY=mcpe_your_key_here -- npx -y mcpemails
@@ -129,18 +138,19 @@ with an `Authorization: Bearer mcpe_...` header, or let it run the OAuth flow. C
 
 ## Tools
 
-| Tool | Actions |
-| --- | --- |
-| `inbox_list` | list the inboxes the key can reach |
-| `email_read` | `list`, `read`, `read_batch`, `search`, `attachment` |
-| `email_organize` | `move`, `move_batch`, `copy`, `copy_batch`, `flag`, `archive`, `search_and_move` |
-| `email_delete` | `delete`, `delete_batch`, `search_and_delete` |
-| `email_compose` | `send`, `reply`, `forward` |
-| `folder` | `list`, `create`, `rename`, `delete` |
-| `draft` | `list`, `create`, `update`, `send` |
-| `schedule` | `create`, `list`, `cancel` |
-| `signature` | `get`, `set` |
-| `contact_search` | search the address book |
+11 tools. Most take an `action` argument that selects the specific operation:
+
+- `inbox_list` - Lists the inboxes the key can reach, with each one's provider capabilities.
+- `email_read` - Lists, reads and searches messages, plus attachments and the original `.eml` (`list`, `read`, `read_batch`, `search`, `attachment`, `extract`, `original`).
+- `email_organize` - Moves, copies, flags and archives messages (`move`, `move_batch`, `copy`, `copy_batch`, `flag`, `archive`, `search_and_move`).
+- `email_delete` - Trashes or permanently deletes messages (`delete`, `delete_batch`, `search_and_delete`).
+- `email_compose` - Sends, replies and forwards through your own provider (`send`, `reply`, `forward`).
+- `folder` - Lists, creates, renames and deletes folders (`list`, `create`, `rename`, `delete`).
+- `draft` - Lists, creates, updates, sends and deletes drafts (`list`, `create`, `reply`, `update`, `send`, `delete`).
+- `schedule` - Queues a message for future delivery, lists it, cancels it (`create`, `list`, `cancel`).
+- `signature` - Reads and sets the signature appended to outbound mail (`get`, `set`).
+- `automation` - Creates and manages unattended triage rules, with no model in the loop (`create`, `list`, `get`, `update`, `enable`, `disable`, `delete`, `runs`, `preview`).
+- `contact_search` - Looks up contacts by scanning recent mail live, with no stored address book.
 
 Each tool is gated by the scopes on your API key, so a key issued with read scopes only cannot send or delete anything no matter what the agent asks for. Full reference at [mcpemails.com/docs](https://mcpemails.com/docs).
 
