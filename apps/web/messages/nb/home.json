@@ -58,12 +58,12 @@
       "1": {
         "tag": "Lagring",
         "h": "E-post hentes i sanntid. Lagres aldri.",
-        "p": "Hvert verktøykall treffer leverandøren din i sanntid: Gmail API, Fastmail JMAP eller IMAP. Meldingsinnhold, emner og vedlegg går til agenten og forkastes umiddelbart. Vi lagrer én ting per innboks, et kryptert token eller app-passord, slik at vi kan gjøre neste kall. Det eneste unntaket er en melding du planlegger å sende senere: vi oppbevarer den frem til sendetidspunktet, og beholder deretter en oppføring for historikken din."
+        "p": "Hvert verktøykall treffer leverandøren din i sanntid: Gmail API eller IMAP. Meldingsinnhold, emner og vedlegg går til agenten og forkastes umiddelbart. Vi lagrer én ting per innboks, et kryptert token eller app-passord, slik at vi kan gjøre neste kall. Det eneste unntaket er en melding du planlegger å sende senere: vi oppbevarer den frem til sendetidspunktet, og beholder deretter en oppføring for historikken din."
       },
       "2": {
         "tag": "Sending",
         "h": "Sending går gjennom leverandøren din.",
-        "p": "Når agenten din kaller <code>email_compose</code> (for å sende eller svare), sendes meldingen via Gmail API, Fastmail JMAP eller din egen SMTP-server. Domenets omdømme og leveringsdyktighet forblir helt i dine hender. Vi videresender aldri e-post fra vårt eget domene."
+        "p": "Når agenten din kaller <code>email_compose</code> (for å sende eller svare), sendes meldingen via Gmail API eller din egen SMTP-server. Domenets omdømme og leveringsdyktighet forblir helt i dine hender. Vi videresender aldri e-post fra vårt eget domene."
       },
       "3": {
         "tag": "Leverandører",
@@ -104,7 +104,7 @@
       "0": "Oppdag alle tilkoblede innbokser og ID-ene deres. Kall dette først, ingen kopiering av UUID fra dashbordet.",
       "1": "Les e-post: list opp nylige sammendrag, hent en hel melding etter ID, batch-les opptil 50, eller kjør et leverandøruavhengig søk, alt via action-argumentet.",
       "2": "Organiser e-post: flytt, kopier, slett, flagg eller arkiver, én om gangen, i bulk eller rett fra et søk.",
-      "3": "Skriv: send en ny melding, svar i tråden eller videresend. Sendes gjennom Gmail API, Fastmail JMAP eller SMTP: ditt domene, din leveringsdyktighet.",
+      "3": "Skriv: send en ny melding, svar i tråden eller videresend. Sendes gjennom Gmail API eller SMTP: ditt domene, din leveringsdyktighet.",
       "4": "Administrer mapper (etiketter på Gmail): list opp, opprett, gi nytt navn eller slett, og bruk dem som flyttemål.",
       "5": "Utkast: list opp, opprett, oppdater og send utkast lagret i leverandørens Drafts-mappe.",
       "6": "Planlegg en melding for et fremtidig tidspunkt, list opp ventende planlagte sendinger, og avbryt dem før de går ut.",
@@ -246,6 +246,7 @@
     "copyAria": "Kopier {label}",
     "linkAbout": "Om",
     "linkSecurity": "Sikkerhet",
+    "linkStatus": "Status",
     "linkSelfHost": "Selvhosting",
     "linkFounders": "For gründere"
   },

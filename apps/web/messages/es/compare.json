@@ -7,7 +7,7 @@
     "eyebrow": "Conectores nativos vs MCP",
     "titleLine1": "Los conectores de IA integrados se detienen",
     "titleLine2": "donde empieza tu bandeja de entrada",
-    "lead": "Los conectores de correo nativos de IA abarcan uno o dos proveedores y casi siempre solo crean borradores. Un servidor de correo MCP gestionado conecta cualquier bandeja, realiza acciones reales y te acompaña a todos los clientes de IA.",
+    "lead": "Los conectores de correo nativos de IA abarcan uno o dos proveedores. Un servidor de correo MCP gestionado conecta cualquier bandeja, realiza acciones reales y te acompaña a todos los clientes de IA.",
     "ctaPrimary": "Conecta una bandeja gratis",
     "ctaSecondary": "Lee la documentación"
   },
@@ -23,8 +23,8 @@
       },
       "actions": {
         "tag": "Acciones reales",
-        "h": "Envía y programa, no solo borradores",
-        "p": "Muchos conectores nativos se detienen en <b>crear un borrador</b> que aún tienes que abrir y enviar. Nuestras nueve herramientas basadas en acciones <b>envían, responden, reenvían, programan, mueven, copian, marcan, archivan y eliminan</b> directamente, así el agente termina el trabajo dentro de la bandeja."
+        "h": "Programa y organiza, no solo envía",
+        "p": "Los conectores nativos envían y responden, y ahí se detienen. Nuestras nueve herramientas basadas en acciones <b>envían, responden, reenvían, programan, mueven, copian, marcan, archivan y eliminan</b> directamente, así el agente termina el trabajo dentro de la bandeja."
       },
       "portable": {
         "tag": "Portátil",
@@ -42,14 +42,14 @@
     "rows": {
       "providers": "Fastmail, iCloud, Yahoo, Zoho, Yandex",
       "imap": "Cualquier buzón IMAP / SMTP",
-      "send": "Enviar y responder directamente (no solo borradores)",
+      "send": "Enviar, responder y reenviar directamente",
       "schedule": "Programar envíos para más tarde",
       "organize": "Mover, copiar, marcar, archivar, eliminar",
       "multiAi": "Funciona en Claude, Cursor, ChatGPT, n8n…",
       "oauth": "Gmail por OAuth",
       "storage": "El correo se obtiene en vivo, nunca se almacena"
     },
-    "footnote": "Las capacidades de los conectores nativos de IA varían según el proveedor; las diferencias anteriores reflejan el patrón habitual de un solo proveedor y solo borradores."
+    "footnote": "Las capacidades de los conectores nativos de IA varían según el proveedor; las diferencias anteriores reflejan el patrón habitual de un solo proveedor."
   },
   "ctaBand": {
     "title": "Dale a tu IA una bandeja de verdad",
@@ -64,15 +64,15 @@
     "items": [
       {
         "q": "¿No puede Claude o ChatGPT leer ya mi Gmail con un conector integrado?",
-        "a": "A veces, para un solo proveedor y a menudo solo de lectura o solo borradores. mcpemails conecta Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex y cualquier buzón IMAP, y realiza acciones reales: enviar, responder, reenviar, programar, mover, copiar, marcar, archivar y eliminar. Esa misma bandeja funciona luego en cualquier cliente MCP, no solo en la app de un proveedor."
+        "a": "A veces, para un solo proveedor. mcpemails conecta Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex y cualquier buzón IMAP, y realiza acciones reales: enviar, responder, reenviar, programar, mover, copiar, marcar, archivar y eliminar. Esa misma bandeja funciona luego en cualquier cliente MCP, no solo en la app de un proveedor."
       },
       {
         "q": "¿Qué buzones suelen quedar fuera de los conectores integrados?",
         "a": "La mayoría de los conectores nativos alcanzan Gmail y a veces Outlook. Por lo general no pueden tocar Fastmail, iCloud, Yahoo, Zoho, Yandex ni un servidor IMAP/SMTP autoalojado. mcpemails los conecta todos."
       },
       {
-        "q": "¿Los conectores nativos envían correo de verdad o solo lo dejan en borrador?",
-        "a": "Muchos se detienen en crear un borrador que aún tienes que abrir y enviar tú. mcpemails envía, responde, reenvía y programa directamente, así el agente termina la tarea dentro de tu bandeja."
+        "q": "¿Los conectores nativos pueden programar y organizar el correo?",
+        "a": "Envían, responden y reenvían, y ahí se detienen. mcpemails además programa, mueve, copia, marca, archiva y elimina, así el agente termina la tarea dentro de tu bandeja en vez de devolverte la mitad."
       },
       {
         "q": "Si lo configuro para Claude, ¿funciona también en Cursor o ChatGPT?",

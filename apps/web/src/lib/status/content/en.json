@@ -1,0 +1,128 @@
+{
+  "meta": {
+    "title": "Status",
+    "description": "Live uptime for the MCP Emails endpoint, measured by an automated check that runs every five minutes against production. Real recorded numbers, no marketing figure."
+  },
+  "hero": {
+    "eyebrow": "Status",
+    "title": "System status",
+    "lead": "A scripted client connects to the public MCP endpoint every five minutes, lists the tools, lists an inbox and reads a message. Everything below is counted from what those checks recorded."
+  },
+  "overall": {
+    "operational": "All systems operational",
+    "degraded": "Degraded",
+    "down": "Major outage",
+    "unknown": "Status unknown"
+  },
+  "overallNote": {
+    "operational": "The most recent check passed.",
+    "degraded": "The most recent check failed once. The monitor waits for a second consecutive failure before it pages, so this may already have cleared.",
+    "down": "Checks are failing now and someone has been paged.",
+    "unknown": "We cannot currently see the monitor's latest result, so we cannot tell you the current state. That is a fault in the monitoring, not a statement about the product."
+  },
+  "checked": {
+    "now": "Last check less than a minute ago",
+    "minutes": "Last check {minutes} minutes ago",
+    "one": "Last check 1 minute ago",
+    "never": "No check recorded",
+    "at": "Last check {time}"
+  },
+  "uptime": {
+    "label": "Uptime, last {days} days",
+    "checks": "{checks} checks, one every {cadence} minutes",
+    "failed": "{failed} of them failed",
+    "failedNone": "none of them failed",
+    "since": "Continuous monitoring started {date}.",
+    "noFigure": "Not enough recorded checks in this window to publish a figure."
+  },
+  "components": {
+    "title": "What is checked",
+    "lead": "One pass through the four steps, in this order. A run stops at its first failure, so each step is scored only against the checks that reached it.",
+    "thStep": "Step",
+    "thNow": "Now",
+    "thWindow": "Last {days} days",
+    "state": {
+      "operational": "Operational",
+      "failing": "Failing",
+      "unknown": "Not reached recently"
+    },
+    "noData": "No data",
+    "attempted": "{attempted} checks",
+    "items": {
+      "initialize": {
+        "name": "Connection",
+        "detail": "The MCP handshake against mcpemails.com, with a real API key."
+      },
+      "tools_list": {
+        "name": "Tool list",
+        "detail": "The server returns its tool catalogue to the client."
+      },
+      "inbox_list": {
+        "name": "Inbox list",
+        "detail": "The connected mailboxes come back for that key."
+      },
+      "email_read": {
+        "name": "Mail read",
+        "detail": "A message is fetched live from the mail provider, end to end."
+      }
+    }
+  },
+  "history": {
+    "title": "Last {days} days",
+    "allOk": "{date}: {checks} checks, all passed",
+    "someFailed": "{date}: {checks} checks, {failed} failed",
+    "noData": "{date}: no checks recorded",
+    "legendOk": "All checks passed",
+    "legendBlip": "One check recovered",
+    "legendFailed": "Some checks failed",
+    "legendNone": "No data",
+    "oldest": "{days} days ago",
+    "newest": "Today"
+  },
+  "incidents": {
+    "title": "Incidents",
+    "lead": "A single failed check that passes again five minutes later is counted against uptime above but is not listed here as an incident. That is the same line the pager draws: two consecutive failures, or one failure of a kind that cannot be somebody else's network.",
+    "none": "No incident in the last {days} days.",
+    "blips": "{count} single failed checks in this window, each of which passed again on the next run.",
+    "blipsOne": "1 single failed check in this window, which passed again on the next run.",
+    "checks": "{count} consecutive checks failed",
+    "checksOne": "1 check failed",
+    "recovered": "Recovered {time}",
+    "openStill": "No passing check recorded since",
+    "paged": "Paged on the first failure",
+    "affected": "Affected: {step}",
+    "class": {
+      "public_endpoint": "The endpoint did not answer",
+      "authentication": "The API key was rejected",
+      "mcp_protocol": "A malformed MCP response",
+      "database": "The database",
+      "provider_read": "The upstream mail provider did not answer in time",
+      "provider_send": "The upstream mail provider refused a send",
+      "alert_delivery": "Alert delivery",
+      "internal": "An error inside the monitor itself"
+    }
+  },
+  "scope": {
+    "title": "What this page does and does not tell you",
+    "points": [
+      "The check runs from one place on a five minute cron, so an outage shorter than five minutes can pass unrecorded, and the timestamps here are accurate to the check that caught it rather than to the second.",
+      "It exercises four code paths. Sending, scheduling, drafts and folder operations are not on this page because nothing measures them on a schedule, and a figure covering them would be a guess.",
+      "It reads one real mailbox at one provider. A failure attributed to the mail provider is that provider having a bad minute, not necessarily anything you would have noticed on yours.",
+      "Nothing here is derived from customer traffic. No account, workspace or message is counted, sampled or shown."
+    ]
+  },
+  "unavailable": {
+    "title": "We cannot read our own monitor right now",
+    "body": "The monitoring history is temporarily unreadable, so there is no honest number to show you. This page prefers to say so rather than repeat the last figure it knew. The monitor itself keeps running and paging whether or not this page can reach it."
+  },
+  "footer": {
+    "source": "Every number on this page is counted from the monitor's own recorded runs at read time. Nothing is entered by hand.",
+    "securityLink": "How we handle your mail and credentials",
+    "contact": "Something wrong that this page says is fine? Write to {email}."
+  },
+  "punct": {
+    "join": ". ",
+    "end": ".",
+    "space": " "
+  }
+}

@@ -1,0 +1,128 @@
+{
+  "meta": {
+    "title": "Estado",
+    "description": "Disponibilidad en vivo del endpoint de MCP Emails, medida por una comprobación automática que se ejecuta cada cinco minutos contra producción. Cifras reales registradas, sin marketing."
+  },
+  "hero": {
+    "eyebrow": "Estado",
+    "title": "Estado del sistema",
+    "lead": "Un cliente automatizado se conecta al endpoint MCP público cada cinco minutos, pide la lista de herramientas, lista un buzón y lee un mensaje. Todo lo que sigue está contado a partir de lo que registraron esas comprobaciones."
+  },
+  "overall": {
+    "operational": "Todos los sistemas operativos",
+    "degraded": "Degradado",
+    "down": "Interrupción importante",
+    "unknown": "Estado desconocido"
+  },
+  "overallNote": {
+    "operational": "La última comprobación pasó.",
+    "degraded": "La última comprobación falló una vez. El sistema de avisos espera a un segundo fallo consecutivo antes de avisar, así que puede que ya se haya resuelto.",
+    "down": "Las comprobaciones están fallando ahora mismo y se ha avisado a alguien.",
+    "unknown": "Ahora mismo no podemos ver el último resultado del monitor, así que no podemos decirte el estado actual. Eso es un fallo de la monitorización, no una afirmación sobre el producto."
+  },
+  "checked": {
+    "now": "Última comprobación hace menos de un minuto",
+    "minutes": "Última comprobación hace {minutes} minutos",
+    "one": "Última comprobación hace 1 minuto",
+    "never": "Ninguna comprobación registrada",
+    "at": "Última comprobación {time}"
+  },
+  "uptime": {
+    "label": "Disponibilidad, últimos {days} días",
+    "checks": "{checks} comprobaciones, una cada {cadence} minutos",
+    "failed": "{failed} de ellas fallaron",
+    "failedNone": "ninguna de ellas falló",
+    "since": "La monitorización continua empezó el {date}.",
+    "noFigure": "No hay comprobaciones registradas suficientes en esta ventana para publicar una cifra."
+  },
+  "components": {
+    "title": "Qué se comprueba",
+    "lead": "Una pasada por los cuatro pasos, en este orden. Una ejecución se detiene en su primer fallo, así que cada paso se puntúa solo contra las comprobaciones que llegaron hasta él.",
+    "thStep": "Paso",
+    "thNow": "Ahora",
+    "thWindow": "Últimos {days} días",
+    "state": {
+      "operational": "Operativo",
+      "failing": "Fallando",
+      "unknown": "No alcanzado recientemente"
+    },
+    "noData": "Sin datos",
+    "attempted": "{attempted} comprobaciones",
+    "items": {
+      "initialize": {
+        "name": "Conexión",
+        "detail": "El saludo MCP contra mcpemails.com, con una clave de API real."
+      },
+      "tools_list": {
+        "name": "Lista de herramientas",
+        "detail": "El servidor devuelve su catálogo de herramientas al cliente."
+      },
+      "inbox_list": {
+        "name": "Lista de buzones",
+        "detail": "Los buzones conectados vuelven para esa clave."
+      },
+      "email_read": {
+        "name": "Lectura de correo",
+        "detail": "Se recupera un mensaje en vivo del proveedor de correo, de extremo a extremo."
+      }
+    }
+  },
+  "history": {
+    "title": "Últimos {days} días",
+    "allOk": "{date}: {checks} comprobaciones, todas pasaron",
+    "someFailed": "{date}: {checks} comprobaciones, {failed} fallaron",
+    "noData": "{date}: ninguna comprobación registrada",
+    "legendOk": "Todas las comprobaciones pasaron",
+    "legendBlip": "Una comprobación, recuperada",
+    "legendFailed": "Algunas comprobaciones fallaron",
+    "legendNone": "Sin datos",
+    "oldest": "Hace {days} días",
+    "newest": "Hoy"
+  },
+  "incidents": {
+    "title": "Incidentes",
+    "lead": "Una comprobación fallida aislada que vuelve a pasar cinco minutos después cuenta contra la disponibilidad de arriba, pero no se lista aquí como incidente. Es la misma línea que traza el sistema de avisos: dos fallos consecutivos, o un fallo de un tipo que no puede ser la red de otra persona.",
+    "none": "Ningún incidente en los últimos {days} días.",
+    "blips": "{count} comprobaciones fallidas aisladas en esta ventana, cada una de las cuales volvió a pasar en la siguiente ejecución.",
+    "blipsOne": "1 comprobación fallida aislada en esta ventana, que volvió a pasar en la siguiente ejecución.",
+    "checks": "{count} comprobaciones consecutivas fallaron",
+    "checksOne": "1 comprobación falló",
+    "recovered": "Recuperado {time}",
+    "openStill": "Ninguna comprobación correcta registrada desde entonces",
+    "paged": "Aviso enviado al primer fallo",
+    "affected": "Afectado: {step}",
+    "class": {
+      "public_endpoint": "El endpoint no respondió",
+      "authentication": "La clave de API fue rechazada",
+      "mcp_protocol": "Una respuesta MCP mal formada",
+      "database": "La base de datos",
+      "provider_read": "El proveedor de correo no respondió a tiempo",
+      "provider_send": "El proveedor de correo rechazó un envío",
+      "alert_delivery": "Entrega del aviso",
+      "internal": "Un error dentro del propio monitor"
+    }
+  },
+  "scope": {
+    "title": "Qué te dice esta página y qué no",
+    "points": [
+      "La comprobación se ejecuta desde un único sitio con un cron de cinco minutos, así que una interrupción más corta que cinco minutos puede pasar sin registrarse, y las marcas de tiempo de aquí son precisas hasta la comprobación que lo detectó, no hasta el segundo.",
+      "Ejercita cuatro rutas de código. El envío, la programación, los borradores y las operaciones de carpetas no están en esta página porque nada los mide de forma periódica, y una cifra que los cubriera sería una suposición.",
+      "Lee un buzón real en un proveedor. Un fallo atribuido al proveedor de correo es ese proveedor teniendo un mal minuto, no necesariamente algo que hubieras notado en el tuyo.",
+      "Nada de aquí procede del tráfico de clientes. Ninguna cuenta, espacio de trabajo ni mensaje se cuenta, se muestrea ni se muestra."
+    ]
+  },
+  "unavailable": {
+    "title": "Ahora mismo no podemos leer nuestro propio monitor",
+    "body": "El historial de monitorización es temporalmente ilegible, así que no hay ninguna cifra honesta que mostrarte. Esta página prefiere decirlo antes que repetir la última que conocía. El monitor sigue ejecutándose y avisando, llegue o no esta página hasta él."
+  },
+  "footer": {
+    "source": "Cada cifra de esta página está contada a partir de las ejecuciones registradas del propio monitor en el momento de la lectura. Nada se introduce a mano.",
+    "securityLink": "Cómo tratamos tu correo y tus credenciales",
+    "contact": "¿Algo va mal y esta página dice que está bien? Escribe a {email}."
+  },
+  "punct": {
+    "join": ". ",
+    "end": ".",
+    "space": " "
+  }
+}

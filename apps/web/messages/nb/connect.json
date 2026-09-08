@@ -24,7 +24,7 @@
   "caps": {
     "eyebrow": "Hva AI-en din kan gjøre",
     "title": "En {provider}-innboks agenten faktisk kan bruke",
-    "sub": "Ni handlingsbaserte MCP-verktøy, ikke bare utkast. Agenten fullfører jobben inne i {provider}."
+    "sub": "Ni handlingsbaserte MCP-verktøy: send, svar, videresend, planlegg og organiser. Agenten fullfører jobben inne i {provider}."
   },
   "capabilities": [
     {

@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://docs.windsurf.com/windsurf/cascade/mcp"
+  ],
+  "meta": {
+    "title": "Connect Email to Windsurf: Cascade MCP Server Setup",
+    "description": "Add a real inbox to Cascade in Windsurf. One entry in mcp_config.json using serverUrl, then authorize with OAuth. No API key. One inbox free."
+  },
+  "hero": {
+    "eyebrow": "Windsurf + email",
+    "titleLine1": "Connect your inbox to Windsurf",
+    "titleLine2": "and Cascade",
+    "lead": "Add a real mailbox to Cascade. Read, search, send, reply, forward, schedule and organize mail from the editor, across every inbox you have connected.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "OAuth, no API key needed",
+    "meta2": "Email fetched live, never stored",
+    "answer": "Add one entry under mcpServers in ~/.codeium/windsurf/mcp_config.json using the field serverUrl, not url, with https://mcpemails.com/api/mcp. Refresh MCP servers in Cascade and authorize when prompted."
+  },
+  "method": {
+    "title": "How Windsurf connects: OAuth, no API key",
+    "body": "Windsurf runs the standard MCP OAuth flow against this server. It registers itself with <b>RFC 7591 dynamic client registration</b>, so there is no client ID to create, and authorizes with <b>authorization code plus PKCE</b> using S256. No client secret is ever transmitted, and the token carries only the scopes you approve on our consent screen. The access token it receives lasts an hour and refreshes itself; it is listed in Dashboard, API Keys as <code>OAuth:</code> followed by the client name, which is where you revoke the connection."
+  },
+  "setup": [
+    {
+      "h": "Create a free account and connect a mailbox",
+      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Gmail connects with one-click Google sign-in; iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
+    },
+    {
+      "h": "Open the Cascade MCP settings",
+      "p": "Open Cascade MCP settings, or edit <code>~/.codeium/windsurf/mcp_config.json</code> directly."
+    },
+    {
+      "h": "Add the server",
+      "p": "Add the entry below. The field name here is <code>serverUrl</code>, not <code>url</code>."
+    },
+    {
+      "h": "Refresh and authorize",
+      "p": "Refresh MCP servers in Cascade and authorize with mcpemails when prompted. Approve the scopes you want Cascade to hold."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The field is serverUrl, and url fails silently",
+      "p": "This is the single most common Windsurf setup mistake, and it is entirely reasonable to make: Cursor, Zed and VS Code all read <code>url</code>, so a snippet copied from any of them looks right. Windsurf reads <code>serverUrl</code>. With the wrong key the entry parses, the server appears in the list, and no tools ever arrive."
+    },
+    {
+      "h": "Cascade needs a refresh, it does not watch the file",
+      "p": "Editing <code>mcp_config.json</code> in an editor does not make Cascade reload it. Use the refresh action in the MCP panel after any change. A correct entry that has not been refreshed looks exactly like a broken one."
+    },
+    {
+      "h": "Decide up front whether Cascade should be able to send",
+      "p": "The consent screen is where that is settled. Read and draft scopes suit an editor assistant, and leaving <code>send:email</code> off means no prompt, no jailbreak and no confused loop can dispatch mail from this connection. Human approval in the dashboard is the belt-and-braces version if you do want sending."
+    }
+  ],
+  "limits": [
+    "Requests are rate limited to 100 per minute, 1,000 per hour and 10,000 per day per key, plus your plan ceiling on billable actions.",
+    "The server is request and response only. There are no webhooks and no server-initiated events, so new mail never wakes your agent by itself. To react to arriving mail, poll on a schedule.",
+    "Mail is fetched live from your provider on every call and never stored. Only the encrypted OAuth token or app password is kept, so a revoked token or a changed mailbox password ends access immediately."
+  ],
+  "faq": [
+    {
+      "q": "How do I connect email to Windsurf?",
+      "a": "Add an entry under mcpServers in ~/.codeium/windsurf/mcp_config.json with serverUrl set to https://mcpemails.com/api/mcp, refresh MCP servers in Cascade, and authorize when prompted. Cascade then has tools for reading, searching, sending, replying, forwarding, organizing and scheduling mail."
+    },
+    {
+      "q": "Why does my Windsurf config not work when the same JSON works in Cursor?",
+      "a": "Almost always the field name. Cursor reads url, Windsurf reads serverUrl. The rest of the entry is identical, which is exactly why the mistake survives a careful read."
+    },
+    {
+      "q": "Do I need an API key for Windsurf?",
+      "a": "No. Windsurf runs the OAuth flow against this server, so the config file holds only a public URL. A bearer API key remains available for scripted or headless use."
+    },
+    {
+      "q": "Which mailboxes can Windsurf reach this way?",
+      "a": "Gmail over Google sign-in, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password, and any other mailbox that speaks IMAP and SMTP on the standard ports. The client sees them all through the same connection: your agent calls inbox_list first to discover every connected mailbox and its id, so there are no UUIDs to paste anywhere."
+    },
+    {
+      "q": "Can Cascade send email without me seeing it?",
+      "a": "Only if you let it. Sending is gated on the send:email scope, so a key or a token without that scope cannot send at all. On top of that, an inbox owner can require human approval in the dashboard, which holds every send, reply, forward, draft send and scheduled send until a person releases it."
+    },
+    {
+      "q": "Is my email stored on your servers?",
+      "a": "No. Every message is fetched live from your provider for the request that asked for it and handed straight to your client. Only the encrypted OAuth token or app password is kept, so future calls can authenticate. Deleting the inbox in the dashboard, or revoking access at your provider, ends the connection at once."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give Cascade a real inbox",
+    "sub": "One config entry, one sign-in. One inbox free forever, no card required."
+  }
+}

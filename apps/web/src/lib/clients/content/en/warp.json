@@ -1,0 +1,88 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://docs.warp.dev/agent-platform/capabilities/mcp/"
+  ],
+  "meta": {
+    "title": "Connect Email to Warp: Agent MCP Server Setup",
+    "description": "Add a real inbox to Warp agents. Settings, Agents, MCP servers, add a Streamable HTTP server by URL and complete browser OAuth. No API key. One inbox free."
+  },
+  "hero": {
+    "eyebrow": "Warp + email",
+    "titleLine1": "Connect your inbox to Warp",
+    "titleLine2": "and its agents",
+    "lead": "Give the terminal a real mailbox. Read, search, send, reply, forward, schedule and organize mail from a Warp agent, across every inbox you have connected.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "OAuth, no API key needed",
+    "meta2": "Email fetched live, never stored",
+    "answer": "Open Settings, Agents, MCP servers, click Add, choose the Streamable HTTP or SSE Server (URL) tab, paste https://mcpemails.com/api/mcp and confirm. Warp completes the browser OAuth flow when prompted."
+  },
+  "method": {
+    "title": "How Warp connects: OAuth, no API key",
+    "body": "Warp runs the standard MCP OAuth flow against this server. It registers itself with <b>RFC 7591 dynamic client registration</b>, so there is no client ID to create, and authorizes with <b>authorization code plus PKCE</b> using S256. No client secret is ever transmitted, and the token carries only the scopes you approve on our consent screen. The access token it receives lasts an hour and refreshes itself; it is listed in Dashboard, API Keys as <code>OAuth:</code> followed by the client name, which is where you revoke the connection."
+  },
+  "setup": [
+    {
+      "h": "Create a free account and connect a mailbox",
+      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Gmail connects with one-click Google sign-in; iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
+    },
+    {
+      "h": "Open the MCP settings",
+      "p": "Open <b>Settings</b>, then <b>Agents</b>, then <b>MCP servers</b>, and click <b>+ Add</b>."
+    },
+    {
+      "h": "Choose the URL tab",
+      "p": "Select the <b>Streamable HTTP or SSE Server (URL)</b> tab rather than the command-based one."
+    },
+    {
+      "h": "Paste and authorize",
+      "p": "Paste <code>https://mcpemails.com/api/mcp</code> and confirm, then complete the browser OAuth flow when prompted. Approve the scopes you want the agent to hold."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Pick the URL tab, not the command tab",
+      "p": "Warp offers a command-based server and a URL-based one. This server is hosted, so it has no command to run and no package to install. The URL tab is the only one that can work, and picking the other produces a server that never starts."
+    },
+    {
+      "h": "A terminal agent runs long and unattended",
+      "p": "That is the appeal, and it is also why the scope decision matters here. An agent working through a task list with <code>send:email</code> can mail someone at any point in that list. Leaving the scope off, or turning on human approval so sends queue for a person, keeps the useful part without the surprise."
+    },
+    {
+      "h": "Nothing arrives on its own",
+      "p": "The server is request and response only, with no webhooks or push. A Warp agent sees mail when it looks, so a scheduled or explicitly requested check is what turns this into a monitor. Mind the rate limits if you poll aggressively."
+    }
+  ],
+  "limits": [
+    "Requests are rate limited to 100 per minute, 1,000 per hour and 10,000 per day per key, plus your plan ceiling on billable actions.",
+    "The server is request and response only. There are no webhooks and no server-initiated events, so new mail never wakes your agent by itself. To react to arriving mail, poll on a schedule.",
+    "Mail is fetched live from your provider on every call and never stored. Only the encrypted OAuth token or app password is kept, so a revoked token or a changed mailbox password ends access immediately."
+  ],
+  "faq": [
+    {
+      "q": "How do I connect email to Warp?",
+      "a": "Open Settings, Agents, MCP servers, click Add, choose the Streamable HTTP or SSE Server (URL) tab, paste https://mcpemails.com/api/mcp and confirm, then complete the browser OAuth flow. Warp agents then have tools for reading, searching, sending, replying, forwarding, organizing and scheduling mail."
+    },
+    {
+      "q": "Do I need an API key for Warp?",
+      "a": "No. Warp completes a browser OAuth flow against this server, so nothing secret goes into the settings. A bearer key remains available for scripts and headless machines."
+    },
+    {
+      "q": "Which mailboxes can Warp reach this way?",
+      "a": "Gmail over Google sign-in, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password, and any other mailbox that speaks IMAP and SMTP on the standard ports. The client sees them all through the same connection: your agent calls inbox_list first to discover every connected mailbox and its id, so there are no UUIDs to paste anywhere."
+    },
+    {
+      "q": "Can a Warp agent send email without me seeing it?",
+      "a": "Only if you let it. Sending is gated on the send:email scope, so a key or a token without that scope cannot send at all. On top of that, an inbox owner can require human approval in the dashboard, which holds every send, reply, forward, draft send and scheduled send until a person releases it."
+    },
+    {
+      "q": "Is my email stored on your servers?",
+      "a": "No. Every message is fetched live from your provider for the request that asked for it and handed straight to your client. Only the encrypted OAuth token or app password is kept, so future calls can authenticate. Deleting the inbox in the dashboard, or revoking access at your provider, ends the connection at once."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your terminal a real inbox",
+    "sub": "One URL, one sign-in. One inbox free forever, no card required."
+  }
+}

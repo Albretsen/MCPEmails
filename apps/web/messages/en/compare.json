@@ -7,7 +7,7 @@
     "eyebrow": "Native connectors vs MCP",
     "titleLine1": "Built-in AI connectors stop",
     "titleLine2": "where your inbox starts",
-    "lead": "AI-native email connectors cover one or two providers and mostly draft. A managed MCP email server connects any inbox, takes real actions, and travels with you to every AI client.",
+    "lead": "AI-native email connectors cover one or two providers. A managed MCP email server connects any inbox, takes real actions, and travels with you to every AI client.",
     "ctaPrimary": "Connect an inbox free",
     "ctaSecondary": "Read the docs"
   },
@@ -23,8 +23,8 @@
       },
       "actions": {
         "tag": "Real actions",
-        "h": "Send and schedule, not just draft",
-        "p": "Many native connectors stop at <b>creating a draft</b> you still have to open and send. Our nine action-based tools <b>send, reply, forward, schedule, move, copy, flag, archive, and delete</b> directly, so the agent finishes the job inside the inbox."
+        "h": "Schedule and organize, not just send",
+        "p": "Native connectors send and reply, then stop. Our nine action-based tools <b>send, reply, forward, schedule, move, copy, flag, archive, and delete</b> directly, so the agent finishes the job inside the inbox."
       },
       "portable": {
         "tag": "Portable",
@@ -42,14 +42,14 @@
     "rows": {
       "providers": "Fastmail, iCloud, Yahoo, Zoho, Yandex",
       "imap": "Any IMAP / SMTP mailbox",
-      "send": "Send & reply directly (not just drafts)",
+      "send": "Send, reply, and forward directly",
       "schedule": "Schedule sends for later",
       "organize": "Move, copy, flag, archive, delete",
       "multiAi": "Works across Claude, Cursor, ChatGPT, n8n…",
       "oauth": "Gmail over OAuth",
       "storage": "Email fetched live, never stored"
     },
-    "footnote": "Capabilities of typical AI-native connectors vary by vendor; the gaps above reflect the common one-provider, draft-only pattern."
+    "footnote": "Capabilities of typical AI-native connectors vary by vendor; the gaps above reflect the common one-provider pattern."
   },
   "ctaBand": {
     "title": "Give your AI a real inbox",
@@ -64,15 +64,15 @@
     "items": [
       {
         "q": "Can't Claude or ChatGPT already read my Gmail with a built-in connector?",
-        "a": "Sometimes, for one provider and often read-only or draft-only. mcpemails connects Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex, and any IMAP mailbox, and it takes real actions: send, reply, forward, schedule, move, copy, flag, archive, and delete. The same inbox then works in every MCP client, not just one vendor's app."
+        "a": "Sometimes, for one provider. mcpemails connects Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex, and any IMAP mailbox, and it takes real actions: send, reply, forward, schedule, move, copy, flag, archive, and delete. The same inbox then works in every MCP client, not just one vendor's app."
       },
       {
         "q": "Which mailboxes do built-in connectors usually miss?",
         "a": "Most native connectors reach Gmail and sometimes Outlook. They typically can't touch Fastmail, iCloud, Yahoo, Zoho, Yandex, or a self-hosted IMAP/SMTP server. mcpemails connects all of them."
       },
       {
-        "q": "Do native connectors actually send email, or just draft it?",
-        "a": "Many stop at creating a draft you still have to open and send yourself. mcpemails sends, replies, forwards, and schedules directly, so the agent finishes the task inside your inbox."
+        "q": "Can native connectors schedule and organize mail?",
+        "a": "They send, reply, and forward, then stop. mcpemails also schedules, moves, copies, flags, archives, and deletes, so the agent finishes the task inside your inbox instead of handing half of it back to you."
       },
       {
         "q": "If I set this up for Claude, does it work in Cursor or ChatGPT too?",

@@ -24,7 +24,7 @@
   "caps": {
     "eyebrow": "Lo que tu IA puede hacer",
     "title": "Una bandeja de {provider} que tu agente puede usar de verdad",
-    "sub": "Nueve herramientas MCP basadas en acciones, no solo borradores. Tu agente termina el trabajo dentro de {provider}."
+    "sub": "Nueve herramientas MCP basadas en acciones: enviar, responder, reenviar, programar y organizar. Tu agente termina el trabajo dentro de {provider}."
   },
   "capabilities": [
     {

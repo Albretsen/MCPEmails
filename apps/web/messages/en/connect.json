@@ -24,7 +24,7 @@
   "caps": {
     "eyebrow": "What your AI can do",
     "title": "A {provider} inbox your agent can actually use",
-    "sub": "Nine action-based MCP tools, not just drafts. Your agent finishes the job inside {provider}."
+    "sub": "Nine action-based MCP tools: send, reply, forward, schedule, and organize. Your agent finishes the job inside {provider}."
   },
   "capabilities": [
     {
