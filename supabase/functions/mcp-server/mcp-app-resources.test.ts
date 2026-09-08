@@ -474,6 +474,59 @@ Deno.test("tools/list emits _meta when present and is byte-identical without it"
   assertEquals(full["annotations"], { destructiveHint: true }, "annotations round-trip");
 });
 
+Deno.test("tools/list advertises a consolidated tool without its allOf rules and keeps them for the validator", () => {
+  // The shape buildConsolidatedTool emits. The registry entry is what
+  // tools/call validates against, so stripping must happen on the way out,
+  // not in place.
+  const rules = [
+    {
+      if: { properties: { action: { const: "list" } }, required: ["action"] },
+      then: { not: { anyOf: [{ required: ["message_id"] }] } },
+    },
+    {
+      if: { properties: { action: { const: "read" } }, required: ["action"] },
+      then: { required: ["message_id"] },
+    },
+  ];
+  const registryEntry = {
+    name: "email_read",
+    title: "Read Email",
+    description: "Read, list and search email.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        action: { type: "string", enum: ["list", "read"], description: "Operation to run. Required: read: message_id." },
+        message_id: { type: "string" },
+      },
+      required: ["action"],
+      additionalProperties: false,
+      allOf: rules,
+    },
+    outputSchema: { type: "object", additionalProperties: true },
+  };
+
+  const listed = serializeToolForList(registryEntry);
+  assertEquals(
+    JSON.stringify(listed),
+    JSON.stringify({
+      name: "email_read",
+      title: "Read Email",
+      description: "Read, list and search email.",
+      inputSchema: {
+        type: "object",
+        properties: registryEntry.inputSchema.properties,
+        required: ["action"],
+        additionalProperties: false,
+      },
+      outputSchema: { type: "object", additionalProperties: true },
+    }),
+    "advertised wire bytes: full schema minus allOf, outputSchema kept",
+  );
+  assert(!("allOf" in (listed["inputSchema"] as Record<string, unknown>)), "allOf is not advertised");
+  assert(registryEntry.inputSchema.allOf === rules, "the registry entry still carries its rules");
+  assertEquals(registryEntry.inputSchema.allOf.length, 2, "all of them");
+});
+
 // ---------------------------------------------------------------------------
 // Client capability observation
 // ---------------------------------------------------------------------------

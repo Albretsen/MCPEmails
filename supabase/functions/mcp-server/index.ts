@@ -9,6 +9,7 @@ import {
   ImapMessageTooLargeError,
 } from "./imap-client.ts";
 import { decodedBase64ByteLength } from "./attachment-validation.ts";
+import { actionSelectorDescription } from "./advertised-schema.ts";
 import {
   base64ToUtf8,
   downloadContentBlocks,
@@ -3015,18 +3016,18 @@ const RAW_QUERY_DESCRIPTION =
 const INBOX_ID_PROPERTY = {
   type: "string",
   format: "uuid",
+  // One sentence on purpose: the full selection rules (omit both when the key
+  // has one inbox, never guess, the error lists every inbox_id) live in
+  // SERVER_INSTRUCTIONS, and this property is advertised on nine tools.
   description:
-    "Inbox UUID. Optional when the key has exactly one inbox. Otherwise pass " +
-    "this or `inbox` — not both, unless they name the same inbox; omit both " +
-    "and the error lists every inbox_id.",
+    "Inbox UUID from inbox_list. Optional when the key has one inbox; pass " +
+    "this or `inbox`, not both.",
 } as const;
 
 /** Shared `inbox` property — the email-address alternative to `inbox_id`. */
 const INBOX_PROPERTY = {
   type: "string",
-  description:
-    "Inbox email address; an alternative to inbox_id. Pass one or the other: " +
-    "if both are given and they name different inboxes the call is refused.",
+  description: "Inbox email address, an alternative to inbox_id.",
 } as const;
 
 /**
@@ -3052,11 +3053,12 @@ const IDEMPOTENCY_KEY_PROPERTY = {
   type: "string",
   minLength: 1,
   maxLength: 200,
+  // Advertised on five tools, so only the facts that change a caller's
+  // behaviour: retry-only reuse, the window, and the conflict rule.
   description:
-    "Opaque key for one operation, outbound or mailbox mutation. Reuse it only " +
-    "when retrying the identical request within 24 hours: the retry is collapsed, " +
-    "not repeated, which matters most for copy. Reuse with different arguments is " +
-    "rejected; omit it for normal behaviour.",
+    "Reuse only when retrying the identical request within 24 hours; the " +
+    "retry is collapsed, not repeated. Reuse with different arguments is " +
+    "rejected.",
 } as const;
 
 /**
@@ -6540,12 +6542,13 @@ const ACTION_SELECTORS_BY_TOOL: Record<string, ActionSelectorIndex> = Object
  * Which action of a consolidated tool owns which argument, built beside the
  * schema by buildConsolidatedTool and keyed by tool name.
  *
- * The published `allOf` rules say only that an argument is forbidden for the
- * selected action. This index says where it is allowed instead, and which of
- * its values the schema itself calls a no-op, which is what lets dispatch tell
- * a harmless extra argument apart from a filter the caller expected to be
- * honoured. See consolidated-arguments.ts for why that distinction is the whole
- * point, and why the ownership is held here rather than published in the schema.
+ * The `allOf` rules (validated server-side, not advertised) say only that an
+ * argument is forbidden for the selected action. This index says where it is
+ * allowed instead, and which of its values the schema itself calls a no-op,
+ * which is what lets dispatch tell a harmless extra argument apart from a
+ * filter the caller expected to be honoured. See consolidated-arguments.ts for
+ * why that distinction is the whole point, and why the ownership is held here
+ * rather than published in the schema.
  *
  * Derived from the same merge as `properties` and the `allOf` rules so it
  * cannot describe a contract other than the one clients were handed.
@@ -6628,28 +6631,26 @@ function buildConsolidatedOutputSchema(
  * Build a consolidated tool's input schema by merging the input schemas of its
  * actions' legacy tools. A required `action` enum selects the operation. The
  * action-specific `allOf` rules make the selected action's required fields and
- * accepted properties explicit; without them, fields from one action (for
- * example the search fields of `search_and_move`) misleadingly appear usable
- * with another action (such as `flag`). The first action to contribute a
+ * accepted properties explicit for the server-side validator; without them,
+ * fields from one action (for example the search fields of `search_and_move`)
+ * would validate with another action (such as `flag`). They are not advertised
+ * (advertised-schema.ts); the required fields reach the client through the
+ * `action` property's description instead. The first action to contribute a
  * property wins (shared props like inbox_id are identical across tools), except
  * keys listed in an action's `renames`.
  *
  * Side effect: records the tool's entry in CONSOLIDATED_ARGUMENT_INDEX.
  */
 function buildConsolidatedTool(name: string, spec: ConsolidatedSpec): ToolDefinition {
-  const actionHints = Object.entries(spec.actions)
-    .filter(([, action]) => action.hint)
-    .map(([actionName, action]) => `${actionName} = ${action.hint}`)
-    .join("; ");
-  const properties: Record<string, unknown> = {
-    action: {
-      type: "string",
-      enum: Object.keys(spec.actions),
-      description: actionHints
-        ? `Operation to run. ${actionHints}.`
-        : "Operation to run.",
-    },
+  // `description` is filled in below, once every action's required list is
+  // known: see actionSelectorDescription for why the selector's prose has to
+  // state them.
+  const actionSelector: Record<string, unknown> = {
+    type: "string",
+    enum: Object.keys(spec.actions),
+    description: "",
   };
+  const properties: Record<string, unknown> = { action: actionSelector };
   const actionProperties = new Map<string, Set<string>>();
   const actionRequired = new Map<string, string[]>();
   let requiredScope = "";
@@ -6682,6 +6683,13 @@ function buildConsolidatedTool(name: string, spec: ConsolidatedSpec): ToolDefini
   }
   // requiredScope must not also appear in altScopes.
   altScopeSet.delete(requiredScope);
+  actionSelector.description = actionSelectorDescription(
+    Object.entries(spec.actions).map(([actionName, action]) => ({
+      name: actionName,
+      hint: action.hint,
+      required: actionRequired.get(actionName) ?? [],
+    })),
+  );
   const allPropertyNames = Object.keys(properties);
   const actionRules = Object.keys(spec.actions).map((actionName) => {
     const allowed = actionProperties.get(actionName) ?? new Set(["action"]);
@@ -6724,6 +6732,9 @@ function buildConsolidatedTool(name: string, spec: ConsolidatedSpec): ToolDefini
     description: spec.description,
     requiredScope: requiredScope as ToolDefinition["requiredScope"],
     ...(altScopeSet.size > 0 ? { altScopes: [...altScopeSet] } : {}),
+    // The full schema, rules included. It is what tools/call validates
+    // against; tools/list advertises it WITHOUT `allOf` (see
+    // advertisedInputSchema in advertised-schema.ts for the measured reasons).
     inputSchema: {
       type: "object",
       properties,
@@ -6828,10 +6839,11 @@ for (const definition of BULK_TOOL_DEFINITIONS) {
 //
 // MCP clients are not required to validate a tool's advertised inputSchema.
 // Keep this small Draft-7 subset here rather than trusting every client (or
-// adding a cold-start dependency) and validate the exact schema returned by
-// tools/list before an argument reaches a handler.  The subset covers every
-// keyword used by the registry, including the action-specific allOf rules of
-// consolidated tools.
+// adding a cold-start dependency) and validate the registry's FULL schema
+// before an argument reaches a handler. The subset covers every keyword used
+// by the registry, including the action-specific allOf rules of consolidated
+// tools, which tools/list deliberately omits (advertised-schema.ts): the
+// advertised schema is the full one minus those rules, never a looser one.
 // ---------------------------------------------------------------------------
 
 type InputSchemaError = { path: string; keyword: string; message: string };

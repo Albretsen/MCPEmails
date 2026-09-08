@@ -3,9 +3,10 @@
 //
 // A consolidated tool (email_read, email_organize, …) publishes ONE flat
 // `properties` map holding the union of every action's arguments, and relies on
-// an `allOf` of if/then/not rules to say which subset each action actually
-// accepts. Models read the flat map far more reliably than the conditional
-// rules, so they routinely send `email_read {action: "list", subject: "..."}`
+// an `allOf` of if/then/not rules (validated server-side; since 2026-09-08 not
+// advertised in tools/list, see advertised-schema.ts) to say which subset each
+// action actually accepts. Models read the flat map far more reliably than
+// conditional rules, so they routinely send `email_read {action: "list", subject: "..."}`
 // or `{action: "search", unread_only: false}`. Every one of those was refused
 // outright: 463 refusals across 40 external workspaces in the 30 days to
 // 2026-08-25, the single largest error class on the product, one user at a 38%
