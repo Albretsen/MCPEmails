@@ -100,7 +100,7 @@ Uansett hvilken leverandør du valgte, er agentens første trekk alltid det samm
 }
 \`\`\`
 
-En god røyktest: be agenten din om å "oppsummere mine tre nyeste uleste e-poster." Den kjører \`inbox_list\`, deretter \`email_read\` med \`action: "list"\` og \`unread_only: true\`, og så \`email_read\` med \`action: "read"\` på hver av dem. Hvis det fungerer, er koblingen din i drift.
+En god røyktest: be agenten din om å "oppsummere mine tre nyeste uleste e-poster." Den kjører \`inbox_list\`, deretter \`email_read\` med \`action: "list"\` og \`unread: true\`, og så \`email_read\` med \`action: "read"\` på hver av dem. Hvis det fungerer, er koblingen din i drift.
 
 Ett ærlig forbehold det er verdt å avklare med en gang: MCP Emails er pollebasert. Det finnes ingen webhooks eller push-hendelser, så en agent reagerer på ny e-post ved å sjekke etter en tidsplan i stedet for å bli varslet. Det er riktig modell for de fleste arbeidsflyter, og det er slik mønstrene for [innbokstriagering og oppsummering](/blog/ai-agent-triage-summarize-inbox) fungerer.
 

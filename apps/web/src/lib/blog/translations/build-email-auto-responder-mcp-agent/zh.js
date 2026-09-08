@@ -50,7 +50,7 @@ while True:
     unread = email_read(
         action="list",
         inbox_id=inbox["inbox_id"],
-        unread_only=True,
+        unread=True,
         limit=20,
     )
 
@@ -79,7 +79,7 @@ while True:
     sleep(60)
 \`\`\`
 
-有三点值得留意。第一，智能体调用 \`inbox_list\` 来发现 \`inbox_id\`，而不是把一个 UUID 粘进代码里——这就是"先发现"的模式，它能让脚本在你重新连接收件箱后依然可用。第二，\`unread_only: true\` 才是让这成为一个*新邮件*回复器、而不是一台对所有人反复回复的机器的关键。第三，每一封消息在发送任何东西之前都要经过护栏。
+有三点值得留意。第一，智能体调用 \`inbox_list\` 来发现 \`inbox_id\`，而不是把一个 UUID 粘进代码里——这就是"先发现"的模式，它能让脚本在你重新连接收件箱后依然可用。第二，\`unread: true\` 才是让这成为一个*新邮件*回复器、而不是一台对所有人反复回复的机器的关键。第三，每一封消息在发送任何东西之前都要经过护栏。
 
 ### 把消息标记为已处理
 
@@ -143,7 +143,7 @@ def send_with_backoff(**kwargs):
 如果明天就要为一个真实收件箱上线这套东西，我会从小而无聊的地方起步：
 
 1. 一把带 \`read:email\` 和 \`send:email\` 的 API 密钥，限定到一个收件箱。
-2. 每两分钟轮询一次 \`email_read(action: "list", unread_only: true)\`。
+2. 每两分钟轮询一次 \`email_read(action: "list", unread: true)\`。
 3. 白名单里只放恰好一个客服别名。
 4. 只用草稿模式——创建草稿，不自动发送任何东西。
 5. 读了一周草稿之后，对那些显而易见的情形开启自动发送，其余的继续起草。

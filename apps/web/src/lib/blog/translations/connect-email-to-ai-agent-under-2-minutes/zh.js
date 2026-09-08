@@ -100,7 +100,7 @@ iCloud 底层走 IMAP/SMTP，所以你能用到和其他人完全相同的工具
 }
 \`\`\`
 
-一个不错的冒烟测试：让你的智能体“总结我最近的三封未读邮件”。它会先运行 \`inbox_list\`，然后带上 \`action: "list"\` 和 \`unread_only: true\` 运行 \`email_read\`，再对每一封带上 \`action: "read"\` 运行 \`email_read\`。如果这能跑通，你的连接就已经生效了。
+一个不错的冒烟测试：让你的智能体“总结我最近的三封未读邮件”。它会先运行 \`inbox_list\`，然后带上 \`action: "list"\` 和 \`unread: true\` 运行 \`email_read\`，再对每一封带上 \`action: "read"\` 运行 \`email_read\`。如果这能跑通，你的连接就已经生效了。
 
 有一个值得先讲明白的实话提醒：MCP Emails 是基于轮询的。没有 webhook，也没有推送事件，所以智能体是按计划定期检查来对新邮件做出反应，而不是被实时通知。对大多数工作流来说这才是正确的模型，[收件箱分类与摘要](/blog/ai-agent-triage-summarize-inbox)的那些模式也正是这么工作的。
 

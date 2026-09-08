@@ -21,7 +21,7 @@ La boîte mail du matin, c’est surtout du bruit avec trois choses importantes 
 
 > Vérifie ma boîte de travail pour les messages non lus des dernières 24 heures. Regroupe-les en « réponse nécessaire aujourd’hui », « pour info » et « newsletters/automatisés ». Pour le premier groupe, donne-moi une ligne sur ce qu’ils veulent.
 
-En coulisse, l’agent appelle \`email_read\` avec l’action list et \`unread_only: true\` sur la boîte renvoyée par \`inbox_list\`, lit avec \`email_read\` (action read) les quelques messages qui semblent importants et ignore le reste. Il peut marquer comme lu le bruit évident pour qu’il cesse d’encombrer le compteur. Pour une version plus poussée de cela, le [guide de tri et de résumé](/blog/ai-agent-triage-summarize-inbox) procède outil par outil.
+En coulisse, l’agent appelle \`email_read\` avec l’action list et \`unread: true\` sur la boîte renvoyée par \`inbox_list\`, lit avec \`email_read\` (action read) les quelques messages qui semblent importants et ignore le reste. Il peut marquer comme lu le bruit évident pour qu’il cesse d’encombrer le compteur. Pour une version plus poussée de cela, le [guide de tri et de résumé](/blog/ai-agent-triage-summarize-inbox) procède outil par outil.
 
 ### 2. Résumer un long fil de discussion
 

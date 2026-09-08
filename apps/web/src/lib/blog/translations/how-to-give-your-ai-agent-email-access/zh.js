@@ -55,14 +55,14 @@ const translation = {
 - \`email_compose\`（动作 \`reply\`）—— 同上，并且会替你设置好线程头（In-Reply-To、References）
 - \`email_organize\` —— 移动、删除、标记或归档（每次调用一个动作）
 
-有一个值得开门见山说清楚的局限：这是**轮询，而非推送**。没有 webhook。要对新邮件做出反应，你的智能体需要按计划轮询，例如带 \`unread_only: true\` 的 \`email_read\`（动作 \`list\`）。你搭建的任何自动回复器都靠定时器运转，而不是即时触发。[自动回复器搭建指南](/blog/build-email-auto-responder-mcp-agent) 展示了如何把这件事做好。
+有一个值得开门见山说清楚的局限：这是**轮询，而非推送**。没有 webhook。要对新邮件做出反应，你的智能体需要按计划轮询，例如带 \`unread: true\` 的 \`email_read\`（动作 \`list\`）。你搭建的任何自动回复器都靠定时器运转，而不是即时触发。[自动回复器搭建指南](/blog/build-email-auto-responder-mcp-agent) 展示了如何把这件事做好。
 
 一次早间整理流程读起来是这样的：
 
 \`\`\`json
 {
   "step1": "inbox_list                  → finds your work Gmail",
-  "step2": "email_read (action list)    → last 24h, unread_only",
+  "step2": "email_read (action list)    → last 24h, unread: true",
   "step3": "email_read (action read)    → full body for anything urgent",
   "step4": "email_compose (action reply) → draft, or just summarize and wait"
 }

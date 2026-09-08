@@ -21,7 +21,7 @@ La bandeja de entrada de la mañana es sobre todo ruido con tres cosas important
 
 > Revisa mi bandeja de trabajo en busca de correo sin leer de las últimas 24 horas. Agrúpalo en "necesita respuesta hoy", "para tu información" y "boletines/automáticos". Para el primer grupo, dame una línea sobre lo que quiere cada uno.
 
-Por debajo, el agente llama a \`email_read\` con la acción list y \`unread_only: true\` sobre la bandeja que devolvió \`inbox_list\`, lee los pocos que parecen importantes con \`email_read\` de nuevo (acción read) y se salta el resto. Puede marcar como leído el ruido evidente para que deje de inflar el contador. Para una versión más a fondo de esto, el [manual de clasificación y resumen](/blog/ai-agent-triage-summarize-inbox) va herramienta por herramienta.
+Por debajo, el agente llama a \`email_read\` con la acción list y \`unread: true\` sobre la bandeja que devolvió \`inbox_list\`, lee los pocos que parecen importantes con \`email_read\` de nuevo (acción read) y se salta el resto. Puede marcar como leído el ruido evidente para que deje de inflar el contador. Para una versión más a fondo de esto, el [manual de clasificación y resumen](/blog/ai-agent-triage-summarize-inbox) va herramienta por herramienta.
 
 ### 2. Resumir un hilo largo
 

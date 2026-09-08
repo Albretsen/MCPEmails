@@ -64,7 +64,7 @@ https://mcpemails.com/api/mcp
 你的智能体会获得整合后的核心工具，外加 Outlook 支持的额外工具：
 
 - \`inbox_list\`——一定要先调用这个。它返回你已连接的邮箱及其 \`inbox_id\` UUID，这样智能体就永远不用去猜某个 ID。
-- \`email_read\`——一个工具，多个 action：\`list\`（最新优先、分页，并带有像 \`unread_only\` 这样的筛选条件）、\`read\`（解析后的纯文本、可选的净化 HTML、可选的附件）以及 \`search\`（见下面关于搜索的说明）。
+- \`email_read\`——一个工具，多个 action：\`list\`（最新优先、分页，并带有像 \`unread\` 这样的筛选条件）、\`read\`（解析后的纯文本、可选的净化 HTML、可选的附件）以及 \`search\`（见下面关于搜索的说明）。
 - \`email_compose\`——\`send\` 这个 action 用于撰写邮件，支持抄送／密送、HTML 以及总计最多 10 MB 的附件；\`reply\` 和 \`forward\` 这两个 action 会带着正确的头部在会话线程内正确串接。
 - \`email_organize\`——标记已读／未读、加旗标、归档、删除和移动，各自通过自己的 \`action\` 完成。
 
@@ -78,7 +78,7 @@ Outlook 搜索不是 Gmail 搜索。Gmail 接受像 \`from:\` 和 \`is:unread\` 
 
 下面是我对一个 Microsoft 365 邮箱跑的分拣循环。每小时一两次，智能体会：
 
-1. 用 \`email_read\` 的 \`list\` action 加上 \`unread_only: true\` 调用。
+1. 用 \`email_read\` 的 \`list\` action 加上 \`unread: true\` 调用。
 2. 对任何看起来有时效性的邮件用 \`email_read\` 的 \`read\` action 读取。
 3. 把这一批做个汇总，并为那些我显然会回复的邮件起草回复。
 4. 在我确认之前，把所有邮件都保持为未读。

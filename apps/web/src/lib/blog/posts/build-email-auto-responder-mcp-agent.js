@@ -57,7 +57,7 @@ while True:
     unread = email_read(
         action="list",
         inbox_id=inbox["inbox_id"],
-        unread_only=True,
+        unread=True,
         limit=20,
     )
 
@@ -86,7 +86,7 @@ while True:
     sleep(60)
 \`\`\`
 
-Three things to notice. First, the agent calls \`inbox_list\` to discover the \`inbox_id\` rather than pasting a UUID into the code — that's the discovery-first pattern, and it keeps the script working if you reconnect an inbox. Second, \`unread_only: true\` is what makes this a *new mail* responder instead of a re-reply-to-everything machine. Third, every message passes through guardrails before anything sends.
+Three things to notice. First, the agent calls \`inbox_list\` to discover the \`inbox_id\` rather than pasting a UUID into the code — that's the discovery-first pattern, and it keeps the script working if you reconnect an inbox. Second, \`unread: true\` is what makes this a *new mail* responder instead of a re-reply-to-everything machine. Third, every message passes through guardrails before anything sends.
 
 ### Marking messages handled
 
@@ -150,7 +150,7 @@ Give the drafting model tight instructions and a length cap. For support replies
 If I were shipping this for a real inbox tomorrow, I'd start small and boring:
 
 1. API key with \`read:email\` and \`send:email\`, scoped to one inbox.
-2. Poll \`email_read(action: "list", unread_only: true)\` every two minutes.
+2. Poll \`email_read(action: "list", unread: true)\` every two minutes.
 3. Allowlist exactly one support alias.
 4. Draft mode only — create drafts, send nothing automatically.
 5. After a week of reading the drafts, enable auto-send for the obvious cases and keep drafting the rest.

@@ -27,7 +27,7 @@ La configuration est vraiment rapide. Dans claude.ai, vous allez dans **Customiz
 
 **Idéal pour :** presque tout le monde — les utilisateurs non techniques, les personnes qui ont Gmail, Outlook et IMAP à la fois, quiconque tient à ce que le corps des messages ne soit pas stocké.
 
-**Les compromis honnêtes :** c’est un service tiers dans votre chemin d’authentification (vous pouvez révoquer depuis le tableau de bord en un clic, mais vous faites confiance au modèle de sécurité de l’hébergeur). Et il n’y a pas de webhooks. Pour réagir aux nouveaux messages, Claude doit interroger en continu — appeler \`email_read\` avec \`action: list\` et \`unread_only: true\` selon un calendrier. Les notifications push n’existent pas dans MCP. Tout outil qui prétend réagir aux e-mails en temps réel fait soit de l’interrogation sous le capot, soit stocke vos messages.
+**Les compromis honnêtes :** c’est un service tiers dans votre chemin d’authentification (vous pouvez révoquer depuis le tableau de bord en un clic, mais vous faites confiance au modèle de sécurité de l’hébergeur). Et il n’y a pas de webhooks. Pour réagir aux nouveaux messages, Claude doit interroger en continu — appeler \`email_read\` avec \`action: list\` et \`unread: true\` selon un calendrier. Les notifications push n’existent pas dans MCP. Tout outil qui prétend réagir aux e-mails en temps réel fait soit de l’interrogation sous le capot, soit stocke vos messages.
 
 Le palier gratuit est à 0 $ pour toujours, avec une boîte connectée et un plafond de 60 requêtes/minute. Personal (5 $/mois) connecte jusqu'à trois boîtes et relève le plafond de pointe ; Pro (15 $/mois) connecte toutes les boîtes que vous possédez ; Team ajoute des membres et des rôles. Le coût est rarement le facteur décisif ici.
 

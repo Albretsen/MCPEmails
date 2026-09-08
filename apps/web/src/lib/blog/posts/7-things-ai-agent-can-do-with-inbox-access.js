@@ -28,7 +28,7 @@ The morning inbox is mostly noise with three things buried in it that matter. Ha
 
 > Check my work inbox for unread mail from the last 24 hours. Group it into "needs a reply today," "FYI," and "newsletters/automated." For the first group, give me one line each on what they want.
 
-Under the hood the agent calls \`email_read\` with action list and \`unread_only: true\` on the inbox \`inbox_list\` returned, reads the few that look important with \`email_read\` again (action read), and skips the rest. It can mark the obvious noise as read so it stops cluttering the count. For a deeper version of this, the [triage and summarize playbook](/blog/ai-agent-triage-summarize-inbox) goes tool by tool.
+Under the hood the agent calls \`email_read\` with action list and \`unread: true\` on the inbox \`inbox_list\` returned, reads the few that look important with \`email_read\` again (action read), and skips the rest. It can mark the obvious noise as read so it stops cluttering the count. For a deeper version of this, the [triage and summarize playbook](/blog/ai-agent-triage-summarize-inbox) goes tool by tool.
 
 ### 2. Summarize a long thread
 

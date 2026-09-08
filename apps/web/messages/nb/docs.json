@@ -63,7 +63,7 @@
     "infoFormat": "Responsformat: <b>JSON-RPC 2.0</b>. Vellykkede resultater bærer også et typet <code>structuredContent</code>-objekt",
     "handshakeLabel": "Initialize-håndtrykk",
     "pollingHeading": "Polling, ikke push",
-    "pollingBody": "MCPEmails er kun forespørsel/svar: hvert resultat kommer fra et verktøykall agenten din gjør. Det finnes <b>ingen webhooks, push-varsler eller hendelser initiert av serveren</b>. En innkommende e-post utløser aldri et agentkall av seg selv. For å reagere på ny e-post bør agenten din <b>polle</b> etter en tidsplan, f.eks. kalle <code>email_read</code> med <code>action: \"list\"</code> og <code>unread_only: true</code> med intervallet arbeidsflyten din trenger (vær oppmerksom på rategrensene over)."
+    "pollingBody": "MCPEmails er kun forespørsel/svar: hvert resultat kommer fra et verktøykall agenten din gjør. Det finnes <b>ingen webhooks, push-varsler eller hendelser initiert av serveren</b>. En innkommende e-post utløser aldri et agentkall av seg selv. For å reagere på ny e-post bør agenten din <b>polle</b> etter en tidsplan, f.eks. kalle <code>email_read</code> med <code>action: \"list\"</code> og <code>unread: true</code> med intervallet arbeidsflyten din trenger (vær oppmerksom på rategrensene over)."
   },
   "operations": {
     "eyebrow": "Bygget for ekte innboksarbeid",
@@ -144,7 +144,6 @@
         "attachment_index": "0-basert indeks for vedlegget som skal lastes ned (action 'attachment'), i samsvar med rekkefølgen i vedleggslisten fra 'read'. Har forrang over filename. Utelat begge når meldingen har nøyaktig ett vedlegg.",
         "filename": "Navnet på vedlegget som skal lastes ned (action 'attachment'), eksakt match uten å skille mellom store og små bokstaver. Ignoreres hvis attachment_index er oppgitt.",
         "folder": "Mappe som skal listes (action 'list'). Standard \"INBOX\". Andre verdier: \"SENT\", \"DRAFTS\", \"TRASH\".",
-        "unread_only": "Returner kun uleste meldinger (action 'list'). Standard false.",
         "limit": "Maks antall resultater som returneres (action 'list' eller 'search'). Standard 20, maks 100.",
         "offset": "Nullbasert pagineringsforskyvning (action 'list' eller 'search'). Standard 0.",
         "include_html": "Inkluder renset HTML-kropp (action 'read'/'read_batch'). Standard false.",
@@ -159,7 +158,7 @@
         "subject": "Tekst som skal matches i emnefeltet (action 'search'). Fraser med flere ord matches som de er.",
         "body": "Fritekst å finne i meldingskroppen (action 'search'). (På Gmail matcher dette hele meldingen, ikke bare kroppen.)",
         "text": "Fritekst å matche hvor som helst i meldingen: overskrifter og kropp (action 'search').",
-        "unread": "Action 'search': true = kun uleste meldinger; false = kun leste meldinger; utelat for begge.",
+        "unread": "Handlingene 'list' og 'search': true = kun uleste meldinger; false = kun leste meldinger; utelat for begge.",
         "has_attachment": "Action 'search': true = kun meldinger med vedlegg. Ikke støttet på generisk IMAP (ignoreres der).",
         "flagged": "Action 'search': true = kun flaggede/stjernemerkede meldinger. Ikke støttet på Outlook/Graph (ignoreres der).",
         "since": "ISO 8601-dato eller -datotid (action 'search'); returner meldinger mottatt på/etter (>=) dette tidspunktet. F.eks. \"2026-06-01\".",
@@ -279,7 +278,7 @@
     },
     "schedule": {
       "title": "Planlagt sending",
-      "desc": "Planlegg e-post for fremtidig levering via en kø på serversiden. Sett action: 'create' (to/subject/body pluss en send_at ISO 8601-tidsstempel; mottakere og kropp valideres umiddelbart, og ugyldige sendinger settes ikke i kø), 'list' (ventende planlagte sendinger, tidligste først, eventuelt filtrert på innboks) eller 'cancel' (scheduled_send_id, men bare sendinger som fremdeles er 'pending' kan avbrytes). Utsenderen kjører hvert minutt, så levering kan skje opptil 60 sekunder etter send_at.",
+      "desc": "Planlegg e-post for fremtidig levering via en kø på serversiden. Sett action: 'create' (to/subject/body pluss en send_at ISO 8601-tidsstempel; mottakere og kropp valideres umiddelbart, og ugyldige sendinger settes ikke i kø), 'list' (ventende planlagte sendinger, tidligste først, eventuelt filtrert på innboks) eller 'cancel' (id, men bare sendinger som fremdeles er 'pending' kan avbrytes). Utsenderen kjører hvert minutt, så levering kan skje opptil 60 sekunder etter send_at.",
       "params": {
         "action": "Hvilken operasjon som skal utføres: \"create\", \"list\" eller \"cancel\". Avgjør hvilke andre argumenter som gjelder.",
         "inbox_id": "UUID for innboksen det skal sendes fra (action 'create') eller filtreres på (action 'list'). Valgfritt, løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox. Kall inbox_list for å hente tilgjengelige inbox-ID-er.",
@@ -293,7 +292,7 @@
         "html_body": "Valgfri HTML-versjon av kroppen (action 'create').",
         "reply_to": "Valgfri Reply-To-overskriftsadresse (action 'create').",
         "attachments": "Filvedlegg (action 'create'). Kun innebygde byte: '{' filename, mime_type, data (base64) '}'. Referanseformen source_message_id finnes på email_compose, ikke her. Maks 20 elementer, 10 MB totalt.",
-        "scheduled_send_id": "UUID for den planlagte sendingen som skal avbrytes (action 'cancel').",
+        "id": "UUID for den planlagte sendingen som skal avbrytes (action 'cancel'), slik 'create' eller 'list' returnerte den.",
         "limit": "Maks antall resultater (action 'list'). Standard 20, maks 100.",
         "idempotency_key": "Valgfri ugjennomsiktig nøkkel for opprettelsen av én planlagt sending. Gjenbruk den bare for å prøve nøyaktig samme create-forespørsel på nytt innen 24 timer."
       }
@@ -394,7 +393,8 @@
     "retryableNo": "Nei",
     "exampleLabel": "Eksempler på feilsvar",
     "rows": {
-      "auth": "Manglende, feilformatert, tilbakekalt eller utløpt API-nøkkel. Returneres også når API-nøkkelen mangler det nødvendige omfanget for verktøyet som kalles.",
+      "auth": "Manglende, feilformatert, tilbakekalt eller utløpt API-nøkkel (HTTP 401).",
+      "scope": "Nøkkelen er gyldig, men mangler et omfang verktøyhandlingen krever (HTTP 403). data.error_code er \"insufficient_scope\" og data.required_scopes lister hva som ville autorisert kallet; WWW-Authenticate-headeren gjentar det slik at OAuth-klienter kan be om mer tilgang.",
       "method": "Ukjent JSON-RPC-metode (f.eks. kall av en annen metode enn initialize, tools/list, tools/call)",
       "param": "Ukjent verktøynavn, eller manglende / ugyldig parameter i tools/call",
       "rate": "Hastighetsgrense per nøkkel eller per arbeidsområde overskredet (HTTP 429). data.error_code er alltid \"rate_limit_exceeded\". Vent data.retry_after sekunder, eller les Retry-After-headeren, før du prøver på nytt.",

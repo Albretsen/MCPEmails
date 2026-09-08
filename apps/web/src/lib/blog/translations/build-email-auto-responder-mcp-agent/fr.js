@@ -50,7 +50,7 @@ while True:
     unread = email_read(
         action="list",
         inbox_id=inbox["inbox_id"],
-        unread_only=True,
+        unread=True,
         limit=20,
     )
 
@@ -79,7 +79,7 @@ while True:
     sleep(60)
 \`\`\`
 
-Trois choses à remarquer. D’abord, l’agent appelle \`inbox_list\` pour découvrir l’\`inbox_id\` au lieu de coller un UUID dans le code — c’est le modèle « découverte d’abord », et il garde le script fonctionnel si vous reconnectez une boîte. Ensuite, \`unread_only: true\` est ce qui fait de ceci un répondeur aux *nouveaux e-mails* plutôt qu’une machine à re-répondre à tout le monde. Enfin, chaque message passe par les garde-fous avant tout envoi.
+Trois choses à remarquer. D’abord, l’agent appelle \`inbox_list\` pour découvrir l’\`inbox_id\` au lieu de coller un UUID dans le code — c’est le modèle « découverte d’abord », et il garde le script fonctionnel si vous reconnectez une boîte. Ensuite, \`unread: true\` est ce qui fait de ceci un répondeur aux *nouveaux e-mails* plutôt qu’une machine à re-répondre à tout le monde. Enfin, chaque message passe par les garde-fous avant tout envoi.
 
 ### Marquer les messages comme traités
 
@@ -143,7 +143,7 @@ Donnez au modèle de rédaction des instructions serrées et un plafond de longu
 Si je devais déployer ceci pour une vraie boîte de réception demain, je commencerais petit et ennuyeux :
 
 1. Une clé API avec \`read:email\` et \`send:email\`, limitée à une seule boîte.
-2. Interroger \`email_read(action: "list", unread_only: true)\` toutes les deux minutes.
+2. Interroger \`email_read(action: "list", unread: true)\` toutes les deux minutes.
 3. Mettre exactement un alias de support en allowlist.
 4. Mode brouillon uniquement — créer des brouillons, n’envoyer rien automatiquement.
 5. Après une semaine de lecture des brouillons, activer l’envoi automatique pour les cas évidents et continuer à rédiger le reste.

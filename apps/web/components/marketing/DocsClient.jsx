@@ -200,7 +200,6 @@ const TOOLS = [
       { name: 'message_id',          type: 'string',        required: false },
       { name: 'message_ids',         type: 'array[string]', required: false },
       { name: 'folder',              type: 'string',        required: false },
-      { name: 'unread_only',         type: 'boolean',       required: false },
       { name: 'limit',               type: 'integer',       required: false },
       { name: 'offset',              type: 'integer',       required: false },
       { name: 'include_html',        type: 'boolean',       required: false },
@@ -229,7 +228,7 @@ const TOOLS = [
       "action": "list",
       "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
       "limit": 5,
-      "unread_only": true
+      "unread": true
     }
   }
 }`,
@@ -481,7 +480,7 @@ const TOOLS = [
       { name: 'html_body',         type: 'string',        required: false },
       { name: 'reply_to',          type: 'string',        required: false },
       { name: 'attachments',       type: 'array',         required: false },
-      { name: 'scheduled_send_id', type: 'string (uuid)', required: false },
+      { name: 'id',                type: 'string (uuid)', required: false },
       { name: 'idempotency_key',   type: 'string',        required: false },
       { name: 'limit',             type: 'integer',       required: false },
     ],
@@ -502,7 +501,7 @@ const TOOLS = [
 }`,
       response: `{
   "scheduled": true,
-  "scheduled_send_id": "c91e0b2a-7f3d-4a18-9c44-2b6e1d8f0a55",
+  "id": "c91e0b2a-7f3d-4a18-9c44-2b6e1d8f0a55",
   "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
   "send_at": "2026-06-02T07:00:00Z",
   "status": "pending"
@@ -650,6 +649,7 @@ const ALL_TOOLS = TOOLS;
 
 const ERROR_CODES = [
   { code: '-32001', type: 'JSON-RPC error', whenKey: 'auth', retryable: false },
+  { code: '-32004', type: 'JSON-RPC error', whenKey: 'scope', retryable: false },
   { code: '-32601', type: 'JSON-RPC error', whenKey: 'method', retryable: false },
   { code: '-32602', type: 'JSON-RPC error', whenKey: 'param', retryable: false },
   { code: '-32003', type: 'JSON-RPC error', whenKey: 'rate', retryable: true },

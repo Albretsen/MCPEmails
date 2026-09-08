@@ -3,7 +3,7 @@ const translation = {
   description:
     'Un guide pratique pour le tri de la boîte de réception par un agent IA : des prompts prêts à copier-coller pour lister le courrier non lu, lire l’essentiel, résumer, prioriser et interroger à intervalle régulier.',
   coverAlt: 'Un agent IA trie et résume une boîte de réception via MCP — MCP Emails',
-  content: `Le moyen le plus rapide d’amener un agent IA à trier votre boîte de réception est de vous appuyer sur deux outils dans l’ordre : \`inbox_list\` pour trouver votre boîte aux lettres, puis \`email_read\` — avec \`action: list\` et \`unread_only: true\` pour récupérer les nouveautés, puis \`action: read\` pour la poignée de messages qui semblent importants — puis une instruction en langage clair pour les résumer et les classer. Voilà toute la boucle. Si vous voulez qu’il rédige ou envoie des réponses, vous ajoutez \`email_compose\` avec \`action: reply\` à la fin.
+  content: `Le moyen le plus rapide d’amener un agent IA à trier votre boîte de réception est de vous appuyer sur deux outils dans l’ordre : \`inbox_list\` pour trouver votre boîte aux lettres, puis \`email_read\` — avec \`action: list\` et \`unread: true\` pour récupérer les nouveautés, puis \`action: read\` pour la poignée de messages qui semblent importants — puis une instruction en langage clair pour les résumer et les classer. Voilà toute la boucle. Si vous voulez qu’il rédige ou envoie des réponses, vous ajoutez \`email_compose\` avec \`action: reply\` à la fin.
 
 Cet article vous donne les prompts exacts que j’utilise, ce à quoi ressemble une bonne sortie, et comment exécuter la même boucle de façon planifiée pour que votre tri matinal soit fait avant même que vous ne vous installiez. Il suppose que votre agent a déjà accès à votre messagerie via [MCP Emails](/blog/how-to-give-your-ai-agent-email-access). Si vous n’avez pas encore connecté de boîte, le [guide de connexion en moins de deux minutes](/blog/connect-email-to-ai-agent-under-2-minutes) vous y amène d’abord.
 
@@ -12,7 +12,7 @@ Cet article vous donne les prompts exacts que j’utilise, ce à quoi ressemble 
 Chaque session de tri suit les mêmes cinq étapes. Votre agent détermine l’ordre tout seul une fois que vous décrivez l’objectif, mais il est utile de savoir ce qui se passe sous le capot :
 
 1. \`inbox_list\` — découvrir les boîtes connectées et leurs UUID \`inbox_id\`. L’agent ne code jamais un UUID en dur ; il en cherche un ici.
-2. \`email_read\` avec \`action: list\` et \`unread_only: true\` — récupérer la file des non-lus d’une boîte, du plus récent au plus ancien.
+2. \`email_read\` avec \`action: list\` et \`unread: true\` — récupérer la file des non-lus d’une boîte, du plus récent au plus ancien.
 3. \`email_read\` avec \`action: read\` — ouvrir le corps complet des quelques messages qui méritent une lecture détaillée.
 4. Résumer et prioriser — du pur raisonnement, aucun appel d’outil. Le modèle regroupe, classe et explique.
 5. \`email_compose\` avec \`action: reply\` (facultatif) — rédiger ou envoyer pour ceux qui appellent une réponse.
@@ -78,7 +78,7 @@ Si vous voulez aller plus loin et vous retirer complètement de la boucle, c’e
 
 ## Exécuter le tri de façon planifiée
 
-Voici la limite, en toute honnêteté : MCP fonctionne en **interrogation, pas en notification poussée.** MCP Emails n’a pas de webhooks et n’envoie aucun événement initié par le serveur. Votre agent n’est pas prévenu quand un courrier arrive. Pour faire du tri en continu, quelque chose doit appeler \`email_read\` avec \`action: list\` et \`unread_only: true\` sur une minuterie.
+Voici la limite, en toute honnêteté : MCP fonctionne en **interrogation, pas en notification poussée.** MCP Emails n’a pas de webhooks et n’envoie aucun événement initié par le serveur. Votre agent n’est pas prévenu quand un courrier arrive. Pour faire du tri en continu, quelque chose doit appeler \`email_read\` avec \`action: list\` et \`unread: true\` sur une minuterie.
 
 En pratique, cela signifie l’une de deux configurations :
 

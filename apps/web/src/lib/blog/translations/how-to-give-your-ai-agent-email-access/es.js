@@ -55,14 +55,14 @@ Un puñado de herramientas consolidadas y basadas en acciones cubren toda la sup
 - \`email_compose\` (acción \`reply\`) — lo mismo, y fija por ti las cabeceras de hilo (In-Reply-To, References)
 - \`email_organize\` — mover, eliminar, marcar o archivar (una acción por llamada)
 
-Una limitación honesta que conviene dejar clara de entrada: esto es **sondeo, no push**. No hay webhooks. Para reaccionar al correo nuevo, tu agente sondea según una programación, por ejemplo \`email_read\` (acción \`list\`) con \`unread_only: true\`. Cualquier autorrespondedor que construyas funciona con un temporizador, no con un disparador instantáneo. La [guía para construir un autorrespondedor](/blog/build-email-auto-responder-mcp-agent) muestra cómo hacerlo bien.
+Una limitación honesta que conviene dejar clara de entrada: esto es **sondeo, no push**. No hay webhooks. Para reaccionar al correo nuevo, tu agente sondea según una programación, por ejemplo \`email_read\` (acción \`list\`) con \`unread: true\`. Cualquier autorrespondedor que construyas funciona con un temporizador, no con un disparador instantáneo. La [guía para construir un autorrespondedor](/blog/build-email-auto-responder-mcp-agent) muestra cómo hacerlo bien.
 
 Una ejecución de triaje matutino se lee así:
 
 \`\`\`json
 {
   "step1": "inbox_list                  → finds your work Gmail",
-  "step2": "email_read (action list)    → last 24h, unread_only",
+  "step2": "email_read (action list)    → last 24h, unread: true",
   "step3": "email_read (action read)    → full body for anything urgent",
   "step4": "email_compose (action reply) → draft, or just summarize and wait"
 }

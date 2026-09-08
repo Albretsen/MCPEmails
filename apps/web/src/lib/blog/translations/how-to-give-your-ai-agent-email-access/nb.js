@@ -55,14 +55,14 @@ En håndfull konsoliderte, handlingsbaserte verktøy dekker hele flaten: lese, s
 - \`email_compose\` (handling \`reply\`) — det samme, og den setter tråd-headerne (In-Reply-To, References) for deg
 - \`email_organize\` — flytt, slett, flagg eller arkiver (én handling per kall)
 
-Én ærlig begrensning verdt å nevne med en gang: dette er **polling, ikke push**. Det finnes ingen webhooks. For å reagere på ny e-post må agenten din polle på en tidsplan, for eksempel \`email_read\` (handling \`list\`) med \`unread_only: true\`. Enhver autosvarer du bygger fungerer på en timer, ikke en umiddelbar utløser. [Bygg-guiden for autosvarer](/blog/build-email-auto-responder-mcp-agent) viser hvordan du gjør dette godt.
+Én ærlig begrensning verdt å nevne med en gang: dette er **polling, ikke push**. Det finnes ingen webhooks. For å reagere på ny e-post må agenten din polle på en tidsplan, for eksempel \`email_read\` (handling \`list\`) med \`unread: true\`. Enhver autosvarer du bygger fungerer på en timer, ikke en umiddelbar utløser. [Bygg-guiden for autosvarer](/blog/build-email-auto-responder-mcp-agent) viser hvordan du gjør dette godt.
 
 En morgentriage-kjøring ser slik ut:
 
 \`\`\`json
 {
   "step1": "inbox_list                  → finds your work Gmail",
-  "step2": "email_read (action list)    → last 24h, unread_only",
+  "step2": "email_read (action list)    → last 24h, unread: true",
   "step3": "email_read (action read)    → full body for anything urgent",
   "step4": "email_compose (action reply) → draft, or just summarize and wait"
 }

@@ -78,7 +78,7 @@ curl -s https://www.mcpemails.com/api/mcp \\
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 \`\`\`
 
-If you get a tool list back, you're connected. A \`-32001\` error means the key is bad or missing a scope — that one is not retryable, so fix the key rather than looping. Don't commit the key. Read it from an environment variable and keep it out of git. If you're weighing which auth model to use where, [OAuth vs API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access) lays out the trade-offs.
+If you get a tool list back, you're connected. A \`-32001\` error means the key is bad, and a \`-32004\` (HTTP 403) means it lacks a scope the tool needs — neither is retryable, so fix the key rather than looping. Don't commit the key. Read it from an environment variable and keep it out of git. If you're weighing which auth model to use where, [OAuth vs API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access) lays out the trade-offs.
 
 ## The tools your agent gets
 
@@ -101,13 +101,13 @@ Morning triage, typed straight into the chat panel:
 
 > Call inbox_list, then list unread from my work inbox in the last 12 hours. Group them: needs a reply, FYI, and noise. For the FYI bucket give me one line each.
 
-The agent runs \`inbox_list\`, then \`email_read\` with action \`list\` and \`unread_only\` set, reads the ones that matter, and hands back a sorted digest. When I spot one I want answered, I follow up:
+The agent runs \`inbox_list\`, then \`email_read\` with action \`list\` and \`unread\` set, reads the ones that matter, and hands back a sorted digest. When I spot one I want answered, I follow up:
 
 > Reply to the message from the design contractor confirming Thursday at 2pm works, keep it short.
 
 It calls \`email_compose\` with action \`reply\`, threading is handled, and the reply leaves through my own Gmail — so it lands from my address with my domain's reputation, not some relay. For a deeper treatment of triage prompts, see [how to make an AI agent triage and summarize your inbox](/blog/ai-agent-triage-summarize-inbox).
 
-One honest limitation: there are no webhooks. The server doesn't push you new mail. If you want the agent to react to incoming messages, you poll — \`email_read\` with action \`list\` and \`unread_only: true\` on a schedule. That's a deliberate design choice, and it shapes how you build anything reactive, like an [auto-responder over MCP](/blog/build-email-auto-responder-mcp-agent).
+One honest limitation: there are no webhooks. The server doesn't push you new mail. If you want the agent to react to incoming messages, you poll — \`email_read\` with action \`list\` and \`unread: true\` on a schedule. That's a deliberate design choice, and it shapes how you build anything reactive, like an [auto-responder over MCP](/blog/build-email-auto-responder-mcp-agent).
 
 ## Rate limits for scripted access
 
