@@ -222,8 +222,24 @@ async function buildTemplate(eventType: string, payload: Record<string, unknown>
         ? `New signup: ${email}`
         : `New signup - that's ${stats.totalUsers} people`;
 
+    // The first line is the whole email as far as a phone is concerned: a
+    // notification preview shows the subject and roughly the first two lines
+    // of the body and nothing else. So the numbers go FIRST, on one dense
+    // line, and the prose that used to open the mail ("Nice, another one...")
+    // moves below them. Everything after this line is for when the mail is
+    // actually opened.
+    const digest = [
+      stats.totalUsers === null ? null : `${stats.totalUsers} people`,
+      stats.last24h === null ? null : `+${stats.last24h} today`,
+      stats.last7d === null ? null : `+${stats.last7d} this week`,
+      stats.recentWorkspaces === null || stats.recentWorkspacesConnected === null
+        ? null
+        : `${stats.recentWorkspacesConnected}/${stats.recentWorkspaces} activated`,
+    ].filter((part): part is string => part !== null).join(" | ");
+
     const body = [
-      `Nice, another one. ${email} just signed up.`,
+      digest || "Growth stats unavailable.",
+      `${email} just signed up.`,
       "",
       "THE HEADLINE",
       stats.totalUsers === null
