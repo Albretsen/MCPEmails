@@ -378,5 +378,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'success', category: 'fastmail', phase: 'complete', connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
-  return NextResponse.json({ success: true });
+  // The same success shape the other two connect routes answer with. Fastmail's
+  // documented transport leads and the standard alternatives are only reached
+  // when it never gets far enough to present the credential, so `adjusted` is
+  // rare here; when it is true the row holds a transport the user was never
+  // shown, and the dashboard is the only place that can say so.
+  return NextResponse.json({
+    success: true,
+    transport_adjusted: imapDetection.adjusted || smtpDetection.adjusted,
+    imap_port: resolvedImapPort,
+    imap_security: resolvedImapSecurity,
+    smtp_port: resolvedSmtpPort,
+    smtp_security: resolvedSmtpSecurity,
+  });
 }

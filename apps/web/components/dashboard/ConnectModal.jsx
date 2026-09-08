@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { Icon, Btn, ProviderLogo } from '../Primitives';
 import { trackProductEvent } from '@/lib/analytics.mjs';
@@ -89,9 +90,14 @@ const APP_PASSWORD_STEP_KEYS = {
  * reason gets its own headline and its own next step, instead of one sentence
  * about checking the password that is wrong advice in three of the four cases.
  *
- * `app_password_length` has no server counterpart. It is decided in the browser
- * before anything is sent, because a half-pasted token is visible without
- * asking a mail server to reject it.
+ * `app_password_length` is decided in the browser before anything is sent,
+ * because a half-pasted token is visible without asking a mail server to reject
+ * it. It is ALSO a server reason now. The browser's rule speaks once per value
+ * (see `shapeWarnedFor`), so the second Connect on the same truncated string
+ * goes to the server, and the server used to fold both shape problems into
+ * `account_password_used`: one string, two clicks, two contradictory stories.
+ * lib/email/auth-failure.ts keeps the two apart, so both clicks now say the
+ * same thing about the same value.
  */
 const AUTH_REASON_HEADLINE_KEYS = {
   imap_disabled: 'connect.errorAuthImapDisabled',
@@ -326,7 +332,7 @@ export function splitHostPort(raw) {
  * way, and a disabled control is what the security selects beside it already
  * use for the same reason.
  */
-function PortSelect({ id, protocol, value, onChange, disabled }) {
+function PortSelect({ id, protocol, value, onChange, disabled, inputRef, invalid, describedBy }) {
   const current = Number(value);
   const options = allowedMailPorts(protocol);
   if (Number.isFinite(current) && current > 0 && !options.includes(current)) {
@@ -336,10 +342,17 @@ function PortSelect({ id, protocol, value, onChange, disabled }) {
   return (
     <select
       id={id}
+      ref={inputRef}
       className="input"
       value={String(value)}
       onChange={e => onChange(e.target.value)}
       disabled={disabled}
+      // A port is not optional and the form will not submit without one, so the
+      // control says so rather than leaving it to the failure message.
+      required
+      aria-required="true"
+      aria-invalid={invalid || undefined}
+      aria-describedby={describedBy}
     >
       {options.map(port => (
         <option key={port} value={String(port)}>{port}</option>
@@ -385,7 +398,13 @@ const PROVIDERS = [
     subKey: 'connect.subAppPassword',
     logoKind: p.logoKind,
   })),
-  { k: 'fastmail', label: 'Fastmail', subKey: 'connect.subFastmail',    logoKind: 'imap' },
+  // `fastmail`, not `imap`. Fastmail connects over IMAP underneath, which is
+  // what the generic logo was standing in for, but the card above it in the
+  // same grid is literally called "IMAP / SMTP" and wears that exact mark, so
+  // the two chips were visually identical and the brand the user came looking
+  // for was the one thing missing from its own card. Primitives.jsx has carried
+  // a real `fastmail` mark all along.
+  { k: 'fastmail', label: 'Fastmail', subKey: 'connect.subFastmail',    logoKind: 'fastmail' },
   // Outlook is temporarily unavailable (Microsoft connector not live yet) —
   // shown LAST, greyed out / non-selectable with a "coming soon" flag until it ships.
   { k: 'outlook',  label: 'Outlook',  subKey: 'connect.subOutlook',     logoKind: 'outlook', disabled: true },
@@ -427,6 +446,41 @@ const NOT_A_LOGIN_FIELD = {
   'data-1p-ignore': '',
   'data-lpignore': 'true',
   'data-form-type': 'other',
+};
+
+/**
+ * The clip that keeps the three announcers below out of the layout.
+ *
+ * They have to be in the document from the moment the dialog opens, because a
+ * live region that is INSERTED together with its first text is announced
+ * unreliably: several screen readers only watch regions they were already
+ * observing when the mutation happened. That was the state of every notice in
+ * this modal (the prefill note, the moved-port note, the error alert), all of
+ * them conditionally rendered.
+ *
+ * Always-mounting them where they are visible is not an option: an empty span
+ * in a `.field` still collects the column's 6px gap, so every form would grow
+ * blank strips for messages that are not there. So the visible notices stay
+ * exactly as they were, plain text with no role, and the announcing is done by
+ * these three, which are 1px, clipped, and never draw anything.
+ *
+ * `clip` as well as `clipPath`: the deprecated property is still what older
+ * assistive technology honours, and both together are the pattern that keeps
+ * the text readable to a screen reader while removing it from the page. Not
+ * `display: none` or `visibility: hidden`, which remove it from the
+ * accessibility tree along with the layout.
+ */
+const SR_ONLY = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  margin: -1,
+  padding: 0,
+  overflow: 'hidden',
+  clip: 'rect(0 0 0 0)',
+  clipPath: 'inset(50%)',
+  whiteSpace: 'nowrap',
+  border: 0,
 };
 
 /** Everything the focus trap treats as a stop inside the dialog. */
@@ -548,6 +602,42 @@ export function ConnectModal({
   const [serverLimit, setServerLimit] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
+  /**
+   * The fields the last failed submit was actually about.
+   *
+   * The alert at the bottom of the body was the only trace a rejected submit
+   * left: no field carried `aria-invalid`, none pointed at the message, and
+   * focus stayed wherever it was. "IMAP and SMTP host are required" is a
+   * perfectly clear sentence in a form with five text boxes and no indication
+   * of which two it means.
+   *
+   * A list rather than a single key because one message can be about two
+   * fields at once (both hosts, both ports). The first entry is the one focus
+   * goes to.
+   */
+  const [invalidFields, setInvalidFields] = useState([]);
+  /**
+   * A counter bumped by every error we put on screen, including a repeat of the
+   * one already there.
+   *
+   * Two identical rejections produce identical text, and a live region whose
+   * content does not change announces nothing. This is the value that makes the
+   * announce-and-scroll effect run for the second one; see `announce` for the
+   * clear-then-rewrite it drives.
+   */
+  const [errorSeq, setErrorSeq] = useState(0);
+  const bumpErrorSeq = () => setErrorSeq(n => n + 1);
+  /**
+   * What the three persistent announcers are saying right now.
+   *
+   * One channel per kind of notice rather than one shared region, because they
+   * coexist: a detected provider, a port lifted out of a host, and a rejected
+   * submit can all be true at the same moment, and writing them into one region
+   * would make each new one silence the last.
+   */
+  const [live, setLive] = useState({ detect: '', port: '', portError: '', error: '' });
+  const liveFrames = useRef({ detect: 0, port: 0, portError: 0, error: 0 });
+  const liveSettle = useRef({ detect: 0, port: 0, portError: 0, error: 0 });
   // The long-form troubleshooting text that used to lead the alert. It is kept,
   // but behind a disclosure, so the first thing the user reads is one sentence.
   const [errorDetail, setErrorDetail] = useState(null);
@@ -667,6 +757,91 @@ export function ConnectModal({
     return () => { mountedRef.current = false; };
   }, []);
 
+  /**
+   * Say something through one of the persistent announcers.
+   *
+   * Clear first, write on the next frame. Assistive technology announces a live
+   * region when its CONTENT CHANGES, so writing the same string twice is
+   * silence: the second identical rejection, the second "moved port 993" after
+   * the user pastes the same host again. Emptying the region and filling it one
+   * frame later is a change either way, which is the established fix and the
+   * reason this is not a plain `setLive`.
+   *
+   * Timeouts, NOT requestAnimationFrame, and this is the whole reason the two
+   * are not interchangeable here: a frame callback only runs while the page is
+   * compositing. Measured in this app, a tab that is loaded and
+   * `document.visibilityState === 'visible'` but not being painted never fired
+   * one at all, so an rAF-based announcer sat silent with the text queued
+   * behind a callback that would never run. A timeout is throttled in a
+   * backgrounded tab; it is not withheld. (The same trap already cost this file
+   * a smooth scroll; see the scroll effect below.)
+   *
+   * Both writes are deferred, the clear included, so that the effects that call
+   * this schedule work rather than setting state in their own bodies.
+   */
+  const announce = (channel, text) => {
+    if (typeof window === 'undefined') return;
+    window.clearTimeout(liveFrames.current[channel]);
+    window.clearTimeout(liveSettle.current[channel]);
+    const next = text ? String(text) : '';
+    liveFrames.current[channel] = window.setTimeout(() => {
+      // The verification outlives this component (see `mountedRef`), so a timer
+      // can land after the modal has gone.
+      if (!mountedRef.current) return;
+      // `flushSync`, and it is load-bearing. Two ordinary updates a task apart
+      // are still free to be coalesced into one render, and measured here they
+      // were: on roughly half the repeats the region went straight from the old
+      // sentence to the identical new one with no mutation in between, which is
+      // precisely the silence this whole arrangement exists to break. Forcing
+      // the empty state to commit on its own makes the clear observable, so the
+      // write that follows it is a change every time.
+      flushSync(() => {
+        setLive(prev => (prev[channel] === '' ? prev : { ...prev, [channel]: '' }));
+      });
+      if (!next) return;
+      liveFrames.current[channel] = window.setTimeout(() => {
+        if (!mountedRef.current) return;
+        setLive(prev => ({ ...prev, [channel]: next }));
+        // And empty it again once it has been spoken. A live region keeps
+        // whatever was written into it, and everything written here is ALSO on
+        // screen as ordinary text that the field it belongs to points at, so a
+        // region left holding the sentence makes a screen reader read the whole
+        // dialog with every notice in it twice. Four seconds is long past the
+        // announcement and long before anyone reaches this part of the form.
+        liveSettle.current[channel] = window.setTimeout(() => {
+          if (!mountedRef.current) return;
+          setLive(prev => (prev[channel] === next ? { ...prev, [channel]: '' } : prev));
+        }, 4000);
+      }, 0);
+    }, 0);
+  };
+
+  useEffect(() => {
+    const timers = liveFrames.current;
+    const settle = liveSettle.current;
+    return () => {
+      Object.values(timers).forEach(id => window.clearTimeout(id));
+      Object.values(settle).forEach(id => window.clearTimeout(id));
+    };
+  }, []);
+
+  /**
+   * The form controls, by name, so a rejected submit can put focus on the field
+   * it is about.
+   *
+   * Keyed rather than one ref per input because the validation messages come in
+   * lists ("IMAP and SMTP host are required" is about two of them) and the
+   * caller wants "the first of these that exists", not five nullable refs.
+   */
+  const fieldRefs = useRef({});
+  const bindField = key => node => { fieldRefs.current[key] = node; };
+  const isInvalid = key => invalidFields.includes(key);
+  /** aria-describedby, from however many ids happen to be on screen. */
+  const describedBy = (...ids) => {
+    const value = ids.filter(Boolean).join(' ');
+    return value || undefined;
+  };
+
   // The upgrade panel replaces the provider picker and the credentials form,
   // whether the cap was known up front (prop) or learned from a 402 (state).
   // The server's numbers win when present: they were counted at the moment of
@@ -738,6 +913,17 @@ export function ConnectModal({
    */
   const detectRunRef = useRef(0);
   const detectedDomainRef = useRef(null);
+  /**
+   * True when the last detection actually wrote the host fields, false when it
+   * recognised the provider and left the user's own values alone.
+   *
+   * A ref, not state: it is set from inside the `setForm` updater in
+   * `applyDiscovery` (the only place that can see whether the fields were
+   * empty) and read back on the render that the accompanying `setHostPrefill`
+   * causes, which React runs after that updater. Nothing renders from it on its
+   * own, so it never needs to schedule a render of its own.
+   */
+  const discoveryFilledHostsRef = useRef(false);
 
   /**
    * Fill the server fields in from the address, when we can work out where the
@@ -773,7 +959,16 @@ export function ConnectModal({
       source: match.source ?? 'table',
     });
     setForm(prev => {
-      if (prev.imapHost.trim() || prev.smtpHost.trim()) return prev;
+      const alreadyHasHosts = Boolean(prev.imapHost.trim() || prev.smtpHost.trim());
+      // Whether the fields were actually written, recorded here because this is
+      // the only place that sees the state the decision is made against. The
+      // note above the form used to claim "the server settings below are filled
+      // in for you" unconditionally, which is a lie for anyone who typed their
+      // host before their address: nothing was filled, the sentence said it
+      // was, and the next thing the user does is look for values that are not
+      // there. Read back at render, which happens after this updater has run.
+      discoveryFilledHostsRef.current = !alreadyHasHosts;
+      if (alreadyHasHosts) return prev;
       const ports = portsTouched.current
         ? null
         : {
@@ -952,15 +1147,27 @@ export function ConnectModal({
     if (portRejected) {
       setPortNote(null);
       setPortRangeError(protocol);
+      // Pasting the same unusable host twice is the same sentence twice, and an
+      // unchanged live region says nothing. The counter is what makes the
+      // second one a change.
+      bumpErrorSeq();
     } else if (portRangeError === protocol) {
       setPortRangeError(null);
     }
     return result;
   };
 
-  /** Replace the alert with a single sentence and no expandable detail. */
-  const showError = message => {
+  /**
+   * Replace the alert with a single sentence and no expandable detail.
+   *
+   * `fields` names the controls the sentence is about. They get `aria-invalid`
+   * and a pointer at the message; everything else is cleared, so a host error
+   * cannot leave the password box marked invalid from the attempt before.
+   */
+  const showError = (message, fields = []) => {
     setFormError(message);
+    setInvalidFields(fields);
+    if (message) bumpErrorSeq();
     setErrorDetail(null);
     setErrorDetailOpen(false);
     // The credential explanation belongs to one rejection. Leaving it behind
@@ -968,6 +1175,24 @@ export function ConnectModal({
     // failure, which may be a hostname.
     setAuthReason(null);
     setSessionExpired(false);
+  };
+
+  /**
+   * Refuse a submit AT the field that caused it.
+   *
+   * Focus moves, which is the half that was missing. The alert renders at the
+   * bottom of a body that is taller than the modal, so on a form with Advanced
+   * settings open the whole feedback for a missing hostname was a sentence
+   * below the fold and a cursor that had not moved. Scrolling the alert into
+   * view (the effect further down) tells a sighted user that something
+   * happened; only moving focus tells them, and a screen reader user, WHERE.
+   */
+  const failValidation = (message, fields) => {
+    showError(message, fields);
+    const target = fields
+      .map(key => fieldRefs.current[key])
+      .find(node => node && typeof node.focus === 'function');
+    if (target) target.focus();
   };
 
   // ── Step 1: the provider radiogroup ────────────────────────────────────────
@@ -1140,6 +1365,50 @@ export function ConnectModal({
    */
   const needsAppPassword = Boolean(activePolicy?.requiresAppPassword);
 
+  // ── The notices, as text ───────────────────────────────────────────────────
+  // Computed once, here, rather than inline in the JSX, because each of them is
+  // needed twice: once for the span the user reads and once for the announcer
+  // that reads it out. Two copies of the same conditional would be two chances
+  // for the visible sentence and the spoken one to drift apart.
+
+  /**
+   * What the detection found, and whether it changed anything.
+   *
+   * Two sentences, not one. `prefill` only ever writes into EMPTY host fields
+   * (see applyDiscovery), which is the right rule: a host the user typed came
+   * out of their provider's own documentation and is better than anything we
+   * can derive. But the note said "the server settings below are filled in for
+   * you" either way, so someone who filled the host first was told their form
+   * had been completed when it had not.
+   */
+  const hostPrefillNote = (() => {
+    if (!isGeneric || !hostPrefill) return null;
+    const filled = discoveryFilledHostsRef.current;
+    if (!hostPrefill.label) {
+      return tr(filled ? 'connect.hostDetectedNote' : 'connect.hostDetectedNoteKept');
+    }
+    const key = hostPrefill.source === 'table'
+      ? (filled ? 'connect.hostPrefillNote' : 'connect.hostPrefillNoteKept')
+      : (filled ? 'connect.hostDetectedProviderNote' : 'connect.hostDetectedProviderNoteKept');
+    return tr(key, { provider: hostPrefill.label });
+  })();
+
+  /** The credential this detected provider actually takes, when it takes a special one. */
+  const hostPrefillAppPasswordNote =
+    isGeneric && hostPrefill?.requiresAppPassword && hostPrefill.label
+      ? tr('connect.hostPrefillAppPassword', { provider: hostPrefill.label })
+      : null;
+
+  /** "Moved port 993 into the IMAP port field", for whichever field it was. */
+  const portMovedNote = portNote
+    ? tr('connect.portMovedNote', {
+        port: String(portNote.port),
+        protocol: portNote.protocol === 'imap' ? 'IMAP' : 'SMTP',
+      })
+    : null;
+
+  const portRangeNote = portRangeError ? tr('connect.errorPortRange') : null;
+
   // ── Step 2: credentials submission ─────────────────────────────────────────
 
   const handleAppPasswordSubmit = async () => {
@@ -1164,11 +1433,11 @@ export function ConnectModal({
         : normalizeAppPassword(form.password);
 
     if (!email || !email.includes('@')) {
-      showError(tr('connect.errorEmailRequired'));
+      failValidation(tr('connect.errorEmailRequired'), ['email']);
       return;
     }
     if (!appPassword) {
-      showError(tr('connect.errorPasswordRequired'));
+      failValidation(tr('connect.errorPasswordRequired'), ['password']);
       return;
     }
 
@@ -1203,7 +1472,13 @@ export function ConnectModal({
       // field. Submitting anyway would connect on the default port, which is
       // not what the user asked for, so stop and say which ports are accepted.
       if (imapParsed.portRejected || smtpParsed.portRejected) {
-        showError(tr('connect.errorPortRange'));
+        // The offending text is in the HOST box, which is where the digits were
+        // typed and where they have just been stripped from, so that is the
+        // field the message is about and the field focus goes to.
+        failValidation(
+          tr('connect.errorPortRange'),
+          [imapParsed.portRejected ? 'imapHost' : null, smtpParsed.portRejected ? 'smtpHost' : null].filter(Boolean)
+        );
         return;
       }
       const imapHost = imapParsed.host.toLowerCase();
@@ -1211,11 +1486,21 @@ export function ConnectModal({
       const imapPort = Number(imapParsed.port ?? form.imapPort);
       const smtpPort = Number(smtpParsed.port ?? form.smtpPort);
       if (!imapHost || !smtpHost) {
-        showError(tr('connect.errorHostRequired'));
+        // "IMAP and SMTP host are required" names two fields, so both are
+        // marked; focus goes to the first one that is actually empty rather
+        // than always to the IMAP box, which would move the cursor away from
+        // the field the user still has to fill.
+        failValidation(
+          tr('connect.errorHostRequired'),
+          [!imapHost ? 'imapHost' : null, !smtpHost ? 'smtpHost' : null].filter(Boolean)
+        );
         return;
       }
       if (!imapPort || !smtpPort) {
-        showError(tr('connect.errorPortRequired'));
+        failValidation(
+          tr('connect.errorPortRequired'),
+          [!imapPort ? 'imapPort' : null, !smtpPort ? 'smtpPort' : null].filter(Boolean)
+        );
         return;
       }
       endpoint = '/api/inboxes/imap';
@@ -1251,6 +1536,13 @@ export function ConnectModal({
       const shapeReason = shape.problem === 'account_password' ? 'account_password_used' : 'app_password_length';
       setAuthReason(shapeReason);
       setFormError(tr(AUTH_REASON_HEADLINE_KEYS[shapeReason], { provider: appPasswordProvider }));
+      // The objection is about one field and one value, so say which. Focus is
+      // deliberately NOT stolen here: the whole point of this warning is that
+      // the user may be right and we may be wrong, and the next act is either
+      // pasting the rest of the token or pressing Connect again, neither of
+      // which is helped by the caret jumping.
+      setInvalidFields(['password']);
+      bumpErrorSeq();
       setErrorDetail(tr('connect.appPasswordTryAnyway'));
       // Nothing else is on screen to explain this, and unlike a server
       // rejection the user has not yet been told anything, so the detail leads
@@ -1337,6 +1629,19 @@ export function ConnectModal({
         setAuthReason(reason);
         setSessionExpired(code === SESSION_EXPIRED_CODE);
         setFormError(headline);
+        // A rejected credential is about the password box; a login name the
+        // server did not recognise is about the username box. Every other code
+        // here is about the mailbox or the network rather than about a field on
+        // this form, and marking one of them invalid would point at something
+        // the user cannot fix by editing it.
+        setInvalidFields(
+          reason === 'login_username_required'
+            ? ['username']
+            : code === 'auth_failed'
+              ? ['password']
+              : []
+        );
+        bumpErrorSeq();
         setErrorDetail(detail);
         // Open on a classified credential failure: that is the case where the
         // next step and the link to the generator are the whole point, and
@@ -1360,6 +1665,14 @@ export function ConnectModal({
         // rather than selecting a password that may be perfectly good.
         if (reason === 'login_username_required' && isGeneric) {
           setAdvancedOpen(true);
+          // The field does not exist yet: the panel holding it is only in the
+          // DOM while it is open, and it is being opened by this very update.
+          // A tick later it is mounted and can take focus. A timeout rather
+          // than a frame, for the reason spelled out on `announce`.
+          window.setTimeout(() => {
+            if (!mountedRef.current) return;
+            fieldRefs.current.username?.focus();
+          }, 0);
           return;
         }
 
@@ -1386,11 +1699,54 @@ export function ConnectModal({
       // there's no display name.
       const optimisticProvider = provider === 'generic' ? 'imap' : provider;
       const optimisticLabel = email.split('@')[0] || email;
+      /**
+       * The transport the mailbox is actually connected on.
+       *
+       * All three connect routes autodetect: they try what was asked for, then
+       * the standard alternatives, and they persist WHAT WORKED rather than
+       * what was submitted. They have always said so in the response, with a
+       * comment on the generic one explaining that it exists "so the dashboard
+       * can say so rather than silently disagreeing with the form the user is
+       * still looking at", and the dashboard never read it. Someone who
+       * submitted 993 implicit TLS and was connected on 143 STARTTLS closed a
+       * form still showing 993 and was told only that it worked.
+       *
+       * Only forwarded when the route says something was changed. On the
+       * ordinary path the numbers are the ones the user submitted, and reciting
+       * them back is noise on top of a success.
+       */
+      const transport =
+        data?.transport_adjusted === true
+          ? {
+              imapPort: data.imap_port,
+              imapSecurity: data.imap_security,
+              smtpPort: data.smtp_port,
+              smtpSecurity: data.smtp_security,
+            }
+          : null;
+      /**
+       * How this mailbox was connected, for the `inbox_connected` event.
+       *
+       * The parent used to hard-code 'app_password' for every row that came out
+       * of this modal, which is wrong for the generic IMAP connector, and the
+       * generic connector is the largest bucket on the card. The modal is the
+       * only place that knows which door was used, so it says.
+       *
+       * OAuth never arrives here: those providers navigate to a server route
+       * and the event is recorded on the way back in App.jsx.
+       */
+      const connectionMethod = isGeneric ? 'imap' : 'app_password';
       // Called whether or not this modal is still mounted. The parent owns the
       // inbox list and the success toast, and it is still on screen either way:
       // a connection that succeeded after the user walked away is still a
       // connection, and the row has to appear.
-      onConnect({ provider: optimisticProvider, address: email, label: optimisticLabel });
+      onConnect({
+        provider: optimisticProvider,
+        address: email,
+        label: optimisticLabel,
+        connectionMethod,
+        transport,
+      });
     } catch {
       // A dropped connection or an aborted request. Same rule as above: say so
       // where the user can see it, wherever that now is.
@@ -1464,6 +1820,13 @@ export function ConnectModal({
       // Remember whether this confirmation is guarding a running check, so the
       // effect below knows whether its premise can expire.
       confirmOpenedDuringCheck.current = submitting;
+      // And remember what asked the question, so that dismissing it puts the
+      // user back where they were. Three different controls open this prompt
+      // (the header X, the footer's Cancel, the scrim) and all of them left
+      // focus stranded on the parent dialog when it went away.
+      const opener = document.activeElement;
+      confirmOpenerRef.current =
+        opener && dialogRef.current?.contains(opener) ? opener : null;
       setConfirmingClose(true);
       return;
     }
@@ -1487,19 +1850,49 @@ export function ConnectModal({
     setConfirmingClose(false);
   }, [submitting, confirmingClose]);
 
-  // Bring a new error into view. `nearest` scrolls the minimum distance, which
-  // keeps the password field on screen as well: on this form the two are close
-  // enough to fit together even with Advanced settings open.
-  // `lastFailure` is in the dependency list as well as the message: two
-  // identical rejections in a row produce the same sentence, and without a
-  // value that changes every time, the second one would not scroll back to an
-  // alert the user had scrolled away from.
+  /**
+   * Speak the failure, and bring it into view.
+   *
+   * Both halves are keyed on `errorSeq`, which is bumped by every error we put
+   * on screen including a repeat of the one already there. Two identical
+   * rejections produce identical text, so without a value that changes each
+   * time neither the announcement nor the scroll would happen for the second
+   * one. The scroll was the workaround for the announcement not working at all;
+   * it stays, because it is what a sighted user needs and the announcer does
+   * nothing for them.
+   *
+   * The inline port refusal has a channel of its own rather than sharing this
+   * one. It arrives on BLUR, with whatever alert the last submit left still on
+   * screen, so a shared channel would keep announcing the stale sentence and
+   * say nothing about the host that was just pasted. Skipped when the two carry
+   * the same words, which is what a submit with a rejected port produces: one
+   * refusal, said once.
+   */
   useEffect(() => {
+    announce('error', formError);
+    announce('portError', portRangeNote && portRangeNote !== formError ? portRangeNote : '');
     if (!formError) return;
     // Instant, not smooth: a smooth scroll is silently dropped in a background
     // tab and is the wrong call for a message the user is waiting on anyway.
     errorAlertRef.current?.scrollIntoView({ block: 'nearest' });
-  }, [formError, lastFailure]);
+  }, [formError, portRangeNote, errorSeq]);
+
+  /**
+   * Speak the two quiet notices: what the address was recognised as, and a port
+   * that was lifted out of a host field.
+   *
+   * Polite, and on their own channels, because they are not refusals and they
+   * coexist with each other and with an error. Both used to be `role="status"`
+   * on a span that appears at the same instant as its text, which several
+   * screen readers do not announce at all.
+   */
+  useEffect(() => {
+    announce('detect', [hostPrefillNote, hostPrefillAppPasswordNote].filter(Boolean).join(' '));
+  }, [hostPrefillNote, hostPrefillAppPasswordNote]);
+
+  useEffect(() => {
+    announce('port', portMovedNote);
+  }, [portMovedNote]);
 
   // ── Dialog behaviour: focus restore, Escape, focus trap ────────────────────
 
@@ -1507,6 +1900,8 @@ export function ConnectModal({
   const confirmRef = useRef(null);
   /** The element that opened the modal, so focus can be handed back to it. */
   const openerRef = useRef(null);
+  /** The control inside this dialog that opened the discard confirmation. */
+  const confirmOpenerRef = useRef(null);
 
   useEffect(() => {
     openerRef.current = document.activeElement;
@@ -1525,12 +1920,35 @@ export function ConnectModal({
     };
   }, []);
 
-  // When the discard confirmation opens, move focus into it. Without this the
-  // trap below would be guarding a dialog that focus is not actually inside.
+  /**
+   * Move focus into the discard confirmation when it opens, and back out to
+   * whatever opened it when it closes.
+   *
+   * The move IN was already here: without it the Tab trap would be guarding a
+   * dialog that focus is not actually inside. The move OUT was not, so
+   * dismissing the prompt left focus on a button that had just been removed
+   * from the document, which browsers reset to `body`. From there the trap has
+   * nothing to trap and the next Tab lands in the dashboard behind the modal.
+   *
+   * The restore runs from an effect rather than from the click handler because
+   * the parent dialog is `inert` while the prompt is up: focusing a control
+   * inside an inert subtree does nothing. By the time an effect runs, React has
+   * committed the removal of the attribute.
+   */
   useEffect(() => {
-    if (!confirmingClose) return;
-    const first = confirmRef.current?.querySelector('button');
-    if (first) first.focus();
+    if (confirmingClose) {
+      const first = confirmRef.current?.querySelector('button');
+      if (first) first.focus();
+      return;
+    }
+    const opener = confirmOpenerRef.current;
+    confirmOpenerRef.current = null;
+    // Only back to something still in the document: the form behind the prompt
+    // can have changed shape while it was up (a check that answered, Advanced
+    // settings opened by the failure it answered with).
+    if (opener && document.contains(opener) && typeof opener.focus === 'function') {
+      opener.focus();
+    }
   }, [confirmingClose]);
 
   /**
@@ -1587,7 +2005,38 @@ export function ConnectModal({
         // Focus target on open, so the dialog is announced and Escape works
         // from the provider step, which autofocuses nothing.
         tabIndex={-1}
+        /**
+         * Out of reach entirely while the discard confirmation is up.
+         *
+         * Two `aria-modal="true"` dialogs were live at once. `aria-modal` is a
+         * claim, not a mechanism: it asks assistive technology to ignore
+         * everything outside the dialog, and with a nested dialog rendered
+         * INSIDE this one "outside" does not include this one. The Tab trap
+         * already redirected the keyboard, but a screen reader's virtual
+         * cursor is not the keyboard, and it could still read and operate the
+         * form the prompt is asking whether to discard.
+         *
+         * `inert` is the mechanism: it removes the subtree from the
+         * accessibility tree and from hit-testing together, which is what
+         * `aria-hidden` alone would not do. React 19 passes it through as a
+         * real attribute (verified in the rendered DOM), so no fallback is
+         * needed here.
+         */
+        inert={confirmingClose}
       >
+        {/* The three announcers. Mounted for the life of the dialog and empty
+            most of it; see SR_ONLY for why they cannot be the visible spans.
+
+            Inside the dialog, so `aria-modal` above does not put them out of
+            reach, which means they are inert along with everything else while
+            the discard prompt is up. The one notice that can land in that
+            window is a check answering, and that answer also takes the prompt
+            away; `announce` writes on the following frame, by which time React
+            has removed the attribute. */}
+        <div aria-live="polite" aria-atomic="true" style={SR_ONLY}>{live.detect}</div>
+        <div aria-live="polite" aria-atomic="true" style={SR_ONLY}>{live.port}</div>
+        <div aria-live="assertive" aria-atomic="true" style={SR_ONLY}>{live.portError}</div>
+        <div aria-live="assertive" aria-atomic="true" style={SR_ONLY}>{live.error}</div>
 
         {/* Header */}
         <div className="modal-h">
@@ -1622,12 +2071,32 @@ export function ConnectModal({
               onClick={requestClose}
               aria-label={tr('connect.close')}
               className="plain-focus"
+              /**
+               * A 44x44 target around a 16px icon, with the growth taken back
+               * out again in margin.
+               *
+               * It was `padding: 4` around that icon: a 24px square, which is
+               * a comfortable click with a mouse and a coin toss with a thumb.
+               * 44px is the documented minimum and this is the control that
+               * throws away a half-filled credential form, so a mis-hit is not
+               * a cheap mistake either way it goes.
+               *
+               * The negative margin is what makes this invisible. The border
+               * box grows by 20px in each direction and the margin pulls 10px
+               * back off every side, so the button occupies exactly the 24x24
+               * it did before in the header's flex row and the X does not move
+               * by a pixel. Only the hit area changed.
+               */
               style={{
                 background: 'transparent',
                 border: 'none',
                 cursor: 'pointer',
                 color: 'var(--fg-3)',
-                padding: 4,
+                padding: 14,
+                margin: -10,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 flexShrink: 0,
                 lineHeight: 1,
               }}
@@ -1947,6 +2416,20 @@ export function ConnectModal({
             // implicit submission fire.
             <form
               onSubmit={e => { e.preventDefault(); if (!submitting) handleAppPasswordSubmit(); }}
+              /**
+               * The fields carry `required` so that assistive technology
+               * announces them as required, and this turns off the browser's
+               * own enforcement of it.
+               *
+               * Without `noValidate` the two ways of submitting this form would
+               * disagree: Enter goes through the hidden submit button and would
+               * be stopped by a native bubble in the browser's own wording,
+               * while the footer's Connect button lives OUTSIDE the form and
+               * calls the handler directly, so it would sail past the same
+               * check and produce the modal's own message. One refusal, in one
+               * place, in the user's own language.
+               */
+              noValidate
               style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
             >
               {isReconnect && (
@@ -1986,12 +2469,13 @@ export function ConnectModal({
                     value={zohoAccountType}
                     onChange={e => setZohoAccountType(e.target.value)}
                     disabled={isReconnect}
+                    aria-describedby="cm-zoho-account-type-hint"
                   >
                     {ZOHO_ACCOUNT_TYPES.map(t => (
                       <option key={t.value} value={t.value}>{tr(t.labelKey)}</option>
                     ))}
                   </select>
-                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                  <span id="cm-zoho-account-type-hint" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
                     {tr('connect.zohoAccountTypeHint')}
                   </span>
                 </div>
@@ -2008,12 +2492,13 @@ export function ConnectModal({
                     value={zohoRegion}
                     onChange={e => setZohoRegion(e.target.value)}
                     disabled={isReconnect}
+                    aria-describedby="cm-zoho-region-hint"
                   >
                     {ZOHO_REGIONS.map(r => (
                       <option key={r.value} value={r.value}>{r.label}</option>
                     ))}
                   </select>
-                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                  <span id="cm-zoho-region-hint" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
                     {tr('connect.zohoRegionHint')}
                   </span>
                 </div>
@@ -2023,9 +2508,22 @@ export function ConnectModal({
                 <label htmlFor="cm-email">{tr('connect.emailLabel')}</label>
                 <input
                   id="cm-email"
+                  ref={bindField('email')}
                   className="input"
                   type="email"
                   placeholder="you@example.com"
+                  // The form carries `noValidate`, so `required` is here for
+                  // what it TELLS rather than for what it blocks: a screen
+                  // reader announces the field as required, and the modal's own
+                  // sentence stays the only refusal the user ever sees.
+                  required
+                  aria-required="true"
+                  aria-invalid={isInvalid('email') || undefined}
+                  aria-describedby={describedBy(
+                    hostPrefillNote ? 'cm-email-detected' : null,
+                    hostPrefillAppPasswordNote ? 'cm-email-credential' : null,
+                    isInvalid('email') ? 'cm-form-error' : null
+                  )}
                   value={form.email}
                   onChange={e => setForm(prev => ({ ...prev, email: e.target.value }))}
                   // On blur rather than on change: reacting mid-typing would
@@ -2053,19 +2551,19 @@ export function ConnectModal({
                     and only the second one tells the user whether to trust it.
                     A DNS answer we cannot attribute to a provider we know says
                     so plainly rather than inventing a name for it. */}
-                {isGeneric && hostPrefill && (
-                  <span role="status" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--brand)' }}>
-                    {hostPrefill.label
-                      ? tr(
-                          hostPrefill.source === 'table' ? 'connect.hostPrefillNote' : 'connect.hostDetectedProviderNote',
-                          { provider: hostPrefill.label }
-                        )
-                      : tr('connect.hostDetectedNote')}
+                {/* No `role="status"` any more. It was on a span that appears
+                    at the same moment as its text, which is the arrangement
+                    screen readers announce least reliably; the persistent
+                    announcer at the top of the dialog does the speaking, and
+                    this is now plain text with an id the field points at. */}
+                {hostPrefillNote && (
+                  <span id="cm-email-detected" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--brand)' }}>
+                    {hostPrefillNote}
                   </span>
                 )}
-                {isGeneric && hostPrefill?.requiresAppPassword && hostPrefill.label && (
-                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
-                    {tr('connect.hostPrefillAppPassword', { provider: hostPrefill.label })}
+                {hostPrefillAppPasswordNote && (
+                  <span id="cm-email-credential" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                    {hostPrefillAppPasswordNote}
                   </span>
                 )}
               </div>
@@ -2074,11 +2572,11 @@ export function ConnectModal({
                 <>
                 <div className="field">
                   <label htmlFor="cm-yandex-account-type">{tr('connect.yandexAccountTypeLabel')}</label>
-                  <select id="cm-yandex-account-type" className="input" value={yandexAccountType} onChange={e => setYandexAccountType(e.target.value)} disabled={isReconnect}>
+                  <select id="cm-yandex-account-type" className="input" value={yandexAccountType} onChange={e => setYandexAccountType(e.target.value)} disabled={isReconnect} aria-describedby="cm-yandex-account-type-hint">
                     <option value="personal">{tr('connect.yandexPersonal')}</option>
                     <option value="business">{tr('connect.yandexBusiness')}</option>
                   </select>
-                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                  <span id="cm-yandex-account-type-hint" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
                     {tr('connect.yandexAccountTypeHint')}
                   </span>
                 </div>
@@ -2096,8 +2594,9 @@ export function ConnectModal({
                     {...NOT_A_LOGIN_FIELD}
                     readOnly={isReconnect}
                     aria-readonly={isReconnect || undefined}
+                    aria-describedby="cm-yandex-login-hint"
                   />
-                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                  <span id="cm-yandex-login-hint" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
                     {tr('connect.yandexLoginHint')}
                   </span>
                 </div>
@@ -2125,9 +2624,23 @@ export function ConnectModal({
                       <label htmlFor="cm-imap-host">{tr('connect.imapHostLabel')}</label>
                       <input
                         id="cm-imap-host"
+                        ref={bindField('imapHost')}
                         className="input"
                         type="text"
                         placeholder="imap.example.com"
+                        required
+                        aria-required="true"
+                        aria-invalid={isInvalid('imapHost') || undefined}
+                        // The paste hint and the two notices below belong to
+                        // this pair of controls but render outside the field
+                        // (see the comment on the hint), so the association has
+                        // to be made by id: without it, tabbing here announced
+                        // "IMAP host, edit text" and nothing else.
+                        aria-describedby={describedBy(
+                          'cm-host-paste-hint',
+                          portRangeError === 'imap' ? 'cm-imap-port-error' : null,
+                          isInvalid('imapHost') ? 'cm-form-error' : null
+                        )}
                         value={form.imapHost}
                         onChange={e => { setPortNote(null); setPortRangeError(null); setForm(prev => ({ ...prev, imapHost: e.target.value })); }}
                         onBlur={() => normalizeHostField('imap')}
@@ -2139,10 +2652,16 @@ export function ConnectModal({
                       <label htmlFor="cm-imap-port">{tr('connect.imapPortLabel')}</label>
                       <PortSelect
                         id="cm-imap-port"
+                        inputRef={bindField('imapPort')}
                         protocol="imap"
                         value={form.imapPort}
                         onChange={value => setPort('imap', value)}
                         disabled={isReconnect}
+                        invalid={isInvalid('imapPort')}
+                        describedBy={describedBy(
+                          portNote?.protocol === 'imap' ? 'cm-imap-port-note' : null,
+                          isInvalid('imapPort') ? 'cm-form-error' : null
+                        )}
                       />
                     </div>
                   </div>
@@ -2150,17 +2669,21 @@ export function ConnectModal({
                       port beside it, a hint nested inside the host field would
                       be indented under a column rather than under the pair it
                       describes. */}
-                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)', marginTop: -6 }}>
+                  <span id="cm-host-paste-hint" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)', marginTop: -6 }}>
                     {tr('connect.hostPasteHint')}
                   </span>
+                  {/* Neither of these carries a live role any longer: both were
+                      spans that arrive with their own text, which is the case
+                      that does not announce. The dialog's persistent announcers
+                      say them; the ids are what tie them to the controls. */}
                   {portNote?.protocol === 'imap' && (
-                    <span role="status" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--brand)', marginTop: -6 }}>
-                      {tr('connect.portMovedNote', { port: String(portNote.port), protocol: 'IMAP' })}
+                    <span id="cm-imap-port-note" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--brand)', marginTop: -6 }}>
+                      {portMovedNote}
                     </span>
                   )}
                   {portRangeError === 'imap' && (
-                    <span role="alert" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--red-700)', marginTop: -6 }}>
-                      {tr('connect.errorPortRange')}
+                    <span id="cm-imap-port-error" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--red-700)', marginTop: -6 }}>
+                      {portRangeNote}
                     </span>
                   )}
 
@@ -2169,9 +2692,18 @@ export function ConnectModal({
                       <label htmlFor="cm-smtp-host">{tr('connect.smtpHostLabel')}</label>
                       <input
                         id="cm-smtp-host"
+                        ref={bindField('smtpHost')}
                         className="input"
                         type="text"
                         placeholder="smtp.example.com"
+                        required
+                        aria-required="true"
+                        aria-invalid={isInvalid('smtpHost') || undefined}
+                        aria-describedby={describedBy(
+                          'cm-host-paste-hint',
+                          portRangeError === 'smtp' ? 'cm-smtp-port-error' : null,
+                          isInvalid('smtpHost') ? 'cm-form-error' : null
+                        )}
                         value={form.smtpHost}
                         onChange={e => { setPortNote(null); setPortRangeError(null); setForm(prev => ({ ...prev, smtpHost: e.target.value })); }}
                         onBlur={() => normalizeHostField('smtp')}
@@ -2183,21 +2715,27 @@ export function ConnectModal({
                       <label htmlFor="cm-smtp-port">{tr('connect.smtpPortLabel')}</label>
                       <PortSelect
                         id="cm-smtp-port"
+                        inputRef={bindField('smtpPort')}
                         protocol="smtp"
                         value={form.smtpPort}
                         onChange={value => setPort('smtp', value)}
                         disabled={isReconnect}
+                        invalid={isInvalid('smtpPort')}
+                        describedBy={describedBy(
+                          portNote?.protocol === 'smtp' ? 'cm-smtp-port-note' : null,
+                          isInvalid('smtpPort') ? 'cm-form-error' : null
+                        )}
                       />
                     </div>
                   </div>
                   {portNote?.protocol === 'smtp' && (
-                    <span role="status" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--brand)', marginTop: -6 }}>
-                      {tr('connect.portMovedNote', { port: String(portNote.port), protocol: 'SMTP' })}
+                    <span id="cm-smtp-port-note" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--brand)', marginTop: -6 }}>
+                      {portMovedNote}
                     </span>
                   )}
                   {portRangeError === 'smtp' && (
-                    <span role="alert" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--red-700)', marginTop: -6 }}>
-                      {tr('connect.errorPortRange')}
+                    <span id="cm-smtp-port-error" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--red-700)', marginTop: -6 }}>
+                      {portRangeNote}
                     </span>
                   )}
                 </>
@@ -2212,9 +2750,19 @@ export function ConnectModal({
                 <div style={{ position: 'relative', display: 'flex' }}>
                   <input
                     id="cm-password"
-                    ref={passwordRef}
+                    ref={node => { passwordRef.current = node; fieldRefs.current.password = node; }}
                     className="input"
-                    style={{ flex: 1, paddingRight: 40, minWidth: 0 }}
+                    required
+                    aria-required="true"
+                    aria-invalid={isInvalid('password') || undefined}
+                    aria-describedby={describedBy(
+                      'cm-password-hint',
+                      isInvalid('password') ? 'cm-form-error' : null
+                    )}
+                    // 48 rather than 40: the reveal button beside it is 44px
+                    // wide now, and text running underneath a control is worse
+                    // than text that stops short of one.
+                    style={{ flex: 1, paddingRight: 48, minWidth: 0 }}
                     type={passwordVisible ? 'text' : 'password'}
                     // The old placeholder was "••••-••••-••••-••••", which asserts a
                     // dashed four-group shape. Only Apple's app-specific password
@@ -2254,12 +2802,27 @@ export function ConnectModal({
                     onClick={() => setPasswordVisible(v => !v)}
                     aria-label={passwordVisible ? tr('connect.hidePassword') : tr('connect.showPassword')}
                     aria-pressed={passwordVisible}
+                    /**
+                     * 44x44, centred on the 36px-tall input.
+                     *
+                     * It was 32x36, and it is the control a person reaches for
+                     * precisely because they cannot read what they typed, which
+                     * is the moment a missed tap costs the most: the field
+                     * holds an unreadable string and there is no way to check
+                     * it except this button.
+                     *
+                     * Absolutely positioned, so growing it moves nothing: the
+                     * 4px it now overhangs above and below the input falls into
+                     * the `.field` column's own 6px gaps and lands on no other
+                     * control. The eye icon stays 15px and stays centred,
+                     * because the box is centred on the same line it was.
+                     */
                     style={{
                       position: 'absolute',
-                      right: 4,
-                      top: 0,
-                      height: 36,
-                      width: 32,
+                      right: 0,
+                      top: -4,
+                      height: 44,
+                      width: 44,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -2314,7 +2877,7 @@ export function ConnectModal({
                   </a>
                 )}
 
-                <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                <span id="cm-password-hint" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
                   {needsAppPassword
                     ? tr('connect.appPasswordHint', { provider: appPasswordProvider })
                     : tr('connect.passwordHint')}
@@ -2430,9 +2993,15 @@ export function ConnectModal({
                         <label htmlFor="cm-username">{tr('connect.usernameLabel')}</label>
                         <input
                           id="cm-username"
+                          ref={bindField('username')}
                           className="input"
                           type="text"
                           placeholder={tr('connect.usernamePlaceholder')}
+                          aria-invalid={isInvalid('username') || undefined}
+                          aria-describedby={describedBy(
+                            'cm-username-hint',
+                            isInvalid('username') ? 'cm-form-error' : null
+                          )}
                           value={form.username}
                           onChange={e => setForm(prev => ({ ...prev, username: e.target.value }))}
                           // The SASL login the MAIL server issued. Named
@@ -2448,7 +3017,7 @@ export function ConnectModal({
                           readOnly={isReconnect}
                           aria-readonly={isReconnect || undefined}
                         />
-                        <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                        <span id="cm-username-hint" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
                           {tr('connect.usernameHint')}
                         </span>
                       </div>
@@ -2464,11 +3033,11 @@ export function ConnectModal({
                         </legend>
                         <div className="field">
                           <label htmlFor="cm-imap-security">{tr('connect.imapSecurityLabel')}</label>
-                          <select id="cm-imap-security" className="input" value={form.imapSecurity} onChange={e => setSecurity('imap', e.target.value)} disabled={isReconnect}>
+                          <select id="cm-imap-security" className="input" value={form.imapSecurity} onChange={e => setSecurity('imap', e.target.value)} disabled={isReconnect} aria-describedby="cm-imap-security-hint">
                             <option value="tls">{tr('connect.securityTls')}</option>
                             <option value="starttls">{tr('connect.securityStarttls')}</option>
                           </select>
-                          <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                          <span id="cm-imap-security-hint" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
                             {tr('connect.securityPortNote')}
                           </span>
                         </div>
@@ -2480,11 +3049,11 @@ export function ConnectModal({
                         </legend>
                         <div className="field">
                           <label htmlFor="cm-smtp-security">{tr('connect.smtpSecurityLabel')}</label>
-                          <select id="cm-smtp-security" className="input" value={form.smtpSecurity} onChange={e => setSecurity('smtp', e.target.value)} disabled={isReconnect}>
+                          <select id="cm-smtp-security" className="input" value={form.smtpSecurity} onChange={e => setSecurity('smtp', e.target.value)} disabled={isReconnect} aria-describedby="cm-smtp-security-hint">
                             <option value="tls">{tr('connect.securityTls')}</option>
                             <option value="starttls">{tr('connect.securityStarttls')}</option>
                           </select>
-                          <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
+                          <span id="cm-smtp-security-hint" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
                             {tr('connect.securityPortNote')}
                           </span>
                         </div>
@@ -2539,7 +3108,21 @@ export function ConnectModal({
                   its generator link. */}
               {formError && (
                 <div
-                  role="alert"
+                  /**
+                   * No `role="alert"`.
+                   *
+                   * It was on a node that is created together with its text and
+                   * whose text then does not change: two identical rejections
+                   * in a row rendered the same sentence into the same box and
+                   * announced nothing, which is exactly why a scroll fallback
+                   * keyed on the failure counter had to be bolted on to tell a
+                   * sighted user anything had happened at all.
+                   *
+                   * The persistent assertive announcer at the top of the dialog
+                   * says it instead, and it clears and re-writes so a repeat is
+                   * a change. What is left here is the visible message, with an
+                   * id that the field the failure is about points at.
+                   */
                   ref={errorAlertRef}
                   style={{
                     padding: '10px 12px',
@@ -2555,7 +3138,7 @@ export function ConnectModal({
                     gap: 6,
                   }}
                 >
-                  <span>{formError}</span>
+                  <span id="cm-form-error">{formError}</span>
 
                   {/* The one failure whose fix is not in this form. It leads,
                       outside the disclosure, because a link the user has to
@@ -2820,7 +3403,12 @@ export function ConnectModal({
               <Btn variant="secondary" onClick={() => setConfirmingClose(false)}>
                 {confirmingCloseDuringCheck ? tr('connect.keepWaiting') : tr('connect.keepEditing')}
               </Btn>
-              <Btn variant="danger" onClick={() => { setConfirmingClose(false); onClose(); }}>
+              {/* Discarding closes the whole modal, so there is nothing behind
+                  the prompt to hand focus back to. Clearing the opener stops
+                  the restore effect from reaching for a control that is about
+                  to be unmounted; the modal's own unmount cleanup returns focus
+                  to whatever opened IT. */}
+              <Btn variant="danger" onClick={() => { confirmOpenerRef.current = null; setConfirmingClose(false); onClose(); }}>
                 {confirmingCloseDuringCheck ? tr('connect.closeAnyway') : tr('connect.discardConfirm')}
               </Btn>
             </div>
