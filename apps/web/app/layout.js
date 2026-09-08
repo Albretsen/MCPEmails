@@ -39,8 +39,18 @@ export const metadata = {
     title: 'AI Email MCP Server — Connect Gmail & IMAP to Claude | mcpemails',
     description: 'Connect Gmail, Fastmail, iCloud, or IMAP email to Claude, Cursor, ChatGPT, and MCP clients. Read, send, search, and organize email live; Outlook support is in progress.',
   },
+  // All three files live in public/ and are therefore served from the root.
+  // The .ico is declared first with sizes="any" so modern browsers skip it and
+  // pick the SVG below; it exists mainly because crawlers and directory sites
+  // (Smithery, the Docker MCP catalog) fetch the literal /favicon.ico path and
+  // fall back to a third-party favicon proxy when it 404s.
   icons: {
-    icon: '/favicon.svg',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any', type: 'image/x-icon' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
   },
 };
 
