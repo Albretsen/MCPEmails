@@ -25,22 +25,29 @@ console.log(`\nProvider page rollout as of ${now.toISOString().slice(0, 10)}\n`)
 let cumulative = 0;
 for (const w of status) {
   cumulative += w.count;
-  const mark = w.released ? 'LIVE  ' : 'queued';
+  // Waves share dates now, so the wave number is a cohort label rather than a
+  // position in a queue. Held waves have no date at all.
+  const mark = w.held ? 'HELD  ' : w.released ? 'LIVE  ' : 'queued';
   const bar = '#'.repeat(w.count).padEnd(15, '.');
   console.log(
-    `  wave ${String(w.wave).padStart(2)}  ${w.date}  ${mark}  ${bar}  ` +
+    `  wave ${String(w.wave).padStart(2)}  ${(w.date ?? 'no date').padEnd(10)}  ${mark}  ${bar}  ` +
     `${String(w.count).padStart(3)} pages  (${String(cumulative).padStart(3)} cumulative)`,
   );
 }
 console.log(`\n  public today : ${live} of ${PROVIDERS.length}`);
-const next = status.find((w) => !w.released);
+const next = status.find((w) => !w.released && !w.held);
+const heldCount = status.filter((w) => w.held).reduce((sum, w) => sum + w.count, 0);
+const dueNext = next ? status.filter((w) => w.date === next.date) : [];
 console.log(next
-  ? `  next wave    : ${next.count} pages on ${next.date}\n`
-  : '  next wave    : none, the rollout is complete\n');
+  ? `  next wave    : ${dueNext.reduce((sum, w) => sum + w.count, 0)} pages on ${next.date}`
+  : '  next wave    : none, everything scheduled is public');
+console.log(heldCount
+  ? `  held         : ${heldCount} pages, waiting on a human, not on a date\n`
+  : '');
 
 for (const w of status) {
   if (!w.released) {
-    console.log(`  wave ${w.wave} (${w.date}): ${w.slugs.join(' ')}`);
+    console.log(`  wave ${w.wave} (${w.held ? 'HELD for review' : w.date}): ${w.slugs.join(' ')}`);
   }
 }
 console.log('');

@@ -3,37 +3,58 @@ import { PROVIDERS, getProvider } from './providers.mjs';
 /**
  * Staged release of the provider landing pages.
  *
- * 100 of these 106 pages are new to production, on a site that has roughly 42
- * indexed URLs. Publishing them in one go would triple the site overnight.
+ * The original schedule put these 106 pages out in ten weekly waves, from
+ * 2026-08-31 to 2026-11-02, for three stated reasons. Eight days of production
+ * data settled all three, so the schedule is now collapsed into three dates.
  *
- * The reason for staging is NOT that volume is penalised on its own; it is not,
- * and treating a slow rollout as protection against a spam judgement would be
- * superstition. The reasons that do hold:
+ *  1. Crawl budget. Wrong at this size. Crawl budget binds on sites in the tens
+ *     of thousands of URLs; this domain went from ~42 to ~150. Unpublished
+ *     pages were not saving a budget that was ever under pressure.
+ *  2. A learning loop, to see whether the format ranks before committing the
+ *     other 90 pages to it. This one worked, and it answered fast. Wave 1
+ *     carried five genuinely new pages (imap, gmx, ionos, aol, migadu). Within
+ *     eight days gmx, ionos and imap had produced 9 attributed signups, 6 of
+ *     them organic Google, which is 19% of every signup ever attributed to a
+ *     /connect page. The format ranks in days, not months. There is nothing
+ *     further to learn by waiting, and each week of waiting costs the tail of
+ *     the set its own indexing lead time on top.
+ *  3. Blast radius, so a systematic error surfaces on ten pages rather than
+ *     all of them. Still valid, but it attaches to specific pages rather than
+ *     to a calendar. The pages with weak sourcing are held below by name.
  *
- *  1. Crawl budget. A domain with this backlink profile does not get 106 new
- *     URLs crawled promptly however they are published, so releasing faster
- *     than they can be crawled buys nothing.
- *  2. A learning loop. Wave 1 tells us whether the format ranks before the
- *     other 90 pages are committed to it.
- *  3. Blast radius. A systematic error in one cohort (a wrong ISP status, a
- *     stale hostname) surfaces on ten pages rather than all of them.
+ * Wave numbers are kept as cohort identifiers even where several now share a
+ * date: they record which batch a page was researched and generated in, which
+ * is what a blast-radius diagnosis needs. They are no longer a queue.
  *
- * A wave is released when its date has passed. Every route on this site renders
- * per request, so a wave goes live on its date with no deploy. If these pages
- * are ever made statically generated, this gate freezes at build time and will
- * need a revalidate window to match.
+ * A wave is released when its date has passed. `null` is a deliberate hold: the
+ * pages stay private until a human changes this file, because what gates them
+ * is a review that has not happened, not a date that has not arrived.
+ *
+ * Every route on this site renders per request (Set-Cookie from the experiment
+ * assignment forces it), so a wave goes live on its date with no deploy. If
+ * these pages are ever made statically generated, this gate freezes at build
+ * time and will need a revalidate window to match.
  */
 export const RELEASE_WAVES = {
   1: '2026-08-31',
   2: '2026-09-07',
-  3: '2026-09-14',
-  4: '2026-09-21',
-  5: '2026-09-28',
-  6: '2026-10-05',
-  7: '2026-10-12',
-  8: '2026-10-19',
-  9: '2026-10-26',
-  10: '2026-11-02',
+  // Everything the product can actually connect: hosting, cPanel, privacy,
+  // regional and ISP mailboxes.
+  3: '2026-09-08',
+  4: '2026-09-08',
+  5: '2026-09-08',
+  6: '2026-09-08',
+  7: '2026-09-08',
+  // Self-hosted stacks, then the `blocked` set (Outlook, Office365, Proton,
+  // Tutanota, Hey), whose honest answer is "no". A week behind the rest so the
+  // supported pages are the ones indexed first.
+  8: '2026-09-15',
+  9: '2026-09-15',
+  // HELD, not scheduled. These seven need a human spot-check first: SFR and
+  // StartMail are sourced more weakly than the rest of the set, and Rogers has
+  // app-password availability contradicted between two live vendor pages. Set
+  // a date here once someone has read them.
+  10: null,
 };
 
 /**
@@ -53,8 +74,9 @@ export function waveReleaseDate(wave) {
 export function isReleased(provider, now = new Date()) {
   if (!provider) return false;
   const date = RELEASE_WAVES[provider.wave];
-  // A provider with no wave is a data error. Treat it as unreleased rather than
-  // letting it leak out, so the failure is a missing page and not a surprise one.
+  // No date means either a deliberate hold (the wave is present and null) or a
+  // data error (the wave is unknown). Both stay private, so the failure mode is
+  // a missing page rather than a surprise one.
   if (!date) return false;
   return now >= new Date(`${date}T00:00:00.000Z`);
 }
@@ -126,6 +148,11 @@ export function relatedProviders(slug, limit = 6, now = new Date()) {
   return out;
 }
 
+/** True when a wave is deliberately parked with no date, rather than queued. */
+export function isHeld(wave) {
+  return Object.hasOwn(RELEASE_WAVES, wave) && RELEASE_WAVES[wave] === null;
+}
+
 /** Rollout progress, for the release-status script and for sanity checks. */
 export function releaseStatus(now = new Date()) {
   const byWave = {};
@@ -136,7 +163,10 @@ export function releaseStatus(now = new Date()) {
     .map(([wave, slugs]) => ({
       wave: Number(wave),
       date: RELEASE_WAVES[wave] ?? null,
-      released: now >= new Date(`${RELEASE_WAVES[wave]}T00:00:00.000Z`),
+      held: isHeld(wave),
+      // Asked through isReleased so a held wave and a released one can never
+      // disagree between this report and what the routes actually serve.
+      released: isReleased({ wave: Number(wave) }, now),
       count: slugs.length,
       slugs: slugs.sort(),
     }))
