@@ -52,8 +52,8 @@
     "items": {
       "0": {
         "tag": "Périmètre",
-        "h": "Dix outils ciblés. L'essentiel, couvert.",
-        "p": "Les outils couvrent le travail quotidien : <code>inbox_list</code>, <code>email_read</code> (list, read, search) et <code>email_compose</code> (send, reply), ainsi que des outils ciblés pour organiser, supprimer, gérer les dossiers, les brouillons, la planification, les contacts et les signatures. Collez l'URL du point de terminaison MCP dans claude.ai, Claude Desktop, Cursor ou tout agent compatible MCP."
+        "h": "Onze outils ciblés. L'essentiel, couvert.",
+        "p": "Les outils couvrent le travail quotidien : <code>inbox_list</code>, <code>email_read</code> (list, read, search) et <code>email_compose</code> (send, reply), ainsi que des outils ciblés pour organiser, supprimer, gérer les dossiers, les brouillons, la planification, les contacts, les signatures et les automatisations sans surveillance. Collez l'URL du point de terminaison MCP dans claude.ai, Claude Desktop, Cursor ou tout agent compatible MCP."
       },
       "1": {
         "tag": "Stockage",

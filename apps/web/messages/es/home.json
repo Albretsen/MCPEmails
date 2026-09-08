@@ -52,8 +52,8 @@
     "items": {
       "0": {
         "tag": "Alcance",
-        "h": "Diez herramientas enfocadas. Lo esencial, cubierto.",
-        "p": "Las herramientas cubren el trabajo diario: <code>inbox_list</code>, <code>email_read</code> (list, read, search) y <code>email_compose</code> (send, reply), además de herramientas específicas para organizar, eliminar, carpetas, borradores, programación, contactos y firmas. Pega la URL del endpoint MCP en claude.ai, Claude Desktop, Cursor o cualquier agente compatible con MCP."
+        "h": "Once herramientas enfocadas. Lo esencial, cubierto.",
+        "p": "Las herramientas cubren el trabajo diario: <code>inbox_list</code>, <code>email_read</code> (list, read, search) y <code>email_compose</code> (send, reply), además de herramientas específicas para organizar, eliminar, carpetas, borradores, programación, contactos, firmas y automatizaciones desatendidas. Pega la URL del endpoint MCP en claude.ai, Claude Desktop, Cursor o cualquier agente compatible con MCP."
       },
       "1": {
         "tag": "Almacenamiento",
