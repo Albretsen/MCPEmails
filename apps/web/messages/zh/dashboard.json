@@ -148,7 +148,6 @@
     "statusConnected": "已连接",
     "statusPending": "待处理",
     "statusError": "错误",
-    "statusExpired": "已过期",
     "reconnect": "重新连接",
     "checkConnection": "检查连接",
     "disconnectInbox": "断开收件箱",

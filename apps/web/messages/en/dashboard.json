@@ -148,7 +148,6 @@
     "statusConnected": "Connected",
     "statusPending": "Pending",
     "statusError": "Error",
-    "statusExpired": "Expired",
     "reconnect": "Reconnect",
     "checkConnection": "Check connection",
     "disconnectInbox": "Disconnect inbox",
