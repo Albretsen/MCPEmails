@@ -1,6 +1,6 @@
 {
   "name": "mcpemails",
-  "version": "1.0.5",
+  "version": "1.0.4",
   "mcpName": "com.mcpemails/emails",
   "description": "Stdio bridge to the MCP Emails server. Read, search, send, organize, draft and schedule email from Claude Desktop, Cursor, Cline, Windsurf and any other stdio MCP client.",
   "keywords": [
