@@ -5,6 +5,16 @@ import { getAllPosts, getPostLocales } from '@/lib/blog/posts';
 import { blogPostLanguageAlternates } from '@/lib/blog/seo.mjs';
 
 /**
+ * The provider pages are gated by a release schedule (lib/connect/release.mjs)
+ * that opens a wave on its date with no deploy. Every provider route renders per
+ * request and honours that immediately, but this file prerenders at build time,
+ * so without a revalidate window the sitemap would keep advertising the previous
+ * set until something else triggered a build. An hour is far finer than any
+ * resolution a sitemap needs, and keeps the two from disagreeing.
+ */
+export const revalidate = 3600;
+
+/**
  * Next.js App Router sitemap generator (renders as /sitemap.xml).
  * Only public marketing pages are included; dashboard, auth, and API routes
  * are private and must not appear in search indexes.
