@@ -52,8 +52,8 @@
     "items": {
       "0": {
         "tag": "Omfang",
-        "h": "Ti fokuserte verktøy. Det essensielle, dekket.",
-        "p": "Verktøy dekker det daglige arbeidet: <code>inbox_list</code>, <code>email_read</code> (list, read, search) og <code>email_compose</code> (send, reply), pluss fokuserte verktøy for organisering, sletting, mapper, utkast, planlegging, kontakter og signaturer. Lim inn MCP-endepunkt-URL-en i claude.ai, Claude Desktop, Cursor eller en hvilken som helst MCP-kompatibel agent."
+        "h": "Elleve fokuserte verktøy. Det essensielle, dekket.",
+        "p": "Verktøy dekker det daglige arbeidet: <code>inbox_list</code>, <code>email_read</code> (list, read, search) og <code>email_compose</code> (send, reply), pluss fokuserte verktøy for organisering, sletting, mapper, utkast, planlegging, kontakter, signaturer og automatiseringer som går uten tilsyn. Lim inn MCP-endepunkt-URL-en i claude.ai, Claude Desktop, Cursor eller en hvilken som helst MCP-kompatibel agent."
       },
       "1": {
         "tag": "Lagring",

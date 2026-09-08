@@ -20,7 +20,7 @@
   },
   "compare": {
     "title": "Auto-hébergé ou hébergé",
-    "intro": "Le serveur MCP complet et ses dix outils sont présents dans les deux cas. L'auto-hébergement échange le confort du service géré contre un contrôle total.",
+    "intro": "Le serveur MCP complet et ses onze outils sont présents dans les deux cas. L'auto-hébergement échange le confort du service géré contre un contrôle total.",
     "thFeature": "",
     "thSelf": "Auto-hébergé",
     "thHosted": "Hébergé",
@@ -31,7 +31,7 @@
         "hosted": "Gratuit, 5 $, 15 $ ou 79 $"
       },
       {
-        "feature": "Le serveur MCP et ses 10 outils",
+        "feature": "Le serveur MCP et ses 11 outils",
         "self": "Oui",
         "hosted": "Oui"
       },

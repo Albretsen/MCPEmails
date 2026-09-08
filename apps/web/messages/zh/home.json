@@ -52,8 +52,8 @@
     "items": {
       "0": {
         "tag": "范围",
-        "h": "十个专注工具，覆盖日常所需。",
-        "p": "工具覆盖日常工作：<code>inbox_list</code>、<code>email_read</code>（list、read、search）和 <code>email_compose</code>（send、reply）。另有专门用于整理、删除、文件夹、草稿、定时发送、联系人和签名的工具。把 MCP 端点 URL 粘贴到 claude.ai、Claude Desktop、Cursor 或任何兼容 MCP 的智能体中。"
+        "h": "十一个专注工具，覆盖日常所需。",
+        "p": "工具覆盖日常工作：<code>inbox_list</code>、<code>email_read</code>（list、read、search）和 <code>email_compose</code>（send、reply）。另有专门用于整理、删除、文件夹、草稿、定时发送、联系人、签名和无人值守自动化规则的工具。把 MCP 端点 URL 粘贴到 claude.ai、Claude Desktop、Cursor 或任何兼容 MCP 的智能体中。"
       },
       "1": {
         "tag": "存储",
