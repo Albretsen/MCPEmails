@@ -58,12 +58,12 @@
       "1": {
         "tag": "Almacenamiento",
         "h": "El correo se obtiene en vivo. Nunca se almacena.",
-        "p": "Cada llamada a una herramienta consulta tu proveedor en tiempo real: la API de Gmail, Fastmail JMAP o IMAP. Los cuerpos de los mensajes, los asuntos y los adjuntos van al agente y se descartan de inmediato. Persistimos una sola cosa por bandeja, un token cifrado o una contraseña de aplicación, para poder hacer la siguiente llamada. La única excepción es un mensaje que programas para enviar más tarde: lo conservamos hasta la hora de envío y luego guardamos un registro para tu historial."
+        "p": "Cada llamada a una herramienta consulta tu proveedor en tiempo real: la API de Gmail o IMAP. Los cuerpos de los mensajes, los asuntos y los adjuntos van al agente y se descartan de inmediato. Persistimos una sola cosa por bandeja, un token cifrado o una contraseña de aplicación, para poder hacer la siguiente llamada. La única excepción es un mensaje que programas para enviar más tarde: lo conservamos hasta la hora de envío y luego guardamos un registro para tu historial."
       },
       "2": {
         "tag": "Envío",
         "h": "El envío pasa por tu proveedor.",
-        "p": "Cuando tu agente llama a <code>email_compose</code> (para enviar o responder), el mensaje se envía mediante la API de Gmail, Fastmail JMAP o tu propio servidor SMTP. La reputación de tu dominio y la entregabilidad quedan completamente en tus manos. Nunca retransmitimos correo desde nuestro propio dominio."
+        "p": "Cuando tu agente llama a <code>email_compose</code> (para enviar o responder), el mensaje se envía mediante la API de Gmail o tu propio servidor SMTP. La reputación de tu dominio y la entregabilidad quedan completamente en tus manos. Nunca retransmitimos correo desde nuestro propio dominio."
       },
       "3": {
         "tag": "Proveedores",
@@ -104,7 +104,7 @@
       "0": "Descubre todas las bandejas conectadas y sus IDs. Llama a esto primero, sin copiar y pegar UUIDs del panel.",
       "1": "Leer correo: lista resúmenes recientes, obtén un mensaje completo por ID, lee hasta 50 por lotes o ejecuta una búsqueda independiente del proveedor, todo mediante el argumento action.",
       "2": "Organizar correo: mueve, copia, elimina, marca o archiva, ya sea uno a uno, en lote o directamente desde una búsqueda.",
-      "3": "Redactar: envía un mensaje nuevo, responde en el hilo o reenvía. Despachado mediante la API de Gmail, Fastmail JMAP o SMTP: tu dominio, tu entregabilidad.",
+      "3": "Redactar: envía un mensaje nuevo, responde en el hilo o reenvía. Despachado mediante la API de Gmail o SMTP: tu dominio, tu entregabilidad.",
       "4": "Gestiona carpetas (etiquetas en Gmail): lista, crea, renombra o elimina, y úsalas como destino de movimientos.",
       "5": "Borradores: lista, crea, actualiza y envía borradores guardados en la carpeta Drafts del proveedor.",
       "6": "Programa un mensaje para una hora futura, lista los envíos programados pendientes y cancélalos antes de que salgan.",
@@ -246,6 +246,7 @@
     "copyAria": "Copiar {label}",
     "linkAbout": "Acerca de",
     "linkSecurity": "Seguridad",
+    "linkStatus": "Estado",
     "linkSelfHost": "Auto-alojamiento",
     "linkFounders": "Para fundadores"
   },

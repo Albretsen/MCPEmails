@@ -58,12 +58,12 @@
       "1": {
         "tag": "Stockage",
         "h": "Les e-mails sont récupérés en direct. Jamais stockés.",
-        "p": "Chaque appel d'outil contacte votre fournisseur en temps réel : API Gmail, Fastmail JMAP ou IMAP. Les corps de message, les objets et les pièces jointes vont à l'agent et sont immédiatement supprimés. Nous conservons une seule chose par boîte de réception, un jeton chiffré ou un mot de passe d'application, afin de pouvoir effectuer l'appel suivant. La seule exception est un message que vous programmez pour un envoi ultérieur : nous le conservons jusqu'à l'heure d'envoi, puis en gardons une trace pour votre historique."
+        "p": "Chaque appel d'outil contacte votre fournisseur en temps réel : API Gmail ou IMAP. Les corps de message, les objets et les pièces jointes vont à l'agent et sont immédiatement supprimés. Nous conservons une seule chose par boîte de réception, un jeton chiffré ou un mot de passe d'application, afin de pouvoir effectuer l'appel suivant. La seule exception est un message que vous programmez pour un envoi ultérieur : nous le conservons jusqu'à l'heure d'envoi, puis en gardons une trace pour votre historique."
       },
       "2": {
         "tag": "Envoi",
         "h": "L'envoi passe par votre fournisseur.",
-        "p": "Lorsque votre agent appelle <code>email_compose</code> (pour envoyer ou répondre), le message est expédié via l'API Gmail, Fastmail JMAP ou votre propre serveur SMTP. La réputation de votre domaine et votre délivrabilité restent entièrement entre vos mains. Nous ne relayons jamais de courrier depuis notre propre domaine."
+        "p": "Lorsque votre agent appelle <code>email_compose</code> (pour envoyer ou répondre), le message est expédié via l'API Gmail ou votre propre serveur SMTP. La réputation de votre domaine et votre délivrabilité restent entièrement entre vos mains. Nous ne relayons jamais de courrier depuis notre propre domaine."
       },
       "3": {
         "tag": "Fournisseurs",
@@ -104,7 +104,7 @@
       "0": "Découvrez toutes les boîtes connectées et leurs ID. Appelez ceci en premier, sans copier-coller d'UUID depuis le tableau de bord.",
       "1": "Lire le courrier : listez les résumés récents, récupérez un message complet par ID, lisez jusqu'à 50 par lot ou lancez une recherche indépendante du fournisseur, le tout via l'argument action.",
       "2": "Organiser le courrier : déplacez, copiez, supprimez, marquez ou archivez : un à la fois, en masse ou directement depuis une recherche.",
-      "3": "Rédiger : envoyez un nouveau message, répondez dans le fil ou transférez. Expédié par l'API Gmail, Fastmail JMAP ou SMTP : votre domaine, votre délivrabilité.",
+      "3": "Rédiger : envoyez un nouveau message, répondez dans le fil ou transférez. Expédié par l'API Gmail ou SMTP : votre domaine, votre délivrabilité.",
       "4": "Gérez les dossiers (libellés sur Gmail) : listez, créez, renommez ou supprimez, et utilisez-les comme destinations de déplacement.",
       "5": "Brouillons : listez, créez, mettez à jour et envoyez les brouillons stockés dans le dossier Drafts du fournisseur.",
       "6": "Programmez un message pour plus tard, listez les envois programmés en attente et annulez-les avant leur départ.",
@@ -246,6 +246,7 @@
     "copyAria": "Copier {label}",
     "linkAbout": "À propos",
     "linkSecurity": "Sécurité",
+    "linkStatus": "Statut",
     "linkSelfHost": "Auto-hébergement",
     "linkFounders": "Pour les fondateurs"
   },

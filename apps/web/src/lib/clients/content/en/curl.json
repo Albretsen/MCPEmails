@@ -1,0 +1,93 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "apps/web/app/api/mcp/route.ts",
+    "apps/web/messages/en/docs.json"
+  ],
+  "meta": {
+    "title": "Email MCP Server API: curl, JSON-RPC and Bearer Auth",
+    "description": "Call the mcpemails MCP server directly over HTTP. One Streamable HTTP endpoint, JSON-RPC 2.0, a scoped bearer key, and the full tool catalogue. One inbox free."
+  },
+  "hero": {
+    "eyebrow": "HTTP + email",
+    "titleLine1": "Call the email MCP server",
+    "titleLine2": "straight from curl or a script",
+    "lead": "No client, no SDK. One Streamable HTTP endpoint that speaks JSON-RPC 2.0, authenticated with a scoped bearer key you can revoke in one click.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Scoped API key, revocable in one click",
+    "meta2": "Email fetched live, never stored",
+    "answer": "POST JSON-RPC 2.0 to https://mcpemails.com/api/mcp with an Authorization Bearer header carrying an API key from your dashboard. Supported methods are initialize, tools/list, tools/call, prompts/list and prompts/get."
+  },
+  "method": {
+    "title": "How A script or raw HTTP client connects: a scoped API key",
+    "body": "A script or raw HTTP client does not run the OAuth browser flow against a remote MCP server, so it authenticates with a bearer token instead. Create an API key in your dashboard, tick only the scopes the agent needs, and paste it into A script or raw HTTP client as an <code>Authorization: Bearer</code> header. Key connections and OAuth connections hit the same endpoint and get the same tool catalogue; the difference is only how the token is obtained."
+  },
+  "setup": [
+    {
+      "h": "Create a free account and connect a mailbox",
+      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Gmail connects with one-click Google sign-in; iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
+    },
+    {
+      "h": "Create a scoped API key",
+      "p": "In Dashboard, API Keys, click Create key. Name it and tick only the scopes this agent needs: <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> and <code>manage:automations</code>. The key looks like <code>mcpe_</code> followed by 64 hex characters and is shown once, so copy it before you close the dialog."
+    },
+    {
+      "h": "Call the endpoint",
+      "p": "POST a JSON-RPC 2.0 body to <code>https://mcpemails.com/api/mcp</code> with the key on the <code>Authorization</code> header. Start with <code>tools/list</code> to see the catalogue, then <code>inbox_list</code> to discover your mailbox ids."
+    },
+    {
+      "h": "Handle the response",
+      "p": "Results come back as JSON-RPC 2.0. Successful results also carry a typed <code>structuredContent</code> object, so a script does not have to parse prose."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Send the key on the header, not in the query string",
+      "p": "A key on <code>?key=</code> or <code>?api_key=</code> is still accepted for integrations that predate the header, but it should not be used in anything new. URL credentials survive in browser history, proxy logs, referrer headers and monitoring systems, none of which you control. The <code>Authorization</code> header is the supported path."
+    },
+    {
+      "h": "Outbound calls take an idempotency key, and retries without one are a real risk",
+      "p": "Send, reply, forward, draft send and scheduled send accept an optional idempotency key, honoured for 24 hours. A network timeout on a send is ambiguous by nature: the mail may well have gone. With an idempotency key the retry is safe. Without one, a retry is a second email."
+    },
+    {
+      "h": "Long operations are genuinely long",
+      "p": "A search-and-move across a large mailbox has been observed taking around 152 seconds in production, and the proxy allows up to 270 seconds before it gives up on its own. Set a client timeout that reflects that rather than the usual few seconds, or you will cancel operations that were about to succeed."
+    },
+    {
+      "h": "There is no push, in either direction",
+      "p": "No webhooks, no server-initiated events, no callback URL to register. Reacting to new mail means polling, for example <code>email_read</code> with <code>action: \"list\"</code> and unread only, on whatever interval your workflow needs. Rate limits are 100 per minute, 1,000 per hour and 10,000 per day per key."
+    }
+  ],
+  "limits": [
+    "Requests are rate limited to 100 per minute, 1,000 per hour and 10,000 per day per key, plus your plan ceiling on billable actions.",
+    "The server is request and response only. There are no webhooks and no server-initiated events, so new mail never wakes your agent by itself. To react to arriving mail, poll on a schedule.",
+    "Mail is fetched live from your provider on every call and never stored. Only the encrypted OAuth token or app password is kept, so a revoked token or a changed mailbox password ends access immediately."
+  ],
+  "faq": [
+    {
+      "q": "Can I use this without an MCP client?",
+      "a": "Yes. It is an ordinary HTTPS endpoint speaking JSON-RPC 2.0, so curl, a cron job, a backend service or any HTTP library can call it. Authenticate with a bearer API key from Dashboard, API Keys. The tool catalogue is identical to what an MCP client sees."
+    },
+    {
+      "q": "Which JSON-RPC methods are supported?",
+      "a": "initialize, tools/list, tools/call, prompts/list and prompts/get. Successful results carry a typed structuredContent object alongside the human-readable content, which is what a script should read."
+    },
+    {
+      "q": "How do I make retries safe?",
+      "a": "Pass an idempotency key on outbound operations. Send, reply, forward, draft send and scheduled send accept one and honour it for 24 hours, so retrying the same request after a timeout cannot produce a second email. Reads are naturally safe to retry."
+    },
+    {
+      "q": "What are the rate limits?",
+      "a": "100 requests per minute, 1,000 per hour and 10,000 per day per key, plus your plan ceiling on billable actions. Failed calls and inbox_list are not billed."
+    },
+    {
+      "q": "Is my email stored on your servers?",
+      "a": "No. Every message is fetched live from your provider for the request that asked for it and handed straight to your client. Only the encrypted OAuth token or app password is kept, so future calls can authenticate. Deleting the inbox in the dashboard, or revoking access at your provider, ends the connection at once."
+    }
+  ],
+  "ctaBand": {
+    "title": "Script your inbox",
+    "sub": "One endpoint, one scoped key. One inbox free forever, no card required."
+  }
+}

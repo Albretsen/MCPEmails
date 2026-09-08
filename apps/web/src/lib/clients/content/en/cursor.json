@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://cursor.com/docs/mcp"
+  ],
+  "meta": {
+    "title": "Connect Email to Cursor: mcp.json MCP Server Setup",
+    "description": "Add a real inbox to Cursor with four lines in mcp.json. Cursor prompts the OAuth sign-in, no API key, then read, search, send and schedule mail. One inbox free."
+  },
+  "hero": {
+    "eyebrow": "Cursor + email",
+    "titleLine1": "Connect your inbox to Cursor",
+    "titleLine2": "with four lines of mcp.json",
+    "lead": "Give the editor a real mailbox. Reply to a bug report from the file that caused it, mail a customer the fix, or clear an inbox without switching windows.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "OAuth, no API key needed",
+    "meta2": "Email fetched live, never stored",
+    "answer": "Add one entry under mcpServers in ~/.cursor/mcp.json with the url https://mcpemails.com/api/mcp. Cursor then prompts you to sign in through OAuth, and no API key is involved."
+  },
+  "method": {
+    "title": "How Cursor connects: OAuth, no API key",
+    "body": "Cursor runs the standard MCP OAuth flow against this server. It registers itself with <b>RFC 7591 dynamic client registration</b>, so there is no client ID to create, and authorizes with <b>authorization code plus PKCE</b> using S256. No client secret is ever transmitted, and the token carries only the scopes you approve on our consent screen. The access token it receives lasts an hour and refreshes itself; it is listed in Dashboard, API Keys as <code>OAuth:</code> followed by the client name, which is where you revoke the connection."
+  },
+  "setup": [
+    {
+      "h": "Create a free account and connect a mailbox",
+      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Gmail connects with one-click Google sign-in; iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
+    },
+    {
+      "h": "Open your mcp.json",
+      "p": "Edit <code>~/.cursor/mcp.json</code> for every project, or <code>.cursor/mcp.json</code> inside one project."
+    },
+    {
+      "h": "Add the server",
+      "p": "Add the entry below under <code>mcpServers</code>. The field Cursor wants here is <code>url</code>."
+    },
+    {
+      "h": "Authorize",
+      "p": "Cursor prompts you to sign in through OAuth. Authorize with mcpemails and approve the scopes you want the editor to hold."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Project config and global config are different files, and both exist",
+      "p": "A server in <code>~/.cursor/mcp.json</code> follows you into every project; one in <code>.cursor/mcp.json</code> belongs to that repository only. Mail is usually a you thing rather than a repository thing, so the global file is the better home, and it keeps the entry out of a repo other people clone."
+    },
+    {
+      "h": "A project mcp.json is a file you might commit by accident",
+      "p": "The entry itself holds no secret, just a public URL, and OAuth tokens are stored by Cursor rather than written here. That changes the moment someone swaps the OAuth entry for a bearer API key inline. If you go the key route, keep it out of a committed file, and revoke any key that has ever been pushed: keys are revocable from Dashboard, API Keys in one click."
+    },
+    {
+      "h": "Give the editor less than you would give a mail app",
+      "p": "A coding agent with <code>delete:email</code> is a strange amount of power to hand a tool whose main job is refactoring. Read, search and draft scopes cover almost every editor workflow. You can always issue a second, wider connection for the assistant you actually triage mail in."
+    }
+  ],
+  "limits": [
+    "Requests are rate limited to 100 per minute, 1,000 per hour and 10,000 per day per key, plus your plan ceiling on billable actions.",
+    "The server is request and response only. There are no webhooks and no server-initiated events, so new mail never wakes your agent by itself. To react to arriving mail, poll on a schedule.",
+    "Mail is fetched live from your provider on every call and never stored. Only the encrypted OAuth token or app password is kept, so a revoked token or a changed mailbox password ends access immediately."
+  ],
+  "faq": [
+    {
+      "q": "How do I connect email to Cursor?",
+      "a": "Add an entry under mcpServers in ~/.cursor/mcp.json with the url https://mcpemails.com/api/mcp, then complete the OAuth sign-in Cursor prompts for. Cursor then has tools for reading, searching, sending, replying, forwarding, organizing and scheduling mail across every mailbox you have connected."
+    },
+    {
+      "q": "Do I need an API key for Cursor?",
+      "a": "No. Cursor runs the OAuth browser flow against this server, registering itself dynamically and authorizing with PKCE, so the config file holds nothing secret. A bearer API key remains an option for scripted or headless setups."
+    },
+    {
+      "q": "Why is the field called url here and serverUrl in Windsurf?",
+      "a": "Because the two clients chose different config schemas for the same idea. Cursor reads url under mcpServers, Windsurf reads serverUrl, VS Code wants type and url under servers, and Gemini CLI wants httpUrl. The endpoint is identical in all four; only the key name differs, and copying a snippet across clients is the usual reason a setup silently does nothing."
+    },
+    {
+      "q": "Which mailboxes can Cursor reach this way?",
+      "a": "Gmail over Google sign-in, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password, and any other mailbox that speaks IMAP and SMTP on the standard ports. The client sees them all through the same connection: your agent calls inbox_list first to discover every connected mailbox and its id, so there are no UUIDs to paste anywhere."
+    },
+    {
+      "q": "Can Cursor send email without me seeing it?",
+      "a": "Only if you let it. Sending is gated on the send:email scope, so a key or a token without that scope cannot send at all. On top of that, an inbox owner can require human approval in the dashboard, which holds every send, reply, forward, draft send and scheduled send until a person releases it."
+    },
+    {
+      "q": "Is my email stored on your servers?",
+      "a": "No. Every message is fetched live from your provider for the request that asked for it and handed straight to your client. Only the encrypted OAuth token or app password is kept, so future calls can authenticate. Deleting the inbox in the dashboard, or revoking access at your provider, ends the connection at once."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give Cursor a real inbox",
+    "sub": "Four lines of config, one sign-in. One inbox free forever, no card required."
+  }
+}

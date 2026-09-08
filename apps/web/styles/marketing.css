@@ -1341,3 +1341,116 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
   .demo-video-section { padding-top: 40px; padding-bottom: 40px; }
   .demo-video-caption { padding: 12px 16px; font-size: 13px; }
 }
+
+/* === Changelog (/changelog) ==============================================
+   Dated list of shipped work, grouped by month. Token driven throughout, so
+   html[data-theme="dark"] flips it with no rules of its own here. The month
+   heading is sticky on wide screens: the list is long by design and the reader
+   should never lose track of which month they are reading. */
+.cl-section { padding-top: 56px; padding-bottom: 96px; }
+
+.cl-month { margin: 0 0 56px; }
+.cl-month:last-of-type { margin-bottom: 40px; }
+
+.cl-month-title {
+  position: sticky;
+  top: 65px;               /* clears the 64px sticky nav and its hairline */
+  z-index: 1;
+  margin: 0 0 20px;
+  padding: 8px 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-14);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  background: var(--bg-page);
+  border-bottom: 1px solid var(--border-1);
+}
+
+.cl-list { list-style: none; margin: 0; padding: 0; }
+
+.cl-entry {
+  display: grid;
+  grid-template-columns: 168px 1fr;
+  gap: 24px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border-1);
+}
+.cl-entry:last-child { border-bottom: none; }
+
+.cl-entry-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+.cl-entry-date {
+  font-family: var(--font-mono);
+  font-size: var(--fs-13);
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+
+.cl-kind {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border-1);
+  background: var(--bg-sunken);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+/* One accent only. "New" is the thing a returning reader scans for; the other
+   kinds stay quiet rather than turning the page into a colour key. */
+.cl-kind-added {
+  background: var(--cobalt-50);
+  border-color: transparent;
+  color: var(--brand);
+}
+
+.cl-entry-title {
+  margin: 0 0 6px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-16);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--fg-1);
+}
+
+.cl-entry-text {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-15);
+  line-height: 1.65;
+  color: var(--fg-2);
+  max-width: 62ch;
+}
+
+.cl-footnote {
+  margin: 0;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-1);
+  font-family: var(--font-sans);
+  font-size: var(--fs-14);
+  color: var(--fg-3);
+}
+.cl-footnote a { color: var(--brand); text-decoration: underline; text-underline-offset: 2px; }
+
+@media (max-width: 767px) {
+  .cl-section { padding-top: 32px; padding-bottom: 64px; }
+  .cl-month { margin-bottom: 40px; }
+  .cl-month-title { position: static; }
+  .cl-entry {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 18px 0;
+  }
+  .cl-entry-meta { flex-direction: row; align-items: center; gap: 10px; }
+}
