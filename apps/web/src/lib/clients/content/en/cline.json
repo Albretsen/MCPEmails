@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "apps/web/app/api/mcp/route.ts",
+    "https://docs.cline.bot/mcp/configuring-mcp-servers"
+  ],
+  "meta": {
+    "title": "Connect Email to Cline: Remote MCP Server Setup",
+    "description": "Add a real inbox to Cline as a remote Streamable HTTP server with a scoped API key. Read, search, send and schedule mail from VS Code. One inbox free."
+  },
+  "hero": {
+    "eyebrow": "Cline + email",
+    "titleLine1": "Connect your inbox to Cline",
+    "titleLine2": "as a remote MCP server",
+    "lead": "Add a real mailbox to Cline in VS Code. Read, search, send, reply, forward, schedule and organize mail, with a key scoped to exactly what you want the agent to do.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Scoped API key, revocable in one click",
+    "meta2": "Email fetched live, never stored",
+    "answer": "In the Cline panel, open MCP Servers, then Remote Servers. Paste https://mcpemails.com/api/mcp, set the transport type to Streamable HTTP, add the server, then add an Authorization Bearer header holding an API key from your dashboard."
+  },
+  "method": {
+    "title": "How Cline connects: a scoped API key",
+    "body": "Cline does not run the OAuth browser flow against a remote MCP server, so it authenticates with a bearer token instead. Create an API key in your dashboard, tick only the scopes the agent needs, and paste it into Cline as an <code>Authorization: Bearer</code> header. Key connections and OAuth connections hit the same endpoint and get the same tool catalogue; the difference is only how the token is obtained."
+  },
+  "setup": [
+    {
+      "h": "Create a free account and connect a mailbox",
+      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Gmail connects with one-click Google sign-in; iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
+    },
+    {
+      "h": "Create a scoped API key",
+      "p": "In Dashboard, API Keys, click Create key. Name it and tick only the scopes this agent needs: <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> and <code>manage:automations</code>. The key looks like <code>mcpe_</code> followed by 64 hex characters and is shown once, so copy it before you close the dialog."
+    },
+    {
+      "h": "Add the remote server",
+      "p": "In the Cline panel, click the MCP Servers icon, open the <b>Remote Servers</b> tab, enter a name and paste <code>https://mcpemails.com/api/mcp</code>. Set Transport Type to <b>Streamable HTTP</b>, then click Add Server."
+    },
+    {
+      "h": "Add the Authorization header",
+      "p": "Add a header named <code>Authorization</code> with the value <code>Bearer</code> followed by a space and your key. The server accepts bearer tokens on that header only."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Streamable HTTP, not SSE",
+      "p": "The Remote Servers tab offers more than one transport. This server speaks Streamable HTTP under the 2025-06-18 protocol revision. Picking SSE produces a server that appears to add cleanly and then never answers, which is a slow way to discover a one-field mistake."
+    },
+    {
+      "h": "The word Bearer is part of the value",
+      "p": "The header value is <code>Bearer</code>, a single space, then the key. Pasting the raw key on its own is the most common cause of a 401 here, and a 401 from this endpoint carries an OAuth discovery pointer rather than a message saying the header was malformed, which does not help you guess."
+    },
+    {
+      "h": "Scope the key to the agent, because the key is the whole permission model",
+      "p": "Cline does not run the OAuth consent flow, so the scopes you tick when creating the key are the entire boundary. A key with <code>read:email</code>, <code>search:email</code> and <code>manage:drafts</code> lets Cline triage and draft, and cannot send or delete anything. Widen it later by issuing a second key rather than by loosening the first."
+    },
+    {
+      "h": "The raw key is shown once",
+      "p": "Only a SHA-256 hash of the key is stored, so there is no way to show it again. If you lose it, revoke it and create another. Revocation from Dashboard, API Keys takes effect on the next call."
+    }
+  ],
+  "limits": [
+    "Requests are rate limited to 100 per minute, 1,000 per hour and 10,000 per day per key, plus your plan ceiling on billable actions.",
+    "The server is request and response only. There are no webhooks and no server-initiated events, so new mail never wakes your agent by itself. To react to arriving mail, poll on a schedule.",
+    "Mail is fetched live from your provider on every call and never stored. Only the encrypted OAuth token or app password is kept, so a revoked token or a changed mailbox password ends access immediately."
+  ],
+  "faq": [
+    {
+      "q": "How do I connect email to Cline?",
+      "a": "Add mcpemails as a remote server: MCP Servers, Remote Servers, paste https://mcpemails.com/api/mcp, set Transport Type to Streamable HTTP, and add an Authorization Bearer header with an API key from your dashboard. Cline then has tools for reading, searching, sending, replying, forwarding, organizing and scheduling mail."
+    },
+    {
+      "q": "Why does Cline need an API key when Cursor does not?",
+      "a": "Because the two clients handle remote MCP authentication differently. Cursor runs the OAuth browser flow and stores the token itself. Cline authenticates with whatever header you configure, so a bearer key is the path that works. Both hit the same endpoint and get the same tools; only the way the token is obtained differs."
+    },
+    {
+      "q": "What can I do if the key leaks?",
+      "a": "Revoke it. Keys are listed in Dashboard, API Keys and revocation applies to the next call, with no wait. Because a key carries only the scopes you ticked, a leaked read-only key also cannot have sent or deleted anything."
+    },
+    {
+      "q": "Which mailboxes can Cline reach this way?",
+      "a": "Gmail over Google sign-in, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password, and any other mailbox that speaks IMAP and SMTP on the standard ports. The client sees them all through the same connection: your agent calls inbox_list first to discover every connected mailbox and its id, so there are no UUIDs to paste anywhere."
+    },
+    {
+      "q": "Can Cline send email without me seeing it?",
+      "a": "Only if you let it. Sending is gated on the send:email scope, so a key or a token without that scope cannot send at all. On top of that, an inbox owner can require human approval in the dashboard, which holds every send, reply, forward, draft send and scheduled send until a person releases it."
+    },
+    {
+      "q": "Is my email stored on your servers?",
+      "a": "No. Every message is fetched live from your provider for the request that asked for it and handed straight to your client. Only the encrypted OAuth token or app password is kept, so future calls can authenticate. Deleting the inbox in the dashboard, or revoking access at your provider, ends the connection at once."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give Cline a real inbox",
+    "sub": "One remote server, one scoped key. One inbox free forever, no card required."
+  }
+}

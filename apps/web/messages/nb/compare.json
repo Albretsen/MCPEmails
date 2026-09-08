@@ -7,7 +7,7 @@
     "eyebrow": "Innebygde koblinger vs MCP",
     "titleLine1": "Innebygde AI-koblinger stopper",
     "titleLine2": "der innboksen din begynner",
-    "lead": "Innebygde AI-e-postkoblinger dekker én eller to leverandører og lager stort sett bare utkast. En administrert MCP-e-postserver kobler til hvilken som helst innboks, utfører ekte handlinger og følger med deg til alle AI-klienter.",
+    "lead": "Innebygde AI-e-postkoblinger dekker én eller to leverandører. En administrert MCP-e-postserver kobler til hvilken som helst innboks, utfører ekte handlinger og følger med deg til alle AI-klienter.",
     "ctaPrimary": "Koble til en innboks gratis",
     "ctaSecondary": "Les dokumentasjonen"
   },
@@ -23,8 +23,8 @@
       },
       "actions": {
         "tag": "Ekte handlinger",
-        "h": "Send og planlegg, ikke bare utkast",
-        "p": "Mange innebygde koblinger stopper ved å <b>lage et utkast</b> som du fortsatt må åpne og sende. Våre ni handlingsbaserte verktøy <b>sender, svarer, videresender, planlegger, flytter, kopierer, flagger, arkiverer og sletter</b> direkte, så agenten fullfører jobben inne i innboksen."
+        "h": "Planlegg og organiser, ikke bare send",
+        "p": "Innebygde koblinger sender og svarer, og stopper der. Våre ni handlingsbaserte verktøy <b>sender, svarer, videresender, planlegger, flytter, kopierer, flagger, arkiverer og sletter</b> direkte, så agenten fullfører jobben inne i innboksen."
       },
       "portable": {
         "tag": "Flyttbar",
@@ -42,14 +42,14 @@
     "rows": {
       "providers": "Fastmail, iCloud, Yahoo, Zoho, Yandex",
       "imap": "Hvilken som helst IMAP-/SMTP-postkasse",
-      "send": "Send og svar direkte (ikke bare utkast)",
+      "send": "Send, svar og videresend direkte",
       "schedule": "Planlegg sendinger til senere",
       "organize": "Flytt, kopier, flagg, arkiver, slett",
       "multiAi": "Virker i Claude, Cursor, ChatGPT, n8n …",
       "oauth": "Gmail via OAuth",
       "storage": "E-post hentes direkte, lagres aldri"
     },
-    "footnote": "Funksjonene til typiske innebygde AI-koblinger varierer mellom leverandører; forskjellene over gjenspeiler det vanlige mønsteret med én leverandør og kun utkast."
+    "footnote": "Funksjonene til typiske innebygde AI-koblinger varierer mellom leverandører; forskjellene over gjenspeiler det vanlige mønsteret med én leverandør."
   },
   "ctaBand": {
     "title": "Gi AI-en din en ekte innboks",
@@ -64,15 +64,15 @@
     "items": [
       {
         "q": "Kan ikke Claude eller ChatGPT allerede lese Gmailen min med en innebygd kobling?",
-        "a": "Av og til, for én leverandør og ofte bare med lese- eller utkasttilgang. mcpemails kobler til Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex og hvilken som helst IMAP-postkasse, og utfører ekte handlinger: send, svar, videresend, planlegg, flytt, kopier, flagg, arkiver og slett. Samme innboks virker da i alle MCP-klienter, ikke bare i én leverandørs app."
+        "a": "Av og til, for én leverandør. mcpemails kobler til Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex og hvilken som helst IMAP-postkasse, og utfører ekte handlinger: send, svar, videresend, planlegg, flytt, kopier, flagg, arkiver og slett. Samme innboks virker da i alle MCP-klienter, ikke bare i én leverandørs app."
       },
       {
         "q": "Hvilke postkasser går innebygde koblinger vanligvis glipp av?",
         "a": "De fleste innebygde koblinger når Gmail og av og til Outlook. De kan vanligvis ikke røre Fastmail, iCloud, Yahoo, Zoho, Yandex eller en selvhostet IMAP-/SMTP-server. mcpemails kobler til alle sammen."
       },
       {
-        "q": "Sender innebygde koblinger faktisk e-post, eller lager de bare utkast?",
-        "a": "Mange stopper ved å lage et utkast som du fortsatt må åpne og sende selv. mcpemails sender, svarer, videresender og planlegger direkte, slik at agenten fullfører jobben inne i innboksen din."
+        "q": "Kan innebygde koblinger planlegge og organisere e-post?",
+        "a": "De sender, svarer og videresender, og stopper der. mcpemails planlegger også, flytter, kopierer, flagger, arkiverer og sletter, slik at agenten fullfører oppgaven inne i innboksen din i stedet for å gi halve tilbake til deg."
       },
       {
         "q": "Hvis jeg setter dette opp for Claude, virker det da også i Cursor eller ChatGPT?",

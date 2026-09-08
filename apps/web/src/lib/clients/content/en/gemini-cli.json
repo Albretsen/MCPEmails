@@ -1,0 +1,93 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/app/.well-known/oauth-protected-resource/route.ts",
+    "https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md"
+  ],
+  "meta": {
+    "title": "Connect Email to Gemini CLI: httpUrl MCP Setup",
+    "description": "Add a real inbox to the Gemini CLI. One entry in settings.json using httpUrl, then the CLI discovers OAuth and opens the browser flow. One inbox free."
+  },
+  "hero": {
+    "eyebrow": "Gemini CLI + email",
+    "titleLine1": "Connect your inbox to Gemini CLI",
+    "titleLine2": "with one settings entry",
+    "lead": "Give the Gemini CLI a real mailbox. Read, search, send, reply, forward, schedule and organize mail from the terminal, across every inbox you have connected.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "OAuth discovered automatically",
+    "meta2": "Email fetched live, never stored",
+    "answer": "Add one entry under mcpServers in ~/.gemini/settings.json using the field httpUrl with https://mcpemails.com/api/mcp. On first connect the CLI discovers the OAuth metadata and opens the browser flow by itself."
+  },
+  "method": {
+    "title": "How Gemini CLI connects: OAuth, no API key",
+    "body": "Gemini CLI runs the standard MCP OAuth flow against this server. It registers itself with <b>RFC 7591 dynamic client registration</b>, so there is no client ID to create, and authorizes with <b>authorization code plus PKCE</b> using S256. No client secret is ever transmitted, and the token carries only the scopes you approve on our consent screen. The access token it receives lasts an hour and refreshes itself; it is listed in Dashboard, API Keys as <code>OAuth:</code> followed by the client name, which is where you revoke the connection."
+  },
+  "setup": [
+    {
+      "h": "Create a free account and connect a mailbox",
+      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Gmail connects with one-click Google sign-in; iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
+    },
+    {
+      "h": "Open your settings.json",
+      "p": "Edit <code>~/.gemini/settings.json</code> for every project, or <code>.gemini/settings.json</code> inside one project."
+    },
+    {
+      "h": "Add the server",
+      "p": "Add the entry below under <code>mcpServers</code>. The field for a Streamable HTTP server here is <code>httpUrl</code>."
+    },
+    {
+      "h": "Connect",
+      "p": "On the first connect the CLI auto-discovers OAuth from the server metadata and opens the browser flow. Approve the scopes you want the CLI to hold."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "httpUrl is a different field from url, and the difference is the transport",
+      "p": "In Gemini CLI settings, <code>httpUrl</code> means a Streamable HTTP server, which is what this is. Other keys in the same object select other transports. A snippet copied from a Cursor guide, which uses <code>url</code>, will not give you a working Streamable HTTP connection here."
+    },
+    {
+      "h": "Discovery is what makes this zero-config, and it starts from a 401",
+      "p": "The CLI does not need to be told where to authenticate. An unauthenticated call gets a 401 whose <code>WWW-Authenticate</code> header points at our protected resource metadata, which names the authorization server, whose metadata names the registration, authorization and token endpoints. That chain is why there is no client ID to create and nothing to paste beyond the URL."
+    },
+    {
+      "h": "A CLI on a shared or headless machine wants the key path instead",
+      "p": "The browser flow needs a browser. On a build agent or a shared box, the honest setup is a bearer API key scoped to precisely what that automation should do, kept in the environment rather than in a committed settings file."
+    }
+  ],
+  "limits": [
+    "Requests are rate limited to 100 per minute, 1,000 per hour and 10,000 per day per key, plus your plan ceiling on billable actions.",
+    "The server is request and response only. There are no webhooks and no server-initiated events, so new mail never wakes your agent by itself. To react to arriving mail, poll on a schedule.",
+    "Mail is fetched live from your provider on every call and never stored. Only the encrypted OAuth token or app password is kept, so a revoked token or a changed mailbox password ends access immediately."
+  ],
+  "faq": [
+    {
+      "q": "How do I connect email to Gemini CLI?",
+      "a": "Add an entry under mcpServers in ~/.gemini/settings.json with httpUrl set to https://mcpemails.com/api/mcp. On first connect the CLI discovers OAuth from the server metadata and opens the browser flow. It then has tools for reading, searching, sending, replying, forwarding, organizing and scheduling mail."
+    },
+    {
+      "q": "Should I use url or httpUrl?",
+      "a": "httpUrl. In Gemini CLI settings that key selects the Streamable HTTP transport, which is the transport this server speaks. Copying a url entry from another client is the usual reason the server appears in the list and produces no tools."
+    },
+    {
+      "q": "Is this the same as the Gmail MCP server Google publishes?",
+      "a": "No. Google publishes a Workspace MCP server covering Gmail alongside its other services, and for Gmail alone in a Google-only workflow that is the shorter path. mcpemails exists for the case where the mailboxes are not all Google, and where the same URL has to work in Claude, Cursor and ChatGPT too."
+    },
+    {
+      "q": "Which mailboxes can Gemini CLI reach this way?",
+      "a": "Gmail over Google sign-in, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password, and any other mailbox that speaks IMAP and SMTP on the standard ports. The client sees them all through the same connection: your agent calls inbox_list first to discover every connected mailbox and its id, so there are no UUIDs to paste anywhere."
+    },
+    {
+      "q": "Can Gemini CLI send email without me seeing it?",
+      "a": "Only if you let it. Sending is gated on the send:email scope, so a key or a token without that scope cannot send at all. On top of that, an inbox owner can require human approval in the dashboard, which holds every send, reply, forward, draft send and scheduled send until a person releases it."
+    },
+    {
+      "q": "Is my email stored on your servers?",
+      "a": "No. Every message is fetched live from your provider for the request that asked for it and handed straight to your client. Only the encrypted OAuth token or app password is kept, so future calls can authenticate. Deleting the inbox in the dashboard, or revoking access at your provider, ends the connection at once."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give Gemini CLI a real inbox",
+    "sub": "One settings entry, one sign-in. One inbox free forever, no card required."
+  }
+}

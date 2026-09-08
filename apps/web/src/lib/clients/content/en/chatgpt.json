@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://help.openai.com/en/articles/12584461"
+  ],
+  "meta": {
+    "title": "Connect Email to ChatGPT: MCP Connector Setup",
+    "description": "Add a real inbox to ChatGPT with developer mode and a custom MCP connector. OAuth, no API key, then read, search, send and schedule mail. One inbox free."
+  },
+  "hero": {
+    "eyebrow": "ChatGPT + email",
+    "titleLine1": "Connect your inbox to ChatGPT",
+    "titleLine2": "as a custom MCP connector",
+    "lead": "Turn on developer mode, create a connector pointing at one URL, and ChatGPT can read, search, send, reply, forward, schedule and organize your real mail.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "OAuth, no API key needed",
+    "meta2": "Email fetched live, never stored",
+    "answer": "In ChatGPT, turn on developer mode under Settings, Apps and Connectors, Advanced settings. Create a connector, paste https://mcpemails.com/api/mcp as the connector URL, choose OAuth, and authorize with mcpemails. Full MCP support is a beta limited to ChatGPT Business and Enterprise or Edu workspaces."
+  },
+  "method": {
+    "title": "How ChatGPT connects: OAuth, no API key",
+    "body": "ChatGPT runs the standard MCP OAuth flow against this server. It registers itself with <b>RFC 7591 dynamic client registration</b>, so there is no client ID to create, and authorizes with <b>authorization code plus PKCE</b> using S256. No client secret is ever transmitted, and the token carries only the scopes you approve on our consent screen. The access token it receives lasts an hour and refreshes itself; it is listed in Dashboard, API Keys as <code>OAuth:</code> followed by the client name, which is where you revoke the connection."
+  },
+  "setup": [
+    {
+      "h": "Create a free account and connect a mailbox",
+      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Gmail connects with one-click Google sign-in; iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
+    },
+    {
+      "h": "Turn on developer mode",
+      "p": "Open Settings, Apps and Connectors, Advanced settings, and turn on Developer mode."
+    },
+    {
+      "h": "Create the connector",
+      "p": "Back in Apps and Connectors, click Create. Enter a name and paste <code>https://mcpemails.com/api/mcp</code> as the Connector URL."
+    },
+    {
+      "h": "Choose OAuth and authorize",
+      "p": "Pick OAuth, click Create, then authorize with mcpemails and approve the scopes you want the connector to hold."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Full MCP in ChatGPT is a beta, and not every workspace has it",
+      "p": "Developer mode with arbitrary MCP connectors is limited to ChatGPT Business and Enterprise or Edu workspaces. On a personal Plus account the Create button for a custom connector is either absent or refuses the server, and no change on our side unlocks it. If that is where you are, the same inbox and the same URL work today in Claude, Cursor, VS Code or the CLI clients, so nothing is wasted while you wait."
+    },
+    {
+      "h": "Pick OAuth, not no-authentication, when you create the connector",
+      "p": "The connector form asks how to authenticate. This server refuses anonymous calls: an unauthenticated request gets a 401 carrying an OAuth discovery pointer, which is what a compliant client follows to start the flow. Choosing no authentication produces a connector that fails on its first tool call rather than at setup, which is the confusing way round."
+    },
+    {
+      "h": "Read-only is a real option and often the right first one",
+      "p": "The consent screen lets you hand ChatGPT <code>read:email</code> and <code>search:email</code> alone. That is enough for triage, summarising and finding things, and it removes every irreversible action from the table while you decide how much further you want to go."
+    }
+  ],
+  "limits": [
+    "Requests are rate limited to 100 per minute, 1,000 per hour and 10,000 per day per key, plus your plan ceiling on billable actions.",
+    "The server is request and response only. There are no webhooks and no server-initiated events, so new mail never wakes your agent by itself. To react to arriving mail, poll on a schedule.",
+    "Mail is fetched live from your provider on every call and never stored. Only the encrypted OAuth token or app password is kept, so a revoked token or a changed mailbox password ends access immediately."
+  ],
+  "faq": [
+    {
+      "q": "Can ChatGPT read and send my email?",
+      "a": "Through a custom MCP connector, yes. ChatGPT cannot reach a mailbox on its own; pointing a connector at mcpemails gives it tools for reading, searching, sending, replying, forwarding, organizing and scheduling mail, limited to the scopes you approve during setup."
+    },
+    {
+      "q": "Why can I not create a connector in my ChatGPT account?",
+      "a": "Developer mode and custom MCP connectors are a beta restricted to ChatGPT Business and Enterprise or Edu workspaces. A personal account cannot add one, whatever the server. This is an OpenAI product decision and nothing on our side changes it."
+    },
+    {
+      "q": "Do I need an API key for ChatGPT?",
+      "a": "No. Pick OAuth when creating the connector and ChatGPT registers itself and completes an authorization code plus PKCE flow. API keys are for clients that cannot do that, and for scripts."
+    },
+    {
+      "q": "Which mailboxes can ChatGPT reach this way?",
+      "a": "Gmail over Google sign-in, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password, and any other mailbox that speaks IMAP and SMTP on the standard ports. The client sees them all through the same connection: your agent calls inbox_list first to discover every connected mailbox and its id, so there are no UUIDs to paste anywhere."
+    },
+    {
+      "q": "Can ChatGPT send email without me seeing it?",
+      "a": "Only if you let it. Sending is gated on the send:email scope, so a key or a token without that scope cannot send at all. On top of that, an inbox owner can require human approval in the dashboard, which holds every send, reply, forward, draft send and scheduled send until a person releases it."
+    },
+    {
+      "q": "Is my email stored on your servers?",
+      "a": "No. Every message is fetched live from your provider for the request that asked for it and handed straight to your client. Only the encrypted OAuth token or app password is kept, so future calls can authenticate. Deleting the inbox in the dashboard, or revoking access at your provider, ends the connection at once."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give ChatGPT a real inbox",
+    "sub": "One connector, every mailbox you have connected. One inbox free forever."
+  }
+}

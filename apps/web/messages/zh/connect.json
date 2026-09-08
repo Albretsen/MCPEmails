@@ -24,7 +24,7 @@
   "caps": {
     "eyebrow": "你的 AI 能做什么",
     "title": "一个代理真正能用的 {provider} 收件箱",
-    "sub": "九个基于动作的 MCP 工具，不止草稿。代理在 {provider} 内即可完成整件事。"
+    "sub": "九个基于动作的 MCP 工具：发送、回复、转发、定时和整理。代理在 {provider} 内即可完成整件事。"
   },
   "capabilities": [
     {

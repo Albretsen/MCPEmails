@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { localePath, languageAlternates, languageAlternatesFor } from '@/i18n/seo';
 import { releasedProviders } from '@/lib/connect/release.mjs';
+import { CLIENTS } from '@/lib/clients/clients.mjs';
 import { getAllPosts, getPostLocales } from '@/lib/blog/posts';
 import { blogPostLanguageAlternates } from '@/lib/blog/seo.mjs';
 
@@ -43,6 +44,11 @@ const MARKETING_PAGES: {
   { path: '/for/founders', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/connect', lastModified: '2026-08-31', changeFrequency: 'weekly', priority: 0.9 },
   { path: '/blog', lastModified: '2026-08-02', changeFrequency: 'weekly', priority: 0.7 },
+  // Bump lastModified whenever a changelog entry is added.
+  { path: '/changelog', lastModified: '2026-09-08', changeFrequency: 'weekly', priority: 0.6 },
+  // The monitor writes a new run every five minutes, so the page's content
+  // changes daily even when nothing ships.
+  { path: '/status', lastModified: '2026-09-08', changeFrequency: 'daily', priority: 0.6 },
   { path: '/privacy', lastModified: '2026-08-27', changeFrequency: 'yearly', priority: 0.3 },
   { path: '/terms', lastModified: '2026-07-28', changeFrequency: 'yearly', priority: 0.3 },
 ];
@@ -107,5 +113,32 @@ export default function sitemap(): MetadataRoute.Sitemap {
       };
     });
 
-  return [...staticEntries, ...providerEntries, ...postEntries];
+  // Per-client setup pages and their hub, plus the comparison against the other
+  // email MCP servers. All English-only, so they must use
+  // `languageAlternatesFor` rather than the `languageAlternates` the static map
+  // applies: the latter would advertise hreflang for four locales whose routes
+  // deliberately 404, which is a worse signal than omitting them.
+  const englishOnlyEntries: MetadataRoute.Sitemap = [
+    { path: '/docs/clients', lastModified: '2026-09-08', priority: 0.9 },
+    ...CLIENTS.map((c) => ({
+      path: `/docs/${c.slug}`,
+      lastModified: '2026-09-08',
+      priority: 0.8,
+    })),
+    // Dated factual claims about named competitors. Re-verify the sources on
+    // the page before moving this date.
+    {
+      path: '/email-mcp-servers-compared',
+      lastModified: '2026-09-08',
+      priority: 0.7,
+    },
+  ].map(({ path, lastModified, priority }) => ({
+    url: localePath('en', path),
+    lastModified: new Date(`${lastModified}T00:00:00.000Z`),
+    changeFrequency: 'monthly' as const,
+    priority,
+    alternates: { languages: languageAlternatesFor(path, ['en']) },
+  }));
+
+  return [...staticEntries, ...providerEntries, ...postEntries, ...englishOnlyEntries];
 }

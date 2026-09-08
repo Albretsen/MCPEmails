@@ -235,7 +235,12 @@ export function HeroPipeDiagram() {
           <div className="s">{t('hero.pipe.serverSub')}</div>
         </div>
         <div className="pipe-arrow-wrap">
-          <span className="pipe-tag">JMAP</span>
+          {/*
+            Was "JMAP". Fastmail runs through the shared IMAP/SMTP path
+            (mcp-server/index.ts:7127-7129) and JMAP survives only in doc
+            comments, so the tag named a transport we do not speak.
+          */}
+          <span className="pipe-tag">IMAP</span>
           <div className="pipe-arrow"/>
         </div>
         <div className="pipe-node">
@@ -924,6 +929,12 @@ function FooterCopy({ icon, label, value, href }) {
 export function Footer() {
   const t = useTranslations('home');
   const tc = useTranslations('compare');
+  // The footer renders on every locale, but three of its links point at
+  // English-only routes that deliberately 404 elsewhere (the per-client setup
+  // silo and the comparison against other MCP servers). Linking them
+  // unconditionally would put a guaranteed 404 in the footer of every /nb,
+  // /es, /fr and /zh page, which is worse than the link being absent there.
+  const isEnglish = useLocale() === 'en';
   return (
     <footer className="footer">
       <div className="container">
@@ -952,7 +963,9 @@ export function Footer() {
             <Link href="/docs#quickstart">{t('footer.linkQuickstart')}</Link>
             <Link href="/docs#oauth">{t('footer.linkOauth')}</Link>
             <Link href="/docs/providers">{t('footer.linkProviders')}</Link>
+            {isEnglish && <Link href="/docs/clients">MCP client setup</Link>}
             <Link href="/blog">Blog</Link>
+            <Link href="/changelog">Changelog</Link>
           </div>
           <div>
             <p className="footer-heading">{tc('links.connectHeading')}</p>
@@ -973,11 +986,15 @@ export function Footer() {
             <Link href="/connect/zoho">{tc('links.connectZoho')}</Link>
             <Link href="/connect/yandex">{tc('links.connectYandex')}</Link>
             <Link href="/native-connectors-vs-mcp">{tc('links.vsNative')}</Link>
+            {isEnglish && (
+              <Link href="/email-mcp-servers-compared">vs other email MCP servers</Link>
+            )}
           </div>
           <div>
             <p className="footer-heading">{t('footer.companyHeading')}</p>
             <Link href="/about">{t('footer.linkAbout')}</Link>
             <Link href="/security">{t('footer.linkSecurity')}</Link>
+            <Link href="/status">{t('footer.linkStatus')}</Link>
             <Link href="/privacy">{t('footer.linkPrivacy')}</Link>
             <Link href="/terms">{t('footer.linkTerms')}</Link>
           </div>

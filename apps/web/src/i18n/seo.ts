@@ -292,6 +292,11 @@ export function docsJsonLd(
  * "how do I connect <provider> to Claude"), plus a `WebPage` + `BreadcrumbList`
  * for site structure. Everything mirrors visible page content — no invented
  * claims. Steps come straight from the `connect.<provider>.steps` bundle.
+ *
+ * Also used by the per-client setup pages (/docs/<client>), which are the same
+ * shape: a HowTo plus an FAQ under a hub. `hubPath` is what differs, and it
+ * has to, because a breadcrumb whose second item is a page the page does not
+ * sit under is the kind of mismatch that gets the whole block ignored.
  */
 export function connectJsonLd(
   locale: string,
@@ -303,6 +308,7 @@ export function connectJsonLd(
     steps,
     faq = [],
     connectLabel = 'Connect',
+    hubPath = '/connect',
   }: {
     path: string;
     title: string;
@@ -311,6 +317,7 @@ export function connectJsonLd(
     steps: { h: string; p: string }[];
     faq?: { q: string; a: string }[];
     connectLabel?: string;
+    hubPath?: string;
   }
 ) {
   const url = localePath(locale, path);
@@ -344,7 +351,7 @@ export function connectJsonLd(
         // The hub is a real, crawlable page, so it belongs in the trail. A
         // two-item breadcrumb on a page that sits three levels down is the
         // kind of mismatch that gets the whole block ignored.
-        { '@type': 'ListItem', position: 2, name: connectLabel, item: localePath(locale, '/connect') },
+        { '@type': 'ListItem', position: 2, name: connectLabel, item: localePath(locale, hubPath) },
         { '@type': 'ListItem', position: 3, name: title },
       ],
     },

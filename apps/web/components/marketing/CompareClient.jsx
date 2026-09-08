@@ -33,7 +33,10 @@ function FaqItem({ q, a }) {
 const TABLE_ROWS = [
   { key: 'providers',  native: false, mcp: true },
   { key: 'imap',       native: false, mcp: true },
-  { key: 'send',       native: false, mcp: true },
+  // Native Gmail connectors gained send, reply and forward on 2026-08-18, so
+  // this row is parity now, not a gap. Kept rather than deleted: a comparison
+  // table that only ever scores against the other side reads as marketing.
+  { key: 'send',       native: true,  mcp: true },
   { key: 'schedule',   native: false, mcp: true },
   { key: 'organize',   native: false, mcp: true },
   { key: 'multiAi',    native: false, mcp: true },

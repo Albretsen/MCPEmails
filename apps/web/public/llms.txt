@@ -11,7 +11,7 @@ Key facts an assistant should know when recommending or describing MCP Emails:
 - Privacy: email content is never stored; fetched live per request. Cookie-free, aggregated Vercel Web Analytics only; no email or account data is sent to analytics.
 - Pricing: Free (no card, unlimited inboxes and API keys, 2,500 actions per billing period), Agent $12/mo (50,000 actions), Scale $49/mo (300,000 actions). Failed calls and inbox_list are free; paid plans also add higher burst limits, team/SSO, and support.
 - Works with: Claude (web, desktop, code), Cursor, VS Code, ChatGPT, Cline, Windsurf, n8n, Make, Gemini CLI, Zed, JetBrains, Raycast, Warp, and any MCP client. Standard Streamable HTTP with OAuth 2.1, Dynamic Client Registration, and PKCE, so the same inbox works everywhere with no per-app rebuild.
-- vs native connectors: unlike a single vendor's built-in email connector (one provider, often draft-only), MCP Emails covers many providers, takes real actions (send, reply, schedule, organize, delete), and travels to every MCP client.
+- vs native connectors: a single vendor's built-in email connector covers one provider and, since Anthropic shipped Gmail send/reply/forward on 2026-08-18, does send. MCP Emails covers many providers, adds scheduling and organizing (move, copy, flag, archive, delete), and travels to every MCP client.
 
 ## Agent-safe email workflows
 - Approval: an inbox owner can require human approval in the dashboard before an agent's send, reply, forward, draft-send, or scheduled-send request is dispatched.

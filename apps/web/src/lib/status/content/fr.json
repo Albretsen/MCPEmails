@@ -1,0 +1,128 @@
+{
+  "meta": {
+    "title": "Statut",
+    "description": "Disponibilité en direct du point d'accès MCP Emails, mesurée par un contrôle automatique exécuté toutes les cinq minutes en production. Des chiffres réels enregistrés, sans marketing."
+  },
+  "hero": {
+    "eyebrow": "Statut",
+    "title": "État du système",
+    "lead": "Un client automatisé se connecte au point d'accès MCP public toutes les cinq minutes, demande la liste des outils, liste une boîte de réception et lit un message. Tout ce qui suit est compté à partir de ce que ces contrôles ont enregistré."
+  },
+  "overall": {
+    "operational": "Tous les systèmes fonctionnent",
+    "degraded": "Dégradé",
+    "down": "Panne majeure",
+    "unknown": "Statut inconnu"
+  },
+  "overallNote": {
+    "operational": "Le dernier contrôle est passé.",
+    "degraded": "Le dernier contrôle a échoué une fois. L'alerte attend un second échec consécutif avant de réveiller quelqu'un, donc c'est peut-être déjà réglé.",
+    "down": "Les contrôles échouent en ce moment et une alerte a été envoyée.",
+    "unknown": "Nous ne voyons pas le dernier résultat du moniteur en ce moment, nous ne pouvons donc pas vous indiquer l'état actuel. C'est une panne de la surveillance, pas une affirmation sur le produit."
+  },
+  "checked": {
+    "now": "Dernier contrôle il y a moins d'une minute",
+    "minutes": "Dernier contrôle il y a {minutes} minutes",
+    "one": "Dernier contrôle il y a 1 minute",
+    "never": "Aucun contrôle enregistré",
+    "at": "Dernier contrôle {time}"
+  },
+  "uptime": {
+    "label": "Disponibilité, {days} derniers jours",
+    "checks": "{checks} contrôles, un toutes les {cadence} minutes",
+    "failed": "{failed} d'entre eux ont échoué",
+    "failedNone": "aucun d'entre eux n'a échoué",
+    "since": "La surveillance continue a commencé le {date}.",
+    "noFigure": "Pas assez de contrôles enregistrés sur cette période pour publier un chiffre."
+  },
+  "components": {
+    "title": "Ce qui est contrôlé",
+    "lead": "Un passage à travers les quatre étapes, dans cet ordre. Une exécution s'arrête à son premier échec, donc chaque étape n'est évaluée que sur les contrôles qui l'ont atteinte.",
+    "thStep": "Étape",
+    "thNow": "Maintenant",
+    "thWindow": "{days} derniers jours",
+    "state": {
+      "operational": "Opérationnel",
+      "failing": "En échec",
+      "unknown": "Pas atteint récemment"
+    },
+    "noData": "Aucune donnée",
+    "attempted": "{attempted} contrôles",
+    "items": {
+      "initialize": {
+        "name": "Connexion",
+        "detail": "La poignée de main MCP vers mcpemails.com, avec une vraie clé d'API."
+      },
+      "tools_list": {
+        "name": "Liste des outils",
+        "detail": "Le serveur renvoie son catalogue d'outils au client."
+      },
+      "inbox_list": {
+        "name": "Liste des boîtes",
+        "detail": "Les boîtes connectées sont renvoyées pour cette clé."
+      },
+      "email_read": {
+        "name": "Lecture d'un message",
+        "detail": "Un message est récupéré en direct chez le fournisseur de messagerie, de bout en bout."
+      }
+    }
+  },
+  "history": {
+    "title": "{days} derniers jours",
+    "allOk": "{date} : {checks} contrôles, tous passés",
+    "someFailed": "{date} : {checks} contrôles, {failed} en échec",
+    "noData": "{date} : aucun contrôle enregistré",
+    "legendOk": "Tous les contrôles sont passés",
+    "legendBlip": "Une vérification, rétablie",
+    "legendFailed": "Certains contrôles ont échoué",
+    "legendNone": "Aucune donnée",
+    "oldest": "Il y a {days} jours",
+    "newest": "Aujourd'hui"
+  },
+  "incidents": {
+    "title": "Incidents",
+    "lead": "Un contrôle isolé qui échoue puis repasse cinq minutes plus tard compte dans la disponibilité ci-dessus, mais n'est pas listé ici comme incident. C'est la même limite que celle de l'alerte : deux échecs consécutifs, ou un échec d'un type qui ne peut pas venir du réseau de quelqu'un d'autre.",
+    "none": "Aucun incident sur les {days} derniers jours.",
+    "blips": "{count} contrôles isolés en échec sur cette période, chacun repassé à l'exécution suivante.",
+    "blipsOne": "1 contrôle isolé en échec sur cette période, repassé à l'exécution suivante.",
+    "checks": "{count} contrôles consécutifs en échec",
+    "checksOne": "1 contrôle en échec",
+    "recovered": "Rétabli {time}",
+    "openStill": "Aucun contrôle réussi enregistré depuis",
+    "paged": "Alerte dès le premier échec",
+    "affected": "Concerné : {step}",
+    "class": {
+      "public_endpoint": "Le point d'accès n'a pas répondu",
+      "authentication": "La clé d'API a été refusée",
+      "mcp_protocol": "Une réponse MCP mal formée",
+      "database": "La base de données",
+      "provider_read": "Le fournisseur de messagerie n'a pas répondu à temps",
+      "provider_send": "Le fournisseur de messagerie a refusé un envoi",
+      "alert_delivery": "Envoi de l'alerte",
+      "internal": "Une erreur dans le moniteur lui-même"
+    }
+  },
+  "scope": {
+    "title": "Ce que cette page vous dit, et ce qu'elle ne dit pas",
+    "points": [
+      "Le contrôle part d'un seul endroit, sur un cron de cinq minutes : une panne de moins de cinq minutes peut donc passer inaperçue, et les horodatages ici sont précis au contrôle qui l'a détectée, pas à la seconde.",
+      "Il exerce quatre chemins de code. L'envoi, la programmation, les brouillons et les opérations sur les dossiers ne figurent pas sur cette page parce que rien ne les mesure périodiquement, et un chiffre qui les couvrirait serait une supposition.",
+      "Il lit une vraie boîte chez un fournisseur. Un échec attribué au fournisseur de messagerie, c'est ce fournisseur qui a une mauvaise minute, pas forcément quelque chose que vous auriez remarqué chez le vôtre.",
+      "Rien ici ne provient du trafic client. Aucun compte, espace de travail ou message n'est compté, échantillonné ou affiché."
+    ]
+  },
+  "unavailable": {
+    "title": "Nous n'arrivons pas à lire notre propre moniteur en ce moment",
+    "body": "L'historique de surveillance est temporairement illisible, il n'y a donc aucun chiffre honnête à vous montrer. Cette page préfère le dire plutôt que de répéter le dernier chiffre connu. Le moniteur, lui, continue de tourner et d'alerter, que cette page l'atteigne ou non."
+  },
+  "footer": {
+    "source": "Chaque chiffre de cette page est compté à partir des exécutions enregistrées du moniteur au moment de la lecture. Rien n'est saisi à la main.",
+    "securityLink": "Comment nous traitons vos messages et vos identifiants",
+    "contact": "Quelque chose ne va pas alors que cette page dit que tout va bien ? Écrivez à {email}."
+  },
+  "punct": {
+    "join": ". ",
+    "end": ".",
+    "space": " "
+  }
+}

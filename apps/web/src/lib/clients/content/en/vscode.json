@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://code.visualstudio.com/docs/copilot/customization/mcp-servers"
+  ],
+  "meta": {
+    "title": "Connect Email to VS Code: Copilot Agent MCP Setup",
+    "description": "Add a real inbox to GitHub Copilot agent mode in VS Code. Run MCP: Add Server, pick HTTP, authorize with OAuth. No API key. One inbox free."
+  },
+  "hero": {
+    "eyebrow": "VS Code + email",
+    "titleLine1": "Connect your inbox to VS Code",
+    "titleLine2": "and Copilot agent mode",
+    "lead": "Add a real mailbox to the editor you already have open. Read, search, send, reply, forward, schedule and organize mail from Copilot agent mode.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "OAuth, no API key needed",
+    "meta2": "Email fetched live, never stored",
+    "answer": "Run MCP: Add Server from the Command Palette, choose HTTP, and paste https://mcpemails.com/api/mcp. Start the server from the MCP view and authorize when prompted. No API key is involved."
+  },
+  "method": {
+    "title": "How VS Code connects: OAuth, no API key",
+    "body": "VS Code runs the standard MCP OAuth flow against this server. It registers itself with <b>RFC 7591 dynamic client registration</b>, so there is no client ID to create, and authorizes with <b>authorization code plus PKCE</b> using S256. No client secret is ever transmitted, and the token carries only the scopes you approve on our consent screen. The access token it receives lasts an hour and refreshes itself; it is listed in Dashboard, API Keys as <code>OAuth:</code> followed by the client name, which is where you revoke the connection."
+  },
+  "setup": [
+    {
+      "h": "Create a free account and connect a mailbox",
+      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Gmail connects with one-click Google sign-in; iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
+    },
+    {
+      "h": "Run MCP: Add Server",
+      "p": "Open the Command Palette with Shift Cmd P, or Shift Ctrl P on Windows and Linux, and run <b>MCP: Add Server</b>."
+    },
+    {
+      "h": "Choose HTTP",
+      "p": "Pick <b>HTTP</b>, paste <code>https://mcpemails.com/api/mcp</code>, and give it a name. VS Code writes the entry below into <code>.vscode/mcp.json</code>."
+    },
+    {
+      "h": "Start it and authorize",
+      "p": "Start the server from the MCP view and complete the sign-in when VS Code prompts. Approve the scopes you want Copilot to hold."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The transport really is HTTP, not stdio, and picking wrong fails quietly",
+      "p": "The Add Server flow offers a command-based stdio server first, which is what most MCP servers are. This one is remote and hosted, so it has no command to run. Choose HTTP, and note the config key is <code>type</code> set to <code>http</code>. A stdio entry pointed at a URL produces a server that never starts, with no obvious reason why."
+    },
+    {
+      "h": "Tools only appear in agent mode",
+      "p": "MCP tools are available to Copilot in agent mode. If the mail tools are missing from the tool picker after a successful connection, the usual cause is being in ask or edit mode rather than agent mode. The MCP view is where to confirm the server is actually running."
+    },
+    {
+      "h": "A .vscode/mcp.json is repository config, so mind what you commit",
+      "p": "The default location is inside the project, which means it can be committed and shared. The URL is public and OAuth tokens are not written here, so the default is safe to share. It stops being safe the moment someone inlines a bearer API key instead. Any key that reaches a repository should be revoked from Dashboard, API Keys."
+    }
+  ],
+  "limits": [
+    "Requests are rate limited to 100 per minute, 1,000 per hour and 10,000 per day per key, plus your plan ceiling on billable actions.",
+    "The server is request and response only. There are no webhooks and no server-initiated events, so new mail never wakes your agent by itself. To react to arriving mail, poll on a schedule.",
+    "Mail is fetched live from your provider on every call and never stored. Only the encrypted OAuth token or app password is kept, so a revoked token or a changed mailbox password ends access immediately."
+  ],
+  "faq": [
+    {
+      "q": "How do I connect email to VS Code?",
+      "a": "Run MCP: Add Server from the Command Palette, choose HTTP, paste https://mcpemails.com/api/mcp, then start the server and authorize when prompted. Copilot agent mode then has tools for reading, searching, sending, replying, forwarding, organizing and scheduling mail."
+    },
+    {
+      "q": "Do I need an API key for VS Code?",
+      "a": "No. VS Code performs the OAuth browser flow with this server, so no token is written into your config. A bearer API key stays available for headless or scripted use."
+    },
+    {
+      "q": "Does this work with Copilot in other editors?",
+      "a": "This page covers VS Code specifically, because the Add Server flow and the mcp.json schema are VS Code features. JetBrains AI Assistant is a separate setup and takes a bearer API key instead of OAuth; there is a page for it."
+    },
+    {
+      "q": "Which mailboxes can VS Code reach this way?",
+      "a": "Gmail over Google sign-in, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password, and any other mailbox that speaks IMAP and SMTP on the standard ports. The client sees them all through the same connection: your agent calls inbox_list first to discover every connected mailbox and its id, so there are no UUIDs to paste anywhere."
+    },
+    {
+      "q": "Can VS Code send email without me seeing it?",
+      "a": "Only if you let it. Sending is gated on the send:email scope, so a key or a token without that scope cannot send at all. On top of that, an inbox owner can require human approval in the dashboard, which holds every send, reply, forward, draft send and scheduled send until a person releases it."
+    },
+    {
+      "q": "Is my email stored on your servers?",
+      "a": "No. Every message is fetched live from your provider for the request that asked for it and handed straight to your client. Only the encrypted OAuth token or app password is kept, so future calls can authenticate. Deleting the inbox in the dashboard, or revoking access at your provider, ends the connection at once."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give VS Code a real inbox",
+    "sub": "One command, one sign-in. One inbox free forever, no card required."
+  }
+}

@@ -1,0 +1,128 @@
+{
+  "meta": {
+    "title": "Status",
+    "description": "Live oppetid for MCP Emails-endepunktet, målt av en automatisk sjekk som kjører hvert femte minutt mot produksjon. Ekte registrerte tall, ingen markedsføringsfigur."
+  },
+  "hero": {
+    "eyebrow": "Status",
+    "title": "Systemstatus",
+    "lead": "En skriptet klient kobler seg til det offentlige MCP-endepunktet hvert femte minutt, henter verktøylisten, lister en innboks og leser en melding. Alt under er talt opp fra det disse sjekkene registrerte."
+  },
+  "overall": {
+    "operational": "Alt fungerer",
+    "degraded": "Redusert",
+    "down": "Større driftsavbrudd",
+    "unknown": "Status ukjent"
+  },
+  "overallNote": {
+    "operational": "Den siste sjekken gikk gjennom.",
+    "degraded": "Den siste sjekken feilet én gang. Overvåkingen venter på to feil på rad før den varsler, så dette kan allerede være over.",
+    "down": "Sjekkene feiler nå, og noen er varslet.",
+    "unknown": "Vi ser ikke det siste resultatet fra overvåkingen akkurat nå, så vi kan ikke fortelle deg tilstanden. Det er en feil i overvåkingen, ikke en påstand om produktet."
+  },
+  "checked": {
+    "now": "Siste sjekk for under ett minutt siden",
+    "minutes": "Siste sjekk for {minutes} minutter siden",
+    "one": "Siste sjekk for 1 minutt siden",
+    "never": "Ingen sjekk registrert",
+    "at": "Siste sjekk {time}"
+  },
+  "uptime": {
+    "label": "Oppetid, siste {days} dager",
+    "checks": "{checks} sjekker, én hvert {cadence}. minutt",
+    "failed": "{failed} av dem feilet",
+    "failedNone": "ingen av dem feilet",
+    "since": "Sammenhengende overvåking startet {date}.",
+    "noFigure": "For få registrerte sjekker i dette vinduet til å publisere et tall."
+  },
+  "components": {
+    "title": "Hva som sjekkes",
+    "lead": "Én runde gjennom de fire trinnene, i denne rekkefølgen. En kjøring stopper ved første feil, så hvert trinn måles bare mot sjekkene som faktisk nådde det.",
+    "thStep": "Trinn",
+    "thNow": "Nå",
+    "thWindow": "Siste {days} dager",
+    "state": {
+      "operational": "Fungerer",
+      "failing": "Feiler",
+      "unknown": "Ikke nådd nylig"
+    },
+    "noData": "Ingen data",
+    "attempted": "{attempted} sjekker",
+    "items": {
+      "initialize": {
+        "name": "Tilkobling",
+        "detail": "MCP-håndtrykket mot mcpemails.com, med en ekte API-nøkkel."
+      },
+      "tools_list": {
+        "name": "Verktøyliste",
+        "detail": "Serveren returnerer verktøykatalogen sin til klienten."
+      },
+      "inbox_list": {
+        "name": "Innbokser",
+        "detail": "De tilkoblede postkassene kommer tilbake for den nøkkelen."
+      },
+      "email_read": {
+        "name": "Lese e-post",
+        "detail": "En melding hentes live fra e-postleverandøren, hele veien."
+      }
+    }
+  },
+  "history": {
+    "title": "Siste {days} dager",
+    "allOk": "{date}: {checks} sjekker, alle gikk gjennom",
+    "someFailed": "{date}: {checks} sjekker, {failed} feilet",
+    "noData": "{date}: ingen sjekker registrert",
+    "legendOk": "Alle sjekker gikk gjennom",
+    "legendBlip": "Én sjekk, gjenopprettet",
+    "legendFailed": "Noen sjekker feilet",
+    "legendNone": "Ingen data",
+    "oldest": "{days} dager siden",
+    "newest": "I dag"
+  },
+  "incidents": {
+    "title": "Hendelser",
+    "lead": "En enkelt feilet sjekk som går gjennom igjen fem minutter senere telles mot oppetiden over, men listes ikke som en hendelse her. Det er samme grense som varslingen bruker: to feil på rad, eller én feil av et slag som ikke kan skyldes noen andres nettverk.",
+    "none": "Ingen hendelser de siste {days} dagene.",
+    "blips": "{count} enkeltstående feilede sjekker i dette vinduet, som alle gikk gjennom igjen på neste kjøring.",
+    "blipsOne": "1 enkeltstående feilet sjekk i dette vinduet, som gikk gjennom igjen på neste kjøring.",
+    "checks": "{count} sjekker på rad feilet",
+    "checksOne": "1 sjekk feilet",
+    "recovered": "Gjenopprettet {time}",
+    "openStill": "Ingen vellykket sjekk registrert siden",
+    "paged": "Varslet ved første feil",
+    "affected": "Berørt: {step}",
+    "class": {
+      "public_endpoint": "Endepunktet svarte ikke",
+      "authentication": "API-nøkkelen ble avvist",
+      "mcp_protocol": "Et ugyldig MCP-svar",
+      "database": "Databasen",
+      "provider_read": "E-postleverandøren svarte ikke i tide",
+      "provider_send": "E-postleverandøren avviste en utsending",
+      "alert_delivery": "Levering av varsel",
+      "internal": "En feil inne i selve overvåkingen"
+    }
+  },
+  "scope": {
+    "title": "Hva denne siden forteller deg, og hva den ikke gjør",
+    "points": [
+      "Sjekken kjører fra ett sted på en cron hvert femte minutt, så et avbrudd kortere enn fem minutter kan passere uregistrert, og tidspunktene her er nøyaktige til sjekken som fanget det, ikke til sekundet.",
+      "Den dekker fire kodeveier. Utsending, planlegging, utkast og mappeoperasjoner står ikke på denne siden fordi ingenting måler dem regelmessig, og et tall som dekket dem ville vært gjetning.",
+      "Den leser én ekte postkasse hos én leverandør. En feil tilskrevet e-postleverandøren er den leverandøren som har et dårlig minutt, ikke nødvendigvis noe du ville merket hos din.",
+      "Ingenting her kommer fra kundetrafikk. Ingen konto, arbeidsområde eller melding telles, samples eller vises."
+    ]
+  },
+  "unavailable": {
+    "title": "Vi får ikke lest vår egen overvåking akkurat nå",
+    "body": "Overvåkingshistorikken er midlertidig uleselig, så det finnes ikke noe ærlig tall å vise deg. Denne siden sier heller det enn å gjenta det siste tallet den kjente. Selve overvåkingen fortsetter å kjøre og varsle uansett om denne siden når den."
+  },
+  "footer": {
+    "source": "Hvert tall på denne siden er talt opp fra overvåkingens egne registrerte kjøringer ved lesetidspunktet. Ingenting er skrevet inn for hånd.",
+    "securityLink": "Slik behandler vi e-posten og påloggingene dine",
+    "contact": "Noe galt som denne siden sier er greit? Skriv til {email}."
+  },
+  "punct": {
+    "join": ". ",
+    "end": ".",
+    "space": " "
+  }
+}

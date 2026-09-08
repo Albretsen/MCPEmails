@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "https://www.jetbrains.com/help/ai-assistant/configure-an-mcp-server.html"
+  ],
+  "meta": {
+    "title": "Connect Email to JetBrains AI Assistant: MCP Setup",
+    "description": "Add a real inbox to AI Assistant in IntelliJ, PyCharm or WebStorm. Streamable HTTP plus a scoped API key in an Authorization header. One inbox free."
+  },
+  "hero": {
+    "eyebrow": "JetBrains + email",
+    "titleLine1": "Connect your inbox to JetBrains",
+    "titleLine2": "AI Assistant",
+    "lead": "Add a real mailbox to AI Assistant in any JetBrains IDE that supports it. Read, search, send, reply, schedule and organize mail without leaving the IDE.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Scoped API key, revocable in one click",
+    "meta2": "Email fetched live, never stored",
+    "answer": "Open Settings, Tools, AI Assistant, Model Context Protocol. Add a server, choose Streamable HTTP as the connection type, paste https://mcpemails.com/api/mcp, and add an Authorization Bearer header holding an API key from your dashboard."
+  },
+  "method": {
+    "title": "How JetBrains AI Assistant connects: a scoped API key",
+    "body": "JetBrains AI Assistant does not run the OAuth browser flow against a remote MCP server, so it authenticates with a bearer token instead. Create an API key in your dashboard, tick only the scopes the agent needs, and paste it into JetBrains AI Assistant as an <code>Authorization: Bearer</code> header. Key connections and OAuth connections hit the same endpoint and get the same tool catalogue; the difference is only how the token is obtained."
+  },
+  "setup": [
+    {
+      "h": "Create a free account and connect a mailbox",
+      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Gmail connects with one-click Google sign-in; iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
+    },
+    {
+      "h": "Create a scoped API key",
+      "p": "In Dashboard, API Keys, click Create key. Name it and tick only the scopes this agent needs: <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> and <code>manage:automations</code>. The key looks like <code>mcpe_</code> followed by 64 hex characters and is shown once, so copy it before you close the dialog."
+    },
+    {
+      "h": "Open the MCP settings",
+      "p": "Open <b>Settings</b>, then <b>Tools</b>, then <b>AI Assistant</b>, then <b>Model Context Protocol (MCP)</b>."
+    },
+    {
+      "h": "Add the server",
+      "p": "Click Add and select <b>Streamable HTTP</b> as the connection type. Paste <code>https://mcpemails.com/api/mcp</code>, then add a header named <code>Authorization</code> with the value <code>Bearer</code> followed by a space and your key."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Streamable HTTP, not stdio and not SSE",
+      "p": "The connection type list offers a local command-based server first, because that is what most MCP servers are. This one is remote and hosted, so there is no command to run. Choose Streamable HTTP, which is the transport this server speaks under the 2025-06-18 revision."
+    },
+    {
+      "h": "The key is the whole permission model here",
+      "p": "AI Assistant does not run the OAuth consent flow, so there is no second screen where you narrow what the connection may do. Whatever you tick when creating the key is what the IDE holds until you revoke it. For an IDE, read, search and draft scopes cover almost everything worth doing."
+    },
+    {
+      "h": "IDE settings sync, and a bearer token is a credential",
+      "p": "If you have settings sync turned on across machines, treat the key like any other credential that travels with it. Keys are cheap: issue one per machine, name them so a listing is readable, and revoke the one you no longer recognise. Only a SHA-256 hash is stored on our side, so the raw key is unrecoverable and lost keys are replaced rather than retrieved."
+    }
+  ],
+  "limits": [
+    "Requests are rate limited to 100 per minute, 1,000 per hour and 10,000 per day per key, plus your plan ceiling on billable actions.",
+    "The server is request and response only. There are no webhooks and no server-initiated events, so new mail never wakes your agent by itself. To react to arriving mail, poll on a schedule.",
+    "Mail is fetched live from your provider on every call and never stored. Only the encrypted OAuth token or app password is kept, so a revoked token or a changed mailbox password ends access immediately."
+  ],
+  "faq": [
+    {
+      "q": "How do I connect email to JetBrains AI Assistant?",
+      "a": "Open Settings, Tools, AI Assistant, Model Context Protocol, add a server with the Streamable HTTP connection type, paste https://mcpemails.com/api/mcp, and add an Authorization Bearer header with an API key from your dashboard. AI Assistant then has tools for reading, searching, sending, replying, organizing and scheduling mail."
+    },
+    {
+      "q": "Which JetBrains IDEs does this work in?",
+      "a": "Any JetBrains IDE where AI Assistant can configure an MCP server. The settings path and the Streamable HTTP connection type belong to AI Assistant rather than to a particular IDE, so the setup is the same wherever the plugin is available. If the Model Context Protocol screen is missing from your Settings, that is the plugin, not this server."
+    },
+    {
+      "q": "Why an API key rather than OAuth?",
+      "a": "Because AI Assistant authenticates a remote MCP server with a configured header rather than by running a browser OAuth flow. A bearer key is the path that works there. The endpoint and the tools are identical to the OAuth clients; only the way the token is obtained differs."
+    },
+    {
+      "q": "Which mailboxes can AI Assistant reach this way?",
+      "a": "Gmail over Google sign-in, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password, and any other mailbox that speaks IMAP and SMTP on the standard ports. The client sees them all through the same connection: your agent calls inbox_list first to discover every connected mailbox and its id, so there are no UUIDs to paste anywhere."
+    },
+    {
+      "q": "Can AI Assistant send email without me seeing it?",
+      "a": "Only if you let it. Sending is gated on the send:email scope, so a key or a token without that scope cannot send at all. On top of that, an inbox owner can require human approval in the dashboard, which holds every send, reply, forward, draft send and scheduled send until a person releases it."
+    },
+    {
+      "q": "Is my email stored on your servers?",
+      "a": "No. Every message is fetched live from your provider for the request that asked for it and handed straight to your client. Only the encrypted OAuth token or app password is kept, so future calls can authenticate. Deleting the inbox in the dashboard, or revoking access at your provider, ends the connection at once."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your IDE a real inbox",
+    "sub": "One MCP server, one scoped key. One inbox free forever, no card required."
+  }
+}

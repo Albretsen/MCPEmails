@@ -30,15 +30,21 @@ const intlMiddleware = createMiddleware(routing);
 const MARKETING_PATHS = new Set([
   '/',
   '/pricing',
-  '/docs',
-  '/docs/providers',
   '/blog',
+  '/changelog',
   '/privacy',
   '/terms',
   '/security',
   '/self-hosting',
+  // Public status page. Without this entry the path falls through to the
+  // Supabase session branch instead of the next-intl rewrite and 404s, which
+  // is a poor look for the one page people open when something is wrong.
+  '/status',
   '/about',
   '/native-connectors-vs-mcp',
+  // Comparison against the other email MCP servers. English only, so it is a
+  // flat entry rather than a prefix; the route itself 404s the other locales.
+  '/email-mcp-servers-compared',
   '/for/founders',
 ]);
 
@@ -61,6 +67,15 @@ function isLocalizedRoute(pathname: string): boolean {
   if (path === '/blog' || path.startsWith('/blog/')) return true;
   // Provider landing pages are a dynamic segment (/connect/<provider>).
   if (path === '/connect' || path.startsWith('/connect/')) return true;
+  // Docs is a prefix, not a list. It holds the hand-written index, the
+  // provider compatibility matrix, the per-client setup hub at /docs/clients
+  // and one dynamic page per MCP client (/docs/<client>). Enumerating those by
+  // hand here is how /docs/providers came to be a separate entry, and a page
+  // missing from this list does not render a 404 from its own route: it falls
+  // through to the Supabase branch, which never rewrites it to the localized
+  // route at all. That failure looks like a routing bug rather than a missing
+  // allow-list entry, which is an expensive thing to debug twice.
+  if (path === '/docs' || path.startsWith('/docs/')) return true;
   return MARKETING_PATHS.has(path);
 }
 

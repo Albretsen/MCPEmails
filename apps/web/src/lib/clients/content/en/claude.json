@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/messages/en/docs.json",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/app/.well-known/oauth-protected-resource/route.ts",
+    "https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp"
+  ],
+  "meta": {
+    "title": "Connect Email to Claude: Gmail and IMAP MCP Setup",
+    "description": "Add a real inbox to claude.ai and Claude Desktop as a custom connector. Paste one URL, authorize with OAuth, and Claude can read, search, send and schedule mail. One inbox free."
+  },
+  "hero": {
+    "eyebrow": "Claude + email",
+    "titleLine1": "Connect your inbox to Claude",
+    "titleLine2": "as a custom connector",
+    "lead": "Claude has no mail client of its own. mcpemails is the hosted MCP server that gives it one: read, search, send, reply, forward, schedule and organize real mail from claude.ai or Claude Desktop.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "OAuth, no API key needed",
+    "meta2": "Email fetched live, never stored",
+    "answer": "Add https://mcpemails.com/api/mcp as a custom connector in Claude, click Connect, and sign in with your mcpemails account. Claude registers itself automatically and asks for the scopes you approve. There is no API key to create and no config file to edit."
+  },
+  "method": {
+    "title": "How Claude connects: OAuth, no API key",
+    "body": "Claude runs the standard MCP OAuth flow against this server. It registers itself with <b>RFC 7591 dynamic client registration</b>, so there is no client ID to create, and authorizes with <b>authorization code plus PKCE</b> using S256. No client secret is ever transmitted, and the token carries only the scopes you approve on our consent screen. The access token it receives lasts an hour and refreshes itself; it is listed in Dashboard, API Keys as <code>OAuth:</code> followed by the client name, which is where you revoke the connection."
+  },
+  "setup": [
+    {
+      "h": "Create a free account and connect a mailbox",
+      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Gmail connects with one-click Google sign-in; iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
+    },
+    {
+      "h": "Open the connector settings",
+      "p": "In claude.ai or Claude Desktop, open Settings, then Connectors."
+    },
+    {
+      "h": "Add a custom connector",
+      "p": "Click Add custom connector, paste <code>https://mcpemails.com/api/mcp</code> as the connector URL, then click Add."
+    },
+    {
+      "h": "Connect and authorize",
+      "p": "Click Connect and sign in with mcpemails to authorize. Approve the scopes you want Claude to hold. No API key needed."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "A connector is not the same thing as Claude built-in Gmail connector",
+      "p": "Anthropic ships its own Google connector, and it is a different path: one provider, inside one app. A custom connector points Claude at an MCP server instead, which is why the same setup then covers iCloud, Fastmail, Zoho, Yandex and any company IMAP mailbox behind a single URL, and why the identical URL works in Cursor, ChatGPT and the rest."
+    },
+    {
+      "h": "You approve scopes once, and they are the only thing the token can do",
+      "p": "The consent screen is ours, not a formality. A token issued without <code>send:email</code> cannot send, and a token without <code>delete:email</code> cannot delete, no matter what the model is asked to do. If you want Claude reading and drafting but never sending, leave <code>send:email</code> unticked and grant <code>manage:drafts</code> instead."
+    },
+    {
+      "h": "The connection is polled, so Claude will not notice mail on its own",
+      "p": "There are no webhooks and no push. Claude sees new mail when it makes a call, which means when you ask. A standing instruction like \"check for anything from finance before we start\" is what turns that into a routine; nothing arrives unprompted."
+    }
+  ],
+  "limits": [
+    "Requests are rate limited to 100 per minute, 1,000 per hour and 10,000 per day per key, plus your plan ceiling on billable actions.",
+    "The server is request and response only. There are no webhooks and no server-initiated events, so new mail never wakes your agent by itself. To react to arriving mail, poll on a schedule.",
+    "Mail is fetched live from your provider on every call and never stored. Only the encrypted OAuth token or app password is kept, so a revoked token or a changed mailbox password ends access immediately."
+  ],
+  "faq": [
+    {
+      "q": "Can Claude read my email?",
+      "a": "Not by itself. Claude can reach a mailbox only through a connector, and a custom connector pointed at mcpemails is one way to give it one. Once connected, Claude can list, read, search, send, reply, forward, organize and schedule mail across every inbox you have attached, limited to the scopes you approved."
+    },
+    {
+      "q": "Do I need an API key for Claude?",
+      "a": "No. Claude does the OAuth browser flow with this server, registering itself dynamically and authorizing with PKCE. API keys exist for clients that cannot do that, such as Cline and JetBrains AI Assistant, and for scripts."
+    },
+    {
+      "q": "Which mailboxes can Claude reach this way?",
+      "a": "Gmail over Google sign-in, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password, and any other mailbox that speaks IMAP and SMTP on the standard ports. The client sees them all through the same connection: your agent calls inbox_list first to discover every connected mailbox and its id, so there are no UUIDs to paste anywhere."
+    },
+    {
+      "q": "Can Claude send email without me seeing it?",
+      "a": "Only if you let it. Sending is gated on the send:email scope, so a key or a token without that scope cannot send at all. On top of that, an inbox owner can require human approval in the dashboard, which holds every send, reply, forward, draft send and scheduled send until a person releases it."
+    },
+    {
+      "q": "Is my email stored on your servers?",
+      "a": "No. Every message is fetched live from your provider for the request that asked for it and handed straight to your client. Only the encrypted OAuth token or app password is kept, so future calls can authenticate. Deleting the inbox in the dashboard, or revoking access at your provider, ends the connection at once."
+    },
+    {
+      "q": "Does this work in Claude Desktop as well as claude.ai?",
+      "a": "Yes. Both reach custom connectors from the same Settings, Connectors screen and both hold the same connection, so a mailbox added in one is available in the other. For the terminal, see the separate Claude Code guide."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give Claude a real inbox",
+    "sub": "Connect a mailbox in minutes. One inbox free forever, no card required."
+  }
+}

@@ -7,7 +7,7 @@
     "eyebrow": "Connecteurs natifs vs MCP",
     "titleLine1": "Les connecteurs IA intégrés s'arrêtent",
     "titleLine2": "là où commence votre boîte mail",
-    "lead": "Les connecteurs d'e-mail natifs des IA couvrent un ou deux fournisseurs et se contentent le plus souvent de créer des brouillons. Un serveur d'e-mail MCP géré connecte n'importe quelle boîte, effectue de vraies actions et vous suit sur tous les clients IA.",
+    "lead": "Les connecteurs d'e-mail natifs des IA couvrent un ou deux fournisseurs. Un serveur d'e-mail MCP géré connecte n'importe quelle boîte, effectue de vraies actions et vous suit sur tous les clients IA.",
     "ctaPrimary": "Connecter une boîte gratuitement",
     "ctaSecondary": "Lire la documentation"
   },
@@ -23,8 +23,8 @@
       },
       "actions": {
         "tag": "Vraies actions",
-        "h": "Envoyer et planifier, pas seulement des brouillons",
-        "p": "Beaucoup de connecteurs natifs s'arrêtent à la <b>création d'un brouillon</b> que vous devez encore ouvrir et envoyer. Nos neuf outils basés sur des actions <b>envoient, répondent, transfèrent, planifient, déplacent, copient, marquent, archivent et suppriment</b> directement : l'agent termine le travail dans la boîte."
+        "h": "Planifier et organiser, pas seulement envoyer",
+        "p": "Les connecteurs natifs envoient et répondent, puis s'arrêtent là. Nos neuf outils basés sur des actions <b>envoient, répondent, transfèrent, planifient, déplacent, copient, marquent, archivent et suppriment</b> directement : l'agent termine le travail dans la boîte."
       },
       "portable": {
         "tag": "Portable",
@@ -42,14 +42,14 @@
     "rows": {
       "providers": "Fastmail, iCloud, Yahoo, Zoho, Yandex",
       "imap": "N'importe quelle boîte IMAP / SMTP",
-      "send": "Envoyer et répondre directement (pas que des brouillons)",
+      "send": "Envoyer, répondre et transférer directement",
       "schedule": "Planifier des envois pour plus tard",
       "organize": "Déplacer, copier, marquer, archiver, supprimer",
       "multiAi": "Fonctionne dans Claude, Cursor, ChatGPT, n8n…",
       "oauth": "Gmail via OAuth",
       "storage": "E-mails récupérés en direct, jamais stockés"
     },
-    "footnote": "Les capacités des connecteurs natifs des IA varient selon le fournisseur ; les écarts ci-dessus reflètent le schéma courant d'un seul fournisseur limité aux brouillons."
+    "footnote": "Les capacités des connecteurs natifs des IA varient selon le fournisseur ; les écarts ci-dessus reflètent le schéma courant d'un seul fournisseur."
   },
   "ctaBand": {
     "title": "Offrez une vraie boîte mail à votre IA",
@@ -64,15 +64,15 @@
     "items": [
       {
         "q": "Claude ou ChatGPT ne peuvent-ils pas déjà lire mon Gmail avec un connecteur intégré ?",
-        "a": "Parfois, pour un seul fournisseur et souvent en lecture seule ou en brouillon seulement. mcpemails connecte Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex et n'importe quelle boîte IMAP, et effectue de vraies actions : envoyer, répondre, transférer, planifier, déplacer, copier, marquer, archiver et supprimer. La même boîte fonctionne ensuite dans tous les clients MCP, pas seulement dans l'app d'un seul fournisseur."
+        "a": "Parfois, pour un seul fournisseur. mcpemails connecte Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex et n'importe quelle boîte IMAP, et effectue de vraies actions : envoyer, répondre, transférer, planifier, déplacer, copier, marquer, archiver et supprimer. La même boîte fonctionne ensuite dans tous les clients MCP, pas seulement dans l'app d'un seul fournisseur."
       },
       {
         "q": "Quelles boîtes les connecteurs intégrés laissent-ils de côté en général ?",
         "a": "La plupart des connecteurs natifs atteignent Gmail et parfois Outlook. Ils ne peuvent généralement pas toucher Fastmail, iCloud, Yahoo, Zoho, Yandex ni un serveur IMAP/SMTP auto-hébergé. mcpemails les connecte tous."
       },
       {
-        "q": "Les connecteurs natifs envoient-ils vraiment les e-mails, ou se contentent-ils de les rédiger ?",
-        "a": "Beaucoup s'arrêtent à la création d'un brouillon que vous devez encore ouvrir et envoyer vous-même. mcpemails envoie, répond, transfère et planifie directement, si bien que l'agent termine le travail dans votre boîte."
+        "q": "Les connecteurs natifs peuvent-ils planifier et organiser les e-mails ?",
+        "a": "Ils envoient, répondent et transfèrent, puis s'arrêtent là. mcpemails planifie aussi, déplace, copie, marque, archive et supprime : l'agent termine la tâche dans votre boîte au lieu de vous en rendre la moitié."
       },
       {
         "q": "Si je configure ceci pour Claude, est-ce que ça marche aussi dans Cursor ou ChatGPT ?",

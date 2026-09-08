@@ -58,7 +58,7 @@
       "1": {
         "tag": "Storage",
         "h": "Email is fetched live. Never stored.",
-        "p": "Every tool call hits your provider in real time: Gmail API, Fastmail JMAP, or IMAP. Message bodies, subjects, and attachments go to the agent and are discarded immediately. We persist one thing per inbox, an encrypted token or app password, so we can make the next call. The one exception is a message you schedule to send later: we hold it until the send time, then keep a record for your history."
+        "p": "Every tool call hits your provider in real time: Gmail API or IMAP. Message bodies, subjects, and attachments go to the agent and are discarded immediately. We persist one thing per inbox, an encrypted token or app password, so we can make the next call. The one exception is a message you schedule to send later: we hold it until the send time, then keep a record for your history."
       },
       "2": {
         "tag": "Sending",
@@ -104,7 +104,7 @@
       "0": "Discover all connected inboxes and their IDs. Call this first, no UUID copy-pasting from the dashboard.",
       "1": "Read mail: list recent summaries, fetch a full message, batch-read up to 50, search across providers, extract readable attachment text, or save the original email as .eml.",
       "2": "Organize mail: move, copy, delete, flag, or archive, whether one at a time, in bulk, or straight from a search. Long bulk runs report their status and can be cancelled from the dashboard.",
-      "3": "Compose: send a new message, reply in-thread, or forward through Gmail API, Fastmail JMAP, or SMTP. Optional inbox approval holds outbound mail for dashboard review before it leaves.",
+      "3": "Compose: send a new message, reply in-thread, or forward through Gmail API or SMTP. Optional inbox approval holds outbound mail for dashboard review before it leaves.",
       "4": "Manage folders (labels on Gmail): list, create, rename, or delete, and use them as move destinations.",
       "5": "Drafts: list, create, update, and send provider-stored drafts, including an unsent reply kept in the source conversation for review.",
       "6": "Schedule a message for a future time, list pending scheduled sends, and cancel them before they go out.",
@@ -246,6 +246,7 @@
     "copyAria": "Copy {label}",
     "linkAbout": "About",
     "linkSecurity": "Security",
+    "linkStatus": "Status",
     "linkSelfHost": "Self-hosting",
     "linkFounders": "For founders"
   },

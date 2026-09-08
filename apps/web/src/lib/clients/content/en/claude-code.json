@@ -1,0 +1,95 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/api/mcp/route.ts",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://code.claude.com/docs/en/mcp",
+    "docs/token-cost/research-spec.md"
+  ],
+  "meta": {
+    "title": "Connect Email to Claude Code: One Command MCP Setup",
+    "description": "Add a real inbox to the Claude Code CLI with claude mcp add. OAuth in the terminal, no API key, then read, search, send and schedule mail from your shell. One inbox free."
+  },
+  "hero": {
+    "eyebrow": "Claude Code + email",
+    "titleLine1": "Connect your inbox to Claude Code",
+    "titleLine2": "with one command",
+    "lead": "Give the CLI you already live in a real mailbox. Triage overnight mail before standup, mail a release note, or turn a thread into an issue, without leaving the terminal.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "OAuth in the terminal, no API key",
+    "meta2": "Email fetched live, never stored",
+    "answer": "Run claude mcp add --transport http mcpemails https://mcpemails.com/api/mcp, then authenticate in the browser when Claude Code prompts you. That is the whole setup: no API key, no config file to hand-edit."
+  },
+  "method": {
+    "title": "How Claude Code connects: OAuth, no API key",
+    "body": "Claude Code runs the standard MCP OAuth flow against this server. It registers itself with <b>RFC 7591 dynamic client registration</b>, so there is no client ID to create, and authorizes with <b>authorization code plus PKCE</b> using S256. No client secret is ever transmitted, and the token carries only the scopes you approve on our consent screen. The access token it receives lasts an hour and refreshes itself; it is listed in Dashboard, API Keys as <code>OAuth:</code> followed by the client name, which is where you revoke the connection."
+  },
+  "setup": [
+    {
+      "h": "Create a free account and connect a mailbox",
+      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Gmail connects with one-click Google sign-in; iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
+    },
+    {
+      "h": "Add the server",
+      "p": "Run the command below. <code>--transport http</code> is the Streamable HTTP transport, which is what this server speaks."
+    },
+    {
+      "h": "Authenticate",
+      "p": "Run <code>/mcp</code> inside a Claude Code session, pick this server and follow the browser flow. If the browser does not open by itself, copy the URL it prints."
+    },
+    {
+      "h": "Ask for something",
+      "p": "Try \"summarise anything unread from today\". Claude Code calls <code>inbox_list</code> first to discover your mailboxes, so there are no ids to paste."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Claude Code defers MCP tool definitions, which is a feature here",
+      "p": "By default Claude Code loads only tool names and the server instructions at session start, then fetches a full schema when it needs one. The practical effect is that adding this server costs a fraction of the context a naive MCP server would, and that a tool you never use never costs you its schema."
+    },
+    {
+      "h": "Scope the connection to what the session is for",
+      "p": "The OAuth consent screen decides what the CLI can do for the life of the token. A coding session that should read mail but never send it is a token without <code>send:email</code>. If you later want more, reconnect and approve the wider set; nothing escalates on its own."
+    },
+    {
+      "h": "An agent loop and a send scope are a combination worth thinking about",
+      "p": "Claude Code runs unattended for long stretches, which is exactly when an accidental send hurts most. Two switches exist for that: leave <code>send:email</code> off the token, or turn on human approval in the dashboard so every send, reply, forward and scheduled send waits for a person. Approval is per inbox and applies whatever client made the call."
+    }
+  ],
+  "limits": [
+    "Requests are rate limited to 100 per minute, 1,000 per hour and 10,000 per day per key, plus your plan ceiling on billable actions.",
+    "The server is request and response only. There are no webhooks and no server-initiated events, so new mail never wakes your agent by itself. To react to arriving mail, poll on a schedule.",
+    "Mail is fetched live from your provider on every call and never stored. Only the encrypted OAuth token or app password is kept, so a revoked token or a changed mailbox password ends access immediately.",
+    "The OAuth flow needs a browser once. On a headless box, add the server with an API key in an Authorization header instead and skip the flow entirely. If you do want OAuth there, <code>--callback-port</code> pins the callback to a port you can forward."
+  ],
+  "faq": [
+    {
+      "q": "How do I connect email to Claude Code?",
+      "a": "Add this MCP server by URL: claude mcp add --transport http mcpemails https://mcpemails.com/api/mcp. Then run /mcp in a session and complete the browser sign-in. Claude Code then has tools for reading, searching, sending, replying, forwarding, organizing and scheduling mail."
+    },
+    {
+      "q": "Can I use an API key instead of OAuth?",
+      "a": "Yes. Claude Code accepts a header on the add command, so passing an Authorization header with a bearer key from Dashboard, API Keys skips the browser entirely. That is the right choice on a headless machine or in CI, where there is nowhere to complete a sign-in."
+    },
+    {
+      "q": "Does it work in a devcontainer or over SSH?",
+      "a": "Yes, with the caveat that the OAuth flow wants a browser once. Either complete the login where a browser exists, or add the server with a bearer API key header and skip the flow. Everything after that is plain HTTPS to one endpoint."
+    },
+    {
+      "q": "Which mailboxes can Claude Code reach this way?",
+      "a": "Gmail over Google sign-in, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password, and any other mailbox that speaks IMAP and SMTP on the standard ports. The client sees them all through the same connection: your agent calls inbox_list first to discover every connected mailbox and its id, so there are no UUIDs to paste anywhere."
+    },
+    {
+      "q": "Can Claude Code send email without me seeing it?",
+      "a": "Only if you let it. Sending is gated on the send:email scope, so a key or a token without that scope cannot send at all. On top of that, an inbox owner can require human approval in the dashboard, which holds every send, reply, forward, draft send and scheduled send until a person releases it."
+    },
+    {
+      "q": "Is my email stored on your servers?",
+      "a": "No. Every message is fetched live from your provider for the request that asked for it and handed straight to your client. Only the encrypted OAuth token or app password is kept, so future calls can authenticate. Deleting the inbox in the dashboard, or revoking access at your provider, ends the connection at once."
+    }
+  ],
+  "ctaBand": {
+    "title": "Put your inbox in the terminal",
+    "sub": "One command, one browser sign-in. One inbox free forever, no card required."
+  }
+}
