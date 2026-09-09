@@ -156,6 +156,52 @@ surface and the listing would advertise less than the product does.
 | Support contact | | `hello@mcpemails.com` |
 | Icon | | `https://mcpemails.com/favicon.svg` |
 | URL slug | permanent | `emails` |
+| Allowed link URIs | | `https://mcpemails.com` (one entry, nothing else) |
+
+#### Allowed link URIs: paste exactly one line
+
+```text
+https://mcpemails.com
+```
+
+Our in-chat card sends `ui/open-link`. `apps/mcp-app/src/bridge.ts:312` defines
+`openLink(url)`, which refuses anything that is not `https:` and then issues the
+`ui/open-link` request. Two call sites in `apps/mcp-app/src/components/App.tsx`
+reach it: `openDashboard()` with `envelope.dashboard_url` or
+`envelope.receipt.dashboard_url`, and the outbound approval button with
+`outbound.review_url`.
+
+All three values are server-authored and all three are built from a single
+origin. `supabase/functions/mcp-server/index.ts:333` sets
+`APP_URL = Deno.env.get("APP_URL") ?? "https://mcpemails.com"`, and every card
+URL is a template on it: `${appUrl}/dashboard`, `${appUrl}/dashboard/approvals`,
+`${appUrl}/dashboard/usage`, and `approvalReviewUrl(APP_URL, id)`. The card
+deliberately does not resolve relative paths against a baked-in origin, so there
+is no second origin hiding in the bundle. **No card link can ever point at
+`www.` or any other subdomain**, so `www.mcpemails.com` does not need an entry
+and should not get one.
+
+Rules from <https://claude.com/docs/connectors/building/mcp-apps/external-links>,
+worth restating because each one is a way to get the entry silently ignored:
+
+- An entry is either an HTTPS origin or a custom URI scheme. Nothing else.
+- Hostname matching is exact and case-insensitive. **Subdomains do not match
+  implicitly**; each one you want must be listed separately.
+- Bare hostnames (`mcpemails.com`), `http://` origins, and malformed values are
+  ignored without an error.
+- Port is not compared, and the path is not compared, so one origin entry covers
+  `/dashboard`, `/dashboard/approvals` and every approval id.
+- The bypass also requires a real user gesture. Ours is a button click, which
+  qualifies.
+
+If the field is left empty, every click on the card's "Open dashboard" and
+"Approve in browser" buttons raises an extra "Open external link" confirmation
+modal before anything opens.
+
+One operational dependency: this is only correct while the edge function's
+`APP_URL` secret is unset or set to the apex. If a future deploy points `APP_URL`
+at a preview or subdomain origin, the links stop matching the allowlist and the
+modal comes back.
 
 Description:
 
@@ -183,6 +229,73 @@ Description:
 >
 > Credentials are encrypted at rest with AES-256-GCM. Access is scoped, so a key
 > that only reads cannot send. Free covers one inbox and 5,000 actions a month.
+>
+> Claude acts only when you ask it to: MCP Emails does not watch your inbox in
+> the background and never wakes the model on its own. The only things that run
+> on a clock are ones you set up. A send you schedule goes out when you said it
+> should. An Automation is a fixed rule you wrote: it starts disabled, cannot
+> delete mail, holds any forward for your approval, and when it replies it only
+> writes a draft.
+
+1,889 characters of the 2,000 allowed, counted as the six paragraphs above
+joined by blank lines, without the `> ` quoting. 111 characters of headroom, so
+a reviewer-requested tweak fits without a rewrite.
+
+> **WARNING, do not paste the description as it stands.** The third paragraph
+> says "the write tools are separate, annotated as writes, and prompt before they
+> act." The first half of that is only true because of the read/write split in
+> section 2, which reached production as edge function v169 on 2026-09-09.
+> Re-run `tools/list` against production immediately before submitting and
+> confirm zero advertised tools mix a read with a write. If the edge function has
+> been rolled back below v169, or the split has been reverted for any reason, the
+> sentence is false and must come out of the description before the form is sent.
+>
+> Second half, softer but worth a look: a connector installed from the directory
+> defaults to "always allow", so "prompt before they act" describes the
+> annotations we set, not a guarantee about what the client will do with them.
+> "annotated as writes, and marked destructive where they are" is the safer
+> wording if a reviewer pushes on it.
+
+The closing paragraph was verified against the code, not assumed:
+
+- Nothing polls a mailbox on our own initiative. `triage-engine.ts` opens with
+  the statement that every mailbox action other than an automation run
+  "originates in a live MCP conversation".
+- Automations are the one scheduled path that touches mail, and every clause
+  about them is enforced in code: `TRIAGE_FORBIDDEN_ACTION_TYPES` refuses
+  delete-shaped actions by name, `TRIAGE_FORBIDDEN_MOVE_DESTINATIONS` refuses a
+  move to Trash because that is a delete on a timer, `forward` is always routed
+  through `send_approvals` regardless of the inbox setting, and `draft_reply`
+  writes a draft and never sends.
+- Scheduled sends are the other clock, and they are user-created by definition.
+  The description names both rather than claiming nothing runs unattended, which
+  would be false.
+- No path wakes the model. An automation run has no model in the loop at all.
+
+### The listing page is public, and so are the tool names
+
+Two things learned from auditing live directory listings that change what we
+submit.
+
+**Tool names are public marketing copy.** The directory detail page renders the
+connector's tool names as a list of chips, alphabetical, first 18 with a "Show
+all" control for the rest. Nobody writes them for that audience, and it shows:
+Superhuman Mail publishes `create_or_update_draft`, `get_thread`, `send_draft`,
+`trash_thread`, `undo_send`, `unsubscribe` and `mark_spam`; Inkbox publishes
+prefixed names like `inkbox_email_delete` and `inkbox_contact_create`; Hostinger
+Mail publishes `email_call_api_read`, `email_call_api_write` and
+`email_call_api_delete`, which reads like an internal router. Our 22 names sync
+automatically at submission and land on that page as-is, so read them once as a
+stranger would before connecting the server to the portal. `email_delete`,
+`bulk_cancel` and `approval_decide` are all going to be visible.
+
+**An MCP App earns a badge.** Listings that ship one get a "CAPABILITIES: In-chat
+UI" badge on the detail page. It is rare: across the Communication and Design
+categories only Superhuman Mail and Mermaid Chart carry it. We serve `ui://`
+resources, so we should qualify. Confirm the badge is actually on
+`/directory/emails` after publication, and if it is missing, that points at the
+`ui://` resources not being picked up during the sync rather than at anything
+cosmetic.
 
 ### Use cases
 
