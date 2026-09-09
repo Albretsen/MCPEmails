@@ -302,18 +302,47 @@ SENT = [
 
 
 def clear(M, folder):
-    """Empty a folder outright. See the module docstring for why this is not a
-    header-scoped search."""
+    """Empty a folder outright, and do not return until it is actually empty.
+
+    See the module docstring for why this is not a header-scoped search.
+
+    The re-check matters and is not defensive padding. Migadu acknowledges
+    EXPUNGE before the messages are gone from a subsequent SEARCH, so a clear
+    that trusted its own return value once let three fixtures survive into the
+    append that followed and left Sent holding two copies of every message. A
+    reviewer opening that mailbox sees a duplicated corpus and no error
+    anywhere. Poll until the folder reads empty, then continue.
+    """
     typ, _ = M.select(folder)
     if typ != "OK":
         print(f"  skip {folder} (not selectable)")
         return
     typ, data = M.search(None, "ALL")
     ids = data[0].split()
-    if ids:
-        M.store(b",".join(ids), "+FLAGS", "\\Deleted")
+    if not ids:
+        print(f"  cleared {folder}: already empty")
+        return
+
+    M.store(b",".join(ids), "+FLAGS", "\\Deleted")
+    M.expunge()
+
+    for attempt in range(10):
+        M.select(folder)
+        remaining = M.search(None, "ALL")[1][0].split()
+        if not remaining:
+            print(f"  cleared {folder}: {len(ids)} removed")
+            return
+        # Re-flag and expunge again: whatever survived was acknowledged as
+        # deleted but is still being listed.
+        M.store(b",".join(remaining), "+FLAGS", "\\Deleted")
         M.expunge()
-    print(f"  cleared {folder}: {len(ids)} removed")
+        time.sleep(1)
+
+    raise SystemExit(
+        f"{folder} still lists {len(remaining)} message(s) after ten expunge "
+        f"attempts. Appending now would duplicate the corpus. Investigate "
+        f"before re-running."
+    )
 
 
 def append(M, folder, message):
