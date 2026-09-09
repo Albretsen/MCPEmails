@@ -670,15 +670,6 @@ export default async function DashboardPage({ params }) {
     (w) => w.owner_id === user.id && (w.plan === 'pro' || w.plan === 'enterprise'),
   );
 
-  // Serialisable workspace list for the sidebar switcher.
-  const workspaces = allWorkspaces.map((w) => ({
-    id: w.id,
-    slug: w.slug,
-    displayName: w.display_name ?? w.slug,
-    plan: w.plan,
-    isOwner: w.owner_id === user.id,
-  }));
-
   // Fall back to Supabase Auth fields if the users table row is missing.
   const displayName = userRecord?.display_name ?? user.user_metadata?.full_name ?? '';
   const email = userRecord?.email ?? user.email ?? '';
@@ -693,6 +684,32 @@ export default async function DashboardPage({ params }) {
   const unlimitedInboxes = effectiveWorkspacePlan?.unlimited_inboxes ?? false;
   const plan = effectiveWorkspacePlan?.plan ?? workspace?.plan ?? 'free';
   const billingWindow = resolveUsageBillingWindow(plan, storedBillingPeriod);
+
+  // Serialisable workspace list for the sidebar switcher.
+  //
+  // `plan` here is the EFFECTIVE plan, never the stored `workspaces.plan`
+  // column. The stored column is not what the customer is entitled to: a comp
+  // lives in `user_usage_entitlements`, keyed on the workspace OWNER, and only
+  // `effective_workspace_plan()` joins the two. A comped workspace therefore
+  // stores 'free' while its owner is entitled to Team, which is how the
+  // switcher came to say "Free plan" directly above an account footer saying
+  // "Team plan" on the same screen.
+  //
+  // That RPC is resolved above for the ACTIVE workspace only, and it is
+  // deliberately not fanned out across the whole list: it is RLS-gated and
+  // takes one workspace id, so covering the list would mean an extra round
+  // trip per row on every dashboard render, for a label in a menu most people
+  // never open. Every other row therefore carries `plan: null`, meaning "not
+  // resolved" rather than "free", and the sidebar renders no plan label at all
+  // for those rows. Showing the stored column there would be the same lie in a
+  // quieter place.
+  const workspaces = allWorkspaces.map((w) => ({
+    id: w.id,
+    slug: w.slug,
+    displayName: w.display_name ?? w.slug,
+    plan: w.id === workspace?.id ? plan : null,
+    isOwner: w.owner_id === user.id,
+  }));
 
   // Resolve plan limits BEFORE the data fetch, because how much analytics
   // history this workspace may see is one of them. Both protections are
