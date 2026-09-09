@@ -1,22 +1,45 @@
 import { NextRequest } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
-import { sha256hex } from '@/lib/oauth/crypto';
-import { hashApiKey } from '@/lib/api-keys/generate';
+import { loggableClientId, revokeGrantByToken } from '@/lib/oauth/revocation';
 import type { Json } from '@/types/database.types';
 
 /**
  * POST /api/oauth/revoke
  *
- * RFC 7009 Token Revocation. Accepts access tokens (mcpe_) and refresh tokens
- * (mcpr_). Per spec, always returns 200 regardless of whether the token existed.
+ * RFC 7009 Token Revocation. Accepts an access token (mcpe_) or a refresh
+ * token (mcpr_), with or without `token_type_hint`, and revokes the WHOLE
+ * grant either way: the api_keys row AND every live row of the refresh chain
+ * bound to it. The two-row shape of a connection, and why revoking one half is
+ * not revocation, is the header of src/lib/oauth/revocation.ts.
  *
- * Access tokens: soft-deleted via api_keys.deleted_at
- * Refresh tokens: revoked via oauth_refresh_tokens.revoked_at
+ * ALWAYS 200. Per §2.2 an unknown, malformed or already-revoked token is
+ * indistinguishable from a successful revocation, so this endpoint cannot be
+ * used as an oracle for whether a token is valid. Only a bad Origin is
+ * answered differently, and that decision is made before the token is read.
+ *
+ * ── No client authentication ────────────────────────────────────────────────
+ *
+ * Our authorization server advertises `token_endpoint_auth_methods_supported:
+ * ["none"]`: every client here is a PUBLIC client and has no secret to
+ * present. RFC 7009 §2.1 allows a server to require client authentication, and
+ * requiring it would mean rejecting every revocation any of our clients could
+ * ever make. So possession of the token IS the authorisation, which is the
+ * same standard the rest of this server holds a bearer token to.
+ *
+ * `client_id`, when a client sends one, is read for the audit log and NOT used
+ * as a filter. A mismatch must never turn revocation into a silent no-op: the
+ * failure mode we are guarding against is a live credential surviving a
+ * disconnect, and "the client spelled its own id differently this time" is not
+ * a reason to keep somebody's mailbox open. It is normalised on the way into
+ * the log because a CIMD client_id is an HTTPS URL
+ * (draft-ietf-oauth-client-id-metadata-document), not a `dyn_` id, and the
+ * same client can spell that URL more than one way.
  *
  * Security:
  * - Origin header checked against an allowlist (CSRF defense-in-depth).
- *   Server-to-server calls (no Origin header) are always allowed.
- * - Token value is the primary CSRF defense: attacker needs the token to revoke it.
+ *   Server-to-server calls (no Origin header) are always allowed, and that is
+ *   the path every real client takes: claude.ai revokes from its backend.
+ * - Token value is the primary defence: an attacker needs the token to revoke it.
  */
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? '';
@@ -63,6 +86,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   // Parse body: accept application/x-www-form-urlencoded or JSON
   let token: string | null = null;
   let tokenTypeHint: string | null = null;
+  let clientId: string | null = null;
 
   const ct = req.headers.get('content-type') ?? '';
   try {
@@ -70,11 +94,13 @@ export async function POST(req: NextRequest): Promise<Response> {
       const params = new URLSearchParams(await req.text());
       token = params.get('token');
       tokenTypeHint = params.get('token_type_hint');
+      clientId = params.get('client_id');
     } else {
       const json = (await req.json()) as Record<string, unknown>;
       token = typeof json['token'] === 'string' ? json['token'] : null;
       tokenTypeHint =
         typeof json['token_type_hint'] === 'string' ? json['token_type_hint'] : null;
+      clientId = typeof json['client_id'] === 'string' ? json['client_id'] : null;
     }
   } catch {
     // RFC 7009 §2.2: always 200. If we can't parse it, the token is already invalid.
@@ -87,62 +113,21 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
 
   const service = createServiceRoleClient();
-  const now = new Date().toISOString();
+  const outcome = await revokeGrantByToken(service, { token, tokenTypeHint });
 
-  // Use the token prefix to route efficiently; fall back to trying both if unknown.
-  const looksLikeAccess = token.startsWith('mcpe_');
-  const looksLikeRefresh = token.startsWith('mcpr_');
-
-  if (tokenTypeHint === 'refresh_token' || looksLikeRefresh) {
-    // ── Revoke refresh token ───────────────────────────────────────────────────
-    const refreshHash = sha256hex(token);
-    const { data } = await service
-      .from('oauth_refresh_tokens')
-      .update({ revoked_at: now })
-      .eq('refresh_hash', refreshHash)
-      .is('revoked_at', null)
-      .select('client_id, workspace_id');
-
-    if (data && data.length > 0) {
-      void logRevocation(req, {
-        token_type:   'refresh_token',
-        client_id:    data[0].client_id,
-        workspace_id: data[0].workspace_id,
-      } as Json);
-    }
-  } else if (tokenTypeHint === 'access_token' || looksLikeAccess) {
-    // ── Revoke access token ────────────────────────────────────────────────────
-    const keyHash = hashApiKey(token);
-    const { data } = await service
-      .from('api_keys')
-      .update({ deleted_at: now })
-      .eq('key_hash', keyHash)
-      .is('deleted_at', null)
-      .select('key_prefix, workspace_id');
-
-    if (data && data.length > 0) {
-      void logRevocation(req, {
-        token_type:   'access_token',
-        key_prefix:   data[0].key_prefix,
-        workspace_id: data[0].workspace_id,
-      } as Json);
-    }
-  } else {
-    // Unknown prefix and no hint: try both per RFC 7009 §2.1 (server should
-    // search across all supported token types when no hint is given).
-    const keyHash = hashApiKey(token);
-    await service
-      .from('api_keys')
-      .update({ deleted_at: now })
-      .eq('key_hash', keyHash)
-      .is('deleted_at', null);
-
-    const refreshHash = sha256hex(token);
-    await service
-      .from('oauth_refresh_tokens')
-      .update({ revoked_at: now })
-      .eq('refresh_hash', refreshHash)
-      .is('revoked_at', null);
+  // Only a call that actually ended something is worth a log line. A scanner
+  // POSTing garbage must not be able to fill auth_logs.
+  if (outcome.revoked) {
+    void logRevocation(req, {
+      token_type:    outcome.matchedAs,
+      presented_as:  tokenTypeHint,
+      api_key_id:    outcome.apiKeyId,
+      key_prefix:    outcome.keyPrefix,
+      client_id:     loggableClientId(clientId) ?? outcome.clientId,
+      workspace_id:  outcome.workspaceId,
+      access_tokens_revoked:  outcome.accessTokensRevoked,
+      refresh_tokens_revoked: outcome.refreshTokensRevoked,
+    } as Json);
   }
 
   // RFC 7009 §2.2: always 200, even if the token was not found.
