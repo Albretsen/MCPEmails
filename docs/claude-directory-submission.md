@@ -20,6 +20,9 @@ Verified against production on 2026-09-09, not against the working tree:
 | `readOnlyHint` / `destructiveHint` on every tool | 22/22 |
 | Tool names within 64 characters | longest is `approval_schedule`, 17 |
 | Every tool exercised with valid arguments | all return a success result |
+
+The counts above were measured before `email_search_and_move` was advertised on
+2026-09-09. A re-run sees 23, not 22; nothing else in the table changes.
 | Advertised tools mixing reads with writes | **0** |
 | Invalid arguments | specific, actionable errors naming the offending field |
 | `/privacy`, `/terms`, `/docs`, `/security`, `/pricing` | all 200 |
@@ -138,7 +141,7 @@ Nothing to enter. Remote MCP server, which is what this portal accepts.
 
 ### Tools
 
-Syncs automatically from the connected server. Expect 22 tools, grouped
+Syncs automatically from the connected server. Expect 23 tools, grouped
 read-only versus write, with nothing in the unannotated group. **Connect with an account whose consent covers all nine
 scopes**: `tools/list` is scope filtered, so a narrow grant syncs a partial tool
 surface and the listing would advertise less than the product does.

@@ -47,7 +47,7 @@ const SCOPE_META = {
   // grants is mail leaving the mailbox, plus the From-line identity that
   // signature_set writes.
   'send:email':      { icon: 'mail',   title: 'Send email on your behalf',  desc: 'email_compose (send/reply/forward), draft (send), signature_set.', required: false, destructive: false },
-  'manage:folders':  { icon: 'menu',   title: 'Manage folders & labels',    desc: 'folder (create/rename/delete), email_organize (move, copy, flag, archive).', required: false, destructive: false },
+  'manage:folders':  { icon: 'menu',   title: 'Manage folders & labels',    desc: 'folder (create/rename/delete), email_organize (move, copy, flag, archive), email_search_and_move.', required: false, destructive: false },
   'delete:email':    { icon: 'trash',  title: 'Delete emails',              desc: 'email_delete (delete and bulk-delete messages).', required: false, destructive: true },
   'manage:drafts':   { icon: 'copy',   title: 'Manage drafts',              desc: 'draft_list, draft (create/reply/update/delete). Sending a draft also needs send:email.', required: false, destructive: false },
   'manage:contacts': { icon: 'users',  title: 'Manage contacts',            desc: 'contact_search (find people via a live scan of your mail; nothing stored).', required: false, destructive: false },
