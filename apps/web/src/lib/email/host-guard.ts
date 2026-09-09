@@ -485,11 +485,47 @@ export async function guardMailHost(
   rawHost: unknown,
   options: MailHostGuardOptions
 ): Promise<HostGuardResult> {
-  const deny = (code: HostGuardCode): HostGuardResult => ({ ok: false, code, message: HOST_GUARD_MESSAGES[code] });
-
   // Port first: it is synchronous and free, and a rejected port should never
   // spend a DNS round trip.
-  if (!isAllowedMailPort(options.protocol, options.port)) return deny('port_not_allowed');
+  if (!isAllowedMailPort(options.protocol, options.port)) {
+    return { ok: false, code: 'port_not_allowed', message: HOST_GUARD_MESSAGES.port_not_allowed };
+  }
+
+  return guardHostAddress(rawHost, options.lookup);
+}
+
+/**
+ * The same address policy as `guardMailHost`, for an outbound HTTPS fetch to a
+ * host the caller does not control.
+ *
+ * Rules 1 to 3 above apply unchanged and are the whole reason this exists as a
+ * second entry point rather than a second implementation: the blocked-range
+ * tables, the loose IPv4 parser and the resolve-every-answer discipline must
+ * never fork. Rule 4 (the mail port allowlist) does not apply, because the
+ * destination is a web server, so the caller enforces its own port policy: the
+ * OAuth CIMD fetch in `lib/oauth/cimd.ts` only ever dials 443.
+ *
+ * This is Node-only and has no counterpart in the Deno mirror, because the
+ * edge function makes no such fetch. It adds no policy of its own, so the
+ * "change both files in the same commit" contract at the top of this file is
+ * not engaged by it.
+ */
+export async function guardHttpHost(
+  rawHost: unknown,
+  options: { lookup?: HostLookup } = {}
+): Promise<HostGuardResult> {
+  return guardHostAddress(rawHost, options.lookup);
+}
+
+/**
+ * Rules 1 to 3: literal parsing, resolution of every answer, and returning the
+ * address that was approved so the caller dials it instead of the name.
+ */
+async function guardHostAddress(
+  rawHost: unknown,
+  lookup: HostLookup | undefined
+): Promise<HostGuardResult> {
+  const deny = (code: HostGuardCode): HostGuardResult => ({ ok: false, code, message: HOST_GUARD_MESSAGES[code] });
 
   const host = normalizeMailHost(rawHost);
   if (host.length === 0) return deny('host_invalid');
@@ -516,7 +552,7 @@ export async function guardMailHost(
 
   let resolved: { address: string; family: number }[];
   try {
-    resolved = await (options.lookup ?? defaultLookup)(host);
+    resolved = await (lookup ?? defaultLookup)(host);
   } catch {
     // ENOTFOUND, EAI_AGAIN, SERVFAIL: no answer is not a security event, and
     // the existing "that server name does not exist" copy is the right advice.

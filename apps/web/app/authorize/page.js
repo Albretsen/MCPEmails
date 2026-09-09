@@ -1,9 +1,12 @@
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { issueCsrfToken } from '@/lib/oauth/csrf';
 import { storeStateNonce } from '@/lib/oauth/state';
 import { isValidRedirectUri } from '@/lib/oauth/redirect-uri';
 import { validateResourceIndicator } from '@/lib/oauth/resource';
+import { looksLikeUrlClientId, redirectUriAllowed, resolveCimdClient } from '@/lib/oauth/cimd';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { AuthorizeApp } from '../../components/auth/AuthorizeApp';
 import '../../styles/marketing.css';
@@ -91,20 +94,75 @@ export default async function AuthorizePage({ searchParams }) {
   }
   const resource = resourceCheck.resource;
 
-  // ── 3. Look up client (including deactivated_at check) ───────────────────
+  // ── 3. Resolve the client ────────────────────────────────────────────────
+  // There are two ways to be a client here, and the client_id itself says
+  // which:
+  //
+  //   claude-desktop, dyn_…   a row in oauth_clients, put there by a seed
+  //                           migration or by RFC 7591 dynamic registration.
+  //   https://…               a Client ID Metadata Document: the URL
+  //                           dereferences to the client's own OAuth metadata,
+  //                           so there is no registration call and no row.
+  //
+  // Both produce the same client shape, so everything below this block, and
+  // the consent component itself, is unaware of which one it is rendering. The
+  // one place the difference must NOT be forgotten is the redirect_uri check
+  // in section 4: a CIMD document is held to its own matching rule.
+  //
+  // For CIMD the client_name below is the HOST of the client_id URL, never the
+  // document's self-asserted client_name. See lib/oauth/cimd.ts for why that
+  // substitution is the security control and not a cosmetic choice.
   const supabase = await createClient();
-  const { data: oauthClient, error: clientError } = await supabase
-    .from('oauth_clients')
-    .select('client_id, client_name, client_byline, redirect_uris, scopes_allowed, logo_url, is_first_party, deactivated_at')
-    .eq('client_id', clientId)
-    .single();
+  const isCimd = looksLikeUrlClientId(clientId);
 
-  if (clientError || !oauthClient) {
-    return <ErrorPage title="Unknown application" message={`No registered application found for client_id "${clientId}".`} />;
-  }
+  let oauthClient;
 
-  if (oauthClient.deactivated_at) {
-    return <ErrorPage title="Application deactivated" message="This application has been deactivated and can no longer request authorization." />;
+  if (isCimd) {
+    // This is an unauthenticated GET and the URL is the requester's to choose,
+    // so the outbound fetch is rate limited per IP on top of the in-process
+    // document cache and the SSRF guard inside resolveCimdClient.
+    const requestHeaders = await headers();
+    const requestIp = requestHeaders.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
+    if (await checkRateLimit(`oauth:cimd:${requestIp}`, 30, 600_000)) {
+      return <ErrorPage title="Too many requests" message="Too many client metadata lookups from this address. Wait a few minutes and try again." />;
+    }
+
+    const resolved = await resolveCimdClient(clientId);
+    if (!resolved.ok) {
+      return <ErrorPage title="Client metadata could not be verified" message={resolved.message} />;
+    }
+    oauthClient = resolved.value;
+
+    // A CIMD client has no row of its own, so the only way to stop one is an
+    // oauth_clients row inserted by hand for exactly that URL with
+    // deactivated_at set. Nothing else on such a row is read: the document
+    // still supplies the redirect_uris and the host still supplies the name.
+    const { data: blocked } = await supabase
+      .from('oauth_clients')
+      .select('deactivated_at')
+      .eq('client_id', oauthClient.client_id)
+      .not('deactivated_at', 'is', null)
+      .maybeSingle();
+
+    if (blocked) {
+      return <ErrorPage title="Application deactivated" message="This application has been deactivated and can no longer request authorization." />;
+    }
+  } else {
+    const { data: registered, error: clientError } = await supabase
+      .from('oauth_clients')
+      .select('client_id, client_name, client_byline, redirect_uris, scopes_allowed, logo_url, is_first_party, deactivated_at')
+      .eq('client_id', clientId)
+      .single();
+
+    if (clientError || !registered) {
+      return <ErrorPage title="Unknown application" message={`No registered application found for client_id "${clientId}".`} />;
+    }
+
+    if (registered.deactivated_at) {
+      return <ErrorPage title="Application deactivated" message="This application has been deactivated and can no longer request authorization." />;
+    }
+
+    oauthClient = registered;
   }
 
   // ── 4. Validate redirect_uri ──────────────────────────────────────────────
@@ -117,16 +175,33 @@ export default async function AuthorizePage({ searchParams }) {
     }
   }
 
-  if (!oauthClient.redirect_uris.includes(resolvedRedirectUri)) {
-    return <ErrorPage title="Invalid redirect_uri" message="The redirect_uri does not match any URI registered for this application." />;
-  }
+  if (isCimd) {
+    // Same origin as the client_id URL, or a loopback URI compared with the
+    // PORT IGNORED (RFC 8252 §7.3). A plain `includes` would be wrong in both
+    // directions here: it would refuse every native client, which binds an
+    // ephemeral port its document cannot name in advance, and it would not
+    // enforce the same-origin rule the document's own entries are held to.
+    if (!redirectUriAllowed(oauthClient.client_id, oauthClient.redirect_uris, resolvedRedirectUri)) {
+      return <ErrorPage title="Invalid redirect_uri" message="The redirect_uri is not listed in the client ID metadata document, or is not on the same origin as the client_id." />;
+    }
+    // No isValidRedirectUri here on purpose. redirectUriAllowed has already
+    // narrowed a CIMD redirect to loopback or to the client_id's own origin,
+    // and that origin was resolved and checked against the SSRF range tables
+    // before the document was fetched. Running the older guard as well would
+    // wrongly refuse http://[::1]/…, which the connector docs name explicitly
+    // as a native-client redirect.
+  } else {
+    if (!oauthClient.redirect_uris.includes(resolvedRedirectUri)) {
+      return <ErrorPage title="Invalid redirect_uri" message="The redirect_uri does not match any URI registered for this application." />;
+    }
 
-  // SSRF guard: only for http/https URIs (custom schemes are safe)
-  const looksLikeHttp = resolvedRedirectUri.startsWith('http://') || resolvedRedirectUri.startsWith('https://');
-  if (looksLikeHttp) {
-    const safe = await isValidRedirectUri(resolvedRedirectUri);
-    if (!safe) {
-      return <ErrorPage title="Invalid redirect_uri" message="The redirect_uri resolves to a disallowed host." />;
+    // SSRF guard: only for http/https URIs (custom schemes are safe)
+    const looksLikeHttp = resolvedRedirectUri.startsWith('http://') || resolvedRedirectUri.startsWith('https://');
+    if (looksLikeHttp) {
+      const safe = await isValidRedirectUri(resolvedRedirectUri);
+      if (!safe) {
+        return <ErrorPage title="Invalid redirect_uri" message="The redirect_uri resolves to a disallowed host." />;
+      }
     }
   }
 
@@ -201,7 +276,10 @@ export default async function AuthorizePage({ searchParams }) {
       .from('oauth_consents')
       .select('scopes')
       .eq('user_id', user.id)
-      .eq('client_id', clientId)
+      // oauthClient.client_id, not the raw param: a CIMD client_id is stored
+      // in its normalised form, so a request that spells the same URL slightly
+      // differently must still find the consent it already granted.
+      .eq('client_id', oauthClient.client_id)
       .maybeSingle();
 
     preApproved = !!(consent && requestedScopes.every((s) => consent.scopes.includes(s)));
