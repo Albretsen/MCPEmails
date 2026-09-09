@@ -111,7 +111,7 @@ and the behaviours below are **correct**. Filing them as defects is a false posi
 | `search.has_attachment` | `exact` | Attachment filtering is reliable here (unlike the IMAP inboxes). |
 | `contacts_api` | `true` | Contact search hits the Google People API, not just the local cache. |
 | `original_message` | `true` | `email_read` `action: original` returns a full `.eml` resource. |
-| `scheduling` | `true` | `schedule` create/list/cancel is expected to work. |
+| `scheduling` | `true` | `schedule_list`, plus `schedule` create/cancel, are expected to work. |
 
 The inbox also has **two sender identities**:
 
@@ -125,15 +125,26 @@ Both are legitimate `from` values. Any other `from` must be rejected. P2.6.
 ## 2. Phase P0: discovery and preflight
 
 - [ ] **P0.1 Tool discovery.** List the tools the client exposes. Record the exact names,
-      actions, and annotations. Expect the nine consolidated tools: `inbox_list`,
-      `email_read`, `email_organize`, `email_delete`, `email_compose`, `folder`, `draft`,
-      `schedule`, `signature`, plus `automation` and `contact_search` where the client
-      surfaces them. Note if the client shows legacy names (`email_search`, `email_move`)
-      instead; both should work, and this file uses the consolidated shape.
+      actions, and annotations. A full-scope key advertises 22 tools: `inbox_list`,
+      `email_read`, `email_organize`, `email_delete`, `email_compose`, `folder_list`,
+      `folder`, `draft_list`, `draft`, `schedule_list`, `schedule`, `signature_get`,
+      `signature_set`, `automation_read`, `automation`, `contact_search`, and the six
+      app-only review-card tools (`approval_review`, `approval_decide`, `approval_update`,
+      `approval_schedule`, `bulk_execute`, `bulk_cancel`), which some clients hide.
+      **`signature` must NOT appear**: it was replaced by `signature_get`/`signature_set` on
+      2026-09-09, and a client still advertising it is running a cached schema, which is a
+      finding in itself. The read halves that were split out the same day (`folder_list`,
+      `draft_list`, `schedule_list`, `signature_get`, `automation_read`) must each have no
+      `action` enum offering a write. The old combined shapes are still accepted on the
+      wire, so a client with a cached schema keeps working; note if the client shows those,
+      or legacy names (`email_search`, `email_move`), and use the advertised shape below.
 - [ ] **P0.2 Destructive annotations.** Confirm `email_delete`, `email_organize`, `folder`,
-      `draft`, and `automation` are marked destructive, and `email_read` and `inbox_list`
-      read-only. A destructive tool that is not flagged is a High finding: the host will
-      not ask the human before running it.
+      `draft`, and `automation` are marked destructive, and that `email_read`, `inbox_list`,
+      `folder_list`, `draft_list`, `schedule_list`, `signature_get` and `automation_read`
+      are marked read-only. A destructive tool that is not flagged is a High finding: the
+      host will not ask the human before running it. A read tool wrongly flagged
+      destructive is a lesser finding but still one: it trains the human to click through
+      confirmations that mean nothing.
 - [ ] **P0.3 `inbox_list`.** Call it with `include_capabilities: true`. Confirm the
       bjellanda entry matches section 1, including both sender identities and the
       `compatibility` block. Record the whole entry verbatim in the report; a capability
@@ -303,10 +314,10 @@ Remember the Gmail move semantics from section 1: a move adds the destination la
 removes `INBOX`, leaving other labels alone. Verify against that, not against
 folder-move semantics.
 
-- [ ] **P4.1 List labels.** `folder` `action: list`. Confirm every entry has an id, a name,
+- [ ] **P4.1 List labels.** `folder_list`, which takes no `action`. Confirm every entry has an id, a name,
       `type: "label"`, and message counts. Record the system labels so you never target one.
 - [ ] **P4.2 Create the run label.** Create `MCPE_HC_<YYYYMMDD>_<HHMM>`. Confirm it appears
-      in a subsequent `list` with the id the create returned.
+      in a subsequent `folder_list` with the id the create returned.
 - [ ] **P4.3 Create edge cases.** Attempt: the same name twice, a name with `æøå`, a name
       with leading and trailing whitespace, a very long name, and a name that collides with
       a Gmail system label. Each must either succeed cleanly or fail with a reason. Do not
@@ -364,9 +375,9 @@ Delete only run fixtures, each verified by subject immediately beforehand.
 ## 8. Phase P6: drafts
 
 - [ ] **P6.1 Create.** Create a self-addressed draft with the run tag in the subject.
-      Confirm it appears in `draft` `action: list` and in the `DRAFT` label.
+      Confirm it appears in `draft_list` and in the `DRAFT` label.
 - [ ] **P6.2 Update.** Update its subject, body, and recipients. Confirm the changes are
-      visible on a fresh `list`. Record whether the `draft_id` changed (it should be stable
+      visible on a fresh `draft_list`. Record whether the `draft_id` changed (it should be stable
       on Gmail; id churn is expected on IMAP inboxes, which are out of scope here).
 - [ ] **P6.3 Signature handling.** Confirm the signature is embedded on create/update, and
       that `send` transmits the stored body as-is so the signature is **not** doubled.
@@ -389,7 +400,7 @@ Delete only run fixtures, each verified by subject immediately beforehand.
 
 - [ ] **P7.1 Create and cancel.** Schedule a self-addressed message about 10 minutes out
       using an explicit ISO 8601 timestamp with an offset (for example
-      `2026-08-30T14:25:00+02:00`). Confirm it appears in `schedule` `action: list`, then
+      `2026-08-30T14:25:00+02:00`). Confirm it appears in `schedule_list`, then
       cancel it and confirm it is gone from the list **and never delivered**. Check the
       mailbox again after the scheduled time has passed.
 - [ ] **P7.2 Create and let it fire.** Schedule a second message about 3 to 5 minutes out.
@@ -409,7 +420,12 @@ Delete only run fixtures, each verified by subject immediately beforehand.
 **Capture the existing signature first, verbatim, and restore it in cleanup.** This is
 live user configuration, not test data.
 
-- [ ] **P8.1 Get.** Read the current signature. Record `signature_html`, `signature_text`,
+Reads go through `signature_get` and writes through `signature_set`; neither takes an
+`action` argument. The old single `signature` tool is no longer advertised, though the
+server still accepts its `action: "get"` / `action: "set"` shape from clients holding a
+cached schema.
+
+- [ ] **P8.1 Get.** `signature_get`. Record `signature_html`, `signature_text`,
       `signature_enabled`, `signature_reply_mode`, and `source` exactly.
 - [ ] **P8.2 Set text.** Set a distinctive plain-text test signature carrying the run tag.
       Send a fixture and confirm it appears once, at the end.
@@ -424,7 +440,7 @@ live user configuration, not test data.
       markup into outgoing mail.
 - [ ] **P8.7 Idempotency.** Set the same signature twice and confirm the stored value does
       not accumulate or duplicate.
-- [ ] **P8.8 Restore.** Write back the exact values from P8.1 and verify with a `get`. This
+- [ ] **P8.8 Restore.** Write back the exact values from P8.1 and verify with `signature_get`. This
       step is mandatory. If it fails, say so loudly at the top of the report.
 
 ---
@@ -434,16 +450,21 @@ live user configuration, not test data.
 Automations run unattended, so this phase stays conservative: preview and inspect, and
 enable only a rule that is scoped to the run tag.
 
-- [ ] **P9.1 List.** List existing automations. **Record them and change none of them.**
-      Pre-existing rules are live user configuration.
-- [ ] **P9.2 Preview is a dry run.** Preview a filter scoped to the run tag. Confirm it
+Reads go through `automation_read` (`list`, `get`, `runs`, `preview`) and writes through
+`automation` (`create`, `update`, `enable`, `disable`, `delete`). The two were split on
+2026-09-09; the old combined `automation` shape is still accepted but no longer advertised.
+
+- [ ] **P9.1 List.** `automation_read` `action: list`. **Record them and change none of
+      them.** Pre-existing rules are live user configuration.
+- [ ] **P9.2 Preview is a dry run.** `automation_read` `action: preview` on a filter scoped
+      to the run tag. Confirm it
       reports matches and applies **nothing**: verify afterwards that no fixture moved,
       changed label, or changed read state. A preview with side effects is a Critical
       finding.
 - [ ] **P9.3 Create is disabled by default.** Create a rule (name, filter scoped to the run
       tag, `rule_action` of `label` or `mark_read`, `interval_minutes: 15`). Confirm the
-      response says it was created **disabled** and that `get` agrees.
-- [ ] **P9.4 Enable, run, disable.** Enable it, wait one interval, then check `action: runs`
+      response says it was created **disabled** and that `automation_read` `action: get` agrees.
+- [ ] **P9.4 Enable, run, disable.** Enable it, wait one interval, then check `automation_read` `action: runs`
       for run counters and check the fixtures for the expected effect. Disable it
       immediately afterwards.
 - [ ] **P9.5 Delete is refused for mail.** Attempt to create a rule with a delete-style
@@ -453,9 +474,9 @@ enable only a rule that is scoped to the run tag.
       approval setting, and confirm nothing was transmitted without approval.
 - [ ] **P9.7 draft_reply writes only a draft.** Confirm a `draft_reply` rule produces a
       draft and never sends.
-- [ ] **P9.8 Argument naming.** Confirm the tool distinguishes `action` (the operation on
-      the tool) from `rule_action` (what the rule does to mail), and that an agent passing
-      `action: "move"` where it meant `rule_action: "move"` gets a clear error.
+- [ ] **P9.8 Argument naming.** Confirm `automation` distinguishes `action` (the operation
+      on the tool) from `rule_action` (what the rule does to mail), and that an agent
+      passing `action: "move"` where it meant `rule_action: "move"` gets a clear error.
 - [ ] **P9.9 Clean up.** Delete every automation this run created. Confirm the pre-existing
       rules from P9.1 are unchanged, including their enabled state.
 
@@ -518,7 +539,7 @@ Do this even if the run is being cut short. Leaving test mail and test config be
 corrupts the next run.
 
 - [ ] **P12.1** Restore the original signature from P8.1 and verify with a `get`.
-- [ ] **P12.2** Delete every automation created in this run. Verify the P9.1 list is back to
+- [ ] **P12.2** Delete every automation created in this run. Verify the P9.1 `automation_read` list is back to
       its original contents and enabled states.
 - [ ] **P12.3** Cancel every scheduled send still pending.
 - [ ] **P12.4** Delete every draft created in this run.
