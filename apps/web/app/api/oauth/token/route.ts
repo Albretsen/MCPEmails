@@ -6,6 +6,7 @@ import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { sha256hex, computeS256Challenge, generateRefreshToken } from '@/lib/oauth/crypto';
 import { oauthError } from '@/lib/oauth/errors';
 import { resourceMatchesGrant, validateResourceIndicator } from '@/lib/oauth/resource';
+import { looksLikeUrlClientId, parseCimdClientId } from '@/lib/oauth/cimd';
 import { checkRateLimit } from '@/lib/rate-limit';
 import type { Json } from '@/types/database.types';
 
@@ -34,6 +35,19 @@ import type { Json } from '@/types/database.types';
  * second resource server a token could be replayed against, so the audience
  * binding is total by construction; the explicit `resource` validation here
  * is what keeps that true when a client asks for a token for somewhere else.
+ *
+ * Client identification: a client_id that is an HTTPS URL is a Client ID
+ * Metadata Document client (draft-ietf-oauth-client-id-metadata-document) and
+ * has no oauth_clients row at all, so the existence check below is skipped for
+ * it and the grant itself carries the binding: a code or refresh token is only
+ * ever found when the client_id presented here is the one it was issued to.
+ * The document is deliberately NOT re-fetched here. It was already fetched and
+ * verified at /authorize, before any grant existed; refetching would put an
+ * outbound request on the hot path and would let a client's own site going
+ * down break token exchange for a code it legitimately holds.
+ *
+ * Either way the client authenticates as a PUBLIC client: no secret is read
+ * anywhere in this file, and PKCE S256 is what proves possession.
  *
  * Machine-to-machine: no user session required. Service-role client throughout.
  */
@@ -125,14 +139,44 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   // ── Client status check ────────────────────────────────────────────────────
   // Re-verify the client hasn't been deactivated between authorization and token exchange.
-  const { data: oauthClient } = await service
-    .from('oauth_clients')
-    .select('deactivated_at')
-    .eq('client_id', clientId)
-    .maybeSingle();
+  //
+  // `lookupClientId` is what every query and insert below uses. For a
+  // registered client it is the client_id as sent. For a CIMD client it is the
+  // NORMALISED URL, matching what /authorize wrote onto the code, so a client
+  // that spells its own URL differently on the two requests still matches.
+  let lookupClientId = clientId;
 
-  if (!oauthClient || oauthClient.deactivated_at) {
-    return oauthError('invalid_client', 'Unknown or deactivated application.');
+  if (looksLikeUrlClientId(clientId)) {
+    const parsed = parseCimdClientId(clientId);
+    // Catches an http:// client_id, a non-default port, credentials in the
+    // URL: none of those could have produced a grant, so none can redeem one.
+    if (!parsed.ok) {
+      return oauthError('invalid_client', parsed.message);
+    }
+    lookupClientId = parsed.value.normalized;
+
+    // A CIMD client has no row of its own; the only way to stop one is a
+    // hand-inserted oauth_clients row for that URL with deactivated_at set.
+    const { data: blocked } = await service
+      .from('oauth_clients')
+      .select('deactivated_at')
+      .eq('client_id', lookupClientId)
+      .not('deactivated_at', 'is', null)
+      .maybeSingle();
+
+    if (blocked) {
+      return oauthError('invalid_client', 'Unknown or deactivated application.');
+    }
+  } else {
+    const { data: oauthClient } = await service
+      .from('oauth_clients')
+      .select('deactivated_at')
+      .eq('client_id', clientId)
+      .maybeSingle();
+
+    if (!oauthClient || oauthClient.deactivated_at) {
+      return oauthError('invalid_client', 'Unknown or deactivated application.');
+    }
   }
 
   // ── Authorization Code grant ────────────────────────────────────────────────
@@ -152,7 +196,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       .from('oauth_auth_codes')
       .select('id, client_id, workspace_id, user_id, client_name, redirect_uri, code_challenge, code_challenge_method, scopes, inbox_ids, resource')
       .eq('code_hash', codeHash)
-      .eq('client_id', clientId)
+      .eq('client_id', lookupClientId)
       .gt('expires_at', new Date().toISOString())
       .maybeSingle();
 
@@ -239,7 +283,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     await service.from('oauth_refresh_tokens').insert({
       refresh_hash: refreshHash,
-      client_id:    clientId,
+      client_id:    lookupClientId,
       workspace_id: authCode.workspace_id,
       user_id:      authCode.user_id,
       client_name:  authCode.client_name,
@@ -253,7 +297,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     await recordProductFunnelEvent(service, { workspaceId: authCode.workspace_id, stage: 'credential_created', outcome: 'success', category: 'oauth' });
 
     void logEvent(req, 'oauth_token_issued', {
-      client_id:  clientId,
+      client_id:  lookupClientId,
       key_prefix: keyPrefix,
       scopes:     authCode.scopes,
       workspace_id: authCode.workspace_id,
@@ -284,7 +328,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       .from('oauth_refresh_tokens')
       .select('id, client_id, workspace_id, user_id, client_name, scopes, inbox_ids, expires_at, api_key_id, resource')
       .eq('refresh_hash', refreshHash)
-      .eq('client_id', clientId)
+      .eq('client_id', lookupClientId)
       .is('revoked_at', null)
       .gt('expires_at', new Date().toISOString())
       .maybeSingle();
@@ -323,7 +367,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       .from('oauth_refresh_tokens')
       .insert({
         refresh_hash: newRefreshHash,
-        client_id:    clientId,
+        client_id:    lookupClientId,
         workspace_id: rt.workspace_id,
         user_id:      rt.user_id,
         client_name:  rt.client_name,
@@ -407,7 +451,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     }
 
     void logEvent(req, 'oauth_token_refreshed', {
-      client_id:  clientId,
+      client_id:  lookupClientId,
       key_prefix: keyPrefix,
       scopes:     rt.scopes,
       workspace_id: rt.workspace_id,
