@@ -102,6 +102,7 @@
     "inboxesConnected": "已连接的收件箱",
     "oneActiveInbox": "1 个活跃收件箱",
     "activeInboxes": "{count} 个活跃收件箱",
+    "activeOfConnected": "{count} 个中有 {active} 个活跃",
     "apiKeys": "API 密钥",
     "oneActiveKey": "1 个活跃密钥",
     "activeKeys": "{count} 个活跃密钥",

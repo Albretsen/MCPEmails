@@ -276,12 +276,19 @@ async function fetchApiKeys(supabase, workspaceId) {
 }
 
 /**
- * Fetches the four Overview page stat counts for a workspace in parallel.
+ * Fetches the Overview page's call totals for a workspace in parallel.
  * Returns zeros on any query error so the page always renders.
+ *
+ * Connected-inbox and API-key counts used to be fetched here too. They were a
+ * second, independently written definition of numbers the page already had in
+ * `fetchInboxes` and `fetchApiKeys`, and the two drifted: this one filtered
+ * `status = 'active'` while the plan cap, the Inboxes page and the sidebar
+ * badge count every non-deleted row. The Overview card now counts the same
+ * arrays everything else counts, so these two queries have no reader left.
  *
  * @param {import('@supabase/supabase-js').SupabaseClient} supabase
  * @param {string} workspaceId
- * @returns {Promise<{ inboxCount: number, apiKeysCount: number, callsToday: number, callsThisMonth: number }>}
+ * @returns {Promise<{ callsToday: number, callsThisMonth: number }>}
  */
 async function fetchOverviewStats(supabase, workspaceId) {
   const now = new Date();
@@ -295,26 +302,9 @@ async function fetchOverviewStats(supabase, workspaceId) {
   ).toISOString();
 
   const [
-    inboxResult,
-    apiKeysResult,
     callsTodayResult,
     callsMonthResult,
   ] = await Promise.all([
-    // Active inboxes: status = 'active', not soft-deleted
-    supabase
-      .from('inboxes')
-      .select('id', { count: 'exact', head: true })
-      .eq('workspace_id', workspaceId)
-      .eq('status', 'active')
-      .is('deleted_at', null),
-
-    // Active API keys: not soft-deleted
-    supabase
-      .from('api_keys')
-      .select('id', { count: 'exact', head: true })
-      .eq('workspace_id', workspaceId)
-      .is('deleted_at', null),
-
     // MCP tool calls made today (UTC day)
     supabase
       .from('activity_log')
@@ -331,8 +321,6 @@ async function fetchOverviewStats(supabase, workspaceId) {
   ]);
 
   return {
-    inboxCount: inboxResult.count ?? 0,
-    apiKeysCount: apiKeysResult.count ?? 0,
     callsToday: callsTodayResult.count ?? 0,
     callsThisMonth: callsMonthResult.count ?? 0,
   };
@@ -730,7 +718,7 @@ export default async function DashboardPage({ params }) {
         fetchPendingInvites(supabase, workspace.id),
       ])
     : [
-        { inboxCount: 0, apiKeysCount: 0, callsToday: 0, callsThisMonth: 0 },
+        { callsToday: 0, callsThisMonth: 0 },
         [],
         [],
         [],
