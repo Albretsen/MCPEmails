@@ -214,9 +214,18 @@ export default async function AuthorizePage({ searchParams }) {
   const offeredScopes = [...VALID_SCOPES].filter((s) =>
     oauthClient.scopes_allowed.includes(s),
   );
-  // Scopes the client explicitly asked for — used only for the "previously
-  // approved" hint below, not to restrict what the user may select.
-  const requestedScopes = rawScope
+  // Scopes the client explicitly asked for, narrowed to what it may hold. This
+  // does NOT restrict what the user may select (the whole menu above stays
+  // selectable); it decides which card the screen OPENS on, and it feeds the
+  // "previously approved" hint below.
+  //
+  // Since 2026-09-09 the challenge in app/api/mcp/route.ts asks for
+  // `read:email` alone rather than all nine scopes, so this is now a real
+  // signal for the clients that send one: claude.ai's authorize request arrives
+  // as `scope=read:email`, verified on the wire. The default-selection rule is
+  // in lib/oauth/consent-presets.ts, which also explains why a request with no
+  // `scope` param at all keeps the older, wider default.
+  const clientRequestedScopes = rawScope
     .split(/[\s,]+/)
     .filter(Boolean)
     .filter((s) => offeredScopes.includes(s));
@@ -271,7 +280,7 @@ export default async function AuthorizePage({ searchParams }) {
   // Never auto-redirect from a GET. Always render the consent UI so the user
   // has an explicit chance to review and confirm each authorization.
   let preApproved = false;
-  if (requestedScopes.length > 0 && workspace) {
+  if (clientRequestedScopes.length > 0 && workspace) {
     const { data: consent } = await supabase
       .from('oauth_consents')
       .select('scopes')
@@ -282,7 +291,7 @@ export default async function AuthorizePage({ searchParams }) {
       .eq('client_id', oauthClient.client_id)
       .maybeSingle();
 
-    preApproved = !!(consent && requestedScopes.every((s) => consent.scopes.includes(s)));
+    preApproved = !!(consent && clientRequestedScopes.every((s) => consent.scopes.includes(s)));
   }
 
   // ── 10. Issue CSRF token for the consent form ─────────────────────────────
@@ -305,6 +314,7 @@ export default async function AuthorizePage({ searchParams }) {
       }}
       workspaceName={workspace?.display_name ?? ''}
       requestedScopes={scopesWithMeta}
+      clientRequestedScopes={clientRequestedScopes}
       inboxes={inboxes}
       redirectUri={resolvedRedirectUri}
       oauthState={state}
