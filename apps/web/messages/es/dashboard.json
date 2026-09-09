@@ -236,6 +236,8 @@
     "hoursAgo": "hace {n}h",
     "yesterday": "Ayer",
     "daysAgo": "hace {n}d",
+    "dormant": "Inactiva",
+    "revokeReality": "Desconectar o eliminar un conector dentro de Claude no lo revoca aquí. El acceso termina cuando lo revocas en esta página, o automáticamente tras 90 días sin uso.",
     "connectUrlTitle": "Conecta con una clave de API",
     "connectUrlSub": "Usa esta configuración en cualquier cliente MCP (Claude, Cursor, VS Code…). Reemplaza <code>YOUR_API_KEY</code> con una clave de arriba.",
     "mcpServerUrl": "Configuración del cliente MCP",
