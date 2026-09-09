@@ -9,15 +9,28 @@ chat message that produced this document. Do not commit them.
 
 ---
 
+## 0. How to actually submit
+
+This document is the reasoning: why each answer is what it is, and what was
+verified to support it. For the step-by-step paste-through, use
+`SUBMIT-WALKTHROUGH.md` in the session scratchpad, which carries the credentials
+this file deliberately does not.
+
+Production is edge function **173** as of the last re-verification. Sections
+below that name v169 are describing when the read/write split landed, not the
+current version.
+
+---
+
 ## 1. State of play
 
 Verified against production on 2026-09-09, not against the working tree:
 
 | Check | Result |
 | --- | --- |
-| `tools/list` over HTTPS with a full-scope key | 200, 22 tools |
-| `title` on every tool | 22/22, top level and in `annotations` |
-| `readOnlyHint` / `destructiveHint` on every tool | 22/22 |
+| `tools/list` over HTTPS with a full-scope key | 200, 23 tools (9 read-only, 14 write) |
+| `title` on every tool | 23/23, top level and in `annotations` |
+| `readOnlyHint` / `destructiveHint` on every tool | 23/23 |
 | Tool names within 64 characters | longest is `approval_schedule`, 17 |
 | Every tool exercised with valid arguments | all return a success result |
 
@@ -142,9 +155,11 @@ Nothing to enter. Remote MCP server, which is what this portal accepts.
 ### Tools
 
 Syncs automatically from the connected server. Expect 23 tools, grouped
-read-only versus write, with nothing in the unannotated group. **Connect with an account whose consent covers all nine
-scopes**: `tools/list` is scope filtered, so a narrow grant syncs a partial tool
-surface and the listing would advertise less than the product does.
+read-only versus write, with nothing in the unannotated group. No scope precaution is needed any more. `33b561f` made an OAuth token see the
+whole advertised surface regardless of what it has been granted, precisely
+because claude.ai caches the tool set at connect time and a read-only first
+grant would otherwise have hidden the write tools forever. Scope filtering now
+applies only to dashboard-issued API keys.
 
 ### Listing
 
@@ -287,7 +302,7 @@ Superhuman Mail publishes `create_or_update_draft`, `get_thread`, `send_draft`,
 `trash_thread`, `undo_send`, `unsubscribe` and `mark_spam`; Inkbox publishes
 prefixed names like `inkbox_email_delete` and `inkbox_contact_create`; Hostinger
 Mail publishes `email_call_api_read`, `email_call_api_write` and
-`email_call_api_delete`, which reads like an internal router. Our 22 names sync
+`email_call_api_delete`, which reads like an internal router. Our 23 names sync
 automatically at submission and land on that page as-is, so read them once as a
 stranger would before connecting the server to the portal. `email_delete`,
 `bulk_cancel` and `approval_decide` are all going to be visible.
@@ -331,15 +346,24 @@ Org number 926 646 753, Bergen, Norway, if the form asks for a legal entity.
 
 ### Authentication
 
-OAuth 2.0 with **dynamic client registration**, PKCE S256. Metadata is live at
-`/.well-known/oauth-authorization-server`, and an unauthenticated call returns
-401 with `WWW-Authenticate` naming `resource_metadata`, which is the documented
-requirement.
+OAuth 2.0 with **client ID metadata documents**, PKCE S256. `27df5b6` shipped
+CIMD on 2026-09-09 and it is live: `/.well-known/oauth-authorization-server`
+advertises `client_id_metadata_document_supported: true` alongside `none` in
+`token_endpoint_auth_methods_supported`, which are the two signals Claude
+requires before it will pick CIMD over DCR. `registration_endpoint` stays, so
+nothing that needs dynamic registration loses it. That closes the warning in
+Anthropic's docs about DCR making Claude register a fresh client per connection
+at directory scale.
 
-Worth knowing, not a blocker: Anthropic's own docs warn that DCR makes Claude
-register a new client on every fresh connection and recommend client ID metadata
-documents (CIMD) at directory scale. Revisit after the listing is live and the
-connection volume is visible.
+Access is also incremental as of `33b561f`. The 401 challenge names
+`read:email` alone rather than falling back to everything in `scopes_supported`,
+so a first connection consents to reading only, and a call needing more answers
+403 with a step-up challenge naming the scopes the token already holds plus the
+one it needs. The reviewer will see two consent prompts, and that is correct
+behaviour to point out rather than apologise for.
+
+An unauthenticated call still returns 401 with `WWW-Authenticate` naming
+`resource_metadata`, which is the documented requirement.
 
 ### Data handling
 
@@ -399,14 +423,19 @@ Seven acknowledgments, all truthfully tickable:
 > 2. You are redirected to mcpemails.com to sign in. Use:
 >    - Email: `directory-review@mcpemails.com`
 >    - Password: *(in the portal's credential field)*
-> 3. Approve all nine scopes on the consent screen. The tool list is scope
->    filtered, so a partial grant hides tools.
+> 3. **The first consent screen asks only for read access.** That is deliberate,
+>    not a partial grant. Approve it. The first time you ask Claude to send,
+>    delete, file or schedule anything you get a second, narrower prompt for
+>    just that permission. Approving as you go is the intended experience and
+>    worth exercising, because it is the main thing that makes this connector
+>    safe to hand an assistant.
 > 4. The workspace already has one inbox, `hello@harborknowledge.com`, connected
 >    over IMAP and SMTP. No setup is required.
 >
-> If you would rather skip OAuth, the same workspace has a full-scope API key
-> you can send as `Authorization: Bearer <key>`; it is in the credentials field
-> alongside the password.
+> If you would rather skip OAuth entirely, the same workspace has an API key
+> carrying all nine scopes that you can send as `Authorization: Bearer <key>`.
+> It is in the credentials field alongside the password, and no step-up prompts
+> appear when using it.
 >
 > ### The mailbox
 >
