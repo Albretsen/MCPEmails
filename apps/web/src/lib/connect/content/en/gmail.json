@@ -5,29 +5,29 @@
     "https://support.google.com/a/answer/7281227"
   ],
   "auth": {
-    "method": "oauth",
-    "label": "Google sign-in",
-    "helpUrl": "https://support.google.com/a/answer/7281227",
-    "usernameForm": "There is no username to type. You choose the account on Google's own sign-in screen and approve the access.",
+    "method": "app-password",
+    "label": "App password",
+    "helpUrl": "https://support.google.com/accounts/answer/185833",
+    "usernameForm": "Your full Gmail address, for example you@gmail.com. The app password replaces your normal Google password; the normal one will not work.",
     "status": "active"
   },
   "meta": {
     "title": "Gmail MCP Server for Claude, Cursor and ChatGPT",
-    "description": "A hosted Gmail MCP server. Sign in with Google once, then read, search, send and schedule Gmail from Claude, Cursor or any MCP client. One inbox free."
+    "description": "A hosted Gmail MCP server. Connect Gmail with a Google app password over IMAP, then read, search, send and schedule mail from Claude, Cursor or any MCP client. One inbox free."
   },
   "hero": {
     "eyebrow": "Gmail + AI",
     "titleLine1": "The Gmail MCP server",
     "titleLine2": "for Claude, Cursor and ChatGPT",
-    "lead": "Give your AI agent a real Gmail inbox in minutes. Read, search, send, reply, schedule and organize mail with one-click Google sign-in, and use the same inbox in every MCP client, not just one.",
+    "lead": "Give your AI agent a real Gmail inbox in minutes. Read, search, send, reply, schedule and organize mail using a Google app password, and use the same inbox in every MCP client, not just one.",
     "meta0": "1 inbox free, forever",
-    "meta1": "One-click Google sign-in (OAuth)",
+    "meta1": "Connects with a Google app password",
     "meta2": "Email fetched live, never stored",
-    "answer": "Claude cannot reach Gmail on its own. mcpemails is a hosted MCP server that sits between them: you sign in with Google once, paste one URL into your MCP client, and Claude, Cursor or ChatGPT can then read, search, send, reply to and schedule your Gmail. One inbox is free, forever."
+    "answer": "Claude cannot reach Gmail on its own. mcpemails is a hosted MCP server that sits between them: you create a Google app password once, paste one URL into your MCP client, and Claude, Cursor or ChatGPT can then read, search, send, reply to and schedule your Gmail. One inbox is free, forever."
   },
   "method": {
-    "title": "How Gmail connects: one-click Google OAuth",
-    "body": "Gmail connects with <b>Google OAuth</b>. Sign in with Google, approve read and send access, and you're connected. No app password, no IMAP settings to dig up. Revoke access anytime from your Google account or the mcpemails dashboard."
+    "title": "How Gmail connects: a Google app password",
+    "body": "Gmail connects with a <b>Google app password</b> over IMAP and SMTP. Google only offers app passwords on accounts with <b>2-Step Verification switched on</b>, so turn that on first, then create one at <b>myaccount.google.com/apppasswords</b>. It is 16 lowercase letters in four groups, and you paste it in place of your normal Google password, which will not work. Revoke it anytime from the same Google page, or delete the inbox in mcpemails."
   },
   "setup": [
     {
@@ -35,8 +35,8 @@
       "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
     },
     {
-      "h": "Sign in with Google",
-      "p": "Click Connect Gmail, sign in with your Google account, and approve read and send access. No app password or IMAP setup."
+      "h": "Create a Google app password",
+      "p": "Switch on 2-Step Verification in your Google account if it is not already on, then go to myaccount.google.com/apppasswords and create one. Paste the 16 characters into mcpemails with your full Gmail address. Spaces in the code do not matter."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -57,8 +57,8 @@
       "p": "The connection talks to the Gmail API, where every folder your AI client shows you is a Gmail label. A message can carry several labels at once, so moving it means adding one and removing another, and archiving is simply removing <code>INBOX</code>. Delete puts the message in Gmail's Trash rather than erasing it. If you ask an agent to file mail into a folder that does not exist yet, the label has to be created first, and it will then appear in Gmail on every device."
     },
     {
-      "h": "The IMAP switch in Gmail settings has nothing to do with this",
-      "p": "Because the connection is Google OAuth plus the Gmail API, the Forwarding and POP/IMAP tab in Gmail settings is irrelevant here, and so is an app password. There is nothing to enable in the mailbox, and a Gmail app password will not be asked for. Access is revoked from your Google Account under the third-party access list, or from the mcpemails dashboard, and takes effect immediately."
+      "h": "A Google Workspace admin can switch app passwords off",
+      "p": "On a personal Google account the only prerequisite is 2-Step Verification. On a Google Workspace account an administrator can disable app passwords for the whole domain, in which case myaccount.google.com/apppasswords is simply unavailable to you and there is nothing you can do from inside the mailbox. Ask your admin, or connect a different mailbox."
     }
   ],
   "limits": [
@@ -76,8 +76,8 @@
       "a": "Yes. Google announced official MCP support for its services, with a Workspace MCP server spanning Gmail, Drive, Calendar and Chat. Use it when Gmail is the only mailbox involved and your client supports it. Choose a third-party server such as mcpemails when you want several providers behind a single MCP URL, or when you want identical behaviour across Claude, Cursor and ChatGPT."
     },
     {
-      "q": "Do I need an app password or IMAP settings for Gmail?",
-      "a": "No. Gmail connects with Google OAuth and the Gmail API, so there is no host to enter, no port, no app password, and nothing to switch on in the mailbox. The POP and IMAP settings in Gmail have no effect on this connection. You approve read and send access once in Google's own dialog and can withdraw it from your Google Account at any time."
+      "q": "Do I need an app password for Gmail?",
+      "a": "Yes. Gmail connects over IMAP and SMTP with a Google app password, not your normal Google password. Google only shows app passwords on accounts with 2-Step Verification enabled, so switch that on first, then create one at myaccount.google.com/apppasswords. It takes about a minute. Google sign-in is still offered as an alternative, but it shows an unverified-app warning you have to click past."
     },
     {
       "q": "Why does Google refuse the sign-in on my work account?",
