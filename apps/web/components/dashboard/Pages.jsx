@@ -673,15 +673,30 @@ function StepDot({ num, done }) {
 }
 
 /* ---------------- Overview ---------------- */
-export function OverviewPage({ inboxes, activity, stats, usageData, planLimits, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected }) {
+export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected }) {
   const t = useTranslations('dashboard');
-  const inboxCount = stats?.inboxCount ?? 0;
+  // Counted off the same live arrays the sidebar counts, never off the server
+  // stats snapshot. `stats.inboxCount` was a separate server-side query taken
+  // at page load, so the moment a mailbox was connected (or removed) without a
+  // full reload the card and the sidebar badge disagreed with each other: the
+  // sidebar moved to 6 and the card still said 5. Two counts of the same thing
+  // on one screen can only ever be right by coincidence.
+  //
+  // It also counted a different set. The stats query filtered `status = active`
+  // while the plan cap, the Inboxes page and Settings all count every
+  // non-deleted inbox, so a mailbox whose credentials had expired was invisible
+  // here and still occupied a slot against the cap.
+  const inboxCount = inboxes?.length ?? 0;
+  const activeInboxCount = (inboxes ?? []).filter((i) => i.status === 'active').length;
   // The overview strip shows at most a fortnight, but it cannot show more days
   // than the plan's analytics window actually contains: on Free that window is
   // 7 days, so slicing a flat 14 would label a 7-bar chart "last 14 days".
   const overviewDays = Math.min(14, planLimits?.historyDays ?? 30);
   const last14 = (usageData?.dailyCounts ?? []).slice(-overviewDays);
-  const apiKeysCount = stats?.apiKeysCount ?? 0;
+  // Same reasoning as the inbox count: the sidebar badge counts `keys`, so the
+  // card counts `keys` too. Only the call totals below still come from `stats`,
+  // because the client has no live copy of the activity log to count.
+  const apiKeysCount = apiKeys?.length ?? 0;
   const callsToday = stats?.callsToday ?? 0;
   const callsThisMonth = stats?.callsThisMonth ?? 0;
 
@@ -732,7 +747,15 @@ export function OverviewPage({ inboxes, activity, stats, usageData, planLimits, 
         <div className="stat">
           <div className="label">{t('overview.inboxesConnected')}</div>
           <div className="value">{inboxCount.toLocaleString()}</div>
-          <div className="delta">{inboxCount === 1 ? t('overview.oneActiveInbox') : t('overview.activeInboxes', { count: inboxCount })}</div>
+          <div className="delta">
+            {activeInboxCount === inboxCount
+              ? (inboxCount === 1 ? t('overview.oneActiveInbox') : t('overview.activeInboxes', { count: inboxCount }))
+              /* Some mailbox is connected but not active (expired credentials,
+                 a failed check). The headline counts it, because the plan cap
+                 counts it, so the delta has to say so rather than quietly
+                 reporting a smaller number than the one above it. */
+              : t('overview.activeOfConnected', { active: activeInboxCount, count: inboxCount })}
+          </div>
         </div>
         <div className="stat">
           <div className="label">{t('overview.apiKeys')}</div>

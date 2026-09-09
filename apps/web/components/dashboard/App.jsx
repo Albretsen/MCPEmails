@@ -194,6 +194,35 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   const [keys, setKeys] = useState(serverApiKeys ?? []);
   const [members, setMembers] = useState(serverMembers ?? []);
   const [pendingInvites, setPendingInvites] = useState(serverPendingInvites ?? []);
+
+  // Adopt fresh server data when a `router.refresh()` delivers it.
+  //
+  // These four lists are seeded from props and then mutated optimistically, so
+  // without this they were frozen at the values of the first page load: a
+  // refresh re-ran the server component, handed down new props, and every one
+  // of them was ignored because `useState` only reads its argument on mount.
+  // The optimistic row a connect appends carries a `Date.now()` id rather than
+  // the real inbox UUID, and it kept that fake id until a full page reload —
+  // which is also why Remove and Check on a just-connected inbox hit an id the
+  // API has never heard of.
+  //
+  // The identity check is the point: props only get a new identity when the
+  // server component actually re-rendered, so an ordinary client re-render does
+  // not stomp on local edits. React's documented "adjust state during render"
+  // pattern, not an effect, so the resynced values render in the same pass.
+  const [syncedFrom, setSyncedFrom] = useState({ inboxes: serverInboxes, keys: serverApiKeys, members: serverMembers, invites: serverPendingInvites });
+  if (
+    syncedFrom.inboxes !== serverInboxes ||
+    syncedFrom.keys !== serverApiKeys ||
+    syncedFrom.members !== serverMembers ||
+    syncedFrom.invites !== serverPendingInvites
+  ) {
+    setSyncedFrom({ inboxes: serverInboxes, keys: serverApiKeys, members: serverMembers, invites: serverPendingInvites });
+    if (syncedFrom.inboxes !== serverInboxes) setInboxes(serverInboxes ?? []);
+    if (syncedFrom.keys !== serverApiKeys) setKeys(serverApiKeys ?? []);
+    if (syncedFrom.members !== serverMembers) setMembers(serverMembers ?? []);
+    if (syncedFrom.invites !== serverPendingInvites) setPendingInvites(serverPendingInvites ?? []);
+  }
   const [showConnect, setShowConnect] = useState(false);
   // When set, the ConnectModal opens in reconnect mode for this existing inbox
   // (identity pre-filled and locked; only the password is re-entered).
@@ -442,6 +471,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       }
       setInboxes(xs => xs.filter(x => x.id !== id));
       toast({ message: tr('app.inboxDisconnected'), variant: 'info' });
+      // Pull the server's own view back down: the removal frees a slot against
+      // the plan cap, and every count derived server-side has to move with it.
+      refreshServerData();
     } catch (err) {
       // Re-throw so the confirmation dialog knows to stay open.
       throw err;
@@ -740,6 +772,11 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       setGuideResumeKey(value => value + 1);
       setTimeout(() => setRoute("overview"), 600);
     }
+    // Replace the optimistic row with the real one. The comment above promised
+    // this happened "on next page load", which meant the row kept a synthetic
+    // id, and the plan's remaining inbox allowance stayed at its pre-connect
+    // value, for as long as the user stayed on the dashboard.
+    refreshServerData();
   };
 
   /**
@@ -913,7 +950,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           <FirstRunBanner onConnect={() => setShowConnect(true)} />
         )}
 
-        {route === "overview" && <OverviewPage key={guideResumeKey} inboxes={inboxes} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} />}
+        {route === "overview" && <OverviewPage key={guideResumeKey} inboxes={inboxes} apiKeys={keys} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} />}
         {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onGoToKeys={() => setRoute("keys")} />}
         {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} workspaceName={workspace?.displayName ?? workspace?.display_name ?? workspace?.slug ?? ''} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onResendInvite={onResendInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} onLeave={onLeaveWorkspace} />}

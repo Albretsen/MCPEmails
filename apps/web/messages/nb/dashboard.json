@@ -102,6 +102,7 @@
     "inboxesConnected": "Tilkoblede innbokser",
     "oneActiveInbox": "1 aktiv innboks",
     "activeInboxes": "{count} aktive innbokser",
+    "activeOfConnected": "{active} av {count} aktive",
     "apiKeys": "API-nøkler",
     "oneActiveKey": "1 aktiv nøkkel",
     "activeKeys": "{count} aktive nøkler",

@@ -102,6 +102,7 @@
     "inboxesConnected": "Bandejas conectadas",
     "oneActiveInbox": "1 bandeja activa",
     "activeInboxes": "{count} bandejas activas",
+    "activeOfConnected": "{active} de {count} activas",
     "apiKeys": "Claves de API",
     "oneActiveKey": "1 clave activa",
     "activeKeys": "{count} claves activas",
