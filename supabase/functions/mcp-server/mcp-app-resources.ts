@@ -231,10 +231,22 @@ export const REVIEW_CARD_TOOL_NAMES: readonly string[] = [
  * that asymmetry is gone.)
  *
  * These emit a plan only when the target inbox has `bulk_review_mode = 'plan'`.
+ *
+ * `email_search_and_move` is here because it is the same handler under a second
+ * name: since 2026-09-09 it is advertised on its own as well as reachable as
+ * `email_organize{action:"search_and_move"}`, and that handler calls
+ * `createBulkPlan` before it moves anything. Membership is keyed by the name a
+ * client CALLS, so leaving it out would mean a plan-mode inbox got a bulk_plan
+ * envelope back from a tool whose `tools/list` entry never told the host to
+ * mount the card for it, which is an unrenderable result rather than a
+ * preview. The plan row it writes still carries `operation: "email_organize"`
+ * (see operationForAction in mcp-app-bulk.ts) because that is the contract §3
+ * field naming the operation, not the tool the caller happened to use.
  */
 export const BULK_PLAN_CARD_TOOL_NAMES: readonly string[] = [
   "email_delete",
   "email_organize",
+  "email_search_and_move",
 ];
 
 /**

@@ -249,9 +249,14 @@ Deno.test("only the three outbound tools are outbound-card-bearing", () => {
     ["draft", "email_compose", "schedule"],
     "outbound card-bearing tool names",
   );
+  // `email_search_and_move` is the third since 2026-09-09: the same handler as
+  // `email_organize{action:"search_and_move"}`, advertised under its own name,
+  // and this list is keyed by the name a client CALLS. Omitting it would hand a
+  // plan-mode inbox a bulk_plan envelope from a tool the host was never told to
+  // mount the card for.
   assertEquals(
     [...BULK_PLAN_CARD_TOOL_NAMES].sort(),
-    ["email_delete", "email_organize"],
+    ["email_delete", "email_organize", "email_search_and_move"],
     "bulk card-bearing tool names",
   );
 

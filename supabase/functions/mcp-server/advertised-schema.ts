@@ -72,6 +72,36 @@
 // list|get|runs|preview. Every one of them dispatches to the very same handler
 // the corresponding action always did, so the two surfaces cannot diverge in
 // behaviour: they are two names for one code path.
+//
+// ── The same seam again, this time to STOP a permission prompt ──────────────
+//
+// Later on 2026-09-09 the mechanism was used a third time, for the opposite
+// reason. It is not only reads that a mixed tool costs you.
+//
+// Annotations are per TOOL. A client decides whether to interrupt the user
+// from `destructiveHint`, and the connector criteria leave it exactly two
+// settings: a read-only tool may run without per-call confirmation, a
+// destructive one always prompts. There is no per-action grade and no user
+// override. So `email_organize` was annotated for the worst thing it could do
+// (`search_and_move`, which relocates everything a caller-supplied filter
+// matches) and the bill was paid by `archive` and `flag`, the two
+// highest-frequency calls in a morning triage, on every single message.
+//
+// Moving that one action out is the only thing that changes the annotation, so
+// it moved the same way the reads did: `advertised: false` on the action, the
+// legacy `email_search_and_move` entry promoted to a tool of its own carrying
+// `destructiveHint: true`, and `email_organize` flipped to false. A client
+// connecting today sees a reversible, id-list tool it can auto-allow and a
+// separate sweep it must confirm.
+//
+// The cached-client obligation cuts the other way here and is worth stating
+// plainly: a session that connected before the split can still send
+// `email_organize{action:"search_and_move"}`, and will now do it without a
+// prompt, because the annotation it is judged by is the one on the tool it
+// named. That is bounded to clients that could already make exactly that call
+// under exactly that name, and it ends when they reconnect. Narrowing what the
+// server ACCEPTS to avoid it would break those same sessions outright, which is
+// worse, and is the trade this whole file exists to make.
 // ---------------------------------------------------------------------------
 
 /**
