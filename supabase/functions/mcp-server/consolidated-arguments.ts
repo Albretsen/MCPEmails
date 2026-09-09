@@ -145,6 +145,12 @@ export const LENIENT_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   // wider filter than the caller wrote is the one read whose consequences are
   // not confined to the call that made it, so it stays strict.
   automation: ["list", "get", "runs"],
+  // The read half of `automation`, advertised separately since 2026-09-09. The
+  // same four actions reach the same four handlers under either name, so the
+  // leniency has to match exactly, 'preview' excluded for the reason above.
+  // A caller that gets a different answer depending on which name it used
+  // would be the whole point of the split defeated.
+  automation_read: ["list", "get", "runs"],
   signature: ["get"],
 };
 

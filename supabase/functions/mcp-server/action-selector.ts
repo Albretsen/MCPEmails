@@ -196,6 +196,21 @@ const ACTION_ALIASES: Readonly<Record<string, Readonly<Record<string, string>>>>
     history: "runs",
     list_runs: "runs",
   },
+  // `automation_read` is the read half of `automation`, advertised on its own
+  // since 2026-09-09 and reaching the identical handlers. The synonyms are
+  // repeated verbatim rather than shared, because this table is keyed by the
+  // tool a caller actually named and the two names must resolve the same word
+  // to the same action. Only the entries whose target survives the split are
+  // here: 'preview' has no synonym, and the write actions live on `automation`.
+  automation_read: {
+    list_automations: "list",
+    list_rules: "list",
+    rules: "list",
+    get_automation: "get",
+    get_rule: "get",
+    history: "runs",
+    list_runs: "runs",
+  },
   signature: {
     get_signature: "get",
     read: "get",

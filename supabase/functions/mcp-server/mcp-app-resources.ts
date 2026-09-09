@@ -356,6 +356,11 @@ export type ListedTool = {
   title: string;
   description: string;
   inputSchema: Record<string, unknown>;
+  /**
+   * The narrower copy of `inputSchema` to publish, when the tool accepts
+   * actions it does not advertise. See ToolDefinition in index.ts.
+   */
+  listedInputSchema?: Record<string, unknown>;
   outputSchema?: Record<string, unknown>;
   annotations?: Record<string, unknown>;
   _meta?: Record<string, unknown>;
@@ -371,6 +376,13 @@ export type ListedTool = {
  * The input schema goes out WITHOUT its action-specific `allOf` rules
  * (advertised-schema.ts says why); the registry entry keeps them for the
  * validator, and a tool that has none serialises exactly as before.
+ *
+ * A tool carrying `listedInputSchema` publishes that instead: it is the same
+ * schema built from the tool's ADVERTISED actions alone, which is how `folder`
+ * shows create|rename|delete while `folder{action:"list"}` still validates
+ * against the full `inputSchema` the registry kept. Passing it through
+ * advertisedInputSchema too is a no-op that costs nothing and means neither
+ * caller has to remember which of the two forms already dropped its rules.
  */
 export function serializeToolForList(
   tool: ListedTool,
@@ -379,7 +391,7 @@ export function serializeToolForList(
     name: tool.name,
     title: tool.title,
     description: tool.description,
-    inputSchema: advertisedInputSchema(tool.inputSchema),
+    inputSchema: advertisedInputSchema(tool.listedInputSchema ?? tool.inputSchema),
     ...(tool.outputSchema ? { outputSchema: tool.outputSchema } : {}),
     ...(tool.annotations ? { annotations: tool.annotations } : {}),
     ...(tool._meta ? { _meta: tool._meta } : {}),
