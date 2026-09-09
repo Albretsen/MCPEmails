@@ -130,7 +130,7 @@ const SCOPE_STYLES = {
 // t('tools.<name>.desc') and t('tools.<name>.params.<param>').
 //
 // WHAT THIS PAGE LEAVES OUT, and why it is a subset rather than an oversight:
-// a full-scope key gets 22 tools from tools/list. The six that are missing here
+// a full-scope key gets 23 tools from tools/list. The six that are missing here
 // (approval_review, approval_decide, approval_update, approval_schedule,
 // bulk_execute, bulk_cancel) all carry _meta.ui.visibility: ["app"] and exist to
 // drive the review card an MCP client renders for a held send or a previewed
@@ -270,6 +270,16 @@ const TOOLS = [
     },
   },
   {
+    // The 'search_and_move' action, and the fourteen search parameters only it
+    // used, are deliberately absent here. They were lifted out 2026-09-09 and
+    // re-advertised as `email_search_and_move` below, because annotations are
+    // per tool and not per action: the sweep's destructive flag governed the
+    // whole tool, so archiving a message and marking one read, the two calls a
+    // triage makes most, asked the user for permission every single time. What
+    // is left is the reversible set a caller names by id. The old shape is
+    // still ACCEPTED on the wire for clients holding a cached schema, exactly
+    // like `folder` `action: "list"`, but tools/list no longer publishes it, so
+    // it is not documented here.
     name: 'email_organize',
     scopes: ['manage:folders'],
     params: [
@@ -280,20 +290,6 @@ const TOOLS = [
       { name: 'message_ids',          type: 'array[string]', required: false },
       { name: 'destination_folder_id',type: 'string',        required: false },
       { name: 'flag_action',          type: 'enum',          required: false },
-      { name: 'from',                 type: 'string',        required: false },
-      { name: 'to',                   type: 'string',        required: false },
-      { name: 'cc',                   type: 'string',        required: false },
-      { name: 'subject',              type: 'string',        required: false },
-      { name: 'body',                 type: 'string',        required: false },
-      { name: 'text',                 type: 'string',        required: false },
-      { name: 'unread',               type: 'boolean',       required: false },
-      { name: 'has_attachment',       type: 'boolean',       required: false },
-      { name: 'flagged',              type: 'boolean',       required: false },
-      { name: 'since',                type: 'string (ISO date)', required: false },
-      { name: 'before',               type: 'string (ISO date)', required: false },
-      { name: 'query',                type: 'string',        required: false },
-      { name: 'include_folders',      type: 'array',         required: false },
-      { name: 'limit',                type: 'integer',       required: false },
     ],
     example: {
       request: `{
@@ -314,6 +310,70 @@ const TOOLS = [
   "operation": "email_move",
   "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
   "destination_folder_id": "Archive"
+}`,
+    },
+  },
+  {
+    // Not a new tool: the pre-consolidation legacy entry that email_organize's
+    // 'search_and_move' action always dispatched to, put back on the surface so
+    // the one destructive operation in the organize family can carry the
+    // destructive annotation on its own. Listed directly after the tool it left
+    // because that is the order to consider the two in: name the ids you mean,
+    // and reach for the sweep only when you cannot.
+    name: 'email_search_and_move',
+    scopes: ['manage:folders'],
+    params: [
+      { name: 'inbox_id',             type: 'string (uuid)', required: false },
+      { name: 'inbox',                type: 'string',        required: false },
+      { name: 'destination_folder_id',type: 'string',        required: true },
+      { name: 'from',                 type: 'string',        required: false },
+      { name: 'to',                   type: 'string',        required: false },
+      { name: 'cc',                   type: 'string',        required: false },
+      { name: 'subject',              type: 'string',        required: false },
+      { name: 'body',                 type: 'string',        required: false },
+      { name: 'text',                 type: 'string',        required: false },
+      { name: 'unread',               type: 'boolean',       required: false },
+      { name: 'has_attachment',       type: 'boolean',       required: false },
+      { name: 'flagged',              type: 'boolean',       required: false },
+      { name: 'since',                type: 'string (ISO date)', required: false },
+      { name: 'before',               type: 'string (ISO date)', required: false },
+      { name: 'query',                type: 'string',        required: false },
+      { name: 'include_folders',      type: 'array',         required: false },
+      { name: 'limit',                type: 'integer',       required: false },
+      { name: 'idempotency_key',      type: 'string',        required: false },
+    ],
+    example: {
+      request: `{
+  "jsonrpc": "2.0", "id": 19, "method": "tools/call",
+  "params": {
+    "name": "email_search_and_move",
+    "arguments": {
+      "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+      "from": "newsletter@acme.com",
+      "before": "2026-01-01",
+      "destination_folder_id": "archive",
+      "limit": 200
+    }
+  }
+}`,
+      response: `{
+  "succeeded": 2,
+  "failed": 0,
+  "operation": "email_search_and_move",
+  "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+  "destination_folder_id": "archive",
+  "destination_type": "folder",
+  "provider_semantics": "Relocated the message to the destination folder.",
+  "query": "{\\"from\\":\\"newsletter@acme.com\\",\\"before\\":\\"2026-01-01\\"}",
+  "match_count": 2,
+  "limit": 200,
+  "limit_reached": false,
+  "has_more": false,
+  "total_matches": 2,
+  "results": [
+    { "message_id": "4412", "success": true },
+    { "message_id": "4418", "success": true }
+  ]
 }`,
     },
   },

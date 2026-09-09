@@ -85,11 +85,12 @@ Copy‑paste instructions per client, including where each one keeps its config 
 
 ## Tools
 
-16 tools you call directly. Most are resource-oriented and take an `action` argument that selects the specific operation (and, for actions that need different privileges, the required scope):
+17 tools you call directly. Most are resource-oriented and take an `action` argument that selects the specific operation (and, for actions that need different privileges, the required scope):
 
 - `inbox_list` - Lists the inboxes the key can reach, with each one's provider capabilities.
 - `email_read` - Lists, reads and searches messages, in batches, plus attachments, extracted attachment text and the original `.eml`.
-- `email_organize` - Moves, copies, flags and archives messages, singly, in batches, or by search.
+- `email_organize` - Moves, copies, flags and archives messages you name by id, singly or in batches.
+- `email_search_and_move` - Moves every message matching a search into a folder. Its own tool, and the destructive one, because a wrong filter relocates a whole inbox.
 - `email_delete` - Trashes or permanently deletes messages, singly, in batches, or by search.
 - `email_compose` - Sends, replies and forwards through your own provider, from your real address.
 - `folder_list` - Lists folders (labels on Gmail) with their provider-native IDs and message counts. Read-only.
@@ -108,7 +109,8 @@ Copy‑paste instructions per client, including where each one keeps its config 
 | --- | --- | --- |
 | `inbox_list` | *(single action)* | `read:email` |
 | `email_read` | `list`, `read`, `read_batch`, `search`, `attachment`, `extract`, `original` | `read:email` (`search` also accepts `search:email`) |
-| `email_organize` | `move`, `move_batch`, `copy`, `copy_batch`, `flag`, `archive`, `search_and_move` | `manage:folders` |
+| `email_organize` | `move`, `move_batch`, `copy`, `copy_batch`, `flag`, `archive` | `manage:folders` |
+| `email_search_and_move` | *(single action)* | `manage:folders` |
 | `email_delete` | `delete`, `delete_batch`, `search_and_delete` | `delete:email` |
 | `email_compose` | `send`, `reply`, `forward` | `send:email` |
 | `folder_list` | *(single action)* | `read:email` |
@@ -128,7 +130,7 @@ A full-scope key sees **22** tools in `tools/list`: the 16 above plus six app-on
 Notes:
 - Tools accept either an explicit `inbox_id` (UUID) or an `inbox` email address; single‑inbox keys auto‑resolve the target.
 - Batch actions cap at 50 (`email_read`'s `read_batch`) to 500 (move/delete/flag) messages per call.
-- For a targeted mutation, first use `email_read` with `action: "search"`, then pass the returned `message_id` or `message_ids` to `email_organize` or `email_delete`. Search fields are accepted only by `search_and_move` and `search_and_delete` mutation actions.
+- For a targeted mutation, first use `email_read` with `action: "search"`, then pass the returned `message_id` or `message_ids` to `email_organize` or `email_delete`. Search fields are accepted only by `email_search_and_move` and `email_delete`'s `search_and_delete` action.
 - `contact_search` scans recent mail live, so there is no stored address book.
 - `email_read`'s `original` action returns one complete provider-stored MIME message as a portable `.eml` file (up to 25 MB). It is read-only and never marks the message as read.
 - `draft`'s `send` action requires `send:email`, not `manage:drafts`, so a key that can only manage drafts can't use them to bypass the send‑mail consent.

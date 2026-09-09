@@ -24,7 +24,7 @@
   "caps": {
     "eyebrow": "What your AI can do",
     "title": "A {provider} inbox your agent can actually use",
-    "sub": "Sixteen action-based MCP tools: send, reply, forward, schedule, and organize. Your agent finishes the job inside {provider}."
+    "sub": "Seventeen action-based MCP tools: send, reply, forward, schedule, and organize. Your agent finishes the job inside {provider}."
   },
   "capabilities": [
     {
@@ -66,7 +66,7 @@
   },
   "related": {
     "title": "Connect a different mailbox",
-    "sub": "Same MCP server, same sixteen tools, a different provider.",
+    "sub": "Same MCP server, same seventeen tools, a different provider.",
     "link": "Connect {provider}",
     "all": "See every supported email provider"
   },
