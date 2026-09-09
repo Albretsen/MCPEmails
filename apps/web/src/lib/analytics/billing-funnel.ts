@@ -67,10 +67,20 @@ async function record(event: ProductFunnelEvent): Promise<void> {
   }
 }
 
-/** A checkout session was requested. `outcome: 'success'` means Stripe returned a URL. */
+/**
+ * A checkout session was requested. `outcome: 'success'` means Stripe returned a URL.
+ *
+ * `target` widens to `'unknown'` for the one case that has no plan+interval to
+ * name: an attempt refused for a bad `planId` or a bad `interval`. Those are
+ * still checkout attempts and still belong in the funnel, and `'unknown'` is in
+ * the category CHECK constraint for exactly this sort of row. Guessing a
+ * plausible target instead would file the attempt under a price nobody asked
+ * for, and echoing the caller's own string into the column would put unbounded
+ * input in a bounded vocabulary.
+ */
 export async function recordCheckoutStarted(
   workspaceId: string | null,
-  target: BillingTargetCategory,
+  target: BillingTargetCategory | 'unknown',
   failure?: ProductFunnelEvent['errorCategory'],
 ): Promise<void> {
   if (!workspaceId) return;

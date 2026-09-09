@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState, Fragment } from 'react';
+import { useCallback, useEffect, useState, Fragment, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 import { createClient } from '@/lib/supabase/client';
-import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
+import { parseUpgradeIntent, pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 
 /* ─── Plan data ─────────────────────────────────────────────── */
@@ -154,9 +155,43 @@ function BillingToggle({ annual, onChange }) {
 }
 
 /**
+ * Reads `?plan=` and `?interval=` off the URL and hands the pair to the page.
+ * Renders nothing.
+ *
+ * WHY A SEPARATE, NULL-RENDERING COMPONENT. useSearchParams opts its subtree
+ * out of static rendering, and the caller wraps this in a Suspense boundary so
+ * the opt-out stops here. Reading the params from the page component instead
+ * would have cost the whole marketing page its prerendered HTML, which is the
+ * asset this page's entire SEO position is made of. As a leaf that renders
+ * null, the boundary's fallback is nothing and the surrounding HTML is
+ * unchanged.
+ *
+ * WHY AN EFFECT AND NOT AN INITIAL STATE. The prerendered HTML necessarily
+ * shows the default (annual, nothing highlighted). Seeding state from the URL
+ * during the first client render would therefore disagree with that HTML and
+ * fail hydration. Applying it just after is the same shape the page already
+ * uses for the signed-in Nav, and lands within a frame of hydration.
+ *
+ * parseUpgradeIntent is the allowlist the checkout route and the paywall links
+ * both use, so an unknown plan, a misspelt interval, a stale link or a
+ * hand-typed query string produces no intent at all and the page keeps exactly
+ * today's behaviour. A bad query string must never be able to break /pricing.
+ */
+function UpgradeIntentReader({ onIntent }) {
+  const params = useSearchParams();
+  const plan = params.get('plan');
+  const interval = params.get('interval');
+  useEffect(() => {
+    const intent = parseUpgradeIntent(plan, interval);
+    if (intent) onIntent(intent);
+  }, [plan, interval, onIntent]);
+  return null;
+}
+
+/**
  * @param {{ annual: boolean, stripePrices?: import('@/lib/stripe/getPrices').StripePricesMap }} props
  */
-function PlanCards({ annual, stripePrices, user }) {
+function PlanCards({ annual, stripePrices, user, highlightPlan }) {
   const t = useTranslations('pricing');
   // No entitlement is read here any more. The Personal CTA used to become a
   // non-interactive status line for a visitor holding `unlimited_inboxes`,
@@ -197,8 +232,24 @@ function PlanCards({ annual, stripePrices, user }) {
         const perDisplay = liveMonthly === 0 ? t(plan.perKey) : t('card.perMonth');
         const features = t.raw(`plans.${plan.key}.features`);
 
+        // The card the visitor was quoted at an in-product paywall, if they
+        // arrived from one. It gets the ring .featured already uses and NOT the
+        // "Most popular" badge, because those are two different claims: one is
+        // about what other people buy, this one is "here is the plan you were
+        // just offered".
+        const chosen = plan.key === highlightPlan;
+        // One primary button at a time. Absent an intent this is the featured
+        // plan, as it has always been; with an intent the chosen card owns the
+        // primary action and everything else steps down, so the page answers
+        // the question the visitor actually arrived with rather than re-opening
+        // the one the marketing page likes to ask.
+        const ctaPrimary = highlightPlan ? chosen : plan.ctaPrimary;
+
         return (
-          <div className={'price' + (plan.featured ? ' featured' : '')} key={plan.key}>
+          <div
+            className={'price' + (plan.featured ? ' featured' : '') + (chosen ? ' price-chosen' : '')}
+            key={plan.key}
+          >
             <div>
               <h4>{t(`plans.${plan.key}.name`)}</h4>
               <div className="num">
@@ -217,7 +268,7 @@ function PlanCards({ annual, stripePrices, user }) {
             </ul>
             {plan.key === 'free' ? (
               <a
-                className={'btn btn-lg ' + (plan.ctaPrimary ? 'btn-primary' : 'btn-secondary')}
+                className={'btn btn-lg ' + (ctaPrimary ? 'btn-primary' : 'btn-secondary')}
                 href={user ? '/dashboard' : plan.ctaHref}
                 style={{ textAlign: 'center', justifyContent: 'center' }}
               >
@@ -231,7 +282,7 @@ function PlanCards({ annual, stripePrices, user }) {
                  begin checkout. Keep this a plain <a>: a next/link <Link> would
                  prefetch the checkout route. */
               <a
-                className={'btn btn-lg ' + (plan.ctaPrimary ? 'btn-primary' : 'btn-secondary')}
+                className={'btn btn-lg ' + (ctaPrimary ? 'btn-primary' : 'btn-secondary')}
                 href={pricingUpgradeHref(plan.key, annual, Boolean(user))}
                 style={{ textAlign: 'center', justifyContent: 'center' }}
               >
@@ -332,8 +383,26 @@ export default function PricingClient({ stripePrices }) {
   // interval is preselected swings the annual mix far more than the size of
   // the discount does, and annual prepay is the cheapest working capital a
   // bootstrapped product has. Monthly stays one click away.
+  //
+  // That default holds for everyone who arrives without an explicit interval,
+  // which is every visitor from search, the nav and every marketing link. Only
+  // an in-product paywall handoff (?interval=month) moves it, and only because
+  // that visitor has ALREADY been quoted a monthly number: the paywall
+  // deliberately preselects monthly so a $5 gesture never quietly becomes a $48
+  // one, and this page undoing that decision one click later showed the same
+  // person two prices for the same plan minutes apart.
   const [annual, setAnnual] = useState(true);
   const [user, setUser] = useState(null);
+  // The plan an inbound paywall link named, or null for ordinary traffic.
+  const [highlightPlan, setHighlightPlan] = useState(null);
+  // Stable identity so the reader's effect runs on a URL change and nothing
+  // else. Both halves of the intent are applied together because they arrive
+  // together: the offer is a plan AT an interval, and honouring half of it
+  // would be its own quiet contradiction.
+  const applyIntent = useCallback(({ planId, interval }) => {
+    setAnnual(interval === 'year');
+    setHighlightPlan(planId);
+  }, []);
   const t = useTranslations('pricing');
   const faqItems = t.raw('faq.items');
 
@@ -356,6 +425,14 @@ export default function PricingClient({ stripePrices }) {
 
   return (
     <div>
+      {/* Suspense is required, not decorative: useSearchParams suspends during
+          prerender, and this boundary is what keeps that confined to a leaf
+          that renders nothing, leaving the rest of the page statically
+          generated and CDN cacheable. The fallback is null because the reader
+          has no output of its own. */}
+      <Suspense fallback={null}>
+        <UpgradeIntentReader onIntent={applyIntent} />
+      </Suspense>
       <Nav user={user} />
 
       {/* Hero */}
@@ -382,7 +459,7 @@ export default function PricingClient({ stripePrices }) {
       {/* Plan cards */}
       <section className="pricing-page-cards">
         <div className="container">
-          <PlanCards annual={annual} stripePrices={stripePrices} user={user} />
+          <PlanCards annual={annual} stripePrices={stripePrices} user={user} highlightPlan={highlightPlan} />
           <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 24 }}>
             {t('cardsFootnote.all')}
           </p>

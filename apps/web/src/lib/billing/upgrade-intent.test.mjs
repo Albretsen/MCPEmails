@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   checkoutStartHref,
   parseUpgradeIntent,
+  pricingCompareHref,
   pricingUpgradeHref,
   upgradeDestination,
 } from './upgrade-intent.mjs';
@@ -61,4 +62,23 @@ test('Personal is a paid plan the pricing CTA can actually hand off', () => {
     pricingUpgradeHref('personal', false, true),
     '/api/stripe/checkout/start?plan=personal&interval=month',
   );
+});
+
+test('the compare link carries the offer the paywall was showing', () => {
+  // The paywall's whole job is to put one number in front of one person. A
+  // bare '/pricing' loses it: the page defaults to annual, so "$5 a month"
+  // becomes "$4 a month, billed $48/year" between one click and the next.
+  assert.equal(pricingCompareHref('personal', false), '/pricing?plan=personal&interval=month');
+  assert.equal(pricingCompareHref('personal', true), '/pricing?plan=personal&interval=year');
+  assert.equal(pricingCompareHref('solo', false), '/pricing?plan=solo&interval=month');
+  assert.equal(pricingCompareHref('pro', true), '/pricing?plan=pro&interval=year');
+});
+
+test('an unsellable plan degrades to plain /pricing rather than a dead query', () => {
+  // Same allowlist as the checkout intent, so the link can never advertise a
+  // plan the consumer will refuse to honour. Free is a real plan and still not
+  // a purchase, which is exactly the case worth pinning.
+  assert.equal(pricingCompareHref('free', false), '/pricing');
+  assert.equal(pricingCompareHref('enterprise', true), '/pricing');
+  assert.equal(pricingCompareHref(undefined, false), '/pricing');
 });

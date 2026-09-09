@@ -1,5 +1,6 @@
 // ---------------------------------------------------------------------------
-// The entitlement guards in front of Stripe Checkout.
+// The entitlement guards in front of Stripe Checkout, and the funnel row every
+// checkout attempt is supposed to leave behind (section 4, added 2026-09-09).
 //
 // These pin the 2026-09-07 correction. Until that day `runCheckout` answered a
 // 409 `grandfathered_personal` to any {planId:'personal'} from a user holding
@@ -59,13 +60,25 @@ type BillingRow = {
  * asked for, so a future read of a table this stub does not model fails loudly
  * instead of silently resolving to null and skipping a guard.
  */
-function fakeSupabase(opts: { entitlement: EntitlementRow; billing?: BillingRow }) {
+function fakeSupabase(opts: {
+  entitlement: EntitlementRow;
+  billing?: BillingRow;
+  /** false models a lapsed or absent session: `getUser` returns no user. */
+  signedIn?: boolean;
+  /** false models an authenticated user who owns no workspace (PGRST116). */
+  hasWorkspace?: boolean;
+}) {
+  const signedIn = opts.signedIn !== false;
+  const hasWorkspace = opts.hasWorkspace !== false;
   return {
     auth: {
-      getUser: async () => ({
-        data: { user: { id: USER_ID, email: 'buyer@example.com' } },
-        error: null,
-      }),
+      getUser: async () =>
+        signedIn
+          ? {
+              data: { user: { id: USER_ID, email: 'buyer@example.com' } },
+              error: null,
+            }
+          : { data: { user: null }, error: { message: 'Auth session missing!' } },
     },
     from(table: string) {
       const builder: Record<string, unknown> = {};
@@ -78,6 +91,14 @@ function fakeSupabase(opts: { entitlement: EntitlementRow; billing?: BillingRow 
         limit: chain,
         single: async () => {
           assert.equal(table, 'workspaces');
+          if (!hasWorkspace) {
+            // Exactly what PostgREST answers `.single()` with when the filter
+            // matched nothing. Not a thrown error: the client returns it.
+            return {
+              data: null,
+              error: { code: 'PGRST116', message: 'JSON object requested, multiple (or no) rows returned' },
+            };
+          }
           return {
             data: { id: WORKSPACE_ID, display_name: 'Test Workspace' },
             error: null,
@@ -109,8 +130,13 @@ const nodeMock = mock as unknown as {
   module(specifier: string, options: { namedExports: Record<string, unknown> }): void;
 };
 
-/** Records every funnel write so a test can assert the OUTCOME, not just the return. */
-const funnelCalls: Array<string | undefined> = [];
+/**
+ * Records every funnel write so a test can assert the OUTCOME, not just the
+ * return. The target is kept alongside the failure because the two validation
+ * refusals are recorded against `unknown` rather than a plan+interval, and a
+ * row filed under the wrong target is worse than no row.
+ */
+const funnelRows: Array<{ target: string; failure: string | undefined }> = [];
 
 /** The Stripe calls a successful checkout makes, so a test can prove one happened. */
 const sessionsCreated: Array<Record<string, unknown>> = [];
@@ -119,11 +145,16 @@ nodeMock.module('@/lib/analytics/billing-funnel', {
   namedExports: {
     billingTarget: (planId: string, interval: string) => `${planId}_${interval}`,
     recordCheckoutStarted: async (
-      _workspaceId: string,
-      _target: string,
+      workspaceId: string | null,
+      target: string,
       failure?: string,
     ) => {
-      funnelCalls.push(failure);
+      // Mirrors the real helper, which no-ops on a null workspace id. Without
+      // that, a test could "prove" a row was written for a user who has no
+      // workspace to write it against.
+      if (!workspaceId) return;
+      assert.equal(workspaceId, WORKSPACE_ID, 'a row must land on the buyer\'s own workspace');
+      funnelRows.push({ target, failure });
     },
   },
 });
@@ -163,15 +194,53 @@ async function checkout(opts: {
   interval?: unknown;
   entitlement: EntitlementRow;
   billing?: BillingRow;
+  signedIn?: boolean;
+  hasWorkspace?: boolean;
 }) {
-  currentSupabase = fakeSupabase({ entitlement: opts.entitlement, billing: opts.billing });
-  funnelCalls.length = 0;
+  currentSupabase = fakeSupabase({
+    entitlement: opts.entitlement,
+    billing: opts.billing,
+    signedIn: opts.signedIn,
+    hasWorkspace: opts.hasWorkspace,
+  });
+  funnelRows.length = 0;
   sessionsCreated.length = 0;
   const outcome = await runCheckout({
     planId: opts.planId,
     interval: opts.interval ?? 'month',
   });
-  return { outcome, funnelCalls: [...funnelCalls], sessionsCreated: [...sessionsCreated] };
+  return {
+    outcome,
+    funnelRows: [...funnelRows],
+    // The failure-reason-only view the older tests are written against.
+    funnelCalls: funnelRows.map((row) => row.failure),
+    sessionsCreated: [...sessionsCreated],
+  };
+}
+
+/**
+ * Run something with console.warn / console.error captured.
+ *
+ * Two checkout exits cannot be funnel rows at all (no workspace to hang one
+ * off), so their log line IS the trace. That makes the log an assertable part
+ * of the behaviour rather than noise, and capturing it also keeps the test
+ * output clean.
+ */
+async function captureLogs<T>(fn: () => Promise<T>): Promise<{ result: T; logs: string[] }> {
+  const logs: string[] = [];
+  const originalWarn = console.warn;
+  const originalError = console.error;
+  const collect = (...args: unknown[]) => {
+    logs.push(args.map((arg) => (typeof arg === 'string' ? arg : JSON.stringify(arg))).join(' '));
+  };
+  console.warn = collect;
+  console.error = collect;
+  try {
+    return { result: await fn(), logs };
+  } finally {
+    console.warn = originalWarn;
+    console.error = originalError;
+  }
 }
 
 /** The grandfathered cohort: a plain entitlement row carrying the inbox grant. */
@@ -344,4 +413,147 @@ test('an EXPIRED comped grant does not refuse anything', async () => {
 test('an account with no entitlement row at all is unaffected', async () => {
   const { outcome } = await checkout({ planId: 'personal', entitlement: null });
   assert.equal(outcome.kind, 'checkout');
+});
+
+// ---------------------------------------------------------------------------
+// 4. Every exit the funnel can represent leaves exactly one row (D5, 2026-09-09).
+//
+// Before this, four terminal returns sat ABOVE the recording latch and wrote
+// nothing: `unauthenticated`, `invalid_plan`, `invalid_interval` and
+// `workspace_not_found`. That made "zero checkout_started rows" permanently
+// ambiguous between nobody clicking and everybody being bounced, which cost a
+// full day of audit work. Two of the four are now rows. The other two cannot
+// be: `product_funnel_events.workspace_id` is NOT NULL and neither case has a
+// workspace, so their trace is a log line, and these tests pin that too.
+//
+// What must NOT change is what the caller sees. Each test below asserts the
+// reason, the status and the message alongside the recording, because both
+// entry points (the dashboard's JSON POST and the buy button's 303 GET) key
+// their behaviour off exactly those.
+// ---------------------------------------------------------------------------
+
+test('an invalid plan id is recorded as one validation failure', async () => {
+  const { outcome, funnelRows, sessionsCreated } = await checkout({
+    planId: 'enterprise',
+    entitlement: null,
+  });
+
+  // Recorded against `unknown`: `billingTarget` cannot name a plan that is not
+  // a plan, and the caller's own string must not reach a bounded column.
+  assert.deepEqual(funnelRows, [{ target: 'unknown', failure: 'validation_failed' }]);
+  assert.equal(sessionsCreated.length, 0, 'no Stripe session may be opened');
+
+  assert.equal(outcome.kind, 'error');
+  if (outcome.kind !== 'error') return;
+  assert.equal(outcome.reason, 'invalid_plan');
+  assert.equal(outcome.status, 400);
+  // The exact legacy string the dashboard has always shown. Spelled out rather
+  // than rebuilt from PURCHASABLE_PLAN_IDS, so that adding a tier is a visible
+  // decision here instead of a silently rewritten error message.
+  assert.equal(
+    outcome.message,
+    'planId must be one of: "personal", "solo", "pro".',
+  );
+});
+
+test('an invalid interval is recorded as one validation failure', async () => {
+  const { outcome, funnelRows, sessionsCreated } = await checkout({
+    planId: 'personal',
+    interval: 'week',
+    entitlement: null,
+  });
+
+  // `unknown` again, not `personal_week` and not `personal_month`: the plan is
+  // valid but the interval is not, and filling in the missing half would file
+  // the attempt under a price nobody asked for.
+  assert.deepEqual(funnelRows, [{ target: 'unknown', failure: 'validation_failed' }]);
+  assert.equal(sessionsCreated.length, 0);
+
+  assert.equal(outcome.kind, 'error');
+  if (outcome.kind !== 'error') return;
+  assert.equal(outcome.reason, 'invalid_interval');
+  assert.equal(outcome.status, 400);
+  assert.equal(outcome.message, 'interval must be "month" or "year".');
+});
+
+test('a successful checkout still records exactly one success row', async () => {
+  // The regression this guards: recording the validation failures introduced a
+  // second call site for the latch. If the latch ever stops being a latch, the
+  // happy path is where it shows up, as two rows for one buyer.
+  const { outcome, funnelRows, sessionsCreated } = await checkout({
+    planId: 'personal',
+    entitlement: null,
+  });
+
+  assert.equal(outcome.kind, 'checkout');
+  assert.equal(sessionsCreated.length, 1);
+  assert.deepEqual(funnelRows, [{ target: 'personal_month', failure: undefined }]);
+});
+
+test('an unauthenticated attempt writes no row and says so in the log', async () => {
+  // NOT RECORDABLE by construction: no user means no workspace, and
+  // workspace_id is NOT NULL. The log is the only trace, so it is asserted.
+  const { result, logs } = await captureLogs(() =>
+    checkout({ planId: 'personal', entitlement: null, signedIn: false }),
+  );
+
+  assert.deepEqual(result.funnelRows, []);
+  assert.equal(result.sessionsCreated.length, 0);
+  assert.equal(logs.length, 1);
+  assert.match(logs[0], /^\[checkout\] unauthenticated attempt/);
+  // No user id, no email: there is no session to identify, and this log must
+  // not become the one place a person is named.
+  assert.doesNotMatch(logs[0], /buyer@example\.com/);
+
+  // The 401 the POST route turns into `{ error: 'Unauthorized' }` and the GET
+  // route turns into a 303 to /login, unchanged.
+  assert.equal(result.outcome.kind, 'error');
+  if (result.outcome.kind !== 'error') return;
+  assert.equal(result.outcome.reason, 'unauthenticated');
+  assert.equal(result.outcome.status, 401);
+  assert.equal(result.outcome.message, 'Unauthorized');
+});
+
+test('a buyer with no workspace writes no row and says so in the log', async () => {
+  // Authenticated, but owns nothing to hang a funnel row off. Inventing a
+  // workspace id here would put fabricated attempts in the column every funnel
+  // number is grouped by, so this one stays a log line too.
+  const { result, logs } = await captureLogs(() =>
+    checkout({ planId: 'personal', entitlement: null, hasWorkspace: false }),
+  );
+
+  assert.deepEqual(result.funnelRows, []);
+  assert.equal(result.sessionsCreated.length, 0);
+  assert.equal(logs.length, 1);
+  assert.match(logs[0], /^\[checkout\] workspace not found/);
+  // The shape of the failure has to be in there: PGRST116 is "this user owns
+  // no workspace", anything else is the database in trouble.
+  assert.match(logs[0], /PGRST116/);
+  assert.doesNotMatch(logs[0], new RegExp(USER_ID));
+
+  assert.equal(result.outcome.kind, 'error');
+  if (result.outcome.kind !== 'error') return;
+  assert.equal(result.outcome.reason, 'workspace_not_found');
+  assert.equal(result.outcome.status, 404);
+  assert.equal(result.outcome.message, 'Workspace not found.');
+});
+
+test('validation still outranks a missing workspace', async () => {
+  // The workspace read now happens BEFORE validation, so that a validation
+  // failure has an id to record against. Its RESULT is still acted on after,
+  // which is what keeps this case answering exactly what it always did: a bad
+  // plan id from a user with no workspace is a 400, not a 404.
+  const { result, logs } = await captureLogs(() =>
+    checkout({ planId: 'enterprise', entitlement: null, hasWorkspace: false }),
+  );
+
+  assert.equal(result.outcome.kind, 'error');
+  if (result.outcome.kind !== 'error') return;
+  assert.equal(result.outcome.reason, 'invalid_plan');
+  assert.equal(result.outcome.status, 400);
+
+  // Nothing to record it against, so nothing is recorded: `recordCheckoutStarted`
+  // no-ops on a null workspace id rather than writing a row that cannot exist.
+  assert.deepEqual(result.funnelRows, []);
+  assert.deepEqual(logs, [], 'a validation refusal is a row, not a log line');
 });

@@ -44,3 +44,34 @@ export function pricingUpgradeHref(planId, annual, signedIn) {
   const destination = checkoutStartHref(planId, annual);
   return signedIn ? destination : `/signup?redirect=${encodeURIComponent(destination)}`;
 }
+
+/**
+ * The "compare all plans" destination, carrying the offer the buyer was shown.
+ *
+ * Every in-product paywall quotes a specific plan at a specific interval
+ * ("Upgrade to Personal, $5/mo", Monthly preselected) and then offers a
+ * secondary link to /pricing. That link used to be the bare constant
+ * '/pricing', which threw the whole offer away: the page defaults to annual
+ * (deliberately, see PricingClient), so a person who had just accepted $5 a
+ * month landed on a Personal card reading "$4 a month, billed $48/year" with
+ * nothing highlighted. They had to re-decide, against a different number and a
+ * twelve-month commitment, a decision they had already made.
+ *
+ * The parameters are read by PricingClient: `interval` seeds the toggle and
+ * `plan` emphasises one card. Both are validated there through
+ * parseUpgradeIntent, the same allowlist above, so this and the consumer can
+ * never drift apart on what a legal offer is. Validating here too means a
+ * caller that somehow holds an unsellable plan id degrades to today's plain
+ * /pricing rather than putting a query string on the page that the consumer
+ * will silently ignore.
+ *
+ * Not a checkout link: /pricing is an ordinary page with no side effects, so
+ * unlike checkoutStartHref this one is safe to render as a next/link <Link>
+ * and safe to prefetch.
+ */
+export function pricingCompareHref(planId, annual) {
+  const interval = annual ? 'year' : 'month';
+  return parseUpgradeIntent(planId, interval)
+    ? `/pricing?plan=${planId}&interval=${interval}`
+    : '/pricing';
+}

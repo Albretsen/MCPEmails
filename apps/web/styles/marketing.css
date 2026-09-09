@@ -368,6 +368,18 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
   background: var(--cobalt-500); color: #fff; font-family: var(--font-sans); font-size: 11.5px;
   font-weight: 500; padding: 4px 10px; border-radius: 999px; letter-spacing: 0.02em;
 }
+/* The plan an in-product paywall named, arriving as /pricing?plan=<id>.
+   Deliberately the SAME ring as .featured and deliberately without its "Most
+   popular" badge: the two are different claims. "Most popular" is about other
+   people; this one only says "the plan you were just quoted", which is the
+   whole reason the parameter exists. Reusing the ring rather than inventing a
+   second emphasis keeps one visual language on the page when both land on the
+   same card (?plan=solo), where the two rules are identical and stack to
+   nothing. */
+.price.price-chosen {
+  border-color: var(--cobalt-500); box-shadow: 0 0 0 3px rgba(37,71,229,0.08);
+  position: relative;
+}
 .price h4 { margin: 0; font-family: var(--font-sans); font-size: 14px; font-weight: 500; color: var(--fg-3); letter-spacing: 0.04em; text-transform: uppercase; }
 .price .num { font-family: var(--font-sans); font-size: 42px; font-weight: 600; letter-spacing: -0.03em; color: var(--fg-1); margin: 4px 0 0; }
 .price .num small { font-size: 14px; font-weight: 400; color: var(--fg-3); letter-spacing: 0; }

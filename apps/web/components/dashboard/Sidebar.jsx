@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 import { CreateWorkspaceModal } from './CreateWorkspaceModal';
 import { sectionToPath } from './routes';
 import { planDisplayName } from '@/lib/stripe/plans';
-import { checkoutStartHref } from '@/lib/billing/upgrade-intent.mjs';
+import { Link } from '@/i18n/navigation';
 
 /* Sidebar.jsx: left nav with mobile-collapsible drawer support. */
 
@@ -214,17 +214,34 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
                    whose internal id is `pro`, so `pro` is the right id here
                    even though the menu sells it under the Team name.
 
-                   Plain anchor on purpose: /api/stripe/checkout/start creates
-                   a Stripe Checkout session as a side effect of the GET, so a
-                   next/link prefetch would open sessions for people who only
-                   opened this menu. */
-                <a href={checkoutStartHref('pro', false)} className="ws-menu-item ws-menu-upsell">
+                   Points at /pricing, not at /api/stripe/checkout/start. This
+                   row used to hand a free user straight to a Stripe hosted page
+                   for Team at $79/month, with the price stated nowhere in the
+                   product and no interval choice, so annual was unreachable
+                   from this surface. Carrying the offer in the query string
+                   (`plan` and `interval`) lets /pricing seed its toggle and
+                   emphasise the Team card, so the person sees the number and
+                   both intervals before committing to anything.
+
+                   Locale-aware Link, unlike the checkout CTAs elsewhere in the
+                   dashboard: the plain anchor there exists only because a
+                   next/link prefetch of the checkout API would open Stripe
+                   sessions for people who never clicked. /pricing is an
+                   ordinary page with no side effects, so prefetching it is
+                   free, and a Norwegian user belongs on /nb/pricing.
+
+                   /pricing also records `pricing_viewed`, which is how this
+                   surface stops being invisible in the funnel. Deliberately no
+                   `paywall_reached` beacon here: that stage is inbox-cap
+                   specific (written with connection_type='first_connect') and
+                   firing it from a dropdown would corrupt its denominator. */
+                <Link href="/pricing?plan=pro&interval=month" className="ws-menu-item ws-menu-upsell">
                   <span className="ws-glyph sm plus" aria-hidden="true"><Icon name="zap" size={13} color="var(--brand)" /></span>
                   <span className="ws-meta">
                     <span className="ws-name">{tr('sidebar.newWorkspace')}</span>
                     <span className="ws-plan">{tr('sidebar.newWorkspaceUpsell')}</span>
                   </span>
-                </a>
+                </Link>
               )}
             </div>
           )}

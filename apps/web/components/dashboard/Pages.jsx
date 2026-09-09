@@ -15,7 +15,7 @@ import { normalizeSenderName } from '@/lib/inboxes/sender-name';
 import { ApprovalsPanel } from './ApprovalsPanel';
 import { AutomationsPanel } from './AutomationsPanel';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
-import { checkoutStartHref } from '@/lib/billing/upgrade-intent.mjs';
+import { checkoutStartHref, pricingCompareHref } from '@/lib/billing/upgrade-intent.mjs';
 import { inboxCapOffer } from '@/lib/billing/inbox-cap-offer.mjs';
 import UpgradeIntervalChoice, {
   IntervalToggle,
@@ -1252,9 +1252,17 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, onConnec
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               {/* Locale-aware Link, unlike the checkout CTA below: /pricing is
                   an ordinary page with no side effects, so prefetching it is
-                  free, and a Norwegian user belongs on /nb/pricing. */}
+                  free, and a Norwegian user belongs on /nb/pricing.
+
+                  It carries the offer, too. /pricing preselects ANNUAL by
+                  design, so a bare '/pricing' would answer the "$5 a month"
+                  this notice just quoted with a Personal card reading "$4 a
+                  month, billed $48/year". The plan and the interval below are
+                  exactly what is on screen here, including the interval the
+                  user picked in the control above, so the page they land on
+                  opens on the same offer they were reading. */}
               <Link
-                href="/pricing"
+                href={pricingCompareHref(offer.plan, capInterval === 'year')}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
