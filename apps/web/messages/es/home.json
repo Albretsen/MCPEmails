@@ -52,7 +52,7 @@
     "items": {
       "0": {
         "tag": "Alcance",
-        "h": "Once herramientas enfocadas. Lo esencial, cubierto.",
+        "h": "Dieciséis herramientas enfocadas. Lo esencial, cubierto.",
         "p": "Las herramientas cubren el trabajo diario: <code>inbox_list</code>, <code>email_read</code> (list, read, search) y <code>email_compose</code> (send, reply), además de herramientas específicas para organizar, eliminar, carpetas, borradores, programación, contactos, firmas y automatizaciones desatendidas. Pega la URL del endpoint MCP en claude.ai, Claude Desktop, Cursor o cualquier agente compatible con MCP."
       },
       "1": {
@@ -105,9 +105,9 @@
       "1": "Leer correo: lista resúmenes recientes, obtén un mensaje completo por ID, lee hasta 50 por lotes o ejecuta una búsqueda independiente del proveedor, todo mediante el argumento action.",
       "2": "Organizar correo: mueve, copia, elimina, marca o archiva, ya sea uno a uno, en lote o directamente desde una búsqueda.",
       "3": "Redactar: envía un mensaje nuevo, responde en el hilo o reenvía. Despachado mediante la API de Gmail o SMTP: tu dominio, tu entregabilidad.",
-      "4": "Gestiona carpetas (etiquetas en Gmail): lista, crea, renombra o elimina, y úsalas como destino de movimientos.",
-      "5": "Borradores: lista, crea, actualiza y envía borradores guardados en la carpeta Drafts del proveedor.",
-      "6": "Programa un mensaje para una hora futura, lista los envíos programados pendientes y cancélalos antes de que salgan.",
+      "4": "Gestiona carpetas (etiquetas en Gmail): crea, renombra o elimina, y úsalas como destino de movimientos. folder_list lee las que ya existen.",
+      "5": "Borradores: crea, actualiza y envía borradores guardados en la carpeta Drafts del proveedor. draft_list lee los que hay guardados.",
+      "6": "Programa un mensaje para una hora futura y cancélalo antes de que salga. schedule_list muestra lo que está en cola.",
       "7": "Encuentra personas por nombre o correo con un escaneo en vivo del correo reciente coincidente. No se almacena nada."
     }
   },
@@ -209,7 +209,7 @@
       },
       {
         "q": "¿Qué puede hacer realmente la IA con mi bandeja de entrada?",
-        "a": "Leer y buscar correo, enviar, responder y reenviar mensajes reales, programar envíos para más tarde y organizar tu bandeja: mover, copiar, marcar, archivar y eliminar. Nueve herramientas basadas en acciones, para que el agente termine el trabajo dentro de tu bandeja en lugar de solo redactar."
+        "a": "Leer y buscar correo, enviar, responder y reenviar mensajes reales, programar envíos para más tarde y organizar tu bandeja: mover, copiar, marcar, archivar y eliminar. Dieciséis herramientas basadas en acciones, para que el agente termine el trabajo dentro de tu bandeja en lugar de solo redactar."
       },
       {
         "q": "¿Cómo conecto una bandeja de entrada?",

@@ -85,53 +85,66 @@ Copy‑paste instructions per client, including where each one keeps its config 
 
 ## Tools
 
-11 tools. Most are resource-oriented and take an `action` argument that selects the specific operation (and, for actions that need different privileges, the required scope):
+16 tools you call directly. Most are resource-oriented and take an `action` argument that selects the specific operation (and, for actions that need different privileges, the required scope):
 
 - `inbox_list` - Lists the inboxes the key can reach, with each one's provider capabilities.
 - `email_read` - Lists, reads and searches messages, in batches, plus attachments, extracted attachment text and the original `.eml`.
 - `email_organize` - Moves, copies, flags and archives messages, singly, in batches, or by search.
 - `email_delete` - Trashes or permanently deletes messages, singly, in batches, or by search.
 - `email_compose` - Sends, replies and forwards through your own provider, from your real address.
-- `folder` - Lists, creates, renames and deletes folders (labels on Gmail).
-- `draft` - Lists, creates, updates, sends and deletes drafts, including provider‑native replies.
-- `schedule` - Queues a message for future delivery, lists what is queued, and cancels it.
-- `signature` - Reads and sets the signature appended to outbound mail.
-- `automation` - Creates and manages unattended triage rules, with no model in the loop.
+- `folder_list` - Lists folders (labels on Gmail) with their provider-native IDs and message counts. Read-only.
+- `folder` - Creates, renames and deletes folders (labels on Gmail).
+- `draft_list` - Lists the drafts saved in the inbox, with their draft ids. Read-only.
+- `draft` - Creates, updates, sends and deletes drafts, including provider-native replies.
+- `schedule_list` - Lists what is queued for future delivery. Read-only.
+- `schedule` - Queues a message for future delivery, and cancels one that is queued.
+- `signature_get` - Reads the signature and sender name configured for an inbox. Read-only.
+- `signature_set` - Sets the signature appended to outbound mail, and the sender name.
+- `automation_read` - Lists triage rules, reads one, shows run history, and dry-runs a filter. Read-only.
+- `automation` - Creates, updates, enables, disables and deletes unattended triage rules, with no model in the loop.
 - `contact_search` - Looks up contacts by scanning recent mail live, with no stored address book.
 
 | Tool | Actions | Scope(s) |
 | --- | --- | --- |
 | `inbox_list` | *(single action)* | `read:email` |
 | `email_read` | `list`, `read`, `read_batch`, `search`, `attachment`, `extract`, `original` | `read:email` (`search` also accepts `search:email`) |
-| `email_organize` | `move`, `move_batch`, `copy`, `copy_batch`, `flag`, `archive`, `search_and_move` | `manage:folders` (move/copy/search_and_move), `send:email` (flag/archive) |
+| `email_organize` | `move`, `move_batch`, `copy`, `copy_batch`, `flag`, `archive`, `search_and_move` | `manage:folders` |
 | `email_delete` | `delete`, `delete_batch`, `search_and_delete` | `delete:email` |
 | `email_compose` | `send`, `reply`, `forward` | `send:email` |
-| `folder` | `list`, `create`, `rename`, `delete` | `read:email` (list), `manage:folders` (create/rename/delete) |
-| `draft` | `list`, `create`, `reply`, `update`, `send`, `delete` | `manage:drafts` (list/create/reply/update/delete), `read:email` (reply also), `send:email` (send) |
-| `schedule` | `create`, `list`, `cancel` | `schedule:email` |
-| `signature` | `get`, `set` | `read:email` (get), `send:email` (set) |
-| `automation` | `create`, `list`, `get`, `update`, `enable`, `disable`, `delete`, `runs`, `preview` | `manage:automations` |
+| `folder_list` | *(single action)* | `read:email` |
+| `folder` | `create`, `rename`, `delete` | `manage:folders` |
+| `draft_list` | *(single action)* | `manage:drafts` |
+| `draft` | `create`, `reply`, `update`, `send`, `delete` | `manage:drafts` (create/reply/update/delete), `read:email` (reply also), `send:email` (send) |
+| `schedule_list` | *(single action)* | `schedule:email` |
+| `schedule` | `create`, `cancel` | `schedule:email` |
+| `signature_get` | *(single action)* | `read:email` |
+| `signature_set` | *(single action)* | `send:email` |
+| `automation_read` | `list`, `get`, `runs`, `preview` | `manage:automations` |
+| `automation` | `create`, `update`, `enable`, `disable`, `delete` | `manage:automations` |
 | `contact_search` | *(single action)* | `manage:contacts` |
+
+A full-scope key sees **22** tools in `tools/list`: the 16 above plus six app-only tools (`approval_review`, `approval_decide`, `approval_update`, `approval_schedule`, `bulk_execute`, `bulk_cancel`). Those carry `_meta.ui.visibility: ["app"]` and drive the review card an MCP client renders for a held send or a previewed bulk operation, rather than being composed by hand.
 
 Notes:
 - Tools accept either an explicit `inbox_id` (UUID) or an `inbox` email address; single‑inbox keys auto‑resolve the target.
 - Batch actions cap at 50 (`email_read`'s `read_batch`) to 500 (move/delete/flag) messages per call.
 - For a targeted mutation, first use `email_read` with `action: "search"`, then pass the returned `message_id` or `message_ids` to `email_organize` or `email_delete`. Search fields are accepted only by `search_and_move` and `search_and_delete` mutation actions.
-- `contact_search` scans recent mail live — there is no stored address book.
+- `contact_search` scans recent mail live, so there is no stored address book.
 - `email_read`'s `original` action returns one complete provider-stored MIME message as a portable `.eml` file (up to 25 MB). It is read-only and never marks the message as read.
-- `draft`'s `send` action requires `send:email`, not `manage:drafts` — so a key that can only manage drafts can't use them to bypass the send‑mail consent.
+- `draft`'s `send` action requires `send:email`, not `manage:drafts`, so a key that can only manage drafts can't use them to bypass the send‑mail consent.
 - `draft`'s `reply` action creates an unsent, provider-native reply in the source conversation. It needs both `manage:drafts` and `read:email`, and defaults to replying only to the sender.
-- `automation` manages unattended scheduled triage rules: a stored search plus one fixed action, evaluated on a cadence with no model in the loop. There is no delete action, a `forward` always waits for human approval, and `draft_reply` only ever writes a draft. See `docs/automations-trust-boundary.md`.
+- The read-only halves (`folder_list`, `draft_list`, `schedule_list`, `signature_get`, `automation_read`) were split out of their write tools on 2026-09-09, so a read-only key is never shown a write tool. The old combined shapes (`folder` `action: "list"`, `draft` `action: "list"`, `schedule` `action: "list"`, `signature` `action: "get"`/`"set"`, `automation` `action: "list"`/`"get"`/`"runs"`/`"preview"`) are still accepted on the wire for already-connected clients, but are no longer advertised.
+- `automation` manages unattended scheduled triage rules: a stored search plus one fixed action, evaluated on a cadence with no model in the loop. There is no delete-mail action, a `forward` always waits for human approval, and `draft_reply` only ever writes a draft. See `docs/automations-trust-boundary.md`.
 - `tools/list` only returns the tools your key (or OAuth token) is actually scoped for.
 
 ## OAuth scopes
 
 | Scope | Grants |
 | --- | --- |
-| `read:email` | List inboxes & folders; list, read, and search messages |
+| `read:email` | List inboxes & folders; list, read, and search messages; read an inbox's signature |
 | `search:email` | Narrower alternative that grants only `email_read`'s `search` action |
-| `send:email` | Send, reply, forward, flag, archive; also required to send a draft |
-| `manage:folders` | Create/rename/delete folders; move/copy messages |
+| `send:email` | Send, reply and forward; set the signature and sender name; also required to send a draft |
+| `manage:folders` | Create/rename/delete folders; move, copy, flag and archive messages |
 | `delete:email` | Trash or permanently expunge messages |
 | `manage:drafts` | Create, edit, and delete drafts (sending one also requires `send:email`) |
 | `manage:contacts` | Live contact lookup from recent mail |

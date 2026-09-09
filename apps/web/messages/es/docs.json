@@ -111,8 +111,8 @@
   },
   "tools": {
     "eyebrow": "Referencia de herramientas",
-    "heading": "11 herramientas. Todas las operaciones de correo que tu agente necesita.",
-    "sub": "<b>Indicar una bandeja es opcional.</b> Cuando tu clave tiene exactamente una bandeja, cada herramienta por bandeja la resuelve automáticamente, así que no hace falta <code>inbox_id</code>. Con varias bandejas, pasa <code>inbox_id</code> (el UUID de <code>inbox_list</code>) o <code>inbox</code> (la dirección de la bandeja). La mayoría de las herramientas toman un argumento <code>action</code> que selecciona la operación; las insignias muestran los permisos que necesita cada una, y <code>tools/list</code> solo devuelve las herramientas para las que tu clave (o token OAuth) tiene permiso. Haz clic en «Mostrar ejemplo» para ver una petición y respuesta completas.",
+    "heading": "16 herramientas. Todas las operaciones de correo que tu agente necesita.",
+    "sub": "<b>Indicar una bandeja es opcional.</b> Cuando tu clave tiene exactamente una bandeja, cada herramienta por bandeja la resuelve automáticamente, así que no hace falta <code>inbox_id</code>. Con varias bandejas, pasa <code>inbox_id</code> (el UUID de <code>inbox_list</code>) o <code>inbox</code> (la dirección de la bandeja). La mayoría de las herramientas toman un argumento <code>action</code> que selecciona la operación; las insignias muestran los permisos que necesita cada una, y <code>tools/list</code> solo devuelve las herramientas para las que tu clave (o token OAuth) tiene permiso. Una clave con todos los permisos ve 22 herramientas en <code>tools/list</code>: estas 16 más seis herramientas de aprobación y de operaciones masivas que tu cliente MCP maneja desde la tarjeta de revisión que te muestra, en lugar de herramientas que compongas a mano. Haz clic en «Mostrar ejemplo» para ver una petición y respuesta completas.",
     "noParams": "Sin parámetros. Llama con un objeto de argumentos vacío:",
     "showExample": "Mostrar petición y respuesta de ejemplo",
     "hideExample": "Ocultar petición y respuesta de ejemplo",
@@ -243,26 +243,43 @@
         "idempotency_key": "Clave opaca opcional (1–200 caracteres) para una única solicitud saliente lógica. Reutilízala solo para reintentar exactamente la misma acción con los mismos argumentos en un plazo de 24 horas; una reutilización con argumentos distintos se rechaza."
       }
     },
-    "folder": {
-      "title": "Carpetas",
-      "desc": "Gestiona las carpetas del buzón (etiquetas en Gmail). Define action: 'list' (cada carpeta con su ID nativo del proveedor, nombre visible, tipo y recuentos de mensajes; usa los IDs como argumento folder al listar correo y como destino de movimientos), 'create' (name), 'rename' (folder_id, new_name) o 'delete' (folder_id, irreversible; los mensajes que contenga pueden perderse según el proveedor). 'list' necesita read:email; create/rename/delete necesitan manage:folders, y delete se marca como destructivo ante tu cliente MCP.",
+    "folder_list": {
+      "title": "Listar carpetas",
+      "desc": "Lista todas las carpetas de una bandeja, o todas las etiquetas en Gmail. Cada entrada incluye su ID nativo del proveedor, nombre visible, tipo ('folder' en los proveedores jerárquicos, 'label' en Gmail) y los recuentos de mensajes, totales y sin leer. Usa los IDs devueltos como argumento folder al listar correo con email_read y como destino de los movimientos de email_organize. Solo lectura, sin argumento action: lo único que hay que indicar es qué bandeja consultar. Necesita read:email.",
       "params": {
-        "action": "Qué operación realizar: \"list\", \"create\", \"rename\" o \"delete\". Determina qué otros argumentos se aplican y qué permiso se requiere.",
+        "inbox_id": "UUID de la bandeja cuyas carpetas se listan. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
+        "inbox": "Dirección de correo de la bandeja a usar, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id."
+      }
+    },
+    "folder": {
+      "title": "Carpetas y etiquetas",
+      "desc": "Crea, renombra y elimina carpetas del buzón o etiquetas de Gmail. Los parámetros usan 'folder' por compatibilidad entre proveedores, pero Gmail gestiona etiquetas (type: 'label'), no carpetas. Define action: 'create' (name), 'rename' (folder_id, new_name) o 'delete' (folder_id, irreversible; en Gmail quita la etiqueta de todos los mensajes que la lleven, y en otros proveedores los mensajes que contenga pueden perderse). Leer las carpetas que existen es la herramienta aparte de solo lectura folder_list, que además es de donde salen los folder_id que toman estas acciones. Todas las acciones necesitan manage:folders, y la herramienta se marca como destructiva ante tu cliente MCP.",
+      "params": {
+        "action": "Qué operación realizar: \"create\", \"rename\" o \"delete\". Determina qué otros argumentos se aplican. Listar carpetas es la herramienta aparte folder_list.",
         "inbox_id": "UUID de la bandeja cuyas carpetas se gestionan. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
         "inbox": "Dirección de correo de la bandeja a usar, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id.",
         "name": "Nombre de la nueva carpeta o etiqueta (action 'create'). 1–255 caracteres.",
-        "folder_id": "ID de carpeta/etiqueta nativo del proveedor (action 'rename' o 'delete'), de la acción list de folder.",
+        "folder_id": "ID de carpeta/etiqueta nativo del proveedor (action 'rename' o 'delete'), obtenido de folder_list.",
         "new_name": "Nuevo nombre visible (action 'rename'). 1–255 caracteres."
+      }
+    },
+    "draft_list": {
+      "title": "Listar borradores",
+      "desc": "Devuelve los borradores guardados en la carpeta Drafts de la bandeja, cada uno con su draft_id, asunto, destinatarios y fecha de creación. Pasa el draft_id a la herramienta draft para actualizar, enviar o eliminar uno. Solo lectura, sin argumento action. Necesita manage:drafts.",
+      "params": {
+        "inbox_id": "UUID de la bandeja que contiene los borradores. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
+        "inbox": "Dirección de correo de la bandeja a usar, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id.",
+        "limit": "Número máximo de borradores a devolver. Por defecto 20, máx. 50."
       }
     },
     "draft": {
       "title": "Borradores",
-      "desc": "Gestiona los borradores en la carpeta Drafts de la bandeja. Define action: 'list' (borradores guardados, cada uno con su draft_id, asunto, destinatarios y fecha de creación), 'create' (subject/body obligatorios, opcionalmente to/cc/bcc/html_body), 'update' (draft_id más los campos a sobrescribir) o 'send' (draft_id, elimina el borrador y lo envía, irreversible). La firma de la bandeja se incrusta cuando el borrador se crea o se actualiza, así que ya está presente en la carpeta Drafts y no se vuelve a añadir al enviar; pasa include_signature: false para crear un borrador sin ella. En bandejas basadas en IMAP un draft_id cambia en cada actualización, así que usa siempre el más reciente; Gmail y Outlook mantienen un draft_id estable.",
+      "desc": "Crea, actualiza, envía y elimina borradores sin enviar en la carpeta Drafts de la bandeja. Define action: 'create' (subject/body obligatorios, opcionalmente to/cc/bcc/html_body), 'reply' (message_id/body obligatorios, opcionalmente reply_all; crea una respuesta sin enviar en la conversación de origen), 'update' (draft_id más los campos a sobrescribir), 'send' (draft_id, elimina el borrador y lo envía, irreversible) o 'delete' (draft_id). Leer los borradores que existen es la herramienta aparte de solo lectura draft_list. La firma de la bandeja se incrusta cuando el borrador se crea o se actualiza, así que ya está presente en la carpeta Drafts y no se vuelve a añadir al enviar; pasa include_signature: false para crear un borrador sin ella. En bandejas basadas en IMAP un draft_id cambia en cada actualización, así que usa siempre el más reciente; Gmail y Outlook mantienen un draft_id estable. 'reply' necesita además read:email y nunca envía correo, 'send' necesita send:email para que una clave limitada a borradores no pueda usar un borrador para saltarse el consentimiento de envío, y el resto necesitan manage:drafts.",
       "params": {
-        "action": "Qué operación realizar: \"list\", \"create\", \"reply\", \"update\" o \"send\". Determina qué otros argumentos se aplican.",
+        "action": "Qué operación realizar: \"create\", \"reply\", \"update\", \"send\" o \"delete\". Determina qué otros argumentos se aplican. Listar borradores es la herramienta aparte draft_list.",
         "inbox_id": "UUID de la bandeja que contiene los borradores. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
         "inbox": "Dirección de correo de la bandeja a usar, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id.",
-        "draft_id": "ID de borrador del proveedor (action 'update' o 'send'), de la acción create, update o list más reciente. En bandejas IMAP cambia tras cada actualización, así que usa siempre el más reciente.",
+        "draft_id": "ID de borrador del proveedor (action 'update' o 'send'), de la acción create o update más reciente, o de draft_list. En bandejas IMAP cambia tras cada actualización, así que usa siempre el más reciente.",
         "message_id": "ID del mensaje de origen para la acción 'reply', obtenido de una acción list, read o search previa.",
         "reply_all": "Para la acción 'reply': false por defecto, respondiendo solo al remitente. Ponlo en true para incluir los destinatarios originales de To y Cc.",
         "subject": "Asunto del borrador (action 'create'/'update').",
@@ -272,16 +289,23 @@
         "bcc": "Destinatarios en copia oculta (action 'create'/'update'). Por defecto [].",
         "html_body": "Cuerpo HTML opcional (action 'create'/'update').",
         "include_signature": "Si incrustar la firma configurada de la bandeja en el borrador (action 'create'/'update'). Por defecto true; ponlo en false para guardar un borrador sin la firma.",
-        "idempotency_key": "Clave opaca opcional (1–200 caracteres) para un único envío de borrador. Reutilízala solo para reintentar exactamente el mismo envío en un plazo de 24 horas; una reutilización con argumentos distintos se rechaza.",
-        "limit": "Número máximo de borradores a devolver (action 'list'). Por defecto 20, máx. 50."
+        "idempotency_key": "Clave opaca opcional (1–200 caracteres) para un único envío de borrador. Reutilízala solo para reintentar exactamente el mismo envío en un plazo de 24 horas; una reutilización con argumentos distintos se rechaza."
+      }
+    },
+    "schedule_list": {
+      "title": "Listar envíos programados",
+      "desc": "Lista los envíos programados pendientes del espacio de trabajo, los más próximos primero, opcionalmente filtrados por una bandeja. Se devuelve todo lo que esté en estado 'pending' o 'sending'. Pasa el id devuelto a la herramienta schedule (action 'cancel') para detener un envío antes de que se despache. Solo lectura, sin argumento action. Necesita schedule:email.",
+      "params": {
+        "inbox_id": "UUID de la bandeja por la que filtrar. Opcional; omítelo para listar los envíos programados de todas las bandejas de la clave.",
+        "limit": "Número máximo de resultados. Por defecto 20, máx. 100."
       }
     },
     "schedule": {
       "title": "Envío programado",
-      "desc": "Programa correo para entrega futura mediante una cola en el servidor. Define action: 'create' (to/subject/body más una marca de tiempo send_at en ISO 8601; los destinatarios y el cuerpo se validan de inmediato, y los envíos inválidos no se encolan), 'list' (envíos programados pendientes, los más próximos primero, opcionalmente filtrados por bandeja) o 'cancel' (id, solo se pueden cancelar los envíos que sigan 'pending'). El despachador se ejecuta cada minuto, por lo que la entrega puede ocurrir hasta 60 segundos después de send_at.",
+      "desc": "Programa correo para entrega futura mediante una cola en el servidor, o cancela un envío ya encolado. Define action: 'create' (to/subject/body más una marca de tiempo send_at en ISO 8601 con zona horaria; los destinatarios y el cuerpo se validan de inmediato, y los envíos inválidos no se encolan) o 'cancel' (id, solo se pueden cancelar los envíos que sigan 'pending'). Leer lo que hay en cola es la herramienta aparte de solo lectura schedule_list, que además es de donde sale el id que toma 'cancel'. Usa email_compose para enviar ahora, y esta solo cuando se indique una hora posterior. El despachador se ejecuta cada minuto, por lo que la entrega puede ocurrir hasta 60 segundos después de send_at. Todas las acciones necesitan schedule:email.",
       "params": {
-        "action": "Qué operación realizar: \"create\", \"list\" o \"cancel\". Determina qué otros argumentos se aplican.",
-        "inbox_id": "UUID de la bandeja desde la que enviar (action 'create') o por la que filtrar (action 'list'). Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
+        "action": "Qué operación realizar: \"create\" o \"cancel\". Determina qué otros argumentos se aplican. Listar los envíos en cola es la herramienta aparte schedule_list.",
+        "inbox_id": "UUID de la bandeja desde la que enviar (action 'create'). Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
         "inbox": "Dirección de correo de la bandeja a usar, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id.",
         "to": "Direcciones de correo de los destinatarios (action 'create'). Máx. 50.",
         "subject": "Asunto del correo (action 'create'). Máx. 998 caracteres.",
@@ -292,9 +316,57 @@
         "html_body": "Versión HTML opcional del cuerpo (action 'create').",
         "reply_to": "Dirección opcional de la cabecera Reply-To (action 'create').",
         "attachments": "Archivos adjuntos (action 'create'). Solo bytes en línea: '{' filename, mime_type, data (base64) '}'. La forma por referencia source_message_id está en email_compose, no aquí. Máx. 20 elementos, 10 MB en total.",
-        "id": "UUID del envío programado a cancelar (action 'cancel'), tal como lo devolvió 'create' o 'list'.",
-        "limit": "Número máximo de resultados (action 'list'). Por defecto 20, máx. 100.",
+        "id": "UUID del envío programado a cancelar (action 'cancel'), tal como lo devolvió 'create' o schedule_list.",
         "idempotency_key": "Clave opaca opcional para la creación de un único envío programado. Reutilízala solo para reintentar exactamente la misma solicitud de creación en un plazo de 24 horas."
+      }
+    },
+    "signature_get": {
+      "title": "Leer firma",
+      "desc": "Lee la firma configurada de una bandeja: su texto plano y su HTML, si está habilitada, el modo de respuesta/reenvío, su origen ('manual', 'gmail_import' o null cuando no hay ninguna) y sender_name, el nombre que los destinatarios ven en la cabecera From. La firma se añade del lado del servidor en cada envío, respuesta, reenvío, borrador y mensaje programado. Solo lectura, sin argumento action. Necesita read:email.",
+      "params": {
+        "inbox_id": "UUID de la bandeja cuya firma se va a leer. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
+        "inbox": "Dirección de correo de la bandeja a usar, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id."
+      }
+    },
+    "signature_set": {
+      "title": "Establecer firma",
+      "desc": "Escribe la firma de una bandeja, que se añade del lado del servidor en cada envío, respuesta, reenvío, borrador y mensaje programado. Pasa signature_text, signature_html o ambos, y opcionalmente signature_enabled, signature_reply_mode y sender_name; pasa una cadena vacía en ambos cuerpos para borrarla. Las firmas admiten HTML enriquecido: negrita, cursiva, encabezados, listas, colores, alineación, enlaces e imágenes/logotipos alojados referenciados como URLs https, de modo que un agente puede establecer una firma con formato completo pasando signature_html. El mismo editor enriquecido está disponible en el panel. Establecer una firma marca su origen como 'manual', lo que anula de forma permanente la importación automática de Gmail para esa bandeja. sender_name define el nombre que los destinatarios ven en la cabecera From, p. ej. \"Evancoe Bot\", mostrado antes de la dirección misma, y puede establecerse por sí solo sin tocar la firma. Leer la firma actual es la herramienta aparte signature_get. No hay argumento action. Necesita send:email.",
+      "params": {
+        "inbox_id": "UUID de la bandeja cuya firma se va a establecer. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
+        "inbox": "Dirección de correo de la bandeja a usar, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id.",
+        "signature_text": "Cuerpo de la firma en texto plano. Omítelo para dejarlo sin cambios; pasa una cadena vacía para borrarlo. Si solo se indica el texto, al enviar se deriva automáticamente una versión HTML.",
+        "signature_html": "Cuerpo opcional de la firma en HTML enriquecido. Admite formato (negrita, cursiva, subrayado, encabezados, listas, colores, alineación, enlaces) e imágenes alojadas mediante etiquetas HTML img cuyo src sea una URL https (sin base64 ni CID); se sanea al guardar. Omítelo para dejarlo sin cambios; pasa una cadena vacía para borrarlo.",
+        "signature_enabled": "Si la firma se añade al correo saliente. Por defecto true; ponlo en false para dejar de añadirla sin borrar el texto.",
+        "signature_reply_mode": "Cuándo incluir la firma en respuestas y reenvíos: \"always\" (cada respuesta/reenvío), \"first_only\" (por defecto, solo el primer mensaje de un hilo, evitando firmar por duplicado) o \"never\".",
+        "sender_name": "Nombre que los destinatarios ven en la cabecera From, p. ej. 'Evancoe Bot', que aparece antes de la dirección misma. Omítelo para dejarlo sin cambios; pasa una cadena vacía para borrarlo. Los espacios se compactan, los caracteres de control y los corchetes angulares se eliminan, y el resultado puede tener como máximo 100 caracteres. Establecer solo sender_name no cambia la firma ni su origen."
+      }
+    },
+    "automation_read": {
+      "title": "Leer automatizaciones",
+      "desc": "Inspecciona las reglas de triaje programadas y desatendidas y lo que han estado haciendo. Una regla es una búsqueda guardada más una acción fija, reevaluada con una cadencia fija y sin ningún modelo de por medio: el correo se compara, nunca se interpreta. Define action: 'list' (todas las reglas), 'get' (automation_id, una regla completa), 'runs' (contadores de las ejecuciones recientes de una regla) o 'preview' (una simulación que informa de lo que coincide con el filtro ahora mismo, no aplica nada, no envía nada y no reclama nada en el registro de deduplicación). Nada de esto cambia una regla ni toca el buzón; crear y modificar reglas es la herramienta aparte automation. Todas las acciones requieren manage:automations.",
+      "params": {
+        "action": "Operación a realizar: «list», «get», «runs» o «preview». Determina qué otros argumentos se aplican. Las cuatro son de solo lectura.",
+        "automation_id": "UUID de la regla a leer, tal como lo devuelven la acción 'create' de automation o 'list'. Obligatorio para get y runs. Opcional en preview: pásalo para simular una regla guardada en lugar de un filtro improvisado.",
+        "inbox_id": "UUID del buzón sobre el que previsualizar. Opcional cuando la clave tiene exactamente un buzón; si no, pasa este o inbox.",
+        "inbox": "Dirección de correo del buzón, como alternativa cómoda a inbox_id. Opcional; se ignora si se indica inbox_id.",
+        "filter": "La búsqueda a simular (action 'preview'), con los mismos criterios estructurados que acepta la acción 'search' de email_read: from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before. Se exige al menos un criterio, porque un filtro vacío coincidiría con todo tu buzón.",
+        "max_messages_per_run": "Cuántas coincidencias informa una previsualización: de 1 a 200, 25 por defecto. Refleja el límite que aplicaría una ejecución real, así que la previsualización muestra el mismo radio de impacto que tendría la regla.",
+        "limit": "Para la acción 'runs': cuántas ejecuciones devolver, de la más reciente a la más antigua. Por defecto 20, máximo 100."
+      }
+    },
+    "automation": {
+      "title": "Automatizaciones",
+      "desc": "Crea, modifica, activa, desactiva y elimina reglas de triaje programadas y desatendidas. Una regla es una búsqueda guardada más una acción fija, reevaluada con una cadencia fija y sin ningún modelo de por medio: el correo se compara, nunca se interpreta. Define action: 'create' (name, filter, rule_action e interval_minutes; la regla siempre se crea desactivada), 'update' (automation_id más los campos a cambiar), 'enable', 'disable' o 'delete' (automation_id; se conserva el historial de ejecuciones). Listar reglas, leer una completa, ver el historial de ejecuciones y simular un filtro es la herramienta aparte de solo lectura automation_read. Las acciones de regla disponibles son move, label (una etiqueta de Gmail, una categoría de Outlook o una palabra clave IMAP), mark_read, forward y draft_reply. Eliminar correo no está disponible para una automatización. Un reenvío siempre queda retenido para su aprobación humana, diga lo que diga el ajuste de aprobación del buzón, y draft_reply solo escribe un borrador. Haz una previsualización antes de activarla. Todas las acciones requieren manage:automations.",
+      "params": {
+        "action": "Operación a realizar: «create», «update», «enable», «disable» o «delete». Determina qué otros argumentos se aplican. Leer reglas y previsualizar filtros es la herramienta aparte automation_read.",
+        "automation_id": "UUID de la regla sobre la que actuar, tal como lo devuelven 'create' o la acción 'list' de automation_read. Obligatorio para update, enable, disable y delete.",
+        "inbox_id": "UUID del buzón que vigila la regla (action 'create'). Opcional cuando la clave tiene exactamente un buzón; si no, pasa este o inbox.",
+        "inbox": "Dirección de correo del buzón, como alternativa cómoda a inbox_id. Opcional; se ignora si se indica inbox_id.",
+        "name": "Nombre legible de la regla, de 1 a 80 caracteres. Obligatorio en 'create'.",
+        "filter": "La búsqueda guardada, con los mismos criterios estructurados que acepta la acción 'search' de email_read: from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before. Se exige al menos un criterio, porque un filtro vacío coincidiría con todo tu buzón. Aquí no se aceptan consultas nativas del proveedor en texto libre: una regla se reejecuta sin supervisión durante meses, y una cadena en bruto es un dialecto que nadie valida.",
+        "rule_action": "La única acción fija que se aplica a cada coincidencia, como objeto etiquetado con un type de move (más folder), label (más label; se escribe como etiqueta de Gmail, categoría de Outlook o palabra clave IMAP), mark_read, forward (más to y un note opcional) o draft_reply (más template). Se llama rule_action porque action ya selecciona la operación. No existe ninguna acción de borrado, y si se pide se rechaza en lugar de ignorarse. Un reenvío siempre queda retenido para su aprobación, y draft_reply solo escribe un borrador. Una plantilla sustituye únicamente '{{sender_name}}', '{{sender_email}}', '{{subject}}' y '{{date}}', con escapado HTML; todo lo demás es texto literal y el cuerpo de los mensajes nunca se interpola.",
+        "interval_minutes": "Minutos entre ejecuciones, dentro de la escala fija 15, 30, 60, 180, 360, 720 o 1440. Obligatorio en 'create'. Una escala en vez de un entero libre, para que una regla de un minuto no machaque al proveedor hasta provocar límites de tasa.",
+        "max_messages_per_run": "Cuántos mensajes coincidentes puede tratar una ejecución: de 1 a 200, 25 por defecto. Es el radio de impacto: limita cuánto correo puede tocar un filtro equivocado antes de que una persona lea el registro de la ejecución."
       }
     },
     "contact_search": {
@@ -305,36 +377,6 @@
         "inbox_id": "Opcional. Restringe el escaneo en vivo a una bandeja. Omítelo para escanear las bandejas a las que la clave tiene acceso (un número acotado).",
         "inbox": "Dirección de correo de la bandeja a la que restringir, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id.",
         "limit": "Número máximo de contactos a devolver. Por defecto 20, máx. 50."
-      }
-    },
-    "automation": {
-      "title": "Automatizaciones",
-      "desc": "Crea y gestiona reglas de triaje programadas y desatendidas. Una regla es una búsqueda guardada más una acción fija, reevaluada con una cadencia fija y sin ningún modelo de por medio: el correo se compara, nunca se interpreta. Define action: 'create' (name, filter, rule_action e interval_minutes; la regla siempre se crea desactivada), 'list', 'get', 'update', 'enable', 'disable', 'delete' (se conserva el historial de ejecuciones), 'runs' (contadores de ejecuciones recientes) o 'preview' (una simulación que informa de lo que coincide con el filtro ahora mismo y no aplica nada). Las acciones de regla disponibles son move, label (una etiqueta de Gmail, una categoría de Outlook o una palabra clave IMAP), mark_read, forward y draft_reply. Eliminar correo no está disponible para una automatización. Un reenvío siempre queda retenido para su aprobación humana, diga lo que diga el ajuste de aprobación del buzón, y draft_reply solo escribe un borrador. Haz una previsualización antes de activarla. Todas las acciones requieren manage:automations.",
-      "params": {
-        "action": "Operación a realizar: «create», «list», «get», «update», «enable», «disable», «delete», «runs» o «preview». Determina qué otros argumentos se aplican.",
-        "automation_id": "UUID de la regla sobre la que actuar, tal como lo devuelven 'create' o 'list'. Obligatorio para get, update, enable, disable, delete y runs. Opcional en preview: pásalo para simular una regla guardada en lugar de un filtro improvisado.",
-        "inbox_id": "UUID del buzón que vigila la regla ('create'), o el buzón sobre el que previsualizar. Opcional cuando la clave tiene exactamente un buzón; si no, pasa este o inbox.",
-        "inbox": "Dirección de correo del buzón, como alternativa cómoda a inbox_id. Opcional; se ignora si se indica inbox_id.",
-        "name": "Nombre legible de la regla, de 1 a 80 caracteres. Obligatorio en 'create'.",
-        "filter": "La búsqueda guardada, con los mismos criterios estructurados que acepta la acción 'search' de email_read: from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before. Se exige al menos un criterio, porque un filtro vacío coincidiría con todo tu buzón. Aquí no se aceptan consultas nativas del proveedor en texto libre: una regla se reejecuta sin supervisión durante meses, y una cadena en bruto es un dialecto que nadie valida.",
-        "rule_action": "La única acción fija que se aplica a cada coincidencia, como objeto etiquetado con un type de move (más folder), label (más label; se escribe como etiqueta de Gmail, categoría de Outlook o palabra clave IMAP), mark_read, forward (más to y un note opcional) o draft_reply (más template). Se llama rule_action porque action ya selecciona la operación. No existe ninguna acción de borrado, y si se pide se rechaza en lugar de ignorarse. Un reenvío siempre queda retenido para su aprobación, y draft_reply solo escribe un borrador. Una plantilla sustituye únicamente '{{sender_name}}', '{{sender_email}}', '{{subject}}' y '{{date}}', con escapado HTML; todo lo demás es texto literal y el cuerpo de los mensajes nunca se interpola.",
-        "interval_minutes": "Minutos entre ejecuciones, dentro de la escala fija 15, 30, 60, 180, 360, 720 o 1440. Obligatorio en 'create'. Una escala en vez de un entero libre, para que una regla de un minuto no machaque al proveedor hasta provocar límites de tasa.",
-        "max_messages_per_run": "Cuántos mensajes coincidentes puede tratar una ejecución: de 1 a 200, 25 por defecto. Es el radio de impacto: limita cuánto correo puede tocar un filtro equivocado antes de que una persona lea el registro de la ejecución.",
-        "limit": "Para la acción 'runs': cuántas ejecuciones devolver, de la más reciente a la más antigua. Por defecto 20, máximo 100."
-      }
-    },
-    "signature": {
-      "title": "Firma",
-      "desc": "Lee o configura la firma de correo de la bandeja, que se añade del lado del servidor en cada envío, respuesta, reenvío, borrador y mensaje programado. Define action: 'get' (devuelve el texto y el HTML actuales de la firma, si está habilitada, el modo de respuesta/reenvío y su origen, que es 'manual', 'gmail_import' o null) o 'set' (escribe signature_text o signature_html, y opcionalmente signature_enabled, signature_reply_mode y sender_name). Las firmas admiten HTML enriquecido: negrita, cursiva, encabezados, listas, colores, alineación, enlaces e imágenes/logotipos alojados referenciados como URLs https, de modo que un agente puede establecer una firma con formato completo pasando signature_html. El mismo editor enriquecido está disponible en el panel. Establecer una firma marca su origen como 'manual', lo que anula de forma permanente la importación automática de Gmail para esa bandeja. sender_name define el nombre que los destinatarios ven en la cabecera From, p. ej. \"Evancoe Bot\", mostrado antes de la dirección misma, y puede establecerse por sí solo sin tocar la firma. 'get' necesita read:email; 'set' necesita send:email.",
-      "params": {
-        "action": "Qué operación realizar: \"get\" (leer la firma actual) o \"set\" (escribirla). Determina qué otros argumentos se aplican y qué permiso se requiere.",
-        "inbox_id": "UUID de la bandeja cuya firma se va a leer o establecer. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
-        "inbox": "Dirección de correo de la bandeja a usar, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id.",
-        "signature_text": "Cuerpo de la firma en texto plano (action 'set'). Omítelo para dejarlo sin cambios; pasa una cadena vacía para borrarlo. Si solo se indica el texto, al enviar se deriva automáticamente una versión HTML.",
-        "signature_html": "Cuerpo opcional de la firma en HTML enriquecido (action 'set'). Admite formato (negrita, cursiva, subrayado, encabezados, listas, colores, alineación, enlaces) e imágenes alojadas mediante etiquetas HTML img cuyo src sea una URL https (sin base64 ni CID); se sanea al guardar. Omítelo para dejarlo sin cambios; pasa una cadena vacía para borrarlo.",
-        "signature_enabled": "Si la firma se añade al correo saliente (action 'set'). Por defecto true; ponlo en false para dejar de añadirla sin borrar el texto.",
-        "signature_reply_mode": "Cuándo incluir la firma en respuestas y reenvíos (action 'set'): \"always\" (cada respuesta/reenvío), \"first_only\" (por defecto, solo el primer mensaje de un hilo, evitando firmar por duplicado) o \"never\".",
-        "sender_name": "Nombre que los destinatarios ven en la cabecera From (action 'set'), p. ej. 'Evancoe Bot', que aparece antes de la dirección misma. Omítelo para dejarlo sin cambios; pasa una cadena vacía para borrarlo. Los espacios se compactan, los caracteres de control y los corchetes angulares se eliminan, y el resultado puede tener como máximo 100 caracteres. Establecer solo sender_name no cambia la firma ni su origen."
       }
     }
   },
