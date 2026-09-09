@@ -151,6 +151,13 @@ import {
   sanitizeSignatureHtmlSafe,
 } from "./signature-sanitizer.ts";
 import {
+  applySignature,
+  composeSignatureBlocks,
+  heldSendSnapshot,
+  includeSignatureForSend,
+  signatureHtmlToText,
+} from "./signature-compose.ts";
+import {
   handleTriageDispatch,
   type TriageAction,
   TRIAGE_ACTION_OPERATIONS,
@@ -10637,57 +10644,11 @@ async function executeListInbox(
 // HTML sanitization — Deno-compatible (no jsdom/DOMPurify)
 // ---------------------------------------------------------------------------
 
-/**
- * Strips dangerous HTML from an email body before returning it to MCP clients.
- *
- * Implements a defence-in-depth regex approach suitable for Deno Edge Functions
- * where jsdom and isomorphic-dompurify are unavailable. Removes:
- *   - <script>, <style>, <link>, <meta>, <iframe>, <object>, <embed> and
- *     their full content (including content between open/close tags)
- *   - All event-handler attributes (on*=...)
- *   - External src attributes (keeps data: URIs for inline images)
- *   - javascript: href values
- *   - <input>, <button>, <textarea>, <select> form elements
- *
- * This is intentionally conservative — false positives (stripping harmless
- * content) are preferred over false negatives (leaving XSS vectors). The
- * output is safe to embed in an LLM context but should not be rendered
- * directly in a user-facing browser without an additional pass through a
- * DOM-based sanitizer.
- */
-
-/**
- * Convert SIGNATURE html to its plain-text half.
- *
- * Deliberately separate from `stripHtmlToText`, which serves arbitrary email
- * bodies: signatures are almost always laid out as a `<table>`, and that
- * function only breaks on `<br>`/`</p>`/`</div>`. A cell-based signature
- * therefore flattened into one run-on line ("Asgeir AlbretsenFounder · MCP
- * Emails"). Here every cell and row boundary is a line break, because plain
- * text has no columns and one cell per line is the only faithful rendering.
- * Widening `stripHtmlToText` itself would reshape `body_text` for every
- * table-heavy marketing email an agent reads, so the two stay independent.
- */
-function signatureHtmlToText(html: string): string {
-  return html
-    .replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/(?:p|div|tr|td|th|li|h[1-6]|blockquote|pre)>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/[ \t]+/g, " ")
-    // Empty cells (a logo `<td>`, a spacer row) each contribute a newline;
-    // squeeze the runs so the signature keeps its shape.
-    .replace(/ *\n */g, "\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
+// Nothing is defined here any more. `signatureHtmlToText` moved to
+// ./signature-compose.ts (2026-09-09) with the rest of the signature
+// composition helpers, so a test can import them; the doc block that used to
+// sit here described the regex email-body sanitizer that the note below
+// replaced, and outlived the function it documented.
 
 // sanitizeEmailHtml and sanitizeSignatureHtml both used to live here, as
 // hand-written regex deny-lists. Both were bypassable, and the email one broke
@@ -12887,130 +12848,14 @@ function isValidEmailAddress(email: string): boolean {
 // Email signatures — central, pure helpers (single injection point)
 // ---------------------------------------------------------------------------
 //
-// No mail backend (Gmail messages.send, Graph sendMail, JMAP Email/send, SMTP)
-// appends a signature — the signature you normally see is added by the client
-// UI. These helpers append a per-inbox signature server-side so programmatic
-// mail looks like mail the user sends. Signature storage lives on the inboxes
-// row (signature_html / signature_text / signature_enabled / ...).
-//
-// PURE: no DB or network I/O. Reply/forward placement (signature before the
-// quoted block, honouring signature_reply_mode) is handled separately — these
-// helpers only cover the plain "new message" case.
-
-/** Minimal HTML-escape for deriving an HTML signature from plain text. */
-function escapeSignatureHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-/**
- * Resolve the signature for an inbox into a normalized `{ text, html }` pair.
- *
- * Returns `null` when no signature should be appended (disabled, or both
- * stored fields empty). When only one half is stored, the other is derived:
- *   - missing text  ← signatureHtmlToText(signature_html)
- *   - missing html  ← escaped signature_text with newlines as <br>
- *
- * The returned `html` is the inner signature markup only — callers wrap it in
- * the `<div class="mcpemails-signature">…</div>` container.
- */
-function composeSignatureBlocks(
-  inbox: InboxRow,
-): { text: string; html: string } | null {
-  if (inbox.signature_enabled === false) return null;
-
-  const storedText = (inbox.signature_text ?? "").trim();
-  const storedHtml = (inbox.signature_html ?? "").trim();
-  if (!storedText && !storedHtml) return null;
-
-  const text = storedText || signatureHtmlToText(storedHtml);
-  // Belt-and-suspenders: scrub the stored HTML at send-time injection (covers
-  // rows written before the tool-side sanitizer, or via any other write path)
-  // before it is wrapped in the mcpemails-signature div. Idempotent on
-  // already-clean HTML; https images and formatting survive.
-  //
-  // The *Safe variant on purpose: the sanitizer throws on output over 100KB,
-  // and failing an entire send over an oversized signature would be a worse
-  // outcome than sending without one. Every write path uses the throwing
-  // version, so this only ever bites on rows written before that was true.
-  const html = storedHtml
-    ? sanitizeSignatureHtmlSafe(storedHtml)
-    : escapeSignatureHtml(storedText).replace(/\n/g, "<br>\n");
-
-  // Guard against a signature that strips down to nothing. The check has to be
-  // on the html's CONTENT, not on the string being non-empty: the dashboard
-  // editor persists `<p></p>` for an untouched signature field, which is a
-  // non-empty string that renders as nothing. Treating it as a signature
-  // appended a bare `-- ` delimiter followed by emptiness to every message.
-  // An image-only signature (a logo with no text) is still a real signature,
-  // so `<img>` counts as content alongside text.
-  const htmlHasContent = signatureHtmlToText(html).trim().length > 0 ||
-    /<img[\s>]/i.test(html);
-  if (!text.trim() && !htmlHasContent) return null;
-
-  return { text, html };
-}
-
-/** Options controlling signature application on a send. */
-interface ApplySignatureOptions {
-  /**
-   * Per-call override (Phase 1 wires this from the tool input). When explicitly
-   * `false`, the signature is never applied. `undefined`/`true` → apply.
-   */
-  include_signature?: boolean;
-}
-
-/**
- * Apply the inbox signature to a NEW-MESSAGE body params object in place,
- * before `buildMimeMessage()` serializes it. Mutates and returns `params`.
- *
- * Rules:
- *   - No-op when `include_signature` is explicitly false, the signature is
- *     disabled, or both stored fields are empty.
- *   - Plain text: append `\n\n-- \n` + signature text (RFC 3676 delimiter:
- *     dash-dash-space-newline).
- *   - HTML: append the signature wrapped in
- *     `<div class="mcpemails-signature">…</div>`.
- *   - If only `textBody` was supplied but the inbox has any signature, an
- *     `htmlBody` is synthesized from the (escaped) plain body + rich signature
- *     so HTML clients render the rich sig — mirroring the multipart/alternative
- *     pair that buildMimeMessage emits whenever htmlBody is present.
- *
- * PURE: reads only the passed objects; performs no I/O.
- */
-function applySignature<T extends { textBody: string; htmlBody?: string }>(
-  params: T,
-  inbox: InboxRow,
-  opts: ApplySignatureOptions = {},
-): T {
-  if (opts.include_signature === false) return params;
-
-  const sig = composeSignatureBlocks(inbox);
-  if (!sig) return params;
-
-  const sigTextBlock = `\n\n-- \n${sig.text}`;
-  const sigHtmlBlock = `\n<div class="mcpemails-signature">${sig.html}</div>`;
-
-  if (params.htmlBody && params.htmlBody.trim()) {
-    // Caller already supplied rich HTML — append to both parts so the
-    // multipart/alternative pair stays consistent.
-    params.htmlBody = `${params.htmlBody}${sigHtmlBlock}`;
-    params.textBody = `${params.textBody}${sigTextBlock}`;
-  } else {
-    // Text-only send. Synthesize the HTML part from the ORIGINAL body (before
-    // appending the text delimiter) so the signature appears exactly once in
-    // each part, then sign the text part.
-    const bodyHtml = escapeSignatureHtml(params.textBody).replace(/\n/g, "<br>\n");
-    params.htmlBody = `${bodyHtml}${sigHtmlBlock}`;
-    params.textBody = `${params.textBody}${sigTextBlock}`;
-  }
-
-  return params;
-}
+// `escapeSignatureHtml`, `plainTextBodyToHtml`, `composeSignatureBlocks` and
+// `applySignature` moved to ./signature-compose.ts (2026-09-09) and are
+// imported at the top of this file. They were extracted, not rewritten: two
+// bugs lived in the seam between "sign at enqueue" and "re-run the snapshot at
+// dispatch", and neither could be covered by a test while they sat in a file no
+// test can import. What stays here is `applyReplyForwardSignature`, because its
+// placement rule is interleaved with the quoting each reply/forward path does.
+// ---------------------------------------------------------------------------
 
 /**
  * Markers that indicate the new reply/forward body ALREADY contains a quoted
@@ -15876,18 +15721,31 @@ async function executeSendEmail(
   // reply/forward placement is handled separately (their own execute fns).
   // include_signature: false (per-call override) suppresses it; omitting the
   // flag preserves the Phase 0 default of always signing.
-  const includeSignature = args["include_signature"] === false ? false : undefined;
+  //
+  // The second argument is the fix for a send that went out signed TWICE
+  // (2026-09-09). This function is re-entered for a held send: the approval
+  // snapshot stored below is the already-signed body, and on approval the
+  // dispatcher re-runs this very handler over it under an internal key. Signing
+  // again there appended the signature to both parts a second time, and nothing
+  // in the codebase said no: `bodyAlreadyHasQuoteOrSignature` only guards the
+  // reply `first_only` mode, and the `internalApprovalDispatch` marker was read
+  // only by `queueSendApproval`, to avoid re-queueing. The rule now lives in
+  // `includeSignatureForSend`, with both halves of it written down.
+  const includeSignature = includeSignatureForSend(args, apiKey.internalApprovalDispatch);
   applySignature(sendParams, senderInbox, { include_signature: includeSignature });
 
   try {
-    const approval = await queueSendApproval(senderInbox, apiKey, {
+    // `heldSendSnapshot` (not an object literal) because this payload carries a
+    // load-bearing key that is invisible here: `include_signature: false`, which
+    // records that the body above is FINAL. See that function.
+    const approval = await queueSendApproval(senderInbox, apiKey, heldSendSnapshot({
       inbox_id: senderInbox.id,
       to: sendParams.to, cc: sendParams.cc, bcc: sendParams.bcc,
-      subject: sendParams.subject, body: sendParams.textBody,
-      ...(sendParams.htmlBody ? { html_body: sendParams.htmlBody } : {}),
-      ...(sendParams.attachments.length ? { attachments: sendParams.attachments } : {}),
-      ...(sendParams.replyTo ? { reply_to: sendParams.replyTo } : {}),
-    });
+      subject: sendParams.subject, textBody: sendParams.textBody,
+      htmlBody: sendParams.htmlBody,
+      attachments: sendParams.attachments,
+      replyTo: sendParams.replyTo,
+    }));
     if (approval) return {
       result: await heldSendResult(approval, apiKey, senderInbox.id, "email"),
       logStatus: "success", logErrorCode: null,

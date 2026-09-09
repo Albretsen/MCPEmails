@@ -45,6 +45,8 @@
 // deno-lint-ignore-file no-explicit-any
 
 import { neutralizeList, neutralizeMaybe, neutralizeText } from "./text-safety.ts";
+import { plainTextBodyToHtml } from "./signature-compose.ts";
+import { EMAIL_HTML_MAX_LENGTH } from "./signature-sanitizer.ts";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -740,6 +742,13 @@ async function buildOutboundEnvelope(
     })
     : [];
 
+  // Whether a signature is still TO BE appended, which is not the same question
+  // as whether the message will have one. An `email_send` snapshot is composed
+  // and signed before it is stored (and says so with `include_signature: false`),
+  // so the body above already contains the signature and this block correctly
+  // stays quiet; a reply/forward/schedule snapshot is the raw arguments and is
+  // signed at dispatch, so there the reviewer is told about a signature they
+  // cannot yet see.
   const signatureText = typeof inboxRow.signature_text === "string" ? inboxRow.signature_text : "";
   const willAppend = inboxRow.signature_enabled === true &&
     !providerSide &&
@@ -1198,7 +1207,61 @@ export async function runApprovalUpdate(
     }
     updated.subject = subject;
   }
-  if (typeof bodyText === "string") updated.body = bodyText;
+  if (typeof bodyText === "string") {
+    updated.body = bodyText;
+    // ── A TEXT-ONLY EDIT MUST NOT LEAVE THE HTML PART BEHIND ───────────────
+    // (fixed 2026-09-09, verified against production first.)
+    //
+    // These two writes used to be independent, which meant a `body_text`-only
+    // edit rewrote the text part and left `html_body` exactly as stored. Most
+    // mail clients render the HTML part, so the tool reported the edit as
+    // applied, the reviewer approved what they had just written, and the
+    // recipient received the PRE-EDIT wording. Silent, and in the one direction
+    // this whole feature exists to prevent.
+    //
+    // Every held send has both parts, including one composed as text only:
+    // `email_send` runs `applySignature` before `queueSendApproval`, and that
+    // synthesizes an HTML alternative whenever the inbox has a signature.
+    //
+    // So when the caller changes the text and does NOT also supply HTML, the
+    // HTML part is regenerated from the new text through
+    // `plainTextBodyToHtml`, the SAME synthesis that produced it at enqueue
+    // time, not a second conversion that could drift from it. That function is
+    // also where the escaping lives: `body_text` is caller-supplied and is
+    // about to become markup, and it becomes markup only by being escaped, so
+    // there is no sanitizer step to get wrong here.
+    //
+    // THE SIGNATURE IS DELIBERATELY NOT RE-APPLIED. The new text already
+    // carries whatever signature is going out, in both of the shapes a snapshot
+    // comes in:
+    //   - `email_send` stores a fully-composed, ALREADY-SIGNED body, and that
+    //     is what the reviewer is shown and edits, so their replacement text
+    //     contains the signature. Appending one here would send it twice.
+    //   - a reply/forward/schedule snapshot stores the RAW ARGUMENTS and is
+    //     signed at dispatch, into both parts. Appending one here would double
+    //     it there too.
+    // Either way the answer is "not here", which is also why this code needs no
+    // access to the inbox's signature at all.
+    //
+    // The cost, stated rather than hidden: a rich HTML signature (or any
+    // caller-supplied rich HTML) comes back as its plain-text form after a
+    // text-only edit, because the reviewer's text is the only statement of
+    // intent we have. Losing the styling of a signature is a smaller harm than
+    // sending wording the reviewer replaced.
+    if (typeof bodyHtml !== "string" && typeof updated.html_body === "string") {
+      const regenerated = plainTextBodyToHtml(bodyText);
+      // `body_text` is capped at 1 MB and escaping can multiply it (every
+      // character of `&'"<>` becomes 5-6), so the regenerated part can outgrow
+      // what a mail body may reasonably be. Dropping the HTML part is the safe
+      // way out: the message goes as text/plain, which still says exactly what
+      // the reviewer typed. Keeping the stale part would not.
+      if (regenerated.length > EMAIL_HTML_MAX_LENGTH) delete updated.html_body;
+      else updated.html_body = regenerated;
+    }
+  }
+  // Supplying HTML explicitly still overrides everything above: a caller who
+  // sends both parts has said what each one should say. HTML alone leaves the
+  // text part alone, as before.
   if (typeof bodyHtml === "string") updated.html_body = bodyHtml;
 
   const ciphertext = await deps.encrypt(JSON.stringify(updated));
@@ -1524,7 +1587,14 @@ export const APPROVAL_TOOL_DEFINITIONS: ApprovalToolDefinition[] = [
       properties: {
         approval_id: APPROVAL_ID_PROPERTY,
         subject: { type: "string", maxLength: MAX_SUBJECT_LENGTH, description: "Replacement subject line." },
-        body_text: { type: "string", maxLength: MAX_BODY_LENGTH, description: "Replacement plain-text body." },
+        body_text: {
+          type: "string",
+          maxLength: MAX_BODY_LENGTH,
+          description:
+            "Replacement plain-text body. Unless body_html is supplied in the same call, " +
+            "the HTML part is regenerated from this text so both parts of the message say " +
+            "the same thing. Include the signature if the body you are replacing had one.",
+        },
         body_html: { type: "string", maxLength: MAX_BODY_LENGTH, description: "Replacement HTML body." },
       },
       required: ["approval_id"],
