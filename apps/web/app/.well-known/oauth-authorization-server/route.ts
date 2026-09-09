@@ -12,6 +12,15 @@
  * - Only public clients (token_endpoint_auth_method: "none") are supported.
  * - All scopes the MCP server enforces are advertised here so clients can
  *   request them up front during the authorization flow.
+ * - Both client identification schemes are advertised, and the client picks:
+ *   `registration_endpoint` for RFC 7591 Dynamic Client Registration, and
+ *   `client_id_metadata_document_supported` for a client_id that is itself an
+ *   HTTPS URL (draft-ietf-oauth-client-id-metadata-document). Claude only
+ *   selects CIMD when it sees that flag AND "none" in
+ *   token_endpoint_auth_methods_supported, since its CIMD client authenticates
+ *   as a public client, so the pair below is the switch. The registration
+ *   endpoint stays because every client that already registered through it
+ *   keeps working, and clients that do not implement CIMD still need it.
  *
  * No authentication required. Cached for 1 hour.
  */
@@ -53,6 +62,7 @@ export async function GET() {
       code_challenge_methods_supported: ['S256'],
       token_endpoint_auth_methods_supported: ['none'],
       revocation_endpoint_auth_methods_supported: ['none'],
+      client_id_metadata_document_supported: true,
     },
     {
       headers: {

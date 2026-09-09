@@ -5,6 +5,7 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { validateCsrfToken } from '@/lib/oauth/csrf';
 import { consumeStateNonce } from '@/lib/oauth/state';
 import { validateResourceIndicator } from '@/lib/oauth/resource';
+import { looksLikeUrlClientId, redirectUriAllowed, resolveCimdClient } from '@/lib/oauth/cimd';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 
 /**
@@ -143,18 +144,69 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const effectiveInboxIds: string[] | null = wantsAllInboxes ? null : requestedInboxIds;
 
   // ── Client validation (re-validate server-side) ───────────────────────────
-  const { data: oauthClient, error: clientError } = await supabase
-    .from('oauth_clients')
-    .select('client_id, client_name, redirect_uris, scopes_allowed, deactivated_at')
-    .eq('client_id', client_id)
-    .is('deactivated_at', null)
-    .single();
+  // Mirrors section 3 of app/authorize/page.js: a client_id that is an HTTPS
+  // URL is a Client ID Metadata Document and is resolved by fetching it, and
+  // anything else is a row in oauth_clients. Re-done here rather than trusted
+  // from the page, exactly like the resource indicator above: this route is a
+  // plain authenticated POST and nothing stops a caller reaching it directly.
+  //
+  // The document is normally still in the in-process cache from the render
+  // that produced this form, so the common case costs no second fetch.
+  const isCimd = looksLikeUrlClientId(client_id);
 
-  if (clientError || !oauthClient) {
-    return NextResponse.json({ error: 'Unknown or deactivated client.' }, { status: 400 });
+  let oauthClient: { client_id: string; client_name: string; redirect_uris: string[]; scopes_allowed: string[] };
+
+  if (isCimd) {
+    const resolved = await resolveCimdClient(client_id);
+    if (!resolved.ok) {
+      return NextResponse.json({ error: resolved.message }, { status: 400 });
+    }
+
+    // The hand-inserted kill switch for a client that has no row of its own.
+    const { data: blocked } = await supabase
+      .from('oauth_clients')
+      .select('deactivated_at')
+      .eq('client_id', resolved.value.client_id)
+      .not('deactivated_at', 'is', null)
+      .maybeSingle();
+
+    if (blocked) {
+      return NextResponse.json({ error: 'Unknown or deactivated client.' }, { status: 400 });
+    }
+
+    oauthClient = {
+      // The NORMALISED URL, which is what gets written to oauth_auth_codes and
+      // oauth_consents below, so the token endpoint's client_id comparison and
+      // a later consent lookup both hit the same string.
+      client_id:      resolved.value.client_id,
+      // The host of the client_id URL. Never the document's client_name: this
+      // string reaches the consent screen and the API key label.
+      client_name:    resolved.value.client_name,
+      redirect_uris:  resolved.value.redirect_uris,
+      scopes_allowed: resolved.value.scopes_allowed,
+    };
+  } else {
+    const { data: registered, error: clientError } = await supabase
+      .from('oauth_clients')
+      .select('client_id, client_name, redirect_uris, scopes_allowed, deactivated_at')
+      .eq('client_id', client_id)
+      .is('deactivated_at', null)
+      .single();
+
+    if (clientError || !registered) {
+      return NextResponse.json({ error: 'Unknown or deactivated client.' }, { status: 400 });
+    }
+
+    oauthClient = registered;
   }
 
-  if (!oauthClient.redirect_uris.includes(redirect_uri)) {
+  // Same-origin or port-agnostic loopback for CIMD (RFC 8252 §7.3), exact
+  // membership for a registered client.
+  const redirectOk = isCimd
+    ? redirectUriAllowed(oauthClient.client_id, oauthClient.redirect_uris, redirect_uri)
+    : oauthClient.redirect_uris.includes(redirect_uri);
+
+  if (!redirectOk) {
     return NextResponse.json({ error: 'redirect_uri does not match registered URIs.' }, { status: 400 });
   }
 
