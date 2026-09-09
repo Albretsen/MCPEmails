@@ -845,12 +845,19 @@ async function loadPendingPlan(
   const at = nowMs(deps);
 
   if (row.status !== "pending") {
+    // Every terminal status needs its own branch. `cancelled` fell through to
+    // the "already executed" default here, so declining a plan and then
+    // clicking Execute told the caller the operation HAD run. On a bulk delete
+    // that is the worst sentence this file can emit: it reports mail as
+    // deleted when nothing was touched. The default is now the honest one.
     const already = row.status === "expired"
       ? "expired"
       : row.status === "executing"
       ? "still running"
       : row.status === "failed"
       ? "already attempted and failed"
+      : row.status === "cancelled"
+      ? "already cancelled"
       : "already executed";
     return {
       ok: false,
