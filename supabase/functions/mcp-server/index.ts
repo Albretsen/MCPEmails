@@ -2934,6 +2934,95 @@ function isToolAuthorized(tool: ToolDefinition, scopes: string[]): boolean {
 }
 
 /**
+ * The prefix `POST /api/oauth/token` writes into `api_keys.name` for every
+ * access token it mints ("OAuth: Claude", disambiguated to "OAuth: Claude (2)"
+ * on a second authorization of the same client).
+ */
+const OAUTH_KEY_NAME_PREFIX = "OAuth: ";
+
+/**
+ * Whether this credential was minted by the OAuth flow rather than created by
+ * hand in the dashboard.
+ *
+ * WHY THE DISTINCTION EXISTS. `tools/list` treats the two kinds of credential
+ * differently (see toolsForListing below), so the question has to be answerable
+ * from the row `authenticateRequest` already loaded, on the hot path, with no
+ * extra round trip.
+ *
+ * WHY IT IS TWO SIGNALS AND NOT A COLUMN. There is no `issued_via` column on
+ * `api_keys`; the table predates the OAuth flow and both issuers write the same
+ * shape. What separates them is that the two issuers write DIFFERENT FIELDS:
+ *
+ *   • `POST /api/oauth/token` always sets `expires_at` (one hour out, rotated
+ *     in place on refresh) and always names the row "OAuth: <client>".
+ *   • The dashboard (`POST /api/api-keys`, `PATCH /api/api-keys/[id]`) has no
+ *     code path that writes `expires_at` at all, and takes the name verbatim
+ *     from the user.
+ *
+ * Both are required together, and that is the point rather than belt and
+ * braces: the name alone is user-controlled (nothing stops someone naming a
+ * dashboard key "OAuth: x"), and an expiry alone would misread a future
+ * expiring-dashboard-key feature. Neither issuer can produce the other's pair
+ * by accident.
+ *
+ * VERIFIED against production 2026-09-09: of 411 active keys, 328 carry the
+ * OAuth name AND an expiry, 83 carry neither, and ZERO carry one without the
+ * other. The authoritative link (`oauth_refresh_tokens.api_key_id`) agrees on
+ * 321 of the 328; the 7 it misses are unlinked access tokens from May 2026
+ * that expired within the hour and can never authenticate again, which is why
+ * this reads the row itself instead of paying for that join on every request.
+ *
+ * A misclassification is not a security event in either direction. Nothing
+ * here authorises anything: `tools/call` re-checks the scope against
+ * `apiKey.scopes` regardless, and the only consequence of guessing wrong is
+ * whether `tools/list` shows a tool the key cannot yet call.
+ */
+function isOAuthIssuedKey(apiKey: ApiKeyRow): boolean {
+  return apiKey.expires_at !== null &&
+    apiKey.expires_at !== undefined &&
+    typeof apiKey.name === "string" &&
+    apiKey.name.startsWith(OAUTH_KEY_NAME_PREFIX);
+}
+
+/**
+ * The advertised tools `tools/list` should return for this credential.
+ *
+ * A DASHBOARD KEY STAYS SCOPE-FILTERED, exactly as it always has. A user who
+ * ticks only "read" when creating a key has made a deliberate security choice,
+ * and integrations built against that key rely on a narrow key syncing a
+ * narrow tool list. Nothing about that changes.
+ *
+ * AN OAUTH TOKEN SEES THE WHOLE SURFACE, whatever it currently holds, and this
+ * is what makes step-up authorization possible at all. From 2026-09-09 the
+ * first consent prompt asks only for the read scope (see WWW_AUTHENTICATE in
+ * apps/web/app/api/mcp/route.ts), and everything else is meant to be reached by
+ * re-consenting when the model first needs it. That only works if the model can
+ * SEE the tool it needs: claude.ai caches a connector's tool SET at connect
+ * time and refreshes only descriptions and result payloads, so a tool absent
+ * from the list at connect time stays absent until the user manually hits
+ * "Refresh tools list". Filtering here would mean a step-up grants the send
+ * scope to a session that has no send tool to call with it, and the user would
+ * never be asked for the scope in the first place, because the model never
+ * sees a reason to try.
+ *
+ * So the list is the catalogue, and the scope check moves entirely to
+ * `tools/call`, which answers an ungranted call with the HTTP 403 +
+ * `WWW-Authenticate: error="insufficient_scope"` challenge the MCP spec's
+ * step-up flow is built on. That is the shape the spec assumes: discovery
+ * describes what the server offers, the challenge describes what this token
+ * may do.
+ *
+ * Withheld tools are excluded first and unconditionally. `isAdvertisedTool` is
+ * about a name we keep callable for clients that cached it (`signature`), not
+ * about permission, and unfiltering scopes must not resurrect it.
+ */
+function toolsForListing(apiKey: ApiKeyRow): ToolDefinition[] {
+  const advertised = TOOL_REGISTRY.filter((tool) => isAdvertisedTool(tool.name));
+  if (isOAuthIssuedKey(apiKey)) return advertised;
+  return advertised.filter((tool) => isToolAuthorized(tool, apiKey.scopes));
+}
+
+/**
  * Custom `format` token for a field that accepts a calendar date OR an instant.
  *
  * `since` and `before` take either, which no standard token can express:
@@ -24705,18 +24794,15 @@ async function handleToolsList(
   // which is a frontend change.
   const uiGates = await keyReviewCardGates(apiKey);
 
-  // Filter the registry to only tools the API key's scopes allow.
-  // An API key with only read:email will see email_list, email_read, email_search.
-  // An API key with send:email (in addition or alone) will also see email_send, email_reply.
+  // Which tools this credential is shown, and whether the scope filter applies
+  // to it at all: a dashboard API key stays filtered to what its scopes allow,
+  // an OAuth token is shown the whole advertised catalogue so it can step up
+  // for the scopes it lacks. The reasoning is long and lives on toolsForListing.
+  //
   // serializeToolForList omits every optional field (outputSchema, annotations,
   // _meta) that the entry does not carry, so a tool without UI metadata
   // produces exactly the JSON it did before MCP Apps existed.
-  const visibleTools = TOOL_REGISTRY
-    // Withheld names first: a tool kept for the clients that already cached it
-    // is registered, validated and callable, but never listed. Today that is
-    // `signature` alone. See UNADVERTISED_TOOLS in advertised-schema.ts.
-    .filter((tool) => isAdvertisedTool(tool.name))
-    .filter((tool) => isToolAuthorized(tool, apiKey.scopes))
+  const visibleTools = toolsForListing(apiKey)
     .map((tool) => {
       // undefined for a tool that is not card-bearing OR is not gated in, in
       // which case the registry entry is passed through untouched — which is
@@ -24730,6 +24816,9 @@ async function handleToolsList(
   console.log("[mcp-server] tools/list", {
     key_id: apiKey.id,
     scopes: apiKey.scopes,
+    // Recorded so a support question ("why can this connection see send?")
+    // is answerable from the log without re-deriving the credential's origin.
+    scope_filtered: !isOAuthIssuedKey(apiKey),
     visible_tool_count: visibleTools.length,
     visible_tools: visibleTools.map((t) => t.name).join(","),
   });
@@ -25164,10 +25253,14 @@ async function handleToolsCall(
         // a caller that just got a name wrong, so it should name the tools we
         // want it to reach for; a withheld name like `signature` is kept alive
         // for clients that already cached it, not offered to new ones.
-        available_tools: TOOL_REGISTRY
-          .filter((t) => isAdvertisedTool(t.name))
-          .filter((t) => isToolAuthorized(t, apiKey.scopes))
-          .map((t) => t.name),
+        //
+        // Deliberately the SAME list `tools/list` gave this credential, via the
+        // same helper. For an OAuth token that means a tool it does not yet
+        // hold the scope for still appears here: it was advertised, so a model
+        // that typo'd its way into this error must be told the real name and
+        // allowed to retry into the step-up challenge. Telling it the tool does
+        // not exist would end the turn instead.
+        available_tools: toolsForListing(apiKey).map((t) => t.name),
       },
     );
   }
@@ -27587,6 +27680,12 @@ async function handleRequest(req: Request): Promise<Response> {
       "WWW-Authenticate",
       buildInsufficientScopeChallenge(
         response.error.data.required_scopes,
+        // The scopes the token already holds travel with the challenge so the
+        // step-up consent RE-grants them. Without this the client asks only
+        // for what the header names, and a user who reaches a second step-up
+        // silently loses the permission the first one gave them. See the long
+        // note on buildInsufficientScopeChallenge.
+        response.error.data.granted_scopes,
         `${APP_URL}/.well-known/oauth-protected-resource`,
       ),
     );
@@ -27631,4 +27730,12 @@ if (Deno.env.get("MCP_SERVER_NO_LISTEN") !== "1") {
 // claim is specifically that a retired call shape still passes the SERVER'S
 // validator, not merely that it appears in a schema.
 // ---------------------------------------------------------------------------
-export { CONSOLIDATED_SPECS, TOOL_ANNOTATIONS, TOOL_REGISTRY, validateInputSchema };
+export {
+  CONSOLIDATED_SPECS,
+  isOAuthIssuedKey,
+  isToolAuthorized,
+  TOOL_ANNOTATIONS,
+  TOOL_REGISTRY,
+  toolsForListing,
+  validateInputSchema,
+};
