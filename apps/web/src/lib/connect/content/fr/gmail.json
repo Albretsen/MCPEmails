@@ -1,20 +1,20 @@
 {
   "meta": {
     "title": "Connecter Gmail à Claude (et à toute IA)",
-    "description": "Connectez Gmail à Claude, Cursor, ChatGPT et tout client MCP en un clic avec Google OAuth. Laissez l'IA lire, envoyer, planifier et organiser Gmail. 1 boîte gratuite, pour toujours."
+    "description": "Connectez Gmail à Claude, Cursor, ChatGPT et tout client MCP avec un mot de passe d'application Google en IMAP. Laissez l'IA lire, envoyer, planifier et organiser Gmail. 1 boîte gratuite, pour toujours."
   },
   "hero": {
     "eyebrow": "Gmail + IA",
     "titleLine1": "Connectez Gmail à Claude",
     "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
-    "lead": "Offrez à votre agent IA une vraie boîte Gmail en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec une connexion Google en un clic, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "lead": "Offrez à votre agent IA une vraie boîte Gmail en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un mot de passe d'application Google, et utilisez la même boîte dans tous les clients MCP, pas seulement dans un.",
     "meta0": "1 boîte gratuite, pour toujours",
-    "meta1": "Connexion Google en un clic (OAuth)",
+    "meta1": "Connexion par mot de passe d'application Google",
     "meta2": "E-mails récupérés en direct, jamais stockés"
   },
   "method": {
-    "title": "Comment Gmail se connecte : Google OAuth en un clic",
-    "body": "Gmail se connecte via <b>Google OAuth</b> : connectez-vous avec Google, approuvez l'accès en lecture et en envoi, et c'est connecté. Pas de mot de passe d'application, pas de paramètres IMAP à dénicher. Révoquez l'accès à tout moment depuis votre compte Google ou le tableau de bord mcpemails."
+    "title": "Comment Gmail se connecte : un mot de passe d'application Google",
+    "body": "Gmail se connecte via un <b>mot de passe d'application Google</b> en IMAP et SMTP. Google ne propose ces mots de passe que sur les comptes dont la <b>validation en deux étapes</b> est activée : activez-la d'abord, puis créez-en un sur <b>myaccount.google.com/apppasswords</b>. Il s'agit de 16 lettres minuscules en quatre groupes, à coller à la place de votre mot de passe Google habituel, qui ne fonctionnera pas. Révoquez-le à tout moment depuis cette même page Google, ou supprimez la boîte dans mcpemails."
   },
   "setup": [
     {
@@ -22,8 +22,8 @@
       "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
-      "h": "Connectez-vous avec Google",
-      "p": "Cliquez sur Connecter Gmail, connectez-vous avec votre compte Google et approuvez l'accès en lecture et en envoi. Pas de mot de passe d'application ni de configuration IMAP."
+      "h": "Créez un mot de passe d'application Google",
+      "p": "Activez la validation en deux étapes sur votre compte Google si ce n'est pas déjà fait, puis rendez-vous sur myaccount.google.com/apppasswords et créez-en un. Collez les 16 caractères dans mcpemails avec votre adresse Gmail complète. Les espaces du code n'ont pas d'importance."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",

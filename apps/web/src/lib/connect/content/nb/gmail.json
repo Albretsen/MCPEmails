@@ -1,20 +1,20 @@
 {
   "meta": {
     "title": "Koble Gmail til Claude (og enhver AI)",
-    "description": "Koble Gmail til Claude, Cursor, ChatGPT og enhver MCP-klient med ett klikk via Google OAuth. La AI lese, sende, planlegge og organisere Gmail-en din. 1 innboks gratis, for alltid."
+    "description": "Koble Gmail til Claude, Cursor, ChatGPT og enhver MCP-klient med et Google app-passord over IMAP. La AI lese, sende, planlegge og organisere Gmail-en din. 1 innboks gratis, for alltid."
   },
   "hero": {
     "eyebrow": "Gmail + AI",
     "titleLine1": "Koble Gmail til Claude",
     "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
-    "lead": "Gi AI-agenten din en ekte Gmail-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med ett klikks Google-pålogging, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "lead": "Gi AI-agenten din en ekte Gmail-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med et Google app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
     "meta0": "1 innboks gratis, for alltid",
-    "meta1": "Google-pålogging med ett klikk (OAuth)",
+    "meta1": "Kobles til med et Google app-passord",
     "meta2": "E-post hentes direkte, lagres aldri"
   },
   "method": {
-    "title": "Slik kobler Gmail seg til: Google OAuth med ett klikk",
-    "body": "Gmail kobles til med <b>Google OAuth</b>: logg inn med Google, godkjenn lese- og sendetilgang, og du er tilkoblet. Ingen app-passord, ingen IMAP-innstillinger å grave fram. Trekk tilbake tilgangen når som helst fra Google-kontoen din eller mcpemails-dashbordet."
+    "title": "Slik kobler Gmail seg til: med et Google app-passord",
+    "body": "Gmail kobles til med et <b>Google app-passord</b> over IMAP og SMTP. Google tilbyr bare app-passord på kontoer med <b>totrinnsbekreftelse slått på</b>, så slå det på først, og opprett deretter et på <b>myaccount.google.com/apppasswords</b>. Det er 16 små bokstaver i fire grupper, og du limer det inn i stedet for det vanlige Google-passordet ditt, som ikke vil fungere. Trekk det tilbake når som helst fra den samme Google-siden, eller slett innboksen i mcpemails."
   },
   "setup": [
     {
@@ -22,8 +22,8 @@
       "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
-      "h": "Logg inn med Google",
-      "p": "Klikk Koble til Gmail, logg inn med Google-kontoen din, og godkjenn lese- og sendetilgang. Ingen app-passord eller IMAP-oppsett."
+      "h": "Opprett et Google app-passord",
+      "p": "Slå på totrinnsbekreftelse på Google-kontoen din hvis den ikke allerede er på, gå til myaccount.google.com/apppasswords og opprett ett. Lim inn de 16 tegnene i mcpemails sammen med hele Gmail-adressen din. Mellomrom i koden spiller ingen rolle."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",

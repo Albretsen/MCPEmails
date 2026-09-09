@@ -1,20 +1,20 @@
 {
   "meta": {
     "title": "将 Gmail 连接到 Claude（及任意 AI）",
-    "description": "用 Google OAuth 一键将 Gmail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的 Gmail，1 个收件箱永久免费。"
+    "description": "用 Google 应用专用密码通过 IMAP 将 Gmail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的 Gmail，1 个收件箱永久免费。"
   },
   "hero": {
     "eyebrow": "Gmail + AI",
     "titleLine1": "将 Gmail 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
-    "lead": "几分钟即可为你的 AI 代理接入一个真正的 Gmail 收件箱。用一键 Google 登录即可读取、搜索、发送、回复、定时与整理邮件：同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+    "lead": "几分钟即可为你的 AI 代理接入一个真正的 Gmail 收件箱。用 Google 应用专用密码即可读取、搜索、发送、回复、定时与整理邮件：同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
     "meta0": "1 个收件箱永久免费",
-    "meta1": "一键 Google 登录（OAuth）",
+    "meta1": "使用 Google 应用专用密码连接",
     "meta2": "邮件实时获取，绝不存储"
   },
   "method": {
-    "title": "Gmail 如何连接：一键 Google OAuth",
-    "body": "Gmail 通过 <b>Google OAuth</b> 连接：用 Google 登录、授予读取与发送权限，即可完成连接。无需应用专用密码，也无需查找 IMAP 设置。你可随时在 Google 账户或 mcpemails 控制台中撤销访问权限。"
+    "title": "Gmail 如何连接：Google 应用专用密码",
+    "body": "Gmail 通过 <b>Google 应用专用密码</b>以 IMAP 与 SMTP 连接。Google 仅对已<b>开启两步验证</b>的账户提供应用专用密码，因此请先开启，然后在 <b>myaccount.google.com/apppasswords</b> 创建一个。密码为 16 个小写字母、分四组，粘贴时用它替代你平时的 Google 密码（平时的密码无法使用）。你可随时在同一个 Google 页面撤销，或在 mcpemails 中删除该收件箱。"
   },
   "setup": [
     {
@@ -22,8 +22,8 @@
       "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
-      "h": "用 Google 登录",
-      "p": "点击「连接 Gmail」，用你的 Google 账户登录，并授予读取与发送权限。无需应用专用密码或 IMAP 配置。"
+      "h": "创建 Google 应用专用密码",
+      "p": "如果尚未开启，请先在 Google 账户中开启两步验证，然后访问 myaccount.google.com/apppasswords 创建一个。将这 16 个字符连同完整的 Gmail 地址粘贴到 mcpemails。密码中的空格可忽略。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
