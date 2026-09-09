@@ -732,7 +732,17 @@ Deno.test("a cancelled plan can never be executed", async () => {
   const result = await runBulkExecute(deps, caller, { plan_id: planId });
 
   assertEquals(spy.calls.length, 0, "a declined plan is dead");
-  assertEquals(envelopeOf(result).state, "decided_elsewhere", "and says so");
+  const envelope = envelopeOf(result);
+  assertEquals(envelope.state, "decided_elsewhere", "and says so");
+  // Regression: `cancelled` used to fall through to the "already executed"
+  // default, so declining a bulk DELETE and then executing it reported the mail
+  // as deleted when nothing had been touched. Asserting only on `state` is what
+  // let that through, so the wording is pinned here too.
+  assertEquals(
+    envelope.receipt.headline,
+    "This preview was already cancelled.",
+    "a cancelled plan must never be described as executed",
+  );
 });
 
 Deno.test("cancel enforces the same isolation guards as execute", async () => {
