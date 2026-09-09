@@ -52,7 +52,7 @@
     "items": {
       "0": {
         "tag": "Périmètre",
-        "h": "Onze outils ciblés. L'essentiel, couvert.",
+        "h": "Seize outils ciblés. L'essentiel, couvert.",
         "p": "Les outils couvrent le travail quotidien : <code>inbox_list</code>, <code>email_read</code> (list, read, search) et <code>email_compose</code> (send, reply), ainsi que des outils ciblés pour organiser, supprimer, gérer les dossiers, les brouillons, la planification, les contacts, les signatures et les automatisations sans surveillance. Collez l'URL du point de terminaison MCP dans claude.ai, Claude Desktop, Cursor ou tout agent compatible MCP."
       },
       "1": {
@@ -105,9 +105,9 @@
       "1": "Lire le courrier : listez les résumés récents, récupérez un message complet par ID, lisez jusqu'à 50 par lot ou lancez une recherche indépendante du fournisseur, le tout via l'argument action.",
       "2": "Organiser le courrier : déplacez, copiez, supprimez, marquez ou archivez : un à la fois, en masse ou directement depuis une recherche.",
       "3": "Rédiger : envoyez un nouveau message, répondez dans le fil ou transférez. Expédié par l'API Gmail ou SMTP : votre domaine, votre délivrabilité.",
-      "4": "Gérez les dossiers (libellés sur Gmail) : listez, créez, renommez ou supprimez, et utilisez-les comme destinations de déplacement.",
-      "5": "Brouillons : listez, créez, mettez à jour et envoyez les brouillons stockés dans le dossier Drafts du fournisseur.",
-      "6": "Programmez un message pour plus tard, listez les envois programmés en attente et annulez-les avant leur départ.",
+      "4": "Gérez les dossiers (libellés sur Gmail) : créez, renommez ou supprimez, et utilisez-les comme destinations de déplacement. folder_list lit ceux qui existent déjà.",
+      "5": "Brouillons : créez, mettez à jour et envoyez les brouillons stockés dans le dossier Drafts du fournisseur. draft_list lit ceux qui sont enregistrés.",
+      "6": "Programmez un message pour plus tard, et annulez-le avant son départ. schedule_list montre ce qui est en attente.",
       "7": "Trouvez des personnes par nom ou e-mail grâce à une analyse en direct du courrier récent correspondant. Rien n'est stocké."
     }
   },
@@ -209,7 +209,7 @@
       },
       {
         "q": "Que peut réellement faire l'IA avec ma boîte de réception ?",
-        "a": "Lire et rechercher du courrier, envoyer, répondre et transférer de vrais messages, programmer des envois pour plus tard et organiser votre boîte de réception : déplacer, copier, marquer, archiver et supprimer. Neuf outils basés sur l'action, pour que l'agent termine le travail dans votre boîte au lieu de se contenter de rédiger."
+        "a": "Lire et rechercher du courrier, envoyer, répondre et transférer de vrais messages, programmer des envois pour plus tard et organiser votre boîte de réception : déplacer, copier, marquer, archiver et supprimer. Seize outils basés sur l'action, pour que l'agent termine le travail dans votre boîte au lieu de se contenter de rédiger."
       },
       {
         "q": "Comment connecter une boîte de réception ?",

@@ -122,12 +122,22 @@ const SCOPE_STYLES = {
 };
 
 /* ─── Tool reference data ────────────────────────────────────── */
-// One card per consolidated tool, in the order the MCP server's tool registry
-// returns them. Most tools take a required `action` selector; the param table
-// lists the union of every action's params (each action uses the relevant
-// subset — see the description). `scopes` lists every scope an action may need.
+// One card per tool a caller invokes directly, in the order the MCP server's
+// tool registry returns them. Most take a required `action` selector; the param
+// table lists the union of every action's params (each action uses the relevant
+// subset, see the description). `scopes` lists every scope an action may need.
 // params/examples are structural; descriptions are resolved via
 // t('tools.<name>.desc') and t('tools.<name>.params.<param>').
+//
+// WHAT THIS PAGE LEAVES OUT, and why it is a subset rather than an oversight:
+// a full-scope key gets 22 tools from tools/list. The six that are missing here
+// (approval_review, approval_decide, approval_update, approval_schedule,
+// bulk_execute, bulk_cancel) all carry _meta.ui.visibility: ["app"] and exist to
+// drive the review card an MCP client renders for a held send or a previewed
+// bulk operation. They are reached from that card, not composed by hand from
+// this reference, and documenting their plan_id/approval_id arguments here would
+// suggest a workflow nobody starts from scratch. Everything a caller writes a
+// tools/call for by hand is on this page.
 
 const TOOLS = [
   {
@@ -205,6 +215,14 @@ const TOOLS = [
       { name: 'include_html',        type: 'boolean',       required: false },
       { name: 'include_attachments', type: 'boolean',       required: false },
       { name: 'mark_as_read',        type: 'boolean',       required: false },
+      // Paging and attachment-selector params. These have had translated copy in
+      // every locale since the actions shipped, but were never listed here, so
+      // the page documented a narrower email_read than the server accepts.
+      { name: 'body_offset',         type: 'integer',       required: false },
+      { name: 'body_html_offset',    type: 'integer',       required: false },
+      { name: 'body_max_chars',      type: 'integer',       required: false },
+      { name: 'attachment_index',    type: 'integer',       required: false },
+      { name: 'filename',            type: 'string',        required: false },
       { name: 'from',                type: 'string',        required: false },
       { name: 'to',                  type: 'string',        required: false },
       { name: 'cc',                  type: 'string',        required: false },
@@ -393,23 +411,23 @@ const TOOLS = [
     },
   },
   {
-    name: 'folder',
-    scopes: ['read:email', 'manage:folders'],
+    // The read half of the old `folder` tool. Split out 2026-09-09 so a
+    // read-only key sees a tool with no action enum instead of a write tool it
+    // may call exactly one action on. The old `folder` `action: "list"` shape is
+    // still accepted on the wire for clients holding a cached schema, but it is
+    // no longer advertised, so it is not documented here.
+    name: 'folder_list',
+    scopes: ['read:email'],
     params: [
-      { name: 'action',    type: 'enum',          required: true },
-      { name: 'inbox_id',  type: 'string (uuid)', required: false },
-      { name: 'inbox',     type: 'string',        required: false },
-      { name: 'name',      type: 'string',        required: false },
-      { name: 'folder_id', type: 'string',        required: false },
-      { name: 'new_name',  type: 'string',        required: false },
+      { name: 'inbox_id', type: 'string (uuid)', required: false },
+      { name: 'inbox',    type: 'string',        required: false },
     ],
     example: {
       request: `{
   "jsonrpc": "2.0", "id": 5, "method": "tools/call",
   "params": {
-    "name": "folder",
+    "name": "folder_list",
     "arguments": {
-      "action": "list",
       "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d"
     }
   }
@@ -425,13 +443,77 @@ const TOOLS = [
     },
   },
   {
-    name: 'draft',
+    name: 'folder',
+    scopes: ['manage:folders'],
+    params: [
+      { name: 'action',    type: 'enum',          required: true },
+      { name: 'inbox_id',  type: 'string (uuid)', required: false },
+      { name: 'inbox',     type: 'string',        required: false },
+      { name: 'name',      type: 'string',        required: false },
+      { name: 'folder_id', type: 'string',        required: false },
+      { name: 'new_name',  type: 'string',        required: false },
+    ],
+    example: {
+      request: `{
+  "jsonrpc": "2.0", "id": 6, "method": "tools/call",
+  "params": {
+    "name": "folder",
+    "arguments": {
+      "action": "create",
+      "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+      "name": "Finance/Invoices"
+    }
+  }
+}`,
+      response: `{
+  "success": true,
+  "inbox_id": "7a2e9c1d-4b8f-6e3a-2c5d-1f0e9b8a7c6d",
+  "folder": { "id": "Finance/Invoices", "name": "Finance/Invoices", "type": "folder" }
+}`,
+    },
+  },
+  {
+    name: 'draft_list',
     scopes: ['manage:drafts'],
+    params: [
+      { name: 'inbox_id', type: 'string (uuid)', required: false },
+      { name: 'inbox',    type: 'string',        required: false },
+      { name: 'limit',    type: 'integer',       required: false },
+    ],
+    example: {
+      request: `{
+  "jsonrpc": "2.0", "id": 25, "method": "tools/call",
+  "params": {
+    "name": "draft_list",
+    "arguments": {
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "limit": 5
+    }
+  }
+}`,
+      response: `{
+  "drafts": [
+    {
+      "draft_id": "r-8830",
+      "subject": "Contract review",
+      "to": [{ "name": null, "email": "erin@example.com" }],
+      "created_at": "2026-05-24T11:40:00Z"
+    }
+  ],
+  "total": 1
+}`,
+    },
+  },
+  {
+    name: 'draft',
+    scopes: ['manage:drafts', 'read:email', 'send:email'],
     params: [
       { name: 'action',   type: 'enum',          required: true },
       { name: 'inbox_id', type: 'string (uuid)', required: false },
       { name: 'inbox',    type: 'string',        required: false },
       { name: 'draft_id', type: 'string',        required: false },
+      { name: 'message_id', type: 'string',      required: false },
+      { name: 'reply_all', type: 'boolean',      required: false },
       { name: 'subject',  type: 'string',        required: false },
       { name: 'body',     type: 'string',        required: false },
       { name: 'to',       type: 'array[string]', required: false },
@@ -440,7 +522,6 @@ const TOOLS = [
       { name: 'html_body',type: 'string',        required: false },
       { name: 'include_signature', type: 'boolean', required: false },
       { name: 'idempotency_key', type: 'string', required: false },
-      { name: 'limit',    type: 'integer',       required: false },
     ],
     example: {
       request: `{
@@ -465,6 +546,37 @@ const TOOLS = [
     },
   },
   {
+    name: 'schedule_list',
+    scopes: ['schedule:email'],
+    params: [
+      { name: 'inbox_id', type: 'string (uuid)', required: false },
+      { name: 'limit',    type: 'integer',       required: false },
+    ],
+    example: {
+      request: `{
+  "jsonrpc": "2.0", "id": 30, "method": "tools/call",
+  "params": {
+    "name": "schedule_list",
+    "arguments": {
+      "limit": 5
+    }
+  }
+}`,
+      response: `{
+  "scheduled_sends": [
+    {
+      "id": "c91e0b2a-7f3d-4a18-9c44-2b6e1d8f0a55",
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "subject": "Reminder: kickoff at 9am",
+      "send_at": "2026-06-02T07:00:00Z",
+      "status": "pending"
+    }
+  ],
+  "total": 1
+}`,
+    },
+  },
+  {
     name: 'schedule',
     scopes: ['schedule:email'],
     params: [
@@ -482,7 +594,6 @@ const TOOLS = [
       { name: 'attachments',       type: 'array',         required: false },
       { name: 'id',                type: 'string (uuid)', required: false },
       { name: 'idempotency_key',   type: 'string',        required: false },
-      { name: 'limit',             type: 'integer',       required: false },
     ],
     example: {
       request: `{
@@ -509,34 +620,107 @@ const TOOLS = [
     },
   },
   {
-    name: 'contact_search',
-    scopes: ['manage:contacts'],
+    name: 'signature_get',
+    scopes: ['read:email'],
     params: [
-      { name: 'query',    type: 'string',        required: true },
       { name: 'inbox_id', type: 'string (uuid)', required: false },
       { name: 'inbox',    type: 'string',        required: false },
-      { name: 'limit',    type: 'integer',       required: false },
     ],
     example: {
       request: `{
-  "jsonrpc": "2.0", "id": 29, "method": "tools/call",
+  "jsonrpc": "2.0", "id": 32, "method": "tools/call",
   "params": {
-    "name": "contact_search",
+    "name": "signature_get",
     "arguments": {
-      "query": "alice",
-      "limit": 5
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c"
     }
   }
 }`,
       response: `{
-  "contacts": [
-    {
-      "email_address": "alice@example.com",
-      "display_name": "Alice Nguyen",
-      "message_count": 87,
-      "last_contacted_at": "2026-05-24T10:30:00Z"
+  "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+  "sender_name": "Bob Chen",
+  "signature_enabled": true,
+  "signature_reply_mode": "first_only",
+  "signature_source": "manual",
+  "signature_text": "Bob Chen\\nHead of Sales · Acme Inc.",
+  "signature_html": null,
+  "signature_updated_at": "2026-06-23T11:20:00Z"
+}`,
+    },
+  },
+  {
+    name: 'signature_set',
+    scopes: ['send:email'],
+    params: [
+      { name: 'inbox_id',             type: 'string (uuid)', required: false },
+      { name: 'inbox',                type: 'string',        required: false },
+      { name: 'signature_text',       type: 'string',        required: false },
+      { name: 'signature_html',       type: 'string',        required: false },
+      { name: 'signature_enabled',    type: 'boolean',       required: false },
+      { name: 'signature_reply_mode', type: 'enum',          required: false },
+      { name: 'sender_name',          type: 'string',        required: false },
+    ],
+    example: {
+      request: `{
+  "jsonrpc": "2.0", "id": 33, "method": "tools/call",
+  "params": {
+    "name": "signature_set",
+    "arguments": {
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "signature_text": "Bob Chen\\nHead of Sales · Acme Inc.",
+      "signature_reply_mode": "first_only",
+      "sender_name": "Bob Chen"
     }
-  ]
+  }
+}`,
+      response: `{
+  "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+  "sender_name": "Bob Chen",
+  "signature_enabled": true,
+  "signature_reply_mode": "first_only",
+  "signature_source": "manual",
+  "signature_text": "Bob Chen\\nHead of Sales · Acme Inc.",
+  "signature_html": null,
+  "signature_updated_at": "2026-06-23T11:20:00Z"
+}`,
+    },
+  },
+  {
+    // The read half of the automation surface: everything here changes nothing,
+    // including 'preview', which is a dry run. Kept as one action-based tool
+    // rather than four names because a caller reaches for all four in sequence
+    // (list, get, preview, runs) while auditing a rule.
+    name: 'automation_read',
+    scopes: ['manage:automations'],
+    params: [
+      { name: 'action',               type: 'enum',          required: true },
+      { name: 'automation_id',        type: 'string (uuid)', required: false },
+      { name: 'inbox_id',             type: 'string (uuid)', required: false },
+      { name: 'inbox',                type: 'string',        required: false },
+      { name: 'filter',               type: 'object',        required: false },
+      { name: 'max_messages_per_run', type: 'integer',       required: false },
+      { name: 'limit',                type: 'integer',       required: false },
+    ],
+    example: {
+      request: `{
+  "jsonrpc": "2.0", "id": 34, "method": "tools/call",
+  "params": {
+    "name": "automation_read",
+    "arguments": {
+      "action": "preview",
+      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
+      "filter": { "from": "billing@", "subject": "invoice", "unread": true }
+    }
+  }
+}`,
+      response: `{
+  "dry_run": true,
+  "matched": 3,
+  "max_messages_per_run": 25,
+  "messages": [
+    { "id": "18a3c2d7f9b1e4a0", "from": "billing@vendor.com", "subject": "Invoice 4471", "date": "2026-05-24T10:30:00Z" }
+  ],
+  "applied": false
 }`,
     },
   },
@@ -556,11 +740,10 @@ const TOOLS = [
       { name: 'rule_action',          type: 'object',        required: false },
       { name: 'interval_minutes',     type: 'enum',          required: false },
       { name: 'max_messages_per_run', type: 'integer',       required: false },
-      { name: 'limit',                type: 'integer',       required: false },
     ],
     example: {
       request: `{
-  "jsonrpc": "2.0", "id": 31, "method": "tools/call",
+  "jsonrpc": "2.0", "id": 35, "method": "tools/call",
   "params": {
     "name": "automation",
     "arguments": {
@@ -602,41 +785,34 @@ const TOOLS = [
     },
   },
   {
-    name: 'signature',
-    scopes: ['read:email', 'send:email'],
+    name: 'contact_search',
+    scopes: ['manage:contacts'],
     params: [
-      { name: 'action',               type: 'enum',          required: true },
-      { name: 'inbox_id',             type: 'string (uuid)', required: false },
-      { name: 'inbox',                type: 'string',        required: false },
-      { name: 'signature_text',       type: 'string',        required: false },
-      { name: 'signature_html',       type: 'string',        required: false },
-      { name: 'signature_enabled',    type: 'boolean',       required: false },
-      { name: 'signature_reply_mode', type: 'enum',          required: false },
-      { name: 'sender_name',          type: 'string',        required: false },
+      { name: 'query',    type: 'string',        required: true },
+      { name: 'inbox_id', type: 'string (uuid)', required: false },
+      { name: 'inbox',    type: 'string',        required: false },
+      { name: 'limit',    type: 'integer',       required: false },
     ],
     example: {
       request: `{
-  "jsonrpc": "2.0", "id": 33, "method": "tools/call",
+  "jsonrpc": "2.0", "id": 29, "method": "tools/call",
   "params": {
-    "name": "signature",
+    "name": "contact_search",
     "arguments": {
-      "action": "set",
-      "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
-      "signature_text": "Bob Chen\\nHead of Sales · Acme Inc.",
-      "signature_reply_mode": "first_only",
-      "sender_name": "Bob Chen"
+      "query": "alice",
+      "limit": 5
     }
   }
 }`,
       response: `{
-  "inbox_id": "3f7a8b2c-1d4e-5f6a-7b8c-9d0e1f2a3b4c",
-  "sender_name": "Bob Chen",
-  "signature_enabled": true,
-  "signature_reply_mode": "first_only",
-  "signature_source": "manual",
-  "signature_text": "Bob Chen\\nHead of Sales · Acme Inc.",
-  "signature_html": null,
-  "signature_updated_at": "2026-06-23T11:20:00Z"
+  "contacts": [
+    {
+      "email_address": "alice@example.com",
+      "display_name": "Alice Nguyen",
+      "message_count": 87,
+      "last_contacted_at": "2026-05-24T10:30:00Z"
+    }
+  ]
 }`,
     },
   },

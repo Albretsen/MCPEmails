@@ -29,20 +29,31 @@ const VALID_SCOPES = new Set([
   'manage:automations',
 ]);
 
+// The `desc` strings name the tools `tools/list` actually advertises, because a
+// consent screen that names a tool the client never shows is unverifiable: the
+// human is asked to trust a list they cannot check against their own client.
+// Kept in sync with TOOL_REGISTRY in supabase/functions/mcp-server/index.ts.
+// Scope assignments did not change when the read/write split shipped
+// (2026-09-09), only the tool names the actions live under.
 const SCOPE_META = {
-  'read:email':      { icon: 'inbox',  title: 'Read your inbox',           desc: 'inbox_list, email_read (list/read/search), folder (list).', required: false, destructive: false },
+  'read:email':      { icon: 'inbox',  title: 'Read your inbox',           desc: 'inbox_list, email_read (list/read/search), folder_list, signature_get.', required: false, destructive: false },
   'search:email':    { icon: 'search', title: 'Search your emails',        desc: 'email_read with action search (advanced search across your messages).', required: false, destructive: false },
-  'send:email':      { icon: 'mail',   title: 'Send email on your behalf',  desc: 'email_compose (send/reply/forward), email_organize (flag, archive).', required: false, destructive: false },
-  'manage:folders':  { icon: 'menu',   title: 'Manage folders & labels',    desc: 'create/rename/delete folders, move messages.', required: false, destructive: false },
-  'delete:email':    { icon: 'trash',  title: 'Delete emails',              desc: 'delete and bulk-delete messages.', required: false, destructive: true },
-  'manage:drafts':   { icon: 'copy',   title: 'Manage drafts',              desc: 'create, update, list and send drafts.', required: false, destructive: false },
+  // email_organize's flag and archive actions are manage:folders, not
+  // send:email. They were remapped in the 2026-07-28 scope bugfix and this
+  // line still claimed them for two months afterwards. What send:email really
+  // grants is mail leaving the mailbox, plus the From-line identity that
+  // signature_set writes.
+  'send:email':      { icon: 'mail',   title: 'Send email on your behalf',  desc: 'email_compose (send/reply/forward), draft (send), signature_set.', required: false, destructive: false },
+  'manage:folders':  { icon: 'menu',   title: 'Manage folders & labels',    desc: 'folder (create/rename/delete), email_organize (move, copy, flag, archive).', required: false, destructive: false },
+  'delete:email':    { icon: 'trash',  title: 'Delete emails',              desc: 'email_delete (delete and bulk-delete messages).', required: false, destructive: true },
+  'manage:drafts':   { icon: 'copy',   title: 'Manage drafts',              desc: 'draft_list, draft (create/reply/update/delete). Sending a draft also needs send:email.', required: false, destructive: false },
   'manage:contacts': { icon: 'users',  title: 'Manage contacts',            desc: 'contact_search (find people via a live scan of your mail; nothing stored).', required: false, destructive: false },
-  'schedule:email':  { icon: 'bell',   title: 'Schedule emails',            desc: 'schedule sends and manage scheduled messages.', required: false, destructive: false },
+  'schedule:email':  { icon: 'bell',   title: 'Schedule emails',            desc: 'schedule_list, schedule (create/cancel).', required: false, destructive: false },
   // Not marked destructive: an automation can never delete mail, and the two
   // actions that leave the mailbox (forward, draft_reply) are approval-gated or
   // produce a draft. It is still a standing, unattended capability rather than
   // a one-off call, which is what the description has to make plain.
-  'manage:automations': { icon: 'zap', title: 'Run scheduled automations', desc: 'create and run rules that sort mail on a schedule with nobody watching. Never deletes; forwarding needs approval.', required: false, destructive: false },
+  'manage:automations': { icon: 'zap', title: 'Run scheduled automations', desc: 'automation_read (list/get/runs/preview), automation (create/update/enable/disable/delete): rules that sort mail on a schedule with nobody watching. Never deletes; forwarding needs approval.', required: false, destructive: false },
 };
 
 export default async function AuthorizePage({ searchParams }) {

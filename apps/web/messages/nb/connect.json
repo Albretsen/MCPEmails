@@ -24,7 +24,7 @@
   "caps": {
     "eyebrow": "Hva AI-en din kan gjøre",
     "title": "En {provider}-innboks agenten faktisk kan bruke",
-    "sub": "Ni handlingsbaserte MCP-verktøy: send, svar, videresend, planlegg og organiser. Agenten fullfører jobben inne i {provider}."
+    "sub": "Seksten handlingsbaserte MCP-verktøy: send, svar, videresend, planlegg og organiser. Agenten fullfører jobben inne i {provider}."
   },
   "capabilities": [
     {
@@ -66,7 +66,7 @@
   },
   "related": {
     "title": "Koble til en annen postkasse",
-    "sub": "Samme MCP-server, samme ni verktøy, en annen leverandør.",
+    "sub": "Samme MCP-server, samme seksten verktøy, en annen leverandør.",
     "link": "Koble til {provider}",
     "all": "Se alle støttede e-postleverandører"
   },

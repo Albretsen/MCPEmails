@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "Fastmail ships its own MCP server, and it is a good one",
-      "p": "In April 2026 Fastmail launched a first-party MCP server at <code>https://api.fastmail.com/mcp</code>, authenticated with OAuth, offering read-only, write or send access and covering mail, calendar and contacts. If Fastmail is the only mailbox you want an assistant to reach, that is the most direct route available and we will say so plainly. mcpemails answers a different question: <b>one</b> MCP URL that holds your Fastmail account and your iCloud, Zoho, Yahoo, GMX or company IMAP mailbox at the same time, with the same nine tools over all of them, so an agent can search across mailboxes and you configure one server rather than five. Being useful to you matters more here than being flattering to us."
+      "p": "In April 2026 Fastmail launched a first-party MCP server at <code>https://api.fastmail.com/mcp</code>, authenticated with OAuth, offering read-only, write or send access and covering mail, calendar and contacts. If Fastmail is the only mailbox you want an assistant to reach, that is the most direct route available and we will say so plainly. mcpemails answers a different question: <b>one</b> MCP URL that holds your Fastmail account and your iCloud, Zoho, Yahoo, GMX or company IMAP mailbox at the same time, with the same sixteen tools over all of them, so an agent can search across mailboxes and you configure one server rather than five. Being useful to you matters more here than being flattering to us."
     },
     {
       "h": "Fastmail Basic accounts cannot use IMAP at all",

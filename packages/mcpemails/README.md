@@ -138,19 +138,26 @@ with an `Authorization: Bearer mcpe_...` header, or let it run the OAuth flow. C
 
 ## Tools
 
-11 tools. Most take an `action` argument that selects the specific operation:
+16 tools you call directly. Most take an `action` argument that selects the specific operation:
 
 - `inbox_list` - Lists the inboxes the key can reach, with each one's provider capabilities.
 - `email_read` - Lists, reads and searches messages, plus attachments and the original `.eml` (`list`, `read`, `read_batch`, `search`, `attachment`, `extract`, `original`).
 - `email_organize` - Moves, copies, flags and archives messages (`move`, `move_batch`, `copy`, `copy_batch`, `flag`, `archive`, `search_and_move`).
 - `email_delete` - Trashes or permanently deletes messages (`delete`, `delete_batch`, `search_and_delete`).
 - `email_compose` - Sends, replies and forwards through your own provider (`send`, `reply`, `forward`).
-- `folder` - Lists, creates, renames and deletes folders (`list`, `create`, `rename`, `delete`).
-- `draft` - Lists, creates, updates, sends and deletes drafts (`list`, `create`, `reply`, `update`, `send`, `delete`).
-- `schedule` - Queues a message for future delivery, lists it, cancels it (`create`, `list`, `cancel`).
-- `signature` - Reads and sets the signature appended to outbound mail (`get`, `set`).
-- `automation` - Creates and manages unattended triage rules, with no model in the loop (`create`, `list`, `get`, `update`, `enable`, `disable`, `delete`, `runs`, `preview`).
+- `folder_list` - Lists folders, or labels on Gmail, with their IDs and message counts. Read-only.
+- `folder` - Creates, renames and deletes folders (`create`, `rename`, `delete`).
+- `draft_list` - Lists the drafts saved in the inbox, with their draft ids. Read-only.
+- `draft` - Creates, updates, sends and deletes drafts (`create`, `reply`, `update`, `send`, `delete`).
+- `schedule_list` - Lists what is queued for future delivery. Read-only.
+- `schedule` - Queues a message for future delivery, or cancels one (`create`, `cancel`).
+- `signature_get` - Reads the signature and sender name configured for an inbox. Read-only.
+- `signature_set` - Sets the signature appended to outbound mail, and the sender name.
+- `automation_read` - Lists triage rules, reads one, shows run history, dry-runs a filter (`list`, `get`, `runs`, `preview`). Read-only.
+- `automation` - Creates and manages unattended triage rules, with no model in the loop (`create`, `update`, `enable`, `disable`, `delete`).
 - `contact_search` - Looks up contacts by scanning recent mail live, with no stored address book.
+
+A full-scope key sees 22 tools in `tools/list`: the 16 above plus six app-only tools that drive the review card your MCP client renders for a held send or a previewed bulk operation.
 
 Each tool is gated by the scopes on your API key, so a key issued with read scopes only cannot send or delete anything no matter what the agent asks for. Full reference at [mcpemails.com/docs](https://mcpemails.com/docs).
 

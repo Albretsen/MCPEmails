@@ -94,9 +94,14 @@ Now point any MCP client at **`http://localhost:8787`** with the key as a bearer
 }
 ```
 
-Start a session with `inbox_list`; the server exposes the same ten action-based tools as the
-hosted product (`inbox_list`, `email_read`, `email_organize`, `email_delete`, `email_compose`,
-`folder`, `draft`, `schedule`, `signature`, `contact_search`).
+Start a session with `inbox_list`; the server exposes the same action-based tools as the
+hosted product. A key issued by `mcpe`, whose scopes stop short of `manage:automations`, gets
+`inbox_list`, `email_read`, `email_organize`, `email_delete`, `email_compose`, `folder_list`,
+`folder`, `draft_list`, `draft`, `schedule_list`, `schedule`, `signature_get`, `signature_set`
+and `contact_search`. The read-only halves (`folder_list`, `draft_list`, `schedule_list`,
+`signature_get`) were split out of their write tools on 2026-09-09; the old combined shapes are
+still accepted on the wire but are no longer advertised, and `signature` is gone from
+`tools/list` entirely in favour of `signature_get` and `signature_set`.
 
 ## Remote access (HTTPS only)
 

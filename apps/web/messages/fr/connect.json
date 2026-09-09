@@ -24,7 +24,7 @@
   "caps": {
     "eyebrow": "Ce que votre IA peut faire",
     "title": "Une boîte {provider} que votre agent peut vraiment utiliser",
-    "sub": "Neuf outils MCP basés sur des actions : envoyer, répondre, transférer, planifier et organiser. Votre agent termine le travail dans {provider}."
+    "sub": "Seize outils MCP basés sur des actions : envoyer, répondre, transférer, planifier et organiser. Votre agent termine le travail dans {provider}."
   },
   "capabilities": [
     {
@@ -66,7 +66,7 @@
   },
   "related": {
     "title": "Connecter une autre boîte",
-    "sub": "Le même serveur MCP, les mêmes neuf outils, un autre fournisseur.",
+    "sub": "Le même serveur MCP, les mêmes seize outils, un autre fournisseur.",
     "link": "Connecter {provider}",
     "all": "Voir tous les fournisseurs e-mail pris en charge"
   },
