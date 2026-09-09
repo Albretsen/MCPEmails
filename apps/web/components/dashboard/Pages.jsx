@@ -2260,6 +2260,32 @@ function formatLastUsed(iso, t) {
 }
 
 /**
+ * How long a connection has actually sat idle, in whole days.
+ *
+ * Measured from the LATER of last use and creation, because a key made two
+ * minutes ago has never been used and that is not the same thing as abandoned.
+ * Mirrors the activity rule the server sweep uses (see
+ * supabase/migrations/20260909180000_auto_revoke_dormant_oauth_grants.sql).
+ */
+function idleDays(key) {
+  const stamps = [key?.lastUsedAt, key?.createdAt]
+    .map((iso) => (iso ? new Date(iso).getTime() : NaN))
+    .filter((ms) => Number.isFinite(ms));
+  if (stamps.length === 0) return null;
+  return Math.floor((Date.now() - Math.max(...stamps)) / 86400000);
+}
+
+/**
+ * Flagged well before the server revokes it, at 30 days against the sweep's 90.
+ *
+ * A connector removed inside Claude never tells us, so a dormant row is the
+ * only visible trace of a connection the user believes they already ended.
+ * Showing it a month in gives them the chance to revoke it themselves, which is
+ * both faster and the thing they meant to do.
+ */
+const DORMANT_AFTER_DAYS = 30;
+
+/**
  * Builds the masked key string shown in the dashboard.
  *
  * We store only the first 8 hex characters of the key suffix (key_prefix).
@@ -3213,6 +3239,7 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
 
       <div className="card">
         {keys.length > 0 ? (
+          <>
           <div className="tbl-wrap">
           <table className="tbl tbl-api-keys">
             <thead>
@@ -3262,7 +3289,12 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
                     {formatDate(k.createdAt)}
                   </td>
                   <td style={{ whiteSpace: "nowrap", color: k.lastUsedAt ? "var(--fg-2)" : "var(--fg-3)", fontFamily: "var(--font-sans)", fontSize: 13 }}>
-                    {formatLastUsed(k.lastUsedAt, t)}
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      {formatLastUsed(k.lastUsedAt, t)}
+                      {idleDays(k) >= DORMANT_AFTER_DAYS && (
+                        <Badge tone="amber" dot="amber">{t('apiKeys.dormant')}</Badge>
+                      )}
+                    </div>
                   </td>
                   <td className="right">
                     <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
@@ -3277,6 +3309,18 @@ export function KeysPage({ keys, inboxes = [], mcpUrl, onCreate, onKeyCreated, o
             </tbody>
           </table>
           </div>
+          {/*
+            The one thing this page did not say, and the reason a connector can
+            outlive the user's belief that they removed it: disconnecting or
+            deleting a connector inside Claude is a change on Claude's side.
+            Calling our revocation endpoint is optional under RFC 7009 and
+            clients do not always do it, so the row above can still be a live
+            credential. This page is where access actually ends.
+          */}
+          <p style={{ margin: "12px 2px 0", fontFamily: "var(--font-sans)", fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.6 }}>
+            {t('apiKeys.revokeReality')}
+          </p>
+          </>
         ) : (
           <div className="empty">
             <div className="ico"><Icon name="key" size={20} /></div>

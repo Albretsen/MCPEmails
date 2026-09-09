@@ -236,6 +236,8 @@
     "hoursAgo": "{n} 小时前",
     "yesterday": "昨天",
     "daysAgo": "{n} 天前",
+    "dormant": "闲置",
+    "revokeReality": "在 Claude 中断开或删除连接器并不会在此处吊销它。访问权限会在你于本页吊销时结束，或在 90 天未使用后自动结束。",
     "connectUrlTitle": "使用 API 密钥连接",
     "connectUrlSub": "在任意 MCP 客户端（Claude、Cursor、VS Code…）中使用此配置。将 <code>YOUR_API_KEY</code> 替换为上方的密钥。",
     "mcpServerUrl": "MCP 客户端配置",

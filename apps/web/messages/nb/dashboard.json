@@ -236,6 +236,8 @@
     "hoursAgo": "{n}t siden",
     "yesterday": "I går",
     "daysAgo": "{n}d siden",
+    "dormant": "Sovende",
+    "revokeReality": "Å koble fra eller slette en kobling inne i Claude opphever den ikke her. Tilgangen slutter når du opphever den på denne siden, eller automatisk etter 90 dager uten bruk.",
     "connectUrlTitle": "Koble til med en API-nøkkel",
     "connectUrlSub": "Bruk denne konfigurasjonen i en hvilken som helst MCP-klient (Claude, Cursor, VS Code…). Erstatt <code>YOUR_API_KEY</code> med en nøkkel ovenfra.",
     "mcpServerUrl": "MCP-klientkonfigurasjon",
