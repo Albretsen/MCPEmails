@@ -52,7 +52,7 @@
     "items": {
       "0": {
         "tag": "Alcance",
-        "h": "Dieciséis herramientas enfocadas. Lo esencial, cubierto.",
+        "h": "Diecisiete herramientas enfocadas. Lo esencial, cubierto.",
         "p": "Las herramientas cubren el trabajo diario: <code>inbox_list</code>, <code>email_read</code> (list, read, search) y <code>email_compose</code> (send, reply), además de herramientas específicas para organizar, eliminar, carpetas, borradores, programación, contactos, firmas y automatizaciones desatendidas. Pega la URL del endpoint MCP en claude.ai, Claude Desktop, Cursor o cualquier agente compatible con MCP."
       },
       "1": {
@@ -209,7 +209,7 @@
       },
       {
         "q": "¿Qué puede hacer realmente la IA con mi bandeja de entrada?",
-        "a": "Leer y buscar correo, enviar, responder y reenviar mensajes reales, programar envíos para más tarde y organizar tu bandeja: mover, copiar, marcar, archivar y eliminar. Dieciséis herramientas basadas en acciones, para que el agente termine el trabajo dentro de tu bandeja en lugar de solo redactar."
+        "a": "Leer y buscar correo, enviar, responder y reenviar mensajes reales, programar envíos para más tarde y organizar tu bandeja: mover, copiar, marcar, archivar y eliminar. Diecisiete herramientas basadas en acciones, para que el agente termine el trabajo dentro de tu bandeja en lugar de solo redactar."
       },
       {
         "q": "¿Cómo conecto una bandeja de entrada?",
