@@ -66,18 +66,60 @@ const SCOPE_TOKEN = /^[\x21\x23-\x5b\x5d-\x7e]+$/;
 /**
  * The WWW-Authenticate value for an HTTP 403 scope denial:
  *
- *   Bearer error="insufficient_scope", scope="send:email",
+ *   Bearer error="insufficient_scope", scope="send:email read:email",
  *     resource_metadata="https://mcpemails.com/.well-known/oauth-protected-resource"
  *
  * `scope` is space-separated per RFC 6750 §3. `resource_metadata` (RFC 9728)
  * is what lets an MCP client that has never seen this server find the
  * authorization server to step up with.
+ *
+ * WHY THE HEADER NAMES THE SCOPES THE TOKEN ALREADY HOLDS (2026-09-09).
+ * Until now this emitted `requiredScopes` alone, which silently downgraded a
+ * user mid-session. Claude re-authorizes with the union of this header's
+ * `scope` and the scope advertised at discovery, and scopes picked up in an
+ * EARLIER step-up are not reliably carried into the next one. So a user who
+ * consented to read, then stepped up to send, then hit a third denial came out
+ * of that third consent holding only what the third challenge named. The MCP
+ * spec's own guidance for runtime insufficient-scope errors is to name the
+ * permissions the caller should still have alongside the newly required ones,
+ * which is what the union below does.
+ *
+ * WHICH REQUIRED SCOPE THE UNION TAKES. `requiredScopes` is an OR-list:
+ * "any ONE of these would have authorised this call" (the registry's
+ * `altScopes`). Naming all of them would ask the user to consent to several
+ * permissions when one is enough, which is the same over-broad prompt this
+ * work exists to remove. Only the FIRST is taken, which the sole caller sets
+ * to the action's primary `requiredScope`, with the alternatives after it. The
+ * denial itself proves the token holds none of them, so the primary is the
+ * minimal grant that makes the call succeed. The JSON body still carries the
+ * whole OR-list in `required_scopes` for a client that wants to choose
+ * differently; only the header narrows.
  */
 export function buildInsufficientScopeChallenge(
   requiredScopes: readonly string[],
+  grantedScopes: readonly string[],
   resourceMetadataUrl: string,
 ): string {
-  const scope = requiredScopes.filter((s) => SCOPE_TOKEN.test(s)).join(" ");
+  // Validity is checked before the union so a malformed entry cannot displace
+  // a usable one: the first VALID required scope is the one that goes in.
+  const required = requiredScopes.filter((s) => SCOPE_TOKEN.test(s));
+  // Defensive: this value comes off a JSON-RPC error body reconstructed by a
+  // type guard that only asserts `required_scopes` is an array, so an absent
+  // or malformed `granted_scopes` must degrade to today's behaviour (the
+  // required scope alone) rather than throw on the response path.
+  const granted = Array.isArray(grantedScopes)
+    ? grantedScopes.filter((s) => SCOPE_TOKEN.test(s))
+    : [];
+
+  // Newly required first, then everything the token already carries, deduped.
+  // Order is fixed rather than sorted so the header bytes are reproducible.
+  const union: string[] = [];
+  if (required.length > 0) union.push(required[0]);
+  for (const held of granted) {
+    if (!union.includes(held)) union.push(held);
+  }
+
+  const scope = union.join(" ");
   const parts = [
     `error="${INSUFFICIENT_SCOPE_ERROR_CODE}"`,
     `error_description="The token does not carry a scope this call requires."`,

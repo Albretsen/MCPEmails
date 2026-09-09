@@ -17,11 +17,13 @@ import { NextRequest, NextResponse } from 'next/server';
  *
  * OAuth 2.0 discovery (RFC 8707):
  *   When a request arrives with no bearer token, or the upstream returns 401,
- *   the response includes WWW-Authenticate with a resource_metadata pointer.
- *   MCP clients use this to auto-discover the authorization server and begin
- *   the OAuth 2.0 Authorization Code + PKCE flow. A 403 scope denial from the
- *   upstream carries its own WWW-Authenticate (error="insufficient_scope"
- *   with the scopes required) and is passed through untouched.
+ *   the response includes WWW-Authenticate with a resource_metadata pointer
+ *   and the minimum scope a new connection needs. MCP clients use this to
+ *   auto-discover the authorization server and begin the OAuth 2.0
+ *   Authorization Code + PKCE flow, asking only for that scope. A 403 scope
+ *   denial from the upstream carries its own WWW-Authenticate
+ *   (error="insufficient_scope" with the scope to step up to, plus the ones
+ *   the token already holds) and is passed through untouched.
  *
  * API keys may be sent in the Authorization header or, for backwards
  * compatibility with existing integrations, as a `key` or `api_key` query
@@ -34,8 +36,53 @@ const MCP_FUNCTION_URL =
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com';
 
+/**
+ * The scope a first-time connection consents to.
+ *
+ * WHY THIS PARAMETER EXISTS. Without a `scope` parameter on the challenge,
+ * Claude asks for everything the protected resource metadata advertises in
+ * `scopes_supported`: all nine of ours, `send:email` and `delete:email`
+ * included. That put a nine-permission consent screen, two of them destructive,
+ * in front of a user who had not yet read a single message. It is the worst
+ * moment in the signup funnel to ask for the largest grant, and nothing about
+ * the product needs it: the remaining scopes are reachable by step-up, when the
+ * model first tries an action that needs one and the server answers HTTP 403
+ * with `error="insufficient_scope"` (see scope-challenge.ts in the edge
+ * function). The user then consents to send at the moment they asked to send.
+ *
+ * WHY `read:email` ALONE, verified against the tool registry rather than
+ * assumed. Every tool a user needs to connect and do read-only work resolves to
+ * `read:email` as its PRIMARY required scope:
+ *
+ *   inbox_list     read:email
+ *   email_read     read:email (all seven actions: list, read, read_batch,
+ *                  search, attachment, extract, original)
+ *   folder_list    read:email
+ *   signature_get  read:email
+ *
+ * `search:email` is deliberately NOT here. It exists only as an ALTERNATIVE
+ * scope on `email_read{action:"search"}`, whose primary is already `read:email`,
+ * so a token holding `read:email` can already search. Adding it would put a
+ * second line on the consent screen that grants nothing the first does not,
+ * which is the same over-asking in miniature. The other read-only tools
+ * (draft_list, schedule_list, automation_read, contact_search) are excluded on
+ * purpose: their scopes (`manage:drafts`, `schedule:email`,
+ * `manage:automations`, `manage:contacts`) all carry write power too, so they
+ * belong to step-up, not to the first prompt.
+ *
+ * KNOWN COST, stated rather than hidden: this header is also attached when the
+ * upstream rejects a token, so a user whose refresh chain has died entirely and
+ * must re-authorize from scratch now re-consents to read first and steps back
+ * up to their other scopes on next use, instead of getting them all back in one
+ * screen. Routine expiry is unaffected: that is handled by the refresh_token
+ * grant, which carries the connection's full scope set forward untouched.
+ */
+const FIRST_CONSENT_SCOPE = 'read:email';
+
 const WWW_AUTHENTICATE =
-  `Bearer realm="MCP Emails", resource_metadata="${APP_URL}/.well-known/oauth-protected-resource"`;
+  `Bearer realm="MCP Emails", ` +
+  `resource_metadata="${APP_URL}/.well-known/oauth-protected-resource", ` +
+  `scope="${FIRST_CONSENT_SCOPE}"`;
 
 // CORS — allow browser-based MCP clients (e.g. claude.ai) to call this endpoint
 // cross-origin. Auth is via the Authorization header (no cookies), so a wildcard
