@@ -52,7 +52,7 @@
     "items": {
       "0": {
         "tag": "Scope",
-        "h": "Sixteen focused tools. The essentials, covered.",
+        "h": "Seventeen focused tools. The essentials, covered.",
         "p": "Tools cover the everyday work: <code>inbox_list</code>, <code>email_read</code> (list, read, search) and <code>email_compose</code> (send, reply), plus focused tools for organizing, deleting, folders, drafts, scheduling, contacts, signatures, and unattended automations. Paste the MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent."
       },
       "1": {
@@ -209,7 +209,7 @@
       },
       {
         "q": "What can the AI actually do with my inbox?",
-        "a": "Read and search mail, send, reply and forward real messages, schedule sends for later, and organize your inbox: move, copy, flag, archive and delete. Sixteen action-based tools, so the agent finishes the job inside your inbox instead of just drafting."
+        "a": "Read and search mail, send, reply and forward real messages, schedule sends for later, and organize your inbox: move, copy, flag, archive and delete. Seventeen action-based tools, so the agent finishes the job inside your inbox instead of just drafting."
       },
       {
         "q": "How do I connect an inbox?",

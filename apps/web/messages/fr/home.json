@@ -52,7 +52,7 @@
     "items": {
       "0": {
         "tag": "Périmètre",
-        "h": "Seize outils ciblés. L'essentiel, couvert.",
+        "h": "Dix-sept outils ciblés. L'essentiel, couvert.",
         "p": "Les outils couvrent le travail quotidien : <code>inbox_list</code>, <code>email_read</code> (list, read, search) et <code>email_compose</code> (send, reply), ainsi que des outils ciblés pour organiser, supprimer, gérer les dossiers, les brouillons, la planification, les contacts, les signatures et les automatisations sans surveillance. Collez l'URL du point de terminaison MCP dans claude.ai, Claude Desktop, Cursor ou tout agent compatible MCP."
       },
       "1": {
@@ -209,7 +209,7 @@
       },
       {
         "q": "Que peut réellement faire l'IA avec ma boîte de réception ?",
-        "a": "Lire et rechercher du courrier, envoyer, répondre et transférer de vrais messages, programmer des envois pour plus tard et organiser votre boîte de réception : déplacer, copier, marquer, archiver et supprimer. Seize outils basés sur l'action, pour que l'agent termine le travail dans votre boîte au lieu de se contenter de rédiger."
+        "a": "Lire et rechercher du courrier, envoyer, répondre et transférer de vrais messages, programmer des envois pour plus tard et organiser votre boîte de réception : déplacer, copier, marquer, archiver et supprimer. Dix-sept outils basés sur l'action, pour que l'agent termine le travail dans votre boîte au lieu de se contenter de rédiger."
       },
       {
         "q": "Comment connecter une boîte de réception ?",

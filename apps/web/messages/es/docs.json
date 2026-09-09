@@ -111,8 +111,8 @@
   },
   "tools": {
     "eyebrow": "Referencia de herramientas",
-    "heading": "16 herramientas. Todas las operaciones de correo que tu agente necesita.",
-    "sub": "<b>Indicar una bandeja es opcional.</b> Cuando tu clave tiene exactamente una bandeja, cada herramienta por bandeja la resuelve automáticamente, así que no hace falta <code>inbox_id</code>. Con varias bandejas, pasa <code>inbox_id</code> (el UUID de <code>inbox_list</code>) o <code>inbox</code> (la dirección de la bandeja). La mayoría de las herramientas toman un argumento <code>action</code> que selecciona la operación; las insignias muestran los permisos que necesita cada una, y <code>tools/list</code> solo devuelve las herramientas para las que tu clave (o token OAuth) tiene permiso. Una clave con todos los permisos ve 22 herramientas en <code>tools/list</code>: estas 16 más seis herramientas de aprobación y de operaciones masivas que tu cliente MCP maneja desde la tarjeta de revisión que te muestra, en lugar de herramientas que compongas a mano. Haz clic en «Mostrar ejemplo» para ver una petición y respuesta completas.",
+    "heading": "17 herramientas. Todas las operaciones de correo que tu agente necesita.",
+    "sub": "<b>Indicar una bandeja es opcional.</b> Cuando tu clave tiene exactamente una bandeja, cada herramienta por bandeja la resuelve automáticamente, así que no hace falta <code>inbox_id</code>. Con varias bandejas, pasa <code>inbox_id</code> (el UUID de <code>inbox_list</code>) o <code>inbox</code> (la dirección de la bandeja). La mayoría de las herramientas toman un argumento <code>action</code> que selecciona la operación; las insignias muestran los permisos que necesita cada una, y <code>tools/list</code> solo devuelve las herramientas para las que tu clave (o token OAuth) tiene permiso. Una clave con todos los permisos ve 23 herramientas en <code>tools/list</code>: estas 17 más seis herramientas de aprobación y de operaciones masivas que tu cliente MCP maneja desde la tarjeta de revisión que te muestra, en lugar de herramientas que compongas a mano. Haz clic en «Mostrar ejemplo» para ver una petición y respuesta completas.",
     "noParams": "Sin parámetros. Llama con un objeto de argumentos vacío:",
     "showExample": "Mostrar petición y respuesta de ejemplo",
     "hideExample": "Ocultar petición y respuesta de ejemplo",
@@ -169,29 +169,39 @@
     },
     "email_organize": {
       "title": "Organizar correo",
-      "desc": "Mueve, copia, marca o archiva mensajes. Define action: 'move'/'move_batch' (a un destination_folder_id), 'copy'/'copy_batch' (duplica en un destination_folder_id, dejando el original en su lugar; solo IMAP, Outlook y Fastmail), 'flag' (establece leído/no leído/destacado mediante flag_action sobre message_ids), 'archive' (saca de la bandeja de entrada, no destructivo), o 'search_and_move' (aplica a cada mensaje que coincida con una búsqueda estructurada, lo que evita IDs de mensaje obsoletos). Cada acción necesita el permiso que le corresponde: manage:folders para mover y copiar, send:email para flag/archive. Eliminar mensajes vive en su propia herramienta email_delete.",
+      "desc": "Mueve, copia, marca o archiva mensajes que indicas por message_id. Define action: 'move'/'move_batch' (a un destination_folder_id), 'copy'/'copy_batch' (duplica en un destination_folder_id, dejando el original en su lugar; solo IMAP, Outlook y Fastmail), 'flag' (establece leído/no leído/destacado mediante flag_action sobre message_ids), o 'archive' (saca un mensaje de la bandeja de entrada). Obtén antes los IDs con email_read. Cada acción toca solo los IDs que pasas y se deshace con otra llamada: un movimiento con el movimiento inverso, archive con un movimiento a la bandeja de entrada, flag con la marca contraria, y una copia deja el original donde estaba. En Gmail, mover añade la etiqueta de destino y quita INBOX; las demás etiquetas se mantienen, sacar un mensaje de Trash o Spam también limpia TRASH/SPAM, así que es una restauración real, y la copia nativa no existe. Para mover todo lo que coincida con una búsqueda en lugar de una lista de IDs, usa email_search_and_move: es una herramienta aparte porque un solo filtro equivocado allí reubica una bandeja entera. Cada acción necesita manage:folders. Eliminar mensajes vive en su propia herramienta email_delete.",
       "params": {
-        "action": "Qué operación realizar: \"move\", \"move_batch\", \"copy\", \"copy_batch\", \"flag\", \"archive\" o \"search_and_move\". Determina qué otros argumentos se aplican y qué permiso se requiere.",
+        "action": "Qué operación realizar: \"move\", \"move_batch\", \"copy\", \"copy_batch\", \"flag\" o \"archive\". Determina qué otros argumentos se aplican. Mover cada mensaje que coincida con una búsqueda es la herramienta aparte email_search_and_move.",
         "inbox_id": "UUID de la bandeja que contiene los mensajes. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
         "inbox": "Dirección de correo de la bandeja a usar, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id.",
         "message_id": "ID de mensaje del proveedor para una acción de un solo mensaje (move, copy, archive), de un list, read o search previo.",
         "message_ids": "IDs de mensaje del proveedor para una acción por lotes (move_batch, copy_batch, flag). Máx. 500 por llamada.",
-        "destination_folder_id": "Carpeta de destino (move, move_batch, copy, copy_batch, search_and_move): un alias canónico (inbox, sent, drafts, trash, archive, spam), un nombre de carpeta/etiqueta (p. ej. 'Receipts') o un ID de carpeta nativo del proveedor de la acción list de folder. Los nombres y alias se resuelven automáticamente.",
-        "flag_action": "Para action 'flag': el cambio a aplicar a cada mensaje: \"read\" o \"unread\" para fijar el estado de lectura, o \"flag\"/\"unflag\" para añadir o quitar una estrella/marca de seguimiento.",
-        "from": "Remitente a coincidir (search_and_move): dirección de correo, nombre visible o fragmento.",
-        "to": "Destinatario principal (To) a coincidir (search_and_move): dirección de correo, nombre visible o fragmento.",
-        "cc": "Destinatario en copia (Cc) a coincidir (search_and_move): dirección de correo, nombre visible o fragmento.",
-        "subject": "Texto a coincidir en el asunto (search_and_move).",
-        "body": "Texto libre a encontrar en el cuerpo del mensaje (search_and_move). (En Gmail esto coincide con todo el mensaje.)",
-        "text": "Texto libre a coincidir en cualquier parte del mensaje: cabeceras y cuerpo (search_and_move).",
-        "unread": "Acciones de búsqueda: true = solo no leídos; false = solo leídos; omítelo para ambos.",
-        "has_attachment": "Acciones de búsqueda: true = solo mensajes con adjunto. No admitido en IMAP genérico (se ignora ahí).",
-        "flagged": "Acciones de búsqueda: true = solo mensajes marcados/destacados. No admitido en Outlook/Graph (se ignora ahí).",
-        "since": "Fecha o fecha-hora ISO 8601 (acciones de búsqueda); coincide con mensajes recibidos en/después de (>=) este instante.",
-        "before": "Fecha o fecha-hora ISO 8601 (acciones de búsqueda); coincide con mensajes recibidos estrictamente antes de (<) este instante.",
-        "query": "Cadena de consulta nativa del proveedor (acciones de búsqueda, recurso de emergencia). Prefiere los campos estructurados de arriba. Se ignora en Fastmail.",
-        "include_folders": "Restringe la búsqueda a estos nombres de carpeta (acciones de búsqueda). Por defecto: todas las carpetas.",
-        "limit": "Para search_and_move: número máximo de coincidencias sobre las que actuar. Por defecto 500, máx. 500."
+        "destination_folder_id": "Carpeta de destino (move, move_batch, copy, copy_batch): un alias canónico (inbox, sent, drafts, trash, archive, spam), un nombre de carpeta/etiqueta (p. ej. 'Receipts') o un ID de carpeta nativo del proveedor obtenido de folder_list. Los nombres y alias se resuelven automáticamente.",
+        "flag_action": "Para action 'flag': el cambio a aplicar a cada mensaje: \"read\" o \"unread\" para fijar el estado de lectura, o \"flag\"/\"unflag\" para añadir o quitar una estrella/marca de seguimiento."
+      }
+    },
+    "email_search_and_move": {
+      "title": "Buscar y mover",
+      "desc": "Mueve a una carpeta de destino cada mensaje que coincida con una búsqueda, en una sola operación del lado del servidor, de modo que ningún ID de mensaje quede obsoleto antes de usarse. La búsqueda usa los mismos campos estructurados e independientes del proveedor que email_read (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), que el servidor traduce a la sintaxis nativa de la bandeja; query es un recurso de emergencia en crudo. Es una herramienta aparte de email_organize, y es la que se marca como destructiva ante tu cliente MCP, porque actúa sobre todo lo que encuentra el filtro y no sobre IDs que hayas elegido: un solo filtro equivocado reubica una bandeja entera. Para mover mensajes que ya has listado, usa email_organize (action 'move' o 'move_batch') en su lugar. Limitada por limit, por defecto y máximo 500: comprueba has_more en el resultado antes de dar una bandeja por barrida del todo, y termina el resto con email_organize (action 'move_batch'). En Gmail, mover añade la etiqueta de destino y quita INBOX. Devuelve los recuentos succeeded/failed y un resultado por mensaje. Necesita manage:folders.",
+      "params": {
+        "inbox_id": "UUID de la bandeja que se va a barrer. Opcional: se resuelve automáticamente cuando la clave tiene exactamente una bandeja; si no, pasa este o inbox. Llama a inbox_list para obtener los IDs de bandeja disponibles.",
+        "inbox": "Dirección de correo de la bandeja a usar, como alternativa práctica a inbox_id. Opcional; se ignora si se indica inbox_id.",
+        "destination_folder_id": "Adónde se mueve cada coincidencia: un alias canónico (inbox, sent, drafts, trash, archive, spam), un nombre de carpeta/etiqueta (p. ej. 'Receipts') o un ID de carpeta nativo del proveedor obtenido de folder_list. Los nombres y alias se resuelven automáticamente.",
+        "from": "Remitente a coincidir: dirección de correo, nombre visible o fragmento.",
+        "to": "Destinatario principal (To) a coincidir: dirección de correo, nombre visible o fragmento.",
+        "cc": "Destinatario en copia (Cc) a coincidir: dirección de correo, nombre visible o fragmento.",
+        "subject": "Texto a coincidir en el asunto.",
+        "body": "Texto libre a encontrar en el cuerpo del mensaje. (En Gmail esto coincide con todo el mensaje.)",
+        "text": "Texto libre a coincidir en cualquier parte del mensaje: cabeceras y cuerpo.",
+        "unread": "true = solo no leídos; false = solo leídos; omítelo para ambos.",
+        "has_attachment": "true = solo mensajes con adjunto. No admitido en IMAP genérico (se ignora ahí).",
+        "flagged": "true = solo mensajes marcados/destacados. No admitido en Outlook/Graph (se ignora ahí).",
+        "since": "Fecha o fecha-hora ISO 8601; coincide con mensajes recibidos en/después de (>=) este instante.",
+        "before": "Fecha o fecha-hora ISO 8601; coincide con mensajes recibidos estrictamente antes de (<) este instante.",
+        "query": "Cadena de consulta nativa del proveedor (recurso de emergencia). Prefiere los campos estructurados de arriba. Se ignora en Fastmail.",
+        "include_folders": "Restringe la búsqueda a estos nombres de carpeta. En IMAP genérico, omitirlo busca solo en INBOX.",
+        "limit": "Número máximo de coincidencias que se mueven. Por defecto 500, máx. 500. Cuando la búsqueda llena el límite, has_more en el resultado dice si quedaron mensajes coincidentes sin tocar.",
+        "idempotency_key": "Clave opaca opcional (1–200 caracteres) para un único barrido lógico. Reutilízala solo para reintentar exactamente la misma llamada en un plazo de 24 horas; una reutilización con argumentos distintos se rechaza."
       }
     },
     "email_delete": {
