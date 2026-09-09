@@ -102,6 +102,7 @@
     "inboxesConnected": "Inboxes connected",
     "oneActiveInbox": "1 active inbox",
     "activeInboxes": "{count} active inboxes",
+    "activeOfConnected": "{active} of {count} active",
     "apiKeys": "API keys",
     "oneActiveKey": "1 active key",
     "activeKeys": "{count} active keys",
