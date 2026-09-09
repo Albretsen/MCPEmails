@@ -45,11 +45,21 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
     };
   }, [wsMenuOpen]);
 
+  // Every `plan` reaching this component is the EFFECTIVE plan, or null when it
+  // could not be resolved. It is never the stored `workspaces.plan` column: a
+  // comped workspace stores 'free' while its owner is entitled to Team, and
+  // rendering the stored column here is what once put "Free plan" in the
+  // switcher and "Team plan" in the account footer on the same screen.
+  //
+  // null means "not resolved", and must stay distinguishable from 'free' all
+  // the way to the DOM, because `planDisplayName(null)` returns "Free": passing
+  // an unresolved plan through it prints a confident, wrong label rather than
+  // nothing. Every call site below guards on the null first.
   const activeWs = workspaces.find((w) => w.id === activeWorkspaceId) ?? {
     id: workspace?.id,
     displayName: workspace?.slug,
     slug: workspace?.slug,
-    plan: workspace?.plan ?? 'free',
+    plan: workspace?.plan ?? null,
   };
 
   // The plan a newly created workspace would inherit. Derived from the plan
@@ -148,7 +158,9 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
             </span>
             <span className="ws-meta">
               <span className="ws-name">{activeWs.displayName || activeWs.slug}</span>
-              <span className="ws-plan">{tr('sidebar.planSuffix', { plan: planDisplayName(activeWs.plan) })}</span>
+              {activeWs.plan ? (
+                <span className="ws-plan">{tr('sidebar.planSuffix', { plan: planDisplayName(activeWs.plan) })}</span>
+              ) : null}
             </span>
             <Icon name="chevron" size={14} color="var(--fg-3)" />
           </button>
@@ -156,25 +168,35 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
           {wsMenuOpen && (
             <div className="ws-menu" role="listbox">
               <div className="ws-menu-label">{tr('sidebar.workspacesLabel')}</div>
-              {workspaces.map((w) => (
-                <button
-                  key={w.id}
-                  type="button"
-                  role="option"
-                  aria-selected={w.id === activeWorkspaceId}
-                  className={'ws-menu-item' + (w.id === activeWorkspaceId ? ' active' : '')}
-                  onClick={() => switchWorkspace(w.id)}
-                >
-                  <span className="ws-glyph sm" aria-hidden="true">
-                    {(w.displayName || w.slug || 'W').slice(0, 1).toUpperCase()}
-                  </span>
-                  <span className="ws-meta">
-                    <span className="ws-name">{w.displayName || w.slug}</span>
-                    <span className="ws-plan">{tr('sidebar.planSuffix', { plan: planDisplayName(w.plan) })}{w.isOwner ? '' : ` · ${tr('sidebar.memberSuffix')}`}</span>
-                  </span>
-                  {w.id === activeWorkspaceId && <Icon name="check" size={14} color="var(--brand)" />}
-                </button>
-              ))}
+              {workspaces.map((w) => {
+                // Only the active workspace arrives with its effective plan
+                // resolved; the rest carry null and get no plan label, so the
+                // sub-line can collapse to the member suffix alone, or to
+                // nothing at all for an unresolved workspace the user owns.
+                const meta = [
+                  w.plan ? tr('sidebar.planSuffix', { plan: planDisplayName(w.plan) }) : null,
+                  w.isOwner ? null : tr('sidebar.memberSuffix'),
+                ].filter(Boolean).join(' · ');
+                return (
+                  <button
+                    key={w.id}
+                    type="button"
+                    role="option"
+                    aria-selected={w.id === activeWorkspaceId}
+                    className={'ws-menu-item' + (w.id === activeWorkspaceId ? ' active' : '')}
+                    onClick={() => switchWorkspace(w.id)}
+                  >
+                    <span className="ws-glyph sm" aria-hidden="true">
+                      {(w.displayName || w.slug || 'W').slice(0, 1).toUpperCase()}
+                    </span>
+                    <span className="ws-meta">
+                      <span className="ws-name">{w.displayName || w.slug}</span>
+                      {meta ? <span className="ws-plan">{meta}</span> : null}
+                    </span>
+                    {w.id === activeWorkspaceId && <Icon name="check" size={14} color="var(--brand)" />}
+                  </button>
+                );
+              })}
 
               <div className="ws-menu-sep" />
 
@@ -241,9 +263,15 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
             <div style={{ fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {user?.displayName || user?.email || tr('sidebar.accountFallback')}
             </div>
-            <div style={{ fontFamily: "var(--font-sans)", fontSize: 11.5, color: "var(--fg-3)", textTransform: "capitalize" }}>
-              {tr('sidebar.planSuffix', { plan: planDisplayName(workspace?.plan) })}
-            </div>
+            {/* Already the effective plan: the dashboard page resolves it
+                through effective_workspace_plan() before it becomes
+                `workspace.plan`. This is the label the switcher above now
+                agrees with. */}
+            {workspace?.plan ? (
+              <div style={{ fontFamily: "var(--font-sans)", fontSize: 11.5, color: "var(--fg-3)", textTransform: "capitalize" }}>
+                {tr('sidebar.planSuffix', { plan: planDisplayName(workspace.plan) })}
+              </div>
+            ) : null}
           </div>
           <button
             onClick={handleSignOut}
