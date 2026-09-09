@@ -8177,6 +8177,36 @@ async function executeListInboxes(
     };
   }));
 
+  // An empty list is the FIRST RUN of every user who connects this server before
+  // connecting a mailbox, which is the order the connector directory imposes:
+  // install, OAuth, then discover there is nothing to read. It is a success, not
+  // an error, so it must not become an isError result. But a bare
+  // {"inboxes": []} tells the model nothing, so the model improvises, and the
+  // user is told to go somewhere with nowhere to click.
+  //
+  // The instruction to re-render the link is not decoration. claude.ai collapses
+  // tool results behind an expander by default, so a URL that only appears in
+  // the payload is invisible until someone thinks to expand it. Naming the
+  // action for the model is what actually puts a link on screen.
+  if (inboxes.length === 0) {
+    return {
+      result: jsonOk({
+        inboxes,
+        setup_required: true,
+        setup_url: `${APP_URL}/dashboard/inboxes`,
+        message:
+          "No mailbox is connected to this account yet, so there is nothing to " +
+          "read or send from. Tell the user this and give them the setup_url as " +
+          "a clickable link so they can connect one. Gmail, Outlook, Fastmail, " +
+          "iCloud, Yahoo and Zoho connect in about a minute; any other provider " +
+          "takes IMAP and SMTP details. Once a mailbox is connected, call " +
+          "inbox_list again.",
+      }, true),
+      logStatus: "success",
+      logErrorCode: null,
+    };
+  }
+
   return {
     result: jsonOk({ inboxes }, true),
     logStatus: "success",
@@ -8481,9 +8511,17 @@ function inboxResolutionError(
       break;
     }
     case "none":
+      // Same first-run moment as the empty inbox_list above, reached by any
+      // other tool. Naming a destination without a link is what Anthropic's own
+      // review criteria call a non-actionable error, and it is the last thing a
+      // directory user sees before giving up.
       text =
-        "No inbox is connected for this API key. The user must connect an " +
-        "inbox in MCP Emails before this tool can be used.";
+        "No mailbox is connected to this account yet, so this tool has nothing " +
+        "to act on. Tell the user this and give them this link, rendered so they " +
+        "can click it, to connect one: " +
+        `${APP_URL}/dashboard/inboxes . Gmail, Outlook, Fastmail, iCloud, ` +
+        "Yahoo and Zoho take about a minute; any other provider needs IMAP and " +
+        "SMTP details. Retry this tool once they confirm a mailbox is connected.";
       errorCode = "no_inbox_connected";
       break;
   }
