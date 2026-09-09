@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { MIcon } from '../MarketingPrimitives';
 import { Icon, Btn, ProviderLogo } from '../Primitives';
 import { trackProductEvent, scopeProfile } from '@/lib/analytics.mjs';
+import { resolveDefaultAccess, resolvePresets } from '@/lib/oauth/consent-presets';
 
 // ─── Theme toggle ─────────────────────────────────────────────────────────────
 
@@ -87,16 +88,16 @@ function ClientMark({ clientId, logoUrl, size = 36 }) {
 // "custom" (handled in AuthorizeApp). Each preset is intersected with the
 // scopes the client actually offered (offeredScopes) — a preset only ever
 // selects scopes within that set.
+//
+// The scope lists themselves, and the rule for which card starts selected, live
+// in lib/oauth/consent-presets.ts so they can be unit tested without rendering.
+// Only the icon is a UI concern and stays here.
 
-const PRESETS = [
-  { id: 'readOnly', icon: 'eye',      scopes: ['read:email', 'search:email'] },
-  { id: 'standard', icon: 'zap',      scopes: ['read:email', 'search:email', 'send:email', 'manage:drafts', 'manage:contacts'], recommended: true },
-  { id: 'full',     icon: 'shield',   scopes: ['read:email', 'search:email', 'send:email', 'manage:folders', 'delete:email', 'manage:drafts', 'manage:contacts', 'schedule:email', 'manage:automations'] },
-];
+const PRESET_ICONS = { readOnly: 'eye', standard: 'zap', full: 'shield' };
 
 // ─── Preset cards (radiogroup) ───────────────────────────────────────────────
 
-function PresetCards({ presets, mode, onSelect }) {
+function PresetCards({ presets, mode, recommendedMode, onSelect }) {
   const t = useTranslations('auth');
 
   // Keyboard: arrow keys move selection between enabled (offered) presets,
@@ -138,7 +139,7 @@ function PresetCards({ presets, mode, onSelect }) {
             <div className="az-preset-main">
               <div className="az-preset-title-row">
                 <span className="az-preset-title">{t(`authorize.preset.${p.id}.title`)}</span>
-                {p.recommended && (
+                {p.id === recommendedMode && (
                   <span className="az-preset-badge">{t('authorize.recommended')}</span>
                 )}
               </div>
@@ -165,6 +166,13 @@ function PresetCards({ presets, mode, onSelect }) {
         <div className="az-preset-main">
           <div className="az-preset-title-row">
             <span className="az-preset-title">{t('authorize.preset.custom.title')}</span>
+            {/* Custom can carry the badge too: when the client asks for a set no
+                preset matches, Custom pre-ticked with exactly that set IS the
+                recommendation, and a badge stranded on a wider card would be
+                telling the user to grant more than the app asked for. */}
+            {recommendedMode === 'custom' && (
+              <span className="az-preset-badge">{t('authorize.recommended')}</span>
+            )}
           </div>
           <div className="az-preset-desc">{t('authorize.preset.custom.desc')}</div>
         </div>
@@ -325,7 +333,15 @@ function DoneScreen({ client, grantCount, totalInboxes, allInboxes }) {
  * Props (all provided by the server component in page.js):
  *  - client         { client_id, client_name, client_byline, logo_url, is_first_party }
  *  - workspaceName  string: the user's workspace display name
- *  - requestedScopes  Array<{ scope, icon, title, desc, required }>
+ *  - requestedScopes  Array<{ scope, icon, title, desc, required }>: the MENU,
+ *                     i.e. every scope this client is permitted to be granted
+ *                     (its scopes_allowed). Misnamed since the first version and
+ *                     kept for churn reasons; `clientRequestedScopes` below is
+ *                     the one that means what the name says.
+ *  - clientRequestedScopes  string[]: the scopes the client actually put in the
+ *                     `scope` query param, already narrowed to the menu above.
+ *                     Empty when the client sent no `scope` at all, which is a
+ *                     distinct case (see lib/oauth/consent-presets.ts).
  *  - inboxes        Array<{ id, email_address, display_name, provider, status }>
  *  - redirectUri    string: validated redirect URI for this client
  *  - oauthState     string: opaque state param to echo back in the redirect
@@ -341,6 +357,7 @@ export function AuthorizeApp({
   client,
   workspaceName,
   requestedScopes,
+  clientRequestedScopes = [],
   inboxes,
   redirectUri,
   oauthState,
@@ -355,36 +372,32 @@ export function AuthorizeApp({
 
   // The set of scopes this client is allowed to offer (canonical order).
   const offeredScopeIds = requestedScopes.map((s) => s.scope);
-  const offeredScopeSet = new Set(offeredScopeIds);
 
   // Build the preset list, intersected with what the client offers. A preset is
   // only "available" when ALL of its scopes are offered — partially-offered
   // presets are greyed out (with a tooltip) so the user is never surprised that
   // a named preset granted less than its label implies. `effectiveScopes` is the
   // exact set a preset selects (already === its scopes when available).
-  const presets = PRESETS.map((p) => {
-    const effectiveScopes = p.scopes.filter((s) => offeredScopeSet.has(s));
-    return {
-      ...p,
-      effectiveScopes,
-      available: effectiveScopes.length === p.scopes.length && effectiveScopes.length > 0,
-    };
-  });
+  const presets = resolvePresets(offeredScopeIds).map((p) => ({ ...p, icon: PRESET_ICONS[p.id] }));
 
-  // Pick the initial mode: prefer "standard" if fully available, else the first
-  // available preset, else "custom". This determines the default selection.
-  const defaultPreset =
-    presets.find((p) => p.id === 'standard' && p.available) ??
-    presets.find((p) => p.available) ??
-    null;
+  // Which card opens selected, and with what ticked. The rule and the reasoning
+  // are in lib/oauth/consent-presets.ts; the short version is that the screen
+  // now defaults to the narrowest option satisfying the client's own `scope`
+  // param instead of always to "standard", because a client that asks only to
+  // read and is handed send/drafts/contacts is over-asking one screen later
+  // than the challenge we just narrowed. Computed once, at mount: it is the
+  // DEFAULT, and the badge must keep pointing at it after the user clicks
+  // elsewhere rather than chasing the selection.
+  const [defaultAccess] = useState(() =>
+    resolveDefaultAccess({ offeredScopes: offeredScopeIds, requestedScopes: clientRequestedScopes }),
+  );
 
-  const [mode, setMode] = useState(defaultPreset ? defaultPreset.id : 'custom');
+  const [mode, setMode] = useState(defaultAccess.mode);
 
-  // Track which scopes the user has toggled on/off. Initialised from the default
-  // preset's scopes (or all offered scopes when no preset is available).
+  // Track which scopes the user has toggled on/off, seeded from that default.
   const [enabledScopes, setEnabledScopes] = useState(() => {
     const initial = {};
-    const initialOn = defaultPreset ? new Set(defaultPreset.effectiveScopes) : offeredScopeSet;
+    const initialOn = new Set(defaultAccess.scopes);
     for (const s of requestedScopes) {
       initial[s.scope] = initialOn.has(s.scope);
     }
@@ -604,7 +617,7 @@ export function AuthorizeApp({
                     </div>
 
                     {/* Preset cards (radiogroup) */}
-                    <PresetCards presets={presets} mode={mode} onSelect={selectPreset} />
+                    <PresetCards presets={presets} mode={mode} recommendedMode={defaultAccess.recommendedMode} onSelect={selectPreset} />
 
                     {/* Customize affordance + granular per-scope toggles */}
                     <button
