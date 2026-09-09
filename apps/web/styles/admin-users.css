@@ -1,0 +1,380 @@
+/* admin-users.css: /admin/growth/users and /admin/growth/users/[id].
+
+   THIS IS A TABLE, AND IT IS DRESSED AS ONE. The growth board next door is a
+   grid of tiles because it is read at a glance; a directory is read one row at
+   a time with an eye running down a column, and every decoration on a row costs
+   the vertical space that would have been another person. So: no card per row,
+   no avatar, no per-row sparkline, one hairline between rows, and a sticky
+   header so column meaning survives a scroll of four hundred people.
+
+   IT INHERITS THE BOARD'S SKIN. Everything here is scoped under `.us`, which is
+   applied alongside `.gb`, so the page picks up the board's dark ground, its
+   header, its `.gb-strip` summary and its type scale for free -- and a change
+   to the board's tokens moves both surfaces together. Nothing in this file
+   touches a `.gb-*` or `.bd-*` rule, only adds `.us-*` ones.
+
+   Every colour is a token from colors_and_type.css / theme.css, so the dark
+   flip is handled upstream and there is not one hard-coded hex below. */
+
+.us { --us-row: 30px; }
+
+.us-crumb { padding: 4px 9px; border-radius: 6px; font-size: 12px; font-weight: 500; color: var(--fg-3); text-decoration: none; }
+a.us-crumb:hover { color: var(--fg-1); background: var(--bg-sunken); }
+.us-crumb.is-current { color: var(--fg-1); }
+
+.us-loading { margin: 26px 0; font-size: 12px; color: var(--fg-4); }
+.us-empty { margin: 34px 0; text-align: center; font-size: 12.5px; color: var(--fg-3); }
+
+/* ── Summary strip ──────────────────────────────────────────────────────── */
+
+/* The board's six-column strip, lifted out of its tile. It is the only chart
+   on the page, and it is here because its counts are the denominators for
+   every percentage below it. */
+.us-summary { display: block; min-height: 0; margin: 14px 0 0; }
+.us .us-strip {
+  margin: 0;
+  border: 1px solid var(--border-1);
+  border-radius: var(--kiosk-radius);
+  background: var(--bg-surface);
+  overflow: hidden;
+}
+
+/* ── Segments ───────────────────────────────────────────────────────────── */
+
+/* Named slices rather than a filter builder. Eleven questions get asked of this
+   table and all eleven are here as one click with their population printed on
+   them, which also makes the counts a funnel you can read across. */
+.us-segments { display: flex; flex-wrap: wrap; gap: 4px; margin: 14px 0 0; }
+.us-segments a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--bg-sunken);
+  color: var(--fg-3);
+  font-size: 12px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.us-segments a:hover { color: var(--fg-1); border-color: var(--border-2); }
+.us-segments a b { font-weight: 650; color: var(--fg-2); font-variant-numeric: tabular-nums; }
+.us-segments a[aria-current="true"] { background: var(--kiosk-accent); color: #0B1020; border-color: transparent; }
+.us-segments a[aria-current="true"] b { color: #0B1020; opacity: 0.75; }
+
+/* ── Search ─────────────────────────────────────────────────────────────── */
+
+.us-search { display: flex; align-items: center; gap: 8px; margin: 12px 0 10px; flex-wrap: wrap; }
+.us-search input[type="search"] {
+  flex: 1;
+  min-width: 220px;
+  max-width: 460px;
+  padding: 6px 11px;
+  border: 1px solid var(--border-1);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--fg-1);
+  font: inherit;
+  font-size: 12.5px;
+}
+.us-search input[type="search"]:focus { outline: none; border-color: var(--kiosk-accent); }
+.us-search button {
+  padding: 6px 13px;
+  border: 1px solid var(--border-1);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--fg-2);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.us-search button:hover { color: var(--fg-1); border-color: var(--border-2); }
+.us-clear { font-size: 12px; color: var(--fg-4); text-decoration: none; }
+.us-clear:hover { color: var(--fg-1); }
+.us-count { margin-left: auto; font-size: 11.5px; color: var(--fg-4); font-variant-numeric: tabular-nums; }
+
+/* ── The table ──────────────────────────────────────────────────────────── */
+
+/* Its own scroll container: fourteen columns do not fit a laptop, and a page
+   that scrolls sideways as a whole loses its header and its segment row on the
+   way. The table scrolls; the page does not. */
+.us-scroll {
+  max-width: 100%;
+  /* The table scrolls in BOTH axes inside this box, and the box is what makes
+     the sticky header work. `overflow-x: auto` alone forces `overflow-y` to
+     auto anyway, so this was already a scroll container; declaring the height
+     is what turns that from a bug -- a header stuck 44px down, with the first
+     row peeking through above it -- into the point. The summary, the segments
+     and the search stay on screen while four hundred people go past. */
+  max-height: calc(100dvh - 268px);
+  min-height: 260px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--border-1);
+  border-radius: var(--kiosk-radius);
+  background: var(--bg-surface);
+}
+
+.us-table { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+.us-table th, .us-table td {
+  padding: 5px 10px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border-1);
+  vertical-align: middle;
+}
+.us-table .is-num, .us-table th.is-num { text-align: right; }
+
+/* Sticky, because a directory is scrolled and a numeric column with no header
+   above it is unreadable. The background is opaque: the rows pass underneath. */
+.us-table thead th {
+  position: sticky;
+  /* Zero, not the header's height: the offset is measured from the top of
+     `.us-scroll`, not the viewport. */
+  top: 0;
+  z-index: 5;
+  padding: 0;
+  background: var(--bg-sunken);
+  border-bottom: 1px solid var(--border-2);
+}
+.us-table thead th a {
+  display: block;
+  padding: 7px 10px;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  text-decoration: none;
+}
+.us-table thead th.is-num a { text-align: right; }
+.us-table thead th a:hover { color: var(--fg-1); }
+.us-table thead th.is-sorted a { color: var(--fg-1); }
+.us-table thead th a i { font-style: normal; margin-left: 4px; color: var(--kiosk-accent); }
+
+.us-table tbody tr:hover { background: var(--bg-sunken); }
+.us-table tbody tr:last-child th, .us-table tbody tr:last-child td { border-bottom: 0; }
+.us-table tbody tr.is-quiet th, .us-table tbody tr.is-quiet td { color: var(--fg-4); }
+.us-table .us-text { font-variant-numeric: normal; color: var(--fg-3); }
+/* A provider list or a referrer can be arbitrarily long; the full value is on
+   the cell's title attribute rather than allowed to set the column width. */
+.us-table .us-clip { max-width: 15ch; overflow: hidden; text-overflow: ellipsis; }
+
+.us-person { min-width: 0; }
+.us-person a { color: var(--fg-1); font-weight: 550; text-decoration: none; }
+.us-person a:hover { text-decoration: underline; }
+.us-person span { display: block; margin-top: 1px; font-size: 10.5px; font-weight: 400; color: var(--fg-4); }
+.us-sub { display: block; margin-top: 1px; font-size: 10.5px; font-weight: 400; color: var(--fg-4); }
+
+.us-tag {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: var(--bg-sunken);
+  font-style: normal;
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+.us-tag.is-warn { color: var(--kiosk-warn); }
+.us-tag.is-quiet { color: var(--fg-4); }
+
+.us-plus { margin-left: 3px; font-size: 10px; color: var(--fg-4); }
+.us-bad { margin-left: 4px; font-size: 10px; color: var(--kiosk-bad); font-style: normal; }
+
+/* The funnel rung as a word, coloured by how far down it sits. Six shades of
+   one hue rather than six hues: this is an ordinal, and a rainbow would imply
+   the stages are categories with no order. */
+.us-stage {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--bg-sunken);
+  font-size: 10.5px;
+  color: var(--fg-4);
+  white-space: nowrap;
+}
+.us-stage.is-s2 { color: var(--fg-3); }
+.us-stage.is-s3 { color: var(--fg-2); }
+.us-stage.is-s4 { color: var(--kiosk-accent); }
+.us-stage.is-s5 { background: color-mix(in srgb, var(--kiosk-good) 20%, transparent); color: var(--kiosk-good); }
+
+/* ── Pager ──────────────────────────────────────────────────────────────── */
+
+.us-pager { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 12px 0 0; flex-wrap: wrap; font-size: 12px; color: var(--fg-4); }
+.us-pager a { color: var(--fg-2); text-decoration: none; padding: 4px 9px; border: 1px solid var(--border-1); border-radius: 7px; }
+.us-pager a:hover { color: var(--fg-1); border-color: var(--border-2); }
+.us-pager-pages, .us-pager-size { display: flex; align-items: center; gap: 8px; }
+.us-pager-size a { padding: 2px 8px; border: 0; background: var(--bg-sunken); }
+.us-pager-size a[aria-current="true"] { background: var(--kiosk-accent); color: #0B1020; }
+
+/* ── Detail page ────────────────────────────────────────────────────────── */
+
+.us-identity { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin: 18px 0 12px; }
+.us-identity h1 { margin: 0; font-size: 21px; font-weight: 650; letter-spacing: -0.02em; word-break: break-all; }
+.us-identity-sub { margin: 4px 0 0; font-size: 12px; color: var(--fg-4); }
+.us-identity-id { display: block; margin-top: 2px; font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-4); opacity: 0.7; }
+
+.us-badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.us-badges li { padding: 3px 10px; border-radius: 999px; background: var(--bg-sunken); font-size: 11.5px; color: var(--fg-2); }
+.us-badges li.is-quiet { color: var(--fg-4); }
+
+.us-detail .us-strip { margin: 0 0 4px; }
+
+/* Two panels to a row, one when a panel asks for the width. Not a twelve
+   column bento: this page has ten panels of wildly different heights, and a
+   bento of those is the exact raggedness the board was rebuilt to remove. */
+.us-bands { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gb-gap); margin-top: var(--gb-gap); align-items: start; }
+.us-bands.is-stacked { grid-template-columns: minmax(0, 1fr); }
+.us-panel {
+  border: 1px solid var(--border-1);
+  border-radius: var(--kiosk-radius);
+  background: var(--bg-surface);
+  padding: 12px 14px;
+  min-width: 0;
+  overflow: hidden;
+}
+.us-panel.is-wide { grid-column: 1 / -1; }
+.us-panel > header { margin-bottom: 9px; }
+.us-panel h2 { margin: 0; font-size: 11px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-3); }
+.us-panel > header p { margin: 2px 0 0; font-size: 11px; color: var(--fg-4); }
+/* The inner tables draw their own frame from the panel, so they drop the one
+   the list page's `.us-scroll` adds. */
+.us-panel .us-scroll {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  /* A panel is already the box; it must not become a second scroll box. */
+  max-height: none;
+  min-height: 0;
+  overflow: visible;
+  overflow-x: auto;
+}
+/* The directory's header cells put their padding on the sort link inside them.
+   These have no link, so they carry it themselves, or the columns run together
+   into "Last callStage". */
+.us-table.is-inner thead th {
+  top: 0;
+  padding: 6px 10px;
+  background: var(--bg-surface);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+.us-panel .ac-card { border: 0; padding: 0; background: transparent; }
+
+.us-facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 9px 16px; margin: 0; }
+.us-facts dt { font-size: 10px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-4); }
+.us-facts dd { margin: 2px 0 0; font-size: 12.5px; color: var(--fg-1); word-break: break-word; }
+.us-facts dd code { font-family: var(--font-mono); font-size: 11px; color: var(--fg-2); }
+.us-ago { display: block; font-style: normal; font-size: 10.5px; color: var(--fg-4); }
+
+/* ── Journey ────────────────────────────────────────────────────────────── */
+
+/* The gaps are the point, so they get their own column at the right rather
+   than being folded into the note. An unreached rung is dimmed and says so;
+   it is never drawn as pending, because a missing timestamp means the step was
+   never recorded, not that it is about to be. */
+.us-journey { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.us-journey li {
+  display: grid;
+  grid-template-columns: minmax(0, 8.5em) minmax(0, 10em) minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 12px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  background: var(--bg-sunken);
+  font-size: 12px;
+}
+.us-journey li.is-unreached { background: transparent; color: var(--fg-4); }
+.us-journey b { font-weight: 600; color: var(--fg-1); }
+.us-journey li.is-unreached b { color: var(--fg-4); }
+.us-journey-when { color: var(--fg-2); }
+.us-journey-note { color: var(--fg-4); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.us-journey-gap { color: var(--kiosk-accent); font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+
+/* ── Tool mix ───────────────────────────────────────────────────────────── */
+
+/* Successes and failures in one track rather than a rate: at these volumes a
+   tool called three times with one failure is a different story from one called
+   three hundred times with a hundred failures, and one percentage cannot tell
+   them apart without its denominator. */
+.us-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.us-bars li { display: grid; grid-template-columns: minmax(0, 11em) minmax(0, 1fr) auto auto; align-items: center; gap: 10px; font-size: 12px; }
+.us-bar-name { color: var(--fg-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.us-bar-track { display: flex; height: 7px; border-radius: 999px; background: var(--bg-sunken); overflow: hidden; }
+.us-bar-track i { display: block; flex: none; height: 100%; background: var(--kiosk-accent); }
+.us-bar-track i.is-bad { background: var(--kiosk-bad); }
+.us-bar-count { font-weight: 650; color: var(--fg-1); white-space: nowrap; }
+.us-bar-count em { margin-left: 6px; font-style: normal; font-weight: 500; font-size: 10.5px; color: var(--kiosk-bad); }
+.us-bar-ms { font-size: 10.5px; color: var(--fg-4); white-space: nowrap; min-width: 4.5em; text-align: right; }
+
+.us-dot { display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: var(--fg-4); }
+.us-dot.is-good { background: var(--kiosk-good); }
+.us-dot.is-bad { background: var(--kiosk-bad); }
+
+/* A provider's own refusal, which can be a paragraph. It wraps rather than
+   widening the table, and it is the only cell on the page allowed to. */
+.us-error { white-space: normal; max-width: 42ch; font-size: 10.5px; color: var(--fg-4); line-height: 1.4; }
+
+/* ── Timeline ───────────────────────────────────────────────────────────── */
+
+/* Grouped by UTC day: one connection attempt writes four rows inside a minute,
+   and a flat list of timestamps makes a busy afternoon look like a busy month. */
+.us-timeline { list-style: none; margin: 0; padding: 0; }
+.us-timeline > li { display: grid; grid-template-columns: minmax(0, 9em) minmax(0, 1fr); gap: 14px; padding: 8px 0; border-top: 1px solid var(--border-1); }
+.us-timeline > li:first-child { border-top: 0; }
+.us-timeline-day { margin: 0; font-size: 11.5px; font-weight: 600; color: var(--fg-2); }
+.us-timeline-day em { display: block; margin-top: 1px; font-style: normal; font-size: 10.5px; font-weight: 400; color: var(--fg-4); }
+.us-timeline ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.us-timeline ul li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 11em) minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 10px;
+  padding: 3px 9px;
+  border-left: 2px solid var(--fg-4);
+  border-radius: 0 6px 6px 0;
+  background: var(--bg-sunken);
+  font-size: 11.5px;
+}
+.us-timeline ul li.is-good { border-left-color: var(--kiosk-good); }
+.us-timeline ul li.is-bad { border-left-color: var(--kiosk-bad); }
+.us-timeline-time { font-variant-numeric: tabular-nums; color: var(--fg-4); font-size: 10.5px; }
+.us-timeline-title { color: var(--fg-1); }
+.us-timeline-detail { color: var(--fg-4); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.us-timeline-kind { font-size: 9.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--fg-4); opacity: 0.7; }
+
+/* ── Narrower viewports ─────────────────────────────────────────────────── */
+
+@media (max-width: 1100px) {
+  .us .us-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .us .us-strip .gb-stat:nth-child(3n + 1) { border-left: 0; }
+  .us .us-strip .gb-stat:nth-child(n + 4) { border-top: 1px solid var(--border-1); }
+  .us-bands { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 760px) {
+  .us .us-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .us .us-strip .gb-stat:nth-child(odd) { border-left: 0; }
+  .us .us-strip .gb-stat:nth-child(n + 3) { border-top: 1px solid var(--border-1); }
+  .us-scroll { max-height: none; }
+  .us-journey li { grid-template-columns: minmax(0, 1fr) auto; row-gap: 2px; }
+  .us-journey-note { grid-column: 1 / -1; }
+  .us-timeline > li { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .us-timeline ul li { grid-template-columns: auto minmax(0, 1fr); row-gap: 2px; }
+  .us-timeline-detail, .us-timeline-kind { grid-column: 1 / -1; }
+  .us-count { margin-left: 0; width: 100%; }
+}
+
+/* The wordmark is a link back to the board on these pages and plain text on
+   the board itself. It must not read as a link: a blue word in the top-left
+   corner of a dark header is the one place on the page an accent colour means
+   something else. */
+.us .gb-wordmark a { color: inherit; text-decoration: none; }
+.us .gb-wordmark a:hover { color: var(--kiosk-accent); }

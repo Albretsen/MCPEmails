@@ -186,6 +186,7 @@ export default async function GrowthBoardPage({
                 </a>
               ))}
             </nav>
+            <a className="gb-link" href="/admin/growth/users">People</a>
             <a className="gb-link" href="/admin/growth/kiosk">Kiosk</a>
             <a className="gb-link" href="/admin/growth/experiments">Experiments</a>
             <a className="gb-link" href="/admin/growth/dunning">Dunning</a>
