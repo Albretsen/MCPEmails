@@ -24,7 +24,7 @@
   "caps": {
     "eyebrow": "Lo que tu IA puede hacer",
     "title": "Una bandeja de {provider} que tu agente puede usar de verdad",
-    "sub": "Dieciséis herramientas MCP basadas en acciones: enviar, responder, reenviar, programar y organizar. Tu agente termina el trabajo dentro de {provider}."
+    "sub": "Diecisiete herramientas MCP basadas en acciones: enviar, responder, reenviar, programar y organizar. Tu agente termina el trabajo dentro de {provider}."
   },
   "capabilities": [
     {
@@ -66,7 +66,7 @@
   },
   "related": {
     "title": "Conecta otro buzón",
-    "sub": "El mismo servidor MCP, las mismas dieciséis herramientas, otro proveedor.",
+    "sub": "El mismo servidor MCP, las mismas diecisiete herramientas, otro proveedor.",
     "link": "Conecta {provider}",
     "all": "Ver todos los proveedores de correo compatibles"
   },

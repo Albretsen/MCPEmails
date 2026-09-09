@@ -111,8 +111,8 @@
   },
   "tools": {
     "eyebrow": "Verktøyreferanse",
-    "heading": "16 verktøy. Alle e-postoperasjonene agenten din trenger.",
-    "sub": "<b>Å angi innboks er valgfritt.</b> Når nøkkelen din har nøyaktig én innboks, løser hvert per-innboks-verktøy den automatisk (ingen <code>inbox_id</code> nødvendig). Med flere innbokser oppgir du enten <code>inbox_id</code> (UUID-en fra <code>inbox_list</code>) eller <code>inbox</code> (innboksens e-postadresse). De fleste verktøy tar et <code>action</code>-argument som velger operasjonen; merkene viser hvilke omfang hvert verktøy trenger, og <code>tools/list</code> returnerer bare verktøyene nøkkelen din (eller OAuth-tokenet) har omfang for. En nøkkel med alle omfang ser 22 verktøy i <code>tools/list</code>: disse 16 pluss seks godkjennings- og masseoperasjonsverktøy som MCP-klienten din styrer fra gjennomgangskortet den viser deg, i stedet for verktøy du setter sammen for hånd. Klikk «Vis eksempel» for å se en full forespørsel og respons.",
+    "heading": "17 verktøy. Alle e-postoperasjonene agenten din trenger.",
+    "sub": "<b>Å angi innboks er valgfritt.</b> Når nøkkelen din har nøyaktig én innboks, løser hvert per-innboks-verktøy den automatisk (ingen <code>inbox_id</code> nødvendig). Med flere innbokser oppgir du enten <code>inbox_id</code> (UUID-en fra <code>inbox_list</code>) eller <code>inbox</code> (innboksens e-postadresse). De fleste verktøy tar et <code>action</code>-argument som velger operasjonen; merkene viser hvilke omfang hvert verktøy trenger, og <code>tools/list</code> returnerer bare verktøyene nøkkelen din (eller OAuth-tokenet) har omfang for. En nøkkel med alle omfang ser 23 verktøy i <code>tools/list</code>: disse 17 pluss seks godkjennings- og masseoperasjonsverktøy som MCP-klienten din styrer fra gjennomgangskortet den viser deg, i stedet for verktøy du setter sammen for hånd. Klikk «Vis eksempel» for å se en full forespørsel og respons.",
     "noParams": "Ingen parametere. Kall med et tomt arguments-objekt:",
     "showExample": "Vis eksempel på forespørsel og svar",
     "hideExample": "Skjul eksempel på forespørsel og svar",
@@ -169,29 +169,39 @@
     },
     "email_organize": {
       "title": "Organiser e-post",
-      "desc": "Flytt, kopier, flagg eller arkiver meldinger. Sett action: 'move'/'move_batch' (til en destination_folder_id), 'copy'/'copy_batch' (kopier til en destination_folder_id og la originalen bli liggende; kun IMAP, Outlook og Fastmail), 'flag' (sett lest/ulest/flagget via flag_action på message_ids), 'archive' (flytt ut av innboksen, ikke-destruktivt), eller 'search_and_move' (anvend på hver melding som matcher et strukturert søk, unngår utdaterte meldings-ID-er). Hver handling trenger omfanget som matcher den: manage:folders for flytting og kopiering, send:email for flag/archive. Sletting av meldinger har sitt eget email_delete-verktøy.",
+      "desc": "Flytt, kopier, flagg eller arkiver meldinger du oppgir med message_id. Sett action: 'move'/'move_batch' (til en destination_folder_id), 'copy'/'copy_batch' (kopier til en destination_folder_id og la originalen bli liggende; kun IMAP, Outlook og Fastmail), 'flag' (sett lest/ulest/flagget via flag_action på message_ids), eller 'archive' (flytt én melding ut av innboksen). Hent ID-ene fra email_read først. Hver handling rører bare ID-ene du sender inn, og angres av et nytt kall: en flytting av en flytting tilbake, archive av en flytting inn i innboksen, flag av det motsatte flagget, og en kopi lar originalen ligge. På Gmail legger flytting til måletiketten og fjerner INBOX; andre etiketter blir liggende, og en melding som flyttes ut av Trash eller Spam mister også TRASH/SPAM, så det er en ekte gjenoppretting. Kopiering finnes ikke på Gmail. Vil du flytte alt som matcher et søk i stedet for en liste med ID-er, bruk email_search_and_move: det er et eget verktøy fordi ett feil filter der flytter en hel innboks. Hver handling trenger manage:folders. Sletting av meldinger har sitt eget email_delete-verktøy.",
       "params": {
-        "action": "Hvilken operasjon som skal utføres: \"move\", \"move_batch\", \"copy\", \"copy_batch\", \"flag\", \"archive\" eller \"search_and_move\". Avgjør hvilke andre argumenter som gjelder og hvilket omfang som kreves.",
+        "action": "Hvilken operasjon som skal utføres: \"move\", \"move_batch\", \"copy\", \"copy_batch\", \"flag\" eller \"archive\". Avgjør hvilke andre argumenter som gjelder. Å flytte hver melding som matcher et søk er det egne verktøyet email_search_and_move.",
         "inbox_id": "UUID for innboksen som eier meldingene. Valgfritt, løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox. Kall inbox_list for å hente tilgjengelige inbox-ID-er.",
         "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt.",
         "message_id": "Leverandørens meldings-ID for en enkeltmeldings-handling (move, copy, archive), fra en tidligere list, read eller search.",
         "message_ids": "Leverandørens meldings-ID-er for en bunke-handling (move_batch, copy_batch, flag). Maks 500 per kall.",
-        "destination_folder_id": "Målmappe (move, move_batch, copy, copy_batch, search_and_move): et kanonisk alias (inbox, sent, drafts, trash, archive, spam), et mappe-/etikettnavn (f.eks. 'Receipts') eller en leverandørspesifikk mappe-ID fra folder list-handlingen. Navn og alias løses automatisk.",
-        "flag_action": "For action 'flag': endringen som skal anvendes på hver melding, enten \"read\" eller \"unread\" for å sette lesestatus, eller \"flag\"/\"unflag\" for å legge til eller fjerne et stjerne-/oppfølgingsflagg.",
-        "from": "Avsender som skal matches (search_and_move): e-postadresse, visningsnavn eller fragment.",
-        "to": "Primær (To) mottaker som skal matches (search_and_move): e-postadresse, visningsnavn eller fragment.",
-        "cc": "Kopimottaker (Cc) som skal matches (search_and_move): e-postadresse, visningsnavn eller fragment.",
-        "subject": "Tekst som skal matches i emnefeltet (search_and_move).",
-        "body": "Fritekst å finne i meldingskroppen (search_and_move). (På Gmail matcher dette hele meldingen.)",
-        "text": "Fritekst å matche hvor som helst i meldingen: overskrifter og kropp (search_and_move).",
-        "unread": "Søkehandlinger: true = kun uleste; false = kun leste; utelat for begge.",
-        "has_attachment": "Søkehandlinger: true = kun meldinger med vedlegg. Ikke støttet på generisk IMAP (ignoreres der).",
-        "flagged": "Søkehandlinger: true = kun flaggede/stjernemerkede meldinger. Ikke støttet på Outlook/Graph (ignoreres der).",
-        "since": "ISO 8601-dato eller -datotid (søkehandlinger); match meldinger mottatt på/etter (>=) dette tidspunktet.",
-        "before": "ISO 8601-dato eller -datotid (søkehandlinger); match meldinger mottatt strengt før (<) dette tidspunktet.",
-        "query": "Rå leverandørspesifikk spørrestreng (søkehandlinger, nødløsning). Foretrekk de strukturerte feltene over. Ignoreres på Fastmail.",
-        "include_folders": "Begrens søket til disse mappenavnene (søkehandlinger). Standard: alle mapper.",
-        "limit": "For search_and_move: maks antall treff som skal behandles. Standard 500, maks 500."
+        "destination_folder_id": "Målmappe (move, move_batch, copy, copy_batch): et kanonisk alias (inbox, sent, drafts, trash, archive, spam), et mappe-/etikettnavn (f.eks. 'Receipts') eller en leverandørspesifikk mappe-ID fra folder_list. Navn og alias løses automatisk.",
+        "flag_action": "For action 'flag': endringen som skal anvendes på hver melding, enten \"read\" eller \"unread\" for å sette lesestatus, eller \"flag\"/\"unflag\" for å legge til eller fjerne et stjerne-/oppfølgingsflagg."
+      }
+    },
+    "email_search_and_move": {
+      "title": "Søk og flytt",
+      "desc": "Flytt hver melding som matcher et søk, til en målmappe, i én operasjon på serversiden, slik at ingen meldings-ID rekker å bli utdatert før den brukes. Søket bruker de samme strukturerte, leverandøruavhengige feltene som email_read (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), som serveren oversetter til innboksens egen syntaks; query er en rå nødløsning. Dette er et eget verktøy, atskilt fra email_organize, og det er dette som er merket destruktivt overfor MCP-klienten din, fordi det virker på alt filteret matcher og ikke på ID-er du har valgt: ett feil filter flytter en hel innboks. Skal du flytte meldinger du allerede har listet, bruk email_organize (action 'move' eller 'move_batch') i stedet. Begrenset av limit, standard og maks 500: sjekk has_more i svaret før du melder en postkasse ferdig ryddet, og ta resten med email_organize (action 'move_batch'). På Gmail legger flyttingen til måletiketten og fjerner INBOX. Returnerer antall vellykkede/mislykkede og ett resultat per melding. Krever manage:folders.",
+      "params": {
+        "inbox_id": "UUID for innboksen som skal ryddes. Valgfritt, løses automatisk når nøkkelen har nøyaktig én innboks; ellers oppgi denne eller inbox. Kall inbox_list for å hente tilgjengelige inbox-ID-er.",
+        "inbox": "E-postadressen til innboksen som skal brukes, som et vennlig alternativ til inbox_id. Valgfritt; ignoreres hvis inbox_id er oppgitt.",
+        "destination_folder_id": "Hvor hvert treff skal flyttes: et kanonisk alias (inbox, sent, drafts, trash, archive, spam), et mappe-/etikettnavn (f.eks. 'Receipts') eller en leverandørspesifikk mappe-ID fra folder_list. Navn og alias løses automatisk.",
+        "from": "Avsender som skal matches: e-postadresse, visningsnavn eller fragment.",
+        "to": "Primær (To) mottaker som skal matches: e-postadresse, visningsnavn eller fragment.",
+        "cc": "Kopimottaker (Cc) som skal matches: e-postadresse, visningsnavn eller fragment.",
+        "subject": "Tekst som skal matches i emnefeltet.",
+        "body": "Fritekst å finne i meldingskroppen. (På Gmail matcher dette hele meldingen.)",
+        "text": "Fritekst å matche hvor som helst i meldingen: overskrifter og kropp.",
+        "unread": "true = kun uleste; false = kun leste; utelat for begge.",
+        "has_attachment": "true = kun meldinger med vedlegg. Ikke støttet på generisk IMAP (ignoreres der).",
+        "flagged": "true = kun flaggede/stjernemerkede meldinger. Ikke støttet på Outlook/Graph (ignoreres der).",
+        "since": "ISO 8601-dato eller -datotid; match meldinger mottatt på/etter (>=) dette tidspunktet.",
+        "before": "ISO 8601-dato eller -datotid; match meldinger mottatt strengt før (<) dette tidspunktet.",
+        "query": "Rå leverandørspesifikk spørrestreng (nødløsning). Foretrekk de strukturerte feltene over. Ignoreres på Fastmail.",
+        "include_folders": "Begrens søket til disse mappenavnene. På generisk IMAP søkes det kun i INBOX når feltet utelates.",
+        "limit": "Maks antall treff som skal flyttes. Standard 500, maks 500. Når søket fyller grensen, sier has_more i svaret om det ble liggende igjen meldinger som matcher.",
+        "idempotency_key": "Valgfri ugjennomsiktig nøkkel (1–200 tegn) for én logisk opprydding. Gjenbruk den bare for å prøve nøyaktig samme kall på nytt innen 24 timer; gjenbruk med andre argumenter avvises."
       }
     },
     "email_delete": {

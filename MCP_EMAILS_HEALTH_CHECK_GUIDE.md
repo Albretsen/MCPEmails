@@ -125,8 +125,9 @@ Both are legitimate `from` values. Any other `from` must be rejected. P2.6.
 ## 2. Phase P0: discovery and preflight
 
 - [ ] **P0.1 Tool discovery.** List the tools the client exposes. Record the exact names,
-      actions, and annotations. A full-scope key advertises 22 tools: `inbox_list`,
-      `email_read`, `email_organize`, `email_delete`, `email_compose`, `folder_list`,
+      actions, and annotations. A full-scope key advertises 23 tools: `inbox_list`,
+      `email_read`, `email_organize`, `email_search_and_move`, `email_delete`,
+      `email_compose`, `folder_list`,
       `folder`, `draft_list`, `draft`, `schedule_list`, `schedule`, `signature_get`,
       `signature_set`, `automation_read`, `automation`, `contact_search`, and the six
       app-only review-card tools (`approval_review`, `approval_decide`, `approval_update`,
@@ -341,7 +342,8 @@ folder-move semantics.
       result.
 - [ ] **P4.11 Archive.** Archive a fixture. Confirm it leaves `INBOX` and is still findable
       by search (Gmail archive is label removal, not deletion).
-- [ ] **P4.12 Search-and-move.** Run `search_and_move` scoped to the run tag with a small
+- [ ] **P4.12 Search-and-move.** Run the standalone `email_search_and_move` tool scoped to
+      the run tag with a small
       `limit`, moving into the run label. Test three cases: a query matching nothing, a
       query matching exactly one, and a query matching more than `limit`. Confirm it never
       moves a message outside the search scope, and that the over-limit case is explicit
