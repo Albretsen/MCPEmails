@@ -510,7 +510,7 @@ same idea.
 | Exactly how many tokens does our payload cost on Opus 5 vs Sonnet 4.6? | `POST /v1/messages/count_tokens` with our real `tools` array, once per model, minus a no-tools baseline. Free, and removes all char-per-token guesswork. |
 | Does the Claude API strip vendor keywords (`x-mcp-header`, `$ref`, `$defs`) before rendering? | Two `count_tokens` calls on the same schema, one with the keyword and one without. Equal counts means stripped. |
 | Do non-Anthropic clients forward `outputSchema` and `annotations` to the model? | Connect via Cursor or VS Code Copilot and inspect their request logs, or measure their reported context. If they forward, the free-fields conclusion is Anthropic-specific. |
-| ~~Is `SERVER_INSTRUCTIONS` under Claude Code's 2KB truncation limit?~~ | Settled: 1,796 bytes, under the 2,048 limit, with 252 bytes of headroom. Add a regression test asserting it. |
+| ~~Is `SERVER_INSTRUCTIONS` under Claude Code's 2KB truncation limit?~~ | Settled, then broken, then fixed. It was 1,796 bytes when this was written, drifted to 3,027 unnoticed because the regression test suggested here was never added, and spent that time truncated in production from roughly byte 2,048 (losing the whole untrusted-content rule). Rewritten to 1,663 bytes on 2026-09-09 and now pinned by `supabase/functions/mcp-server/server-instructions.test.ts`, which also fails if the block names a tool `tools/list` does not advertise. Note the ceiling is shared across every configured server, so 2,048 is a hard cap, not a safe target. |
 
 ---
 
