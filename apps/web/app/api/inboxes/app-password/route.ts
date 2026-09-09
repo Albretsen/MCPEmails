@@ -245,7 +245,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const resolvedImapSecurity = validation.ok ? imapDetection.candidate.security : 'tls';
 
   if (!validation.ok) {
-    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: funnelProvider(service), errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: validation.phase, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
+    // Computed BEFORE the funnel row, not after, because the row now carries
+    // the sub-case. `explainAuthFailure` is a pure classification of values
+    // already in hand, so hoisting it changes nothing but the order.
+    const authFailure =
+      validation.code === 'AUTH_FAILED'
+        ? explainAuthFailure({
+            detail: validation.detail,
+            service,
+            email,
+            host: imapHost,
+            secret: appPassword,
+            usernameProvided: Boolean(loginUsername),
+          })
+        : null;
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: funnelProvider(service), errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: validation.phase, connectionType: alreadyConnected ? 'reconnect' : 'first_connect', authReason: authFailure?.reason ?? null });
     // Every validator code is surfaced in the same lower-cased form the SMTP
     // branch below uses, not AUTH_FAILED alone. The message being "actionable"
     // was never the point: the client picks a short headline from the code and
@@ -261,17 +275,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // will never authenticate, no matter how carefully they retype it.
     // `loginUsername` counts as a supplied login (Yandex derives one), so an
     // "unknown user" answer is not read as a missing one.
-    const authFailure =
-      validation.code === 'AUTH_FAILED'
-        ? explainAuthFailure({
-            detail: validation.detail,
-            service,
-            email,
-            host: imapHost,
-            secret: appPassword,
-            usernameProvided: Boolean(loginUsername),
-          })
-        : null;
     if (authFailure) Object.assign(body, authFailure.fields);
     // Every failure is recorded, AUTH_FAILED included. Skipping it used to look
     // like the right call (a wrong password is user-driven noise), but it left
@@ -317,7 +320,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const resolvedSmtpPort = smtpValidation.ok ? smtpDetection.candidate.port : preset.smtpPort;
   const resolvedSmtpSecurity = smtpValidation.ok ? smtpDetection.candidate.security : preset.smtpSecurity;
   if (!smtpValidation.ok) {
-    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: funnelProvider(service), errorCategory: smtpValidation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: `smtp_${smtpValidation.phase}`, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
+    // Computed BEFORE the funnel row, not after, because the row now carries
+    // the sub-case. `explainAuthFailure` is a pure classification of values
+    // already in hand, so hoisting it changes nothing but the order.
     const smtpAuthFailure =
       smtpValidation.code === 'AUTH_FAILED'
         ? explainAuthFailure({
@@ -329,6 +334,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             usernameProvided: Boolean(loginUsername),
           })
         : null;
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: funnelProvider(service), errorCategory: smtpValidation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: `smtp_${smtpValidation.phase}`, connectionType: alreadyConnected ? 'reconnect' : 'first_connect', authReason: smtpAuthFailure?.reason ?? null });
     // The IMAP half of this route records every failure; the SMTP half
     // recorded none, so a provider that reads fine but cannot send looked
     // identical to a clean success in app_errors.

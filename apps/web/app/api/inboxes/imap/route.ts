@@ -193,7 +193,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const resolvedImapSecurity = validation.ok ? imapDetection.candidate.security : imapSecurity;
 
   if (!validation.ok) {
-    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: validation.phase, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
+    // Computed BEFORE the funnel row, not after, because the row now carries
+    // the sub-case. `explainAuthFailure` is a pure classification of values
+    // already in hand, so hoisting it changes nothing but the order.
+    const authFailure =
+      validation.code === 'AUTH_FAILED'
+        ? explainAuthFailure({
+            detail: validation.detail,
+            email,
+            host: imapHost,
+            secret: appPassword,
+            usernameProvided: Boolean(username),
+          })
+        : null;
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: validation.phase, connectionType: alreadyConnected ? 'reconnect' : 'first_connect', authReason: authFailure?.reason ?? null });
     // Every validator code is surfaced, not just AUTH_FAILED, and in the same
     // lower-cased form the SMTP branch below already uses. A timeout or a TLS
     // failure is the case where the machine-readable code matters most: the fix
@@ -211,16 +224,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // dashboard tells the user to do next, so the sub-case travels with the
     // code. Only an enum and the provider's public name cross the wire: the
     // server's own rejection text stays on this side (see auth-failure.ts).
-    const authFailure =
-      validation.code === 'AUTH_FAILED'
-        ? explainAuthFailure({
-            detail: validation.detail,
-            email,
-            host: imapHost,
-            secret: appPassword,
-            usernameProvided: Boolean(username),
-          })
-        : null;
     if (authFailure) Object.assign(body, authFailure.fields);
     // AUTH_FAILED used to be skipped here on the theory that a wrong password
     // is user-driven noise. That reasoning does not survive contact with the
@@ -282,10 +285,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const resolvedSmtpPort = smtpValidation.ok ? smtpDetection.candidate.port : smtpPort;
   const resolvedSmtpSecurity = smtpValidation.ok ? smtpDetection.candidate.security : smtpSecurity;
   if (!smtpValidation.ok) {
-    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: smtpValidation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: `smtp_${smtpValidation.phase}`, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
-    // Same treatment on the send half: an IMAP login that worked and an SMTP
-    // login that did not is still a credential story, and the user is owed the
-    // same specific answer rather than a second generic one.
+    // Computed BEFORE the funnel row, not after, because the row now carries
+    // the sub-case. `explainAuthFailure` is a pure classification of values
+    // already in hand, so hoisting it changes nothing but the order.
     const smtpAuthFailure =
       smtpValidation.code === 'AUTH_FAILED'
         ? explainAuthFailure({
@@ -296,6 +298,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             usernameProvided: Boolean(username),
           })
         : null;
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: smtpValidation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: `smtp_${smtpValidation.phase}`, connectionType: alreadyConnected ? 'reconnect' : 'first_connect', authReason: smtpAuthFailure?.reason ?? null });
+    // Same treatment on the send half: an IMAP login that worked and an SMTP
+    // login that did not is still a credential story, and the user is owed the
+    // same specific answer rather than a second generic one.
     // An inbox that authenticates over IMAP but fails on SMTP is a distinct and
     // more interesting failure than either half alone, and it had no diagnostic
     // record at all: the funnel counted it, nothing said why.

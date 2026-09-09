@@ -428,24 +428,43 @@ const PROVIDERS = [
  * narrower half of the problem: a locked field cannot be autofilled, but every
  * FIRST connection was still being offered the wrong credential.
  *
- * Four things, because no one of them is enough on its own:
+ * STEERING, NOT SILENCE. Two things, and deliberately not the four this
+ * started with:
  *  - `autoComplete="off"`, which Chrome honours on a field it has not already
  *    decided is a login field;
  *  - a `name` that does not read as one, which is the signal the heuristics
  *    fall back on when the attribute is ignored ("password", "email" and
- *    "username" are the names that trip them);
- *  - `data-1p-ignore` and `data-lpignore`, the per-manager opt-outs 1Password
- *    and LastPass document;
- *  - `data-form-type="other"`, which Dashlane reads the same way.
+ *    "username" are the names that trip them).
+ *
+ * It also carried `data-1p-ignore`, `data-lpignore` and `data-form-type="other"`,
+ * the documented per-manager opt-outs for 1Password, LastPass and Dashlane.
+ * Those are a different instrument. The two above say "this is not the login
+ * for mcpemails.com"; those three say "offer nothing here at all", and the
+ * thing they stopped offering was the credential the user actually needed. A
+ * Gmail, iCloud, Yahoo or AOL app password is sixteen random characters that
+ * nobody holds in their head. It lives in the same manager, and for one day it
+ * could not be filled from it.
+ *
+ * That day is measurable. Of the workspaces that began a connection, 90.4%
+ * (103/114) reached a connected mailbox in the week before this shipped and
+ * 68.8% (11/16) in the day after. The gap survives standardising for which
+ * providers people chose (Mantel-Haenszel z = -2.27, p = 0.023), and it is the
+ * same size on the branded cards as on the generic form, which is what rules
+ * out the autodiscovery that landed in the same commit and points here: this
+ * object is on `cm-password`, and `cm-password` is every path. 19 of the 29
+ * failures were `auth_failed` at the authentication phase, which is what not
+ * being able to produce a credential looks like from the server.
+ *
+ * The original diagnosis was right and is kept. `account_password_used` is a
+ * real failure and this form did invite it. But the cure has to leave the user
+ * able to reach their own mail password, so it steers the heuristics instead of
+ * shutting the manager off.
  *
  * The reveal toggle and the select-on-focus-after-rejection behaviour are
  * untouched: nothing here changes what the field IS, only who offers to fill it.
  */
 const NOT_A_LOGIN_FIELD = {
   autoComplete: 'off',
-  'data-1p-ignore': '',
-  'data-lpignore': 'true',
-  'data-form-type': 'other',
 };
 
 /**

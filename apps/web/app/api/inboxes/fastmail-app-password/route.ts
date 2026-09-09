@@ -209,13 +209,25 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const resolvedImapSecurity = validation.ok ? imapDetection.candidate.security : 'tls';
 
   if (!validation.ok) {
-    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'fastmail', errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: validation.phase, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
+    // Computed BEFORE the funnel row, not after, because the row now carries
+    // the sub-case. `explainAuthFailure` is a pure classification of values
+    // already in hand, so hoisting it changes nothing but the order. The
+    // `isAuthFailed` flag comes with it, since it is the same test read twice.
+    const isAuthFailed = validation.code === 'AUTH_FAILED';
+    const authFailure = isAuthFailed
+      ? explainAuthFailure({
+          detail: validation.detail,
+          service: 'fastmail',
+          email,
+          secret: appPassword,
+        })
+      : null;
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'fastmail', errorCategory: validation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: validation.phase, connectionType: alreadyConnected ? 'reconnect' : 'first_connect', authReason: authFailure?.reason ?? null });
     // AUTH_FAILED keeps the Fastmail-specific message with its app-password
     // hint; every other code keeps the validator's own message. The code itself
     // is always sent, lower-cased, matching the SMTP branch below: the client
     // needs it to tell a timeout or a TLS failure (fixable in Advanced
     // settings) from a rejected credential (not fixable there).
-    const isAuthFailed = validation.code === 'AUTH_FAILED';
     const userMessage = isAuthFailed ? FASTMAIL_AUTH_FAILED_MESSAGE : validation.message;
     const body: Record<string, string> = {
       error: userMessage,
@@ -225,14 +237,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // credential situations this is rather than repeating one sentence for all
     // of them. Fastmail's app password is 16 lowercase characters, so an
     // account password submitted here is visible in the string itself.
-    const authFailure = isAuthFailed
-      ? explainAuthFailure({
-          detail: validation.detail,
-          service: 'fastmail',
-          email,
-          secret: appPassword,
-        })
-      : null;
     if (authFailure) Object.assign(body, authFailure.fields);
     // Fastmail is the clearest case against skipping AUTH_FAILED here: it has
     // 6 connect attempts and 0 successes, every one of them an auth failure,
@@ -262,7 +266,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const resolvedSmtpPort = smtpValidation.ok ? smtpDetection.candidate.port : FASTMAIL_SMTP_PORT;
   const resolvedSmtpSecurity = smtpValidation.ok ? smtpDetection.candidate.security : 'tls';
   if (!smtpValidation.ok) {
-    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'fastmail', errorCategory: smtpValidation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: `smtp_${smtpValidation.phase}`, connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
+    // Computed BEFORE the funnel row, not after, because the row now carries
+    // the sub-case. `explainAuthFailure` is a pure classification of values
+    // already in hand, so hoisting it changes nothing but the order.
     const smtpAuthFailure =
       smtpValidation.code === 'AUTH_FAILED'
         ? explainAuthFailure({
@@ -272,6 +278,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             secret: appPassword,
           })
         : null;
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'fastmail', errorCategory: smtpValidation.code === 'AUTH_FAILED' ? 'auth_failed' : 'validation_failed', phase: `smtp_${smtpValidation.phase}`, connectionType: alreadyConnected ? 'reconnect' : 'first_connect', authReason: smtpAuthFailure?.reason ?? null });
     await captureError(new Error(smtpValidation.message), {
       severity: 'low',
       route: 'api/inboxes/fastmail-app-password',
