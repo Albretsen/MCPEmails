@@ -111,8 +111,8 @@
   },
   "tools": {
     "eyebrow": "Référence des outils",
-    "heading": "16 outils. Toutes les opérations e-mail dont votre agent a besoin.",
-    "sub": "<b>Cibler une boîte est facultatif.</b> Quand votre clé n'a qu'une seule boîte, chaque outil par boîte la résout automatiquement, sans avoir besoin d’<code>inbox_id</code>. Avec plusieurs boîtes, passez <code>inbox_id</code> (l'UUID renvoyé par <code>inbox_list</code>) ou <code>inbox</code> (l'adresse e-mail de la boîte). La plupart des outils prennent un argument <code>action</code> qui sélectionne l'opération ; les badges indiquent les portées dont chacun a besoin, et <code>tools/list</code> ne renvoie que les outils pour lesquels votre clé (ou jeton OAuth) est autorisée. Une clé disposant de toutes les portées voit 22 outils dans <code>tools/list</code> : ces 16 plus six outils d'approbation et d'opérations groupées que votre client MCP pilote depuis la carte de révision qu'il affiche pour vous, plutôt que des outils que vous composez à la main. Cliquez sur « Afficher l'exemple » pour voir une requête et une réponse complètes.",
+    "heading": "17 outils. Toutes les opérations e-mail dont votre agent a besoin.",
+    "sub": "<b>Cibler une boîte est facultatif.</b> Quand votre clé n'a qu'une seule boîte, chaque outil par boîte la résout automatiquement, sans avoir besoin d’<code>inbox_id</code>. Avec plusieurs boîtes, passez <code>inbox_id</code> (l'UUID renvoyé par <code>inbox_list</code>) ou <code>inbox</code> (l'adresse e-mail de la boîte). La plupart des outils prennent un argument <code>action</code> qui sélectionne l'opération ; les badges indiquent les portées dont chacun a besoin, et <code>tools/list</code> ne renvoie que les outils pour lesquels votre clé (ou jeton OAuth) est autorisée. Une clé disposant de toutes les portées voit 23 outils dans <code>tools/list</code> : ces 17 plus six outils d'approbation et d'opérations groupées que votre client MCP pilote depuis la carte de révision qu'il affiche pour vous, plutôt que des outils que vous composez à la main. Cliquez sur « Afficher l'exemple » pour voir une requête et une réponse complètes.",
     "noParams": "Aucun paramètre. Appelez avec un objet d'arguments vide :",
     "showExample": "Afficher l'exemple de requête et réponse",
     "hideExample": "Masquer l'exemple de requête et réponse",
@@ -169,29 +169,39 @@
     },
     "email_organize": {
       "title": "Organiser les e-mails",
-      "desc": "Déplacer, copier, marquer ou archiver des messages. Définissez action : 'move'/'move_batch' (vers un destination_folder_id), 'copy'/'copy_batch' (dupliquer dans un destination_folder_id, en laissant l'original en place ; IMAP, Outlook et Fastmail uniquement), 'flag' (définir lu/non lu/marqué via flag_action sur des message_ids), 'archive' (sortir de la boîte de réception, non destructif), ou 'search_and_move' (appliquer à chaque message correspondant à une recherche structurée, ce qui évite les ID de message obsolètes). Chaque action nécessite la portée correspondante : manage:folders pour les déplacements et les copies, send:email pour flag/archive. La suppression des messages a son propre outil email_delete.",
+      "desc": "Déplacer, copier, marquer ou archiver des messages que vous désignez par message_id. Définissez action : 'move'/'move_batch' (vers un destination_folder_id), 'copy'/'copy_batch' (dupliquer dans un destination_folder_id, en laissant l'original en place ; IMAP, Outlook et Fastmail uniquement), 'flag' (définir lu/non lu/marqué via flag_action sur des message_ids), ou 'archive' (sortir un message de la boîte de réception). Récupérez d'abord les ID avec email_read. Chaque action ne touche que les ID que vous passez et s'annule par un autre appel : un déplacement par un déplacement retour, archive par un déplacement vers la boîte de réception, flag par le marquage inverse, et une copie laisse l'original en place. Sur Gmail, le déplacement ajoute le libellé de destination et retire INBOX ; les autres libellés restent, sortir un message de Trash ou Spam efface aussi TRASH/SPAM, ce qui en fait une véritable restauration, et la copie native n'existe pas. Pour déplacer tout ce qui correspond à une recherche plutôt qu'une liste d'ID, utilisez email_search_and_move : c'est un outil distinct parce qu'un seul filtre erroné y déplace une boîte entière. Chaque action nécessite manage:folders. La suppression des messages a son propre outil email_delete.",
       "params": {
-        "action": "Quelle opération effectuer : \"move\", \"move_batch\", \"copy\", \"copy_batch\", \"flag\", \"archive\" ou \"search_and_move\". Détermine quels autres arguments s'appliquent et quelle portée est requise.",
+        "action": "Quelle opération effectuer : \"move\", \"move_batch\", \"copy\", \"copy_batch\", \"flag\" ou \"archive\". Détermine quels autres arguments s'appliquent. Déplacer chaque message correspondant à une recherche est l'outil distinct email_search_and_move.",
         "inbox_id": "UUID de la boîte qui contient les messages. Facultatif : résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
         "inbox": "Adresse e-mail de la boîte à utiliser, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
         "message_id": "ID de message du fournisseur pour une action sur un seul message (move, copy, archive), issu d'un list, read ou search précédent.",
         "message_ids": "ID de message du fournisseur pour une action par lot (move_batch, copy_batch, flag). Max 500 par appel.",
-        "destination_folder_id": "Dossier de destination (move, move_batch, copy, copy_batch, search_and_move) : un alias canonique (inbox, sent, drafts, trash, archive, spam), un nom de dossier/libellé (p. ex. 'Receipts') ou un ID de dossier natif du fournisseur issu de l'action list de folder. Les noms et alias sont résolus automatiquement.",
-        "flag_action": "Pour l'action 'flag' : la modification à appliquer à chaque message : \"read\" ou \"unread\" pour définir le statut de lecture, ou \"flag\"/\"unflag\" pour ajouter ou retirer une étoile/un indicateur de suivi.",
-        "from": "Expéditeur à faire correspondre (search_and_move) : adresse e-mail, nom affiché ou fragment.",
-        "to": "Destinataire principal (To) à faire correspondre (search_and_move) : adresse e-mail, nom affiché ou fragment.",
-        "cc": "Destinataire en copie (Cc) à faire correspondre (search_and_move) : adresse e-mail, nom affiché ou fragment.",
-        "subject": "Texte à faire correspondre dans l'objet (search_and_move).",
-        "body": "Texte libre à trouver dans le corps du message (search_and_move). (Sur Gmail, cela correspond à l'ensemble du message.)",
-        "text": "Texte libre à faire correspondre n'importe où dans le message, en-têtes et corps (search_and_move).",
-        "unread": "Actions de recherche : true = uniquement non lus ; false = uniquement lus ; omettez pour les deux.",
-        "has_attachment": "Actions de recherche : true = uniquement les messages avec pièce jointe. Non pris en charge sur IMAP générique (ignoré ici).",
-        "flagged": "Actions de recherche : true = uniquement les messages marqués/suivis. Non pris en charge sur Outlook/Graph (ignoré ici).",
-        "since": "Date ou date-heure ISO 8601 (actions de recherche) ; correspond aux messages reçus le/après (>=) cet instant.",
-        "before": "Date ou date-heure ISO 8601 (actions de recherche) ; correspond aux messages reçus strictement avant (<) cet instant.",
-        "query": "Chaîne de requête native du fournisseur (actions de recherche, solution de secours). Préférez les champs structurés ci-dessus. Ignorée sur Fastmail.",
-        "include_folders": "Restreindre la recherche à ces noms de dossier (actions de recherche). Par défaut : tous les dossiers.",
-        "limit": "Pour search_and_move : nombre maximal de correspondances à traiter. Par défaut 500, max 500."
+        "destination_folder_id": "Dossier de destination (move, move_batch, copy, copy_batch) : un alias canonique (inbox, sent, drafts, trash, archive, spam), un nom de dossier/libellé (p. ex. 'Receipts') ou un ID de dossier natif du fournisseur issu de folder_list. Les noms et alias sont résolus automatiquement.",
+        "flag_action": "Pour l'action 'flag' : la modification à appliquer à chaque message : \"read\" ou \"unread\" pour définir le statut de lecture, ou \"flag\"/\"unflag\" pour ajouter ou retirer une étoile/un indicateur de suivi."
+      }
+    },
+    "email_search_and_move": {
+      "title": "Rechercher et déplacer",
+      "desc": "Déplacer dans un dossier de destination chaque message correspondant à une recherche, en une seule opération côté serveur, de sorte qu'aucun ID de message ne soit obsolète au moment de son utilisation. La recherche utilise les mêmes champs structurés et indépendants du fournisseur qu'email_read (from, to, cc, subject, body, text, unread, has_attachment, flagged, since, before), que le serveur traduit dans la syntaxe native de la boîte ; query est une solution de secours brute. C'est un outil distinct d'email_organize, et c'est lui qui est signalé comme destructif à votre client MCP, parce qu'il agit sur tout ce que le filtre trouve et non sur des ID que vous avez choisis : un seul filtre erroné déplace une boîte entière. Pour déplacer des messages que vous avez déjà listés, utilisez plutôt email_organize (action 'move' ou 'move_batch'). Borné par limit, par défaut et au maximum 500 : vérifiez has_more dans le résultat avant d'annoncer une boîte entièrement traitée, et terminez le reste avec email_organize (action 'move_batch'). Sur Gmail, le déplacement ajoute le libellé de destination et retire INBOX. Renvoie les compteurs succeeded/failed et un résultat par message. Nécessite manage:folders.",
+      "params": {
+        "inbox_id": "UUID de la boîte à traiter. Facultatif : résolu automatiquement quand la clé n'a qu'une seule boîte ; sinon passez celui-ci ou inbox. Appelez inbox_list pour obtenir les ID de boîte disponibles.",
+        "inbox": "Adresse e-mail de la boîte à utiliser, comme alternative pratique à inbox_id. Facultatif ; ignoré si inbox_id est fourni.",
+        "destination_folder_id": "Où chaque correspondance est déplacée : un alias canonique (inbox, sent, drafts, trash, archive, spam), un nom de dossier/libellé (p. ex. 'Receipts') ou un ID de dossier natif du fournisseur issu de folder_list. Les noms et alias sont résolus automatiquement.",
+        "from": "Expéditeur à faire correspondre : adresse e-mail, nom affiché ou fragment.",
+        "to": "Destinataire principal (To) à faire correspondre : adresse e-mail, nom affiché ou fragment.",
+        "cc": "Destinataire en copie (Cc) à faire correspondre : adresse e-mail, nom affiché ou fragment.",
+        "subject": "Texte à faire correspondre dans l'objet.",
+        "body": "Texte libre à trouver dans le corps du message. (Sur Gmail, cela correspond à l'ensemble du message.)",
+        "text": "Texte libre à faire correspondre n'importe où dans le message, en-têtes et corps.",
+        "unread": "true = uniquement non lus ; false = uniquement lus ; omettez pour les deux.",
+        "has_attachment": "true = uniquement les messages avec pièce jointe. Non pris en charge sur IMAP générique (ignoré ici).",
+        "flagged": "true = uniquement les messages marqués/suivis. Non pris en charge sur Outlook/Graph (ignoré ici).",
+        "since": "Date ou date-heure ISO 8601 ; correspond aux messages reçus le/après (>=) cet instant.",
+        "before": "Date ou date-heure ISO 8601 ; correspond aux messages reçus strictement avant (<) cet instant.",
+        "query": "Chaîne de requête native du fournisseur (solution de secours). Préférez les champs structurés ci-dessus. Ignorée sur Fastmail.",
+        "include_folders": "Restreindre la recherche à ces noms de dossier. Sur IMAP générique, l'omettre ne cherche que dans INBOX.",
+        "limit": "Nombre maximal de correspondances à déplacer. Par défaut 500, max 500. Quand la recherche atteint la limite, has_more dans le résultat indique s'il reste des messages correspondants.",
+        "idempotency_key": "Clé opaque facultative (1–200 caractères) pour un seul balayage logique. Ne la réutilisez que pour réessayer exactement le même appel dans les 24 heures ; une réutilisation avec des arguments différents est rejetée."
       }
     },
     "email_delete": {

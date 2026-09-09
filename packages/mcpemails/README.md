@@ -138,11 +138,12 @@ with an `Authorization: Bearer mcpe_...` header, or let it run the OAuth flow. C
 
 ## Tools
 
-16 tools you call directly. Most take an `action` argument that selects the specific operation:
+17 tools you call directly. Most take an `action` argument that selects the specific operation:
 
 - `inbox_list` - Lists the inboxes the key can reach, with each one's provider capabilities.
 - `email_read` - Lists, reads and searches messages, plus attachments and the original `.eml` (`list`, `read`, `read_batch`, `search`, `attachment`, `extract`, `original`).
-- `email_organize` - Moves, copies, flags and archives messages (`move`, `move_batch`, `copy`, `copy_batch`, `flag`, `archive`, `search_and_move`).
+- `email_organize` - Moves, copies, flags and archives messages you name by id (`move`, `move_batch`, `copy`, `copy_batch`, `flag`, `archive`).
+- `email_search_and_move` - Moves every message matching a search into a folder. Its own tool, and the destructive one, because a wrong filter relocates a whole inbox.
 - `email_delete` - Trashes or permanently deletes messages (`delete`, `delete_batch`, `search_and_delete`).
 - `email_compose` - Sends, replies and forwards through your own provider (`send`, `reply`, `forward`).
 - `folder_list` - Lists folders, or labels on Gmail, with their IDs and message counts. Read-only.
@@ -157,7 +158,7 @@ with an `Authorization: Bearer mcpe_...` header, or let it run the OAuth flow. C
 - `automation` - Creates and manages unattended triage rules, with no model in the loop (`create`, `update`, `enable`, `disable`, `delete`).
 - `contact_search` - Looks up contacts by scanning recent mail live, with no stored address book.
 
-A full-scope key sees 22 tools in `tools/list`: the 16 above plus six app-only tools that drive the review card your MCP client renders for a held send or a previewed bulk operation.
+A full-scope key sees 23 tools in `tools/list`: the 17 above plus six app-only tools that drive the review card your MCP client renders for a held send or a previewed bulk operation.
 
 Each tool is gated by the scopes on your API key, so a key issued with read scopes only cannot send or delete anything no matter what the agent asks for. Full reference at [mcpemails.com/docs](https://mcpemails.com/docs).
 

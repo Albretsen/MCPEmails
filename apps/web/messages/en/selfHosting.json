@@ -20,7 +20,7 @@
   },
   "compare": {
     "title": "Self-host vs hosted",
-    "intro": "The full MCP server and all 22 tools are in both. Self-hosting trades managed convenience for total control.",
+    "intro": "The full MCP server and all 23 tools are in both. Self-hosting trades managed convenience for total control.",
     "thFeature": "",
     "thSelf": "Self-host",
     "thHosted": "Hosted",
@@ -31,7 +31,7 @@
         "hosted": "Free, $5, $15, or $79"
       },
       {
-        "feature": "The MCP server and all 22 tools",
+        "feature": "The MCP server and all 23 tools",
         "self": "Yes",
         "hosted": "Yes"
       },
