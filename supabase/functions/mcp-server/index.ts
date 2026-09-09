@@ -841,7 +841,8 @@ const SERVER_INSTRUCTIONS =
   "TOOL SHAPE: Tools are grouped by resource and take an `action` argument:\n" +
   "• inbox_list — list the accessible inboxes.\n" +
   "• email_read — action: list | read | read_batch | search | attachment | extract | original.\n" +
-  "• email_organize — action: move | move_batch | copy | copy_batch | flag | archive | search_and_move.\n" +
+  "• email_organize — action: move | move_batch | copy | copy_batch | flag | archive.\n" +
+  "• email_search_and_move: move every message a search matches, its own tool because one wrong filter relocates an inbox (destructive, your client may ask you to confirm).\n" +
   "• email_delete — action: delete | delete_batch | search_and_delete (destructive — your client may ask you to confirm).\n" +
   "• email_compose — action: send | reply | forward.\n" +
   "• folder — action: list | create | rename | delete.\n" +
@@ -3997,16 +3998,30 @@ const LEGACY_TOOLS: ToolDefinition[] = [
   {
     name: "email_search_and_move",
     title: "Search and Move",
+    // Advertised in its own right since 2026-09-09, so this description now
+    // has to stand alone rather than read as a footnote to `email_organize`.
+    // It says three things that used to live in email_organize's prose: that
+    // this is the sweep (not the id-list move), that it is the destructive one,
+    // and that `limit` bounds it so `has_more` decides whether the mailbox is
+    // actually clean. See the annotation note on email_organize for why the
+    // action was lifted out at all.
     description:
-      "Run a search and move all matching messages to a destination folder in one " +
-      "server-side operation — avoids stale message IDs. " +
+      "Move every message matching a search into a destination folder, in one " +
+      "server-side operation, so no message ID is ever stale by the time it is " +
+      "used. " +
       "Search uses structured, provider-agnostic fields (from, to, cc, subject, body, " +
       "text, unread, has_attachment, flagged, since, before) that the server translates " +
       "into the inbox's native search syntax, so you never need provider query syntax; " +
       "`query` is a raw escape hatch. " +
-      "Capped at 500 results per call. " +
+      "SEPARATE from email_organize, and flagged destructive to your MCP client, " +
+      "because it acts on everything the filter matches rather than on ids you " +
+      "chose: one wrong filter relocates a whole inbox. To move messages you have " +
+      "already listed, use email_organize (action 'move' or 'move_batch') instead. " +
+      "Bounded by limit, maximum and default 500: check has_more before reporting a " +
+      "mailbox fully swept, and finish any remainder with email_organize " +
+      "(action 'move_batch'). " +
       "On Gmail, moving adds the destination label and removes the INBOX label. " +
-      "Returns succeeded/failed counts and per-message results.",
+      "Returns succeeded/failed counts and per-message results. Needs manage:folders.",
     requiredScope: "manage:folders",
     inputSchema: {
       type: "object",
@@ -6267,6 +6282,13 @@ interface ConsolidatedAction {
    * a client holding the old cached enum keeps working. See the second half of
    * the header in advertised-schema.ts for why caching makes this the only
    * safe shape.
+   *
+   * It is not only for reads. `email_organize`'s 'search_and_move' is marked
+   * here for the mirror reason: it was the one destructive action in an
+   * otherwise reversible tool, and annotations are per tool, so its presence
+   * made every archive and every mark-as-read prompt the user for permission.
+   * It is re-advertised as `email_search_and_move`, which keeps the
+   * destructive flag it earns.
    */
   advertised?: boolean;
 }
@@ -6332,21 +6354,48 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
   email_organize: {
     title: "Organize Email",
     description:
-      "Move, copy, flag or archive messages in one inbox. Get message ids from " +
-      "email_read first. On Gmail a move adds the destination label and removes " +
-      "INBOX, leaving other labels in place; moving a message OUT of Trash or " +
-      "Spam into a real label also clears TRASH/SPAM, so it is a genuine restore " +
-      "rather than a labelled message still queued for deletion. search_and_move " +
-      "is bounded by limit: check has_more before reporting a mailbox fully " +
-      "swept. Needs manage:folders; deleting is the separate email_delete tool.",
-    // 'search_and_move' relocates every message matching a caller-supplied
-    // query, so one wrong filter empties an inbox into a folder nobody expects;
-    // that is the bulk, non-additive case this file's destructive-action
-    // convention names, and the most destructive action is what a consolidated
-    // tool must be annotated for. Nothing here erases mail, so it stays below
-    // email_delete in severity, but "may perform destructive updates" is
-    // exactly what the hint means.
-    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+      "Move, copy, flag or archive messages you name by message_id, in one " +
+      "inbox. Get message ids from email_read first. Every action acts only on " +
+      "the ids you pass and is undone by another call: a move by a move back, " +
+      "archive by a move into the Inbox, flag by the opposite flag, and a copy " +
+      "leaves the original untouched. On Gmail a move adds the destination " +
+      "label and removes INBOX, leaving other labels in place; moving a message " +
+      "OUT of Trash or Spam into a real label also clears TRASH/SPAM, so it is " +
+      "a genuine restore rather than a labelled message still queued for " +
+      "deletion. To move everything matching a search instead of a list of ids, " +
+      "use email_search_and_move, which is its own tool because a wrong filter " +
+      "there relocates a whole inbox. Needs manage:folders; deleting is the " +
+      "separate email_delete tool.",
+    // destructiveHint FLIPPED to false on 2026-09-09, and the note it replaces
+    // was not wrong: 'search_and_move' relocates every message matching a
+    // caller-supplied query, one wrong filter empties an inbox into a folder
+    // nobody expects, and a consolidated tool is annotated once for everything
+    // it can do. The most destructive action governed, so the whole tool
+    // carried the flag.
+    //
+    // What that COST is the part the old note did not weigh. A tool annotated
+    // destructive can never be auto-allowed by a client: Anthropic's connector
+    // criteria say read-only tools may run without per-call confirmation and
+    // destructive ones always prompt, with nothing in between and no user
+    // setting to override it. Archiving a message and marking one read are the
+    // two highest-frequency calls in a morning triage, and both were paying a
+    // permission prompt, every time, forever, to describe a risk belonging to
+    // an action nobody reaches by accident.
+    //
+    // So the ACTION moved rather than the annotation being softened underneath
+    // it: 'search_and_move' is `advertised: false` below and ships as the
+    // standalone, destructive-flagged `email_search_and_move`. What is left
+    // here is the reversible, caller-enumerated set described above, and
+    // "may perform destructive updates" is not what any of it does.
+    //
+    // idempotentHint stays FALSE, and that is a decision rather than a
+    // leftover. move, move_batch, flag and archive all converge on a stated end
+    // state and are individually annotated idempotent. copy and copy_batch are
+    // not: IMAP UID COPY and the Graph /copy endpoint each create a brand new
+    // message on every call, so a retried copy leaves two copies rather than
+    // converging on one. One non-idempotent member is enough, by the same
+    // annotate-for-the-worst-action rule that used to govern destructiveHint.
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     actions: {
       move: {
         legacy: "email_move",
@@ -6381,10 +6430,30 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
         scope: "manage:folders",
         hint: "move one message_id out of the Inbox",
       },
+      // Accepted, not advertised: this action ships as the standalone
+      // `email_search_and_move`, which keeps the destructive annotation it
+      // earns. Lifting it out is the whole reason the tool above can drop
+      // destructiveHint, but it cannot be DELETED: every client that connected
+      // before 2026-09-09 holds 'search_and_move' in its cached enum and will
+      // keep sending it until its user hits "Refresh tools list", which most
+      // never will. So the action keeps its schema, its manage:folders scope,
+      // its selector index, its argument index, its strictness (it is
+      // deliberately absent from LENIENT_ACTIONS in consolidated-arguments.ts)
+      // and its dispatch to email_search_and_move. See the second half of the
+      // header in advertised-schema.ts for why caching makes this the only
+      // safe shape.
+      //
+      // The honest consequence, stated rather than buried: a client holding the
+      // old enum can still reach a destructive operation through a tool now
+      // annotated non-destructive, and will no longer be prompted for it. That
+      // is bounded to clients that have already been able to make exactly this
+      // call under exactly this tool name, and it ends the moment they
+      // reconnect; a client connecting today cannot see the action at all.
       search_and_move: {
         legacy: "email_search_and_move",
         scope: "manage:folders",
         hint: "move everything matching a search (the only action the search filters apply to), up to limit; the result's has_more says whether matches were left behind",
+        advertised: false,
       },
     },
   },
@@ -6963,7 +7032,8 @@ function buildConsolidatedTool(name: string, spec: ConsolidatedSpec): ToolDefini
   // The advertised subset, built only when it differs. A tool with nothing
   // withheld gets no `listedInputSchema` at all and serialises exactly as
   // before, which is what keeps this change invisible to email_read,
-  // email_organize, email_delete, email_compose and automation_read.
+  // email_delete, email_compose and automation_read. (`email_organize` joined
+  // the tools that DO get one when 'search_and_move' was withheld from it.)
   const advertisedActions = Object.fromEntries(
     Object.entries(spec.actions).filter(([, action]) => action.advertised !== false),
   );
@@ -7013,18 +7083,28 @@ function buildConsolidatedTool(name: string, spec: ConsolidatedSpec): ToolDefini
  * `isAdvertisedTool`, so `signature` is registered and callable but never
  * listed; see the second half of the header in advertised-schema.ts.
  *
- * The five read tools below are the pre-consolidation legacy entries promoted
+ * The six promoted tools below are the pre-consolidation legacy entries put
  * back onto the surface, not new code: they already carried their own titles,
  * descriptions, schemas, output schemas and annotations, they are already
  * billed and rate-limited under these exact names (they are the `legacy`
  * targets the corresponding actions dispatch to), and the if/else chain in
  * handleToolsCall has always had a branch for each. Listing one therefore adds
  * a name to tools/list and changes nothing else about how it runs.
+ *
+ * Five of the six were promoted to un-mix a read from the writes beside it.
+ * `email_search_and_move` is the same mechanism used for the opposite reason:
+ * it is the one destructive action in an otherwise reversible tool, and it had
+ * to leave so `email_organize` could stop being annotated destructive. See the
+ * annotation note on that spec.
  */
 const TOOL_REGISTRY: ToolDefinition[] = [
   LEGACY_BY_NAME.get("inbox_list")!,
   buildConsolidatedTool("email_read", CONSOLIDATED_SPECS.email_read),
   buildConsolidatedTool("email_organize", CONSOLIDATED_SPECS.email_organize),
+  // Listed after the tool it was lifted out of, because that is the order a
+  // model should consider them in: name the ids you mean, and only reach for
+  // the sweep when you cannot.
+  LEGACY_BY_NAME.get("email_search_and_move")!,
   buildConsolidatedTool("email_delete", CONSOLIDATED_SPECS.email_delete),
   buildConsolidatedTool("email_compose", CONSOLIDATED_SPECS.email_compose),
   LEGACY_BY_NAME.get("folder_list")!,
@@ -24762,7 +24842,8 @@ async function handleToolsList(
   // reach an inbox whose opt-in lets that tool produce something the card can
   // render:
   //
-  //   • email_delete / email_organize  ← an inbox with bulk_review_mode='plan'
+  //   • email_delete / email_organize / email_search_and_move
+  //                                    ← an inbox with bulk_review_mode='plan'
   //   • email_compose / draft / schedule ← an inbox with send_approval_required
   //
   // The reason is a hard constraint, not a preference: `_meta.ui` is per-tool,
