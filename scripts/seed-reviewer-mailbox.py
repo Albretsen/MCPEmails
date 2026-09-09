@@ -371,11 +371,24 @@ def main():
 
     # Mark the read ones read. APPEND-time \Seen does not stick on Migadu, so the
     # flag is applied here and verified below.
-    M.select("INBOX")
-    typ, data = M.search(None, "ALL")
-    ids = data[0].split()
+    # Wait for the appends to be listable before flagging them. Migadu
+    # acknowledges APPEND before a subsequent SEARCH returns the message, the
+    # same eventual consistency that makes `clear` poll. Flagging against a
+    # short list silently leaves the tail of the corpus unread, which looks like
+    # a seeding bug days later when the unread count is wrong.
+    ids = []
+    for _ in range(10):
+        M.select("INBOX")
+        ids = M.search(None, "ALL")[1][0].split()
+        if len(ids) == len(INBOX):
+            break
+        time.sleep(1)
     if len(ids) != len(INBOX):
-        raise SystemExit(f"expected {len(INBOX)} INBOX messages, found {len(ids)}")
+        raise SystemExit(
+            f"expected {len(INBOX)} INBOX messages, found {len(ids)} after ten "
+            f"attempts. Flags were NOT applied; the corpus is appended but every "
+            f"message reads unread. Re-run before handing the account to anyone."
+        )
     for entry, uid in zip(INBOX, ids):
         if entry["seen"]:
             M.store(uid, "+FLAGS", "\\Seen")
