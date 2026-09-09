@@ -41,6 +41,7 @@ import {
   summaryIsComplete,
   writeTolerantly,
 } from "./mcp-app-approvals.ts";
+import { applySignature, plainTextBodyToHtml } from "./signature-compose.ts";
 
 /** U+202E RIGHT-TO-LEFT OVERRIDE — see text-safety.test.ts. */
 const RLO = "\u202e";
@@ -912,6 +913,144 @@ Deno.test("approval_update re-encrypts the snapshot AND refreshes the summary", 
   assertEquals(envelope.state, "pending", "an edit does not decide anything");
   assertEquals(envelope.outbound.subject, "Edited subject", "envelope subject");
   assertEquals(envelope.outbound.body.text, "Edited body", "envelope body");
+});
+
+// ---------------------------------------------------------------------------
+// A text-only edit and the HTML part
+//
+// The bug these pin, confirmed against production before it was fixed: editing
+// a held send's plain text rewrote the text part and left the HTML part saying
+// the PRE-EDIT wording. Most mail clients render the HTML part, so the tool
+// reported success and the recipient read the sentence the reviewer had
+// replaced.
+//
+//   before: text="Verification message. Should be held…"
+//           html="Verification message. Should be held…<div …signature>"
+//   after a body_text-only edit:
+//           text="Edited body for verification."
+//           html="Verification message. Should be held…<div …signature>"   ← sent
+// ---------------------------------------------------------------------------
+
+Deno.test("a body_text-only edit leaves no pre-edit wording in the HTML part", async () => {
+  const store = freshStore();
+  const result = await runApprovalUpdate(makeDeps(store), caller, {
+    approval_id: APPROVAL_ID,
+    body_text: "Edited body for verification.",
+  });
+
+  const stored = JSON.parse(String(store.send_approvals[0].payload.data).slice(CIPHER_PREFIX.length));
+  assertEquals(stored.body, "Edited body for verification.", "text part is what was typed");
+  assertEquals(
+    stored.html_body,
+    plainTextBodyToHtml("Edited body for verification."),
+    "html part is regenerated from that same text, through the send path's own synthesis",
+  );
+  assert(
+    !String(stored.html_body).includes("SENTINEL-BODY-HTML"),
+    "no pre-edit wording may survive in the part the recipient renders",
+  );
+
+  // And the card shows the reviewer the same pair that will be sent.
+  const envelope = envelopeOf(result);
+  assertEquals(envelope.outbound.body.text, "Edited body for verification.", "envelope text");
+  assertEquals(envelope.outbound.body.html, stored.html_body, "envelope html matches the snapshot");
+});
+
+Deno.test("the regenerated HTML escapes the new text rather than trusting it", () => {
+  // `body_text` is caller-supplied and becomes markup here. Asserted against the
+  // shared synthesis so this route cannot acquire its own escaping rules.
+  assertEquals(
+    plainTextBodyToHtml('<img src=x onerror=alert(1)> & "quoted"'),
+    "&lt;img src=x onerror=alert(1)&gt; &amp; &quot;quoted&quot;",
+    "the new text is escaped, never emitted as markup",
+  );
+});
+
+Deno.test("a text-only edit keeps the signature at exactly one", async () => {
+  // A real held email_send: signed at enqueue, in both parts. The reviewer edits
+  // the signed text they were shown, so their replacement text carries the
+  // signature — and nothing here may add a second one.
+  const inbox = { signature_enabled: true, signature_text: "Asgeir\nMCP Emails", signature_html: null };
+  const composed = applySignature({ textBody: "Original wording.", htmlBody: undefined }, inbox);
+  const store = freshStore();
+  store.send_approvals[0].payload = {
+    v: 1,
+    data: CIPHER_PREFIX + JSON.stringify({
+      ...SNAPSHOT,
+      body: composed.textBody,
+      html_body: composed.htmlBody,
+      include_signature: false,
+    }),
+  };
+
+  // What an editing client sends back: the shown body with one sentence changed.
+  const edited = composed.textBody.replace("Original wording.", "Edited wording.");
+  await runApprovalUpdate(makeDeps(store), caller, {
+    approval_id: APPROVAL_ID,
+    body_text: edited,
+  });
+
+  const stored = JSON.parse(String(store.send_approvals[0].payload.data).slice(CIPHER_PREFIX.length));
+  assertEquals(stored.body.split("\n-- \n").length - 1, 1, "one signature in the text part");
+  assertEquals(
+    String(stored.html_body).split("Asgeir").length - 1,
+    1,
+    "one signature in the HTML part",
+  );
+  assert(String(stored.html_body).includes("Edited wording."), "the edit reached the HTML part");
+  assertEquals(stored.include_signature, false, "the body stays marked final for the dispatcher");
+});
+
+Deno.test("supplying both parts still says what each one says", async () => {
+  // Unchanged behaviour: a caller who sends HTML has stated what the HTML is.
+  const store = freshStore();
+  await runApprovalUpdate(makeDeps(store), caller, {
+    approval_id: APPROVAL_ID,
+    body_text: "Edited body",
+    body_html: "<p>Deliberately different</p>",
+  });
+  const stored = JSON.parse(String(store.send_approvals[0].payload.data).slice(CIPHER_PREFIX.length));
+  assertEquals(stored.body, "Edited body", "text as given");
+  assertEquals(stored.html_body, "<p>Deliberately different</p>", "html as given, not regenerated");
+});
+
+Deno.test("an HTML-only edit leaves the text part alone", async () => {
+  const store = freshStore();
+  await runApprovalUpdate(makeDeps(store), caller, {
+    approval_id: APPROVAL_ID,
+    body_html: "<p>Edited</p>",
+  });
+  const stored = JSON.parse(String(store.send_approvals[0].payload.data).slice(CIPHER_PREFIX.length));
+  assertEquals(stored.body, SECRET_BODY, "text part untouched");
+  assertEquals(stored.html_body, "<p>Edited</p>", "html part as given");
+});
+
+Deno.test("a text-only send does not gain an HTML part by being edited", async () => {
+  // A reply/forward snapshot is the raw arguments: no html_body unless the
+  // caller sent one. Regeneration must not invent a part that did not exist.
+  const store = freshStore();
+  const { html_body: _dropped, ...textOnly } = SNAPSHOT;
+  store.send_approvals[0].payload = { v: 1, data: CIPHER_PREFIX + JSON.stringify(textOnly) };
+  await runApprovalUpdate(makeDeps(store), caller, {
+    approval_id: APPROVAL_ID,
+    body_text: "Edited body",
+  });
+  const stored = JSON.parse(String(store.send_approvals[0].payload.data).slice(CIPHER_PREFIX.length));
+  assertEquals("html_body" in stored, false, "still text-only");
+});
+
+Deno.test("an edit whose HTML would be enormous drops the part instead of keeping it stale", async () => {
+  // Escaping can multiply a 1 MB body several times over. Sending text/plain
+  // says what the reviewer typed; keeping the old HTML part does not.
+  const store = freshStore();
+  const huge = "&".repeat(200_000);
+  await runApprovalUpdate(makeDeps(store), caller, {
+    approval_id: APPROVAL_ID,
+    body_text: huge,
+  });
+  const stored = JSON.parse(String(store.send_approvals[0].payload.data).slice(CIPHER_PREFIX.length));
+  assertEquals(stored.body, huge, "text part is what was typed");
+  assertEquals("html_body" in stored, false, "the stale HTML part is gone, not kept");
 });
 
 Deno.test("summaryFromSnapshot never emits a recipient it was not given", () => {

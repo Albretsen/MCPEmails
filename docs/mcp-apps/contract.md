@@ -387,19 +387,35 @@ having. It is a tidiness measure, **not** a control. Audit-logged, non-billable 
 | --- | --- | --- |
 | `approval_review` | `{ approval_id }` | envelope, `card: "outbound_review"` |
 | `approval_decide` | `{ approval_id, decision: "reject", note? }` | envelope, `card: "receipt"` |
-| `approval_update` | `{ approval_id, subject?, body_text? }` | envelope, `card: "outbound_review"` (re-encrypted) |
+| `approval_update` | `{ approval_id, subject?, body_text?, body_html? }` | envelope, `card: "outbound_review"` (re-encrypted) |
 | `approval_schedule` | `{ approval_id, send_at }` | envelope, `card: "outbound_review"` with `send_at` set |
 | `bulk_execute` | `{ plan_id }` | envelope, `card: "receipt"` |
 | `bulk_cancel` | `{ plan_id }` | envelope, `card: "receipt"` with `outcome: "cancelled"` |
 
-**`body_html` is not editable and has been dropped from `approval_update`.** The card cannot safely
-author HTML, so an earlier draft that accepted it produced a trap: editing `body_text` on a message that
-has an HTML part left the HTML untouched, so the edit was a **silent no-op on what actually shipped** —
-the reviewer would believe they had corrected an email that then went out unchanged. Required server
-behaviour: when `body_text` is supplied for a message carrying `body_html`, the server **clears
-`body_html`** and returns `body.html: null` with `format_changed: true`. The message then sends as plain
-text. The card must warn before committing. Losing formatting is a visible, understood consequence;
-a silent no-op is not.
+**A `body_text` edit owns the HTML part too.** This paragraph used to specify something that was never
+built, and the gap shipped the exact trap it was written to prevent: `approval_update` accepted
+`body_html`, wrote the two parts independently, and a `body_text`-only edit left the HTML part carrying
+the pre-edit wording. Most mail clients render the HTML part, so the tool reported success, the reviewer
+believed they had corrected the message, and the recipient read the sentence they had replaced. Confirmed
+against production 2026-09-09 and fixed the same day.
+
+Server behaviour, as built:
+
+- `body_text` **and** `body_html` in one call: both are stored as given. A caller that sends HTML has
+  said what the HTML should say.
+- `body_html` alone: the text part is left alone, as before.
+- `body_text` alone, on a message that carries an HTML part: the HTML part is **regenerated** from the
+  new text (escaped, newlines to `<br>`), through the same synthesis `applySignature` uses when it builds
+  an HTML alternative for a text-only send (`signature-compose.ts#plainTextBodyToHtml`). Both parts then
+  say what the reviewer typed. Regenerating beats the clear-and-flag rule this paragraph used to specify:
+  clearing drops the message to text/plain and loses the pair, and `format_changed` was a flag no card
+  ever rendered. The visible cost is that a rich signature comes back as its plain-text form after an
+  edit, which is a smaller harm than sending replaced wording.
+
+**The signature is not re-applied on an edit,** because the new text already carries whatever signature is
+going out: an `email_send` snapshot is signed before it is stored (so the reviewer edits signed text), and
+a reply/forward/schedule snapshot is signed at dispatch. Adding one at edit time would double it in both
+cases.
 
 **`bulk_cancel` exists so cancelling is auditable.** Letting the plan lapse via its 15-minute TTL is
 fail-safe but invisible server-side: no record that a human looked at a destructive operation and said
