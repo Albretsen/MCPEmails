@@ -7,7 +7,8 @@ import { Icon, Btn, ProviderLogo } from '../Primitives';
 import { trackProductEvent } from '@/lib/analytics.mjs';
 import { useInboxPaywallView } from '@/lib/analytics/use-inbox-paywall.mjs';
 import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
-import { checkoutStartHref } from '@/lib/billing/upgrade-intent.mjs';
+import { Link } from '@/i18n/navigation';
+import { checkoutStartHref, pricingCompareHref } from '@/lib/billing/upgrade-intent.mjs';
 import { inboxCapOffer } from '@/lib/billing/inbox-cap-offer.mjs';
 import UpgradeIntervalChoice, {
   annualOfferForPlan,
@@ -879,7 +880,7 @@ export function ConnectModal({
   const limitPlanName = serverLimit?.planName ?? planName;
   const limitInboxCount = serverLimit?.inboxCount ?? inboxCount;
   const limitMaxInboxes = serverLimit?.maxInboxes ?? maxInboxes;
-  const limitUpgradeUrl = serverLimit?.upgradeUrl ?? '/pricing';
+  const serverUpgradeUrl = serverLimit?.upgradeUrl ?? '/pricing';
 
   // Which plan this panel should sell, and therefore which copy it carries.
   // The rule (cheapest plan that clears the cap that was hit) lives in
@@ -897,6 +898,25 @@ export function ConnectModal({
   // Stripe price, or no live prices on this surface at all), in which case the
   // control renders nothing and the CTA below stays the monthly one.
   const annual = annualOfferForPlan(stripePrices, upgradeCopy.plan);
+
+  // "Compare all plans" has to leave with the offer, not without it. /pricing
+  // preselects ANNUAL on purpose, so a bare '/pricing' hands someone who has
+  // just read "Upgrade to Personal, $5/mo" with Monthly selected a card reading
+  // "$4 a month, billed $48/year": the same plan, a different number, minutes
+  // apart, and a decision they already made to make again.
+  //
+  // Built here rather than taken from the server. The interval is client state
+  // this panel owns (the user can flip it without another request), so the
+  // server cannot know it, and every server producer sends the bare constant
+  // anyway. A server value that points at /pricing therefore gets its query
+  // rebuilt from what is actually on screen; a server value pointing anywhere
+  // else is a deliberate override that knows something this component does not,
+  // and is honoured verbatim.
+  const serverSendsPricing =
+    serverUpgradeUrl === '/pricing' || serverUpgradeUrl.startsWith('/pricing?');
+  const limitUpgradeUrl = serverSendsPricing
+    ? pricingCompareHref(upgradeCopy.plan, upgradeInterval === 'year')
+    : serverUpgradeUrl;
 
   // ── Provider categories ─────────────────────────────────────────────────────
 
@@ -3306,7 +3326,15 @@ export function ConnectModal({
           {showLimitPanel && (
             <>
               <Btn variant="ghost" onClick={onClose}>{tr('connect.cancel')}</Btn>
-              <a
+              {/* Locale-aware Link, unlike the checkout CTA below, and the
+                  same treatment the identical link on the Inboxes page already
+                  had: /pricing is an ordinary page with no side effects, so
+                  prefetching it is free and a Norwegian buyer belongs on
+                  /nb/pricing rather than the English page. The plain-anchor
+                  rule applies only to the checkout href underneath, where a
+                  prefetch would open Stripe sessions for people who never
+                  clicked. */}
+              <Link
                 href={limitUpgradeUrl}
                 style={{
                   display: 'inline-flex',
@@ -3321,7 +3349,7 @@ export function ConnectModal({
                 }}
               >
                 {tr('connect.comparePlans')}
-              </a>
+              </Link>
               <a
                 href={checkoutStartHref(upgradeCopy.plan, upgradeInterval === 'year')}
                 style={{
