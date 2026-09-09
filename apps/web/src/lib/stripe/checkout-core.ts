@@ -39,6 +39,13 @@ import {
 type CheckoutFailure = Parameters<typeof recordCheckoutStarted>[2];
 
 /**
+ * The target vocabulary it accepts, likewise. Wider than `BillingTargetCategory`
+ * by exactly one member, `'unknown'`, which is what an attempt that never got a
+ * valid plan and interval is recorded against.
+ */
+type CheckoutTarget = Parameters<typeof recordCheckoutStarted>[1];
+
+/**
  * The purchasable plan ids: every plan in the catalogue except `free`.
  *
  * Derived from PLANS rather than listed literally so adding a tier cannot leave
@@ -271,32 +278,44 @@ export async function runCheckout(input: {
   } = await supabase.auth.getUser();
 
   if (authError || !user) {
+    // NOT RECORDABLE, and that is a schema fact rather than an oversight.
+    // `product_funnel_events.workspace_id` is NOT NULL: every row hangs off a
+    // workspace, and with no user there is nobody to resolve one from. A
+    // synthetic id would be worse than no row at all, because it would put
+    // invented attempts in the one column every funnel number is grouped by.
+    //
+    // So this log IS the trace. It is the only evidence that somebody clicked
+    // buy with a missing or lapsed session, which is exactly the case the
+    // funnel cannot see: the GET entry point bounces them to /login and they
+    // leave nothing behind anywhere else. Nothing identifying is logged (there
+    // is no session to identify), which is also how the rest of this codebase
+    // logs a failure: the reason, never the person.
+    console.warn(
+      '[checkout] unauthenticated attempt, not recordable in the funnel:',
+      authError ? authError.message : 'no session',
+    );
     return fail('unauthenticated', 401, 'Unauthorized');
   }
 
-  // ── 2. Validate the requested plan and interval ───────────────────────────
-  const { planId, interval } = input;
-  // Strictly `=== true`: a truthy string from a query parameter must not be
-  // able to stand in for a person clicking Confirm.
-  const confirmChange = input.confirmChange === true;
-
-  if (!isPurchasablePlanId(planId)) {
-    return fail(
-      'invalid_plan',
-      400,
-      `planId must be one of: ${PURCHASABLE_PLAN_IDS.map((id) => `"${id}"`).join(', ')}.`,
-    );
-  }
-
-  if (interval !== 'month' && interval !== 'year') {
-    return fail('invalid_interval', 400, 'interval must be "month" or "year".');
-  }
-
-  // ── 3. Resolve the user's primary workspace ───────────────────────────────
-  // Resolved BEFORE the Stripe price lookup, deliberately. Every funnel row
-  // needs a workspace id (`product_funnel_events.workspace_id` is NOT NULL), so
-  // a checkout attempt that dies on an unconfigured price has nothing to attach
-  // its trace to until this has run. Nothing below may return before it.
+  // ── 2. Resolve the user's primary workspace ────────────────────────────────
+  // Resolved BEFORE validation and before the Stripe price lookup, deliberately.
+  // Every funnel row needs a workspace id (`product_funnel_events.workspace_id`
+  // is NOT NULL), so a checkout attempt that dies on a bad plan id or an
+  // unconfigured price has nothing to attach its trace to until this has run.
+  //
+  // Hoisting it above validation cannot change what any caller sees, which is
+  // the only reason it is allowed to move in live billing code:
+  //
+  //   - it is a pure read of the caller's OWN oldest active workspace and
+  //     writes nothing;
+  //   - its result is not ACTED on until after the two validation checks below,
+  //     so a bad plan id is still a 400 and never a 404, exactly as before;
+  //   - it cannot throw past this function. The Supabase client returns a fetch
+  //     failure as an `error` value instead of rejecting unless `throwOnError()`
+  //     is set, and it is not set here.
+  //
+  // The cost is one extra read on a request that was going to be refused
+  // anyway. That is the price of being able to see the refusal at all.
   //
   // The subscription itself is tied to the USER, not this workspace; the
   // display name only gives the Stripe customer a friendly label.
@@ -309,32 +328,98 @@ export async function runCheckout(input: {
     .limit(1)
     .single();
 
-  if (wsError || !workspace) {
-    return fail('workspace_not_found', 404, 'Workspace not found.');
-  }
-
   // The one and only `checkout_started` writer for this request.
   //
-  // Created here, above the price lookup, so no exit below can leave an attempt
-  // untraced: a misconfiguration MUST show up in the data. The `recorded` latch
-  // makes a second call a no-op, so a successful checkout can only ever produce
-  // one row no matter how the branches below evolve. The latch is per call of
-  // `runCheckout`, so the two entry points cannot double-record either: each
-  // HTTP request runs this function exactly once.
+  // What this GUARANTEES: every exit below it that the funnel is able to
+  // represent writes exactly one row. The `recorded` latch makes a second call
+  // a no-op, so a successful checkout can only ever produce one row no matter
+  // how the branches below evolve. The latch is per call of `runCheckout`, so
+  // the two entry points cannot double-record either: each HTTP request runs
+  // this function exactly once.
+  //
+  // What it knowingly does NOT cover, because the table cannot hold it: the two
+  // exits that have no workspace to hang a row off. `unauthenticated` above (no
+  // user at all) and `workspace_not_found` below (a user who owns none) are
+  // logged instead, each with a comment saying why. Everything else, the
+  // validation refusals included, is a row.
   //
   // The attempt is not written eagerly with a provisional outcome: the view
   // over this table reads `outcome = 'success'` as "a checkout was started" and
   // `outcome = 'failure'` as "it never got off the ground", so each request
   // writes its row once, at the first point its outcome is known.
-  const target = billingTarget(planId, interval);
   let recorded = false;
-  const recordAttempt = async (failure?: CheckoutFailure): Promise<void> => {
+  const recordOnce = async (
+    target: CheckoutTarget,
+    failure?: CheckoutFailure,
+  ): Promise<void> => {
     if (recorded) return;
     recorded = true;
-    // recordCheckoutStarted swallows its own errors: analytics must never be
-    // able to fail a payment.
-    await recordCheckoutStarted(workspace.id, target, failure);
+    // recordCheckoutStarted swallows its own errors (analytics must never be
+    // able to fail a payment) and no-ops on a null workspace id. That null case
+    // is what makes it safe to call from the validation refusals below, which
+    // deliberately run before `wsError` has been acted on.
+    await recordCheckoutStarted(workspace?.id ?? null, target, failure);
   };
+
+  // ── 3. Validate the requested plan and interval ────────────────────────────
+  const { planId, interval } = input;
+  // Strictly `=== true`: a truthy string from a query parameter must not be
+  // able to stand in for a person clicking Confirm.
+  const confirmChange = input.confirmChange === true;
+
+  // ORDER IS LOAD-BEARING. Both checks run before the `workspace_not_found`
+  // return below, so the refusal a caller sees is unchanged from when
+  // validation came first in this function: a bad plan id from a user who owns
+  // no workspace is still `invalid_plan` / 400, not a 404.
+  if (!isPurchasablePlanId(planId)) {
+    // Recorded as `unknown` / `validation_failed`. `billingTarget` cannot build
+    // a category out of a plan id that is not a plan, and the caller's own
+    // string has no business in a bounded category column, so the row says the
+    // part that is actually known: an attempt was made and died on its input.
+    // Both values are in the CHECK constraints, whose current definitions are
+    // 20260827100000_add_personal_plan.sql (category, which lists 'unknown')
+    // and 20260829220000_funnel_consent_required_category.sql (error_category,
+    // which lists 'validation_failed').
+    await recordOnce('unknown', 'validation_failed');
+    return fail(
+      'invalid_plan',
+      400,
+      `planId must be one of: ${PURCHASABLE_PLAN_IDS.map((id) => `"${id}"`).join(', ')}.`,
+    );
+  }
+
+  if (interval !== 'month' && interval !== 'year') {
+    // `unknown` again rather than `${planId}_month`: the plan is valid here but
+    // the interval is not, and inventing the missing half to make the category
+    // complete would file the attempt under a price nobody asked for.
+    await recordOnce('unknown', 'validation_failed');
+    return fail('invalid_interval', 400, 'interval must be "month" or "year".');
+  }
+
+  if (wsError || !workspace) {
+    // NOT RECORDABLE either, for the same NOT NULL reason: this user is
+    // authenticated but owns no workspace, so there is no row for the attempt
+    // to hang off, and there is no id to invent that would not corrupt someone
+    // else's numbers. The log is the trace instead. It carries the shape of the
+    // failure (a missing row surfaces as PGRST116; any other code means the
+    // database itself is in trouble, which is a different incident) and what
+    // was being bought, and deliberately carries no user identifier, matching
+    // how failures are logged everywhere else here.
+    console.error('[checkout] workspace not found, not recordable in the funnel:', {
+      plan: planId,
+      interval,
+      code: wsError?.code ?? 'none',
+      error: wsError?.message ?? 'no active owned workspace',
+    });
+    return fail('workspace_not_found', 404, 'Workspace not found.');
+  }
+
+  // Past this point the attempt has a plan, an interval and a workspace, so
+  // every remaining exit records against the real target rather than 'unknown'.
+  // `recordAttempt` is the same single latch, with the target already bound.
+  const target = billingTarget(planId, interval);
+  const recordAttempt = (failure?: CheckoutFailure): Promise<void> =>
+    recordOnce(target, failure);
 
   // ── 4. Resolve the target Stripe price ID ─────────────────────────────────
   const plan = PLANS[planId];

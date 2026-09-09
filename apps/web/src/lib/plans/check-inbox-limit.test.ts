@@ -181,7 +181,12 @@ test('the 402 body is machine-readable and leaks no internal plan slug', async (
   assert.equal(body.plan_name, 'Free');
   assert.equal(body.current_count, 1);
   assert.equal(body.max_inboxes, 1);
-  assert.equal(body.upgrade_url, '/pricing');
+  // The link carries the offer, and the offer is the cheapest plan that clears
+  // the cap that was hit: a Free workspace stopped at one inbox is sent to
+  // Personal, monthly, matching the paywall panel's own default. A bare
+  // '/pricing' preselects annual, so it would answer "$5 a month" with "$4 a
+  // month, billed $48/year".
+  assert.equal(body.upgrade_url, '/pricing?plan=personal&interval=month');
 
   // The old sentence read "Your solo plan allows ...", printing a database slug
   // at a customer. Nothing user-visible may contain an internal id again.
@@ -258,7 +263,10 @@ test('the Personal 402 body pluralises its allowance and names the tier', async 
   assert.equal(body.plan_name, 'Personal');
   assert.equal(body.current_count, 3);
   assert.equal(body.max_inboxes, 3);
-  assert.equal(body.upgrade_url, '/pricing');
+  // Personal's own cap is three, so Personal cannot be the answer to hitting
+  // it: the link has to move up the ladder to Pro (internal id `solo`). This is
+  // the case that proves the URL is derived from the cap rather than hardcoded.
+  assert.equal(body.upgrade_url, '/pricing?plan=solo&interval=month');
   // The singular branch of that sentence would read "includes 3 connected
   // inbox", which is the shape of thing nobody notices until a customer does.
   assert.ok(

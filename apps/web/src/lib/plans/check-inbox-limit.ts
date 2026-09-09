@@ -1,6 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database.types';
 import { planDisplayName, resolvePlanLimits } from '@/lib/stripe/plans';
+import { inboxCapOffer } from '@/lib/billing/inbox-cap-offer.mjs';
+import { pricingCompareHref } from '@/lib/billing/upgrade-intent.mjs';
 
 /**
  * Result of an inbox cap check.
@@ -152,7 +154,14 @@ export interface InboxLimitErrorBody {
   current_count: number;
   /** The cap that was hit. Never null here: an uncapped plan cannot reach this. */
   max_inboxes: number;
-  /** Where the client should send the user. */
+  /**
+   * Where the client should send the user.
+   *
+   * Carries the offer: `/pricing?plan=<id>&interval=month`. It used to be the
+   * bare constant '/pricing', which threw away the one thing this response
+   * knows that the pricing page does not, namely which plan actually clears the
+   * cap that was just hit.
+   */
   upgrade_url: string;
 }
 
@@ -167,6 +176,16 @@ export function inboxLimitErrorBody(result: InboxLimitCheckResult): InboxLimitEr
     plan_name: result.planName,
     current_count: result.currentCount,
     max_inboxes: max,
-    upgrade_url: '/pricing',
+    // Same rule as both paywall surfaces, from the same module: the cheapest
+    // plan that clears the cap that was hit. Keyed off `max`, the number this
+    // very check just counted, so the link cannot quote a plan the refusal
+    // does not justify.
+    //
+    // MONTHLY, matching the paywall panel's own deliberate default. /pricing
+    // preselects annual, so an unparameterised link answers a "$5 a month"
+    // refusal with a "$4 a month, billed $48/year" card: the same plan at a
+    // different number, which is a decision the buyer has to make twice.
+    // Defaulting this to year would silently turn a $5 intent into a $48 one.
+    upgrade_url: pricingCompareHref(inboxCapOffer(max).plan, false),
   };
 }
