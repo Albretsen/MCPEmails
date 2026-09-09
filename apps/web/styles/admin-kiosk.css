@@ -216,24 +216,34 @@
   color: var(--fg-1);
 }
 
-/* The live dot. Its animation is the only thing on an otherwise static board
-   that proves the browser has not silently frozen, which on an unattended
-   display is worth more than it looks. */
+/* The live dot.
+
+   IT USED TO PULSE, FOREVER, AND THAT WAS A MISTAKE ON A WALL PANEL. The
+   argument for the animation was that it is the one thing on an otherwise
+   static board proving the browser has not silently frozen. The argument
+   against it is what a running CSS animation costs a display nobody is looking
+   at directly: measured over Chromium's screencast on the Pi on 2026-09-09, the
+   board emitted ~2,200 frames a minute — a sustained ~40 fps repaint of a
+   1920x1200 panel, around the clock, for one pulsing dot. Peripheral vision is
+   built to detect motion and is close to blind to detail, so on a screen at the
+   edge of somebody's eyeline that dot was most of what the board was saying.
+
+   The proof-of-life it was defending is not lost. The header clock re-renders
+   every 15 seconds and the "updated HH:MM" beside this dot moves on every
+   refresh; a frozen tab shows a stopped clock, which is both more legible and
+   more specific than a pulse. Since 2026-09-09 there is also a watchdog on the
+   Pi itself (~/kiosk/watchdog.sh) that restarts Chromium when the board is not
+   on screen, which is the answer to a frozen browser that a decoration on the
+   frozen page could never be.
+
+   The dot stays: it is the health colour, and it means something. It just holds
+   still. Do not put an infinite animation back on this board without measuring
+   what it costs first. */
 .kiosk-live { display: inline-flex; align-items: center; gap: 0.5em; }
 .kiosk-live::before {
   content: "";
   width: 0.6em; height: 0.6em; border-radius: 50%;
   background: var(--kiosk-good);
-  box-shadow: 0 0 0 0 rgba(31, 203, 139, 0.55);
-  animation: kiosk-pulse 2.4s ease-out infinite;
-}
-@keyframes kiosk-pulse {
-  0%   { box-shadow: 0 0 0 0 rgba(31, 203, 139, 0.5); }
-  70%  { box-shadow: 0 0 0 0.62em rgba(31, 203, 139, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(31, 203, 139, 0); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .kiosk-live::before { animation: none; }
 }
 
 
@@ -333,17 +343,25 @@
     var(--bg-page);
 }
 
-/* The header's proof-of-life dot follows the verdict. It is the one thing on
-   the board that moves, so leaving it green under a red banner would be the
-   single most confusing pixel on the screen. */
+/* The header's proof-of-life dot follows the verdict. Leaving it green under a
+   red banner would be the single most confusing pixel on the screen.
+
+   THESE TWO CARRY THE WHOLE `animation` SHORTHAND, deliberately. They used to
+   set `animation-name` alone and inherit duration, easing and iteration count
+   from the base `.kiosk-live::before` rule. When the healthy pulse was removed
+   on 2026-09-09 that shorthand went with it, which would have left these with a
+   name, a duration of 0s and a single iteration: an alarm that silently stops
+   pulsing, discoverable only during an outage. Motion is still exactly right
+   here — this is the board's rarest state and the one it is allowed to shout
+   about — so it is spelled out rather than inherited. */
 .kiosk.is-health-down .kiosk-live::before {
   background: var(--kiosk-bad);
-  animation-name: kiosk-pulse-bad;
+  animation: kiosk-pulse-bad 2.4s ease-out infinite;
 }
 .kiosk.is-health-degraded .kiosk-live::before,
 .kiosk.is-health-unknown .kiosk-live::before {
   background: var(--kiosk-warn);
-  animation-name: kiosk-pulse-warn;
+  animation: kiosk-pulse-warn 2.4s ease-out infinite;
 }
 @keyframes kiosk-pulse-bad {
   0%   { box-shadow: 0 0 0 0 rgba(229, 72, 77, 0.55); }
@@ -358,6 +376,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .kiosk-alarm.is-down { animation: none; }
+  /* Covers the bad and unknown/degraded dots in one rule. The healthy dot has
+     no animation to switch off any more. */
+  .kiosk-live::before { animation: none; }
 }
 
 /* On a short viewport the supporting strip is hidden (see the media query
