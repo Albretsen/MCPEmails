@@ -11,13 +11,25 @@
 // non-compliant: `folder`, `draft`, `schedule`, `signature` and `automation`
 // each carried a read action in among their writes.
 //
+// THE SECOND REASON, and it is not about reads at all. Annotations are per
+// TOOL, and a client decides whether to interrupt the user from
+// `destructiveHint`: read-only tools may run without per-call confirmation,
+// destructive ones always prompt, with no per-action grade and no user
+// override. `email_organize` therefore had to be annotated for
+// `search_and_move`, the one action of the seven that acts on everything a
+// caller-supplied filter matches, and `archive` and `flag` paid for it with a
+// permission prompt on every message of every morning triage. So that action
+// moved out too, by the same mechanism, and `email_search_and_move` carries
+// the destructive flag alone.
+//
 // WHY THE GAP CANNOT BE CLOSED. claude.ai caches a connector's tool SET at
-// connect time. Every user connected before 2026-09-09 holds those five names
-// with their ORIGINAL action enums. Moving the read actions rather than
-// copying them would break the first `folder{action:"list"}` that any of those
-// sessions makes, with no warning and no path to recovery short of every user
-// reconnecting. So the split is advertised-only: the read halves are published
-// under new names, and the old names keep accepting everything they ever did.
+// connect time. Every user connected before 2026-09-09 holds those names with
+// their ORIGINAL action enums. Moving the actions rather than copying them
+// would break the first `folder{action:"list"}` or
+// `email_organize{action:"search_and_move"}` that any of those sessions makes,
+// with no warning and no path to recovery short of every user reconnecting. So
+// the split is advertised-only: the withheld halves are published under new
+// names, and the old names keep accepting everything they ever did.
 //
 // That makes this file's second half the load-bearing one. The first half can
 // only tell you the directory submission is well-formed; the second half is
@@ -84,6 +96,7 @@ Deno.test("tools/list advertises exactly the post-split surface", () => {
       "inbox_list",
       "email_read",
       "email_organize",
+      "email_search_and_move",
       "email_delete",
       "email_compose",
       "folder_list",
@@ -145,6 +158,16 @@ Deno.test("no advertised tool mixes read and write operations", () => {
 });
 
 Deno.test("the write tools advertise their writes and nothing else", () => {
+  // The reversible six. `search_and_move` is deliberately absent: it is the one
+  // that made the whole tool destructive, and it ships as email_search_and_move.
+  assertEquals(advertisedActions("email_organize"), [
+    "move",
+    "move_batch",
+    "copy",
+    "copy_batch",
+    "flag",
+    "archive",
+  ]);
   assertEquals(advertisedActions("folder"), ["create", "rename", "delete"]);
   assertEquals(advertisedActions("draft"), ["create", "reply", "update", "send", "delete"]);
   assertEquals(advertisedActions("schedule"), ["create", "cancel"]);
@@ -173,6 +196,74 @@ Deno.test("the read tools are read-only and carry no write action", () => {
     );
     assertEquals(registryEntry(name).annotations?.destructiveHint, false, `${name} destroys nothing`);
   }
+});
+
+/**
+ * The actions a user runs dozens of times in a morning, on individual messages
+ * they are looking at, and would never sit through a permission prompt for.
+ *
+ * Naming them here rather than asserting on `email_organize` alone is the
+ * point: the failure this guards against is not "someone flipped a boolean",
+ * it is "someone added a sweeping action to a triage tool and re-earned the
+ * flag for the whole thing". Either way the tool bundling these stops being
+ * auto-allowable and the product's core use case starts prompting again.
+ */
+const ROUTINE_TRIAGE_ACTIONS = ["archive", "flag", "move"];
+
+Deno.test("no tool that bundles routine triage is annotated destructive", () => {
+  let checked = 0;
+  for (const tool of advertisedTools()) {
+    const spec = CONSOLIDATED_SPECS[tool.name];
+    if (!spec) continue;
+    const bundled = ROUTINE_TRIAGE_ACTIONS.filter((action) =>
+      spec.actions[action] && spec.actions[action].advertised !== false
+    );
+    if (bundled.length === 0) continue;
+    checked += 1;
+    assertEquals(
+      tool.annotations?.destructiveHint,
+      false,
+      `${tool.name} advertises ${bundled.join(", ")} but is annotated destructive, so a ` +
+        `client can never auto-allow it and every one of those calls prompts the user ` +
+        `forever. Move the destructive action onto its own tool instead (advertised: ` +
+        `false + a promoted registry entry), the way search_and_move was.`,
+    );
+  }
+  // Guards the guard: a rename of any of these actions would otherwise turn
+  // this test into a silent no-op.
+  assert(checked > 0, "no tool matched ROUTINE_TRIAGE_ACTIONS; the action names have moved");
+});
+
+Deno.test("email_organize is annotated for what it can actually do", () => {
+  const annotations = registryEntry("email_organize").annotations!;
+  // Writes: it moves, copies, flags and archives. Never read-only.
+  assertEquals(annotations.readOnlyHint, false);
+  // Reversible and caller-enumerated: every advertised action acts only on ids
+  // the caller passed, and is undone by another call.
+  assertEquals(annotations.destructiveHint, false);
+  // NOT idempotent, and deliberately so. move/move_batch/flag/archive converge
+  // on a stated end state, but IMAP UID COPY and the Graph /copy endpoint each
+  // create a new message per call, so a retried copy leaves two copies.
+  assertEquals(annotations.idempotentHint, false);
+  assertEquals(
+    TOOL_ANNOTATIONS["email_copy"].idempotentHint,
+    false,
+    "email_organize's idempotentHint: false is justified by copy; if copy ever " +
+      "became idempotent the tool-level hint should be revisited",
+  );
+});
+
+Deno.test("the sweep carries the destructive flag email_organize gave up", () => {
+  const annotations = registryEntry("email_search_and_move").annotations!;
+  assertEquals(annotations.readOnlyHint, false);
+  assertEquals(
+    annotations.destructiveHint,
+    true,
+    "the whole point of the split is that this one still prompts",
+  );
+  // Idempotent: once the matches have moved they no longer match the search, so
+  // a repeated call converges rather than compounding.
+  assertEquals(annotations.idempotentHint, true);
 });
 
 Deno.test("the tools split out of a mixed one keep the right write annotations", () => {
@@ -243,6 +334,49 @@ Deno.test("a write tool no longer describes the read action it lost", () => {
   }
 });
 
+Deno.test("no advertised description explains an action its tool no longer has", () => {
+  // The general form of the two tests above, so a NEW withheld action cannot
+  // be added without its prose being cleaned up too. Matched in the quoted form
+  // the descriptions use, because several action names ('list', 'get') are also
+  // ordinary English words that appear legitimately in the same sentence that
+  // points at the tool they moved to.
+  for (const tool of advertisedTools()) {
+    const spec = CONSOLIDATED_SPECS[tool.name];
+    if (!spec) continue;
+    for (const [action, actionSpec] of Object.entries(spec.actions)) {
+      if (actionSpec.advertised !== false) continue;
+      assert(
+        !tool.description.includes(`'${action}'`),
+        `${tool.name} still describes '${action}', which it no longer advertises: ` +
+          tool.description,
+      );
+    }
+  }
+
+  // And the specific one, which the quoted form would miss: email_organize's
+  // description used to explain search_and_move's limit/has_more contract in
+  // prose, unquoted. That contract is the other tool's to state now, and a
+  // model reading it here would be told about an action its enum does not
+  // contain. Commit 83bbbcc had to fix exactly this class of stale
+  // cross-reference for the read split. A mention of the TOOL name is fine and
+  // in fact wanted, so only the bare action name is a leak.
+  const organize = registryEntry("email_organize").description;
+  assert(
+    !/(^|[^A-Za-z0-9_])search_and_move\b/.test(organize),
+    `email_organize still describes search_and_move in prose: ${organize}`,
+  );
+  assert(
+    organize.includes("email_search_and_move"),
+    "and it must say where the sweep went, or the capability looks deleted",
+  );
+
+  // The receiving end says the things that moved: which tool it belongs beside,
+  // and that a bounded sweep is not a finished one.
+  const sweep = registryEntry("email_search_and_move").description;
+  assert(sweep.includes("email_organize"), "the sweep must point back at the id-list tool");
+  assert(sweep.includes("has_more"), "the sweep must keep the not-fully-swept caution");
+});
+
 // ═══════════════════════════════════════════════════════════════════════════
 // 2. Back-compatibility: the surface `tools/call` still accepts
 //
@@ -257,8 +391,13 @@ Deno.test("a write tool no longer describes the read action it lost", () => {
  * `args` carries the action's own required arguments and nothing else, so a
  * validation failure below means the ACTION was refused rather than that the
  * fixture forgot a field.
+ *
+ * Mostly reads, because most of the withheld actions are reads. The last entry
+ * is not: `email_organize{action:"search_and_move"}` was withheld so the tool
+ * could stop being annotated destructive, and it has to survive every one of
+ * these checks for exactly the same reason a retired read does.
  */
-const RETIRED_READ_CALLS: ReadonlyArray<
+const RETIRED_ACTION_CALLS: ReadonlyArray<
   { tool: string; action: string; legacy: string; args?: Record<string, unknown> }
 > = [
   { tool: "folder", action: "list", legacy: "folder_list" },
@@ -279,18 +418,24 @@ const RETIRED_READ_CALLS: ReadonlyArray<
     args: { automation_id: "8f1d0b6e-0000-4000-8000-000000000000" },
   },
   { tool: "automation", action: "preview", legacy: "automation_preview" },
+  {
+    tool: "email_organize",
+    action: "search_and_move",
+    legacy: "email_search_and_move",
+    args: { destination_folder_id: "Archive", from: "newsletter@example.com" },
+  },
 ];
 
 Deno.test("every old consolidated name is still in the registry, so it still dispatches", () => {
   // handleToolsCall looks the tool up with TOOL_REGISTRY.find(t => t.name ===
   // toolName). A name absent from here is an immediate -32602 Unknown tool.
-  for (const name of ["folder", "draft", "schedule", "signature", "automation"]) {
+  for (const name of ["folder", "draft", "schedule", "signature", "automation", "email_organize"]) {
     assert(registryEntry(name), `${name} must stay callable`);
   }
 });
 
-Deno.test("the old names still ACCEPT the read actions they no longer advertise", () => {
-  for (const { tool, action } of RETIRED_READ_CALLS) {
+Deno.test("the old names still ACCEPT the actions they no longer advertise", () => {
+  for (const { tool, action } of RETIRED_ACTION_CALLS) {
     assert(
       acceptedActions(tool).includes(action),
       `${tool}{action:"${action}"} must still validate`,
@@ -305,11 +450,11 @@ Deno.test("the old names still ACCEPT the read actions they no longer advertise"
   assertEquals(acceptedActions("signature"), ["get", "set"]);
 });
 
-Deno.test("a retired read call passes the server's own validator", () => {
+Deno.test("a retired call passes the server's own validator", () => {
   // This is the assertion that would actually catch the break. handleToolsCall
   // validates against `tool.inputSchema`, the FULL schema, never the narrowed
   // copy that goes out on the wire, so the two must genuinely differ here.
-  for (const { tool, action, args } of RETIRED_READ_CALLS) {
+  for (const { tool, action, args } of RETIRED_ACTION_CALLS) {
     const errors = validateInputSchema(registryEntry(tool).inputSchema, { action, ...args });
     assertEquals(
       errors,
@@ -324,13 +469,13 @@ Deno.test("a retired read call passes the server's own validator", () => {
   assertEquals(setErrors, [], `signature{action:"set"} was rejected: ${JSON.stringify(setErrors)}`);
 });
 
-Deno.test("a retired read call is rejected by the schema we now advertise", () => {
+Deno.test("a retired call is rejected by the schema we now advertise", () => {
   // The mirror of the test above, and the reason both are here: if the
   // advertised schema still accepted these, the split would be cosmetic and
   // the directory criterion would not be met. If the full schema rejected
   // them, every existing connection would be broken. Only both together say
   // the change did what it claims.
-  for (const { tool, action, args } of RETIRED_READ_CALLS) {
+  for (const { tool, action, args } of RETIRED_ACTION_CALLS) {
     if (!isAdvertisedTool(tool)) continue; // `signature` publishes no schema at all.
     const listed = serializeToolForList(registryEntry(tool)) as {
       inputSchema: Record<string, unknown>;
@@ -343,13 +488,13 @@ Deno.test("a retired read call is rejected by the schema we now advertise", () =
   }
 });
 
-Deno.test("a retired read action still routes to the handler it always did", () => {
+Deno.test("a retired action still routes to the handler it always did", () => {
   // dispatchName = actionSpec.legacy in handleToolsCall, and every downstream
   // decision keys off that name: billing (BILLABLE_TOOL_NAMES), rate limits,
   // the byte-heavy concurrency cap, idempotency, and the activity_log row an
   // operator reads. A changed legacy target would silently re-bill and
   // re-route a call that used to work.
-  for (const { tool, action, legacy } of RETIRED_READ_CALLS) {
+  for (const { tool, action, legacy } of RETIRED_ACTION_CALLS) {
     assertEquals(
       CONSOLIDATED_SPECS[tool].actions[action].legacy,
       legacy,
@@ -383,6 +528,11 @@ Deno.test("both names for one operation reach the same handler", () => {
       `automation_read '${action}' must reach the same handler as automation '${action}'`,
     );
   }
+  assertEquals(
+    registryEntry("email_search_and_move").name,
+    CONSOLIDATED_SPECS.email_organize.actions.search_and_move.legacy,
+    "the promoted sweep must BE the handler the withheld action dispatches to",
+  );
 });
 
 Deno.test("the old names keep their scopes, so an existing key stays authorized", () => {
@@ -400,14 +550,41 @@ Deno.test("the old names keep their scopes, so an existing key stays authorized"
   const signatureScopes = [signature.requiredScope, ...(signature.altScopes ?? [])];
   assert(signatureScopes.includes("read:email"), "signature{get} needs read:email");
   assert(signatureScopes.includes("send:email"), "signature{set} needs send:email");
+  // Same obligation for the withheld write. The action's scope has to stay in
+  // email_organize's union or a cached client's search_and_move would start
+  // failing with -32001 instead of running.
+  const organize = registryEntry("email_organize");
+  const organizeScopes = [organize.requiredScope, ...(organize.altScopes ?? [])];
+  assert(
+    organizeScopes.includes("manage:folders"),
+    `email_organize{action:"search_and_move"} needs manage:folders, got ${organizeScopes}`,
+  );
+  assertEquals(
+    registryEntry("email_search_and_move").requiredScope,
+    CONSOLIDATED_SPECS.email_organize.actions.search_and_move.scope,
+    "both names for the sweep must demand the same scope, or one becomes a way " +
+      "around the other",
+  );
 });
 
-Deno.test("the action selector still resolves a retired read action", () => {
+Deno.test("the sweep is exactly as strict under either name", () => {
+  // A misplaced sibling argument is dropped and disclosed on a read and refused
+  // on a write, and search_and_move is the write where dropping a filter is the
+  // difference between moving one thread and moving an inbox (see the
+  // DELIBERATELY ABSENT list in consolidated-arguments.ts). Neither name may
+  // soften that: email_organize because it still accepts the action, and
+  // email_search_and_move because leniency is keyed by tool name and an
+  // unlisted tool defaults to strict.
+  assertEquals(allowsLenientArguments("email_organize", "search_and_move"), false);
+  assertEquals(allowsLenientArguments("email_search_and_move", "search_and_move"), false);
+});
+
+Deno.test("the action selector still resolves a retired action", () => {
   // Selector resolution is built from spec.actions, and the sibling-argument
   // leniency from LENIENT_ACTIONS. Both are keyed by tool name, so a tool that
   // kept an action in its spec but lost it from one of these tables would
   // reject or harden a call that used to succeed.
-  for (const { tool, action } of RETIRED_READ_CALLS) {
+  for (const { tool, action } of RETIRED_ACTION_CALLS) {
     const index = actionSelectorIndex(CONSOLIDATED_SPECS[tool].actions);
     const resolved = resolveActionSelector(
       tool,
@@ -444,12 +621,21 @@ Deno.test("automation_read can never be dispatched under its own name", () => {
   }
 });
 
-Deno.test("no promoted read tool depends on argument-alias rewriting", () => {
-  // normalizeArgumentAliases runs only on the CONSOLIDATED path. A read tool
+Deno.test("no promoted tool depends on argument-alias rewriting", () => {
+  // normalizeArgumentAliases runs only on the CONSOLIDATED path. A tool
   // promoted to its own name skips it, so it must not be one whose arguments
   // were ever renamed, or a retired argument name would silently stop being
   // accepted under the new tool while still working under the old one.
-  for (const name of ["folder_list", "draft_list", "schedule_list", "signature_get", "signature_set"]) {
+  for (
+    const name of [
+      "folder_list",
+      "draft_list",
+      "schedule_list",
+      "signature_get",
+      "signature_set",
+      "email_search_and_move",
+    ]
+  ) {
     assertEquals(
       retiredArgumentNames(name),
       [],
