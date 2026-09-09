@@ -1893,12 +1893,33 @@ async function checkPlanQuota(
  * human_message references the pricing page so users know how to upgrade for a
  * higher ceiling.
  */
+/**
+ * What a plan is CALLED, which is not what its id is.
+ *
+ * The internal ids were never renamed as the pricing was: `solo` is sold as
+ * "Pro" and `pro` is sold as "Team". Capitalising the id, which is what this
+ * message used to do, therefore told a Team customer "Your Pro plan..." and a
+ * Pro customer "Your Solo plan..." at the exact moment they hit a ceiling and
+ * were deciding whether to pay us more.
+ *
+ * Kept in step with `planDisplayName` and the PLANS table in
+ * apps/web/src/lib/stripe/plans.ts. An id with no entry falls back to the
+ * capitalised id, which is wrong-but-harmless for a plan that does not exist
+ * yet, and is preferable to printing a raw slug.
+ */
+const PLAN_DISPLAY_NAMES: Record<string, string> = {
+  free: "Free",
+  personal: "Personal",
+  solo: "Pro",
+  pro: "Team",
+};
+
 function buildQuotaExceededResponse(
   requestId: string | number | null,
   result: PlanQuotaResult,
 ): Response {
-  const planLabel =
-    result.plan.charAt(0).toUpperCase() + result.plan.slice(1);
+  const planLabel = PLAN_DISPLAY_NAMES[result.plan] ??
+    (result.plan.charAt(0).toUpperCase() + result.plan.slice(1));
 
   const humanMessage =
     `Your ${planLabel} plan allows ${result.perMinuteLimit} requests per minute, and that ceiling has been reached. ` +
