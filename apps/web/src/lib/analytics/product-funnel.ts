@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { safeDiagnosticPhase } from '@/lib/email/connection-config';
+import type { AuthFailureReason } from '@/lib/email/auth-failure';
 
 /**
  * Persist a server-observed funnel fact. The vocabulary is deliberately small
@@ -37,6 +38,21 @@ export type ProductFunnelEvent = {
   /** Coarse protocol phase only; never a host, address, credential, or response. */
   phase?: string;
   connectionType?: 'first_connect' | 'reconnect';
+  /**
+   * Which sub-case an `auth_failed` was classified as (lib/email/auth-failure.ts).
+   *
+   * `auth_failed` is the largest failure bucket on every connector, and on its
+   * own it cannot answer the only question worth asking about it: whether the
+   * user sent the wrong KIND of secret or simply mistyped the right one. The
+   * classification already existed and was already computed on every one of
+   * these failures. It was sent to the browser and written to app_errors, and
+   * then dropped on the floor here, which is why the connect regression of
+   * 2026-09-08 had to be diagnosed from the shape of the code instead of from
+   * the rows.
+   *
+   * An enum member, never free text: no host, address or credential.
+   */
+  authReason?: AuthFailureReason | null;
 };
 
 export async function recordProductFunnelEvent(db: SupabaseClient, event: ProductFunnelEvent): Promise<void> {
@@ -52,6 +68,7 @@ export async function recordProductFunnelEvent(db: SupabaseClient, event: Produc
     error_category: event.errorCategory ?? null,
     phase: safeDiagnosticPhase(event.phase),
     connection_type: event.connectionType ?? null,
+    auth_reason: event.authReason ?? null,
   });
   if (error) {
     console.error('[product-funnel] event insert failed', { stage: event.stage, outcome: event.outcome, error: error.message });
