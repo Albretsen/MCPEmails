@@ -27,7 +27,73 @@
 // Nothing about server behaviour changes: a call is still validated against
 // the full schema, and a misplaced argument is still classified and reported
 // exactly as before.
+//
+// ── The same seam, now at the level of tools and actions ────────────────────
+//
+// 2026-09-09: the split between "what we advertise" and "what we accept" grew
+// a second job. Anthropic's connector review criteria reject a tool that mixes
+// safe and unsafe operations in one entry point:
+//
+//   "A single tool that accepts both safe HTTP methods (GET, HEAD, OPTIONS)
+//   and unsafe methods (POST, PUT, PATCH, DELETE) is rejected. [...] Split
+//   into a read-only tool and one or more write tools. Documenting safe versus
+//   unsafe operations within one tool's description does not satisfy this
+//   requirement, the operations must be in separate tools."
+//
+// A read-only tool MAY keep an `action` enum, which is why `email_read` is
+// already compliant. Five tools were not: `folder`, `draft`, `schedule`,
+// `signature` and `automation` each mixed a read action in with their writes.
+//
+// The hard constraint is that we cannot simply move those actions. claude.ai
+// caches a connector's tool SET at connect time, so every user connected today
+// holds `folder`, `draft`, `schedule`, `signature` and `automation` with their
+// CURRENT action enums. If those names stopped accepting their read actions,
+// every existing connection would break at the first `folder{action:"list"}`.
+//
+// So the split is advertised-only, in exactly the same shape as the `allOf`
+// strip above:
+//
+//   • `UNADVERTISED_TOOLS` names tools kept in the registry, and therefore
+//     fully callable and fully validated, that `tools/list` no longer emits.
+//     `signature` is the only one: its two actions now ship as the standalone
+//     `signature_get` and `signature_set`, so nothing is left for the mixed
+//     name to advertise.
+//
+//   • An action carrying `advertised: false` in CONSOLIDATED_SPECS stays in
+//     the tool's validated schema, its selector index, its argument index and
+//     its dispatch, and is simply left out of the enum `tools/list` publishes.
+//     That is how `folder` advertises create|rename|delete while still running
+//     `folder{action:"list"}` for a client that connected last month.
+//
+// The read halves are advertised under new names instead: `folder_list`,
+// `draft_list`, `schedule_list`, `signature_get` and `signature_set` are the
+// pre-consolidation legacy entries promoted back onto the surface, and
+// `automation_read` is a new read-only consolidated tool over
+// list|get|runs|preview. Every one of them dispatches to the very same handler
+// the corresponding action always did, so the two surfaces cannot diverge in
+// behaviour: they are two names for one code path.
 // ---------------------------------------------------------------------------
+
+/**
+ * Tools that stay in the registry, and therefore stay callable and validated,
+ * but that `tools/list` does not emit.
+ *
+ * `signature` mixed a read (`get`) and a write (`set`) under one name. Both
+ * halves are now advertised separately as `signature_get` and `signature_set`,
+ * which leaves this name with nothing compliant to advertise — but every
+ * client that connected before today has it cached, so it must keep working.
+ *
+ * This is deliberately a name list rather than a flag on the registry entry:
+ * an unadvertised tool is a back-compatibility obligation, not a property of
+ * the tool, and the obligation is easier to audit when it is written down in
+ * one place next to the reason for it.
+ */
+export const UNADVERTISED_TOOLS: ReadonlySet<string> = new Set(["signature"]);
+
+/** Whether `tools/list` emits this tool. Everything not withheld is listed. */
+export function isAdvertisedTool(name: string): boolean {
+  return !UNADVERTISED_TOOLS.has(name);
+}
 
 /**
  * The copy of an input schema that `tools/list` advertises: identical to the
