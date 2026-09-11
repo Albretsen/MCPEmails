@@ -60,15 +60,18 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com';
  *   folder_list    read:email
  *   signature_get  read:email
  *
+ * `contact_search` is reachable too, through `read:email` as an ALTERNATIVE to
+ * its primary `manage:contacts` (since 2026-09-11): it returns only the names
+ * and addresses of correspondents, which reading the mail already exposes.
+ *
  * `search:email` is deliberately NOT here. It exists only as an ALTERNATIVE
  * scope on `email_read{action:"search"}`, whose primary is already `read:email`,
  * so a token holding `read:email` can already search. Adding it would put a
  * second line on the consent screen that grants nothing the first does not,
  * which is the same over-asking in miniature. The other read-only tools
- * (draft_list, schedule_list, automation_read, contact_search) are excluded on
- * purpose: their scopes (`manage:drafts`, `schedule:email`,
- * `manage:automations`, `manage:contacts`) all carry write power too, so they
- * belong to step-up, not to the first prompt.
+ * (draft_list, schedule_list, automation_read) are excluded on purpose: their
+ * scopes (`manage:drafts`, `schedule:email`, `manage:automations`) all carry
+ * write power too, so they belong to step-up, not to the first prompt.
  *
  * KNOWN COST, stated rather than hidden: this header is also attached when the
  * upstream rejects a token, so a user whose refresh chain has died entirely and
