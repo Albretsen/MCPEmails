@@ -123,7 +123,7 @@ Copy‑paste instructions per client, including where each one keeps its config 
 | `signature_set` | *(single action)* | `send:email` |
 | `automation_read` | `list`, `get`, `runs`, `preview` | `manage:automations` |
 | `automation` | `create`, `update`, `enable`, `disable`, `delete` | `manage:automations` |
-| `contact_search` | *(single action)* | `manage:contacts` |
+| `contact_search` | *(single action)* | `manage:contacts` (also accepts `read:email`) |
 
 A full-scope key sees **22** tools in `tools/list`: the 16 above plus six app-only tools (`approval_review`, `approval_decide`, `approval_update`, `approval_schedule`, `bulk_execute`, `bulk_cancel`). Those carry `_meta.ui.visibility: ["app"]` and drive the review card an MCP client renders for a held send or a previewed bulk operation, rather than being composed by hand.
 
@@ -143,7 +143,7 @@ Notes:
 
 | Scope | Grants |
 | --- | --- |
-| `read:email` | List inboxes & folders; list, read, and search messages; read an inbox's signature |
+| `read:email` | List inboxes & folders; list, read, and search messages; read an inbox's signature; look up contacts |
 | `search:email` | Narrower alternative that grants only `email_read`'s `search` action |
 | `send:email` | Send, reply and forward; set the signature and sender name; also required to send a draft |
 | `manage:folders` | Create/rename/delete folders; move, copy, flag and archive messages |

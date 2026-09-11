@@ -30,14 +30,21 @@
 
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import { isAdvertisedTool } from "./advertised-schema.ts";
+import { buildInsufficientScopeChallenge } from "./scope-challenge.ts";
 
 // index.ts builds its registry at module load and reads env while doing it, so
 // the environment has to be arranged BEFORE the import runs. See the same note
 // in tool-surface.test.ts.
 Deno.env.set("MCP_INTROSPECTION_ONLY", "1");
 Deno.env.set("MCP_SERVER_NO_LISTEN", "1");
-const { CONSOLIDATED_SPECS, isOAuthIssuedKey, isToolAuthorized, TOOL_REGISTRY, toolsForListing } =
-  await import("./index.ts");
+const {
+  CONSOLIDATED_SPECS,
+  handleToolsCall,
+  isOAuthIssuedKey,
+  isToolAuthorized,
+  TOOL_REGISTRY,
+  toolsForListing,
+} = await import("./index.ts");
 
 /** The scope our 401 challenge asks a brand-new connection to consent to. */
 const FIRST_CONSENT_SCOPES = ["read:email"];
@@ -118,13 +125,15 @@ Deno.test("a dashboard key is still filtered to exactly the tools its scopes all
   const listed = names(toolsForListing(key));
   // Stated literally rather than derived: this is the surface a read-only key
   // has been syncing, and the assertion is worth nothing if it recomputes the
-  // implementation.
+  // implementation. contact_search joined it on 2026-09-11, when read:email
+  // became an alternative scope on it (section 5).
   assertEquals(listed, [
     "inbox_list",
     "email_read",
     "folder_list",
     "folder",
     "signature_get",
+    "contact_search",
   ]);
   for (const forbidden of ["email_compose", "email_delete", "draft", "schedule", "automation"]) {
     assert(!listed.includes(forbidden), `a read-only dashboard key must not see ${forbidden}`);
@@ -295,4 +304,184 @@ Deno.test("the first consent grants no write, which is the point of narrowing it
       );
     }
   }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 5. contact_search under a read:email grant
+//
+// read:email is an ALTERNATIVE scope on contact_search (2026-09-11). It returns
+// only correspondents' names and addresses, which a read:email token already
+// reads off message headers, so it grants no new data. Workspace 5bd59bac, on a
+// `read:email search:email` grant, was refused it 4 times in one minute.
+//
+// These drive the real handleToolsCall, not just the registry, because the gate
+// that refuses a call is an inline check there. The allowed calls send `{}`,
+// which the schema rejects (query is required): validation runs right AFTER the
+// scope gate and before any mailbox I/O, so an invalid-arguments answer is
+// proof the gate let the call through.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const NO_REQUEST_CONTEXT = { ipAddress: null, userAgent: null };
+
+interface CallResponse {
+  error?: { code: number; data?: Record<string, unknown> };
+  result?: { isError?: boolean; content?: Array<{ text?: string }> };
+}
+
+async function callContactSearch(
+  key: Parameters<typeof handleToolsCall>[2],
+  args: Record<string, unknown> = {},
+): Promise<CallResponse> {
+  return await handleToolsCall(
+    {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "tools/call",
+      params: { name: "contact_search", arguments: args },
+    },
+    1,
+    key,
+    NO_REQUEST_CONTEXT,
+  ) as CallResponse;
+}
+
+/** Passed the scope gate: stopped at argument validation, not at -32004. */
+function assertPassedScopeGate(response: CallResponse, label: string) {
+  assert(response.error?.code !== -32004, `${label} was refused by the scope gate`);
+  assert(
+    response.error?.code === -32602 || response.result?.isError === true,
+    `${label} should reach argument validation, got ${JSON.stringify(response)}`,
+  );
+}
+
+Deno.test("a read:email OAuth token can call contact_search", async () => {
+  assertPassedScopeGate(await callContactSearch(oauthToken(["read:email"])), "read:email");
+  // The exact grant 5bd59bac was denied on.
+  assertPassedScopeGate(
+    await callContactSearch(oauthToken(["read:email", "search:email"])),
+    "read:email search:email",
+  );
+});
+
+Deno.test("a read:email dashboard key can call contact_search, and lists it", async () => {
+  const key = dashboardKey(["read:email"]);
+  assertPassedScopeGate(await callContactSearch(key), "read:email dashboard key");
+  assert(names(toolsForListing(key)).includes("contact_search"));
+});
+
+Deno.test("a manage:contacts grant still calls contact_search", async () => {
+  assertPassedScopeGate(await callContactSearch(dashboardKey(["manage:contacts"])), "dashboard");
+  assertPassedScopeGate(await callContactSearch(oauthToken(["manage:contacts"])), "OAuth");
+});
+
+Deno.test("a grant with neither read:email nor manage:contacts is still refused with -32004", async () => {
+  // search:email is in here on purpose: it is an alternative on
+  // email_read{action:"search"} only, and must not unlock contact_search.
+  const held = ["send:email", "search:email", "manage:drafts"];
+  for (const key of [dashboardKey(held), oauthToken(held), oauthToken([])]) {
+    const response = await callContactSearch(key, { query: "priya" });
+    assertEquals(response.error?.code, -32004, `[${key.scopes.join(", ")}] must be refused`);
+    const data = response.error!.data!;
+    // Primary first, alternative after it: the order the step-up relies on.
+    assertEquals(data.required_scopes, ["manage:contacts", "read:email"]);
+    assertEquals(data.required_scope, "manage:contacts");
+  }
+});
+
+Deno.test("the step-up challenge for contact_search still names only manage:contacts", () => {
+  // Adding an alternative must not widen the consent a 403 asks for.
+  assertEquals(
+    buildInsufficientScopeChallenge(
+      ["manage:contacts", "read:email"],
+      ["send:email"],
+      "https://mcpemails.com/.well-known/oauth-protected-resource",
+    ),
+    'Bearer error="insufficient_scope", ' +
+      'error_description="The token does not carry a scope this call requires.", ' +
+      'scope="manage:contacts send:email", ' +
+      'resource_metadata="https://mcpemails.com/.well-known/oauth-protected-resource"',
+  );
+});
+
+Deno.test("no tool other than contact_search changed which scopes authorize it", () => {
+  // [primary, ...alternatives] for every registered tool and every action of a
+  // consolidated tool, stated literally from the registry as it stood before
+  // the contact_search change. Any other re-scoping has to edit this table.
+  const expected: Record<string, string[]> = {
+    "inbox_list": ["read:email"],
+    "email_read:list": ["read:email"],
+    "email_read:read": ["read:email"],
+    "email_read:read_batch": ["read:email"],
+    "email_read:search": ["read:email", "search:email"],
+    "email_read:attachment": ["read:email"],
+    "email_read:extract": ["read:email"],
+    "email_read:original": ["read:email"],
+    "email_organize:move": ["manage:folders"],
+    "email_organize:move_batch": ["manage:folders"],
+    "email_organize:copy": ["manage:folders"],
+    "email_organize:copy_batch": ["manage:folders"],
+    "email_organize:flag": ["manage:folders"],
+    "email_organize:archive": ["manage:folders"],
+    "email_organize:search_and_move": ["manage:folders"],
+    "email_search_and_move": ["manage:folders"],
+    "email_delete:delete": ["delete:email"],
+    "email_delete:delete_batch": ["delete:email"],
+    "email_delete:search_and_delete": ["delete:email"],
+    "email_compose:send": ["send:email"],
+    "email_compose:reply": ["send:email"],
+    "email_compose:forward": ["send:email"],
+    "folder_list": ["read:email"],
+    "folder:list": ["read:email"],
+    "folder:create": ["manage:folders"],
+    "folder:rename": ["manage:folders"],
+    "folder:delete": ["manage:folders"],
+    "draft_list": ["manage:drafts"],
+    "draft:list": ["manage:drafts"],
+    "draft:create": ["manage:drafts"],
+    "draft:reply": ["manage:drafts"],
+    "draft:update": ["manage:drafts"],
+    "draft:send": ["send:email"],
+    "draft:delete": ["manage:drafts"],
+    "schedule_list": ["schedule:email"],
+    "schedule:create": ["schedule:email"],
+    "schedule:list": ["schedule:email"],
+    "schedule:cancel": ["schedule:email"],
+    "signature_get": ["read:email"],
+    "signature_set": ["send:email"],
+    "signature:get": ["read:email"],
+    "signature:set": ["send:email"],
+    "automation_read:list": ["manage:automations"],
+    "automation_read:get": ["manage:automations"],
+    "automation_read:runs": ["manage:automations"],
+    "automation_read:preview": ["manage:automations"],
+    "automation:create": ["manage:automations"],
+    "automation:list": ["manage:automations"],
+    "automation:get": ["manage:automations"],
+    "automation:update": ["manage:automations"],
+    "automation:enable": ["manage:automations"],
+    "automation:disable": ["manage:automations"],
+    "automation:delete": ["manage:automations"],
+    "automation:runs": ["manage:automations"],
+    "automation:preview": ["manage:automations"],
+    "contact_search": ["manage:contacts", "read:email"],
+    "approval_review": ["send:email", "schedule:email"],
+    "approval_decide": ["send:email", "schedule:email"],
+    "approval_update": ["send:email", "schedule:email"],
+    "approval_schedule": ["send:email", "schedule:email"],
+    "bulk_execute": ["delete:email", "manage:folders"],
+    "bulk_cancel": ["delete:email", "manage:folders"],
+  };
+  const actual: Record<string, string[]> = {};
+  for (const tool of TOOL_REGISTRY) {
+    const spec = CONSOLIDATED_SPECS[tool.name];
+    if (spec) {
+      for (const [action, actionSpec] of Object.entries(spec.actions)) {
+        const { scope, altScopes } = actionSpec as { scope: string; altScopes?: string[] };
+        actual[`${tool.name}:${action}`] = [scope, ...(altScopes ?? [])];
+      }
+    } else {
+      actual[tool.name] = [tool.requiredScope, ...(tool.altScopes ?? [])];
+    }
+  }
+  assertEquals(actual, expected);
 });
