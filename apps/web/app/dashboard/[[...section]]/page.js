@@ -717,7 +717,7 @@ export default async function DashboardPage({ params }) {
   // features, `unlimitedInboxes` is the repricing grandfather.
   const rawLimits = resolvePlanLimits(plan, { compedScale, unlimitedInboxes });
   // The window the Usage page, the per-inbox activity counts and the audit log
-  // are all bounded by. Free buys 7 days, Personal 30, Pro 90, Team a year;
+  // are all bounded by. Free and Personal buy 30 days, Pro 90, Team a year;
   // those numbers are published copy, so they are read from the plan rather
   // than hardcoded here. See src/lib/analytics/retention.ts.
   const historyDays = retentionDays(rawLimits);
