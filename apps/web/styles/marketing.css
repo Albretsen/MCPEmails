@@ -1466,3 +1466,25 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
   }
   .cl-entry-meta { flex-direction: row; align-items: center; gap: 10px; }
 }
+
+/* === /best-email-mcp-servers: "The short version" pick list ===
+   A two-column description list: the "Best for X" label beside the pick, so
+   every product name starts on the same vertical rule. The label column is
+   max-content, which is what does the aligning, and is also why it has to
+   collapse on a narrow screen: at 375px a max-content column sized by "Best
+   for multi-tool agents" leaves the sentence beside it a few words wide. */
+.picks-dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 20px; row-gap: 10px;
+  margin: 16px 0 0;
+  font-family: var(--font-sans); font-size: 15px; line-height: 1.6;
+}
+.picks-dl dt { color: var(--fg-3); white-space: nowrap; }
+.picks-dl dd { margin: 0; color: var(--fg-2); }
+.picks-dl dd strong { color: var(--fg-1); }
+@media (max-width: 640px) {
+  .picks-dl { grid-template-columns: 1fr; row-gap: 2px; }
+  .picks-dl dt { font-size: 13px; }
+  .picks-dl dd:not(:last-child) { margin-bottom: 14px; }
+}

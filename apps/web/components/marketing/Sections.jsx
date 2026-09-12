@@ -987,7 +987,7 @@ export function Footer() {
             <Link href="/connect/yandex">{tc('links.connectYandex')}</Link>
             <Link href="/native-connectors-vs-mcp">{tc('links.vsNative')}</Link>
             {isEnglish && (
-              <Link href="/email-mcp-servers-compared">vs other email MCP servers</Link>
+              <Link href="/best-email-mcp-servers">Best email MCP servers</Link>
             )}
           </div>
           <div>

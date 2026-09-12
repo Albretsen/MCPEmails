@@ -126,11 +126,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     })),
     // Dated factual claims about named competitors. Re-verify the sources on
-    // the page before moving this date.
+    // the page before moving this date. The old /email-mcp-servers-compared
+    // slug is deliberately absent: it is a 308 to this one, and a redirect in
+    // a sitemap is an instruction to crawl a URL we have just said is wrong.
     {
-      path: '/email-mcp-servers-compared',
-      lastModified: '2026-09-08',
-      priority: 0.7,
+      path: '/best-email-mcp-servers',
+      lastModified: '2026-09-12',
+      priority: 0.8,
     },
   ].map(({ path, lastModified, priority }) => ({
     url: localePath('en', path),
