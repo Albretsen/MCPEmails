@@ -42,8 +42,12 @@ const MARKETING_PATHS = new Set([
   '/status',
   '/about',
   '/native-connectors-vs-mcp',
-  // Comparison against the other email MCP servers. English only, so it is a
-  // flat entry rather than a prefix; the route itself 404s the other locales.
+  // The ranked field of email MCP servers. English only, so it is a flat entry
+  // rather than a prefix; the route itself 404s the other locales.
+  '/best-email-mcp-servers',
+  // The slug that page used until 12 September 2026. Still listed because the
+  // route is now a 308 stub, and a path missing from this set never reaches its
+  // own route at all: it falls through to the Supabase branch and 404s.
   '/email-mcp-servers-compared',
   '/for/founders',
 ]);

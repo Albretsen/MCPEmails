@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
@@ -60,6 +60,7 @@ function Cell({ value }) {
 
 export default function CompareClient() {
   const t = useTranslations('compare');
+  const isEnglish = useLocale() === 'en';
   const axisKeys = ['coverage', 'actions', 'portable'];
 
   return (
@@ -152,6 +153,48 @@ export default function CompareClient() {
               {t.raw('faq.items').map((item) => (
                 <FaqItem key={item.q} q={item.q} a={item.a} />
               ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/*
+        Cross-link to the other comparison axis: this page answers "built-in
+        connector or MCP", that one answers "which MCP email server". English
+        only, and the string is hardcoded rather than added to the `compare`
+        namespace for two reasons: the target route 404s in every other locale,
+        and this namespace is loaded on more than one page, so a key added here
+        ships in the HTML of all of them.
+      */}
+      {isEnglish && (
+        <section className="section" style={{ paddingTop: 0 }}>
+          <div className="container">
+            <div className="connect-callout">
+              <MIcon name="server" size={20} color="var(--cobalt-600)" />
+              <div>
+                <h2 style={{ margin: '0 0 6px', fontSize: 16 }}>
+                  Decided you want an MCP server?
+                </h2>
+                <p style={{ margin: '0 0 10px', color: 'var(--fg-2)', fontSize: 14, lineHeight: 1.6 }}>
+                  There are several, and they differ on price, mailbox coverage and what
+                  they do with your credentials. We ranked them, listed what each one is
+                  bad at, and dated every figure.
+                </p>
+                <Link
+                  href="/best-email-mcp-servers"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    color: 'var(--cobalt-600)',
+                  }}
+                >
+                  Read: the best email MCP servers in 2026
+                  <MIcon name="arrow" size={13} color="var(--cobalt-600)" />
+                </Link>
+              </div>
             </div>
           </div>
         </section>
