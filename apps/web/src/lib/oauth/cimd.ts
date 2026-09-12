@@ -330,9 +330,24 @@ export function validateCimdDocument(raw: unknown, normalizedClientId: string): 
   if (!declared.ok || declared.value.normalized !== normalizedClientId) return fail('not_self_referential');
 
   // We have no client secret and never will, so a document announcing that it
-  // authenticates with one is refused rather than silently downgraded.
-  const authMethod = doc['token_endpoint_auth_method'];
-  if (authMethod !== undefined && authMethod !== 'none') return fail('unsupported_auth_method');
+  // can ONLY authenticate with one is refused rather than silently downgraded.
+  //
+  // Two fields can carry the answer and the plural one decides.
+  // `token_endpoint_auth_methods_supported` lists everything the client is able
+  // to do; the client then picks from the intersection with what this server
+  // advertises, and this server advertises "none" alone. ChatGPT publishes
+  // ["none", "private_key_jwt"] there while still carrying the legacy singular
+  // `token_endpoint_auth_method: "private_key_jwt"` for servers that treat the
+  // singular field as binding, so reading the singular field alone turned away
+  // a client that would have connected as a public client. The singular field
+  // is consulted only when the list is absent.
+  const authMethods = doc['token_endpoint_auth_methods_supported'];
+  if (Array.isArray(authMethods)) {
+    if (!authMethods.includes('none')) return fail('unsupported_auth_method');
+  } else {
+    const authMethod = doc['token_endpoint_auth_method'];
+    if (authMethod !== undefined && authMethod !== 'none') return fail('unsupported_auth_method');
+  }
 
   // Only checked when declared. The fields are optional in the draft, and a
   // document that omits them is not claiming anything we disagree with.

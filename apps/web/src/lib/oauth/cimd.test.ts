@@ -163,6 +163,29 @@ test('a confidential client is refused: we have no secret to verify', () => {
   assert.equal(result.ok === false && result.code, 'unsupported_auth_method');
 });
 
+test('the plural list decides: ChatGPT offers none alongside private_key_jwt', () => {
+  // ChatGPT's client.json carries the legacy singular field set to
+  // private_key_jwt while listing both methods in the plural one. It picks from
+  // the intersection with what we advertise, and we advertise "none" alone.
+  const chatgpt = doc({
+    token_endpoint_auth_method: 'private_key_jwt',
+    token_endpoint_auth_methods_supported: ['none', 'private_key_jwt'],
+  });
+  assert.equal(validateCimdDocument(chatgpt, CLIENT_ID).ok, true);
+});
+
+test('a plural list without none is refused, whatever the singular field says', () => {
+  const result = validateCimdDocument(
+    doc({
+      token_endpoint_auth_method: 'none',
+      token_endpoint_auth_methods_supported: ['private_key_jwt', 'client_secret_basic'],
+    }),
+    CLIENT_ID
+  );
+  assert.equal(result.ok, false);
+  assert.equal(result.ok === false && result.code, 'unsupported_auth_method');
+});
+
 test('omitting the optional declarations is fine', () => {
   const bare = { client_id: CLIENT_ID, redirect_uris: ['https://claude.ai/cb'] };
   assert.equal(validateCimdDocument(bare, CLIENT_ID).ok, true);
