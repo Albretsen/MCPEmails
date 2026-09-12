@@ -133,10 +133,11 @@
         "desc": "Conecta una bandeja y dale a tu agente un buzón de verdad.",
         "features": [
           "1 bandeja conectada",
-          "Leer, buscar, organizar, redactar y enviar",
+          "Leer, buscar, organizar, redactar, programar y enviar",
+          "Aprobación antes de enviar",
+          "Analíticas de uso",
           "Gmail, iCloud, Fastmail y cualquier IMAP",
           "Claves de API ilimitadas",
-          "Un solo usuario",
           "Soporte de la comunidad"
         ],
         "cta": "Empieza gratis"
@@ -145,10 +146,9 @@
         "name": "Personal",
         "desc": "Tres buzones para una sola persona: el del trabajo, el personal y uno más.",
         "features": [
+          "Todo lo de Free",
           "3 bandejas conectadas",
-          "Envíos programados y aprobaciones",
           "Límite de ráfaga 2x más alto",
-          "Analíticas de uso",
           "Soporte por correo"
         ],
         "cta": "Obtener Personal",
@@ -158,11 +158,10 @@
         "name": "Pro",
         "desc": "Todos los buzones que tengas, en un solo agente. Trabajo, personal y cada proyecto paralelo.",
         "features": [
+          "Todo lo de Personal",
           "Bandejas conectadas ilimitadas",
-          "Envíos programados y aprobaciones",
           "Límite de ráfaga 5x más alto",
-          "Analíticas de uso completas",
-          "Soporte por correo"
+          "Más historial de analíticas"
         ],
         "cta": "Obtener Pro"
       },
@@ -174,7 +173,7 @@
           "Miembros ilimitados con roles",
           "Un espacio de trabajo separado por cliente o negocio",
           "SSO (SAML / OIDC) y registro de auditoría",
-          "Analíticas de uso completas",
+          "El mayor historial de analíticas",
           "Soporte prioritario"
         ],
         "cta": "Obtener Team"

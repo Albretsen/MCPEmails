@@ -27,10 +27,11 @@
       "cta": "Start gratis",
       "features": [
         "1 tilkoblet innboks",
-        "Les, søk, organiser, skriv og send",
+        "Les, søk, organiser, skriv, planlegg og send",
+        "Godkjenning før sending",
+        "Bruksanalyse",
         "Gmail, iCloud, Fastmail og enhver IMAP",
         "Ubegrenset antall API-nøkler",
-        "Én bruker",
         "Fellesskapsstøtte"
       ]
     },
@@ -40,10 +41,9 @@
       "cta": "Få Personal",
       "ctaGrandfathered": "Du har allerede ubegrenset antall innbokser",
       "features": [
+        "Alt i Free",
         "3 tilkoblede innbokser",
-        "Planlagte sendinger og godkjenninger",
         "2x høyere burst-grense",
-        "Bruksanalyse",
         "E-poststøtte"
       ]
     },
@@ -52,11 +52,10 @@
       "desc": "Alle postkassene du eier, i én agent. Jobb, privat og hvert sideprosjekt.",
       "cta": "Få Pro",
       "features": [
+        "Alt i Personal",
         "Ubegrenset antall tilkoblede innbokser",
-        "Planlagte sendinger og godkjenninger",
         "5x høyere burst-grense",
-        "Full bruksanalyse",
-        "E-poststøtte"
+        "Lengre analysehistorikk"
       ]
     },
     "pro": {
@@ -68,7 +67,7 @@
         "Ubegrenset antall medlemmer med roller",
         "Et eget arbeidsområde per kunde eller virksomhet",
         "SSO (SAML / OIDC) og revisjonslogg",
-        "Full bruksanalyse",
+        "Lengst analysehistorikk",
         "Prioritert støtte"
       ]
     }
@@ -92,7 +91,8 @@
           "inboxes": "Tilkoblede innbokser",
           "keys": "API-nøkler",
           "members": "Teammedlemmer",
-          "burst": "Burst-grense"
+          "burst": "Burst-grense",
+          "approvals": "Godkjenning før sending"
         }
       },
       "providers": {
@@ -113,7 +113,8 @@
           "dashboard": "Dashbord for bruksanalyse",
           "roles": "Teamroller og arbeidsområder",
           "sso": "SSO (SAML / OIDC)",
-          "audit": "Revisjonslogg"
+          "audit": "Revisjonslogg",
+          "history": "Analysehistorikk"
         }
       },
       "privacy": {
@@ -141,7 +142,10 @@
       "burstFree": "60 / min",
       "burstPersonal": "120 / min",
       "burstSolo": "300 / min",
-      "burstPro": "1 000 / min"
+      "burstPro": "1 000 / min",
+      "history30": "30 dager",
+      "history90": "90 dager",
+      "history365": "1 år"
     }
   },
   "faq": {
@@ -150,7 +154,11 @@
     "items": [
       {
         "q": "Hva får jeg på gratisplanen?",
-        "a": "Én tilkoblet innboks, for alltid, uten kort. Agenten din får alle MCP-verktøyene vi leverer mot den postkassen: lese, søke, organisere, merke, skrive, planlegge og sende. Når du vil ha postkasse nummer to eller tre på samme agent, er det Personal, til $5 i måneden."
+        "a": "Én tilkoblet innboks, for alltid, uten kort. Agenten din får alle MCP-verktøyene vi leverer mot den postkassen: lese, søke, organisere, merke, skrive, planlegge og sende, i tillegg til godkjenning før sending per innboks. Når du vil ha postkasse nummer to eller tre på samme agent, er det Personal, til $5 i måneden."
+      },
+      {
+        "q": "Hva gir Personal utover Free?",
+        "a": "To innbokser til, dobbelt så høyt burst-tak (120 forespørsler per minutt i stedet for 60), og e-poststøtte i stedet for fellesskapsforumet. Det er hele listen. Alt annet ligger allerede i Free: alle MCP-verktøyene, inkludert planlagte sendinger, godkjenning før sending per innboks, og dashbordet for bruksanalyse. Vi priser etter hvor mange postkasser du kobler til, og vi holder ikke funksjoner tilbake fra Free for å få de betalte planene til å se større ut."
       },
       {
         "q": "Hva regnes som et MCP-kall?",
@@ -162,7 +170,7 @@
       },
       {
         "q": "Hva er forskjellen mellom Personal, Pro og Team?",
-        "a": "Personal er for én person med tre tilkoblede innbokser, et tak på 120 forespørsler per minutt, bruksanalyse og e-poststøtte. Pro er den samme ene personen helt uten innboksgrense, et tak på 300 forespørsler per minutt, full bruksanalyse og e-poststøtte. Team er for flere enn én person: ubegrenset antall medlemmer med roller, et eget arbeidsområde per kunde eller virksomhet, SSO (SAML / OIDC), revisjonslogg og prioritert støtte."
+        "a": "Personal er for én person med tre tilkoblede innbokser, et tak på 120 forespørsler per minutt og e-poststøtte. Pro er den samme ene personen helt uten innboksgrense, et tak på 300 forespørsler per minutt, 90 dager analysehistorikk i stedet for 30, og e-poststøtte. Team er for flere enn én person: ubegrenset antall medlemmer med roller, et eget arbeidsområde per kunde eller virksomhet, SSO (SAML / OIDC), revisjonslogg, ett år med analysehistorikk og prioritert støtte."
       },
       {
         "q": "Hva om jeg trenger en fjerde innboks?",

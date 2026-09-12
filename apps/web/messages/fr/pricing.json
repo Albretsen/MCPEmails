@@ -27,10 +27,11 @@
       "cta": "Commencer gratuitement",
       "features": [
         "1 boîte connectée",
-        "Lire, chercher, organiser, rédiger et envoyer",
+        "Lire, chercher, organiser, rédiger, programmer et envoyer",
+        "Validation avant envoi",
+        "Analytique d'usage",
         "Gmail, iCloud, Fastmail et toute boîte IMAP",
         "Clés API illimitées",
-        "Un seul utilisateur",
         "Support communautaire"
       ]
     },
@@ -40,10 +41,9 @@
       "cta": "Choisir Personal",
       "ctaGrandfathered": "Vous avez déjà des boîtes illimitées",
       "features": [
+        "Tout ce que contient Free",
         "3 boîtes connectées",
-        "Envois programmés et validations",
         "Limite de pointe 2x plus élevée",
-        "Analytique d'usage",
         "Support par e-mail"
       ]
     },
@@ -52,11 +52,10 @@
       "desc": "Toutes vos boîtes, dans un seul agent. Le travail, le personnel et chaque activité annexe.",
       "cta": "Choisir Pro",
       "features": [
+        "Tout ce que contient Personal",
         "Boîtes connectées illimitées",
-        "Envois programmés et validations",
         "Limite de pointe 5x plus élevée",
-        "Analytique d'usage complète",
-        "Support par e-mail"
+        "Historique d'analytique plus long"
       ]
     },
     "pro": {
@@ -68,7 +67,7 @@
         "Membres illimités avec rôles",
         "Un espace de travail distinct par client ou activité",
         "SSO (SAML / OIDC) et journal d'audit",
-        "Analytique d'usage complète",
+        "Historique d'analytique le plus long",
         "Support prioritaire"
       ]
     }
@@ -92,7 +91,8 @@
           "inboxes": "Boîtes connectées",
           "keys": "Clés API",
           "members": "Membres d'équipe",
-          "burst": "Limite de débit en pointe"
+          "burst": "Limite de débit en pointe",
+          "approvals": "Validation avant envoi"
         }
       },
       "providers": {
@@ -113,7 +113,8 @@
           "dashboard": "Tableau de bord d'analytique d'usage",
           "roles": "Rôles d'équipe et espaces de travail",
           "sso": "SSO (SAML / OIDC)",
-          "audit": "Journal d'audit"
+          "audit": "Journal d'audit",
+          "history": "Historique d'analytique"
         }
       },
       "privacy": {
@@ -141,7 +142,10 @@
       "burstFree": "60 / min",
       "burstPersonal": "120 / min",
       "burstSolo": "300 / min",
-      "burstPro": "1 000 / min"
+      "burstPro": "1 000 / min",
+      "history30": "30 jours",
+      "history90": "90 jours",
+      "history365": "1 an"
     }
   },
   "faq": {
@@ -150,7 +154,11 @@
     "items": [
       {
         "q": "Que comprend la formule gratuite ?",
-        "a": "Une boîte connectée, pour toujours, sans carte bancaire. Votre agent dispose de tous les outils MCP que nous publions sur cette boîte : lire, chercher, organiser, étiqueter, rédiger, programmer et envoyer. Dès que vous voulez une deuxième ou une troisième boîte sur le même agent, c'est Personal, à 5 $ par mois."
+        "a": "Une boîte connectée, pour toujours, sans carte bancaire. Votre agent dispose de tous les outils MCP que nous publions sur cette boîte : lire, chercher, organiser, étiqueter, rédiger, programmer et envoyer, ainsi que la validation avant envoi, réglable par boîte. Dès que vous voulez une deuxième ou une troisième boîte sur le même agent, c'est Personal, à 5 $ par mois."
+      },
+      {
+        "q": "Qu'apporte Personal par rapport à Free ?",
+        "a": "Deux boîtes connectées de plus, un plafond de pointe doublé (120 requêtes par minute au lieu de 60) et le support par e-mail à la place du forum communautaire. C'est toute la liste. Le reste est déjà inclus dans Free : tous les outils MCP, y compris les envois programmés, la validation avant envoi réglable par boîte, et le tableau de bord d'analytique d'usage. Nous facturons le nombre de boîtes connectées, et nous ne retenons pas de fonctionnalités sur Free pour faire paraître les formules payantes plus riches."
       },
       {
         "q": "Qu'est-ce qui compte comme un appel MCP ?",
@@ -162,7 +170,7 @@
       },
       {
         "q": "Quelle est la différence entre Personal, Pro et Team ?",
-        "a": "Personal s'adresse à une personne avec trois boîtes connectées : un plafond de 120 requêtes par minute, l'analytique d'usage et le support par e-mail. Pro, c'est la même personne seule, mais sans aucune limite de boîtes : un plafond de 300 requêtes par minute, l'analytique d'usage complète et le support par e-mail. Team s'adresse à plusieurs personnes : membres illimités avec rôles, un espace de travail distinct par client ou activité, SSO (SAML / OIDC), journal d'audit et support prioritaire."
+        "a": "Personal s'adresse à une personne avec trois boîtes connectées : un plafond de 120 requêtes par minute et le support par e-mail. Pro, c'est la même personne seule, mais sans aucune limite de boîtes : un plafond de 300 requêtes par minute, 90 jours d'historique d'analytique au lieu de 30, et le support par e-mail. Team s'adresse à plusieurs personnes : membres illimités avec rôles, un espace de travail distinct par client ou activité, SSO (SAML / OIDC), journal d'audit, un an d'historique d'analytique et support prioritaire."
       },
       {
         "q": "Et s'il me faut une quatrième boîte ?",
