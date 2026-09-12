@@ -181,10 +181,16 @@ export const PLANS: Record<PlanId, Plan> = {
     legacyStripePriceIds: [],
     features: [
       '1 connected inbox',
-      'Read, search, organise, draft and send',
+      'Read, search, organise, draft, schedule and send',
+      // Named here, not on Personal. Scheduled sends and the per-inbox send
+      // review / approval hold have never had a plan gate, and the usage
+      // analytics dashboard is on every tier. They were listed as Personal
+      // features until 2026-09-12, which made the card contradict the
+      // comparison table on the same page. Keep them on Free.
+      'Send review and approval hold',
+      'Usage analytics',
       'Gmail, iCloud, Fastmail and any IMAP',
       'Unlimited API keys',
-      'Single user',
       'Community support',
     ],
     highlighted: false,
@@ -215,11 +221,15 @@ export const PLANS: Record<PlanId, Plan> = {
     stripePriceIdMonthly: process.env.STRIPE_PRICE_PERSONAL_MONTHLY ?? null,
     stripePriceIdYearly: process.env.STRIPE_PRICE_PERSONAL_YEARLY ?? null,
     legacyStripePriceIds: [],
+    // ONLY real deltas over Free belong here. The enforced ones are: maxInboxes
+    // 1 -> 3, maxRequestsPerMinute 60 -> 120, supportTier community -> email,
+    // and billingPortalEnabled. maxMonthlyToolCalls also rises, and stays
+    // unsold per the note on that field. Nothing else differs, so nothing else
+    // may be listed.
     features: [
+      'Everything in Free',
       '3 connected inboxes',
-      'Scheduled sends and approvals',
       '2x higher burst rate limit',
-      'Usage analytics',
       'Email support',
     ],
     highlighted: false,
@@ -256,11 +266,14 @@ export const PLANS: Record<PlanId, Plan> = {
       'price_1U69J5ARrgumc6cqmIIP8DAw', // Pro yearly, $276 (retired 2026-09-01)
     ],
     features: [
+      'Everything in Personal',
       'Unlimited connected inboxes',
-      'Scheduled sends and approvals',
       '5x higher burst rate limit',
-      'Full usage analytics',
-      'Email support',
+      // analyticsRetentionDays 30 -> 90. Deliberately unnumbered: a window
+      // quoted in a feature list is quoted in the purchase confirmation email,
+      // which nothing re-checks when the window moves. The pricing page's
+      // comparison table carries the exact days.
+      'Longer analytics history',
     ],
     highlighted: true,
   },
@@ -300,7 +313,7 @@ export const PLANS: Record<PlanId, Plan> = {
       'Unlimited members with roles',
       'A separate workspace per client or business',
       'SSO (SAML / OIDC) and audit log',
-      'Full usage analytics',
+      'Longest analytics history',
       'Priority support',
     ],
     highlighted: false,

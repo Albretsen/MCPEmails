@@ -133,10 +133,11 @@
         "desc": "Connectez une boîte et donnez à votre agent une vraie messagerie.",
         "features": [
           "1 boîte connectée",
-          "Lire, chercher, organiser, rédiger et envoyer",
+          "Lire, chercher, organiser, rédiger, programmer et envoyer",
+          "Validation avant envoi",
+          "Analytique d'usage",
           "Gmail, iCloud, Fastmail et toute boîte IMAP",
           "Clés API illimitées",
-          "Un seul utilisateur",
           "Support communautaire"
         ],
         "cta": "Commencer gratuitement"
@@ -145,10 +146,9 @@
         "name": "Personal",
         "desc": "Trois boîtes pour une seule personne : le travail, le personnel et une de plus.",
         "features": [
+          "Tout ce que contient Free",
           "3 boîtes connectées",
-          "Envois programmés et validations",
           "Limite de pointe 2x plus élevée",
-          "Analytique d'usage",
           "Support par e-mail"
         ],
         "cta": "Choisir Personal",
@@ -158,11 +158,10 @@
         "name": "Pro",
         "desc": "Toutes vos boîtes, dans un seul agent. Le travail, le personnel et chaque activité annexe.",
         "features": [
+          "Tout ce que contient Personal",
           "Boîtes connectées illimitées",
-          "Envois programmés et validations",
           "Limite de pointe 5x plus élevée",
-          "Analytique d'usage complète",
-          "Support par e-mail"
+          "Historique d'analytique plus long"
         ],
         "cta": "Choisir Pro"
       },
@@ -174,7 +173,7 @@
           "Membres illimités avec rôles",
           "Un espace de travail distinct par client ou activité",
           "SSO (SAML / OIDC) et journal d'audit",
-          "Analytique d'usage complète",
+          "Historique d'analytique le plus long",
           "Support prioritaire"
         ],
         "cta": "Choisir Team"

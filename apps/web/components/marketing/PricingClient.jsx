@@ -79,6 +79,11 @@ const TABLE_SECTIONS = [
       // other people is what Team is for.
       { key: 'members',  free: 'values.ownerOnly', personal: 'values.ownerOnly',     solo: 'values.ownerOnly', pro: 'values.unlimited' },
       { key: 'burst',    free: 'values.burstFree', personal: 'values.burstPersonal', solo: 'values.burstSolo', pro: 'values.burstPro' },
+      // On every tier, and broken out as its own row on purpose. It is an
+      // inbox setting (`inboxes.send_review_mode`) with no plan gate anywhere,
+      // and a customer asked in 2026-09 whether it was a paid feature because
+      // the Personal card used to list it as one.
+      { key: 'approvals', free: true, personal: true, solo: true, pro: true },
     ],
   },
   {
@@ -111,6 +116,11 @@ const TABLE_SECTIONS = [
       { key: 'roles',     free: false,             personal: false,                solo: false,              pro: true },
       { key: 'sso',       free: false,             personal: false,                solo: false,              pro: true },
       { key: 'audit',     free: false,             personal: false,                solo: false,              pro: true },
+      // The ONLY analytics difference between the tiers. The dashboard itself
+      // is on every plan, so listing "usage analytics" as a paid feature was
+      // the claim this row replaces. Values mirror `analyticsRetentionDays` in
+      // src/lib/stripe/plans.ts, enforced via src/lib/analytics/retention.ts.
+      { key: 'history',   free: 'values.history30', personal: 'values.history30',   solo: 'values.history90', pro: 'values.history365' },
     ],
   },
   {

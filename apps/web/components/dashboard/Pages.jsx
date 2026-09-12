@@ -4389,7 +4389,10 @@ const BILLING_PLANS = [
     monthlyPrice: 5,
     yearlyMonthlyPrice: 4,      // effective monthly cost when billed yearly ($48/yr)
     yearlyAnnualTotal: 48,
-    featureKeys: ['billing.plans.personalFeature1', 'billing.plans.personalFeature2', 'billing.plans.personalFeature3', 'billing.plans.personalFeature4'],
+    // personalFeature3 was "Analytics" and is gone: the usage analytics
+    // dashboard is on Free too, with the same 30-day window, so it was never
+    // something Personal bought. What is left is what the code enforces.
+    featureKeys: ['billing.plans.personalFeature1', 'billing.plans.personalFeature2', 'billing.plans.personalFeature4'],
     highlighted: false,
   },
   {

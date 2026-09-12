@@ -133,10 +133,11 @@
         "desc": "Connect one inbox and give your agent a real mailbox.",
         "features": [
           "1 connected inbox",
-          "Read, search, organise, draft and send",
+          "Read, search, organise, draft, schedule and send",
+          "Send review and approval hold",
+          "Usage analytics",
           "Gmail, iCloud, Fastmail & any IMAP",
           "Unlimited API keys",
-          "Single user",
           "Community support"
         ],
         "cta": "Start free"
@@ -145,10 +146,9 @@
         "name": "Personal",
         "desc": "Three mailboxes for one person: work, personal, and one more.",
         "features": [
+          "Everything in Free",
           "3 connected inboxes",
-          "Scheduled sends and approvals",
           "2x higher burst rate limit",
-          "Usage analytics",
           "Email support"
         ],
         "cta": "Get Personal",
@@ -158,11 +158,10 @@
         "name": "Pro",
         "desc": "Every mailbox you own, in one agent. Work, personal, and each side business.",
         "features": [
+          "Everything in Personal",
           "Unlimited connected inboxes",
-          "Scheduled sends and approvals",
           "5x higher burst rate limit",
-          "Full usage analytics",
-          "Email support"
+          "Longer analytics history"
         ],
         "cta": "Get Pro"
       },
@@ -174,7 +173,7 @@
           "Unlimited members with roles",
           "A separate workspace per client or business",
           "SSO (SAML / OIDC) and audit log",
-          "Full usage analytics",
+          "Longest analytics history",
           "Priority support"
         ],
         "cta": "Get Team"

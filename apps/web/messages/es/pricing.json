@@ -27,10 +27,11 @@
       "cta": "Empieza gratis",
       "features": [
         "1 bandeja conectada",
-        "Leer, buscar, organizar, redactar y enviar",
+        "Leer, buscar, organizar, redactar, programar y enviar",
+        "Aprobación antes de enviar",
+        "Analíticas de uso",
         "Gmail, iCloud, Fastmail y cualquier IMAP",
         "Claves de API ilimitadas",
-        "Un solo usuario",
         "Soporte de la comunidad"
       ]
     },
@@ -40,10 +41,9 @@
       "cta": "Obtener Personal",
       "ctaGrandfathered": "Ya tienes bandejas ilimitadas",
       "features": [
+        "Todo lo de Free",
         "3 bandejas conectadas",
-        "Envíos programados y aprobaciones",
         "Límite de ráfaga 2x más alto",
-        "Analíticas de uso",
         "Soporte por correo"
       ]
     },
@@ -52,11 +52,10 @@
       "desc": "Todos los buzones que tengas, en un solo agente. Trabajo, personal y cada proyecto paralelo.",
       "cta": "Obtener Pro",
       "features": [
+        "Todo lo de Personal",
         "Bandejas conectadas ilimitadas",
-        "Envíos programados y aprobaciones",
         "Límite de ráfaga 5x más alto",
-        "Analíticas de uso completas",
-        "Soporte por correo"
+        "Más historial de analíticas"
       ]
     },
     "pro": {
@@ -68,7 +67,7 @@
         "Miembros ilimitados con roles",
         "Un espacio de trabajo separado por cliente o negocio",
         "SSO (SAML / OIDC) y registro de auditoría",
-        "Analíticas de uso completas",
+        "El mayor historial de analíticas",
         "Soporte prioritario"
       ]
     }
@@ -92,7 +91,8 @@
           "inboxes": "Bandejas conectadas",
           "keys": "Claves de API",
           "members": "Miembros de equipo",
-          "burst": "Límite de ráfaga"
+          "burst": "Límite de ráfaga",
+          "approvals": "Aprobación antes de enviar"
         }
       },
       "providers": {
@@ -113,7 +113,8 @@
           "dashboard": "Panel de analíticas de uso",
           "roles": "Roles de equipo y espacios de trabajo",
           "sso": "SSO (SAML / OIDC)",
-          "audit": "Registro de auditoría"
+          "audit": "Registro de auditoría",
+          "history": "Historial de analíticas"
         }
       },
       "privacy": {
@@ -141,7 +142,10 @@
       "burstFree": "60 / min",
       "burstPersonal": "120 / min",
       "burstSolo": "300 / min",
-      "burstPro": "1.000 / min"
+      "burstPro": "1.000 / min",
+      "history30": "30 días",
+      "history90": "90 días",
+      "history365": "1 año"
     }
   },
   "faq": {
@@ -150,7 +154,11 @@
     "items": [
       {
         "q": "¿Qué incluye el plan gratuito?",
-        "a": "Una bandeja conectada, para siempre y sin tarjeta. Tu agente dispone de todas las herramientas MCP que publicamos sobre ese buzón: leer, buscar, organizar, etiquetar, redactar, programar y enviar. Cuando quieras un segundo o un tercer buzón en el mismo agente, eso es Personal, por $5 al mes."
+        "a": "Una bandeja conectada, para siempre y sin tarjeta. Tu agente dispone de todas las herramientas MCP que publicamos sobre ese buzón: leer, buscar, organizar, etiquetar, redactar, programar y enviar, además de la aprobación antes de enviar, configurable por bandeja. Cuando quieras un segundo o un tercer buzón en el mismo agente, eso es Personal, por $5 al mes."
+      },
+      {
+        "q": "¿Qué añade Personal sobre Free?",
+        "a": "Dos bandejas conectadas más, el doble de techo de ráfaga (120 peticiones por minuto en lugar de 60) y soporte por correo en lugar del foro de la comunidad. Esa es toda la lista. Todo lo demás ya está en Free: todas las herramientas MCP, incluidos los envíos programados, la aprobación antes de enviar configurable por bandeja y el panel de analíticas de uso. Cobramos por cuántos buzones conectas, y no retenemos funciones en Free para que los planes de pago parezcan más grandes."
       },
       {
         "q": "¿Qué cuenta como una llamada MCP?",
@@ -162,7 +170,7 @@
       },
       {
         "q": "¿Cuál es la diferencia entre Personal, Pro y Team?",
-        "a": "Personal es para una sola persona con tres bandejas conectadas, un techo de 120 peticiones por minuto, analíticas de uso y soporte por correo. Pro es esa misma persona sin ningún límite de bandejas, con un techo de 300 peticiones por minuto, analíticas de uso completas y soporte por correo. Team es para más de una persona: miembros ilimitados con roles, un espacio de trabajo separado por cliente o negocio, SSO (SAML / OIDC), registro de auditoría y soporte prioritario."
+        "a": "Personal es para una sola persona con tres bandejas conectadas, un techo de 120 peticiones por minuto y soporte por correo. Pro es esa misma persona sin ningún límite de bandejas, con un techo de 300 peticiones por minuto, 90 días de historial de analíticas en lugar de 30 y soporte por correo. Team es para más de una persona: miembros ilimitados con roles, un espacio de trabajo separado por cliente o negocio, SSO (SAML / OIDC), registro de auditoría, un año de historial de analíticas y soporte prioritario."
       },
       {
         "q": "¿Y si necesito una cuarta bandeja?",
