@@ -17,7 +17,7 @@ import '../../../styles/theme.css';
 /**
  * Fallback activity window, in UTC days, for a caller that passes none.
  *
- * The real window is the workspace's `analyticsRetentionDays` (Free 7,
+ * The real window is the workspace's `analyticsRetentionDays` (Free 30,
  * Personal 30, Pro 90, Team 365), resolved once in the page component and
  * threaded into every history fetcher below. This constant only keeps those
  * fetchers callable on their own; it is not the product's answer to "how much

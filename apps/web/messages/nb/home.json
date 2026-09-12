@@ -133,10 +133,11 @@
         "desc": "Koble til én innboks og gi agenten din en ekte postkasse.",
         "features": [
           "1 tilkoblet innboks",
-          "Les, søk, organiser, skriv og send",
+          "Les, søk, organiser, skriv, planlegg og send",
+          "Godkjenning før sending",
+          "Bruksanalyse",
           "Gmail, iCloud, Fastmail og alle IMAP",
           "Ubegrenset antall API-nøkler",
-          "Én bruker",
           "Fellesskapsstøtte"
         ],
         "cta": "Start gratis"
@@ -145,10 +146,9 @@
         "name": "Personal",
         "desc": "Tre postkasser for én person: jobb, privat og én til.",
         "features": [
+          "Alt i Free",
           "3 tilkoblede innbokser",
-          "Planlagte sendinger og godkjenninger",
           "2x høyere burst-grense",
-          "Bruksanalyse",
           "E-poststøtte"
         ],
         "cta": "Velg Personal",
@@ -158,11 +158,10 @@
         "name": "Pro",
         "desc": "Alle postkassene du eier, i én agent. Jobb, privat og hvert sideprosjekt.",
         "features": [
+          "Alt i Personal",
           "Ubegrenset antall tilkoblede innbokser",
-          "Planlagte sendinger og godkjenninger",
           "5x høyere burst-grense",
-          "Full bruksanalyse",
-          "E-poststøtte"
+          "Lengre analysehistorikk"
         ],
         "cta": "Velg Pro"
       },
@@ -174,7 +173,7 @@
           "Ubegrenset antall medlemmer med roller",
           "Et eget arbeidsområde per kunde eller virksomhet",
           "SSO (SAML / OIDC) og revisjonslogg",
-          "Full bruksanalyse",
+          "Lengst analysehistorikk",
           "Prioritert støtte"
         ],
         "cta": "Velg Team"

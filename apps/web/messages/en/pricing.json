@@ -27,10 +27,11 @@
       "cta": "Start free",
       "features": [
         "1 connected inbox",
-        "Read, search, organise, draft and send",
+        "Read, search, organise, draft, schedule and send",
+        "Send review and approval hold",
+        "Usage analytics",
         "Gmail, iCloud, Fastmail and any IMAP",
         "Unlimited API keys",
-        "Single user",
         "Community support"
       ]
     },
@@ -40,10 +41,9 @@
       "cta": "Get Personal",
       "ctaGrandfathered": "You already have unlimited inboxes",
       "features": [
+        "Everything in Free",
         "3 connected inboxes",
-        "Scheduled sends and approvals",
         "2x higher burst rate limit",
-        "Usage analytics",
         "Email support"
       ]
     },
@@ -52,11 +52,10 @@
       "desc": "Every mailbox you own, in one agent. Work, personal, and each side business.",
       "cta": "Get Pro",
       "features": [
+        "Everything in Personal",
         "Unlimited connected inboxes",
-        "Scheduled sends and approvals",
         "5x higher burst rate limit",
-        "Full usage analytics",
-        "Email support"
+        "Longer analytics history"
       ]
     },
     "pro": {
@@ -68,7 +67,7 @@
         "Unlimited members with roles",
         "A separate workspace per client or business",
         "SSO (SAML / OIDC) and audit log",
-        "Full usage analytics",
+        "Longest analytics history",
         "Priority support"
       ]
     }
@@ -92,7 +91,8 @@
           "inboxes": "Connected inboxes",
           "keys": "API keys",
           "members": "Team members",
-          "burst": "Burst rate limit"
+          "burst": "Burst rate limit",
+          "approvals": "Send review and approval hold"
         }
       },
       "providers": {
@@ -113,7 +113,8 @@
           "dashboard": "Usage analytics dashboard",
           "roles": "Team roles & workspaces",
           "sso": "SSO (SAML / OIDC)",
-          "audit": "Audit log"
+          "audit": "Audit log",
+          "history": "Analytics history"
         }
       },
       "privacy": {
@@ -141,7 +142,10 @@
       "burstFree": "60 / min",
       "burstPersonal": "120 / min",
       "burstSolo": "300 / min",
-      "burstPro": "1,000 / min"
+      "burstPro": "1,000 / min",
+      "history30": "30 days",
+      "history90": "90 days",
+      "history365": "1 year"
     }
   },
   "faq": {
@@ -150,7 +154,11 @@
     "items": [
       {
         "q": "What do I get on the free plan?",
-        "a": "One connected inbox, forever, with no card. Your agent gets every MCP tool we ship against that mailbox: read, search, organise, label, draft, schedule and send. When you want a second or third mailbox on the same agent, that is Personal, at $5 a month."
+        "a": "One connected inbox, forever, with no card. Your agent gets every MCP tool we ship against that mailbox: read, search, organise, label, draft, schedule and send, plus the per-inbox send review and approval hold. When you want a second or third mailbox on the same agent, that is Personal, at $5 a month."
+      },
+      {
+        "q": "What does Personal add over Free?",
+        "a": "Two more connected inboxes, double the burst ceiling (120 requests a minute instead of 60), and email support instead of the community forum. That is the whole list. Everything else is already on Free: every MCP tool including scheduled sends, the per-inbox send review and approval hold, and the usage analytics dashboard. We price by how many mailboxes you connect, and we do not hold features back from Free to make the paid tiers look bigger."
       },
       {
         "q": "What counts as an MCP call?",
@@ -162,7 +170,7 @@
       },
       {
         "q": "What's the difference between Personal, Pro and Team?",
-        "a": "Personal is one person with three connected inboxes, a 120 requests/minute ceiling, usage analytics, and email support. Pro is still one person, with no inbox limit at all, a 300 requests/minute ceiling, full usage analytics, and email support. Team is for more than one person: unlimited members with roles, a separate workspace per client or business, SSO (SAML / OIDC), an audit log, and priority support."
+        "a": "Personal is one person with three connected inboxes, a 120 requests/minute ceiling, and email support. Pro is still one person, with no inbox limit at all, a 300 requests/minute ceiling, 90 days of analytics history instead of 30, and email support. Team is for more than one person: unlimited members with roles, a separate workspace per client or business, SSO (SAML / OIDC), an audit log, a year of analytics history, and priority support."
       },
       {
         "q": "What if I need a fourth inbox?",
