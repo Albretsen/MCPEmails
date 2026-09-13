@@ -1,6 +1,6 @@
 # Plan: 150 email actions per month on Free, first 7 days uncounted
 
-Status: BUILT in the working tree 2026-09-13 (phases 1-6), NOT applied, deployed, committed or pushed. Phase 7 (launch) is pending Asgeir's go. Written 2026-09-12.
+Status: SHIPPED 2026-09-13. Migrations 20260912200000/210000/220000 applied to prod and repaired into the history, edge function deployed (twice: the 80% check became a deduped band after prod verification), web pushed as 4bb3dc7 (Vercel auto-deploy). Written 2026-09-12.
 Decision record: `docs/DECISION-free-tier-usage-cap-20260912.md`. Supersedes
 `docs/PROMPT-free-tier-action-cap.md` (500 + 50/day) on every number.
 
@@ -388,3 +388,55 @@ nothing has been applied to prod, deployed, committed or pushed.
   stale), homepage `pricing.title` + `sub` in five locales, `/best-email-mcp-servers` free-tier
   lines, `docs/claude-directory-submission.md` note. Remaining by-hand items are in
   `docs/CHECKLIST-listing-copy-action-cap.md`.
+
+## Phase 7 result (2026-09-13)
+
+1. Migrations applied in order with `db query --linked -f` and `migration repair --status applied`;
+   prod afterwards: 513 workspaces `free_action_cap_exempt = true`, 0 false, all four new functions
+   present, `record_usage_limit_event` returns boolean, both `triage_rules` and both
+   `billing_email_sends` columns present.
+2. Edge function deployed. HTTP verification on a synthetic workspace owned by hello@ (no comp),
+   created 8 days back, temp key scoped read/search/contacts, tool `contact_search`:
+   allowance row cap 150 / used 0; call allowed; 150 synthetic rows + 2 real -> refusal text
+   "Monthly allowance reached: 152 of 150 ..." with `_meta` fields; retry still refused with ONE
+   `paywall_reached` funnel row and one `usage_limit_reached` queue row; `created_at = now()` ->
+   in_grace true and the call allowed again. The 80% email did NOT queue on the first pass because
+   `isWarningCrossing` was a strict equality on the 120th reservation and synthetic rows stepped
+   over it; changed to `used >= 120 && used < 150` with the queue's unique index as the dedupe,
+   redeployed, retested: one `usage_warning_80` row after two in-band calls. Workspace, key and
+   every dependent row deleted; the key returns 401.
+3. Web: isolated production build of the exported tree exit 0, commit 4bb3dc7 pushed to main.
+   Left uncommitted on purpose: two video-studio files and six unrelated PROMPT docs.
+4. Still by hand: `docs/CHECKLIST-listing-copy-action-cap.md` (directory listings), and the Stripe
+   side needs nothing (no coupon in this design).
+
+## Dummy-account test (2026-09-13, after launch)
+
+Account `bjellanda+captest@gmail.com` (user e1f165c8, workspace b89d4d6b, slug
+`bjellanda-captest`, listed in `internal_accounts`), created through the auth admin API and
+signed in through the product's own magic-link flow (the sign-in email was read from the
+owner's Gmail via the MCP connector, since an admin-generated link lands with an implicit
+token hash that neither the homepage nor the login page consumes).
+
+Verified end to end in the Browser pane and over HTTP:
+- new workspace is metered (`free_action_cap_exempt = false`), overview tile "Trial week: no
+  cap until 20 Sept 2026", `/api/usage` `in_grace: true`;
+- API key created in the dashboard, `contact_search` allowed during grace;
+- `created_at` moved 8 days back: tile "0 of 150", then 121 of 150 amber with the Usage page
+  bar and the 80% banner, `usage_warning_80` queued;
+- 150 of 150: tool refusal text, tile "Cap reached, refused until 1 Oct 2026", Usage page
+  "This month's allowance is used up", `usage_limit_reached` queued, one `usage_limit_events`
+  row;
+- both emails SENT by the 12:10 UTC dispatcher run (Resend ids stored) and received in Gmail
+  from hello@ with subjects "121 of 150 email actions used this month" and "150 of 150 email
+  actions used, paused until 2026-10-01";
+- "Upgrade to Personal, $5/mo" opened a live Stripe checkout for Personal monthly (not paid).
+- API key revoked from the dashboard afterwards.
+
+Not covered: the automation pause (needs a connected inbox and a rule; unit-tested only).
+
+The account is left capped on purpose (150 synthetic `action_usage` rows, tool `email_read`,
+occurred 2026-09-13). To reset it: `delete from action_usage where workspace_id =
+'b89d4d6b-6c89-4bad-9290-d7b0c931bec5'` and `update workspaces set created_at = now()` (or
+leave `created_at` so it stays metered), and delete its `billing_email_sends` rows if the
+emails should fire again next period.
