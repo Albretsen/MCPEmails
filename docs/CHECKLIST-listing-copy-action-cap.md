@@ -99,3 +99,25 @@ those units and are listed only so nobody has to re-check them.
 - [ ] Open `/docs#rate-limits` and read the "Monthly allowance" step and the error table's last row.
 - [ ] Re-run the grep above; the MUST list should be empty.
 - [ ] Re-cache freemcp.space (API), re-sync Glama and LobeHub, then spot-check each cached README for the new table row.
+
+## Pass of 2026-09-13 (two Claude-in-Chrome agents, after launch)
+
+| Listing | Result |
+| --- | --- |
+| Glama | Description clean. Cached README is pre-launch (no actions row, still says the ceiling is "never shown to customers"). Chrome was signed out and the Admin page showed the listing as UNCLAIMED: needs a GitHub sign-in as Albretsen, claim, then Repository syncs. AI FAQ still claims Outlook (not editable). |
+| LobeHub | Description clean. Cached README two generations stale: Pro **$29/mo**, no actions row. Signed out; needs sign-in and a re-sync from GitHub. Highest priority: a wrong price. |
+| Smithery | Already consistent (no README render, description links to /pricing). Icon served from Smithery's own proxy; stored source URL only visible signed in. |
+| PulseMCP | Clean ("Free Tier"). Site has listing changes paused anyway. |
+| mcp.so | Stale: "10 action-based tools", "Free tier with no daily usage caps", FAQ "no daily caps", "No tools detected", "Transports: stdio". We own no submission there; add these to the open 2026-09-10 support ticket. |
+| mcpservers.org | Listing description clean (17 tools). Page also renders a scrape of our homepage from before today's copy fix ("Priced by inbox, not by usage."): ask for a re-scrape. |
+| Cursor directory | Clean. |
+| npm | Clean on pricing; publishing still blocked, nothing to republish. |
+| Docker registry PR #4973 | Clean on pricing; icon still the Google favicons proxy URL. |
+| Google Business Profile | Clean. |
+| Claude Directory submission | **FIXED 2026-09-13**: Description and Connection requirements now say "150 email actions a month, first 7 days after signup not counted" (was 5,000). Still In review, not withdrawn. Both fields still list Outlook (not shipped). Seven server prompts are missing from the listing and need "Sync from server". |
+
+### Second pass, signed in with GitHub (2026-09-13 ~14:20 UTC)
+
+- **Glama: DONE.** Signed in as Albretsen, listing was claimed all along (the unclaimed view was the signed-out render). Sync Server run: last synced 2026-09-13 14:16 at commit 05a31e9. Public README now shows the "Email actions / month" row and Pro $15; the AI FAQ was regenerated and no longer claims Outlook.
+- **LobeHub: no web control exists.** No sign-in on lobehub.com; owner path is the `lhm` CLI (authenticated on this Mac until 2026-09-17), and `lhm plugin update` preserves the cached README, so a refresh needs a fresh manifest (the repo's `lhm.plugin.json` is stale) or LobeHub support. Still shows Pro $29 and no actions row.
+- **Smithery: stopped at a WorkOS email code** (sent to bjellanda@gmail.com) after the GitHub authorize step. Icon is already served from Smithery's own proxy as our SVG; description clean. Nothing urgent.
