@@ -167,6 +167,7 @@ import {
   type TriageInbox,
   type TriageMatch,
   TRIAGE_OPERATION_NAMES,
+  type TriagePlanLimit,
   type TriageRuleRow,
   type TriageStore,
   type AutomationDeps,
@@ -229,7 +230,18 @@ import {
   summarizeForwardBatch,
 } from "./forward-batch.ts";
 import { attachResultNote, withResultNotesProperty } from "./result-notes.ts";
-import { buildUsageLimitText, USAGE_LIMIT_SUPPORT_EMAIL } from "./usage-limit-message.ts";
+import {
+  buildUsageLimitText,
+  FREE_ACTION_GRACE_DAYS,
+  freeCapUpgradeUrl,
+  USAGE_LIMIT_SUPPORT_EMAIL,
+} from "./usage-limit-message.ts";
+import {
+  type ActionAllowanceRow,
+  allowanceDecision,
+  isAllowanceExhausted,
+  isWarningCrossing,
+} from "./action-allowance.ts";
 import {
   DATE_INPUT_EXAMPLES,
   isIsoDateOrDateTime,
@@ -2348,7 +2360,13 @@ async function writeActivityLog(params: ActivityLogParams): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
-// Phase-1 action usage shadow meter
+// The action usage meter
+//
+// Every successful billable tool call writes one `action_usage` row (meter
+// version 1). Metered workspaces write it by finalising a reservation taken
+// before the call ran; unmetered ones insert it bare after the fact. The
+// allowance that decides which is which lives further down, under "The action
+// allowance".
 // ---------------------------------------------------------------------------
 
 const ACTION_METER_VERSION = 1;
@@ -2376,7 +2394,18 @@ const BILLABLE_TOOL_NAMES = new Set([
 
 /** The only non-billable successful MCP tool in meter version 1 is inbox_list.
  * Keep this allow-list explicit: newly introduced tools are free until this
- * list and customer-facing documentation are deliberately updated. */
+ * list and customer-facing documentation are deliberately updated.
+ *
+ * Two ways in, on purpose. With a `reservationId` the row is booked by
+ * finalising the reservation `reserveBillableAction()` took before the call
+ * ran (success books it, anything else releases it), which is how a metered
+ * workspace can never run past its cap mid-flight. WITHOUT one, the bare
+ * insert below records the action after the fact. That path is reachable
+ * only when there was deliberately no reservation: the kill switch is on,
+ * the tool is not billable, the workspace is unmetered (early member, first
+ * week, comped, exempt), or the reservation subsystem failed open. It must
+ * never be used to "skip" a reservation for a metered workspace; the cap
+ * would still be counted against, one call late, and refused one call late. */
 async function writeActionUsage(
   workspaceId: string,
   toolName: string,
@@ -2407,62 +2436,120 @@ async function writeActionUsage(
   }
 }
 
-/** The abuse ceiling per billing period, by internal plan id.
+// ---------------------------------------------------------------------------
+// The action allowance
+//
+// One SQL function, `workspace_action_allowance(p_workspace_id)` (migration
+// 20260912200000, docs/PLAN-free-action-cap-150.md), decides everything: the
+// plan, whether the workspace is exempt (early member, comped owner, support
+// exemption), the cap, the counting window, the 7-day grace on Free, used and
+// remaining. This section READS that row and acts on it; it derives nothing
+// of its own. The window used to be computed here too, and in
+// billing-window.ts, and in /api/usage, and the three disagreed; that is why
+// there is now exactly one place.
+//
+// What the function encodes, for the reader who does not open the migration:
+// Free workspaces created after 2026-09-12 get 150 billable actions per UTC
+// calendar month, nothing in their first 7 days counted. Every workspace that
+// existed before that date is an early member and is never metered. Paid plans
+// keep silent abuse ceilings (25k / 100k / 500k per Stripe period, `c_cap_*`
+// in the function, `maxMonthlyToolCalls` in plans.ts) that are NOT a pricing
+// lever and are never named in customer-facing copy; the Free allowance IS
+// public and is printed on /pricing.
+// ---------------------------------------------------------------------------
+
+/** One `workspace_action_allowance()` row, or null.
  *
- * NOT a pricing lever. Since the 2026-08-19 repricing the value metric is
- * connected inboxes; these numbers exist only so a runaway or malicious agent
- * cannot burn unbounded provider quota, and they are never sold, never upsold
- * against, and never named in customer-facing copy. Keep in step with
- * `maxMonthlyToolCalls` in apps/web/src/lib/stripe/plans.ts.
- *
- * Headroom check against production on the day they were set: the busiest month
- * any non-comped external workspace had ever recorded was 2,120 billable
- * actions, against a Free ceiling of 5,000. The two heaviest accounts overall
- * (roughly 20,000 and 5,000) are internal or comped and are exempted before the
- * ceiling is consulted. */
-const SHADOW_ACTION_CAPS: Record<string, number> = {
-  free: 5_000,
-  personal: 25_000,
-  solo: 100_000,
-  pro: 500_000,
-};
-
-interface UsageBillingWindow {
-  start: string;
-  end: string;
-}
-
-/** Free workspaces use a calendar-month cycle. Paid workspaces are resolved
- * from Stripe's stored cycle in resolveUsageBillingWindow(). */
-function calendarMonthUsageWindow(now = new Date()): UsageBillingWindow {
-  return {
-    start: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString(),
-    end: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString(),
-  };
-}
-
-function isActiveUsageBillingWindow(start: string | null | undefined, end: string | null | undefined, now = Date.now()): start is string {
-  if (!start || !end) return false;
-  const startMs = new Date(start).getTime();
-  const endMs = new Date(end).getTime();
-  return Number.isFinite(startMs) && Number.isFinite(endMs) && startMs <= now && now < endMs;
-}
-
-/** The ledger, dashboard, and reservation RPC must share exact boundaries.
- * The current Stripe period is authoritative for paid plans; calendar months
- * are only the defined Free-plan cycle or a safe transient fallback while a
- * legacy Stripe row awaits its next webhook sync. */
-async function resolveUsageBillingWindow(ownerId: string, plan: string): Promise<UsageBillingWindow> {
-  if (plan === "free") return calendarMonthUsageWindow();
-  const { data, error } = await supabase.from("user_billing")
-    .select("current_period_start, current_period_end")
-    .eq("user_id", ownerId).maybeSingle();
-  if (error) console.error("[mcp-server] usage_billing_window_lookup_failed", { error: error.message });
-  if (isActiveUsageBillingWindow(data?.current_period_start, data?.current_period_end)) {
-    return { start: data.current_period_start, end: data.current_period_end! };
+ * Null for an unknown workspace (the function returns no row) and for an RPC
+ * failure, which is logged. Every caller reads null as "not metered", so an
+ * outage in the allowance lookup fails OPEN: the allowance is a plan rule, and
+ * it must never be the reason a customer cannot read their mail. */
+async function loadActionAllowance(workspaceId: string): Promise<ActionAllowanceRow | null> {
+  const { data, error } = await supabase
+    .rpc("workspace_action_allowance", { p_workspace_id: workspaceId })
+    .maybeSingle();
+  if (error) {
+    console.error("[mcp-server] action_allowance_lookup_failed", {
+      workspace_id: workspaceId, error: error.message, error_code: error.code,
+    });
+    return null;
   }
-  console.warn("[mcp-server] usage_billing_window_fallback_calendar_month", { plan });
-  return calendarMonthUsageWindow();
+  return (data as ActionAllowanceRow | null) ?? null;
+}
+
+/** The three notices the edge function can queue. Composed and sent by the
+ * web app's billing-lifecycle dispatcher; this side only writes the row. */
+type UsageEmailTemplate = "usage_warning_80" | "usage_limit_reached" | "automation_paused_limit";
+
+/** The allowance notices are about the Free allowance, and only about it.
+ *
+ * A paid workspace at 80% of its silent ceiling gets no mail: the ceiling is
+ * never named to customers (plans.ts, "paid ceilings are not public"), and an
+ * email reading "20,000 of 25,000" would name it. A paid workspace that
+ * actually reaches the ceiling is refused, and its automations pause, exactly
+ * as before; the human remedy in the refusal text is the notice. */
+function allowanceNoticesApply(plan: string | null | undefined): boolean {
+  return plan === "free";
+}
+
+/**
+ * Queues one allowance notice for the workspace owner, once per period.
+ *
+ * Insert-or-ignore on `billing_email_sends_workspace_template_period_idx`,
+ * done as a plain INSERT with 23505 read as "already queued this period". NOT
+ * `.upsert(..., { onConflict })`: PostgREST emits `ON CONFLICT (workspace_id,
+ * template, period_start)` without the index's `WHERE workspace_id IS NOT
+ * NULL`, and Postgres then cannot infer the partial index (42P10, verified in
+ * Phase 1). The recipient is resolved HERE, at queue time, so the row freezes
+ * the address it was queued to, exactly as the Stripe-keyed rows do; that is
+ * one `users` read on the crossing call and on the first refusal of a period,
+ * and none on the hot path.
+ *
+ * Best effort throughout. A notice that cannot be queued is logged and the
+ * tool call it rode on is unaffected: the customer's mail is more important
+ * than our email about it.
+ */
+async function queueUsageEmail(input: {
+  workspaceId: string;
+  ownerId: string;
+  template: UsageEmailTemplate;
+  /** period_start ISO for the two usage_* templates, the rule id for the automation one. */
+  scopeKey: string;
+  periodStart: string;
+  payload: Record<string, unknown>;
+}): Promise<void> {
+  try {
+    const { data: owner, error: ownerError } = await supabase
+      .from("users").select("email").eq("id", input.ownerId).maybeSingle();
+    if (ownerError || !owner?.email) {
+      console.error("[mcp-server] usage_email_recipient_unresolved", {
+        workspace_id: input.workspaceId, template: input.template,
+        error: ownerError?.message ?? "owner has no email",
+      });
+      return;
+    }
+    const { error } = await supabase.from("billing_email_sends").insert({
+      workspace_id: input.workspaceId,
+      user_id: input.ownerId,
+      recipient: owner.email,
+      template: input.template,
+      scope_key: input.scopeKey,
+      send_after: new Date().toISOString(),
+      period_start: input.periodStart,
+      payload: input.payload,
+    });
+    if (error && error.code !== "23505") {
+      console.error("[mcp-server] usage_email_queue_failed", {
+        workspace_id: input.workspaceId, template: input.template,
+        error: error.message, error_code: error.code,
+      });
+    }
+  } catch (error) {
+    console.error("[mcp-server] usage_email_queue_threw", {
+      workspace_id: input.workspaceId, template: input.template,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
 }
 
 /** Records a cap response separately from successful action metering. A failed
@@ -2476,15 +2563,22 @@ async function resolveUsageBillingWindow(ownerId: string, plan: string): Promise
  * retries a blocked call five times has still only reached one paywall. Before
  * this, each retry booked another hit, which would have made the very first
  * real cap hit look like a burst of demand and permanently depressed the
- * paywall -> pricing conversion rate that the billing funnel reports. */
+ * paywall -> pricing conversion rate that the billing funnel reports.
+ *
+ * Returns true on exactly the call that wrote the funnel row, i.e. the first
+ * refusal of the period. Since 20260912200000 the RPC returns a bare boolean
+ * (PostgREST hands it back as `data: true|false`, not as a row), and that one
+ * signal is what sends the "limit reached" email once per period with no
+ * second round trip. A failed write returns false: no funnel row means no
+ * email, which errs on the side of silence rather than of a duplicate. */
 async function writeUsageLimitEvent(
   workspaceId: string,
   plan: string,
   usedActions: number,
   cap: number,
   periodStart: string,
-): Promise<void> {
-  const { error } = await supabase.rpc("record_usage_limit_event", {
+): Promise<boolean> {
+  const { data, error } = await supabase.rpc("record_usage_limit_event", {
     p_workspace_id: workspaceId,
     p_plan: plan,
     p_used_actions: usedActions,
@@ -2496,41 +2590,104 @@ async function writeUsageLimitEvent(
     console.error("[mcp-server] usage_limit_event_record_failed", {
       plan, used_actions: usedActions, cap, error: error.message, error_code: error.code,
     });
+    return false;
   }
+  return data === true;
 }
 
-/** Calculates (but never enforces) the launch cap condition. Diagnostics stay
- * aggregate: no message data, arguments, customer identity, or API key. */
-async function logShadowLimitDiagnostic(workspaceId: string): Promise<void> {
-  if (Deno.env.get("USAGE_SHADOW_WOULD_BLOCK") !== "true") return;
-  const [{ data: workspace }, { count, error }] = await Promise.all([
-    supabase.from("workspaces").select("plan").eq("id", workspaceId).maybeSingle(),
-    supabase.from("action_usage").select("*", { count: "exact", head: true })
-      .eq("workspace_id", workspaceId).eq("billable", true).eq("meter_version", ACTION_METER_VERSION)
-      .gte("occurred_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
-  ]);
-  if (error) return;
-  const plan = workspace?.plan ?? "free";
-  const cap = SHADOW_ACTION_CAPS[plan] ?? SHADOW_ACTION_CAPS.free;
-  if ((count ?? 0) >= cap) {
-    console.log("[mcp-server] usage_shadow_would_block", { plan, used_actions: count ?? 0, cap, meter_version: ACTION_METER_VERSION });
+/** What reserving one billable action came to. */
+type BillableActionReservation =
+  /** No reservation was made and none is owed: the bare insert in writeActionUsage is correct. */
+  | { outcome: "unmetered"; reason: string }
+  /** Reserved. `usedActions` counts this reservation, so 120 here IS the 80% crossing. */
+  | { outcome: "reserved"; reservationId: string; usedActions: number }
+  /** Refused by the cap. Everything the refusal text and `_meta` need. */
+  | {
+    outcome: "refused";
+    plan: string;
+    usedActions: number;
+    cap: number;
+    periodStart: string;
+    periodEnd: string;
+  };
+
+/**
+ * Reserves one billable action against the workspace's allowance.
+ *
+ * The one path both the interactive tool call and the unattended automation
+ * runner take, so the two cannot disagree about whether a workspace has
+ * allowance left. In order: read the allowance row; let unmetered rows
+ * through with no reservation; reserve with the row's cap and window; on
+ * success queue the 80% notice from the crossing call; on refusal record the
+ * event and queue the 100% notice from the first refusal of the period.
+ *
+ * Fail-open is confined to INFRASTRUCTURE: an allowance lookup or reservation
+ * RPC that errors lets the call through, logged. Fail-closed is confined to a
+ * REAL refusal, i.e. the reservation RPC answering `allowed: false`. Nothing
+ * else refuses. The kill switch and the billable-tool check are the callers'
+ * job, because they differ between the two callers.
+ */
+async function reserveBillableAction(
+  workspaceId: string,
+  toolName: string,
+): Promise<BillableActionReservation> {
+  const allowance = await loadActionAllowance(workspaceId);
+  const decision = allowanceDecision(allowance);
+  if (decision.kind !== "meter" || !allowance) return { outcome: "unmetered", reason: decision.kind === "meter" ? "no_row" : decision.reason };
+
+  const { data: reservation, error: reservationError } = await supabase.rpc("reserve_action_usage", {
+    p_workspace_id: workspaceId, p_tool_name: toolName, p_meter_version: ACTION_METER_VERSION, p_cap: decision.cap,
+    p_period_start: decision.periodStart, p_period_end: decision.periodEnd,
+  }).single();
+  if (reservationError) {
+    console.error("[mcp-server] action_usage_reservation_failed", { error: reservationError.message, error_code: reservationError.code });
+    // Fail open only when the reservation subsystem itself is unavailable.
+    return { outcome: "unmetered", reason: "reservation_error" };
   }
+  const result = reservation as { reservation_id: string | null; allowed: boolean; used_actions: number } | null;
+  const notices = allowanceNoticesApply(allowance.plan);
+  const usagePayload = (used: number) => ({
+    used, cap: decision.cap, period_start: decision.periodStart, period_end: decision.periodEnd, plan: allowance.plan,
+  });
+
+  if (result?.allowed && result.reservation_id) {
+    if (notices && isWarningCrossing(result.used_actions, decision.cap)) {
+      await queueUsageEmail({
+        workspaceId, ownerId: allowance.owner_id, template: "usage_warning_80",
+        scopeKey: decision.periodStart, periodStart: decision.periodStart, payload: usagePayload(result.used_actions),
+      });
+    }
+    return { outcome: "reserved", reservationId: result.reservation_id, usedActions: result.used_actions };
+  }
+
+  const usedActions = result?.used_actions ?? decision.cap;
+  const firstRefusalOfPeriod = await writeUsageLimitEvent(workspaceId, allowance.plan, usedActions, decision.cap, decision.periodStart);
+  if (notices && firstRefusalOfPeriod) {
+    await queueUsageEmail({
+      workspaceId, ownerId: allowance.owner_id, template: "usage_limit_reached",
+      scopeKey: decision.periodStart, periodStart: decision.periodStart, payload: usagePayload(usedActions),
+    });
+  }
+  return {
+    outcome: "refused", plan: allowance.plan, usedActions, cap: decision.cap,
+    periodStart: decision.periodStart, periodEnd: decision.periodEnd,
+  };
 }
 
-/** The ceiling applies to every workspace.
+/** The shape the automation runner pauses on, from a refusal. */
+function planLimitOfRefusal(refusal: Extract<BillableActionReservation, { outcome: "refused" }>): TriagePlanLimit {
+  return { paused_until: refusal.periodEnd, period_start: refusal.periodStart, used: refusal.usedActions, cap: refusal.cap };
+}
+
+/** The allowance applies to every workspace that is not exempt.
  *
- * It used to apply to a deterministic 5% cohort of workspaces created after a
- * configured start date, which was the right shape for a rollout of a PAYWALL
- * and the wrong shape for an ABUSE CEILING: a limit that covers 5% of new
- * signups and none of the existing estate stops nothing. Both gates are gone.
- * What remains is a kill switch (`USAGE_ENFORCEMENT_DISABLED=true`), off by
- * default, so a bad ceiling can be lifted without a redeploy.
- *
- * The two exemptions that stay are the ones that describe an account we have
- * deliberately promised not to meter: a comped entitlement on the owner, and a
- * `workspace_usage_exemptions` grant on the workspace. Reservation failures
- * still fail OPEN: the ceiling is a backstop, and it must never be the reason a
- * paying customer cannot read their mail. */
+ * What remains of the older gating is a kill switch
+ * (`USAGE_ENFORCEMENT_DISABLED=true`), off by default, so a bad allowance can
+ * be lifted without a redeploy; it is also the documented rollback for the
+ * Free allowance launch. Exemptions are the SQL function's business now
+ * (early member, comped owner, support grant), not this file's. Reservation
+ * failures still fail OPEN: the allowance is a plan rule, and it must never
+ * be the reason a paying customer cannot read their mail. */
 interface ActionLimitCheck {
   /** A ready-to-return isError tool result, or null when the call may proceed. */
   response: JsonRpcSuccessResponse | null;
@@ -2551,18 +2708,16 @@ interface ActionLimitCheck {
  */
 function usageLimitResult(
   requestId: string | number | null,
-  plan: string,
-  usedActions: number,
-  cap: number,
-  resetAt: string,
+  refusal: Extract<BillableActionReservation, { outcome: "refused" }>,
 ): JsonRpcSuccessResponse {
+  const { plan, usedActions, cap, periodEnd } = refusal;
   return {
     jsonrpc: "2.0",
     id: requestId,
     result: {
       content: [{
         type: "text",
-        text: buildUsageLimitText(plan, usedActions, cap, resetAt, APP_URL),
+        text: buildUsageLimitText(plan, usedActions, cap, periodEnd, APP_URL),
       }],
       isError: true,
       _meta: {
@@ -2571,13 +2726,22 @@ function usageLimitResult(
           effective_plan: plan,
           used_actions: usedActions,
           cap,
-          reset_at: resetAt,
+          reset_at: periodEnd,
           retryable: false,
           dashboard_url: `${APP_URL}/dashboard/usage`,
-          // Support, not pricing. `pricing_url` used to sit here from when this
-          // was a paywall; a client rendering it would offer to sell a bigger
-          // allowance, which no plan provides any more.
-          support_email: USAGE_LIMIT_SUPPORT_EMAIL,
+          ...(plan === "free"
+            // The Free allowance is a plan limit with a true way out, so the
+            // machine-readable block says what the text says: the allowance,
+            // the uncounted first week, and the page that removes the cap.
+            ? {
+              allowance: cap,
+              grace_days: FREE_ACTION_GRACE_DAYS,
+              upgrade_url: freeCapUpgradeUrl(APP_URL),
+            }
+            // Paid: support, not pricing. A client rendering a pricing URL
+            // here would offer to sell a bigger allowance, which no paid plan
+            // provides.
+            : { support_email: USAGE_LIMIT_SUPPORT_EMAIL }),
         },
       },
     },
@@ -2593,36 +2757,15 @@ async function actionLimitResponse(
   // otherwise, so a missing or mistyped variable cannot silently disable the
   // only thing standing between us and an unbounded provider bill.
   if (Deno.env.get("USAGE_ENFORCEMENT_DISABLED") === "true" || !BILLABLE_TOOL_NAMES.has(toolName)) return { response: null, reservationId: null };
-  const { data: workspace } = await supabase.from("workspaces")
-    .select("plan, owner_id").eq("id", workspaceId).maybeSingle();
-  if (!workspace) return { response: null, reservationId: null };
-  const { data: entitlement } = await supabase.from("user_usage_entitlements")
-    .select("kind, expires_at").eq("user_id", workspace.owner_id).maybeSingle();
-  if (entitlement?.kind === "comped_scale" && (!entitlement.expires_at || new Date(entitlement.expires_at) > new Date())) return { response: null, reservationId: null };
-  const { data: exemption } = await supabase.from("workspace_usage_exemptions")
-    .select("expires_at, revoked_at").eq("workspace_id", workspaceId).is("revoked_at", null)
-    .order("granted_at", { ascending: false }).limit(1).maybeSingle();
-  if (exemption && (!exemption.expires_at || new Date(exemption.expires_at) > new Date())) return { response: null, reservationId: null };
-  const plan = workspace.plan ?? "free";
-  const cap = SHADOW_ACTION_CAPS[plan] ?? SHADOW_ACTION_CAPS.free;
-  const billingWindow = await resolveUsageBillingWindow(workspace.owner_id, plan);
-  const { data: reservation, error: reservationError } = await supabase.rpc("reserve_action_usage", {
-    p_workspace_id: workspaceId, p_tool_name: toolName, p_meter_version: ACTION_METER_VERSION, p_cap: cap,
-    p_period_start: billingWindow.start, p_period_end: billingWindow.end,
-  }).single();
-  if (reservationError) {
-    console.error("[mcp-server] action_usage_reservation_failed", { error: reservationError.message, error_code: reservationError.code });
-    // Fail open only when the reservation subsystem itself is unavailable.
-    return { response: null, reservationId: null };
+  const reservation = await reserveBillableAction(workspaceId, toolName);
+  switch (reservation.outcome) {
+    case "unmetered":
+      return { response: null, reservationId: null };
+    case "reserved":
+      return { response: null, reservationId: reservation.reservationId };
+    case "refused":
+      return { response: usageLimitResult(requestId, reservation), reservationId: null };
   }
-  const result = reservation as { reservation_id: string | null; allowed: boolean; used_actions: number } | null;
-  if (result?.allowed && result.reservation_id) return { response: null, reservationId: result.reservation_id };
-  const usedActions = result?.used_actions ?? cap;
-  await writeUsageLimitEvent(workspaceId, plan, usedActions, cap, billingWindow.start);
-  return {
-    response: usageLimitResult(requestId, plan, usedActions, cap, billingWindow.end),
-    reservationId: null,
-  };
 }
 
 /** Records the first server-confirmed successful MCP tool call per workspace.
@@ -26206,10 +26349,10 @@ async function handleToolsCall(
     // useless as a filter for operators asking "which errors can I read?".
     ...(logErrorDetails ? { errorDetails: logErrorDetails } : {}),
   });
-  // Phase 1 is observation-only. Successful calls write one privacy-safe
-  // classification row; failed/rate-limited calls write no usage action.
+  // Settle the meter. With a reservation this finalises it (success books the
+  // row, anything else releases it); without one, a successful call writes a
+  // bare row and a failed or rate-limited call writes nothing.
   await writeActionUsage(apiKey.workspace_id, dispatchName, logStatus, actionLimit.reservationId);
-  await logShadowLimitDiagnostic(apiKey.workspace_id);
   // Dispatch mutates logStatus inside AsyncLocalStorage.run; TypeScript cannot
   // follow that closure mutation and otherwise narrows it to its initial value.
   if ((logStatus as string) === "success") await markFirstProductUse(apiKey.workspace_id, apiKey.id, resolvedInboxId, dispatchName, ctx.userAgent);
@@ -26598,7 +26741,22 @@ const TRIAGE_API_KEY_COLUMNS =
 
 const TRIAGE_RULE_COLUMNS =
   "id, workspace_id, inbox_id, api_key_id, name, enabled, filter, action, " +
-  "interval_minutes, max_messages_per_run, next_run_at, running_since, consecutive_failures";
+  "interval_minutes, max_messages_per_run, next_run_at, running_since, consecutive_failures, " +
+  "paused_reason, paused_until";
+
+/**
+ * The plan-limit pause, as a PostgREST filter: `paused_until IS NULL OR
+ * paused_until <= now()`. Applied by BOTH the due query and the claim CAS.
+ *
+ * Not in `triage_rules_due_idx` and it cannot be: `now()` is not IMMUTABLE,
+ * and a predicate of `paused_until IS NULL` would drop a rule out of the
+ * index for good the moment it was paused, the opposite of self-lifting
+ * (migration 20260912200000, section 4). The index still narrows the scan to
+ * enabled, live, unclaimed rules; this filter is applied on top.
+ */
+function triageNotPausedFilter(nowIso: string): string {
+  return `paused_until.is.null,paused_until.lte.${nowIso}`;
+}
 
 /**
  * HMAC-SHA256(ENCRYPTION_KEY, provider_message_id).
@@ -26668,6 +26826,7 @@ const triageStore: TriageStore = {
       .is("running_since", null)
       .not("next_run_at", "is", null)
       .lte("next_run_at", nowIso)
+      .or(triageNotPausedFilter(nowIso))
       .order("next_run_at", { ascending: true })
       .limit(limit);
     if (error) throw new Error(error.message);
@@ -26677,16 +26836,24 @@ const triageStore: TriageStore = {
   async claimRule(ruleId, nowIso) {
     // The CAS. Every predicate from the due query is repeated here on purpose:
     // between the SELECT and this UPDATE another invocation may have claimed the
-    // rule, or a user may have disabled or deleted it, and the claim must lose
-    // in all three cases. A zero-row result is that loss.
+    // rule, or a user may have disabled or deleted it, or its workspace may have
+    // run out of allowance and paused it, and the claim must lose in all four
+    // cases. A zero-row result is that loss.
+    //
+    // The claim is also where a lifted pause is cleared. The predicate above
+    // already proves `paused_until` has passed (or was never set), so writing
+    // both columns back to null costs nothing extra and leaves no stale reason
+    // on a rule that is running again. The resume needs no other write: a rule
+    // paused to the end of its period becomes due the minute the period ends.
     const { data, error } = await supabase
       .from("triage_rules")
-      .update({ running_since: nowIso })
+      .update({ running_since: nowIso, paused_reason: null, paused_until: null })
       .eq("id", ruleId)
       .is("running_since", null)
       .eq("enabled", true)
       .is("deleted_at", null)
       .lte("next_run_at", nowIso)
+      .or(triageNotPausedFilter(nowIso))
       .select("id");
     if (error) throw new Error(error.message);
     return Array.isArray(data) && data.length > 0;
@@ -27284,7 +27451,75 @@ function triageDeps(): TriageDeps {
         ipAddress: null,
         userAgent: "mcp-emails-triage-runner",
       });
-      await writeActionUsage(input.workspaceId, input.operation, input.status);
+      await writeActionUsage(input.workspaceId, input.operation, input.status, input.reservationId ?? null);
+    },
+    async checkAllowance(workspaceId) {
+      // Asked once per due rule, after the lease is won and before the mailbox
+      // is opened. The kill switch covers the unattended path too: it is the
+      // documented rollback for the whole allowance, and a rollback that left
+      // automations paused would be half a rollback.
+      if (Deno.env.get("USAGE_ENFORCEMENT_DISABLED") === "true") return { allowed: true };
+      const allowance = await loadActionAllowance(workspaceId);
+      // Unmetered and lookup failures both answer "allowed": isAllowanceExhausted
+      // is false for anything that does not meter, and a null row is one of them.
+      if (!allowance || !isAllowanceExhausted(allowance)) return { allowed: true };
+      return {
+        allowed: false,
+        limit: {
+          paused_until: allowance.period_end,
+          period_start: allowance.period_start,
+          used: allowance.used,
+          cap: allowance.cap ?? 0,
+        },
+      };
+    },
+    async reserveAction(input) {
+      // The same reservation an interactive tool call takes, so an unattended
+      // run cannot walk past the cap mid-batch. `reservation_id` null means the
+      // workspace is not metered or the reservation subsystem failed open; the
+      // engine hands it back to `meter`, which then writes the usage row bare.
+      if (Deno.env.get("USAGE_ENFORCEMENT_DISABLED") === "true") return { allowed: true, reservation_id: null };
+      const reservation = await reserveBillableAction(input.workspaceId, input.operation);
+      if (reservation.outcome === "refused") return { allowed: false, limit: planLimitOfRefusal(reservation) };
+      return {
+        allowed: true,
+        reservation_id: reservation.outcome === "reserved" ? reservation.reservationId : null,
+      };
+    },
+    async releaseReservation(reservationId) {
+      // Finalising as NOT succeeded is the release: the reservation row is
+      // deleted and no action_usage row is written. Same RPC writeActionUsage
+      // calls, so there is one place that ends a reservation's life.
+      const { error } = await supabase.rpc("finalize_action_usage_reservation", {
+        p_reservation_id: reservationId,
+        p_succeeded: false,
+      });
+      if (error) throw new Error(error.message);
+    },
+    async notifyRulePaused(input) {
+      // One notice per workspace per period, enforced by the queue's unique
+      // index: a second rule paused in the same period is a 23505 and is
+      // dropped, which is the right outcome for a customer who would otherwise
+      // get one mail per rule about one cause. The allowance is re-read here
+      // rather than carried through the engine, because the owner address and
+      // the plan are ours to resolve, not the engine's to know: one RPC on a
+      // path that fires at most once per workspace per period.
+      const allowance = await loadActionAllowance(input.workspaceId);
+      if (!allowance || !allowanceNoticesApply(allowance.plan)) return;
+      await queueUsageEmail({
+        workspaceId: input.workspaceId,
+        ownerId: allowance.owner_id,
+        template: "automation_paused_limit",
+        scopeKey: input.ruleId,
+        periodStart: input.limit.period_start,
+        payload: {
+          rule_id: input.ruleId,
+          rule_name: input.ruleName,
+          used: input.limit.used,
+          cap: input.limit.cap,
+          period_end: input.limit.paused_until,
+        },
+      });
     },
     async notifyRuleDisabled(input) {
       // Reuses the existing system-event pipeline (migration

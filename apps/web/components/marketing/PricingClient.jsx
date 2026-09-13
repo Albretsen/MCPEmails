@@ -12,9 +12,11 @@ import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 
 /* ─── Plan data ─────────────────────────────────────────────── */
 // The value metric is CONNECTED INBOXES. Free is one inbox, Personal is three
-// for one person, Pro is every inbox you own, Team adds people. The action
-// ceiling is a silent abuse guard and is deliberately absent from this page
-// (see src/lib/stripe/plans.ts).
+// for one person, Pro is every inbox you own, Team adds people. Since
+// 2026-09-12 Free also carries a public allowance of 150 email actions a
+// calendar month (first 7 days uncounted), stated in the table and the FAQ;
+// paid tiers have no monthly cap and their fair-use ceilings stay silent
+// (see src/lib/stripe/plans.ts, FREE_ACTION_ALLOWANCE / FREE_ACTION_GRACE_DAYS).
 //
 // NOTE: the "Pro" tier keeps the internal key `solo` and "Team" keeps `pro`, so
 // live Stripe prices (keyed by plan id) resolve correctly. Only the display
@@ -74,6 +76,10 @@ const TABLE_SECTIONS = [
     key: 'usage',
     rows: [
       { key: 'inboxes',  free: 'values.oneInbox',  personal: 'values.threeInboxes', solo: 'values.unlimited', pro: 'values.unlimited' },
+      // Free's allowance is public and must match FREE_ACTION_ALLOWANCE /
+      // FREE_ACTION_GRACE_DAYS in src/lib/stripe/plans.ts. Paid tiers never
+      // print a number: they have no monthly cap, subject to fair use.
+      { key: 'actions',  free: 'values.actionsFree', personal: 'values.actionsPaid', solo: 'values.actionsPaid', pro: 'values.actionsPaid' },
       { key: 'keys',     free: 'values.unlimited', personal: 'values.unlimited',    solo: 'values.unlimited', pro: 'values.unlimited' },
       // Personal and Pro are deliberately single-seat: sharing inboxes with
       // other people is what Team is for.

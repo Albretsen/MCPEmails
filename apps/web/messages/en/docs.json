@@ -437,7 +437,7 @@
   "errors": {
     "eyebrow": "Error codes",
     "heading": "Error codes & retry guidance.",
-    "sub": "Auth, scope, and rate limit failures return a JSON-RPC <code>error</code> object with a numeric code. Tool execution failures (inbox not found, provider error, fair-use ceiling reached, etc.) return a normal <code>result</code> with <code>isError: true</code> and a human-readable message in <code>content[0].text</code>.",
+    "sub": "Auth, scope, and rate limit failures return a JSON-RPC <code>error</code> object with a numeric code. Tool execution failures (inbox not found, provider error, monthly allowance of email actions reached, etc.) return a normal <code>result</code> with <code>isError: true</code> and a human-readable message in <code>content[0].text</code>.",
     "thCode": "Code",
     "thType": "Type",
     "thWhen": "When it occurs",
@@ -451,7 +451,7 @@
       "param": "Unknown tool name, or missing / invalid parameter in tools/call",
       "rate": "Per-key or per-workspace rate limit exceeded (HTTP 429). data.error_code is always \"rate_limit_exceeded\". Wait data.retry_after seconds, or read the Retry-After header, before retrying.",
       "tool": "Tool executed but encountered an error (inbox not found, message not found, provider auth failure, invalid recipient, attachment too large, provider 5xx). The error description is in content[0].text.",
-      "cap": "The workspace has hit its fair-use ceiling on billable actions for the current billing period. Returned as a normal tool result with isError: true, not as a JSON-RPC error, with the details under _meta[\"com.mcpemails/usage_limit\"]: error_code \"usage_limit_reached\" and reset_at. Retrying cannot succeed before reset_at."
+      "cap": "The workspace has used its monthly allowance of email actions: 150 a calendar month on Free, with the first 7 days after signup uncounted; Personal, Pro and Team have no monthly cap under fair use. Returned as a normal tool result with isError: true, not as a JSON-RPC error. content[0].text starts with the count and the reset date (the 1st of the next month, UTC), and _meta[\"com.mcpemails/usage_limit\"] carries error_code \"usage_limit_reached\" and reset_at. inbox_list still works. Retrying cannot succeed before reset_at."
     }
   },
   "rateLimits": {
@@ -463,9 +463,9 @@
     "planTag": "Plan per-minute ceiling",
     "planHeading": "Free 60 / min · Personal 120 / min · Pro 300 / min · Team 1,000 / min",
     "planBody": "A per-workspace fair-use burst limit, aggregated across all your API keys. When exceeded, calls return error code <code>-32003</code> with <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> and a <code>data.retry_after</code> countdown (seconds). Personal, Pro and Team raise the ceiling.",
-    "capTag": "Fair-use ceiling",
-    "capHeading": "A stop, not a backoff",
-    "capBody": "Every workspace has a fair-use ceiling on billable actions per billing period. It sits far above real usage and is not something you buy your way past, but a runaway agent can reach it. Hitting it is not a JSON-RPC error: the call returns HTTP 200 with a normal tool result carrying <code>isError: true</code> and a <code>_meta[\"com.mcpemails/usage_limit\"]</code> block with <code>error_code: \"usage_limit_reached\"</code> and <code>reset_at</code>. There is no <code>retry_after</code>, because retrying cannot succeed before <code>reset_at</code>. Treat it as a stop, not a backoff.",
+    "capTag": "Monthly allowance",
+    "capHeading": "Free 150 email actions / month · Personal, Pro and Team no monthly cap",
+    "capBody": "A Free workspace gets 150 email actions per calendar month (UTC). Nothing is counted during the first 7 days after signup, and <code>inbox_list</code> and the dashboard are never counted. Personal, Pro and Team have no monthly cap, subject to fair use. Reaching the allowance is not a JSON-RPC error: the call returns HTTP 200 with a normal tool result carrying <code>isError: true</code>. The text in <code>content[0].text</code> opens with the count and the reset date, the 1st of the next month, and states that retrying will not help; <code>_meta[\"com.mcpemails/usage_limit\"]</code> carries <code>error_code: \"usage_limit_reached\"</code> and <code>reset_at</code>. There is no <code>retry_after</code>. Every other email action is refused until the reset, unattended automations pause and resume on their own on the 1st, and the workspace owner is emailed at 80% and at 100%. Treat it as a stop, not a backoff.",
     "retryTag": "Retrying safely",
     "retryHeading": "Always honour retry_after; never retry sends blindly",
     "retryBody": "For <code>rate_limit_exceeded</code> errors, wait <code>data.retry_after</code> seconds before retrying. Use exponential backoff for <code>provider_error</code>. Do not auto-retry <code>email_compose</code> sends on <code>provider_error</code>, since the message may have already been accepted by the provider. Never retry <code>usage_limit_reached</code>: it clears only at <code>reset_at</code>."

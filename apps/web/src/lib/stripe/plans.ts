@@ -6,9 +6,17 @@
  * The value metric is CONNECTED INBOXES, not actions. Inboxes are the scarce,
  * defensible asset: every workspace with two or more inboxes is active, and the
  * businesses that run three to seven mailboxes (hotels, agencies, publishers)
- * are the accounts worth pricing for. Action volume is abundant, invisible to
- * the customer, and was never reachable as a paywall, so it has been demoted to
- * a silent abuse ceiling that never appears in customer-facing copy.
+ * are the accounts worth pricing for.
+ *
+ * FREE ACTION ALLOWANCE (2026-09-12). Free workspaces created after launch get
+ * FREE_ACTION_ALLOWANCE billable email actions per UTC calendar month, with the
+ * first FREE_ACTION_GRACE_DAYS days uncounted. That allowance is public and
+ * sold: it is on the pricing page, the dashboard, the docs and the README, and
+ * the number a customer reads is by construction the number that blocks them
+ * (the SQL function `workspace_action_allowance` owns both constants; the two
+ * exports below mirror them for copy). Paid tiers still carry only a silent
+ * abuse ceiling that never appears in customer-facing copy. See
+ * docs/PLAN-free-action-cap-150.md.
  *
  * Four tiers: Free (1 inbox), Personal (3 inboxes, one person), Pro (unlimited
  * inboxes, one person), Team (unlimited inboxes, several people, separate
@@ -81,13 +89,27 @@ export interface PlanLimits {
   /** Legacy daily burst cap. Infinity = unlimited (all tiers). */
   maxDailyBurstCalls: number;
   /**
-   * SILENT ABUSE CEILING. Billable actions per billing period.
+   * Billable email actions per billing period.
    *
-   * This is deliberately NOT a pricing lever and must never appear on the
-   * pricing page, in plan feature lists, in the dashboard, or in the docs. It
-   * exists so a runaway or malicious agent cannot burn unbounded provider
-   * quota. Every ceiling is set far above any observed real usage: the highest
-   * month any external workspace has ever recorded is 3,105 actions.
+   * Two different things, depending on the tier:
+   *
+   *   Free   THE PUBLIC ALLOWANCE (FREE_ACTION_ALLOWANCE). It is stated on the
+   *          pricing page, in the Free feature list, on the dashboard and in
+   *          the docs, and the MCP edge function refuses at exactly this
+   *          number once the first FREE_ACTION_GRACE_DAYS days have passed.
+   *          Workspaces that existed before 2026-09-12 are exempt for good
+   *          (`workspaces.free_action_cap_exempt`).
+   *
+   *   Paid   A SILENT ABUSE CEILING. Not a pricing lever; it must never appear
+   *          on the pricing page, in a feature list, in the dashboard or in the
+   *          docs. It exists so a runaway or malicious agent cannot burn
+   *          unbounded provider quota, and every ceiling sits far above any
+   *          observed real usage (the highest month any external workspace has
+   *          ever recorded is 3,105 actions). Copy says "no monthly action
+   *          cap", never a number.
+   *
+   * The SQL function `workspace_action_allowance` is the definition every
+   * enforcing and displaying caller reads; these values mirror it.
    *
    * Infinity = a comped entitlement.
    */
@@ -113,6 +135,20 @@ export interface PlanLimits {
   /** Support tier. */
   supportTier: SupportTier;
 }
+
+// ---------------------------------------------------------------------------
+// The Free action allowance, for copy.
+//
+// The SQL function `workspace_action_allowance` (migration
+// 20260912200000_free_action_cap_150) holds the enforced values as
+// c_free_cap and c_grace. These two are the copy-side mirror: every sentence
+// that quotes the allowance derives from them, and plans-copy-parity.test.ts
+// checks that the pricing page's translated copy agrees. Change all three
+// together or the number a customer reads stops being the number that blocks
+// them.
+// ---------------------------------------------------------------------------
+export const FREE_ACTION_ALLOWANCE = 150;
+export const FREE_ACTION_GRACE_DAYS = 7;
 
 // ---------------------------------------------------------------------------
 // Plan definition
@@ -157,7 +193,7 @@ export const PLANS: Record<PlanId, Plan> = {
     limits: {
       maxInboxes: 1,
       maxDailyBurstCalls: Infinity,
-      maxMonthlyToolCalls: 5_000,
+      maxMonthlyToolCalls: FREE_ACTION_ALLOWANCE,
       maxApiKeys: Infinity,
       maxMembers: 1,
       billingPortalEnabled: false,
@@ -181,6 +217,9 @@ export const PLANS: Record<PlanId, Plan> = {
     legacyStripePriceIds: [],
     features: [
       '1 connected inbox',
+      // The public allowance, from the constants above so this sentence, the
+      // pricing table and the enforcing SQL cannot quote three numbers.
+      `${FREE_ACTION_ALLOWANCE} email actions a month, first ${FREE_ACTION_GRACE_DAYS} days uncounted`,
       'Read, search, organise, draft, schedule and send',
       // Named here, not on Personal. Scheduled sends and the per-inbox send
       // review / approval hold have never had a plan gate, and the usage
@@ -222,13 +261,16 @@ export const PLANS: Record<PlanId, Plan> = {
     stripePriceIdYearly: process.env.STRIPE_PRICE_PERSONAL_YEARLY ?? null,
     legacyStripePriceIds: [],
     // ONLY real deltas over Free belong here. The enforced ones are: maxInboxes
-    // 1 -> 3, maxRequestsPerMinute 60 -> 120, supportTier community -> email,
-    // and billingPortalEnabled. maxMonthlyToolCalls also rises, and stays
-    // unsold per the note on that field. Nothing else differs, so nothing else
-    // may be listed.
+    // 1 -> 3, the monthly action cap (Free's public 150 -> none that a
+    // customer can reach; the paid ceiling stays a silent abuse guard and is
+    // never quoted as a number), maxRequestsPerMinute 60 -> 120, supportTier
+    // community -> email, and billingPortalEnabled. Nothing else differs, so
+    // nothing else may be listed. Pro and Team inherit "no cap" through
+    // "Everything in Personal" and must not restate it.
     features: [
       'Everything in Free',
       '3 connected inboxes',
+      'No monthly action cap',
       '2x higher burst rate limit',
       'Email support',
     ],

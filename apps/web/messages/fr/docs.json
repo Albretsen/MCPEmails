@@ -437,7 +437,7 @@
   "errors": {
     "eyebrow": "Codes d'erreur",
     "heading": "Codes d'erreur et conseils de réessai.",
-    "sub": "Les échecs d'authentification, de portée et de limite de débit renvoient un objet <code>error</code> JSON-RPC avec un code numérique. Les échecs d'exécution d'outil (boîte introuvable, erreur du fournisseur, plafond d'usage équitable atteint, etc.) renvoient un <code>result</code> normal avec <code>isError: true</code> et un message lisible dans <code>content[0].text</code>.",
+    "sub": "Les échecs d'authentification, de portée et de limite de débit renvoient un objet <code>error</code> JSON-RPC avec un code numérique. Les échecs d'exécution d'outil (boîte introuvable, erreur du fournisseur, allocation mensuelle d'actions e-mail épuisée, etc.) renvoient un <code>result</code> normal avec <code>isError: true</code> et un message lisible dans <code>content[0].text</code>.",
     "thCode": "Code",
     "thType": "Type",
     "thWhen": "Quand cela survient",
@@ -451,7 +451,7 @@
       "param": "Nom d'outil inconnu, ou paramètre manquant / invalide dans tools/call",
       "rate": "Limite de débit par clé ou par espace de travail dépassée (HTTP 429). data.error_code vaut toujours « rate_limit_exceeded ». Attendez data.retry_after secondes, ou lisez l'en-tête Retry-After, avant de réessayer.",
       "tool": "L'outil s'est exécuté mais a rencontré une erreur (boîte introuvable, message introuvable, échec d'authentification du fournisseur, destinataire invalide, pièce jointe trop volumineuse, fournisseur 5xx). La description de l'erreur se trouve dans content[0].text.",
-      "cap": "L'espace de travail a atteint son plafond d'usage équitable sur les actions facturables pour la période de facturation en cours. Renvoyé comme un résultat d'outil normal avec isError: true, et non comme une erreur JSON-RPC, les détails se trouvant sous _meta[\"com.mcpemails/usage_limit\"] : error_code « usage_limit_reached » et reset_at. Réessayer ne peut pas réussir avant reset_at."
+      "cap": "L'espace de travail a épuisé son allocation mensuelle d'actions e-mail : 150 par mois civil sur Free, les 7 premiers jours après l'inscription n'étant pas comptés ; Personal, Pro et Team n'ont aucun plafond mensuel, sous réserve d'un usage équitable. Renvoyé comme un résultat d'outil normal avec isError: true, et non comme une erreur JSON-RPC. content[0].text commence par le décompte et la date de remise à zéro (le 1er du mois suivant, UTC), et _meta[\"com.mcpemails/usage_limit\"] porte error_code « usage_limit_reached » et reset_at. inbox_list continue de fonctionner. Réessayer ne peut pas réussir avant reset_at."
     }
   },
   "rateLimits": {
@@ -463,9 +463,9 @@
     "planTag": "Plafond par minute de la formule",
     "planHeading": "Gratuit 60 / min · Personal 120 / min · Pro 300 / min · Team 1 000 / min",
     "planBody": "Une limite de pointe d'usage équitable par espace de travail, agrégée sur toutes vos clés API. En cas de dépassement, les appels renvoient le code d'erreur <code>-32003</code> avec <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> et un compte à rebours <code>data.retry_after</code> (secondes). Personal, Pro et Team relèvent le plafond.",
-    "capTag": "Plafond d'usage équitable",
-    "capHeading": "Un arrêt, pas un backoff",
-    "capBody": "Chaque espace de travail dispose d'un plafond d'usage équitable sur les actions facturables par période de facturation. Il se situe très au-dessus de l'usage réel et ne s'achète pas, mais un agent emballé peut l'atteindre. L'atteindre n'est pas une erreur JSON-RPC : l'appel renvoie HTTP 200 avec un résultat d'outil normal portant <code>isError: true</code> et un bloc <code>_meta[\"com.mcpemails/usage_limit\"]</code> contenant <code>error_code: \"usage_limit_reached\"</code> et <code>reset_at</code>. Il n'y a pas de <code>retry_after</code>, car réessayer ne peut pas réussir avant <code>reset_at</code>. Traitez cela comme un arrêt, pas comme un backoff.",
+    "capTag": "Allocation mensuelle",
+    "capHeading": "Free 150 actions e-mail / mois · Personal, Pro et Team sans plafond mensuel",
+    "capBody": "Un espace de travail Free dispose de 150 actions e-mail par mois civil (UTC). Rien n'est compté pendant les 7 premiers jours après l'inscription, et <code>inbox_list</code> ainsi que le tableau de bord ne sont jamais comptés. Personal, Pro et Team n'ont aucun plafond mensuel, sous réserve d'un usage équitable. Atteindre l'allocation n'est pas une erreur JSON-RPC : l'appel renvoie HTTP 200 avec un résultat d'outil normal portant <code>isError: true</code>. Le texte de <code>content[0].text</code> s'ouvre sur le décompte et la date de remise à zéro, le 1er du mois suivant, et précise que réessayer ne sert à rien ; <code>_meta[\"com.mcpemails/usage_limit\"]</code> porte <code>error_code: \"usage_limit_reached\"</code> et <code>reset_at</code>. Il n'y a pas de <code>retry_after</code>. Toute autre action e-mail est refusée jusqu'à la remise à zéro, les automatisations sans surveillance se mettent en pause et reprennent d'elles-mêmes le 1er, et le propriétaire de l'espace de travail reçoit un e-mail à 80 % et à 100 %. Traitez cela comme un arrêt, pas comme un backoff.",
     "retryTag": "Réessayer en toute sécurité",
     "retryHeading": "Respectez toujours retry_after ; ne réessayez jamais les envois à l'aveugle",
     "retryBody": "Pour les erreurs <code>rate_limit_exceeded</code>, attendez <code>data.retry_after</code> secondes avant de réessayer. Utilisez un backoff exponentiel pour <code>provider_error</code>. Ne réessayez pas automatiquement les envois <code>email_compose</code> en cas de <code>provider_error</code>, car le message a peut-être déjà été accepté par le fournisseur. Ne réessayez jamais <code>usage_limit_reached</code> : cela ne se débloque qu'à <code>reset_at</code>."

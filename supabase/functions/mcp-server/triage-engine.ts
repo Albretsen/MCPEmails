@@ -586,6 +586,17 @@ export interface TriageRuleRow {
   next_run_at: string | null;
   running_since: string | null;
   consecutive_failures: number;
+  /**
+   * A plan-limit pause (migration 20260912200000). 'plan_limit' is the only
+   * reason; `paused_until` is the allowance period's end. Distinct from
+   * `disabled_reason`, which is terminal: a paused rule stays enabled and the
+   * dispatcher picks it up again by itself once `paused_until` has passed.
+   * Optional on the type so a caller projecting the pre-pause columns still
+   * type-checks; the dispatcher reads them through `claimRule`'s predicate,
+   * never off the row.
+   */
+  paused_reason?: string | null;
+  paused_until?: string | null;
 }
 
 /** The authority a run acts with. Projected from `api_keys`. */
@@ -689,15 +700,25 @@ export interface TriageStore {
    * -> executing), and a zero-row update is an unambiguous "somebody else got it".
    */
   claimRule(ruleId: string, nowIso: string): Promise<boolean>;
-  /** Release the lease and write the post-run scheduling state. */
+  /**
+   * Release the lease and write the post-run scheduling state.
+   *
+   * `last_run_at` is optional because a plan-limit pause releases a rule that
+   * did NOT run, and "last run" must keep meaning the last time it did.
+   * `paused_reason` / `paused_until` write the pause; the dispatcher's claim
+   * clears them once `paused_until` has passed, so nothing here ever needs to
+   * write them back to null.
+   */
   releaseRule(
     ruleId: string,
     update: {
       next_run_at: string;
-      last_run_at: string;
+      last_run_at?: string;
       consecutive_failures: number;
       enabled?: boolean;
       disabled_reason?: string | null;
+      paused_reason?: string | null;
+      paused_until?: string | null;
     },
   ): Promise<void>;
   createRun(input: {
@@ -753,6 +774,39 @@ export interface TriageStore {
   loadInbox(inboxId: string): Promise<TriageInbox | null>;
 }
 
+/**
+ * What the allowance said when it said no.
+ *
+ * Everything an unattended rule needs to pause itself honestly: when the pause
+ * lifts (the allowance period's end, so the rule resumes on the 1st with no
+ * manual action) and the numbers for the notice. Produced by index.ts from the
+ * `workspace_action_allowance()` row; the engine never computes any of it.
+ */
+export interface TriagePlanLimit {
+  /** ISO. When the pause lifts. Written to `triage_rules.paused_until`. */
+  paused_until: string;
+  /** ISO. The allowance period the numbers below are about. */
+  period_start: string;
+  used: number;
+  cap: number;
+}
+
+/** Answer to "may this rule run at all right now?", asked before the mailbox is opened. */
+export type TriageAllowanceCheck =
+  | { allowed: true }
+  | { allowed: false; limit: TriagePlanLimit };
+
+/**
+ * Answer to "may this ONE action be taken?", asked before the message is
+ * claimed. `reservation_id` is null when the workspace is not metered (exempt,
+ * in its first week, or the reservation subsystem failed open); the engine
+ * treats it as an opaque token and hands it back through `meter` (action
+ * taken) or `releaseReservation` (action not taken).
+ */
+export type TriageActionReservation =
+  | { allowed: true; reservation_id: string | null }
+  | { allowed: false; limit: TriagePlanLimit };
+
 export interface TriageDeps {
   store: TriageStore;
   /** HMAC-SHA256(ENCRYPTION_KEY, provider_message_id). Keyed and one-way. */
@@ -774,7 +828,14 @@ export interface TriageDeps {
     /** Already rendered, escaped, and free of body content. */
     renderedTemplate: string | null;
   }): Promise<TriageActionOutcome>;
-  /** `writeActivityLog` + `writeActionUsage`, per action. */
+  /**
+   * `writeActivityLog` + `writeActionUsage`, per action, AFTER it was taken.
+   *
+   * `reservationId` is whatever `reserveAction` handed out for this action;
+   * index.ts finalises that reservation (success books the row, failure
+   * releases it) instead of inserting a bare usage row. Null means the action
+   * was not metered against an allowance, and the bare insert is correct.
+   */
   meter(input: {
     workspaceId: string;
     apiKeyId: string;
@@ -783,6 +844,52 @@ export interface TriageDeps {
     status: "success" | "error";
     errorCode: string | null;
     durationMs: number;
+    reservationId?: string | null;
+  }): Promise<void>;
+  /**
+   * The allowance gate, asked ONCE per rule after the lease is won and before
+   * the mailbox is opened. A refusal pauses the rule until the period ends.
+   *
+   * Optional, like `loadKeyGrant`: a caller that does not implement it gets
+   * the pre-allowance behaviour (every rule runs), never a stricter one. The
+   * implementation must fail OPEN on infrastructure error and answer `allowed:
+   * false` only for a real, exhausted allowance; the engine still wraps the
+   * call so a throw is read as "allowed" rather than as a rule failure.
+   */
+  checkAllowance?(workspaceId: string): Promise<TriageAllowanceCheck>;
+  /**
+   * The allowance gate, per ACTION, asked before the message is claimed.
+   *
+   * Reserving before the dedupe claim, not after, is deliberate: a message
+   * claimed and then refused would sit in `triage_seen_messages` as handled
+   * without ever having been touched, and that is a permanent loss, once per
+   * pause. Reserving first means a refusal leaves the message unclaimed for
+   * the run that happens after the pause lifts. The price is that a lost
+   * claim (another run got the message first) has to hand the reservation
+   * back through `releaseReservation`; that path is rare and the reservation
+   * expires on its own within fifteen minutes even if the hand-back fails.
+   */
+  reserveAction?(input: {
+    workspaceId: string;
+    operation: TriageOperationName;
+  }): Promise<TriageActionReservation>;
+  /** Hand back a reservation for an action that was never taken. */
+  releaseReservation?(reservationId: string): Promise<void>;
+  /**
+   * Announce that a rule was paused for the workspace's plan limit.
+   *
+   * Same contract as `notifyRuleDisabled`: optional, fire-and-forget, never a
+   * second failure for a rule that has already stopped. index.ts queues the
+   * `automation_paused_limit` email from it. Called once per pause, not once
+   * per skipped run: a paused rule is filtered out of the due query, so it is
+   * not seen again until the pause lifts.
+   */
+  notifyRulePaused?(input: {
+    ruleId: string;
+    workspaceId: string;
+    inboxId: string;
+    ruleName: string;
+    limit: TriagePlanLimit;
   }): Promise<void>;
   /**
    * Announce that a rule just switched itself off after repeated failures.
@@ -922,6 +1029,63 @@ export interface TriageRunSummary {
   failed: number;
   skipped: number;
   error_code: string | null;
+}
+
+/** The value written to `triage_rules.paused_reason`. The only reason today. */
+export const TRIAGE_PAUSE_REASON_PLAN_LIMIT = "plan_limit";
+
+/**
+ * Pauses a leased rule until its workspace's allowance period ends.
+ *
+ * Shared by the two places a plan limit can stop a rule: before it runs (the
+ * dispatcher's pre-run check) and mid-run (a refused reservation). In both
+ * the lease is released, the rule stays ENABLED, `consecutive_failures` is
+ * left exactly as it was (a plan limit is not a failure of the rule), and
+ * `next_run_at` is moved to the moment the pause lifts so the dashboard's
+ * "next run" is honest and the rule is due the minute it may run again. The
+ * dispatcher clears `paused_reason` / `paused_until` on the next claim it
+ * wins, so the resume needs no write here.
+ */
+async function pauseRuleForPlanLimit(
+  deps: TriageDeps,
+  rule: TriageRuleRow,
+  limit: TriagePlanLimit,
+): Promise<void> {
+  await deps.store.releaseRule(rule.id, {
+    next_run_at: limit.paused_until,
+    consecutive_failures: rule.consecutive_failures ?? 0,
+    paused_reason: TRIAGE_PAUSE_REASON_PLAN_LIMIT,
+    paused_until: limit.paused_until,
+  });
+  // Structured, ids and counts only. This line is how an operator answers
+  // "why did this customer's automation stop?" without opening the dashboard.
+  console.info("[triage] rule_paused_plan_limit", {
+    rule_id: rule.id,
+    workspace_id: rule.workspace_id,
+    used: limit.used,
+    cap: limit.cap,
+    paused_until: limit.paused_until,
+  });
+  if (deps.notifyRulePaused) {
+    try {
+      await deps.notifyRulePaused({
+        ruleId: rule.id,
+        workspaceId: rule.workspace_id,
+        inboxId: rule.inbox_id,
+        // User-authored text on its way into an email, so it is neutralized
+        // and truncated at this boundary like every other user-authored
+        // string this module passes on.
+        ruleName: neutralizeText(rule.name ?? "").slice(0, 80),
+        limit,
+      });
+    } catch (error) {
+      // Never a second failure for a rule that has already stopped.
+      console.warn("[triage] pause_notify_failed", {
+        rule_id: rule.id,
+        error: redactErrorDetail(error),
+      });
+    }
+  }
 }
 
 /**
@@ -1098,9 +1262,75 @@ export async function runTriageRule(
     }
   }
 
+  /**
+   * Plan limit mid-run: stop cleanly, keep what was done, pause the rule.
+   *
+   * Not a failure. The run is finished with the counts it reached and its
+   * true status (a run that moved eleven messages and was then refused the
+   * twelfth COMPLETED eleven moves), `error_code` says why it stopped short,
+   * `consecutive_failures` is untouched, and the unprocessed matches are
+   * still unclaimed for the run after the pause lifts.
+   */
+  const pauseRun = async (limit: TriagePlanLimit): Promise<TriageRunSummary> => {
+    const status: TriageRunSummary["status"] = failed > 0
+      ? "completed_with_errors"
+      : processed === 0
+      ? "skipped"
+      : "completed";
+    await store.finishRun(runId, {
+      status,
+      duration_ms: nowMs(deps) - startedMs,
+      matched,
+      processed,
+      succeeded,
+      failed,
+      skipped,
+      error_code: TRIAGE_PAUSE_REASON_PLAN_LIMIT,
+      error_detail: `Stopped after ${processed} of ${matched} matches: the workspace has used ` +
+        `${limit.used} of ${limit.cap} email actions this period. The automation is paused ` +
+        `until ${limit.paused_until.slice(0, 10)} and resumes by itself.`,
+    });
+    await pauseRuleForPlanLimit(deps, rule, limit);
+    return {
+      rule_id: rule.id,
+      status,
+      matched,
+      processed,
+      succeeded,
+      failed,
+      skipped,
+      error_code: TRIAGE_PAUSE_REASON_PLAN_LIMIT,
+    };
+  };
+
   // ── Act, message by message ───────────────────────────────────────────────
   for (const match of matches.slice(0, cap)) {
     const digest = await deps.digest(match.id);
+
+    // RESERVE BEFORE CLAIMING. Each unattended action is metered against the
+    // workspace's allowance exactly like an interactive one, and the
+    // reservation is taken here, ahead of the dedupe claim, so a refusal
+    // leaves the message unclaimed (see `reserveAction` on TriageDeps for why
+    // the other order loses a message per pause). A throw is read as
+    // "allowed, unmetered": the allowance is a plan rule, and an
+    // infrastructure error in it must not become a rule failure.
+    let reservationId: string | null = null;
+    if (deps.reserveAction) {
+      let reservation: TriageActionReservation = { allowed: true, reservation_id: null };
+      try {
+        reservation = await deps.reserveAction({
+          workspaceId: rule.workspace_id,
+          operation: TRIAGE_ACTION_OPERATIONS[action.type],
+        });
+      } catch (error) {
+        console.warn("[triage] reserve_action_threw", {
+          rule_id: rule.id,
+          error: redactErrorDetail(error),
+        });
+      }
+      if (!reservation.allowed) return await pauseRun(reservation.limit);
+      reservationId = reservation.reservation_id;
+    }
 
     // CLAIM BEFORE ACTING. Zero rows inserted means somebody already handled
     // this message for this rule, so we record the skip and do NOT touch the
@@ -1109,6 +1339,19 @@ export async function runTriageRule(
     // whereas a claim after the action would double-move on every retry.
     const claimed = await store.claimMessage(rule.id, digest);
     if (!claimed) {
+      if (reservationId && deps.releaseReservation) {
+        // Nothing was done, so nothing is owed. Best effort: an unreleased
+        // reservation expires on its own and only ever over-counts by one for
+        // a quarter of an hour.
+        try {
+          await deps.releaseReservation(reservationId);
+        } catch (error) {
+          console.warn("[triage] reservation_release_failed", {
+            rule_id: rule.id,
+            error: redactErrorDetail(error),
+          });
+        }
+      }
       skipped++;
       await store.writeRunItem({
         run_id: runId,
@@ -1174,6 +1417,7 @@ export async function runTriageRule(
       status: outcome.ok ? "success" : "error",
       errorCode: outcome.ok ? null : (outcome.error_code ?? "provider_error"),
       durationMs: nowMs(deps) - actionStartMs,
+      reservationId,
     });
 
     if (!outcome.ok) {
@@ -1309,6 +1553,7 @@ export async function handleTriageDispatch(deps: TriageDeps): Promise<Response> 
   let ran = 0;
   let failedRuns = 0;
   let contended = 0;
+  let paused = 0;
   let budgetExhausted = false;
 
   for (const rule of due) {
@@ -1333,6 +1578,33 @@ export async function handleTriageDispatch(deps: TriageDeps): Promise<Response> 
       continue;
     }
 
+    // THE ALLOWANCE, BEFORE THE MAILBOX. A workspace with nothing left this
+    // period gets its rule paused here, holding the lease we just won, rather
+    // than being allowed to search, claim its first match and be refused on
+    // the reservation. One RPC per due rule; an unmetered workspace (early
+    // member, first week, paid) answers "allowed" and costs nothing more. The
+    // implementation fails open, and so does this wrapper: a thrown check is
+    // "allowed", never a rule failure.
+    if (deps.checkAllowance) {
+      let check: TriageAllowanceCheck = { allowed: true };
+      try {
+        check = await deps.checkAllowance(rule.workspace_id);
+      } catch (error) {
+        console.warn("[triage-dispatch] allowance check threw for rule", rule.id, redactErrorDetail(error));
+      }
+      if (!check.allowed) {
+        try {
+          await pauseRuleForPlanLimit(deps, rule, check.limit);
+          paused++;
+        } catch (error) {
+          // The store threw mid-pause. Same rule as a throw out of
+          // runTriageRule below: leave the lease to the stale sweep.
+          console.error("[triage-dispatch] rule", rule.id, "pause threw:", redactErrorDetail(error));
+        }
+        continue;
+      }
+    }
+
     try {
       const summary = await runTriageRule(deps, rule, "schedule");
       ran++;
@@ -1348,7 +1620,7 @@ export async function handleTriageDispatch(deps: TriageDeps): Promise<Response> 
   }
 
   console.log(
-    `[triage-dispatch] Done: ran=${ran} failed=${failedRuns} contended=${contended} ` +
+    `[triage-dispatch] Done: ran=${ran} failed=${failedRuns} contended=${contended} paused=${paused} ` +
       `reclaimed=${reclaimed} due=${due.length} budget_exhausted=${budgetExhausted}`,
   );
   return new Response(
@@ -1356,6 +1628,7 @@ export async function handleTriageDispatch(deps: TriageDeps): Promise<Response> 
       ran,
       failed: failedRuns,
       contended,
+      paused,
       reclaimed,
       due: due.length,
       budget_exhausted: budgetExhausted,
@@ -1450,11 +1723,13 @@ function toolErr(text: string, code: string): TriageToolResult {
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** Columns safe to return to a model. Never the lease or internal counters raw. */
+/** Columns safe to return to a model. Never the lease or internal counters raw.
+ * The two pause columns are included so an agent reading `automation_list`
+ * sees WHY an enabled rule has not run, instead of a next_run_at weeks out. */
 const AUTOMATION_PUBLIC_COLUMNS =
   "id, name, enabled, inbox_id, filter, action, interval_minutes, " +
   "max_messages_per_run, next_run_at, last_run_at, consecutive_failures, " +
-  "disabled_reason, created_at, updated_at";
+  "disabled_reason, paused_reason, paused_until, created_at, updated_at";
 
 /**
  * Validates the create/update body as a whole.

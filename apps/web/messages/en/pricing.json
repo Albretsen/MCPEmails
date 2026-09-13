@@ -27,6 +27,7 @@
       "cta": "Start free",
       "features": [
         "1 connected inbox",
+        "150 email actions a month, first 7 days uncounted",
         "Read, search, organise, draft, schedule and send",
         "Send review and approval hold",
         "Usage analytics",
@@ -43,6 +44,7 @@
       "features": [
         "Everything in Free",
         "3 connected inboxes",
+        "No monthly action cap",
         "2x higher burst rate limit",
         "Email support"
       ]
@@ -89,6 +91,7 @@
         "label": "What you get",
         "rows": {
           "inboxes": "Connected inboxes",
+          "actions": "Email actions per month",
           "keys": "API keys",
           "members": "Team members",
           "burst": "Burst rate limit",
@@ -136,6 +139,8 @@
     },
     "values": {
       "unlimited": "Unlimited",
+      "actionsFree": "150 / month, first 7 days uncounted",
+      "actionsPaid": "No monthly cap, fair use",
       "oneInbox": "1 inbox",
       "threeInboxes": "3 inboxes",
       "ownerOnly": "Just you",
@@ -154,15 +159,19 @@
     "items": [
       {
         "q": "What do I get on the free plan?",
-        "a": "One connected inbox, forever, with no card. Your agent gets every MCP tool we ship against that mailbox: read, search, organise, label, draft, schedule and send, plus the per-inbox send review and approval hold. When you want a second or third mailbox on the same agent, that is Personal, at $5 a month."
+        "a": "One connected inbox, forever, with no card, and 150 email actions a calendar month. Your first 7 days after signup are not counted, so you can wire up your agent and try everything before the meter starts. Your agent gets every MCP tool we ship against that mailbox: read, search, organise, label, draft, schedule and send, plus the per-inbox send review and approval hold. When you want a second or third mailbox, or no monthly cap on actions, that is Personal, at $5 a month."
       },
       {
         "q": "What does Personal add over Free?",
-        "a": "Two more connected inboxes, double the burst ceiling (120 requests a minute instead of 60), and email support instead of the community forum. That is the whole list. Everything else is already on Free: every MCP tool including scheduled sends, the per-inbox send review and approval hold, and the usage analytics dashboard. We price by how many mailboxes you connect, and we do not hold features back from Free to make the paid tiers look bigger."
+        "a": "Two more connected inboxes, no monthly cap on email actions (fair use applies), double the burst ceiling (120 requests a minute instead of 60), and email support instead of the community forum. That is the whole list. Everything else is already on Free: every MCP tool including scheduled sends, the per-inbox send review and approval hold, and the usage analytics dashboard. We do not hold features back from Free to make the paid tiers look bigger."
       },
       {
-        "q": "What counts as an MCP call?",
-        "a": "A JSON-RPC tool invocation against your /mcp endpoint. We're a standard MCP server, so the same endpoint works with Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, and any MCP-compatible client. Plans are priced by connected inboxes, not by how many calls your agent makes."
+        "q": "What counts as an email action?",
+        "a": "One tool call against your /mcp endpoint that touches a mailbox: a read, a search, a move, a draft, a send. Listing your inboxes (inbox_list) and anything you do in the dashboard are never counted. We're a standard MCP server, so the same endpoint works with Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, and any MCP-compatible client. Free includes 150 email actions a calendar month; Personal, Pro and Team have no monthly cap, subject to fair use."
+      },
+      {
+        "q": "What happens when I reach 150 email actions?",
+        "a": "Every other email action in that workspace is refused until the 1st of the next month (UTC), when the allowance resets. Your agent sees a plain tool result saying how many actions were used and when the counter resets, so it knows retrying will not help. Unattended automations pause and resume by themselves on the 1st. The dashboard and inbox_list keep working, and we email you at 80% and again at 100%. Personal removes the monthly cap for $5 a month. Workspaces created before 2026-09-12 are early members and are not metered against the allowance."
       },
       {
         "q": "Is my email content stored anywhere?",

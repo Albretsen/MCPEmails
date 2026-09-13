@@ -186,7 +186,7 @@ nodeMock.module('@/lib/supabase/server', {
 });
 
 const { runCheckout } = await import('./checkout-core.ts');
-const { PLANS, resolvePlanLimits } = await import('./plans.ts');
+const { FREE_ACTION_ALLOWANCE, PLANS, resolvePlanLimits } = await import('./plans.ts');
 
 /** Run one checkout against a freshly stubbed database, and report what it did. */
 async function checkout(opts: {
@@ -344,7 +344,13 @@ test('Personal is a strict upgrade for a grandfathered account on all four other
   const grandfatheredFree = resolvePlanLimits('free', { unlimitedInboxes: true });
   const grandfatheredPersonal = resolvePlanLimits('personal', { unlimitedInboxes: true });
 
-  assert.equal(grandfatheredFree.maxMonthlyToolCalls, 5_000);
+  // Free's ceiling became the public 150-action allowance on 2026-09-12, so
+  // this reads the constant rather than a number that now moves with pricing
+  // copy. In practice this cohort is never metered against it: every workspace
+  // that existed before that date is exempt for good
+  // (workspaces.free_action_cap_exempt). Personal's 25,000 stays a silent
+  // abuse ceiling and is never quoted to a customer.
+  assert.equal(grandfatheredFree.maxMonthlyToolCalls, FREE_ACTION_ALLOWANCE);
   assert.equal(grandfatheredPersonal.maxMonthlyToolCalls, 25_000);
 
   assert.equal(grandfatheredFree.maxRequestsPerMinute, 60);

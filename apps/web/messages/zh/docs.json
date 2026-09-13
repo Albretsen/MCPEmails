@@ -437,7 +437,7 @@
   "errors": {
     "eyebrow": "错误代码",
     "heading": "错误代码与重试指南。",
-    "sub": "认证、权限范围和速率限制失败会返回一个带有数字代码的 JSON-RPC <code>error</code> 对象。工具执行失败（收件箱未找到、服务商错误、触及合理使用上限等）会返回一个正常的 <code>result</code>，其中 <code>isError: true</code>，并在 <code>content[0].text</code> 中提供人类可读的消息。",
+    "sub": "认证、权限范围和速率限制失败会返回一个带有数字代码的 JSON-RPC <code>error</code> 对象。工具执行失败（收件箱未找到、服务商错误、每月邮件操作额度用尽等）会返回一个正常的 <code>result</code>，其中 <code>isError: true</code>，并在 <code>content[0].text</code> 中提供人类可读的消息。",
     "thCode": "代码",
     "thType": "类型",
     "thWhen": "发生时机",
@@ -451,7 +451,7 @@
       "param": "未知的工具名称，或 tools/call 中缺少 / 无效的参数",
       "rate": "超出每密钥或每工作区的速率限制（HTTP 429）。data.error_code 始终为 \"rate_limit_exceeded\"。重试前请等待 data.retry_after 秒，或读取 Retry-After 响应头。",
       "tool": "工具已执行但遇到错误（收件箱未找到、邮件未找到、服务商认证失败、收件人无效、附件过大、服务商 5xx）。错误描述在 content[0].text 中。",
-      "cap": "工作区在当前计费周期内已触及可计费操作的合理使用上限。它以普通工具结果返回，带 isError: true，而不是 JSON-RPC 错误；详情位于 _meta[\"com.mcpemails/usage_limit\"]：error_code \"usage_limit_reached\" 和 reset_at。在 reset_at 之前重试不可能成功。"
+      "cap": "工作区已用尽每月邮件操作额度：Free 每个日历月 150 次，注册后的前 7 天不计入；Personal、Pro 和 Team 没有每月上限，但须遵守合理使用原则。它以普通工具结果返回，带 isError: true，而不是 JSON-RPC 错误。content[0].text 以计数和重置日期（下个月 1 日，UTC）开头，_meta[\"com.mcpemails/usage_limit\"] 携带 error_code \"usage_limit_reached\" 和 reset_at。inbox_list 仍可使用。在 reset_at 之前重试不可能成功。"
     }
   },
   "rateLimits": {
@@ -463,9 +463,9 @@
     "planTag": "套餐每分钟上限",
     "planHeading": "免费 60 次/分钟 · Personal 120 次/分钟 · Pro 300 次/分钟 · Team 1,000 次/分钟",
     "planBody": "这是一个每工作区的合理使用突发限制，在你所有 API 密钥间汇总。超出时，调用会返回错误代码 <code>-32003</code>，并附带 <code>data.error_code: \"rate_limit_exceeded\"</code>、<code>data.window: \"per_minute\"</code> 和一个 <code>data.retry_after</code> 倒计时（秒）。Personal、Pro 和 Team 会提高该上限。",
-    "capTag": "合理使用上限",
-    "capHeading": "这是停止信号，不是退避重试",
-    "capBody": "每个工作区在每个计费周期内都有一个针对可计费操作的合理使用上限。它远高于真实用量，也不是可以花钱突破的东西，但失控的智能体有可能触及它。触及该上限不是 JSON-RPC 错误：调用会返回 HTTP 200 和一个普通工具结果，带有 <code>isError: true</code> 以及一个 <code>_meta[\"com.mcpemails/usage_limit\"]</code> 区块，其中包含 <code>error_code: \"usage_limit_reached\"</code> 和 <code>reset_at</code>。这里没有 <code>retry_after</code>，因为在 <code>reset_at</code> 之前重试不可能成功。请把它当作停止信号，而不是退避重试。",
+    "capTag": "每月额度",
+    "capHeading": "Free 每月 150 次邮件操作 · Personal、Pro 和 Team 无每月上限",
+    "capBody": "Free 工作区每个日历月（UTC）有 150 次邮件操作。注册后的前 7 天不计任何操作，<code>inbox_list</code> 和仪表盘永远不计入。Personal、Pro 和 Team 没有每月上限，但须遵守合理使用原则。用尽额度不是 JSON-RPC 错误：调用会返回 HTTP 200 和一个普通工具结果，带有 <code>isError: true</code>。<code>content[0].text</code> 中的文本以计数和重置日期（下个月 1 日）开头，并说明重试没有用；<code>_meta[\"com.mcpemails/usage_limit\"]</code> 携带 <code>error_code: \"usage_limit_reached\"</code> 和 <code>reset_at</code>。这里没有 <code>retry_after</code>。其他所有邮件操作都会被拒绝直到重置，无人值守的自动化会暂停并在 1 日自动恢复，工作区所有者会在 80% 和 100% 时收到邮件。请把它当作停止信号，而不是退避重试。",
     "retryTag": "安全重试",
     "retryHeading": "始终遵守 retry_after；切勿盲目重试发送",
     "retryBody": "对于 <code>rate_limit_exceeded</code> 错误，请在重试前等待 <code>data.retry_after</code> 秒。对于 <code>provider_error</code> 请使用指数退避。请勿在 <code>provider_error</code> 时自动重试 <code>email_compose</code> 发送，因为该邮件可能已被服务商接受。切勿重试 <code>usage_limit_reached</code>：它只在 <code>reset_at</code> 时才会解除。"

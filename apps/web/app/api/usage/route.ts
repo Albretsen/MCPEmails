@@ -1,37 +1,41 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
-import { resolvePlanLimits } from '@/lib/stripe/plans';
+import { fetchWorkspaceActionAllowance } from '@/lib/usage/allowance';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 
 /**
  * GET /api/usage
  *
- * Returns the authenticated workspace's billable action usage for the current
- * billing-cycle window. The action ledger is also the source used by edge
- * enforcement, so the customer-visible value cannot drift from the cap check.
+ * The authenticated workspace's action allowance for the current period, read
+ * from `workspace_action_allowance()`, the same row the MCP edge function
+ * enforces from. There is no second definition of the window, the cap or the
+ * exemption on this side: the number this returns is the number that blocks.
  *
- * Response 200:
+ * Response 200 (src/lib/usage/allowance.ts `ActionAllowance`):
  * {
- *   plan: string,
+ *   plan:          string,                 // effective plan id
+ *   exempt:        boolean,                // never metered against Free
+ *   exempt_reason: 'early_member' | 'comped' | 'exemption' | null,
+ *   in_grace:      boolean,                // Free, inside its first 7 days
+ *   grace_ends_at: string | null,          // ISO, Free only
  *   monthly: {
- *     used:       number,          // calls made this billing cycle
- *     cap:        number | null,   // null = a comped entitlement
- *     resets_at:  string,          // ISO timestamp of next UTC month start
+ *     used:         number,                // billable actions in the window
+ *     cap:          number | null,         // 150 for a metered Free workspace,
+ *                                          // null for exempt AND for every
+ *                                          // paid plan (its ceiling is a silent
+ *                                          // abuse guard, never a feature)
+ *     remaining:    number | null,         // same rule as cap
+ *     period_start: string,                // ISO, start of the counting window
+ *     resets_at:    string,                // ISO, when the window ends
  *   },
- *   daily_burst: { ... },
  * }
  *
- * The daily burst row remains a request-rate diagnostic; the monthly row is
- * the abuse ceiling, NOT a pricing lever. Since the 2026-08-19 repricing the
- * value metric is connected inboxes; the action ceiling exists so a runaway
- * agent cannot burn unbounded provider quota, and it must never be presented as
- * something a customer can buy more of.
+ * `daily_burst` is gone: it was never enforced and never shown.
  */
 export async function GET(): Promise<NextResponse> {
   const supabase = await createClient();
 
-  // ── Auth ──────────────────────────────────────────────────────────────────
   const {
     data: { user },
     error: authError,
@@ -41,101 +45,29 @@ export async function GET(): Promise<NextResponse> {
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
   }
 
-  // ── Workspace ─────────────────────────────────────────────────────────────
   // Cookie-aware resolution so users in 2+ workspaces target their active one
   // (a bare `.single()` on workspace_members throws for multi-workspace users).
   const workspaceId = await resolveActiveWorkspaceId(supabase, user.id);
-
   if (!workspaceId) {
     return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
   }
 
-  // ── Plan ──────────────────────────────────────────────────────────────────
+  // Membership, under RLS, with the viewer's own client. The allowance function
+  // is service-role only and would happily answer for any id, so the viewer's
+  // right to see this workspace is established here first.
   const { data: workspace, error: workspaceError } = await supabase
     .from('workspaces')
-    .select('plan, owner_id')
+    .select('id')
     .eq('id', workspaceId)
     .maybeSingle();
-
   if (workspaceError || !workspace) {
     return NextResponse.json({ error: 'Workspace not found.' }, { status: 403 });
   }
 
-  const service = createServiceRoleClient();
-  const [{ data: entitlement }, { data: billing }] = await Promise.all([
-    service.from('user_usage_entitlements').select('kind, expires_at, unlimited_inboxes').eq('user_id', workspace.owner_id).maybeSingle(),
-    service.from('user_billing').select('current_period_start, current_period_end').eq('user_id', workspace.owner_id).maybeSingle(),
-  ]);
-  const compedScale = entitlement?.kind === 'comped_scale' &&
-    (!entitlement.expires_at || new Date(entitlement.expires_at) > new Date());
-  const plan = compedScale ? 'pro' : ((workspace.plan as string) ?? 'free');
-  const limits = resolvePlanLimits(plan, {
-    compedScale,
-    unlimitedInboxes: entitlement?.unlimited_inboxes ?? false,
-  });
+  const allowance = await fetchWorkspaceActionAllowance(createServiceRoleClient(), workspaceId);
+  if (!allowance) {
+    return NextResponse.json({ error: 'Usage is temporarily unavailable.' }, { status: 503 });
+  }
 
-  // ── Window boundaries ─────────────────────────────────────────────────────
-  // Paid workspaces follow Stripe's exact billing cycle. Free workspaces use
-  // the documented calendar-month cycle. This matches edge enforcement.
-  const now = new Date();
-
-  const todayStart = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-  ).toISOString();
-
-  const calendarMonthStart = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
-  ).toISOString();
-
-  // Reset timestamps
-  const nextMidnightUTC = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1),
-  ).toISOString();
-
-  const nextCalendarMonthUTC = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1),
-  ).toISOString();
-
-  const billingStart = plan !== 'free' && billing?.current_period_start && billing?.current_period_end &&
-    new Date(billing.current_period_start) <= now && now < new Date(billing.current_period_end)
-    ? billing.current_period_start
-    : calendarMonthStart;
-  const billingEnd = plan !== 'free' && billing?.current_period_start && billing?.current_period_end &&
-    new Date(billing.current_period_start) <= now && now < new Date(billing.current_period_end)
-    ? billing.current_period_end
-    : nextCalendarMonthUTC;
-
-  // ── Count queries (parallel) ──────────────────────────────────────────────
-  const [dailyResult, monthlyResult] = await Promise.all([
-    supabase
-      .from('activity_log')
-      .select('*', { count: 'exact', head: true })
-      .eq('workspace_id', workspaceId)
-      .gte('created_at', todayStart),
-    supabase
-      .from('action_usage')
-      .select('*', { count: 'exact', head: true })
-      .eq('workspace_id', workspaceId)
-      .eq('billable', true)
-      .eq('meter_version', 1)
-      .gte('occurred_at', billingStart)
-      .lt('occurred_at', billingEnd),
-  ]);
-
-  const usedToday = dailyResult.count ?? 0;
-  const usedThisMonth = monthlyResult.count ?? 0;
-
-  return NextResponse.json({
-    plan,
-    monthly: {
-      used: usedThisMonth,
-      cap: limits.maxMonthlyToolCalls === Infinity ? null : limits.maxMonthlyToolCalls,
-      resets_at: billingEnd,
-    },
-    daily_burst: {
-      used: usedToday,
-      cap: limits.maxDailyBurstCalls === Infinity ? null : limits.maxDailyBurstCalls,
-      resets_at: nextMidnightUTC,
-    },
-  });
+  return NextResponse.json(allowance);
 }

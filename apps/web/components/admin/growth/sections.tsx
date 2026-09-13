@@ -46,10 +46,20 @@ import {
   fetchProviderMix,
   fetchRetentionCurve,
   fetchUpgradePressure,
+  fetchUsageCapOverview,
+  fetchUsageCapWorkspaces,
   fetchUserSignupDays,
   gmailCapProjection,
   type GrowthResult,
 } from '@/lib/analytics/growth-queries';
+import {
+  closestToTheWall,
+  normaliseUsageCapOverview,
+  usageCapFunnelSteps,
+  usageCapRetentionPair,
+  usageCapStateTiles,
+  usageCapTone,
+} from '@/lib/analytics/usage-cap';
 import {
   fetchCashCollected,
   fetchCheckoutFunnel,
@@ -452,6 +462,198 @@ export async function MoneySection({ days }: { days: number }) {
             title="Workspaces by connected inboxes"
             error={bands.ok ? 'upgrade pressure unavailable' : bands.error}
           />
+        )}
+      </Cell>
+    </>
+  );
+}
+
+/* ========================================================= usage cap band */
+
+/** Rows in the "closest to the wall" list. Five keeps the tile a tile. */
+const WALL_ROWS = 5;
+
+/**
+ * The Free action allowance: 150 email actions a month, first 7 days
+ * uncounted, every workspace from before 2026-09-12 exempt for good.
+ *
+ * WHAT THIS BAND ANSWERS, in the order the tiles sit: how many workspaces
+ * the cap can reach and what state each is in; who is nearest the wall, by
+ * domain only; whether being refused sends anyone to checkout; whether it
+ * costs us anyone (capped against uncapped from the same signup weeks); and
+ * whether the two emails and the automation pause are actually happening.
+ *
+ * NO PERSON IS NAMED HERE. The workspace list prints the owner's domain and
+ * nothing else; the sub-page behind the link is where the address is, and it
+ * sits behind the same ADMIN_EMAILS session as the two tables in the last
+ * band. The wall kiosk does not render this section.
+ *
+ * The state counts are a snapshot bucketed by the same rules as
+ * workspace_action_allowance() (migration 20260912210000 says so in its
+ * header and must be changed with it); the funnel, emails and pauses are
+ * over the page window.
+ */
+export async function UsageCapSection({ days }: { days: number }) {
+  const [overview, roster] = await Promise.all([fetchUsageCapOverview(days), fetchUsageCapWorkspaces()]);
+
+  const row = overview.ok ? normaliseUsageCapOverview(overview.data) : null;
+  const tiles = row ? usageCapStateTiles(row) : [];
+  const retention = row ? usageCapRetentionPair(row) : null;
+  const exempt = row ? row.exempt_early + row.exempt_support : 0;
+  const wall = roster.ok ? closestToTheWall(roster.data, WALL_ROWS) : [];
+
+  // Domain plus state, made unique the dull way: two workspaces at the same
+  // domain and the same rung are one row each, not one row that vanishes
+  // into a duplicate React key.
+  const seen = new Map<string, number>();
+  const wallRows = wall.map((workspace) => {
+    const base = `${workspace.owner_domain ?? 'unknown domain'} · ${workspace.state === 'capped' ? 'capped' : `${formatCount(workspace.used)} of ${formatCount(workspace.cap ?? 0)}`}`;
+    const times = (seen.get(base) ?? 0) + 1;
+    seen.set(base, times);
+    return {
+      name: times > 1 ? `${base} (${times})` : base,
+      count: workspace.used,
+      color: workspace.state === 'capped' ? 'var(--red-500)' : workspace.state === 'warn' ? 'var(--amber-500)' : 'var(--cobalt-300)',
+    };
+  });
+
+  return (
+    <>
+      <Cell span={8} tall={2}>
+        {row ? (
+          <Tile
+            label="Who the cap can reach"
+            aside={`${formatCount(row.metered)} metered`}
+            tone={usageCapTone(row)}
+          >
+            <StatStrip
+              stats={[
+                ...tiles.map((tile) => ({ label: tile.label, value: formatCount(tile.value), note: tile.note })),
+                {
+                  label: 'Exempt',
+                  value: formatCount(exempt),
+                  note: `${formatCount(row.exempt_early)} early members, ${formatCount(row.exempt_support)} by support`,
+                },
+              ]}
+            />
+            <BarList
+              rows={wallRows}
+              emptyLabel="Nobody is past half the allowance."
+              color="var(--cobalt-300)"
+            />
+            <p className="kiosk-big-caption">
+              Closest to the wall, by owner domain. <strong>{formatCount(row.refused_workspaces_window)}</strong> workspaces were
+              refused <strong>{formatCount(row.refusals_window)}</strong> times in {days}d.{' '}
+              <a href="/admin/growth/usage-cap">Every workspace at 50% or more, by name</a>.
+            </p>
+          </Tile>
+        ) : (
+          <TileError label="Who the cap can reach" message={overview.ok ? 'unavailable' : overview.error} />
+        )}
+      </Cell>
+
+      <Cell span={4} tall={2}>
+        {row ? (
+          <Tile label="After a refusal" aside={`${days}d, workspaces`}>
+            <FunnelSteps steps={usageCapFunnelSteps(row)} />
+            <p className="kiosk-big-caption">
+              Each rung is an event after the first refusal. The dashboard banner links straight to checkout, so a
+              rung can be skipped.
+            </p>
+          </Tile>
+        ) : (
+          <TileError label="After a refusal" message={overview.ok ? 'unavailable' : overview.error} />
+        )}
+      </Cell>
+
+      <Cell span={4}>
+        {row && retention ? (
+          <Tile
+            label="Did the wall cost us anyone"
+            aside="7 days after"
+            tone={
+              retention.capped.eligible === 0
+                ? 'default'
+                : retention.capped.retained / retention.capped.eligible >=
+                    (retention.uncapped.eligible > 0 ? retention.uncapped.retained / retention.uncapped.eligible : 0)
+                  ? 'good'
+                  : 'warn'
+            }
+          >
+            <BigNumber
+              value={ratio(retention.capped.retained, retention.capped.eligible)}
+              caption={
+                <>
+                  of refused workspaces called again within 7 days, against{' '}
+                  <strong>{ratio(retention.uncapped.retained, retention.uncapped.eligible)}</strong> of uncapped ones from
+                  the same signup weeks
+                </>
+              }
+            />
+          </Tile>
+        ) : (
+          <TileError label="Did the wall cost us anyone" message={overview.ok ? 'unavailable' : overview.error} />
+        )}
+      </Cell>
+
+      <Cell span={4}>
+        {row ? (
+          <Tile label="Usage emails" aside={`${days}d, sent · queued`}>
+            <Rail
+              groups={[
+                {
+                  title: 'One per workspace per month',
+                  rows: [
+                    {
+                      key: 'warn',
+                      count: formatCount(row.email_80_sent),
+                      label: '80% warning',
+                      value: `${formatCount(row.email_80_queued)} queued`,
+                      zero: row.email_80_sent === 0 && row.email_80_queued === 0,
+                    },
+                    {
+                      key: 'limit',
+                      count: formatCount(row.email_100_sent),
+                      label: 'Limit reached',
+                      value: `${formatCount(row.email_100_queued)} queued`,
+                      zero: row.email_100_sent === 0 && row.email_100_queued === 0,
+                    },
+                    {
+                      key: 'pause',
+                      count: formatCount(row.email_pause_sent),
+                      label: 'Automation paused',
+                      value: `${formatCount(row.email_pause_queued)} queued`,
+                      zero: row.email_pause_sent === 0 && row.email_pause_queued === 0,
+                    },
+                  ],
+                },
+              ]}
+            />
+          </Tile>
+        ) : (
+          <TileError label="Usage emails" message={overview.ok ? 'unavailable' : overview.error} />
+        )}
+      </Cell>
+
+      <Cell span={4}>
+        {row ? (
+          <Tile
+            label="Automations paused"
+            aside="plan limit, now"
+            tone={row.rules_paused_now > 0 ? 'warn' : 'good'}
+          >
+            <BigNumber
+              value={row.rules_paused_now}
+              caption={
+                <>
+                  rules on <strong>{formatCount(row.workspaces_paused_now)}</strong> workspaces, resuming on the 1st ·{' '}
+                  <strong>{formatCount(row.pauses_window)}</strong> workspaces paused in {days}d
+                </>
+              }
+            />
+          </Tile>
+        ) : (
+          <TileError label="Automations paused" message={overview.ok ? 'unavailable' : overview.error} />
         )}
       </Cell>
     </>

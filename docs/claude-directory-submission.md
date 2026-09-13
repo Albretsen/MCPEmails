@@ -53,9 +53,14 @@ Two findings that are not blockers but belong on the record:
   for the activity log only. All claude.ai clients egress from a shared
   Anthropic IP pool, so a per-IP limiter would have throttled real users. Ours
   will not.
-- **Free plan cap is 5,000 actions per calendar month.** A reviewer will use
-  perhaps 40. The reviewer workspace stays on `free` deliberately: it is the
-  state a new user lands in.
+- **Free plan allowance is 150 email actions per calendar month** (first 7 days
+  after signup uncounted) for workspaces created after the 2026-09-12 launch of
+  the allowance. The reviewer workspace predates it, so it is an early member and
+  is not metered at all (`workspaces.free_action_cap_exempt`). It stays on `free`
+  deliberately: it is the state a new user lands in. The two quoted submission
+  paragraphs below still say "5,000 actions", which was true when submitted;
+  change both to "150 email actions a month, first 7 days uncounted" at the next
+  revision of the listing.
 
 ---
 

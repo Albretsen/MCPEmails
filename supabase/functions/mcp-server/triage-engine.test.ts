@@ -586,6 +586,157 @@ Deno.test("a failing rule below the ceiling stays enabled", async () => {
 });
 
 // ---------------------------------------------------------------------------
+// The plan limit
+//
+// An unattended rule is the one place where running out of allowance is not
+// self-announcing: nobody is reading a tool result. So the rule has to stop
+// visibly (paused_reason, paused_until, a notice) and it has to stop WITHOUT
+// looking like a failure, because five "failures" auto-disable a rule for good
+// and a customer who upgrades would find their automations switched off.
+// ---------------------------------------------------------------------------
+
+/** The refusal shape index.ts builds out of a workspace_action_allowance row. */
+const PLAN_LIMIT = {
+  paused_until: "2026-10-01T00:00:00.000Z",
+  period_start: "2026-09-08T00:00:00.000Z",
+  used: 150,
+  cap: 150,
+};
+
+Deno.test("a workspace with nothing left has its rule paused before the mailbox is opened", async () => {
+  const state = freshState({ dueRules: [fakeRule()] });
+  const applied = { calls: [] as any[] };
+  const searched = { count: 0 };
+  const paused: any[] = [];
+  const deps: TriageDeps = {
+    ...fakeDeps(state, [fakeMatch("msg-a")], applied),
+    search: () => {
+      searched.count++;
+      return Promise.resolve([fakeMatch("msg-a")]);
+    },
+    checkAllowance: () => Promise.resolve({ allowed: false, limit: PLAN_LIMIT }),
+    notifyRulePaused: (input) => {
+      paused.push(input);
+      return Promise.resolve();
+    },
+  };
+
+  const body = await (await handleTriageDispatch(deps)).json();
+
+  assertEquals(body.paused, 1, "the dispatch reports the pause rather than hiding it");
+  assertEquals(body.ran, 0, "the rule does not run");
+  assertEquals(searched.count, 0, "the mailbox is never opened");
+  assertEquals(applied.calls.length, 0, "and nothing is applied to it");
+
+  const release = state.released[0];
+  assertEquals(release.paused_reason, "plan_limit", "the pause says why");
+  assertEquals(release.paused_until, PLAN_LIMIT.paused_until, "and until when: the period end");
+  assertEquals(release.next_run_at, PLAN_LIMIT.paused_until, "next_run_at is the moment it may run again");
+  assertEquals(release.consecutive_failures, 0, "a plan limit is NOT a failure of the rule");
+  assertEquals(release.enabled, undefined, "the rule stays enabled: this resumes by itself");
+  assertEquals(release.last_run_at, undefined, "a rule that did not run has not run");
+  assertEquals(state.leases.size, 0, "the lease is handed back");
+  assertEquals(paused.length, 1, "the owner is told once");
+  assertEquals(paused[0].limit.cap, 150, "the notice carries the numbers");
+});
+
+Deno.test("an allowance check that throws lets the rule run, never pauses it", async () => {
+  const state = freshState({ dueRules: [fakeRule()] });
+  const applied = { calls: [] as any[] };
+  const deps: TriageDeps = {
+    ...fakeDeps(state, [fakeMatch("msg-a")], applied),
+    checkAllowance: () => Promise.reject(new Error("rpc down")),
+  };
+
+  const body = await (await handleTriageDispatch(deps)).json();
+  assertEquals(body.ran, 1, "infrastructure trouble in the allowance fails OPEN");
+  assertEquals(body.paused, 0, "and pauses nothing");
+});
+
+Deno.test("a rule that is due and not paused runs exactly as before", async () => {
+  // The seam is optional on purpose: a deps bundle without the allowance hooks
+  // (every existing caller, and the manual Run now path before it was wired)
+  // must behave identically to the pre-allowance engine.
+  const state = freshState({ dueRules: [fakeRule()] });
+  const applied = { calls: [] as any[] };
+  const body = await (await handleTriageDispatch(fakeDeps(state, [fakeMatch("msg-a")], applied))).json();
+  assertEquals(body.ran, 1, "no checkAllowance means the old behaviour");
+  assertEquals(body.paused, 0, "and no pauses");
+  assertEquals(applied.calls.length, 1, "the mailbox is acted on");
+});
+
+Deno.test("a refusal mid-run stops the run cleanly and keeps what was already done", async () => {
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const paused: any[] = [];
+  let reservations = 0;
+  const deps: TriageDeps = {
+    ...fakeDeps(state, [fakeMatch("msg-a"), fakeMatch("msg-b"), fakeMatch("msg-c")], applied),
+    reserveAction: () => {
+      reservations++;
+      // The first action is allowed, the second is refused: the allowance ran
+      // out between them, exactly as it does on the 150th action of a month.
+      return Promise.resolve(
+        reservations === 1
+          ? { allowed: true, reservation_id: "res-1" }
+          : { allowed: false, limit: PLAN_LIMIT },
+      );
+    },
+    notifyRulePaused: (input) => {
+      paused.push(input);
+      return Promise.resolve();
+    },
+  };
+
+  const summary = await runTriageRule(deps, fakeRule());
+
+  assertEquals(summary.status, "completed", "one move done and one refused is a completed run, not a failed one");
+  assertEquals(summary.error_code, "plan_limit", "but it says why it stopped short");
+  assertEquals(summary.succeeded, 1, "the action that was taken is kept");
+  assertEquals(applied.calls.length, 1, "the refused action never reaches the mailbox");
+  assertEquals(state.seen.size, 1, "and the refused message is NOT claimed, so it is still there next month");
+
+  const release = state.released[0];
+  assertEquals(release.consecutive_failures, 0, "a plan limit does not count towards auto-disable");
+  assertEquals(release.paused_reason, "plan_limit", "the rule is paused by the same path as the pre-run check");
+  assertEquals(release.paused_until, PLAN_LIMIT.paused_until, "until the period ends");
+  assertEquals(paused.length, 1, "one notice");
+
+  const run = state.runs[0];
+  assertEquals(run.status, "completed", "the run row agrees with the summary");
+  assertEquals(run.error_code, "plan_limit", "and carries the reason");
+});
+
+Deno.test("the reservation rides through to the meter, and a lost claim hands it back", async () => {
+  const state = freshState();
+  // Another run already claimed msg-a, so this run reserves for it and then
+  // finds the ledger has it: the reservation must not be spent.
+  state.seen.add("rule-1:digest-msg-a");
+  const applied = { calls: [] as any[] };
+  const metered: any[] = [];
+  const released: string[] = [];
+  let issued = 0;
+  const deps: TriageDeps = {
+    ...fakeDeps(state, [fakeMatch("msg-a"), fakeMatch("msg-b")], applied),
+    reserveAction: () => Promise.resolve({ allowed: true, reservation_id: `res-${++issued}` }),
+    releaseReservation: (id) => {
+      released.push(id);
+      return Promise.resolve();
+    },
+    meter: (input) => {
+      metered.push(input);
+      return Promise.resolve();
+    },
+  };
+
+  await runTriageRule(deps, fakeRule());
+
+  assertEquals(released, ["res-1"], "the reservation for the message somebody else took is released");
+  assertEquals(metered.length, 1, "only the action actually taken is metered");
+  assertEquals(metered[0].reservationId, "res-2", "and it finalises ITS OWN reservation, not the released one");
+});
+
+// ---------------------------------------------------------------------------
 // Authority
 // ---------------------------------------------------------------------------
 

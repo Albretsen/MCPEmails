@@ -437,7 +437,7 @@
   "errors": {
     "eyebrow": "Feilkoder",
     "heading": "Feilkoder og veiledning for nye forsøk.",
-    "sub": "Feil ved autentisering, omfang og hastighetsgrense returnerer et JSON-RPC <code>error</code>-objekt med en numerisk kode. Feil ved verktøykjøring (innboks ikke funnet, leverandørfeil, tak for rimelig bruk nådd osv.) returnerer et vanlig <code>result</code> med <code>isError: true</code> og en lesbar melding i <code>content[0].text</code>.",
+    "sub": "Feil ved autentisering, omfang og hastighetsgrense returnerer et JSON-RPC <code>error</code>-objekt med en numerisk kode. Feil ved verktøykjøring (innboks ikke funnet, leverandørfeil, månedlig kvote for e-posthandlinger brukt opp osv.) returnerer et vanlig <code>result</code> med <code>isError: true</code> og en lesbar melding i <code>content[0].text</code>.",
     "thCode": "Kode",
     "thType": "Type",
     "thWhen": "Når den oppstår",
@@ -451,7 +451,7 @@
       "param": "Ukjent verktøynavn, eller manglende / ugyldig parameter i tools/call",
       "rate": "Hastighetsgrense per nøkkel eller per arbeidsområde overskredet (HTTP 429). data.error_code er alltid \"rate_limit_exceeded\". Vent data.retry_after sekunder, eller les Retry-After-headeren, før du prøver på nytt.",
       "tool": "Verktøyet ble kjørt, men støtte på en feil (innboks ikke funnet, melding ikke funnet, autentiseringsfeil hos leverandør, ugyldig mottaker, vedlegg for stort, leverandør 5xx). Feilbeskrivelsen finnes i content[0].text.",
-      "cap": "Arbeidsområdet har nådd taket for rimelig bruk av fakturerbare handlinger i inneværende faktureringsperiode. Det returneres som et vanlig verktøyresultat med isError: true, ikke som en JSON-RPC-feil, med detaljene under _meta[\"com.mcpemails/usage_limit\"]: error_code \"usage_limit_reached\" og reset_at. Nye forsøk kan ikke lykkes før reset_at."
+      "cap": "Arbeidsområdet har brukt opp sin månedlige kvote for e-posthandlinger: 150 per kalendermåned på Free, der de første 7 dagene etter registrering ikke telles; Personal, Pro og Team har ingen månedlig grense, innenfor rimelig bruk. Det returneres som et vanlig verktøyresultat med isError: true, ikke som en JSON-RPC-feil. content[0].text begynner med tellingen og nullstillingsdatoen (den 1. i neste måned, UTC), og _meta[\"com.mcpemails/usage_limit\"] bærer error_code \"usage_limit_reached\" og reset_at. inbox_list fungerer fortsatt. Nye forsøk kan ikke lykkes før reset_at."
     }
   },
   "rateLimits": {
@@ -463,9 +463,9 @@
     "planTag": "Plantak per minutt",
     "planHeading": "Gratis 60 / min · Personal 120 / min · Pro 300 / min · Team 1 000 / min",
     "planBody": "En burst-grense for rimelig bruk per arbeidsområde, aggregert på tvers av alle API-nøklene dine. Ved overskridelse returnerer kall feilkode <code>-32003</code> med <code>data.error_code: \"rate_limit_exceeded\"</code>, <code>data.window: \"per_minute\"</code> og en <code>data.retry_after</code>-nedtelling (sekunder). Personal, Pro og Team hever taket.",
-    "capTag": "Tak for rimelig bruk",
-    "capHeading": "Full stopp, ikke backoff",
-    "capBody": "Hvert arbeidsområde har et tak for rimelig bruk av fakturerbare handlinger per faktureringsperiode. Det ligger langt over reell bruk og er ikke noe du kjøper deg forbi, men en agent som løper løpsk kan nå det. Å nå det er ikke en JSON-RPC-feil: kallet returnerer HTTP 200 med et vanlig verktøyresultat som bærer <code>isError: true</code> og en <code>_meta[\"com.mcpemails/usage_limit\"]</code>-blokk med <code>error_code: \"usage_limit_reached\"</code> og <code>reset_at</code>. Det finnes ingen <code>retry_after</code>, fordi nye forsøk ikke kan lykkes før <code>reset_at</code>. Behandle det som full stopp, ikke som backoff.",
+    "capTag": "Månedlig kvote",
+    "capHeading": "Free 150 e-posthandlinger / måned · Personal, Pro og Team uten månedlig grense",
+    "capBody": "Et Free-arbeidsområde får 150 e-posthandlinger per kalendermåned (UTC). Ingenting telles de første 7 dagene etter registrering, og <code>inbox_list</code> og dashbordet telles aldri. Personal, Pro og Team har ingen månedlig grense, innenfor rimelig bruk. Å nå kvoten er ikke en JSON-RPC-feil: kallet returnerer HTTP 200 med et vanlig verktøyresultat som bærer <code>isError: true</code>. Teksten i <code>content[0].text</code> åpner med tellingen og nullstillingsdatoen, den 1. i neste måned, og sier at nye forsøk ikke hjelper; <code>_meta[\"com.mcpemails/usage_limit\"]</code> bærer <code>error_code: \"usage_limit_reached\"</code> og <code>reset_at</code>. Det finnes ingen <code>retry_after</code>. Alle andre e-posthandlinger avvises frem til nullstillingen, ubemannede automatiseringer settes på pause og gjenopptas av seg selv den 1., og eieren av arbeidsområdet får en e-post ved 80% og ved 100%. Behandle det som full stopp, ikke som backoff.",
     "retryTag": "Trygge nye forsøk",
     "retryHeading": "Respekter alltid retry_after; prøv aldri sendinger på nytt i blinde",
     "retryBody": "For <code>rate_limit_exceeded</code>-feil, vent <code>data.retry_after</code> sekunder før du prøver på nytt. Bruk eksponentiell backoff for <code>provider_error</code>. Ikke prøv <code>email_compose</code>-sendinger automatisk på nytt ved <code>provider_error</code>, siden meldingen kan ha blitt akseptert av leverandøren allerede. Prøv aldri <code>usage_limit_reached</code> på nytt: den løsner først ved <code>reset_at</code>."

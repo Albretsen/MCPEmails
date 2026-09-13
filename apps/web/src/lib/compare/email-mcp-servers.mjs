@@ -107,7 +107,7 @@ export const entries = [
     href: '/signup',
     verdict:
       'The only one of these that puts several mailboxes behind a single MCP URL, authorises the connection with scoped OAuth rather than a mailbox credential, and can hold outbound mail for a human before it sends.',
-    price: 'Free: 1 inbox, 60 requests a minute, no daily call cap. Paid from $5 a month for 3 inboxes ($48 a year). Pro is $15 a month for as many inboxes as you own.',
+    price: 'Free: 1 inbox, 150 email actions a month with the first 7 days uncounted, no daily cap. Paid from $5 a month for 3 inboxes ($48 a year) with no monthly action cap. Pro is $15 a month for as many inboxes as you own.',
     pros: [
       'Gmail over the Gmail API with Google sign-in; Fastmail, iCloud, Yahoo, Zoho, Yandex and any IMAP mailbox with an app password. Several at once, one URL.',
       'OAuth 2.1 with dynamic client registration, S256 PKCE and 9 scopes: a connection without the send scope cannot be talked into sending, by you or by a hostile email.',
@@ -245,7 +245,7 @@ export const rows = [
   },
   {
     label: 'Free tier',
-    us: '1 inbox, 60 req/min, no daily cap.',
+    us: '1 inbox, 150 email actions a month, first 7 days uncounted, no daily cap.',
     mailmcp: '1 mailbox, 5 MCP calls a day.',
     composio: '100,000 tool calls a month.',
     selfhosted: 'Unlimited.',

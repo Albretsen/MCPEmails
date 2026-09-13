@@ -395,3 +395,105 @@ export type GrowthUserSignupDayRow = {
   /** Every external user created up to AND INCLUDING that day, not just in the window. */
   cumulative_users: number;
 };
+
+/**
+ * The Free action allowance, one row of counts.
+ * `growth_usage_cap_overview(p_window_days, p_internal_emails, p_internal_domains)`.
+ *
+ * The state counts are a snapshot of now, bucketed by the SAME rules as
+ * `workspace_action_allowance()` (150 per UTC month, first 7 days uncounted,
+ * exempt for every workspace that existed at launch) written set-based in
+ * migration 20260912210000. Everything else is over the window. Internal
+ * accounts are excluded in SQL, so these never include our own traffic.
+ *
+ * The funnel enters at a workspace's first refusal in the window and each
+ * later rung is "has that event AFTER the refusal"; the rungs are not
+ * required to be sequential, because the dashboard banner links straight to
+ * checkout. The retention pair anchors capped workspaces at their first
+ * refusal and uncapped ones from the same signup weeks at the end of their
+ * grace week, and counts ANY call on a later UTC day within 7 days, refused
+ * ones included.
+ */
+export type GrowthUsageCapOverviewRow = {
+  /** Non-exempt Free, inside the first 7 days: nothing is counted yet. */
+  in_grace: number;
+  /** Counting, under 50% of the allowance. */
+  under_half: number;
+  /** 50% to 79%. */
+  half: number;
+  /** 80% to 99%: the warning email has been earned. */
+  warn: number;
+  /** At the allowance: every billable call is refused until the 1st. */
+  capped: number;
+  /** The five states above summed: every workspace the cap can reach. */
+  metered: number;
+  /** Existed at launch; never metered against Free. */
+  exempt_early: number;
+  /** Comped owner or a live support exemption. */
+  exempt_support: number;
+  refused_workspaces_window: number;
+  refusals_window: number;
+  /** Rows created in the window, whatever became of them. */
+  email_80_queued: number;
+  /** Rows sent in the window. */
+  email_80_sent: number;
+  email_100_queued: number;
+  email_100_sent: number;
+  email_pause_queued: number;
+  email_pause_sent: number;
+  funnel_capped: number;
+  funnel_pricing_viewed: number;
+  funnel_checkout_started: number;
+  funnel_checkout_completed: number;
+  capped_eligible: number;
+  capped_retained: number;
+  uncapped_eligible: number;
+  uncapped_retained: number;
+  /** Live triage rules with paused_reason = 'plan_limit' and a future paused_until. */
+  rules_paused_now: number;
+  workspaces_paused_now: number;
+  /** automation_paused_limit emails created in the window: one per workspace per period. */
+  pauses_window: number;
+};
+
+/** The allowance states a workspace can be in, as the SQL names them. */
+export type GrowthUsageCapState =
+  | 'exempt_early'
+  | 'exempt_support'
+  | 'paid'
+  | 'grace'
+  | 'under_half'
+  | 'half'
+  | 'warn'
+  | 'capped';
+
+/**
+ * One Free workspace at or past half its allowance.
+ * `growth_usage_cap_workspaces(p_internal_emails, p_internal_domains)`.
+ *
+ * NAMES A PERSON. `owner_email` is for the operator sub-page behind the
+ * ADMIN_EMAILS session; the board band prints `owner_domain` at most, and the
+ * wall kiosk reads neither. `owner_id` is the users.id the person page takes.
+ */
+export type GrowthUsageCapWorkspaceRow = {
+  workspace_id: string;
+  owner_id: string;
+  owner_email: string | null;
+  owner_domain: string | null;
+  workspace_name: string | null;
+  state: GrowthUsageCapState;
+  used: number;
+  cap: number | null;
+  remaining: number | null;
+  period_start: string;
+  period_end: string;
+  created_at: string;
+  last_action_at: string | null;
+  /** usage_limit_events since the period opened. */
+  refusals: number;
+  /** Comma-separated usage templates sent this period, null when none. */
+  emails_sent: string | null;
+  /** Comma-separated usage templates still pending this period, null when none. */
+  emails_queued: string | null;
+  paused_rules: number;
+};
