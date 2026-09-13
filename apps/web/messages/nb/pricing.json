@@ -27,6 +27,7 @@
       "cta": "Start gratis",
       "features": [
         "1 tilkoblet innboks",
+        "150 e-posthandlinger i måneden, de første 7 dagene telles ikke",
         "Les, søk, organiser, skriv, planlegg og send",
         "Godkjenning før sending",
         "Bruksanalyse",
@@ -43,6 +44,7 @@
       "features": [
         "Alt i Free",
         "3 tilkoblede innbokser",
+        "Ingen månedlig handlingsgrense",
         "2x høyere burst-grense",
         "E-poststøtte"
       ]
@@ -89,6 +91,7 @@
         "label": "Hva du får",
         "rows": {
           "inboxes": "Tilkoblede innbokser",
+          "actions": "E-posthandlinger per måned",
           "keys": "API-nøkler",
           "members": "Teammedlemmer",
           "burst": "Burst-grense",
@@ -136,6 +139,8 @@
     },
     "values": {
       "unlimited": "Ubegrenset",
+      "actionsFree": "150 / måned, de første 7 dagene telles ikke",
+      "actionsPaid": "Ingen månedlig grense, rimelig bruk",
       "oneInbox": "1 innboks",
       "threeInboxes": "3 innbokser",
       "ownerOnly": "Bare deg",
@@ -154,15 +159,19 @@
     "items": [
       {
         "q": "Hva får jeg på gratisplanen?",
-        "a": "Én tilkoblet innboks, for alltid, uten kort. Agenten din får alle MCP-verktøyene vi leverer mot den postkassen: lese, søke, organisere, merke, skrive, planlegge og sende, i tillegg til godkjenning før sending per innboks. Når du vil ha postkasse nummer to eller tre på samme agent, er det Personal, til $5 i måneden."
+        "a": "Én tilkoblet innboks, for alltid, uten kort, og 150 e-posthandlinger per kalendermåned. De første 7 dagene etter registrering telles ikke, så du kan koble opp agenten og prøve alt før telleren starter. Agenten din får alle MCP-verktøyene vi leverer mot den postkassen: lese, søke, organisere, merke, skrive, planlegge og sende, i tillegg til godkjenning før sending per innboks. Når du vil ha postkasse nummer to eller tre, eller slippe den månedlige handlingsgrensen, er det Personal, til $5 i måneden."
       },
       {
         "q": "Hva gir Personal utover Free?",
-        "a": "To innbokser til, dobbelt så høyt burst-tak (120 forespørsler per minutt i stedet for 60), og e-poststøtte i stedet for fellesskapsforumet. Det er hele listen. Alt annet ligger allerede i Free: alle MCP-verktøyene, inkludert planlagte sendinger, godkjenning før sending per innboks, og dashbordet for bruksanalyse. Vi priser etter hvor mange postkasser du kobler til, og vi holder ikke funksjoner tilbake fra Free for å få de betalte planene til å se større ut."
+        "a": "To innbokser til, ingen månedlig grense på e-posthandlinger (rimelig bruk gjelder), dobbelt så høyt burst-tak (120 forespørsler per minutt i stedet for 60), og e-poststøtte i stedet for fellesskapsforumet. Det er hele listen. Alt annet ligger allerede i Free: alle MCP-verktøyene, inkludert planlagte sendinger, godkjenning før sending per innboks, og dashbordet for bruksanalyse. Vi holder ikke funksjoner tilbake fra Free for å få de betalte planene til å se større ut."
       },
       {
-        "q": "Hva regnes som et MCP-kall?",
-        "a": "En JSON-RPC-verktøyinvokasjon mot /mcp-endepunktet ditt. Vi er en standard MCP-server, så det samme endepunktet fungerer med Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make og enhver MCP-kompatibel klient. Planene prises etter antall tilkoblede innbokser, ikke etter hvor mange kall agenten din gjør."
+        "q": "Hva regnes som en e-posthandling?",
+        "a": "Ett verktøykall mot /mcp-endepunktet ditt som rører en postkasse: en lesing, et søk, en flytting, et utkast, en sending. Å liste innboksene dine (inbox_list) og alt du gjør i dashbordet telles aldri. Vi er en standard MCP-server, så det samme endepunktet fungerer med Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make og enhver MCP-kompatibel klient. Free inkluderer 150 e-posthandlinger per kalendermåned; Personal, Pro og Team har ingen månedlig grense, innenfor rimelig bruk."
+      },
+      {
+        "q": "Hva skjer når jeg når 150 e-posthandlinger?",
+        "a": "Alle andre e-posthandlinger i det arbeidsområdet avvises til den 1. i neste måned (UTC), når kvoten nullstilles. Agenten din får et vanlig verktøyresultat som sier hvor mange handlinger som er brukt og når telleren nullstilles, så den vet at nye forsøk ikke hjelper. Ubemannede automatiseringer settes på pause og gjenopptas av seg selv den 1. Dashbordet og inbox_list fungerer som før, og vi sender deg en e-post ved 80% og en til ved 100%. Personal fjerner den månedlige grensen for $5 i måneden. Arbeidsområder opprettet før 2026-09-12 er tidlige medlemmer og måles ikke mot kvoten."
       },
       {
         "q": "Lagres e-postinnholdet mitt noe sted?",

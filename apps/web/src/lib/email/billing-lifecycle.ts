@@ -1,7 +1,8 @@
 /**
- * Billing lifecycle email: dunning, card expiry, cancellation save, win-back.
+ * Billing lifecycle email: dunning, card expiry, cancellation save, win-back,
+ * and the Free allowance notices.
  *
- * Nine templates in two categories, and the split between them is the most
+ * Twelve templates in two categories, and the split between them is the most
  * important thing in this file.
  *
  * TRANSACTIONAL (dunning_1/3/7/14, card_expiry_30/7, cancel_ask)
@@ -10,6 +11,19 @@
  *   A customer who unsubscribed from a win-back in March must still be told in
  *   June that their card was declined; the alternative is taking their money,
  *   failing to take their money, and telling them neither.
+ *
+ * TRANSACTIONAL, WORKSPACE-KEYED (usage_warning_80, usage_limit_reached,
+ * automation_paused_limit)
+ *   Notices about the account's own state: the Free allowance of email actions
+ *   is 80% used, used up, or has paused an unattended automation. Queued by the
+ *   mcp-server edge function per workspace and per allowance period (the
+ *   migration is 20260912200000_free_action_cap_150.sql, the plan is
+ *   docs/PLAN-free-action-cap-150.md). The owner may have no Stripe customer
+ *   at all, so these rows carry `workspace_id` and `period_start` instead of
+ *   `stripe_customer_id`, and the Resend Idempotency-Key is built from those.
+ *   "Your service is about to stop" is account status, so they are not
+ *   suppressible and carry no unsubscribe header. The upgrade line in each is
+ *   secondary to the numbers, which is what keeps them out of marketing.
  *
  * MARKETING-ADJACENT (winback_14, winback_30)
  *   Sent to somebody who has already left. Carries List-Unsubscribe and
@@ -63,10 +77,16 @@
  *
  * LOCALE. English only, for the same reason as the purchase confirmation: the
  * customer's interface language never reaches the server and a Stripe webhook
- * has no request context to read one from.
+ * has no request context to read one from. The usage notices are queued by
+ * the edge function, which has no interface locale either.
  *
- * NEVER MENTION the monthly tool-call ceiling. It is a silent abuse ceiling,
- * not a pricing lever, and it must not appear in customer-facing copy.
+ * THE FREE ALLOWANCE IS PUBLIC; THE PAID CEILINGS ARE NOT. Since 2026-09-12
+ * the Free plan has a stated allowance of 150 email actions a month, and the
+ * three usage templates print the numbers the edge function counted. The paid
+ * plans still carry silent abuse ceilings that are not a pricing lever and must
+ * not appear in customer-facing copy: the dunning and win-back templates never
+ * mention them, and the usage templates only ever describe the Free number
+ * they were handed in the payload.
  */
 
 import { Resend } from 'resend';
@@ -102,17 +122,35 @@ export const BILLING_TEMPLATES = [
   'cancel_ask',
   'winback_14',
   'winback_30',
+  'usage_warning_80',
+  'usage_limit_reached',
+  'automation_paused_limit',
 ] as const;
 
 export type BillingTemplate = (typeof BILLING_TEMPLATES)[number];
+
+/** The three notices keyed by workspace and allowance period, not by Stripe customer. */
+export const USAGE_TEMPLATES = [
+  'usage_warning_80',
+  'usage_limit_reached',
+  'automation_paused_limit',
+] as const satisfies ReadonlyArray<BillingTemplate>;
+
+export type UsageTemplate = (typeof USAGE_TEMPLATES)[number];
+
+export function isUsageTemplate(template: string): template is UsageTemplate {
+  return (USAGE_TEMPLATES as ReadonlyArray<string>).includes(template);
+}
 
 export type BillingCategory = 'transactional' | 'marketing';
 
 /**
  * The category rule, mirrored from the GENERATED column in
- * 20260902130000_billing_lifecycle_emails.sql. Both must agree. The database is
+ * 20260902130000_billing_lifecycle_emails.sql, re-declared unchanged in
+ * 20260912200000_free_action_cap_150.sql. Both must agree. The database is
  * the authority; this exists so the sender can decide, without a round trip,
- * whether an unsubscribe header belongs on the message.
+ * whether an unsubscribe header belongs on the message. Only winback_* is ever
+ * marketing; the usage notices are transactional by the same rule.
  */
 export function categoryOf(template: BillingTemplate): BillingCategory {
   return template.startsWith('winback_') ? 'marketing' : 'transactional';
@@ -313,6 +351,29 @@ export interface LifecyclePayload {
    * for them and the composer must not print it.
    */
   grandfathered?: boolean;
+
+  // ── Usage notices ────────────────────────────────────────────────────────
+  //
+  // Written by the mcp-server edge function into `billing_email_sends.payload`
+  // in snake_case, exactly as the keys land in the jsonb, so the composer reads
+  // what was queued without a mapping layer in between. The numbers are the
+  // ones the edge function counted at queue time; the composer prints them and
+  // never re-derives them. `period_end` is EXCLUSIVE (the first instant of the
+  // next period), which is why "resets on" prints that day.
+
+  /** Billable email actions counted in the period, at queue time. */
+  used?: number | null;
+  /** The Free allowance the workspace is measured against. */
+  cap?: number | null;
+  /** ISO timestamp the allowance period began. */
+  period_start?: string | null;
+  /** ISO timestamp the allowance period ends and the count resets. */
+  period_end?: string | null;
+  /** Plan id at queue time. Informational; the copy never names it. */
+  plan?: string | null;
+  /** The triage rule that was paused (automation_paused_limit only). */
+  rule_id?: string | null;
+  rule_name?: string | null;
 }
 
 export interface ComposedLifecycleEmail {
@@ -420,6 +481,69 @@ function monthName(expiry: string): string {
   return `${names[month - 1]} ${match[2]}`;
 }
 
+// ---------------------------------------------------------------------------
+// Usage notice helpers
+// ---------------------------------------------------------------------------
+
+/** "2026-10-01T00:00:00+00:00" to "2026-10-01" (UTC). Null on anything odd. */
+function isoDate(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString().slice(0, 10);
+}
+
+function wholeNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0
+    ? Math.floor(value)
+    : null;
+}
+
+/**
+ * The facts every usage notice is built from, or null when the payload cannot
+ * back them up. A notice that reads "undefined of undefined email actions" is
+ * worse than no notice, so a payload without real numbers and a real reset date
+ * composes to nothing and the dispatcher cancels the row as undeliverable.
+ */
+interface UsageFacts {
+  used: number;
+  cap: number;
+  /** YYYY-MM-DD, UTC, the day the count resets. */
+  resetsOn: string;
+}
+
+function usageFacts(payload: LifecyclePayload): UsageFacts | null {
+  const used = wholeNumber(payload.used);
+  const cap = wholeNumber(payload.cap);
+  const resetsOn = isoDate(payload.period_end);
+  if (used == null || cap == null || cap <= 0 || !resetsOn) return null;
+  return { used, cap, resetsOn };
+}
+
+/**
+ * "$5", read off the plan catalogue so a repricing of Personal cannot leave a
+ * stale number in an email. Whole dollars when the price is whole, otherwise
+ * the usual two decimals.
+ */
+function personalMonthlyPrice(): string {
+  const cents = PLANS.personal.monthlyPriceCents;
+  return cents % 100 === 0 ? `$${cents / 100}` : formatAmount(cents, 'usd');
+}
+
+/**
+ * The dashboard link that starts the Personal upgrade.
+ *
+ * `upgrade` and `interval` are the pair components/dashboard/App.jsx validates
+ * through parseUpgradeIntent; BOTH must be present or the intent is dropped and
+ * the reader lands on a plain settings page. `interval=month` is deliberate: the
+ * email quotes a monthly price, and the default at every in-product paywall
+ * stays monthly. `offer=usage_cap` names the surface for attribution and is
+ * ignored by consumers that do not read it.
+ */
+function usageUpgradeUrl(base: string): string {
+  return `${base}/dashboard/settings?upgrade=personal&interval=month&offer=usage_cap`;
+}
+
 /** Nothing is ever deleted on a downgrade, and saying so removes real anxiety. */
 const NOTHING_DELETED =
   'Nothing is deleted either way. Your inbox connections, API keys and settings stay exactly where they are, and reconnecting is one click if you come back.';
@@ -507,6 +631,15 @@ function p(text: string): string {
 
 function h(text: string): string {
   return `<p style="margin:0 0 8px;font-size:16px;font-weight:700;color:#0f172a;">${escapeHtml(text)}</p>`;
+}
+
+/**
+ * A sentence followed by a real link, for the secondary URLs the CTA button
+ * does not carry. The href is attribute-escaped, so a query string's `&`
+ * renders as `&amp;` in the source and as `&` in the reader's browser.
+ */
+function pLink(text: string, url: string): string {
+  return `<p style="margin:0 0 16px;font-size:15px;color:#334155;line-height:1.6;">${escapeHtml(text)} <a href="${escapeHtml(url)}" style="color:#3b82f6;word-break:break-all;">${escapeHtml(url)}</a></p>`;
 }
 
 /** A quiet grey box for the facts (amount, card, date). Never the message. */
@@ -998,6 +1131,181 @@ export function composeBillingEmail(
         }),
       };
     }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Free allowance notices. Numbers first, declarative, no imperatives and
+    // no exclamation marks: the reader is being told the state of their own
+    // account, not sold to. The upgrade line is one sentence at the end and
+    // is the same sentence in all three, so nobody reads two different
+    // prices for the same thing.
+    // ─────────────────────────────────────────────────────────────────────
+    case 'usage_warning_80':
+    case 'usage_limit_reached':
+    case 'automation_paused_limit': {
+      const usage = usageFacts(payload);
+      if (!usage) {
+        console.error(
+          `[billing-email] ${template} not composed: payload is missing used, cap or period_end, so there are no numbers to print.`,
+        );
+        return null;
+      }
+      const usageUrl = `${base}/dashboard/usage`;
+      const automationsUrl = `${base}/dashboard/automations`;
+      const upgradeUrl = usageUpgradeUrl(base);
+      const upgradeLine = `Personal removes the monthly cap for ${personalMonthlyPrice()} a month.`;
+      const counted = `${usage.used} of ${usage.cap} email actions`;
+
+      if (template === 'usage_warning_80') {
+        const subject = `${counted} used this month`;
+        const lead = `${counted} have been used on your Free workspace this month. The count resets on ${usage.resetsOn}.`;
+        const stops =
+          `At ${usage.cap}, email actions are refused until the reset, and any automations pause and resume automatically on ${usage.resetsOn}.`;
+        const keeps =
+          'The inbox list, the dashboard and your data are not affected. Nothing is deleted.';
+        const body = [
+          lead,
+          '',
+          `WHAT STOPS AT ${usage.cap}`,
+          stops,
+          '',
+          'WHAT DOES NOT',
+          keeps,
+          '',
+          'The current count is on the usage page:',
+          usageUrl,
+          '',
+          upgradeLine,
+          upgradeUrl,
+          '',
+          SUPPORT_FOOTER_TEXT,
+          '',
+          'MCPEmails',
+          base,
+          '',
+          POSTAL_ADDRESS_LINE,
+        ].join('\n');
+
+        return {
+          subject,
+          category,
+          body,
+          htmlBody: shell({
+            title: subject,
+            html:
+              p(lead) +
+              facts([
+                ['Used', `${usage.used} of ${usage.cap}`],
+                ['Resets on', usage.resetsOn],
+              ]) +
+              h(`What stops at ${usage.cap}`) +
+              p(stops) +
+              h('What does not') +
+              p(keeps) +
+              pLink('The current count is on the usage page:', usageUrl) +
+              pLink(upgradeLine, upgradeUrl),
+            ctaUrl: usageUrl,
+            ctaLabel: 'See the current count',
+            footerNote: SUPPORT_FOOTER,
+          }),
+        };
+      }
+
+      if (template === 'usage_limit_reached') {
+        const subject = `${counted} used, paused until ${usage.resetsOn}`;
+        const lead = `${counted} have been used on your Free workspace this month, so email actions are refused until the count resets on ${usage.resetsOn}. Retrying will not help before then.`;
+        const automations = `Any automations are paused and resume automatically on ${usage.resetsOn}.`;
+        const keeps =
+          'The inbox list, the dashboard and your data are not affected. Nothing is deleted.';
+        const body = [
+          lead,
+          '',
+          automations,
+          keeps,
+          '',
+          'The count and the reset date are on the usage page:',
+          usageUrl,
+          '',
+          upgradeLine,
+          upgradeUrl,
+          '',
+          SUPPORT_FOOTER_TEXT,
+          '',
+          'MCPEmails',
+          base,
+          '',
+          POSTAL_ADDRESS_LINE,
+        ].join('\n');
+
+        return {
+          subject,
+          category,
+          body,
+          htmlBody: shell({
+            title: subject,
+            html:
+              p(lead) +
+              facts([
+                ['Used', `${usage.used} of ${usage.cap}`],
+                ['Resets on', usage.resetsOn],
+              ]) +
+              p(automations) +
+              p(keeps) +
+              pLink('The count and the reset date are on the usage page:', usageUrl) +
+              pLink(upgradeLine, upgradeUrl),
+            ctaUrl: usageUrl,
+            ctaLabel: 'See the usage page',
+            footerNote: SUPPORT_FOOTER,
+          }),
+        };
+      }
+
+      // automation_paused_limit
+      const ruleName = payload.rule_name?.trim() || 'Unnamed automation';
+      const subject = `Automation "${ruleName}" paused until ${usage.resetsOn}`;
+      const lead = `The automation "${ruleName}", and any other automation in this workspace, is paused because the workspace reached its monthly allowance (${counted}). They resume automatically on ${usage.resetsOn}.`;
+      const keeps =
+        'Nothing was deleted. Your rules, their settings and everything they already did are unchanged, and no other part of the account is affected.';
+      const body = [
+        lead,
+        '',
+        keeps,
+        '',
+        'The rule is on the automations page:',
+        automationsUrl,
+        '',
+        upgradeLine,
+        upgradeUrl,
+        '',
+        SUPPORT_FOOTER_TEXT,
+        '',
+        'MCPEmails',
+        base,
+        '',
+        POSTAL_ADDRESS_LINE,
+      ].join('\n');
+
+      return {
+        subject,
+        category,
+        body,
+        htmlBody: shell({
+          title: `Automation paused until ${usage.resetsOn}`,
+          html:
+            p(lead) +
+            facts([
+              ['Automation', ruleName],
+              ['Used', `${usage.used} of ${usage.cap}`],
+              ['Resumes on', usage.resetsOn],
+            ]) +
+            p(keeps) +
+            pLink('The rule is on the automations page:', automationsUrl) +
+            pLink(upgradeLine, upgradeUrl),
+          ctaUrl: automationsUrl,
+          ctaLabel: 'See the automation',
+          footerNote: SUPPORT_FOOTER,
+        }),
+      };
+    }
   }
 }
 
@@ -1020,14 +1328,83 @@ function safeCode(value: unknown): string {
 export interface SendBillingEmailInput {
   to: string;
   template: BillingTemplate;
-  /** Invoice id, subscription id or card key. Also the Resend idempotency key. */
+  /**
+   * Invoice id, subscription id or card key on the Stripe-keyed rows; the
+   * period start (usage_*) or the rule id (automation_paused_limit) on the
+   * workspace-keyed ones. Part of the Resend idempotency key for Stripe rows.
+   */
   scopeKey: string;
+  /**
+   * Set on the workspace-keyed usage rows, where `stripe_customer_id` is NULL.
+   * With `periodStart` and the template it forms the idempotency key, matching
+   * the database's UNIQUE (workspace_id, template, period_start).
+   */
+  workspaceId?: string | null;
+  periodStart?: string | null;
   payload: LifecyclePayload;
 }
 
 export type SendBillingEmailResult =
   | { ok: true; resendId: string | null }
   | { ok: false; reason: string };
+
+/**
+ * The minimum of a `billing_email_sends` row the dispatcher hands to the
+ * sender. Declared here, next to the key derivation, so the route's QueueRow
+ * and this module cannot disagree about which columns matter.
+ */
+export interface LifecycleQueueRowInput {
+  stripe_customer_id: string | null;
+  workspace_id?: string | null;
+  period_start?: string | null;
+  recipient: string;
+  template: BillingTemplate;
+  scope_key: string;
+  payload: LifecyclePayload | null;
+}
+
+/** A claimed queue row to the sender's input. Pure; no resolution happens here. */
+export function sendInputForQueueRow(row: LifecycleQueueRowInput): SendBillingEmailInput {
+  return {
+    to: row.recipient,
+    template: row.template,
+    scopeKey: row.scope_key,
+    workspaceId: row.workspace_id ?? null,
+    periodStart: row.period_start ?? null,
+    payload: row.payload ?? {},
+  };
+}
+
+/**
+ * The Resend Idempotency-Key. Keyed on what the email is ABOUT, matching the
+ * database's uniqueness, so a dispatcher retry after a lost response delivers
+ * one email, not two.
+ *
+ *   Stripe-keyed rows      `${template}-${scope_key}`
+ *                          (UNIQUE (stripe_customer_id, template, scope_key);
+ *                          scope_key is already unique per customer).
+ *   Workspace-keyed rows   `${template}-${workspace_id}-${period_start}`
+ *                          (UNIQUE (workspace_id, template, period_start)).
+ *
+ * `period_start` is normalised to a UTC ISO string because Postgres serialises
+ * a timestamptz as "+00:00" and JavaScript as "Z"; the key must not depend on
+ * which side last touched the value. Resend caps the key at 256 characters.
+ */
+export function lifecycleIdempotencyKey(
+  input: Pick<SendBillingEmailInput, 'template' | 'scopeKey' | 'workspaceId' | 'periodStart'>,
+): string {
+  const key =
+    input.workspaceId && isUsageTemplate(input.template)
+      ? `${input.template}-${input.workspaceId}-${normaliseIso(input.periodStart) ?? input.scopeKey}`
+      : `${input.template}-${input.scopeKey}`;
+  return key.slice(0, 256);
+}
+
+function normaliseIso(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? value : d.toISOString();
+}
 
 /**
  * Send one lifecycle email. NEVER THROWS.
@@ -1096,10 +1473,9 @@ export async function sendBillingLifecycleEmail(
         text: composed.body,
         ...(Object.keys(headers).length ? { headers } : {}),
       },
-      // Keyed on what the email is ABOUT, matching the database's
-      // (customer, template, scope_key) uniqueness. A dispatcher retry after a
-      // lost response therefore delivers one email, not two.
-      { idempotencyKey: `${input.template}-${input.scopeKey}`.slice(0, 256) },
+      // Keyed on what the email is ABOUT, matching the database's uniqueness
+      // for whichever way the row is keyed. See lifecycleIdempotencyKey.
+      { idempotencyKey: lifecycleIdempotencyKey(input) },
     );
 
     if (error) {

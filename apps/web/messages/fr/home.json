@@ -123,8 +123,8 @@
   },
   "pricing": {
     "eyebrow": "Tarifs",
-    "title": "Un tarif par boîte, pas à l'usage.",
-    "sub": "Gratuit connecte une boîte. Personal en connecte trois. Pro connecte toutes les boîtes que vous possédez. Team ajoute des personnes, des rôles et un espace de travail distinct par client.",
+    "title": "Un tarif par boîte. Aucun comptage sur les offres payantes.",
+    "sub": "Gratuit connecte une boîte avec 150 actions e-mail par mois. Personal en connecte trois. Pro connecte toutes les boîtes que vous possédez. Team ajoute des personnes, des rôles et un espace de travail distinct par client.",
     "perForever": "/pour toujours",
     "perMonth": "/mois",
     "tiers": {

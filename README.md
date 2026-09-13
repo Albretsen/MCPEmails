@@ -173,6 +173,7 @@ The value metric is **connected inboxes**. Free connects one mailbox, Personal c
 | --- | --- | --- | --- | --- |
 | Price | $0 | $5/mo · $48/yr ($4/mo) | $15/mo · $144/yr ($12/mo) | $79/mo · $756/yr ($63/mo) |
 | Connected inboxes | 1 | 3 | Unlimited | Unlimited |
+| Email actions / month | 150 (first 7 days uncounted) | No monthly cap (fair use) | No monthly cap (fair use) | No monthly cap (fair use) |
 | API keys | Unlimited | Unlimited | Unlimited | Unlimited |
 | Members | 1 (owner only) | 1 (owner only) | 1 (owner only) | Unlimited, with roles |
 | Fair‑use rate limit | 60 req/min | 120 req/min | 300 req/min | 1,000 req/min |
@@ -182,9 +183,9 @@ The value metric is **connected inboxes**. Free connects one mailbox, Personal c
 
 Per‑API‑key limits also apply (100 req/min · 1,000/hr · 10,000/day). Rate limits are retryable: they come back as JSON-RPC error `-32003` with `data.retry_after` in seconds.
 
-Every workspace additionally has a **fair-use ceiling** on billable actions per billing period. It is an abuse guard, not a plan feature: it sits far above any observed real usage, is never shown to customers, and cannot be bought past. Hitting it is not retryable and not a JSON-RPC error: it comes back as a normal tool result with `isError: true` and a `_meta["com.mcpemails/usage_limit"]` block, and clears at `reset_at`.
+Free workspaces get **150 email actions per calendar month (UTC)**. The first 7 days after signup are not counted, and `inbox_list` and the dashboard are never counted. When the allowance is reached, every other email action is refused until the 1st of the next month, unattended automations pause and resume automatically on the 1st, and the owner is emailed at 80% and at 100%. Personal, Pro and Team have no monthly cap, subject to fair use (their ceilings are abuse guards, not plan features, and are not printed anywhere). A refusal is not retryable and not a JSON-RPC error: it comes back as a normal tool result with `isError: true`, text that opens with the count and the reset date, and a `_meta["com.mcpemails/usage_limit"]` block that clears at `reset_at`.
 
-Internal plan ids predate the names: `solo` is sold as **Pro** and `pro` is sold as **Team**. The newer `personal` id is the only one that matches its display name, **Personal**. Every user who existed before the 2026-08-19 repricing keeps unlimited inboxes for free, permanently. See [`apps/web/src/lib/stripe/plans.ts`](apps/web/src/lib/stripe/plans.ts).
+Internal plan ids predate the names: `solo` is sold as **Pro** and `pro` is sold as **Team**. The newer `personal` id is the only one that matches its display name, **Personal**. Every user who existed before the 2026-08-19 repricing keeps unlimited inboxes for free, permanently, and every workspace created before the 2026-09-12 launch of the action allowance is an early member that is not metered against it. See [`apps/web/src/lib/stripe/plans.ts`](apps/web/src/lib/stripe/plans.ts).
 
 ## Architecture
 

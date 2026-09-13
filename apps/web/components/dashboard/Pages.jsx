@@ -17,6 +17,17 @@ import { AutomationsPanel } from './AutomationsPanel';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 import { checkoutStartHref, pricingCompareHref } from '@/lib/billing/upgrade-intent.mjs';
 import { inboxCapOffer } from '@/lib/billing/inbox-cap-offer.mjs';
+import {
+  usageCapCheckoutHref,
+  usageCapCompareHref,
+  usageCapOffer,
+} from '@/lib/billing/usage-cap-offer.mjs';
+import {
+  allowanceProgress,
+  allowanceTileState,
+  allowanceTone,
+  showUsageCapBanner,
+} from '@/lib/usage/allowance-view.mjs';
 import UpgradeIntervalChoice, {
   IntervalToggle,
   annualOfferForPlan,
@@ -673,7 +684,7 @@ function StepDot({ num, done }) {
 }
 
 /* ---------------- Overview ---------------- */
-export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected }) {
+export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected }) {
   const t = useTranslations('dashboard');
   // Counted off the same live arrays the sidebar counts, never off the server
   // stats snapshot. `stats.inboxCount` was a separate server-side query taken
@@ -700,11 +711,16 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
   const callsToday = stats?.callsToday ?? 0;
   const callsThisMonth = stats?.callsThisMonth ?? 0;
 
-  // Call counts are reported, not metered. Volume stopped being a pricing lever
-  // in the 2026-08-19 repricing, so the daily and monthly quota bars that used
-  // to sit under these two stats are gone: the plan is priced by connected
-  // inboxes, and showing a customer a shrinking allowance they cannot buy their
-  // way out of only manufactured anxiety.
+  // The monthly tile is an allowance tile for a metered Free workspace and a
+  // plain count for everyone else. `actionAllowance` is the row the MCP edge
+  // function enforces from (workspace_action_allowance, via /api/usage's
+  // shape), so the number here is the number that blocks. A paid plan arrives
+  // with cap null: its ceiling is an abuse guard, not a feature, and drawing a
+  // bar against a number the customer was never sold only manufactures
+  // anxiety. The daily tile stays a report; nothing meters a day.
+  const allowanceState = allowanceTileState(actionAllowance);
+  const allowance = allowanceProgress(actionAllowance);
+  const allowanceToneName = allowanceTone(allowance);
 
   // Seat cap: null means unlimited (Team or comped).
   const seatCap = planLimits?.maxMembers ?? null;
@@ -767,11 +783,40 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
           <div className="value">{callsToday.toLocaleString()}</div>
           <div className="delta">{t('overview.callsUtcDay')}</div>
         </div>
-        <div className="stat">
-          <div className="label">{t('overview.callsThisMonth')}</div>
-          <div className="value">{callsThisMonth.toLocaleString()}</div>
-          <div className="delta">{t('overview.callsUtcMonth')}</div>
-        </div>
+        {allowanceState === 'counting' ? (
+          /* Metered Free, past the grace week: used of cap, with the same bar
+             the Inboxes page draws for the inbox cap. Amber from 80%, red at
+             the cap, when the value also changes colour so the state is
+             readable without the bar. */
+          <div className="stat">
+            <div className="label">{t('overview.actionsThisMonth')}</div>
+            <div className="value" style={{ color: allowanceToneColor(allowanceToneName, 'text') }}>
+              {allowance.used.toLocaleString()}
+            </div>
+            <div className="delta">
+              {allowance.atLimit
+                ? t('overview.actionsCapReached', { date: formatUtcDate(actionAllowance.monthly.resets_at) })
+                : t('overview.actionsOfCap', { cap: allowance.cap, date: formatUtcDate(actionAllowance.monthly.resets_at) })}
+            </div>
+            <ActionAllowanceBar progress={allowance} height={3} style={{ marginTop: 6 }} />
+          </div>
+        ) : (
+          /* Grace week, exempt, or a paid plan: the plain count, with the
+             delta saying why nothing is being metered where that is the
+             case. The count is every tool call this UTC month, from the
+             activity log, exactly the tile that was here before. */
+          <div className="stat">
+            <div className="label">{t('overview.callsThisMonth')}</div>
+            <div className="value">{callsThisMonth.toLocaleString()}</div>
+            <div className="delta">
+              {allowanceState === 'grace'
+                ? t('overview.actionsGrace', { date: formatUtcDate(actionAllowance.grace_ends_at) })
+                : allowanceState === 'exempt'
+                  ? t('overview.actionsExempt')
+                  : t('overview.callsUtcMonth')}
+            </div>
+          </div>
+        )}
         <div
           className="stat"
           style={onGoToMembers ? { cursor: 'pointer' } : undefined}
@@ -877,6 +922,55 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * The colour a tone from allowanceTone() renders as. 'bar' is the fill of the
+ * progress bar (the inbox indicator's amber, plus red at the cap); 'text' is
+ * the stat value, which stays the default colour until the bar is amber.
+ */
+function allowanceToneColor(tone, use = 'bar') {
+  if (tone === 'red') return use === 'text' ? 'var(--red-600, #dc2626)' : 'var(--red-500, #ef4444)';
+  if (tone === 'amber') return use === 'text' ? 'var(--amber-600, #d97706)' : 'var(--amber-500, #f59e0b)';
+  return use === 'text' ? undefined : 'var(--brand)';
+}
+
+/**
+ * The allowance progress bar, shared by the Overview tile and the Usage page
+ * so the two cannot disagree about where amber begins. Mirrors the inbox
+ * usage indicator on the Inboxes page: a thin track, a brand fill, amber from
+ * 80%, and (new here) red once the cap is reached.
+ *
+ * Renders nothing without a progress result, which is every non-counting
+ * state, so callers need no guard of their own.
+ */
+function ActionAllowanceBar({ progress, width = '100%', height = 4, style }) {
+  if (!progress) return null;
+  return (
+    <div
+      role="progressbar"
+      aria-valuemin={0}
+      aria-valuemax={progress.cap}
+      aria-valuenow={Math.min(progress.used, progress.cap)}
+      style={{
+        width,
+        height,
+        borderRadius: 2,
+        background: 'var(--bg-sunken, #f1f5f9)',
+        overflow: 'hidden',
+        flexShrink: 0,
+        ...style,
+      }}
+    >
+      <div style={{
+        height: '100%',
+        width: `${progress.pct}%`,
+        background: allowanceToneColor(allowanceTone(progress)),
+        borderRadius: 2,
+        transition: 'width 0.4s',
+      }} />
     </div>
   );
 }
@@ -2249,6 +2343,29 @@ function formatDate(iso) {
 }
 
 /**
+ * The same short absolute date as formatDate, but read in UTC.
+ *
+ * Every boundary of the action allowance is a UTC instant: the counting window
+ * ends at UTC month start, and the grace week ends seven days after the
+ * workspace row was created. formatDate renders in the viewer's own zone, which
+ * anywhere west of Greenwich turns a reset at 2026-10-01T00:00:00Z into
+ * "30 Sep", a day before it is true, on the one surface whose whole job is to
+ * say when the customer gets their actions back. Only allowance dates use this;
+ * every other date in this file is an event that happened at a local moment.
+ */
+function formatUtcDate(iso) {
+  if (!iso) return '–';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '–';
+  return d.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
+/**
  * Formats last_used_at as a relative time when recent, falling back to
  * absolute date for older entries. Returns "Never" when null.
  */
@@ -3466,11 +3583,17 @@ function BulkRunsPanel() {
 /**
  * UsagePage: real data from activity_log, passed as the `usageData` prop.
  *
- * This page is a history view, not a meter. It used to lead with a monthly
- * "action allowance" bar and an upgrade nudge, which sold a limit the customer
- * could not act on and that no longer prices anything: plans are priced by
- * connected inboxes. The remaining fair-use ceiling is an abuse guard and is
- * deliberately invisible here.
+ * A history view with one meter at the top. The allowance bar was removed in
+ * the 2026-08-19 repricing because the number it showed (the silent abuse
+ * ceiling) was not something a customer could buy their way out of. It is
+ * back since 2026-09-12 for exactly one case, a metered Free workspace,
+ * because that number is now public, sold, and the one the MCP edge function
+ * refuses at: 150 email actions a month after a 7-day grace week
+ * (docs/PLAN-free-action-cap-150.md). From 80% the strip is joined by a
+ * banner that names the plan that removes the cap, carrying the offer to
+ * checkout and to /pricing the same way the inbox-cap notice does. Paid plans
+ * still have a ceiling and it is still deliberately invisible here: they
+ * arrive with `actionAllowance.monthly.cap` null and get no bar at all.
  *
  * usageData shape:
  *   dailyCounts  Array<{ date: "YYYY-MM-DD", count: number }>, 30 entries oldest-first
@@ -3478,8 +3601,16 @@ function BulkRunsPanel() {
  *   byTool       Array<{ tool: string, count: number, pct: number }>, sorted desc
  *   byInbox      Array<{ inboxId: string, label: string, address: string, count: number, pct: number }>, sorted desc
  */
-export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
+export function UsagePage({ usageData, planLimits, actionAllowance = null, stripePrices = null, onConnect, onGoToKeys }) {
   const t = useTranslations('dashboard');
+  // The banner's annual CTA label lives beside the modal's, in dashboardChrome.
+  const trc = useTranslations('dashboardChrome');
+  // Monthly by default, like every paywall in the product; the choice control
+  // in the banner can switch it. Hoisted here because the banner renders from
+  // a conditional and hooks cannot live inside it.
+  const [capInterval, setCapInterval] = useState('month');
+  const allowanceState = allowanceTileState(actionAllowance);
+  const allowance = allowanceProgress(actionAllowance);
   const {
     dailyCounts = [],
     totalCalls = 0,
@@ -3508,6 +3639,150 @@ export function UsagePage({ usageData, planLimits, onConnect, onGoToKeys }) {
         title={t('usage.title')}
         sub={t('usage.sub', { days: historyDays })}
       />
+
+      {/* The allowance strip: bar plus one sentence for a metered Free
+          workspace, one sentence alone for grace and exempt, nothing for a
+          paid plan. Above both the empty and the normal state, because a
+          workspace in its grace week has usually made no calls yet and that
+          is precisely when "not counted until" is worth reading. */}
+      {allowanceState !== 'plain' && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 10,
+          marginBottom: 12,
+          fontFamily: 'var(--font-sans)',
+          fontSize: 12.5,
+          color: 'var(--fg-3)',
+        }}>
+          <ActionAllowanceBar progress={allowance} width={120} height={4} />
+          <span>
+            {allowanceState === 'counting'
+              ? (allowance.atLimit
+                  ? t('usage.allowanceReached', { cap: allowance.cap, date: formatUtcDate(actionAllowance.monthly.resets_at) })
+                  : t('usage.allowanceCounting', { used: allowance.used, cap: allowance.cap, date: formatUtcDate(actionAllowance.monthly.resets_at) }))
+              : allowanceState === 'grace'
+                ? t('usage.allowanceGrace', { date: formatUtcDate(actionAllowance.grace_ends_at) })
+                : t('usage.allowanceExempt')}
+          </span>
+        </div>
+      )}
+
+      {/* From 80% of the allowance: the numbers, what stops at the cap, and
+          the plan that removes it. Same shape as the inbox-cap notice on the
+          Inboxes page, same offer module pattern (usage-cap-offer.mjs), same
+          two links: a locale-aware Link to /pricing and a plain anchor to the
+          checkout route that must never be prefetched. Both are built by the
+          offer module so they carry plan, interval and offer=usage_cap, the
+          same three values the 80% and 100% emails carry. No paywall beacon
+          here either: nothing was refused by rendering this. */}
+      {showUsageCapBanner(actionAllowance) && (() => {
+        const offer = usageCapOffer({ reached: allowance.atLimit });
+        const annual = annualOfferForPlan(stripePrices, offer.plan);
+        const tone = allowanceTone(allowance);
+        const copyValues = {
+          used: allowance.used,
+          cap: allowance.cap,
+          date: formatUtcDate(actionAllowance.monthly.resets_at),
+        };
+        return (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 12,
+            padding: '14px 16px',
+            marginBottom: 12,
+            background: 'var(--brand-soft)',
+            border: `1px solid ${tone === 'red' ? 'rgba(239,68,68,0.35)' : 'rgba(37,71,229,0.18)'}`,
+            borderRadius: 10,
+          }}>
+            <Icon name="zap" size={16} color={allowanceToneColor(tone)} />
+            <div style={{ flex: '1 1 260px', minWidth: 0 }}>
+              <div style={{
+                fontFamily: 'var(--font-sans)',
+                fontSize: 13.5,
+                fontWeight: 600,
+                color: 'var(--fg-1)',
+                marginBottom: 2,
+              }}>
+                {t(offer.titleKey)}
+              </div>
+              <div style={{
+                fontFamily: 'var(--font-sans)',
+                fontSize: 12.5,
+                color: 'var(--fg-3)',
+                lineHeight: 1.5,
+              }}>
+                {t(offer.bodyKey, copyValues)}
+              </div>
+              {/* What $5 buys, in the Billing card's own words. */}
+              <div style={{
+                marginTop: 6,
+                fontFamily: 'var(--font-sans)',
+                fontSize: 12,
+                color: 'var(--fg-3)',
+              }}>
+                {offer.featureKeys.map((key) => t(key)).join(' · ')}
+              </div>
+              {annual && (
+                <div style={{ marginTop: 10 }}>
+                  <UpgradeIntervalChoice
+                    offer={annual}
+                    value={capInterval}
+                    onChange={setCapInterval}
+                    size="sm"
+                  />
+                </div>
+              )}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Link
+                href={usageCapCompareHref(offer.plan, capInterval === 'year')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  height: 32,
+                  padding: '0 10px',
+                  color: 'var(--fg-2)',
+                  fontFamily: 'var(--font-sans)',
+                  fontSize: 12.5,
+                  textDecoration: 'none',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {t('usage.capCompare')}
+              </Link>
+              <a
+                href={usageCapCheckoutHref(offer.plan, capInterval === 'year')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  height: 32,
+                  padding: '0 14px',
+                  background: 'var(--brand)',
+                  color: '#fff',
+                  borderRadius: 8,
+                  fontFamily: 'var(--font-sans)',
+                  fontSize: 12.5,
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {upgradeCtaLabel(trc, {
+                  offer: annual,
+                  interval: capInterval,
+                  planName: planDisplayName(offer.plan),
+                  monthlyLabel: t(offer.ctaKey),
+                })}
+              </a>
+            </div>
+          </div>
+        );
+      })()}
 
       {isEmpty ? (
         /* ── Empty state ───────────────────────────────────────────────── */
@@ -4391,8 +4666,12 @@ const BILLING_PLANS = [
     yearlyAnnualTotal: 48,
     // personalFeature3 was "Analytics" and is gone: the usage analytics
     // dashboard is on Free too, with the same 30-day window, so it was never
-    // something Personal bought. What is left is what the code enforces.
-    featureKeys: ['billing.plans.personalFeature1', 'billing.plans.personalFeature2', 'billing.plans.personalFeature4'],
+    // something Personal bought. personalFeatureActions is the real delta that
+    // arrived on 2026-09-12: Free is metered at 150 email actions a month,
+    // Personal has no monthly cap a customer can reach (its ceiling is a
+    // silent abuse guard and is never quoted). What is listed is what the
+    // code enforces. The usage-cap banner renders these same keys.
+    featureKeys: ['billing.plans.personalFeature1', 'billing.plans.personalFeatureActions', 'billing.plans.personalFeature2', 'billing.plans.personalFeature4'],
     highlighted: false,
   },
   {
@@ -4485,6 +4764,12 @@ function formatRenewalDate(unixSeconds, locale) {
  *   inboxCount:   inboxes connected right now.
  *   grandfathered true when unlimited inboxes come from the pre-repricing
  *                 entitlement rather than from a paid plan.
+ *   actionAllowance the /api/usage shape, or null. "What your plan includes"
+ *                 states the Free action allowance from it (used of the cap,
+ *                 the grace week, or the early-member exemption) and says only
+ *                 "no monthly action cap" for a paid plan, whose ceiling
+ *                 arrives here as null and is never quoted. Null itself (the
+ *                 RPC failed) states nothing.
  */
 function BillingSection({
   currentPlan,
@@ -4494,6 +4779,7 @@ function BillingSection({
   maxInboxes = null,
   inboxCount = 0,
   grandfathered = false,
+  actionAllowance = null,
 }) {
   const t = useTranslations('dashboard');
   // Matches the pricing page, where annual is preselected. An upgrade intent
@@ -4699,10 +4985,12 @@ function BillingSection({
   // from unlimited. Both are gone as of 2026-09-07 and neither should come
   // back: the grant lifts `maxInboxes` and nothing else, it survives onto a
   // paid plan (nothing clears the entitlement when a subscription activates),
-  // and Personal raises their action ceiling 5,000 to 25,000, their burst rate
-  // 60/min to 120/min, and adds the billing portal and email support. So it is
-  // a strict upgrade for them, and hiding the card meant the cohort could not
-  // buy at all: the card was the only way to reach the checkout.
+  // and Personal raises their burst rate 60/min to 120/min and adds the
+  // billing portal and email support. (The Free action allowance is not a
+  // delta for this cohort: every workspace from before 2026-09-12 is exempt
+  // from it for good.) So it is a strict upgrade for them, and hiding the
+  // card meant the cohort could not buy at all: the card was the only way to
+  // reach the checkout.
   const offeredPlans = BILLING_PLANS;
 
   // The tiers this customer can actually move UP to.
@@ -4824,6 +5112,35 @@ function BillingSection({
   // accounts, and the grandfathered pre-repricing cohort alike.
   const inboxesUnlimited = maxInboxes == null;
 
+  // Action allowance, stated in the same list as the inbox allowance and read
+  // from the row the MCP edge function enforces from, so the billing screen and
+  // the refusal an agent receives quote one number. The four cases are the four
+  // states of allowance-view.mjs: a metered Free workspace counts, one inside
+  // its first week says when counting starts, an exempt one says it is never
+  // counted, and anything else (every paid plan) says only that there is no cap
+  // it can reach. A paid ceiling is a silent abuse guard, never a figure on a
+  // billing screen, and it arrives here as cap null. No allowance at all (the
+  // RPC failed) renders no line rather than a guess.
+  const billingAllowanceState = allowanceTileState(actionAllowance);
+  const billingAllowanceProgress = allowanceProgress(actionAllowance);
+  const allowanceLine =
+    billingAllowanceState === 'counting'
+      ? t('billing.actionsUsed', {
+          used: billingAllowanceProgress.used,
+          cap: billingAllowanceProgress.cap,
+          date: formatUtcDate(actionAllowance.monthly.resets_at),
+        })
+      : billingAllowanceState === 'grace' && actionAllowance.monthly.cap != null
+        ? t('billing.actionsGrace', {
+            cap: actionAllowance.monthly.cap,
+            date: formatUtcDate(actionAllowance.grace_ends_at),
+          })
+        : billingAllowanceState === 'exempt'
+          ? t('billing.actionsExempt')
+          : actionAllowance
+            ? t('billing.actionsNoCap')
+            : null;
+
   return (
     <div className="card" style={{ maxWidth: 640, marginTop: 14 }}>
       <div className="card-h">
@@ -4870,6 +5187,12 @@ function BillingSection({
           {inboxesUnlimited && (
             <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
               {t('billing.inboxesCount', { count: inboxCount })}
+            </div>
+          )}
+          {allowanceLine && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-sans)', fontSize: 13.5, color: 'var(--fg-1)' }}>
+              <Icon name="check" size={13} color="var(--mint-600)" />
+              <span>{allowanceLine}</span>
             </div>
           )}
         </div>
@@ -5859,7 +6182,7 @@ function SettingsSectionLabel({ children }) {
   );
 }
 
-export function SettingsPage({ user, workspace, workspaces = [], userRole, stripePrices, upgradeIntent, planLimits, inboxCount = 0, grandfathered = false, onWorkspaceUpdate }) {
+export function SettingsPage({ user, workspace, workspaces = [], userRole, stripePrices, upgradeIntent, planLimits, actionAllowance = null, inboxCount = 0, grandfathered = false, onWorkspaceUpdate }) {
   const t = useTranslations('dashboard');
 
   // The active workspace is owned by the user when either the server-resolved
@@ -5897,6 +6220,7 @@ export function SettingsPage({ user, workspace, workspaces = [], userRole, strip
         maxInboxes={planLimits?.maxInboxes ?? null}
         inboxCount={inboxCount}
         grandfathered={grandfathered}
+        actionAllowance={actionAllowance}
       />
 
       {/* ── Workspace: settings that affect only the current workspace ───── */}

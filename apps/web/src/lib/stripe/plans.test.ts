@@ -1,7 +1,17 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { PLANS, getPlanByStripePriceId, planDisplayName, resolvePlanLimits } from './plans.ts';
+import {
+  FREE_ACTION_ALLOWANCE,
+  FREE_ACTION_GRACE_DAYS,
+  PLANS,
+  getPlanByStripePriceId,
+  planDisplayName,
+  resolvePlanLimits,
+} from './plans.ts';
+
+/** The one Free feature line that quotes the allowance, built as plans.ts builds it. */
+const FREE_ALLOWANCE_FEATURE = `${FREE_ACTION_ALLOWANCE} email actions a month, first ${FREE_ACTION_GRACE_DAYS} days uncounted`;
 
 test('the value metric is inboxes, and the tiers are named the way they are sold', () => {
   assert.equal(PLANS.free.name, 'Free');
@@ -32,19 +42,36 @@ test('prices match the published repricing', () => {
   assert.equal(PLANS.free.monthlyPriceCents, 0);
 });
 
-test('the action ceiling is an abuse backstop, not a tier feature', () => {
-  // These exist so a runaway agent cannot burn unbounded provider quota. They
-  // are never sold, so no marketing feature list may mention them. If this test
-  // is updated, check that nothing customer-facing quotes the old numbers.
-  assert.equal(resolvePlanLimits('free').maxMonthlyToolCalls, 5_000);
+test('Free sells its action allowance; the paid ceilings stay silent', () => {
+  // Free's allowance is public (2026-09-12): the pricing page, the dashboard
+  // and the docs all quote it, and the MCP edge function refuses at exactly
+  // this number. The constants are mirrored from the SQL function
+  // workspace_action_allowance (c_free_cap = 150, c_grace = 7 days); if either
+  // moves here, the migration and the pricing copy move with it.
+  assert.equal(FREE_ACTION_ALLOWANCE, 150);
+  assert.equal(FREE_ACTION_GRACE_DAYS, 7);
+  assert.equal(resolvePlanLimits('free').maxMonthlyToolCalls, FREE_ACTION_ALLOWANCE);
+  assert.ok(
+    PLANS.free.features.includes(FREE_ALLOWANCE_FEATURE),
+    'the Free feature list must state the allowance, derived from the constants',
+  );
+
+  // The paid ceilings exist so a runaway agent cannot burn unbounded provider
+  // quota. They are never sold, so no feature list may quote them as a number:
+  // "No monthly action cap" is the only sentence a paid tier may say about
+  // actions. If this test is updated, check that nothing customer-facing
+  // quotes the old numbers.
+  assert.equal(resolvePlanLimits('personal').maxMonthlyToolCalls, 25_000);
   assert.equal(resolvePlanLimits('solo').maxMonthlyToolCalls, 100_000);
   assert.equal(resolvePlanLimits('pro').maxMonthlyToolCalls, 500_000);
+  assert.ok(PLANS.personal.features.includes('No monthly action cap'));
 
   for (const plan of Object.values(PLANS)) {
+    if (plan.id === 'free') continue;
     for (const feature of plan.features) {
       assert.ok(
-        !/action/i.test(feature),
-        `plan ${plan.id} sells an action allowance in its feature list: ${feature}`,
+        !/\d[\d,_.]*\s*(k\s*)?(email\s+)?actions?\b/i.test(feature),
+        `plan ${plan.id} quotes an action number in its feature list: ${feature}`,
       );
     }
   }
@@ -66,8 +93,13 @@ test('no feature list promises an analytics retention window', () => {
   // the plan, not in a hardcoded marketing string. These lists and the
   // `pricing.plans.*.features` message arrays are two renderings of one
   // promise and must not diverge again.
+  //
+  // The Free allowance line ("first 7 days uncounted") is the one exception:
+  // it is a metering rule, not a retention window, and it is built from the
+  // same constant the enforcing SQL mirrors, so it cannot drift on its own.
   for (const plan of Object.values(PLANS)) {
     for (const feature of plan.features) {
+      if (feature === FREE_ALLOWANCE_FEATURE) continue;
       assert.ok(
         !/\b\d+[- ]?(day|month|year)s?\b|\bone[- ]year\b/i.test(feature),
         `plan ${plan.id} promises a retention window nothing enforces: ${feature}`,
@@ -84,9 +116,12 @@ test('a grandfathered user keeps unlimited inboxes on the Free plan', () => {
   assert.equal(grandfathered.maxInboxes, Infinity);
 
   // It lifts the INBOX cap and nothing else. A grandfathered account is still
-  // a Free account for seats, support and the abuse ceiling.
+  // a Free account for seats, support and the action allowance. (Whether a
+  // given workspace is actually metered against that allowance is decided
+  // per workspace by workspace_action_allowance(): everything created before
+  // 2026-09-12 is exempt. That is not this function's business.)
   assert.equal(grandfathered.maxMembers, 1);
-  assert.equal(grandfathered.maxMonthlyToolCalls, 5_000);
+  assert.equal(grandfathered.maxMonthlyToolCalls, FREE_ACTION_ALLOWANCE);
   assert.equal(grandfathered.supportTier, 'community');
   assert.equal(grandfathered.teamRolesEnabled, false);
 });
@@ -115,12 +150,12 @@ test('the two entitlements stack without either swallowing the other', () => {
 
   // The Stripe/workspace projection remains an input, not a mutation made by
   // entitlement resolution. Webhook replays can safely continue to update it.
-  assert.equal(resolvePlanLimits('free').maxMonthlyToolCalls, 5_000);
+  assert.equal(resolvePlanLimits('free').maxMonthlyToolCalls, FREE_ACTION_ALLOWANCE);
   assert.equal(resolvePlanLimits('free').maxInboxes, 1);
 });
 
 test('unknown legacy plans safely use Free limits unless an entitlement applies', () => {
-  assert.equal(resolvePlanLimits('unknown').maxMonthlyToolCalls, 5_000);
+  assert.equal(resolvePlanLimits('unknown').maxMonthlyToolCalls, FREE_ACTION_ALLOWANCE);
   assert.equal(resolvePlanLimits('unknown').maxInboxes, 1);
   assert.equal(resolvePlanLimits('unknown', { compedScale: true }).maxMonthlyToolCalls, Infinity);
   assert.equal(resolvePlanLimits('enterprise', { unlimitedInboxes: true }).maxInboxes, Infinity);

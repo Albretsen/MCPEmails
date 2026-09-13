@@ -123,8 +123,8 @@
   },
   "pricing": {
     "eyebrow": "Precios",
-    "title": "El precio va por bandeja, no por uso.",
-    "sub": "Gratis conecta una bandeja. Personal conecta tres. Pro conecta todos los buzones que tengas. Team añade personas, roles y un espacio de trabajo separado por cliente.",
+    "title": "Precio por bandeja. Sin medición en los planes de pago.",
+    "sub": "Gratis conecta una bandeja con 150 acciones de correo al mes. Personal conecta tres. Pro conecta todos los buzones que tengas. Team añade personas, roles y un espacio de trabajo separado por cliente.",
     "perForever": "/para siempre",
     "perMonth": "/mes",
     "tiers": {

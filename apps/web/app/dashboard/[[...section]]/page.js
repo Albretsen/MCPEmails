@@ -9,7 +9,8 @@ import { DashboardApp } from '../../../components/dashboard/App';
 import { pathSegmentToSection } from '../../../components/dashboard/routes';
 import { resolvePlanLimits } from '../../../src/lib/stripe/plans';
 import { retentionDays } from '../../../src/lib/analytics/retention';
-import { resolveUsageBillingWindow } from '../../../src/lib/usage/billing-window';
+import { calendarMonthWindow } from '../../../src/lib/usage/billing-window';
+import { fetchWorkspaceActionAllowance } from '../../../src/lib/usage/allowance';
 import { fetchStripePrices } from '../../../src/lib/stripe/getPrices';
 import '../../../styles/dashboard.css';
 import '../../../styles/theme.css';
@@ -26,11 +27,11 @@ import '../../../styles/theme.css';
 const USAGE_WINDOW_DAYS = 30;
 
 /**
- * Meter version the usage RPC counts billable actions under. Nothing
- * customer-facing reads that count any more (the action meter was removed in
- * the 2026-08-19 repricing), but the RPC still takes the argument, and passing
- * a version that disagrees with ACTION_METER_VERSION in the MCP edge function
- * would silently mis-count if the number is ever surfaced again.
+ * Meter version the usage-summary RPC counts billable actions under. The
+ * customer-facing count (the Free allowance tile) does not come from that RPC
+ * but from workspace_action_allowance(), which pins the version itself; this
+ * one only has to agree with ACTION_METER_VERSION in the MCP edge function so
+ * the summary never silently counts a different ledger.
  */
 const ACTION_METER_VERSION = 1;
 
@@ -629,9 +630,13 @@ export default async function DashboardPage({ params }) {
   // The calling user's role in the ACTIVE workspace (drives role-gated UI).
   let userRole = 'member';
   let effectiveWorkspacePlan = null;
-  let storedBillingPeriod = null;
+  // The workspace's action allowance (plan, exemption, cap, window, used),
+  // shaped exactly like GET /api/usage. Null when the call fails, in which
+  // case the Overview shows a plain call count and no bar, as it did before
+  // the allowance existed.
+  let actionAllowance = null;
   if (workspace) {
-    const [{ data: memberRow }, { data: effectivePlanRows }, { data: billingRow }] = await Promise.all([
+    const [{ data: memberRow }, { data: effectivePlanRows }, allowance] = await Promise.all([
       supabase
         .from('workspace_members')
         .select('role')
@@ -639,27 +644,18 @@ export default async function DashboardPage({ params }) {
         .eq('workspace_id', workspace.id)
         .maybeSingle(),
       supabase.rpc('effective_workspace_plan', { p_workspace_id: workspace.id }),
-      // The owner's Stripe cycle, which is what the action allowance is granted
-      // over. Read for the workspace OWNER, not the viewer: a member of someone
-      // else's paid workspace must see that workspace's period.
-      //
-      // Service-role, deliberately. `user_billing_select_own` restricts SELECT
-      // to `user_id = auth.uid()`, so reading it with the viewer's client
-      // returns null for every member who is not the owner, and the window
-      // silently degrades to a calendar month while the edge function (which is
-      // service-role) keeps enforcing against the real Stripe period. The meter
-      // and the thing that blocks you would then disagree, on a billing
-      // surface. Only the two period timestamps are selected, never a Stripe
-      // customer or subscription id. /api/usage reads it the same way.
-      createServiceRoleClient()
-        .from('user_billing')
-        .select('current_period_start, current_period_end')
-        .eq('user_id', workspace.owner_id)
-        .maybeSingle(),
+      // workspace_action_allowance() is the ONE definition of the window and
+      // the cap: the MCP edge function refuses off the same row, so what this
+      // page shows is what blocks. It reads the OWNER's Stripe cycle and the
+      // owner's entitlements itself, which is why it is service-role and why
+      // the viewer's RLS-scoped client (which cannot see another member's
+      // user_billing row) is not used for it. The viewer's membership is
+      // established by the RLS-filtered workspace list above.
+      fetchWorkspaceActionAllowance(createServiceRoleClient(), workspace.id),
     ]);
     userRole = memberRow?.role ?? 'member';
     effectiveWorkspacePlan = effectivePlanRows?.[0] ?? null;
-    storedBillingPeriod = billingRow ?? null;
+    actionAllowance = allowance;
   }
 
   // Creating additional workspaces is a Pro feature: the user must OWN at least
@@ -683,7 +679,11 @@ export default async function DashboardPage({ params }) {
   // limit the server would never actually enforce against them.
   const unlimitedInboxes = effectiveWorkspacePlan?.unlimited_inboxes ?? false;
   const plan = effectiveWorkspacePlan?.plan ?? workspace?.plan ?? 'free';
-  const billingWindow = resolveUsageBillingWindow(plan, storedBillingPeriod);
+  // The period the usage-summary RPC scopes its (undisplayed) action meter to:
+  // the allowance's own window, or the UTC month when that call failed.
+  const billingWindow = actionAllowance
+    ? { start: actionAllowance.monthly.period_start, end: actionAllowance.monthly.resets_at }
+    : calendarMonthWindow();
 
   // Serialisable workspace list for the sidebar switcher.
   //
@@ -745,9 +745,10 @@ export default async function DashboardPage({ params }) {
         [],
       ];
 
-  // The monthly action ceiling is deliberately NOT passed to the client. It is
-  // an abuse guard, not a plan feature, and every customer-facing meter built
-  // on it was removed in the 2026-08-19 repricing.
+  // The action allowance travels beside planLimits as `actionAllowance`, not
+  // inside it: planLimits is the plan's static shape, the allowance is a live
+  // reading with a window and a count. A paid plan's ceiling is still an
+  // abuse guard, not a feature, and arrives in that object as cap: null.
   const planLimits = {
     // null = unlimited. A grandfathered free account lands here too, and the
     // inbox cap UI keys off exactly this null to render nothing at all.
@@ -794,6 +795,7 @@ export default async function DashboardPage({ params }) {
       mcpUrl={mcpUrl}
       userRole={userRole}
       planLimits={planLimits}
+      actionAllowance={actionAllowance}
       inboxesGrandfathered={inboxesGrandfathered}
       stripePrices={stripePrices}
       overviewStats={overviewStats}

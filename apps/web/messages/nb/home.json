@@ -123,8 +123,8 @@
   },
   "pricing": {
     "eyebrow": "Priser",
-    "title": "Prisen følger innboksene, ikke bruken.",
-    "sub": "Gratis kobler til én innboks. Personal kobler til tre. Pro kobler til alle postkassene du eier. Team legger til folk, roller og et eget arbeidsområde per kunde.",
+    "title": "Prisen følger innboksene. Ingen måling på betalte planer.",
+    "sub": "Gratis kobler til én innboks med 150 e-posthandlinger i måneden. Personal kobler til tre. Pro kobler til alle postkassene du eier. Team legger til folk, roller og et eget arbeidsområde per kunde.",
     "perForever": "/for alltid",
     "perMonth": "/måned",
     "tiers": {

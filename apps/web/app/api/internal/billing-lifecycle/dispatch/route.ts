@@ -42,6 +42,18 @@
  * invoice still unpaid, right now". A dunning email that arrives after the
  * money was taken is worse than no dunning at all, and it is the one failure
  * mode a fixed calendar cannot rule out.
+ *
+ * TWO WAYS A ROW IS KEYED. The billing rows carry `stripe_customer_id` and are
+ * unique on (customer, template, scope_key). The three Free allowance notices
+ * (usage_warning_80, usage_limit_reached, automation_paused_limit) are queued
+ * by the mcp-server edge function for owners who may have no Stripe customer
+ * at all, so they carry `workspace_id` and `period_start` instead, with
+ * `stripe_customer_id` NULL, and are unique on (workspace, template, period).
+ * The recipient was frozen at queue time on both kinds, so this route resolves
+ * nothing further; it only asks whether the notice is still true. For a usage
+ * row that question goes to `workspace_action_allowance`, not to Stripe: if
+ * the workspace has since been exempted or upgraded the cap is gone and the
+ * email would tell a new Personal customer that their actions are refused.
  */
 
 import { timingSafeEqual } from 'node:crypto';
@@ -52,9 +64,12 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { getPlanByStripePriceId } from '@/lib/stripe/plans';
 import {
   composeBillingEmail,
+  isUsageTemplate,
   sendBillingLifecycleEmail,
+  sendInputForQueueRow,
   type BillingTemplate,
   type LifecyclePayload,
+  type LifecycleQueueRowInput,
 } from '@/lib/email/billing-lifecycle';
 import {
   isGrandfathered,
@@ -74,9 +89,17 @@ import {
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
-interface QueueRow {
+/**
+ * A claimed `billing_email_sends` row. `stripe_customer_id` OR `workspace_id`
+ * is set (CHECK billing_email_sends_keyed); never neither. The workspace
+ * columns are cast here rather than read from database.types.ts, which is
+ * regenerated after the 20260912200000 migration is applied.
+ */
+interface QueueRow extends LifecycleQueueRowInput {
   id: number;
-  stripe_customer_id: string;
+  stripe_customer_id: string | null;
+  workspace_id: string | null;
+  period_start: string | null;
   user_id: string | null;
   recipient: string;
   template: BillingTemplate;
@@ -135,7 +158,9 @@ export async function POST(request: Request): Promise<Response> {
     return Response.json({ error: 'claim_failed' }, { status: 500 });
   }
 
-  const rows = (claimed ?? []) as QueueRow[];
+  // Through `unknown`: the generated row type predates workspace_id and
+  // period_start (see the QueueRow note above).
+  const rows = (claimed ?? []) as unknown as QueueRow[];
   const result = { claimed: rows.length, sent: 0, cancelled: 0, failed: 0, dryRun: 0 };
 
   // What `queue_only` is FOR. A count answers "did anything happen"; reviewing
@@ -199,7 +224,14 @@ export async function POST(request: Request): Promise<Response> {
       row.payload = { ...(row.payload ?? {}), unsubscribeToken: profile.unsubscribe_token };
     }
 
-    const fresh = await checkFreshness(stripe, row);
+    // The usage notices have nothing in Stripe to check against; their
+    // freshness question is whether the Free allowance still applies. The
+    // suppression branch above is never entered for them either: their
+    // GENERATED category is transactional, so an owner cannot opt out of being
+    // told their own service is about to stop.
+    const fresh = isUsageTemplate(row.template)
+      ? await checkAllowanceFreshness(db, row)
+      : await checkFreshness(stripe, row);
     if (!fresh.send) {
       if (fresh.reason === RETRY_REASON) continue; // leave it; lease expires
       await finish(db, row.id, { cancelled: fresh.reason });
@@ -230,12 +262,10 @@ export async function POST(request: Request): Promise<Response> {
       continue;
     }
 
-    const send = await sendBillingLifecycleEmail({
-      to: row.recipient,
-      template: row.template,
-      scopeKey: row.scope_key,
-      payload: row.payload ?? {},
-    });
+    // One attempt, never a retry inside the send; the queue retries on the
+    // next tick under the same Idempotency-Key, which for a workspace-keyed
+    // row is (workspace_id, template, period_start). See lifecycleIdempotencyKey.
+    const send = await sendBillingLifecycleEmail(sendInputForQueueRow(row));
 
     if (send.ok) {
       await finish(db, row.id, { sent: send.resendId });
@@ -271,6 +301,74 @@ function maskAddress(email: string): string {
   const domain = email.slice(at);
   if (local.length <= 2) return `${local[0] ?? '*'}****${domain}`;
   return `${local[0]}****${local[local.length - 1]}${domain}`;
+}
+
+/**
+ * The one row of `workspace_action_allowance()` this decision reads. The
+ * function is declared in 20260912200000_free_action_cap_150.sql and is not
+ * in database.types.ts until that file is regenerated, hence the local shape
+ * and the cast below.
+ */
+interface AllowanceRow {
+  exempt: boolean | null;
+  cap: number | null;
+  period_start: string | null;
+}
+
+/**
+ * "Is this usage notice still true?", asked of the allowance function
+ * immediately before the send.
+ *
+ * Cancels when the cap no longer applies (the workspace was exempted, comped
+ * or upgraded since the row was queued: `exempt` or a NULL `cap`) or when the
+ * period it describes is over (the allowance now reports a later
+ * `period_start`, so the count it quotes has reset). A workspace that no
+ * longer exists cancels too. A read failure returns RETRY_REASON, exactly as
+ * the Stripe check does: the row stays claimed, the lease expires, and the
+ * next run asks again. A notice delayed by fifteen minutes costs nothing; one
+ * that tells a brand-new Personal customer their actions are refused costs
+ * the sale it just made.
+ */
+async function checkAllowanceFreshness(
+  db: ReturnType<typeof createServiceRoleClient>,
+  row: QueueRow,
+): Promise<{ send: true } | { send: false; reason: string }> {
+  if (!row.workspace_id) {
+    // Unreachable under the keyed CHECK plus the template CHECK, but a usage
+    // row with no workspace has no allowance to describe.
+    return { send: false, reason: 'no_workspace' };
+  }
+  try {
+    const rpc = (db as unknown as {
+      rpc(fn: string, args: Record<string, unknown>): PromiseLike<{
+        data: unknown;
+        error: { message: string } | null;
+      }>;
+    }).rpc.bind(db);
+    const { data, error } = await rpc('workspace_action_allowance', {
+      p_workspace_id: row.workspace_id,
+    });
+    if (error) throw new Error(error.message);
+
+    const allowance = (Array.isArray(data) ? data[0] : data) as AllowanceRow | null | undefined;
+    if (!allowance) return { send: false, reason: 'workspace_gone' };
+    if (allowance.exempt || allowance.cap == null) {
+      return { send: false, reason: 'allowance_lifted' };
+    }
+    if (
+      row.period_start &&
+      allowance.period_start &&
+      new Date(allowance.period_start).getTime() > new Date(row.period_start).getTime()
+    ) {
+      return { send: false, reason: 'period_ended' };
+    }
+    return { send: true };
+  } catch (err) {
+    console.error(`[lifecycle-dispatch] allowance check failed for row ${row.id}:`, {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return { send: false, reason: RETRY_REASON };
+  }
 }
 
 async function finish(

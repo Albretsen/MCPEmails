@@ -67,11 +67,16 @@
  * points, no trophies, no confetti, no emoji. See board/milestones.tsx for why
  * the reached half is now a time axis rather than a wrapped list of pills.
  *
+ * THE ACTION CAP IS BACK, AS ONE BAND. Four panels of it were cut on
+ * 2026-09-07 because the cap was a silent abuse ceiling nobody could reach
+ * and they reported a structural zero. Since 2026-09-12 Free is 150 email
+ * actions a month with the first 7 days uncounted (docs/PLAN-free-action-cap-150.md),
+ * which makes it a paywall with a funnel, two emails and an automation pause
+ * behind it, and that is what the "Usage cap" band measures. Connected
+ * inboxes remain the other value metric and keep their own tiles.
+ *
  * WHAT IS DELIBERATELY ABSENT, so it is not helpfully re-added:
  *   - A jump nav. It was a patch on a page that was too long and too uniform.
- *   - Any measure of the ACTION cap: connected inboxes have been the value
- *     metric since the August 2026 repricing, and four panels once reported a
- *     structural zero.
  *   - A cumulative-signups curve under a signups bar chart, which restated it.
  *   - The MCP client mix, which reads "unknown, 100%" on every render.
  *   - Any figure stated twice.
@@ -92,6 +97,7 @@ import {
   TablesSection,
   TopSection,
   UptimeSection,
+  UsageCapSection,
 } from '../../../components/admin/growth/sections';
 import '../../../styles/admin-board.css';
 import '../../../styles/admin-board-parts.css';
@@ -142,6 +148,7 @@ function Band({ id, title, question }: { id: string; title: string; question: st
 /** The bands, in page order. The header renders these as jump links. */
 const BANDS = [
   { id: 'money', title: 'Money', question: 'what have we earned' },
+  { id: 'usage-cap', title: 'Usage cap', question: 'who is near the wall' },
   { id: 'milestones', title: 'Milestones', question: 'how far, and how fast' },
   { id: 'growth', title: 'Growth', question: 'who is arriving' },
   { id: 'stickiness', title: 'Stickiness', question: 'who stays' },
@@ -190,6 +197,7 @@ export default async function GrowthBoardPage({
             <a className="gb-link" href="/admin/growth/kiosk">Kiosk</a>
             <a className="gb-link" href="/admin/growth/experiments">Experiments</a>
             <a className="gb-link" href="/admin/growth/dunning">Dunning</a>
+            <a className="gb-link" href="/admin/growth/usage-cap">Usage cap</a>
             {/* A route handler rather than a Server Action: the action-ID lookup
                 failed on every submission in production (verified live
                 2026-08-30), and a URL is not a build-generated hash. */}
@@ -225,6 +233,21 @@ export default async function GrowthBoardPage({
             }
           >
             <MoneySection days={days} />
+          </Suspense>
+
+          <Band id="usage-cap" title="Usage cap" question="who is near the wall" />
+          <Suspense
+            fallback={
+              <>
+                <Skeleton span={8} tall={2} />
+                <Skeleton span={4} tall={2} />
+                <Skeleton span={4} />
+                <Skeleton span={4} />
+                <Skeleton span={4} />
+              </>
+            }
+          >
+            <UsageCapSection days={days} />
           </Suspense>
 
           <Band id="milestones" title="Milestones" question="how far, and how fast" />

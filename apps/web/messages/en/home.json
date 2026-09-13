@@ -123,8 +123,8 @@
   },
   "pricing": {
     "eyebrow": "Pricing",
-    "title": "Priced by inbox, not by usage.",
-    "sub": "Free connects one inbox. Personal connects three. Pro connects every mailbox you own. Team adds people, roles, and a separate workspace per client.",
+    "title": "Priced by inbox. No metering on paid plans.",
+    "sub": "Free connects one inbox with 150 email actions a month. Personal connects three. Pro connects every mailbox you own. Team adds people, roles, and a separate workspace per client.",
     "perForever": "/forever",
     "perMonth": "/month",
     "tiers": {

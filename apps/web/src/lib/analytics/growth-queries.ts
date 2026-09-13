@@ -53,6 +53,8 @@ import type {
   GrowthChannelRow,
   GrowthPeopleCountsRow,
   GrowthUserSignupDayRow,
+  GrowthUsageCapOverviewRow,
+  GrowthUsageCapWorkspaceRow,
 } from '@/lib/analytics/growth-types';
 import { PLANS, resolvePlanLimits } from '@/lib/stripe/plans';
 import { internalAccountMatchers } from '@/lib/analytics/internal-accounts';
@@ -75,6 +77,7 @@ export const GROWTH_TAGS = {
   inventory: 'growth:inventory',
   accounts: 'growth:accounts',
   revenue: 'growth:revenue',
+  usageCap: 'growth:usage-cap',
 } as const;
 
 /**
@@ -463,3 +466,41 @@ export async function fetchUserSignupDays(days: number): Promise<GrowthResult<Gr
 
 /** See fetchPeopleCounts: half the 90 day purge horizon, because it looks back twice. */
 const PEOPLE_MAX_DAYS = 45;
+
+/**
+ * The Free action allowance, as one row of counts for the "Usage cap" band.
+ *
+ * The state counts ignore `days` (they are a snapshot of each workspace's own
+ * current period, the same reason `fetchUtilizationBands` takes no window);
+ * refusals, emails, the funnel and the pauses are over the window. The
+ * retention pair reads `activity_log`, so the window is clamped at 90 like
+ * every other read of that table.
+ *
+ * The internal list crosses into SQL for the same reason it does everywhere
+ * else on this page: the RPC returns aggregates, and our own monitor would
+ * otherwise be the first workspace to reach the wall.
+ */
+export async function fetchUsageCapOverview(days: number): Promise<GrowthResult<GrowthUsageCapOverviewRow>> {
+  const internal = internalAccountMatchers();
+  return rpcSingleRow<GrowthUsageCapOverviewRow>('growth_usage_cap_overview', GROWTH_TAGS.usageCap, {
+    p_window_days: clampInt(days, 1, 90),
+    p_internal_emails: internal.emails,
+    p_internal_domains: internal.domains,
+  });
+}
+
+/**
+ * The Free workspaces at or past half their allowance, most used first.
+ *
+ * NAMES PEOPLE, like `fetchActiveWorkspaces`, and is cached under its own tag
+ * for the same reason: so who reads it stays easy to see and to revoke. The
+ * board band uses the domain column at most; the wall kiosk must never call
+ * this.
+ */
+export async function fetchUsageCapWorkspaces(): Promise<GrowthResult<GrowthUsageCapWorkspaceRow[]>> {
+  const internal = internalAccountMatchers();
+  return rpcRows<GrowthUsageCapWorkspaceRow>('growth_usage_cap_workspaces', GROWTH_TAGS.usageCap, {
+    p_internal_emails: internal.emails,
+    p_internal_domains: internal.domains,
+  });
+}
