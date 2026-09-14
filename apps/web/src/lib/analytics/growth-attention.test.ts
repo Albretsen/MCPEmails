@@ -53,6 +53,8 @@ function calm(): AttentionInput {
       abandoned: 2,
       checkoutFailed: 0,
       portalOpened: 3,
+      planUpgraded: 0,
+      planDowngraded: 0,
       internalExcluded: 4,
       lastCompletedAt: '2026-09-01T09:00:00Z',
     },
