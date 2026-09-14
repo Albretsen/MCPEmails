@@ -26,6 +26,7 @@ import {
   folderNameTrimNote,
   type FolderReference,
   folderNotFoundMessage,
+  matchFolderExactly,
   resolveFolderReference,
 } from "./label-target.ts";
 
@@ -553,4 +554,72 @@ Deno.test("a created folder can be addressed by the name the create call reporte
     assert(r.ok, `${JSON.stringify(spelling)} should reach the created folder`);
     assertEquals(r.id, "ZZ SPACE TEST");
   }
+});
+
+// ---------------------------------------------------------------------------
+// The exact pass, on its own — the gate that decides whether a value is ever
+// read as a ROLE at all.
+//
+// `resolveFolderId` in index.ts asks this question FIRST, for every provider,
+// and only consults the alias table for a value no folder answers to. Before
+// 2026-09-14 it asked the alias table first and returned on a hit, so an IMAP
+// mailbox called "Spam" listed Junk's messages and a copy into "Spam" landed in
+// Junk while reporting success. Gmail and Outlook shared the defect in a
+// narrower form: their system folders carry different names from some of the
+// alias tokens, so a user's own label "Junk" or folder "Spam" was unreachable
+// and, on a move, silently replaced by the system one.
+// ---------------------------------------------------------------------------
+
+Deno.test("a Gmail label named Junk is that label, not the SPAM system label", () => {
+  const labels: FolderReference[] = [
+    ...GMAIL_LABELS,
+    { id: "Label_20", name: "Junk" },
+  ];
+  for (const spelling of ["Junk", "junk", "JUNK"]) {
+    const hit = matchFolderExactly(spelling, labels);
+    assert(hit, `${spelling} names a label that exists`);
+    assertEquals(hit.id, "Label_20");
+  }
+  // The system label is still reachable by its own name, which is what Gmail
+  // reports and what an alias resolution would have returned anyway.
+  assertEquals(matchFolderExactly("spam", labels)?.id, "SPAM");
+});
+
+Deno.test("with no such label, the exact pass declines and the alias role runs", () => {
+  // Null is the whole contract here: it is what lets resolveFolderId fall
+  // through to Gmail's system label / Outlook's well-known name / the IMAP
+  // SPECIAL-USE mailbox. Nothing about a caller who means the role changes.
+  assertEquals(matchFolderExactly("junk", GMAIL_LABELS), null);
+  assertEquals(matchFolderExactly("archive", GMAIL_LABELS), null);
+  assertEquals(matchFolderExactly("deleted", GMAIL_LABELS), null);
+});
+
+Deno.test("an Outlook folder named Spam is addressed by its opaque id, never by junkemail", () => {
+  // Outlook is the likeliest place for this: its junk folder is displayed as
+  // "Junk Email", so "Spam" is an ordinary name a user is free to give a folder,
+  // and the well-known token `junkemail` used to win every time.
+  const folders: FolderReference[] = [
+    { id: "AAMkAGI1", name: "Inbox" },
+    { id: "AAMkAGI2", name: "Junk Email" },
+    { id: "AAMkAGI3", name: "Spam" },
+  ];
+  assertEquals(matchFolderExactly("Spam", folders)?.id, "AAMkAGI3");
+  assertEquals(matchFolderExactly("spam", folders)?.id, "AAMkAGI3");
+  // "junk" names nothing here, so it stays a role and resolveFolderId answers
+  // it with the well-known "junkemail".
+  assertEquals(matchFolderExactly("junk", folders), null);
+});
+
+Deno.test("an id still beats a name, and both beat anything fuzzy", () => {
+  const folders: FolderReference[] = [
+    { id: "Spam", name: "Not spam at all" },
+    { id: "Label_30", name: "Spam" },
+  ];
+  // Byte-for-byte id first…
+  assertEquals(matchFolderExactly("Spam", folders)?.id, "Spam");
+  // …and the name match is case-insensitive, as every caller has always had it.
+  assertEquals(matchFolderExactly("SPAM", folders)?.id, "Label_30");
+  // Padding is NOT the exact pass's business; resolveFolderReference's relaxed
+  // step owns that, and only when it is unambiguous.
+  assertEquals(matchFolderExactly(" Spam ", folders), null);
 });

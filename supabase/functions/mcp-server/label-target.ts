@@ -477,6 +477,40 @@ function folderAmbiguousMessage(
 }
 
 /**
+ * The EXACT half of {@link resolveFolderReference}: a provider id compared
+ * byte for byte, then a display name compared case-insensitively, both on the
+ * value AS THE CALLER TYPED IT. Null when neither hits.
+ *
+ * It is exported, and it is the reason this is a function rather than four
+ * lines inside the matcher, because a SECOND caller has to ask this exact
+ * question FIRST: `resolveFolderId` in index.ts reads some values as an alias
+ * ROLE ("spam" → whichever mailbox the server flags \\Junk), and a role reading
+ * must never outvote a folder that literally bears the name that was typed.
+ *
+ * ── The bug that moved this up here (2026-09-14) ───────────────────────────
+ * `resolveFolderId` matched the alias table first and RETURNED on a hit, so
+ * step 3 below was unreachable for any value that happened to be an alias
+ * token. On a Migadu account holding both a "Junk" and a "Spam" mailbox,
+ * `email_read action: list folder: "Spam"` listed Junk, and
+ * `email_organize action: copy destination_folder_id: "Spam"` reported success
+ * and put the message in Junk. That is a silent wrong-folder WRITE, which is
+ * strictly worse than the "Mailbox not found" the same alias table produced on
+ * the read paths, because nothing in the response says it happened.
+ *
+ * One rule, one implementation: whoever types a folder's exact name gets that
+ * folder, and an alias is consulted only for a value no folder answers to.
+ */
+export function matchFolderExactly(
+  value: string,
+  folders: readonly FolderReference[],
+): FolderReference | null {
+  const byId = folders.find((f) => f.id === value);
+  if (byId) return byId;
+  const lower = value.toLowerCase();
+  return folders.find((f) => f.name.toLowerCase() === lower) ?? null;
+}
+
+/**
  * Matches a user-supplied folder value against a folder listing.
  *
  * Order (the first three are what the move path has always done, which is the
@@ -525,12 +559,10 @@ export function resolveFolderReference(
   }
 
   // ── 1-2: exact, on the value as typed ─────────────────────────────────────
-  const byId = folders.find((f) => f.id === value);
-  if (byId) return { ok: true, id: byId.id, matched: "id" };
-
-  const lowerExact = value.toLowerCase();
-  const byName = folders.find((f) => f.name.toLowerCase() === lowerExact);
-  if (byName) return { ok: true, id: byName.id, matched: "name" };
+  const exact = matchFolderExactly(value, folders);
+  if (exact) {
+    return { ok: true, id: exact.id, matched: exact.id === value ? "id" : "name" };
+  }
 
   const lower = trimmed.toLowerCase();
 
