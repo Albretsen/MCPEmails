@@ -754,6 +754,12 @@ export async function CheckoutDetail({ days }: KioskDetailProps) {
               // of mind, and it is the one row here nobody can fix by writing
               // better pricing copy.
               { label: 'Could not start', value: checkout.data.checkoutFailed },
+              // Expansion, kept out of "Paid" because it is the same customer
+              // buying more rather than a new one arriving. It is also the rung
+              // the funnel could not see at all until 2026-09-14, when a paid
+              // upgrade was still being written down as a failed checkout.
+              { label: 'Upgraded after paying', value: checkout.data.planUpgraded },
+              { label: 'Downgraded', value: checkout.data.planDowngraded },
               { label: 'Opened the portal', value: checkout.data.portalOpened },
               { label: 'Ours, excluded', value: checkout.data.internalExcluded },
             ]}
