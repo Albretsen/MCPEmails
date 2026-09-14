@@ -450,6 +450,39 @@ export function getPlanByStripePriceId(
 }
 
 // ---------------------------------------------------------------------------
+// Helper: the one total order over (plan, interval) pairs.
+//
+// This is what decides whether an in-place plan change was an UPGRADE or a
+// DOWNGRADE, and it exists because neither half of the pair can answer that on
+// its own. It is deliberately NOT a comparison of what the two prices bill over
+// a year: every annual price in the catalogue is discounted (Personal is $48 a
+// year against $60 of monthlies), so by yearly revenue a customer committing to
+// twelve months up front would be recorded as contracting. Nobody means that by
+// "downgrade".
+//
+// TIER FIRST, then commitment length. Moving up a tier is an upgrade at any
+// interval; at the same tier, a year is more than a month. So:
+//
+//   personal/month -> personal/year : upgrade (same tier, longer commitment)
+//   personal/year  -> solo/month    : upgrade (a tier up beats an interval down)
+//   pro/month      -> solo/year     : downgrade (a tier down is a tier down)
+//
+// The tier order is read off the catalogue rather than written out, so adding
+// or repricing a plan reorders it without a second place to remember.
+// ---------------------------------------------------------------------------
+const TIER_ORDER: readonly PlanId[] = (Object.keys(PLANS) as PlanId[]).sort(
+  (a, b) => PLANS[a].monthlyPriceCents - PLANS[b].monthlyPriceCents,
+);
+
+export function planCommitmentRank(
+  planId: PlanId,
+  interval: BillingInterval,
+): number {
+  // Doubled so the interval can never reach across a tier boundary.
+  return TIER_ORDER.indexOf(planId) * 2 + (interval === 'year' ? 1 : 0);
+}
+
+// ---------------------------------------------------------------------------
 // Helper: get or create a Stripe Customer for a workspace.
 // Idempotent: returns the existing customer ID if already stored.
 // Call only from server-side code (Route Handlers / Server Actions).

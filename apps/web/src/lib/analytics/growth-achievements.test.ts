@@ -110,6 +110,8 @@ const CHECKOUT: CheckoutFunnel = {
   abandoned: 3,
   checkoutFailed: 0,
   portalOpened: 2,
+  planUpgraded: 0,
+  planDowngraded: 0,
   internalExcluded: 4,
   lastCompletedAt: '2026-09-01T08:12:00Z',
 };

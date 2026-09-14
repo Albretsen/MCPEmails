@@ -138,12 +138,29 @@ const nodeMock = mock as unknown as {
  */
 const funnelRows: Array<{ target: string; failure: string | undefined }> = [];
 
+/**
+ * The plan-change rows, kept apart from the checkout rows on purpose.
+ *
+ * They are a different stage in a different part of the funnel, and the whole
+ * point of the 2026-09-14 fix is that a plan change must not land in the
+ * checkout bucket. A single combined list would let a regression that puts it
+ * back there pass.
+ */
+const planChangeRows: Array<{
+  direction: string;
+  target: string;
+  outcome: string;
+  failure: string | undefined;
+}> = [];
+
 /** The Stripe calls a successful checkout makes, so a test can prove one happened. */
 const sessionsCreated: Array<Record<string, unknown>> = [];
 
 nodeMock.module('@/lib/analytics/billing-funnel', {
   namedExports: {
     billingTarget: (planId: string, interval: string) => `${planId}_${interval}`,
+    planCategory: (plan: string | null | undefined) =>
+      plan === 'personal' || plan === 'solo' || plan === 'pro' ? plan : 'free',
     recordCheckoutStarted: async (
       workspaceId: string | null,
       target: string,
@@ -156,6 +173,22 @@ nodeMock.module('@/lib/analytics/billing-funnel', {
       assert.equal(workspaceId, WORKSPACE_ID, 'a row must land on the buyer\'s own workspace');
       funnelRows.push({ target, failure });
     },
+    recordPlanChange: async (args: {
+      workspaceId: string | null;
+      direction: string;
+      target: string;
+      outcome: string;
+      failure?: string;
+    }) => {
+      if (!args.workspaceId) return;
+      assert.equal(args.workspaceId, WORKSPACE_ID);
+      planChangeRows.push({
+        direction: args.direction,
+        target: args.target,
+        outcome: args.outcome,
+        failure: args.failure,
+      });
+    },
   },
 });
 
@@ -164,6 +197,21 @@ nodeMock.module('@/lib/stripe/customer', {
     getOrCreateStripeCustomer: async () => ({ customerId: 'cus_test_grandfathered' }),
   },
 });
+
+/**
+ * How the stubbed Stripe should answer the in-place price swap.
+ *
+ * `applied` is the ordinary paid upgrade. `pending` is Stripe holding the swap
+ * because the invoice was not paid (3DS or a decline), which leaves the
+ * customer on the plan they had. `throws` is the 500 path.
+ */
+let swapBehaviour: 'applied' | 'pending' | 'throws' = 'applied';
+
+/** The subscription the stub says the user is currently on. */
+let currentSubscriptionPrice = 'price_personal_month';
+
+/** Every `subscriptions.update` call, so a test can prove the swap happened. */
+const subscriptionsUpdated: Array<Record<string, unknown>> = [];
 
 nodeMock.module('@/lib/stripe/client', {
   namedExports: {
@@ -175,6 +223,46 @@ nodeMock.module('@/lib/stripe/client', {
             return { url: SESSION_URL };
           },
         },
+      },
+      subscriptions: {
+        retrieve: async (id: string) => ({
+          id,
+          customer: 'cus_test_subscriber',
+          items: {
+            data: [
+              {
+                id: 'si_test_item',
+                price: { id: currentSubscriptionPrice },
+                current_period_end: 1_760_000_000,
+              },
+            ],
+          },
+        }),
+        update: async (id: string, params: Record<string, unknown>) => {
+          subscriptionsUpdated.push({ id, ...params });
+          if (swapBehaviour === 'throws') throw new Error('card_declined_hard');
+          return {
+            pending_update: swapBehaviour === 'pending' ? { expires_at: 1 } : null,
+            latest_invoice: {
+              amount_paid: swapBehaviour === 'pending' ? 0 : 1041,
+              currency: 'usd',
+              hosted_invoice_url: 'https://invoice.stripe.com/test',
+            },
+          };
+        },
+      },
+      // Only reached on the unconfirmed pass, to quote the change. A failure
+      // here is not a refusal in the real code either, so the stub is allowed
+      // to be thin.
+      invoices: {
+        createPreview: async () => ({
+          currency: 'usd',
+          amount_due: 1041,
+          lines: { data: [{ amount: -459 }] },
+        }),
+      },
+      prices: {
+        retrieve: async () => ({ unit_amount: 1500 }),
       },
     },
   },
@@ -196,6 +284,11 @@ async function checkout(opts: {
   billing?: BillingRow;
   signedIn?: boolean;
   hasWorkspace?: boolean;
+  /** The second half of the two-call consent gate. Defaults to the quote. */
+  confirmChange?: unknown;
+  /** The price the existing subscription is on, for the plan-change path. */
+  currentPrice?: string;
+  swap?: 'applied' | 'pending' | 'throws';
 }) {
   currentSupabase = fakeSupabase({
     entitlement: opts.entitlement,
@@ -204,17 +297,24 @@ async function checkout(opts: {
     hasWorkspace: opts.hasWorkspace,
   });
   funnelRows.length = 0;
+  planChangeRows.length = 0;
   sessionsCreated.length = 0;
+  subscriptionsUpdated.length = 0;
+  swapBehaviour = opts.swap ?? 'applied';
+  currentSubscriptionPrice = opts.currentPrice ?? 'price_personal_month';
   const outcome = await runCheckout({
     planId: opts.planId,
     interval: opts.interval ?? 'month',
+    confirmChange: opts.confirmChange,
   });
   return {
     outcome,
     funnelRows: [...funnelRows],
     // The failure-reason-only view the older tests are written against.
     funnelCalls: funnelRows.map((row) => row.failure),
+    planChangeRows: [...planChangeRows],
     sessionsCreated: [...sessionsCreated],
+    subscriptionsUpdated: [...subscriptionsUpdated],
   };
 }
 
@@ -562,4 +662,183 @@ test('validation still outranks a missing workspace', async () => {
   // no-ops on a null workspace id rather than writing a row that cannot exist.
   assert.deepEqual(result.funnelRows, []);
   assert.deepEqual(logs, [], 'a validation refusal is a row, not a log line');
+});
+
+// ---------------------------------------------------------------------------
+// 5. The in-place plan change (added 2026-09-14).
+//
+// An existing subscriber who changes plan never sees a Stripe Checkout page:
+// the price is swapped on the live subscription and the proration is invoiced
+// on the spot. Until today this path recorded
+//
+//     checkout_started / failure / subscription_exists
+//
+// one line above the call that performs the swap, so the funnel's only trace of
+// a paid upgrade said the checkout had failed. It happened to a real customer
+// on 2026-09-14: workspace dbed58c7 bought Personal at 10:21, hit the
+// three-inbox ceiling at 10:46 connecting a fourth mailbox, upgraded to Pro
+// (`solo`), and Stripe collected the money at 10:46:33Z. Expansion revenue was
+// invisible and the board's only real "checkout failure" was a sale.
+//
+// These tests pin BOTH halves: no checkout row of any outcome, and a
+// plan-change row in the right direction at every exit.
+// ---------------------------------------------------------------------------
+
+/** A live Personal subscriber, which is what the 2026-09-14 customer was. */
+const PERSONAL_SUBSCRIBER: BillingRow = {
+  plan: 'personal',
+  subscription_status: 'active',
+  stripe_subscription_id: 'sub_test_personal',
+};
+
+test('the confirmed upgrade records an upgrade, not a failed checkout', async () => {
+  const { outcome, funnelRows, planChangeRows, subscriptionsUpdated } = await checkout({
+    planId: 'solo',
+    entitlement: null,
+    billing: PERSONAL_SUBSCRIBER,
+    confirmChange: true,
+  });
+
+  // The swap really happened, at the Pro price, on the existing subscription.
+  assert.equal(outcome.kind, 'changed');
+  assert.equal(subscriptionsUpdated.length, 1);
+  assert.deepEqual(subscriptionsUpdated[0].items, [
+    { id: 'si_test_item', price: 'price_solo_month' },
+  ]);
+
+  // THE REGRESSION GUARD. Not "no failure row" but no checkout row at all: a
+  // success row would be just as wrong, because the view reads a started
+  // checkout with no completion as an abandonment on Stripe's page, and this
+  // customer never saw one.
+  assert.deepEqual(funnelRows, []);
+
+  assert.deepEqual(planChangeRows, [
+    { direction: 'upgrade', target: 'solo_month', outcome: 'success', failure: undefined },
+  ]);
+});
+
+test('a downgrade is recorded as a downgrade, so it cannot read as a sale', async () => {
+  // The reason the direction is decided in the application rather than left for
+  // a report to guess: `category` names the plan the change landed ON, and
+  // `solo_month` on its own looks exactly like a Pro purchase.
+  const { outcome, funnelRows, planChangeRows } = await checkout({
+    planId: 'personal',
+    entitlement: null,
+    billing: { plan: 'solo', subscription_status: 'active', stripe_subscription_id: 'sub_x' },
+    currentPrice: 'price_solo_month',
+    confirmChange: true,
+  });
+
+  assert.equal(outcome.kind, 'changed');
+  assert.deepEqual(funnelRows, []);
+  assert.deepEqual(planChangeRows, [
+    { direction: 'downgrade', target: 'personal_month', outcome: 'success', failure: undefined },
+  ]);
+});
+
+test('a cheaper tier bought for a year is still a downgrade', async () => {
+  // Team monthly to Pro annual. The two halves point in opposite directions:
+  // by tier this is a step down, by interval a step up. Tier wins, which is
+  // what `planCommitmentRank` encodes by doubling the tier index so an interval
+  // can never reach across a tier boundary.
+  const { planChangeRows } = await checkout({
+    planId: 'solo',
+    interval: 'year',
+    entitlement: null,
+    billing: { plan: 'pro', subscription_status: 'active', stripe_subscription_id: 'sub_x' },
+    currentPrice: 'price_pro_month',
+    confirmChange: true,
+  });
+
+  assert.deepEqual(planChangeRows, [
+    { direction: 'downgrade', target: 'solo_year', outcome: 'success', failure: undefined },
+  ]);
+});
+
+test('the quote itself records nothing at all', async () => {
+  // The first half of the consent gate. Asking what a change costs is not an
+  // attempt to make one, and a row here would count every person who opened the
+  // dialog and closed it as an upgrade in progress.
+  const { outcome, funnelRows, planChangeRows, subscriptionsUpdated } = await checkout({
+    planId: 'solo',
+    entitlement: null,
+    billing: PERSONAL_SUBSCRIBER,
+  });
+
+  assert.equal(outcome.kind, 'confirmation_required');
+  assert.equal(subscriptionsUpdated.length, 0, 'nothing may be swapped without a confirmation');
+  assert.deepEqual(funnelRows, []);
+  assert.deepEqual(planChangeRows, []);
+});
+
+test('a change Stripe holds unpaid is started, never a completed upgrade', async () => {
+  // `pending_if_incomplete`: the swap is accepted but the subscription stays on
+  // the price it has until the invoice is paid. Recording this as a success
+  // would book expansion revenue that has not arrived.
+  const { outcome, planChangeRows } = await checkout({
+    planId: 'solo',
+    entitlement: null,
+    billing: PERSONAL_SUBSCRIBER,
+    confirmChange: true,
+    swap: 'pending',
+  });
+
+  assert.equal(outcome.kind, 'payment_required');
+  assert.deepEqual(planChangeRows, [
+    { direction: 'upgrade', target: 'solo_month', outcome: 'started', failure: undefined },
+  ]);
+});
+
+test('a plan change that throws is recorded, where before it vanished', async () => {
+  // The single `checkout_started` write used to sit INSIDE the try, below the
+  // throw, so a subscriber who confirmed an amount and got a 500 left no row of
+  // any stage. That is the most expensive failure on this path.
+  const { result } = await captureLogs(() =>
+    checkout({
+      planId: 'solo',
+      entitlement: null,
+      billing: PERSONAL_SUBSCRIBER,
+      confirmChange: true,
+      swap: 'throws',
+    }),
+  );
+
+  assert.equal(result.outcome.kind, 'error');
+  if (result.outcome.kind !== 'error') return;
+  assert.equal(result.outcome.reason, 'plan_change_failed');
+  assert.deepEqual(result.funnelRows, []);
+  assert.deepEqual(result.planChangeRows, [
+    { direction: 'upgrade', target: 'solo_month', outcome: 'failure', failure: 'stripe_error' },
+  ]);
+});
+
+test('asking for the plan you already hold is no longer a checkout failure', async () => {
+  // Nothing was attempted and nothing was refused, so this belongs in neither
+  // bucket: the growth board captions its failure count "our bug, not a change
+  // of mind", and a no-op click is neither.
+  const { outcome, funnelRows, planChangeRows } = await checkout({
+    planId: 'personal',
+    entitlement: null,
+    billing: PERSONAL_SUBSCRIBER,
+    confirmChange: true,
+  });
+
+  assert.equal(outcome.kind, 'error');
+  if (outcome.kind !== 'error') return;
+  assert.equal(outcome.reason, 'already_on_plan');
+  assert.equal(outcome.status, 409);
+  assert.deepEqual(funnelRows, []);
+  assert.deepEqual(planChangeRows, []);
+});
+
+test('a buyer we turn away IS still a checkout failure', async () => {
+  // The other side of the same line, and the reason the failure bucket is not
+  // simply emptied: a comped account clicking buy is somebody who wanted to pay
+  // us and could not, which is exactly what that bucket is for.
+  const { funnelRows } = await checkout({
+    planId: 'solo',
+    entitlement: { kind: 'comped_scale', expires_at: null },
+  });
+
+  assert.deepEqual(funnelRows, [{ target: 'solo_month', failure: 'subscription_exists' }]);
 });

@@ -5,6 +5,7 @@ import {
   FREE_ACTION_ALLOWANCE,
   FREE_ACTION_GRACE_DAYS,
   PLANS,
+  planCommitmentRank,
   getPlanByStripePriceId,
   planDisplayName,
   resolvePlanLimits,
@@ -325,4 +326,38 @@ test('both Personal prices reverse-resolve to the Personal plan', async () => {
 
   delete process.env.STRIPE_PRICE_PERSONAL_MONTHLY;
   delete process.env.STRIPE_PRICE_PERSONAL_YEARLY;
+});
+
+test('the commitment rank orders every (plan, interval) pair', () => {
+  // The ordering that decides whether an in-place plan change was expansion or
+  // contraction. Three cases, each of which a simpler comparison gets wrong.
+
+  // 1. Same tier, longer commitment. A plan-id comparison sees no change, and a
+  //    yearly-revenue comparison calls it a downgrade, because $48 a year is
+  //    less than $60 of monthlies. It is an upgrade.
+  assert.ok(
+    planCommitmentRank('personal', 'year') > planCommitmentRank('personal', 'month'),
+    'personal/year must outrank personal/month',
+  );
+
+  // 2. A tier up beats an interval down: the interval must never be able to
+  //    reach across a tier boundary.
+  assert.ok(
+    planCommitmentRank('solo', 'month') > planCommitmentRank('personal', 'year'),
+    'a tier up is an upgrade at any interval',
+  );
+
+  // 3. A cheaper tier bought for a year is still a downgrade.
+  assert.ok(
+    planCommitmentRank('solo', 'year') < planCommitmentRank('pro', 'month'),
+    'Pro annual sits below Team monthly',
+  );
+
+  // The move the 2026-09-14 customer actually made, and the floor beneath every
+  // first purchase, so a new sale can never read as a downgrade.
+  assert.ok(
+    planCommitmentRank('solo', 'month') > planCommitmentRank('personal', 'month'),
+    'personal -> solo is an upgrade',
+  );
+  assert.equal(planCommitmentRank('free', 'month'), 0);
 });
