@@ -22,6 +22,7 @@
  */
 
 import * as tls from 'tls';
+import { decodeModifiedUtf7, encodeModifiedUtf7 } from './utf7.ts';
 
 // ── Error codes ───────────────────────────────────────────────────────────────
 
@@ -194,6 +195,10 @@ export interface ImapSession {
   /**
    * List available mailboxes matching the pattern.
    *
+   * Names in and out are human-readable, never wire form: the pattern is
+   * encoded to modified UTF-7 on the way out (its '*' and '%' wildcards held
+   * out intact) and every returned name is decoded on the way in.
+   *
    * @param refName - Reference name, typically '' (empty string)
    * @param pattern - Mailbox name with wildcards, e.g. '*' for all mailboxes
    */
@@ -208,7 +213,13 @@ export interface ImapSession {
 }
 
 export interface ImapMailboxInfo {
-  /** Folder name as reported by the server. */
+  /**
+   * Folder name in human-readable form: the server's modified-UTF-7 wire name
+   * (RFC 3501 5.1.3) already decoded, so "&BkUGLAZEBi8-" arrives as "مجلد".
+   * This is the form every other method on the session takes back, which is
+   * the point of decoding it: what the caller is shown is what the caller can
+   * pass to `fetch`, `search` and `store`.
+   */
   name: string;
   /** Folder path delimiter (typically '/' or '.'). */
   delimiter: string;
@@ -583,8 +594,12 @@ function formatAddressList(list: string[]): string {
  * Parse untagged LIST response lines into ImapMailboxInfo objects.
  *
  * LIST response format: * LIST (\HasNoChildren) "/" "INBOX"
+ *
+ * This is the one place a mailbox name is read off the socket, so it is the one
+ * place the wire encoding is undone. Exported for its unit test; it is not part
+ * of the session API.
  */
-function parseListResponse(untaggedLines: string[]): ImapMailboxInfo[] {
+export function parseListResponse(untaggedLines: string[]): ImapMailboxInfo[] {
   const mailboxes: ImapMailboxInfo[] = [];
 
   for (const line of untaggedLines) {
@@ -601,17 +616,88 @@ function parseListResponse(untaggedLines: string[]): ImapMailboxInfo[] {
       // With delimiter
       attributes = match[1].split(' ').map((a) => a.trim()).filter(Boolean);
       delimiter = match[2];
-      name = match[3].replace(/^"|"$/g, '').trim();
+      name = unquoteMailbox(match[3]);
     } else if (match.length === 3) {
       // NIL delimiter
       attributes = match[1].split(' ').map((a) => a.trim()).filter(Boolean);
-      name = match[2].replace(/^"|"$/g, '').trim();
+      name = unquoteMailbox(match[2]);
     }
 
-    mailboxes.push({ name, delimiter, attributes });
+    // Mailbox names travel in modified UTF-7 (RFC 3501 5.1.3), so the raw
+    // capture is a wire string. Decoding is total: a server that never
+    // implemented 5.1.3, or one that sends a malformed run, gets its name back
+    // verbatim rather than half-mangled, and a verbatim name is still one we
+    // can hand straight back in a SELECT.
+    mailboxes.push({ name: decodeModifiedUtf7(name), delimiter, attributes });
   }
 
   return mailboxes;
+}
+
+// ── Private: mailbox-name quoting ─────────────────────────────────────────────
+
+/**
+ * Undo an IMAP quoted-string: drop the quotes and the backslash escapes inside
+ * them. An unquoted name is an atom and carries no escapes, so it is left alone.
+ *
+ * This is the exact inverse of the quoting {@link quoteMailbox} does. It has to
+ * be: now that a name containing a quote or a backslash is escaped on the way
+ * out, a name read back without unescaping would select a different folder than
+ * the one the server named.
+ */
+function unquoteMailbox(token: string): string {
+  const trimmed = token.trim();
+  if (trimmed.length >= 2 && trimmed.startsWith('"') && trimmed.endsWith('"')) {
+    return trimmed.slice(1, -1).replace(/\\(.)/g, '$1');
+  }
+  return trimmed;
+}
+
+/**
+ * Reject a name that cannot legally go on a command line, then encode it to the
+ * wire form and quote it. Every mailbox-name argument goes through here.
+ *
+ * Order matters. The control-character check runs on the name the CALLER gave
+ * us, before encoding, because modified UTF-7 would otherwise launder a CRLF
+ * into an innocuous-looking BASE64 run and the guard would never see it. A
+ * folder name carrying CRLF would end the command line early and let the rest
+ * of the name be read as further IMAP commands.
+ *
+ * Exported for its unit test only; it is not part of the session API.
+ */
+export function quoteMailbox(name: string): string {
+  if (/[\x00-\x1F\x7F]/.test(name)) {
+    throw new McpEmailsError(
+      'IMAP_PROTOCOL_ERROR',
+      'Invalid folder name: control characters are not allowed'
+    );
+  }
+  return `"${encodeModifiedUtf7(name).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+}
+
+/**
+ * The same for a LIST *pattern*, which is not quite a name: '*' and '%' are the
+ * IMAP wildcards and have to reach the server intact.
+ *
+ * Both are printable US-ASCII, so the encoder already passes them through
+ * untouched — but leaning on that would make the wildcards an accident of the
+ * encoder's rules rather than a requirement of this call site, so they are held
+ * out explicitly and everything between them is encoded as a name would be.
+ *
+ * Exported for its unit test only; it is not part of the session API.
+ */
+export function quoteListPattern(pattern: string): string {
+  if (/[\x00-\x1F\x7F]/.test(pattern)) {
+    throw new McpEmailsError(
+      'IMAP_PROTOCOL_ERROR',
+      'Invalid folder pattern: control characters are not allowed'
+    );
+  }
+  const encoded = pattern
+    .split(/([*%])/)
+    .map((part) => (part === '*' || part === '%' ? part : encodeModifiedUtf7(part)))
+    .join('');
+  return `"${encoded.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
 }
 
 // ── Private: socket write helper ──────────────────────────────────────────────
@@ -801,10 +887,16 @@ export async function openImapSession(config: ImapConfig): Promise<ImapSession> 
 
   // ── Session object ──────────────────────────────────────────────────────────
 
-  /** SELECT a mailbox; throws McpEmailsError on NO/BAD. */
+  /**
+   * SELECT a mailbox; throws McpEmailsError on NO/BAD.
+   *
+   * `mailbox` is a human-readable name — the same form `list()` hands back —
+   * and is encoded to the wire here. Without this the decoded name from a LIST
+   * could never be selected, which is the shape the bug took in the MCP server.
+   */
   async function selectMailbox(mailbox: string): Promise<void> {
     const selectTag = nextTag();
-    await socketWrite(socket, `${selectTag} SELECT "${mailbox}"\r\n`);
+    await socketWrite(socket, `${selectTag} SELECT ${quoteMailbox(mailbox)}\r\n`);
     const result = await readTaggedResponse(reader, selectTag, TIMEOUT.SELECT);
 
     if (result.status === 'NO') {
@@ -877,7 +969,10 @@ export async function openImapSession(config: ImapConfig): Promise<ImapSession> 
 
     async list(refName: string, pattern: string): Promise<ImapMailboxInfo[]> {
       const listTag = nextTag();
-      await socketWrite(socket, `${listTag} LIST "${refName}" "${pattern}"\r\n`);
+      await socketWrite(
+        socket,
+        `${listTag} LIST ${quoteMailbox(refName)} ${quoteListPattern(pattern)}\r\n`
+      );
       const result = await readTaggedResponse(reader, listTag, TIMEOUT.COMMAND);
 
       if (result.status === 'NO') {

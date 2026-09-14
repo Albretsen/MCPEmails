@@ -164,7 +164,7 @@
         "since": "ISO 8601-dato eller -datotid (action 'search'); returner meldinger mottatt på/etter (>=) dette tidspunktet. F.eks. \"2026-06-01\".",
         "before": "ISO 8601-dato eller -datotid (action 'search'); returner meldinger mottatt strengt før (<) dette tidspunktet.",
         "query": "Rå leverandørspesifikk spørrestreng (action 'search', nødløsning). Foretrekk de strukturerte feltene over. Kombineres med dem der det støttes; ignoreres på Fastmail.",
-        "include_folders": "Begrens et søk til disse mappenavnene (action 'search'). Standard: søk i alle mapper."
+        "include_folders": "Begrens et søk til disse mappenavnene (action 'search'). På generisk IMAP søkes det kun i INBOX når feltet utelates; oppgi arkiv- eller sendt-mappene for å utvide søket. Gmail og Outlook søker i alle mapper."
       }
     },
     "email_organize": {
@@ -199,7 +199,7 @@
         "since": "ISO 8601-dato eller -datotid; match meldinger mottatt på/etter (>=) dette tidspunktet.",
         "before": "ISO 8601-dato eller -datotid; match meldinger mottatt strengt før (<) dette tidspunktet.",
         "query": "Rå leverandørspesifikk spørrestreng (nødløsning). Foretrekk de strukturerte feltene over. Ignoreres på Fastmail.",
-        "include_folders": "Begrens søket til disse mappenavnene. På generisk IMAP søkes det kun i INBOX når feltet utelates.",
+        "include_folders": "Begrens søket til disse mappenavnene. På generisk IMAP søkes det kun i INBOX når feltet utelates; oppgi arkiv- eller sendt-mappene for å utvide søket. Gmail og Outlook søker i alle mapper.",
         "limit": "Maks antall treff som skal flyttes. Standard 500, maks 500. Når søket fyller grensen, sier has_more i svaret om det ble liggende igjen meldinger som matcher.",
         "idempotency_key": "Valgfri ugjennomsiktig nøkkel (1–200 tegn) for én logisk opprydding. Gjenbruk den bare for å prøve nøyaktig samme kall på nytt innen 24 timer; gjenbruk med andre argumenter avvises."
       }
@@ -226,7 +226,7 @@
         "since": "ISO 8601-dato eller -datotid (søkehandling); match meldinger mottatt på/etter (>=) dette tidspunktet.",
         "before": "ISO 8601-dato eller -datotid (søkehandling); match meldinger mottatt strengt før (<) dette tidspunktet.",
         "query": "Rå leverandørspesifikk spørrestreng (søkehandling, nødløsning). Foretrekk de strukturerte feltene over. Ignoreres på Fastmail.",
-        "include_folders": "Begrens søket til disse mappenavnene (søkehandling). Standard: alle mapper.",
+        "include_folders": "Begrens søket til disse mappenavnene (søkehandling). På generisk IMAP søkes det kun i INBOX når feltet utelates; oppgi arkiv- eller sendt-mappene for å utvide søket. Gmail og Outlook søker i alle mapper.",
         "limit": "For search_and_delete: maks antall treff som skal behandles. Standard 500, maks 500."
       }
     },

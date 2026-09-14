@@ -370,7 +370,7 @@
           },
           "include_folders": {
             "default": [],
-            "description": "Folders to search, each an alias, a folder or label name, or a folder id (names and aliases resolve for you). IMAP covers INBOX only unless you name archive or sent folders; Gmail always searches everything.",
+            "description": "Folders to search, each an alias, a folder or label name, or a folder id (names and aliases resolve for you). IMAP covers INBOX only unless you name archive or sent folders; Gmail and Outlook always search everything.",
             "items": {
               "type": "string"
             },
@@ -642,7 +642,7 @@
             "type": "string"
           },
           "include_folders": {
-            "description": "Folder names to search. IMAP covers INBOX only when omitted.",
+            "description": "Folders to search, each an alias, a folder or label name, or a folder id (names and aliases resolve for you). IMAP covers INBOX only unless you name archive or sent folders; Gmail and Outlook always search everything.",
             "items": {
               "type": "string"
             },
@@ -779,7 +779,7 @@
             "type": "string"
           },
           "include_folders": {
-            "description": "Folder names to search.",
+            "description": "Folders to search, each an alias, a folder or label name, or a folder id (names and aliases resolve for you). IMAP covers INBOX only unless you name archive or sent folders; Gmail and Outlook always search everything.",
             "items": {
               "type": "string"
             },

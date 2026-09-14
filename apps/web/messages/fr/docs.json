@@ -164,7 +164,7 @@
         "since": "Date ou date-heure ISO 8601 (action 'search') ; renvoie les messages reçus le/après (>=) cet instant. P. ex. \"2026-06-01\".",
         "before": "Date ou date-heure ISO 8601 (action 'search') ; renvoie les messages reçus strictement avant (<) cet instant.",
         "query": "Chaîne de requête native du fournisseur (action 'search', solution de secours). Préférez les champs structurés ci-dessus. Combinée avec eux quand c'est pris en charge ; ignorée sur Fastmail.",
-        "include_folders": "Restreindre une recherche à ces noms de dossier (action 'search'). Par défaut : rechercher dans tous les dossiers."
+        "include_folders": "Restreindre une recherche à ces noms de dossier (action 'search'). Sur IMAP générique, l'omettre ne cherche que dans INBOX ; indiquez vos dossiers d'archives ou d'envoi pour l'élargir. Gmail et Outlook cherchent dans tous les dossiers."
       }
     },
     "email_organize": {
@@ -199,7 +199,7 @@
         "since": "Date ou date-heure ISO 8601 ; correspond aux messages reçus le/après (>=) cet instant.",
         "before": "Date ou date-heure ISO 8601 ; correspond aux messages reçus strictement avant (<) cet instant.",
         "query": "Chaîne de requête native du fournisseur (solution de secours). Préférez les champs structurés ci-dessus. Ignorée sur Fastmail.",
-        "include_folders": "Restreindre la recherche à ces noms de dossier. Sur IMAP générique, l'omettre ne cherche que dans INBOX.",
+        "include_folders": "Restreindre la recherche à ces noms de dossier. Sur IMAP générique, l'omettre ne cherche que dans INBOX ; indiquez vos dossiers d'archives ou d'envoi pour l'élargir. Gmail et Outlook cherchent dans tous les dossiers.",
         "limit": "Nombre maximal de correspondances à déplacer. Par défaut 500, max 500. Quand la recherche atteint la limite, has_more dans le résultat indique s'il reste des messages correspondants.",
         "idempotency_key": "Clé opaque facultative (1–200 caractères) pour un seul balayage logique. Ne la réutilisez que pour réessayer exactement le même appel dans les 24 heures ; une réutilisation avec des arguments différents est rejetée."
       }
@@ -226,7 +226,7 @@
         "since": "Date ou date-heure ISO 8601 (action de recherche) ; correspond aux messages reçus le/après (>=) cet instant.",
         "before": "Date ou date-heure ISO 8601 (action de recherche) ; correspond aux messages reçus strictement avant (<) cet instant.",
         "query": "Chaîne de requête native du fournisseur (action de recherche, solution de secours). Préférez les champs structurés ci-dessus. Ignorée sur Fastmail.",
-        "include_folders": "Restreindre la recherche à ces noms de dossier (action de recherche). Par défaut : tous les dossiers.",
+        "include_folders": "Restreindre la recherche à ces noms de dossier (action de recherche). Sur IMAP générique, l'omettre ne cherche que dans INBOX ; indiquez vos dossiers d'archives ou d'envoi pour l'élargir. Gmail et Outlook cherchent dans tous les dossiers.",
         "limit": "Pour search_and_delete : nombre maximal de correspondances à traiter. Par défaut 500, max 500."
       }
     },
