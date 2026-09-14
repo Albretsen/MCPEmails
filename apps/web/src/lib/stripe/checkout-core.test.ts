@@ -15,8 +15,14 @@
 // The refusal was therefore turning away every remaining grandfathered account
 // at the cheapest paid tier. What it must NOT do is take the comped guard with
 // it: a comped grant resolves to Pro with no action ceiling, so for that cohort
-// Personal genuinely is less than they already hold for nothing. The last four
-// tests exist to stop a future cleanup from deleting both together.
+// Personal genuinely is less than they already hold for nothing. The tests in
+// section 3 exist to stop a future cleanup from deleting both together.
+//
+// Section 5 pins the second refusal of the same kind, removed on 2026-09-14:
+// `already_on_plan`, which refused a monthly subscriber the annual price of the
+// plan they were already on. Its header carries the full story, including the
+// two things that had to survive it: the real no-op refusal, and the consent
+// gate in front of every in-place swap.
 //
 // Run: node --test --experimental-strip-types --experimental-test-module-mocks \
 //        --import ./scripts/register-ts-alias.mjs src/lib/stripe/checkout-core.test.ts
@@ -141,6 +147,68 @@ const funnelRows: Array<{ target: string; failure: string | undefined }> = [];
 /** The Stripe calls a successful checkout makes, so a test can prove one happened. */
 const sessionsCreated: Array<Record<string, unknown>> = [];
 
+/**
+ * The in-place plan change, modelled end to end.
+ *
+ * `currentPrice` is the price the fake subscription is currently on, which is
+ * what separates a genuine no-op (`already_on_plan_interval`) from a real
+ * interval switch. `swaps` records every `subscriptions.update`, so a test can
+ * assert that the second request charged the RIGHT price and, just as
+ * importantly, that the first one charged nothing at all.
+ */
+const SUBSCRIPTION_ID = 'sub_test_existing';
+let currentPrice = 'price_personal_month';
+const swaps: Array<{ id: string; params: Record<string, unknown> }> = [];
+const previewsRequested: Array<Record<string, unknown>> = [];
+
+const stripeStub = {
+  checkout: {
+    sessions: {
+      create: async (params: Record<string, unknown>) => {
+        sessionsCreated.push(params);
+        return { url: SESSION_URL };
+      },
+    },
+  },
+  subscriptions: {
+    retrieve: async (id: string) => ({
+      id,
+      customer: 'cus_test_existing',
+      items: {
+        data: [
+          {
+            id: 'si_test_item',
+            price: { id: currentPrice },
+            current_period_end: 1_800_000_000,
+          },
+        ],
+      },
+    }),
+    update: async (id: string, params: Record<string, unknown>) => {
+      swaps.push({ id, params });
+      return {
+        pending_update: null,
+        latest_invoice: { amount_paid: 4_800, currency: 'usd', hosted_invoice_url: null },
+      };
+    },
+  },
+  invoices: {
+    // A pure read in production, and a pure read here: it must never be able to
+    // stand in for the swap.
+    createPreview: async (params: Record<string, unknown>) => {
+      previewsRequested.push(params);
+      return {
+        currency: 'usd',
+        amount_due: 3_141,
+        lines: { data: [{ amount: -1_659 }, { amount: 4_800 }] },
+      };
+    },
+  },
+  prices: {
+    retrieve: async (id: string) => ({ id, unit_amount: 4_800 }),
+  },
+};
+
 nodeMock.module('@/lib/analytics/billing-funnel', {
   namedExports: {
     billingTarget: (planId: string, interval: string) => `${planId}_${interval}`,
@@ -166,18 +234,7 @@ nodeMock.module('@/lib/stripe/customer', {
 });
 
 nodeMock.module('@/lib/stripe/client', {
-  namedExports: {
-    stripe: {
-      checkout: {
-        sessions: {
-          create: async (params: Record<string, unknown>) => {
-            sessionsCreated.push(params);
-            return { url: SESSION_URL };
-          },
-        },
-      },
-    },
-  },
+  namedExports: { stripe: stripeStub },
 });
 
 let currentSupabase: ReturnType<typeof fakeSupabase>;
@@ -196,6 +253,10 @@ async function checkout(opts: {
   billing?: BillingRow;
   signedIn?: boolean;
   hasWorkspace?: boolean;
+  /** Only true stands for a person having accepted a quote. */
+  confirmChange?: unknown;
+  /** The Stripe price the existing subscription is on. Ignored without one. */
+  subscriptionPrice?: string;
 }) {
   currentSupabase = fakeSupabase({
     entitlement: opts.entitlement,
@@ -205,9 +266,13 @@ async function checkout(opts: {
   });
   funnelRows.length = 0;
   sessionsCreated.length = 0;
+  swaps.length = 0;
+  previewsRequested.length = 0;
+  currentPrice = opts.subscriptionPrice ?? 'price_personal_month';
   const outcome = await runCheckout({
     planId: opts.planId,
     interval: opts.interval ?? 'month',
+    confirmChange: opts.confirmChange,
   });
   return {
     outcome,
@@ -215,8 +280,17 @@ async function checkout(opts: {
     // The failure-reason-only view the older tests are written against.
     funnelCalls: funnelRows.map((row) => row.failure),
     sessionsCreated: [...sessionsCreated],
+    swaps: [...swaps],
+    previewsRequested: [...previewsRequested],
   };
 }
+
+/** An entitled Personal subscriber, billed monthly. The cohort at issue. */
+const PERSONAL_MONTHLY: BillingRow = {
+  plan: 'personal',
+  subscription_status: 'active',
+  stripe_subscription_id: SUBSCRIPTION_ID,
+};
 
 /**
  * Run something with console.warn / console.error captured.
@@ -562,4 +636,274 @@ test('validation still outranks a missing workspace', async () => {
   // no-ops on a null workspace id rather than writing a row that cannot exist.
   assert.deepEqual(result.funnelRows, []);
   assert.deepEqual(logs, [], 'a validation refusal is a row, not a log line');
+});
+
+// ---------------------------------------------------------------------------
+// 5. The interval switch (2026-09-14).
+//
+// `runCheckout` used to answer a 409 `already_on_plan` to any request naming
+// the plan the subscriber already held, decided from `user_billing.plan` alone
+// and taken BEFORE anything looked at the interval. `user_billing` records the
+// tier, not the price, so that check could not tell "already paying for exactly
+// this" from "paying monthly, asking for annual", and refused both. Annual is
+// sold at the paywall and on the pricing page; every existing customer who
+// clicked it was told they were already on the plan and nothing happened.
+//
+// The genuine no-op is a PRICE comparison against the live subscription, and it
+// is still made: `already_on_plan_interval`. These tests pin the difference
+// between the two, and pin that the consent gate did not come off with the
+// refusal. An interval switch charges a card with no hosted Stripe page in
+// front of it, so it must quote first, exactly like a tier change.
+// ---------------------------------------------------------------------------
+
+test('a Personal monthly subscriber asking for annual is QUOTED, not refused', async () => {
+  // The whole point of the change. This was a 409 with the message "You are
+  // already on the Personal plan."
+  const { outcome, swaps } = await checkout({
+    planId: 'personal',
+    interval: 'year',
+    entitlement: null,
+    billing: PERSONAL_MONTHLY,
+    subscriptionPrice: 'price_personal_month',
+  });
+
+  assert.equal(outcome.kind, 'confirmation_required');
+  if (outcome.kind !== 'confirmation_required') return;
+  assert.equal(outcome.planId, 'personal');
+  assert.equal(outcome.interval, 'year');
+
+  // Quoted from Stripe's own preview, so the dialog can state the real number.
+  assert.equal(outcome.preview?.amountDueNowCents, 3_141);
+  assert.equal(outcome.preview?.creditCents, 1_659);
+  assert.equal(outcome.preview?.recurringCents, 4_800);
+
+  // And nothing was charged on the way to the quote.
+  assert.deepEqual(swaps, [], 'a quote must not touch the subscription');
+});
+
+test('annual to monthly is reachable too', async () => {
+  // The refusal was symmetric, so the fix has to be. A customer who took annual
+  // and wants to go back must not be trapped on it.
+  const { outcome } = await checkout({
+    planId: 'personal',
+    interval: 'month',
+    entitlement: null,
+    billing: PERSONAL_MONTHLY,
+    subscriptionPrice: 'price_personal_year',
+  });
+
+  assert.equal(outcome.kind, 'confirmation_required');
+  assert.equal(
+    outcome.kind === 'confirmation_required' ? outcome.interval : null,
+    'month',
+  );
+});
+
+test('the confirmed interval switch swaps to the annual price and records one row', async () => {
+  const { outcome, swaps, funnelRows } = await checkout({
+    planId: 'personal',
+    interval: 'year',
+    entitlement: null,
+    billing: PERSONAL_MONTHLY,
+    subscriptionPrice: 'price_personal_month',
+    confirmChange: true,
+  });
+
+  assert.equal(outcome.kind, 'changed');
+  if (outcome.kind !== 'changed') return;
+  assert.equal(outcome.interval, 'year');
+  assert.equal(outcome.amountPaidCents, 4_800);
+
+  assert.equal(swaps.length, 1);
+  assert.equal(swaps[0].id, SUBSCRIPTION_ID);
+  assert.deepEqual(swaps[0].params.items, [
+    { id: 'si_test_item', price: 'price_personal_year' },
+  ]);
+  // Charged now, and held rather than applied if the card needs 3DS. Both are
+  // what keep an unpaid switch from granting anything.
+  assert.equal(swaps[0].params.proration_behavior, 'always_invoice');
+  assert.equal(swaps[0].params.payment_behavior, 'pending_if_incomplete');
+
+  assert.deepEqual(funnelRows, [
+    { target: 'personal_year', failure: 'subscription_exists' },
+  ]);
+});
+
+test('the quote prices the same swap the confirmation performs', async () => {
+  // A preview taken against different parameters would quote one number and
+  // charge another. The two calls must agree on item, price and proration.
+  const quote = await checkout({
+    planId: 'personal',
+    interval: 'year',
+    entitlement: null,
+    billing: PERSONAL_MONTHLY,
+    subscriptionPrice: 'price_personal_month',
+  });
+  const confirmed = await checkout({
+    planId: 'personal',
+    interval: 'year',
+    entitlement: null,
+    billing: PERSONAL_MONTHLY,
+    subscriptionPrice: 'price_personal_month',
+    confirmChange: true,
+  });
+
+  const previewed = quote.previewsRequested[0].subscription_details as {
+    items: Array<{ id: string; price: string }>;
+    proration_behavior: string;
+  };
+  assert.deepEqual(previewed.items, confirmed.swaps[0].params.items);
+  assert.equal(previewed.proration_behavior, confirmed.swaps[0].params.proration_behavior);
+});
+
+test('the consent gate still stands in front of an interval switch', async () => {
+  // The refusal that came off was the only thing between a GET and a re-priced
+  // subscription for this case. If `confirmChange` ever stops being required
+  // here, one link unfurl or one back button re-prices a live subscription.
+  for (const confirmChange of [undefined, false, 'true', 1, {}]) {
+    const { outcome, swaps, funnelRows } = await checkout({
+      planId: 'personal',
+      interval: 'year',
+      entitlement: null,
+      billing: PERSONAL_MONTHLY,
+      subscriptionPrice: 'price_personal_month',
+      confirmChange,
+    });
+
+    assert.equal(
+      outcome.kind,
+      'confirmation_required',
+      `confirmChange=${JSON.stringify(confirmChange)} must only quote`,
+    );
+    assert.deepEqual(swaps, [], 'no card may be charged without a confirmation');
+    // Asking the price is not an attempt, so it is not a funnel row either.
+    assert.deepEqual(funnelRows, []);
+  }
+});
+
+test('the real no-op is still refused, and only it', async () => {
+  // Same plan AND already on that exact price: there is nothing to change.
+  // This is the check that now does the work `already_on_plan` was doing badly.
+  const { outcome, swaps } = await checkout({
+    planId: 'personal',
+    interval: 'month',
+    entitlement: null,
+    billing: PERSONAL_MONTHLY,
+    subscriptionPrice: 'price_personal_month',
+  });
+
+  assert.equal(outcome.kind, 'error');
+  if (outcome.kind !== 'error') return;
+  assert.equal(outcome.reason, 'already_on_plan_interval');
+  assert.equal(outcome.status, 409);
+  assert.equal(outcome.message, 'You are already on Personal, billed monthly.');
+  assert.deepEqual(swaps, []);
+});
+
+test('the no-op refusal survives a confirmation', async () => {
+  // A stale dialog must not be able to re-invoice a customer for the price they
+  // are already on.
+  const { outcome, swaps } = await checkout({
+    planId: 'personal',
+    interval: 'month',
+    entitlement: null,
+    billing: PERSONAL_MONTHLY,
+    subscriptionPrice: 'price_personal_month',
+    confirmChange: true,
+  });
+
+  assert.equal(outcome.kind === 'error' ? outcome.reason : null, 'already_on_plan_interval');
+  assert.deepEqual(swaps, []);
+});
+
+test('a tier change is unaffected by the removal', async () => {
+  // `solo` is sold as "Pro". This path was always reachable and must stay
+  // exactly as it was, quote first and all.
+  const { outcome } = await checkout({
+    planId: 'solo',
+    interval: 'month',
+    entitlement: null,
+    billing: PERSONAL_MONTHLY,
+    subscriptionPrice: 'price_personal_month',
+  });
+
+  assert.equal(outcome.kind, 'confirmation_required');
+  assert.equal(outcome.kind === 'confirmation_required' ? outcome.planId : null, 'solo');
+});
+
+test('an interval switch never opens a second subscription', async () => {
+  // The reason this branch exists at all: a Stripe Checkout session here would
+  // leave the customer paying for two subscriptions at once.
+  for (const confirmChange of [false, true]) {
+    const { sessionsCreated } = await checkout({
+      planId: 'personal',
+      interval: 'year',
+      entitlement: null,
+      billing: PERSONAL_MONTHLY,
+      subscriptionPrice: 'price_personal_month',
+      confirmChange,
+    });
+    assert.equal(sessionsCreated.length, 0);
+  }
+});
+
+test('a manually seeded plan is still not self-service', async () => {
+  // Entitled with no subscription id: comped or hand-seeded. There is no
+  // subscription to read an interval off, so this stays a refusal. It answers
+  // `plan_not_self_service` where it used to answer `already_on_plan`, which is
+  // the honest answer: the plan is not ours to re-price from a button.
+  const { outcome, swaps } = await checkout({
+    planId: 'personal',
+    interval: 'year',
+    entitlement: null,
+    billing: { plan: 'personal', subscription_status: 'active', stripe_subscription_id: null },
+  });
+
+  assert.equal(outcome.kind, 'error');
+  if (outcome.kind !== 'error') return;
+  assert.equal(outcome.reason, 'plan_not_self_service');
+  assert.equal(outcome.status, 409);
+  assert.equal(outcome.errorCode, 'subscription_not_self_service');
+  assert.deepEqual(swaps, []);
+});
+
+test('a comped account cannot reach the swap by asking for another interval', async () => {
+  // The comped guard runs above all of this and must keep running: these users
+  // hold more than any plan they could be sold.
+  const { outcome, swaps, sessionsCreated } = await checkout({
+    planId: 'personal',
+    interval: 'year',
+    entitlement: { kind: 'comped_scale', expires_at: null },
+    billing: PERSONAL_MONTHLY,
+    subscriptionPrice: 'price_personal_month',
+    confirmChange: true,
+  });
+
+  assert.equal(outcome.kind === 'error' ? outcome.reason : null, 'comped');
+  assert.deepEqual(swaps, []);
+  assert.equal(sessionsCreated.length, 0);
+});
+
+test('a lapsed subscription still buys through Stripe Checkout, not the swap', async () => {
+  // `canceled` is not an entitled status, so this user has no live subscription
+  // to re-price and must get a hosted page. Falling into the swap here would
+  // try to update a subscription that is gone.
+  const { outcome, sessionsCreated, swaps } = await checkout({
+    planId: 'personal',
+    interval: 'year',
+    entitlement: null,
+    billing: {
+      plan: 'personal',
+      subscription_status: 'canceled',
+      stripe_subscription_id: SUBSCRIPTION_ID,
+    },
+  });
+
+  assert.equal(outcome.kind, 'checkout');
+  assert.equal(sessionsCreated.length, 1);
+  assert.equal(
+    (sessionsCreated[0].line_items as Array<{ price: string }>)[0].price,
+    'price_personal_year',
+  );
+  assert.deepEqual(swaps, []);
 });
