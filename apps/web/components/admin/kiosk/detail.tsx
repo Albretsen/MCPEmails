@@ -129,6 +129,12 @@ export async function KioskDetail({ days = KIOSK_WINDOW_DAYS }: { days?: number 
             facts={[
               { label: 'Portal opened', value: checkout.data.portalOpened },
               { label: 'Create failed', value: checkout.data.checkoutFailed },
+              // Not a rung in the table above: a plan change happens to someone
+              // who already paid, so it belongs beside the funnel, not inside
+              // it. Downgrades sit next to upgrades deliberately, because a net
+              // of the two is the only honest reading of expansion.
+              { label: 'Upgraded', value: checkout.data.planUpgraded },
+              { label: 'Downgraded', value: checkout.data.planDowngraded },
               { label: 'Ours, excluded', value: checkout.data.internalExcluded },
             ]}
           />

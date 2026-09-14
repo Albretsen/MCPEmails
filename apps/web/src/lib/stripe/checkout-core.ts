@@ -3,10 +3,19 @@ import type Stripe from 'stripe';
 import { createClient } from '@/lib/supabase/server';
 import { stripe } from '@/lib/stripe/client';
 import { getOrCreateStripeCustomer } from '@/lib/stripe/customer';
-import { PLANS, type PlanId, type BillingInterval } from '@/lib/stripe/plans';
+import {
+  PLANS,
+  planCommitmentRank,
+  getPlanByStripePriceId,
+  type PlanId,
+  type BillingInterval,
+} from '@/lib/stripe/plans';
 import {
   billingTarget,
+  planCategory,
   recordCheckoutStarted,
+  recordPlanChange,
+  type PlanChangeDirection,
 } from '@/lib/analytics/billing-funnel';
 
 /**
@@ -351,8 +360,17 @@ export async function runCheckout(input: {
   // What it knowingly does NOT cover, because the table cannot hold it: the two
   // exits that have no workspace to hang a row off. `unauthenticated` above (no
   // user at all) and `workspace_not_found` below (a user who owns none) are
-  // logged instead, each with a comment saying why. Everything else, the
-  // validation refusals included, is a row.
+  // logged instead, each with a comment saying why.
+  //
+  // And what it deliberately no longer covers, as of 2026-09-14: the in-place
+  // plan change. That path creates no Stripe Checkout session, so it has no
+  // `checkout_started` to record; it writes its own row in the `plan_upgraded`
+  // / `plan_downgraded` stages instead, at whichever of its three exits it
+  // reaches. The once-per-request property is unchanged, since those exits are
+  // mutually exclusive and each writes once. The two exits that report "you
+  // already have exactly this" write nothing at all, and say why inline.
+  //
+  // Everything else, the validation refusals included, is a row.
   //
   // The attempt is not written eagerly with a provisional outcome: the view
   // over this table reads `outcome = 'success'` as "a checkout was started" and
@@ -570,6 +588,31 @@ export async function runCheckout(input: {
       );
     }
 
+    // Where the change is coming FROM, and therefore whether it is expansion or
+    // contraction. Filled in once the subscription has been read, because the
+    // price the subscription is actually on is the only place the CURRENT
+    // interval is written down at all: `user_billing` stores a plan and no
+    // interval, so without this a monthly-to-annual switch on one tier would be
+    // indistinguishable from no change.
+    let fromPrice: { planId: PlanId; interval: BillingInterval } | null = null;
+
+    // One rule, evaluated at whichever exit is reached, on the best inputs that
+    // exit has. The fallback (`user_billing.plan` at the target's interval) is
+    // for an exit taken before the subscription could be read, and for a price
+    // that no longer maps to a plan at all: `getPlanByStripePriceId` returns
+    // null for an archived id that was dropped from `legacyStripePriceIds`,
+    // which the webhook already treats as an anomaly to reconcile by hand.
+    // `>=` rather than `>` so an unresolvable pair defaults to the direction a
+    // person clicking a paid plan almost always means.
+    const changeDirection = (): PlanChangeDirection => {
+      const fromPlanId = fromPrice?.planId ?? planCategory(billing!.plan);
+      const fromInterval = fromPrice?.interval ?? interval;
+      return planCommitmentRank(planId, interval) >=
+        planCommitmentRank(fromPlanId, fromInterval)
+        ? 'upgrade'
+        : 'downgrade';
+    };
+
     try {
       const subscription = await stripe.subscriptions.retrieve(subscriptionId);
       const currentItem = subscription.items.data[0];
@@ -578,8 +621,23 @@ export async function runCheckout(input: {
         throw new Error(`Subscription ${subscriptionId} has no items.`);
       }
 
+      const resolvedFrom = getPlanByStripePriceId(currentItem.price.id);
+      if (resolvedFrom) {
+        fromPrice = { planId: resolvedFrom.plan.id, interval: resolvedFrom.interval };
+      }
+
       if (currentItem.price.id === priceId) {
-        await recordAttempt('subscription_exists');
+        // THE no-op, and the only one left since `already_on_plan` was removed
+        // on 2026-09-14 (see the note at the top of this branch): the
+        // subscription is already on the exact price being asked for.
+        //
+        // Not recorded, and not a checkout failure. Nothing was attempted,
+        // nothing was refused and nothing could have been bought, so a
+        // `checkout_started / failure` row would put a no-op click in the
+        // bucket the growth board captions "our bug, not a change of mind".
+        // The two refusals that DO stay in that bucket are the comped guard
+        // and the manually-managed plan above, where somebody wanted to pay us
+        // and was turned away.
         return fail(
           'already_on_plan_interval',
           409,
@@ -615,7 +673,23 @@ export async function runCheckout(input: {
         };
       }
 
-      await recordAttempt('subscription_exists');
+      // NOTHING IS RECORDED HERE, and until 2026-09-14 that was the bug. This
+      // spot held `recordAttempt('subscription_exists')`, so the funnel's only
+      // trace of a confirmed, invoiced, PAID upgrade was a row saying the
+      // checkout had failed because a subscription already existed. Workspace
+      // dbed58c7 bought Personal at 10:21 on 2026-09-14, hit the three-inbox
+      // ceiling at 10:46 and upgraded to Pro; Stripe invoiced and collected it,
+      // `user_billing` and `workspaces.plan` both moved, and the funnel
+      // recorded the opposite. It made expansion revenue invisible and put the
+      // one real customer who had ever expanded into the failure bucket.
+      //
+      // A checkout is not what happens here: no hosted page is created, so a
+      // `checkout_started` row of either outcome would be a claim about a
+      // Stripe Checkout session that does not exist, and a success row would
+      // additionally read as an abandonment in the view (started with no
+      // matching completion). The row this path owns is written at the three
+      // exits below, in the `plan_upgraded` / `plan_downgraded` stages, once
+      // the outcome is known.
 
       // `always_invoice` invoices and charges the proration NOW, at the moment
       // access changes. The old `create_prorations` deferred it to the next
@@ -650,7 +724,16 @@ export async function runCheckout(input: {
           : null;
 
       if (updated.pending_update) {
-        // Held, not applied. The plan the customer already paid for is intact.
+        // Held, not applied. The plan the customer already paid for is intact,
+        // so this is `started` and not `success`: the change has begun and the
+        // money has not moved. See recordPlanChange for why no later row closes
+        // it when Stripe applies the update by itself.
+        await recordPlanChange({
+          workspaceId: workspace.id,
+          direction: changeDirection(),
+          target,
+          outcome: 'started',
+        });
         return {
           kind: 'payment_required',
           planId,
@@ -662,6 +745,24 @@ export async function runCheckout(input: {
 
       // Paid and applied. The subscription.updated webhook projects the new
       // plan onto user_billing and every workspace the user owns.
+      //
+      // Recorded from here rather than from that webhook, which is the opposite
+      // of the rule `recordCheckoutCompleted` follows, for a reason that only
+      // applies to this path: the webhook is handed a subscription and nothing
+      // about what it replaced, and nothing anywhere stores the price a
+      // subscription was previously on. It can therefore see neither the
+      // interval half of the move nor, without a second read, the direction.
+      // This is not a client's claim either: `pending_if_incomplete` above
+      // guarantees Stripe would have returned a pending update instead of an
+      // applied one if the invoice had not been paid, so reaching this line IS
+      // Stripe's confirmation that the money arrived.
+      await recordPlanChange({
+        workspaceId: workspace.id,
+        direction: changeDirection(),
+        target,
+        outcome: 'success',
+      });
+
       return {
         kind: 'changed',
         planId,
@@ -673,6 +774,19 @@ export async function runCheckout(input: {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error('[checkout] plan change failed:', message);
+      // Recorded, where before it was only logged. A subscriber who confirmed
+      // an amount and got a 500 is the most expensive failure on this path and
+      // was the one the funnel could not see at all: it left no row of any
+      // stage, because the single `checkout_started` write sat inside the try
+      // below the throw. `stripe_error` rather than `subscription_exists`,
+      // since what failed is the call to Stripe and not the entitlement check.
+      await recordPlanChange({
+        workspaceId: workspace.id,
+        direction: changeDirection(),
+        target,
+        outcome: 'failure',
+        failure: 'stripe_error',
+      });
       return fail(
         'plan_change_failed',
         500,

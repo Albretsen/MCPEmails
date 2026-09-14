@@ -21,7 +21,15 @@ export type ProductFunnelEvent = {
     | 'onboarding_started' | 'client_selected' | 'provider_selected' | 'inbox_connection'
     | 'connection_verified' | 'credential_created' | 'technical_activation' | 'value_activation'
     | 'paywall_reached' | 'pricing_viewed' | 'checkout_started' | 'checkout_completed'
-    | 'billing_portal_opened';
+    | 'billing_portal_opened'
+    // An EXISTING subscriber's price was swapped in place. Deliberately not
+    // `checkout_completed`: that stage is what `billing_funnel_by_workspace`
+    // exposes as `paid_at`, which the experiment read-out treats as "this
+    // workspace converted", so filing a plan change there would count every
+    // downgrade as a new sale. Two stages rather than one `plan_changed`
+    // because the direction is the whole point: a bucket that cannot separate
+    // expansion from contraction answers neither question.
+    | 'plan_upgraded' | 'plan_downgraded';
   outcome: 'started' | 'success' | 'failure';
   category:
     | 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap'

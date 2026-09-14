@@ -102,6 +102,69 @@ export async function recordCheckoutCompleted(
   await record({ workspaceId, stage: 'checkout_completed', outcome: 'success', category: target });
 }
 
+/**
+ * Which way an in-place plan change moved.
+ *
+ * Not derivable from the row it produces: `category` carries the plan the
+ * change landed ON, and a single "changed plan" bucket cannot tell expansion
+ * from contraction. `planCommitmentRank` (plans.ts) is the ordering.
+ */
+export type PlanChangeDirection = 'upgrade' | 'downgrade';
+
+/**
+ * An existing subscriber's subscription was re-priced in place.
+ *
+ * NOT a `checkout_completed`, and not a `checkout_started` either. Until
+ * 2026-09-14 this path wrote `checkout_started / failure / subscription_exists`
+ * on the CONFIRMED pass, which is to say the funnel recorded a successful,
+ * invoiced, paid upgrade as a checkout that never got off the ground. One real
+ * customer had made that journey and the only row it left behind said the
+ * opposite of what happened.
+ *
+ * The stage is not `checkout_completed` either, and that is the part worth
+ * spelling out: `billing_funnel_by_workspace` exposes `MIN(checkout_completed)`
+ * as `paid_at`, and `growth_experiment_readout` reads `paid_at IS NOT NULL` as
+ * "this workspace converted". A downgrade filed there would count as a new
+ * sale, in an experiment read-out, forever.
+ *
+ * `outcome` carries what actually happened to the money:
+ *   success  the swap was applied and the proration was invoiced AND paid.
+ *   started  Stripe accepted the swap but holds it as a pending update until
+ *            the invoice is paid (3DS, or a declined card). The customer is
+ *            still on the plan they had, so this is not a completed change.
+ *   failure  the call to Stripe threw; nothing moved.
+ *
+ * KNOWN GAP, deliberately left: a `started` row is never followed by a success
+ * row of its own. Stripe applies a pending update by itself when the invoice is
+ * paid, and the only evidence is a `customer.subscription.updated` webhook that
+ * cannot tell an upgrade it is completing from one this function already
+ * recorded (nothing stores the price a subscription was previously on, so the
+ * webhook cannot see an interval change at all). Recording from both places
+ * would double-count every ordinary upgrade, which is a worse error than
+ * missing a rare held one. The workspace's plan and the MRR read-out both still
+ * move when the payment lands.
+ */
+export async function recordPlanChange(args: {
+  workspaceId: string | null;
+  direction: PlanChangeDirection;
+  /** The plan+interval the change landed on, never the one it came from. */
+  target: BillingTargetCategory;
+  outcome: 'started' | 'success' | 'failure';
+  failure?: ProductFunnelEvent['errorCategory'];
+}): Promise<void> {
+  const { workspaceId, direction, target, outcome, failure } = args;
+  if (!workspaceId) return;
+  await record({
+    workspaceId,
+    stage: direction === 'upgrade' ? 'plan_upgraded' : 'plan_downgraded',
+    outcome,
+    category: target,
+    // `product_funnel_events_terminal_error_check` rejects a reason on any
+    // outcome but `failure`, so this is a constraint, not a style choice.
+    errorCategory: outcome === 'failure' ? failure : undefined,
+  });
+}
+
 /** An existing subscriber opened the Stripe billing portal. */
 export async function recordPortalOpened(
   workspaceId: string | null,

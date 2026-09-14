@@ -182,6 +182,15 @@ export type CheckoutFunnel = {
   checkoutFailed: number;
   /** Existing subscribers who opened the billing portal. */
   portalOpened: number;
+  /**
+   * Workspaces that moved UP a tier after already paying, and the ones that
+   * moved down. Counted apart from `checkoutCompleted` on purpose: an in-place
+   * plan change is expansion or contraction on an existing customer, never a
+   * new sale, and folding either into "Paid" would report the same customer
+   * twice and a downgrade as growth.
+   */
+  planUpgraded: number;
+  planDowngraded: number;
   /** Workspaces dropped from every count above because they are ours. */
   internalExcluded: number;
   /** When the most recent checkout completed, ISO, or null if none ever has. */
@@ -193,7 +202,12 @@ const BILLING_STAGES = [
   'checkout_started',
   'checkout_completed',
   'billing_portal_opened',
+  'plan_upgraded',
+  'plan_downgraded',
 ] as const;
+
+/** The two stages that can carry a non-success outcome worth excluding. */
+const PLAN_CHANGE_STAGES: ReadonlySet<string> = new Set(['plan_upgraded', 'plan_downgraded']);
 
 /**
  * The checkout funnel, counted in distinct workspaces, all time.
@@ -271,6 +285,10 @@ export function summarizeCheckoutFunnel(rows: BillingEventRow[]): CheckoutFunnel
       if (row.stage === 'checkout_started') failed.add(row.workspace_id);
       continue;
     }
+    // A plan change Stripe is holding as an unpaid pending update is recorded
+    // as `started`: the customer agreed to it and is still on the plan they
+    // had. Only a completed change belongs on the tiles below.
+    if (row.outcome !== 'success' && PLAN_CHANGE_STAGES.has(row.stage)) continue;
     const seen = reached.get(row.stage) ?? new Set<string>();
     seen.add(row.workspace_id);
     reached.set(row.stage, seen);
@@ -291,6 +309,9 @@ export function summarizeCheckoutFunnel(rows: BillingEventRow[]): CheckoutFunnel
     abandoned,
     checkoutFailed: [...failed].filter((id) => !internal.has(id)).length,
     portalOpened: (reached.get('billing_portal_opened') ?? new Set()).size,
+    // Completed changes only: the loop above drops the held and failed ones.
+    planUpgraded: (reached.get('plan_upgraded') ?? new Set()).size,
+    planDowngraded: (reached.get('plan_downgraded') ?? new Set()).size,
     internalExcluded: internal.size,
     lastCompletedAt,
   };

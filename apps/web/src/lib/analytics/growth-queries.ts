@@ -345,6 +345,11 @@ export type BillingFunnelRow = {
   checkouts_failed: number;
   checkouts_completed: number;
   abandoned_checkout: boolean;
+  /** Expansion and contraction. Never counted as sales: see the view's header. */
+  plan_upgrades: number;
+  plan_downgrades: number;
+  /** Confirmed plan changes Stripe threw on, or is holding unpaid. */
+  plan_changes_unfinished: number;
 };
 
 /**
@@ -360,7 +365,10 @@ export async function fetchBillingFunnel(): Promise<GrowthResult<BillingFunnelRo
     const service = createServiceRoleClient() as any;
     const { data, error } = await service
       .from('billing_funnel_by_workspace')
-      .select('workspace_id, plan, paywall_hits, pricing_views, checkouts_started, checkouts_failed, checkouts_completed, abandoned_checkout');
+      .select(
+        'workspace_id, plan, paywall_hits, pricing_views, checkouts_started, checkouts_failed, ' +
+          'checkouts_completed, abandoned_checkout, plan_upgrades, plan_downgrades, plan_changes_unfinished',
+      );
     if (error) throw new Error(error.message);
     return (data ?? []) as BillingFunnelRow[];
   });
