@@ -35,6 +35,9 @@ import {
   subjectHeaderLineError,
 } from "./subject-header.ts";
 import {
+  folderArgumentValue,
+  folderNameRequest,
+  folderNameTrimNote,
   type FolderReference,
   folderNotFoundMessage,
   type LabelTargetKind,
@@ -52,6 +55,16 @@ import {
   searchSweepLimitFields,
   type SearchSweepLimitFields,
 } from "./search-sweep-limit.ts";
+import {
+  applyGmailFolderScope,
+  gmailFolderScopeQuery,
+  gmailLabelIdsNeedingNames,
+  gmailResultFolder,
+  mergeOutlookFolderPages,
+  OUTLOOK_FOLDER_FANOUT_CAP,
+  type OutlookFolderPage,
+  planOutlookFolderFanout,
+} from "./search-folder-scope.ts";
 import {
   FolderOperationError,
   FolderTargetError,
@@ -229,7 +242,7 @@ import {
   runForwardMessages,
   summarizeForwardBatch,
 } from "./forward-batch.ts";
-import { attachResultNote, withResultNotesProperty } from "./result-notes.ts";
+import { attachResultNote, attachResultNotes, withResultNotesProperty } from "./result-notes.ts";
 import {
   buildUsageLimitText,
   FREE_ACTION_GRACE_DAYS,
@@ -3325,6 +3338,23 @@ const STRUCTURED_SEARCH_PROPERTIES: Record<string, Record<string, unknown>> = {
   },
 };
 
+/**
+ * The wire text for `include_folders`, shared by every tool that takes it.
+ *
+ * Three tools advertise this argument — email_search (which the consolidated
+ * email_read republishes), email_search_and_move and email_search_and_delete —
+ * and all three resolve it through the same `resolveIncludeFolders`, so one
+ * constant is the only thing that keeps them from disagreeing again. They did
+ * until 2026-09-14: the two sweep tools said less than email_search, and
+ * email_search_and_delete said nothing at all about what an omitted list
+ * covers, which is how /docs came to claim it searches every folder. The
+ * default is the whole point of the sentence, so it is stated on every tool.
+ */
+const INCLUDE_FOLDERS_DESCRIPTION =
+  "Folders to search, each an alias, a folder or label name, or a folder id " +
+  "(names and aliases resolve for you). IMAP covers INBOX only unless you name " +
+  "archive or sent folders; Gmail and Outlook always search everything.";
+
 /** Description for the legacy `query` raw escape-hatch field. */
 const RAW_QUERY_DESCRIPTION =
   "Provider-native raw query (escape hatch); prefer the structured fields. " +
@@ -3838,10 +3868,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           type: "array",
           items: { type: "string" },
           default: [],
-          description:
-            "Folders to search, each an alias, a folder or label name, or a folder " +
-            "id (names and aliases resolve for you). IMAP covers INBOX only unless " +
-            "you name archive or sent folders; Gmail always searches everything.",
+          description: INCLUDE_FOLDERS_DESCRIPTION,
         },
       },
       required: [],
@@ -4252,8 +4279,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         include_folders: {
           type: "array",
           items: { type: "string" },
-          description:
-            "Folder names to search. IMAP covers INBOX only when omitted.",
+          description: INCLUDE_FOLDERS_DESCRIPTION,
         },
         limit: {
           type: "number",
@@ -4302,7 +4328,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         include_folders: {
           type: "array",
           items: { type: "string" },
-          description: "Folder names to search.",
+          description: INCLUDE_FOLDERS_DESCRIPTION,
         },
         limit: {
           type: "number",
@@ -6046,6 +6072,13 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
       item_type: { type: "string", enum: ["folder", "label"] },
       new_name: { type: "string" },
       status: { type: "string" },
+      // Present only when the requested name carried leading or trailing
+      // whitespace that was removed. Optional, so nothing that already parses
+      // this result stops parsing it; see executeRenameFolder for why the trim
+      // is reported rather than applied silently.
+      requested_new_name: { type: "string" },
+      new_name_trimmed: { type: "boolean" },
+      note: { type: "string" },
     },
     required: ["inbox_id", "folder_id", "item_type", "new_name", "status"],
     additionalProperties: false,
@@ -16133,11 +16166,53 @@ interface SearchEmailsResult {
   next_offset: number | null;
   /** The query as received (providers do not expose a normalized form). */
   query_normalized: string;
+  /**
+   * Server notes about how the search was run, published on the same `notes`
+   * key every other tool result uses (see result-notes.ts) so a client that
+   * already surfaces notes needs to learn nothing new.
+   *
+   * Written by the provider function, not by the handler, because the only
+   * thing worth reporting here is a limit of the provider's own API: Graph
+   * cannot search several folders in one request, so an `include_folders` list
+   * longer than the fan-out cap is covered in part and says so. Absent when
+   * there is nothing to report, which is very nearly always.
+   */
+  notes?: string[];
 }
 
 // ---------------------------------------------------------------------------
 // Gmail provider — email_search
 // ---------------------------------------------------------------------------
+
+/**
+ * The account's labels as an id → display-name map.
+ *
+ * Gmail's `q` addresses a user label by NAME (`label:"Q3 Receipts"`) while
+ * every folder argument in this server has already been resolved to an ID
+ * (`Label_17`), so a multi-label search has to translate back exactly once.
+ *
+ * A plain labels.list, deliberately NOT `gmailListFolders`: that one fans out a
+ * labels.get per label for message counts, which is up to fifty extra round
+ * trips inside a search that has thirty seconds for everything.
+ */
+async function gmailLabelNamesById(
+  accessToken: string,
+): Promise<Record<string, string>> {
+  const resp = await fetch(
+    "https://gmail.googleapis.com/gmail/v1/users/me/labels",
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("gmail_auth_failed");
+    throw new Error(`Gmail labels.list failed: ${resp.statusText}`);
+  }
+  const data = (await resp.json()) as { labels?: { id: string; name: string }[] };
+  const byId: Record<string, string> = {};
+  for (const label of data.labels ?? []) {
+    if (label.id && label.name) byId[label.id] = label.name;
+  }
+  return byId;
+}
 
 /**
  * Implements `email_search` for Gmail.
@@ -16146,6 +16221,14 @@ interface SearchEmailsResult {
  * search operator syntax (from:, to:, subject:, after:, before:, has:, etc.).
  * Provider-native search executes server-side; only matching IDs are returned
  * in the first response, then metadata is fetched in parallel.
+ *
+ * `include_folders` is honoured for ANY number of entries. One entry keeps the
+ * `labelIds` parameter it has always used. Two or more move into the query as
+ * Gmail's brace-OR over label terms, because `labelIds` is an AND — listing two
+ * ids there asks for messages carrying BOTH labels, the opposite of what
+ * `include_folders` means. Until 2026-09-14 a list of two or more silently took
+ * the unscoped branch and searched the whole mailbox; see search-folder-scope.ts
+ * for what that cost the caller.
  *
  * Timeout is enforced by the caller (executeSearchEmails), which runs this
  * through `raceSearchWithTimeout`.
@@ -16159,7 +16242,21 @@ async function searchGmailMessages(
 ): Promise<SearchEmailsResult> {
   const accessToken = await withFreshGmailToken(inbox);
 
-  const q = toGmailQuery(search);
+  // ── Folder scope ──────────────────────────────────────────────────────────
+  // One folder keeps the `labelIds` parameter, byte for byte what it has always
+  // sent. Two or more become a brace-OR inside `q`, which needs label NAMES
+  // where `labelIds` took ids, so the account's labels are listed once — and
+  // only when the set actually contains a user label, since a search across
+  // INBOX and SENT is expressible from the static operator table alone.
+  const scopeInQuery = includeFolders.length > 1;
+  let labelNamesById: Record<string, string> = {};
+  if (scopeInQuery && gmailLabelIdsNeedingNames(includeFolders).length > 0) {
+    labelNamesById = await gmailLabelNamesById(accessToken);
+  }
+  const q = applyGmailFolderScope(
+    toGmailQuery(search),
+    scopeInQuery ? gmailFolderScopeQuery(includeFolders, labelNamesById) : null,
+  );
 
   // Gmail has cursor pagination only. Follow its cursors until we have enough
   // refs to form the requested numeric-offset page; limiting a single request
@@ -16175,9 +16272,10 @@ async function searchGmailMessages(
       q,
       maxResults: String(Math.min(target - allRefs.length, 500)),
     });
-    // When include_folders contains exactly one folder, restrict to that label.
-    // Multiple folders are not supported by Gmail's single-labelIds filter;
-    // if more than one is given, fall back to full-inbox search.
+    // Exactly one folder restricts through `labelIds`, unchanged. Several are
+    // already in `q` above: `labelIds` ANDs its values, so sending them here
+    // would ask for the intersection of the caller's folders instead of their
+    // union, and none would be sent at all if the query carried the scope too.
     if (includeFolders.length === 1) {
       params.set("labelIds", gmailFolderToLabel(includeFolders[0]));
     }
@@ -16249,15 +16347,22 @@ async function searchGmailMessages(
     for (const h of msg.payload?.headers ?? []) {
       hdrs[h.name.toLowerCase()] = h.value;
     }
-    // Determine which folder/label the message belongs to.
+    // Determine which folder/label the message belongs to. When the caller
+    // scoped the search, the answer has to come from the folders they asked
+    // for: a multi-folder search used to report "INBOX" on every row whatever
+    // the message actually carried, which made a result set look like it came
+    // from one place when it came from several. `gmailResultFolder` picks the
+    // first requested label the message really has, and falls back to the
+    // system-label guess below for an unscoped search.
     const labelIds = msg.labelIds ?? [];
-    const folder = includeFolders.length === 1
-      ? includeFolders[0]
-      : labelIds.includes("INBOX")
+    const unscopedFolder = labelIds.includes("INBOX")
       ? "INBOX"
       : labelIds.find((l) =>
           ["SENT", "DRAFT", "TRASH", "SPAM"].includes(l)
         ) ?? "INBOX";
+    const folder = includeFolders.length === 1
+      ? includeFolders[0]
+      : gmailResultFolder(labelIds, includeFolders, unscopedFolder);
     return {
       id: msg.id ?? pageRefs[i].id,
       from: parseEmailAddress(hdrs["from"] ?? ""),
@@ -16301,10 +16406,28 @@ async function searchGmailMessages(
  * listed folder and merging the results. This increases API call count but
  * respects the folder constraint as faithfully as Graph allows.
  *
+ * That is what this comment claimed from the day it was written and what the
+ * code did not do until 2026-09-14: the fan-out existed only for a list of
+ * exactly ONE, and two or more fell through to `/me/messages`, the whole
+ * mailbox. Graph offers no third option. `$search` cannot be combined with
+ * `$filter`, so `parentFolderId in (…)` is not available beside a keyword
+ * search, and there is no folder-set parameter — one request per folder is the
+ * only honest way to mean "these folders and no others".
+ *
+ * The fan-out runs in parallel and is capped at OUTLOOK_FOLDER_FANOUT_CAP
+ * folders, because N serial-or-parallel Graph searches inside a 30-second tool
+ * budget is how a search starts timing out, and because Exchange Online meters
+ * concurrent requests per mailbox. Going over the cap NARROWS the search and
+ * says so in `notes`, naming both the folders covered and the folders left out.
+ * It never widens back to the whole mailbox: a result set that quietly contains
+ * folders the caller excluded is the defect this replaced.
+ *
  * Note: Graph `$search` requires `ConsistencyLevel: eventual` and does NOT
  * support `$count=true` alongside `$search` on the messages resource (Graph
  * rejects the request). We therefore report `total: null` (unknown) rather
- * than fabricate a count.
+ * than fabricate a count. Across a fan-out the same rule holds per leg, and the
+ * legs are summed only when every one of them carried a count — Outlook folders
+ * are disjoint, so summing double-counts nothing.
  */
 async function searchOutlookMessages(
   inbox: InboxRow,
@@ -16318,15 +16441,21 @@ async function searchOutlookMessages(
   const select =
     "id,conversationId,from,toRecipients,subject,receivedDateTime,bodyPreview,isRead,hasAttachments,parentFolderId";
 
-  // Build the base URL. Scope to folder when include_folders has exactly one entry.
-  let baseUrl: string;
-  if (includeFolders.length === 1) {
-    const folderName = outlookWellKnownFolder(includeFolders[0]);
-    baseUrl =
-      `https://graph.microsoft.com/v1.0/me/mailFolders/${folderName}/messages`;
-  } else {
-    baseUrl = "https://graph.microsoft.com/v1.0/me/messages";
-  }
+  // ── One request per listed folder ─────────────────────────────────────────
+  // No folders listed keeps the whole-mailbox URL, which is the only case where
+  // /me/messages is the right endpoint. Every other case is one leg per folder,
+  // each reporting its own folder on the rows it contributes — the old code
+  // stamped "INBOX" on every row of a multi-folder search whatever the message
+  // actually was.
+  const fanout = planOutlookFolderFanout(includeFolders, OUTLOOK_FOLDER_FANOUT_CAP);
+  const legs: { folder: string; url: string }[] = fanout.searched.length === 0
+    ? [{ folder: "INBOX", url: "https://graph.microsoft.com/v1.0/me/messages" }]
+    : fanout.searched.map((folder) => ({
+      folder,
+      url: `https://graph.microsoft.com/v1.0/me/mailFolders/${
+        outlookWellKnownFolder(folder)
+      }/messages`,
+    }));
 
   // Graph CANNOT combine $search and $filter on /messages, so pick exactly one
   // (per search-translate.ts policy): prefer $search when free-text criteria
@@ -16356,50 +16485,61 @@ async function searchOutlookMessages(
   }
   // else: neither — list without $search/$filter (match all).
 
-  const resp = await fetch(`${baseUrl}?${params}`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      ConsistencyLevel: "eventual",
-    },
-  });
+  // Every leg sends the identical query string; only the folder in the path
+  // differs. They are issued together rather than one after another because the
+  // 30-second budget is wall-clock: serialised, five folders would cost five
+  // round trips of latency, and the whole point of a cap is that the slowest
+  // leg — not the sum of them — is what the budget has to absorb.
+  const pages: OutlookFolderPage<OutlookMessage>[] = await Promise.all(
+    legs.map(async ({ folder, url }) => {
+      const resp = await fetch(`${url}?${params}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          ConsistencyLevel: "eventual",
+        },
+      });
 
-  if (!resp.ok) {
-    if (resp.status === 401) throw new Error("outlook_auth_failed");
-    const errBody = (await resp.json()) as { error?: { message?: string } };
-    const errMsg = errBody.error?.message ?? resp.statusText;
-    // Graph returns 400 with "InequalityNotSupported" or similar when the
-    // $search syntax is invalid — surface this as invalid_query.
-    if (resp.status === 400) throw new Error(`outlook_invalid_query: ${errMsg}`);
-    throw new Error(`Outlook Graph API error: ${errMsg}`);
-  }
+      if (!resp.ok) {
+        if (resp.status === 401) throw new Error("outlook_auth_failed");
+        const errBody = (await resp.json()) as { error?: { message?: string } };
+        const errMsg = errBody.error?.message ?? resp.statusText;
+        // Graph returns 400 with "InequalityNotSupported" or similar when the
+        // $search syntax is invalid — surface this as invalid_query.
+        if (resp.status === 400) throw new Error(`outlook_invalid_query: ${errMsg}`);
+        throw new Error(`Outlook Graph API error: ${errMsg}`);
+      }
 
-  const data = (await resp.json()) as {
-    value?: OutlookMessage[];
-    "@odata.count"?: number;
-    "@odata.nextLink"?: string;
-  };
+      const data = (await resp.json()) as {
+        value?: OutlookMessage[];
+        "@odata.count"?: number;
+        "@odata.nextLink"?: string;
+      };
+      return {
+        folder,
+        messages: data.value ?? [],
+        // With $filter we requested $count=true and Graph returns an exact total
+        // via @odata.count. With $search, Graph rejects $count, so this is null
+        // (unknown) rather than fabricated.
+        count: data["@odata.count"] ?? null,
+        hasNextPage: !!data["@odata.nextLink"],
+      };
+    }),
+  );
 
-  const rawMessages = data.value ?? [];
-  const hasMore = !!data["@odata.nextLink"];
   // Graph's $search returns results in relevance order (and $orderby cannot be
   // combined with $search), so a recent message can rank below an older keyword
   // match. Sort the fetched window by received date descending before slicing
-  // the page so results are newest-first, matching the other providers.
-  const orderedMessages = rawMessages.slice().sort((a, b) => {
-    const da = Date.parse(a.receivedDateTime ?? "");
-    const db = Date.parse(b.receivedDateTime ?? "");
-    const va = Number.isFinite(da) ? da : -Infinity;
-    const vb = Number.isFinite(db) ? db : -Infinity;
-    return vb - va;
-  });
-  const pageMessages = orderedMessages.slice(offset, offset + limit);
-  // With $filter we requested $count=true and Graph returns an exact total via
-  // @odata.count. With $search, Graph rejects $count, so total stays null
-  // (unknown) rather than fabricated.
-  const total = data["@odata.count"] ?? null;
+  // the page so results are newest-first, matching the other providers — and,
+  // across a fan-out, so the page interleaves the folders by date instead of
+  // exhausting the first folder before the second gets a look in.
+  const merged = mergeOutlookFolderPages(
+    pages,
+    offset,
+    limit,
+    (msg) => msg.receivedDateTime,
+  );
 
-  const folder = includeFolders.length === 1 ? includeFolders[0] : "INBOX";
-  const messages: SearchEmailSummary[] = pageMessages.map((msg) => ({
+  const messages: SearchEmailSummary[] = merged.page.map(({ folder, message: msg }) => ({
     id: msg.id,
     from: {
       name: msg.from?.emailAddress?.name ?? "",
@@ -16421,12 +16561,16 @@ async function searchOutlookMessages(
 
   return {
     messages,
-    total,
+    total: merged.total,
     // $filter+$count yields an exact total; otherwise total is null (unknown).
     total_is_estimate: false,
-    has_more: hasMore,
+    has_more: merged.hasMore,
     next_offset: offset + limit,
     query_normalized: queryNormalized,
+    // Present only when the fan-out cap left folders unsearched. Published on
+    // the same `notes` key every other tool result uses (result-notes.ts), so
+    // the caller reads the shortfall where they already read server notes.
+    ...(fanout.note ? { notes: [fanout.note] } : {}),
   };
 }
 
@@ -17175,9 +17319,9 @@ function listFoldersForProvider(inbox: InboxRow): Promise<FolderEntry[]> {
  *      alias falls through to the listing step and matches by canonical name.
  *      The Gmail `archive` alias has no system label (null) and likewise falls
  *      through (archive-as-move is unsupported; email_archive handles it).
- *   3. Otherwise list folders once and match `nameOrId` case-insensitively
- *      against each FolderEntry.name (returning that entry's id), or return it
- *      immediately if it already exactly equals some FolderEntry.id.
+ *   3. Otherwise list folders once and hand the value to
+ *      {@link resolveFolderReference}, which owns the whole matching rule (id,
+ *      name case-insensitively, alias name, then a whitespace-insensitive pass).
  *   4. No match → return `nameOrId` unchanged (best-effort pass-through: it may
  *      already be a valid provider id we don't enumerate; if not, the provider
  *      rejects it and the existing "call folder_list" error guides the agent),
@@ -17187,6 +17331,18 @@ function listFoldersForProvider(inbox: InboxRow): Promise<FolderEntry[]> {
  *      "Invalid label: X. Please try again in a moment." — a permanent failure
  *      that read as transient. Write paths keep the pass-through so a valid
  *      provider id we happen not to enumerate still works.
+ *   5. AMBIGUOUS → always throws, strict or not. See the call to
+ *      resolveFolderReference below for why that one is not a pass-through.
+ *
+ * ── WHITESPACE (2026-09-14) ─────────────────────────────────────────────────
+ * `trimmed` below is used for the blank check, for the alias lookup and in
+ * error copy, and for NOTHING ELSE. The value handed to the matcher is the raw
+ * `nameOrId`, spaces and all, because a mailbox named " LM1921 & LM1935 " wears
+ * those spaces in its LIST reply and, on IMAP, in its id. Trimming here as well
+ * as in resolveFolderReference made that mailbox unreachable by every spelling
+ * at once: the caller's side was trimmed, the candidate's side was not, so
+ * neither could ever be equal. One layer owns the trimming rule now, and it is
+ * the matcher, which can trim both sides together. Do not re-add a trim here.
  */
 async function resolveFolderId(
   inbox: InboxRow,
@@ -17273,13 +17429,34 @@ async function resolveFolderId(
   const folders = await folderReferencesForProvider(inbox, opts.session);
   const aliasNames = alias ? [alias.imap, ...alias.aliases] : [];
 
-  const match = resolveFolderReference(trimmed, folders, {
+  // NOTE the argument: `nameOrId`, not `trimmed`. The matcher needs the value
+  // as the caller typed it so a mailbox whose name really does carry leading or
+  // trailing spaces can be addressed by its exact name. See the header.
+  const match = resolveFolderReference(nameOrId, folders, {
     aliasNames,
     provider: inbox.provider,
     itemNoun: organizationItemType(inbox),
     hint: gmailArchiveHint(inbox, alias),
   });
   if (match.ok) return match.id;
+
+  // ── Ambiguous ───────────────────────────────────────────────────────────────
+  // Two mailboxes differing only in their surrounding whitespace, and a spelling
+  // that is exact for neither. This throws on the WRITE paths too, which is the
+  // one place `opts.strict` deliberately does not apply: the pass-through below
+  // exists for a value that might still be a valid id we failed to enumerate,
+  // and that argument has no force here — we enumerated the folder, twice, and
+  // the only question left is which of the two the caller meant. Handing the
+  // provider a coin-flip would move mail into the wrong mailbox and report
+  // success.
+  if (match.code === "folder_ambiguous") {
+    throw new FolderTargetError({
+      error: match.code,
+      provider: inbox.provider,
+      folder: nameOrId,
+      message: match.error,
+    });
+  }
 
   // ── No match ────────────────────────────────────────────────────────────────
   // Strict (read paths): a structured, permanent, actionable failure.
@@ -17292,7 +17469,26 @@ async function resolveFolderId(
       message: match.error,
     });
   }
-  return trimmed;
+  // The pass-through hands over `nameOrId`, not `trimmed`. Its whole premise is
+  // that this might be a valid provider id we failed to ENUMERATE - Graph's
+  // mailFolders page caps at 100, so a 101st folder is exactly that case - and
+  // a value we are forwarding precisely because we could not verify it is the
+  // last value to start editing. The stray-whitespace spelling this used to
+  // rescue ("  Archive  " against a mailbox Archive) is now matched properly
+  // one step earlier, whenever the mailbox appears in the listing at all.
+  return nameOrId;
+}
+
+/**
+ * The `destination_folder_id` argument of every move/copy tool.
+ *
+ * A one-line wrapper so the five handlers share one spelling, and so the rule
+ * itself lives beside the matcher that consumes it rather than being restated
+ * here: see {@link folderArgumentValue} for WHY this does not trim the value,
+ * only the presence test.
+ */
+function destinationFolderArg(args: Record<string, unknown>): string {
+  return folderArgumentValue(args["destination_folder_id"]);
 }
 
 /**
@@ -18050,7 +18246,13 @@ async function executeCreateFolder(
   if (resolved.error) return resolved.error;
   const { inbox, args } = resolved;
 
-  const name = typeof args["name"] === "string" ? args["name"].trim() : "";
+  // ── The name, trimmed, and the fact of the trim ──────────────────────────
+  // Still trimmed, no longer silently: see folderNameRequest for why that is
+  // the right answer rather than honouring the spaces or refusing the name.
+  // The report rides on the `created` object, whose advertised schema is
+  // additionalProperties: true, so nothing in the contract moves.
+  const nameReq = folderNameRequest(args["name"]);
+  const name = nameReq.name;
   if (!name) {
     return {
       result: {
@@ -18090,7 +18292,17 @@ async function executeCreateFolder(
     result: {
       ...jsonOk({
         inbox_id: inbox.id,
-        created: { ...created, type: organizationItemType(inbox) },
+        created: {
+          ...created,
+          type: organizationItemType(inbox),
+          ...(nameReq.trimmed
+            ? {
+              requested_name: nameReq.requested,
+              name_trimmed: true,
+              note: folderNameTrimNote(nameReq, organizationItemType(inbox)),
+            }
+            : {}),
+        },
       }, true),
       isError: false,
     },
@@ -18121,7 +18333,15 @@ async function executeRenameFolder(
   const { inbox, args } = resolved;
 
   const folderId = args["folder_id"] as string;
-  const newName = typeof args["new_name"] === "string" ? args["new_name"].trim() : "";
+  // Same rule as folder_create: the trim stays, the silence does not. Renaming
+  // a folder TO a padded name would manufacture exactly the unaddressable
+  // mailbox this whole area exists to rescue people from, so we refuse to build
+  // one; but the caller is told the name they will actually have to use.
+  // `folder_id` itself is never trimmed - on IMAP the id IS the mailbox name,
+  // so a padded folder has a padded id and editing it would break the rename of
+  // precisely the folders that need renaming most.
+  const newNameReq = folderNameRequest(args["new_name"]);
+  const newName = newNameReq.name;
   if (!newName) {
     return {
       result: {
@@ -18164,6 +18384,13 @@ async function executeRenameFolder(
         item_type: organizationItemType(inbox),
         new_name: newName,
         status: "renamed",
+        ...(newNameReq.trimmed
+          ? {
+            requested_new_name: newNameReq.requested,
+            new_name_trimmed: true,
+            note: folderNameTrimNote(newNameReq, organizationItemType(inbox)),
+          }
+          : {}),
       }, true),
       isError: false,
     },
@@ -19069,10 +19296,7 @@ async function executeMoveEmail(
 
   // ── Validate destination_folder_id ──────────────────────────────────────
   const args = rawArgs as Record<string, unknown>;
-  const destinationFolderId =
-    typeof args["destination_folder_id"] === "string"
-      ? args["destination_folder_id"].trim()
-      : "";
+  const destinationFolderId = destinationFolderArg(args);
   if (!destinationFolderId) {
     return {
       result: {
@@ -19096,6 +19320,14 @@ async function executeMoveEmail(
   try {
     resolvedDest = await resolveFolderId(inbox, destinationFolderId);
   } catch (err) {
+    // An AMBIGUOUS destination is the one structured refusal this non-strict
+    // resolve can raise (two mailboxes differing only in surrounding
+    // whitespace). It is permanent and must not be dressed as a retryable
+    // provider fault by the branch below. The ledger argument is the one
+    // resolveIncludeFolders already makes: nothing was moved, and replaying the
+    // identical call would fail identically, so "failed" is the honest
+    // settlement.
+    if (err instanceof FolderTargetError) return folderTargetErrorResult(err);
     // BUGFIX (2026-07-28): destinationFolderId is already validated non-empty
     // above, so resolveFolderId can only throw here on a genuine provider/network
     // failure (e.g. LIST/labels.list erroring) — not on bad input. Previously this
@@ -19256,10 +19488,7 @@ async function executeCopyEmail(
 
   // ── Validate destination_folder_id ──────────────────────────────────────
   const args = rawArgs as Record<string, unknown>;
-  const destinationFolderId =
-    typeof args["destination_folder_id"] === "string"
-      ? args["destination_folder_id"].trim()
-      : "";
+  const destinationFolderId = destinationFolderArg(args);
   if (!destinationFolderId) {
     return {
       result: {
@@ -19283,6 +19512,9 @@ async function executeCopyEmail(
   try {
     resolvedDest = await resolveFolderId(inbox, destinationFolderId);
   } catch (err) {
+    // Ambiguous destination: permanent, structured, never "try again". See the
+    // matching branch in executeMoveEmail.
+    if (err instanceof FolderTargetError) return folderTargetErrorResult(err);
     // BUGFIX (2026-07-28): see the matching comment in executeMoveEmail — this can
     // only throw here on a genuine provider/network failure, not bad input.
     const message = err instanceof Error ? err.message : String(err);
@@ -20711,10 +20943,7 @@ async function executeBulkMove(
   if (messageIds.length > MAX_BULK_IDS) return bulkCapError(messageIds.length);
 
   const args = rawArgs as Record<string, unknown>;
-  const destinationFolderId =
-    typeof args["destination_folder_id"] === "string"
-      ? args["destination_folder_id"].trim()
-      : "";
+  const destinationFolderId = destinationFolderArg(args);
   if (!destinationFolderId) {
     return {
       result: {
@@ -20737,6 +20966,9 @@ async function executeBulkMove(
   try {
     resolvedDest = await resolveFolderId(inbox, destinationFolderId);
   } catch (err) {
+    // Ambiguous destination: permanent, structured, never "try again". See the
+    // matching branch in executeMoveEmail.
+    if (err instanceof FolderTargetError) return folderTargetErrorResult(err);
     // BUGFIX (2026-07-28): see the matching comment in executeMoveEmail — this can
     // only throw here on a genuine provider/network failure, not bad input.
     const message = err instanceof Error ? err.message : String(err);
@@ -20833,10 +21065,7 @@ async function executeBulkCopy(
   if (messageIds.length > MAX_BULK_IDS) return bulkCapError(messageIds.length);
 
   const args = rawArgs as Record<string, unknown>;
-  const destinationFolderId =
-    typeof args["destination_folder_id"] === "string"
-      ? args["destination_folder_id"].trim()
-      : "";
+  const destinationFolderId = destinationFolderArg(args);
   if (!destinationFolderId) {
     return {
       result: {
@@ -20859,6 +21088,9 @@ async function executeBulkCopy(
   try {
     resolvedDest = await resolveFolderId(inbox, destinationFolderId);
   } catch (err) {
+    // Ambiguous destination: permanent, structured, never "try again". See the
+    // matching branch in executeMoveEmail.
+    if (err instanceof FolderTargetError) return folderTargetErrorResult(err);
     // BUGFIX (2026-07-28): see the matching comment in executeMoveEmail — this can
     // only throw here on a genuine provider/network failure, not bad input.
     const message = err instanceof Error ? err.message : String(err);
@@ -21117,10 +21349,7 @@ async function executeSearchAndMove(
   // Human-readable echo of the criteria for the result payload.
   const query = JSON.stringify(search);
 
-  const destinationFolderId =
-    typeof args["destination_folder_id"] === "string"
-      ? args["destination_folder_id"].trim()
-      : "";
+  const destinationFolderId = destinationFolderArg(args);
   if (!destinationFolderId) {
     return {
       result: {
@@ -21172,6 +21401,9 @@ async function executeSearchAndMove(
     try {
       resolvedDest = await resolveFolderId(inbox, destinationFolderId, { session });
     } catch (err) {
+      // Ambiguous destination: permanent, structured, never "try again". See the
+      // matching branch in executeMoveEmail.
+      if (err instanceof FolderTargetError) return folderTargetErrorResult(err);
       // BUGFIX (2026-07-28): see the matching comment in executeMoveEmail. This can
       // only throw here on a genuine provider/network failure, not bad input.
       const message = err instanceof Error ? err.message : String(err);
@@ -21373,7 +21605,7 @@ async function executeSearchAndMove(
     }
 
     if (messageIds.length === 0) {
-      return {
+      const emptyResult = {
         result: jsonOk({
           succeeded: 0,
           failed: 0,
@@ -21386,9 +21618,14 @@ async function executeSearchAndMove(
           ...sweepLimit(0),
           results: [],
         }),
-        logStatus: "success",
+        logStatus: "success" as const,
         logErrorCode: null,
       };
+      // A zero-match sweep is exactly where the search's own note matters most:
+      // "nothing matched" reads as a fact about the mailbox, and on a capped
+      // Outlook fan-out it is only a fact about the folders that were reached.
+      attachResultNotes(emptyResult, searchResult.notes);
+      return emptyResult;
     }
 
     // ── Apply bulk move to search results ─────────────────────────────────────
@@ -21422,7 +21659,7 @@ async function executeSearchAndMove(
 
     await finishBulkRun(runId, messageIds.length, bulkResult);
 
-    return formatBulkResult(
+    const moveResult = formatBulkResult(
       bulkResult.succeeded,
       bulkResult.failed,
       "email_search_and_move",
@@ -21436,6 +21673,16 @@ async function executeSearchAndMove(
       },
       partialFieldsFor("email_search_and_move", messageIds, bulkResult, budget),
     );
+    // ── The search phase's own notes, carried onto the move result ──────────
+    // This handler rebuilds its result from `searchResult.messages` rather than
+    // returning the search result, so anything the search said about ITSELF was
+    // dropped here until 2026-09-14. The one thing it says is the Outlook
+    // fan-out cap: more than OUTLOOK_FOLDER_FANOUT_CAP entries in
+    // include_folders and the remainder went unsearched, so a caller who listed
+    // eight folders and had three ignored moved less mail than they asked for
+    // and was told nothing. See attachResultNotes for why it merges.
+    attachResultNotes(moveResult, searchResult.notes);
+    return moveResult;
   } finally {
     // A leaked IMAP connection counts against the account's simultaneous-
     // connection cap until the server times it out, which is exactly what
@@ -21699,7 +21946,7 @@ async function executeSearchAndDelete(
     }
 
     if (messageIds.length === 0) {
-      return {
+      const emptyResult = {
         result: jsonOk({
           succeeded: 0,
           failed: 0,
@@ -21710,9 +21957,14 @@ async function executeSearchAndDelete(
           ...sweepLimit(0),
           results: [],
         }),
-        logStatus: "success",
+        logStatus: "success" as const,
         logErrorCode: null,
       };
+      // Same reason as the matching branch in executeSearchAndMove: "nothing
+      // matched" must not be read as "nothing is there" when the fan-out cap
+      // left folders unsearched.
+      attachResultNotes(emptyResult, searchResult.notes);
+      return emptyResult;
     }
 
     // ── Apply bulk delete to search results ───────────────────────────────────
@@ -21737,7 +21989,7 @@ async function executeSearchAndDelete(
       });
     }
 
-    return formatBulkResult(
+    const deleteResult = formatBulkResult(
       bulkResult.succeeded,
       bulkResult.failed,
       "email_search_and_delete",
@@ -21749,6 +22001,13 @@ async function executeSearchAndDelete(
       // are gone", and a reader must not have to infer it from another field.
       partialFieldsFor("email_search_and_delete", messageIds, bulkResult, budget, permanent),
     );
+    // ── The search phase's own notes, carried onto the delete result ────────
+    // Identical to executeSearchAndMove, one degree more serious: a caller who
+    // listed eight folders, had three of them silently skipped by the Outlook
+    // fan-out cap and read "succeeded: 12" has no way to know the sweep they
+    // believe is finished never touched three of the folders they named.
+    attachResultNotes(deleteResult, searchResult.notes);
+    return deleteResult;
   } finally {
     // A leaked IMAP connection counts against the account's simultaneous-
     // connection cap until the server times it out, which is exactly what

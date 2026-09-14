@@ -30,6 +30,12 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── September 2026 ─────────────────────────────────────────── */
   {
+    date: '2026-09-14',
+    kind: 'changed',
+    title: 'IMAP search covers the Inbox unless you widen it',
+    body: 'On generic IMAP, a search with no folder filter looks in the Inbox. Fanning out across every mailbox is one serial search per folder and ran past the time a search is allowed to take, so it is no longer the default. Name the folders you want in include_folders, such as your archive or your sent mail, to search wider. Gmail and Outlook still search every folder.',
+  },
+  {
     date: '2026-09-08',
     kind: 'added',
     title: 'Setup guides for 77 email providers',

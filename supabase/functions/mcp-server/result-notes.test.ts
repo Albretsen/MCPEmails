@@ -24,9 +24,14 @@
 import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1";
 import {
   attachResultNote,
+  attachResultNotes,
   RESULT_NOTES_PROPERTY,
   withResultNotesProperty,
 } from "./result-notes.ts";
+import {
+  OUTLOOK_FOLDER_FANOUT_CAP,
+  planOutlookFolderFanout,
+} from "./search-folder-scope.ts";
 import {
   buildIgnoredArgumentsNote,
   reviewExtraArguments,
@@ -239,4 +244,109 @@ Deno.test("widening is idempotent and ignores schemas with no properties", () =>
   assertEquals(twice, once, "applying it again changes nothing");
   const noProps = { type: "string" };
   assertEquals(withResultNotesProperty(noProps), noProps, "nothing to declare on");
+});
+
+
+// ---------------------------------------------------------------------------
+// Notes produced by one phase of a call, on a result built by another.
+//
+// email_search_and_move and email_search_and_delete run the same provider
+// search email_search runs and then build a move/delete result of their own out
+// of `searchResult.messages`. Everything the search said about ITSELF was
+// dropped on the floor there. The one thing it says is the Outlook fan-out cap:
+// Graph cannot query several folders in one request, so an include_folders list
+// longer than the cap is covered in part. Ask for eight folders, have three
+// ignored, delete what the other five held, and the result read "succeeded: 12"
+// with nothing to suggest the sweep had not finished.
+// ---------------------------------------------------------------------------
+
+/** A sweep result, shaped exactly as formatBulkResult(jsonOk(...)) builds one. */
+function sweepResult(payload: Record<string, unknown>) {
+  return {
+    result: {
+      content: [{ type: "text", text: JSON.stringify(payload) }],
+      structuredContent: payload,
+    },
+    logStatus: "success" as const,
+    logErrorCode: null,
+  };
+}
+
+/** The real note, from the real planner, for a list over the real cap. */
+function capNote(): string {
+  const folders = ["inbox", "archive", "sentitems", "Receipts", "Invoices", "Clients", "Tax", "Old"];
+  const plan = planOutlookFolderFanout(folders, OUTLOOK_FOLDER_FANOUT_CAP);
+  assert(plan.note, "the planner stopped reporting the cap");
+  assertEquals(plan.skipped.length, folders.length - OUTLOOK_FOLDER_FANOUT_CAP);
+  return plan.note;
+}
+
+Deno.test("a sweep result carries the search's own cap note instead of swallowing it", () => {
+  const payload = {
+    succeeded: 12,
+    failed: 0,
+    operation: "email_search_and_delete",
+    results: [],
+  };
+  const response = sweepResult(payload);
+  attachResultNotes(response, [capNote()]);
+
+  const structured = response.result.structuredContent as Record<string, unknown>;
+  const notes = structured[RESULT_NOTES_PROPERTY];
+  assert(Array.isArray(notes), "the sweep result must publish the search's note");
+  assertEquals(notes.length, 1);
+  assertStringIncludes(String(notes[0]), "NOT searched");
+  // The counts are untouched: this discloses the shortfall, it does not change
+  // what was deleted.
+  assertEquals(structured.succeeded, 12);
+  // And a client reading the serialized mirror sees the same thing.
+  const reparsed = JSON.parse(response.result.content[0].text) as Record<string, unknown>;
+  assertEquals((reparsed[RESULT_NOTES_PROPERTY] as string[]).length, 1);
+});
+
+Deno.test("a note the sweep already carries survives the search's note arriving", () => {
+  // The order the server produces: the handler's payload is built first, the
+  // dispatch-level disclosures are appended after. Either way both must be
+  // readable — overwriting one with the other is the bug this replaces.
+  const existing = "Note: 'unread' was not applied.";
+  const response = sweepResult({
+    succeeded: 3,
+    failed: 0,
+    operation: "email_search_and_move",
+    [RESULT_NOTES_PROPERTY]: [existing],
+  });
+  attachResultNotes(response, [capNote()]);
+
+  const notes = (response.result.structuredContent as Record<string, unknown>)[
+    RESULT_NOTES_PROPERTY
+  ] as string[];
+  assertEquals(notes.length, 2);
+  assertEquals(notes[0], existing);
+  assertStringIncludes(notes[1], "NOT searched");
+
+  // And the reverse order: the search's note first, a dispatch note after.
+  const other = sweepResult({ succeeded: 3, failed: 0, operation: "email_search_and_move" });
+  attachResultNotes(other, [capNote()]);
+  attachResultNote(other, existing);
+  const bothWays = (other.result.structuredContent as Record<string, unknown>)[
+    RESULT_NOTES_PROPERTY
+  ] as string[];
+  assertEquals(bothWays.length, 2);
+  assertEquals(bothWays[1], existing);
+});
+
+Deno.test("a search with nothing to report leaves the sweep result exactly as it was", () => {
+  // The overwhelmingly common case: no include_folders, or a list under the
+  // cap, or any provider but Outlook. `notes` must not appear at all.
+  for (const notes of [undefined, [], [""], ["   "]]) {
+    const response = sweepResult({ succeeded: 1, failed: 0, operation: "email_search_and_move" });
+    attachResultNotes(response, notes);
+    const structured = response.result.structuredContent as Record<string, unknown>;
+    assertEquals(
+      Object.hasOwn(structured, RESULT_NOTES_PROPERTY),
+      false,
+      `an empty notes list (${JSON.stringify(notes)}) still added the key`,
+    );
+    assertEquals(response.result.content.length, 1, "an empty note still pushed a text block");
+  }
 });

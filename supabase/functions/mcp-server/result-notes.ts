@@ -169,3 +169,30 @@ export function attachResultNote(response: unknown, note: string): void {
 
   if (content) content.push({ type: "text", text: note });
 }
+
+/**
+ * Attach every note another phase of the same call already produced.
+ *
+ * The plural form exists for the search_and_* tools. They run the same provider
+ * search email_search runs, and that search can report on itself — Graph cannot
+ * query several folders in one request, so an `include_folders` list longer than
+ * the fan-out cap is covered in part and says so on the search result's own
+ * `notes`. email_search returns that result whole and the note rides along;
+ * email_search_and_move and email_search_and_delete build a move/delete result
+ * of their own from `searchResult.messages` and, until this existed, dropped it.
+ * The narrowing is safe in direction (fewer messages touched, never more) and
+ * was completely silent, which is the part that is not acceptable.
+ *
+ * Nothing here overwrites: each note goes through attachResultNote, which
+ * appends to whatever `notes` the result already carries, so a sweep result
+ * that also gets an argument-leniency note keeps both.
+ */
+export function attachResultNotes(
+  response: unknown,
+  notes: readonly string[] | undefined,
+): void {
+  if (!notes) return;
+  for (const note of notes) {
+    if (typeof note === "string" && note.trim() !== "") attachResultNote(response, note);
+  }
+}

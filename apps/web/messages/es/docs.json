@@ -164,7 +164,7 @@
         "since": "Fecha o fecha-hora ISO 8601 (action 'search'); devuelve mensajes recibidos en/después de (>=) este instante. P. ej. \"2026-06-01\".",
         "before": "Fecha o fecha-hora ISO 8601 (action 'search'); devuelve mensajes recibidos estrictamente antes de (<) este instante.",
         "query": "Cadena de consulta nativa del proveedor (action 'search', recurso de emergencia). Prefiere los campos estructurados de arriba. Se combina con ellos donde se admite; se ignora en Fastmail.",
-        "include_folders": "Restringe una búsqueda a estos nombres de carpeta (action 'search'). Por defecto: buscar en todas las carpetas."
+        "include_folders": "Restringe una búsqueda a estos nombres de carpeta (action 'search'). En IMAP genérico, omitirlo busca solo en INBOX; indica tus carpetas de archivo o de enviados para ampliarlo. Gmail y Outlook buscan en todas las carpetas."
       }
     },
     "email_organize": {
@@ -199,7 +199,7 @@
         "since": "Fecha o fecha-hora ISO 8601; coincide con mensajes recibidos en/después de (>=) este instante.",
         "before": "Fecha o fecha-hora ISO 8601; coincide con mensajes recibidos estrictamente antes de (<) este instante.",
         "query": "Cadena de consulta nativa del proveedor (recurso de emergencia). Prefiere los campos estructurados de arriba. Se ignora en Fastmail.",
-        "include_folders": "Restringe la búsqueda a estos nombres de carpeta. En IMAP genérico, omitirlo busca solo en INBOX.",
+        "include_folders": "Restringe la búsqueda a estos nombres de carpeta. En IMAP genérico, omitirlo busca solo en INBOX; indica tus carpetas de archivo o de enviados para ampliarlo. Gmail y Outlook buscan en todas las carpetas.",
         "limit": "Número máximo de coincidencias que se mueven. Por defecto 500, máx. 500. Cuando la búsqueda llena el límite, has_more en el resultado dice si quedaron mensajes coincidentes sin tocar.",
         "idempotency_key": "Clave opaca opcional (1–200 caracteres) para un único barrido lógico. Reutilízala solo para reintentar exactamente la misma llamada en un plazo de 24 horas; una reutilización con argumentos distintos se rechaza."
       }
@@ -226,7 +226,7 @@
         "since": "Fecha o fecha-hora ISO 8601 (acción de búsqueda); coincide con mensajes recibidos en/después de (>=) este instante.",
         "before": "Fecha o fecha-hora ISO 8601 (acción de búsqueda); coincide con mensajes recibidos estrictamente antes de (<) este instante.",
         "query": "Cadena de consulta nativa del proveedor (acción de búsqueda, recurso de emergencia). Prefiere los campos estructurados de arriba. Se ignora en Fastmail.",
-        "include_folders": "Restringe la búsqueda a estos nombres de carpeta (acción de búsqueda). Por defecto: todas las carpetas.",
+        "include_folders": "Restringe la búsqueda a estos nombres de carpeta (acción de búsqueda). En IMAP genérico, omitirlo busca solo en INBOX; indica tus carpetas de archivo o de enviados para ampliarlo. Gmail y Outlook buscan en todas las carpetas.",
         "limit": "Para search_and_delete: número máximo de coincidencias sobre las que actuar. Por defecto 500, máx. 500."
       }
     },

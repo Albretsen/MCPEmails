@@ -20,6 +20,7 @@
 
 import { normalizeSnippetPreview } from "./text-extract.ts";
 import { connectGuardedTcp } from "./host-guard.ts";
+import { decodeModifiedUtf7, encodeModifiedUtf7 } from "./utf7.ts";
 
 export class ImapAuthError extends Error {
   constructor(message: string) {
@@ -561,7 +562,7 @@ export class ImapClient {
     return this.runExclusive(async () => {
       const tag = this.nextTag();
       this.lastPermanentFlags = null;
-      await this.write(`${tag} SELECT ${quoteImap(mailbox)}${CRLF}`);
+      await this.write(`${tag} SELECT ${quoteMailbox(mailbox)}${CRLF}`);
       const resp = await this.readTagged(tag);
       if (resp.status !== "OK") {
         throw new Error(`Mailbox not found: ${mailbox}`);
@@ -908,7 +909,7 @@ export class ImapClient {
     return this.runExclusive(async () => {
       const tag = this.nextTag();
       const bytes = this.encoder.encode(message);
-      await this.write(`${tag} APPEND ${quoteImap(mailbox)} (\\Seen) {${bytes.length}}${CRLF}`);
+      await this.write(`${tag} APPEND ${quoteMailbox(mailbox)} (\\Seen) {${bytes.length}}${CRLF}`);
 
       const cont = await this.readLine();
       if (!cont.startsWith("+")) {
@@ -948,7 +949,7 @@ export class ImapClient {
       const bytes = this.encoder.encode(message);
       const flagStr = flags.length ? ` (${flags.join(" ")})` : "";
       await this.write(
-        `${tag} APPEND ${quoteImap(mailbox)}${flagStr} {${bytes.length}}${CRLF}`,
+        `${tag} APPEND ${quoteMailbox(mailbox)}${flagStr} {${bytes.length}}${CRLF}`,
       );
       const cont = await this.readLine();
       if (!cont.startsWith("+")) {
@@ -1010,7 +1011,7 @@ export class ImapClient {
   private async uidCopyUnlocked(uids: number[], targetMailbox: string): Promise<void> {
     const tag = this.nextTag();
     const uidSet = toUidSet(uids);
-    await this.write(`${tag} UID COPY ${uidSet} ${quoteImap(targetMailbox)}${CRLF}`);
+    await this.write(`${tag} UID COPY ${uidSet} ${quoteMailbox(targetMailbox)}${CRLF}`);
     const resp = await this.readTagged(tag);
     if (resp.status !== "OK") {
       throw new Error(`UID COPY failed: ${resp.text}`);
@@ -1032,7 +1033,7 @@ export class ImapClient {
     return this.runExclusive(async () => {
       const uidSet = toUidSet(uids);
       const moveTag = this.nextTag();
-      await this.write(`${moveTag} UID MOVE ${uidSet} ${quoteImap(targetMailbox)}${CRLF}`);
+      await this.write(`${moveTag} UID MOVE ${uidSet} ${quoteMailbox(targetMailbox)}${CRLF}`);
       const moveResp = await this.readTagged(moveTag);
       if (moveResp.status === "OK") return;
       // Server doesn't support RFC 6851 MOVE — fall back: COPY → \\Deleted → EXPUNGE.
@@ -1073,7 +1074,7 @@ export class ImapClient {
   listMailboxes(pattern = "*"): Promise<ImapMailboxInfo[]> {
     return this.runExclusive(async () => {
       const tag = this.nextTag();
-      await this.write(`${tag} LIST "" ${quoteImap(pattern)}${CRLF}`);
+      await this.write(`${tag} LIST "" ${quoteListPattern(pattern)}${CRLF}`);
       const resp = await this.readTagged(tag);
       if (resp.status !== "OK") {
         throw new Error(`LIST failed: ${resp.text}`);
@@ -1089,7 +1090,14 @@ export class ImapClient {
         if (name.startsWith('"')) {
           name = name.slice(1, -1).replace(/\\(.)/g, "$1");
         }
-        mailboxes.push({ name, delimiter, flags });
+        // The wire form is modified UTF-7 (RFC 3501 5.1.3). Decoding here, at
+        // the one place a mailbox name is read off the socket, is what makes
+        // the name a caller sees the same string the caller may pass back in.
+        mailboxes.push({
+          name: decodeModifiedUtf7(repairRawUtf8Name(name)),
+          delimiter,
+          flags,
+        });
       }
       mailboxes.sort((a, b) => a.name.localeCompare(b.name));
       return mailboxes;
@@ -1103,7 +1111,7 @@ export class ImapClient {
     return this.runExclusive(async () => {
       const tag = this.nextTag();
       await this.write(
-        `${tag} STATUS ${quoteImap(mailbox)} (MESSAGES UNSEEN RECENT UIDNEXT UIDVALIDITY)${CRLF}`,
+        `${tag} STATUS ${quoteMailbox(mailbox)} (MESSAGES UNSEEN RECENT UIDNEXT UIDVALIDITY)${CRLF}`,
       );
       const resp = await this.readTagged(tag);
       if (resp.status !== "OK") {
@@ -1129,7 +1137,7 @@ export class ImapClient {
   createMailbox(mailbox: string): Promise<void> {
     return this.runExclusive(async () => {
       const tag = this.nextTag();
-      await this.write(`${tag} CREATE ${quoteImap(mailbox)}${CRLF}`);
+      await this.write(`${tag} CREATE ${quoteMailbox(mailbox)}${CRLF}`);
       const resp = await this.readTagged(tag);
       if (resp.status !== "OK") {
         throw new Error(`CREATE failed for "${mailbox}": ${resp.text}`);
@@ -1141,7 +1149,7 @@ export class ImapClient {
   deleteMailbox(mailbox: string): Promise<void> {
     return this.runExclusive(async () => {
       const tag = this.nextTag();
-      await this.write(`${tag} DELETE ${quoteImap(mailbox)}${CRLF}`);
+      await this.write(`${tag} DELETE ${quoteMailbox(mailbox)}${CRLF}`);
       const resp = await this.readTagged(tag);
       if (resp.status !== "OK") {
         throw new Error(`DELETE failed for "${mailbox}": ${resp.text}`);
@@ -1153,7 +1161,7 @@ export class ImapClient {
   renameMailbox(from: string, to: string): Promise<void> {
     return this.runExclusive(async () => {
       const tag = this.nextTag();
-      await this.write(`${tag} RENAME ${quoteImap(from)} ${quoteImap(to)}${CRLF}`);
+      await this.write(`${tag} RENAME ${quoteMailbox(from)} ${quoteMailbox(to)}${CRLF}`);
       const resp = await this.readTagged(tag);
       if (resp.status !== "OK") {
         throw new Error(`RENAME failed from "${from}" to "${to}": ${resp.text}`);
@@ -1824,7 +1832,70 @@ function parseSearchUids(untagged: string[]): number[] {
   return uids;
 }
 
-function quoteImap(s: string): string {
+/**
+ * The 0x80-0x9F slots of windows-1252, in order. Needed because the "latin1"
+ * label resolves to windows-1252 under the WHATWG encoding standard that Deno
+ * implements, so a read octet of 0x85 comes back as U+2026 rather than U+0085.
+ * Inverting the byte→character mapping is the only way back to the octet.
+ */
+const CP1252_HIGH: Map<number, number> = (() => {
+  const bytes = new Uint8Array(0x20);
+  for (let i = 0; i < 0x20; i++) bytes[i] = 0x80 + i;
+  // Decoded with the SAME label the read path uses, so the inverse is exact by
+  // construction rather than a hand-copied table that could drift from it.
+  const chars = new TextDecoder("latin1").decode(bytes);
+  const map = new Map<number, number>();
+  for (let i = 0; i < chars.length; i++) map.set(chars.charCodeAt(i), 0x80 + i);
+  return map;
+})();
+
+/**
+ * Undo the byte-per-character reading of a mailbox name that a non-compliant
+ * server sent as raw UTF-8 octets instead of modified UTF-7.
+ *
+ * Protocol lines are decoded as single-byte text, which is right for IMAP:
+ * RFC 3501 mailbox names are 7-bit, so nothing above 0x7F should ever appear.
+ * When a server ignores 5.1.3 and puts UTF-8 octets on the wire anyway, that
+ * decode turns "مجلد" into mojibake before any codec can look at it. Mapping
+ * the characters back to the octets they were and decoding those as UTF-8 —
+ * strictly, so anything that is not valid UTF-8 is left exactly as it arrived —
+ * recovers the real name.
+ */
+function repairRawUtf8Name(name: string): string {
+  let eightBit = false;
+  const octets = new Uint8Array(name.length);
+  for (let i = 0; i < name.length; i++) {
+    const code = name.charCodeAt(i);
+    let octet: number;
+    if (code <= 0x7f) {
+      octet = code;
+    } else if (code <= 0xff) {
+      octet = code;
+      eightBit = true;
+    } else {
+      const mapped = CP1252_HIGH.get(code);
+      // Not a character any single-byte read could have produced: leave it be.
+      if (mapped === undefined) return name;
+      octet = mapped;
+      eightBit = true;
+    }
+    octets[i] = octet;
+  }
+  if (!eightBit) return name;
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(octets);
+  } catch {
+    return name;
+  }
+}
+
+/**
+ * Quote a string as an IMAP quoted-string. NOT a mailbox-name helper: it does
+ * no modified-UTF-7 encoding, so every mailbox name must reach it through
+ * {@link quoteMailbox} (or {@link quoteListPattern} for a LIST pattern) rather
+ * than directly. There are exactly two callers for that reason.
+ */
+function quoteImapString(s: string): string {
   // SECURITY: reject CR/LF and other control chars before quoting. These flow
   // into raw IMAP command lines (SELECT/CREATE/RENAME/DELETE/COPY/MOVE/APPEND/
   // LIST/STATUS); a folder name containing CRLF would break out of the command
@@ -1834,6 +1905,45 @@ function quoteImap(s: string): string {
     throw new Error("Invalid folder name: control characters are not allowed");
   }
   return `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+}
+
+/**
+ * Encode a mailbox NAME to the wire and quote it. The single chokepoint every
+ * mailbox-name argument goes through: SELECT, APPEND, UID COPY, UID MOVE,
+ * STATUS, CREATE, DELETE and both halves of RENAME.
+ *
+ * The control-character guard runs on the name the CALLER gave us, before
+ * encoding, because modified UTF-7 would otherwise launder a CRLF into an
+ * innocent-looking BASE64 run and the injection guard would never see it.
+ */
+function quoteMailbox(name: string): string {
+  // deno-lint-ignore no-control-regex
+  if (/[\x00-\x1F\x7F]/.test(name)) {
+    throw new Error("Invalid folder name: control characters are not allowed");
+  }
+  return quoteImapString(encodeModifiedUtf7(name));
+}
+
+/**
+ * Encode and quote a LIST *pattern*, which is not a mailbox name: "*" and "%"
+ * are the IMAP wildcards and must survive to the server intact.
+ *
+ * Both are printable US-ASCII, so `encodeModifiedUtf7` already leaves them
+ * alone — but relying on that would make the wildcards a silent consequence of
+ * the encoder's rules rather than a stated requirement of this call site, so
+ * the split is explicit: wildcards are held out, everything between them is
+ * encoded as a name would be.
+ */
+function quoteListPattern(pattern: string): string {
+  // deno-lint-ignore no-control-regex
+  if (/[\x00-\x1F\x7F]/.test(pattern)) {
+    throw new Error("Invalid folder name: control characters are not allowed");
+  }
+  const encoded = pattern
+    .split(/([*%])/)
+    .map((part) => (part === "*" || part === "%" ? part : encodeModifiedUtf7(part)))
+    .join("");
+  return quoteImapString(encoded);
 }
 
 function escapeQuoted(s: string): string {

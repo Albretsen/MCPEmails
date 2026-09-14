@@ -231,6 +231,22 @@ export function permanentFlagsAllowKeyword(
 // in WHERE the folder listing comes from. Case-insensitive on names, because
 // that is what the move path has always done and one behaviour is worth more
 // than the marginally stricter one.
+//
+// ── WHITESPACE (2026-09-14) ────────────────────────────────────────────────
+// This is the ONE place that may trim a folder value, and it trims the caller's
+// value and the candidate names TOGETHER or not at all. Until now it trimmed
+// only the caller's side, which made any mailbox whose name carries leading or
+// trailing spaces - " LM1921 & LM1935 ", created in a provider's own web UI,
+// reported by LIST with its spaces intact, and on IMAP its own id - permanently
+// unaddressable: `f.id === trimmed` could not match because the id still had
+// the spaces, `f.name.toLowerCase() === lower` could not match for the same
+// reason, and no spelling the caller could type would ever reach it. A user
+// could not even move mail OUT of such a folder.
+//
+// resolveFolderId in index.ts used to trim as well, one layer up, which meant
+// the raw value never even arrived here. It no longer does: the caller's value
+// reaches this function exactly as the agent typed it, and every trimming
+// decision is taken below. Two layers cannot both own this rule.
 // ---------------------------------------------------------------------------
 
 /** One folder (Gmail: label) as `folder action: list` reports it. */
@@ -252,8 +268,12 @@ export const FOLDER_ALIAS_TOKENS = [
 ] as const;
 
 export type FolderResolution =
-  | { ok: true; id: string; matched: "id" | "name" | "alias" }
-  | { ok: false; code: "folder_required" | "folder_not_found"; error: string };
+  | { ok: true; id: string; matched: "id" | "name" | "alias" | "whitespace" }
+  | {
+    ok: false;
+    code: "folder_required" | "folder_not_found" | "folder_ambiguous";
+    error: string;
+  };
 
 export interface FolderResolutionContext {
   /**
@@ -352,14 +372,138 @@ export function folderNotFoundMessage(
 }
 
 /**
+ * A folder-taking argument as the matcher should receive it: present-checked,
+ * never edited.
+ *
+ * Every move/copy handler used to write `args["destination_folder_id"].trim()`
+ * and carry the TRIMMED value forward, which made the tool handlers a third
+ * layer with an opinion about whitespace, after resolveFolderId and
+ * resolveFolderReference. It was also the layer that mattered most: a mailbox
+ * named " LM1921 & LM1935 " in a provider's web UI is addressed by exactly
+ * those spaces, and that line removed them before the matcher was ever
+ * consulted, so the user's actual complaint - that mail could not be moved into
+ * or out of such a folder - would have survived any fix made further down.
+ *
+ * The trim stays where it belongs, in the PRESENCE test: an argument of nothing
+ * but whitespace is still absent, and the caller still gets "required and must
+ * be a non-empty string", exactly as before. What comes back is the caller's
+ * string, untouched, for {@link resolveFolderReference} to decide about. It is
+ * also what the result echoes, so the agent is told the destination it asked
+ * for rather than a cleaned-up version of it.
+ */
+export function folderArgumentValue(raw: unknown): string {
+  if (typeof raw !== "string") return "";
+  return raw.trim() ? raw : "";
+}
+
+/** A folder name a caller asked to CREATE or RENAME to, and what it became. */
+export interface FolderNameRequest {
+  /** What will actually be written. Empty when the request was blank. */
+  name: string;
+  /** Exactly what the caller typed. */
+  requested: string;
+  /** True when the two differ, i.e. whitespace was removed. */
+  trimmed: boolean;
+}
+
+/**
+ * The name a folder will actually get, and whether that differs from the ask.
+ *
+ * THE TRIM STAYS, AND IT IS NOT SILENT. Two defensible answers exist for
+ * `folder action: create` with " ZZ SPACE TEST ": honour the spaces, or refuse
+ * the name. Honouring them manufactures exactly the mailbox this file's
+ * addressing section exists to rescue people from - one that is awkward in
+ * every mail client the user owns, not merely in this connector - and an agent
+ * that emits a stray space around a folder name is doing it by accident
+ * essentially always. Refusing outright would fail a routine call over a
+ * character nobody meant to type.
+ *
+ * So the name is trimmed, and the trim is REPORTED. That is the same rule this
+ * module's header states for labels, and the third option was never "trim it
+ * quietly": until 2026-09-14 create answered with a folder called
+ * "ZZ SPACE TEST" and said nothing, so the agent kept the padded spelling in
+ * its head and every later call to it looked like a not-found. A transformation
+ * the caller is not told about is a bug with a delay on it.
+ */
+export function folderNameRequest(raw: unknown): FolderNameRequest {
+  const requested = typeof raw === "string" ? raw : "";
+  const name = requested.trim();
+  return { name, requested, trimmed: name !== requested };
+}
+
+/**
+ * The sentence that tells a caller their folder is not called what they asked.
+ *
+ * Null when nothing changed, so the caller can spread it into a result without
+ * deciding anything. It names both spellings and says which one to use next,
+ * because "whitespace was removed" without the resulting name is a warning the
+ * agent cannot act on.
+ */
+export function folderNameTrimNote(
+  req: FolderNameRequest,
+  noun: "folder" | "label" = "folder",
+): string | null {
+  if (!req.trimmed || !req.name) return null;
+  return (
+    `Leading or trailing whitespace was removed from the requested name, so ` +
+    `this ${noun} is called "${req.name}", not "${req.requested}". Address it ` +
+    `by that name from now on.`
+  );
+}
+
+/**
+ * The message an agent gets when a value matches two folders that differ only
+ * in the whitespace around their names.
+ *
+ * Spelled out with the padding visible inside the quotes, because that is the
+ * only thing that tells the two apart and the whole point of the refusal is
+ * that the caller must choose between them.
+ */
+function folderAmbiguousMessage(
+  value: string,
+  candidates: readonly FolderReference[],
+  ctx: FolderResolutionContext = {},
+): string {
+  const noun = folderNoun(ctx);
+  const names = candidates.map((f) => `"${f.name}"`).join(" and ");
+  return (
+    `"${value}" matches ${candidates.length} ${noun}s in this inbox once ` +
+    `surrounding whitespace is ignored: ${names}. They differ only in the ` +
+    `spaces around the name, so there is no way to tell which one was meant. ` +
+    `Reissue the call with the ${noun} spelled EXACTLY as it appears above, ` +
+    `including its leading and trailing spaces, or pass its id from ` +
+    `folder action: list. Nothing was changed.`
+  );
+}
+
+/**
  * Matches a user-supplied folder value against a folder listing.
  *
- * Order (identical to what the move path has always done, which is the point):
- *   1. exact provider id;
- *   2. display name, case-insensitively;
+ * Order (the first three are what the move path has always done, which is the
+ * point; the fourth is the 2026-09-14 whitespace fix described at the top of
+ * this section):
+ *   1. exact provider id, on the value EXACTLY as the caller typed it;
+ *   2. display name, case-insensitively, likewise untrimmed;
  *   3. the canonical names of an alias the caller already matched;
- *   4. nothing -> a STRUCTURED failure, never a throw and never a silent
+ *   4. whitespace-insensitive: the caller's value and each candidate id/name
+ *      trimmed on BOTH sides before comparing, which is how " LM1921 & LM1935 "
+ *      becomes reachable and how "  Archive  " keeps working;
+ *   5. nothing -> a STRUCTURED failure, never a throw and never a silent
  *      pass-through of the unmatched value to the provider.
+ *
+ * ── WHY EXACT COMES FIRST, AND WHY AMBIGUITY REFUSES ────────────────────────
+ * A mailbox " Work " and a mailbox "Work" can both exist; providers allow it
+ * and one user already has the shape. Whoever types either name exactly gets
+ * that exact mailbox, every time, from steps 1-2 - an exact match can never be
+ * outvoted by a fuzzy one. Only a spelling that is exact for NEITHER (say
+ * "  Work  ", a third padding) reaches step 4, and there the honest answer is
+ * that we do not know which was meant.
+ *
+ * So step 4 resolves only when the relaxed match is UNIQUE, and refuses with
+ * `folder_ambiguous` when it is not. Guessing here would move mail into the
+ * wrong mailbox and report success, and a move an agent believes succeeded is
+ * a move nobody goes looking for. A refusal that names both candidates with
+ * their padding visible costs one round trip and cannot lose mail.
  */
 export function resolveFolderReference(
   value: string,
@@ -367,6 +511,10 @@ export function resolveFolderReference(
   ctx: FolderResolutionContext = {},
 ): FolderResolution {
   const trimmed = value.trim();
+  // A value that is nothing but whitespace scopes nothing. A mailbox named
+  // only of spaces is theoretically expressible and deliberately NOT reachable
+  // here: "pass a folder" is the more useful answer to a blank argument than
+  // an exotic match, and index.ts refuses the blank one layer earlier anyway.
   if (!trimmed) {
     return {
       ok: false,
@@ -376,17 +524,43 @@ export function resolveFolderReference(
     };
   }
 
-  const byId = folders.find((f) => f.id === trimmed);
+  // ── 1-2: exact, on the value as typed ─────────────────────────────────────
+  const byId = folders.find((f) => f.id === value);
   if (byId) return { ok: true, id: byId.id, matched: "id" };
 
-  const lower = trimmed.toLowerCase();
-  const byName = folders.find((f) => f.name.toLowerCase() === lower);
+  const lowerExact = value.toLowerCase();
+  const byName = folders.find((f) => f.name.toLowerCase() === lowerExact);
   if (byName) return { ok: true, id: byName.id, matched: "name" };
 
+  const lower = trimmed.toLowerCase();
+
+  // ── 3: alias, before the relaxed pass, NOT after ───────────────────────────
+  // An alias is a request for a ROLE ("trash"), and a user folder that happens
+  // to be named " trash " is not that role. Running the alias first keeps the
+  // real Trash winning over a padded lookalike.
   const aliasNames = (ctx.aliasNames ?? []).map((a) => a.toLowerCase());
   if (aliasNames.length > 0) {
     const byAlias = folders.find((f) => aliasNames.includes(f.name.toLowerCase()));
     if (byAlias) return { ok: true, id: byAlias.id, matched: "alias" };
+  }
+
+  // ── 4: whitespace-insensitive, both sides trimmed, unique or nothing ───────
+  // Deduplicated by id because on IMAP the name IS the id, so one mailbox
+  // satisfies both comparisons and must not look like two candidates.
+  const relaxed: FolderReference[] = [];
+  for (const f of folders) {
+    const hit = f.id.trim() === trimmed || f.name.trim().toLowerCase() === lower;
+    if (hit && !relaxed.some((r) => r.id === f.id)) relaxed.push(f);
+  }
+  if (relaxed.length === 1) {
+    return { ok: true, id: relaxed[0].id, matched: "whitespace" };
+  }
+  if (relaxed.length > 1) {
+    return {
+      ok: false,
+      code: "folder_ambiguous",
+      error: folderAmbiguousMessage(value, relaxed, ctx),
+    };
   }
 
   return {
