@@ -5011,6 +5011,28 @@ function BillingSection({
       ? []
       : offeredPlans.filter(plan => planRank(plan.id) > currentRank);
 
+  // The SAME tier at the other billing interval, which is a real self-service
+  // move and not an upgrade by rank, so `upgradablePlans` can never contain it.
+  //
+  // It has to be named here because the annual price is sold from the paywall
+  // and the pricing page, and both send the buyer through GET
+  // /api/stripe/checkout/start. For an existing subscriber that route cannot
+  // show a price, so it hands the intent back to this screen as
+  // ?upgrade=<plan>&interval=<i>. Until 2026-09-14 checkout-core refused those
+  // with a 409 `already_on_plan` before it ever read the interval; with that
+  // gone, the intent arrives here and would be dropped in silence by the rank
+  // test alone, which would leave monthly-to-annual just as unreachable as
+  // before, one layer further out.
+  //
+  // A comped account is excluded: `currentPlan` is its EFFECTIVE 'pro', there
+  // is no subscription of its own to re-price, and checkout-core refuses it.
+  // A legacy 'enterprise' plan is excluded by construction, since it is not in
+  // the catalogue this searches.
+  const intervalSwitchPlanId =
+    isOnPaidPlan && !compedScale
+      ? (offeredPlans.find(plan => plan.id === currentPlan)?.id ?? null)
+      : null;
+
   // A paid-plan CTA on the pricing page is a direct request to begin Stripe
   // Checkout. The URL carries only a validated plan and interval; remove it
   // once consumed so refresh/back cannot accidentally initiate it again.
@@ -5031,7 +5053,16 @@ function BillingSection({
     // It deliberately no longer refuses every paid plan: `?upgrade=solo` sent
     // from a Personal customer's inbox-cap prompt is the intended path, and it
     // used to be discarded in silence onto a page with no cards at all.
-    if (!upgradablePlans.some(plan => plan.id === upgradeIntent.planId)) return;
+    //
+    // The second clause is the interval switch described above: the plan the
+    // account already pays for, at the other interval. It is not a free pass to
+    // re-price anything, because nothing here charges: handleUpgrade's first
+    // request can only come back with a quote, and a request for the interval
+    // already in force is refused by the server as `already_on_plan_interval`.
+    const intentIsOffered =
+      upgradablePlans.some(plan => plan.id === upgradeIntent.planId) ||
+      upgradeIntent.planId === intervalSwitchPlanId;
+    if (!intentIsOffered) return;
     // Applies the already-validated upgrade intent once, as described above.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setInterval(upgradeIntent.interval);
@@ -5472,6 +5503,7 @@ function BillingSection({
       {pendingChange && (
         <PlanChangeDialog
           change={pendingChange}
+          currentPlanId={currentPlan}
           currentPlanName={planDisplay}
           locale={locale}
           busy={confirmingChange}
@@ -5513,6 +5545,18 @@ function BillingSection({
  * `change.preview` is null when Stripe could not price the change. The dialog
  * still appears; it simply says the exact prorated amount will be on the
  * invoice rather than inventing a figure.
+ *
+ * TWO SHAPES, because since 2026-09-14 a subscriber can also change only the
+ * INTERVAL of the plan they already hold (checkout-core used to refuse that
+ * with a 409 before it read the interval at all). Written for a tier change
+ * alone, this dialog told those customers they were "moving from Personal to
+ * Personal", and then made two claims that are false for an interval switch:
+ * a next-renewal date taken from the period they are leaving, and a note
+ * promising the renewal date does not change. Changing the interval restarts
+ * the billing period, so the renewal date is exactly what does move. The
+ * same-plan branch states that instead, and shows no date at all rather than
+ * the stale one: the preview carries the CURRENT period end, and the new one
+ * is Stripe's to set when the swap is made.
  */
 /** One label/value line of the plan-change summary. */
 function SummaryRow({ label, value, strong = false }) {
@@ -5537,9 +5581,14 @@ function SummaryRow({ label, value, strong = false }) {
   );
 }
 
-function PlanChangeDialog({ change, currentPlanName, locale, busy, onConfirm, onCancel }) {
+function PlanChangeDialog({ change, currentPlanId, currentPlanName, locale, busy, onConfirm, onCancel }) {
   const t = useTranslations('dashboard');
   const { preview } = change;
+
+  // Compared by id, not by display name: the names are translated in one place
+  // and built in another ('Pro (comped)'), and a mismatch here would word the
+  // dialog for the wrong kind of change at the moment money is agreed to.
+  const isIntervalSwitch = change.planId === currentPlanId;
 
   const dueNow =
     preview && preview.amountDueNowCents > 0
@@ -5590,10 +5639,16 @@ function PlanChangeDialog({ change, currentPlanName, locale, busy, onConfirm, on
         <div className="card-h">
           <div>
             <div className="title" id="plan-change-title" style={{ fontSize: 15 }}>
-              {t('billing.confirmTitle', { plan: change.planName })}
+              {isIntervalSwitch
+                ? t(change.interval === 'year'
+                    ? 'billing.confirmTitleYear'
+                    : 'billing.confirmTitleMonth')
+                : t('billing.confirmTitle', { plan: change.planName })}
             </div>
             <div className="sub" style={{ marginTop: 4 }}>
-              {t('billing.confirmSub', { from: currentPlanName, to: change.planName })}
+              {isIntervalSwitch
+                ? t('billing.confirmSubInterval', { plan: change.planName })
+                : t('billing.confirmSub', { from: currentPlanName, to: change.planName })}
             </div>
           </div>
         </div>
@@ -5622,7 +5677,12 @@ function PlanChangeDialog({ change, currentPlanName, locale, busy, onConfirm, on
                 />
               </div>
             )}
-            {renewalDate && <SummaryRow label={t('billing.confirmRenews')} value={renewalDate} />}
+            {/* The date in the preview is the end of the period being left. It
+                survives a tier change untouched and is wrong the moment the
+                interval moves, so it is shown only where it is true. */}
+            {renewalDate && !isIntervalSwitch && (
+              <SummaryRow label={t('billing.confirmRenews')} value={renewalDate} />
+            )}
           </div>
 
           <p style={{
@@ -5632,7 +5692,11 @@ function PlanChangeDialog({ change, currentPlanName, locale, busy, onConfirm, on
             color: 'var(--fg-3)',
             lineHeight: 1.5,
           }}>
-            {preview ? t('billing.confirmNote') : t('billing.confirmNoteNoPreview')}
+            {isIntervalSwitch
+              ? (preview
+                  ? t('billing.confirmNoteInterval')
+                  : t('billing.confirmNoteIntervalNoPreview'))
+              : (preview ? t('billing.confirmNote') : t('billing.confirmNoteNoPreview'))}
           </p>
 
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>

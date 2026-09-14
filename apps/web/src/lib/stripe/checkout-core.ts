@@ -93,7 +93,18 @@ export type CheckoutReason =
   // string is deliberately kept in messages/*/dashboard.json so a bookmarked or
   // in-flight ?checkout_error= URL still renders instead of throwing.
   | 'plan_not_self_service'
-  | 'already_on_plan'
+  // 'already_on_plan' was removed on 2026-09-14, for the same reason
+  // 'grandfathered_personal' was: it refused money. It answered a 409 to any
+  // request naming the plan the subscriber already holds, BEFORE looking at the
+  // interval, so a Personal-monthly customer who clicked the annual price was
+  // told they were already on Personal and nothing happened. Every
+  // monthly-to-annual and annual-to-monthly switch in the product died there,
+  // on top of a swap path that handles interval moves perfectly well.
+  // `already_on_plan_interval` below is the genuine no-op (the subscription is
+  // already on the exact price being asked for) and is now the only one. The
+  // `billing.checkoutErrors.already_on_plan` string is deliberately kept in
+  // messages/*/dashboard.json so a bookmarked or in-flight ?checkout_error=
+  // URL still renders instead of throwing.
   | 'already_on_plan_interval'
   | 'stripe_customer_failed'
   | 'plan_change_failed'
@@ -513,12 +524,31 @@ export async function runCheckout(input: {
       entitledStatuses.includes(billing.subscription_status));
 
   if (hasEntitledSubscription) {
-    if (billing!.plan === planId) {
-      await recordAttempt('subscription_exists');
-      return fail('already_on_plan', 409, `You are already on the ${plan.name} plan.`);
-    }
-    // Different paid plan or interval: change the price on the existing
-    // subscription rather than opening a second one.
+    // Different paid plan OR a different interval of the same plan: change the
+    // price on the existing subscription rather than opening a second one.
+    //
+    // SAME-PLAN REQUESTS FALL THROUGH HERE ON PURPOSE (2026-09-14). This spot
+    // used to hold a 409 `already_on_plan` keyed on `billing.plan === planId`
+    // alone, which ran before anything had looked at the interval. `user_billing`
+    // records the TIER, not the price, so that check could not tell "already
+    // paying for exactly this" from "paying monthly, asking for annual" and
+    // refused both. Annual is sold at the paywall; the refusal meant nobody who
+    // had already bought could ever take it, in either direction.
+    //
+    // Nothing is left unguarded by its removal. The real no-op is a price
+    // comparison, not a plan comparison, and it is made below against the live
+    // subscription item: if `currentItem.price.id === priceId` the request is
+    // genuinely asking for the price already in force and is refused with
+    // `already_on_plan_interval`. An interval switch reaches the swap exactly
+    // like a tier change does, consent gate and all: `confirmChange` is still
+    // required before a card is touched, so the first request only ever quotes.
+    //
+    // One case changes its wording rather than its outcome: a subscriber whose
+    // plan is entitled but has no `stripe_subscription_id` (comped or manually
+    // seeded) asking for the plan they already hold now gets
+    // `plan_not_self_service` instead of `already_on_plan`. That is the honest
+    // answer. Without a subscription to read there is no interval to compare,
+    // so "contact support to change it" is what we actually know.
     //
     // This used to send the customer to the Billing Portal, which was a dead
     // end: the portal cannot offer a plan list on this account (the API
