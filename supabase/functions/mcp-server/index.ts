@@ -4,11 +4,17 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   ImapAuthError,
   ImapClient,
-  ImapMailboxInfo,
+  type ImapMailboxInfo,
   ImapMessageSummary,
   ImapMessageTooLargeError,
 } from "./imap-client.ts";
 import { decodedBase64ByteLength } from "./attachment-validation.ts";
+import {
+  type CanonicalFolderAlias,
+  imapMailboxForServerFolder,
+  lookupCanonicalAlias,
+  matchImapAliasMailbox,
+} from "./imap-folder-target.ts";
 import {
   actionSelectorDescription,
   advertisedInputSchema,
@@ -42,6 +48,7 @@ import {
   folderNotFoundMessage,
   type LabelTargetKind,
   labelTargetFor,
+  matchFolderExactly,
   mergeOutlookCategories,
   permanentFlagsAllowKeyword,
   resolveFolderReference,
@@ -9512,104 +9519,14 @@ async function listGmailMessages(
 // ---------------------------------------------------------------------------
 
 /**
- * Single source of truth mapping a canonical folder alias to each provider's
- * native value. Every provider-specific folder map (`outlookWellKnownFolder`,
- * `imapFolderName`) and the cross-provider `resolveFolderId` helper derive from
- * this table — keep this the only place provider folder vocabulary lives.
- *
- * - `gmail`: system label ID (e.g. "INBOX", "TRASH"). Gmail has no system
- *   "archive" label — archiving means removing the INBOX label — so the
- *   `archive` alias has no Gmail value (`null`); resolveFolderId falls through
- *   to listing / pass-through, and email_archive handles the real archive op.
- * - `outlook`: Graph well-known folder name (e.g. "inbox", "deleteditems").
- * - `fastmail`: JMAP mailbox `role`; resolved to a concrete mailbox id at
- *   runtime via the folder list (no static id exists).
- * - `imap`: common mailbox name; for IMAP the name *is* the id.
- *
- * `aliases` lists every accepted user-facing token (case-insensitive) for the
- * canonical entry, including the legacy UPPER canonical names used by callers.
- */
-interface CanonicalFolderAlias {
-  /** Accepted user-facing tokens (matched case-insensitively). */
-  aliases: string[];
-  /** Gmail system label ID, or null when no system label exists (archive). */
-  gmail: string | null;
-  /** Microsoft Graph well-known folder name. */
-  outlook: string;
-  /** Common IMAP mailbox name (the name is the id). */
-  imap: string;
-}
-
-const CANONICAL_FOLDER_ALIASES: CanonicalFolderAlias[] = [
-  { aliases: ["inbox"], gmail: "INBOX", outlook: "inbox", imap: "INBOX" },
-  { aliases: ["sent"], gmail: "SENT", outlook: "sentitems", imap: "Sent" },
-  { aliases: ["drafts", "draft"], gmail: "DRAFT", outlook: "drafts", imap: "Drafts" },
-  { aliases: ["trash", "deleted"], gmail: "TRASH", outlook: "deleteditems", imap: "Trash" },
-  { aliases: ["archive"], gmail: null, outlook: "archive", imap: "Archive" },
-  { aliases: ["spam", "junk"], gmail: "SPAM", outlook: "junkemail", imap: "Junk" },
-];
-
-/** Case-insensitive lookup of a canonical alias entry by any of its tokens. */
-function lookupCanonicalAlias(token: string): CanonicalFolderAlias | undefined {
-  const lower = token.trim().toLowerCase();
-  return CANONICAL_FOLDER_ALIASES.find((e) => e.aliases.includes(lower));
-}
-
-/**
- * Maps a canonical folder alias (matched by its first token) to the IMAP
- * SPECIAL-USE attribute flag a mailbox advertises for that role (RFC 6154),
- * lower-cased for case-insensitive comparison against LIST flags.
- *
- * Used to resolve aliases ("archive", "trash", …) against the server's ACTUAL
- * mailbox layout instead of assuming a fixed English name like "Archive" — the
- * generic-IMAP move bug where "archive" hard-resolved to a non-existent
- * "Archive" mailbox. "inbox" has no SPECIAL-USE flag (it is always the reserved
- * name "INBOX"), so it is intentionally absent.
- */
-const IMAP_ALIAS_SPECIAL_USE: Record<string, string> = {
-  archive: "\\archive",
-  sent: "\\sent",
-  drafts: "\\drafts",
-  trash: "\\trash",
-  spam: "\\junk",
-};
-
-/**
- * Match a canonical folder alias against an already-fetched IMAP mailbox list.
- * Pure (no I/O) so it can be shared by callers that own a connection. Matches:
- *   1. "inbox" → always the reserved name "INBOX".
- *   2. SPECIAL-USE flag match (\\Archive, \\Trash, \\Sent, \\Drafts, \\Junk).
- *   3. Case-insensitive match against the canonical English name (e.g.
- *      a mailbox literally named "Archive").
- * Returns null when nothing matches.
- */
-function matchImapAliasMailbox(
-  mailboxes: ImapMailboxInfo[],
-  alias: CanonicalFolderAlias,
-): string | null {
-  const canonicalToken = alias.aliases[0];
-  if (canonicalToken === "inbox") return "INBOX";
-
-  // (2) SPECIAL-USE flag match.
-  const wantFlag = IMAP_ALIAS_SPECIAL_USE[canonicalToken];
-  if (wantFlag) {
-    const bySpecialUse = mailboxes.find((mb) =>
-      mb.flags.some((f) => f.toLowerCase() === wantFlag)
-    );
-    if (bySpecialUse) return bySpecialUse.name;
-  }
-
-  // (3) Case-insensitive match against the canonical English name.
-  const wantName = alias.imap.toLowerCase();
-  const byName = mailboxes.find((mb) => mb.name.toLowerCase() === wantName);
-  if (byName) return byName.name;
-
-  return null;
-}
-
-/**
  * Resolve a canonical folder alias to a concrete IMAP mailbox name using the
- * server's real layout (one LIST + {@link matchImapAliasMailbox}).
+ * server's real layout (one LIST + {@link matchImapAliasMailbox}), or none at
+ * all when the caller passes the listing it already has.
+ *
+ * This answers the ROLE question only — "which mailbox is this account's spam
+ * folder?" — and is therefore the SECOND question a user-facing folder
+ * argument asks. The first is whether a mailbox is literally named what the
+ * caller typed; see {@link resolveFolderId}, which owns that ordering.
  *
  * When the server advertises neither the SPECIAL-USE flag nor a mailbox with
  * the canonical English name, returns null so the caller can fall back — UNLESS
@@ -9634,6 +9551,17 @@ async function resolveImapAliasMailbox(
      * caller is already holding one.
      */
     session?: ImapSession<ImapClient> | null;
+    /**
+     * A LIST the caller has ALREADY issued, to be matched instead of a fresh
+     * one. {@link resolveFolderId} has one in hand because it must first ask
+     * whether a mailbox is literally NAMED the alias token, and asking the
+     * server the same question twice in one resolve is pure latency.
+     *
+     * A create (archive only) still needs a connection, so the session/opener
+     * dance below is unchanged — it simply never connects when the listing is
+     * supplied and something matches.
+     */
+    mailboxes?: ImapMailboxInfo[] | null;
   } = {},
 ): Promise<string | null> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
@@ -9646,12 +9574,12 @@ async function resolveImapAliasMailbox(
   // caller's connection cannot disturb a SELECT it is relying on.
   const session = shared ?? new ImapSession(imapSessionOpener(inbox));
   try {
-    const client = await session.client();
-    const mailboxes = await client.listMailboxes();
+    const mailboxes = opts.mailboxes ?? await (await session.client()).listMailboxes();
     const matched = matchImapAliasMailbox(mailboxes, alias);
     if (matched) return matched;
 
     if (opts.createIfMissing) {
+      const client = await session.client();
       await client.createMailbox(alias.imap);
       return alias.imap;
     }
@@ -9943,14 +9871,23 @@ const BULK_ATTACHMENT_MAX_BYTES = 2 * 1024 * 1024;
 // Generic IMAP provider — email_list
 // ---------------------------------------------------------------------------
 
-/**
- * Maps MCPEmails canonical folder names to common IMAP folder names.
- * Unknown values are passed through unchanged. Folder naming varies by provider
- * (e.g. iCloud uses "Sent Messages"); INBOX is universal.
- */
-function imapFolderName(folder: string): string {
-  return lookupCanonicalAlias(folder)?.imap ?? folder;
-}
+// `imapFolderName(folder)` — a static `lookupCanonicalAlias(folder)?.imap`
+// lookup — used to live here, and the comments further down this file still
+// name it because it is the thing they warn against. It is GONE, deliberately.
+//
+// It answered "what is this role usually called?" with a fixed English name,
+// and thirteen call sites used it to answer a different question: "which
+// mailbox does this folder name refer to?" For a name the server itself
+// reported those are not the same question, and the gap rewrote "Spam" to
+// "Junk", "Draft" to "Drafts" and "Deleted" to "Trash" — breaking every read,
+// flag, move and delete on a Yandex account, whose spam mailbox is "Spam".
+//
+// Both questions now have a home that cannot be confused for the other:
+//   * a name that came FROM the server  → imapMailboxForServerFolder (verbatim)
+//   * a user-facing alias ("spam")      → resolveFolderId /
+//     resolveImapAliasMailbox, which match against the account's REAL layout
+//     (SPECIAL-USE flags first), not against a guess at its vocabulary.
+// Do not reintroduce a static name map for IMAP mailboxes.
 
 /**
  * Decode RFC 2047 MIME encoded-words in an envelope subject. The IMAP ENVELOPE
@@ -9986,6 +9923,15 @@ function decodeEnvelopeAddress(
  */
 async function listImapMessages(
   inbox: InboxRow,
+  /**
+   * An ALREADY-RESOLVED mailbox name: executeListInbox runs the caller's
+   * `folder` through resolveFolderId (strict) before dispatching here, so an
+   * alias like "spam" has already been matched against this account's real
+   * layout. Selecting `imapFolderName(folder)` on top of that was a SECOND
+   * mapping over an answer that was already correct, and it could only make it
+   * wrong: a Yandex mailbox resolved to "Spam" came back out as "Junk".
+   * Same removal as searchImapMessages'.
+   */
   folder: string,
   limit: number,
   offset: number,
@@ -10007,7 +9953,7 @@ async function listImapMessages(
       password,
     });
 
-    await client.selectMailbox(imapFolderName(folder));
+    await client.selectMailbox(imapMailboxForServerFolder(folder));
 
     const allUids = await client.uidSearch(
       unread === true ? "UNSEEN" : unread === false ? "SEEN" : "ALL",
@@ -10108,7 +10054,7 @@ async function readImapMessage(
 
   const session = sharedSession ?? new ImapSession(imapSessionOpener(inbox));
   try {
-    const client = await session.select(imapFolderName(folder));
+    const client = await session.select(imapMailboxForServerFolder(folder));
 
     const msg = await client.fetchMessageRaw(uid);
     if (!msg) throw new Error("message_not_found");
@@ -10576,7 +10522,7 @@ async function replyImapMessage(
           email: imapAuthUser(inbox),
           password,
         });
-        await client.selectMailbox(imapFolderName(folder));
+        await client.selectMailbox(imapMailboxForServerFolder(folder));
         const msg = await client.fetchMessageRaw(uid);
         if (!msg) throw new Error("message_not_found");
         original = parseEmail(msg.raw);
@@ -12110,7 +12056,7 @@ async function readOriginalMessage(
           email: imapAuthUser(inbox),
           password,
         });
-        await client.selectMailbox(imapFolderName(folder));
+        await client.selectMailbox(imapMailboxForServerFolder(folder));
         // Hand the ceiling down to the literal reader so an oversized message is
         // abandoned while it is still being streamed off the socket. Buffering it
         // first and measuring afterwards is what kills the isolate.
@@ -17313,26 +17259,67 @@ function listFoldersForProvider(inbox: InboxRow): Promise<FolderEntry[]> {
  *
  * Resolution order:
  *   1. Empty input → throws Error("folder_required") (callers map to a tool error).
- *   2. Canonical alias hit → provider-native value with NO network call for
- *      Gmail/Outlook/IMAP (Gmail system label id / Outlook well-known name /
- *      IMAP common name, which is its own id). Fastmail has no static id, so its
- *      alias falls through to the listing step and matches by canonical name.
- *      The Gmail `archive` alias has no system label (null) and likewise falls
- *      through (archive-as-move is unsupported; email_archive handles it).
- *   3. Otherwise list folders once and hand the value to
- *      {@link resolveFolderReference}, which owns the whole matching rule (id,
- *      name case-insensitively, alias name, then a whitespace-insensitive pass).
- *   4. No match → return `nameOrId` unchanged (best-effort pass-through: it may
+ *   2. "inbox" short-circuits: it is a reserved name on every provider, so no
+ *      listing can disagree with it. See the comment on that line.
+ *   3. List the account's folders ONCE, and take an EXACT match first:
+ *      {@link matchFolderExactly} — the provider id byte for byte, then the
+ *      display name case-insensitively. A folder that literally bears the name
+ *      the caller typed is that folder, whatever the alias table thinks the
+ *      word usually means.
+ *   4. Only then read the value as a canonical alias, i.e. as a ROLE:
+ *      Gmail system label id / Outlook well-known name / on IMAP the mailbox
+ *      the server flags for that role ({@link resolveImapAliasMailbox}, matched
+ *      against the listing from step 3 — no second LIST). The Gmail `archive`
+ *      alias has no system label (null) and falls through to step 5
+ *      (archive-as-move is unsupported; email_archive handles it).
+ *   5. Otherwise hand the value to {@link resolveFolderReference}, which owns
+ *      the rest of the matching rule (the alias's canonical NAMES, then a
+ *      whitespace-insensitive pass) and the structured failures.
+ *   6. No match → return `nameOrId` unchanged (best-effort pass-through: it may
  *      already be a valid provider id we don't enumerate; if not, the provider
  *      rejects it and the existing "call folder_list" error guides the agent),
- *      UNLESS `opts.strict` is set, in which case step 4 throws a
+ *      UNLESS `opts.strict` is set, in which case it throws a
  *      {@link FolderTargetError}. Read paths (email_list, email_search) are
  *      strict: passing an unmatched name through to Gmail produced
  *      "Invalid label: X. Please try again in a moment." — a permanent failure
  *      that read as transient. Write paths keep the pass-through so a valid
  *      provider id we happen not to enumerate still works.
- *   5. AMBIGUOUS → always throws, strict or not. See the call to
+ *   7. AMBIGUOUS → always throws, strict or not. See the call to
  *      resolveFolderReference below for why that one is not a pass-through.
+ *
+ * ── WHY THE ALIAS IS NOT FIRST ANY MORE (2026-09-14) ────────────────────────
+ * It used to be, and it RETURNED on a hit, so the listing step was unreachable
+ * for any value that happened to be an alias token — `inbox`, `sent`, `drafts`,
+ * `draft`, `trash`, `deleted`, `archive`, `spam`, `junk`, in any case. On a
+ * Migadu account carrying BOTH a "Junk" mailbox and a user's own "Spam":
+ *
+ *   email_read     action: list  folder: "Spam"                → listed Junk
+ *   email_organize action: copy  destination_folder_id: "Spam" → wrote to Junk,
+ *                                                                reported success
+ *
+ * The third and worst face of the same alias-table bug that broke Yandex (see
+ * the tombstone comment above `decodeEnvelopeSubject` and
+ * imap-folder-target.ts). The read-side faces were LOUD — "Mailbox not found:
+ * Junk" — and this one is silent: mail lands in a mailbox the caller did not
+ * name and nothing in the response says so. So exact beats role, everywhere,
+ * for every provider, which is the precedence resolveFolderReference has always
+ * used internally; the alias branch simply used to jump the queue.
+ *
+ * The ROLE reading is untouched for a value no folder answers to: "spam" on an
+ * account with only a "Junk" still resolves to Junk, "trash" to "[Gmail]/Trash",
+ * "archive" to whatever advertises \\Archive (creating it on the move path when
+ * it is missing, and NEVER on a strict read — see the alias branch below).
+ *
+ * ── COST ────────────────────────────────────────────────────────────────────
+ * IMAP pays nothing new: the alias branch already did a LIST, and the two
+ * questions are now answered from the same one ({@link imapMailboxListing}).
+ * "inbox", which used to resolve with no round trip at all on every provider,
+ * still does — see the short-circuit below. Gmail and Outlook DO pay a listing
+ * they used to skip for the OTHER alias tokens — one labels.list, one
+ * mailFolders GET, both already paid by every non-alias folder value. That is the price of the question "is there a folder actually called
+ * this?", and there is no cheaper way to ask it: Outlook users name folders
+ * "Spam" all the time, and a Gmail label may be called "Junk" or "Deleted".
+ * A silent write into the wrong mailbox is not worth one round trip.
  *
  * ── WHITESPACE (2026-09-14) ─────────────────────────────────────────────────
  * `trimmed` below is used for the blank check, for the alias lookup and in
@@ -17372,22 +17359,69 @@ async function resolveFolderId(
   const trimmed = nameOrId.trim();
   if (!trimmed) throw new Error("folder_required");
 
-  // ── Canonical alias hit ────────────────────────────────────────────────────
   const alias = lookupCanonicalAlias(trimmed);
+
+  // ── The one value a listing cannot disagree with ──────────────────────────
+  // "inbox" is reserved on every provider we speak to: RFC 3501 §5.1 makes
+  // INBOX a case-insensitive reserved mailbox name, and neither Gmail nor
+  // Outlook will hand out a second top-level folder by that name. So the exact
+  // pass below could only ever answer with the inbox as well, and this is not
+  // an exception to exact-beats-role — it is the one case where the rule's
+  // answer is known without asking.
+  //
+  // Worth the two lines: `email_read action: list` defaults its `folder` to the
+  // inbox, which makes this the most-resolved value in the product. Listing to
+  // confirm what the RFC already guarantees would put a round trip on the
+  // hottest path in exchange for nothing.
+  if (alias?.aliases[0] === "inbox") {
+    switch (inbox.provider) {
+      case "gmail":
+        return alias.gmail ?? "INBOX";
+      case "outlook":
+        return alias.outlook;
+      default:
+        // The reserved IMAP name, which is also what resolveImapAliasMailbox
+        // answers for this alias without looking at any listing.
+        return "INBOX";
+    }
+  }
+
+  // ── The listing, once, for every question below ───────────────────────────
+  // On IMAP the SPECIAL-USE flags come back in the same reply as the names, so
+  // the role step below reuses `imapMailboxes` rather than asking again.
+  const imapMailboxes = isImapProvider(inbox)
+    ? await imapMailboxListing(inbox, opts.session)
+    : null;
+  const folders = imapMailboxes
+    ? imapFolderReferences(imapMailboxes)
+    : await folderReferencesForProvider(inbox, opts.session);
+
+  // ── Exact id, then exact name: a real folder outranks a role ──────────────
+  // `nameOrId`, not `trimmed` — a mailbox whose name really does carry leading
+  // or trailing spaces is addressed by exactly those spaces. See the header.
+  //
+  // This is the step the alias branch used to jump: "Spam" on an account that
+  // has both a "Spam" and a "Junk" is the "Spam" mailbox, on the read side and
+  // on a move/copy/delete DESTINATION alike.
+  const exact = matchFolderExactly(nameOrId, folders);
+  if (exact) return exact.id;
+
+  // ── The alias as a ROLE, for a value no folder answers to ─────────────────
   if (alias) {
     switch (inbox.provider) {
       case "gmail":
-        // Gmail `archive` has no system label (null) → fall through to listing.
+        // Gmail `archive` has no system label (null) → fall through to the
+        // matcher, which explains itself through gmailArchiveHint.
         if (alias.gmail) return alias.gmail;
         break;
       case "outlook":
         return alias.outlook;
       default: {
         // imap — resolve the alias against the server's REAL layout via IMAP
-        // SPECIAL-USE flags (one LIST). A generic IMAP account may name its
-        // archive/trash/etc differently from the hard-coded English names, so
-        // we can't just return alias.imap verbatim (that caused move-to-archive
-        // to fail with TRYCREATE for a non-existent "Archive").
+        // SPECIAL-USE flags (the LIST above). A generic IMAP account may name
+        // its archive/trash/etc differently from the hard-coded English names,
+        // so we can't just return alias.imap verbatim (that caused
+        // move-to-archive to fail with TRYCREATE for a non-existent "Archive").
         //
         // For "archive" specifically, auto-create the mailbox when missing so
         // moving into it behaves like email_archive (and never leaks the raw
@@ -17401,7 +17435,11 @@ async function resolveFolderId(
         const resolvedName = await resolveImapAliasMailbox(
           inbox,
           alias,
-          { createIfMissing: isArchive && !opts.strict, session: opts.session },
+          {
+            createIfMissing: isArchive && !opts.strict,
+            session: opts.session,
+            mailboxes: imapMailboxes,
+          },
         );
         if (resolvedName) return resolvedName;
         if (opts.strict) {
@@ -17412,6 +17450,7 @@ async function resolveFolderId(
             message: folderNotFoundMessage(trimmed, {
               provider: inbox.provider,
               itemNoun: "folder",
+              available: folders.map((f) => f.name),
               hint: `This mailbox advertises no ${alias.aliases[0]} folder and none is ` +
                 `named "${alias.imap}".`,
             }),
@@ -17422,11 +17461,10 @@ async function resolveFolderId(
     }
   }
 
-  // ── List once and match by id / name / alias-name ───────────────────────────
-  // For a Fastmail (or fell-through) alias, also try matching the canonical
-  // IMAP-style name (e.g. alias "trash" → mailbox named "Trash") so role-less
+  // ── Match by the alias's canonical NAMES, then whitespace-insensitively ────
+  // For a fell-through (Gmail archive) alias, also try matching the canonical
+  // IMAP-style name (e.g. alias "trash" → a label named "Trash") so role-less
   // listings still resolve common folders.
-  const folders = await folderReferencesForProvider(inbox, opts.session);
   const aliasNames = alias ? [alias.imap, ...alias.aliases] : [];
 
   // NOTE the argument: `nameOrId`, not `trimmed`. The matcher needs the value
@@ -17591,26 +17629,57 @@ async function folderReferencesForProvider(
     default: {
       // imap and all service variants: the mailbox name IS the id, and LIST
       // alone answers the question (no STATUS round-trips).
-      if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
-        throw new Error("imap_auth_failed");
-      }
-      const shared = sharedSession ?? null;
-      const session = shared ?? new ImapSession(imapSessionOpener(inbox));
-      try {
-        const client = await session.client();
-        const mailboxes = await client.listMailboxes();
-        return mailboxes.map((mb) => ({ id: mb.name, name: mb.name }));
-      } catch (err) {
-        if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
-        // Do not hand a possibly-desynchronised socket back to the caller that
-        // lent it; the next unit of work opens a fresh one.
-        await session.invalidate();
-        throw err;
-      } finally {
-        if (!shared) await session.close();
-      }
+      return imapFolderReferences(await imapMailboxListing(inbox, sharedSession));
     }
   }
+}
+
+/** True for every provider whose folders are IMAP mailboxes (fastmail included). */
+function isImapProvider(inbox: InboxRow): boolean {
+  return inbox.provider !== "gmail" && inbox.provider !== "outlook";
+}
+
+/**
+ * One IMAP LIST, in the two fields folder resolution needs: the mailbox names
+ * (which on IMAP are also their ids) and the SPECIAL-USE flags.
+ *
+ * Extracted so ONE listing can answer both questions resolution asks — "is
+ * there a mailbox called exactly this?" and "which mailbox plays this role?".
+ * They used to be asked by two functions that each did their own LIST
+ * (`folderReferencesForProvider` and `resolveImapAliasMailbox`), which is why
+ * ordering them correctly used to look like it would cost a second round trip.
+ * It does not: `resolveFolderId` lists once and hands the result to both.
+ */
+async function imapMailboxListing(
+  inbox: InboxRow,
+  /**
+   * Do the LIST on the caller's connection instead of opening one.
+   * See {@link resolveFolderId}'s `session`.
+   */
+  sharedSession?: ImapSession<ImapClient> | null,
+): Promise<ImapMailboxInfo[]> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const shared = sharedSession ?? null;
+  const session = shared ?? new ImapSession(imapSessionOpener(inbox));
+  try {
+    const client = await session.client();
+    return await client.listMailboxes();
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    // Do not hand a possibly-desynchronised socket back to the caller that
+    // lent it; the next unit of work opens a fresh one.
+    await session.invalidate();
+    throw err;
+  } finally {
+    if (!shared) await session.close();
+  }
+}
+
+/** An IMAP LIST reply as a folder listing: the mailbox name IS the id. */
+function imapFolderReferences(mailboxes: ImapMailboxInfo[]): FolderReference[] {
+  return mailboxes.map((mb) => ({ id: mb.name, name: mb.name }));
 }
 
 /** Gmail labels.list, ids and names only — shared by resolution and folder_create. */
@@ -18490,7 +18559,7 @@ async function imapUpdateFlags(
       email: imapAuthUser(inbox),
       password,
     });
-    await client.selectMailbox(imapFolderName(folder));
+    await client.selectMailbox(imapMailboxForServerFolder(folder));
     await client.uidStore([uid], imapFlags, mode);
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
@@ -18541,7 +18610,7 @@ async function imapArchiveEmail(
       target = archiveAlias.imap; // "Archive"
       await client.createMailbox(target);
     }
-    await client.selectMailbox(imapFolderName(folder));
+    await client.selectMailbox(imapMailboxForServerFolder(folder));
     // uidMove falls back internally if MOVE is unsupported (COPY + \\Deleted +
     // EXPUNGE); the COPY runs before the destructive steps.
     await client.uidMove([uid], target);
@@ -18869,7 +18938,7 @@ async function imapAddKeyword(
       email: imapAuthUser(inbox),
       password,
     });
-    await client.selectMailbox(imapFolderName(folder));
+    await client.selectMailbox(imapMailboxForServerFolder(folder));
     const allowed = permanentFlagsAllowKeyword(client.permanentFlags(), keyword);
     if (allowed === false) throw new Error("imap_keywords_unsupported");
     try {
@@ -19170,7 +19239,7 @@ async function imapMoveEmail(
       email: imapAuthUser(inbox),
       password,
     });
-    await client.selectMailbox(imapFolderName(folder));
+    await client.selectMailbox(imapMailboxForServerFolder(folder));
     // uidMove falls back to COPY + \\Deleted + EXPUNGE when RFC 6851 MOVE is
     // unsupported by the server.
     await client.uidMove([uid], destinationFolderId);
@@ -19426,7 +19495,7 @@ async function imapCopyEmail(
       email: imapAuthUser(inbox),
       password,
     });
-    await client.selectMailbox(imapFolderName(folder));
+    await client.selectMailbox(imapMailboxForServerFolder(folder));
     await client.uidCopy([uid], destinationFolderId);
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
@@ -19564,7 +19633,50 @@ async function executeCopyEmail(
 // ── email_delete provider helpers ──────────────────────────────────────────
 
 /**
- * IMAP delete: move to "Trash" (soft) or \\Deleted + UID EXPUNGE (permanent).
+ * Resolve the account's REAL trash mailbox on a connection the caller owns,
+ * creating it only if the account genuinely has none.
+ *
+ * Both soft-delete paths used to move to `imapFolderName("TRASH")`, which is
+ * the literal string "Trash" and nothing more. The comments above those calls
+ * claimed it "handles namespaced/localized trash like INBOX.Trash" — it never
+ * did; it described the intent of a function that does a static alias lookup.
+ * So soft delete failed outright on Gmail-over-IMAP ("[Gmail]/Trash"), on
+ * Dovecot/cPanel ("INBOX.Trash") and on every localized mailbox ("Papierkorb",
+ * "Corbeille", "Удалённые").
+ *
+ * This is imapArchiveEmail's resolution, applied to the other destructive
+ * destination: one LIST, {@link matchImapAliasMailbox} (the \\Trash SPECIAL-USE
+ * mailbox, else a mailbox whose WHOLE name is "Trash"), and a CREATE only when
+ * the account advertises neither — mirroring how the send path auto-files Sent,
+ * and avoiding the raw "[TRYCREATE] Mailbox doesn't exist: Trash" leak.
+ *
+ * Two properties matter here because this chooses where mail GOES when it is
+ * deleted:
+ *   * The whole-name rule in matchImapAliasMailbox is the guard that keeps a
+ *     user's own "Projects/Trash" from becoming the account's trash can. It is
+ *     preserved, not relaxed (see that function's comment).
+ *   * The caller resolves BEFORE it selects the source mailbox, so a failure to
+ *     find or create the destination happens while the message is still safely
+ *     where it was. uidMove COPYs before it STOREs \\Deleted and EXPUNGEs.
+ *
+ * LIST and CREATE do not change the selected mailbox, so borrowing the caller's
+ * connection cannot disturb a SELECT it is relying on (same reasoning as
+ * resolveImapAliasMailbox's `session` option).
+ */
+async function resolveImapTrashMailbox(client: ImapClient): Promise<string> {
+  const trashAlias = lookupCanonicalAlias("trash")!;
+  const mailboxes = await client.listMailboxes();
+  const matched = matchImapAliasMailbox(mailboxes, trashAlias);
+  if (matched) return matched;
+  // No \\Trash mailbox and nothing literally named "Trash": create the
+  // canonical one rather than dead-ending the delete.
+  await client.createMailbox(trashAlias.imap);
+  return trashAlias.imap;
+}
+
+/**
+ * IMAP delete: move to the account's trash mailbox (soft) or \\Deleted + UID
+ * EXPUNGE (permanent).
  * Throws "imap_auth_failed" on credential rejection.
  */
 async function imapDeleteEmail(
@@ -19588,16 +19700,19 @@ async function imapDeleteEmail(
       email: imapAuthUser(inbox),
       password,
     });
-    await client.selectMailbox(imapFolderName(folder));
     if (permanent) {
       // Hard-delete: flag \\Deleted then UID EXPUNGE
+      await client.selectMailbox(imapMailboxForServerFolder(folder));
       await client.uidStore([uid], ["\\Deleted"], "add");
       await client.uidExpunge([uid]);
     } else {
-      // Soft-delete: move to the resolved Trash mailbox (handles namespaced/
-      // localized trash like INBOX.Trash via imapFolderName). uidMove falls
-      // back to COPY+EXPUNGE if RFC 6851 MOVE is unsupported.
-      await client.uidMove([uid], imapFolderName("TRASH"));
+      // Soft-delete: move to the account's own trash mailbox, resolved against
+      // the server's real layout BEFORE the source is touched (see
+      // resolveImapTrashMailbox). uidMove falls back to COPY+EXPUNGE if
+      // RFC 6851 MOVE is unsupported.
+      const trash = await resolveImapTrashMailbox(client);
+      await client.selectMailbox(imapMailboxForServerFolder(folder));
+      await client.uidMove([uid], trash);
     }
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
@@ -20202,7 +20317,7 @@ function imapBulkByFolderGroup(
         groups,
         preFailed: failed,
         session,
-        folderName: imapFolderName,
+        folderName: imapMailboxForServerFolder,
         apply,
         stop: (succeeded, failedCount) =>
           bulkStopSignal(opts, runId, succeeded, failedCount),
@@ -20254,18 +20369,25 @@ function imapBulkDelete(
   runId: string | null = null,
   opts?: BulkRunOptions,
 ): Promise<BulkOpResult> {
+  // Resolved once for the whole run, on the first group that needs it, and then
+  // reused: the destination is a property of the ACCOUNT, not of the source
+  // folder, so one LIST answers it for every group. Deferring it to the first
+  // soft-delete group also keeps a permanent delete at exactly the commands it
+  // had before. The name stays valid if runImapFolderGroups invalidates the
+  // session and reconnects between groups.
+  let trash: string | null = null;
   return imapBulkByFolderGroup(inbox, messageIds, runId, opts, async (client, group) => {
     const uids = group.items.map((i) => i.uid);
     if (permanent) {
       await client.uidStore(uids, ["\\Deleted"], "add");
       await client.uidExpunge(uids);
     } else {
-      // Resolve the trash mailbox via the same imapFolderName resolver the
-      // single-message delete path uses for mailbox names, so servers with a
-      // namespaced/localized trash (e.g. INBOX.Trash) work instead of failing
-      // on a raw "Trash" literal. uidMove falls back to COPY+EXPUNGE if MOVE
-      // is unsupported.
-      await client.uidMove(uids, imapFolderName("TRASH"));
+      // Same resolution as the single-message delete path: the account's real
+      // trash mailbox, so "[Gmail]/Trash", "INBOX.Trash" and localized names
+      // work instead of failing on a raw "Trash" literal. uidMove falls back to
+      // COPY+EXPUNGE if MOVE is unsupported.
+      trash ??= await resolveImapTrashMailbox(client);
+      await client.uidMove(uids, trash);
     }
   });
 }
@@ -22193,7 +22315,7 @@ async function imapGetDraft(
       email: imapAuthUser(inbox),
       password,
     });
-    await client.selectMailbox(imapFolderName(folder));
+    await client.selectMailbox(imapMailboxForServerFolder(folder));
     const msg = await client.fetchMessageRaw(uid);
     if (!msg) return null;
     const h = parseEmail(msg.raw).headers;
@@ -23180,7 +23302,7 @@ async function executeCreateReplyDraft(
       if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) throw new Error("imap_auth_failed");
       const client = await ImapClient.connect({ host: inbox.imap_host, port: inbox.imap_port, email: imapAuthUser(inbox), password: await decryptStoredToken(inbox.imap_password) });
       try {
-        await client.selectMailbox(imapFolderName(folder));
+        await client.selectMailbox(imapMailboxForServerFolder(folder));
         const source = await client.fetchMessageRaw(uid);
         if (!source) throw new Error("message_not_found");
         const parsed = parseEmail(source.raw);
