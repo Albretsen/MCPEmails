@@ -1,32 +1,49 @@
 'use client';
 
 import { useEffect } from 'react';
+import { sanitizedAcquisition } from '@/lib/acquisition-context.mjs';
 import {
-  acquisitionFromLocation,
-  sanitizedAcquisition,
-} from '@/lib/acquisition-context.mjs';
+  captureAcquisition,
+  readLegacyAcquisition,
+  readStoredAcquisition,
+} from './acquisition-storage.mjs';
 
-// Store only coarse, allowlisted acquisition categories in session storage.
-// Raw URLs, UTM values, search terms, and identifiers never leave the browser.
+// Store only coarse, allowlisted acquisition categories, now in local storage
+// with a 30 day first-touch window (it used to be session storage, which filed
+// every visitor who slept on it as `direct`). Raw URLs, UTM values, search
+// terms, and identifiers never leave the browser.
 export function readAcquisitionContext() {
   try {
-    const raw = window.sessionStorage.getItem('mcpe-acquisition');
-    const value = raw ? JSON.parse(raw) : null;
-    if (value) return sanitizedAcquisition(value);
+    const stored = readStoredAcquisition(window.localStorage, Date.now());
+    if (stored) return stored;
+    // A visitor mid-session at deploy time may still only have the old session
+    // record if they reached this form before the capture effect promoted it.
+    const legacy = readLegacyAcquisition(window.sessionStorage);
+    if (legacy) return legacy;
   } catch {}
   return sanitizedAcquisition({});
 }
 
 export default function AcquisitionCapture() {
   useEffect(() => {
+    // Reading `window.localStorage` at all throws when site data is blocked,
+    // so even the lookup is guarded before anything is handed to the helper.
+    let local = null;
+    let session = null;
     try {
-      if (window.sessionStorage.getItem('mcpe-acquisition')) return;
-      const url = new URL(window.location.href);
-      const referrer = document.referrer ? new URL(document.referrer) : null;
-      window.sessionStorage.setItem(
-        'mcpe-acquisition',
-        JSON.stringify(acquisitionFromLocation(url, referrer)),
-      );
+      local = window.localStorage;
+    } catch {}
+    try {
+      session = window.sessionStorage;
+    } catch {}
+    try {
+      captureAcquisition({
+        local,
+        session,
+        url: new URL(window.location.href),
+        referrer: document.referrer ? new URL(document.referrer) : null,
+        now: Date.now(),
+      });
     } catch {}
   }, []);
   return null;
