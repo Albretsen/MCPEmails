@@ -32,7 +32,8 @@
 
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { attemptRate, calendarWeekBuckets, mondayOf } from './shared.ts';
+import { SOURCES } from '../../../src/lib/acquisition-context.mjs';
+import { attemptRate, calendarWeekBuckets, mondayOf, prettyChannel } from './shared.ts';
 
 test('mondayOf returns the Monday on or before a day, Sunday included', () => {
   // 2026-08-31 is a Monday. Walk the whole week and assert every day maps back
@@ -154,3 +155,56 @@ function daysBetween(from: string, to: string): string[] {
   }
   return days;
 }
+
+/* -------------------------------------------------------- channel labels */
+
+/**
+ * A fourth way for the board to be wrong, and the reason this section exists
+ * in a file that otherwise only tests arithmetic: a source with no label falls
+ * through to `humanise`, which prints `Mcp so`, `Pulsemcp` and `Lobehub` on a
+ * wall. Those are not names anybody recognises, and a channel nobody
+ * recognises is a channel nobody acts on.
+ *
+ * The map below is the expectation for every member of the persisted
+ * allowlist, so adding a source in acquisition-context.mjs without deciding
+ * how it should read fails here rather than on the panel.
+ */
+const EXPECTED_LABELS: Record<string, string> = {
+  direct: 'Direct',
+  organic_google: 'Google',
+  organic_bing: 'Bing',
+  organic_duckduckgo: 'DuckDuckGo',
+  reddit: 'Reddit',
+  hacker_news: 'Hacker News',
+  x_twitter: 'X',
+  linkedin: 'LinkedIn',
+  github: 'GitHub',
+  claude: 'Claude',
+  chatgpt: 'ChatGPT',
+  perplexity: 'Perplexity',
+  smithery: 'Smithery',
+  glama: 'Glama',
+  cursor: 'Cursor',
+  lobehub: 'LobeHub',
+  pulsemcp: 'PulseMCP',
+  mcpservers: 'mcpservers.org',
+  mcp_so: 'mcp.so',
+  freemcp: 'freemcp',
+  other: 'Other',
+};
+
+test('every persisted acquisition source has a label a person would recognise', () => {
+  assert.deepEqual([...SOURCES].sort(), Object.keys(EXPECTED_LABELS).sort());
+  for (const [source, label] of Object.entries(EXPECTED_LABELS)) {
+    assert.equal(prettyChannel(source), label, source);
+    assert.equal(label.includes('_'), false, source);
+  }
+});
+
+test('an id the map has never seen is still printed, not dropped', () => {
+  // The fallback has to keep working: attribution ids come from whatever wrote
+  // the first-touch cookie, and a row that vanishes stops the totals adding up.
+  assert.equal(prettyChannel('producthunt'), 'Product Hunt');
+  assert.equal(prettyChannel('some_new_directory'), 'Some new directory');
+  assert.equal(prettyChannel('unattributed'), 'Unknown');
+});

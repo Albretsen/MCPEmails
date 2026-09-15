@@ -445,6 +445,7 @@ export function prettyProvider(provider: string): string {
 const CHANNEL_LABELS: Record<string, string> = {
   unattributed: 'Unknown',
   direct: 'Direct',
+  other: 'Other',
   organic: 'Search',
   organic_google: 'Google',
   organic_bing: 'Bing',
@@ -452,11 +453,27 @@ const CHANNEL_LABELS: Record<string, string> = {
   reddit: 'Reddit',
   hn: 'Hacker News',
   hackernews: 'Hacker News',
+  hacker_news: 'Hacker News',
   github: 'GitHub',
   x: 'X',
   twitter: 'X',
+  x_twitter: 'X',
   linkedin: 'LinkedIn',
   producthunt: 'Product Hunt',
+  // The AI clients and MCP directories the allowlist gained on 2026-09-15.
+  // Every one of these would otherwise be humanised into something a person
+  // would not recognise on a wall: `Lobehub`, `Pulsemcp`, `Mcp so`, `Mcpservers`.
+  claude: 'Claude',
+  chatgpt: 'ChatGPT',
+  perplexity: 'Perplexity',
+  smithery: 'Smithery',
+  glama: 'Glama',
+  cursor: 'Cursor',
+  lobehub: 'LobeHub',
+  pulsemcp: 'PulseMCP',
+  mcpservers: 'mcpservers.org',
+  mcp_so: 'mcp.so',
+  freemcp: 'freemcp',
 };
 
 export function prettyChannel(source: string): string {
