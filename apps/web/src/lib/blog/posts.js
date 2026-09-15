@@ -49,6 +49,11 @@ import aiAgentEmailWorkflowsAndPrompts from './posts/ai-agent-email-workflows-an
 import preventDuplicateAiAgentEmailSends from './posts/prevent-duplicate-ai-agent-email-sends';
 import gmailLabelsVsImapFoldersAiAgents from './posts/gmail-labels-vs-imap-folders-ai-agents';
 import claudeImapConnector from './posts/claude-imap-connector';
+import connectChatgptToEmail from './posts/connect-chatgpt-to-email';
+import manageMultipleEmailAccounts from './posts/manage-multiple-email-accounts-with-ai';
+import automatedEmailTriageRules from './posts/automated-email-triage-rules';
+import connectBusinessCustomDomain from './posts/connect-business-email-custom-domain-to-ai-agent';
+import aiEmailForAgencies from './posts/ai-email-for-agencies-and-client-work';
 
 // Sidecar translations: { [slug]: { [locale]: { title, description, coverAlt, content } } }.
 import TRANSLATIONS from './translations';
@@ -79,6 +84,11 @@ const MODULE_POSTS = [
   preventDuplicateAiAgentEmailSends,
   gmailLabelsVsImapFoldersAiAgents,
   claudeImapConnector,
+  connectChatgptToEmail,
+  manageMultipleEmailAccounts,
+  automatedEmailTriageRules,
+  connectBusinessCustomDomain,
+  aiEmailForAgencies,
 ];
 
 /** @type {Array<import('./types').Post>} */
@@ -179,12 +189,30 @@ Give your agent verbs, not passwords — and let it get to work.`,
 const RELEVANCE_ORDER = [
   'approve-ai-agent-email-sends',
   'ai-agent-email-workflows-and-prompts',
+  // Multi-mailbox is the buyer profile: every paying workspace to date runs two
+  // or more inboxes, and inbox COUNT is the value metric the plans are priced
+  // on, so this is the highest-intent page on the blog.
+  'manage-multiple-email-accounts-with-ai',
+  // Business-domain signups convert at 7.2% against 2.4% for consumer domains,
+  // and a custom-domain mailbox is the thing that identifies them, so this sits
+  // directly behind the multi-mailbox page.
+  'connect-business-email-custom-domain-to-ai-agent',
+  // Agencies are the multi-mailbox buyer at its most extreme: a workspace per
+  // client, and the only segment that needs Team.
+  'ai-email-for-agencies-and-client-work',
   'extract-email-attachments-for-ai',
   'prevent-duplicate-ai-agent-email-sends',
   'gmail-labels-vs-imap-folders-ai-agents',
   'connect-email-to-ai-agent-under-2-minutes',
   'connect-claude-to-email',
+  // Sits beside the Claude setup guide because `openai-mcp` is the
+  // best-converting MCP client we have (16% of those workspaces pay, against
+  // 8% for claude-code), and until now nothing on the blog served it.
+  'connect-chatgpt-to-email',
   'claude-imap-connector',
+  // Retention content for the heaviest free users: the two largest free
+  // workspaces run 70 and 57 standing triage rules between them.
+  'automated-email-triage-rules',
   'connect-gmail-to-claude',
   'email-signatures-for-claude',
   'inbox-zero-with-ai-claude',

@@ -88,6 +88,26 @@ import t75 from './claude-imap-connector/es';
 import t76 from './claude-imap-connector/fr';
 import t77 from './claude-imap-connector/nb';
 import t78 from './claude-imap-connector/zh';
+import t79 from './connect-chatgpt-to-email/es';
+import t80 from './connect-chatgpt-to-email/fr';
+import t81 from './connect-chatgpt-to-email/nb';
+import t82 from './connect-chatgpt-to-email/zh';
+import t83 from './manage-multiple-email-accounts-with-ai/es';
+import t84 from './manage-multiple-email-accounts-with-ai/fr';
+import t85 from './manage-multiple-email-accounts-with-ai/nb';
+import t86 from './manage-multiple-email-accounts-with-ai/zh';
+import t87 from './automated-email-triage-rules/es';
+import t88 from './automated-email-triage-rules/fr';
+import t89 from './automated-email-triage-rules/nb';
+import t90 from './automated-email-triage-rules/zh';
+import t91 from './connect-business-email-custom-domain-to-ai-agent/es';
+import t92 from './connect-business-email-custom-domain-to-ai-agent/fr';
+import t93 from './connect-business-email-custom-domain-to-ai-agent/nb';
+import t94 from './connect-business-email-custom-domain-to-ai-agent/zh';
+import t95 from './ai-email-for-agencies-and-client-work/es';
+import t96 from './ai-email-for-agencies-and-client-work/fr';
+import t97 from './ai-email-for-agencies-and-client-work/nb';
+import t98 from './ai-email-for-agencies-and-client-work/zh';
 
 const TRANSLATIONS = {
   '7-things-ai-agent-can-do-with-inbox-access': { es: t0, fr: t1, nb: t2, zh: t3 },
@@ -110,6 +130,11 @@ const TRANSLATIONS = {
   'oauth-vs-api-keys-ai-email-access': { es: t55, fr: t56, nb: t57, zh: t58 },
   'what-is-an-mcp-email-server': { es: t59, fr: t60, nb: t61, zh: t62 },
   'why-email-never-stored-matters': { es: t63, fr: t64, nb: t65, zh: t66 },
+  'connect-chatgpt-to-email': { es: t79, fr: t80, nb: t81, zh: t82 },
+  'manage-multiple-email-accounts-with-ai': { es: t83, fr: t84, nb: t85, zh: t86 },
+  'automated-email-triage-rules': { es: t87, fr: t88, nb: t89, zh: t90 },
+  'connect-business-email-custom-domain-to-ai-agent': { es: t91, fr: t92, nb: t93, zh: t94 },
+  'ai-email-for-agencies-and-client-work': { es: t95, fr: t96, nb: t97, zh: t98 },
 };
 
 export default TRANSLATIONS;
