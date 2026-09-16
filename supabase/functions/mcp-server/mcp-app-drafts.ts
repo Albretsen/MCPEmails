@@ -91,6 +91,7 @@ const MAX_LISTED_ATTACHMENTS = 25;
 export const DRAFT_EDITOR_TOOL_NAMES = [
   "draft_read",
   "draft_editor_save",
+  "draft_editor_hide",
 ] as const;
 
 export type DraftEditorToolName = typeof DRAFT_EDITOR_TOOL_NAMES[number];
@@ -259,6 +260,19 @@ export interface DraftEditorDeps {
   ): Promise<{ draft_id: string; updated_at?: string }>;
   /** `index.ts#isValidEmailAddress`, so one validator serves every send path. */
   isValidEmailAddress(address: string): boolean;
+  /**
+   * Write the user's draft-editor opt-out, at one of the two grains.
+   *
+   * `inbox` writes `inboxes.draft_editor_hidden` for the one inbox; `workspace`
+   * writes `workspaces.draft_editor_hidden` for all of them. Injected for the
+   * same reason every other write here is: this module stays free of the
+   * Supabase client so its tests can run without one.
+   */
+  setDraftEditorHidden(
+    scope: "inbox" | "workspace",
+    ids: { workspaceId: string; inboxId: string },
+    hidden: boolean,
+  ): Promise<void>;
   /** Injectable clock, for tests. */
   now?(): number;
 }
@@ -1209,9 +1223,163 @@ export const DRAFT_EDITOR_TOOL_DEFINITIONS: DraftEditorToolDefinition[] = [
       openWorldHint: false,
     },
   },
+  {
+    name: "draft_editor_hide",
+    title: "Hide the draft editor card",
+    description:
+      "Turn OFF the in-chat draft editor card, either for one inbox or for the " +
+      "whole workspace. This is a display preference only: drafts, sending and " +
+      "every other tool are completely unaffected, and the same draft results " +
+      "keep coming back as plain text. Pass hidden:false to turn it back on. " +
+      "The person can also change this in the dashboard.",
+    requiredScope: "manage:drafts",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox_id: INBOX_ID_PROPERTY,
+        inbox: INBOX_PROPERTY,
+        scope: {
+          type: "string",
+          enum: ["inbox", "workspace"],
+          description:
+            "'inbox' hides the card for this mailbox only; 'workspace' hides it " +
+            "for every mailbox. Required: the card asks rather than guessing.",
+        },
+        hidden: {
+          type: "boolean",
+          description: "Defaults to true. Pass false to show the card again.",
+        },
+      },
+      required: ["scope"],
+      additionalProperties: false,
+    },
+    outputSchema: DRAFT_CARD_OUTPUT_SCHEMA,
+    annotations: {
+      title: "Hide the draft editor card",
+      // Not read-only: it writes a preference. Not destructive: nothing is
+      // lost and the same call with hidden:false restores it exactly, which is
+      // also why it is idempotent.
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: false,
+    },
+  }
 ];
 
 /** Dispatch by name. Unknown names return null so the caller can 404 them. */
+// ---------------------------------------------------------------------------
+// draft_editor_hide
+// ---------------------------------------------------------------------------
+
+/**
+ * The card's own "hide this" affordance.
+ *
+ * ── Why this is a tool and not a dashboard-only setting ────────────────────
+ * The opt-out that people actually find is the one sitting next to the thing
+ * annoying them. A dashboard toggle is the authoritative control and exists
+ * too (both write the same columns), but nobody goes looking for a settings
+ * page to turn off a card they have just met.
+ *
+ * ── Two grains, because the card cannot guess ──────────────────────────────
+ * "Hide this" is ambiguous between the inbox on screen and every inbox, and
+ * the two are genuinely different wishes: one mailbox is a scratch account,
+ * all of them is "I don't want this feature". The card asks rather than
+ * choosing, so `scope` is required and has no default.
+ *
+ * ── Hostile-caller analysis (contract §6) ──────────────────────────────────
+ * `visibility: ["app"]` is a host UI hint, never a boundary, so assume a
+ * prompt-injected model calls this. It can then hide the card, or un-hide it.
+ * That is a DISPLAY PREFERENCE: nothing is sent, nothing is deleted, no data is
+ * read back, and the dashboard toggle reverses it in one click. The failure is
+ * visible (the card stops appearing) and self-correcting (the user turns it
+ * back on). It is the mildest thing an app-only tool in this server can do,
+ * and it still re-verifies workspace ownership and the key's inbox allowlist
+ * through the same `gateDraftTool` every other draft tool uses.
+ *
+ * Deliberately requires only `manage:drafts` — the same scope that already
+ * lets a caller rewrite the draft's entire body. A preference about how that
+ * draft is DISPLAYED cannot sensibly be harder to change than the draft.
+ */
+export async function runDraftEditorHide(
+  deps: DraftEditorDeps,
+  caller: DraftEditorCaller,
+  rawArgs: unknown,
+): Promise<DraftEditorToolResult> {
+  const args = asObject(rawArgs);
+
+  const scope = args["scope"];
+  if (scope !== "inbox" && scope !== "workspace") {
+    return invalidArgs(deps.appUrl, 'scope is required and must be "inbox" or "workspace".');
+  }
+  // `hidden` defaults to true: the tool's name is "hide", and the card's link
+  // says Hide. Passing false is how the same tool un-hides, which keeps the
+  // reversal on the same surface as the action.
+  const hidden = args["hidden"] === undefined ? true : args["hidden"];
+  if (typeof hidden !== "boolean") {
+    return invalidArgs(deps.appUrl, "hidden must be a boolean when given.");
+  }
+
+  const gate = await gateDraftTool(deps, caller, args, ["manage:drafts"]);
+  if (!gate.ok) return gate.failure;
+
+  try {
+    await deps.setDraftEditorHidden(
+      scope,
+      { workspaceId: caller.workspace_id, inboxId: gate.inbox.id },
+      hidden,
+    );
+  } catch (error) {
+    console.error("[mcp-server] draft_editor_hide_failed", {
+      inbox_id: gate.inbox.id,
+      scope,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return draftFailure(
+      deps.appUrl,
+      "failed",
+      "That setting could not be saved.",
+      "Nothing was changed. Try again, or change it in the dashboard.",
+      "provider_error",
+      "provider_error",
+    );
+  }
+
+  // A receipt, not a draft envelope: the editor is going away, so there is no
+  // draft state left to render. The card flips to this one line and the next
+  // `tools/list` drops `_meta.ui` entirely (notifications/tools/list_changed
+  // makes that happen without a reconnect), so this is the last card the user
+  // sees for this inbox until they turn it back on.
+  const where = scope === "workspace"
+    ? "for every inbox in this workspace"
+    : `for ${gate.inbox.email_address}`;
+  const envelope = draftReceiptEnvelope({
+    outcome: "discarded",
+    headline: hidden ? "Draft editor hidden." : "Draft editor turned back on.",
+    detail: hidden
+      ? `The card will not appear ${where}. Drafts still work exactly as before. Turn it back on in the dashboard.`
+      : `The card will appear again ${where}.`,
+    affected_count: 1,
+    dashboard_url: `${deps.appUrl}/dashboard`,
+    error_code: null,
+  });
+
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text: hidden
+          ? `Draft editor card hidden ${where}. Drafts are unaffected.`
+          : `Draft editor card re-enabled ${where}.`,
+      }],
+      structuredContent: envelope,
+      isError: false,
+    },
+    logStatus: "success",
+    logErrorCode: null,
+  };
+}
+
 export function runDraftEditorTool(
   name: string,
   deps: DraftEditorDeps,
@@ -1223,6 +1391,8 @@ export function runDraftEditorTool(
       return runDraftRead(deps, caller, rawArgs);
     case "draft_editor_save":
       return runDraftEditorSave(deps, caller, rawArgs);
+    case "draft_editor_hide":
+      return runDraftEditorHide(deps, caller, rawArgs);
     default:
       return null;
   }

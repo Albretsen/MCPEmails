@@ -366,6 +366,20 @@ export async function PATCH(
     (update as any).send_review_mode = input.send_approval_required ? 'dashboard' : 'off';
   }
 
+  // The per-inbox draft-editor opt-out. A display preference, not a permission:
+  // hiding the card changes nothing about what the assistant can do with drafts
+  // in this inbox, only whether the result is rendered as an editor.
+  if ('draft_editor_hidden' in input) {
+    if (typeof input.draft_editor_hidden !== 'boolean') {
+      return NextResponse.json(
+        { error: 'draft_editor_hidden must be a boolean.' },
+        { status: 400 }
+      );
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (update as any).draft_editor_hidden = input.draft_editor_hidden;
+  }
+
   if (Object.keys(update).length === 0) {
     return NextResponse.json(
       { error: 'Provide at least one supported inbox setting.' },
@@ -465,6 +479,24 @@ export async function PATCH(
   if (updateError || !saved) {
     console.error('[update-inbox-signature] Failed to save signature:', updateError?.message);
     return NextResponse.json({ error: 'Failed to save signature.' }, { status: 500 });
+  }
+
+  // Changing the card preference changes what tools/list advertises, and clients
+  // cache that listing for the life of a connection. Marking every key in the
+  // workspace stale makes the MCP server send notifications/tools/list_changed
+  // on the next card-bearing tool call, so the change lands without a
+  // reconnect. Best-effort: the preference is already saved, and the worst case
+  // without it is the reconnect we started from.
+  if ('draft_editor_hidden' in input) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: staleError } = await (service as any)
+      .from('api_keys')
+      .update({ card_build_notified: 'stale' })
+      .eq('workspace_id', workspaceId)
+      .is('deleted_at', null);
+    if (staleError) {
+      console.warn('[update-inbox] card listing invalidation failed:', staleError.message);
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

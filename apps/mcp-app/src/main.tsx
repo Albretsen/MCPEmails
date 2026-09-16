@@ -6,6 +6,7 @@ import "./styles.css";
 import {
   armResultWatchdog,
   disarmResultWatchdog,
+  getState,
   runTeardownSaver,
   setState,
   toolInfoFrom,
@@ -36,6 +37,13 @@ bridge.onHostContextChanged = () => {
     hostContext: bridge.hostContext,
     toolInfo: toolInfoFrom(bridge.hostContext),
   });
+};
+
+// Diagnostics only: keeps the `hs`/`rx` counters live while the handshake is
+// still being retried, so a card that never connects shows what it actually
+// tried rather than its first-paint values.
+bridge.onInitializeAttempt = () => {
+  setState({ handshakeTick: getState().handshakeTick + 1 });
 };
 
 bridge.onTeardown = async () => {

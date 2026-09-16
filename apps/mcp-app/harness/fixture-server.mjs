@@ -16,6 +16,7 @@
 // ---------------------------------------------------------------------------
 
 import { createServer } from "node:http";
+import { createHash } from "node:crypto";
 import { readFileSync, existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -24,7 +25,16 @@ import * as F from "./fixtures.mjs";
 const here = dirname(fileURLToPath(import.meta.url));
 const BUNDLE = resolve(here, "../dist/index.html");
 const PORT = Number(process.env.FIXTURE_PORT ?? 3011);
-const CARD_URI = "ui://mcpemails/review-card.html";
+
+// Fingerprinted exactly as codegen.mjs fingerprints it for production, so the
+// harness exercises the same URI shape the edge function serves. A fixture that
+// kept the bare name would be the one place the cached-card bug could not be
+// reproduced, which is precisely where it hid for a week.
+const CARD_URI = existsSync(BUNDLE)
+  ? `ui://mcpemails/review-card.${
+    createHash("sha256").update(readFileSync(BUNDLE, "utf8"), "utf8").digest("hex").slice(0, 12)
+  }.html`
+  : "ui://mcpemails/review-card.missing.html";
 const MIME = "text/html;profile=mcp-app";
 const PROTOCOL_VERSION = "2025-06-18";
 

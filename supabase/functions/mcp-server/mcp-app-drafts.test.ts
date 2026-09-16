@@ -48,6 +48,7 @@ import {
   runDraftEditorSave,
   runDraftEditorTool,
   runDraftRead,
+  runDraftEditorHide,
 } from "./mcp-app-drafts.ts";
 
 const APP_URL = "https://mcpemails.com";
@@ -111,8 +112,10 @@ function fakeDeps(options: {
   resolveFails?: boolean;
   throwOnRead?: boolean;
   throwOnWrite?: string;
+  throwOnHide?: string;
 } = {}) {
   const writes: { draftId: string; params: ProviderDraftParams }[] = [];
+  const hides: { scope: string; workspaceId: string; inboxId: string; hidden: boolean }[] = [];
   const inbox = options.inbox ?? IMAP_INBOX;
   let nextId = 3;
   const deps: DraftEditorDeps = {
@@ -147,20 +150,30 @@ function fakeDeps(options: {
       return Promise.resolve({ draft_id: `Drafts:${nextId++}` });
     },
     isValidEmailAddress: (address: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(address),
+    setDraftEditorHidden: (scope, ids, hidden) => {
+      if (options.throwOnHide) return Promise.reject(new Error(options.throwOnHide));
+      hides.push({ scope, workspaceId: ids.workspaceId, inboxId: ids.inboxId, hidden });
+      return Promise.resolve();
+    },
     now: () => Date.parse("2026-09-16T10:04:00Z"),
   };
-  return { deps, writes };
+  return { deps, writes, hides };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 1. The tool surface
 // ═══════════════════════════════════════════════════════════════════════════
 
-Deno.test("the module defines exactly the two tools contract §8 names", () => {
-  assertEquals([...DRAFT_EDITOR_TOOL_NAMES], ["draft_read", "draft_editor_save"]);
+Deno.test("the module defines the §8 tools plus the opt-out", () => {
+  // draft_read and draft_editor_save are contract §8; draft_editor_hide is the
+  // card's own "hide this" affordance, added 2026-09-16.
+  assertEquals(
+    [...DRAFT_EDITOR_TOOL_NAMES],
+    ["draft_read", "draft_editor_save", "draft_editor_hide"],
+  );
   assertEquals(
     DRAFT_EDITOR_TOOL_DEFINITIONS.map((t) => t.name),
-    ["draft_read", "draft_editor_save"],
+    ["draft_read", "draft_editor_save", "draft_editor_hide"],
   );
   for (const name of DRAFT_EDITOR_TOOL_NAMES) assert(isDraftEditorToolName(name), name);
   // Not actions of the consolidated `draft` tool, and not reachable under any
@@ -172,14 +185,22 @@ Deno.test("the module defines exactly the two tools contract §8 names", () => {
   assertEquals(runDraftEditorTool("draft_update", fakeDeps().deps, caller(), {}), null);
 });
 
-Deno.test("both tools require manage:drafts and refuse unknown arguments", () => {
+Deno.test("every tool requires manage:drafts and refuses unknown arguments", () => {
+  // `draft_editor_hide` is on the same scope as the other two on purpose: it
+  // changes how a draft is DISPLAYED, and that cannot sensibly be harder to do
+  // than rewriting the draft's entire body, which manage:drafts already allows.
+  const REQUIRED: Record<string, string[]> = {
+    draft_read: ["draft_id"],
+    draft_editor_save: ["draft_id"],
+    draft_editor_hide: ["scope"],
+  };
   for (const definition of DRAFT_EDITOR_TOOL_DEFINITIONS) {
     assertEquals(definition.requiredScope, "manage:drafts", definition.name);
     // No altScopes: an OR here would be a way in for a key that holds neither.
     assertEquals(definition.altScopes, undefined, definition.name);
     const schema = definition.inputSchema as Record<string, unknown>;
     assertEquals(schema.additionalProperties, false, definition.name);
-    assertEquals(schema.required, ["draft_id"], definition.name);
+    assertEquals(schema.required, REQUIRED[definition.name], definition.name);
   }
   // There is deliberately NO body_html argument: the editor is a plain-text
   // surface, and a card that could write arbitrary HTML into outgoing mail is a
@@ -856,4 +877,85 @@ Deno.test("a save with no editable field is refused before anything is read", as
   const noId = await runDraftEditorSave(deps, caller(), { subject: "x" });
   assertEquals(failureCode(noId), "invalid_arguments");
   assertEquals(writes.length, 0);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// draft_editor_hide — the card's own opt-out
+// ═══════════════════════════════════════════════════════════════════════════
+
+const HIDE_CALLER = { id: "k1", workspace_id: "w1", scopes: ["manage:drafts"], inbox_ids: null };
+
+Deno.test("hiding for one inbox writes the inbox, never the workspace", () => {
+  return (async () => {
+    const { deps, hides } = fakeDeps();
+    const out = await runDraftEditorHide(deps, HIDE_CALLER, { scope: "inbox" });
+    assertEquals(out.logStatus, "success");
+    assertEquals(out.result.isError, false);
+    assertEquals(hides.length, 1, "exactly one write");
+    assertEquals(hides[0].scope, "inbox");
+    assertEquals(hides[0].hidden, true, "defaults to hiding");
+    assertEquals(hides[0].workspaceId, "w1");
+  })();
+});
+
+Deno.test("hiding for the workspace writes the workspace", async () => {
+  const { deps, hides } = fakeDeps();
+  await runDraftEditorHide(deps, HIDE_CALLER, { scope: "workspace" });
+  assertEquals(hides[0].scope, "workspace");
+  assertEquals(hides[0].hidden, true);
+});
+
+Deno.test("the same tool turns it back on", async () => {
+  // The reversal lives on the surface that did the hiding. A one-way door
+  // whose only exit is a settings page nobody knows about is a trap.
+  const { deps, hides } = fakeDeps();
+  await runDraftEditorHide(deps, HIDE_CALLER, { scope: "inbox", hidden: false });
+  assertEquals(hides[0].hidden, false);
+});
+
+Deno.test("scope is required and has no default", async () => {
+  // "Hide this" is ambiguous between this mailbox and all of them, and the two
+  // are different wishes. The card asks rather than guessing.
+  const { deps, hides } = fakeDeps();
+  for (const args of [{}, { scope: "everything" }, { scope: "" }, { scope: 1 }]) {
+    const out = await runDraftEditorHide(deps, HIDE_CALLER, args);
+    assertEquals(out.result.isError, true, JSON.stringify(args));
+  }
+  assertEquals(hides.length, 0, "nothing written on a bad scope");
+});
+
+Deno.test("a non-boolean hidden is refused before anything is written", async () => {
+  const { deps, hides } = fakeDeps();
+  const out = await runDraftEditorHide(deps, HIDE_CALLER, { scope: "inbox", hidden: "yes" });
+  assertEquals(out.result.isError, true);
+  assertEquals(hides.length, 0, "changes nothing");
+});
+
+Deno.test("a key that cannot reach the inbox changes nothing", async () => {
+  // Same gate as every other draft tool: workspace ownership and the key's
+  // inbox allowlist, resolved through resolveInbox.
+  const { deps, hides } = fakeDeps({ resolveFails: true });
+  const out = await runDraftEditorHide(deps, HIDE_CALLER, { scope: "inbox" });
+  assertEquals(out.result.isError, true);
+  assertEquals(hides.length, 0, "no write for an unreachable inbox");
+});
+
+Deno.test("a failed write reports failure rather than claiming success", async () => {
+  // Reporting success for a write that did not happen would hide the card on
+  // screen and show it again on the next turn, which reads as a broken toggle.
+  const { deps } = fakeDeps({ throwOnHide: "db down" });
+  const out = await runDraftEditorHide(deps, HIDE_CALLER, { scope: "inbox" });
+  assertEquals(out.result.isError, true);
+  const env = out.result.structuredContent as Record<string, unknown>;
+  assertEquals((env.receipt as Record<string, unknown>).error_code, "provider_error");
+});
+
+Deno.test("the result carries no draft body and names where it applied", async () => {
+  const { deps } = fakeDeps();
+  const out = await runDraftEditorHide(deps, HIDE_CALLER, { scope: "inbox" });
+  const text = (out.result.content as Array<{ text: string }>)[0].text;
+  assert(text.includes("hidden"), "says what happened");
+  assert(!text.includes("Here they are."), "never echoes a draft body");
+  const env = out.result.structuredContent as Record<string, unknown>;
+  assertEquals(env.card, "receipt", "the editor is going away, so: a receipt");
 });

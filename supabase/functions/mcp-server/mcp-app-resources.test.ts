@@ -27,11 +27,13 @@ import {
   RESOURCES_CAPABILITY,
   reviewCardMetaForListing,
   reviewCardToolMeta,
+  REVIEW_CARD_LEGACY_RESOURCE_URI,
   REVIEW_CARD_RESOURCE_URI,
   REVIEW_CARD_TOOL_NAMES,
   serializeToolForList,
 } from "./mcp-app-resources.ts";
-import { REVIEW_CARD_HTML } from "./ui/review-card.html.ts";
+import { REVIEW_CARD_BUILD_ID, REVIEW_CARD_HTML } from "./ui/review-card.html.ts";
+import { createHash } from "node:crypto";
 
 function assertEquals<T>(actual: T, expected: T, message: string): void {
   if (JSON.stringify(actual) !== JSON.stringify(expected)) {
@@ -82,7 +84,17 @@ Deno.test("resources/list returns the single review card with listing-level _met
 
   const entry = result.resources[0];
   assertEquals(entry["uri"], REVIEW_CARD_RESOURCE_URI, "uri");
-  assertEquals(entry["uri"], "ui://mcpemails/review-card.html", "uri matches contract.md §0");
+  assertEquals(
+    entry["uri"],
+    `ui://mcpemails/review-card.${REVIEW_CARD_BUILD_ID}.html`,
+    "uri matches contract.md §0, build-fingerprinted",
+  );
+  // The bare URI is served (see the legacy-alias test) but must never be the
+  // one advertised: advertising it is what pins a caching host to one build.
+  assert(
+    entry["uri"] !== REVIEW_CARD_LEGACY_RESOURCE_URI,
+    "the advertised uri must carry a build fingerprint",
+  );
   assertEquals(entry["mimeType"], MCP_APP_MIME_TYPE, "mimeType");
 
   // Phase 0 Q7.6: the mimeType is compared literally by the host — no space
@@ -169,6 +181,81 @@ Deno.test("resources/read URI matching is exact, not a prefix or case-insensitiv
   );
 });
 
+Deno.test("the advertised URI is fingerprinted with the bundle's build id", () => {
+  // The whole point: a changed bundle must be a changed URI. Claude's host
+  // caches the card by URI and keeps it across tool calls and reconnects
+  // (CONCEPT-draft-editor.md §13), so a fixed URI means a card deploy reaches
+  // nobody who is already connected.
+  assert(
+    /^[0-9a-f]{12}$/.test(REVIEW_CARD_BUILD_ID),
+    `build id must be 12 lowercase hex, got ${REVIEW_CARD_BUILD_ID}`,
+  );
+  assert(
+    REVIEW_CARD_RESOURCE_URI.includes(REVIEW_CARD_BUILD_ID),
+    "the advertised uri must carry the build id",
+  );
+  assert(
+    REVIEW_CARD_RESOURCE_URI.startsWith("ui://") &&
+      REVIEW_CARD_RESOURCE_URI.endsWith(".html"),
+    "still a ui:// URI ending in .html (Phase 0 Q7.5)",
+  );
+  // No query string: the fingerprint lives in the path so that a host which
+  // normalises or strips query parameters cannot collapse two builds onto one
+  // cache key.
+  assert(!REVIEW_CARD_RESOURCE_URI.includes("?"), "fingerprint must not be a query parameter");
+});
+
+Deno.test("the build id is a content hash of the bundle actually served", () => {
+  // Guards the one way this can silently rot: a codegen change that stops
+  // deriving the id from the HTML would leave the URI stable across builds and
+  // put us straight back into the cached-card bug, with tests still green.
+  const digest = createHash("sha256").update(REVIEW_CARD_HTML, "utf8").digest("hex");
+  assertEquals(
+    REVIEW_CARD_BUILD_ID,
+    digest.slice(0, 12),
+    "build id must be the first 12 hex of sha256(bundle)",
+  );
+});
+
+Deno.test("resources/read still answers the pre-fingerprint URI with today's card", () => {
+  // A client holding a tools/list from before 2026-09-16 asks for the bare
+  // name. Answering -32002 would render as a broken cell for as long as it
+  // holds that listing; today's card is always the better answer.
+  const result = buildResourceReadResult(REVIEW_CARD_LEGACY_RESOURCE_URI);
+
+  assert(result !== null, "legacy URI must resolve");
+  assertEquals(result!.contents.length, 1, "contents length");
+  assertEquals(result!.contents[0]["text"], REVIEW_CARD_HTML, "serves the CURRENT bundle");
+  assertEquals(result!.contents[0]["_meta"], EXPECTED_UI_META, "content-level _meta.ui");
+
+  // The response echoes the URI that was asked for, not the catalogue's: a host
+  // matches content against its own request and cache key.
+  assertEquals(
+    result!.contents[0]["uri"],
+    REVIEW_CARD_LEGACY_RESOURCE_URI,
+    "echoes the requested uri",
+  );
+});
+
+Deno.test("the legacy URI is served but never advertised", () => {
+  // Nothing new may acquire it: no listing entry and no tool points at it, so
+  // it can only ever answer a client that already had it.
+  for (const entry of buildResourcesListResult().resources) {
+    assert(
+      entry["uri"] !== REVIEW_CARD_LEGACY_RESOURCE_URI,
+      "resources/list must not advertise the legacy uri",
+    );
+  }
+  assert(
+    reviewCardToolMeta().ui.resourceUri !== REVIEW_CARD_LEGACY_RESOURCE_URI,
+    "tool _meta must not point at the legacy uri",
+  );
+  assert(
+    appOnlyReviewCardToolMeta().ui.resourceUri !== REVIEW_CARD_LEGACY_RESOURCE_URI,
+    "app-only tool _meta must not point at the legacy uri",
+  );
+});
+
 Deno.test("resources/templates/list is an empty array", () => {
   // Implemented purely so AppBridge's proxied call does not log a -32601;
   // our URIs are concrete, never parameterised.
@@ -190,7 +277,7 @@ Deno.test("ui _meta is a fresh object per call so responses cannot alias state",
 Deno.test("review-card _meta targets the contract URI and omits visibility", () => {
   assertEquals(
     reviewCardToolMeta(),
-    { ui: { resourceUri: "ui://mcpemails/review-card.html" } },
+    { ui: { resourceUri: REVIEW_CARD_RESOURCE_URI } },
     "tool _meta",
   );
 
@@ -224,7 +311,7 @@ Deno.test("the approval tools advertise app-only visibility, as a hint and nothi
   // docs/mcp-apps/contract.md §6 first.
   assertEquals(
     appOnlyReviewCardToolMeta(),
-    { ui: { resourceUri: "ui://mcpemails/review-card.html", visibility: ["app"] } },
+    { ui: { resourceUri: REVIEW_CARD_RESOURCE_URI, visibility: ["app"] } },
     "app-only tool _meta",
   );
 
@@ -336,7 +423,7 @@ Deno.test("a card-bearing tool gets no _meta when its gate is closed", () => {
     );
     assertEquals(
       reviewCardMetaForListing(name, { outbound: false, bulk: false, drafts: true }),
-      { ui: { resourceUri: "ui://mcpemails/review-card.html" } },
+      { ui: { resourceUri: REVIEW_CARD_RESOURCE_URI } },
       `${name} is opened by the draft-editor flag alone`,
     );
   }
@@ -352,7 +439,7 @@ Deno.test("a card-bearing tool gets the exact nested _meta.ui.resourceUri when g
   ) {
     assertEquals(
       reviewCardMetaForListing(name, ALL_GATES),
-      { ui: { resourceUri: "ui://mcpemails/review-card.html" } },
+      { ui: { resourceUri: REVIEW_CARD_RESOURCE_URI } },
       `${name} gated in`,
     );
   }
@@ -470,7 +557,7 @@ Deno.test("an ungated card-bearing tool serialises byte-identically to pre-MCP-A
       description: "Send, reply, or forward.",
       inputSchema: { type: "object", properties: {}, required: ["action"] },
       annotations: { title: "Compose email", readOnlyHint: false },
-      _meta: { ui: { resourceUri: "ui://mcpemails/review-card.html" } },
+      _meta: { ui: { resourceUri: REVIEW_CARD_RESOURCE_URI } },
     }),
     "gated email_compose wire bytes",
   );

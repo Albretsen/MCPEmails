@@ -160,3 +160,57 @@ export function bulkVerbProgressive(action: string): string {
 export function plural(n: number, one: string, many: string): string {
   return n === 1 ? one : many;
 }
+
+// ---------------------------------------------------------------------------
+// Signature split
+// ---------------------------------------------------------------------------
+
+/**
+ * The RFC 3676 §4.3 signature separator, and the sloppy variant that mail
+ * clients emit anyway. Ordered longest-first so the correct form wins when both
+ * would match at the same place.
+ */
+const SIG_SEPARATORS = ["\n-- \n", "\n--\n"] as const;
+
+export interface SplitBody {
+  /** Everything before the separator. The whole text when there is none. */
+  message: string;
+  /** The exact separator found, or null. Kept so `joinBody` is byte-exact. */
+  separator: string | null;
+  /** Everything after the separator, or null when there is none. */
+  signature: string | null;
+}
+
+/**
+ * Split a draft body into message and signature.
+ *
+ * Why this exists: the stored body carries the signature inline (contract §8
+ * requires the card to show and save the text as-is, or the signature doubles),
+ * and for a short message the signature is most of the box. Splitting lets the
+ * card dim it without changing a byte of what gets saved.
+ *
+ * The LAST separator wins. A line of exactly `--` is legal inside prose, and
+ * when it appears the signature is still the final block, so scanning from the
+ * end is both the standard heuristic and the safe one: the worst case is that a
+ * trailing prose block is styled as a signature, which is cosmetic. It is never
+ * a correctness risk, because `joinBody(splitBody(t))` is `t` for every input.
+ */
+export function splitBody(text: string): SplitBody {
+  for (const separator of SIG_SEPARATORS) {
+    const at = text.lastIndexOf(separator);
+    if (at !== -1) {
+      return {
+        message: text.slice(0, at),
+        separator,
+        signature: text.slice(at + separator.length),
+      };
+    }
+  }
+  return { message: text, separator: null, signature: null };
+}
+
+/** Inverse of `splitBody`. Byte-exact by construction. */
+export function joinBody(parts: SplitBody): string {
+  if (parts.separator === null || parts.signature === null) return parts.message;
+  return parts.message + parts.separator + parts.signature;
+}

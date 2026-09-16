@@ -111,6 +111,19 @@ export interface CardStore {
   /** Did the host deliver a result at all, and was it late? */
   resultArrival: ResultArrival;
   /**
+   * Milliseconds from the handshake resolving to the tool result landing, or
+   * null when none has. Diagnostics only, and internal-only: it is how
+   * RESULT_WATCHDOG_MS gets set from the real host's timing instead of the
+   * reference host's. Goes when the diagnostics line goes.
+   */
+  resultAfterMs: number | null;
+  /**
+   * Bumped once per `ui/initialize` attempt, purely to wake subscribers so the
+   * diagnostics line re-reads the bridge's live counters. Rendered by nothing.
+   * Goes when the diagnostics line goes.
+   */
+  handshakeTick: number;
+  /**
    * `null` until a restore has been attempted, then what it found. The card
    * must not draw its "nothing to show" placeholder while this is still null,
    * because that is the state in which the answer is genuinely not known yet.
@@ -127,6 +140,8 @@ let state: CardStore = {
   toolInfo: null,
   toolInput: null,
   resultArrival: "none",
+  resultAfterMs: null,
+  handshakeTick: 0,
   restored: null,
 };
 
@@ -316,21 +331,45 @@ export function envelopeFrom(result: ToolResultParams | undefined): Envelope | n
  * honest expectation is single-digit milliseconds and this budget is roughly
  * three orders of magnitude of headroom.
  *
- * Was 3s, cut to 1.5s on 2026-09-16. The original reasoning ("too short and a
- * slow-but-working host gets cut off mid-delivery and the user loses a card")
- * no longer holds, and that is the whole reason it could move: a late result
- * has always still won, and now the deadline no longer ends in silence either —
- * it ends in a restore from storage or a one-line placeholder, both of which a
- * late envelope overwrites. So the cost of firing early fell to a brief
- * flicker, while the cost of firing late stayed what the founder saw in Claude:
- * seconds of loading state on a card that was never getting a result. It is
- * still deliberately well inside `INITIALIZE_TIMEOUT_MS` (10s), which covers
+ * MEASURED on Claude, 2026-09-16: `result late 4487ms`. The host delivers the
+ * mounting tool result about four and a half seconds after the handshake, which
+ * is almost certainly the end of the assistant's turn rather than the end of the
+ * tool call. Every budget below 4.5s therefore fired on a host that was working,
+ * which is what `late` meant each time. 9s is that measurement with headroom for
+ * a longer turn, and the cost of being generous is only a longer loading line on
+ * a card that is genuinely getting nothing.
+ *
+ * Was 3s, cut to 1.5s, raised to 4s on 2026-09-16 once the real host could
+ * finally be read. The 1.5s was set against phase-0's reference-host timing
+ * (tool-input and tool-result in effectively the same tick as the handshake,
+ * Q7.12) on the theory that the honest expectation was single-digit
+ * milliseconds and the rest was headroom. The first diagnostics line out of
+ * Claude says otherwise: `result late`. The host DOES deliver to a freshly
+ * mounted view, just not within 1.5s, so the budget was cutting off a host that
+ * was working — and the visible cost is a "nothing to show" placeholder
+ * flashing in front of a card that then renders perfectly well, on every single
+ * card.
+ *
+ * The asymmetry that justified cutting it still holds and now points the other
+ * way. Firing late costs loading state on a card that is never getting a
+ * result; firing early costs a flash on every card that is. Claude is the host
+ * we have, and it is late, so the budget follows it.
+ *
+ * Still deliberately well inside `INITIALIZE_TIMEOUT_MS` (10s), which covers
  * the other half of the problem: a host that never completes the handshake at
- * all surfaces as `connectError`, not as this.
+ * all surfaces as `connectError`, not as this. How late Claude actually is,
+ * How late Claude is, is now known and is the first paragraph above.
  */
-export const RESULT_WATCHDOG_MS = 1_500;
+export const RESULT_WATCHDOG_MS = 9_000;
 
 let watchdogTimer: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * When the watchdog was armed, i.e. when the handshake resolved. Null until
+ * then, which is also the answer to "how late was a result that arrived before
+ * we were ready for one": unknowable, and not interesting.
+ */
+let armedAt: number | null = null;
 
 /** Stop the watchdog. Idempotent, and safe to call when it never started. */
 export function disarmResultWatchdog() {
@@ -359,6 +398,9 @@ export function armResultWatchdog(bridge: HostBridge): () => void {
   setState({ toolInfo: toolInfoFrom(bridge.hostContext) });
 
   const startedAt = Date.now();
+  // Same instant the watchdog is measured from, so "result after 2340ms" and
+  // "the watchdog fired at 4000ms" are on one clock and directly comparable.
+  armedAt = startedAt;
   watchdogTimer = setTimeout(() => {
     watchdogTimer = null;
     // Anything already terminal wins. The watchdog exists to break a deadlock,
@@ -440,13 +482,14 @@ export function wireResultHandlers(bridge: HostBridge) {
     // host: `late` would mean remounts DO get a result and the budget is wrong.
     const arrival: ResultArrival =
       getState().resultStatus === "absent" ? "late" : "ontime";
+    const afterMs = armedAt === null ? null : Date.now() - armedAt;
     // Unconditional, including after the watchdog has already given up. A late
     // envelope is still a real envelope and must render, over a restored one.
     disarmResultWatchdog();
     setState(
       envelope
-        ? { envelope, resultStatus: status, resultArrival: arrival }
-        : { resultStatus: status, resultArrival: arrival },
+        ? { envelope, resultStatus: status, resultArrival: arrival, resultAfterMs: afterMs }
+        : { resultStatus: status, resultArrival: arrival, resultAfterMs: afterMs },
     );
   };
 

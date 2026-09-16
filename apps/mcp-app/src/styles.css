@@ -102,7 +102,10 @@
   --r-full: var(--border-radius-full, 9999px);
   --bw: var(--border-width-regular, 1px);
   /* The label gutter on recipient rows. One number, so every row lines up. */
-  --gutter: 32px;
+  /* Wide enough for "Subject", which is the longest label any row carries.
+     It was 32px, sized for To/Cc/Bcc back when the subject was the one
+     unlabelled field, and labelling it made the word wrap onto two lines. */
+  --gutter: 56px;
 }
 
 * { box-sizing: border-box; }
@@ -124,13 +127,19 @@ body {
 
 /* ---- shell ------------------------------------------------------------- */
 
-/* No background and no border: the host's labelled container is the surface. */
+/* No background and no border: the host's labelled container is the surface.
+   It does NOT, however, bring any padding of its own, which the 2px here
+   assumed. Verified in the real host 2026-09-16: every row sat hard against
+   the container's border, and the founder's word for it was "there is no
+   padding or anything". 12px is the smallest value that reads as inset at the
+   ~770px the host gives an inline card, and it matches the inset the host's
+   own message content uses, which is the thing the card sits next to. */
 .card {
   container-type: inline-size;
   container-name: card;
   color: var(--fg);
-  padding: calc(2px + var(--safe-top)) calc(2px + var(--safe-right))
-    calc(2px + var(--safe-bottom)) calc(2px + var(--safe-left));
+  padding: calc(12px + var(--safe-top)) calc(12px + var(--safe-right))
+    calc(12px + var(--safe-bottom)) calc(12px + var(--safe-left));
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -250,6 +259,8 @@ body {
   font-size: var(--fs-sm);
   color: var(--fg-3);
   min-width: 0;
+  /* A wrapped label would push its own row taller than the field beside it. */
+  white-space: nowrap;
 }
 
 .row > .val {
@@ -383,6 +394,19 @@ body {
   align-items: center;
 }
 
+/* The secondary cluster: text links that share the action row instead of
+   floating on their own line above it. `margin-right: auto` is what pushes the
+   two real buttons to the right edge, so the row reads as "things that change
+   the draft" against "everything else". */
+.acts-l {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-right: auto;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
 .btn {
   appearance: none;
   font: inherit;
@@ -464,6 +488,33 @@ body {
 }
 
 .link[data-tone="danger"] { color: var(--fg-danger); }
+
+.link:disabled {
+  cursor: default;
+  opacity: 0.55;
+  text-decoration: none;
+}
+
+/* ---- signature ---------------------------------------------------------- */
+
+/* Collapsed, dimmed, and clearly the same material as the body above it: one
+   line where four used to be. Clicking anywhere on it opens the editor, so the
+   "Edit" link is a label for the affordance rather than the only way in. */
+.sig {
+  color: var(--fg-3);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+
+.sig:hover { color: var(--fg-2); }
+
+.sig-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 /* ---- segmented control (fullscreen panel switcher only) ---------------- */
 
@@ -668,15 +719,6 @@ body {
   color: var(--fg-3);
   font-size: var(--fs-sm);
   animation: sk-pulse 1.4s ease-in-out infinite;
-}
-
-.loading::before {
-  content: "";
-  width: 14px;
-  height: 2px;
-  border-radius: var(--r-full);
-  background: currentColor;
-  flex: 0 0 auto;
 }
 
 @keyframes sk-pulse {

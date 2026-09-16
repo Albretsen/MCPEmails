@@ -42,6 +42,7 @@ export function TextLink(props: {
   onClick: () => void;
   title?: string;
   tone?: "danger";
+  disabled?: boolean;
 }) {
   return (
     <button
@@ -49,6 +50,7 @@ export function TextLink(props: {
       class="link"
       data-tone={props.tone}
       title={props.title}
+      disabled={props.disabled}
       onClick={props.onClick}
     >
       {props.children}
@@ -107,17 +109,48 @@ export function ProviderLine(props: {
   fullscreen: boolean;
   extra?: string | null;
   lead?: string | null;
+  /**
+   * A plain-language stand-in for the provider detail, shown INSTEAD of it
+   * while inline. The full detail moves to the tooltip.
+   *
+   * This line was the longest text on the draft card and the least actionable:
+   * "IMAP + SMTP · APPEND to Drafts · Saving rewrites the message, so the draft
+   * gets a new id each time". `APPEND to Drafts` is protocol jargon, and the id
+   * caveat is a fact the reader cannot do anything with. A caller that has a
+   * human sentence for the same thing passes it here; one that does not passes
+   * nothing and gets exactly today's line.
+   */
+  compactSummary?: string | null;
 }) {
   const p = props.provider;
   const caveats = p?.caveats ?? [];
-  const parts = [
-    props.lead,
-    p ? (p.route ? `${p.label} · ${p.route}` : p.label) : null,
-    ...(props.fullscreen ? caveats : caveats.slice(0, 1)),
-    props.extra,
-  ].filter((s): s is string => !!s && s.trim().length > 0);
-  if (parts.length === 0) return null;
-  return <p class="line">{parts.join(" · ")}</p>;
+  const providerText = p ? (p.route ? `${p.label} · ${p.route}` : p.label) : null;
+  const compact = !props.fullscreen && !!props.compactSummary;
+
+  const parts = compact
+    ? [props.lead, props.compactSummary]
+    : [
+        props.lead,
+        providerText,
+        ...(props.fullscreen ? caveats : caveats.slice(0, 1)),
+        props.extra,
+      ];
+
+  const shown = parts.filter((s): s is string => !!s && s.trim().length > 0);
+  if (shown.length === 0) return null;
+
+  // Everything the compact line dropped, so it is hidden rather than lost.
+  const title = compact
+    ? [providerText, ...caveats, props.extra]
+        .filter((s): s is string => !!s && s.trim().length > 0)
+        .join(" · ")
+    : undefined;
+
+  return (
+    <p class="line" title={title}>
+      {shown.join(" · ")}
+    </p>
+  );
 }
 
 export function Fields(props: { rows: Array<[string, ComponentChildren]> }) {
@@ -173,21 +206,48 @@ export function AutoTextarea(props: {
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    // Measured, never assumed: the line height comes from a host variable and
-    // the font from the host's stack, so a hardcoded px-per-row would be wrong
-    // on exactly the hosts this is meant to look native in.
-    const cs = getComputedStyle(el);
-    const line = parseFloat(cs.lineHeight) || 18;
-    const chrome =
-      parseFloat(cs.paddingTop) +
-      parseFloat(cs.paddingBottom) +
-      parseFloat(cs.borderTopWidth) +
-      parseFloat(cs.borderBottomWidth);
-    el.style.height = "auto";
-    const wanted = el.scrollHeight;
-    const max = line * props.maxRows + chrome;
-    el.style.height = `${Math.min(wanted, max)}px`;
-    el.style.overflowY = wanted > max ? "auto" : "hidden";
+
+    const fit = () => {
+      // Measured, never assumed: the line height comes from a host variable and
+      // the font from the host's stack, so a hardcoded px-per-row would be wrong
+      // on exactly the hosts this is meant to look native in.
+      const cs = getComputedStyle(el);
+      const line = parseFloat(cs.lineHeight) || 18;
+      const chrome =
+        parseFloat(cs.paddingTop) +
+        parseFloat(cs.paddingBottom) +
+        parseFloat(cs.borderTopWidth) +
+        parseFloat(cs.borderBottomWidth);
+      el.style.height = "auto";
+      const wanted = el.scrollHeight;
+      const max = line * props.maxRows + chrome;
+      el.style.height = `${Math.min(wanted, max)}px`;
+      el.style.overflowY = wanted > max ? "auto" : "hidden";
+    };
+
+    fit();
+
+    // ── Why a width observer, and not just [props.value] ──────────────────
+    // How tall wrapped text is depends on how wide it is allowed to be, and in
+    // this host the width is not settled when the first measurement runs. A
+    // re-mounted card lays out before the host has sized its iframe, so
+    // `scrollHeight` comes back as a single line, the body is pinned at ~18px,
+    // and nothing ever re-measures because the value has not changed. That is
+    // the sliver of clipped text the founder caught on 2026-09-16: a card that
+    // "loads a broken UI" and then stays broken.
+    //
+    // Only WIDTH is acted on. We set height inside this callback, so reacting
+    // to height would be a feedback loop; the last observed width is kept so a
+    // height-only notification is a no-op.
+    let lastWidth = el.clientWidth;
+    const ro = new ResizeObserver(() => {
+      const w = el.clientWidth;
+      if (w === lastWidth) return;
+      lastWidth = w;
+      fit();
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
   }, [props.value, props.maxRows]);
 
   return (

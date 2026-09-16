@@ -58,10 +58,16 @@ function Diagnostics(props: { bridge: HostBridge }) {
         : s.resultArrival === "late"
           ? "late"
           : "none"
-    }`,
+    }${s.resultAfterMs === null ? "" : ` ${s.resultAfterMs}ms`}`,
     `input ${s.toolInput ? "yes" : "no"}`,
     `restored ${s.restored === "storage" ? "storage" : "none"}`,
     `toolInfo ${s.toolInfo ? "yes" : "no"}`,
+    // Handshake facts. `hs` is how many ui/initialize requests it took; `rx` is
+    // accepted/foreign JSON-RPC messages. On a card that never connects these
+    // are the whole diagnosis: rx 0/0 means the host never spoke, and a
+    // non-zero foreign count would mean it spoke and we dropped it.
+    `hs ${props.bridge.initializeAttempts}`,
+    `rx ${props.bridge.rxAccepted}/${props.bridge.rxForeign}`,
   ].join(" · ");
   return <p class="diag">{line}</p>;
 }
@@ -257,13 +263,12 @@ export function App(props: { bridge: HostBridge }) {
   const body = ((): VNode | null => {
     // ---- connection / loading ----------------------------------------------
 
+    // The host never completed `ui/initialize`, even across retries. The
+    // message above this card already carries every fact, so this is a quiet
+    // one-liner with a way out rather than a red block announcing a failure the
+    // user cannot act on and that cost them nothing.
     if (store.connectError) {
-      return (
-        <Notice tone="danger">
-          This card could not reach the app host. The same information is in the
-          message above.
-        </Notice>
-      );
+      return oneLine(`${toolLabel(store.toolInfo?.tool)}: not shown here.`);
     }
 
     // A restored draft that the server says is gone. One line, not the editor's
@@ -328,7 +333,25 @@ export function App(props: { bridge: HostBridge }) {
       }
 
       // Still genuinely waiting. At most RESULT_WATCHDOG_MS of this.
-      return <Loading />;
+      //
+      // Gated on `connected`, which is the difference between "waiting" and
+      // "never started". Measured in Claude on 2026-09-16: a RE-MOUNTED card
+      // paints once and then never executes again — its diagnostics line reads
+      // `hs 0`, and `initializeAttempts` is incremented synchronously inside
+      // connect() in the same tick as this very render, so a painted 0 is the
+      // pre-connect first paint and nothing after it ever ran. No microtask, no
+      // timer, no handshake.
+      //
+      // A spinner is a promise that something is coming. In that frame nothing
+      // is, and it is the only frame the user will ever see, so the promise is
+      // a lie that sits on screen forever: "simply not loading". Rendering
+      // nothing instead lets `.card:empty` collapse the shell, leaving the
+      // host's own header and the message text below it to carry the result,
+      // which they already do in full.
+      //
+      // This does not fix the remount. Nothing on this side can: the card is
+      // not running. It stops the failure from being loud.
+      return store.connected ? <Loading /> : null;
     }
 
     // ---- version gate -------------------------------------------------------
@@ -533,6 +556,19 @@ export function App(props: { bridge: HostBridge }) {
               );
             },
             refresh: () => void callDraft("refresh", "draft_read", target()),
+            // The opt-out. `scope` is passed through from the card's confirm
+            // row rather than defaulted here, because "hide this" is ambiguous
+            // between this mailbox and every mailbox and the two are different
+            // wishes. The result is a receipt, so the same announceReceipt path
+            // that handles send and discard flips the card to one line.
+            hide: async (scope) => {
+              announceReceipt(
+                await callDraft("hide", "draft_editor_hide", {
+                  ...target(),
+                  scope,
+                }),
+              );
+            },
             setFullscreen,
           }}
         />

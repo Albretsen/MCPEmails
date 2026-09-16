@@ -479,6 +479,9 @@ Deno.test("no tool other than contact_search changed which scopes authorize it",
     // mcp-app-drafts.ts#runDraftRead.
     "draft_read": ["manage:drafts"],
     "draft_editor_save": ["manage:drafts"],
+    // Same scope as the two above: it changes how a draft is DISPLAYED, which
+    // cannot sensibly be harder to do than rewriting the draft's whole body.
+    "draft_editor_hide": ["manage:drafts"],
   };
   const actual: Record<string, string[]> = {};
   for (const tool of TOOL_REGISTRY) {

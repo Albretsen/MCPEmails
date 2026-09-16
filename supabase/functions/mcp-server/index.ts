@@ -122,8 +122,17 @@ import {
   RESOURCES_CAPABILITY,
   type ReviewCardGates,
   reviewCardMetaForListing,
+  isCardBearingToolName,
   serializeToolForList,
 } from "./mcp-app-resources.ts";
+import {
+  acceptsEventStream,
+  CARD_LISTING_STALE,
+  decideBuildNotification,
+  sseResponse,
+  TOOLS_LIST_CHANGED_NOTIFICATION,
+} from "./card-build-notify.ts";
+import { REVIEW_CARD_BUILD_ID } from "./ui/review-card.html.ts";
 import {
   APPROVAL_TOOL_DEFINITIONS,
   APPROVAL_TTL_MS,
@@ -694,6 +703,18 @@ interface ApiKeyRow {
   last_used_at: string | null;
   deleted_at: string | null;
   created_at: string;
+  /**
+   * The review-card build id this key's client last received in a `tools/list`,
+   * or was last sent `notifications/tools/list_changed` for. NULL until its
+   * first `tools/list`. See card-build-notify.ts.
+   *
+   * Optional rather than required so the many hand-built key rows in the test
+   * suites stay valid without restating a field none of them exercise. Every
+   * read normalises with `?? null`, and it must: `undefined` would slip past
+   * the "never read a tools/list" check that `null` is there to catch, and
+   * notify a brand-new connection about a listing it has not read yet.
+   */
+  card_build_notified?: string | null;
   internalApprovalDispatch?: boolean;
 }
 
@@ -729,6 +750,9 @@ const INTROSPECTION_API_KEY: ApiKeyRow = {
   name: "introspection",
   key_prefix: "mcpe_introspection",
   key_hash: "",
+  // Never persisted, so it can never be "notified": a directory scanner gets
+  // one tools/list and goes away.
+  card_build_notified: null,
   scopes: [
     "read:email",
     "search:email",
@@ -823,8 +847,12 @@ interface InitializeResult {
   protocolVersion: string;
   capabilities: {
     tools: {
-      /** False: the tool list is static — clients should not expect notifications/tools/list_changed. */
-      listChanged: false;
+      /**
+       * True: the card's build-fingerprinted resource URI lives in this list,
+       * so a card deploy changes it and we emit
+       * notifications/tools/list_changed. See card-build-notify.ts.
+       */
+      listChanged: true;
     };
     /** User-invoked, reusable email routines. The catalogue is static per key. */
     prompts: { listChanged: false };
@@ -1672,7 +1700,7 @@ async function authenticateRequest(
   const { data: row, error } = await supabase
     .from("api_keys")
     .select(
-      "id, workspace_id, name, key_prefix, key_hash, scopes, inbox_ids, expires_at, last_used_at, deleted_at, created_at",
+      "id, workspace_id, name, key_prefix, key_hash, scopes, inbox_ids, expires_at, last_used_at, deleted_at, created_at, card_build_notified",
     )
     .eq("key_hash", incomingHash)
     .is("deleted_at", null)
@@ -8255,6 +8283,12 @@ interface InboxRow {
   signature_text: string | null;
   /** When false, no signature is appended for this inbox. */
   signature_enabled: boolean;
+  /**
+   * User preference: hide the draft editor card for drafts in this inbox.
+   * Optional because rows built by tests and by the older selects do not carry
+   * it; `=== true` is the only test applied, so absent means "not hidden".
+   */
+  draft_editor_hidden?: boolean | null;
   /** Reply/forward behaviour: 'always' | 'first_only' | 'never'. (Used in Phase 1.) */
   signature_reply_mode: string;
   /** Origin of the stored signature: 'manual' | 'gmail_import' | null. */
@@ -8270,7 +8304,10 @@ const INBOX_SELECT_COLUMNS =
   "imap_host, imap_port, imap_tls, imap_security, imap_username, imap_password, " +
   "smtp_host, smtp_port, smtp_tls, smtp_security, status, " +
   "signature_html, signature_text, signature_enabled, " +
-  "signature_reply_mode, signature_source, signature_updated_at, send_approval_required";
+  "signature_reply_mode, signature_source, signature_updated_at, send_approval_required, " +
+  // The per-inbox draft-editor opt-out. Carried on the resolved row rather
+  // than fetched separately so the per-call check costs no round trip.
+  "draft_editor_hidden";
 
 /**
  * The SASL login username for IMAP/SMTP auth. Most providers authenticate with
@@ -21033,7 +21070,14 @@ async function keyReviewCardGates(apiKey: ApiKeyRow): Promise<ReviewCardGates> {
   // rather than awaited in sequence, for the reason in the note above: this
   // runs on the connect path with the user watching a spinner, and a second
   // serialised round trip would show up there.
-  const draftsGate = workspaceDraftEditorEnabled(apiKey.workspace_id);
+  // Both halves of the draft gate, issued together: the workspace switch (our
+  // rollout AND the user's workspace-level opt-out) and the per-inbox opt-out
+  // rolled up to "are they ALL hidden". Parallel for the reason in the note
+  // above — this is the connect path with the user watching a spinner.
+  const draftsGate = Promise.all([
+    workspaceDraftEditorEnabled(apiKey.workspace_id),
+    allReachableInboxesHideDraftEditor(apiKey),
+  ]).then(([enabled, allHidden]) => enabled && !allHidden);
   if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length === 0) {
     return { ...denied, drafts: await draftsGate };
   }
@@ -23550,7 +23594,7 @@ async function workspaceDraftEditorEnabled(workspaceId: string): Promise<boolean
   try {
     const { data, error } = await supabase
       .from("workspaces")
-      .select("draft_editor_enabled")
+      .select("draft_editor_enabled, draft_editor_hidden")
       .eq("id", workspaceId)
       .maybeSingle();
     if (error) {
@@ -23560,10 +23604,117 @@ async function workspaceDraftEditorEnabled(workspaceId: string): Promise<boolean
       });
       return false;
     }
-    return (data as { draft_editor_enabled?: unknown } | null)?.draft_editor_enabled === true;
+    const row = data as {
+      draft_editor_enabled?: unknown;
+      draft_editor_hidden?: unknown;
+    } | null;
+    // Two independent switches, ANDed. `draft_editor_enabled` is OUR rollout
+    // gate; `draft_editor_hidden` is the USER's opt-out. Kept apart so that
+    // widening the rollout can never un-hide the card for someone who turned
+    // it off, and so the rollout read-out can tell "not enabled yet" from
+    // "offered and refused". A missing `draft_editor_hidden` column reads as
+    // undefined, which is not `true`, so a database without the migration
+    // behaves exactly as before.
+    if (row?.draft_editor_hidden === true) return false;
+    return row?.draft_editor_enabled === true;
   } catch (error) {
     console.warn("[mcp-server] draft_editor_gate_unavailable", {
       workspace_id: workspaceId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return false;
+  }
+}
+
+/**
+ * Mark every live key in a workspace as holding a stale tool listing.
+ *
+ * Called after ANY write that changes whether the draft editor card is
+ * advertised. `tools/list` is cached by the client for the life of the
+ * connection, so without this a user who hides the card keeps seeing it until
+ * they reconnect — the same staleness a card deploy used to cause, arriving by
+ * a different route. The next card-bearing `tools/call` on each key sees the
+ * sentinel, emits `notifications/tools/list_changed`, and the client re-reads a
+ * listing that no longer carries `_meta.ui`.
+ *
+ * Workspace-wide even for a single-inbox change: keys carry inbox allowlists
+ * and working out exactly which ones overlap costs more than the one UPDATE,
+ * and the false positives are harmless (one extra `tools/list`).
+ *
+ * Never throws. The preference write has already succeeded at this point, and
+ * failing the user's action because a cache hint could not be written would be
+ * the wrong trade: the worst case here is the old behaviour, a reconnect.
+ */
+async function invalidateCardListings(workspaceId: string): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from("api_keys")
+      .update({ card_build_notified: CARD_LISTING_STALE })
+      .eq("workspace_id", workspaceId)
+      .is("deleted_at", null);
+    if (error) {
+      console.warn("[mcp-server] card_listing_invalidate_failed", {
+        workspace_id: workspaceId,
+        error: error.message,
+      });
+    }
+  } catch (error) {
+    console.warn("[mcp-server] card_listing_invalidate_threw", {
+      workspace_id: workspaceId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+/**
+ * True when EVERY inbox this key can reach has the draft editor hidden.
+ *
+ * The per-inbox opt-out has an awkward shape and this function is where it is
+ * made honest. `_meta.ui` is per TOOL, not per call, so the host mounts the
+ * card for every `draft` result once the tool carries it — there is no way to
+ * advertise "card for this inbox, none for that one".
+ *
+ * So the opt-out lands in two places. When every reachable inbox is hidden the
+ * metadata is withheld here and the surface is byte-identical to pre-MCP-Apps.
+ * When only SOME are, the tool keeps its metadata and a hidden inbox instead
+ * returns no envelope (see draftEditorHiddenForInbox), which the card
+ * classifies as a payload that is not its own and renders as nothing at all,
+ * collapsing the shell. The cost of the mixed case is a mounted iframe and one
+ * cached resource read for a card that draws nothing. That is invisible to the
+ * user and is the price of a per-tool metadata field.
+ */
+async function allReachableInboxesHideDraftEditor(
+  apiKey: ApiKeyRow,
+): Promise<boolean> {
+  if (INTROSPECTION_ONLY) return false;
+  // A key scoped to zero inboxes reaches nothing; there is no "every inbox"
+  // to be hidden, and vacuous truth here would withhold the card from a key
+  // whose owner never asked for that.
+  if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length === 0) return false;
+  try {
+    let query = supabase
+      .from("inboxes")
+      .select("draft_editor_hidden")
+      .eq("workspace_id", apiKey.workspace_id);
+    if (apiKey.inbox_ids !== null) query = query.in("id", apiKey.inbox_ids);
+    const { data, error } = await query;
+    if (error) {
+      // Fail OPEN, unlike the rollout gate. This is a preference, not a
+      // permission: the safe direction when we cannot read it is to keep
+      // showing what the workspace already opted into, not to silently
+      // withdraw a feature because one query failed.
+      console.warn("[mcp-server] draft_editor_hidden_query_failed", {
+        key_id: apiKey.id,
+        error: error.message,
+      });
+      return false;
+    }
+    const rows = (data ?? []) as Array<{ draft_editor_hidden?: unknown }>;
+    if (rows.length === 0) return false;
+    return rows.every((row) => row.draft_editor_hidden === true);
+  } catch (error) {
+    console.warn("[mcp-server] draft_editor_hidden_unavailable", {
+      key_id: apiKey.id,
       error: error instanceof Error ? error.message : String(error),
     });
     return false;
@@ -23644,6 +23795,28 @@ function draftEditorDepsFor(apiKey: ApiKeyRow): DraftEditorDeps {
     getDraft: getDraftForEditor,
     updateDraft: updateDraftForEditor,
     isValidEmailAddress,
+    setDraftEditorHidden: async (scope, ids, hidden) => {
+      // Scoped by workspace on BOTH branches, not just by id. The inbox id
+      // already came through `resolveInbox` (which applies the workspace filter
+      // and the key's allowlist), so this is belt and braces — but a write that
+      // can be addressed by id alone is one bug away from writing another
+      // tenant's row, and this one never can be.
+      const { error } = scope === "workspace"
+        ? await supabase
+          .from("workspaces")
+          .update({ draft_editor_hidden: hidden })
+          .eq("id", ids.workspaceId)
+        : await supabase
+          .from("inboxes")
+          .update({ draft_editor_hidden: hidden })
+          .eq("id", ids.inboxId)
+          .eq("workspace_id", ids.workspaceId);
+      // Thrown, not swallowed: the caller turns it into a receipt that says
+      // nothing was changed. Reporting success for a write that did not happen
+      // would leave the card hidden on screen and showing on the next turn.
+      if (error) throw new Error(error.message);
+      await invalidateCardListings(ids.workspaceId);
+    },
   };
 }
 
@@ -23681,6 +23854,13 @@ async function draftEditorEnvelopeForWrite(
   },
 ): Promise<Record<string, unknown> | null> {
   try {
+    // The per-inbox opt-out. Checked here rather than at tools/list because
+    // `_meta.ui` is per TOOL: when only some of a key's inboxes are hidden the
+    // tool must keep its metadata for the others, so a hidden inbox opts out by
+    // returning no envelope. The card classifies a payload without
+    // `schema_version` as not its own and renders nothing, collapsing the
+    // shell. See allReachableInboxesHideDraftEditor.
+    if (inbox.draft_editor_hidden === true) return null;
     if (!await workspaceDraftEditorEnabled(apiKey.workspace_id)) return null;
     const draft: NormalizedDraft = {
       draft_id: input.draftId,
@@ -23727,11 +23907,17 @@ async function draftEditorEnvelopeForWrite(
  */
 async function draftEditorReceiptFor(
   apiKey: ApiKeyRow,
+  inbox: InboxRow,
   outcome: "sent" | "discarded",
   detail: string,
   headline: string,
 ): Promise<Record<string, unknown> | null> {
   try {
+    // Hiding the editor hides its receipts too. Suppressing the editor but
+    // still flipping a card up on send or discard would be the worse half of
+    // both behaviours: the user still gets a widget, and it is one they can no
+    // longer reach the editor from.
+    if (inbox.draft_editor_hidden === true) return null;
     if (!await workspaceDraftEditorEnabled(apiKey.workspace_id)) return null;
     return draftReceiptEnvelope({
       outcome,
@@ -24493,6 +24679,7 @@ async function executeSendDraft(
   // review card, because the send has not happened yet.
   const sentCard = await draftEditorReceiptFor(
     apiKey,
+    inbox,
     "sent",
     `Delivered via ${draftProviderBlock(inbox.provider).label} at ${sendResult.sent_at}.`,
     "Sent.",
@@ -24576,6 +24763,7 @@ async function executeDeleteDraft(
   // sitting on a draft that no longer exists.
   const discardedCard = await draftEditorReceiptFor(
     apiKey,
+    inbox,
     "discarded",
     "The draft was removed from Drafts without being sent.",
     "Discarded. Nothing was sent.",
@@ -25961,9 +26149,20 @@ async function handleInitialize(
     protocolVersion: SUPPORTED_PROTOCOL_VERSION,
     capabilities: {
       tools: {
-        // false: the tool list is a fixed, versioned set. Clients must not
-        // subscribe to notifications/tools/list_changed — none will be emitted.
-        listChanged: false,
+        // TRUE since 2026-09-16. The tool list was a fixed, versioned set until
+        // the review card's resource URI became build-fingerprinted and moved
+        // INTO that list (`_meta.ui.resourceUri`). A card deploy therefore
+        // changes the tool list, and a client holding the listing it read at
+        // connect is holding a stale card URI — which is what made "reconnect
+        // the connector after every card deploy" a real instruction rather
+        // than a superstition.
+        //
+        // Declaring this is the promise that we will send
+        // notifications/tools/list_changed when that happens. We do, on the
+        // first card-bearing tools/call after the build id moves. See
+        // card-build-notify.ts for the rules and for how a stateless,
+        // POST-only server gets a notification onto the wire at all.
+        listChanged: true,
       },
       prompts: {
         // The starter routines are versioned with the server and do not change
@@ -27671,7 +27870,7 @@ async function handleScheduledDispatch(): Promise<Response> {
           throw new Error("approved request expired before it was decided");
         }
         const { data: key, error: keyErr } = await supabase.from("api_keys")
-          .select("id, workspace_id, name, key_prefix, key_hash, scopes, inbox_ids, expires_at, last_used_at, deleted_at, created_at")
+          .select("id, workspace_id, name, key_prefix, key_hash, scopes, inbox_ids, expires_at, last_used_at, deleted_at, created_at, card_build_notified")
           .eq("id", approval.api_key_id).is("deleted_at", null).single();
         if (keyErr || !key) throw new Error("originating API key is unavailable");
         const original = await resolveScheduledPayload(approval);
@@ -28359,6 +28558,7 @@ function triageApiKeyAsApiKeyRow(key: TriageApiKey): ApiKeyRow {
     last_used_at: null,
     deleted_at: key.deleted_at,
     created_at: "",
+    card_build_notified: null,
   };
 }
 
@@ -29171,6 +29371,51 @@ async function handleRequest(req: Request): Promise<Response> {
     );
     return http;
   }
+
+  // ── Tool-list invalidation ────────────────────────────────────────────────
+  // The card's resource URI is build-fingerprinted and lives in `tools/list`,
+  // which a client reads once at connect and caches. So a card deploy leaves
+  // every connected client pointing at the previous bundle, and used to need a
+  // manual reconnect. MCP's own answer is notifications/tools/list_changed, and
+  // Streamable HTTP lets a stateless server put one on the SSE stream of a POST
+  // it is already answering. See card-build-notify.ts for both quotes and for
+  // every rule below.
+  const notifyDecision = decideBuildNotification({
+    method: rpcRequest.method,
+    cardBearingTool:
+      rpcRequest.method === "tools/call" &&
+      isCardBearingToolName(
+        String(
+          (rpcRequest.params as Record<string, unknown> | undefined)?.["name"] ?? "",
+        ),
+      ),
+    acceptsEventStream: acceptsEventStream(req.headers.get("Accept")),
+    notifiedBuild: apiKey.card_build_notified ?? null,
+    currentBuild: REVIEW_CARD_BUILD_ID,
+  });
+
+  if (notifyDecision.record !== null) {
+    // Fire and forget, exactly like last_used_at: this is a cache hint, and a
+    // failed write costs one repeated notification, never a failed request.
+    // Awaiting it would put a database round trip in front of every tool
+    // result for the sake of bookkeeping.
+    void supabase
+      .from("api_keys")
+      .update({ card_build_notified: notifyDecision.record })
+      .eq("id", apiKey.id)
+      .then(undefined, () => {});
+  }
+
+  if (notifyDecision.notify) {
+    console.log("[mcp-server] tools/list_changed", {
+      key_id: apiKey.id,
+      from_build: apiKey.card_build_notified ?? null,
+      to_build: REVIEW_CARD_BUILD_ID,
+      on_method: rpcRequest.method,
+    });
+    return sseResponse([TOOLS_LIST_CHANGED_NOTIFICATION], response, CORS_HEADERS);
+  }
+
   return jsonResponse(response);
 }
 
