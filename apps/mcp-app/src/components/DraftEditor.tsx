@@ -1,7 +1,7 @@
 import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { DraftEditorData, Envelope, Provider } from "../contract";
-import { formatBytes, formatDateTime, wordCount } from "../format";
+import { formatBytes, formatDateTime, joinBody, splitBody, wordCount } from "../format";
 import { setTeardownSaver } from "../store";
 import {
   AutoTextarea,
@@ -54,6 +54,21 @@ const FIELD_LABELS: Record<Field, string> = { to: "To", cc: "Cc", bcc: "Bcc" };
  * cap is effectively lifted.
  */
 const INLINE_BODY_ROWS = 14;
+
+/** How tall the signature box grows to once it is being edited. */
+const SIGNATURE_ROWS = 6;
+
+/**
+ * The signature as one line: its first non-empty line, and a count of the rest.
+ * Enough to recognise which signature it is without spending the room the
+ * signature was taking in the first place.
+ */
+function signaturePreview(signature: string): string {
+  const lines = signature.split("\n").filter((l) => l.trim().length > 0);
+  if (lines.length === 0) return "Signature";
+  const rest = lines.length - 1;
+  return rest > 0 ? `${lines[0]} + ${rest} more line${rest === 1 ? "" : "s"}` : lines[0];
+}
 const FULLSCREEN_BODY_ROWS = 40;
 
 /**
@@ -178,6 +193,7 @@ export function DraftEditor(props: Props) {
 
   const [addrWarning, setAddrWarning] = useState<string | null>(null);
   const [showMore, setShowMore] = useState(false);
+  const [editingSig, setEditingSig] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [showHtml, setShowHtml] = useState(false);
   const askedFullscreen = useRef(false);
@@ -321,7 +337,9 @@ export function DraftEditor(props: Props) {
           autocomplete="off"
           spellcheck={false}
           aria-label={`${FIELD_LABELS[field]} recipients`}
-          placeholder={edit[field].length === 0 ? "name@example.com" : ""}
+          // "name@example.com" reads as a value that is already there rather
+          // than as an invitation to type one.
+          placeholder={edit[field].length === 0 ? `Add ${FIELD_LABELS[field]}` : ""}
           value={edit.typed[field]}
           disabled={!canEdit}
           onInput={(e) =>
@@ -374,11 +392,18 @@ export function DraftEditor(props: Props) {
       }`
     : "Not saved yet";
 
+  // Derived, never stored: `edit.bodyText` stays the single source of truth for
+  // what will be saved, and this is only how it is presented.
+  const split = splitBody(edit.bodyText);
+
   return (
     <>
       <div class="hdr">
         <div class="hdr-l">
-          <span class="dot" data-tone="warning" aria-hidden="true" />
+          {/* No status dot here. The other cards use one to carry a state the
+              words do not (sent, rejected, expired); this card's state is the
+              word "Draft" immediately beside it, so the dot was an amber signal
+              with nothing to signal and no legend to read it by. */}
           <b>Draft</b>
           <span class="muted">{fromAddress(d)}</span>
         </div>
@@ -427,11 +452,17 @@ export function DraftEditor(props: Props) {
         {(showMore || edit.bcc.length > 0) && recipientRow("bcc")}
 
         <div class="row">
-          <span class="lbl" aria-hidden="true" />
+          {/* Labelled like the rows above it. It used to be the one unlabelled
+              field, which left it reading as an orphan under Bcc rather than as
+              the last of a set. */}
+          <label class="lbl" for="d-subject">
+            Subject
+          </label>
           <input
+            id="d-subject"
             class="subj grow"
             aria-label="Subject"
-            placeholder="Subject"
+            placeholder="No subject"
             value={edit.subject}
             disabled={!canEdit}
             onInput={(e) =>
@@ -447,10 +478,12 @@ export function DraftEditor(props: Props) {
         <AutoTextarea
           id="d-body"
           ariaLabel="Message"
-          value={edit.bodyText}
+          value={split.signature === null ? edit.bodyText : split.message}
           disabled={!canEdit}
           maxRows={fullscreen ? FULLSCREEN_BODY_ROWS : INLINE_BODY_ROWS}
-          onInput={(v) => update({ bodyText: v })}
+          onInput={(v) =>
+            update({ bodyText: joinBody({ ...split, message: v }) })
+          }
           onFocus={() => {
             // CONCEPT §7: ask for a real compose surface the first time the
             // user starts writing, and only the first time, so someone who
@@ -464,15 +497,38 @@ export function DraftEditor(props: Props) {
         />
       )}
 
-      {hasHtml && (
-        <p class="line">
-          <TextLink onClick={() => setShowHtml(!showHtml)}>
-            {showHtml ? "Edit plain text" : "Show formatting"}
-          </TextLink>
-          {showHtml
-            ? " · read only, saving regenerates this from the text"
-            : ""}
-        </p>
+      {/* The signature, split out of the body box but still the same bytes.
+          For a fourteen-word message the stored signature was four of eight
+          lines, so the box was mostly boilerplate and the message was the
+          smaller half of its own editor. Dimmed and collapsed by default,
+          editable on request; `joinBody` puts it back verbatim, so what is
+          saved is byte-identical to what was stored (contract §8: the card must
+          save the text as-is or the signature doubles). */}
+      {!showHtml && split.signature !== null && (
+        editingSig ? (
+          <AutoTextarea
+            id="d-signature"
+            ariaLabel="Signature"
+            value={split.signature}
+            disabled={!canEdit}
+            maxRows={fullscreen ? FULLSCREEN_BODY_ROWS : SIGNATURE_ROWS}
+            onInput={(v) =>
+              update({ bodyText: joinBody({ ...split, signature: v }) })
+            }
+          />
+        ) : (
+          <div class="sig" onClick={() => canEdit && setEditingSig(true)}>
+            <span class="sig-text">{signaturePreview(split.signature)}</span>
+            {canEdit && (
+              <TextLink
+                title="Edit the signature stored in this draft"
+                onClick={() => setEditingSig(true)}
+              >
+                Edit
+              </TextLink>
+            )}
+          </div>
+        )
       )}
 
       {d.body?.truncated && (
@@ -540,16 +596,48 @@ export function DraftEditor(props: Props) {
         </div>
       ) : (
         <div class="acts">
-          <Btn
-            variant="danger"
-            disabled={!canEdit}
-            onClick={() => setConfirmDiscard(true)}
-          >
-            Discard
-          </Btn>
-          <Btn busy={busy === "refresh"} onClick={actions.refresh}>
-            Refresh
-          </Btn>
+          {/* ── Two weights, not four ──────────────────────────────────────
+              This row used to be Discard · Refresh · Save · Send as four
+              equal buttons. Three problems: a destructive action and a
+              maintenance action carried the same weight as the one that sends
+              mail; Discard sat immediately beside the primary, which is where
+              a misclick costs the most; and "Show formatting" hung on its own
+              left-aligned line above a right-aligned row, so the footer had no
+              structure to read.
+
+              Now: the two things that change the draft are buttons on the
+              right, and everything else is a text link on the left, in the
+              same row. Discard keeps its danger tone and still goes through
+              the inline confirm below. */}
+          <span class="acts-l">
+            {hasHtml && (
+              <TextLink
+                onClick={() => setShowHtml(!showHtml)}
+                title={
+                  showHtml
+                    ? "Edit the plain-text version"
+                    : "Preview the HTML version, read only"
+                }
+              >
+                {showHtml ? "Edit plain text" : "Show formatting"}
+              </TextLink>
+            )}
+            <TextLink
+              disabled={busy === "refresh"}
+              title="Re-read this draft from the mailbox"
+              onClick={actions.refresh}
+            >
+              {busy === "refresh" ? "Refreshing" : "Refresh"}
+            </TextLink>
+            <TextLink
+              tone="danger"
+              disabled={!canEdit}
+              title="Delete this draft at your provider"
+              onClick={() => setConfirmDiscard(true)}
+            >
+              Discard
+            </TextLink>
+          </span>
           <Btn
             disabled={!canEdit || !dirty}
             busy={saving}
@@ -581,8 +669,15 @@ export function DraftEditor(props: Props) {
       <ProviderLine
         provider={provider}
         fullscreen={fullscreen}
-        lead={`${wordCount(edit.bodyText)} words`}
+        // The message, not the message plus the signature. The signature is
+        // constant boilerplate the user did not write and can now see is
+        // separate, so counting it answers a question nobody asked and makes a
+        // three-word note read as thirty.
+        lead={`${wordCount(split.message)} words`}
         extra={idNote}
+        // Inline, the provider label, the route and the new-id caveat all move
+        // into the tooltip. See ProviderLine.
+        compactSummary="Saved to Drafts"
       />
     </>
   );

@@ -179,7 +179,8 @@ async function main() {
       contents:
         'export * from "./src/store";\n' +
         'export * from "./src/persist";\n' +
-        'export { HostBridge, TEARDOWN_TIMEOUT_MS } from "./src/bridge";\n',
+        'export { HostBridge, TEARDOWN_TIMEOUT_MS } from "./src/bridge";\n' +
+        'export { splitBody, joinBody } from "./src/format";\n',
       resolveDir: appRoot,
       sourcefile: "state-machine-entry.ts",
       loader: "ts",
@@ -692,6 +693,54 @@ async function main() {
       t.expect("the fifth-oldest is gone", t.mod.loadEnvelope("i4"), null);
       t.expect("the twentieth-newest is kept", t.mod.loadEnvelope("i5")?.card, "receipt");
     }),
+  );
+
+  // ---- signature split --------------------------------------------------------
+  // The draft card shows the signature as a dimmed one-liner instead of four
+  // lines of the body box. It is the SAME bytes, split for display only, and
+  // contract §8 requires the card to save the stored text as-is or the
+  // signature doubles on the next send. So the only property that actually
+  // matters is that the round trip is exact, for every input.
+
+  results.push(
+    await (async () => {
+      const mod = await import(`${pathToFileURL(OUT).href}?i=${++instance}`);
+      const checks = [];
+      const expect = (label, actual, wanted) =>
+        checks.push({ label, actual, wanted, ok: Object.is(actual, wanted) });
+
+      const bodies = [
+        "Hi,\n\nHow are you?\n\nBest,\nAsgeir\n\n-- \nAsgeir Albretsen\nFounder\nmcpemails.com",
+        "No signature here at all.",
+        "",
+        "-- \nleading separator only",
+        "trailing separator\n-- \n",
+        "two\n-- \nblocks\n-- \nlast one wins",
+        "sloppy\n--\nseparator",
+        "a line of --\nin prose\n\n-- \nreal sig",
+        "\n\n\n",
+        "unicode ✉️ and CRLF\r\n-- \r\nsig",
+      ];
+      for (const [i, body] of bodies.entries()) {
+        expect(`round trip ${i}`, mod.joinBody(mod.splitBody(body)), body);
+      }
+
+      // The split itself, on the shape that actually ships.
+      const split = mod.splitBody(bodies[0]);
+      // Note the retained trailing newline: the body is "...Asgeir\n\n-- \n...",
+      // so one \n belongs to the message and the next three chars are the
+      // separator. Keeping it is exactly what makes the round trip exact.
+      expect("message stops at the separator", split.message.endsWith("Asgeir\n"), true);
+      expect("signature starts after it", split.signature.startsWith("Asgeir Albretsen"), true);
+      expect("no separator means no signature", mod.splitBody(bodies[1]).signature, null);
+      // Editing either half must still rebuild the whole body.
+      expect(
+        "an edited message keeps the signature",
+        mod.joinBody({ ...split, message: "New text" }),
+        "New text\n-- \nAsgeir Albretsen\nFounder\nmcpemails.com",
+      );
+      return { name: "the signature split round-trips byte for byte", checks };
+    })(),
   );
 
   // ---- handshake ------------------------------------------------------------

@@ -42,6 +42,7 @@ export function TextLink(props: {
   onClick: () => void;
   title?: string;
   tone?: "danger";
+  disabled?: boolean;
 }) {
   return (
     <button
@@ -49,6 +50,7 @@ export function TextLink(props: {
       class="link"
       data-tone={props.tone}
       title={props.title}
+      disabled={props.disabled}
       onClick={props.onClick}
     >
       {props.children}
@@ -107,17 +109,48 @@ export function ProviderLine(props: {
   fullscreen: boolean;
   extra?: string | null;
   lead?: string | null;
+  /**
+   * A plain-language stand-in for the provider detail, shown INSTEAD of it
+   * while inline. The full detail moves to the tooltip.
+   *
+   * This line was the longest text on the draft card and the least actionable:
+   * "IMAP + SMTP · APPEND to Drafts · Saving rewrites the message, so the draft
+   * gets a new id each time". `APPEND to Drafts` is protocol jargon, and the id
+   * caveat is a fact the reader cannot do anything with. A caller that has a
+   * human sentence for the same thing passes it here; one that does not passes
+   * nothing and gets exactly today's line.
+   */
+  compactSummary?: string | null;
 }) {
   const p = props.provider;
   const caveats = p?.caveats ?? [];
-  const parts = [
-    props.lead,
-    p ? (p.route ? `${p.label} · ${p.route}` : p.label) : null,
-    ...(props.fullscreen ? caveats : caveats.slice(0, 1)),
-    props.extra,
-  ].filter((s): s is string => !!s && s.trim().length > 0);
-  if (parts.length === 0) return null;
-  return <p class="line">{parts.join(" · ")}</p>;
+  const providerText = p ? (p.route ? `${p.label} · ${p.route}` : p.label) : null;
+  const compact = !props.fullscreen && !!props.compactSummary;
+
+  const parts = compact
+    ? [props.lead, props.compactSummary]
+    : [
+        props.lead,
+        providerText,
+        ...(props.fullscreen ? caveats : caveats.slice(0, 1)),
+        props.extra,
+      ];
+
+  const shown = parts.filter((s): s is string => !!s && s.trim().length > 0);
+  if (shown.length === 0) return null;
+
+  // Everything the compact line dropped, so it is hidden rather than lost.
+  const title = compact
+    ? [providerText, ...caveats, props.extra]
+        .filter((s): s is string => !!s && s.trim().length > 0)
+        .join(" · ")
+    : undefined;
+
+  return (
+    <p class="line" title={title}>
+      {shown.join(" · ")}
+    </p>
+  );
 }
 
 export function Fields(props: { rows: Array<[string, ComponentChildren]> }) {

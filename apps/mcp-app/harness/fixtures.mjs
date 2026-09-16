@@ -504,7 +504,13 @@ export const draftEditorImap = {
       text:
         "Hi Dana,\n\nHere are the Q3 numbers. Shout if anything looks off.\n\n" +
         "On Tue, 15 Sep 2026, dana@northwind.example wrote:\n" +
-        "> Can you send the Q3 numbers?",
+        "> Can you send the Q3 numbers?\n\n" +
+        // The stored body carries the signature inline, which is what
+        // `signature: { embedded: true }` below has always claimed and the
+        // fixture never actually showed. The card splits on the RFC 3676
+        // separator to dim it; without it here, that path shipped untested
+        // against the reference host.
+        "-- \nDemo User\nMCP Emails\nmcpemails.com",
       html: null,
       truncated: false,
     },

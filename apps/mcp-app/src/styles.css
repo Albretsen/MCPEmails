@@ -102,7 +102,10 @@
   --r-full: var(--border-radius-full, 9999px);
   --bw: var(--border-width-regular, 1px);
   /* The label gutter on recipient rows. One number, so every row lines up. */
-  --gutter: 32px;
+  /* Wide enough for "Subject", which is the longest label any row carries.
+     It was 32px, sized for To/Cc/Bcc back when the subject was the one
+     unlabelled field, and labelling it made the word wrap onto two lines. */
+  --gutter: 56px;
 }
 
 * { box-sizing: border-box; }
@@ -256,6 +259,8 @@ body {
   font-size: var(--fs-sm);
   color: var(--fg-3);
   min-width: 0;
+  /* A wrapped label would push its own row taller than the field beside it. */
+  white-space: nowrap;
 }
 
 .row > .val {
@@ -389,6 +394,19 @@ body {
   align-items: center;
 }
 
+/* The secondary cluster: text links that share the action row instead of
+   floating on their own line above it. `margin-right: auto` is what pushes the
+   two real buttons to the right edge, so the row reads as "things that change
+   the draft" against "everything else". */
+.acts-l {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-right: auto;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
 .btn {
   appearance: none;
   font: inherit;
@@ -470,6 +488,40 @@ body {
 }
 
 .link[data-tone="danger"] { color: var(--fg-danger); }
+
+.link:disabled {
+  cursor: default;
+  opacity: 0.55;
+  text-decoration: none;
+}
+
+/* ---- signature ---------------------------------------------------------- */
+
+/* Collapsed, dimmed, and clearly the same material as the body above it: one
+   line where four used to be. Clicking anywhere on it opens the editor, so the
+   "Edit" link is a label for the affordance rather than the only way in. */
+.sig {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: var(--r-sm);
+  border: 1px dashed var(--bd);
+  color: var(--fg-3);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  min-width: 0;
+}
+
+.sig:hover { color: var(--fg-2); }
+
+.sig-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 /* ---- segmented control (fullscreen panel switcher only) ---------------- */
 
