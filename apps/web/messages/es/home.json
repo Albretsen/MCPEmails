@@ -121,6 +121,20 @@
     "text": "Quería que mis agentes trabajaran mi bandeja de entrada, pero cada opción implicaba entregar a un tercero una copia de mi correo. Así que construí la tubería que deseaba que existiera: conéctate una vez, tu bandeja de entrada se obtiene en vivo y nunca se almacena, y puedes cortarle el acceso a cualquier agente con un clic. Ese es el producto en el que confío con mi propia bandeja.",
     "role": "fundador, mcpemails"
   },
+  "reviews": {
+    "eyebrow": "Opiniones",
+    "titleLine1": "No lo decimos nosotros.",
+    "titleLine2": "Lo dicen ellos.",
+    "sub": "Opiniones reales de quienes usan mcpemails con su propia bandeja de entrada, publicadas con su nombre.",
+    "ratingLabel": "Valorado con {rating} de 5",
+    "count": "{count, plural, one {# opinión} other {# opiniones}}",
+    "via": "Opinión publicada en {source}",
+    "trackLabel": "Opiniones de clientes",
+    "prev": "Opiniones anteriores",
+    "next": "Más opiniones",
+    "featuredLabel": "Opinión destacada de un cliente",
+    "readFull": "Leer la opinión completa"
+  },
   "pricing": {
     "eyebrow": "Precios",
     "title": "Precio por bandeja. Sin medición en los planes de pago.",

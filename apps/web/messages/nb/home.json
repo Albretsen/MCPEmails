@@ -121,6 +121,20 @@
     "text": "Jeg ville at agentene mine skulle jobbe i innboksen min, men alle alternativer betydde å gi en tredjepart en kopi av e-posten min. Så jeg bygde røret jeg skulle ønske fantes: koble til én gang, innboksen din hentes i sanntid og lagres aldri, og du kan kutte av enhver agent med ett klikk. Det er produktet jeg stoler på med min egen innboks.",
     "role": "grunnlegger, mcpemails"
   },
+  "reviews": {
+    "eyebrow": "Omtaler",
+    "titleLine1": "Ikke ta vårt ord for det.",
+    "titleLine2": "Ta deres.",
+    "sub": "Ekte omtaler fra folk som bruker mcpemails mot sin egen innboks, publisert under fullt navn.",
+    "ratingLabel": "Vurdert til {rating} av 5",
+    "count": "{count, plural, one {# omtale} other {# omtaler}}",
+    "via": "Omtalt på {source}",
+    "trackLabel": "Kundeomtaler",
+    "prev": "Forrige omtaler",
+    "next": "Flere omtaler",
+    "featuredLabel": "Utvalgt kundeomtale",
+    "readFull": "Les hele omtalen"
+  },
   "pricing": {
     "eyebrow": "Priser",
     "title": "Prisen følger innboksene. Ingen måling på betalte planer.",

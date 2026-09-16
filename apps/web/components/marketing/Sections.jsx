@@ -1,10 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link, usePathname } from '@/i18n/navigation';
 import { MBtn, MIcon } from '../MarketingPrimitives';
 import { CLIENT_LOGOS, MCP_CLIENT_BRANDS } from '../dashboard/clientLogos';
+import {
+  REVIEWS, REVIEW_SOURCES, featuredReview, initialsOf, reviewsAreListed, reviewSummary,
+} from './reviews.mjs';
 import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
 
 // Rich-text tag handlers shared across sections (inline code + bold).
@@ -652,6 +655,342 @@ export function Examples() {
             </div>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============== REVIEWS ============== */
+/**
+ * Star row. Rendered as a single labelled image rather than five separate
+ * glyphs so a screen reader announces "Rated 5 out of 5" once instead of
+ * reading five decorative stars.
+ */
+function Stars({ rating, size = 15 }) {
+  const t = useTranslations('home');
+  return (
+    <span
+      className="review-stars"
+      role="img"
+      aria-label={t('reviews.ratingLabel', { rating })}
+    >
+      {[1, 2, 3, 4, 5].map((i) => (
+        <svg
+          key={i}
+          width={size}
+          height={size}
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          className={i <= rating ? 'is-on' : 'is-off'}
+        >
+          <path d="M12 2.6l2.86 5.8 6.4.93-4.63 4.51 1.09 6.37L12 17.2l-5.72 3.01 1.09-6.37L2.74 9.33l6.4-.93L12 2.6z" />
+        </svg>
+      ))}
+    </span>
+  );
+}
+
+/**
+ * Where the review was published. A permalink when the platform gives us one,
+ * plain text when it does not, so the badge never implies a public source that
+ * a visitor cannot go and check.
+ */
+function SourceBadge({ source, href }) {
+  const t = useTranslations('home');
+  const label = t('reviews.via', { source: source.label });
+  const inner = (
+    <>
+      {source.icon ? (
+        <MIcon name={source.icon} size={14} />
+      ) : (
+        <span aria-hidden="true">{source.short}</span>
+      )}
+      <span className="sr-only">{label}</span>
+    </>
+  );
+  return href ? (
+    <a className="review-source" href={href} target="_blank" rel="noopener noreferrer" title={label}>
+      {inner}
+    </a>
+  ) : (
+    <span className="review-source" title={label}>
+      {inner}
+    </span>
+  );
+}
+
+/**
+ * One review, as a `figure`/`blockquote`/`figcaption` so the quote and its
+ * attribution stay associated outside of CSS.
+ */
+function ReviewCard({ review }) {
+  const locale = useLocale();
+  const src = REVIEW_SOURCES[review.source];
+  const dated = review.date
+    ? new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'long' }).format(
+        new Date(`${review.date}T00:00:00Z`),
+      )
+    : null;
+
+  return (
+    <figure className="review-card">
+      <div className="review-top">
+        <Stars rating={review.rating} />
+        {src && <SourceBadge source={src} href={review.sourceUrl} />}
+      </div>
+
+      <blockquote className="review-quote">
+        <p>{review.quote}</p>
+      </blockquote>
+
+      <figcaption className="review-who">
+        <span className="review-avatar" aria-hidden="true">{initialsOf(review.author)}</span>
+        <span className="review-id">
+          <cite className="review-name">{review.author}</cite>
+          <span className="review-meta">
+            {review.role}
+            {review.role && review.company ? ', ' : ''}
+            {review.company &&
+              (review.url ? (
+                <a href={review.url} target="_blank" rel="noopener noreferrer">
+                  {review.company}
+                </a>
+              ) : (
+                review.company
+              ))}
+          </span>
+        </span>
+        {dated && (
+          <time className="review-date" dateTime={review.date}>
+            {dated}
+          </time>
+        )}
+      </figcaption>
+    </figure>
+  );
+}
+
+/**
+ * Customer reviews, in a horizontal scroller.
+ *
+ * The scroller is the point: reviews arrive one at a time and the section has
+ * to look deliberate at one card and at twenty without anyone touching the
+ * layout again. Cards therefore have a fixed track width and the arrows
+ * measure real overflow, so with a single review there is nothing to scroll,
+ * no arrows, and no empty rail.
+ *
+ * Accessibility notes, since a scroller is easy to get wrong:
+ *  - The track carries `tabindex=0` and a label. Chrome does not make an
+ *    overflow container focusable on its own, so without this a keyboard-only
+ *    visitor cannot reach the reviews past the first (WCAG 2.1.1).
+ *  - The arrows are real buttons with labels and a disabled state at each end,
+ *    not decorative chevrons.
+ *  - Smooth scrolling is dropped under `prefers-reduced-motion` (in CSS).
+ */
+export function Reviews() {
+  const t = useTranslations('home');
+  const trackRef = useRef(null);
+  const [overflow, setOverflow] = useState({ start: false, end: false });
+  const { count, average } = reviewSummary(REVIEWS);
+  const listed = reviewsAreListed();
+
+  const measure = useCallback(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    // 2px of slack: sub-pixel track widths otherwise leave the "next" arrow
+    // enabled forever at the right-hand end.
+    const max = el.scrollWidth - el.clientWidth;
+    setOverflow({ start: el.scrollLeft > 2, end: el.scrollLeft < max - 2 });
+  }, []);
+
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return undefined;
+    measure();
+    el.addEventListener('scroll', measure, { passive: true });
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener('scroll', measure);
+      ro.disconnect();
+    };
+  }, [measure]);
+
+  const page = (dir) => {
+    const el = trackRef.current;
+    if (!el) return;
+    const card = el.querySelector('.review-card');
+    // Fall back to a viewport-width page if the card is gone for any reason.
+    const step = card ? card.getBoundingClientRect().width + 16 : el.clientWidth;
+    // `scroll-behavior` in CSS does not apply to scrollBy's default, so the
+    // reduced-motion preference has to be honoured here too.
+    const reduce =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollBy({ left: dir * step, behavior: reduce ? 'auto' : 'smooth' });
+  };
+
+  const scrollable = overflow.start || overflow.end;
+
+  // Below MIN_LISTED_REVIEWS there is no section at all. Returning after the
+  // hooks rather than before them keeps the hook order stable, which is what
+  // lets this flip on purely from the length of REVIEWS.
+  if (!listed) return null;
+
+  return (
+    <section className="section reviews" id="reviews" aria-labelledby="reviews-title">
+      <div className="container">
+        <div className="section-head reviews-head">
+          <div>
+            <div className="eye-label">{t('reviews.eyebrow')}</div>
+            <h2 id="reviews-title">
+              {t('reviews.titleLine1')}
+              <br />
+              {t('reviews.titleLine2')}
+            </h2>
+            <p className="sub">{t('reviews.sub')}</p>
+          </div>
+          <div className="reviews-aside">
+            <div className="reviews-score">
+              <Stars rating={Math.round(average)} size={17} />
+              <strong>{average.toFixed(1)}</strong>
+            </div>
+            <p className="reviews-count">{t('reviews.count', { count })}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Full-bleed on purpose: the track's own gutter lines the first card up
+          with the container, and the last card is then free to run past the
+          right edge, which is what tells a visitor there is more to scroll. */}
+      <div
+        className="reviews-rail"
+        data-start={overflow.start ? '' : undefined}
+        data-end={overflow.end ? '' : undefined}
+      >
+        <ul
+          className="review-track"
+          ref={trackRef}
+          tabIndex={0}
+          role="group"
+          aria-label={t('reviews.trackLabel')}
+        >
+          {REVIEWS.map((r) => (
+            <li key={r.id}>
+              <ReviewCard review={r} />
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {scrollable && (
+        <div className="container">
+          <div className="reviews-nav">
+            <button
+              type="button"
+              className="reviews-arrow"
+              onClick={() => page(-1)}
+              disabled={!overflow.start}
+              aria-label={t('reviews.prev')}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="reviews-arrow"
+              onClick={() => page(1)}
+              disabled={!overflow.end}
+              aria-label={t('reviews.next')}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/* ============== FEATURED REVIEW (proof bar) ============== */
+/**
+ * One strong sentence from a real customer, placed high on the page.
+ *
+ * Why a second review surface exists at all: the full scroller sits above
+ * Pricing, which is the right home for it (proof next to the decision) but is
+ * six screens down, and everything above it is our own voice. The Trusted
+ * marquee looks like proof and is not: it lists MCP clients we are compatible
+ * with, and none of them vouched for anything. This bar is the first outside
+ * voice on the page.
+ *
+ * It sits immediately after the Hero, which on every common desktop size and
+ * on a 375x812 phone puts it ABOVE THE FOLD. A review does need a referent,
+ * but the hero supplies one: by the end of it the reader has been told this
+ * connects their inbox to an MCP client, so "10x more efficient" has something
+ * to attach to. (An earlier draft parked this after Features on the theory
+ * that the referent arrived later. That was wrong, and it cost the bar five
+ * screens of reach.)
+ *
+ * Keep it ABOVE the demo-video slot in HomeClient. The video is the treatment
+ * arm of a running experiment; ordering the bar after it would change the
+ * bar's depth between arms and confound the test.
+ *
+ * Deliberately not a card and not the display serif. The founder Quote already
+ * owns the big italic pull-quote treatment, and a second one would read as the
+ * same block twice. This is a slim band: stars, sentence, attribution, source.
+ *
+ * The excerpt comes from `pullQuote`, which reviews.test.mjs pins to a verbatim
+ * slice of the full review rendered further down the page.
+ */
+export function FeaturedReview() {
+  const t = useTranslations('home');
+  const review = featuredReview();
+  if (!review) return null;
+  const src = REVIEW_SOURCES[review.source];
+
+  return (
+    <section className="proof-bar" aria-label={t('reviews.featuredLabel')}>
+      <div className="container">
+        <figure className="proof-fig">
+          <Stars rating={review.rating} size={14} />
+
+          <blockquote className="proof-quote">
+            <p>&ldquo;{review.pullQuote}&rdquo;</p>
+          </blockquote>
+
+          <figcaption className="proof-who">
+            <span className="review-avatar" aria-hidden="true">{initialsOf(review.author)}</span>
+            <span className="proof-id">
+              <cite className="proof-name">{review.author}</cite>
+              <span className="proof-meta">
+                {review.role}
+                {review.role && review.company ? ', ' : ''}
+                {review.company &&
+                  (review.url ? (
+                    <a href={review.url} target="_blank" rel="noopener noreferrer">
+                      {review.company}
+                    </a>
+                  ) : (
+                    review.company
+                  ))}
+              </span>
+            </span>
+          </figcaption>
+
+          {src && <SourceBadge source={src} href={review.sourceUrl} />}
+
+          {/* Only while the scroller is actually rendered: below
+              MIN_LISTED_REVIEWS there is no `#reviews` on the page, and a link
+              to a missing anchor is a link that silently does nothing. */}
+          {reviewsAreListed() && (
+            <a className="proof-link" href="#reviews">{t('reviews.readFull')}</a>
+          )}
+        </figure>
       </div>
     </section>
   );

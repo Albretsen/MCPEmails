@@ -3,7 +3,8 @@
 import { useEffect } from 'react';
 import { useTweaks, TweakSection, TweakRadio, TweakToggle, TweaksPanel } from '../tweaks-panel';
 import {
-  Nav, Hero, Trusted, Features, DashboardPreview, HowItWorks, Examples, Quote, Pricing, Faq, Footer
+  Nav, Hero, Trusted, Features, FeaturedReview, DashboardPreview, HowItWorks, Examples, Quote, Reviews,
+  Pricing, Faq, Footer
 } from './Sections';
 import { DemoVideo } from './DemoVideo';
 
@@ -54,6 +55,11 @@ export default function HomeClient({ stripePrices, showDemoVideo = false }) {
       <Nav onSignIn={onSignIn} onGetStarted={onGetStarted} />
       <main>
         <Hero variant={t.heroVariant} onGetStarted={onGetStarted} />
+        {/* Directly under the hero, and deliberately ABOVE the demo-video slot:
+            the video is the treatment arm of a running experiment, so putting
+            the proof bar after it would move the bar's depth between arms and
+            confound the test. Here it sits at the same place in both. */}
+        <FeaturedReview />
         {showDemoVideo && <DemoVideo />}
         <Trusted />
         <Features />
@@ -61,6 +67,7 @@ export default function HomeClient({ stripePrices, showDemoVideo = false }) {
         <HowItWorks />
         <Examples />
         <Quote />
+        <Reviews />
         <Pricing onGetStarted={onGetStarted} stripePrices={stripePrices} />
         <Faq />
       </main>

@@ -121,6 +121,20 @@
     "text": "我希望我的智能体能处理我的收件箱，但每一个方案都意味着把我的邮件副本交给第三方。于是我打造了一直渴望存在的那条管道：连接一次，你的收件箱实时获取且从不存储，并且你可以一键切断任何智能体。这就是我敢用自己收件箱去信任的产品。",
     "role": "创始人，mcpemails"
   },
+  "reviews": {
+    "eyebrow": "用户评价",
+    "titleLine1": "不必听我们说。",
+    "titleLine2": "听他们说。",
+    "sub": "来自真实用户的评价，他们用 mcpemails 连接自己的收件箱，并以实名公开发表。",
+    "ratingLabel": "评分 {rating} 分（满分 5 分）",
+    "count": "{count, plural, other {# 条评价}}",
+    "via": "发表于 {source}",
+    "trackLabel": "用户评价",
+    "prev": "上一批评价",
+    "next": "更多评价",
+    "featuredLabel": "精选用户评价",
+    "readFull": "阅读完整评价"
+  },
   "pricing": {
     "eyebrow": "价格",
     "title": "按收件箱定价。付费版不计用量。",

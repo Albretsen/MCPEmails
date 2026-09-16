@@ -550,6 +550,258 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
   display: flex; gap: 12px; justify-content: center; align-items: center;
 }
 
+/* === Featured review (proof bar) ===
+   A slim band between Features and the dashboard preview: the first outside
+   voice on the page, three screens above the full scroller. Kept to one row of
+   ordinary sans so it never competes with the founder Quote's display serif. */
+.proof-bar {
+  background: var(--bg-page);
+  border-top: 1px solid var(--border-1);
+  border-bottom: 1px solid var(--border-1);
+}
+.proof-bar .container { padding-top: 22px; padding-bottom: 22px; }
+.proof-fig {
+  margin: 0;
+  display: flex; align-items: center; justify-content: center;
+  flex-wrap: wrap; gap: 10px 14px;
+}
+/* Uneven gaps on purpose. An even row reads as one undifferentiated run of
+   text; widening the seam before the attribution splits it into the two things
+   it actually is, the claim and who made it. */
+.proof-who { margin-inline-start: 14px; }
+.proof-link { margin-inline-start: 4px; }
+/* The source is a bare mark here, not the chip it is on the card: two grey
+   pills side by side with the avatar made the slim bar look busy. */
+.proof-fig .review-source { background: none; padding: 0; }
+.proof-quote { margin: 0; }
+.proof-quote p {
+  margin: 0; font-family: var(--font-sans); font-size: 17px; font-weight: 500;
+  line-height: 1.45; letter-spacing: -0.01em; color: var(--fg-1);
+}
+.proof-who { display: flex; align-items: center; gap: 10px; }
+.proof-id { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.proof-name {
+  font-family: var(--font-sans); font-size: 13.5px; font-weight: 600;
+  font-style: normal; color: var(--fg-1); line-height: 1.25;
+}
+.proof-meta {
+  font-family: var(--font-sans); font-size: 12.5px; color: var(--fg-3); line-height: 1.3;
+}
+.proof-meta a {
+  color: inherit; text-decoration: underline;
+  text-decoration-color: var(--border-2); text-underline-offset: 2px;
+}
+.proof-meta a:hover { color: var(--fg-1); }
+/* The site's quiet attributed-link treatment (same as `.review-meta a` and the
+   founder quote's byline) rather than brand blue. Two reasons: `--brand` on
+   `--bg-page` is 4.3:1 in the dark theme, under AA for 13px text, and this is a
+   secondary action that should not compete with the nav's primary CTA. */
+.proof-link {
+  font-family: var(--font-sans); font-size: 13px; font-weight: 500;
+  color: var(--fg-2); text-decoration: underline;
+  text-decoration-color: var(--border-2); text-underline-offset: 3px;
+}
+.proof-link:hover { color: var(--fg-1); text-decoration-color: currentColor; }
+/* The bar's own avatar is a touch smaller than the scroller's, so the row
+   stays the height of a line of text rather than the height of a chip. */
+.proof-who .review-avatar { width: 30px; height: 30px; font-size: 11px; }
+
+@media (max-width: 767px) {
+  .proof-bar .container { padding-top: 18px; padding-bottom: 18px; }
+  /* Stacked and left-aligned: stars, the sentence, who said it, then the link.
+     The desktop row's grouping margins would only push things off-centre once
+     every item is on its own line. */
+  .proof-fig { justify-content: flex-start; gap: 10px 12px; }
+  .proof-quote { flex-basis: 100%; }
+  .proof-quote p { font-size: 16px; }
+  .proof-who { margin-inline-start: 0; }
+  .proof-link { margin-inline-start: 0; flex-basis: 100%; }
+}
+
+/* === Reviews (customer proof) ===
+   A horizontal scroller rather than a grid, because reviews arrive one at a
+   time: this has to look deliberate at one card and at twenty without anyone
+   re-doing the layout. The track is full-bleed and carries its own gutter, so
+   the first card lines up with `.container` and the last one runs off the
+   right edge instead of stopping short of it. */
+.reviews { padding-bottom: 88px; }
+.reviews-head {
+  max-width: none;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 32px;
+  margin-bottom: 36px;
+}
+.reviews-head > div:first-child { max-width: 720px; }
+.reviews-aside { flex: none; text-align: right; }
+.reviews-score {
+  display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+}
+.reviews-score strong {
+  font-family: var(--font-sans); font-size: 22px; font-weight: 600;
+  letter-spacing: -0.02em; color: var(--fg-1); line-height: 1;
+}
+.reviews-count {
+  margin: 6px 0 0; font-family: var(--font-sans); font-size: 13px; color: var(--fg-3);
+}
+
+/* Stars. One labelled `role="img"` per row, so the filled/empty split below is
+   purely visual and never reaches the accessibility tree. */
+.review-stars { display: inline-flex; gap: 2px; line-height: 0; }
+.review-stars svg.is-on  { fill: var(--amber-500); }
+.review-stars svg.is-off { fill: var(--border-2); }
+
+/* The rail. `100%` here is the section's content width, which excludes the
+   page scrollbar; `100vw` does not, and using it would add a horizontal
+   scrollbar to the whole page on every platform that reserves gutter space. */
+.reviews-rail {
+  position: relative;
+  /* A full-bleed scroll container still contributes its overflow to the root
+     scroller in Chrome, which put a horizontal scrollbar on the whole page and
+     let the document slide sideways. Clipping the rail is what stops that.
+     `clip` rather than `hidden` on purpose: it clips the inline axis only, so
+     the cards' hover shadow is still free to paint above and below, and the
+     rail never becomes a scroll container of its own. `hidden` is the
+     fallback declaration for Safari < 16, which does not know `clip`. */
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+.review-track {
+  --rail-gutter: max(32px, calc((100% - 1200px) / 2 + 32px));
+  list-style: none; margin: 0;
+  display: flex; gap: 16px;
+  overflow-x: auto; overflow-y: hidden;
+  /* Vertical padding keeps the cards' hover shadow from being clipped by the
+     scroll container (overflow-y cannot be `visible` next to `overflow-x: auto`). */
+  padding: 8px var(--rail-gutter) 14px;
+  scroll-padding-inline: var(--rail-gutter);
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;            /* arrows + edge fade are the affordance */
+  -ms-overflow-style: none;
+  overscroll-behavior-x: contain;
+}
+.review-track::-webkit-scrollbar { display: none; }
+/* The track is focusable (Chrome does not make overflow containers focusable
+   on its own), so it needs a ring a keyboard user can actually see. */
+.review-track:focus-visible {
+  outline: 2px solid var(--border-focus); outline-offset: 2px; border-radius: 16px;
+}
+.review-track > li { flex: none; scroll-snap-align: start; display: flex; }
+
+/* Fades that appear only on the side that actually has more content. */
+.reviews-rail::before,
+.reviews-rail::after {
+  content: ''; position: absolute; top: 0; bottom: 0; width: 64px;
+  pointer-events: none; opacity: 0; transition: opacity 200ms var(--ease-out);
+  z-index: 1;
+}
+.reviews-rail::before {
+  left: 0; background: linear-gradient(to right, var(--bg-surface), transparent);
+}
+.reviews-rail::after {
+  right: 0; background: linear-gradient(to left, var(--bg-surface), transparent);
+}
+.reviews-rail[data-start]::before,
+.reviews-rail[data-end]::after { opacity: 1; }
+
+.review-card {
+  margin: 0; width: 380px; max-width: 84vw;
+  display: flex; flex-direction: column; gap: 18px;
+  background: var(--bg-surface); border: 1px solid var(--border-1);
+  border-radius: 14px; padding: 22px 24px 20px;
+  transition: border-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
+}
+.review-card:hover { border-color: var(--border-2); box-shadow: var(--shadow-2); }
+.review-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.review-source {
+  flex: none; display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-sans); font-size: 11.5px; font-weight: 500;
+  letter-spacing: 0.02em; color: var(--fg-3);
+  background: var(--bg-sunken); border-radius: 999px; padding: 4px 9px;
+  line-height: 1; text-decoration: none;
+}
+a.review-source:hover { color: var(--fg-1); text-decoration: none; }
+.review-source svg { display: block; }
+
+.review-quote { margin: 0; flex: 1; }
+.review-quote p {
+  margin: 0; font-family: var(--font-sans); font-size: 15.5px; line-height: 1.62;
+  color: var(--fg-2);
+  /* Quotes are verbatim and vary in length; balancing keeps short ones from
+     leaving a one-word last line. */
+  text-wrap: pretty;
+}
+
+.review-who {
+  display: flex; align-items: center; gap: 11px;
+  border-top: 1px solid var(--border-1); padding-top: 16px;
+}
+.review-avatar {
+  flex: none; width: 34px; height: 34px; border-radius: 999px;
+  display: grid; place-items: center;
+  font-family: var(--font-mono); font-size: 12px; font-weight: 500;
+  letter-spacing: 0.01em;
+  /* Neutral rather than cobalt: `--cobalt-700` is not overridden by the dark
+     theme, so the navy-on-faint-blue pairing rendered at about 1.1:1 there.
+     This pair is the same chip material as `.review-source` and clears AA in
+     both themes. */
+  color: var(--fg-2); background: var(--bg-sunken);
+}
+.review-id { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.review-name {
+  font-family: var(--font-sans); font-size: 14px; font-weight: 600;
+  font-style: normal; color: var(--fg-1); line-height: 1.25;
+}
+.review-meta {
+  font-family: var(--font-sans); font-size: 12.5px; color: var(--fg-3); line-height: 1.3;
+}
+.review-meta a {
+  color: inherit; text-decoration: underline;
+  text-decoration-color: var(--border-2); text-underline-offset: 2px;
+}
+.review-meta a:hover { color: var(--fg-1); }
+.review-date {
+  margin-left: auto; flex: none; align-self: flex-start;
+  /* `--fg-3`, not `--fg-4`: when a review was left is real information, and
+     `--fg-4` is the placeholder/disabled level (2.6:1 on white). */
+  font-family: var(--font-sans); font-size: 12px; color: var(--fg-3);
+}
+
+/* Arrows. Rendered only when the track actually overflows, so a single review
+   never sits under a pair of dead controls. */
+.reviews-nav { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+.reviews-arrow {
+  width: 36px; height: 36px; border-radius: 999px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--bg-surface); color: var(--fg-1);
+  border: 1px solid var(--border-1);
+  transition: background 120ms var(--ease-out), border-color 120ms var(--ease-out);
+}
+.reviews-arrow:hover:not(:disabled) { background: var(--ink-50); border-color: var(--border-2); }
+.reviews-arrow:disabled { color: var(--fg-4); cursor: default; opacity: 0.55; }
+
+@media (prefers-reduced-motion: reduce) {
+  .review-track { scroll-behavior: auto; }
+  .reviews-rail::before,
+  .reviews-rail::after { transition: none; }
+}
+
+@media (max-width: 767px) {
+  .reviews { padding-bottom: 56px; }
+  .reviews-head { display: block; }
+  .reviews-aside { text-align: left; margin-top: 20px; }
+  .reviews-score { justify-content: flex-start; }
+  .review-card { width: 320px; max-width: 82vw; }
+  /* 44px is the touch-target floor; the desktop 36px is a pointer size. */
+  .reviews-arrow { width: 44px; height: 44px; }
+}
+
+/* === Visually hidden ===
+   Announced by assistive tech, painted nowhere. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
 /* === Quote === */
 .quote {
   background: var(--bg-page);

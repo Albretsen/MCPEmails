@@ -121,6 +121,20 @@
     "text": "Je voulais que mes agents travaillent ma boîte de réception, mais chaque option impliquait de confier une copie de mes e-mails à un tiers. Alors j'ai construit le tuyau dont je rêvais : connectez-vous une fois, votre boîte de réception est récupérée en direct et jamais stockée, et vous pouvez couper l'accès à n'importe quel agent en un clic. C'est le produit auquel je confie ma propre boîte de réception.",
     "role": "fondateur, mcpemails"
   },
+  "reviews": {
+    "eyebrow": "Avis",
+    "titleLine1": "Ne nous croyez pas.",
+    "titleLine2": "Croyez-les.",
+    "sub": "De vrais avis de personnes qui utilisent mcpemails sur leur propre boîte mail, publiés sous leur nom.",
+    "ratingLabel": "Noté {rating} sur 5",
+    "count": "{count, plural, one {# avis} other {# avis}}",
+    "via": "Avis publié sur {source}",
+    "trackLabel": "Avis clients",
+    "prev": "Avis précédents",
+    "next": "Plus d'avis",
+    "featuredLabel": "Avis client mis en avant",
+    "readFull": "Lire l'avis complet"
+  },
   "pricing": {
     "eyebrow": "Tarifs",
     "title": "Un tarif par boîte. Aucun comptage sur les offres payantes.",

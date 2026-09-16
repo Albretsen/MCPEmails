@@ -121,6 +121,20 @@
     "text": "I wanted my agents to work my inbox, but every option meant handing a third party a copy of my email. So I built the pipe I wished existed: connect once, your inbox is fetched live and never stored, and you can cut off any agent in a click. That's the product I trust with my own inbox.",
     "role": "founder, mcpemails"
   },
+  "reviews": {
+    "eyebrow": "Reviews",
+    "titleLine1": "Not our word for it.",
+    "titleLine2": "Theirs.",
+    "sub": "Real reviews from people running mcpemails against their own inbox, published under their own names.",
+    "ratingLabel": "Rated {rating} out of 5",
+    "count": "{count, plural, one {# review} other {# reviews}}",
+    "via": "Reviewed on {source}",
+    "trackLabel": "Customer reviews",
+    "prev": "Previous reviews",
+    "next": "More reviews",
+    "featuredLabel": "Featured customer review",
+    "readFull": "Read the full review"
+  },
   "pricing": {
     "eyebrow": "Pricing",
     "title": "Priced by inbox. No metering on paid plans.",

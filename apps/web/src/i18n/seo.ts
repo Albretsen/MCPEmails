@@ -1,5 +1,6 @@
 import { routing } from './routing';
 import { PLANS } from '@/lib/stripe/plans';
+import { REVIEW_SOURCES, publishedReviews, reviewSummary } from '../../components/marketing/reviews.mjs';
 
 export const APP_URL = (
   process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com'
@@ -123,6 +124,67 @@ function planOffers(url: string) {
 }
 
 /**
+ * `review` + `aggregateRating` for the home page's SoftwareApplication node,
+ * built from the same array the page renders (components/marketing/reviews.mjs).
+ *
+ * Two constraints shape this, and neither is optional:
+ *
+ *  - It must describe exactly what a visitor can read on the page. That is why
+ *    the count and the average come from `reviewSummary()` and not from the
+ *    Google Business Profile's own tally: markup that claims more reviews than
+ *    the page shows is the definition of the "inconsistent" review markup
+ *    Google's own guidelines call out, and it is also just untrue.
+ *  - Every review is a real, named person's words. The surrounding graph
+ *    already refuses invented signals (see the note on `homeJsonLd`); this is
+ *    the same rule applied to social proof.
+ *
+ * Note that self-serving reviews on your own Organization / product are not
+ * eligible for Google's review rich results. They are emitted anyway, because
+ * the assistants and crawlers that read this graph to describe mcpemails are a
+ * bigger audience than the star snippet, and honest data is what we want them
+ * reading. Returns an empty object when there are no reviews, so the node
+ * never carries an empty rating.
+ */
+function reviewMarkup() {
+  // `publishedReviews()`, not REVIEWS: while the scroller is hidden behind
+  // MIN_LISTED_REVIEWS the only review a visitor can read is the proof bar's
+  // excerpt, so that excerpt is the only thing this may claim.
+  const published = publishedReviews();
+  const { count, average } = reviewSummary(published);
+  if (!count) return {};
+  return {
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: average.toString(),
+      reviewCount: count,
+      bestRating: '5',
+      worstRating: '1',
+    },
+    review: published.map((r) => ({
+      '@type': 'Review',
+      reviewBody: r.body,
+      datePublished: r.date,
+      author: {
+        '@type': 'Person',
+        name: r.author,
+        ...(r.url ? { url: r.url } : {}),
+        ...(r.company ? { worksFor: { '@type': 'Organization', name: r.company } } : {}),
+      },
+      reviewRating: {
+        '@type': 'Rating',
+        ratingValue: r.rating.toString(),
+        bestRating: '5',
+        worstRating: '1',
+      },
+      ...(REVIEW_SOURCES[r.source]
+        ? { publisher: { '@type': 'Organization', name: REVIEW_SOURCES[r.source].label } }
+        : {}),
+      ...(r.sourceUrl ? { url: r.sourceUrl } : {}),
+    })),
+  };
+}
+
+/**
  * Structured-data graph for the home page (Organization + WebSite +
  * SoftwareApplication). This is the product's primary acquisition surface:
  * AI assistants and search engines read it to describe and recommend
@@ -185,6 +247,7 @@ export function homeJsonLd(
           'Threaded reply drafts',
         ],
         offers: planOffers(localePath(locale, '/pricing')),
+        ...reviewMarkup(),
       },
     ],
   };
