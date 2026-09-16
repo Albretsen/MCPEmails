@@ -4,6 +4,7 @@
 
 import {
   acceptsEventStream,
+  CARD_LISTING_STALE,
   decideBuildNotification,
   sseResponse,
   TOOLS_LIST_CHANGED_NOTIFICATION,
@@ -170,4 +171,40 @@ Deno.test("sseResponse passes CORS headers through", () => {
     "Access-Control-Allow-Origin": "*",
   });
   assertEquals(res.headers.get("Access-Control-Allow-Origin"), "*", "CORS preserved");
+});
+
+Deno.test("a preference change notifies, even though the card did not change", () => {
+  // The bug this pins: hiding the card changes no bytes of the bundle, so the
+  // build id is unmoved and the old logic stayed silent. The user kept seeing
+  // the card they had just turned off until they reconnected, which is exactly
+  // the staleness the notification exists to remove. Writing the sentinel makes
+  // the next card-bearing call notify.
+  assertEquals(
+    decideBuildNotification({ ...BASE, notifiedBuild: CARD_LISTING_STALE }),
+    { notify: true, record: BASE.currentBuild },
+    "a stale marker notifies and then re-records the real build",
+  );
+});
+
+Deno.test("the stale sentinel can never collide with a real build id", () => {
+  // Build ids are 12 lowercase hex. If the sentinel could ever equal one, a
+  // deploy would land on it and silently stop notifying.
+  assert(
+    !/^[0-9a-f]{12}$/.test(CARD_LISTING_STALE),
+    `sentinel must not look like a build id, got ${CARD_LISTING_STALE}`,
+  );
+});
+
+Deno.test("a stale marker on a non-card tool still says nothing", () => {
+  // Invalidation is workspace-wide and deliberately over-broad, so it must not
+  // turn every unrelated tool call into a tools/list re-read.
+  assertEquals(
+    decideBuildNotification({
+      ...BASE,
+      notifiedBuild: CARD_LISTING_STALE,
+      cardBearingTool: false,
+    }),
+    { notify: false, record: null },
+    "still only card-bearing calls",
+  );
 });

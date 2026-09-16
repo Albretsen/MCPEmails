@@ -42,6 +42,25 @@
 // notification can reach it. Old conversations keep their old card.
 // ---------------------------------------------------------------------------
 
+/**
+ * Sentinel written into `api_keys.card_build_notified` to mark a client's
+ * cached tool listing stale for a reason other than a card deploy.
+ *
+ * The build id answers "has the CARD changed". It cannot answer "has this
+ * workspace's card PREFERENCE changed", because hiding the card changes no
+ * bytes of the bundle — but it does change `tools/list`, which is exactly what
+ * the client is caching. Without this, a user who hid the card kept seeing it
+ * until they reconnected, which is the very problem the notification exists to
+ * remove.
+ *
+ * Writing a value that cannot equal any build id makes the next card-bearing
+ * `tools/call` notify and then re-record the real id. The alternative was
+ * recomputing the gate on every tool call, which is the per-call database read
+ * this whole design avoids. Any non-hex string works; this one is readable in
+ * the table.
+ */
+export const CARD_LISTING_STALE = "stale";
+
 /** The notification body. No params, no id: it is a bare notification. */
 export const TOOLS_LIST_CHANGED_NOTIFICATION = {
   jsonrpc: "2.0",

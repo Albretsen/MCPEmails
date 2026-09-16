@@ -127,6 +127,7 @@ import {
 } from "./mcp-app-resources.ts";
 import {
   acceptsEventStream,
+  CARD_LISTING_STALE,
   decideBuildNotification,
   sseResponse,
   TOOLS_LIST_CHANGED_NOTIFICATION,
@@ -23626,6 +23627,46 @@ async function workspaceDraftEditorEnabled(workspaceId: string): Promise<boolean
 }
 
 /**
+ * Mark every live key in a workspace as holding a stale tool listing.
+ *
+ * Called after ANY write that changes whether the draft editor card is
+ * advertised. `tools/list` is cached by the client for the life of the
+ * connection, so without this a user who hides the card keeps seeing it until
+ * they reconnect — the same staleness a card deploy used to cause, arriving by
+ * a different route. The next card-bearing `tools/call` on each key sees the
+ * sentinel, emits `notifications/tools/list_changed`, and the client re-reads a
+ * listing that no longer carries `_meta.ui`.
+ *
+ * Workspace-wide even for a single-inbox change: keys carry inbox allowlists
+ * and working out exactly which ones overlap costs more than the one UPDATE,
+ * and the false positives are harmless (one extra `tools/list`).
+ *
+ * Never throws. The preference write has already succeeded at this point, and
+ * failing the user's action because a cache hint could not be written would be
+ * the wrong trade: the worst case here is the old behaviour, a reconnect.
+ */
+async function invalidateCardListings(workspaceId: string): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from("api_keys")
+      .update({ card_build_notified: CARD_LISTING_STALE })
+      .eq("workspace_id", workspaceId)
+      .is("deleted_at", null);
+    if (error) {
+      console.warn("[mcp-server] card_listing_invalidate_failed", {
+        workspace_id: workspaceId,
+        error: error.message,
+      });
+    }
+  } catch (error) {
+    console.warn("[mcp-server] card_listing_invalidate_threw", {
+      workspace_id: workspaceId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+/**
  * True when EVERY inbox this key can reach has the draft editor hidden.
  *
  * The per-inbox opt-out has an awkward shape and this function is where it is
@@ -23774,6 +23815,7 @@ function draftEditorDepsFor(apiKey: ApiKeyRow): DraftEditorDeps {
       // nothing was changed. Reporting success for a write that did not happen
       // would leave the card hidden on screen and showing on the next turn.
       if (error) throw new Error(error.message);
+      await invalidateCardListings(ids.workspaceId);
     },
   };
 }

@@ -127,6 +127,27 @@ export async function PATCH(
     return NextResponse.json({ error: 'Failed to update the workspace.' }, { status: 500 });
   }
 
+  // Changing the card preference changes what tools/list advertises, and
+  // clients cache that listing for the life of a connection. Marking every key
+  // stale makes the MCP server send notifications/tools/list_changed on the
+  // next card-bearing tool call, so the change lands without a reconnect.
+  // Best-effort: the preference is already saved, and the worst case without
+  // this is that the user has to reconnect, which is where we started.
+  if (update.draft_editor_hidden !== undefined) {
+    // Cast for the same reason the inbox route casts: the column arrives with a
+    // migration that can land after this code, and src/types/database.types.ts
+    // is regenerated on its own cadence.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: staleError } = await (service as any)
+      .from('api_keys')
+      .update({ card_build_notified: 'stale' })
+      .eq('workspace_id', workspaceId)
+      .is('deleted_at', null);
+    if (staleError) {
+      console.warn('[workspaces/patch] card listing invalidation failed:', staleError.message);
+    }
+  }
+
   return NextResponse.json({
     id: workspaceId,
     ...(trimmed !== null ? { displayName: trimmed } : {}),

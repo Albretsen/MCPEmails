@@ -481,6 +481,24 @@ export async function PATCH(
     return NextResponse.json({ error: 'Failed to save signature.' }, { status: 500 });
   }
 
+  // Changing the card preference changes what tools/list advertises, and clients
+  // cache that listing for the life of a connection. Marking every key in the
+  // workspace stale makes the MCP server send notifications/tools/list_changed
+  // on the next card-bearing tool call, so the change lands without a
+  // reconnect. Best-effort: the preference is already saved, and the worst case
+  // without it is the reconnect we started from.
+  if ('draft_editor_hidden' in input) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: staleError } = await (service as any)
+      .from('api_keys')
+      .update({ card_build_notified: 'stale' })
+      .eq('workspace_id', workspaceId)
+      .is('deleted_at', null);
+    if (staleError) {
+      console.warn('[update-inbox] card listing invalidation failed:', staleError.message);
+    }
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sendApprovalRequired = (saved as any).send_approval_required ?? false;
   return NextResponse.json({
