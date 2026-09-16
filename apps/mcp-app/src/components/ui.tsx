@@ -1,5 +1,6 @@
 import type { ComponentChildren, JSX } from "preact";
 import { useLayoutEffect, useRef } from "preact/hooks";
+import type { Provider } from "../contract";
 import { sanitizeEmailHtml } from "../sanitize";
 
 type Variant = "default" | "primary" | "danger" | "quiet";
@@ -59,6 +60,37 @@ export function Notice(props: {
   return (
     <div class="notice" data-tone={props.tone ?? "default"} role="status">
       {props.children}
+    </div>
+  );
+}
+
+/**
+ * Contract §5: which capability will actually be used, and what that costs the
+ * user to know. Every card shows it identically; `caveats` is capped inline
+ * because the block sits above the buttons and a five-line caveat list pushes
+ * them off a phone screen.
+ */
+export function ProviderBlock(props: {
+  provider?: Provider;
+  fullscreen: boolean;
+}) {
+  const p = props.provider;
+  if (!p) return null;
+  const all = p.caveats ?? [];
+  const caveats = props.fullscreen ? all : all.slice(0, 2);
+  return (
+    <div class="provider">
+      <div class="route">
+        <b>{p.label}</b>
+        {p.route ? ` · ${p.route}` : ""}
+      </div>
+      {caveats.length > 0 && (
+        <ul class="caveats">
+          {caveats.map((c, i) => (
+            <li key={i}>{c}</li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

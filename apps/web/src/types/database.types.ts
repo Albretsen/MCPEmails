@@ -1847,6 +1847,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           display_name: string
+          draft_editor_enabled: boolean
           grandfathered: boolean
           id: string
           owner_id: string
@@ -1887,6 +1888,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           display_name: string
+          draft_editor_enabled?: boolean
           grandfathered?: boolean
           id?: string
           owner_id: string
@@ -1927,6 +1929,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           display_name?: string
+          draft_editor_enabled?: boolean
           grandfathered?: boolean
           id?: string
           owner_id?: string

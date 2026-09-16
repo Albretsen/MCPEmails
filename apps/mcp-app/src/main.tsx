@@ -6,6 +6,7 @@ import "./styles.css";
 import {
   armResultWatchdog,
   disarmResultWatchdog,
+  runTeardownSaver,
   setState,
   toolInfoFrom,
   wireResultHandlers,
@@ -41,7 +42,12 @@ bridge.onHostContextChanged = () => {
   });
 };
 
-bridge.onTeardown = () => {
+bridge.onTeardown = async () => {
+  // Async on purpose: `ui/resource-teardown` is a request and the bridge holds
+  // its reply until this resolves, which is the only moment a half-typed draft
+  // can still be written. The bridge caps the wait at TEARDOWN_TIMEOUT_MS, so a
+  // save that hangs cannot hold the host's frame open.
+  await runTeardownSaver();
   disarmResultWatchdog();
   setState({ connected: false });
 };

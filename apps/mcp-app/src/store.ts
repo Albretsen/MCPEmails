@@ -116,6 +116,43 @@ export function subscribe(fn: () => void): () => void {
   return () => listeners.delete(fn);
 }
 
+// ---------------------------------------------------------------------------
+// Unsaved work at teardown
+//
+// `ui/resource-teardown` is handled in main.tsx, outside the Preact tree, but
+// the only thing that knows whether there is unsaved work is a component. This
+// is the one-slot handoff between them: the draft editor registers a saver
+// while it is dirty and clears it as soon as it is not, so main.tsx can await
+// "whatever still needs writing" without knowing what a draft is.
+//
+// Deliberately one slot, not a set: one card is mounted per frame.
+// ---------------------------------------------------------------------------
+
+let teardownSaver: (() => Promise<unknown>) | null = null;
+
+/** Register (or clear, with `null`) the work to finish before teardown. */
+export function setTeardownSaver(fn: (() => Promise<unknown>) | null) {
+  teardownSaver = fn;
+}
+
+/**
+ * Run the registered saver, if any. Never throws: the teardown reply is owed
+ * to the host whether or not the save worked. The bridge caps how long this is
+ * allowed to take (`TEARDOWN_TIMEOUT_MS`).
+ */
+export async function runTeardownSaver(): Promise<void> {
+  const fn = teardownSaver;
+  if (!fn) return;
+  // Cleared first: teardown happens once, and a retry on a frame that is going
+  // away would only be a second write nobody can see the result of.
+  teardownSaver = null;
+  try {
+    await fn();
+  } catch {
+    /* nothing left to tell the user: the card is being torn down */
+  }
+}
+
 /**
  * Does this payload claim to be ours?
  *

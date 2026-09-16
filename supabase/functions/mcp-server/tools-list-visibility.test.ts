@@ -470,6 +470,15 @@ Deno.test("no tool other than contact_search changed which scopes authorize it",
     "approval_schedule": ["send:email", "schedule:email"],
     "bulk_execute": ["delete:email", "manage:folders"],
     "bulk_cancel": ["delete:email", "manage:folders"],
+    // The draft-editor tools (contract §8). `draft_read` ALSO requires
+    // `read:email`, which cannot be expressed here: this map is what the
+    // dispatch layer checks, and that layer ORs `requiredScope` with
+    // `altScopes` — it can say "one of these" and not "both of these". The
+    // second required scope is enforced inside the handler, exactly as
+    // `draft{action:"send"}` re-checks `send:email` in executeSendDraft. See
+    // mcp-app-drafts.ts#runDraftRead.
+    "draft_read": ["manage:drafts"],
+    "draft_editor_save": ["manage:drafts"],
   };
   const actual: Record<string, string[]> = {};
   for (const tool of TOOL_REGISTRY) {

@@ -11,10 +11,15 @@
 
 export const SCHEMA_VERSION = "review-card-v1";
 
-export type CardKind = "outbound_review" | "bulk_plan" | "receipt";
+export type CardKind =
+  | "outbound_review"
+  | "bulk_plan"
+  | "receipt"
+  | "draft_editor";
 
 export type CardState =
   | "pending"
+  | "editing"
   | "sent"
   | "scheduled"
   | "rejected"
@@ -110,10 +115,64 @@ export interface Plan {
   sample_truncated?: boolean;
 }
 
+/**
+ * §8 `draft_editor`. Every field except `draft_id` is treated as absent-by-
+ * default in the components: the envelope is built by a server path that is
+ * allowed to degrade to today's payload, and a card that crashes on a missing
+ * `recipients` would turn a working draft into a blank frame.
+ */
+export interface DraftRecipients {
+  to: string[];
+  cc: string[];
+  bcc: string[];
+}
+
+export interface DraftSignature {
+  /** Whether the stored text already carries the signature. Display only. */
+  embedded: boolean;
+}
+
+/**
+ * The message being replied to. §8 lists message_id, subject and from;
+ * CONCEPT §7 also wants a date on the collapsed line, so `date` is accepted
+ * and rendered when present rather than required.
+ */
+export interface InReplyTo {
+  message_id?: string | null;
+  subject?: string | null;
+  from?: string | null;
+  date?: string | null;
+}
+
+export interface DraftEditorData {
+  /**
+   * The CURRENT id. On IMAP it changes on every save, so the card adopts the
+   * id from every server response and never reuses the one it was mounted
+   * with. See `id_is_stable`.
+   */
+  draft_id: string;
+  id_is_stable?: boolean;
+  origin?: "create" | "reply" | "update" | "read" | "save";
+  last_saved_at?: string | null;
+  /** "user" only when the last write was `draft_editor_save`. */
+  last_saved_by?: "agent" | "user" | null;
+  identity: Identity;
+  recipients?: DraftRecipients;
+  subject?: string;
+  body?: Body;
+  /** Display only: the card cannot add or remove attachments. */
+  attachments?: Attachment[];
+  signature?: DraftSignature | null;
+  in_reply_to?: InReplyTo | null;
+  /** Key has send:email AND the draft has at least one recipient. */
+  can_send?: boolean;
+}
+
 export interface Receipt {
   outcome:
     | "sent"
     | "scheduled"
+    | "discarded"
     | "rejected"
     | "expired"
     | "decided_elsewhere"
@@ -137,7 +196,10 @@ export interface Provider {
 }
 
 export interface Actor {
-  can_decide: boolean;
+  /** Outbound / bulk cards. Absent on a draft_editor envelope. */
+  can_decide?: boolean;
+  /** draft_editor. `false` with `reason` viewer_role | wrong_workspace | not_found. */
+  can_edit?: boolean;
   reason?: string | null;
 }
 
@@ -154,6 +216,7 @@ export interface Envelope {
   state: CardState;
   outbound?: Outbound;
   plan?: Plan;
+  draft?: DraftEditorData;
   receipt?: Receipt;
   provider?: Provider;
   actor?: Actor;

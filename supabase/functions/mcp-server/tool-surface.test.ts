@@ -116,6 +116,11 @@ Deno.test("tools/list advertises exactly the post-split surface", () => {
       "approval_schedule",
       "bulk_execute",
       "bulk_cancel",
+      // The draft-editor card's two tools (contract §8). App-only like the six
+      // above, listed unconditionally for the same reason: they always return
+      // an envelope, so there is no result shape for the card to fail on.
+      "draft_read",
+      "draft_editor_save",
     ],
   );
 });

@@ -607,3 +607,45 @@ body {
   white-space: nowrap;
   border: 0;
 }
+
+/* ---- draft editor ------------------------------------------------------ */
+
+/*
+ * The remove control on a recipient chip. Not a .btn: it lives inside a chip,
+ * has to keep the chip on one line, and a 44px target would double the chip's
+ * height. The chip itself stays a comfortable tap target and the label is on
+ * the aria-label, so a pointer misses the glyph and still hits the control.
+ */
+.chip-x {
+  flex: none;
+  padding: 0 2px;
+  margin: -2px -4px -2px 0;
+  border: 0;
+  background: none;
+  color: var(--fg-3);
+  font: inherit;
+  font-size: var(--t-sm);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.chip-x:hover { color: var(--fg); }
+
+.chip-x:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+  border-radius: var(--r-sm);
+}
+
+.reply-to > summary {
+  font-size: var(--t-xs);
+  color: var(--fg-3);
+  cursor: pointer;
+}
+
+.reply-to > summary:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.reply-to[open] > summary { margin-bottom: 6px; }

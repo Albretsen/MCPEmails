@@ -55,6 +55,58 @@ export function relativeExpiry(iso: string | null | undefined): string {
   return `expires ${formatDate(iso)}`;
 }
 
+/** "10:04". Used in the model-context line, where the date is redundant. */
+export function formatClock(iso: string | null | undefined): string {
+  const d = parse(iso);
+  if (!d) return "";
+  try {
+    return new Intl.DateTimeFormat(locale, { timeStyle: "short" }).format(d);
+  } catch {
+    return d.toISOString().slice(11, 16);
+  }
+}
+
+/** Whitespace-separated tokens. The body is counted, never quoted. */
+export function wordCount(text: string | null | undefined): number {
+  if (typeof text !== "string") return 0;
+  const trimmed = text.trim();
+  return trimmed ? trimmed.split(/\s+/).length : 0;
+}
+
+/**
+ * Contract §8, the line the card sends after a successful save:
+ *
+ *   User edited draft Drafts:3 in the editor at 10:04. Subject: "…". To 1,
+ *   cc 1, bcc 0. Body 412 words. Current draft_id is Drafts:3.
+ *
+ * Body-free on purpose. The model gets the shape of the draft — who it is to,
+ * what it is about, how long it is, and above all which id is live now — and
+ * not a word of what the user wrote. §8 prints the same id in both positions,
+ * which is the post-save id, so that is what both use: on IMAP the id the card
+ * was mounted with is dead by the time this is sent, and naming it here would
+ * hand the model the one id it must not call back with.
+ */
+export function draftSavedContextLine(draft: {
+  draft_id?: string;
+  subject?: string;
+  recipients?: { to?: string[]; cc?: string[]; bcc?: string[] };
+  body?: { text?: string };
+  last_saved_at?: string | null;
+}): string {
+  const id = draft.draft_id || "unknown";
+  const at = formatClock(draft.last_saved_at) || formatClock(new Date().toISOString());
+  const subject = (draft.subject ?? "").trim() || "(no subject)";
+  const to = draft.recipients?.to?.length ?? 0;
+  const cc = draft.recipients?.cc?.length ?? 0;
+  const bcc = draft.recipients?.bcc?.length ?? 0;
+  const words = wordCount(draft.body?.text);
+  return (
+    `User edited draft ${id} in the editor at ${at}. ` +
+    `Subject: "${subject}". To ${to}, cc ${cc}, bcc ${bcc}. ` +
+    `Body ${words} words. Current draft_id is ${id}.`
+  );
+}
+
 export function formatBytes(n: unknown): string {
   const bytes = typeof n === "number" && isFinite(n) && n >= 0 ? n : 0;
   if (bytes < 1024) return `${bytes} B`;

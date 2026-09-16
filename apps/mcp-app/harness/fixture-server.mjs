@@ -53,6 +53,9 @@ const FIXTURES = {
   fx_receipt_expired: F.receiptExpired,
   fx_receipt_failed: F.receiptFailed,
   fx_receipt_decided_elsewhere: F.receiptDecidedElsewhere,
+  fx_draft_imap: F.draftEditorImap,
+  fx_draft_gmail_attachments: F.draftEditorGmailAttachments,
+  fx_draft_error_not_found: F.draftErrorNotFound,
   fx_unknown_version: F.unknownVersion,
   fx_malformed: F.malformed,
   // Not an envelope at all: what a UI-bearing tool returns for an inbox that
@@ -91,6 +94,12 @@ const appTools = [
   "approval_update",
   "approval_schedule",
   "bulk_execute",
+  // Draft editor, contract §8. `draft` itself is model-visible in production
+  // (it is the consolidated tool the agent calls), but the harness only needs
+  // the card's call path, so it sits here with the rest.
+  "draft_read",
+  "draft_editor_save",
+  "draft",
 ].map((name) => ({
   name,
   title: name,
@@ -183,12 +192,121 @@ function handleToolsCall(req) {
         F.receiptExecuted,
         "Moved 128 messages to Trash.",
       );
+
+    // ---- draft editor (contract §8) ------------------------------------
+    case "draft_read": {
+      const env = draftFor(args.draft_id);
+      if (!env) return envelopeResult(id(req), F.draftErrorNotFound, "No such draft.");
+      return envelopeResult(
+        id(req),
+        { ...env, draft: { ...env.draft, origin: "read" } },
+        `Draft ${env.draft.draft_id}: ${env.draft.recipients.to.length} recipient(s).`,
+      );
+    }
+    case "draft_editor_save": {
+      const env = draftFor(args.draft_id);
+      if (!env) return envelopeResult(id(req), F.draftErrorNotFound, "No such draft.");
+      if ((env.draft.attachments ?? []).length > 0) {
+        return envelopeResult(
+          id(req),
+          F.draftErrorAttachments,
+          "Not saved: this draft has attachments.",
+        );
+      }
+      const bad = ["to", "cc", "bcc"]
+        .flatMap((k) => (Array.isArray(args[k]) ? args[k] : []))
+        .filter((a) => !/^[^\s@,;<>"]+@[^\s@,;<>".]+(\.[^\s@,;<>".]+)+$/.test(String(a)));
+      if (bad.length > 0) {
+        return envelopeResult(
+          id(req),
+          {
+            ...F.draftErrorAttachments,
+            receipt: {
+              ...F.draftErrorAttachments.receipt,
+              headline: `Not saved. ${bad[0]} is not a valid address.`,
+              detail: "Nothing was changed.",
+              error_code: "invalid_recipients",
+            },
+          },
+          "Not saved: invalid recipient.",
+        );
+      }
+      // The whole point of the IMAP path: the save writes a NEW draft and the
+      // old id is dead. A card that does not adopt this id 404s on its next
+      // call, which is exactly the footgun §8 exists to close.
+      const next = {
+        ...env,
+        state: "editing",
+        draft: {
+          ...env.draft,
+          draft_id: nextDraftId(env.draft.draft_id),
+          origin: "save",
+          last_saved_at: new Date().toISOString(),
+          last_saved_by: "user",
+          recipients: {
+            to: args.to ?? env.draft.recipients.to,
+            cc: args.cc ?? env.draft.recipients.cc,
+            bcc: args.bcc ?? env.draft.recipients.bcc,
+          },
+          subject: args.subject ?? env.draft.subject,
+          body: {
+            ...env.draft.body,
+            text: args.body_text ?? env.draft.body.text,
+          },
+        },
+      };
+      return envelopeResult(
+        id(req),
+        next,
+        `Saved. The draft is now ${next.draft.draft_id}.`,
+      );
+    }
+    case "draft": {
+      const draftId = String(args.draft_id ?? "");
+      if (args.action === "send") {
+        return envelopeResult(
+          id(req),
+          { ...F.draftSendReceiptMerged, draft_id: draftId },
+          "Sent.",
+        );
+      }
+      if (args.action === "delete") {
+        return envelopeResult(
+          id(req),
+          { ...F.draftDeleteReceiptMerged, draft_id: draftId },
+          "Draft deleted.",
+        );
+      }
+      return fail(id(req), -32602, `draft: unsupported action ${args.action}`);
+    }
     default:
       return fail(id(req), -32602, `Unknown tool: ${name}`);
   }
 }
 
 const id = (req) => req.id;
+
+/**
+ * Which draft fixture an id refers to. Gmail ids are opaque strings, IMAP ids
+ * are `Drafts:N` and change on every save, so anything else is a stale id and
+ * gets the not-found path.
+ */
+function draftFor(draftId) {
+  const key = String(draftId ?? "");
+  if (key === F.draftEditorGmailAttachments.draft.draft_id) {
+    return F.draftEditorGmailAttachments;
+  }
+  if (!/^Drafts:\d+$/.test(key)) return null;
+  return {
+    ...F.draftEditorImap,
+    draft: { ...F.draftEditorImap.draft, draft_id: key },
+  };
+}
+
+function nextDraftId(current) {
+  const m = /^Drafts:(\d+)$/.exec(String(current));
+  return m ? `Drafts:${Number(m[1]) + 1}` : String(current);
+}
 
 function route(req) {
   switch (req.method) {

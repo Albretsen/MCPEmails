@@ -98,6 +98,20 @@ type Json = Record<string, unknown>;
 const INITIALIZE_TIMEOUT_MS = 10_000;
 const REQUEST_TIMEOUT_MS = 120_000;
 
+/**
+ * How long `ui/resource-teardown` waits for an async teardown handler before
+ * replying anyway.
+ *
+ * The spec says the host "SHOULD wait for a response before tearing down the
+ * resource (to prevent data loss)", which is what lets the draft editor save a
+ * dirty draft on close. That same sentence is why this cap exists: a host that
+ * waits on us is a host we can hang. A save is one `tools/call` round trip
+ * through the host to the edge function, so seconds, not minutes; 8s is past
+ * any plausible save and short enough that a stuck one does not read as a
+ * frozen client. Whichever finishes first, the reply is sent exactly once.
+ */
+export const TEARDOWN_TIMEOUT_MS = 8_000;
+
 export class HostBridge {
   hostContext: HostContext = {};
   hostCapabilities: HostCapabilities = {};
@@ -115,7 +129,13 @@ export class HostBridge {
   onToolResult?: (params: ToolResultParams) => void;
   onToolCancelled?: (params: ToolCancelledParams) => void;
   onHostContextChanged?: (patch: HostContext) => void;
-  onTeardown?: () => void;
+  /**
+   * May be async. `ui/resource-teardown` is a REQUEST, and the reply is held
+   * until this resolves (or `TEARDOWN_TIMEOUT_MS` elapses), which is what lets
+   * a dirty draft editor save before the frame goes away. A sync handler, as
+   * every other card has, replies in the same tick as before.
+   */
+  onTeardown?: () => void | Promise<void>;
 
   private nextId = 1;
   private pending = new Map<number, Pending>();
@@ -187,7 +207,8 @@ export class HostBridge {
           this.onHostContextChanged?.(params as HostContext);
           return;
         case "ui/notifications/request-teardown":
-          this.onTeardown?.();
+          // A notification: nothing to reply to, so nothing to wait for.
+          void this.runTeardown();
           return;
         default:
           return; // tool-input-partial, ... : nothing to do.
@@ -197,8 +218,16 @@ export class HostBridge {
     // Host -> app requests. Anything we do not answer with a well-formed
     // response looks, from the host's side, like a dead frame.
     if (method === "ui/resource-teardown") {
-      this.onTeardown?.();
-      this.post({ jsonrpc: "2.0", id, result: {} });
+      // The reply is what the host waits on, so it is sent AFTER the handler
+      // has had its chance to save. Exactly once: a handler that resolves
+      // after the timeout already fired must not post a second response.
+      let replied = false;
+      const reply = () => {
+        if (replied) return;
+        replied = true;
+        this.post({ jsonrpc: "2.0", id, result: {} });
+      };
+      void this.runTeardown().then(reply, reply);
       return;
     }
     if (method === "ping") {
@@ -218,6 +247,30 @@ export class HostBridge {
       id,
       error: { code: -32601, message: `Method not found: ${method}` },
     });
+  }
+
+  /**
+   * Run the teardown handler, never throw, never take longer than
+   * `TEARDOWN_TIMEOUT_MS`. A sync handler resolves without a timer at all, so
+   * the cards that do not save on teardown keep their old timing exactly.
+   */
+  private async runTeardown(): Promise<void> {
+    const handler = this.onTeardown;
+    if (!handler) return;
+    try {
+      const result = handler();
+      if (!result || typeof (result as Promise<void>).then !== "function") return;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      await Promise.race([
+        (result as Promise<void>).catch(() => undefined),
+        new Promise<void>((resolve) => {
+          timer = setTimeout(resolve, TEARDOWN_TIMEOUT_MS);
+        }),
+      ]);
+      if (timer !== undefined) clearTimeout(timer);
+    } catch {
+      /* a failed save must never cost the host its reply */
+    }
   }
 
   private request<T = unknown>(

@@ -284,3 +284,24 @@ workspace's mail.
 - **destructive false:** it discards a preview that was never applied, so no
   mail is affected at all. Same fail-safe direction as `approval_decide`.
 - **openWorld false:** the plan is this workspace's own row.
+
+## draft_read (readOnly: true, destructive: false, openWorld: false)
+
+- **readOnly true:** it fetches one unsent draft so the draft-editor card can
+  show it. Nothing is written and nothing is sent.
+- **destructive false:** it changes nothing at all.
+- **openWorld false:** the draft is inside the connected mailbox. It also
+  requires `read:email` on top of `manage:drafts`, because on IMAP and Outlook a
+  draft id is a message id and `email_read` already returns the same body to the
+  same key.
+
+## draft_editor_save (readOnly: false, destructive: false, openWorld: false)
+
+- **readOnly false:** it saves the fields a person edited in the draft editor.
+- **destructive false:** it overwrites an unsent draft, which `draft`'s own
+  `update` action already does, and it transmits nothing. Safeguards: omitted
+  fields are left as stored rather than blanked; no signature is applied, so a
+  saved draft cannot end up with two; and a draft that carries attachments is
+  refused outright on IMAP and Gmail rather than being rebuilt without them.
+- **openWorld false:** the draft stays in the connected mailbox. Sending it
+  still goes through `draft`, including its approval hold.

@@ -140,6 +140,20 @@ import {
   writeTolerantly,
 } from "./mcp-app-approvals.ts";
 import {
+  buildDraftEditorEnvelope,
+  DRAFT_EDITOR_TOOL_DEFINITIONS,
+  type DraftEditorCaller,
+  type DraftEditorDeps,
+  type DraftEditorOrigin,
+  type DraftEditorProviderInbox,
+  draftCardToolResult,
+  draftProviderBlock,
+  draftReceiptEnvelope,
+  isDraftEditorToolName,
+  type NormalizedDraft,
+  runDraftEditorTool,
+} from "./mcp-app-drafts.ts";
+import {
   BULK_TOOL_DEFINITIONS,
   type BulkExecutionOutcome,
   type BulkExecutionRequest,
@@ -7570,6 +7584,32 @@ for (const definition of APPROVAL_TOOL_DEFINITIONS) {
 // handlers assume a hostile caller; see the header of mcp-app-bulk.ts.
 // ---------------------------------------------------------------------------
 for (const definition of BULK_TOOL_DEFINITIONS) {
+  TOOL_REGISTRY.push({ ...definition, _meta: appOnlyReviewCardToolMeta() });
+}
+
+// ---------------------------------------------------------------------------
+// MCP Apps: the draft-editor tools (`draft_read`, `draft_editor_save`).
+//
+// Appended last, and listed unconditionally, exactly like the approval and bulk
+// tools — and for the same reason: they are app-only affordances that always
+// return an envelope, so there is no result shape for the card to fail on. A
+// workspace that is not gated in can still call them and gets a renderable
+// `state: "error"` envelope saying so, which is the same inert-but-coherent
+// behaviour `bulk_execute` has for a workspace with no plans.
+//
+// They carry `visibility: ["app"]` for tidiness (Phase 0 Q2: it is a host UI
+// hint, never a control), are absent from BILLABLE_TOOL_NAMES — they act on one
+// unsent draft that the billable draft tools already charged for, and metering
+// a person's keystrokes in an editor would charge twice for one message — and
+// absent from IDEMPOTENT_OUTBOUND_OPERATIONS, because neither sends anything.
+//
+// They are NOT actions of the consolidated `draft` tool. `draft`'s action enum
+// is cached by clients at connect time and is the MODEL's surface; a tool that
+// returns a whole message body belongs beside `approval_review`, not in among
+// create/reply/update/send/delete. `draft{action:"read"}` resolves to nothing
+// and must stay that way — mcp-app-drafts.test.ts pins it.
+// ---------------------------------------------------------------------------
+for (const definition of DRAFT_EDITOR_TOOL_DEFINITIONS) {
   TOOL_REGISTRY.push({ ...definition, _meta: appOnlyReviewCardToolMeta() });
 }
 
@@ -20984,18 +21024,26 @@ async function shouldPlanBulkOperation(inbox: InboxRow): Promise<boolean> {
  * non-null allowlist restricts the query, and an empty one denies everything.
  */
 async function keyReviewCardGates(apiKey: ApiKeyRow): Promise<ReviewCardGates> {
-  const denied: ReviewCardGates = { outbound: false, bulk: false };
+  const denied: ReviewCardGates = { outbound: false, bulk: false, drafts: false };
   // Introspection mode has no database to ask. Return the plain pre-MCP-Apps
   // surface immediately rather than attempting a connection that cannot succeed.
   if (INTROSPECTION_ONLY) return denied;
-  if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length === 0) return denied;
+  // The draft-editor gate is a WORKSPACE flag, not an inbox opt-in, so it
+  // cannot join the `.or()` below and needs its own read. Issued in parallel
+  // rather than awaited in sequence, for the reason in the note above: this
+  // runs on the connect path with the user watching a spinner, and a second
+  // serialised round trip would show up there.
+  const draftsGate = workspaceDraftEditorEnabled(apiKey.workspace_id);
+  if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length === 0) {
+    return { ...denied, drafts: await draftsGate };
+  }
   let query = supabase
     .from("inboxes")
     .select("bulk_review_mode, send_approval_required")
     .eq("workspace_id", apiKey.workspace_id)
     .or("bulk_review_mode.eq.plan,send_approval_required.is.true");
   if (apiKey.inbox_ids !== null) query = query.in("id", apiKey.inbox_ids);
-  const { data, error } = await query;
+  const [{ data, error }, drafts] = await Promise.all([query, draftsGate]);
   if (error) {
     // Almost certainly "column does not exist" against a database where one of
     // these phases' migrations has not landed yet. Silent and safe: no
@@ -21004,7 +21052,9 @@ async function keyReviewCardGates(apiKey: ApiKeyRow): Promise<ReviewCardGates> {
       key_id: apiKey.id,
       error: error.message,
     });
-    return denied;
+    // The inbox opt-ins are unknown and therefore closed. The workspace flag
+    // came back from its own query and is unaffected by this one's failure.
+    return { ...denied, drafts };
   }
   const rows = (data ?? []) as Array<
     { bulk_review_mode?: unknown; send_approval_required?: unknown }
@@ -21012,6 +21062,7 @@ async function keyReviewCardGates(apiKey: ApiKeyRow): Promise<ReviewCardGates> {
   return {
     outbound: rows.some((row) => row.send_approval_required === true),
     bulk: rows.some((row) => row.bulk_review_mode === "plan"),
+    drafts,
   };
 }
 
@@ -22382,6 +22433,27 @@ interface DraftContent {
   threadId?: string;
   inReplyTo?: string;
   references?: string;
+  /**
+   * The draft's own content, for the MCP App draft editor (contract §8).
+   *
+   * OPTIONAL, and absent from the two Gmail/Outlook readers the update path
+   * uses. The merge in `executeUpdateDraft` needs headers only, and it runs on
+   * every partial update, so widening those two reads to pull a whole message
+   * body (Gmail's metadata format does not carry one, `format=raw` does) would
+   * put a full download on a path that has never needed it. The editor uses its
+   * own readers instead — `gmailGetDraftForEditor` / `outlookGetDraftForEditor`
+   * — and `imapGetDraft` fills these in for free, because it already parses the
+   * complete raw message to get the headers.
+   *
+   * `attachments` is metadata only: filenames and sizes, never bytes. It is
+   * what `draft_editor_save` refuses on (see mcp-app-drafts.ts), so an empty
+   * array and an absent field must not be conflated — a reader that cannot tell
+   * returns `undefined`, and the save path treats that as "no attachments"
+   * only because every reader it is wired to does report them.
+   */
+  bodyText?: string | null;
+  bodyHtml?: string | null;
+  attachments?: { filename: string; size_bytes: number | null; mime_type: string | null }[];
 }
 
 
@@ -22467,7 +22539,8 @@ async function imapGetDraft(
     await client.selectMailbox(imapMailboxForServerFolder(folder));
     const msg = await client.fetchMessageRaw(uid);
     if (!msg) return null;
-    const h = parseEmail(msg.raw).headers;
+    const parsed = parseEmail(msg.raw);
+    const h = parsed.headers;
     return {
       subject: decodeEncodedWords(getHeader(h, "subject") ?? "(no subject)"),
       to: parseAddressList(decodeEncodedWords(getHeader(h, "to") ?? "")).map(formatAddressEntry),
@@ -22475,6 +22548,16 @@ async function imapGetDraft(
       bcc: parseAddressList(decodeEncodedWords(getHeader(h, "bcc") ?? "")).map(formatAddressEntry),
       inReplyTo: decodeEncodedWords(getHeader(h, "in-reply-to") ?? "") || undefined,
       references: decodeEncodedWords(getHeader(h, "references") ?? "") || undefined,
+      // Free: the whole message was already fetched and parsed to get the
+      // headers above, so the editor's read costs no extra round trip here.
+      // Callers that only wanted the headers (executeUpdateDraft) ignore these.
+      bodyText: parsed.text,
+      bodyHtml: parsed.html,
+      attachments: parsed.attachments.map((a) => ({
+        filename: a.filename,
+        size_bytes: typeof a.size === "number" ? a.size : null,
+        mime_type: a.mimeType ?? null,
+      })),
     };
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
@@ -22902,6 +22985,60 @@ async function gmailGetDraft(
   };
 }
 
+/**
+ * The same Gmail draft, read WITH its body — the MCP App editor's reader.
+ *
+ * Separate from `gmailGetDraft` rather than a flag on it, because the two have
+ * opposite cost profiles and only one of them is on a hot path.
+ * `gmailGetDraft` runs on every partial `draft{action:"update"}` and needs six
+ * headers, so it asks for `format=metadata` and downloads a few hundred bytes.
+ * The editor needs the message, so this asks for `format=raw` and downloads all
+ * of it, attachments included. Putting both behind one function would have made
+ * every update pay the editor's price, which is exactly the kind of quiet
+ * regression `_meta.ui` being per-tool already taught us to avoid.
+ *
+ * Gmail is also the one provider where a draft id is NOT a message id, so this
+ * is the only way to read a Gmail draft's body at all (CONCEPT §6).
+ */
+async function gmailGetDraftForEditor(
+  inbox: InboxRow,
+  draftId: string,
+): Promise<DraftContent | null> {
+  const token = await withFreshGmailToken(inbox);
+  const resp = await fetch(
+    `https://gmail.googleapis.com/gmail/v1/users/me/drafts/${encodeURIComponent(draftId)}?format=raw`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401) throw new Error("gmail_auth_failed");
+    return null;
+  }
+  const data = (await resp.json()) as { message?: { threadId?: string; raw?: string } };
+  const raw = data.message?.raw;
+  if (typeof raw !== "string") return null;
+  // `atob` of the base64url form yields a latin1 string — one char per byte —
+  // which is exactly what `parseEmail` documents as its input, so per-part
+  // charset decoding still happens where it belongs.
+  const parsed = parseEmail(atob(base64urlToBase64(raw)));
+  const h = parsed.headers;
+  return {
+    subject: decodeEncodedWords(getHeader(h, "subject") ?? "(no subject)"),
+    to: parseAddressList(decodeEncodedWords(getHeader(h, "to") ?? "")).map(formatAddressEntry),
+    cc: parseAddressList(decodeEncodedWords(getHeader(h, "cc") ?? "")).map(formatAddressEntry),
+    bcc: parseAddressList(decodeEncodedWords(getHeader(h, "bcc") ?? "")).map(formatAddressEntry),
+    threadId: data.message?.threadId,
+    inReplyTo: decodeEncodedWords(getHeader(h, "in-reply-to") ?? "") || undefined,
+    references: decodeEncodedWords(getHeader(h, "references") ?? "") || undefined,
+    bodyText: parsed.text,
+    bodyHtml: parsed.html,
+    attachments: parsed.attachments.map((a) => ({
+      filename: a.filename,
+      size_bytes: typeof a.size === "number" ? a.size : null,
+      mime_type: a.mimeType ?? null,
+    })),
+  };
+}
+
 async function gmailCreateDraft(
   inbox: InboxRow,
   params: DraftParams,
@@ -23144,6 +23281,95 @@ async function outlookGetDraft(
   };
 }
 
+/**
+ * The same Outlook draft, read WITH its body — the MCP App editor's reader.
+ *
+ * Separate from `outlookGetDraft` for the reason given on
+ * `gmailGetDraftForEditor`: the update path needs four fields and this needs
+ * the message. Graph makes the split cheap, since `$select` is explicit either
+ * way.
+ *
+ * `body` comes back as ONE representation — Graph returns `contentType: "html"`
+ * or `"text"`, never both — so the plain-text half of an HTML draft is
+ * synthesised here with `stripHtmlToText`, the same conversion `email_read`
+ * uses. That matters for `draft_editor_save`: the editor is a plain-text
+ * surface, so `body.text` has to be populated for an HTML draft or the user
+ * would be handed an empty editor over a message that plainly has words in it.
+ * `bodyHtml` is still reported, which is what makes the save regenerate the
+ * HTML part rather than write the two independently.
+ *
+ * Attachments are fetched only when Graph says there are any, and only as
+ * metadata: a card renders filenames, never bytes.
+ */
+async function outlookGetDraftForEditor(
+  inbox: InboxRow,
+  draftId: string,
+): Promise<DraftContent | null> {
+  const token = await withFreshOutlookToken(inbox);
+  const resp = await fetch(
+    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(draftId)}` +
+      `?$select=subject,body,toRecipients,ccRecipients,bccRecipients,hasAttachments,conversationId,lastModifiedDateTime`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
+    return null;
+  }
+  const data = (await resp.json()) as {
+    subject?: string;
+    body?: { contentType?: string; content?: string };
+    hasAttachments?: boolean;
+    conversationId?: string;
+    toRecipients?: { emailAddress: { address: string; name?: string } }[];
+    ccRecipients?: { emailAddress: { address: string; name?: string } }[];
+    bccRecipients?: { emailAddress: { address: string; name?: string } }[];
+  };
+  const map = (arr?: { emailAddress: { address: string; name?: string } }[]) =>
+    (arr ?? []).map((r) =>
+      formatAddressEntry({ name: r.emailAddress.name ?? "", email: r.emailAddress.address })
+    );
+
+  const isHtml = (data.body?.contentType ?? "").toLowerCase() === "html";
+  const content = typeof data.body?.content === "string" ? data.body.content : "";
+
+  let attachments: { filename: string; size_bytes: number | null; mime_type: string | null }[] = [];
+  if (data.hasAttachments === true) {
+    try {
+      const attResp = await fetch(
+        `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(draftId)}` +
+          `/attachments?$select=name,size,contentType`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (attResp.ok) {
+        const attData = (await attResp.json()) as {
+          value?: { name?: string; size?: number; contentType?: string }[];
+        };
+        attachments = (attData.value ?? []).map((a) => ({
+          filename: typeof a.name === "string" ? a.name : "attachment",
+          size_bytes: typeof a.size === "number" ? a.size : null,
+          mime_type: typeof a.contentType === "string" ? a.contentType : null,
+        }));
+      }
+    } catch {
+      // Non-fatal, and it fails in the safe direction: the draft still opens,
+      // and the only thing lost is the filename list under the body. Outlook is
+      // the one provider whose save preserves attachments anyway (PATCH touches
+      // named fields only), so this list is display, not a guard.
+    }
+  }
+
+  return {
+    subject: data.subject ?? "(no subject)",
+    to: map(data.toRecipients),
+    cc: map(data.ccRecipients),
+    bcc: map(data.bccRecipients),
+    threadId: data.conversationId,
+    bodyText: isHtml ? stripHtmlToText(content) : content,
+    bodyHtml: isHtml ? content : null,
+    attachments,
+  };
+}
+
 async function outlookCreateDraft(
   inbox: InboxRow,
   params: DraftParams,
@@ -23288,6 +23514,242 @@ async function outlookDeleteDraft(
 }
 
 
+// ---------------------------------------------------------------------------
+// MCP Apps: the draft editor (contract §8)
+//
+// The glue between the draft handlers below and `mcp-app-drafts.ts`. Three
+// things live here and nothing else: the workspace gate, the per-provider
+// read/write dispatch injected into the module, and the two envelope builders
+// the handlers call on success.
+//
+// ── THE FAILURE RULE, WHICH IS THE WHOLE REASON THESE ARE WRAPPERS ─────────
+// Building an envelope must NEVER turn a successful draft operation into an
+// error. The draft is already written by the time these run: the provider has
+// it, the id is real, and the caller is owed the payload it has always been
+// given. So every function here returns `null` on any failure — gate off, gate
+// unreadable, provider hiccup, a bug in the builder — and the caller degrades
+// to today's payload with today's `content`. This mirrors §2a's failure rule
+// for held sends, and it is why none of these ever rethrows.
+// ---------------------------------------------------------------------------
+
+/**
+ * `workspaces.draft_editor_enabled` for one workspace.
+ *
+ * Its own query rather than a column on an existing read, for deploy-order
+ * safety — the same reasoning as `readBulkReviewMode`. The edge function is
+ * deployed by hand, so a deploy that lands before
+ * `20260916140000_draft_editor_flag.sql` must not 500 every draft call:
+ * PostgREST answers "column does not exist", the catch below reads false, and
+ * the draft tool behaves exactly as it did yesterday.
+ *
+ * Fails closed in every direction. False is not a degraded mode, it IS the
+ * pre-feature behaviour.
+ */
+async function workspaceDraftEditorEnabled(workspaceId: string): Promise<boolean> {
+  if (INTROSPECTION_ONLY) return false;
+  try {
+    const { data, error } = await supabase
+      .from("workspaces")
+      .select("draft_editor_enabled")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    if (error) {
+      console.warn("[mcp-server] draft_editor_gate_query_failed", {
+        workspace_id: workspaceId,
+        error: error.message,
+      });
+      return false;
+    }
+    return (data as { draft_editor_enabled?: unknown } | null)?.draft_editor_enabled === true;
+  } catch (error) {
+    console.warn("[mcp-server] draft_editor_gate_unavailable", {
+      workspace_id: workspaceId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return false;
+  }
+}
+
+/**
+ * Read one draft with its body, per provider.
+ *
+ * Gmail and Outlook use the editor-specific readers; IMAP uses `imapGetDraft`
+ * unchanged, because it already returns the body (it parses the whole raw
+ * message to get the headers either way).
+ */
+function getDraftForEditor(
+  inbox: DraftEditorProviderInbox,
+  draftId: string,
+): Promise<DraftContent | null> {
+  const row = inbox as unknown as InboxRow;
+  switch (inbox.provider) {
+    case "gmail":
+      return gmailGetDraftForEditor(row, draftId);
+    case "outlook":
+      return outlookGetDraftForEditor(row, draftId);
+    default:
+      return imapGetDraft(row, draftId);
+  }
+}
+
+/**
+ * Write one draft, per provider — the SAME three functions
+ * `draft{action:"update"}` uses.
+ *
+ * Deliberately not a fourth write path. A second way to write a draft is a
+ * second place for the MIME assembly, the BCC header handling and the
+ * per-provider error mapping to drift, and the editor's whole safety argument
+ * is that it can do nothing `draft{action:"update"}` cannot. What differs is
+ * what is PASSED: no signature, and a body the caller merged from what was
+ * stored. See mcp-app-drafts.ts#runDraftEditorSave.
+ */
+async function updateDraftForEditor(
+  inbox: DraftEditorProviderInbox,
+  draftId: string,
+  params: DraftParams,
+): Promise<{ draft_id: string; updated_at?: string }> {
+  const row = inbox as unknown as InboxRow;
+  switch (inbox.provider) {
+    case "gmail":
+      return await gmailUpdateDraft(row, draftId, params);
+    case "outlook":
+      return await outlookUpdateDraft(row, draftId, params);
+    default:
+      return await imapUpdateDraft(row, draftId, params);
+  }
+}
+
+/**
+ * The dependency bundle for one call, closing over the calling key.
+ *
+ * Per call, never module-level: a Deno isolate serves concurrent requests from
+ * different workspaces, so a shared "current key" would be a cross-tenant race
+ * with an inbox allowlist hanging off it.
+ */
+function draftEditorDepsFor(apiKey: ApiKeyRow): DraftEditorDeps {
+  return {
+    appUrl: APP_URL,
+    workspaceEnabled: workspaceDraftEditorEnabled,
+    // NOT a reimplementation of the inbox gate. `resolveInboxArg` is the one
+    // place that resolves an inbox_id or an email alias against the calling
+    // key's workspace AND its `inbox_ids` allowlist, and every mail tool goes
+    // through it; an editor with its own copy would be an editor whose
+    // allowlist drifts.
+    resolveInbox: async (args) => {
+      const resolved = await resolveInboxArg(args, apiKey);
+      return resolved.ok
+        ? { ok: true as const, inbox: resolved.inbox as unknown as DraftEditorProviderInbox }
+        : { ok: false as const, reason: String((resolved as { reason?: unknown }).reason ?? "") };
+    },
+    getDraft: getDraftForEditor,
+    updateDraft: updateDraftForEditor,
+    isValidEmailAddress,
+  };
+}
+
+function draftEditorCallerFor(apiKey: ApiKeyRow): DraftEditorCaller {
+  return {
+    id: apiKey.id,
+    workspace_id: apiKey.workspace_id,
+    scopes: apiKey.scopes,
+    inbox_ids: apiKey.inbox_ids,
+  };
+}
+
+/**
+ * The §8 envelope for a draft that was JUST written, built from what the
+ * handler already has in hand.
+ *
+ * No provider round trip: `draft{action:"create"|"reply"|"update"}` composed
+ * the message it just stored, so the params ARE the draft. Re-reading it to
+ * build the card would double the latency of every draft write in a gated
+ * workspace and could only ever return the same bytes.
+ *
+ * Returns null when the workspace is not gated in, or on any failure — see the
+ * failure rule at the top of this section.
+ */
+async function draftEditorEnvelopeForWrite(
+  apiKey: ApiKeyRow,
+  inbox: InboxRow,
+  input: {
+    draftId: string;
+    origin: DraftEditorOrigin;
+    params: DraftParams;
+    signatureEmbedded: boolean;
+    lastSavedAt: string;
+    inReplyTo?: { message_id: string; subject: string | null; from: string | null } | null;
+  },
+): Promise<Record<string, unknown> | null> {
+  try {
+    if (!await workspaceDraftEditorEnabled(apiKey.workspace_id)) return null;
+    const draft: NormalizedDraft = {
+      draft_id: input.draftId,
+      to: input.params.to,
+      cc: input.params.cc,
+      bcc: input.params.bcc,
+      subject: input.params.subject,
+      body_text: input.params.body,
+      body_html: input.params.htmlBody ?? null,
+      // A draft written by create / reply / update carries no attachment parts:
+      // all three build the MIME from parameters, and none of them accepts an
+      // attachment. An empty list here is a fact about those paths, not a
+      // guess. `draft_read` reports what is actually stored.
+      attachments: [],
+      in_reply_to: input.inReplyTo ?? null,
+      signature_embedded: input.signatureEmbedded,
+      last_saved_at: input.lastSavedAt,
+    };
+    const hasRecipient = draft.to.length > 0 || draft.cc.length > 0 || draft.bcc.length > 0;
+    return buildDraftEditorEnvelope({
+      appUrl: APP_URL,
+      draft,
+      inbox: inbox as unknown as DraftEditorProviderInbox,
+      origin: input.origin,
+      // An agent wrote this one. Only `draft_editor_save` says "user".
+      lastSavedBy: "agent",
+      canSend: apiKey.scopes.includes("send:email") && hasRecipient,
+    });
+  } catch (error) {
+    console.warn("[mcp-server] draft_editor_envelope_failed", {
+      inbox_id: inbox.id,
+      origin: input.origin,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
+/**
+ * The §4 receipt envelope for a draft that has just left the editor: sent, or
+ * discarded.
+ *
+ * Same failure rule: null means the caller returns today's payload untouched.
+ */
+async function draftEditorReceiptFor(
+  apiKey: ApiKeyRow,
+  outcome: "sent" | "discarded",
+  detail: string,
+  headline: string,
+): Promise<Record<string, unknown> | null> {
+  try {
+    if (!await workspaceDraftEditorEnabled(apiKey.workspace_id)) return null;
+    return draftReceiptEnvelope({
+      outcome,
+      headline,
+      detail,
+      affected_count: 1,
+      dashboard_url: `${APP_URL}/dashboard`,
+      error_code: null,
+    });
+  } catch (error) {
+    console.warn("[mcp-server] draft_editor_receipt_failed", {
+      workspace_id: apiKey.workspace_id,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
 // ── Drafts execute functions ──────────────────────────────────────────────────
 
 async function executeListDrafts(
@@ -23415,6 +23877,10 @@ async function executeCreateReplyDraft(
     let originalFrom = "";
     let originalDate = "";
     let originalBody = "";
+    // The ORIGINAL subject, before the `Re:` prefix — the card shows it as the
+    // message being answered, and "Re: Re: X" there would read as a second
+    // message rather than as the one this draft replies to.
+    let originalSubjectForCard = "";
 
     if (inbox.provider === "gmail") {
       const token = await withFreshGmailToken(inbox);
@@ -23439,6 +23905,7 @@ async function executeCreateReplyDraft(
       if (!resolvedReply.ok) throw new Error("reply_recipients_not_found");
       to = resolvedReply.recipients.map(toEmailAddressEntry).map(formatAddressEntry);
       subject = /^re:/i.test((headers.subject ?? "").trim()) ? headers.subject : `Re: ${headers.subject ?? "(no subject)"}`;
+      originalSubjectForCard = headers.subject ?? "";
       inReplyTo = headers["message-id"] ?? "";
       references = [headers.references, inReplyTo].filter(Boolean).join(" ");
       threadId = original.threadId;
@@ -23467,6 +23934,7 @@ async function executeCreateReplyDraft(
         to = resolvedReply.recipients.map(toEmailAddressEntry).map(formatAddressEntry);
         const rawSubject = decodeEncodedWords(getHeader(headers, "subject") ?? "(no subject)");
         subject = /^re:/i.test(rawSubject.trim()) ? rawSubject : `Re: ${rawSubject}`;
+        originalSubjectForCard = rawSubject;
         inReplyTo = getHeader(headers, "message-id") ?? "";
         references = [getHeader(headers, "references"), inReplyTo].filter(Boolean).join(" ");
         originalFrom = decodeEncodedWords(getHeader(headers, "from") ?? "");
@@ -23479,7 +23947,26 @@ async function executeCreateReplyDraft(
     const params: DraftParams = { to, cc: [], bcc: [], subject, body: buildReplyTextBody(signed.textBody, originalFrom, originalDate, originalBody), htmlBody: signed.htmlBody, threadId, inReplyTo: inReplyTo || undefined, references: references || undefined };
     const created = inbox.provider === "gmail" ? await gmailCreateDraft(inbox, params) : await imapCreateDraft(inbox, params);
     const output: DraftReplyResult = { ...created, in_reply_to: messageId, threading: inbox.provider === "gmail" ? "native" : "standards_based" };
-    return { result: jsonOk(buildDraftMutationEnvelope(output) as unknown as Record<string, unknown>), logStatus: "success", logErrorCode: null };
+    // MCP Apps (contract §8) — see the note in executeCreateDraft. This is the
+    // one path that can populate `draft.in_reply_to`: `messageId` is a SERVER
+    // message id the caller just used, so the card can offer to open it. A
+    // draft read back later carries only the RFC In-Reply-To header, which is
+    // not a server id, so `draft_read` reports null there rather than something
+    // the card would show as openable and could not open.
+    const replyPayload = buildDraftMutationEnvelope(output) as unknown as Record<string, unknown>;
+    const replyCard = await draftEditorEnvelopeForWrite(apiKey, inbox, {
+      draftId: created.draft_id,
+      origin: "reply",
+      params,
+      signatureEmbedded: signed.textBody !== body,
+      lastSavedAt: created.created_at,
+      inReplyTo: {
+        message_id: messageId,
+        subject: originalSubjectForCard || null,
+        from: originalFrom || null,
+      },
+    });
+    return { result: draftCardToolResult(replyPayload, replyCard), logStatus: "success", logErrorCode: null };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (message === "gmail_auth_failed" || message === "outlook_auth_failed" || message === "imap_auth_failed") return authFailedResult(inbox.provider, inbox.id, "access");
@@ -23603,8 +24090,25 @@ async function executeCreateDraft(
     });
   }
 
+  // MCP Apps (contract §8): in a gated workspace the card envelope is merged
+  // over today's payload in `structuredContent` ONLY. `content` is byte-
+  // identical to what `jsonOk` produced before — same compact JSON, same
+  // payload — because the envelope carries the body and contract §7 commits to
+  // the default flow not re-injecting message content into the conversation.
+  // A null envelope (gate off, or any failure) degrades to exactly that payload.
+  const createPayload = buildDraftMutationEnvelope(draftResult) as unknown as Record<
+    string,
+    unknown
+  >;
+  const cardEnvelope = await draftEditorEnvelopeForWrite(apiKey, inbox, {
+    draftId: draftResult.draft_id,
+    origin: "create",
+    params: draftParams,
+    signatureEmbedded: signed.textBody !== body,
+    lastSavedAt: draftResult.created_at,
+  });
   return {
-    result: jsonOk(buildDraftMutationEnvelope(draftResult) as unknown as Record<string, unknown>),
+    result: draftCardToolResult(createPayload, cardEnvelope),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -23778,8 +24282,22 @@ async function executeUpdateDraft(
     });
   }
 
+  // MCP Apps (contract §8) — see the note in executeCreateDraft. The id here is
+  // the one the provider returned, not the one the caller passed: on IMAP an
+  // update rewrites the message and the old id stops resolving.
+  const updatePayload = buildDraftMutationEnvelope(updateResult) as unknown as Record<
+    string,
+    unknown
+  >;
+  const updateCard = await draftEditorEnvelopeForWrite(apiKey, inbox, {
+    draftId: updateResult.draft_id,
+    origin: "update",
+    params: draftParams,
+    signatureEmbedded: signed.textBody !== body,
+    lastSavedAt: updateResult.updated_at,
+  });
   return {
-    result: jsonOk(buildDraftMutationEnvelope(updateResult) as unknown as Record<string, unknown>),
+    result: draftCardToolResult(updatePayload, updateCard),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -23969,8 +24487,18 @@ async function executeSendDraft(
     });
   }
 
+  // MCP Apps (contract §8): a draft that was actually sent flips the card to a
+  // receipt. This is the NOT-HELD path only — a held send returned above with
+  // the §2a shape, which is untouched by this feature and stays the outbound
+  // review card, because the send has not happened yet.
+  const sentCard = await draftEditorReceiptFor(
+    apiKey,
+    "sent",
+    `Delivered via ${draftProviderBlock(inbox.provider).label} at ${sendResult.sent_at}.`,
+    "Sent.",
+  );
   return {
-    result: jsonOk(sendResult as unknown as Record<string, unknown>),
+    result: draftCardToolResult(sendResult as unknown as Record<string, unknown>, sentCard),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -24043,8 +24571,17 @@ async function executeDeleteDraft(
     });
   }
 
+  // MCP Apps (contract §8): a discarded draft flips the card to a receipt, so
+  // the editor the person was looking at says what happened to it rather than
+  // sitting on a draft that no longer exists.
+  const discardedCard = await draftEditorReceiptFor(
+    apiKey,
+    "discarded",
+    "The draft was removed from Drafts without being sent.",
+    "Discarded. Nothing was sent.",
+  );
   return {
-    result: jsonOk(deleteResult as unknown as Record<string, unknown>),
+    result: draftCardToolResult(deleteResult as unknown as Record<string, unknown>, discardedCard),
     logStatus: "success", logErrorCode: null,
   };
 }
@@ -26768,6 +27305,21 @@ async function handleToolsCall(
           name: apiKey.name,
           inbox_ids: apiKey.inbox_ids,
         },
+        rawArgs,
+      )!;
+      logStatus = ls;
+      logErrorCode = lec;
+      toolResult = { jsonrpc: "2.0", id, result };
+    } else if (isDraftEditorToolName(dispatchName)) {
+      // MCP Apps draft-editor tools. The scope check above verified
+      // `manage:drafts`; everything else — `read:email` for the read, the
+      // inbox's workspace and the key's allowlist, the workspace gate — is
+      // re-applied inside the handler, because a draft_id supplied by the
+      // caller proves nothing about the caller. See mcp-app-drafts.ts.
+      const { result, logStatus: ls, logErrorCode: lec } = await runDraftEditorTool(
+        dispatchName,
+        draftEditorDepsFor(apiKey),
+        draftEditorCallerFor(apiKey),
         rawArgs,
       )!;
       logStatus = ls;

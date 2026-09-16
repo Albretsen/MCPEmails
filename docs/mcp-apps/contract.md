@@ -453,3 +453,151 @@ The envelope added in §2a travels in `structuredContent` only, and `structuredC
 channel. Note the honest caveat that applies to the whole feature: some hosts may show `structuredContent`
 to the model too, and the model can call `approval_review` for the same body regardless. This is context
 hygiene, not a boundary, and it is worth having and worth not overselling.
+
+---
+
+## 8. `draft_editor` — an unsent draft the user can edit in the card (v1, internal only)
+
+Added 2026-09-16 by the orchestrating session. Background and rationale:
+`CONCEPT-draft-editor.md`. This section is the binding v1 shape; the concept's lineage table,
+conflict rule and launcher are NOT in v1.
+
+### Gate
+
+`workspaces.draft_editor_enabled boolean not null default false`. When false, the `draft`
+tool behaves byte-for-byte as before in both channels and carries no `_meta.ui` at
+`tools/list`. When true, `draft` is listed with `reviewCardToolMeta()` unconditionally (a draft
+result always has something to render), and the results below carry an envelope in
+`structuredContent` only. `content` is unchanged on every path. Internal workspaces are those in
+`public.internal_accounts`; the migration that adds the column sets it true for them.
+
+### Envelope
+
+```jsonc
+{
+  "schema_version": "review-card-v1",
+  "card": "draft_editor",
+  "state": "editing",                       // terminal states are delivered as card: "receipt"
+  "dashboard_url": "https://mcpemails.com/dashboard",
+  "draft": {
+    "draft_id": "Drafts:2",                 // the CURRENT id; on IMAP it changes on every save
+    "id_is_stable": false,                  // false on IMAP: the card MUST adopt every returned id
+    "origin": "create" | "reply" | "update" | "read" | "save",
+    "last_saved_at": "2026-09-16T10:04:00Z",
+    "last_saved_by": "agent" | "user",      // "user" only when the last write was draft_editor_save
+    "identity": { "inbox_id", "email_address", "display_name", "provider", "service" },   // §2 Identity
+    "recipients": { "to": ["a@x"], "cc": [], "bcc": [] },   // full bcc: the author's surface
+    "subject": "…",
+    "body": { "text": "…", "html": "…" | null, "truncated": false },   // 64 KB clip as §2
+    "attachments": [ { "filename", "size_bytes", "mime_type" } ],       // display only
+    "signature": { "embedded": true | false },   // whether the stored text already carries it
+    "in_reply_to": { "message_id": "INBOX:42", "subject": "…", "from": "…" } | null,
+    "can_send": true | false                // key has send:email AND at least one recipient
+  },
+  "provider": { "label": "IMAP + SMTP", "route": "APPEND to Drafts", "caveats": [] },   // §5 shape
+  "actor": { "can_edit": true, "reason": null }   // reason: "viewer_role" | "wrong_workspace" | "not_found"
+}
+```
+
+Everything in `draft` is hostile input (subjects and reply metadata come from third parties);
+the card neutralises at the boundary as it does for §2.
+
+### Where it is emitted
+
+| Path | `structuredContent` when gated in | `content` |
+| --- | --- | --- |
+| `draft{action:"create"|"reply"|"update"}` success | today's payload keys **plus** the envelope, merged at top level exactly as §2a (disjoint key sets, asserted by test) | unchanged |
+| `draft_read`, `draft_editor_save` | envelope alone | a short body-free summary line |
+| `draft{action:"send"}` not held | today's `{draft_id, message_id, sent_at}` **plus** `card: "receipt"`, `outcome: "sent"` | unchanged |
+| `draft{action:"send"}` held | the §2a held-send shape, unchanged | unchanged |
+| `draft{action:"delete"}` | today's `{draft_id, deleted}` **plus** `card: "receipt"`, `outcome: "discarded"` | unchanged |
+
+Building the envelope must never turn a successful draft operation into an error: a failure
+degrades to today's payload, exactly as §2a's failure rule.
+
+### Tools (app-only, `appOnlyReviewCardToolMeta()`, audit-logged, non-billable)
+
+| Tool | Arguments | Returns |
+| --- | --- | --- |
+| `draft_read` | `{ inbox_id?, inbox?, draft_id }` | `card: "draft_editor"`, `origin: "read"`; needs `manage:drafts` **and** `read:email` |
+| `draft_editor_save` | `{ inbox_id?, inbox?, draft_id, to?, cc?, bcc?, subject?, body_text? }`, at least one field | `card: "draft_editor"`, `origin: "save"`, `last_saved_by: "user"`, the NEW `draft_id` |
+
+`draft_editor_save` rules, all load-bearing:
+
+* **Never applies a signature.** The text the user saw already carries whatever will go out.
+* **Never writes the HTML part independently.** When `body_text` is given and the stored draft
+  has an HTML part, the HTML part is regenerated from the new text with
+  `signature-compose.ts#plainTextBodyToHtml`, the same rule `approval_update` follows.
+* **Omitted fields are kept.** Unlike `draft{action:"update"}`, which requires `body`, an omitted
+  field means "leave it as stored". The server reads the stored draft first and merges.
+* **Refuses rather than drops attachments.** `imapUpdateDraft` and `gmailUpdateDraft` rebuild the
+  MIME from parameters and carry no attachment parts. A save on a draft that has attachments on
+  IMAP or Gmail returns `state: "error"` with `receipt.error_code: "draft_has_attachments"` and
+  changes nothing. Outlook (PATCH) may proceed.
+* **Recipients are validated** as `draft` validates them; an invalid address returns
+  `error_code: "invalid_recipients"` and changes nothing.
+* Stale or missing ids return `error_code: "draft_not_found"`; the card then offers Refresh.
+
+Both tools re-verify: the inbox belongs to the calling key's workspace and is in its
+`inbox_ids` allowlist, the workspace is gated in, and the scopes above. A hostile caller can do
+nothing here that `draft{action:"update"}` and `email_read` could not already do (see
+`CONCEPT-draft-editor.md` §6).
+
+### Model context
+
+After a successful save the card calls `ui/update-model-context` with a complete, body-free
+statement of the draft's current state (the spec says each call overwrites the last):
+
+> User edited draft Drafts:3 in the editor at 10:04. Subject: "…". To 1, cc 1, bcc 0. Body 412
+> words. Current draft_id is Drafts:3.
+
+After send or discard it sends the receipt headline, as the outbound card does.
+
+### Teardown
+
+On `ui/resource-teardown` a dirty editor calls `draft_editor_save` before replying to the
+request. The host is required to wait for that reply (spec: "SHOULD wait for a response before
+tearing down the resource (to prevent data loss)").
+
+### As built (server)
+
+Implemented 2026-09-16. Server side only; the card is `apps/mcp-app/`.
+
+**Tools.** `draft_read` and `draft_editor_save`, defined in
+`supabase/functions/mcp-server/mcp-app-drafts.ts`, registered after the `bulk_*` tools with
+`appOnlyReviewCardToolMeta()`, listed unconditionally, absent from `BILLABLE_TOOL_NAMES` and from
+`IDEMPOTENT_OUTBOUND_OPERATIONS`. Both declare `requiredScope: "manage:drafts"` and no `altScopes`.
+
+**Error codes**, all delivered as a `card: "receipt"` envelope with `state: "error"`,
+`outcome: "failed"` and `isError: true` — never a JSON-RPC error: `invalid_arguments`,
+`insufficient_scope`, `inbox_not_found`, `draft_editor_disabled`, `draft_not_found`,
+`invalid_recipients`, `draft_has_attachments`, `provider_error`. The not-found and
+wrong-workspace cases are byte-identical, so neither tool is an existence oracle.
+
+**Gate.** `workspaces.draft_editor_enabled`, read per call and fail-closed
+(`workspaceDraftEditorEnabled` in `index.ts`), and resolved once more at `tools/list` as a third
+`ReviewCardGates` member. `draft` moved out of `REVIEW_CARD_TOOL_NAMES` into
+`DRAFT_EDITOR_CARD_TOOL_NAMES`; `email_compose` and `schedule` stay on the outbound gate.
+
+Deviations, all small and all deliberate:
+
+* **`draft.in_reply_to` is populated on `origin: "reply"` only.** §8 types its `message_id` as a
+  server message id (`"INBOX:42"`), and a stored draft carries only the original's RFC
+  `In-Reply-To` header, which is not one. `draft_read` therefore returns `null` rather than a value
+  the card would render as openable and could not open. Threading is preserved across a save
+  regardless: the headers are read and written back untouched.
+* **`receipt.outcome: "discarded"` is new to §4's enum,** which §8 asks for. Its envelope `state` is
+  `"cancelled"` — §1 has no `"discarded"`, and a draft that was withdrawn before it went anywhere is
+  what `"cancelled"` already means there for a lapsed plan.
+* **A receipt's `actor` carries `can_decide: false`, not `can_edit`.** `card: "receipt"` is a shape
+  the outbound and bulk cards already produce and the card reads one field for all three;
+  `can_edit` belongs to the `draft_editor` envelope alone.
+* **`draft_editor_save` takes no `body_html`.** The editor is a plain-text surface, and the HTML part
+  is only ever regenerated from `body_text`. A card able to write arbitrary HTML into outgoing mail
+  is a larger thing than v1 needs.
+* **`draft_read` requires `read:email` inside its handler,** not through `altScopes`: the dispatch
+  layer ORs `requiredScope` with `altScopes`, so it can express "one of these" and not "both".
+  Same pattern as `executeSendDraft`'s `send:email` re-check.
+* **The Outlook `draft{action:"reply"}` path returns today's payload with no envelope.** It creates
+  the draft through Graph's `createReply`, so the handler never holds the composed body the envelope
+  builder needs. This is the §8 degradation rule firing, not a failure.

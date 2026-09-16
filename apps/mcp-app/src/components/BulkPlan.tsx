@@ -6,7 +6,7 @@ import {
   plural,
   relativeExpiry,
 } from "../format";
-import { Btn, Fields, Notice } from "./ui";
+import { Btn, Fields, Notice, ProviderBlock } from "./ui";
 
 export interface BulkActions {
   execute: () => void;
@@ -40,7 +40,6 @@ export function BulkPlan(props: Props) {
   const shown = fullscreen ? samples.slice(0, 5) : samples.slice(0, 3);
   const hiddenSamples = Math.min(samples.length, 5) - shown.length;
   const caveats = provider?.caveats ?? [];
-  const shownCaveats = fullscreen ? caveats : caveats.slice(0, 2);
   const expiry = relativeExpiry(plan.expires_at);
 
   const blockedReason =
@@ -122,21 +121,7 @@ export function BulkPlan(props: Props) {
         </>
       )}
 
-      {provider && (
-        <div class="provider">
-          <div class="route">
-            <b>{provider.label}</b>
-            {provider.route ? ` · ${provider.route}` : ""}
-          </div>
-          {shownCaveats.length > 0 && (
-            <ul class="caveats">
-              {shownCaveats.map((c, i) => (
-                <li key={i}>{c}</li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+      <ProviderBlock provider={provider} fullscreen={fullscreen} />
 
       {blockedReason && <Notice tone="warning">{blockedReason}</Notice>}
       {props.error && <Notice tone="danger">{props.error}</Notice>}

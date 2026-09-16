@@ -21,6 +21,7 @@ import {
   buildResourceTemplatesListResult,
   BULK_PLAN_CARD_TOOL_NAMES,
   clientSupportsUiExtension,
+  DRAFT_EDITOR_CARD_TOOL_NAMES,
   MCP_APP_MIME_TYPE,
   mcpAppUiMeta,
   RESOURCES_CAPABILITY,
@@ -243,11 +244,23 @@ Deno.test("the approval tools advertise app-only visibility, as a hint and nothi
   );
 });
 
-Deno.test("only the three outbound tools are outbound-card-bearing", () => {
+Deno.test("only the two outbound tools are outbound-card-bearing", () => {
+  // `draft` LEFT this list on 2026-09-16 (contract §8). It is card-bearing on
+  // five more paths than a held send — every create, reply, update, send and
+  // delete carries an envelope once the workspace has the draft editor — so
+  // gating it on `send_approval_required` would have withheld the card from
+  // exactly the results the editor exists to show. It is gated by
+  // DRAFT_EDITOR_CARD_TOOL_NAMES instead. `email_compose` and `schedule` have
+  // no second card and stay where they were.
   assertEquals(
     [...REVIEW_CARD_TOOL_NAMES].sort(),
-    ["draft", "email_compose", "schedule"],
+    ["email_compose", "schedule"],
     "outbound card-bearing tool names",
+  );
+  assertEquals(
+    [...DRAFT_EDITOR_CARD_TOOL_NAMES].sort(),
+    ["draft"],
+    "draft-editor card-bearing tool names",
   );
   // `email_search_and_move` is the third since 2026-09-09: the same handler as
   // `email_organize{action:"search_and_move"}`, advertised under its own name,
@@ -265,12 +278,17 @@ Deno.test("only the three outbound tools are outbound-card-bearing", () => {
   // bearing and cannot silently start mattering.
   for (const name of BULK_PLAN_CARD_TOOL_NAMES) {
     assert(!REVIEW_CARD_TOOL_NAMES.includes(name), `${name} must be gated by exactly one opt-in`);
+    assert(!DRAFT_EDITOR_CARD_TOOL_NAMES.includes(name), `${name} must be gated by exactly one opt-in`);
+  }
+  for (const name of DRAFT_EDITOR_CARD_TOOL_NAMES) {
+    assert(!REVIEW_CARD_TOOL_NAMES.includes(name), `${name} must be gated by exactly one opt-in`);
   }
 
   // Read-only tools advertise no card under any gate.
   for (const name of ["inbox_list", "email_read", "folder", "signature", "contact_search"]) {
     assert(!REVIEW_CARD_TOOL_NAMES.includes(name), `${name} must not be outbound card-bearing`);
     assert(!BULK_PLAN_CARD_TOOL_NAMES.includes(name), `${name} must not be bulk card-bearing`);
+    assert(!DRAFT_EDITOR_CARD_TOOL_NAMES.includes(name), `${name} must not be draft card-bearing`);
   }
 });
 
@@ -285,8 +303,8 @@ Deno.test("only the three outbound tools are outbound-card-bearing", () => {
 // sends got a card with nothing to show: the stuck loading skeleton.
 // ---------------------------------------------------------------------------
 
-const NO_GATES = { outbound: false, bulk: false };
-const ALL_GATES = { outbound: true, bulk: true };
+const NO_GATES = { outbound: false, bulk: false, drafts: false };
+const ALL_GATES = { outbound: true, bulk: true, drafts: true };
 
 Deno.test("a card-bearing tool gets no _meta when its gate is closed", () => {
   for (const name of REVIEW_CARD_TOOL_NAMES) {
@@ -294,23 +312,44 @@ Deno.test("a card-bearing tool gets no _meta when its gate is closed", () => {
     // The bulk opt-in must not open the outbound gate, or an inbox that
     // previews deletes would start mounting empty cards under every send.
     assertEquals(
-      reviewCardMetaForListing(name, { outbound: false, bulk: true }),
+      reviewCardMetaForListing(name, { outbound: false, bulk: true, drafts: true }),
       undefined,
-      `${name} must not be opened by the bulk opt-in`,
+      `${name} must not be opened by the bulk or draft opt-in`,
     );
   }
   for (const name of BULK_PLAN_CARD_TOOL_NAMES) {
     assertEquals(reviewCardMetaForListing(name, NO_GATES), undefined, `${name} ungated`);
     assertEquals(
-      reviewCardMetaForListing(name, { outbound: true, bulk: false }),
+      reviewCardMetaForListing(name, { outbound: true, bulk: false, drafts: true }),
       undefined,
-      `${name} must not be opened by the send-approval opt-in`,
+      `${name} must not be opened by the send-approval or draft opt-in`,
+    );
+  }
+  // The draft editor is a WORKSPACE flag and the other two are per-inbox
+  // opt-ins, so a workspace that holds sends must not thereby get the editor.
+  for (const name of DRAFT_EDITOR_CARD_TOOL_NAMES) {
+    assertEquals(reviewCardMetaForListing(name, NO_GATES), undefined, `${name} ungated`);
+    assertEquals(
+      reviewCardMetaForListing(name, { outbound: true, bulk: true, drafts: false }),
+      undefined,
+      `${name} must not be opened by either inbox opt-in`,
+    );
+    assertEquals(
+      reviewCardMetaForListing(name, { outbound: false, bulk: false, drafts: true }),
+      { ui: { resourceUri: "ui://mcpemails/review-card.html" } },
+      `${name} is opened by the draft-editor flag alone`,
     );
   }
 });
 
 Deno.test("a card-bearing tool gets the exact nested _meta.ui.resourceUri when gated in", () => {
-  for (const name of [...REVIEW_CARD_TOOL_NAMES, ...BULK_PLAN_CARD_TOOL_NAMES]) {
+  for (
+    const name of [
+      ...REVIEW_CARD_TOOL_NAMES,
+      ...BULK_PLAN_CARD_TOOL_NAMES,
+      ...DRAFT_EDITOR_CARD_TOOL_NAMES,
+    ]
+  ) {
     assertEquals(
       reviewCardMetaForListing(name, ALL_GATES),
       { ui: { resourceUri: "ui://mcpemails/review-card.html" } },
@@ -335,6 +374,8 @@ Deno.test("a non-card tool gets no _meta under any combination of gates", () => 
       "email_read",
       "folder",
       "draft_unknown",
+      "draft_read",
+      "draft_editor_save",
       "signature",
       "automation",
       "contact_search",
@@ -347,7 +388,15 @@ Deno.test("a non-card tool gets no _meta under any combination of gates", () => 
       "",
     ]
   ) {
-    for (const gates of [NO_GATES, ALL_GATES, { outbound: true, bulk: false }, { outbound: false, bulk: true }]) {
+    for (
+      const gates of [
+        NO_GATES,
+        ALL_GATES,
+        { outbound: true, bulk: false, drafts: false },
+        { outbound: false, bulk: true, drafts: false },
+        { outbound: false, bulk: false, drafts: true },
+      ]
+    ) {
       assertEquals(
         reviewCardMetaForListing(name, gates),
         undefined,
@@ -358,7 +407,17 @@ Deno.test("a non-card tool gets no _meta under any combination of gates", () => 
 });
 
 Deno.test("gating is by exact name, never a prefix or case-insensitive match", () => {
-  for (const name of ["Email_Compose", "email_compose ", "email_compose_v2", "draftx", "schedul"]) {
+  for (
+    const name of [
+      "Email_Compose",
+      "email_compose ",
+      "email_compose_v2",
+      "draftx",
+      "Draft",
+      "draft ",
+      "schedul",
+    ]
+  ) {
     assertEquals(reviewCardMetaForListing(name, ALL_GATES), undefined, `${name} must not match`);
   }
 });

@@ -6,9 +6,10 @@ import {
   type Envelope,
   type Receipt as ReceiptData,
 } from "../contract";
-import { bulkVerb } from "../format";
+import { bulkVerb, draftSavedContextLine } from "../format";
 import { envelopeFrom, getState, setState, subscribe } from "../store";
 import { BulkPlan } from "./BulkPlan";
+import { DraftEditor, type DraftPatch } from "./DraftEditor";
 import { OutboundReview } from "./OutboundReview";
 import { Receipt } from "./Receipt";
 import { Btn, CardSkeleton, Notice } from "./ui";
@@ -89,6 +90,54 @@ export function App(props: { bridge: HostBridge }) {
       setBusy(null);
     }
   };
+
+  /**
+   * One tool call from the draft editor.
+   *
+   * Differs from `run` in two ways that matter, both from contract §8:
+   *
+   *  - it hands the resulting envelope back, because the editor's own flows
+   *    need it. A save on IMAP returns a NEW draft_id, and the send that
+   *    follows a save must use that one, not the id this card mounted with.
+   *  - an error envelope must not take the editor away. `state: "error"` means
+   *    the server changed nothing, and the user's unsaved text is still in the
+   *    textarea, so if the error carries no `draft` the current one is kept and
+   *    the editor renders the error as a notice around it. Replacing the
+   *    envelope wholesale would answer "that address was rejected" by deleting
+   *    the message the user was writing.
+   */
+  const callDraft = async (
+    key: string,
+    tool: string,
+    args: Record<string, unknown>,
+  ): Promise<Envelope | null> => {
+    setBusy(key);
+    setError(null);
+    try {
+      const result = await bridge.callServerTool(tool, args);
+      const next = envelopeFrom(result);
+      if (!next) {
+        setError("The server sent a response this card could not read.");
+        return null;
+      }
+      const current = getState().envelope;
+      const applied =
+        next.card === "draft_editor" && !next.draft && current?.draft
+          ? { ...next, draft: current.draft }
+          : next;
+      setEnvelope(applied);
+      return applied;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      return null;
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  /** A save that actually stored something, as opposed to a refusal. */
+  const draftStored = (env: Envelope | null): boolean =>
+    !!env && env.card === "draft_editor" && env.state !== "error" && !!env.draft;
 
   const openDashboard = (path: string | null | undefined) => {
     const url = path ? absoluteUrl(path) : null;
@@ -297,6 +346,75 @@ export function App(props: { bridge: HostBridge }) {
               `The user cancelled the bulk ${bulkVerb(plan.action).toLowerCase()} plan. Nothing was changed.`,
             );
           },
+          setFullscreen,
+        }}
+      />
+    );
+  }
+
+  if (envelope.card === "draft_editor" && envelope.draft) {
+    const d = envelope.draft;
+    // Read at call time, never closed over: on IMAP every save retires the id
+    // and returns a new one, and the next call has to use the live one (§8,
+    // `id_is_stable: false`). The store already holds whatever the last
+    // response adopted.
+    const target = () => ({
+      inbox_id: d.identity?.inbox_id,
+      draft_id: getState().envelope?.draft?.draft_id ?? d.draft_id,
+    });
+
+    const save = async (patch: DraftPatch): Promise<boolean> => {
+      if (Object.keys(patch).length === 0) return true;
+      const next = await callDraft("save", "draft_editor_save", {
+        ...target(),
+        ...patch,
+      });
+      if (!draftStored(next)) return false;
+      void bridge.updateModelContext(draftSavedContextLine(next!.draft!));
+      return true;
+    };
+
+    const announceReceipt = (env: Envelope | null) => {
+      const headline = env?.receipt?.headline?.trim();
+      if (headline) void bridge.updateModelContext(headline);
+    };
+
+    return (
+      <DraftEditor
+        env={envelope}
+        draft={d}
+        provider={envelope.provider}
+        fullscreen={fullscreen}
+        canExpand={canExpand}
+        busy={busy}
+        error={error}
+        actions={{
+          save,
+          send: async (patch) => {
+            // Unsaved changes are written first and the send is abandoned if
+            // that write fails, so a send never puts the stored draft on the
+            // wire when the user is looking at a newer one.
+            if (patch && Object.keys(patch).length > 0) {
+              const saved = await callDraft("send", "draft_editor_save", {
+                ...target(),
+                ...patch,
+              });
+              if (!draftStored(saved)) return;
+              void bridge.updateModelContext(draftSavedContextLine(saved!.draft!));
+            }
+            announceReceipt(
+              await callDraft("send", "draft", { action: "send", ...target() }),
+            );
+          },
+          discard: async () => {
+            announceReceipt(
+              await callDraft("discard", "draft", {
+                action: "delete",
+                ...target(),
+              }),
+            );
+          },
+          refresh: () => void callDraft("refresh", "draft_read", target()),
           setFullscreen,
         }}
       />

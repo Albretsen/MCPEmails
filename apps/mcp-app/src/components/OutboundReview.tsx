@@ -7,7 +7,7 @@ import {
   relativeExpiry,
   summarizeRecipients,
 } from "../format";
-import { Btn, Fields, HtmlBody, Notice, Segmented } from "./ui";
+import { Btn, Fields, HtmlBody, Notice, ProviderBlock, Segmented } from "./ui";
 
 export interface OutboundActions {
   reject: (note?: string) => void;
@@ -92,8 +92,6 @@ export function OutboundReview(props: Props) {
   );
 
   const attachments = o.attachments ?? [];
-  const caveats = provider?.caveats ?? [];
-  const inlineCaveats = fullscreen ? caveats : caveats.slice(0, 2);
   const expiry = relativeExpiry(o.expires_at);
   const expired = expiry === "expired";
 
@@ -165,21 +163,9 @@ export function OutboundReview(props: Props) {
     </>
   );
 
-  const providerBlock = provider ? (
-    <div class="provider">
-      <div class="route">
-        <b>{provider.label}</b>
-        {provider.route ? ` · ${provider.route}` : ""}
-      </div>
-      {inlineCaveats.length > 0 && (
-        <ul class="caveats">
-          {inlineCaveats.map((c, i) => (
-            <li key={i}>{c}</li>
-          ))}
-        </ul>
-      )}
-    </div>
-  ) : null;
+  const providerBlock = (
+    <ProviderBlock provider={provider} fullscreen={fullscreen} />
+  );
 
   const attachmentChips =
     attachments.length > 0 ? (
@@ -356,7 +342,8 @@ export function OutboundReview(props: Props) {
           </div>
           {hasHtml && (
             <p class="tiny">
-              Saving replaces the plain-text body. The HTML version is kept as is.
+              Saving replaces the plain-text body. The formatted version is
+              regenerated from it.
             </p>
           )}
           <div class="actions">

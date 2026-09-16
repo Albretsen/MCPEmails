@@ -453,3 +453,189 @@ export const heldSendLegacy = {
   review_url: heldSendMerged.review_url,
   message: heldSendMerged.message,
 };
+
+// ---------------------------------------------------------------------------
+// DRAFT EDITOR (contract §8)
+//
+// Two providers, because the two halves of the feature only show up one per
+// provider: IMAP has `id_is_stable: false`, so the card has to adopt a new
+// draft_id on every save or its next call 404s, and Gmail is where a draft with
+// attachments demonstrates the save refusal. Hostile strings throughout for the
+// same reason as everything else in this file: a draft subject and the reply
+// metadata come from whoever wrote the message being answered.
+// ---------------------------------------------------------------------------
+
+const IMAP_DRAFT_PROVIDER = {
+  label: "IMAP + SMTP",
+  route: "APPEND to Drafts",
+  caveats: [
+    "This provider stores a new copy on every save, so the draft gets a new id each time.",
+    "Sending goes out over SMTP and a copy is appended to Sent.",
+  ],
+};
+
+export const draftEditorImap = {
+  schema_version: V,
+  card: "draft_editor",
+  state: "editing",
+  dashboard_url: "https://mcpemails.com/dashboard",
+  provider: IMAP_DRAFT_PROVIDER,
+  actor: { can_edit: true, reason: null },
+  draft: {
+    draft_id: "Drafts:2",
+    id_is_stable: false,
+    origin: "reply",
+    last_saved_at: iso(-6),
+    last_saved_by: "agent",
+    identity: {
+      inbox_id: "51ab6d90-4c18-4a2f-9d77-8e6a1b022c9d",
+      email_address: "demo@mcpemails.com",
+      display_name: "Asgeir Albretsen",
+      provider: "imap",
+      service: "migadu",
+    },
+    recipients: {
+      to: ["dana@northwind.example"],
+      cc: [],
+      bcc: ["archive@mcpemails.example"],
+    },
+    subject: "Re: Q3 numbers <script>alert('draft')</script>",
+    body: {
+      text:
+        "Hi Dana,\n\nHere are the Q3 numbers. Shout if anything looks off.\n\n" +
+        "On Tue, 15 Sep 2026, dana@northwind.example wrote:\n" +
+        "> Can you send the Q3 numbers?",
+      html: null,
+      truncated: false,
+    },
+    attachments: [],
+    signature: { embedded: true },
+    in_reply_to: {
+      message_id: "INBOX:42",
+      subject: "Q3 numbers",
+      from: "dana@northwind.example",
+      date: "2026-09-15T09:12:00Z",
+    },
+    can_send: true,
+  },
+};
+
+export const draftEditorGmailAttachments = {
+  schema_version: V,
+  card: "draft_editor",
+  state: "editing",
+  dashboard_url: "https://mcpemails.com/dashboard",
+  provider: {
+    label: "Gmail API",
+    route: "users.drafts.update",
+    caveats: ["The draft lives in Gmail and is visible in the Gmail web client."],
+  },
+  actor: { can_edit: true, reason: null },
+  draft: {
+    draft_id: "r-8814402299118",
+    id_is_stable: true,
+    origin: "create",
+    last_saved_at: iso(-90),
+    last_saved_by: "agent",
+    identity: {
+      inbox_id: "b1d0a2e4-77aa-4c11-9f31-2c9d8e6a1b02",
+      email_address: "asgeir@mcpemails.com",
+      display_name: null,
+      provider: "gmail",
+      service: null,
+    },
+    recipients: {
+      to: ["ops@northwind.example", "finance@northwind.example"],
+      cc: ["dana@northwind.example"],
+      bcc: [],
+    },
+    subject: "Q3 pack, with the regional split attached",
+    body: { text: BODY_TEXT, html: HOSTILE_HTML, truncated: false },
+    attachments: [
+      { filename: "q3.pdf", size_bytes: 184320, mime_type: "application/pdf" },
+      {
+        filename: "invoice‮ fdp.exe",
+        size_bytes: 1048576,
+        mime_type: "application/octet-stream",
+      },
+    ],
+    signature: { embedded: false },
+    in_reply_to: null,
+    can_send: true,
+  },
+};
+
+/** A save refused because the draft carries attachments. Nothing changed. */
+export const draftErrorAttachments = {
+  schema_version: V,
+  card: "draft_editor",
+  state: "error",
+  dashboard_url: "https://mcpemails.com/dashboard",
+  receipt: {
+    outcome: "failed",
+    headline: "Not saved. This draft has attachments.",
+    detail: "Saving rebuilds the message and would drop them, so nothing was changed.",
+    affected_count: 0,
+    error_code: "draft_has_attachments",
+  },
+};
+
+/**
+ * A stale id. Deliberately carries NO `draft`: the card must keep the one it is
+ * already showing, with the user's unsaved text intact, and offer Refresh.
+ */
+export const draftErrorNotFound = {
+  schema_version: V,
+  card: "draft_editor",
+  state: "error",
+  dashboard_url: "https://mcpemails.com/dashboard",
+  receipt: {
+    outcome: "failed",
+    headline: "That draft no longer exists.",
+    detail: "On IMAP every save writes a new draft and retires the old one.",
+    affected_count: 0,
+    error_code: "draft_not_found",
+  },
+};
+
+/**
+ * `draft{action:"send"}`, not held: today's payload with the receipt keys
+ * merged on top, exactly as §8's table specifies and §2a already does for the
+ * held send. Built by spreading the published keys and then the envelope, so
+ * the disjointness is a property of the construction, not a transcription.
+ */
+export const draftSendReceiptMerged = {
+  draft_id: "Drafts:3",
+  message_id: "<20260916T100400.9f2@mcpemails.com>",
+  sent_at: iso(0),
+  schema_version: V,
+  card: "receipt",
+  state: "sent",
+  dashboard_url: "https://mcpemails.com/dashboard",
+  receipt: {
+    outcome: "sent",
+    headline: "Sent to dana@northwind.example",
+    detail: "Sent over SMTP and copied to Sent.",
+    affected_count: 1,
+    dashboard_url: "https://mcpemails.com/dashboard",
+    error_code: null,
+  },
+};
+
+/** `draft{action:"delete"}`: the same merge, outcome "discarded". */
+export const draftDeleteReceiptMerged = {
+  draft_id: "Drafts:3",
+  deleted: true,
+  schema_version: V,
+  card: "receipt",
+  state: "rejected",
+  dashboard_url: "https://mcpemails.com/dashboard",
+  receipt: {
+    outcome: "discarded",
+    headline: "Draft discarded. Nothing was sent.",
+    detail: "The draft was deleted at your provider.",
+    affected_count: 0,
+    dashboard_url: "https://mcpemails.com/dashboard",
+    error_code: null,
+  },
+};

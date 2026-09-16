@@ -217,8 +217,31 @@ export function buildResourceTemplatesListResult(): {
  */
 export const REVIEW_CARD_TOOL_NAMES: readonly string[] = [
   "email_compose",
-  "draft",
   "schedule",
+];
+
+/**
+ * The draft tool, gated by the draft editor instead (contract §8).
+ *
+ * ── Why `draft` left the outbound list ─────────────────────────────────────
+ * It was there because a held `draft{action:"send"}` produces a §2 outbound
+ * envelope, and that is still true. What changed is that it now produces
+ * something renderable on FIVE more paths: with `workspaces.draft_editor_enabled`
+ * on, every successful create, reply and update carries a §8 draft_editor
+ * envelope, and send and delete carry a §4 receipt. So the condition under
+ * which `draft` earns `_meta.ui` is no longer "this key can reach an inbox that
+ * holds sends" — it is "this workspace has the editor", and gating it on the
+ * send opt-in would have withheld the card from every draft the editor exists
+ * to show.
+ *
+ * `email_compose` and `schedule` stay on the outbound gate: they have no second
+ * card, and for them an ungated call still returns today's plain payload, which
+ * is not an envelope. The asymmetry is the point — see CONCEPT-draft-editor.md
+ * §8, which argues it from the same fact: a draft result ALWAYS has something
+ * to render, and a send result only sometimes does.
+ */
+export const DRAFT_EDITOR_CARD_TOOL_NAMES: readonly string[] = [
+  "draft",
 ];
 
 /**
@@ -322,6 +345,15 @@ export interface ReviewCardGates {
   outbound: boolean;
   /** True when the key can reach an inbox with `bulk_review_mode = 'plan'`. */
   bulk: boolean;
+  /**
+   * True when the calling key's workspace has `draft_editor_enabled`.
+   *
+   * The odd one out, and deliberately so: the other two are per-INBOX opt-ins
+   * and this is per-WORKSPACE. A draft envelope is built from the draft itself
+   * rather than from an inbox setting, so there is no inbox-level switch for it
+   * to key on, and contract §8 puts the flag on `workspaces`.
+   */
+  drafts: boolean;
 }
 
 /**
@@ -354,6 +386,9 @@ export function reviewCardMetaForListing(
   }
   if (BULK_PLAN_CARD_TOOL_NAMES.includes(toolName)) {
     return gates.bulk ? reviewCardToolMeta() : undefined;
+  }
+  if (DRAFT_EDITOR_CARD_TOOL_NAMES.includes(toolName)) {
+    return gates.drafts ? reviewCardToolMeta() : undefined;
   }
   return undefined;
 }
