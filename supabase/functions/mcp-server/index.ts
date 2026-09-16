@@ -27151,6 +27151,19 @@ function triageMessageDigest(providerMessageId: string): Promise<string> {
   return idempotencyDigest(`triage:${providerMessageId}`);
 }
 
+/**
+ * What the runner opens once per run and hands to every action.
+ *
+ * The engine carries this as an opaque `TriageProviderSession` and never looks
+ * inside it, which is the same seam that keeps `applyTriageAction` the only
+ * place in the automation path that can talk to a provider at all.
+ */
+type TriageRunSession = {
+  inboxRow: InboxRow;
+  /** Null on Gmail and Outlook, which have no connection worth holding. */
+  imap: ImapSession<ImapClient> | null;
+};
+
 /** Loads the full InboxRow the provider helpers need, from the slim projection. */
 async function loadInboxRowForTriage(inboxId: string): Promise<InboxRow | null> {
   const { data, error } = await supabase
@@ -27390,16 +27403,40 @@ async function applyTriageAction(input: {
   action: TriageAction;
   match: TriageMatch;
   destinationId: string | null;
+  // NOT `destinationVerified`, which the engine also passes: what that bit
+  // changes is how a failure is REPORTED, and that decision lives in one place,
+  // next to the try/catch that joins this function's two failure paths. See
+  // reportedActionErrorCode in triage-engine.ts.
   renderedTemplate: string | null;
+  /**
+   * The run's shared connection, as a {@link TriageRunSession}. Typed as
+   * `unknown` because that is how the engine carries it; cast once, here.
+   *
+   * Optional so the manual and test paths that predate it still type-check,
+   * and null-safe throughout: every helper below falls back to opening its own
+   * connection, which is exactly what the runner did before 2026-09-16.
+   */
+  session?: unknown;
 }): Promise<TriageActionOutcome> {
-  const inboxRow = await loadInboxRowForTriage(input.inbox.id);
+  const run = input.session as TriageRunSession | null;
+  // One row per RUN, not one per message. See openSession.
+  const inboxRow = run?.inboxRow ?? await loadInboxRowForTriage(input.inbox.id);
   if (!inboxRow) return { ok: false, error_code: "inbox_unavailable" };
+  // `undefined` rather than null: BulkRunOptions.session is optional, and the
+  // helpers read "absent" as "open your own".
+  const imapSession = run?.imap ?? undefined;
   const { action, match } = input;
 
   switch (action.type) {
     case "move": {
       if (!input.destinationId) return { ok: false, error_code: "folder_unresolved" };
-      const result = await runBulkMoveOnIds(inboxRow, [match.id], input.destinationId);
+      const result = await runBulkMoveOnIds(
+        inboxRow,
+        [match.id],
+        input.destinationId,
+        null,
+        { session: imapSession },
+      );
       if (result.succeeded.length === 0) {
         // Classified, not passed through. The runner's meter writes this
         // straight into activity_log.error_code, and the bulk helpers hand back
@@ -27468,7 +27505,9 @@ async function applyTriageAction(input: {
     }
 
     case "mark_read": {
-      const result = await runBulkFlagOnIds(inboxRow, [match.id], "read");
+      const result = await runBulkFlagOnIds(inboxRow, [match.id], "read", null, {
+        session: imapSession,
+      });
       if (result.succeeded.length === 0) {
         // Same reasoning as the move branch above.
         return {
@@ -27810,12 +27849,68 @@ function triageDeps(): TriageDeps {
         // possible guarantee that it cannot end up in a template or a run log.
       }));
     },
-    async resolveFolder(inbox, nameOrId) {
-      const inboxRow = await loadInboxRowForTriage(inbox.id);
+    /**
+     * The rule's destination folder, and whether the provider vouched for it.
+     *
+     * STRICT FIRST, THEN THE OLD BEHAVIOUR. `resolveFolderId` has always had
+     * two modes here: strict answers only with a folder it matched against the
+     * provider's own listing, and the default falls back to handing the raw
+     * name through on the chance it is an id we could not enumerate (Graph
+     * pages folders at 100, so a 101st folder is exactly that case). Asking
+     * strictly first costs nothing on the common path and buys the one bit the
+     * runner could not otherwise have: whether the destination is KNOWN to
+     * exist. A later "mailbox does not exist" from the provider means something
+     * completely different depending on that bit — see reportedActionErrorCode
+     * in triage-engine.ts.
+     *
+     * The fallback is deliberately the unchanged call, not a hand-rolled
+     * substitute: it re-lists on the same connection, and it keeps the
+     * behaviours strict mode suppresses, notably auto-creating a missing
+     * archive mailbox for a move. Only `folder_not_found` falls through to it.
+     * An ambiguous spelling is a question no mode can answer and is re-thrown
+     * as the run failure it already was.
+     */
+    async resolveFolder(inbox, nameOrId, session) {
+      const run = session as TriageRunSession | null;
+      const inboxRow = run?.inboxRow ?? await loadInboxRowForTriage(inbox.id);
       if (!inboxRow) throw new Error("inbox_unavailable");
-      return await resolveFolderId(inboxRow, nameOrId);
+      const imap = run?.imap ?? undefined;
+      try {
+        return {
+          id: await resolveFolderId(inboxRow, nameOrId, { strict: true, session: imap }),
+          verified: true,
+        };
+      } catch (error) {
+        if (!(error instanceof FolderTargetError) || error.logErrorCode !== "folder_not_found") {
+          throw error;
+        }
+        return {
+          id: await resolveFolderId(inboxRow, nameOrId, { session: imap }),
+          verified: false,
+        };
+      }
     },
     applyAction: applyTriageAction,
+    /**
+     * One IMAP connection, and one inbox row, for a whole run.
+     *
+     * The inbox row rides along because every action used to re-read it from
+     * Postgres: a rule moving 200 messages did 200 identical single-row
+     * selects on top of its 200 handshakes. One read per run is what every
+     * interactive tool call already does.
+     *
+     * Non-IMAP providers get `imap: null` and lose nothing: Gmail and Graph
+     * are per-request HTTP and have no connection to hold open.
+     */
+    async openSession(inbox) {
+      const inboxRow = await loadInboxRowForTriage(inbox.id);
+      if (!inboxRow) throw new Error("inbox_unavailable");
+      return { inboxRow, imap: imapSessionFor(inboxRow) } satisfies TriageRunSession;
+    },
+    async closeSession(session) {
+      const run = session as TriageRunSession | null;
+      if (run?.imap) await run.imap.close();
+    },
     async meter(input) {
       // Both halves, per action. writeActivityLog gives the audit trail;
       // writeActionUsage gives the meter. The scheduled-send /dispatch path

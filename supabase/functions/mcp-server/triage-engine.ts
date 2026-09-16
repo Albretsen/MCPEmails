@@ -807,6 +807,30 @@ export type TriageActionReservation =
   | { allowed: true; reservation_id: string | null }
   | { allowed: false; limit: TriagePlanLimit };
 
+/**
+ * The run's shared provider connection, as the engine sees it: nothing at all.
+ *
+ * `unknown` rather than a union of provider session types, because the whole
+ * point of the `TriageDeps` seam is that this module has no provider code and
+ * cannot grow any. It opens one of these, hands it back to `resolveFolder` and
+ * every `applyAction`, and closes it. It never looks inside.
+ */
+export type TriageProviderSession = unknown;
+
+/** A resolved move destination, and whether the provider vouched for it. */
+export interface TriageFolderTarget {
+  /** The provider-native id or name to file mail into. */
+  id: string;
+  /**
+   * True when `id` was matched against the provider's OWN folder listing, so
+   * the folder is known to exist. False when it is a best-effort pass-through
+   * of a name the listing did not contain — which is still worth attempting
+   * (a provider id we could not enumerate is valid; Graph pages folders at
+   * 100), but is not evidence the folder is there.
+   */
+  verified: boolean;
+}
+
 export interface TriageDeps {
   store: TriageStore;
   /** HMAC-SHA256(ENCRYPTION_KEY, provider_message_id). Keyed and one-way. */
@@ -816,7 +840,11 @@ export interface TriageDeps {
   /** Run a stored NormalizedSearch through the interactive search path. */
   search(inbox: TriageInbox, filter: NormalizedSearch, limit: number): Promise<TriageMatch[]>;
   /** Resolve a folder/label name to a provider-native id. */
-  resolveFolder(inbox: TriageInbox, nameOrId: string): Promise<string>;
+  resolveFolder(
+    inbox: TriageInbox,
+    nameOrId: string,
+    session: TriageProviderSession,
+  ): Promise<TriageFolderTarget>;
   /** Apply one action to one message. index.ts owns every provider call. */
   applyAction(input: {
     inbox: TriageInbox;
@@ -825,9 +853,43 @@ export interface TriageDeps {
     match: TriageMatch;
     /** Pre-resolved provider-native destination for move; null otherwise. */
     destinationId: string | null;
+    /**
+     * Did `destinationId` come out of the provider's own folder listing?
+     *
+     * Carried per action because it is the only thing that can tell a folder
+     * that is really gone from a provider having a bad moment. See
+     * {@link reportedActionErrorCode}.
+     */
+    destinationVerified: boolean;
     /** Already rendered, escaped, and free of body content. */
     renderedTemplate: string | null;
+    /** The run's shared provider connection, or null. See {@link TriageDeps.openSession}. */
+    session: TriageProviderSession;
   }): Promise<TriageActionOutcome>;
+  /**
+   * Open ONE provider connection for the whole run, or null when the provider
+   * has none worth sharing.
+   *
+   * WHY THE ENGINE OWNS THE LIFETIME AND NOT THE CONTENTS. Until 2026-09-16
+   * every action opened, authenticated and tore down its own connection, so a
+   * rule moving thirty messages performed thirty IMAP handshakes against one
+   * account. On AOL and Yahoo, which cap an account at five simultaneous
+   * connections, that churn is what makes the server start refusing ordinary
+   * commands: 2026-09-16 saw one AOL mailbox answer `[TRYCREATE]` to fifty
+   * copies into a folder that demonstrably existed, because 4400 connections
+   * had been opened to it that day. The connection is opaque here on purpose —
+   * the engine must stay unable to talk to a provider itself (the same reason
+   * `applyAction` exists at all), so it only decides WHEN the thing is opened
+   * and closed, and index.ts decides what it is.
+   *
+   * Optional: a caller that does not implement it gets the old
+   * connect-per-action behaviour, never a broken run. A throw is read the same
+   * way, because a run that can still work one connection at a time must not
+   * be failed by an optimisation.
+   */
+  openSession?(inbox: TriageInbox): Promise<TriageProviderSession>;
+  /** Close what `openSession` opened. Called exactly once, however the run ends. */
+  closeSession?(session: TriageProviderSession): Promise<void>;
   /**
    * `writeActivityLog` + `writeActionUsage`, per action, AFTER it was taken.
    *
@@ -1035,6 +1097,64 @@ export interface TriageRunSummary {
 export const TRIAGE_PAUSE_REASON_PLAN_LIMIT = "plan_limit";
 
 /**
+ * `triage_runs.error_code` for a run that stopped because the invocation ran
+ * out of wall clock, not because anything went wrong.
+ *
+ * Distinct from `run_interrupted`, which is what the stale-lease sweep writes
+ * for a run whose invocation DIED mid-message. The two used to be the same
+ * event from the outside and they are not the same thing at all: this one
+ * finished its bookkeeping, knows exactly how many messages it applied, and
+ * queued the remainder. `run_interrupted` knows none of that, which is why it
+ * is never retried.
+ */
+export const TRIAGE_STOP_REASON_TIME_BUDGET = "time_budget_exhausted";
+
+/**
+ * The error code a failed action is REPORTED as, once the run's own knowledge
+ * of the destination is taken into account.
+ *
+ * WHAT THIS FIXES. `classifyProviderError` maps every provider's way of saying
+ * "that mailbox is not there" — `[NONEXISTENT]`, `[TRYCREATE]`, "Mailbox not
+ * found" — to `folder_missing`, and on a read-shaped boundary that narrows to
+ * `folder_not_found`. That is exactly right when nobody checked whether the
+ * folder exists. It is wrong here: a move destination is resolved ONCE per run,
+ * against the provider's own listing, before a single message is touched. When
+ * that listing said the folder is there and the provider then refuses the copy,
+ * the folder did not evaporate between two commands on the same connection.
+ *
+ * MEASURED, 2026-09-16. One AOL mailbox logged 50 `folder_not_found` rows on
+ * `triage_move` while the same rules moved 4380 messages into the same four
+ * folders the same day, in bursts (16 failures in one minute, then none for
+ * fifteen). The folders existed throughout; AOL was refusing commands under
+ * connection pressure we were generating ourselves (see
+ * {@link TriageDeps.openSession}). The row said the customer had a broken
+ * folder, and sent whoever read it after a folder that was demonstrably there.
+ *
+ * WHY IT ONLY EVER WIDENS, AND ONLY FOR A VERIFIED DESTINATION. An unverified
+ * destination is a name the listing did NOT contain, passed through on the
+ * chance it is a provider id we could not enumerate. For that one, "the
+ * provider says this mailbox does not exist" is very probably the truth and
+ * stays exactly as it was, which is what keeps a genuinely deleted folder
+ * diagnosable. Nothing here can make a real failure look like a success: the
+ * action failed either way, and only the noun changes.
+ */
+export function reportedActionErrorCode(
+  errorCode: string | null | undefined,
+  actionType: TriageAction["type"],
+  destinationVerified: boolean,
+): string {
+  // Blank counts as missing, not as a code. `activity_log.status = 'error'`
+  // with nothing in `error_code` is the exact shape a 2026-07-28 bugfix went
+  // and removed; this function is now the last place a failure's code is
+  // decided, so it is the place that must not let one back in.
+  const code = errorCode && errorCode.trim() !== "" ? errorCode : "provider_error";
+  if (actionType !== "move") return code;
+  if (code !== "folder_not_found") return code;
+  if (!destinationVerified) return code;
+  return "provider_error";
+}
+
+/**
  * Pauses a leased rule until its workspace's allowance period ends.
  *
  * Shared by the two places a plan limit can stop a rule: before it runs (the
@@ -1099,6 +1219,19 @@ export async function runTriageRule(
   deps: TriageDeps,
   rule: TriageRuleRow,
   trigger: "schedule" | "manual" = "schedule",
+  opts: {
+    /**
+     * Wall-clock instant this run must stop applying messages by, as an epoch
+     * millisecond count. Omitted means no deadline, which is what the manual
+     * "Run now" path passes.
+     *
+     * It belongs to the INVOCATION, not to the rule: the dispatcher hands down
+     * its own budget so that one rule with a long backlog cannot spend the
+     * whole of it and be killed mid-message. See the per-message check in the
+     * act loop for what the alternative cost us.
+     */
+    deadlineMs?: number;
+  } = {},
 ): Promise<TriageRunSummary> {
   const startedMs = nowMs(deps);
   const store = deps.store;
@@ -1250,47 +1383,366 @@ export async function runTriageRule(
   }
   matched = matches.length;
 
-  // Move resolves its destination ONCE per run, not per message: the folder is a
-  // property of the rule, and re-resolving would be one provider round-trip per
-  // matched message for an answer that cannot change mid-run.
-  let destinationId: string | null = null;
-  if (action.type === "move") {
+  // ── One provider connection for the whole run ─────────────────────────────
+  // Opened AFTER the search, which owns a connection of its own for as long as
+  // it runs: overlapping the two would put this run at two simultaneous
+  // connections on an account that may only have five, to save one handshake.
+  // Everything past this point — the destination resolve and every message —
+  // runs on this one connection. See TriageDeps.openSession.
+  let session: TriageProviderSession = null;
+  if (deps.openSession) {
     try {
-      destinationId = await deps.resolveFolder(inbox, action.folder);
+      session = await deps.openSession(inbox);
     } catch (error) {
-      return await failRun("folder_unresolved", redactErrorDetail(error));
+      // Never a run failure. The actions below all accept a null session and
+      // fall back to opening their own connection, which is exactly what they
+      // did before this existed.
+      console.warn("[triage] open_session_failed", {
+        rule_id: rule.id,
+        error: redactErrorDetail(error),
+      });
+      session = null;
     }
   }
 
-  /**
-   * Plan limit mid-run: stop cleanly, keep what was done, pause the rule.
-   *
-   * Not a failure. The run is finished with the counts it reached and its
-   * true status (a run that moved eleven messages and was then refused the
-   * twelfth COMPLETED eleven moves), `error_code` says why it stopped short,
-   * `consecutive_failures` is untouched, and the unprocessed matches are
-   * still unclaimed for the run after the pause lifts.
-   */
-  const pauseRun = async (limit: TriagePlanLimit): Promise<TriageRunSummary> => {
+  try {
+    // Move resolves its destination ONCE per run, not per message: the folder is a
+    // property of the rule, and re-resolving would be one provider round-trip per
+    // matched message for an answer that cannot change mid-run.
+    //
+    // `verified` is carried alongside the id for the whole run, because it is
+    // the one fact that separates "this folder is gone" from "this provider is
+    // having a bad minute" when a copy is later refused. See
+    // reportedActionErrorCode.
+    let destinationId: string | null = null;
+    let destinationVerified = false;
+    if (action.type === "move") {
+      try {
+        const target = await deps.resolveFolder(inbox, action.folder, session);
+        destinationId = target.id;
+        destinationVerified = target.verified;
+      } catch (error) {
+        return await failRun("folder_unresolved", redactErrorDetail(error));
+      }
+    }
+
+    /**
+     * Plan limit mid-run: stop cleanly, keep what was done, pause the rule.
+     *
+     * Not a failure. The run is finished with the counts it reached and its
+     * true status (a run that moved eleven messages and was then refused the
+     * twelfth COMPLETED eleven moves), `error_code` says why it stopped short,
+     * `consecutive_failures` is untouched, and the unprocessed matches are
+     * still unclaimed for the run after the pause lifts.
+     */
+    const pauseRun = async (limit: TriagePlanLimit): Promise<TriageRunSummary> => {
+      const status: TriageRunSummary["status"] = failed > 0
+        ? "completed_with_errors"
+        : processed === 0
+        ? "skipped"
+        : "completed";
+      await store.finishRun(runId, {
+        status,
+        duration_ms: nowMs(deps) - startedMs,
+        matched,
+        processed,
+        succeeded,
+        failed,
+        skipped,
+        error_code: TRIAGE_PAUSE_REASON_PLAN_LIMIT,
+        error_detail: `Stopped after ${processed} of ${matched} matches: the workspace has used ` +
+          `${limit.used} of ${limit.cap} email actions this period. The automation is paused ` +
+          `until ${limit.paused_until.slice(0, 10)} and resumes by itself.`,
+      });
+      await pauseRuleForPlanLimit(deps, rule, limit);
+      return {
+        rule_id: rule.id,
+        status,
+        matched,
+        processed,
+        succeeded,
+        failed,
+        skipped,
+        error_code: TRIAGE_PAUSE_REASON_PLAN_LIMIT,
+      };
+    };
+
+    /**
+     * Out of wall clock mid-run: stop cleanly, keep what was done, come back.
+     *
+     * Shaped like `pauseRun` above and for the same reason, with one
+     * difference that matters: nothing is wrong here, so the rule is released
+     * as IMMEDIATELY due rather than paused or pushed out a full interval. The
+     * remaining matches were never claimed (the dedupe claim is per message,
+     * taken just below), so the next invocation re-searches, finds them, and
+     * carries on. A rule with a real backlog therefore drains a budget's worth
+     * at a time instead of stalling for its whole interval between bites, and
+     * a rule without one goes straight back to its normal cadence because its
+     * next run finishes inside the budget.
+     */
+    const stopForBudget = async (): Promise<TriageRunSummary> => {
+      const status: TriageRunSummary["status"] = failed > 0
+        ? "completed_with_errors"
+        : processed === 0
+        ? "skipped"
+        : "completed";
+      const stoppedMs = nowMs(deps);
+      await store.finishRun(runId, {
+        status,
+        duration_ms: stoppedMs - startedMs,
+        matched,
+        processed,
+        succeeded,
+        failed,
+        skipped,
+        error_code: TRIAGE_STOP_REASON_TIME_BUDGET,
+        error_detail: `Stopped after ${processed} of ${matched} matches: this invocation ran ` +
+          `out of time. Nothing was left half-applied and the remaining matches are ` +
+          `untouched; the automation picks them up on its next run.`,
+      });
+      await store.releaseRule(rule.id, {
+        // Due now, not in `interval_minutes`. See the note above.
+        next_run_at: new Date(stoppedMs).toISOString(),
+        last_run_at: new Date(stoppedMs).toISOString(),
+        // Emphatically not a failure: the run did its work and said where it
+        // got to. Counting it would auto-disable a rule for being busy.
+        consecutive_failures: 0,
+      });
+      console.info("[triage] run_stopped_time_budget", {
+        rule_id: rule.id,
+        workspace_id: rule.workspace_id,
+        matched,
+        processed,
+      });
+      return {
+        rule_id: rule.id,
+        status,
+        matched,
+        processed,
+        succeeded,
+        failed,
+        skipped,
+        error_code: TRIAGE_STOP_REASON_TIME_BUDGET,
+      };
+    };
+
+    // ── Act, message by message ───────────────────────────────────────────────
+    for (const match of matches.slice(0, cap)) {
+      // THE BUDGET, BEFORE THE MESSAGE. Checked here and not merely between
+      // rules, which is where the dispatcher used to check it and nowhere
+      // else. A rule may match up to TRIAGE_MAX_MESSAGES_PER_RUN messages and
+      // a move costs seconds, so one rule could run for minutes past a 40
+      // second budget and be killed by the platform mid-loop — leaving a run
+      // stuck in 'running' for the stale-lease sweep to mark `run_interrupted`
+      // and, by design, never retry. 51 runs died that way on 2026-09-16
+      // alone, all for one workspace, and every message they had not reached
+      // was silently dropped. Stopping ourselves, one message boundary early,
+      // turns that into a partial run that says so and finishes the rest next
+      // minute.
+      if (opts.deadlineMs !== undefined && nowMs(deps) >= opts.deadlineMs) {
+        return await stopForBudget();
+      }
+
+      const digest = await deps.digest(match.id);
+
+      // RESERVE BEFORE CLAIMING. Each unattended action is metered against the
+      // workspace's allowance exactly like an interactive one, and the
+      // reservation is taken here, ahead of the dedupe claim, so a refusal
+      // leaves the message unclaimed (see `reserveAction` on TriageDeps for why
+      // the other order loses a message per pause). A throw is read as
+      // "allowed, unmetered": the allowance is a plan rule, and an
+      // infrastructure error in it must not become a rule failure.
+      let reservationId: string | null = null;
+      if (deps.reserveAction) {
+        let reservation: TriageActionReservation = { allowed: true, reservation_id: null };
+        try {
+          reservation = await deps.reserveAction({
+            workspaceId: rule.workspace_id,
+            operation: TRIAGE_ACTION_OPERATIONS[action.type],
+          });
+        } catch (error) {
+          console.warn("[triage] reserve_action_threw", {
+            rule_id: rule.id,
+            error: redactErrorDetail(error),
+          });
+        }
+        if (!reservation.allowed) return await pauseRun(reservation.limit);
+        reservationId = reservation.reservation_id;
+      }
+
+      // CLAIM BEFORE ACTING. Zero rows inserted means somebody already handled
+      // this message for this rule, so we record the skip and do NOT touch the
+      // mailbox. Doing this before the provider call, not after, is the entire
+      // guarantee: a crash between the claim and the action loses one message,
+      // whereas a claim after the action would double-move on every retry.
+      const claimed = await store.claimMessage(rule.id, digest);
+      if (!claimed) {
+        if (reservationId && deps.releaseReservation) {
+          // Nothing was done, so nothing is owed. Best effort: an unreleased
+          // reservation expires on its own and only ever over-counts by one for
+          // a quarter of an hour.
+          try {
+            await deps.releaseReservation(reservationId);
+          } catch (error) {
+            console.warn("[triage] reservation_release_failed", {
+              rule_id: rule.id,
+              error: redactErrorDetail(error),
+            });
+          }
+        }
+        skipped++;
+        await store.writeRunItem({
+          run_id: runId,
+          rule_id: rule.id,
+          message_digest: digest,
+          subject_redacted: redactForRunLog(match.subject),
+          sender_redacted: redactForRunLog(match.from_email),
+          outcome: "skipped_duplicate",
+          detail: { reason: "already_handled_by_this_rule" },
+          undo_state: null,
+        });
+        continue;
+      }
+
+      processed++;
+      const actionStartMs = nowMs(deps);
+      let outcome: TriageActionOutcome;
+      try {
+        outcome = await deps.applyAction({
+          inbox,
+          apiKey: key,
+          action,
+          match,
+          destinationId,
+          destinationVerified,
+          session,
+          renderedTemplate: action.type === "draft_reply"
+            ? renderTriageTemplate(action.template, {
+              sender_name: match.from_name,
+              sender_email: match.from_email,
+              subject: match.subject,
+              date: match.date,
+            })
+            : null,
+        });
+      } catch (error) {
+        // CLASSIFIED, NOT REDACTED (2026-09-01). This used to be
+        // `redactErrorDetail(error).slice(0, 120)`, and `error_code` is where it
+        // landed: on `activity_log` through `deps.meter` below, and on the run
+        // item's `detail`. redactErrorDetail neutralises control characters and
+        // truncates, which is the right treatment for a free-text detail field
+        // and the wrong one for a code. It left up to 120 characters of provider
+        // prose in a column monitoring groups on, and provider prose is where a
+        // folder name ("Mailbox not found: Junk") or an echoed search command
+        // lives. A finite reason cannot carry either.
+        //
+        // "read" is the correct boundary: the runner never claims the outbound
+        // idempotency ledger, so nothing here decides whether a keyed retry
+        // replays. See providerErrorCode in index.ts.
+        outcome = {
+          ok: false,
+          error_code: providerErrorLogCode(classifyProviderError(error), "read"),
+        };
+      }
+
+      // BOTH PATHS THROUGH ONE RULE. applyAction can report a failure by
+      // returning one or by throwing one, and a "that mailbox is not there"
+      // from a provider arrives either way. Settling the reported code here,
+      // after the try/catch has joined them, is what stops the two from
+      // disagreeing about the same refusal.
+      if (!outcome.ok) {
+        outcome = {
+          ...outcome,
+          error_code: reportedActionErrorCode(outcome.error_code, action.type, destinationVerified),
+        };
+      }
+
+      // METERING AND AUDIT, per action. The /dispatch path historically wrote no
+      // activity_log or action_usage rows at all, which meant background work was
+      // invisible to both the audit trail and the meter. An unattended action is
+      // exactly as real as an interactive one, so it is recorded exactly the same.
+      await deps.meter({
+        workspaceId: rule.workspace_id,
+        apiKeyId: key.id,
+        inboxId: inbox.id,
+        operation: TRIAGE_ACTION_OPERATIONS[action.type],
+        status: outcome.ok ? "success" : "error",
+        errorCode: outcome.ok ? null : (outcome.error_code ?? "provider_error"),
+        durationMs: nowMs(deps) - actionStartMs,
+        reservationId,
+      });
+
+      if (!outcome.ok) {
+        failed++;
+        await store.writeRunItem({
+          run_id: runId,
+          rule_id: rule.id,
+          message_digest: digest,
+          subject_redacted: redactForRunLog(match.subject),
+          sender_redacted: redactForRunLog(match.from_email),
+          outcome: "failed",
+          detail: { error_code: outcome.error_code ?? "provider_error", ...(outcome.detail ?? {}) },
+          undo_state: null,
+        });
+        continue;
+      }
+
+      succeeded++;
+      // forward stops at an approval row: nothing has happened to the mailbox and
+      // nothing will until a human decides. That is a distinct terminal outcome,
+      // not a success, which is why the migration gave it its own value.
+      const queued = typeof outcome.approval_id === "string" && outcome.approval_id.length > 0;
+      let undoState: Record<string, unknown> | null = null;
+      if (outcome.undo) {
+        // Provider message ids ARE message identifiers, so the narrow carve-out
+        // from fetch-live-never-store is encrypted, matching bulk_plans.scope.
+        undoState = { v: 1, data: await deps.encrypt(JSON.stringify(outcome.undo)) };
+      }
+      await store.writeRunItem({
+        run_id: runId,
+        rule_id: rule.id,
+        message_digest: digest,
+        subject_redacted: redactForRunLog(match.subject),
+        sender_redacted: redactForRunLog(match.from_email),
+        outcome: queued ? "queued_for_approval" : "applied",
+        detail: {
+          action: action.type,
+          ...(queued ? { approval_id: outcome.approval_id } : {}),
+          ...(outcome.detail ?? {}),
+        },
+        undo_state: queued ? null : undoState,
+      });
+    }
+
+    // ── Settle ────────────────────────────────────────────────────────────────
+    // 'skipped' is a distinct status from 'completed' because a rule that only
+    // ever skips is a misconfigured filter, and that is worth surfacing.
     const status: TriageRunSummary["status"] = failed > 0
       ? "completed_with_errors"
       : processed === 0
       ? "skipped"
       : "completed";
+    const endedMs = nowMs(deps);
     await store.finishRun(runId, {
       status,
-      duration_ms: nowMs(deps) - startedMs,
+      duration_ms: endedMs - startedMs,
       matched,
       processed,
       succeeded,
       failed,
       skipped,
-      error_code: TRIAGE_PAUSE_REASON_PLAN_LIMIT,
-      error_detail: `Stopped after ${processed} of ${matched} matches: the workspace has used ` +
-        `${limit.used} of ${limit.cap} email actions this period. The automation is paused ` +
-        `until ${limit.paused_until.slice(0, 10)} and resumes by itself.`,
+      error_code: null,
+      error_detail: null,
     });
-    await pauseRuleForPlanLimit(deps, rule, limit);
+    await store.releaseRule(rule.id, {
+      next_run_at: new Date(endedMs + rule.interval_minutes * 60_000).toISOString(),
+      last_run_at: new Date(endedMs).toISOString(),
+      // A run that completed, even with per-message errors, proves the mailbox and
+      // the key are reachable. The failure counter tracks RUN failures, not
+      // individual provider hiccups, so it resets here.
+      consecutive_failures: 0,
+    });
+
     return {
       rule_id: rule.id,
       status,
@@ -1299,208 +1751,24 @@ export async function runTriageRule(
       succeeded,
       failed,
       skipped,
-      error_code: TRIAGE_PAUSE_REASON_PLAN_LIMIT,
+      error_code: null,
     };
-  };
-
-  // ── Act, message by message ───────────────────────────────────────────────
-  for (const match of matches.slice(0, cap)) {
-    const digest = await deps.digest(match.id);
-
-    // RESERVE BEFORE CLAIMING. Each unattended action is metered against the
-    // workspace's allowance exactly like an interactive one, and the
-    // reservation is taken here, ahead of the dedupe claim, so a refusal
-    // leaves the message unclaimed (see `reserveAction` on TriageDeps for why
-    // the other order loses a message per pause). A throw is read as
-    // "allowed, unmetered": the allowance is a plan rule, and an
-    // infrastructure error in it must not become a rule failure.
-    let reservationId: string | null = null;
-    if (deps.reserveAction) {
-      let reservation: TriageActionReservation = { allowed: true, reservation_id: null };
+  } finally {
+    // However this run ended — applied, stopped at the budget, paused on the
+    // plan limit, or thrown out of — the connection is closed exactly once.
+    if (session !== null && deps.closeSession) {
       try {
-        reservation = await deps.reserveAction({
-          workspaceId: rule.workspace_id,
-          operation: TRIAGE_ACTION_OPERATIONS[action.type],
-        });
+        await deps.closeSession(session);
       } catch (error) {
-        console.warn("[triage] reserve_action_threw", {
+        // A connection we are done with failing to close politely is not a
+        // fact about the run, and must never become one.
+        console.warn("[triage] close_session_failed", {
           rule_id: rule.id,
           error: redactErrorDetail(error),
         });
       }
-      if (!reservation.allowed) return await pauseRun(reservation.limit);
-      reservationId = reservation.reservation_id;
     }
-
-    // CLAIM BEFORE ACTING. Zero rows inserted means somebody already handled
-    // this message for this rule, so we record the skip and do NOT touch the
-    // mailbox. Doing this before the provider call, not after, is the entire
-    // guarantee: a crash between the claim and the action loses one message,
-    // whereas a claim after the action would double-move on every retry.
-    const claimed = await store.claimMessage(rule.id, digest);
-    if (!claimed) {
-      if (reservationId && deps.releaseReservation) {
-        // Nothing was done, so nothing is owed. Best effort: an unreleased
-        // reservation expires on its own and only ever over-counts by one for
-        // a quarter of an hour.
-        try {
-          await deps.releaseReservation(reservationId);
-        } catch (error) {
-          console.warn("[triage] reservation_release_failed", {
-            rule_id: rule.id,
-            error: redactErrorDetail(error),
-          });
-        }
-      }
-      skipped++;
-      await store.writeRunItem({
-        run_id: runId,
-        rule_id: rule.id,
-        message_digest: digest,
-        subject_redacted: redactForRunLog(match.subject),
-        sender_redacted: redactForRunLog(match.from_email),
-        outcome: "skipped_duplicate",
-        detail: { reason: "already_handled_by_this_rule" },
-        undo_state: null,
-      });
-      continue;
-    }
-
-    processed++;
-    const actionStartMs = nowMs(deps);
-    let outcome: TriageActionOutcome;
-    try {
-      outcome = await deps.applyAction({
-        inbox,
-        apiKey: key,
-        action,
-        match,
-        destinationId,
-        renderedTemplate: action.type === "draft_reply"
-          ? renderTriageTemplate(action.template, {
-            sender_name: match.from_name,
-            sender_email: match.from_email,
-            subject: match.subject,
-            date: match.date,
-          })
-          : null,
-      });
-    } catch (error) {
-      // CLASSIFIED, NOT REDACTED (2026-09-01). This used to be
-      // `redactErrorDetail(error).slice(0, 120)`, and `error_code` is where it
-      // landed: on `activity_log` through `deps.meter` below, and on the run
-      // item's `detail`. redactErrorDetail neutralises control characters and
-      // truncates, which is the right treatment for a free-text detail field
-      // and the wrong one for a code. It left up to 120 characters of provider
-      // prose in a column monitoring groups on, and provider prose is where a
-      // folder name ("Mailbox not found: Junk") or an echoed search command
-      // lives. A finite reason cannot carry either.
-      //
-      // "read" is the correct boundary: the runner never claims the outbound
-      // idempotency ledger, so nothing here decides whether a keyed retry
-      // replays. See providerErrorCode in index.ts.
-      outcome = {
-        ok: false,
-        error_code: providerErrorLogCode(classifyProviderError(error), "read"),
-      };
-    }
-
-    // METERING AND AUDIT, per action. The /dispatch path historically wrote no
-    // activity_log or action_usage rows at all, which meant background work was
-    // invisible to both the audit trail and the meter. An unattended action is
-    // exactly as real as an interactive one, so it is recorded exactly the same.
-    await deps.meter({
-      workspaceId: rule.workspace_id,
-      apiKeyId: key.id,
-      inboxId: inbox.id,
-      operation: TRIAGE_ACTION_OPERATIONS[action.type],
-      status: outcome.ok ? "success" : "error",
-      errorCode: outcome.ok ? null : (outcome.error_code ?? "provider_error"),
-      durationMs: nowMs(deps) - actionStartMs,
-      reservationId,
-    });
-
-    if (!outcome.ok) {
-      failed++;
-      await store.writeRunItem({
-        run_id: runId,
-        rule_id: rule.id,
-        message_digest: digest,
-        subject_redacted: redactForRunLog(match.subject),
-        sender_redacted: redactForRunLog(match.from_email),
-        outcome: "failed",
-        detail: { error_code: outcome.error_code ?? "provider_error", ...(outcome.detail ?? {}) },
-        undo_state: null,
-      });
-      continue;
-    }
-
-    succeeded++;
-    // forward stops at an approval row: nothing has happened to the mailbox and
-    // nothing will until a human decides. That is a distinct terminal outcome,
-    // not a success, which is why the migration gave it its own value.
-    const queued = typeof outcome.approval_id === "string" && outcome.approval_id.length > 0;
-    let undoState: Record<string, unknown> | null = null;
-    if (outcome.undo) {
-      // Provider message ids ARE message identifiers, so the narrow carve-out
-      // from fetch-live-never-store is encrypted, matching bulk_plans.scope.
-      undoState = { v: 1, data: await deps.encrypt(JSON.stringify(outcome.undo)) };
-    }
-    await store.writeRunItem({
-      run_id: runId,
-      rule_id: rule.id,
-      message_digest: digest,
-      subject_redacted: redactForRunLog(match.subject),
-      sender_redacted: redactForRunLog(match.from_email),
-      outcome: queued ? "queued_for_approval" : "applied",
-      detail: {
-        action: action.type,
-        ...(queued ? { approval_id: outcome.approval_id } : {}),
-        ...(outcome.detail ?? {}),
-      },
-      undo_state: queued ? null : undoState,
-    });
   }
-
-  // ── Settle ────────────────────────────────────────────────────────────────
-  // 'skipped' is a distinct status from 'completed' because a rule that only
-  // ever skips is a misconfigured filter, and that is worth surfacing.
-  const status: TriageRunSummary["status"] = failed > 0
-    ? "completed_with_errors"
-    : processed === 0
-    ? "skipped"
-    : "completed";
-  const endedMs = nowMs(deps);
-  await store.finishRun(runId, {
-    status,
-    duration_ms: endedMs - startedMs,
-    matched,
-    processed,
-    succeeded,
-    failed,
-    skipped,
-    error_code: null,
-    error_detail: null,
-  });
-  await store.releaseRule(rule.id, {
-    next_run_at: new Date(endedMs + rule.interval_minutes * 60_000).toISOString(),
-    last_run_at: new Date(endedMs).toISOString(),
-    // A run that completed, even with per-message errors, proves the mailbox and
-    // the key are reachable. The failure counter tracks RUN failures, not
-    // individual provider hiccups, so it resets here.
-    consecutive_failures: 0,
-  });
-
-  return {
-    rule_id: rule.id,
-    status,
-    matched,
-    processed,
-    succeeded,
-    failed,
-    skipped,
-    error_code: null,
-  };
 }
 
 // ---------------------------------------------------------------------------
@@ -1606,7 +1874,14 @@ export async function handleTriageDispatch(deps: TriageDeps): Promise<Response> 
     }
 
     try {
-      const summary = await runTriageRule(deps, rule, "schedule");
+      // The SAME budget the loop above gates on, handed down so the rule can
+      // stop at a message boundary instead of being killed between two. The
+      // check up here only ever decided whether to START another rule, which
+      // is no protection at all against a single rule that outlasts the whole
+      // invocation.
+      const summary = await runTriageRule(deps, rule, "schedule", {
+        deadlineMs: startedMs + TRIAGE_TIME_BUDGET_MS,
+      });
       ran++;
       if (summary.status === "failed") failedRuns++;
     } catch (error) {

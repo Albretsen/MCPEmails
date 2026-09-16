@@ -36,9 +36,11 @@ import {
   handleTriageDispatch,
   redactForRunLog,
   renderTriageTemplate,
+  reportedActionErrorCode,
   runTriageRule,
   TRIAGE_MAX_FORWARD_RECIPIENTS,
   TRIAGE_STALE_LEASE_MS,
+  TRIAGE_STOP_REASON_TIME_BUDGET,
   type TriageActionOutcome,
   type TriageApiKey,
   type TriageDeps,
@@ -210,19 +212,40 @@ function fakeDeps(
   matches: TriageMatch[],
   applied: { calls: any[] },
   outcome: TriageActionOutcome = { ok: true, undo: { op: "move" } },
+  overrides: Partial<TriageDeps> = {},
 ): TriageDeps {
   return {
     store: fakeStore(state),
     digest: (id) => Promise.resolve(`digest-${id}`),
     encrypt: (text) => Promise.resolve(`enc(${text})`),
     search: () => Promise.resolve(matches),
-    resolveFolder: (_inbox, name) => Promise.resolve(`id-of-${name}`),
+    // Verified by default: the ordinary case is a folder the provider listed.
+    resolveFolder: (_inbox, name) => Promise.resolve({ id: `id-of-${name}`, verified: true }),
     applyAction: (input) => {
       applied.calls.push(input);
       return Promise.resolve(outcome);
     },
     meter: () => Promise.resolve(),
     now: () => 1_000_000,
+    ...overrides,
+  };
+}
+
+/**
+ * A clock the test drives, for the wall-clock budget.
+ *
+ * `runTriageRule` reads the clock several times per message (the deadline
+ * check, the action's own start and end), so a clock that advanced on every
+ * read would make the budget tests depend on how many times the engine happens
+ * to look. This one only moves when the test says so.
+ */
+function fakeClock(startMs = 1_000_000) {
+  let current = startMs;
+  return {
+    now: () => current,
+    advance: (ms: number) => {
+      current += ms;
+    },
   };
 }
 
@@ -1596,4 +1619,526 @@ Deno.test("a move to an ordinary folder is still allowed", () => {
     const result = validateTriageAction({ type: "move", folder });
     assert(result.ok, `move to '${folder}' must be allowed, got: ${!result.ok ? result.error : ""}`);
   }
+});
+
+// ---------------------------------------------------------------------------
+// The reported error code: a folder that exists must never be reported missing
+//
+// 2026-09-16. One AOL mailbox logged 50 `folder_not_found` rows on triage_move
+// while the same rules moved 4380 messages into the same four folders the same
+// day. The destination is resolved once per run, against the provider's own
+// listing, before any message is touched; when the provider then refuses the
+// copy with `[TRYCREATE]` the folder has not evaporated between two commands
+// on one connection. The row sent whoever read it after a folder that was
+// demonstrably there.
+// ---------------------------------------------------------------------------
+
+Deno.test("a verified destination turns a provider's 'no such mailbox' into provider_error", () => {
+  assertEquals(
+    reportedActionErrorCode("folder_not_found", "move", true),
+    "provider_error",
+    "the listing said the folder is there, so the refusal is the provider's problem",
+  );
+});
+
+Deno.test("an UNVERIFIED destination keeps folder_not_found", () => {
+  // The name was not in the listing and was passed through on the chance it is
+  // a provider id we could not enumerate. Here "that mailbox does not exist" is
+  // very probably the literal truth, and it is the only signal a genuinely
+  // deleted folder has left.
+  assertEquals(
+    reportedActionErrorCode("folder_not_found", "move", false),
+    "folder_not_found",
+    "an unverified destination must stay diagnosable",
+  );
+});
+
+Deno.test("only move is reinterpreted; every other action keeps its code", () => {
+  for (const action of ["label", "mark_read", "forward", "draft_reply"] as const) {
+    assertEquals(
+      reportedActionErrorCode("folder_not_found", action, true),
+      "folder_not_found",
+      `${action} has no resolved destination, so it has no grounds to widen`,
+    );
+  }
+});
+
+Deno.test("the widening is narrow: no other code is touched, on either verification", () => {
+  for (const verified of [true, false]) {
+    for (
+      const code of [
+        "provider_error",
+        "message_not_found",
+        "auth_failed",
+        "imap_auth_failed",
+        "connection_limit",
+        "search_timeout",
+        "folder_ambiguous",
+        "folder_already_exists",
+      ]
+    ) {
+      assertEquals(
+        reportedActionErrorCode(code, "move", verified),
+        code,
+        `${code} must pass through untouched (verified=${verified})`,
+      );
+    }
+  }
+});
+
+Deno.test("a missing code is still provider_error, not null", () => {
+  // `activity_log.status = 'error'` with no code is the shape this taxonomy
+  // spent a bugfix removing; it must not come back through this function.
+  assertEquals(reportedActionErrorCode(null, "move", true), "provider_error", "null");
+  assertEquals(reportedActionErrorCode(undefined, "move", false), "provider_error", "undefined");
+  assertEquals(reportedActionErrorCode("", "label", true), "provider_error", "empty string");
+});
+
+Deno.test("a returned folder_not_found on a verified destination is metered as provider_error", async () => {
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const metered: any[] = [];
+  const deps = fakeDeps(state, [fakeMatch("msg-a")], applied, {
+    ok: false,
+    error_code: "folder_not_found",
+  }, { meter: (input) => (metered.push(input), Promise.resolve()) });
+
+  const summary = await runTriageRule(deps, fakeRule());
+
+  assertEquals(summary.failed, 1, "the action still failed; only the noun changes");
+  assertEquals(summary.status, "completed_with_errors", "the run is still honest about it");
+  assertEquals(metered.length, 1, "one metered action");
+  assertEquals(
+    metered[0].errorCode,
+    "provider_error",
+    "activity_log must not say the folder is missing when the listing found it",
+  );
+  const item = state.runItems.find((i) => i.outcome === "failed");
+  assertEquals(
+    item.detail.error_code,
+    "provider_error",
+    "the run item the customer reads must say the same thing as the log",
+  );
+});
+
+Deno.test("a THROWN [TRYCREATE] on a verified destination is also metered as provider_error", async () => {
+  // The two paths out of applyAction (return a failure, throw one) both carry
+  // this condition, and before the settling moved below the try/catch they
+  // disagreed about the same refusal.
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const metered: any[] = [];
+  const deps = fakeDeps(state, [fakeMatch("msg-a")], applied, { ok: true }, {
+    applyAction: () => {
+      throw new Error("UID COPY failed: [TRYCREATE] Mailbox does not exist");
+    },
+    meter: (input) => (metered.push(input), Promise.resolve()),
+  });
+
+  await runTriageRule(deps, fakeRule());
+
+  assertEquals(
+    metered[0].errorCode,
+    "provider_error",
+    "a thrown mailbox-missing on a verified destination is the provider, not the folder",
+  );
+});
+
+Deno.test("the same thrown [TRYCREATE] on an UNVERIFIED destination stays folder_not_found", async () => {
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const metered: any[] = [];
+  const deps = fakeDeps(state, [fakeMatch("msg-a")], applied, { ok: true }, {
+    resolveFolder: (_inbox, name) => Promise.resolve({ id: name, verified: false }),
+    applyAction: () => {
+      throw new Error("UID COPY failed: [NONEXISTENT] Mailbox does not exist");
+    },
+    meter: (input) => (metered.push(input), Promise.resolve()),
+  });
+
+  await runTriageRule(deps, fakeRule());
+
+  assertEquals(
+    metered[0].errorCode,
+    "folder_not_found",
+    "a folder the provider never listed and then refused is a missing folder",
+  );
+});
+
+Deno.test("the resolved destination's verification reaches every action", async () => {
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const deps = fakeDeps(state, [fakeMatch("msg-a"), fakeMatch("msg-b")], applied, undefined, {
+    resolveFolder: (_inbox, name) => Promise.resolve({ id: `id-of-${name}`, verified: false }),
+  });
+
+  await runTriageRule(deps, fakeRule());
+
+  assertEquals(applied.calls.length, 2, "both messages acted on");
+  for (const call of applied.calls) {
+    assertEquals(call.destinationId, "id-of-Newsletters", "the resolved id is carried");
+    assertEquals(call.destinationVerified, false, "and so is what is known about it");
+  }
+});
+
+// ---------------------------------------------------------------------------
+// The wall-clock budget, checked per MESSAGE
+//
+// The dispatcher checked its 40s budget between rules and nowhere else, so a
+// rule with up to 200 matches at seconds per move ran until the platform killed
+// the invocation. The run stayed 'running' until the stale-lease sweep marked
+// it `run_interrupted`, which is deliberately never retried: 51 runs died that
+// way on 2026-09-16, and every message they had not reached was dropped.
+// ---------------------------------------------------------------------------
+
+Deno.test("a run that outlasts its deadline stops cleanly instead of being killed", async () => {
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const clock = fakeClock();
+  const deps = fakeDeps(state, [fakeMatch("a"), fakeMatch("b"), fakeMatch("c")], applied, undefined, {
+    now: clock.now,
+    // Each action costs 20 seconds of the run's 30 second budget.
+    applyAction: (input) => {
+      applied.calls.push(input);
+      clock.advance(20_000);
+      return Promise.resolve({ ok: true, undo: { op: "move" } });
+    },
+  });
+
+  const summary = await runTriageRule(deps, fakeRule(), "schedule", {
+    deadlineMs: clock.now() + 30_000,
+  });
+
+  assertEquals(applied.calls.length, 2, "it stops at a message boundary, not mid-message");
+  assertEquals(summary.processed, 2, "and reports exactly what it processed");
+  assertEquals(summary.succeeded, 2, "the work that happened, happened");
+  assertEquals(summary.matched, 3, "while still naming how much it had found");
+  assertEquals(summary.error_code, TRIAGE_STOP_REASON_TIME_BUDGET, "and why it stopped");
+  assertEquals(summary.status, "completed", "a partial run is not a failed one");
+});
+
+Deno.test("a budget stop leaves the unreached messages unclaimed for the next run", async () => {
+  // The whole point. A killed invocation dropped them; a clean stop must not.
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const clock = fakeClock();
+  const matches = [fakeMatch("a"), fakeMatch("b"), fakeMatch("c")];
+  const deps = fakeDeps(state, matches, applied, undefined, {
+    now: clock.now,
+    applyAction: (input) => {
+      applied.calls.push(input);
+      clock.advance(20_000);
+      return Promise.resolve({ ok: true, undo: { op: "move" } });
+    },
+  });
+
+  await runTriageRule(deps, fakeRule(), "schedule", { deadlineMs: clock.now() + 30_000 });
+
+  assert(state.seen.has("rule-1:digest-a"), "the message it applied is claimed");
+  assert(
+    !state.seen.has("rule-1:digest-c"),
+    "the message it never reached must NOT be in the dedupe ledger",
+  );
+
+  // The next invocation, with room to finish.
+  const second = { calls: [] as any[] };
+  const resumeClock = fakeClock();
+  const resumeDeps = fakeDeps(state, matches, second, undefined, { now: resumeClock.now });
+  const resumed = await runTriageRule(resumeDeps, fakeRule(), "schedule", {
+    deadlineMs: resumeClock.now() + 30_000,
+  });
+
+  assertEquals(resumed.succeeded, 1, "the untouched message is picked up");
+  assertEquals(second.calls[0].match.id, "c", "and it is the right one");
+});
+
+Deno.test("a budget stop re-queues the rule immediately and is not counted as a failure", async () => {
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const clock = fakeClock();
+  const deps = fakeDeps(state, [fakeMatch("a"), fakeMatch("b")], applied, undefined, {
+    now: clock.now,
+    applyAction: (input) => {
+      applied.calls.push(input);
+      clock.advance(20_000);
+      return Promise.resolve({ ok: true, undo: { op: "move" } });
+    },
+  });
+
+  // 15s, so the deadline is already past when the second message comes up.
+  await runTriageRule(deps, fakeRule({ interval_minutes: 15 }), "schedule", {
+    deadlineMs: clock.now() + 15_000,
+  });
+
+  assertEquals(state.released.length, 1, "the lease is released");
+  const release = state.released[0];
+  assertEquals(
+    release.consecutive_failures,
+    0,
+    "being busy must never count towards auto-disabling the rule",
+  );
+  assertEquals(
+    release.next_run_at,
+    new Date(clock.now()).toISOString(),
+    "a rule with a backlog comes straight back rather than waiting out its interval",
+  );
+  assert(!state.leases.has("rule-1"), "and it is not left holding a lease for the stale sweep");
+});
+
+Deno.test("the run row records the partial stop, with its real counts", async () => {
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const clock = fakeClock();
+  const deps = fakeDeps(state, [fakeMatch("a"), fakeMatch("b")], applied, undefined, {
+    now: clock.now,
+    applyAction: (input) => {
+      applied.calls.push(input);
+      clock.advance(20_000);
+      return Promise.resolve({ ok: true, undo: { op: "move" } });
+    },
+  });
+
+  await runTriageRule(deps, fakeRule(), "schedule", { deadlineMs: clock.now() + 15_000 });
+
+  const run = state.runs[0];
+  assertEquals(run.status, "completed", "not 'failed', and never left 'running'");
+  assertEquals(run.error_code, TRIAGE_STOP_REASON_TIME_BUDGET, "the reason is on the row");
+  assertEquals(run.processed, 1, "the counts are the real ones");
+  assertEquals(run.matched, 2, "including what it had not got to");
+  assert(
+    typeof run.error_detail === "string" && run.error_detail.includes("1 of 2"),
+    `the detail says how far it got, got: ${run.error_detail}`,
+  );
+});
+
+Deno.test("a deadline already passed stops before the FIRST message is touched", async () => {
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const clock = fakeClock();
+  const deps = fakeDeps(state, [fakeMatch("a")], applied, undefined, { now: clock.now });
+
+  const summary = await runTriageRule(deps, fakeRule(), "schedule", {
+    deadlineMs: clock.now() - 1,
+  });
+
+  assertEquals(applied.calls.length, 0, "the mailbox is not touched at all");
+  assertEquals(summary.processed, 0, "nothing was processed");
+  assertEquals(summary.status, "skipped", "a run that did nothing is 'skipped'");
+  assertEquals(summary.error_code, TRIAGE_STOP_REASON_TIME_BUDGET, "and says why");
+  assertEquals(state.seen.size, 0, "and claims nothing it did not do");
+});
+
+Deno.test("no deadline means no stopping: the manual Run now path is unchanged", async () => {
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const clock = fakeClock();
+  const deps = fakeDeps(state, [fakeMatch("a"), fakeMatch("b"), fakeMatch("c")], applied, undefined, {
+    now: clock.now,
+    applyAction: (input) => {
+      applied.calls.push(input);
+      clock.advance(60_000);
+      return Promise.resolve({ ok: true, undo: { op: "move" } });
+    },
+  });
+
+  const summary = await runTriageRule(deps, fakeRule(), "manual");
+
+  assertEquals(applied.calls.length, 3, "every match is acted on");
+  assertEquals(summary.error_code, null, "and the run ends ordinarily");
+});
+
+Deno.test("the dispatcher hands its own budget down to the rule", async () => {
+  // The check it already had only ever decided whether to START another rule,
+  // which is no protection against one rule that outlasts the invocation.
+  const state = freshState({ dueRules: [fakeRule()] });
+  const applied = { calls: [] as any[] };
+  const clock = fakeClock();
+  const deps = fakeDeps(state, [fakeMatch("a"), fakeMatch("b"), fakeMatch("c")], applied, undefined, {
+    now: clock.now,
+    applyAction: (input) => {
+      applied.calls.push(input);
+      // Two of these spend 40s of the dispatcher's 40s budget, so the third
+      // is the one that must not be started.
+      clock.advance(20_000);
+      return Promise.resolve({ ok: true, undo: { op: "move" } });
+    },
+  });
+
+  await handleTriageDispatch(deps);
+
+  assert(
+    applied.calls.length < 3,
+    `the rule must stop inside the invocation's budget, applied ${applied.calls.length}`,
+  );
+  assertEquals(
+    state.runs[0].error_code,
+    TRIAGE_STOP_REASON_TIME_BUDGET,
+    "and say so, rather than being killed and swept up as run_interrupted",
+  );
+});
+
+// ---------------------------------------------------------------------------
+// One provider connection per run
+//
+// Every action used to open, authenticate and tear down its own connection, so
+// a rule moving thirty messages performed thirty IMAP handshakes against one
+// account. AOL and Yahoo cap an account at five simultaneous connections, and
+// that churn is what makes them start refusing ordinary commands.
+// ---------------------------------------------------------------------------
+
+/** Records the session lifecycle, and hands out a token the test can identify. */
+function sessionRecorder() {
+  const log: string[] = [];
+  const token = { id: "session-1" };
+  return {
+    log,
+    token,
+    deps: {
+      openSession: () => {
+        log.push("open");
+        return Promise.resolve(token);
+      },
+      closeSession: (session: unknown) => {
+        log.push(session === token ? "close" : "close-wrong-session");
+        return Promise.resolve();
+      },
+    } satisfies Partial<TriageDeps>,
+  };
+}
+
+Deno.test("a run opens ONE connection, uses it throughout, and closes it once", async () => {
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const recorder = sessionRecorder();
+  const resolved: unknown[] = [];
+  const deps = fakeDeps(state, [fakeMatch("a"), fakeMatch("b"), fakeMatch("c")], applied, undefined, {
+    ...recorder.deps,
+    resolveFolder: (_inbox, name, session) => {
+      resolved.push(session);
+      return Promise.resolve({ id: `id-of-${name}`, verified: true });
+    },
+  });
+
+  await runTriageRule(deps, fakeRule());
+
+  assertEquals(recorder.log, ["open", "close"], "opened once, closed once, in that order");
+  assertEquals(resolved, [recorder.token], "the destination resolve runs on it");
+  assertEquals(applied.calls.length, 3, "all three messages acted on");
+  for (const call of applied.calls) {
+    assertEquals(call.session, recorder.token, "and every action gets the same connection");
+  }
+});
+
+Deno.test("the connection is opened AFTER the search, which owns one of its own", async () => {
+  // Overlapping the two would put the run at two simultaneous connections on an
+  // account that may only have five, to save a single handshake.
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const recorder = sessionRecorder();
+  const deps = fakeDeps(state, [fakeMatch("a")], applied, undefined, {
+    ...recorder.deps,
+    search: () => {
+      recorder.log.push("search");
+      return Promise.resolve([fakeMatch("a")]);
+    },
+  });
+
+  await runTriageRule(deps, fakeRule());
+
+  assertEquals(recorder.log, ["search", "open", "close"], "search first, then the connection");
+});
+
+Deno.test("the connection is closed when the run stops at its budget", async () => {
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const recorder = sessionRecorder();
+  const clock = fakeClock();
+  const deps = fakeDeps(state, [fakeMatch("a"), fakeMatch("b")], applied, undefined, {
+    ...recorder.deps,
+    now: clock.now,
+    applyAction: (input) => {
+      applied.calls.push(input);
+      clock.advance(20_000);
+      return Promise.resolve({ ok: true, undo: { op: "move" } });
+    },
+  });
+
+  await runTriageRule(deps, fakeRule(), "schedule", { deadlineMs: clock.now() + 30_000 });
+
+  assertEquals(recorder.log, ["open", "close"], "a partial run still closes its connection");
+});
+
+Deno.test("the connection is closed when an action throws", async () => {
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const recorder = sessionRecorder();
+  const deps = fakeDeps(state, [fakeMatch("a")], applied, undefined, {
+    ...recorder.deps,
+    applyAction: () => {
+      throw new Error("UID COPY failed: connection reset");
+    },
+  });
+
+  await runTriageRule(deps, fakeRule());
+
+  assertEquals(recorder.log, ["open", "close"], "a failing action must not leak the connection");
+});
+
+Deno.test("the connection is closed when the store throws mid-run", async () => {
+  // The one path that leaves runTriageRule by throwing. A leaked connection
+  // here would hold one of five slots until the provider's idle timeout.
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const recorder = sessionRecorder();
+  const store = fakeStore(state);
+  const deps = fakeDeps(state, [fakeMatch("a")], applied, undefined, {
+    ...recorder.deps,
+    store: {
+      ...store,
+      claimMessage: () => {
+        throw new Error("postgres is having a day");
+      },
+    },
+  });
+
+  let threw = false;
+  try {
+    await runTriageRule(deps, fakeRule());
+  } catch {
+    threw = true;
+  }
+
+  assert(threw, "the store error still propagates");
+  assertEquals(recorder.log, ["open", "close"], "and the connection is still closed");
+});
+
+Deno.test("a connection that cannot be opened is not a run failure", async () => {
+  // The actions all fall back to opening their own, which is what they did
+  // before the shared connection existed. An optimisation must not be able to
+  // fail a run.
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const closed: unknown[] = [];
+  const deps = fakeDeps(state, [fakeMatch("a")], applied, undefined, {
+    openSession: () => Promise.reject(new Error("imap_auth_failed")),
+    closeSession: (session) => (closed.push(session), Promise.resolve()),
+  });
+
+  const summary = await runTriageRule(deps, fakeRule());
+
+  assertEquals(summary.succeeded, 1, "the run still does its work");
+  assertEquals(summary.status, "completed", "and completes");
+  assertEquals(applied.calls[0].session, null, "each action falls back to its own connection");
+  assertEquals(closed.length, 0, "and there is nothing to close");
+});
+
+Deno.test("deps with no session support at all still run", async () => {
+  // fakeDeps without the overrides: openSession and closeSession are absent,
+  // which is the shape every caller had before 2026-09-16.
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const summary = await runTriageRule(fakeDeps(state, [fakeMatch("a")], applied), fakeRule());
+
+  assertEquals(summary.succeeded, 1, "the run works with no session seam implemented");
+  assertEquals(applied.calls[0].session, null, "and the action is told there is no connection");
 });
