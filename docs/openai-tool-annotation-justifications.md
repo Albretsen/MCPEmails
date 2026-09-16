@@ -1,7 +1,14 @@
 # OpenAI plugin submission: tool annotation justifications
 
-The text to paste into the annotation justification fields of the plugin
+The reasoning behind the annotation justification fields of the plugin
 submission portal, one block per advertised tool.
+
+Each portal field is a single line capped at **200 characters**, so what is
+actually submitted is a condensed form of the matching bullet below. Condense,
+never contradict: the portal shows the reviewer the scanned boolean beside your
+sentence, and a sentence arguing for a different value is the specific failure
+the review calls out ("describing the tool as functionally read-only in the
+justification doesn't make the tool read-only").
 
 **Why this file exists.** MCPEmails v1.0.0 was rejected on 2026-09-15 with "one
 or more of the tool's annotations do not appear to match the tool's behaviour,
