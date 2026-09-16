@@ -22,15 +22,11 @@ const bridge = new HostBridge();
 // immediately after the handshake, so every handler is attached before
 // connect() is called, not after.
 
-// tool-result AND tool-cancelled, together, because they are two halves of one
-// state machine: either can be the thing that ends the wait, and neither is
-// guaranteed to arrive at all. See store.ts#wireResultHandlers.
+// tool-input, tool-result AND tool-cancelled, together, because they are three
+// halves of one state machine: any can be the thing that ends the wait, none is
+// guaranteed to arrive at all, and tool-input is the only one a re-mounted view
+// is actually promised. See store.ts#wireResultHandlers.
 wireResultHandlers(bridge);
-
-bridge.onToolInput = () => {
-  // The card renders the server's envelope, never the agent's raw arguments —
-  // they are attacker-influenced and carry no fields the envelope lacks.
-};
 
 bridge.onHostContextChanged = () => {
   // The host does not apply the theme for us (Q7.1); re-apply on every change.

@@ -6,7 +6,7 @@ import {
   plural,
   relativeExpiry,
 } from "../format";
-import { Btn, Fields, Notice, ProviderBlock } from "./ui";
+import { Btn, Notice, ProviderLine, TextLink } from "./ui";
 
 export interface BulkActions {
   execute: () => void;
@@ -55,55 +55,41 @@ export function BulkPlan(props: Props) {
 
   return (
     <>
-      <div class="head">
-        <div class="grow">
-          <p class="eyebrow">
-            <span
-              class="status-dot"
-              data-tone={pending ? "warning" : "neutral"}
-              aria-hidden="true"
-            />
-            {verb} · awaiting confirmation
-          </p>
+      <div class="hdr">
+        <div class="hdr-l">
+          <span
+            class="dot"
+            data-tone={pending ? "warning" : "neutral"}
+            aria-hidden="true"
+          />
+          <b>
+            <span class="count">{count.toLocaleString()}</span>{" "}
+            {plural(count, "message", "messages")} to {verb.toLowerCase()}
+            {plan.scope?.destination ? ` into ${plan.scope.destination}` : ""}
+          </b>
         </div>
-        {fullscreen ? (
-          <Btn variant="quiet" onClick={() => actions.setFullscreen(false)}>
-            Close details
-          </Btn>
-        ) : props.canExpand && (hiddenSamples > 0 || caveats.length > 2) ? (
-          <Btn variant="quiet" onClick={() => actions.setFullscreen(true)}>
-            Details
-          </Btn>
-        ) : null}
+        <div class="hdr-r">
+          {fullscreen ? (
+            <TextLink onClick={() => actions.setFullscreen(false)}>
+              Collapse
+            </TextLink>
+          ) : props.canExpand && (hiddenSamples > 0 || caveats.length > 2) ? (
+            <TextLink onClick={() => actions.setFullscreen(true)}>
+              Details
+            </TextLink>
+          ) : null}
+          <span class="muted">{expiry}</span>
+        </div>
       </div>
 
-      <h2 class="headline">
-        <span class="count">{count.toLocaleString()}</span>{" "}
-        {plural(count, "message", "messages")} to {verb.toLowerCase()}
-        {plan.scope?.destination ? ` into ${plan.scope.destination}` : ""}
-      </h2>
-
-      <Fields
-        rows={[
-          ["Inbox", plan.inbox?.email_address ?? "unknown"],
-          [
-            "Matching",
-            <>
-              {plan.scope?.description || "(no description)"}
-              {plan.scope?.folder && (
-                <span class="muted"> · in {plan.scope.folder}</span>
-              )}
-            </>,
-          ],
-        ]}
-      />
+      <p class="line">
+        {plan.inbox?.email_address ?? "unknown"} ·{" "}
+        {plan.scope?.description || "(no description)"}
+        {plan.scope?.folder ? ` · in ${plan.scope.folder}` : ""}
+      </p>
 
       {shown.length > 0 && (
         <>
-          <span class="field-label">
-            Sample of what matches
-            {plan.sample_truncated ? ` (${shown.length} of ${count})` : ""}
-          </span>
           <ul class="samples">
             {shown.map((s, i) => (
               <li key={i}>
@@ -113,25 +99,30 @@ export function BulkPlan(props: Props) {
               </li>
             ))}
           </ul>
-          {hiddenSamples > 0 && (
-            <p class="tiny" style={{ margin: 0 }}>
-              {hiddenSamples} more in the sample. Open Details for the rest.
-            </p>
-          )}
+          <p class="line">
+            Sample of what matches
+            {plan.sample_truncated ? ` (${shown.length} of ${count})` : ""}
+            {hiddenSamples > 0
+              ? `. ${hiddenSamples} more in the sample, open Details for the rest.`
+              : ""}
+          </p>
         </>
       )}
 
-      <ProviderBlock provider={provider} fullscreen={fullscreen} />
+      <ProviderLine provider={provider} fullscreen={fullscreen} />
 
       {blockedReason && <Notice tone="warning">{blockedReason}</Notice>}
       {props.error && <Notice tone="danger">{props.error}</Notice>}
 
-      <div class="actions">
-        <Btn disabled={!canDecide} onClick={actions.cancel}>
+      {/* The destructive action is the filled one here, not a danger outline:
+          on this card it IS the primary action and hiding it as a text link
+          would be worse than owning it. */}
+      <div class="acts">
+        <Btn variant="quiet" disabled={!canDecide} onClick={actions.cancel}>
           Cancel
         </Btn>
         <Btn
-          variant="danger"
+          variant="primary"
           disabled={!canDecide}
           busy={busy === "execute"}
           onClick={actions.execute}
@@ -141,7 +132,6 @@ export function BulkPlan(props: Props) {
             : `${verb} ${count.toLocaleString()}`}
         </Btn>
       </div>
-      <p class="tiny">{expiry}</p>
     </>
   );
 }

@@ -15,6 +15,7 @@ import type {
   ToolResultParams,
 } from "./bridge";
 import { isEnvelope, type Envelope } from "./contract";
+import { cardKey, loadEnvelope, saveEnvelope } from "./persist";
 import { neutralizeDeep, neutralizeText } from "./sanitize";
 
 /**
@@ -80,6 +81,17 @@ export interface ToolInfoSummary {
   callId: string | number | null;
 }
 
+/**
+ * Whether a tool result arrived, and whether it beat the watchdog.
+ *
+ * Distinct from `ResultStatus` because it answers a question about the HOST
+ * rather than about the payload: "none" on a card that restored itself from
+ * storage is the remount case working as designed, and "late" says the host
+ * does deliver to a re-mounted view, only slower than the watchdog allows. We
+ * cannot read Claude's logs, so the diagnostics line is how that gets measured.
+ */
+export type ResultArrival = "none" | "ontime" | "late";
+
 export interface CardStore {
   envelope: Envelope | null;
   /** Classification of the most recent tool result. See `ResultStatus`. */
@@ -89,6 +101,21 @@ export interface CardStore {
   connectError: string | null;
   /** Diagnostics only, never rendered. Absent on hosts that omit it (Q6). */
   toolInfo: ToolInfoSummary | null;
+  /**
+   * The arguments of the originating `tools/call`, from
+   * `ui/notifications/tool-input`. NEVER rendered: they are agent-authored and
+   * carry no field the envelope lacks. Kept only as cache-key material for a
+   * host that omits `toolInfo` (persist.ts#cardKey).
+   */
+  toolInput: Record<string, unknown> | null;
+  /** Did the host deliver a result at all, and was it late? */
+  resultArrival: ResultArrival;
+  /**
+   * `null` until a restore has been attempted, then what it found. The card
+   * must not draw its "nothing to show" placeholder while this is still null,
+   * because that is the state in which the answer is genuinely not known yet.
+   */
+  restored: "storage" | "none" | null;
 }
 
 let state: CardStore = {
@@ -98,6 +125,9 @@ let state: CardStore = {
   connected: false,
   connectError: null,
   toolInfo: null,
+  toolInput: null,
+  resultArrival: "none",
+  restored: null,
 };
 
 const listeners = new Set<() => void>();
@@ -108,7 +138,39 @@ export function getState(): CardStore {
 
 export function setState(patch: Partial<CardStore>) {
   state = { ...state, ...patch };
+  // Every state change that carries an envelope updates the cache, not just the
+  // mounting result: the envelope the user is looking at after a save, a send
+  // or a local cancel is the one they should see again on remount, and it is
+  // the only one the server will not hand back (an IMAP save retires the id).
+  if (patch.envelope) persist(state);
   for (const l of listeners) l();
+}
+
+function persist(s: CardStore) {
+  if (!s.envelope) return;
+  const key = cardKey(s.toolInfo, s.toolInput);
+  if (key) saveEnvelope(key, s.envelope);
+}
+
+/**
+ * Put back the envelope this call last rendered, if this host kept it.
+ *
+ * Idempotent and one-shot: `restored` going non-null is what stops it running
+ * again, and an envelope that has already arrived wins outright — restoring
+ * over a live result would replace the truth with a memory of it.
+ *
+ * `quiet` is for the tool-input trigger, which fires while a result may still
+ * be milliseconds away: it restores a hit but does not record a miss, so a
+ * perfectly normal first mount is not pushed into its "nothing found" rendering
+ * one tick before the result lands. The watchdog calls it without `quiet` and
+ * that is what finally settles the question.
+ */
+export function attemptRestore(quiet = false): void {
+  if (state.envelope || state.restored !== null) return;
+  const key = cardKey(state.toolInfo, state.toolInput);
+  const found = key ? loadEnvelope(key) : null;
+  if (found) setState({ envelope: found, restored: "storage" });
+  else if (!quiet) setState({ restored: "none" });
 }
 
 export function subscribe(fn: () => void): () => void {
@@ -254,17 +316,19 @@ export function envelopeFrom(result: ToolResultParams | undefined): Envelope | n
  * honest expectation is single-digit milliseconds and this budget is roughly
  * three orders of magnitude of headroom.
  *
- * 3s is picked from both ends. Too short and a slow-but-working host gets cut
- * off mid-delivery and the user loses a card they were entitled to (the failure
- * mode here is silent, so that would be a bad trade); too long and the user is
- * left reading a loading skeleton that is never going to resolve, which is the
- * exact symptom being fixed. 3s is comfortably past any plausible delivery and
- * still under the point where a stuck skeleton reads as a broken product. It is
- * deliberately well inside `INITIALIZE_TIMEOUT_MS` (10s), which covers the
- * other half of the problem: a host that never completes the handshake at all
- * surfaces as `connectError`, not as this.
+ * Was 3s, cut to 1.5s on 2026-09-16. The original reasoning ("too short and a
+ * slow-but-working host gets cut off mid-delivery and the user loses a card")
+ * no longer holds, and that is the whole reason it could move: a late result
+ * has always still won, and now the deadline no longer ends in silence either —
+ * it ends in a restore from storage or a one-line placeholder, both of which a
+ * late envelope overwrites. So the cost of firing early fell to a brief
+ * flicker, while the cost of firing late stayed what the founder saw in Claude:
+ * seconds of loading state on a card that was never getting a result. It is
+ * still deliberately well inside `INITIALIZE_TIMEOUT_MS` (10s), which covers
+ * the other half of the problem: a host that never completes the handshake at
+ * all surfaces as `connectError`, not as this.
  */
-export const RESULT_WATCHDOG_MS = 3_000;
+export const RESULT_WATCHDOG_MS = 1_500;
 
 let watchdogTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -302,20 +366,27 @@ export function armResultWatchdog(bridge: HostBridge): () => void {
     if (getState().resultStatus !== "waiting") return;
 
     setState({ resultStatus: "absent" });
+    // The deadline is also the last moment the question "is there a remembered
+    // envelope for this call" is still open, so it is answered here rather than
+    // left to a component: this is the path the founder's "it doesn't load if I
+    // leave the chat and come back" actually takes.
+    attemptRestore();
 
     // Fire-and-forget, after the state is already committed, so a host with no
     // log channel cannot affect what the user sees. Protocol facts only.
-    const info = getState().toolInfo;
+    const s = getState();
     bridge.log("warning", {
       event: "tool_result_absent",
       waited_ms: Date.now() - startedAt,
       protocol_version: bridge.protocolVersion,
       host: bridge.hostInfo?.name ?? null,
-      tool: info?.tool ?? null,
-      call_id: info?.callId ?? null,
+      tool: s.toolInfo?.tool ?? null,
+      call_id: s.toolInfo?.callId ?? null,
+      had_tool_input: s.toolInput !== null,
+      restored: s.restored,
       note:
         "No ui/notifications/tool-result or -cancelled after connect. " +
-        "Card collapsed instead of holding its loading state.",
+        "Card fell back to its stored envelope, or to a one-line placeholder.",
     });
   }, RESULT_WATCHDOG_MS);
 
@@ -344,15 +415,39 @@ export function toolInfoFrom(ctx: HostContext | undefined): ToolInfoSummary | nu
  * `harness/state-machine.mjs` proves the three no-result paths.
  */
 export function wireResultHandlers(bridge: HostBridge) {
+  // The host MUST send tool-input with the full arguments after ui/initialize,
+  // including to a view that mounts long after the call finished — which makes
+  // it the only thing a re-mounted card is guaranteed to receive, and therefore
+  // the trigger for putting the last envelope back. The arguments themselves
+  // are never rendered; they are agent-authored and the envelope has every
+  // field the card needs.
+  bridge.onToolInput = (args: Record<string, unknown> | undefined) => {
+    setState({ toolInput: args ?? {} });
+    // `quiet`: a hit restores immediately, a miss waits for the watchdog. On a
+    // first mount the result is usually a tick behind this notification, and
+    // recording the miss here would flash a "nothing to show" line in front of
+    // a card that is about to render perfectly well.
+    attemptRestore(true);
+  };
+
   bridge.onToolResult = (params: ToolResultParams) => {
     // `status` matters as much as `envelope`: a result that is not ours at all
     // (an opted-out inbox, a non-plannable email_organize action) must leave
     // the card silent rather than warn under a successful operation.
     const { envelope, status } = classifyResult(params);
+    // Recorded before the disarm, because "did this beat the watchdog" is
+    // exactly the fact the diagnostics line exists to collect from the real
+    // host: `late` would mean remounts DO get a result and the budget is wrong.
+    const arrival: ResultArrival =
+      getState().resultStatus === "absent" ? "late" : "ontime";
     // Unconditional, including after the watchdog has already given up. A late
-    // envelope is still a real envelope and must render.
+    // envelope is still a real envelope and must render, over a restored one.
     disarmResultWatchdog();
-    setState(envelope ? { envelope, resultStatus: status } : { resultStatus: status });
+    setState(
+      envelope
+        ? { envelope, resultStatus: status, resultArrival: arrival }
+        : { resultStatus: status, resultArrival: arrival },
+    );
   };
 
   bridge.onToolCancelled = (_params: ToolCancelledParams) => {

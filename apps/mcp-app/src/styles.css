@@ -1,30 +1,38 @@
 /* ---------------------------------------------------------------------------
    Review card styles.
 
-   Rules being obeyed (Anthropic MCP Apps design guidelines):
+   Redesigned 2026-09-16 after the first internal run in the real Claude host.
+   The verdict was "super ugly and far too big ... looks super unprofessional",
+   and the cause was a category error: the card was styled as a standalone app
+   (its own background, 44px controls, boxed sections, a six-bar skeleton) and
+   Claude already draws a labelled container around it. Two apps, nested.
+
+   So the card is now a DENSE BLOCK OF CONTENT, not a surface:
+   - transparent background and near-zero padding: the host's container is the
+     surface, and the card must not paint a second one inside it.
+   - 13px / 1.4, 8px rhythm, 4px inside a control.
+   - 28px controls, text-first. This deliberately drops the old >=44px touch
+     rule: the host's own composer and buttons in the same viewport are ~28px,
+     and matching them beats an abstract guideline the surrounding UI ignores.
+     Hit area is kept honest with padding rather than height where it matters.
+   - one bordered box per editable field, never around a section.
+   - the loading state is ONE line.
+
+   Unchanged rules, still load-bearing:
    - every structural colour / type / radius comes from a host style variable
-     with a literal fallback. Phase-0 Q6 shows a host "can provide any subset",
-     and the reference host omits several.
+     with a literal fallback. Phase-0 Q6: a host "can provide any subset".
    - literal colours appear only in the token block below, once per theme.
    - no dropdowns / menus / popovers anywhere (clipped by the container,
-     conflicts with host z-index). Segmented buttons and inline tabs only.
+     conflicts with host z-index).
    - inline card: auto-fit height, no nested vertical scrolling.
-   - >=44px touch targets, visible focus rings, WCAG AA contrast.
-   - container queries, never fixed widths. 320px -> fullscreen.
+   - visible focus rings, WCAG AA contrast, container queries not fixed widths.
 --------------------------------------------------------------------------- */
 
-/* Semantic tokens. Each is a host style variable with a literal fallback, and
-   the fallback is redefined per theme because the host does not apply the theme
-   for us (findings Q7.1). When the host supplies its variables these literals
-   are never used; when it supplies a subset, only the gaps fall back. */
 :root {
   --bg: var(--color-background-primary, #ffffff);
   --bg-2: var(--color-background-secondary, #f5f5f5);
   --bg-3: var(--color-background-tertiary, #e5e5e5);
   --bg-inverse: var(--color-background-inverse, #1a1a1a);
-  --bg-danger: var(--color-background-danger, #fef2f2);
-  --bg-success: var(--color-background-success, #f0fdf4);
-  --bg-warning: var(--color-background-warning, #fefce8);
   --fg: var(--color-text-primary, #1f2937);
   --fg-2: var(--color-text-secondary, #57606f);
   --fg-3: var(--color-text-tertiary, #6b7280);
@@ -36,8 +44,6 @@
   --bd: var(--color-border-primary, #e5e7eb);
   --bd-2: var(--color-border-secondary, #d1d5db);
   --bd-danger: var(--color-border-danger, #fca5a5);
-  --bd-warning: var(--color-border-warning, #fde047);
-  --bd-success: var(--color-border-success, #86efac);
   --ring: var(--color-ring-primary, #3b82f6);
   --ring-danger: var(--color-ring-danger, #dc2626);
 
@@ -53,9 +59,6 @@
   --bg-2: var(--color-background-secondary, #2d2d2d);
   --bg-3: var(--color-background-tertiary, #404040);
   --bg-inverse: var(--color-background-inverse, #ffffff);
-  --bg-danger: var(--color-background-danger, #7f1d1d);
-  --bg-success: var(--color-background-success, #14532d);
-  --bg-warning: var(--color-background-warning, #713f12);
   --fg: var(--color-text-primary, #f3f4f6);
   --fg-2: var(--color-text-secondary, #b6bcc6);
   --fg-3: var(--color-text-tertiary, #9ca3af);
@@ -67,28 +70,39 @@
   --bd: var(--color-border-primary, #404040);
   --bd-2: var(--color-border-secondary, #525252);
   --bd-danger: var(--color-border-danger, #991b1b);
-  --bd-warning: var(--color-border-warning, #854d0e);
-  --bd-success: var(--color-border-success, #166534);
   --ring: var(--color-ring-primary, #60a5fa);
   --ring-danger: var(--color-ring-danger, #ef4444);
   color-scheme: dark;
 }
 
+/* The accent, i.e. the fill on the one primary button per card.
+
+   Deliberately the host's INVERSE pair rather than `--color-ring-primary`: the
+   ring colour is a 3.7:1 blue against white, which is fine for a 2px outline
+   and not fine behind 13px button text, and it flips to a lighter blue in dark
+   where white text is worse still. The inverse pair is the host's own filled
+   button (near-black on light, near-white on dark), passes AA in both, and is
+   what "accent" means in Claude's surface. */
 :root {
+  --accent: var(--bg-inverse);
+  --accent-fg: var(--fg-inverse);
+
   --font: var(--font-sans, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
   --font-mono-stack: var(--font-mono, ui-monospace, "SF Mono", Menlo, monospace);
-  --t-xs: var(--font-text-xs-size, 0.75rem);
-  --t-sm: var(--font-text-sm-size, 0.875rem);
-  --h-md: var(--font-heading-md-size, 1rem);
-  --h-lg: var(--font-heading-lg-size, 1.25rem);
-  --lh-sm: var(--font-text-sm-line-height, 1.4);
-  --lh-md: var(--font-text-md-line-height, 1.5);
+  /* Fixed px, not the host's rem scale: the brief is a 13px base, and the host
+     variables are relative to a root font size the sandbox does not share. */
+  --fs: 13px;
+  --fs-sm: 12px;
+  --fs-xs: 11px;
+  --lh: 1.4;
   --w-medium: var(--font-weight-medium, 500);
   --w-semibold: var(--font-weight-semibold, 600);
   --r-sm: var(--border-radius-sm, 4px);
   --r-md: var(--border-radius-md, 6px);
   --r-full: var(--border-radius-full, 9999px);
   --bw: var(--border-width-regular, 1px);
+  /* The label gutter on recipient rows. One number, so every row lines up. */
+  --gutter: 32px;
 }
 
 * { box-sizing: border-box; }
@@ -102,24 +116,24 @@ body {
 
 body {
   font-family: var(--font);
-  font-size: var(--t-sm);
-  line-height: var(--lh-sm);
+  font-size: var(--fs);
+  line-height: var(--lh);
   color: var(--fg);
   -webkit-text-size-adjust: 100%;
 }
 
 /* ---- shell ------------------------------------------------------------- */
 
+/* No background and no border: the host's labelled container is the surface. */
 .card {
   container-type: inline-size;
   container-name: card;
-  background: var(--bg);
   color: var(--fg);
-  padding: calc(12px + var(--safe-top)) calc(12px + var(--safe-right))
-    calc(12px + var(--safe-bottom)) calc(12px + var(--safe-left));
+  padding: calc(2px + var(--safe-top)) calc(2px + var(--safe-right))
+    calc(2px + var(--safe-bottom)) calc(2px + var(--safe-left));
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   overflow-wrap: anywhere;
 }
 
@@ -130,86 +144,137 @@ body {
 }
 
 .card[data-mode="fullscreen"] {
-  gap: 14px;
-  padding: calc(16px + var(--safe-top)) calc(16px + var(--safe-right))
-    calc(16px + var(--safe-bottom)) calc(16px + var(--safe-left));
-  max-width: 780px;
+  padding: calc(12px + var(--safe-top)) calc(12px + var(--safe-right))
+    calc(12px + var(--safe-bottom)) calc(12px + var(--safe-left));
+  max-width: 720px;
   margin: 0 auto;
+  min-height: 100vh;
 }
 
 /* ---- type -------------------------------------------------------------- */
 
-.eyebrow {
-  font-size: var(--t-xs);
-  font-weight: var(--w-semibold);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--fg-2);
-  margin: 0;
-}
-
 .subject {
-  font-size: var(--h-md);
+  font-size: var(--fs);
   font-weight: var(--w-semibold);
-  line-height: var(--font-heading-md-line-height, 1.4);
+  line-height: var(--lh);
   margin: 0;
   color: var(--fg);
 }
 
 .headline {
-  font-size: var(--h-lg);
+  font-size: var(--fs);
   font-weight: var(--w-semibold);
-  line-height: var(--font-heading-lg-line-height, 1.3);
+  line-height: var(--lh);
   margin: 0;
   color: var(--fg);
 }
 
 .muted { color: var(--fg-2); }
-.tiny { font-size: var(--t-xs); color: var(--fg-3); }
 .mono { font-family: var(--font-mono-stack); }
+
+/* The workhorse: every collapsed section in the redesign is one of these. */
+.line {
+  margin: 0;
+  font-size: var(--fs-sm);
+  line-height: var(--lh);
+  color: var(--fg-2);
+}
+
+.tiny { font-size: var(--fs-xs); color: var(--fg-3); margin: 0; }
 
 /* ---- header ------------------------------------------------------------ */
 
-.head {
+.hdr {
   display: flex;
-  align-items: flex-start;
+  align-items: baseline;
   justify-content: space-between;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.status-dot {
+.hdr-l,
+.hdr-r {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.hdr-l { flex: 1 1 auto; }
+.hdr-r { flex: 0 0 auto; }
+
+/* Shrinkable, because a receipt's headline is a whole sentence here while a
+   draft's is the word "Draft". `.hdr` wraps before this shrinks far. */
+.hdr-l > b {
+  font-weight: var(--w-semibold);
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.hdr-l > .muted {
+  font-size: var(--fs-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hdr-r > .muted { font-size: var(--fs-sm); color: var(--fg-3); }
+
+.dot {
   display: inline-block;
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
   border-radius: var(--r-full);
   background: var(--fg-warning);
-  margin-right: 6px;
-  vertical-align: middle;
+  /* baseline-aligned flex item: nudge it onto the text's optical centre */
+  transform: translateY(-1px);
 }
-.status-dot[data-tone="danger"] { background: var(--fg-danger); }
-.status-dot[data-tone="success"] { background: var(--fg-success); }
-.status-dot[data-tone="neutral"] { background: var(--fg-3); }
+.dot[data-tone="danger"] { background: var(--fg-danger); }
+.dot[data-tone="success"] { background: var(--fg-success); }
+.dot[data-tone="neutral"] { background: var(--fg-3); }
 
 /* ---- field rows -------------------------------------------------------- */
 
+/* label gutter + field, the same geometry for a chip row, a subject and a
+   read-only pair, so the three card kinds line up as one product. */
+.row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.lbl {
+  flex: 0 0 var(--gutter);
+  font-size: var(--fs-sm);
+  color: var(--fg-3);
+  min-width: 0;
+}
+
+.row > .val {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--fs);
+}
+
+/* Read-only pairs (outbound, bulk). Same gutter as the editable rows. */
 .fields {
   display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 4px 10px;
+  grid-template-columns: var(--gutter) 1fr;
+  gap: 4px 8px;
   align-items: baseline;
   margin: 0;
 }
 
 .fields dt {
-  font-size: var(--t-xs);
+  font-size: var(--fs-sm);
   color: var(--fg-3);
-  font-weight: var(--w-medium);
 }
 
 .fields dd {
   margin: 0;
-  font-size: var(--t-sm);
+  font-size: var(--fs);
   color: var(--fg);
   min-width: 0;
 }
@@ -217,8 +282,8 @@ body {
 /* ---- body preview ------------------------------------------------------ */
 
 .preview {
-  font-size: var(--t-sm);
-  line-height: var(--lh-md);
+  font-size: var(--fs);
+  line-height: var(--lh);
   color: var(--fg-2);
   white-space: pre-wrap;
   margin: 0;
@@ -231,37 +296,33 @@ body {
 }
 
 .body-full {
-  font-size: var(--t-sm);
-  line-height: var(--lh-md);
+  font-size: var(--fs);
+  line-height: var(--lh);
   color: var(--fg);
   white-space: pre-wrap;
   margin: 0;
-  padding: 10px 12px;
+  padding: 6px 8px;
   border: var(--bw) solid var(--bd);
   border-radius: var(--r-md);
-  background: var(--bg-2);
 }
 
-.body-html {
-  white-space: normal;
-}
-.body-html table { max-width: 100%; }
-.body-html table { border-collapse: collapse; }
+.body-html { white-space: normal; }
+.body-html table { max-width: 100%; border-collapse: collapse; }
 .body-html td,
-.body-html th { border: var(--bw) solid var(--bd); padding: 4px 6px; }
+.body-html th { border: var(--bw) solid var(--bd); padding: 3px 5px; }
 .body-html a { color: var(--fg-info); }
 .body-html blockquote {
   margin: 6px 0;
-  padding-left: 10px;
+  padding-left: 8px;
   border-left: 2px solid var(--bd-2);
   color: var(--fg-2);
 }
 .img-placeholder {
   display: inline-block;
-  padding: 1px 6px;
+  padding: 0 4px;
   border: var(--bw) dashed var(--bd-2);
   border-radius: var(--r-sm);
-  font-size: var(--t-xs);
+  font-size: var(--fs-xs);
   color: var(--fg-3);
 }
 
@@ -270,7 +331,7 @@ body {
 .chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -279,14 +340,14 @@ body {
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   max-width: 100%;
-  padding: 3px 9px;
+  padding: 0 6px;
   border: var(--bw) solid var(--bd);
-  border-radius: var(--r-full);
-  background: var(--bg-2);
-  font-size: var(--t-xs);
-  color: var(--fg-2);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  line-height: 18px;
+  color: var(--fg);
 }
 
 .chip > .name {
@@ -295,99 +356,50 @@ body {
   white-space: nowrap;
 }
 
-/* ---- provider block ---------------------------------------------------- */
-
-.provider {
-  border: var(--bw) solid var(--bd);
-  border-radius: var(--r-md);
-  background: var(--bg-2);
-  padding: 8px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.provider .route {
-  font-size: var(--t-xs);
-  color: var(--fg-2);
-}
-
-.provider .route b {
-  color: var(--fg);
-  font-weight: var(--w-semibold);
-}
-
-.caveats {
-  margin: 0;
-  padding-left: 16px;
-  font-size: var(--t-xs);
-  color: var(--fg-2);
-  line-height: var(--lh-sm);
-}
-
-.caveats li + li { margin-top: 2px; }
-
 /* ---- notices ----------------------------------------------------------- */
 
+/* A rule and muted text, not a filled panel: a notice is a sentence about the
+   card, and giving it a coloured box made every error look like an outage. */
 .notice {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-  padding: 8px 10px;
-  border-radius: var(--r-md);
-  border: var(--bw) solid var(--bd);
-  background: var(--bg-2);
-  font-size: var(--t-xs);
+  padding: 2px 0 2px 8px;
+  border-left: 2px solid var(--bd-2);
+  font-size: var(--fs-sm);
   color: var(--fg-2);
 }
 
-.notice[data-tone="danger"] {
-  border-color: var(--bd-danger);
-  background: var(--bg-danger);
-  color: var(--fg-danger);
-}
-.notice[data-tone="warning"] {
-  border-color: var(--bd-warning);
-  background: var(--bg-warning);
-  color: var(--fg-warning);
-}
-.notice[data-tone="success"] {
-  border-color: var(--bd-success);
-  background: var(--bg-success);
-  color: var(--fg-success);
-}
+.notice[data-tone="danger"] { border-color: var(--bd-danger); color: var(--fg-danger); }
+.notice[data-tone="warning"] { border-color: var(--fg-warning); color: var(--fg-warning); }
+.notice[data-tone="success"] { border-color: var(--fg-success); color: var(--fg-success); }
 
 /* ---- actions ----------------------------------------------------------- */
 
-.actions {
+/* One row, right-aligned, wrapping. Never full-width buttons: a stretched
+   "Send" reads as a landing page, not as a control in a chat transcript. */
+.acts {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
-}
-
-.actions > .btn { flex: 1 1 auto; }
-
-@container card (max-width: 359px) {
-  .actions { flex-direction: column; }
-  .actions > .btn { width: 100%; }
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .btn {
   appearance: none;
   font: inherit;
+  font-size: var(--fs-sm);
   font-weight: var(--w-medium);
-  min-height: 44px;
-  padding: 10px 14px;
+  height: 28px;
+  padding: 0 10px;
   border-radius: var(--r-md);
   border: var(--bw) solid var(--bd-2);
-  background: var(--bg);
+  background: transparent;
   color: var(--fg);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  text-align: center;
+  gap: 4px;
+  white-space: nowrap;
 }
 
 .btn:hover:not(:disabled) { background: var(--bg-2); }
@@ -395,73 +407,90 @@ body {
 
 .btn:focus-visible {
   outline: 2px solid var(--ring);
-  outline-offset: 2px;
+  outline-offset: 1px;
 }
 
 .btn:disabled {
   cursor: not-allowed;
-  opacity: 0.55;
+  opacity: 0.45;
 }
 
 .btn[data-variant="primary"] {
-  background: var(--bg-inverse);
-  color: var(--fg-inverse);
+  background: var(--accent);
+  color: var(--accent-fg);
   border-color: transparent;
 }
-.btn[data-variant="primary"]:hover:not(:disabled) { opacity: 0.88; }
+.btn[data-variant="primary"]:hover:not(:disabled) { background: var(--accent); opacity: 0.88; }
 .btn[data-variant="primary"]:active:not(:disabled) { opacity: 0.78; }
 
+/* Text only, per the brief: a bordered red button next to a bordered grey one
+   made Discard look like a peer of Send. */
 .btn[data-variant="danger"] {
   color: var(--fg-danger);
-  border-color: var(--bd-danger);
-  background: var(--bg);
+  border-color: transparent;
+  padding: 0 6px;
 }
-.btn[data-variant="danger"]:hover:not(:disabled) { background: var(--bg-danger); }
+.btn[data-variant="danger"]:hover:not(:disabled) { background: transparent; text-decoration: underline; }
 .btn[data-variant="danger"]:focus-visible { outline-color: var(--ring-danger); }
 
-/* Low-emphasis, still 44px tall for touch. */
 .btn[data-variant="quiet"] {
   border-color: transparent;
-  background: transparent;
   color: var(--fg-2);
-  padding: 10px 8px;
-  font-size: var(--t-xs);
+  padding: 0 6px;
 }
-.btn[data-variant="quiet"]:hover:not(:disabled) {
-  background: var(--bg-2);
-  color: var(--fg);
+.btn[data-variant="quiet"]:hover:not(:disabled) { background: transparent; color: var(--fg); }
+
+/* A text link that is really a button. Used for Expand, Cc Bcc, Show
+   formatting: affordances that must not carry a control's visual weight. */
+.link {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: var(--fs-sm);
+  color: var(--fg-2);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
-/* ---- segmented control (replaces every dropdown) ----------------------- */
+.link:hover { color: var(--fg); }
+
+.link:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+.link[data-tone="danger"] { color: var(--fg-danger); }
+
+/* ---- segmented control (fullscreen panel switcher only) ---------------- */
 
 .segmented {
   display: inline-flex;
   border: var(--bw) solid var(--bd);
   border-radius: var(--r-md);
   overflow: hidden;
-  background: var(--bg-2);
   flex-wrap: wrap;
 }
 
 .segmented > button {
   appearance: none;
   font: inherit;
-  font-size: var(--t-xs);
-  min-height: 44px;
-  padding: 0 12px;
+  font-size: var(--fs-sm);
+  height: 26px;
+  padding: 0 10px;
   border: 0;
   background: transparent;
   color: var(--fg-2);
   cursor: pointer;
 }
 
-.segmented > button + button {
-  border-left: var(--bw) solid var(--bd);
-}
+.segmented > button + button { border-left: var(--bw) solid var(--bd); }
 
-.segmented > button[aria-pressed="true"],
 .segmented > button[aria-selected="true"] {
-  background: var(--bg);
+  background: var(--bg-2);
   color: var(--fg);
   font-weight: var(--w-semibold);
 }
@@ -471,40 +500,100 @@ body {
   outline-offset: -2px;
 }
 
-/* ---- form controls (fullscreen only) ----------------------------------- */
+/* ---- form controls ----------------------------------------------------- */
 
-.field-label {
-  display: block;
-  font-size: var(--t-xs);
-  color: var(--fg-3);
-  font-weight: var(--w-medium);
-  margin-bottom: 4px;
+/* The chip box. Chips and their input share ONE border so the row reads as a
+   single field rather than a list stacked above a text box. */
+.fld {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+  border: var(--bw) solid var(--bd);
+  border-radius: var(--r-md);
+  cursor: text;
+}
+
+.fld:focus-within {
+  border-color: var(--ring);
+  outline: 1px solid var(--ring);
+}
+
+/* The input inside .fld carries no chrome of its own. */
+.fld > input {
+  flex: 1 1 80px;
+  min-width: 80px;
+  font: inherit;
+  font-size: var(--fs);
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--fg);
+  padding: 0;
+  height: 18px;
 }
 
 .input,
 .textarea {
   font: inherit;
-  font-size: var(--t-sm);
+  font-size: var(--fs);
   width: 100%;
-  min-height: 44px;
-  padding: 10px 12px;
+  padding: 6px 8px;
   color: var(--fg);
-  background: var(--bg);
-  border: var(--bw) solid var(--bd-2);
+  background: transparent;
+  border: var(--bw) solid var(--bd);
   border-radius: var(--r-md);
 }
 
 .textarea {
-  min-height: 180px;
-  line-height: var(--lh-md);
-  resize: vertical;
+  line-height: var(--lh);
+  resize: none;
+  display: block;
+  overflow: hidden;
+}
+
+/* The subject: a writing line, not a box. */
+/* Fullscreen is a compose surface: the message box takes the room that is
+   left, rather than auto-growing to the text and leaving dead space under it.
+   `flex: 1 1 auto` keeps the measured auto-grow height as the basis, so a
+   short draft still starts at its natural size and only grows. */
+.card[data-mode="fullscreen"] .textarea {
+  flex: 1 1 auto;
+  min-height: 8lh;
+}
+
+.subj {
+  font: inherit;
+  font-size: var(--fs);
+  font-weight: var(--w-medium);
+  width: 100%;
+  padding: 3px 0;
+  color: var(--fg);
+  background: transparent;
+  border: 0;
+  border-bottom: var(--bw) solid var(--bd);
+  border-radius: 0;
 }
 
 .input:focus-visible,
 .textarea:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 1px;
-  border-color: transparent;
+  outline: 1px solid var(--ring);
+  border-color: var(--ring);
+}
+
+.subj:focus-visible {
+  outline: none;
+  border-bottom-color: var(--ring);
+}
+
+.input:disabled,
+.textarea:disabled,
+.subj:disabled,
+.fld > input:disabled {
+  color: var(--fg-3);
 }
 
 /* ---- sample rows (bulk) ------------------------------------------------ */
@@ -522,9 +611,8 @@ body {
   display: flex;
   gap: 8px;
   align-items: baseline;
-  padding: 6px 10px;
-  font-size: var(--t-xs);
-  background: var(--bg);
+  padding: 3px 8px;
+  font-size: var(--fs-sm);
 }
 
 .samples > li + li { border-top: var(--bw) solid var(--bd); }
@@ -562,37 +650,64 @@ body {
 /* ---- count ------------------------------------------------------------- */
 
 .count {
-  font-size: var(--font-heading-xl-size, 1.5rem);
-  line-height: var(--font-heading-xl-line-height, 1.25);
   font-weight: var(--w-semibold);
   font-variant-numeric: tabular-nums;
 }
 
-/* ---- skeletons (never spinners) ---------------------------------------- */
+/* ---- loading ----------------------------------------------------------- */
 
-.sk {
-  background: var(--bg-2);
-  border-radius: var(--r-sm);
-  height: 12px;
+/* ONE line. The old skeleton was six bars and two blocks, ~150px of grey under
+   the host's own "Widget from ..." header, and it was the single loudest thing
+   in the founder's screenshots. The card now spends at most RESULT_WATCHDOG_MS
+   here before it either restores or says what it knows. */
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 20px;
+  color: var(--fg-3);
+  font-size: var(--fs-sm);
   animation: sk-pulse 1.4s ease-in-out infinite;
 }
 
-.sk[data-h="lg"] { height: 18px; }
-.sk[data-h="btn"] { height: 44px; border-radius: var(--r-md); }
+.loading::before {
+  content: "";
+  width: 14px;
+  height: 2px;
+  border-radius: var(--r-full);
+  background: currentColor;
+  flex: 0 0 auto;
+}
 
 @keyframes sk-pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.55; }
+  50% { opacity: 0.45; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sk { animation: none; }
+  .loading { animation: none; }
+}
+
+/* ---- diagnostics ------------------------------------------------------- */
+
+/* Internal v1 only. One line of protocol facts, never content: we cannot read
+   the real host's logs, so this is how remount behaviour gets measured. Delete
+   this rule and <Diagnostics/> together when the answer is known. */
+.diag {
+  margin: 0;
+  font-size: var(--fs-xs);
+  line-height: 1.3;
+  color: var(--fg-3);
+  opacity: 0.7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ---- misc -------------------------------------------------------------- */
 
 .stack { display: flex; flex-direction: column; gap: 8px; }
-.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.tight { display: flex; flex-direction: column; gap: 4px; }
 .grow { flex: 1 1 auto; min-width: 0; }
 .divider { height: var(--bw); background: var(--bd); border: 0; margin: 0; }
 
@@ -612,19 +727,19 @@ body {
 
 /*
  * The remove control on a recipient chip. Not a .btn: it lives inside a chip,
- * has to keep the chip on one line, and a 44px target would double the chip's
- * height. The chip itself stays a comfortable tap target and the label is on
- * the aria-label, so a pointer misses the glyph and still hits the control.
+ * has to keep the chip on one line, and a control-sized target would double the
+ * chip's height. The chip itself stays a comfortable pointer target and the
+ * label is on the aria-label, so a pointer misses the glyph and still hits it.
  */
 .chip-x {
   flex: none;
-  padding: 0 2px;
-  margin: -2px -4px -2px 0;
+  padding: 0 1px;
+  margin-right: -3px;
   border: 0;
   background: none;
   color: var(--fg-3);
   font: inherit;
-  font-size: var(--t-sm);
+  font-size: var(--fs);
   line-height: 1;
   cursor: pointer;
 }
@@ -636,16 +751,3 @@ body {
   outline-offset: 1px;
   border-radius: var(--r-sm);
 }
-
-.reply-to > summary {
-  font-size: var(--t-xs);
-  color: var(--fg-3);
-  cursor: pointer;
-}
-
-.reply-to > summary:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-}
-
-.reply-to[open] > summary { margin-bottom: 6px; }

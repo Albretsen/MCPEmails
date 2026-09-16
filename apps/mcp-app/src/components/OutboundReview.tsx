@@ -7,7 +7,16 @@ import {
   relativeExpiry,
   summarizeRecipients,
 } from "../format";
-import { Btn, Fields, HtmlBody, Notice, ProviderBlock, Segmented } from "./ui";
+import {
+  AutoTextarea,
+  Btn,
+  Fields,
+  HtmlBody,
+  Notice,
+  ProviderLine,
+  Segmented,
+  TextLink,
+} from "./ui";
 
 export interface OutboundActions {
   reject: (note?: string) => void;
@@ -75,7 +84,7 @@ export function OutboundReview(props: Props) {
   const pending = env.state === "pending";
   const canDecide = env.actor?.can_decide !== false && pending;
 
-  const [bodyMode, setBodyMode] = useState<"text" | "html">("text");
+  const [showHtml, setShowHtml] = useState(false);
   const [panel, setPanel] = useState<"none" | "edit" | "schedule">("none");
   const [subject, setSubject] = useState(o.subject ?? "");
   const [bodyText, setBodyText] = useState(o.body?.text ?? "");
@@ -107,36 +116,41 @@ export function OutboundReview(props: Props) {
         : null;
 
   const header = (
-    <div class="head">
-      <div class="grow">
-        <p class="eyebrow">
-          <span
-            class="status-dot"
-            data-tone={pending ? "warning" : "neutral"}
-            aria-hidden="true"
-          />
-          {operationLabel(o.operation)} · awaiting approval
-        </p>
+    <div class="hdr">
+      <div class="hdr-l">
+        <span
+          class="dot"
+          data-tone={pending ? "warning" : "neutral"}
+          aria-hidden="true"
+        />
+        <b>{operationLabel(o.operation)}</b>
+        <span class="muted">{identityLine(o)}</span>
       </div>
-      {fullscreen ? (
-        <Btn variant="quiet" onClick={() => actions.setFullscreen(false)}>
-          Close details
-        </Btn>
-      ) : props.canExpand ? (
-        <Btn
-          variant="quiet"
-          onClick={() => actions.setFullscreen(true)}
-          title="Full message, edit and send later"
-        >
-          Details
-        </Btn>
-      ) : null}
+      <div class="hdr-r">
+        {fullscreen ? (
+          <TextLink onClick={() => actions.setFullscreen(false)}>
+            Collapse
+          </TextLink>
+        ) : props.canExpand ? (
+          <TextLink
+            onClick={() => actions.setFullscreen(true)}
+            title="Full message, edit and send later"
+          >
+            Details
+          </TextLink>
+        ) : null}
+        <span class="muted">{expiry}</span>
+      </div>
     </div>
   );
 
   const primaryActions = (
     <>
-      <div class="actions">
+      <p class="line">
+        Approval happens on mcpemails.com in your own browser. No agent,
+        including this one, can approve a send.
+      </p>
+      <div class="acts">
         <Btn
           variant="danger"
           disabled={!canDecide}
@@ -156,32 +170,27 @@ export function OutboundReview(props: Props) {
           <span aria-hidden="true">&#8599;</span>
         </Btn>
       </div>
-      <p class="tiny">
-        Approval happens on mcpemails.com in your own browser session. That step
-        is deliberate: no agent, including this one, can approve a send.
-      </p>
     </>
   );
 
   const providerBlock = (
-    <ProviderBlock provider={provider} fullscreen={fullscreen} />
+    <ProviderLine provider={provider} fullscreen={fullscreen} />
   );
 
-  const attachmentChips =
+  // One muted line, like the draft editor's: the card cannot open or change an
+  // attachment, so a row of chips was spending height on read-only facts.
+  const shownAttachments = attachments.slice(0, fullscreen ? 8 : 3);
+  const attachmentLine =
     attachments.length > 0 ? (
-      <ul class="chips" aria-label={`${attachments.length} attachments`}>
-        {attachments.slice(0, fullscreen ? 20 : 3).map((a, i) => (
-          <li class="chip" key={i}>
-            <span class="name">{a.filename || "(unnamed)"}</span>
-            <span class="tiny">{formatBytes(a.size_bytes)}</span>
-          </li>
-        ))}
-        {!fullscreen && attachments.length > 3 && (
-          <li class="chip">
-            <span class="name">+{attachments.length - 3} more</span>
-          </li>
-        )}
-      </ul>
+      <p class="line">
+        {attachments.length} attachment{attachments.length === 1 ? "" : "s"}:{" "}
+        {shownAttachments
+          .map((a) => `${a.filename || "(unnamed)"} ${formatBytes(a.size_bytes)}`)
+          .join(", ")}
+        {attachments.length > shownAttachments.length
+          ? `, +${attachments.length - shownAttachments.length} more`
+          : ""}
+      </p>
     ) : null;
 
   // ---- inline -------------------------------------------------------------
@@ -190,31 +199,29 @@ export function OutboundReview(props: Props) {
     return (
       <>
         {header}
-        <h2 class="subject">{o.subject || "(no subject)"}</h2>
-        <Fields
-          rows={[
-            ["From", identityLine(o)],
-            [
-              "To",
-              <>
-                {recipients.primary}
-                {recipients.extra && (
-                  <span class="muted"> · {recipients.extra}</span>
-                )}
-              </>,
-            ],
-          ]}
-        />
+        <div class="tight">
+          <div class="row">
+            <span class="lbl">To</span>
+            <span class="val">
+              {recipients.primary}
+              {recipients.extra && (
+                <span class="muted"> · {recipients.extra}</span>
+              )}
+            </span>
+          </div>
+          <h2 class="subject">{o.subject || "(no subject)"}</h2>
+        </div>
         {o.body?.text ? <p class="preview">{o.body.text}</p> : null}
-        {attachmentChips}
+        {attachmentLine}
         {providerBlock}
         {o.send_at && (
-          <Notice>Scheduled to send {formatDateTime(o.send_at)} once approved.</Notice>
+          <p class="line">
+            Scheduled to send {formatDateTime(o.send_at)} once approved.
+          </p>
         )}
         {blockedReason && <Notice tone="warning">{blockedReason}</Notice>}
         {props.error && <Notice tone="danger">{props.error}</Notice>}
         {primaryActions}
-        <p class="tiny">{expiry}</p>
       </>
     );
   }
@@ -229,7 +236,6 @@ export function OutboundReview(props: Props) {
       <h2 class="subject">{o.subject || "(no subject)"}</h2>
       <Fields
         rows={[
-          ["From", identityLine(o)],
           ["To", (o.recipients?.to ?? []).join(", ") || "(none)"],
           ...((o.recipients?.cc ?? []).length
             ? ([["Cc", (o.recipients?.cc ?? []).join(", ")]] as Array<
@@ -256,40 +262,36 @@ export function OutboundReview(props: Props) {
         ]}
       />
 
-      {attachmentChips}
+      {attachmentLine}
 
-      {hasHtml && (
-        <Segmented
-          label="Body format"
-          value={bodyMode}
-          onChange={(v) => setBodyMode(v as "text" | "html")}
-          options={[
-            { value: "text", label: "Plain text" },
-            { value: "html", label: "Show original formatting" },
-          ]}
-        />
-      )}
-
-      {bodyMode === "html" && hasHtml ? (
+      {showHtml && hasHtml ? (
         <HtmlBody html={o.body.html as string} />
       ) : (
         <p class="body-full">{o.body?.text || "(empty message)"}</p>
       )}
 
+      {hasHtml && (
+        <p class="line">
+          <TextLink onClick={() => setShowHtml(!showHtml)}>
+            {showHtml ? "Show plain text" : "Show original formatting"}
+          </TextLink>
+        </p>
+      )}
+
       {o.body?.truncated && (
         <Notice tone="warning">
-          This message was clipped for review.
-          <Btn variant="quiet" onClick={actions.openDashboard}>
-            View full message in dashboard
-          </Btn>
+          This message was clipped for review.{" "}
+          <TextLink onClick={actions.openDashboard}>
+            View the full message in the dashboard
+          </TextLink>
         </Notice>
       )}
 
       {o.signature?.will_append && (
-        <div class="stack">
-          <span class="field-label">Signature appended at send time</span>
-          <p class="body-full tiny">{o.signature.preview_text || "(signature)"}</p>
-        </div>
+        <p class="line">
+          Signature appended at send time:{" "}
+          {o.signature.preview_text || "(signature)"}
+        </p>
       )}
 
       {providerBlock}
@@ -299,7 +301,7 @@ export function OutboundReview(props: Props) {
 
       <hr class="divider" />
 
-      <div class="row">
+      <div class="acts" style={{ justifyContent: "flex-start" }}>
         <Segmented
           label="Edit or schedule"
           value={panel}
@@ -314,40 +316,35 @@ export function OutboundReview(props: Props) {
 
       {panel === "edit" && (
         <div class="stack">
-          <div>
-            <label class="field-label" for="edit-subject">
-              Subject
-            </label>
-            <input
-              id="edit-subject"
-              class="input"
-              value={subject}
-              disabled={!canDecide}
-              onInput={(e) => setSubject((e.target as HTMLInputElement).value)}
-            />
-          </div>
-          <div>
-            <label class="field-label" for="edit-body">
-              Message
-            </label>
-            <textarea
-              id="edit-body"
-              class="textarea"
-              value={bodyText}
-              disabled={!canDecide}
-              onInput={(e) =>
-                setBodyText((e.target as HTMLTextAreaElement).value)
-              }
-            />
-          </div>
+          <input
+            class="subj"
+            aria-label="Subject"
+            placeholder="Subject"
+            value={subject}
+            disabled={!canDecide}
+            onInput={(e) => setSubject((e.target as HTMLInputElement).value)}
+          />
+          <AutoTextarea
+            id="edit-body"
+            ariaLabel="Message"
+            value={bodyText}
+            disabled={!canDecide}
+            maxRows={40}
+            onInput={setBodyText}
+          />
           {hasHtml && (
-            <p class="tiny">
+            <p class="line">
               Saving replaces the plain-text body. The formatted version is
               regenerated from it.
             </p>
           )}
-          <div class="actions">
+          <p class="line">
+            Saving does not send anything. The message still needs the browser
+            approval step.
+          </p>
+          <div class="acts">
             <Btn
+              variant="quiet"
               onClick={() => {
                 setSubject(o.subject ?? "");
                 setBodyText(o.body?.text ?? "");
@@ -370,38 +367,39 @@ export function OutboundReview(props: Props) {
               {busy === "update" ? "Saving" : "Save changes"}
             </Btn>
           </div>
-          <p class="tiny">
-            Saving does not send anything. The message still needs the browser
-            approval step.
-          </p>
         </div>
       )}
 
       {panel === "schedule" && (
         <div class="stack">
-          <span class="field-label">Send later</span>
           <div class="row">
-            {quickSlots().map((s) => (
-              <Btn key={s.iso} onClick={() => setSendAt(isoToLocalInput(s.iso))}>
-                {s.label}
-              </Btn>
-            ))}
+            <span class="lbl">Send</span>
+            <span class="val acts" style={{ justifyContent: "flex-start" }}>
+              {quickSlots().map((s) => (
+                <Btn key={s.iso} onClick={() => setSendAt(isoToLocalInput(s.iso))}>
+                  {s.label}
+                </Btn>
+              ))}
+              <input
+                id="send-at"
+                class="input"
+                style={{ width: "auto" }}
+                aria-label="Or pick a send time"
+                type="datetime-local"
+                value={sendAt}
+                disabled={!canDecide}
+                onInput={(e) => setSendAt((e.target as HTMLInputElement).value)}
+              />
+            </span>
           </div>
-          <div>
-            <label class="field-label" for="send-at">
-              Or pick a time
-            </label>
-            <input
-              id="send-at"
-              class="input"
-              type="datetime-local"
-              value={sendAt}
-              disabled={!canDecide}
-              onInput={(e) => setSendAt((e.target as HTMLInputElement).value)}
-            />
-          </div>
-          <div class="actions">
-            <Btn onClick={() => setPanel("none")}>Cancel</Btn>
+          <p class="line">
+            Scheduling does not send anything either. The message is queued for
+            that time and still needs the browser approval step.
+          </p>
+          <div class="acts">
+            <Btn variant="quiet" onClick={() => setPanel("none")}>
+              Cancel
+            </Btn>
             <Btn
               variant="primary"
               disabled={!canDecide || !localInputToIso(sendAt)}
@@ -414,15 +412,11 @@ export function OutboundReview(props: Props) {
               {busy === "schedule" ? "Saving" : "Set send time"}
             </Btn>
           </div>
-          <p class="tiny">
-            Scheduling does not send anything either. The message is queued for
-            that time and still needs the browser approval step.
-          </p>
         </div>
       )}
 
       {primaryActions}
-      <p class="tiny">
+      <p class="line">
         {expiry}
         {o.approval_id ? ` · ${o.approval_id}` : ""}
       </p>

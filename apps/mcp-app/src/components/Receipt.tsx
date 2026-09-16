@@ -1,5 +1,5 @@
 import type { Receipt as ReceiptData } from "../contract";
-import { Btn, Notice } from "./ui";
+import { TextLink } from "./ui";
 
 type Tone = "success" | "danger" | "warning" | "neutral";
 
@@ -27,6 +27,15 @@ const FALLBACK_HEADLINES: Record<string, string> = {
   failed: "Could not complete",
 };
 
+/**
+ * A receipt is a fact, so it is one line.
+ *
+ * It used to be an uppercase eyebrow, a 20px headline, a detail paragraph, a
+ * count line, a notice and a bordered button: six stacked blocks to say "Sent".
+ * The outcome word is dropped from the render entirely because the headline
+ * already contains it ("Sent", "Rejected. Nothing was sent.") and the dot
+ * carries the tone.
+ */
 export function Receipt(props: {
   receipt: ReceiptData;
   busy: string | null;
@@ -36,34 +45,32 @@ export function Receipt(props: {
   const tone = TONES[r.outcome] ?? "neutral";
   const headline =
     r.headline?.trim() || FALLBACK_HEADLINES[r.outcome] || "Done";
+  const detail = [
+    r.detail?.trim() || null,
+    typeof r.affected_count === "number" && r.affected_count > 1
+      ? `${r.affected_count.toLocaleString()} messages affected.`
+      : null,
+    r.outcome === "failed" && r.error_code ? `Error: ${r.error_code}` : null,
+  ]
+    .filter((s): s is string => !!s)
+    .join(" ");
 
   return (
     <>
-      <p class="eyebrow">
-        <span class="status-dot" data-tone={tone} aria-hidden="true" />
-        {r.outcome.replace(/_/g, " ")}
-      </p>
-      <h2 class="headline">{headline}</h2>
-      {r.detail && <p class="muted" style={{ margin: 0 }}>{r.detail}</p>}
-      {typeof r.affected_count === "number" && r.affected_count > 1 && (
-        <p class="tiny">{r.affected_count.toLocaleString()} messages affected.</p>
-      )}
-      {r.outcome === "failed" && (
-        <Notice tone="danger">
-          {r.error_code ? `Error: ${r.error_code}` : "The operation failed."}
-        </Notice>
-      )}
-      {r.dashboard_url && (
-        <div class="actions">
-          <Btn
-            busy={props.busy === "dashboard"}
-            onClick={props.onOpenDashboard}
-          >
-            Open in dashboard
-            <span aria-hidden="true">&#8599;</span>
-          </Btn>
+      <div class="hdr">
+        <div class="hdr-l">
+          <span class="dot" data-tone={tone} aria-hidden="true" />
+          <b>{headline}</b>
         </div>
-      )}
+        {r.dashboard_url && (
+          <div class="hdr-r">
+            <TextLink onClick={props.onOpenDashboard}>
+              Open in dashboard
+            </TextLink>
+          </div>
+        )}
+      </div>
+      {detail && <p class="line">{detail}</p>}
     </>
   );
 }

@@ -1,4 +1,4 @@
-import type { ComponentChildren, JSX } from "preact";
+import type { ComponentChildren } from "preact";
 import { useLayoutEffect, useRef } from "preact/hooks";
 import type { Provider } from "../contract";
 import { sanitizeEmailHtml } from "../sanitize";
@@ -22,6 +22,33 @@ export function Btn(props: {
       disabled={props.disabled || props.busy}
       title={props.title}
       aria-busy={props.busy ? "true" : undefined}
+      onClick={props.onClick}
+    >
+      {props.children}
+    </button>
+  );
+}
+
+/**
+ * A button that looks like a link.
+ *
+ * Exists because the redesign has three affordances that must not carry a
+ * control's weight: Expand, "Cc Bcc" and "Show formatting". The last one used
+ * to be a two-option segmented control, which gave a formatting preview the
+ * same visual authority as Send.
+ */
+export function TextLink(props: {
+  children: ComponentChildren;
+  onClick: () => void;
+  title?: string;
+  tone?: "danger";
+}) {
+  return (
+    <button
+      type="button"
+      class="link"
+      data-tone={props.tone}
+      title={props.title}
       onClick={props.onClick}
     >
       {props.children}
@@ -66,33 +93,31 @@ export function Notice(props: {
 
 /**
  * Contract §5: which capability will actually be used, and what that costs the
- * user to know. Every card shows it identically; `caveats` is capped inline
- * because the block sits above the buttons and a five-line caveat list pushes
- * them off a phone screen.
+ * user to know.
+ *
+ * Was a bordered, filled block with a bulleted caveat list. It is now one muted
+ * line, because it is reference information that every card repeats and it was
+ * taking the visual weight of a warning. `extra` is the card-specific tail (the
+ * draft editor's "saving gives the draft a new id"); caveats are capped inline
+ * for the same reason the block was capped before, that an inline card must
+ * auto-fit without pushing its buttons off a phone screen.
  */
-export function ProviderBlock(props: {
+export function ProviderLine(props: {
   provider?: Provider;
   fullscreen: boolean;
+  extra?: string | null;
+  lead?: string | null;
 }) {
   const p = props.provider;
-  if (!p) return null;
-  const all = p.caveats ?? [];
-  const caveats = props.fullscreen ? all : all.slice(0, 2);
-  return (
-    <div class="provider">
-      <div class="route">
-        <b>{p.label}</b>
-        {p.route ? ` · ${p.route}` : ""}
-      </div>
-      {caveats.length > 0 && (
-        <ul class="caveats">
-          {caveats.map((c, i) => (
-            <li key={i}>{c}</li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
+  const caveats = p?.caveats ?? [];
+  const parts = [
+    props.lead,
+    p ? (p.route ? `${p.label} · ${p.route}` : p.label) : null,
+    ...(props.fullscreen ? caveats : caveats.slice(0, 1)),
+    props.extra,
+  ].filter((s): s is string => !!s && s.trim().length > 0);
+  if (parts.length === 0) return null;
+  return <p class="line">{parts.join(" · ")}</p>;
 }
 
 export function Fields(props: { rows: Array<[string, ComponentChildren]> }) {
@@ -108,23 +133,75 @@ export function Fields(props: { rows: Array<[string, ComponentChildren]> }) {
   );
 }
 
-export function Skeleton(props: { style?: JSX.CSSProperties; h?: string }) {
-  return <div class="sk" data-h={props.h} style={props.style} />;
+/**
+ * The entire loading state: one pulsing line.
+ *
+ * It is reached for at most `RESULT_WATCHDOG_MS`, because the watchdog now ends
+ * in a restored envelope or a one-line placeholder rather than in silence. The
+ * old six-bar skeleton was the founder's first complaint ("the loading is super
+ * ugly and far too big"), and it was doubly wrong: ~150px of grey under the
+ * host's own header, for a state that in the remount case never resolved.
+ */
+export function Loading() {
+  return (
+    <div class="loading" aria-busy="true" aria-live="polite">
+      Loading&#8230;
+    </div>
+  );
 }
 
-export function CardSkeleton() {
+/**
+ * A body textarea that grows to its content instead of holding a fixed block of
+ * empty space.
+ *
+ * `maxRows` keeps an inline card auto-fitting without internal scrolling: past
+ * the cap the textarea does scroll, which is the lesser evil against a card
+ * that pushes the conversation's own scroll around. In fullscreen the cap is
+ * lifted and the element fills the height it is given.
+ */
+export function AutoTextarea(props: {
+  id: string;
+  value: string;
+  disabled?: boolean;
+  maxRows: number;
+  ariaLabel: string;
+  onInput: (v: string) => void;
+  onFocus?: () => void;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    // Measured, never assumed: the line height comes from a host variable and
+    // the font from the host's stack, so a hardcoded px-per-row would be wrong
+    // on exactly the hosts this is meant to look native in.
+    const cs = getComputedStyle(el);
+    const line = parseFloat(cs.lineHeight) || 18;
+    const chrome =
+      parseFloat(cs.paddingTop) +
+      parseFloat(cs.paddingBottom) +
+      parseFloat(cs.borderTopWidth) +
+      parseFloat(cs.borderBottomWidth);
+    el.style.height = "auto";
+    const wanted = el.scrollHeight;
+    const max = line * props.maxRows + chrome;
+    el.style.height = `${Math.min(wanted, max)}px`;
+    el.style.overflowY = wanted > max ? "auto" : "hidden";
+  }, [props.value, props.maxRows]);
+
   return (
-    <div class="stack" aria-busy="true" aria-live="polite">
-      <span class="sr-only">Loading review</span>
-      <Skeleton style={{ width: "40%" }} />
-      <Skeleton h="lg" style={{ width: "75%" }} />
-      <Skeleton style={{ width: "90%" }} />
-      <Skeleton style={{ width: "60%" }} />
-      <div class="actions">
-        <Skeleton h="btn" style={{ flex: "1 1 auto" }} />
-        <Skeleton h="btn" style={{ flex: "1 1 auto" }} />
-      </div>
-    </div>
+    <textarea
+      id={props.id}
+      ref={ref}
+      class="textarea"
+      rows={1}
+      aria-label={props.ariaLabel}
+      value={props.value}
+      disabled={props.disabled}
+      onInput={(e) => props.onInput((e.target as HTMLTextAreaElement).value)}
+      onFocus={props.onFocus}
+    />
   );
 }
 

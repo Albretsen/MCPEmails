@@ -93,6 +93,29 @@ function scriptedHost({ hostContext = {} } = {}) {
   return { win, deliver, sent, logs, responses };
 }
 
+/**
+ * `localStorage`, good enough for persist.ts.
+ *
+ * Node has no web storage without a flag, and persist.ts is written so that a
+ * missing `localStorage` is simply "this host keeps nothing" (every access is
+ * wrapped). That degradation is itself worth pinning, so the default is NO
+ * storage and a scenario opts in — a scenario that forgets to would then fail
+ * on the restore, not silently pass on a global left over from the last one.
+ */
+function fakeStorage() {
+  const map = new Map();
+  return {
+    getItem: (k) => (map.has(k) ? map.get(k) : null),
+    setItem: (k, v) => void map.set(k, String(v)),
+    removeItem: (k) => void map.delete(k),
+    clear: () => map.clear(),
+    get length() {
+      return map.size;
+    },
+    key: (i) => [...map.keys()][i] ?? null,
+  };
+}
+
 const toolResult = (structuredContent, text) => ({
   jsonrpc: "2.0",
   method: "ui/notifications/tool-result",
@@ -109,6 +132,10 @@ let instance = 0;
 async function scenario(name, hostOpts, body) {
   const host = scriptedHost(hostOpts);
   globalThis.window = host.win;
+  // Fresh per scenario: the store is a singleton and so is the storage blob,
+  // and a scenario must not inherit either.
+  if (hostOpts.storage) globalThis.localStorage = fakeStorage();
+  else delete globalThis.localStorage;
   const mod = await import(`${pathToFileURL(OUT).href}?i=${++instance}`);
   const bridge = new mod.HostBridge();
   mod.wireResultHandlers(bridge);
@@ -135,6 +162,7 @@ async function main() {
     stdin: {
       contents:
         'export * from "./src/store";\n' +
+        'export * from "./src/persist";\n' +
         'export { HostBridge, TEARDOWN_TIMEOUT_MS } from "./src/bridge";\n',
       resolveDir: appRoot,
       sourcefile: "state-machine-entry.ts",
@@ -194,6 +222,10 @@ async function main() {
           log?.data?.protocol_version,
           PROTOCOL_VERSION,
         );
+        // No web storage at all is a supported host, and the card must reach a
+        // settled "nothing remembered" rather than sit on `restored: null`.
+        t.expect("restore was attempted and missed", t.mod.getState().restored, "none");
+        t.expect("no result ever arrived", t.mod.getState().resultArrival, "none");
       },
     ),
   );
@@ -469,6 +501,175 @@ async function main() {
         t.expect("toolInfo.callId", t.mod.getState().toolInfo?.callId, 42);
       },
     ),
+  );
+
+  // ---- remount recovery (2026-09-16) --------------------------------------
+  //
+  // The founder's third complaint: "It doesn't load if I leave the chat and
+  // come back." Reopening a conversation lazy-mounts widget cells whose tool
+  // call finished long ago, and the spec owes that view no tool-result at all
+  // ("if the View is displayed during tool execution"). These three scenarios
+  // are the whole recovery path, driven through the real store and the real
+  // persist layer — nothing is reimplemented here.
+
+  // (h1) Remount with a remembered envelope. The host re-sends tool-input (a
+  // MUST) and never sends a result; the card puts back what it last rendered.
+  results.push(
+    await scenario(
+      "no result + a stored envelope restores",
+      { hostContext: { toolInfo: TOOL_INFO }, storage: true },
+      async (t) => {
+        // Seeded through the shipped writer, under the shipped key, so a change
+        // to either breaks this rather than being papered over by a fixture.
+        const key = t.mod.cardKey({ tool: "draft", callId: TOOL_INFO.id }, null);
+        t.expect("the key is the call id", key, "i42");
+        t.mod.saveEnvelope(key, F.draftEditorImap);
+
+        t.host.deliver({
+          jsonrpc: "2.0",
+          method: "ui/notifications/tool-input",
+          params: { arguments: { action: "create", inbox: "demo@mcpemails.com" } },
+        });
+        await settle();
+        // tool-input alone is enough: a hit does not wait for the watchdog.
+        t.expect("restored from storage", t.mod.getState().restored, "storage");
+        t.expect("and it is the draft", t.mod.getState().envelope?.card, "draft_editor");
+        t.expect("still no result", t.mod.getState().resultArrival, "none");
+
+        // App.tsx's refresh effect re-applied: a restored draft immediately
+        // calls draft_read with these two fields, so they must have survived
+        // the round trip through storage.
+        const d = t.mod.getState().envelope?.draft;
+        t.expect("the refresh has its draft id", d?.draft_id, "Drafts:2");
+        t.expect(
+          "the refresh has its inbox",
+          d?.identity?.inbox_id,
+          F.draftEditorImap.draft.identity.inbox_id,
+        );
+      },
+    ),
+  );
+
+  // (h2) Remount with nothing remembered: a different browser, a cleared
+  // partition, or a host that hands out a fresh origin every time. The card
+  // must reach a settled miss, which is what App.tsx draws its one-line
+  // placeholder from. Never the loading state.
+  results.push(
+    await scenario(
+      "no result + nothing stored settles on a miss",
+      { hostContext: { toolInfo: TOOL_INFO }, storage: true },
+      async (t) => {
+        t.host.deliver({
+          jsonrpc: "2.0",
+          method: "ui/notifications/tool-input",
+          params: { arguments: { action: "create" } },
+        });
+        await settle();
+        // A MISS does not settle on tool-input: the result may still be one
+        // tick away, and recording it here would flash the placeholder in
+        // front of a card that is about to render.
+        t.expect("not settled yet", t.mod.getState().restored, null);
+        await after(watchdogMs + 250);
+        t.expect("settled on a miss", t.mod.getState().restored, "none");
+        t.expect("nothing to render", t.mod.getState().envelope, null);
+        t.expect("status", t.status(), "absent");
+        // App.tsx: this is the placeholder branch, and the tool name on it
+        // comes from toolInfo.
+        t.expect("the placeholder has a tool name", t.mod.getState().toolInfo?.tool, "email_compose");
+      },
+    ),
+  );
+
+  // (h3) A late result beats a restored one. The restore is a fallback, not a
+  // lock: a host that delivers slowly must still end up rendering the truth.
+  results.push(
+    await scenario(
+      "a late result wins over a restored envelope",
+      { hostContext: { toolInfo: TOOL_INFO }, storage: true },
+      async (t) => {
+        t.mod.saveEnvelope(t.mod.cardKey({ tool: "draft", callId: 42 }, null), F.draftEditorImap);
+        await after(watchdogMs + 250);
+        t.expect("restored", t.mod.getState().restored, "storage");
+        t.expect("showing the memory", t.mod.getState().envelope?.card, "draft_editor");
+
+        t.host.deliver(toolResult(F.outboundGmail, "Queued for approval."));
+        await settle();
+        t.expect("status", t.status(), "envelope");
+        t.expect("the live result won", t.mod.getState().envelope?.card, "outbound_review");
+        t.expect("and is recorded as late", t.mod.getState().resultArrival, "late");
+      },
+    ),
+  );
+
+  // (h4) The write half. Every state change carrying an envelope is cached, so
+  // the NEXT mount has something to restore — including the post-save envelope,
+  // which is the only one the server will not hand back (an IMAP save retires
+  // the id it was called with).
+  results.push(
+    await scenario(
+      "the rendered envelope is what gets remembered",
+      { hostContext: { toolInfo: TOOL_INFO }, storage: true },
+      async (t) => {
+        t.host.deliver(toolResult(F.draftEditorImap, "Draft Drafts:2."));
+        await settle();
+        const key = t.mod.cardKey({ tool: "draft", callId: 42 }, null);
+        t.expect("the result was cached", t.mod.loadEnvelope(key)?.draft?.draft_id, "Drafts:2");
+
+        // Now the card moves on, as a save does.
+        t.mod.setState({
+          envelope: { ...F.draftEditorImap, draft: { ...F.draftEditorImap.draft, draft_id: "Drafts:3" } },
+        });
+        t.expect("the newer one replaced it", t.mod.loadEnvelope(key)?.draft?.draft_id, "Drafts:3");
+        t.expect(
+          "and the dashboard url is kept for the empty case",
+          t.mod.lastDashboardUrl(),
+          F.draftEditorImap.dashboard_url,
+        );
+      },
+    ),
+  );
+
+  // (h5) The fallback key, for a host that omits `toolInfo` entirely (phase-0
+  // Q6 recorded exactly that on the reference host). The arguments the host
+  // MUST re-send are hashed instead, so the same call still finds its envelope.
+  results.push(
+    await scenario(
+      "a host with no toolInfo still restores, keyed on the arguments",
+      { storage: true },
+      async (t) => {
+        t.expect("no toolInfo", t.mod.getState().toolInfo, null);
+        const args = { action: "create", inbox: "demo@mcpemails.com" };
+        const key = t.mod.cardKey(null, args);
+        t.expect("the key is an argument hash", key?.startsWith("a"), true);
+        t.mod.saveEnvelope(key, F.draftEditorImap);
+
+        t.host.deliver({
+          jsonrpc: "2.0",
+          method: "ui/notifications/tool-input",
+          params: { arguments: args },
+        });
+        await settle();
+        t.expect("restored", t.mod.getState().restored, "storage");
+        t.expect("the draft came back", t.mod.getState().envelope?.draft?.draft_id, "Drafts:2");
+      },
+    ),
+  );
+
+  // (h6) Eviction. The cache is bounded, oldest first, so a long conversation
+  // cannot turn the origin's storage into a mail archive.
+  results.push(
+    await scenario("the cache is bounded and evicts the oldest", { storage: true }, async (t) => {
+      for (let i = 0; i < 25; i++) {
+        t.mod.saveEnvelope(`i${i}`, F.receiptSent);
+        // saveEnvelope stamps Date.now(); without a gap the sort is a tie and
+        // "oldest" would be whatever order the keys happen to come back in.
+        await after(2);
+      }
+      t.expect("the oldest is gone", t.mod.loadEnvelope("i0"), null);
+      t.expect("the newest is kept", t.mod.loadEnvelope("i24")?.card, "receipt");
+      t.expect("the fifth-oldest is gone", t.mod.loadEnvelope("i4"), null);
+      t.expect("the twentieth-newest is kept", t.mod.loadEnvelope("i5")?.card, "receipt");
+    }),
   );
 
   let failed = 0;

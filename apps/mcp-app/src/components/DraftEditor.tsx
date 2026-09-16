@@ -1,8 +1,16 @@
+import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { DraftEditorData, Envelope, Provider } from "../contract";
 import { formatBytes, formatDateTime, wordCount } from "../format";
 import { setTeardownSaver } from "../store";
-import { Btn, Fields, HtmlBody, Notice, ProviderBlock, Segmented } from "./ui";
+import {
+  AutoTextarea,
+  Btn,
+  HtmlBody,
+  Notice,
+  ProviderLine,
+  TextLink,
+} from "./ui";
 
 /** Only the fields the user actually changed are sent (§8: omitted means keep). */
 export interface DraftPatch {
@@ -40,6 +48,15 @@ const FIELDS: Field[] = ["to", "cc", "bcc"];
 const FIELD_LABELS: Record<Field, string> = { to: "To", cc: "Cc", bcc: "Bcc" };
 
 /**
+ * How many lines the message box grows to before it starts scrolling itself.
+ * Inline it is a cap (an inline card must auto-fit without moving the
+ * conversation's own scroll); in fullscreen the surface is the point, so the
+ * cap is effectively lifted.
+ */
+const INLINE_BODY_ROWS = 14;
+const FULLSCREEN_BODY_ROWS = 40;
+
+/**
  * Deliberately loose. This is a typo catcher in front of a server that does the
  * real validation (§8: an invalid address is refused with `invalid_recipients`
  * and nothing is changed), not an RFC 5322 parser. It catches the mistakes
@@ -59,10 +76,13 @@ function sameList(a: string[], b: string[]): boolean {
   return a.length === b.length && a.every((v, i) => v === b[i]);
 }
 
-function identityLine(d: DraftEditorData): string {
-  const name = d.identity?.display_name?.trim();
-  const addr = d.identity?.email_address ?? "unknown sender";
-  return name ? `${name} · ${addr}` : addr;
+/**
+ * The From line in the header. The address alone, not "Name · address": the
+ * header is one line shared with the status and the expand control, and the
+ * display name is the half that can be reconstructed from the address.
+ */
+function fromAddress(d: DraftEditorData): string {
+  return d.identity?.email_address ?? "unknown sender";
 }
 
 /**
@@ -106,6 +126,20 @@ function errorNotice(env: Envelope): { text: string; offerRefresh: boolean } | n
   }
 }
 
+/** Attachments, collapsed to one muted line. The card cannot edit them. */
+function attachmentLine(d: DraftEditorData, fullscreen: boolean): string | null {
+  const all = d.attachments ?? [];
+  if (all.length === 0) return null;
+  const shown = all.slice(0, fullscreen ? 8 : 3);
+  const names = shown
+    .map((a) => `${a.filename || "(unnamed)"} ${formatBytes(a.size_bytes)}`)
+    .join(", ");
+  const rest = all.length - shown.length;
+  return `${all.length} attachment${all.length === 1 ? "" : "s"}: ${names}${
+    rest > 0 ? `, +${rest} more` : ""
+  }`;
+}
+
 interface EditState {
   to: string[];
   cc: string[];
@@ -143,11 +177,9 @@ export function DraftEditor(props: Props) {
   };
 
   const [addrWarning, setAddrWarning] = useState<string | null>(null);
-  const [showMore, setShowMore] = useState(
-    server.cc.length + server.bcc.length > 0,
-  );
+  const [showMore, setShowMore] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
-  const [bodyMode, setBodyMode] = useState<"text" | "html">("text");
+  const [showHtml, setShowHtml] = useState(false);
   const askedFullscreen = useRef(false);
 
   // The card MUST adopt every id the server returns (§8: on IMAP the id changes
@@ -247,66 +279,93 @@ export function DraftEditor(props: Props) {
     );
   };
 
-  const recipientRow = (field: Field) => (
-    <div>
-      <label class="field-label" for={`d-${field}`}>
+  /**
+   * One recipient row: a 32px label and ONE bordered box that holds both the
+   * chips and the input. They used to be a label, a chip list and a separate
+   * full-width input stacked into three rows per field, which is where most of
+   * the card's height went.
+   */
+  const recipientRow = (field: Field, trailing?: ComponentChildren) => (
+    <div class="row">
+      <label class="lbl" for={`d-${field}`}>
         {FIELD_LABELS[field]}
       </label>
-      {edit[field].length > 0 && (
-        <ul class="chips" aria-label={`${FIELD_LABELS[field]} recipients`}>
-          {edit[field].map((addr, i) => (
-            <li class="chip" key={`${addr}-${i}`}>
-              <span class="name">{addr}</span>
-              {canEdit && (
-                <button
-                  type="button"
-                  class="chip-x"
-                  aria-label={`Remove ${addr}`}
-                  onClick={() => removeAt(field, i)}
-                >
-                  &#215;
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-      <input
-        id={`d-${field}`}
-        class="input"
-        type="email"
-        autocomplete="off"
-        spellcheck={false}
-        placeholder="name@example.com"
-        value={edit.typed[field]}
-        disabled={!canEdit}
-        onInput={(e) =>
-          update({
-            typed: {
-              ...editRef.current.typed,
-              [field]: (e.target as HTMLInputElement).value,
-            },
-          })
-        }
-        onKeyDown={(e) => onKey(field, e as unknown as KeyboardEvent)}
-        onBlur={(e) => {
-          const el = e.target as HTMLInputElement;
-          if (el.value.trim()) commitField(field, el.value);
+      <div
+        class="fld"
+        onClick={(e) => {
+          // The box looks like one field, so clicking the empty part of it must
+          // put the caret in the input rather than do nothing.
+          if (e.target === e.currentTarget) {
+            (e.currentTarget as HTMLElement).querySelector("input")?.focus();
+          }
         }}
-      />
+      >
+        {edit[field].map((addr, i) => (
+          <span class="chip" key={`${addr}-${i}`}>
+            <span class="name">{addr}</span>
+            {canEdit && (
+              <button
+                type="button"
+                class="chip-x"
+                aria-label={`Remove ${addr}`}
+                onClick={() => removeAt(field, i)}
+              >
+                &#215;
+              </button>
+            )}
+          </span>
+        ))}
+        <input
+          id={`d-${field}`}
+          type="email"
+          autocomplete="off"
+          spellcheck={false}
+          aria-label={`${FIELD_LABELS[field]} recipients`}
+          placeholder={edit[field].length === 0 ? "name@example.com" : ""}
+          value={edit.typed[field]}
+          disabled={!canEdit}
+          onInput={(e) =>
+            update({
+              typed: {
+                ...editRef.current.typed,
+                [field]: (e.target as HTMLInputElement).value,
+              },
+            })
+          }
+          onKeyDown={(e) => onKey(field, e as unknown as KeyboardEvent)}
+          onBlur={(e) => {
+            const el = e.target as HTMLInputElement;
+            if (el.value.trim()) commitField(field, el.value);
+          }}
+        />
+      </div>
+      {trailing}
     </div>
   );
 
   const refusal = attachmentRefusal(d);
   const err = errorNotice(env);
-  const attachments = d.attachments ?? [];
   const hasHtml = !!d.body?.html;
   const canSend = d.can_send === true && canEdit;
   const saving = busy === "save";
   const sending = busy === "send";
+  const attachLine = attachmentLine(d, fullscreen);
+  // Which of Cc / Bcc are neither populated nor already revealed.
+  const hiddenFields: Field[] = showMore
+    ? []
+    : (["cc", "bcc"] as Field[]).filter((f) => edit[f].length === 0);
+  // Contract §5 caveats are server-authored and already say this on IMAP
+  // ("stores a new copy on every save"), so the card only adds its own shorter
+  // version when the provider did not supply one. Two sentences of the same
+  // fact side by side is how the old provider box read.
+  const idNote =
+    d.id_is_stable === false &&
+    !(provider?.caveats ?? []).some((c) => /new id/i.test(c))
+      ? "saving gives the draft a new id"
+      : null;
 
   const savedLine = d.last_saved_at
-    ? `Last saved ${formatDateTime(d.last_saved_at)}${
+    ? `Saved ${formatDateTime(d.last_saved_at)}${
         d.last_saved_by === "user"
           ? " by you"
           : d.last_saved_by === "agent"
@@ -317,75 +376,62 @@ export function DraftEditor(props: Props) {
 
   return (
     <>
-      <div class="head">
-        <div class="grow">
-          <p class="eyebrow">
-            <span class="status-dot" data-tone="warning" aria-hidden="true" />
-            Draft · not sent
-          </p>
+      <div class="hdr">
+        <div class="hdr-l">
+          <span class="dot" data-tone="warning" aria-hidden="true" />
+          <b>Draft</b>
+          <span class="muted">{fromAddress(d)}</span>
         </div>
-        {fullscreen ? (
-          <Btn variant="quiet" onClick={() => actions.setFullscreen(false)}>
-            Close editor
-          </Btn>
-        ) : props.canExpand ? (
-          <Btn
-            variant="quiet"
-            onClick={() => actions.setFullscreen(true)}
-            title="More room to write"
-          >
-            Expand
-          </Btn>
-        ) : null}
+        <div class="hdr-r">
+          {fullscreen ? (
+            <TextLink onClick={() => actions.setFullscreen(false)}>
+              Collapse
+            </TextLink>
+          ) : props.canExpand ? (
+            <TextLink
+              onClick={() => actions.setFullscreen(true)}
+              title="More room to write"
+            >
+              Expand
+            </TextLink>
+          ) : null}
+          <span class="muted">
+            {savedLine}
+            {dirty ? " · unsaved" : ""}
+          </span>
+        </div>
       </div>
 
-      <Fields rows={[["From", identityLine(d)]]} />
-
       {d.in_reply_to && (
-        <details class="reply-to">
-          <summary>
-            Replying to {d.in_reply_to.from || "an earlier message"}
-          </summary>
-          <Fields
-            rows={[
-              ["Subject", d.in_reply_to.subject || "(no subject)"],
-              ...(d.in_reply_to.date
-                ? ([["Date", formatDateTime(d.in_reply_to.date)]] as Array<
-                    [string, string]
-                  >)
-                : []),
-              ...(d.in_reply_to.message_id
-                ? ([["Message", d.in_reply_to.message_id]] as Array<
-                    [string, string]
-                  >)
-                : []),
-            ]}
-          />
-        </details>
+        <p class="line">
+          Replying to {d.in_reply_to.from || "an earlier message"}
+          {d.in_reply_to.subject ? ` · ${d.in_reply_to.subject}` : ""}
+          {d.in_reply_to.date ? ` · ${formatDateTime(d.in_reply_to.date)}` : ""}
+        </p>
       )}
 
-      <div class="stack">
-        {recipientRow("to")}
-        {showMore ? (
-          <>
-            {recipientRow("cc")}
-            {recipientRow("bcc")}
-          </>
-        ) : (
-          <div class="row">
-            <Btn variant="quiet" onClick={() => setShowMore(true)}>
-              Add Cc or Bcc
-            </Btn>
-          </div>
+      <div class="tight">
+        {recipientRow(
+          "to",
+          // The Cc/Bcc affordance rides on the To row rather than taking a row
+          // of its own: it is one word of chrome for fields most drafts never
+          // use. A populated field is always shown, so this only ever offers
+          // the ones that are actually empty.
+          hiddenFields.length > 0 ? (
+            <TextLink onClick={() => setShowMore(true)}>
+              {hiddenFields.map((f) => FIELD_LABELS[f]).join(" ")}
+            </TextLink>
+          ) : undefined,
         )}
+        {(showMore || edit.cc.length > 0) && recipientRow("cc")}
+        {(showMore || edit.bcc.length > 0) && recipientRow("bcc")}
 
-        <div>
-          <label class="field-label" for="d-subject">
-            Subject
-          </label>
+        <div class="row">
+          <span class="lbl" aria-hidden="true" />
           <input
-            id="d-subject"
-            class="input"
+            class="subj grow"
+            aria-label="Subject"
+            placeholder="Subject"
             value={edit.subject}
             disabled={!canEdit}
             onInput={(e) =>
@@ -393,55 +439,41 @@ export function DraftEditor(props: Props) {
             }
           />
         </div>
-
-        {hasHtml && (
-          <Segmented
-            label="Body format"
-            value={bodyMode}
-            onChange={(v) => setBodyMode(v as "text" | "html")}
-            options={[
-              { value: "text", label: "Plain text" },
-              { value: "html", label: "Show formatting" },
-            ]}
-          />
-        )}
-
-        {bodyMode === "html" && hasHtml ? (
-          <>
-            <HtmlBody html={d.body?.html as string} />
-            <p class="tiny">
-              Read only. Switch to plain text to edit. Saving regenerates the
-              formatted version from the text.
-            </p>
-          </>
-        ) : (
-          <div>
-            <label class="field-label" for="d-body">
-              Message
-            </label>
-            <textarea
-              id="d-body"
-              class="textarea"
-              rows={fullscreen ? 20 : 8}
-              value={edit.bodyText}
-              disabled={!canEdit}
-              onInput={(e) =>
-                update({ bodyText: (e.target as HTMLTextAreaElement).value })
-              }
-              onFocus={() => {
-                // CONCEPT §7: ask for a real compose surface the first time the
-                // user starts writing, and only the first time, so someone who
-                // went back to inline is not dragged out of it again.
-                if (askedFullscreen.current || fullscreen || !props.canExpand) {
-                  return;
-                }
-                askedFullscreen.current = true;
-                actions.setFullscreen(true);
-              }}
-            />
-          </div>
-        )}
       </div>
+
+      {showHtml && hasHtml ? (
+        <HtmlBody html={d.body?.html as string} />
+      ) : (
+        <AutoTextarea
+          id="d-body"
+          ariaLabel="Message"
+          value={edit.bodyText}
+          disabled={!canEdit}
+          maxRows={fullscreen ? FULLSCREEN_BODY_ROWS : INLINE_BODY_ROWS}
+          onInput={(v) => update({ bodyText: v })}
+          onFocus={() => {
+            // CONCEPT §7: ask for a real compose surface the first time the
+            // user starts writing, and only the first time, so someone who
+            // went back to inline is not dragged out of it again.
+            if (askedFullscreen.current || fullscreen || !props.canExpand) {
+              return;
+            }
+            askedFullscreen.current = true;
+            actions.setFullscreen(true);
+          }}
+        />
+      )}
+
+      {hasHtml && (
+        <p class="line">
+          <TextLink onClick={() => setShowHtml(!showHtml)}>
+            {showHtml ? "Edit plain text" : "Show formatting"}
+          </TextLink>
+          {showHtml
+            ? " · read only, saving regenerates this from the text"
+            : ""}
+        </p>
+      )}
 
       {d.body?.truncated && (
         <Notice tone="warning">
@@ -450,37 +482,16 @@ export function DraftEditor(props: Props) {
         </Notice>
       )}
 
-      {attachments.length > 0 && (
-        <div class="stack">
-          <span class="field-label">
-            {attachments.length} attachment{attachments.length === 1 ? "" : "s"}
-          </span>
-          <ul class="chips" aria-label="Attachments">
-            {attachments.slice(0, fullscreen ? 20 : 3).map((a, i) => (
-              <li class="chip" key={i}>
-                <span class="name">{a.filename || "(unnamed)"}</span>
-                <span class="tiny">{formatBytes(a.size_bytes)}</span>
-              </li>
-            ))}
-            {!fullscreen && attachments.length > 3 && (
-              <li class="chip">
-                <span class="name">+{attachments.length - 3} more</span>
-              </li>
-            )}
-          </ul>
-        </div>
-      )}
+      {attachLine && <p class="line">{attachLine}</p>}
 
       {refusal && <Notice tone="warning">{refusal}</Notice>}
 
       {d.signature?.embedded === false && (
-        <p class="tiny">
+        <p class="line">
           Your signature is not part of this text. It is added when the draft is
           sent.
         </p>
       )}
-
-      <ProviderBlock provider={provider} fullscreen={fullscreen} />
 
       {env.actor?.can_edit === false && (
         <Notice tone="warning">
@@ -496,90 +507,83 @@ export function DraftEditor(props: Props) {
         <Notice tone="danger">
           {err.text}
           {err.offerRefresh && (
-            <div class="actions">
-              <Btn busy={busy === "refresh"} onClick={actions.refresh}>
-                Refresh
-              </Btn>
-            </div>
+            <>
+              {" "}
+              <TextLink onClick={actions.refresh}>Refresh</TextLink>
+            </>
           )}
         </Notice>
       )}
 
       {props.error && <Notice tone="danger">{props.error}</Notice>}
 
-      <hr class="divider" />
-
+      {/* Inline confirm, never a modal: a dialog inside a sandboxed frame is
+          clipped by the host's container and fights its z-index. */}
       {confirmDiscard ? (
-        <div class="stack">
-          <Notice tone="danger">
-            Discard this draft? It is deleted at your provider and cannot be
-            brought back.
-          </Notice>
-          <div class="actions">
-            <Btn onClick={() => setConfirmDiscard(false)}>Keep it</Btn>
-            <Btn
-              variant="danger"
-              busy={busy === "discard"}
-              onClick={() => {
-                setConfirmDiscard(false);
-                actions.discard();
-              }}
-            >
-              Delete draft
-            </Btn>
-          </div>
+        <div class="acts">
+          <span class="line grow">
+            Discard this draft? It is deleted at your provider.
+          </span>
+          <Btn
+            variant="danger"
+            busy={busy === "discard"}
+            onClick={() => {
+              setConfirmDiscard(false);
+              actions.discard();
+            }}
+          >
+            Yes, discard
+          </Btn>
+          <Btn variant="quiet" onClick={() => setConfirmDiscard(false)}>
+            No
+          </Btn>
         </div>
       ) : (
-        <>
-          <div class="actions">
-            <Btn
-              disabled={!canEdit || !dirty}
-              busy={saving}
-              onClick={() => void actions.save(patchFrom(flush()))}
-            >
-              {saving ? "Saving" : "Save changes"}
-            </Btn>
-            <Btn
-              variant="primary"
-              disabled={!canSend}
-              busy={sending}
-              title={
-                canSend
-                  ? dirty
-                    ? "Saves your changes first, then sends"
-                    : "Sends this draft now"
-                  : "This draft needs a recipient, and the key needs send access"
-              }
-              onClick={() => {
-                const p = patchFrom(flush());
-                actions.send(Object.keys(p).length > 0 ? p : null);
-              }}
-            >
-              {sending ? "Sending" : dirty ? "Save and send" : "Send"}
-            </Btn>
-          </div>
-          <div class="actions">
-            <Btn busy={busy === "refresh"} onClick={actions.refresh}>
-              Refresh
-            </Btn>
-            <Btn
-              variant="danger"
-              disabled={!canEdit}
-              onClick={() => setConfirmDiscard(true)}
-            >
-              Discard draft
-            </Btn>
-          </div>
-        </>
+        <div class="acts">
+          <Btn
+            variant="danger"
+            disabled={!canEdit}
+            onClick={() => setConfirmDiscard(true)}
+          >
+            Discard
+          </Btn>
+          <Btn busy={busy === "refresh"} onClick={actions.refresh}>
+            Refresh
+          </Btn>
+          <Btn
+            disabled={!canEdit || !dirty}
+            busy={saving}
+            onClick={() => void actions.save(patchFrom(flush()))}
+          >
+            {saving ? "Saving" : "Save"}
+          </Btn>
+          <Btn
+            variant="primary"
+            disabled={!canSend}
+            busy={sending}
+            title={
+              canSend
+                ? dirty
+                  ? "Saves your changes first, then sends"
+                  : "Sends this draft now"
+                : "This draft needs a recipient, and the key needs send access"
+            }
+            onClick={() => {
+              const p = patchFrom(flush());
+              actions.send(Object.keys(p).length > 0 ? p : null);
+            }}
+          >
+            {sending ? "Sending" : dirty ? "Save and send" : "Send"}
+          </Btn>
+        </div>
       )}
 
-      <p class="tiny">
-        {savedLine}
-        {dirty ? " · unsaved changes" : ""} · {wordCount(edit.bodyText)} words
-        {d.id_is_stable === false
-          ? " · this provider gives the draft a new id on every save"
-          : ""}
-      </p>
+      <ProviderLine
+        provider={provider}
+        fullscreen={fullscreen}
+        lead={`${wordCount(edit.bodyText)} words`}
+        extra={idNote}
+      />
     </>
   );
 }
