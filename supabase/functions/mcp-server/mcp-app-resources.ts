@@ -322,6 +322,27 @@ export const BULK_PLAN_CARD_TOOL_NAMES: readonly string[] = [
 ];
 
 /**
+ * True when a call to this tool name can mount the review card, under any of
+ * the three gates.
+ *
+ * Deliberately gate-BLIND: it asks "is this a tool whose listing can carry
+ * `_meta.ui`", not "does this key have it today". The caller
+ * (`card-build-notify.ts`) uses it to decide whether a stale tool listing is
+ * worth invalidating, and a key that is not gated in has no card URI to be
+ * stale — so the worst a false positive costs is one `tools/list` the client
+ * did not strictly need. Resolving the real gates here would mean the database
+ * lookups `reviewCardMetaForListing` already did at listing time, repeated on
+ * every tool call.
+ */
+export function isCardBearingToolName(name: string): boolean {
+  return (
+    REVIEW_CARD_TOOL_NAMES.includes(name) ||
+    BULK_PLAN_CARD_TOOL_NAMES.includes(name) ||
+    DRAFT_EDITOR_CARD_TOOL_NAMES.includes(name)
+  );
+}
+
+/**
  * The `_meta` attached to a UI-bearing tool in `tools/list`.
  *
  * ── `visibility` is NOT an authorisation boundary ───────────────────────────

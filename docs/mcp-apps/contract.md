@@ -35,7 +35,22 @@ The bare `ui://mcpemails/review-card.html` is still answered, with the *current*
 clients holding a `tools/list` from before the change. It appears in no listing and no tool
 `_meta`, so nothing new can acquire it.
 
-**A card deploy requires reconnecting the connector** to pick up the new URI from `tools/list`.
+**A card deploy no longer requires reconnecting the connector** (since 2026-09-16). The server
+declares `tools.listChanged: true` and sends `notifications/tools/list_changed` on the first
+card-bearing `tools/call` after the build id moves; the client re-reads `tools/list` and picks up
+the new URI. MCP 2025-06-18, Tools § *List Changed Notification*, and its message-flow diagram is
+exactly this case.
+
+A stateless POST-only server can still send one, because Streamable HTTP allows it to ride on the
+response to a request the client is already making: "If the server initiates an SSE stream: … The
+server MAY send JSON-RPC requests and notifications before sending the JSON-RPC response. These
+messages SHOULD relate to the originating client request." So the notification is emitted ahead of
+the tool result whose card is the stale thing. No session id, nothing held open. See
+`supabase/functions/mcp-server/card-build-notify.ts`.
+
+This fixes **live** clients only. A re-mounted cell from an older conversation replays the URI
+recorded when its tool call happened; that is a stored record, not a live listing, and no
+notification can reach it. Old conversations keep their old card.
 
 CSP for the resource is **empty on every axis** — the card talks to the world only through
 `app.callServerTool`:

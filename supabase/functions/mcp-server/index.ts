@@ -122,8 +122,16 @@ import {
   RESOURCES_CAPABILITY,
   type ReviewCardGates,
   reviewCardMetaForListing,
+  isCardBearingToolName,
   serializeToolForList,
 } from "./mcp-app-resources.ts";
+import {
+  acceptsEventStream,
+  decideBuildNotification,
+  sseResponse,
+  TOOLS_LIST_CHANGED_NOTIFICATION,
+} from "./card-build-notify.ts";
+import { REVIEW_CARD_BUILD_ID } from "./ui/review-card.html.ts";
 import {
   APPROVAL_TOOL_DEFINITIONS,
   APPROVAL_TTL_MS,
@@ -694,6 +702,18 @@ interface ApiKeyRow {
   last_used_at: string | null;
   deleted_at: string | null;
   created_at: string;
+  /**
+   * The review-card build id this key's client last received in a `tools/list`,
+   * or was last sent `notifications/tools/list_changed` for. NULL until its
+   * first `tools/list`. See card-build-notify.ts.
+   *
+   * Optional rather than required so the many hand-built key rows in the test
+   * suites stay valid without restating a field none of them exercise. Every
+   * read normalises with `?? null`, and it must: `undefined` would slip past
+   * the "never read a tools/list" check that `null` is there to catch, and
+   * notify a brand-new connection about a listing it has not read yet.
+   */
+  card_build_notified?: string | null;
   internalApprovalDispatch?: boolean;
 }
 
@@ -729,6 +749,9 @@ const INTROSPECTION_API_KEY: ApiKeyRow = {
   name: "introspection",
   key_prefix: "mcpe_introspection",
   key_hash: "",
+  // Never persisted, so it can never be "notified": a directory scanner gets
+  // one tools/list and goes away.
+  card_build_notified: null,
   scopes: [
     "read:email",
     "search:email",
@@ -823,8 +846,12 @@ interface InitializeResult {
   protocolVersion: string;
   capabilities: {
     tools: {
-      /** False: the tool list is static — clients should not expect notifications/tools/list_changed. */
-      listChanged: false;
+      /**
+       * True: the card's build-fingerprinted resource URI lives in this list,
+       * so a card deploy changes it and we emit
+       * notifications/tools/list_changed. See card-build-notify.ts.
+       */
+      listChanged: true;
     };
     /** User-invoked, reusable email routines. The catalogue is static per key. */
     prompts: { listChanged: false };
@@ -1672,7 +1699,7 @@ async function authenticateRequest(
   const { data: row, error } = await supabase
     .from("api_keys")
     .select(
-      "id, workspace_id, name, key_prefix, key_hash, scopes, inbox_ids, expires_at, last_used_at, deleted_at, created_at",
+      "id, workspace_id, name, key_prefix, key_hash, scopes, inbox_ids, expires_at, last_used_at, deleted_at, created_at, card_build_notified",
     )
     .eq("key_hash", incomingHash)
     .is("deleted_at", null)
@@ -25961,9 +25988,20 @@ async function handleInitialize(
     protocolVersion: SUPPORTED_PROTOCOL_VERSION,
     capabilities: {
       tools: {
-        // false: the tool list is a fixed, versioned set. Clients must not
-        // subscribe to notifications/tools/list_changed — none will be emitted.
-        listChanged: false,
+        // TRUE since 2026-09-16. The tool list was a fixed, versioned set until
+        // the review card's resource URI became build-fingerprinted and moved
+        // INTO that list (`_meta.ui.resourceUri`). A card deploy therefore
+        // changes the tool list, and a client holding the listing it read at
+        // connect is holding a stale card URI — which is what made "reconnect
+        // the connector after every card deploy" a real instruction rather
+        // than a superstition.
+        //
+        // Declaring this is the promise that we will send
+        // notifications/tools/list_changed when that happens. We do, on the
+        // first card-bearing tools/call after the build id moves. See
+        // card-build-notify.ts for the rules and for how a stateless,
+        // POST-only server gets a notification onto the wire at all.
+        listChanged: true,
       },
       prompts: {
         // The starter routines are versioned with the server and do not change
@@ -27671,7 +27709,7 @@ async function handleScheduledDispatch(): Promise<Response> {
           throw new Error("approved request expired before it was decided");
         }
         const { data: key, error: keyErr } = await supabase.from("api_keys")
-          .select("id, workspace_id, name, key_prefix, key_hash, scopes, inbox_ids, expires_at, last_used_at, deleted_at, created_at")
+          .select("id, workspace_id, name, key_prefix, key_hash, scopes, inbox_ids, expires_at, last_used_at, deleted_at, created_at, card_build_notified")
           .eq("id", approval.api_key_id).is("deleted_at", null).single();
         if (keyErr || !key) throw new Error("originating API key is unavailable");
         const original = await resolveScheduledPayload(approval);
@@ -28359,6 +28397,7 @@ function triageApiKeyAsApiKeyRow(key: TriageApiKey): ApiKeyRow {
     last_used_at: null,
     deleted_at: key.deleted_at,
     created_at: "",
+    card_build_notified: null,
   };
 }
 
@@ -29171,6 +29210,51 @@ async function handleRequest(req: Request): Promise<Response> {
     );
     return http;
   }
+
+  // ── Tool-list invalidation ────────────────────────────────────────────────
+  // The card's resource URI is build-fingerprinted and lives in `tools/list`,
+  // which a client reads once at connect and caches. So a card deploy leaves
+  // every connected client pointing at the previous bundle, and used to need a
+  // manual reconnect. MCP's own answer is notifications/tools/list_changed, and
+  // Streamable HTTP lets a stateless server put one on the SSE stream of a POST
+  // it is already answering. See card-build-notify.ts for both quotes and for
+  // every rule below.
+  const notifyDecision = decideBuildNotification({
+    method: rpcRequest.method,
+    cardBearingTool:
+      rpcRequest.method === "tools/call" &&
+      isCardBearingToolName(
+        String(
+          (rpcRequest.params as Record<string, unknown> | undefined)?.["name"] ?? "",
+        ),
+      ),
+    acceptsEventStream: acceptsEventStream(req.headers.get("Accept")),
+    notifiedBuild: apiKey.card_build_notified ?? null,
+    currentBuild: REVIEW_CARD_BUILD_ID,
+  });
+
+  if (notifyDecision.record !== null) {
+    // Fire and forget, exactly like last_used_at: this is a cache hint, and a
+    // failed write costs one repeated notification, never a failed request.
+    // Awaiting it would put a database round trip in front of every tool
+    // result for the sake of bookkeeping.
+    void supabase
+      .from("api_keys")
+      .update({ card_build_notified: notifyDecision.record })
+      .eq("id", apiKey.id)
+      .then(undefined, () => {});
+  }
+
+  if (notifyDecision.notify) {
+    console.log("[mcp-server] tools/list_changed", {
+      key_id: apiKey.id,
+      from_build: apiKey.card_build_notified ?? null,
+      to_build: REVIEW_CARD_BUILD_ID,
+      on_method: rpcRequest.method,
+    });
+    return sseResponse([TOOLS_LIST_CHANGED_NOTIFICATION], response, CORS_HEADERS);
+  }
+
   return jsonResponse(response);
 }
 
