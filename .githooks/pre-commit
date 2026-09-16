@@ -44,21 +44,27 @@ if [ -n "$leaks" ]; then
 fi
 
 # A stray control byte in source typechecks, bundles and passes every test.
-# apps/mcp-app/src/persist.ts has now grown one twice: once as a deliberate
-# "\x00" key separator, and once by accident during an edit, caught only
-# because an exact-match revert failed. Text source has no business carrying
-# C0 controls other than tab, newline and carriage return.
-# (BSD grep has no -P, so this deletes the legitimate ones and looks at what
-# is left rather than matching a hex class.)
-ctrl=$(git diff --cached --diff-filter=ACMR --name-only -- '*.ts' '*.tsx' '*.js' '*.jsx' '*.mjs' '*.cjs' '*.json' '*.css' '*.md' \
-  | while IFS= read -r p; do
-      [ -f "$p" ] || continue
-      if LC_ALL=C tr -d '\t\n\r' < "$p" | LC_ALL=C grep -q '[[:cntrl:]]'; then echo "$p"; fi
-    done)
-if [ -n "$ctrl" ]; then
-  echo "pre-commit: control bytes in source" >&2
-  echo "$ctrl" | sed 's/^/  /' >&2
-  echo "  Locate with: LC_ALL=C cat -v <file> | grep -n '\^'" >&2
+# apps/mcp-app/src/persist.ts has grown one twice: once deliberately as a key
+# separator, and once by accident during an edit, caught only because an
+# exact-match revert failed.
+#
+# This inspects ADDED LINES ONLY, not whole files. Two files legitimately
+# carry a raw NUL from before this hook existed (index.ts's gmailLabelCacheKey
+# separator among them); checking whole files would block every commit that
+# touches them for a byte the commit did not introduce. Prefer a \u0000
+# escape in new code.
+#
+# Tab and carriage return are deleted first so CRLF and indentation pass.
+# BSD grep has no -P, hence tr plus [[:cntrl:]] rather than a hex class.
+ctrl=$(git diff --cached --diff-filter=ACMR -U0 \
+        -- '*.ts' '*.tsx' '*.js' '*.jsx' '*.mjs' '*.cjs' '*.json' '*.css' '*.md' \
+      | grep '^+' | grep -v '^+++' \
+      | LC_ALL=C tr -d '\t\r' \
+      | LC_ALL=C grep -c '[[:cntrl:]]')
+if [ "${ctrl:-0}" -gt 0 ]; then
+  echo "pre-commit: $ctrl added line(s) carry a control byte" >&2
+  echo "  Find them with: git diff --cached | LC_ALL=C cat -v | grep -n '\^'" >&2
+  echo "  Write \\u0000 (or the right escape) rather than the raw byte." >&2
   fail=1
 fi
 
