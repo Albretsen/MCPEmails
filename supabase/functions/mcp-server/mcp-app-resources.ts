@@ -19,7 +19,7 @@
 // the fixed identifiers in `docs/mcp-apps/contract.md` §0.
 // ---------------------------------------------------------------------------
 
-import { REVIEW_CARD_HTML } from "./ui/review-card.html.ts";
+import { REVIEW_CARD_BUILD_ID, REVIEW_CARD_HTML } from "./ui/review-card.html.ts";
 import { advertisedInputSchema } from "./advertised-schema.ts";
 
 /**
@@ -31,8 +31,48 @@ import { advertisedInputSchema } from "./advertised-schema.ts";
  */
 export const MCP_APP_MIME_TYPE = "text/html;profile=mcp-app";
 
-/** Canonical URI of the single review card. Fixed by `contract.md` §0. */
-export const REVIEW_CARD_RESOURCE_URI = "ui://mcpemails/review-card.html";
+/**
+ * Canonical URI of the single review card, fingerprinted with the build id of
+ * the bundle it serves (`contract.md` §0).
+ *
+ * ── Why this is not a fixed string ─────────────────────────────────────────
+ * It was one until 2026-09-16, and that is the bug the draft editor's first
+ * week in the real host exposed. The SEP lets a host "prefetch and cache UI
+ * resource content", and Claude's host does so by URI and keeps it: measured in
+ * production, the host read the card exactly once, then served three later tool
+ * calls and a whole new OAuth authorization out of that one copy. A card deploy
+ * therefore reached nobody who was already connected — the founder spent forty
+ * minutes looking at a bundle that had been replaced on the server, which
+ * presents as "my fix did not ship" and is unfalsifiable from inside the card.
+ * See `CONCEPT-draft-editor.md` §13 for the log evidence.
+ *
+ * Fingerprinting the URI makes the cache work FOR us instead: an unchanged
+ * bundle keeps its URI and stays cached (the host is right to keep it), and a
+ * changed bundle is a URI the host has never seen, so it must read it. The id
+ * is a content hash, so this is exact in both directions — no deploy counter to
+ * bump and no way to forget.
+ *
+ * The client still has to re-read `tools/list` to learn the new URI, which it
+ * does on connect. So the operational rule is unchanged and now sufficient:
+ * reconnect the connector after a card deploy. Before this, reconnecting did
+ * not help either, which is what made it so hard to see.
+ */
+export const REVIEW_CARD_RESOURCE_URI =
+  `ui://mcpemails/review-card.${REVIEW_CARD_BUILD_ID}.html`;
+
+/**
+ * The unfingerprinted URI every build before 2026-09-16 advertised.
+ *
+ * Still served, and deliberately served the CURRENT bundle: a host that cached
+ * the old `tools/list` will ask for this URI for as long as it holds that
+ * listing, and the only two answers are today's card or a `-32002` that renders
+ * as a broken cell. A card is always the better answer — envelope skew is what
+ * `schema_version` is for, and the card has a screen for it.
+ *
+ * It is NOT advertised in `resources/list` and no tool points at it. Nothing
+ * new can acquire it; it only ever answers a client that already had it.
+ */
+export const REVIEW_CARD_LEGACY_RESOURCE_URI = "ui://mcpemails/review-card.html";
 
 /**
  * The `resources` capability object declared in the `initialize` result.
@@ -157,12 +197,21 @@ export function buildResourcesListResult(): {
 export function buildResourceReadResult(
   uri: string,
 ): { contents: Array<Record<string, unknown>> } | null {
-  const resource = MCP_APP_RESOURCES.find((entry) => entry.uri === uri);
+  const resource = MCP_APP_RESOURCES.find((entry) => entry.uri === uri) ??
+    // A client holding a `tools/list` from before the URI was fingerprinted
+    // still asks for the bare name; answer it with today's card rather than a
+    // "resource not found" that renders as a broken cell. See
+    // REVIEW_CARD_LEGACY_RESOURCE_URI.
+    (uri === REVIEW_CARD_LEGACY_RESOURCE_URI ? MCP_APP_RESOURCES[0] : undefined);
   if (!resource) return null;
 
   return {
     contents: [{
-      uri: resource.uri,
+      // Echo the URI that was ASKED for, not the catalogue's. A host matches the
+      // content it gets back against the request it made and against its own
+      // cache key; handing it a URI it did not ask for is how a legacy read
+      // turns into an unrenderable cell.
+      uri,
       name: resource.name,
       title: resource.title,
       mimeType: MCP_APP_MIME_TYPE,

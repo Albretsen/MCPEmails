@@ -346,3 +346,109 @@ signature text, so signature embedding was confirmed in code only
 **Found along the way, not fixed.** `OutboundReview.tsx:359` still says "The HTML version is
 kept as is." The server has regenerated the HTML part from `body_text` since 2026-09-09
 (`mcp-app-approvals.ts` ~1227), so the card's copy contradicts what actually happens.
+
+---
+
+## 13. Real host findings (2026-09-16)
+
+Written after the feature's first hours in the Claude desktop app, where it was
+"a large grey skeleton" that "never became the editor" — on first mount and again
+on returning to the conversation. §12 had only ever tested the ext-apps reference
+host. This section is what the real host does.
+
+### The finding: the host caches the UI resource, and a fixed URI made that fatal
+
+The card the founder was looking at was **not the card on the server**.
+
+Timeline, from `function_logs` and `activity_log`, all times UTC on 2026-09-16:
+
+| Time | Event | Card bytes |
+| --- | --- | ---: |
+| 11:25:50 | `draft_create`, OAuth connection "claude.ai (2)" (`af108c02`) | |
+| 11:26:02 | **`resources/read`** `ui://mcpemails/review-card.html` | **64,070** |
+| 11:27:19 | `draft_create`, same connection | no read |
+| 11:52:56 | `cab5d6e` deployed (edge function v184) | |
+| 11:54:49 | `draft_create`, same connection | no read |
+| 11:56:29 | **new** OAuth connection "claude.ai (3)" (`ee63117d`) | |
+| 11:56:37 | `draft_create`, new connection | no read |
+| 12:02:38 | `resources/read` from a probe key minted for this session | 65,845 |
+
+64,070 characters is the `88584e2` bundle (62.6 KB). 65,845 is `cab5d6e` (64.3 KB).
+**The host fetched the card exactly once, and never fetched the new bundle at all.**
+The 12:02 read is this session's probe, not the host.
+
+So every symptom follows from one cause:
+
+1. The six-bar, ~150 px skeleton is `88584e2`'s loading state. `cab5d6e` replaced it
+   with a single 20 px line, and the host was still running `88584e2`.
+2. "Leaving and coming back shows the same skeleton" — of course: the
+   restore-on-remount added in `cab5d6e` was not in the bundle being run.
+3. Deploying a card fix changed nothing observable, which is exactly what makes
+   this class of bug so expensive: the fix was live on the server the whole time.
+
+The spec permits this. Resource Discovery says a host "MAY prefetch and cache UI
+resource content". §11's first open question asked whether Claude's host caches;
+the answer is yes, and harder than expected — **the cache survived a full OAuth
+re-authorization.** Connection (3) was new, fetched its own `tools/list`, and still
+did not read the resource. So the cache key is not the connection. It is the URI.
+
+What was NOT the cause, each ruled out by direct probe against production:
+
+* The server serves the new bundle. `resources/read` returns bytes identical to
+  the local `cab5d6e` build (65,864 bytes, sha256 `a159bff9…`).
+* `_meta.ui` is stamped correctly. `tools/list` on a gated-in workspace returns
+  `draft` with `{"ui":{"resourceUri":…}}`, and `draft_read` / `draft_editor_save`
+  with `visibility:["app"]` as well. The gate works.
+* The envelope is correct. `draft{action:"create"}` returns contract §8's
+  `card: "draft_editor"` in `structuredContent`, with `content` byte-identical to
+  the pre-feature payload.
+* The card is not being blocked. The host renders a widget cell ("Widget from MCP
+  Emails draft"), which it only does having read `_meta.ui`; and the skeleton it
+  shows is drawn by our own JavaScript — the served HTML's `<body>` is an empty
+  `<div id="root">`, so a skeleton on screen proves the bundle's inline script ran.
+
+### The fix: fingerprint the resource URI
+
+`REVIEW_CARD_RESOURCE_URI` is now `ui://mcpemails/review-card.<build id>.html`,
+where the build id is the first 12 hex of SHA-256 over the bundle, emitted by
+`codegen.mjs` as `REVIEW_CARD_BUILD_ID`. A changed bundle is therefore a URI the
+host has never seen, which it must read; an unchanged bundle keeps its URI and
+stays cached, which is the host being right. The fingerprint is in the path, not a
+query string, so a host that normalises query parameters cannot collapse two
+builds onto one cache key.
+
+The bare `ui://mcpemails/review-card.html` is still served, and deliberately serves
+the *current* bundle, for clients holding a `tools/list` from before this change.
+It is not advertised anywhere: no listing entry and no tool points at it.
+
+**The operational rule, which is now sufficient and was not before: reconnect the
+connector in Claude's settings after a card deploy.** A client learns the new URI
+from `tools/list`, which it re-reads on connect. Before the fingerprint, reconnecting
+did not help either — which is why this looked like "the deploy did not work".
+
+A side benefit worth keeping: `resources/read` logs the URI, so the logs now say
+exactly which build any host is running.
+
+### Still open, to be answered from a diagnostics screenshot
+
+The card's diagnostics line (bottom, 11 px, internal builds only) prints
+`host <name> <version> · mode · result yes|late|none · input yes|no · restored
+storage|none · toolInfo yes|no`. It has never been seen in the real host, because
+the bundle carrying it has never been loaded there. Once it is:
+
+* **Remount.** `result none · restored storage` means the restore path works and the
+  host sends no result to a re-mounted view. `restored none` means either the
+  storage key did not match (`persist.ts#cardKey`: `toolInfo.id`, else a hash of
+  tool name plus arguments) or the sandbox origin has no persistent storage.
+* **`toolInfo`.** Phase 0 recorded the reference host omitting it entirely. Whether
+  Claude sends it decides which branch of `cardKey` is load-bearing in practice.
+* **Protocol version.** We send `2026-01-26` at `ui/initialize`; `bridge.protocolVersion`
+  records what the host echoes back.
+
+### Confirmed: `structuredContent` reaches the model
+
+§7's warning is now an observed fact for this host, not a caution: the
+model-visible tool result carried the full envelope, body included. `content` is
+unchanged and body-free on every draft path, and the tests pin that, but the
+envelope itself is not a private channel to the card. Nothing in v1 depends on it
+being one.

@@ -15,10 +15,27 @@ Related: `phase-0-protocol-findings.md` (protocol-level facts) and the plan at
 
 | Name | Value |
 | --- | --- |
-| Resource URI | `ui://mcpemails/review-card.html` |
+| Resource URI | `ui://mcpemails/review-card.<build id>.html` |
+| Legacy resource URI | `ui://mcpemails/review-card.html` — still served, never advertised |
 | Resource mimeType | `text/html;profile=mcp-app` |
 | Generated Deno module | `supabase/functions/mcp-server/ui/review-card.html.ts` (exports `REVIEW_CARD_HTML`) |
 | Frontend source | `apps/mcp-app/` |
+
+**The resource URI carries a build fingerprint** (changed 2026-09-16): the first 12 hex of
+SHA-256 over the bundle, emitted by `codegen.mjs` as `REVIEW_CARD_BUILD_ID`. A changed bundle is
+therefore a URI no host has seen, and an unchanged bundle keeps its URI.
+
+This is not decoration. Claude's host caches the resource by URI and holds it across tool calls
+and across a full OAuth re-authorization, so while the URI was a fixed string a card deploy could
+not reach anyone already connected — measured in production, see `CONCEPT-draft-editor.md` §13.
+`phase-0-protocol-findings.md` Q4 called for exactly this ("strong `ETag`-style versioning in the
+URI … so hosts that *do* cache can do so safely") and v1 shipped without it.
+
+The bare `ui://mcpemails/review-card.html` is still answered, with the *current* bundle, for
+clients holding a `tools/list` from before the change. It appears in no listing and no tool
+`_meta`, so nothing new can acquire it.
+
+**A card deploy requires reconnecting the connector** to pick up the new URI from `tools/list`.
 
 CSP for the resource is **empty on every axis** — the card talks to the world only through
 `app.callServerTool`:
@@ -378,7 +395,7 @@ single load-bearing rule of this feature.
 `approval_review` is no longer the card's entry point: a held send returns the envelope itself (§2a), and
 these tools are what the card calls *after* it has rendered.
 
-All carry `_meta.ui = { resourceUri: "ui://mcpemails/review-card.html", visibility: ["app"] }` — the
+All carry `_meta.ui = { resourceUri: <the §0 fingerprinted URI>, visibility: ["app"] }` — the
 `visibility` is set because well-behaved hosts will keep these out of the model's picker, which is worth
 having. It is a tidiness measure, **not** a control. Audit-logged, non-billable (absent from
 `BILLABLE_TOOL_NAMES`).
