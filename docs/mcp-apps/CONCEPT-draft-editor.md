@@ -487,6 +487,34 @@ all look identical from inside. It is host-side either way, and the honest v1
 answer is that a re-mounted draft editor collapses to nothing rather than
 pretending.
 
+### Correction: the re-mounted frame is NOT frozen
+
+The `hs 0` reading above was wrong, or at least wrongly generalised. On the next
+build the same remount came back:
+
+> `host Claude 1.0.0 · mode inline · result yes 6ms · input yes · restored storage · toolInfo no · hs 1 · rx 8/0`
+
+Handshake on the first attempt, eight messages in, tool-input delivered, and
+**`restored storage`** — the remount path works, and the localStorage restore
+from `cab5d6e` fires exactly as designed. A re-mounted view also gets its tool
+result, in 6 ms rather than the 4,487 ms a first mount waits.
+
+The most likely reading of the earlier `hs 0`, and it is a hypothesis rather than
+a measurement: **the host binds the resource URI at tool-call time and reuses
+that URI on every later remount of the cell.** An old conversation cell therefore
+re-mounts whichever bundle was current when its tool call happened, forever. The
+`hs 0` screenshot came from a cell whose build predated the live-counter wiring,
+so its diagnostics line was frozen at first-paint values while the card sat
+waiting — which reads identically to a frozen frame and is not one.
+
+If that is right, it sharpens the cache finding rather than replacing it: a card
+deploy reaches new tool calls, and **old conversations keep their old card
+permanently**. There is no reconnect that fixes an already-recorded cell.
+
+Practical consequence for anyone debugging this: a remount test is only valid in
+a conversation whose tool call was made *after* the build under test was
+deployed. Testing "go back to the old chat" measures the old bundle, every time.
+
 ### Still open, to be answered from a diagnostics screenshot
 
 The card's diagnostics line (bottom, 11 px, internal builds only) prints
