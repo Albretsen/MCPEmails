@@ -277,6 +277,150 @@ Deno.test("the tools split out of a mixed one keep the right write annotations",
   assertEquals(registryEntry("automation").annotations?.destructiveHint, true);
 });
 
+// ═══════════════════════════════════════════════════════════════════════════
+// The three hints a directory submission is judged on
+//
+// OpenAI's plugin review rejected v1.0.0 on 2026-09-15 with "one or more of
+// the tool's annotations do not appear to match the tool's behaviour", and the
+// published rules it judges against are narrower than the MCP spec's prose:
+//
+//   readOnlyHint    true ONLY if the tool strictly fetches and changes nothing,
+//                   "even in only select modes, through default parameters, or
+//                   through indirect side effects".
+//   destructiveHint true if it can cause an IRREVERSIBLE outcome, which
+//                   explicitly includes "sending messages ... you can't undo".
+//   openWorldHint   false when the tool "is limited to a bounded private
+//                   account or workspace, even when that service is externally
+//                   hosted". One connected mailbox is such an account.
+//
+// These tests hold the surface to those three sentences, because the booleans
+// are submitted with a written justification per tool and a value that drifts
+// out from under its justification is the thing that gets a plugin pulled.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Tools that can reach a party outside the connected mailbox. */
+const OPEN_WORLD_TOOLS = ["email_compose", "draft", "schedule", "automation"];
+
+Deno.test("openWorldHint is true only where the tool can reach outside the account", () => {
+  for (const tool of advertisedTools()) {
+    const expected = OPEN_WORLD_TOOLS.includes(tool.name);
+    assertEquals(
+      tool.annotations?.openWorldHint,
+      expected,
+      `${tool.name} publishes openWorldHint: ${tool.annotations?.openWorldHint}. ` +
+        (expected
+          ? `It sends to recipients outside the mailbox, so the hint must be true.`
+          : `Everything it touches is one connected mailbox or this workspace's own ` +
+            `rows, which the review rules call a bounded private account: the hint ` +
+            `must be false. A blanket true across all 17 mail tools is what was ` +
+            `rejected on 2026-09-15.`),
+    );
+  }
+});
+
+Deno.test("a tool that can send mail is annotated destructive", () => {
+  // Nothing recalls a delivered message. The three tools that can put one on
+  // the wire (directly, from a draft, or on a schedule) therefore carry the
+  // flag, whatever else they do. `automation` is here too: its rules can be
+  // given a forward action.
+  for (const name of ["email_compose", "draft", "schedule", "automation"]) {
+    assertEquals(
+      registryEntry(name).annotations?.destructiveHint,
+      true,
+      `${name} can put a message on the wire and cannot take it back`,
+    );
+  }
+});
+
+Deno.test("email_read advertises nothing that writes", () => {
+  // The hint and the schema have to agree. `mark_as_read` wrote the \Seen flag
+  // at the provider from inside a readOnlyHint: true tool; it was retired
+  // rather than the hint flipped, so the property must not come back to any
+  // action of this tool. Checked against the SERIALIZED schema, which is what a
+  // reviewer reads.
+  assertEquals(registryEntry("email_read").annotations?.readOnlyHint, true);
+  const listed = JSON.stringify(serializeToolForList(registryEntry("email_read")));
+  assert(
+    !listed.includes("mark_as_read"),
+    "email_read advertises mark_as_read again; either drop it or stop claiming readOnlyHint",
+  );
+  // Still accepted on the wire, because every connected client cached the old
+  // schema. Accepted and ignored, not accepted and honoured.
+  assertEquals(retiredArgumentNames("email_read").includes("mark_as_read"), true);
+});
+
+Deno.test("every advertised tool states all four hints explicitly", () => {
+  // "Confirm the annotations are explicitly set to true or false (not null) for
+  // each tool" — the rejection mail, verbatim. An omitted hint reads as unknown.
+  for (const tool of advertisedTools()) {
+    for (
+      const hint of ["readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint"]
+    ) {
+      assertEquals(
+        typeof (tool.annotations as Record<string, unknown> | undefined)?.[hint],
+        "boolean",
+        `${tool.name} must state ${hint} as a boolean`,
+      );
+    }
+  }
+});
+
+/**
+ * The reviewer-facing justifications, parsed back out of the file they are
+ * pasted from.
+ *
+ * `## <tool> (readOnly: X, destructive: Y, openWorld: Z)`, one heading per
+ * advertised tool. Values only; the prose under each heading is what a human
+ * reads and is not machine-checkable.
+ */
+function justificationValues(markdown: string): Record<string, Record<string, boolean>> {
+  const values: Record<string, Record<string, boolean>> = {};
+  const heading =
+    /^## ([a-z_]+) \(readOnly: (true|false), destructive: (true|false), openWorld: (true|false)\)$/gm;
+  for (const match of markdown.matchAll(heading)) {
+    values[match[1]] = {
+      readOnlyHint: match[2] === "true",
+      destructiveHint: match[3] === "true",
+      openWorldHint: match[4] === "true",
+    };
+  }
+  return values;
+}
+
+Deno.test("the submitted justifications describe the annotations the server ships", async () => {
+  // The rejection this guards against is not "a boolean is wrong" but "a
+  // boolean moved and the sentence submitted under it did not". OpenAI reviews
+  // the justification against the scanned value, and a plugin whose two
+  // disagree is pulled after publication, not before.
+  const path = new URL(
+    "../../../docs/openai-tool-annotation-justifications.md",
+    import.meta.url,
+  );
+  const justified = justificationValues(await Deno.readTextFile(path));
+  for (const tool of advertisedTools()) {
+    const claimed = justified[tool.name];
+    assert(
+      claimed,
+      `${tool.name} is advertised but has no justification block in ` +
+        `docs/openai-tool-annotation-justifications.md`,
+    );
+    for (const hint of ["readOnlyHint", "destructiveHint", "openWorldHint"] as const) {
+      assertEquals(
+        (tool.annotations as Record<string, unknown> | undefined)?.[hint],
+        claimed[hint],
+        `${tool.name}: the server publishes ${hint}: ` +
+          `${(tool.annotations as Record<string, unknown>)?.[hint]}, the submitted ` +
+          `justification claims ${claimed[hint]}`,
+      );
+    }
+  }
+  assertEquals(
+    Object.keys(justified).length,
+    advertisedTools().length,
+    "the justification file documents a tool that tools/list does not advertise",
+  );
+});
+
 Deno.test("every advertised tool is directory-submittable", () => {
   for (const tool of advertisedTools()) {
     const listed = serializeToolForList(tool) as Record<string, unknown>;

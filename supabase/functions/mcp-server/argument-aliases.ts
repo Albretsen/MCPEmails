@@ -24,10 +24,15 @@
 // Pure and dependency-free so it can be tested without booting the server.
 // ---------------------------------------------------------------------------
 
-/** One rewrite that was applied, for the operator log. Names only, no values. */
+/**
+ * One rewrite that was applied, for the operator log. Names only, no values.
+ *
+ * `to` is null when the retired name was DROPPED rather than renamed: the
+ * capability behind it is gone, so there is nothing to carry the value into.
+ */
 export interface AppliedArgumentAlias {
   from: string;
-  to: string;
+  to: string | null;
 }
 
 type AliasRule = {
@@ -40,6 +45,28 @@ type AliasRule = {
    * means "the retired value asserted nothing; write no canonical value".
    */
   translate: (value: unknown) => unknown;
+};
+
+/**
+ * Retired argument names with NO canonical replacement.
+ *
+ * `email_read.mark_as_read` wrote the \Seen flag at the provider after a
+ * fetch. It was removed on 2026-09-16, not renamed: a tool that publishes
+ * `readOnlyHint: true` must not be able to change anything, and the OpenAI
+ * plugin review rejects exactly that mismatch ("set readOnlyHint to false if
+ * the tool can ... change state ... even in only select modes, through default
+ * parameters"). Flipping the hint instead would have made every read of a
+ * mailbox a state-changing call in every client that gates on it. Marking read
+ * lives on `email_organize { action: "flag", flag: "read" }`, which is
+ * annotated as the write it is.
+ *
+ * Dropped here, before validation, for the same caching reason the renames
+ * exist: `additionalProperties: false` would otherwise refuse the call of
+ * every client still holding the old schema. The caller is told in a result
+ * note (index.ts) rather than silently having its request narrowed.
+ */
+const DROPPED_ARGUMENTS: Record<string, readonly string[]> = {
+  email_read: ["mark_as_read"],
 };
 
 const ARGUMENT_ALIASES: Record<string, readonly AliasRule[]> = {
@@ -73,9 +100,14 @@ export function normalizeArgumentAliases(
   toolName: string,
   args: Record<string, unknown>,
 ): AppliedArgumentAlias[] {
-  const rules = ARGUMENT_ALIASES[toolName];
-  if (!rules) return [];
   const applied: AppliedArgumentAlias[] = [];
+  for (const name of DROPPED_ARGUMENTS[toolName] ?? []) {
+    if (!(name in args)) continue;
+    delete args[name];
+    applied.push({ from: name, to: null });
+  }
+  const rules = ARGUMENT_ALIASES[toolName];
+  if (!rules) return applied;
   for (const rule of rules) {
     if (!(rule.from in args)) continue;
     const retiredValue = args[rule.from];
@@ -90,5 +122,13 @@ export function normalizeArgumentAliases(
 
 /** The retired names a tool still accepts, for tests and documentation. */
 export function retiredArgumentNames(toolName: string): string[] {
-  return (ARGUMENT_ALIASES[toolName] ?? []).map((rule) => rule.from);
+  return [
+    ...(ARGUMENT_ALIASES[toolName] ?? []).map((rule) => rule.from),
+    ...(DROPPED_ARGUMENTS[toolName] ?? []),
+  ];
+}
+
+/** The retired names a tool accepts and then ignores. */
+export function droppedArgumentNames(toolName: string): string[] {
+  return [...(DROPPED_ARGUMENTS[toolName] ?? [])];
 }

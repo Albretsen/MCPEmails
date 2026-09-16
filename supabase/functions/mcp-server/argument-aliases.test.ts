@@ -7,7 +7,11 @@
 // ---------------------------------------------------------------------------
 
 import { assertEquals } from "jsr:@std/assert@1";
-import { normalizeArgumentAliases, retiredArgumentNames } from "./argument-aliases.ts";
+import {
+  droppedArgumentNames,
+  normalizeArgumentAliases,
+  retiredArgumentNames,
+} from "./argument-aliases.ts";
 
 Deno.test("email_read: unread_only: true becomes unread: true", () => {
   const args: Record<string, unknown> = { action: "list", unread_only: true };
@@ -65,7 +69,33 @@ Deno.test("tools without aliases are untouched", () => {
   assertEquals(retiredArgumentNames("email_compose"), []);
 });
 
-Deno.test("the retired names are exactly the two the schemas stopped advertising", () => {
-  assertEquals(retiredArgumentNames("email_read"), ["unread_only"]);
+Deno.test("the retired names are exactly the ones the schemas stopped advertising", () => {
+  assertEquals(retiredArgumentNames("email_read"), ["unread_only", "mark_as_read"]);
   assertEquals(retiredArgumentNames("schedule"), ["scheduled_send_id"]);
+});
+
+Deno.test("email_read: mark_as_read is accepted and dropped, never renamed", () => {
+  // The capability is gone, not moved: email_read publishes readOnlyHint: true
+  // and a tool that writes the \Seen flag cannot honestly claim it. A client
+  // holding the pre-2026-09-16 schema still gets its call run, minus the write.
+  const args: Record<string, unknown> = {
+    action: "read",
+    message_id: "42",
+    mark_as_read: true,
+  };
+  const applied = normalizeArgumentAliases("email_read", args);
+  assertEquals(applied, [{ from: "mark_as_read", to: null }]);
+  assertEquals(args, { action: "read", message_id: "42" });
+  assertEquals(droppedArgumentNames("email_read"), ["mark_as_read"]);
+});
+
+Deno.test("mark_as_read: false is dropped just the same", () => {
+  // No special case for the old default. The key must not survive into schema
+  // validation either way, because the property no longer exists there and
+  // additionalProperties: false would refuse the whole call.
+  const args: Record<string, unknown> = { action: "read", mark_as_read: false };
+  assertEquals(normalizeArgumentAliases("email_read", args), [
+    { from: "mark_as_read", to: null },
+  ]);
+  assertEquals(args, { action: "read" });
 });

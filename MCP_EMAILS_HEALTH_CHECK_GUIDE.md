@@ -168,8 +168,8 @@ Both are legitimate `from` values. Any other `from` must be rejected. P2.6.
 
 ## 3. Phase P1: read path
 
-All read-only. Nothing here mutates the mailbox except where `mark_as_read` is explicitly
-tested, and that is done on a fixture created in P2 (so run P1.9 after P2).
+All read-only, with no exception: `email_read` publishes `readOnlyHint: true` and nothing
+in this phase may change the mailbox. P1.9 checks that this is actually true.
 
 - [ ] **P1.1 List Inbox.** `email_read` `action: list`, `limit: 10`. Confirm each result
       has a `message_id`, `subject`, `from`, `date`, and an `untrusted_content` marker on
@@ -200,9 +200,14 @@ tested, and that is done on a fixture created in P2 (so run P1.9 after P2).
       never fail the call.
 - [ ] **P1.8 Batch size cap.** Send 51 ids to `read_batch` (the cap is 50). Expect a
       schema-level rejection naming the limit, not a truncated success.
-- [ ] **P1.9 `mark_as_read`.** On a P2 fixture only: confirm the message is unread, read it
-      with `mark_as_read: true`, then list unread and confirm it is gone from that list.
-      Then confirm the default (`mark_as_read` omitted) leaves read state untouched.
+- [ ] **P1.9 `email_read` really is read-only.** `mark_as_read` was retired on 2026-09-16:
+      a tool annotated `readOnlyHint: true` must not be able to write the \Seen flag, which
+      is what the OpenAI plugin review rejects. On a P2 fixture: confirm the message is
+      unread, read it with `mark_as_read: true`, and confirm (a) the call still SUCCEEDS,
+      since every connected client cached the old schema, (b) the result carries a note
+      saying the argument was ignored, and (c) the message is STILL unread afterwards.
+      Then mark it read with `email_organize` `action: flag`, `flag_action: read`, which is
+      the write tool that owns this now.
 - [ ] **P1.10 Structured search.** Search the run tag by `subject`. Then search the same
       fixtures by `from`, by `to`, by `body`, by `unread`, by `flagged`, by
       `has_attachment`, and by `since` / `before` around the fixture's timestamp. Each

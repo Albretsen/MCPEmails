@@ -3,7 +3,7 @@
   "name": "com.mcpemails/emails",
   "title": "MCP Emails",
   "description": "Never-stored live email: read, send, organize, schedule and auto-triage Gmail or any IMAP mailbox.",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "websiteUrl": "https://mcpemails.com",
   "icons": [
     {

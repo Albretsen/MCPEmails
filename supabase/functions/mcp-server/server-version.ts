@@ -12,4 +12,4 @@
 // published on npm; it is not required to match this constant.
 // ---------------------------------------------------------------------------
 
-export const SERVER_VERSION = "1.0.5";
+export const SERVER_VERSION = "1.0.6";
