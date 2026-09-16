@@ -58,7 +58,7 @@ function Diagnostics(props: { bridge: HostBridge }) {
         : s.resultArrival === "late"
           ? "late"
           : "none"
-    }`,
+    }${s.resultAfterMs === null ? "" : ` ${s.resultAfterMs}ms`}`,
     `input ${s.toolInput ? "yes" : "no"}`,
     `restored ${s.restored === "storage" ? "storage" : "none"}`,
     `toolInfo ${s.toolInfo ? "yes" : "no"}`,

@@ -124,13 +124,19 @@ body {
 
 /* ---- shell ------------------------------------------------------------- */
 
-/* No background and no border: the host's labelled container is the surface. */
+/* No background and no border: the host's labelled container is the surface.
+   It does NOT, however, bring any padding of its own, which the 2px here
+   assumed. Verified in the real host 2026-09-16: every row sat hard against
+   the container's border, and the founder's word for it was "there is no
+   padding or anything". 12px is the smallest value that reads as inset at the
+   ~770px the host gives an inline card, and it matches the inset the host's
+   own message content uses, which is the thing the card sits next to. */
 .card {
   container-type: inline-size;
   container-name: card;
   color: var(--fg);
-  padding: calc(2px + var(--safe-top)) calc(2px + var(--safe-right))
-    calc(2px + var(--safe-bottom)) calc(2px + var(--safe-left));
+  padding: calc(12px + var(--safe-top)) calc(12px + var(--safe-right))
+    calc(12px + var(--safe-bottom)) calc(12px + var(--safe-left));
   display: flex;
   flex-direction: column;
   gap: 8px;
