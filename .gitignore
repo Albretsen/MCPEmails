@@ -42,3 +42,9 @@ yarn-error.log*
 *.tsbuildinfo
 supabase/.temp/
 Documents/
+
+# Working briefs. Local-only: they quote real customer addresses, purchase
+# times and MRR, and this repo is public. Two reviewed briefs are exempt.
+docs/PROMPT-*.md
+!docs/PROMPT-acquisition-flywheel.md
+!docs/PROMPT-free-tier-action-cap.md

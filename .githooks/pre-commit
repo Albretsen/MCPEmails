@@ -1,0 +1,46 @@
+#!/bin/sh
+# Guard against the 2026-09-16 incident class: local-only working briefs, which
+# routinely quote real customer addresses and revenue, getting swept into a
+# PUBLIC repo by `git add -A`. See docs/INCIDENT-2026-09-16-prompt-brief-pii.md.
+#
+# Two rules, both narrow on purpose so they do not false-positive on test
+# fixtures and so nobody learns to reflexively pass --no-verify:
+#   1. docs/PROMPT-*.md is local-only, except the two briefs that were reviewed
+#      and are legitimately tracked.
+#   2. No consumer-mailbox address may be ADDED anywhere under docs/. That is
+#      where the leak happened, and docs/ has no legitimate need for one.
+
+ALLOWED_BRIEFS="docs/PROMPT-acquisition-flywheel.md docs/PROMPT-free-tier-action-cap.md"
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+fail=0
+
+for path in $staged; do
+  case "$path" in
+    docs/PROMPT-*.md)
+      ok=0
+      for allowed in $ALLOWED_BRIEFS; do
+        [ "$path" = "$allowed" ] && ok=1
+      done
+      if [ "$ok" -eq 0 ]; then
+        echo "pre-commit: refusing to commit $path" >&2
+        echo "  Working briefs stay untracked. This repo is PUBLIC and the briefs quote" >&2
+        echo "  real customer addresses, purchase times and MRR." >&2
+        fail=1
+      fi
+      ;;
+  esac
+done
+
+leaks=$(git diff --cached --diff-filter=ACMR -U0 -- docs/ \
+  | grep '^+' | grep -v '^+++' \
+  | grep -oiE '[A-Za-z0-9._%+-]+@(gmail|yahoo|ymail|hotmail|outlook|live|icloud|me|proton|protonmail|pm)\.[A-Za-z.]{2,}' \
+  | sort -u || true)
+if [ -n "$leaks" ]; then
+  echo "pre-commit: refusing to add a consumer-mailbox address under docs/" >&2
+  echo "$leaks" | sed 's/^/  /' >&2
+  echo "  Mask it, or move the file out of the repo." >&2
+  fail=1
+fi
+
+[ "$fail" -eq 0 ] || { echo "" >&2; echo "  (Deliberate and reviewed? git commit --no-verify)" >&2; exit 1; }
