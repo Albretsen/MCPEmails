@@ -331,6 +331,14 @@ export function envelopeFrom(result: ToolResultParams | undefined): Envelope | n
  * honest expectation is single-digit milliseconds and this budget is roughly
  * three orders of magnitude of headroom.
  *
+ * MEASURED on Claude, 2026-09-16: `result late 4487ms`. The host delivers the
+ * mounting tool result about four and a half seconds after the handshake, which
+ * is almost certainly the end of the assistant's turn rather than the end of the
+ * tool call. Every budget below 4.5s therefore fired on a host that was working,
+ * which is what `late` meant each time. 9s is that measurement with headroom for
+ * a longer turn, and the cost of being generous is only a longer loading line on
+ * a card that is genuinely getting nothing.
+ *
  * Was 3s, cut to 1.5s, raised to 4s on 2026-09-16 once the real host could
  * finally be read. The 1.5s was set against phase-0's reference-host timing
  * (tool-input and tool-result in effectively the same tick as the handshake,
@@ -350,10 +358,9 @@ export function envelopeFrom(result: ToolResultParams | undefined): Envelope | n
  * Still deliberately well inside `INITIALIZE_TIMEOUT_MS` (10s), which covers
  * the other half of the problem: a host that never completes the handshake at
  * all surfaces as `connectError`, not as this. How late Claude actually is,
- * is not yet known — the diagnostics line now prints the elapsed ms so the next
- * screenshot settles whether 4s is generous or still short.
+ * How late Claude is, is now known and is the first paragraph above.
  */
-export const RESULT_WATCHDOG_MS = 4_000;
+export const RESULT_WATCHDOG_MS = 9_000;
 
 let watchdogTimer: ReturnType<typeof setTimeout> | null = null;
 

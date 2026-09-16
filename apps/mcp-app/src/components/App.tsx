@@ -333,7 +333,25 @@ export function App(props: { bridge: HostBridge }) {
       }
 
       // Still genuinely waiting. At most RESULT_WATCHDOG_MS of this.
-      return <Loading />;
+      //
+      // Gated on `connected`, which is the difference between "waiting" and
+      // "never started". Measured in Claude on 2026-09-16: a RE-MOUNTED card
+      // paints once and then never executes again — its diagnostics line reads
+      // `hs 0`, and `initializeAttempts` is incremented synchronously inside
+      // connect() in the same tick as this very render, so a painted 0 is the
+      // pre-connect first paint and nothing after it ever ran. No microtask, no
+      // timer, no handshake.
+      //
+      // A spinner is a promise that something is coming. In that frame nothing
+      // is, and it is the only frame the user will ever see, so the promise is
+      // a lie that sits on screen forever: "simply not loading". Rendering
+      // nothing instead lets `.card:empty` collapse the shell, leaving the
+      // host's own header and the message text below it to carry the result,
+      // which they already do in full.
+      //
+      // This does not fix the remount. Nothing on this side can: the card is
+      // not running. It stops the failure from being loud.
+      return store.connected ? <Loading /> : null;
     }
 
     // ---- version gate -------------------------------------------------------

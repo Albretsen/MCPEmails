@@ -429,6 +429,64 @@ did not help either — which is why this looked like "the deploy did not work".
 A side benefit worth keeping: `resources/read` logs the URI, so the logs now say
 exactly which build any host is running.
 
+### Answered: what Claude's host does on first mount and on remount
+
+Read off the diagnostics line in the real host, 2026-09-16, connector pointed at
+`mcpemails.com/api/mcp`.
+
+**First mount, working:**
+
+> `host Claude 1.0.0 · mode inline · result late 4487ms · input yes · restored none · toolInfo no · hs 1 · rx 6/0`
+
+* The host identifies as **Claude 1.0.0** and mounts inline.
+* The handshake succeeds on the first `ui/initialize` (`hs 1`), and six JSON-RPC
+  messages arrive from the expected source with none dropped (`rx 6/0`).
+* **The tool result arrives 4,487 ms after the handshake.** That is not the tool
+  being slow (the `draft` call finishes in well under a second); it is almost
+  certainly the end of the assistant's turn. Phase 0's reference host delivers in
+  ~10 ms, which is why `RESULT_WATCHDOG_MS` was ever set anywhere near it. Every
+  budget below 4.5 s fired on a host that was working. It is now 9 s.
+* **`toolInfo no`.** Claude does not send `hostContext.toolInfo`, so
+  `persist.ts#cardKey` runs on its argument-hash fallback in production and the
+  `callId` branch is dead code against this host.
+
+**Remount (leave the conversation, come back):**
+
+> `host ? ? · mode ? · result none · input no · restored none · toolInfo no · hs 0 · rx 0/0`
+
+`hs 0` is the whole finding, and it is stronger than "the host sends nothing".
+`initializeAttempts` is incremented **synchronously inside `connect()`**, in the
+same tick as the initial `render()` that paints this very line. A painted `0` is
+therefore the pre-connect first paint, and it means **no microtask and no timer
+ever ran in that frame**. The card executes its first synchronous tick, paints,
+and stops.
+
+So on remount the card is not waiting, not disconnected, and not being ignored.
+It is not running. Which settles three things:
+
+1. **The `ui/initialize` retry cannot help**, and neither can anything else on
+   this side. It was added on the theory that our single-shot handshake was
+   racing the host's listener; `hs 0` disproves that, because a race would show
+   `hs` climbing. It is kept anyway — it is correct, it costs nothing, and it
+   removes a real single point of failure — but it is not the fix for this.
+2. **The restore-on-remount from `cab5d6e` can never fire.** It is triggered by
+   `ui/notifications/tool-input`, which needs a completed handshake. It is
+   correct code (101/101 in the harness, including a host that sends no
+   `toolInfo`) guarding a door the host never opens.
+3. **The loading state was a lie.** A spinner promises something is coming; in a
+   frozen frame nothing is, and that frame is the only one the user ever sees.
+   Hence "simply not loading". The card now renders **nothing at all** until the
+   handshake completes, so `.card:empty` collapses the shell and the host's own
+   header plus the message text below carry the result, which they already do in
+   full. This does not fix the remount. It stops it being loud.
+
+Not yet known: *why* the frame stops. A host that re-mounts a stored cell into an
+inert context, a lazily attached iframe that never gets a live browsing context,
+or a deliberate policy of not re-running app code for historical results would
+all look identical from inside. It is host-side either way, and the honest v1
+answer is that a re-mounted draft editor collapses to nothing rather than
+pretending.
+
 ### Still open, to be answered from a diagnostics screenshot
 
 The card's diagnostics line (bottom, 11 px, internal builds only) prints
