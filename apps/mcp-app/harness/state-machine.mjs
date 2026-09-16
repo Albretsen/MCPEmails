@@ -48,7 +48,7 @@ const TOOL_INFO = {
  * construction, posts to it, and only accepts messages whose `source` is that
  * same object (the origin check the real sandbox proxy relies on).
  */
-function scriptedHost({ hostContext = {} } = {}) {
+function scriptedHost({ hostContext = {}, deaf = () => false, initializeError = null } = {}) {
   const listeners = [];
   const sent = [];
   const logs = [];
@@ -60,6 +60,15 @@ function scriptedHost({ hostContext = {} } = {}) {
       if (msg.method === "notifications/message") logs.push(msg.params);
       if (msg.id !== undefined && msg.method === undefined) responses.push(msg);
       if (msg.method === "ui/initialize") {
+        // `deaf` models the real failure this guards: a host that is not yet
+        // listening. A postMessage into a window with no listener is not
+        // queued and not refused, it is simply gone, so the fake drops it on
+        // the floor exactly as the browser would.
+        if (deaf()) return;
+        if (initializeError) {
+          deliver({ jsonrpc: "2.0", id: msg.id, error: initializeError });
+          return;
+        }
         deliver({
           jsonrpc: "2.0",
           id: msg.id,
@@ -90,7 +99,14 @@ function scriptedHost({ hostContext = {} } = {}) {
     });
   }
 
-  return { win, deliver, sent, logs, responses };
+  /** Deliver a message from a window that is NOT the app's parent. */
+  function deliverFrom(message) {
+    queueMicrotask(() => {
+      for (const fn of listeners) fn({ source: { notOurParent: true }, data: message });
+    });
+  }
+
+  return { win, deliver, deliverFrom, sent, logs, responses };
 }
 
 /**
@@ -179,6 +195,12 @@ async function main() {
     .RESULT_WATCHDOG_MS;
 
   const results = [];
+
+  // (i1) below: the fake host ignores everything posted before this moment. Set
+  // when that scenario actually starts, not here — the scenarios above take
+  // real time, and a deadline fixed now would have passed before it is used,
+  // which silently turns the test into "a host that was listening all along".
+  let deafUntil = 0;
 
   // (a) A payload that is not ours at all. Regression guard: this path already
   // worked, and the new statuses must not have stolen it.
@@ -670,6 +692,102 @@ async function main() {
       t.expect("the fifth-oldest is gone", t.mod.loadEnvelope("i4"), null);
       t.expect("the twentieth-newest is kept", t.mod.loadEnvelope("i5")?.card, "receipt");
     }),
+  );
+
+  // ---- handshake ------------------------------------------------------------
+  // These drive the bridge directly rather than through scenario(), because the
+  // thing under test is connect() itself and scenario() awaits it for you.
+
+  async function handshake(name, hostOpts, body) {
+    const host = scriptedHost(hostOpts);
+    globalThis.window = host.win;
+    delete globalThis.localStorage;
+    const mod = await import(`${pathToFileURL(OUT).href}?i=${++instance}`);
+    const bridge = new mod.HostBridge();
+    const checks = [];
+    const expect = (label, actual, wanted) =>
+      checks.push({ label, actual, wanted, ok: Object.is(actual, wanted) });
+    await body({ bridge, host, mod, expect });
+    return { name, checks };
+  }
+
+  // (i1) THE REAL-HOST BUG. A re-mounted card in Claude came back with no host
+  // info, no tool-input and no result: the handshake had never completed,
+  // because the single ui/initialize went out before the host was listening.
+  // One shot meant one chance. Retrying must recover it.
+  results.push(
+    await handshake(
+      "a host that starts listening late still completes the handshake",
+      { deaf: () => Date.now() < deafUntil },
+      async (t) => {
+        // Past the first attempt (250ms), inside the second.
+        deafUntil = Date.now() + 600;
+        t.expect("connected", t.bridge.connected, false);
+        await t.bridge.connect({ name: "handshake-check", version: "0.0.0" });
+        t.expect("connected", t.bridge.connected, true);
+        t.expect("host was heard", t.bridge.hostInfo.name, HOST_INFO.name);
+        t.expect("it took more than one attempt", t.bridge.initializeAttempts > 1, true);
+      },
+    ),
+  );
+
+  // (i2) A host that never listens must still give up, and within the budget,
+  // so a dead frame surfaces as connectError instead of spinning forever.
+  results.push(
+    await handshake(
+      "a host that never listens gives up, and says so",
+      { deaf: () => true },
+      async (t) => {
+        const started = Date.now();
+        let error = null;
+        await t.bridge
+          .connect({ name: "handshake-check", version: "0.0.0" })
+          .catch((e) => (error = e));
+        t.expect("it failed", error instanceof Error, true);
+        t.expect("not connected", t.bridge.connected, false);
+        t.expect("it tried repeatedly", t.bridge.initializeAttempts > 3, true);
+        // The budget is INITIALIZE_TIMEOUT_MS (10s) and must not be multiplied
+        // by the retries: the retry loop shares one deadline.
+        t.expect("inside the budget", Date.now() - started < 12_000, true);
+      },
+    ),
+  );
+
+  // (i3) A host that ANSWERS with an error heard us. Re-asking it is noise, not
+  // resilience, so an error response must end the handshake on the first try.
+  results.push(
+    await handshake(
+      "a refused handshake is not retried",
+      { initializeError: { code: -32600, message: "no apps here" } },
+      async (t) => {
+        let error = null;
+        await t.bridge
+          .connect({ name: "handshake-check", version: "0.0.0" })
+          .catch((e) => (error = e));
+        t.expect("it failed", error instanceof Error, true);
+        t.expect("exactly one attempt", t.bridge.initializeAttempts, 1);
+      },
+    ),
+  );
+
+  // (i4) The source check drops messages from any window that is not our
+  // parent, and counts them when it does. A non-zero foreign count in the real
+  // host would mean the host IS speaking and we are throwing it away, which is
+  // a different bug from silence; the diagnostics line reports both.
+  results.push(
+    await handshake(
+      "a JSON-RPC message from another window is dropped and counted",
+      {},
+      async (t) => {
+        await t.bridge.connect({ name: "handshake-check", version: "0.0.0" });
+        const accepted = t.bridge.rxAccepted;
+        for (const fn of t.host.win.listenersForTest ?? []) void fn;
+        t.host.deliverFrom({ jsonrpc: "2.0", method: "ui/notifications/tool-input", params: {} });
+        await settle();
+        t.expect("not accepted", t.bridge.rxAccepted, accepted);
+        t.expect("counted as foreign", t.bridge.rxForeign, 1);
+      },
+    ),
   );
 
   let failed = 0;

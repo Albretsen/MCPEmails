@@ -125,6 +125,26 @@ export class HostBridge {
   protocolVersion: string | null = null;
   connected = false;
 
+  /**
+   * Handshake instrumentation. INTERNAL v1 ONLY, same lifetime as the
+   * diagnostics line in App.tsx.
+   *
+   * `initializeAttempts` is how many `ui/initialize` requests were posted
+   * before one was answered. `rxAccepted` counts JSON-RPC messages that passed
+   * the source check; `rxForeign` counts JSON-RPC-shaped messages that were
+   * dropped because they came from a window other than our parent.
+   *
+   * Together they separate the two ways a handshake can die silently, which is
+   * otherwise unknowable from inside a sandboxed frame: `rxAccepted 0` with
+   * `rxForeign 0` means the host never spoke to us at all and retrying is the
+   * right fix; a non-zero `rxForeign` would mean the host IS speaking and our
+   * source check is throwing its messages away, which is a different bug with a
+   * different fix.
+   */
+  initializeAttempts = 0;
+  rxAccepted = 0;
+  rxForeign = 0;
+
   onToolInput?: (args: Record<string, unknown> | undefined) => void;
   onToolResult?: (params: ToolResultParams) => void;
   onToolCancelled?: (params: ToolCancelledParams) => void;
@@ -148,12 +168,20 @@ export class HostBridge {
     if (this.listening) return;
     this.listening = true;
     window.addEventListener("message", (event: MessageEvent) => {
-      // Validate the source window. The card's parent is the sandbox proxy
-      // frame; anything else is not the host.
-      if (event.source !== this.target) return;
       const data = event.data as Json | undefined;
-      if (!data || (data as Json).jsonrpc !== "2.0") return;
-      this.handle(data);
+      const isRpc = !!data && (data as Json).jsonrpc === "2.0";
+      // Validate the source window. The card's parent is the sandbox proxy
+      // frame; anything else is not the host. This check is byte-identical to
+      // the reference `PostMessageTransport`'s, so it is not a place our
+      // hand-rolled bridge diverges — but a dropped message here is invisible,
+      // so a JSON-RPC-shaped message from elsewhere is counted before it goes.
+      if (event.source !== this.target) {
+        if (isRpc) this.rxForeign++;
+        return;
+      }
+      if (!isRpc) return;
+      this.rxAccepted++;
+      this.handle(data as Json);
     });
   }
 
@@ -313,22 +341,80 @@ export class HostBridge {
 
   async connect(appInfo: { name: string; version: string }): Promise<void> {
     this.listen();
-    const result = await this.request<{
+
+    const params: Json = {
+      appInfo,
+      appCapabilities: {
+        availableDisplayModes: ["inline", "fullscreen"],
+      },
+      protocolVersion: UI_PROTOCOL_VERSION,
+    };
+
+    // ── Why this retries, when the reference SDK does not ──────────────────
+    // `App.connect()` in @modelcontextprotocol/ext-apps posts `ui/initialize`
+    // exactly once and waits. That is fine when the host is already listening,
+    // and it is how this bridge behaved until 2026-09-16, when the first
+    // diagnostics line from a RE-MOUNTED card in Claude came back reading
+    // `host ? ? · mode ? · result none · input no`: no initialize result, no
+    // host info, no tool-input, nothing. The card was not waiting for a tool
+    // result, it had never completed the handshake at all, and so it sat on its
+    // loading line until the 10s timeout.
+    //
+    // A first mount works, a re-mount does not, and the difference is when the
+    // host starts listening. Our `ui/initialize` goes out during initial module
+    // evaluation, which for a lazily re-mounted conversation cell can be before
+    // the host has wired its side of the channel. A `postMessage` with no
+    // listener is not queued and not returned; it is simply gone. One shot
+    // means one chance, and losing it costs the entire card.
+    //
+    // So the request is re-posted until the host answers or the overall budget
+    // runs out. Each attempt carries a fresh JSON-RPC id, which keeps every
+    // attempt independently answerable; `handle()` ignores responses whose id
+    // is no longer pending, so a host that answers two of them is harmless. The
+    // total budget is unchanged at INITIALIZE_TIMEOUT_MS, so a host that is
+    // genuinely absent fails in exactly the same time it did before.
+    const deadline = Date.now() + INITIALIZE_TIMEOUT_MS;
+    let attemptMs = 250;
+    let lastError: unknown;
+
+    for (;;) {
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) {
+        throw lastError instanceof Error
+          ? lastError
+          : new Error("ui/initialize timed out");
+      }
+      this.initializeAttempts++;
+      try {
+        const answered = await this.request<{
+          protocolVersion?: string;
+          hostInfo?: Json;
+          hostCapabilities?: HostCapabilities;
+          hostContext?: HostContext;
+        }>("ui/initialize", params, Math.min(attemptMs, remaining));
+        return this.applyInitializeResult(answered);
+      } catch (e) {
+        // Only a timeout is worth another attempt. An actual JSON-RPC error
+        // response means the host heard us and refused, and re-asking a host
+        // that has already answered is noise, not resilience.
+        lastError = e;
+        if (!(e instanceof Error) || !/timed out$/.test(e.message)) throw e;
+        // Back off, but stay frequent enough that a host which starts
+        // listening a second in is not kept waiting for the next attempt.
+        attemptMs = Math.min(attemptMs * 2, 2_000);
+      }
+    }
+  }
+
+  /** Record what the host told us at `ui/initialize` and finish the handshake. */
+  private applyInitializeResult(
+    result: {
       protocolVersion?: string;
       hostInfo?: Json;
       hostCapabilities?: HostCapabilities;
       hostContext?: HostContext;
-    }>(
-      "ui/initialize",
-      {
-        appInfo,
-        appCapabilities: {
-          availableDisplayModes: ["inline", "fullscreen"],
-        },
-        protocolVersion: UI_PROTOCOL_VERSION,
-      },
-      INITIALIZE_TIMEOUT_MS,
-    );
+    } | undefined,
+  ): void {
 
     // `McpUiInitializeResult` carries protocolVersion, hostInfo,
     // hostCapabilities and hostContext, and deliberately carries NO tool
