@@ -506,27 +506,36 @@ export function DraftEditor(props: Props) {
           save the text as-is or the signature doubles). */}
       {!showHtml && split.signature !== null && (
         editingSig ? (
-          <AutoTextarea
-            id="d-signature"
-            ariaLabel="Signature"
-            value={split.signature}
-            disabled={!canEdit}
-            maxRows={fullscreen ? FULLSCREEN_BODY_ROWS : SIGNATURE_ROWS}
-            onInput={(v) =>
-              update({ bodyText: joinBody({ ...split, signature: v }) })
-            }
-          />
+          <div class="row">
+            <label class="lbl" for="d-signature">
+              Signature
+            </label>
+            <div class="grow">
+              <AutoTextarea
+                id="d-signature"
+                ariaLabel="Signature"
+                value={split.signature}
+                disabled={!canEdit}
+                maxRows={fullscreen ? FULLSCREEN_BODY_ROWS : SIGNATURE_ROWS}
+                onInput={(v) =>
+                  update({ bodyText: joinBody({ ...split, signature: v }) })
+                }
+              />
+            </div>
+          </div>
         ) : (
-          <div class="sig" onClick={() => canEdit && setEditingSig(true)}>
+          // Labelled in the same gutter as To / Cc / Bcc / Subject. Collapsed,
+          // it was just the first line of the signature and a count, which
+          // read as a stray fragment of the message rather than as a field:
+          // you had to already know what it was to recognise it.
+          <div
+            class="row sig"
+            title="The signature stored in this draft. Click to edit it."
+            onClick={() => canEdit && setEditingSig(true)}
+          >
+            <span class="lbl">Signature</span>
             <span class="sig-text">{signaturePreview(split.signature)}</span>
-            {canEdit && (
-              <TextLink
-                title="Edit the signature stored in this draft"
-                onClick={() => setEditingSig(true)}
-              >
-                Edit
-              </TextLink>
-            )}
+            {canEdit && <TextLink onClick={() => setEditingSig(true)}>Edit</TextLink>}
           </div>
         )
       )}

@@ -501,16 +501,9 @@ body {
    line where four used to be. Clicking anywhere on it opens the editor, so the
    "Edit" link is a label for the affordance rather than the only way in. */
 .sig {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  padding: 4px 8px;
-  border-radius: var(--r-sm);
-  border: 1px dashed var(--bd);
   color: var(--fg-3);
   font-size: var(--fs-sm);
   cursor: pointer;
-  min-width: 0;
 }
 
 .sig:hover { color: var(--fg-2); }
