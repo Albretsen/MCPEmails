@@ -43,4 +43,23 @@ if [ -n "$leaks" ]; then
   fail=1
 fi
 
+# A stray control byte in source typechecks, bundles and passes every test.
+# apps/mcp-app/src/persist.ts has now grown one twice: once as a deliberate
+# "\x00" key separator, and once by accident during an edit, caught only
+# because an exact-match revert failed. Text source has no business carrying
+# C0 controls other than tab, newline and carriage return.
+# (BSD grep has no -P, so this deletes the legitimate ones and looks at what
+# is left rather than matching a hex class.)
+ctrl=$(git diff --cached --diff-filter=ACMR --name-only -- '*.ts' '*.tsx' '*.js' '*.jsx' '*.mjs' '*.cjs' '*.json' '*.css' '*.md' \
+  | while IFS= read -r p; do
+      [ -f "$p" ] || continue
+      if LC_ALL=C tr -d '\t\n\r' < "$p" | LC_ALL=C grep -q '[[:cntrl:]]'; then echo "$p"; fi
+    done)
+if [ -n "$ctrl" ]; then
+  echo "pre-commit: control bytes in source" >&2
+  echo "$ctrl" | sed 's/^/  /' >&2
+  echo "  Locate with: LC_ALL=C cat -v <file> | grep -n '\^'" >&2
+  fail=1
+fi
+
 [ "$fail" -eq 0 ] || { echo "" >&2; echo "  (Deliberate and reviewed? git commit --no-verify)" >&2; exit 1; }
