@@ -121,6 +121,7 @@ Deno.test("tools/list advertises exactly the post-split surface", () => {
       // an envelope, so there is no result shape for the card to fail on.
       "draft_read",
       "draft_editor_save",
+      "draft_editor_hide",
     ],
   );
 });

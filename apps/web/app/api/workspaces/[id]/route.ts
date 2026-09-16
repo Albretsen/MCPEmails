@@ -46,17 +46,47 @@ export async function PATCH(
     return NextResponse.json({ error: 'Request body must be a JSON object.' }, { status: 400 });
   }
 
-  const { displayName } = body as Record<string, unknown>;
-  if (typeof displayName !== 'string' || displayName.trim().length === 0) {
-    return NextResponse.json({ error: 'A workspace name is required.' }, { status: 400 });
+  // Two independent settings on one route. Each is applied only when present,
+  // so a rename never touches the card preference and vice versa; at least one
+  // must be supplied, or the request is a no-op worth reporting.
+  const { displayName, draftEditorHidden } = body as Record<string, unknown>;
+  const update: Record<string, unknown> = {};
+  let trimmed: string | null = null;
+
+  if (displayName !== undefined) {
+    if (typeof displayName !== 'string' || displayName.trim().length === 0) {
+      return NextResponse.json({ error: 'A workspace name is required.' }, { status: 400 });
+    }
+    if (displayName.trim().length > MAX_NAME_LEN) {
+      return NextResponse.json(
+        { error: `Workspace name must be ${MAX_NAME_LEN} characters or fewer.` },
+        { status: 400 },
+      );
+    }
+    trimmed = displayName.trim();
+    update.display_name = trimmed;
   }
-  if (displayName.trim().length > MAX_NAME_LEN) {
+
+  // The workspace-wide draft-editor opt-out. Deliberately NOT the same column
+  // as `draft_editor_enabled`, which is the internal rollout gate: if they were
+  // one column, widening the rollout would silently un-hide the card for
+  // someone who turned it off.
+  if (draftEditorHidden !== undefined) {
+    if (typeof draftEditorHidden !== 'boolean') {
+      return NextResponse.json(
+        { error: 'draftEditorHidden must be a boolean.' },
+        { status: 400 },
+      );
+    }
+    update.draft_editor_hidden = draftEditorHidden;
+  }
+
+  if (Object.keys(update).length === 0) {
     return NextResponse.json(
-      { error: `Workspace name must be ${MAX_NAME_LEN} characters or fewer.` },
+      { error: 'Provide a workspace name or a draft editor preference.' },
       { status: 400 },
     );
   }
-  const trimmed = displayName.trim();
 
   // 3. Verify caller is an owner or admin of this workspace (user-role client
   //    enforces RLS on workspace_members, which is the correct auth check).
@@ -72,7 +102,11 @@ export async function PATCH(
   }
   if (callerMember.role !== 'owner' && callerMember.role !== 'admin') {
     return NextResponse.json(
-      { error: 'Only workspace owners and admins can rename the workspace.' },
+      {
+        error: trimmed !== null
+          ? 'Only workspace owners and admins can rename the workspace.'
+          : 'Only workspace owners and admins can change this setting for the workspace.',
+      },
       { status: 403 },
     );
   }
@@ -84,16 +118,22 @@ export async function PATCH(
 
   const { error: updateError } = await service
     .from('workspaces')
-    .update({ display_name: trimmed, updated_at: new Date().toISOString() })
+    .update({ ...update, updated_at: new Date().toISOString() })
     .eq('id', workspaceId)
     .is('deleted_at', null);
 
   if (updateError) {
     console.error('[workspaces/patch] Update failed:', updateError.message);
-    return NextResponse.json({ error: 'Failed to update workspace name.' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to update the workspace.' }, { status: 500 });
   }
 
-  return NextResponse.json({ id: workspaceId, displayName: trimmed });
+  return NextResponse.json({
+    id: workspaceId,
+    ...(trimmed !== null ? { displayName: trimmed } : {}),
+    ...(update.draft_editor_hidden !== undefined
+      ? { draftEditorHidden: update.draft_editor_hidden }
+      : {}),
+  });
 }
 
 /**

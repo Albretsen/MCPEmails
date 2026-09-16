@@ -556,6 +556,19 @@ export function App(props: { bridge: HostBridge }) {
               );
             },
             refresh: () => void callDraft("refresh", "draft_read", target()),
+            // The opt-out. `scope` is passed through from the card's confirm
+            // row rather than defaulted here, because "hide this" is ambiguous
+            // between this mailbox and every mailbox and the two are different
+            // wishes. The result is a receipt, so the same announceReceipt path
+            // that handles send and discard flips the card to one line.
+            hide: async (scope) => {
+              announceReceipt(
+                await callDraft("hide", "draft_editor_hide", {
+                  ...target(),
+                  scope,
+                }),
+              );
+            },
             setFullscreen,
           }}
         />

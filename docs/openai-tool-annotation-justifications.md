@@ -305,3 +305,18 @@ workspace's mail.
   refused outright on IMAP and Gmail rather than being rebuilt without them.
 - **openWorld false:** the draft stays in the connected mailbox. Sending it
   still goes through `draft`, including its approval hold.
+
+## draft_editor_hide (readOnly: false, destructive: false, openWorld: false)
+
+- **readOnly false:** it writes a display preference — `inboxes.draft_editor_hidden`
+  for one mailbox, or `workspaces.draft_editor_hidden` for all of them.
+- **destructive false:** nothing is lost and nothing is sent. It changes only
+  whether the draft editor card is rendered; drafts, sending and every other
+  tool behave identically either way, and the result of a draft call is the same
+  text it has always been. The same tool with `hidden: false` restores the card
+  exactly, which is also why it is marked idempotent, and the dashboard reverses
+  it in one click.
+- **openWorld false:** it touches two columns in the caller's own workspace and
+  reaches nothing outside it. The inbox is resolved through the same gate every
+  other draft tool uses, so it can only ever address a mailbox the calling key
+  is already allowed to use.

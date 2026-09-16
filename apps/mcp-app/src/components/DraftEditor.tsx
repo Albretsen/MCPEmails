@@ -28,6 +28,8 @@ export interface DraftActions {
   send: (patch: DraftPatch | null) => void;
   discard: () => void;
   refresh: () => void;
+  /** Turn the card off, for this inbox or for every inbox in the workspace. */
+  hide: (scope: "inbox" | "workspace") => void;
   setFullscreen: (on: boolean) => void;
 }
 
@@ -195,6 +197,7 @@ export function DraftEditor(props: Props) {
   const [showMore, setShowMore] = useState(false);
   const [editingSig, setEditingSig] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const [confirmHide, setConfirmHide] = useState(false);
   const [showHtml, setShowHtml] = useState(false);
   const askedFullscreen = useRef(false);
 
@@ -584,7 +587,39 @@ export function DraftEditor(props: Props) {
 
       {/* Inline confirm, never a modal: a dialog inside a sandboxed frame is
           clipped by the host's container and fights its z-index. */}
-      {confirmDiscard ? (
+      {/* Hiding is offered at two grains because the card cannot guess which
+          one is meant: one mailbox is "this account is noisy", all of them is
+          "I do not want this feature". Inline, never a modal, for the same
+          reason the discard confirm is inline: a dialog inside a sandboxed
+          frame is clipped by the host's container and fights its z-index. */}
+      {confirmHide ? (
+        <div class="acts">
+          <span class="line grow">Hide the draft editor card?</span>
+          <Btn
+            busy={busy === "hide"}
+            title="Only for this mailbox"
+            onClick={() => {
+              setConfirmHide(false);
+              actions.hide("inbox");
+            }}
+          >
+            This inbox
+          </Btn>
+          <Btn
+            busy={busy === "hide"}
+            title="Every mailbox in this workspace"
+            onClick={() => {
+              setConfirmHide(false);
+              actions.hide("workspace");
+            }}
+          >
+            All inboxes
+          </Btn>
+          <Btn variant="quiet" onClick={() => setConfirmHide(false)}>
+            Cancel
+          </Btn>
+        </div>
+      ) : confirmDiscard ? (
         <div class="acts">
           <span class="line grow">
             Discard this draft? It is deleted at your provider.
@@ -645,6 +680,15 @@ export function DraftEditor(props: Props) {
               onClick={() => setConfirmDiscard(true)}
             >
               Discard
+            </TextLink>
+            {/* The opt-out sits where the annoyance is. A preference page is
+                the authoritative control and exists too, but nobody goes
+                looking for one to turn off a card they have just met. */}
+            <TextLink
+              title="Stop showing this card. Drafts keep working exactly as they do now."
+              onClick={() => setConfirmHide(true)}
+            >
+              Hide
             </TextLink>
           </span>
           <Btn
