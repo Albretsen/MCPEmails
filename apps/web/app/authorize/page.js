@@ -230,6 +230,17 @@ export default async function AuthorizePage({ searchParams }) {
     .filter(Boolean)
     .filter((s) => offeredScopes.includes(s));
 
+  // The OIDC identity scopes, kept apart from everything above. They are not
+  // permissions in the sense this screen is about: they grant no mailbox
+  // access, only `sub`, `email` and `email_verified` at /api/oauth/userinfo,
+  // which is what lets a ChatGPT Business or Enterprise admin restrict this
+  // connector to their own email domain. So they get no checkbox and no place
+  // in the menu; the screen states them as a line of text, and the POST
+  // forwards them so the grant records what the client actually asked for.
+  const identityScopes = rawScope
+    .split(/[\s,]+/)
+    .filter((s) => s === 'openid' || s === 'email');
+
   // ── 6. Require authentication ─────────────────────────────────────────────
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -315,6 +326,7 @@ export default async function AuthorizePage({ searchParams }) {
       workspaceName={workspace?.display_name ?? ''}
       requestedScopes={scopesWithMeta}
       clientRequestedScopes={clientRequestedScopes}
+      identityScopes={identityScopes}
       inboxes={inboxes}
       redirectUri={resolvedRedirectUri}
       oauthState={state}

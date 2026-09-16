@@ -342,6 +342,12 @@ function DoneScreen({ client, grantCount, totalInboxes, allInboxes }) {
  *                     `scope` query param, already narrowed to the menu above.
  *                     Empty when the client sent no `scope` at all, which is a
  *                     distinct case (see lib/oauth/consent-presets.ts).
+ *  - identityScopes  string[]: `openid` and/or `email` if the client asked for
+ *                     them. They are NOT permissions in this screen's sense —
+ *                     they grant no mailbox access, only the account email at
+ *                     /api/oauth/userinfo — so they get no toggle, cannot be
+ *                     deselected, and are stated as a line of text instead.
+ *                     Forwarded verbatim to the grant.
  *  - inboxes        Array<{ id, email_address, display_name, provider, status }>
  *  - redirectUri    string: validated redirect URI for this client
  *  - oauthState     string: opaque state param to echo back in the redirect
@@ -358,6 +364,7 @@ export function AuthorizeApp({
   workspaceName,
   requestedScopes,
   clientRequestedScopes = [],
+  identityScopes = [],
   inboxes,
   redirectUri,
   oauthState,
@@ -480,6 +487,8 @@ export function AuthorizeApp({
           // when the client did not send one.
           resource:         resource,
           scopes:           selectedScopes.map((s) => s.scope),
+          // Not part of the checkbox state: see the identityScopes prop.
+          identity_scopes:  identityScopes,
           // null = all inboxes (including future ones); array = explicit allowlist.
           all_inboxes:      allInboxes,
           inbox_ids:        allInboxes ? null : selectedInboxIds,
@@ -653,6 +662,19 @@ export function AuthorizeApp({
                     padding: '12px 0', marginBottom: 8,
                   }}>
                     {t('authorize.noScopes')}
+                  </div>
+                )}
+
+                {/* The OIDC identity scopes, when the client asked for them.
+                    Stated, not offered: they carry no mailbox access, so a
+                    toggle would imply a choice between two things that are not
+                    comparable. See the identityScopes prop. */}
+                {identityScopes.length > 0 && (
+                  <div style={{
+                    fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)',
+                    lineHeight: 1.5, margin: '10px 0 14px',
+                  }}>
+                    {t('authorize.identityScopeNote', { clientName: client.client_name })}
                   </div>
                 )}
 

@@ -7,6 +7,7 @@ import { consumeStateNonce } from '@/lib/oauth/state';
 import { validateResourceIndicator } from '@/lib/oauth/resource';
 import { looksLikeUrlClientId, redirectUriAllowed, resolveCimdClient } from '@/lib/oauth/cimd';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
+import { IDENTITY_SCOPES } from '@/lib/oauth/metadata';
 
 /**
  * POST /api/oauth/authorize
@@ -30,6 +31,23 @@ const VALID_SCOPES = new Set([
   'schedule:email',
   'manage:automations',
 ]);
+
+/**
+ * The identity scopes, handled apart from the tool scopes above on purpose.
+ *
+ * They authorize no tool and no mailbox: all they unlock is `sub`, `email` and
+ * `email_verified` at /api/oauth/userinfo, which is what lets a ChatGPT
+ * Business or Enterprise admin restrict this connector to their own email
+ * domain. So they are not offered as checkboxes on the consent screen, are not
+ * subject to the client's tool-scope allow-list, and never satisfy the
+ * "grant at least one permission" rule below — a connection that carried only
+ * these could read nothing and would be a pointless grant.
+ *
+ * They are granted only when the CLIENT asked for them in its authorization
+ * request; the consent page forwards that request verbatim, and the screen
+ * says in one line that the account's email address is included.
+ */
+const IDENTITY_SCOPE_SET = new Set<string>(IDENTITY_SCOPES);
 
 function generateAuthCode(): string {
   return crypto.randomBytes(32).toString('hex');
@@ -67,6 +85,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     challenge_method,
     resource,
     scopes,
+    identity_scopes,
     inbox_ids,
     all_inboxes,
   } = body as Record<string, unknown>;
@@ -215,11 +234,26 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // At least one scope must be granted — a connection with no scopes can call
   // zero tools, so it is never a useful grant. (The consent UI also disables the
   // Allow button in this case; this is the server-side backstop.)
+  //
+  // Checked BEFORE the identity scopes are appended, so `openid` alone can
+  // never stand in for a real permission.
   if (approvedScopes.length === 0) {
     return NextResponse.json(
       { error: 'Select at least one permission to grant.' },
       { status: 400 },
     );
+  }
+
+  // Identity scopes, appended after that check. Taken from what the client
+  // asked for rather than from the consent checkboxes, because they are not
+  // checkboxes: see IDENTITY_SCOPE_SET.
+  const grantedIdentityScopes = Array.isArray(identity_scopes)
+    ? (identity_scopes as unknown[]).filter(
+        (s): s is string => typeof s === 'string' && IDENTITY_SCOPE_SET.has(s),
+      )
+    : [];
+  for (const scope of grantedIdentityScopes) {
+    if (!approvedScopes.includes(scope)) approvedScopes.push(scope);
   }
 
   // ── Workspace resolution ──────────────────────────────────────────────────

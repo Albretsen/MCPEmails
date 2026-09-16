@@ -33,6 +33,10 @@ const CORS_HEADERS = {
 // oauth/authorize routes). It is the CEILING of what the client may ask for —
 // the user still chooses which of these to actually grant on the consent screen.
 // search:email is vestigial (read:email covers search) but kept for parity.
+// `openid` and `email` are included so a dynamically-registered client may ASK
+// for the identity claims (/api/oauth/userinfo). They authorize no tool, are
+// never offered as a consent checkbox, and are granted only when the client
+// requests them — see IDENTITY_SCOPES in lib/oauth/metadata.ts.
 const DYNAMIC_SCOPES = [
   'read:email',
   'search:email',
@@ -43,6 +47,8 @@ const DYNAMIC_SCOPES = [
   'manage:contacts',
   'schedule:email',
   'manage:automations',
+  'openid',
+  'email',
 ];
 
 export async function OPTIONS(): Promise<Response> {

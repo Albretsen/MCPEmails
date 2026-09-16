@@ -11,7 +11,13 @@
  * - Only S256 PKCE is supported; "plain" is intentionally omitted.
  * - Only public clients (token_endpoint_auth_method: "none") are supported.
  * - All scopes the MCP server enforces are advertised here so clients can
- *   request them up front during the authorization flow.
+ *   request them up front during the authorization flow, plus the two OIDC
+ *   identity scopes (`openid`, `email`) that grant no mailbox access and only
+ *   unlock the claims at `userinfo_endpoint`. See that route for why a
+ *   product with no sign-in of its own publishes a userinfo endpoint.
+ * - There is no `id_token`: the claims are served from the userinfo endpoint
+ *   only, so there is no signing key and no JWKS to rotate. Nothing that
+ *   consumes this metadata has asked for one.
  * - Both client identification schemes are advertised, and the client picks:
  *   `registration_endpoint` for RFC 7591 Dynamic Client Registration, and
  *   `client_id_metadata_document_supported` for a client_id that is itself an
@@ -24,6 +30,8 @@
  *
  * No authentication required. Cached for 1 hour.
  */
+import { authorizationServerMetadata } from '@/lib/oauth/metadata';
+
 // CORS — discovery documents must be readable cross-origin by browser-based
 // MCP clients during the OAuth flow. Unauthenticated, no cookies → wildcard.
 const CORS_HEADERS = {
@@ -37,38 +45,12 @@ export function OPTIONS() {
 }
 
 export async function GET() {
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://mcpemails.com';
-
-  return Response.json(
-    {
-      issuer: base,
-      authorization_endpoint: `${base}/authorize`,
-      token_endpoint: `${base}/api/oauth/token`,
-      registration_endpoint: `${base}/api/oauth/register`,
-      revocation_endpoint: `${base}/api/oauth/revoke`,
-      scopes_supported: [
-        'read:email',
-        'search:email',
-        'send:email',
-        'manage:folders',
-        'delete:email',
-        'manage:drafts',
-        'manage:contacts',
-        'schedule:email',
-        'manage:automations',
-      ],
-      response_types_supported: ['code'],
-      grant_types_supported: ['authorization_code', 'refresh_token'],
-      code_challenge_methods_supported: ['S256'],
-      token_endpoint_auth_methods_supported: ['none'],
-      revocation_endpoint_auth_methods_supported: ['none'],
-      client_id_metadata_document_supported: true,
+  // The document itself lives in lib/oauth/metadata.ts, shared with
+  // /.well-known/openid-configuration so the two cannot drift apart.
+  return Response.json(authorizationServerMetadata(), {
+    headers: {
+      ...CORS_HEADERS,
+      'Cache-Control': 'max-age=3600',
     },
-    {
-      headers: {
-        ...CORS_HEADERS,
-        'Cache-Control': 'max-age=3600',
-      },
-    }
-  );
+  });
 }
