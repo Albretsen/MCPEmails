@@ -118,6 +118,12 @@ export interface CardStore {
    */
   resultAfterMs: number | null;
   /**
+   * Bumped once per `ui/initialize` attempt, purely to wake subscribers so the
+   * diagnostics line re-reads the bridge's live counters. Rendered by nothing.
+   * Goes when the diagnostics line goes.
+   */
+  handshakeTick: number;
+  /**
    * `null` until a restore has been attempted, then what it found. The card
    * must not draw its "nothing to show" placeholder while this is still null,
    * because that is the state in which the answer is genuinely not known yet.
@@ -135,6 +141,7 @@ let state: CardStore = {
   toolInput: null,
   resultArrival: "none",
   resultAfterMs: null,
+  handshakeTick: 0,
   restored: null,
 };
 

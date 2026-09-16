@@ -156,6 +156,14 @@ export class HostBridge {
    * every other card has, replies in the same tick as before.
    */
   onTeardown?: () => void | Promise<void>;
+  /**
+   * Fired before each `ui/initialize` attempt. INTERNAL v1 ONLY: it exists so
+   * the diagnostics line can re-render while the handshake is still being
+   * retried. Without it the counters freeze at their first-paint values, which
+   * on the one card that matters — the one that never connects — is precisely
+   * the wrong number.
+   */
+  onInitializeAttempt?: () => void;
 
   private nextId = 1;
   private pending = new Map<number, Pending>();
@@ -385,6 +393,7 @@ export class HostBridge {
           : new Error("ui/initialize timed out");
       }
       this.initializeAttempts++;
+      this.onInitializeAttempt?.();
       try {
         const answered = await this.request<{
           protocolVersion?: string;
