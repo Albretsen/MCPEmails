@@ -34,7 +34,10 @@
  * @property {string}  [url]     Their site. Rendered as a link on the company.
  * @property {string}  [date]    ISO date (YYYY-MM-DD) the review was left.
  * @property {'google'} source   Where it was published.
- * @property {string}  [sourceUrl] Public permalink to the review, when one exists.
+ * @property {string}  [sourceUrl] Public permalink to this one review. Its
+ *   presence is what turns the source badge into a link, so it must open the
+ *   review itself: a link to a listing the review is merely somewhere inside
+ *   is worse than no link, and belongs left off.
  */
 
 /**
@@ -83,11 +86,31 @@ export const REVIEWS = [
     role: 'Founder',
     company: 'Vikse Development AS',
     url: 'https://vikse.dev/',
-    // Google renders review bodies nowhere public, so there is no permalink to
-    // link the badge to and no published timestamp beyond "3 days ago" as read
-    // on 2026-09-16.
+    // Google publishes no exact timestamp on a review, only "3 days ago" as
+    // read on 2026-09-16.
     date: '2026-09-13',
     source: 'google',
+    // The permalink Maps' own "Share" gives for this one review. It opens the
+    // review by itself rather than the place page, which is the whole point:
+    // the Google mark in the proof bar has to land a reader on exactly the
+    // sentence quoted above it, not on a listing they then have to search.
+    // Verified 2026-09-16 in a browser with no Google session, so it is a
+    // public URL and not a signed-in-owner view.
+    //
+    // This is what share.google/9ynsnfJM4kFzLXDuo resolves to, with Google's
+    // own share-surface tracking (`source`, `kgs`, `utm_source`) dropped and
+    // nothing else touched. The long opaque id IS the review, and
+    // 0x0:0x40013a8d36c2b552 is the place, the CID in every Maps URL for MCP
+    // Emails. `hl=en-US` is deliberate even though the site is served in five
+    // languages: it makes Google show the English the reviewer actually wrote,
+    // which is the text quoted verbatim on this page. Drop it and a Norwegian
+    // reader gets a machine translation of a quote we present as his words.
+    //
+    // (The comment this replaces said no permalink existed. That was true on
+    // 2026-09-16 only because the reviews were still held by Google's filter;
+    // they republished the same day. See the reviews-withheld note.)
+    sourceUrl:
+      'https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2s5RGNWbEllazFaYUZOblNWQnBVM1puVFZZNFNtYxAB!2m1!1s0x0:0x40013a8d36c2b552!3m1!1s2@1:CAIQACodChtycF9oOk9DcVlIek1ZaFNnSVBpU3ZnTVY4Smc%7C%7C?hl=en-US',
   },
 ];
 

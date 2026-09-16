@@ -55,6 +55,13 @@ test('every review is attributable and plausibly rated', () => {
     if (r.date) {
       assert.match(r.date, /^\d{4}-\d{2}-\d{2}$/, `${r.id} has a non-ISO date`);
     }
+    // `sourceUrl` is what makes the source badge a link, and it is also
+    // emitted as the Review's `url` in structured data. A relative or
+    // http:// value would quietly produce a broken outbound link on every
+    // locale of the home page.
+    if (r.sourceUrl) {
+      assert.match(r.sourceUrl, /^https:\/\//, `${r.id} has a non-absolute sourceUrl`);
+    }
   }
 });
 

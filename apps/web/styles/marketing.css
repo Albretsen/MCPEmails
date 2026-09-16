@@ -573,6 +573,17 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
 /* The source is a bare mark here, not the chip it is on the card: two grey
    pills side by side with the avatar made the slim bar look busy. */
 .proof-fig .review-source { background: none; padding: 0; }
+/* ...but once it carries a `sourceUrl` that bare mark is a link, and a 14px
+   glyph is a 14x14 target. The padding grows it to 24x24 and the equal
+   negative margin gives the width straight back to the row, so the hit area
+   doubles without anything visibly moving. The pill only appears under the
+   pointer or on focus, which is also the only affordance saying it is
+   clickable at all. */
+.proof-fig a.review-source {
+  padding: 5px; margin: -5px; border-radius: 999px;
+}
+.proof-fig a.review-source:hover,
+.proof-fig a.review-source:focus-visible { background: var(--bg-sunken); }
 .proof-quote { margin: 0; }
 .proof-quote p {
   margin: 0; font-family: var(--font-sans); font-size: 17px; font-weight: 500;
