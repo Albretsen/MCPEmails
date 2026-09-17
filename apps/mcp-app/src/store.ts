@@ -352,6 +352,30 @@ export function isRenderable(env: Envelope | null | undefined): boolean {
 }
 
 /**
+ * Is this the receipt for a message that actually left, as opposed to one that
+ * was discarded, refused, or never went anywhere?
+ *
+ * Exported because two places need the same answer and must not drift: this
+ * file decides whether to carry the draft across, and App.tsx decides whether
+ * to render it. `state: "error"` is excluded explicitly as well as by outcome —
+ * §4 says the envelope state and the receipt outcome describe the same
+ * condition from two levels, and a disagreement between them is not a send.
+ */
+export function isDepartedReceipt(env: Envelope | null | undefined): boolean {
+  if (!env || env.card !== "receipt" || !env.receipt) return false;
+  if (env.state === "error") return false;
+  return env.receipt.outcome === "sent" || env.receipt.outcome === "scheduled";
+}
+
+/** Rule 0 above: keep the sent message on screen under its receipt. */
+function carrySentDraft(current: Envelope | null | undefined, next: Envelope): Envelope {
+  if (!current || current.card !== "draft_editor" || !current.draft) return next;
+  if (isRestoreStub(current)) return next;
+  if (!isDepartedReceipt(next) || next.draft) return next;
+  return { ...next, draft: current.draft };
+}
+
+/**
  * Merge a new envelope onto the current one.
  *
  * `isEnvelope` is structural: `{schema_version, card}` and nothing else passes
@@ -375,6 +399,30 @@ export function isRenderable(env: Envelope | null | undefined): boolean {
  * Anything renderable replaces, unconditionally. A receipt over a draft is a
  * send completing, and that must always win.
  *
+ * ── RULE 0: A COMPLETED SEND KEEPS WHAT WAS SENT ────────────────────────────
+ * The receipt still wins — it is the authoritative envelope and every field
+ * comes from it — but the draft payload the card was already holding is carried
+ * across onto it, so the message survives the transition. Without this, pressing
+ * Send replaced a screen full of the user's own words with the single line
+ * "Sent.", and the only copy of what had just gone out was in a mailbox the card
+ * cannot open. That was the top complaint about the editor.
+ *
+ * Narrow on purpose:
+ *
+ *   - only onto a receipt whose outcome is a SUCCESSFUL DEPARTURE (`sent`,
+ *     `scheduled`). A `failed` receipt is an error the editor renders around
+ *     itself, a `discarded` one is a deletion, and neither wants a read-only
+ *     copy of the message pinned under it;
+ *   - only from a real draft_editor envelope, never from a restore stub, which
+ *     is empty by design and would render as a blank message;
+ *   - never over a `draft` the server itself put on the receipt. Today it sends
+ *     none, and if it ever does, its copy is the better one.
+ *
+ * Nothing is stored: `persist.ts#redact` keeps `draft` for a `draft_editor`
+ * card only, so a receipt carrying one still persists as an outcome word and a
+ * neutral headline. The message lives in this tab's memory until the frame goes
+ * away, which is exactly as long as the user is looking at it.
+ *
  * "Always" is scoped to what reaches here. The card's own calls (App.tsx
  * #callDraft) reach this function directly, so a send the user pressed always
  * flips the card to its receipt. A PUSHED receipt is filtered first by
@@ -388,7 +436,9 @@ export function mergeEnvelope(
   current: Envelope | null | undefined,
   next: Envelope,
 ): Envelope {
-  if (isRenderable(next) || !current) return next;
+  if (isRenderable(next) || !current) {
+    return carrySentDraft(current, next);
+  }
   // A RESTORE STUB is renderable by shape (a draft stub has a `draft`) and
   // empty by design (no subject, no body, no recipients). Grafting it onto a
   // fresh envelope would strip the `_stub` marker with it, and App.tsx gates on

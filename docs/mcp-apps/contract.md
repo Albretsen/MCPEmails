@@ -706,3 +706,42 @@ Deviations, all small and all deliberate:
 * **The Outlook `draft{action:"reply"}` path returns today's payload with no envelope.** It creates
   the draft through Graph's `createReply`, so the handler never holds the composed body the envelope
   builder needs. This is the §8 degradation rule firing, not a failure.
+
+### As built (card) — the sent message stays on screen
+
+Added 2026-09-17, card side only. No new field, no new tool, no new server read.
+
+`draft{action:"send"}` returns a `card: "receipt"` envelope, and the card used to render that
+the way it renders every other receipt: one line, "Sent." Everything the user had just
+written left the screen at the moment they most wanted to read it back, and the only
+remaining copy was in a Sent folder the card cannot open. It was the most common complaint
+about the editor.
+
+The receipt still wins. `store.ts#carrySentDraft` copies the `draft` payload the card was
+already holding onto the incoming receipt envelope, and `components/SentMessage.tsx` renders
+it read-only underneath the receipt's own headline, detail and dashboard link.
+
+Deliberately narrow, in all four directions:
+
+* **Only onto a departure.** `outcome: "sent" | "scheduled"`, and never `state: "error"`
+  (`store.ts#isDepartedReceipt`, which both the merge and the render read so they cannot
+  drift). A discard stays one line: the user asked for the draft to go away, and pinning a
+  read-only copy under "Draft discarded" would be the card arguing with them.
+* **Only from a live editor**, never from a restore stub, which is empty by design.
+* **Never over a server-sent `draft`.** The server sends none today; if it ever does, its
+  copy is the better one.
+* **Nothing is stored.** `persist.ts#redact` keeps a `draft` for a `draft_editor` card only,
+  so a receipt carrying one still persists as an outcome word and a neutral headline. The
+  message lives in the frame's memory for as long as the user is looking at it and no
+  longer, which is also why a REMOUNT of a sent card is still one line — the draft is gone
+  at the provider and there is nothing left to re-request. Pinned by hardening.mjs
+  ("and the sent message is still not written to storage").
+
+One server-side change went with it: the send receipt's `detail` no longer embeds a
+timestamp. It read `Delivered via IMAP + SMTP at 2026-09-17T08:04:11.394Z.` — an ISO string
+inside an English sentence, which is not what §4's own example (`"at 10:04"`) ever asked
+for. The server has no timezone and no locale to render a send time in and the card does, so
+the sentence now says only where it went (`Delivered via IMAP + SMTP.`) and the card formats
+the time from `sent_at`, which the §8 merge already publishes at the top level of the same
+payload. Its headline is the bare word `Sent` for the same reason: in the card it sits beside
+the sender address, where a full stop read as a stray mark.

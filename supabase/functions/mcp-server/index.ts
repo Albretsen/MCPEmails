@@ -25142,12 +25142,23 @@ async function executeSendDraft(
   // receipt. This is the NOT-HELD path only — a held send returned above with
   // the §2a shape, which is untouched by this feature and stays the outbound
   // review card, because the send has not happened yet.
+  //
+  // NO TIMESTAMP IN THE DETAIL. It used to read "Delivered via IMAP + SMTP at
+  // 2026-09-17T08:04:11.394Z.", an ISO string inside an English sentence, which
+  // is what §4's own example ("at 10:04") was never asking for. This code has no
+  // timezone and no locale to render a send time in, and the card does: the same
+  // payload already carries `sent_at` at the top level (the §8 merge), and the
+  // card formats it with the browser's resolved locale. So the sentence says
+  // where it went and the card says when.
   const sentCard = await draftEditorReceiptFor(
     apiKey,
     inbox,
     "sent",
-    `Delivered via ${draftProviderBlock(inbox.provider).label} at ${sendResult.sent_at}.`,
-    "Sent.",
+    `Delivered via ${draftProviderBlock(inbox.provider).label}.`,
+    // A label, not a sentence: it sits beside the sender address in the card's
+    // header, where "Sent." read as a stray full stop. §4's fallback headline
+    // for this outcome has always been the bare word.
+    "Sent",
   );
   return {
     result: draftCardToolResult(sendResult as unknown as Record<string, unknown>, sentCard),

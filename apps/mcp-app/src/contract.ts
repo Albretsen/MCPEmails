@@ -264,8 +264,30 @@ export interface Envelope {
   diagnostics?: boolean;
   outbound?: Outbound;
   plan?: Plan;
+  /**
+   * §8's draft payload on a `draft_editor` card.
+   *
+   * It also rides along on a `card: "receipt"` envelope whose outcome is `sent`
+   * or `scheduled`, and that one is CLIENT-AUTHORED: the server sends no draft
+   * on a receipt, and `store.ts#carrySentDraft` moves the copy the card was
+   * already showing across so that pressing Send does not erase the message
+   * from the screen. Read-only from that moment on — the draft is gone at the
+   * provider and there is nothing left to save it to.
+   */
   draft?: DraftEditorData;
   receipt?: Receipt;
+  /**
+   * Not an envelope field: a published key of the `draft{action:"send"}`
+   * payload, which §8 merges with the receipt envelope at the top level, so it
+   * arrives here for free. Declared rather than cast at the use site because the
+   * merge is a documented contract, and read defensively because every other
+   * path that produces a receipt sends none.
+   *
+   * It is the one timestamp the card can format itself. The server has no
+   * timezone to render a send time in, which is why its `detail` no longer
+   * carries one.
+   */
+  sent_at?: string | null;
   provider?: Provider;
   actor?: Actor;
 }

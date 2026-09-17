@@ -15,6 +15,7 @@ import {
   adoptRehydration,
   envelopeFrom,
   getState,
+  isDepartedReceipt,
   mergeEnvelope,
   rehydrationCall,
   setState,
@@ -24,6 +25,7 @@ import { BulkPlan } from "./BulkPlan";
 import { DraftEditor, type DraftPatch } from "./DraftEditor";
 import { OutboundReview } from "./OutboundReview";
 import { Receipt } from "./Receipt";
+import { SentMessage } from "./SentMessage";
 import { Loading, Notice, TextLink } from "./ui";
 
 /**
@@ -685,6 +687,36 @@ export function App(props: { bridge: HostBridge }) {
     }
 
     if (envelope.card === "receipt" && envelope.receipt) {
+      // A SEND THAT COMPLETED, still holding the message it sent.
+      //
+      // `store.ts#carrySentDraft` puts the draft on this receipt, and only for
+      // an outcome that means the message actually left. So this branch is
+      // reached exactly once per card, immediately after the user pressed Send,
+      // and never for a discard, a refusal, or a receipt restored from storage
+      // (which keeps no content at all — persist.ts#redact).
+      //
+      // The receipt is still what is true: `SentMessage` takes its headline,
+      // its detail and its dashboard link from it, and the draft is rendered
+      // underneath as a read-only record. Falling through to `Receipt` when
+      // there is no draft is not a fallback so much as the normal case for
+      // every other receipt there is.
+      if (isDepartedReceipt(envelope) && envelope.draft) {
+        return (
+          <SentMessage
+            receipt={envelope.receipt}
+            draft={envelope.draft}
+            provider={envelope.provider}
+            sentAt={envelope.sent_at}
+            fullscreen={fullscreen}
+            canExpand={canExpand}
+            busy={busy}
+            onOpenDashboard={() =>
+              openDashboard(envelope.receipt?.dashboard_url ?? envelope.dashboard_url)
+            }
+            setFullscreen={setFullscreen}
+          />
+        );
+      }
       return (
         <Receipt
           receipt={envelope.receipt}

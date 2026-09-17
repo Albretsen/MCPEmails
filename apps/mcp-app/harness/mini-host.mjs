@@ -58,6 +58,15 @@ const FIXTURES = {
   // What the server would send for an internal workspace once the envelope
   // carries the flag (contract.ts#Envelope.diagnostics).
   draft_internal: { ...F.draftEditorImap, diagnostics: true },
+  // The send of the draft above. Pushed on top of a mounted draft it is the
+  // whole of the "I cannot see what I just sent" fix: the receipt wins, and
+  // store.ts#carrySentDraft keeps the message under it.
+  sent: { ...F.draftSendReceiptMerged, draft_id: F.draftEditorImap.draft.draft_id },
+  // The same transition for a discard, which must NOT keep the message.
+  discarded: {
+    ...F.draftDeleteReceiptMerged,
+    draft_id: F.draftEditorImap.draft.draft_id,
+  },
 };
 
 const PAGE = `<!doctype html>
@@ -170,6 +179,8 @@ const buttons = [
   ["push draft-less envelope", () => push("draftless")],
   ["push someone else's draft", () => push("someone_else")],
   ["mount internal draft (diagnostics)", () => mount("draft_internal")],
+  ["send the mounted draft", () => push("sent")],
+  ["discard the mounted draft", () => push("discarded")],
   ["dump storage", dump],
   ["clear storage", () => { localStorage.clear(); dump(); }],
 ];

@@ -1382,6 +1382,126 @@ async function main() {
   );
 
   // ======================================================================
+  // (G) A completed send keeps the message, and ONLY a completed send
+  // ======================================================================
+  //
+  // Pressing Send used to replace the editor with the single line "Sent.", so
+  // the message the user had just written left the screen at the moment they
+  // most wanted to read it back. `store.ts#carrySentDraft` carries the draft
+  // across onto the receipt and App.tsx renders it read-only.
+  //
+  // The receipt still wins — every other field comes from it — and the carry is
+  // deliberately narrow. These scenarios pin both halves: that it happens for a
+  // send, and that it does NOT happen for a discard, an error, or a stub.
+
+  results.push(
+    await scenario("a completed send keeps the message on screen", {}, async (t) => {
+      t.host.deliver(toolResult(F.draftEditorImap, "Draft Drafts:2."));
+      await settle();
+      t.host.deliver(
+        toolResult({ ...F.draftSendReceiptMerged, draft_id: "Drafts:2" }, "Sent."),
+      );
+      await settle();
+      const env = t.state().envelope;
+      t.expect("the receipt won", env?.card, "receipt");
+      t.expect("with its outcome", env?.receipt?.outcome, "sent");
+      t.expect("and its headline", env?.receipt?.headline, F.draftSendReceiptMerged.receipt.headline);
+      // The half that is new: what was sent is still there to read.
+      t.expect("the message survived", env?.draft?.subject, F.draftEditorImap.draft.subject);
+      t.expect(
+        "with its body",
+        env?.draft?.body?.text?.includes(SECRET.bodyLine),
+        true,
+      );
+      t.expect("and its recipients", env?.draft?.recipients?.to?.[0], "dana@northwind.example");
+      t.expect("nothing was refused", t.state().uncorrelatedResults, 0);
+    }),
+  );
+
+  results.push(
+    await scenario(
+      "and the sent message is still not written to storage",
+      { storage: true },
+      async (t) => {
+        // The carry lives in this tab's memory only. `persist.ts#redact` keeps a
+        // `draft` for a `draft_editor` card and nothing else, so a receipt that
+        // is carrying one must still persist as an outcome word and a neutral
+        // headline. This is the check that keeps the fix from quietly
+        // reintroducing the very leak WS-1b removed.
+        t.host.deliver(toolInput({ action: "send", inbox: "demo@mcpemails.com" }));
+        t.host.deliver(toolResult(F.draftEditorImap, "Draft Drafts:2."));
+        await settle();
+        t.host.deliver(
+          toolResult({ ...F.draftSendReceiptMerged, draft_id: "Drafts:2" }, "Sent."),
+        );
+        await settle();
+        t.expect("the card is holding it", t.state().envelope?.draft?.subject !== undefined, true);
+        const raw = t.storage.raw();
+        t.expect("but storage has no body", raw.includes(SECRET.bodyLine), false);
+        t.expect("no quoted original", raw.includes(SECRET.quoted), false);
+        t.expect("no bcc address", raw.includes(SECRET.bcc), false);
+        t.expect("no subject", raw.includes(SECRET.subject), false);
+        t.expect("and no signature block", raw.includes(SECRET.signature), false);
+      },
+    ),
+  );
+
+  results.push(
+    await scenario("a discard does NOT keep the message", {}, async (t) => {
+      // A deleted draft is not a record of anything: the user asked for it to
+      // go away, and pinning a read-only copy of it under "Draft discarded"
+      // would be the card arguing with them. One line, as before.
+      t.host.deliver(toolResult(F.draftEditorImap, "Draft Drafts:2."));
+      await settle();
+      t.host.deliver(
+        toolResult({ ...F.draftDeleteReceiptMerged, draft_id: "Drafts:2" }, "Discarded."),
+      );
+      await settle();
+      t.expect("the receipt won", t.state().envelope?.card, "receipt");
+      t.expect("with its outcome", t.state().envelope?.receipt?.outcome, "discarded");
+      t.expect("and the message is gone with it", t.state().envelope?.draft, undefined);
+    }),
+  );
+
+  results.push(
+    await scenario("the carry is narrow", {}, async (t) => {
+      // Driven through the shipped `mergeEnvelope` directly, because these are
+      // decisions rather than transitions and the push path would filter three
+      // of the four before they ever reached it.
+      const merge = t.mod.mergeEnvelope;
+      const sent = { ...F.draftSendReceiptMerged, draft_id: "Drafts:2" };
+
+      t.expect(
+        "a send carries",
+        merge(F.draftEditorImap, sent).draft?.draft_id,
+        "Drafts:2",
+      );
+      t.expect(
+        "a failure does not",
+        merge(F.draftEditorImap, { ...sent, state: "error", receipt: { ...sent.receipt, outcome: "failed" } }).draft,
+        undefined,
+      );
+      t.expect(
+        "a restore stub is never the source",
+        merge(F.draftEditorClaimingStub, sent).draft,
+        undefined,
+      );
+      // If the server ever does put a draft on a receipt, its copy is the
+      // better one and this must not overwrite it.
+      const serverSide = { ...sent, draft: { ...F.draftEditorImap.draft, draft_id: "Drafts:9" } };
+      t.expect(
+        "a server-sent draft wins",
+        merge(F.draftEditorImap, serverSide).draft?.draft_id,
+        "Drafts:9",
+      );
+      // And the classifier the two sides share.
+      t.expect("a send departed", t.mod.isDepartedReceipt(sent), true);
+      t.expect("a discard did not", t.mod.isDepartedReceipt(F.draftDeleteReceiptMerged), false);
+      t.expect("an editor is not a receipt", t.mod.isDepartedReceipt(F.draftEditorImap), false);
+    }),
+  );
+
+  // ======================================================================
   // (D) Diagnostics are internal-only, and default to off
   // ======================================================================
 

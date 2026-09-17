@@ -750,6 +750,10 @@ body {
 
 .stack { display: flex; flex-direction: column; gap: 8px; }
 .tight { display: flex; flex-direction: column; gap: 4px; }
+/* A row of text links with nothing else in it. `.acts-l` is the same shape but
+   carries `margin-right: auto` to push buttons off the end of an action row,
+   which is meaningless on a line that has no buttons. */
+.links { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .grow { flex: 1 1 auto; min-width: 0; }
 .divider { height: var(--bw); background: var(--bd); border: 0; margin: 0; }
 
