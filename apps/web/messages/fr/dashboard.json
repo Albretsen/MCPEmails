@@ -178,6 +178,13 @@
       "lastCall": "Dernier appel réussi",
       "lastCallNone": "Aucun appel réussi au cours des {days} derniers jours",
       "disconnect": "Déconnecter",
+      "draftEditor": {
+        "title": "Carte d’édition de brouillon",
+        "help": "Afficher les brouillons écrits pour cette boîte sous forme de carte modifiable dans votre conversation avec l’IA.",
+        "show": "Afficher la carte d’édition de brouillon",
+        "workspaceOff": "La carte est désactivée pour tout l’espace de travail, elle reste donc masquée ici aussi. Réactivez-la dans Paramètres, Carte d’édition de brouillon.",
+        "viewerNote": "Les lecteurs ne peuvent pas modifier les paramètres d’une boîte."
+      },
       "senderName": {
         "title": "Nom d’expéditeur",
         "help": "Le nom que les destinataires voient à côté de votre adresse.",
@@ -409,6 +416,17 @@
       "name": "Nom de l'espace de travail",
       "cancel": "Annuler",
       "saveChanges": "Enregistrer les modifications"
+    },
+    "draftEditor": {
+      "title": "Carte d’édition de brouillon",
+      "sub": "Comment un brouillon préparé apparaît dans votre conversation avec l’IA.",
+      "show": "Afficher la carte d’édition de brouillon",
+      "help": "Lorsque cette option est activée, un brouillon préparé par l’assistant apparaît sous forme de carte modifiable que vous pouvez corriger et envoyer depuis la conversation. Lorsqu’elle est désactivée, le brouillon est décrit en texte brut. Cela change ce que vous voyez, pas ce que l’assistant peut faire avec vos brouillons.",
+      "roleNote": "Seuls les propriétaires et les administrateurs de l’espace de travail peuvent modifier ce réglage pour tout l’espace de travail. Vous pouvez toujours désactiver la carte pour une seule boîte depuis la page Boîtes.",
+      "saved": "Préférence d’édition de brouillon enregistrée.",
+      "saveFailed": "Impossible d’enregistrer la préférence d’édition de brouillon.",
+      "networkError": "Erreur réseau. Veuillez réessayer.",
+      "viewerNote": "Seuls les propriétaires et les administrateurs de l’espace de travail peuvent modifier ce réglage pour tout l’espace de travail. Les lecteurs ne peuvent pas modifier les paramètres d’une boîte."
     },
     "deleteWorkspace": {
       "title": "Supprimer cet espace de travail",

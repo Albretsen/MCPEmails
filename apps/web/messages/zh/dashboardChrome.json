@@ -36,6 +36,8 @@
     "inboxDisconnected": "收件箱已断开连接。",
     "inboxDisconnectFailed": "断开收件箱连接失败。",
     "signatureSaved": "签名已保存。",
+    "draftEditorSaved": "草稿编辑器偏好已保存。",
+    "draftEditorSaveFailed": "无法保存草稿编辑器偏好。",
     "signatureSaveFailed": "保存签名失败。",
     "senderNameSaved": "发件人名称已保存。",
     "senderNameSaveFailed": "保存发件人名称失败。",

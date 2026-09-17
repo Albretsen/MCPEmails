@@ -36,6 +36,8 @@
     "inboxDisconnected": "Inbox disconnected.",
     "inboxDisconnectFailed": "Failed to disconnect inbox.",
     "signatureSaved": "Signature saved.",
+    "draftEditorSaved": "Draft editor preference saved.",
+    "draftEditorSaveFailed": "Could not save the draft editor preference.",
     "signatureSaveFailed": "Failed to save signature.",
     "senderNameSaved": "Sender name saved.",
     "senderNameSaveFailed": "Failed to save sender name.",

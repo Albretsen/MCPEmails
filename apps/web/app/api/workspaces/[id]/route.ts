@@ -71,6 +71,17 @@ export async function PATCH(
   // as `draft_editor_enabled`, which is the internal rollout gate: if they were
   // one column, widening the rollout would silently un-hide the card for
   // someone who turned it off.
+  //
+  // NO ROLLOUT CHECK HERE, on purpose. The dashboard renders no control for a
+  // workspace outside the rollout, so an owner can only reach this by hand, and
+  // the answer to "should that be refused" is no. This column is the CUSTOMER's
+  // preference and the gate is OURS; a `true` stored before the rollout is
+  // precisely the state the two-column split exists to preserve, and the card
+  // must stay off for them when we gate them in. Refusing would also make the
+  // gate load-bearing on the write path, so the same request would start
+  // succeeding the day the rollout widens, for a reason that has nothing to do
+  // with the request. The write is already owner/admin-only and boolean-checked,
+  // and the flag does nothing until the gate opens.
   if (draftEditorHidden !== undefined) {
     if (typeof draftEditorHidden !== 'boolean') {
       return NextResponse.json(

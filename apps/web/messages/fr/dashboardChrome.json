@@ -36,6 +36,8 @@
     "inboxDisconnected": "Boîte déconnectée.",
     "inboxDisconnectFailed": "Échec de la déconnexion de la boîte.",
     "signatureSaved": "Signature enregistrée.",
+    "draftEditorSaved": "Préférence d’édition de brouillon enregistrée.",
+    "draftEditorSaveFailed": "Impossible d’enregistrer la préférence d’édition de brouillon.",
     "signatureSaveFailed": "Échec de l'enregistrement de la signature.",
     "senderNameSaved": "Nom d’expéditeur enregistré.",
     "senderNameSaveFailed": "Échec de l’enregistrement du nom d’expéditeur.",

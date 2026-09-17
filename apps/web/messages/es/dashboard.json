@@ -178,6 +178,13 @@
       "lastCall": "Última llamada correcta",
       "lastCallNone": "Sin llamadas correctas en los últimos {days} días",
       "disconnect": "Desconectar",
+      "draftEditor": {
+        "title": "Tarjeta del editor de borradores",
+        "help": "Muestra los borradores escritos para este buzón como una tarjeta editable en tu conversación con la IA.",
+        "show": "Mostrar la tarjeta del editor de borradores",
+        "workspaceOff": "La tarjeta está desactivada para todo el espacio de trabajo, así que aquí también permanece oculta. Vuelve a activarla en Ajustes, Tarjeta del editor de borradores.",
+        "viewerNote": "Los lectores no pueden cambiar los ajustes del buzón."
+      },
       "senderName": {
         "title": "Nombre del remitente",
         "help": "El nombre que ven los destinatarios junto a tu dirección.",
@@ -409,6 +416,17 @@
       "name": "Nombre del espacio de trabajo",
       "cancel": "Cancelar",
       "saveChanges": "Guardar cambios"
+    },
+    "draftEditor": {
+      "title": "Tarjeta del editor de borradores",
+      "sub": "Cómo aparece un borrador preparado en tu conversación con la IA.",
+      "show": "Mostrar la tarjeta del editor de borradores",
+      "help": "Con esta opción activada, un borrador que prepara el asistente aparece como una tarjeta editable que puedes modificar y enviar desde la conversación. Con ella desactivada, el borrador se describe en texto sin formato. Esto cambia lo que ves, no lo que el asistente puede hacer con tus borradores.",
+      "roleNote": "Solo los propietarios y administradores del espacio de trabajo pueden cambiar esto para todo el espacio de trabajo. Aún puedes desactivar la tarjeta para un solo buzón desde la página Bandejas de entrada.",
+      "saved": "Preferencia del editor de borradores guardada.",
+      "saveFailed": "No se pudo guardar la preferencia del editor de borradores.",
+      "networkError": "Error de red. Inténtalo de nuevo.",
+      "viewerNote": "Solo los propietarios y administradores del espacio de trabajo pueden cambiar esto para todo el espacio de trabajo. Los lectores no pueden cambiar los ajustes del buzón."
     },
     "deleteWorkspace": {
       "title": "Eliminar este espacio de trabajo",

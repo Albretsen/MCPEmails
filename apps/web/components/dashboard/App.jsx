@@ -609,6 +609,43 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   };
 
   /**
+   * Saves the per-inbox draft editor preference via PATCH /api/inboxes/[id]
+   * (`{ draft_editor_hidden }`).
+   *
+   * Optimistic, unlike the signature and sender-name saves above, and for a
+   * reason: this is a checkbox, so the control IS its own state. Waiting for a
+   * round trip before the tick moves reads as a dead checkbox. On failure the
+   * previous value is put back from the closure rather than re-derived, so a
+   * rejected save cannot leave the screen claiming a preference the database
+   * does not hold.
+   *
+   * `hidden` is the COLUMN sense (true = the card is off). Callers get there
+   * through `hiddenFromShown`, never by writing `!checked`.
+   */
+  const onSaveDraftEditorHidden = async (id, hidden) => {
+    const previous = inboxes.find(x => x.id === id)?.draftEditorHidden ?? false;
+    setInboxes(xs => xs.map(x => (x.id === id ? { ...x, draftEditorHidden: hidden } : x)));
+    let data = {};
+    try {
+      const res = await fetch(`/api/inboxes/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ draft_editor_hidden: hidden }),
+      });
+      try { data = await res.json(); } catch { /* ignore JSON parse failure */ }
+      if (!res.ok) throw new Error(typeof data?.error === 'string' ? data.error : '');
+    } catch (err) {
+      setInboxes(xs => xs.map(x => (x.id === id ? { ...x, draftEditorHidden: previous } : x)));
+      const message = err instanceof Error && err.message
+        ? err.message
+        : tr('app.draftEditorSaveFailed');
+      toast({ message, variant: 'error' });
+      throw new Error(message);
+    }
+    toast({ message: tr('app.draftEditorSaved'), variant: 'success' });
+  };
+
+  /**
    * Restarts the OAuth (or app-password) flow for an errored inbox.
    *
    * For OAuth inboxes: navigate to the provider's server-side initiation
@@ -951,7 +988,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         )}
 
         {route === "overview" && <OverviewPage key={guideResumeKey} inboxes={inboxes} apiKeys={keys} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} />}
-        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onGoToKeys={() => setRoute("keys")} />}
+        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onSaveDraftEditorHidden={onSaveDraftEditorHidden} draftEditorRolledOut={workspace?.draftEditorEnabled === true} draftEditorWorkspaceHidden={workspace?.draftEditorHidden === true} userRole={userRole} onGoToKeys={() => setRoute("keys")} />}
         {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} workspaceName={workspace?.displayName ?? workspace?.display_name ?? workspace?.slug ?? ''} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onResendInvite={onResendInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} onLeave={onLeaveWorkspace} />}
         {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} stripePrices={stripePrices} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} />}

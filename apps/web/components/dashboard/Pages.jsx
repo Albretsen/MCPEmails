@@ -12,6 +12,11 @@ import { useToast } from './Toast';
 import SignatureRichEditor from './SignatureRichEditor';
 import { sanitizeSignatureHtml } from '@/lib/sanitizeSignatureHtml';
 import { normalizeSenderName } from '@/lib/inboxes/sender-name';
+import {
+  hiddenFromShown,
+  inboxDraftEditorControl,
+  workspaceDraftEditorControl,
+} from '@/lib/drafts/editor-preference';
 import { ApprovalsPanel } from './ApprovalsPanel';
 import { AutomationsPanel } from './AutomationsPanel';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
@@ -1161,7 +1166,7 @@ function needsReconnect(status) {
   return status === 'error';
 }
 
-export function InboxesPage({ inboxes, planLimits, stripePrices = null, onConnect, onRemove, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onGoToKeys }) {
+export function InboxesPage({ inboxes, planLimits, stripePrices = null, onConnect, onRemove, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, userRole, onGoToKeys }) {
   // The analytics window this plan buys. Every per-inbox call count on this
   // page is scoped to it server-side, so the label has to quote the same
   // number or the column silently means something different per plan.
@@ -1654,6 +1659,10 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, onConnec
           onDisconnect={(ib) => { setDetailInbox(null); handleDisconnectRequest(ib); }}
           onSaveSignature={onSaveSignature}
           onSaveSenderName={onSaveSenderName}
+          onSaveDraftEditorHidden={onSaveDraftEditorHidden}
+          draftEditorRolledOut={draftEditorRolledOut}
+          draftEditorWorkspaceHidden={draftEditorWorkspaceHidden}
+          canManageInbox={userRole !== 'viewer'}
           historyDays={historyDays}
         />
       )}
@@ -2186,6 +2195,100 @@ function SignatureEditor({ inbox, onSave, t }) {
 
 /* A label/value line in the inbox detail modal. Declared at module scope, not
    inside InboxDetailModal, so it keeps its identity between renders. */
+/**
+ * The per-inbox draft editor control, inside the inbox detail modal.
+ *
+ * Deliberately NOT inside the "Signature & sending" panel: that panel is about
+ * what leaves the mailbox, this is about how a prepared draft is DISPLAYED back
+ * in the conversation. Nothing here changes what the assistant may do with
+ * drafts in this inbox.
+ *
+ * Three states, all resolved by `inboxDraftEditorControl`:
+ *   - the workspace is not rolled out  -> nothing renders, no inert toggle
+ *   - the workspace has hidden the card -> the checkbox reads the inbox's own
+ *     stored value but is disabled, with the override said out loud, because a
+ *     workspace "off" beats an inbox "on"
+ *   - otherwise                         -> an editable checkbox
+ */
+function DraftEditorInboxPreference({
+  inbox, rolledOut, workspaceHidden, canManage, onSave, t,
+}) {
+  const [saving, setSaving] = useState(false);
+  const control = inboxDraftEditorControl({
+    rolledOut,
+    workspaceHidden,
+    inboxHidden: inbox.draftEditorHidden === true,
+    canManage,
+  });
+
+  if (!control.visible || !onSave) return null;
+
+  const handleToggle = async (nextShown) => {
+    if (saving || !control.editable) return;
+    setSaving(true);
+    try {
+      await onSave(inbox.id, hiddenFromShown(nextShown));
+    } catch {
+      // App.jsx already rolled the optimistic state back and showed a toast.
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const label = { fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)' };
+  const checkboxId = `draft-editor-${inbox.id}`;
+
+  return (
+    <div
+      style={{
+        padding: '12px',
+        marginBottom: 16,
+        border: '1px solid var(--border-1)',
+        borderRadius: 8,
+        background: 'var(--bg-sunken)',
+      }}
+    >
+      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--fg-1)', marginBottom: 4 }}>
+        {t('inboxes.detail.draftEditor.title')}
+      </div>
+      <div style={{ ...label, marginBottom: 9, color: 'var(--fg-2)', lineHeight: 1.5 }}>
+        {t('inboxes.detail.draftEditor.help')}
+      </div>
+      <label
+        htmlFor={checkboxId}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 8,
+          ...label,
+          color: control.editable ? 'var(--fg-1)' : 'var(--fg-3)',
+          cursor: control.editable ? 'pointer' : 'default',
+        }}
+      >
+        <input
+          id={checkboxId}
+          type="checkbox"
+          checked={control.shown}
+          onChange={e => handleToggle(e.target.checked)}
+          disabled={!control.editable || saving}
+          style={{ accentColor: 'var(--brand)' }}
+        />
+        {t('inboxes.detail.draftEditor.show')}
+      </label>
+      {control.lockedBy === 'workspace_hidden' && (
+        <div style={{ ...label, marginTop: 7, color: 'var(--fg-2)', lineHeight: 1.5 }}>
+          {t('inboxes.detail.draftEditor.workspaceOff')}
+        </div>
+      )}
+      {control.lockedBy === 'role' && (
+        <div style={{ ...label, marginTop: 7, color: 'var(--fg-2)', lineHeight: 1.5 }}>
+          {t('inboxes.detail.draftEditor.viewerNote')}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const InboxDetailRow = ({ label, children }) => (
   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16, padding: '10px 0', borderBottom: '1px solid var(--border-1)' }}>
     <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--fg-3)', flexShrink: 0 }}>{label}</span>
@@ -2193,7 +2296,7 @@ const InboxDetailRow = ({ label, children }) => (
   </div>
 );
 
-function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature, onSaveSenderName, historyDays = 30 }) {
+function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDisconnect, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, canManageInbox = true, historyDays = 30 }) {
   const t = useTranslations('dashboard');
   if (!inbox) return null;
 
@@ -2294,6 +2397,15 @@ function InboxDetailModal({ inbox, checking, onClose, onReconnect, onCheck, onDi
               {compatibility.notes.map(note => <li key={note}>{note}</li>)}
             </ul>
           </div>
+
+          <DraftEditorInboxPreference
+            inbox={inbox}
+            rolledOut={draftEditorRolledOut}
+            workspaceHidden={draftEditorWorkspaceHidden}
+            canManage={canManageInbox}
+            onSave={onSaveDraftEditorHidden}
+            t={t}
+          />
 
           {onSaveSignature && inbox.status !== 'pending' && (
             <details className="inbox-sending-details">
@@ -5967,6 +6079,143 @@ function WorkspaceSection({ workspace, onWorkspaceUpdate }) {
   );
 }
 
+/**
+ * DraftEditorSection: the workspace-wide draft editor card preference.
+ *
+ * WHY IT LIVES HERE AND NOT ONLY ON THE INBOX. The flag exists at two grains
+ * and the workspace one is the grain the MCP tool itself talks about: the card
+ * is offered per workspace, and one switch here turns it off for every mailbox
+ * at once. The per-inbox control in the inbox detail modal is the finer tool,
+ * for the mailbox where a card is unwelcome.
+ *
+ * ROLLOUT. `workspace.draftEditorEnabled` is our internal gate, not a customer
+ * setting. A workspace that is not gated in gets no card here at all, rather
+ * than a toggle with nothing behind it.
+ *
+ * That is a statement about the SCREEN, not about secrecy. AppLocaleProvider
+ * statically imports all five `dashboard.json` files, so "Draft editor card"
+ * and every string below it sit in one shared client chunk that ten app-realm
+ * routes pull in: /dashboard, but also /login, /signup, /authorize,
+ * /invite/[token], /approvals/[id] and the /auth screens. Anyone who reads the
+ * bundle can see the feature exists, whether or not their workspace is gated
+ * in. The gate keeps an un-gated workspace from being offered a control that
+ * does nothing; it is not, and must never be relied on as, a way to keep an
+ * unreleased feature confidential.
+ *
+ * ROLE. PATCH /api/workspaces/[id] refuses anyone below admin. The control is
+ * therefore rendered read-only with the reason stated for a member or viewer,
+ * instead of letting them tick a box that 403s. It is still shown to them, so
+ * the absence of a card in their chat has a visible explanation.
+ *
+ * SENSE. The column is `draft_editor_hidden`; the checkbox says "show". The
+ * flip happens once, in `hiddenFromShown`, on the way into the PATCH body.
+ */
+function DraftEditorSection({ workspace, userRole, onWorkspaceUpdate }) {
+  const t = useTranslations('dashboard');
+  const { toast } = useToast();
+  const [saving, setSaving] = useState(false);
+
+  const control = workspaceDraftEditorControl({
+    rolledOut: workspace?.draftEditorEnabled === true,
+    hidden: workspace?.draftEditorHidden === true,
+    canManage: userRole === 'owner' || userRole === 'admin' || workspace?.isOwner === true,
+  });
+
+  if (!control.visible) return null;
+
+  async function handleToggle(nextShown) {
+    if (saving || !control.editable) return;
+    const hidden = hiddenFromShown(nextShown);
+    const previousHidden = workspace?.draftEditorHidden === true;
+    setSaving(true);
+    // Optimistic: the checkbox is the state, so it has to move now. The parent
+    // holds the workspace, which is also what the Inboxes page reads, so the
+    // per-inbox controls lock and unlock in the same tick.
+    if (onWorkspaceUpdate) {
+      onWorkspaceUpdate({ ...workspace, draftEditorHidden: hidden });
+    }
+    try {
+      const res = await fetch(`/api/workspaces/${workspace.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ draftEditorHidden: hidden }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (onWorkspaceUpdate) {
+          onWorkspaceUpdate({ ...workspace, draftEditorHidden: previousHidden });
+        }
+        toast({
+          message: typeof data.error === 'string' ? data.error : t('settings.draftEditor.saveFailed'),
+          variant: 'error',
+        });
+        return;
+      }
+      toast({ message: t('settings.draftEditor.saved'), variant: 'success' });
+    } catch {
+      if (onWorkspaceUpdate) {
+        onWorkspaceUpdate({ ...workspace, draftEditorHidden: previousHidden });
+      }
+      toast({ message: t('settings.draftEditor.networkError'), variant: 'error' });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="card" style={{ maxWidth: 640, marginTop: 14 }}>
+      <div className="card-h">
+        <div>
+          <div className="title">{t('settings.draftEditor.title')}</div>
+          <div className="sub">{t('settings.draftEditor.sub')}</div>
+        </div>
+      </div>
+      <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <label
+          htmlFor="settings-draft-editor"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            fontFamily: 'var(--font-sans)',
+            fontSize: 13,
+            color: control.editable ? 'var(--fg-1)' : 'var(--fg-3)',
+            cursor: control.editable ? 'pointer' : 'default',
+          }}
+        >
+          <input
+            id="settings-draft-editor"
+            type="checkbox"
+            checked={control.shown}
+            onChange={e => handleToggle(e.target.checked)}
+            disabled={!control.editable || saving}
+            style={{ accentColor: 'var(--brand)' }}
+          />
+          {t('settings.draftEditor.show')}
+        </label>
+        <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-2)', lineHeight: 1.55 }}>
+          {t('settings.draftEditor.help')}
+        </div>
+        {control.lockedBy === 'role' && (
+          <div
+            style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-2)', lineHeight: 1.55 }}
+            role="note"
+          >
+            {/* A member and a viewer are both locked out here, but only a
+                member can fall back to the per-inbox control: canManageInbox
+                is `userRole !== 'viewer'` and PATCH /api/inboxes/[id] refuses a
+                viewer outright. Pointing a viewer at the Inboxes page would
+                send them to a control that is disabled for the same reason. */}
+            {t(userRole === 'viewer'
+              ? 'settings.draftEditor.viewerNote'
+              : 'settings.draftEditor.roleNote')}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /* DeleteWorkspaceSection                                              */
 /*                                                                     */
@@ -6292,6 +6541,14 @@ export function SettingsPage({ user, workspace, workspaces = [], userRole, strip
 
       {/* Workspace section: rename the workspace display name */}
       <WorkspaceSection workspace={workspace} onWorkspaceUpdate={onWorkspaceUpdate} />
+
+      {/* Draft editor card: workspace-wide opt-out. Renders nothing unless this
+          workspace is gated into the rollout. */}
+      <DraftEditorSection
+        workspace={workspace}
+        userRole={userRole}
+        onWorkspaceUpdate={onWorkspaceUpdate}
+      />
 
       {/* Delete THIS workspace only (owner-only) */}
       <DeleteWorkspaceSection

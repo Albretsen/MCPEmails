@@ -36,6 +36,8 @@
     "inboxDisconnected": "Innboks koblet fra.",
     "inboxDisconnectFailed": "Kunne ikke koble fra innboksen.",
     "signatureSaved": "Signatur lagret.",
+    "draftEditorSaved": "Innstillingen for utkastredigering er lagret.",
+    "draftEditorSaveFailed": "Kunne ikke lagre innstillingen for utkastredigering.",
     "signatureSaveFailed": "Kunne ikke lagre signaturen.",
     "senderNameSaved": "Avsendernavn lagret.",
     "senderNameSaveFailed": "Kunne ikke lagre avsendernavnet.",

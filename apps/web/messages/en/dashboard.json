@@ -178,6 +178,13 @@
       "lastCall": "Last successful call",
       "lastCallNone": "No successful calls in the last {days} days",
       "disconnect": "Disconnect",
+      "draftEditor": {
+        "title": "Draft editor card",
+        "help": "Show drafts written for this mailbox as an editable card in your AI conversation.",
+        "show": "Show the draft editor card",
+        "workspaceOff": "The card is turned off for the whole workspace, so it stays hidden here too. Turn it back on under Settings, Draft editor card.",
+        "viewerNote": "Viewers cannot change inbox settings."
+      },
       "senderName": {
         "title": "Sender name",
         "help": "The name recipients see next to your address.",
@@ -409,6 +416,17 @@
       "name": "Workspace name",
       "cancel": "Cancel",
       "saveChanges": "Save changes"
+    },
+    "draftEditor": {
+      "title": "Draft editor card",
+      "sub": "How a prepared draft appears in your AI conversation.",
+      "show": "Show the draft editor card",
+      "help": "With this on, a draft the assistant prepares appears as an editable card you can change and send from the conversation. With it off, the draft is described in plain text instead. This changes what you see, not what the assistant can do with your drafts.",
+      "roleNote": "Only workspace owners and admins can change this for the whole workspace. You can still turn the card off for a single mailbox from the Inboxes page.",
+      "saved": "Draft editor preference saved.",
+      "saveFailed": "Could not save the draft editor preference.",
+      "networkError": "Network error. Please try again.",
+      "viewerNote": "Only workspace owners and admins can change this for the whole workspace. Viewers cannot change inbox settings."
     },
     "deleteWorkspace": {
       "title": "Delete this workspace",

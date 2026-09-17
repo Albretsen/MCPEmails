@@ -178,6 +178,13 @@
       "lastCall": "Siste vellykkede kall",
       "lastCallNone": "Ingen vellykkede kall de siste {days} dagene",
       "disconnect": "Koble fra",
+      "draftEditor": {
+        "title": "Kort for utkastredigering",
+        "help": "Vis utkast som er skrevet for denne postboksen, som et redigerbart kort i AI-samtalen.",
+        "show": "Vis kortet for utkastredigering",
+        "workspaceOff": "Kortet er slått av for hele arbeidsområdet, så det forblir skjult her også. Slå det på igjen under Innstillinger, Kort for utkastredigering.",
+        "viewerNote": "Lesere kan ikke endre innboksinnstillinger."
+      },
       "senderName": {
         "title": "Avsendernavn",
         "help": "Navnet mottakere ser ved siden av adressen din.",
@@ -409,6 +416,17 @@
       "name": "Navn på arbeidsområde",
       "cancel": "Avbryt",
       "saveChanges": "Lagre endringer"
+    },
+    "draftEditor": {
+      "title": "Kort for utkastredigering",
+      "sub": "Hvordan et ferdig utkast vises i AI-samtalen din.",
+      "show": "Vis kortet for utkastredigering",
+      "help": "Når dette er på, vises et utkast assistenten har laget som et redigerbart kort du kan endre og sende fra samtalen. Når det er av, beskrives utkastet som ren tekst i stedet. Dette endrer hva du ser, ikke hva assistenten kan gjøre med utkastene dine.",
+      "roleNote": "Bare eiere og administratorer av arbeidsområdet kan endre dette for hele arbeidsområdet. Du kan fortsatt slå av kortet for én enkelt postboks fra Innbokser-siden.",
+      "saved": "Innstillingen for utkastredigering er lagret.",
+      "saveFailed": "Kunne ikke lagre innstillingen for utkastredigering.",
+      "networkError": "Nettverksfeil. Prøv igjen.",
+      "viewerNote": "Bare eiere og administratorer av arbeidsområdet kan endre dette for hele arbeidsområdet. Lesere kan ikke endre innboksinnstillinger."
     },
     "deleteWorkspace": {
       "title": "Slett dette arbeidsområdet",

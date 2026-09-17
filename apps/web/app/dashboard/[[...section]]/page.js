@@ -132,12 +132,23 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
     // `send_review_mode` is added by a migration that may land after this
     // code; selectTolerantly re-runs without it rather than blanking the whole
     // inbox list. See src/lib/approvals/columns.ts.
+    //
+    // `draft_editor_hidden` (20260916170000) is tolerated HERE but deliberately
+    // NOT added to PENDING_INBOX_COLUMNS, because that constant is also the
+    // optional list for the WRITE in /api/inboxes/[id]: dropping the column
+    // there would make the route answer 200 for a preference it never stored.
+    // A read has the opposite trade. Dropping it yields `undefined`, which
+    // `shownFromHidden` already reads as "not hidden" (the pre-feature default
+    // and the column's own DEFAULT false), whereas failing the select makes
+    // `fetchInboxes` return [] and the Inboxes page claim the workspace has no
+    // mailboxes at all. Degrade the preference, never the mailbox list.
     selectTolerantly(
       ['id', 'display_name', 'email_address', 'provider', 'service', 'status', 'last_error',
         'imap_host', 'imap_port', 'imap_security', 'smtp_host', 'smtp_port', 'smtp_security',
         'imap_username', 'created_at', 'signature_text', 'signature_html', 'signature_enabled',
-        'signature_reply_mode', 'signature_source', 'send_approval_required', 'send_review_mode'],
-      PENDING_INBOX_COLUMNS,
+        'signature_reply_mode', 'signature_source', 'send_approval_required', 'send_review_mode',
+        'draft_editor_hidden'],
+      [...PENDING_INBOX_COLUMNS, 'draft_editor_hidden'],
       (columns) => supabase
         .from('inboxes')
         .select(columns)
@@ -230,6 +241,16 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
     // legacy boolean until every row carries the new column.
     sendReviewMode:
       row.send_review_mode ?? (row.send_approval_required ? 'dashboard' : 'off'),
+    // Per-inbox draft editor opt-out. `true` means the card is OFF for drafts
+    // in this mailbox; the dashboard control presents the opposite sense and
+    // inverts on write (src/lib/drafts/editor-preference.ts).
+    //
+    // `undefined` here is not hypothetical and not a row shape: it is what the
+    // tolerant retry above produces on a database without migration
+    // 20260916170000, which is the whole reason that retry lists this column.
+    // It is not `true`, so the card stays on, matching the column's own
+    // NOT NULL DEFAULT false.
+    draftEditorHidden: row.draft_editor_hidden === true,
   }));
 }
 
@@ -599,7 +620,7 @@ export default async function DashboardPage({ params }) {
     // ones they own (for the Pro "create workspace" gate).
     supabase
       .from('workspaces')
-      .select('id, slug, display_name, plan, owner_id, grandfathered, analytics_first_tool_name, analytics_first_tool_provider, analytics_first_tool_client, analytics_first_tool_path, analytics_first_tool_reported_at')
+      .select('id, slug, display_name, plan, owner_id, grandfathered, draft_editor_enabled, draft_editor_hidden, analytics_first_tool_name, analytics_first_tool_provider, analytics_first_tool_client, analytics_first_tool_path, analytics_first_tool_reported_at')
       .is('deleted_at', null)
       .order('created_at', { ascending: true }),
     supabase
@@ -788,6 +809,14 @@ export default async function DashboardPage({ params }) {
         compedScale,
         displayName: workspace?.display_name ?? workspaceSlug,
         isOwner: workspace?.owner_id === user.id,
+        // The draft editor card, at the workspace grain. Two separate columns
+        // on purpose: `draftEditorEnabled` is OUR rollout gate (internal only
+        // in v1, so most workspaces see no control at all) and
+        // `draftEditorHidden` is the customer's own opt-out. Conflating them
+        // would mean widening the rollout un-hides the card for someone who
+        // deliberately turned it off. See src/lib/drafts/editor-preference.ts.
+        draftEditorEnabled: workspace?.draft_editor_enabled === true,
+        draftEditorHidden: workspace?.draft_editor_hidden === true,
       }}
       workspaces={workspaces}
       activeWorkspaceId={workspace?.id ?? ''}

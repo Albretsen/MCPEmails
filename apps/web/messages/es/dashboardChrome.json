@@ -36,6 +36,8 @@
     "inboxDisconnected": "Bandeja de entrada desconectada.",
     "inboxDisconnectFailed": "No se pudo desconectar la bandeja de entrada.",
     "signatureSaved": "Firma guardada.",
+    "draftEditorSaved": "Preferencia del editor de borradores guardada.",
+    "draftEditorSaveFailed": "No se pudo guardar la preferencia del editor de borradores.",
     "signatureSaveFailed": "No se pudo guardar la firma.",
     "senderNameSaved": "Nombre del remitente guardado.",
     "senderNameSaveFailed": "No se pudo guardar el nombre del remitente.",
