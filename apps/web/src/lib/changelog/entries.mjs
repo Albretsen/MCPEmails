@@ -30,6 +30,48 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── September 2026 ─────────────────────────────────────────── */
   {
+    date: '2026-09-17',
+    kind: 'fixed',
+    title: 'Nothing unattended acts on a disconnected inbox',
+    body: 'Scheduled sends, held bulk plans and automation runs each loaded their inbox by id alone, so a mailbox disconnected, revoked or expired after the work was queued could still be used. All three now require an active inbox, the same check every ordinary tool call makes. A scheduled send against such an inbox fails with a reason shown on the dashboard, and an automation reports the inbox as unavailable instead of claiming it no longer exists.',
+  },
+  {
+    date: '2026-09-17',
+    kind: 'improved',
+    title: 'A draft update says whether it is still threaded',
+    body: 'Updating a reply draft returned no reply-to reference, which read as though the thread had been lost when the headers were carried through all along. Draft results now carry a threaded flag on every path, true when the draft answers a known message.',
+  },
+  {
+    date: '2026-09-17',
+    kind: 'changed',
+    title: 'Invites are re-checked when they are accepted',
+    body: 'An invite is valid for seven days and was checked only when it was sent. Accepting one now re-checks that the workspace still has a seat free on its plan and still exists, so a workspace that left the Team plan in between cannot gain a member through an invite already in flight.',
+  },
+  {
+    date: '2026-09-16',
+    kind: 'added',
+    title: 'Restrict the connector to your own email domain',
+    body: 'The OAuth server can now say, for a given token, which verified email address it was issued to, through a userinfo endpoint and the openid and email scopes. A ChatGPT Business or Enterprise admin can use that to limit the connector to accounts on their own domain. These scopes grant no mail permission, and the consent screen states in one line that the account\'s address is included.',
+  },
+  {
+    date: '2026-09-16',
+    kind: 'changed',
+    title: 'Tool annotations match what the tools do',
+    body: 'The hints a client uses to decide when to ask before running a tool were corrected. Only the four tools that can reach someone outside your own mailbox (compose, draft send, schedule and automation) are marked open-world, and anything that sends is marked destructive, because a delivered message cannot be recalled. Reading a message no longer marks it as read, so email_read stays a read-only tool; the old mark_as_read argument is accepted and ignored, and the result points at the flag action of email_organize instead.',
+  },
+  {
+    date: '2026-09-16',
+    kind: 'fixed',
+    title: 'Automations: one connection per run, and a time budget that holds',
+    body: 'A recurring rule opened a fresh IMAP connection for every matched message, which providers that cap simultaneous connections punished. A run now uses one connection. A rule with many matches could also run past the time allowed and be cut off part way with the rest dropped; it now stops at a message boundary, records what it did and picks up the remainder on the next run. A destination folder the provider had confirmed is no longer reported as missing when a single move is refused.',
+  },
+  {
+    date: '2026-09-14',
+    kind: 'fixed',
+    title: 'A folder called Spam is Spam, not Junk',
+    body: 'Folder names were run through an alias table before every operation, so a mailbox with a real Spam folder and no Junk got a Junk-not-found error, and a move or copy addressed to Spam reported success and landed in Junk. An exact folder name or id now wins over the role reading on every provider, and deleting resolves the mailbox\'s real Trash folder instead of assuming one named Trash.',
+  },
+  {
     date: '2026-09-14',
     kind: 'changed',
     title: 'IMAP search covers the Inbox unless you widen it',
