@@ -1,7 +1,7 @@
 const translation = {
   title: 'Connecter Claude à vos e-mails avec MCP (Gmail, iCloud et IMAP)',
   description:
-    'Guide pratique pour connecter Claude à Gmail, iCloud, Fastmail, Yahoo, Zoho et toute boîte IMAP avec MCP — sans code et sans stockage des e-mails.',
+    'Guide pratique pour connecter Claude à Gmail, iCloud, Fastmail, Yahoo, Zoho et toute boîte IMAP avec MCP, sans code et sans stockage des e-mails.',
   coverAlt:
     'Connecter Claude à Gmail, iCloud, Fastmail, Yahoo, Zoho et aux e-mails IMAP avec MCP Emails',
   content: `> **Outlook et Microsoft 365 sont en cours de développement.** Ils ne peuvent pas encore être connectés en production. Ce guide couvre Gmail, iCloud, Fastmail, Yahoo, Zoho et les autres boîtes IMAP disponibles aujourd'hui.
@@ -15,7 +15,7 @@ Vous n'avez aucun code à écrire, aucun SDK à installer et aucune clé API à 
 ## Ce dont vous avez besoin
 
 - D'un **forfait ou d'une application Claude qui prend en charge les connecteurs personnalisés**.
-- D'un compte gratuit **MCP Emails** — [créez-le ici](/signup).
+- D'un compte gratuit **MCP Emails** : [créez-le ici](/signup).
 - D'une boîte e-mail. Gmail utilise OAuth ; iCloud, Fastmail, Yahoo, Zoho et la plupart des autres fournisseurs utilisent un mot de passe spécifique à l'application. La prise en charge d'Outlook est en cours.
 
 ## Étape 1 : Connectez votre boîte à MCP Emails
@@ -28,7 +28,7 @@ Choisissez **Gmail**, connectez-vous avec Google et autorisez l'accès. Votre mo
 
 ### iCloud Mail
 
-Créez un mot de passe spécifique à l'application dans votre compte Apple, choisissez **iCloud** et utilisez ce mot de passe — pas celui de votre compte Apple. Le [guide iCloud et IMAP](/blog/connect-icloud-fastmail-imap-to-claude) présente les étapes exactes.
+Créez un mot de passe spécifique à l'application dans votre compte Apple, choisissez **iCloud** et utilisez ce mot de passe, pas celui de votre compte Apple. Le [guide iCloud et IMAP](/blog/connect-icloud-fastmail-imap-to-claude) présente les étapes exactes.
 
 ### Fastmail
 

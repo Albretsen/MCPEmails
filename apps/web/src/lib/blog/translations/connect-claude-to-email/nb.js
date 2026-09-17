@@ -1,12 +1,12 @@
 const translation = {
   title: 'Koble Claude til e-posten din med MCP (Gmail, iCloud og IMAP)',
   description:
-    'En praktisk guide til å koble Claude til Gmail, iCloud, Fastmail, Yahoo, Zoho og enhver IMAP-innboks over MCP — uten kode og uten lagring av e-post.',
+    'En praktisk guide til å koble Claude til Gmail, iCloud, Fastmail, Yahoo, Zoho og enhver IMAP-innboks over MCP, uten kode og uten lagring av e-post.',
   coverAlt:
     'Koble Claude til Gmail, iCloud, Fastmail, Yahoo, Zoho og IMAP-e-post med MCP Emails',
   content: `> **Outlook og Microsoft 365 er under utvikling.** De kan ikke kobles til i produksjon ennå. Denne guiden dekker Gmail, iCloud, Fastmail, Yahoo, Zoho og andre IMAP-innbokser som er tilgjengelige i dag.
 
-Claude kan lese, søke i, organisere og sende e-post — men trenger en MCP-server for å nå en ekte innboks. MCP Emails er broen: koble til en innboks én gang, legg ett sikkert endepunkt til i Claude, og Claude får et konsekvent sett med e-postverktøy på tvers av Gmail, iCloud, Fastmail, Yahoo, Zoho og andre IMAP-leverandører.
+Claude kan lese, søke i, organisere og sende e-post, men trenger en MCP-server for å nå en ekte innboks. MCP Emails er broen: koble til en innboks én gang, legg ett sikkert endepunkt til i Claude, og Claude får et konsekvent sett med e-postverktøy på tvers av Gmail, iCloud, Fastmail, Yahoo, Zoho og andre IMAP-leverandører.
 
 Du trenger ikke skrive kode, installere en SDK eller bruke en API-nøkkel når du kobler til gjennom Claudes OAuth-flyt. E-post hentes live fra leverandøren din ved hver forespørsel og lagres ikke av MCP Emails.
 
@@ -15,7 +15,7 @@ Du trenger ikke skrive kode, installere en SDK eller bruke en API-nøkkel når d
 ## Dette trenger du
 
 - Et **Claude-abonnement eller en app som støtter egendefinerte connectors**.
-- En gratis **MCP Emails**-konto — [opprett en her](/signup).
+- En gratis **MCP Emails**-konto: [opprett en her](/signup).
 - En e-postinnboks. Gmail bruker OAuth; iCloud, Fastmail, Yahoo, Zoho og de fleste andre leverandører bruker et appspesifikt passord. Outlook-støtte er under utvikling.
 
 ## Steg 1: Koble innboksen til MCP Emails
@@ -28,7 +28,7 @@ Velg **Gmail**, logg inn med Google og godkjenn tilgang. Google-passordet ditt d
 
 ### iCloud Mail
 
-Opprett et appspesifikt passord i Apple-kontoen din, velg **iCloud**, og bruk dette passordet — ikke det vanlige Apple-passordet. [Guiden for iCloud og IMAP](/blog/connect-icloud-fastmail-imap-to-claude) viser de nøyaktige stegene.
+Opprett et appspesifikt passord i Apple-kontoen din, velg **iCloud**, og bruk dette passordet, ikke det vanlige Apple-passordet. [Guiden for iCloud og IMAP](/blog/connect-icloud-fastmail-imap-to-claude) viser de nøyaktige stegene.
 
 ### Fastmail
 

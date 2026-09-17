@@ -2,7 +2,7 @@ const post = {
   slug: 'connect-claude-to-email',
   title: 'Connect Claude to Your Email with MCP (Gmail, iCloud & IMAP)',
   description:
-    'A practical guide to connecting Claude to Gmail, iCloud, Fastmail, Yahoo, Zoho, and any IMAP inbox over MCP — no code and no email stored. Outlook support is in progress.',
+    'A practical guide to connecting Claude to Gmail, iCloud, Fastmail, Yahoo, Zoho, and any IMAP inbox over MCP, no code and no email stored. Outlook support is in progress.',
   cover: '/blog/cover-connect-email-to-ai-agent-under-2-minutes.svg',
   coverAlt:
     'Connect Claude to Gmail, Outlook, iCloud, Fastmail, Yahoo, Zoho, and IMAP email with MCP Emails',
@@ -13,7 +13,7 @@ const post = {
   featured: false,
   content: `> **Outlook and Microsoft 365 are in progress.** They cannot be connected in production yet. This guide covers Gmail, iCloud, Fastmail, Yahoo, Zoho, and other IMAP inboxes available today.
 
-Claude can read, search, organize, and send your email — but it needs an MCP server to reach a real inbox. MCP Emails is that bridge: connect an inbox once, add one secure endpoint to Claude, and Claude gets a consistent set of email tools across Gmail, iCloud, Fastmail, Yahoo, Zoho, and other IMAP providers.
+Claude can read, search, organize, and send your email, but it needs an MCP server to reach a real inbox. MCP Emails is that bridge: connect an inbox once, add one secure endpoint to Claude, and Claude gets a consistent set of email tools across Gmail, iCloud, Fastmail, Yahoo, Zoho, and other IMAP providers.
 
 There is no code to write, no SDK to install, and no API key when you connect through Claude's OAuth flow. Email is fetched live from your provider for each request and is not stored by MCP Emails.
 
@@ -22,7 +22,7 @@ There is no code to write, no SDK to install, and no API key when you connect th
 ## What you need
 
 - A **Claude plan or app that supports custom connectors**.
-- A free **MCP Emails** account — [create one here](/signup).
+- A free **MCP Emails** account: [create one here](/signup).
 - One email inbox. Gmail uses OAuth; iCloud, Fastmail, Yahoo, Zoho, and most other providers use an app-specific password. Outlook support is in progress.
 
 ## Step 1: Connect your inbox to MCP Emails
@@ -35,7 +35,7 @@ Choose **Gmail**, sign in with Google, and approve access. Your Google password 
 
 ### iCloud Mail
 
-Create an app-specific password in your Apple Account, choose **iCloud**, and enter that password—not your normal Apple Account password. The [iCloud and IMAP walkthrough](/blog/connect-icloud-fastmail-imap-to-claude) includes the exact provider steps.
+Create an app-specific password in your Apple Account, choose **iCloud**, and enter that password, not your normal Apple Account password. The [iCloud and IMAP walkthrough](/blog/connect-icloud-fastmail-imap-to-claude) includes the exact provider steps.
 
 ### Fastmail
 
