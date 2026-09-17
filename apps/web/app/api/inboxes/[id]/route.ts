@@ -489,8 +489,7 @@ export async function PATCH(
   // reconnect. Best-effort: the preference is already saved, and the worst case
   // without it is the reconnect we started from.
   if ('draft_editor_hidden' in input) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: staleError } = await (service as any)
+    const { error: staleError } = await service
       .from('api_keys')
       .update({ card_build_notified: CARD_LISTING_STALE })
       .eq('workspace_id', workspaceId)

@@ -149,8 +149,7 @@ export async function PATCH(
     // Cast for the same reason the inbox route casts: the column arrives with a
     // migration that can land after this code, and src/types/database.types.ts
     // is regenerated on its own cadence.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: staleError } = await (service as any)
+    const { error: staleError } = await service
       .from('api_keys')
       .update({ card_build_notified: CARD_LISTING_STALE })
       .eq('workspace_id', workspaceId)

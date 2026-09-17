@@ -329,6 +329,12 @@ const SENTINEL_EXEMPT = new Set([
   'apps/web/src/lib/mcp/card-listing.test.ts',
   'supabase/functions/mcp-server/card-build-notify.ts',
   'supabase/functions/mcp-server/card-build-notify.test.ts',
+  // Generated wholesale by `npm run gen:types` from the live schema, so it
+  // names EVERY column and necessarily names this one. It declares types and
+  // writes nothing. Naming a column is not writing it, which is the same
+  // reason the two migrations are allow-listed rather than rewritten.
+  // Keep this in step with the Deno twin.
+  'apps/web/src/types/database.types.ts',
 ]);
 
 /**

@@ -1020,6 +1020,14 @@ const SENTINEL_EXEMPT = new Set([
   "apps/web/src/lib/mcp/card-listing.test.ts",
   "supabase/functions/mcp-server/card-build-notify.ts",
   "supabase/functions/mcp-server/card-build-notify.test.ts",
+  // Generated, wholesale, by `npm run gen:types` from the live schema. It names
+  // EVERY column in the database, so it necessarily names this one; it declares
+  // types and writes nothing. It is exempt for the same reason the two
+  // migrations are allow-listed rather than rewritten: naming a column is not
+  // writing it. This entry appeared only once the types were regenerated — the
+  // check was written against a stale file that did not yet know the column
+  // existed, which is why no single branch could have caught it.
+  "apps/web/src/types/database.types.ts",
 ]);
 
 /**
