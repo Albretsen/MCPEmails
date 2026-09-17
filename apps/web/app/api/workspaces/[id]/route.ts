@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { ACTIVE_WORKSPACE_COOKIE } from '@/lib/workspace/active';
+import { CARD_LISTING_STALE } from '@/lib/mcp/card-listing';
 
 const MAX_NAME_LEN = 60;
 
@@ -151,7 +152,7 @@ export async function PATCH(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: staleError } = await (service as any)
       .from('api_keys')
-      .update({ card_build_notified: 'stale' })
+      .update({ card_build_notified: CARD_LISTING_STALE })
       .eq('workspace_id', workspaceId)
       .is('deleted_at', null);
     if (staleError) {

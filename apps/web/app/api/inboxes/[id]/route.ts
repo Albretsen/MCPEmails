@@ -12,6 +12,7 @@ import {
   selectTolerantly,
 } from '@/lib/approvals/columns';
 import { normalizeSenderName } from '@/lib/inboxes/sender-name';
+import { CARD_LISTING_STALE } from '@/lib/mcp/card-listing';
 import {
   canManageInboxes,
   canManageWorkspace,
@@ -491,7 +492,7 @@ export async function PATCH(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: staleError } = await (service as any)
       .from('api_keys')
-      .update({ card_build_notified: 'stale' })
+      .update({ card_build_notified: CARD_LISTING_STALE })
       .eq('workspace_id', workspaceId)
       .is('deleted_at', null);
     if (staleError) {

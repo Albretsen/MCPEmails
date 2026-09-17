@@ -123,9 +123,17 @@ jobs:
         # and they are gated behind this env var precisely so that this job can
         # skip them; they run locally, where a developer can see a live DNS
         # failure for what it is. --allow-env is what lets the gate be read.
+        #
+        # --allow-run=git is the one exception, and it is scoped to that single
+        # binary. card-build-notify.test.ts enumerates the repo with `git
+        # ls-files` rather than with a hand-maintained list of top-level
+        # directories, which was defeated in five straight rounds of review; the
+        # alternative is re-implementing .gitignore semantics inside a test file.
+        # Without the flag those three checks FAIL loudly rather than passing on
+        # an empty file list, which is the whole point.
         env:
           HOST_GUARD_SKIP_NETWORK_TESTS: '1'
-        run: deno test --allow-read --allow-env supabase/functions/mcp-server/
+        run: deno test --allow-read --allow-env --allow-run=git supabase/functions/mcp-server/
 
   build:
     name: Build Check

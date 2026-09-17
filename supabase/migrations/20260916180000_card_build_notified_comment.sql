@@ -1,0 +1,42 @@
+-- Corrects the column comment on api_keys.card_build_notified.
+--
+-- NOT YET APPLIED to production. Written here as the record; the live column
+-- still carries the 20260916160000 text until someone runs this.
+--
+-- The shipped comment reads:
+--
+--   '... last received in a tools/list, or was last sent
+--    notifications/tools/list_changed for. Set on tools/list, compared on
+--    tools/call. NULL until the first tools/list.'
+--
+-- Both of the last two sentences are now false, and a column comment is the
+-- first thing anyone reads when they meet this column in psql:
+--
+--   * "Set on tools/list" — it is also set on a `tools/call` that notifies, by
+--     the compare-and-swap in card-build-notify.ts, and it is set to a sentinel
+--     ('stale', CARD_LISTING_STALE) by all THREE writers that change the card
+--     preference, which is neither a listing nor a build id. Those three are
+--     the two dashboard routes (PATCH /api/inboxes/[id], PATCH
+--     /api/workspaces/[id]) AND invalidateCardListings() in the MCP server
+--     itself, reached from the draft_editor_hide tool when the card turns
+--     itself off. Saying "the dashboard" writes it misses the third.
+--
+--   * "NULL until the first tools/list" — NULL is ambiguous and is resolved by
+--     the key's own created_at and last_used_at. A key created at or after
+--     2026-09-16T14:05:00Z (CARD_BUILD_TRACKING_SINCE, the deploy that started
+--     writing this column) with NULL here has genuinely never been served a
+--     listing. An OLDER key with NULL here was being served listings before the
+--     column existed: it holds a full cached listing and nothing was recorded.
+--     Reading the second as the first is what left the entire pre-column cohort
+--     unable to receive an invalidation at all.
+--
+-- Counted on 2026-09-16 22:54Z under the authentication filter that is the only
+-- one that can matter (deleted_at is null AND (expires_at is null OR expires_at
+-- > now()), the predicate on the api_keys lookup in mcp-server/index.ts): 145
+-- keys can authenticate, 93 read NULL, and 58 of those across 48 workspaces
+-- predate the watershed and have been used — the rows the ambiguity was losing.
+-- The counts that include expiring rows drift between reads; the stable subset
+-- is the 51 keys / 41 workspaces that never expire.
+
+comment on column public.api_keys.card_build_notified is
+  'Review-card build id (REVIEW_CARD_BUILD_ID) this key''s client last received in a tools/list, or was last sent notifications/tools/list_changed for. Written on tools/list, on a notifying tools/call, and as the literal ''stale'' by the dashboard routes AND by the MCP server''s own invalidateCardListings() when a workspace changes its card preference. NULL is ambiguous: on a key created at or after 2026-09-16T14:05:00Z it means no listing was ever served (nothing cached); on an older key it means the column did not exist yet (a cached listing we never recorded). See supabase/functions/mcp-server/card-build-notify.ts, CARD_BUILD_TRACKING_SINCE.';

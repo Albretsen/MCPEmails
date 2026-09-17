@@ -128,7 +128,10 @@ import {
 import {
   acceptsEventStream,
   CARD_LISTING_STALE,
+  type CardBuildClient,
+  claimListingNotification,
   decideBuildNotification,
+  predatesBuildTracking,
   sseResponse,
   TOOLS_LIST_CHANGED_NOTIFICATION,
 } from "./card-build-notify.ts";
@@ -724,8 +727,25 @@ interface ApiKeyRow {
   created_at: string;
   /**
    * The review-card build id this key's client last received in a `tools/list`,
-   * or was last sent `notifications/tools/list_changed` for. NULL until its
-   * first `tools/list`. See card-build-notify.ts.
+   * or was last sent `notifications/tools/list_changed` for. See
+   * card-build-notify.ts.
+   *
+   * NULL means one of two things, and they are told apart by the key's own
+   * `created_at` and `last_used_at`: a key created at or after
+   * CARD_BUILD_TRACKING_SINCE (2026-09-16T14:05:00Z, the deploy that started
+   * writing this column) has never been served a listing (nothing cached),
+   * while an older one was being served listings before the column existed
+   * (everything cached, nothing recorded). Those two timestamps are the same
+   * instant on purpose: this comment and that constant must be edited together
+   * or one of them starts lying.
+   *
+   * The ORIGINAL column comment shipped in
+   * 20260916160000_card_build_notified.sql ("Set on tools/list, compared on
+   * tools/call. NULL until the first tools/list.") is wrong on both halves — it
+   * is also set on a notifying tools/call, and NULL no longer means "never
+   * listed". 20260916180000_card_build_notified_comment.sql replaces it and has
+   * NOT been applied yet, so the live column still carries the wrong text.
+   * CARD_BUILD_TRACKING_SINCE is the authority either way.
    *
    * Optional rather than required so the many hand-built key rows in the test
    * suites stay valid without restating a field none of them exercise. Every
@@ -23876,6 +23896,14 @@ async function workspaceRoleForUser(
  * and working out exactly which ones overlap costs more than the one UPDATE,
  * and the false positives are harmless (one extra `tools/list`).
  *
+ * This is the THIRD writer of the sentinel, alongside the two dashboard routes,
+ * and it is the one that gets forgotten — `setDraftEditorHidden` below calls it
+ * for `draft_editor_hide`, so the card can turn itself off. It carries the same
+ * `deleted_at`-only predicate as those routes, deliberately and not by
+ * oversight: see the "the write guards on `deleted_at` ONLY" section of
+ * apps/web/src/lib/mcp/card-listing.ts for why an expiry filter here would be a
+ * bug rather than a tightening.
+ *
  * Never throws. The preference write has already succeeded at this point, and
  * failing the user's action because a cache hint could not be written would be
  * the wrong trade: the worst case here is the old behaviour, a reconnect.
@@ -29717,6 +29745,7 @@ async function handleRequest(req: Request): Promise<Response> {
   // Streamable HTTP lets a stateless server put one on the SSE stream of a POST
   // it is already answering. See card-build-notify.ts for both quotes and for
   // every rule below.
+  const observedBuild = apiKey.card_build_notified ?? null;
   const notifyDecision = decideBuildNotification({
     method: rpcRequest.method,
     cardBearingTool:
@@ -29727,35 +29756,84 @@ async function handleRequest(req: Request): Promise<Response> {
         ),
       ),
     acceptsEventStream: acceptsEventStream(req.headers.get("Accept")),
-    notifiedBuild: apiKey.card_build_notified ?? null,
+    notifiedBuild: observedBuild,
     currentBuild: REVIEW_CARD_BUILD_ID,
+    // A NULL column on a key that predates the column is a cached listing we
+    // cannot see, not an empty cache. See CARD_BUILD_TRACKING_SINCE.
+    keyPredatesBuildTracking: predatesBuildTracking(apiKey.created_at),
+    // Read from the row fetched at authentication time, so it is the value
+    // BEFORE this request's own fire-and-forget last_used_at write.
+    keyUsedBefore: apiKey.last_used_at != null,
   });
 
-  // `metered` again, for the same reason: the synthetic introspection key has
-  // no `api_keys` row to record a build against, and it is never persisted, so
-  // the write would be a guaranteed failure against a placeholder URL. The
-  // DECISION still runs — the SSE branch below is part of the shape a real
-  // client sees, and introspection must not be a different shape.
-  if (metered && notifyDecision.record !== null) {
-    // Fire and forget, exactly like last_used_at: this is a cache hint, and a
-    // failed write costs one repeated notification, never a failed request.
-    // Awaiting it would put a database round trip in front of every tool
-    // result for the sake of bookkeeping.
-    void supabase
-      .from("api_keys")
-      .update({ card_build_notified: notifyDecision.record })
-      .eq("id", apiKey.id)
-      .then(undefined, () => {});
+  if (notifyDecision.notify && notifyDecision.record !== null) {
+    // Awaited, and ONLY here. The compare-and-swap is what makes "one
+    // notification per change" true instead of "one per concurrent in-flight
+    // call": whoever moves the row away from the value we read is the one that
+    // speaks. This costs a database round trip, but only on the rare request
+    // that actually has an invalidation to deliver, and the round trip is
+    // deadline-bounded (CARD_CLAIM_DEADLINE_MS) because `routeMethod` above has
+    // already run: by this line the tool's work is done, and for the tools that
+    // send mail or delete messages that work is irreversible, so a stalled
+    // PostgREST must not be able to turn it into a failed request. Not every
+    // card-bearing tool has a side effect — `draft_read` is a pure read the card
+    // makes on every remount — so for those the bound is what the user WAITS,
+    // up to 1.5 s, at most once per key per change. See the "bounded in time"
+    // section of claimListingNotification in card-build-notify.ts.
+    //
+    // ACCEPTED, and deliberately not defended against: the swap commits here,
+    // BEFORE `sseResponse` streams a single byte. If the client never consumes
+    // the stream — it disconnects, a proxy drops it, the isolate dies mid-write
+    // — the column already reads "delivered" and that invalidation is lost for
+    // this key until the next change writes a sentinel. The alternative is
+    // committing from inside the stream's `start`, which trades a rare lost
+    // notification for a re-introduced race (two concurrent calls would both be
+    // past the decision before either wrote) and still cannot prove the bytes
+    // arrived. Lost-on-abandoned-stream costs one stale listing until the next
+    // change; the race costs a duplicate notification on every change. The
+    // cheaper failure is the one kept.
+    // `metered` guards the WRITE only, never the decision and never the shape.
+    // Introspection shares this path now instead of short-circuiting it, so the
+    // frame a real client sees is the frame introspection emits. But the
+    // synthetic introspection key has no `api_keys` row to record a build
+    // against and is never persisted, so claiming would be a guaranteed failure
+    // against a placeholder URL. Skipping the claim, not the branch, is what
+    // keeps the two shapes identical.
+    const claimed = metered
+      ? await claimListingNotification(
+        supabase as unknown as CardBuildClient,
+        apiKey.id,
+        observedBuild,
+        notifyDecision.record,
+      )
+      : true;
+    if (claimed) {
+      console.log("[mcp-server] tools/list_changed", {
+        key_id: apiKey.id,
+        from_build: observedBuild,
+        to_build: REVIEW_CARD_BUILD_ID,
+        on_method: rpcRequest.method,
+      });
+      return sseResponse([TOOLS_LIST_CHANGED_NOTIFICATION], response, CORS_HEADERS);
+    }
+    // A concurrent call on this same key delivered it. Sending a second
+    // notification would make the client re-read a listing it is already
+    // re-reading.
+    return jsonResponse(response);
   }
 
-  if (notifyDecision.notify) {
-    console.log("[mcp-server] tools/list_changed", {
-      key_id: apiKey.id,
-      from_build: apiKey.card_build_notified ?? null,
-      to_build: REVIEW_CARD_BUILD_ID,
-      on_method: rpcRequest.method,
-    });
-    return sseResponse([TOOLS_LIST_CHANGED_NOTIFICATION], response, CORS_HEADERS);
+  if (metered && notifyDecision.record !== null) {
+    // Bookkeeping only (`tools/list`). Fire and forget, exactly like
+    // last_used_at: a failed write costs one repeated notification, never a
+    // failed request, and awaiting it would put a database round trip in front
+    // of every listing. Still compare-and-swapped, so it cannot clobber a
+    // sentinel written between our read and our write.
+    void claimListingNotification(
+      supabase as unknown as CardBuildClient,
+      apiKey.id,
+      observedBuild,
+      notifyDecision.record,
+    ).then(undefined, () => {});
   }
 
   return jsonResponse(response);

@@ -35,22 +35,69 @@ The bare `ui://mcpemails/review-card.html` is still answered, with the *current*
 clients holding a `tools/list` from before the change. It appears in no listing and no tool
 `_meta`, so nothing new can acquire it.
 
-**A card deploy no longer requires reconnecting the connector** (since 2026-09-16). The server
-declares `tools.listChanged: true` and sends `notifications/tools/list_changed` on the first
-card-bearing `tools/call` after the build id moves; the client re-reads `tools/list` and picks up
-the new URI. MCP 2025-06-18, Tools § *List Changed Notification*, and its message-flow diagram is
-exactly this case.
+**A card deploy usually no longer requires reconnecting the connector** (since 2026-09-16), and
+the exceptions below are not edge cases. The server declares `tools.listChanged: true` and sends
+`notifications/tools/list_changed` on the first card-bearing `tools/call` after the build id moves;
+the client re-reads `tools/list` and picks up the new URI. MCP 2025-06-18, Tools § *List Changed
+Notification*, and its message-flow diagram is exactly this case.
 
 A stateless POST-only server can still send one, because Streamable HTTP allows it to ride on the
 response to a request the client is already making: "If the server initiates an SSE stream: … The
 server MAY send JSON-RPC requests and notifications before sending the JSON-RPC response. These
 messages SHOULD relate to the originating client request." So the notification is emitted ahead of
-the tool result whose card is the stale thing. No session id, nothing held open. See
-`supabase/functions/mcp-server/card-build-notify.ts`.
+the tool result whose card is the stale thing. No session id, nothing held open.
 
-This fixes **live** clients only. A re-mounted cell from an older conversation replays the URI
-recorded when its tool call happened; that is a stored record, not a live listing, and no
-notification can reach it. Old conversations keep their old card.
+The notification also fires when nothing about the BUNDLE changed but the listing did. Hiding the
+draft editor card changes no bytes, so the build id does not move, and the invalidation is carried
+instead by a sentinel (`'stale'`, `CARD_LISTING_STALE`) written into `api_keys.card_build_notified`
+for every key in the workspace. Three places write it: `PATCH /api/inboxes/[id]`, `PATCH
+/api/workspaces/[id]`, and `invalidateCardListings()` in the MCP server itself, which is how the
+card turns *itself* off via `draft_editor_hide`. The next card-bearing call notifies and re-records
+the real build id.
+
+Five things it does **not** reach, all of them real populations rather than theoretical ones:
+
+- **A connected client that only makes non-card-bearing tool calls.** `decideBuildNotification`
+  opens with `if (!input.cardBearingTool) return { notify: false, record: null }`, so a client that
+  lives on `email_read`, `email_search_and_move`, `inbox_list` and the rest is never told the
+  listing moved, however long it stays connected. This is deferral rather than permanent loss — the
+  invalidation is still sitting on the key and is delivered whenever a `draft` call finally
+  happens — but so is the second item below, and the wait is unbounded. It is real rather than
+  theoretical: `cd74d874` was created 2026-09-16 18:09:32.72Z and used repeatedly for over five
+  hours (`last_used_at` 23:18:56.37Z at a 23:21:01Z read) with `card_build_notified` still NULL.
+  A NULL there means the key made no card-bearing `tools/call` in all that time — which is this
+  population's defining behaviour — and no `tools/list` either. The same row is the one named
+  further down as the single row the watershed's placement is worth.
+- **A client that does not offer `text/event-stream` in `Accept` is never notified at all.** The
+  notification rides on an SSE stream, and a client that asked for `application/json` must get
+  JSON. It sees the new card at its next reconnect and not before.
+- **A second live connection on the same API key.** The state is per key, not per connection, and
+  the transport is POST-only with no session id. Whichever connection makes the first card-bearing
+  call consumes the invalidation; the other keeps its cached listing until a later change raises
+  the sentinel again. This bites a **static API key pasted into more than one client** — an OAuth
+  connection holds its own `api_keys` row, so two OAuth connections never share one. (A token
+  rotation does *not* belong on this list: the `refresh_token` grant updates that one row in
+  place, leaving `created_at` and `card_build_notified` alone, so a sentinel written before a
+  refresh is still there after it.)
+- **A client that abandons the stream.** The compare-and-swap that claims the notification commits
+  *before* `sseResponse` writes a byte. If the client disconnects, a proxy drops the response, or
+  the isolate dies mid-write, the column already reads "delivered" and that invalidation is lost
+  for that key until the next change raises the sentinel again. Committing from inside the stream
+  instead would re-introduce the duplicate-notification race it was added to close.
+- **A re-mounted cell from an older conversation.** It replays the URI recorded when its tool call
+  happened, which is a stored record rather than a live listing. No notification can reach it, and
+  old conversations keep their old card.
+
+One population it *does* reach, and only since 2026-09-16: **keys that connected before the column
+existed** read NULL for a reason the code used to misread as "nothing cached", when in fact they
+hold a full cached listing that was never recorded. They are told apart from genuinely new keys by
+`created_at` and `last_used_at`, get exactly one notification each, and then behave normally. On
+2026-09-16 22:54Z that was 58 keys across 48 workspaces, counted under the authentication filter
+(`deleted_at is null AND (expires_at is null OR expires_at > now())`) — the only filter worth
+quoting, since an expired key can never be notified.
+
+The reasoning for every one of those, with the production measurements, is in
+`supabase/functions/mcp-server/card-build-notify.ts`.
 
 CSP for the resource is **empty on every axis** — the card talks to the world only through
 `app.callServerTool`:
