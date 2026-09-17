@@ -479,6 +479,27 @@ Deno.test("an empty filter is refused", () => {
   assert(!result.ok, "an empty filter matches the whole mailbox and must be refused");
 });
 
+Deno.test("a provider-native 'raw' query is not a storable filter", () => {
+  // The refusal the tool schemas have always advertised, enforced since
+  // 2026-09-15. `raw` is a second query dialect passed to the provider
+  // verbatim: acceptable for an interactive search a human just typed, not for
+  // a rule that re-runs unattended every fifteen minutes for months. The sharp
+  // edge is that it also defeated the guard above, since `{raw: "ALL"}` counts
+  // as a criterion and searches the entire mailbox.
+  //
+  // The list itself, and the schema text that describes it, are checked against
+  // each other in automation-filter-fields.test.ts.
+  for (const filter of [{ raw: "ALL" }, { raw: "OR FROM a@b.c FROM d@e.f" }, { from: "a@b.c", raw: "TEXT x" }]) {
+    const result = validateTriageFilter(filter);
+    assert(!result.ok, `${JSON.stringify(filter)} must be refused, not stored`);
+    assert(!result.ok && result.error.includes("raw"), "the error names the field it refused");
+  }
+  // Refused outright rather than dropped: a filter quietly stripped of a term
+  // matches more mail than the caller asked for, which on this surface means
+  // acting on more mail than the caller asked for.
+  assert(!validateTriageFilter({ from: "a@b.c", raw: "TEXT x" }).ok, "a valid sibling field does not rescue it");
+});
+
 Deno.test("a stored filter date must be the same ISO shape the tools accept", () => {
   for (const good of ["2026-08-25", "2026-08-25T09:00", "2026-08-25T09:00:00Z", "2026-08-25T09:00:00+02:00"]) {
     assert(validateTriageFilter({ since: good }).ok, `${good} is a shape the search tools accept`);

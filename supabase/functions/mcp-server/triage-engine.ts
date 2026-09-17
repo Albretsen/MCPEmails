@@ -263,22 +263,44 @@ const EMAIL_RE = /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/;
 /**
  * The NormalizedSearch fields a stored filter may carry.
  *
- * `raw` is included, and reluctantly so. It is a provider-native query string
- * passed through verbatim, i.e. a second dialect nothing validates, which is a
- * defensible trade for an interactive call a human just typed and a much worse
- * one for a query that re-executes unattended every fifteen minutes for months.
- * It is here because apps/web/src/lib/automations/rules.ts already accepts it,
- * and a filter the dashboard will happily save but the runner refuses to run is
- * a worse failure than a permissive field: the user gets a rule that silently
- * never works. If it is ever dropped, drop it on BOTH sides in the same change.
+ * `raw` is NOT one of them, and the omission is the point. It is a
+ * provider-native query string passed through verbatim, i.e. a second dialect
+ * nothing here validates, which is a defensible trade for an interactive call a
+ * human just typed and a much worse one for a query that re-executes unattended
+ * every fifteen minutes for months with no model and no reviewer in the loop.
+ * Two consequences, both concrete rather than theoretical:
  *
- * The mitigation is the same either way: `raw` is length-capped like every other
- * term, neutralized, and translated by search-translate.ts, which never lets it
- * become anything but a search.
+ *   - it walks straight through the "at least one criterion" guard below.
+ *     `{raw: "ALL"}` counts as a criterion and `toImapSearch` turns it into the
+ *     RFC 3501 key ALL, i.e. the entire mailbox, which is precisely the rule
+ *     that guard exists to refuse;
+ *   - nothing on this path can tell a working query from a broken one, so a
+ *     typo in the dialect is a rule that fails every run for months, and a
+ *     correct one can express selections (HEADER, OR, UID ranges) that a person
+ *     reading the stored filter in the dashboard would not recognise as the
+ *     reach they are approving.
+ *
+ * The list was written WITH `raw` in it (8a52f8c, 2026-08-19) while the
+ * automation tool schemas in index.ts and the error message below both said the
+ * opposite in the same commit. The schemas are the intent, this list was the
+ * leak, and it was closed on 2026-09-15 after checking production first: 312
+ * stored rules across 17 workspaces, not one of them carrying a `raw` key, and
+ * the dashboard form never offered the field at all, so nothing already saved
+ * is invalidated. (Same precedent as the date tightening below.)
+ *
+ * Kept in step with FILTER_STRING_FIELDS in
+ * apps/web/src/lib/automations/rules.ts, which validates the same rows on the
+ * dashboard's write path: a field one side accepts and the other refuses is a
+ * rule that saves cleanly and then silently never runs. Both directions are
+ * pinned, by automation-filter-fields.test.ts here (the allow-list against what
+ * the tool schemas advertise) and by rules.test.ts there (the two copies
+ * against each other).
+ *
+ * Exported for those tests, and for nothing else.
  */
-const ALLOWED_FILTER_STRING_FIELDS = ["from", "to", "cc", "subject", "body", "text", "raw"] as const;
-const ALLOWED_FILTER_BOOL_FIELDS = ["unread", "has_attachment", "flagged"] as const;
-const ALLOWED_FILTER_DATE_FIELDS = ["since", "before"] as const;
+export const ALLOWED_FILTER_STRING_FIELDS = ["from", "to", "cc", "subject", "body", "text"] as const;
+export const ALLOWED_FILTER_BOOL_FIELDS = ["unread", "has_attachment", "flagged"] as const;
+export const ALLOWED_FILTER_DATE_FIELDS = ["since", "before"] as const;
 
 /** Longest a single filter term may be. Long enough for a real subject line. */
 const MAX_FILTER_TERM_CHARS = 500;
@@ -304,9 +326,28 @@ export function validateTriageFilter(raw: unknown): TriageValidation<NormalizedS
       (ALLOWED_FILTER_BOOL_FIELDS as readonly string[]).includes(key) ||
       (ALLOWED_FILTER_DATE_FIELDS as readonly string[]).includes(key);
     if (!known) {
+      const allowed = [
+        ...ALLOWED_FILTER_STRING_FIELDS,
+        ...ALLOWED_FILTER_BOOL_FIELDS,
+        ...ALLOWED_FILTER_DATE_FIELDS,
+      ].join(", ");
+      // `raw` gets its own sentence rather than falling through to "unsupported
+      // field". It is the one refusal a caller has reason to read as a bug:
+      // email_search accepts `raw`, so a model that has just used it there will
+      // reach for it here, and an error that only lists the alternatives does
+      // not tell it that the refusal is deliberate. Saying why is also what
+      // stops the next person from "fixing" it by widening the list above.
+      if (key === "raw") {
+        return fail(
+          "filter: provider-native 'raw' queries are not accepted for automations. " +
+            "A rule re-executes unattended for months, and a raw string is a second " +
+            "dialect nothing validates, so it has to be expressed with the structured " +
+            `fields instead. Allowed: ${allowed}.`,
+        );
+      }
       return fail(
         `filter: unsupported field '${neutralizeText(String(key)).slice(0, 40)}'. ` +
-          `Allowed: ${[...ALLOWED_FILTER_STRING_FIELDS, ...ALLOWED_FILTER_BOOL_FIELDS, ...ALLOWED_FILTER_DATE_FIELDS].join(", ")}. ` +
+          `Allowed: ${allowed}. ` +
           "Provider-native 'raw' queries are not accepted for automations.",
       );
     }

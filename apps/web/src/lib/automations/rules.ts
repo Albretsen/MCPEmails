@@ -23,10 +23,26 @@ export const ALLOWED_INTERVALS = [15, 30, 60, 180, 360, 720, 1440] as const;
 /** Actions a rule may take. Deliberately has no delete member. */
 export const ALLOWED_ACTION_TYPES = ['move', 'label', 'mark_read', 'forward', 'draft_reply'] as const;
 
-/** Fields of the NormalizedSearch shape a stored filter may carry. */
-const FILTER_STRING_FIELDS = ['from', 'to', 'cc', 'subject', 'body', 'text', 'raw'] as const;
-const FILTER_BOOLEAN_FIELDS = ['unread', 'has_attachment', 'flagged'] as const;
-const FILTER_DATE_FIELDS = ['since', 'before'] as const;
+/**
+ * Fields of the NormalizedSearch shape a stored filter may carry.
+ *
+ * `raw`, the provider-native escape hatch that `email_search` accepts, is
+ * deliberately absent. An automation re-executes unattended for months, and a
+ * raw query string is a second dialect neither side validates: `{raw: 'ALL'}`
+ * satisfies the "at least one condition" rule below and then matches the whole
+ * mailbox on IMAP, which is the one thing that rule exists to prevent.
+ *
+ * Kept in step with ALLOWED_FILTER_STRING_FIELDS in
+ * supabase/functions/mcp-server/triage-engine.ts, which is the enforcing copy:
+ * the runner re-validates every stored filter before each run, so a field this
+ * module accepted but that one refuses is a rule that saves cleanly from the
+ * dashboard and then fails every single run. rules.test.ts compares the two
+ * lists directly. Removed here and there together on 2026-09-15 (no stored rule
+ * used it, and the form below never offered it).
+ */
+export const FILTER_STRING_FIELDS = ['from', 'to', 'cc', 'subject', 'body', 'text'] as const;
+export const FILTER_BOOLEAN_FIELDS = ['unread', 'has_attachment', 'flagged'] as const;
+export const FILTER_DATE_FIELDS = ['since', 'before'] as const;
 
 export const MAX_TEMPLATE_LENGTH = 5000;
 export const MAX_NOTE_LENGTH = 500;
@@ -166,6 +182,16 @@ export function validateFilter(raw: unknown): ValidationResult<StoredFilter> {
       continue;
     }
 
+    // `raw` is named rather than merely refused: it is the only unsupported
+    // field a caller can arrive at honestly (the MCP search tools take it), so
+    // the message says the refusal is the rule and not a gap.
+    if (key === 'raw') {
+      return fail(
+        'Provider-native "raw" queries are not accepted for automations: a rule runs ' +
+          'unattended for months, so it has to say what it matches in the structured ' +
+          'fields instead.',
+      );
+    }
     return fail(`"${key}" is not a supported filter field.`);
   }
 

@@ -151,6 +151,19 @@ each of them requires a fresh threat model, a written decision, and a revision o
 6. **Accepting provider-native raw query strings** in `filter`. A stored rule re-executes for months
    without review; a raw string is a second dialect that nothing validates and that the preview cannot
    faithfully model.
+
+   **This line was crossed from the day the feature shipped, and closed on 2026-09-15.** The tool schemas
+   in `index.ts`, the validator's own error message and this list all said `raw` was refused, while
+   `ALLOWED_FILTER_STRING_FIELDS` in `triage-engine.ts` (and `FILTER_STRING_FIELDS` in the web copy) had
+   carried it since `8a52f8c`. It was reachable only through the MCP tools and the REST endpoint (the
+   dashboard form has never offered the field), and the sharpest edge was that it also defeated the
+   empty-filter guard: `{raw: "ALL"}` counts as one criterion and translates to the RFC 3501 key `ALL`,
+   i.e. the whole mailbox, on a cadence. Production was checked before removing it: 312 stored rules
+   across 17 workspaces, none carrying a `raw` key, so no live rule changed behaviour. The two lists and
+   the advertised schema text are now pinned against each other by
+   `supabase/functions/mcp-server/automation-filter-fields.test.ts` and
+   `apps/web/src/lib/automations/rules.test.ts`, because a comment demonstrably could not keep them
+   honest for four weeks.
 7. **Storing message content** in `triage_*` tables. The privacy carve-outs are exactly two: the encrypted
    `triage_run_items.undo_state`, and the neutralized 120-character `subject_redacted` / `sender_redacted`
    pair. See the migration header before adding a column.

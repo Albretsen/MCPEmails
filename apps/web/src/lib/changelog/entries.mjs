@@ -31,6 +31,12 @@ export const ENTRIES = [
   /* ── September 2026 ─────────────────────────────────────────── */
   {
     date: '2026-09-17',
+    kind: 'changed',
+    title: 'Automations no longer accept a provider-native raw query',
+    body: 'An automation filter could carry raw, a query string handed straight to the mail provider in its own dialect. A rule re-runs unattended every fifteen minutes for months, and nothing on that path can tell a working raw query from a broken one, so it was also a way past the rule that a filter must state at least one condition: a raw value of ALL counted as a condition and then matched the whole mailbox. The field is now refused where a rule is saved and again where it runs, with an error that says the refusal is deliberate rather than a gap. No stored rule used it, so no existing automation changes what it does, and the interactive search tools still take raw.',
+  },
+  {
+    date: '2026-09-17',
     kind: 'fixed',
     title: 'Nothing unattended acts on a disconnected inbox',
     body: 'Scheduled sends, held bulk plans and automation runs each loaded their inbox by id alone, so a mailbox disconnected, revoked or expired after the work was queued could still be used. All three now require an active inbox, the same check every ordinary tool call makes. A scheduled send against such an inbox fails with a reason shown on the dashboard, and an automation reports the inbox as unavailable instead of claiming it no longer exists.',
