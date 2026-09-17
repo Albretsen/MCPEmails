@@ -190,8 +190,26 @@ jobs:
           # Match the version the functions are developed against; Deno's
           # minor releases have changed type-checking strictness before.
           deno-version: v2.x
+      # WHY --node-modules-dir=none ON BOTH DENO STEPS. The repo root has a
+      # package.json, which puts deno into "bring your own node_modules" mode.
+      # A fresh checkout here runs no `npm install`, so there is no
+      # node_modules, and resolution dies on `npm:openai@^4.52.5` — a
+      # dependency of nothing we wrote, pulled in by the TYPES of
+      # jsr:@supabase/functions-js (edge-runtime.d.ts:186). The flag turns byonm
+      # off and sends npm specifiers to deno's own global cache, which is what
+      # this job wants: it type-checks and tests the function, it does not need
+      # a local install. Adding `openai` to package.json would be the wrong fix,
+      # since nothing imports it.
+      #
+      # This was latent, not new. Until the `push` trigger above was added on
+      # 2026-09-17 this job only ran on PRs, and the only PRs are dependabot's,
+      # so the breakage showed up as "dependabot is red again" and was never
+      # traced. Reproduced and fixed against a node_modules-free worktree, which
+      # is exactly what the runner has: plain `deno check` fails there with the
+      # message above, and with the flag it passes and the suite runs
+      # 1288 passed / 0 failed / 2 ignored.
       - name: Type check the edge function
-        run: deno check supabase/functions/mcp-server/index.ts
+        run: deno check --node-modules-dir=none supabase/functions/mcp-server/index.ts
       - name: Run edge function tests
         # Withholding --allow-net is deliberate: a test that quietly starts
         # depending on the network fails here rather than becoming flaky in CI
@@ -209,7 +227,7 @@ jobs:
         # an empty file list, which is the whole point.
         env:
           HOST_GUARD_SKIP_NETWORK_TESTS: '1'
-        run: deno test --allow-read --allow-env --allow-run=git supabase/functions/mcp-server/
+        run: deno test --node-modules-dir=none --allow-read --allow-env --allow-run=git supabase/functions/mcp-server/
 
   build:
     name: Build Check
