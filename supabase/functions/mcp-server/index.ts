@@ -173,6 +173,8 @@ import {
   allInboxesHideDraftEditor,
   type DraftEditorHiddenRow,
   type InboxQueryClient,
+  inboxIsReachable,
+  type InboxReachabilityRow,
   reachableInboxSelect,
   type ReviewCardOptInRow,
   reviewCardOptInsFromRows,
@@ -21370,19 +21372,66 @@ function planSampleFromSearch(messages: SearchEmailSummary[]): PlanSampleRow[] {
  * credential snapshot) and hands off to the shared paths above. The workspace
  * and allowlist checks already happened in `loadPendingPlan`; this re-reads the
  * inbox because credentials may have been refreshed since the plan was made.
+ *
+ * ── AND BECAUSE THE MAILBOX MAY HAVE GONE AWAY ─────────────────────────────
+ * Re-reading for fresher credentials was the original reason, and it was not
+ * enough. Until 2026-09-17 this query filtered on `id` and `workspace_id` and
+ * nothing else, while `resolveInbox` / `resolveInboxArg` — the only two ways an
+ * ordinary tool call ever reaches a mailbox — require `deleted_at is null` AND
+ * `status = 'active'`. Nothing else on the claim-and-execute path closed the
+ * gap either: `loadPendingPlan` re-verifies the PLAN and never reads `inboxes`.
+ *
+ * So a plan made while a mailbox was healthy could be run against that mailbox
+ * after it was revoked or soft-deleted, and what these plans carry is a bulk
+ * delete or a bulk move. The window is the 15-minute plan TTL, which is long
+ * enough for the two things that actually cause it: a workspace teardown, and
+ * an OAuth token expiring so `status` flips to 'error'.
+ *
+ * Both conditions are checked because neither implies the other. Production on
+ * 2026-09-16: 49 soft-deleted inboxes across 43 workspaces (all also 'revoked',
+ * since the teardown writes both at once) and 4 rows `status = 'error'` that
+ * are NOT soft-deleted.
+ *
+ * The refusal is explicit and counts every message as failed, so the plan is
+ * marked `failed` with the code below and the receipt says nothing was
+ * changed. Skipping quietly would mark the plan `executed` over an untouched
+ * mailbox.
  */
 async function executeBulkPlanRequest(
   request: BulkExecutionRequest,
   apiKey: ApiKeyRow,
+  db: InboxQueryClient = supabase,
 ): Promise<BulkExecutionOutcome> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("inboxes")
-    .select(INBOX_SELECT_COLUMNS)
+    // `reachableInboxSelect` appends `status` and `deleted_at`, so the columns
+    // `inboxIsReachable` decides on and the columns the query asks for are one
+    // list by construction. Hand-writing the projection is the drift that turns
+    // the predicate into a constant true: an ABSENT column is not decisive.
+    .select(reachableInboxSelect(...INBOX_SELECT_COLUMNS.split(",")))
     .eq("id", request.inbox_id)
     .eq("workspace_id", apiKey.workspace_id)
+    // The soft-delete half stays in SQL, as it is on every other inboxes read.
+    // On a path that deletes mail the primary filter must not depend on the
+    // projection surviving a later edit: a soft-deleted row never arrives at
+    // all, whatever the predicate below can or cannot see.
+    .is("deleted_at", null)
     .maybeSingle();
   if (error || !data) {
     return { succeeded: 0, failed: request.message_ids.length, error_code: "inbox_not_found" };
+  }
+  // The status half, decided by the shared predicate rather than a third copy
+  // of the filter. Kept separate from `inbox_not_found` on purpose: a mailbox
+  // the user still has but that stopped authenticating needs reconnecting, and
+  // "not found" would neither say so nor be true. There is no enumeration
+  // surface to protect here the way `resolveInbox` has one — the inbox id comes
+  // from the plan row, never from the caller.
+  if (!inboxIsReachable(data as InboxReachabilityRow)) {
+    console.error("[mcp-server] bulk_plan_inbox_unreachable", {
+      inbox_id: request.inbox_id,
+      status: (data as InboxReachabilityRow).status,
+    });
+    return { succeeded: 0, failed: request.message_ids.length, error_code: "inbox_unreachable" };
   }
   const inbox = data as unknown as InboxRow;
 
@@ -28173,7 +28222,18 @@ async function resolveScheduledPayload(row: {
     : {};
 }
 
-async function handleScheduledDispatch(): Promise<Response> {
+/**
+ * The scheduled-send dispatcher: pg_cron every minute, over every workspace.
+ *
+ * `db` is a parameter for one reason: so a test can drive this whole loop
+ * against a recording client and assert what the inbox gate below ACTUALLY
+ * asks the database for, and what this function then writes back on to the
+ * `scheduled_sends` row. See scheduled-send-reachability.test.ts. Production
+ * passes nothing and gets the module client, exactly as before.
+ */
+async function handleScheduledDispatch(
+  db: InboxQueryClient = supabase,
+): Promise<Response> {
   const now = new Date().toISOString();
 
   // ── Reclaim stale 'sending' rows ──────────────────────────────────────────
@@ -28182,7 +28242,7 @@ async function handleScheduledDispatch(): Promise<Response> {
   // that may already have gone out before the previous invocation crashed.
   // Runs globally across all workspaces — correct for a cron dispatcher.
   const staleCutoff = new Date(Date.now() - STALE_SENDING_MS).toISOString();
-  const { error: reclaimErr } = await supabase
+  const { error: reclaimErr } = await db
     .from("scheduled_sends")
     .update({
       status: "error",
@@ -28198,7 +28258,7 @@ async function handleScheduledDispatch(): Promise<Response> {
 
   // Fetch pending rows due for sending, ordered by send_at ASC so the
   // oldest-due messages are dispatched first.
-  const { data: rows, error: fetchErr } = await supabase
+  const { data: rows, error: fetchErr } = await db
     .from("scheduled_sends")
     // send_at comes back so a provable non-send can be deferred within a
     // bounded window rather than failed outright (see the catch below).
@@ -28231,7 +28291,7 @@ async function handleScheduledDispatch(): Promise<Response> {
   for (const row of pending) {
     // Optimistic lock: atomically transition pending → sending so a
     // concurrent cron invocation cannot pick up the same row.
-    const { data: claimed, error: lockErr } = await supabase
+    const { data: claimed, error: lockErr } = await db
       .from("scheduled_sends")
       .update({ status: "sending", updated_at: new Date().toISOString() })
       .eq("id", row.id)
@@ -28253,17 +28313,70 @@ async function handleScheduledDispatch(): Promise<Response> {
 
     try {
       // ── Look up the inbox ──────────────────────────────────────────────
-      const { data: inbox, error: inboxErr } = await supabase
+      //
+      // ── AND REFUSE ONE THAT WENT UNREACHABLE ──────────────────────────
+      // Until 2026-09-17 this filtered on `id` and nothing else, while
+      // `resolveInbox` / `resolveInboxArg` — the only two ways an ordinary
+      // tool call ever reaches a mailbox — require `deleted_at is null` AND
+      // `status = 'active'`. Nothing upstream closed the gap: the pending rows
+      // are selected from `scheduled_sends` by `status = 'pending'` and
+      // `send_at <= now` only. So a send scheduled while a mailbox was healthy
+      // would still be attempted against that mailbox after it was revoked or
+      // soft-deleted.
+      //
+      // The window here is the SCHEDULING LEAD TIME, not a short TTL. On
+      // 2026-09-17 production had leads up to 3d16h on `sent` rows and 180
+      // days on a cancelled one, and all 107 currently-pending rows are due
+      // roughly 2.5 days out. Compare the 15-minute plan TTL that bounded the
+      // same defect in `executeBulkPlanRequest` (992ff6e): this is the same
+      // hole with three orders of magnitude more time to open in.
+      //
+      // Both conditions are checked because neither implies the other.
+      // Production on 2026-09-17: 49 inboxes both soft-deleted and 'revoked'
+      // (workspace teardown writes the pair at once) and 4 rows
+      // `status = 'error'` that are NOT soft-deleted, which is the realistic
+      // case — an OAuth token expired under a send that was already queued.
+      const { data: inboxData, error: inboxErr } = await db
         .from("inboxes")
-        .select(INBOX_SELECT_COLUMNS)
+        // `reachableInboxSelect` appends `status` and `deleted_at`, so the
+        // columns `inboxIsReachable` decides on and the columns the query asks
+        // for are one list by construction. Hand-writing the projection is the
+        // drift that turns the predicate into a constant true: an ABSENT
+        // column is not decisive.
+        .select(reachableInboxSelect(...INBOX_SELECT_COLUMNS.split(",")))
         .eq("id", row.inbox_id)
-        .single<InboxRow>();
+        // The soft-delete half stays in SQL, as on every other inboxes read,
+        // so a soft-deleted row never arrives however the projection later
+        // drifts.
+        .is("deleted_at", null)
+        .single();
 
-      if (inboxErr || !inbox) {
+      if (inboxErr || !inboxData) {
         throw new Error(
           `Inbox ${row.inbox_id} not found: ${inboxErr?.message ?? "no data"}`,
         );
       }
+      // FAILED, not skipped and not deferred, and this is the deliberate part:
+      // nobody is watching an unattended send the way a user watches a bulk
+      // plan's card. The row goes terminal 'error' with the detail below, which
+      // is what the dashboard renders, so the user finds out the message did
+      // not go — the one thing a silent drop would never tell them. Deferring
+      // is wrong for the same reason it is right for a refused SMTP handshake:
+      // a revoked mailbox does not heal inside the defer window, and retrying
+      // for two hours would just delay the same failure.
+      if (!inboxIsReachable(inboxData as InboxReachabilityRow)) {
+        const status = String((inboxData as InboxReachabilityRow).status ?? "unknown");
+        console.error("[dispatch] scheduled_send_inbox_unreachable", {
+          scheduled_send_id: row.id,
+          inbox_id: row.inbox_id,
+          status,
+        });
+        throw new Error(
+          `The mailbox this message was scheduled from is no longer connected ` +
+            `(status: ${status}). Reconnect it, then schedule the message again.`,
+        );
+      }
+      const inbox = inboxData as unknown as InboxRow;
 
       // ── Build SendEmailParams from stored payload ───────────────────────
       // Dual-mode: decrypts encrypted rows, passes legacy plaintext through.
@@ -28275,7 +28388,7 @@ async function handleScheduledDispatch(): Promise<Response> {
         // `select("*")` so the expiry re-check below works against a database
         // where the Phase 2 migration has not been applied yet (the columns are
         // simply absent, and the check degrades to a no-op).
-        const { data: approval, error: approvalErr } = await supabase
+        const { data: approval, error: approvalErr } = await db
           .from("send_approvals")
           .select("*")
           .eq("id", payload["approval_id"]).eq("status", "approved").maybeSingle();
@@ -28292,7 +28405,7 @@ async function handleScheduledDispatch(): Promise<Response> {
         if (approvalLapsedBeforeDecision(approval, Date.now())) {
           throw new Error("approved request expired before it was decided");
         }
-        const { data: key, error: keyErr } = await supabase.from("api_keys")
+        const { data: key, error: keyErr } = await db.from("api_keys")
           .select("id, workspace_id, created_by, name, key_prefix, key_hash, scopes, inbox_ids, expires_at, last_used_at, deleted_at, created_at, card_build_notified")
           .eq("id", approval.api_key_id).is("deleted_at", null).single();
         if (keyErr || !key) throw new Error("originating API key is unavailable");
@@ -28323,7 +28436,7 @@ async function handleScheduledDispatch(): Promise<Response> {
           }
           throw new Error(`approved ${approval.operation} failed: ${dispatchedResult.logErrorCode ?? "unknown"}`);
         }
-        await supabase.from("scheduled_sends").update({ status: "sent", sent_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", row.id);
+        await db.from("scheduled_sends").update({ status: "sent", sent_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", row.id);
         dispatched++;
         continue;
       }
@@ -28376,7 +28489,7 @@ async function handleScheduledDispatch(): Promise<Response> {
       }
 
       // ── Mark sent ──────────────────────────────────────────────────────
-      await supabase
+      await db
         .from("scheduled_sends")
         .update({
           status: "sent",
@@ -28405,7 +28518,7 @@ async function handleScheduledDispatch(): Promise<Response> {
         Date.now() - dueMs < SCHEDULED_SEND_DEFER_WINDOW_MS;
       if (err instanceof SmtpNotSentError && err.retryable && withinDeferWindow) {
         console.warn(`[dispatch] scheduled_send ${row.id} deferred (nothing sent):`, detail);
-        await supabase
+        await db
           .from("scheduled_sends")
           .update({
             status: "pending",
@@ -28423,7 +28536,7 @@ async function handleScheduledDispatch(): Promise<Response> {
       );
 
       // Truncate error_detail to 1 000 chars to match column convention.
-      await supabase
+      await db
         .from("scheduled_sends")
         .update({
           status: "error",
@@ -28509,15 +28622,69 @@ type TriageRunSession = {
   imap: ImapSession<ImapClient> | null;
 };
 
-/** Loads the full InboxRow the provider helpers need, from the slim projection. */
-async function loadInboxRowForTriage(inboxId: string): Promise<InboxRow | null> {
-  const { data, error } = await supabase
+/**
+ * Loads the full InboxRow the provider helpers need, from the slim projection.
+ *
+ * ── THE ONE GATE FOR THE WHOLE AUTOMATION PATH ─────────────────────────────
+ * Every route from a `triage_rules` row to a provider comes through here:
+ * `store.loadInbox`, `search`, `resolveFolder`, `openSession` and the
+ * per-message fallback in `applyTriageAction`. That is why the reachability
+ * filter goes in this function rather than at five call sites.
+ *
+ * Until 2026-09-17 it filtered on `id` and nothing else, while `resolveInbox`
+ * / `resolveInboxArg` — the only two ways an ordinary tool call ever reaches a
+ * mailbox — require `deleted_at is null` AND `status = 'active'`. Nothing
+ * upstream closed the gap: `listDueRules` and the claim CAS both check the
+ * RULE (enabled, not deleted, not leased, due, not paused) and neither reads
+ * `inboxes`. So a rule pointed at a mailbox that was later revoked or
+ * soft-deleted kept trying to triage it.
+ *
+ * Automations recur, so unlike the 15-minute bulk-plan TTL (992ff6e) there was
+ * no window at all: the attempt simply repeats on the rule's cadence forever.
+ *
+ * ── RETURNING NULL IS THE REPORTING DECISION, NOT A SHRUG ──────────────────
+ * The engine already has exactly the right shape for this and it was checked
+ * rather than assumed: `runTriageRule` calls `store.loadInbox` FIRST, before
+ * the search and before any connection is opened, and a null there is
+ * `failRun("inbox_unavailable", ...)`. That is not the retry loop it looks
+ * like. `failRun` increments `consecutive_failures`, and at
+ * TRIAGE_MAX_CONSECUTIVE_FAILURES (5) the rule disables itself with a
+ * `disabled_reason` and calls `notifyRuleDisabled`. So the rule stops, the
+ * dashboard says why, and the owner is told.
+ *
+ * A quiet skip was the alternative and is worse here: it would leave the
+ * automation enabled and apparently healthy, running forever over a mailbox it
+ * cannot touch, and the user would never learn their mailbox needs
+ * reconnecting. Unlike the bulk plan there is no card in front of anyone, so
+ * the failed run IS the only channel.
+ *
+ * `db` is a parameter so a test can assert the query this actually issues
+ * rather than the text of index.ts. See scheduled-send-reachability.test.ts.
+ */
+async function loadInboxRowForTriage(
+  inboxId: string,
+  db: InboxQueryClient = supabase,
+): Promise<InboxRow | null> {
+  const { data, error } = await db
     .from("inboxes")
-    .select(INBOX_SELECT_COLUMNS)
+    // One list by construction: `reachableInboxSelect` appends the two columns
+    // `inboxIsReachable` decides on. An ABSENT column is not decisive, so a
+    // hand-written projection would turn the predicate into a constant true.
+    .select(reachableInboxSelect(...INBOX_SELECT_COLUMNS.split(",")))
     .eq("id", inboxId)
-    .maybeSingle<InboxRow>();
+    // Soft-delete stays in SQL, as on every other inboxes read: the row never
+    // arrives at all, whatever the projection later drifts to.
+    .is("deleted_at", null)
+    .maybeSingle();
   if (error || !data) return null;
-  return data;
+  if (!inboxIsReachable(data as InboxReachabilityRow)) {
+    console.error("[triage] inbox_unreachable", {
+      inbox_id: inboxId,
+      status: (data as InboxReachabilityRow).status,
+    });
+    return null;
+  }
+  return data as unknown as InboxRow;
 }
 
 const triageStore: TriageStore = {
@@ -30036,15 +30203,30 @@ if (Deno.env.get("MCP_SERVER_NO_LISTEN") !== "1") {
 // a recording Supabase client and asserts what the two inbox rollups actually
 // ask the database for. That replaced a source-text pin over this file which
 // three rounds of review evaded without ever changing the behaviour.
+//
+// `executeBulkPlanRequest` is exported for `bulk-plan-reachability.test.ts` on
+// the same principle and with the same injected client. It is the one place a
+// bulk delete runs against an inbox resolved from a stored id rather than from
+// `resolveInbox`, so "does it still refuse an unreachable mailbox" has to be
+// answerable by a test rather than by reading the query.
+//
+// `handleScheduledDispatch` and `loadInboxRowForTriage` join them for
+// scheduled-send-reachability.test.ts, for the same reason: they are the other
+// two places an inbox is resolved from a STORED id rather than through
+// `resolveInbox`, so "does it still refuse an unreachable mailbox" has to be
+// answerable by running them, not by reading their queries.
 // ---------------------------------------------------------------------------
 export {
   CONSOLIDATED_SPECS,
+  executeBulkPlanRequest,
   handleRequest,
+  handleScheduledDispatch,
   handleToolsCall,
   handleToolsList,
   isOAuthIssuedKey,
   keyReviewCardGates,
   isToolAuthorized,
+  loadInboxRowForTriage,
   SERVER_INSTRUCTIONS,
   SERVER_INSTRUCTIONS_MAX_BYTES,
   TOOL_ANNOTATIONS,
