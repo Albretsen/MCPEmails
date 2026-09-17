@@ -124,8 +124,7 @@
         "label": "Personvern og sikkerhet",
         "rows": {
           "neverStored": "E-post hentes i sanntid, lagres aldri",
-          "encrypted": "Legitimasjon kryptert i hvile",
-          "soc2": "SOC 2 Type II-rapport på forespørsel"
+          "encrypted": "Legitimasjon kryptert i hvile"
         }
       },
       "support": {

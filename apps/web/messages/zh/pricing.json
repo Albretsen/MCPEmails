@@ -124,8 +124,7 @@
         "label": "隐私与安全",
         "rows": {
           "neverStored": "邮件实时获取，从不存储",
-          "encrypted": "凭据静态加密",
-          "soc2": "可应要求提供 SOC 2 Type II 报告"
+          "encrypted": "凭据静态加密"
         }
       },
       "support": {

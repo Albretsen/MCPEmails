@@ -124,8 +124,7 @@
         "label": "Privacy & security",
         "rows": {
           "neverStored": "Email fetched live, never stored",
-          "encrypted": "Credentials encrypted at rest",
-          "soc2": "SOC 2 Type II report on request"
+          "encrypted": "Credentials encrypted at rest"
         }
       },
       "support": {

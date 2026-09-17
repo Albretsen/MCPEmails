@@ -134,7 +134,6 @@ const TABLE_SECTIONS = [
     rows: [
       { key: 'neverStored', free: true,  personal: true,  solo: true,  pro: true },
       { key: 'encrypted',   free: true,  personal: true,  solo: true,  pro: true },
-      { key: 'soc2',        free: false, personal: false, solo: false, pro: true },
     ],
   },
   {

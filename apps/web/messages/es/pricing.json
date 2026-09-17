@@ -124,8 +124,7 @@
         "label": "Privacidad y seguridad",
         "rows": {
           "neverStored": "El correo se obtiene en vivo, nunca se almacena",
-          "encrypted": "Credenciales cifradas en reposo",
-          "soc2": "Informe SOC 2 Type II bajo petición"
+          "encrypted": "Credenciales cifradas en reposo"
         }
       },
       "support": {
