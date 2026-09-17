@@ -3,6 +3,21 @@ name: CI
 on:
   pull_request:
     branches: [main]
+  # WHY A PUSH TRIGGER (2026-09-17). With `pull_request` alone this pipeline
+  # had never run for any change that reached production, because nothing here
+  # goes through a PR: work is integrated locally and pushed straight to main.
+  # Checked on 2026-09-17, a day with eleven commits on main: CI ran zero
+  # times, including for the run that added the `card` job itself. Every claim
+  # of "green" on those changes came from a local run, which is exactly the
+  # verification a pipeline exists to stop depending on.
+  #
+  # Scoped to `main` on purpose. Branch pushes stay untriggered so a PR gets
+  # one run rather than two, and so the dozens of `claude/*` and `ws*` working
+  # branches in this repo do not each start a build. The `concurrency` group
+  # below keys on `github.ref`, and a push to main (`refs/heads/main`) and a
+  # PR (`refs/pull/N/merge`) are different refs, so neither cancels the other.
+  push:
+    branches: [main]
 
 concurrency:
   group: ci-${{ github.ref }}
