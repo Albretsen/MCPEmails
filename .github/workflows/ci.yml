@@ -52,8 +52,25 @@ jobs:
   # advisories. Running it here is also the only reliable option: `npm audit`
   # inside apps/web works locally only because a previous install happened to
   # leave an apps/web/node_modules behind, which a fresh CI checkout does not
-  # have. (apps/web also carries a stale pnpm-lock.yaml from a one-off pnpm
-  # run; nothing reads it, and npm audit ignores it.)
+  # have.
+  #
+  # CORRECTION (2026-09-17): an earlier version of this comment said apps/web's
+  # pnpm-lock.yaml was "a stale pnpm-lock.yaml from a one-off pnpm run; nothing
+  # reads it". That is FALSE and dangerous, because PRODUCTION reads it. The
+  # Vercel Root Directory is apps/web, so the build finds that lockfile and
+  # installs with pnpm, not npm. Straight from the production build log:
+  #
+  #   Detected `pnpm-lock.yaml` 9 ...
+  #   Using pnpm@10.x based on project creation date
+  #   Lockfile is up to date, resolution step is skipped
+  #   Done in 877ms using pnpm v10.28.0
+  #   Running "pnpm run build"
+  #
+  # So `npm audit` here reads the ROOT package-lock.json while prod installs
+  # from apps/web/pnpm-lock.yaml: two different resolved trees. A dependency
+  # bump has to update BOTH or prod either keeps the vulnerable version or
+  # fails the install outright. This is also why every dependabot PR is red:
+  # it updates package-lock.json and never touches the pnpm lock.
   #
   # WHY NO `npm install`. `npm audit` resolves the tree from package-lock.json
   # and asks the registry about it, so it needs no node_modules at all. That
