@@ -544,7 +544,8 @@
       "permanentDelete": "<b>永久删除：</b>Gmail 在你删除时会移至回收站，它们的 API 不提供永久彻底清除。IMAP 服务商（Fastmail、iCloud、Yahoo、Zoho、Yandex、通用）同时支持回收站和硬性彻底清除。",
       "contacts_db": "<b>联系人搜索（实时扫描）：</b>所有服务商都支持 <code>contact_search</code>，它通过对你近期一段匹配邮件进行实时、仅读取邮件头的扫描来查找匹配的联系人。不存在联系人表，在两次调用之间不存储任何内容，且数量仅反映所扫描窗口内匹配的邮件。",
       "scheduling": "<b>定时：</b>通过服务器端的 <code>scheduled_sends</code> 队列为所有服务商提供支持。使用 <code>schedule</code> 工具的 <code>create</code>、<code>list</code> 和 <code>cancel</code> 操作。投递使用每个服务商现有的发送路径，无需服务商原生的定时 API。",
-      "signatures": "<b>签名：</b>每个收件箱的签名会在每次发送、回复、转发、草稿和定时邮件时由服务器端追加，这适用于<b>所有</b>服务商。签名支持富文本 HTML 格式（粗体、斜体、标题、列表、颜色、对齐、链接）以及托管的徽标/图片；可在仪表盘的富文本编辑器或 <code>signature</code> MCP 工具（接受 <code>signature_html</code>）中设置。图片以托管的 https URL 引用，可在所有服务商中显示，不过某些客户端（如 Gmail）可能会先隐藏图片，直到收件人点击“显示图片”，对于任何含托管图片的签名，这都是正常现象。使用 <code>signature_reply_mode</code> 控制其是否出现在回复和转发中。按单次调用，在 <code>email_compose</code> 或 <code>draft</code> 上传入 <code>include_signature: false</code> 可跳过它。 仪表盘中的同一收件箱面板还提供“发件人名称”字段，即收件人在该收件箱发送的所有邮件中看到的地址旁名称。"
+      "signatures": "<b>签名：</b>每个收件箱的签名会在每次发送、回复、转发、草稿和定时邮件时由服务器端追加，这适用于<b>所有</b>服务商。签名支持富文本 HTML 格式（粗体、斜体、标题、列表、颜色、对齐、链接）以及托管的徽标/图片；可在仪表盘的富文本编辑器或 <code>signature</code> MCP 工具（接受 <code>signature_html</code>）中设置。图片以托管的 https URL 引用，可在所有服务商中显示，不过某些客户端（如 Gmail）可能会先隐藏图片，直到收件人点击“显示图片”，对于任何含托管图片的签名，这都是正常现象。使用 <code>signature_reply_mode</code> 控制其是否出现在回复和转发中。按单次调用，在 <code>email_compose</code> 或 <code>draft</code> 上传入 <code>include_signature: false</code> 可跳过它。 仪表盘中的同一收件箱面板还提供“发件人名称”字段，即收件人在该收件箱发送的所有邮件中看到的地址旁名称。",
+      "forward": "<b>转发：</b>在所有服务商上，转发都会逐字节转发原始邮件：其 HTML、内嵌图片、附件和 MIME 结构会与发送时完全一致地到达，位于你的备注和常规的转发邮件头之下。原始邮件最大 25 MB。<code>as_attachment</code> 会改为把整封原始邮件作为 .eml 部分发送，<code>include_attachments: false</code> 则不带附件文件。"
     },
     "cta": {
       "heading": "准备好连接你的收件箱了吗？",

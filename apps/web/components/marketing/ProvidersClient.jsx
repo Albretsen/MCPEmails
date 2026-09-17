@@ -509,6 +509,9 @@ export default function ProvidersClient() {
             <p style={{ margin: 0 }}>
               {t.rich('providers.notes.signatures', RICH)}
             </p>
+            <p style={{ margin: 0 }}>
+              {t.rich('providers.notes.forward', RICH)}
+            </p>
           </div>
         </div>
       </section>

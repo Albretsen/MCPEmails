@@ -3,8 +3,8 @@
 //
 // Every send in this server passes through the same three stages:
 //
-//   source    read the message being acted on, including its attachment BYTES
-//             when include_attachments is set
+//   source    read the message being acted on: its parsed form for a reply,
+//             its raw bytes (up to 25 MB) for a forward
 //   compose   apply the signature, build the body, encode the attachments into
 //             MIME, mint the message id
 //   transmit  hand those bytes to Gmail / Graph / an SMTP server

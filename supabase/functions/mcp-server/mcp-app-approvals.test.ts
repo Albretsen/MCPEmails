@@ -1586,3 +1586,24 @@ Deno.test("an argument refusal carries a null approval_id, not a missing key", a
   assert("approval_id" in envelope, "the key must always be present");
   assertEquals(envelope.approval_id, null, "nothing was verified");
 });
+
+Deno.test("a held forward says it carries the original's attachments, and a snapshot edit keeps that", () => {
+  // Since 2026-09-17 a forward relays the original's files unless
+  // include_attachments is false, and none of them are arguments, so
+  // attachment_count alone would tell a reviewer "0 attachments" about a
+  // forward that is about to deliver an invoice.
+  const carried = buildApprovalSummary({ to: ["x@y"], message_id: "INBOX:1" }, { subject: "S" }, "email_forward");
+  assertEquals(carried.forward_carries_original, true, "a default forward carries the original's files");
+  assertEquals(carried.attachment_count, 0, "and none of them are arguments");
+  const left = buildApprovalSummary(
+    { to: ["x@y"], message_id: "INBOX:1", include_attachments: false },
+    { subject: "S" },
+    "email_forward",
+  );
+  assertEquals(left.forward_carries_original, false, "include_attachments: false leaves them behind");
+  // Other operations do not grow the key at all, so their summaries are unchanged.
+  assertEquals("forward_carries_original" in buildApprovalSummary({ to: ["x@y"], subject: "S" }), false, "a send summary is unchanged");
+  // A body-only edit recomputes from the snapshot; the flag must survive it.
+  const recomputed = summaryFromSnapshot({ to: ["x@y"], message_id: "INBOX:1", body: "edited" }, carried);
+  assertEquals(recomputed.forward_carries_original, true, "the flag survives a snapshot recompute");
+});

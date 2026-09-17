@@ -6953,8 +6953,9 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
     title: "Compose Email",
     description:
       "Send new mail, reply, or forward from one inbox. The inbox's signature " +
-      "is appended automatically, above the quoted text on replies and " +
-      "forwards; pass include_signature: false to suppress it. " +
+      "is appended automatically, above the quoted text on a reply and above " +
+      "the relayed original on a forward; pass include_signature: false to " +
+      "suppress it. " +
       "To attach a file that is already in this inbox, do NOT read it and " +
       "re-encode it: put { source_message_id, attachment_index } in " +
       "attachments and the server moves the bytes itself. 'forward' also takes " +
@@ -10385,7 +10386,7 @@ async function readImapMessage(
    * read fifty messages that usually all live in INBOX. That, not the FETCHes,
    * was the batch-read tail. When omitted the old connect-per-read behaviour is
    * kept, which is right for the single-message callers (email_read, the
-   * reply/forward quoting paths) that only ever read one.
+   * reply quoting path) that only ever read one.
    */
   sharedSession?: ImapSession<ImapClient>,
   /**
@@ -13515,10 +13516,10 @@ interface ReplySignatureOptions {
  * new text and BEFORE the quoted/forwarded block is appended downstream.
  *
  * This mutates the caller-supplied new-text fields (`body` / `htmlBody`) in
- * place. Because every reply/forward path quotes the original AFTER this new
- * text (either via buildReplyTextBody / the forward header block, or — for
- * Fastmail JMAP — by leaving the quote out entirely), appending the signature
- * to the new text here always lands it before the quote. Single source of
+ * place. Because every reply path quotes the original AFTER this new text
+ * (buildReplyTextBody) and the forward path places the relayed original AFTER
+ * its intro part (forward-relay.ts), appending the signature to the new text
+ * here always lands it before the quote or the original. Single source of
  * signature strings: composeSignatureBlocks().
  *
  * Honours `signature_reply_mode`:
@@ -14356,8 +14357,9 @@ interface ForwardEmailResult {
  *
  * `replyText` is the caller-supplied new body (may be empty). `from`/`date` come
  * from the original message; `origBody` is its plain-text body (empty string is
- * tolerated — the attribution line is still emitted for context). Parity with
- * email_forward, which already quotes via buildForwardedTextBody.
+ * tolerated — the attribution line is still emitted for context). A forward
+ * does not quote at all any more: it relays the original's bytes under an
+ * intro part (forward-relay.ts), so this is the only quoting builder left.
  */
 function buildReplyTextBody(
   replyText: string | undefined,
@@ -15772,6 +15774,7 @@ async function queueSendApproval(
   const summary = buildApprovalSummary(
     payload,
     await resolveApprovalSummaryFields(inbox, operation, payload),
+    operation,
   );
   // A pending request stays decidable for 24h and is then dead: the tools
   // refuse it, the decide paths refuse it, and the dispatcher re-checks it.
@@ -26900,20 +26903,22 @@ function handlePromptsGet(req: JsonRpcRequest, id: string | number | null, apiKe
 /**
  * The dispatches that pull whole messages or whole attachments into the isolate.
  *
- * These are the only handlers whose peak memory is set by the SIZE of the mail
- * rather than by the shape of the request, and they are the three that show up
- * in every "Memory limit exceeded" worker kill we have traced.
+ * These are the handlers whose peak memory is set by the SIZE of the mail
+ * rather than by the shape of the request. The first three show up in every
+ * "Memory limit exceeded" worker kill we have traced; email_forward joined on
+ * 2026-09-17, when it started relaying the raw original (forward-relay.ts) and
+ * so holds exactly what email_original holds, up to the same 25 MB. It used to
+ * be left out on purpose, because the old forward read attachments under a
+ * 10 MB budget and the cap would have refused the third of several parallel
+ * single-message forwards; with a 25 MB original per call that is now the
+ * case to refuse. A batch forward is one call and one message at a time, so
+ * it occupies one slot for its whole run.
  */
 const BYTE_HEAVY_DISPATCH_NAMES = new Set([
   "email_original",
   "email_attachment",
   "email_read_batch",
-  // NOT email_forward, deliberately, even though a batch forward with
-  // include_attachments drags as many bytes through the isolate as any read
-  // here. This set caps CONCURRENT calls per key, and adding the name would
-  // start refusing the third of six parallel single-message forwards that work
-  // today. The batch's own exposure is bounded differently and from inside: one
-  // call, one message at a time, under a wall-clock budget.
+  "email_forward",
 ]);
 
 /**

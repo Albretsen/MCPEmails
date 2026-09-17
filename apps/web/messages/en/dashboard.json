@@ -676,6 +676,7 @@
       "noSubject": "(no subject)",
       "noRecipients": "No recipient supplied",
       "noAttachments": "None",
+      "attachmentsFromOriginal": "The original message's attachments, as sent",
       "recipientsAtSend": "This page could not read the recipients from the original message. They will be resolved when it is sent, so check the message text before approving.",
       "bccCount": "{count, plural, one {# hidden recipient} other {# hidden recipients}}",
       "attachmentCount": "{count, plural, one {# file} other {# files}}",

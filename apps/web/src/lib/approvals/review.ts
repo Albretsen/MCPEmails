@@ -105,6 +105,8 @@ export interface ApprovalReviewModel {
   recipients: { to: string[]; cc: string[]; bcc_count: number };
   subject: string;
   attachment_count: number;
+  /** A forward that relays the original's own attachments (none are arguments). */
+  forward_carries_original: boolean;
   attachments: ReviewAttachment[];
   body: ReviewBody;
   provider: ReviewProvider;
@@ -331,6 +333,7 @@ export async function loadApprovalForReview(
     },
     subject,
     attachment_count: attachmentCount,
+    forward_carries_original: summary.forward_carries_original === true,
     attachments,
     body,
     provider: providerRouteFor(inbox),

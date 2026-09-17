@@ -676,6 +676,7 @@
       "noSubject": "（无主题）",
       "noRecipients": "未提供收件人",
       "noAttachments": "无",
+      "attachmentsFromOriginal": "原始邮件的附件，按原样发送",
       "recipientsAtSend": "本页无法从原邮件中读取收件人。收件人将在发送时解析，请在批准前先查看邮件正文。",
       "bccCount": "{count} 个隐藏收件人",
       "attachmentCount": "{count} 个文件",

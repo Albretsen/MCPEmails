@@ -676,6 +676,7 @@
       "noSubject": "(sans objet)",
       "noRecipients": "Aucun destinataire",
       "noAttachments": "Aucune",
+      "attachmentsFromOriginal": "Les pièces jointes du message d'origine, telles qu'envoyées",
       "recipientsAtSend": "Cette page n’a pas pu lire les destinataires du message d’origine. Ils seront résolus au moment de l’envoi : vérifiez le texte du message avant d’approuver.",
       "bccCount": "{count, plural, one {# destinataire masqué} other {# destinataires masqués}}",
       "attachmentCount": "{count, plural, one {# fichier} other {# fichiers}}",

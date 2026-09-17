@@ -685,6 +685,7 @@ export function summaryIsComplete(payload: Record<string, unknown>): boolean {
 export function buildApprovalSummary(
   payload: Record<string, unknown>,
   resolved: ResolvedSummaryFields = {},
+  operation?: string,
 ): Record<string, unknown> {
   const to = stringList(payload.to);
   const cc = stringList(payload.cc);
@@ -697,6 +698,13 @@ export function buildApprovalSummary(
     bcc_count: Array.isArray(payload.bcc) ? payload.bcc.length : resolved.bcc_count ?? 0,
     subject: neutralizeText(subject),
     attachment_count: Array.isArray(payload.attachments) ? payload.attachments.length : 0,
+    // A held forward carries no `attachments` argument, yet since 2026-09-17 it
+    // relays the original's files unless include_attachments is false. Without
+    // this flag every reviewer surface said "0 attachments" for a forward that
+    // was about to deliver an invoice.
+    ...(operation === "email_forward"
+      ? { forward_carries_original: payload.include_attachments !== false }
+      : {}),
   };
 }
 
@@ -725,7 +733,7 @@ export function summaryFromSnapshot(
     cc: stringList(prev.cc),
     bcc_count: typeof prev.bcc_count === "number" ? prev.bcc_count : 0,
     subject: typeof prev.subject === "string" ? prev.subject : "",
-  });
+  }, typeof prev.forward_carries_original === "boolean" ? "email_forward" : undefined);
 }
 
 async function buildOutboundEnvelope(
@@ -840,6 +848,9 @@ async function buildOutboundEnvelope(
         truncated: text.truncated || html.truncated,
       },
       attachments,
+      // True for a forward that will relay the original's own attachments,
+      // which never appear in `attachments` above (they are not arguments).
+      forwards_original_attachments: summary.forward_carries_original === true,
       signature: {
         will_append: willAppend,
         source: typeof inboxRow.signature_source === "string" ? inboxRow.signature_source : null,
@@ -1003,7 +1014,11 @@ function outboundSummaryText(envelope: Record<string, unknown>, lead: string): s
     ? to.slice(0, 3).join(", ") + (to.length > 3 ? ` and ${to.length - 3} more` : "")
     : "recipients resolved from the original message";
   return `${lead} To: ${recipients}. Subject: ${outbound.subject || "(none)"}. ` +
-    `${outbound.attachments.length} attachment(s). Nothing has been sent. ` +
+    `${
+      outbound.attachments.length === 0 && outbound.forwards_original_attachments
+        ? "Carries the original message's attachments as sent."
+        : `${outbound.attachments.length} attachment(s).`
+    } Nothing has been sent. ` +
     `Approve it at ${outbound.review_url} (sign-in required) or reject it with approval_decide. ` +
     `The message body is shown in the review card and is not repeated here.`;
 }

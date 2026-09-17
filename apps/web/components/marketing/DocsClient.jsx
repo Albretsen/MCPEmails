@@ -441,6 +441,7 @@ const TOOLS = [
       { name: 'reply_to',            type: 'string',        required: false },
       { name: 'reply_all',           type: 'boolean',       required: false },
       { name: 'include_attachments', type: 'boolean',       required: false },
+      { name: 'as_attachment',       type: 'boolean',       required: false },
       { name: 'include_signature',   type: 'boolean',       required: false },
       { name: 'attachments',         type: 'array',         required: false },
       { name: 'idempotency_key',     type: 'string',        required: false },

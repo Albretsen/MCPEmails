@@ -231,7 +231,11 @@ export function ApprovalReview({ review, csrfToken }) {
                   ) : null}
                 </>
               ) : (
-                <span className="review-muted">{t('approvals.review.noAttachments')}</span>
+                <span className="review-muted">
+                  {review.forward_carries_original
+                    ? t('approvals.review.attachmentsFromOriginal')
+                    : t('approvals.review.noAttachments')}
+                </span>
               )}
             </Row>
 

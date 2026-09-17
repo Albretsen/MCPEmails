@@ -676,6 +676,7 @@
       "noSubject": "(uten emne)",
       "noRecipients": "Ingen mottaker oppgitt",
       "noAttachments": "Ingen",
+      "attachmentsFromOriginal": "Den opprinnelige meldingens vedlegg, slik de ble sendt",
       "recipientsAtSend": "Denne siden klarte ikke å lese mottakerne fra den opprinnelige meldingen. De hentes når den sendes, så les gjennom meldingsteksten før du godkjenner.",
       "bccCount": "{count, plural, one {# skjult mottaker} other {# skjulte mottakere}}",
       "attachmentCount": "{count, plural, one {# fil} other {# filer}}",
