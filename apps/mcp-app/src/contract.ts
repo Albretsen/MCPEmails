@@ -152,7 +152,25 @@ export interface DraftEditorData {
    */
   draft_id: string;
   id_is_stable?: boolean;
+  /**
+   * An opaque id for the CONTENT of this draft, server-authored
+   * (`mcp-app-drafts.ts#draftContentVersion`). Equal versions mean equal
+   * content. Compared only against another `version`, never parsed, never
+   * rendered, never sent back.
+   *
+   * This is what tells the editor whether the text in the box is still
+   * describing what the server has. Optional because an envelope restored from
+   * storage may predate the field; `DraftEditor#draftVersion` falls back to the
+   * content the card itself holds, which is exact but too big to put on a wire.
+   */
+  version?: string;
   origin?: "create" | "reply" | "update" | "read" | "save";
+  /**
+   * NOT a modification time. Every server path stamps this with the clock at
+   * RESPONSE time, so two reads of an untouched draft differ in it. Render it,
+   * do not reason with it — `version` is the field that says whether anything
+   * changed.
+   */
   last_saved_at?: string | null;
   /** "user" only when the last write was `draft_editor_save`. */
   last_saved_by?: "agent" | "user" | null;

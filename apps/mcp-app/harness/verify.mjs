@@ -44,6 +44,15 @@ const SUITES = [
   ["hardening", "hardening.mjs"],
   ["storage audit", "storage-audit.mjs"],
   ["draft body", "draft-body.test.mjs"],
+  // The only suite that needs a DOM: it mounts the real DraftEditor in jsdom,
+  // because the two defects it pins (a resync that discards unsaved typing, and
+  // a teardown that lands between a new envelope and the effect which would
+  // disarm the saver) are properties of a mounted component and are invisible
+  // to a pure function. jsdom is resolved up out of the root node_modules as a
+  // direct dependency of the apps/web workspace, the same hoisting arrangement
+  // esbuild already relies on — see the note above the `card` job in
+  // .github/workflows/ci.yml.
+  ["draft resync", "draft-sync.test.mjs"],
 ];
 
 const outcomes = [];

@@ -302,6 +302,7 @@ Deno.test("the draft block carries every §8 field, bcc included", () => {
       "recipients",
       "signature",
       "subject",
+      "version",
     ],
   );
   // The FULL bcc list, unlike §2's bcc_count: this is the author's own compose
@@ -337,6 +338,115 @@ Deno.test("id_is_stable is false on IMAP and true on the two API providers", () 
     canSend: false,
   });
   assertEquals((imap.draft as Record<string, unknown>).id_is_stable, false);
+});
+
+// ── draft.version ──────────────────────────────────────────────────────────
+//
+// The field the card uses to decide whether the text in its box still describes
+// what the server has. Everything below is one property stated twice, from both
+// sides: the version moves when the CONTENT moves, and only then.
+//
+// The failures these prevent are not symmetrical, which is why both directions
+// are pinned. A version that moves when nothing changed makes the card resync
+// and throw away whatever the user was typing — that is what the previous
+// heuristic did on every single response, because it keyed on `last_saved_at`
+// and every path stamps that with the clock at response time. A version that
+// sits still while the content moves is worse and quieter: `edit` keeps
+// describing the old body while the diff is taken against the new one, so Save
+// and the teardown saver write the stale text over the newer draft.
+
+Deno.test("the version is stable for identical content, across responses", () => {
+  const build = (draft: NormalizedDraft, origin: "read" | "save") =>
+    ((buildDraftEditorEnvelope({
+      appUrl: APP_URL,
+      draft,
+      inbox: IMAP_INBOX,
+      origin,
+      lastSavedBy: origin === "save" ? "user" : "agent",
+      canSend: true,
+    }).draft) as Record<string, unknown>).version;
+
+  const first = build(normalized(), "read");
+  assertEquals(typeof first, "string");
+  // Same content read twice: same version. Two reads of an untouched draft
+  // DIFFER in last_saved_at (it is the response clock, not a modification
+  // time), and in origin and last_saved_by when one is a save — none of which
+  // is a change to the draft, and none of which may move the version.
+  assertEquals(build(normalized(), "read"), first);
+  assertEquals(
+    build(normalized({ last_saved_at: "2031-01-01T00:00:00Z" }), "read"),
+    first,
+  );
+  assertEquals(build(normalized(), "save"), first);
+  // Nor may anything else that is about the draft's context rather than its
+  // content: threading headers ride along on a save and are not edited here.
+  assertEquals(build(normalized({ thread_id: "t-99" }), "read"), first);
+  assertEquals(build(normalized({ signature_embedded: true }), "read"), first);
+});
+
+Deno.test("the version moves for every field the card can edit, and for the id", () => {
+  const version = (draft: NormalizedDraft) =>
+    ((buildDraftEditorEnvelope({
+      appUrl: APP_URL,
+      draft,
+      inbox: IMAP_INBOX,
+      origin: "read",
+      lastSavedBy: "agent",
+      canSend: true,
+    }).draft) as Record<string, unknown>).version as string;
+
+  const base = version(normalized());
+  const moves: [string, NormalizedDraft][] = [
+    // The id is in the hash because on IMAP a save REPLACES the message: the
+    // same bytes at a new uid is a different draft to write back to.
+    ["draft_id", normalized({ draft_id: "Drafts:3" })],
+    ["to", normalized({ to: ["a@x.com", "b@x.com"] })],
+    ["to order", normalized({ to: ["b@x.com"] })],
+    ["cc", normalized({ cc: ["c@x.com"] })],
+    ["bcc", normalized({ bcc: ["b@x.com"] })],
+    ["subject", normalized({ subject: "Quarterly numbers." })],
+    ["body_text", normalized({ body_text: "Here they are!" })],
+    // The card cannot edit the HTML part, but it can DESTROY it: a body_text
+    // save regenerates it. A change there is still a different version.
+    ["body_html", normalized({ body_html: "<p>Here they are.</p>" })],
+    ["body_text emptied", normalized({ body_text: null })],
+    ["attachments", normalized({
+      attachments: [{ filename: "q3.pdf", size_bytes: 12, mime_type: "application/pdf" }],
+    })],
+  ];
+  for (const [label, draft] of moves) {
+    assert(version(draft) !== base, `${label} must move the version`);
+  }
+  // And two fields that differ only by where a value sits must not collide:
+  // the framing has to be unambiguous, not a join on some separator a subject
+  // could contain.
+  assert(
+    version(normalized({ to: ["a@x.com"], subject: "" })) !==
+      version(normalized({ to: [], subject: "a@x.com" })),
+    "a value moved between fields must move the version",
+  );
+});
+
+Deno.test("a change past the body clip still moves the version", () => {
+  // The hash is taken over the CLIPPED body, because that is the text the card
+  // edits and the version has to describe the same bytes the card holds. That
+  // leaves one blind spot: a change beyond 64 KB, which the clipped text cannot
+  // report. The raw lengths are hashed alongside for exactly this.
+  const long = (tail: string) => "x".repeat(70 * 1024) + tail;
+  const version = (text: string) =>
+    ((buildDraftEditorEnvelope({
+      appUrl: APP_URL,
+      draft: normalized({ body_text: text }),
+      inbox: IMAP_INBOX,
+      origin: "read",
+      lastSavedBy: "agent",
+      canSend: true,
+    }).draft) as Record<string, unknown>).version as string;
+
+  const a = version(long("first ending"));
+  const b = version(long("a second, longer ending"));
+  assert(a !== b, "a change past the clip must still move the version");
+  assertEquals(version(long("first ending")), a);
 });
 
 Deno.test("the provider block names the transport and the save route", () => {

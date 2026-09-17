@@ -421,6 +421,107 @@ export function draftIdIsStable(provider: string | null | undefined): boolean {
   return provider === "gmail" || provider === "outlook";
 }
 
+// ---------------------------------------------------------------------------
+// The content version (contract §8 `draft.version`)
+// ---------------------------------------------------------------------------
+
+/**
+ * WHY THIS EXISTS.
+ *
+ * The card holds two things at once: the editable state the user is typing
+ * into, and the server content that state was derived from. Every question it
+ * has to answer — is this dirty, what should the patch contain, is it safe to
+ * write the textarea over what is stored — is really the question "are those
+ * two describing the SAME version of the draft". Until this field existed the
+ * card had to guess, from `draft_id` + `last_saved_at` + `origin`, and that
+ * triple answers a different question: it changes on every RESPONSE rather than
+ * on every CHANGE (see the note on `last_saved_at` below), so it is false in
+ * both directions. This is the fact the card was missing.
+ *
+ * WHAT IT IS. An opaque id of the draft CONTENT, in the exact form the envelope
+ * is about to carry it. Equal versions mean equal content; the card compares it
+ * to itself and to nothing else, so the format is ours to change.
+ *
+ * WHAT IT IS NOT. Not monotonic, and not an ordering. Nothing available here
+ * can be: `ProviderDraft` carries no ETag, no historyId and no modification
+ * time from any of the three providers, and this module holds no durable
+ * per-draft state of its own, so a counter would need either a new table or all
+ * three readers widened. It is also not the property the card needs — "is this
+ * the version I am editing" is identity, not order — so it is not worth either
+ * price. If an ordering is ever wanted (to drop a response that overtakes a
+ * newer one in flight, which the card cannot detect today), that is a separate
+ * field and a separate decision.
+ *
+ * NOT A SECURITY PRIMITIVE. A 64-bit change detector over content the same user
+ * already controls. Nothing is authorised by it and nothing is signed with it.
+ *
+ * ── WHY `last_saved_at` IS NOT IN THE HASH ────────────────────────────────
+ * Because it is not a property of the draft. Every path that reaches this
+ * builder stamps it with `new Date()` at RESPONSE time — `readStoredDraft`
+ * (there is no provider timestamp to use: `ProviderDraft` has no such field),
+ * `runDraftEditorSave` via `updated_at`, and index.ts's create/reply/update
+ * path via the same. Two reads of a draft nobody has touched therefore differ
+ * in it, and including it here would rebuild exactly the nonce that made the
+ * card resync — and so discard unsaved typing — on every response.
+ */
+
+/**
+ * FNV-1a, 32-bit, twice with different primes, concatenated.
+ *
+ * `Math.imul` rather than BigInt on purpose: a body reaches 64 KB after
+ * clipping and this runs on every envelope, where the BigInt version measured
+ * in tens of milliseconds and this one does not register.
+ */
+function fnv1a32(bytes: Uint8Array, prime: number): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < bytes.length; i++) {
+    h = Math.imul(h ^ bytes[i], prime);
+  }
+  return (h >>> 0).toString(16).padStart(8, "0");
+}
+
+/**
+ * The version for one draft, as `buildDraftEditorEnvelope` is about to emit it.
+ *
+ * Takes the clip result as well as the draft because the card edits the CLIPPED
+ * body: hashing what was stored rather than what was sent would let the version
+ * and the textarea describe different bytes, which is the whole failure this
+ * field removes. The raw lengths go in alongside so that a change made past the
+ * clip boundary — invisible to the card, and the one thing the clipped text
+ * cannot report — still moves the version.
+ *
+ * The field list is written out rather than derived from the emitted object so
+ * that reordering that object literal cannot silently change every version in
+ * the world and resync every open card once.
+ */
+export function draftContentVersion(
+  draft: NormalizedDraft,
+  clipped: { text: string | null; html: string | null; truncated: boolean },
+): string {
+  // JSON, so the framing is unambiguous by construction: no separator a
+  // subject or a body could contain, and no two field lists that serialise the
+  // same way.
+  const canonical = JSON.stringify([
+    draft.draft_id,
+    draft.to,
+    draft.cc,
+    draft.bcc,
+    draft.subject ?? "",
+    clipped.text,
+    clipped.html,
+    clipped.truncated,
+    draft.body_text?.length ?? 0,
+    draft.body_html?.length ?? 0,
+    draft.attachments.map((a) => [a.filename, a.size_bytes, a.mime_type]),
+  ]);
+  const bytes = new TextEncoder().encode(canonical);
+  // The byte length is carried in its own right, not just hashed: it is free,
+  // and it makes an accidental collision need a length match as well.
+  return `1:${bytes.length.toString(36)}:${fnv1a32(bytes, 0x01000193)}${
+    fnv1a32(bytes, 0x9e3779b1)
+  }`;
+}
+
 /**
  * The §8 envelope. Pure: everything it needs is in its arguments.
  *
@@ -469,6 +570,14 @@ export function buildDraftEditorEnvelope(input: {
     draft: {
       draft_id: draft.draft_id,
       id_is_stable: draftIdIsStable(inbox.provider),
+      // Which version of the content this is. The card's only faithful answer
+      // to "is the text in the box still describing what the server has": see
+      // `draftContentVersion`, and the §8 note in the card's contract.ts.
+      version: draftContentVersion(draft, {
+        text: text.value,
+        html: html.value,
+        truncated: text.truncated || html.truncated,
+      }),
       origin: input.origin,
       last_saved_at: draft.last_saved_at,
       last_saved_by: input.lastSavedBy,

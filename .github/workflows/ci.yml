@@ -100,21 +100,32 @@ jobs:
   # nowhere else. That is the card the user types an unsent email into: its
   # tests are what stand between a refactor and a draft being rewritten on save.
   #
-  # WHAT RUNS. `npm test` is `npm run verify`, which is the scripted host
-  # (harness/state-machine.mjs, 115 checks) followed by the body/signature suite
-  # (harness/draft-body.test.mjs, 82 checks). Neither needs a browser: both
-  # bundle `src/` with esbuild and drive the SHIPPED functions directly, so a
-  # green run here means the code that goes into the card is the code that
-  # passed. Runtime is a couple of seconds.
+  # WHAT RUNS. `npm test` is `npm run verify`, which is harness/verify.mjs, and
+  # that runs FIVE independent suites and reports all of them: the scripted host
+  # (state-machine.mjs), hardening (hardening.mjs), the storage audit
+  # (storage-audit.mjs), the body/signature suite (draft-body.test.mjs) and the
+  # resync suite (draft-sync.test.mjs, 36 checks). Every suite bundles `src/`
+  # with esbuild and drives the SHIPPED functions, so a green run here means the
+  # code that goes into the card is the code that passed. The first four need no
+  # browser at all; the fifth mounts the real editor in jsdom, because the defect
+  # it pins — a teardown landing between a new envelope and the effect that would
+  # disarm the saver — only exists in a mounted component. Runtime is a couple of
+  # seconds.
+  #
+  # The suite count is load-bearing: verify.mjs prints "N/N suites passed", and
+  # it exists because the old `&&` chain let one crashing suite hide the findings
+  # of every suite behind it. If that line ever says fewer than five, a suite was
+  # dropped rather than fixed.
   #
   # WHY `npm install` AT THE ROOT. apps/mcp-app is an npm workspace (root
   # package.json "workspaces": ["apps/*"]) with no lockfile of its own, exactly
-  # like apps/web. The root install is what puts vite, typescript and — the
-  # harness's one non-builtin import — esbuild in the root node_modules that
-  # apps/mcp-app resolves up into. esbuild arrives as vite's own dependency
-  # rather than a declared one here; it is a single hoisted copy, but if this
-  # job ever fails on `Cannot find package 'esbuild'`, that is the reason and
-  # the fix is to declare it in apps/mcp-app's devDependencies.
+  # like apps/web. The root install is what puts vite, typescript and the
+  # harness's two non-builtin imports in the root node_modules that apps/mcp-app
+  # resolves up into. Neither is declared here: esbuild arrives as vite's own
+  # dependency, jsdom as a direct dependency of the apps/web workspace. Both are
+  # single hoisted copies, but if this job ever fails on `Cannot find package
+  # 'esbuild'` or `'jsdom'`, that is the reason and the fix is to declare it in
+  # apps/mcp-app's devDependencies.
   #
   # WHY 22, NOT 20. Same reason as Unit Tests above: 22 is what these suites are
   # developed and run against. Nothing in them is known to need it, but nothing
@@ -142,7 +153,7 @@ jobs:
       - run: npm install
       - name: Type check the card
         run: cd apps/mcp-app && npm run typecheck
-      - name: Run card tests (scripted host + draft body)
+      - name: Run card tests (five suites via harness/verify.mjs)
         run: cd apps/mcp-app && npm test
 
   # The edge function is a separate runtime with a separate test suite, and
