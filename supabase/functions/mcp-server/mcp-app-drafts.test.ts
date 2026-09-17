@@ -302,6 +302,7 @@ Deno.test("the draft block carries every §8 field, bcc included", () => {
       "recipients",
       "signature",
       "subject",
+      "threaded",
       "version",
     ],
   );
@@ -319,6 +320,41 @@ Deno.test("the draft block carries every §8 field, bcc included", () => {
     provider: "imap",
     service: null,
   });
+});
+
+Deno.test("threaded says whether the draft answers a message on every path, not only reply", () => {
+  const build = (draft: NormalizedDraft, origin: "reply" | "update" | "read") =>
+    (buildDraftEditorEnvelope({
+      appUrl: APP_URL,
+      draft,
+      inbox: IMAP_INBOX,
+      origin,
+      lastSavedBy: "agent",
+      canSend: true,
+    }).draft as Record<string, unknown>);
+
+  // The reply path knows the server message id: both fields say so.
+  const reply = build(
+    normalized({ in_reply_to: { message_id: "INBOX:154", subject: "Hi", from: "p@x.com" } }),
+    "reply",
+  );
+  assertEquals(reply.threaded, true);
+  assertEquals((reply.in_reply_to as { message_id: string }).message_id, "INBOX:154");
+
+  // An update or a read carries only the RFC header. `in_reply_to` stays null
+  // (it is typed as a server id) but `threaded` must not read as "lost".
+  for (const origin of ["update", "read"] as const) {
+    const carried = build(normalized({ in_reply_to_header: "<abc@mail>" }), origin);
+    assertEquals(carried.in_reply_to, null);
+    assertEquals(carried.threaded, true);
+  }
+
+  // A fresh draft answers nothing.
+  const fresh = build(normalized(), "update");
+  assertEquals(fresh.in_reply_to, null);
+  assertEquals(fresh.threaded, false);
+  // An empty header is no header.
+  assertEquals(build(normalized({ in_reply_to_header: "" }), "read").threaded, false);
 });
 
 Deno.test("id_is_stable is false on IMAP and true on the two API providers", () => {

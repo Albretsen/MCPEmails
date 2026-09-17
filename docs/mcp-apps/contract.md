@@ -597,6 +597,7 @@ result always has something to render), and the results below carry an envelope 
     "attachments": [ { "filename", "size_bytes", "mime_type" } ],       // display only
     "signature": { "embedded": true | false },   // whether the stored text already carries it
     "in_reply_to": { "message_id": "INBOX:42", "subject": "…", "from": "…" } | null,
+    "threaded": true | false,               // answers a message, on EVERY path; see the deviations note
     "can_send": true | false                // key has send:email AND at least one recipient
   },
   "provider": { "label": "IMAP + SMTP", "route": "APPEND to Drafts", "caveats": [] },   // §5 shape
@@ -690,7 +691,12 @@ Deviations, all small and all deliberate:
   server message id (`"INBOX:42"`), and a stored draft carries only the original's RFC
   `In-Reply-To` header, which is not one. `draft_read` therefore returns `null` rather than a value
   the card would render as openable and could not open. Threading is preserved across a save
-  regardless: the headers are read and written back untouched.
+  regardless: the headers are read and written back untouched. **`draft.threaded` says so** on every
+  path: true when the draft answers a message, whether that is known by server id (reply) or by the
+  RFC header a read or an update carried. It exists because `in_reply_to` flipping from an object
+  to `null` between a reply and the following update read as "threading lost" and made an agent
+  delete a good draft to recreate it (2026-09-17). The plain `draft{action:"update"}` payload carries
+  the same `threaded` flag.
 * **`receipt.outcome: "discarded"` is new to §4's enum,** which §8 asks for. Its envelope `state` is
   `"cancelled"` — §1 has no `"discarded"`, and a draft that was withdrawn before it went anywhere is
   what `"cancelled"` already means there for a lapsed plan.

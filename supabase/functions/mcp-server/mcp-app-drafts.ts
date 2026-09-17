@@ -142,7 +142,11 @@ export interface NormalizedDraft {
   signature_embedded: boolean;
   /** ISO 8601. The provider's own timestamp where it gives one. */
   last_saved_at: string;
-  /** Threading metadata, carried through a save so a reply stays in its thread. */
+  /**
+   * Threading metadata, carried through a save so a reply stays in its thread.
+   * `in_reply_to_header` also drives the envelope's `threaded` flag, which is
+   * what a reader consults on the paths where `in_reply_to` is null.
+   */
   thread_id?: string;
   in_reply_to_header?: string;
   references_header?: string;
@@ -625,6 +629,15 @@ export function buildDraftEditorEnvelope(input: {
           from: neutralizeMaybe(draft.in_reply_to.from),
         }
         : null,
+      // Whether this draft answers a message, whatever the path. `in_reply_to`
+      // above is null on every path but reply, so on its own it reads as
+      // "threading lost" after an update or a read, when the headers were in
+      // fact carried through. An agent that compared a reply's envelope with the
+      // update's concluded exactly that (2026-09-17) and deleted a good draft to
+      // recreate it. This flag is the answer to the question that comparison
+      // was asking.
+      threaded: draft.in_reply_to !== null ||
+        (typeof draft.in_reply_to_header === "string" && draft.in_reply_to_header.length > 0),
       can_send: input.canSend,
     },
     provider: draftProviderBlock(inbox.provider),

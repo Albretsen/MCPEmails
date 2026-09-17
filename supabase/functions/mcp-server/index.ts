@@ -6334,6 +6334,12 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
       },
       subject: { type: "string" },
       updated_at: { type: "string" },
+      threaded: {
+        type: "boolean",
+        description: "true when the draft answers a message and the update kept it in that thread " +
+          "(In-Reply-To and References are read off the existing draft and written back). " +
+          "A reply draft stays a reply across updates; there is no need to delete and recreate it.",
+      },
     },
     required: ["draft_id", "subject", "updated_at"],
     additionalProperties: true,
@@ -22646,6 +22652,13 @@ interface DraftUpdateResult {
   draft_id: string;
   subject: string;
   updated_at: string;
+  /**
+   * Whether the rewritten draft still answers a message. Set by
+   * executeUpdateDraft from the headers it read off the existing draft and
+   * wrote back, never by a provider function. Without it a caller had no way to
+   * tell from the result that a reply survived an update as a reply.
+   */
+  threaded?: boolean;
 }
 
 interface DraftSendResult {
@@ -24339,6 +24352,12 @@ async function draftEditorEnvelopeForWrite(
       in_reply_to: input.inReplyTo ?? null,
       signature_embedded: input.signatureEmbedded,
       last_saved_at: input.lastSavedAt,
+      // The headers the write carried. On an update they are the ones read off
+      // the existing draft, and they are what makes the envelope say `threaded`
+      // when `in_reply_to` (a server id, known on the reply path only) is null.
+      thread_id: input.params.threadId,
+      in_reply_to_header: input.params.inReplyTo,
+      references_header: input.params.references,
     };
     const hasRecipient = draft.to.length > 0 || draft.cc.length > 0 || draft.bcc.length > 0;
     return buildDraftEditorEnvelope({
@@ -24936,6 +24955,10 @@ async function executeUpdateDraft(
   // MCP Apps (contract §8) — see the note in executeCreateDraft. The id here is
   // the one the provider returned, not the one the caller passed: on IMAP an
   // update rewrites the message and the old id stops resolving.
+  // `threaded` is a fact about the headers this update carried, so it is
+  // stamped here rather than in the three provider functions: they are told the
+  // headers and do not report them back.
+  updateResult.threaded = Boolean(inReplyTo || threadId);
   const updatePayload = buildDraftMutationEnvelope(updateResult) as unknown as Record<
     string,
     unknown
