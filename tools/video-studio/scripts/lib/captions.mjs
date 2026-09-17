@@ -95,6 +95,9 @@ const SPELLINGS = [
   // by a real one, because a different voice will produce a different guess.
   { heard: 'clawed', text: 'Claude' },
   { heard: 'clod', text: 'Claude' },
+  // "ChatGPT" heard as "Jack g pt" on the real voiceover. Same class as
+  // Claude above: recheck if the voiceover is re-recorded.
+  { heard: 'jackgpt', text: 'ChatGPT' },
   { heard: 'jmap', text: 'JMAP' },
   { heard: 'imap', text: 'IMAP' },
   { heard: 'smtp', text: 'SMTP' },
