@@ -1,7 +1,15 @@
 import type { ComponentChildren } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { DraftEditorData, Envelope, Provider } from "../contract";
-import { formatBytes, formatDateTime, joinBody, splitBody, wordCount } from "../format";
+import type { SplitBody } from "../format";
+import {
+  bodyTextChanged,
+  formatBytes,
+  formatDateTime,
+  joinBody,
+  splitBody,
+  wordCount,
+} from "../format";
 import { setTeardownSaver } from "../store";
 import {
   AutoTextarea,
@@ -64,9 +72,17 @@ const SIGNATURE_ROWS = 6;
  * The signature as one line: its first non-empty line, and a count of the rest.
  * Enough to recognise which signature it is without spending the room the
  * signature was taking in the first place.
+ *
+ * Split on EVERY line ending, not just LF. Until `splitBody` learned the CRLF
+ * and CR separator forms this could only ever be handed an LF signature, so
+ * `split("\n")` was enough; now that a signature from a real mail client
+ * reaches it, splitting on LF alone welded a stray `\r` onto the first line
+ * (CRLF) and, on a bare-CR signature, returned the WHOLE signature as one
+ * "line" — the collapsed row then rendered every line of it, which is the
+ * layout the split exists to protect.
  */
-function signaturePreview(signature: string): string {
-  const lines = signature.split("\n").filter((l) => l.trim().length > 0);
+export function signaturePreview(signature: string): string {
+  const lines = signature.split(/\r\n|\n|\r/).filter((l) => l.trim().length > 0);
   if (lines.length === 0) return "Signature";
   const rest = lines.length - 1;
   return rest > 0 ? `${lines[0]} + ${rest} more line${rest === 1 ? "" : "s"}` : lines[0];
@@ -157,7 +173,91 @@ function attachmentLine(d: DraftEditorData, fullscreen: boolean): string | null 
   }`;
 }
 
-interface EditState {
+/** Where the signature box has pinned the boundary. See `pinnedSplit`. */
+interface SigPin {
+  messageLen: number;
+  separator: string;
+}
+
+/**
+ * The split, held still while the signature box is open.
+ *
+ * `splitBody` picks the LAST separator in the text. That is the right rule for
+ * text that arrived from a mailbox, but it makes the boundary move under the
+ * user's cursor: type `\n-- \n` into the signature field and the separator plus
+ * everything above it visibly jumps up into the message box on the next render.
+ * Nothing is lost (the bytes are the same either way, which is why this was
+ * never more than a wart), but it looks like the card ate half the signature.
+ *
+ * So while that box is open the boundary is remembered rather than re-derived.
+ * It is re-validated against the live text every render and abandoned the moment
+ * it no longer describes it, so the worst case is falling back to `splitBody` —
+ * and either way `message + separator + signature` is still the same string,
+ * which is the only property that reaches the server.
+ */
+export function pinnedSplit(text: string, pin: SigPin | null): SplitBody | null {
+  if (!pin) return null;
+  const end = pin.messageLen + pin.separator.length;
+  if (end > text.length) return null;
+  if (text.slice(pin.messageLen, end) !== pin.separator) return null;
+  return {
+    message: text.slice(0, pin.messageLen),
+    separator: pin.separator,
+    signature: text.slice(end),
+  };
+}
+
+/**
+ * One keystroke in the MESSAGE box: the new body text, and what becomes of the
+ * pin.
+ *
+ * Pure and exported so the pin rule can be tested without a DOM. `split` is the
+ * boundary this render drew (`pinnedSplit(...) ?? splitBody(...)`), which is the
+ * one the user is looking at, so the join is against that and not against a
+ * boundary re-derived from text they have already changed.
+ *
+ * The pin is carried forward ONLY when it is the boundary that render used.
+ * This used to be an unconditional `if (pin) setSigPin({ ...pin, messageLen })`,
+ * which kept maintaining a pin `pinnedSplit` had already rejected for this very
+ * text. Today that state is unreachable — a pin is only ever created from a live
+ * split, and neither box can invalidate one (the message box moves `messageLen`
+ * by exactly the change in length, the signature box touches only the bytes
+ * after the separator) — so this changes nothing a user can see. It is written
+ * this way because the harmlessness is an accident of there being exactly two
+ * body mutators, and because a rejected pin carried forward is NOT inert in
+ * general: `{ messageLen: 5, separator: "\r\n--\r" }` is dead against
+ * `"aa\r\n--\r\nsig"`, but retype the message down to one character and it
+ * validates again at a boundary one byte short of the real separator, putting a
+ * leading blank line into the signature box that `splitBody` would never draw.
+ * Nothing is ever lost (the bytes still `joinBody` back byte-exactly), but it is
+ * a wrong boundary revived from state the code had already discarded. Dropping
+ * it just falls back to `splitBody`, which is the worst case the pin was
+ * designed around anyway.
+ */
+export function applyMessageEdit(
+  split: SplitBody,
+  pin: SigPin | null,
+  nextMessage: string,
+): { bodyText: string; pin: SigPin | null } {
+  const bodyText = joinBody({ ...split, message: nextMessage });
+  // "The render used this pin" — which also covers the case where the pin was
+  // rejected but `splitBody` independently landed on the same boundary, because
+  // then the two are the same split and the pin is live either way.
+  const live =
+    pin !== null &&
+    split.separator !== null &&
+    pin.separator === split.separator &&
+    pin.messageLen === split.message.length;
+  // Editing the message moves the boundary by exactly the change in its length.
+  // Without this the pin would stop matching on the next keystroke and the
+  // boundary would snap back, which is the jump the pin exists to prevent.
+  return {
+    bodyText,
+    pin: live ? { messageLen: nextMessage.length, separator: split.separator! } : null,
+  };
+}
+
+export interface EditState {
   to: string[];
   cc: string[];
   bcc: string[];
@@ -165,6 +265,66 @@ interface EditState {
   bodyText: string;
   /** What is in the address inputs but not yet a chip. */
   typed: Record<Field, string>;
+}
+
+/**
+ * What to send for `edited` given what the server holds in `stored`. Only the
+ * fields that actually differ (§8: an omitted field means keep).
+ *
+ * Pure, and exported, because this is the function that decides whether a draft
+ * is rewritten. It used to compare the body byte for byte, which is wrong in one
+ * specific and very common way: the stored body is CRLF (a real mail client
+ * wrote it) and the value a `<textarea>` hands back is LF, so every line read as
+ * an edit the moment the user pressed any key. `dirty` could then never go back
+ * to false, Save stayed enabled, the teardown saver stayed armed, and the patch
+ * that went out carried the WHOLE body — which on a draft with a rich HTML part
+ * made the server regenerate that part from the plain text and threw the
+ * formatting away. See `bodyTextChanged`.
+ *
+ * What gets SENT when the body genuinely did change is `edited.bodyText`
+ * verbatim, LF and all, NOT re-CRLF'd.
+ *
+ * ── AND NOTHING DOWNSTREAM PUTS THE CRLF BACK ──────────────────────────────
+ * An earlier version of this comment claimed the server owns the wire format
+ * and canonicalises on write. It does not, and it is worth being exact about
+ * why, because the claim reads plausible: `draft{action:"editor_save"}` passes
+ * `body_text` through to `updateDraft` as `body:` unchanged
+ * (supabase/functions/mcp-server/mcp-app-drafts.ts), and the MIME builder
+ * base64-encodes it verbatim — `encodeTextAsBase64Lines` runs
+ * `new TextEncoder().encode(text)` on the body as given, and the `\r\n` it then
+ * inserts wraps the BASE64 at 76 columns (RFC 2045). It is the encoding's line
+ * ending, not the body's. Decode that part and the body's own endings are
+ * exactly the bytes this function sent.
+ *
+ * So what actually happens, both reproduced in a browser:
+ *
+ *   - one character typed into a separator-less CRLF draft rewrites the WHOLE
+ *     stored body to LF;
+ *   - editing only the signature leaves a MIXED body: CRLF above the
+ *     separator, LF below it.
+ *
+ * No user content is lost either way, and RFC 5322's CRLF requirement is one
+ * most clients tolerate, so this is a correctness nicety rather than a live bug.
+ * It is left alone on purpose rather than papered over here: whichever layer
+ * ends up owning it (see the round-2 report), the card silently re-encoding
+ * line endings it was never handed is not obviously the right answer, because
+ *
+ *   - it would save bytes nobody typed, and
+ *   - a part-CRLF/part-LF body cannot be "restored" anyway: once the textarea
+ *     has touched it the original endings are gone from the value, so the card
+ *     can only impose one convention on the whole body, not recover the old one.
+ *
+ * The fix this function exists for is not about normalising what we send. It is
+ * about never sending an unedited body at all.
+ */
+export function draftPatch(edited: EditState, stored: EditState): DraftPatch {
+  const p: DraftPatch = {};
+  if (!sameList(edited.to, stored.to)) p.to = edited.to;
+  if (!sameList(edited.cc, stored.cc)) p.cc = edited.cc;
+  if (!sameList(edited.bcc, stored.bcc)) p.bcc = edited.bcc;
+  if (edited.subject !== stored.subject) p.subject = edited.subject;
+  if (bodyTextChanged(edited.bodyText, stored.bodyText)) p.body_text = edited.bodyText;
+  return p;
 }
 
 export function DraftEditor(props: Props) {
@@ -196,6 +356,7 @@ export function DraftEditor(props: Props) {
   const [addrWarning, setAddrWarning] = useState<string | null>(null);
   const [showMore, setShowMore] = useState(false);
   const [editingSig, setEditingSig] = useState(false);
+  const [sigPin, setSigPin] = useState<SigPin | null>(null);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [confirmHide, setConfirmHide] = useState(false);
   const [showHtml, setShowHtml] = useState(false);
@@ -206,22 +367,38 @@ export function DraftEditor(props: Props) {
   // the response and the editor resyncs to it. Keyed on id + last_saved_at +
   // origin so an ERROR response, which by contract changes nothing, does NOT
   // resync and the user keeps the edits they were about to lose.
+  //
+  // ── KNOWN GAP, PRE-EXISTING (identified round 2, NOT introduced by it) ────
+  // The key is a proxy for "this is a different version of the draft", and it
+  // is not a faithful one. A refresh that comes back with the SAME draft_id,
+  // the SAME last_saved_at and the SAME origin produces the same key, so this
+  // effect does not re-run and `edit` is never resynced — while `server` above
+  // is recomputed from the new props on every render. Two ways to get there:
+  // a provider that returns no draft timestamp at all (`last_saved_at` is null
+  // on both sides, so the key's middle field is "" both times), and two reads
+  // that land inside one tick of the provider's timestamp granularity.
+  //
+  // What a user would see: a draft changed elsewhere (their phone, another
+  // session) is refreshed here, the box still shows the OLD text, and because
+  // `patch` is computed against the NEW `server`, the card now reads as dirty
+  // and both Save and the teardown saver will write the stale editor contents
+  // straight over the newer body. Silent, and lossy in the direction that
+  // matters. The fix is a real version marker in the envelope rather than a
+  // heuristic triple; it is not attempted here because the envelope is the
+  // server's (supabase/functions/mcp-server/mcp-app-drafts.ts,
+  // `buildDraftEditorEnvelope`).
   const syncKey = [d.draft_id, d.last_saved_at ?? "", d.origin ?? ""].join(" ");
   useEffect(() => {
     update(server);
     setAddrWarning(null);
     setConfirmDiscard(false);
+    // A resync replaces the body wholesale, so a boundary pinned into the old
+    // one describes nothing. Dropped rather than re-validated.
+    setSigPin(null);
+    setEditingSig(false);
   }, [syncKey]);
 
-  const patchFrom = (e: EditState): DraftPatch => {
-    const p: DraftPatch = {};
-    if (!sameList(e.to, server.to)) p.to = e.to;
-    if (!sameList(e.cc, server.cc)) p.cc = e.cc;
-    if (!sameList(e.bcc, server.bcc)) p.bcc = e.bcc;
-    if (e.subject !== server.subject) p.subject = e.subject;
-    if (e.bodyText !== server.bodyText) p.body_text = e.bodyText;
-    return p;
-  };
+  const patchFrom = (e: EditState): DraftPatch => draftPatch(e, server);
 
   const patch = patchFrom(edit);
   const dirty = Object.keys(patch).length > 0;
@@ -231,12 +408,31 @@ export function DraftEditor(props: Props) {
   // frame goes away and waits for the reply, so this is the last moment a
   // half-typed edit can be written. Registered only while there is something to
   // write, and re-registered as it changes so the snapshot is the current one.
+  //
+  // ── KNOWN GAP, PRE-EXISTING (identified round 2, NOT introduced by it) ────
+  // There is a one-commit window on every resync where the snapshot is stale.
+  // Both effects flush in the same commit and this one is declared SECOND, so
+  // on the render that first carries a new envelope: the resync effect above
+  // runs `update(server)` (which only schedules a re-render), then this effect
+  // runs with `patch` still computed from the OLD `edit` against the NEW
+  // `server` — a non-empty patch — and arms the teardown saver with it. The
+  // very next render recomputes an empty patch and disarms it. A teardown
+  // landing inside that window writes the pre-refresh editor contents. The
+  // window is one render long and needs the frame to be torn down inside it,
+  // which is why this is written down rather than papered over; the real fix
+  // is the same version marker the syncKey gap above needs, so that `edit` and
+  // the snapshot can never disagree about which version they describe.
   useEffect(() => {
-    if (!dirty || !canEdit) {
+    const snapshot = { ...patch };
+    // `dirty` is derived from exactly these keys, so the second half of this
+    // test is redundant today. It is written out anyway because the failure it
+    // guards is the expensive one: an empty patch reaching the server is a
+    // whole-body rewrite of a draft the user only looked at, and teardown fires
+    // with no one watching. Nothing goes out unless a field actually differs.
+    if (!canEdit || !dirty || Object.keys(snapshot).length === 0) {
       setTeardownSaver(null);
       return;
     }
-    const snapshot = { ...patch };
     setTeardownSaver(() => actions.save(snapshot));
     return () => setTeardownSaver(null);
   }, [patchKey, canEdit]);
@@ -397,7 +593,15 @@ export function DraftEditor(props: Props) {
 
   // Derived, never stored: `edit.bodyText` stays the single source of truth for
   // what will be saved, and this is only how it is presented.
-  const split = splitBody(edit.bodyText);
+  const split = pinnedSplit(edit.bodyText, sigPin) ?? splitBody(edit.bodyText);
+
+  /** Open the signature box, holding the boundary where it is now. */
+  const startEditingSig = () => {
+    if (split.separator !== null) {
+      setSigPin({ messageLen: split.message.length, separator: split.separator });
+    }
+    setEditingSig(true);
+  };
 
   return (
     <>
@@ -484,9 +688,13 @@ export function DraftEditor(props: Props) {
           value={split.signature === null ? edit.bodyText : split.message}
           disabled={!canEdit}
           maxRows={fullscreen ? FULLSCREEN_BODY_ROWS : INLINE_BODY_ROWS}
-          onInput={(v) =>
-            update({ bodyText: joinBody({ ...split, message: v }) })
-          }
+          onInput={(v) => {
+            const next = applyMessageEdit(split, sigPin, v);
+            update({ bodyText: next.bodyText });
+            // Assigned rather than guarded on `sigPin`: a pin the split no
+            // longer describes is dropped, not carried. See `applyMessageEdit`.
+            setSigPin(next.pin);
+          }}
           onFocus={() => {
             // CONCEPT §7: ask for a real compose surface the first time the
             // user starts writing, and only the first time, so someone who
@@ -534,11 +742,11 @@ export function DraftEditor(props: Props) {
           <div
             class="row sig"
             title="The signature stored in this draft. Click to edit it."
-            onClick={() => canEdit && setEditingSig(true)}
+            onClick={() => canEdit && startEditingSig()}
           >
             <span class="lbl">Signature</span>
             <span class="sig-text">{signaturePreview(split.signature)}</span>
-            {canEdit && <TextLink onClick={() => setEditingSig(true)}>Edit</TextLink>}
+            {canEdit && <TextLink onClick={startEditingSig}>Edit</TextLink>}
           </div>
         )
       )}

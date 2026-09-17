@@ -13,7 +13,16 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "noEmit": true,
-    "types": []
+    // `["vite/client"]`, not `[]`. `[]` means "load no ambient @types at all",
+    // which is the right instinct here (nothing in this package should see
+    // Node's globals), but it also drops the one ambient declaration the card
+    // genuinely needs: Vite's `declare module '*.css' {}`. Without it
+    // `import "./styles.css"` in main.tsx is TS2882 and `tsc --noEmit` exits 2,
+    // which is why this package had no type-check job in CI. vite/client
+    // declares CSS/asset modules and `import.meta.env` and pulls in no other
+    // package's types, so this stays as narrow as `[]` was meant to be.
+    // Verified 2026-09-16: takes the error count from 1 to 0, and adds none.
+    "types": ["vite/client"]
   },
   "include": ["src", "vite.config.ts"]
 }

@@ -162,15 +162,72 @@ export function plural(n: number, one: string, many: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// Line endings
+// ---------------------------------------------------------------------------
+
+/**
+ * Line endings folded to LF, for COMPARISON ONLY. Never for anything that is
+ * stored or sent.
+ *
+ * `body.text` arrives from the server with the CRLF a real mail client wrote
+ * (`"alpha\r\nbeta\r\n-- \r\nSig"`). A `<textarea>` does not keep that: per the
+ * HTML spec its API value is the raw value with every CRLF and bare CR
+ * normalised to LF, so the first keystroke anywhere in the box hands the card
+ * back an LF copy of bytes the user never touched. Comparing that to the stored
+ * text byte for byte reports EVERY line as an edit, which is how a draft nobody
+ * meant to change ended up being rewritten (and its HTML part regenerated from
+ * the plain text) on save.
+ */
+export function normalizeEol(text: string): string {
+  return text.replace(/\r\n|\r/g, "\n");
+}
+
+/**
+ * Did the user actually change the body, as opposed to the browser changing its
+ * line endings?
+ *
+ * The cheap byte comparison first, because it is true for almost every real
+ * edit and short-circuits the allocation; the normalised comparison is only
+ * reached when the two differ, which is exactly the CRLF-vs-LF case.
+ */
+export function bodyTextChanged(edited: string, stored: string): boolean {
+  return edited !== stored && normalizeEol(edited) !== normalizeEol(stored);
+}
+
+// ---------------------------------------------------------------------------
 // Signature split
 // ---------------------------------------------------------------------------
 
 /**
- * The RFC 3676 §4.3 signature separator, and the sloppy variant that mail
- * clients emit anyway. Ordered longest-first so the correct form wins when both
- * would match at the same place.
+ * The RFC 3676 §4.3 signature separator (`-- ` alone on a line), and the sloppy
+ * variant (`--`) that mail clients emit anyway, in every line ending a draft can
+ * arrive with.
+ *
+ * All three line endings on BOTH sides, because the two sides are independent:
+ * an agent-authored body is LF throughout (`encodeTextAsBase64Lines` inserts the
+ * body verbatim and `buildDraftMime` never canonicalises it), a body from a real
+ * mail client is CRLF throughout, and a body that has been through a textarea is
+ * LF for the part that was retyped. The LF-only list this replaced never fired
+ * on a CRLF body at all, so the split shipped in 9af42ea did nothing for exactly
+ * the drafts it was built for.
+ *
+ * Sorted longest-first, which is what makes the tie-break in `splitBody`
+ * correct: on the body `"a\r\n-- \r\nsig"` both `\r\n-- \r\n` and `\n-- \r\n`
+ * end at the same place, and taking the shorter one would weld a stray `\r` to
+ * the end of the message.
  */
-const SIG_SEPARATORS = ["\n-- \n", "\n--\n"] as const;
+const SIG_SEPARATORS: readonly string[] = (() => {
+  const eols = ["\r\n", "\n", "\r"];
+  const out: string[] = [];
+  for (const lead of eols) {
+    for (const dashes of ["-- ", "--"]) {
+      for (const tail of eols) out.push(lead + dashes + tail);
+    }
+  }
+  // Ties broken on the string itself only so the order is deterministic across
+  // engines; only the length ordering is load-bearing.
+  return out.sort((a, b) => b.length - a.length || (a < b ? -1 : 1));
+})();
 
 export interface SplitBody {
   /** Everything before the separator. The whole text when there is none. */
@@ -189,24 +246,83 @@ export interface SplitBody {
  * and for a short message the signature is most of the box. Splitting lets the
  * card dim it without changing a byte of what gets saved.
  *
- * The LAST separator wins. A line of exactly `--` is legal inside prose, and
- * when it appears the signature is still the final block, so scanning from the
- * end is both the standard heuristic and the safe one: the worst case is that a
- * trailing prose block is styled as a signature, which is cosmetic. It is never
- * a correctness risk, because `joinBody(splitBody(t))` is `t` for every input.
+ * ── The tie-break ──────────────────────────────────────────────────────────
+ * The LAST separator in the text wins, across all forms. The comment here used
+ * to claim that while the code returned on the FIRST form it found anywhere, so
+ * `"Hi\n-- \nAsgeir\n--\nPS"` split at 2 rather than at 13. Last-wins is the
+ * right rule and is now what runs:
+ *
+ *   - A line of exactly `--` is legal inside prose (a dash rule, a diff, a
+ *     quoted patch). When one shows up, the signature is still the FINAL block,
+ *     so scanning from the end is the standard heuristic.
+ *   - It also fails in the cheaper direction. Getting it wrong late means a
+ *     trailing prose block is dimmed as a signature; getting it wrong early
+ *     means the whole remainder of the message is dimmed and collapsed behind a
+ *     one-line preview, which is the version that looks like data loss even
+ *     though it is not.
+ *   - It is never a correctness risk either way: `joinBody(splitBody(t))` is
+ *     byte-exactly `t` for every input, including CRLF ones, because both
+ *     halves and the separator are slices of the same string and `joinBody`
+ *     concatenates them back in order. Nothing here normalises anything.
+ *
+ * Within one position, longest wins (see `SIG_SEPARATORS`).
+ *
+ * ── What counts as a separator line ────────────────────────────────────────
+ * Every entry in `SIG_SEPARATORS` is `<eol> + ("-- " | "--") + <eol>`, so the
+ * dashes need a line ending on BOTH sides. Both halves of that are load-bearing
+ * and both cut in the conservative direction — no separator means "it is all
+ * message", which is the reading that never collapses text behind a preview:
+ *
+ *   - LEADING: a body that OPENS with `-- \n` has no line ending before the
+ *     dashes, so it is all message rather than all signature.
+ *   - TRAILING: a body that ENDS at the dashes — `"a\n-- "`, or `"a\n--"` —
+ *     has no line ending after them, so it does not split either. That is the
+ *     half-typed case: someone who has just typed the separator and not yet
+ *     pressed Enter does not have the line they are on torn out of the message
+ *     box mid-keystroke. One more Enter and it splits.
+ *
+ * Both are pinned by tests in harness/draft-body.test.mjs ("a separator needs a
+ * line ending on BOTH sides"), because they are the kind of rule that looks like
+ * an oversight to the next reader.
  */
 export function splitBody(text: string): SplitBody {
-  for (const separator of SIG_SEPARATORS) {
-    const at = text.lastIndexOf(separator);
-    if (at !== -1) {
-      return {
-        message: text.slice(0, at),
-        separator,
-        signature: text.slice(at + separator.length),
-      };
+  // Deliberately not a single global regex scan. A global scan consumes the
+  // line ending it matched, so in `"a\n--\n-- \nsig"` the `\n` that opens the
+  // second separator has already been eaten by the first and the later, real
+  // separator becomes invisible. Overlapping candidates are the normal case
+  // here, so every form is located independently.
+  //
+  // Ranked on where each candidate ENDS, not where it starts. The forms overlap
+  // each other on one and the same separator line: in `"a\r\n-- \r\nsig"` the
+  // full `\r\n-- \r\n` starts at 1 while `\n-- \r\n` starts at 2, and ranking on
+  // the start would pick the later, shorter one and leave a stray `\r` welded to
+  // the end of the message. Every candidate for a given separator line ends at
+  // or before that line's trailing EOL, and a LATER separator line always ends
+  // further right, so "ends furthest right, longest at that end" is exactly
+  // "the last separator line, matched greedily".
+  let at = -1;
+  let end = -1;
+  let separator: string | null = null;
+  for (const candidate of SIG_SEPARATORS) {
+    const found = text.lastIndexOf(candidate);
+    if (found === -1) continue;
+    const candidateEnd = found + candidate.length;
+    // Strictly greater, and SIG_SEPARATORS is longest-first, so the longest
+    // candidate reaching a given end is the one that sticks.
+    if (candidateEnd > end) {
+      at = found;
+      end = candidateEnd;
+      separator = candidate;
     }
   }
-  return { message: text, separator: null, signature: null };
+  if (separator === null) {
+    return { message: text, separator: null, signature: null };
+  }
+  return {
+    message: text.slice(0, at),
+    separator,
+    signature: text.slice(at + separator.length),
+  };
 }
 
 /** Inverse of `splitBody`. Byte-exact by construction. */

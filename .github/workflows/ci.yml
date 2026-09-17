@@ -95,6 +95,56 @@ jobs:
       - name: Run unit tests
         run: cd apps/web && npm test
 
+  # The draft editor card (apps/mcp-app) had NO job here at all — not a type
+  # check, not its suite — so everything that protects it ran on one laptop and
+  # nowhere else. That is the card the user types an unsent email into: its
+  # tests are what stand between a refactor and a draft being rewritten on save.
+  #
+  # WHAT RUNS. `npm test` is `npm run verify`, which is the scripted host
+  # (harness/state-machine.mjs, 115 checks) followed by the body/signature suite
+  # (harness/draft-body.test.mjs, 82 checks). Neither needs a browser: both
+  # bundle `src/` with esbuild and drive the SHIPPED functions directly, so a
+  # green run here means the code that goes into the card is the code that
+  # passed. Runtime is a couple of seconds.
+  #
+  # WHY `npm install` AT THE ROOT. apps/mcp-app is an npm workspace (root
+  # package.json "workspaces": ["apps/*"]) with no lockfile of its own, exactly
+  # like apps/web. The root install is what puts vite, typescript and — the
+  # harness's one non-builtin import — esbuild in the root node_modules that
+  # apps/mcp-app resolves up into. esbuild arrives as vite's own dependency
+  # rather than a declared one here; it is a single hoisted copy, but if this
+  # job ever fails on `Cannot find package 'esbuild'`, that is the reason and
+  # the fix is to declare it in apps/mcp-app's devDependencies.
+  #
+  # WHY 22, NOT 20. Same reason as Unit Tests above: 22 is what these suites are
+  # developed and run against. Nothing in them is known to need it, but nothing
+  # in them has been verified on 20 either, and a card suite that goes red for a
+  # Node reason teaches the team to ignore it.
+  #
+  # WHY THE TYPE CHECK IS HERE AND NOT SKIPPED. It could not have been, until
+  # this commit: `tsc --noEmit` exited 2 on a single pre-existing error,
+  # src/main.tsx(5,8) TS2882, the side-effect import of ./styles.css. The cause
+  # was `"types": []` in apps/mcp-app/tsconfig.json dropping Vite's ambient
+  # `declare module '*.css'`; it is now `["vite/client"]`, which takes the error
+  # count from one to zero and adds none. Fixed rather than excluded, because a
+  # job that runs only half of what it should is the same blind spot in smaller
+  # print. This does NOT type-check the harness — those are .mjs and outside
+  # tsconfig's `include` — which is the honest remaining gap.
+  card:
+    name: Draft Card Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm install
+      - name: Type check the card
+        run: cd apps/mcp-app && npm run typecheck
+      - name: Run card tests (scripted host + draft body)
+        run: cd apps/mcp-app && npm test
+
   # The edge function is a separate runtime with a separate test suite, and
   # until now nothing ran it. That mattered more than it looked: the MCP server
   # is where mail credentials are decrypted and where every mailbox operation
