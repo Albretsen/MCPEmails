@@ -16,6 +16,26 @@ import '../../../styles/dashboard.css';
 import '../../../styles/theme.css';
 
 /**
+ * A Supabase client carrying the generated schema, i.e. what both
+ * `createClient()` (src/lib/supabase/server.ts) and `createServiceRoleClient()`
+ * (src/lib/supabase/service.ts) actually return.
+ *
+ * Every fetcher below is annotated with this rather than a bare
+ * `SupabaseClient`, which would be `SupabaseClient<any, "public", any>` and
+ * would describe these functions as accepting a client whose `.from()` and
+ * `.rpc()` are unchecked. That is not what they are handed.
+ *
+ * Note this is DOCUMENTATION, not enforcement: this file is .js, and
+ * apps/web/tsconfig.json sets no `checkJs` and its `include` covers only .ts
+ * and .tsx, so it is outside the typechecked program. The
+ * `no-restricted-syntax` rules in eslint.config.mjs cannot read JSDoc either.
+ * Keep the annotation honest by hand; the enforcement lives at the wrappers
+ * this file imports.
+ *
+ * @typedef {import('@supabase/supabase-js').SupabaseClient<import('@/types/database.types').Database>} SchemaTypedClient
+ */
+
+/**
  * Fallback activity window, in UTC days, for a caller that passes none.
  *
  * The real window is the workspace's `analyticsRetentionDays` (Free 30,
@@ -87,7 +107,7 @@ function formatRelativeTime(isoTimestamp) {
  * joined with the inbox's display name / email address.
  * Returns an empty array on any query error so the page always renders.
  *
- * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {SchemaTypedClient} supabase
  * @param {string} workspaceId
  * @returns {Promise<Array<{ id: string, tool: string, account: string, time: string, ok: boolean }>>}
  */
@@ -123,7 +143,7 @@ async function fetchActivityFeed(supabase, workspaceId) {
  * Returns a serialisable array safe to pass as props to Client Components.
  * Encrypted credential columns are never selected here.
  *
- * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {SchemaTypedClient} supabase
  * @param {string} workspaceId
  * @returns {Promise<Array<{ id: string, label: string, address: string, provider: string, status: string, lastError: string|null, hasImap: boolean, calls: number, createdAt: string, lastCallAt: string|null }>>}
  */
@@ -259,7 +279,7 @@ async function fetchInboxes(supabase, workspaceId, historyDays = USAGE_WINDOW_DA
  * Returns only the columns safe to display in the dashboard, never key_hash.
  * Ordered newest-first so recently created keys appear at the top of the list.
  *
- * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {SchemaTypedClient} supabase
  * @param {string} workspaceId
  * @returns {Promise<Array<{
  *   id: string,
@@ -308,7 +328,7 @@ async function fetchApiKeys(supabase, workspaceId) {
  * badge count every non-deleted row. The Overview card now counts the same
  * arrays everything else counts, so these two queries have no reader left.
  *
- * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {SchemaTypedClient} supabase
  * @param {string} workspaceId
  * @returns {Promise<{ callsToday: number, callsThisMonth: number }>}
  */
@@ -353,7 +373,7 @@ async function fetchOverviewStats(supabase, workspaceId) {
  * Returns daily counts (oldest first), per-tool breakdown, and per-inbox breakdown.
  * All aggregation is done in JavaScript after a single query so no DB function is needed.
  *
- * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {SchemaTypedClient} supabase
  * @param {string} workspaceId
  * @returns {Promise<{
  *   dailyCounts: Array<{ date: string, count: number }>,
@@ -452,7 +472,7 @@ async function fetchUsageData(supabase, workspaceId, billingWindow, historyDays 
  * Returns tool calls from activity_log with joined inbox and api_key display fields.
  * Never fetches encrypted credential columns.
  *
- * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {SchemaTypedClient} supabase
  * @param {string} workspaceId
  * @returns {Promise<{
  *   entries: Array<{
@@ -535,7 +555,7 @@ async function fetchAuditLog(supabase, workspaceId) {
  * Fetches all members of a workspace using the get_workspace_members() SECURITY DEFINER RPC.
  * The RPC bypasses the users_select_own RLS policy so member profiles are visible.
  *
- * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {SchemaTypedClient} supabase
  * @param {string} workspaceId
  * @returns {Promise<Array<{ userId, role, joinedAt, email, displayName, avatarUrl }>>}
  */
@@ -560,7 +580,7 @@ async function fetchMembers(supabase, workspaceId) {
 /**
  * Fetches pending (un-accepted, non-expired) workspace invites.
  *
- * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {SchemaTypedClient} supabase
  * @param {string} workspaceId
  * @returns {Promise<Array<{ id, email, role, expiresAt, createdAt }>>}
  */

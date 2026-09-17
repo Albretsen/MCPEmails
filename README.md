@@ -307,23 +307,51 @@ regeneration, and a hand-added column that never existed in the database
 compiles clean and 500s in production. Regenerate it in the same change that
 applies a migration, and commit the result.
 
-Tables, views and RPC functions are all covered, and every Supabase client in
-`apps/web` is declared `SupabaseClient<Database>`, so `.from()`, `.select()`,
-`.insert()` and `.rpc()` are type-checked against the real schema. If a table or
-column looks missing, the fix is `npm run gen:types`, never a local `as any` on
-the Supabase client. Casts that remain are for things the generator genuinely
+Tables, views and RPC functions are all covered, and every Supabase client
+declared in the `.ts`/`.tsx` of `apps/web` (which is the whole typechecked
+program) is `SupabaseClient<Database>`, so `.from()`, `.select()`, `.insert()`
+and `.rpc()` are type-checked against the real schema. If a table or column
+looks missing, the fix is `npm run gen:types`, never a local `as any` on the
+Supabase client. Casts that remain are for things the generator genuinely
 cannot express: jsonb payload shapes, nullable function arguments, and one
 helper that dispatches many RPCs through a single signature. Each of those
 carries a comment saying so.
+
+The `.ts`/`.tsx` qualifier is load-bearing. `apps/web/tsconfig.json` sets no
+`checkJs` and its `include` is `**/*.ts` and `**/*.tsx`, so a `.js` file such as
+`app/dashboard/[[...section]]/page.js` is outside the program entirely: its
+JSDoc `@param` types are documentation and nothing verifies them. They are
+written as `SchemaTypedClient` (a `@typedef` for
+`SupabaseClient<Database>`) so the documentation at least agrees with what the
+callers pass, but keeping it honest is a manual job.
 
 **Never write a bare `SupabaseClient`.** With no type argument it resolves to
 `SupabaseClient<any, "public", any>`, which is an `as any` that no grep for
 `as any` will find: a function declared `db: SupabaseClient` gets no column
 checking at all, and a nonexistent column in an `.insert()` compiles clean.
-`SupabaseClient<any>` is the same hole spelled out loud. Both forms, and an
-un-parameterised `createServerClient(...)` / `createBrowserClient(...)`, are
-now `no-restricted-syntax` errors in `apps/web/eslint.config.mjs`, so `npm run
-lint` fails on them rather than leaving a silent gap.
+`SupabaseClient<any>` is the same hole spelled out loud, and so are
+`SupabaseClient<any | Database>` and `SupabaseClient<Alias>` where the alias is
+`any`. `apps/web/eslint.config.mjs` therefore does not hunt for `any`; it
+requires `Database`, and `npm run lint` errors on any `SupabaseClient` type
+reference that does not carry it, plus an un-parameterised
+`createServerClient(...)` / `createBrowserClient(...)`.
+
+Those are syntactic selectors (the repo runs no type-aware linting), so they
+match on the spelling at the use site and three things could otherwise walk
+straight past them: `import { SupabaseClient as SB }`, `import * as Supa` then
+`Supa.SupabaseClient`, and `const mk = createServerClient; mk(...)`. No selector
+can see through any of those, so the config closes them one level up instead:
+renaming the `SupabaseClient` import and namespace-importing `@supabase/ssr` or
+`@supabase/supabase-js` are themselves errors, and `no-restricted-imports`
+keeps `createClient` / `createServerClient` / `createBrowserClient` out of every
+file except the wrappers in `src/lib/supabase/`, which are the one place that
+constructs a client and always passes `<Database>`. Everything else imports
+those wrappers.
+
+The rules are not scoped to `**/*.ts(x)`, so the import and call restrictions
+apply in `.js`/`.jsx`/`.mjs` too. What they cannot do there is read a JSDoc
+type: a syntactic selector sees no AST node for it. That is the known limit
+above, not a gap the rules pretend to cover.
 
 Two things a green `tsc` still does not tell you:
 
