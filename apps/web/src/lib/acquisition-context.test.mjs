@@ -136,6 +136,32 @@ test('utm_source recognises the same names by substring', () => {
   assert.equal(sourceFromUtm(null), null);
 });
 
+/**
+ * The regression that paid for this test: ChatGPT stamps
+ * `utm_source=chatgpt.com` onto the links it surfaces, "chatgp{t.co}m"
+ * contains the `t.co` needle, and `t.co` is tried first, so from 2026-09-15 to
+ * 09-17 every ChatGPT signup was filed as X and `chatgpt` held zero rows. The
+ * needles above are ordered so that none contains another, which is a check on
+ * the LIST; these are the checks on the VALUE.
+ */
+test('a needle buried inside a longer word is not a match', () => {
+  assert.equal(sourceFromUtm('chatgpt.com'), 'chatgpt');
+  assert.equal(sourceFromUtm('mailbox.com'), 'other');
+  assert.equal(sourceFromUtm('inbox.com'), 'other');
+  assert.equal(sourceFromUtm('contact.com'), 'other');
+  assert.equal(sourceFromUtm('linux.com'), 'other');
+});
+
+test('a name still matches where a label can start', () => {
+  // Left-anchored, not whole-word: loose matching is the point of this table.
+  assert.equal(sourceFromUtm('chatgptplugin'), 'chatgpt');
+  assert.equal(sourceFromUtm('chat.openai.com'), 'chatgpt');
+  assert.equal(sourceFromUtm('www.x.com'), 'x_twitter');
+  assert.equal(sourceFromUtm('t.co/aBc123'), 'x_twitter');
+  assert.equal(sourceFromUtm('twitter.com'), 'x_twitter');
+  assert.equal(sourceFromUtm('news.ycombinator.com'), 'hacker_news');
+});
+
 /* --------------------------------------------------------- SQL/JS drift */
 
 /**

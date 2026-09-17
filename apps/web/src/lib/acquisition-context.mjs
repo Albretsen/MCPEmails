@@ -136,6 +136,17 @@ export function safeLandingPath(pathname) {
  * only. `mcp` alone would swallow every directory at once, so each directory
  * carries its full name. The first match wins, so nothing here may be a
  * substring of a later entry.
+ *
+ * WHY THE MATCH IS ANCHORED ON ITS LEFT (2026-09-17). Ordering the needles
+ * only rules out one needle hiding inside another; it does nothing about a
+ * needle hiding inside an arbitrary VALUE. `t.co` sits inside "chatgp`t.co`m",
+ * and ChatGPT stamps `utm_source=chatgpt.com` onto every link it surfaces, so
+ * for two days every ChatGPT signup was filed as X and the `chatgpt` bucket
+ * held nothing at all. `x.com` did the same to mailbox.com and linux.com. A
+ * needle now only counts where a label can actually start: at the beginning of
+ * the value, or straight after a non-alphanumeric character. Suffixes like
+ * "openai-directory" and "chatgptplugin" still match, which is the point of
+ * matching loosely in the first place.
  */
 const UTM_SOURCES = Object.freeze([
   ['google', 'organic_google'],
@@ -166,11 +177,17 @@ const UTM_SOURCES = Object.freeze([
   ['freemcp', 'freemcp'],
 ]);
 
+/** `t.co` may begin the value or follow a separator, never a letter or digit. */
+const UTM_PATTERNS = UTM_SOURCES.map(([needle, category]) => [
+  new RegExp(`(?:^|[^a-z0-9])${needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`),
+  category,
+]);
+
 export function sourceFromUtm(value) {
   const source = value?.toLowerCase();
   if (!source) return null;
-  for (const [needle, category] of UTM_SOURCES) {
-    if (source.includes(needle)) return category;
+  for (const [pattern, category] of UTM_PATTERNS) {
+    if (pattern.test(source)) return category;
   }
   return 'other';
 }
