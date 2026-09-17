@@ -247,10 +247,7 @@ type BillingEventRow = {
  * the failure mode stays "capped" rather than "slow forever".
  */
 async function loadBillingEvents(): Promise<BillingEventRow[]> {
-  // Generated database types cover tables, not embedded relationships; cast
-  // locally rather than weakening the shared client type.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const service = createServiceRoleClient() as any;
+  const service = createServiceRoleClient();
   const rows: BillingEventRow[] = [];
   for (let page = 0; page < MAX_EVENT_PAGES; page += 1) {
     const from = page * PAGE_SIZE;

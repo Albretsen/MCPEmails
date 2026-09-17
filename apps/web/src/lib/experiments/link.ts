@@ -10,6 +10,7 @@
  * request-scoped wrapper lives in link-request.ts.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database.types';
 import { isValidSubjectId } from './bucketing.ts';
 
 export interface LinkExperimentSubjectInput {
@@ -23,18 +24,21 @@ export interface LinkExperimentSubjectInput {
  * render, and an analytics write must never be the reason a dashboard 500s.
  */
 export async function linkExperimentSubject(
-  client: SupabaseClient,
+  client: SupabaseClient<Database>,
   { subjectId, workspaceId, userId }: LinkExperimentSubjectInput,
 ): Promise<void> {
   if (!isValidSubjectId(subjectId)) return;
   if (!workspaceId) return;
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (client as any).rpc('experiment_link_subject', {
+    const { error } = await client.rpc('experiment_link_subject', {
       p_subject_id: subjectId,
       p_workspace_id: workspaceId,
-      p_user_id: userId ?? null,
+      // Verified against the live definition: the function is not STRICT and
+      // `experiment_subjects.user_id` is nullable, so NULL is the intended
+      // "anonymous" value here. The type generator cannot express a nullable
+      // function argument, so it types every arg non-null.
+      p_user_id: (userId ?? null) as unknown as string,
     });
     if (error) console.error('[experiments] subject link failed', { error: error.message });
   } catch (error) {

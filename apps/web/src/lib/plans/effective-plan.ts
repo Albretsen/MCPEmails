@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { resolvePlanLimits, type PlanLimits } from '@/lib/stripe/plans';
+import type { Database } from '@/types/database.types';
 
 /**
  * Resolve a workspace's effective plan, and say plainly when it could not be
@@ -44,8 +45,7 @@ export type EffectivePlanResolution =
     };
 
 export async function resolveEffectiveWorkspacePlan(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  supabase: SupabaseClient<any>,
+  supabase: SupabaseClient<Database>,
   workspaceId: string,
 ): Promise<EffectivePlanResolution> {
   const { data, error } = await supabase.rpc('effective_workspace_plan', {

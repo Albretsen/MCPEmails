@@ -125,8 +125,7 @@ export function unknownHealth(now: number, reason: string): SystemHealth {
 /* ------------------------------------------------------------- the monitor */
 
 async function fetchMonitorFacts(): Promise<MonitorFacts> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const service = createServiceRoleClient() as any;
+  const service = createServiceRoleClient();
 
   const [runs, incidents] = await Promise.all([
     service
@@ -225,8 +224,7 @@ const CONCENTRATION_ROW_BUDGET = 400;
  * be done any other way on this project.
  */
 async function fetchCallWindow(minutes: number, now: number, withConcentration = false): Promise<CallWindow> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const service = createServiceRoleClient() as any;
+  const service = createServiceRoleClient();
   const since = new Date(now - minutes * 60_000).toISOString();
   const scoped = () => service.from('activity_log').select('id', { count: 'exact', head: true }).gte('created_at', since);
 
@@ -246,9 +244,9 @@ async function fetchCallWindow(minutes: number, now: number, withConcentration =
       : null,
   ]);
 
-  if (all.error || ok.error || bad.error) {
-    const message = (all.error ?? ok.error ?? bad.error).message;
-    console.error('[kiosk-health]', 'activity counts unreadable', message);
+  const countError = all.error ?? ok.error ?? bad.error;
+  if (countError) {
+    console.error('[kiosk-health]', 'activity counts unreadable', countError.message);
     return emptyWindow(minutes);
   }
 
@@ -396,8 +394,7 @@ function emptyWindow(minutes: number): CallWindow {
  * scheduler when both witnesses are unhappy at once.
  */
 async function fetchLastCallAt(): Promise<string | null> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const service = createServiceRoleClient() as any;
+  const service = createServiceRoleClient();
   const { data, error } = await service
     .from('activity_log')
     .select('created_at')
@@ -440,8 +437,7 @@ export type MonitorIncident = {
  * this module does: a wall display renders what it has.
  */
 export async function fetchRecentIncidents(limit = 6): Promise<MonitorIncident[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const service = createServiceRoleClient() as any;
+  const service = createServiceRoleClient();
   const { data, error } = await service
     .from('synthetic_monitor_incidents')
     .select('fingerprint,status,failure_class,failed_step,first_failure_at,last_failure_at,resolved_at,consecutive_failures')

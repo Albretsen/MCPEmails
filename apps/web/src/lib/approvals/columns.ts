@@ -36,14 +36,22 @@ export function isUnknownColumnError(error: any): boolean {
 }
 
 /**
+ * What a Supabase statement resolves to. `data` is nullable and the builder is
+ * a thenable rather than a real Promise, so both helpers below describe the
+ * callback as `PromiseLike<Tolerant<T>>`; typing it as `Promise<{ data: T }>`
+ * only compiled while the callers were casting their client to `any`.
+ */
+export type Tolerant<T> = { data: T | null; error: any };
+
+/**
  * Runs a Supabase statement built from `patch`. If it fails purely because one
  * of `optional` does not exist yet, it retries once without those keys.
  */
 export async function runTolerantly<T>(
   patch: Record<string, unknown>,
   optional: readonly string[],
-  run: (patch: Record<string, unknown>) => Promise<{ data: T; error: any }>,
-): Promise<{ data: T; error: any }> {
+  run: (patch: Record<string, unknown>) => PromiseLike<Tolerant<T>>,
+): Promise<Tolerant<T>> {
   const first = await run(patch);
   if (!first.error || !isUnknownColumnError(first.error)) return first;
   const reduced = { ...patch };
@@ -66,8 +74,8 @@ export async function runTolerantly<T>(
 export async function selectTolerantly<T>(
   columns: string[],
   optional: readonly string[],
-  run: (columns: string) => Promise<{ data: T; error: any }>,
-): Promise<{ data: T; error: any }> {
+  run: (columns: string) => PromiseLike<Tolerant<T>>,
+): Promise<Tolerant<T>> {
   const first = await run(columns.join(', '));
   if (!first.error || !isUnknownColumnError(first.error)) return first;
   const reduced = columns.filter((c) => !optional.includes(c));

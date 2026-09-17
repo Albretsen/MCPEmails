@@ -22,6 +22,7 @@
  */
 
 import { createServiceRoleClient } from '@/lib/supabase/service';
+import type { Database } from '@/types/database.types';
 import { GROWTH_TAGS, cachedSection, type GrowthResult } from '@/lib/analytics/growth-queries';
 
 /** Widest window any of these will ask for: `activity_log` is purged at 90 days. */
@@ -175,20 +176,22 @@ type RpcArgs = Record<string, number | string | null>;
  * One RPC read, with the PostgREST row ceiling defeated explicitly.
  *
  * `.range()` widens the request past the default page; without it a response
- * longer than the ceiling comes back quietly truncated. Generated database
- * types cover tables and not functions, so the client is cast here rather than
- * weakened globally -- same convention as growth-queries.ts.
+ * longer than the ceiling comes back quietly truncated. The function NAME is
+ * checked against the generated schema; only the argument object is not,
+ * because one helper dispatches several functions -- same convention as
+ * growth-queries.ts.
  */
-async function readAll<T>(fn: string, args: RpcArgs, max: number): Promise<T[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const service = createServiceRoleClient() as any;
-  const { data, error } = await service.rpc(fn, args).range(0, Math.max(max - 1, 0));
+type RpcName = keyof Database['public']['Functions'];
+
+async function readAll<T>(fn: RpcName, args: RpcArgs, max: number): Promise<T[]> {
+  const service = createServiceRoleClient();
+  const { data, error } = await service.rpc(fn, args as never).range(0, Math.max(max - 1, 0));
   if (error) throw new Error(error.message);
   if (data === null || data === undefined) return [];
   return (Array.isArray(data) ? data : [data]) as T[];
 }
 
-function cachedRpc<T>(fn: string, args: RpcArgs, max: number): Promise<GrowthResult<T[]>> {
+function cachedRpc<T>(fn: RpcName, args: RpcArgs, max: number): Promise<GrowthResult<T[]>> {
   return cachedSection<T[]>(
     // The arguments MUST be in the key: unstable_cache hashes the callback's
     // source text, which is identical for every caller of this wrapper.

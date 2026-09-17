@@ -27,6 +27,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database.types';
 
 /** Percentages are withheld until a denominator can carry one. */
 export const MIN_SEQUENCES_FOR_RATE = 5;
@@ -209,8 +210,7 @@ export function summariseDunning(rows: DunningRow[], now = new Date()): DunningS
  * count would mislead.
  */
 export async function fetchDunningRows(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  db: SupabaseClient<any>,
+  db: SupabaseClient<Database>,
   hardCap = 5000,
 ): Promise<{ rows: DunningRow[]; truncated: boolean }> {
   const PAGE = 1000;

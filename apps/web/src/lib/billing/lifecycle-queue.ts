@@ -32,6 +32,7 @@ import {
   type BillingTemplate,
   type LifecyclePayload,
 } from '@/lib/email/billing-lifecycle';
+import type { Database } from '@/types/database.types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -52,7 +53,7 @@ interface QueueRow {
 }
 
 async function insertRows(
-  db: SupabaseClient,
+  db: SupabaseClient<Database>,
   rows: QueueRow[],
   label: string,
 ): Promise<number> {
@@ -95,7 +96,7 @@ async function insertRows(
  * useful email to send.
  */
 export async function resolveRecipient(
-  db: SupabaseClient,
+  db: SupabaseClient<Database>,
   stripeEmail: string | null | undefined,
   userId: string | null,
 ): Promise<string | null> {
@@ -112,7 +113,7 @@ export async function resolveRecipient(
 
 /** Resolve the owner behind a Stripe customer. Null when unknown. */
 export async function resolveUserId(
-  db: SupabaseClient,
+  db: SupabaseClient<Database>,
   stripeCustomerId: string,
   metadataUserId: string | null,
 ): Promise<string | null> {
@@ -141,7 +142,7 @@ export async function resolveUserId(
  * something we promised them permanently.
  */
 export async function isGrandfathered(
-  db: SupabaseClient,
+  db: SupabaseClient<Database>,
   userId: string | null,
 ): Promise<boolean> {
   if (!userId) return true;
@@ -177,7 +178,7 @@ export async function isGrandfathered(
  * explains a thing they are already looking at instead of introducing one.
  */
 export async function queueDunningSequence(options: {
-  db: SupabaseClient;
+  db: SupabaseClient<Database>;
   target: QueueTarget;
   invoiceId: string;
   payload: LifecyclePayload;
@@ -218,7 +219,7 @@ export async function queueDunningSequence(options: {
  * a second sequence rather than being permanently deduplicated by the first.
  */
 export async function queueCancellationSequence(options: {
-  db: SupabaseClient;
+  db: SupabaseClient<Database>;
   target: QueueTarget;
   subscriptionId: string;
   /** Unix seconds. The end of the period they have already paid for. */
@@ -290,7 +291,7 @@ export async function queueCancellationSequence(options: {
  * already answered it costs the answer.
  */
 export async function hasCancellationSeries(
-  db: SupabaseClient,
+  db: SupabaseClient<Database>,
   stripeCustomerId: string,
   subscriptionId: string,
 ): Promise<boolean> {
@@ -326,7 +327,7 @@ export async function hasCancellationSeries(
  * re-running the daily sweep over the same card warns once.
  */
 export async function queueCardExpiryWarning(options: {
-  db: SupabaseClient;
+  db: SupabaseClient<Database>;
   target: QueueTarget;
   template: 'card_expiry_30' | 'card_expiry_7';
   paymentMethodId: string;
@@ -388,7 +389,7 @@ export type CancelReason =
  * sent; you cannot un-send an email by writing to a table.
  */
 export async function cancelOpenSequence(options: {
-  db: SupabaseClient;
+  db: SupabaseClient<Database>;
   stripeCustomerId: string;
   /** Restrict to one scope (invoice / subscription). Omit for every open row. */
   scopeKey?: string;
@@ -453,7 +454,7 @@ export async function cancelOpenSequence(options: {
  * invoice happened to be open is still checked rather than assumed.
  */
 export async function cancelDunningForCustomer(
-  db: SupabaseClient,
+  db: SupabaseClient<Database>,
   stripeCustomerId: string,
   reason: CancelReason,
 ): Promise<number> {

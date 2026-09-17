@@ -33,9 +33,7 @@ async function context() {
   if (!user) return null;
   const workspaceId = await resolveActiveWorkspaceId(auth, user.id);
   if (!workspaceId) return null;
-  // The triage_automations migration has not been regenerated into Database yet.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = createServiceRoleClient() as any;
+  const db = createServiceRoleClient();
   const { data: membership } = await db.from('workspace_members').select('role').eq('workspace_id', workspaceId).eq('user_id', user.id).maybeSingle();
   return membership ? { user, workspaceId, role: membership.role, db } : null;
 }

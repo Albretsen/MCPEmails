@@ -9,7 +9,8 @@
   "scripts": {
     "dev": "npm run dev -w apps/web",
     "build": "npm run build -w apps/web",
-    "lint": "npm run lint -w apps/web"
+    "lint": "npm run lint -w apps/web",
+    "gen:types": "supabase gen types typescript --linked > \"${TMPDIR:-/tmp}/mcpemails.database.types.ts\" && mv \"${TMPDIR:-/tmp}/mcpemails.database.types.ts\" apps/web/src/types/database.types.ts"
   },
   "repository": {
     "type": "git",

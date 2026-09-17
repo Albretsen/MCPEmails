@@ -1,4 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database.types';
+
+/** Every caller passes a schema-typed client (service-role or cookie-bound). */
+type Db = SupabaseClient<Database>;
 import { safeDiagnosticPhase } from '@/lib/email/connection-config';
 import type { AuthFailureReason } from '@/lib/email/auth-failure';
 
@@ -63,11 +67,8 @@ export type ProductFunnelEvent = {
   authReason?: AuthFailureReason | null;
 };
 
-export async function recordProductFunnelEvent(db: SupabaseClient, event: ProductFunnelEvent): Promise<void> {
-  // Generated database types can lag migrations; this server-only table is
-  // intentionally cast locally rather than weakening the application client.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const table = (db as any).from('product_funnel_events');
+export async function recordProductFunnelEvent(db: Db, event: ProductFunnelEvent): Promise<void> {
+  const table = db.from('product_funnel_events');
   const { error } = await table.insert({
     workspace_id: event.workspaceId,
     stage: event.stage,
@@ -100,14 +101,13 @@ export async function recordProductFunnelEvent(db: SupabaseClient, event: Produc
 
 /** Record an OAuth callback failure using only its unguessable, single-use state. */
 export async function recordOAuthCallbackFailure(
-  db: SupabaseClient,
+  db: Db,
   state: string | null,
   provider: 'gmail' | 'outlook',
   errorCategory: 'provider_denied' | 'consent_required' | 'unknown'
 ): Promise<void> {
   if (!state) return;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const states = (db as any).from('oauth_states');
+  const states = db.from('oauth_states');
   const { data } = await states.select('id, workspace_id').eq('state', state).eq('provider', provider).maybeSingle();
   if (!data?.workspace_id) return;
   await recordProductFunnelEvent(db, { workspaceId: data.workspace_id, stage: 'inbox_connection', outcome: 'failure', category: provider, errorCategory, phase: 'authorization' });

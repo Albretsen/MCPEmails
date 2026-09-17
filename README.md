@@ -292,11 +292,54 @@ Schema and Row‑Level Security policies live in [`supabase/migrations/`](supaba
 # Apply migrations to the linked project
 npx supabase db push
 
-# Generate TypeScript types from the live schema
-npx supabase gen types typescript --linked > apps/web/src/types/database.ts
+# Regenerate TypeScript types from the live schema
+npm run gen:types
 ```
 
 > The Supabase CLI is the source of truth for DB changes in this project.
+
+### `apps/web/src/types/database.types.ts` is GENERATED
+
+It is written in full by `npm run gen:types` (`supabase gen types typescript
+--linked`), which reads the **live linked project**, not the migration files.
+Do not hand-edit it: a hand-added column is silently dropped by the next
+regeneration, and a hand-added column that never existed in the database
+compiles clean and 500s in production. Regenerate it in the same change that
+applies a migration, and commit the result.
+
+Tables, views and RPC functions are all covered, and every Supabase client in
+`apps/web` is declared `SupabaseClient<Database>`, so `.from()`, `.select()`,
+`.insert()` and `.rpc()` are type-checked against the real schema. If a table or
+column looks missing, the fix is `npm run gen:types`, never a local `as any` on
+the Supabase client. Casts that remain are for things the generator genuinely
+cannot express: jsonb payload shapes, nullable function arguments, and one
+helper that dispatches many RPCs through a single signature. Each of those
+carries a comment saying so.
+
+**Never write a bare `SupabaseClient`.** With no type argument it resolves to
+`SupabaseClient<any, "public", any>`, which is an `as any` that no grep for
+`as any` will find: a function declared `db: SupabaseClient` gets no column
+checking at all, and a nonexistent column in an `.insert()` compiles clean.
+`SupabaseClient<any>` is the same hole spelled out loud. Both forms, and an
+un-parameterised `createServerClient(...)` / `createBrowserClient(...)`, are
+now `no-restricted-syntax` errors in `apps/web/eslint.config.mjs`, so `npm run
+lint` fails on them rather than leaving a silent gap.
+
+Two things a green `tsc` still does not tell you:
+
+- **`--linked` reads production, not `supabase/migrations/`.** Whatever the
+  live project actually has is what lands in the file, drift included, and a
+  migration that exists locally but has not been pushed is invisible to it.
+  Regenerating needs credentials for the linked project, so CI cannot reproduce
+  this file from the repo alone. Check `supabase migration list --linked`
+  before believing the types describe what the migrations say. As of
+  2026-09-16 that command reports eight mismatches in both directions.
+- **A cast still switches checking off.** `(row as any).some_column` and
+  `client as unknown as SupabaseClient<Database>` both compile whatever you
+  write. The lint rules above catch the client *declaration*, not a client that
+  is cast to `any` at the call site; `@typescript-eslint/no-explicit-any` is
+  what catches those, and an `eslint-disable` on it is a deliberate choice that
+  should say why.
 
 ## Deployment
 

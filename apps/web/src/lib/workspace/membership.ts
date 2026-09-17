@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { VIEWER_SCOPES, viewerScopeList } from '@/lib/api-keys/scopes';
+import type { Database } from '@/types/database.types';
 
 /**
  * The membership side effects that must happen identically wherever a person
@@ -40,8 +41,7 @@ interface WriteFailure {
  * keys they hold in the ones they are still in.
  */
 export async function revokeMemberApiKeys(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  service: SupabaseClient<any>,
+  service: SupabaseClient<Database>,
   workspaceId: string,
   userId: string,
 ): Promise<WriteFailure> {
@@ -60,8 +60,7 @@ export async function revokeMemberApiKeys(
  * credentials.
  */
 export async function removeWorkspaceMember(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  service: SupabaseClient<any>,
+  service: SupabaseClient<Database>,
   workspaceId: string,
   userId: string,
 ): Promise<WriteFailure> {
@@ -100,8 +99,7 @@ export interface DemotionKeyRevocation {
  * expression; the row count here is a handful of keys per member.
  */
 export async function revokeApiKeysBeyondViewerScopes(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  service: SupabaseClient<any>,
+  service: SupabaseClient<Database>,
   workspaceId: string,
   userId: string,
 ): Promise<DemotionKeyRevocation> {

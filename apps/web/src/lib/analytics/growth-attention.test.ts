@@ -13,7 +13,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   ATTENTION_CHECK_COUNT,
-  ATTENTION_THRESHOLDS,
   attentionReport,
   type AttentionInput,
 } from './growth-attention.ts';

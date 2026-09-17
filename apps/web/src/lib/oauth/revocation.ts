@@ -52,6 +52,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { hashApiKey } from '@/lib/api-keys/generate';
 import { looksLikeUrlClientId, parseCimdClientId } from '@/lib/oauth/cimd';
 import { sha256hex } from '@/lib/oauth/crypto';
+import type { Database } from '@/types/database.types';
 
 export type RevocationTokenKind = 'access_token' | 'refresh_token';
 
@@ -130,7 +131,7 @@ interface ResolvedGrant {
 }
 
 async function findByAccessToken(
-  db: SupabaseClient,
+  db: SupabaseClient<Database>,
   hash: string,
 ): Promise<ResolvedGrant | null> {
   // No deleted_at filter: an already-soft-deleted key may still have a live
@@ -154,7 +155,7 @@ async function findByAccessToken(
 }
 
 async function findByRefreshToken(
-  db: SupabaseClient,
+  db: SupabaseClient<Database>,
   hash: string,
 ): Promise<ResolvedGrant | null> {
   const { data } = await db
@@ -183,7 +184,7 @@ async function findByRefreshToken(
  * log via the zero counts.
  */
 export async function revokeGrantByToken(
-  db: SupabaseClient,
+  db: SupabaseClient<Database>,
   args: { token: string; tokenTypeHint?: string | null; now?: Date },
 ): Promise<RevocationOutcome> {
   const token = args.token;

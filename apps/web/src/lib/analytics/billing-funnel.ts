@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createServiceRoleClient } from '@/lib/supabase/service';
+import type { Database } from '@/types/database.types';
 import {
   recordProductFunnelEvent,
   type BillingPlanCategory,
@@ -24,7 +25,7 @@ import {
 
 /** Resolve the workspace a user's billing events belong to. */
 export async function primaryWorkspaceId(
-  db: SupabaseClient,
+  db: SupabaseClient<Database>,
   userId: string,
 ): Promise<string | null> {
   const { data, error } = await db
@@ -236,8 +237,7 @@ export async function recordPricingViewed(
   const db = createServiceRoleClient();
   const dayStart = new Date();
   dayStart.setUTCHours(0, 0, 0, 0);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: existing } = await (db as any)
+  const { data: existing } = await db
     .from('product_funnel_events')
     .select('id')
     .eq('workspace_id', workspaceId)

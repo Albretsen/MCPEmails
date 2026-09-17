@@ -320,8 +320,17 @@ export function declineCopy(code: string | null | undefined): DeclineCopy | null
  * failure as it was on day 0 rather than re-deriving it from a Stripe account
  * that has moved on. The dispatcher's freshness check is what stops a stale
  * payload from being sent at all; see the dispatch route.
+ *
+ * Declared as a TYPE ALIAS, not an interface, on purpose. This object is
+ * written straight into a `jsonb` column whose generated type is `Json`, and
+ * TypeScript only gives an implicit index signature to an object TYPE, never to
+ * an interface. As an interface it failed to satisfy `Json`, and the only way
+ * past that was `as unknown as Json` at the call site, which would have
+ * switched off checking for the whole insert. Keep it a type alias, and keep
+ * every member assignable to `Json`: no Date, no undefined-only unions, no
+ * class instances.
  */
-export interface LifecyclePayload {
+export type LifecyclePayload = {
   /** Paid plan the customer is on (or was on). */
   planId?: PlanId | null;
   /** What the failing or upcoming charge is, in minor units. */
@@ -374,7 +383,7 @@ export interface LifecyclePayload {
   /** The triage rule that was paused (automation_paused_limit only). */
   rule_id?: string | null;
   rule_name?: string | null;
-}
+};
 
 export interface ComposedLifecycleEmail {
   subject: string;

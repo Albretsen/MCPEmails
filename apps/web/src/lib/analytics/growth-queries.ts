@@ -21,15 +21,17 @@
  * 2. EVERY READ IS CACHED under a section tag plus the shared `growth` tag, so
  *    the page's Refresh button can drop the lot with one `revalidateTag`.
  *
- * Row shapes and the SQL function names live in growth-types.ts, which is the
- * binding contract between the migration, this module and the page. Generated
- * `database.types.ts` covers tables but neither functions nor views, so `.rpc()`
- * and the billing view are cast locally rather than by weakening the shared
- * client type (same convention as product-funnel.ts).
+ * Row shapes live in growth-types.ts, which is the binding contract between the
+ * migration, this module and the page. Generated `database.types.ts` DOES cover
+ * functions and views (it is regenerated from the live schema, see the root
+ * `npm run gen:types`), so the RPC names and the billing view are checked
+ * against the schema here; only the RPC argument objects are not, because one
+ * helper dispatches every growth function.
  */
 
 import { revalidateTag, unstable_cache } from 'next/cache';
 import { createServiceRoleClient } from '@/lib/supabase/service';
+import type { Database } from '@/types/database.types';
 import type {
   GmailCapSummaryRow,
   GmailGrantMonthRow,
@@ -142,12 +144,15 @@ export async function cachedSection<T>(
  */
 type RpcArgs = Record<string, number | string[] | Record<string, number>>;
 
-async function callRpc<T>(fn: string, args: RpcArgs): Promise<T[]> {
-  // Generated database types cover tables, not functions; cast locally rather
-  // than weakening the shared service-role client.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const service = createServiceRoleClient() as any;
-  const { data, error } = await service.rpc(fn, args);
+/** Every RPC the generated schema knows about. A typo is a compile error. */
+type RpcName = keyof Database['public']['Functions'];
+
+async function callRpc<T>(fn: RpcName, args: RpcArgs): Promise<T[]> {
+  const service = createServiceRoleClient();
+  // The NAME is checked against the schema; the ARGUMENTS cannot be, because
+  // this helper dispatches ~45 different functions through one signature and
+  // PostgrestClient.rpc wants the arg type of one named function.
+  const { data, error } = await service.rpc(fn, args as never);
   if (error) throw new Error(error.message);
   // A `RETURNS TABLE` function comes back as an array. Tolerate a scalar/record
   // shape too, so a harmless change on the SQL side cannot blank a section.
@@ -156,7 +161,7 @@ async function callRpc<T>(fn: string, args: RpcArgs): Promise<T[]> {
 }
 
 function rpcRows<T>(
-  fn: string,
+  fn: RpcName,
   tag: string,
   args: RpcArgs = {},
 ): Promise<GrowthResult<T[]>> {
@@ -164,7 +169,7 @@ function rpcRows<T>(
 }
 
 /** For the RPCs that are defined to return exactly one summary row. */
-async function rpcSingleRow<T>(fn: string, tag: string, args: RpcArgs = {}): Promise<GrowthResult<T>> {
+async function rpcSingleRow<T>(fn: RpcName, tag: string, args: RpcArgs = {}): Promise<GrowthResult<T>> {
   const result = await rpcRows<T>(fn, tag, args);
   if (!result.ok) return result;
   const row = result.data[0];
@@ -360,14 +365,14 @@ export type BillingFunnelRow = {
  */
 export async function fetchBillingFunnel(): Promise<GrowthResult<BillingFunnelRow[]>> {
   return cachedSection<BillingFunnelRow[]>(['billing_funnel_by_workspace'], GROWTH_TAGS.funnel, async () => {
-    // Generated database types cover tables, not views; cast locally.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const service = createServiceRoleClient() as any;
+    const service = createServiceRoleClient();
+    // One string literal, not a concatenation: PostgREST types the response by
+    // parsing the select list at the type level, and a `+` widens it to
+    // `string`, which collapses every row to GenericStringError.
     const { data, error } = await service
       .from('billing_funnel_by_workspace')
       .select(
-        'workspace_id, plan, paywall_hits, pricing_views, checkouts_started, checkouts_failed, ' +
-          'checkouts_completed, abandoned_checkout, plan_upgrades, plan_downgrades, plan_changes_unfinished',
+        'workspace_id, plan, paywall_hits, pricing_views, checkouts_started, checkouts_failed, checkouts_completed, abandoned_checkout, plan_upgrades, plan_downgrades, plan_changes_unfinished',
       );
     if (error) throw new Error(error.message);
     return (data ?? []) as BillingFunnelRow[];

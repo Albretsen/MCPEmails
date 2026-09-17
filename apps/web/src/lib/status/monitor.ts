@@ -197,8 +197,7 @@ export const getStatusSnapshot: () => Promise<StatusSnapshot> = unstable_cache(
 export async function fetchStatusSnapshot(now: number = Date.now()): Promise<StatusSnapshot> {
   const generatedAt = new Date(now).toISOString();
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const service = createServiceRoleClient() as any;
+    const service = createServiceRoleClient();
     const days = utcDays(now, WINDOW_DAYS);
     const windowStart = `${days[0]}T00:00:00.000Z`;
 
@@ -211,7 +210,10 @@ export async function fetchStatusSnapshot(now: number = Date.now()): Promise<Sta
         .from('synthetic_monitor_runs')
         .select('id', { count: 'exact', head: true })
         .eq('mode', 'read');
-    const rows = (cols: string) =>
+    // Generic over the column list so the literal survives: PostgREST's types
+    // parse the select string, and a widened `string` collapses every row to
+    // GenericStringError.
+    const rows = <C extends string>(cols: C) =>
       service.from('synthetic_monitor_runs').select(cols).eq('mode', 'read');
 
     const [finished, succeeded, failedRows, recent, oldest, newest, open, dayCounts] =

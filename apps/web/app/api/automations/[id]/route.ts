@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
+import type { TablesUpdate } from '@/types/database.types';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { isJsonRequest, isSameOrigin } from '@/lib/http/same-origin';
 import { canDecide as canManageAutomations } from '@/lib/approvals/decide';
+import type { StoredAction } from '@/lib/automations/rules';
 import {
   RULE_COLUMNS,
   assertWorkspaceResources,
@@ -32,9 +34,7 @@ async function context() {
   if (!user) return null;
   const workspaceId = await resolveActiveWorkspaceId(auth, user.id);
   if (!workspaceId) return null;
-  // The triage_automations migration has not been regenerated into Database yet.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = createServiceRoleClient() as any;
+  const db = createServiceRoleClient();
   const { data: membership } = await db.from('workspace_members').select('role').eq('workspace_id', workspaceId).eq('user_id', user.id).maybeSingle();
   return membership ? { user, workspaceId, role: membership.role, db } : null;
 }
@@ -63,8 +63,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     .maybeSingle();
   if (!existing) return NextResponse.json({ error: 'That automation could not be found.' }, { status: 404 });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const patch: Record<string, any> = { updated_at: new Date().toISOString() };
+  const patch: TablesUpdate<'triage_rules'> = { updated_at: new Date().toISOString() };
 
   if (body.name !== undefined) {
     const name = validateName(body.name);
@@ -107,7 +106,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   // is a keyword, which is an atom. Either half of the pair can change in one
   // PATCH, so the check runs against the action and the inbox this rule will
   // have AFTER the edit, not the ones it had before.
-  const nextAction = patch.action ?? existing.action;
+  //
+  // `triage_rules.action` is jsonb, so the generated column type is `Json`.
+  // Every write goes through validateAction, so the stored shape is a
+  // StoredAction; assert that rather than re-validating a row we validated on
+  // the way in.
+  const nextAction = (patch.action ?? existing.action) as StoredAction | null;
   if (nextAction && typeof nextAction === 'object' && nextAction.type === 'label') {
     const provider = await readInboxProvider(c.db, c.workspaceId, nextInboxId);
     const forProvider = validateActionForProvider(nextAction, provider);

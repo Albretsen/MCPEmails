@@ -22,6 +22,10 @@
  * meant to make impossible.
  */
 
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+import type { Database } from '@/types/database.types';
+
 type Row = Record<string, unknown>;
 type Filter = { op: 'eq' | 'is' | 'in' | 'like'; column: string; value: unknown };
 
@@ -182,8 +186,18 @@ export class FakeSupabase {
   }
 }
 
-/** The queue module is typed against SupabaseClient; the fake satisfies the slice it uses. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function asClient(fake: FakeSupabase): any {
-  return fake;
+/**
+ * Hand the fake to code that wants a real `SupabaseClient<Database>`.
+ *
+ * TEST SUPPORT ONLY, and the ONE place in the repo where a Supabase client type
+ * is asserted rather than checked. The fake implements a handful of the
+ * client's query shapes and none of its auth, realtime or storage surface, so
+ * there is no structural way to satisfy the real type; the assertion is
+ * confined here so that every test call site is still typed as the real client
+ * and nothing else has to widen to `any`. If a test starts calling a shape the
+ * fake does not implement, the fake throws at runtime rather than compiling to
+ * a silent no-op.
+ */
+export function asClient(fake: FakeSupabase): SupabaseClient<Database> {
+  return fake as unknown as SupabaseClient<Database>;
 }

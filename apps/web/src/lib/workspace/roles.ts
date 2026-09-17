@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database.types';
 
 /**
  * The workspace role model, and the one place that decides what each role may
@@ -116,8 +117,7 @@ export const INSUFFICIENT_ROLE_REDIRECT_CODE = 'insufficient_role';
  * turns an authorization check into a rubber stamp.
  */
 export async function fetchWorkspaceRole(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  supabase: SupabaseClient<any>,
+  supabase: SupabaseClient<Database>,
   workspaceId: string,
   userId: string,
 ): Promise<WorkspaceRole | null> {

@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database.types';
 
 /**
  * Name of the cookie that stores the user's currently-selected workspace.
@@ -25,8 +26,7 @@ export const ACTIVE_WORKSPACE_COOKIE = 'mcpe_active_ws';
  * earliest row is taken with `.limit(1)`.
  */
 export async function resolveActiveWorkspaceId(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  supabase: SupabaseClient<any>,
+  supabase: SupabaseClient<Database>,
   userId: string,
 ): Promise<string | null> {
   const cookieStore = await cookies();

@@ -31,9 +31,7 @@ export async function GET() {
   const context = await getContext();
   if (!context) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
 
-  // The bulk_runs migration has not been regenerated into Database yet.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = createServiceRoleClient() as any;
+  const db = createServiceRoleClient();
   const { data, error } = await db
     .from('bulk_runs')
     .select('id, inbox_id, operation, status, total, processed, succeeded, failed, cancel_requested_at, created_at, completed_at, error_code, inboxes(email_address, display_name)')
@@ -58,9 +56,7 @@ export async function PATCH(request: NextRequest) {
   const id = body && typeof body.id === 'string' ? body.id : null;
   if (!id) return NextResponse.json({ error: 'A run id is required.' }, { status: 400 });
 
-  // The bulk_runs migration has not been regenerated into Database yet.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = createServiceRoleClient() as any;
+  const db = createServiceRoleClient();
   const now = new Date().toISOString();
   const { data, error } = await db.from('bulk_runs')
     .update({ status: 'cancelling', cancel_requested_at: now })

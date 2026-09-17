@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { resolveEffectiveWorkspacePlan } from '@/lib/plans/effective-plan';
+import type { Database } from '@/types/database.types';
 
 /** The seat picture for a workspace whose plan was actually resolved. */
 export interface ResolvedMemberLimit {
@@ -58,8 +59,7 @@ export type MemberLimitCheckResult = ResolvedMemberLimit | UnresolvedMemberLimit
  * @param workspaceId  The workspace UUID to check.
  */
 export async function checkMemberLimit(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  supabase: SupabaseClient<any>,
+  supabase: SupabaseClient<Database>,
   workspaceId: string,
 ): Promise<MemberLimitCheckResult> {
   const [planResolution, memberCountResult] = await Promise.all([

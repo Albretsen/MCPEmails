@@ -4,6 +4,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createServiceRoleClient } from '@/lib/supabase/service';
+import type { Database } from '@/types/database.types';
 import type { ExperimentRecord } from './constants.ts';
 import type { ExperimentStore } from './resolve.ts';
 
@@ -26,7 +27,7 @@ export function clearExperimentCache(key?: string): void {
   else cache.clear();
 }
 
-export function createExperimentStore(client?: SupabaseClient): ExperimentStore {
+export function createExperimentStore(client?: SupabaseClient<Database>): ExperimentStore {
   const db = client ?? createServiceRoleClient();
 
   return {
@@ -34,10 +35,7 @@ export function createExperimentStore(client?: SupabaseClient): ExperimentStore 
       const hit = cache.get(key);
       if (hit && Date.now() - hit.fetchedAt < CACHE_TTL_MS) return hit.record;
 
-      // Generated database types can lag migrations; this server-only table is
-      // intentionally cast locally rather than weakening the application client.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (db as any)
+      const { data, error } = await db
         .from('experiments')
         .select('key, name, description, status, variants, winner_variant_id, retention_goal, retention_window_days, created_at, updated_at, started_at, concluded_at')
         .eq('key', key)
@@ -50,14 +48,15 @@ export function createExperimentStore(client?: SupabaseClient): ExperimentStore 
         return null;
       }
 
-      const record = (data as ExperimentRecord | null) ?? null;
+      // `variants` is jsonb, so the generated column type is `Json`; the shape
+      // is asserted here, at the single point the row enters the app.
+      const record = (data as unknown as ExperimentRecord | null) ?? null;
       cache.set(key, { record, fetchedAt: Date.now() });
       return record;
     },
 
     async assign(key: string, subjectId: string, variantId: string): Promise<string> {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (db as any).rpc('experiment_assign', {
+      const { data, error } = await db.rpc('experiment_assign', {
         p_key: key,
         p_subject_id: subjectId,
         p_variant_id: variantId,

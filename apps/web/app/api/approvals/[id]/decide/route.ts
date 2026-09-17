@@ -53,9 +53,7 @@ export async function POST(
     );
   }
 
-  // The send_approvals migration has not been regenerated into Database yet.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = createServiceRoleClient() as any;
+  const db = createServiceRoleClient();
 
   const { data: approval } = await db
     .from('send_approvals')

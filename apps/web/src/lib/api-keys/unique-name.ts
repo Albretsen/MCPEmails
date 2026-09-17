@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { selectAllRows } from '@/lib/supabase/paginate';
+import type { Database } from '@/types/database.types';
 
 /**
  * API key name distinguishability helpers.
@@ -20,8 +21,11 @@ import { selectAllRows } from '@/lib/supabase/paginate';
 
 /** Fetch the names of all active (non-revoked) API keys in a workspace. */
 export async function getActiveApiKeyNames(
-  // Accept any Supabase client (RLS user client or service-role client).
-  supabase: Pick<SupabaseClient, 'from'>,
+  // Accept either Supabase client (RLS user client or service-role client).
+  // Parameterised with Database on purpose: a bare `SupabaseClient` is
+  // `SupabaseClient<any>`, which would stop type-checking `.from('api_keys')`
+  // and `.select('name')` against the real schema.
+  supabase: Pick<SupabaseClient<Database>, 'from'>,
   workspaceId: string,
 ): Promise<string[]> {
   // This list is the ONLY thing the collision check below reads, so a partial

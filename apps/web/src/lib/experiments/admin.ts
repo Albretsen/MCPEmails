@@ -8,6 +8,17 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createServiceRoleClient } from '@/lib/supabase/service';
+import type { Database, Json, TablesUpdate } from '@/types/database.types';
+
+/** Every caller is server-side and service-role, so the schema is known. */
+type Db = SupabaseClient<Database>;
+
+/**
+ * `experiments.variants` is jsonb, so the generated column type is `Json`.
+ * Column NAMES are checked by the generated schema; only this one payload
+ * shape is asserted, at the two places the row crosses the boundary.
+ */
+const asRecord = (row: unknown) => row as unknown as ExperimentRecord;
 import { validateVariants } from './bucketing.ts';
 import { clearExperimentCache } from './store.ts';
 import type {
@@ -24,24 +35,20 @@ const COLUMNS =
 const KEY_PATTERN = /^[a-z0-9_]{2,64}$/;
 const RETENTION_GOALS: RetentionGoal[] = ['mailbox_activity', 'any_tool_call', 'value_activation'];
 
-// Generated database types can lag migrations; these server-only tables are
-// intentionally cast locally rather than weakening the application client.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function table(db: SupabaseClient): any {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (db as any).from('experiments');
+function table(db: Db) {
+  return db.from('experiments');
 }
 
-export async function listExperiments(client?: SupabaseClient): Promise<ExperimentRecord[]> {
+export async function listExperiments(client?: Db): Promise<ExperimentRecord[]> {
   const db = client ?? createServiceRoleClient();
   const { data, error } = await table(db).select(COLUMNS).order('created_at', { ascending: false });
   if (error) throw new Error(`Could not read the experiments: ${error.message}`);
-  return (data ?? []) as ExperimentRecord[];
+  return (data ?? []).map(asRecord);
 }
 
 export async function getExperimentRecord(
   key: string,
-  client?: SupabaseClient,
+  client?: Db,
 ): Promise<ExperimentRecord | null> {
   const db = client ?? createServiceRoleClient();
   const { data, error } = await table(db).select(COLUMNS).eq('key', key).maybeSingle();
@@ -60,7 +67,7 @@ export interface CreateExperimentInput {
 
 export async function createExperiment(
   input: CreateExperimentInput,
-  client?: SupabaseClient,
+  client?: Db,
 ): Promise<ExperimentRecord> {
   if (!KEY_PATTERN.test(input.key ?? '')) {
     throw new Error('The key must be 2 to 64 characters of lowercase letters, digits or underscores.');
@@ -84,7 +91,7 @@ export async function createExperiment(
       key: input.key,
       name: input.name.trim(),
       description: input.description?.trim() || null,
-      variants: input.variants,
+      variants: input.variants as unknown as Json,
       retention_goal: goal,
       retention_window_days: days,
     })
@@ -96,7 +103,7 @@ export async function createExperiment(
     throw new Error(`Could not create the experiment: ${error.message}`);
   }
   clearExperimentCache(input.key);
-  return data as ExperimentRecord;
+  return asRecord(data);
 }
 
 export type ExperimentPatch = Partial<
@@ -127,14 +134,13 @@ const ALLOWED_TRANSITIONS: Record<ExperimentStatus, ExperimentStatus[]> = {
 export async function updateExperiment(
   key: string,
   patch: ExperimentPatch,
-  client?: SupabaseClient,
+  client?: Db,
 ): Promise<ExperimentRecord> {
   const db = client ?? createServiceRoleClient();
   const current = await getExperimentRecord(key, db);
   if (!current) throw new Error(`There is no experiment named "${key}".`);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const update: Record<string, any> = {};
+  const update: TablesUpdate<'experiments'> = {};
 
   if (patch.name !== undefined) {
     if (!patch.name || patch.name.trim() === '') throw new Error('The experiment needs a name.');
@@ -161,7 +167,7 @@ export async function updateExperiment(
   if (patch.variants !== undefined) {
     const variantError = validateVariants(patch.variants);
     if (variantError) throw new Error(variantError);
-    update.variants = patch.variants;
+    update.variants = patch.variants as unknown as Json;
   }
 
   if (patch.status !== undefined && patch.status !== current.status) {
@@ -200,17 +206,16 @@ export async function updateExperiment(
   const { data, error } = await table(db).update(update).eq('key', key).select(COLUMNS).single();
   if (error) throw new Error(`Could not save the experiment: ${error.message}`);
   clearExperimentCache(key);
-  return data as ExperimentRecord;
+  return asRecord(data);
 }
 
 /** Per-variant counts from the database. One row per variant, in array order. */
 export async function fetchExperimentStats(
   key: string,
-  client?: SupabaseClient,
+  client?: Db,
 ): Promise<ExperimentVariantStats[]> {
   const db = client ?? createServiceRoleClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (db as any).rpc('experiment_stats', { p_key: key });
+  const { data, error } = await db.rpc('experiment_stats', { p_key: key });
   if (error) throw new Error(`Could not read the results for "${key}": ${error.message}`);
   return (data ?? []) as ExperimentVariantStats[];
 }
