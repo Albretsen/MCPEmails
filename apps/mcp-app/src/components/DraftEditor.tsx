@@ -327,6 +327,83 @@ export function draftPatch(edited: EditState, stored: EditState): DraftPatch {
   return p;
 }
 
+// ---------------------------------------------------------------------------
+// Which version of the draft is on screen
+// ---------------------------------------------------------------------------
+
+/**
+ * The version marker for one envelope's draft.
+ *
+ * Normally the server's (`mcp-app-drafts.ts#draftContentVersion`). The fallback
+ * is for an envelope that predates the field — one restored from this browser's
+ * storage, or one from an older edge function — and is the card's own content
+ * SERIALISED rather than hashed. Exact, and impossible to drift from the
+ * server's hash because it is not trying to match it: the two are never
+ * compared for equality across sources, only against themselves, and a card
+ * that meets both in one session simply resyncs once on the changeover. Hashing
+ * it here would duplicate an algorithm for no benefit; the server hashes only
+ * because it has to put the result on a wire and a 64 KB body does not fit.
+ *
+ * Everything volatile is left out for the reason `last_saved_at` is left out of
+ * the server's: `last_saved_at`, `origin` and `last_saved_by` describe the
+ * RESPONSE, not the draft, and change when nothing has.
+ */
+export function draftVersion(d: DraftEditorData): string {
+  if (typeof d.version === "string" && d.version.length > 0) return d.version;
+  return "c1:" + JSON.stringify([
+    d.draft_id,
+    d.recipients?.to ?? [],
+    d.recipients?.cc ?? [],
+    d.recipients?.bcc ?? [],
+    d.subject ?? "",
+    d.body?.text ?? null,
+    d.body?.html ?? null,
+    d.body?.truncated === true,
+    (d.attachments ?? []).map((a) => [a.filename, a.size_bytes, a.mime_type]),
+  ]);
+}
+
+/**
+ * The patch, and the one rule that makes it safe: a patch is only ever computed
+ * between an editor state and the server content it was DERIVED FROM.
+ *
+ * ── WHAT THIS REPLACED, AND WHY IT IS A FUNCTION ──────────────────────────
+ * The editor keeps `edit` in state and recomputes `server` from props on every
+ * render, and those two move at different times: props change in the render
+ * itself, `edit` only once the resync effect has run. Between the two there is
+ * a commit where `patch` is the OLD editor state diffed against the NEW server
+ * content — a patch that describes a change nobody made. Both ways that patch
+ * could escape were real:
+ *
+ *   - the teardown saver armed with it (`ui/resource-teardown` lands as its own
+ *     task, so "one render" was long enough), writing the pre-refresh contents
+ *     over the newer body;
+ *   - Send, which computes its own patch in the click handler and is not gated
+ *     on `dirty`.
+ *
+ * Both are closed here rather than at either call site, because the fix is not
+ * "order the effects better" — it is that a patch across two different versions
+ * is not a patch at all, and the only correct value for it is empty.
+ *
+ * Out of sync lasts from the render that first carries a new envelope until the
+ * resync effect flushes, which is a frame rather than a render. Through it the
+ * card reads as clean and Save is disabled, which is correct rather than a
+ * compromise: at that instant the card knows of no edit relative to what the
+ * server now has. The user's text is still on screen and still in `editRef`
+ * either way; what is withheld is only the claim that it is a change.
+ *
+ * `editVersion` is null only if a caller never recorded one.
+ */
+export function editorPatch(
+  editVersion: string | null,
+  serverVersion: string,
+  edited: EditState,
+  stored: EditState,
+): DraftPatch {
+  if (editVersion !== serverVersion) return {};
+  return draftPatch(edited, stored);
+}
+
 export function DraftEditor(props: Props) {
   const { env, draft: d, provider, fullscreen, busy, actions } = props;
   const canEdit = env.actor?.can_edit !== false;
@@ -364,31 +441,30 @@ export function DraftEditor(props: Props) {
 
   // The card MUST adopt every id the server returns (§8: on IMAP the id changes
   // on every save). This is where that happens: App replaces the envelope with
-  // the response and the editor resyncs to it. Keyed on id + last_saved_at +
-  // origin so an ERROR response, which by contract changes nothing, does NOT
-  // resync and the user keeps the edits they were about to lose.
+  // the response and the editor resyncs to it.
   //
-  // ── KNOWN GAP, PRE-EXISTING (identified round 2, NOT introduced by it) ────
-  // The key is a proxy for "this is a different version of the draft", and it
-  // is not a faithful one. A refresh that comes back with the SAME draft_id,
-  // the SAME last_saved_at and the SAME origin produces the same key, so this
-  // effect does not re-run and `edit` is never resynced — while `server` above
-  // is recomputed from the new props on every render. Two ways to get there:
-  // a provider that returns no draft timestamp at all (`last_saved_at` is null
-  // on both sides, so the key's middle field is "" both times), and two reads
-  // that land inside one tick of the provider's timestamp granularity.
+  // Keyed on the CONTENT version, not on id + last_saved_at + origin. That
+  // triple was a proxy for "this is a different version of the draft" and it
+  // was false in both directions. Too eager, which is what shipped: every
+  // server path stamps `last_saved_at` with the clock at response time (see
+  // contract.ts), so the key changed on every response and a refresh that
+  // brought back a byte-identical draft still threw away whatever the user had
+  // typed. And too lax, which is what it would have become the moment
+  // `last_saved_at` started meaning what its name says: two responses agreeing
+  // on the triple while the content had moved would leave `edit` describing the
+  // old body, and Save would write it over the new one.
   //
-  // What a user would see: a draft changed elsewhere (their phone, another
-  // session) is refreshed here, the box still shows the OLD text, and because
-  // `patch` is computed against the NEW `server`, the card now reads as dirty
-  // and both Save and the teardown saver will write the stale editor contents
-  // straight over the newer body. Silent, and lossy in the direction that
-  // matters. The fix is a real version marker in the envelope rather than a
-  // heuristic triple; it is not attempted here because the envelope is the
-  // server's (supabase/functions/mcp-server/mcp-app-drafts.ts,
-  // `buildDraftEditorEnvelope`).
-  const syncKey = [d.draft_id, d.last_saved_at ?? "", d.origin ?? ""].join(" ");
+  // `version` answers the question directly, so neither failure is available.
+  // An error response still does not resync — it carries no `draft`, App keeps
+  // the current one (see its callDraft), so the version does not move and the
+  // user keeps the edits they were about to lose.
+  const version = draftVersion(d);
+  // The version `edit` was derived from. Written in the same effect that
+  // replaces `edit`, and read by `editorPatch` below, which is what stops the
+  // two from ever describing different versions.
+  const editVersion = useRef(version);
   useEffect(() => {
+    editVersion.current = version;
     update(server);
     setAddrWarning(null);
     setConfirmDiscard(false);
@@ -396,44 +472,64 @@ export function DraftEditor(props: Props) {
     // one describes nothing. Dropped rather than re-validated.
     setSigPin(null);
     setEditingSig(false);
-  }, [syncKey]);
+  }, [version]);
 
-  const patchFrom = (e: EditState): DraftPatch => draftPatch(e, server);
+  // Every patch taken during a render goes through here: this render's
+  // `dirty`, Save and Send. The teardown saver calls `editorPatch` itself, for
+  // the reason its own comment gives — it needs the LIVE envelope, not this
+  // render's. See `editorPatch` for why the guard is inside the function rather
+  // than at any of the call sites.
+  const patchFrom = (e: EditState): DraftPatch =>
+    editorPatch(editVersion.current, version, e, server);
 
   const patch = patchFrom(edit);
   const dirty = Object.keys(patch).length > 0;
   const patchKey = JSON.stringify(patch);
 
+  // The server content and version of the LATEST render, readable from a
+  // closure that was made during an earlier one. Assigned during render on
+  // purpose: the teardown saver below is the one thing in the card that fires
+  // at a moment nothing else controls, and it has to see the current envelope,
+  // not the one that was current when it was armed.
+  const live = useRef({ version, server });
+  live.current = { version, server };
+
   // Unsaved work at teardown. The host sends `ui/resource-teardown` before the
   // frame goes away and waits for the reply, so this is the last moment a
   // half-typed edit can be written. Registered only while there is something to
-  // write, and re-registered as it changes so the snapshot is the current one.
+  // write.
   //
-  // ── KNOWN GAP, PRE-EXISTING (identified round 2, NOT introduced by it) ────
-  // There is a one-commit window on every resync where the snapshot is stale.
-  // Both effects flush in the same commit and this one is declared SECOND, so
-  // on the render that first carries a new envelope: the resync effect above
-  // runs `update(server)` (which only schedules a re-render), then this effect
-  // runs with `patch` still computed from the OLD `edit` against the NEW
-  // `server` — a non-empty patch — and arms the teardown saver with it. The
-  // very next render recomputes an empty patch and disarms it. A teardown
-  // landing inside that window writes the pre-refresh editor contents. The
-  // window is one render long and needs the frame to be torn down inside it,
-  // which is why this is written down rather than papered over; the real fix
-  // is the same version marker the syncKey gap above needs, so that `edit` and
-  // the snapshot can never disagree about which version they describe.
+  // ── WHY THE PATCH IS RE-DERIVED AT FIRE TIME ──────────────────────────────
+  // It used to be frozen at arm time, and a frozen patch is stale from the
+  // instant the envelope moves. Arming and disarming both happen in effects,
+  // which flush a frame after the render that triggered them, whereas
+  // `ui/resource-teardown` arrives as its own task: a teardown between a new
+  // envelope landing and this effect re-running fired a saver armed against the
+  // PREVIOUS version and wrote the pre-refresh editor contents over the newer
+  // body. Re-deriving closes that whole class rather than narrowing it, because
+  // the answer is then computed from the live editor state and the live
+  // envelope at the only moment that matters, and `editorPatch` returns nothing
+  // at all when those two describe different versions.
+  //
+  // It is also what the frozen snapshot was reaching for: "the current one"
+  // read from `editRef` at fire time is more current than any re-arming can be.
   useEffect(() => {
-    const snapshot = { ...patch };
-    // `dirty` is derived from exactly these keys, so the second half of this
-    // test is redundant today. It is written out anyway because the failure it
-    // guards is the expensive one: an empty patch reaching the server is a
-    // whole-body rewrite of a draft the user only looked at, and teardown fires
-    // with no one watching. Nothing goes out unless a field actually differs.
-    if (!canEdit || !dirty || Object.keys(snapshot).length === 0) {
+    // `dirty` is derived from exactly these keys, so this test is redundant
+    // with the one inside the saver. It is written out anyway because the
+    // failure it guards is the expensive one: an empty patch reaching the
+    // server is a whole-body rewrite of a draft the user only looked at, and
+    // teardown fires with no one watching. Nothing goes out unless a field
+    // actually differs.
+    if (!canEdit || !dirty) {
       setTeardownSaver(null);
       return;
     }
-    setTeardownSaver(() => actions.save(snapshot));
+    setTeardownSaver(() => {
+      const now = live.current;
+      const p = editorPatch(editVersion.current, now.version, editRef.current, now.server);
+      if (Object.keys(p).length === 0) return Promise.resolve(false);
+      return actions.save(p);
+    });
     return () => setTeardownSaver(null);
   }, [patchKey, canEdit]);
 
