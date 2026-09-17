@@ -1,15 +1,19 @@
 -- Corrects the column comment on api_keys.card_build_notified.
 --
--- NOT YET APPLIED to production. Written here as the record; the live column
--- still carries the 20260916160000 text until someone runs this.
+-- APPLIED to production 2026-09-17. It went out ahead of this file rather than
+-- through it, so the ledger first recorded it under the generated version
+-- 20260917075820 and `migration list --linked` read as one mismatch; the row
+-- was renamed to this file's version on 2026-09-17, statement intact. Verified
+-- against the object, not the ledger: the live comment is 645 chars and
+-- contains invalidateCardListings.
 --
--- The shipped comment reads:
+-- The comment this REPLACED, from 20260916160000, read:
 --
 --   '... last received in a tools/list, or was last sent
 --    notifications/tools/list_changed for. Set on tools/list, compared on
 --    tools/call. NULL until the first tools/list.'
 --
--- Both of the last two sentences are now false, and a column comment is the
+-- Both of its last two sentences were false, and a column comment is the
 -- first thing anyone reads when they meet this column in psql:
 --
 --   * "Set on tools/list" — it is also set on a `tools/call` that notifies, by
