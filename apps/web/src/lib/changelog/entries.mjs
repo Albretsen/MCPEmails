@@ -28,6 +28,12 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 
 /** @type {{ date: string, kind: 'added'|'improved'|'fixed'|'changed', title: string, body: string }[]} */
 export const ENTRIES = [
+  {
+    date: '2026-09-17',
+    kind: 'fixed',
+    title: 'A forward now carries the original exactly',
+    body: 'Forwarding relays the original message byte for byte: its HTML, inline images, attachments and MIME structure arrive as they were sent, under your note and the usual forwarded-message header. Until now a forward was flattened to plain text on every provider. Originals up to 25 MB, and as_attachment sends the whole original as a .eml instead.',
+  },
   /* ── September 2026 ─────────────────────────────────────────── */
   {
     date: '2026-09-17',

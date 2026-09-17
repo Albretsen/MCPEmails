@@ -30,23 +30,18 @@
 // class's own `writeAll` existed a few hundred lines up, documented with
 // exactly why an octet-counted literal must not be short-written.
 //
-// The tests below pin both, plus the third thing the report asked for: a
-// forward must never answer a file it cannot carry by dropping it and
-// reporting success.
+// The tests below pin both. (The third thing the report asked for, refusing
+// rather than dropping an attachment the reader could not carry, is moot since
+// 2026-09-17: a forward relays the original's bytes and never re-reads its
+// attachments at all. See forward-relay.ts.)
 //
 // Run: deno test supabase/functions/mcp-server/forward-attachments.test.ts
 // ---------------------------------------------------------------------------
 
-import { assert, assertEquals, assertRejects, assertThrows } from "jsr:@std/assert@1";
+import { assert, assertEquals, assertRejects } from "jsr:@std/assert@1";
 import { smtpDataPayload, writeAllBytes } from "./smtp-client.ts";
 import { ImapClient } from "./imap-client.ts";
 import { buildMimeMessage } from "./mime-build.ts";
-import {
-  collectForwardAttachments,
-  FORWARD_ATTACHMENT_MAX_BYTES,
-  ForwardAttachmentError,
-  type ForwardSourceAttachment,
-} from "./forward-attachments.ts";
 
 const LATIN1 = new TextDecoder("latin1");
 const UTF8 = new TextEncoder();
@@ -286,63 +281,26 @@ Deno.test("APPEND writes the whole Sent copy, not one socket buffer of it", asyn
   );
 });
 
-// -- refusing rather than dropping -------------------------------------------
+// -- a Sent copy that is bytes, not text -------------------------------------
 
-function att(
-  filename: string,
-  size: number,
-  data: string | null,
-): ForwardSourceAttachment {
-  return { filename, mime_type: "application/pdf", size_bytes: size, data };
-}
+Deno.test("APPEND writes a byte message exactly, without a UTF-8 round trip", async () => {
+  // forward-relay.ts files the octets it transmitted as the Sent copy. Those
+  // may include 8-bit bodies (0x80-0xFF) that a string path would re-encode as
+  // two bytes each, making the Sent copy differ from what went out.
+  const conn = new ShortWriteImapConn(4096);
+  const client = clientOn(conn);
+  const message = new Uint8Array(70_000);
+  for (let i = 0; i < message.length; i++) message[i] = i % 256;
+  const appended = client.append("Sent", message);
+  await new Promise((r) => setTimeout(r, 0));
+  conn.finish("A00001");
 
-Deno.test("attachments the reader fetched are passed through", () => {
-  const parts = collectForwardAttachments(
-    [att("a.pdf", 3, "YWJj"), att("b.pdf", 3, "eHl6")],
-    true,
+  assertEquals(await appended, true);
+  const command = `A00001 APPEND "Sent" (\\Seen) {${message.length}}\r\n`;
+  assertEquals(conn.written.length, command.length + message.length + 2);
+  assertEquals(
+    new Uint8Array(conn.written.slice(command.length, command.length + message.length)),
+    message,
+    "every octet, in order, unchanged",
   );
-  assertEquals(parts.length, 2);
-  assertEquals(parts[0], { filename: "a.pdf", mime_type: "application/pdf", data: "YWJj" });
-});
-
-Deno.test("include_attachments: false leaves them behind, as asked", () => {
-  assertEquals(collectForwardAttachments([att("a.pdf", 3, null)], false), []);
-});
-
-Deno.test("a file over the limit refuses the forward instead of dropping it", () => {
-  // The old code was `.filter((a) => a.data !== null)`, which sent the message
-  // without the invoice and reported success. Losing a bilag quietly is worse
-  // than failing loudly, so this must throw.
-  const err = assertThrows(
-    () => collectForwardAttachments([att("stor-faktura.pdf", 12_000_000, null)], true),
-    ForwardAttachmentError,
-  );
-  assertEquals(err.kind, "too_large");
-  assertEquals(err.filename, "stor-faktura.pdf");
-  assertEquals(err.limitBytes, FORWARD_ATTACHMENT_MAX_BYTES);
-});
-
-Deno.test("a file whose bytes are missing for any other reason also refuses", () => {
-  // Gmail's reader returns data:null when the attachment fetch itself fails, at
-  // any size. That is not "too large" and must not be reported as such, but it
-  // is just as much a reason not to send.
-  const err = assertThrows(
-    () => collectForwardAttachments([att("kvittering.pdf", 60_000, null)], true),
-    ForwardAttachmentError,
-  );
-  assertEquals(err.kind, "unavailable");
-  assertEquals(err.sizeBytes, 60_000);
-});
-
-Deno.test("every file listed in the 2026-09-07 report is under the forward limit", () => {
-  // Hetzner, Supabase and Domeneshop, verbatim from the bug report. None of
-  // these was ever near a real ceiling, which is what made the failure so
-  // confusing; all of them must now pass the collector untouched.
-  const sizes = [59_859, 61_070, 69_397, 69_539, 72_001, 116_911, 116_848, 152_172, 152_666];
-  const parts = collectForwardAttachments(
-    sizes.map((n, i) => att(`file${i}.pdf`, n, "YWJj")),
-    true,
-  );
-  assertEquals(parts.length, sizes.length);
-  for (const n of sizes) assert(n < FORWARD_ATTACHMENT_MAX_BYTES);
 });

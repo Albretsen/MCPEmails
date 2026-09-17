@@ -905,10 +905,12 @@ export class ImapClient {
    * does not exist). Uses an IMAP literal: send "{len}", await the "+" prompt,
    * then the raw bytes.
    */
-  append(mailbox: string, message: string): Promise<boolean> {
+  append(mailbox: string, message: string | Uint8Array): Promise<boolean> {
     return this.runExclusive(async () => {
       const tag = this.nextTag();
-      const bytes = this.encoder.encode(message);
+      // Bytes go out exactly as given: a relayed forward's Sent copy must be
+      // the octets that were transmitted, not a UTF-8 re-encoding of them.
+      const bytes = typeof message === "string" ? this.encoder.encode(message) : message;
       await this.write(`${tag} APPEND ${quoteMailbox(mailbox)} (\\Seen) {${bytes.length}}${CRLF}`);
 
       const cont = await this.readLine();
@@ -1848,6 +1850,33 @@ const CP1252_HIGH: Map<number, number> = (() => {
   for (let i = 0; i < chars.length; i++) map.set(chars.charCodeAt(i), 0x80 + i);
   return map;
 })();
+
+/**
+ * The octets a single-byte read produced, exactly.
+ *
+ * Literals come off the socket through TextDecoder("latin1"), which is
+ * windows-1252 and maps 0x80-0x9F to other code points (0x85 reads as U+2026).
+ * `charCodeAt(i) & 0xff` on such a string silently corrupts those bytes: every
+ * UTF-8 continuation byte in 0x80-0x9F, so "…" (E2 80 A6) came back as
+ * E2 26 A6. This is the exact inverse of that decode, so a raw message read as
+ * a string and turned back into bytes is the message that was on the wire.
+ */
+export function singleByteTextToBytes(text: string): Uint8Array {
+  const octets = new Uint8Array(text.length);
+  for (let i = 0; i < text.length; i++) {
+    const code = text.charCodeAt(i);
+    if (code <= 0xff) {
+      octets[i] = code;
+      continue;
+    }
+    const mapped = CP1252_HIGH.get(code);
+    if (mapped === undefined) {
+      throw new Error(`not a single-byte character: U+${code.toString(16).toUpperCase()}`);
+    }
+    octets[i] = mapped;
+  }
+  return octets;
+}
 
 /**
  * Undo the byte-per-character reading of a mailbox name that a non-compliant

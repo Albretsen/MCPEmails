@@ -59,7 +59,7 @@ function splitHeadersBody(raw: string): { headerBlock: string; body: string } {
   return { headerBlock: raw.slice(0, idx), body: raw.slice(idx + sep) };
 }
 
-function parseHeaders(block: string): Map<string, string[]> {
+export function parseHeaders(block: string): Map<string, string[]> {
   const headers = new Map<string, string[]>();
   // Unfold: lines beginning with whitespace continue the previous header.
   const lines = block.split(/\r\n|\n/);
@@ -83,12 +83,12 @@ function parseHeaders(block: string): Map<string, string[]> {
   return headers;
 }
 
-interface ContentType {
+export interface ContentType {
   mediaType: string;
   params: Record<string, string>;
 }
 
-function parseContentType(value: string | null): ContentType {
+export function parseContentType(value: string | null): ContentType {
   if (!value) return { mediaType: "text/plain", params: {} };
   const parts = value.split(";");
   const mediaType = parts[0].trim().toLowerCase();

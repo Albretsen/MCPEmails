@@ -232,7 +232,7 @@
     },
     "email_compose": {
       "title": "撰写邮件",
-      "desc": "发送新邮件或回复现有邮件。设置 action：'send' 发送新邮件（to/subject/body，可选 cc/bcc/html_body/reply_to/attachments）、'reply' 回复某个 message_id（线程标头自动设置；可选 reply_all），或 'forward' 将某个 message_id 转发给新收件人（可选择重新附加原始文件）。收件箱的签名会自动追加：在回复和转发时，它位于你的文本之后、引用块之前，由签名的回复模式控制；传入 include_signature: false 可在单封简短邮件中抑制它。三者一经发送均不可撤销。 'forward' 也接受 message_ids，一次最多 50 封邮件，逐条报告。要附加本收件箱中已有的文件，请用 '{' source_message_id、attachment_index '}' 引用它，而不是读取后重新编码。",
+      "desc": "发送新邮件或回复现有邮件。设置 action：'send' 发送新邮件（to/subject/body，可选 cc/bcc/html_body/reply_to/attachments）、'reply' 回复某个 message_id（线程标头自动设置；可选 reply_all），或 'forward' 将某个 message_id 转发给新收件人，原始邮件逐字节转发（HTML、内嵌图片和附件均保持原样）。收件箱的签名会自动追加：在回复和转发时，它位于你的文本之后、引用块之前，由签名的回复模式控制；传入 include_signature: false 可在单封简短邮件中抑制它。三者一经发送均不可撤销。 'forward' 也接受 message_ids，一次最多 50 封邮件，逐条报告。要附加本收件箱中已有的文件，请用 '{' source_message_id、attachment_index '}' 引用它，而不是读取后重新编码。",
       "params": {
         "action": "要执行的操作：\"send\"、\"reply\" 或 \"forward\"。决定其他哪些参数适用。",
         "inbox_id": "要从中发送的收件箱的 UUID。可选：当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
@@ -247,7 +247,8 @@
         "html_body": "正文的 HTML 版本（multipart/alternative）。调用方负责确保 HTML 安全。",
         "reply_to": "Reply-To 标头地址（action 'send'）。",
         "reply_all": "回复所有原始收件人，即 To + Cc（action 'reply'）。默认 false。",
-        "include_attachments": "重新附加原始邮件的附件（action 'forward'）。超出 10 MB 额度的文件将被省略。默认 false。",
+        "include_attachments": "携带原始邮件的附件（action 'forward'）。默认 true；设为 false 可不带附件文件。正文内嵌的图片始终保留。",
+        "as_attachment": "将整封原始邮件作为单个 message/rfc822（.eml）部分转发，包含全部邮件头，而不是内联转发其正文（action 'forward'）。默认 false。",
         "include_signature": "是否将收件箱已配置的签名追加到这封邮件。默认 true；设为 false 可发送这一封不带签名的邮件。",
         "attachments": "文件附件。每项要么是内联字节 '{' filename、mime_type、data（base64）'}'，要么是对本收件箱中已有文件的引用 '{' source_message_id、attachment_index '}'，服务器会直接复制这些字节，不经过模型。最多 20 项，共 10 MB。",
         "idempotency_key": "可选的不透明键（1–200 个字符），代表一次逻辑上的外发请求。仅在 24 小时内重试完全相同的动作和参数时才可重复使用；参数不同的重复使用会被拒绝。"

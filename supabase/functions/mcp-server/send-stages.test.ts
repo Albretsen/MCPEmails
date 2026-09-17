@@ -41,10 +41,6 @@ import {
   TargetUnresolvedError,
 } from "./send-stages.ts";
 import { targetUnresolvedMessage } from "./message-id-errors.ts";
-import {
-  collectForwardAttachments,
-  ForwardAttachmentError,
-} from "./forward-attachments.ts";
 
 Deno.test("a forward that dies fetching attachment bytes is a source failure", async () => {
   // The 2026-09-07 shape: readImapMessage throws part-way through the
@@ -198,27 +194,6 @@ Deno.test("the compose sentence names the stage it actually failed at", () => {
     !compose.includes("could not read the message it was asked to act on"),
     `compose must not borrow the source wording: ${compose}`,
   );
-});
-
-Deno.test("a forward attachment refusal keeps its own type through the wrapper", () => {
-  // forward-attachments.ts refuses to send a forward whose attachment bytes it
-  // could not carry, and email_forward has a branch that names the file and the
-  // limit. That branch is `instanceof ForwardAttachmentError`, so the compose
-  // wrapper must not reclassify it on the way out - which it does not, because
-  // ForwardAttachmentError IS a PreTransmissionError.
-  let caught: unknown = null;
-  try {
-    preTransmissionSync("compose", () =>
-      collectForwardAttachments(
-        [{ filename: "invoice.pdf", mime_type: "application/pdf", size_bytes: 99, data: null }],
-        true,
-      ));
-  } catch (e) {
-    caught = e;
-  }
-  assert(caught instanceof ForwardAttachmentError, "specific branch still fires");
-  assert(caught instanceof PreTransmissionError, "and the not-sent guarantee holds");
-  assertEquals((caught as ForwardAttachmentError).filename, "invoice.pdf");
 });
 
 Deno.test("no pre-transmission failure is ever told to try again in a moment", () => {

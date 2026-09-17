@@ -77,8 +77,13 @@ export interface SmtpMessage {
   from: string;
   /** Envelope RCPT TO recipients (bare emails): to + cc + bcc. */
   recipients: string[];
-  /** Full RFC 5322 message with CRLF line endings. */
-  rawMessage: string;
+  /**
+   * Full RFC 5322 message. A string is UTF-8 encoded on the wire (every body
+   * our builder writes is base64, so that is ASCII in practice). Bytes are
+   * written exactly as given, which is what a byte-for-byte forward relies on:
+   * see forward-relay.ts.
+   */
+  rawMessage: string | Uint8Array;
 }
 
 const EHLO_DOMAIN = "mcpemails.com";
@@ -198,7 +203,11 @@ async function submitOnce(cfg: SmtpConfig, msg: SmtpMessage): Promise<void> {
       throw new SmtpAuthError(`SMTP authentication failed: ${reason}`);
     }
 
-    await session.command(`MAIL FROM:<${msg.from}>`, 250);
+    // RFC 6152: declare an 8-bit body when the server can take one. A relayed
+    // original with `Content-Transfer-Encoding: 8bit` parts is exactly that;
+    // everything our own builder writes is base64 and stays 7-bit.
+    const eightBit = messageHasEightBit(msg.rawMessage) && advertises8BitMime(capabilities.lines);
+    await session.command(`MAIL FROM:<${msg.from}>${eightBit ? " BODY=8BITMIME" : ""}`, 250);
     for (const rcpt of msg.recipients) {
       // 250 = accepted, 251 = forwarded.
       const r = await session.commandRaw(`RCPT TO:<${rcpt}>`);
@@ -353,17 +362,69 @@ export async function writeAllBytes(
   }
 }
 
+/** True when the EHLO reply listed the 8BITMIME extension. */
+export function advertises8BitMime(lines: readonly string[]): boolean {
+  return lines.some((line) => line.trim().toUpperCase() === "8BITMIME");
+}
+
+/** True when the message has an octet (or, for a string, a character) above 0x7F. */
+export function messageHasEightBit(rawMessage: string | Uint8Array): boolean {
+  if (typeof rawMessage === "string") {
+    // deno-lint-ignore no-control-regex
+    return /[^\x00-\x7f]/.test(rawMessage);
+  }
+  for (let i = 0; i < rawMessage.length; i++) if (rawMessage[i] > 0x7f) return true;
+  return false;
+}
+
 /**
  * The exact bytes that follow a 354: CRLF-normalised, dot-stuffed, terminated.
  *
  * Split out of {@link SmtpSession.writeData} so the byte count the socket has
  * to carry is something a test can assert on directly.
+ *
+ * The byte form does the same three things without ever decoding the message:
+ * a relayed original may carry 8-bit octets that no text round trip could be
+ * trusted to preserve, and the only transformations SMTP is owed are line
+ * endings, dot-stuffing and the terminator.
  */
-export function smtpDataPayload(rawMessage: string): Uint8Array {
-  const normalized = rawMessage.replace(/\r?\n/g, "\r\n");
-  // Dot-stuffing: any line starting with '.' gets an extra leading '.'.
-  const stuffed = normalized.replace(/^\./gm, "..");
-  return new TextEncoder().encode(stuffed + "\r\n.\r\n");
+export function smtpDataPayload(rawMessage: string | Uint8Array): Uint8Array {
+  if (typeof rawMessage === "string") {
+    const normalized = rawMessage.replace(/\r?\n/g, "\r\n");
+    // Dot-stuffing: any line starting with '.' gets an extra leading '.'.
+    const stuffed = normalized.replace(/^\./gm, "..");
+    return new TextEncoder().encode(stuffed + "\r\n.\r\n");
+  }
+  const CR = 0x0d, LF = 0x0a, DOT = 0x2e;
+  // Worst case every byte is a stuffed dot or a bare LF, plus the terminator.
+  const out = new Uint8Array(rawMessage.length * 2 + 5);
+  let o = 0;
+  let lineStart = true;
+  for (let i = 0; i < rawMessage.length; i++) {
+    const b = rawMessage[i];
+    if (b === CR && rawMessage[i + 1] === LF) {
+      out[o++] = CR;
+      out[o++] = LF;
+      i++;
+      lineStart = true;
+      continue;
+    }
+    if (b === LF) {
+      out[o++] = CR;
+      out[o++] = LF;
+      lineStart = true;
+      continue;
+    }
+    if (lineStart && b === DOT) out[o++] = DOT;
+    out[o++] = b;
+    lineStart = false;
+  }
+  out[o++] = CR;
+  out[o++] = LF;
+  out[o++] = DOT;
+  out[o++] = CR;
+  out[o++] = LF;
+  return out.subarray(0, o);
 }
 
 class SmtpSession {
@@ -437,7 +498,7 @@ class SmtpSession {
   }
 
   /** Write the DATA payload with dot-stuffing and the terminating <CRLF>.<CRLF>. */
-  async writeData(rawMessage: string): Promise<void> {
+  async writeData(rawMessage: string | Uint8Array): Promise<void> {
     await writeAllBytes(this.conn, smtpDataPayload(rawMessage));
   }
 

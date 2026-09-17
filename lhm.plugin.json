@@ -987,8 +987,13 @@
             "type": "string"
           },
           "include_attachments": {
+            "default": true,
+            "description": "Carry the original's attachments. Default true. Set false to leave attached files behind; inline images the body embeds always stay.",
+            "type": "boolean"
+          },
+          "as_attachment": {
             "default": false,
-            "description": "Re-attach the original's attachments, up to 10 MB per file and 10 MB shared across the message. A file over that is never dropped quietly: the forward is refused with attachment_too_large naming the file, and nothing is sent. Read such a file on its own with email_read action: attachment (25 MB cap) and attach it to a plain send instead.",
+            "description": "Forward the whole original as one message/rfc822 (.eml) part, headers included, instead of relaying its body inline. Default false.",
             "type": "boolean"
           },
           "include_signature": {

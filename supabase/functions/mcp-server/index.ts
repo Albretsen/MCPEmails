@@ -7,6 +7,7 @@ import {
   type ImapMailboxInfo,
   ImapMessageSummary,
   ImapMessageTooLargeError,
+  singleByteTextToBytes,
 } from "./imap-client.ts";
 import { decodedBase64ByteLength } from "./attachment-validation.ts";
 import {
@@ -237,10 +238,13 @@ import {
 } from "./triage-engine.ts";
 import { sendViaSmtp, SmtpAuthError, SmtpNotSentError } from "./smtp-client.ts";
 import {
-  collectForwardAttachments,
-  FORWARD_ATTACHMENT_MAX_BYTES,
-  ForwardAttachmentError,
-} from "./forward-attachments.ts";
+  buildRelayForwardMime,
+  composeIntroHtml,
+  composeIntroText,
+  FORWARD_RELAY_MAX_BYTES,
+  splitRawMessage,
+  summarizeOriginal,
+} from "./forward-relay.ts";
 import { isSelfSenderIdentity, senderIdentityErrorCode } from "./sender-identity.ts";
 import { normaliseSenderName, SENDER_NAME_MAX_CHARS } from "./sender-name.ts";
 import {
@@ -4604,10 +4608,11 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     name: "email_forward",
     title: "Forward Email",
     description:
-      "Forward an existing email to one or more new recipients. Fetches the original " +
-      "message and prepends an optional introductory note followed by the standard " +
-      "'---------- Forwarded message ----------' header block (From, Date, Subject, To) " +
-      "and the original body. Optionally re-attaches original attachments. " +
+      "Forward an existing email to one or more new recipients. The original is " +
+      "relayed byte for byte: its HTML, inline images, attachments and MIME " +
+      "structure arrive exactly as they were sent, under an optional introductory " +
+      "note and the standard '---------- Forwarded message ----------' header " +
+      "block (From, Date, Subject, To). Originals up to 25 MB. " +
       "The forward subject is prefixed with 'Fwd:' if not already present. " +
       "Pass message_ids instead of message_id to forward up to 50 messages to the " +
       "same recipients in one call: they go one at a time, and the result names " +
@@ -4678,17 +4683,21 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           type: "string",
           description:
             "Optional HTML version of the introductory note. If provided alongside body, " +
-            "the message is sent as multipart/alternative.",
+            "the note is sent as multipart/alternative above the forwarded original.",
         },
         include_attachments: {
           type: "boolean",
+          default: true,
+          description:
+            "Carry the original's attachments. Default true. Set false to leave " +
+            "attached files behind; inline images the body embeds always stay.",
+        },
+        as_attachment: {
+          type: "boolean",
           default: false,
           description:
-            "Re-attach the original's attachments, up to 10 MB per file and 10 MB " +
-            "shared across the message. A file over that is never dropped quietly: " +
-            "the forward is refused with attachment_too_large naming the file, and " +
-            "nothing is sent. Read such a file on its own with email_read action: " +
-            "attachment (25 MB cap) and attach it to a plain send instead.",
+            "Forward the whole original as one message/rfc822 (.eml) part, headers " +
+            "included, instead of relaying its body inline. Default false.",
         },
         include_signature: INCLUDE_SIGNATURE_PROPERTY,
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
@@ -6980,7 +6989,7 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       forward: {
         legacy: "email_forward",
         scope: "send:email",
-        hint: "pass a message_id — or up to 50 message_ids — on to new recipients",
+        hint: "pass a message_id — or up to 50 message_ids — on to new recipients, the original relayed intact",
       },
     },
   },
@@ -10383,8 +10392,9 @@ async function readImapMessage(
    * Override the per-file ceiling that would otherwise be derived from
    * `attachmentBudgetBytes` and `selectOnlyIndex`.
    *
-   * Set only by the forward path, which needs the bytes it is about to
-   * retransmit rather than a preview of them. See FORWARD_ATTACHMENT_MAX_BYTES.
+   * Lifts the bulk preview clamp for a caller that needs the bytes themselves
+   * rather than a preview of them. No caller sets it since the forward moved
+   * to relaying the raw original (forward-relay.ts); kept for that next caller.
    */
   perFileMaxBytes?: number,
 ): Promise<ReadEmailResult> {
@@ -10719,7 +10729,7 @@ async function searchImapMessages(
  */
 async function imapSmtpSend(
   inbox: InboxRow,
-  mimeMessage: string,
+  mimeMessage: string | Uint8Array,
   recipients: string[],
 ): Promise<void> {
   if (!inbox.smtp_host || !inbox.smtp_port || !inbox.imap_password) {
@@ -10753,7 +10763,7 @@ const SENT_FOLDER_CANDIDATES = ["Sent", "Sent Messages", "Sent Items", "INBOX.Se
  * Graph / JMAP send APIs). Never throws — a failed Sent copy must not fail the
  * send itself.
  */
-async function appendToSentFolder(inbox: InboxRow, mimeMessage: string): Promise<void> {
+async function appendToSentFolder(inbox: InboxRow, mimeMessage: string | Uint8Array): Promise<void> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) return;
   let client: ImapClient | null = null;
   try {
@@ -11484,8 +11494,9 @@ async function readGmailMessage(
    * Override the per-file ceiling that would otherwise be derived from
    * `attachmentBudgetBytes` and `selectOnlyIndex`.
    *
-   * Set only by the forward path, which needs the bytes it is about to
-   * retransmit rather than a preview of them. See FORWARD_ATTACHMENT_MAX_BYTES.
+   * Lifts the bulk preview clamp for a caller that needs the bytes themselves
+   * rather than a preview of them. No caller sets it since the forward moved
+   * to relaying the raw original (forward-relay.ts); kept for that next caller.
    */
   perFileMaxBytes?: number,
 ): Promise<ReadEmailResult> {
@@ -11683,8 +11694,9 @@ async function readOutlookMessage(
    * Override the per-file ceiling that would otherwise be derived from
    * `attachmentBudgetBytes` and `selectOnlyIndex`.
    *
-   * Set only by the forward path, which needs the bytes it is about to
-   * retransmit rather than a preview of them. See FORWARD_ATTACHMENT_MAX_BYTES.
+   * Lifts the bulk preview clamp for a caller that needs the bytes themselves
+   * rather than a preview of them. No caller sets it since the forward moved
+   * to relaying the raw original (forward-relay.ts); kept for that next caller.
    */
   perFileMaxBytes?: number,
 ): Promise<ReadEmailResult> {
@@ -12362,10 +12374,18 @@ class OriginalMessageTooLargeError extends Error {
   }
 }
 
+/**
+ * The octets an IMAP literal was, exactly.
+ *
+ * Used to be `charCodeAt(i) & 0xff`, which is wrong for the decoder the IMAP
+ * client reads with: "latin1" is windows-1252 under WHATWG, so 0x80-0x9F come
+ * back as other code points and the mask turned them into unrelated bytes.
+ * Every UTF-8 continuation byte in that range was affected, so an 8-bit body
+ * fetched by email_original did not hash to the message on the server. The
+ * inverse lives next to the decoder it undoes (imap-client.ts).
+ */
 function latin1ToBytes(value: string): Uint8Array {
-  const bytes = new Uint8Array(value.length);
-  for (let i = 0; i < value.length; i++) bytes[i] = value.charCodeAt(i) & 0xff;
-  return bytes;
+  return singleByteTextToBytes(value);
 }
 
 async function sha256Hex(bytes: Uint8Array): Promise<string> {
@@ -14285,8 +14305,17 @@ interface ForwardEmailParams {
   body?: string;
   /** Optional HTML version of the introductory note. */
   htmlBody?: string;
-  /** When true, include original message attachments in the forward. */
+  /**
+   * When false, the original's attachment parts are left out of the relayed
+   * body (forward-relay.ts decides which parts those are). Default true: a
+   * forward carries what the original carried.
+   */
   includeAttachments: boolean;
+  /**
+   * When true, the whole original (headers included) rides as one
+   * message/rfc822 part instead of its body being relayed inline.
+   */
+  asAttachment: boolean;
   /**
    * Per-call signature override (Task 6). When explicitly `false`, the inbox
    * signature is not appended to the forward intro even if reply-mode would.
@@ -14314,40 +14343,6 @@ interface ForwardEmailResult {
 // ---------------------------------------------------------------------------
 // email_forward — shared helpers
 // ---------------------------------------------------------------------------
-
-/**
- * Build the plain-text forwarded-message body.
- *
- * Format:
- *   [optional intro text]
- *
- *   ---------- Forwarded message ----------
- *   From: <original sender>
- *   Date: <original date>
- *   Subject: <original subject>
- *   To: <original to>
- *
- *   <original body>
- */
-function buildForwardedTextBody(
-  intro: string | undefined,
-  from: string,
-  date: string,
-  subject: string,
-  to: string,
-  origBody: string,
-): string {
-  const block = [
-    "---------- Forwarded message ----------",
-    `From: ${from}`,
-    `Date: ${date}`,
-    `Subject: ${subject}`,
-    `To: ${to}`,
-    "",
-    origBody,
-  ].join("\n");
-  return intro ? `${intro}\n\n${block}` : block;
-}
 
 /**
  * Build a reply plain-text body that quotes the original message, mirroring the
@@ -14387,290 +14382,196 @@ function makeForwardSubject(origSubject: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// email_forward — IMAP provider
+// email_forward — one implementation for every provider
 // ---------------------------------------------------------------------------
 
 /**
- * Forwards an email via IMAP inboxes.
+ * Forward a message by relaying the original byte for byte.
+ *
+ * Until 2026-09-17 each provider had its own forward that re-read the original
+ * through the parsed read path and quoted `body_text` under a header block.
+ * The HTML, the inline images and the MIME tree were lost on every provider;
+ * a Yahoo customer verified the received message was `text/plain` only. The
+ * three functions were identical apart from the read and send they called, so
+ * they are one function now, and what it sends is the original itself
+ * (forward-relay.ts explains the shape).
  *
  * Flow:
- *   1. Read the original message via `readImapMessage` (with attachments if requested).
- *   2. Build the forwarded plain-text body with the standard header block.
- *   3. Send via `sendImapMessage` (SMTP submission) with the composed body.
+ *   1. STAGE "source": the raw MIME through readOriginalMessage, the same bytes
+ *      email_original hands out. Refused from the provider's declared size when
+ *      over FORWARD_RELAY_MAX_BYTES, so an oversized message is never buffered
+ *      and never sent with part of itself missing.
+ *   2. STAGE "compose": author the intro part (note, signature, the
+ *      "---------- Forwarded message ----------" block) and place the original
+ *      under it. The original is not decoded at any point.
+ *   3. Transmit through the provider's raw endpoint: SMTP DATA, Gmail's
+ *      message/rfc822 upload, or Graph's MIME sendMail.
  */
-async function forwardImapMessage(
+async function forwardRelayMessage(
   inbox: InboxRow,
   originalMessageId: string,
   params: ForwardEmailParams,
 ): Promise<ForwardEmailResult> {
-  // STAGE "source" (see send-stages.ts): reading the original, and when
-  // include_attachments is set, fetching its attachment BYTES. This is where
-  // the eight forwards of 2026-09-07 died, and not one of them transmitted
-  // anything — so whatever shape a throw from in here arrives in, it is
-  // not_sent, and the caller may retry it immediately.
+  // STAGE "source" (see send-stages.ts): nothing is on the wire until the
+  // provider call at the bottom, so a throw from in here is not_sent and the
+  // caller may retry it immediately.
   const original = await preTransmission("source", () => {
-    // Sign the forward intro before the original is appended below
-    // (buildForwardedTextBody places the forwarded block after params.body).
+    // Sign the intro before the forwarded block is placed after it.
     applyReplyForwardSignature(params, inbox, {
       include_signature: params.include_signature,
     });
-    return readImapMessage(
-      inbox,
-      originalMessageId,
-      false,
-      params.includeAttachments,
-      false,
-      ATTACHMENT_DATA_BUDGET,
-      undefined,
-      undefined,
-      // Lift the 2 MB bulk preview clamp: these bytes are the payload, not a peek.
-      params.includeAttachments ? FORWARD_ATTACHMENT_MAX_BYTES : undefined,
-    );
+    return readOriginalMessage(inbox, originalMessageId, FORWARD_RELAY_MAX_BYTES);
   });
 
-  // STAGE "compose": assembling the message. Still nothing on the wire — the
-  // provider send below is the first thing that can leave delivery unknown.
-  const { fwdSubject, textBody, attachments } = preTransmissionSync("compose", () => {
-    const fwdSubject = makeForwardSubject(original.subject);
-    const origFromStr = original.from.name
-      ? `${original.from.name} <${original.from.email}>`
-      : original.from.email;
-    const origToStr = original.to
-      .map((a) => (a.name ? `${a.name} <${a.email}>` : a.email))
-      .join(", ");
-
-    return {
-      fwdSubject,
-      textBody: buildForwardedTextBody(
-        params.body,
-        origFromStr,
-        original.date,
-        original.subject,
-        origToStr,
-        original.body_text ?? "",
-      ),
-      // Refuses rather than dropping a file the read could not carry — see
-      // ForwardAttachmentError for why a silently attachment-less forward is
-      // worse than a failed one. It is a PreTransmissionError itself, so it
-      // passes through this wrapper with its own type and its own message.
-      attachments: collectForwardAttachments(
-        original.attachments,
-        params.includeAttachments,
-      ),
-    };
+  // STAGE "compose": still nothing on the wire.
+  const { fwdSubject, bytes, messageId } = preTransmissionSync("compose", () => {
+    const { headerBlock } = splitRawMessage(original.bytes);
+    const summary = summarizeOriginal(headerBlock);
+    const fwdSubject = makeForwardSubject(summary.subject);
+    const messageId = crypto.randomUUID();
+    const relay = buildRelayForwardMime({
+      from: formatMailbox(inbox.display_name, inbox.email_address),
+      to: params.to,
+      cc: params.cc.length ? params.cc : undefined,
+      bcc: params.bcc.length ? params.bcc : undefined,
+      // The header IS the recipient channel on Gmail's raw send and on Graph's
+      // MIME send, and both submission agents strip it before delivery. SMTP
+      // carries BCC in the envelope (RCPT TO), so the header must not go out
+      // there. See MimeMessageParams.includeBccHeader for the full rule.
+      includeBccHeader: inbox.provider !== "imap",
+      subject: fwdSubject,
+      messageId,
+      introText: composeIntroText(params.body, summary),
+      introHtml: params.htmlBody && params.htmlBody.trim()
+        ? composeIntroHtml(params.htmlBody, summary)
+        : undefined,
+      original: original.bytes,
+      includeAttachments: params.includeAttachments,
+      asAttachment: params.asAttachment,
+    });
+    return { fwdSubject, bytes: relay.bytes, messageId };
   });
 
-  const sendResult = await sendImapMessage(inbox, {
-    to: params.to,
-    cc: params.cc,
-    bcc: params.bcc,
-    subject: fwdSubject,
-    textBody,
-    htmlBody: params.htmlBody,
-    attachments,
-  });
+  const sent = await transmitRawMessage(inbox, bytes, messageId, params);
 
   return {
-    message_id: sendResult.message_id,
-    thread_id: sendResult.thread_id,
-    sent_at: sendResult.sent_at,
+    message_id: sent.message_id,
+    thread_id: sent.thread_id,
+    sent_at: sent.sent_at,
     forwarded_from: originalMessageId,
-    to: sendResult.to,
+    to: params.to.map((e) => parseEmailAddress(e)),
     subject: fwdSubject,
     status: "sent",
   };
 }
 
-// ---------------------------------------------------------------------------
-// email_forward — Gmail provider
-// ---------------------------------------------------------------------------
-
 /**
- * Forwards an email via the Gmail REST API.
+ * Hand a complete RFC 5322 message, as octets, to the provider.
  *
- * Flow:
- *   1. Read the original message via `readGmailMessage` (with attachments if requested).
- *   2. Build the forwarded plain-text body with the standard header block.
- *   3. Send via `sendGmailMessage` using the composed body and collected attachments.
+ * This is the one place a raw message leaves the server. The three transports
+ * differ only in framing: SMTP takes the octets after dot-stuffing (and
+ * declares 8BITMIME when the message needs it and the server offers it),
+ * Gmail's upload endpoint takes them as `message/rfc822`, Graph's sendMail
+ * takes them base64-encoded with a text/plain content type.
  */
-async function forwardGmailMessage(
+async function transmitRawMessage(
   inbox: InboxRow,
-  originalMessageId: string,
-  params: ForwardEmailParams,
-): Promise<ForwardEmailResult> {
-  // STAGE "source" (see send-stages.ts): reading the original, and when
-  // include_attachments is set, fetching its attachment BYTES. This is where
-  // the eight forwards of 2026-09-07 died, and not one of them transmitted
-  // anything — so whatever shape a throw from in here arrives in, it is
-  // not_sent, and the caller may retry it immediately.
-  const original = await preTransmission("source", () => {
-    // Sign the forward intro before the original is appended below
-    // (buildForwardedTextBody places the forwarded block after params.body).
-    applyReplyForwardSignature(params, inbox, {
-      include_signature: params.include_signature,
-    });
-    return readGmailMessage(
-      inbox,
-      originalMessageId,
-      false,
-      params.includeAttachments,
-      false,
-      ATTACHMENT_DATA_BUDGET,
-      undefined,
-      params.includeAttachments ? FORWARD_ATTACHMENT_MAX_BYTES : undefined,
-    );
-  });
-
-  // STAGE "compose": assembling the message. Still nothing on the wire — the
-  // provider send below is the first thing that can leave delivery unknown.
-  const { fwdSubject, textBody, attachments } = preTransmissionSync("compose", () => {
-    const fwdSubject = makeForwardSubject(original.subject);
-    const origFromStr = original.from.name
-      ? `${original.from.name} <${original.from.email}>`
-      : original.from.email;
-    const origToStr = original.to
-      .map((a) => (a.name ? `${a.name} <${a.email}>` : a.email))
-      .join(", ");
-
-    return {
-      fwdSubject,
-      textBody: buildForwardedTextBody(
-        params.body,
-        origFromStr,
-        original.date,
-        original.subject,
-        origToStr,
-        original.body_text ?? "",
-      ),
-      // Refuses rather than dropping a file the read could not carry — see
-      // ForwardAttachmentError for why a silently attachment-less forward is
-      // worse than a failed one. It is a PreTransmissionError itself, so it
-      // passes through this wrapper with its own type and its own message.
-      attachments: collectForwardAttachments(
-        original.attachments,
-        params.includeAttachments,
-      ),
-    };
-  });
-
-  const sendResult = await sendGmailMessage(inbox, {
-    to: params.to,
-    cc: params.cc,
-    bcc: params.bcc,
-    subject: fwdSubject,
-    textBody,
-    htmlBody: params.htmlBody,
-    attachments,
-  });
-
-  return {
-    message_id: sendResult.message_id,
-    thread_id: sendResult.thread_id,
-    sent_at: sendResult.sent_at,
-    forwarded_from: originalMessageId,
-    to: sendResult.to,
-    subject: fwdSubject,
-    status: "sent",
-  };
-}
-
-// ---------------------------------------------------------------------------
-// email_forward — Outlook provider
-// ---------------------------------------------------------------------------
-
-/**
- * Forwards an email via Outlook / Microsoft 365 (Graph API).
- *
- * Flow:
- *   1. Read the original message via `readOutlookMessage` (with attachments if requested).
- *   2. Build the forwarded plain-text body with the standard header block.
- *   3. Send via `sendOutlookMessage` using Graph sendMail with the composed body.
- */
-async function forwardOutlookMessage(
-  inbox: InboxRow,
-  originalMessageId: string,
-  params: ForwardEmailParams,
-): Promise<ForwardEmailResult> {
-  // STAGE "source" (see send-stages.ts): reading the original, and when
-  // include_attachments is set, fetching its attachment BYTES. This is where
-  // the eight forwards of 2026-09-07 died, and not one of them transmitted
-  // anything — so whatever shape a throw from in here arrives in, it is
-  // not_sent, and the caller may retry it immediately.
-  const original = await preTransmission("source", () => {
-    // Sign the forward intro before the original is appended below
-    // (buildForwardedTextBody places the forwarded block after params.body).
-    applyReplyForwardSignature(params, inbox, {
-      include_signature: params.include_signature,
-    });
-    return readOutlookMessage(
-      inbox,
-      originalMessageId,
-      false,
-      params.includeAttachments,
-      false,
-      ATTACHMENT_DATA_BUDGET,
-      undefined,
-      params.includeAttachments ? FORWARD_ATTACHMENT_MAX_BYTES : undefined,
-    );
-  });
-
-  // STAGE "compose": assembling the message. Still nothing on the wire — the
-  // provider send below is the first thing that can leave delivery unknown.
-  const { fwdSubject, textBody, attachments } = preTransmissionSync("compose", () => {
-    const fwdSubject = makeForwardSubject(original.subject);
-    const origFromStr = original.from.name
-      ? `${original.from.name} <${original.from.email}>`
-      : original.from.email;
-    const origToStr = original.to
-      .map((a) => (a.name ? `${a.name} <${a.email}>` : a.email))
-      .join(", ");
-
-    return {
-      fwdSubject,
-      textBody: buildForwardedTextBody(
-        params.body,
-        origFromStr,
-        original.date,
-        original.subject,
-        origToStr,
-        original.body_text ?? "",
-      ),
-      // Refuses rather than dropping a file the read could not carry — see
-      // ForwardAttachmentError for why a silently attachment-less forward is
-      // worse than a failed one. It is a PreTransmissionError itself, so it
-      // passes through this wrapper with its own type and its own message.
-      attachments: collectForwardAttachments(
-        original.attachments,
-        params.includeAttachments,
-      ),
-    };
-  });
-
-  const sendResult = await sendOutlookMessage(inbox, {
-    to: params.to,
-    cc: params.cc,
-    bcc: params.bcc,
-    subject: fwdSubject,
-    textBody,
-    htmlBody: params.htmlBody,
-    attachments,
-  });
-
-  return {
-    message_id: sendResult.message_id,
-    thread_id: sendResult.thread_id,
-    sent_at: sendResult.sent_at,
-    forwarded_from: originalMessageId,
-    to: sendResult.to,
-    subject: fwdSubject,
-    status: "sent",
-  };
+  bytes: Uint8Array,
+  messageId: string,
+  params: { to: string[]; cc: string[]; bcc: string[] },
+): Promise<{ message_id: string; thread_id: string; sent_at: string }> {
+  switch (inbox.provider) {
+    case "imap": {
+      const recipients = [...params.to, ...params.cc, ...params.bcc]
+        .map((e) => parseEmailAddress(e).email)
+        .filter(Boolean);
+      await imapSmtpSend(inbox, bytes, recipients);
+      await appendToSentFolder(inbox, bytes);
+      const fullId = `<${messageId}@mcpemails.com>`;
+      return { message_id: fullId, thread_id: fullId, sent_at: new Date().toISOString() };
+    }
+    case "gmail": {
+      const accessToken = await preTransmission("compose", () => withFreshGmailToken(inbox));
+      // The upload form of messages.send, not the JSON `raw` field: the JSON
+      // body is capped well below the 35 MB this endpoint accepts, and the
+      // octets go over as they are instead of growing by a third in base64.
+      const resp = await fetch(
+        "https://gmail.googleapis.com/upload/gmail/v1/users/me/messages/send?uploadType=media",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "message/rfc822",
+          },
+          // A plain ArrayBuffer view: Deno's fetch typings reject a Uint8Array
+          // over ArrayBufferLike, and this makes the octets a BodyInit.
+          body: bytes.slice().buffer as ArrayBuffer,
+        },
+      );
+      if (!resp.ok) {
+        if (resp.status === 401) throw new Error("gmail_auth_failed");
+        let errMsg = resp.statusText;
+        let isQuota = resp.status === 429;
+        try {
+          const errBody = (await resp.json()) as { error?: { message?: string; status?: string } };
+          if (errBody.error?.message) errMsg = errBody.error.message;
+          if (errBody.error?.status === "RESOURCE_EXHAUSTED") isQuota = true;
+        } catch { /* ignore JSON parse errors */ }
+        if (isQuota) throw new Error("quota_exceeded");
+        throw new Error(`Gmail send error: ${errMsg}`);
+      }
+      const sent = (await resp.json()) as { id?: string; threadId?: string };
+      return {
+        message_id: sent.id ?? messageId,
+        thread_id: sent.threadId ?? sent.id ?? messageId,
+        sent_at: new Date().toISOString(),
+      };
+    }
+    case "outlook": {
+      const accessToken = await preTransmission("compose", () => withFreshOutlookToken(inbox));
+      // Graph's MIME form of sendMail: "provide the MIME content as a
+      // base64-encoded string in the request body" with Content-Type
+      // text/plain. Saves to Sent Items like the JSON form.
+      const resp = await fetch("https://graph.microsoft.com/v1.0/me/sendMail", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "text/plain",
+        },
+        body: bytesToBase64(bytes),
+      });
+      if (!resp.ok) {
+        if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
+        if (resp.status === 429) throw new Error("quota_exceeded");
+        let errMsg = resp.statusText;
+        try {
+          const errBody = (await resp.json()) as { error?: { message?: string } };
+          if (errBody.error?.message) errMsg = errBody.error.message;
+        } catch { /* ignore */ }
+        throw new Error(`Outlook send error: ${errMsg}`);
+      }
+      // 202 Accepted with no body: no provider id exists to report. Empty ids,
+      // never a fabricated one a caller could mistake for a fetchable Graph id.
+      return { message_id: "", thread_id: "", sent_at: new Date().toISOString() };
+    }
+    default:
+      throw new Error("unsupported_provider");
+  }
 }
 
 
 // ---------------------------------------------------------------------------
 // email_forward — batch fan-out
 // ---------------------------------------------------------------------------
+
+/** The one sentence both the single and batch shapes use for an oversized original. */
+function forwardTooLargeText(): string {
+  const limitMb = Math.round(FORWARD_RELAY_MAX_BYTES / (1024 * 1024));
+  return `Not sent: the original message is over the ${limitMb} MB forwarding limit, ` +
+    "which is also the ceiling every major provider accepts for one message. " +
+    "Nothing was transmitted. Read its attachments individually with " +
+    "email_read action: attachment and send them with email_compose action: send.";
+}
 
 /**
  * Classify one message's forward failure for the batch result.
@@ -14692,16 +14593,20 @@ async function forwardOutlookMessage(
 function classifyForwardFailure(err: unknown, provider: string): ForwardFailure {
   const message = err instanceof Error ? err.message : String(err);
 
-  if (err instanceof ForwardAttachmentError) {
+  if (message === "original_too_large") {
     return {
       status: "not_sent",
-      error:
-        `Not sent: "${err.filename}" (${err.sizeBytes} bytes) could not be ` +
-        `attached, and the forward was refused rather than delivered without ` +
-        `it. Send it on its own with email_compose action: send and ` +
-        `attachments: [{ source_message_id, attachment_index }], or forward ` +
-        `with include_attachments: false.`,
-      ledgerCode: "attachment_too_large",
+      error: forwardTooLargeText(),
+      ledgerCode: "original_too_large",
+      fatal: false,
+    };
+  }
+
+  if (message === "original_unavailable") {
+    return {
+      status: "not_sent",
+      error: "Not sent: the provider could not return the complete original message.",
+      ledgerCode: "original_unavailable",
       fatal: false,
     };
   }
@@ -15024,8 +14929,13 @@ async function executeForwardEmail(
   const htmlBody =
     typeof args["html_body"] === "string" ? args["html_body"] : undefined;
 
-  // include_attachments (optional, default false)
-  const includeAttachments = args["include_attachments"] === true;
+  // include_attachments (optional, default true): a forward carries what the
+  // original carried unless the caller says otherwise.
+  const includeAttachments = args["include_attachments"] !== false;
+
+  // as_attachment (optional, default false): the whole original as one
+  // message/rfc822 part, headers and all, instead of its body relayed inline.
+  const asAttachment = args["as_attachment"] === true;
 
   // include_signature (optional, default true) — explicit false suppresses the
   // inbox signature on this forward's intro.
@@ -15121,6 +15031,7 @@ async function executeForwardEmail(
     body,
     htmlBody,
     includeAttachments,
+    asAttachment,
     include_signature: includeSignature,
   };
 
@@ -15143,20 +15054,8 @@ async function executeForwardEmail(
   }
 
   /** One message, one provider call. Shared by the single and batch shapes. */
-  const forwardOne = (id: string): Promise<ForwardEmailResult> => {
-    switch (senderInbox.provider) {
-      case "gmail":
-        return forwardGmailMessage(senderInbox, id, fwdParams);
-      case "outlook":
-        return forwardOutlookMessage(senderInbox, id, fwdParams);
-      case "imap":
-        return forwardImapMessage(senderInbox, id, fwdParams);
-      default:
-        // Unreachable: the guard above returned already. Kept so a provider
-        // added to one list and not the other fails loudly rather than sending.
-        return Promise.reject(new Error(`unsupported_provider:${senderInbox.provider}`));
-    }
-  };
+  const forwardOne = (id: string): Promise<ForwardEmailResult> =>
+    forwardRelayMessage(senderInbox, id, fwdParams);
 
   if (targets.mode === "batch") {
     // The whole-call idempotency claim is skipped for a batch (see
@@ -15205,46 +15104,31 @@ async function executeForwardEmail(
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
 
-    // Nothing was transmitted: the refusal happens while assembling the parts,
-    // before any provider send call. Say so plainly, because the generic branch
-    // at the bottom says the opposite ("may or may not have been delivered").
-    if (err instanceof ForwardAttachmentError) {
-      const limitMb = Math.round(err.limitBytes / (1024 * 1024));
-      console.error("[mcp-server] email_forward: attachment_too_large", {
+    // Nothing was transmitted: the refusal happens from the size the provider
+    // declared, before a byte of the original is buffered, let alone sent. Say
+    // so plainly, because the generic branch at the bottom says the opposite
+    // ("may or may not have been delivered").
+    if (message === "original_too_large" || message === "original_unavailable") {
+      console.error("[mcp-server] email_forward: " + message, {
         inbox_id: inboxId,
         provider: inbox.provider,
-        filename: err.filename,
-        size_bytes: err.sizeBytes,
-        limit_bytes: err.limitBytes,
-        kind: err.kind,
+        message_id: messageId,
       });
       return {
         result: {
           content: [{
             type: "text",
-            text: err.kind === "too_large"
-              ? `email_forward: "${err.filename}" is ${err.sizeBytes} bytes, over the ` +
-                `${limitMb} MB per-file limit for forwarding attachments. Nothing was ` +
-                "sent: the forward was refused rather than delivered without the file. " +
-                "Send it as its own message instead — email_compose action: send with " +
-                "attachments: [{ source_message_id, attachment_index }], which moves the " +
-                "bytes server-side under a 25 MB cap — or forward with " +
-                "include_attachments: false."
-              : `email_forward: the bytes of "${err.filename}" (${err.sizeBytes} bytes) ` +
-                "could not be retrieved, so the forward was refused rather than sent " +
-                `without it. The message's attachments share a ${limitMb} MB budget; if ` +
-                "this message carries several files, forward them individually, or send " +
-                "each one with email_compose action: send and attachments: " +
-                "[{ source_message_id, attachment_index }].",
+            text: message === "original_too_large"
+              ? `email_forward: ${forwardTooLargeText()}`
+              : "email_forward: the provider could not return the complete original message, so nothing was sent.",
           }],
           isError: true,
           delivery_status: "not_sent",
         } as ToolErrorResult["result"],
         logStatus: "error",
-        logErrorCode: "attachment_too_large",
+        logErrorCode: message,
       };
     }
-
 
     if (message === "message_not_found") {
       return {
