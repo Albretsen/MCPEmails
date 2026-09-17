@@ -7,9 +7,19 @@ import {
   type Envelope,
   type Receipt as ReceiptData,
 } from "../contract";
+import { diagnosticsEnabled } from "../diagnostics";
 import { bulkVerb, draftSavedContextLine } from "../format";
-import { lastDashboardUrl } from "../persist";
-import { envelopeFrom, getState, setState, subscribe } from "../store";
+import { isRestoreStub, lastDashboardUrl } from "../persist";
+import {
+  acceptRehydration,
+  adoptRehydration,
+  envelopeFrom,
+  getState,
+  mergeEnvelope,
+  rehydrationCall,
+  setState,
+  subscribe,
+} from "../store";
 import { BulkPlan } from "./BulkPlan";
 import { DraftEditor, type DraftPatch } from "./DraftEditor";
 import { OutboundReview } from "./OutboundReview";
@@ -32,7 +42,10 @@ function absoluteUrl(url: string | null | undefined): string | null {
 }
 
 /**
- * One line of protocol facts at the bottom of every card. INTERNAL v1 ONLY.
+ * One line of protocol facts at the bottom of a card. INTERNAL v1 ONLY, and
+ * since 2026-09-16 that is enforced rather than asserted: `diagnosticsEnabled`
+ * decides, it defaults to off, and the only per-workspace source it has is a
+ * server-authored envelope field that is not sent yet. See diagnostics.ts.
  *
  * It exists because the remount bug is not reproducible from here: the card
  * runs inside claude.ai's sandbox, we cannot read the host's logs, and the one
@@ -68,6 +81,9 @@ function Diagnostics(props: { bridge: HostBridge }) {
     // non-zero foreign count would mean it spoke and we dropped it.
     `hs ${props.bridge.initializeAttempts}`,
     `rx ${props.bridge.rxAccepted}/${props.bridge.rxForeign}`,
+    // Expected to be 0 forever. A non-zero count means the host pushed a
+    // result belonging to a different call into this card (store.ts).
+    ...(s.uncorrelatedResults ? [`xcall ${s.uncorrelatedResults}`] : []),
   ].join(" · ");
   return <p class="diag">{line}</p>;
 }
@@ -129,7 +145,7 @@ export function App(props: { bridge: HostBridge }) {
       const result = await bridge.callServerTool(tool, args);
       const next = envelopeFrom(result);
       if (next) {
-        setEnvelope(next);
+        setEnvelope(mergeEnvelope(getState().envelope, next));
       } else {
         setError("The server sent a response this card could not read.");
       }
@@ -155,6 +171,10 @@ export function App(props: { bridge: HostBridge }) {
    *    the editor renders the error as a notice around it. Replacing the
    *    envelope wholesale would answer "that address was rejected" by deleting
    *    the message the user was writing.
+   *
+   * That second rule now lives in `store.ts#mergeEnvelope`, because the PUSH
+   * path needed exactly the same one and having it in only one of the two
+   * places was the bug (WS-1b defect B).
    */
   const callDraft = async (
     key: string,
@@ -170,11 +190,7 @@ export function App(props: { bridge: HostBridge }) {
         setError("The server sent a response this card could not read.");
         return null;
       }
-      const current = getState().envelope;
-      const applied =
-        next.card === "draft_editor" && !next.draft && current?.draft
-          ? { ...next, draft: current.draft }
-          : next;
+      const applied = mergeEnvelope(getState().envelope, next);
       setEnvelope(applied);
       return applied;
     } catch (e) {
@@ -201,40 +217,94 @@ export function App(props: { bridge: HostBridge }) {
 
   // ---- restore recovery ---------------------------------------------------
   //
-  // A card that restored its envelope from storage is showing a MEMORY of a
-  // draft, and a draft is the one card kind whose contents can have moved on
-  // since (an IMAP save retires the id, and the user may have edited or sent it
-  // in a mail client). So it refreshes itself against the server exactly once,
-  // adopting whatever id comes back, and falls back to what it restored if the
-  // call fails — an offline memory of the draft still beats a blank card.
-  const [draftGone, setDraftGone] = useState(false);
+  // A card that restored from storage is holding a POINTER, not a copy: since
+  // WS-1b, persist.ts keeps the card kind, the state and the opaque id the
+  // server's own reader is called with — `inbox_id` + `draft_id` for a draft,
+  // `approval_id` for a queued send — and nothing else. No subject, no body,
+  // no recipients. So the restore is only half the recovery; this effect is
+  // the other half, and until it lands there is nothing but a loading line.
+  //
+  // It runs exactly once, adopts whatever comes back, and on failure says so in
+  // one line. It deliberately does NOT fall back to rendering the stub: an
+  // editor with an empty subject and an empty body, sitting over a draft that
+  // has both, is an invitation to overwrite the real thing — and a decision row
+  // drawn from a stub would be a Reject button with nothing behind it.
+  //
+  // WHICH CARDS HAVE A READER, checked against the shipped tool definitions
+  // rather than assumed (2026-09-16):
+  //
+  //   draft_editor    `draft_read`      — read-only, takes inbox_id + draft_id.
+  //   outbound_review `approval_review` — read-only, takes approval_id, and its
+  //                   own description says "so it can be shown in the review
+  //                   card". It has existed since the card shipped; the card
+  //                   simply never called it, which is what cost a remounted
+  //                   pending send its Reject button. Approve was already only
+  //                   `openLink(review_url)` and is not what was lost.
+  //   bulk_plan       NOTHING. `mcp-app-bulk.ts` declares exactly two tools,
+  //                   `bulk_execute` and `bulk_cancel`, and both DECIDE — there
+  //                   is no reader for a plan, and inventing one out of a
+  //                   decision tool would mean running the thing we wanted to
+  //                   show. A plan is also server-held with a 15-minute TTL, so
+  //                   a remount minutes later is usually looking at something
+  //                   that has already expired. It stays on the one-liner, on
+  //                   purpose: this is settled, do not re-litigate it.
+  //   receipt         Terminal. Nothing to re-request; persist.ts rewrites the
+  //                   headline from the outcome alone and it renders directly.
+  //
+  // Both decisions — which read a card kind has, and whether the answer may be
+  // adopted — live in store.ts (`rehydrationCall`, `acceptRehydration`) rather
+  // than inline here, so the harnesses can drive the shipped functions instead
+  // of restating them. This effect is the wiring and the copy, nothing else.
+  //
+  // THE OPT-OUT'S HALF OF THIS, added 2026-09-17. `draft_read` refuses a
+  // switched-off editor with a `card: "receipt"` envelope carrying
+  // `error_code: "draft_editor_hidden"`. That matched neither of the two arms
+  // below — it is not `draft_not_found`, and it is not a draft envelope — so it
+  // fell through to `stubFailed` and the card answered a deliberate opt-out
+  // with a generic "open the dashboard to see this". The receipt already says
+  // the true thing, in the server's own words, with the way back in it; it is
+  // now adopted (store.ts#EDITOR_STOP_CODES) and the ordinary receipt renderer
+  // prints it for free. Deliberately NOT extended to every receipt:
+  // `runDraftRead` also answers a transient IMAP blip with one, and adopting
+  // that would replace a good restored draft with a one-line error — the same
+  // event the `.catch()` arm below exists to tolerate, by a different route.
+  const [gone, setGone] = useState<string | null>(null);
+  const [stubFailed, setStubFailed] = useState(false);
   const refreshed = useRef(false);
   useEffect(() => {
     if (store.restored !== "storage" || refreshed.current) return;
     const env = store.envelope;
-    const d = env?.card === "draft_editor" ? env.draft : null;
-    if (!d) return;
+    const call = rehydrationCall(env);
+    if (!env || !call) return;
+
+    // The STUB itself, not just its card kind: `acceptRehydration` correlates
+    // the answer against the id this call asked about, and the stub is where
+    // that id lives. Captured before the await so a later store write cannot
+    // change what "asked" means.
+    const asked = env;
     refreshed.current = true;
     bridge
-      .callServerTool("draft_read", {
-        inbox_id: d.identity?.inbox_id,
-        draft_id: d.draft_id,
-      })
+      .callServerTool(call.tool, call.args)
       .then((result) => {
-        const next = envelopeFrom(result);
-        if (!next) return;
-        // `draft_not_found` gets its own one-line rendering rather than the
-        // editor's Refresh notice: refreshing is what just failed, and a wall
-        // of red over a draft the user deliberately sent or deleted elsewhere
-        // is the scare this card refuses to raise.
-        if (next.receipt?.error_code === "draft_not_found") {
-          setDraftGone(true);
-          return;
-        }
-        if (next.card === "draft_editor" && next.draft) setState({ envelope: next });
+        const decided = acceptRehydration(asked, envelopeFrom(result));
+        // `adoptRehydration`, never a bare setState: a server answer about a
+        // known id is the moment this card stops being a memory, and the push
+        // path has to start correlating from here. A plain setState left
+        // `pushAccepted` false and gave exactly one later pushed result a free
+        // pass to rebind the card to a foreign draft or approval.
+        if (decided.kind === "adopt") adoptRehydration(decided.envelope);
+        else if (decided.kind === "gone") {
+          setGone(
+            decided.subject === "draft"
+              ? "This draft is no longer in Drafts."
+              : "This send is no longer pending.",
+          );
+        } else setStubFailed(true);
       })
       .catch(() => {
-        /* keep the restored envelope: it is the best thing available */
+        // Offline, or the host refused the call. There is nothing to show: the
+        // stub has no content in it, by design.
+        setStubFailed(true);
       });
   }, [store.restored, store.envelope]);
 
@@ -271,9 +341,9 @@ export function App(props: { bridge: HostBridge }) {
       return oneLine(`${toolLabel(store.toolInfo?.tool)}: not shown here.`);
     }
 
-    // A restored draft that the server says is gone. One line, not the editor's
-    // Refresh notice: see the refresh effect above.
-    if (draftGone) return oneLine("This draft is no longer in Drafts.");
+    // A restored card whose subject the server says is gone. One line, not the
+    // editor's Refresh notice: see the re-request effect above.
+    if (gone) return oneLine(gone);
 
     if (!envelope) {
       // NOT OUR PAYLOAD -> SILENCE. `_meta.ui` is per-tool, so the host renders
@@ -380,6 +450,37 @@ export function App(props: { bridge: HostBridge }) {
       );
     }
 
+    // ---- a restored card is a pointer, not a copy ---------------------------
+    //
+    // Everything that is not a receipt has to be fetched again before it can be
+    // rendered, because the stub has no content in it. A draft and a queued
+    // send are both fetched by the effect above, and this is the line the user
+    // sees while that is in flight.
+    //
+    // A BULK PLAN is the one card that genuinely has nowhere to go, and that is
+    // a deliberate trade rather than an oversight: there is no reader for a
+    // plan (see the effect above — `bulk_execute` and `bulk_cancel` are the
+    // only two tools and both DECIDE), the plan is server-held with a 15-minute
+    // TTL so a remount is usually looking at something already expired, and the
+    // stub was a MEMORY of a decision the server may already have made. One
+    // line and a link to the place that knows the truth is the honest
+    // rendering. Settled 2026-09-16 against the shipped tool list; do not
+    // re-open it by inventing a read out of a decision tool.
+    //
+    // A receipt stub is exempt: it is terminal, there is nothing to re-request,
+    // and persist.ts rewrites its headline from the outcome alone.
+    if (isRestoreStub(envelope) && envelope.card !== "receipt") {
+      const hydrating =
+        !stubFailed &&
+        ((envelope.card === "draft_editor" && !!envelope.draft?.draft_id) ||
+          (envelope.card === "outbound_review" && !!envelope.outbound?.approval_id));
+      return hydrating ? (
+        <Loading />
+      ) : (
+        oneLine(`${toolLabel(store.toolInfo?.tool)}: open the dashboard to see this.`)
+      );
+    }
+
     // ---- variants -----------------------------------------------------------
 
     if (envelope.card === "outbound_review" && envelope.outbound) {
@@ -467,9 +568,15 @@ export function App(props: { bridge: HostBridge }) {
                 `The user confirmed the bulk ${bulkVerb(plan.action).toLowerCase()} of ${plan.match_count} messages.`,
               ),
             cancel: () => {
-              // Contract v1 has no bulk_cancel tool: plans are server-held and
-              // expire on their own (15 min TTL). Cancelling is therefore purely
-              // local — we simply stop offering the button.
+              // Cancelling is purely local: the card stops offering the button
+              // and the plan expires on its own (server-held, 15 min TTL).
+              //
+              // Corrected 2026-09-16: this comment used to claim contract v1
+              // has no `bulk_cancel` tool. It does (mcp-app-bulk.ts, takes only
+              // `plan_id`). Whether the card should call it to RECORD the
+              // decision instead of letting the plan lapse is a real question
+              // and is open; the behaviour is unchanged here because a server
+              // write is not a comment fix.
               const receipt: ReceiptData = {
                 outcome: "cancelled",
                 headline: "Cancelled. Nothing was changed.",
@@ -599,6 +706,7 @@ export function App(props: { bridge: HostBridge }) {
   // call) must keep rendering nothing, or every successful delete on an
   // opted-out inbox grows a stray line of protocol trivia underneath it.
   if (body === null) return null;
+  if (!diagnosticsEnabled(envelope)) return body;
   return (
     <>
       {body}

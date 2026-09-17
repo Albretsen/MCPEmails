@@ -544,14 +544,20 @@ async function main() {
       async (t) => {
         // Seeded through the shipped writer, under the shipped key, so a change
         // to either breaks this rather than being papered over by a fixture.
+        const seedArgs = { action: "create", inbox: "demo@mcpemails.com" };
         const key = t.mod.cardKey({ tool: "draft", callId: TOOL_INFO.id }, null);
         t.expect("the key is the call id", key, "i42");
-        t.mod.saveEnvelope(key, F.draftEditorImap);
+        // WITH the arguments, because the mount that wrote this entry had them:
+        // `tool-input` is a host MUST and store.ts#persist passes `toolInput`
+        // straight through. An entry written without them is fingerprinted
+        // `NO_ARGS` and is deliberately NOT restorable by a mount that has
+        // arguments — that is the cross-conversation guard, not a bug.
+        t.mod.saveEnvelope(key, F.draftEditorImap, seedArgs);
 
         t.host.deliver({
           jsonrpc: "2.0",
           method: "ui/notifications/tool-input",
-          params: { arguments: { action: "create", inbox: "demo@mcpemails.com" } },
+          params: { arguments: seedArgs },
         });
         await settle();
         // tool-input alone is enough: a hit does not wait for the watchdog.
@@ -664,7 +670,7 @@ async function main() {
         const args = { action: "create", inbox: "demo@mcpemails.com" };
         const key = t.mod.cardKey(null, args);
         t.expect("the key is an argument hash", key?.startsWith("a"), true);
-        t.mod.saveEnvelope(key, F.draftEditorImap);
+        t.mod.saveEnvelope(key, F.draftEditorImap, args);
 
         t.host.deliver({
           jsonrpc: "2.0",
@@ -674,6 +680,62 @@ async function main() {
         await settle();
         t.expect("restored", t.mod.getState().restored, "storage");
         t.expect("the draft came back", t.mod.getState().envelope?.draft?.draft_id, "Drafts:2");
+      },
+    ),
+  );
+
+  // (h5b) THE SAME LOOP FOR A QUEUED SEND, end to end. This is the regression
+  // the round-2 pass closed: a pending send restored to a one-line dashboard
+  // link, so a user who scrolled back could no longer REJECT it from the card —
+  // and reject is the only decision this channel is ever allowed to make
+  // (approving needs a signed-in browser session, on purpose). Approve was
+  // already just `openLink(review_url)` and was not what was lost.
+  //
+  // Driven through the real store, the real persist layer and the shipped
+  // `rehydrationCall`, so the chain "rendered -> stored -> remounted -> knows
+  // how to ask again" is proven rather than assumed at each join.
+  results.push(
+    await scenario(
+      "a remounted pending send knows how to ask for itself again",
+      { hostContext: { toolInfo: TOOL_INFO }, storage: true },
+      async (t) => {
+        const args = { to: ["dana@northwind.example"], subject: "Q3 numbers" };
+        // Mount 1: the card renders the review and the store caches it.
+        t.host.deliver({
+          jsonrpc: "2.0",
+          method: "ui/notifications/tool-input",
+          params: { arguments: args },
+        });
+        t.host.deliver(toolResult(F.outboundGmail, "Queued for approval."));
+        await settle();
+        t.expect("the review rendered", t.mod.getState().envelope?.card, "outbound_review");
+
+        // Mount 2: a new cell, the same call. Only tool-input is promised.
+        const key = t.mod.cardKey({ tool: "email_compose", callId: TOOL_INFO.id }, args);
+        const back = t.mod.loadEnvelope(key, args);
+        t.expect("what came back is a stub", t.mod.isRestoreStub(back), true);
+        t.expect("carrying no recipients", back?.outbound?.recipients, undefined);
+        t.expect("and no body", back?.outbound?.body, undefined);
+
+        // App.tsx's re-request effect, from the shipped decision function.
+        const call = t.mod.rehydrationCall(back);
+        t.expect("it re-reads itself", call?.tool, "approval_review");
+        t.expect(
+          "with the id the Reject button also needs",
+          call?.args?.approval_id,
+          F.outboundGmail.outbound.approval_id,
+        );
+        // And the answer restores a card the Reject button can actually be
+        // drawn from, which the one-liner never could.
+        // The STUB is what is handed in, not its card kind: the answer is
+        // correlated against the id that was asked for.
+        const accepted = t.mod.acceptRehydration(back, F.outboundGmail);
+        t.expect("the answer is adopted", accepted.kind, "adopt");
+        t.expect(
+          "with the approval id reject is called with",
+          accepted.envelope?.outbound?.approval_id,
+          F.outboundGmail.outbound.approval_id,
+        );
       },
     ),
   );

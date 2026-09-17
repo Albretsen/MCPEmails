@@ -178,9 +178,15 @@ export interface Receipt {
     | "decided_elsewhere"
     | "executed"
     | "failed"
-    // Local-only outcome: the card cancelled a bulk plan client-side. There is
-    // no `bulk_cancel` tool in contract v1 (see report), so nothing is sent to
-    // the server and the plan simply expires.
+    // Local-only outcome: the card cancelled a bulk plan client-side, so
+    // nothing is sent to the server and the plan expires on its own after 15
+    // minutes.
+    //
+    // Corrected 2026-09-16: this used to say "there is no `bulk_cancel` tool in
+    // contract v1". There is — mcp-app-bulk.ts declares it, taking only
+    // `plan_id` — and the comment predated it. The card still cancels locally;
+    // whether it should instead record the decision server-side is a separate
+    // question from whether the tool exists, and is open.
     | "cancelled";
   headline: string;
   detail?: string | null;
@@ -214,6 +220,25 @@ export interface Envelope {
    */
   dashboard_url?: string | null;
   state: CardState;
+  /**
+   * PROPOSED CONTRACT ADDITION (WS-1b, 2026-09-16). The server does not send
+   * this yet, and until it does the diagnostics line renders for nobody.
+   *
+   * Three files called the diagnostics line "INTERNAL v1 ONLY" while App.tsx
+   * rendered it unconditionally, on every card kind. The customer-facing
+   * opt-ins that produce a card (`inboxes.send_approval_required`,
+   * `bulk_review_mode = 'plan'`) are not the internal rollout flag, and five
+   * non-internal workspaces had inboxes with one of them set — so those
+   * customers were reading our protocol trivia under their send approvals.
+   *
+   * The card bundle is static, identical for every workspace, and has no
+   * server round trip of its own before it renders, so the only thing that can
+   * carry a per-workspace "this is us" signal is the envelope. The server side
+   * is one line where the envelope is built, gated on the same internal flag
+   * the draft editor rollout uses; see the report. `true` and nothing else
+   * turns it on (diagnostics.ts#diagnosticsEnabled).
+   */
+  diagnostics?: boolean;
   outbound?: Outbound;
   plan?: Plan;
   draft?: DraftEditorData;

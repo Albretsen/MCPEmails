@@ -15,7 +15,13 @@ import type {
   ToolResultParams,
 } from "./bridge";
 import { isEnvelope, type Envelope } from "./contract";
-import { cardKey, loadEnvelope, saveEnvelope } from "./persist";
+import {
+  cardKey,
+  isRestoreStub,
+  loadEnvelope,
+  saveEnvelope,
+  stripStubMarker,
+} from "./persist";
 import { neutralizeDeep, neutralizeText } from "./sanitize";
 
 /**
@@ -129,6 +135,12 @@ export interface CardStore {
    * because that is the state in which the answer is genuinely not known yet.
    */
   restored: "storage" | "none" | null;
+  /**
+   * How many pushed tool results were refused because they did not belong to
+   * the call this card is showing. Diagnostics only, and expected to be 0 on
+   * every host forever: it is the counter that would say otherwise.
+   */
+  uncorrelatedResults: number;
 }
 
 let state: CardStore = {
@@ -143,6 +155,7 @@ let state: CardStore = {
   resultAfterMs: null,
   handshakeTick: 0,
   restored: null,
+  uncorrelatedResults: 0,
 };
 
 const listeners = new Set<() => void>();
@@ -164,7 +177,11 @@ export function setState(patch: Partial<CardStore>) {
 function persist(s: CardStore) {
   if (!s.envelope) return;
   const key = cardKey(s.toolInfo, s.toolInput);
-  if (key) saveEnvelope(key, s.envelope);
+  // The arguments go with it: persist.ts fingerprints them into the entry so
+  // that the same key in a DIFFERENT conversation reads as a miss rather than
+  // as this card. It stores a HASH of them, never the arguments themselves —
+  // a `draft{action:"create"}` call carries the body the agent composed.
+  if (key) saveEnvelope(key, s.envelope, s.toolInput);
 }
 
 /**
@@ -183,7 +200,7 @@ function persist(s: CardStore) {
 export function attemptRestore(quiet = false): void {
   if (state.envelope || state.restored !== null) return;
   const key = cardKey(state.toolInfo, state.toolInput);
-  const found = key ? loadEnvelope(key) : null;
+  const found = key ? loadEnvelope(key, state.toolInput) : null;
   if (found) setState({ envelope: found, restored: "storage" });
   else if (!quiet) setState({ restored: "none" });
 }
@@ -272,8 +289,15 @@ export function classifyResult(result: ToolResultParams | undefined): Classified
   // bidi overrides and zero-width characters in a subject, display name or
   // attachment filename can make the card display something other than what
   // will be sent. See sanitize.ts#neutralizeText.
+  //
+  // `stripStubMarker` is the same idea for a key rather than a character:
+  // `_stub` means "this is a local pointer, re-request it", and a wire payload
+  // that carried it would wedge the cell on a spinner the one-shot re-request
+  // can no longer clear. Applied to BOTH channels and on the single path every
+  // envelope takes — the pushed notification and the card's own tool calls both
+  // land here — so there is no second place to forget it.
   if (isEnvelope(sc)) {
-    return { envelope: neutralizeDeep(sc as Envelope), status: "envelope" };
+    return { envelope: stripStubMarker(neutralizeDeep(sc as Envelope)), status: "envelope" };
   }
   if (claimsToBeOurs(sc)) return { envelope: null, status: "malformed" };
 
@@ -282,7 +306,7 @@ export function classifyResult(result: ToolResultParams | undefined): Classified
     try {
       const parsed: unknown = JSON.parse(text);
       if (isEnvelope(parsed)) {
-        return { envelope: neutralizeDeep(parsed), status: "envelope" };
+        return { envelope: stripStubMarker(neutralizeDeep(parsed)), status: "envelope" };
       }
       if (claimsToBeOurs(parsed)) return { envelope: null, status: "malformed" };
     } catch {
@@ -298,6 +322,467 @@ export function classifyResult(result: ToolResultParams | undefined): Classified
 /** Convenience wrapper for callers that only need the envelope. */
 export function envelopeFrom(result: ToolResultParams | undefined): Envelope | null {
   return classifyResult(result).envelope;
+}
+
+// ---------------------------------------------------------------------------
+// Applying an envelope over the one already on screen
+//
+// Both paths that produce an envelope end here: the card's own `tools/call`
+// responses (App.tsx) and the host's pushed `ui/notifications/tool-result`.
+// They used to disagree — App.tsx guarded "an error envelope must not take the
+// editor away" and the push path did not — and the asymmetry is the defect,
+// not either rule. One function, two callers, no drift.
+// ---------------------------------------------------------------------------
+
+/** Does this envelope carry the payload its own discriminator promises? */
+export function isRenderable(env: Envelope | null | undefined): boolean {
+  if (!env) return false;
+  switch (env.card) {
+    case "draft_editor":
+      return !!env.draft;
+    case "outbound_review":
+      return !!env.outbound;
+    case "bulk_plan":
+      return !!env.plan;
+    case "receipt":
+      return !!env.receipt;
+    default:
+      return false;
+  }
+}
+
+/**
+ * Merge a new envelope onto the current one.
+ *
+ * `isEnvelope` is structural: `{schema_version, card}` and nothing else passes
+ * it, reaches every card branch in App.tsx without matching one, and lands on
+ * the "This review is missing its details" notice. If the user was typing a
+ * reply at the time, their text went with it. Today's server always populates
+ * `draft`, so this is defence in depth — and it is the kind of defence that has
+ * to exist BEFORE the server change that needs it, because the failure is
+ * silent and destroys work.
+ *
+ * Two rules, in order:
+ *
+ *  1. Same card kind, new envelope has no payload, current one does: keep the
+ *     payload and take everything else from the new envelope. This is what
+ *     makes `state: "error"` render as an error AROUND the editor rather than
+ *     instead of it — the server changed nothing, so neither do we.
+ *  2. Nothing renderable in the new envelope at all, and something renderable
+ *     on screen: ignore it outright. A payload-less `bulk_plan` is not a
+ *     reason to take away a send the user is reviewing.
+ *
+ * Anything renderable replaces, unconditionally. A receipt over a draft is a
+ * send completing, and that must always win.
+ *
+ * "Always" is scoped to what reaches here. The card's own calls (App.tsx
+ * #callDraft) reach this function directly, so a send the user pressed always
+ * flips the card to its receipt. A PUSHED receipt is filtered first by
+ * `envelopeSubject` / `sameSubject` above, which admits a receipt that names
+ * this draft and refuses one that names another — or names nothing at all,
+ * which is where the server gap in `receiptSubject` bites. That asymmetry is
+ * deliberate: this function decides how to merge, not whether the result
+ * belongs to this card.
+ */
+export function mergeEnvelope(
+  current: Envelope | null | undefined,
+  next: Envelope,
+): Envelope {
+  if (isRenderable(next) || !current) return next;
+  // A RESTORE STUB is renderable by shape (a draft stub has a `draft`) and
+  // empty by design (no subject, no body, no recipients). Grafting it onto a
+  // fresh envelope would strip the `_stub` marker with it, and App.tsx gates on
+  // that marker alone: the result is a full DraftEditor with blank fields
+  // sitting over a real server draft, whose first Save writes the blanks back.
+  // There is nothing in a stub worth preserving, so rule 1 does not apply to
+  // one and rule 2 below keeps the stub itself, marker intact.
+  if (next.card === current.card && isRenderable(current) && !isRestoreStub(current)) {
+    switch (current.card) {
+      case "draft_editor":
+        return { ...next, draft: current.draft };
+      case "outbound_review":
+        return { ...next, outbound: current.outbound };
+      case "bulk_plan":
+        return { ...next, plan: current.plan };
+      case "receipt":
+        return { ...next, receipt: current.receipt };
+    }
+  }
+  return isRenderable(current) ? current : next;
+}
+
+// ---------------------------------------------------------------------------
+// Re-requesting a restored stub
+//
+// Both halves of this live here rather than inside App.tsx's effect, because
+// both are decisions rather than rendering: WHICH read a card kind has, and
+// WHETHER what came back may be adopted. In the component they were reachable
+// only through a browser, so the one thing that most needed pinning — "a
+// bulk_plan has no reader and must not get one" — was a comment. Here the
+// harnesses drive the shipped functions directly.
+// ---------------------------------------------------------------------------
+
+/** The read a restored stub needs, or null when its card kind has none. */
+export interface RehydrationCall {
+  tool: string;
+  args: Record<string, unknown>;
+}
+
+/**
+ * Which server read puts the content back, for a stub of this card kind.
+ *
+ * Checked against the shipped tool definitions on 2026-09-16, not assumed:
+ *
+ *   draft_editor    `draft_read` (mcp-app-drafts.ts) — read-only, inbox_id +
+ *                   draft_id.
+ *   outbound_review `approval_review` (mcp-app-approvals.ts) — read-only,
+ *                   `approval_id` alone, `readOnlyHint: true`, and its own
+ *                   description ends "so it can be shown in the review card".
+ *                   It shipped with the card and was simply never called, which
+ *                   is what cost a re-mounted pending send its Reject button —
+ *                   Approve was already only `openLink(review_url)`.
+ *   bulk_plan       NONE, and deliberately none. mcp-app-bulk.ts declares
+ *                   exactly `bulk_execute` and `bulk_cancel`; both DECIDE, and
+ *                   reading a plan by running it is not a read. Plans are also
+ *                   server-held with a 15-minute TTL, so a card scrolled back
+ *                   to is usually looking at something already expired. This is
+ *                   settled: do not add a case for it.
+ *   receipt         Terminal. persist.ts rewrites the headline from the outcome
+ *                   and it renders straight from the stub.
+ */
+export function rehydrationCall(env: Envelope | null | undefined): RehydrationCall | null {
+  if (!env || !isRestoreStub(env)) return null;
+  if (env.card === "draft_editor" && env.draft?.draft_id) {
+    return {
+      tool: "draft_read",
+      args: {
+        inbox_id: env.draft.identity?.inbox_id,
+        draft_id: env.draft.draft_id,
+      },
+    };
+  }
+  if (env.card === "outbound_review" && env.outbound?.approval_id) {
+    return {
+      tool: "approval_review",
+      args: { approval_id: env.outbound.approval_id },
+    };
+  }
+  return null;
+}
+
+/**
+ * What to do with the answer. `gone` names a subject, not a sentence: the copy
+ * belongs to the component.
+ */
+export type Rehydration =
+  | { kind: "adopt"; envelope: Envelope }
+  | { kind: "gone"; subject: "draft" | "send" }
+  | { kind: "failed" };
+
+/**
+ * Receipt error codes that mean THIS EDITOR MUST STOP RENDERING.
+ *
+ * An allow-list, and deliberately not its complement ("anything but
+ * `provider_error`"). `runDraftRead` answers a transient IMAP blip with a
+ * `provider_error` receipt, and a receipt is exactly the same event as the
+ * thrown error the effect's own `.catch()` arm was written to tolerate — so
+ * adopting receipts by default would let one bad remount replace a restored
+ * draft with a one-line error. The complement also adopts every code nobody has
+ * written yet, which is the same bet made blind.
+ *
+ * What is on the list is durable rather than transient, and in every case the
+ * server's own copy is the right thing to show: it carries the headline, the
+ * detail and the way back. `draft_editor_hidden` is the user's own opt-out and
+ * is the reason this list exists — without it the card kept rendering a
+ * live-looking editor for a mailbox the user had switched off, over a body held
+ * only in this browser. `draft_editor_disabled` is the identical shape for a
+ * workspace de-rolled-out mid-session. `insufficient_scope` and
+ * `inbox_not_found` say this caller or this inbox can never render this card,
+ * which no retry changes either.
+ *
+ * NOTE for whoever edits the copy: the strings come from the server
+ * (mcp-app-drafts.ts#gateDraftTool), and as of ws2/round3 they no longer
+ * promise a dashboard control, because there is not one yet. Do not reintroduce
+ * that promise on the card side.
+ */
+const EDITOR_STOP_CODES: readonly string[] = [
+  "draft_editor_hidden",
+  "draft_editor_disabled",
+  "insufficient_scope",
+  "inbox_not_found",
+];
+
+/**
+ * Validate a re-request answer before anything is rendered from it.
+ *
+ * Held to the same standard as a pushed result, because it is the same kind of
+ * thing: a server payload arriving into a card that is already showing
+ * something. That standard has two halves and this function used to apply only
+ * the first:
+ *
+ *  1. SHAPE. The card kind must be the one that was asked for AND carry its
+ *     payload, or it must be a terminal receipt on a path where a receipt is a
+ *     real answer. The stub is never rendered as a fallback: an editor with a
+ *     blank subject over a draft that has one is an invitation to overwrite the
+ *     real thing, and a decision row drawn from a stub is a Reject button with
+ *     nothing behind it.
+ *  2. IDENTITY. The answer must be about the id that was ASKED FOR. This is why
+ *     `asked` is the stub envelope rather than its card kind: `rehydrationCall`
+ *     already had the id, and comparing it costs one `sameSubject`.
+ *
+ * Without (2) an `approval_review` answer naming a DIFFERENT `approval_id`, or
+ * a `draft_read` answer naming a different `draft_id`, was adopted and drew a
+ * live Reject bound to whichever id the answer chose. Measured on 2026-09-17
+ * by the round-2 verification pass, which also noted the bound: this is
+ * server-trust, not privilege escalation, because `approval_decide` re-
+ * authorises the id against the caller's key. It is still a server BUG rather
+ * than a case to tolerate — we asked about one thing and were told about
+ * another — so it fails closed, and the comment no longer claims a standard the
+ * code was not applying.
+ */
+export function acceptRehydration(
+  asked: Envelope | null | undefined,
+  next: Envelope | null,
+): Rehydration {
+  // BOTH sides, not just `next`. Round 3 changed `asked` from a card-kind
+  // STRING to the stub envelope, and `"draft_editor".card` is a harmless
+  // `undefined` where `null.card` throws — so the same call that used to
+  // return `failed` now takes the function out. App.tsx cannot reach it (the
+  // effect returns on `!env`, captures the value before the await, and its
+  // `.catch()` would swallow a throw anyway), but this is an exported boundary
+  // the harnesses drive directly, and one of them found it: state-machine.mjs
+  // hands in whatever `loadEnvelope` returned, which is `null` on any miss.
+  // A re-request with nothing to correlate against IS a failed re-request.
+  if (!next || !asked) return { kind: "failed" };
+  const kind = asked.card;
+
+  // "There is no such thing any more." One quiet line, never a red notice:
+  // re-requesting is what just failed, and a wall of warning over a draft the
+  // user deliberately sent, or a send somebody already decided, is the scare
+  // this card refuses to raise. `not_found` deliberately also covers the
+  // wrong-workspace case, which the server makes indistinguishable on purpose,
+  // so the line it maps to has to stay neutral.
+  //
+  // Correlation does not apply here and must not: these refusals carry no id BY
+  // DESIGN. `draftFailure` publishes none at all, and ws2/round3's
+  // `approval_id` is explicitly `null` on a not-found, because echoing an
+  // unverified id back would turn a deliberately indistinguishable refusal into
+  // an existence oracle. So a `null` id reads as UNNAMED, which is refused on
+  // the push path and lands here as `gone` — which is the same answer the card
+  // gave before, for a better reason.
+  const code = next.receipt?.error_code;
+  if (code === "draft_not_found") return { kind: "gone", subject: "draft" };
+  if (
+    kind === "outbound_review" &&
+    (code === "not_found" || code === "invalid_approval_id")
+  ) {
+    return { kind: "gone", subject: "send" };
+  }
+
+  if (next.card === kind && isRenderable(next)) {
+    // Both sides always name an id on this path — a draft envelope carries
+    // `draft_id`, an outbound one `approval_id` — so an answer that cannot be
+    // placed is a defect, not the tolerated absence `sameSubject` allows for a
+    // receipt's missing scope.
+    const mine = envelopeSubject(asked);
+    const theirs = envelopeSubject(next);
+    if (!mine || !theirs || !sameSubject(mine, theirs)) return { kind: "failed" };
+    return { kind: "adopt", envelope: next };
+  }
+
+  // A queued send that expired, or that was decided in the dashboard while the
+  // card was scrolled away, comes back as a terminal receipt. It is
+  // server-authored, carries no mail content (the headline names no recipient
+  // and no subject) and is the truthful rendering, so it is adopted rather than
+  // collapsed into "open the dashboard to see this".
+  //
+  // On the DRAFT path the same is now true of the few refusals that mean this
+  // editor must stop existing — the opt-out above all. Everything else there
+  // still falls to the one-liner: `draft_read` answers a missing draft with a
+  // `draft_editor` error envelope rather than a receipt, so an unrecognised
+  // receipt is a shape nobody has seen.
+  if (
+    next.card === "receipt" &&
+    next.receipt &&
+    (kind === "outbound_review" ||
+      (kind === "draft_editor" && EDITOR_STOP_CODES.includes(String(code))))
+  ) {
+    // A receipt is exempt from (2) when it names NOTHING, and only then. That
+    // is not laxity: an unnamed receipt is the shape the draft failures still
+    // have (`draftFailure` publishes no `draft_id`) and the shape every approval
+    // receipt had before ws2/round3, so requiring an id would refuse the very
+    // answers this branch exists for. A receipt that DOES name something and
+    // names the wrong thing is a mislabelled answer and fails closed.
+    const theirs = envelopeSubject(next);
+    const mine = envelopeSubject(asked);
+    const named = !!theirs && theirs.id !== "";
+    if (named && mine && !sameSubject(mine, theirs)) return { kind: "failed" };
+    return { kind: "adopt", envelope: next };
+  }
+
+  return { kind: "failed" };
+}
+
+/**
+ * Adopt a re-request answer as the rendered envelope.
+ *
+ * Exists so that App.tsx cannot do this with a bare `setState`, which is what
+ * it used to do — and which left `pushAccepted` false, so exactly one later
+ * PUSHED result bypassed correlation entirely and could rebind the card to a
+ * foreign draft or approval.
+ *
+ * The line between this and a restore is the whole point, and it is why the
+ * flag is not simply set wherever an envelope appears. A RESTORE is a memory of
+ * a call; the real result is measured seconds late on Claude and must still be
+ * able to beat it, which is the allowance pinned by hardening.mjs's "a late
+ * result still wins over a RESTORED envelope". A REHYDRATION is a server answer
+ * to a call the card itself made about a specific id — from that moment the
+ * card knows what it is showing, and a later push about something else is the
+ * ordinary uncorrelated case rather than the arrival the recovery was waiting
+ * for.
+ */
+export function adoptRehydration(envelope: Envelope): void {
+  pushAccepted = true;
+  setState({ envelope });
+}
+
+/**
+ * What a rendered envelope is ABOUT.
+ *
+ * Used for one thing only: deciding whether a SECOND pushed tool result is the
+ * same call as the first. Never rendered, never stored.
+ *
+ * `scope` is the mailbox an id lives in, and it is a separate field rather than
+ * part of the id because the two sides do not always both know it. Provider
+ * draft ids are per-mailbox and collide freely across them — `Drafts:2` is the
+ * second draft in EVERY IMAP account — so a draft envelope, which carries the
+ * inbox, must compare it. A receipt carries no identity block, so it names the
+ * id and nothing else; see `sameSubject`.
+ */
+interface Subject {
+  kind: "draft" | "approval" | "plan" | "receipt";
+  id: string;
+  scope: string | null;
+}
+
+/**
+ * A receipt that names nothing it could be a receipt FOR.
+ *
+ * Every approval and bulk receipt in the server is built by a `receiptEnvelope`
+ * helper that emits `{schema_version, card, dashboard_url, state, receipt,
+ * actor}` and no id at all (mcp-app-approvals.ts#receiptEnvelope,
+ * mcp-app-bulk.ts#receiptEnvelope), so today this is what most of them produce.
+ * Its `kind` is its own, so it equals no draft, approval or plan — which keeps
+ * an uncorrelatable receipt REFUSED, exactly as before this refinement.
+ *
+ * That refusal is the fail-safe direction and is chosen deliberately: the
+ * alternative, exempting receipts from correlation, trades "a terminal receipt
+ * for this card is wrongly refused" for "a foreign receipt replaces a draft the
+ * user is typing in", which is the worse failure and is not recoverable.
+ */
+const UNNAMED_RECEIPT: Subject = { kind: "receipt", id: "", scope: null };
+
+/**
+ * What a RECEIPT is a receipt for, read off the merged top-level ids.
+ *
+ * A receipt envelope has no payload of its own to look at — `receipt` is an
+ * outcome and a headline. What it does have, on the draft path, is contract
+ * §8's merge: `draft{action:"send"}` and `draft{action:"delete"}` publish
+ * today's flat payload with the envelope keys laid on top, so `draft_id` sits
+ * at the top level beside `schema_version`. That is the correlating material,
+ * and it is read here rather than assumed.
+ *
+ * SERVER GAP, CLOSED 2026-09-17 (ws2/round3, a3cd89a): the approval and bulk
+ * `receiptEnvelope` helpers now publish `approval_id` / `plan_id` at the top
+ * level, so this function correlates them. The id is the VERIFIED row id and is
+ * `null` wherever nothing was verified — a malformed uuid, or one naming no row
+ * this key may see — because echoing an unverified id back would turn the
+ * deliberately indistinguishable not-found refusal into an existence oracle.
+ * That shape is what this function wants: `typeof === "string"` rejects `null`,
+ * so an unverified receipt reads as UNNAMED and stays refused on the push path,
+ * which is the fail-safe direction and exactly what it was before.
+ *
+ * ORDER IS A PRECEDENCE, not a search: `draft_id` first, then `approval_id`,
+ * then `plan_id`. A receipt carrying two of them would be read as the draft
+ * one, which shadows the approval side — so a hypothetical approval receipt
+ * that also named a draft would fail to correlate against an approval card and
+ * be refused. That is the safe direction and it is why the order is written
+ * down rather than left to whichever key was added last. The three are disjoint
+ * in every builder today (`draft{action:"send"|"delete"}` merges `draft_id`
+ * only; the two `receiptEnvelope`s publish one id each) and there is no reason
+ * to make them overlap.
+ */
+function receiptSubject(env: Envelope): Subject {
+  const top = env as unknown as Record<string, unknown>;
+  const draftId = top.draft_id;
+  if (typeof draftId === "string" && draftId) {
+    const inbox = top.inbox_id;
+    return {
+      kind: "draft",
+      id: draftId,
+      scope: typeof inbox === "string" && inbox ? inbox : null,
+    };
+  }
+  const approvalId = top.approval_id;
+  if (typeof approvalId === "string" && approvalId) {
+    return { kind: "approval", id: approvalId, scope: null };
+  }
+  const planId = top.plan_id;
+  if (typeof planId === "string" && planId) {
+    return { kind: "plan", id: planId, scope: null };
+  }
+  return UNNAMED_RECEIPT;
+}
+
+function envelopeSubject(env: Envelope | null | undefined): Subject | null {
+  if (!env) return null;
+  if (env.draft?.draft_id) {
+    return {
+      kind: "draft",
+      id: env.draft.draft_id,
+      scope: env.draft.identity?.inbox_id ?? null,
+    };
+  }
+  if (env.outbound?.approval_id) {
+    return { kind: "approval", id: env.outbound.approval_id, scope: null };
+  }
+  if (env.plan?.plan_id) return { kind: "plan", id: env.plan.plan_id, scope: null };
+  if (env.receipt) return receiptSubject(env);
+  return null;
+}
+
+/**
+ * Are these two envelopes about the same thing?
+ *
+ * The scope comparison is deliberately "differ only when BOTH sides name one".
+ * A receipt that omits `inbox_id` is not thereby a receipt for a different
+ * mailbox — it simply does not say — and refusing it on an absence would put
+ * the whole draft-send path back where D4 found it. The id still has to match
+ * exactly, and a provider draft id is not guessable from outside the account
+ * that holds it.
+ */
+function sameSubject(a: Subject, b: Subject): boolean {
+  if (a.kind !== b.kind || a.id !== b.id) return false;
+  if (a.scope !== null && b.scope !== null && a.scope !== b.scope) return false;
+  return true;
+}
+
+/**
+ * A call id on a pushed result, when the host puts one there.
+ *
+ * The 2026-01-26 shape of `ui/notifications/tool-result` carries `content` and
+ * `structuredContent` and no id, so this is usually null and the correlation
+ * below cannot lean on it. It is read anyway because a host that DOES label its
+ * notifications gives us an exact answer, and an exact answer beats a
+ * heuristic on the one path where being wrong costs the user their typing.
+ */
+function pushedCallId(params: ToolResultParams | undefined): string | null {
+  const meta = (params?._meta ?? {}) as Record<string, unknown>;
+  const candidate =
+    params?.callId ?? params?.toolCallId ?? meta.callId ?? meta["ui/callId"];
+  return typeof candidate === "string" || typeof candidate === "number"
+    ? String(candidate)
+    : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -456,6 +941,14 @@ export function toolInfoFrom(ctx: HostContext | undefined): ToolInfoSummary | nu
  * state machine is one DOM-free unit that can be driven directly, which is how
  * `harness/state-machine.mjs` proves the three no-result paths.
  */
+/**
+ * Has a PUSHED tool result already been accepted for this view?
+ *
+ * Module scope, like the watchdog timer: one card is mounted per frame, and
+ * this is a fact about the frame rather than about the rendered state.
+ */
+let pushAccepted = false;
+
 export function wireResultHandlers(bridge: HostBridge) {
   // The host MUST send tool-input with the full arguments after ui/initialize,
   // including to a view that mounts long after the call finished — which makes
@@ -473,6 +966,24 @@ export function wireResultHandlers(bridge: HostBridge) {
   };
 
   bridge.onToolResult = (params: ToolResultParams) => {
+    // ---- correlation ------------------------------------------------------
+    //
+    // A pushed result is supposed to be THE result of the call that
+    // instantiated this view. The bridge's `event.source` check already limits
+    // the sender to the real parent frame, so this is not a boundary against an
+    // attacker; it is a guard against a host (or a future server) delivering a
+    // second, unrelated result into a card the user is typing in. `DraftEditor`
+    // resyncs on `draft_id` + `last_saved_at` + `origin`, so a foreign envelope
+    // does not merely redraw: it discards unsaved text.
+    //
+    // The exact check first, when the host gives us one.
+    const pushedId = pushedCallId(params);
+    const mountedId = getState().toolInfo?.callId;
+    if (pushedId !== null && mountedId != null && pushedId !== String(mountedId)) {
+      setState({ uncorrelatedResults: getState().uncorrelatedResults + 1 });
+      return;
+    }
+
     // `status` matters as much as `envelope`: a result that is not ours at all
     // (an opted-out inbox, a non-plannable email_organize action) must leave
     // the card silent rather than warn under a successful operation.
@@ -486,11 +997,50 @@ export function wireResultHandlers(bridge: HostBridge) {
     // Unconditional, including after the watchdog has already given up. A late
     // envelope is still a real envelope and must render, over a restored one.
     disarmResultWatchdog();
-    setState(
-      envelope
-        ? { envelope, resultStatus: status, resultArrival: arrival, resultAfterMs: afterMs }
-        : { resultStatus: status, resultArrival: arrival, resultAfterMs: afterMs },
-    );
+    const timing = { resultStatus: status, resultArrival: arrival, resultAfterMs: afterMs };
+    if (!envelope) {
+      // Unchanged and deliberately so: a foreign or malformed SECOND result
+      // moves the status and leaves the card alone. App.tsx renders on
+      // envelope presence, so nothing blanks.
+      setState(timing);
+      return;
+    }
+
+    const current = getState().envelope;
+    // `pushAccepted`, not "is there an envelope": a RESTORED envelope is a
+    // memory, not a result, and the first real result must always beat it
+    // (state-machine.mjs h3, and every remount that is merely slow).
+    //
+    // ── A FIRST FOREIGN PUSH STILL WINS, AND THAT IS THE TRADE ──────────────
+    //
+    // Spelled out because it is otherwise only implicit in `pushAccepted`: with
+    // a stub restored from storage and no result yet accepted, a pushed result
+    // for a COMPLETELY DIFFERENT draft is accepted and rendered. Nothing here
+    // refuses it, and nothing should. A restore is a memory of a call, not the
+    // call's answer, and the case this whole file exists for is a host that
+    // delivers the real result late — several seconds late, measured. Refusing
+    // a first result because it disagrees with a memory would lock the card
+    // onto the memory forever on exactly the hosts the recovery was built for.
+    // The cost is bounded: there is no unsaved typing to destroy at that point
+    // (a stub can never render as an editor — App.tsx re-requests first), and
+    // the correlation below starts biting from the second result onwards.
+    //
+    // `isRenderable(envelope)` because only a PAYLOAD-BEARING envelope can
+    // destroy anything. A payload-less one (a `state: "error"` refusal, say)
+    // has no subject to compare and cannot take the draft away — mergeEnvelope
+    // keeps it — so refusing those would only mean swallowing the error message
+    // that belongs to this very card.
+    if (pushAccepted && current && isRenderable(envelope)) {
+      const theirs = envelopeSubject(envelope);
+      const mine = envelopeSubject(current);
+      if (theirs !== null && mine !== null && !sameSubject(mine, theirs)) {
+        setState({ ...timing, uncorrelatedResults: getState().uncorrelatedResults + 1 });
+        return;
+      }
+    }
+
+    pushAccepted = true;
+    setState({ ...timing, envelope: mergeEnvelope(current, envelope) });
   };
 
   bridge.onToolCancelled = (_params: ToolCancelledParams) => {

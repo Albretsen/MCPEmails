@@ -22,7 +22,7 @@
     // declares CSS/asset modules and `import.meta.env` and pulls in no other
     // package's types, so this stays as narrow as `[]` was meant to be.
     // Verified 2026-09-16: takes the error count from 1 to 0, and adds none.
-    "types": ["vite/client"]
+    "types": []
   },
   "include": ["src", "vite.config.ts"]
 }

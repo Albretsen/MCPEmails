@@ -628,6 +628,139 @@ export const draftSendReceiptMerged = {
   },
 };
 
+/**
+ * `approval_review` on an id that is gone — or that belongs to a different
+ * workspace, which the server makes DELIBERATELY indistinguishable from gone so
+ * the tool cannot be used to probe which approvals exist elsewhere
+ * (mcp-app-approvals.ts#notFoundFailure). The card therefore has to answer both
+ * with the same neutral line, and never with a warning.
+ */
+export const approvalNotFound = {
+  schema_version: V,
+  card: "receipt",
+  state: "error",
+  dashboard_url: "https://mcpemails.com/dashboard/approvals",
+  receipt: {
+    outcome: "failed",
+    headline: "That approval could not be found.",
+    detail:
+      "It may have been deleted, or it belongs to a different workspace than this API key.",
+    affected_count: 0,
+    dashboard_url: "https://mcpemails.com/dashboard/approvals",
+    error_code: "not_found",
+  },
+};
+
+/**
+ * A terminal receipt with NO id of its own, which is what every approval and
+ * bulk receipt looks like today: both `receiptEnvelope` helpers on the server
+ * emit `{schema_version, card, dashboard_url, state, receipt, actor}` and
+ * nothing else. Named here so the correlation guard's "cannot be shown to
+ * belong to this card" branch is driven by the real shape rather than by a
+ * hand-built one.
+ */
+export const receiptWithNoId = {
+  schema_version: V,
+  card: "receipt",
+  state: "decided_elsewhere",
+  dashboard_url: "https://mcpemails.com/dashboard/approvals",
+  receipt: {
+    outcome: "decided_elsewhere",
+    headline: "This request was already decided.",
+    detail: "It was decided elsewhere — in the dashboard, or by another client.",
+    affected_count: 0,
+    dashboard_url: "https://mcpemails.com/dashboard/approvals",
+    error_code: null,
+  },
+};
+
+/**
+ * `draft_read` refusing a switched-off editor.
+ *
+ * The real shape, from mcp-app-drafts.ts#gateDraftTool via `draftFailure`:
+ * `card: "receipt"`, `state: "error"`, an `error_code` and NO id of any kind —
+ * the draft failures publish none, which is why the card's receipt-adoption
+ * branch cannot require one. The copy is the server's, and as of ws2/round3
+ * (13e0fa7) it no longer promises a dashboard control that does not exist.
+ */
+export const draftEditorHidden = {
+  schema_version: V,
+  card: "receipt",
+  state: "error",
+  dashboard_url: "https://mcpemails.com/dashboard",
+  receipt: {
+    outcome: "failed",
+    headline: "The draft editor card is turned off.",
+    detail:
+      "It is off for this inbox, so nothing was changed. Call draft_editor_hide with " +
+      'scope:"inbox" and hidden:false to turn it back on. ' +
+      "Drafts are unaffected and still work through the draft tool.",
+    affected_count: 0,
+    dashboard_url: "https://mcpemails.com/dashboard",
+    error_code: "draft_editor_hidden",
+  },
+  actor: { can_decide: false, reason: "wrong_workspace" },
+};
+
+/** The same shape for a workspace that is not rolled out, or was de-rolled. */
+export const draftEditorDisabled = {
+  ...draftEditorHidden,
+  receipt: {
+    ...draftEditorHidden.receipt,
+    headline: "The draft editor is not enabled for this workspace.",
+    detail:
+      "Nothing was changed. Drafts can still be created, updated and sent with the draft tool.",
+    error_code: "draft_editor_disabled",
+  },
+};
+
+/**
+ * A TRANSIENT failure in the same clothes.
+ *
+ * `runDraftRead` answers an IMAP blip with this, and it is the same event as
+ * the thrown error App.tsx's `.catch()` arm was written to tolerate. It is the
+ * reason the receipt-adoption branch is an allow-list of codes rather than
+ * "anything but provider_error" or, worse, "any receipt at all".
+ */
+export const draftProviderError = {
+  ...draftEditorHidden,
+  receipt: {
+    ...draftEditorHidden.receipt,
+    headline: "That draft could not be read.",
+    detail: "The mail server did not answer. Nothing was changed.",
+    error_code: "provider_error",
+  },
+};
+
+/**
+ * An `approval_review` answer about a DIFFERENT approval than the one asked
+ * for. Well-formed, renderable, and a server bug: we asked about one id and
+ * were told about another.
+ */
+export const outboundOtherApproval = {
+  ...outboundGmail,
+  outbound: {
+    ...outboundGmail.outbound,
+    approval_id: "3d1f0c66-5a4e-4d70-9b21-7c8e5f0a1234",
+  },
+};
+
+/** The same for `draft_read`: the right shape, the wrong draft. */
+export const draftEditorOtherId = {
+  ...draftEditorImap,
+  draft: { ...draftEditorImap.draft, draft_id: "Drafts:404" },
+};
+
+/**
+ * A server payload that claims to be a LOCAL restore stub.
+ *
+ * `_stub` is a plain JSON key, so "our server never sends it" is a statement
+ * about our server and not about what can arrive. Left in place it makes
+ * App.tsx render `<Loading/>` behind a one-shot re-request that has already
+ * run, i.e. forever.
+ */
+export const draftEditorClaimingStub = { ...draftEditorImap, _stub: true };
+
 /** `draft{action:"delete"}`: the same merge, outcome "discarded". */
 export const draftDeleteReceiptMerged = {
   draft_id: "Drafts:3",
