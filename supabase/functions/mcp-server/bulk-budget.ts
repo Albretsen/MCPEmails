@@ -214,7 +214,7 @@ export async function raceSearchWithTimeout<T>(
   // Outside the try: a synchronous throw from `startSearch` is the caller's own
   // bug and should propagate untouched, with no timer to clean up.
   const search = startSearch();
-  let timer: number | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     return await new Promise<T>((resolve, reject) => {
       timer = setTimeout(() => {

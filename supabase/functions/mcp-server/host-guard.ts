@@ -647,7 +647,7 @@ function makeDenoLookup(state: ResolverState): HostLookup {
       // The loser of the race below still settles later. Without this its
       // rejection is unhandled, which in Deno is a process-level event.
       p.catch(() => {});
-      let timer: number | undefined;
+      let timer: ReturnType<typeof setTimeout> | undefined;
       const timeout = new Promise<never>((_, reject) => {
         timer = setTimeout(
           () => reject(new Error(`DNS resolution timed out after ${RESOLVE_TIMEOUT_MS}ms`)),
