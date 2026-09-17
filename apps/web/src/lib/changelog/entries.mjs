@@ -15,6 +15,15 @@
  * the date the work landed on main, ISO-8601, so they serialise straight into
  * <time> and JSON-LD.
  *
+ * WHAT DOES NOT. Pricing, plans, billing and usage allowances are out, by a
+ * decision taken on 2026-09-17: what a plan costs, what it includes, what an
+ * allowance is and when it resets is the pricing page's job, and this page
+ * carrying its own dated history of it only gives a reader two places to read
+ * a number and one of them to get wrong. Fourteen such entries were removed
+ * that day. A fix whose subject is something else may still name a plan if it
+ * cannot be said otherwise, but the plan is never the news. If you are adding
+ * an entry because a price, a tier or a limit moved, it does not go here.
+ *
  * Entries are written in English and served in every locale. They are terse
  * release notes about a fast-moving product; a stale machine translation of a
  * line about SMTP AUTH is worse than the English line. The page chrome around
@@ -62,7 +71,7 @@ export const ENTRIES = [
     kind: 'changed',
     title: 'Invites are re-checked when they are accepted',
     body:
-      'An invite is valid for seven days and was checked only when it was sent. Accepting one now re-checks that the workspace still has a seat free on its plan and still exists, so a workspace that left the Team plan in between cannot gain a member through an invite already in flight.',
+      'An invite is valid for seven days and was checked only when it was sent. Accepting one now re-checks that the workspace still has room for another member and still exists, so a workspace whose membership changed in between cannot gain a member through an invite already in flight.',
   },
   {
     date: '2026-09-16',
@@ -98,20 +107,6 @@ export const ENTRIES = [
     title: 'IMAP search covers the Inbox unless you widen it',
     body:
       'On generic IMAP, a search with no folder filter looks in the Inbox. Fanning out across every mailbox is one serial search per folder and ran past the time a search is allowed to take, so it is no longer the default. Name the folders you want in include_folders, such as your archive or your sent mail, to search wider. Gmail and Outlook still search every folder.',
-  },
-  {
-    date: '2026-09-14',
-    kind: 'fixed',
-    title: 'Switch between monthly and annual billing',
-    body:
-      'A subscriber who chose annual billing was told they were already on that plan and nothing happened, in either direction, because the check read the tier and never looked at the interval. Both directions work now, quoted before anything is charged like any other plan change. Switching restarts the billing period, and the confirmation says so instead of promising the renewal date will not move.',
-  },
-  {
-    date: '2026-09-13',
-    kind: 'changed',
-    title: 'Free includes 150 email actions a month',
-    body:
-      'A Free workspace gets 150 billable email actions per calendar month. The first seven days after signing up are not counted, so a first week is never cut short, and there is no daily cap. Every workspace that already existed is exempt for good. The dashboard shows where you stand against the allowance, an email goes out at 80 percent and again at the limit, and an automation that meets the limit pauses with a stated reason and resumes on the 1st. Paid plans are unchanged.',
   },
   {
     date: '2026-09-12',
@@ -198,27 +193,6 @@ export const ENTRIES = [
       'When a forward fails before anything is transmitted, the result reports it as not sent and the retry is safe with the same idempotency key. Attachments the reader could not carry are no longer quietly left off a forward.',
   },
   {
-    date: '2026-09-07',
-    kind: 'added',
-    title: 'Billing notifications',
-    body:
-      'Email when a renewal payment needs attention, when a saved card is about to expire, and when a subscription changes or ends, so nothing about your subscription happens silently.',
-  },
-  {
-    date: '2026-09-07',
-    kind: 'improved',
-    title: 'Annual billing offered where you upgrade',
-    body:
-      'The upgrade prompt inside the app now shows the annual price next to the monthly one, and every account can move to any paid plan from the pricing page.',
-  },
-  {
-    date: '2026-09-07',
-    kind: 'fixed',
-    title: 'Long-time users can buy a plan',
-    body:
-      'A workspace holding the unlimited-inboxes grant from the August pricing change was refused at checkout for Personal, on the reasoning that a plan naming three inboxes must be a downgrade from unlimited. The grant lifts the inbox ceiling and nothing else, and it survives onto a paid plan, so Personal raises everything else and is now purchasable.',
-  },
-  {
     date: '2026-09-01',
     kind: 'added',
     title: 'Connect Gmail with an app password',
@@ -245,20 +219,6 @@ export const ENTRIES = [
     title: 'Clearer failures, faster IMAP',
     body:
       'Provider failures are reported with a specific reason instead of one generic error, an action name that differs only in case or separator is understood rather than refused, and an abandoned IMAP connection is dropped instead of holding up the next call.',
-  },
-  {
-    date: '2026-09-01',
-    kind: 'changed',
-    title: 'Analytics window matches your plan',
-    body:
-      'Usage charts and the audit log show the history window your plan includes, and the dashboard names that window instead of always saying 30 days. Nothing is deleted; the window only limits what is displayed.',
-  },
-  {
-    date: '2026-09-01',
-    kind: 'changed',
-    title: 'Pro is now $15 a month',
-    body:
-      'Pro drops from $29 to $15 a month, and from $276 to $144 a year. At $29 the step up from Personal was close to six times the price to go from three mailboxes to five, which is not what those two mailboxes are worth. Personal stays at $5 and Team is unchanged. No subscription was on the old prices.',
   },
   /* ── August 2026 ───────────────────────────────────────────── */
   {
@@ -308,7 +268,7 @@ export const ENTRIES = [
     kind: 'fixed',
     title: 'Inviting a teammate works',
     body:
-      'Every invite was refused with a message saying the workspace already held its maximum of one member, on every plan, Team included. The check could not read the workspace\'s real plan and fell back to the most restrictive one, so nobody could ever add anybody. A plan that cannot be read is now an error rather than a silent fall back to Free. The inbox routes also gained the role check they were missing, so a viewer can no longer connect, disconnect or reconfigure a mailbox in someone else\'s workspace.',
+      'Every invite was refused with a message saying the workspace already held its maximum of one member, so nobody could ever add anybody to a workspace. The check could not read the workspace it was asked about and fell back to the most restrictive answer available; an unreadable workspace is now an error rather than a silent refusal. The inbox routes also gained the role check they were missing, so a viewer can no longer connect, disconnect or reconfigure a mailbox in someone else\'s workspace.',
   },
   {
     date: '2026-08-30',
@@ -326,31 +286,10 @@ export const ENTRIES = [
   },
   {
     date: '2026-08-29',
-    kind: 'added',
-    title: 'Purchase confirmation email',
-    body:
-      'A confirmation after checkout naming the plan, the amount and the billing interval.',
-  },
-  {
-    date: '2026-08-29',
-    kind: 'improved',
-    title: 'A plan change shows the amount first',
-    body:
-      'Switching plan asks for confirmation and shows what you will be charged before anything is billed.',
-  },
-  {
-    date: '2026-08-29',
     kind: 'improved',
     title: 'Connecting an IMAP mailbox',
     body:
       'The connect form works out the transport from the port instead of asking you to choose between SSL and STARTTLS, failures explain what actually went wrong, and the whole form can be completed from the keyboard.',
-  },
-  {
-    date: '2026-08-27',
-    kind: 'added',
-    title: 'Personal: three inboxes for $5 a month',
-    body:
-      'A plan between Free and Pro, at $5 a month or $48 a year: three connected inboxes, one person, and twice the per-minute ceiling of Free. Free, Pro and Team keep their prices and their limits.',
   },
   {
     date: '2026-08-25',
@@ -365,13 +304,6 @@ export const ENTRIES = [
     title: 'Automations keep running on OAuth connections',
     body:
       'A scheduled rule created from an OAuth connection stopped running once its access token rotated. Rules now follow the authorisation itself, which does not rotate.',
-  },
-  {
-    date: '2026-08-25',
-    kind: 'improved',
-    title: 'The upgrade offer when an inbox is over the limit',
-    body:
-      'Connecting a mailbox above your plan limit shows the upgrade panel, in your own language, instead of a generic form error about your credentials.',
   },
   {
     date: '2026-08-24',
@@ -407,27 +339,6 @@ export const ENTRIES = [
     title: 'Use it from Claude Desktop, Cursor, Cline and Windsurf',
     body:
       'npx -y mcpemails bridges the hosted server to clients that can only launch a local command. No dependencies, Node 18 or newer, and your key is only ever sent in the authorization header.',
-  },
-  {
-    date: '2026-08-19',
-    kind: 'changed',
-    title: 'Plans are priced on connected inboxes',
-    body:
-      'Pricing moved from how many actions you take to how many mailboxes you connect, which is the thing people actually run out of. Everyone using the product at the time kept unlimited inboxes.',
-  },
-  {
-    date: '2026-08-19',
-    kind: 'improved',
-    title: 'Change plan from the dashboard',
-    body:
-      'Switching plan or billing interval happens in place, with the difference settled on your next invoice, instead of sending you to a portal that could not make the change.',
-  },
-  {
-    date: '2026-08-19',
-    kind: 'improved',
-    title: 'The usage meter warns you before the limit',
-    body:
-      'The action allowance is labelled for what it is, turns amber at 80 percent, and at the limit reports what is actually happening to your calls rather than guessing.',
   },
   {
     date: '2026-08-18',
