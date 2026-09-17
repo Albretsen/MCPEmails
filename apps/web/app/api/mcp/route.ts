@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { upstreamHeaders } from '@/lib/mcp/upstream-headers';
+
 /**
  * POST /api/mcp
  *
@@ -94,7 +96,11 @@ const WWW_AUTHENTICATE =
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Authorization, Content-Type, MCP-Protocol-Version',
+  // Accept is listed explicitly rather than relied on as CORS-safelisted: the
+  // safelist only covers Accept values with no CORS-unsafe bytes, and a
+  // Streamable HTTP client sends `application/json, text/event-stream`, which
+  // the browser must be told it may send for the SSE path to work at all.
+  'Access-Control-Allow-Headers': 'Authorization, Content-Type, MCP-Protocol-Version, Accept',
   'Access-Control-Expose-Headers': 'WWW-Authenticate, MCP-Protocol-Version, Mcp-Session-Id',
 } as const;
 
@@ -209,6 +215,26 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // with HTTP 400 (and logs the rest). Until 2026-09-08 this proxy dropped the
   // header, so the upstream had never seen a real client's value.
   const protocolVersion = request.headers.get('mcp-protocol-version');
+  // Accept decides whether the upstream is ALLOWED to answer with an SSE
+  // stream, and dropping it here silently disabled the whole
+  // notifications/tools/list_changed mechanism.
+  //
+  // The upstream gate is `accept.includes("text/event-stream")`
+  // (acceptsEventStream in card-build-notify.ts). Because this object listed
+  // only Content-Type, Authorization and MCP-Protocol-Version, undici filled in
+  // its own default and EVERY request reached the function as `Accept: */*`
+  // (measured 2026-09-17: 2681 of 2681, byte-identical, which is the signature
+  // of a proxy default rather than of real clients). So the gate was false on
+  // every request and the notification had never fired for anyone: 2329
+  // [mcp-server] log lines in the two hours after a card deploy, zero
+  // tools/list_changed, while one key with 328 card-bearing calls sat waiting
+  // for one.
+  //
+  // This is the same mistake as the MCP-Protocol-Version note above, which was
+  // fixed on 2026-09-08. Forwarded rather than hardcoded: a client that does
+  // not ask for a stream must keep getting plain JSON it can parse, and absent
+  // means absent, so the header is omitted instead of being invented.
+  const accept = request.headers.get('accept');
 
   // Both the request and the body read are guarded. The Edge Function's isolate
   // is capped at 256MB and Supabase kills it on breach (HTTP 546,
@@ -219,11 +245,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const upstream = await fetch(MCP_FUNCTION_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': contentType,
-        Authorization: authorization,
-        ...(protocolVersion ? { 'MCP-Protocol-Version': protocolVersion } : {}),
-      },
+      headers: upstreamHeaders({
+        authorization,
+        contentType,
+        protocolVersion,
+        accept,
+      }),
       body,
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
