@@ -280,14 +280,39 @@ function nowMs(deps: BulkDeps): number {
   return deps.now ? deps.now() : Date.now();
 }
 
+/**
+ * A terminal receipt, at the envelope level.
+ *
+ * ── WHY `plan_id` IS HERE ──────────────────────────────────────────────────
+ * This COMPLETES A CONTRACT; it does not fix an observable defect, and should
+ * not be described as one. `apps/mcp-app/src/contract.ts` declares no
+ * `plan_id` on a receipt and the card has no correlation logic today, so
+ * nothing is currently refusing anything — the field is the server half of
+ * correlation that is being built on the card side in parallel.
+ *
+ * What that correlation will do: match a PUSHED receipt against the plan the
+ * card is rendering, so a receipt for this plan wins and a receipt for a
+ * different one is refused rather than silently replacing an open preview.
+ * The plan envelope has published `plan.plan_id` since it was written; this
+ * one published no id at all, so a pushed terminal receipt would arrive with
+ * nothing to place it by, and the card would have to treat it as UNNAMED and
+ * refuse it.
+ *
+ * `null` where no row was verified — an id that failed UUID validation, or one
+ * that named no plan this key may see. Echoing an unvalidated caller-supplied
+ * id back would make the correlation worth nothing.
+ */
 function receiptEnvelope(
   state: CardState,
   receipt: BulkReceiptFields,
   reason: ActorReason | null,
+  planId: string | null,
 ): Record<string, unknown> {
   return {
     schema_version: CARD_SCHEMA_VERSION,
     card: "receipt",
+    // Which plan this receipt is about. See the note above.
+    plan_id: planId,
     // Envelope-level and absolute — see the matching note in
     // mcp-app-approvals.ts#receiptEnvelope. The card holds no origin of its own.
     dashboard_url: receipt.dashboard_url,
@@ -297,16 +322,22 @@ function receiptEnvelope(
   };
 }
 
+/**
+ * `planId` is the VERIFIED row id, or `null` when no row was verified. Required
+ * rather than optional so a new failure path has to decide, instead of quietly
+ * publishing a receipt the card cannot place.
+ */
 function failureResult(
   state: CardState,
   receipt: BulkReceiptFields,
   reason: ActorReason | null,
   logErrorCode: string,
+  planId: string | null,
 ): BulkToolResult {
   return {
     result: {
       content: [{ type: "text", text: receipt.headline + " " + receipt.detail }],
-      structuredContent: receiptEnvelope(state, receipt, reason),
+      structuredContent: receiptEnvelope(state, receipt, reason, planId),
       isError: true,
     },
     logStatus: "error",
@@ -346,6 +377,9 @@ function invalidArgs(deps: BulkDeps, message: string): BulkToolResult {
     },
     "not_pending",
     "-32602",
+    // Null: these fire before any row is loaded, so nothing about the caller's
+    // id is verified.
+    null,
   );
 }
 
@@ -680,6 +714,9 @@ export async function createBulkPlan(
       },
       "not_pending",
       "bulk_plan_write_failed",
+      // The insert is what would have minted the id, and it failed. There is no
+      // plan for the card to correlate this against, and that is the truth.
+      null,
     );
   }
 
@@ -815,6 +852,8 @@ async function loadPendingPlan(
         },
         "wrong_workspace",
         "invalid_plan_id",
+        // Nothing verified: the id never parsed as a UUID.
+        null,
       ),
     };
   }
@@ -879,6 +918,7 @@ async function loadPendingPlan(
         },
         "not_pending",
         row.status === "expired" ? "bulk_plan_expired" : "bulk_plan_not_pending",
+        row.id,
       ),
     };
   }
@@ -891,7 +931,7 @@ async function loadPendingPlan(
       .update({ status: "expired" })
       .eq("id", row.id)
       .eq("status", "pending");
-    return { ok: false, failure: expiredPlanFailure(deps) };
+    return { ok: false, failure: expiredPlanFailure(deps, row.id) };
   }
 
   return { ok: true, row };
@@ -908,7 +948,7 @@ export function isPlanExpired(
   return Number.isFinite(parsed) && parsed <= atMs;
 }
 
-function expiredPlanFailure(deps: BulkDeps): BulkToolResult {
+function expiredPlanFailure(deps: BulkDeps, planId: string): BulkToolResult {
   return failureResult(
     "expired",
     {
@@ -924,6 +964,7 @@ function expiredPlanFailure(deps: BulkDeps): BulkToolResult {
     },
     "expired",
     "bulk_plan_expired",
+    planId,
   );
 }
 
@@ -947,6 +988,9 @@ function planNotFoundFailure(deps: BulkDeps): BulkToolResult {
     },
     "wrong_workspace",
     "bulk_plan_not_found",
+    // Deliberately null, for the same reason this response is identical for all
+    // three causes: naming an id here would confirm which one it was.
+    null,
   );
 }
 
@@ -1037,6 +1081,7 @@ export async function runBulkExecute(
       },
       "not_pending",
       "bulk_plan_decrypt_failed",
+      row.id,
     );
   }
 
@@ -1075,6 +1120,7 @@ export async function runBulkExecute(
       },
       "not_pending",
       "bulk_plan_claim_failed",
+      row.id,
     );
   }
 
@@ -1093,6 +1139,7 @@ export async function runBulkExecute(
       },
       "not_pending",
       "bulk_plan_already_executed",
+      row.id,
     );
   }
 
@@ -1133,6 +1180,7 @@ export async function runBulkExecute(
       },
       "not_pending",
       "provider_error",
+      row.id,
     );
   }
 
@@ -1172,6 +1220,7 @@ export async function runBulkExecute(
       },
       "not_pending",
       outcome.error_code ?? "provider_error",
+      row.id,
     );
   }
 
@@ -1189,7 +1238,7 @@ export async function runBulkExecute(
   };
 
   return cardResult(
-    receiptEnvelope("executed", receipt, "not_pending"),
+    receiptEnvelope("executed", receipt, "not_pending", row.id),
     `${receipt.headline} ${receipt.detail}`,
   );
 }
@@ -1256,6 +1305,7 @@ export async function runBulkCancel(
       },
       "not_pending",
       "bulk_plan_write_failed",
+      row.id,
     );
   }
 
@@ -1273,6 +1323,7 @@ export async function runBulkCancel(
       },
       "not_pending",
       "bulk_plan_decided_elsewhere",
+      row.id,
     );
   }
 
@@ -1289,7 +1340,7 @@ export async function runBulkCancel(
   };
 
   return cardResult(
-    receiptEnvelope("rejected", receipt, "not_pending"),
+    receiptEnvelope("rejected", receipt, "not_pending", row.id),
     `${receipt.headline} ${receipt.detail}`,
   );
 }

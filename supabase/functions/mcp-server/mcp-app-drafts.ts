@@ -230,12 +230,45 @@ export interface DraftEditorDeps {
   /** Canonical app origin, no trailing slash. */
   appUrl: string;
   /**
-   * `workspaces.draft_editor_enabled` for one workspace.
+   * The workspace's two draft-editor switches, read together.
    *
-   * MUST fail closed: an error means false, which is the pre-feature behaviour
-   * (no envelope, no editor) rather than a card the host cannot render.
+   * `rolledOut` is `workspaces.draft_editor_enabled` — OUR gate. `hidden` is
+   * `workspaces.draft_editor_hidden` — the USER's workspace-wide opt-out.
+   *
+   * They are returned SEPARATELY rather than pre-ANDed, and that separation is
+   * what makes the opt-out reversible. `draft_editor_hide{hidden:false}` is the
+   * tool whose whole job is to clear `hidden`, so it must not be gated on
+   * `hidden` being clear already — a single "enabled" boolean made workspace
+   * hiding a one-way door (a hide disabled the tool that would undo it).
+   * See `runDraftEditorHide`.
+   *
+   * MUST fail closed on `rolledOut`: an error means false, which is the
+   * pre-feature behaviour (no envelope, no editor) rather than a card the host
+   * cannot render. `hidden` fails closed too (true), which only ever withholds.
    */
-  workspaceEnabled(workspaceId: string): Promise<boolean>;
+  workspaceGate(workspaceId: string): Promise<{ rolledOut: boolean; hidden: boolean }>;
+  /**
+   * `inboxes.draft_editor_hidden` for ONE inbox — the per-inbox opt-out.
+   *
+   * Its own read rather than a column on the resolved inbox row, for
+   * deploy-order safety: the shared `INBOX_SELECT_COLUMNS` projection is used
+   * by EVERY mail tool, so a new column there would make every mail tool
+   * report `inbox_not_found` against a database whose migration has not landed
+   * yet. Same reasoning, and the same shape, as `readSendReviewMode` and
+   * `readBulkReviewMode` in `index.ts`.
+   *
+   * MUST fail closed (true = hidden): unreadable means no card, which is the
+   * pre-feature behaviour.
+   */
+  inboxHidden(inboxId: string): Promise<boolean>;
+  /**
+   * The workspace role of the human this key belongs to ('owner' | 'admin' |
+   * 'member'), or null when it cannot be established.
+   *
+   * Only `draft_editor_hide{scope:"workspace"}` consults it. See the role note
+   * on `runDraftEditorHide`.
+   */
+  workspaceRole(workspaceId: string, userId: string): Promise<string | null>;
   /**
    * `index.ts#resolveInboxArg`, which already applies the workspace filter AND
    * the key's `inbox_ids` allowlist. Injected rather than reimplemented: an
@@ -283,6 +316,15 @@ export interface DraftEditorCaller {
   workspace_id: string;
   scopes: string[];
   inbox_ids: string[] | null;
+  /**
+   * `api_keys.created_by` — the human the key was minted by, or null.
+   *
+   * Used for exactly one thing: the owner/admin check on
+   * `draft_editor_hide{scope:"workspace"}`. Null means the role cannot be
+   * established, which is refused rather than waved through (every live
+   * production key carries one, verified 2026-09-16).
+   */
+  user_id: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -314,6 +356,20 @@ function asObject(rawArgs: unknown): Record<string, unknown> {
 
 function stringList(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
+}
+
+/**
+ * CRLF and lone CR to LF, so two bodies can be compared for real difference.
+ *
+ * Used for ONE decision — "did the person actually change the wording?" — and
+ * never to rewrite what gets stored. A browser `<textarea>` hands its value
+ * back as CRLF regardless of what was put into it, so a card that re-sends an
+ * untouched body sends a byte-different string for a draft stored with LF. The
+ * comparison has to see through that; the write does not, and passes the
+ * caller's text along exactly as given.
+ */
+export function normalizeLineEndings(value: string): string {
+  return value.replace(/\r\n?/g, "\n");
 }
 
 // ---------------------------------------------------------------------------
@@ -674,7 +730,7 @@ type GateResult =
   | { ok: false; failure: DraftEditorToolResult };
 
 /**
- * Everything both tools re-verify, in the order that leaks the least.
+ * Everything these tools re-verify, in the order that leaks the least.
  *
  *   1. the scopes this tool needs (checked here as well as at the dispatch
  *      layer — that layer ORs `requiredScope` with `altScopes`, so a second
@@ -682,16 +738,51 @@ type GateResult =
  *   2. the inbox resolves, is in the caller's workspace, and is inside the
  *      key's `inbox_ids` allowlist — all three through `resolveInboxArg`, the
  *      same function every mail tool uses;
- *   3. the workspace is gated into the draft editor.
+ *   3. the workspace is rolled out to the draft editor;
+ *   4. NEITHER opt-out is set — not the workspace one, and not the one on the
+ *      inbox this call resolved to.
  *
- * (2) and (3) fail with the same "could not be found" response, so neither can
- * be used to probe which inboxes or which workspaces exist.
+ * (2), (3) and (4) fail with responses that name no inbox and no workspace, so
+ * none of them can be used to probe which exist.
+ *
+ * ── WHY (4) IS HERE AND NOT ONLY IN THE ENVELOPE BUILDERS ──────────────────
+ * It used to be missing, and that falsified the opt-out's entire promise. The
+ * per-inbox flag was consulted by `draftEditorEnvelopeForWrite` and
+ * `draftEditorReceiptFor` alone, so with the card hidden the three app-only
+ * tools still worked: `draft_read` returned the full decrypted body in a live
+ * `card: "draft_editor"` envelope and `draft_editor_save` happily rewrote the
+ * draft. Measured 2026-09-16 against the demo inbox with `draft_editor_hide`
+ * set: `draft` correctly lost its `_meta.ui` and its envelope, while
+ * `draft_read` / `draft_editor_save` / `draft_editor_hide` all kept
+ * `_meta: {ui:{…}}` and kept working.
+ *
+ * That is reachable with no adversary at all: the card's restore-recovery
+ * effect calls `draft_read` whenever a cell remounts from storage, so scrolling
+ * back to an older conversation re-opened a working editor for an inbox the
+ * user had switched off. Contract §6 additionally says to assume a
+ * prompt-injected agent calls all three deliberately. The opt-out is advertised
+ * as byte-identical to life before MCP Apps; this is what makes that true.
+ *
+ * `allowWhileHidden` is the ONE exception, and `draft_editor_hide` is the one
+ * caller that passes it — unconditionally, in both directions. That tool
+ * returns a receipt about the preference and writes the very column (4) reads,
+ * so gating it protects nothing while making the opt-out a one-way door
+ * (`hidden:false` refused) and crossing scopes (a hidden INBOX refusing a
+ * WORKSPACE-grain hide). The flag skips (4) and nothing else — scopes, the
+ * inbox and its allowlist, and the rollout gate all still apply. See
+ * `runDraftEditorHide`.
+ *
+ * It is not a general escape hatch and must not become one: (4) is what makes
+ * "the opt-out is byte-identical to life before MCP Apps" true for `draft_read`
+ * and `draft_editor_save`, which DO return a body and DO rewrite a draft. It is
+ * a fixed argument at each call site, never derived from caller input.
  */
 async function gateDraftTool(
   deps: DraftEditorDeps,
   caller: DraftEditorCaller,
   args: Record<string, unknown>,
   requiredScopes: readonly string[],
+  options: { allowWhileHidden?: boolean } = {},
 ): Promise<GateResult> {
   for (const scope of requiredScopes) {
     if (!caller.scopes.includes(scope)) {
@@ -726,8 +817,17 @@ async function gateDraftTool(
     };
   }
 
-  const enabled = await deps.workspaceEnabled(caller.workspace_id);
-  if (!enabled) {
+  // The workspace's two switches, and the per-inbox opt-out, in one round of
+  // parallel reads. The inbox read needs the resolved id, so it cannot join the
+  // resolve above; it can and does join the workspace read.
+  const [workspace, inboxHidden] = await Promise.all([
+    deps.workspaceGate(caller.workspace_id),
+    options.allowWhileHidden
+      ? Promise.resolve(false)
+      : deps.inboxHidden(resolved.inbox.id),
+  ]);
+
+  if (!workspace.rolledOut) {
     return {
       ok: false,
       failure: draftFailure(
@@ -737,6 +837,37 @@ async function gateDraftTool(
         "Nothing was changed. Drafts can still be created, updated and sent with the draft tool.",
         "draft_editor_disabled",
         "draft_editor_disabled",
+        "wrong_workspace",
+      ),
+    };
+  }
+
+  // The user's own opt-out, at either grain. A DISTINCT error code from the
+  // rollout gate above: "we have not offered you this" and "you switched this
+  // off" are different facts, the second is actionable by the caller, and a
+  // support question about a silent card is answerable from the log line.
+  if (!options.allowWhileHidden && (workspace.hidden || inboxHidden)) {
+    return {
+      ok: false,
+      failure: draftFailure(
+        deps.appUrl,
+        "failed",
+        "The draft editor card is turned off.",
+        // NO DASHBOARD PROMISE. There is no screen for this: `grep -rni
+        // draft_editor apps/web` matches two API routes and the generated
+        // types, and nothing else — no component, no locale string. The tool
+        // route below is the one that exists and works today, so it is the only
+        // one offered. (A dashboard toggle is being built; when it ships, this
+        // is one of the six strings to revisit.)
+        workspace.hidden
+          ? "It is off for this whole workspace, so nothing was changed. Call draft_editor_hide " +
+            'with scope:"workspace" and hidden:false to turn it back on. ' +
+            "Drafts are unaffected and still work through the draft tool."
+          : "It is off for this inbox, so nothing was changed. Call draft_editor_hide with " +
+            'scope:"inbox" and hidden:false to turn it back on. ' +
+            "Drafts are unaffected and still work through the draft tool.",
+        "draft_editor_hidden",
+        "draft_editor_hidden",
         "wrong_workspace",
       ),
     };
@@ -971,15 +1102,96 @@ export async function runDraftEditorSave(
   // replaced. There is deliberately no `body_html` argument — the editor is a
   // plain-text surface, and a card that could write arbitrary HTML into an
   // outgoing message is a strictly larger thing than this feature needs to be.
+  //
+  // ── A LINE-ENDING-ONLY DIFFERENCE IS NOT A BODY EDIT ─────────────────────
+  // The rule above trades a rich HTML part for truthfulness, and that trade is
+  // only worth making when the wording actually changed. It was firing when it
+  // had not: a `<textarea>` normalises its value to CRLF on submit, so a card
+  // that re-sent an untouched body sent CRLF for a draft stored with LF, the
+  // `typeof bodyText === "string"` test above called that an edit, and a rich
+  // HTML part was flattened to `plainTextBodyToHtml`'s markup — plus, on IMAP,
+  // the draft id moved, because every save appends and expunges. Confirmed
+  // against production 2026-09-16.
+  //
+  // So the comparison is made modulo line endings, and a body that matches the
+  // stored one under that normalisation is treated exactly like an omitted
+  // `body_text`: the stored HTML part is carried through untouched. This is
+  // belt and braces for the card-side fix (a no-op edit should never produce a
+  // patch in the first place) and it is deliberately NARROW — regenerating the
+  // HTML for a GENUINE body edit is the defended trade-off of contract §6 and
+  // §8 and is not softened here by a single character.
+  //
+  // ── AND `null` IS NOT `""` ───────────────────────────────────────────────
+  // The comparison was written against `stored.body_text ?? ""`, and that
+  // coalesce reopened the very hole the regeneration rule exists to close. A
+  // draft with NO text part and an HTML part stores `body_text: null`; the card
+  // renders that as an empty textarea; a caller who types into it and deletes
+  // back to empty sends `body_text: ""`. `"" !== ""` is false, so the save was
+  // classified as an OMITTED body and the stored rich HTML was carried through
+  // untouched — the user cleared the message and it still went out carrying the
+  // original wording in the `text/html` part most clients render. Worse than
+  // the bug this whole block was written to prevent, and a regression from the
+  // `typeof bodyText === "string"` test it replaced, which got this case right.
+  //
+  // So `null` is compared as null, not as "". A stored draft with no text part
+  // has nothing for a supplied body to be equal to, so any string is a change —
+  // including the empty one. The line-ending exemption applies only where there
+  // IS a stored text part for the line endings to differ from.
+  //
+  // ── AND AN EMPTY STORED TEXT PART IS NO TEXT PART ────────────────────────
+  // `null` is not the only shape "no usable text" arrives in, and the first
+  // version of this fix left the other half open. `mime.ts` sets
+  // `out.text = decodeCharset(bytes, charset)` for a text/plain part that is
+  // PRESENT and EMPTY, so a multipart/alternative whose text part is empty
+  // parses to `""`, not `null` — verified 2026-09-17 against a message this
+  // server itself builds (`draft{action:"create", body:"", html_body:"<p>…</p>"}`
+  // reads back as `body_text: ""`). Against such a draft an explicit clear
+  // compared `"" !== ""`, was classified as an OMITTED body, and carried the
+  // stored rich HTML through untouched: the same harm as the `?? ""` bug, one
+  // stored shape over.
+  //
+  // The card cannot reach it (an untouched empty textarea produces an empty
+  // patch), so it takes a direct tool call — but the invariant stated above is
+  // about the stored draft, not about who is calling, and it was false for that
+  // shape. Both emptinesses are now "nothing to be equal to".
+  //
+  // Both emptiness tests are spelled out here rather than hoisted into a named
+  // boolean: the `=== null` is what narrows `stored.body_text` to `string` for
+  // the comparison below, and a hoisted `const` loses that narrowing.
+  const bodyTextChanged = typeof bodyText === "string" &&
+    (stored.body_text === null || stored.body_text === "" ||
+      normalizeLineEndings(bodyText) !== normalizeLineEndings(stored.body_text));
   let nextHtml: string | undefined;
   if (stored.body_html !== null) {
-    if (typeof bodyText === "string") {
-      const regenerated = plainTextBodyToHtml(bodyText);
+    if (bodyTextChanged) {
+      const regenerated = plainTextBodyToHtml(bodyText as string);
       // Escaping can multiply the input (every `&'"<>` becomes 5-6 bytes), so
       // the regenerated part can outgrow what a mail body may reasonably be.
       // Dropping it is the safe way out: the message goes as text/plain, which
       // still says exactly what the user typed. Keeping the stale part would not.
-      nextHtml = regenerated.length > EMAIL_HTML_MAX_LENGTH ? undefined : regenerated;
+      //
+      // An EMPTY regeneration is dropped for the same reason and not for the
+      // opposite one: a cleared body should leave a message with no HTML part,
+      // not one carrying an empty `text/html`.
+      //
+      // ── WHAT THIS IS NOT ─────────────────────────────────────────────────
+      // It is NOT a fix for malformed MIME, and an earlier version of this
+      // comment claimed it was ("makes the IMAP MIME match what Gmail and
+      // Outlook would already do"). That was wrong: the IMAP builder already
+      // matched. `buildDraftMime` -> `buildMimeMessage` branches on
+      // `const hasHtml = !!params.htmlBody` (mime-build.ts), which is the same
+      // truthiness test as Outlook's `contentType: params.htmlBody ? "html" :
+      // "text"`, so `""` and `undefined` built byte-identical messages —
+      // `Content-Type: text/plain`, no multipart boundary, `parsed.html` null.
+      // Verified against all three builders 2026-09-17.
+      //
+      // Keep it anyway: it is tidier and more honest to say `undefined` when we
+      // mean "no HTML part", and it is defence against a FUTURE builder that
+      // branches on `htmlBody !== undefined` instead of on truthiness. Do not
+      // describe it as a bug fix.
+      nextHtml = regenerated.length === 0 || regenerated.length > EMAIL_HTML_MAX_LENGTH
+        ? undefined
+        : regenerated;
     } else {
       nextHtml = stored.body_html;
     }
@@ -1230,8 +1442,10 @@ export const DRAFT_EDITOR_TOOL_DEFINITIONS: DraftEditorToolDefinition[] = [
       "Turn OFF the in-chat draft editor card, either for one inbox or for the " +
       "whole workspace. This is a display preference only: drafts, sending and " +
       "every other tool are completely unaffected, and the same draft results " +
-      "keep coming back as plain text. Pass hidden:false to turn it back on. " +
-      "The person can also change this in the dashboard.",
+      "keep coming back as plain text. Pass hidden:false to turn it back on, " +
+      "which works at either scope even while the card is hidden. Hiding or " +
+      "showing it for the WHOLE workspace changes it for every member, so that " +
+      "scope needs a workspace owner or admin; one inbox needs no extra role.",
     requiredScope: "manage:drafts",
     inputSchema: {
       type: "object",
@@ -1256,9 +1470,29 @@ export const DRAFT_EDITOR_TOOL_DEFINITIONS: DraftEditorToolDefinition[] = [
     outputSchema: DRAFT_CARD_OUTPUT_SCHEMA,
     annotations: {
       title: "Hide the draft editor card",
-      // Not read-only: it writes a preference. Not destructive: nothing is
-      // lost and the same call with hidden:false restores it exactly, which is
-      // also why it is idempotent.
+      // Not read-only: it writes a preference.
+      //
+      // Not DESTRUCTIVE: nothing is lost and nothing is sent; it changes only
+      // whether the card is rendered, and the same call with hidden:false
+      // restores it exactly. That reversal is now true at both scopes. It was
+      // not until 2026-09-16, when a workspace-scope hide disabled the tool
+      // that would undo it — so this annotation and the description's "Pass
+      // hidden:false to turn it back on" were both asserting something the
+      // code refused. The fix was to ungate the reversal, not to soften the
+      // claim; see `runDraftEditorHide`.
+      //
+      // IDEMPOTENT is a SEPARATE property and must be argued separately, since
+      // conflating the two is how an annotation gets written that the spec does
+      // not support. Reversibility says "another call can undo this"; the MCP
+      // spec's `idempotentHint` says repeating THIS call with the SAME
+      // arguments has no additional effect on the environment. It holds here
+      // because the write is an assignment, not an increment or an append:
+      // `setDraftEditorHidden(scope, target, hidden)` sets one boolean column
+      // to a literal, so the state after N identical calls is the state after
+      // one, with nothing accumulated and nothing else touched. Since
+      // 2026-09-16 the RESPONSE matches too — the tool no longer refuses a
+      // repeat while the card is already hidden — so a caller retrying a
+      // timed-out call gets the same receipt rather than an error.
       readOnlyHint: false,
       destructiveHint: false,
       idempotentHint: true,
@@ -1277,9 +1511,18 @@ export const DRAFT_EDITOR_TOOL_DEFINITIONS: DraftEditorToolDefinition[] = [
  *
  * ── Why this is a tool and not a dashboard-only setting ────────────────────
  * The opt-out that people actually find is the one sitting next to the thing
- * annoying them. A dashboard toggle is the authoritative control and exists
- * too (both write the same columns), but nobody goes looking for a settings
- * page to turn off a card they have just met.
+ * annoying them. Nobody goes looking for a settings page to turn off a card
+ * they have just met.
+ *
+ * And as of 2026-09-17 there is no settings page to go looking for: `grep -rni
+ * draft_editor apps/web` matches `PATCH /api/workspaces/[id]`, `PATCH
+ * /api/inboxes/[id]` and the generated types — no screen, no component, no
+ * locale string. An earlier version of this comment said a dashboard toggle
+ * "exists too", and six user-visible strings in this file promised it. They
+ * were wrong and are now written for what is true today: this tool reverses
+ * itself at either scope, and an owner or admin can also use the workspace API.
+ * A dashboard toggle IS being built in `apps/web`; when it ships, re-offer it
+ * in the six strings listed in the note on `runDraftEditorHide`.
  *
  * ── Two grains, because the card cannot guess ──────────────────────────────
  * "Hide this" is ambiguous between the inbox on screen and every inbox, and
@@ -1291,15 +1534,86 @@ export const DRAFT_EDITOR_TOOL_DEFINITIONS: DraftEditorToolDefinition[] = [
  * `visibility: ["app"]` is a host UI hint, never a boundary, so assume a
  * prompt-injected model calls this. It can then hide the card, or un-hide it.
  * That is a DISPLAY PREFERENCE: nothing is sent, nothing is deleted, no data is
- * read back, and the dashboard toggle reverses it in one click. The failure is
+ * read back, and this same tool reverses it — `hidden:false` works at either
+ * scope even while the card is hidden, which is what makes the reversal
+ * reachable from the surface the person is actually looking at. (The earlier
+ * claim that "the dashboard toggle reverses it in one click" was false: there
+ * is no such toggle yet, only `PATCH /api/workspaces/[id]`.) The failure is
  * visible (the card stops appearing) and self-correcting (the user turns it
  * back on). It is the mildest thing an app-only tool in this server can do,
  * and it still re-verifies workspace ownership and the key's inbox allowlist
  * through the same `gateDraftTool` every other draft tool uses.
  *
- * Deliberately requires only `manage:drafts` — the same scope that already
- * lets a caller rewrite the draft's entire body. A preference about how that
- * draft is DISPLAYED cannot sensibly be harder to change than the draft.
+ * ── SCOPE IS THE SAME; ROLE IS NOT, AND ONLY AT WORKSPACE GRAIN ───────────
+ * `manage:drafts` and nothing more, for both grains — the same scope that
+ * already lets a caller rewrite the draft's entire body. A preference about how
+ * a draft is DISPLAYED cannot sensibly be harder to change than the draft.
+ *
+ * That argument is sound at INBOX grain, where the blast radius is the caller's
+ * own mailbox. It does not carry to WORKSPACE grain, where the blast radius is
+ * other people: any member's key — or a prompt-injected model holding one —
+ * would switch the card off for every colleague. And the project had already
+ * decided the other way about this exact column: `PATCH /api/workspaces/[id]`
+ * writes `workspaces.draft_editor_hidden` only for an owner or an admin. A tool
+ * that walks around that route's own gate on the same write is the bug, not a
+ * convenience. So workspace scope additionally requires owner/admin; inbox
+ * scope is unchanged.
+ *
+ * `owner || admin` is `canManageWorkspace` from
+ * `apps/web/src/lib/workspace/roles.ts`, which is the project's single
+ * statement of the role policy ("owner/admin: may change who is in the
+ * workspace and how it is configured"). It is restated rather than imported
+ * because that module is Node/Next and this one runs in Deno; if the policy
+ * ever moves, move both.
+ *
+ * ── IT MUST BE REVERSIBLE, AND IT WAS NOT ─────────────────────────────────
+ * `hidden:false` used to be refused after a workspace-scope hide: the gate
+ * asked "is the editor enabled", the workspace opt-out made that false, and so
+ * hiding disabled the only tool that could un-hide. Measured 2026-09-16:
+ * `hide{scope:"workspace"}` succeeded, and `hide{scope:"workspace",
+ * hidden:false}` came straight back with `error_code: draft_editor_disabled`.
+ * Four artefacts asserted otherwise — the tool description ("Pass hidden:false
+ * to turn it back on"), `idempotentHint: true` and its justification, the
+ * receipt copy, and the OpenAI annotation justification doc.
+ *
+ * Reversible is the right answer, not "make every artefact say one-way": an
+ * opt-out that cannot be undone from the surface that offered it is a trap, the
+ * un-hide write is strictly de-escalating (it restores the default the
+ * workspace was rolled out with), and the alternative leaves a non-owner with
+ * no way back at all.
+ *
+ * ── THE OPT-OUT CHECK IS OFF FOR THIS TOOL ENTIRELY, NOT JUST FOR UN-HIDE ──
+ * The first fix passed `allowWhileHidden: hidden === false`, so a HIDE was
+ * still refused while the card was hidden. That half-measure had two faults,
+ * and neither is an edge case.
+ *
+ *   1. IT CROSSED SCOPES. `gateDraftTool` ORs `workspace.hidden || inboxHidden`
+ *      with no idea which grain was asked for, and `resolveInbox` resolves the
+ *      same inbox either way. So with the workspace flag CLEAR and one inbox
+ *      hidden, `hide{scope:"workspace", hidden:true}` was refused with
+ *      `draft_editor_hidden` and wrote nothing — the caller asked about the
+ *      workspace and was told about an inbox. For a single-inbox key, which is
+ *      the modal shape of this product, that was unconditional: hide the one
+ *      inbox and the workspace switch became unreachable from the tool.
+ *   2. IT MADE THE TOOL NON-REPEATABLE. A second identical
+ *      `hide{hidden:true}` came back as an error. The stored flag was right,
+ *      but a caller that retries a timed-out call — which is the whole reason
+ *      `idempotentHint` exists — saw a failure.
+ *
+ * And the check was buying nothing. What the opt-out promises is that the
+ * EDITOR stops operating: no decrypted body crosses the wire (`draft_read`), no
+ * draft is rewritten (`draft_editor_save`), no `_meta.ui` is advertised. This
+ * tool does none of those. It returns a receipt about the preference itself and
+ * makes exactly one write — to the column the flag governs. Refusing it while
+ * hidden protects nothing and removes the user's control over the very switch
+ * they are operating.
+ *
+ * So `allowWhileHidden` is now unconditional here, and it is the only tool that
+ * passes it. Everything that does real work still applies: `scope` validation,
+ * inbox resolution through the key's own allowlist, the rollout gate, and
+ * owner/admin at workspace grain. A side benefit: the tool no longer answers
+ * "is the editor hidden?" through its error code, and no longer pays for the
+ * per-inbox read on any call.
  */
 export async function runDraftEditorHide(
   deps: DraftEditorDeps,
@@ -1320,8 +1634,35 @@ export async function runDraftEditorHide(
     return invalidArgs(deps.appUrl, "hidden must be a boolean when given.");
   }
 
-  const gate = await gateDraftTool(deps, caller, args, ["manage:drafts"]);
+  // This tool is never gated on the flag it writes, in EITHER direction. See
+  // the header for why the opt-out check buys nothing here and costs the user
+  // the control it governs.
+  const gate = await gateDraftTool(deps, caller, args, ["manage:drafts"], {
+    allowWhileHidden: true,
+  });
   if (!gate.ok) return gate.failure;
+
+  // ── WORKSPACE GRAIN IS AN ADMIN ACTION ───────────────────────────────────
+  // Checked AFTER the gate so a member cannot use this as a rollout oracle,
+  // and in BOTH directions: un-hiding for everyone is as much a decision about
+  // other people's screens as hiding is.
+  if (scope === "workspace") {
+    const role = caller.user_id === null
+      ? null
+      : await deps.workspaceRole(caller.workspace_id, caller.user_id);
+    if (role !== "owner" && role !== "admin") {
+      return draftFailure(
+        deps.appUrl,
+        "failed",
+        "Only workspace owners and admins can change this for the whole workspace.",
+        'Nothing was changed. Use scope:"inbox" to change it for this mailbox only, or ask an ' +
+          "owner or admin to change it for the whole workspace.",
+        "insufficient_role",
+        "insufficient_role",
+        "viewer_role",
+      );
+    }
+  }
 
   try {
     await deps.setDraftEditorHidden(
@@ -1339,7 +1680,7 @@ export async function runDraftEditorHide(
       deps.appUrl,
       "failed",
       "That setting could not be saved.",
-      "Nothing was changed. Try again, or change it in the dashboard.",
+      "Nothing was changed. Try again in a moment.",
       "provider_error",
       "provider_error",
     );
@@ -1353,11 +1694,32 @@ export async function runDraftEditorHide(
   const where = scope === "workspace"
     ? "for every inbox in this workspace"
     : `for ${gate.inbox.email_address}`;
+  // Name the way back, and name only the one that exists.
+  //
+  // ── SIX STRINGS TO REVISIT WHEN THE DASHBOARD TOGGLE SHIPS ───────────────
+  // The original copy offered "the dashboard", and so did five other
+  // user-visible strings here. There is no dashboard control: as of 2026-09-17
+  // `grep -rni draft_editor apps/web` matches two API routes and the generated
+  // types, and nothing else. On a model-visible description, on a tool whose
+  // `destructiveHint: false` case rests on reversibility, on a submission
+  // already rejected once for annotation accuracy, that is not a rounding
+  // error. One is being built in `apps/web`; when it lands, these six can
+  // re-offer it:
+  //
+  //   1-2. both branches of the `draft_editor_hidden` refusal in gateDraftTool
+  //   3.   the `insufficient_role` refusal below
+  //   4.   the `provider_error` refusal below
+  //   5.   this `back` string
+  //   6.   the `draft_editor_hide` tool description
+  //
+  // Until then the tool route is the true one, and it is the surface the person
+  // is looking at anyway.
+  const back = `Call draft_editor_hide again with scope:"${scope}" and hidden:false.`;
   const envelope = draftReceiptEnvelope({
     outcome: "discarded",
     headline: hidden ? "Draft editor hidden." : "Draft editor turned back on.",
     detail: hidden
-      ? `The card will not appear ${where}. Drafts still work exactly as before. Turn it back on in the dashboard.`
+      ? `The card will not appear ${where}. Drafts still work exactly as before. ${back}`
       : `The card will appear again ${where}.`,
     affected_count: 1,
     dashboard_url: `${deps.appUrl}/dashboard`,

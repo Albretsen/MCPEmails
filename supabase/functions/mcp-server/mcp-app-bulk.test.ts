@@ -1036,3 +1036,74 @@ Deno.test("every receipt carries an absolute dashboard_url", async () => {
     assert(!("dashboard_path" in envelope.receipt), "the old relative field is gone");
   }
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// A RECEIPT SAYS WHICH PLAN IT IS ABOUT
+//
+// This COMPLETES A CONTRACT rather than fixing an observable defect.
+// `apps/mcp-app/src/contract.ts` declares no `plan_id` on a receipt and the
+// card has no correlation logic today, so nothing is refusing anything yet;
+// the matching card-side work is in flight and expects exactly this shape.
+//
+// What that correlation will do: match a PUSHED terminal receipt against the
+// plan the card is rendering, so a receipt for this plan wins and one for a
+// different plan is refused rather than silently replacing an open preview.
+// The plan envelope has always published `plan.plan_id`; the receipt envelope
+// published no id at all — `{schema_version, card, dashboard_url, state,
+// receipt, actor}` — so a pushed receipt for a bulk plan would arrive UNNAMED,
+// with nothing to place it by.
+//
+// The id must also be one the SERVER verified. Echoing a caller-supplied string
+// back would let a hostile agent address a receipt at a plan it cannot
+// otherwise touch, which is exactly the correlation this field exists to make
+// trustworthy — and this module's refusals are deliberately indistinguishable
+// between "no such plan" and "another workspace's plan".
+// ═══════════════════════════════════════════════════════════════════════════
+
+Deno.test("an execution receipt names the plan it ran", async () => {
+  const store = newStore();
+  const deps = makeDeps(store, newSpy());
+  const planId = await seedPlan(deps);
+
+  const envelope = envelopeOf(await runBulkExecute(deps, caller, { plan_id: planId }));
+  assertEquals(envelope.card, "receipt", "a terminal execution returns a receipt");
+  assertEquals(envelope.plan_id, planId, "and the receipt says which plan");
+});
+
+Deno.test("a cancellation receipt names the plan it cancelled", async () => {
+  const store = newStore();
+  const deps = makeDeps(store, newSpy());
+  const planId = await seedPlan(deps);
+
+  const envelope = envelopeOf(await runBulkCancel(deps, caller, { plan_id: planId }));
+  assertEquals(envelope.plan_id, planId, "the receipt says which plan");
+});
+
+Deno.test("a replay receipt names it too — the case the card most needs", async () => {
+  // The pushed receipt the correlation was written for: someone ran or
+  // cancelled the plan elsewhere and this card is still holding the preview.
+  const store = newStore();
+  const deps = makeDeps(store, newSpy());
+  const planId = await seedPlan(deps);
+
+  await runBulkExecute(deps, caller, { plan_id: planId });
+  const replay = envelopeOf(await runBulkExecute(deps, caller, { plan_id: planId }));
+  assertEquals(replay.state, "decided_elsewhere", "the second call is refused");
+  assertEquals(replay.plan_id, planId, "and still says which plan it is about");
+});
+
+Deno.test("an UNVERIFIED plan id is never echoed into a receipt", async () => {
+  const store = newStore();
+  const deps = makeDeps(store, newSpy());
+
+  const malformed = envelopeOf(
+    await runBulkExecute(deps, caller, { plan_id: "not-a-uuid" }),
+  );
+  assertEquals(malformed.plan_id, null, "a malformed id is not echoed");
+
+  const missing = envelopeOf(
+    await runBulkExecute(deps, caller, { plan_id: MISSING_PLAN }),
+  );
+  assertEquals(missing.plan_id, null, "an id that names no visible plan is not echoed");
+  assert("plan_id" in missing, "but the key is always present, so the card need not guard");
+});

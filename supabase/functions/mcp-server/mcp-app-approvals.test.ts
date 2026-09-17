@@ -1486,3 +1486,103 @@ Deno.test("writes degrade when the Phase 2 columns do not exist yet", async () =
   assertEquals(attempted[1], { status: "rejected" }, "only the optional column is dropped");
   assertEquals(outcome.error, null, "and the retry succeeds");
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// A RECEIPT SAYS WHICH APPROVAL IT IS ABOUT
+//
+// This COMPLETES A CONTRACT rather than fixing an observable defect.
+// `apps/mcp-app/src/contract.ts` declares no `approval_id` and the card has no
+// correlation logic today, so nothing is refusing anything yet; the matching
+// card-side work is in flight and expects exactly this shape.
+//
+// What that correlation will do: match a PUSHED terminal receipt against the
+// identity the card is rendering, so a receipt for this approval wins and one
+// for a different approval is refused rather than silently replacing an open
+// review. The outbound envelope has always published `outbound.approval_id`
+// and `draft{action:"send"|"delete"}` publishes `draft_id` at the top level,
+// but the receipt envelope published NO id at all — `{schema_version, card,
+// dashboard_url, state, receipt, actor}` — so a pushed receipt for a queued
+// send would arrive UNNAMED, with nothing to place it by.
+//
+// The other half is that the id must be one the SERVER verified. Echoing a
+// caller-supplied string back would let a hostile agent address a receipt at an
+// approval it cannot otherwise touch, which is precisely the correlation this
+// field exists to make trustworthy.
+// ═══════════════════════════════════════════════════════════════════════════
+
+Deno.test("a rejection receipt names the approval it rejected", async () => {
+  const store = freshStore();
+  const result = await runApprovalDecide(makeDeps(store), caller, {
+    approval_id: APPROVAL_ID,
+    decision: "reject",
+  });
+  const envelope = envelopeOf(result);
+  assertEquals(envelope.card, "receipt", "a terminal decision returns a receipt");
+  assertEquals(envelope.approval_id, APPROVAL_ID, "and the receipt says which approval");
+});
+
+Deno.test("a decided-elsewhere receipt names it too — the case the card most needs", async () => {
+  // The pushed receipt the correlation was written for: the reviewer decided in
+  // the dashboard, and the card is still holding the open review.
+  const store = freshStore({ status: "rejected", decided_at: new Date(NOW).toISOString() });
+  const result = await runApprovalDecide(makeDeps(store), caller, {
+    approval_id: APPROVAL_ID,
+    decision: "reject",
+  });
+  const envelope = envelopeOf(result);
+  assertEquals(envelope.state, "decided_elsewhere", "the row was already decided");
+  assertEquals(envelope.approval_id, APPROVAL_ID, "and the receipt says which approval");
+});
+
+Deno.test("an expiry receipt names it", async () => {
+  const store = freshStore({
+    created_at: new Date(NOW - APPROVAL_TTL_MS - 1000).toISOString(),
+    expires_at: new Date(NOW - 1000).toISOString(),
+  });
+  const result = await runApprovalReview(makeDeps(store), caller, { approval_id: APPROVAL_ID });
+  const envelope = envelopeOf(result);
+  assertEquals(envelope.state, "expired", "a lapsed approval is retired on read");
+  assertEquals(envelope.approval_id, APPROVAL_ID, "and the receipt says which approval");
+});
+
+Deno.test("an UNVERIFIED id is never echoed into a receipt", async () => {
+  // Two shapes, one rule. A malformed id is refused before the query runs; a
+  // well-formed id for another workspace's approval gets the deliberately
+  // identical "not found" response. Publishing either as the receipt's subject
+  // would make the card's correlation worth nothing — and in the second case it
+  // would confirm that the id exists.
+  const deps = makeDeps(freshStore());
+
+  const malformed = await runApprovalReview(deps, caller, { approval_id: "not-a-uuid" });
+  assertEquals(envelopeOf(malformed).approval_id, null, "a malformed id is not echoed");
+
+  const foreign = await runApprovalReview(
+    makeDeps({
+      send_approvals: [pendingApproval({ id: OTHER_ID, workspace_id: OTHER_WORKSPACE })],
+      inboxes: [inboxRow()],
+      api_keys: [{ id: KEY, name: "Claude" }],
+      mcp_client_capabilities: [],
+    }),
+    caller,
+    { approval_id: OTHER_ID },
+  );
+  assertEquals(envelopeOf(foreign).approval_id, null, "another workspace's id is not echoed");
+  assertEquals(
+    envelopeOf(foreign).receipt.error_code,
+    "not_found",
+    "and it is still the same indistinguishable refusal",
+  );
+});
+
+Deno.test("an argument refusal carries a null approval_id, not a missing key", async () => {
+  // `null` and absent are different to a consumer that checks `in`. The field
+  // is always present so the card can read it without guarding, and null is the
+  // honest value when nothing was verified.
+  const result = await runApprovalSchedule(makeDeps(freshStore()), caller, {
+    approval_id: APPROVAL_ID,
+    send_at: "not a timestamp",
+  });
+  const envelope = envelopeOf(result);
+  assert("approval_id" in envelope, "the key must always be present");
+  assertEquals(envelope.approval_id, null, "nothing was verified");
+});

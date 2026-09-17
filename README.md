@@ -385,6 +385,15 @@ Security headers and function timeouts are defined in `vercel.json`. The marketi
 npx supabase functions deploy mcp-server --project-ref <your-project-ref> --no-verify-jwt
 ```
 
+> **Migrations first, function second.** PostgREST does not return `undefined` for a column it does
+> not know about — it errors — and the server's shared inbox projection
+> (`INBOX_SELECT_COLUMNS`) is used by every mail tool, which all read a query error as
+> "inbox not found". Deploying the function ahead of its migration can therefore take the whole
+> mail surface down, not just the feature that wanted the new column. Newly-migrated inbox columns
+> are deliberately read in their own small queries (`readSendReviewMode`, `readBulkReviewMode`,
+> `readInboxDraftEditorHidden`) so an out-of-order deploy degrades that one feature instead of
+> breaking everything — that is a safety net, not a licence to skip the order.
+
 ## Self-hosting
 
 Don't want to trust the hosted service with your mail? Run the **same MCP server** on your own

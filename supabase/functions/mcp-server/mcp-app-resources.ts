@@ -294,6 +294,36 @@ export const DRAFT_EDITOR_CARD_TOOL_NAMES: readonly string[] = [
 ];
 
 /**
+ * The draft editor's own three app-only tools, gated by the SAME flag.
+ *
+ * ── Why they are no longer stamped at module load ──────────────────────────
+ * They were pushed into the registry with `appOnlyReviewCardToolMeta()`
+ * unconditionally, on the argument that an app-only tool always returns an
+ * envelope so there is no result shape for the card to fail on. True of
+ * `approval_*` and `bulk_*`; not true here, because these three are the only
+ * app-only tools with a user-facing OFF switch. With the card hidden they
+ * still advertised `_meta.ui` while `draft` correctly dropped it — measured
+ * 2026-09-16 — so the host kept mounting the editor for an inbox the user had
+ * switched off, and `draft_read` kept handing it a full decrypted body.
+ *
+ * The handlers now refuse when the opt-out is set (`gateDraftTool`), and this
+ * list is the listing half of the same fix: no gate, no metadata, which is
+ * what "the opt-out is byte-identical to life before MCP Apps" means for
+ * `tools/list`. The tools stay LISTED — a card restoring from storage in an
+ * old conversation still calls `draft_read`, and a renderable "the card is
+ * turned off" envelope is a better answer than a -32601.
+ *
+ * Kept apart from `DRAFT_EDITOR_CARD_TOOL_NAMES` because the metadata differs:
+ * these carry `visibility: ["app"]` on top of the resource URI, `draft` does
+ * not. Same gate, different shape.
+ */
+export const DRAFT_EDITOR_APP_TOOL_NAMES: readonly string[] = [
+  "draft_read",
+  "draft_editor_save",
+  "draft_editor_hide",
+];
+
+/**
  * The bulk tools that can return a bulk-plan card.
  *
  * Kept beside `REVIEW_CARD_TOOL_NAMES` rather than in `index.ts` because the
@@ -333,12 +363,37 @@ export const BULK_PLAN_CARD_TOOL_NAMES: readonly string[] = [
  * did not strictly need. Resolving the real gates here would mean the database
  * lookups `reviewCardMetaForListing` already did at listing time, repeated on
  * every tool call.
+ *
+ * ── The draft-editor app tools are IN, as of round two ─────────────────────
+ * They were left out on the argument that it cost nothing. It did cost
+ * something, and the cost was on the wrong side of the trade this function
+ * already made. Two ways:
+ *
+ *   * By this function's own definition they ARE card-bearing:
+ *     `reviewCardMetaForListing` hands all three `appOnlyReviewCardToolMeta()`
+ *     whenever the drafts gate is open, so their listing carries a card URI
+ *     that a deploy can make stale exactly like `draft`'s. They are also the
+ *     tools the card itself calls most — a restoring cell calls `draft_read`
+ *     before it calls anything else — so a client whose next call after a card
+ *     deploy was `draft_read` got no notification at all and went on holding
+ *     the previous bundle's URI. That is the original problem, not a rounding
+ *     error on it.
+ *   * `draft_editor_hide` writes the preference and calls
+ *     `invalidateCardListings` (index.ts), which is the precise moment
+ *     `tools/list` needs re-reading so `_meta.ui` can disappear. It cannot
+ *     carry the resulting notification on its OWN response — the decision
+ *     reads the `api_keys` row snapshot taken before the write — but it is a
+ *     card-bearing call for every subsequent one.
+ *
+ * The cost is what the paragraph above already accepts: a few `tools/list`
+ * round trips a client did not strictly need.
  */
 export function isCardBearingToolName(name: string): boolean {
   return (
     REVIEW_CARD_TOOL_NAMES.includes(name) ||
     BULK_PLAN_CARD_TOOL_NAMES.includes(name) ||
-    DRAFT_EDITOR_CARD_TOOL_NAMES.includes(name)
+    DRAFT_EDITOR_CARD_TOOL_NAMES.includes(name) ||
+    DRAFT_EDITOR_APP_TOOL_NAMES.includes(name)
   );
 }
 
@@ -416,12 +471,19 @@ export interface ReviewCardGates {
   /** True when the key can reach an inbox with `bulk_review_mode = 'plan'`. */
   bulk: boolean;
   /**
-   * True when the calling key's workspace has `draft_editor_enabled`.
+   * True when the draft editor is both rolled out to the calling key's
+   * workspace and not switched off by its owner.
+   *
+   * Three conditions ANDed by the caller: `workspaces.draft_editor_enabled`
+   * (our rollout gate), NOT `workspaces.draft_editor_hidden` (the workspace
+   * opt-out), and NOT "every inbox this key can reach has
+   * `inboxes.draft_editor_hidden`" (the per-inbox opt-out, rolled up).
    *
    * The odd one out, and deliberately so: the other two are per-INBOX opt-ins
-   * and this is per-WORKSPACE. A draft envelope is built from the draft itself
-   * rather than from an inbox setting, so there is no inbox-level switch for it
-   * to key on, and contract §8 puts the flag on `workspaces`.
+   * and the rollout half of this is per-WORKSPACE. A draft envelope is built
+   * from the draft itself rather than from an inbox setting, so there is no
+   * inbox-level switch for it to key on, and contract §8 puts the flag on
+   * `workspaces`.
    */
   drafts: boolean;
 }
@@ -450,7 +512,7 @@ export interface ReviewCardGates {
 export function reviewCardMetaForListing(
   toolName: string,
   gates: ReviewCardGates,
-): { ui: { resourceUri: string } } | undefined {
+): { ui: { resourceUri: string; visibility?: string[] } } | undefined {
   if (REVIEW_CARD_TOOL_NAMES.includes(toolName)) {
     return gates.outbound ? reviewCardToolMeta() : undefined;
   }
@@ -460,7 +522,63 @@ export function reviewCardMetaForListing(
   if (DRAFT_EDITOR_CARD_TOOL_NAMES.includes(toolName)) {
     return gates.drafts ? reviewCardToolMeta() : undefined;
   }
+  // The app-only three: same gate, plus `visibility: ["app"]`. They are no
+  // longer stamped in the registry, so `undefined` here really does mean "this
+  // listing carries no `_meta` at all" — see DRAFT_EDITOR_APP_TOOL_NAMES.
+  if (DRAFT_EDITOR_APP_TOOL_NAMES.includes(toolName)) {
+    return gates.drafts ? appOnlyReviewCardToolMeta() : undefined;
+  }
   return undefined;
+}
+
+/**
+ * Apply `reviewCardMetaForListing` across a whole tool list. The listing path,
+ * and a test can call this.
+ *
+ * ── AND THE CALL SITE IS PINNED SEPARATELY ────────────────────────────────
+ * This used to say "THE listing path: `handleToolsList` calls nothing else",
+ * and nothing held that claim. A second review broke it in one line — a `.map`
+ * after this call re-stamping the three app-only tools — and the whole suite
+ * stayed green, with the original bug back on the wire. A stamp inside
+ * `toolsForListing` has the same property. Extracting this function bought
+ * coverage of the composition and moved the risk one line outwards.
+ *
+ * So the composition tests below it are no longer the only thing: the last
+ * section of `mcp-app-resources.test.ts` calls the real `handleToolsList` (in
+ * `MCP_INTROSPECTION_ONLY` mode, where every gate is shut — the state in which
+ * advertising `_meta.ui` IS the bug) and asserts on the bytes it returns. If
+ * you add a step to that pipeline, that is the test that will tell you.
+ *
+ * ── Why this is a function and not three lines inside handleToolsList ──────
+ * It was those three lines, and that is what let the headline fix ship with no
+ * coverage at all. `reviewCardMetaForListing` is pure and was tested as such,
+ * but the composition is where the bug lived: `meta ? {...tool, _meta: meta} :
+ * tool` PASSES A REGISTRY `_meta` THROUGH UNTOUCHED. So a module-load
+ * `TOOL_REGISTRY.push({...definition, _meta: appOnlyReviewCardToolMeta()})` —
+ * the exact stamp the draft-editor fix removed, and an easy one to re-add
+ * because the shape looks harmless — reinstated the original bug verbatim
+ * while every one of the 1171 tests still passed. Reachable only through this
+ * composition, so this composition is what a test has to be able to hold.
+ *
+ * `index.ts` cannot export it: the registry it builds is the thing under test,
+ * so the assertion has to be able to run the real mapping over the real
+ * registry. It lives here, next to the three name lists it consults.
+ *
+ * Note what it does NOT do: it never strips. A tool that carries `_meta` from
+ * the registry keeps it, which is exactly right for `approval_*` and `bulk_*`
+ * (unconditional app-only affordances, stamped at index.ts:7611 and :7632 on
+ * purpose) and exactly wrong for anything gated. Gating and stamping are
+ * mutually exclusive by construction, and `mcp-app-resources.test.ts` pins
+ * which tools are on which side.
+ */
+export function withListingCardMeta(
+  tools: readonly ListedTool[],
+  gates: ReviewCardGates,
+): ListedTool[] {
+  return tools.map((tool) => {
+    const meta = reviewCardMetaForListing(tool.name, gates);
+    return meta ? { ...tool, _meta: meta } : tool;
+  });
 }
 
 /**

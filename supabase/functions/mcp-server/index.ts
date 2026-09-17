@@ -121,9 +121,9 @@ import {
   clientSupportsUiExtension,
   RESOURCES_CAPABILITY,
   type ReviewCardGates,
-  reviewCardMetaForListing,
   isCardBearingToolName,
   serializeToolForList,
+  withListingCardMeta,
 } from "./mcp-app-resources.ts";
 import {
   acceptsEventStream,
@@ -162,6 +162,14 @@ import {
   type NormalizedDraft,
   runDraftEditorTool,
 } from "./mcp-app-drafts.ts";
+import {
+  allInboxesHideDraftEditor,
+  type DraftEditorHiddenRow,
+  type InboxQueryClient,
+  reachableInboxSelect,
+  type ReviewCardOptInRow,
+  reviewCardOptInsFromRows,
+} from "./reachable-inbox.ts";
 import {
   BULK_TOOL_DEFINITIONS,
   type BulkExecutionOutcome,
@@ -694,6 +702,17 @@ function jsonOk(
 interface ApiKeyRow {
   id: string;
   workspace_id: string;
+  /**
+   * The user who minted this key (`api_keys.created_by`), or null.
+   *
+   * Read for exactly one decision: the owner/admin check on
+   * `draft_editor_hide{scope:"workspace"}`, which has to match the gate
+   * `PATCH /api/workspaces/[id]` already applies to the same column. Optional
+   * on the type so the many hand-built key rows in the test suites stay valid.
+   * NOT an authorisation input anywhere else — scopes and `inbox_ids` remain
+   * the only things that decide what a key may touch.
+   */
+  created_by?: string | null;
   name: string;
   key_prefix: string;
   key_hash: string;
@@ -1700,7 +1719,7 @@ async function authenticateRequest(
   const { data: row, error } = await supabase
     .from("api_keys")
     .select(
-      "id, workspace_id, name, key_prefix, key_hash, scopes, inbox_ids, expires_at, last_used_at, deleted_at, created_at, card_build_notified",
+      "id, workspace_id, created_by, name, key_prefix, key_hash, scopes, inbox_ids, expires_at, last_used_at, deleted_at, created_at, card_build_notified",
     )
     .eq("key_hash", incomingHash)
     .is("deleted_at", null)
@@ -7575,6 +7594,11 @@ const TOOL_REGISTRY: ToolDefinition[] = [
 // is the single definition of *when* they say so. Keep this note: re-adding a
 // module-load stamp here is the regression, and it is an easy one to make
 // because the shape looks harmless.
+//
+// It is no longer only a note. `mcp-app-resources.test.ts` runs the real
+// listing mapping over the real registry and fails if any gated tool comes out
+// carrying `_meta` — because a registry `_meta` SURVIVES being gated out, which
+// is precisely why "the shape looks harmless" was not enough.
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
@@ -7616,17 +7640,38 @@ for (const definition of BULK_TOOL_DEFINITIONS) {
 }
 
 // ---------------------------------------------------------------------------
-// MCP Apps: the draft-editor tools (`draft_read`, `draft_editor_save`).
+// MCP Apps: the draft-editor tools (`draft_read`, `draft_editor_save`,
+// `draft_editor_hide`).
 //
-// Appended last, and listed unconditionally, exactly like the approval and bulk
-// tools — and for the same reason: they are app-only affordances that always
-// return an envelope, so there is no result shape for the card to fail on. A
-// workspace that is not gated in can still call them and gets a renderable
-// `state: "error"` envelope saying so, which is the same inert-but-coherent
-// behaviour `bulk_execute` has for a workspace with no plans.
+// Appended last, and LISTED unconditionally — but with NO `_meta` here, unlike
+// the approval and bulk tools above. That difference is the 2026-09-16 fix.
 //
-// They carry `visibility: ["app"]` for tidiness (Phase 0 Q2: it is a host UI
-// hint, never a control), are absent from BILLABLE_TOOL_NAMES — they act on one
+// The old argument was that an app-only tool always returns an envelope, so
+// there is no result shape for the card to fail on. True of `approval_*` and
+// `bulk_*`; false of these three, because they are the only app-only tools with
+// a user-facing OFF switch. With the card hidden they went on advertising
+// `_meta.ui` while `draft` correctly dropped it, so the host went on mounting
+// the editor for an inbox the user had switched off — reachable with no
+// adversary, because the card's restore-recovery effect calls `draft_read`
+// whenever a cell remounts from storage.
+//
+// So their metadata is now attached per key in `handleToolsList` through
+// `reviewCardMetaForListing`, on the same `drafts` gate as `draft`, and
+// `mcp-app-resources.ts#DRAFT_EDITOR_APP_TOOL_NAMES` is the single definition of
+// which. They stay listed, and their handlers refuse while the opt-out is set
+// (`gateDraftTool`) — a renderable "the card is turned off" envelope is a
+// better answer to a restoring card than a -32601. (`draft_editor_hide` is the
+// one exception to "refuse while hidden": it writes the very flag the gate
+// reads, so gating it protects nothing and made the switch unreachable — see
+// `runDraftEditorHide`.) Re-adding a module-load stamp here is the regression,
+// exactly as it was for the outbound tools, and
+// `mcp-app-resources.test.ts` now fails on it: the mapping in
+// `withListingCardMeta` leaves a registry `_meta` in place, so a stamp here
+// silently survives the gate.
+//
+// They carry `visibility: ["app"]` when gated in, for tidiness (Phase 0 Q2: it
+// is a host UI hint, never a control). They are absent from
+// BILLABLE_TOOL_NAMES — they act on one
 // unsent draft that the billable draft tools already charged for, and metering
 // a person's keystrokes in an editor would charge twice for one message — and
 // absent from IDEMPOTENT_OUTBOUND_OPERATIONS, because neither sends anything.
@@ -7638,7 +7683,7 @@ for (const definition of BULK_TOOL_DEFINITIONS) {
 // and must stay that way — mcp-app-drafts.test.ts pins it.
 // ---------------------------------------------------------------------------
 for (const definition of DRAFT_EDITOR_TOOL_DEFINITIONS) {
-  TOOL_REGISTRY.push({ ...definition, _meta: appOnlyReviewCardToolMeta() });
+  TOOL_REGISTRY.push({ ...definition });
 }
 
 // ---------------------------------------------------------------------------
@@ -8283,12 +8328,10 @@ interface InboxRow {
   signature_text: string | null;
   /** When false, no signature is appended for this inbox. */
   signature_enabled: boolean;
-  /**
-   * User preference: hide the draft editor card for drafts in this inbox.
-   * Optional because rows built by tests and by the older selects do not carry
-   * it; `=== true` is the only test applied, so absent means "not hidden".
-   */
-  draft_editor_hidden?: boolean | null;
+  // NOTE: `inboxes.draft_editor_hidden` is deliberately NOT here, and not in
+  // INBOX_SELECT_COLUMNS. It is read on demand by
+  // `readInboxDraftEditorHidden`, for the deploy-order reason spelled out on
+  // that constant.
   /** Reply/forward behaviour: 'always' | 'first_only' | 'never'. (Used in Phase 1.) */
   signature_reply_mode: string;
   /** Origin of the stored signature: 'manual' | 'gmail_import' | null. */
@@ -8298,16 +8341,41 @@ interface InboxRow {
   send_approval_required: boolean;
 }
 
+/**
+ * The shared inbox projection — used by EVERY mail tool, through
+ * `resolveInbox` / `resolveInboxArg`.
+ *
+ * ── DO NOT ADD A COLUMN THAT A MIGRATION HAS NOT LANDED YET ───────────────
+ * This is the most expensive select in the function to get wrong. PostgREST
+ * does not return `undefined` for a column it does not know about: it ERRORS
+ * ("column inboxes.x does not exist"), and every caller here treats an error as
+ * `inbox_not_found`. So one unreleased column in this string does not degrade
+ * the feature that wanted it — it makes every single mail tool report that the
+ * user's mailbox cannot be found, for as long as the function is deployed ahead
+ * of its migration. The edge function is deployed by hand, so that window is
+ * real.
+ *
+ * `draft_editor_hidden` was added here on 2026-09-16 and is now removed again
+ * for exactly that reason. The pattern this file already had for a
+ * newly-migrated inbox column is the right one and there are now three of them:
+ * `readSendReviewMode`, `readBulkReviewMode` and `readInboxDraftEditorHidden`
+ * each read their own column in their own query, with their own catch and their
+ * own documented failure direction. The cost is one small round trip on the
+ * path that actually needs the value; the benefit is that the blast radius of a
+ * missing migration is that one feature instead of the whole mail surface.
+ *
+ * DEPLOY ORDER, stated once for whoever ships next: apply
+ * `supabase/migrations` first, deploy `mcp-server` second. The three readers
+ * above make an out-of-order deploy degrade instead of break; they are not a
+ * licence to skip the order.
+ */
 const INBOX_SELECT_COLUMNS =
   "id, workspace_id, provider, email_address, display_name, " +
   "oauth_access_token, oauth_refresh_token, oauth_token_expires_at, " +
   "imap_host, imap_port, imap_tls, imap_security, imap_username, imap_password, " +
   "smtp_host, smtp_port, smtp_tls, smtp_security, status, " +
   "signature_html, signature_text, signature_enabled, " +
-  "signature_reply_mode, signature_source, signature_updated_at, send_approval_required, " +
-  // The per-inbox draft-editor opt-out. Carried on the resolved row rather
-  // than fetched separately so the per-call check costs no round trip.
-  "draft_editor_hidden";
+  "signature_reply_mode, signature_source, signature_updated_at, send_approval_required";
 
 /**
  * The SASL login username for IMAP/SMTP auth. Most providers authenticate with
@@ -12054,7 +12122,14 @@ async function executeReadEmail(
   // provider plumbing below is left intact — marking read is one line away if it
   // ever moves to a write tool of its own — but nothing on the tool surface can
   // reach it. Callers that want it use email_organize { action: "flag",
-  // flag: "read" }.
+  // flag_action: "read" }. The property is `flag_action`, not `flag` — the
+  // rename is `renames: { action: "flag_action" }` in the email_organize spec.
+  // The one artefact that already named it correctly is the RESULT NOTE this
+  // server emits when it drops `mark_as_read` (search this file for
+  // `flag_action` in an appendResultNote call). NOT the `DROPPED_ARGUMENTS`
+  // JSDoc in argument-aliases.ts, which an earlier version of this comment
+  // pointed at: that one says `flag: "read"` and is wrong too. It is outside
+  // this change's edit set; reported rather than fixed here.
   const markAsRead = false;
 
   // A single read is a deliberate request for ONE message, so it gets the
@@ -13088,7 +13163,14 @@ async function executeReadEmails(
   // provider plumbing below is left intact — marking read is one line away if it
   // ever moves to a write tool of its own — but nothing on the tool surface can
   // reach it. Callers that want it use email_organize { action: "flag",
-  // flag: "read" }.
+  // flag_action: "read" }. The property is `flag_action`, not `flag` — the
+  // rename is `renames: { action: "flag_action" }` in the email_organize spec.
+  // The one artefact that already named it correctly is the RESULT NOTE this
+  // server emits when it drops `mark_as_read` (search this file for
+  // `flag_action` in an appendResultNote call). NOT the `DROPPED_ARGUMENTS`
+  // JSDoc in argument-aliases.ts, which an earlier version of this comment
+  // pointed at: that one says `flag: "read"` and is wrong too. It is outside
+  // this change's edit set; reported rather than fixed here.
   const markAsRead = false;
 
   // 50 messages share ONE context window, so the per-message allowance here is
@@ -18999,7 +19081,10 @@ const gmailLabelIdCache = new Map<string, { id: string; expiresAtMs: number }>()
 const GMAIL_LABEL_CACHE_TTL_MS = 5 * 60 * 1000;
 
 function gmailLabelCacheKey(inbox: InboxRow, name: string): string {
-  return `${inbox.id} ${name.toLowerCase()}`;
+  // `\u0000` written as an ESCAPE, not as a raw NUL byte in the source. Same
+  // string at runtime; the raw byte trips the pre-commit control-character
+  // guard, which exists because an accidental one is invisible in a diff.
+  return `${inbox.id}\u0000${name.toLowerCase()}`;
 }
 
 /**
@@ -21060,11 +21145,22 @@ async function shouldPlanBulkOperation(inbox: InboxRow): Promise<boolean> {
  * `inbox_ids` allowlist is applied the same way it is everywhere else: a
  * non-null allowlist restricts the query, and an empty one denies everything.
  */
-async function keyReviewCardGates(apiKey: ApiKeyRow): Promise<ReviewCardGates> {
+async function keyReviewCardGates(
+  apiKey: ApiKeyRow,
+  db: InboxQueryClient = supabase,
+): Promise<ReviewCardGates> {
   const denied: ReviewCardGates = { outbound: false, bulk: false, drafts: false };
   // Introspection mode has no database to ask. Return the plain pre-MCP-Apps
   // surface immediately rather than attempting a connection that cannot succeed.
-  if (INTROSPECTION_ONLY) return denied;
+  //
+  // The guard is about the DEFAULT client specifically: under
+  // MCP_INTROSPECTION_ONLY the module-level `supabase` points at a placeholder
+  // URL with no project behind it, so every query it issues is a guaranteed
+  // failure. A caller that handed in its own client handed in one that works,
+  // and skipping its queries would be answering a question nobody asked. That
+  // is what lets `reachable-inbox.test.ts` drive these rollups for real in the
+  // same process that `mcp-app-resources.test.ts` uses introspection mode for.
+  if (INTROSPECTION_ONLY && db === supabase) return denied;
   // The draft-editor gate is a WORKSPACE flag, not an inbox opt-in, so it
   // cannot join the `.or()` below and needs its own read. Issued in parallel
   // rather than awaited in sequence, for the reason in the note above: this
@@ -21075,16 +21171,27 @@ async function keyReviewCardGates(apiKey: ApiKeyRow): Promise<ReviewCardGates> {
   // rolled up to "are they ALL hidden". Parallel for the reason in the note
   // above — this is the connect path with the user watching a spinner.
   const draftsGate = Promise.all([
-    workspaceDraftEditorEnabled(apiKey.workspace_id),
-    allReachableInboxesHideDraftEditor(apiKey),
+    workspaceDraftEditorEnabled(apiKey.workspace_id, db),
+    allReachableInboxesHideDraftEditor(apiKey, db),
   ]).then(([enabled, allHidden]) => enabled && !allHidden);
   if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length === 0) {
     return { ...denied, drafts: await draftsGate };
   }
-  let query = supabase
+  // `deleted_at`/`status` close the mirror image of the draft-editor rollup's
+  // bug: this one is a `.some()`, so a SOFT-DELETED inbox that still carries
+  // `send_approval_required` used to turn the OUTBOUND card gate on for a key
+  // whose calls can never land on it. Same missing filter, opposite direction,
+  // and it predates the draft editor. `reviewCardOptInsFromRows` applies the
+  // same predicate to the returned rows, and `reachableInboxSelect` is what
+  // stops the projection and that predicate drifting apart: the two columns it
+  // appends are exactly the two the predicate reads, so they cannot be tidied
+  // away here without the helper going too.
+  let query = db
     .from("inboxes")
-    .select("bulk_review_mode, send_approval_required")
+    .select(reachableInboxSelect("bulk_review_mode", "send_approval_required"))
     .eq("workspace_id", apiKey.workspace_id)
+    .is("deleted_at", null)
+    .eq("status", "active")
     .or("bulk_review_mode.eq.plan,send_approval_required.is.true");
   if (apiKey.inbox_ids !== null) query = query.in("id", apiKey.inbox_ids);
   const [{ data, error }, drafts] = await Promise.all([query, draftsGate]);
@@ -21100,12 +21207,8 @@ async function keyReviewCardGates(apiKey: ApiKeyRow): Promise<ReviewCardGates> {
     // came back from its own query and is unaffected by this one's failure.
     return { ...denied, drafts };
   }
-  const rows = (data ?? []) as Array<
-    { bulk_review_mode?: unknown; send_approval_required?: unknown }
-  >;
   return {
-    outbound: rows.some((row) => row.send_approval_required === true),
-    bulk: rows.some((row) => row.bulk_review_mode === "plan"),
+    ...reviewCardOptInsFromRows((data ?? []) as ReviewCardOptInRow[]),
     drafts,
   };
 }
@@ -23589,10 +23692,18 @@ async function outlookDeleteDraft(
  * Fails closed in every direction. False is not a degraded mode, it IS the
  * pre-feature behaviour.
  */
-async function workspaceDraftEditorEnabled(workspaceId: string): Promise<boolean> {
-  if (INTROSPECTION_ONLY) return false;
+async function workspaceDraftEditorGate(
+  workspaceId: string,
+  db: InboxQueryClient = supabase,
+): Promise<{ rolledOut: boolean; hidden: boolean }> {
+  // Fails closed in BOTH fields. `rolledOut: false` is the pre-feature
+  // behaviour, not a degraded mode. `hidden: true` only ever withholds a card.
+  const closed = { rolledOut: false, hidden: true };
+  // Same guard as `keyReviewCardGates`: only the DEFAULT client is the one
+  // introspection mode leaves pointing at nothing.
+  if (INTROSPECTION_ONLY && db === supabase) return closed;
   try {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("workspaces")
       .select("draft_editor_enabled, draft_editor_hidden")
       .eq("id", workspaceId)
@@ -23602,27 +23713,151 @@ async function workspaceDraftEditorEnabled(workspaceId: string): Promise<boolean
         workspace_id: workspaceId,
         error: error.message,
       });
-      return false;
+      return closed;
     }
     const row = data as {
       draft_editor_enabled?: unknown;
       draft_editor_hidden?: unknown;
     } | null;
-    // Two independent switches, ANDed. `draft_editor_enabled` is OUR rollout
-    // gate; `draft_editor_hidden` is the USER's opt-out. Kept apart so that
-    // widening the rollout can never un-hide the card for someone who turned
-    // it off, and so the rollout read-out can tell "not enabled yet" from
-    // "offered and refused". A missing `draft_editor_hidden` column reads as
-    // undefined, which is not `true`, so a database without the migration
-    // behaves exactly as before.
-    if (row?.draft_editor_hidden === true) return false;
-    return row?.draft_editor_enabled === true;
+    // Two independent switches, returned SEPARATELY. `draft_editor_enabled` is
+    // OUR rollout gate; `draft_editor_hidden` is the USER's opt-out. Kept apart
+    // so that widening the rollout can never un-hide the card for someone who
+    // turned it off, so the rollout read-out can tell "not enabled yet" from
+    // "offered and refused", and — the reason they stopped being pre-ANDed
+    // here — so `draft_editor_hide{hidden:false}` can be allowed to run against
+    // the very flag it is clearing. ANDing them into one boolean is what made
+    // a workspace-scope hide a one-way door.
+    //
+    // CORRECTION to what this comment used to claim: a missing
+    // `draft_editor_hidden` column does NOT "read as undefined". PostgREST
+    // errors on a column it does not know, the branch above catches it, and
+    // the gate closes. The outcome was right; the stated mechanism was not.
+    return {
+      rolledOut: row?.draft_editor_enabled === true,
+      hidden: row?.draft_editor_hidden === true,
+    };
   } catch (error) {
     console.warn("[mcp-server] draft_editor_gate_unavailable", {
       workspace_id: workspaceId,
       error: error instanceof Error ? error.message : String(error),
     });
-    return false;
+    return closed;
+  }
+}
+
+/** Both workspace switches ANDed: "may this workspace see the card at all?" */
+async function workspaceDraftEditorEnabled(
+  workspaceId: string,
+  db: InboxQueryClient = supabase,
+): Promise<boolean> {
+  const gate = await workspaceDraftEditorGate(workspaceId, db);
+  return gate.rolledOut && !gate.hidden;
+}
+
+/**
+ * `inboxes.draft_editor_hidden` for ONE inbox — the per-inbox opt-out.
+ *
+ * Its own query, deliberately, and NOT a column on `INBOX_SELECT_COLUMNS`:
+ * that projection is used by every mail tool, so a deploy that lands before
+ * `20260916170000_draft_editor_hidden.sql` would have made every mail tool
+ * report `inbox_not_found`. See the note on INBOX_SELECT_COLUMNS. Same shape as
+ * `readSendReviewMode` and `readBulkReviewMode`.
+ *
+ * **Fails CLOSED (true = hidden), the opposite of `readBulkReviewMode`.** The
+ * directions differ because the harms do. There, degrading wrong would turn a
+ * real delete into a preview nobody knows how to run. Here, "hidden" means no
+ * card and today's plain payload, which is the pre-feature behaviour and is
+ * exactly what an unreadable preference should fall back to.
+ */
+async function readInboxDraftEditorHidden(inboxId: string): Promise<boolean> {
+  if (INTROSPECTION_ONLY) return true;
+  try {
+    const { data, error } = await supabase
+      .from("inboxes")
+      .select("draft_editor_hidden")
+      .eq("id", inboxId)
+      .maybeSingle();
+    if (error) {
+      console.warn("[mcp-server] draft_editor_inbox_flag_query_failed", {
+        inbox_id: inboxId,
+        error: error.message,
+      });
+      return true;
+    }
+    const row = data as { draft_editor_hidden?: unknown } | null;
+    // A row that is missing entirely is not "not hidden": the caller only ever
+    // asks about an inbox `resolveInboxArg` just returned, so no row means
+    // something is wrong and the card should not be built.
+    if (row === null) return true;
+    return row.draft_editor_hidden === true;
+  } catch (error) {
+    console.warn("[mcp-server] draft_editor_inbox_flag_unavailable", {
+      inbox_id: inboxId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return true;
+  }
+}
+
+/**
+ * The workspace role of the human an API key belongs to, or null.
+ *
+ * Used by `draft_editor_hide{scope:"workspace"}` alone, to match the owner/admin
+ * gate `PATCH /api/workspaces/[id]` already applies to the same column. Null on
+ * any failure, which the caller refuses on.
+ *
+ * ── THIS RUNS ON THE SERVICE-ROLE CLIENT, AND THAT IS CONDITIONAL ─────────
+ * Its Next-side twin, `fetchWorkspaceRole` in
+ * `apps/web/src/lib/workspace/roles.ts`, carries a warning that has to travel
+ * with any restatement of it: it MUST be called with the request-scoped USER
+ * client, because under the service-role client it bypasses the
+ * `workspace_members` RLS policy and would "happily report a role in a
+ * workspace the caller has no relationship with, which turns an authorization
+ * check into a rubber stamp."
+ *
+ * This server has no user client — it authenticates a bearer API key, not a
+ * Supabase session — so the query above IS the service-role one, RLS and all.
+ * It is safe here for one specific reason and only that reason: NEITHER
+ * argument comes from the caller. `workspaceId` and `userId` are
+ * `api_keys.workspace_id` and `api_keys.created_by`, read off the authenticated
+ * key row by the server, and the tool layer exposes no way to steer either. RLS
+ * would be re-checking a pair the server already derived from a credential it
+ * trusts.
+ *
+ * That safety is therefore a property of the CALL SITE, not of this function.
+ * If a future caller ever passes a workspace id or a user id that came in over
+ * the wire — a `workspace_id` argument, an impersonation parameter, anything —
+ * this becomes the rubber stamp the warning describes. Add the membership check
+ * to that path, or give this function a user-scoped client; do not assume the
+ * present safety carries over.
+ */
+async function workspaceRoleForUser(
+  workspaceId: string,
+  userId: string,
+): Promise<string | null> {
+  if (INTROSPECTION_ONLY) return null;
+  try {
+    const { data, error } = await supabase
+      .from("workspace_members")
+      .select("role")
+      .eq("workspace_id", workspaceId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error) {
+      console.warn("[mcp-server] workspace_role_query_failed", {
+        workspace_id: workspaceId,
+        error: error.message,
+      });
+      return null;
+    }
+    const role = (data as { role?: unknown } | null)?.role;
+    return typeof role === "string" ? role : null;
+  } catch (error) {
+    console.warn("[mcp-server] workspace_role_unavailable", {
+      workspace_id: workspaceId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
   }
 }
 
@@ -23674,28 +23909,74 @@ async function invalidateCardListings(workspaceId: string): Promise<void> {
  * card for every `draft` result once the tool carries it — there is no way to
  * advertise "card for this inbox, none for that one".
  *
- * So the opt-out lands in two places. When every reachable inbox is hidden the
- * metadata is withheld here and the surface is byte-identical to pre-MCP-Apps.
- * When only SOME are, the tool keeps its metadata and a hidden inbox instead
- * returns no envelope (see draftEditorHiddenForInbox), which the card
- * classifies as a payload that is not its own and renders as nothing at all,
- * collapsing the shell. The cost of the mixed case is a mounted iframe and one
- * cached resource read for a card that draws nothing. That is invisible to the
- * user and is the price of a per-tool metadata field.
+ * So the opt-out lands in three places. When every reachable inbox is hidden
+ * the metadata is withheld here and the surface is byte-identical to
+ * pre-MCP-Apps. When only SOME are, the tool keeps its metadata and a hidden
+ * inbox instead returns no envelope (see `draftEditorEnvelopeForWrite`, which
+ * checks the flag per call), which the card classifies as a payload that is not
+ * its own and renders as nothing at all, collapsing the shell. And in either
+ * case the three app-only tools REFUSE for a hidden inbox (`gateDraftTool`) —
+ * that third place was missing until 2026-09-16, which is what let a restoring
+ * card re-open a live editor for an inbox the user had switched off.
+ *
+ * The cost of the mixed case is a mounted iframe and one cached resource read
+ * for a card that draws nothing. That is invisible to the user and is the price
+ * of a per-tool metadata field.
+ *
+ * ── Fail direction, and why it stays OPEN here ────────────────────────────
+ * This one rollup fails open (unreadable → "not all hidden" → keep the
+ * metadata), unlike everything else in this section. It is a preference rather
+ * than a permission, and its blast radius on failure is one invisible iframe
+ * that mounts and renders nothing — because the per-call check that actually
+ * withholds the envelope reads its flag separately and refuses on ITS failure.
+ * Not a redesign candidate.
  */
 async function allReachableInboxesHideDraftEditor(
   apiKey: ApiKeyRow,
+  db: InboxQueryClient = supabase,
 ): Promise<boolean> {
-  if (INTROSPECTION_ONLY) return false;
+  // See the same guard on `keyReviewCardGates`: it is the DEFAULT client that
+  // has no project behind it under introspection, not an injected one.
+  if (INTROSPECTION_ONLY && db === supabase) return false;
   // A key scoped to zero inboxes reaches nothing; there is no "every inbox"
   // to be hidden, and vacuous truth here would withhold the card from a key
   // whose owner never asked for that.
   if (apiKey.inbox_ids !== null && apiKey.inbox_ids.length === 0) return false;
   try {
-    let query = supabase
+    // `deleted_at is null` is the bug this query used to have. Without it the
+    // rollup counted soft-deleted rows, which keep `draft_editor_hidden = false`
+    // forever, so `.every()` could never reach true and the user's opt-out
+    // could never suppress `_meta.ui`. Confirmed in the owner's own workspace
+    // 2026-09-16: one revoked `hello@mcpemails.com` row beside one active
+    // inbox. `reachableInboxSelect` appends exactly the columns the predicate
+    // in reachable-inbox.ts reads, so the projection cannot drift away from it.
+    //
+    // ── AND WHY `status` IS DELIBERATELY *NOT* FILTERED HERE ────────────────
+    // This is the one inboxes query in the server that does not, and it is a
+    // fix rather than an omission (2026-09-17). `allInboxesHideDraftEditor`
+    // falls back to the key's own rows when NONE of them is reachable, so that
+    // a stated preference survives a mailbox going unreachable — an expired
+    // OAuth token used to hand the user back a card they had switched off.
+    // Filtering `status = 'active'` in SQL would delete exactly the evidence
+    // that fallback reads, so status is decided in TypeScript, over rows this
+    // query was careful to hand over. See the long note on
+    // `allInboxesHideDraftEditor`; the `.some()` rollup in `keyReviewCardGates`
+    // is the opposite case and keeps both filters.
+    //
+    // ── THE 1000-ROW TRAP, NAMED BUT NOT CLOSED ────────────────────────────
+    // `keyReviewCardGates` narrows with an `.or()` so its result is near-empty
+    // for almost every workspace. This one has no equivalent narrowing: it asks
+    // for every live inbox the key can see, and PostgREST silently truncates a
+    // row-returning select at 1000 with no error. A workspace past 1000 live
+    // inboxes would have `.every()` evaluated over a prefix. The blast radius
+    // is one invisible iframe not mounted for a key whose first 1000 inboxes
+    // are all hidden, which is why this is documented rather than guarded; the
+    // largest production workspace on 2026-09-16 has single digits.
+    let query = db
       .from("inboxes")
-      .select("draft_editor_hidden")
-      .eq("workspace_id", apiKey.workspace_id);
+      .select(reachableInboxSelect("draft_editor_hidden"))
+      .eq("workspace_id", apiKey.workspace_id)
+      .is("deleted_at", null);
     if (apiKey.inbox_ids !== null) query = query.in("id", apiKey.inbox_ids);
     const { data, error } = await query;
     if (error) {
@@ -23709,9 +23990,7 @@ async function allReachableInboxesHideDraftEditor(
       });
       return false;
     }
-    const rows = (data ?? []) as Array<{ draft_editor_hidden?: unknown }>;
-    if (rows.length === 0) return false;
-    return rows.every((row) => row.draft_editor_hidden === true);
+    return allInboxesHideDraftEditor((data ?? []) as DraftEditorHiddenRow[]);
   } catch (error) {
     console.warn("[mcp-server] draft_editor_hidden_unavailable", {
       key_id: apiKey.id,
@@ -23780,7 +24059,9 @@ async function updateDraftForEditor(
 function draftEditorDepsFor(apiKey: ApiKeyRow): DraftEditorDeps {
   return {
     appUrl: APP_URL,
-    workspaceEnabled: workspaceDraftEditorEnabled,
+    workspaceGate: workspaceDraftEditorGate,
+    inboxHidden: readInboxDraftEditorHidden,
+    workspaceRole: workspaceRoleForUser,
     // NOT a reimplementation of the inbox gate. `resolveInboxArg` is the one
     // place that resolves an inbox_id or an email alias against the calling
     // key's workspace AND its `inbox_ids` allowlist, and every mail tool goes
@@ -23826,6 +24107,11 @@ function draftEditorCallerFor(apiKey: ApiKeyRow): DraftEditorCaller {
     workspace_id: apiKey.workspace_id,
     scopes: apiKey.scopes,
     inbox_ids: apiKey.inbox_ids,
+    // The human behind the key, for the owner/admin check on
+    // `draft_editor_hide{scope:"workspace"}`. `?? null` because the column is
+    // nullable — every live production key carries one (verified 2026-09-16),
+    // and a key without one is refused workspace scope rather than waved past.
+    user_id: apiKey.created_by ?? null,
   };
 }
 
@@ -23860,8 +24146,19 @@ async function draftEditorEnvelopeForWrite(
     // returning no envelope. The card classifies a payload without
     // `schema_version` as not its own and renders nothing, collapsing the
     // shell. See allReachableInboxesHideDraftEditor.
-    if (inbox.draft_editor_hidden === true) return null;
-    if (!await workspaceDraftEditorEnabled(apiKey.workspace_id)) return null;
+    //
+    // The two reads are issued together: the inbox flag no longer rides on the
+    // resolved row (see INBOX_SELECT_COLUMNS), so this is one extra round trip
+    // that costs nothing in latency next to the workspace read it runs beside.
+    // Both fail closed, and the try/catch below means either one throwing
+    // degrades to today's payload rather than failing a draft that is already
+    // written.
+    const [enabled, hidden] = await Promise.all([
+      workspaceDraftEditorEnabled(apiKey.workspace_id),
+      readInboxDraftEditorHidden(inbox.id),
+    ]);
+    if (hidden) return null;
+    if (!enabled) return null;
     const draft: NormalizedDraft = {
       draft_id: input.draftId,
       to: input.params.to,
@@ -23917,8 +24214,12 @@ async function draftEditorReceiptFor(
     // still flipping a card up on send or discard would be the worse half of
     // both behaviours: the user still gets a widget, and it is one they can no
     // longer reach the editor from.
-    if (inbox.draft_editor_hidden === true) return null;
-    if (!await workspaceDraftEditorEnabled(apiKey.workspace_id)) return null;
+    const [enabled, hidden] = await Promise.all([
+      workspaceDraftEditorEnabled(apiKey.workspace_id),
+      readInboxDraftEditorHidden(inbox.id),
+    ]);
+    if (hidden) return null;
+    if (!enabled) return null;
     return draftReceiptEnvelope({
       outcome,
       headline,
@@ -26257,15 +26558,15 @@ async function handleToolsList(
   // serializeToolForList omits every optional field (outputSchema, annotations,
   // _meta) that the entry does not carry, so a tool without UI metadata
   // produces exactly the JSON it did before MCP Apps existed.
-  const visibleTools = toolsForListing(apiKey)
-    .map((tool) => {
-      // undefined for a tool that is not card-bearing OR is not gated in, in
-      // which case the registry entry is passed through untouched — which is
-      // what preserves the unconditional `visibility: ["app"]` metadata the
-      // approval_* and bulk_* tools carry from the registry.
-      const meta = reviewCardMetaForListing(tool.name, uiGates);
-      return meta ? { ...tool, _meta: meta } : tool;
-    })
+  //
+  // The mapping lives in `withListingCardMeta` rather than inline here, so a
+  // test can run the REAL composition over the REAL registry. That matters
+  // more than it looks: the gate is `reviewCardMetaForListing` returning
+  // undefined, and undefined passes the registry entry through UNTOUCHED — so
+  // a tool that was stamped with `_meta` at module load keeps it and is not
+  // gated at all. Testing the pure function proves nothing about that;
+  // `mcp-app-resources.test.ts` tests this composition instead.
+  const visibleTools = withListingCardMeta(toolsForListing(apiKey), uiGates)
     .map(serializeToolForList);
 
   console.log("[mcp-server] tools/list", {
@@ -27870,7 +28171,7 @@ async function handleScheduledDispatch(): Promise<Response> {
           throw new Error("approved request expired before it was decided");
         }
         const { data: key, error: keyErr } = await supabase.from("api_keys")
-          .select("id, workspace_id, name, key_prefix, key_hash, scopes, inbox_ids, expires_at, last_used_at, deleted_at, created_at, card_build_notified")
+          .select("id, workspace_id, created_by, name, key_prefix, key_hash, scopes, inbox_ids, expires_at, last_used_at, deleted_at, created_at, card_build_notified")
           .eq("id", approval.api_key_id).is("deleted_at", null).single();
         if (keyErr || !key) throw new Error("originating API key is unavailable");
         const original = await resolveScheduledPayload(approval);
@@ -29153,29 +29454,58 @@ async function handleRequest(req: Request): Promise<Response> {
   // Serves the static tool surface to a directory scanner that has no API key
   // and no database. Strictly schema reads: `tools/call` is refused, so this
   // path can never touch a mailbox. See INTROSPECTION_ONLY above.
-  if (INTROSPECTION_ONLY) {
-    if (!INTROSPECTABLE_METHODS.has(rpcRequest.method)) {
-      return jsonResponse(jsonRpcErrorBody(
-        requestId,
-        RPC_METHOD_NOT_FOUND,
-        "This server is running in introspection mode. Only schema methods are available.",
-      ));
-    }
-    return jsonResponse(
-      await routeMethod(rpcRequest, INTROSPECTION_API_KEY, ctx),
-    );
+  //
+  // ── WHY THIS IS NO LONGER AN EARLY `return` (2026-09-17) ──────────────────
+  // Until today this branch answered with
+  // `jsonResponse(await routeMethod(rpcRequest, INTROSPECTION_API_KEY, ctx))`
+  // and returned, which made introspection a SHORTER path than a real request,
+  // not merely a narrower one. Everything below the route call —
+  // `normalizeResponseContentMeta`, the insufficient-scope 403 dressing, the
+  // tools/list_changed SSE branch — was skipped, so the Glama introspection
+  // container was graded on a differently shaped response than any real client
+  // receives. That was a production inconsistency in its own right.
+  //
+  // It was also a hole in the only end-to-end test this suite has.
+  // `mcp-app-resources.test.ts` drives `handleRequest` under
+  // MCP_INTROSPECTION_ONLY precisely because it needs no database and no key,
+  // and claimed there was "no enclosing layer left" to stamp `_meta.ui` from.
+  // There was: everything between `routeMethod` and the final `jsonResponse`.
+  // A `.map()` inserted right after `normalizeResponseContentMeta` put the
+  // original bug back on the wire for every authenticated client with the suite
+  // green at 1213/1213.
+  //
+  // So introspection now differs in exactly the two things that MUST differ —
+  // the method allow-list, and the synthetic key standing in for one this
+  // request cannot have — and shares every layer below with a real request.
+  // Keep it that way: an early `return` here is a test hole and a shape
+  // difference at the same time.
+  if (INTROSPECTION_ONLY && !INTROSPECTABLE_METHODS.has(rpcRequest.method)) {
+    return jsonResponse(jsonRpcErrorBody(
+      requestId,
+      RPC_METHOD_NOT_FOUND,
+      "This server is running in introspection mode. Only schema methods are available.",
+    ));
   }
 
   // ── Authenticate API key ──────────────────────────────────────────────────
   // Every non-notification request must carry a valid, active API key.
   // Returns { apiKey } on success, or an HTTP error Response on failure.
-  const authResult = await authenticateRequest(req, requestId);
-  if (authResult instanceof Response) {
-    // Authentication failed — return the error response directly.
-    return authResult;
+  //
+  // Introspection mode is the one exception, and it is a substitution rather
+  // than a skip: there is no `api_keys` table to check against, so the request
+  // is routed with the synthetic full-scope key. It reaches exactly the same
+  // handlers and the same response post-processing as a real one.
+  let apiKey: ApiKeyRow;
+  if (INTROSPECTION_ONLY) {
+    apiKey = INTROSPECTION_API_KEY;
+  } else {
+    const authResult = await authenticateRequest(req, requestId);
+    if (authResult instanceof Response) {
+      // Authentication failed — return the error response directly.
+      return authResult;
+    }
+    apiKey = authResult.apiKey;
   }
-
-  const { apiKey } = authResult;
 
   // ── Cheap-method rate limit ───────────────────────────────────────────────
   // Every method EXCEPT `tools/call` is cheap and never writes to activity_log,
@@ -29200,7 +29530,14 @@ async function handleRequest(req: Request): Promise<Response> {
   // 30/min discovery bucket would throttle a perfectly normal session. See
   // RESOURCE_RATE_LIMITS for the sizing argument.
   const isResourceMethod = rpcRequest.method.startsWith("resources/");
-  if (rpcRequest.method !== "tools/call" && rpcRequest.method !== "ping") {
+  // Every limiter and quota below counts rows in a database. Introspection
+  // mode has no project behind it, so the three checks are skipped — not as a
+  // free pass, but because there is nothing to count and every call would be a
+  // guaranteed failure that fails open anyway. The container is one directory
+  // scanner on a private network; the metered surface it is exempt from is the
+  // one it cannot reach (`tools/call` is not introspectable at all).
+  const metered = !INTROSPECTION_ONLY;
+  if (metered && rpcRequest.method !== "tools/call" && rpcRequest.method !== "ping") {
     const cheapMethodResult = isResourceMethod
       ? await checkDiscoveryRateLimit(apiKey.id, RESOURCE_RATE_LIMITS, "resources")
       : await checkDiscoveryRateLimit(apiKey.id);
@@ -29234,7 +29571,7 @@ async function handleRequest(req: Request): Promise<Response> {
   // working — degrading the safety surface precisely when things are busiest,
   // which is exactly backwards. The dedicated `mcp:resources:*` bucket above
   // already bounds this traffic.
-  const rateLimitResult = isResourceMethod
+  const rateLimitResult = isResourceMethod || !metered
     ? { allowed: true as const }
     : await checkRateLimit(apiKey.id);
   if (!rateLimitResult.allowed) {
@@ -29291,7 +29628,7 @@ async function handleRequest(req: Request): Promise<Response> {
   // (requests per minute, aggregated across the workspace's API keys).
   // Runs after the per-key rolling-window guard. Fail-open on DB errors.
   // `resources/*` exempt — see the note on the per-key limiter above.
-  const quotaResult = isResourceMethod
+  const quotaResult = isResourceMethod || !metered
     ? { allowed: true as const }
     : await checkPlanQuota(apiKey.workspace_id);
   if (!quotaResult.allowed) {
@@ -29394,7 +29731,12 @@ async function handleRequest(req: Request): Promise<Response> {
     currentBuild: REVIEW_CARD_BUILD_ID,
   });
 
-  if (notifyDecision.record !== null) {
+  // `metered` again, for the same reason: the synthetic introspection key has
+  // no `api_keys` row to record a build against, and it is never persisted, so
+  // the write would be a guaranteed failure against a placeholder URL. The
+  // DECISION still runs — the SSE branch below is part of the shape a real
+  // client sees, and introspection must not be a different shape.
+  if (metered && notifyDecision.record !== null) {
     // Fire and forget, exactly like last_used_at: this is a cache hint, and a
     // failed write costs one repeated notification, never a failed request.
     // Awaiting it would put a database round trip in front of every tool
@@ -29435,6 +29777,24 @@ async function handleRequest(req: Request): Promise<Response> {
 // and was rejected deliberately: it makes serving depend on how the Supabase
 // edge runtime happens to load this file, and being wrong about that takes the
 // whole MCP server down rather than merely leaving a test unable to run.
+//
+// ── THIS LINE MUST STAY A BARE REFERENCE. NO TESTABLE LAYER EXISTS OUTSIDE IT ─
+// `Deno.serve(handleRequest)` is where in-process coverage stops, and it stops
+// by construction, not by oversight. Every test in this suite sets
+// MCP_SERVER_NO_LISTEN=1, so anything written as `Deno.serve(async (req) => …)`
+// — a wrapper that reads the body, rewrites the JSON and re-serialises it — is
+// unreachable by any test here and can put arbitrary bytes on the wire with the
+// suite green. Verified 2026-09-17.
+//
+// So do not wrap it. A handler is composed INSIDE `handleRequest`, where the
+// tests can drive it. If this ever genuinely has to become a wrapper, the
+// honest cost is that a real HTTP request against a running server becomes the
+// only thing that can check it.
+//
+// (For completeness: `apps/web/app/api/mcp/route.ts` re-reads the upstream body
+// and builds a fresh NextResponse, so it is a second such layer, outside this
+// runtime entirely. Byte-transparent today. No Deno test can be the last word
+// on what a browser client receives.)
 if (Deno.env.get("MCP_SERVER_NO_LISTEN") !== "1") {
   Deno.serve(handleRequest);
 }
@@ -29466,11 +29826,52 @@ if (Deno.env.get("MCP_SERVER_NO_LISTEN") !== "1") {
 // `handleToolsCall` is exported for tools-list-visibility.test.ts, so a scope
 // decision is asserted against the gate that actually refuses a call (and the
 // -32004 it answers with), not only against the registry data it reads.
+//
+// `handleToolsList` and `handleRequest` are exported for the same reason, and
+// for a sharper one. `_meta.ui` on a tool nobody opted into has now been
+// re-introduced THREE times by adversarial review, each time one layer further
+// out than the test that had just been written:
+//
+//   1. a `TOOL_REGISTRY.push({ ...definition, _meta })` at module load, which
+//      survives the gate because `withListingCardMeta` maps "no metadata" to
+//      "leave the entry alone". Closed by testing the real composition.
+//   2. a `.map()` in `handleToolsList`'s own chain, between the composition and
+//      `serializeToolForList`. Closed by testing the real `handleToolsList`.
+//   3. a `.map()` in `routeMethod`, on the value `handleToolsList` returned:
+//
+//          case "tools/list": {
+//            const listed = await handleToolsList(req, id, apiKey);
+//            (listed.result as { tools: Array<Record<string, unknown>> }).tools =
+//              ... map the draft tools to { ...tool, _meta: appOnly... };
+//            return listed;
+//          }
+//
+//      Suite green at 1204/1204, and the original bug back ON THE WIRE.
+//
+// Each fix pinned the layer that had just been broken and left the next one
+// out unguarded, because all three asserted on a value some INNER function
+// returned. There is no inner function left to move to once the assertion is
+// on the bytes `handleRequest` puts in an HTTP response, which is why
+// `mcp-app-resources.test.ts` now drives THAT and reads the serialised
+// JSON-RPC body. `MCP_INTROSPECTION_ONLY` is what makes it possible with no
+// database and no API key: `handleRequest` routes the introspectable methods
+// with a synthetic full-scope key, and `keyReviewCardGates` returns every gate
+// shut — which is precisely the state in which advertising `_meta.ui` is the
+// bug. `handleToolsList` stays exported because the narrower tests that name
+// individual tools still read better against it.
+//
+// `keyReviewCardGates` is exported for `reachable-inbox.test.ts`, which injects
+// a recording Supabase client and asserts what the two inbox rollups actually
+// ask the database for. That replaced a source-text pin over this file which
+// three rounds of review evaded without ever changing the behaviour.
 // ---------------------------------------------------------------------------
 export {
   CONSOLIDATED_SPECS,
+  handleRequest,
   handleToolsCall,
+  handleToolsList,
   isOAuthIssuedKey,
+  keyReviewCardGates,
   isToolAuthorized,
   SERVER_INSTRUCTIONS,
   SERVER_INSTRUCTIONS_MAX_BYTES,

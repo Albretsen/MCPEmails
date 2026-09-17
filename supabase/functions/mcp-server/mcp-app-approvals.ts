@@ -284,14 +284,42 @@ export type CardState =
   | "executed"
   | "error";
 
+/**
+ * A terminal receipt, at the envelope level.
+ *
+ * ── WHY `approval_id` IS HERE ──────────────────────────────────────────────
+ * This COMPLETES A CONTRACT; it does not fix an observable defect, and should
+ * not be described as one. `apps/mcp-app/src/contract.ts` declares no
+ * `approval_id` and the card has no correlation logic today, so nothing is
+ * currently refusing anything — the field is the server half of correlation
+ * that is being built on the card side in parallel.
+ *
+ * What that correlation will do: match a PUSHED receipt against the identity
+ * the card is currently rendering, so a receipt for this approval wins and a
+ * receipt for a different one is refused rather than silently swallowing the
+ * open review. `draft{action:"send"|"delete"}` already publishes `draft_id` at
+ * the top level for the same reason. This envelope published nothing —
+ * `{schema_version, card, dashboard_url, state, receipt, actor}` and no id
+ * anywhere — so a pushed terminal receipt would arrive with nothing to match
+ * on, and the card would have to treat it as UNNAMED and refuse it.
+ *
+ * `null` where there is genuinely no verified row: an id that failed UUID
+ * validation, or one that named no approval this key may see. Publishing an
+ * unvalidated caller-supplied id would let a hostile agent address a receipt at
+ * an approval it cannot otherwise touch, which is exactly the correlation this
+ * field exists to make trustworthy.
+ */
 function receiptEnvelope(
   state: CardState,
   receipt: ReceiptFields,
   reason: string | null,
+  approvalId: string | null,
 ): Record<string, unknown> {
   return {
     schema_version: CARD_SCHEMA_VERSION,
     card: "receipt",
+    // Which approval this receipt is about. See the note above.
+    approval_id: approvalId,
     // Envelope-level, always present, absolute. `ui/open-link` requires an
     // absolute URL, and the card must not hold an origin of its own: it ships
     // inside the edge function, so a hardcoded origin would be deployment
@@ -415,6 +443,10 @@ async function loadPendingApproval(
         },
         "not_found",
         "invalid_approval_id",
+        // Nothing verified: the id never parsed as a UUID. Echoing it back as
+        // the receipt's subject would publish a caller-supplied string as if
+        // the server had confirmed it.
+        null,
       ),
     };
   }
@@ -466,6 +498,7 @@ async function loadPendingApproval(
         },
         "not_pending",
         row.status === "expired" ? "approval_expired" : "approval_not_pending",
+        row.id,
       ),
     };
   }
@@ -501,6 +534,7 @@ async function loadPendingApproval(
         },
         "expired",
         "approval_expired",
+        row.id,
       ),
     };
   }
@@ -522,16 +556,26 @@ function notFoundFailure(appUrl: string): ApprovalToolResult {
     },
     "not_found",
     "approval_not_found",
+    // Deliberately null, and for the same reason this response is identical for
+    // "no such row", "another workspace" and "outside this key's allowlist":
+    // naming an id here would confirm which of those it was.
+    null,
   );
 }
 
+/**
+ * `approvalId` is the VERIFIED row id, or `null` when no row was verified.
+ * Required rather than optional so a new failure path has to decide, instead of
+ * quietly publishing a receipt the card cannot place.
+ */
 function failureResult(
   state: CardState,
   receipt: ReceiptFields,
   reason: string | null,
   logErrorCode: string,
+  approvalId: string | null,
 ): ApprovalToolResult {
-  const envelope = receiptEnvelope(state, receipt, reason);
+  const envelope = receiptEnvelope(state, receipt, reason, approvalId);
   return {
     result: {
       content: [{ type: "text", text: receipt.headline + " " + receipt.detail }],
@@ -1028,6 +1072,8 @@ export async function runApprovalDecide(
       },
       "approve_not_available_over_mcp",
       "approve_not_supported",
+      // This refusal happens BEFORE the row is loaded, so nothing is verified.
+      null,
     );
   }
 
@@ -1086,6 +1132,7 @@ export async function runApprovalDecide(
       },
       "error",
       "approval_write_failed",
+      row.id,
     );
   }
 
@@ -1104,6 +1151,7 @@ export async function runApprovalDecide(
       },
       "not_pending",
       "approval_decided_elsewhere",
+      row.id,
     );
   }
 
@@ -1120,6 +1168,7 @@ export async function runApprovalDecide(
       error_code: null,
     },
     "rejected",
+    row.id,
   );
   return cardResult(
     envelope,
@@ -1176,6 +1225,7 @@ export async function runApprovalUpdate(
       },
       "not_editable",
       "approval_not_editable",
+      row.id,
     );
   }
 
@@ -1193,6 +1243,7 @@ export async function runApprovalUpdate(
       },
       "error",
       "approval_decrypt_failed",
+      row.id,
     );
   }
 
@@ -1299,9 +1350,10 @@ export async function runApprovalUpdate(
       },
       "error",
       "approval_write_failed",
+      row.id,
     );
   }
-  if (!claimed) return decidedElsewhereDuringEdit(deps.appUrl);
+  if (!claimed) return decidedElsewhereDuringEdit(deps.appUrl, row.id);
 
   const envelope = await buildOutboundEnvelope(deps, caller, claimed as ApprovalRow);
   return cardResult(
@@ -1310,7 +1362,10 @@ export async function runApprovalUpdate(
   );
 }
 
-function decidedElsewhereDuringEdit(appUrl: string): ApprovalToolResult {
+function decidedElsewhereDuringEdit(
+  appUrl: string,
+  approvalId: string,
+): ApprovalToolResult {
   return failureResult(
     "decided_elsewhere",
     {
@@ -1323,6 +1378,7 @@ function decidedElsewhereDuringEdit(appUrl: string): ApprovalToolResult {
     },
     "not_pending",
     "approval_decided_elsewhere",
+    approvalId,
   );
 }
 
@@ -1375,9 +1431,10 @@ export async function runApprovalSchedule(
       },
       "error",
       "approval_write_failed",
+      row.id,
     );
   }
-  if (!claimed) return decidedElsewhereDuringEdit(deps.appUrl);
+  if (!claimed) return decidedElsewhereDuringEdit(deps.appUrl, row.id);
 
   const envelope = await buildOutboundEnvelope(deps, caller, claimed as ApprovalRow);
   return cardResult(
@@ -1400,6 +1457,10 @@ function asObject(rawArgs: unknown): Record<string, unknown> {
     : {};
 }
 
+/**
+ * An argument-shaped refusal. Its `approval_id` is null: every one of these
+ * fires before the row is loaded, so nothing about the caller's id is verified.
+ */
 function invalidArgs(appUrl: string, message: string): ApprovalToolResult {
   return failureResult(
     "error",
@@ -1413,6 +1474,7 @@ function invalidArgs(appUrl: string, message: string): ApprovalToolResult {
     },
     "error",
     "-32602",
+    null,
   );
 }
 

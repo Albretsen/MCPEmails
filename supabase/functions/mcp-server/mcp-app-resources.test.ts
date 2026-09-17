@@ -21,6 +21,7 @@ import {
   buildResourceTemplatesListResult,
   BULK_PLAN_CARD_TOOL_NAMES,
   clientSupportsUiExtension,
+  DRAFT_EDITOR_APP_TOOL_NAMES,
   DRAFT_EDITOR_CARD_TOOL_NAMES,
   MCP_APP_MIME_TYPE,
   mcpAppUiMeta,
@@ -30,7 +31,9 @@ import {
   REVIEW_CARD_LEGACY_RESOURCE_URI,
   REVIEW_CARD_RESOURCE_URI,
   REVIEW_CARD_TOOL_NAMES,
+  isCardBearingToolName,
   serializeToolForList,
+  withListingCardMeta,
 } from "./mcp-app-resources.ts";
 import { REVIEW_CARD_BUILD_ID, REVIEW_CARD_HTML } from "./ui/review-card.html.ts";
 import { createHash } from "node:crypto";
@@ -451,18 +454,55 @@ Deno.test("a card-bearing tool gets the exact nested _meta.ui.resourceUri when g
   assert(!serialized.includes("visibility"), "mail tools must not restrict visibility");
 });
 
+Deno.test("the draft editor's app-only tools are gated by the SAME flag", () => {
+  // The WS-2 fix. `draft_read` / `draft_editor_save` / `draft_editor_hide` were
+  // stamped with appOnlyReviewCardToolMeta() in the registry unconditionally,
+  // on the argument that an app-only tool always returns an envelope. That is
+  // true of approval_* and bulk_*, and false of these three: they are the only
+  // app-only tools with a user-facing OFF switch. Measured 2026-09-16 with the
+  // demo inbox hidden, `draft` correctly dropped its `_meta.ui` while all three
+  // of these kept theirs, so the host kept mounting the editor for an inbox the
+  // user had switched off.
+  for (const name of DRAFT_EDITOR_APP_TOOL_NAMES) {
+    assertEquals(reviewCardMetaForListing(name, NO_GATES), undefined, `${name} ungated`);
+    assertEquals(
+      reviewCardMetaForListing(name, { outbound: true, bulk: true, drafts: false }),
+      undefined,
+      `${name} must not be opened by either inbox opt-in`,
+    );
+    // Gated in, they carry `visibility: ["app"]` on top of the resource URI —
+    // the difference from `draft`, which is model-callable and must not.
+    assertEquals(
+      reviewCardMetaForListing(name, { outbound: false, bulk: false, drafts: true }),
+      { ui: { resourceUri: REVIEW_CARD_RESOURCE_URI, visibility: ["app"] } },
+      `${name} is opened by the draft-editor flag alone`,
+    );
+  }
+  // They are NOT the same list as the model-facing `draft`: same gate,
+  // different metadata shape.
+  for (const name of DRAFT_EDITOR_APP_TOOL_NAMES) {
+    assert(
+      !DRAFT_EDITOR_CARD_TOOL_NAMES.includes(name),
+      `${name} must not also be in the model-facing list`,
+    );
+  }
+});
+
 Deno.test("a non-card tool gets no _meta under any combination of gates", () => {
-  // Includes the app-only tools: they carry appOnlyReviewCardToolMeta() from
-  // the registry unconditionally and must be passed through untouched, so this
-  // helper returning undefined for them is what preserves their metadata.
+  // Includes the OTHER app-only tools: approval_* and bulk_* carry
+  // appOnlyReviewCardToolMeta() from the registry unconditionally and must be
+  // passed through untouched, so this helper returning undefined for them is
+  // what preserves their metadata. The draft-editor three are deliberately
+  // absent from this list — see the test above; they are no longer stamped in
+  // the registry and get their metadata from here instead.
   for (
     const name of [
       "inbox_list",
       "email_read",
       "folder",
       "draft_unknown",
-      "draft_read",
-      "draft_editor_save",
+      "draft_editor",
+      "draft_editor_saved",
       "signature",
       "automation",
       "contact_search",
@@ -747,5 +787,272 @@ Deno.test("the review card is a small, self-contained HTML5 document", () => {
       !pattern.test(REVIEW_CARD_HTML),
       `card must not reference external resources (found ${label})`,
     );
+  }
+});
+
+// ---------------------------------------------------------------------------
+// The listing path, against the REAL registry
+//
+// ── Why this section exists ────────────────────────────────────────────────
+// Everything above tests `reviewCardMetaForListing`, which is pure and was
+// always correct. The headline fix lived somewhere else: in the COMPOSITION
+// `handleToolsList` performs over the registry. Re-adding the module-load stamp
+// the fix removed —
+//
+//     TOOL_REGISTRY.push({ ...definition, _meta: appOnlyReviewCardToolMeta() });
+//
+// — reinstates the original bug verbatim, because `withListingCardMeta` maps
+// `undefined` to "leave the entry alone" and a registry `_meta` therefore
+// SURVIVES being gated out. Verified 2026-09-16: with that line back, the whole
+// suite still passed 1171/1171. The gap was that nothing ever looked at the
+// registry's `_meta` at all — `reviewCardMetaForListing` was tested as a pure
+// function, and `tools-list-visibility.test.ts` and `tool-surface.test.ts` both
+// import TOOL_REGISTRY without mentioning `_meta`.
+//
+// So these run the real mapping over the real registry. index.ts builds it at
+// module load and reads the environment while doing so, hence the two env vars
+// before the import — the same note as tool-surface.test.ts.
+// ---------------------------------------------------------------------------
+
+Deno.env.set("MCP_INTROSPECTION_ONLY", "1");
+Deno.env.set("MCP_SERVER_NO_LISTEN", "1");
+const { TOOL_REGISTRY, handleRequest } = await import("./index.ts");
+
+/** The names the real listing path leaves carrying `_meta` under these gates. */
+function listedWithMeta(gates: {
+  outbound: boolean;
+  bulk: boolean;
+  drafts: boolean;
+}): string[] {
+  return withListingCardMeta(TOOL_REGISTRY, gates)
+    .filter((tool) => tool._meta !== undefined)
+    .map((tool) => tool.name);
+}
+
+Deno.test("no draft-editor tool carries _meta through the listing when its gate is shut", () => {
+  const carried = listedWithMeta(NO_GATES);
+  for (const name of [...DRAFT_EDITOR_CARD_TOOL_NAMES, ...DRAFT_EDITOR_APP_TOOL_NAMES]) {
+    assert(
+      !carried.includes(name),
+      `${name} must carry NO _meta when the draft-editor gate is shut — ` +
+        "a module-load TOOL_REGISTRY.push({..., _meta}) is the regression this catches",
+    );
+  }
+  // ...and the serialized wire object must not even have the key, so a key that
+  // is not gated in gets byte-identical JSON to life before MCP Apps.
+  for (const tool of withListingCardMeta(TOOL_REGISTRY, NO_GATES)) {
+    if (!DRAFT_EDITOR_APP_TOOL_NAMES.includes(tool.name)) continue;
+    assert(
+      !("_meta" in serializeToolForList(tool)),
+      `${tool.name} must serialise without a _meta key at all`,
+    );
+  }
+});
+
+Deno.test("with every gate shut, the only tools left carrying _meta are approval_* and bulk_*", () => {
+  // The general form, so this keeps catching the same regression for a
+  // card-bearing tool that does not exist yet. Those two families are stamped at
+  // module load on purpose (index.ts:7611 and :7632): they are app-only
+  // affordances with no user-facing off switch that always return an envelope,
+  // so there is no result shape for the card to fail on and nothing to gate.
+  const stamped = listedWithMeta(NO_GATES);
+  for (const name of stamped) {
+    assert(
+      name.startsWith("approval_") || name.startsWith("bulk_"),
+      `${name} carries _meta with every gate shut — it must be gated, not stamped`,
+    );
+  }
+  // Both families really are there: an assertion over an empty set proves
+  // nothing, and a "fix" that stripped them rather than leaving them alone
+  // would be a different regression.
+  assert(stamped.some((n) => n.startsWith("approval_")), "approval_* keep their _meta");
+  assert(stamped.some((n) => n.startsWith("bulk_")), "bulk_* keep their _meta");
+});
+
+Deno.test("the drafts gate opens all four draft-editor tools, and nothing else", () => {
+  const carried = listedWithMeta({ outbound: false, bulk: false, drafts: true });
+  for (const name of [...DRAFT_EDITOR_CARD_TOOL_NAMES, ...DRAFT_EDITOR_APP_TOOL_NAMES]) {
+    assert(carried.includes(name), `${name} must be listed with _meta when gated in`);
+  }
+  for (const name of [...REVIEW_CARD_TOOL_NAMES, ...BULK_PLAN_CARD_TOOL_NAMES]) {
+    if (DRAFT_EDITOR_CARD_TOOL_NAMES.includes(name)) continue;
+    assert(!carried.includes(name), `${name} must stay shut behind its own gate`);
+  }
+
+  // And the shapes: the app-only three add `visibility: ["app"]`; `draft` does
+  // not, because it is model-callable.
+  const byName = new Map(
+    withListingCardMeta(TOOL_REGISTRY, { outbound: false, bulk: false, drafts: true })
+      .map((tool) => [tool.name, tool] as const),
+  );
+  for (const name of DRAFT_EDITOR_APP_TOOL_NAMES) {
+    assertEquals(byName.get(name)?._meta, appOnlyReviewCardToolMeta(), name);
+  }
+  assertEquals(byName.get("draft")?._meta, reviewCardToolMeta(), "draft is model-callable");
+});
+
+Deno.test("every draft-editor tool is card-bearing for the staleness check", () => {
+  // `isCardBearingToolName` decides whether a `tools/call` may carry
+  // notifications/tools/list_changed. All four listings above can hold a
+  // build-fingerprinted card URI, and the card itself calls `draft_read` before
+  // it calls anything else — so a client whose next call after a card deploy was
+  // `draft_read` got no notification at all and went on holding the previous
+  // bundle's URI. NOTE for whoever owns card-build-notify.ts: this widens what
+  // reaches `decideBuildNotification`.
+  for (
+    const name of [
+      ...REVIEW_CARD_TOOL_NAMES,
+      ...BULK_PLAN_CARD_TOOL_NAMES,
+      ...DRAFT_EDITOR_CARD_TOOL_NAMES,
+      ...DRAFT_EDITOR_APP_TOOL_NAMES,
+    ]
+  ) {
+    assert(isCardBearingToolName(name), `${name} can hold a stale card URI`);
+  }
+  for (const name of ["inbox_list", "email_read", "ping", "draft_update", ""]) {
+    assert(!isCardBearingToolName(name), `${name} cannot`);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// THE WIRE, not the call site — the outermost boundary this suite can reach
+//
+// ── Why this section keeps getting rewritten ───────────────────────────────
+// `_meta.ui` on a tool nobody opted into has now been re-introduced THREE
+// times by adversarial review, each time ONE LAYER further out than the test
+// that had just been written to stop it:
+//
+//   1. `TOOL_REGISTRY.push({ ...definition, _meta: appOnlyReviewCardToolMeta() })`
+//      at module load. It survives the gate because `withListingCardMeta` maps
+//      "this tool gets no metadata" to "leave the entry alone", so a registry
+//      `_meta` is passed through untouched. Green at 1171/1171, because
+//      nothing looked at the registry's `_meta` at all.
+//      → closed by running the real composition over the real registry.
+//   2. a `.map()` inside `handleToolsList`'s own chain, between
+//      `withListingCardMeta` and `serializeToolForList`. Green at 1187/1187.
+//      → closed by running the real `handleToolsList`.
+//   3. a `.map()` inside `routeMethod`, over the result `handleToolsList` had
+//      just returned:
+//
+//          case "tools/list": {
+//            const listed = await handleToolsList(req, id, apiKey);
+//            const r = listed.result as { tools: Array<Record<string, unknown>> };
+//            r.tools = r.tools.map((tool) =>
+//              ["draft_read", "draft_editor_save", "draft_editor_hide"]
+//                  .includes(tool.name as string)
+//                ? { ...tool, _meta: appOnlyReviewCardToolMeta() } : tool);
+//            return listed;
+//          }
+//
+//      Green at 1204/1204, with the original bug back on the wire.
+//
+// The pattern is the point, and it is not a coincidence: every one of those
+// tests asserted on a value that some INNER function returned, and a caller
+// one level out can always post-process that value. `routeMethod` is not the
+// last such layer either — `handleRequest` post-processing `routeMethod`'s
+// response would evade a pin on `routeMethod` in exactly the same way.
+//
+// So these assert on the HTTP response `handleRequest` produces: the real
+// transport entry point, the real router, the real handler, the real gates,
+// and the actual serialised JSON-RPC bytes a client receives. There is no
+// enclosing layer left to add a step to. A stamp anywhere inside — registry,
+// `toolsForListing`, `withListingCardMeta`, `serializeToolForList`,
+// `handleToolsList`, `routeMethod`, `handleRequest` itself — shows up here.
+//
+// `MCP_INTROSPECTION_ONLY` is what makes driving the real entry point possible
+// with no database and no API key: `handleRequest` routes the introspectable
+// methods with a synthetic full-scope key (all 26 tools are listed, both card
+// families included), and `keyReviewCardGates` returns every gate shut without
+// issuing a query. Every gate shut is precisely the state in which advertising
+// `_meta.ui` is the defect, so this is not a weaker test than an integration
+// one — it is the case that matters, driven end to end.
+// ---------------------------------------------------------------------------
+
+/** The bytes a client gets back from one JSON-RPC method, over the real entry point. */
+async function wireResponse(method: string): Promise<Record<string, unknown>> {
+  const response = await handleRequest(
+    new Request("https://mcp.example.test/mcp-server", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 7, method }),
+    }),
+  );
+  assertEquals(response.status, 200, `${method} must answer 200`);
+  // Parsed from the response body rather than read off a returned object, so
+  // anything that is not JSON-serialisable never reaches these assertions
+  // looking healthy.
+  const body = JSON.parse(await response.text()) as Record<string, unknown>;
+  assertEquals(body.jsonrpc, "2.0", "a JSON-RPC 2.0 envelope");
+  assertEquals(body.id, 7, "the response is the one we asked for");
+  assert(!("error" in body), `${method} failed: ${JSON.stringify(body.error)}`);
+  return body;
+}
+
+/** The tools `tools/list` actually advertises, exactly as sent. */
+async function realToolsListResponse(): Promise<Array<Record<string, unknown>>> {
+  const body = await wireResponse("tools/list");
+  const result = body.result as { tools: Array<Record<string, unknown>> };
+  return result.tools;
+}
+
+Deno.test("the tools/list on the wire advertises no card metadata when every gate is shut", async () => {
+  // THE GENERAL FORM, and the durable one: it keeps catching this for a
+  // card-bearing tool that does not exist yet. `approval_*` and `bulk_*` are
+  // stamped at module load on purpose (index.ts:7611 and :7632) — app-only
+  // affordances with no user-facing off switch that always return an envelope,
+  // so there is no result shape for the card to fail on and nothing to gate.
+  const tools = await realToolsListResponse();
+  assert(tools.length > 0, "introspection mode still lists tools");
+
+  const stamped = tools.filter((tool) => "_meta" in tool).map((tool) => tool.name as string);
+  for (const name of stamped) {
+    assert(
+      name.startsWith("approval_") || name.startsWith("bulk_"),
+      `${name} reaches the wire carrying _meta with every gate shut — ` +
+        "it must be gated, not stamped",
+    );
+  }
+  // Both families really are there. An assertion over an empty set proves
+  // nothing, and a "fix" that stripped them rather than leaving them alone
+  // would be a different regression.
+  assert(stamped.some((n) => n.startsWith("approval_")), "approval_* keep their _meta");
+  assert(stamped.some((n) => n.startsWith("bulk_")), "bulk_* keep their _meta");
+});
+
+Deno.test("no draft-editor tool reaches the wire with _meta, named one by one", async () => {
+  // The general form above is the durable one; this names the four so a failure
+  // says which tool, and so the assertion is not vacuous if the listing ever
+  // stops including them.
+  const tools = await realToolsListResponse();
+  const byName = new Map(tools.map((tool) => [tool.name as string, tool]));
+  for (const name of [...DRAFT_EDITOR_CARD_TOOL_NAMES, ...DRAFT_EDITOR_APP_TOOL_NAMES]) {
+    const tool = byName.get(name);
+    assert(tool !== undefined, `${name} is listed to a full-scope key`);
+    assert(!("_meta" in tool!), `${name} must reach the wire with no _meta key at all`);
+  }
+  // `draft` is model-visible and always listed, so this half is never vacuous.
+  assert(byName.has("draft"), "draft is always listed");
+  assert(!("_meta" in byName.get("draft")!), "draft must carry no _meta");
+});
+
+Deno.test("the listing on the wire still goes through serializeToolForList", async () => {
+  // The other direction: a call site that stopped serialising would put the
+  // registry's internal fields (`listedInputSchema`, the action-specific `allOf`
+  // rules) on the wire. Byte-compatibility with life before MCP Apps is the
+  // whole claim, so it is asserted rather than assumed.
+  const tools = await realToolsListResponse();
+  const allowed = new Set([
+    "name",
+    "title",
+    "description",
+    "inputSchema",
+    "outputSchema",
+    "annotations",
+    "_meta",
+  ]);
+  for (const tool of tools) {
+    for (const key of Object.keys(tool)) {
+      assert(allowed.has(key), `${tool.name} leaks ${key} onto the tools/list wire`);
+    }
   }
 });
