@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'node:crypto';
 import { createClient } from '@/lib/supabase/server';
+import { mapInviteAcceptError } from '@/lib/workspace/invite-accept-error';
 
 function hashToken(raw: string): string {
   return crypto.createHash('sha256').update(raw, 'utf8').digest('hex');
@@ -61,54 +62,12 @@ export async function POST(
   const { data, error } = await rpc('accept_workspace_invite', { p_token_hash: tokenHash });
 
   if (error) {
-    // Map PL/pgSQL exception messages to HTTP status codes.
-    const msg: string = error.message ?? '';
-
-    if (msg.includes('invite_not_found')) {
-      return NextResponse.json({ error: 'Invite not found.' }, { status: 404 });
-    }
-    if (msg.includes('invite_already_accepted')) {
-      return NextResponse.json({ error: 'This invite has already been accepted.' }, { status: 409 });
-    }
-    if (msg.includes('invite_expired')) {
-      return NextResponse.json({ error: 'This invite has expired.' }, { status: 410 });
-    }
-    if (msg.includes('invite_email_mismatch')) {
-      return NextResponse.json(
-        {
-          error: 'This invite was sent to a different email address. Sign in with the correct account to accept it.',
-          error_code: 'invite_email_mismatch',
-        },
-        { status: 403 },
-      );
-    }
-    if (msg.includes('already_a_member')) {
-      return NextResponse.json(
-        { error: 'You are already a member of this workspace.' },
-        { status: 409 },
-      );
-    }
-    // Both of these are re-checks the RPC performs at REDEMPTION time, because
-    // an invite is live for 7 days and the conditions that made it legitimate
-    // can lapse inside that window: the workspace can downgrade off the Team
-    // plan (seats are a Team capability) or be deleted outright. Mapped
-    // explicitly so neither falls through to the generic 500 below, which is
-    // what an unmapped sentinel does.
-    if (msg.includes('workspace_seat_limit')) {
-      return NextResponse.json(
-        {
-          error: 'This workspace has no seat available. Its owner needs the Team plan to add collaborators.',
-          error_code: 'member_limit_reached',
-          upgrade_url: '/pricing',
-        },
-        { status: 403 },
-      );
-    }
-    if (msg.includes('workspace_unavailable')) {
-      return NextResponse.json(
-        { error: 'This workspace no longer exists.', error_code: 'workspace_unavailable' },
-        { status: 410 },
-      );
+    // Map PL/pgSQL exception messages to HTTP status codes. The mapping itself
+    // lives in src/lib/workspace/invite-accept-error.ts so a test can exercise
+    // every sentinel; see the note there on why it was moved out.
+    const mapped = mapInviteAcceptError(error.message ?? '');
+    if (mapped) {
+      return NextResponse.json(mapped.body, { status: mapped.status });
     }
 
     console.error('[invite/accept] RPC error:', error.message);
