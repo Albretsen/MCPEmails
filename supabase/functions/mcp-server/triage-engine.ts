@@ -1367,7 +1367,18 @@ export async function runTriageRule(
 
   const inbox = await store.loadInbox(rule.inbox_id);
   if (!inbox) {
-    return await failRun("inbox_unavailable", "The inbox this automation targets no longer exists.");
+    // Two causes, one code. The row may be gone, or (since 2026-09-17) it may
+    // be present but unreachable — soft-deleted, or `status <> 'active'`
+    // because its credentials stopped working. `loadInbox` deliberately does
+    // not distinguish them: the remedy is the same either way, and both are
+    // terminal for this run. The wording has to cover both, because the old
+    // "no longer exists" is simply false for a mailbox the user still has and
+    // only needs to reconnect, and this string is what the dashboard shows.
+    return await failRun(
+      "inbox_unavailable",
+      "The inbox this automation targets is not reachable: it was disconnected, " +
+        "or its connection stopped working. Reconnect it, or delete this automation.",
+    );
   }
 
   // ── Match ─────────────────────────────────────────────────────────────────
