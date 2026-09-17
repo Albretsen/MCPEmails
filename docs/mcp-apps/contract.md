@@ -129,7 +129,8 @@ single object with a discriminator. The card switches on `card`.
   "actor": {             // who may act, resolved server-side
     "can_decide": true,
     "reason": null       // e.g. "viewer_role" | "not_pending" | "expired" when can_decide is false
-  }
+  },
+  "diagnostics": true    // OPTIONAL, internal only, `true` or absent (see below)
 }
 ```
 
@@ -141,6 +142,31 @@ than only on the receipt for a specific reason: the unsupported-schema screen is
 cannot read the rest of the envelope, and precisely when it most needs to offer a way out. A
 receipt-level-only field would be unreachable there. The card must never hold an origin of its own — it
 ships inside the edge function, so a hardcoded origin is deployment config baked into a build artifact.
+
+`diagnostics` is an **optional, internal-only** envelope field, `true` or absent. When present the card
+renders one row of protocol facts under the content: host name and version, display mode, whether a
+tool result / tool input / stored envelope arrived, two timings, the handshake attempt count, and
+accepted/foreign message counters. It carries no mail content; the only attacker-influenced string in it
+is the dispatched tool name, neutralised and sliced to 64 characters.
+
+It exists because Phase 0's questions about the real host cannot be answered from outside the frame. It
+is **off unless the server says otherwise**, and the server says so only for a workspace with
+`workspaces.card_diagnostics` (applied 2026-09-17, default false, seeded to the 12 workspaces our own
+accounts own). The flag has its own column rather than riding on `draft_editor_enabled`, for a reason
+worth keeping: the outbound and bulk cards are gated by `send_approval_required` and `bulk_review_mode`,
+which are *customer* opt-ins, so the line as first shipped reached 7 non-internal workspaces, and gating
+it on the draft editor's rollout flag would reach every workspace that feature ever rolls out to.
+
+The server stamps it in one place, `card-diagnostics.ts`, called once at the end of `tools/call` dispatch
+rather than threaded through the six envelope builders, so a new card kind is gated the day it ships.
+`structuredContent` only: §8 pins `content` byte-for-byte, and this is a rendering hint for one iframe.
+
+**The server flag is the only source in a shipped card.** The card also honours a
+`VITE_CARD_DIAGNOSTICS=1` build flag, which a production build does not carry. An earlier draft had a
+third source, a `mcpemails.card.diag` key in the card's own `localStorage`, and it was removed on
+2026-09-17: it was the only input to the decision that we do not author, any same-origin page could
+write it, and whether Claude's sandbox gives each MCP App its own origin is a host detail the card
+cannot read from inside the frame.
 
 **Gating is an explicit opt-in, never capability sniffing.** Earlier drafts of §3 said a plan is returned
 "when the client is UI-capable". Phase 0 proved that is undetectable — the reference host renders apps

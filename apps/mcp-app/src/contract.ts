@@ -221,22 +221,27 @@ export interface Envelope {
   dashboard_url?: string | null;
   state: CardState;
   /**
-   * PROPOSED CONTRACT ADDITION (WS-1b, 2026-09-16). The server does not send
-   * this yet, and until it does the diagnostics line renders for nobody.
+   * Internal only, `true` or absent. Turns on the protocol diagnostics line.
    *
-   * Three files called the diagnostics line "INTERNAL v1 ONLY" while App.tsx
-   * rendered it unconditionally, on every card kind. The customer-facing
-   * opt-ins that produce a card (`inboxes.send_approval_required`,
-   * `bulk_review_mode = 'plan'`) are not the internal rollout flag, and five
-   * non-internal workspaces had inboxes with one of them set — so those
-   * customers were reading our protocol trivia under their send approvals.
+   * Three files called that line "INTERNAL v1 ONLY" while App.tsx rendered it
+   * unconditionally, on every card kind. The customer-facing opt-ins that
+   * produce a card (`inboxes.send_approval_required`, `bulk_review_mode =
+   * 'plan'`) are not an internal rollout flag, so 7 non-internal workspaces
+   * were reading our protocol trivia under their own send approvals.
    *
-   * The card bundle is static, identical for every workspace, and has no
-   * server round trip of its own before it renders, so the only thing that can
-   * carry a per-workspace "this is us" signal is the envelope. The server side
-   * is one line where the envelope is built, gated on the same internal flag
-   * the draft editor rollout uses; see the report. `true` and nothing else
-   * turns it on (diagnostics.ts#diagnosticsEnabled).
+   * The card bundle is static, identical for every workspace, and has no server
+   * round trip of its own before it renders, so the only thing that can carry a
+   * per-workspace "this is us" signal is the envelope.
+   *
+   * As built (2026-09-17), and NOT what the proposal above it said: the server
+   * reads its OWN column, `workspaces.card_diagnostics`, not the draft editor's
+   * rollout flag. Reusing that one would have turned the line on for every
+   * workspace the editor ever reaches, which is worse than leaving it off. The
+   * stamp is one call at the end of `tools/call` dispatch
+   * (`supabase/functions/mcp-server/card-diagnostics.ts`), not an argument on
+   * the six envelope builders, so a new card kind is gated the day it ships.
+   *
+   * `true` and nothing else turns it on (diagnostics.ts#diagnosticsEnabled).
    */
   diagnostics?: boolean;
   outbound?: Outbound;

@@ -44,8 +44,10 @@ function absoluteUrl(url: string | null | undefined): string | null {
 /**
  * One line of protocol facts at the bottom of a card. INTERNAL v1 ONLY, and
  * since 2026-09-16 that is enforced rather than asserted: `diagnosticsEnabled`
- * decides, it defaults to off, and the only per-workspace source it has is a
- * server-authored envelope field that is not sent yet. See diagnostics.ts.
+ * decides, it defaults to off, and its only per-workspace source is a
+ * server-authored envelope field, which since 2026-09-17 the server really
+ * does send, for a workspace with `workspaces.card_diagnostics`. See
+ * diagnostics.ts.
  *
  * It exists because the remount bug is not reproducible from here: the card
  * runs inside claude.ai's sandbox, we cannot read the host's logs, and the one

@@ -135,6 +135,10 @@ import {
   sseResponse,
   TOOLS_LIST_CHANGED_NOTIFICATION,
 } from "./card-build-notify.ts";
+import {
+  cardEnvelopeIn,
+  stampDiagnostics,
+} from "./card-diagnostics.ts";
 import { REVIEW_CARD_BUILD_ID } from "./ui/review-card.html.ts";
 import {
   APPROVAL_TOOL_DEFINITIONS,
@@ -1617,6 +1621,40 @@ function appendResultNote(
   note: string,
 ): void {
   attachResultNote(response, note);
+}
+
+/**
+ * Let the card show its diagnostics line, for our workspaces only.
+ *
+ * ── Why this is one call at the end of dispatch, not a builder argument ────
+ * Every card envelope in this server comes out of one of six builders across
+ * three modules, and several of them (the failure receipts) hold nothing but an
+ * `appUrl`. Threading a per-workspace flag through all of them would put the
+ * decision back in the same places that produced the original bug, where the
+ * seventh builder, the next card kind, gets to forget it. Instead the envelope
+ * is stamped once, here, where the calling key is in scope and the flag already
+ * has a reader. A new card kind is covered the day it ships and cannot opt
+ * itself out.
+ *
+ * ── The read is not on the hot path ────────────────────────────────────────
+ * Almost no tool result carries a card, so the envelope check runs first and
+ * the database is asked only when there is something to stamp. A call with no
+ * card costs one `typeof`.
+ *
+ * `structuredContent` only. Contract §8 pins `content` byte-for-byte, and
+ * `content` is the model's channel: this flag is a rendering hint for one
+ * iframe. See card-diagnostics.ts.
+ */
+async function stampCardDiagnostics(
+  response: JsonRpcSuccessResponse | JsonRpcErrorResponse,
+  workspaceId: string,
+): Promise<void> {
+  if (!("result" in response) || !response.result || typeof response.result !== "object") return;
+  const envelope = cardEnvelopeIn(
+    (response.result as { structuredContent?: unknown }).structuredContent,
+  );
+  if (!envelope) return;
+  if (await workspaceCardDiagnostics(workspaceId)) stampDiagnostics(envelope);
 }
 
 /**
@@ -23775,6 +23813,55 @@ async function workspaceDraftEditorEnabled(
 }
 
 /**
+ * `workspaces.card_diagnostics` for one workspace.
+ *
+ * The one server source for the card's protocol diagnostics line (contract §1
+ * and `apps/mcp-app/src/diagnostics.ts`). A static bundle cannot know whose
+ * workspace it is rendering in, so the answer has to ride on the envelope, and
+ * this is where it comes from.
+ *
+ * Its OWN column rather than `draft_editor_enabled`: that flag is the draft
+ * editor's rollout gate, and reusing it would turn our protocol counters on for
+ * every workspace that ever gets the editor. The two questions are unrelated
+ * ("may they use the card" versus "may they see our handshake counters"), and
+ * the line already leaked to five customer workspaces once, through exactly this
+ * kind of gate reuse (their cards come from `send_approval_required` and
+ * `bulk_review_mode`, which are customer choices, not our rollout).
+ *
+ * Its own query rather than a column on an existing read, for deploy-order
+ * safety, the same reasoning as `workspaceDraftEditorEnabled`. The edge
+ * function is deployed by hand, so a deploy that lands before
+ * `20260917120000_card_diagnostics_flag.sql` must not 500 a card call:
+ * PostgREST answers "column does not exist", the catch below reads false, and
+ * no card shows the line. Fails closed in every direction, and closed is the
+ * state every customer should be in.
+ */
+async function workspaceCardDiagnostics(workspaceId: string): Promise<boolean> {
+  if (INTROSPECTION_ONLY) return false;
+  try {
+    const { data, error } = await supabase
+      .from("workspaces")
+      .select("card_diagnostics")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    if (error) {
+      console.warn("[mcp-server] card_diagnostics_gate_query_failed", {
+        workspace_id: workspaceId,
+        error: error.message,
+      });
+      return false;
+    }
+    return (data as { card_diagnostics?: unknown } | null)?.card_diagnostics === true;
+  } catch (error) {
+    console.warn("[mcp-server] card_diagnostics_gate_unavailable", {
+      workspace_id: workspaceId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return false;
+  }
+}
+
+/**
  * `inboxes.draft_editor_hidden` for ONE inbox — the per-inbox opt-out.
  *
  * Its own query, deliberately, and NOT a column on `INBOX_SELECT_COLUMNS`:
@@ -27997,6 +28084,13 @@ async function handleToolsCall(
     status: logStatus,
     duration_ms: durationMs,
   });
+
+  // Last thing before the result leaves: if this is one of our own
+  // workspaces AND this result carries a card, let that card show its
+  // protocol diagnostics line. Deliberately after the audit log and the
+  // idempotency snapshot, so a rendering hint can never appear in either.
+  // See card-diagnostics.ts.
+  await stampCardDiagnostics(toolResult, apiKey.workspace_id);
 
   return toolResult;
 }

@@ -1409,13 +1409,30 @@ async function main() {
     }),
   );
 
+  // The per-browser opt-in was REMOVED on 2026-09-17, now that the server flag
+  // exists. It was the only input to the decision we do not author: any
+  // same-origin page could write the key, and whether Claude's sandbox gives
+  // each MCP App its own origin is a host detail the card cannot read from
+  // inside the frame. This scenario is the regression guard for that removal,
+  // so it asserts the key does NOTHING. If it starts passing with the storage
+  // read back in place, the write is reachable again.
   results.push(
-    await scenario("the local opt-in is explicit and survives nothing else", { storage: true }, async (t) => {
+    await scenario("the retired storage key cannot turn the line on", { storage: true }, async (t) => {
       t.expect("off to begin with", t.mod.diagnosticsEnabled(F.outboundGmail), false);
       t.storage.setItem("mcpemails.card.diag", "1");
-      t.expect("on for this browser", t.mod.diagnosticsEnabled(F.outboundGmail), true);
-      t.storage.setItem("mcpemails.card.diag", "0");
-      t.expect("off again", t.mod.diagnosticsEnabled(F.outboundGmail), false);
+      t.expect("still off with the old key set", t.mod.diagnosticsEnabled(F.outboundGmail), false);
+      // Any spelling of it, in case someone reaches for a near-miss instead.
+      for (const key of ["mcpemails.card.diagnostics", "diagnostics", "mcpemails.diag"]) {
+        t.storage.setItem(key, "1");
+      }
+      t.expect("and off for near-misses too", t.mod.diagnosticsEnabled(F.outboundGmail), false);
+      // The server flag still works with storage present and populated: the
+      // removal must not have taken the real source with it.
+      t.expect(
+        "the server flag still wins",
+        t.mod.diagnosticsEnabled({ ...F.outboundGmail, diagnostics: true }),
+        true,
+      );
     }),
   );
 
