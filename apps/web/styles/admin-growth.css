@@ -372,6 +372,10 @@
 .gb-mile { display: flex; flex-direction: column; padding: 5px 8px; border-radius: 6px; background: var(--bg-sunken); border-left: 2px solid var(--fg-4); }
 .gb-mile b { font-size: 11.5px; font-weight: 600; color: var(--fg-1); white-space: nowrap; }
 .gb-mile span { font-size: 9.5px; color: var(--fg-4); }
+/* A day reconstructed from production rather than read off this panel's own
+   series. Dotted, not coloured: it is a note about provenance, and colour on
+   this panel already means category. The evidence is in the row's tooltip. */
+.gb-mile span.is-reconstructed { border-bottom: 1px dotted var(--border-1); align-self: flex-start; }
 .gb-mile.is-money       { border-left-color: var(--kiosk-good); }
 .gb-mile.is-people      { border-left-color: var(--kiosk-accent); }
 .gb-mile.is-usage       { border-left-color: var(--kiosk-warn); }

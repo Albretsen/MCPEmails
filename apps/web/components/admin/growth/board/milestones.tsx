@@ -29,10 +29,17 @@
  *   colouring it by category would put a mint ring beside an amber one and
  *   imply one of them is in better shape.
  *
- *   UNDATED UNLOCKS STAY VISIBLE. A rung whose series cannot prove the day it
- *   was crossed gets a chip below the track rather than a guessed month.
- *   Inventing a date is the one edit here that would turn a record into a
- *   story.
+ *   UNDATED UNLOCKS STAY VISIBLE. A rung whose day cannot be established gets a
+ *   chip below the track rather than a guessed month. Inventing a date is the
+ *   one edit here that would turn a record into a story.
+ *
+ *   A RECONSTRUCTED DAY SAYS SO. Eighteen rungs that their own series cannot
+ *   date were dated once from production and written into
+ *   `growth-milestone-record.ts`, which is why the undated pile is currently
+ *   empty. Those days are marked with a dotted underline and carry their
+ *   evidence in the row's tooltip, because "the signup series crossed here" and
+ *   "we went and looked this up in user_billing" are different claims and the
+ *   weaker one should not borrow the stronger one's confidence.
  *
  * Synchronous Server Component.
  */
@@ -113,9 +120,15 @@ export function Milestones({ report }: { report: AchievementReport }) {
                 ) : (
                   <ul>
                     {month.items.map((badge) => (
-                      <li key={badge.id} className={`gb-mile is-${badge.category}`} title={badge.detail}>
+                      <li
+                        key={badge.id}
+                        className={`gb-mile is-${badge.category}`}
+                        title={badge.unlockedOnNote ? `${badge.detail} \u00b7 ${badge.unlockedOnNote}` : badge.detail}
+                      >
                         <b>{badge.title}</b>
-                        <span>{dayLabel(badge.unlockedOn)}</span>
+                        <span className={badge.unlockedOnNote ? 'is-reconstructed' : undefined}>
+                          {dayLabel(badge.unlockedOn)}
+                        </span>
                       </li>
                     ))}
                   </ul>
@@ -125,11 +138,11 @@ export function Milestones({ report }: { report: AchievementReport }) {
           </div>
         )}
 
-        {/* A rung whose series cannot prove the day it was crossed. It gets a
-            chip below the track rather than a guessed month: inventing a date
-            is the one edit here that would turn a record into a story. The
-            caveat is stated once, on the heading, rather than repeated on
-            every chip. */}
+        {/* A rung nothing can date: not its own series, and not the recorded
+            crossings either. It gets a chip below the track rather than a
+            guessed month, because inventing a date is the one edit here that
+            would turn a record into a story. Empty as of 2026-09-17 and kept
+            anyway: the next rung up any snapshot-backed ladder lands here. */}
         {undated.length > 0 && (
           <>
             <h4 className="gb-miles-label" style={{ margin: '14px 0 8px' }}>Reached, day unknown</h4>

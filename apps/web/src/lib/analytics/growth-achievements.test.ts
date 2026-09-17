@@ -9,6 +9,7 @@ import {
   type Achievement,
   type AchievementInput,
 } from './growth-achievements.ts';
+import { MILESTONE_UNLOCK_RECORD, type MilestoneUnlockRecord } from './growth-milestone-record.ts';
 
 /*
  * The fixture is the real business on 2026-09-03, because a ladder tested only
@@ -133,12 +134,20 @@ const CALM: AchievementInput = {
   lifecycle: LIFECYCLE,
 };
 
+/*
+ * Every test below the fixture passes this instead of the real record, so the
+ * ladder rules are tested on their own: a test that asserted "paying-5 has no
+ * date" would otherwise be asserting a fact about August 2026 rather than
+ * about the code. The record has its own block at the end of the file.
+ */
+const NO_RECORD: MilestoneUnlockRecord = {};
+
 const ids = (list: Achievement[]) => list.map((entry) => entry.id);
 const find = (report: { unlocked: Achievement[]; next: Achievement[] }, id: string) =>
   [...report.unlocked, ...report.next].find((entry) => entry.id === id);
 
 test('the real numbers split into a sensible ladder, and the counts add up', () => {
-  const report = achievementReport(CALM, NOW);
+  const report = achievementReport(CALM, NOW, NO_RECORD);
 
   assert.equal(report.totalCount, ACHIEVEMENT_COUNT);
   assert.equal(report.unlockedCount, report.unlocked.length);
@@ -164,8 +173,8 @@ test('the real numbers split into a sensible ladder, and the counts add up', () 
 });
 
 test('a null source removes exactly its own rungs and leaves the rest alone', () => {
-  const full = achievementReport(CALM, NOW);
-  const withoutRevenue = achievementReport({ ...CALM, revenue: null }, NOW);
+  const full = achievementReport(CALM, NOW, NO_RECORD);
+  const withoutRevenue = achievementReport({ ...CALM, revenue: null }, NOW, NO_RECORD);
 
   const dropped = ids([...full.unlocked, ...full.next]).filter(
     (id) => !ids([...withoutRevenue.unlocked, ...withoutRevenue.next]).includes(id),
@@ -174,18 +183,18 @@ test('a null source removes exactly its own rungs and leaves the rest alone', ()
   assert.equal(withoutRevenue.totalCount, full.totalCount - dropped.length);
 
   // The checkout funnel feeds no rung, so dropping it changes nothing at all.
-  const withoutCheckout = achievementReport({ ...CALM, checkout: null }, NOW);
+  const withoutCheckout = achievementReport({ ...CALM, checkout: null }, NOW, NO_RECORD);
   assert.deepEqual(ids([...withoutCheckout.unlocked, ...withoutCheckout.next]), ids([...full.unlocked, ...full.next]));
 
   // And a lifecycle outage takes the two lifecycle ladders and nothing else.
-  const withoutLifecycle = achievementReport({ ...CALM, lifecycle: null }, NOW);
+  const withoutLifecycle = achievementReport({ ...CALM, lifecycle: null }, NOW, NO_RECORD);
   assert.equal(withoutLifecycle.totalCount, full.totalCount - 9);
   assert.equal(find(withoutLifecycle, 'activated-50'), undefined);
   assert.equal(find(withoutLifecycle, 'signups-100')?.unlocked, true);
 });
 
 test('the signup ladder is dated to the day the count first crossed, not the last', () => {
-  const report = achievementReport(CALM, NOW);
+  const report = achievementReport(CALM, NOW, NO_RECORD);
   const rows = CALM.signups ?? [];
   const firstAt100 = rows.find((row) => row.cumulative_users >= 100)?.day;
   const lastAt100 = [...rows].reverse().find((row) => row.cumulative_users >= 100)?.day;
@@ -203,13 +212,13 @@ test('a target already cleared before the window opened is not dated to the wind
     { day: '2026-09-02', new_users: 4, activated_users: 1, cumulative_users: 334 },
     { day: '2026-09-03', new_users: 5, activated_users: 2, cumulative_users: 339 },
   ];
-  const report = achievementReport({ ...CALM, signups: late }, NOW);
+  const report = achievementReport({ ...CALM, signups: late }, NOW, NO_RECORD);
   assert.equal(find(report, 'signups-100')?.unlocked, true);
   assert.equal(find(report, 'signups-100')?.unlockedOn, null);
 });
 
 test('the cash ladder is dated to the month that crossed it', () => {
-  const report = achievementReport(CALM, NOW);
+  const report = achievementReport(CALM, NOW, NO_RECORD);
   assert.equal(find(report, 'cash-1')?.unlockedOn, '2026-08-01');
   assert.equal(find(report, 'cash-10000')?.unlockedOn, '2026-08-01');
   // $250 only arrives once September's $150 is added to August's $100.
@@ -217,8 +226,8 @@ test('the cash ladder is dated to the month that crossed it', () => {
   assert.equal(find(report, 'cash-50000')?.unlocked, false);
 });
 
-test('a rung with no series behind it is undated even when it is unlocked', () => {
-  const report = achievementReport(CALM, NOW);
+test('a rung with neither a series nor a recorded day stays undated', () => {
+  const report = achievementReport(CALM, NOW, NO_RECORD);
   for (const id of ['mrr-1000', 'mrr-2500', 'paying-1', 'paying-5', 'activated-100', 'active-7d-100', 'signup-streak-30']) {
     const entry = find(report, id);
     assert.equal(entry?.unlocked, true, `${id} should be unlocked in the fixture`);
@@ -227,7 +236,7 @@ test('a rung with no series behind it is undated even when it is unlocked', () =
 });
 
 test('progress is a clamped fraction and never exceeds one', () => {
-  const report = achievementReport(CALM, NOW);
+  const report = achievementReport(CALM, NOW, NO_RECORD);
   for (const entry of [...report.unlocked, ...report.next]) {
     assert.ok(entry.progress >= 0 && entry.progress <= 1, `${entry.id} progress out of range`);
     if (entry.unlocked) assert.equal(entry.progress, 1, `${entry.id} is unlocked so progress is 1`);
@@ -239,7 +248,7 @@ test('progress is a clamped fraction and never exceeds one', () => {
 });
 
 test('only the two paced ladders project a date, and the money ladders never do', () => {
-  const report = achievementReport(CALM, NOW);
+  const report = achievementReport(CALM, NOW, NO_RECORD);
 
   for (const id of ['mrr-5000', 'mrr-10000', 'cash-50000', 'paying-10', 'activated-250', 'active-7d-250']) {
     assert.equal(find(report, id)?.daysToGo, null, `${id} must not extrapolate`);
@@ -255,12 +264,12 @@ test('only the two paced ladders project a date, and the money ladders never do'
 
 test('a stalled series refuses to forecast rather than promising a date', () => {
   const flat = (CALM.signups ?? []).map((row) => ({ ...row, new_users: 0 }));
-  const report = achievementReport({ ...CALM, signups: flat }, NOW);
+  const report = achievementReport({ ...CALM, signups: flat }, NOW, NO_RECORD);
   assert.equal(find(report, 'signups-500')?.daysToGo, null);
 });
 
 test('the next list is ordered closest-first', () => {
-  const report = achievementReport(CALM, NOW);
+  const report = achievementReport(CALM, NOW, NO_RECORD);
   for (let i = 1; i < report.next.length; i += 1) {
     assert.ok(
       report.next[i - 1].progress >= report.next[i].progress,
@@ -271,7 +280,7 @@ test('the next list is ordered closest-first', () => {
 });
 
 test('the unlocked list is ordered most recently unlocked first, undated last', () => {
-  const report = achievementReport(CALM, NOW);
+  const report = achievementReport(CALM, NOW, NO_RECORD);
   const dated = report.unlocked.filter((entry) => entry.unlockedOn !== null);
   const undated = report.unlocked.filter((entry) => entry.unlockedOn === null);
 
@@ -309,4 +318,91 @@ test('an empty and a missing world both produce nothing rather than throwing', (
   assert.equal(zeroed.totalCount, ACHIEVEMENT_COUNT);
   assert.equal(zeroed.next.length, ACHIEVEMENT_COUNT);
   assert.ok(zeroed.next.every((entry) => entry.progress === 0 && entry.unlockedOn === null));
+});
+
+/* ======================================================= recorded unlocks */
+
+test('a recorded day dates an unlocked rung the ladder cannot date itself', () => {
+  const report = achievementReport(CALM, NOW);
+
+  // The fixture's MRR is $35 and its customer count 6, so these are unlocked,
+  // and Stripe being a snapshot means no ladder could ever date them.
+  const mrr = find(report, 'mrr-1000');
+  assert.equal(mrr?.unlockedOn, '2026-08-31');
+  assert.match(mrr?.unlockedOnNote ?? '', /user_billing/);
+
+  const paying = find(report, 'paying-5');
+  assert.equal(paying?.unlockedOn, '2026-09-01');
+  assert.ok(paying?.unlockedOnNote);
+});
+
+test('a ladder that can date itself is never overridden by the record', () => {
+  // `signup-streak-30` is recorded; the signup ladder's own rungs are dated
+  // from the series and must keep those days, note-free.
+  const report = achievementReport(CALM, NOW);
+  const recorded = find(report, 'signup-streak-30');
+  const derived = find(report, 'signups-250');
+
+  assert.equal(recorded?.unlockedOn, MILESTONE_UNLOCK_RECORD['signup-streak-30'].day);
+  assert.ok(derived?.unlockedOn && derived.unlockedOn > '2026-06-01');
+  assert.equal(derived?.unlockedOnNote, null, 'a series-dated rung carries no provenance caveat');
+});
+
+test('a recorded day never lands on a rung that is still being climbed', () => {
+  // Nothing has been paid and nobody has activated, so every recorded rung is
+  // locked. A locked rung with a date would be a milestone reached in advance.
+  const empty = achievementReport(
+    {
+      signups: [],
+      daily: [],
+      revenue: { ...REVENUE, mrrMinor: 0, payingCustomers: 0 },
+      cash: { ...CASH, allTimeMinor: 0, months: [], charges: 0, since: null },
+      checkout: CHECKOUT,
+      lifecycle: { value_activated: 0, one_and_done: 0, at_risk: 0, active_7d: 0, active_28d: 0 },
+    },
+    NOW,
+  );
+
+  for (const id of Object.keys(MILESTONE_UNLOCK_RECORD)) {
+    const entry = find(empty, id);
+    assert.equal(entry?.unlocked, false, `${id} should be locked in a zeroed world`);
+    assert.equal(entry?.unlockedOn, null, `${id} must not be dated before it is reached`);
+    assert.equal(entry?.unlockedOnNote, null);
+  }
+});
+
+test('every recorded id is a rung that exists, and every day is a real ISO day', () => {
+  // A ladder retargeted in ACHIEVEMENT_POLICY leaves its recorded ids pointing
+  // at nothing, and the dates would silently stop appearing. This is the test
+  // that fails instead.
+  const everything = achievementReport(
+    {
+      signups: signupSeries(),
+      daily: dailySeries(),
+      revenue: { ...REVENUE, mrrMinor: 10_000_000, payingCustomers: 10_000 },
+      cash: { ...CASH, allTimeMinor: 10_000_000 },
+      checkout: CHECKOUT,
+      lifecycle: { value_activated: 10_000, one_and_done: 0, at_risk: 0, active_7d: 10_000, active_28d: 10_000 },
+    },
+    NOW,
+  );
+  const known = new Set([...everything.unlocked, ...everything.next].map((entry) => entry.id));
+
+  for (const [id, unlock] of Object.entries(MILESTONE_UNLOCK_RECORD)) {
+    assert.ok(known.has(id), `${id} is recorded but no ladder builds it`);
+    assert.match(unlock.day, /^20\d\d-[01]\d-[0-3]\d$/, `${id} has a malformed day`);
+    assert.equal(unlock.day, new Date(`${unlock.day}T00:00:00Z`).toISOString().slice(0, 10));
+    assert.ok(unlock.note.trim().length > 0, `${id} records a day with no evidence`);
+    assert.ok(unlock.day <= '2026-09-17', `${id} is dated in the future`);
+  }
+});
+
+test('the reached track and the undated pile between them hold every unlock', () => {
+  // The panel renders dated unlocks on the month track and undated ones as
+  // chips below it. Nothing may fall between the two.
+  const report = achievementReport(CALM, NOW);
+  const dated = report.unlocked.filter((entry) => entry.unlockedOn !== null).length;
+  const undated = report.unlocked.filter((entry) => entry.unlockedOn === null).length;
+  assert.equal(dated + undated, report.unlockedCount);
+  assert.ok(dated > undated, 'most unlocks should now carry a day');
 });

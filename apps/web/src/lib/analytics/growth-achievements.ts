@@ -16,13 +16,24 @@
  * makes it an "achievement" rather than a metric is that the threshold was
  * fixed in advance, in the block below, and can be read as a policy.
  *
- * THE DATE IS THE HARD PART, AND MOST OF THEM DO NOT HAVE ONE. Three of the ten
- * ladders sit on a series that can be walked, so their unlock has a real day
- * behind it. The rest are a single number read from Stripe or a lifecycle
+ * THE DATE IS THE HARD PART, AND THE LADDERS CANNOT ALL PROVE ONE. Three of the
+ * ten ladders sit on a series that can be walked, so their unlock has a real
+ * day behind it. The rest are a single number read from Stripe or a lifecycle
  * count, with no history at all, and those return `unlockedOn: null` rather
  * than the day the page happened to be loaded. A guessed date on a milestone
  * card is indistinguishable from a real one, which is why the guess is not
  * offered: see `dateFor` on each ladder, and the test that pins it.
+ *
+ * WHAT THE SERIES CANNOT PROVE, THE RECORD CAN. A crossing the panel's own
+ * inputs cannot reach is not necessarily unknowable: it is usually one query
+ * against a table this module does not read. Those queries were run once
+ * against production and their answers written down in
+ * `growth-milestone-record.ts`, which is consulted ONLY for rungs that are
+ * already unlocked and that their own ladder refused to date. A recorded date
+ * carries its evidence with it as `unlockedOnNote`, so the page can say where
+ * it came from rather than passing a reconstruction off as a series read. A
+ * ladder that can date itself always wins: the record is a fallback, never an
+ * override.
  *
  * NOTHING HERE THROWS AND NOTHING HERE READS. A null source means the ladders
  * that depend on it are not evaluated at all, so `totalCount` shrinks and the
@@ -40,6 +51,11 @@ import type { CashCollected, CheckoutFunnel } from './kiosk-revenue.ts';
 import type { GrowthDailyRow, GrowthLifecycleRow, GrowthUserSignupDayRow } from './growth-types.ts';
 import type { RevenueSummary } from './revenue-math.ts';
 import { daysBetween, daysToTarget, recordDay, streak } from './growth-records.ts';
+import {
+  MILESTONE_UNLOCK_RECORD,
+  recordedUnlock,
+  type MilestoneUnlockRecord,
+} from './growth-milestone-record.ts';
 import { formatCount, formatMoney } from '../../../components/admin/charts/format.ts';
 
 /**
@@ -65,8 +81,17 @@ export type Achievement = {
   /** 0..1, clamped. `current / target`, or 1 when unlocked. */
   progress: number;
   unlocked: boolean;
-  /** ISO day (YYYY-MM-DD) it was first reached, when a series can prove it. */
+  /**
+   * ISO day (YYYY-MM-DD) it was first reached, from the ladder's own series or,
+   * failing that, from the recorded crossings in `growth-milestone-record.ts`.
+   */
   unlockedOn: string | null;
+  /**
+   * Where a RECONSTRUCTED `unlockedOn` came from, in one clause. Null when the
+   * ladder's own series proved the date, which is the case the page needs no
+   * caveat for, and null when there is no date at all.
+   */
+  unlockedOnNote: string | null;
   /** Days at the recent pace until `target`. Null when not projectable. */
   daysToGo: number | null;
   /**
@@ -194,9 +219,13 @@ const TOOL_CALL_DETAIL = 'Tool calls in the last 90 days, not all time: the log 
  * `now` defaults to the clock but is a parameter, so the two pace figures and
  * anything else time-dependent stay deterministic under test.
  */
-export function achievementReport(input: AchievementInput, now: number = Date.now()): AchievementReport {
+export function achievementReport(
+  input: AchievementInput,
+  now: number = Date.now(),
+  record: MilestoneUnlockRecord = MILESTONE_UNLOCK_RECORD,
+): AchievementReport {
   const all: Achievement[] = [];
-  for (const ladder of ladders(input, now)) all.push(...buildLadder(ladder));
+  for (const ladder of ladders(input, now)) all.push(...buildLadder(ladder, record));
 
   const unlocked = all.filter((entry) => entry.unlocked).sort(byRecency);
   const next = all.filter((entry) => !entry.unlocked).sort(byCloseness);
@@ -389,12 +418,19 @@ function ladders(input: AchievementInput, now: number): Ladder[] {
 }
 
 /** One ladder into its rungs. Every rung is the same fact at a different height. */
-function buildLadder(ladder: Ladder): Achievement[] {
+function buildLadder(ladder: Ladder, record: MilestoneUnlockRecord): Achievement[] {
   const current = finite(ladder.current);
   return ladder.targets.map((target) => {
     const unlocked = current >= target;
+    const id = `${ladder.idPrefix}-${target}`;
+    // The ladder's own series first. Only when it cannot answer is the record
+    // consulted, and only for a rung that is actually unlocked: a recorded day
+    // on a rung still being climbed would be a date for something that has not
+    // happened.
+    const fromSeries = unlocked ? (ladder.dateFor?.(target) ?? null) : null;
+    const fromRecord = unlocked && !fromSeries ? recordedUnlock(id, record) : null;
     return {
-      id: `${ladder.idPrefix}-${target}`,
+      id,
       category: ladder.category,
       title: ladder.title(target),
       detail: ladder.detail,
@@ -402,7 +438,8 @@ function buildLadder(ladder: Ladder): Achievement[] {
       current,
       progress: unlocked ? 1 : clamp01(current / target),
       unlocked,
-      unlockedOn: unlocked ? (ladder.dateFor?.(target) ?? null) : null,
+      unlockedOn: fromSeries ?? fromRecord?.day ?? null,
+      unlockedOnNote: fromRecord?.note ?? null,
       // An unlocked rung has no distance left, and printing "0 days to go" on
       // something cleared in June reads as a countdown rather than as history.
       daysToGo: unlocked ? null : (ladder.paceFor?.(target - current) ?? null),
