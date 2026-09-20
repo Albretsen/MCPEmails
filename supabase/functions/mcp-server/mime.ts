@@ -118,11 +118,7 @@ function parsePart(
   if (ct.mediaType.startsWith("multipart/")) {
     const boundary = ct.params["boundary"];
     if (!boundary) return;
-    for (const sub of splitMultipart(body, boundary)) {
-      const { headerBlock, body: subBody } = splitHeadersBody(sub);
-      const subHeaders = parseHeaders(headerBlock);
-      parsePart(subHeaders, subBody, out);
-    }
+    parseMultipartInto(body, boundary, out);
     return;
   }
 
@@ -152,6 +148,77 @@ function parsePart(
   }
 }
 
+/**
+ * Walk every child of a multipart body into `out`.
+ *
+ * Split out of {@link parsePart} so the descent has exactly one implementation,
+ * shared with {@link parseMultipartBodySource} — the entry point for the case
+ * where the multipart's own headers were never fetched.
+ */
+function parseMultipartInto(body: string, boundary: string, out: ParsedEmail): void {
+  for (const sub of splitMultipart(body, boundary)) {
+    const { headerBlock, body: subBody } = splitHeadersBody(sub);
+    parsePart(parseHeaders(headerBlock), subBody, out);
+  }
+}
+
+/** How far into a part body we look for its first boundary delimiter. */
+const MULTIPART_SNIFF_CHARS = 4096;
+
+/**
+ * The first boundary delimiter line of a part body: "--" plus the boundary,
+ * alone on a line. RFC 2046 allows trailing whitespace on that line which is
+ * not part of the boundary, so it is trimmed off the capture below.
+ */
+const FIRST_DELIMITER_LINE = /(?:^|\r?\n)--([^\r\n]{1,200})\r?\n/;
+
+/** An RFC 5322 field name followed by its colon, at the start of a line. */
+const PART_HEADER_LINE = /^[A-Za-z][A-Za-z0-9-]{0,60}:/;
+
+/**
+ * The boundary a raw part BODY is delimited by, or null when the source is not
+ * a multipart body at all.
+ *
+ * This exists because a fetched part body arrives without the headers that
+ * declare it: `BODY[1]` of a multipart/mixed message returns the bytes of part
+ * one and nothing else, so when part one is itself a multipart/alternative the
+ * only surviving statement of its boundary is the delimiter line the body
+ * starts with. Reading it back off that line is what makes the nested descent
+ * possible at all (F-03, 2026-09-20 — see previewFromBodyPartSource).
+ *
+ * Two guards keep a plain-text body that merely starts a line with "--" (a
+ * signature separator, a dashed rule) from being mistaken for a multipart: the
+ * delimiter must be followed immediately by something shaped like a MIME header
+ * field, and only the head of the source is examined.
+ */
+export function multipartBoundaryOfSource(source: string): string | null {
+  const head = source.slice(0, MULTIPART_SNIFF_CHARS);
+  const delimiter = FIRST_DELIMITER_LINE.exec(head);
+  if (!delimiter) return null;
+  const boundary = delimiter[1].replace(/[ \t]+$/, "");
+  if (!boundary) return null;
+  const afterDelimiter = head.slice(delimiter.index + delimiter[0].length);
+  if (!PART_HEADER_LINE.test(afterDelimiter)) return null;
+  return boundary;
+}
+
+/**
+ * Parse a raw part BODY that is itself a multipart, discovering its boundary
+ * from the source. Returns null when the source is not a multipart body, so the
+ * caller can fall back to treating it as a leaf part.
+ *
+ * The returned `headers` map is empty on purpose: this parses a body whose own
+ * headers were never fetched, and inventing them would be a lie a caller could
+ * read back out.
+ */
+export function parseMultipartBodySource(source: string): ParsedEmail | null {
+  const boundary = multipartBoundaryOfSource(source);
+  if (!boundary) return null;
+  const out: ParsedEmail = { headers: new Map(), text: null, html: null, attachments: [] };
+  parseMultipartInto(source, boundary, out);
+  return out;
+}
+
 function filenameFromDisposition(disposition: string): string | null {
   const m = /filename\*?=(?:"([^"]+)"|([^;]+))/i.exec(disposition);
   if (!m) return null;
@@ -176,8 +243,16 @@ function splitMultipart(body: string, boundary: string): string[] {
 function decodeContent(body: string, cte: string): Uint8Array {
   if (cte === "base64") {
     const clean = body.replace(/[^A-Za-z0-9+/=]/g, "");
+    // Trim to a whole quantum. A complete part is always a multiple of four
+    // here, but a PARTIAL fetch is not: the preview path asks for the first 2KB
+    // of a part, which cuts base64 mid-quantum, `atob` then throws, and the
+    // latin1 fallback below hands the alphabet itself back as if it were text.
+    // That is one of the two ways raw base64 reached a preview verbatim (F-03,
+    // 2026-09-20). Losing up to three characters off the tail of a snippet costs
+    // nothing; emitting the encoding costs the reader the whole field.
+    const whole = clean.slice(0, clean.length - (clean.length % 4));
     try {
-      const bin = atob(clean);
+      const bin = atob(whole);
       const bytes = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
       return bytes;

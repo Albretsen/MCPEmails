@@ -199,6 +199,7 @@ import {
   replyNoRecipientsMessage,
 } from "./recipient-rules.ts";
 import { decodeEncodedWords, getHeader, parseEmail } from "./mime.ts";
+import { contactDisplayName } from "./contact-display-name.ts";
 import {
   normalizePreview,
   preferredBodyText,
@@ -25404,7 +25405,11 @@ function foldContactEntries(
     const email = (entry.email ?? "").trim();
     if (!email) continue;
     const key = email.toLowerCase();
-    const name = (entry.name ?? "").trim();
+    // Decoded HERE, at ingestion, not on the way out: the filter below matches
+    // the query against the name, and "på" never matches "p=C3=A5". See
+    // contact-display-name.ts for the encoded-word that shipped raw (F-07,
+    // 2026-09-20) and for why the invisible-character strip rides with it.
+    const name = contactDisplayName(entry.name);
     // Client-side query filter: keep only people who actually match the query.
     if (!key.includes(queryLc) && !name.toLowerCase().includes(queryLc)) {
       continue;
