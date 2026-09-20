@@ -340,6 +340,14 @@ import {
 import { assertUidPresent, presentUids } from "./imap-uid-presence.ts";
 import { dedupeMessageIds } from "./message-id-dedupe.ts";
 import {
+  buildFilteredNoMatchReport,
+  hasInboxFilter,
+  INBOX_PROVIDER_VALUES,
+  INBOX_SERVICE_VALUES,
+  type InboxListFilter,
+  matchesInboxFilter,
+} from "./inbox-filter.ts";
+import {
   type InboxSelectorConflict,
   inboxSelectorConflictMessage,
   inboxSelectorOutcome,
@@ -3506,7 +3514,7 @@ const INBOX_ID_PROPERTY = {
   // SERVER_INSTRUCTIONS, and this property is advertised on nine tools.
   description:
     "Inbox UUID from inbox_list. Optional when the key has one inbox; pass " +
-    "this or `inbox`, not both.",
+    "this or `inbox`, not both — a pair naming different mailboxes is refused.",
 } as const;
 
 /** Shared `inbox` property — the email-address alternative to `inbox_id`. */
@@ -3635,17 +3643,32 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     description:
       "List every inbox (mailbox or account) this API key may use. Call it " +
       "FIRST for the inbox_id the other tools take. Each entry carries the UUID, " +
-      "email address, display name, provider, optional service brand " +
-      "(icloud/yahoo/zoho/yandex/generic) and a capabilities object.",
+      "email address, display name, provider (the connector: gmail/outlook/" +
+      "fastmail/imap), optional service brand (the account behind an IMAP " +
+      "connection: gmail/fastmail/icloud/yahoo/zoho/yandex/generic) and a " +
+      "capabilities object. A Gmail account connected with an app password has " +
+      "provider 'imap' and service 'gmail', so filter on service, not provider, " +
+      "to find a mailbox by brand.",
     requiredScope: "read:email",
     inputSchema: {
       type: "object",
       properties: {
         provider: {
           type: "string",
-          enum: ["gmail", "outlook", "fastmail", "imap"],
+          enum: [...INBOX_PROVIDER_VALUES],
           description:
-            "Return only inboxes served by this provider. Omit for all of them.",
+            "Return only inboxes reached through this CONNECTOR. Not the brand " +
+            "of the address: a Gmail mailbox connected over IMAP is provider " +
+            "'imap'. Use `service` for the brand. Omit for all of them.",
+        },
+        service: {
+          type: "string",
+          enum: [...INBOX_SERVICE_VALUES],
+          description:
+            "Return only inboxes whose account BRAND is this. Set on inboxes " +
+            "reached over plain IMAP; null for a first-party connector, so " +
+            "service 'gmail' means Gmail-over-app-password and provider " +
+            "'gmail' means Gmail-over-Google-API. Omit for all of them.",
         },
         include_capabilities: {
           type: "boolean",
@@ -5225,7 +5248,9 @@ const LEGACY_TOOLS: ToolDefinition[] = [
       "DRY RUN. Runs a filter against the inbox and reports what it matches right now. " +
       "Applies nothing, sends nothing, and does not claim any message in the " +
       "deduplication ledger. Pass either an automation_id (to preview a stored rule) " +
-      "or a filter (to try one before saving it). Always do this before enabling.",
+      "or a filter (to try one before saving it). Always do this before enabling. " +
+      "With an automation_id the inbox comes from the stored rule, so no inbox_id " +
+      "is needed; with a filter, name the inbox.",
     requiredScope: "manage:automations",
     inputSchema: {
       type: "object",
@@ -5917,6 +5942,60 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
           required: ["inbox_id", "email_address", "provider"],
           additionalProperties: true,
         },
+      },
+      // The keys the two EMPTY-`inboxes` payloads add. They were being returned
+      // undeclared under `additionalProperties: false`, which is exactly the
+      // failure result-notes.ts describes: a strict client rejects a payload
+      // carrying a key the schema never announced, and inbox_list is one of the
+      // three strict schemas on this surface. Declared here so the onboarding
+      // prompt and the filtered no-match report can both be validated.
+      setup_required: {
+        type: "boolean",
+        description:
+          "Present and true ONLY when this key can reach no mailbox at all. " +
+          "Never set by a filter that matched nothing — see `matched`.",
+      },
+      setup_url: {
+        type: "string",
+        description: "Where the user connects their first mailbox.",
+      },
+      matched: {
+        type: "integer",
+        description:
+          "Present only on a filtered call that matched nothing. Always 0; its " +
+          "presence is what distinguishes an unmatched filter from an empty " +
+          "account, which carries setup_required instead.",
+      },
+      filter: {
+        type: "object",
+        description: "The provider/service filter that was applied.",
+        properties: {
+          provider: { type: "string" },
+          service: { type: "string" },
+        },
+        additionalProperties: false,
+      },
+      available: {
+        type: "array",
+        description:
+          "Every inbox this key can reach, on a filtered call that matched " +
+          "none of them, so the filter can be corrected without a second call.",
+        items: {
+          type: "object",
+          properties: {
+            email_address: { type: "string" },
+            provider: { type: "string" },
+            service: { type: ["string", "null"] },
+          },
+          required: ["email_address", "provider"],
+          additionalProperties: true,
+        },
+      },
+      message: {
+        type: "string",
+        description:
+          "What happened, when `inboxes` is empty: either that no mailbox is " +
+          "connected yet, or that the filter matched none of the ones that are.",
       },
     },
     required: ["inboxes"],
@@ -7264,7 +7343,9 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       preview: {
         legacy: "automation_preview",
         scope: "manage:automations",
-        hint: "dry-run a stored automation_id or an unsaved filter and report the matches",
+        hint:
+          "dry-run a stored automation_id (its own inbox is used, no inbox_id " +
+          "needed) or an unsaved filter against a named inbox",
       },
     },
   },
@@ -8684,6 +8765,11 @@ async function encryptForStorage(plaintext: string): Promise<string> {
  * If the key has a non-null inbox_ids allowlist, only those inboxes are
  * returned. Otherwise all active inboxes in the workspace are returned.
  * Credential columns are never included in the output.
+ *
+ * Optionally narrowed by `provider` (the connector) and/or `service` (the
+ * account brand). Those are two different axes and a caller that confuses them
+ * gets nothing back, so the empty-result paths below are where most of the
+ * thinking is — see inbox-filter.ts.
  */
 async function executeListInboxes(
   rawArgs: unknown,
@@ -8698,7 +8784,19 @@ async function executeListInboxes(
     typeof rawArgs === "object" && rawArgs !== null && !Array.isArray(rawArgs)
       ? rawArgs as Record<string, unknown>
       : {};
-  const providerFilter = typeof args.provider === "string" ? args.provider : null;
+  // The two filter axes, and never a database predicate. BUGFIX (2026-09-20):
+  // `.eq("provider", …)` meant an unmatched filter and an account with no
+  // mailbox at all arrived here as the same empty row set, and the handler
+  // answered both with the onboarding prompt — telling a user with six
+  // connected inboxes to go and connect one. Fetching the roster unfiltered and
+  // narrowing in memory is what makes the two distinguishable, and it costs one
+  // query either way. Safe against the PostgREST 1000-row cap for the same
+  // reason the auto-resolve path below is: this is inboxes in one workspace,
+  // bounded further by the key's allowlist.
+  const filter: InboxListFilter = {
+    provider: typeof args.provider === "string" ? args.provider : null,
+    service: typeof args.service === "string" ? args.service : null,
+  };
   // include_capabilities defaults to true; only an explicit `false` opts out.
   const includeCapabilities = args.include_capabilities !== false;
 
@@ -8714,10 +8812,6 @@ async function executeListInboxes(
     query = query.in("id", apiKey.inbox_ids);
   }
 
-  if (providerFilter !== null) {
-    query = query.eq("provider", providerFilter);
-  }
-
   const { data, error } = await query;
 
   if (error) {
@@ -8729,13 +8823,21 @@ async function executeListInboxes(
     };
   }
 
-  const inboxes = await Promise.all((data ?? []).map(async (row: {
+  interface InboxListRow {
     id: string;
     email_address: string;
     display_name: string | null;
     provider: string;
     service: string | null;
-  }) => {
+  }
+
+  const allRows = (data ?? []) as InboxListRow[];
+  const matchedRows = allRows.filter((row) => matchesInboxFilter(row, filter));
+
+  // Only the matched rows are expanded. The Gmail sender-identity lookup below
+  // is a network call per row, so narrowing first is also why filtering in
+  // memory is no more expensive than the predicate it replaced.
+  const inboxes = await Promise.all(matchedRows.map(async (row: InboxListRow) => {
     let senderIdentities: Array<Record<string, unknown>> = [{
       email_address: row.email_address,
       display_name: row.display_name ?? row.email_address,
@@ -8779,6 +8881,32 @@ async function executeListInboxes(
     };
   }));
 
+  // A filter that selected none of several connected mailboxes is NOT the
+  // onboarding case, and answering it with the onboarding prompt below is the
+  // defect found on 2026-09-20: `inbox_list {provider: "gmail"}` on a key with
+  // six inboxes returned setup_required and the sentence "No mailbox is
+  // connected to this account yet", which an agent relays verbatim to a user
+  // whose mailboxes are all connected. The account roster is what decides which
+  // branch this is — `inboxes.length` cannot, because it is zero in both.
+  // See inbox-filter.ts for why the Gmail account did not match `provider`.
+  if (inboxes.length === 0 && allRows.length > 0 && hasInboxFilter(filter)) {
+    const report = buildFilteredNoMatchReport(filter, allRows);
+    return {
+      result: jsonOk({
+        inboxes,
+        matched: 0,
+        filter: {
+          ...(filter.provider !== null ? { provider: filter.provider } : {}),
+          ...(filter.service !== null ? { service: filter.service } : {}),
+        },
+        available: report.available,
+        message: report.message,
+      }, true),
+      logStatus: "success",
+      logErrorCode: null,
+    };
+  }
+
   // An empty list is the FIRST RUN of every user who connects this server before
   // connecting a mailbox, which is the order the connector directory imposes:
   // install, OAuth, then discover there is nothing to read. It is a success, not
@@ -8790,6 +8918,9 @@ async function executeListInboxes(
   // tool results behind an expander by default, so a URL that only appears in
   // the payload is invisible until someone thinks to expand it. Naming the
   // action for the model is what actually puts a link on screen.
+  //
+  // Reached only when `allRows` is empty too, so this sentence is now only ever
+  // said about an account that really does have nothing connected.
   if (inboxes.length === 0) {
     return {
       result: jsonOk({
@@ -8999,6 +9130,12 @@ async function resolveInboxArgInner(
       // resolve silently to the stale one. Refuse instead of guessing.
       return { ok: false, reason: "selector_conflict", conflict: outcome.conflict };
     }
+    // `outcome.redundant` is true when both selectors were given and both named
+    // this same inbox. It is deliberately not surfaced: no result note, no log
+    // line, no change to the payload. The two lookups proved the duplicate could
+    // not have changed which mailbox was touched, which makes it IGNORABLE in
+    // the sense consolidated-arguments.ts defines, and result-notes.ts is for
+    // disclosing instructions the server did NOT carry out. See inbox-selector.ts.
     return fromInboxId
       ? { ok: true, inbox: fromInboxId }
       : { ok: false, reason: "not_found" };
@@ -29265,6 +29402,51 @@ function triageApiKeyAsApiKeyRow(key: TriageApiKey): ApiKeyRow {
  * makes the explicit `workspace_id` predicate on every query the ONLY tenancy
  * check there is. Do not remove one.
  */
+/**
+ * The inbox-resolution failure, phrased for the `automation` tools.
+ *
+ * Deliberately NOT inboxResolutionError(): that builds a whole ToolErrorResult,
+ * while AutomationDeps.resolveInbox hands back a bare sentence that the action
+ * prefixes with "automation preview: ". Same four reasons, same facts, one
+ * clause each — an agent that gets "several inboxes are accessible, here they
+ * are" can retry immediately, which is the whole difference from the sentence
+ * this replaced.
+ */
+function automationInboxFailureMessage(
+  failure: {
+    reason: "not_found" | "ambiguous" | "none" | "selector_conflict";
+    inboxes?: InboxRow[];
+    conflict?: InboxSelectorConflict;
+  },
+): string {
+  switch (failure.reason) {
+    case "ambiguous": {
+      const listed = (failure.inboxes ?? [])
+        .map((ib) => `${ib.email_address} (inbox_id: ${ib.id})`)
+        .join("; ");
+      return (
+        "several inboxes are accessible, so this action needs one named. " +
+        `Retry passing inbox_id (or inbox): ${listed}.`
+      );
+    }
+    case "selector_conflict":
+      return failure.conflict
+        ? inboxSelectorConflictMessage(failure.conflict)
+        : "inbox_id and inbox name different inboxes. Retry with only one of them.";
+    case "none":
+      return (
+        "no mailbox is connected to this account yet, so there is nothing to " +
+        `automate. Connect one at ${APP_URL}/dashboard/inboxes .`
+      );
+    case "not_found":
+    default:
+      return (
+        "no inbox matches the given inbox_id/inbox. Call inbox_list and pass " +
+        "one of the inbox_id values it returns."
+      );
+  }
+}
+
 function automationDepsFor(apiKey: ApiKeyRow): AutomationDeps {
   return {
     db: supabase,
@@ -29280,7 +29462,14 @@ function automationDepsFor(apiKey: ApiKeyRow): AutomationDeps {
       // against an inbox the key may not touch.
       const resolved = await resolveInboxArg(args, apiKey);
       if (!resolved.ok) {
-        return { ok: false, message: "could not resolve the inbox. Call inbox_list for the inbox_id." };
+        // BUGFIX (2026-09-20): every failure reason collapsed into "could not
+        // resolve the inbox. Call inbox_list for the inbox_id." That sentence
+        // misdirects twice. It is not a lookup failure when several inboxes are
+        // accessible and none was named, and calling inbox_list does not fix
+        // anything on its own — the id has to be PASSED. The resolver already
+        // works all of this out, including the roster it can name inline and
+        // the conflict it can quote both sides of, so stop throwing it away.
+        return { ok: false, message: automationInboxFailureMessage(resolved) };
       }
       return {
         ok: true,

@@ -2085,6 +2085,22 @@ function toolErr(text: string, code: string): TriageToolResult {
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/**
+ * Whether the caller named a mailbox at all.
+ *
+ * Non-empty AFTER trimming, deliberately: `resolveInbox` trims too, so
+ * `inbox_id: "  "` is nothing there and has to be nothing here, or a blank
+ * string would suppress a perfectly good default and reinstate the very
+ * "could not resolve the inbox" dead end this is here to remove.
+ */
+function hasInboxSelector(args: Record<string, unknown>): boolean {
+  for (const key of ["inbox_id", "inbox"]) {
+    const value = args[key];
+    if (typeof value === "string" && value.trim() !== "") return true;
+  }
+  return false;
+}
+
 /** Columns safe to return to a model. Never the lease or internal counters raw.
  * The two pause columns are included so an agent reading `automation_list`
  * sees WHY an enabled rule has not run, instead of a next_run_at weeks out. */
@@ -2456,10 +2472,28 @@ export async function runAutomationTool(
       // never writes a run, and never calls applyAction. That is what makes it
       // safe to offer before a rule is enabled, which is precisely when a user
       // most wants to know what a filter does.
-      const resolved = await deps.resolveInbox(args);
-      if (!resolved.ok) return toolErr(`automation preview: ${resolved.message}`, "inbox_not_found");
-
+      // ORDER MATTERS, and getting it wrong was the defect a live test caught on
+      // 2026-09-20. The inbox used to be resolved FIRST, from `args` alone, so
+      //
+      //     automation_read {action: "preview", automation_id: "1ac73f1c-…"}
+      //
+      // failed on a key with six inboxes with "could not resolve the inbox. Call
+      // inbox_list for the inbox_id." — while the stored rule being previewed
+      // carried `inbox_id: "1245c938-…"` all along, and `action: "get"` and
+      // `action: "list"` both returned it. The server was asking the caller for
+      // a value it already held, and the error misdirected on top: calling
+      // inbox_list does nothing, you have to PASS the id.
+      //
+      // So the rule is loaded first and its own inbox is the default selector,
+      // exactly as `update` has always done. An explicit `inbox_id`/`inbox` is
+      // still honoured — previewing a stored filter against a different mailbox
+      // ("what would this rule catch in my other account?") is a legitimate
+      // read-only question, it is what the caller literally asked for, and the
+      // result reports `inbox_id`, so which mailbox ran is never in doubt.
       let filter: NormalizedSearch;
+      const selector: Record<string, unknown> = args;
+      let defaultSelector: Record<string, unknown> | null = null;
+
       if (args["automation_id"] !== undefined) {
         if (!UUID_RE.test(ruleIdArg)) return toolErr("automation preview: automation_id must be a UUID.", "-32602");
         const rule = await loadAutomation(deps, ruleIdArg);
@@ -2467,10 +2501,26 @@ export async function runAutomationTool(
         const check = validateTriageFilter(rule.filter);
         if (!check.ok) return toolErr(`automation preview: the stored filter is invalid (${check.error})`, "invalid_filter");
         filter = check.value;
+        if (!hasInboxSelector(args) && rule.inbox_id) {
+          defaultSelector = { inbox_id: rule.inbox_id };
+        }
       } else {
         const check = validateTriageFilter(args["filter"]);
         if (!check.ok) return toolErr(`automation preview: ${check.error}`, "-32602");
         filter = check.value;
+      }
+
+      const resolved = await deps.resolveInbox(defaultSelector ?? selector);
+      if (!resolved.ok) {
+        // Only an UNSAVED filter can reach this with nothing to fall back on,
+        // and there an inbox selector genuinely is required: there is no record
+        // that knows which mailbox the caller means. Say that, rather than
+        // repeating the resolver's generic complaint on its own.
+        const needsSelector = defaultSelector === null && args["automation_id"] === undefined
+          ? " Previewing an unsaved filter needs an inbox: pass inbox_id (or inbox)." +
+            " Previewing a stored rule by automation_id does not — it uses the rule's own inbox."
+          : "";
+        return toolErr(`automation preview: ${resolved.message}${needsSelector}`, "inbox_not_found");
       }
 
       const capArg = typeof args["max_messages_per_run"] === "number"
