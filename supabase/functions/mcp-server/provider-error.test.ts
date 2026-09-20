@@ -34,6 +34,17 @@ const PRODUCTION_ERRORS: [string, ProviderErrorReason][] = [
     "UID COPY failed: [NONEXISTENT] Mailbox does not exist",
     "folder_missing",
   ],
+  // MEASURED 2026-09-20 against a live Gmail-over-IMAP mailbox: a move into a
+  // folder that was never created. This reached the caller verbatim, wrapped in
+  // "Provider error during email_move: ... Please try again in a moment." —
+  // retry advice for a condition no wait can fix. Both the coded form Gmail
+  // sends and the bare-words form a server may send instead must land in
+  // folder_missing.
+  [
+    "UID COPY failed: [TRYCREATE] No folder [MCPE-TEST-20260920-1501] NO-SUCH-FOLDER (Failure)",
+    "folder_missing",
+  ],
+  ["UID COPY failed: No folder Receipts/2026 (Failure)", "folder_missing"],
 ];
 
 /** An Error carrying a constructor name, the way the real classes do. */
@@ -96,6 +107,19 @@ Deno.test("an IMAP read timeout on a search path logs search_timeout, not provid
     providerErrorLogCode(reason, "read") !== "provider_error",
     "the whole point of the fix is that this stops being provider_error",
   );
+});
+
+Deno.test("a TRYCREATE move into a missing folder logs folder_not_found", () => {
+  // The whole point of classifying it: the code an operator greps for is the
+  // one that names the condition, and the single-message move/copy paths now
+  // return that code instead of a "try again in a moment" provider_error.
+  const reason = classifyProviderError(
+    new Error(
+      "UID COPY failed: [TRYCREATE] No folder [MCPE-TEST-20260920-1501] NO-SUCH-FOLDER (Failure)",
+    ),
+  );
+  assertEquals(reason, "folder_missing");
+  assertEquals(providerErrorLogCode(reason, "read"), "folder_not_found");
 });
 
 Deno.test("a Mailbox not found on a read path logs folder_not_found, not provider_error", () => {

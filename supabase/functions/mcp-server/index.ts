@@ -91,6 +91,10 @@ import {
   safeActionToken,
 } from "./action-selector.ts";
 import {
+  DESTINATION_FOLDER_MISSING_CODE,
+  destinationFolderMissingMessage,
+} from "./destination-folder-missing.ts";
+import {
   classifyProviderError,
   type ProviderErrorAuditDetails,
   providerErrorAuditDetails,
@@ -3424,14 +3428,40 @@ const SEARCH_SCHEMA_DESCRIPTIONS: Record<string, string> = {
   from: "Sender to match: address, name, or fragment.",
   to: "To recipient to match: address, name, or fragment.",
   cc: "Cc recipient to match: address, name, or fragment.",
-  subject: "Text to match in the subject; phrases match as-is.",
+  // MEASURED 2026-09-20 on a live Gmail-over-IMAP mailbox. "phrases match
+  // as-is" reads as a substring promise and is not one: `subject: "sigtext"`
+  // returned 1 message and `subject: "sigtex"` returned 0, and the leading
+  // fragment "[MCPE-TEST-20260920-1501] G" of a subject that matched in full
+  // returned 0 as well. The matching is per-token. It only ever UNDER-matches,
+  // so nothing unsafe follows from it, but a caller that builds a filter from
+  // half a word reads the empty result as "that mail does not exist".
+  //
+  // Whose rule is this? Not ours — we emit `SUBJECT <string>`, and RFC 3501
+  // defines that as a substring of the header. Gmail serves IMAP SEARCH from
+  // its own word index, so a Gmail mailbox behaves the same over IMAP as the
+  // Gmail API does, and Graph KQL is word-based too. A conventional IMAP server
+  // (Dovecot, Cyrus) does substring-match, so the description says which is
+  // which instead of flattening both into one claim.
+  subject:
+    "Text to match in the subject, as written. Gmail (API or IMAP) and Outlook match WHOLE WORDS, so a partial word finds nothing; other IMAP servers substring-match.",
   body: "Text to find in the body. On Gmail this matches the whole message.",
   text: "Text to match anywhere, headers included.",
   unread: "true = unread only; false = read only; omit for both.",
   has_attachment: "true = only messages with an attachment. Ignored on generic IMAP.",
   flagged: "true = only flagged/starred messages. Ignored on Outlook.",
-  since: "Received on or after this date or datetime (no timezone = UTC).",
-  before: "Received strictly before this date or datetime (no timezone = UTC).",
+  // The relative and truncated forms were shipped but never advertised: the
+  // schema said `format: "date-or-date-time"` and nothing else, so the only
+  // caller who learned about "7 days ago" was one who had already been
+  // REJECTED and read the error naming them (DATE_INPUT_EXAMPLES in
+  // search-translate.ts). They are normalised into the contract before
+  // validation runs, which is why the format token is still accurate. Saying so
+  // up front is worth its tokens: `since`/`before` were the second largest
+  // error class on the product, 414 hard rejections in the 30 days to
+  // 2026-08-29, and the shapes that cost them are exactly these.
+  since:
+    "Received on or after this date or datetime (no timezone = UTC). Also takes \"2026-06\", \"today\", \"7 days ago\", \"last month\" or \"30d\".",
+  before:
+    "Received strictly before this date or datetime (no timezone = UTC). Takes the same relative forms as `since`.",
 };
 
 /**
@@ -4141,8 +4171,10 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     title: "Copy Email",
     description:
       "Copy an email message into another folder, leaving the original in place. " +
-      "Unlike move, the source message is not removed. Supported on IMAP, Outlook " +
-      "and Fastmail inboxes (Gmail's label model has no native copy).",
+      "Unlike move, the source message is not removed. Available wherever " +
+      "inbox_list reports capabilities.copy true: every IMAP inbox (including a " +
+      "Gmail address connected over IMAP) and Outlook. The one connector without " +
+      "it is the Gmail API, whose label model has no copy operation.",
     requiredScope: "manage:folders",
     inputSchema: {
       type: "object",
@@ -4240,8 +4272,10 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     title: "Bulk Copy",
     description:
       "Copy up to 500 email messages into a destination folder in one call, " +
-      "leaving the originals in place. Supported on IMAP, Outlook and Fastmail " +
-      "inboxes (not Gmail). Returns succeeded/failed counts and per-message results.",
+      "leaving the originals in place. Available wherever inbox_list reports " +
+      "capabilities.copy true: every IMAP inbox (including a Gmail address " +
+      "connected over IMAP) and Outlook, but not the Gmail API connector. " +
+      "Returns succeeded/failed counts and per-message results.",
     requiredScope: "manage:folders",
     inputSchema: {
       type: "object",
@@ -5550,10 +5584,20 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           type: "string",
           maxLength: SENDER_NAME_MAX_CHARS,
           description:
+            // "Whitespace is collapsed; control characters ... are removed"
+            // described two rules that interact, and a live run on 2026-09-20
+            // showed the interaction is not what the sentence implies: a tab or
+            // newline is a control character, so it is DELETED before the
+            // collapse runs and the words on either side are joined —
+            // "Bot\ttab\nnewline" stored as "Bottabnewline". The stripping is
+            // the From-header injection guard and is staying exactly as it is
+            // (see sender-name.ts); what changes is that the description now
+            // says what it does, so a caller can space its own name.
             "Display name recipients see in the From header, e.g. 'Evancoe Bot' " +
             "gives \"Evancoe Bot <bot@evancoe.com>\". Omit to keep, empty string " +
-            "to clear. Whitespace is collapsed; control characters and angle " +
-            "brackets are removed.",
+            "to clear. Control characters and angle brackets are DELETED, not " +
+            "replaced, so a tab or newline joins the words around it; runs of " +
+            "spaces then collapse to one. Separate words with spaces.",
         },
       },
       required: [],
@@ -6034,6 +6078,11 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
       automation: AUTOMATION_SUMMARY_SCHEMA,
       enabled: { type: "boolean" },
       message: { type: "string" },
+      // Present, and true, only on a forward rule. The prose in `message` says
+      // the same thing, but a client that acts on a rule it just created should
+      // not have to read English to learn that this one cannot send by itself.
+      // See forwardApprovalNote in triage-engine.ts.
+      held_for_approval: { type: "boolean" },
     },
     required: ["automation"],
     additionalProperties: true,
@@ -6805,7 +6854,11 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       "inbox. Get message ids from email_read first. Every action acts only on " +
       "the ids you pass and is undone by another call: a move by a move back, " +
       "archive by a move into the Inbox, flag by the opposite flag, and a copy " +
-      "leaves the original untouched. On Gmail a move adds the destination " +
+      "leaves the original untouched. Copy follows the CONNECTOR, not the " +
+      "address: inbox_list reports it per inbox as capabilities.copy, true for " +
+      "every IMAP inbox (a Gmail address connected over IMAP included) and for " +
+      "Outlook, false only on the Gmail API connector, which has no copy " +
+      "operation at all. On Gmail a move adds the destination " +
       "label and removes INBOX, leaving other labels in place; moving a message " +
       "OUT of Trash or Spam into a real label also clears TRASH/SPAM, so it is " +
       "a genuine restore rather than a labelled message still queued for " +
@@ -6868,7 +6921,18 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       copy: {
         legacy: "email_copy",
         scope: "manage:folders",
-        hint: "duplicate into destination_folder_id, original stays, IMAP/Outlook/Fastmail only (never Gmail)",
+        // The hint used to end "IMAP/Outlook/Fastmail only (never Gmail)", which
+        // was measurably false. It conflated the SERVICE (the brand of the
+        // mailbox: gmail/icloud/yahoo/zoho/generic) with the PROVIDER (the
+        // connector actually in use). A live run on 2026-09-20 against a Gmail
+        // address connected over IMAP — inbox_list reports it provider "imap",
+        // service "gmail", capabilities.copy true — copied one message and a
+        // batch of two, both succeeding with the originals left in INBOX. A
+        // model reading "never Gmail" refuses to attempt any of that and tells
+        // the user their mailbox cannot do it. Copy follows the connector, and
+        // capabilities.copy is the only thing that answers for a given inbox.
+        // NB: no semicolons in a hint — the selector joins actions with them.
+        hint: "duplicate into destination_folder_id, original stays, wherever inbox_list reports capabilities.copy true (every IMAP inbox, a Gmail address connected over IMAP included, and Outlook, but not the Gmail API connector)",
       },
       copy_batch: {
         legacy: "email_copy_batch",
@@ -7513,6 +7577,37 @@ function buildConsolidatedSchema(spec: ConsolidatedSpec): {
       (ownersByProperty[property] ??= []).push(actionName);
     }
   }
+  // An unadvertised action may not be the action a refusal recommends.
+  //
+  // BUGFIX (2026-09-20). `schedule { action: "cancel", inbox_id: ... }` was
+  // correctly refused with "arguments.inbox_id is not an argument of action
+  // 'cancel'; it belongs to actions 'create' or 'list'" — and `schedule` has no
+  // 'list' in its enum. Listing is the separate `schedule_list` tool; 'list'
+  // survives here only as an accepted-but-unadvertised alias for clients that
+  // cached the old enum (see the note beside it). Sending a model after an
+  // action it cannot see in the schema is a worse answer than saying nothing
+  // about it.
+  //
+  // So an unadvertised owner is dropped only when an advertised one remains, in
+  // two senses deliberately. The property stays in the index either way, which
+  // is what keeps the leniency path (reviewExtraArguments in
+  // consolidated-arguments.ts drops a property it cannot attribute to anyone)
+  // behaving exactly as before. And a property owned ONLY by an unadvertised
+  // action keeps that owner: `email_organize`'s search filters belong to
+  // 'search_and_move' and nothing else, that action is still accepted, and
+  // every client connected before 2026-09-09 has it in its cached enum — so
+  // naming it there is the true and useful answer.
+  const hiddenActions = new Set(
+    Object.entries(spec.actions)
+      .filter(([, action]) => action.advertised === false)
+      .map(([actionName]) => actionName),
+  );
+  if (hiddenActions.size > 0) {
+    for (const [property, owners] of Object.entries(ownersByProperty)) {
+      const visible = owners.filter((owner) => !hiddenActions.has(owner));
+      if (visible.length > 0) ownersByProperty[property] = visible;
+    }
+  }
   const neutralDefaults: Record<string, unknown> = {};
   for (const [property, propertySchema] of Object.entries(properties)) {
     const neutral = neutralDefaultOf(propertySchema);
@@ -8111,7 +8206,12 @@ const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     folders: false,      // Gmail uses labels, not folders
     labels: true,
     move: true,          // label add/remove simulates move
-    copy: false,         // Gmail API has no native copy
+    // The Gmail API has no copy operation: a message exists once and appears
+    // under every label it carries. This entry is keyed on the CONNECTOR, so it
+    // governs only inboxes stored as provider='gmail'. A Gmail ADDRESS connected
+    // over IMAP is provider='imap', service='gmail', and copies fine (verified
+    // live on 2026-09-20). Never describe this row as "Gmail cannot copy".
+    copy: false,
     delete: true,
     trash_vs_expunge: "trash",
     forward: true,
@@ -19348,7 +19448,13 @@ async function resolveFlagArgs(
 
 /**
  * Common error handler for flag/archive provider calls.
- * Maps auth failures and message-not-found to structured results.
+ * Maps auth failures, message-not-found and a missing DESTINATION folder to
+ * structured results.
+ *
+ * `destinationFolderId` is passed by the two callers that have one (email_move
+ * and email_copy) and is the caller's own spelling, pre-resolution, because
+ * that is the string they have to fix. Omitted elsewhere: email_flag and
+ * email_delete have no destination, and email_archive's is ours, not theirs.
  */
 function handleFlagError(
   err: unknown,
@@ -19356,6 +19462,7 @@ function handleFlagError(
   inboxId: string,
   provider: string,
   messageId: string,
+  destinationFolderId?: string | null,
 ): ToolErrorResult {
   const message = err instanceof Error ? err.message : String(err);
 
@@ -19384,6 +19491,41 @@ function handleFlagError(
 
   if (isAuthFailure) {
     return authFailedResult(provider, inboxId, "access");
+  }
+
+  // ── The destination folder is not there ─────────────────────────────────
+  // BUGFIX (2026-09-20). A live move into a folder that had never been created
+  // came back as "Provider error during email_move: UID COPY failed:
+  // [TRYCREATE] No folder <name> (Failure). Please try again in a moment." —
+  // the raw IMAP line, mislabelled a provider fault, closing with advice that
+  // is not just unhelpful but wrong, since no amount of waiting creates a
+  // folder. `folder_missing` has been in the classifier's taxonomy since
+  // 2026-09-01 and the bulk paths have logged `folder_not_found` for this exact
+  // text since 2026-07-28; only the single-message paths still leaked it.
+  //
+  // LEDGER: this is the one place in this helper that does NOT keep
+  // `provider_error`, and that is deliberate. `provider_error` settles the
+  // outbound idempotency ledger as "unknown" so a keyed retry may replay, which
+  // is the right hedge when we cannot tell whether the provider acted. Here we
+  // can: the server refused the command outright, nothing moved, and an
+  // identical retry fails identically — so "failed" is the honest settlement.
+  // It is the same argument the FolderTargetError branch in executeMoveEmail
+  // already makes for an ambiguous destination.
+  if (destinationFolderId && classifyProviderError(err) === "folder_missing") {
+    return providerFailure({
+      tool: toolName,
+      provider,
+      inboxId,
+      error: err,
+      boundary: "ledger",
+      fallbackCode: DESTINATION_FOLDER_MISSING_CODE,
+      text: destinationFolderMissingMessage(
+        toolName,
+        destinationFolderId,
+        provider === "gmail" ? "label" : "folder",
+      ),
+      logContext: { message_id: messageId, phase: "destination_missing" },
+    });
   }
 
   // LEDGER BOUNDARY. Every caller of this helper (email_move, email_copy,
@@ -19698,7 +19840,14 @@ async function executeMoveEmail(
         break;
     }
   } catch (err) {
-    return handleFlagError(err, "email_move", inbox.id, inbox.provider, messageId);
+    return handleFlagError(
+      err,
+      "email_move",
+      inbox.id,
+      inbox.provider,
+      messageId,
+      destinationFolderId,
+    );
   }
 
   return {
@@ -19804,7 +19953,10 @@ async function outlookCopyEmail(
  * original in place.
  *
  * Scope: manage:folders
- * Capability gate: caps.copy (false for Gmail → unsupportedFeatureError)
+ * Capability gate: caps.copy (false for the Gmail API connector, i.e.
+ * inbox.provider === "gmail" → unsupportedFeatureError). It is NOT false for a
+ * Gmail ADDRESS: one connected over IMAP is provider "imap", service "gmail",
+ * and UID COPY works there like anywhere else.
  */
 async function executeCopyEmail(
   rawArgs: unknown,
@@ -19875,7 +20027,14 @@ async function executeCopyEmail(
         break;
     }
   } catch (err) {
-    return handleFlagError(err, "email_copy", inbox.id, inbox.provider, messageId);
+    return handleFlagError(
+      err,
+      "email_copy",
+      inbox.id,
+      inbox.provider,
+      messageId,
+      destinationFolderId,
+    );
   }
 
   return {
@@ -21515,7 +21674,10 @@ async function executeBulkMove(
  * leaving the originals in place.
  *
  * Scope: manage:folders
- * Capability gate: caps.copy (false for Gmail → unsupportedFeatureError)
+ * Capability gate: caps.copy (false for the Gmail API connector, i.e.
+ * inbox.provider === "gmail" → unsupportedFeatureError). It is NOT false for a
+ * Gmail ADDRESS: one connected over IMAP is provider "imap", service "gmail",
+ * and UID COPY works there like anywhere else.
  * Cap: MAX_BULK_IDS (500)
  */
 async function executeBulkCopy(
@@ -30140,6 +30302,11 @@ if (Deno.env.get("MCP_SERVER_NO_LISTEN") !== "1") {
 // answerable by running them, not by reading their queries.
 // ---------------------------------------------------------------------------
 export {
+  // Exported for tool-surface.test.ts: the ownership map is what a refusal's
+  // "it belongs to action X" sentence is built from, and since 2026-09-20 that
+  // sentence may not name an action the client was never shown. That rule is
+  // only checkable against the built index.
+  CONSOLIDATED_ARGUMENT_INDEX,
   CONSOLIDATED_SPECS,
   executeBulkPlanRequest,
   handleRequest,

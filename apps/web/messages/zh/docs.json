@@ -169,7 +169,7 @@
     },
     "email_organize": {
       "title": "整理邮件",
-      "desc": "移动、复制、标记或归档你用 message_id 指定的邮件。设置 action：'move'/'move_batch'（移动到某个 destination_folder_id）、'copy'/'copy_batch'（复制到某个 destination_folder_id，同时保留原件；仅支持 IMAP、Outlook 和 Fastmail）、'flag'（通过 message_ids 上的 flag_action 设置已读/未读/标记），或 'archive'（把一封邮件移出收件箱）。先用 email_read 取得这些 ID。每个操作只作用于你传入的 ID，并且都能用另一次调用撤销：移动可以再移回来，archive 可以移回收件箱，flag 可以用相反的标记，而复制会原样保留原件。在 Gmail 上，移动会添加目标标签并移除 INBOX；其他标签保持不变，把邮件移出 Trash 或 Spam 还会清除 TRASH/SPAM，因此那是真正的还原，而原生复制在 Gmail 上不可用。若想移动匹配某个搜索的全部邮件，而不是一份 ID 列表，请使用 email_search_and_move：它之所以是独立工具，是因为在那里一个写错的过滤条件就会搬走整个收件箱。每个操作都需要 manage:folders。删除邮件由独立的 email_delete 工具负责。",
+      "desc": "移动、复制、标记或归档你用 message_id 指定的邮件。设置 action：'move'/'move_batch'（移动到某个 destination_folder_id）、'copy'/'copy_batch'（复制到某个 destination_folder_id，同时保留原件；只要 inbox_list 报告 capabilities.copy 为 true 即可使用：所有 IMAP 收件箱（包括通过 IMAP 连接的 Gmail 地址）以及 Outlook）、'flag'（通过 message_ids 上的 flag_action 设置已读/未读/标记），或 'archive'（把一封邮件移出收件箱）。先用 email_read 取得这些 ID。每个操作只作用于你传入的 ID，并且都能用另一次调用撤销：移动可以再移回来，archive 可以移回收件箱，flag 可以用相反的标记，而复制会原样保留原件。在 Gmail 上，移动会添加目标标签并移除 INBOX；其他标签保持不变，把邮件移出 Trash 或 Spam 还会清除 TRASH/SPAM，因此那是真正的还原，而 Gmail API 连接器（provider 'gmail'）没有原生复制；通过 IMAP 连接的 Gmail 邮箱和其他 IMAP 收件箱一样可以复制。若想移动匹配某个搜索的全部邮件，而不是一份 ID 列表，请使用 email_search_and_move：它之所以是独立工具，是因为在那里一个写错的过滤条件就会搬走整个收件箱。每个操作都需要 manage:folders。删除邮件由独立的 email_delete 工具负责。",
       "params": {
         "action": "要执行的操作：\"move\"、\"move_batch\"、\"copy\"、\"copy_batch\"、\"flag\" 或 \"archive\"。决定其他哪些参数适用。移动匹配某个搜索的每封邮件由独立的 email_search_and_move 工具负责。",
         "inbox_id": "拥有这些邮件的收件箱的 UUID。可选：当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以获取可用的收件箱 ID。",
@@ -540,7 +540,7 @@
       "feature": "功能"
     },
     "notes": {
-      "gmail": "<b>Gmail 的文件夹与标签：</b>Gmail 使用扁平的标签系统而非分层的文件夹。“移动”是通过添加/移除标签来实现的。Gmail REST API 不提供原生复制。",
+      "gmail": "<b>Gmail 的文件夹与标签：</b>Gmail 使用扁平的标签系统而非分层的文件夹。“移动”是通过添加/移除标签来实现的。Gmail REST API 不提供原生复制。这些 Gmail 行描述的是 Gmail API 连接器：使用应用专用密码通过 IMAP 连接的 Gmail 邮箱适用 IMAP 各列，包括复制。",
       "permanentDelete": "<b>永久删除：</b>Gmail 在你删除时会移至回收站，它们的 API 不提供永久彻底清除。IMAP 服务商（Fastmail、iCloud、Yahoo、Zoho、Yandex、通用）同时支持回收站和硬性彻底清除。",
       "contacts_db": "<b>联系人搜索（实时扫描）：</b>所有服务商都支持 <code>contact_search</code>，它通过对你近期一段匹配邮件进行实时、仅读取邮件头的扫描来查找匹配的联系人。不存在联系人表，在两次调用之间不存储任何内容，且数量仅反映所扫描窗口内匹配的邮件。",
       "scheduling": "<b>定时：</b>通过服务器端的 <code>scheduled_sends</code> 队列为所有服务商提供支持。使用 <code>schedule</code> 工具的 <code>create</code>、<code>list</code> 和 <code>cancel</code> 操作。投递使用每个服务商现有的发送路径，无需服务商原生的定时 API。",

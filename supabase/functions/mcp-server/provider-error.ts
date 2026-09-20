@@ -205,9 +205,17 @@ export function classifyProviderError(error: unknown): ProviderErrorReason {
   // Every provider's way of saying "that folder is not there". Mirrors
   // FOLDER_MISSING_RE in index.ts, plus IMAP's SELECT failure text, which is
   // what "Mailbox not found: Junk" is.
+  //
+  // "no folder" was added on 2026-09-20 from a live run: Gmail's IMAP server
+  // answers a UID COPY into a mailbox that does not exist with "[TRYCREATE] No
+  // folder <name> (Failure)". The response code already landed this in the
+  // right bucket, but the words alone did not — a server that says "No folder
+  // X" without the code fell through to `command_rejected`, and the two are
+  // different operator problems. The bare-words form is matched on its own now,
+  // so the classification does not depend on a server choosing to send a code.
   if (
     /\[NONEXISTENT\]|\[TRYCREATE\]|invalid label|no such mailbox/i.test(message) ||
-    /mailbox not found/i.test(message) ||
+    /mailbox not found|\bno folder\b/i.test(message) ||
     /does ?n[o']?t exist/i.test(message)
   ) {
     return "folder_missing";

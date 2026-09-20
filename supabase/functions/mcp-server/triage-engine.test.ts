@@ -1385,6 +1385,63 @@ Deno.test("an Outlook label rule says it will be applied as a category", async (
   );
 });
 
+// ---------------------------------------------------------------------------
+// What a forward rule discloses when it is created.
+//
+// MEASURED 2026-09-20: creating a forward rule answered only "Created and
+// DISABLED...", while the label rule right beside it explains its own
+// keyword/category mapping. Forward is the one rule type whose effect is
+// visible OUTSIDE the mailbox, and the fact that every match stops at a human
+// approval is the single most important thing about it — the tool description
+// says so in capitals, and the result said nothing.
+// ---------------------------------------------------------------------------
+
+/** A create-a-forward-rule call, with a key that may actually send. */
+async function createForwardRule(): Promise<{ result: any; log: FakeDbLog }> {
+  const log: FakeDbLog = { inserts: [], updates: [], rows: {} };
+  const previewed = { calls: [] as any[] };
+  const deps = automationDeps(log, previewed);
+  const { runAutomationTool } = await import("./triage-engine.ts");
+  const result = await runAutomationTool("create", {
+    inbox_id: "inbox-1",
+    name: "Forward invoices",
+    filter: { subject: "invoice" },
+    rule_action: { type: "forward", to: ["ap@example.com"] },
+    interval_minutes: 60,
+  }, deps);
+  return { result, log };
+}
+
+Deno.test("a forward rule's create result says it is always held for approval", async () => {
+  const { result } = await createForwardRule();
+  assertEquals(result.logStatus, "success", "a forward rule is accepted");
+  const payload = result.result.structuredContent as any;
+  const message = String(payload.message);
+  assert(
+    message.includes("Created and DISABLED"),
+    "the existing disclosure is kept — both facts matter",
+  );
+  assert(message.includes("approval"), "and the approval hold is now stated too");
+  assert(
+    /ALWAYS|always/.test(message),
+    "unconditionally: the inbox's own approval setting does not change it",
+  );
+  assertEquals(
+    payload.held_for_approval,
+    true,
+    "with a machine-readable half, so a client need not parse the prose",
+  );
+});
+
+Deno.test("a non-forward rule carries no approval note", async () => {
+  // Same rule as every other note in this file: a line that says nothing new
+  // is noise. move/label/mark_read/draft_reply never leave the mailbox.
+  const { result } = await createLabelRule("gmail", "Receipts");
+  const payload = result.result.structuredContent as any;
+  assertEquals(payload.held_for_approval, undefined);
+  assertEquals(String(payload.message).includes("approval"), false);
+});
+
 Deno.test("a Gmail label rule carries no rename note, because nothing is renamed", async () => {
   const { result } = await createLabelRule("gmail", "Order updates");
   const payload = result.result.structuredContent as any;

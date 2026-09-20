@@ -54,7 +54,13 @@ import { serializeToolForList } from "./mcp-app-resources.ts";
 //                           importing it here does not bind a port.
 Deno.env.set("MCP_INTROSPECTION_ONLY", "1");
 Deno.env.set("MCP_SERVER_NO_LISTEN", "1");
-const { CONSOLIDATED_SPECS, TOOL_ANNOTATIONS, TOOL_REGISTRY, validateInputSchema } = await import(
+const {
+  CONSOLIDATED_ARGUMENT_INDEX,
+  CONSOLIDATED_SPECS,
+  TOOL_ANNOTATIONS,
+  TOOL_REGISTRY,
+  validateInputSchema,
+} = await import(
   "./index.ts"
 );
 
@@ -806,4 +812,55 @@ Deno.test("the new read tool is exactly as lenient as the actions it replaced", 
       `automation_read '${action}' must match automation '${action}'`,
     );
   }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 3. A refusal may only point at actions the client can see
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// MEASURED 2026-09-20. `schedule { action: "cancel", inbox_id: ... }` was
+// refused with "it belongs to actions 'create' or 'list'", and `schedule`
+// advertises no 'list': listing is the separate `schedule_list` tool, and the
+// action survives only as an accepted alias for clients that cached the old
+// enum. The ownership index behind that sentence now prefers advertised owners.
+
+Deno.test("an unadvertised action is not offered as the place an argument belongs", () => {
+  const owners = CONSOLIDATED_ARGUMENT_INDEX["schedule"].ownersByProperty["inbox_id"];
+  assert(owners.includes("create"), "'create' really does take inbox_id");
+  assertEquals(
+    owners.includes("list"),
+    false,
+    "schedule advertises no 'list' action, so a refusal must not send a caller to it",
+  );
+  // And the rule is general, not a special case for one tool: no consolidated
+  // tool may name a hidden owner while an advertised one exists.
+  for (const [toolName, spec] of Object.entries(CONSOLIDATED_SPECS)) {
+    const hidden = new Set(
+      Object.entries(spec.actions)
+        .filter(([, action]) => action.advertised === false)
+        .map(([actionName]) => actionName),
+    );
+    const index = CONSOLIDATED_ARGUMENT_INDEX[toolName];
+    if (!index) continue;
+    for (const [property, propertyOwners] of Object.entries(index.ownersByProperty)) {
+      const visible = propertyOwners.filter((owner: string) => !hidden.has(owner));
+      if (visible.length === 0) continue; // only a hidden action takes it
+      assertEquals(
+        propertyOwners,
+        visible,
+        `${toolName}.${property} names an unadvertised action alongside advertised ones`,
+      );
+    }
+  }
+});
+
+Deno.test("a property only an unadvertised action takes keeps that owner", () => {
+  // The other half of the rule, and the reason it is not "drop hidden owners".
+  // email_organize's search filters belong to 'search_and_move' and to nothing
+  // else; that action is still accepted and still sits in the cached enum of
+  // every client connected before 2026-09-09, so naming it is the true answer.
+  // Saying nothing would leave a caller with the bare "not an argument of this
+  // action" it had before the ownership map existed.
+  const owners = CONSOLIDATED_ARGUMENT_INDEX["email_organize"].ownersByProperty["subject"];
+  assertEquals(owners, ["search_and_move"]);
 });
