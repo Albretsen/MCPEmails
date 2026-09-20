@@ -31,16 +31,21 @@
 // ---------------------------------------------------------------------------
 
 import {
+  buildUnappliedSearchNote,
+  buildUnappliedSearchRefusal,
   DATE_INPUT_EXAMPLES,
   formatGmailDate,
   formatImapDate,
   formatUtcDateTime,
   isIsoDateOrDateTime,
+  type NormalizedSearch,
   normalizeDateOrDateTime,
   parseIsoDate,
+  searchDialectFor,
   toGmailQuery,
   toGraphSearch,
   toImapSearch,
+  unappliedSearchFields,
 } from "./search-translate.ts";
 
 function assert(condition: boolean, message: string): void {
@@ -397,4 +402,194 @@ Deno.test("the examples in the rejection are all shapes the parser takes", () =>
       `the rejection offers ${example}, which must normalize`,
     );
   }
+});
+
+// ── Unapplied criteria (F-04, live functional test, 2026-09-20) ──────────────
+//
+// The regression these pin: `email_read {action:"search", subject:"[MCPE-TEST-
+// 20260920-1501]", has_attachment:true}` against a Gmail-over-IMAP inbox
+// returned all 9 subject matches (2 of which had attachments) with
+// `query_normalized: 'SUBJECT "[MCPE-TEST-20260920-1501]"'` and no `notes`.
+// The drop is correct; the silence was the bug.
+//
+// The first test is the important one and it is deliberately not a string
+// comparison against a hand-written list: it asserts the REPORT against the
+// QUERY, so a translator that learns a new predicate, or loses one, cannot
+// leave the disclosure behind. That is the failure mode automation-filter-
+// fields.test.ts exists for elsewhere in this server, and it is the same shape.
+
+/** Does the emitted query carry any trace of `field`? */
+function queryMentions(search: NormalizedSearch, provider: string, field: string): boolean {
+  const probes: Record<string, RegExp> = {
+    has_attachment: /has:attachment|hasAttachments|KEYWORD/i,
+    flagged: /is:starred|FLAGGED|\$flagged|followupFlag/i,
+    unread: /is:unread|is:read|UNSEEN|SEEN|isRead/i,
+    since: /after:|SINCE|ge 2/i,
+    before: /before:|BEFORE|lt 2/i,
+  };
+  const probe = probes[field];
+  if (!probe) throw new Error(`no probe for ${field}`);
+  if (provider === "gmail") return probe.test(toGmailQuery(search));
+  if (provider === "imap") return probe.test(toImapSearch(search));
+  const graph = toGraphSearch(search);
+  // The Graph policy (see this module's header): $search and $filter cannot be
+  // combined on /messages, so when both exist only $search is actually sent.
+  const sent = graph.search ?? graph.filter ?? "";
+  return probe.test(sent);
+}
+
+Deno.test("every reported drop is really absent from the query, and vice versa", () => {
+  const criteria: NormalizedSearch[] = [
+    { subject: "invoice", has_attachment: true },
+    { subject: "invoice", flagged: true },
+    { subject: "invoice", unread: true, since: "2026-08-01" },
+    { has_attachment: true, flagged: true, unread: false },
+    { subject: "q3", has_attachment: true, flagged: true, unread: true, since: "2026-08-01", before: "2026-09-01" },
+    // No free text at all: on Graph this is the $filter-only branch, where the
+    // state and date predicates DO survive.
+    { has_attachment: true, unread: true, since: "2026-08-01" },
+  ];
+  const checkable = ["has_attachment", "flagged", "unread", "since", "before"];
+
+  for (const provider of ["gmail", "outlook", "imap"]) {
+    for (const search of criteria) {
+      const reported = unappliedSearchFields(search, provider);
+      for (const field of checkable) {
+        const sent = (search as Record<string, unknown>)[field] !== undefined;
+        if (!sent) {
+          assert(
+            !reported.includes(field),
+            `${provider}: reported '${field}' as dropped although it was never sent`,
+          );
+          continue;
+        }
+        const survived = queryMentions(search, provider, field);
+        assertEquals(
+          reported.includes(field),
+          !survived,
+          `${provider} ${JSON.stringify(search)}: '${field}' survived=${survived} but ` +
+            `reported=${JSON.stringify(reported)}`,
+        );
+      }
+    }
+  }
+});
+
+Deno.test("F-04: has_attachment on an IMAP inbox is dropped AND disclosed", () => {
+  // The exact call from the 2026-09-20 functional test.
+  const search: NormalizedSearch = {
+    subject: "[MCPE-TEST-20260920-1501]",
+    has_attachment: true,
+  };
+
+  // Still dropped — that part was never the bug, and RFC 3501 has no predicate.
+  assertEquals(
+    toImapSearch(search),
+    'SUBJECT "[MCPE-TEST-20260920-1501]"',
+    "the IMAP query is unchanged",
+  );
+
+  // …and now said out loud.
+  const unapplied = unappliedSearchFields(search, "imap");
+  assertEquals(unapplied.length, 1, "exactly one criterion went unapplied");
+  assertEquals(unapplied[0], "has_attachment", "and it is named");
+
+  const note = buildUnappliedSearchNote("imap", unapplied);
+  assert(note.includes("'has_attachment'"), `the note names the field: ${note}`);
+  assert(note.includes("not applied"), `the note says it was not applied: ${note}`);
+  assert(
+    note.includes("does not reflect it"),
+    `the note says the result does not reflect it: ${note}`,
+  );
+  assert(note.includes("generic IMAP"), `the note names the provider: ${note}`);
+  // Same opener as the argument-leniency disclosure, so a reader that has seen
+  // one recognises the other. See buildIgnoredArgumentsNote.
+  assert(note.startsWith("Note: "), `the note reads like every other note: ${note}`);
+});
+
+Deno.test("the same criteria on Gmail are honoured and disclose nothing", () => {
+  const search: NormalizedSearch = { subject: "invoice", has_attachment: true };
+  assertEquals(toGmailQuery(search), "subject:invoice has:attachment", "Gmail runs it");
+  assertEquals(
+    unappliedSearchFields(search, "gmail").length,
+    0,
+    "so there is nothing to disclose",
+  );
+});
+
+Deno.test("Graph drops its whole $filter beside a $search, and says which fields", () => {
+  // The larger, quieter Outlook drop: a subject search with a date window
+  // silently becomes a subject search over all time.
+  const search: NormalizedSearch = {
+    subject: "invoice",
+    unread: true,
+    since: "2026-08-01",
+    has_attachment: true,
+  };
+  const graph = toGraphSearch(search);
+  assert(!!graph.search && !!graph.filter, "both are produced, and only one may be sent");
+
+  const unapplied = unappliedSearchFields(search, "outlook");
+  assertEquals(
+    JSON.stringify(unapplied),
+    JSON.stringify(["unread", "has_attachment", "since"]),
+    "every filter-side criterion is named",
+  );
+  const note = buildUnappliedSearchNote("outlook", unapplied);
+  assert(note.includes("They were not applied"), `plural reads correctly: ${note}`);
+  assert(note.includes("does not reflect them"), `plural reads correctly: ${note}`);
+});
+
+Deno.test("a negated attachment or flag predicate exists in no dialect", () => {
+  // Unreachable from a tool call (buildNormalizedSearch records only `true`),
+  // reachable from a stored automation filter, which accepts either boolean and
+  // counts it as a criterion. So a rule meaning "unflagged mail only" was
+  // expressible, unhonourable and silent.
+  for (const provider of ["gmail", "outlook", "imap"]) {
+    assertEquals(
+      JSON.stringify(unappliedSearchFields({ subject: "x", flagged: false }, provider)),
+      JSON.stringify(["flagged"]),
+      `${provider}: flagged:false is not a predicate anywhere`,
+    );
+    assert(
+      unappliedSearchFields({ subject: "x", has_attachment: false }, provider)
+        .includes("has_attachment"),
+      `${provider}: has_attachment:false is not a predicate anywhere`,
+    );
+  }
+});
+
+Deno.test("an unknown provider is treated as the IMAP baseline, not as supported", () => {
+  // Fail-safe, matching getProviderCapabilities in index.ts: a connector that
+  // forgets to declare itself over-reports drops rather than under-reporting
+  // them. Over-reporting costs a sentence; under-reporting is F-04.
+  assertEquals(searchDialectFor("fastmail"), "imap", "fastmail is IMAP since 2026-06-01");
+  assertEquals(searchDialectFor("something-new"), "imap", "and so is anything unknown");
+  assert(
+    unappliedSearchFields({ subject: "x", has_attachment: true }, "something-new")
+      .includes("has_attachment"),
+    "an unrecognised provider still reports the baseline's drops",
+  );
+});
+
+Deno.test("the destructive refusal names the tool, the field and a way forward", () => {
+  // The destructive half of the fix: search_and_move / search_and_delete do not
+  // get the note, they get this. See buildUnappliedSearchRefusal for why, and
+  // LENIENT_ACTIONS in consolidated-arguments.ts for the precedent.
+  const refusal = buildUnappliedSearchRefusal(
+    "email_search_and_delete",
+    "imap",
+    ["has_attachment"],
+  );
+  assert(refusal.startsWith("email_search_and_delete:"), `names the tool: ${refusal}`);
+  assert(refusal.includes("'has_attachment'"), `names the field: ${refusal}`);
+  assert(refusal.includes("generic IMAP"), `names the provider: ${refusal}`);
+  assert(refusal.includes("no mail was"), `says nothing was touched: ${refusal}`);
+  assert(refusal.includes("WIDER"), `says which direction the error would run: ${refusal}`);
+  assert(
+    refusal.includes('email_read {action: "search"}'),
+    `offers the read that shows the same set without acting: ${refusal}`,
+  );
+  // It must NOT read like the note: a caller that gets this has no result.
+  assert(!refusal.startsWith("Note: "), "a refusal is not a note");
 });

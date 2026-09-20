@@ -33,11 +33,16 @@
  *   *  Gmail has no dedicated "body-only" operator; bare phrases search the whole
  *      message (incl. subject/headers). We map both `body` and `text` to bare
  *      quoted terms; they are effectively equivalent on Gmail.
- *   †  IMAP RFC 3501 SEARCH has no attachment predicate. `has_attachment` is
- *      silently dropped for IMAP; the integrator must filter client-side if needed.
+ *   †  IMAP RFC 3501 SEARCH has no attachment predicate, so `has_attachment` is
+ *      dropped for IMAP; the integrator must filter client-side if needed.
  *   ‡  Graph KQL `$search` exposes no "flagged/followup" token usable here and
  *      the `flag/followupFlag` property is awkward in `$filter`; `flagged` is
- *      dropped for Graph. Surface this to users.
+ *      dropped for Graph.
+ *
+ *   Every drop marked here — and the larger one the $search/$filter policy
+ *   below forces on Graph — is reported by `unappliedSearchFields` at the
+ *   bottom of this file, so a caller is told by name what went unapplied.
+ *   Until 2026-09-20 the drops were silent; see the incident note there.
  *
  * ── Graph $search vs $filter combination policy ─────────────────────────────
  *   For the **messages** endpoint, Microsoft Graph does NOT allow `$search` and
@@ -658,3 +663,237 @@ export const SEARCH_FIELD_DESCRIPTIONS: Record<string, string> = {
   before: "ISO 8601 date or date-time; return messages received strictly before (<) this instant. A value with no timezone is read as UTC. E.g. \"2026-07-01\" or \"2026-07-01T00:00:00\". Also accepts \"2026-07\", \"today\" and \"30d\".",
   raw: "Escape hatch: a provider-native query appended to the structured criteria. Ignored on Fastmail (JMAP).",
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// What the dialect could NOT honour — and why silence about it was the bug
+//
+// ── The incident (F-04, live functional test, 2026-09-20) ───────────────────
+// Against a real Gmail-over-IMAP mailbox (`provider: "imap"`, `service:
+// "gmail"`), one call:
+//
+//   email_read {action:"search", subject:"[MCPE-TEST-20260920-1501]",
+//               has_attachment:true, limit:1}
+//     -> total: 9
+//        query_normalized: 'SUBJECT "[MCPE-TEST-20260920-1501]"'
+//        (no `notes` field at all)
+//
+// Two of those nine messages had an attachment. `has_attachment` had been
+// dropped by toImapSearch — correctly, because RFC 3501 SEARCH has no
+// attachment predicate, and this module's own matrix has said so since it was
+// written. The defect is not the drop. The defect is that the result said
+// nothing, so a caller that asked a narrow question was handed a wide answer
+// that looked like the narrow one. In the same session, and from the same tool,
+// a far smaller problem WAS disclosed: `email_read {action:"search",
+// body_max_chars:0}` came back with a `notes` entry explaining that the
+// argument belongs to another action and was not applied.
+//
+// ── Why `query_normalized` is not itself the disclosure ─────────────────────
+// The obvious objection is that the caller CAN see it: `query_normalized` came
+// back as 'SUBJECT "…"' with no attachment term in it, so the information is
+// technically present. It is not a disclosure, for two reasons.
+//
+//   1. Reading it requires diffing a provider-dialect string against the
+//      structured arguments that were sent, in a dialect the caller was
+//      explicitly promised it would never have to learn (see this file's
+//      opening paragraph). An IMAP `SUBJECT "x"` and a Gmail
+//      `subject:x has:attachment` differ for a dozen reasons that have nothing
+//      to do with which criteria survived, so a reader cannot tell a dropped
+//      filter from ordinary dialect translation.
+//   2. Absence is the weakest possible signal. Every other unapplied-argument
+//      case on this server is reported by something being PRESENT in the
+//      payload — see consolidated-arguments.ts, whose whole subject is that a
+//      dropped filter produces "a plausible answer to a question nobody asked",
+//      and whose fix was a sentence in the result rather than a smaller query.
+//
+// So the drop is now reported positively, by name, on the same `notes` channel
+// everything else uses (result-notes.ts).
+//
+// ── Why this lives in the translator and not at each call site ──────────────
+// The drops are properties of the dialect, decided by the functions above. Any
+// other home for the list is a second copy of the matrix that can fall out of
+// step with the code that actually builds the query — which is exactly how
+// `raw` came to sit in the automation filter allow-list while every schema said
+// it was refused (see automation-filter-fields.test.ts). One function, next to
+// the translators, pinned to them by tests.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** The query dialect a provider's search is translated into. */
+export type SearchDialect = "gmail" | "outlook" | "imap";
+
+/**
+ * A provider id (`inboxes.provider`) → its dialect.
+ *
+ * Unknown providers fall back to `imap`, matching getProviderCapabilities in
+ * index.ts: the IMAP baseline is the most conservative of the three, so a new
+ * connector that forgets to declare itself over-reports drops rather than
+ * under-reporting them. Over-reporting costs a sentence; under-reporting is
+ * this bug. Fastmail is `imap` here and everywhere else since the JMAP
+ * connector was removed on 2026-06-01.
+ */
+export function searchDialectFor(provider: string): SearchDialect {
+  return provider === "gmail" || provider === "outlook" ? provider : "imap";
+}
+
+/** Human name for a dialect, as it appears in a note or a refusal. */
+export const SEARCH_DIALECT_LABELS: Readonly<Record<SearchDialect, string>> = {
+  gmail: "Gmail",
+  outlook: "Outlook",
+  imap: "generic IMAP",
+};
+
+/**
+ * Every field of `search` that `provider` will NOT apply, in the order the
+ * NormalizedSearch interface declares them.
+ *
+ * Derived from the translators above, clause by clause, and pinned to them by
+ * search-translate.test.ts: a field named here must be absent from the emitted
+ * query, and a criterion the emitted query does not carry must be named here.
+ *
+ * Note the VALUE sensitivity. `has_attachment` and `flagged` are only ever
+ * translated for `true` — no dialect here emits a "has no attachment" or "is
+ * not flagged" predicate — so `{flagged: false}` is a criterion dropped on
+ * every provider, including the ones the matrix marks as supporting the field.
+ * A tool call cannot express that (buildNormalizedSearch records only `true`),
+ * but a stored automation filter can: validateTriageFilter accepts either
+ * boolean and counts it as a criterion, so a rule meaning "unflagged mail only"
+ * has been expressible, unhonourable and silent since automations shipped.
+ */
+export function unappliedSearchFields(
+  search: NormalizedSearch,
+  provider: string,
+): string[] {
+  const dialect = searchDialectFor(provider);
+  const unapplied: string[] = [];
+
+  // A negated attachment/flag predicate exists in none of the three dialects.
+  // Checked first and for all of them, because it is the one drop the matrix
+  // above does not show.
+  if (search.has_attachment === false) unapplied.push("has_attachment");
+  if (search.flagged === false) unapplied.push("flagged");
+
+  if (dialect === "imap") {
+    // RFC 3501 SEARCH has no attachment predicate. This is F-04 itself.
+    if (search.has_attachment === true) unapplied.push("has_attachment");
+    return unapplied;
+  }
+
+  if (dialect === "gmail") {
+    // Gmail expresses every field this server offers. `body` is widened to a
+    // whole-message term rather than dropped, which the gmail-v1 compatibility
+    // profile already calls "different" — it still narrows the result set, so
+    // it is not a silent widening and is not reported here.
+    return unapplied;
+  }
+
+  // ── Outlook / Graph ───────────────────────────────────────────────────────
+  // Two separate drops, and the second is by far the larger.
+  //
+  //   flagged   no usable predicate in either $search or $filter (see the
+  //             matrix above; the outlook-v1 compatibility profile marks
+  //             search.flagged "unavailable").
+  //
+  //   the whole $filter  Graph refuses to combine $search and $filter on
+  //             /messages, so when free-text criteria exist the caller must
+  //             send $search and abandon $filter entirely. That drops `unread`,
+  //             `has_attachment`, `since` and `before` together — a subject
+  //             search with a date window silently becomes a subject search
+  //             over all time. The preference is stated in this file's header
+  //             and executed in index.ts (searchOutlookMessages); it is
+  //             re-derived here from toGraphSearch rather than re-stated, so
+  //             the report cannot disagree with the query that was sent.
+  // `=== true`, not `!== undefined`: the `false` case was already recorded by
+  // the negation check above, and a field named twice reads as two separate
+  // problems in the note.
+  if (search.flagged === true) unapplied.push("flagged");
+  const graph = toGraphSearch(search);
+  if (graph.search && graph.filter) {
+    if (search.unread !== undefined) unapplied.push("unread");
+    if (search.has_attachment === true) unapplied.push("has_attachment");
+    if (search.since) unapplied.push("since");
+    if (search.before) unapplied.push("before");
+  }
+  return unapplied;
+}
+
+/** `'a'`, `'a' and 'b'`, `'a', 'b' and 'c'` — the list style the notes use. */
+function quotedFieldList(fields: readonly string[]): string {
+  const quoted = fields.map((field) => `'${field}'`);
+  if (quoted.length === 1) return quoted[0];
+  return `${quoted.slice(0, -1).join(", ")} and ${quoted[quoted.length - 1]}`;
+}
+
+/**
+ * The disclosure attached to a READ whose criteria were not all honoured.
+ *
+ * Deliberately the same shape and register as buildIgnoredArgumentsNote in
+ * consolidated-arguments.ts — name the field, state that it was not applied,
+ * state that the result therefore does not reflect it — because nobody should
+ * have to learn two vocabularies for the same class of fact. The half-sentence
+ * the argument note does not carry is the DIRECTION: a dropped search criterion
+ * always widens and never narrows, and "wider than the criteria sent" is what
+ * tells a reader the extra rows are not a mistake in their own query.
+ *
+ * Declarative, never imperative, for the reason set out in
+ * invalid-arguments-message.ts: an instruction addressed to a model from inside
+ * a tool response is indistinguishable from a prompt injected by whoever runs
+ * the server. What happened is a fact; what to do about it is the caller's.
+ */
+export function buildUnappliedSearchNote(
+  provider: string,
+  fields: readonly string[],
+): string {
+  const one = fields.length === 1;
+  return (
+    `Note: this inbox's provider (${SEARCH_DIALECT_LABELS[searchDialectFor(provider)]}) ` +
+    `cannot apply ${quotedFieldList(fields)} to a search. ` +
+    `${one ? "It was" : "They were"} not applied, so this result does not ` +
+    `reflect ${one ? "it" : "them"} and is wider than the criteria sent.`
+  );
+}
+
+/**
+ * The refusal used INSTEAD of a note when the same drop would widen the filter
+ * of a tool that then acts on everything the filter matched.
+ *
+ * ── Why a refusal here and a note two functions up ──────────────────────────
+ * consolidated-arguments.ts settled this question already, in the general case,
+ * with production numbers: refusing every misplaced argument was the largest
+ * error class on the product (882 rejections across 42 workspaces in the 30
+ * days to 2026-08-29, fewer than half followed by a successful call), so for a
+ * READ the answer is drop-and-disclose. But the leniency it grants is granted
+ * per (tool, action) by LENIENT_ACTIONS, and that list holds exactly the
+ * read-only actions. `email_organize` and `email_delete` appear there with
+ * EMPTY arrays, and the comment above them names this tool specifically:
+ * "search_and_move acts on everything a filter matches, so a dropped filter is
+ * the difference between moving one thread and moving an inbox."
+ *
+ * A criterion the provider cannot run is the same fact arriving by a different
+ * route, so it gets the same answer. "Delete my tagged mail that has
+ * attachments" on an IMAP inbox, disclosed rather than refused, deletes every
+ * tagged message and explains afterwards — and the note is read, at best, once
+ * the mail is already gone. The asymmetry is the whole argument: a wrongly
+ * widened read costs one more call, a wrongly widened delete costs mail.
+ *
+ * This is not the over-strictness that module warns against. It refuses a
+ * combination that CANNOT be executed as written on this inbox, not one the
+ * server merely dislikes, and the message names the exact edits that make the
+ * call run — including the read that shows the same set without touching it.
+ */
+export function buildUnappliedSearchRefusal(
+  toolName: string,
+  provider: string,
+  fields: readonly string[],
+): string {
+  const list = quotedFieldList(fields);
+  return (
+    `${toolName}: this inbox's provider ` +
+    `(${SEARCH_DIALECT_LABELS[searchDialectFor(provider)]}) cannot apply ${list} ` +
+    `to a search, and this tool acts on every message the search matches. ` +
+    `Running it would act on a WIDER set than was asked for — every message ` +
+    `matching the remaining criteria — so nothing was searched and no mail was ` +
+    `touched. Re-send with criteria this provider can run, or, if that wider ` +
+    `set is genuinely the intent, re-send without ${list}. To see the wider ` +
+    `set first, run email_read {action: "search"} with the same criteria: it ` +
+    `discloses the same drop and changes nothing.`
+  );
+}

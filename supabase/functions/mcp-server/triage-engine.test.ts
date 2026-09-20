@@ -49,6 +49,7 @@ import {
   type TriageMatch,
   type TriageRuleRow,
   type TriageStore,
+  validateAutomationBody,
   validateTriageAction,
   validateTriageFilter,
   validateTriageInterval,
@@ -436,6 +437,96 @@ Deno.test("a rule with a delete action fails its run without touching the mailbo
   assertEquals(summary.error_code, "invalid_action", "and says why");
   assertEquals(applied.calls.length, 0, "nothing whatsoever reached the mailbox");
   assertEquals(state.seen.size, 0, "and no message was claimed in the ledger");
+});
+
+// ── F-04: a filter the provider cannot run, on the unattended path ──────────
+//
+// The live functional test on 2026-09-20 found `has_attachment` dropped in
+// silence by the IMAP translator. Interactively that costs one wide read and is
+// now disclosed in the result. Stored as an automation it is something else
+// entirely: `{flagged: true, has_attachment: true}` on a generic-IMAP inbox
+// translates to `SEARCH FLAGGED` — every flagged message in the mailbox — and
+// the rule re-runs every fifteen minutes with nobody reading the outcome. So
+// the automation surfaces refuse it at both ends, write and run.
+
+Deno.test("a rule whose filter this provider cannot run fails without touching mail", async () => {
+  const state = freshState({
+    inbox: { id: "inbox-1", workspace_id: "ws-1", email_address: "a@b.com", provider: "imap" },
+  });
+  const applied = { calls: [] as any[] };
+  const searched: unknown[] = [];
+  const deps = fakeDeps(state, [fakeMatch("msg-a")], applied, { ok: true, undo: { op: "move" } }, {
+    search: (_inbox, filter) => {
+      searched.push(filter);
+      return Promise.resolve([fakeMatch("msg-a")]);
+    },
+  });
+
+  const summary = await runTriageRule(
+    deps,
+    fakeRule({ filter: { flagged: true, has_attachment: true } }),
+  );
+
+  assertEquals(summary.status, "failed", "the run fails rather than widening");
+  assertEquals(summary.error_code, "filter_unsupported", "and says exactly why");
+  assertEquals(searched.length, 0, "the mailbox was never even searched");
+  assertEquals(applied.calls.length, 0, "so nothing was moved");
+  assertEquals(state.seen.size, 0, "and no message was claimed in the ledger");
+  // The detail is what the owner reads in the dashboard, and what the
+  // auto-disable notification quotes.
+  const run = state.runs[0] as { error_detail?: string };
+  assert(
+    (run.error_detail ?? "").includes("'has_attachment'"),
+    `the run log names the field: ${run.error_detail}`,
+  );
+});
+
+Deno.test("the same rule on Gmail, which can run the filter, is untouched", async () => {
+  // The guard must be about the provider, not about the field: Gmail has
+  // has:attachment, so this rule is perfectly good there. A check that failed
+  // both would be a worse bug than the one it fixes.
+  const state = freshState(); // provider: gmail
+  const applied = { calls: [] as any[] };
+  const summary = await runTriageRule(
+    fakeDeps(state, [fakeMatch("msg-a")], applied),
+    fakeRule({ filter: { flagged: true, has_attachment: true } }),
+  );
+  assertEquals(summary.status, "completed", "the run goes ahead");
+  assertEquals(applied.calls.length, 1, "and acts on the match");
+});
+
+Deno.test("a filter the inbox cannot run is refused when the rule is written", () => {
+  // The same reasoning as the label-name check beside it: this is not a runtime
+  // failure to discover in a run log five minutes later, it is a rule that can
+  // never do what it says, and the moment to say so is while it is being saved.
+  const bad = validateAutomationBody(
+    {
+      name: "Tagged with attachments",
+      filter: { flagged: true, has_attachment: true },
+      action: { type: "move", folder: "Receipts" },
+      interval_minutes: 60,
+    },
+    "imap",
+    false,
+  );
+  assert(!bad.ok, "an unrunnable filter is not storable");
+  assert(!bad.ok && bad.error.includes("'has_attachment'"), `the error names the field: ${!bad.ok && bad.error}`);
+  assert(
+    !bad.ok && bad.error.includes("unattended"),
+    "and says why a rule is judged more harshly than a search",
+  );
+
+  const good = validateAutomationBody(
+    {
+      name: "Tagged with attachments",
+      filter: { flagged: true, has_attachment: true },
+      action: { type: "move", folder: "Receipts" },
+      interval_minutes: 60,
+    },
+    "gmail",
+    false,
+  );
+  assert(good.ok, "the identical rule saves on a provider that can run it");
 });
 
 Deno.test("only the five documented action types validate", () => {
