@@ -1248,6 +1248,166 @@ Deno.test("automation preview refuses an empty filter", async () => {
   assertEquals(previewed.calls.length, 0, "and no search is run against the mailbox");
 });
 
+// ---------------------------------------------------------------------------
+// Previewing a STORED automation by its id alone.
+//
+// A live functional test on 2026-09-20, on a key with six inboxes, ran
+//
+//   automation_read {action: "preview", automation_id: "1ac73f1c-…"}
+//     -> error: "automation preview: could not resolve the inbox.
+//                Call inbox_list for the inbox_id."
+//   automation_read {action: "preview", automation_id: "1ac73f1c-…",
+//                    inbox_id: "1245c938-…"}                  -> fine
+//
+// The stored rule carried `inbox_id: "1245c938-…"` the whole time — `get` and
+// `list` both return it. The server was demanding a value it already held, and
+// the error pointed at a tool that does not fix it (inbox_list tells you the
+// id; it is PASSING the id that mattered). The cause was ordering: the inbox
+// was resolved from `args` before the rule was ever loaded.
+// ---------------------------------------------------------------------------
+
+/** A deps bundle whose resolveInbox behaves like a key with SEVERAL inboxes. */
+function ambiguousInboxDeps(log: FakeDbLog, previewed: { calls: any[] }): any {
+  const deps = automationDeps(log, previewed);
+  deps.resolveInbox = (args: Record<string, unknown>) => {
+    const id = typeof args["inbox_id"] === "string" ? args["inbox_id"].trim() : "";
+    const address = typeof args["inbox"] === "string" ? args["inbox"].trim() : "";
+    if (!id && !address) {
+      // Exactly what resolveInboxArg reports when nothing is named and more
+      // than one inbox is reachable.
+      return Promise.resolve({
+        ok: false,
+        message:
+          "several inboxes are accessible, so this action needs one named. " +
+          "Retry passing inbox_id (or inbox): a@b.com (inbox_id: inbox-1); c@d.com (inbox_id: inbox-2).",
+      });
+    }
+    return Promise.resolve({
+      ok: true,
+      inbox: {
+        id: id || "inbox-by-address",
+        workspace_id: "ws-1",
+        email_address: address || "a@b.com",
+        provider: "gmail",
+      },
+    });
+  };
+  return deps;
+}
+
+const STORED_RULE = {
+  id: "rule-1",
+  inbox_id: "1245c938-5567-400d-9bf3-a81371a890bf",
+  filter: { from: "news@example.com" },
+};
+
+Deno.test("preview of a stored automation_id resolves the inbox from the rule", async () => {
+  const log: FakeDbLog = { inserts: [], updates: [], rows: { triage_rules: [STORED_RULE] } };
+  const previewed = { calls: [] as any[] };
+  const { runAutomationTool } = await import("./triage-engine.ts");
+
+  // No inbox_id, no inbox. This is the call that used to fail.
+  const result = await runAutomationTool(
+    "preview",
+    { automation_id: "1ac73f1c-5ee5-4a89-a649-96c3c2ee69df" },
+    ambiguousInboxDeps(log, previewed),
+  );
+
+  assertEquals(result.logStatus, "success", "a stored rule can be previewed by its id alone");
+  const payload = result.result.structuredContent as any;
+  assertEquals(
+    payload.inbox_id,
+    STORED_RULE.inbox_id,
+    "and it previews the rule's OWN mailbox, which the result names",
+  );
+  assertEquals(previewed.calls.length, 1, "the search ran once");
+  assertEquals(log.inserts.length, 0, "still a dry run: nothing is written");
+  assertEquals(log.updates.length, 0, "and nothing is updated");
+});
+
+Deno.test("an explicit inbox still wins over the stored rule's own", async () => {
+  // Previewing a stored filter against a DIFFERENT mailbox is a legitimate
+  // read-only question, and it is the workaround callers were told to use, so
+  // it must keep working byte for byte.
+  const log: FakeDbLog = { inserts: [], updates: [], rows: { triage_rules: [STORED_RULE] } };
+  const previewed = { calls: [] as any[] };
+  const { runAutomationTool } = await import("./triage-engine.ts");
+
+  const result = await runAutomationTool(
+    "preview",
+    { automation_id: "1ac73f1c-5ee5-4a89-a649-96c3c2ee69df", inbox_id: "inbox-2" },
+    ambiguousInboxDeps(log, previewed),
+  );
+
+  assertEquals(result.logStatus, "success", "the explicit selector is honoured");
+  assertEquals(
+    (result.result.structuredContent as any).inbox_id,
+    "inbox-2",
+    "and the result names the mailbox that actually ran",
+  );
+});
+
+Deno.test("a blank inbox_id does not suppress the stored rule's inbox", async () => {
+  const log: FakeDbLog = { inserts: [], updates: [], rows: { triage_rules: [STORED_RULE] } };
+  const previewed = { calls: [] as any[] };
+  const { runAutomationTool } = await import("./triage-engine.ts");
+
+  const result = await runAutomationTool(
+    "preview",
+    { automation_id: "1ac73f1c-5ee5-4a89-a649-96c3c2ee69df", inbox_id: "   " },
+    ambiguousInboxDeps(log, previewed),
+  );
+
+  assertEquals(result.logStatus, "success", "whitespace is not a selector");
+  assertEquals(
+    (result.result.structuredContent as any).inbox_id,
+    STORED_RULE.inbox_id,
+    "the rule's own inbox is still used",
+  );
+});
+
+Deno.test("previewing an UNSAVED filter still needs an inbox, and the error says so", async () => {
+  const log: FakeDbLog = { inserts: [], updates: [], rows: {} };
+  const previewed = { calls: [] as any[] };
+  const { runAutomationTool } = await import("./triage-engine.ts");
+
+  const result = await runAutomationTool(
+    "preview",
+    { filter: { from: "news@example.com" } },
+    ambiguousInboxDeps(log, previewed),
+  );
+
+  assert(result.result.isError === true, "there is no record that knows which mailbox is meant");
+  const text = result.result.content[0].text;
+  assert(
+    text.includes("Previewing an unsaved filter needs an inbox"),
+    `the error explains what is actually missing: ${text}`,
+  );
+  assert(
+    text.includes("automation_id"),
+    `and points at the case that needs nothing: ${text}`,
+  );
+  // The resolver's own roster survives, so the retry is one call away.
+  assert(text.includes("inbox-1"), `the accessible inboxes are named inline: ${text}`);
+  assertEquals(previewed.calls.length, 0, "no mailbox was searched");
+});
+
+Deno.test("preview of an unknown automation_id never touches a mailbox", async () => {
+  const log: FakeDbLog = { inserts: [], updates: [], rows: {} };
+  const previewed = { calls: [] as any[] };
+  const { runAutomationTool } = await import("./triage-engine.ts");
+
+  const result = await runAutomationTool(
+    "preview",
+    { automation_id: "1ac73f1c-5ee5-4a89-a649-96c3c2ee69df" },
+    ambiguousInboxDeps(log, previewed),
+  );
+
+  assert(result.result.isError === true, "an id naming no rule is an error");
+  assertEquals(result.logErrorCode, "not_found", "the missing RULE is the complaint, not the inbox");
+  assertEquals(previewed.calls.length, 0, "and no mailbox was searched");
+});
+
 Deno.test("automation delete is a soft delete that keeps run history", async () => {
   const log: FakeDbLog = { inserts: [], updates: [], rows: { triage_rules: [{ id: "rule-1" }] } };
   const previewed = { calls: [] as any[] };
