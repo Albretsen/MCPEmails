@@ -2224,6 +2224,31 @@ function labelAppliedNote(action: TriageAction | undefined, provider: string | n
   return `On this inbox the label is applied as the ${noun} '${target.target.applied_as}'.`;
 }
 
+/**
+ * A one-line note when the rule's action does not do what its name suggests it
+ * will do unattended.
+ *
+ * Only `forward` qualifies. A forward rule never transmits from the runner: it
+ * writes a send_approval row and stops, whatever `inboxes.send_approval_required`
+ * says, because "unattended" and "mail leaves the building" may not be combined.
+ * The tool DESCRIPTION says so in capitals, and the create RESULT said only
+ * "Created and DISABLED", which is where a model actually looks after the call.
+ *
+ * ADDED 2026-09-20 after a functional run: the label rule discloses its own
+ * quirk at create time (labelAppliedNote, right above) and forward, which is the
+ * one rule type whose action is visible to people outside the mailbox, disclosed
+ * nothing. A caller that enables it and then reports "invoices are now being
+ * forwarded" is wrong in a way nobody discovers until the approvals pile up.
+ */
+function forwardApprovalNote(action: TriageAction | undefined): string | null {
+  if (!action || action.type !== "forward") return null;
+  return (
+    "A forward rule is ALWAYS held for human approval: each match creates an " +
+    "approval a person has to accept before anything is sent, whatever this " +
+    "inbox's approval setting says. Nothing leaves the mailbox unattended."
+  );
+}
+
 /** Loads one rule, scoped to the caller's workspace. Tenancy is never implicit. */
 async function loadAutomation(
   deps: AutomationDeps,
@@ -2317,14 +2342,19 @@ export async function runAutomationTool(
         return toolErr(`automation create: could not save the rule (${error?.code ?? "unknown"}).`, "db_error");
       }
       const createNote = labelAppliedNote(body.value.action, resolved.inbox.provider);
+      const approvalNote = forwardApprovalNote(body.value.action);
       return toolOk({
         automation: data,
         enabled: false,
         ...(createNote ? { label_applied_as: createNote } : {}),
+        // Machine-readable half of the same statement, so a client does not
+        // have to parse prose to know this rule cannot send on its own.
+        ...(approvalNote ? { held_for_approval: true } : {}),
         message:
           "Created and DISABLED. Nothing will run until you call automation with " +
           "action 'enable'. Call action 'preview' first to see what the filter matches." +
-          (createNote ? ` ${createNote}` : ""),
+          (createNote ? ` ${createNote}` : "") +
+          (approvalNote ? ` ${approvalNote}` : ""),
       });
     }
 
