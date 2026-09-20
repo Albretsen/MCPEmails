@@ -18,6 +18,7 @@ import {
   normalizePreview,
   normalizeSnippetPreview,
   preferredBodyText,
+  previewFromBodyPartSource,
   stripHtmlToText,
 } from "./text-extract.ts";
 
@@ -260,4 +261,154 @@ Deno.test("a table-built body does not arrive as runs of blank lines", () => {
 
 Deno.test("CRLF is normalised so line rules can see boundaries", () => {
   assertEquals(stripHtmlToText("<p>a</p>\r\n\r\n\r\n<p>b</p>").includes("\r"), false, "no CR survives");
+});
+
+// ── F-03: the preview that was raw MIME ─────────────────────────────────────
+//
+// Every fixture below is the source of ONE fetched body part, exactly as
+// `BODY.PEEK[1]<0.2048>` hands it over: the bytes of part one, with none of the
+// headers that declare what part one is. The boundary and the message text are
+// lifted from the 2026-09-20 functional run that found the bug, where
+// `[MCPE-TEST-20260920-1501] F3 attach` previewed as its own MIME framing while
+// `email_read action:"read"` returned the body perfectly.
+
+const ALT_BOUNDARY = "mcpe_alt_08cb43e0fcbb4d2187a8ae7132385ee7";
+const F3_TEXT =
+  "F3 attachment fixture. Sentinel: F3-BODY-MARKER-CCC333. Two attachments.";
+
+/** UTF-8 to base64, wrapped at 76 columns, exactly as mime-build.ts writes it. */
+function b64Lines(text: string): string {
+  const bytes = new TextEncoder().encode(text);
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return (btoa(bin).match(/.{1,76}/g) ?? []).join("\r\n");
+}
+
+function part(contentType: string, body: string): string[] {
+  return [`Content-Type: ${contentType}`, "Content-Transfer-Encoding: base64", "", body, ""];
+}
+
+/** The multipart/alternative that mime-build.ts nests inside multipart/mixed. */
+function nestedAlternative(text: string, html: string, boundary = ALT_BOUNDARY): string {
+  return [
+    `--${boundary}`,
+    ...part("text/plain; charset=UTF-8", b64Lines(text)),
+    `--${boundary}`,
+    ...part("text/html; charset=UTF-8", b64Lines(html)),
+    `--${boundary}--`,
+  ].join("\r\n");
+}
+
+/** The properties that make a preview a preview rather than a dump of the wire. */
+function assertNoMimeLeak(preview: string): void {
+  assert(!preview.includes("mcpe_"), `boundary leaked: ${preview}`);
+  assert(!/--[A-Za-z0-9_]{8,}/.test(preview), `delimiter leaked: ${preview}`);
+  assert(
+    !/content-(type|transfer-encoding|disposition)/i.test(preview),
+    `header line leaked: ${preview}`,
+  );
+  assert(!/[A-Za-z0-9+/]{40,}/.test(preview), `base64 run leaked: ${preview}`);
+}
+
+Deno.test("a multipart/alternative fetched as part one previews as its text", () => {
+  const preview = previewFromBodyPartSource(
+    nestedAlternative(F3_TEXT, "<p>F3 attachment fixture.</p>"),
+  );
+  assertEquals(preview, F3_TEXT, "the decoded text/plain part, and nothing else");
+  assertNoMimeLeak(preview);
+});
+
+Deno.test("the 2KB cut through a base64 part does not spill the alphabet", () => {
+  // The real fetch is <0.2048>, which lands mid-quantum in the middle of the
+  // first part. `atob` throws on that, and the old fallback handed the base64
+  // back as if it were prose.
+  const long = `${F3_TEXT} ` + "Body line for the truncation fixture. ".repeat(60);
+  const truncated = nestedAlternative(long, "<p>ignored</p>").slice(0, 2048);
+  const preview = previewFromBodyPartSource(truncated);
+  assert(preview.startsWith(F3_TEXT), `lost the start of the body: ${preview}`);
+  assertNoMimeLeak(preview);
+});
+
+Deno.test("the descent is not depth-limited", () => {
+  // multipart/related wrapping the alternative: two levels below the part that
+  // was actually fetched. A generator that only looks one level down is a
+  // generator that breaks again the next time a sender nests deeper.
+  const inner = nestedAlternative(F3_TEXT, "<p>F3 attachment fixture.</p>");
+  const source = [
+    "--mcpe_rel_1111",
+    `Content-Type: multipart/alternative; boundary="${ALT_BOUNDARY}"`,
+    "",
+    inner,
+    "",
+    "--mcpe_rel_1111--",
+  ].join("\r\n");
+  const preview = previewFromBodyPartSource(source);
+  assertEquals(preview, F3_TEXT, "two levels of nesting is still the same answer");
+  assertNoMimeLeak(preview);
+});
+
+Deno.test("an HTML-only nested part falls back to the stripped HTML", () => {
+  const source = [
+    `--${ALT_BOUNDARY}`,
+    ...part("text/html; charset=UTF-8", b64Lines("<p>Invoice&nbsp;42 is ready.</p>")),
+    `--${ALT_BOUNDARY}--`,
+  ].join("\r\n");
+  const preview = previewFromBodyPartSource(source);
+  assertEquals(preview, "Invoice 42 is ready.", "the HTML part, converted to text");
+  assertNoMimeLeak(preview);
+});
+
+Deno.test("the HTML fallback does not spend the preview budget on link targets", () => {
+  // body_text keeps the URLs on purpose; a 200-character triage line cannot
+  // afford one, let alone the four a marketing template carries.
+  const html = '<p>Your invoice is <a href="https://billing.example.com/i/42?t=abcdef">ready</a>.</p>';
+  const source = [
+    `--${ALT_BOUNDARY}`,
+    ...part("text/html; charset=UTF-8", b64Lines(html)),
+    `--${ALT_BOUNDARY}--`,
+  ].join("\r\n");
+  assertEquals(
+    previewFromBodyPartSource(source),
+    "Your invoice is ready.",
+    "the text, without the target",
+  );
+});
+
+Deno.test("a nested part carrying no text at all previews as empty, not as bytes", () => {
+  const source = [
+    `--${ALT_BOUNDARY}`,
+    "Content-Type: image/png; name=\"logo.png\"",
+    "Content-Disposition: attachment; filename=\"logo.png\"",
+    "Content-Transfer-Encoding: base64",
+    "",
+    b64Lines("x".repeat(400)),
+    "",
+    `--${ALT_BOUNDARY}--`,
+  ].join("\r\n");
+  assertEquals(previewFromBodyPartSource(source), "", "no text in, nothing out");
+});
+
+Deno.test("a leaf base64 text part still previews (the case that always worked)", () => {
+  assertEquals(
+    previewFromBodyPartSource(b64Lines(F3_TEXT)),
+    F3_TEXT,
+    "the leaf path this fix must not regress",
+  );
+});
+
+Deno.test("a leaf quoted-printable part still decodes", () => {
+  assertEquals(
+    previewFromBodyPartSource("Karin p=C3=A5 Teknikkdeler sendte deg en=\r\n faktura."),
+    "Karin på Teknikkdeler sendte deg en faktura.",
+    "soft line break joined, =XX decoded",
+  );
+});
+
+Deno.test("a plain body whose line starts with -- is not mistaken for a multipart", () => {
+  // The signature separator is RFC 3676's, not a boundary. The guard is that a
+  // delimiter must be followed by something shaped like a MIME header field.
+  const body = "Thanks, that works for me.\r\n\r\n-- \r\nKarin\r\nTeknikkdeler AS";
+  const preview = previewFromBodyPartSource(body);
+  assert(preview.startsWith("Thanks, that works for me."), `body mangled: ${preview}`);
+  assert(preview.includes("Karin"), `signature dropped: ${preview}`);
 });
