@@ -61,12 +61,24 @@
  *   Every request is verified against STRIPE_WEBHOOK_SECRET using the raw body.
  *   This handler uses the service-role Supabase client (bypasses RLS).
  *
+ * Delivered through a queue (2026-09-20):
+ *   Stripe points at a Queuey ingress, which forwards here. Two consequences,
+ *   both handled below:
+ *     - The queue must forward the `Stripe-Signature` header and the body
+ *       UNCHANGED (raw passthrough, no re-serialisation). The signature is over
+ *       the exact bytes; a reformatted body is an invalid signature.
+ *     - A held event is replayed long after it was signed, so the timestamp
+ *       tolerance is widened. See signatureToleranceSeconds().
+ *   STRIPE_WEBHOOK_PROXY_KEY optionally restricts the route to the queue. It is
+ *   an additional gate, never a replacement for the signature.
+ *
  * References:
  *   src/lib/stripe/plans.ts  (plan catalogue, getPlanByStripePriceId)
  *   src/lib/stripe/client.ts (stripe SDK instance)
  *   src/lib/email/purchase-confirmation.ts (confirmation email composer + sender)
  */
 
+import { timingSafeEqual } from 'node:crypto';
 import { NextRequest, NextResponse, after } from 'next/server';
 import type Stripe from 'stripe';
 import { stripe } from '@/lib/stripe/client';
@@ -111,6 +123,88 @@ export const maxDuration = 30;
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
 /**
+ * Signature timestamp tolerance, in seconds. Default 7 days.
+ *
+ * WHY IT IS NOT STRIPE'S 300-SECOND DEFAULT.
+ * Stripe no longer delivers here directly: a queue (Queuey) sits in front,
+ * receives the signed request, and forwards it byte for byte. When our endpoint
+ * is down that queue HOLDS the event and re-sends it later — after 30 seconds,
+ * then minutes, then every ~30 minutes for about two days, and after that only
+ * when a human resumes it. Every one of those replays carries the ORIGINAL
+ * signature, because the signature is over the original bytes and the queue
+ * must not touch them. With the 300-second default, every replay older than
+ * five minutes fails verification as "timestamp outside tolerance" and returns
+ * 400 — which the queue classifies as a PERMANENT failure and dead-letters
+ * instead of retrying. The outage would eat the events it was installed to
+ * protect.
+ *
+ * WHAT STILL STOPS A REPLAY. The tolerance was never the only defence and is
+ * not the interesting one here. Section 2 inserts every event id into
+ * `stripe_webhook_events` under a unique constraint, so a replayed event is a
+ * no-op ack. Section 3 additionally ignores any event for a customer whose
+ * `created` predates the newest event already processed for that customer, so
+ * even a first-time-seen stale event cannot clobber newer subscription state.
+ * Widening the window costs the ability to reject an old signature as old; it
+ * costs nothing in state correctness.
+ *
+ * Read at call time, not captured at module scope — see the WHY on
+ * BILLING_LIFECYCLE_EMAILS below; a warm lambda keeps whatever it booted with.
+ */
+const DEFAULT_SIGNATURE_TOLERANCE_SECONDS = 7 * 24 * 60 * 60;
+
+function signatureToleranceSeconds(): number {
+  const raw = process.env.STRIPE_WEBHOOK_TOLERANCE_SECONDS;
+  if (!raw) return DEFAULT_SIGNATURE_TOLERANCE_SECONDS;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    console.error(
+      `[stripe-webhook] STRIPE_WEBHOOK_TOLERANCE_SECONDS is not a positive number (${raw}); using the default.`,
+    );
+    return DEFAULT_SIGNATURE_TOLERANCE_SECONDS;
+  }
+  return parsed;
+}
+
+/**
+ * The key the delivery queue presents to prove the request came from IT and not
+ * from the open internet. Optional, and OFF until the variable is set.
+ *
+ * It is not what makes an event authentic — the Stripe signature below is, and
+ * it is still required on every request. This only narrows who can reach the
+ * route at all, so a hostile prober cannot even attempt signatures.
+ *
+ * ORDER OF OPERATIONS WHEN TURNING IT ON. Configure the key in the queue and
+ * send a test FIRST, then set this variable. Setting it while the queue is
+ * still sending nothing means every delivery gets a 401, which the queue reads
+ * as permanent and dead-letters — it will not retry its way out of that.
+ *
+ * ONCE SET, STRIPE CANNOT DELIVER DIRECTLY. A "send test webhook" from the
+ * Stripe dashboard, or an old endpoint still pointed at this URL, arrives with
+ * no key and is refused. That is the intended posture, not a bug: disable the
+ * direct endpoint in Stripe so there is exactly one path in.
+ *
+ * Three header spellings are accepted because the name is the queue's choice,
+ * not ours: its built-in auth may send `Authorization: Bearer`, and a key added
+ * by hand under "default headers" is conventionally `X-Api-Key`.
+ */
+function proxyKeyAccepted(request: NextRequest): boolean {
+  const expected = process.env.STRIPE_WEBHOOK_PROXY_KEY;
+  if (!expected) return true; // Not configured: the gate is off.
+
+  const bearer = request.headers.get('authorization');
+  const provided =
+    request.headers.get('x-api-key') ??
+    request.headers.get('x-queuey-key') ??
+    (bearer?.toLowerCase().startsWith('bearer ') ? bearer.slice(7) : null) ??
+    '';
+
+  const a = Buffer.from(expected);
+  const b = Buffer.from(provided);
+  // Length is not secret, and timingSafeEqual throws on a mismatch.
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+/**
  * Billing lifecycle email mode. THE PRODUCTION KILL SWITCH.
  *
  *   off        (default) Queue nothing, cancel nothing. This file behaves
@@ -145,6 +239,16 @@ const ENTITLED_STATUSES: ReadonlySet<Stripe.Subscription.Status> = new Set([
 // ---------------------------------------------------------------------------
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  // ── 0. Front door: is this the delivery queue? ─────────────────────────────
+  // Off unless STRIPE_WEBHOOK_PROXY_KEY is set. 401 and not 403 because the
+  // request failed to authenticate rather than being refused a resource, and
+  // because a delivery queue reads both as permanent — which is what we want
+  // for a wrong key: park it and tell someone, never retry it into the void.
+  if (!proxyKeyAccepted(request)) {
+    console.error('[stripe-webhook] rejected: proxy key missing or wrong.');
+    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+  }
+
   // ── 1. Verify webhook signature ───────────────────────────────────────────
   if (!WEBHOOK_SECRET) {
     console.error('[stripe-webhook] STRIPE_WEBHOOK_SECRET is not set.');
@@ -175,7 +279,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(rawBody, signature, WEBHOOK_SECRET);
+    event = stripe.webhooks.constructEvent(
+      rawBody,
+      signature,
+      WEBHOOK_SECRET,
+      signatureToleranceSeconds(),
+    );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error('[stripe-webhook] Signature verification failed:', message);
