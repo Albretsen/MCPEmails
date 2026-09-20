@@ -1536,8 +1536,15 @@ export class ImapClient {
  * Compress an array of UIDs to a compact IMAP UID-set string, collapsing
  * consecutive runs into ranges. E.g. [1,2,3,5,7,8] → "1:3,5,7:8".
  * Deduplicates and sorts the input before building ranges.
+ *
+ * Exported since 2026-09-20 for `imap-uid-presence.ts`, which builds the
+ * "UID <set>" SEARCH criteria that asks a mailbox which of these UIDs it
+ * actually holds. That criteria has to be the same set syntax the UID STORE /
+ * COPY / MOVE built from the same array, or the probe would be asking about a
+ * different set of messages than the command it is guarding. One function, one
+ * spelling, no second implementation to drift.
  */
-function toUidSet(uids: number[]): string {
+export function toUidSet(uids: number[]): string {
   if (uids.length === 0) return "";
   const sorted = [...new Set(uids)].sort((a, b) => a - b);
   const ranges: string[] = [];

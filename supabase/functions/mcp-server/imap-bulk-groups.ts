@@ -19,6 +19,8 @@
 // ---------------------------------------------------------------------------
 
 import type { BulkStopReason } from "./bulk-budget.ts";
+import { MESSAGE_NOT_FOUND } from "./message-id-errors.ts";
+import { splitByPresence } from "./imap-uid-presence.ts";
 
 /** One source folder's worth of work, after the ids have been decoded. */
 export interface ImapFolderGroup {
@@ -108,6 +110,19 @@ export async function runImapFolderGroups<C>(opts: {
   folderName: (folder: string) => string;
   /** The one UID command that distinguishes move from copy from delete from flag. */
   apply: (client: C, group: ImapFolderGroup) => Promise<void>;
+  /**
+   * Which of the group's UIDs the SELECTed mailbox actually holds.
+   *
+   * Optional only so the loop stays usable by a caller that has some other way
+   * of knowing; every mutation path in this server supplies it. When it is
+   * supplied, `apply` is handed ONLY the UIDs that came back present, and the
+   * rest are failed as {@link MESSAGE_NOT_FOUND} without ever reaching a UID
+   * command. See imap-uid-presence.ts for why a UID command cannot answer this
+   * question for itself: a UID set matching zero messages is a tagged OK, so
+   * before 2026-09-20 a delete_batch of two ids that did not exist returned
+   * `{"succeeded":2,"failed":0}`.
+   */
+  presentUids?: (client: C, group: ImapFolderGroup) => Promise<ReadonlySet<number>>;
   /** Cooperative stop: budget exhausted, user cancellation, or neither. */
   stop?: (succeeded: number, failed: number) => Promise<BulkStopReason | null>;
   /** Turns a thrown provider error into the per-id error string. */
@@ -120,13 +135,40 @@ export async function runImapFolderGroups<C>(opts: {
     const stop = opts.stop ? await opts.stop(succeeded.length, failed.length) : null;
     if (stop) return { succeeded, failed, cancelled: true, stoppedReason: stop };
 
+    // Hoisted out of the try so the catch can tell the two kinds of failure
+    // apart: ids the mailbox told us are gone are a settled fact even if the
+    // UID command that followed then blew up, and reporting them as the
+    // provider's error would send the caller to retry an id that can never
+    // work.
+    let missing: ImapFolderGroup["items"] = [];
+    let attempted: ImapFolderGroup = group;
+
     try {
       const client = await opts.session.select(opts.folderName(group.folder));
-      await opts.apply(client, group);
-      for (const item of group.items) succeeded.push(item.messageId);
+
+      if (opts.presentUids) {
+        const present = await opts.presentUids(client, group);
+        const split = splitByPresence(group.items, present);
+        missing = split.missing;
+        attempted = { folder: group.folder, items: split.present };
+      }
+
+      // A group where every id is stale issues NO UID command at all. That is
+      // not only a saved round trip: an empty UID set is the one input whose
+      // meaning varies by server, and a destructive command is the last place
+      // to find out which way this one reads it.
+      if (attempted.items.length > 0) await opts.apply(client, attempted);
+
+      for (const item of attempted.items) succeeded.push(item.messageId);
+      for (const item of missing) {
+        failed.push({ id: item.messageId, error: MESSAGE_NOT_FOUND });
+      }
     } catch (err) {
       const message = opts.classifyError(err);
-      for (const item of group.items) failed.push({ id: item.messageId, error: message });
+      for (const item of missing) {
+        failed.push({ id: item.messageId, error: MESSAGE_NOT_FOUND });
+      }
+      for (const item of attempted.items) failed.push({ id: item.messageId, error: message });
       await opts.session.invalidate();
     }
   }

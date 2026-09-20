@@ -333,6 +333,7 @@ import {
   type ImapFolderGroup,
   runImapFolderGroups,
 } from "./imap-bulk-groups.ts";
+import { assertUidPresent, presentUids } from "./imap-uid-presence.ts";
 import { dedupeMessageIds } from "./message-id-dedupe.ts";
 import {
   type InboxSelectorConflict,
@@ -18821,6 +18822,10 @@ async function imapUpdateFlags(
       password,
     });
     await client.selectMailbox(imapMailboxForServerFolder(folder));
+    // The message has to BE there before we say we acted on it: a UID command
+    // against a UID nobody holds is a tagged OK, not an error. See
+    // imap-uid-presence.ts.
+    await assertUidPresent(client, uid);
     await client.uidStore([uid], imapFlags, mode);
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
@@ -18872,6 +18877,10 @@ async function imapArchiveEmail(
       await client.createMailbox(target);
     }
     await client.selectMailbox(imapMailboxForServerFolder(folder));
+    // The message has to BE there before we say we acted on it: a UID command
+    // against a UID nobody holds is a tagged OK, not an error. See
+    // imap-uid-presence.ts.
+    await assertUidPresent(client, uid);
     // uidMove falls back internally if MOVE is unsupported (COPY + \\Deleted +
     // EXPUNGE); the COPY runs before the destructive steps.
     await client.uidMove([uid], target);
@@ -19504,6 +19513,10 @@ async function imapMoveEmail(
       password,
     });
     await client.selectMailbox(imapMailboxForServerFolder(folder));
+    // The message has to BE there before we say we acted on it: a UID command
+    // against a UID nobody holds is a tagged OK, not an error. See
+    // imap-uid-presence.ts.
+    await assertUidPresent(client, uid);
     // uidMove falls back to COPY + \\Deleted + EXPUNGE when RFC 6851 MOVE is
     // unsupported by the server.
     await client.uidMove([uid], destinationFolderId);
@@ -19760,6 +19773,10 @@ async function imapCopyEmail(
       password,
     });
     await client.selectMailbox(imapMailboxForServerFolder(folder));
+    // The message has to BE there before we say we acted on it: a UID command
+    // against a UID nobody holds is a tagged OK, not an error. See
+    // imap-uid-presence.ts.
+    await assertUidPresent(client, uid);
     await client.uidCopy([uid], destinationFolderId);
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
@@ -19967,6 +19984,19 @@ async function imapDeleteEmail(
     if (permanent) {
       // Hard-delete: flag \\Deleted then UID EXPUNGE
       await client.selectMailbox(imapMailboxForServerFolder(folder));
+      // "UID STORE 99999999 +FLAGS (\\Deleted)" is a tagged OK on a mailbox that
+      // has no UID 99999999: RFC 3501 UID commands are set-addressed, and a set
+      // matching zero messages is not an error. Every IMAP mutation helper in
+      // this file used to read "the command did not throw" as "the message was
+      // acted on", which on 2026-09-20 had email_delete answering
+      // {"success":true} for INBOX:99999999 and email_organize answering
+      // "Relocated the message to the destination folder." for INBOX:55555555.
+      // Neither message had ever existed. The probe below is the half of the
+      // question that was missing; it throws the same `message_not_found`
+      // sentinel the Gmail and Outlook paths already throw, so handleFlagError
+      // renders the wording email_read has always used for a stale id.
+      // See imap-uid-presence.ts.
+      await assertUidPresent(client, uid);
       await client.uidStore([uid], ["\\Deleted"], "add");
       await client.uidExpunge([uid]);
     } else {
@@ -19976,6 +20006,11 @@ async function imapDeleteEmail(
       // RFC 6851 MOVE is unsupported.
       const trash = await resolveImapTrashMailbox(client);
       await client.selectMailbox(imapMailboxForServerFolder(folder));
+      // SEARCH, not a FETCH of the flags: a message already flagged \\Deleted
+      // and not yet expunged is still PRESENT, so re-deleting an
+      // already-trashed message stays the idempotent no-op it has always been.
+      // Only an id for a message that is genuinely gone fails here.
+      await assertUidPresent(client, uid);
       await client.uidMove([uid], trash);
     }
   } catch (err) {
@@ -20583,6 +20618,15 @@ function imapBulkByFolderGroup(
         session,
         folderName: imapMailboxForServerFolder,
         apply,
+        // One UID SEARCH per folder group, in front of the one UID command per
+        // folder group — so the check costs a round trip per GROUP, not per
+        // message, and a 500-id sweep across three folders pays three of them.
+        // Without it a UID set that matches nothing is a tagged OK and every id
+        // in the group lands in `succeeded`; see imap-uid-presence.ts for the
+        // 2026-09-20 transcript where delete_batch of two nonexistent ids
+        // answered {"succeeded":2,"failed":0}.
+        presentUids: (client, group) =>
+          presentUids(client, group.items.map((i) => i.uid)),
         stop: (succeeded, failedCount) =>
           bulkStopSignal(opts, runId, succeeded, failedCount),
         classifyError: (err) =>
