@@ -20,7 +20,7 @@ import {
 import { ApprovalsPanel } from './ApprovalsPanel';
 import { AutomationsPanel } from './AutomationsPanel';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
-import { checkoutStartHref, pricingCompareHref } from '@/lib/billing/upgrade-intent.mjs';
+import { pricingCompareHref } from '@/lib/billing/upgrade-intent.mjs';
 import { inboxCapOffer } from '@/lib/billing/inbox-cap-offer.mjs';
 import {
   usageCapCheckoutHref,
@@ -35,6 +35,8 @@ import {
 } from '@/lib/usage/allowance-view.mjs';
 import UpgradeIntervalChoice, {
   IntervalToggle,
+  PlanCheckoutLink,
+  SharedIntervalChoice,
   annualOfferForPlan,
   upgradeCtaLabel,
 } from './UpgradeIntervalChoice';
@@ -1166,16 +1168,21 @@ function needsReconnect(status) {
   return status === 'error';
 }
 
-export function InboxesPage({ inboxes, planLimits, stripePrices = null, onConnect, onRemove, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, userRole, onGoToKeys }) {
+// `businessShaped` is computed ONCE in App.jsx (isBusinessShapedWorkspace) and
+// handed here and to the ConnectModal as the same boolean, so the cap notice
+// and the modal's panel cannot classify one workspace two ways. It only changes
+// anything at the Free cap, where inboxCapOffer widens Personal alone to
+// Personal and Pro.
+export function InboxesPage({ inboxes, planLimits, stripePrices = null, businessShaped = false, onConnect, onRemove, onReconnect, onCheck, onSaveSignature, onSaveSenderName, onSaveDraftEditorHidden, draftEditorRolledOut = false, draftEditorWorkspaceHidden = false, userRole, onGoToKeys }) {
   // The analytics window this plan buys. Every per-inbox call count on this
   // page is scoped to it server-side, so the label has to quote the same
   // number or the column silently means something different per plan.
   const historyDays = planLimits?.historyDays ?? 30;
   const t = useTranslations('dashboard');
-  // The cap notice's interval copy lives beside the modal's, in
-  // dashboardChrome, so the two surfaces cannot word the same choice
-  // differently. Both namespaces are loaded for the whole app realm.
-  const trc = useTranslations('dashboardChrome');
+  // The cap notice's interval copy and its annual buy label live beside the
+  // modal's, in dashboardChrome, so the two surfaces cannot word the same
+  // choice differently. They are read inside UpgradeIntervalChoice,
+  // SharedIntervalChoice and PlanCheckoutLink, which both surfaces share.
   // Count errored inboxes to conditionally show a page-level warning banner.
   const erroredCount = inboxes.filter(ib => ib.status === "error").length;
 
@@ -1299,11 +1306,19 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, onConnec
       {atInboxLimit && maxInboxes !== null && (() => {
         // Same rule as the modal's panel, from the same module, so the two
         // surfaces can never quote different plans for the same block.
-        const offer = inboxCapOffer(maxInboxes);
-        const personal = offer.plan === 'personal';
+        //
+        // For a business-shaped workspace at the Free cap that is TWO plans
+        // (Personal, then Pro), and this notice puts a buy button on each, in
+        // the rule's order, under one interval choice. Everything below maps
+        // over `offer.offers`, which has exactly one entry in every other
+        // case, so the single-plan notice is the same code with one button.
+        const offer = inboxCapOffer(maxInboxes, { businessShaped });
         // Null when annual cannot be sold for this plan, in which case the
         // notice keeps the monthly-only shape it has always had.
         const annual = annualOfferForPlan(stripePrices, offer.plan);
+        const annualByPlan = Object.fromEntries(
+          offer.offers.map(o => [o.plan, annualOfferForPlan(stripePrices, o.plan)])
+        );
         return (
           <div style={{
             display: 'flex',
@@ -1333,11 +1348,11 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, onConnec
                 color: 'var(--fg-3)',
                 lineHeight: 1.5,
               }}>
-                {personal ? t('inboxes.capBodyPersonal') : t('inboxes.capBodyPro')}
+                {t(offer.noticeBodyKey)}
               </div>
               {/* The same choice, in the same words, as the modal's panel.
                   Renders nothing when the plan has no yearly price. */}
-              {annual && (
+              {!offer.dual && annual && (
                 <div style={{ marginTop: 10 }}>
                   <UpgradeIntervalChoice
                     offer={annual}
@@ -1347,8 +1362,27 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, onConnec
                   />
                 </div>
               )}
+              {/* Two plans, one interval choice over both buy buttons. It is
+                  price-free (two plans have two prices) and renders nothing
+                  unless BOTH can be bought yearly; each button then quotes its
+                  own annual total. Still Monthly until somebody picks. */}
+              {offer.dual && (
+                <div style={{ marginTop: 10, display: 'flex' }}>
+                  <SharedIntervalChoice
+                    annualOffers={offer.offers.map(o => annualByPlan[o.plan])}
+                    value={capInterval}
+                    onChange={setCapInterval}
+                    size="sm"
+                  />
+                </div>
+              )}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            {/* Wraps: with two buy buttons this row is about 480px of nowrap
+                labels, and the notice is narrower than that on a phone. */}
+            <div
+              data-cap-offer={offer.dual ? 'dual' : 'single'}
+              style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: offer.dual ? 8 : 4 }}
+            >
               {/* Locale-aware Link, unlike the checkout CTA below: /pricing is
                   an ordinary page with no side effects, so prefetching it is
                   free, and a Norwegian user belongs on /nb/pricing.
@@ -1378,32 +1412,20 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, onConnec
               </Link>
               {/* Must stay a plain <a> to an API path: a next/link prefetch
                   would open Stripe Checkout sessions for people who never
-                  clicked. Same contract as the modal's CTA. */}
-              <a
-                href={checkoutStartHref(offer.plan, capInterval === 'year')}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  height: 32,
-                  padding: '0 14px',
-                  background: 'var(--brand)',
-                  color: '#fff',
-                  borderRadius: 8,
-                  fontFamily: 'var(--font-sans)',
-                  fontSize: 12.5,
-                  fontWeight: 500,
-                  textDecoration: 'none',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {upgradeCtaLabel(trc, {
-                  offer: annual,
-                  interval: capInterval,
-                  planName: planDisplayName(offer.plan),
-                  monthlyLabel: personal ? t('inboxes.capCtaPersonal') : t('inboxes.capCtaPro'),
-                })}
-              </a>
+                  clicked. Same contract as the modal's CTA, and the same
+                  component, which keeps that contract in one place. One button
+                  per offered plan, in the rule's order. */}
+              {offer.offers.map(o => (
+                <PlanCheckoutLink
+                  key={o.plan}
+                  plan={o.plan}
+                  planName={planDisplayName(o.plan)}
+                  monthlyLabel={t(o.noticeCtaKey)}
+                  annualOffer={annualByPlan[o.plan]}
+                  interval={capInterval}
+                  size="sm"
+                />
+              ))}
             </div>
           </div>
         );

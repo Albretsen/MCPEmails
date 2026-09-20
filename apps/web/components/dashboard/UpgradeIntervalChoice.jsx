@@ -5,6 +5,8 @@ import {
   annualOfferFromPrices,
   formatPriceCents,
 } from '@/lib/stripe/annual-offer';
+import { checkoutStartHref } from '@/lib/billing/upgrade-intent.mjs';
+import { buysAnnual, sharedIntervalChoice } from '@/lib/billing/inbox-cap-offer.mjs';
 
 /**
  * The monthly / annual choice on the in-product upsell surfaces.
@@ -221,4 +223,127 @@ export function upgradeCtaLabel(tr, { offer, interval, planName, monthlyLabel })
     plan: planName,
     price: formatPriceCents(offer.yearlyPriceCents),
   });
+}
+
+/**
+ * ONE interval choice governing SEVERAL buy buttons.
+ *
+ * Used when the inbox cap offers two plans side by side (a business-shaped
+ * Free workspace is shown Personal and Pro, see lib/billing/inbox-cap-offer).
+ * The single-plan control above prints each interval's price inside the toggle,
+ * which two plans at two prices cannot share, so this one is price-free and
+ * every buy button states its own number instead.
+ *
+ * Same default as everything else here: the caller's state starts at 'month'
+ * and this never changes it. It renders nothing unless EVERY plan on screen can
+ * be bought yearly, so "Annual" can never sit above a button that would still
+ * sell monthly; both rules live in `sharedIntervalChoice`, where they are
+ * tested.
+ *
+ * @param {{
+ *   annualOffers: Array<import('@/lib/stripe/annual-offer').AnnualOffer | null>,
+ *   value: 'month' | 'year',
+ *   onChange: (interval: 'month' | 'year') => void,
+ *   size?: 'sm' | 'md',
+ * }} props
+ */
+export function SharedIntervalChoice({ annualOffers, value, onChange, size = 'md' }) {
+  const tr = useTranslations('dashboardChrome');
+  const { annualAvailable, savingPercent } = sharedIntervalChoice(annualOffers);
+  if (!annualAvailable) return null;
+
+  return (
+    <IntervalToggle
+      value={value}
+      onChange={onChange}
+      ariaLabel={tr('connect.intervalLabel')}
+      size={size}
+      options={[
+        { value: 'month', label: tr('connect.intervalMonthly') },
+        {
+          value: 'year',
+          label: tr('connect.intervalAnnual'),
+          badge:
+            savingPercent != null
+              ? tr('connect.intervalSave', { percent: savingPercent })
+              : undefined,
+        },
+      ]}
+    />
+  );
+}
+
+/**
+ * One plan's buy button on a cap surface, as a plain anchor.
+ *
+ * MUST STAY A PLAIN <a>, never a next/link: the href is an API route that
+ * creates a Stripe Checkout session, so a prefetch would open sessions for
+ * people who never clicked.
+ *
+ * The href and the label are derived from the SAME `buysAnnual` answer, so the
+ * button can never read "$5/mo" while sending `interval=year`, nor the reverse.
+ * That pairing was previously kept true by two adjacent expressions at each
+ * call site; with two buttons per surface it is kept true here, once.
+ *
+ * `block` is the in-card form: full width, and allowed to wrap, because a card
+ * is about 185px wide inside the modal and "Oppgrader til Personal, $48/yr"
+ * is not. A clipped price on a buy button is worse than a two-line one.
+ *
+ * @param {{
+ *   plan: string,
+ *   planName: string,
+ *   monthlyLabel: string,
+ *   annualOffer: import('@/lib/stripe/annual-offer').AnnualOffer | null,
+ *   interval: 'month' | 'year',
+ *   size?: 'sm' | 'md',
+ *   block?: boolean,
+ *   children?: import('react').ReactNode,
+ * }} props `children` renders before the label (an icon).
+ */
+export function PlanCheckoutLink({
+  plan,
+  planName,
+  monthlyLabel,
+  annualOffer,
+  interval,
+  size = 'md',
+  block = false,
+  children,
+}) {
+  const tr = useTranslations('dashboardChrome');
+  const annual = buysAnnual(interval, annualOffer);
+  const compact = size === 'sm';
+  const height = compact ? 32 : 34;
+  return (
+    <a
+      href={checkoutStartHref(plan, annual)}
+      data-cap-offer-plan={plan}
+      style={{
+        display: block ? 'flex' : 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+        padding: block ? '7px 10px' : compact ? '0 14px' : '0 16px',
+        ...(block ? { minHeight: height, boxSizing: 'border-box' } : { height }),
+        background: 'var(--brand)',
+        color: '#fff',
+        borderRadius: 8,
+        fontFamily: 'var(--font-sans)',
+        fontSize: compact ? 12.5 : 13,
+        fontWeight: 500,
+        lineHeight: 1.3,
+        textAlign: 'center',
+        textDecoration: 'none',
+        whiteSpace: block ? 'normal' : 'nowrap',
+      }}
+    >
+      {children}
+      {upgradeCtaLabel(tr, {
+        offer: annualOffer,
+        interval: annual ? 'year' : 'month',
+        planName,
+        monthlyLabel,
+      })}
+    </a>
+  );
 }
