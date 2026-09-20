@@ -14,6 +14,7 @@ import { CommandPalette } from './CommandPalette';
 import { ToastProvider, useToast } from './Toast';
 import { trackProductEvent } from '@/lib/analytics.mjs';
 import { parseUpgradeIntent } from '@/lib/billing/upgrade-intent.mjs';
+import { isBusinessShapedWorkspace } from '@/lib/segment/consumer-domains.mjs';
 
 /* App.jsx: dashboard root. Owns state, route, modals.
    firstrun param auto-opens the connect modal.
@@ -190,6 +191,19 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   // Initialise from server-fetched data; fallback to empty array so the
   // empty-state UI renders correctly on first run or when fetch fails.
   const [inboxes, setInboxes] = useState(serverInboxes ?? []);
+  // Does this workspace already hold a mailbox on a company domain? Decided
+  // ONCE, here, from the live inbox list, and handed as the same boolean to the
+  // two surfaces that sell at the inbox cap (the ConnectModal's panel and the
+  // notice on the Inboxes page), so they cannot classify one workspace two
+  // ways. It has to be decided from what is ALREADY connected: the panel is
+  // drawn the moment the modal opens, before a new address has been typed.
+  //
+  // The account email is OR-ed in for the OWNER only. A member's own address
+  // says nothing about who pays for the workspace.
+  const businessShaped = isBusinessShapedWorkspace({
+    inboxes,
+    ownerEmail: serverWorkspace?.isOwner === true ? user?.email : null,
+  });
   // Initialise from server-fetched API keys; empty array on first run or error.
   const [keys, setKeys] = useState(serverApiKeys ?? []);
   const [members, setMembers] = useState(serverMembers ?? []);
@@ -988,7 +1002,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         )}
 
         {route === "overview" && <OverviewPage key={guideResumeKey} inboxes={inboxes} apiKeys={keys} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} />}
-        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onSaveDraftEditorHidden={onSaveDraftEditorHidden} draftEditorRolledOut={workspace?.draftEditorEnabled === true} draftEditorWorkspaceHidden={workspace?.draftEditorHidden === true} userRole={userRole} onGoToKeys={() => setRoute("keys")} />}
+        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} businessShaped={businessShaped} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onSaveDraftEditorHidden={onSaveDraftEditorHidden} draftEditorRolledOut={workspace?.draftEditorEnabled === true} draftEditorWorkspaceHidden={workspace?.draftEditorHidden === true} userRole={userRole} onGoToKeys={() => setRoute("keys")} />}
         {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} workspaceName={workspace?.displayName ?? workspace?.display_name ?? workspace?.slug ?? ''} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onResendInvite={onResendInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} onLeave={onLeaveWorkspace} />}
         {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} stripePrices={stripePrices} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} />}
@@ -1017,6 +1031,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           inboxCount={inboxes.length}
           maxInboxes={planLimits?.maxInboxes ?? null}
           stripePrices={stripePrices}
+          businessShaped={businessShaped}
         />
       )}
 

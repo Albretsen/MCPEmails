@@ -141,6 +141,7 @@
     "capTitle": "Vous avez atteint votre limite de boîtes",
     "capBodyPersonal": "L'offre gratuite connecte une boîte. Personal vous en donne trois pour 5 $ par mois, pour que le pro et le perso partagent le même agent.",
     "capBodyPro": "Personal connecte trois boîtes. Pro supprime la limite pour 15 $ par mois, pour réunir toutes vos boîtes sur un seul agent.",
+    "capBodyBusiness": "Vous gérez plusieurs boîtes d'entreprise ? L'offre gratuite en connecte une. Personal en couvre trois pour 5 $ par mois, de quoi couvrir info@, ventes@ et la vôtre. Pro couvre toutes les boîtes de votre entreprise pour 15 $ par mois : finance, ventes, support, info et la vôtre.",
     "capCtaPersonal": "Passer à Personal, 5 $/mois",
     "capCtaPro": "Passer à Pro, 15 $/mois",
     "capCompare": "Comparer toutes les formules",

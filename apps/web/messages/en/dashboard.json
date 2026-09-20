@@ -141,6 +141,7 @@
     "capTitle": "You're at your inbox limit",
     "capBodyPersonal": "Free connects one mailbox. Personal takes you to three for $5 a month, so work and personal can share the same agent.",
     "capBodyPro": "Personal connects three mailboxes. Pro removes the limit for $15 a month, so every mailbox you own runs on one agent.",
+    "capBodyBusiness": "Running more than one company mailbox? Free connects one. Personal covers three for $5 a month, enough for info@, sales@ and your own. Pro covers every mailbox your business runs for $15 a month: finance, sales, support, info, and your own.",
     "capCtaPersonal": "Upgrade to Personal, $5/mo",
     "capCtaPro": "Upgrade to Pro, $15/mo",
     "capCompare": "Compare all plans",

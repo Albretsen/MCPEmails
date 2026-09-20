@@ -141,6 +141,7 @@
     "capTitle": "你已达到收件箱数量上限",
     "capBodyPersonal": "免费版可连接一个邮箱。Personal 每月 5 美元，可连接三个，让工作与私人邮箱共用同一个智能体。",
     "capBodyPro": "Personal 可连接三个邮箱。Pro 每月 15 美元，取消上限，让你所有的邮箱都在同一个智能体上运行。",
+    "capBodyBusiness": "你在管理不止一个公司邮箱吗？免费版只能连接一个。Personal 每月 5 美元，可连接三个，足够覆盖 info@、sales@ 和你自己的邮箱。Pro 每月 15 美元，覆盖公司使用的每一个邮箱：财务、销售、客服、info，还有你自己的邮箱。",
     "capCtaPersonal": "升级到 Personal，每月 5 美元",
     "capCtaPro": "升级到 Pro，每月 15 美元",
     "capCompare": "比较所有方案",

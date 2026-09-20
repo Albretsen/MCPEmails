@@ -8,11 +8,13 @@ import { trackProductEvent } from '@/lib/analytics.mjs';
 import { useInboxPaywallView } from '@/lib/analytics/use-inbox-paywall.mjs';
 import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
 import { Link } from '@/i18n/navigation';
-import { checkoutStartHref, pricingCompareHref } from '@/lib/billing/upgrade-intent.mjs';
-import { inboxCapOffer } from '@/lib/billing/inbox-cap-offer.mjs';
+import { pricingCompareHref } from '@/lib/billing/upgrade-intent.mjs';
+import { inboxCapOffer, splitSharedFeatures } from '@/lib/billing/inbox-cap-offer.mjs';
+import { formatPriceCents } from '@/lib/stripe/annual-offer';
 import UpgradeIntervalChoice, {
   annualOfferForPlan,
-  upgradeCtaLabel,
+  PlanCheckoutLink,
+  SharedIntervalChoice,
 } from './UpgradeIntervalChoice';
 import { planDisplayName } from './Pages';
 import {
@@ -541,6 +543,14 @@ const OAUTH_ROUTES = {
  *   intervals have a configured price ID. Absent means the panel sells monthly
  *   only, which is what it did before the interval choice existed: an interval
  *   is never offered on a guess about whether it can be bought.
+ * @param {boolean} businessShaped - True when a mailbox this workspace already
+ *   holds (or its owner's account address) is on a company domain. Computed
+ *   once in App.jsx by `isBusinessShapedWorkspace` and handed, as the same
+ *   boolean, to this modal and to the cap notice on the Inboxes page, so the
+ *   two cannot classify one workspace two ways. It has to come from outside:
+ *   the panel is drawn the moment the modal opens, before any address has been
+ *   typed into it. At the Free cap it turns the Personal-only panel into
+ *   Personal and Pro side by side; everywhere else it changes nothing.
  */
 export function ConnectModal({
   onClose,
@@ -551,6 +561,7 @@ export function ConnectModal({
   maxInboxes = null,
   stripePrices = null,
   reconnect = null,
+  businessShaped = false,
 }) {
   const tr = useTranslations('dashboardChrome');
   // The toast lives in ToastProvider, above this modal in App.jsx, so it
@@ -886,7 +897,11 @@ export function ConnectModal({
   // The rule (cheapest plan that clears the cap that was hit) lives in
   // inboxCapOffer, shared verbatim with the cap notice on the Inboxes page, so
   // the two surfaces can never quote different plans for the same block.
-  const upgradeCopy = inboxCapOffer(limitMaxInboxes);
+  //
+  // `businessShaped` only ever matters at the Free cap, where it widens the
+  // offer from Personal alone to Personal and Pro side by side. The rule that
+  // decides that is inboxCapOffer's, not this component's.
+  const upgradeCopy = inboxCapOffer(limitMaxInboxes, { businessShaped });
 
   // MONTHLY, deliberately, and it stays monthly unless the person picks
   // otherwise. This panel used to have no interval at all and always bought
@@ -898,6 +913,13 @@ export function ConnectModal({
   // Stripe price, or no live prices on this surface at all), in which case the
   // control renders nothing and the CTA below stays the monthly one.
   const annual = annualOfferForPlan(stripePrices, upgradeCopy.plan);
+  // The dual panel: one annual offer per card, in card order, and the feature
+  // lines split into what tells the two plans apart and what they share. ONE
+  // `upgradeInterval` governs every buy button on the panel.
+  const annualByPlan = Object.fromEntries(
+    upgradeCopy.offers.map(o => [o.plan, annualOfferForPlan(stripePrices, o.plan)])
+  );
+  const dualFeatures = splitSharedFeatures(upgradeCopy.offers);
 
   // "Compare all plans" has to leave with the offer, not without it. /pricing
   // preselects ANNUAL on purpose, so a bare '/pricing' hands someone who has
@@ -2193,10 +2215,137 @@ export function ConnectModal({
                 </div>
               </div>
 
+              {/* TWO PLANS, SIDE BY SIDE: a business-shaped workspace at the
+                  Free cap. Personal first (it is what most people buy), Pro
+                  beside it (it is what an operator with a company's mailboxes
+                  needs, and it used to be reachable from here only through
+                  "Compare all plans"). Each card carries its own buy button,
+                  so the footer below drops its single CTA in this mode.
+
+                  The interval control sits ABOVE the cards because it governs
+                  both of them. It still starts on Monthly and still renders
+                  nothing when either plan has no yearly price.
+
+                  `flex: 1 1 190px` is the whole responsive story: two cards
+                  fit the 432px modal body, and at a phone's ~300px they stack
+                  one per row with nothing clipped. */}
+              {upgradeCopy.dual && (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <SharedIntervalChoice
+                      annualOffers={upgradeCopy.offers.map(o => annualByPlan[o.plan])}
+                      value={upgradeInterval}
+                      onChange={setUpgradeInterval}
+                    />
+                  </div>
+                  <div
+                    data-cap-offer="dual"
+                    style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'stretch' }}
+                  >
+                    {upgradeCopy.offers.map(o => {
+                      const planAnnual = annualByPlan[o.plan];
+                      return (
+                        <div
+                          key={o.plan}
+                          style={{
+                            flex: '1 1 190px',
+                            minWidth: 0,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 8,
+                            padding: 12,
+                            background: 'var(--bg-surface)',
+                            border: '1px solid var(--border-1)',
+                            borderRadius: 10,
+                          }}
+                        >
+                          <div style={{
+                            fontFamily: 'var(--font-sans)',
+                            fontSize: 14,
+                            fontWeight: 600,
+                            color: 'var(--fg-1)',
+                          }}>
+                            {planDisplayName(o.plan)}
+                          </div>
+                          <div style={{
+                            fontFamily: 'var(--font-sans)',
+                            fontSize: 12.5,
+                            color: 'var(--fg-3)',
+                            lineHeight: 1.5,
+                          }}>
+                            {tr(o.pitchKey)}
+                          </div>
+                          {dualFeatures.byPlan[o.plan].map(fKey => (
+                            <div key={fKey} style={{
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              gap: 6,
+                              fontFamily: 'var(--font-sans)',
+                              fontSize: 12.5,
+                              color: 'var(--fg-2)',
+                              lineHeight: 1.4,
+                            }}>
+                              <span style={{ flexShrink: 0, paddingTop: 2 }}>
+                                <Icon name="check" size={12} color="var(--mint-600)" />
+                              </span>
+                              {tr(fKey)}
+                            </div>
+                          ))}
+                          {/* `marginTop: auto` pins the button to the bottom
+                              of the card, so the two buy buttons line up even
+                              when one pitch wraps to more lines than the
+                              other. */}
+                          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 4 }}>
+                            {/* What the annual button actually charges, said
+                                before the click, per plan. */}
+                            {upgradeInterval === 'year' && planAnnual && (
+                              <div style={{
+                                fontFamily: 'var(--font-sans)',
+                                fontSize: 11.5,
+                                color: 'var(--fg-3)',
+                                lineHeight: 1.4,
+                              }}>
+                                {tr('connect.intervalAnnualNote', {
+                                  price: formatPriceCents(planAnnual.yearlyPriceCents),
+                                })}
+                              </div>
+                            )}
+                            <PlanCheckoutLink
+                              plan={o.plan}
+                              planName={planDisplayName(o.plan)}
+                              monthlyLabel={tr(o.ctaKey)}
+                              annualOffer={planAnnual}
+                              interval={upgradeInterval}
+                              block
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {/* What both plans include, said once instead of twice. */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px', justifyContent: 'center' }}>
+                    {dualFeatures.shared.map(fKey => (
+                      <div key={fKey} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        fontFamily: 'var(--font-sans)',
+                        fontSize: 12.5,
+                        color: 'var(--fg-3)',
+                      }}>
+                        <Icon name="check" size={12} color="var(--mint-600)" />
+                        {tr(fKey)}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
               {/* Feature highlights. The inbox count leads in both variants: it
                   is the thing they were just blocked on, and the rest is
                   supporting detail. */}
-              {upgradeCopy.featureKeys.map(fKey => (
+              {!upgradeCopy.dual && upgradeCopy.featureKeys.map(fKey => (
                 <div key={fKey} style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -2212,12 +2361,15 @@ export function ConnectModal({
 
               {/* The interval choice, under the offer it applies to and above
                   the button that acts on it. Renders nothing at all when the
-                  plan has no yearly price to sell. */}
-              <UpgradeIntervalChoice
-                offer={annual}
-                value={upgradeInterval}
-                onChange={setUpgradeInterval}
-              />
+                  plan has no yearly price to sell. The dual panel has its own,
+                  above its cards. */}
+              {!upgradeCopy.dual && (
+                <UpgradeIntervalChoice
+                  offer={annual}
+                  value={upgradeInterval}
+                  onChange={setUpgradeInterval}
+                />
+              )}
             </div>
           )}
 
@@ -3320,6 +3472,12 @@ export function ConnectModal({
               unlimited mailboxes finds Pro through "Compare all plans", which
               stays as the secondary link.
 
+              That is the CONSUMER case. A workspace that already holds a
+              mailbox on a company domain is shown Personal and Pro side by
+              side in the body instead (see inboxCapOffer), because for that
+              buyer "Compare all plans" was the only road to the plan they
+              needed and most of them never took it.
+
               Only a capped account ever sees this panel, and the grandfathered
               cohort has no cap, so nobody who already holds unlimited inboxes
               can be routed at Personal from here. */}
@@ -3350,32 +3508,21 @@ export function ConnectModal({
               >
                 {tr('connect.comparePlans')}
               </Link>
-              <a
-                href={checkoutStartHref(upgradeCopy.plan, upgradeInterval === 'year')}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  padding: '0 16px',
-                  height: 34,
-                  background: 'var(--brand)',
-                  color: '#fff',
-                  borderRadius: 8,
-                  fontFamily: 'var(--font-sans)',
-                  fontSize: 13,
-                  fontWeight: 500,
-                  textDecoration: 'none',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                <Icon name="zap" size={13} color="#fff" />
-                {upgradeCtaLabel(tr, {
-                  offer: annual,
-                  interval: upgradeInterval,
-                  planName: planDisplayName(upgradeCopy.plan),
-                  monthlyLabel: tr(upgradeCopy.ctaKey),
-                })}
-              </a>
+              {/* One plan, one buy button, here in the footer as it has always
+                  been. With two plans on offer each card in the body carries
+                  its own button, and a third one down here would have to pick
+                  a favourite between them. */}
+              {!upgradeCopy.dual && (
+                <PlanCheckoutLink
+                  plan={upgradeCopy.plan}
+                  planName={planDisplayName(upgradeCopy.plan)}
+                  monthlyLabel={tr(upgradeCopy.ctaKey)}
+                  annualOffer={annual}
+                  interval={upgradeInterval}
+                >
+                  <Icon name="zap" size={13} color="#fff" />
+                </PlanCheckoutLink>
+              )}
             </>
           )}
 
