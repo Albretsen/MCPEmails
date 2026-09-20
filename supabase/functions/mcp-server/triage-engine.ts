@@ -49,7 +49,19 @@ import { neutralizeMaybe, neutralizeText } from "./text-safety.ts";
 // The SAME date predicate the tool schema enforces, imported rather than
 // re-expressed. A stored rule must not be allowed to hold a date shape an
 // interactive search would have refused: see the note in validateTriageFilter.
-import { isIsoDateOrDateTime, type NormalizedSearch } from "./search-translate.ts";
+// `unappliedSearchFields` and its wording helpers come from the same module for
+// the same reason: a stored rule must not be allowed to hold a criterion the
+// interactive search would have refused, and the list of criteria a provider
+// cannot honour has to be read from the translator that drops them rather than
+// restated here. See the incident note at the bottom of search-translate.ts.
+import {
+  buildUnappliedSearchNote,
+  isIsoDateOrDateTime,
+  type NormalizedSearch,
+  SEARCH_DIALECT_LABELS,
+  searchDialectFor,
+  unappliedSearchFields,
+} from "./search-translate.ts";
 // Pure naming rules, no provider code: what a label is called on each provider
 // and which of those names are legal. See the note on `applyAction` above about
 // why the runner owns no provider code of its own.
@@ -1422,6 +1434,29 @@ export async function runTriageRule(
     );
   }
 
+  // ── Can this provider actually run the stored filter? ─────────────────────
+  // The write path refuses such a filter (see validateAutomationBody), but that
+  // only binds rules written after 2026-09-20. A rule saved before it — or one
+  // whose inbox was reconnected under a different provider — can still hold a
+  // criterion the dialect has no predicate for, and running it would search on
+  // the remaining criteria alone and then move or delete everything that
+  // matched. F-04 (2026-09-20): `{flagged: true, has_attachment: true}` on
+  // generic IMAP is `SEARCH FLAGGED`, i.e. every flagged message in the
+  // mailbox.
+  //
+  // Failing the run is the right end state and not merely the safe one. This
+  // condition never clears by itself, so failRun's consecutive-failure counter
+  // walks the rule to auto-disable and sends the owner the disabled
+  // notification — which is precisely the outcome for a rule that cannot do
+  // what it says. Silently doing something else every fifteen minutes is not.
+  const unrunnable = unappliedSearchFields(filterCheck.value, inbox.provider);
+  if (unrunnable.length > 0) {
+    return await failRun(
+      "filter_unsupported",
+      unrunnableFilterMessage(inbox.provider, unrunnable),
+    );
+  }
+
   // ── Match ─────────────────────────────────────────────────────────────────
   const cap = Math.min(
     Math.max(rule.max_messages_per_run, TRIAGE_MIN_MESSAGES_PER_RUN),
@@ -2068,6 +2103,30 @@ const AUTOMATION_PUBLIC_COLUMNS =
  * (Gmail label, Outlook category, IMAP keyword); only the NAME is constrained,
  * and only on IMAP, where a keyword is an atom.
  */
+/**
+ * Why a stored filter is refused for the inbox it was written against.
+ *
+ * Its own sentence rather than buildUnappliedSearchRefusal's, because that one
+ * speaks to an interactive caller holding a result ("nothing was searched and
+ * no mail was touched") and this one speaks to somebody saving a rule that has
+ * not run yet. The fact and the remedy are the same; the tense is not.
+ */
+export function unrunnableFilterMessage(
+  provider: string,
+  fields: readonly string[],
+): string {
+  const one = fields.length === 1;
+  const list = fields.map((f) => `'${f}'`).join(", ");
+  return (
+    `filter: this inbox's provider (${SEARCH_DIALECT_LABELS[searchDialectFor(provider)]}) ` +
+    `cannot apply ${list} to a search, so a rule using ` +
+    `${one ? "it" : "them"} would run against every message matching the ` +
+    `remaining criteria — a wider set than the filter describes — every time it ` +
+    `fires, unattended. Save the rule with criteria this provider can run, or ` +
+    `without ${list} if that wider set is the intent.`
+  );
+}
+
 export function validateAutomationBody(
   args: Record<string, unknown>,
   inboxProvider: string | null,
@@ -2089,6 +2148,24 @@ export function validateAutomationBody(
   if (args["filter"] !== undefined || !partial) {
     const check = validateTriageFilter(args["filter"]);
     if (!check.ok) return fail(check.error);
+    // A criterion this provider has no predicate for is refused HERE, when the
+    // rule is being written, for the same reason the label name is: it is not a
+    // runtime surprise to discover in a run log, it is a rule that can never do
+    // what it says. And unlike an interactive search, where the widening costs
+    // one extra call and is disclosed in the result, a rule re-runs unattended
+    // every fifteen minutes and moves or deletes whatever it matched.
+    //
+    // F-04 (2026-09-20) found `has_attachment` dropped in silence on generic
+    // IMAP. Stored as an automation filter, `{flagged: true, has_attachment:
+    // true, action: delete}` on an IMAP inbox is a rule that deletes every
+    // flagged message in the mailbox, on a cadence, with nobody reading the
+    // result. `inboxProvider` is null only where the caller could not be
+    // resolved to an inbox at all, and there the filter is left to the
+    // provider-agnostic checks above rather than guessed at.
+    if (inboxProvider) {
+      const unrunnable = unappliedSearchFields(check.value, inboxProvider);
+      if (unrunnable.length > 0) return fail(unrunnableFilterMessage(inboxProvider, unrunnable));
+    }
     out.filter = check.value;
   }
   if (args["action"] !== undefined || !partial) {
@@ -2401,6 +2478,15 @@ export async function runAutomationTool(
         : 25;
       const cap = Math.min(Math.max(Math.trunc(capArg) || 25, TRIAGE_MIN_MESSAGES_PER_RUN), TRIAGE_MAX_MESSAGES_PER_RUN);
 
+      // Computed from the filter and the inbox's own provider, before the
+      // search runs, so the disclosure is attached whatever the search returns
+      // — including an empty match set, where "0 matched" would otherwise read
+      // as a confident answer about a criterion that was never applied.
+      const unapplied = unappliedSearchFields(filter, resolved.inbox.provider);
+      const previewNotes = unapplied.length > 0
+        ? [buildUnappliedSearchNote(resolved.inbox.provider, unapplied)]
+        : [];
+
       let matches: TriageMatch[];
       try {
         matches = await deps.preview(resolved.inbox, filter, cap);
@@ -2422,6 +2508,13 @@ export async function runAutomationTool(
         })),
         untrusted_content: true,
         message: "Dry run. Nothing was changed and no message was claimed in the deduplication ledger.",
+        // A preview DISCLOSES where create/update refuses. It changes nothing,
+        // so the read-only reasoning in consolidated-arguments.ts applies, and
+        // it is the one surface on which a caller can see what the provider
+        // will actually match before being told the rule cannot be saved. Under
+        // F-04 (2026-09-20) this preview would have reported the wider match
+        // set as though the filter had been honoured, with nothing to say so.
+        ...(previewNotes.length > 0 ? { notes: previewNotes } : {}),
       });
     }
 

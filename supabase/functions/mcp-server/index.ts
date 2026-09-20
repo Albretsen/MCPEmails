@@ -307,6 +307,8 @@ import {
   isWarningCrossing,
 } from "./action-allowance.ts";
 import {
+  buildUnappliedSearchNote,
+  buildUnappliedSearchRefusal,
   DATE_INPUT_EXAMPLES,
   isIsoDateOrDateTime,
   normalizeDateOrDateTime,
@@ -316,6 +318,7 @@ import {
   toGmailQuery,
   toGraphSearch,
   toImapSearch,
+  unappliedSearchFields,
 } from "./search-translate.ts";
 import {
   BULK_WALL_CLOCK_BUDGET_MS,
@@ -8314,6 +8317,56 @@ function permanentDeleteUnsupportedError(
     },
     logStatus: "error",
     logErrorCode: "unsupported_permanent_delete",
+  };
+}
+
+/**
+ * Structured refusal for a search-and-act tool whose filter carries a criterion
+ * this provider has no predicate for.
+ *
+ * ── Why this is an error and the identical drop on email_read is a note ─────
+ * Both come out of the same translator gap (F-04, 2026-09-20: `has_attachment`
+ * on generic IMAP, where RFC 3501 SEARCH has no attachment predicate and the
+ * inbox's own compatibility profile says so). The difference is what happens
+ * next. A read that answered a wider question than intended costs one more
+ * call, so it runs and discloses — that is the settled position in
+ * consolidated-arguments.ts, backed by 882 rejections across 42 workspaces in
+ * the 30 days to 2026-08-29, most of them abandoned rather than retried. A
+ * search_and_move or search_and_delete acts on everything the filter matched,
+ * and LENIENT_ACTIONS lists both of those tools with an EMPTY array for exactly
+ * this reason. "Delete my tagged mail that has attachments" cannot be allowed
+ * to become "delete my tagged mail" with a footnote.
+ *
+ * Shaped like permanentDeleteUnsupportedError above: a named, permanent,
+ * machine-readable refusal that also names the edit which makes the call run,
+ * so this is not the over-strictness that produced the rejection numbers. It
+ * refuses a request that cannot be executed as written on this inbox, and it
+ * says what CAN be.
+ */
+function searchCriteriaUnsupportedError(
+  toolName: string,
+  provider: string,
+  fields: readonly string[],
+): {
+  result: { content: { type: string; text: string }[]; isError: true };
+  logStatus: "error";
+  logErrorCode: string;
+} {
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text: JSON.stringify({
+          error: "unsupported_search_criteria",
+          provider,
+          unsupported_fields: [...fields],
+          message: buildUnappliedSearchRefusal(toolName, provider, fields),
+        }),
+      }],
+      isError: true,
+    },
+    logStatus: "error",
+    logErrorCode: "unsupported_search_criteria",
   };
 }
 
@@ -16837,14 +16890,59 @@ function searchMessagesForProvider(
 ): Promise<SearchEmailsResult> {
   switch (inbox.provider) {
     case "gmail":
-      return searchGmailMessages(inbox, search, limit, offset, includeFolders);
+      return searchGmailMessages(inbox, search, limit, offset, includeFolders)
+        .then((r) => discloseUnappliedCriteria(r, search, inbox.provider));
     case "outlook":
-      return searchOutlookMessages(inbox, search, limit, offset, includeFolders);
+      return searchOutlookMessages(inbox, search, limit, offset, includeFolders)
+        .then((r) => discloseUnappliedCriteria(r, search, inbox.provider));
     case "imap":
-      return searchImapMessages(inbox, search, limit, offset, includeFolders, needPreview);
+      return searchImapMessages(inbox, search, limit, offset, includeFolders, needPreview)
+        .then((r) => discloseUnappliedCriteria(r, search, inbox.provider));
     default:
       return Promise.reject(new Error("unsupported_provider"));
   }
+}
+
+/**
+ * Record, on the search result itself, any criterion the provider could not
+ * apply — so a narrow-looking result set says out loud that it is not narrow.
+ *
+ * ── The bug (F-04, live functional test, 2026-09-20) ───────────────────────
+ * `email_read {action:"search", subject:"[MCPE-TEST-…]", has_attachment:true}`
+ * against a Gmail-over-IMAP mailbox returned all 9 subject matches, only 2 of
+ * which had an attachment, with `query_normalized: 'SUBJECT "[MCPE-TEST-…]"'`
+ * and no `notes` at all. The drop is correct and documented (RFC 3501 SEARCH
+ * has no attachment predicate; the inbox's own compatibility profile says
+ * `search.has_attachment: "unavailable"`). The silence was not: the same tool,
+ * in the same session, disclosed a far smaller problem — a `body_max_chars`
+ * belonging to another action — through this very `notes` channel.
+ *
+ * The missing `has:attachment` term in `query_normalized` is NOT the
+ * disclosure, and the reasoning is in search-translate.ts: it asks the reader
+ * to diff a provider-dialect string against the structured arguments it sent,
+ * in a dialect this server exists to spare it, and it signals by absence, which
+ * is the one signal a model does not reliably act on. Every other unapplied
+ * argument on this server is reported by something being PRESENT.
+ *
+ * ── Why here and not inside each provider function ─────────────────────────
+ * searchGmailMessages, searchOutlookMessages and searchImapMessages return from
+ * a dozen places between them (empty page, single pass, fan-out, …), and a
+ * disclosure attached at eleven of the twelve is the same defect again with a
+ * smaller blast radius. This wraps the dispatch instead, so there is exactly
+ * one place to be right. The note is APPENDED: Graph's include_folders fan-out
+ * note already uses this field, and losing it would be trading one silent
+ * narrowing for one silent widening.
+ */
+function discloseUnappliedCriteria(
+  result: SearchEmailsResult,
+  search: NormalizedSearch,
+  provider: string,
+): SearchEmailsResult {
+  const unapplied = unappliedSearchFields(search, provider);
+  if (unapplied.length === 0) return result;
+  const note = buildUnappliedSearchNote(provider, unapplied);
+  result.notes = result.notes ? [...result.notes, note] : [note];
+  return result;
 }
 
 function buildNormalizedSearch(
@@ -17265,6 +17363,15 @@ async function executeSearchEmails(
   }
 
   // ── Success ───────────────────────────────────────────────────────────────
+  // Say what the provider could not run, BEFORE the result is described as an
+  // answer. A criterion this dialect has no predicate for (F-04, 2026-09-20:
+  // `has_attachment` on IMAP) is dropped on the way in and used to be dropped
+  // in silence, so nine subject matches came back looking like nine
+  // subject-and-attachment matches. This handler dispatches to the provider
+  // functions directly rather than through searchMessagesForProvider — it owns
+  // the timeout and the shared IMAP session — so it needs the same call the
+  // dispatcher makes. See discloseUnappliedCriteria.
+  searchResult = discloseUnappliedCriteria(searchResult, search, inbox.provider);
   // Same boundary as email_list: neutralise the scanned fields, mark the whole
   // result set as untrusted mailbox content.
   searchResult.messages = neutralizeSummaries(searchResult.messages);
@@ -21851,6 +21958,19 @@ async function executeSearchAndMove(
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.move) return unsupportedFeatureError("move", inbox.provider);
 
+  // ── A filter this provider cannot run is refused, not widened ────────────
+  // Checked before the session opens and before a single message is read. See
+  // buildUnappliedSearchRefusal for the argument; in short, email_organize and
+  // email_delete carry EMPTY leniency arrays in LENIENT_ACTIONS precisely
+  // because "a dropped filter is the difference between moving one thread and
+  // moving an inbox", and a criterion the dialect has no predicate for is that
+  // same dropped filter arriving by another route. email_read's search
+  // discloses and runs; this one stops.
+  const unrunnable = unappliedSearchFields(search, inbox.provider);
+  if (unrunnable.length > 0) {
+    return searchCriteriaUnsupportedError("email_search_and_move", inbox.provider, unrunnable);
+  }
+
   // ── One IMAP connection for the whole call ───────────────────────────────
   // Created FIRST, ahead of the destination resolve, which is what changed on
   // 2026-09-01. The comment that used to sit lower down claimed the shared
@@ -22224,6 +22344,18 @@ async function executeSearchAndDelete(
   // front before running the search so the caller gets a clear instruction.
   if (permanent && caps.trash_vs_expunge === "trash") {
     return permanentDeleteUnsupportedError(inbox.provider);
+  }
+
+  // ── A filter this provider cannot run is refused, not widened ────────────
+  // The sharpest version of the case in buildUnappliedSearchRefusal. "Delete my
+  // tagged mail that has attachments" on an IMAP inbox translates to SEARCH
+  // FLAGGED with the attachment criterion gone, i.e. every tagged message in
+  // the mailbox — and a disclosure attached to the receipt is read after the
+  // mail is in the trash. Refused before the session opens, so nothing is read
+  // and nothing is deleted.
+  const unrunnable = unappliedSearchFields(search, inbox.provider);
+  if (unrunnable.length > 0) {
+    return searchCriteriaUnsupportedError("email_search_and_delete", inbox.provider, unrunnable);
   }
 
   // ── One IMAP connection for the whole call ───────────────────────────────
@@ -29251,6 +29383,15 @@ async function handleTriagePreview(req: Request): Promise<Response> {
     matched: messages.length,
     truncated,
     messages,
+    // Carried through for the same reason the MCP search carries it: this is a
+    // DRY RUN whose whole job is to show what a filter will do, and a preview
+    // that quietly ignores `has_attachment` on an IMAP inbox is a preview of a
+    // rule the user is not about to save (F-04, 2026-09-20). The write path
+    // refuses such a filter outright — see validateAutomationBody — so this
+    // note is how the dashboard can explain the refusal rather than just
+    // report it. Omitted when there is nothing to say, so the existing payload
+    // shape is unchanged for every filter the provider can run.
+    ...(result.notes && result.notes.length > 0 ? { notes: result.notes } : {}),
   }, 200);
 }
 
