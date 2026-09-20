@@ -281,8 +281,12 @@ Feature‑dependent:
 | `NEXT_PUBLIC_OAUTH_VERIFICATION_PENDING` | Shows the unverified‑app warning until Google/Microsoft verification completes |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Billing |
 | `STRIPE_PRICE_PERSONAL_MONTHLY` / `_YEARLY`, `STRIPE_PRICE_SOLO_MONTHLY` / `_YEARLY`, `STRIPE_PRICE_PRO_MONTHLY` / `_YEARLY` | Plan price IDs (`personal` = Personal, `solo` = Pro, `pro` = Team) |
+| `STRIPE_WEBHOOK_PROXY_KEY` | Optional. Restricts `/api/stripe/webhook` to the delivery queue in front of it. Unset = no restriction. Set it only AFTER the queue is sending the key, or every delivery 401s and is dead‑lettered. |
+| `STRIPE_WEBHOOK_TOLERANCE_SECONDS` | Optional. Stripe signature age limit, default 7 days. Wide because a queued replay carries its original signature; Stripe's own 300s default would reject every held retry. |
 
 > Fastmail and other IMAP providers connect via app password and need no OAuth credentials.
+
+> **Stripe webhooks are delivered through a queue.** Stripe posts to the Queuey ingress, which forwards to `/api/stripe/webhook`. Two settings on that queue are load‑bearing: the payload must be **raw passthrough** (the signature is over exact bytes), and a **mapped header** must forward `header:Stripe-Signature`. Without the mapped header every delivery fails with `Missing stripe-signature header.` Note that `STRIPE_WEBHOOK_SECRET` must be the signing secret of the Stripe endpoint pointed at the *ingress*, not of any older direct endpoint.
 
 ## Database & migrations
 
