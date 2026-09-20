@@ -1,17 +1,22 @@
 {
   "meta": {
     "title": "Koble en hvilken som helst IMAP-postkasse til Claude",
-    "description": "Koble enhver IMAP-postkasse til Claude, Cursor, ChatGPT og enhver MCP-klient. Ta med vert, port og passord, og la AI lese, sende, planlegge og organisere e-post. 1 innboks gratis, for alltid."
+    "description": "Koble alle firmaets IMAP-postkasser til Claude, Cursor, ChatGPT og enhver MCP-klient. Ta med vert, port og passord, og la AI lese, sende, planlegge og organisere e-post. 1 innboks gratis, for alltid."
   },
   "hero": {
     "eyebrow": "IMAP + AI",
     "titleLine1": "Koble enhver IMAP-postkasse til Claude,",
     "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
-    "lead": "Gi AI-agenten din innboksen du allerede har, uansett hvem som drifter den. Les, søk, send, svar, planlegg og organiser e-post over vanlig IMAP og SMTP, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "lead": "Koble til alle postkassene firmaet har, uansett hvem som drifter dem: post@, salg@, faktura@ og din egen. AI-agenten din leser, søker, sender, svarer, planlegger og organiserer den e-posten over vanlig IMAP og SMTP, og de samme postkassene virker i alle MCP-klienter, ikke bare én.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Enhver IMAP-vert, ingen OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude har ingen egen IMAP-klient. mcpemails er en hostet MCP-server som logger inn på e-postserveren din over IMAP og SMTP med adressen, verten og passordet leverandøren allerede har gitt deg, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Enhver vert som snakker IMAP fungerer, og én innboks er gratis."
+    "answer": "Claude har ingen egen IMAP-klient. mcpemails er en hostet MCP-server som logger inn på e-postserveren din over IMAP og SMTP med adressen, verten og passordet leverandøren allerede har gitt deg, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Enhver vert som snakker IMAP fungerer, firmaadresser kobles til på samme måte som en privat adresse, og én innboks er gratis."
+  },
+  "persona": {
+    "intro": "Tar du deg av flere firmapostkasser?",
+    "label": "Se hvordan én person håndterer alle firmaets adresser fra én agent",
+    "href": "/for/business"
   },
   "method": {
     "title": "Slik kobler en generisk IMAP-postkasse seg til",
@@ -20,7 +25,7 @@
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid. De betalte planene tar resten: tre postkasser med Personal, alle firmaets postkasser med Pro."
     },
     {
       "h": "Finn IMAP- og SMTP-innstillingene dine",
@@ -36,7 +41,7 @@
     }
   ],
   "ctaBand": {
-    "title": "Gi AI-en din innboksen du allerede har",
+    "title": "Gi AI-en din postkassene firmaet allerede har",
     "sub": "Koble til enhver IMAP-postkasse på minutter. Én innboks gratis for alltid, uten kort."
   }
 }

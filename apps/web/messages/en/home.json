@@ -138,7 +138,7 @@
   "pricing": {
     "eyebrow": "Pricing",
     "title": "Priced by inbox. No metering on paid plans.",
-    "sub": "Free connects one inbox with 150 email actions a month. Personal connects three. Pro connects every mailbox you own. Team adds people, roles, and a separate workspace per client.",
+    "sub": "Free connects one inbox with 150 email actions a month. Personal connects three. Pro connects every mailbox your business runs. Team adds people, roles, and a separate workspace per client.",
     "perForever": "/forever",
     "perMonth": "/month",
     "tiers": {
@@ -158,7 +158,7 @@
       },
       "personal": {
         "name": "Personal",
-        "desc": "Three mailboxes for one person: work, personal, and one more.",
+        "desc": "Three mailboxes for one person or one small business: work, personal, or your first company addresses.",
         "features": [
           "Everything in Free",
           "3 connected inboxes",
@@ -170,7 +170,7 @@
       },
       "solo": {
         "name": "Pro",
-        "desc": "Every mailbox you own, in one agent. Work, personal, and each side business.",
+        "desc": "Every mailbox your business runs, on one agent: finance, sales, support, info, and your own.",
         "features": [
           "Everything in Personal",
           "Unlimited connected inboxes",
@@ -193,7 +193,8 @@
         "cta": "Get Team"
       }
     },
-    "footnote": "All plans: the mail your agent reads is fetched live and never stored. OAuth tokens encrypted at rest. Need something custom? <contact>Contact us</contact>. <comparison>See full feature comparison →</comparison>"
+    "footnote": "All plans: the mail your agent reads is fetched live and never stored. OAuth tokens encrypted at rest. Need something custom? <contact>Contact us</contact>. <comparison>See full feature comparison →</comparison>",
+    "businessLink": "Running a company's mailboxes? <business>See how one person connects them all</business>."
   },
   "faq": {
     "eyebrow": "FAQ",
@@ -261,7 +262,8 @@
     "linkSecurity": "Security",
     "linkStatus": "Status",
     "linkSelfHost": "Self-hosting",
-    "linkFounders": "For founders"
+    "linkFounders": "For founders",
+    "linkBusiness": "For business"
   },
   "languageSwitcher": {
     "label": "Language",

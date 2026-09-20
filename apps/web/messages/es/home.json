@@ -138,7 +138,7 @@
   "pricing": {
     "eyebrow": "Precios",
     "title": "Precio por bandeja. Sin medición en los planes de pago.",
-    "sub": "Gratis conecta una bandeja con 150 acciones de correo al mes. Personal conecta tres. Pro conecta todos los buzones que tengas. Team añade personas, roles y un espacio de trabajo separado por cliente.",
+    "sub": "Gratis conecta una bandeja con 150 acciones de correo al mes. Personal conecta tres. Pro conecta todos los buzones que lleva tu negocio. Team añade personas, roles y un espacio de trabajo separado por cliente.",
     "perForever": "/para siempre",
     "perMonth": "/mes",
     "tiers": {
@@ -158,7 +158,7 @@
       },
       "personal": {
         "name": "Personal",
-        "desc": "Tres buzones para una sola persona: el del trabajo, el personal y uno más.",
+        "desc": "Tres buzones para una persona o una empresa pequeña: el del trabajo, el personal o las primeras direcciones de tu empresa.",
         "features": [
           "Todo lo de Free",
           "3 bandejas conectadas",
@@ -170,7 +170,7 @@
       },
       "solo": {
         "name": "Pro",
-        "desc": "Todos los buzones que tengas, en un solo agente. Trabajo, personal y cada proyecto paralelo.",
+        "desc": "Todos los buzones que lleva tu negocio, en un solo agente: finanzas, ventas, soporte, info y el tuyo.",
         "features": [
           "Todo lo de Personal",
           "Bandejas conectadas ilimitadas",
@@ -193,7 +193,8 @@
         "cta": "Obtener Team"
       }
     },
-    "footnote": "Todos los planes: el correo que lee tu agente se obtiene en vivo y nunca se almacena. Tokens de OAuth cifrados en reposo. ¿Necesitas algo a medida? <contact>Contáctanos</contact>. <comparison>Ver la comparación completa de funciones →</comparison>"
+    "footnote": "Todos los planes: el correo que lee tu agente se obtiene en vivo y nunca se almacena. Tokens de OAuth cifrados en reposo. ¿Necesitas algo a medida? <contact>Contáctanos</contact>. <comparison>Ver la comparación completa de funciones →</comparison>",
+    "businessLink": "¿Llevas los buzones de una empresa? <business>Mira cómo una sola persona los conecta todos</business>."
   },
   "faq": {
     "eyebrow": "FAQ",
@@ -261,7 +262,8 @@
     "linkSecurity": "Seguridad",
     "linkStatus": "Estado",
     "linkSelfHost": "Auto-alojamiento",
-    "linkFounders": "Para fundadores"
+    "linkFounders": "Para fundadores",
+    "linkBusiness": "Para empresas"
   },
   "languageSwitcher": {
     "label": "Idioma",

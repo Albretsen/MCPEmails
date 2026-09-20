@@ -50,6 +50,7 @@ const MARKETING_PATHS = new Set([
   // own route at all: it falls through to the Supabase branch and 404s.
   '/email-mcp-servers-compared',
   '/for/founders',
+  '/for/business',
 ]);
 
 function isLocalizedRoute(pathname: string): boolean {

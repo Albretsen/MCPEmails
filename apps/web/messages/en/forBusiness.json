@@ -1,0 +1,163 @@
+{
+  "meta": {
+    "title": "AI Email for Business: Every Company Mailbox on One Agent",
+    "description": "One operator, every company mailbox. Connect info@, sales@ and invoices@ over IMAP, Gmail or any mail host, and work them all from Claude or any MCP client."
+  },
+  "hero": {
+    "eyebrow": "For the person who runs the company's email",
+    "titleLine1": "Every company mailbox,",
+    "titleLine2": "one operator, one agent",
+    "lead": "info@, sales@, invoices@, support@ and your own address usually land on the same person. mcpemails connects all of them to Claude, Cursor, ChatGPT or any MCP client, so you read, answer, forward and file across every address from one conversation. It works with whoever hosts your mail, and you can hold every outgoing message for your approval.",
+    "ctaPrimary": "Connect your first mailbox free",
+    "ctaSecondary": "See what it does"
+  },
+  "pains": {
+    "eyebrow": "The job",
+    "title": "Five addresses, one person answering them",
+    "sub": "A small company has more mailboxes than people. Each one is a separate login, a separate tab, and one more place where a customer can go unanswered.",
+    "items": {
+      "coverage": {
+        "tag": "Coverage",
+        "h": "Ask once, check every address",
+        "p": "Ask your agent to <b>go through sales@, info@ and support@ and list what is still waiting for a reply</b>. It reads each connected mailbox live and brings back one list, so nothing sits unseen in the address nobody opened today."
+      },
+      "sender": {
+        "tag": "Right sender",
+        "h": "Replies leave from the right address",
+        "p": "Each mailbox keeps <b>its own sender name and signature</b>, and its mail goes out through that mailbox's own provider or SMTP server. An answer to an invoice question comes from invoices@, signed the way invoices@ signs."
+      },
+      "routine": {
+        "tag": "Routine",
+        "h": "Put the routine on a schedule",
+        "p": "Recurring chores can run as <b>triage automations</b>: a saved search plus one fixed action (move, label, mark as read, forward or draft a reply) on a cadence, with no AI model in the loop. An automation can never delete mail, and a forward it queues always waits for your approval."
+      }
+    }
+  },
+  "day": {
+    "eyebrow": "A day across the company's mailboxes",
+    "title": "Real prompts operators type",
+    "sub": "No new app to learn. You talk to your AI client, and it works inside the real mailboxes.",
+    "prompts": [
+      "Go through sales@ and info@ and list every enquiry from this week that nobody has answered.",
+      "Forward this month's invoices from invoices@ to our accountant, attachments included.",
+      "Draft a reply from support@ to the delivery complaint, and match the tone of our last reply to that customer.",
+      "Search every mailbox for anything from northwind-supplies.example and tell me where the order stands.",
+      "Move every supplier statement in invoices@ into a Statements folder.",
+      "Schedule the price update to go out from sales@ on Monday at 8am."
+    ]
+  },
+  "does": {
+    "eyebrow": "What it actually does",
+    "title": "Real mailboxes, not a read-only peek",
+    "sub": "The same tools work on every mailbox you connect. With several connected, each call names the mailbox it acts on.",
+    "items": {
+      "read": {
+        "h": "Read and search",
+        "p": "List, read and search each connected mailbox, fetched live from the provider every time."
+      },
+      "send": {
+        "h": "Send, reply and forward",
+        "p": "Send new mail, reply in the thread, or forward with the original attachments intact, from the address the mail belongs to."
+      },
+      "schedule": {
+        "h": "Schedule",
+        "p": "Queue a message to go out later, and cancel it any time before it is sent."
+      },
+      "organize": {
+        "h": "Organize",
+        "p": "Move, copy, flag, archive and label messages, and create the folders to file them in."
+      }
+    }
+  },
+  "safety": {
+    "eyebrow": "Control",
+    "title": "You stay the one who presses send",
+    "sub": "Letting an agent into the company's mail only works if the limits are real. These are enforced on our server, not suggested to the model.",
+    "items": {
+      "approval": {
+        "h": "Approval hold on outgoing mail",
+        "p": "Turn it on per mailbox and every send, reply, forward, draft send and scheduled send waits in your dashboard until you approve or reject it. It is included on every plan, Free too."
+      },
+      "stored": {
+        "h": "The mail it reads is never stored",
+        "p": "Messages are fetched live from your provider for each request and handed to your AI client, with nothing kept between calls. What we store per mailbox is the encrypted token or password. A message you schedule for later is the exception: we store it until it is sent, and keep a record in your history afterwards."
+      },
+      "keys": {
+        "h": "Keys limited to the mailboxes you pick",
+        "p": "An API key can be restricted to selected mailboxes and to the permissions it needs. A key made for triaging support@ cannot reach invoices@, and a key without the send permission cannot send at all."
+      },
+      "server": {
+        "h": "Your mail server stays in charge",
+        "p": "Mail is sent through your own provider or SMTP server, never from a mail server of ours. Changing a mailbox password, revoking its app password, or removing access in your Google account cuts the agent off."
+      }
+    },
+    "link": "Read how security works"
+  },
+  "providers": {
+    "eyebrow": "Any host",
+    "title": "Connect every mailbox the company runs, whoever hosts it",
+    "sub": "Most company mail lives with the web host or the domain registrar, and that is fine. Any mailbox that speaks IMAP and SMTP on the standard ports connects with its address, host and password. IONOS, Hostinger, OVH, Namecheap and other common hosts are recognised from the address and filled in for you. Gmail and Google Workspace sign in with Google. iCloud, Fastmail, Yahoo, Zoho and Yandex connect with an app password.",
+    "ctaImap": "Connect any IMAP mailbox",
+    "ctaGmail": "Connect Gmail or Google Workspace",
+    "ctaIonos": "Connect IONOS",
+    "ctaMatrix": "See how each provider connects"
+  },
+  "pricing": {
+    "eyebrow": "Pricing",
+    "title": "Pick the plan by counting mailboxes",
+    "sub": "Free, Personal and Pro are all one login. What changes is how many mailboxes that login can connect.",
+    "items": {
+      "free": {
+        "h": "Free: one mailbox",
+        "p": "Start with the busiest address. 150 email actions a month, the first 7 days uncounted, no card required."
+      },
+      "personal": {
+        "h": "Personal, $5 a month: up to three",
+        "p": "For a company with two or three addresses. No monthly action cap, a higher burst rate limit and email support."
+      },
+      "pro": {
+        "h": "Pro, $15 a month: four or more",
+        "p": "Every mailbox the business runs, with no limit on how many, still on one login. The plan for a company with an address per department."
+      }
+    },
+    "note": "Team, at $79 a month, is for when several people each need their own login, with roles and a separate workspace per client.",
+    "cta": "Compare all plans"
+  },
+  "faq": {
+    "eyebrow": "Operator questions",
+    "title": "What operators ask before connecting",
+    "sub": "The practical objections, answered straight.",
+    "items": [
+      {
+        "q": "We are a company, not an individual. Is Pro really the right plan?",
+        "a": "Yes, if one person operates the mailboxes. Pro is one login with no limit on connected mailboxes, so a single operator can run info@, sales@, invoices@ and support@ from one agent. Team is for when several people each need to sign in, with roles and a separate workspace per client."
+      },
+      {
+        "q": "Our email is with our web host, not Gmail. Will it work?",
+        "a": "Almost certainly. Any mailbox that speaks IMAP and SMTP on the standard ports connects with its address, host and password, and common hosts are recognised from the address so the settings fill themselves in. The server has to be reachable from the public internet, and a mailbox that will only accept an OAuth sign-in over IMAP cannot be connected this way."
+      },
+      {
+        "q": "Does the agent send from the right address?",
+        "a": "Yes. With more than one mailbox connected, every tool call names the mailbox it acts on, and each mailbox has its own sender name and signature. A reply to a thread in sales@ goes out from sales@, through that mailbox's own mail server."
+      },
+      {
+        "q": "Can I stop it sending anything without me?",
+        "a": "Yes. Turn on the approval hold for a mailbox and every outgoing message from it waits in your dashboard until you approve or reject it. You can also give an AI client an API key that has no send permission at all. Both are available on every plan."
+      },
+      {
+        "q": "Is company email stored on your servers?",
+        "a": "No. The mail your agent reads is fetched live from your provider for each request and is not kept. What we store is the encrypted token or password for each mailbox. A message you schedule for later is the exception: we store it until it is sent, and keep a record in your history afterwards."
+      },
+      {
+        "q": "What if a colleague needs access too?",
+        "a": "Free, Personal and Pro are single-login plans. When a second person needs a login of their own, Team adds members with roles. Until then, one operator on Pro covers every mailbox."
+      }
+    ]
+  },
+  "ctaBand": {
+    "title": "Put every company mailbox on one agent",
+    "sub": "Connect the first mailbox free, no card required. Add the rest when you are ready: three on Personal, all of them on Pro.",
+    "ctaPrimary": "Connect your first mailbox free",
+    "ctaSecondary": "Read the docs"
+  }
+}

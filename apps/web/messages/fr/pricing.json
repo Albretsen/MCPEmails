@@ -1,14 +1,14 @@
 {
   "meta": {
     "title": "Tarifs du serveur MCP e-mail pour l'IA : Gratuit, Personal, Pro et Team",
-    "description": "Gratuit connecte une boîte. Personal en connecte trois pour 5 $ par mois. Pro connecte toutes vos boîtes pour 15 $. Team ajoute membres, rôles et SSO."
+    "description": "Gratuit connecte une boîte. Personal en connecte trois pour 5 $ par mois. Pro connecte toutes les boîtes de votre entreprise pour 15 $. Team ajoute membres, rôles et SSO."
   },
   "hero": {
     "eyebrow": "Tarifs",
     "titleLine1": "Une boîte, gratuite.",
     "titleLine2": "Trois boîtes, 5 $.",
     "titleLine2Yearly": "Trois boîtes, 48 $ par an.",
-    "lead": "Connectez une boîte une fois et votre agent peut lire, chercher, organiser, rédiger, programmer et envoyer. Gratuit couvre une boîte. Personal en couvre trois pour 5 $ par mois. Pro couvre toutes les boîtes que vous possédez. Team ajoute des personnes, des rôles et un espace de travail distinct par client."
+    "lead": "Connectez une boîte une fois et votre agent peut lire, chercher, organiser, rédiger, programmer et envoyer. Gratuit couvre une boîte. Personal en couvre trois pour 5 $ par mois. Pro couvre toutes les boîtes que vous ou votre entreprise gérez, avec une seule connexion. Team ajoute des personnes, des rôles et un espace de travail distinct par client."
   },
   "billing": {
     "monthly": "Mensuel",
@@ -38,7 +38,7 @@
     },
     "personal": {
       "name": "Personal",
-      "desc": "Trois boîtes pour une seule personne : le travail, le personnel et une de plus.",
+      "desc": "Trois boîtes pour une personne ou une petite entreprise : le travail, le personnel ou les premières adresses de votre société.",
       "cta": "Choisir Personal",
       "ctaGrandfathered": "Vous avez déjà des boîtes illimitées",
       "features": [
@@ -51,7 +51,7 @@
     },
     "solo": {
       "name": "Pro",
-      "desc": "Toutes vos boîtes, dans un seul agent. Le travail, le personnel et chaque activité annexe.",
+      "desc": "Toutes les boîtes que gère votre entreprise, sur un seul agent : finance, ventes, support, info et la vôtre.",
       "cta": "Choisir Pro",
       "features": [
         "Tout ce que contient Personal",
@@ -93,7 +93,7 @@
           "inboxes": "Boîtes connectées",
           "actions": "Actions e-mail par mois",
           "keys": "Clés API",
-          "members": "Membres d'équipe",
+          "members": "Utilisateurs",
           "burst": "Limite de débit en pointe",
           "approvals": "Validation avant envoi"
         }
@@ -138,11 +138,12 @@
     },
     "values": {
       "unlimited": "Illimité",
+      "unlimitedCompany": "Illimité, boîtes d'entreprise comprises",
       "actionsFree": "150 / mois, 7 premiers jours non comptés",
       "actionsPaid": "Aucun plafond mensuel, usage équitable",
       "oneInbox": "1 boîte",
       "threeInboxes": "3 boîtes",
-      "ownerOnly": "Vous seul",
+      "oneSeat": "1 utilisateur",
       "burstFree": "60 / min",
       "burstPersonal": "120 / min",
       "burstSolo": "300 / min",
@@ -178,11 +179,11 @@
       },
       {
         "q": "Quelle est la différence entre Personal, Pro et Team ?",
-        "a": "Personal s'adresse à une personne avec trois boîtes connectées : un plafond de 120 requêtes par minute et le support par e-mail. Pro, c'est la même personne seule, mais sans aucune limite de boîtes : un plafond de 300 requêtes par minute, 90 jours d'historique d'analytique au lieu de 30, et le support par e-mail. Team s'adresse à plusieurs personnes : membres illimités avec rôles, un espace de travail distinct par client ou activité, SSO (SAML / OIDC), journal d'audit, un an d'historique d'analytique et support prioritaire."
+        "a": "Personal, c'est un seul utilisateur avec trois boîtes connectées, un plafond de 120 requêtes par minute et le support par e-mail. Pro, c'est toujours un seul utilisateur et une seule connexion, mais sans aucune limite de boîtes : une personne peut donc connecter toutes les boîtes que gère une entreprise (ventes, factures, support, info). S'y ajoutent un plafond de 300 requêtes par minute, 90 jours d'historique d'analytique au lieu de 30, et le support par e-mail. Team, c'est pour le moment où plusieurs personnes doivent se connecter : membres illimités avec rôles, un espace de travail distinct par client ou activité, SSO (SAML / OIDC), journal d'audit, un an d'historique d'analytique et support prioritaire."
       },
       {
         "q": "Et s'il me faut une quatrième boîte ?",
-        "a": "Personal couvre trois boîtes connectées. Une quatrième vous fait passer à Pro, à 15 $ par mois, et cela supprime complètement la limite : toutes les boîtes que vous possédez, quel qu'en soit le nombre, sur un seul agent. Si vous dépassez tout juste trois et que cela ne vous convient pas, dites-le-nous à hello@mcpemails.com."
+        "a": "Personal couvre trois boîtes connectées. Une quatrième vous fait passer à Pro, à 15 $ par mois, et cela supprime complètement la limite : toutes les boîtes que vous ou votre entreprise gérez, quel qu'en soit le nombre, sur un seul agent et avec une seule connexion. Si vous dépassez tout juste trois et que cela ne vous convient pas, dites-le-nous à hello@mcpemails.com."
       },
       {
         "q": "Puis-je changer ou annuler ma formule ?",
@@ -208,7 +209,7 @@
   },
   "ctaBand": {
     "title": "Prêt à offrir une boîte de réception à votre agent ?",
-    "sub": "Commencez avec Gratuit : une boîte, sans carte bancaire. Trois boîtes coûtent 5 $ par mois avec Personal, et toutes les boîtes que vous possédez 15 $ avec Pro.",
+    "sub": "Commencez avec Gratuit : une boîte, sans carte bancaire. Trois boîtes coûtent 5 $ par mois avec Personal, et toutes les boîtes que gère votre entreprise 15 $ avec Pro.",
     "ctaPrimary": "Commencer gratuitement",
     "ctaSecondary": "Lire la documentation"
   }

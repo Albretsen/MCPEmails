@@ -42,6 +42,18 @@ export default async function ConnectProviderView({ locale, provider, content })
           {content.hero.answer && (
             <p className="pricing-page-answer">{content.hero.answer}</p>
           )}
+          {/*
+            Optional pointer to a persona page. Only /connect/imap carries one:
+            more than half of the business-domain mailboxes we see sit on a host
+            with no brand of its own, so this is the page the company-mailbox
+            operator lands on, and /for/business is the page written for them.
+          */}
+          {content.persona?.href && (
+            <p className="how-guide-link" style={{ marginTop: 16 }}>
+              {content.persona.intro}{' '}
+              <Link href={content.persona.href}>{content.persona.label}</Link>
+            </p>
+          )}
           <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
             <a className="btn btn-primary btn-lg" href="/signup">
               {t('cta.primary', { provider: provider.name })}

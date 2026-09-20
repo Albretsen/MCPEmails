@@ -1,14 +1,14 @@
 {
   "meta": {
     "title": "Precios del servidor MCP de correo con IA: planes Gratis, Personal, Pro y Team",
-    "description": "Gratis conecta una bandeja. Personal, tres por $5 al mes. Pro, todas tus bandejas por $15. Team añade miembros, roles, SSO y un espacio por cliente."
+    "description": "Gratis conecta una bandeja. Personal, tres por $5 al mes. Pro, todos los buzones de tu negocio por $15. Team añade miembros, roles, SSO y un espacio por cliente."
   },
   "hero": {
     "eyebrow": "Precios",
     "titleLine1": "Una bandeja, gratis.",
     "titleLine2": "Tres bandejas, $5.",
     "titleLine2Yearly": "Tres bandejas, $48 al año.",
-    "lead": "Conecta un buzón una vez y tu agente podrá leer, buscar, organizar, redactar, programar y enviar. Gratis cubre una bandeja. Personal cubre tres por $5 al mes. Pro cubre todos los buzones que tengas. Team añade personas, roles y un espacio de trabajo separado por cliente."
+    "lead": "Conecta un buzón una vez y tu agente podrá leer, buscar, organizar, redactar, programar y enviar. Gratis cubre una bandeja. Personal cubre tres por $5 al mes. Pro cubre todos los buzones, tuyos o de tu negocio, con un solo inicio de sesión. Team añade personas, roles y un espacio de trabajo separado por cliente."
   },
   "billing": {
     "monthly": "Mensual",
@@ -38,7 +38,7 @@
     },
     "personal": {
       "name": "Personal",
-      "desc": "Tres buzones para una sola persona: el del trabajo, el personal y uno más.",
+      "desc": "Tres buzones para una persona o una empresa pequeña: el del trabajo, el personal o las primeras direcciones de tu empresa.",
       "cta": "Obtener Personal",
       "ctaGrandfathered": "Ya tienes bandejas ilimitadas",
       "features": [
@@ -51,7 +51,7 @@
     },
     "solo": {
       "name": "Pro",
-      "desc": "Todos los buzones que tengas, en un solo agente. Trabajo, personal y cada proyecto paralelo.",
+      "desc": "Todos los buzones que lleva tu negocio, en un solo agente: finanzas, ventas, soporte, info y el tuyo.",
       "cta": "Obtener Pro",
       "features": [
         "Todo lo de Personal",
@@ -93,7 +93,7 @@
           "inboxes": "Bandejas conectadas",
           "actions": "Acciones de correo al mes",
           "keys": "Claves de API",
-          "members": "Miembros de equipo",
+          "members": "Usuarios",
           "burst": "Límite de ráfaga",
           "approvals": "Aprobación antes de enviar"
         }
@@ -138,11 +138,12 @@
     },
     "values": {
       "unlimited": "Ilimitado",
+      "unlimitedCompany": "Ilimitado, buzones de empresa incluidos",
       "actionsFree": "150 / mes, los primeros 7 días no cuentan",
       "actionsPaid": "Sin tope mensual, uso justo",
       "oneInbox": "1 bandeja",
       "threeInboxes": "3 bandejas",
-      "ownerOnly": "Solo tú",
+      "oneSeat": "1 usuario",
       "burstFree": "60 / min",
       "burstPersonal": "120 / min",
       "burstSolo": "300 / min",
@@ -178,11 +179,11 @@
       },
       {
         "q": "¿Cuál es la diferencia entre Personal, Pro y Team?",
-        "a": "Personal es para una sola persona con tres bandejas conectadas, un techo de 120 peticiones por minuto y soporte por correo. Pro es esa misma persona sin ningún límite de bandejas, con un techo de 300 peticiones por minuto, 90 días de historial de analíticas en lugar de 30 y soporte por correo. Team es para más de una persona: miembros ilimitados con roles, un espacio de trabajo separado por cliente o negocio, SSO (SAML / OIDC), registro de auditoría, un año de historial de analíticas y soporte prioritario."
+        "a": "Personal es un solo usuario con tres bandejas conectadas, un techo de 120 peticiones por minuto y soporte por correo. Pro sigue siendo un solo usuario y un solo inicio de sesión, sin ningún límite de bandejas, así que una persona puede conectar todos los buzones que lleva una empresa (ventas, facturas, soporte, info). Además tiene un techo de 300 peticiones por minuto, 90 días de historial de analíticas en lugar de 30 y soporte por correo. Team es para cuando más de una persona necesita iniciar sesión: miembros ilimitados con roles, un espacio de trabajo separado por cliente o negocio, SSO (SAML / OIDC), registro de auditoría, un año de historial de analíticas y soporte prioritario."
       },
       {
         "q": "¿Y si necesito una cuarta bandeja?",
-        "a": "Personal cubre tres bandejas conectadas. Una cuarta te lleva a Pro, por $15 al mes, y eso elimina el límite por completo: todos los buzones que tengas, sean los que sean, en un solo agente. Si te quedas justo por encima de tres y eso no te encaja, escríbenos a hello@mcpemails.com."
+        "a": "Personal cubre tres bandejas conectadas. Una cuarta te lleva a Pro, por $15 al mes, y eso elimina el límite por completo: todos los buzones, tuyos o de tu empresa, sean los que sean, en un solo agente y con un solo inicio de sesión. Si te quedas justo por encima de tres y eso no te encaja, escríbenos a hello@mcpemails.com."
       },
       {
         "q": "¿Puedo cambiar o cancelar mi plan?",
@@ -208,7 +209,7 @@
   },
   "ctaBand": {
     "title": "¿Listo para darle a tu agente una bandeja de entrada?",
-    "sub": "Empieza en Gratis: una bandeja, sin tarjeta. Tres buzones cuestan $5 al mes con Personal, y todos los buzones que tengas cuestan $15 con Pro.",
+    "sub": "Empieza en Gratis: una bandeja, sin tarjeta. Tres buzones cuestan $5 al mes con Personal, y todos los buzones que lleva tu negocio cuestan $15 con Pro.",
     "ctaPrimary": "Empieza gratis",
     "ctaSecondary": "Lee la documentación"
   }

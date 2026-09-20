@@ -30,8 +30,8 @@ const MARKETING_PAGES: {
   changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'];
   priority: number;
 }[] = [
-  { path: '', lastModified: '2026-08-27', changeFrequency: 'weekly', priority: 1.0 },
-  { path: '/pricing', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.9 },
+  { path: '', lastModified: '2026-09-20', changeFrequency: 'weekly', priority: 1.0 },
+  { path: '/pricing', lastModified: '2026-09-20', changeFrequency: 'monthly', priority: 0.9 },
   { path: '/docs', lastModified: '2026-08-27', changeFrequency: 'weekly', priority: 0.8 },
   // The provider compatibility matrix: the page written to be cited, and the
   // one whose value depends on being re-verified, hence the higher priority
@@ -42,6 +42,7 @@ const MARKETING_PAGES: {
   { path: '/security', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.6 },
   { path: '/about', lastModified: '2026-08-29', changeFrequency: 'yearly', priority: 0.5 },
   { path: '/for/founders', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.8 },
+  { path: '/for/business', lastModified: '2026-09-20', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/connect', lastModified: '2026-08-31', changeFrequency: 'weekly', priority: 0.9 },
   { path: '/blog', lastModified: '2026-08-02', changeFrequency: 'weekly', priority: 0.7 },
   // Bump lastModified whenever a changelog entry is added.

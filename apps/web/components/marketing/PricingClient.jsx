@@ -75,15 +75,22 @@ const TABLE_SECTIONS = [
   {
     key: 'usage',
     rows: [
-      { key: 'inboxes',  free: 'values.oneInbox',  personal: 'values.threeInboxes', solo: 'values.unlimited', pro: 'values.unlimited' },
+      // Pro's cell says company mailboxes out loud. Pro is the plan a business
+      // with a mailbox per department wants, and a bare "Unlimited" next to a
+      // single seat read as "one person's own mailboxes" and sent companies to
+      // Team.
+      { key: 'inboxes',  free: 'values.oneInbox',  personal: 'values.threeInboxes', solo: 'values.unlimitedCompany', pro: 'values.unlimited' },
       // Free's allowance is public and must match FREE_ACTION_ALLOWANCE /
       // FREE_ACTION_GRACE_DAYS in src/lib/stripe/plans.ts. Paid tiers never
       // print a number: they have no monthly cap, subject to fair use.
       { key: 'actions',  free: 'values.actionsFree', personal: 'values.actionsPaid', solo: 'values.actionsPaid', pro: 'values.actionsPaid' },
       { key: 'keys',     free: 'values.unlimited', personal: 'values.unlimited',    solo: 'values.unlimited', pro: 'values.unlimited' },
       // Personal and Pro are deliberately single-seat: sharing inboxes with
-      // other people is what Team is for.
-      { key: 'members',  free: 'values.ownerOnly', personal: 'values.ownerOnly',     solo: 'values.ownerOnly', pro: 'values.unlimited' },
+      // other people is what Team is for. The row is labelled "Seats" and the
+      // value is a count, not "Just you": the old wording was true about logins
+      // and read as "not for a company", which is wrong about the buyer.
+      // src/lib/personas/business-copy.test.ts keeps "Just you" from returning.
+      { key: 'members',  free: 'values.oneSeat', personal: 'values.oneSeat',     solo: 'values.oneSeat', pro: 'values.unlimited' },
       { key: 'burst',    free: 'values.burstFree', personal: 'values.burstPersonal', solo: 'values.burstSolo', pro: 'values.burstPro' },
       // On every tier, and broken out as its own row on purpose. It is an
       // inbox setting (`inboxes.send_review_mode`) with no plan gate anywhere,

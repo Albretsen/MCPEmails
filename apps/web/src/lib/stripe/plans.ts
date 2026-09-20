@@ -239,7 +239,7 @@ export const PLANS: Record<PlanId, Plan> = {
   personal: {
     id: 'personal',
     name: 'Personal',
-    description: 'Three mailboxes for one person: work, personal, and one more.',
+    description: 'Three mailboxes for one person or one small business: work, personal, or your first company addresses.',
     limits: {
       maxInboxes: 3,
       maxDailyBurstCalls: Infinity,
@@ -281,7 +281,7 @@ export const PLANS: Record<PlanId, Plan> = {
   solo: {
     id: 'solo',
     name: 'Pro',
-    description: 'Every mailbox you own, in one agent. Work, personal, and each side business.',
+    description: 'Every mailbox your business runs, on one agent: finance, sales, support, info, and your own.',
     limits: {
       maxInboxes: Infinity,
       maxDailyBurstCalls: Infinity,

@@ -1416,6 +1416,14 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
   .founder-prompts, .founder-does-grid { grid-template-columns: 1fr; }
 }
 
+/* === Business landing (/for/business) ===
+   Reuses the founders classes above. The one addition: the plan picker has
+   three cards, which the two-column founders grid would leave lopsided. */
+.founder-does-grid.business-plan-grid { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 900px) {
+  .founder-does-grid.business-plan-grid { grid-template-columns: 1fr; }
+}
+
 /* ── Provider compatibility matrix (/docs/providers) ────────────────────────
    Two tables on one page: how each provider connects, then what the agent can
    do once it has. Both live inside .comparison-wrap, which already scrolls on

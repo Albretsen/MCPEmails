@@ -1,0 +1,163 @@
+{
+  "meta": {
+    "title": "E-mail IA pour les entreprises : toutes les boîtes sur un seul agent",
+    "description": "Une seule personne, toutes les boîtes de l'entreprise. Connectez info@, ventes@ et factures@ en IMAP, Gmail ou chez tout hébergeur, et gérez-les depuis Claude ou tout client MCP."
+  },
+  "hero": {
+    "eyebrow": "Pour la personne qui gère les e-mails de l'entreprise",
+    "titleLine1": "Toutes les boîtes de l'entreprise,",
+    "titleLine2": "une personne, un agent",
+    "lead": "info@, ventes@, factures@, support@ et votre propre adresse finissent en général chez la même personne. mcpemails les connecte toutes à Claude, Cursor, ChatGPT ou tout client MCP, pour lire, répondre, transférer et classer sur chaque adresse depuis une seule conversation. Cela fonctionne quel que soit l'hébergeur de votre messagerie, et vous pouvez retenir chaque message sortant jusqu'à votre approbation.",
+    "ctaPrimary": "Connectez votre première boîte gratuitement",
+    "ctaSecondary": "Voir ce qu'il fait"
+  },
+  "pains": {
+    "eyebrow": "Le travail",
+    "title": "Cinq adresses, une seule personne pour y répondre",
+    "sub": "Une petite entreprise a plus de boîtes que de personnes. Chacune est une connexion de plus, un onglet de plus, et un endroit de plus où un client peut rester sans réponse.",
+    "items": {
+      "coverage": {
+        "tag": "Couverture",
+        "h": "Une seule demande, toutes les adresses vérifiées",
+        "p": "Demandez à votre agent de <b>parcourir ventes@, info@ et support@ et de lister ce qui attend encore une réponse</b>. Il lit en direct chaque boîte connectée et vous rend une seule liste, pour que rien ne dorme dans l'adresse que personne n'a ouverte aujourd'hui."
+      },
+      "sender": {
+        "tag": "Bon expéditeur",
+        "h": "Les réponses partent de la bonne adresse",
+        "p": "Chaque boîte garde <b>son propre nom d'expéditeur et sa propre signature</b>, et son courrier part par le fournisseur ou le serveur SMTP de cette même boîte. La réponse à une question sur une facture part de factures@, signée comme signe factures@."
+      },
+      "routine": {
+        "tag": "Routine",
+        "h": "Mettez la routine en pilote automatique",
+        "p": "Les tâches récurrentes peuvent tourner sous forme d'<b>automatisations de tri</b> : une recherche enregistrée plus une action fixe (déplacer, étiqueter, marquer comme lu, transférer ou rédiger une réponse) à intervalle régulier, sans aucun modèle d'IA dans la boucle. Une automatisation ne peut jamais supprimer de courrier, et un transfert qu'elle met en file attend toujours votre approbation."
+      }
+    }
+  },
+  "day": {
+    "eyebrow": "Une journée dans les boîtes de l'entreprise",
+    "title": "De vraies demandes, telles qu'on les tape",
+    "sub": "Aucune nouvelle application à apprendre. Vous parlez à votre client IA, et il travaille dans les vraies boîtes.",
+    "prompts": [
+      "Parcours ventes@ et info@ et liste toutes les demandes de cette semaine auxquelles personne n'a répondu.",
+      "Transfère les factures de ce mois depuis factures@ à notre expert-comptable, pièces jointes comprises.",
+      "Rédige depuis support@ une réponse à la réclamation sur la livraison, dans le ton de notre dernière réponse à ce client.",
+      "Cherche dans toutes les boîtes tout ce qui vient de fournitures-northwind.example et dis-moi où en est la commande.",
+      "Déplace tous les relevés fournisseurs de factures@ dans un dossier Relevés.",
+      "Programme l'annonce de la nouvelle grille tarifaire pour qu'elle parte de ventes@ lundi à 8 h."
+    ]
+  },
+  "does": {
+    "eyebrow": "Ce qu'il fait vraiment",
+    "title": "De vraies boîtes, pas un aperçu en lecture seule",
+    "sub": "Les mêmes outils fonctionnent sur chaque boîte que vous connectez. Quand il y en a plusieurs, chaque appel nomme la boîte sur laquelle il agit.",
+    "items": {
+      "read": {
+        "h": "Lire et rechercher",
+        "p": "Listez, lisez et recherchez dans chaque boîte connectée, avec un courrier récupéré en direct chez le fournisseur à chaque fois."
+      },
+      "send": {
+        "h": "Envoyer, répondre et transférer",
+        "p": "Envoyez un nouveau message, répondez dans le fil ou transférez avec les pièces jointes d'origine intactes, depuis l'adresse à laquelle le courrier appartient."
+      },
+      "schedule": {
+        "h": "Programmer",
+        "p": "Mettez un message en file pour un envoi ultérieur, et annulez-le à tout moment avant son départ."
+      },
+      "organize": {
+        "h": "Organiser",
+        "p": "Déplacez, copiez, marquez, archivez et étiquetez les messages, et créez les dossiers où les ranger."
+      }
+    }
+  },
+  "safety": {
+    "eyebrow": "Contrôle",
+    "title": "C'est toujours vous qui appuyez sur envoyer",
+    "sub": "Laisser un agent entrer dans la messagerie de l'entreprise ne fonctionne que si les limites sont réelles. Celles-ci sont appliquées sur notre serveur, pas suggérées au modèle.",
+    "items": {
+      "approval": {
+        "h": "Retenue des messages sortants jusqu'à approbation",
+        "p": "Activez-la boîte par boîte, et chaque envoi, réponse, transfert, envoi de brouillon et envoi programmé attend dans votre tableau de bord que vous l'approuviez ou le rejetiez. Elle est incluse dans toutes les formules, Gratuit compris."
+      },
+      "stored": {
+        "h": "Le courrier qu'il lit n'est jamais stocké",
+        "p": "Les messages sont récupérés en direct chez votre fournisseur à chaque requête et remis à votre client IA, sans rien conserver entre deux appels. Ce que nous stockons par boîte, c'est le jeton ou le mot de passe, chiffré. L'exception est un message que vous programmez pour plus tard : nous le stockons jusqu'à son envoi, puis gardons une trace dans votre historique."
+      },
+      "keys": {
+        "h": "Des clés limitées aux boîtes que vous choisissez",
+        "p": "Une clé d'API peut être restreinte à certaines boîtes et aux seules permissions dont elle a besoin. Une clé créée pour trier support@ ne peut pas atteindre factures@, et une clé sans la permission d'envoi ne peut rien envoyer du tout."
+      },
+      "server": {
+        "h": "Votre serveur de messagerie garde la main",
+        "p": "Le courrier part par votre propre fournisseur ou serveur SMTP, jamais depuis un serveur de messagerie à nous. Changer le mot de passe d'une boîte, révoquer son mot de passe d'application ou retirer l'accès dans votre compte Google coupe l'agent."
+      }
+    },
+    "link": "Lire comment fonctionne la sécurité"
+  },
+  "providers": {
+    "eyebrow": "Tout hébergeur",
+    "title": "Connectez toutes les boîtes de l'entreprise, quel qu'en soit l'hébergeur",
+    "sub": "La plupart des messageries d'entreprise sont chez l'hébergeur web ou le registraire du domaine, et cela ne pose aucun problème. Toute boîte qui parle IMAP et SMTP sur les ports standard se connecte avec son adresse, son serveur et son mot de passe. IONOS, Hostinger, OVH, Namecheap et d'autres hébergeurs courants sont reconnus à partir de l'adresse et renseignés pour vous. Gmail et Google Workspace se connectent avec Google. iCloud, Fastmail, Yahoo, Zoho et Yandex se connectent avec un mot de passe d'application.",
+    "ctaImap": "Connecter n'importe quelle boîte IMAP",
+    "ctaGmail": "Connecter Gmail ou Google Workspace",
+    "ctaIonos": "Connecter IONOS",
+    "ctaMatrix": "Voir comment chaque fournisseur se connecte"
+  },
+  "pricing": {
+    "eyebrow": "Tarifs",
+    "title": "Choisissez la formule en comptant vos boîtes",
+    "sub": "Gratuit, Personal et Pro sont toutes des formules à une seule connexion. Ce qui change, c'est le nombre de boîtes que cette connexion peut relier.",
+    "items": {
+      "free": {
+        "h": "Gratuit : une boîte",
+        "p": "Commencez par l'adresse la plus sollicitée. 150 actions e-mail par mois, les 7 premiers jours non comptés, sans carte bancaire."
+      },
+      "personal": {
+        "h": "Personal, 5 $ par mois : jusqu'à trois",
+        "p": "Pour une entreprise qui a deux ou trois adresses. Aucun plafond mensuel d'actions, une limite de débit en rafale plus élevée et le support par e-mail."
+      },
+      "pro": {
+        "h": "Pro, 15 $ par mois : quatre ou plus",
+        "p": "Toutes les boîtes que gère l'entreprise, sans limite de nombre, toujours avec une seule connexion. La formule pour une entreprise qui a une adresse par service."
+      }
+    },
+    "note": "Team, à 79 $ par mois, c'est pour le moment où plusieurs personnes ont chacune besoin de leur propre connexion, avec des rôles et un espace de travail distinct par client.",
+    "cta": "Comparer toutes les formules"
+  },
+  "faq": {
+    "eyebrow": "Questions fréquentes",
+    "title": "Ce qu'on demande avant de connecter",
+    "sub": "Les objections pratiques, sans détour.",
+    "items": [
+      {
+        "q": "Nous sommes une entreprise, pas un particulier. Pro est-elle vraiment la bonne formule ?",
+        "a": "Oui, si une seule personne gère les boîtes. Pro, c'est une seule connexion sans limite de boîtes connectées : une personne peut donc gérer info@, ventes@, factures@ et support@ depuis un seul agent. Team, c'est pour le moment où plusieurs personnes doivent chacune se connecter, avec des rôles et un espace de travail distinct par client."
+      },
+      {
+        "q": "Notre messagerie est chez notre hébergeur web, pas chez Gmail. Est-ce que ça marchera ?",
+        "a": "Très probablement. Toute boîte qui parle IMAP et SMTP sur les ports standard se connecte avec son adresse, son serveur et son mot de passe, et les hébergeurs courants sont reconnus à partir de l'adresse, si bien que les réglages se remplissent tout seuls. Le serveur doit être joignable depuis l'internet public, et une boîte qui n'accepte qu'une connexion OAuth en IMAP ne peut pas être connectée de cette façon."
+      },
+      {
+        "q": "L'agent envoie-t-il depuis la bonne adresse ?",
+        "a": "Oui. Quand plusieurs boîtes sont connectées, chaque appel d'outil nomme la boîte sur laquelle il agit, et chaque boîte a son propre nom d'expéditeur et sa propre signature. Une réponse à un fil de ventes@ part de ventes@, par le serveur de messagerie de cette même boîte."
+      },
+      {
+        "q": "Puis-je l'empêcher d'envoyer quoi que ce soit sans moi ?",
+        "a": "Oui. Activez la retenue pour une boîte, et chaque message sortant de cette boîte attend dans votre tableau de bord que vous l'approuviez ou le rejetiez. Vous pouvez aussi donner à un client IA une clé d'API sans aucune permission d'envoi. Les deux sont disponibles dans toutes les formules."
+      },
+      {
+        "q": "Les e-mails de l'entreprise sont-ils stockés sur vos serveurs ?",
+        "a": "Non. Le courrier que lit votre agent est récupéré en direct chez votre fournisseur à chaque requête et n'est pas conservé. Ce que nous stockons, c'est le jeton ou le mot de passe de chaque boîte, chiffré. L'exception est un message que vous programmez pour plus tard : nous le stockons jusqu'à son envoi, puis gardons une trace dans votre historique."
+      },
+      {
+        "q": "Et si un collègue a lui aussi besoin d'un accès ?",
+        "a": "Gratuit, Personal et Pro sont des formules à une seule connexion. Quand une deuxième personne a besoin de la sienne, Team ajoute des membres avec des rôles. D'ici là, une seule personne sur Pro couvre toutes les boîtes."
+      }
+    ]
+  },
+  "ctaBand": {
+    "title": "Mettez toutes les boîtes de l'entreprise sur un seul agent",
+    "sub": "Connectez la première boîte gratuitement, sans carte bancaire. Ajoutez les autres quand vous voulez : trois avec Personal, toutes avec Pro.",
+    "ctaPrimary": "Connectez votre première boîte gratuitement",
+    "ctaSecondary": "Lire la documentation"
+  }
+}

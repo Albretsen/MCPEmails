@@ -586,16 +586,23 @@ export function HowItWorks() {
 /* ============== EXAMPLES ============== */
 /**
  * Concrete, mass-appeal prompts a person could hand their AI assistant once
- * connected — everyday inbox chores, not developer jargon. The prompts/
+ * connected: everyday inbox chores, not developer jargon. The prompts/
  * outcomes are untranslated (like the terminal/endpoint hero mockups above)
  * since the literal tool-call fragments are part of the visual rather than
  * prose to localize; the section head text is translated as usual.
+ *
+ * The first and third cards are departmental on purpose (role addresses on a
+ * company domain). The grid used to be six personal-life prompts, and the
+ * buyer who actually pays runs sales@ and invoices@, read it, and concluded
+ * this was a personal-email toy. Keep at least two company-mailbox cards, and
+ * only show things the tools really do: reading several inboxes is one
+ * email_read call per inbox, and a forward carries the original attachments.
  */
 const EXAMPLES = [
   {
-    prompt: "What was the wifi password Alex sent me last week?",
-    tools: ["email_read"],
-    outcome: "Found it — pulled straight from Alex’s message on Tuesday.",
+    prompt: "Go through sales@ and info@ and list every enquiry from this week nobody has answered",
+    tools: ["inbox_list", "email_read"],
+    outcome: "7 open enquiries across both inboxes, oldest first. Two have waited since Monday.",
   },
   {
     prompt: "Unsubscribe me from every newsletter I haven’t opened in 3 months",
@@ -603,9 +610,9 @@ const EXAMPLES = [
     outcome: "Archived 14 newsletters you haven’t touched since April.",
   },
   {
-    prompt: "Reply to the landlord and say rent’s coming Friday",
-    tools: ["email_compose"],
-    outcome: "Sent — Priya knows rent lands Friday.",
+    prompt: "Forward this month’s invoices from invoices@ to our accountant",
+    tools: ["email_read", "email_compose"],
+    outcome: "Forwarded 9 invoices from invoices@, PDFs attached.",
   },
   {
     prompt: "Move every receipt from this month into a Receipts folder",
@@ -615,7 +622,7 @@ const EXAMPLES = [
   {
     prompt: "Send this at 8am Monday, not now",
     tools: ["schedule"],
-    outcome: "Scheduled for Mon 8:00 AM — nothing goes out before then.",
+    outcome: "Scheduled for Mon 8:00 AM. Nothing goes out before then.",
   },
   {
     prompt: "What did the doctor’s office say about my appointment?",
@@ -1126,6 +1133,12 @@ export function Pricing({ onGetStarted, stripePrices }) {
             comparison: (chunks) => <Link href="/pricing">{chunks}</Link>,
           })}
         </p>
+        {/* The one homepage pointer to the company-mailbox persona page. */}
+        <p className="pricing-footnote" style={{ marginTop: 8 }}>
+          {t.rich('pricing.businessLink', {
+            business: (chunks) => <Link href="/for/business">{chunks}</Link>,
+          })}
+        </p>
       </div>
     </section>
   );
@@ -1295,6 +1308,7 @@ export function Footer() {
             <Link href="/docs">{t('footer.linkDocs')}</Link>
             <Link href="/self-hosting">{t('footer.linkSelfHost')}</Link>
             <Link href="/for/founders">{t('footer.linkFounders')}</Link>
+            <Link href="/for/business">{t('footer.linkBusiness')}</Link>
           </div>
           <div>
             <p className="footer-heading">{t('footer.resourcesHeading')}</p>

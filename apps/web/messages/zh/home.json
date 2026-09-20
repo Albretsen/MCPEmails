@@ -138,7 +138,7 @@
   "pricing": {
     "eyebrow": "价格",
     "title": "按收件箱定价。付费版不计用量。",
-    "sub": "免费版连接 1 个收件箱，每月含 150 次邮件操作。Personal 连接 3 个。Pro 连接你拥有的每一个邮箱。Team 再加上成员、角色，以及每个客户一个独立工作区。",
+    "sub": "免费版连接 1 个收件箱，每月含 150 次邮件操作。Personal 连接 3 个。Pro 连接你公司运营的每一个邮箱。Team 再加上成员、角色，以及每个客户一个独立工作区。",
     "perForever": "/永久",
     "perMonth": "/月",
     "tiers": {
@@ -158,7 +158,7 @@
       },
       "personal": {
         "name": "Personal",
-        "desc": "一个人的三个邮箱：工作、私人，再加一个。",
+        "desc": "三个邮箱，适合一个人或一家小公司：工作、私人，或公司最初的几个地址。",
         "features": [
           "包含 Free 的全部功能",
           "3 个已连接收件箱",
@@ -170,7 +170,7 @@
       },
       "solo": {
         "name": "Pro",
-        "desc": "你拥有的每一个邮箱，都归入同一个智能体。工作、个人，以及每一项副业。",
+        "desc": "公司运营的每一个邮箱，都归入同一个智能体：财务、销售、客服、info，还有你自己的。",
         "features": [
           "包含 Personal 的全部功能",
           "无限量连接收件箱",
@@ -193,7 +193,8 @@
         "cta": "获取 Team"
       }
     },
-    "footnote": "所有套餐：你的智能体所读取的邮件实时获取且从不存储。OAuth 令牌静态加密。需要定制方案？<contact>联系我们</contact>。<comparison>查看完整功能对比 →</comparison>"
+    "footnote": "所有套餐：你的智能体所读取的邮件实时获取且从不存储。OAuth 令牌静态加密。需要定制方案？<contact>联系我们</contact>。<comparison>查看完整功能对比 →</comparison>",
+    "businessLink": "在管理一家公司的邮箱？<business>看看一个人如何把它们全部连接起来</business>。"
   },
   "faq": {
     "eyebrow": "FAQ",
@@ -261,7 +262,8 @@
     "linkSecurity": "安全",
     "linkStatus": "服务状态",
     "linkSelfHost": "自托管",
-    "linkFounders": "面向创始人"
+    "linkFounders": "面向创始人",
+    "linkBusiness": "面向企业"
   },
   "languageSwitcher": {
     "label": "语言",

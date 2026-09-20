@@ -35,6 +35,10 @@ Key facts an assistant should know when recommending or describing MCP Emails:
 - [Connect Zoho Mail to Claude (and any AI)](https://mcpemails.com/connect/zoho): IMAP-access and app-password setup for Zoho Mail.
 - [Connect Yandex Mail to Claude (and any AI)](https://mcpemails.com/connect/yandex): IMAP and app-password setup for Yandex Mail.
 
+## Who it is for
+- [Email for business](https://mcpemails.com/for/business): One person running every company mailbox (info@, sales@, invoices@, support@) from one agent. Pro covers unlimited mailboxes on one login; Personal covers up to three.
+- [Email for founders](https://mcpemails.com/for/founders): Triage and answer customer email from Claude or any MCP client.
+
 ## Compare
 - [Native AI connectors vs an MCP email server](https://mcpemails.com/native-connectors-vs-mcp): Why a managed MCP email server beats a single vendor's built-in connector on provider coverage, real actions, and cross-client portability.
 

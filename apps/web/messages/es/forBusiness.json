@@ -1,0 +1,163 @@
+{
+  "meta": {
+    "title": "Correo con IA para empresas: todos los buzones en un solo agente",
+    "description": "Una sola persona, todos los buzones de la empresa. Conecta info@, ventas@ y facturas@ por IMAP, Gmail o cualquier proveedor, y gestiónalos desde Claude o cualquier cliente MCP."
+  },
+  "hero": {
+    "eyebrow": "Para quien lleva el correo de la empresa",
+    "titleLine1": "Todos los buzones de la empresa,",
+    "titleLine2": "una persona, un agente",
+    "lead": "info@, ventas@, facturas@, soporte@ y tu propia dirección suelen acabar en manos de la misma persona. mcpemails los conecta todos a Claude, Cursor, ChatGPT o cualquier cliente MCP, para que leas, respondas, reenvíes y archives en todas las direcciones desde una sola conversación. Funciona con quien aloje tu correo, y puedes retener cada mensaje saliente hasta que lo apruebes.",
+    "ctaPrimary": "Conecta tu primer buzón gratis",
+    "ctaSecondary": "Mira lo que hace"
+  },
+  "pains": {
+    "eyebrow": "El trabajo",
+    "title": "Cinco direcciones y una sola persona para responderlas",
+    "sub": "Una empresa pequeña tiene más buzones que personas. Cada uno es otro inicio de sesión, otra pestaña y otro sitio donde un cliente puede quedarse sin respuesta.",
+    "items": {
+      "coverage": {
+        "tag": "Cobertura",
+        "h": "Pregunta una vez, revisa todas las direcciones",
+        "p": "Pídele a tu agente que <b>repase ventas@, info@ y soporte@ y liste lo que sigue esperando respuesta</b>. Lee en vivo cada buzón conectado y te devuelve una sola lista, así nada se queda sin ver en la dirección que hoy nadie abrió."
+      },
+      "sender": {
+        "tag": "Remitente correcto",
+        "h": "Las respuestas salen de la dirección correcta",
+        "p": "Cada buzón conserva <b>su propio nombre de remitente y su firma</b>, y su correo sale por el proveedor o el servidor SMTP de ese mismo buzón. La respuesta a una duda sobre una factura sale de facturas@, firmada como firma facturas@."
+      },
+      "routine": {
+        "tag": "Rutina",
+        "h": "Pon la rutina en piloto automático",
+        "p": "Las tareas repetitivas pueden funcionar como <b>automatizaciones de triaje</b>: una búsqueda guardada más una acción fija (mover, etiquetar, marcar como leído, reenviar o redactar una respuesta) con una cadencia, sin ningún modelo de IA de por medio. Una automatización nunca puede borrar correo, y un reenvío que ponga en cola siempre espera tu aprobación."
+      }
+    }
+  },
+  "day": {
+    "eyebrow": "Un día en los buzones de la empresa",
+    "title": "Peticiones reales de quien lleva el correo",
+    "sub": "No hay ninguna aplicación nueva que aprender. Hablas con tu cliente de IA y él trabaja dentro de los buzones reales.",
+    "prompts": [
+      "Repasa ventas@ e info@ y lista todas las consultas de esta semana que nadie ha respondido.",
+      "Reenvía las facturas de este mes desde facturas@ a nuestra gestoría, con los adjuntos.",
+      "Redacta desde soporte@ una respuesta a la queja por la entrega, con el mismo tono de nuestra última respuesta a ese cliente.",
+      "Busca en todos los buzones cualquier correo de suministros-northwind.example y dime cómo va el pedido.",
+      "Mueve todos los extractos de proveedores de facturas@ a una carpeta Extractos.",
+      "Programa el aviso de cambio de precios para que salga desde ventas@ el lunes a las 8:00."
+    ]
+  },
+  "does": {
+    "eyebrow": "Lo que hace de verdad",
+    "title": "Buzones reales, no un vistazo de solo lectura",
+    "sub": "Las mismas herramientas funcionan en cada buzón que conectes. Con varios conectados, cada llamada indica el buzón sobre el que actúa.",
+    "items": {
+      "read": {
+        "h": "Leer y buscar",
+        "p": "Lista, lee y busca en cada buzón conectado, con el correo obtenido en vivo del proveedor cada vez."
+      },
+      "send": {
+        "h": "Enviar, responder y reenviar",
+        "p": "Envía correo nuevo, responde en el hilo o reenvía con los adjuntos originales intactos, desde la dirección a la que pertenece el correo."
+      },
+      "schedule": {
+        "h": "Programar",
+        "p": "Deja un mensaje en cola para que salga más tarde, y cancélalo cuando quieras antes de que se envíe."
+      },
+      "organize": {
+        "h": "Organizar",
+        "p": "Mueve, copia, marca, archiva y etiqueta mensajes, y crea las carpetas donde guardarlos."
+      }
+    }
+  },
+  "safety": {
+    "eyebrow": "Control",
+    "title": "Quien pulsa enviar sigues siendo tú",
+    "sub": "Dejar entrar a un agente en el correo de la empresa solo funciona si los límites son reales. Estos se aplican en nuestro servidor, no son una sugerencia para el modelo.",
+    "items": {
+      "approval": {
+        "h": "Retención del correo saliente hasta tu aprobación",
+        "p": "Actívala por buzón y cada envío, respuesta, reenvío, envío de borrador y envío programado espera en tu panel hasta que lo apruebes o lo rechaces. Está incluida en todos los planes, también en Gratis."
+      },
+      "stored": {
+        "h": "El correo que lee nunca se almacena",
+        "p": "Los mensajes se obtienen en vivo de tu proveedor en cada petición y se entregan a tu cliente de IA, sin guardar nada entre llamadas. Lo que almacenamos por buzón es el token o la contraseña, cifrados. La excepción es un mensaje que programes para más tarde: lo guardamos hasta que se envía y después conservamos un registro en tu historial."
+      },
+      "keys": {
+        "h": "Claves limitadas a los buzones que elijas",
+        "p": "Una clave de API puede restringirse a buzones concretos y a los permisos que necesita. Una clave creada para el triaje de soporte@ no puede llegar a facturas@, y una clave sin el permiso de envío no puede enviar nada."
+      },
+      "server": {
+        "h": "Tu servidor de correo sigue mandando",
+        "p": "El correo se envía a través de tu propio proveedor o servidor SMTP, nunca desde un servidor de correo nuestro. Cambiar la contraseña de un buzón, revocar su contraseña de aplicación o retirar el acceso en tu cuenta de Google deja fuera al agente."
+      }
+    },
+    "link": "Lee cómo funciona la seguridad"
+  },
+  "providers": {
+    "eyebrow": "Cualquier proveedor",
+    "title": "Conecta todos los buzones de la empresa, los aloje quien los aloje",
+    "sub": "La mayor parte del correo de empresa vive en el proveedor de hosting o en el registrador del dominio, y eso no es ningún problema. Cualquier buzón que hable IMAP y SMTP en los puertos estándar se conecta con su dirección, su servidor y su contraseña. IONOS, Hostinger, OVH, Namecheap y otros proveedores habituales se reconocen por la dirección y se rellenan solos. Gmail y Google Workspace inician sesión con Google. iCloud, Fastmail, Yahoo, Zoho y Yandex se conectan con una contraseña de aplicación.",
+    "ctaImap": "Conecta cualquier buzón IMAP",
+    "ctaGmail": "Conecta Gmail o Google Workspace",
+    "ctaIonos": "Conecta IONOS",
+    "ctaMatrix": "Mira cómo se conecta cada proveedor"
+  },
+  "pricing": {
+    "eyebrow": "Precios",
+    "title": "Elige el plan contando buzones",
+    "sub": "Gratis, Personal y Pro son todos de un solo inicio de sesión. Lo que cambia es cuántos buzones puede conectar.",
+    "items": {
+      "free": {
+        "h": "Gratis: un buzón",
+        "p": "Empieza por la dirección con más movimiento. 150 acciones de correo al mes, los primeros 7 días no cuentan, sin tarjeta."
+      },
+      "personal": {
+        "h": "Personal, $5 al mes: hasta tres",
+        "p": "Para una empresa con dos o tres direcciones. Sin tope mensual de acciones, un límite de ráfaga más alto y soporte por correo."
+      },
+      "pro": {
+        "h": "Pro, $15 al mes: cuatro o más",
+        "p": "Todos los buzones que lleva el negocio, sin límite de cantidad y con un solo inicio de sesión. El plan para una empresa con una dirección por departamento."
+      }
+    },
+    "note": "Team, por $79 al mes, es para cuando varias personas necesitan cada una su propio inicio de sesión, con roles y un espacio de trabajo separado por cliente.",
+    "cta": "Compara todos los planes"
+  },
+  "faq": {
+    "eyebrow": "Preguntas habituales",
+    "title": "Lo que se pregunta antes de conectar",
+    "sub": "Las objeciones prácticas, respondidas sin rodeos.",
+    "items": [
+      {
+        "q": "Somos una empresa, no un particular. ¿De verdad Pro es el plan adecuado?",
+        "a": "Sí, si es una sola persona quien lleva los buzones. Pro es un único inicio de sesión sin límite de buzones conectados, así que una sola persona puede llevar info@, ventas@, facturas@ y soporte@ desde un mismo agente. Team es para cuando varias personas necesitan iniciar sesión cada una, con roles y un espacio de trabajo separado por cliente."
+      },
+      {
+        "q": "Nuestro correo está en nuestro proveedor de hosting, no en Gmail. ¿Funcionará?",
+        "a": "Casi seguro que sí. Cualquier buzón que hable IMAP y SMTP en los puertos estándar se conecta con su dirección, su servidor y su contraseña, y los proveedores habituales se reconocen por la dirección, de modo que los ajustes se rellenan solos. El servidor tiene que ser accesible desde internet, y un buzón que solo acepte un inicio de sesión OAuth por IMAP no se puede conectar de esta forma."
+      },
+      {
+        "q": "¿El agente envía desde la dirección correcta?",
+        "a": "Sí. Con más de un buzón conectado, cada llamada a una herramienta indica el buzón sobre el que actúa, y cada buzón tiene su propio nombre de remitente y su firma. Una respuesta a un hilo de ventas@ sale de ventas@, a través del servidor de correo de ese mismo buzón."
+      },
+      {
+        "q": "¿Puedo impedir que envíe algo sin mí?",
+        "a": "Sí. Activa la retención para un buzón y cada mensaje saliente de ese buzón espera en tu panel hasta que lo apruebes o lo rechaces. También puedes darle a un cliente de IA una clave de API sin ningún permiso de envío. Las dos cosas están disponibles en todos los planes."
+      },
+      {
+        "q": "¿El correo de la empresa se almacena en vuestros servidores?",
+        "a": "No. El correo que lee tu agente se obtiene en vivo de tu proveedor en cada petición y no se conserva. Lo que almacenamos es el token o la contraseña de cada buzón, cifrados. La excepción es un mensaje que programes para más tarde: lo guardamos hasta que se envía y después conservamos un registro en tu historial."
+      },
+      {
+        "q": "¿Y si un compañero también necesita acceso?",
+        "a": "Gratis, Personal y Pro son planes de un solo inicio de sesión. Cuando una segunda persona necesite el suyo, Team añade miembros con roles. Hasta entonces, una sola persona en Pro cubre todos los buzones."
+      }
+    ]
+  },
+  "ctaBand": {
+    "title": "Pon todos los buzones de la empresa en un solo agente",
+    "sub": "Conecta el primer buzón gratis, sin tarjeta. Añade el resto cuando quieras: tres con Personal, todos con Pro.",
+    "ctaPrimary": "Conecta tu primer buzón gratis",
+    "ctaSecondary": "Lee la documentación"
+  }
+}

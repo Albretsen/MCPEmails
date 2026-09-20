@@ -16,17 +16,22 @@
   },
   "meta": {
     "title": "Connect Any IMAP Mailbox to Claude, Cursor & MCP Clients",
-    "description": "Connect any IMAP mailbox to Claude, Cursor and any MCP client. Bring your host and password: 993 or 143 for IMAP, 465 or 587 for SMTP, detected for you."
+    "description": "Connect any IMAP mailbox your company runs to Claude, Cursor and any MCP client. Bring host and password: IMAP on 993 or 143, SMTP on 465 or 587, detected for you."
   },
   "hero": {
     "eyebrow": "IMAP + AI",
     "titleLine1": "Connect any IMAP mailbox to Claude,",
     "titleLine2": "and Cursor, ChatGPT, any MCP client",
-    "lead": "Give your AI agent the inbox you already have, whoever hosts it. Read, search, send, reply, schedule and organize mail over plain IMAP and SMTP, and use the same inbox in every MCP client, not just one.",
+    "lead": "Connect every mailbox your company runs, whoever hosts it: info@, sales@, invoices@ and your own. Your AI agent reads, searches, sends, replies, schedules and organizes that mail over plain IMAP and SMTP, and the same mailboxes work in every MCP client, not just one.",
     "meta0": "1 inbox free, forever",
     "meta1": "Any IMAP host, no OAuth setup",
     "meta2": "Email fetched live, never stored",
-    "answer": "Claude has no IMAP client of its own. mcpemails is a hosted MCP server that logs in to your mail server over IMAP and SMTP with the address, host and password your provider already gave you, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Any host that speaks IMAP works, and one inbox is free."
+    "answer": "Claude has no IMAP client of its own. mcpemails is a hosted MCP server that logs in to your mail server over IMAP and SMTP with the address, host and password your provider already gave you, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Any host that speaks IMAP works, a company's role addresses connect the same way as a personal one, and one inbox is free."
+  },
+  "persona": {
+    "intro": "Running several company mailboxes?",
+    "label": "See how one person works every company address from one agent",
+    "href": "/for/business"
   },
   "method": {
     "title": "How a generic IMAP mailbox connects",
@@ -35,7 +40,7 @@
   "setup": [
     {
       "h": "Create a free account",
-      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever. Paid plans add the rest: three mailboxes on Personal, every company mailbox on Pro."
     },
     {
       "h": "Collect your IMAP and SMTP settings",
@@ -100,7 +105,7 @@
     }
   ],
   "ctaBand": {
-    "title": "Give your AI the inbox you already have",
+    "title": "Give your AI the mailboxes your company already runs",
     "sub": "Connect any IMAP mailbox in minutes. One inbox free forever, no card required."
   },
   "guide": {

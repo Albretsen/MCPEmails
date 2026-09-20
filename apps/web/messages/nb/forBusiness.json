@@ -1,0 +1,163 @@
+{
+  "meta": {
+    "title": "AI-e-post for bedrifter: alle firmaets postkasser i én agent",
+    "description": "Én person, alle firmaets postkasser. Koble til post@, salg@ og faktura@ over IMAP, Gmail eller hvilken som helst e-postvert, og jobb i alle fra Claude eller en annen MCP-klient."
+  },
+  "hero": {
+    "eyebrow": "For den som tar seg av firmaets e-post",
+    "titleLine1": "Alle firmaets postkasser,",
+    "titleLine2": "én person, én agent",
+    "lead": "post@, salg@, faktura@, support@ og din egen adresse havner som regel hos den samme personen. mcpemails kobler alle sammen til Claude, Cursor, ChatGPT eller en annen MCP-klient, så du kan lese, svare, videresende og rydde i hver adresse fra én samtale. Det fungerer uansett hvem som drifter e-posten, og du kan holde tilbake hver utgående melding til du har godkjent den.",
+    "ctaPrimary": "Koble til den første postkassen gratis",
+    "ctaSecondary": "Se hva den gjør"
+  },
+  "pains": {
+    "eyebrow": "Jobben",
+    "title": "Fem adresser, én person som svarer på dem",
+    "sub": "Et lite firma har flere postkasser enn ansatte. Hver av dem er en egen innlogging, en egen fane og enda et sted der en kunde kan bli stående uten svar.",
+    "items": {
+      "coverage": {
+        "tag": "Oversikt",
+        "h": "Spør én gang, sjekk alle adressene",
+        "p": "Be agenten <b>gå gjennom salg@, post@ og support@ og liste opp det som fortsatt venter på svar</b>. Den leser hver tilkoblede postkasse direkte og kommer tilbake med én liste, så ingenting blir liggende usett i den adressen ingen åpnet i dag."
+      },
+      "sender": {
+        "tag": "Riktig avsender",
+        "h": "Svarene går ut fra riktig adresse",
+        "p": "Hver postkasse beholder <b>sitt eget avsendernavn og sin egen signatur</b>, og e-posten sendes gjennom den postkassens egen leverandør eller SMTP-server. Svaret på et fakturaspørsmål kommer fra faktura@, signert slik faktura@ signerer."
+      },
+      "routine": {
+        "tag": "Rutine",
+        "h": "Sett rutinearbeidet på timeplan",
+        "p": "Gjentakende oppgaver kan kjøre som <b>automatiserte sorteringsregler</b>: et lagret søk pluss én fast handling (flytt, merk, marker som lest, videresend eller skriv et svarutkast) med faste mellomrom, uten noen AI-modell i løkken. En automatisering kan aldri slette e-post, og en videresending den legger i kø, venter alltid på din godkjenning."
+      }
+    }
+  },
+  "day": {
+    "eyebrow": "En dag i firmaets postkasser",
+    "title": "Ekte forespørsler, slik de skrives",
+    "sub": "Ingen ny app å lære. Du snakker med AI-klienten din, og den jobber i de ekte postkassene.",
+    "prompts": [
+      "Gå gjennom salg@ og post@ og list opp alle henvendelser fra denne uken som ingen har svart på.",
+      "Videresend månedens fakturaer fra faktura@ til regnskapsføreren vår, med vedleggene.",
+      "Skriv et svar fra support@ på leveringsklagen, i samme tone som det forrige svaret vårt til den kunden.",
+      "Søk i alle postkassene etter alt fra northwind-rekvisita.example og fortell meg hvor bestillingen står.",
+      "Flytt alle kontoutskrifter fra leverandører i faktura@ til en mappe som heter Kontoutskrifter.",
+      "Planlegg prisoppdateringen slik at den går ut fra salg@ mandag klokken 08.00."
+    ]
+  },
+  "does": {
+    "eyebrow": "Hva den faktisk gjør",
+    "title": "Ekte postkasser, ikke et skrivebeskyttet glimt",
+    "sub": "De samme verktøyene virker i hver postkasse du kobler til. Når flere er koblet til, oppgir hvert kall hvilken postkasse det gjelder.",
+    "items": {
+      "read": {
+        "h": "Les og søk",
+        "p": "List opp, les og søk i hver tilkoblede postkasse, hentet direkte fra leverandøren hver gang."
+      },
+      "send": {
+        "h": "Send, svar og videresend",
+        "p": "Send ny e-post, svar i tråden, eller videresend med de opprinnelige vedleggene intakt, fra adressen e-posten hører til."
+      },
+      "schedule": {
+        "h": "Planlegg",
+        "p": "Legg en melding i kø for sending senere, og avbryt den når som helst før den går ut."
+      },
+      "organize": {
+        "h": "Organiser",
+        "p": "Flytt, kopier, flagg, arkiver og merk meldinger, og opprett mappene de skal ligge i."
+      }
+    }
+  },
+  "safety": {
+    "eyebrow": "Kontroll",
+    "title": "Det er fortsatt du som trykker send",
+    "sub": "Å slippe en agent inn i firmaets e-post fungerer bare hvis grensene er reelle. Disse håndheves på serveren vår, de er ikke forslag til modellen.",
+    "items": {
+      "approval": {
+        "h": "Godkjenning før utgående e-post",
+        "p": "Slå det på per postkasse, så venter hver sending, hvert svar, hver videresending, utkastsending og planlagte sending i dashbordet til du godkjenner eller avviser den. Det er med i alle planer, også Gratis."
+      },
+      "stored": {
+        "h": "E-posten den leser, lagres aldri",
+        "p": "Meldinger hentes direkte fra leverandøren din for hver forespørsel og gis videre til AI-klienten, uten at noe beholdes mellom kallene. Det vi lagrer per postkasse, er det krypterte tokenet eller passordet. Unntaket er en melding du planlegger til senere: den lagrer vi til den er sendt, og etterpå beholder vi en oppføring i historikken din."
+      },
+      "keys": {
+        "h": "Nøkler begrenset til postkassene du velger",
+        "p": "En API-nøkkel kan begrenses til utvalgte postkasser og til de tillatelsene den trenger. En nøkkel laget for å sortere support@ når ikke faktura@, og en nøkkel uten sendetillatelse kan ikke sende noe som helst."
+      },
+      "server": {
+        "h": "E-postserveren din bestemmer fortsatt",
+        "p": "E-post sendes gjennom din egen leverandør eller SMTP-server, aldri fra en e-postserver hos oss. Bytter du passord på en postkasse, trekker tilbake app-passordet eller fjerner tilgangen i Google-kontoen din, er agenten stengt ute."
+      }
+    },
+    "link": "Les hvordan sikkerheten fungerer"
+  },
+  "providers": {
+    "eyebrow": "Enhver vert",
+    "title": "Koble til alle postkassene firmaet har, uansett hvem som drifter dem",
+    "sub": "Det meste av firma-e-post ligger hos webhotellet eller domeneregistraren, og det er helt greit. Enhver postkasse som snakker IMAP og SMTP på standardportene, kobles til med adresse, vert og passord. IONOS, Hostinger, OVH, Namecheap og andre vanlige verter gjenkjennes ut fra adressen og fylles ut for deg. Gmail og Google Workspace logger inn med Google. iCloud, Fastmail, Yahoo, Zoho og Yandex kobles til med et app-passord.",
+    "ctaImap": "Koble til enhver IMAP-postkasse",
+    "ctaGmail": "Koble til Gmail eller Google Workspace",
+    "ctaIonos": "Koble til IONOS",
+    "ctaMatrix": "Se hvordan hver leverandør kobles til"
+  },
+  "pricing": {
+    "eyebrow": "Priser",
+    "title": "Velg plan ved å telle postkasser",
+    "sub": "Gratis, Personal og Pro har alle én innlogging. Forskjellen er hvor mange postkasser den innloggingen kan koble til.",
+    "items": {
+      "free": {
+        "h": "Gratis: én postkasse",
+        "p": "Begynn med den travleste adressen. 150 e-posthandlinger i måneden, de første 7 dagene telles ikke, uten kort."
+      },
+      "personal": {
+        "h": "Personal, $5 i måneden: opptil tre",
+        "p": "For et firma med to eller tre adresser. Ingen månedlig handlingsgrense, høyere burst-grense og e-poststøtte."
+      },
+      "pro": {
+        "h": "Pro, $15 i måneden: fire eller flere",
+        "p": "Alle postkassene virksomheten har, uten grense for antall, fortsatt med én innlogging. Planen for et firma med en adresse per avdeling."
+      }
+    },
+    "note": "Team, til $79 i måneden, er for når flere personer trenger hver sin innlogging, med roller og et eget arbeidsområde per kunde.",
+    "cta": "Sammenlign alle planene"
+  },
+  "faq": {
+    "eyebrow": "Vanlige spørsmål",
+    "title": "Det folk spør om før de kobler til",
+    "sub": "De praktiske innvendingene, besvart rett fram.",
+    "items": [
+      {
+        "q": "Vi er et firma, ikke en privatperson. Er Pro virkelig riktig plan?",
+        "a": "Ja, hvis det er én person som tar seg av postkassene. Pro er én innlogging uten grense for antall tilkoblede postkasser, så én person kan håndtere post@, salg@, faktura@ og support@ fra én agent. Team er for når flere personer trenger å logge inn hver for seg, med roller og et eget arbeidsområde per kunde."
+      },
+      {
+        "q": "E-posten vår ligger hos webhotellet, ikke Gmail. Vil det fungere?",
+        "a": "Nesten helt sikkert. Enhver postkasse som snakker IMAP og SMTP på standardportene, kobles til med adresse, vert og passord, og vanlige verter gjenkjennes ut fra adressen slik at innstillingene fyller seg ut selv. Serveren må være tilgjengelig fra det åpne internett, og en postkasse som bare godtar OAuth-innlogging over IMAP, kan ikke kobles til på denne måten."
+      },
+      {
+        "q": "Sender agenten fra riktig adresse?",
+        "a": "Ja. Når mer enn én postkasse er koblet til, oppgir hvert verktøykall hvilken postkasse det gjelder, og hver postkasse har sitt eget avsendernavn og sin egen signatur. Et svar i en tråd i salg@ går ut fra salg@, gjennom den postkassens egen e-postserver."
+      },
+      {
+        "q": "Kan jeg hindre at den sender noe uten meg?",
+        "a": "Ja. Slå på godkjenning for en postkasse, så venter hver utgående melding fra den i dashbordet til du godkjenner eller avviser den. Du kan også gi en AI-klient en API-nøkkel helt uten sendetillatelse. Begge deler er tilgjengelig i alle planer."
+      },
+      {
+        "q": "Lagres firmaets e-post på serverne deres?",
+        "a": "Nei. E-posten agenten leser, hentes direkte fra leverandøren din for hver forespørsel og beholdes ikke. Det vi lagrer, er det krypterte tokenet eller passordet for hver postkasse. Unntaket er en melding du planlegger til senere: den lagrer vi til den er sendt, og etterpå beholder vi en oppføring i historikken din."
+      },
+      {
+        "q": "Hva om en kollega også trenger tilgang?",
+        "a": "Gratis, Personal og Pro er planer med én innlogging. Når en person til trenger sin egen, legger Team til medlemmer med roller. Fram til da dekker én person på Pro alle postkassene."
+      }
+    ]
+  },
+  "ctaBand": {
+    "title": "Samle alle firmaets postkasser i én agent",
+    "sub": "Koble til den første postkassen gratis, uten kort. Legg til resten når du er klar: tre med Personal, alle med Pro.",
+    "ctaPrimary": "Koble til den første postkassen gratis",
+    "ctaSecondary": "Les dokumentasjonen"
+  }
+}

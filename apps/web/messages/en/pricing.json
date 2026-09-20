@@ -1,14 +1,14 @@
 {
   "meta": {
     "title": "AI Email MCP Server Pricing: Free, Personal, Pro and Team Plans",
-    "description": "Free connects one inbox. Personal connects three for $5 a month. Pro connects every inbox you own for $15. Team adds members, roles and SSO."
+    "description": "Free connects one inbox. Personal connects three for $5 a month. Pro connects every mailbox your business runs for $15. Team adds members, roles and SSO."
   },
   "hero": {
     "eyebrow": "Pricing",
     "titleLine1": "One inbox, free.",
     "titleLine2": "Three inboxes, $5.",
     "titleLine2Yearly": "Three inboxes, $48 a year.",
-    "lead": "Connect a mailbox once and your agent can read, search, organise, draft, schedule and send. Free covers one inbox. Personal covers three for $5 a month. Pro covers every mailbox you own. Team adds people, roles, and a separate workspace per client."
+    "lead": "Connect a mailbox once and your agent can read, search, organise, draft, schedule and send. Free covers one inbox. Personal covers three for $5 a month. Pro covers every mailbox you or your business runs, on one login. Team adds people, roles, and a separate workspace per client."
   },
   "billing": {
     "monthly": "Monthly",
@@ -38,7 +38,7 @@
     },
     "personal": {
       "name": "Personal",
-      "desc": "Three mailboxes for one person: work, personal, and one more.",
+      "desc": "Three mailboxes for one person or one small business: work, personal, or your first company addresses.",
       "cta": "Get Personal",
       "ctaGrandfathered": "You already have unlimited inboxes",
       "features": [
@@ -51,7 +51,7 @@
     },
     "solo": {
       "name": "Pro",
-      "desc": "Every mailbox you own, in one agent. Work, personal, and each side business.",
+      "desc": "Every mailbox your business runs, on one agent: finance, sales, support, info, and your own.",
       "cta": "Get Pro",
       "features": [
         "Everything in Personal",
@@ -93,7 +93,7 @@
           "inboxes": "Connected inboxes",
           "actions": "Email actions per month",
           "keys": "API keys",
-          "members": "Team members",
+          "members": "Seats",
           "burst": "Burst rate limit",
           "approvals": "Send review and approval hold"
         }
@@ -138,11 +138,12 @@
     },
     "values": {
       "unlimited": "Unlimited",
+      "unlimitedCompany": "Unlimited, company mailboxes included",
       "actionsFree": "150 / month, first 7 days uncounted",
       "actionsPaid": "No monthly cap, fair use",
       "oneInbox": "1 inbox",
       "threeInboxes": "3 inboxes",
-      "ownerOnly": "Just you",
+      "oneSeat": "1 seat",
       "burstFree": "60 / min",
       "burstPersonal": "120 / min",
       "burstSolo": "300 / min",
@@ -178,11 +179,11 @@
       },
       {
         "q": "What's the difference between Personal, Pro and Team?",
-        "a": "Personal is one person with three connected inboxes, a 120 requests/minute ceiling, and email support. Pro is still one person, with no inbox limit at all, a 300 requests/minute ceiling, 90 days of analytics history instead of 30, and email support. Team is for more than one person: unlimited members with roles, a separate workspace per client or business, SSO (SAML / OIDC), an audit log, a year of analytics history, and priority support."
+        "a": "Personal is one seat with three connected inboxes, a 120 requests/minute ceiling, and email support. Pro is still one seat and one login, with no inbox limit at all, so one person can connect every mailbox a company runs (sales, invoices, support, info). It also has a 300 requests/minute ceiling, 90 days of analytics history instead of 30, and email support. Team is for when more than one person needs to sign in: unlimited members with roles, a separate workspace per client or business, SSO (SAML / OIDC), an audit log, a year of analytics history, and priority support."
       },
       {
         "q": "What if I need a fourth inbox?",
-        "a": "Personal covers three connected inboxes. A fourth moves you to Pro at $15 a month, and that lifts the limit entirely: every mailbox you own, however many, on one agent. If you are sitting just over three and that does not work for you, tell us at hello@mcpemails.com."
+        "a": "Personal covers three connected inboxes. A fourth moves you to Pro at $15 a month, and that lifts the limit entirely: every mailbox you or your company runs, however many, on one agent and one login. If you are sitting just over three and that does not work for you, tell us at hello@mcpemails.com."
       },
       {
         "q": "Can I change or cancel my plan?",
@@ -208,7 +209,7 @@
   },
   "ctaBand": {
     "title": "Ready to give your agent an inbox?",
-    "sub": "Start on Free: one inbox, no card required. Personal takes you to three mailboxes for $5 a month, and Pro covers every mailbox you own for $15.",
+    "sub": "Start on Free: one inbox, no card required. Personal takes you to three mailboxes for $5 a month, and Pro covers every mailbox your business runs for $15.",
     "ctaPrimary": "Get started free",
     "ctaSecondary": "Read the docs"
   }
