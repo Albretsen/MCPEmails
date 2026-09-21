@@ -42,7 +42,7 @@
 // folder token names, which mailbox on a given layout is the trash can) are
 // pure functions in imap-folder-target.ts and are run for real below, against
 // layout fixtures taken from the providers that broke. The source scan then
-// pins that all fourteen call sites are wired to them, so a reviewer cannot
+// pins that all thirteen call sites are wired to them, so a reviewer cannot
 // reintroduce the old shape and have it look deliberate.
 //
 // Run: deno test --allow-all supabase/functions/mcp-server/
@@ -248,7 +248,7 @@ Deno.test("the trash alias is the same table entry the delete paths ask for", ()
 });
 
 // ---------------------------------------------------------------------------
-// Source scan — the fourteen call sites.
+// Source scan — the thirteen call sites.
 // ---------------------------------------------------------------------------
 
 /** Every function that SELECTs a mailbox named by an id or a resolved folder. */
@@ -257,7 +257,6 @@ const SELECT_SITES = [
   "readImapMessage",
   "replyImapMessage",
   "readOriginalMessage",
-  "imapUpdateFlags",
   "imapArchiveEmail",
   "imapAddKeyword",
   "imapMoveEmail",
@@ -292,6 +291,21 @@ Deno.test("every IMAP select site takes the folder name the server gave it", () 
       `${name} must SELECT the folder verbatim`,
     );
   }
+});
+
+Deno.test("there is no single-message IMAP flag helper to keep in step", () => {
+  // `imapUpdateFlags` was in the list above until 2026-09-21, and had had no
+  // caller since 2026-06-03: the four single-message flag handlers became one
+  // bulk `email_flag` whose schema requires `message_ids`, so the shape it
+  // served stopped existing at the tool boundary. It went on collecting
+  // maintenance it could not repay — the F-09 probe (2026-09-20) was added to a
+  // function nothing could call. Flagging goes through imapBulkFlag, which gets
+  // the SELECT and the presence probe from imapBulkByFolderGroup; see the
+  // tombstone above imapArchiveEmail in index.ts before adding a second path.
+  assert(
+    !/\bfunction imapUpdateFlags\s*\(/.test(CODE),
+    "index.ts declares imapUpdateFlags again; see the tombstone comment there",
+  );
 });
 
 Deno.test("email_list does not map a folder resolveFolderId already resolved", () => {

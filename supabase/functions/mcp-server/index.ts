@@ -19141,46 +19141,25 @@ async function executeDeleteFolder(
 
 // ── IMAP provider helpers ──────────────────────────────────────────────────
 
-/**
- * Sets or removes IMAP system flags on a single message.
- * The message_id must be in "<folder>:<uid>" format (from encodeImapId).
- * Throws "imap_auth_failed" on credential rejection.
- */
-async function imapUpdateFlags(
-  inbox: InboxRow,
-  messageId: string,
-  imapFlags: string[],
-  mode: "add" | "remove",
-): Promise<void> {
-  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
-    throw new Error("imap_auth_failed");
-  }
-  const { folder, uid } = decodeImapId(messageId);
-  if (!Number.isFinite(uid) || uid <= 0) throw new Error("message_not_found");
-
-  const password = await decryptStoredToken(inbox.imap_password);
-  let client: ImapClient | null = null;
-  try {
-    client = await ImapClient.connect({
-      host: inbox.imap_host,
-      port: inbox.imap_port,
-      security: inbox.imap_security ?? "tls",
-      email: imapAuthUser(inbox),
-      password,
-    });
-    await client.selectMailbox(imapMailboxForServerFolder(folder));
-    // The message has to BE there before we say we acted on it: a UID command
-    // against a UID nobody holds is a tagged OK, not an error. See
-    // imap-uid-presence.ts.
-    await assertUidPresent(client, uid);
-    await client.uidStore([uid], imapFlags, mode);
-  } catch (err) {
-    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
-    throw err;
-  } finally {
-    if (client) await client.logout().catch(() => {});
-  }
-}
+// There is no single-message IMAP flag helper here, and there has not been a
+// caller for one since 2026-06-03. `imapUpdateFlags` survived that day's
+// consolidation as an orphan and was finally removed on 2026-09-21.
+//
+// The four single-message handlers it served -- executeMarkRead,
+// executeMarkUnread, executeFlagEmail, executeUnflagEmail -- were folded into
+// one bulk `email_flag`, whose schema requires `message_ids` (an array,
+// minItems 1). So a one-id flag is not a different shape at the tool boundary;
+// it is a bulk call of length one, and `email_organize {action:"flag"}` reaches
+// it through the same dispatch. runBulkFlagOnIds -> imapBulkFlag ->
+// imapBulkByFolderGroup is the only path, and it is the one to add to.
+//
+// Restoring a single-message helper would cost more than the round trip it
+// saves: imapBulkByFolderGroup is where the run ledger (startBulkRun /
+// finishBulkRun), the work budget, the cooperative stop, the per-folder
+// grouping and -- since F-09, 2026-09-20 -- the `presentUids` probe that keeps
+// a UID set matching nothing from being reported as success all live. A second
+// path would have to re-earn each of those, which is precisely how the orphan
+// came to hold an assertUidPresent call no caller could ever reach.
 
 /**
  * Archives a single IMAP message by moving it to the account's Archive mailbox.
