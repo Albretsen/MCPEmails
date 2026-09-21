@@ -653,7 +653,24 @@ export const SEARCH_FIELD_DESCRIPTIONS: Record<string, string> = {
   from: "Sender to match: email address, display name, or fragment (e.g. \"alice@example.com\" or \"Alice\").",
   to: "Primary (To) recipient to match: email address, display name, or fragment.",
   cc: "Carbon-copy (Cc) recipient to match: email address, display name, or fragment.",
-  subject: "Text to match in the subject line. Multi-word phrases are matched as-is.",
+  // MEASURED 2026-09-20 on a live Gmail-over-IMAP mailbox. "matched as-is" read
+  // as a substring promise and was not one: `subject: "sigtext"` returned 1
+  // message, `subject: "sigtex"` returned 0, and `subject: "[TAG] G"` returned 0
+  // while the full `"[TAG] G1 sigtext"` matched. The matching is per-token.
+  //
+  // Whose rule is it? Not ours — we emit `SUBJECT <string>`, which RFC 3501
+  // defines as a substring of the header. Gmail serves IMAP SEARCH from its own
+  // word index, so a Gmail mailbox behaves over IMAP the way the Gmail API
+  // does, and Graph KQL is word-based too; a conventional IMAP server (Dovecot,
+  // Cyrus) really does substring-match. So the text says which is which rather
+  // than flattening both into one claim.
+  //
+  // This constant is a FALLBACK: SEARCH_SCHEMA_DESCRIPTIONS in index.ts wins
+  // for every field that actually ships, and that one was corrected in the same
+  // round. Kept in step with it anyway, because the day a field is added there
+  // without a short form is the day this string becomes wire text.
+  subject:
+    "Text to match in the subject line, as written. Gmail (API or IMAP) and Outlook match whole words, so a partial word finds nothing; other IMAP servers substring-match.",
   body: "Free text to find in the message body. (On Gmail this matches the whole message, not body-only.)",
   text: "Free text to match anywhere in the message (headers and body).",
   unread: "true = only unread messages; false = only read messages; omit for either.",

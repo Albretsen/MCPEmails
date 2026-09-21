@@ -5617,18 +5617,19 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           description:
             // "Whitespace is collapsed; control characters ... are removed"
             // described two rules that interact, and a live run on 2026-09-20
-            // showed the interaction is not what the sentence implies: a tab or
-            // newline is a control character, so it is DELETED before the
-            // collapse runs and the words on either side are joined —
-            // "Bot\ttab\nnewline" stored as "Bottabnewline". The stripping is
-            // the From-header injection guard and is staying exactly as it is
-            // (see sender-name.ts); what changes is that the description now
-            // says what it does, so a caller can space its own name.
+            // showed the interaction was not what the sentence implied: a tab
+            // or newline is both, removal won, and "Bot\ttab\nnewline" stored
+            // as "Bottabnewline". On 2026-09-21 the BEHAVIOUR was fixed rather
+            // than the sentence — tab, newline and CR now fold into the
+            // surrounding whitespace, which is what a reader assumed all along
+            // and is exactly as safe (sender-name.ts carries the RFC 5322
+            // argument and the test pins it). What is left to warn about is the
+            // angle brackets, because that one really is a deletion.
             "Display name recipients see in the From header, e.g. 'Evancoe Bot' " +
             "gives \"Evancoe Bot <bot@evancoe.com>\". Omit to keep, empty string " +
-            "to clear. Control characters and angle brackets are DELETED, not " +
-            "replaced, so a tab or newline joins the words around it; runs of " +
-            "spaces then collapse to one. Separate words with spaces.",
+            "to clear. Whitespace is collapsed: a tab or newline becomes a " +
+            "single space, as does any run of spaces. Angle brackets and " +
+            "non-printable control characters are removed outright.",
         },
       },
       required: [],
@@ -20892,6 +20893,56 @@ function bulkFailureErrorCode(
 }
 
 /**
+ * The whole-batch answer for a move or copy whose DESTINATION does not exist.
+ *
+ * ── BUGFIX (2026-09-21) ────────────────────────────────────────────────────
+ * The single-message paths stopped leaking the raw provider line on
+ * 2026-09-20; the bulk ones were deferred in the same round and kept answering
+ *
+ *   "Provider error during email_move: UID COPY failed: [TRYCREATE] No folder
+ *    <name> (Failure). Please try again in a moment."
+ *
+ * for up to five hundred messages at a time. The same three faults as before —
+ * protocol text, a permanent caller-caused condition filed as a provider fault,
+ * and retry advice no amount of waiting makes true — multiplied by the batch.
+ *
+ * LEDGER: this is the same deliberate exception `executeMoveEmail`'s helper
+ * makes, and for the same reason. `provider_error` settles the outbound
+ * idempotency ledger as "unknown" so a keyed retry may replay, which is the
+ * right hedge when we cannot tell whether the provider acted. Here we can: the
+ * server refused the command outright, nothing was dispatched, and an identical
+ * retry fails identically — so `folder_not_found`, which settles as "failed",
+ * is the honest code. A caller that fixes the destination is sending a
+ * different request and wants a fresh key anyway.
+ */
+function bulkDestinationMissingFailure(input: {
+  /** Dispatch name, e.g. "email_move_batch". */
+  tool: string;
+  inbox: InboxRow;
+  /** destination_folder_id EXACTLY as the caller wrote it. */
+  destinationFolderId: string;
+  error: unknown;
+  /** Batch size, so the "nothing happened" clause speaks for all of it. */
+  messageCount: number;
+}): ToolErrorResult {
+  return providerFailure({
+    tool: input.tool,
+    provider: input.inbox.provider,
+    inboxId: input.inbox.id,
+    error: input.error,
+    boundary: "ledger",
+    fallbackCode: DESTINATION_FOLDER_MISSING_CODE,
+    text: destinationFolderMissingMessage(
+      input.tool,
+      input.destinationFolderId,
+      organizationItemType(input.inbox),
+      input.messageCount,
+    ),
+    logContext: { phase: "destination_missing", message_count: input.messageCount },
+  });
+}
+
+/**
  * Builds the standard JSON-RPC result for a bulk operation.
  * logStatus is "success" when at least one message succeeded (partial success
  * is still success from the operator's perspective); "error" when all failed.
@@ -20921,15 +20972,31 @@ function formatBulkResult(
   // sentence. Translating here, at the point the result is rendered, is what
   // lets both be true at once: `failed` below still holds the sentinel that
   // logErrorCode and activity_log group on, while the model reads the same
-  // wording the single-message paths have always used for a stale id. Only the
-  // not-found sentinel is rewritten — see bulkFailureMessage for why nothing
-  // else is.
+  // wording the single-message paths have always used for a stale id. Two
+  // sentinels are rewritten — a stale id and, since 2026-09-21, a destination
+  // that does not exist; see bulkFailureMessage for why nothing else is.
+  //
+  // The destination context is READ OFF `extra` rather than threaded through a
+  // new parameter, because `extra` is already the place each handler states
+  // what it was doing: move_batch, copy_batch and search_and_move put
+  // `destination_folder_id` there (the caller's own string, pre-resolution) and
+  // the move paths put `destination_type`. delete_batch and flag put neither,
+  // which is exactly the guard bulkFailureMessage needs — a tool with no
+  // destination can never be told its destination was missing.
+  const rawDestination = extra?.["destination_folder_id"];
+  const destinationContext = typeof rawDestination === "string" && rawDestination
+    ? {
+      tool: operation,
+      destination: rawDestination,
+      itemNoun: extra?.["destination_type"] === "label" ? "label" as const : "folder" as const,
+    }
+    : undefined;
   const results = [
     ...succeeded.map((id) => ({ message_id: id, success: true })),
     ...failed.map(({ id, error }) => ({
       message_id: id,
       success: false,
-      error: bulkFailureMessage(error),
+      error: bulkFailureMessage(error, destinationContext),
     })),
   ];
   const isTotalFailure = succeeded.length === 0 && failed.length > 0;
@@ -21928,6 +21995,21 @@ async function executeBulkMove(
     bulkResult = await runBulkMoveOnIds(inbox, messageIds, resolvedDest, runId, { budget });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    // The destination is not there. Permanent, caller-fixable, and nothing was
+    // dispatched — see bulkDestinationMissingFailure. The run is still failed,
+    // with the accurate code rather than `provider_error`: `bulk_runs.error_code`
+    // is free text an operator reads, and "the folder did not exist" and "the
+    // provider fell over" call for opposite responses.
+    if (classifyProviderError(err) === "folder_missing") {
+      await failBulkRun(runId, DESTINATION_FOLDER_MISSING_CODE);
+      return bulkDestinationMissingFailure({
+        tool: "email_move_batch",
+        inbox,
+        destinationFolderId,
+        error: err,
+        messageCount: messageIds.length,
+      });
+    }
     await failBulkRun(runId, "provider_error");
     // LEDGER BOUNDARY: email_move_batch accepts an idempotency_key, so the code stays
     // `provider_error` and only the details are new. See providerFailure.
@@ -22043,6 +22125,18 @@ async function executeBulkCopy(
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    // The destination is not there: permanent, caller-fixable, nothing copied.
+    // See bulkDestinationMissingFailure. This is the commonest way a copy_batch
+    // fails outright — UID COPY is the very command that answers [TRYCREATE].
+    if (classifyProviderError(err) === "folder_missing") {
+      return bulkDestinationMissingFailure({
+        tool: "email_copy_batch",
+        inbox,
+        destinationFolderId,
+        error: err,
+        messageCount: messageIds.length,
+      });
+    }
     // LEDGER BOUNDARY: email_copy_batch accepts an idempotency_key, so the code stays
     // `provider_error` and only the details are new. See providerFailure.
     return providerFailure({
@@ -22577,6 +22671,20 @@ async function executeSearchAndMove(
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
+      // The destination is not there. This handler reaches the same bulk seam
+      // as email_move_batch, so it inherits the same answer rather than a
+      // sweep-flavoured variant of it — the caller's mistake is identical and
+      // so is the fix. See bulkDestinationMissingFailure.
+      if (classifyProviderError(err) === "folder_missing") {
+        await failBulkRun(runId, DESTINATION_FOLDER_MISSING_CODE);
+        return bulkDestinationMissingFailure({
+          tool: "email_search_and_move",
+          inbox,
+          destinationFolderId,
+          error: err,
+          messageCount: messageIds.length,
+        });
+      }
       await failBulkRun(runId, "provider_error");
       // LEDGER BOUNDARY: email_search_and_move accepts an idempotency_key, so the code
       // stays `provider_error` and only the details are new.

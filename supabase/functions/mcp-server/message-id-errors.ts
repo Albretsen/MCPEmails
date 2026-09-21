@@ -34,6 +34,11 @@
 // rendered, on the way out, and nowhere else - the sentinel that the log sees is
 // untouched.
 // ---------------------------------------------------------------------------
+import {
+  DESTINATION_FOLDER_MISSING_CODE,
+  destinationFolderMissingMessage,
+} from "./destination-folder-missing.ts";
+import { classifyProviderError } from "./provider-error.ts";
 
 /**
  * The sentinel every provider path throws, and every bulk helper records, for a
@@ -86,17 +91,71 @@ export const MESSAGE_NOT_FOUND_DETAIL =
   "call email_list or email_search to get current message IDs.";
 
 /**
+ * The move/copy destination a bulk result was built for, when it had one.
+ *
+ * Only `email_move_batch`, `email_copy_batch` and `email_search_and_move` can
+ * supply this; `email_delete_batch` and `email_flag` have no destination and
+ * pass nothing, which is what keeps their per-id failures untouched.
+ */
+export interface BulkDestinationContext {
+  /** Dispatch name, so the sentence names the call the caller actually made. */
+  tool: string;
+  /** The destination_folder_id EXACTLY as the caller wrote it. */
+  destination: string;
+  /** "label" on Gmail, "folder" everywhere else. */
+  itemNoun?: "folder" | "label";
+}
+
+/**
  * Render one bulk per-id failure for the caller.
  *
- * Only the not-found sentinel is translated. Every other value is passed through
- * untouched and on purpose: an auth failure, a rate limit and a 5xx are all
- * genuinely different conditions with genuinely different remedies, and folding
- * them into "the message may have been deleted" would send a caller to re-list a
- * mailbox when what it needed was to reconnect, back off, or wait. A raw status
- * line is a poor error; a confidently wrong one is worse.
+ * Two conditions are translated, and nothing else. Every other value is passed
+ * through untouched and on purpose: an auth failure, a rate limit and a 5xx are
+ * all genuinely different conditions with genuinely different remedies, and
+ * folding them into "the message may have been deleted" would send a caller to
+ * re-list a mailbox when what it needed was to reconnect, back off, or wait. A
+ * raw status line is a poor error; a confidently wrong one is worse.
+ *
+ * ── The second condition, added 2026-09-21 ─────────────────────────────────
+ * A destination folder that does not exist. The single-message paths stopped
+ * leaking the raw IMAP line on 2026-09-20; the bulk paths did not, so a
+ * per-message failure inside a batch still read
+ *
+ *   "UID COPY failed: [TRYCREATE] No folder <name> (Failure)."
+ *
+ * — protocol text, no statement about what happened to the mail, and no way to
+ * act on it. `destination-folder-missing.ts` already had the sentence and
+ * `provider-error.ts` already had the classification; this wires the bulk path
+ * to both instead of minting a third wording.
+ *
+ * WHY THE CONTEXT IS REQUIRED AND NOT INFERRED. The rewrite only happens when
+ * the caller passes a destination, i.e. only on a tool that HAS one. Without
+ * that guard a delete or a flag whose source folder went missing mid-run would
+ * be answered with advice about a `destination_folder_id` it never sent. The
+ * guard is the same one `executeMoveEmail`'s single-message branch uses, and it
+ * carries the same acknowledged imprecision: on a move, a `folder_missing` that
+ * is really about the SOURCE is reported as being about the destination. That
+ * trade was taken deliberately — the destination is the argument the caller
+ * controls and the overwhelmingly common cause — and it is written down here so
+ * the next reader does not have to re-derive it.
  */
-export function bulkFailureMessage(error: string): string {
-  return error === MESSAGE_NOT_FOUND ? MESSAGE_NOT_FOUND_DETAIL : error;
+export function bulkFailureMessage(
+  error: string,
+  destination?: BulkDestinationContext,
+): string {
+  if (error === MESSAGE_NOT_FOUND) return MESSAGE_NOT_FOUND_DETAIL;
+  if (
+    destination &&
+    (error === DESTINATION_FOLDER_MISSING_CODE ||
+      classifyProviderError(error) === "folder_missing")
+  ) {
+    return destinationFolderMissingMessage(
+      destination.tool,
+      destination.destination,
+      destination.itemNoun ?? "folder",
+    );
+  }
+  return error;
 }
 
 /**

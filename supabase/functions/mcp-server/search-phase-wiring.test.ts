@@ -343,9 +343,26 @@ Deno.test("REGRESSION GUARD: the search phase of a mutating tool logs what it lo
     assertStringIncludes(searchFailure, 'boundary: "ledger"');
     assertStringIncludes(searchFailure, 'phase: "search"');
 
+    // NARROWED 2026-09-21, and the narrowing is of the ASSERTION, not of the
+    // guard. This used to ban `classifyProviderError` from the whole function.
+    // That was the right ban while the only thing it could have been used for
+    // was re-coding a search failure — but it also banned it from the ACT
+    // phase, where email_search_and_move now needs it to tell a missing
+    // destination folder from a provider fault (see
+    // bulkDestinationMissingFailure in index.ts; the ledger move from "unknown"
+    // to "failed" is the point there, because the server refused the command
+    // and nothing was dispatched). The property worth holding is unchanged: the
+    // SEARCH phase, which runs before a single message is touched and whose
+    // failures have no mailbox effect to reason about, still logs exactly what
+    // it logged before. So the ban now covers the part of the body that runs
+    // before the act phase begins, and stops there.
+    const actAt = body.indexOf(
+      name === "executeSearchAndMove" ? "runBulkMoveOnIds(" : "runBulkDeleteOnIds(",
+    );
+    assert(actAt > 0, `${name} no longer has an identifiable act phase`);
     assert(
-      !body.includes("classifyProviderError"),
-      `${name} must not narrow a provider failure: it would move the ledger from unknown to failed`,
+      !body.slice(0, actAt).includes("classifyProviderError"),
+      `${name} must not narrow a SEARCH-phase provider failure: it would move the ledger from unknown to failed`,
     );
   }
 });

@@ -42,6 +42,7 @@ import {
   normalizeDateOrDateTime,
   parseIsoDate,
   searchDialectFor,
+  SEARCH_FIELD_DESCRIPTIONS,
   toGmailQuery,
   toGraphSearch,
   toImapSearch,
@@ -592,4 +593,27 @@ Deno.test("the destructive refusal names the tool, the field and a way forward",
   );
   // It must NOT read like the note: a caller that gets this has no result.
   assert(!refusal.startsWith("Note: "), "a refusal is not a note");
+});
+
+Deno.test("the subject fallback description does not promise substring matching", () => {
+  // MEASURED 2026-09-20 on a live Gmail-over-IMAP mailbox: `subject: "sigtext"`
+  // matched, `subject: "sigtex"` returned 0, and the leading fragment
+  // "[MCPE-TEST-20260920-1501] G" of a subject that matched in full returned 0
+  // too. The matching is per-token, and this constant said "Multi-word phrases
+  // are matched as-is" until 2026-09-21, which a reader takes as a substring
+  // promise and then reads an empty result as "that mail does not exist".
+  //
+  // SEARCH_SCHEMA_DESCRIPTIONS in index.ts is what actually ships for this
+  // field and was corrected in the previous round; this constant is the
+  // fallback behind it. index.ts cannot be imported here (it calls Deno.serve
+  // at load), so the two are held together by asserting the same facts of both
+  // rather than by comparing the strings.
+  const subject = SEARCH_FIELD_DESCRIPTIONS["subject"];
+  assert(
+    !/as-is/i.test(subject),
+    `the phrase that read as a substring promise is gone: ${subject}`,
+  );
+  assert(/whole words/i.test(subject), `says what Gmail and Outlook do: ${subject}`);
+  assert(/substring/i.test(subject), `and what a conventional IMAP server does: ${subject}`);
+  assert(/gmail/i.test(subject) && /outlook/i.test(subject), `names both: ${subject}`);
 });
