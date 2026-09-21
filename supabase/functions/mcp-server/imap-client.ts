@@ -18,7 +18,7 @@
  * A faithful Node reference lives at apps/web/src/lib/email/imap.ts.
  */
 
-import { normalizeSnippetPreview } from "./text-extract.ts";
+import { previewFromBodyPartSource } from "./text-extract.ts";
 import { connectGuardedTcp } from "./host-guard.ts";
 import { decodeModifiedUtf7, encodeModifiedUtf7 } from "./utf7.ts";
 
@@ -1536,8 +1536,15 @@ export class ImapClient {
  * Compress an array of UIDs to a compact IMAP UID-set string, collapsing
  * consecutive runs into ranges. E.g. [1,2,3,5,7,8] → "1:3,5,7:8".
  * Deduplicates and sorts the input before building ranges.
+ *
+ * Exported since 2026-09-20 for `imap-uid-presence.ts`, which builds the
+ * "UID <set>" SEARCH criteria that asks a mailbox which of these UIDs it
+ * actually holds. That criteria has to be the same set syntax the UID STORE /
+ * COPY / MOVE built from the same array, or the probe would be asking about a
+ * different set of messages than the command it is guarding. One function, one
+ * spelling, no second implementation to drift.
  */
-function toUidSet(uids: number[]): string {
+export function toUidSet(uids: number[]): string {
   if (uids.length === 0) return "";
   const sorted = [...new Set(uids)].sort((a, b) => a - b);
   const ranges: string[] = [];
@@ -2039,7 +2046,7 @@ function parseFetchLine(line: string): ImapMessageSummary | null {
       typeof key === "string" && key.startsWith("BODY[") &&
       typeof attrs[i + 1] === "string"
     ) {
-      preview = snippetToPreview(attrs[i + 1] as string);
+      preview = previewFromBodyPartSource(attrs[i + 1] as string);
     }
   }
 
@@ -2047,56 +2054,18 @@ function parseFetchLine(line: string): ImapMessageSummary | null {
   return { uid, flags, envelope, hasAttachments, preview };
 }
 
-/**
- * Best-effort preview from a fetched body snippet: decode the part (base64 or
- * soft QP), strip HTML tags, collapse whitespace, cap at 200 chars. Returns ""
- * for binary/undecodable content.
- */
-function snippetToPreview(snippet: string): string {
-  // Base64 path: many providers (e.g. Fastmail) transfer-encode text parts as
-  // base64, wrapped at ~76 chars with CRLF. After whitespace-stripping, such a
-  // snippet is essentially the base64 alphabet only. Detect via ratio so prose
-  // (with spaces/punctuation) is not misclassified, then decode.
-  const stripped = snippet.replace(/\s+/g, "");
-  if (stripped.length >= 32) {
-    const b64Chars = (stripped.match(/[A-Za-z0-9+/=]/g) ?? []).length;
-    if (b64Chars / stripped.length >= 0.95) {
-      // Partial fetch (<0.2048>) may cut mid-quantum; trim to a multiple of 4.
-      const b64 = stripped.slice(0, stripped.length - (stripped.length % 4));
-      try {
-        const bin = atob(b64);
-        const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
-        const decoded = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
-        const text = cleanPreviewText(decoded);
-        // If it still looks binary (lots of control / U+FFFD replacement chars), drop it.
-        const bad = (text.match(/[\x00-\x08\x0E-\x1F�]/g) ?? []).length;
-        if (text && bad / text.length < 0.1) return text;
-        return "";
-      } catch {
-        // Fall through to the plain/QP text path below.
-      }
-    }
-  }
-
-  // Plain / quoted-printable path: decode soft line breaks + =XX hex escapes.
-  const t = snippet
-    .replace(/=\r?\n/g, "")
-    .replace(/=([0-9A-Fa-f]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
-  return cleanPreviewText(t);
-}
-
-/**
- * Strip HTML tags, decode entities, drop invisible padding, collapse
- * whitespace, cap at 200 chars.
- *
- * Delegates to the shared cleaner so this path cannot drift from the Gmail and
- * Outlook summaries again. The cap has to come after the invisible strip, not
- * before: a preheader padded with U+200C would otherwise fill all 200
- * characters here and reach the caller as a preview that cleans up to nothing.
- */
-function cleanPreviewText(s: string): string {
-  return normalizeSnippetPreview(s);
-}
+// The preview generator used to live here, as a decoder that knew about base64
+// and quoted-printable and nothing else. It assumed `BODY[1]` was always a leaf
+// text part, so a message whose part one is a nested multipart/alternative — the
+// shape mime-build.ts emits for a send with inline attachments — had its
+// boundary line, its part headers and its base64 shipped verbatim as the
+// preview (F-03, found against a live Gmail-over-IMAP mailbox on 2026-09-20).
+//
+// It is now `previewFromBodyPartSource` in text-extract.ts, which descends
+// through any nesting using mime.ts — the same parser the `read` path uses, and
+// the reason `read` was always correct on the very messages `list` and `search`
+// mangled. Having a second, private parser here is what let the two diverge;
+// there is one now, and it belongs beside the rest of the preview policy.
 
 /** Parse an IMAP ENVELOPE token list into structured fields. */
 function parseEnvelope(env: Token[]): ImapEnvelope {

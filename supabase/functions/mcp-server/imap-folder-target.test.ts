@@ -354,12 +354,15 @@ Deno.test("the trash destination exists before the source message is touched", (
   // imapArchiveEmail orders it.
   const body = functionBody("imapDeleteEmail");
   const resolved = body.indexOf("resolveImapTrashMailbox(client)");
-  const selected = body.indexOf(
-    "selectMailbox(imapMailboxForServerFolder(folder));\n      await client.uidMove",
-  );
-  assert(resolved !== -1 && selected !== -1, "imapDeleteEmail changed shape");
+  // Anchored on the two commands themselves rather than on their adjacency:
+  // the F-09 fix (2026-09-20) put an `assertUidPresent` probe between the
+  // SELECT and the MOVE, and an anchor that spelled out the exact intervening
+  // bytes made an unrelated, correct insertion look like this ordering had
+  // been broken. The property under test is which of the two happens FIRST.
+  const moved = body.indexOf("uidMove([uid], trash)");
+  assert(resolved !== -1 && moved !== -1, "imapDeleteEmail changed shape");
   assert(
-    resolved < selected,
+    resolved < moved,
     "imapDeleteEmail must resolve trash before selecting the source mailbox",
   );
 });

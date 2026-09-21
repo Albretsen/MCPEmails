@@ -25,6 +25,39 @@
 // resolves to the same inbox, behaves exactly as before — including the case
 // where `inbox_id` carries an address rather than a UUID, which the resolver
 // has always accepted.
+//
+// ── The AGREEING pair: accepted, in silence, and why (2026-09-20) ───────────
+// A live functional test called
+//
+//     folder_list {inbox: "bjellanda@gmail.com", inbox_id: "1245c938-…"}
+//
+// — both selectors, same mailbox — and got its folders back with nothing said,
+// even though every `inbox_id` description on the surface reads "pass this or
+// `inbox`, not both". That left the rule looking unenforced and the precedence
+// looking untested, so it is worth writing down that this outcome is the
+// decision rather than the omission.
+//
+// Classified against the IGNORABLE / MISPLACED line that consolidated-
+// arguments.ts draws, a redundant selector is IGNORABLE, and by a stronger test
+// than the one used there. That module can only ask whether an argument's value
+// equals the published schema's absence-equivalent default — a judgement made
+// before the call, from the schema alone. Here the server has done both lookups
+// and holds proof: the two selectors named the SAME inbox row, so dropping
+// either one provably could not have changed which mailbox was touched. There
+// is no unapplied instruction to disclose, because nothing went unapplied.
+//
+// Disclosing it anyway would mean a result note on every call a model makes
+// when it helpfully sends both — a fact-free sentence on a correct call, which
+// is precisely the noise that makes a result note stop being read on the calls
+// that do carry one. The disclosure mechanism (result-notes.ts) is reserved for
+// what it was built for: an instruction the server did NOT carry out.
+//
+// The disagreeing pair is the opposite in every respect — the selectors assert
+// different mailboxes, one of them is going to be discarded, and the call is a
+// write as often as not — so it is refused above. `redundant` on the `ok`
+// outcome records that the server saw the duplicate and chose to say nothing,
+// so the choice is visible, testable, and reversible by a caller that ever
+// wants to disclose it.
 // ---------------------------------------------------------------------------
 
 /** The minimum an inbox row needs for selector matching and for the message. */
@@ -47,7 +80,18 @@ export interface InboxSelectorConflict {
 
 export type InboxSelectorOutcome =
   /** Zero or one selector given, or both agree: resolution proceeds as before. */
-  | { kind: "ok"; inbox: SelectorInbox | null }
+  | {
+      kind: "ok";
+      inbox: SelectorInbox | null;
+      /**
+       * Both selectors were given and both named THIS inbox.
+       *
+       * Accepted without a word — see the header for the reasoning. Carried on
+       * the outcome so that "we noticed and said nothing" is a fact a test can
+       * assert, rather than an absence nobody can tell apart from an oversight.
+       */
+      redundant: boolean;
+    }
   /** A selector named nothing this key can reach. Pre-existing behaviour. */
   | { kind: "not_found" }
   /** Both given, both resolved, and they are different mailboxes. */
@@ -107,21 +151,22 @@ export function inboxSelectorOutcome(
   if (id && !fromInboxId) return { kind: "not_found" };
   if (address && !fromInbox) return { kind: "not_found" };
 
-  if (id && address && fromInboxId && fromInbox) {
-    if (fromInboxId.id !== fromInbox.id) {
-      return {
-        kind: "conflict",
-        conflict: {
-          inbox_id: id,
-          inbox: address,
-          resolved_from_inbox_id: fromInboxId,
-          resolved_from_inbox: fromInbox,
-        },
-      };
-    }
+  const bothGiven = !!(id && address && fromInboxId && fromInbox);
+  if (bothGiven && fromInboxId!.id !== fromInbox!.id) {
+    return {
+      kind: "conflict",
+      conflict: {
+        inbox_id: id,
+        inbox: address,
+        resolved_from_inbox_id: fromInboxId!,
+        resolved_from_inbox: fromInbox!,
+      },
+    };
   }
 
-  return { kind: "ok", inbox: fromInboxId ?? fromInbox ?? null };
+  // Reaching here with `bothGiven` means the pair agreed: two names for one
+  // mailbox, nothing discarded, nothing to report. See the header.
+  return { kind: "ok", inbox: fromInboxId ?? fromInbox ?? null, redundant: bothGiven };
 }
 
 /**

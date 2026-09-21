@@ -106,3 +106,58 @@ Deno.test("an unknown address is not_found even beside a valid id", () => {
   );
   assertEquals(outcome.kind, "not_found");
 });
+
+// ---------------------------------------------------------------------------
+// Agreeing vs conflicting, side by side.
+//
+// A live functional test on 2026-09-20 called
+//
+//     folder_list {inbox: "bjellanda@gmail.com", inbox_id: "1245c938-…"}
+//
+// with both selectors naming the same mailbox, got its folders back with
+// nothing said, and reported the "pass this or `inbox`, not both" rule as
+// unenforced. It is enforced — for the case that matters. This pair of tests
+// states the two halves of that decision next to each other so neither can be
+// changed by accident: the disagreement is refused, the duplicate is accepted
+// in silence because both lookups prove it could not have changed the outcome.
+// The reasoning is in inbox-selector.ts's header.
+// ---------------------------------------------------------------------------
+
+Deno.test("an AGREEING pair is accepted, and recorded as redundant rather than disclosed", () => {
+  const outcome = checkInboxSelectors(
+    BJELLANDA.id,
+    BJELLANDA.email_address,
+    KNOWN,
+  );
+  assert(outcome.kind === "ok", "two names for one mailbox is not a conflict");
+  assertEquals(outcome.inbox?.id, BJELLANDA.id, "and it is that mailbox");
+  assertEquals(
+    outcome.redundant,
+    true,
+    "the duplicate was seen — silence here is a decision, not an oversight",
+  );
+});
+
+Deno.test("a CONFLICTING pair is refused instead of picking a winner", () => {
+  const outcome = checkInboxSelectors(
+    BJELLANDA.id,
+    ASGEIR.email_address,
+    KNOWN,
+  );
+  assertEquals(
+    outcome.kind,
+    "conflict",
+    "two DIFFERENT mailboxes is a caller bug, not a precedence question",
+  );
+});
+
+Deno.test("a single selector is never reported as redundant", () => {
+  for (const outcome of [
+    checkInboxSelectors(BJELLANDA.id, "", KNOWN),
+    checkInboxSelectors("", ASGEIR.email_address, KNOWN),
+    checkInboxSelectors("", "", KNOWN),
+  ]) {
+    assert(outcome.kind === "ok");
+    assertEquals(outcome.redundant, false, "nothing was duplicated");
+  }
+});

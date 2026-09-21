@@ -33,6 +33,7 @@
 // made of padding.
 // ---------------------------------------------------------------------------
 
+import { parseMultipartBodySource } from "./mime.ts";
 import { stripInvisibleText, stripZeroWidthText } from "./text-safety.ts";
 
 /**
@@ -147,6 +148,109 @@ export function normalizeSnippetPreview(snippet: string): string {
 }
 
 /**
+ * The preview for one fetched IMAP body part, from its raw source.
+ *
+ * ── Why this is here, and why it is the ONLY preview generator ──────────────
+ *
+ * A live test against a real Gmail-over-IMAP mailbox on 2026-09-20 (F-03) found
+ * `email_read action:"list"` and `action:"search"` shipping this as a preview:
+ *
+ *   --mcpe_alt_08cb43e0… Content-Type: text/plain; charset=UTF-8
+ *   Content-Transfer-Encoding: base64 RjMgYXR0YWNobWVudCBmaXh0dXJlLiBTZW50…
+ *
+ * `action:"read"` on the same message returned a perfectly decoded body, which
+ * is the whole diagnosis: the read path parses MIME and the preview path did
+ * not. The listing asks for `BODY.PEEK[1]<0.2048>` and assumed part one is a
+ * leaf text part. For mail this server itself composes with inline attachments
+ * — `multipart/mixed` wrapping a `multipart/alternative`, exactly what
+ * mime-build.ts emits — part one is the nested multipart, so its "body" is a
+ * boundary line, four header lines and base64. The old generator stringified
+ * that as prose. The field an agent reads FIRST to decide what to open was
+ * useless for precisely the mail that has attachments, and it spent the model's
+ * context on MIME framing.
+ *
+ * Two code paths for one question is what let them diverge, so there is now one
+ * here and the IMAP client calls it. The descent below is mime.ts's own — the
+ * parser the working `read` path uses — not a second one written for previews.
+ *
+ * The contract, in order:
+ *   1. a multipart source (any nesting depth) is parsed and reduced to its
+ *      decoded text/plain, falling back to its decoded text/html stripped to
+ *      text. If neither yields anything — a 2KB snippet can stop before any
+ *      content — the preview is EMPTY. It is never the source.
+ *   2. a leaf source is decoded from base64 or quoted-printable and cleaned.
+ *   3. either way boundaries, header lines and base64 never reach a caller.
+ */
+export function previewFromBodyPartSource(source: string): string {
+  const nested = parseMultipartBodySource(source);
+  if (nested) {
+    const text = preferredBodyText(nested.text, nested.html, { keepLinks: false });
+    if (!text) return "";
+    // A 2KB fetch can cut a multi-byte character in half; the decoder emits
+    // U+FFFD for the remainder. Drop a trailing run of them so a short preview
+    // does not end in replacement characters.
+    return normalizePreview(text.replace(/�+$/, ""));
+  }
+  return leafSnippetPreview(source);
+}
+
+/**
+ * Preview for a LEAF part fetched as a snippet: decode base64 or soft
+ * quoted-printable, then clean. Returns "" for binary/undecodable content.
+ *
+ * The transfer encoding has to be guessed because a part body carries no
+ * headers of its own (BODYSTRUCTURE knows, but the snippet does not), hence the
+ * ratio test rather than a declared value.
+ */
+function leafSnippetPreview(snippet: string): string {
+  // Base64 path: many providers (e.g. Fastmail) transfer-encode text parts as
+  // base64, wrapped at ~76 chars with CRLF. After whitespace-stripping, such a
+  // snippet is essentially the base64 alphabet only. Detect via ratio so prose
+  // (with spaces/punctuation) is not misclassified, then decode.
+  const stripped = snippet.replace(/\s+/g, "");
+  if (stripped.length >= 32) {
+    const b64Chars = (stripped.match(/[A-Za-z0-9+/=]/g) ?? []).length;
+    if (b64Chars / stripped.length >= 0.95) {
+      // Partial fetch (<0.2048>) may cut mid-quantum; trim to a multiple of 4.
+      const b64 = stripped.slice(0, stripped.length - (stripped.length % 4));
+      try {
+        const bin = atob(b64);
+        const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+        const decoded = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+        const text = normalizeSnippetPreview(decoded);
+        // If it still looks binary (lots of control / U+FFFD replacement chars), drop it.
+        // deno-lint-ignore no-control-regex -- the control characters ARE the test.
+        const bad = (text.match(/[\x00-\x08\x0E-\x1F�]/g) ?? []).length;
+        if (text && bad / text.length < 0.1) return text;
+        return "";
+      } catch {
+        // Fall through to the plain/QP text path below.
+      }
+    }
+  }
+
+  // Plain / quoted-printable path: decode soft line breaks + =XX hex escapes.
+  const latin1 = snippet
+    .replace(/=\r?\n/g, "")
+    .replace(/=([0-9A-Fa-f]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
+
+  // `=XX` yields BYTES, and a UTF-8 part spends two or three of them per
+  // non-ASCII character, so stopping at the latin1 string above previewed
+  // "Karin på" as "Karin pÃ¥" — mojibake in the one field a triage pass reads.
+  // The base64 branch a few lines up has always decoded UTF-8; these are two
+  // branches of one function and they disagreed. Charset is not knowable from a
+  // part body (its headers were not fetched), so: decode as UTF-8, and keep the
+  // latin1 reading only when the result is full of replacement characters,
+  // which is what a genuinely latin1 part looks like. A snippet cut mid-
+  // character contributes at most one, and the tail trim below removes it.
+  const utf8 = new TextDecoder("utf-8", { fatal: false }).decode(
+    Uint8Array.from(latin1, (c) => c.charCodeAt(0) & 0xff),
+  ).replace(/�+$/, "");
+  const replacements = (utf8.match(/�/g) ?? []).length;
+  return normalizeSnippetPreview(replacements > 2 ? latin1 : utf8);
+}
+
+/**
  * `<a href="U">T</a>` to `T (U)`, run before the tag strip so the target
  * survives at all.
  *
@@ -244,11 +348,21 @@ export function stripHtmlToText(
  *
  * Whitespace-only counts as empty for the same reason: a part containing one
  * \r\n carries no more information than an absent one.
+ *
+ * `keepLinks` defaults to true because `body_text` is the caller this was
+ * written for, and an agent asked to find a link needs the URLs. The preview
+ * generator passes false: a 200-character triage line would spend its entire
+ * budget on one tracking URL. The CHOICE between the two parts is the same
+ * either way, which is why it stays one function.
  */
-export function preferredBodyText(text: string | null | undefined, html: string | null | undefined): string | null {
+export function preferredBodyText(
+  text: string | null | undefined,
+  html: string | null | undefined,
+  options?: { keepLinks?: boolean },
+): string | null {
   if (typeof text === "string" && text.trim() !== "") return text;
   if (typeof html === "string" && html !== "") {
-    const converted = stripHtmlToText(html, { keepLinks: true });
+    const converted = stripHtmlToText(html, { keepLinks: options?.keepLinks !== false });
     if (converted.trim() !== "") return converted;
   }
   return text ?? null;

@@ -384,3 +384,186 @@ Deno.test("no groups means no connection is ever opened", async () => {
   assertEquals(result.succeeded, []);
   assertEquals(result.failed.length, 2);
 });
+
+// ── Stale ids never count as done (F-09, 2026-09-20) ────────────────────────
+//
+// The live run that found this asked for `delete_batch` of
+// ["INBOX:77777777","INBOX:66666666"], neither of which existed, and got back
+// {"succeeded":2,"failed":0, results:[{success:true},{success:true}]}. The loop
+// had no way to know better: `apply` issues ONE UID command for the whole
+// group, and a UID set matching zero messages is a tagged OK rather than an
+// error, so "the command returned" was the only signal available and every id
+// in the group inherited it. The `presentUids` hook supplies the missing
+// signal, and these tests pin what the loop does with it.
+
+/** A mailbox that holds a known set of UIDs, per folder. */
+function heldUids(byFolder: Record<string, number[]>) {
+  return (_client: FakeConnection, group: ImapFolderGroup): Promise<ReadonlySet<number>> => {
+    const have = new Set(byFolder[group.folder] ?? []);
+    return Promise.resolve(new Set(group.items.map((i) => i.uid).filter((u) => have.has(u))));
+  };
+}
+
+Deno.test("a nonexistent id is failed as not-found, not counted as succeeded", async () => {
+  const conn = new FakeConnection();
+  const { session } = makeSession([conn]);
+  const { groups } = groupImapIdsByFolder(["INBOX:77777777", "INBOX:66666666"], decode);
+
+  const result = await runImapFolderGroups<FakeConnection>({
+    groups,
+    session,
+    folderName: identityFolder,
+    apply: recordingApply(() => conn),
+    presentUids: heldUids({ INBOX: [1, 2, 3] }),
+    classifyError: classify,
+  });
+  await session.close();
+
+  assertEquals(result.succeeded, [], "nothing was deleted, so nothing may be reported deleted");
+  assertEquals(result.failed, [
+    { id: "INBOX:77777777", error: "message_not_found" },
+    { id: "INBOX:66666666", error: "message_not_found" },
+  ]);
+  assertEquals(
+    conn.applied,
+    [],
+    "a group with no surviving ids must issue no UID command: an empty UID set " +
+      "is the one input whose meaning varies by server, and a destructive " +
+      "command is the last place to find out which way this one reads it",
+  );
+});
+
+Deno.test("a real id still succeeds, and takes the UID command with it", async () => {
+  // The regression half. Verification must not cost the ordinary case
+  // anything: the real ids are still applied, in one command, in their folder.
+  const conn = new FakeConnection();
+  const { session, opened } = makeSession([conn]);
+  const { groups } = groupImapIdsByFolder(["INBOX:1", "INBOX:2", "Archive:7"], decode);
+
+  const result = await runImapFolderGroups<FakeConnection>({
+    groups,
+    session,
+    folderName: identityFolder,
+    apply: recordingApply(() => conn),
+    presentUids: heldUids({ INBOX: [1, 2], Archive: [7] }),
+    classifyError: classify,
+  });
+  await session.close();
+
+  assertEquals(result.succeeded, ["INBOX:1", "INBOX:2", "Archive:7"]);
+  assertEquals(result.failed, []);
+  assertEquals(conn.applied, [
+    { mailbox: "INBOX", uids: [1, 2] },
+    { mailbox: "Archive", uids: [7] },
+  ]);
+  assertEquals(opened(), 1, "the probe rides the same connection, not a new one");
+});
+
+Deno.test("a mixed group acts on the real ids and reports the stale ones", async () => {
+  // The shape that matters most: a partially stale batch must not become
+  // all-or-nothing in either direction. On IMAP a UID changes every time a
+  // message moves folder — during the 2026-09-20 run one message's id changed
+  // four times — so half a caller's list going stale is the ordinary case.
+  const conn = new FakeConnection();
+  const { session } = makeSession([conn]);
+  const { groups } = groupImapIdsByFolder(
+    ["INBOX:1", "INBOX:55555555", "INBOX:2"],
+    decode,
+  );
+
+  const result = await runImapFolderGroups<FakeConnection>({
+    groups,
+    session,
+    folderName: identityFolder,
+    apply: recordingApply(() => conn),
+    presentUids: heldUids({ INBOX: [1, 2] }),
+    classifyError: classify,
+  });
+  await session.close();
+
+  assertEquals(result.succeeded, ["INBOX:1", "INBOX:2"]);
+  assertEquals(result.failed, [{ id: "INBOX:55555555", error: "message_not_found" }]);
+  assertEquals(
+    conn.applied,
+    [{ mailbox: "INBOX", uids: [1, 2] }],
+    "the stale uid must not be in the UID set that goes on the wire",
+  );
+});
+
+Deno.test("an id known to be gone stays not-found even when the UID command then fails", async () => {
+  // Two different facts, and collapsing them costs the caller a retry it can
+  // never win: the mailbox already told us 55555555 is not there, so that id
+  // is settled whatever the following command does to the ids that ARE there.
+  const conn = new FakeConnection();
+  conn.failOn.add("INBOX");
+  const { session } = makeSession([conn, new FakeConnection()]);
+  const { groups } = groupImapIdsByFolder(["INBOX:1", "INBOX:55555555"], decode);
+
+  const result = await runImapFolderGroups<FakeConnection>({
+    groups,
+    session,
+    folderName: identityFolder,
+    apply: recordingApply(() => conn),
+    presentUids: heldUids({ INBOX: [1] }),
+    classifyError: classify,
+  });
+  await session.close();
+
+  assertEquals(result.succeeded, []);
+  assertEquals(result.failed, [
+    { id: "INBOX:55555555", error: "message_not_found" },
+    { id: "INBOX:1", error: "UID MOVE failed in INBOX" },
+  ]);
+});
+
+Deno.test("a probe that itself fails fails the group, rather than calling everything not-found", async () => {
+  // "Not found" is a claim about the mailbox and is only ours to make when the
+  // mailbox answered. A read error that turned into "the message may have been
+  // deleted" would send the caller to re-list a mailbox that was never the
+  // problem, and would do it on a delete.
+  const conn = new FakeConnection();
+  const { session } = makeSession([conn, new FakeConnection()]);
+  const { groups } = groupImapIdsByFolder(["INBOX:1", "INBOX:2"], decode);
+
+  const result = await runImapFolderGroups<FakeConnection>({
+    groups,
+    session,
+    folderName: identityFolder,
+    apply: recordingApply(() => conn),
+    presentUids: () => Promise.reject(new Error("UID SEARCH failed: NO [SERVERBUG]")),
+    classifyError: classify,
+  });
+  await session.close();
+
+  assertEquals(result.succeeded, []);
+  assertEquals(result.failed, [
+    { id: "INBOX:1", error: "UID SEARCH failed: NO [SERVERBUG]" },
+    { id: "INBOX:2", error: "UID SEARCH failed: NO [SERVERBUG]" },
+  ]);
+  assertEquals(conn.applied, [], "nothing may be mutated on the strength of an unanswered probe");
+  assert(
+    conn.loggedOut,
+    "a failed probe invalidates the session like any other failure, so a " +
+      "half-read socket is never carried into the next group",
+  );
+});
+
+Deno.test("without the hook the loop behaves exactly as it did before", async () => {
+  // The hook is optional, and a caller that omits it must get the old
+  // semantics byte for byte — this is the control for every test above.
+  const conn = new FakeConnection();
+  const { session } = makeSession([conn]);
+  const { groups } = groupImapIdsByFolder(["INBOX:1", "INBOX:99999999"], decode);
+
+  const result = await runImapFolderGroups<FakeConnection>({
+    groups,
+    session,
+    folderName: identityFolder,
+    apply: recordingApply(() => conn),
+    classifyError: classify,
+  });
+  await session.close();
+
+  assertEquals(result.succeeded, ["INBOX:1", "INBOX:99999999"]);
+  assertEquals(conn.applied, [{ mailbox: "INBOX", uids: [1, 99999999] }]);
+});

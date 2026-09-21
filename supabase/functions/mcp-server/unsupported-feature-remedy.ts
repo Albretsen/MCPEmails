@@ -33,21 +33,34 @@
  * caller gets the plain refusal.
  */
 const FEATURE_REMEDIES: Record<string, string> = {
-  // Gmail has no copy because it has no place to put a second copy: a Gmail
-  // message exists once and appears under every label it carries. `move` is
-  // additive there — it ADDS the destination label — so the message ends up
-  // filed in the destination while keeping the labels it already had, which is
-  // the outcome a copy produces on a folder-based provider. The one difference
-  // worth stating is that a move also removes INBOX, so it is spelled out
-  // rather than glossed over.
+  // The Gmail API connector has no copy because it has no place to put a second
+  // copy: a Gmail message exists once and appears under every label it carries.
+  // `move` is additive there — it ADDS the destination label — so the message
+  // ends up filed in the destination while keeping the labels it already had,
+  // which is the outcome a copy produces on a folder-based provider. The one
+  // difference worth stating is that a move also removes INBOX, so it is
+  // spelled out rather than glossed over.
+  //
+  // REVISED 2026-09-20. The remedy opened "Gmail uses labels rather than
+  // folders", which reads as a statement about Gmail ADDRESSES and is false of
+  // most of them: a Gmail mailbox connected over IMAP is provider 'imap',
+  // service 'gmail', and a live run that day copied one message and a batch of
+  // two into another folder with the originals left in INBOX. This refusal can
+  // only ever be reached with provider 'gmail' — the Gmail API connector — so
+  // it now says so, and points at the per-inbox authority (capabilities.copy
+  // from inbox_list) instead of leaving a model to generalise from the brand.
   "gmail:copy":
-    "Gmail uses labels rather than folders, so one message can carry several " +
-    "labels at once and there is no separate copy to create. Use " +
-    "email_organize action: 'move' (or 'move_batch' for several message_ids) " +
-    "with the same destination_folder_id: on Gmail a move ADDS the destination " +
-    "label and leaves the message's other labels in place, which is what a " +
-    "copy achieves on a folder-based provider. The only difference is that a " +
-    "move also removes the INBOX label, so the message leaves the inbox.",
+    "This inbox is connected through the Gmail API, and that connector has no " +
+    "copy operation: Gmail keeps one message and shows it under every label it " +
+    "carries, so there is no second copy to create. Use email_organize action: " +
+    "'move' (or 'move_batch' for several message_ids) with the same " +
+    "destination_folder_id: a move ADDS the destination label and leaves the " +
+    "message's other labels in place, which is what a copy achieves on a " +
+    "folder-based provider. The only difference is that a move also removes " +
+    "the INBOX label, so the message leaves the inbox. This limit belongs to " +
+    "the connector, not to Gmail addresses: a Gmail mailbox connected over " +
+    "IMAP copies normally. inbox_list reports capabilities.copy per inbox and " +
+    "is the authority on which one you have.",
 };
 
 /**

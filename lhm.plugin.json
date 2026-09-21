@@ -494,7 +494,7 @@
         "additionalProperties": false,
         "properties": {
           "action": {
-            "description": "Operation to run. move = one message_id to destination_folder_id; move_batch = the same for up to 500 message_ids; copy = duplicate into destination_folder_id, original stays, IMAP/Outlook/Fastmail only (never Gmail); copy_batch = the same for up to 500 message_ids; flag = set read/unread/flagged on message_ids via flag_action; archive = move one message_id out of the Inbox. Moving everything a search matches is the separate email_search_and_move tool. Required: move_batch: destination_folder_id; copy: message_id; copy_batch: destination_folder_id.",
+            "description": "Operation to run. move = one message_id to destination_folder_id; move_batch = the same for up to 500 message_ids; copy = duplicate into destination_folder_id, original stays, wherever inbox_list reports capabilities.copy true (every IMAP inbox, a Gmail address connected over IMAP included, and Outlook, but not the Gmail API connector); copy_batch = the same for up to 500 message_ids; flag = set read/unread/flagged on message_ids via flag_action; archive = move one message_id out of the Inbox. Moving everything a search matches is the separate email_search_and_move tool. Required: move_batch: destination_folder_id; copy: message_id; copy_batch: destination_folder_id.",
             "enum": [
               "move",
               "move_batch",

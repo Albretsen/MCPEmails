@@ -91,6 +91,10 @@ import {
   safeActionToken,
 } from "./action-selector.ts";
 import {
+  DESTINATION_FOLDER_MISSING_CODE,
+  destinationFolderMissingMessage,
+} from "./destination-folder-missing.ts";
+import {
   classifyProviderError,
   type ProviderErrorAuditDetails,
   providerErrorAuditDetails,
@@ -199,6 +203,7 @@ import {
   replyNoRecipientsMessage,
 } from "./recipient-rules.ts";
 import { decodeEncodedWords, getHeader, parseEmail } from "./mime.ts";
+import { contactDisplayName } from "./contact-display-name.ts";
 import {
   normalizePreview,
   preferredBodyText,
@@ -307,6 +312,8 @@ import {
   isWarningCrossing,
 } from "./action-allowance.ts";
 import {
+  buildUnappliedSearchNote,
+  buildUnappliedSearchRefusal,
   DATE_INPUT_EXAMPLES,
   isIsoDateOrDateTime,
   normalizeDateOrDateTime,
@@ -316,6 +323,7 @@ import {
   toGmailQuery,
   toGraphSearch,
   toImapSearch,
+  unappliedSearchFields,
 } from "./search-translate.ts";
 import {
   BULK_WALL_CLOCK_BUDGET_MS,
@@ -333,7 +341,16 @@ import {
   type ImapFolderGroup,
   runImapFolderGroups,
 } from "./imap-bulk-groups.ts";
+import { assertUidPresent, presentUids } from "./imap-uid-presence.ts";
 import { dedupeMessageIds } from "./message-id-dedupe.ts";
+import {
+  buildFilteredNoMatchReport,
+  hasInboxFilter,
+  INBOX_PROVIDER_VALUES,
+  INBOX_SERVICE_VALUES,
+  type InboxListFilter,
+  matchesInboxFilter,
+} from "./inbox-filter.ts";
 import {
   type InboxSelectorConflict,
   inboxSelectorConflictMessage,
@@ -3424,14 +3441,40 @@ const SEARCH_SCHEMA_DESCRIPTIONS: Record<string, string> = {
   from: "Sender to match: address, name, or fragment.",
   to: "To recipient to match: address, name, or fragment.",
   cc: "Cc recipient to match: address, name, or fragment.",
-  subject: "Text to match in the subject; phrases match as-is.",
+  // MEASURED 2026-09-20 on a live Gmail-over-IMAP mailbox. "phrases match
+  // as-is" reads as a substring promise and is not one: `subject: "sigtext"`
+  // returned 1 message and `subject: "sigtex"` returned 0, and the leading
+  // fragment "[MCPE-TEST-20260920-1501] G" of a subject that matched in full
+  // returned 0 as well. The matching is per-token. It only ever UNDER-matches,
+  // so nothing unsafe follows from it, but a caller that builds a filter from
+  // half a word reads the empty result as "that mail does not exist".
+  //
+  // Whose rule is this? Not ours — we emit `SUBJECT <string>`, and RFC 3501
+  // defines that as a substring of the header. Gmail serves IMAP SEARCH from
+  // its own word index, so a Gmail mailbox behaves the same over IMAP as the
+  // Gmail API does, and Graph KQL is word-based too. A conventional IMAP server
+  // (Dovecot, Cyrus) does substring-match, so the description says which is
+  // which instead of flattening both into one claim.
+  subject:
+    "Text to match in the subject, as written. Gmail (API or IMAP) and Outlook match WHOLE WORDS, so a partial word finds nothing; other IMAP servers substring-match.",
   body: "Text to find in the body. On Gmail this matches the whole message.",
   text: "Text to match anywhere, headers included.",
   unread: "true = unread only; false = read only; omit for both.",
   has_attachment: "true = only messages with an attachment. Ignored on generic IMAP.",
   flagged: "true = only flagged/starred messages. Ignored on Outlook.",
-  since: "Received on or after this date or datetime (no timezone = UTC).",
-  before: "Received strictly before this date or datetime (no timezone = UTC).",
+  // The relative and truncated forms were shipped but never advertised: the
+  // schema said `format: "date-or-date-time"` and nothing else, so the only
+  // caller who learned about "7 days ago" was one who had already been
+  // REJECTED and read the error naming them (DATE_INPUT_EXAMPLES in
+  // search-translate.ts). They are normalised into the contract before
+  // validation runs, which is why the format token is still accurate. Saying so
+  // up front is worth its tokens: `since`/`before` were the second largest
+  // error class on the product, 414 hard rejections in the 30 days to
+  // 2026-08-29, and the shapes that cost them are exactly these.
+  since:
+    "Received on or after this date or datetime (no timezone = UTC). Also takes \"2026-06\", \"today\", \"7 days ago\", \"last month\" or \"30d\".",
+  before:
+    "Received strictly before this date or datetime (no timezone = UTC). Takes the same relative forms as `since`.",
 };
 
 /**
@@ -3501,7 +3544,7 @@ const INBOX_ID_PROPERTY = {
   // SERVER_INSTRUCTIONS, and this property is advertised on nine tools.
   description:
     "Inbox UUID from inbox_list. Optional when the key has one inbox; pass " +
-    "this or `inbox`, not both.",
+    "this or `inbox`, not both — a pair naming different mailboxes is refused.",
 } as const;
 
 /** Shared `inbox` property — the email-address alternative to `inbox_id`. */
@@ -3630,17 +3673,32 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     description:
       "List every inbox (mailbox or account) this API key may use. Call it " +
       "FIRST for the inbox_id the other tools take. Each entry carries the UUID, " +
-      "email address, display name, provider, optional service brand " +
-      "(icloud/yahoo/zoho/yandex/generic) and a capabilities object.",
+      "email address, display name, provider (the connector: gmail/outlook/" +
+      "fastmail/imap), optional service brand (the account behind an IMAP " +
+      "connection: gmail/fastmail/icloud/yahoo/zoho/yandex/generic) and a " +
+      "capabilities object. A Gmail account connected with an app password has " +
+      "provider 'imap' and service 'gmail', so filter on service, not provider, " +
+      "to find a mailbox by brand.",
     requiredScope: "read:email",
     inputSchema: {
       type: "object",
       properties: {
         provider: {
           type: "string",
-          enum: ["gmail", "outlook", "fastmail", "imap"],
+          enum: [...INBOX_PROVIDER_VALUES],
           description:
-            "Return only inboxes served by this provider. Omit for all of them.",
+            "Return only inboxes reached through this CONNECTOR. Not the brand " +
+            "of the address: a Gmail mailbox connected over IMAP is provider " +
+            "'imap'. Use `service` for the brand. Omit for all of them.",
+        },
+        service: {
+          type: "string",
+          enum: [...INBOX_SERVICE_VALUES],
+          description:
+            "Return only inboxes whose account BRAND is this. Set on inboxes " +
+            "reached over plain IMAP; null for a first-party connector, so " +
+            "service 'gmail' means Gmail-over-app-password and provider " +
+            "'gmail' means Gmail-over-Google-API. Omit for all of them.",
         },
         include_capabilities: {
           type: "boolean",
@@ -4141,8 +4199,10 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     title: "Copy Email",
     description:
       "Copy an email message into another folder, leaving the original in place. " +
-      "Unlike move, the source message is not removed. Supported on IMAP, Outlook " +
-      "and Fastmail inboxes (Gmail's label model has no native copy).",
+      "Unlike move, the source message is not removed. Available wherever " +
+      "inbox_list reports capabilities.copy true: every IMAP inbox (including a " +
+      "Gmail address connected over IMAP) and Outlook. The one connector without " +
+      "it is the Gmail API, whose label model has no copy operation.",
     requiredScope: "manage:folders",
     inputSchema: {
       type: "object",
@@ -4240,8 +4300,10 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     title: "Bulk Copy",
     description:
       "Copy up to 500 email messages into a destination folder in one call, " +
-      "leaving the originals in place. Supported on IMAP, Outlook and Fastmail " +
-      "inboxes (not Gmail). Returns succeeded/failed counts and per-message results.",
+      "leaving the originals in place. Available wherever inbox_list reports " +
+      "capabilities.copy true: every IMAP inbox (including a Gmail address " +
+      "connected over IMAP) and Outlook, but not the Gmail API connector. " +
+      "Returns succeeded/failed counts and per-message results.",
     requiredScope: "manage:folders",
     inputSchema: {
       type: "object",
@@ -5220,7 +5282,9 @@ const LEGACY_TOOLS: ToolDefinition[] = [
       "DRY RUN. Runs a filter against the inbox and reports what it matches right now. " +
       "Applies nothing, sends nothing, and does not claim any message in the " +
       "deduplication ledger. Pass either an automation_id (to preview a stored rule) " +
-      "or a filter (to try one before saving it). Always do this before enabling.",
+      "or a filter (to try one before saving it). Always do this before enabling. " +
+      "With an automation_id the inbox comes from the stored rule, so no inbox_id " +
+      "is needed; with a filter, name the inbox.",
     requiredScope: "manage:automations",
     inputSchema: {
       type: "object",
@@ -5550,10 +5614,20 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           type: "string",
           maxLength: SENDER_NAME_MAX_CHARS,
           description:
+            // "Whitespace is collapsed; control characters ... are removed"
+            // described two rules that interact, and a live run on 2026-09-20
+            // showed the interaction is not what the sentence implies: a tab or
+            // newline is a control character, so it is DELETED before the
+            // collapse runs and the words on either side are joined —
+            // "Bot\ttab\nnewline" stored as "Bottabnewline". The stripping is
+            // the From-header injection guard and is staying exactly as it is
+            // (see sender-name.ts); what changes is that the description now
+            // says what it does, so a caller can space its own name.
             "Display name recipients see in the From header, e.g. 'Evancoe Bot' " +
             "gives \"Evancoe Bot <bot@evancoe.com>\". Omit to keep, empty string " +
-            "to clear. Whitespace is collapsed; control characters and angle " +
-            "brackets are removed.",
+            "to clear. Control characters and angle brackets are DELETED, not " +
+            "replaced, so a tab or newline joins the words around it; runs of " +
+            "spaces then collapse to one. Separate words with spaces.",
         },
       },
       required: [],
@@ -5913,6 +5987,60 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
           additionalProperties: true,
         },
       },
+      // The keys the two EMPTY-`inboxes` payloads add. They were being returned
+      // undeclared under `additionalProperties: false`, which is exactly the
+      // failure result-notes.ts describes: a strict client rejects a payload
+      // carrying a key the schema never announced, and inbox_list is one of the
+      // three strict schemas on this surface. Declared here so the onboarding
+      // prompt and the filtered no-match report can both be validated.
+      setup_required: {
+        type: "boolean",
+        description:
+          "Present and true ONLY when this key can reach no mailbox at all. " +
+          "Never set by a filter that matched nothing — see `matched`.",
+      },
+      setup_url: {
+        type: "string",
+        description: "Where the user connects their first mailbox.",
+      },
+      matched: {
+        type: "integer",
+        description:
+          "Present only on a filtered call that matched nothing. Always 0; its " +
+          "presence is what distinguishes an unmatched filter from an empty " +
+          "account, which carries setup_required instead.",
+      },
+      filter: {
+        type: "object",
+        description: "The provider/service filter that was applied.",
+        properties: {
+          provider: { type: "string" },
+          service: { type: "string" },
+        },
+        additionalProperties: false,
+      },
+      available: {
+        type: "array",
+        description:
+          "Every inbox this key can reach, on a filtered call that matched " +
+          "none of them, so the filter can be corrected without a second call.",
+        items: {
+          type: "object",
+          properties: {
+            email_address: { type: "string" },
+            provider: { type: "string" },
+            service: { type: ["string", "null"] },
+          },
+          required: ["email_address", "provider"],
+          additionalProperties: true,
+        },
+      },
+      message: {
+        type: "string",
+        description:
+          "What happened, when `inboxes` is empty: either that no mailbox is " +
+          "connected yet, or that the filter matched none of the ones that are.",
+      },
     },
     required: ["inboxes"],
     additionalProperties: false,
@@ -6034,6 +6162,11 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
       automation: AUTOMATION_SUMMARY_SCHEMA,
       enabled: { type: "boolean" },
       message: { type: "string" },
+      // Present, and true, only on a forward rule. The prose in `message` says
+      // the same thing, but a client that acts on a rule it just created should
+      // not have to read English to learn that this one cannot send by itself.
+      // See forwardApprovalNote in triage-engine.ts.
+      held_for_approval: { type: "boolean" },
     },
     required: ["automation"],
     additionalProperties: true,
@@ -6805,7 +6938,11 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       "inbox. Get message ids from email_read first. Every action acts only on " +
       "the ids you pass and is undone by another call: a move by a move back, " +
       "archive by a move into the Inbox, flag by the opposite flag, and a copy " +
-      "leaves the original untouched. On Gmail a move adds the destination " +
+      "leaves the original untouched. Copy follows the CONNECTOR, not the " +
+      "address: inbox_list reports it per inbox as capabilities.copy, true for " +
+      "every IMAP inbox (a Gmail address connected over IMAP included) and for " +
+      "Outlook, false only on the Gmail API connector, which has no copy " +
+      "operation at all. On Gmail a move adds the destination " +
       "label and removes INBOX, leaving other labels in place; moving a message " +
       "OUT of Trash or Spam into a real label also clears TRASH/SPAM, so it is " +
       "a genuine restore rather than a labelled message still queued for " +
@@ -6868,7 +7005,18 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       copy: {
         legacy: "email_copy",
         scope: "manage:folders",
-        hint: "duplicate into destination_folder_id, original stays, IMAP/Outlook/Fastmail only (never Gmail)",
+        // The hint used to end "IMAP/Outlook/Fastmail only (never Gmail)", which
+        // was measurably false. It conflated the SERVICE (the brand of the
+        // mailbox: gmail/icloud/yahoo/zoho/generic) with the PROVIDER (the
+        // connector actually in use). A live run on 2026-09-20 against a Gmail
+        // address connected over IMAP — inbox_list reports it provider "imap",
+        // service "gmail", capabilities.copy true — copied one message and a
+        // batch of two, both succeeding with the originals left in INBOX. A
+        // model reading "never Gmail" refuses to attempt any of that and tells
+        // the user their mailbox cannot do it. Copy follows the connector, and
+        // capabilities.copy is the only thing that answers for a given inbox.
+        // NB: no semicolons in a hint — the selector joins actions with them.
+        hint: "duplicate into destination_folder_id, original stays, wherever inbox_list reports capabilities.copy true (every IMAP inbox, a Gmail address connected over IMAP included, and Outlook, but not the Gmail API connector)",
       },
       copy_batch: {
         legacy: "email_copy_batch",
@@ -7259,7 +7407,9 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
       preview: {
         legacy: "automation_preview",
         scope: "manage:automations",
-        hint: "dry-run a stored automation_id or an unsaved filter and report the matches",
+        hint:
+          "dry-run a stored automation_id (its own inbox is used, no inbox_id " +
+          "needed) or an unsaved filter against a named inbox",
       },
     },
   },
@@ -7511,6 +7661,37 @@ function buildConsolidatedSchema(spec: ConsolidatedSpec): {
     for (const property of allowed) {
       if (property === "action") continue;
       (ownersByProperty[property] ??= []).push(actionName);
+    }
+  }
+  // An unadvertised action may not be the action a refusal recommends.
+  //
+  // BUGFIX (2026-09-20). `schedule { action: "cancel", inbox_id: ... }` was
+  // correctly refused with "arguments.inbox_id is not an argument of action
+  // 'cancel'; it belongs to actions 'create' or 'list'" — and `schedule` has no
+  // 'list' in its enum. Listing is the separate `schedule_list` tool; 'list'
+  // survives here only as an accepted-but-unadvertised alias for clients that
+  // cached the old enum (see the note beside it). Sending a model after an
+  // action it cannot see in the schema is a worse answer than saying nothing
+  // about it.
+  //
+  // So an unadvertised owner is dropped only when an advertised one remains, in
+  // two senses deliberately. The property stays in the index either way, which
+  // is what keeps the leniency path (reviewExtraArguments in
+  // consolidated-arguments.ts drops a property it cannot attribute to anyone)
+  // behaving exactly as before. And a property owned ONLY by an unadvertised
+  // action keeps that owner: `email_organize`'s search filters belong to
+  // 'search_and_move' and nothing else, that action is still accepted, and
+  // every client connected before 2026-09-09 has it in its cached enum — so
+  // naming it there is the true and useful answer.
+  const hiddenActions = new Set(
+    Object.entries(spec.actions)
+      .filter(([, action]) => action.advertised === false)
+      .map(([actionName]) => actionName),
+  );
+  if (hiddenActions.size > 0) {
+    for (const [property, owners] of Object.entries(ownersByProperty)) {
+      const visible = owners.filter((owner) => !hiddenActions.has(owner));
+      if (visible.length > 0) ownersByProperty[property] = visible;
     }
   }
   const neutralDefaults: Record<string, unknown> = {};
@@ -8111,7 +8292,12 @@ const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     folders: false,      // Gmail uses labels, not folders
     labels: true,
     move: true,          // label add/remove simulates move
-    copy: false,         // Gmail API has no native copy
+    // The Gmail API has no copy operation: a message exists once and appears
+    // under every label it carries. This entry is keyed on the CONNECTOR, so it
+    // governs only inboxes stored as provider='gmail'. A Gmail ADDRESS connected
+    // over IMAP is provider='imap', service='gmail', and copies fine (verified
+    // live on 2026-09-20). Never describe this row as "Gmail cannot copy".
+    copy: false,
     delete: true,
     trash_vs_expunge: "trash",
     forward: true,
@@ -8314,6 +8500,56 @@ function permanentDeleteUnsupportedError(
     },
     logStatus: "error",
     logErrorCode: "unsupported_permanent_delete",
+  };
+}
+
+/**
+ * Structured refusal for a search-and-act tool whose filter carries a criterion
+ * this provider has no predicate for.
+ *
+ * ── Why this is an error and the identical drop on email_read is a note ─────
+ * Both come out of the same translator gap (F-04, 2026-09-20: `has_attachment`
+ * on generic IMAP, where RFC 3501 SEARCH has no attachment predicate and the
+ * inbox's own compatibility profile says so). The difference is what happens
+ * next. A read that answered a wider question than intended costs one more
+ * call, so it runs and discloses — that is the settled position in
+ * consolidated-arguments.ts, backed by 882 rejections across 42 workspaces in
+ * the 30 days to 2026-08-29, most of them abandoned rather than retried. A
+ * search_and_move or search_and_delete acts on everything the filter matched,
+ * and LENIENT_ACTIONS lists both of those tools with an EMPTY array for exactly
+ * this reason. "Delete my tagged mail that has attachments" cannot be allowed
+ * to become "delete my tagged mail" with a footnote.
+ *
+ * Shaped like permanentDeleteUnsupportedError above: a named, permanent,
+ * machine-readable refusal that also names the edit which makes the call run,
+ * so this is not the over-strictness that produced the rejection numbers. It
+ * refuses a request that cannot be executed as written on this inbox, and it
+ * says what CAN be.
+ */
+function searchCriteriaUnsupportedError(
+  toolName: string,
+  provider: string,
+  fields: readonly string[],
+): {
+  result: { content: { type: string; text: string }[]; isError: true };
+  logStatus: "error";
+  logErrorCode: string;
+} {
+  return {
+    result: {
+      content: [{
+        type: "text",
+        text: JSON.stringify({
+          error: "unsupported_search_criteria",
+          provider,
+          unsupported_fields: [...fields],
+          message: buildUnappliedSearchRefusal(toolName, provider, fields),
+        }),
+      }],
+      isError: true,
+    },
+    logStatus: "error",
+    logErrorCode: "unsupported_search_criteria",
   };
 }
 
@@ -8629,6 +8865,11 @@ async function encryptForStorage(plaintext: string): Promise<string> {
  * If the key has a non-null inbox_ids allowlist, only those inboxes are
  * returned. Otherwise all active inboxes in the workspace are returned.
  * Credential columns are never included in the output.
+ *
+ * Optionally narrowed by `provider` (the connector) and/or `service` (the
+ * account brand). Those are two different axes and a caller that confuses them
+ * gets nothing back, so the empty-result paths below are where most of the
+ * thinking is — see inbox-filter.ts.
  */
 async function executeListInboxes(
   rawArgs: unknown,
@@ -8643,7 +8884,19 @@ async function executeListInboxes(
     typeof rawArgs === "object" && rawArgs !== null && !Array.isArray(rawArgs)
       ? rawArgs as Record<string, unknown>
       : {};
-  const providerFilter = typeof args.provider === "string" ? args.provider : null;
+  // The two filter axes, and never a database predicate. BUGFIX (2026-09-20):
+  // `.eq("provider", …)` meant an unmatched filter and an account with no
+  // mailbox at all arrived here as the same empty row set, and the handler
+  // answered both with the onboarding prompt — telling a user with six
+  // connected inboxes to go and connect one. Fetching the roster unfiltered and
+  // narrowing in memory is what makes the two distinguishable, and it costs one
+  // query either way. Safe against the PostgREST 1000-row cap for the same
+  // reason the auto-resolve path below is: this is inboxes in one workspace,
+  // bounded further by the key's allowlist.
+  const filter: InboxListFilter = {
+    provider: typeof args.provider === "string" ? args.provider : null,
+    service: typeof args.service === "string" ? args.service : null,
+  };
   // include_capabilities defaults to true; only an explicit `false` opts out.
   const includeCapabilities = args.include_capabilities !== false;
 
@@ -8659,10 +8912,6 @@ async function executeListInboxes(
     query = query.in("id", apiKey.inbox_ids);
   }
 
-  if (providerFilter !== null) {
-    query = query.eq("provider", providerFilter);
-  }
-
   const { data, error } = await query;
 
   if (error) {
@@ -8674,13 +8923,21 @@ async function executeListInboxes(
     };
   }
 
-  const inboxes = await Promise.all((data ?? []).map(async (row: {
+  interface InboxListRow {
     id: string;
     email_address: string;
     display_name: string | null;
     provider: string;
     service: string | null;
-  }) => {
+  }
+
+  const allRows = (data ?? []) as InboxListRow[];
+  const matchedRows = allRows.filter((row) => matchesInboxFilter(row, filter));
+
+  // Only the matched rows are expanded. The Gmail sender-identity lookup below
+  // is a network call per row, so narrowing first is also why filtering in
+  // memory is no more expensive than the predicate it replaced.
+  const inboxes = await Promise.all(matchedRows.map(async (row: InboxListRow) => {
     let senderIdentities: Array<Record<string, unknown>> = [{
       email_address: row.email_address,
       display_name: row.display_name ?? row.email_address,
@@ -8724,6 +8981,32 @@ async function executeListInboxes(
     };
   }));
 
+  // A filter that selected none of several connected mailboxes is NOT the
+  // onboarding case, and answering it with the onboarding prompt below is the
+  // defect found on 2026-09-20: `inbox_list {provider: "gmail"}` on a key with
+  // six inboxes returned setup_required and the sentence "No mailbox is
+  // connected to this account yet", which an agent relays verbatim to a user
+  // whose mailboxes are all connected. The account roster is what decides which
+  // branch this is — `inboxes.length` cannot, because it is zero in both.
+  // See inbox-filter.ts for why the Gmail account did not match `provider`.
+  if (inboxes.length === 0 && allRows.length > 0 && hasInboxFilter(filter)) {
+    const report = buildFilteredNoMatchReport(filter, allRows);
+    return {
+      result: jsonOk({
+        inboxes,
+        matched: 0,
+        filter: {
+          ...(filter.provider !== null ? { provider: filter.provider } : {}),
+          ...(filter.service !== null ? { service: filter.service } : {}),
+        },
+        available: report.available,
+        message: report.message,
+      }, true),
+      logStatus: "success",
+      logErrorCode: null,
+    };
+  }
+
   // An empty list is the FIRST RUN of every user who connects this server before
   // connecting a mailbox, which is the order the connector directory imposes:
   // install, OAuth, then discover there is nothing to read. It is a success, not
@@ -8735,6 +9018,9 @@ async function executeListInboxes(
   // tool results behind an expander by default, so a URL that only appears in
   // the payload is invisible until someone thinks to expand it. Naming the
   // action for the model is what actually puts a link on screen.
+  //
+  // Reached only when `allRows` is empty too, so this sentence is now only ever
+  // said about an account that really does have nothing connected.
   if (inboxes.length === 0) {
     return {
       result: jsonOk({
@@ -8944,6 +9230,12 @@ async function resolveInboxArgInner(
       // resolve silently to the stale one. Refuse instead of guessing.
       return { ok: false, reason: "selector_conflict", conflict: outcome.conflict };
     }
+    // `outcome.redundant` is true when both selectors were given and both named
+    // this same inbox. It is deliberately not surfaced: no result note, no log
+    // line, no change to the payload. The two lookups proved the duplicate could
+    // not have changed which mailbox was touched, which makes it IGNORABLE in
+    // the sense consolidated-arguments.ts defines, and result-notes.ts is for
+    // disclosing instructions the server did NOT carry out. See inbox-selector.ts.
     return fromInboxId
       ? { ok: true, inbox: fromInboxId }
       : { ok: false, reason: "not_found" };
@@ -16837,14 +17129,59 @@ function searchMessagesForProvider(
 ): Promise<SearchEmailsResult> {
   switch (inbox.provider) {
     case "gmail":
-      return searchGmailMessages(inbox, search, limit, offset, includeFolders);
+      return searchGmailMessages(inbox, search, limit, offset, includeFolders)
+        .then((r) => discloseUnappliedCriteria(r, search, inbox.provider));
     case "outlook":
-      return searchOutlookMessages(inbox, search, limit, offset, includeFolders);
+      return searchOutlookMessages(inbox, search, limit, offset, includeFolders)
+        .then((r) => discloseUnappliedCriteria(r, search, inbox.provider));
     case "imap":
-      return searchImapMessages(inbox, search, limit, offset, includeFolders, needPreview);
+      return searchImapMessages(inbox, search, limit, offset, includeFolders, needPreview)
+        .then((r) => discloseUnappliedCriteria(r, search, inbox.provider));
     default:
       return Promise.reject(new Error("unsupported_provider"));
   }
+}
+
+/**
+ * Record, on the search result itself, any criterion the provider could not
+ * apply — so a narrow-looking result set says out loud that it is not narrow.
+ *
+ * ── The bug (F-04, live functional test, 2026-09-20) ───────────────────────
+ * `email_read {action:"search", subject:"[MCPE-TEST-…]", has_attachment:true}`
+ * against a Gmail-over-IMAP mailbox returned all 9 subject matches, only 2 of
+ * which had an attachment, with `query_normalized: 'SUBJECT "[MCPE-TEST-…]"'`
+ * and no `notes` at all. The drop is correct and documented (RFC 3501 SEARCH
+ * has no attachment predicate; the inbox's own compatibility profile says
+ * `search.has_attachment: "unavailable"`). The silence was not: the same tool,
+ * in the same session, disclosed a far smaller problem — a `body_max_chars`
+ * belonging to another action — through this very `notes` channel.
+ *
+ * The missing `has:attachment` term in `query_normalized` is NOT the
+ * disclosure, and the reasoning is in search-translate.ts: it asks the reader
+ * to diff a provider-dialect string against the structured arguments it sent,
+ * in a dialect this server exists to spare it, and it signals by absence, which
+ * is the one signal a model does not reliably act on. Every other unapplied
+ * argument on this server is reported by something being PRESENT.
+ *
+ * ── Why here and not inside each provider function ─────────────────────────
+ * searchGmailMessages, searchOutlookMessages and searchImapMessages return from
+ * a dozen places between them (empty page, single pass, fan-out, …), and a
+ * disclosure attached at eleven of the twelve is the same defect again with a
+ * smaller blast radius. This wraps the dispatch instead, so there is exactly
+ * one place to be right. The note is APPENDED: Graph's include_folders fan-out
+ * note already uses this field, and losing it would be trading one silent
+ * narrowing for one silent widening.
+ */
+function discloseUnappliedCriteria(
+  result: SearchEmailsResult,
+  search: NormalizedSearch,
+  provider: string,
+): SearchEmailsResult {
+  const unapplied = unappliedSearchFields(search, provider);
+  if (unapplied.length === 0) return result;
+  const note = buildUnappliedSearchNote(provider, unapplied);
+  result.notes = result.notes ? [...result.notes, note] : [note];
+  return result;
 }
 
 function buildNormalizedSearch(
@@ -17265,6 +17602,15 @@ async function executeSearchEmails(
   }
 
   // ── Success ───────────────────────────────────────────────────────────────
+  // Say what the provider could not run, BEFORE the result is described as an
+  // answer. A criterion this dialect has no predicate for (F-04, 2026-09-20:
+  // `has_attachment` on IMAP) is dropped on the way in and used to be dropped
+  // in silence, so nine subject matches came back looking like nine
+  // subject-and-attachment matches. This handler dispatches to the provider
+  // functions directly rather than through searchMessagesForProvider — it owns
+  // the timeout and the shared IMAP session — so it needs the same call the
+  // dispatcher makes. See discloseUnappliedCriteria.
+  searchResult = discloseUnappliedCriteria(searchResult, search, inbox.provider);
   // Same boundary as email_list: neutralise the scanned fields, mark the whole
   // result set as untrusted mailbox content.
   searchResult.messages = neutralizeSummaries(searchResult.messages);
@@ -18821,6 +19167,10 @@ async function imapUpdateFlags(
       password,
     });
     await client.selectMailbox(imapMailboxForServerFolder(folder));
+    // The message has to BE there before we say we acted on it: a UID command
+    // against a UID nobody holds is a tagged OK, not an error. See
+    // imap-uid-presence.ts.
+    await assertUidPresent(client, uid);
     await client.uidStore([uid], imapFlags, mode);
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
@@ -18872,6 +19222,10 @@ async function imapArchiveEmail(
       await client.createMailbox(target);
     }
     await client.selectMailbox(imapMailboxForServerFolder(folder));
+    // The message has to BE there before we say we acted on it: a UID command
+    // against a UID nobody holds is a tagged OK, not an error. See
+    // imap-uid-presence.ts.
+    await assertUidPresent(client, uid);
     // uidMove falls back internally if MOVE is unsupported (COPY + \\Deleted +
     // EXPUNGE); the COPY runs before the destructive steps.
     await client.uidMove([uid], target);
@@ -19348,7 +19702,13 @@ async function resolveFlagArgs(
 
 /**
  * Common error handler for flag/archive provider calls.
- * Maps auth failures and message-not-found to structured results.
+ * Maps auth failures, message-not-found and a missing DESTINATION folder to
+ * structured results.
+ *
+ * `destinationFolderId` is passed by the two callers that have one (email_move
+ * and email_copy) and is the caller's own spelling, pre-resolution, because
+ * that is the string they have to fix. Omitted elsewhere: email_flag and
+ * email_delete have no destination, and email_archive's is ours, not theirs.
  */
 function handleFlagError(
   err: unknown,
@@ -19356,6 +19716,7 @@ function handleFlagError(
   inboxId: string,
   provider: string,
   messageId: string,
+  destinationFolderId?: string | null,
 ): ToolErrorResult {
   const message = err instanceof Error ? err.message : String(err);
 
@@ -19384,6 +19745,41 @@ function handleFlagError(
 
   if (isAuthFailure) {
     return authFailedResult(provider, inboxId, "access");
+  }
+
+  // ── The destination folder is not there ─────────────────────────────────
+  // BUGFIX (2026-09-20). A live move into a folder that had never been created
+  // came back as "Provider error during email_move: UID COPY failed:
+  // [TRYCREATE] No folder <name> (Failure). Please try again in a moment." —
+  // the raw IMAP line, mislabelled a provider fault, closing with advice that
+  // is not just unhelpful but wrong, since no amount of waiting creates a
+  // folder. `folder_missing` has been in the classifier's taxonomy since
+  // 2026-09-01 and the bulk paths have logged `folder_not_found` for this exact
+  // text since 2026-07-28; only the single-message paths still leaked it.
+  //
+  // LEDGER: this is the one place in this helper that does NOT keep
+  // `provider_error`, and that is deliberate. `provider_error` settles the
+  // outbound idempotency ledger as "unknown" so a keyed retry may replay, which
+  // is the right hedge when we cannot tell whether the provider acted. Here we
+  // can: the server refused the command outright, nothing moved, and an
+  // identical retry fails identically — so "failed" is the honest settlement.
+  // It is the same argument the FolderTargetError branch in executeMoveEmail
+  // already makes for an ambiguous destination.
+  if (destinationFolderId && classifyProviderError(err) === "folder_missing") {
+    return providerFailure({
+      tool: toolName,
+      provider,
+      inboxId,
+      error: err,
+      boundary: "ledger",
+      fallbackCode: DESTINATION_FOLDER_MISSING_CODE,
+      text: destinationFolderMissingMessage(
+        toolName,
+        destinationFolderId,
+        provider === "gmail" ? "label" : "folder",
+      ),
+      logContext: { message_id: messageId, phase: "destination_missing" },
+    });
   }
 
   // LEDGER BOUNDARY. Every caller of this helper (email_move, email_copy,
@@ -19504,6 +19900,10 @@ async function imapMoveEmail(
       password,
     });
     await client.selectMailbox(imapMailboxForServerFolder(folder));
+    // The message has to BE there before we say we acted on it: a UID command
+    // against a UID nobody holds is a tagged OK, not an error. See
+    // imap-uid-presence.ts.
+    await assertUidPresent(client, uid);
     // uidMove falls back to COPY + \\Deleted + EXPUNGE when RFC 6851 MOVE is
     // unsupported by the server.
     await client.uidMove([uid], destinationFolderId);
@@ -19698,7 +20098,14 @@ async function executeMoveEmail(
         break;
     }
   } catch (err) {
-    return handleFlagError(err, "email_move", inbox.id, inbox.provider, messageId);
+    return handleFlagError(
+      err,
+      "email_move",
+      inbox.id,
+      inbox.provider,
+      messageId,
+      destinationFolderId,
+    );
   }
 
   return {
@@ -19760,6 +20167,10 @@ async function imapCopyEmail(
       password,
     });
     await client.selectMailbox(imapMailboxForServerFolder(folder));
+    // The message has to BE there before we say we acted on it: a UID command
+    // against a UID nobody holds is a tagged OK, not an error. See
+    // imap-uid-presence.ts.
+    await assertUidPresent(client, uid);
     await client.uidCopy([uid], destinationFolderId);
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
@@ -19804,7 +20215,10 @@ async function outlookCopyEmail(
  * original in place.
  *
  * Scope: manage:folders
- * Capability gate: caps.copy (false for Gmail → unsupportedFeatureError)
+ * Capability gate: caps.copy (false for the Gmail API connector, i.e.
+ * inbox.provider === "gmail" → unsupportedFeatureError). It is NOT false for a
+ * Gmail ADDRESS: one connected over IMAP is provider "imap", service "gmail",
+ * and UID COPY works there like anywhere else.
  */
 async function executeCopyEmail(
   rawArgs: unknown,
@@ -19875,7 +20289,14 @@ async function executeCopyEmail(
         break;
     }
   } catch (err) {
-    return handleFlagError(err, "email_copy", inbox.id, inbox.provider, messageId);
+    return handleFlagError(
+      err,
+      "email_copy",
+      inbox.id,
+      inbox.provider,
+      messageId,
+      destinationFolderId,
+    );
   }
 
   return {
@@ -19967,6 +20388,19 @@ async function imapDeleteEmail(
     if (permanent) {
       // Hard-delete: flag \\Deleted then UID EXPUNGE
       await client.selectMailbox(imapMailboxForServerFolder(folder));
+      // "UID STORE 99999999 +FLAGS (\\Deleted)" is a tagged OK on a mailbox that
+      // has no UID 99999999: RFC 3501 UID commands are set-addressed, and a set
+      // matching zero messages is not an error. Every IMAP mutation helper in
+      // this file used to read "the command did not throw" as "the message was
+      // acted on", which on 2026-09-20 had email_delete answering
+      // {"success":true} for INBOX:99999999 and email_organize answering
+      // "Relocated the message to the destination folder." for INBOX:55555555.
+      // Neither message had ever existed. The probe below is the half of the
+      // question that was missing; it throws the same `message_not_found`
+      // sentinel the Gmail and Outlook paths already throw, so handleFlagError
+      // renders the wording email_read has always used for a stale id.
+      // See imap-uid-presence.ts.
+      await assertUidPresent(client, uid);
       await client.uidStore([uid], ["\\Deleted"], "add");
       await client.uidExpunge([uid]);
     } else {
@@ -19976,6 +20410,11 @@ async function imapDeleteEmail(
       // RFC 6851 MOVE is unsupported.
       const trash = await resolveImapTrashMailbox(client);
       await client.selectMailbox(imapMailboxForServerFolder(folder));
+      // SEARCH, not a FETCH of the flags: a message already flagged \\Deleted
+      // and not yet expunged is still PRESENT, so re-deleting an
+      // already-trashed message stays the idempotent no-op it has always been.
+      // Only an id for a message that is genuinely gone fails here.
+      await assertUidPresent(client, uid);
       await client.uidMove([uid], trash);
     }
   } catch (err) {
@@ -20583,6 +21022,15 @@ function imapBulkByFolderGroup(
         session,
         folderName: imapMailboxForServerFolder,
         apply,
+        // One UID SEARCH per folder group, in front of the one UID command per
+        // folder group — so the check costs a round trip per GROUP, not per
+        // message, and a 500-id sweep across three folders pays three of them.
+        // Without it a UID set that matches nothing is a tagged OK and every id
+        // in the group lands in `succeeded`; see imap-uid-presence.ts for the
+        // 2026-09-20 transcript where delete_batch of two nonexistent ids
+        // answered {"succeeded":2,"failed":0}.
+        presentUids: (client, group) =>
+          presentUids(client, group.items.map((i) => i.uid)),
         stop: (succeeded, failedCount) =>
           bulkStopSignal(opts, runId, succeeded, failedCount),
         classifyError: (err) =>
@@ -21515,7 +21963,10 @@ async function executeBulkMove(
  * leaving the originals in place.
  *
  * Scope: manage:folders
- * Capability gate: caps.copy (false for Gmail → unsupportedFeatureError)
+ * Capability gate: caps.copy (false for the Gmail API connector, i.e.
+ * inbox.provider === "gmail" → unsupportedFeatureError). It is NOT false for a
+ * Gmail ADDRESS: one connected over IMAP is provider "imap", service "gmail",
+ * and UID COPY works there like anywhere else.
  * Cap: MAX_BULK_IDS (500)
  */
 async function executeBulkCopy(
@@ -21850,6 +22301,19 @@ async function executeSearchAndMove(
 
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.move) return unsupportedFeatureError("move", inbox.provider);
+
+  // ── A filter this provider cannot run is refused, not widened ────────────
+  // Checked before the session opens and before a single message is read. See
+  // buildUnappliedSearchRefusal for the argument; in short, email_organize and
+  // email_delete carry EMPTY leniency arrays in LENIENT_ACTIONS precisely
+  // because "a dropped filter is the difference between moving one thread and
+  // moving an inbox", and a criterion the dialect has no predicate for is that
+  // same dropped filter arriving by another route. email_read's search
+  // discloses and runs; this one stops.
+  const unrunnable = unappliedSearchFields(search, inbox.provider);
+  if (unrunnable.length > 0) {
+    return searchCriteriaUnsupportedError("email_search_and_move", inbox.provider, unrunnable);
+  }
 
   // ── One IMAP connection for the whole call ───────────────────────────────
   // Created FIRST, ahead of the destination resolve, which is what changed on
@@ -22224,6 +22688,18 @@ async function executeSearchAndDelete(
   // front before running the search so the caller gets a clear instruction.
   if (permanent && caps.trash_vs_expunge === "trash") {
     return permanentDeleteUnsupportedError(inbox.provider);
+  }
+
+  // ── A filter this provider cannot run is refused, not widened ────────────
+  // The sharpest version of the case in buildUnappliedSearchRefusal. "Delete my
+  // tagged mail that has attachments" on an IMAP inbox translates to SEARCH
+  // FLAGGED with the attachment criterion gone, i.e. every tagged message in
+  // the mailbox — and a disclosure attached to the receipt is read after the
+  // mail is in the trash. Refused before the session opens, so nothing is read
+  // and nothing is deleted.
+  const unrunnable = unappliedSearchFields(search, inbox.provider);
+  if (unrunnable.length > 0) {
+    return searchCriteriaUnsupportedError("email_search_and_delete", inbox.provider, unrunnable);
   }
 
   // ── One IMAP connection for the whole call ───────────────────────────────
@@ -25228,7 +25704,11 @@ function foldContactEntries(
     const email = (entry.email ?? "").trim();
     if (!email) continue;
     const key = email.toLowerCase();
-    const name = (entry.name ?? "").trim();
+    // Decoded HERE, at ingestion, not on the way out: the filter below matches
+    // the query against the name, and "på" never matches "p=C3=A5". See
+    // contact-display-name.ts for the encoded-word that shipped raw (F-07,
+    // 2026-09-20) and for why the invisible-character strip rides with it.
+    const name = contactDisplayName(entry.name);
     // Client-side query filter: keep only people who actually match the query.
     if (!key.includes(queryLc) && !name.toLowerCase().includes(queryLc)) {
       continue;
@@ -29084,6 +29564,51 @@ function triageApiKeyAsApiKeyRow(key: TriageApiKey): ApiKeyRow {
  * makes the explicit `workspace_id` predicate on every query the ONLY tenancy
  * check there is. Do not remove one.
  */
+/**
+ * The inbox-resolution failure, phrased for the `automation` tools.
+ *
+ * Deliberately NOT inboxResolutionError(): that builds a whole ToolErrorResult,
+ * while AutomationDeps.resolveInbox hands back a bare sentence that the action
+ * prefixes with "automation preview: ". Same four reasons, same facts, one
+ * clause each — an agent that gets "several inboxes are accessible, here they
+ * are" can retry immediately, which is the whole difference from the sentence
+ * this replaced.
+ */
+function automationInboxFailureMessage(
+  failure: {
+    reason: "not_found" | "ambiguous" | "none" | "selector_conflict";
+    inboxes?: InboxRow[];
+    conflict?: InboxSelectorConflict;
+  },
+): string {
+  switch (failure.reason) {
+    case "ambiguous": {
+      const listed = (failure.inboxes ?? [])
+        .map((ib) => `${ib.email_address} (inbox_id: ${ib.id})`)
+        .join("; ");
+      return (
+        "several inboxes are accessible, so this action needs one named. " +
+        `Retry passing inbox_id (or inbox): ${listed}.`
+      );
+    }
+    case "selector_conflict":
+      return failure.conflict
+        ? inboxSelectorConflictMessage(failure.conflict)
+        : "inbox_id and inbox name different inboxes. Retry with only one of them.";
+    case "none":
+      return (
+        "no mailbox is connected to this account yet, so there is nothing to " +
+        `automate. Connect one at ${APP_URL}/dashboard/inboxes .`
+      );
+    case "not_found":
+    default:
+      return (
+        "no inbox matches the given inbox_id/inbox. Call inbox_list and pass " +
+        "one of the inbox_id values it returns."
+      );
+  }
+}
+
 function automationDepsFor(apiKey: ApiKeyRow): AutomationDeps {
   return {
     db: supabase,
@@ -29099,7 +29624,14 @@ function automationDepsFor(apiKey: ApiKeyRow): AutomationDeps {
       // against an inbox the key may not touch.
       const resolved = await resolveInboxArg(args, apiKey);
       if (!resolved.ok) {
-        return { ok: false, message: "could not resolve the inbox. Call inbox_list for the inbox_id." };
+        // BUGFIX (2026-09-20): every failure reason collapsed into "could not
+        // resolve the inbox. Call inbox_list for the inbox_id." That sentence
+        // misdirects twice. It is not a lookup failure when several inboxes are
+        // accessible and none was named, and calling inbox_list does not fix
+        // anything on its own — the id has to be PASSED. The resolver already
+        // works all of this out, including the roster it can name inline and
+        // the conflict it can quote both sides of, so stop throwing it away.
+        return { ok: false, message: automationInboxFailureMessage(resolved) };
       }
       return {
         ok: true,
@@ -29251,6 +29783,15 @@ async function handleTriagePreview(req: Request): Promise<Response> {
     matched: messages.length,
     truncated,
     messages,
+    // Carried through for the same reason the MCP search carries it: this is a
+    // DRY RUN whose whole job is to show what a filter will do, and a preview
+    // that quietly ignores `has_attachment` on an IMAP inbox is a preview of a
+    // rule the user is not about to save (F-04, 2026-09-20). The write path
+    // refuses such a filter outright — see validateAutomationBody — so this
+    // note is how the dashboard can explain the refusal rather than just
+    // report it. Omitted when there is nothing to say, so the existing payload
+    // shape is unchanged for every filter the provider can run.
+    ...(result.notes && result.notes.length > 0 ? { notes: result.notes } : {}),
   }, 200);
 }
 
@@ -30140,6 +30681,11 @@ if (Deno.env.get("MCP_SERVER_NO_LISTEN") !== "1") {
 // answerable by running them, not by reading their queries.
 // ---------------------------------------------------------------------------
 export {
+  // Exported for tool-surface.test.ts: the ownership map is what a refusal's
+  // "it belongs to action X" sentence is built from, and since 2026-09-20 that
+  // sentence may not name an action the client was never shown. That rule is
+  // only checkable against the built index.
+  CONSOLIDATED_ARGUMENT_INDEX,
   CONSOLIDATED_SPECS,
   executeBulkPlanRequest,
   handleRequest,
