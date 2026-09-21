@@ -1,5 +1,6 @@
 'use client';
 
+import { Fragment } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
@@ -470,8 +471,8 @@ export default function ProvidersClient() {
               </thead>
               <tbody>
                 {sections.map(({ section, rows }) => (
-                  <>
-                    <tr key={'section-' + section} className="tbl-section-head">
+                  <Fragment key={section}>
+                    <tr className="tbl-section-head">
                       <td colSpan={PROVIDERS.length + 1}>{t(`providers.sections.${section}`)}</td>
                     </tr>
                     {rows.map(row => (
@@ -482,7 +483,7 @@ export default function ProvidersClient() {
                         ))}
                       </tr>
                     ))}
-                  </>
+                  </Fragment>
                 ))}
               </tbody>
             </table>
