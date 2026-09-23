@@ -28,7 +28,7 @@
   },
   "method": {
     "title": "Slik kobles Fastmail til: et app-passord",
-    "body": "Fastmail kobles til over IMAP/SMTP med et <b>Fastmail-app-passord</b>. Lag et i Fastmail under Settings → Privacy & Security → App passwords, lim det inn i mcpemails, så er du koblet til. Ingen OAuth-runddans, ingen popup-vinduer i nettleseren."
+    "body": "Fastmail kobles til over IMAP/SMTP med et <b>Fastmail-app-passord</b>. Lag et i Fastmail under Settings → Privacy & Security → Connected apps & API tokens → Manage app passwords and access → New app password, lim det inn i mcpemails, så er du koblet til. Ingen OAuth-runddans, ingen popup-vinduer i nettleseren."
   },
   "setup": [
     {
@@ -37,7 +37,7 @@
     },
     {
       "h": "Lag et Fastmail-app-passord",
-      "p": "Gå til Settings → Privacy & Security → App passwords i Fastmail og lag et for e-post (IMAP/SMTP)."
+      "p": "Gå til Settings → Privacy & Security → Connected apps & API tokens → Manage app passwords and access → New app password i Fastmail og lag et for e-post (IMAP/SMTP)."
     },
     {
       "h": "Lim det inn i mcpemails",
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "Fastmail leverer sin egen MCP-server, og den er god",
-      "p": "I april 2026 lanserte Fastmail en egen MCP-server på <code>https://api.fastmail.com/mcp</code>, autentisert med OAuth, med tilgang til bare lesing, skriving eller sending, og som dekker e-post, kalender og kontakter. Hvis Fastmail er den eneste postkassen du vil at en assistent skal nå, er det den mest direkte veien som finnes, og det sier vi rett ut. mcpemails svarer på et annet spørsmål: <b>én</b> MCP-URL som rommer Fastmail-kontoen din og iCloud-, Zoho-, Yahoo-, GMX- eller jobb-IMAP-postkassen din samtidig, med de samme seksten verktøyene over alle, slik at en agent kan søke på tvers av postkasser og du setter opp én server i stedet for fem. Det viktigste her er å være nyttig for deg, ikke å fremstille oss selv i best mulig lys."
+      "p": "I april 2026 lanserte Fastmail en egen MCP-server på <code>https://api.fastmail.com/mcp</code>, autentisert med OAuth, med tilgang til bare lesing, skriving eller sending, og som dekker e-post, kalender og kontakter. Hvis Fastmail er den eneste postkassen du vil at en assistent skal nå, er det den mest direkte veien som finnes, og det sier vi rett ut. mcpemails svarer på et annet spørsmål: <b>én</b> MCP-URL som rommer Fastmail-kontoen din og iCloud-, Zoho-, Yahoo-, GMX- eller jobb-IMAP-postkassen din samtidig, med de samme verktøyene over alle, slik at en agent kan søke på tvers av postkasser og du setter opp én server i stedet for fem. Det viktigste her er å være nyttig for deg, ikke å fremstille oss selv i best mulig lys."
     },
     {
       "h": "Fastmail Basic-kontoer kan ikke bruke IMAP i det hele tatt",

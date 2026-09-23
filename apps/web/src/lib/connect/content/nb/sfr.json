@@ -44,7 +44,7 @@
       "p": "SFR lar en abonnent opprette ekstra adresser og aliaser fra den samme skjermen for postkassekonfigurasjon, ved siden av hovedadressen som fulgte med linjen. Vil du helst ikke gi en agent adressen alle du kjenner skriver til, oppretter du en ny der og kobler til den. Det er de samme vertene og portene."
     },
     {
-      "h": "Lim det inn i mcpemails, og lim så MCP-URL-en inn i AI-en",
+      "h": "Legg til postkassen i mcpemails",
       "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel prenom.nom@sfr.fr, og lim inn passordet for SFR Mail. SFR-vertene og -portene er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
     }
   ],

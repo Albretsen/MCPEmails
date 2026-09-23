@@ -12,7 +12,7 @@
     "eyebrow": "JetBrains + email",
     "titleLine1": "Connect your inbox to JetBrains",
     "titleLine2": "AI Assistant",
-    "lead": "Add a real mailbox to AI Assistant in any JetBrains IDE that supports it. Read, search, send, reply, schedule and organize mail without leaving the IDE.",
+    "lead": "Add a real mailbox to AI Assistant in any JetBrains IDE that supports it. Read, search, send, reply, forward, schedule and organize mail without leaving the IDE.",
     "meta0": "1 inbox free, forever",
     "meta1": "Scoped API key, revocable in one click",
     "meta2": "Email fetched live, never stored",
@@ -62,7 +62,7 @@
   "faq": [
     {
       "q": "How do I connect email to JetBrains AI Assistant?",
-      "a": "Open Settings, Tools, AI Assistant, Model Context Protocol, add a server with the Streamable HTTP connection type, paste https://mcpemails.com/api/mcp, and add an Authorization Bearer header with an API key from your dashboard. AI Assistant then has tools for reading, searching, sending, replying, organizing and scheduling mail."
+      "a": "Open Settings, Tools, AI Assistant, Model Context Protocol, add a server with the Streamable HTTP connection type, paste https://mcpemails.com/api/mcp, and add an Authorization Bearer header with an API key from your dashboard. AI Assistant then has tools for reading, searching, sending, replying, forwarding, organizing and scheduling mail."
     },
     {
       "q": "Which JetBrains IDEs does this work in?",

@@ -63,7 +63,7 @@
   ],
   "limits": [
     "Le serveur n'annonce pas l'extension MOVE : déplacer un message se fait donc par copie, marquage et purge plutôt qu'en une seule commande atomique.",
-    "SPECIAL-USE est absent : Envoyés, Brouillons, Corbeille et Indésirables sont reconnus par leur nom. Sur une boîte en français, ils s'appellent généralement Envoyes, Brouillons, Corbeille et Indesirables."
+    "SPECIAL-USE est absent : Envoyés, Brouillons, Corbeille et Indésirables sont reconnus par leur nom. Sur une boîte en français, ils s'appellent généralement Messages envoyés, Brouillons, Corbeille et Spam."
   ],
   "faq": [
     {

@@ -28,7 +28,7 @@
   },
   "method": {
     "title": "Slik kobles IONOS til: IMAP og postkassepassordet ditt",
-    "body": "IONOS kobles til over IMAP/SMTP med <b>e-postpassordet</b> du setter i IONOS-kontrollpanelet under Email, som er atskilt fra IONOS-innloggingen din. IONOS svarer på begge standardtransportene, 993 med TLS og 143 med STARTTLS, og å gjette mellom dem er den vanligste måten en IONOS-tilkobling feiler på. mcpemails fyller inn et par som fungerer og prøver det andre hvis det første ikke svarer, så en avvist innlogging her skyldes virkelig passordet."
+    "body": "IONOS kobles til over IMAP/SMTP med <b>e-postpassordet</b> du setter i IONOS-kontrollpanelet under Email, som er atskilt fra IONOS-innloggingen din. IONOS svarer på begge standardtransportene, 993 med TLS og 143 med STARTTLS, så porten er sjelden grunnen til at en IONOS-innlogging feiler. mcpemails fyller inn et par som fungerer og prøver det andre hvis det første ikke svarer, så en avvist innlogging her skyldes virkelig passordet."
   },
   "setup": [
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "Lim det inn i mcpemails",
-      "p": "Velg IMAP / SMTP, og legg inn IONOS-adressen din, vertene nedenfor og passordet for å koble til innboksen på en sikker måte."
+      "p": "Velg IMAP / SMTP, og legg inn IONOS-adressen din, vertene ovenfor og passordet for å koble til innboksen på en sikker måte."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "Hos IONOS er porten nesten aldri årsaken, og å bytte porter sløser bort dager",
-      "p": "Dette er det mest nyttige vi kan fortelle deg om IONOS, og det kommer fra våre egne tilkoblingslogger, ikke fra noen håndbok. Ett arbeidsområde gjorde tolv mislykkede forsøk på rad mot <code>imap.ionos.com</code>, vekselvis på 993 med implisitt TLS og 143 med STARTTLS, i den tro at én av de to transportene var feil. IONOS svarer på begge. Passordet var problemet hele tiden. IONOS dokumenterer 993 for IMAP og 465 for SMTP, og tilbyr 587 med STARTTLS som et alternativ for utgående e-post på nettverk som blokkerer 465, så transporten er genuint fleksibel og genuint ikke det som avviser innloggingen din. Hvis serveren svarer og deretter avviser deg, behandler du det som et problem med påloggingsopplysningene og går rett til kontrollpanelet."
+      "p": "Et vanlig mønster etter en avvist innlogging er å fortsette å prøve mot <code>imap.ionos.com</code>, vekselvis på 993 med implisitt TLS og 143 med STARTTLS, i den tro at én av de to transportene er feil. IONOS svarer på begge, så byttet endrer ingenting når det er passordet som er problemet. IONOS dokumenterer 993 for IMAP og 465 for SMTP, og tilbyr 587 med STARTTLS som et alternativ for utgående e-post på nettverk som blokkerer 465, så transporten er genuint fleksibel og genuint ikke det som avviser innloggingen din. Hvis serveren svarer og deretter avviser deg, behandler du det som et problem med påloggingsopplysningene og går rett til kontrollpanelet."
     },
     {
       "h": "Hver IONOS-adresse har sitt eget passord, og det er ikke IONOS-innloggingen din",

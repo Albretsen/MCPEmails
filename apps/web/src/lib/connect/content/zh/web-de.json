@@ -29,7 +29,7 @@
   },
   "method": {
     "title": "WEB.DE 如何连接：IMAP 与账户密码",
-    "body": "WEB.DE 通过 IMAP/SMTP 连接，但 <b>POP3 和 IMAP 访问默认是关闭的</b>。请在 WEB.DE 的邮件设置、POP3/IMAP 收取中开启，然后用 WEB.DE 地址和密码连接。WEB.DE 在两种标准发信传输方式上都会响应，即 465 端口的隐式 TLS 和 587 端口的 STARTTLS，所以端口几乎从来不是发信失败的原因。mcpemails 使用下方的 465 组合，并会自动回退到另一种。"
+    "body": "WEB.DE 通过 IMAP/SMTP 连接，但 <b>POP3 和 IMAP 访问默认是关闭的</b>。请在 WEB.DE 的 E-Mail-Einstellungen（邮件设置）、E-Mail empfangen（接收邮件）、POP3/IMAP 中开启，然后用 WEB.DE 地址和密码连接。WEB.DE 在两种标准发信传输方式上都会响应，即 465 端口的隐式 TLS 和 587 端口的 STARTTLS，所以端口几乎从来不是发信失败的原因。mcpemails 使用下方的 465 组合，并会自动回退到另一种。"
   },
   "setup": [
     {
@@ -38,11 +38,11 @@
     },
     {
       "h": "在 WEB.DE 中开启 IMAP 访问",
-      "p": "在 WEB.DE 中打开邮件设置、POP3/IMAP 收取，允许 POP3 和 IMAP 访问。"
+      "p": "在 WEB.DE 中打开 E-Mail-Einstellungen（邮件设置），在 E-Mail empfangen 下选择 POP3/IMAP，然后把滑块拨到 POP3- und IMAP-Zugriff erlauben（允许 POP3 和 IMAP 访问）。"
     },
     {
-      "h": "粘贴到 mcpemails",
-      "p": "选择 IMAP / SMTP，填入你的 WEB.DE 地址、下方的服务器地址和密码，安全连接收件箱。"
+      "h": "在 mcpemails 中添加邮箱",
+      "p": "选择 IMAP / SMTP，填入你的 WEB.DE 地址、上方的服务器地址和密码，安全连接收件箱。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -60,7 +60,7 @@
     },
     {
       "h": "开启两步验证会让你的密码在邮件客户端中失效",
-      "p": "WEB.DE 的双重认证保护的是网页登录，一旦开启，你普通的 WEB.DE 密码就无法在任何使用 IMAP 或 SMTP 的东西中使用。此时你需要一个 <b>anwendungsspezifisches Passwort</b>（应用专用密码），在邮箱中依次进入 Account verwalten、Login & Sicherheit、Anwendungsspezifische Passwörter 生成。为邮件创建一个，把它而不是普通密码粘贴到 mcpemails，普通密码留给网站使用。未开启两步验证时，账户密码就是正确的凭据，也没有应用密码可以创建。"
+      "p": "WEB.DE 的双重认证保护的是网页登录，一旦开启，你普通的 WEB.DE 密码就无法在任何使用 IMAP 或 SMTP 的东西中使用。此时你需要一个 <b>anwendungsspezifisches Passwort</b>（应用专用密码），在邮箱中依次进入 Account verwalten、Login & Sicherheit、Anwendungsspezifische Passwörter verwalten 生成。为邮件创建一个，把它而不是普通密码粘贴到 mcpemails，普通密码留给网站使用。未开启两步验证时，账户密码就是正确的凭据，也没有应用密码可以创建。"
     },
     {
       "h": "两种 SMTP 传输方式都会响应，所以发信失败很少是端口问题",
@@ -91,7 +91,7 @@
     },
     {
       "q": "WEB.DE 需要应用密码吗？",
-      "a": "只有在开启了双重认证时才需要。未开启两步验证时，开启收取后你普通的 WEB.DE 密码即可用于邮件客户端认证。开启两步验证后，请在 Account verwalten、Login und Sicherheit、Anwendungsspezifische Passwörter 下生成应用专用密码，并在 mcpemails 中使用它。"
+      "a": "只有在开启了双重认证时才需要。未开启两步验证时，开启收取后你普通的 WEB.DE 密码即可用于邮件客户端认证。开启两步验证后，请在 Account verwalten、Login & Sicherheit、Anwendungsspezifische Passwörter verwalten 下生成应用专用密码，并在 mcpemails 中使用它。"
     },
     {
       "q": "我的 WEB.DE 邮件会存储在你们的服务器上吗？",

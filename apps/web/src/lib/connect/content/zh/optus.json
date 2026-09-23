@@ -39,7 +39,7 @@
     },
     {
       "h": "输入完整地址和邮箱密码",
-      "p": "在 mcpemails 中选择 IMAP / SMTP，在用户名栏按 Optus 自己的格式填写完整地址 <code>username@optusnet.com.au</code>。使用该邮箱的密码。下方的服务器和端口已自动填好，并已通过实时 TLS 连接验证。"
+      "p": "在 mcpemails 中选择 IMAP / SMTP，在用户名栏按 Optus 自己的格式填写完整地址 <code>username@optusnet.com.au</code>。使用该邮箱的密码。上方的服务器和端口已自动填好，并已通过实时 TLS 连接验证。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",

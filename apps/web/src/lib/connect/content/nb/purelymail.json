@@ -44,7 +44,7 @@
     },
     {
       "h": "Legg til et app-passord hvis brukeren har 2FA, og koble så til",
-      "p": "Er flerfaktorautentisering på for brukeren, åpner du brukeren, blar ned til <b>App Passwords</b>, klikker <b>Add New</b>, gir det et navn og kopierer koden. Purelymail viser den én gang. Velg nå IMAP / SMTP i mcpemails, skriv inn hele adressen og det passordet. Vertene under er forhåndsutfylt."
+      "p": "Er flerfaktorautentisering på for brukeren, åpner du brukeren, blar ned til <b>App Passwords</b>, klikker <b>Add New</b>, gir det et navn og kopierer koden. Purelymail viser den én gang. Velg nå IMAP / SMTP i mcpemails, skriv inn hele adressen og det passordet. Vertene over er forhåndsutfylt."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",

@@ -26,7 +26,7 @@
   },
   "method": {
     "title": "Yahoo 如何连接：应用密码",
-    "body": "Yahoo Mail 通过 IMAP/SMTP 使用 <b>Yahoo 应用密码</b>连接。开启两步验证，在 Yahoo Account Security 中生成应用密码，然后连同 Yahoo 地址一起粘贴到 mcpemails。没有 OAuth 流程，也没有浏览器弹窗。"
+    "body": "Yahoo Mail 通过 IMAP/SMTP 使用 <b>Yahoo 应用密码</b>连接。在 Yahoo Account Security 的 External connections 下生成应用密码，然后连同 Yahoo 地址一起粘贴到 mcpemails。如果看不到这个选项，请开启两步验证后再查看。没有 OAuth 流程，也没有浏览器弹窗。"
   },
   "setup": [
     {
@@ -35,7 +35,7 @@
     },
     {
       "h": "生成 Yahoo 应用密码",
-      "p": "开启两步验证，然后在 Yahoo Account Security 中生成应用密码。"
+      "p": "在 Yahoo Account Security 的 External connections 下生成应用密码。如果那里没有这个选项，请先开启两步验证。"
     },
     {
       "h": "粘贴到 mcpemails",

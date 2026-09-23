@@ -28,7 +28,7 @@
   },
   "method": {
     "title": "How Fastmail connects: an app password",
-    "body": "Fastmail connects over IMAP/SMTP using a <b>Fastmail app password</b>. Generate one in Fastmail under Settings → Privacy & Security → App passwords, paste it into mcpemails, and you're connected. No OAuth dance, no browser pop-ups."
+    "body": "Fastmail connects over IMAP/SMTP using a <b>Fastmail app password</b>. Generate one in Fastmail under Settings → Privacy & Security → Connected apps & API tokens → Manage app passwords and access → New app password, paste it into mcpemails, and you're connected. No OAuth dance, no browser pop-ups."
   },
   "setup": [
     {
@@ -37,7 +37,7 @@
     },
     {
       "h": "Generate a Fastmail app password",
-      "p": "In Fastmail, go to Settings → Privacy & Security → App passwords and create one for mail (IMAP/SMTP)."
+      "p": "In Fastmail, go to Settings → Privacy & Security → Connected apps & API tokens → Manage app passwords and access → New app password and create one for mail (IMAP/SMTP)."
     },
     {
       "h": "Paste it into mcpemails",
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "Fastmail ships its own MCP server, and it is a good one",
-      "p": "In April 2026 Fastmail launched a first-party MCP server at <code>https://api.fastmail.com/mcp</code>, authenticated with OAuth, offering read-only, write or send access and covering mail, calendar and contacts. If Fastmail is the only mailbox you want an assistant to reach, that is the most direct route available and we will say so plainly. mcpemails answers a different question: <b>one</b> MCP URL that holds your Fastmail account and your iCloud, Zoho, Yahoo, GMX or company IMAP mailbox at the same time, with the same sixteen tools over all of them, so an agent can search across mailboxes and you configure one server rather than five. Being useful to you matters more here than being flattering to us."
+      "p": "In April 2026 Fastmail launched a first-party MCP server at <code>https://api.fastmail.com/mcp</code>, authenticated with OAuth, offering read-only, write or send access and covering mail, calendar and contacts. If Fastmail is the only mailbox you want an assistant to reach, that is the most direct route available and we will say so plainly. mcpemails answers a different question: <b>one</b> MCP URL that holds your Fastmail account and your iCloud, Zoho, Yahoo, GMX or company IMAP mailbox at the same time, with the same tools over all of them, so an agent can search across mailboxes and you configure one server rather than five. Being useful to you matters more here than being flattering to us."
     },
     {
       "h": "Fastmail Basic accounts cannot use IMAP at all",

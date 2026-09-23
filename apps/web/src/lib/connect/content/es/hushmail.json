@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Conecta Hushmail a Claude, Cursor y clientes MCP",
-    "description": "Conecta Hushmail a Claude, Cursor y cualquier cliente MCP por IMAP. Ajustes verificados; IMAP requiere un plan de pago y su propia contraseña de acceso. Una bandeja gratis."
+    "description": "Conecta Hushmail a Claude, Cursor y cualquier cliente MCP por IMAP. Ajustes verificados y el inicio de sesión con contraseña más código de seguridad, explicado. Una bandeja gratis."
   },
   "hero": {
     "eyebrow": "Hushmail + IA",
@@ -36,7 +36,7 @@
     },
     {
       "h": "Consigue tu código de seguridad si la verificación en dos pasos está activada",
-      "p": "Inicia sesión en el webmail de Hushmail, abre <b>Preferences</b> desde el menú de arriba a la derecha, luego la pestaña <b>Security</b>, y baja hasta la sección titulada \"Using a desktop or mobile email application\". Muestra un marcador seguido de un código de 20 letras en cuatro grupos. Si la verificación en dos pasos está desactivada, sáltate este paso por completo y usa tu contraseña normal."
+      "p": "Inicia sesión en el webmail de Hushmail, abre <b>Preferences</b> desde el menú de arriba a la derecha, luego la pestaña <b>Security</b>, y baja hasta la sección titulada \"Using a desktop or mobile email application\". Muestra un marcador seguido de un código de 20 caracteres en cuatro grupos. Si la verificación en dos pasos está desactivada, sáltate este paso por completo y usa tu contraseña normal."
     },
     {
       "h": "Añade el buzón en mcpemails",
@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "La verificación en dos pasos convierte tu contraseña en contraseña más código",
-      "p": "Esta es la que pilla a todo el mundo. Hushmail no emite contraseñas de aplicación. Con la verificación en dos pasos activada, cada inicio de sesión IMAP y SMTP espera <code>yourpassword xxxxx xxxxx xxxxx xxxxx</code> en un solo campo: tu contraseña normal, un espacio y luego el código de seguridad de 20 letras dividido en cuatro grupos por espacios. Si te equivocas en un grupo, añades un espacio al final o pegas solo el código, el servidor te rechaza con un fallo de autenticación normal idéntico al de una contraseña incorrecta. El código está en el webmail, en Preferences, pestaña Security."
+      "p": "Esta es la que pilla a todo el mundo. Hushmail no emite contraseñas de aplicación. Con la verificación en dos pasos activada, cada inicio de sesión IMAP y SMTP espera <code>yourpassword xxxxx xxxxx xxxxx xxxxx</code> en un solo campo: tu contraseña normal, un espacio y luego el código de seguridad de 20 caracteres dividido en cuatro grupos por espacios. Si te equivocas en un grupo, añades un espacio al final o pegas solo el código, el servidor te rechaza con un fallo de autenticación normal idéntico al de una contraseña incorrecta. El código está en el webmail, en Preferences, pestaña Security."
     },
     {
       "h": "El servidor IMAP de Hushmail no anuncia SASL-IR",

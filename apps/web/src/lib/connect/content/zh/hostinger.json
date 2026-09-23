@@ -27,7 +27,7 @@
   },
   "method": {
     "title": "Hostinger 如何连接：IMAP 与你的邮箱密码",
-    "body": "Hostinger Email 使用你在 hPanel 的 Emails 下设置的邮箱密码，通过 IMAP/SMTP 连接。没有应用专用密码，也没有 OAuth 步骤。所有域名的服务器都是 <code>imap.hostinger.com</code> 和 <code>smtp.hostinger.com</code>，所以不需要查找任何东西。"
+    "body": "Hostinger Email 使用你在 hPanel 的 Emails 下设置的邮箱密码，通过 IMAP/SMTP 连接。没有应用专用密码，也没有 OAuth 步骤。在 Hostinger Email 上，所有域名的服务器都是 <code>imap.hostinger.com</code> 和 <code>smtp.hostinger.com</code>。Business Email 和 Enterprise Email 套餐基于 Titan，使用不同的服务器，详见下文。"
   },
   "setup": [
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "粘贴到 mcpemails",
-      "p": "选择 IMAP / SMTP，填入你的 Hostinger 地址、下方的服务器地址和密码，安全地连接收件箱。"
+      "p": "选择 IMAP / SMTP，填入你的 Hostinger 地址、上方的服务器地址和密码，安全地连接收件箱。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",

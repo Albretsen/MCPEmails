@@ -39,7 +39,7 @@
     },
     {
       "h": "Enter the full address and the email password",
-      "p": "In mcpemails choose IMAP / SMTP and put the whole address in the username field, in Optus's own format <code>username@optusnet.com.au</code>. Use the password for that mailbox. The host and ports below are prefilled and were verified from a live TLS connection."
+      "p": "In mcpemails choose IMAP / SMTP and put the whole address in the username field, in Optus's own format <code>username@optusnet.com.au</code>. Use the password for that mailbox. The host and ports above are prefilled and were verified from a live TLS connection."
     },
     {
       "h": "Paste the MCP URL into your AI",

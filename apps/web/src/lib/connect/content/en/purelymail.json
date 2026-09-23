@@ -44,7 +44,7 @@
     },
     {
       "h": "Add an app password if that user has 2FA, then connect",
-      "p": "If multi-factor authentication is on for that user, open the user, scroll to <b>App Passwords</b>, click <b>Add New</b>, give it a name and copy the code. Purelymail displays it once. Now choose IMAP / SMTP in mcpemails, enter the full address and that password. The hosts below are prefilled."
+      "p": "If multi-factor authentication is on for that user, open the user, scroll to <b>App Passwords</b>, click <b>Add New</b>, give it a name and copy the code. Purelymail displays it once. Now choose IMAP / SMTP in mcpemails, enter the full address and that password. The hosts above are prefilled."
     },
     {
       "h": "Paste the MCP URL into your AI",

@@ -44,7 +44,7 @@
       "p": "Onet 不为邮件客户端签发应用专用密码；你用 Onet 账户密码和完整地址认证。如果你正在从旧客户端迁移设置，不要把 POP3 服务器带过来。POP3 是被直接停用而不是逐步淘汰，所以 995 端口上已不会有任何响应。"
     },
     {
-      "h": "粘贴到 mcpemails，再把 MCP URL 粘贴到你的 AI",
+      "h": "在 mcpemails 中添加邮箱",
       "p": "选择 IMAP / SMTP，输入完整地址（例如 nazwa@onet.pl）并输入密码。Onet 的服务器和端口已自动填好，并已通过实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],

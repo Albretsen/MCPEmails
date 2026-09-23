@@ -26,7 +26,7 @@
   },
   "method": {
     "title": "Slik kobler Xtra Mail seg til: IMAP med passordet du allerede har",
-    "body": "Spark publiserer <code>imap.xtra.co.nz</code> på port 993 for innkommende e-post og <code>send.xtra.co.nz</code> for utgående, med brukernavnet oppgitt som hele adressen. Autentisering skjer med postkassepassordet, uendret. Det er uvanlig nok i 2026 til å være verdt å si to ganger, fordi Sparks egen side om totrinnsbekreftelse har en merknad øverst om at den bare er tilgjengelig i webmail-portalen og ikke vil gjelde for e-postklienter som Outlook, Mail og Gmail. Så det finnes ikke noe app-passord å finne, ingen sikkerhetsside å besøke og ingen andre faktor å omgå, og hele feilflaten krymper til om passordet er riktig og om klienten din oppfyller Sparks transportkrav. Spark har slike krav: de ber om at appen støtter 1024-bit eller 2048-bit AES-chiffer og TLS 1.0 eller høyere, og sier at RC4, SSL og SSL3 ikke støttes."
+    "body": "Spark publiserer <code>imap.xtra.co.nz</code> på port 993 for innkommende e-post og <code>send.xtra.co.nz</code> for utgående, med brukernavnet oppgitt som hele adressen. Autentisering skjer med postkassepassordet, uendret. Det er uvanlig nok i 2026 til å være verdt å si to ganger, fordi Sparks egen side om totrinnsbekreftelse har en merknad øverst om at den bare er tilgjengelig i webmail-portalen og ikke vil gjelde for e-postklienter som Outlook, Mail og Gmail. Så det finnes ikke noe app-passord å finne, ingen sikkerhetsside å besøke og ingen andre faktor å omgå, og hele feilflaten krymper til om passordet er riktig og om klienten din oppfyller Sparks transportkrav. Spark har slike krav: de ber om at appen støtter AES-chiffer og TLS 1.0 eller høyere, og sier at RC4, SSL og SSL3 ikke støttes."
   },
   "setup": [
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "Skriv inn hele adressen og Xtra Mail-passordet ditt",
-      "p": "I mcpemails velger du IMAP / SMTP og skriver inn adressen nøyaktig slik Spark skriver den, for eksempel <code>joe.bloggs@xtra.co.nz</code>, med passordet du bruker til å logge inn i Xtra-webmail. Vertene og portene under er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
+      "p": "I mcpemails velger du IMAP / SMTP og skriver inn adressen nøyaktig slik Spark skriver den, for eksempel <code>joe.bloggs@xtra.co.nz</code>, med passordet du bruker til å logge inn i Xtra-webmail. Vertene og portene over er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",

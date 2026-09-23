@@ -40,7 +40,7 @@
     },
     {
       "h": "Generate an AOL app password under Account Security",
-      "p": "Open Account Info, then <b>Account Security</b>. Turn on two-step verification if it is off, then generate an app password and give it a name such as <code>mcpemails</code>. AOL shows it once. Paste that into mcpemails together with the full verizon.net address; the AOL hosts below are prefilled."
+      "p": "Open Account Info, then <b>Account Security</b>. Turn on two-step verification if it is off, then generate an app password and give it a name such as <code>mcpemails</code>. AOL shows it once. Paste that into mcpemails together with the full verizon.net address; the AOL hosts above are prefilled."
     },
     {
       "h": "Paste the MCP URL into your AI",

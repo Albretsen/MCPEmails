@@ -27,7 +27,7 @@
   },
   "method": {
     "title": "HostGator 邮箱如何连接：服务器主机名，IMAP 993",
-    "body": "HostGator 运行 cPanel，安全连接时邮箱在端口 993 上提供 IMAP、在 465 上提供 SMTP；未加密时则为 143 以及 25 或 587。人们出错的地方是主机名。<code>mail.yourdomain.com</code> 可用于未加密的会话，但 HostGator 用<b>通配符</b>证书保护邮件，在共享和云账户上覆盖 <code>.hostgator.com</code>，在经销商账户上覆盖 <code>.websitewelcome.com</code>。你自己的域名不在任何一张证书上。所以使用 TLS 时，你要用服务器自己的主机名，形如 <code>gator1234.hostgator.com</code> 或 <code>servername.websitewelcome.com</code>。HostGator 自己的 SSL 文章正是这样说的，并建议更新设置，而不是屏蔽警告。用户名始终是完整的邮箱地址。"
+    "body": "HostGator 运行 cPanel，安全连接时邮箱在端口 993 上提供 IMAP、在 465 上提供 SMTP；未加密时 IMAP 为 143，SMTP 为 25 或 26。人们出错的地方是主机名。<code>mail.yourdomain.com</code> 可用于未加密的会话，但 HostGator 用<b>通配符</b>证书保护邮件，在共享和云账户上覆盖 <code>.hostgator.com</code>，在经销商账户上覆盖 <code>.websitewelcome.com</code>。你自己的域名不在任何一张证书上。所以使用 TLS 时，你要用服务器自己的主机名，形如 <code>gator1234.hostgator.com</code> 或 <code>servername.websitewelcome.com</code>。HostGator 自己的 SSL 文章正是这样说的，并建议更新设置，而不是屏蔽警告。用户名始终是完整的邮箱地址。"
   },
   "setup": [
     {

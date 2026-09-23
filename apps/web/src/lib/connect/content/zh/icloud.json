@@ -26,7 +26,7 @@
   },
   "method": {
     "title": "iCloud 如何连接：App 专用密码",
-    "body": "iCloud 邮件使用 <b>Apple App 专用密码</b>通过 IMAP/SMTP 连接。在 appleid.apple.com 的 Sign-In & Security → App-Specific Passwords（登录与安全、App 专用密码）中生成一个（需要开启双重认证），然后连同你的 iCloud 地址一起粘贴到 mcpemails。"
+    "body": "iCloud 邮件使用 <b>Apple App 专用密码</b>通过 IMAP/SMTP 连接。在 account.apple.com 的 Sign-In and Security → App-Specific Passwords（登录与安全、App 专用密码）中生成一个（需要开启双重认证），然后连同你的 iCloud 地址一起粘贴到 mcpemails。"
   },
   "setup": [
     {
@@ -35,7 +35,7 @@
     },
     {
       "h": "生成 App 专用密码",
-      "p": "在 appleid.apple.com 进入 Sign-In & Security → App-Specific Passwords，创建一个密码（必须已开启双重认证）。"
+      "p": "在 account.apple.com 进入 Sign-In and Security → App-Specific Passwords，创建一个密码（必须已开启双重认证）。"
     },
     {
       "h": "粘贴到 mcpemails",

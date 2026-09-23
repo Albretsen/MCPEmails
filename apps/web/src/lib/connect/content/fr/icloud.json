@@ -26,7 +26,7 @@
   },
   "method": {
     "title": "Comment iCloud se connecte : un mot de passe pour app",
-    "body": "iCloud Mail se connecte en IMAP/SMTP avec un <b>mot de passe pour app Apple</b>. Générez-en un sur appleid.apple.com sous Sign-In & Security → App-Specific Passwords (identification à deux facteurs requise), puis collez-le dans mcpemails avec votre adresse iCloud."
+    "body": "iCloud Mail se connecte en IMAP/SMTP avec un <b>mot de passe pour app Apple</b>. Générez-en un sur account.apple.com sous Sign-In and Security → App-Specific Passwords (identification à deux facteurs requise), puis collez-le dans mcpemails avec votre adresse iCloud."
   },
   "setup": [
     {
@@ -35,7 +35,7 @@
     },
     {
       "h": "Générez un mot de passe pour app",
-      "p": "Sur appleid.apple.com, allez dans Sign-In & Security → App-Specific Passwords et créez-en un (l'identification à deux facteurs doit être activée)."
+      "p": "Sur account.apple.com, allez dans Sign-In and Security → App-Specific Passwords et créez-en un (l'identification à deux facteurs doit être activée)."
     },
     {
       "h": "Collez-le dans mcpemails",

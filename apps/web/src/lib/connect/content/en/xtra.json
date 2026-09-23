@@ -26,7 +26,7 @@
   },
   "method": {
     "title": "How Xtra Mail connects: IMAP with the password you already have",
-    "body": "Spark publishes <code>imap.xtra.co.nz</code> on port 993 for incoming mail and <code>send.xtra.co.nz</code> for outgoing, with the username given as the full address. Authentication is the mailbox password, unmodified. That is unusual enough in 2026 to be worth stating twice, because Spark's own two-step verification page carries a note at the top saying it is only available in the webmail portal and will not apply to email clients like Outlook, Mail and Gmail. So there is no app password to find, no security page to visit and no second factor to work around, and the entire failure surface reduces to whether the password is right and whether your client meets Spark's transport requirements. Spark does have those: it asks that the app support 1024-bit or 2048-bit AES ciphers and TLS 1.0 or higher, and states that RC4, SSL and SSL3 are not supported."
+    "body": "Spark publishes <code>imap.xtra.co.nz</code> on port 993 for incoming mail and <code>send.xtra.co.nz</code> for outgoing, with the username given as the full address. Authentication is the mailbox password, unmodified. That is unusual enough in 2026 to be worth stating twice, because Spark's own two-step verification page carries a note at the top saying it is only available in the webmail portal and will not apply to email clients like Outlook, Mail and Gmail. So there is no app password to find, no security page to visit and no second factor to work around, and the entire failure surface reduces to whether the password is right and whether your client meets Spark's transport requirements. Spark does have those: it asks that the app support AES ciphers and TLS 1.0 or higher, and states that RC4, SSL and SSL3 are not supported."
   },
   "setup": [
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "Enter the full address and your Xtra Mail password",
-      "p": "In mcpemails choose IMAP / SMTP and enter the address exactly as Spark writes it, such as <code>joe.bloggs@xtra.co.nz</code>, with the password you use to sign in to Xtra webmail. The hosts and ports below are prefilled and were verified from a live TLS connection."
+      "p": "In mcpemails choose IMAP / SMTP and enter the address exactly as Spark writes it, such as <code>joe.bloggs@xtra.co.nz</code>, with the password you use to sign in to Xtra webmail. The hosts and ports above are prefilled and were verified from a live TLS connection."
     },
     {
       "h": "Paste the MCP URL into your AI",

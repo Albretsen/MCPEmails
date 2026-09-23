@@ -38,7 +38,7 @@
     },
     {
       "h": "Enter the complete address in mcpemails",
-      "p": "Choose IMAP / SMTP and type the whole address, <code>name@free.fr</code>, in the username field. Free's own documentation says to give the complete address including the domain. The hosts and ports below are prefilled and were verified from a live TLS connection."
+      "p": "Choose IMAP / SMTP and type the whole address, <code>name@free.fr</code>, in the username field. Free's own documentation says to give the complete address including the domain. The hosts and ports above are prefilled and were verified from a live TLS connection."
     },
     {
       "h": "Paste the MCP URL into your AI",

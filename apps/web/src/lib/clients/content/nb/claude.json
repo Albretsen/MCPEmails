@@ -44,7 +44,7 @@
   ],
   "gotchas": [
     {
-      "h": "En kobling er ikke det samme som Claudes innebygde Gmail-kobling",
+      "h": "En egendefinert kobling er ikke det samme som Claudes innebygde Gmail-kobling",
       "p": "Anthropic leverer sin egen Google-kobling, og det er en annen vei: én leverandør, inne i én app. En egendefinert kobling peker i stedet Claude mot en MCP-server, og derfor dekker det samme oppsettet også iCloud, Fastmail, Zoho, Yandex og enhver IMAP-postkasse på jobben bak én enkelt URL, og derfor fungerer den samme URL-en i Cursor, ChatGPT og resten."
     },
     {

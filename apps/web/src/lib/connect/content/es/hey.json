@@ -23,7 +23,7 @@
     "answer": "No, y no por una función que nos falte a nosotros. HEY no acepta ninguna conexión IMAP, POP ni SMTP, ni en las direcciones hey.com ni en los dominios propios de HEY for Domains, así que mcpemails no puede conectar un buzón de HEY y ningún otro servidor MCP alojado tampoco. 37signals lo trata como una decisión de diseño y no como una carencia: el filtrado, las reglas por contacto y los hilos de HEY viven en sus servidores y solo sus propias aplicaciones hablan ese protocolo. Si quieres un agente dentro de HEY, 37signals ofrece hey-cli, que ejecuta un servidor MCP en local contra tu cuenta con la sesión iniciada. mcpemails es para los buzones IMAP que tengas además de ese, y ahí una bandeja es gratis.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Sin inicio de sesión IMAP, POP ni SMTP",
-    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+    "meta2": "hey-cli ofrece un servidor MCP local"
   },
   "method": {
     "title": "Cómo se conecta HEY: no se conecta, y ese es el producto",

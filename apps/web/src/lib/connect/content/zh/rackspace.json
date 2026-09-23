@@ -40,7 +40,7 @@
     },
     {
       "h": "粘贴到 mcpemails",
-      "p": "选择 IMAP / SMTP，填入你的 Rackspace Email 地址、下方的服务器地址和密码，安全连接收件箱。"
+      "p": "选择 IMAP / SMTP，填入你的 Rackspace Email 地址、上方的服务器地址和密码，安全连接收件箱。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",

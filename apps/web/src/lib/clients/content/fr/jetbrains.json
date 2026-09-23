@@ -12,7 +12,7 @@
     "eyebrow": "JetBrains + e-mail",
     "titleLine1": "Connectez votre boîte à JetBrains",
     "titleLine2": "AI Assistant",
-    "lead": "Ajoutez une vraie boîte à AI Assistant dans tout IDE JetBrains qui le prend en charge. Lisez, recherchez, envoyez, répondez, planifiez et organisez vos e-mails sans quitter l'IDE.",
+    "lead": "Ajoutez une vraie boîte à AI Assistant dans tout IDE JetBrains qui le prend en charge. Lisez, recherchez, envoyez, répondez, transférez, planifiez et organisez vos e-mails sans quitter l'IDE.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Clé API à portée limitée, révocable en un clic",
     "meta2": "E-mails récupérés en direct, jamais stockés",
@@ -62,7 +62,7 @@
   "faq": [
     {
       "q": "Comment connecter l'e-mail à JetBrains AI Assistant ?",
-      "a": "Ouvrez Settings, Tools, AI Assistant, Model Context Protocol, ajoutez un serveur avec le type de connexion Streamable HTTP, collez https://mcpemails.com/api/mcp et ajoutez un en-tête Authorization Bearer avec une clé API de votre tableau de bord. AI Assistant dispose alors d'outils pour lire, rechercher, envoyer, répondre, organiser et planifier des e-mails."
+      "a": "Ouvrez Settings, Tools, AI Assistant, Model Context Protocol, ajoutez un serveur avec le type de connexion Streamable HTTP, collez https://mcpemails.com/api/mcp et ajoutez un en-tête Authorization Bearer avec une clé API de votre tableau de bord. AI Assistant dispose alors d'outils pour lire, rechercher, envoyer, répondre, transférer, organiser et planifier des e-mails."
     },
     {
       "q": "Dans quels IDE JetBrains cela fonctionne-t-il ?",

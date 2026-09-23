@@ -43,7 +43,7 @@
       "p": "Avec un abonnement internet, Ziggo vous permet de créer jusqu'à six adresses e-mail ; un abonnement téléphone seul n'en donne qu'une. Si vous préférez ne pas confier votre adresse principale à un agent, créez-en une deuxième dans Mijn Ziggo et connectez-la à la place. Notez que l'adresse principale est liée à l'abonnement internet et disparaît si vous le résiliez."
     },
     {
-      "h": "Collez-le dans mcpemails, puis collez l'URL MCP dans votre IA",
+      "h": "Ajoutez la boîte dans mcpemails",
       "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple naam@ziggo.nl, et collez l'e-mailwachtwoord. Les serveurs et ports Ziggo sont préremplis, y compris le port de soumission STARTTLS, et ont été vérifiés par une connexion TLS réelle. Mettez ensuite https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
     }
   ],

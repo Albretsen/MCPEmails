@@ -43,7 +43,7 @@
       "p": "I laposte.net-webmailen åpner du <b>Paramètres</b> og deretter <b>Sécurité</b>. Der slås tofaktorautentisering av og på. La Postes egen dokumentasjon for tofaktorautentisering på laposte.net beskriver en push-bekreftelse til en paret mobilenhet og dokumenterer ingen mekanisme for applikasjonspassord til e-postprogrammer, så finn ut hvilken tilstand kontoen din er i før du feilsøker en avvist pålogging."
     },
     {
-      "h": "Lim det inn i mcpemails, og lim deretter MCP-URL-en inn i AI-en",
+      "h": "Legg til postkassen i mcpemails",
       "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel prenom.nom@laposte.net, og skriv inn passordet. Vertene og portene til La Poste er fylt inn på forhånd og ble verifisert fra en direkte TLS-tilkobling. Lim deretter https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
     }
   ],

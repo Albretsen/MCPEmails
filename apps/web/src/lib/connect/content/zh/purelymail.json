@@ -44,7 +44,7 @@
     },
     {
       "h": "如果该用户开启了两步验证，添加应用密码，然后连接",
-      "p": "如果该用户开启了多重身份验证，打开该用户，滚动到 <b>App Passwords</b>，点击 <b>Add New</b>，命名后复制该代码。Purelymail 只显示一次。然后在 mcpemails 中选择 IMAP / SMTP，输入完整地址和该密码。下方的服务器已自动填好。"
+      "p": "如果该用户开启了多重身份验证，打开该用户，滚动到 <b>App Passwords</b>，点击 <b>Add New</b>，命名后复制该代码。Purelymail 只显示一次。然后在 mcpemails 中选择 IMAP / SMTP，输入完整地址和该密码。上方的服务器已自动填好。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",

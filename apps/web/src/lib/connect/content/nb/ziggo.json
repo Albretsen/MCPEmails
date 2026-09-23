@@ -43,7 +43,7 @@
       "p": "Med et internettabonnement lar Ziggo deg opprette opptil seks e-postadresser; et abonnement med bare telefon får én. Vil du helst ikke gi en agent hovedadressen din, lager du en ekstra i Mijn Ziggo og kobler til den i stedet. Merk at hovedadressen er knyttet til internettabonnementet og faller bort hvis du sier det opp."
     },
     {
-      "h": "Lim det inn i mcpemails, og lim så MCP-URL-en inn i AI-en",
+      "h": "Legg til postkassen i mcpemails",
       "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel naam@ziggo.nl, og lim inn e-mailwachtwoord-et. Ziggo-vertene og -portene er forhåndsutfylt, inkludert STARTTLS-porten for innsending, og ble verifisert via en direkte TLS-tilkobling. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
     }
   ],

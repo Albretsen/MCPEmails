@@ -40,7 +40,7 @@
     },
     {
       "h": "Saisissez l'adresse cox.net et le mot de passe d'application",
-      "p": "Dans mcpemails, choisissez IMAP / SMTP, indiquez votre adresse cox.net complète dans le champ identifiant et collez le mot de passe d'application plutôt que le mot de passe de votre compte Cox. Les serveurs et ports ci-dessous sont préremplis et ont été vérifiés par une connexion TLS réelle."
+      "p": "Dans mcpemails, choisissez IMAP / SMTP, indiquez votre adresse cox.net complète dans le champ identifiant et collez le mot de passe d'application plutôt que le mot de passe de votre compte Cox. Les serveurs et ports ci-dessus sont préremplis et ont été vérifiés par une connexion TLS réelle."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",

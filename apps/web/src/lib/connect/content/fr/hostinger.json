@@ -27,7 +27,7 @@
   },
   "method": {
     "title": "Comment Hostinger se connecte : IMAP et le mot de passe de votre boîte",
-    "body": "Hostinger Email se connecte en IMAP/SMTP avec le mot de passe de boîte que vous définissez dans hPanel, sous Emails. Il n'y a ni mot de passe d'application ni étape OAuth. Les serveurs sont <code>imap.hostinger.com</code> et <code>smtp.hostinger.com</code> pour tous les domaines : il n'y a donc rien à chercher."
+    "body": "Hostinger Email se connecte en IMAP/SMTP avec le mot de passe de boîte que vous définissez dans hPanel, sous Emails. Il n'y a ni mot de passe d'application ni étape OAuth. Sur Hostinger Email, les serveurs sont <code>imap.hostinger.com</code> et <code>smtp.hostinger.com</code> pour tous les domaines. Les offres Business Email et Enterprise Email reposent sur Titan et utilisent d'autres serveurs, présentés plus bas."
   },
   "setup": [
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Collez-le dans mcpemails",
-      "p": "Choisissez IMAP / SMTP, ajoutez votre adresse Hostinger, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+      "p": "Choisissez IMAP / SMTP, ajoutez votre adresse Hostinger, les serveurs ci-dessus et le mot de passe pour connecter la boîte en toute sécurité."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",

@@ -44,7 +44,7 @@
       "p": "SFR permite al abonado crear direcciones y alias adicionales desde la misma pantalla de configuración del buzón, junto a la dirección principal que venía con la línea. Si prefieres no darle a un agente la dirección a la que te escribe todo el mundo, crea una segunda ahí y conecta esa. Usa los mismos servidores y puertos."
     },
     {
-      "h": "Pégala en mcpemails y luego pega la URL MCP en tu IA",
+      "h": "Añade el buzón en mcpemails",
       "p": "Elige IMAP / SMTP, escribe la dirección completa, como prenom.nom@sfr.fr, y pega la contraseña de SFR Mail. Los servidores y puertos de SFR vienen rellenados y se verificaron mediante una conexión TLS real. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
     }
   ],

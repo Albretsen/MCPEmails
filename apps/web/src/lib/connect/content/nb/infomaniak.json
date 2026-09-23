@@ -63,7 +63,7 @@
   ],
   "limits": [
     "Serveren annonserer ikke MOVE-utvidelsen, så å flytte en melding utføres som kopi, flagging og expunge i stedet for én atomisk kommando.",
-    "SPECIAL-USE mangler, så Sendt, Utkast, Papirkurv og Søppelpost matches på navn. I en fransk postkasse heter de vanligvis Envoyes, Brouillons, Corbeille og Indesirables."
+    "SPECIAL-USE mangler, så Sendt, Utkast, Papirkurv og Søppelpost matches på navn. I en fransk postkasse heter de vanligvis Messages envoyés, Brouillons, Corbeille og Spam."
   ],
   "faq": [
     {

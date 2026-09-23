@@ -44,7 +44,7 @@
     },
     {
       "h": "Añade una contraseña de aplicación si ese usuario tiene 2FA, y conecta",
-      "p": "Si la autenticación multifactor está activada para ese usuario, abre el usuario, baja hasta <b>App Passwords</b>, haz clic en <b>Add New</b>, ponle un nombre y copia el código. Purelymail lo muestra una sola vez. Ahora elige IMAP / SMTP en mcpemails e introduce la dirección completa y esa contraseña. Los servidores de abajo ya vienen rellenados."
+      "p": "Si la autenticación multifactor está activada para ese usuario, abre el usuario, baja hasta <b>App Passwords</b>, haz clic en <b>Add New</b>, ponle un nombre y copia el código. Purelymail lo muestra una sola vez. Ahora elige IMAP / SMTP en mcpemails e introduce la dirección completa y esa contraseña. Los servidores de arriba ya vienen rellenados."
     },
     {
       "h": "Pega la URL MCP en tu IA",

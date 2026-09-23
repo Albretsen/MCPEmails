@@ -44,7 +44,7 @@
       "p": "En kontoadministrator kan opprette opptil ti Telenet-postkasser, en vanlig bruker én. Vil du helst ikke gi en agent adressen du har brukt i femten år, oppretter du en ekstra postkasse på samme konto og kobler til den i stedet. Det er samme vert, samme porter og et passord du kan bytte uten å forstyrre noe annet."
     },
     {
-      "h": "Lim det inn i mcpemails, og lim så MCP-URL-en inn i AI-en",
+      "h": "Legg til postkassen i mcpemails",
       "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel naam@telenet.be, og lim inn postkassepassordet. Telenet-vertene og -portene er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
     }
   ],

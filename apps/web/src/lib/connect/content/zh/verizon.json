@@ -40,7 +40,7 @@
     },
     {
       "h": "在 Account Security 下生成 AOL 应用密码",
-      "p": "打开 Account Info，然后是 <b>Account Security</b>。如果两步验证未开启，请先开启，然后生成一个应用密码，命名为 <code>mcpemails</code> 之类的名称。AOL 只显示一次。把它连同完整的 verizon.net 地址一起粘贴到 mcpemails；下方的 AOL 服务器已自动填好。"
+      "p": "打开 Account Info，然后是 <b>Account Security</b>。如果两步验证未开启，请先开启，然后生成一个应用密码，命名为 <code>mcpemails</code> 之类的名称。AOL 只显示一次。把它连同完整的 verizon.net 地址一起粘贴到 mcpemails；上方的 AOL 服务器已自动填好。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",

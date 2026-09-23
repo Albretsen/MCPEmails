@@ -39,7 +39,7 @@
     },
     {
       "h": "输入完整地址和该密码",
-      "p": "在 mcpemails 中选择 IMAP / SMTP，按原样输入地址，包括 <code>name@mindspring.com</code> 这样的形式。下方的 EarthLink 服务器和端口已预填，并经实时 TLS 连接验证，包括端口 587 上单独的发信服务器。"
+      "p": "在 mcpemails 中选择 IMAP / SMTP，按原样输入地址，包括 <code>name@mindspring.com</code> 这样的形式。上方的 EarthLink 服务器和端口已预填，并经实时 TLS 连接验证，包括端口 587 上单独的发信服务器。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
@@ -48,8 +48,8 @@
   ],
   "gotchas": [
     {
-      "h": "EarthLink 不声明任何可用的 SASL 机制，严格的客户端会直接放弃登录",
-      "p": "EarthLink 在登录前返回的能力列表提供 <code>AUTH=CRAM-MD5</code>、<code>AUTH=EL-TAC</code> 和 <code>AUTH=EL-VOICE</code>。后两者是 EarthLink 自己的机制，没有任何普通邮件客户端实现它们。列表中根本没有 <code>AUTH=PLAIN</code>，也没有 <code>AUTH=LOGIN</code>。因此，按服务器声明来选择 SASL 机制的客户端找不到可用的机制，在根本没发送密码的情况下就报告认证失败。真正可行的是普通的 IMAP <code>LOGIN</code> 命令，服务器会接受它，因为它没有声明 LOGINDISABLED。mcpemails 会退回使用这个命令。这是本页最有用的一条信息，其他任何 EarthLink 设置指南都没有提到。"
+      "h": "EarthLink 既不声明 PLAIN 也不声明 LOGIN，严格的客户端会直接放弃登录",
+      "p": "EarthLink 在登录前返回的能力列表提供 <code>AUTH=CRAM-MD5</code>、<code>AUTH=EL-TAC</code> 和 <code>AUTH=EL-VOICE</code>。后两者是 EarthLink 自己的机制，没有任何普通邮件客户端实现它们。CRAM-MD5 是标准机制，但并非所有客户端都实现了它，而列表中根本没有 <code>AUTH=PLAIN</code>，也没有 <code>AUTH=LOGIN</code>。因此，只支持 PLAIN 或 LOGIN、并按服务器声明来选择机制的客户端找不到可用的机制，在根本没发送密码的情况下就报告认证失败。mcpemails 不使用 CRAM-MD5，也不从声明的列表中选择：无论服务器声明什么，它始终用 <code>AUTHENTICATE PLAIN</code> 登录。"
     },
     {
       "h": "发信服务器不是 imap 或 smtp.earthlink.net",
@@ -84,7 +84,7 @@
     },
     {
       "q": "EarthLink 需要应用专用密码吗？",
-      "a": "不需要。EarthLink 不签发应用专用密码，也没有创建它的页面。邮件客户端使用该邮箱的密码登录。如果正确的密码仍被拒绝，原因通常是认证机制而不是凭据，因为 EarthLink 在登录前不声明任何标准 SASL 机制。"
+      "a": "不需要。EarthLink 不签发应用专用密码，也没有创建它的页面。邮件客户端使用该邮箱的密码登录。如果正确的密码仍被拒绝，原因可能是认证机制而不是凭据：EarthLink 在登录前只声明 CRAM-MD5 和两个自有机制，没有 PLAIN 或 LOGIN。"
     },
     {
       "q": "我的 EarthLink 邮件会存储在你们的服务器上吗？",

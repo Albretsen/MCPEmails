@@ -85,7 +85,7 @@
     },
     {
       "q": "¿Funciona con una dirección de Foxmail?",
-      "a": "Sí. Una dirección @foxmail.com es un alias de Tencent en el mismo buzón que tu dirección @qq.com. Usa los mismos servidores, el mismo código de autorización y la misma configuración. Puedes enviar desde cualquiera de las dos direcciones una vez conectado el buzón."
+      "a": "Sí. Una dirección @foxmail.com es un alias de Tencent en el mismo buzón que tu dirección @qq.com. Usa los mismos servidores, el mismo código de autorización y la misma configuración. Conecta el buzón una sola vez, no una vez por dirección."
     },
     {
       "q": "¿Se almacena mi correo de QQ en sus servidores?",

@@ -43,7 +43,7 @@
       "p": "En el webmail de laposte.net, abre <b>Paramètres</b>, luego <b>Sécurité</b>. Ahí se activa y desactiva la autenticación en dos factores. La documentación de La Poste sobre la autenticación en dos factores de laposte.net describe una confirmación push en un dispositivo móvil vinculado y no documenta ningún mecanismo de contraseñas de aplicación para programas de correo, así que ten claro en qué estado está tu cuenta antes de investigar un inicio de sesión rechazado."
     },
     {
-      "h": "Pégala en mcpemails y luego pega la URL MCP en tu IA",
+      "h": "Añade el buzón en mcpemails",
       "p": "Elige IMAP / SMTP, introduce la dirección completa, como prenom.nom@laposte.net, y la contraseña. Los servidores y puertos de La Poste ya vienen rellenados y se verificaron con una conexión TLS real. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
     }
   ],

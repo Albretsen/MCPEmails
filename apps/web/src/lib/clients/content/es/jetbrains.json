@@ -12,7 +12,7 @@
     "eyebrow": "JetBrains + correo",
     "titleLine1": "Conecta tu bandeja a JetBrains",
     "titleLine2": "AI Assistant",
-    "lead": "Añade un buzón real a AI Assistant en cualquier IDE de JetBrains que lo admita. Lee, busca, envía, responde, programa y organiza correo sin salir del IDE.",
+    "lead": "Añade un buzón real a AI Assistant en cualquier IDE de JetBrains que lo admita. Lee, busca, envía, responde, reenvía, programa y organiza correo sin salir del IDE.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Clave de API con permisos limitados, revocable con un clic",
     "meta2": "Correo obtenido en vivo, nunca almacenado",
@@ -62,7 +62,7 @@
   "faq": [
     {
       "q": "¿Cómo conecto el correo a JetBrains AI Assistant?",
-      "a": "Abre Settings, Tools, AI Assistant, Model Context Protocol, añade un servidor con el tipo de conexión Streamable HTTP, pega https://mcpemails.com/api/mcp y añade un encabezado Authorization Bearer con una clave de API de tu panel. A partir de ahí AI Assistant tiene herramientas para leer, buscar, enviar, responder, organizar y programar correo."
+      "a": "Abre Settings, Tools, AI Assistant, Model Context Protocol, añade un servidor con el tipo de conexión Streamable HTTP, pega https://mcpemails.com/api/mcp y añade un encabezado Authorization Bearer con una clave de API de tu panel. A partir de ahí AI Assistant tiene herramientas para leer, buscar, enviar, responder, reenviar, organizar y programar correo."
     },
     {
       "q": "¿En qué IDE de JetBrains funciona?",

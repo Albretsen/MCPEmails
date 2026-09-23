@@ -44,7 +44,7 @@
       "p": "SFR permet à un abonné de créer des adresses et alias supplémentaires depuis le même écran de configuration des boîtes, en plus de l'adresse principale fournie avec la ligne. Si vous préférez ne pas confier à un agent l'adresse à laquelle tous vos contacts écrivent, créez-en une seconde et connectez-la. Les serveurs et ports sont les mêmes."
     },
     {
-      "h": "Collez-le dans mcpemails, puis collez l'URL MCP dans votre IA",
+      "h": "Ajoutez la boîte dans mcpemails",
       "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple prenom.nom@sfr.fr, et collez le mot de passe SFR Mail. Les serveurs et ports SFR sont préremplis et ont été vérifiés via une connexion TLS réelle. Mettez ensuite https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
     }
   ],

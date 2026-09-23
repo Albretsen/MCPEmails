@@ -91,7 +91,7 @@
     },
     {
       "q": "¿El almacenamiento cifrado del correo de Posteo impide que mi IA lea mi correo?",
-      "a": "No. El almacenamiento cifrado del correo cifra tu buzón en reposo del lado de Posteo y se descifra de forma transparente cuando te autenticas, así que IMAP se comporta con normalidad y un agente lee tu correo como siempre. La función que sí hace que el correo sea ilegible para un cliente es el cifrado entrante, que cifra con PGP o S/MIME cada mensaje nuevo con tu propia clave pública."
+      "a": "No. El almacenamiento cifrado del correo cifra tu buzón en reposo del lado de Posteo y se descifra de forma transparente cuando te autenticas, así que IMAP se comporta con normalidad y un agente lee tu correo como siempre. La función que sí hace que el correo sea ilegible para un cliente es el cifrado entrante, que cifra cada mensaje nuevo que llega con tu propia clave pública PGP o S/MIME."
     },
     {
       "q": "¿Se almacena mi correo de Posteo en sus servidores?",

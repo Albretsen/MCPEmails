@@ -39,7 +39,7 @@
     },
     {
       "h": "Lag et app-passord under External connections",
-      "p": "På sikkerhetssiden for Yahoo-kontoen finner du <b>External connections</b> og velger <b>Create app password</b>. Kall det <code>mcpemails</code>, kopier koden som vises, og lim den inn i mcpemails sammen med hele frontier.com-adressen din. Frontier-vertene nedenfor er forhåndsutfylt."
+      "p": "På sikkerhetssiden for Yahoo-kontoen finner du <b>External connections</b> og velger <b>Create app password</b>. Kall det <code>mcpemails</code>, kopier koden som vises, og lim den inn i mcpemails sammen med hele frontier.com-adressen din. Frontier-vertene ovenfor er forhåndsutfylt."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",

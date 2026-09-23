@@ -41,7 +41,7 @@
     },
     {
       "h": "输入 rogers.com 地址和应用密码",
-      "p": "在 mcpemails 中选择 IMAP / SMTP，在用户名栏填写完整的 rogers.com 地址，粘贴应用密码。不要使用 Rogers Yahoo 网页邮箱密码，它会在 IMAP 层被拒绝。下方的服务器和端口已自动填好，并已通过实时 TLS 连接验证。"
+      "p": "在 mcpemails 中选择 IMAP / SMTP，在用户名栏填写完整的 rogers.com 地址，粘贴应用密码。不要使用 Rogers Yahoo 网页邮箱密码，它会在 IMAP 层被拒绝。上方的服务器和端口已自动填好，并已通过实时 TLS 连接验证。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",

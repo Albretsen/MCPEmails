@@ -23,7 +23,7 @@
     "answer": "No, and not because of a missing feature on our side. HEY accepts no IMAP, POP or SMTP connections at all, on hey.com addresses and on HEY for Domains custom domains alike, so mcpemails cannot connect a HEY mailbox and neither can any other hosted MCP server. 37signals treats this as a design decision rather than a gap: screening, contact-level rules and HEY's threading live on its servers and only its own apps speak that protocol. If you want an agent inside HEY, 37signals ships hey-cli, which runs an MCP server locally against your signed-in account. mcpemails is for the IMAP mailboxes you keep alongside it, and one inbox there is free.",
     "meta0": "1 inbox free, forever",
     "meta1": "No IMAP, POP or SMTP login",
-    "meta2": "Email fetched live, never stored"
+    "meta2": "hey-cli offers a local MCP server"
   },
   "method": {
     "title": "How HEY connects: it does not, and that is the product",

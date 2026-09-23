@@ -43,7 +43,7 @@
       "p": "<b>planet.nl</b>、<b>hetnet.nl</b> 或 <b>xs4all.nl</b> 地址并没有自己的服务器。所有 KPN 邮箱域名都通过 <code>imap.kpnmail.nl</code> 和 <code>smtp.kpnmail.nl</code> 认证。没有需要按域名查找的东西，而用猜出来的 <code>imap.planet.nl</code> 配置客户端，是最常见的卡壳方式。"
     },
     {
-      "h": "粘贴到 mcpemails，再把 MCP URL 粘贴到你的 AI",
+      "h": "在 mcpemails 中添加邮箱",
       "p": "选择 IMAP / SMTP，输入完整地址和邮箱密码。KPN 的服务器地址和端口已预填，并经实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],

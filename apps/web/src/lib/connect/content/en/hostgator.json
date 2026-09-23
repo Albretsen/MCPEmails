@@ -27,7 +27,7 @@
   },
   "method": {
     "title": "How HostGator mail connects: the server hostname, IMAP 993",
-    "body": "HostGator runs cPanel, and mailboxes speak IMAP on port 993 with SMTP on 465 for secure connections, or 143 and 25 or 587 unencrypted. The part people get wrong is the hostname. <code>mail.yourdomain.com</code> works for an unencrypted session, but HostGator secures mail with <b>wildcard</b> certificates covering <code>.hostgator.com</code> on shared and cloud accounts and <code>.websitewelcome.com</code> on reseller accounts. Your own domain is not on either certificate. So for TLS you use the server's own hostname, in the form <code>gator1234.hostgator.com</code> or <code>servername.websitewelcome.com</code>. HostGator's own SSL article says exactly this, and recommends updating the settings rather than suppressing the warning. The username is always the full email address."
+    "body": "HostGator runs cPanel, and mailboxes speak IMAP on port 993 with SMTP on 465 for secure connections, or 143 for IMAP and 25 or 26 for SMTP without encryption. The part people get wrong is the hostname. <code>mail.yourdomain.com</code> works for an unencrypted session, but HostGator secures mail with <b>wildcard</b> certificates covering <code>.hostgator.com</code> on shared and cloud accounts and <code>.websitewelcome.com</code> on reseller accounts. Your own domain is not on either certificate. So for TLS you use the server's own hostname, in the form <code>gator1234.hostgator.com</code> or <code>servername.websitewelcome.com</code>. HostGator's own SSL article says exactly this, and recommends updating the settings rather than suppressing the warning. The username is always the full email address."
   },
   "setup": [
     {

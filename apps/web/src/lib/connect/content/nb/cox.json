@@ -40,7 +40,7 @@
     },
     {
       "h": "Skriv inn cox.net-adressen og app-passordet",
-      "p": "Velg IMAP / SMTP i mcpemails, skriv hele cox.net-adressen i brukernavnfeltet og lim inn app-passordet i stedet for passordet til Cox-kontoen. Vertene og portene nedenfor er forhåndsutfylt og ble bekreftet via en faktisk TLS-tilkobling."
+      "p": "Velg IMAP / SMTP i mcpemails, skriv hele cox.net-adressen i brukernavnfeltet og lim inn app-passordet i stedet for passordet til Cox-kontoen. Vertene og portene ovenfor er forhåndsutfylt og ble bekreftet via en faktisk TLS-tilkobling."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",

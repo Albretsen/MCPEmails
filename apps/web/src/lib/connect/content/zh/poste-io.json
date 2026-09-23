@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Poste.io 接入 Claude：容器中的 Dovecot IMAP",
-    "description": "通过 993 端口的 IMAP 将 Poste.io 邮箱连接到 Claude、Cursor 和 ChatGPT。容器主机名就是你的邮件主机，以及反向代理为何会掩盖错误的证书。"
+    "description": "通过 993 端口的 IMAP 将 Poste.io 邮箱连接到 Claude、Cursor 和 ChatGPT。容器主机名就是你的邮件主机，而反向代理可能会掩盖错误的证书。"
   },
   "hero": {
     "eyebrow": "Poste.io + AI",

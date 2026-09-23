@@ -40,7 +40,7 @@
     },
     {
       "h": "Générez un mot de passe d'application AOL sous Account Security",
-      "p": "Ouvrez Account Info, puis <b>Account Security</b>. Activez la validation en deux étapes si elle est désactivée, puis générez un mot de passe d'application et donnez-lui un nom, par exemple <code>mcpemails</code>. AOL ne l'affiche qu'une fois. Collez-le dans mcpemails avec l'adresse verizon.net complète ; les serveurs AOL ci-dessous sont préremplis."
+      "p": "Ouvrez Account Info, puis <b>Account Security</b>. Activez la validation en deux étapes si elle est désactivée, puis générez un mot de passe d'application et donnez-lui un nom, par exemple <code>mcpemails</code>. AOL ne l'affiche qu'une fois. Collez-le dans mcpemails avec l'adresse verizon.net complète ; les serveurs AOL ci-dessus sont préremplis."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",

@@ -43,7 +43,7 @@
       "p": "Interia's two-step login (<b>logowanie dwuetapowe</b>) and mail programs are mutually exclusive. Interia says so on the screen where you enable it: with two-step login on, the account cannot be used in a mail program. Interia issues no app password to work around it, so if the mailbox has it enabled you have a choice to make before you go further."
     },
     {
-      "h": "Paste it into mcpemails, then paste the MCP URL into your AI",
+      "h": "Add the mailbox in mcpemails",
       "p": "Choose IMAP / SMTP, enter the full address such as nazwa@interia.pl, and enter your Interia password. The hosts and ports are prefilled and were verified from a live TLS connection. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
     }
   ],

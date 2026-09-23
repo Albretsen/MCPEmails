@@ -27,7 +27,7 @@
   },
   "method": {
     "title": "Comment Mail-in-a-Box se connecte : le nom d'hôte de la box, pas votre domaine",
-    "body": "Mail-in-a-Box installe Postfix, Dovecot, Nginx et un petit panneau d'administration sur une seule machine Ubuntu : le comportement IMAP sous-jacent est donc du Dovecot standard. Là où l'on se trompe, c'est sur le nom d'hôte. Le guide d'installation recommande de nommer la box <code>box</code> suivi d'un point et de votre nom de domaine, soit <code>box.yourdomain.com</code>, et c'est ce nom qui figure sur le certificat et que vos logiciels de messagerie doivent utiliser. Votre domaine nu est l'endroit où le courrier est adressé, pas celui où les clients se connectent. La liste documentée des ports à ouvrir est 22, 25, 53 en TCP et UDP, 80, 443, 465 pour la soumission, 993 pour l'IMAP, 995 pour le POP et 4190 pour Sieve. Les identifiants sont le mot de passe propre à l'utilisateur mail, défini sous Mail puis Users dans le panneau ; le compte administrateur du panneau est lui-même un utilisateur mail, il a donc bien une boîte."
+    "body": "Mail-in-a-Box installe Postfix, Dovecot, Nginx et un petit panneau d'administration sur une seule machine Ubuntu : le comportement IMAP sous-jacent est donc du Dovecot standard. Là où l'on se trompe, c'est sur le nom d'hôte. Le guide d'installation recommande de nommer la box <code>box</code> suivi d'un point et de votre nom de domaine, soit <code>box.yourdomain.com</code>, et c'est ce nom qui figure sur le certificat et que vos logiciels de messagerie doivent utiliser. Votre domaine nu est l'endroit où le courrier est adressé, pas celui où les clients se connectent. La liste documentée des ports à ouvrir est 22, 25, 53 en TCP et UDP, 80, 443, 465 pour la soumission, 993 pour l'IMAP, 995 pour le POP et 4190 pour Sieve. Les identifiants sont le mot de passe propre à l'utilisateur mail, défini sous Mail puis Users dans le panneau ; l'administrateur du panneau est simplement un utilisateur mail doté des droits d'administration, il a donc une boîte et se connecte comme n'importe quel autre utilisateur."
   },
   "setup": [
     {
@@ -58,7 +58,7 @@
     },
     {
       "h": "La box ne peut pas partager son nom avec un site web hébergé ailleurs",
-      "p": "Le guide dit sans détour que le nom de la box ne peut pas être un domaine sur lequel vous comptez servir un site web depuis un autre hébergeur, car la box veut répondre sur 80 et 443 pour ses propres renouvellements de certificat et son panneau d'administration. Les administrateurs qui font pointer <code>mail.yourdomain.com</code> vers un CDN ou un reverse proxy cassent le renouvellement Let's Encrypt sans rien casser de visible, et le certificat IMAP expire discrètement quelques semaines plus tard."
+      "p": "Le guide dit sans détour que le nom de la box ne peut pas être un domaine sur lequel vous comptez servir un site web depuis un autre hébergeur, car la box veut répondre sur 80 et 443 pour ses propres renouvellements de certificat et son panneau d'administration. Les administrateurs qui font pointer <code>box.yourdomain.com</code> vers un CDN ou un reverse proxy cassent le renouvellement Let's Encrypt sans rien casser de visible, et le certificat IMAP expire discrètement quelques semaines plus tard."
     }
   ],
   "limits": [

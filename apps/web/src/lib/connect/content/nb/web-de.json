@@ -29,7 +29,7 @@
   },
   "method": {
     "title": "Slik kobler WEB.DE seg til: IMAP og kontopassordet ditt",
-    "body": "WEB.DE kobles til via IMAP/SMTP, men <b>POP3- og IMAP-tilgang er slått av som standard</b>. Slå det på i WEB.DE under E-mail settings, POP3/IMAP retrieval, og koble så til med WEB.DE-adressen og passordet ditt. WEB.DE svarer på begge standard utgående transporter, implisitt TLS på port 465 og STARTTLS på port 587, så porten er nesten aldri grunnen til at en sending feiler. mcpemails bruker 465-paret under og faller tilbake til det andre av seg selv."
+    "body": "WEB.DE kobles til via IMAP/SMTP, men <b>POP3- og IMAP-tilgang er slått av som standard</b>. Slå det på i WEB.DE under E-Mail-Einstellungen (e-postinnstillinger), E-Mail empfangen, POP3/IMAP, og koble så til med WEB.DE-adressen og passordet ditt. WEB.DE svarer på begge standard utgående transporter, implisitt TLS på port 465 og STARTTLS på port 587, så porten er nesten aldri grunnen til at en sending feiler. mcpemails bruker 465-paret under og faller tilbake til det andre av seg selv."
   },
   "setup": [
     {
@@ -38,11 +38,11 @@
     },
     {
       "h": "Slå på IMAP-tilgang i WEB.DE",
-      "p": "I WEB.DE åpner du E-mail settings, POP3/IMAP retrieval, og tillater POP3- og IMAP-tilgang."
+      "p": "I WEB.DE åpner du E-Mail-Einstellungen (e-postinnstillinger), velger POP3/IMAP under E-Mail empfangen og setter glidebryteren på POP3- und IMAP-Zugriff erlauben (tillat POP3- og IMAP-tilgang)."
     },
     {
-      "h": "Lim det inn i mcpemails",
-      "p": "Velg IMAP / SMTP, legg til WEB.DE-adressen din, vertene under og passordet for å koble til innboksen trygt."
+      "h": "Legg til postkassen i mcpemails",
+      "p": "Velg IMAP / SMTP, legg til WEB.DE-adressen din, vertene over og passordet for å koble til innboksen trygt."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
@@ -60,7 +60,7 @@
     },
     {
       "h": "Å slå på tofaktorautentisering pensjonerer passordet ditt for e-postklienter",
-      "p": "WEB.DEs tofaktorautentisering beskytter webinnloggingen, og når den er på, slutter det vanlige WEB.DE-passordet ditt å virke i alt som snakker IMAP eller SMTP. Du trenger da et <b>anwendungsspezifisches Passwort</b>, generert i postkassen under Account verwalten, så Login & Sicherheit, så Anwendungsspezifische Passwörter. Opprett ett for e-post, lim det inn i mcpemails i stedet for det vanlige passordet, og la det vanlige passordet være for nettsiden. Uten 2FA er kontopassordet den riktige påloggingen, og det finnes ikke noe app-passord å opprette."
+      "p": "WEB.DEs tofaktorautentisering beskytter webinnloggingen, og når den er på, slutter det vanlige WEB.DE-passordet ditt å virke i alt som snakker IMAP eller SMTP. Du trenger da et <b>anwendungsspezifisches Passwort</b>, generert i postkassen under Account verwalten, så Login & Sicherheit, så Anwendungsspezifische Passwörter verwalten. Opprett ett for e-post, lim det inn i mcpemails i stedet for det vanlige passordet, og la det vanlige passordet være for nettsiden. Uten 2FA er kontopassordet den riktige påloggingen, og det finnes ikke noe app-passord å opprette."
     },
     {
       "h": "Begge SMTP-transportene svarer, så en sendefeil skyldes sjelden porten",
@@ -91,7 +91,7 @@
     },
     {
       "q": "Trenger WEB.DE et app-passord?",
-      "a": "Bare hvis du har tofaktorautentisering slått på. Med 2FA av autentiserer det vanlige WEB.DE-passordet e-postklienter når henting er slått på. Med 2FA på genererer du et programspesifikt passord under Account verwalten, Login und Sicherheit, Anwendungsspezifische Passwörter, og bruker det i mcpemails."
+      "a": "Bare hvis du har tofaktorautentisering slått på. Med 2FA av autentiserer det vanlige WEB.DE-passordet e-postklienter når henting er slått på. Med 2FA på genererer du et programspesifikt passord under Account verwalten, Login & Sicherheit, Anwendungsspezifische Passwörter verwalten, og bruker det i mcpemails."
     },
     {
       "q": "Lagres WEB.DE-e-posten min på serverne deres?",

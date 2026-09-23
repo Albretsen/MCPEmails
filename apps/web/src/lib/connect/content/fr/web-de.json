@@ -29,7 +29,7 @@
   },
   "method": {
     "title": "Comment WEB.DE se connecte : IMAP et le mot de passe de votre compte",
-    "body": "WEB.DE se connecte en IMAP/SMTP, mais <b>l'accès POP3 et IMAP est désactivé par défaut</b>. Activez-le dans WEB.DE sous E-mail settings, POP3/IMAP retrieval (réglages e-mail, récupération POP3/IMAP), puis connectez-vous avec votre adresse et votre mot de passe WEB.DE. WEB.DE répond sur les deux transports sortants standard, TLS implicite sur le port 465 et STARTTLS sur le port 587 : le port n'est donc presque jamais la raison d'un échec d'envoi. mcpemails utilise la paire en 465 ci-dessous et bascule seul sur l'autre si besoin."
+    "body": "WEB.DE se connecte en IMAP/SMTP, mais <b>l'accès POP3 et IMAP est désactivé par défaut</b>. Activez-le dans WEB.DE sous E-Mail-Einstellungen (réglages e-mail), E-Mail empfangen (réception), POP3/IMAP, puis connectez-vous avec votre adresse et votre mot de passe WEB.DE. WEB.DE répond sur les deux transports sortants standard, TLS implicite sur le port 465 et STARTTLS sur le port 587 : le port n'est donc presque jamais la raison d'un échec d'envoi. mcpemails utilise la paire en 465 ci-dessous et bascule seul sur l'autre si besoin."
   },
   "setup": [
     {
@@ -38,11 +38,11 @@
     },
     {
       "h": "Activez l'accès IMAP dans WEB.DE",
-      "p": "Dans WEB.DE, ouvrez E-mail settings, POP3/IMAP retrieval, et autorisez l'accès POP3 et IMAP."
+      "p": "Dans WEB.DE, ouvrez E-Mail-Einstellungen (réglages e-mail), choisissez POP3/IMAP sous E-Mail empfangen, et placez le curseur sur POP3- und IMAP-Zugriff erlauben (autoriser l'accès POP3 et IMAP)."
     },
     {
-      "h": "Collez-le dans mcpemails",
-      "p": "Choisissez IMAP / SMTP, ajoutez votre adresse WEB.DE, les serveurs ci-dessous et le mot de passe pour connecter la boîte de façon sécurisée."
+      "h": "Ajoutez la boîte dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, ajoutez votre adresse WEB.DE, les serveurs ci-dessus et le mot de passe pour connecter la boîte de façon sécurisée."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -60,7 +60,7 @@
     },
     {
       "h": "Activer l'authentification à deux facteurs met votre mot de passe hors service pour les clients de messagerie",
-      "p": "L'authentification à deux facteurs de WEB.DE protège la connexion web, et une fois activée, votre mot de passe WEB.DE habituel cesse de fonctionner dans tout ce qui parle IMAP ou SMTP. Il vous faut alors un <b>anwendungsspezifisches Passwort</b> (mot de passe d'application), généré dans la boîte sous Account verwalten, puis Login & Sicherheit, puis Anwendungsspezifische Passwörter. Créez-en un pour le courrier, collez-le dans mcpemails à la place de votre mot de passe habituel, et gardez ce dernier pour le site web. Sans 2FA, le mot de passe du compte est le bon identifiant et il n'y a pas de mot de passe d'application à créer."
+      "p": "L'authentification à deux facteurs de WEB.DE protège la connexion web, et une fois activée, votre mot de passe WEB.DE habituel cesse de fonctionner dans tout ce qui parle IMAP ou SMTP. Il vous faut alors un <b>anwendungsspezifisches Passwort</b> (mot de passe d'application), généré dans la boîte sous Account verwalten, puis Login & Sicherheit, puis Anwendungsspezifische Passwörter verwalten. Créez-en un pour le courrier, collez-le dans mcpemails à la place de votre mot de passe habituel, et gardez ce dernier pour le site web. Sans 2FA, le mot de passe du compte est le bon identifiant et il n'y a pas de mot de passe d'application à créer."
     },
     {
       "h": "Les deux transports SMTP répondent, donc un échec d'envoi vient rarement du port",
@@ -91,7 +91,7 @@
     },
     {
       "q": "WEB.DE a-t-il besoin d'un mot de passe d'application ?",
-      "a": "Seulement si l'authentification à deux facteurs est activée. Sans 2FA, votre mot de passe WEB.DE habituel authentifie les clients de messagerie une fois la récupération activée. Avec la 2FA, générez un mot de passe d'application sous Account verwalten, Login und Sicherheit, Anwendungsspezifische Passwörter, et utilisez-le dans mcpemails."
+      "a": "Seulement si l'authentification à deux facteurs est activée. Sans 2FA, votre mot de passe WEB.DE habituel authentifie les clients de messagerie une fois la récupération activée. Avec la 2FA, générez un mot de passe d'application sous Account verwalten, Login & Sicherheit, Anwendungsspezifische Passwörter verwalten, et utilisez-le dans mcpemails."
     },
     {
       "q": "Mon courrier WEB.DE est-il stocké sur vos serveurs ?",

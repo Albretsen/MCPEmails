@@ -39,7 +39,7 @@
     },
     {
       "h": "Introduce la dirección completa y la contraseña del correo",
-      "p": "En mcpemails elige IMAP / SMTP y escribe la dirección completa en el campo de usuario, con el formato de la propia Optus, <code>username@optusnet.com.au</code>. Usa la contraseña de ese buzón. El servidor y los puertos de abajo ya vienen rellenados y se verificaron con una conexión TLS en vivo."
+      "p": "En mcpemails elige IMAP / SMTP y escribe la dirección completa en el campo de usuario, con el formato de la propia Optus, <code>username@optusnet.com.au</code>. Usa la contraseña de ese buzón. El servidor y los puertos de arriba ya vienen rellenados y se verificaron con una conexión TLS en vivo."
     },
     {
       "h": "Pega la URL MCP en tu IA",

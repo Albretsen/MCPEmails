@@ -91,7 +91,7 @@
     },
     {
       "q": "Le stockage chiffré de Posteo empêche-t-il mon IA de lire mon courrier ?",
-      "a": "Non. Le stockage chiffré chiffre votre boîte au repos du côté de Posteo et se déchiffre de façon transparente quand vous vous authentifiez : l'IMAP se comporte normalement et un agent lit votre courrier comme d'habitude. La fonction qui rend réellement le courrier illisible pour un client est le chiffrement entrant, qui chiffre chaque nouveau message en PGP ou S/MIME avec votre propre clé publique."
+      "a": "Non. Le stockage chiffré chiffre votre boîte au repos du côté de Posteo et se déchiffre de façon transparente quand vous vous authentifiez : l'IMAP se comporte normalement et un agent lit votre courrier comme d'habitude. La fonction qui rend réellement le courrier illisible pour un client est le chiffrement entrant, qui chiffre chaque nouveau message reçu avec votre propre clé publique PGP ou S/MIME."
     },
     {
       "q": "Mon courrier Posteo est-il stocké sur vos serveurs ?",

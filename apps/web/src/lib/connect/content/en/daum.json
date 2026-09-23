@@ -90,7 +90,7 @@
     },
     {
       "q": "Do hanmail.net addresses use the same settings?",
-      "a": "Yes. Hanmail was Daum's original mail domain and both it and daum.net point at the same mailbox on the same servers, with the same IMAP switch and the same Kakao app password. Connect the mailbox once, using whichever address form your account carries, and both work for sending."
+      "a": "Yes. Hanmail was Daum's original mail domain and both it and daum.net point at the same mailbox on the same servers, with the same IMAP switch and the same Kakao app password. Connect the mailbox once, using whichever address form your account carries."
     },
     {
       "q": "Is my Daum mail stored on your servers?",

@@ -40,7 +40,7 @@
     },
     {
       "h": "Generer et AOL-app-passord under Account Security",
-      "p": "Åpne Account Info, så <b>Account Security</b>. Slå på totrinnsbekreftelse hvis den er av, generer så et app-passord og gi det et navn som <code>mcpemails</code>. AOL viser det én gang. Lim det inn i mcpemails sammen med hele verizon.net-adressen; AOL-vertene under er forhåndsutfylt."
+      "p": "Åpne Account Info, så <b>Account Security</b>. Slå på totrinnsbekreftelse hvis den er av, generer så et app-passord og gi det et navn som <code>mcpemails</code>. AOL viser det én gang. Lim det inn i mcpemails sammen med hele verizon.net-adressen; AOL-vertene over er forhåndsutfylt."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",

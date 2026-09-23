@@ -43,7 +43,7 @@
       "p": "Con una suscripción a internet, Ziggo te permite crear hasta seis direcciones de correo; una suscripción solo de teléfono tiene una. Si prefieres no darle a un agente tu dirección principal, crea una segunda en Mijn Ziggo y conecta esa. Ten en cuenta que la dirección principal está ligada a la suscripción a internet y caduca si la cancelas."
     },
     {
-      "h": "Introdúcela en mcpemails y pega la URL MCP en tu IA",
+      "h": "Añade el buzón en mcpemails",
       "p": "Elige IMAP / SMTP, introduce la dirección completa, por ejemplo naam@ziggo.nl, y pega el e-mailwachtwoord. Los servidores y puertos de Ziggo ya vienen rellenados, incluido el puerto de envío con STARTTLS, y se verificaron con una conexión TLS real. Luego pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
     }
   ],

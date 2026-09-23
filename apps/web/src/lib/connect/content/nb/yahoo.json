@@ -26,7 +26,7 @@
   },
   "method": {
     "title": "Slik kobler Yahoo seg til: et app-passord",
-    "body": "Yahoo Mail kobles til via IMAP/SMTP med et <b>Yahoo-app-passord</b>. Slå på totrinnsbekreftelse, generer et app-passord i Yahoo Account Security, og lim det så inn i mcpemails sammen med Yahoo-adressen din. Ingen OAuth-dans, ingen popup-vinduer i nettleseren."
+    "body": "Yahoo Mail kobles til via IMAP/SMTP med et <b>Yahoo-app-passord</b>. Generer et i Yahoo Account Security under External connections, og lim det så inn i mcpemails sammen med Yahoo-adressen din. Ser du ikke valget, slår du på totrinnsbekreftelse og ser etter igjen. Ingen OAuth-dans, ingen popup-vinduer i nettleseren."
   },
   "setup": [
     {
@@ -35,7 +35,7 @@
     },
     {
       "h": "Generer et Yahoo-app-passord",
-      "p": "Slå på totrinnsbekreftelse, og generer så et app-passord i Yahoo Account Security."
+      "p": "Generer et app-passord i Yahoo Account Security, under External connections. Finnes ikke valget der, slår du på totrinnsbekreftelse først."
     },
     {
       "h": "Lim det inn i mcpemails",

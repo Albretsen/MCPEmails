@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Poste.io en Claude: IMAP de Dovecot en un contenedor",
-    "description": "Conecta Poste.io a Claude, Cursor y ChatGPT por IMAP en el 993. Tu servidor es el nombre del contenedor, y por qué un proxy inverso oculta un certificado malo."
+    "description": "Conecta un buzón de Poste.io a Claude, Cursor y ChatGPT por IMAP en el 993. El nombre de host del contenedor es tu servidor de correo, y un proxy inverso puede ocultar un certificado malo."
   },
   "hero": {
     "eyebrow": "Poste.io + IA",

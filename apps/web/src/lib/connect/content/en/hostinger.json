@@ -27,7 +27,7 @@
   },
   "method": {
     "title": "How Hostinger connects: IMAP and your mailbox password",
-    "body": "Hostinger Email connects over IMAP/SMTP with the mailbox password you set in hPanel under Emails. There is no app password and no OAuth step. The hosts are <code>imap.hostinger.com</code> and <code>smtp.hostinger.com</code> for every domain, so there is nothing to look up."
+    "body": "Hostinger Email connects over IMAP/SMTP with the mailbox password you set in hPanel under Emails. There is no app password and no OAuth step. On Hostinger Email the hosts are <code>imap.hostinger.com</code> and <code>smtp.hostinger.com</code> for every domain. Business and Enterprise Email plans run on Titan and use different hosts, covered below."
   },
   "setup": [
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Paste it into mcpemails",
-      "p": "Choose IMAP / SMTP, add your Hostinger address, the hosts below and the password to connect the inbox securely."
+      "p": "Choose IMAP / SMTP, add your Hostinger address, the hosts above and the password to connect the inbox securely."
     },
     {
       "h": "Paste the MCP URL into your AI",

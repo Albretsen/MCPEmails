@@ -44,7 +44,7 @@
       "p": "Onet utsteder ikke programspesifikke passord for e-postklienter; du autentiserer med Onet-kontopassordet og hele adressen. Flytter du innstillinger fra en gammel klient, ikke ta med POP3-verten. POP3 ble fjernet helt, ikke bare faset ut, så ingenting på port 995 svarer deg lenger."
     },
     {
-      "h": "Lim det inn i mcpemails, og lim så MCP-URL-en inn i AI-en",
+      "h": "Legg til postkassen i mcpemails",
       "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel nazwa@onet.pl, og skriv inn passordet. Onet-vertene og -portene er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
     }
   ],

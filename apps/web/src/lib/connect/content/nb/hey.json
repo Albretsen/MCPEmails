@@ -23,7 +23,7 @@
     "answer": "Nei, og ikke fordi det mangler en funksjon hos oss. HEY godtar ingen IMAP-, POP- eller SMTP-tilkoblinger i det hele tatt, verken på hey.com-adresser eller på egne domener i HEY for Domains, så mcpemails kan ikke koble til en HEY-postkasse, og det kan heller ingen annen driftet MCP-server. 37signals ser på dette som et designvalg og ikke som en mangel: screening, regler per kontakt og HEYs trådvisning ligger på deres servere, og bare deres egne apper snakker den protokollen. Vil du ha en agent inne i HEY, leverer 37signals hey-cli, som kjører en MCP-server lokalt mot den innloggede kontoen din. mcpemails er for IMAP-postkassene du har ved siden av, og én innboks der er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Ingen IMAP-, POP- eller SMTP-innlogging",
-    "meta2": "E-post hentes direkte, lagres aldri"
+    "meta2": "hey-cli tilbyr en lokal MCP-server"
   },
   "method": {
     "title": "Slik kobles HEY til: det gjør den ikke, og det er selve produktet",

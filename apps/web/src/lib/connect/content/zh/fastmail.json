@@ -28,7 +28,7 @@
   },
   "method": {
     "title": "Fastmail 如何连接：应用专用密码",
-    "body": "Fastmail 通过 IMAP/SMTP 连接，需要一个 <b>Fastmail 应用专用密码</b>。在 Fastmail 的 Settings → Privacy & Security → App passwords 中生成一个，粘贴到 mcpemails，即可完成连接。无需繁琐的 OAuth 流程，也没有浏览器弹窗。"
+    "body": "Fastmail 通过 IMAP/SMTP 连接，需要一个 <b>Fastmail 应用专用密码</b>。在 Fastmail 的 Settings → Privacy & Security → Connected apps & API tokens → Manage app passwords and access → New app password 中生成一个，粘贴到 mcpemails，即可完成连接。无需繁琐的 OAuth 流程，也没有浏览器弹窗。"
   },
   "setup": [
     {
@@ -37,7 +37,7 @@
     },
     {
       "h": "生成 Fastmail 应用专用密码",
-      "p": "在 Fastmail 中打开 Settings → Privacy & Security → App passwords，创建一个用于邮件（IMAP/SMTP）的应用专用密码。"
+      "p": "在 Fastmail 中打开 Settings → Privacy & Security → Connected apps & API tokens → Manage app passwords and access → New app password，创建一个用于邮件（IMAP/SMTP）的应用专用密码。"
     },
     {
       "h": "粘贴到 mcpemails",
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "Fastmail 有自己的 MCP 服务器，而且做得不错",
-      "p": "2026 年 4 月，Fastmail 推出了官方 MCP 服务器，地址为 <code>https://api.fastmail.com/mcp</code>，使用 OAuth 认证，提供只读、写入或发送权限，覆盖邮件、日历和通讯录。如果 Fastmail 是你唯一想让助手访问的邮箱，那它就是最直接的途径，我们会直说。mcpemails 解决的是另一个问题：<b>一个</b> MCP URL 同时容纳你的 Fastmail 账户以及 iCloud、Zoho、Yahoo、GMX 或公司 IMAP 邮箱，对所有邮箱提供同样的十六个工具，让代理可以跨邮箱搜索，而你只需配置一台服务器，而不是五台。在这里，对你有用比替我们说好话更重要。"
+      "p": "2026 年 4 月，Fastmail 推出了官方 MCP 服务器，地址为 <code>https://api.fastmail.com/mcp</code>，使用 OAuth 认证，提供只读、写入或发送权限，覆盖邮件、日历和通讯录。如果 Fastmail 是你唯一想让助手访问的邮箱，那它就是最直接的途径，我们会直说。mcpemails 解决的是另一个问题：<b>一个</b> MCP URL 同时容纳你的 Fastmail 账户以及 iCloud、Zoho、Yahoo、GMX 或公司 IMAP 邮箱，对所有邮箱提供同样的工具，让代理可以跨邮箱搜索，而你只需配置一台服务器，而不是五台。在这里，对你有用比替我们说好话更重要。"
     },
     {
       "h": "Fastmail Basic 账户完全不能使用 IMAP",

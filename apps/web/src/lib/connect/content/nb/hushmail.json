@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Koble Hushmail til Claude, Cursor og MCP-klienter",
-    "description": "Koble Hushmail til Claude, Cursor og enhver MCP-klient over IMAP. Bekreftede innstillinger, IMAP krever betalt plan og eget tilgangspassord. Én innboks gratis."
+    "description": "Koble Hushmail til Claude, Cursor og enhver MCP-klient over IMAP. Bekreftede innstillinger, og innloggingen med passord pluss sikkerhetskode forklart. Én innboks gratis."
   },
   "hero": {
     "eyebrow": "Hushmail + AI",
@@ -36,7 +36,7 @@
     },
     {
       "h": "Hent sikkerhetskoden din hvis totrinnsbekreftelse er på",
-      "p": "Logg inn på Hushmail webmail, åpne <b>Preferences</b> fra menyen øverst til høyre, deretter fanen <b>Security</b>, og rull ned til seksjonen med overskriften «Using a desktop or mobile email application». Der vises en plassholder etterfulgt av en kode på 20 bokstaver i fire grupper. Hvis totrinnsbekreftelse er av, hopper du helt over dette steget og bruker det vanlige passordet ditt."
+      "p": "Logg inn på Hushmail webmail, åpne <b>Preferences</b> fra menyen øverst til høyre, deretter fanen <b>Security</b>, og rull ned til seksjonen med overskriften «Using a desktop or mobile email application». Der vises en plassholder etterfulgt av en kode på 20 tegn i fire grupper. Hvis totrinnsbekreftelse er av, hopper du helt over dette steget og bruker det vanlige passordet ditt."
     },
     {
       "h": "Legg til postkassen i mcpemails",
@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "Totrinnsbekreftelse gjør passordet ditt om til passord pluss kode",
-      "p": "Det er denne som tar alle. Hushmail utsteder ikke app-passord. Med totrinnsbekreftelse slått på forventer hver IMAP- og SMTP-innlogging <code>yourpassword xxxxx xxxxx xxxxx xxxxx</code> i ett felt: det vanlige passordet ditt, ett mellomrom, og deretter sikkerhetskoden på 20 bokstaver delt i fire grupper med mellomrom. Får du en gruppe feil, legger til et mellomrom på slutten eller limer inn bare koden, avviser serveren deg med en vanlig autentiseringsfeil som ser nøyaktig ut som et feil passord. Koden ligger i webmail under Preferences, fanen Security."
+      "p": "Det er denne som tar alle. Hushmail utsteder ikke app-passord. Med totrinnsbekreftelse slått på forventer hver IMAP- og SMTP-innlogging <code>yourpassword xxxxx xxxxx xxxxx xxxxx</code> i ett felt: det vanlige passordet ditt, ett mellomrom, og deretter sikkerhetskoden på 20 tegn delt i fire grupper med mellomrom. Får du en gruppe feil, legger til et mellomrom på slutten eller limer inn bare koden, avviser serveren deg med en vanlig autentiseringsfeil som ser nøyaktig ut som et feil passord. Koden ligger i webmail under Preferences, fanen Security."
     },
     {
       "h": "Hushmails IMAP-server annonserer ikke SASL-IR",

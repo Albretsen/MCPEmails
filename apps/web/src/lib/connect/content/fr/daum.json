@@ -90,7 +90,7 @@
     },
     {
       "q": "Les adresses hanmail.net utilisent-elles les mêmes réglages ?",
-      "a": "Oui. Hanmail était le domaine de messagerie d'origine de Daum, et hanmail.net comme daum.net pointent vers la même boîte sur les mêmes serveurs, avec la même option IMAP et le même mot de passe d'application Kakao. Connectez la boîte une seule fois, avec la forme d'adresse que porte votre compte, et les deux fonctionnent pour l'envoi."
+      "a": "Oui. Hanmail était le domaine de messagerie d'origine de Daum, et hanmail.net comme daum.net pointent vers la même boîte sur les mêmes serveurs, avec la même option IMAP et le même mot de passe d'application Kakao. Connectez la boîte une seule fois, avec la forme d'adresse que porte votre compte."
     },
     {
       "q": "Mon courrier Daum est-il stocké sur vos serveurs ?",

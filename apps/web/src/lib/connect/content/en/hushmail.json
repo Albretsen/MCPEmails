@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Connect Hushmail to Claude, Cursor and MCP Clients",
-    "description": "Connect Hushmail to Claude, Cursor and any MCP client over IMAP. Verified settings, IMAP needs a paid plan and its own access password. One inbox free."
+    "description": "Connect Hushmail to Claude, Cursor and any MCP client over IMAP. Verified settings, and the password-plus-security-code login explained. One inbox free."
   },
   "hero": {
     "eyebrow": "Hushmail + AI",
@@ -36,7 +36,7 @@
     },
     {
       "h": "Collect your security code if two-step verification is on",
-      "p": "Sign into Hushmail webmail, open <b>Preferences</b> from the top-right menu, then the <b>Security</b> tab, and scroll to the section headed \"Using a desktop or mobile email application\". It shows a placeholder followed by a 20-letter code in four groups. If two-step verification is off, skip this step entirely and use your ordinary password."
+      "p": "Sign into Hushmail webmail, open <b>Preferences</b> from the top-right menu, then the <b>Security</b> tab, and scroll to the section headed \"Using a desktop or mobile email application\". It shows a placeholder followed by a 20-character code in four groups. If two-step verification is off, skip this step entirely and use your ordinary password."
     },
     {
       "h": "Add the mailbox in mcpemails",
@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "Two-step verification turns your password into password-plus-code",
-      "p": "This is the one that catches everybody. Hushmail does not issue app passwords. With two-step verification enabled, every IMAP and SMTP login expects <code>yourpassword xxxxx xxxxx xxxxx xxxxx</code> in a single field: your normal password, one space, then the 20-letter security code split into four groups by spaces. Get a group wrong, add a trailing space, or paste only the code and the server rejects you with an ordinary authentication failure that looks exactly like a bad password. The code lives in webmail under Preferences, Security tab."
+      "p": "This is the one that catches everybody. Hushmail does not issue app passwords. With two-step verification enabled, every IMAP and SMTP login expects <code>yourpassword xxxxx xxxxx xxxxx xxxxx</code> in a single field: your normal password, one space, then the 20-character security code split into four groups by spaces. Get a group wrong, add a trailing space, or paste only the code and the server rejects you with an ordinary authentication failure that looks exactly like a bad password. The code lives in webmail under Preferences, Security tab."
     },
     {
       "h": "Hushmail's IMAP server does not advertise SASL-IR",

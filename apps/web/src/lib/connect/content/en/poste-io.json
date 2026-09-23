@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Poste.io to Claude: Dovecot IMAP in a Container",
-    "description": "Connect a Poste.io mailbox to Claude, Cursor and ChatGPT over IMAP on 993. The container hostname is your mail host, and why a reverse proxy hides a bad cert."
+    "description": "Connect a Poste.io mailbox to Claude, Cursor and ChatGPT over IMAP on 993. The container hostname is your mail host, and a reverse proxy can hide a bad cert."
   },
   "hero": {
     "eyebrow": "Poste.io + AI",

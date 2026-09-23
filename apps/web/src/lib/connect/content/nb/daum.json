@@ -90,7 +90,7 @@
     },
     {
       "q": "Bruker hanmail.net-adresser de samme innstillingene?",
-      "a": "Ja. Hanmail var Daums opprinnelige e-postdomene, og både det og daum.net peker på samme postkasse på samme servere, med samme IMAP-bryter og samme Kakao-app-passord. Koble til postkassen én gang, med den adresseformen kontoen din har, så fungerer begge for sending."
+      "a": "Ja. Hanmail var Daums opprinnelige e-postdomene, og både det og daum.net peker på samme postkasse på samme servere, med samme IMAP-bryter og samme Kakao-app-passord. Koble til postkassen én gang, med den adresseformen kontoen din har."
     },
     {
       "q": "Lagres Daum-e-posten min på serverne deres?",

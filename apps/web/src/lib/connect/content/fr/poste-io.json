@@ -14,7 +14,7 @@
   },
   "meta": {
     "title": "Poste.io vers Claude : l'IMAP Dovecot dans un conteneur",
-    "description": "Connectez une boîte Poste.io à Claude, Cursor et ChatGPT en IMAP sur 993. Le nom d'hôte du conteneur est le serveur ; un proxy inverse masque un mauvais certificat."
+    "description": "Connectez une boîte Poste.io à Claude, Cursor et ChatGPT en IMAP sur 993. Le nom d'hôte du conteneur est votre serveur mail, et un proxy inverse peut masquer un mauvais certificat."
   },
   "hero": {
     "eyebrow": "Poste.io + IA",

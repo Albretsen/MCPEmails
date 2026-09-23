@@ -44,7 +44,7 @@
     },
     {
       "h": "Ajoutez un mot de passe d'application si cet utilisateur a la 2FA, puis connectez-vous",
-      "p": "Si l'authentification multifacteur est active pour cet utilisateur, ouvrez-le, descendez jusqu'à <b>App Passwords</b>, cliquez sur <b>Add New</b>, donnez-lui un nom et copiez le code. Purelymail ne l'affiche qu'une fois. Choisissez ensuite IMAP / SMTP dans mcpemails, saisissez l'adresse complète et ce mot de passe. Les serveurs ci-dessous sont préremplis."
+      "p": "Si l'authentification multifacteur est active pour cet utilisateur, ouvrez-le, descendez jusqu'à <b>App Passwords</b>, cliquez sur <b>Add New</b>, donnez-lui un nom et copiez le code. Purelymail ne l'affiche qu'une fois. Choisissez ensuite IMAP / SMTP dans mcpemails, saisissez l'adresse complète et ce mot de passe. Les serveurs ci-dessus sont préremplis."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",

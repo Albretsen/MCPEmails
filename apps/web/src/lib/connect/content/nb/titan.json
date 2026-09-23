@@ -43,7 +43,7 @@
     },
     {
       "h": "Bekreft vertsnavnene, og lim så alt inn i mcpemails",
-      "p": "De fleste Titan-postkasser bruker vertene som er forhåndsutfylt under. Administreres domenet ditt gjennom GoDaddy, dokumenterer GoDaddy i stedet <code>imap.secureserver.net</code> på 993 og <code>smtpout.secureserver.net</code> på 465. Kjøpte du Titan fra Blacknight, MonoVM, DomainDiscount24, Fluccs eller Domain Central, dokumenterer Titan <code>imap0101.titan.email</code> og <code>smtp0101.titan.email</code>. Velg IMAP / SMTP i mcpemails, skriv inn hele Titan-adressen din og passordet."
+      "p": "De fleste Titan-postkasser bruker vertene som er forhåndsutfylt ovenfor. Administreres domenet ditt gjennom GoDaddy, dokumenterer GoDaddy i stedet <code>imap.secureserver.net</code> på 993 og <code>smtpout.secureserver.net</code> på 465. Kjøpte du Titan fra Blacknight, MonoVM, DomainDiscount24, Fluccs eller Domain Central, dokumenterer Titan <code>imap0101.titan.email</code> og <code>smtp0101.titan.email</code>. Velg IMAP / SMTP i mcpemails, skriv inn hele Titan-adressen din og passordet."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",

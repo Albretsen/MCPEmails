@@ -63,7 +63,7 @@
   ],
   "limits": [
     "服务器不声明 MOVE 扩展，因此移动邮件以复制、标记和清除的方式完成，而不是一条原子命令。",
-    "服务器不支持 SPECIAL-USE，因此 Sent、Drafts、Trash 和 Junk 按名称匹配。在法语邮箱中，它们通常是 Envoyes、Brouillons、Corbeille 和 Indesirables。"
+    "服务器不支持 SPECIAL-USE，因此 Sent、Drafts、Trash 和 Junk 按名称匹配。在法语邮箱中，它们通常是 Messages envoyés、Brouillons、Corbeille 和 Spam。"
   ],
   "faq": [
     {

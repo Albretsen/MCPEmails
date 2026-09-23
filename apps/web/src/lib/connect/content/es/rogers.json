@@ -41,7 +41,7 @@
     },
     {
       "h": "Introduce la dirección rogers.com y la contraseña de aplicación",
-      "p": "En mcpemails elige IMAP / SMTP, pon la dirección rogers.com completa en el campo de usuario y pega la contraseña de aplicación. No uses la contraseña del webmail de Rogers Yahoo; la capa IMAP la rechaza. Los servidores y puertos de abajo vienen rellenados y se verificaron mediante una conexión TLS real."
+      "p": "En mcpemails elige IMAP / SMTP, pon la dirección rogers.com completa en el campo de usuario y pega la contraseña de aplicación. No uses la contraseña del webmail de Rogers Yahoo; la capa IMAP la rechaza. Los servidores y puertos de arriba vienen rellenados y se verificaron mediante una conexión TLS real."
     },
     {
       "h": "Pega la URL MCP en tu IA",

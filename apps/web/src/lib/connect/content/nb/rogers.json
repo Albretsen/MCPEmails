@@ -41,7 +41,7 @@
     },
     {
       "h": "Skriv inn rogers.com-adressen og app-passordet",
-      "p": "I mcpemails velger du IMAP / SMTP, skriver hele rogers.com-adressen i brukernavnfeltet og limer inn app-passordet. Ikke bruk webmail-passordet for Rogers Yahoo; det avvises på IMAP-nivå. Vertene og portene under er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
+      "p": "I mcpemails velger du IMAP / SMTP, skriver hele rogers.com-adressen i brukernavnfeltet og limer inn app-passordet. Ikke bruk webmail-passordet for Rogers Yahoo; det avvises på IMAP-nivå. Vertene og portene over er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",

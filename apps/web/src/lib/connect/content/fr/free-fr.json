@@ -38,7 +38,7 @@
     },
     {
       "h": "Saisissez l'adresse complète dans mcpemails",
-      "p": "Choisissez IMAP / SMTP et tapez l'adresse entière, <code>name@free.fr</code>, dans le champ identifiant. La documentation de Free demande de donner l'adresse complète, domaine compris. Les serveurs et ports ci-dessous sont préremplis et ont été vérifiés par une connexion TLS réelle."
+      "p": "Choisissez IMAP / SMTP et tapez l'adresse entière, <code>name@free.fr</code>, dans le champ identifiant. La documentation de Free demande de donner l'adresse complète, domaine compris. Les serveurs et ports ci-dessus sont préremplis et ont été vérifiés par une connexion TLS réelle."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",

@@ -43,7 +43,7 @@
       "p": "Interias totrinnsinnlogging (<b>logowanie dwuetapowe</b>) og e-postprogrammer utelukker hverandre. Interia sier det selv på skjermen der du slår den på: med totrinnsinnlogging på kan kontoen ikke brukes i et e-postprogram. Interia utsteder ikke noe app-passord for å komme rundt det, så hvis postkassen har det slått på, har du et valg å ta før du går videre."
     },
     {
-      "h": "Lim det inn i mcpemails, og lim så MCP-URL-en inn i AI-en",
+      "h": "Legg til postkassen i mcpemails",
       "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel nazwa@interia.pl, og skriv inn Interia-passordet ditt. Vertene og portene er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling. Lim deretter https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
     }
   ],

@@ -41,7 +41,7 @@
     },
     {
       "h": "Enter the rogers.com address and the app password",
-      "p": "In mcpemails choose IMAP / SMTP, put the full rogers.com address in the username field and paste the app password. Do not use your Rogers Yahoo webmail password; it is refused at the IMAP layer. The hosts and ports below are prefilled and were verified from a live TLS connection."
+      "p": "In mcpemails choose IMAP / SMTP, put the full rogers.com address in the username field and paste the app password. Do not use your Rogers Yahoo webmail password; it is refused at the IMAP layer. The hosts and ports above are prefilled and were verified from a live TLS connection."
     },
     {
       "h": "Paste the MCP URL into your AI",

@@ -43,7 +43,7 @@
       "p": "El inicio de sesión en dos pasos de Interia (<b>logowanie dwuetapowe</b>) y los programas de correo son mutuamente excluyentes. Interia lo dice en la pantalla donde lo activas: con el inicio de sesión en dos pasos activado, la cuenta no se puede usar en un programa de correo. Interia no emite ninguna contraseña de aplicación para sortearlo, así que si el buzón lo tiene activado tienes que decidir antes de seguir."
     },
     {
-      "h": "Pégala en mcpemails y luego pega la URL MCP en tu IA",
+      "h": "Añade el buzón en mcpemails",
       "p": "Elige IMAP / SMTP, introduce la dirección completa, como nazwa@interia.pl, y tu contraseña de Interia. Los servidores y puertos ya vienen rellenados y se verificaron con una conexión TLS real. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
     }
   ],

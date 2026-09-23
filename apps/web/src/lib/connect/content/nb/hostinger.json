@@ -27,7 +27,7 @@
   },
   "method": {
     "title": "Slik kobles Hostinger til: IMAP og postkassepassordet ditt",
-    "body": "Hostinger Email kobles til over IMAP/SMTP med postkassepassordet du setter i hPanel under Emails. Det finnes ikke noe app-passord og ikke noe OAuth-steg. Vertene er <code>imap.hostinger.com</code> og <code>smtp.hostinger.com</code> for alle domener, så det er ingenting å slå opp."
+    "body": "Hostinger Email kobles til over IMAP/SMTP med postkassepassordet du setter i hPanel under Emails. Det finnes ikke noe app-passord og ikke noe OAuth-steg. På Hostinger Email er vertene <code>imap.hostinger.com</code> og <code>smtp.hostinger.com</code> for alle domener. Business Email- og Enterprise Email-abonnementene kjører på Titan og bruker andre verter, som er beskrevet nedenfor."
   },
   "setup": [
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Lim det inn i mcpemails",
-      "p": "Velg IMAP / SMTP, legg inn Hostinger-adressen din, vertene nedenfor og passordet for å koble til innboksen på en sikker måte."
+      "p": "Velg IMAP / SMTP, legg inn Hostinger-adressen din, vertene ovenfor og passordet for å koble til innboksen på en sikker måte."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",

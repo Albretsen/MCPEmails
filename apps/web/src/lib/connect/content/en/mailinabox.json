@@ -27,7 +27,7 @@
   },
   "method": {
     "title": "How Mail-in-a-Box connects: the box hostname, not your domain",
-    "body": "Mail-in-a-Box installs Postfix, Dovecot, Nginx and a small admin control panel onto one Ubuntu machine, so the IMAP behaviour underneath is plain Dovecot. The part people get wrong is the hostname. The setup guide recommends naming the box <code>box</code> plus a dot plus your domain name, so <code>box.yourdomain.com</code>, and that is the name in the certificate and the name your mail clients should use. Your bare domain is where mail is addressed, not where clients connect. The documented firewall list is 22, 25, 53 for TCP and UDP, 80, 443, 465 for submission, 993 for IMAP, 995 for POP and 4190 for Sieve. Credentials are the mail user's own password, set under Mail then Users in the control panel; the control panel admin account is itself a mail user, so it does have a mailbox."
+    "body": "Mail-in-a-Box installs Postfix, Dovecot, Nginx and a small admin control panel onto one Ubuntu machine, so the IMAP behaviour underneath is plain Dovecot. The part people get wrong is the hostname. The setup guide recommends naming the box <code>box</code> plus a dot plus your domain name, so <code>box.yourdomain.com</code>, and that is the name in the certificate and the name your mail clients should use. Your bare domain is where mail is addressed, not where clients connect. The documented firewall list is 22, 25, 53 for TCP and UDP, 80, 443, 465 for submission, 993 for IMAP, 995 for POP and 4190 for Sieve. Credentials are the mail user's own password, set under Mail then Users in the control panel; the control panel admin is simply a mail user with admin rights, so it has a mailbox and connects like any other user."
   },
   "setup": [
     {
@@ -58,7 +58,7 @@
     },
     {
       "h": "The box cannot share its name with a website you host elsewhere",
-      "p": "The guide is blunt that the box's name cannot be a domain you intend to serve a website on from another host, because the box wants to answer on 80 and 443 for its own certificate renewals and control panel. Operators who point <code>mail.yourdomain.com</code> at a CDN or a reverse proxy break Let's Encrypt renewal without breaking anything visible, and the IMAP certificate expires quietly weeks later."
+      "p": "The guide is blunt that the box's name cannot be a domain you intend to serve a website on from another host, because the box wants to answer on 80 and 443 for its own certificate renewals and control panel. Operators who point <code>box.yourdomain.com</code> at a CDN or a reverse proxy break Let's Encrypt renewal without breaking anything visible, and the IMAP certificate expires quietly weeks later."
     }
   ],
   "limits": [

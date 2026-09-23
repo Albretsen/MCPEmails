@@ -27,7 +27,7 @@
   },
   "method": {
     "title": "Slik kobles Mail-in-a-Box til: boksens vertsnavn, ikke domenet ditt",
-    "body": "Mail-in-a-Box installerer Postfix, Dovecot, Nginx og et lite administrasjonspanel på én Ubuntu-maskin, så IMAP-oppførselen under er vanlig Dovecot. Det folk tar feil av, er vertsnavnet. Oppsettsveiledningen anbefaler å kalle boksen <code>box</code> pluss et punktum pluss domenenavnet ditt, altså <code>box.yourdomain.com</code>, og det er navnet i sertifikatet og navnet e-postklientene dine skal bruke. Det nakne domenet ditt er der e-post adresseres til, ikke der klienter kobler til. Den dokumenterte brannmurlisten er 22, 25, 53 for TCP og UDP, 80, 443, 465 for innsending, 993 for IMAP, 995 for POP og 4190 for Sieve. Påloggingsopplysningene er e-postbrukerens eget passord, satt under Mail og deretter Users i administrasjonspanelet; administratorkontoen i panelet er selv en e-postbruker, så den har faktisk en postkasse."
+    "body": "Mail-in-a-Box installerer Postfix, Dovecot, Nginx og et lite administrasjonspanel på én Ubuntu-maskin, så IMAP-oppførselen under er vanlig Dovecot. Det folk tar feil av, er vertsnavnet. Oppsettsveiledningen anbefaler å kalle boksen <code>box</code> pluss et punktum pluss domenenavnet ditt, altså <code>box.yourdomain.com</code>, og det er navnet i sertifikatet og navnet e-postklientene dine skal bruke. Det nakne domenet ditt er der e-post adresseres til, ikke der klienter kobler til. Den dokumenterte brannmurlisten er 22, 25, 53 for TCP og UDP, 80, 443, 465 for innsending, 993 for IMAP, 995 for POP og 4190 for Sieve. Påloggingsopplysningene er e-postbrukerens eget passord, satt under Mail og deretter Users i administrasjonspanelet; administratoren i panelet er rett og slett en e-postbruker med administratorrettigheter, så den har en postkasse og kobler til som alle andre brukere."
   },
   "setup": [
     {
@@ -58,7 +58,7 @@
     },
     {
       "h": "Boksen kan ikke dele navn med et nettsted du drifter et annet sted",
-      "p": "Veiledningen sier rett ut at boksens navn ikke kan være et domene du har tenkt å levere et nettsted på fra en annen vert, fordi boksen vil svare på 80 og 443 for sine egne sertifikatfornyelser og administrasjonspanelet. Driftere som peker <code>mail.yourdomain.com</code> mot et CDN eller en omvendt proxy, ødelegger fornyelsen av Let's Encrypt uten at noe synlig går i stykker, og IMAP-sertifikatet utløper i det stille noen uker senere."
+      "p": "Veiledningen sier rett ut at boksens navn ikke kan være et domene du har tenkt å levere et nettsted på fra en annen vert, fordi boksen vil svare på 80 og 443 for sine egne sertifikatfornyelser og administrasjonspanelet. Driftere som peker <code>box.yourdomain.com</code> mot et CDN eller en omvendt proxy, ødelegger fornyelsen av Let's Encrypt uten at noe synlig går i stykker, og IMAP-sertifikatet utløper i det stille noen uker senere."
     }
   ],
   "limits": [

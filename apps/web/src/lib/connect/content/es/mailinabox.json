@@ -27,7 +27,7 @@
   },
   "method": {
     "title": "Cómo se conecta Mail-in-a-Box: el nombre de la box, no tu dominio",
-    "body": "Mail-in-a-Box instala Postfix, Dovecot, Nginx y un pequeño panel de control de administración en una sola máquina Ubuntu, así que el comportamiento IMAP de fondo es Dovecot sin más. Lo que la gente configura mal es el nombre de servidor. La guía de instalación recomienda llamar a la box <code>box</code> más un punto más tu nombre de dominio, es decir <code>box.yourdomain.com</code>, y ese es el nombre del certificado y el que deben usar tus clientes de correo. Tu dominio sin prefijo es a donde se dirige el correo, no a donde se conectan los clientes. La lista documentada del cortafuegos es 22, 25, 53 para TCP y UDP, 80, 443, 465 para el envío, 993 para IMAP, 995 para POP y 4190 para Sieve. Las credenciales son la contraseña propia del usuario de correo, definida en Mail y luego Users en el panel de control; la cuenta de administrador del panel es a su vez un usuario de correo, así que sí tiene buzón."
+    "body": "Mail-in-a-Box instala Postfix, Dovecot, Nginx y un pequeño panel de control de administración en una sola máquina Ubuntu, así que el comportamiento IMAP de fondo es Dovecot sin más. Lo que la gente configura mal es el nombre de servidor. La guía de instalación recomienda llamar a la box <code>box</code> más un punto más tu nombre de dominio, es decir <code>box.yourdomain.com</code>, y ese es el nombre del certificado y el que deben usar tus clientes de correo. Tu dominio sin prefijo es a donde se dirige el correo, no a donde se conectan los clientes. La lista documentada del cortafuegos es 22, 25, 53 para TCP y UDP, 80, 443, 465 para el envío, 993 para IMAP, 995 para POP y 4190 para Sieve. Las credenciales son la contraseña propia del usuario de correo, definida en Mail y luego Users en el panel de control; el administrador del panel es simplemente un usuario de correo con permisos de administrador, así que tiene buzón y se conecta como cualquier otro usuario."
   },
   "setup": [
     {
@@ -58,7 +58,7 @@
     },
     {
       "h": "La box no puede compartir su nombre con un sitio web que alojas en otro sitio",
-      "p": "La guía es tajante: el nombre de la box no puede ser un dominio en el que pienses servir un sitio web desde otro servidor, porque la box quiere responder en el 80 y el 443 para sus propias renovaciones de certificado y para el panel de control. Los administradores que apuntan <code>mail.yourdomain.com</code> a una CDN o a un proxy inverso rompen la renovación de Let's Encrypt sin romper nada visible, y el certificado IMAP caduca sin avisar semanas después."
+      "p": "La guía es tajante: el nombre de la box no puede ser un dominio en el que pienses servir un sitio web desde otro servidor, porque la box quiere responder en el 80 y el 443 para sus propias renovaciones de certificado y para el panel de control. Los administradores que apuntan <code>box.yourdomain.com</code> a una CDN o a un proxy inverso rompen la renovación de Let's Encrypt sin romper nada visible, y el certificado IMAP caduca sin avisar semanas después."
     }
   ],
   "limits": [

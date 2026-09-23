@@ -6,7 +6,7 @@
   ],
   "auth": {
     "method": "app-password",
-    "label": "App-specific password",
+    "label": "Zoho password, or an app-specific password with 2FA or SSO",
     "helpUrl": "https://help.zoho.com/portal/en/kb/accounts/multi-factor-authentication/articles/application-specific-passwords",
     "usernameForm": "Your full Zoho address, including the domain: name@yourdomain.com on a custom domain, or name@zohomail.com on a free personal account.",
     "status": "active"
@@ -19,15 +19,15 @@
     "eyebrow": "Zoho Mail + AI",
     "titleLine1": "Connect Zoho Mail to Claude,",
     "titleLine2": "and Cursor, ChatGPT, any MCP client",
-    "lead": "Give your AI agent a real Zoho inbox in minutes. Read, search, send, reply, schedule and organize mail with IMAP and an app password, and use the same inbox in every MCP client, not just one.",
+    "lead": "Give your AI agent a real Zoho inbox in minutes. Read, search, send, reply, schedule and organize mail with IMAP and your Zoho password or an app-specific password, and use the same inbox in every MCP client, not just one.",
     "meta0": "1 inbox free, forever",
-    "meta1": "App password, no OAuth setup",
+    "meta1": "Account or app password, no OAuth setup",
     "meta2": "Email fetched live, never stored",
     "answer": "Claude cannot reach Zoho Mail on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.zoho.com on port 993, so Claude, Cursor or any MCP client can read, search, send and organize that mail. Two things have to be right first: IMAP access is switched off on a new Zoho mailbox until you enable it, and the hostname follows your Zoho data centre, so an account created in the EU or India uses a different one. One inbox is free, forever."
   },
   "method": {
-    "title": "How Zoho connects: IMAP and an app password",
-    "body": "Zoho Mail connects over IMAP/SMTP. Enable IMAP access in Zoho first (it is off by default), generate an application-specific password if you use two-factor authentication, then paste it into mcpemails with your Zoho address. mcpemails supports every Zoho data-center region."
+    "title": "How Zoho connects: IMAP and a password",
+    "body": "Zoho Mail connects over IMAP/SMTP. Enable IMAP access in Zoho first (it is off by default), then paste your Zoho address and password into mcpemails. If you use two-factor authentication, federated sign-in or SAML, generate an application-specific password and use that instead. mcpemails supports every Zoho data-center region."
   },
   "setup": [
     {
@@ -35,8 +35,8 @@
       "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
     },
     {
-      "h": "Enable IMAP and generate an app password",
-      "p": "In Zoho Mail, turn on IMAP access (Settings, Mail Accounts, IMAP Access). If you use two-factor authentication, generate an application-specific password in Zoho Account, Security."
+      "h": "Enable IMAP, and create an app password if needed",
+      "p": "In Zoho Mail, turn on IMAP access (Settings, Mail Accounts, IMAP Access). If you use two-factor authentication, federated sign-in or SAML, generate an application-specific password in Zoho Account, Security."
     },
     {
       "h": "Paste it into mcpemails",

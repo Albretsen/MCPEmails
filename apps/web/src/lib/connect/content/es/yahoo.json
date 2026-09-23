@@ -26,7 +26,7 @@
   },
   "method": {
     "title": "Cómo se conecta Yahoo: con una contraseña de aplicación",
-    "body": "Yahoo Mail se conecta por IMAP/SMTP con una <b>contraseña de aplicación de Yahoo</b>. Activa la verificación en dos pasos, genera una contraseña de aplicación en Yahoo Account Security (seguridad de la cuenta) y pégala en mcpemails junto con tu dirección de Yahoo. Sin flujo OAuth ni ventanas emergentes del navegador."
+    "body": "Yahoo Mail se conecta por IMAP/SMTP con una <b>contraseña de aplicación de Yahoo</b>. Genera una en Yahoo Account Security (seguridad de la cuenta), en External connections, y pégala en mcpemails junto con tu dirección de Yahoo. Si no ves la opción, activa la verificación en dos pasos y vuelve a mirar. Sin flujo OAuth ni ventanas emergentes del navegador."
   },
   "setup": [
     {
@@ -35,7 +35,7 @@
     },
     {
       "h": "Genera una contraseña de aplicación de Yahoo",
-      "p": "Activa la verificación en dos pasos y genera una contraseña de aplicación en Yahoo Account Security."
+      "p": "En Yahoo Account Security, en External connections, genera una contraseña de aplicación. Si la opción no aparece, activa primero la verificación en dos pasos."
     },
     {
       "h": "Pégala en mcpemails",

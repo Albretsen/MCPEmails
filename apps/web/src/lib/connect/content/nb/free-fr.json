@@ -38,7 +38,7 @@
     },
     {
       "h": "Skriv inn hele adressen i mcpemails",
-      "p": "Velg IMAP / SMTP og skriv hele adressen, <code>name@free.fr</code>, i brukernavnfeltet. Frees egen dokumentasjon sier at du skal oppgi hele adressen med domenet. Vertene og portene nedenfor er forhåndsutfylt og ble bekreftet via en faktisk TLS-tilkobling."
+      "p": "Velg IMAP / SMTP og skriv hele adressen, <code>name@free.fr</code>, i brukernavnfeltet. Frees egen dokumentasjon sier at du skal oppgi hele adressen med domenet. Vertene og portene ovenfor er forhåndsutfylt og ble bekreftet via en faktisk TLS-tilkobling."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",

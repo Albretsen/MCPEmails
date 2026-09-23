@@ -12,22 +12,22 @@
     "status": "active"
   },
   "meta": {
-    "title": "BOL Mail vers Claude : IMAP exige BOL Completo",
-    "description": "Connectez une boîte BOL à Claude ou tout client MCP sur imap.bol.com.br:993. Les comptes BOL gratuits sont limités au webmail : IMAP exige l'offre payante BOL Completo."
+    "title": "BOL Mail vers Claude : IMAP et l'offre BOL Completo",
+    "description": "Connectez une boîte BOL à Claude ou tout client MCP sur imap.bol.com.br:993. Selon des guides tiers, les comptes BOL gratuits sont limités au webmail et IMAP exige l'offre payante BOL Completo."
   },
   "hero": {
     "eyebrow": "BOL Mail + IA",
     "titleLine1": "Connectez BOL Mail à Claude,",
     "titleLine2": "Cursor, ChatGPT, tout client MCP",
     "lead": "Donnez à votre agent IA une vraie boîte BOL. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP, à condition que la boîte soit sur une offre BOL payante plutôt que sur l'offre webmail gratuite.",
-    "answer": "Claude ne peut pas accéder seul à BOL Mail. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.bol.com.br, port 993, en s'authentifiant avec votre mot de passe BOL, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Le piège tient à l'offre, pas au protocole : BOL a retiré l'accès IMAP et POP de ses comptes gratuits, limités au webmail, si bien qu'une adresse bol.com.br gratuite ordinaire ne peut être connectée par aucun client tant qu'elle n'est pas passée à une offre BOL payante. Une boîte sur mcpemails est gratuite.",
+    "answer": "Claude ne peut pas accéder seul à BOL Mail. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.bol.com.br, port 993, en s'authentifiant avec votre mot de passe BOL, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Le piège tient probablement à l'offre, pas au protocole : selon des guides de configuration tiers, BOL a retiré l'accès IMAP et POP de ses comptes gratuits, désormais limités au webmail, si bien qu'une adresse bol.com.br gratuite risque de ne pouvoir être connectée par aucun client tant qu'elle n'est pas passée à une offre BOL payante. Une boîte sur mcpemails est gratuite.",
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Offre BOL payante, puis votre mot de passe",
     "meta2": "E-mails récupérés en direct, jamais stockés"
   },
   "method": {
     "title": "Comment BOL Mail se connecte : IMAP sur l'offre payante uniquement",
-    "body": "BOL sert IMAP sur <code>imap.bol.com.br</code>, port 993, en TLS implicite, et la soumission sur <code>smtps.bol.com.br</code>, port 465, également en TLS implicite. BOL est exploité par UOL, et le serveur derrière les deux est la même installation Dovecot qu'exploite UOL, avec le même plafond de taille de message et le même nommage. La différence qui compte est commerciale. La boîte gratuite de BOL, celle de la plupart des adresses bol.com.br, fonctionne dans le webmail et nulle part ailleurs : l'accès POP et IMAP a été retiré de l'offre gratuite, il n'existe donc aucun nom d'hôte qui permette à un compte gratuit de se connecter depuis un client. L'offre payante, vendue sous le nom <b>BOL Completo</b>, rétablit l'accès client, et à partir de là l'authentification est ordinaire. Il n'y a ni mot de passe d'application ni code d'autorisation distinct, seulement votre mot de passe BOL et l'adresse complète comme nom d'utilisateur."
+    "body": "BOL sert IMAP sur <code>imap.bol.com.br</code>, port 993, en TLS implicite, et la soumission sur <code>smtps.bol.com.br</code>, port 465, également en TLS implicite. BOL est exploité par UOL, et le serveur derrière les deux est la même installation Dovecot qu'exploite UOL, avec le même plafond de taille de message et le même nommage. La différence qui compte le plus probablement est commerciale. Selon des guides de configuration tiers, la boîte gratuite de BOL, celle de la plupart des adresses bol.com.br, fonctionne dans le webmail et nulle part ailleurs, parce que l'accès POP et IMAP a été retiré de l'offre gratuite, et l'offre payante, vendue sous le nom <b>BOL Completo</b>, rétablit l'accès client. Nous n'avons trouvé aucune documentation de BOL qui le confirme. Sur une offre avec accès client, l'authentification est ordinaire. Il n'y a ni mot de passe d'application ni code d'autorisation distinct, seulement votre mot de passe BOL et l'adresse complète comme nom d'utilisateur."
   },
   "setup": [
     {
@@ -36,7 +36,7 @@
     },
     {
       "h": "Vérifiez que la boîte est sur une offre BOL payante",
-      "p": "Connectez-vous au webmail BOL et vérifiez l'offre du compte. Un compte BOL gratuit n'a aucun accès client à activer : POP et IMAP ont été retirés de cette offre, la boîte n'est donc accessible que par l'interface web. Passer à BOL Completo est ce qui rend une connexion IMAP possible. Si le compte reste gratuit, connectez plutôt une autre boîte dans mcpemails et redirigez-y le courrier BOL."
+      "p": "Connectez-vous au webmail BOL et vérifiez l'offre du compte. Selon des guides tiers, un compte BOL gratuit n'a aucun accès client à activer, car POP et IMAP ont été retirés de cette offre, et c'est le passage à BOL Completo qui rend une connexion IMAP possible. Si le compte est gratuit et qu'un mot de passe correct est refusé, c'est la cause probable ; connectez alors plutôt une autre boîte dans mcpemails et redirigez-y le courrier BOL."
     },
     {
       "h": "Saisissez votre adresse et votre mot de passe dans mcpemails",
@@ -49,8 +49,8 @@
   ],
   "gotchas": [
     {
-      "h": "Un compte BOL gratuit ne peut être connecté par rien du tout",
-      "p": "C'est la réponse à presque toutes les questions sur les clients BOL, et elle est rarement formulée clairement. Les boîtes BOL gratuites ne fonctionnent que dans le webmail. L'accès POP et IMAP a été retiré de l'offre gratuite : Thunderbird, Outlook, Apple Mail, un script et un serveur MCP hébergé échouent tous de la même façon, à l'étape de connexion, avec une erreur d'identifiants qui ne dit rien de l'offre. Les gens en concluent que le mot de passe est faux, le réinitialisent, et échouent à nouveau avec le nouveau. Vérifiez l'offre avant tout le reste. Aucune configuration n'y remédie, seul un passage à BOL Completo le fait."
+      "h": "Les comptes BOL gratuits seraient limités au webmail, et l'erreur de connexion ne mentionne pas l'offre",
+      "p": "Selon des guides de configuration tiers, les boîtes BOL gratuites ne fonctionnent que dans le webmail, parce que l'accès POP et IMAP a été retiré de l'offre gratuite. Nous n'avons trouvé aucune documentation de BOL qui le confirme. Si cela s'applique à votre compte, Thunderbird, Outlook, Apple Mail, un script et un serveur MCP hébergé échouent tous de la même façon, à l'étape de connexion, avec une erreur d'identifiants qui ne dit rien de l'offre. Les gens en concluent que le mot de passe est faux, le réinitialisent, et échouent à nouveau avec le nouveau. Vérifiez l'offre avant tout le reste. Si l'offre est en cause, aucune configuration n'y remédie, seul un passage à BOL Completo le fait."
     },
     {
       "h": "Les réglages d'UOL semblent assez proches pour être copiés, mais le port SMTP diffère",
@@ -62,14 +62,14 @@
     }
   ],
   "limits": [
-    "IMAP exige une offre BOL payante. Si la boîte est sur l'offre gratuite, il n'y a rien à connecter, et mcpemails ne peut pas contourner la restriction, car elle est appliquée par le serveur de BOL.",
+    "Selon des guides tiers, IMAP exige une offre BOL payante. Si c'est le cas pour votre boîte, mcpemails ne peut pas le contourner, car la connexion est refusée par le serveur de BOL.",
     "IDLE n'est pas pris en charge : le courrier est donc relevé périodiquement plutôt que poussé. Votre agent voit un nouveau message à sa prochaine vérification plutôt qu'au moment où il arrive.",
     "Le serveur SMTP accepte les messages jusqu'à environ 33 Mo. Un transfert avec des pièces jointes plus lourdes est refusé à l'envoi plutôt que mis en file d'attente."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec l'e-mail BOL ?",
-      "a": "Seulement avec une offre BOL payante. Claude n'a pas de connecteur BOL intégré et ne peut pas ouvrir seul une connexion IMAP : il lui faut un serveur MCP comme mcpemails devant la boîte. Cette connexion passe par IMAP, que les comptes BOL gratuits ne proposent pas, donc une adresse bol.com.br gratuite doit d'abord être mise à niveau."
+      "a": "Apparemment, seulement avec une offre BOL payante. Claude n'a pas de connecteur BOL intégré et ne peut pas ouvrir seul une connexion IMAP : il lui faut un serveur MCP comme mcpemails devant la boîte. Cette connexion passe par IMAP, que les comptes BOL gratuits ne proposent pas selon des guides tiers, donc une adresse bol.com.br gratuite devra peut-être d'abord être mise à niveau."
     },
     {
       "q": "Quels sont les réglages IMAP et SMTP de BOL ?",
@@ -77,7 +77,7 @@
     },
     {
       "q": "Pourquoi mon mot de passe BOL ne fonctionne-t-il pas dans un client de messagerie ?",
-      "a": "Très probablement parce que la boîte est sur l'offre gratuite, dont l'accès POP et IMAP a été retiré. Le serveur refuse quand même la connexion avec une erreur d'identifiants ordinaire, ce qui fait croire à un problème de mot de passe. Vérifiez l'offre dans le webmail BOL avant de réinitialiser quoi que ce soit. Sur une offre payante, le mot de passe BOL ordinaire est le bon identifiant."
+      "a": "Très probablement parce que la boîte est sur l'offre gratuite, dont l'accès POP et IMAP a été retiré selon des guides tiers. Le serveur refuse alors quand même la connexion avec une erreur d'identifiants ordinaire, ce qui fait croire à un problème de mot de passe. Vérifiez l'offre dans le webmail BOL avant de réinitialiser quoi que ce soit. Sur une offre payante, le mot de passe BOL ordinaire est le bon identifiant."
     },
     {
       "q": "BOL est-il la même chose qu'UOL ?",

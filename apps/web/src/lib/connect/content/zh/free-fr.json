@@ -38,7 +38,7 @@
     },
     {
       "h": "在 mcpemails 中输入完整地址",
-      "p": "选择 IMAP / SMTP，在用户名字段输入完整地址 <code>name@free.fr</code>。Free 自己的文档要求填写包括域名在内的完整地址。下方的服务器地址和端口已预填，并经实时 TLS 连接验证。"
+      "p": "选择 IMAP / SMTP，在用户名字段输入完整地址 <code>name@free.fr</code>。Free 自己的文档要求填写包括域名在内的完整地址。上方的服务器地址和端口已预填，并经实时 TLS 连接验证。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",

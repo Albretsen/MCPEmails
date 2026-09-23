@@ -44,7 +44,7 @@
       "p": "Onet issues no app-specific password for mail clients; you authenticate with your Onet account password and the full address. If you are migrating settings from an old client, do not carry the POP3 host across. POP3 was withdrawn outright rather than deprecated, so nothing on port 995 will answer for you any more."
     },
     {
-      "h": "Paste it into mcpemails, then paste the MCP URL into your AI",
+      "h": "Add the mailbox in mcpemails",
       "p": "Choose IMAP / SMTP, enter the full address such as nazwa@onet.pl, and enter the password. The Onet hosts and ports are prefilled and were verified from a live TLS connection. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
     }
   ],

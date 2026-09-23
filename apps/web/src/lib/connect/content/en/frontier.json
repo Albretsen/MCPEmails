@@ -39,7 +39,7 @@
     },
     {
       "h": "Create an app password under External connections",
-      "p": "On the Yahoo account security page, find <b>External connections</b> and choose <b>Create app password</b>. Name it <code>mcpemails</code>, copy the code that appears, and paste it into mcpemails together with your full frontier.com address. The Frontier hosts below are prefilled."
+      "p": "On the Yahoo account security page, find <b>External connections</b> and choose <b>Create app password</b>. Name it <code>mcpemails</code>, copy the code that appears, and paste it into mcpemails together with your full frontier.com address. The Frontier hosts above are prefilled."
     },
     {
       "h": "Paste the MCP URL into your AI",

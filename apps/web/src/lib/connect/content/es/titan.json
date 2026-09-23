@@ -43,7 +43,7 @@
     },
     {
       "h": "Confirma tus nombres de servidor y pega todo en mcpemails",
-      "p": "La mayoría de los buzones de Titan usan los servidores que vienen rellenados abajo. Si tu dominio se gestiona a través de GoDaddy, GoDaddy documenta en su lugar <code>imap.secureserver.net</code> en el 993 y <code>smtpout.secureserver.net</code> en el 465. Si compraste Titan a Blacknight, MonoVM, DomainDiscount24, Fluccs o Domain Central, Titan documenta <code>imap0101.titan.email</code> y <code>smtp0101.titan.email</code>. Elige IMAP / SMTP en mcpemails y escribe tu dirección completa de Titan y su contraseña."
+      "p": "La mayoría de los buzones de Titan usan los servidores que vienen rellenados arriba. Si tu dominio se gestiona a través de GoDaddy, GoDaddy documenta en su lugar <code>imap.secureserver.net</code> en el 993 y <code>smtpout.secureserver.net</code> en el 465. Si compraste Titan a Blacknight, MonoVM, DomainDiscount24, Fluccs o Domain Central, Titan documenta <code>imap0101.titan.email</code> y <code>smtp0101.titan.email</code>. Elige IMAP / SMTP en mcpemails y escribe tu dirección completa de Titan y su contraseña."
     },
     {
       "h": "Pega la URL MCP en tu IA",

@@ -28,7 +28,7 @@
   },
   "method": {
     "title": "Comment Fastmail se connecte : un mot de passe d'application",
-    "body": "Fastmail se connecte via IMAP/SMTP avec un <b>mot de passe d'application Fastmail</b>. Générez-en un dans Fastmail sous Settings → Privacy & Security → App passwords, collez-le dans mcpemails, et c'est connecté. Pas de parcours OAuth, pas de fenêtres pop-up."
+    "body": "Fastmail se connecte via IMAP/SMTP avec un <b>mot de passe d'application Fastmail</b>. Générez-en un dans Fastmail sous Settings → Privacy & Security → Connected apps & API tokens → Manage app passwords and access → New app password, collez-le dans mcpemails, et c'est connecté. Pas de parcours OAuth, pas de fenêtres pop-up."
   },
   "setup": [
     {
@@ -37,7 +37,7 @@
     },
     {
       "h": "Générez un mot de passe d'application Fastmail",
-      "p": "Dans Fastmail, allez dans Settings → Privacy & Security → App passwords (paramètres, confidentialité et sécurité, mots de passe d'application) et créez-en un pour le courrier (IMAP/SMTP)."
+      "p": "Dans Fastmail, allez dans Settings → Privacy & Security → Connected apps & API tokens → Manage app passwords and access → New app password (paramètres, confidentialité et sécurité, applications connectées et jetons d'API, gérer les mots de passe d'application et les accès, nouveau mot de passe d'application) et créez-en un pour le courrier (IMAP/SMTP)."
     },
     {
       "h": "Collez-le dans mcpemails",
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "Fastmail propose son propre serveur MCP, et il est bon",
-      "p": "En avril 2026, Fastmail a lancé un serveur MCP officiel à l'adresse <code>https://api.fastmail.com/mcp</code>, authentifié par OAuth, qui offre un accès en lecture seule, en écriture ou en envoi et couvre le courrier, le calendrier et les contacts. Si Fastmail est la seule boîte à laquelle vous voulez donner accès à un assistant, c'est la voie la plus directe, et nous le disons franchement. mcpemails répond à une autre question : <b>une seule</b> URL MCP qui contient à la fois votre compte Fastmail et votre boîte iCloud, Zoho, Yahoo, GMX ou IMAP d'entreprise, avec les mêmes seize outils pour toutes, afin qu'un agent puisse chercher dans plusieurs boîtes et que vous configuriez un serveur au lieu de cinq. Ici, vous être utile compte davantage que nous mettre en valeur."
+      "p": "En avril 2026, Fastmail a lancé un serveur MCP officiel à l'adresse <code>https://api.fastmail.com/mcp</code>, authentifié par OAuth, qui offre un accès en lecture seule, en écriture ou en envoi et couvre le courrier, le calendrier et les contacts. Si Fastmail est la seule boîte à laquelle vous voulez donner accès à un assistant, c'est la voie la plus directe, et nous le disons franchement. mcpemails répond à une autre question : <b>une seule</b> URL MCP qui contient à la fois votre compte Fastmail et votre boîte iCloud, Zoho, Yahoo, GMX ou IMAP d'entreprise, avec les mêmes outils pour toutes, afin qu'un agent puisse chercher dans plusieurs boîtes et que vous configuriez un serveur au lieu de cinq. Ici, vous être utile compte davantage que nous mettre en valeur."
     },
     {
       "h": "Les comptes Fastmail Basic ne peuvent pas du tout utiliser IMAP",

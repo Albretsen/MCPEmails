@@ -26,7 +26,7 @@
   },
   "method": {
     "title": "How GMX connects: IMAP and your account password",
-    "body": "GMX connects over IMAP/SMTP, but <b>POP3 and IMAP access is switched off by default</b>. Turn it on in GMX under E-mail settings, POP3/IMAP retrieval, then connect with your GMX address and password. If GMX asks you to create an application-specific password, use that instead. German accounts use the .net hosts, <code>imap.gmx.net</code> and <code>mail.gmx.net</code>."
+    "body": "GMX connects over IMAP/SMTP, but <b>POP3 and IMAP access is switched off by default</b>. Turn it on in GMX under the Email tab, Settings, POP3 & IMAP, then connect with your GMX address and password. If GMX asks you to create an application-specific password, use that instead. German accounts use the .net hosts, <code>imap.gmx.net</code> and <code>mail.gmx.net</code>."
   },
   "setup": [
     {
@@ -35,11 +35,11 @@
     },
     {
       "h": "Turn on IMAP access in GMX",
-      "p": "In GMX, open E-mail settings, POP3/IMAP retrieval, and allow POP3 and IMAP access. GMX switches it off again if the account goes unused for a long time."
+      "p": "In GMX, open the Email tab, then Settings, then POP3 & IMAP, and allow POP3 and IMAP access. GMX switches it off again if the account goes unused for a long time."
     },
     {
-      "h": "Paste it into mcpemails",
-      "p": "Choose IMAP / SMTP, add your GMX address, the hosts below and the password to connect the inbox securely."
+      "h": "Add the mailbox in mcpemails",
+      "p": "Choose IMAP / SMTP, add your GMX address, the hosts above and the password to connect the inbox securely."
     },
     {
       "h": "Paste the MCP URL into your AI",

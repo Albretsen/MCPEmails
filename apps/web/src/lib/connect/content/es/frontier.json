@@ -39,7 +39,7 @@
     },
     {
       "h": "Crea una contraseña de aplicación en External connections",
-      "p": "En la página de seguridad de la cuenta de Yahoo, busca <b>External connections</b> y elige <b>Create app password</b>. Llámala <code>mcpemails</code>, copia el código que aparece y pégalo en mcpemails junto con tu dirección frontier.com completa. Los servidores de Frontier de abajo ya vienen rellenados."
+      "p": "En la página de seguridad de la cuenta de Yahoo, busca <b>External connections</b> y elige <b>Create app password</b>. Llámala <code>mcpemails</code>, copia el código que aparece y pégalo en mcpemails junto con tu dirección frontier.com completa. Los servidores de Frontier de arriba ya vienen rellenados."
     },
     {
       "h": "Pega la URL MCP en tu IA",

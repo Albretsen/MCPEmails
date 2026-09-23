@@ -28,7 +28,7 @@
   },
   "method": {
     "title": "Comment IONOS se connecte : IMAP et le mot de passe de votre boîte mail",
-    "body": "IONOS se connecte en IMAP/SMTP avec le <b>mot de passe de l'adresse e-mail</b> que vous définissez dans l'espace client IONOS, sous Email, et qui est distinct de votre identifiant IONOS. IONOS répond sur les deux transports standard, 993 en TLS et 143 en STARTTLS, et hésiter entre les deux est la cause la plus fréquente d'échec d'une connexion IONOS. mcpemails renseigne une combinaison qui fonctionne et essaie l'autre si la première ne répond pas : si la connexion est refusée ici, c'est vraiment le mot de passe."
+    "body": "IONOS se connecte en IMAP/SMTP avec le <b>mot de passe de l'adresse e-mail</b> que vous définissez dans l'espace client IONOS, sous Email, et qui est distinct de votre identifiant IONOS. IONOS répond sur les deux transports standard, 993 en TLS et 143 en STARTTLS, si bien que le port est rarement la cause d'un échec de connexion IONOS. mcpemails renseigne une combinaison qui fonctionne et essaie l'autre si la première ne répond pas : si la connexion est refusée ici, c'est vraiment le mot de passe."
   },
   "setup": [
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "Collez-le dans mcpemails",
-      "p": "Choisissez IMAP / SMTP, ajoutez votre adresse IONOS, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+      "p": "Choisissez IMAP / SMTP, ajoutez votre adresse IONOS, les serveurs ci-dessus et le mot de passe pour connecter la boîte en toute sécurité."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "Chez IONOS, le port n'est presque jamais en cause, et alterner les ports fait perdre des jours",
-      "p": "C'est l'information la plus utile que nous puissions vous donner sur IONOS, et elle vient de nos propres journaux de connexion plutôt que d'un manuel. Un espace de travail a enchaîné douze tentatives échouées sur <code>imap.ionos.com</code>, en alternant entre 993 en TLS implicite et 143 en STARTTLS, en supposant que l'un des deux transports était le mauvais. IONOS répond sur les deux. Le problème était le mot de passe depuis le début. IONOS documente 993 pour l'IMAP et 465 pour le SMTP, et propose 587 en STARTTLS comme alternative sortante pour les réseaux qui bloquent le 465 : le transport est donc réellement flexible, et ce n'est réellement pas lui qui refuse votre connexion. Si le serveur répond puis vous rejette, traitez-le comme un problème d'identifiants et allez directement dans l'espace client."
+      "p": "Après un refus de connexion, on a souvent tendance à réessayer sur <code>imap.ionos.com</code> en alternant entre 993 en TLS implicite et 143 en STARTTLS, en supposant que l'un des deux transports est le mauvais. IONOS répond sur les deux : changer de port ne change rien quand le problème vient du mot de passe. IONOS documente 993 pour l'IMAP et 465 pour le SMTP, et propose 587 en STARTTLS comme alternative sortante pour les réseaux qui bloquent le 465 : le transport est donc réellement flexible, et ce n'est réellement pas lui qui refuse votre connexion. Si le serveur répond puis vous rejette, traitez-le comme un problème d'identifiants et allez directement dans l'espace client."
     },
     {
       "h": "Chaque adresse IONOS a son propre mot de passe, et ce n'est pas votre identifiant IONOS",

@@ -40,7 +40,7 @@
     },
     {
       "h": "Introduce la dirección cox.net y la contraseña de aplicación",
-      "p": "En mcpemails elige IMAP / SMTP, pon tu dirección cox.net completa en el campo de nombre de usuario y pega la contraseña de aplicación, no la contraseña de tu cuenta de Cox. Los servidores y puertos de abajo ya vienen rellenados y se verificaron con una conexión TLS real."
+      "p": "En mcpemails elige IMAP / SMTP, pon tu dirección cox.net completa en el campo de nombre de usuario y pega la contraseña de aplicación, no la contraseña de tu cuenta de Cox. Los servidores y puertos de arriba ya vienen rellenados y se verificaron con una conexión TLS real."
     },
     {
       "h": "Pega la URL MCP en tu IA",

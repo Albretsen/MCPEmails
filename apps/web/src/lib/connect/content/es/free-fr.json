@@ -38,7 +38,7 @@
     },
     {
       "h": "Introduce la dirección completa en mcpemails",
-      "p": "Elige IMAP / SMTP y escribe la dirección entera, <code>name@free.fr</code>, en el campo de nombre de usuario. La propia documentación de Free dice que se indique la dirección completa, dominio incluido. Los servidores y puertos de abajo ya vienen rellenados y se verificaron con una conexión TLS real."
+      "p": "Elige IMAP / SMTP y escribe la dirección entera, <code>name@free.fr</code>, en el campo de nombre de usuario. La propia documentación de Free dice que se indique la dirección completa, dominio incluido. Los servidores y puertos de arriba ya vienen rellenados y se verificaron con una conexión TLS real."
     },
     {
       "h": "Pega la URL MCP en tu IA",

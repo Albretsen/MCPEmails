@@ -43,7 +43,7 @@
       "p": "En adresse på <b>planet.nl</b>, <b>hetnet.nl</b> eller <b>xs4all.nl</b> får ikke sin egen server. Alle KPN-e-postdomener autentiserer mot <code>imap.kpnmail.nl</code> og <code>smtp.kpnmail.nl</code>. Det finnes ingenting per domene å slå opp, og å sette opp en klient med en gjettet <code>imap.planet.nl</code> er den aller vanligste måten å kjøre seg fast på."
     },
     {
-      "h": "Lim det inn i mcpemails, og lim så MCP-URL-en inn i AI-en",
+      "h": "Legg til postkassen i mcpemails",
       "p": "Velg IMAP / SMTP, og skriv inn hele adressen og e-postpassordet. KPN-vertene og portene er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling. Lim deretter https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
     }
   ],

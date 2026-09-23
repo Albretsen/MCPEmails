@@ -43,7 +43,7 @@
       "p": "Une adresse <b>planet.nl</b>, <b>hetnet.nl</b> ou <b>xs4all.nl</b> n'a pas son propre serveur. Tous les domaines de messagerie KPN s'authentifient sur <code>imap.kpnmail.nl</code> et <code>smtp.kpnmail.nl</code>. Il n'y a rien à chercher domaine par domaine, et configurer un client avec un <code>imap.planet.nl</code> deviné est la façon la plus courante de rester bloqué."
     },
     {
-      "h": "Collez-le dans mcpemails, puis collez l'URL MCP dans votre IA",
+      "h": "Ajoutez la boîte dans mcpemails",
       "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète et le mot de passe de messagerie. Les serveurs et ports KPN sont préremplis et ont été vérifiés par une vraie connexion TLS. Ajoutez ensuite https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
     }
   ],

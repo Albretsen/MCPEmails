@@ -43,7 +43,7 @@
     },
     {
       "h": "确认主机名，然后把所有信息粘贴到 mcpemails",
-      "p": "大多数 Titan 邮箱使用下方自动填好的服务器。如果你的域名通过 GoDaddy 管理，GoDaddy 的文档给出的则是 993 端口的 <code>imap.secureserver.net</code> 和 465 端口的 <code>smtpout.secureserver.net</code>。如果你是从 Blacknight、MonoVM、DomainDiscount24、Fluccs 或 Domain Central 购买的 Titan，Titan 文档给出的是 <code>imap0101.titan.email</code> 和 <code>smtp0101.titan.email</code>。在 mcpemails 中选择 IMAP / SMTP，输入你完整的 Titan 地址及其密码。"
+      "p": "大多数 Titan 邮箱使用上方自动填好的服务器。如果你的域名通过 GoDaddy 管理，GoDaddy 的文档给出的则是 993 端口的 <code>imap.secureserver.net</code> 和 465 端口的 <code>smtpout.secureserver.net</code>。如果你是从 Blacknight、MonoVM、DomainDiscount24、Fluccs 或 Domain Central 购买的 Titan，Titan 文档给出的是 <code>imap0101.titan.email</code> 和 <code>smtp0101.titan.email</code>。在 mcpemails 中选择 IMAP / SMTP，输入你完整的 Titan 地址及其密码。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",

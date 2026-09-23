@@ -26,7 +26,7 @@
   },
   "method": {
     "title": "Comment Yahoo se connecte : un mot de passe d'application",
-    "body": "Yahoo Mail se connecte en IMAP/SMTP avec un <b>mot de passe d'application Yahoo</b>. Activez la vérification en deux étapes, générez un mot de passe d'application dans Yahoo Account Security, puis collez-le dans mcpemails avec votre adresse Yahoo. Pas de parcours OAuth, pas de fenêtres pop-up."
+    "body": "Yahoo Mail se connecte en IMAP/SMTP avec un <b>mot de passe d'application Yahoo</b>. Générez-en un dans Yahoo Account Security, sous External connections, puis collez-le dans mcpemails avec votre adresse Yahoo. Si l'option n'apparaît pas, activez la vérification en deux étapes et regardez à nouveau. Pas de parcours OAuth, pas de fenêtres pop-up."
   },
   "setup": [
     {
@@ -35,7 +35,7 @@
     },
     {
       "h": "Générez un mot de passe d'application Yahoo",
-      "p": "Activez la vérification en deux étapes, puis générez un mot de passe d'application dans Yahoo Account Security."
+      "p": "Dans Yahoo Account Security, sous External connections, générez un mot de passe d'application. Si l'option n'y figure pas, activez d'abord la vérification en deux étapes."
     },
     {
       "h": "Collez-le dans mcpemails",

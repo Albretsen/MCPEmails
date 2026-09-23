@@ -63,7 +63,7 @@
   ],
   "limits": [
     "El servidor no anuncia la extensión MOVE, así que mover un mensaje se hace como copia, marca y expunge en lugar de un único comando atómico.",
-    "No hay SPECIAL-USE, así que Enviados, Borradores, Papelera y Correo no deseado se identifican por nombre. En un buzón en francés suelen ser Envoyes, Brouillons, Corbeille e Indesirables."
+    "No hay SPECIAL-USE, así que Enviados, Borradores, Papelera y Correo no deseado se identifican por nombre. En un buzón en francés suelen ser Messages envoyés, Brouillons, Corbeille y Spam."
   ],
   "faq": [
     {

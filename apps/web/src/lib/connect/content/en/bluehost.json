@@ -62,7 +62,7 @@
     }
   ],
   "limits": [
-    "A Google Workspace mailbox bought through Bluehost is a Google mailbox. Connect it as Gmail through Google OAuth, not with Bluehost credentials.",
+    "A Google Workspace mailbox bought through Bluehost is a Google mailbox. Connect it as Gmail, with a Google app password or the Google sign-in option, not with Bluehost credentials.",
     "mcpemails connects mailboxes, not the hosting account. Forwarders, aliases and filters stay in the Bluehost portal."
   ],
   "faq": [

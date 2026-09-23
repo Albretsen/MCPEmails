@@ -63,7 +63,7 @@
   ],
   "limits": [
     "The server does not advertise the MOVE extension, so moving a message is performed as copy, flag and expunge rather than one atomic command.",
-    "SPECIAL-USE is absent, so Sent, Drafts, Trash and Junk are matched by name. On a French-language mailbox those are usually Envoyes, Brouillons, Corbeille and Indesirables."
+    "SPECIAL-USE is absent, so Sent, Drafts, Trash and Junk are matched by name. On a French-language mailbox those are usually Messages envoyés, Brouillons, Corbeille and Spam."
   ],
   "faq": [
     {

@@ -44,7 +44,7 @@
       "p": "Un administrador de la cuenta puede crear hasta diez buzones de Telenet, un usuario normal, uno. Si prefieres no darle a un agente la dirección que usas desde hace quince años, crea un segundo buzón en la misma cuenta y conecta ese. Es el mismo servidor, los mismos puertos y una contraseña que puedes cambiar sin alterar nada más."
     },
     {
-      "h": "Pégala en mcpemails y luego pega la URL MCP en tu IA",
+      "h": "Añade el buzón en mcpemails",
       "p": "Elige IMAP / SMTP, escribe la dirección completa, como naam@telenet.be, y pega la contraseña del buzón. Los servidores y puertos de Telenet vienen rellenados y se verificaron mediante una conexión TLS real. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
     }
   ],

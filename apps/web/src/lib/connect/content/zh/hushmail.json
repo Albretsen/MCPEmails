@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "将 Hushmail 连接到 Claude、Cursor 与 MCP 客户端",
-    "description": "通过 IMAP 将 Hushmail 连接到 Claude、Cursor 及任意 MCP 客户端。已验证的设置；IMAP 需要付费套餐和单独的访问密码。1 个收件箱免费。"
+    "description": "通过 IMAP 将 Hushmail 连接到 Claude、Cursor 及任意 MCP 客户端。已验证的设置，并说明“密码加安全码”的登录方式。1 个收件箱免费。"
   },
   "hero": {
     "eyebrow": "Hushmail + AI",
@@ -36,7 +36,7 @@
     },
     {
       "h": "如果开启了两步验证，获取你的安全码",
-      "p": "登录 Hushmail 网页邮箱，从右上角菜单打开 <b>Preferences</b>，然后打开 <b>Security</b> 选项卡，滚动到标题为“Using a desktop or mobile email application”的部分。那里显示一个占位符，后面跟着分为四组的 20 个字母的代码。如果两步验证处于关闭状态，请完全跳过这一步，使用你的普通密码。"
+      "p": "登录 Hushmail 网页邮箱，从右上角菜单打开 <b>Preferences</b>，然后打开 <b>Security</b> 选项卡，滚动到标题为“Using a desktop or mobile email application”的部分。那里显示一个占位符，后面跟着分为四组的 20 个字符的代码。如果两步验证处于关闭状态，请完全跳过这一步，使用你的普通密码。"
     },
     {
       "h": "在 mcpemails 中添加邮箱",
@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "两步验证会把你的密码变成密码加代码",
-      "p": "这一点会难住所有人。Hushmail 不签发应用专用密码。开启两步验证后，每次 IMAP 和 SMTP 登录都要求在一个字段中填写 <code>yourpassword xxxxx xxxxx xxxxx xxxxx</code>：你的普通密码，一个空格，然后是用空格分为四组的 20 个字母的安全码。只要有一组写错、末尾多了空格，或只粘贴了代码，服务器就会以普通的认证失败拒绝你，看起来与密码错误完全一样。代码位于网页邮箱的 Preferences、Security 选项卡中。"
+      "p": "这一点会难住所有人。Hushmail 不签发应用专用密码。开启两步验证后，每次 IMAP 和 SMTP 登录都要求在一个字段中填写 <code>yourpassword xxxxx xxxxx xxxxx xxxxx</code>：你的普通密码，一个空格，然后是用空格分为四组的 20 个字符的安全码。只要有一组写错、末尾多了空格，或只粘贴了代码，服务器就会以普通的认证失败拒绝你，看起来与密码错误完全一样。代码位于网页邮箱的 Preferences、Security 选项卡中。"
     },
     {
       "h": "Hushmail 的 IMAP 服务器不声明 SASL-IR",

@@ -44,7 +44,7 @@
       "p": "Onet no emite contraseñas específicas de aplicación para clientes de correo; te autenticas con la contraseña de tu cuenta de Onet y la dirección completa. Si migras la configuración de un cliente antiguo, no copies el servidor POP3. POP3 se retiró por completo, no quedó en desuso, así que ya nada te responderá en el puerto 995."
     },
     {
-      "h": "Pégala en mcpemails y después pega la URL MCP en tu IA",
+      "h": "Añade el buzón en mcpemails",
       "p": "Elige IMAP / SMTP, escribe la dirección completa, por ejemplo nazwa@onet.pl, e introduce la contraseña. Los servidores y puertos de Onet vienen rellenados y se verificaron con una conexión TLS real. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
     }
   ],

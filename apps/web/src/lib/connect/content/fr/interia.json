@@ -43,7 +43,7 @@
       "p": "La connexion en deux étapes d'Interia (<b>logowanie dwuetapowe</b>) et les programmes de messagerie s'excluent mutuellement. Interia l'indique sur l'écran même où vous l'activez : avec la connexion en deux étapes, le compte ne peut pas être utilisé dans un programme de messagerie. Interia ne fournit aucun mot de passe d'application pour contourner cela, donc si la boîte l'a activée, vous avez un choix à faire avant d'aller plus loin."
     },
     {
-      "h": "Collez-le dans mcpemails, puis collez l'URL MCP dans votre IA",
+      "h": "Ajoutez la boîte dans mcpemails",
       "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple nazwa@interia.pl, puis votre mot de passe Interia. Les serveurs et les ports sont préremplis et ont été vérifiés par une vraie connexion TLS. Ajoutez ensuite https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
     }
   ],

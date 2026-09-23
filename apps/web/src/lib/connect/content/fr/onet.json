@@ -44,7 +44,7 @@
       "p": "Onet n'émet pas de mot de passe spécifique pour les clients de messagerie ; vous vous authentifiez avec le mot de passe de votre compte Onet et l'adresse complète. Si vous reprenez les réglages d'un ancien client, ne recopiez pas le serveur POP3. POP3 a été purement et simplement retiré, pas seulement déprécié : plus rien ne vous répondra sur le port 995."
     },
     {
-      "h": "Collez-le dans mcpemails, puis collez l'URL MCP dans votre IA",
+      "h": "Ajoutez la boîte dans mcpemails",
       "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple nazwa@onet.pl, et entrez le mot de passe. Les serveurs et ports Onet sont préremplis et ont été vérifiés par une connexion TLS réelle. Mettez ensuite https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
     }
   ],

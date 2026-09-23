@@ -26,7 +26,7 @@
   },
   "method": {
     "title": "Cómo se conecta Xtra Mail: IMAP con la contraseña que ya tienes",
-    "body": "Spark publica <code>imap.xtra.co.nz</code> en el puerto 993 para el correo entrante y <code>send.xtra.co.nz</code> para el saliente, con la dirección completa como nombre de usuario. La autenticación es la contraseña del buzón, sin modificar. Eso es lo bastante inusual en 2026 como para decirlo dos veces, porque la propia página de verificación en dos pasos de Spark lleva una nota al principio que dice que solo está disponible en el portal de webmail y que no se aplicará a clientes de correo como Outlook, Mail y Gmail. Así que no hay contraseña de aplicación que buscar, ni página de seguridad que visitar, ni segundo factor que sortear, y todo lo que puede fallar se reduce a si la contraseña es correcta y si tu cliente cumple los requisitos de transporte de Spark. Porque Spark sí los tiene: pide que la aplicación admita cifrados AES de 1024 o 2048 bits y TLS 1.0 o superior, e indica que RC4, SSL y SSL3 no son compatibles."
+    "body": "Spark publica <code>imap.xtra.co.nz</code> en el puerto 993 para el correo entrante y <code>send.xtra.co.nz</code> para el saliente, con la dirección completa como nombre de usuario. La autenticación es la contraseña del buzón, sin modificar. Eso es lo bastante inusual en 2026 como para decirlo dos veces, porque la propia página de verificación en dos pasos de Spark lleva una nota al principio que dice que solo está disponible en el portal de webmail y que no se aplicará a clientes de correo como Outlook, Mail y Gmail. Así que no hay contraseña de aplicación que buscar, ni página de seguridad que visitar, ni segundo factor que sortear, y todo lo que puede fallar se reduce a si la contraseña es correcta y si tu cliente cumple los requisitos de transporte de Spark. Porque Spark sí los tiene: pide que la aplicación admita cifrados AES y TLS 1.0 o superior, e indica que RC4, SSL y SSL3 no son compatibles."
   },
   "setup": [
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "Introduce la dirección completa y tu contraseña de Xtra Mail",
-      "p": "En mcpemails elige IMAP / SMTP e introduce la dirección exactamente como la escribe Spark, por ejemplo <code>joe.bloggs@xtra.co.nz</code>, con la contraseña que usas para iniciar sesión en el webmail de Xtra. Los servidores y puertos indicados abajo ya vienen rellenados y se verificaron con una conexión TLS real."
+      "p": "En mcpemails elige IMAP / SMTP e introduce la dirección exactamente como la escribe Spark, por ejemplo <code>joe.bloggs@xtra.co.nz</code>, con la contraseña que usas para iniciar sesión en el webmail de Xtra. Los servidores y puertos indicados arriba ya vienen rellenados y se verificaron con una conexión TLS real."
     },
     {
       "h": "Pega la URL MCP en tu IA",

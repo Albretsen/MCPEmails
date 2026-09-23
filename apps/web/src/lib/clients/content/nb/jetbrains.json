@@ -12,7 +12,7 @@
     "eyebrow": "JetBrains + e-post",
     "titleLine1": "Koble innboksen din til JetBrains",
     "titleLine2": "AI Assistant",
-    "lead": "Legg til en ekte postkasse i AI Assistant i enhver JetBrains-IDE som støtter den. Les, søk i, send, svar på, planlegg og organiser e-post uten å forlate IDE-en.",
+    "lead": "Legg til en ekte postkasse i AI Assistant i enhver JetBrains-IDE som støtter den. Les, søk i, send, svar på, videresend, planlegg og organiser e-post uten å forlate IDE-en.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Avgrenset API-nøkkel, kan tilbakekalles med ett klikk",
     "meta2": "E-post hentes direkte, lagres aldri",
@@ -62,7 +62,7 @@
   "faq": [
     {
       "q": "Hvordan kobler jeg e-post til JetBrains AI Assistant?",
-      "a": "Åpne Settings, Tools, AI Assistant, Model Context Protocol, legg til en server med tilkoblingstypen Streamable HTTP, lim inn https://mcpemails.com/api/mcp, og legg til en Authorization Bearer-header med en API-nøkkel fra dashbordet ditt. Da har AI Assistant verktøy for å lese, søke, sende, svare, organisere og planlegge e-post."
+      "a": "Åpne Settings, Tools, AI Assistant, Model Context Protocol, legg til en server med tilkoblingstypen Streamable HTTP, lim inn https://mcpemails.com/api/mcp, og legg til en Authorization Bearer-header med en API-nøkkel fra dashbordet ditt. Da har AI Assistant verktøy for å lese, søke, sende, svare, videresende, organisere og planlegge e-post."
     },
     {
       "q": "Hvilke JetBrains-IDE-er fungerer dette i?",

@@ -26,7 +26,7 @@
   },
   "method": {
     "title": "GMX 如何连接：IMAP 与你的账户密码",
-    "body": "GMX 通过 IMAP/SMTP 连接，但 <b>POP3 和 IMAP 访问默认是关闭的</b>。请在 GMX 的 E-mail settings、POP3/IMAP retrieval 中将其开启，然后用你的 GMX 地址和密码连接。如果 GMX 要求你创建应用专用密码，请改用它。德国账户使用 .net 服务器：<code>imap.gmx.net</code> 和 <code>mail.gmx.net</code>。"
+    "body": "GMX 通过 IMAP/SMTP 连接，但 <b>POP3 和 IMAP 访问默认是关闭的</b>。请在 GMX 的 Email 选项卡、Settings、POP3 & IMAP 中将其开启，然后用你的 GMX 地址和密码连接。如果 GMX 要求你创建应用专用密码，请改用它。德国账户使用 .net 服务器：<code>imap.gmx.net</code> 和 <code>mail.gmx.net</code>。"
   },
   "setup": [
     {
@@ -35,11 +35,11 @@
     },
     {
       "h": "在 GMX 中开启 IMAP 访问",
-      "p": "在 GMX 中打开 E-mail settings、POP3/IMAP retrieval，允许 POP3 和 IMAP 访问。如果账户长时间未使用，GMX 会再次将其关闭。"
+      "p": "在 GMX 中打开 Email 选项卡，然后依次进入 Settings、POP3 & IMAP，允许 POP3 和 IMAP 访问。如果账户长时间未使用，GMX 会再次将其关闭。"
     },
     {
-      "h": "粘贴到 mcpemails",
-      "p": "选择 IMAP / SMTP，填入你的 GMX 地址、下方的服务器地址和密码，安全地连接收件箱。"
+      "h": "在 mcpemails 中添加邮箱",
+      "p": "选择 IMAP / SMTP，填入你的 GMX 地址、上方的服务器地址和密码，安全地连接收件箱。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",

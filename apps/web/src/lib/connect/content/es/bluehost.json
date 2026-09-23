@@ -62,7 +62,7 @@
     }
   ],
   "limits": [
-    "Un buzón de Google Workspace comprado a través de Bluehost es un buzón de Google. Conéctalo como Gmail mediante Google OAuth, no con credenciales de Bluehost.",
+    "Un buzón de Google Workspace comprado a través de Bluehost es un buzón de Google. Conéctalo como Gmail, con una contraseña de aplicación de Google o con la opción de inicio de sesión con Google, no con credenciales de Bluehost.",
     "mcpemails conecta buzones, no la cuenta de hosting. Los reenviadores, alias y filtros se quedan en el portal de Bluehost."
   ],
   "faq": [

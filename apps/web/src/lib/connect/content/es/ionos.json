@@ -28,7 +28,7 @@
   },
   "method": {
     "title": "Cómo se conecta IONOS: IMAP y la contraseña de tu buzón",
-    "body": "IONOS se conecta por IMAP/SMTP con la <b>contraseña de correo</b> que defines en el panel de control de IONOS, en Email, que es distinta de tu acceso a IONOS. IONOS responde en los dos transportes estándar, 993 con TLS y 143 con STARTTLS, y adivinar entre ellos es la forma más común en que falla una conexión con IONOS. mcpemails rellena una pareja que funciona y prueba la otra si la primera no responde, así que un inicio de sesión rechazado aquí es de verdad la contraseña."
+    "body": "IONOS se conecta por IMAP/SMTP con la <b>contraseña de correo</b> que defines en el panel de control de IONOS, en Email, que es distinta de tu acceso a IONOS. IONOS responde en los dos transportes estándar, 993 con TLS y 143 con STARTTLS, así que el puerto rara vez es lo que hace fallar un inicio de sesión en IONOS. mcpemails rellena una pareja que funciona y prueba la otra si la primera no responde, así que un inicio de sesión rechazado aquí es de verdad la contraseña."
   },
   "setup": [
     {
@@ -41,7 +41,7 @@
     },
     {
       "h": "Pégala en mcpemails",
-      "p": "Elige IMAP / SMTP y añade tu dirección de IONOS, los servidores de abajo y la contraseña para conectar la bandeja de forma segura."
+      "p": "Elige IMAP / SMTP y añade tu dirección de IONOS, los servidores de arriba y la contraseña para conectar la bandeja de forma segura."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -51,7 +51,7 @@
   "gotchas": [
     {
       "h": "En IONOS el puerto casi nunca es la causa, y alternar puertos hace perder días",
-      "p": "Es lo más útil que podemos decirte sobre IONOS, y sale de nuestros propios registros de conexión, no de ningún manual. Un espacio de trabajo hizo doce intentos fallidos seguidos contra <code>imap.ionos.com</code>, alternando entre el 993 con TLS implícito y el 143 con STARTTLS, suponiendo que uno de los dos transportes era el incorrecto. IONOS responde en ambos. El problema fue la contraseña todo el tiempo. IONOS documenta el 993 para IMAP y el 465 para SMTP, y ofrece el 587 con STARTTLS como alternativa de salida para redes que bloquean el 465, así que el transporte es de verdad flexible y de verdad no es lo que rechaza tu inicio de sesión. Si el servidor responde y luego te rechaza, trátalo como un problema de credenciales y ve directamente al panel de control."
+      "p": "Un patrón habitual tras un inicio de sesión rechazado es seguir reintentando contra <code>imap.ionos.com</code>, alternando entre el 993 con TLS implícito y el 143 con STARTTLS, suponiendo que uno de los dos transportes es el incorrecto. IONOS responde en ambos, así que cambiar no arregla nada cuando el problema es la contraseña. IONOS documenta el 993 para IMAP y el 465 para SMTP, y ofrece el 587 con STARTTLS como alternativa de salida para redes que bloquean el 465, así que el transporte es de verdad flexible y de verdad no es lo que rechaza tu inicio de sesión. Si el servidor responde y luego te rechaza, trátalo como un problema de credenciales y ve directamente al panel de control."
     },
     {
       "h": "Cada dirección de IONOS tiene su propia contraseña, y no es tu acceso a IONOS",

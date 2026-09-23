@@ -43,7 +43,7 @@
       "p": "Dans le webmail laposte.net, ouvrez <b>Paramètres</b>, puis <b>Sécurité</b>. C'est là que la double authentification s'active et se désactive. La documentation de La Poste sur la double authentification laposte.net décrit une confirmation par notification sur un appareil mobile associé et ne documente aucun mécanisme de mot de passe d'application pour les logiciels de messagerie : sachez donc dans quel état se trouve votre compte avant de chercher pourquoi une connexion est refusée."
     },
     {
-      "h": "Collez-le dans mcpemails, puis collez l'URL MCP dans votre IA",
+      "h": "Ajoutez la boîte dans mcpemails",
       "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple prenom.nom@laposte.net, puis le mot de passe. Les serveurs et ports de La Poste sont préremplis et ont été vérifiés par une vraie connexion TLS. Ajoutez ensuite https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
     }
   ],

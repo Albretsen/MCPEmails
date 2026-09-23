@@ -43,7 +43,7 @@
       "p": "在 laposte.net 网页邮箱中打开 <b>Paramètres</b>，然后打开 <b>Sécurité</b>。双重身份验证就在那里开启和关闭。La Poste 关于 laposte.net 双重身份验证的文档描述的是向已配对移动设备推送确认，并没有记载任何供邮件软件使用的应用密码机制，所以在排查登录被拒之前，请先弄清你的账户处于哪种状态。"
     },
     {
-      "h": "粘贴到 mcpemails，再把 MCP URL 粘贴到你的 AI",
+      "h": "在 mcpemails 中添加邮箱",
       "p": "选择 IMAP / SMTP，输入完整地址（例如 prenom.nom@laposte.net）和密码。La Poste 的服务器地址和端口已预填，并经实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],

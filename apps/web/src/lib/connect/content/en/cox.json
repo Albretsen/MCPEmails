@@ -40,7 +40,7 @@
     },
     {
       "h": "Enter the cox.net address and the app password",
-      "p": "In mcpemails choose IMAP / SMTP, put your full cox.net address in the username field and paste the app password rather than your Cox account password. The hosts and ports below are prefilled and were verified from a live TLS connection."
+      "p": "In mcpemails choose IMAP / SMTP, put your full cox.net address in the username field and paste the app password rather than your Cox account password. The hosts and ports above are prefilled and were verified from a live TLS connection."
     },
     {
       "h": "Paste the MCP URL into your AI",

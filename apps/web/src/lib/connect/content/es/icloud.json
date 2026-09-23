@@ -26,7 +26,7 @@
   },
   "method": {
     "title": "Cómo se conecta iCloud: una contraseña específica de aplicación",
-    "body": "iCloud Mail se conecta por IMAP/SMTP con una <b>contraseña específica de aplicación de Apple</b>. Genera una en appleid.apple.com, en Sign-In & Security → App-Specific Passwords (hace falta la autenticación de doble factor), y pégala en mcpemails con tu dirección de iCloud."
+    "body": "iCloud Mail se conecta por IMAP/SMTP con una <b>contraseña específica de aplicación de Apple</b>. Genera una en account.apple.com, en Sign-In and Security → App-Specific Passwords (hace falta la autenticación de doble factor), y pégala en mcpemails con tu dirección de iCloud."
   },
   "setup": [
     {
@@ -35,7 +35,7 @@
     },
     {
       "h": "Genera una contraseña específica de aplicación",
-      "p": "En appleid.apple.com, ve a Sign-In & Security → App-Specific Passwords y crea una (la autenticación de doble factor tiene que estar activada)."
+      "p": "En account.apple.com, ve a Sign-In and Security → App-Specific Passwords y crea una (la autenticación de doble factor tiene que estar activada)."
     },
     {
       "h": "Pégala en mcpemails",

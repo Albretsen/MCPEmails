@@ -39,7 +39,7 @@
     },
     {
       "h": "Saisissez l'adresse complète et le mot de passe de la messagerie",
-      "p": "Dans mcpemails, choisissez IMAP / SMTP et mettez l'adresse entière dans le champ identifiant, au format d'Optus <code>username@optusnet.com.au</code>. Utilisez le mot de passe de cette boîte. Le serveur et les ports ci-dessous sont préremplis et ont été vérifiés par une connexion TLS réelle."
+      "p": "Dans mcpemails, choisissez IMAP / SMTP et mettez l'adresse entière dans le champ identifiant, au format d'Optus <code>username@optusnet.com.au</code>. Utilisez le mot de passe de cette boîte. Le serveur et les ports ci-dessus sont préremplis et ont été vérifiés par une connexion TLS réelle."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",

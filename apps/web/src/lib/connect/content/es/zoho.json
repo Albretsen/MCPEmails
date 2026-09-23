@@ -6,7 +6,7 @@
   ],
   "auth": {
     "method": "app-password",
-    "label": "Contraseña específica de aplicación",
+    "label": "Contraseña de Zoho, o una contraseña específica de aplicación con 2FA o SSO",
     "helpUrl": "https://help.zoho.com/portal/en/kb/accounts/multi-factor-authentication/articles/application-specific-passwords",
     "usernameForm": "Tu dirección completa de Zoho, incluido el dominio: name@yourdomain.com en un dominio propio, o name@zohomail.com en una cuenta personal gratuita.",
     "status": "active"
@@ -19,15 +19,15 @@
     "eyebrow": "Zoho Mail + IA",
     "titleLine1": "Conecta Zoho Mail a Claude,",
     "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
-    "lead": "Dale a tu agente de IA una bandeja real de Zoho en minutos. Lee, busca, envía, responde, programa y organiza correo con IMAP y una contraseña de aplicación, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+    "lead": "Dale a tu agente de IA una bandeja real de Zoho en minutos. Lee, busca, envía, responde, programa y organiza correo con IMAP y tu contraseña de Zoho o una contraseña específica de aplicación, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
     "meta0": "1 bandeja gratis, para siempre",
-    "meta1": "Contraseña de aplicación, sin configurar OAuth",
+    "meta1": "Contraseña de la cuenta o de aplicación, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
     "answer": "Claude no puede acceder por sí solo a Zoho Mail. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.zoho.com en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Antes tienen que estar bien dos cosas: el acceso IMAP está desactivado en un buzón nuevo de Zoho hasta que lo actives, y el nombre del servidor depende de tu centro de datos de Zoho, así que una cuenta creada en la UE o en India usa otro distinto. Una bandeja es gratis, para siempre."
   },
   "method": {
-    "title": "Cómo se conecta Zoho: IMAP y una contraseña de aplicación",
-    "body": "Zoho Mail se conecta por IMAP/SMTP. Primero activa el acceso IMAP en Zoho (viene desactivado de forma predeterminada), genera una contraseña específica de aplicación si usas autenticación de dos factores y pégala en mcpemails junto con tu dirección de Zoho. mcpemails admite todas las regiones de centros de datos de Zoho."
+    "title": "Cómo se conecta Zoho: IMAP y una contraseña",
+    "body": "Zoho Mail se conecta por IMAP/SMTP. Primero activa el acceso IMAP en Zoho (viene desactivado de forma predeterminada) y luego pega tu dirección y tu contraseña de Zoho en mcpemails. Si usas autenticación de dos factores, inicio de sesión federado o SAML, genera una contraseña específica de aplicación y usa esa. mcpemails admite todas las regiones de centros de datos de Zoho."
   },
   "setup": [
     {
@@ -35,8 +35,8 @@
       "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
-      "h": "Activa IMAP y genera una contraseña de aplicación",
-      "p": "En Zoho Mail, activa el acceso IMAP (Settings, Mail Accounts, IMAP Access). Si usas autenticación de dos factores, genera una contraseña específica de aplicación en Zoho Account, Security."
+      "h": "Activa IMAP y, si hace falta, crea una contraseña de aplicación",
+      "p": "En Zoho Mail, activa el acceso IMAP (Settings, Mail Accounts, IMAP Access). Si usas autenticación de dos factores, inicio de sesión federado o SAML, genera una contraseña específica de aplicación en Zoho Account, Security."
     },
     {
       "h": "Pégala en mcpemails",

@@ -49,12 +49,12 @@
       "p": "Google har annonsert offisiell MCP-støtte for tjenestene sine, blant annet en Workspace MCP-server som dekker Gmail sammen med Drive, Calendar og Chat. Vi skal ikke late som noe annet. Hvis Gmail er den eneste postkassen du vil at en assistent skal røre, og klienten din snakker med Googles server, så bruk den. Grunnen til å peke mcpemails mot Gmail i stedet er at den samme serveren også rommer iCloud-, Fastmail-, Zoho-, Yahoo- eller bedrifts-IMAP-postkassen din, eksponerer hver eneste av dem gjennom <b>én</b> MCP-URL, og oppfører seg likt i Claude, Cursor og ChatGPT. Én kobling per leverandør, hver med sin egen autentisering og sine egne verktøynavn, er nettopp det dette unngår."
     },
     {
-      "h": "En Gmail-konto på jobben kan blokkeres av Workspace-administratoren, og Google sier det i feilmeldingen",
-      "p": "Google Workspace-administratorer styrer tredjeparts API-tilgang under Security, deretter API controls, deretter App access control. En administrator kan blokkere alle tredjepartsapper fullstendig, eller tillate en app bare for bestemte OAuth-omfang. Der dette er slått på, avviser Google allerede på sin egen samtykkeskjerm med <code>Error 400: admin_policy_enforced</code>, og forespørselen når aldri oss. Ingenting på vår side kan overstyre det: en administrator må tillate appen for Gmail-omfangene. Personlige kontoer som slutter på <code>@gmail.com</code>, har ingen slik policy og påvirkes ikke."
+      "h": "På en Gmail-konto på jobben kan Workspace-administratoren blokkere alternativet innlogging med Google",
+      "p": "Dette gjelder bare innlogging med Google, ikke et app-passord. Google Workspace-administratorer styrer tredjeparts API-tilgang under Security, deretter API controls, deretter App access control. En administrator kan blokkere alle tredjepartsapper fullstendig, eller tillate en app bare for bestemte OAuth-omfang. Der dette er slått på, avviser Google allerede på sin egen samtykkeskjerm med <code>Error 400: admin_policy_enforced</code>, og forespørselen når aldri oss. Ingenting på vår side kan overstyre det: en administrator må tillate appen for Gmail-omfangene. Personlige kontoer som slutter på <code>@gmail.com</code>, har ingen slik policy og påvirkes ikke."
     },
     {
       "h": "Gmail har etiketter, ikke mapper, så en flytting er ikke en flytting",
-      "p": "Tilkoblingen snakker med Gmail-API-et, der hver mappe AI-klienten viser deg, er en Gmail-etikett. En melding kan ha flere etiketter samtidig, så å flytte den betyr å legge til én og fjerne en annen, og arkivering er rett og slett å fjerne <code>INBOX</code>. Sletting legger meldingen i Gmails papirkurv i stedet for å fjerne den for godt. Ber du en agent sortere e-post inn i en mappe som ikke finnes ennå, må etiketten opprettes først, og den vil da vises i Gmail på alle enheter."
+      "p": "Gmail lagrer etiketter, ikke mapper. Over IMAP vises hver etikett som en mappe, og innlogging med Google jobber direkte med etikettene, så uansett kan en melding ha flere etiketter samtidig og dukke opp i flere mapper. Å flytte den betyr å legge til én etikett og fjerne en annen, og arkivering er rett og slett å fjerne <code>INBOX</code>. Sletting legger meldingen i Gmails papirkurv i stedet for å fjerne den for godt. Ber du en agent sortere e-post inn i en mappe som ikke finnes ennå, må etiketten opprettes først, og den vil da vises i Gmail på alle enheter."
     },
     {
       "h": "En Google Workspace-administrator kan slå av app-passord",
@@ -62,14 +62,14 @@
     }
   ],
   "limits": [
-    "Tilkoblingen ber bare om Gmail-omfangene for lesing, sending, endring og grunnleggende innstillinger. Drive, Calendar, Chat og Docs blir ikke bedt om og kan ikke nås.",
-    "En Google Workspace-postkasse der administratoren blokkerer tredjeparts API-tilgang, kan ikke kobles til. Den avgjørelsen tas i Admin-konsollen, og bare en administrator kan endre den.",
+    "Uansett når mcpemails bare e-post: et app-passord brukes bare til IMAP og SMTP, og innlogging med Google ber bare om Gmail-omfangene for lesing, sending, endring og grunnleggende innstillinger. Drive, Calendar, Chat og Docs nås ikke.",
+    "En Google Workspace-administrator kan stenge begge veiene fra Admin-konsollen: app-passord kan slås av for domenet, og tredjeparts API-tilgang kan blokkeres for innlogging med Google. Bare en administrator kan endre noen av disse avgjørelsene.",
     "Sletting flytter en melding til Gmails papirkurv. Permanent sletting av e-post gjøres i selve Gmail."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Gmail?",
-      "a": "Ja, så snart det står noe mellom dem som snakker Gmail på vegne av Claude. mcpemails er én slik løsning: du logger inn med Google, limer inn én MCP-URL, og Claude kan lese, søke, sende, svare på, videresende og planlegge e-post. Google publiserer også en offisiell Workspace MCP-server som dekker Gmail. Den praktiske forskjellen er at mcpemails ikke bare er for Google, så den samme URL-en betjener også de andre postkassene dine."
+      "a": "Ja, så snart det står noe mellom dem som snakker Gmail på vegne av Claude. mcpemails er én slik løsning: du lager et Google-app-passord, limer inn én MCP-URL, og Claude kan lese, søke, sende, svare på, videresende og planlegge e-post. Google publiserer også en offisiell Workspace MCP-server som dekker Gmail. Den praktiske forskjellen er at mcpemails ikke bare er for Google, så den samme URL-en betjener også de andre postkassene dine."
     },
     {
       "q": "Finnes det en offisiell Gmail MCP-server fra Google?",
@@ -80,16 +80,16 @@
       "a": "Ja. Gmail kobles til over IMAP og SMTP med et Google-app-passord, ikke det vanlige Google-passordet ditt. Google viser bare app-passord på kontoer med totrinnsbekreftelse slått på, så slå det på først, og lag deretter et på myaccount.google.com/apppasswords. Det tar omtrent ett minutt. Innlogging med Google tilbys fortsatt som et alternativ, men den viser en advarsel om ubekreftet app som du må klikke deg forbi."
     },
     {
-      "q": "Hvorfor avviser Google innloggingen på jobbkontoen min?",
-      "a": "Nesten alltid på grunn av en administratorpolicy. Google Workspace-administratorer begrenser hvilke tredjepartsapper som får bruke Gmail-omfang under Security, API controls, App access control. Når appen ikke er tillatt, stopper Google flyten med Error 400: admin_policy_enforced før noe når oss. Administratoren din må tillate appen. En personlig Gmail-konto støter ikke på dette."
+      "q": "Hvorfor avviser Google innlogging med Google på jobbkontoen min?",
+      "a": "Nesten alltid på grunn av en administratorpolicy. Google Workspace-administratorer begrenser hvilke tredjepartsapper som får bruke Gmail-omfang under Security, API controls, App access control. Når appen ikke er tillatt, stopper Google flyten med Error 400: admin_policy_enforced før noe når oss. Administratoren din må tillate appen, eller du kan koble til med et app-passord i stedet, hvis domenet ditt tillater det. En personlig Gmail-konto støter ikke på dette."
     },
     {
       "q": "Fungerer det med et eget domene i Google Workspace?",
-      "a": "Ja. En Workspace-postkasse på ditt eget domene logger inn gjennom den samme samtykkeflyten hos Google som en gmail.com-adresse og oppfører seg likt etterpå. Den eneste betingelsen er administratorpolicyen ovenfor: tredjeparts API-tilgang må være tillatt for kontoen, ellers blokkerer Google samtykkeskjermen."
+      "a": "Ja. En Workspace-postkasse på ditt eget domene kobles til med et app-passord akkurat som en gmail.com-adresse og oppfører seg likt etterpå. Den eneste betingelsen er administratorpolicy: domenet må tillate app-passord, eller, hvis du bruker innlogging med Google, må tredjeparts API-tilgang være tillatt for kontoen, ellers blokkerer Google samtykkeskjermen."
     },
     {
       "q": "Lagres Gmail-e-posten min på serverne deres?",
-      "a": "Nei. Meldinger hentes direkte fra Google for hver forespørsel og sendes videre til AI-klienten din. OAuth-tokener er kryptert ved lagring, og meldingsinnhold beholdes ikke. Tilbakekaller du tilgangen i Google-kontoen din eller sletter innboksen i mcpemails, avsluttes tilkoblingen umiddelbart."
+      "a": "Nei. Meldinger hentes direkte fra Google for hver forespørsel og sendes videre til AI-klienten din. App-passordet ditt, eller OAuth-tokenet hvis du bruker innlogging med Google, er kryptert ved lagring, og meldingsinnhold beholdes ikke. Tilbakekaller du app-passordet eller tilgangen i Google-kontoen din, eller sletter innboksen i mcpemails, avsluttes tilkoblingen umiddelbart."
     }
   ],
   "ctaBand": {

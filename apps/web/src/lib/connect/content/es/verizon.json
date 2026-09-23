@@ -40,7 +40,7 @@
     },
     {
       "h": "Genera una contraseña de aplicación de AOL en Account Security",
-      "p": "Abre Account Info y luego <b>Account Security</b>. Activa la verificación en dos pasos si está desactivada, genera una contraseña de aplicación y ponle un nombre como <code>mcpemails</code>. AOL la muestra una sola vez. Pégala en mcpemails junto con la dirección verizon.net completa; los servidores de AOL indicados abajo ya vienen rellenados."
+      "p": "Abre Account Info y luego <b>Account Security</b>. Activa la verificación en dos pasos si está desactivada, genera una contraseña de aplicación y ponle un nombre como <code>mcpemails</code>. AOL la muestra una sola vez. Pégala en mcpemails junto con la dirección verizon.net completa; los servidores de AOL indicados arriba ya vienen rellenados."
     },
     {
       "h": "Pega la URL MCP en tu IA",

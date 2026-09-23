@@ -26,7 +26,7 @@
   },
   "method": {
     "title": "How Yahoo connects: an app password",
-    "body": "Yahoo Mail connects over IMAP/SMTP using a <b>Yahoo app password</b>. Turn on two-step verification, generate an app password in Yahoo Account Security, then paste it into mcpemails with your Yahoo address. No OAuth dance, no browser pop-ups."
+    "body": "Yahoo Mail connects over IMAP/SMTP using a <b>Yahoo app password</b>. Generate one in Yahoo Account Security under External connections, then paste it into mcpemails with your Yahoo address. If the option is not visible, turn on two-step verification and look again. No OAuth dance, no browser pop-ups."
   },
   "setup": [
     {
@@ -35,7 +35,7 @@
     },
     {
       "h": "Generate a Yahoo app password",
-      "p": "Turn on two-step verification, then generate an app password in Yahoo Account Security."
+      "p": "In Yahoo Account Security, under External connections, generate an app password. If the option is not there, turn on two-step verification first."
     },
     {
       "h": "Paste it into mcpemails",

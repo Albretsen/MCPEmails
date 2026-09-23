@@ -43,7 +43,7 @@
       "p": "有互联网订阅时，Ziggo 允许你创建最多六个邮箱地址；仅有电话订阅则只有一个。如果你不想把主地址交给代理，可以在 Mijn Ziggo 中再创建一个并连接它。请注意，主地址与互联网订阅绑定，取消订阅后就会失效。"
     },
     {
-      "h": "粘贴到 mcpemails，再把 MCP URL 粘贴到你的 AI",
+      "h": "在 mcpemails 中添加邮箱",
       "p": "选择 IMAP / SMTP，输入完整地址（例如 naam@ziggo.nl），粘贴 e-mailwachtwoord。Ziggo 的服务器和端口（包括 STARTTLS 提交端口）已自动填好，并已通过实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],

@@ -85,7 +85,7 @@
     },
     {
       "q": "Does this work with a Foxmail address?",
-      "a": "Yes. An @foxmail.com address is a Tencent alias on the same mailbox as your @qq.com address. It uses the same hosts, the same authorization code and the same setup. You can send as either address once the mailbox is connected."
+      "a": "Yes. An @foxmail.com address is a Tencent alias on the same mailbox as your @qq.com address. It uses the same hosts, the same authorization code and the same setup. Connect the mailbox once rather than once per address."
     },
     {
       "q": "Is my QQ mail stored on your servers?",

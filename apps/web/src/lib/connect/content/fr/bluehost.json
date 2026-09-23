@@ -62,7 +62,7 @@
     }
   ],
   "limits": [
-    "Une boîte Google Workspace achetée via Bluehost est une boîte Google. Connectez-la comme Gmail via Google OAuth, pas avec des identifiants Bluehost.",
+    "Une boîte Google Workspace achetée via Bluehost est une boîte Google. Connectez-la comme Gmail, avec un mot de passe d'application Google ou l'option de connexion avec Google, pas avec des identifiants Bluehost.",
     "mcpemails connecte des boîtes, pas le compte d'hébergement. Les redirections, alias et filtres restent dans le portail Bluehost."
   ],
   "faq": [

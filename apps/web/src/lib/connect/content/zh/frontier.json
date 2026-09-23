@@ -39,7 +39,7 @@
     },
     {
       "h": "在 External connections 下创建应用专用密码",
-      "p": "在 Yahoo 账户安全页面找到 <b>External connections</b>，选择 <b>Create app password</b>。将其命名为 <code>mcpemails</code>，复制出现的代码，并连同你的完整 frontier.com 地址一起粘贴到 mcpemails 中。下方的 Frontier 服务器地址已预填。"
+      "p": "在 Yahoo 账户安全页面找到 <b>External connections</b>，选择 <b>Create app password</b>。将其命名为 <code>mcpemails</code>，复制出现的代码，并连同你的完整 frontier.com 地址一起粘贴到 mcpemails 中。上方的 Frontier 服务器地址已预填。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",

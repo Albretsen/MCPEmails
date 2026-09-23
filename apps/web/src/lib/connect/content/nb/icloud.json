@@ -26,7 +26,7 @@
   },
   "method": {
     "title": "Slik kobles iCloud til: et appspesifikt passord",
-    "body": "iCloud Mail kobles til over IMAP/SMTP med et <b>appspesifikt passord fra Apple</b>. Generer et på appleid.apple.com under Sign-In & Security → App-Specific Passwords (krever tofaktorautentisering), og lim det deretter inn i mcpemails sammen med iCloud-adressen din."
+    "body": "iCloud Mail kobles til over IMAP/SMTP med et <b>appspesifikt passord fra Apple</b>. Generer et på account.apple.com under Sign-In and Security → App-Specific Passwords (krever tofaktorautentisering), og lim det deretter inn i mcpemails sammen med iCloud-adressen din."
   },
   "setup": [
     {
@@ -35,7 +35,7 @@
     },
     {
       "h": "Generer et appspesifikt passord",
-      "p": "På appleid.apple.com går du til Sign-In & Security → App-Specific Passwords og oppretter et (tofaktorautentisering må være slått på)."
+      "p": "På account.apple.com går du til Sign-In and Security → App-Specific Passwords og oppretter et (tofaktorautentisering må være slått på)."
     },
     {
       "h": "Lim det inn i mcpemails",

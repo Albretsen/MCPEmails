@@ -39,7 +39,7 @@
     },
     {
       "h": "Introduce la dirección completa y esa contraseña",
-      "p": "En mcpemails elige IMAP / SMTP e introduce la dirección exactamente como está escrita, incluida <code>name@mindspring.com</code>. Los servidores y puertos de EarthLink de abajo ya vienen rellenados y se verificaron con una conexión TLS real, incluido el servidor de salida aparte en el puerto 587."
+      "p": "En mcpemails elige IMAP / SMTP e introduce la dirección exactamente como está escrita, incluida <code>name@mindspring.com</code>. Los servidores y puertos de EarthLink de arriba ya vienen rellenados y se verificaron con una conexión TLS real, incluido el servidor de salida aparte en el puerto 587."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -48,8 +48,8 @@
   ],
   "gotchas": [
     {
-      "h": "EarthLink no anuncia ningún mecanismo SASL utilizable, y los clientes estrictos se rinden en lugar de iniciar sesión",
-      "p": "La lista de capacidades que EarthLink devuelve antes del inicio de sesión ofrece <code>AUTH=CRAM-MD5</code>, <code>AUTH=EL-TAC</code> y <code>AUTH=EL-VOICE</code>. Los dos últimos son mecanismos propios de EarthLink y ningún cliente de correo normal los implementa. En esa lista no hay ni <code>AUTH=PLAIN</code> ni <code>AUTH=LOGIN</code>. Un cliente programado para elegir un mecanismo SASL según lo que anuncia el servidor no encuentra por tanto nada que pueda usar e informa de un fallo de autenticación sin llegar a enviar la contraseña. Lo que sí funciona es el comando IMAP <code>LOGIN</code> simple, que el servidor acepta porque no anuncia LOGINDISABLED. mcpemails recurre a él. Es el dato más útil de esta página y ninguna otra guía de ajustes de EarthLink lo menciona."
+      "h": "EarthLink no anuncia ni PLAIN ni LOGIN, y los clientes estrictos se rinden en lugar de iniciar sesión",
+      "p": "La lista de capacidades que EarthLink devuelve antes del inicio de sesión ofrece <code>AUTH=CRAM-MD5</code>, <code>AUTH=EL-TAC</code> y <code>AUTH=EL-VOICE</code>. Los dos últimos son mecanismos propios de EarthLink y ningún cliente de correo normal los implementa. CRAM-MD5 es un mecanismo estándar, pero no todos los clientes lo implementan, y en esa lista no hay ni <code>AUTH=PLAIN</code> ni <code>AUTH=LOGIN</code>. Un cliente que solo admite PLAIN o LOGIN y elige el mecanismo según lo que anuncia el servidor no encuentra por tanto nada que pueda usar e informa de un fallo de autenticación sin llegar a enviar la contraseña. mcpemails no usa CRAM-MD5 ni elige de la lista anunciada: siempre inicia sesión con <code>AUTHENTICATE PLAIN</code>, anuncie lo que anuncie el servidor."
     },
     {
       "h": "El servidor de salida no es imap ni smtp punto earthlink punto net",
@@ -84,7 +84,7 @@
     },
     {
       "q": "¿Necesita EarthLink una contraseña de aplicación?",
-      "a": "No. EarthLink no emite contraseñas específicas de aplicación ni tiene una página para crearlas. Un cliente de correo inicia sesión con la contraseña de ese buzón. Si aun así se rechaza una contraseña correcta, la causa suele ser el mecanismo de autenticación y no la credencial, ya que EarthLink no anuncia ningún mecanismo SASL estándar antes del inicio de sesión."
+      "a": "No. EarthLink no emite contraseñas específicas de aplicación ni tiene una página para crearlas. Un cliente de correo inicia sesión con la contraseña de ese buzón. Si aun así se rechaza una contraseña correcta, la causa puede ser el mecanismo de autenticación y no la credencial: antes del inicio de sesión, EarthLink solo anuncia CRAM-MD5 y dos mecanismos propios, no PLAIN ni LOGIN."
     },
     {
       "q": "¿Se almacena mi correo de EarthLink en sus servidores?",

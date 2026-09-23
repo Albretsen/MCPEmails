@@ -85,7 +85,7 @@
     },
     {
       "q": "Cela fonctionne-t-il avec une adresse Foxmail ?",
-      "a": "Oui. Une adresse @foxmail.com est un alias Tencent de la même boîte que votre adresse @qq.com. Elle utilise les mêmes serveurs, le même code d'autorisation et la même configuration. Une fois la boîte connectée, vous pouvez envoyer depuis l'une ou l'autre adresse."
+      "a": "Oui. Une adresse @foxmail.com est un alias Tencent de la même boîte que votre adresse @qq.com. Elle utilise les mêmes serveurs, le même code d'autorisation et la même configuration. Connectez la boîte une seule fois, et non une fois par adresse."
     },
     {
       "q": "Mon courrier QQ est-il stocké sur vos serveurs ?",

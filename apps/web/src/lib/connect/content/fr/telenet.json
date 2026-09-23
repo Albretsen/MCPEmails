@@ -44,7 +44,7 @@
       "p": "Un administrateur de compte peut créer jusqu'à dix boîtes Telenet, un utilisateur ordinaire une seule. Si vous préférez ne pas confier à un agent l'adresse que vous utilisez depuis quinze ans, créez une seconde boîte sur le même compte et connectez plutôt celle-là. Même serveur, mêmes ports, et un mot de passe que vous pouvez changer sans rien perturber d'autre."
     },
     {
-      "h": "Collez-le dans mcpemails, puis collez l'URL MCP dans votre IA",
+      "h": "Ajoutez la boîte dans mcpemails",
       "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple naam@telenet.be, et collez le mot de passe de la boîte. Les serveurs et ports Telenet sont préremplis et ont été vérifiés via une connexion TLS réelle. Mettez ensuite https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
     }
   ],

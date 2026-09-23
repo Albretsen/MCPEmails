@@ -20,8 +20,8 @@
     "answer": "POST JSON-RPC 2.0 to https://mcpemails.com/api/mcp with an Authorization Bearer header carrying an API key from your dashboard. Supported methods are initialize, tools/list, tools/call, prompts/list and prompts/get."
   },
   "method": {
-    "title": "How A script or raw HTTP client connects: a scoped API key",
-    "body": "A script or raw HTTP client does not run the OAuth browser flow against a remote MCP server, so it authenticates with a bearer token instead. Create an API key in your dashboard, tick only the scopes the agent needs, and paste it into A script or raw HTTP client as an <code>Authorization: Bearer</code> header. Key connections and OAuth connections hit the same endpoint and get the same tool catalogue; the difference is only how the token is obtained."
+    "title": "How a script or raw HTTP client connects: a scoped API key",
+    "body": "A script or raw HTTP client does not run the OAuth browser flow against a remote MCP server, so it authenticates with a bearer token instead. Create an API key in your dashboard, tick only the scopes the agent needs, and send it from your script or HTTP client as an <code>Authorization: Bearer</code> header. Key connections and OAuth connections hit the same endpoint and get the same tool catalogue; the difference is only how the token is obtained."
   },
   "setup": [
     {

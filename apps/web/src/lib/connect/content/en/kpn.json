@@ -43,14 +43,14 @@
       "p": "A <b>planet.nl</b>, <b>hetnet.nl</b> or <b>xs4all.nl</b> address does not get its own server. Every KPN mail domain authenticates against <code>imap.kpnmail.nl</code> and <code>smtp.kpnmail.nl</code>. There is nothing per-domain to look up, and configuring a client with a guessed <code>imap.planet.nl</code> is the single most common way to get stuck."
     },
     {
-      "h": "Paste it into mcpemails, then paste the MCP URL into your AI",
+      "h": "Add the mailbox in mcpemails",
       "p": "Choose IMAP / SMTP, enter the full address and the mail password. The KPN hosts and ports are prefilled and were verified from a live TLS connection. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
     }
   ],
   "gotchas": [
     {
       "h": "The host is live, but KPN paused new mailboxes on 10 June 2026",
-      "p": "These are two separate facts and it matters not to confuse them. <code>imap.kpnmail.nl</code> answers today and existing mailboxes connect from mail clients as they always have; KPN's own staff answer on this is <b>je kunt e-mailclients blijven gebruiken zoals je gewend bent</b>. What stopped is issuance: from 10 June 2026 you can no longer create a standard KPN e-mail address or an extra account, while every mailbox is migrated to a new platform. KPN describes the pause as temporary (<b>deze situatie is tijdelijk</b>). So this page will connect the address you already have, and cannot help you obtain a new one right now."
+      "p": "These are two separate facts and it matters not to confuse them. <code>imap.kpnmail.nl</code> answers today and existing mailboxes connect from mail clients as they always have; as KPN's own staff put it, <b>je kunt e-mailclients blijven gebruiken zoals je gewend bent</b>. What stopped is issuance: from 10 June 2026 you can no longer create a standard KPN e-mail address or an extra account, while every mailbox is migrated to a new platform. KPN describes the pause as temporary (<b>deze situatie is tijdelijk</b>). So this page will connect the address you already have, and cannot help you obtain a new one right now."
     },
     {
       "h": "Thirty-odd inherited domains, one hostname, and no new ones",

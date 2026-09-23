@@ -13,7 +13,7 @@
   },
   "meta": {
     "title": "Connecter Hushmail à Claude, Cursor et aux clients MCP",
-    "description": "Connectez Hushmail à Claude, Cursor et tout client MCP en IMAP. Réglages vérifiés, IMAP exige une offre payante et son propre mot de passe d'accès. 1 boîte gratuite."
+    "description": "Connectez Hushmail à Claude, Cursor et tout client MCP en IMAP. Réglages vérifiés, et la connexion par mot de passe suivi du code de sécurité expliquée. 1 boîte gratuite."
   },
   "hero": {
     "eyebrow": "Hushmail + IA",
@@ -36,7 +36,7 @@
     },
     {
       "h": "Récupérez votre code de sécurité si la validation en deux étapes est activée",
-      "p": "Connectez-vous au webmail Hushmail, ouvrez <b>Preferences</b> depuis le menu en haut à droite, puis l'onglet <b>Security</b>, et faites défiler jusqu'à la section intitulée « Using a desktop or mobile email application ». Elle affiche un espace réservé suivi d'un code de 20 lettres en quatre groupes. Si la validation en deux étapes est désactivée, sautez entièrement cette étape et utilisez votre mot de passe habituel."
+      "p": "Connectez-vous au webmail Hushmail, ouvrez <b>Preferences</b> depuis le menu en haut à droite, puis l'onglet <b>Security</b>, et faites défiler jusqu'à la section intitulée « Using a desktop or mobile email application ». Elle affiche un espace réservé suivi d'un code de 20 caractères en quatre groupes. Si la validation en deux étapes est désactivée, sautez entièrement cette étape et utilisez votre mot de passe habituel."
     },
     {
       "h": "Ajoutez la boîte dans mcpemails",
@@ -50,7 +50,7 @@
   "gotchas": [
     {
       "h": "La validation en deux étapes transforme votre mot de passe en mot de passe plus code",
-      "p": "C'est le piège dans lequel tout le monde tombe. Hushmail ne délivre pas de mots de passe d'application. Avec la validation en deux étapes activée, chaque connexion IMAP et SMTP attend <code>yourpassword xxxxx xxxxx xxxxx xxxxx</code> dans un seul champ : votre mot de passe habituel, une espace, puis le code de sécurité de 20 lettres découpé en quatre groupes séparés par des espaces. Un groupe erroné, une espace finale en trop, ou le code seul collé, et le serveur vous rejette avec un échec d'authentification ordinaire qui ressemble exactement à un mauvais mot de passe. Le code se trouve dans le webmail sous Preferences, onglet Security."
+      "p": "C'est le piège dans lequel tout le monde tombe. Hushmail ne délivre pas de mots de passe d'application. Avec la validation en deux étapes activée, chaque connexion IMAP et SMTP attend <code>yourpassword xxxxx xxxxx xxxxx xxxxx</code> dans un seul champ : votre mot de passe habituel, une espace, puis le code de sécurité de 20 caractères découpé en quatre groupes séparés par des espaces. Un groupe erroné, une espace finale en trop, ou le code seul collé, et le serveur vous rejette avec un échec d'authentification ordinaire qui ressemble exactement à un mauvais mot de passe. Le code se trouve dans le webmail sous Preferences, onglet Security."
     },
     {
       "h": "Le serveur IMAP de Hushmail n'annonce pas SASL-IR",

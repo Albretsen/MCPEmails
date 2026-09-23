@@ -12,7 +12,7 @@
     "eyebrow": "JetBrains + 邮件",
     "titleLine1": "把你的收件箱连接到 JetBrains",
     "titleLine2": "AI Assistant",
-    "lead": "在任何支持 AI Assistant 的 JetBrains IDE 中为它接入一个真实邮箱。读取、搜索、发送、回复、定时发送和整理邮件，无需离开 IDE。",
+    "lead": "在任何支持 AI Assistant 的 JetBrains IDE 中为它接入一个真实邮箱。读取、搜索、发送、回复、转发、定时发送和整理邮件，无需离开 IDE。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "限定范围的 API 密钥，一键撤销",
     "meta2": "邮件实时获取，从不存储",
@@ -62,7 +62,7 @@
   "faq": [
     {
       "q": "如何将邮箱连接到 JetBrains AI Assistant？",
-      "a": "打开 Settings、Tools、AI Assistant、Model Context Protocol，添加一个连接类型为 Streamable HTTP 的服务器，粘贴 https://mcpemails.com/api/mcp ，并添加一个带有仪表盘中 API 密钥的 Authorization Bearer 标头。之后 AI Assistant 就拥有了读取、搜索、发送、回复、整理和定时发送邮件的工具。"
+      "a": "打开 Settings、Tools、AI Assistant、Model Context Protocol，添加一个连接类型为 Streamable HTTP 的服务器，粘贴 https://mcpemails.com/api/mcp ，并添加一个带有仪表盘中 API 密钥的 Authorization Bearer 标头。之后 AI Assistant 就拥有了读取、搜索、发送、回复、转发、整理和定时发送邮件的工具。"
     },
     {
       "q": "哪些 JetBrains IDE 可以使用？",

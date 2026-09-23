@@ -62,7 +62,7 @@
     }
   ],
   "limits": [
-    "通过 Bluehost 购买的 Google Workspace 邮箱是 Google 邮箱。请通过 Google OAuth 按 Gmail 连接，而不是使用 Bluehost 凭据。",
+    "通过 Bluehost 购买的 Google Workspace 邮箱是 Google 邮箱。请按 Gmail 连接，使用 Google 应用专用密码或 Google 登录选项，而不是使用 Bluehost 凭据。",
     "mcpemails 连接的是邮箱，而不是主机账户。转发器、别名和过滤器仍在 Bluehost 门户中管理。"
   ],
   "faq": [

@@ -90,7 +90,7 @@
     },
     {
       "q": "¿Usan las direcciones hanmail.net los mismos ajustes?",
-      "a": "Sí. Hanmail fue el dominio de correo original de Daum, y tanto él como daum.net apuntan al mismo buzón en los mismos servidores, con el mismo interruptor IMAP y la misma contraseña de aplicación de Kakao. Conecta el buzón una vez, con la forma de dirección que tenga tu cuenta, y ambas funcionan para enviar."
+      "a": "Sí. Hanmail fue el dominio de correo original de Daum, y tanto él como daum.net apuntan al mismo buzón en los mismos servidores, con el mismo interruptor IMAP y la misma contraseña de aplicación de Kakao. Conecta el buzón una vez, con la forma de dirección que tenga tu cuenta."
     },
     {
       "q": "¿Se almacena mi correo de Daum en sus servidores?",

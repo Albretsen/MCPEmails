@@ -43,7 +43,7 @@
       "p": "With an internet subscription Ziggo lets you create up to six e-mail addresses; a telephone-only subscription gets one. If you would rather not hand an agent your primary address, make a second one in Mijn Ziggo and connect that instead. Note that the primary address is tied to the internet subscription and lapses if you cancel it."
     },
     {
-      "h": "Paste it into mcpemails, then paste the MCP URL into your AI",
+      "h": "Add the mailbox in mcpemails",
       "p": "Choose IMAP / SMTP, enter the full address such as naam@ziggo.nl, and paste the e-mailwachtwoord. The Ziggo hosts and ports are prefilled, including the STARTTLS submission port, and were verified from a live TLS connection. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
     }
   ],

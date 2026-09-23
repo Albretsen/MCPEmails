@@ -26,7 +26,7 @@
   },
   "method": {
     "title": "How iCloud connects: an app-specific password",
-    "body": "iCloud Mail connects over IMAP/SMTP using an <b>Apple app-specific password</b>. Generate one at appleid.apple.com under Sign-In & Security → App-Specific Passwords (two-factor authentication required), then paste it into mcpemails with your iCloud address."
+    "body": "iCloud Mail connects over IMAP/SMTP using an <b>Apple app-specific password</b>. Generate one at account.apple.com under Sign-In and Security → App-Specific Passwords (two-factor authentication required), then paste it into mcpemails with your iCloud address."
   },
   "setup": [
     {
@@ -35,7 +35,7 @@
     },
     {
       "h": "Generate an app-specific password",
-      "p": "At appleid.apple.com, go to Sign-In & Security → App-Specific Passwords and create one (two-factor authentication must be on)."
+      "p": "At account.apple.com, go to Sign-In and Security → App-Specific Passwords and create one (two-factor authentication must be on)."
     },
     {
       "h": "Paste it into mcpemails",

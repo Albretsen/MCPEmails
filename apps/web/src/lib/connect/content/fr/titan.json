@@ -43,7 +43,7 @@
     },
     {
       "h": "Vérifiez vos noms de serveurs, puis collez le tout dans mcpemails",
-      "p": "La plupart des boîtes Titan utilisent les serveurs préremplis ci-dessous. Si votre domaine est géré via GoDaddy, GoDaddy indique plutôt <code>imap.secureserver.net</code> sur le 993 et <code>smtpout.secureserver.net</code> sur le 465. Si vous avez acheté Titan chez Blacknight, MonoVM, DomainDiscount24, Fluccs ou Domain Central, Titan indique <code>imap0101.titan.email</code> et <code>smtp0101.titan.email</code>. Choisissez IMAP / SMTP dans mcpemails, saisissez votre adresse Titan complète et son mot de passe."
+      "p": "La plupart des boîtes Titan utilisent les serveurs préremplis ci-dessus. Si votre domaine est géré via GoDaddy, GoDaddy indique plutôt <code>imap.secureserver.net</code> sur le 993 et <code>smtpout.secureserver.net</code> sur le 465. Si vous avez acheté Titan chez Blacknight, MonoVM, DomainDiscount24, Fluccs ou Domain Central, Titan indique <code>imap0101.titan.email</code> et <code>smtp0101.titan.email</code>. Choisissez IMAP / SMTP dans mcpemails, saisissez votre adresse Titan complète et son mot de passe."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",

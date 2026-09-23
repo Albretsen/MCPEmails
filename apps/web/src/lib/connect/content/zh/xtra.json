@@ -26,7 +26,7 @@
   },
   "method": {
     "title": "Xtra Mail 如何连接：用你已有的密码走 IMAP",
-    "body": "Spark 公布的收信服务器是 <code>imap.xtra.co.nz</code> 的 993 端口，发信服务器是 <code>send.xtra.co.nz</code>，用户名为完整地址。认证使用邮箱密码，不做任何改动。在 2026 年这已经少见到值得强调两遍，因为 Spark 自己的两步验证页面顶部有一条说明：该功能仅在网页邮箱门户中可用，不适用于 Outlook、Mail 和 Gmail 等邮件客户端。所以没有应用密码需要寻找，没有安全页面需要访问，也没有第二重验证需要绕过，所有可能的失败只归结为密码是否正确，以及你的客户端是否满足 Spark 的传输要求。Spark 确实有这些要求：它要求应用支持 1024 位或 2048 位 AES 加密套件以及 TLS 1.0 或更高版本，并声明不支持 RC4、SSL 和 SSL3。"
+    "body": "Spark 公布的收信服务器是 <code>imap.xtra.co.nz</code> 的 993 端口，发信服务器是 <code>send.xtra.co.nz</code>，用户名为完整地址。认证使用邮箱密码，不做任何改动。在 2026 年这已经少见到值得强调两遍，因为 Spark 自己的两步验证页面顶部有一条说明：该功能仅在网页邮箱门户中可用，不适用于 Outlook、Mail 和 Gmail 等邮件客户端。所以没有应用密码需要寻找，没有安全页面需要访问，也没有第二重验证需要绕过，所有可能的失败只归结为密码是否正确，以及你的客户端是否满足 Spark 的传输要求。Spark 确实有这些要求：它要求应用支持 AES 加密套件以及 TLS 1.0 或更高版本，并声明不支持 RC4、SSL 和 SSL3。"
   },
   "setup": [
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "输入完整地址和你的 Xtra Mail 密码",
-      "p": "在 mcpemails 中选择 IMAP / SMTP，按 Spark 的写法原样输入地址，例如 <code>joe.bloggs@xtra.co.nz</code>，以及你登录 Xtra 网页邮箱所用的密码。下方的服务器和端口已自动填好，并已通过实时 TLS 连接验证。"
+      "p": "在 mcpemails 中选择 IMAP / SMTP，按 Spark 的写法原样输入地址，例如 <code>joe.bloggs@xtra.co.nz</code>，以及你登录 Xtra 网页邮箱所用的密码。上方的服务器和端口已自动填好，并已通过实时 TLS 连接验证。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",

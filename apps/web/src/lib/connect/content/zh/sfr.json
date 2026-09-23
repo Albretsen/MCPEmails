@@ -44,7 +44,7 @@
       "p": "SFR 允许用户在同一个邮箱配置页面中，在线路附带的主地址之外创建额外的地址和别名。如果你不想把所有熟人都在用的地址交给代理，可以在那里再创建一个并连接它。服务器和端口都相同。"
     },
     {
-      "h": "粘贴到 mcpemails，再把 MCP URL 粘贴到你的 AI",
+      "h": "在 mcpemails 中添加邮箱",
       "p": "选择 IMAP / SMTP，输入完整地址（例如 prenom.nom@sfr.fr），粘贴 SFR Mail 密码。SFR 的服务器和端口已自动填好，并已通过实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],

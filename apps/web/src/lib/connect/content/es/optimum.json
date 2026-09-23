@@ -2,7 +2,8 @@
   "_sources": [
     "https://faq.optimum.net/taxonomy/term/1250",
     "https://faq.optimum.net/taxonomy/term/3677",
-    "https://faq.optimum.net/node/13446"
+    "https://faq.optimum.net/node/13446",
+    "https://faq.optimum.net/node/7327"
   ],
   "auth": {
     "method": "account-password",
@@ -27,7 +28,7 @@
   },
   "method": {
     "title": "Cómo se conecta Optimum: IMAP con tu Optimum ID de siempre",
-    "body": "Optimum usa un único servidor de correo para todas sus marcas. <code>mail.optimum.net</code> responde a IMAP en el puerto 993 sobre TLS con su propio certificado, y el mismo nombre atiende el envío en el puerto 465. Las direcciones de <code>optimum.net</code>, <code>optonline.net</code> y de los dominios de Suddenlink que Optimum absorbió llegan todas a él. La autenticación es de una sencillez que se agradece: tu <b>Optimum ID</b> y su contraseña, con la dirección de correo completa como nombre de usuario. Optimum no emite contraseñas específicas de aplicación ni tiene un interruptor de acceso para terceros que buscar, así que un inicio de sesión que falla aquí es un problema real de credenciales y no un ajuste escondido. Lo único que conviene saber antes de conectar un agente al buzón es que Optimum dejó de crear cuentas de correo el 4 de mayo de 2021 y remite a quien quiera una dirección nueva a Gmail, Outlook.com o Yahoo."
+    "body": "Optimum usa un único servidor de correo para todas sus marcas. <code>mail.optimum.net</code> responde a IMAP en el puerto 993 sobre TLS con su propio certificado, y Optimum documenta el mismo nombre para el envío en el puerto 465. Las direcciones de <code>optimum.net</code>, <code>optonline.net</code> y de los dominios de Suddenlink que Optimum absorbió llegan todas a él. La autenticación es de una sencillez que se agradece: tu <b>Optimum ID</b> y su contraseña, con la dirección de correo completa como nombre de usuario. Optimum no emite contraseñas específicas de aplicación ni tiene un interruptor de acceso para terceros que buscar, así que un inicio de sesión que falla aquí es un problema real de credenciales y no un ajuste escondido. Lo único que conviene saber antes de conectar un agente al buzón es que Optimum dejó de crear cuentas de correo el 4 de mayo de 2021 y remite a quien quiera una dirección nueva a Gmail, Outlook.com o Yahoo."
   },
   "setup": [
     {
@@ -77,7 +78,7 @@
     },
     {
       "q": "¿Cuál es la configuración IMAP de Optimum?",
-      "a": "IMAP es mail.optimum.net en el puerto 993 con TLS implícito, verificado con una conexión TLS en vivo en la fecha que se indica en esta página. El envío usa el mismo nombre de servidor en el puerto 465. El usuario es tu dirección de correo completa y la contraseña es la de tu Optimum ID."
+      "a": "IMAP es mail.optimum.net en el puerto 993 con TLS implícito, verificado con una conexión TLS en vivo en la fecha que se indica en esta página. Para el envío, Optimum documenta el mismo nombre de servidor en el puerto 465; nuestra propia prueba de ese puerto no obtuvo respuesta, así que la parte de salida no está verificada aquí. El usuario es tu dirección de correo completa y la contraseña es la de tu Optimum ID."
     },
     {
       "q": "¿Necesito una contraseña de aplicación para el correo de Optimum?",

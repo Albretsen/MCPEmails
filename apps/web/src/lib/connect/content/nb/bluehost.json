@@ -62,7 +62,7 @@
     }
   ],
   "limits": [
-    "En Google Workspace-postkasse kjøpt gjennom Bluehost er en Google-postkasse. Koble den til som Gmail via Google OAuth, ikke med Bluehost-påloggingsopplysninger.",
+    "En Google Workspace-postkasse kjøpt gjennom Bluehost er en Google-postkasse. Koble den til som Gmail, med et Google-app-passord eller innlogging med Google, ikke med Bluehost-påloggingsopplysninger.",
     "mcpemails kobler til postkasser, ikke webhotellkontoen. Videresendinger, alias og filtre forblir i Bluehost-portalen."
   ],
   "faq": [

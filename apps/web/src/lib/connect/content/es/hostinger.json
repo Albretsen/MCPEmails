@@ -27,7 +27,7 @@
   },
   "method": {
     "title": "Cómo se conecta Hostinger: IMAP y la contraseña de tu buzón",
-    "body": "Hostinger Email se conecta por IMAP/SMTP con la contraseña del buzón que defines en hPanel, en Emails. No hay contraseña de aplicación ni paso OAuth. Los servidores son <code>imap.hostinger.com</code> y <code>smtp.hostinger.com</code> para todos los dominios, así que no hay nada que consultar."
+    "body": "Hostinger Email se conecta por IMAP/SMTP con la contraseña del buzón que defines en hPanel, en Emails. No hay contraseña de aplicación ni paso OAuth. En Hostinger Email los servidores son <code>imap.hostinger.com</code> y <code>smtp.hostinger.com</code> para todos los dominios. Los planes Business Email y Enterprise Email funcionan sobre Titan y usan otros servidores, que se explican más abajo."
   },
   "setup": [
     {
@@ -40,7 +40,7 @@
     },
     {
       "h": "Pégala en mcpemails",
-      "p": "Elige IMAP / SMTP y añade tu dirección de Hostinger, los servidores de abajo y la contraseña para conectar la bandeja de forma segura."
+      "p": "Elige IMAP / SMTP y añade tu dirección de Hostinger, los servidores de arriba y la contraseña para conectar la bandeja de forma segura."
     },
     {
       "h": "Pega la URL MCP en tu IA",

@@ -43,7 +43,7 @@
       "p": "Interia 的两步登录（<b>logowanie dwuetapowe</b>）与邮件程序是互斥的。Interia 在开启它的页面上就说明了：开启两步登录后，该账户无法在邮件程序中使用。Interia 不提供可以绕过它的应用专用密码，所以如果邮箱已开启两步登录，你需要在继续之前做出选择。"
     },
     {
-      "h": "粘贴到 mcpemails，再把 MCP URL 粘贴到你的 AI",
+      "h": "在 mcpemails 中添加邮箱",
       "p": "选择 IMAP / SMTP，输入完整地址（例如 nazwa@interia.pl），并输入你的 Interia 密码。服务器地址和端口已预填，并经实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],

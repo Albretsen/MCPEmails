@@ -26,7 +26,7 @@
   },
   "method": {
     "title": "Comment Xtra Mail se connecte : IMAP avec le mot de passe que vous avez déjà",
-    "body": "Spark publie <code>imap.xtra.co.nz</code> sur le port 993 pour le courrier entrant et <code>send.xtra.co.nz</code> pour le courrier sortant, avec l'adresse complète comme nom d'utilisateur. L'authentification se fait avec le mot de passe de la boîte, tel quel. C'est assez inhabituel en 2026 pour mériter d'être répété, car la page de Spark consacrée à la vérification en deux étapes porte en tête une note indiquant qu'elle n'est disponible que dans le portail webmail et ne s'appliquera pas aux clients de messagerie comme Outlook, Mail et Gmail. Il n'y a donc aucun mot de passe d'application à trouver, aucune page de sécurité à visiter et aucun second facteur à contourner : tout ce qui peut échouer se résume à savoir si le mot de passe est correct et si votre client respecte les exigences de transport de Spark. Car Spark en a : il demande que l'application prenne en charge les chiffrements AES 1024 ou 2048 bits et TLS 1.0 ou supérieur, et précise que RC4, SSL et SSL3 ne sont pas pris en charge."
+    "body": "Spark publie <code>imap.xtra.co.nz</code> sur le port 993 pour le courrier entrant et <code>send.xtra.co.nz</code> pour le courrier sortant, avec l'adresse complète comme nom d'utilisateur. L'authentification se fait avec le mot de passe de la boîte, tel quel. C'est assez inhabituel en 2026 pour mériter d'être répété, car la page de Spark consacrée à la vérification en deux étapes porte en tête une note indiquant qu'elle n'est disponible que dans le portail webmail et ne s'appliquera pas aux clients de messagerie comme Outlook, Mail et Gmail. Il n'y a donc aucun mot de passe d'application à trouver, aucune page de sécurité à visiter et aucun second facteur à contourner : tout ce qui peut échouer se résume à savoir si le mot de passe est correct et si votre client respecte les exigences de transport de Spark. Car Spark en a : il demande que l'application prenne en charge les chiffrements AES et TLS 1.0 ou supérieur, et précise que RC4, SSL et SSL3 ne sont pas pris en charge."
   },
   "setup": [
     {
@@ -39,7 +39,7 @@
     },
     {
       "h": "Saisissez l'adresse complète et votre mot de passe Xtra Mail",
-      "p": "Dans mcpemails, choisissez IMAP / SMTP et saisissez l'adresse exactement comme Spark l'écrit, par exemple <code>joe.bloggs@xtra.co.nz</code>, avec le mot de passe que vous utilisez pour vous connecter au webmail Xtra. Les serveurs et ports ci-dessous sont préremplis et ont été vérifiés par une connexion TLS réelle."
+      "p": "Dans mcpemails, choisissez IMAP / SMTP et saisissez l'adresse exactement comme Spark l'écrit, par exemple <code>joe.bloggs@xtra.co.nz</code>, avec le mot de passe que vous utilisez pour vous connecter au webmail Xtra. Les serveurs et ports ci-dessus sont préremplis et ont été vérifiés par une connexion TLS réelle."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",

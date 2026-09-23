@@ -43,7 +43,7 @@
       "p": "In the laposte.net webmail, open <b>Paramètres</b>, then <b>Sécurité</b>. That is where two-factor authentication is switched on and off. La Poste's own documentation for laposte.net two-factor authentication describes a push confirmation to a paired mobile device and does not document any application-password mechanism for mail software, so know which state your account is in before you troubleshoot a refused login."
     },
     {
-      "h": "Paste it into mcpemails, then paste the MCP URL into your AI",
+      "h": "Add the mailbox in mcpemails",
       "p": "Choose IMAP / SMTP, enter the full address such as prenom.nom@laposte.net, and enter the password. The La Poste hosts and ports are prefilled and were verified from a live TLS connection. Then drop https://mcpemails.com/api/mcp into Claude, Cursor or ChatGPT, authorize, and your agent has the inbox."
     }
   ],

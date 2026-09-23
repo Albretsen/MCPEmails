@@ -39,7 +39,7 @@
     },
     {
       "h": "Skriv inn hele adressen og e-postpassordet",
-      "p": "I mcpemails velger du IMAP / SMTP og skriver hele adressen i brukernavnfeltet, i Optus' eget format <code>username@optusnet.com.au</code>. Bruk passordet for den postkassen. Vert og porter under er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
+      "p": "I mcpemails velger du IMAP / SMTP og skriver hele adressen i brukernavnfeltet, i Optus' eget format <code>username@optusnet.com.au</code>. Bruk passordet for den postkassen. Vert og porter over er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",

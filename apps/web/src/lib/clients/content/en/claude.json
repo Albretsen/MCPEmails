@@ -44,7 +44,7 @@
   ],
   "gotchas": [
     {
-      "h": "A connector is not the same thing as Claude built-in Gmail connector",
+      "h": "A custom connector is not the same thing as Claude's built-in Gmail connector",
       "p": "Anthropic ships its own Google connector, and it is a different path: one provider, inside one app. A custom connector points Claude at an MCP server instead, which is why the same setup then covers iCloud, Fastmail, Zoho, Yandex and any company IMAP mailbox behind a single URL, and why the identical URL works in Cursor, ChatGPT and the rest."
     },
     {

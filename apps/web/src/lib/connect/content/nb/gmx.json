@@ -26,7 +26,7 @@
   },
   "method": {
     "title": "Slik kobles GMX til: IMAP og kontopassordet ditt",
-    "body": "GMX kobles til over IMAP/SMTP, men <b>POP3- og IMAP-tilgang er slått av som standard</b>. Slå det på i GMX under E-mail settings, POP3/IMAP retrieval, og koble deretter til med GMX-adressen og passordet ditt. Hvis GMX ber deg lage et applikasjonsspesifikt passord, bruker du det i stedet. Tyske kontoer bruker .net-vertene, <code>imap.gmx.net</code> og <code>mail.gmx.net</code>."
+    "body": "GMX kobles til over IMAP/SMTP, men <b>POP3- og IMAP-tilgang er slått av som standard</b>. Slå det på i GMX under fanen Email, Settings, POP3 & IMAP, og koble deretter til med GMX-adressen og passordet ditt. Hvis GMX ber deg lage et applikasjonsspesifikt passord, bruker du det i stedet. Tyske kontoer bruker .net-vertene, <code>imap.gmx.net</code> og <code>mail.gmx.net</code>."
   },
   "setup": [
     {
@@ -35,11 +35,11 @@
     },
     {
       "h": "Slå på IMAP-tilgang i GMX",
-      "p": "Åpne E-mail settings, POP3/IMAP retrieval i GMX, og tillat POP3- og IMAP-tilgang. GMX slår det av igjen hvis kontoen står ubrukt lenge."
+      "p": "Åpne fanen Email, deretter Settings, deretter POP3 & IMAP i GMX, og tillat POP3- og IMAP-tilgang. GMX slår det av igjen hvis kontoen står ubrukt lenge."
     },
     {
-      "h": "Lim det inn i mcpemails",
-      "p": "Velg IMAP / SMTP, legg inn GMX-adressen din, vertene nedenfor og passordet for å koble til innboksen på en sikker måte."
+      "h": "Legg til postkassen i mcpemails",
+      "p": "Velg IMAP / SMTP, legg inn GMX-adressen din, vertene ovenfor og passordet for å koble til innboksen på en sikker måte."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",

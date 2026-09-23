@@ -41,7 +41,7 @@
     },
     {
       "h": "Saisissez l'adresse rogers.com et le mot de passe d'application",
-      "p": "Dans mcpemails, choisissez IMAP / SMTP, mettez l'adresse rogers.com complète dans le champ du nom d'utilisateur et collez le mot de passe d'application. N'utilisez pas votre mot de passe de webmail Rogers Yahoo : il est refusé au niveau IMAP. Les serveurs et ports ci-dessous sont préremplis et ont été vérifiés par une connexion TLS réelle."
+      "p": "Dans mcpemails, choisissez IMAP / SMTP, mettez l'adresse rogers.com complète dans le champ du nom d'utilisateur et collez le mot de passe d'application. N'utilisez pas votre mot de passe de webmail Rogers Yahoo : il est refusé au niveau IMAP. Les serveurs et ports ci-dessus sont préremplis et ont été vérifiés par une connexion TLS réelle."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",

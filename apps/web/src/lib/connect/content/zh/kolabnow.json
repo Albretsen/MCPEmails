@@ -12,7 +12,7 @@
   },
   "meta": {
     "title": "将 Kolab Now 连接到 Claude、Cursor 与 MCP 客户端",
-    "description": "通过 imap.kolabnow.com:993 的 IMAP 将 Kolab Now 连接到 Claude、Cursor 及任意 MCP 客户端。已验证的设置与应用专用密码规则。1 个收件箱免费。"
+    "description": "通过 imap.kolabnow.com:993 的 IMAP 将 Kolab Now 连接到 Claude、Cursor 及任意 MCP 客户端。已验证的设置，以及为什么登录使用的是账户密码。1 个收件箱免费。"
   },
   "hero": {
     "eyebrow": "Kolab Now + AI",

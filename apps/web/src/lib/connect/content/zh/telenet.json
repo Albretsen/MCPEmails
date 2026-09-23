@@ -44,7 +44,7 @@
       "p": "账户管理员最多可创建十个 Telenet 邮箱，普通用户可创建一个。如果你不想把用了十五年的地址交给代理，可以在同一账户下再创建一个邮箱并连接它。服务器相同、端口相同，密码可以单独更换而不影响其他任何东西。"
     },
     {
-      "h": "粘贴到 mcpemails，再把 MCP URL 粘贴到你的 AI",
+      "h": "在 mcpemails 中添加邮箱",
       "p": "选择 IMAP / SMTP，输入完整地址（例如 naam@telenet.be），粘贴邮箱密码。Telenet 的服务器和端口已自动填好，并已通过实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],

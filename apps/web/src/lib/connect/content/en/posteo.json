@@ -91,7 +91,7 @@
     },
     {
       "q": "Does Posteo's crypto mail storage stop my AI reading my mail?",
-      "a": "No. Crypto mail storage encrypts your mailbox at rest on Posteo's side and is decrypted transparently when you authenticate, so IMAP behaves normally and an agent reads your mail as usual. The feature that does make mail unreadable to a client is inbound encryption, which PGP or S/MIME encrypts every new message to your own public key."
+      "a": "No. Crypto mail storage encrypts your mailbox at rest on Posteo's side and is decrypted transparently when you authenticate, so IMAP behaves normally and an agent reads your mail as usual. The feature that does make mail unreadable to a client is inbound encryption, which encrypts every newly arriving message to your own public PGP or S/MIME key."
     },
     {
       "q": "Is my Posteo mail stored on your servers?",

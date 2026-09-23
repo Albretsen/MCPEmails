@@ -23,7 +23,7 @@
     "answer": "不能，而且并不是因为我们这边缺少某项功能。HEY 根本不接受任何 IMAP、POP 或 SMTP 连接，无论是 hey.com 地址还是 HEY for Domains 自定义域名都一样，所以 mcpemails 无法连接 HEY 邮箱，任何其他托管 MCP 服务器也不能。37signals 把这视为设计决定而非缺陷：筛选、按联系人设置的规则以及 HEY 的会话组织都在其服务器上实现，只有它自己的应用使用那套协议。如果你想让代理进入 HEY，37signals 提供了 hey-cli，它会针对你已登录的账户在本地运行一个 MCP 服务器。mcpemails 用于你与 HEY 并用的那些 IMAP 邮箱，其中 1 个收件箱免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "不支持 IMAP、POP 或 SMTP 登录",
-    "meta2": "邮件实时获取，绝不存储"
+    "meta2": "hey-cli 提供本地 MCP 服务器"
   },
   "method": {
     "title": "HEY 如何连接：它不连接，这就是它的产品设计",

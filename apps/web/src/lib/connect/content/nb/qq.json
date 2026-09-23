@@ -85,7 +85,7 @@
     },
     {
       "q": "Virker dette med en Foxmail-adresse?",
-      "a": "Ja. En @foxmail.com-adresse er et Tencent-alias på samme postkasse som @qq.com-adressen din. Den bruker samme verter, samme autorisasjonskode og samme oppsett. Du kan sende som begge adressene når postkassen er koblet til."
+      "a": "Ja. En @foxmail.com-adresse er et Tencent-alias på samme postkasse som @qq.com-adressen din. Den bruker samme verter, samme autorisasjonskode og samme oppsett. Koble til postkassen én gang, ikke én gang per adresse."
     },
     {
       "q": "Lagres QQ-e-posten min på serverne deres?",

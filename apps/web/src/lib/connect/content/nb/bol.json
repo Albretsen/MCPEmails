@@ -12,22 +12,22 @@
     "status": "active"
   },
   "meta": {
-    "title": "BOL Mail til Claude: IMAP krever BOL Completo",
-    "description": "Koble en BOL-postkasse til Claude eller enhver MCP-klient på imap.bol.com.br:993. Gratis BOL-kontoer er bare webmail, så IMAP krever det betalte BOL Completo."
+    "title": "BOL Mail til Claude: IMAP og BOL Completo-abonnementet",
+    "description": "Koble en BOL-postkasse til Claude eller enhver MCP-klient på imap.bol.com.br:993. Tredjepartsveiledninger oppgir at gratis BOL-kontoer bare har webmail, og at IMAP krever det betalte BOL Completo."
   },
   "hero": {
     "eyebrow": "BOL Mail + AI",
     "titleLine1": "Koble BOL Mail til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte BOL-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP, forutsatt at postkassen er på et betalt BOL-abonnement og ikke på det gratis webmailnivået.",
-    "answer": "Claude kan ikke nå BOL Mail på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP på imap.bol.com.br, port 993, og autentiserer med BOL-passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Haken ligger i abonnementet, ikke i protokollen: BOL fjernet IMAP- og POP-tilgang fra gratiskontoene sine, som bare har webmail, så en vanlig gratis bol.com.br-adresse kan ikke kobles til av noen klient før den er oppgradert til et betalt BOL-abonnement. Én innboks i mcpemails er gratis.",
+    "answer": "Claude kan ikke nå BOL Mail på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP på imap.bol.com.br, port 993, og autentiserer med BOL-passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Haken ligger sannsynligvis i abonnementet, ikke i protokollen: tredjepartsveiledninger oppgir at BOL fjernet IMAP- og POP-tilgang fra gratiskontoene sine, som dermed bare har webmail, så en gratis bol.com.br-adresse lar seg kanskje ikke koble til fra noen klient før den er oppgradert til et betalt BOL-abonnement. Én innboks i mcpemails er gratis.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Betalt BOL-abonnement, deretter passordet ditt",
     "meta2": "E-post hentes direkte, lagres aldri"
   },
   "method": {
     "title": "Slik kobles BOL Mail til: IMAP bare på det betalte nivået",
-    "body": "BOL leverer IMAP på <code>imap.bol.com.br</code>, port 993 med implisitt TLS, og innsending på <code>smtps.bol.com.br</code>, port 465, også med implisitt TLS. BOL drives av UOL, og serveren bak begge er den samme Dovecot-installasjonen som UOL kjører, med samme grense for meldingsstørrelse og samme navngivning. Forskjellen som betyr noe, er kommersiell. BOLs gratispostkasse, som de fleste bol.com.br-adresser er, fungerer i webmailen og ingen andre steder: tilgang over POP og IMAP ble fjernet fra gratisabonnementet, så det finnes ikke noe vertsnavn du kan skrive inn som får en gratiskonto til å logge inn fra en klient. Det betalte nivået, som selges som <b>BOL Completo</b>, gir tilbake klienttilgangen, og derfra er autentiseringen helt vanlig. Det finnes ikke noe app-passord og ingen egen autorisasjonskode, bare BOL-passordet ditt og hele adressen som brukernavn."
+    "body": "BOL leverer IMAP på <code>imap.bol.com.br</code>, port 993 med implisitt TLS, og innsending på <code>smtps.bol.com.br</code>, port 465, også med implisitt TLS. BOL drives av UOL, og serveren bak begge er den samme Dovecot-installasjonen som UOL kjører, med samme grense for meldingsstørrelse og samme navngivning. Forskjellen som mest sannsynlig betyr noe, er kommersiell. Tredjepartsveiledninger oppgir at BOLs gratispostkasse, som de fleste bol.com.br-adresser er, fungerer i webmailen og ingen andre steder, fordi tilgang over POP og IMAP ble fjernet fra gratisabonnementet, og at det betalte nivået, som selges som <b>BOL Completo</b>, gir tilbake klienttilgangen. Vi har ikke funnet dokumentasjon fra BOL som bekrefter dette. På et abonnement med klienttilgang er autentiseringen helt vanlig. Det finnes ikke noe app-passord og ingen egen autorisasjonskode, bare BOL-passordet ditt og hele adressen som brukernavn."
   },
   "setup": [
     {
@@ -36,7 +36,7 @@
     },
     {
       "h": "Bekreft at postkassen er på et betalt BOL-abonnement",
-      "p": "Logg inn i BOLs webmail og sjekk abonnementet på kontoen. En gratis BOL-konto har ingen klienttilgang å slå på: POP og IMAP ble fjernet fra det nivået, så postkassen kan bare nås via nettgrensesnittet. Det er en oppgradering til BOL Completo som gjør en IMAP-tilkobling mulig. Hvis kontoen forblir gratis, kobler du heller en annen postkasse til mcpemails og videresender BOL-e-posten dit."
+      "p": "Logg inn i BOLs webmail og sjekk abonnementet på kontoen. Tredjepartsveiledninger oppgir at en gratis BOL-konto ikke har noen klienttilgang å slå på, fordi POP og IMAP ble fjernet fra det nivået, og at det er en oppgradering til BOL Completo som gjør en IMAP-tilkobling mulig. Hvis kontoen er gratis og et riktig passord avvises, er det den sannsynlige årsaken; koble da heller en annen postkasse til mcpemails og videresend BOL-e-posten dit."
     },
     {
       "h": "Skriv inn adressen og passordet ditt i mcpemails",
@@ -49,8 +49,8 @@
   ],
   "gotchas": [
     {
-      "h": "En gratis BOL-konto kan ikke kobles til i det hele tatt, av noe som helst",
-      "p": "Dette er svaret på nesten alle spørsmål om BOL og e-postklienter, og det sies sjelden rett ut. Gratis BOL-postkasser fungerer bare i webmailen. POP- og IMAP-tilgang ble fjernet fra gratisabonnementet, så Thunderbird, Outlook, Apple Mail, et skript og en hostet MCP-server feiler alle på samme måte, og de feiler ved pålogging med en feilmelding om påloggingsopplysninger som ikke sier noe om abonnement. Folk konkluderer med at passordet er feil, tilbakestiller det og feiler igjen med det nye. Sjekk abonnementet før du sjekker noe annet. Ingen konfigurasjon løser dette, bare en oppgradering til BOL Completo."
+      "h": "Gratis BOL-kontoer skal etter sigende bare ha webmail, og innloggingsfeilen nevner ikke abonnement",
+      "p": "Tredjepartsveiledninger oppgir at gratis BOL-postkasser bare fungerer i webmailen, fordi POP- og IMAP-tilgang ble fjernet fra gratisabonnementet. Vi har ikke funnet dokumentasjon fra BOL som bekrefter det. Hvis det gjelder kontoen din, feiler Thunderbird, Outlook, Apple Mail, et skript og en hostet MCP-server alle på samme måte, ved pålogging, med en feilmelding om påloggingsopplysninger som ikke sier noe om abonnement. Folk konkluderer med at passordet er feil, tilbakestiller det og feiler igjen med det nye. Sjekk abonnementet før du sjekker noe annet. Hvis abonnementet er årsaken, løser ingen konfigurasjon det, bare en oppgradering til BOL Completo."
     },
     {
       "h": "UOLs innstillinger ser like nok ut til å kopieres, og SMTP-porten er ulik",
@@ -62,14 +62,14 @@
     }
   ],
   "limits": [
-    "IMAP krever et betalt BOL-abonnement. Hvis postkassen er på gratisnivået, finnes det ingenting å koble til, og mcpemails kan ikke omgå det fordi begrensningen håndheves på BOLs server.",
+    "Tredjepartsveiledninger oppgir at IMAP krever et betalt BOL-abonnement. Hvis det gjelder postkassen din, kan ikke mcpemails omgå det, fordi innloggingen avvises på BOLs server.",
     "Det finnes ingen IDLE-støtte, så e-post hentes ved jevnlige sjekker i stedet for å bli dyttet ut. Agenten ser en ny melding neste gang den sjekker, ikke i det øyeblikket den kommer.",
     "SMTP-serveren godtar meldinger opptil omtrent 33 MB. En videresending med større vedlegg avvises ved sending i stedet for å settes i kø."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med BOL-e-post?",
-      "a": "Bare på et betalt BOL-abonnement. Claude har ingen innebygd BOL-kobling og kan ikke åpne en IMAP-tilkobling på egen hånd, så den trenger en MCP-server som mcpemails foran postkassen. Den tilkoblingen går over IMAP, som gratis BOL-kontoer ikke tilbyr, så en gratis bol.com.br-adresse må oppgraderes først."
+      "a": "Etter det som oppgis, bare på et betalt BOL-abonnement. Claude har ingen innebygd BOL-kobling og kan ikke åpne en IMAP-tilkobling på egen hånd, så den trenger en MCP-server som mcpemails foran postkassen. Den tilkoblingen går over IMAP, som gratis BOL-kontoer ifølge tredjepartsveiledninger ikke tilbyr, så en gratis bol.com.br-adresse må kanskje oppgraderes først."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for BOL?",
@@ -77,7 +77,7 @@
     },
     {
       "q": "Hvorfor fungerer ikke BOL-passordet mitt i en e-postklient?",
-      "a": "Mest sannsynlig fordi postkassen er på gratisabonnementet, der POP- og IMAP-tilgang er fjernet. Serveren avviser likevel påloggingen med en vanlig feilmelding om påloggingsopplysninger, og det får det til å se ut som et passordproblem. Bekreft abonnementet i BOLs webmail før du tilbakestiller noe. På et betalt abonnement er det vanlige BOL-passordet riktig påloggingsopplysning."
+      "a": "Mest sannsynlig fordi postkassen er på gratisabonnementet, der POP- og IMAP-tilgang ifølge tredjepartsveiledninger er fjernet. Serveren avviser da likevel påloggingen med en vanlig feilmelding om påloggingsopplysninger, og det får det til å se ut som et passordproblem. Bekreft abonnementet i BOLs webmail før du tilbakestiller noe. På et betalt abonnement er det vanlige BOL-passordet riktig påloggingsopplysning."
     },
     {
       "q": "Er BOL det samme som UOL?",

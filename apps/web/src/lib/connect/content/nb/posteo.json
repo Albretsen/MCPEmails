@@ -91,7 +91,7 @@
     },
     {
       "q": "Hindrer Posteos krypterte e-postlagring AI-en min i å lese e-posten?",
-      "a": "Nei. Kryptert e-postlagring krypterer postkassen din ved lagring hos Posteo og dekrypteres usynlig når du autentiserer, så IMAP oppfører seg normalt og en agent leser e-posten din som vanlig. Funksjonen som faktisk gjør e-post uleselig for en klient, er kryptering av innkommende e-post, som krypterer hver ny melding med PGP eller S/MIME til din egen offentlige nøkkel."
+      "a": "Nei. Kryptert e-postlagring krypterer postkassen din ved lagring hos Posteo og dekrypteres usynlig når du autentiserer, så IMAP oppfører seg normalt og en agent leser e-posten din som vanlig. Funksjonen som faktisk gjør e-post uleselig for en klient, er kryptering av innkommende e-post, som krypterer hver ny melding som kommer inn, med din egen offentlige PGP- eller S/MIME-nøkkel."
     },
     {
       "q": "Lagres Posteo-e-posten min på serverne deres?",
