@@ -62,7 +62,7 @@
 // ---------------------------------------------------------------------------
 
 /** How a selector was resolved. `exact` is the only one with nothing to say. */
-export type ActionResolutionKind = "exact" | "canonical" | "legacy" | "alias";
+export type ActionResolutionKind = "exact" | "canonical" | "legacy" | "alias" | "inferred";
 
 export interface ActionResolution {
   /** The enum member the call will run. */
@@ -304,8 +304,56 @@ export function buildResolvedActionNote(
   toolName: string,
   resolution: ActionResolution,
 ): string {
+  if (resolution.kind === "inferred") {
+    return (
+      `Note: ${toolName} was called without an action; from the arguments ` +
+      `given it was read as '${resolution.action}' and that is what ran.`
+    );
+  }
   return (
     `Note: '${resolution.received}' is not an action of ${toolName}; ` +
     `it was read as '${resolution.action}' and that is what ran.`
   );
+}
+
+// ---------------------------------------------------------------------------
+// A missing selector, inferred from the arguments (2026-09-23).
+//
+// `email_read` with no `action` was refused 24 times across 14 workspaces in
+// the 10 days to 2026-09-22. Every action of email_read is a read, so a wrong
+// guess costs one more read and the note in the result says which action ran.
+// No other tool gets this: on a tool that can write, "no action" is not a
+// question the server may answer on the caller's behalf.
+//
+// The rules only look at which arguments are PRESENT, most specific first:
+//   message_ids                          → read_batch
+//   message_id + attachment_index/filename → attachment
+//   message_id                           → read
+//   any search filter                    → search
+//   anything else                        → list
+// ---------------------------------------------------------------------------
+
+const SEARCH_ARGUMENTS = [
+  "query", "from", "to", "cc", "subject", "body", "text", "has_attachment",
+  "flagged", "since", "before", "include_folders",
+];
+
+/** The action a selector-less call means, for the tools that allow asking. */
+export function inferMissingAction(
+  toolName: string,
+  args: Record<string, unknown>,
+): ActionResolution | null {
+  if (toolName !== "email_read") return null;
+  if ("action" in args) return null;
+  const has = (name: string) => args[name] !== undefined && args[name] !== null;
+  const action = has("message_ids")
+    ? "read_batch"
+    : has("message_id") && (has("attachment_index") || has("filename"))
+    ? "attachment"
+    : has("message_id")
+    ? "read"
+    : SEARCH_ARGUMENTS.some(has)
+    ? "search"
+    : "list";
+  return { action, kind: "inferred", received: "(none)" };
 }

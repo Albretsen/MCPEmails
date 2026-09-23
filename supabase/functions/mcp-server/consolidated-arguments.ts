@@ -330,3 +330,39 @@ export function buildIgnoredArgumentsNote(
     `result does not reflect ${clauses.length === 1 ? "it" : "them"}.`
   );
 }
+
+// ---------------------------------------------------------------------------
+// One message id where the action takes a list, or the reverse (2026-09-23).
+//
+// `email_organize {action: "flag", message_id: "..."}` was refused because flag
+// takes only `message_ids`, and the refusal pointed at move/copy/archive, which
+// is the wrong advice. `message_id: X` and `message_ids: [X]` name exactly the
+// same message, so on an action that takes only one of the two, the other is
+// rewritten into it. A list of more than one id on a single-message action is
+// NOT rewritten: that is a request for several messages, and running it on the
+// first would be a different call.
+// ---------------------------------------------------------------------------
+
+/** Rewrite message_id ⇄ message_ids to the form `allowed` takes. Returns the rewrite, if any. */
+export function normalizeMessageIdShape(
+  allowed: readonly string[],
+  args: Record<string, unknown>,
+): "to_list" | "to_single" | null {
+  const takesOne = allowed.includes("message_id");
+  const takesMany = allowed.includes("message_ids");
+  if (takesMany && !takesOne && typeof args["message_id"] === "string" && !("message_ids" in args)) {
+    args["message_ids"] = [args["message_id"]];
+    delete args["message_id"];
+    return "to_list";
+  }
+  if (
+    takesOne && !takesMany && Array.isArray(args["message_ids"]) &&
+    args["message_ids"].length === 1 && typeof args["message_ids"][0] === "string" &&
+    !("message_id" in args)
+  ) {
+    args["message_id"] = args["message_ids"][0];
+    delete args["message_ids"];
+    return "to_single";
+  }
+  return null;
+}

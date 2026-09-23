@@ -36,6 +36,32 @@
 //   integer, got a string → base-10 digits with an optional sign, and only
 //                           within the safe-integer range.
 //   number, got a string  → the same, plus a decimal fraction.
+//   object, got a string  → a JSON object literal ('{"from":"a@b.no"}') is
+//                           parsed. Some hosts serialise every nested object.
+//
+// ── Added 2026-09-23, from a sweep of every advertised parameter ────────────
+//
+//   null, on a property whose type does not admit null → the property is
+//     removed, i.e. treated as not sent. Clients that fill every declared field
+//     (OpenAI-style strict function calling) send `null` for the ones they
+//     mean to leave unset; all 265 optional parameters refused that. A
+//     REQUIRED property sent as null is still missing afterwards, so it is
+//     still refused as required.
+//   enum, wrong case → the member that matches ignoring case and surrounding
+//     whitespace ("Gmail" → "gmail"). Only when exactly one member matches.
+//   email, "Name <addr>" → addr. The display name is dropped: every email
+//     field here takes a bare address, and the validator then checks addr.
+//     A list given as one string is split on , and ; OUTSIDE quotes and angle
+//     brackets, so '"Doe, John" <j@x.no>, a@b.no' is two recipients, not three.
+//   integer above `maximum`, on a property the CALLER names as clampable →
+//     the maximum. Only page sizes are clampable (see CLAMPED_TO_MAXIMUM):
+//     asking for 200 results and getting the first 100 plus `has_more` is the
+//     answer to the question that was asked. A cap that bounds what a write
+//     touches (a delete's `limit`, `max_messages_per_run`) is never clamped:
+//     there a larger number is an instruction, and a silent smaller one is not
+//     the same instruction. A clamp is always DISCLOSED in the result by the
+//     caller of this module; the others are not, because they change nothing
+//     about what the call does.
 //
 // Pure and dependency-free so it can be tested without booting the server.
 // ---------------------------------------------------------------------------
@@ -48,8 +74,41 @@ export interface CoercedArgument {
   path: string;
   /** JSON type the caller sent. */
   from: string;
-  /** Declared type it was rewritten into. */
+  /**
+   * What it was rewritten into: a declared type, `absent` for a null that was
+   * removed, `enum` for a case-folded member, `address` for an extracted
+   * email address, or `clamped` for a value lowered to its maximum.
+   */
   to: string;
+  /** For `clamped` only: the number asked for and the number used. */
+  requested?: number;
+  used?: number;
+}
+
+/**
+ * Page-size properties that are lowered to their schema `maximum` instead of
+ * refused, per tool. Read-only listings only: every one of these bounds how
+ * much is RETURNED, never how much is changed. `email_read.limit` alone was
+ * refused 346 times in the 10 days to 2026-09-22, most of them a client
+ * retrying the identical call every three seconds.
+ */
+export const CLAMPED_TO_MAXIMUM: Readonly<Record<string, readonly string[]>> = {
+  email_read: ["limit", "body_max_chars"],
+  draft: ["limit"],
+  draft_list: ["limit"],
+  schedule: ["limit"],
+  schedule_list: ["limit"],
+  contact_search: ["limit"],
+  // `limit` on these two is the run-history page size (action 'runs').
+  // `max_messages_per_run` is deliberately absent: it bounds what an
+  // unattended rule may touch.
+  automation: ["limit"],
+  automation_read: ["limit"],
+};
+
+export interface CoercionOptions {
+  /** Top-level properties that may be clamped to their maximum. */
+  clamp?: readonly string[];
 }
 
 function declaredTypes(schema: Schema): string[] {
@@ -100,6 +159,16 @@ function coerceString(text: string, types: readonly string[], schema: Schema): {
       const parsed = Number(trimmed);
       if (Number.isFinite(parsed)) return { value: parsed, to: "number" };
     }
+    if (type === "object" && trimmed.startsWith("{") && trimmed.endsWith("}")) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (parsed !== null && typeof parsed === "object" && !Array.isArray(parsed)) {
+          return { value: parsed, to: "object" };
+        }
+      } catch {
+        // Not JSON; leave it for the validator.
+      }
+    }
     if (type === "array") {
       if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
         try {
@@ -116,13 +185,64 @@ function coerceString(text: string, types: readonly string[], schema: Schema): {
       // the validator to name.
       if (items && !itemTypes.includes("string")) continue;
       if (items?.format === "email") {
-        const parts = trimmed.split(/[,;]/).map((part) => part.trim()).filter((part) => part !== "");
+        const parts = splitAddressList(trimmed);
         return { value: parts.length > 0 ? parts : [text], to: "array" };
       }
       return { value: [text], to: "array" };
     }
   }
   return null;
+}
+
+/**
+ * Split an address list written as one string into bare addresses.
+ *
+ * Separators are `,` and `;`, but only outside a quoted display name and
+ * outside angle brackets, so a display name may contain either. An entry with
+ * an angle-bracketed part contributes what is inside the brackets; any other
+ * entry contributes itself, trimmed. Nothing here decides validity: the
+ * validator checks every address that comes out.
+ */
+export function splitAddressList(text: string): string[] {
+  const entries: string[] = [];
+  let current = "";
+  let quoted = false;
+  let angled = false;
+  for (const char of text) {
+    if (char === '"' && !angled) quoted = !quoted;
+    else if (char === "<" && !quoted) angled = true;
+    else if (char === ">" && !quoted) angled = false;
+    if ((char === "," || char === ";") && !quoted && !angled) {
+      entries.push(current);
+      current = "";
+      continue;
+    }
+    current += char;
+  }
+  entries.push(current);
+  return entries
+    .map((entry) => bareAddress(entry))
+    .filter((entry) => entry !== "");
+}
+
+/** `Name <addr>` → `addr`; anything without angle brackets, trimmed. */
+function bareAddress(entry: string): string {
+  const match = /<([^<>]*)>\s*$/.exec(entry.trim());
+  return (match ? match[1] : entry).trim();
+}
+
+/** Does this string carry a display name around an angle-bracketed address? */
+function hasDisplayName(entry: string): boolean {
+  return /<[^<>]*>\s*$/.test(entry.trim());
+}
+
+/** The one enum member equal to `text` ignoring case and surrounding space. */
+function enumMember(text: string, members: readonly unknown[]): string | null {
+  const wanted = text.trim().toLowerCase();
+  const hits = members.filter((member) =>
+    typeof member === "string" && member.toLowerCase() === wanted
+  );
+  return hits.length === 1 ? hits[0] as string : null;
 }
 
 /**
@@ -135,6 +255,7 @@ export function coerceArgumentTypes(
   schema: Schema,
   value: unknown,
   path = "",
+  options: CoercionOptions = {},
 ): CoercedArgument[] {
   const changed: CoercedArgument[] = [];
   if (value === null || typeof value !== "object" || Array.isArray(value)) return changed;
@@ -147,6 +268,13 @@ export function coerceArgumentTypes(
     const childPath = path === "" ? key : `${path}.${key}`;
     const types = declaredTypes(propertySchema);
     let child = object[key];
+
+    // null for an optional field means "not set" to the clients that send it.
+    if (child === null && types.length > 0 && !types.includes("null")) {
+      delete object[key];
+      changed.push({ path: childPath, from: "null", to: "absent" });
+      continue;
+    }
 
     if (types.length > 0 && !admits(types, child)) {
       if (typeof child === "string") {
@@ -166,6 +294,42 @@ export function coerceArgumentTypes(
       }
     }
 
+    if (
+      typeof child === "string" && Array.isArray(propertySchema.enum) &&
+      !propertySchema.enum.includes(child)
+    ) {
+      const member = enumMember(child, propertySchema.enum);
+      if (member !== null) {
+        object[key] = member;
+        child = member;
+        changed.push({ path: childPath, from: "string", to: "enum" });
+      }
+    }
+
+    if (typeof child === "string" && propertySchema.format === "email" && hasDisplayName(child)) {
+      object[key] = bareAddress(child);
+      child = object[key];
+      changed.push({ path: childPath, from: "string", to: "address" });
+    }
+    if (Array.isArray(child) && asSchema(propertySchema.items)?.format === "email") {
+      child.forEach((item, index) => {
+        if (typeof item === "string" && hasDisplayName(item)) {
+          (child as unknown[])[index] = bareAddress(item);
+          changed.push({ path: `${childPath}[${index}]`, from: "string", to: "address" });
+        }
+      });
+    }
+
+    if (
+      path === "" && options.clamp?.includes(key) && typeof child === "number" &&
+      typeof propertySchema.maximum === "number" && child > propertySchema.maximum
+    ) {
+      const used = propertySchema.maximum;
+      changed.push({ path: childPath, from: "number", to: "clamped", requested: child, used });
+      object[key] = used;
+      child = used;
+    }
+
     if (child !== null && typeof child === "object" && !Array.isArray(child)) {
       changed.push(...coerceArgumentTypes(propertySchema, child, childPath));
     } else if (Array.isArray(child)) {
@@ -178,4 +342,22 @@ export function coerceArgumentTypes(
     }
   }
   return changed;
+}
+
+/** How to get the rest, per clamped property. */
+const CLAMP_CONTINUATION: Record<string, string> = {
+  limit: "call again with the returned next_offset for the rest",
+  body_max_chars: "continue a truncated body with body_offset",
+};
+
+/**
+ * The result note for page sizes lowered to their maximum. The caller asked
+ * for more than it got; the note says so and says how to get the rest.
+ */
+export function buildClampedArgumentsNote(clamped: readonly CoercedArgument[]): string {
+  const parts = clamped.map((entry) =>
+    `${entry.path} ${entry.requested} is above the maximum of ${entry.used}, so ${entry.used} ` +
+    `was used` + (CLAMP_CONTINUATION[entry.path] ? `; ${CLAMP_CONTINUATION[entry.path]}` : "")
+  );
+  return `Note: ${parts.join(". ")}.`;
 }

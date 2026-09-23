@@ -79,6 +79,8 @@ export const INBOX_SERVICE_VALUES = [
 
 /** The columns this module needs. A row carries far more; none of it matters here. */
 export interface FilterableInbox {
+  /** Present on every row inbox_list reads; optional so older callers still type-check. */
+  id?: string;
   email_address: string;
   provider: string;
   service: string | null;
@@ -88,11 +90,18 @@ export interface FilterableInbox {
 export interface InboxListFilter {
   provider: string | null;
   service: string | null;
+  /**
+   * One inbox, by email address or inbox_id (2026-09-23). Models pass the inbox
+   * they mean to inbox_list the way they pass it to every other tool, and were
+   * refused for it; as a filter it answers "is this one connected, and what is
+   * its id" in one call.
+   */
+  inbox?: string | null;
 }
 
 /** Whether any filter was supplied at all. */
 export function hasInboxFilter(filter: InboxListFilter): boolean {
-  return filter.provider !== null || filter.service !== null;
+  return filter.provider !== null || filter.service !== null || (filter.inbox ?? null) !== null;
 }
 
 /**
@@ -114,6 +123,12 @@ export function matchesInboxFilter(
   if (filter.service !== null) {
     const service = (inbox.service ?? "").toLowerCase();
     if (service !== filter.service.toLowerCase()) return false;
+  }
+  if (filter.inbox) {
+    const wanted = filter.inbox.trim().toLowerCase();
+    if (inbox.email_address.toLowerCase() !== wanted && (inbox.id ?? "").toLowerCase() !== wanted) {
+      return false;
+    }
   }
   return true;
 }
@@ -137,6 +152,7 @@ function filterPhrase(filter: InboxListFilter): string {
   const clauses: string[] = [];
   if (filter.provider !== null) clauses.push(`provider '${filter.provider}'`);
   if (filter.service !== null) clauses.push(`service '${filter.service}'`);
+  if (filter.inbox) clauses.push(`inbox '${filter.inbox}'`);
   return clauses.join(" and ");
 }
 

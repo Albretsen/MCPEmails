@@ -85,6 +85,90 @@ const ARGUMENT_ALIASES: Record<string, readonly AliasRule[]> = {
   ],
 };
 
+/** A plain rename: the value means exactly the same thing under both names. */
+const same = (value: unknown) => value;
+
+// ── Synonyms models reach for (2026-09-23) ──────────────────────────────────
+// Unlike the retired names above, none of these was ever in a schema. They are
+// the names models write when they guess, taken from production refusals
+// ("arguments.email_id is not allowed", 90 days to 2026-09-23): `id` alone was
+// 22 calls across 12 workspaces. Each maps to a property with EXACTLY the same
+// meaning, so accepting one changes nothing about what the call does, and
+// they are rewritten in silence. `is_read` is the one that inverts: the
+// tri-state `unread` is its negation, and a non-boolean is carried over so the
+// validator refuses it under the canonical name.
+const SYNONYMS: Record<string, readonly AliasRule[]> = {
+  email_read: [
+    { from: "email_id", to: "message_id", translate: same },
+    { from: "id", to: "message_id", translate: same },
+    { from: "body_length", to: "body_max_chars", translate: same },
+    { from: "body_limit", to: "body_max_chars", translate: same },
+    { from: "body_char_limit", to: "body_max_chars", translate: same },
+    { from: "max_length", to: "body_max_chars", translate: same },
+    { from: "max_body_chars", to: "body_max_chars", translate: same },
+    { from: "has_attachments", to: "has_attachment", translate: same },
+    { from: "max_results", to: "limit", translate: same },
+    { from: "folders", to: "include_folders", translate: same },
+    {
+      from: "is_read",
+      to: "unread",
+      translate: (value) => typeof value === "boolean" ? !value : value,
+    },
+  ],
+  // destination_folder_id already takes a folder NAME as well as an id, so the
+  // name-shaped spelling is the same argument.
+  email_organize: [
+    { from: "destination_folder", to: "destination_folder_id", translate: same },
+  ],
+  email_search_and_move: [
+    { from: "destination_folder", to: "destination_folder_id", translate: same },
+  ],
+  // inbox_list's filter is `inbox` (address or id); every other tool also takes
+  // `inbox_id`, so that spelling is accepted here too.
+  inbox_list: [
+    { from: "inbox_id", to: "inbox", translate: same },
+  ],
+};
+
+/**
+ * The words that name the ONE operation of a tool that has no `action`.
+ *
+ * Consolidated tools take an `action`, so models add one to the standalone
+ * tools too: `inbox_list {action: "list"}` was refused 35 times across 15
+ * workspaces in 90 days. An `action` that names the tool's own operation
+ * selects nothing the call was not already going to do, so it is dropped in
+ * silence. Any other word is left in place and refused, because it may be a
+ * request for a different operation: `signature_set {action: "get"}` must not
+ * quietly become a write.
+ */
+const STANDALONE_ACTION_WORDS: Record<string, readonly string[]> = {
+  inbox_list: ["list", "inbox_list", "list_inboxes", "inboxes"],
+  folder_list: ["list", "folder_list", "list_folders", "folders"],
+  draft_list: ["list", "draft_list", "list_drafts", "drafts"],
+  schedule_list: ["list", "schedule_list", "list_scheduled", "scheduled"],
+  contact_search: ["search", "contact_search", "search_contacts", "contacts"],
+  signature_get: ["get", "read", "signature_get", "get_signature"],
+  signature_set: ["set", "update", "signature_set", "set_signature"],
+  email_search_and_move: ["search_and_move", "email_search_and_move", "move"],
+  draft_read: ["read", "get", "draft_read"],
+};
+
+/**
+ * Remove an `action` that only restates a standalone tool's own operation.
+ * Returns true when one was removed. See STANDALONE_ACTION_WORDS.
+ */
+export function dropRedundantAction(
+  toolName: string,
+  args: Record<string, unknown>,
+): boolean {
+  const words = STANDALONE_ACTION_WORDS[toolName];
+  if (!words || typeof args["action"] !== "string") return false;
+  const spoken = args["action"].trim().toLowerCase().replace(/[\s-]+/g, "_");
+  if (!words.includes(spoken)) return false;
+  delete args["action"];
+  return true;
+}
+
 /**
  * Rewrite retired argument names into their canonical names, in place.
  *
@@ -106,8 +190,8 @@ export function normalizeArgumentAliases(
     delete args[name];
     applied.push({ from: name, to: null });
   }
-  const rules = ARGUMENT_ALIASES[toolName];
-  if (!rules) return applied;
+  const rules = [...(ARGUMENT_ALIASES[toolName] ?? []), ...(SYNONYMS[toolName] ?? [])];
+  if (rules.length === 0) return applied;
   for (const rule of rules) {
     if (!(rule.from in args)) continue;
     const retiredValue = args[rule.from];

@@ -87,6 +87,7 @@ import {
   type ActionSelectorIndex,
   actionSelectorIndex,
   buildResolvedActionNote,
+  inferMissingAction,
   resolveActionSelector,
   safeActionToken,
 } from "./action-selector.ts";
@@ -263,6 +264,7 @@ import {
   buildIgnoredArgumentsNote,
   type ExtraArgumentReview,
   neutralDefaultOf,
+  normalizeMessageIdShape,
   reviewExtraArguments,
   withOwningActions,
 } from "./consolidated-arguments.ts";
@@ -367,8 +369,19 @@ import {
   KNOWN_PROTOCOL_VERSIONS,
   readProtocolVersionHeader,
 } from "./protocol-version-header.ts";
-import { normalizeArgumentAliases } from "./argument-aliases.ts";
-import { coerceArgumentTypes } from "./argument-coercion.ts";
+import { dropRedundantAction, normalizeArgumentAliases } from "./argument-aliases.ts";
+import {
+  byteStringToBase64url,
+  type RecipientOverride,
+  recipientOverrideFrom,
+  rewriteRecipientHeaders,
+} from "./draft-recipients.ts";
+import {
+  buildClampedArgumentsNote,
+  CLAMPED_TO_MAXIMUM,
+  type CoercedArgument,
+  coerceArgumentTypes,
+} from "./argument-coercion.ts";
 import {
   buildInsufficientScopeChallenge,
   insufficientScopeErrorData,
@@ -1266,6 +1279,12 @@ const IDEMPOTENT_MUTATION_OPERATIONS = new Set([
   "email_move", "email_copy", "email_move_batch", "email_copy_batch",
   "email_delete", "email_delete_batch", "email_flag", "email_archive",
   "email_search_and_move", "email_search_and_delete",
+  // Draft writes (2026-09-23). A retried draft_create or draft_reply leaves two
+  // drafts; models sent a key on them 31 times across 12 workspaces in ten
+  // days and were refused. update/delete are included so the key is accepted
+  // on every draft write, not three of four: a retried IMAP update otherwise
+  // fails on the draft_id the first attempt already replaced.
+  "draft_create", "draft_reply", "draft_update", "draft_delete",
 ]);
 
 /** Either family of operation may carry an `idempotency_key`. */
@@ -3555,6 +3574,25 @@ const INBOX_PROPERTY = {
 } as const;
 
 /**
+ * `inbox_id` / `inbox` on an action that already names its object by id (an
+ * automation, a scheduled send). The object carries its own inbox, so these
+ * select nothing; they are a CHECK. Models send them because every other tool
+ * takes them, and refusing was 15 calls across 5 workspaces in ten days. A
+ * selector that names a different inbox than the object's is refused rather
+ * than dropped: it means the caller has the wrong object in mind.
+ */
+const OWNER_INBOX_ID_PROPERTY = {
+  type: "string",
+  format: "uuid",
+  description:
+    "Optional. The inbox this belongs to; the call is refused if it belongs to a different one.",
+} as const;
+const OWNER_INBOX_PROPERTY = {
+  type: "string",
+  description: "Optional. The same check as inbox_id, by email address.",
+} as const;
+
+/**
  * Shared `include_signature` property. The inbox's configured signature is
  * appended automatically by default; pass `false` to suppress it for this one
  * call (e.g. a terse one-line reply where a signature would be noise).
@@ -3577,7 +3615,7 @@ const IDEMPOTENCY_KEY_PROPERTY = {
   type: "string",
   minLength: 1,
   maxLength: 200,
-  // Advertised on five tools, so only the facts that change a caller's
+  // Advertised on several tools, so only the facts that change a caller's
   // behaviour: retry-only reuse, the window, and the conflict rule.
   description:
     "Reuse only when retrying the identical request within 24 hours; the " +
@@ -3707,6 +3745,10 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           description:
             "Include each inbox's capabilities object. Set false for a compact " +
             "list of inbox_id, email address, display name, provider and brand.",
+        },
+        inbox: {
+          type: "string",
+          description: "Return only this inbox: its email address or inbox_id.",
         },
       },
       additionalProperties: false,
@@ -4658,6 +4700,18 @@ const LEGACY_TOOLS: ToolDefinition[] = [
             "Reply to the original To and Cc as well as the sender. Still capped " +
             "at 50 recipients.",
         },
+        cc: {
+          type: "array",
+          items: { type: "string", format: "email" },
+          default: [],
+          description: "Cc addresses.",
+        },
+        bcc: {
+          type: "array",
+          items: { type: "string", format: "email" },
+          default: [],
+          description: "Bcc addresses; not visible to the other recipients.",
+        },
         attachments: ATTACHMENTS_PROPERTY,
         include_signature: INCLUDE_SIGNATURE_PROPERTY,
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
@@ -4884,6 +4938,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           description: "Optional HTML draft body.",
         },
         include_signature: INCLUDE_SIGNATURE_PROPERTY,
+        idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
       },
       required: ["subject", "body"],
       additionalProperties: false,
@@ -4917,7 +4972,20 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           default: false,
           description: "Address the reply to the original To and Cc too.",
         },
+        cc: {
+          type: "array",
+          items: { type: "string", format: "email" },
+          default: [],
+          description: "Cc addresses.",
+        },
+        bcc: {
+          type: "array",
+          items: { type: "string", format: "email" },
+          default: [],
+          description: "Bcc addresses.",
+        },
         include_signature: INCLUDE_SIGNATURE_PROPERTY,
+        idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
       },
       required: ["message_id", "body"],
       additionalProperties: false,
@@ -4981,6 +5049,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           description: "Updated HTML body.",
         },
         include_signature: INCLUDE_SIGNATURE_PROPERTY,
+        idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
       },
       required: ["draft_id", "body"],
       additionalProperties: false,
@@ -4993,8 +5062,9 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     description:
       "Send a previously saved draft. The draft is removed from the Drafts folder after sending. " +
       "This action is irreversible — use carefully. " +
-      "The draft must already have at least one address in to, cc or bcc: a draft with none is " +
-      "refused and left untouched, so add the recipient with draft_update first. " +
+      "The draft must have at least one address in to, cc or bcc: a draft with none is " +
+      "refused and left untouched. Pass to, cc or bcc here to set them at send time; each one " +
+      "given replaces the draft's stored list, and the draft keeps its body and attachments. " +
       "Always pass the MOST RECENT draft_id (from draft_create, the latest draft_update, or draft_list): " +
       "on IMAP-backed inboxes the id changes on every update, and a stale id will fail with a not-found error.",
     requiredScope: "manage:drafts",
@@ -5007,6 +5077,21 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           type: "string",
           description: "Draft id from the most recent draft call. On IMAP it " +
             "changes after every update, so a stale one fails.",
+        },
+        to: {
+          type: "array",
+          items: { type: "string", format: "email" },
+          description: "Recipients to send to, replacing the draft's stored To.",
+        },
+        cc: {
+          type: "array",
+          items: { type: "string", format: "email" },
+          description: "Replaces the draft's stored Cc.",
+        },
+        bcc: {
+          type: "array",
+          items: { type: "string", format: "email" },
+          description: "Replaces the draft's stored Bcc.",
         },
         idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
       },
@@ -5035,6 +5120,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           description: "Draft id from the most recent draft call. On IMAP it " +
             "changes after every update, so a stale one fails.",
         },
+        idempotency_key: IDEMPOTENCY_KEY_PROPERTY,
       },
       required: ["draft_id"],
       additionalProperties: false,
@@ -5129,7 +5215,10 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     requiredScope: "manage:automations",
     inputSchema: {
       type: "object",
-      properties: { automation_id: {
+      properties: {
+        inbox_id: OWNER_INBOX_ID_PROPERTY,
+        inbox: OWNER_INBOX_PROPERTY,
+        automation_id: {
           type: "string",
           description: "The automation's UUID, as returned by action 'list' or 'create'.",
         } },
@@ -5148,6 +5237,8 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
+        inbox_id: OWNER_INBOX_ID_PROPERTY,
+        inbox: OWNER_INBOX_PROPERTY,
         automation_id: {
           type: "string",
           description: "The automation's UUID, as returned by action 'list' or 'create'.",
@@ -5208,7 +5299,10 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     requiredScope: "manage:automations",
     inputSchema: {
       type: "object",
-      properties: { automation_id: {
+      properties: {
+        inbox_id: OWNER_INBOX_ID_PROPERTY,
+        inbox: OWNER_INBOX_PROPERTY,
+        automation_id: {
           type: "string",
           description: "The automation's UUID, as returned by action 'list' or 'create'.",
         } },
@@ -5227,7 +5321,10 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     requiredScope: "manage:automations",
     inputSchema: {
       type: "object",
-      properties: { automation_id: {
+      properties: {
+        inbox_id: OWNER_INBOX_ID_PROPERTY,
+        inbox: OWNER_INBOX_PROPERTY,
+        automation_id: {
           type: "string",
           description: "The automation's UUID, as returned by action 'list' or 'create'.",
         } },
@@ -5245,7 +5342,10 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     requiredScope: "manage:automations",
     inputSchema: {
       type: "object",
-      properties: { automation_id: {
+      properties: {
+        inbox_id: OWNER_INBOX_ID_PROPERTY,
+        inbox: OWNER_INBOX_PROPERTY,
+        automation_id: {
           type: "string",
           description: "The automation's UUID, as returned by action 'list' or 'create'.",
         } },
@@ -5265,6 +5365,8 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
+        inbox_id: OWNER_INBOX_ID_PROPERTY,
+        inbox: OWNER_INBOX_PROPERTY,
         automation_id: {
           type: "string",
           description: "The automation's UUID, as returned by action 'list' or 'create'.",
@@ -5366,6 +5468,10 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           description:
             "Restricts the scan to one inbox. Set it only when the user named a " +
             "specific inbox, and never carry one over from an earlier turn.",
+        },
+        inbox: {
+          type: "string",
+          description: "The same restriction by email address, an alternative to inbox_id.",
         },
         limit: {
           type: "integer",
@@ -5502,6 +5608,10 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           description:
             "Optional. When provided, restricts results to scheduled sends for that inbox.",
         },
+        inbox: {
+          type: "string",
+          description: "Optional. The same filter by email address.",
+        },
         limit: {
           type: "integer",
           minimum: 1,
@@ -5527,6 +5637,8 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
+        inbox_id: OWNER_INBOX_ID_PROPERTY,
+        inbox: OWNER_INBOX_PROPERTY,
         // The retired alias `scheduled_send_id` is still accepted on the wire
         // for clients holding a cached schema; see argument-aliases.ts.
         id: {
@@ -6014,10 +6126,11 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
       },
       filter: {
         type: "object",
-        description: "The provider/service filter that was applied.",
+        description: "The provider/service/inbox filter that was applied.",
         properties: {
           provider: { type: "string" },
           service: { type: "string" },
+          inbox: { type: "string" },
         },
         additionalProperties: false,
       },
@@ -8898,6 +9011,7 @@ async function executeListInboxes(
   const filter: InboxListFilter = {
     provider: typeof args.provider === "string" ? args.provider : null,
     service: typeof args.service === "string" ? args.service : null,
+    inbox: typeof args.inbox === "string" && args.inbox.trim() !== "" ? args.inbox.trim() : null,
   };
   // include_capabilities defaults to true; only an explicit `false` opts out.
   const includeCapabilities = args.include_capabilities !== false;
@@ -9000,6 +9114,7 @@ async function executeListInboxes(
         filter: {
           ...(filter.provider !== null ? { provider: filter.provider } : {}),
           ...(filter.service !== null ? { service: filter.service } : {}),
+          ...(filter.inbox ? { inbox: filter.inbox } : {}),
         },
         available: report.available,
         message: report.message,
@@ -9120,6 +9235,12 @@ type InboxResolution =
  * specified), "selector_conflict" (both arguments given, naming DIFFERENT
  * inboxes), or "none" (the key can access no inbox at all).
  */
+/** Did the caller name an inbox at all, by id or by address? */
+function hasInboxSelector(args: Record<string, unknown>): boolean {
+  return (typeof args["inbox_id"] === "string" && args["inbox_id"].trim() !== "") ||
+    (typeof args["inbox"] === "string" && args["inbox"].trim() !== "");
+}
+
 async function resolveInboxArg(
   args: Record<string, unknown>,
   apiKey: ApiKeyRow,
@@ -11222,6 +11343,7 @@ async function replyImapMessage(
       const mime = buildMimeMessage({
         from: formatMailbox(inbox.display_name, inbox.email_address),
         to: toStrings,
+        cc: params.cc?.length ? params.cc : undefined,
         subject: replySubject,
         textBody: buildReplyTextBody(
           params.body,
@@ -11243,7 +11365,12 @@ async function replyImapMessage(
       return { mime, messageId, recipients, replySubject, origMessageId, uid };
     });
 
-  await imapSmtpSend(inbox, mime, recipients.map((a) => a.email));
+  // Bcc travels in the SMTP envelope only; the header was never written.
+  await imapSmtpSend(
+    inbox,
+    mime,
+    replyEnvelope(recipients.map((a) => a.email), params.cc, params.bcc),
+  );
   await appendToSentFolder(inbox, mime);
 
   return {
@@ -11252,6 +11379,7 @@ async function replyImapMessage(
     sent_at: new Date().toISOString(),
     in_reply_to: origMessageId,
     to: recipients,
+    ...replyExtrasForResult(params),
     subject: replySubject,
     status: "sent",
   };
@@ -14148,6 +14276,12 @@ interface ReplyToEmailParams {
    * (original To + Cc), not just the original sender.
    */
   replyAll: boolean;
+  /**
+   * Extra Cc / Bcc addresses, on top of the derived recipients. Optional so the
+   * approval re-run and older call sites need not pass them.
+   */
+  cc?: string[];
+  bcc?: string[];
   /** Attachments to include with the reply (same shape as email_send). */
   attachments: Array<{ filename: string; mime_type: string; data: string }>;
   /**
@@ -14168,10 +14302,56 @@ interface ReplyToEmailResult {
   in_reply_to: string;
   /** Resolved To recipients for the reply. */
   to: EmailAddressEntry[];
+  /** Extra Cc / Bcc the caller added, when any were. */
+  cc?: EmailAddressEntry[];
+  bcc?: EmailAddressEntry[];
   /** Reply subject (prefixed with "Re:" if necessary). */
   subject: string;
   /** Always "sent" on success. */
   status: "sent";
+}
+
+/** The caller's extra reply recipients: the strings of an array, trimmed, deduplicated. */
+function replyExtraAddresses(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const entry of value) {
+    if (typeof entry !== "string") continue;
+    const address = entry.trim();
+    if (address === "" || seen.has(address.toLowerCase())) continue;
+    seen.add(address.toLowerCase());
+    out.push(address);
+  }
+  return out;
+}
+
+/**
+ * The SMTP envelope of a reply: derived recipients, then extra Cc, then Bcc,
+ * each address once. The Bcc addresses are here and nowhere in the headers.
+ */
+function replyEnvelope(
+  derived: readonly string[],
+  cc: readonly string[] | undefined,
+  bcc: readonly string[] | undefined,
+): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const address of [...derived, ...(cc ?? []), ...(bcc ?? [])]) {
+    const key = address.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(address);
+  }
+  return out;
+}
+
+/** `cc` / `bcc` for a reply result, present only when the caller added some. */
+function replyExtrasForResult(params: ReplyToEmailParams): { cc?: EmailAddressEntry[]; bcc?: EmailAddressEntry[] } {
+  return {
+    ...(params.cc?.length ? { cc: params.cc.map((email) => ({ name: "", email })) } : {}),
+    ...(params.bcc?.length ? { bcc: params.bcc.map((email) => ({ name: "", email })) } : {}),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -14293,6 +14473,11 @@ async function replyGmailMessage(
       const mimeMessage = buildMimeMessage({
         from: formatMailbox(inbox.display_name, inbox.email_address),
         to: replyAddresses,
+        cc: params.cc?.length ? params.cc : undefined,
+        // The Bcc header is Gmail's only recipient channel for a `raw` send;
+        // Gmail strips it before delivery, exactly as on email_send.
+        bcc: params.bcc?.length ? params.bcc : undefined,
+        includeBccHeader: Boolean(params.bcc?.length),
         subject: replySubject,
         textBody: buildReplyTextBody(
           params.body,
@@ -14365,6 +14550,7 @@ async function replyGmailMessage(
     sent_at: sentAt,
     in_reply_to: originalMessageId,
     to: replyAddresses.map((e) => parseEmailAddress(e)),
+    ...replyExtrasForResult(params),
     subject: replySubject,
     status: "sent",
   };
@@ -14515,6 +14701,12 @@ async function replyOutlookMessage(
             address: r.emailAddress?.address ?? "",
           },
         })),
+        ...(params.cc?.length
+          ? { ccRecipients: params.cc.map((address) => ({ emailAddress: { address } })) }
+          : {}),
+        ...(params.bcc?.length
+          ? { bccRecipients: params.bcc.map((address) => ({ emailAddress: { address } })) }
+          : {}),
         // Threading headers — Graph supports setting these via internetMessageHeaders.
         internetMessageHeaders: [
           ...(origMsgId ? [{ name: "In-Reply-To", value: origMsgId }] : []),
@@ -14579,6 +14771,7 @@ async function replyOutlookMessage(
       name: r.emailAddress?.name ?? "",
       email: r.emailAddress?.address ?? "",
     })),
+    ...replyExtrasForResult(params),
     subject: replySubject,
     status: "sent",
   };
@@ -15607,6 +15800,12 @@ async function executeReplyToEmail(
   // reply_all (optional, default false)
   const replyAll = args["reply_all"] === true;
 
+  // cc / bcc (optional, 2026-09-23): added to the recipients the reply derives
+  // from the original, never replacing them. Refused before, which left no way
+  // to copy someone on a reply short of sending a new, unthreaded message.
+  const extraCc = replyExtraAddresses(args["cc"]);
+  const extraBcc = replyExtraAddresses(args["bcc"]);
+
   // include_signature (optional, default true) — explicit false suppresses the
   // inbox signature for this reply (e.g. terse one-line replies).
   const includeSignature = args["include_signature"] === false ? false : undefined;
@@ -15718,6 +15917,8 @@ async function executeReplyToEmail(
     body,
     htmlBody,
     replyAll,
+    cc: extraCc,
+    bcc: extraBcc,
     attachments,
     include_signature: includeSignature,
   };
@@ -16017,10 +16218,16 @@ async function resolveApprovalSummaryFields(
         ownAddresses: inboxOwnAddresses(inbox),
         replyAll: payload.reply_all === true,
       });
+      // Extra Cc/Bcc the caller added ride with the derived recipients, so the
+      // reviewer sees everyone the reply will reach.
+      const summaryCc = replyExtraAddresses(payload.cc);
+      const summaryBcc = replyExtraAddresses(payload.bcc);
       return {
         to: resolvedReply.ok
           ? resolvedReply.recipients.map(toEmailAddressEntry).map(formatAddressEntry)
           : [],
+        ...(summaryCc.length ? { cc: summaryCc } : {}),
+        ...(summaryBcc.length ? { bcc: summaryBcc } : {}),
         subject: /^re:/i.test(origSubject.trim()) ? origSubject : `Re: ${origSubject}`,
       };
     }
@@ -23457,6 +23664,144 @@ async function imapUpdateDraft(
   }
 }
 
+/**
+ * Set a stored draft's To / Cc / Bcc and nothing else, for draft send's
+ * recipient override. Returns the draft id to use afterwards: unchanged on
+ * Gmail and Outlook, NEW on IMAP (the message is re-stored). See
+ * draft-recipients.ts for why this is not draft update.
+ */
+async function rewriteDraftRecipients(
+  inbox: InboxRow,
+  draftId: string,
+  override: RecipientOverride,
+): Promise<string> {
+  switch (inbox.provider) {
+    case "gmail": return await gmailRewriteDraftRecipients(inbox, draftId, override);
+    case "outlook": return await outlookRewriteDraftRecipients(inbox, draftId, override);
+    default: return await imapRewriteDraftRecipients(inbox, draftId, override);
+  }
+}
+
+async function gmailRewriteDraftRecipients(
+  inbox: InboxRow,
+  draftId: string,
+  override: RecipientOverride,
+): Promise<string> {
+  const token = await withFreshGmailToken(inbox);
+  const url = `https://gmail.googleapis.com/gmail/v1/users/me/drafts/${encodeURIComponent(draftId)}`;
+  const read = await fetch(`${url}?format=raw`, { headers: { Authorization: `Bearer ${token}` } });
+  if (!read.ok) {
+    if (read.status === 401) throw new Error("gmail_auth_failed");
+    if (read.status === 404) throw new Error("draft_not_found");
+    throw new Error(`Gmail drafts.get error: ${read.statusText}`);
+  }
+  const data = (await read.json()) as { message?: { threadId?: string; raw?: string } };
+  const raw = data.message?.raw;
+  if (typeof raw !== "string") throw new Error("draft_not_found");
+  const rewritten = rewriteRecipientHeaders(atob(base64urlToBase64(raw)), override);
+  if (rewritten === null) throw new Error("draft_unreadable");
+  const threadId = data.message?.threadId;
+  const write = await fetch(url, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message: { raw: byteStringToBase64url(rewritten), ...(threadId ? { threadId } : {}) },
+    }),
+  });
+  if (!write.ok) {
+    if (write.status === 401) throw new Error("gmail_auth_failed");
+    if (write.status === 404) throw new Error("draft_not_found");
+    throw new Error(`Gmail drafts.update error: ${write.statusText}`);
+  }
+  return draftId;
+}
+
+async function outlookRewriteDraftRecipients(
+  inbox: InboxRow,
+  draftId: string,
+  override: RecipientOverride,
+): Promise<string> {
+  const token = await withFreshOutlookToken(inbox);
+  const recipients = (addresses: string[]) => addresses.map((address) => ({ emailAddress: { address } }));
+  const patch: Record<string, unknown> = {};
+  if (override.to) patch.toRecipients = recipients(override.to);
+  if (override.cc) patch.ccRecipients = recipients(override.cc);
+  if (override.bcc) patch.bccRecipients = recipients(override.bcc);
+  const resp = await fetch(
+    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(draftId)}`,
+    {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    },
+  );
+  if (!resp.ok) {
+    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
+    if (resp.status === 404) throw new Error("draft_not_found");
+    throw new Error(`Outlook update draft error: ${resp.statusText}`);
+  }
+  return draftId;
+}
+
+async function imapRewriteDraftRecipients(
+  inbox: InboxRow,
+  draftId: string,
+  override: RecipientOverride,
+): Promise<string> {
+  if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
+    throw new Error("imap_auth_failed");
+  }
+  const password = await decryptStoredToken(inbox.imap_password);
+  const { folder, uid: oldUid } = decodeImapId(draftId);
+  if (!Number.isFinite(oldUid) || oldUid <= 0) throw new Error("draft_not_found");
+
+  let client: ImapClient | null = null;
+  try {
+    client = await ImapClient.connect({
+      host: inbox.imap_host,
+      port: inbox.imap_port,
+      security: inbox.imap_security ?? "tls",
+      email: imapAuthUser(inbox),
+      password,
+    });
+    await client.selectMailbox(folder);
+    const stored = await client.fetchMessageRaw(oldUid);
+    if (!stored) throw new Error("draft_not_found");
+
+    // A fresh Message-ID is how the re-stored copy is found when the server
+    // does not report its UID (no UIDPLUS), exactly as imapUpdateDraft does.
+    const messageId = crypto.randomUUID();
+    const rewritten = rewriteRecipientHeaders(stored.raw, override, messageId);
+    if (rewritten === null) throw new Error("draft_unreadable");
+
+    const appended = await client.appendWithFlags(
+      folder,
+      singleByteTextToBytes(rewritten),
+      ["\\Draft", "\\Seen"],
+    );
+    if (!appended.ok) throw new Error("imap_append_failed");
+    let newUid = appended.uid;
+    if (newUid === undefined) {
+      await client.selectMailbox(folder);
+      const found = await client.uidSearch(`HEADER Message-ID "<${messageId}@mcpemails.com>"`);
+      newUid = found.length > 0 ? found[found.length - 1] : undefined;
+    }
+    // Without the new copy's UID there is no draft id to send. Keep the old
+    // draft rather than delete the only copy we can address.
+    if (newUid === undefined) throw new Error("draft_rewrite_unconfirmed");
+
+    await client.selectMailbox(folder);
+    await client.uidStore([oldUid], ["\\Deleted"], "add");
+    await client.uidExpunge([oldUid]);
+    return encodeImapId(folder, newUid);
+  } catch (err) {
+    if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
+    throw err;
+  } finally {
+    if (client) await client.logout().catch(() => {});
+  }
+}
+
 async function imapSendDraft(
   inbox: InboxRow,
   draftId: string,
@@ -25065,7 +25410,9 @@ async function executeCreateReplyDraft(
     }
     if (!to.length) throw new Error("reply_recipients_not_found");
     const signed = applySignature({ textBody: body, htmlBody }, inbox, { include_signature: includeSignature });
-    const params: DraftParams = { to, cc: [], bcc: [], subject, body: buildReplyTextBody(signed.textBody, originalFrom, originalDate, originalBody), htmlBody: signed.htmlBody, threadId, inReplyTo: inReplyTo || undefined, references: references || undefined };
+    // Extra Cc/Bcc (2026-09-23) are added to the derived recipients, exactly as
+    // on email_compose reply.
+    const params: DraftParams = { to, cc: replyExtraAddresses(args["cc"]), bcc: replyExtraAddresses(args["bcc"]), subject, body: buildReplyTextBody(signed.textBody, originalFrom, originalDate, originalBody), htmlBody: signed.htmlBody, threadId, inReplyTo: inReplyTo || undefined, references: references || undefined };
     const created = inbox.provider === "gmail" ? await gmailCreateDraft(inbox, params) : await imapCreateDraft(inbox, params);
     const output: DraftReplyResult = { ...created, in_reply_to: messageId, threading: inbox.provider === "gmail" ? "native" : "standards_based" };
     // MCP Apps (contract §8) — see the note in executeCreateDraft. This is the
@@ -25443,7 +25790,7 @@ async function executeSendDraft(
     };
   }
   const args = rawArgs as Record<string, unknown>;
-  const draftId = typeof args["draft_id"] === "string" && args["draft_id"].length > 0
+  let draftId = typeof args["draft_id"] === "string" && args["draft_id"].length > 0
     ? args["draft_id"] : null;
   if (!draftId) {
     return {
@@ -25475,6 +25822,51 @@ async function executeSendDraft(
 
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.drafts) return unsupportedFeatureError("drafts", inbox.provider);
+
+  // ── Recipients set at send time (2026-09-23) ─────────────────────────────
+  // to / cc / bcc given here replace the draft's stored lists BEFORE anything
+  // else looks at the draft, so the recipient preflight, the approval card and
+  // the send all see the same message. Only the recipient headers change; the
+  // body and attachments stay exactly as stored (draft-recipients.ts).
+  //
+  // The approval, if one is required, is queued against the rewritten draft
+  // and WITHOUT the override: its later re-run must send that draft, not
+  // rewrite a draft id that (on IMAP) no longer exists.
+  const recipientOverride = recipientOverrideFrom(args);
+  let approvalArgs: Record<string, unknown> = args;
+  if (recipientOverride) {
+    try {
+      draftId = await rewriteDraftRecipients(inbox, draftId, recipientOverride);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (message === "draft_not_found") {
+        return {
+          result: { content: [{ type: "text", text: draftNotFoundMessage(inbox.provider, draftId, "send") }], isError: true },
+          logStatus: "error", logErrorCode: "draft_not_found",
+        };
+      }
+      if (message === "gmail_auth_failed" || message === "outlook_auth_failed" || message === "imap_auth_failed") {
+        return authFailedResult(inbox.provider, inbox.id, "access");
+      }
+      // Nothing was sent: the failure is in setting the recipients, before the
+      // send. Settled as not-sent so a retry with the same key is allowed.
+      return providerFailure({
+        tool: "draft_send",
+        provider: inbox.provider,
+        inboxId: inbox.id,
+        error: err,
+        boundary: "ledger",
+        fallbackCode: PROVIDER_NOT_SENT_ERROR_CODE,
+        text: `draft_send: could not set the recipients on draft ${draftId}. Nothing was sent; retry shortly.`,
+        logContext: { phase: "preflight" },
+        resultExtra: { delivery_status: DELIVERY_STATUS_NOT_SENT },
+      });
+    }
+    approvalArgs = { ...args, draft_id: draftId };
+    delete approvalArgs["to"];
+    delete approvalArgs["cc"];
+    delete approvalArgs["bcc"];
+  }
 
   // ── Pre-flight: a draft with no recipients must not be handed to a provider.
   //
@@ -25538,7 +25930,7 @@ async function executeSendDraft(
     const approval = await queueSendApproval(
       inbox,
       apiKey,
-      { ...args, inbox_id: inbox.id },
+      { ...approvalArgs, inbox_id: inbox.id },
       undefined,
       "draft_send",
     );
@@ -26152,7 +26544,15 @@ async function executeSearchContacts(
   // aggregators have everything they need.
   let targets: InboxRow[];
   let inboxesTruncated = false;
-  if (inboxId) {
+  // `inbox` (an address) selects exactly as `inbox_id` does, through the same
+  // resolver every inbox-bound tool uses; until 2026-09-23 this tool took only
+  // the UUID and refused the address.
+  const inboxAddress = typeof args["inbox"] === "string" && args["inbox"].trim() !== "";
+  if (inboxAddress) {
+    const resolved = await resolveInboxArg(args, apiKey);
+    if (!resolved.ok) return inboxResolutionError(resolved, "contact_search");
+    targets = [resolved.inbox];
+  } else if (inboxId) {
     const inbox = await resolveInbox(inboxId, apiKey);
     if (!inbox) {
       return {
@@ -26586,13 +26986,19 @@ async function executeListScheduled(
   }
   const args = rawArgs as Record<string, unknown>;
 
-  const inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
+  let inboxId = typeof args["inbox_id"] === "string" ? args["inbox_id"] : null;
   const limit = typeof args["limit"] === "number"
     ? Math.min(100, Math.max(1, Math.floor(args["limit"])))
     : 20;
 
-  // If inbox_id provided, validate accessibility.
-  if (inboxId) {
+  // `inbox` (an address) filters exactly as `inbox_id` does, resolved through
+  // the shared resolver; until 2026-09-23 only the UUID was accepted here.
+  if (typeof args["inbox"] === "string" && args["inbox"].trim() !== "") {
+    const resolved = await resolveInboxArg(args, apiKey);
+    if (!resolved.ok) return inboxResolutionError(resolved, "schedule_list");
+    inboxId = resolved.inbox.id;
+  } else if (inboxId) {
+    // If inbox_id provided, validate accessibility.
     const inbox = await resolveInbox(inboxId, apiKey);
     if (!inbox) {
       return {
@@ -26741,6 +27147,29 @@ async function executeCancelScheduled(
       result: { content: [{ type: "text", text: `schedule_cancel: scheduled send ${scheduledSendId} not found or not accessible.` }], isError: true },
       logStatus: "error", logErrorCode: "not_found",
     };
+  }
+
+  // An inbox named alongside the id is a check, not a selector: the row
+  // carries its own inbox. A mismatch means the caller has a different send in
+  // mind, so nothing is cancelled. Checked after the key's inbox restriction,
+  // so it can never reveal a row the key could not see.
+  if (hasInboxSelector(args)) {
+    const resolved = await resolveInboxArg(args, apiKey);
+    if (!resolved.ok) return inboxResolutionError(resolved, "schedule_cancel");
+    if (resolved.inbox.id !== row.inbox_id) {
+      return {
+        result: {
+          content: [{
+            type: "text",
+            text:
+              `schedule_cancel: scheduled send ${scheduledSendId} belongs to a different inbox ` +
+              `than ${resolved.inbox.email_address}. Nothing was cancelled.`,
+          }],
+          isError: true,
+        },
+        logStatus: "error", logErrorCode: "inbox_mismatch",
+      };
+    }
   }
 
   if (row.status !== "pending") {
@@ -27694,6 +28123,31 @@ async function handleToolsCall(
   // Set only when the selector had to be READ as something other than what was
   // written, so the result can say so. See action-selector.ts.
   let actionResolution: ActionResolution | null = null;
+  // ── Coerce unambiguous argument shapes ──────────────────────────────────
+  // `"to": "a@b.no"` for an array, `"false"` for a boolean, `"20"` for an
+  // integer, `null` for an optional field left unset, "Gmail" for "gmail",
+  // `"Name <a@b.no>"` for an address, a page size above its maximum: right
+  // intent, wrong shape. Every one of these was refused and then retried
+  // correctly, so refusing bought nothing but a round trip. In place, and
+  // FIRST: the action resolver, the sibling-argument review and the validator
+  // all read this object, and a strict client's `cc: null` on a reply must be
+  // gone before the review can mistake it for a misplaced `cc`. The validator
+  // still judges every coerced value. See argument-coercion.ts.
+  let clampedArguments: CoercedArgument[] = [];
+  if (rawArgs !== null && typeof rawArgs === "object" && !Array.isArray(rawArgs)) {
+    const coercedArguments = coerceArgumentTypes(tool.inputSchema, rawArgs, "", {
+      clamp: CLAMPED_TO_MAXIMUM[toolName] ?? [],
+    });
+    clampedArguments = coercedArguments.filter((entry) => entry.to === "clamped");
+    if (coercedArguments.length > 0) {
+      console.info("[mcp-server] tools/call: coerced_argument_types", {
+        key_id: apiKey.id,
+        tool_name: toolName,
+        coerced: coercedArguments,
+      });
+    }
+  }
+
   const consolidated = CONSOLIDATED_BY_NAME[toolName];
   if (consolidated) {
     const argsObj =
@@ -27720,6 +28174,11 @@ async function handleToolsCall(
       });
     }
 
+    // A selector-less email_read is answered from its arguments rather than
+    // refused; see inferMissingAction for the rules and why only email_read.
+    const inferredAction = inferMissingAction(toolName, argsObj);
+    if (inferredAction) argsObj["action"] = inferredAction.action;
+
     const rawAction = argsObj["action"];
     const action = typeof rawAction === "string" ? rawAction : null;
     // The selector is resolved rather than looked up. An exact enum member
@@ -27735,6 +28194,7 @@ async function handleToolsCall(
       (candidate) => allowsLenientArguments(toolName, candidate),
     );
     if (resolution && resolution.kind !== "exact") actionResolution = resolution;
+    if (inferredAction) actionResolution = inferredAction;
     // The second half of the condition is a backstop, not a duplicate of the
     // first: the canonical and legacy tables are built from `actions` and can
     // only name a real one, but the alias table is written by hand, and a typo
@@ -27842,11 +28302,18 @@ async function handleToolsCall(
     // dispatch.
     const argumentIndex = CONSOLIDATED_ARGUMENT_INDEX[toolName];
     if (argumentIndex) {
+      // `message_id: X` where the action takes `message_ids`, or `[X]` where it
+      // takes one: the same message either way, so it is rewritten before the
+      // review below can call it misplaced. See normalizeMessageIdShape.
+      normalizeMessageIdShape(argumentIndex.allowedByAction[selectedAction] ?? [], argsObj);
+      // Keyed on the RESOLVED action. The selector as sent ("Read", "email_list")
+      // names no row in the index, which made every argument of a resolved
+      // call look misplaced.
       extraArguments = reviewExtraArguments(
         argumentIndex,
-        action as string,
+        selectedAction,
         argsObj,
-        allowsLenientArguments(toolName, action as string),
+        allowsLenientArguments(toolName, selectedAction),
       );
       for (const property of extraArguments.ignorable) delete argsObj[property];
       for (const entry of extraArguments.ignoredMisplaced) delete argsObj[entry.property];
@@ -27859,11 +28326,28 @@ async function handleToolsCall(
         console.info("[mcp-server] tools/call: ignored_extra_arguments", {
           key_id: apiKey.id,
           tool_name: toolName,
-          action,
+          action: selectedAction,
           inert: extraArguments.ignorable,
           misplaced: extraArguments.ignoredMisplaced.map((entry) => entry.property),
         });
       }
+    }
+  } else if (rawArgs !== null && typeof rawArgs === "object" && !Array.isArray(rawArgs)) {
+    // Standalone tools have no selector to resolve, but models write their
+    // synonyms (`inbox_id` on inbox_list, `destination_folder` on
+    // email_search_and_move) and give them an `action` anyway. Same rules as
+    // above: exact-meaning renames in silence, and an `action` dropped only
+    // when it restates the tool's own operation. See argument-aliases.ts.
+    const standaloneArgs = rawArgs as Record<string, unknown>;
+    const renamed = normalizeArgumentAliases(toolName, standaloneArgs);
+    const droppedAction = dropRedundantAction(toolName, standaloneArgs);
+    if (renamed.length > 0 || droppedAction) {
+      console.info("[mcp-server] tools/call: normalized_argument_aliases", {
+        key_id: apiKey.id,
+        tool_name: toolName,
+        aliases: renamed,
+        dropped_action: droppedAction,
+      });
     }
   }
 
@@ -27939,23 +28423,6 @@ async function handleToolsCall(
         tool_name: toolName,
         action: selectedAction,
         dates: normalizedDates,
-      });
-    }
-
-    // ── Coerce unambiguous scalar shapes ────────────────────────────────────
-    // `"to": "a@b.no"` for an array, `"false"` for a boolean, `"20"` for an
-    // integer: right value, wrong JSON type. The largest type rejection in
-    // production, and every one of them was retried correctly on the next
-    // call, so refusing it bought nothing but a wasted round trip. In place
-    // and before validation, like the dates above, so the validator still
-    // judges the coerced value. See argument-coercion.ts.
-    const coercedArguments = coerceArgumentTypes(tool.inputSchema, rawArgs);
-    if (coercedArguments.length > 0) {
-      console.info("[mcp-server] tools/call: coerced_argument_types", {
-        key_id: apiKey.id,
-        tool_name: toolName,
-        action: selectedAction,
-        coerced: coercedArguments,
       });
     }
   }
@@ -28574,6 +29041,12 @@ async function handleToolsCall(
   // match never reaches here, so a correctly spelled call carries no note.
   if (actionResolution) {
     appendResultNote(toolResult, buildResolvedActionNote(toolName, actionResolution));
+  }
+
+  // A page size above its maximum ran at the maximum. The caller asked for more
+  // than it got, so it is told, and told how to get the rest.
+  if (clampedArguments.length > 0) {
+    appendResultNote(toolResult, buildClampedArgumentsNote(clampedArguments));
   }
 
   // Same disclosure rule for an argument whose capability was retired rather

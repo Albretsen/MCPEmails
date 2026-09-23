@@ -943,12 +943,14 @@ export class ImapClient {
    */
   appendWithFlags(
     mailbox: string,
-    message: string,
+    message: string | Uint8Array,
     flags: string[],
   ): Promise<{ ok: boolean; uid?: number }> {
     return this.runExclusive(async () => {
       const tag = this.nextTag();
-      const bytes = this.encoder.encode(message);
+      // Bytes go out exactly as given, as in append(): a draft whose recipient
+      // headers were rewritten in place must keep every other octet it had.
+      const bytes = typeof message === "string" ? this.encoder.encode(message) : message;
       const flagStr = flags.length ? ` (${flags.join(" ")})` : "";
       await this.write(
         `${tag} APPEND ${quoteMailbox(mailbox)}${flagStr} {${bytes.length}}${CRLF}`,

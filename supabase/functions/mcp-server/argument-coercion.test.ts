@@ -173,14 +173,14 @@ Deno.test("a type that already admits a string is never coerced", () => {
   assertEquals(args, { v: "true", w: "20" });
 });
 
-Deno.test("null and undeclared properties are left alone", () => {
-  const args: Record<string, unknown> = { a: null, extra: "true" };
+Deno.test("null on a declared property is removed; undeclared properties are left alone", () => {
+  const args: Record<string, unknown> = { a: null, b: null, extra: "true" };
   const changed = coerceArgumentTypes({
     type: "object",
-    properties: { a: { type: "boolean" } },
+    properties: { a: { type: "boolean" }, b: { type: ["string", "null"] } },
   }, args);
-  assertEquals(changed, []);
-  assertEquals(args, { a: null, extra: "true" });
+  assertEquals(changed, [{ path: "a", from: "null", to: "absent" }]);
+  assertEquals(args, { b: null, extra: "true" }, "a type that admits null keeps it");
 });
 
 // ── Objects and nesting ─────────────────────────────────────────────────────

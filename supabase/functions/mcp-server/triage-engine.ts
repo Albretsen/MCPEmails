@@ -2249,6 +2249,35 @@ function forwardApprovalNote(action: TriageAction | undefined): string | null {
   );
 }
 
+/**
+ * `inbox_id` / `inbox` on an action that names a rule by id is a CHECK, not a
+ * selector: the rule carries its own inbox. Models send one because every
+ * other tool takes one (15 refusals across 5 workspaces in ten days to
+ * 2026-09-22). A selector naming a different inbox than the rule's means the
+ * caller has a different rule in mind, so the call is refused and nothing is
+ * changed. No selector: null, and the action runs exactly as before.
+ */
+async function ruleInboxMismatch(
+  deps: AutomationDeps,
+  // deno-lint-ignore no-explicit-any
+  rule: any,
+  args: Record<string, unknown>,
+  verb: string,
+): Promise<TriageToolResult | null> {
+  const named = (key: string) => typeof args[key] === "string" && (args[key] as string).trim() !== "";
+  if (!named("inbox_id") && !named("inbox")) return null;
+  const resolved = await deps.resolveInbox(args);
+  if (!resolved.ok) return toolErr(`automation ${verb}: ${resolved.message}`, "inbox_not_found");
+  if (resolved.inbox.id !== rule.inbox_id) {
+    return toolErr(
+      `automation ${verb}: automation ${rule.id} belongs to a different inbox than ` +
+        `${resolved.inbox.email_address ?? "the one named"}. Nothing was changed.`,
+      "inbox_mismatch",
+    );
+  }
+  return null;
+}
+
 /** Loads one rule, scoped to the caller's workspace. Tenancy is never implicit. */
 async function loadAutomation(
   deps: AutomationDeps,
@@ -2373,12 +2402,16 @@ export async function runAutomationTool(
     case "get": {
       const rule = await loadAutomation(deps, ruleIdArg);
       if (!rule) return toolErr("automation get: no automation with that id in this workspace.", "not_found");
+      const getMismatch = await ruleInboxMismatch(deps, rule, args, "get");
+      if (getMismatch) return getMismatch;
       return toolOk({ automation: rule });
     }
 
     case "update": {
       const rule = await loadAutomation(deps, ruleIdArg);
       if (!rule) return toolErr("automation update: no automation with that id in this workspace.", "not_found");
+      const updateMismatch = await ruleInboxMismatch(deps, rule, args, "update");
+      if (updateMismatch) return updateMismatch;
       const resolved = await deps.resolveInbox({ inbox_id: rule.inbox_id });
       const provider = resolved.ok ? resolved.inbox.provider : null;
       const body = validateAutomationBody(args, provider, true);
@@ -2411,6 +2444,8 @@ export async function runAutomationTool(
     case "enable": {
       const rule = await loadAutomation(deps, ruleIdArg);
       if (!rule) return toolErr("automation enable: no automation with that id in this workspace.", "not_found");
+      const enableMismatch = await ruleInboxMismatch(deps, rule, args, "enable");
+      if (enableMismatch) return enableMismatch;
       // Re-validate before letting it loose. A rule may have been written when
       // the key held a scope it has since lost, and enabling is the moment that
       // matters, because it is the moment unattended work becomes possible.
@@ -2440,6 +2475,14 @@ export async function runAutomationTool(
     }
 
     case "disable": {
+      // Only disable and delete skip the load, so they load here when there is
+      // an inbox to check against.
+      if (typeof args["inbox_id"] === "string" || typeof args["inbox"] === "string") {
+        const rule = await loadAutomation(deps, ruleIdArg);
+        if (!rule) return toolErr("automation disable: no automation with that id in this workspace.", "not_found");
+        const disableMismatch = await ruleInboxMismatch(deps, rule, args, "disable");
+        if (disableMismatch) return disableMismatch;
+      }
       const { data, error } = await deps.db
         .from("triage_rules")
         .update({ enabled: false, next_run_at: null, disabled_reason: "Disabled by request." })
@@ -2464,6 +2507,12 @@ export async function runAutomationTool(
       // SOFT delete. Run history outlives the rule on purpose: it is the record
       // of what was done to a mailbox, and it is exactly what a user goes
       // looking for after the fact.
+      if (typeof args["inbox_id"] === "string" || typeof args["inbox"] === "string") {
+        const rule = await loadAutomation(deps, ruleIdArg);
+        if (!rule) return toolErr("automation delete: no automation with that id in this workspace.", "not_found");
+        const deleteMismatch = await ruleInboxMismatch(deps, rule, args, "delete");
+        if (deleteMismatch) return deleteMismatch;
+      }
       const { data, error } = await deps.db
         .from("triage_rules")
         .update({ deleted_at: nowIso, enabled: false, next_run_at: null })
@@ -2485,6 +2534,8 @@ export async function runAutomationTool(
       const limit = Math.min(Math.max(Math.trunc(limitArg) || 20, 1), 100);
       const rule = await loadAutomation(deps, ruleIdArg);
       if (!rule) return toolErr("automation runs: no automation with that id in this workspace.", "not_found");
+      const runsMismatch = await ruleInboxMismatch(deps, rule, args, "runs");
+      if (runsMismatch) return runsMismatch;
       const { data, error } = await deps.db
         .from("triage_runs")
         .select("id, status, trigger, started_at, completed_at, duration_ms, matched, processed, succeeded, failed, skipped, error_code, error_detail")
