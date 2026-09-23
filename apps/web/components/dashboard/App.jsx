@@ -352,6 +352,28 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // they wanted anything. The offer belongs where the intent already is.
       setRouteState('inboxes');
       setShowConnect(true);
+    } else if (errorParam === 'admin_consent_required') {
+      // Microsoft refused before the user ever saw a consent screen: their
+      // organisation's default policy does not let employees approve mailbox
+      // access. Nothing they can do in our UI fixes this, so the message names
+      // the real next step (their IT admin) instead of reading as a failure on
+      // their side. Held open rather than auto-dismissed: it carries an action
+      // the person has to take somewhere else.
+      toast({
+        message: tr('app.adminConsentRequired'),
+        variant: 'warning',
+        duration: 0,
+        action: {
+          label: tr('app.adminConsentAction'),
+          onClick: () => {
+            // A whole-document navigation, not a router push: this is a server
+            // route handler that redirects to Microsoft, not a page we render.
+            // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+            window.location.href = '/auth/outlook/admin-consent';
+          },
+        },
+      });
+      setRouteState('inboxes');
     } else if (errorParam === 'token_exchange_failed') {
       toast({ message: tr('app.tokenExchangeFailed'), variant: 'error' });
       setRouteState('inboxes');
