@@ -1689,8 +1689,8 @@ Deno.test("a non-forward rule carries no approval note", async () => {
   // is noise. move/label/mark_read/draft_reply never leave the mailbox.
   const { result } = await createLabelRule("gmail", "Receipts");
   const payload = result.result.structuredContent as any;
-  assertEquals(payload.held_for_approval, undefined);
-  assertEquals(String(payload.message).includes("approval"), false);
+  assertEquals(payload.held_for_approval, undefined, "no held_for_approval flag");
+  assertEquals(String(payload.message).includes("approval"), false, "no approval wording");
 });
 
 Deno.test("a Gmail label rule carries no rename note, because nothing is renamed", async () => {

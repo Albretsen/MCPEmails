@@ -368,6 +368,7 @@ import {
   readProtocolVersionHeader,
 } from "./protocol-version-header.ts";
 import { normalizeArgumentAliases } from "./argument-aliases.ts";
+import { coerceArgumentTypes } from "./argument-coercion.ts";
 import {
   buildInsufficientScopeChallenge,
   insufficientScopeErrorData,
@@ -27851,6 +27852,23 @@ async function handleToolsCall(
         tool_name: toolName,
         action: selectedAction,
         dates: normalizedDates,
+      });
+    }
+
+    // ── Coerce unambiguous scalar shapes ────────────────────────────────────
+    // `"to": "a@b.no"` for an array, `"false"` for a boolean, `"20"` for an
+    // integer: right value, wrong JSON type. The largest type rejection in
+    // production, and every one of them was retried correctly on the next
+    // call, so refusing it bought nothing but a wasted round trip. In place
+    // and before validation, like the dates above, so the validator still
+    // judges the coerced value. See argument-coercion.ts.
+    const coercedArguments = coerceArgumentTypes(tool.inputSchema, rawArgs);
+    if (coercedArguments.length > 0) {
+      console.info("[mcp-server] tools/call: coerced_argument_types", {
+        key_id: apiKey.id,
+        tool_name: toolName,
+        action: selectedAction,
+        coerced: coercedArguments,
       });
     }
   }
