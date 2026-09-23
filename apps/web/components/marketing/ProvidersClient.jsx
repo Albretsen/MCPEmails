@@ -13,20 +13,39 @@ const RICH = {
 
 // ---------------------------------------------------------------------------
 // Capability data — mirrors PROVIDER_CAPABILITIES in
-// supabase/functions/mcp-server/index.ts and Documents/provider-support.md.
-// Keep these three sources in sync whenever the matrix changes.
+// supabase/functions/mcp-server/index.ts. Keep the two in sync whenever the
+// matrix changes. (This comment used to name a third source,
+// Documents/provider-support.md; no such file is in the repo.)
+//
+// That map is keyed by the stored `inboxes.provider` value rather than by
+// brand, and a Google mailbox reaches it through two different keys:
+//
+//   'gmail' → the Gmail API connector, reached with OAuth. The inboxes that
+//             connected before an app password became the default way in are
+//             still stored this way and still run on it.
+//   'imap'  → every app-password inbox, a Google one included. A Gmail address
+//             connected today is stored as provider='imap', service='gmail'
+//             (src/lib/email-providers/imap-presets.ts), and nothing in the
+//             edge function branches on `service`, so it gets the same
+//             capability set as iCloud or a generic host.
+//
+// The two answer differently on folders, labels, copy, permanent delete and
+// search syntax, so Gmail gets a column per key below rather than one column
+// that would have to be silently wrong for one of them.
 // ---------------------------------------------------------------------------
 
 const PROVIDERS = [
-  { key: 'gmail',    label: 'Gmail' },
-  { key: 'fastmail', label: 'Fastmail' },
-  // iCloud, Yahoo, Zoho, Yandex, and Generic IMAP all use provider='imap'
-  // in the DB and share the same capability set.
-  { key: 'icloud',   label: 'iCloud' },
-  { key: 'yahoo',    label: 'Yahoo' },
-  { key: 'zoho',     label: 'Zoho' },
-  { key: 'yandex',   label: 'Yandex' },
-  { key: 'generic',  label: 'Generic IMAP' },
+  // Gmail, both ways in. App password leads because it is the default one.
+  { key: 'gmailImap', labelKey: 'gmailImap' },  // PROVIDER_CAPABILITIES.imap
+  { key: 'gmail',     labelKey: 'gmailApi' },   // PROVIDER_CAPABILITIES.gmail
+  // Every column from here down, and the Gmail app-password one above, is
+  // provider='imap' in the DB and shares the one capability set.
+  { key: 'fastmail',  label: 'Fastmail' },
+  { key: 'icloud',    label: 'iCloud' },
+  { key: 'yahoo',     label: 'Yahoo' },
+  { key: 'zoho',      label: 'Zoho' },
+  { key: 'yandex',    label: 'Yandex' },
+  { key: 'generic',   labelKey: 'generic' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -42,17 +61,35 @@ const PROVIDERS = [
 //   hosts, ports, transport   src/lib/email-providers/imap-presets.ts
 //                             src/lib/email-providers/host-presets.ts
 //   Gmail OAuth scopes        app/auth/gmail/route.ts
+//   Gmail app-password hosts  IMAP_PRESETS.gmail in imap-presets.ts
 //   Microsoft scopes/consent  src/lib/email-providers/outlook-oauth.ts
 //   generic transport pairs   src/lib/email/transport-autodetect.ts
 //
 // `imap`/`smtp` are null when the provider is not reached over IMAP at all.
+//
+// Gmail takes two rows because it genuinely has two ways in, and which one a
+// mailbox used decides what the agent can do with it afterwards — see the two
+// Gmail columns in the capability table below.
 // ---------------------------------------------------------------------------
 
 const CONNECTION = [
   {
+    // The default way into a Google mailbox: an app password over Gmail's own
+    // IMAP/SMTP hosts, stored as provider='imap', service='gmail'. Hosts and
+    // ports are IMAP_PRESETS.gmail verbatim (imap-presets.ts).
+    key: 'gmailImap', labelKey: 'gmailImap', href: '/connect/gmail',
+    auth: 'appPassword',
+    imap: { host: 'imap.gmail.com', port: '993', security: 'TLS' },
+    smtp: { host: 'smtp.gmail.com', port: '465', security: 'TLS' },
+  },
+  {
     // Gmail API, not IMAP: gmail.readonly, gmail.send, gmail.modify and
-    // gmail.settings.basic (app/auth/gmail/route.ts).
-    key: 'gmail', label: 'Gmail', href: '/connect/gmail',
+    // gmail.settings.basic (app/auth/gmail/route.ts). Kept and demoted rather
+    // than retired — it still carries the inboxes that connected this way, and
+    // the connect modal still offers it one click down — because an unverified
+    // Google app may only ever be granted consent by 100 accounts in its
+    // lifetime and that counter cannot be reset.
+    key: 'gmail', labelKey: 'gmailApi', href: '/connect/gmail',
     auth: 'googleOauth', imap: null, smtp: null,
   },
   {
@@ -96,7 +133,7 @@ const CONNECTION = [
   },
   {
     // Both standard pairs, in the order transport-autodetect tries them.
-    key: 'generic', label: null, href: '/connect/imap',
+    key: 'generic', labelKey: 'generic', href: '/connect/imap',
     auth: 'mailboxPassword',
     imap: { host: null, port: '993 / 143', security: 'TLS / STARTTLS' },
     smtp: { host: null, port: '465 / 587', security: 'TLS / STARTTLS' },
@@ -113,92 +150,99 @@ const MATRIX = {
   original_message: {
     label: 'Download original (.eml)',
     section: 'Core',
-    gmail: true, fastmail: true,
+    gmail: true, gmailImap: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   read: {
     label: 'Read email',
     section: 'Core',
-    gmail: true, fastmail: true,
+    gmail: true, gmailImap: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   search: {
     label: 'Search',
     section: 'Core',
-    gmail: true, fastmail: true,
+    gmail: true, gmailImap: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   send: {
     label: 'Send email',
     section: 'Core',
-    gmail: true, fastmail: true,
+    gmail: true, gmailImap: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   reply: {
     label: 'Reply',
     section: 'Core',
-    gmail: true, fastmail: true,
+    gmail: true, gmailImap: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   forward: {
     label: 'Forward',
     section: 'Core',
-    gmail: true, fastmail: true,
+    gmail: true, gmailImap: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Flags & state ──────────────────────────────────────────────────────
   flags: {
     label: 'Read/unread + starred flags',
     section: 'Flags & state',
-    gmail: true, fastmail: true,
+    gmail: true, gmailImap: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Folders & labels ───────────────────────────────────────────────────
   folders: {
     label: 'Folders',
     section: 'Folders & labels',
-    // Gmail uses labels, not folders
-    gmail: false, fastmail: true,
+    // The Gmail API has labels and no folders at all. Gmail's IMAP server
+    // presents those same labels as folders, so the app-password column
+    // answers like every other IMAP one.
+    gmail: false, gmailImap: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   labels: {
     label: 'Labels / tags',
     section: 'Folders & labels',
-    gmail: true, fastmail: false,
+    // The mirror image of the row above: label tools are offered on the Gmail
+    // API connector only. Over IMAP the same labels are reached as folders.
+    gmail: true, gmailImap: false, fastmail: false,
     icloud: false, yahoo: false, zoho: false, yandex: false, generic: false,
   },
   move: {
     label: 'Move',
     section: 'Folders & labels',
-    gmail: true, fastmail: true,
+    gmail: true, gmailImap: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   copy: {
     label: 'Copy',
     section: 'Folders & labels',
-    // Gmail API has no native copy
-    gmail: false, fastmail: true,
+    // The Gmail API has no native copy. IMAP UID COPY does, on Gmail's hosts
+    // as anywhere else, so the same mailbox copies over an app password.
+    gmail: false, gmailImap: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Delete ─────────────────────────────────────────────────────────────
   delete: {
     label: 'Delete / trash',
     section: 'Delete',
-    gmail: true, fastmail: true,
+    gmail: true, gmailImap: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   permanent_delete: {
     label: 'Permanent delete (expunge)',
     section: 'Delete',
-    // Gmail and Outlook support trash only (no direct expunge via API)
-    gmail: false, fastmail: true,
+    // The Gmail and Outlook APIs expose trash only, with no direct expunge.
+    // The IMAP connector offers both, and a Gmail mailbox on an app password
+    // is the IMAP connector (trash_vs_expunge: 'both').
+    gmail: false, gmailImap: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Drafts ─────────────────────────────────────────────────────────────
   drafts: {
     label: 'Drafts (create / edit / send)',
     section: 'Drafts',
-    gmail: true, fastmail: true,
+    gmail: true, gmailImap: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Contacts ───────────────────────────────────────────────────────────
@@ -207,7 +251,7 @@ const MATRIX = {
     section: 'Contacts',
     // contact_search does a live, header-only scan of recent mail for every
     // provider — nothing is stored between calls.
-    gmail: true, fastmail: true,
+    gmail: true, gmailImap: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Scheduling ─────────────────────────────────────────────────────────
@@ -215,7 +259,7 @@ const MATRIX = {
     label: 'Scheduled send',
     section: 'Scheduling',
     // Shipped via server-side scheduled_sends queue (Task 17-18) for all providers
-    gmail: true, fastmail: true,
+    gmail: true, gmailImap: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Signatures ─────────────────────────────────────────────────────────
@@ -226,19 +270,33 @@ const MATRIX = {
     // scheduled message — works the same on every provider. Supports rich HTML
     // formatting and a hosted logo/image (https URLs; some clients image-block
     // by default). See providers.notes.signatures for the rendered copy.
-    gmail: true, fastmail: true,
+    gmail: true, gmailImap: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Search syntax ──────────────────────────────────────────────────────
   search_syntax: {
     label: 'Search syntax',
     section: 'Search',
-    gmail: 'Gmail', fastmail: 'IMAP',
+    // email_search takes Gmail's query language on the API connector and IMAP
+    // SEARCH criteria on everything else, the same mailbox over IMAP included.
+    gmail: 'Gmail', gmailImap: 'IMAP', fastmail: 'IMAP',
     icloud: 'IMAP', yahoo: 'IMAP', zoho: 'IMAP', yandex: 'IMAP', generic: 'IMAP',
   },
 };
 
 // ── Helpers ────────────────────────────────────────────────────────────────
+
+/**
+ * The name shown for a provider, in either table.
+ *
+ * Most rows are a brand name that is the same word in every locale, so they
+ * carry it inline. A row whose name says something *about* the connection —
+ * "Generic IMAP", and the two Gmail rows, which have to name which way in they
+ * are — carries a message key instead, because that part is translated.
+ */
+function providerLabel(t, entry) {
+  return entry.labelKey ? t(`providers.labels.${entry.labelKey}`) : entry.label;
+}
 
 function Check() {
   const t = useTranslations('docs');
@@ -296,9 +354,11 @@ function Cell({ value }) {
 /**
  * One IMAP/SMTP cell: host on its own line, then port and transport security.
  *
- * A null endpoint means the provider is not reached over IMAP at all, which is
- * two different statements: Gmail talks to a provider API, and Microsoft 365
- * cannot be connected yet. A null host means the value is the user's own.
+ * A null endpoint means the row is not reached over IMAP at all, which is two
+ * different statements: the Gmail API row talks to gmail.googleapis.com, and
+ * Microsoft 365 cannot be connected yet. (The other Gmail row is ordinary
+ * IMAP and has hosts like any other.) A null host means the value is the
+ * user's own.
  */
 function Transport({ endpoint, unavailable }) {
   const t = useTranslations('docs');
@@ -396,8 +456,8 @@ export default function ProvidersClient() {
                         hub rather than another leaf.
                       */}
                       {row.href
-                        ? <Link href={row.href}>{row.label ?? t('providers.labels.generic')}</Link>
-                        : (row.label ?? t('providers.labels.generic'))}
+                        ? <Link href={row.href}>{providerLabel(t, row)}</Link>
+                        : providerLabel(t, row)}
                     </td>
                     <td className="tbl-val" style={{ fontSize: 13 }}>
                       {t(`providers.connection.auth.${row.auth}`)}
@@ -418,6 +478,13 @@ export default function ProvidersClient() {
             display: 'flex', flexDirection: 'column', gap: 10,
             fontSize: 13, fontFamily: 'var(--font-sans)', color: 'var(--fg-3)', lineHeight: 1.6,
           }}>
+            {/*
+              The Gmail pair needs a sentence of its own: two rows for one
+              brand reads like a mistake until you know that the product really
+              does connect a Google mailbox two ways, and that the choice is
+              what decides the capability columns further down.
+            */}
+            <p style={{ margin: 0 }}>{t.rich('providers.connection.notes.gmailTwoWays', RICH)}</p>
             <p style={{ margin: 0 }}>{t.rich('providers.connection.notes.autodetect', RICH)}</p>
             <p style={{ margin: 0 }}>{t.rich('providers.connection.notes.authMechanism', RICH)}</p>
             <p style={{ margin: 0 }}>{t.rich('providers.connection.notes.otherHosts', RICH)}</p>
@@ -465,7 +532,7 @@ export default function ProvidersClient() {
                 <tr>
                   <th className="feat-col" style={{ minWidth: 200 }}>{t('providers.table.feature')}</th>
                   {PROVIDERS.map(p => (
-                    <th key={p.key} style={{ minWidth: 90 }}>{p.key === 'generic' ? t('providers.labels.generic') : p.label}</th>
+                    <th key={p.key} style={{ minWidth: 90 }}>{providerLabel(t, p)}</th>
                   ))}
                 </tr>
               </thead>

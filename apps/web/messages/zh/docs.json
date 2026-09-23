@@ -483,6 +483,8 @@
       "description": "哪些邮箱服务商可以通过 MCP 与 AI 代理配合使用，以及逐个连接时需要什么：OAuth 还是专用应用密码、IMAP 与 SMTP 主机和端口、TLS 还是 STARTTLS、常见的失败原因，以及连接后代理能做什么。涵盖 Gmail、Fastmail、iCloud Mail、Yahoo Mail、Zoho Mail、Yandex Mail、Microsoft 365 与通用 IMAP。"
     },
     "labels": {
+      "gmailImap": "Gmail（IMAP）",
+      "gmailApi": "Gmail（API）",
       "generic": "通用 IMAP"
     },
     "features": {
@@ -527,7 +529,7 @@
       "supported": "支持",
       "notSupported": "不支持",
       "planned": "计划中（尚未上线）",
-      "imapNote": "<b>Fastmail、iCloud、Yahoo、Zoho、Yandex 和通用 IMAP</b> 全部通过同一个 IMAP/SMTP 传输连接（Fastmail 和 iCloud 使用应用专用密码），并共享完全相同的功能集，包括 IMAP 搜索语法。这些列分开展示只是为了清晰。"
+      "imapNote": "<b>Gmail（IMAP）、Fastmail、iCloud、Yahoo、Zoho、Yandex 和通用 IMAP</b> 全部通过同一个 IMAP/SMTP 传输连接（Gmail、Fastmail 和 iCloud 使用应用专用密码），并共享完全相同的功能集，包括 IMAP 搜索语法。这些列分开展示只是为了清晰。<b>Gmail（API）</b>是唯一不走 IMAP 的 Gmail 列：同一个邮箱，改为通过 Google 登录和 Gmail API 访问。"
     },
     "profiles": {
       "title": "兼容性配置文件",
@@ -541,7 +543,7 @@
     },
     "notes": {
       "gmail": "<b>Gmail 的文件夹与标签：</b>Gmail 使用扁平的标签系统而非分层的文件夹。“移动”是通过添加/移除标签来实现的。Gmail REST API 不提供原生复制。这些 Gmail 行描述的是 Gmail API 连接器：使用应用专用密码通过 IMAP 连接的 Gmail 邮箱适用 IMAP 各列，包括复制。",
-      "permanentDelete": "<b>永久删除：</b>Gmail 在你删除时会移至回收站，它们的 API 不提供永久彻底清除。IMAP 服务商（Fastmail、iCloud、Yahoo、Zoho、Yandex、通用）同时支持回收站和硬性彻底清除。",
+      "permanentDelete": "<b>永久删除：</b>Gmail 和 Microsoft 的 API 都是把删除的邮件移到回收站，两者都不提供永久彻底清除。所有 IMAP 邮箱（用应用专用密码连接的 Gmail、Fastmail、iCloud、Yahoo、Zoho、Yandex、通用）都同时支持回收站和硬性彻底清除。",
       "contacts_db": "<b>联系人搜索（实时扫描）：</b>所有服务商都支持 <code>contact_search</code>，它通过对你近期一段匹配邮件进行实时、仅读取邮件头的扫描来查找匹配的联系人。不存在联系人表，在两次调用之间不存储任何内容，且数量仅反映所扫描窗口内匹配的邮件。",
       "scheduling": "<b>定时：</b>通过服务器端的 <code>scheduled_sends</code> 队列为所有服务商提供支持。使用 <code>schedule</code> 工具的 <code>create</code>、<code>list</code> 和 <code>cancel</code> 操作。投递使用每个服务商现有的发送路径，无需服务商原生的定时 API。",
       "signatures": "<b>签名：</b>每个收件箱的签名会在每次发送、回复、转发、草稿和定时邮件时由服务器端追加，这适用于<b>所有</b>服务商。签名支持富文本 HTML 格式（粗体、斜体、标题、列表、颜色、对齐、链接）以及托管的徽标/图片；可在仪表盘的富文本编辑器或 <code>signature</code> MCP 工具（接受 <code>signature_html</code>）中设置。图片以托管的 https URL 引用，可在所有服务商中显示，不过某些客户端（如 Gmail）可能会先隐藏图片，直到收件人点击“显示图片”，对于任何含托管图片的签名，这都是正常现象。使用 <code>signature_reply_mode</code> 控制其是否出现在回复和转发中。按单次调用，在 <code>email_compose</code> 或 <code>draft</code> 上传入 <code>include_signature: false</code> 可跳过它。 仪表盘中的同一收件箱面板还提供“发件人名称”字段，即收件人在该收件箱发送的所有邮件中看到的地址旁名称。",
@@ -578,7 +580,8 @@
       "unavailable": "尚未开放",
       "varies": "你的主机商设置",
       "breaks": {
-        "gmail": "传输层没有问题：Gmail 走的是 Gmail API 而非 IMAP。限制在语义上：Gmail 用标签而不是文件夹，没有原生复制，也不支持彻底删除。",
+        "gmailImap": "Google 账户没有开启两步验证时，根本不会出现应用专用密码这个选项；如果 Workspace 管理员在整个域上关闭了应用专用密码，账户同样无法生成。Google 会把密码分成四段显示，其中的空格只是排版，登录前会被去掉。",
+        "gmail": "传输层没有问题：这一行连的是 gmail.googleapis.com 而不是 IMAP。出问题的是授权。本应用未经 Google 验证，登录页会带一条必须点开的警告，而且 Google 规定未验证应用一生中最多只能获得 100 个账户的授权，这个计数无法重置。正是这个上限，让上面的应用专用密码成为默认方式。连上之后的限制是语义上的：用标签而不是文件夹，没有原生复制，也不支持彻底删除。",
         "fastmail": "普通账户密码会被直接拒绝。Fastmail 会生成一个 16 位的应用密码，而提交登录密码是连接失败最常见的单一原因。",
         "icloud": "必须先开启双因素认证，Apple 才会生成专用应用密码。Apple 会把密码显示为四组带连字符的字符；连字符只是显示用的，发送登录前会被去掉。",
         "yahoo": "Yahoo 最多只允许 5 个并发连接。它的拒绝提示“Incorrect username or password”是故意把两者一起列出的，并不会告诉你错的是哪一个。",
@@ -588,6 +591,7 @@
         "generic": "端口与安全模式对不上。端口仍为 993 却选了 STARTTLS，会对一个只说 TLS 的监听端口开启明文连接，连接只会一直等到超时。现在失败的传输会自动换另一种标准组合重试。"
       },
       "notes": {
+        "gmailTwoWays": "<b>Gmail 的两种连接方式：</b>Google 邮箱既可以用应用专用密码通过 <code>imap.gmail.com</code> 连接（默认方式），也可以用 Google 登录，走 Gmail API 而不是 IMAP。连接窗口里两种都提供，两种也都能继续使用。选哪一种决定了之后代理能做什么，所以下面的功能表为每一种各列一栏：<b>Gmail（IMAP）</b>对应应用专用密码，<b>Gmail（API）</b>对应 Google 登录。",
         "autodetect": "<b>传输自动检测：</b>若一次连接始终未能建立会话，会换到另一种标准传输重试（IMAP <code>993</code>/TLS 与 <code>143</code>/STARTTLS；SMTP <code>465</code>/TLS、<code>587</code>/STARTTLS 与 <code>25</code>）。被拒绝的密码从不重试，因为每次尝试都会计入服务商自己的锁定。",
         "authMechanism": "<b>登录机制：</b>大多数服务器可以一次往返完成 <code>AUTH PLAIN</code>。只声明 GSSAPI、NTLM 和 LOGIN 的服务器（最常见的是 Microsoft Exchange）会回应 <code>504 5.7.4</code>，客户端会自行回退到 <code>AUTH LOGIN</code>。",
         "otherHosts": "<b>其他主机商：</b>IONOS、Hostinger、OVH、OVH Hosted Exchange、DreamHost、Titan Email、Namecheap Private Email、Migadu、InMotion Hosting、OpenSRS、GMX 和 mail.com 会根据你输入的地址或邮件主机自动识别，并为你填好主机、端口和传输安全性。"

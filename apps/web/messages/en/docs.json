@@ -483,6 +483,8 @@
       "description": "Which email providers work with an AI agent over MCP, and what it takes to connect each one: OAuth or app-specific password, IMAP and SMTP hosts and ports, TLS or STARTTLS, what commonly breaks, and what the agent can do once connected. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Microsoft 365 and generic IMAP."
     },
     "labels": {
+      "gmailImap": "Gmail (IMAP)",
+      "gmailApi": "Gmail (API)",
       "generic": "Generic IMAP"
     },
     "features": {
@@ -527,7 +529,7 @@
       "supported": "Supported",
       "notSupported": "Not supported",
       "planned": "Planned (not yet shipped)",
-      "imapNote": "<b>Fastmail, iCloud, Yahoo, Zoho, Yandex, and Generic IMAP</b> all connect over the same IMAP/SMTP transport (Fastmail and iCloud use an app-specific password) and share an identical feature set, including IMAP search syntax. The columns are shown separately for clarity."
+      "imapNote": "<b>Gmail (IMAP), Fastmail, iCloud, Yahoo, Zoho, Yandex, and Generic IMAP</b> all connect over the same IMAP/SMTP transport (Gmail, Fastmail and iCloud use an app-specific password) and share an identical feature set, including IMAP search syntax. The columns are shown separately for clarity. <b>Gmail (API)</b> is the one Gmail column that is not IMAP: the same mailbox, reached through Google sign-in and the Gmail API instead."
     },
     "profiles": {
       "title": "Compatibility profiles",
@@ -541,7 +543,7 @@
     },
     "notes": {
       "gmail": "<b>Gmail folders vs labels:</b> Gmail uses a flat label system rather than hierarchical folders. \"Move\" is implemented as label add/remove. Native copy is not available via the Gmail REST API. These Gmail rows describe the Gmail API connector: a Gmail mailbox connected with an app password over IMAP follows the IMAP columns instead, copy included.",
-      "permanentDelete": "<b>Permanent delete:</b> Gmail moves to Trash when you delete, and permanent expunge is not exposed by their APIs. IMAP providers (Fastmail, iCloud, Yahoo, Zoho, Yandex, Generic) support both trash and hard expunge.",
+      "permanentDelete": "<b>Permanent delete:</b> the Gmail and Microsoft APIs move a deleted message to Trash, and permanent expunge is not exposed by either of them. Every IMAP inbox (Gmail on an app password, Fastmail, iCloud, Yahoo, Zoho, Yandex, Generic) supports both trash and hard expunge.",
       "contacts_db": "<b>Contact search (live scan):</b> All providers support <code>contact_search</code>, which finds matching correspondents with a live, header-only scan of a recent window of your matching mail. There is no contacts table: nothing is stored between calls, and counts reflect only matched messages in the scanned window.",
       "scheduling": "<b>Scheduling:</b> Supported for all providers via a server-side <code>scheduled_sends</code> queue. Use the <code>schedule</code> tool's <code>create</code>, <code>list</code>, and <code>cancel</code> actions. Delivery uses each provider's existing send path, so no provider-native scheduling API is required.",
       "signatures": "<b>Signatures:</b> A per-inbox signature is appended server-side on every send, reply, forward, draft, and scheduled message. This works on <b>all</b> providers. Signatures support rich HTML formatting (bold, italic, headings, lists, colors, alignment, links) and a hosted logo/image; set them in the dashboard rich editor or via the <code>signature</code> MCP tool (which accepts <code>signature_html</code>). Images are referenced as hosted https URLs and render across every provider, though some clients (e.g. Gmail) may hide them until the recipient clicks \"display images\", which is normal for any hosted-image signature. Use <code>signature_reply_mode</code> to control whether the signature appears on replies and forwards. Per call, pass <code>include_signature: false</code> on <code>email_compose</code> or <code>draft</code> to skip it. The same inbox panel in the dashboard also has a Sender name field, the display name recipients see next to the address on everything the inbox sends.",
@@ -578,7 +580,8 @@
       "unavailable": "Not yet available",
       "varies": "Your host’s settings",
       "breaks": {
-        "gmail": "Nothing at the transport layer: Gmail connects over the Gmail API rather than IMAP. The limits are semantic. Gmail has labels instead of folders, no native copy, and no permanent expunge.",
+        "gmailImap": "The app password option does not exist on the Google account until 2-Step Verification is on, and it disappears again for everyone in a Workspace whose administrator switches app passwords off for the domain. Google shows the password in four blocks; the spaces are display only and are stripped before the login is sent.",
+        "gmail": "Nothing at the transport layer: this row talks to gmail.googleapis.com rather than IMAP. What breaks is consent. The app is not verified by Google, so the sign-in screen carries a warning you have to click past, and Google lets an unverified app be granted consent by at most 100 accounts in its whole lifetime, a counter that cannot be reset. That ceiling is why the app password above is the default way in. The limits afterwards are semantic: labels instead of folders, no native copy, and no permanent expunge.",
         "fastmail": "The ordinary account password is refused outright. Fastmail issues a 16-character app password, and submitting the login password instead is the most common single cause of a failed connection.",
         "icloud": "Two-factor authentication has to be on before Apple will generate an app-specific password. Apple displays that password as four hyphenated blocks; the hyphens are display only and are stripped before the login is sent.",
         "yahoo": "Yahoo accepts at most 5 simultaneous connections. Its rejection text, “Incorrect username or password”, names both halves on purpose and will not tell you which one was wrong.",
@@ -588,6 +591,7 @@
         "generic": "A port and a security mode that disagree. Choosing STARTTLS while the port stays 993 opens a plaintext socket to a TLS-only listener, and the connection just times out. Failed transports are now retried automatically on the other standard combination."
       },
       "notes": {
+        "gmailTwoWays": "<b>Gmail, two ways in:</b> a Google mailbox connects either with an app password over <code>imap.gmail.com</code>, which is the default, or by signing in with Google, which uses the Gmail API instead of IMAP. Both are offered in the connect window and both keep working. The choice decides what the agent can do afterwards, so the capability table below has a column for each: <b>Gmail (IMAP)</b> for the app password and <b>Gmail (API)</b> for Google sign-in.",
         "autodetect": "<b>Transport autodetect:</b> a connection that never established a session is retried on the other standard transport (IMAP <code>993</code>/TLS and <code>143</code>/STARTTLS; SMTP <code>465</code>/TLS, <code>587</code>/STARTTLS and <code>25</code>). A rejected password is never retried, because re-sending it counts against the provider’s own lockout.",
         "authMechanism": "<b>Login mechanism:</b> most servers take <code>AUTH PLAIN</code> in a single round trip. Servers that advertise only GSSAPI, NTLM and LOGIN, with Microsoft Exchange the common case, answer it with <code>504 5.7.4</code>, and the client falls back to <code>AUTH LOGIN</code> on its own.",
         "otherHosts": "<b>Other hosts:</b> IONOS, Hostinger, OVH, OVH Hosted Exchange, DreamHost, Titan Email, Namecheap Private Email, Migadu, InMotion Hosting, OpenSRS, GMX and mail.com are recognised from the address or the mail host you type, and their hosts, ports and transport security are filled in for you."

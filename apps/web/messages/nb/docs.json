@@ -483,6 +483,8 @@
       "description": "Hvilke e-postleverandører som fungerer med en AI-agent over MCP, og hva som skal til for å koble til hver enkelt: OAuth eller app-passord, IMAP- og SMTP-verter og porter, TLS eller STARTTLS, hva som vanligvis feiler, og hva agenten kan gjøre når tilkoblingen er på plass. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Microsoft 365 og generisk IMAP."
     },
     "labels": {
+      "gmailImap": "Gmail (IMAP)",
+      "gmailApi": "Gmail (API)",
       "generic": "Generic IMAP"
     },
     "features": {
@@ -527,7 +529,7 @@
       "supported": "Støttet",
       "notSupported": "Ikke støttet",
       "planned": "Planlagt (ikke lansert ennå)",
-      "imapNote": "<b>Fastmail, iCloud, Yahoo, Zoho, Yandex og Generic IMAP</b> kobler alle til over den samme IMAP/SMTP-transporten (Fastmail og iCloud bruker et app-spesifikt passord) og deler et identisk funksjonssett, inkludert IMAP-søkesyntaks. Kolonnene vises hver for seg for tydelighetens skyld."
+      "imapNote": "<b>Gmail (IMAP), Fastmail, iCloud, Yahoo, Zoho, Yandex og Generic IMAP</b> kobler alle til over den samme IMAP/SMTP-transporten (Gmail, Fastmail og iCloud bruker et app-spesifikt passord) og deler et identisk funksjonssett, inkludert IMAP-søkesyntaks. Kolonnene vises hver for seg for tydelighetens skyld. <b>Gmail (API)</b> er den ene Gmail-kolonnen som ikke er IMAP: samme postkasse, nådd gjennom Google-innlogging og Gmail-API-et i stedet."
     },
     "profiles": {
       "title": "Kompatibilitetsprofiler",
@@ -541,7 +543,7 @@
     },
     "notes": {
       "gmail": "<b>Gmail, mapper vs. etiketter:</b> Gmail bruker et flatt etikettsystem i stedet for hierarkiske mapper. \"Flytt\" er implementert som legg til / fjern etikett. Native kopiering er ikke tilgjengelig via Gmail REST-API-et. Disse Gmail-radene beskriver Gmail API-koblingen: en Gmail-postkasse som kobles til med app-passord over IMAP, følger IMAP-kolonnene i stedet, kopiering inkludert.",
-      "permanentDelete": "<b>Permanent sletting:</b> Gmail flytter til papirkurven når du sletter. Permanent expunge eksponeres ikke av API-ene deres. IMAP-leverandører (Fastmail, iCloud, Yahoo, Zoho, Yandex, Generic) støtter både papirkurv og hard expunge.",
+      "permanentDelete": "<b>Permanent sletting:</b> Gmail- og Microsoft-API-ene flytter en slettet melding til papirkurven, og permanent expunge eksponeres ikke av noen av dem. Alle IMAP-innbokser (Gmail med app-passord, Fastmail, iCloud, Yahoo, Zoho, Yandex, Generic) støtter både papirkurv og hard expunge.",
       "contacts_db": "<b>Kontaktsøk (sanntidsskanning):</b> Alle leverandører støtter <code>contact_search</code>, som finner matchende korrespondenter med en sanntidsskanning som kun leser headere, av et nylig vindu av matchende e-post. Det finnes ingen kontakttabell: ingenting lagres mellom kall, og tallene gjenspeiler kun matchende meldinger i det skannede vinduet.",
       "scheduling": "<b>Planlegging:</b> Støttet for alle leverandører via <code>scheduled_sends</code>-køen. Bruk <code>schedule</code>-verktøyets <code>create</code>-, <code>list</code>- og <code>cancel</code>-handlinger.",
       "signatures": "<b>Signaturer:</b> En signatur per innboks legges til på serversiden ved hver sending, svar, videresending, utkast og planlagt melding, og dette fungerer på <b>alle</b> leverandører. Signaturer støtter rik HTML-formatering (fet, kursiv, overskrifter, lister, farger, justering, lenker) og en hostet logo/et bilde; sett dem i dashbordets rike editor eller med <code>signature</code>-MCP-verktøyet (som godtar <code>signature_html</code>). Bilder refereres som hostede https-URL-er og vises hos alle leverandører, men enkelte klienter (f.eks. Gmail) kan skjule dem til mottakeren klikker «vis bilder». Det er normalt for enhver signatur med hostede bilder. Bruk <code>signature_reply_mode</code> for å styre om den vises på svar og videresendinger. Per kall, oppgi <code>include_signature: false</code> på <code>email_compose</code> eller <code>draft</code> for å hoppe over den. Det samme innbokspanelet i dashbordet har også et Avsendernavn-felt, navnet mottakere ser ved siden av adressen på alt innboksen sender.",
@@ -578,7 +580,8 @@
       "unavailable": "Ikke tilgjengelig ennå",
       "varies": "Innstillingene til verten din",
       "breaks": {
-        "gmail": "Ingenting i transportlaget: Gmail kobler til over Gmail-API-et, ikke IMAP. Begrensningene er semantiske. Gmail har etiketter i stedet for mapper, ingen innebygd kopiering og ingen permanent sletting.",
+        "gmailImap": "App-passord finnes ikke på Google-kontoen før tostegsbekreftelse er slått på, og de forsvinner igjen for alle i et Workspace der administratoren slår app-passord av for hele domenet. Google viser passordet i fire blokker; mellomrommene er bare visning og fjernes før innloggingen sendes.",
+        "gmail": "Ingenting i transportlaget: denne raden snakker med gmail.googleapis.com, ikke IMAP. Det som ryker, er samtykket. Appen er ikke verifisert av Google, så innloggingsskjermen har en advarsel du må klikke deg forbi, og Google lar en uverifisert app få samtykke fra maks 100 kontoer i hele levetiden – en teller som ikke kan nullstilles. Det taket er grunnen til at app-passordet over er standardveien inn. Begrensningene etterpå er semantiske: etiketter i stedet for mapper, ingen innebygd kopiering og ingen permanent sletting.",
         "fastmail": "Det vanlige kontopassordet blir avvist direkte. Fastmail utsteder et app-passord på 16 tegn, og å sende inn innloggingspassordet i stedet er den vanligste enkeltårsaken til en mislykket tilkobling.",
         "icloud": "Tofaktorautentisering må være på før Apple genererer et app-passord. Apple viser passordet som fire blokker med bindestrek mellom; bindestrekene er bare visning og fjernes før innloggingen sendes.",
         "yahoo": "Yahoo tillater høyst 5 samtidige tilkoblinger. Avvisningsteksten, «Incorrect username or password», nevner begge deler med vilje og sier ikke hvilken av dem som var feil.",
@@ -588,6 +591,7 @@
         "generic": "En port og en sikkerhetsmodus som ikke stemmer overens. Å velge STARTTLS mens porten fortsatt er 993 åpner en ukryptert forbindelse mot en lytter som bare snakker TLS, og tilkoblingen går rett i tidsavbrudd. Mislykkede transporter forsøkes nå automatisk på den andre standardkombinasjonen."
       },
       "notes": {
+        "gmailTwoWays": "<b>Gmail, to veier inn:</b> en Google-postkasse kobles enten til med app-passord over <code>imap.gmail.com</code>, som er standard, eller ved å logge inn med Google, som bruker Gmail-API-et i stedet for IMAP. Begge tilbys i tilkoblingsvinduet, og begge fortsetter å virke. Valget avgjør hva agenten kan gjøre etterpå, så funksjonstabellen under har én kolonne for hver: <b>Gmail (IMAP)</b> for app-passordet og <b>Gmail (API)</b> for Google-innlogging.",
         "autodetect": "<b>Automatisk transportvalg:</b> en tilkobling som aldri fikk en økt i gang, prøves på nytt på den andre standardtransporten (IMAP <code>993</code>/TLS og <code>143</code>/STARTTLS; SMTP <code>465</code>/TLS, <code>587</code>/STARTTLS og <code>25</code>). Et avvist passord prøves aldri på nytt, fordi hvert forsøk teller mot leverandørens egen utestenging.",
         "authMechanism": "<b>Innloggingsmekanisme:</b> de fleste servere tar <code>AUTH PLAIN</code> i én runde. Servere som bare tilbyr GSSAPI, NTLM og LOGIN, der Microsoft Exchange er det vanlige tilfellet, svarer med <code>504 5.7.4</code>, og klienten faller selv tilbake på <code>AUTH LOGIN</code>.",
         "otherHosts": "<b>Andre verter:</b> IONOS, Hostinger, OVH, OVH Hosted Exchange, DreamHost, Titan Email, Namecheap Private Email, Migadu, InMotion Hosting, OpenSRS, GMX og mail.com gjenkjennes ut fra adressen eller e-postverten du skriver inn, og verter, porter og transportsikkerhet fylles ut for deg."
