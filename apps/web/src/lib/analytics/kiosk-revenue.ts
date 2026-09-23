@@ -62,10 +62,7 @@ const MAX_EVENT_PAGES = 10;
  * costs one Stripe call every ten minutes rather than one per render.
  */
 export async function fetchRecurringRevenue(windowDays: number): Promise<GrowthResult<RevenueSummary>> {
-  // The version segment is bumped whenever RevenueSummary gains a field: a
-  // cached payload from the previous shape would otherwise keep rendering
-  // "—" for the new figures until it happened to expire.
-  return cachedSection<RevenueSummary>(['recurring_revenue', 'v2', String(windowDays)], GROWTH_TAGS.revenue, async () => {
+  return cachedSection<RevenueSummary>(['recurring_revenue', String(windowDays)], GROWTH_TAGS.revenue, async () => {
     // Imported inside the cached read, not at module scope. `@/lib/stripe/client`
     // throws on an unset STRIPE_SECRET_KEY, and at module scope that throw takes
     // the whole board down rather than one tile: a wall display that shows

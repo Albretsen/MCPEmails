@@ -89,6 +89,21 @@ export const GROWTH_TAGS = {
 export const GROWTH_REVALIDATE_SECONDS = 600;
 
 /**
+ * Scopes every cache key to the running deployment.
+ *
+ * The data cache behind `unstable_cache` persists ACROSS deployments, and the
+ * key is only the wrapper's source text plus `keyParts`, neither of which
+ * changes when a payload type gains a field. So a deploy that adds, say,
+ * churn fields to RevenueSummary kept rendering the previous build's payload
+ * (the new fields read "—") until the entry happened to expire. That happened
+ * on 2026-09-23 and was patched by hand-bumping a 'v2' into two keys. Keying
+ * on the deployment makes that automatic for every section: a new build
+ * starts cold, once, and never reads a shape it was not compiled against.
+ */
+const CACHE_GENERATION =
+  process.env.VERCEL_DEPLOYMENT_ID || process.env.VERCEL_GIT_COMMIT_SHA || 'local';
+
+/**
  * Either the rows or the reason there are none, never an exception.
  * `fetchedAt` is captured inside the cache, so it reports when the data was
  * actually read rather than when this render happened to look at it.
@@ -126,7 +141,7 @@ export async function cachedSection<T>(
   try {
     const cached = unstable_cache(
       async () => ({ payload: await load(), fetchedAt: new Date().toISOString() }),
-      ['growth', ...keyParts],
+      ['growth', CACHE_GENERATION, ...keyParts],
       { revalidate: GROWTH_REVALIDATE_SECONDS, tags: [GROWTH_TAG, tag] },
     );
     const { payload, fetchedAt } = await cached();
@@ -396,9 +411,20 @@ export async function fetchBillingFunnel(): Promise<GrowthResult<BillingFunnelRo
  * pressed Refresh because they want to see the new numbers now, and an expiry
  * of zero is what makes Next treat the page as revalidated immediately instead
  * of serving one more stale render while it rebuilds in the background.
+ *
+ * Checked against the Next 16 docs (revalidateTag.md, updateTag.md) on
+ * 2026-09-23: this two-argument form is the documented one for a route
+ * handler, and `updateTag` is NOT an option here, it throws outside a Server
+ * Action. Tags passed to `unstable_cache({ tags })` are invalidated by it the
+ * same way as `fetch` tags.
+ *
+ * The log line is the only trace a press leaves: the route answers a 303 with
+ * no body, and on 2026-09-23 a "Refresh did nothing" report turned out to be
+ * seven page reloads and no POST at all, which took the logs to establish.
  */
 export async function refreshGrowthData(): Promise<void> {
   revalidateTag(GROWTH_TAG, { expire: 0 });
+  console.info('[growth]', 'refresh: expired tag', { tag: GROWTH_TAG, generation: CACHE_GENERATION });
 }
 
 /**
