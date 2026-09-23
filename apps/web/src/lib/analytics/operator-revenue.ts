@@ -109,7 +109,7 @@ export type RevenueDetail = {
  * never disagree about which subscription existed when.
  */
 export async function fetchRevenueDetail(): Promise<GrowthResult<RevenueDetail>> {
-  return cachedSection<RevenueDetail>(['revenue_detail'], GROWTH_TAGS.revenue, async () => {
+  return cachedSection<RevenueDetail>(['revenue_detail', 'v2'], GROWTH_TAGS.revenue, async () => {
     const { stripe } = await import('@/lib/stripe/client');
     const since = Math.floor(Date.now() / 1000) - CASH_DAYS * 24 * 60 * 60;
 
