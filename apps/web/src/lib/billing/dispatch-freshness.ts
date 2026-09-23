@@ -18,6 +18,8 @@
  * we could not confirm was unpaid is a support incident.
  */
 
+import { scheduledToStop } from '@/lib/analytics/revenue-math';
+
 export type Freshness = { send: true } | { send: false; reason: string };
 
 /** The sentinel reason meaning "we could not tell; leave the row and retry". */
@@ -47,6 +49,7 @@ export interface FreshnessStripe {
     retrieve(id: string): Promise<{
       status?: string | null;
       cancel_at_period_end?: boolean | null;
+      cancel_at?: number | null;
     }>;
   };
   paymentMethods: {
@@ -85,8 +88,14 @@ export async function checkFreshness(
 
       if (row.template === 'cancel_ask') {
         // They un-cancelled before we got to the question. Do not ask a paying
-        // customer why they left.
-        if (!subscription.cancel_at_period_end && subscription.status === 'active') {
+        // customer why they left. A scheduled cancel is EITHER field: the
+        // portal now sets `cancel_at` and leaves the boolean false, so reading
+        // the boolean alone would drop every question it was queued to ask.
+        const stillLeaving = scheduledToStop({
+          cancel_at_period_end: subscription.cancel_at_period_end ?? null,
+          cancel_at: subscription.cancel_at ?? null,
+        });
+        if (!stillLeaving && subscription.status === 'active') {
           return { send: false, reason: 'subscription_reactivated' };
         }
         return { send: true };

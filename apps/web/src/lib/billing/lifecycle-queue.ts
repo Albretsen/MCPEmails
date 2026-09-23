@@ -32,6 +32,7 @@ import {
   type BillingTemplate,
   type LifecyclePayload,
 } from '@/lib/email/billing-lifecycle';
+import { scheduledToStop } from '@/lib/analytics/revenue-math';
 import type { Database } from '@/types/database.types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -268,14 +269,39 @@ export async function queueCancellationSequence(options: {
 }
 
 /**
+ * What a `customer.subscription.updated` means for the cancellation series.
+ *
+ * TWO SHAPES OF "CANCEL AT PERIOD END". Stripe's dashboard and customer portal
+ * now schedule the cancel by setting `cancel_at` to the period end and leaving
+ * `cancel_at_period_end` FALSE (verified live 2026-09-23 on both September
+ * cancellers). Reading only the boolean meant those customers got no question
+ * and no win-back, and worse, the "resumed" branch below read the false boolean
+ * as an un-cancel. Either field set means the subscription is on its way out;
+ * both clear means it is not, including when a customer resumes and Stripe puts
+ * `cancel_at` back to null. Shares `scheduledToStop` with the growth board so
+ * the two can never disagree about who is leaving.
+ */
+export function cancellationAction(subscription: {
+  cancel_at_period_end?: boolean | null;
+  cancel_at?: number | null;
+}): 'queue' | 'cancel_open' {
+  return scheduledToStop({
+    cancel_at_period_end: subscription.cancel_at_period_end ?? null,
+    cancel_at: subscription.cancel_at ?? null,
+  })
+    ? 'queue'
+    : 'cancel_open';
+}
+
+/**
  * Has ANY cancellation-series row ever been queued for this subscription?
  *
- * `customer.subscription.updated` with `cancel_at_period_end = true` is the
- * normal trigger for the cancellation question and the win-backs, and it covers
+ * `customer.subscription.updated` with a scheduled cancel (`cancel_at_period_end
+ * = true`, or `cancel_at` set; see `cancellationAction`) is the normal trigger for the cancellation question and the win-backs, and it covers
  * a customer who cancels in the portal. It does not cover a subscription that is
  * deleted outright: cancelled immediately from the Stripe dashboard, or closed
  * by Stripe when the retries on a failed card run out. Those customers passed
- * through no `cancel_at_period_end = true` state at all and, before this,
+ * through no scheduled-cancel state at all and, before this,
  * received neither the question nor a win-back. Churn from a dead card is
  * exactly the churn a win-back is for.
  *

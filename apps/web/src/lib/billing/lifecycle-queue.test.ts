@@ -23,6 +23,7 @@ import { FakeSupabase, asClient } from '@/lib/billing/fake-supabase';
 import {
   cancelDunningForCustomer,
   cancelOpenSequence,
+  cancellationAction,
   hasCancellationSeries,
   isGrandfathered,
   queueCancellationSequence,
@@ -589,6 +590,75 @@ test('the cancellation question is dropped if they un-cancelled first', async ()
     ),
     { send: true },
   );
+});
+
+test('the cancellation question survives the portal\'s cancel_at shape', async () => {
+  // Stripe's portal and dashboard now schedule the cancel with `cancel_at` set
+  // and `cancel_at_period_end` false (sub_1UHtmrARrgumc6cq3CfEWrVP, 2026-09-23).
+  // Reading the boolean alone dropped this question as "reactivated".
+  const row = { id: 2, template: 'cancel_ask', scope_key: `${SUBSCRIPTION}:1792537482` };
+  assert.deepEqual(
+    await checkFreshness(
+      stripeStub({
+        subscription: { status: 'active', cancel_at_period_end: false, cancel_at: 1792537482 },
+      }),
+      row,
+    ),
+    { send: true },
+  );
+  // Resumed in the portal: Stripe puts cancel_at back to null.
+  assert.deepEqual(
+    await checkFreshness(
+      stripeStub({
+        subscription: { status: 'active', cancel_at_period_end: false, cancel_at: null },
+      }),
+      row,
+    ),
+    { send: false, reason: 'subscription_reactivated' },
+  );
+});
+
+test('cancellationAction reads both shapes of a scheduled cancel', () => {
+  assert.equal(cancellationAction({ cancel_at_period_end: true, cancel_at: 1792537482 }), 'queue');
+  assert.equal(cancellationAction({ cancel_at_period_end: true, cancel_at: null }), 'queue');
+  assert.equal(
+    cancellationAction({ cancel_at_period_end: false, cancel_at: 1792537482 }),
+    'queue',
+    'the portal shape must queue, not read as an un-cancel',
+  );
+  assert.equal(cancellationAction({ cancel_at_period_end: false, cancel_at: null }), 'cancel_open');
+  assert.equal(cancellationAction({}), 'cancel_open');
+});
+
+test('a resume after a cancel_at cancel kills the queued series', async () => {
+  // Mirrors the webhook's two calls: the portal-shape update queues, the resume
+  // (cancel_at cleared back to null) cancels everything still pending.
+  const db = new FakeSupabase();
+  const cancelled = { cancel_at_period_end: false, cancel_at: 1792537482 };
+  assert.equal(cancellationAction(cancelled), 'queue');
+  assert.equal(
+    await queueCancellationSequence({
+      db: asClient(db),
+      target: target(),
+      subscriptionId: SUBSCRIPTION,
+      periodEndSeconds: cancelled.cancel_at,
+      payload: payload(),
+    }),
+    3,
+  );
+
+  const resumed = { cancel_at_period_end: false, cancel_at: null };
+  assert.equal(cancellationAction(resumed), 'cancel_open');
+  await cancelOpenSequence({
+    db: asClient(db),
+    stripeCustomerId: CUSTOMER,
+    templates: ['cancel_ask', 'winback_14', 'winback_30'],
+    reason: 'subscription_reactivated',
+  });
+  for (const row of queued(db)) {
+    assert.ok(row.cancelled_at, `${row.template} is cancelled`);
+    assert.equal(row.cancel_reason, 'subscription_reactivated');
+  }
 });
 
 test('a win-back is dropped the moment they are paying again', async () => {

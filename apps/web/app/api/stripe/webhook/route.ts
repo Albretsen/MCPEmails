@@ -28,7 +28,8 @@
  *   never lands after the retry already worked.
  *
  *   `customer.subscription.updated` is EXTENDED rather than duplicated: when it
- *   carries cancel_at_period_end = true it also queues the one-question
+ *   carries a scheduled cancel (cancel_at_period_end = true OR cancel_at set;
+ *   see cancellationAction in lifecycle-queue.ts) it also queues the one-question
  *   cancellation email plus the two win-backs, scheduled from the period end.
  *
  *   Everything is gated on BILLING_LIFECYCLE_EMAILS (off | queue_only | on).
@@ -96,6 +97,7 @@ import { sendPurchaseConfirmationEmail } from '@/lib/email/purchase-confirmation
 import {
   cancelDunningForCustomer,
   cancelOpenSequence,
+  cancellationAction,
   hasCancellationSeries,
   isGrandfathered,
   queueCancellationSequence,
@@ -714,14 +716,21 @@ async function handleSubscriptionUpserted(
   // first call inserts and every later one conflicts and does nothing. Relying
   // on the constraint rather than on previous_attributes also survives the case
   // where the flag was set outside a webhook we saw at all.
-  if (lifecycleQueueingEnabled()) {
+  //
+  // "Scheduled to stop" is EITHER field: Stripe's portal and dashboard now set
+  // `cancel_at` to the period end and leave `cancel_at_period_end` false.
+  // Reading the boolean alone skipped the queue for those customers and then
+  // ran the un-cancel branch below against them.
+  const cancellation = cancellationAction(subscription);
+  if (lifecycleQueueingEnabled() && cancellation === 'queue') {
     await maybeQueueCancellation(subscription, resolved.plan.id);
   }
 
-  // Un-cancelled: they clicked "renew" in the portal before the period ended.
-  // Kill the pending question and both win-backs. Cheap, and the alternative is
-  // asking a paying customer why they left.
-  if (lifecycleQueueingEnabled() && subscription.cancel_at_period_end === false && customerId) {
+  // Un-cancelled: they clicked "renew" in the portal before the period ended,
+  // which clears whichever field was set. Kill the pending question and both
+  // win-backs. Cheap, and the alternative is asking a paying customer why they
+  // left.
+  if (lifecycleQueueingEnabled() && cancellation === 'cancel_open' && customerId) {
     await cancelOpenSequence({
       db: createServiceRoleClient(),
       stripeCustomerId: customerId,
@@ -746,7 +755,7 @@ async function maybeQueueCancellation(
   planId: PlanId,
 ): Promise<void> {
   try {
-    if (!subscription.cancel_at_period_end) return;
+    if (cancellationAction(subscription) !== 'queue') return;
 
     const customerId =
       typeof subscription.customer === 'string'
@@ -837,11 +846,11 @@ async function handleSubscriptionDeleted(
 
     // And queue the cancellation series if nothing queued it already.
     //
-    // The normal route in is `customer.subscription.updated` with
-    // cancel_at_period_end = true, which covers a customer who cancels in the
+    // The normal route in is `customer.subscription.updated` with a scheduled
+    // cancel (cancel_at_period_end = true or cancel_at set), which covers a customer who cancels in the
     // portal. It does NOT cover a subscription deleted outright: cancelled
     // immediately from the dashboard, or closed by Stripe when the retries on a
-    // dead card run out. Those customers passed through no cancel_at_period_end
+    // dead card run out. Those customers passed through no scheduled-cancel
     // state, so before this they received neither the question nor a win-back,
     // and churn from a dead card is precisely the churn a win-back is for.
     await maybeQueueCancellationOnDelete(subscription, customerId);
