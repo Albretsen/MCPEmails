@@ -29,7 +29,8 @@
       "step2": "De vuelta en Apps y conectores, haz clic en «Crear».",
       "step3": "Introduce un nombre y pega la URL de arriba como la URL del conector.",
       "step4": "Elige OAuth, haz clic en «Crear» y luego autoriza con mcpemails.",
-      "note": "El MCP completo es una beta limitada a los espacios de trabajo de ChatGPT Business y Enterprise/Edu."
+      "step5": "En un chat de chatgpt.com, haz clic en + → modo de desarrollador y selecciona la app de mcpemails. Repítelo en cada chat nuevo; si no, ChatGPT no verá las herramientas.",
+      "note": "Funciona en chatgpt.com (solo web) con Plus, Pro, Business, Enterprise y Edu. Las cuentas Free y Go no pueden añadir conectores personalizados. En Business y Enterprise, puede que un administrador tenga que permitir antes el modo de desarrollador."
     },
     "cursor": {
       "step1": "Edita ~/.cursor/mcp.json (global) o .cursor/mcp.json (proyecto).",

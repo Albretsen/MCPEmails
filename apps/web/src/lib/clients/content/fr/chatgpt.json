@@ -16,7 +16,7 @@
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "OAuth, aucune clé API requise",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Dans ChatGPT, activez le mode développeur sous Settings, Apps and Connectors, Advanced settings. Créez un connecteur, collez https://mcpemails.com/api/mcp comme URL du connecteur, choisissez OAuth et autorisez avec mcpemails. La prise en charge complète de MCP est une bêta réservée aux espaces de travail ChatGPT Business et Enterprise ou Edu."
+    "answer": "Dans ChatGPT, activez le mode développeur sous Settings, Apps and Connectors, Advanced settings. Créez un connecteur, collez https://mcpemails.com/api/mcp comme URL du connecteur, choisissez OAuth et autorisez avec mcpemails. Le mode développeur fonctionne sur chatgpt.com avec Plus, Pro, Business, Enterprise et Edu, et dans chaque conversation vous l'activez depuis le menu +."
   },
   "method": {
     "title": "Comment ChatGPT se connecte : OAuth, sans clé API",
@@ -38,12 +38,16 @@
     {
       "h": "Choisissez OAuth et autorisez",
       "p": "Sélectionnez OAuth, cliquez sur Create, puis autorisez avec mcpemails et approuvez les autorisations que le connecteur doit détenir."
+    },
+    {
+      "h": "Activez-le dans chaque conversation",
+      "p": "Ouvrez une nouvelle conversation sur chatgpt.com, cliquez sur <b>+</b>, choisissez Developer mode et sélectionnez l'app mcpemails. ChatGPT ne voit les outils que dans une conversation où vous l'avez fait, donc recommencez dans chaque nouvelle conversation. Entre-temps, le connecteur reste dans Apps and Connectors."
     }
   ],
   "gotchas": [
     {
-      "h": "Le MCP complet dans ChatGPT est une bêta, et tous les espaces de travail ne l'ont pas",
-      "p": "Le mode développeur avec des connecteurs MCP arbitraires est réservé aux espaces de travail ChatGPT Business et Enterprise ou Edu. Sur un compte Plus personnel, le bouton Create d'un connecteur personnalisé est soit absent, soit il refuse le serveur, et aucun changement de notre côté ne le débloque. Si c'est votre cas, la même boîte et la même URL fonctionnent dès aujourd'hui dans Claude, Cursor, VS Code ou les clients en ligne de commande : rien n'est perdu en attendant."
+      "h": "Le mode développeur exige un abonnement payant, le web et une activation dans chaque conversation",
+      "p": "Les connecteurs MCP personnalisés sont disponibles sur chatgpt.com pour les comptes Plus, Pro, Business, Enterprise et Edu. Les comptes Free et Go ne peuvent pas en ajouter, et les apps mobile et de bureau ne proposent pas le mode développeur. Sur Business et Enterprise, un administrateur doit parfois d'abord autoriser le mode développeur pour l'espace de travail. L'étape oubliée est la dernière : le connecteur ne fait rien tant que vous n'avez pas choisi Developer mode et l'app mcpemails dans le menu <b>+</b> de la conversation en cours."
     },
     {
       "h": "Choisissez OAuth, et non « aucune authentification », en créant le connecteur",
@@ -66,7 +70,7 @@
     },
     {
       "q": "Pourquoi ne puis-je pas créer de connecteur dans mon compte ChatGPT ?",
-      "a": "Le mode développeur et les connecteurs MCP personnalisés sont une bêta réservée aux espaces de travail ChatGPT Business et Enterprise ou Edu. Un compte personnel ne peut pas en ajouter, quel que soit le serveur. C'est une décision produit d'OpenAI, et rien de notre côté ne la change."
+      "a": "Le mode développeur exige ChatGPT Plus, Pro, Business, Enterprise ou Edu, sur le web. Les comptes Free et Go ne peuvent pas ajouter de connecteur personnalisé, et les apps mobile et de bureau n'affichent pas l'option. Dans un espace de travail Business ou Enterprise, demandez à un administrateur d'autoriser le mode développeur. Si le connecteur est créé mais que ChatGPT l'ignore, ouvrez le menu <b>+</b> de la conversation et sélectionnez Developer mode et l'app mcpemails."
     },
     {
       "q": "Ai-je besoin d'une clé API pour ChatGPT ?",

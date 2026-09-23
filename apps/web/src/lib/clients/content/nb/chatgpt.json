@@ -16,7 +16,7 @@
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "OAuth, ingen API-nøkkel nødvendig",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "I ChatGPT slår du på utviklermodus under Settings, Apps and Connectors, Advanced settings. Opprett en kobling, lim inn https://mcpemails.com/api/mcp som koblings-URL, velg OAuth og autoriser med mcpemails. Full MCP-støtte er en beta som bare er tilgjengelig i arbeidsområder for ChatGPT Business og Enterprise eller Edu."
+    "answer": "I ChatGPT slår du på utviklermodus under Settings, Apps and Connectors, Advanced settings. Opprett en kobling, lim inn https://mcpemails.com/api/mcp som koblings-URL, velg OAuth og autoriser med mcpemails. Utviklermodus fungerer på chatgpt.com med Plus, Pro, Business, Enterprise og Edu, og i hver samtale slår du den på fra +-menyen."
   },
   "method": {
     "title": "Slik kobler ChatGPT seg til: OAuth, ingen API-nøkkel",
@@ -38,12 +38,16 @@
     {
       "h": "Velg OAuth og autoriser",
       "p": "Velg OAuth, klikk Create, autoriser deretter med mcpemails og godkjenn tilgangene du vil at koblingen skal ha."
+    },
+    {
+      "h": "Slå den på i hver samtale",
+      "p": "Åpne en ny samtale på chatgpt.com, klikk <b>+</b>, velg Developer mode og velg mcpemails-appen. ChatGPT ser bare verktøyene i en samtale der du har gjort dette, så gjenta det i hver nye samtale. Koblingen blir liggende under Apps and Connectors i mellomtiden."
     }
   ],
   "gotchas": [
     {
-      "h": "Full MCP i ChatGPT er en beta, og ikke alle arbeidsområder har den",
-      "p": "Utviklermodus med vilkårlige MCP-koblinger er begrenset til arbeidsområder for ChatGPT Business og Enterprise eller Edu. På en personlig Plus-konto mangler Create-knappen for en egendefinert kobling, eller så avviser den serveren, og ingen endring på vår side låser den opp. Hvis det er der du står, fungerer den samme innboksen og den samme URL-en allerede i dag i Claude, Cursor, VS Code eller CLI-klientene, så ingenting er bortkastet mens du venter."
+      "h": "Utviklermodus krever et betalt abonnement, nettleseren og et valg i hver samtale",
+      "p": "Egne MCP-koblinger er tilgjengelige på chatgpt.com for Plus-, Pro-, Business-, Enterprise- og Edu-kontoer. Free- og Go-kontoer kan ikke legge til en, og mobil- og skrivebordsappene har ikke utviklermodus. På Business og Enterprise må en administrator kanskje tillate utviklermodus for arbeidsområdet først. Steget folk glemmer er det siste: koblingen gjør ingenting før du velger Developer mode og mcpemails-appen fra <b>+</b>-menyen i samtalen du bruker."
     },
     {
       "h": "Velg OAuth, ikke ingen autentisering, når du oppretter koblingen",
@@ -66,7 +70,7 @@
     },
     {
       "q": "Hvorfor kan jeg ikke opprette en kobling i ChatGPT-kontoen min?",
-      "a": "Utviklermodus og egendefinerte MCP-koblinger er en beta som er begrenset til arbeidsområder for ChatGPT Business og Enterprise eller Edu. En personlig konto kan ikke legge til en, uansett server. Dette er en produktbeslutning hos OpenAI, og ingenting på vår side endrer det."
+      "a": "Utviklermodus krever ChatGPT Plus, Pro, Business, Enterprise eller Edu, i nettleseren. Free- og Go-kontoer kan ikke legge til egne koblinger, og mobil- og skrivebordsappene viser ikke valget. I et Business- eller Enterprise-arbeidsområde ber du en administrator tillate utviklermodus. Hvis koblingen er opprettet, men ChatGPT overser den, åpner du <b>+</b>-menyen i samtalen og velger Developer mode og mcpemails-appen."
     },
     {
       "q": "Trenger jeg en API-nøkkel for ChatGPT?",

@@ -29,7 +29,8 @@
       "step2": "返回 Apps & Connectors，点击 \"Create\"。",
       "step3": "输入名称并将上方的 URL 粘贴为 Connector URL。",
       "step4": "选择 OAuth，点击 \"Create\"，然后使用 mcpemails 授权。",
-      "note": "完整的 MCP 是 beta 功能，仅限 ChatGPT Business 和 Enterprise/Edu 工作区。"
+      "step5": "在 chatgpt.com 的对话中，点击 + → Developer mode 并选择 mcpemails 应用。每个新对话都要重复这一步，否则 ChatGPT 看不到这些工具。",
+      "note": "仅限 chatgpt.com 网页版，适用于 Plus、Pro、Business、Enterprise 和 Edu。Free 和 Go 账户无法添加自定义连接器。在 Business 和 Enterprise 上，可能需要管理员先允许 Developer mode。"
     },
     "cursor": {
       "step1": "编辑 ~/.cursor/mcp.json（全局）或 .cursor/mcp.json（项目）。",

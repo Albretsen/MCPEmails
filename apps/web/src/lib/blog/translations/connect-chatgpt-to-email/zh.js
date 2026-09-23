@@ -12,11 +12,11 @@ ChatGPT 无法自行访问邮箱。它需要在你的邮件前面有一台 MCP �
 
 ## 你需要准备什么
 
-- **一个可以创建自定义连接器的 ChatGPT 工作区。** 支持任意 MCP 连接器的开发者模式是 OpenAI 的测试功能，仅限 ChatGPT Business、Enterprise 和 Edu 工作区。在个人账户上，这个选项要么不存在，要么会拒绝该服务器，我们这边无法解锁它。
+- **网页版的 ChatGPT Plus、Pro、Business、Enterprise 或 Edu。** 自定义 MCP 连接器位于开发者模式之后，OpenAI 在 chatgpt.com 上向这些方案提供该模式。Free 和 Go 账户无法添加，移动端和桌面端应用也不显示该选项。在 Business 和 Enterprise 上，可能需要管理员先允许开发者模式。
 - **一个免费的 MCP Emails 账户。** [在此创建](/signup)。免费方案可连接一个收件箱，无需信用卡。
 - **一个邮箱。** Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandex，或任何支持 IMAP 与 SMTP 的邮箱。
 
-如果你的工作区暂时还不能创建连接器，同一个收件箱和同一个 URL 已经可以在 [Claude](/docs/claude)、[Cursor](/docs/cursor)、[VS Code](/docs/vscode) 以及其他[受支持的客户端](/docs/clients)中使用。
+如果你使用的是 Free 或 Go，同一个邮箱和同一个 URL 已经可以在 [Claude](/docs/claude)、[Cursor](/docs/cursor)、[VS Code](/docs/vscode) 以及其他[支持的客户端](/docs/clients)中使用。
 
 ## 第 1 步：把收件箱连接到 MCP Emails
 
@@ -47,6 +47,7 @@ https://mcpemails.com/api/mcp
 \`\`\`
 
 4. 认证方式选择 **OAuth**，创建连接器，然后用 MCP Emails 完成授权。
+5. 打开一个新对话，点击 **+**，选择 **Developer mode** 并选中 MCP Emails 应用。ChatGPT 只在完成这一步的对话中看得到这些工具，所以每个新对话都要重复。
 
 请选择 OAuth，不要选"无需认证"。本服务器会拒绝匿名调用，因此一个在创建时未配置认证的连接器，设置阶段看起来一切正常，却会在第一次工具调用时失败，这种先后顺序最容易让人困惑。使用 OAuth 时，ChatGPT 会自行注册并完成带 PKCE 的授权码流程：不需要创建 client id，任何地方都不需要客户端密钥。OpenAI 在测试期间会不断调整菜单措辞，因此请查看 [ChatGPT 设置页](/docs/chatgpt)获取当前路径。
 
@@ -96,8 +97,9 @@ Codex 与 ChatGPT 连接器是不同的平台，浏览器 OAuth 流程在这里�
 
 ## 常见问题排查
 
-- **没有创建自定义连接器的选项。** 开发者模式仅限 Business、Enterprise 和 Edu 工作区。这是 OpenAI 的产品决策，不是服务端设置。
+- **没有创建自定义连接器的选项。** 开发者模式需要在浏览器中使用 chatgpt.com，并且是 Plus、Pro、Business、Enterprise 或 Edu。Free 和 Go 账户没有该模式。在 Business 或 Enterprise 工作区中，需要管理员允许。
 - **连接器在第一次工具调用时失败。** 它多半是在未配置认证的情况下创建的。删除它，用 OAuth 重新创建。
+- **连接器已创建，但 ChatGPT 回答时没有读取你的邮件。** 它在这个对话中没有开启。点击 **+**，选择 **Developer mode** 并选中 MCP Emails 应用，然后再问一次。
 - **服务商拒绝你的密码。** 请使用服务商生成的应用专用密码，而不是网页登录密码。部分服务商只有在开启双重验证后才会签发。
 - **自定义 IMAP 连接超时。** 确认主机、端口和 TLS 模式。993 端口通常使用隐式 TLS，143 端口通常使用 STARTTLS。
 - **ChatGPT 连上了却看不到邮件。** 检查该收件箱在控制台中是否处于启用状态，确认连接拥有 \`read:email\` 权限，并让 ChatGPT 先调用 \`inbox_list\`。

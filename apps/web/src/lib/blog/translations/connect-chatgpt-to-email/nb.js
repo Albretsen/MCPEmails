@@ -14,11 +14,11 @@ To OpenAI-flater er involvert, og de autentiserer på hver sin måte. ChatGPT kj
 
 ## Dette trenger du
 
-- **Et ChatGPT-arbeidsområde som kan opprette egendefinerte koblinger.** Utviklermodus med vilkårlige MCP-koblinger er en OpenAI-beta som er begrenset til arbeidsområdene ChatGPT Business, Enterprise og Edu. På en personlig konto mangler valget eller så avvises serveren, og ingenting på vår side låser det opp.
+- **ChatGPT Plus, Pro, Business, Enterprise eller Edu, i nettleseren.** Egne MCP-koblinger ligger bak utviklermodus, som OpenAI tilbyr på chatgpt.com for disse abonnementene. Free- og Go-kontoer kan ikke legge til en, og mobil- og skrivebordsappene viser ikke valget. På Business og Enterprise må en administrator kanskje tillate utviklermodus først.
 - **En gratis MCP Emails-konto.** [Opprett en her](/signup). Gratisplanen rommer én tilkoblet innboks og krever ikke kort.
 - **Én postkasse.** Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex, eller hva som helst som snakker IMAP og SMTP.
 
-Hvis arbeidsområdet ditt ikke kan opprette en ennå, fungerer den samme innboksen og URL-en allerede i [Claude](/docs/claude), [Cursor](/docs/cursor), [VS Code](/docs/vscode) og de andre [støttede klientene](/docs/clients).
+Er du på Free eller Go, fungerer den samme innboksen og URL-en allerede i [Claude](/docs/claude), [Cursor](/docs/cursor), [VS Code](/docs/vscode) og de andre [støttede klientene](/docs/clients).
 
 ## Steg 1: Koble innboksen til MCP Emails
 
@@ -49,6 +49,7 @@ https://mcpemails.com/api/mcp
 \`\`\`
 
 4. Velg **OAuth** som autentiseringsmetode, opprett koblingen, og autoriser deretter med MCP Emails.
+5. Åpne en ny samtale, klikk **+**, velg **Developer mode** og velg MCP Emails-appen. ChatGPT ser bare verktøyene i en samtale der du har gjort dette, så gjenta det i hver nye samtale.
 
 Velg OAuth, ikke "ingen autentisering". Denne serveren avviser anonyme kall, så en kobling opprettet uten autentisering ser riktig ut under oppsettet og feiler så ved første verktøykall, som er den forvirrende rekkefølgen. Med OAuth registrerer ChatGPT seg selv og fullfører en authorization code-flyt med PKCE: ingen klient-id å opprette, ingen klienthemmelighet noe sted. Ordlyden i menyene flytter seg mens OpenAI itererer på betaen, så sjekk [oppsettssiden for ChatGPT](/docs/chatgpt) for gjeldende sti.
 
@@ -98,8 +99,9 @@ Avgrens nøkkelen stramt. Bare lesetilgang er som regel riktig for en kodeagent:
 
 ## Feilsøking
 
-- **Ingen mulighet til å opprette en egendefinert kobling.** Utviklermodus er begrenset til arbeidsområdene Business, Enterprise og Edu. Det er en produktbeslutning hos OpenAI, ikke en innstilling på serversiden.
+- **Ingen mulighet til å opprette en egendefinert kobling.** Utviklermodus krever Plus, Pro, Business, Enterprise eller Edu, på chatgpt.com i en nettleser. Free- og Go-kontoer har det ikke. I et Business- eller Enterprise-arbeidsområde må en administrator tillate det.
 - **Koblingen feiler ved første verktøykall.** Den ble sannsynligvis opprettet uten autentisering. Slett den og opprett den på nytt med OAuth.
+- **Koblingen er opprettet, men ChatGPT svarer uten å røre e-posten din.** Den er ikke slått på i denne samtalen. Klikk **+**, velg **Developer mode** og velg MCP Emails-appen, og spør igjen.
 - **Leverandøren avviser passordet ditt.** Bruk et apppassord generert av leverandøren, ikke passordet du logger inn med på nettet. Noen leverandører utsteder det bare når tofaktorautentisering er slått på.
 - **En egendefinert IMAP-tilkobling får tidsavbrudd.** Bekreft vert, port og TLS-modus. Port 993 bruker normalt implisitt TLS. Port 143 bruker normalt STARTTLS.
 - **ChatGPT kobler til, men ser ingen post.** Sjekk at innboksen er aktiv i dashbordet, bekreft at tilkoblingen har \`read:email\`, og be ChatGPT kalle \`inbox_list\` først.

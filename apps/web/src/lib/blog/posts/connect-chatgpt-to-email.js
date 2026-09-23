@@ -8,7 +8,7 @@ const post = {
     'Connect ChatGPT and OpenAI Codex to Gmail, iCloud, Fastmail and IMAP email with MCP Emails',
   authorId: 'asgeir',
   publishedAt: '2026-09-15T09:00:00.000Z',
-  updatedAt: '2026-09-15T09:00:00.000Z',
+  updatedAt: '2026-09-23T09:00:00.000Z',
   tags: ['ChatGPT', 'Codex', 'MCP', 'Email', 'Tutorial'],
   featured: false,
   content: `> **Outlook and Microsoft 365 are in progress.** They cannot be connected in production yet. This guide covers Gmail, iCloud, Fastmail, Yahoo, Zoho and the other IMAP mailboxes available today.
@@ -21,11 +21,11 @@ Two OpenAI surfaces are involved, and they authenticate differently. ChatGPT run
 
 ## What you need
 
-- **A ChatGPT workspace that can create custom connectors.** Developer mode with arbitrary MCP connectors is an OpenAI beta limited to ChatGPT Business, Enterprise and Edu workspaces. On a personal account the option is missing or refuses the server, and nothing on our side unlocks it.
+- **ChatGPT Plus, Pro, Business, Enterprise or Edu, on the web.** Custom MCP connectors live behind developer mode, which OpenAI offers on chatgpt.com to those plans. Free and Go accounts cannot add one, and the mobile and desktop apps do not show the option. On Business and Enterprise an admin may need to allow developer mode first.
 - **A free MCP Emails account.** [Create one here](/signup). The free plan holds one connected inbox and needs no card.
 - **One mailbox.** Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex, or anything that speaks IMAP and SMTP.
 
-If your workspace cannot create one yet, the same inbox and URL already work in [Claude](/docs/claude), [Cursor](/docs/cursor), [VS Code](/docs/vscode) and the other [supported clients](/docs/clients).
+If you are on Free or Go, the same inbox and URL already work in [Claude](/docs/claude), [Cursor](/docs/cursor), [VS Code](/docs/vscode) and the other [supported clients](/docs/clients).
 
 ## Step 1: Connect your inbox to MCP Emails
 
@@ -56,6 +56,7 @@ https://mcpemails.com/api/mcp
 \`\`\`
 
 4. Choose **OAuth** as the authentication method, create the connector, then authorize with MCP Emails.
+5. Open a new chat, click **+**, choose **Developer mode** and select the MCP Emails app. ChatGPT only sees the tools in a chat where you have done this, so repeat it in every new conversation.
 
 Pick OAuth, not "no authentication". This server refuses anonymous calls, so a connector created without authentication looks fine at setup and then fails on its first tool call, which is the confusing way round. With OAuth, ChatGPT registers itself and completes an authorization code flow with PKCE: no client id to create, no client secret anywhere. The menu wording moves as OpenAI iterates on the beta, so check the [ChatGPT setup page](/docs/chatgpt) for the current path.
 
@@ -105,8 +106,9 @@ Scope the key tightly. Read-only is usually correct for a coding agent: one that
 
 ## Troubleshooting
 
-- **No option to create a custom connector.** Developer mode is restricted to Business, Enterprise and Edu workspaces. That is an OpenAI decision, not a server-side setting.
+- **No option to create a custom connector.** Developer mode needs Plus, Pro, Business, Enterprise or Edu, on chatgpt.com in a browser. Free and Go accounts do not have it. On a Business or Enterprise workspace, an admin has to allow it.
 - **The connector fails on its first tool call.** It was probably created with no authentication. Delete it and recreate it with OAuth.
+- **The connector is created, but ChatGPT answers without touching your mail.** It is not switched on in this chat. Click **+**, choose **Developer mode** and select the MCP Emails app, then ask again.
 - **The provider rejects your password.** Use a provider-generated app password, not your web sign-in password. Some providers only issue one once two-factor authentication is on.
 - **A custom IMAP connection times out.** Confirm the host, port and TLS mode. Port 993 normally uses implicit TLS; port 143 normally uses STARTTLS.
 - **ChatGPT connects but sees no mail.** Check the inbox is active in the dashboard, confirm the connection holds \`read:email\`, and ask ChatGPT to call \`inbox_list\` first.

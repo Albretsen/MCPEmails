@@ -16,7 +16,7 @@
     "meta0": "1 个收件箱永久免费",
     "meta1": "OAuth，无需 API 密钥",
     "meta2": "邮件实时获取，从不存储",
-    "answer": "在 ChatGPT 中，于 Settings、Apps and Connectors、Advanced settings 下开启开发者模式。创建一个连接器，将 https://mcpemails.com/api/mcp 粘贴为连接器 URL，选择 OAuth，并通过 mcpemails 授权。完整的 MCP 支持目前是测试版，仅限 ChatGPT Business 以及 Enterprise 或 Edu 工作区使用。"
+    "answer": "在 ChatGPT 中，于 Settings、Apps and Connectors、Advanced settings 下开启开发者模式。创建一个连接器，将 https://mcpemails.com/api/mcp 粘贴为连接器 URL，选择 OAuth，并通过 mcpemails 授权。开发者模式适用于 chatgpt.com 上的 Plus、Pro、Business、Enterprise 和 Edu，并且每个对话都要从 + 菜单中开启。"
   },
   "method": {
     "title": "ChatGPT 如何连接：OAuth，无需 API 密钥",
@@ -38,12 +38,16 @@
     {
       "h": "选择 OAuth 并授权",
       "p": "选择 OAuth，点击 Create，然后通过 mcpemails 授权，并批准你希望该连接器拥有的权限范围。"
+    },
+    {
+      "h": "在每个对话中开启",
+      "p": "在 chatgpt.com 打开一个新对话，点击 <b>+</b>，选择 Developer mode 并选中 mcpemails 应用。ChatGPT 只在完成这一步的对话中看得到这些工具，所以每个新对话都要重复。连接器会一直保留在 Apps and Connectors 中。"
     }
   ],
   "gotchas": [
     {
-      "h": "ChatGPT 中的完整 MCP 是测试版，并非每个工作区都有",
-      "p": "支持任意 MCP 连接器的开发者模式仅限 ChatGPT Business 以及 Enterprise 或 Edu 工作区。在个人 Plus 账户上，自定义连接器的 Create 按钮要么不存在，要么会拒绝该服务器，我们这边做任何改动都无法解锁。如果你正处于这种情况，同一个收件箱和同一个 URL 现在就能在 Claude、Cursor、VS Code 或各种命令行客户端中使用，等待期间不会白费任何功夫。"
+      "h": "开发者模式需要付费方案、网页版，并且每个对话都要开启",
+      "p": "自定义 MCP 连接器在 chatgpt.com 上向 Plus、Pro、Business、Enterprise 和 Edu 账户开放。Free 和 Go 账户无法添加，移动端和桌面端应用也不提供开发者模式。在 Business 和 Enterprise 上，可能需要管理员先为工作区允许开发者模式。最容易漏掉的是最后一步：在当前对话的 <b>+</b> 菜单中选择 Developer mode 和 mcpemails 应用之前，连接器不会起作用。"
     },
     {
       "h": "创建连接器时选择 OAuth，而不是无认证",
@@ -66,7 +70,7 @@
     },
     {
       "q": "为什么我无法在自己的 ChatGPT 账户中创建连接器？",
-      "a": "开发者模式和自定义 MCP 连接器是测试版功能，仅限 ChatGPT Business 以及 Enterprise 或 Edu 工作区。无论使用哪个服务器，个人账户都无法添加。这是 OpenAI 的产品决策，我们这边无法改变。"
+      "a": "开发者模式需要网页版的 ChatGPT Plus、Pro、Business、Enterprise 或 Edu。Free 和 Go 账户无法添加自定义连接器，移动端和桌面端应用也不显示该选项。在 Business 或 Enterprise 工作区中，请管理员允许开发者模式。如果连接器已创建但 ChatGPT 没有使用它，请在对话中打开 <b>+</b> 菜单，选择 Developer mode 和 mcpemails 应用。"
     },
     {
       "q": "ChatGPT 需要 API 密钥吗？",

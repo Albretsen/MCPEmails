@@ -29,7 +29,8 @@
       "step2": "Tilbake i Apps & Connectors, klikk «Create».",
       "step3": "Skriv inn et navn og lim inn URL-en over som Connector URL.",
       "step4": "Velg OAuth, klikk «Create», og autoriser deretter med mcpemails.",
-      "note": "Full MCP er en beta begrenset til ChatGPT Business- og Enterprise/Edu-arbeidsområder."
+      "step5": "I en samtale på chatgpt.com, klikk + → Developer mode og velg mcpemails-appen. Gjør dette i hver nye samtale, ellers ser ikke ChatGPT verktøyene.",
+      "note": "Fungerer på chatgpt.com (kun nett) med Plus, Pro, Business, Enterprise og Edu. Free- og Go-kontoer kan ikke legge til egne connectors. På Business og Enterprise må en administrator kanskje tillate Developer mode først."
     },
     "cursor": {
       "step1": "Rediger ~/.cursor/mcp.json (global) eller .cursor/mcp.json (prosjekt).",

@@ -14,11 +14,11 @@ Aquí intervienen dos superficies de OpenAI que se autentican de forma distinta.
 
 ## Lo que necesitas
 
-- **Un espacio de trabajo de ChatGPT que pueda crear conectores personalizados.** El modo de desarrollador con conectores MCP arbitrarios es una beta de OpenAI limitada a los espacios ChatGPT Business, Enterprise y Edu. En una cuenta personal la opción no aparece o rechaza el servidor, y nada de nuestro lado lo desbloquea.
+- **ChatGPT Plus, Pro, Business, Enterprise o Edu, en la web.** Los conectores MCP personalizados están detrás del modo de desarrollador, que OpenAI ofrece en chatgpt.com para esos planes. Las cuentas Free y Go no pueden añadir uno, y las apps de móvil y escritorio no muestran la opción. En Business y Enterprise, puede que un administrador tenga que permitir antes el modo de desarrollador.
 - **Una cuenta gratuita de MCP Emails.** [Créala aquí](/signup). El plan gratuito admite un buzón conectado y no pide tarjeta.
 - **Un buzón.** Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex o cualquier servicio que hable IMAP y SMTP.
 
-Si tu espacio de trabajo todavía no puede crear un conector, el mismo buzón y la misma URL ya funcionan en [Claude](/docs/claude), [Cursor](/docs/cursor), [VS Code](/docs/vscode) y los demás [clientes compatibles](/docs/clients).
+Si estás en Free o Go, la misma bandeja y la misma URL ya funcionan en [Claude](/docs/claude), [Cursor](/docs/cursor), [VS Code](/docs/vscode) y los demás [clientes compatibles](/docs/clients).
 
 ## Paso 1: Conecta tu buzón a MCP Emails
 
@@ -49,6 +49,7 @@ https://mcpemails.com/api/mcp
 \`\`\`
 
 4. Elige **OAuth** como método de autenticación, crea el conector y autoriza con MCP Emails.
+5. Abre un chat nuevo, haz clic en **+**, elige **Developer mode** y selecciona la app de MCP Emails. ChatGPT solo ve las herramientas en un chat donde lo hayas hecho, así que repítelo en cada conversación nueva.
 
 Elige OAuth, no la opción sin autenticación. Este servidor rechaza las llamadas anónimas, así que un conector creado sin autenticación parece correcto durante la configuración y falla en su primera llamada a una herramienta, que es el orden más confuso posible. Con OAuth, ChatGPT se registra solo y completa un flujo de código de autorización con PKCE: no hay ningún client id que crear ni ningún secreto en ninguna parte. La redacción de los menús cambia mientras OpenAI itera sobre la beta, así que consulta la [página de configuración de ChatGPT](/docs/chatgpt) para ver la ruta actual.
 
@@ -98,8 +99,9 @@ Limita bien la clave. Solo lectura suele ser lo correcto para un agente de progr
 
 ## Problemas comunes
 
-- **No aparece la opción de crear un conector personalizado.** El modo de desarrollador está restringido a los espacios Business, Enterprise y Edu. Es una decisión de OpenAI, no un ajuste del servidor.
+- **No aparece la opción de crear un conector personalizado.** El modo de desarrollador requiere Plus, Pro, Business, Enterprise o Edu, en chatgpt.com desde un navegador. Las cuentas Free y Go no lo tienen. En un espacio Business o Enterprise, un administrador tiene que permitirlo.
 - **El conector falla en su primera llamada a una herramienta.** Probablemente se creó sin autenticación. Bórralo y vuelve a crearlo con OAuth.
+- **El conector está creado, pero ChatGPT responde sin tocar tu correo.** No está activado en este chat. Haz clic en **+**, elige **Developer mode**, selecciona la app de MCP Emails y vuelve a preguntar.
 - **El proveedor rechaza tu contraseña.** Usa una contraseña de aplicación generada por el proveedor, no la de inicio de sesión web. Algunos proveedores solo la emiten con la verificación en dos pasos activada.
 - **Una conexión IMAP personalizada agota el tiempo.** Confirma el host, el puerto y el modo TLS. El puerto 993 suele usar TLS implícito; el 143 suele usar STARTTLS.
 - **ChatGPT se conecta pero no ve correo.** Comprueba que el buzón esté activo en el panel, confirma que la conexión tiene \`read:email\` y pide a ChatGPT que llame primero a \`inbox_list\`.

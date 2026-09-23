@@ -144,12 +144,16 @@ export function renderMarkdown(markdown) {
     // ordered list
     if (/^\s*\d+\.\s+/.test(line)) {
       paragraph = flushParagraph(paragraph);
+      // A list that resumes after a code block ("4." after a fenced URL) must
+      // keep its number, or every step after the block renders as "1.".
+      const start = Number(line.match(/^\s*(\d+)\./)[1]);
       const items = [];
       while (i < lines.length && /^\s*\d+\.\s+/.test(lines[i])) {
         items.push(lines[i].replace(/^\s*\d+\.\s+/, ''));
         i++;
       }
-      html.push(`<ol>${items.map((it) => `<li>${inline(it)}</li>`).join('')}</ol>`);
+      const startAttr = start === 1 ? '' : ` start="${start}"`;
+      html.push(`<ol${startAttr}>${items.map((it) => `<li>${inline(it)}</li>`).join('')}</ol>`);
       continue;
     }
 

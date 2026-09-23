@@ -130,3 +130,10 @@ for (const slug of EM_DASH_CLEAN_SLUGS) {
     });
   }
 }
+
+test('an ordered list that resumes after a code block keeps its number', async () => {
+  const { renderMarkdown } = await import('./markdown.js');
+  const { html } = renderMarkdown('1. One\n2. Two\n\n```\nhttps://example.com\n```\n\n4. Four\n5. Five\n');
+  assert.match(html, /<ol>\s*<li>One<\/li>/);
+  assert.match(html, /<ol start="4"><li>Four<\/li><li>Five<\/li><\/ol>/);
+});
