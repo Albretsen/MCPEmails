@@ -64,6 +64,7 @@ import {
   fetchCashCollected,
   fetchCheckoutFunnel,
   fetchRecurringRevenue,
+  fetchSignupConversion,
   valuationMultiple,
 } from '@/lib/analytics/kiosk-revenue';
 import { fetchRevenueDetail } from '@/lib/analytics/operator-revenue';
@@ -267,7 +268,13 @@ export async function TopSection({ days }: { days: number }) {
                 rows: mrr
                   ? [
                       move('new', mrr.newCustomers, 'New', mrr.newMrrMinor, money, 'good'),
-                      move('churn', mrr.churnedCustomers, 'Churned', -mrr.churnedMrrMinor, money, 'bad'),
+                      // The click and the loss are different days: "Cancelled"
+                      // is who pressed cancel in the window, "Churned" is whose
+                      // billing actually stopped in it. A cancel scheduled for
+                      // next month is on the first row today and the second
+                      // row then, and must not be invisible in between.
+                      move('cancelled', mrr.cancelledCustomers, 'Cancelled', -mrr.cancelledMrrMinor, money, 'bad'),
+                      move('churn', mrr.churnedCustomers, 'Billing stopped', -mrr.churnedMrrMinor, money, 'bad'),
                       move('risk', mrr.atRiskCustomers, 'Card failing', mrr.atRiskMinor, money, 'warn'),
                       move('leaving', mrr.leavingCustomers, 'Set to stop', mrr.leavingMinor, money, 'warn'),
                       {
@@ -317,6 +324,19 @@ export async function TopSection({ days }: { days: number }) {
   );
 }
 
+/**
+ * A conversion or churn rate to one decimal.
+ *
+ * `ratio` rounds to whole percent, which at our volumes reads 3.3% and 4.8% as
+ * "3%" and "5%" and hides the difference that matters. Under ten in the
+ * denominator it still falls back to counts, for the reason `ratio` gives.
+ */
+function rate(numerator: number, denominator: number): string {
+  if (denominator > 0 && denominator < 10) return ratio(numerator, denominator);
+  if (denominator <= 0) return NO_DATA;
+  return formatPercent(numerator / denominator, 1);
+}
+
 /** One MRR movement row. Churn is passed negative so it reads as a loss. */
 function move(
   key: string,
@@ -350,18 +370,89 @@ function deltaPercent(current: number, previous: number | null | undefined): num
 /* ============================================================= money band */
 
 export async function MoneySection({ days }: { days: number }) {
-  const [revenue, checkout, pressure, bands] = await Promise.all([
+  const [revenue, checkout, pressure, bands, conversion] = await Promise.all([
     fetchRecurringRevenue(days),
     fetchCheckoutFunnel(),
     fetchUpgradePressure(),
     fetchInboxDistribution(),
+    fetchSignupConversion(days),
   ]);
 
   const mrr = orNull(revenue);
+  const conv = orNull(conversion);
+  const funnel = orNull(checkout);
   const bandRows = bands.ok ? [...bands.data].sort((a, b) => a.band_index - b.band_index) : [];
 
   return (
     <>
+      {/* The rates the counts below imply, said as rates. Every other money
+          tile is a level or a count, and "24 paying" cannot say whether that
+          is a good share of 719 signups, nor "2 cancelled" whether that is a
+          bad share of 26 customers. */}
+      <Cell span={12}>
+        <Tile
+          label="Conversion and churn"
+          aside={`signup cohort and churn: last ${days}d · checkout steps: all time`}
+          tone={mrr && mrr.cancelledCustomers > 0 ? 'warn' : 'default'}
+        >
+          <StatStrip
+            stats={[
+              {
+                label: `Signup → paid, ${days}d`,
+                value: conv ? rate(conv.window.paid, conv.window.workspaces) : NO_DATA,
+                note: conv
+                  ? `${formatCount(conv.window.paid)} of ${formatCount(conv.window.workspaces)} who signed up`
+                  : 'unavailable',
+              },
+              {
+                label: 'Signup → paid, ever',
+                value: conv ? rate(conv.allTime.paid, conv.allTime.workspaces) : NO_DATA,
+                note: conv
+                  ? `${formatCount(conv.allTime.paid)} of ${formatCount(conv.allTime.workspaces)} workspaces`
+                  : 'unavailable',
+              },
+              {
+                label: 'Plans → checkout',
+                value: funnel ? rate(funnel.checkoutStarted, funnel.pricingViewed) : NO_DATA,
+                note: funnel
+                  ? `${formatCount(funnel.checkoutStarted)} of ${formatCount(funnel.pricingViewed)} who looked`
+                  : 'unavailable',
+              },
+              {
+                label: 'Checkout → paid',
+                value: funnel ? rate(funnel.checkoutCompleted, funnel.checkoutStarted) : NO_DATA,
+                note: funnel
+                  ? `${formatCount(funnel.abandoned)} abandoned on Stripe`
+                  : 'unavailable',
+              },
+              {
+                label: `Customer churn, ${days}d`,
+                value: mrr?.customerChurnRate != null
+                  ? rate(mrr.cancelledCustomers, mrr.churnBaseCustomers)
+                  : NO_DATA,
+                note: mrr
+                  ? `${formatCount(mrr.cancelledCustomers)} of ${formatCount(mrr.churnBaseCustomers)} cancelled`
+                  : 'Stripe unavailable',
+              },
+              {
+                label: `Revenue churn, ${days}d`,
+                value: mrr?.revenueChurnRate != null
+                  ? rate(mrr.cancelledMrrMinor, mrr.churnBaseMrrMinor)
+                  : NO_DATA,
+                note: mrr
+                  ? `${formatMoney(mrr.cancelledMrrMinor, mrr.currency)} of ${formatMoney(mrr.churnBaseMrrMinor, mrr.currency)} MRR`
+                  : 'Stripe unavailable',
+              },
+            ]}
+          />
+          <p className="kiosk-big-caption">
+            Churn counts a customer on the day they pressed cancel, including cancels that only take effect at
+            the end of the period, out of everyone who paid at any point in the window. Signup → paid follows the
+            window&apos;s signup cohort, which is young and will keep converting.
+          </p>
+        </Tile>
+      </Cell>
+
       <Cell span={4}>
         {mrr && mrr.byPlan.length > 0 ? (
           <Tile label="Which tier pays" aside={`${formatMoney(mrr.arrMinor, mrr.currency)}/yr`}>

@@ -250,7 +250,7 @@ const leavingRule: Rule = ({ revenue }) => {
     id: 'mrr-leaving',
     severity: 'act',
     title: `${formatMoney(revenue.leavingMinor, revenue.currency)} of MRR is set to stop at the end of its period.`,
-    population: `${formatCount(revenue.leavingCustomers)} live subscription(s) with cancel_at_period_end, from Stripe, now.`,
+    population: `${formatCount(revenue.leavingCustomers)} live subscription(s) scheduled to cancel, from Stripe, now.`,
   };
 };
 

@@ -37,8 +37,16 @@ export type SubscriptionFacts = {
   createdAt: number;
   /** Unix seconds it actually stopped billing, null while it is still live. */
   endedAt: number | null;
-  /** Live, but already scheduled to stop at the end of the current period. */
+  /**
+   * Live, but already scheduled to stop. Despite the name this is NOT only
+   * Stripe's `cancel_at_period_end`: see `scheduledToStop` for the second shape.
+   */
   cancelAtPeriodEnd: boolean;
+  /**
+   * Unix seconds the customer (or we) pressed cancel, null if nobody has. Set
+   * as soon as a cancellation is scheduled, long before billing stops.
+   */
+  canceledAt: number | null;
   /** ISO 4217, lowercase, as Stripe reports it. */
   currency: string;
   /** List price per month in minor units, before any coupon. */
@@ -74,6 +82,24 @@ export const NO_DISCOUNT: DiscountFacts = { percentOff: 0, amountOffMonthlyMinor
  */
 const LIVE_STATUSES = new Set(['active', 'past_due', 'unpaid']);
 
+/**
+ * Whether a live subscription is already scheduled to stop billing.
+ *
+ * TWO SHAPES, AND THE BOARD ONLY KNEW ONE. Stripe's own dashboard and customer
+ * portal now schedule "cancel at end of period" by setting `cancel_at` to the
+ * period end and leaving `cancel_at_period_end` FALSE. Verified live on
+ * 2026-09-23: both customers who cancelled in September carry
+ * `cancel_at: <period end>, cancel_at_period_end: false`, and a board reading
+ * only the boolean showed "Set to stop: 0" while Stripe's list said
+ * "Cancels Oct 14" and "Cancels Oct 21". Either field means the same thing here.
+ */
+export function scheduledToStop(subscription: {
+  cancel_at_period_end: boolean | null;
+  cancel_at: number | null;
+}): boolean {
+  return subscription.cancel_at_period_end === true || subscription.cancel_at != null;
+}
+
 /** Statuses where the money is live but not arriving. */
 const AT_RISK_STATUSES = new Set(['past_due', 'unpaid']);
 
@@ -104,6 +130,23 @@ export type RevenueSummary = {
   churnedCustomers: number;
   /** `newMrrMinor - churnedMrrMinor`. See the module note on expansion. */
   netNewMrrMinor: number;
+  /**
+   * Customers who pressed cancel inside the window, whether billing has
+   * already stopped or is scheduled to. This is the number a founder means by
+   * "two people cancelled"; `churned*` is when the money actually leaves.
+   */
+  cancelledCustomers: number;
+  cancelledMrrMinor: number;
+  /**
+   * Everyone who paid us at any point in the window: the churn denominator.
+   * Paying at the start plus everyone new, so a window that starts with zero
+   * customers still has an honest base instead of a division by zero.
+   */
+  churnBaseCustomers: number;
+  churnBaseMrrMinor: number;
+  /** cancelled / base, 0..1, null when nobody paid in the window. */
+  customerChurnRate: number | null;
+  revenueChurnRate: number | null;
   /** Where the money sits, biggest first. */
   byPlan: { label: string; customers: number; mrrMinor: number }[];
   /** Our own live subscriptions, excluded from every figure above. */
@@ -182,7 +225,12 @@ export function summarizeSubscriptions(
   // pressed cancel. A subscription cancelled at period end has a `canceled_at`
   // in the past and keeps paying until `ended_at`, and counting it as lost on
   // the click would book the loss weeks before it happens.
+  //
+  // Only `canceled` is churn. `incomplete_expired` also carries an `ended_at`,
+  // but it is an abandoned checkout that never paid, and counting it booked
+  // lost revenue from people who were never customers.
   const churned = external
+    .filter((sub) => sub.status === 'canceled')
     .filter((sub) => sub.endedAt !== null && sub.endedAt >= windowStart && sub.endedAt <= nowSeconds)
     .filter((sub) => sub.currency === currency)
     .map((sub) => ({ sub, monthly: netMonthlyMinor(sub) }))
@@ -190,6 +238,23 @@ export function summarizeSubscriptions(
 
   const churnedMrrMinor = Math.round(sum(churned.map((row) => row.monthly)));
   const newMrrMinor = Math.round(sum(fresh.map((row) => row.monthly)));
+
+  // The churn base: every external subscription that was billing at some
+  // point in the window. Live ones, plus ones that ended inside it. Only
+  // `canceled` counts as having ended from paying: `incomplete_expired` is an
+  // abandoned checkout that never paid anything.
+  const base = external
+    .filter((sub) => sub.currency === currency)
+    .filter((sub) =>
+      LIVE_STATUSES.has(sub.status)
+      || (sub.status === 'canceled' && sub.endedAt !== null && sub.endedAt >= windowStart))
+    .map((sub) => ({ sub, monthly: netMonthlyMinor(sub) }))
+    .filter((row) => row.monthly > 0);
+  const cancelled = base.filter(
+    (row) => row.sub.canceledAt !== null && row.sub.canceledAt >= windowStart && row.sub.canceledAt <= nowSeconds,
+  );
+  const baseMrrMinor = Math.round(sum(base.map((row) => row.monthly)));
+  const cancelledMrrMinor = Math.round(sum(cancelled.map((row) => row.monthly)));
 
   return {
     currency,
@@ -207,6 +272,12 @@ export function summarizeSubscriptions(
     churnedMrrMinor,
     churnedCustomers: churned.length,
     netNewMrrMinor: newMrrMinor - churnedMrrMinor,
+    cancelledCustomers: cancelled.length,
+    cancelledMrrMinor,
+    churnBaseCustomers: base.length,
+    churnBaseMrrMinor: baseMrrMinor,
+    customerChurnRate: base.length > 0 ? cancelled.length / base.length : null,
+    revenueChurnRate: baseMrrMinor > 0 ? cancelledMrrMinor / baseMrrMinor : null,
     byPlan: groupByPlan(paying),
     internalCustomers: subscriptions.filter((sub) => sub.internal && LIVE_STATUSES.has(sub.status)).length,
     otherCurrencies,

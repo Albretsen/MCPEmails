@@ -6,6 +6,7 @@ import {
   netMonthlyMinor,
   summarizeSubscriptions,
   planSplit,
+  scheduledToStop,
   valuationFromArr,
   NO_DISCOUNT,
   type SubscriptionFacts,
@@ -21,6 +22,7 @@ function sub(overrides: Partial<SubscriptionFacts> = {}): SubscriptionFacts {
     createdAt: NOW - 200 * DAY,
     endedAt: null,
     cancelAtPeriodEnd: false,
+    canceledAt: null,
     currency: 'usd',
     grossMonthlyMinor: 2900,
     discount: NO_DISCOUNT,
@@ -243,4 +245,48 @@ test('a fractional multiple lands on a whole number of minor units', () => {
   const result = valuationFromArr(4801, 3.5);
   assert.equal(result.valuationMinor, Math.round(4801 * 3.5));
   assert.ok(Number.isInteger(result.valuationMinor));
+});
+
+test('a cancel scheduled through cancel_at counts as set to stop, not only the boolean', () => {
+  // Stripe's dashboard and portal now cancel at period end this way; verified
+  // live on 2026-09-23 against both September cancellations.
+  assert.equal(scheduledToStop({ cancel_at_period_end: false, cancel_at: NOW + 20 * DAY }), true);
+  assert.equal(scheduledToStop({ cancel_at_period_end: true, cancel_at: null }), true);
+  assert.equal(scheduledToStop({ cancel_at_period_end: false, cancel_at: null }), false);
+});
+
+test('cancelled counts the click, churn rate divides by everyone who paid in the window', () => {
+  const summary = summarizeSubscriptions(
+    [
+      // Pressed cancel 5 days ago, still paying until period end.
+      sub({ id: 'leaving', cancelAtPeriodEnd: true, canceledAt: NOW - 5 * DAY, grossMonthlyMinor: 500 }),
+      // Cancelled and ended inside the window.
+      sub({ id: 'gone', status: 'canceled', canceledAt: NOW - 10 * DAY, endedAt: NOW - 3 * DAY, grossMonthlyMinor: 1500 }),
+      // Cancelled before the window: not this window's churn, not in its base.
+      sub({ id: 'old', status: 'canceled', canceledAt: NOW - 100 * DAY, endedAt: NOW - 90 * DAY }),
+      // Two healthy customers, one of them new.
+      sub({ id: 'a', grossMonthlyMinor: 500 }),
+      sub({ id: 'b', createdAt: NOW - 2 * DAY, grossMonthlyMinor: 1500 }),
+      // Never paid, and comped: neither is a customer who could churn.
+      sub({ id: 'abandoned', status: 'incomplete_expired', endedAt: NOW - DAY }),
+      sub({ id: 'comp', canceledAt: NOW - DAY, discount: { percentOff: 100, amountOffMonthlyMinor: 0 } }),
+      // Ours.
+      sub({ id: 'ours', internal: true, canceledAt: NOW - DAY }),
+    ],
+    WINDOW,
+  );
+  assert.equal(summary.cancelledCustomers, 2);
+  assert.equal(summary.cancelledMrrMinor, 2000);
+  assert.equal(summary.churnBaseCustomers, 4);
+  assert.equal(summary.churnBaseMrrMinor, 4000);
+  assert.equal(summary.customerChurnRate, 0.5);
+  assert.equal(summary.revenueChurnRate, 0.5);
+  assert.equal(summary.leavingCustomers, 1);
+  assert.equal(summary.churnedCustomers, 1);
+});
+
+test('churn rate is null, not zero, when nobody paid in the window', () => {
+  const summary = summarizeSubscriptions([], WINDOW);
+  assert.equal(summary.customerChurnRate, null);
+  assert.equal(summary.revenueChurnRate, null);
 });

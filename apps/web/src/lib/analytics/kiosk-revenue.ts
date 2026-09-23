@@ -29,6 +29,7 @@ import { GROWTH_TAGS, cachedSection, type GrowthResult } from '@/lib/analytics/g
 import {
   DEFAULT_VALUATION_ARR_MULTIPLE,
   monthlyFromInterval,
+  scheduledToStop,
   summarizeSubscriptions,
   type DiscountFacts,
   type RevenueSummary,
@@ -107,7 +108,8 @@ function subscriptionFacts(subscription: Stripe.Subscription): SubscriptionFacts
     status: subscription.status,
     createdAt: subscription.created,
     endedAt: subscription.ended_at,
-    cancelAtPeriodEnd: subscription.cancel_at_period_end,
+    cancelAtPeriodEnd: scheduledToStop(subscription),
+    canceledAt: subscription.canceled_at,
     currency: subscription.currency,
     grossMonthlyMinor,
     discount: discountFacts(subscription, interval, intervalCount),
@@ -312,6 +314,75 @@ export function summarizeCheckoutFunnel(rows: BillingEventRow[]): CheckoutFunnel
     internalExcluded: internal.size,
     lastCompletedAt,
   };
+}
+
+/* -------------------------------------------------------------- conversion */
+
+/** Signed-up workspaces and how many of them ever completed a checkout. */
+export type ConversionCohort = { workspaces: number; paid: number };
+
+export type SignupConversion = {
+  /** Workspaces created inside the window, and how many of those have paid. */
+  window: ConversionCohort;
+  /** Every external workspace ever, and how many have ever paid. */
+  allTime: ConversionCohort;
+};
+
+type WorkspaceRow = {
+  id: string;
+  created_at: string;
+  users: { email: string | null } | null;
+};
+
+/**
+ * Signup to paid, as a rate, for the window's signup cohort and for all time.
+ *
+ * COHORT, NOT RATIO OF TWO COUNTS. "Sales in 28d / signups in 28d" divides
+ * people who paid this month by different people who arrived this month, and
+ * at our volumes one early buyer from August swings it by whole points. This
+ * asks the question a founder means: of the workspaces that signed up in the
+ * window, how many have paid us. A recent cohort is young and will keep
+ * converting, which is why the all-time rate sits beside it.
+ *
+ * Paid means a `checkout_completed` event, the same source as the checkout
+ * funnel, so someone who paid and later cancelled still converted. Churn is a
+ * separate figure. Our own accounts are excluded on both sides.
+ */
+export async function fetchSignupConversion(windowDays: number): Promise<GrowthResult<SignupConversion>> {
+  return cachedSection<SignupConversion>(['signup_conversion', String(windowDays)], GROWTH_TAGS.revenue, async () => {
+    const [workspaces, events] = await Promise.all([loadWorkspaces(), loadBillingEvents()]);
+    const paid = new Set(
+      events
+        .filter((row) => row.stage === 'checkout_completed' && row.outcome !== 'failure')
+        .map((row) => row.workspace_id),
+    );
+    const windowStart = Date.now() - windowDays * 86_400_000;
+    const external = workspaces.filter((row) => !isInternalAccount(row.users?.email ?? null));
+    const recent = external.filter((row) => Date.parse(row.created_at) >= windowStart);
+    return {
+      window: { workspaces: recent.length, paid: recent.filter((row) => paid.has(row.id)).length },
+      allTime: { workspaces: external.length, paid: external.filter((row) => paid.has(row.id)).length },
+    };
+  });
+}
+
+/** Every workspace with its owner's email, paged past PostgREST's 1000-row cap. */
+async function loadWorkspaces(): Promise<WorkspaceRow[]> {
+  const service = createServiceRoleClient();
+  const rows: WorkspaceRow[] = [];
+  for (let page = 0; page < MAX_EVENT_PAGES; page += 1) {
+    const from = page * PAGE_SIZE;
+    const { data, error } = await service
+      .from('workspaces')
+      .select('id, created_at, users!workspaces_owner_id_fkey(email)')
+      .order('created_at', { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) throw new Error(error.message);
+    const batch = (data ?? []) as unknown as WorkspaceRow[];
+    rows.push(...batch);
+    if (batch.length < PAGE_SIZE) break;
+  }
+  return rows;
 }
 
 /* -------------------------------------------------------------------- cash */

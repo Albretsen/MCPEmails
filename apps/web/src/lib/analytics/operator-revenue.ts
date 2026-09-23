@@ -30,7 +30,7 @@ import type Stripe from 'stripe';
 import { getPlanByStripePriceId, planDisplayName } from '@/lib/stripe/plans';
 import { isInternalAccount } from '@/lib/analytics/internal-accounts';
 import { GROWTH_TAGS, cachedSection, type GrowthResult } from '@/lib/analytics/growth-queries';
-import { monthlyFromInterval, netMonthlyMinor, type SubscriptionFacts } from '@/lib/analytics/revenue-math';
+import { monthlyFromInterval, netMonthlyMinor, scheduledToStop, type SubscriptionFacts } from '@/lib/analytics/revenue-math';
 import { rollUpCash, stripeMode, type CashMonth } from '@/lib/analytics/cash-math';
 
 // Re-exported because this is where the page looks for them.
@@ -188,7 +188,8 @@ function toCustomerRow(subscription: Stripe.Subscription): RevenueCustomerRow {
     status: subscription.status,
     createdAt: subscription.created,
     endedAt: subscription.ended_at,
-    cancelAtPeriodEnd: subscription.cancel_at_period_end,
+    cancelAtPeriodEnd: scheduledToStop(subscription),
+    canceledAt: subscription.canceled_at,
     currency: subscription.currency,
     grossMonthlyMinor,
     discount: { percentOff, amountOffMonthlyMinor },
@@ -219,7 +220,7 @@ function toCustomerRow(subscription: Stripe.Subscription): RevenueCustomerRow {
     isInternal: isInternalAccount(email),
     startedAt: isoOrNull(subscription.created),
     renewsAt: isoOrNull(periodEnd(subscription)),
-    cancelAtPeriodEnd: subscription.cancel_at_period_end,
+    cancelAtPeriodEnd: scheduledToStop(subscription),
     endedAt: isoOrNull(subscription.ended_at),
   };
 }
