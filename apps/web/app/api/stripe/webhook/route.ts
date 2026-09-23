@@ -62,15 +62,19 @@
  *   This handler uses the service-role Supabase client (bypasses RLS).
  *
  * Delivered through a queue (2026-09-20):
- *   Stripe points at a Queuey ingress, which forwards here. Two consequences,
- *   both handled below:
- *     - The queue must forward the `Stripe-Signature` header and the body
- *       UNCHANGED (raw passthrough, no re-serialisation). The signature is over
- *       the exact bytes; a reformatted body is an invalid signature.
- *     - A held event is replayed long after it was signed, so the timestamp
- *       tolerance is widened. See signatureToleranceSeconds().
- *   STRIPE_WEBHOOK_PROXY_KEY optionally restricts the route to the queue. It is
- *   an additional gate, never a replacement for the signature.
+ *   Stripe points at a Queuey ingress, which verifies Stripe's signature with
+ *   its Stripe signing template and forwards here. The body must cross the
+ *   queue as RAW bytes under either scheme below — both hash exactly what was
+ *   sent, and neither survives a re-serialisation.
+ *
+ *   Which signature THIS route checks depends on QUEUEY_SIGNING_SECRET:
+ *     - unset  Stripe's forwarded `Stripe-Signature`, with a seven-day
+ *              tolerance because a held replay carries its ORIGINAL timestamp.
+ *              Needs the queue to map `Stripe-Signature` through.
+ *     - set    Queuey's own `X-Queuey-*` HMAC, re-signed per delivery attempt,
+ *              so ±5 minutes suffices. See src/lib/queuey/verify-delivery.ts.
+ *   The variable is the rollout switch, not a feature flag: the queue must be
+ *   signing before this route demands it. Unsetting it rolls back.
  *
  * References:
  *   src/lib/stripe/plans.ts  (plan catalogue, getPlanByStripePriceId)
@@ -78,7 +82,6 @@
  *   src/lib/email/purchase-confirmation.ts (confirmation email composer + sender)
  */
 
-import { timingSafeEqual } from 'node:crypto';
 import { NextRequest, NextResponse, after } from 'next/server';
 import type Stripe from 'stripe';
 import { stripe } from '@/lib/stripe/client';
@@ -108,6 +111,7 @@ import {
   primaryWorkspaceId,
   recordCheckoutCompleted,
 } from '@/lib/analytics/billing-funnel';
+import { verifyQueueyDelivery } from '@/lib/queuey/verify-delivery';
 
 // ---------------------------------------------------------------------------
 // Route config
@@ -166,45 +170,6 @@ function signatureToleranceSeconds(): number {
 }
 
 /**
- * The key the delivery queue presents to prove the request came from IT and not
- * from the open internet. Optional, and OFF until the variable is set.
- *
- * It is not what makes an event authentic — the Stripe signature below is, and
- * it is still required on every request. This only narrows who can reach the
- * route at all, so a hostile prober cannot even attempt signatures.
- *
- * ORDER OF OPERATIONS WHEN TURNING IT ON. Configure the key in the queue and
- * send a test FIRST, then set this variable. Setting it while the queue is
- * still sending nothing means every delivery gets a 401, which the queue reads
- * as permanent and dead-letters — it will not retry its way out of that.
- *
- * ONCE SET, STRIPE CANNOT DELIVER DIRECTLY. A "send test webhook" from the
- * Stripe dashboard, or an old endpoint still pointed at this URL, arrives with
- * no key and is refused. That is the intended posture, not a bug: disable the
- * direct endpoint in Stripe so there is exactly one path in.
- *
- * Three header spellings are accepted because the name is the queue's choice,
- * not ours: its built-in auth may send `Authorization: Bearer`, and a key added
- * by hand under "default headers" is conventionally `X-Api-Key`.
- */
-function proxyKeyAccepted(request: NextRequest): boolean {
-  const expected = process.env.STRIPE_WEBHOOK_PROXY_KEY;
-  if (!expected) return true; // Not configured: the gate is off.
-
-  const bearer = request.headers.get('authorization');
-  const provided =
-    request.headers.get('x-api-key') ??
-    request.headers.get('x-queuey-key') ??
-    (bearer?.toLowerCase().startsWith('bearer ') ? bearer.slice(7) : null) ??
-    '';
-
-  const a = Buffer.from(expected);
-  const b = Buffer.from(provided);
-  // Length is not secret, and timingSafeEqual throws on a mismatch.
-  return a.length === b.length && timingSafeEqual(a, b);
-}
-
-/**
  * Billing lifecycle email mode. THE PRODUCTION KILL SWITCH.
  *
  *   off        (default) Queue nothing, cancel nothing. This file behaves
@@ -239,33 +204,9 @@ const ENTITLED_STATUSES: ReadonlySet<Stripe.Subscription.Status> = new Set([
 // ---------------------------------------------------------------------------
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  // ── 0. Front door: is this the delivery queue? ─────────────────────────────
-  // Off unless STRIPE_WEBHOOK_PROXY_KEY is set. 401 and not 403 because the
-  // request failed to authenticate rather than being refused a resource, and
-  // because a delivery queue reads both as permanent — which is what we want
-  // for a wrong key: park it and tell someone, never retry it into the void.
-  if (!proxyKeyAccepted(request)) {
-    console.error('[stripe-webhook] rejected: proxy key missing or wrong.');
-    return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
-  }
-
-  // ── 1. Verify webhook signature ───────────────────────────────────────────
-  if (!WEBHOOK_SECRET) {
-    console.error('[stripe-webhook] STRIPE_WEBHOOK_SECRET is not set.');
-    return NextResponse.json(
-      { error: 'Webhook secret not configured.' },
-      { status: 500 },
-    );
-  }
-
-  const signature = request.headers.get('stripe-signature');
-  if (!signature) {
-    return NextResponse.json(
-      { error: 'Missing stripe-signature header.' },
-      { status: 400 },
-    );
-  }
-
+  // ── 1. Authenticate the request ───────────────────────────────────────────
+  // The raw bytes come first, because BOTH schemes below hash exactly what was
+  // sent and neither survives a parse/re-serialise round trip.
   let rawBody: Buffer;
   try {
     const buffer = await request.arrayBuffer();
@@ -277,21 +218,75 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
+  // WHICH SCHEME, AND WHY IT IS A SWITCH RATHER THAN A REPLACEMENT.
+  // Setting QUEUEY_SIGNING_SECRET moves authentication from Stripe's signature
+  // (signed once, by Stripe) to Queuey's (re-signed on every delivery attempt).
+  // Both cannot be cut over atomically: the queue has to be signing before this
+  // route demands a signature, or every delivery is refused and dead-lettered.
+  // So the variable IS the rollout — unset keeps today's behaviour exactly,
+  // setting it flips the route, unsetting it rolls back without a code change.
+  //
+  // Once signing has been live long enough to trust, the Stripe branch and
+  // signatureToleranceSeconds() come out and the seven-day window goes with
+  // them: a Queuey signature on a two-day-old replay is minutes old, so ±5
+  // minutes is enough and a captured delivery stops being replayable for a week.
+  const queueySecret = process.env.QUEUEY_SIGNING_SECRET;
+
   let event: Stripe.Event;
-  try {
-    event = stripe.webhooks.constructEvent(
+  if (queueySecret) {
+    const verdict = verifyQueueyDelivery({
+      method: request.method,
+      url: request.url,
+      header: (name) => request.headers.get(name),
       rawBody,
-      signature,
-      WEBHOOK_SECRET,
-      signatureToleranceSeconds(),
-    );
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.error('[stripe-webhook] Signature verification failed:', message);
-    return NextResponse.json(
-      { error: `Webhook signature verification failed: ${message}` },
-      { status: 400 },
-    );
+      secret: queueySecret,
+    });
+    if (!verdict.ok) {
+      // The reason goes to our logs and never to the caller: telling an
+      // attacker which of the five checks they failed is free help.
+      console.error(`[stripe-webhook] Queuey delivery rejected: ${verdict.failure}`);
+      return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+    }
+    try {
+      event = JSON.parse(rawBody.toString('utf8')) as Stripe.Event;
+    } catch {
+      return NextResponse.json({ error: 'Malformed event body.' }, { status: 400 });
+    }
+    if (!event?.id || !event?.type) {
+      return NextResponse.json({ error: 'Malformed event body.' }, { status: 400 });
+    }
+  } else {
+    if (!WEBHOOK_SECRET) {
+      console.error('[stripe-webhook] STRIPE_WEBHOOK_SECRET is not set.');
+      return NextResponse.json(
+        { error: 'Webhook secret not configured.' },
+        { status: 500 },
+      );
+    }
+
+    const signature = request.headers.get('stripe-signature');
+    if (!signature) {
+      return NextResponse.json(
+        { error: 'Missing stripe-signature header.' },
+        { status: 400 },
+      );
+    }
+
+    try {
+      event = stripe.webhooks.constructEvent(
+        rawBody,
+        signature,
+        WEBHOOK_SECRET,
+        signatureToleranceSeconds(),
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('[stripe-webhook] Signature verification failed:', message);
+      return NextResponse.json(
+        { error: `Webhook signature verification failed: ${message}` },
+        { status: 400 },
+      );
+    }
   }
 
   // ── 2. Idempotency: skip events we have already processed ──────────────────
