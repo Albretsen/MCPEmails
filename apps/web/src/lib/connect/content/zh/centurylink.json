@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://www.centurylink.com/home/help/internet/email/how-to-set-up-your-email-server-settings-to-go-through-pop-and-smtp.html",
+    "https://www.centurylink.com/home/help/internet/email/setup-email-edit-settings-on-iphone.html",
+    "https://www.brightspeed.com/former-century-link-customers/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "CenturyLink 邮箱密码",
+    "helpUrl": "https://www.centurylink.com/home/help/internet/email/how-to-set-up-your-email-server-settings-to-go-through-pop-and-smtp.html",
+    "usernameForm": "你的完整地址，无论使用哪个 CenturyLink 域名：name@centurylink.net、name@centurytel.net 或 name@embarqmail.com。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "通过 IMAP 将 CenturyLink 邮箱连接到 Claude",
+    "description": "通过 mail.centurylink.net:993 的 IMAP（SMTP 端口 587）将 CenturyLink 邮箱连接到 Claude 及任意 MCP 客户端。一年未使用的邮箱会被停用并清空。"
+  },
+  "hero": {
+    "eyebrow": "CenturyLink + AI",
+    "titleLine1": "将 CenturyLink 邮箱连接到",
+    "titleLine2": "Claude、Cursor 及任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 centurylink.net 收件箱。使用你的 CenturyLink 邮箱密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用而不止一个。",
+    "answer": "Claude 无法自行访问 CenturyLink 邮箱。mcpemails 是一个托管 MCP 服务器，通过 mail.centurylink.net 端口 993 的 IMAP 与之连接，外发邮件经由 smtp.centurylink.net 端口 587 并使用 STARTTLS，以你的完整地址和 CenturyLink 邮箱密码登录。连接后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送、回复和整理这些邮件。1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "CenturyLink 邮箱密码即可使用",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "CenturyLink 如何连接：IMAP、587 上的 STARTTLS，以及一台老服务器",
+    "body": "CenturyLink 在 <code>mail.centurylink.net</code> 端口 993 上通过 TLS 提供 IMAP，在 <code>smtp.centurylink.net</code> 端口 587 上以 STARTTLS 接收外发邮件。这种区分很重要：收信是隐式 TLS，发信是连接后再协商 TLS，而端口 25 被 CenturyLink 过滤，不能作为替代。无需创建应用专用密码；邮箱接受你普通的 CenturyLink 邮箱密码，用户名为完整地址。同样的设置也适用于 <code>centurytel.net</code>、<code>embarqmail.com</code> 以及 CenturyLink 合并的其他旧域名。主机名背后是一台 Mail2World 服务器，这个平台比本站大多数服务商所用的 Dovecot 和 Yahoo 系统更老，这一点体现在它能做和不能做的事情上。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "先登录 centurylink.net 网页邮箱",
+      "p": "打开 CenturyLink 主页，用你要连接的地址登录网页邮箱。这样可以确认密码，同时也会重置闲置计时：CenturyLink 会停用一年未使用的账户并删除其内容。"
+    },
+    {
+      "h": "在 mcpemails 中输入完整地址",
+      "p": "选择 IMAP / SMTP，输入完整地址（包括 <code>@centurylink.net</code>、<code>@centurytel.net</code> 或 <code>@embarqmail.com</code>）和你的邮箱密码。服务器地址以及 993 TLS 加 587 STARTTLS 的混合组合都已预填。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "该服务器只提供 AUTH=LOGIN，别无其他",
+      "p": "CenturyLink 的 IMAP 服务器只声明了一种 SASL 机制，即 LOGIN，并且不声明 SASL-IR。大多数现代客户端会选择 PLAIN，并随 AUTHENTICATE 命令一起发送凭据，结果找不到预期的机制，要么直接崩溃，要么返回看起来像凭据错误的报错。mcpemails 使用这台服务器实际支持的分步 LOGIN 交互。这就是为什么在别处都能用的通用 IMAP 工具，在这里第一条命令就可能失败。"
+    },
+    {
+      "h": "一年不登录，邮箱及其全部内容就会被删除",
+      "p": "CenturyLink 声明，一年未使用的账户会被停用，其内容会被删除。这比大多数服务商的期限都短，而且事后无法恢复。如果这是一个你只通过代理阅读的备用地址，请有意识地偶尔登录一下 CenturyLink 网页邮箱，不要以为邮箱上的活动就会被算作使用。"
+    },
+    {
+      "h": "Brightspeed 接管了网络服务，但没有接管邮箱",
+      "p": "如果你的 CenturyLink 服务已转给 Brightspeed，你的邮箱并没有随之迁移。Brightspeed 不提供邮箱服务，centurylink.net 邮箱仍通过 centurylink.net 访问，邮箱支持也仍由 CenturyLink 负责。在 Brightspeed 账户中寻找这些设置是走不通的；邮箱仍在 CenturyLink 那边。"
+    },
+    {
+      "h": "没有 IDLE，没有 MOVE，发送上限也很小",
+      "p": "该服务器既不声明 IDLE 也不声明 MOVE，所以新邮件没有推送通知（我们改为轮询），归档一封邮件要依次执行 COPY、STORE 删除标记、EXPUNGE。CenturyLink 的文档还规定外发邮件最大 10 MB、邮箱容量 700 MB，都远低于大多数服务商的上限，因此大附件和长期未清理的归档在这里都会比你预想的更早碰壁。"
+    }
+  ],
+  "limits": [
+    "CenturyLink 的文档规定外发邮件上限为 10 MB，因此带较大附件的邮件会被 CenturyLink 拒绝。",
+    "文档规定的邮箱配额为 700 MB。邮箱满后将不再接收新邮件，看起来像是投递问题，而不是存储问题。",
+    "该服务器不支持 IMAP IDLE，因此新邮件在代理查询时才会被获取，而不是在到达时立即推送。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 CenturyLink 邮箱吗？",
+      "a": "不能直接使用。Claude 没有内置的 CenturyLink 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 centurylink.net 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "CenturyLink 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 mail.centurylink.net，端口 993，使用隐式 TLS。SMTP 为 smtp.centurylink.net，端口 587，使用 STARTTLS 而非隐式 TLS，端口 25 被 CenturyLink 过滤。用户名是你的完整邮箱地址。两个服务器均已在本页所示日期通过实时 TLS 连接验证。"
+    },
+    {
+      "q": "centurytel.net 和 embarqmail.com 使用相同的设置吗？",
+      "a": "是的。CenturyLink 在同一平台上用同一组主机名运行 centurylink.net、centurytel.net、embarqmail.com 及其他旧域名。用你的完整地址作为用户名即可，本页其他内容不会因域名而改变。"
+    },
+    {
+      "q": "我现在是 Brightspeed 客户，还能连接这个邮箱吗？",
+      "a": "能，只要邮箱仍然有效。Brightspeed 不提供邮箱服务，原 CenturyLink 客户仍通过 CenturyLink 访问现有邮箱，邮箱支持也由 CenturyLink 负责。请使用本页上的设置，而不是 Brightspeed 账户页面上的任何内容。"
+    },
+    {
+      "q": "CenturyLink 需要应用专用密码吗？",
+      "a": "不需要。CenturyLink 不为邮件客户端签发应用专用密码。用你在 CenturyLink 网页邮箱上使用的同一个邮箱密码登录，并以完整地址作为用户名。如果被拒绝，请先在网页邮箱中确认密码，再去改客户端设置。"
+    },
+    {
+      "q": "我的 CenturyLink 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 CenturyLink 实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 CenturyLink 收件箱",
+    "sub": "几分钟即可连接 centurylink.net 地址。1 个收件箱永久免费，无需信用卡。"
+  }
+}

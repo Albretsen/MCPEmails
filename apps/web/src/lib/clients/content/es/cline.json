@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "apps/web/app/api/mcp/route.ts",
+    "https://docs.cline.bot/mcp/configuring-mcp-servers"
+  ],
+  "meta": {
+    "title": "Conecta el correo a Cline: servidor MCP remoto",
+    "description": "Añade una bandeja real a Cline como servidor remoto Streamable HTTP con una clave de API limitada. Lee, busca, envía y programa correo desde VS Code. Una bandeja gratis."
+  },
+  "hero": {
+    "eyebrow": "Cline + correo",
+    "titleLine1": "Conecta tu bandeja a Cline",
+    "titleLine2": "como servidor MCP remoto",
+    "lead": "Añade un buzón real a Cline en VS Code. Lee, busca, envía, responde, reenvía, programa y organiza correo, con una clave limitada exactamente a lo que quieres que haga el agente.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Clave de API con permisos limitados, revocable con un clic",
+    "meta2": "Correo obtenido en vivo, nunca almacenado",
+    "answer": "En el panel de Cline, abre MCP Servers y luego Remote Servers. Pega https://mcpemails.com/api/mcp, elige Streamable HTTP como tipo de transporte, añade el servidor y luego añade un encabezado Authorization Bearer con una clave de API de tu panel."
+  },
+  "method": {
+    "title": "Cómo se conecta Cline: una clave de API con permisos limitados",
+    "body": "Cline no ejecuta el flujo OAuth en el navegador contra un servidor MCP remoto, así que se autentica con un token bearer. Crea una clave de API en tu panel, marca solo los permisos que necesita el agente y pégala en Cline como encabezado <code>Authorization: Bearer</code>. Las conexiones con clave y las conexiones OAuth llegan al mismo endpoint y reciben el mismo catálogo de herramientas; la única diferencia es cómo se obtiene el token."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis y conecta un buzón",
+      "p": "Regístrate en mcpemails.com, sin tarjeta, y luego ve a Dashboard, Inboxes, Connect Inbox. Gmail se conecta con el inicio de sesión de Google en un clic; iCloud, Fastmail, Yahoo, Zoho y Yandex requieren una contraseña de aplicación; cualquier otro se conecta por IMAP y SMTP estándar. El plan gratuito incluye una bandeja, para siempre."
+    },
+    {
+      "h": "Crea una clave de API con permisos limitados",
+      "p": "En Dashboard, API Keys, haz clic en Create key. Ponle un nombre y marca solo los permisos que necesita este agente: <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> y <code>manage:automations</code>. La clave tiene la forma <code>mcpe_</code> seguida de 64 caracteres hexadecimales y solo se muestra una vez, así que cópiala antes de cerrar el diálogo."
+    },
+    {
+      "h": "Añade el servidor remoto",
+      "p": "En el panel de Cline, haz clic en el icono de MCP Servers, abre la pestaña <b>Remote Servers</b>, escribe un nombre y pega <code>https://mcpemails.com/api/mcp</code>. Pon Transport Type en <b>Streamable HTTP</b> y haz clic en Add Server."
+    },
+    {
+      "h": "Añade el encabezado Authorization",
+      "p": "Añade un encabezado llamado <code>Authorization</code> con el valor <code>Bearer</code> seguido de un espacio y tu clave. El servidor solo acepta tokens bearer en ese encabezado."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Streamable HTTP, no SSE",
+      "p": "La pestaña Remote Servers ofrece más de un transporte. Este servidor habla Streamable HTTP según la revisión del protocolo 2025-06-18. Si eliges SSE, obtienes un servidor que parece añadirse sin problemas y luego nunca responde, una forma lenta de descubrir un error de un solo campo."
+    },
+    {
+      "h": "La palabra Bearer forma parte del valor",
+      "p": "El valor del encabezado es <code>Bearer</code>, un espacio y luego la clave. Pegar la clave sola es la causa más común de un 401 aquí, y un 401 de este endpoint lleva un puntero de descubrimiento OAuth en lugar de un mensaje que diga que el encabezado estaba mal formado, lo que no ayuda a adivinarlo."
+    },
+    {
+      "h": "Limita la clave al agente, porque la clave es todo el modelo de permisos",
+      "p": "Cline no ejecuta el flujo de consentimiento OAuth, así que los permisos que marcas al crear la clave son todo el límite. Una clave con <code>read:email</code>, <code>search:email</code> y <code>manage:drafts</code> permite a Cline clasificar y redactar, y no puede enviar ni eliminar nada. Si luego necesitas más, emite una segunda clave en lugar de ampliar la primera."
+    },
+    {
+      "h": "La clave en claro se muestra una sola vez",
+      "p": "Solo se guarda un hash SHA-256 de la clave, así que no hay forma de volver a mostrarla. Si la pierdes, revócala y crea otra. La revocación desde Dashboard, API Keys surte efecto en la siguiente llamada."
+    }
+  ],
+  "limits": [
+    "Las solicitudes están limitadas a 100 por minuto, 1.000 por hora y 10.000 al día por clave, además del tope de acciones facturables de tu plan.",
+    "El servidor funciona solo por petición y respuesta. No hay webhooks ni eventos iniciados por el servidor, así que el correo nuevo nunca despierta a tu agente por sí solo. Para reaccionar al correo entrante, consulta periódicamente según un horario.",
+    "El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, así que un token revocado o un cambio de contraseña del buzón corta el acceso de inmediato."
+  ],
+  "faq": [
+    {
+      "q": "¿Cómo conecto el correo a Cline?",
+      "a": "Añade mcpemails como servidor remoto: MCP Servers, Remote Servers, pega https://mcpemails.com/api/mcp, pon Transport Type en Streamable HTTP y añade un encabezado Authorization Bearer con una clave de API de tu panel. A partir de ahí Cline tiene herramientas para leer, buscar, enviar, responder, reenviar, organizar y programar correo."
+    },
+    {
+      "q": "¿Por qué Cline necesita una clave de API y Cursor no?",
+      "a": "Porque los dos clientes gestionan de forma distinta la autenticación con MCP remotos. Cursor ejecuta el flujo OAuth en el navegador y guarda el token por su cuenta. Cline se autentica con el encabezado que configures, así que una clave bearer es el camino que funciona. Ambos llegan al mismo endpoint y reciben las mismas herramientas; solo cambia cómo se obtiene el token."
+    },
+    {
+      "q": "¿Qué hago si se filtra la clave?",
+      "a": "Revócala. Las claves aparecen en Dashboard, API Keys y la revocación se aplica a la siguiente llamada, sin espera. Como una clave lleva solo los permisos que marcaste, una clave de solo lectura filtrada tampoco puede haber enviado ni eliminado nada."
+    },
+    {
+      "q": "¿Qué buzones puede alcanzar Cline de esta forma?",
+      "a": "Gmail con el inicio de sesión de Google; iCloud, Fastmail, Yahoo, Zoho y Yandex con una contraseña de aplicación; y cualquier otro buzón que hable IMAP y SMTP en los puertos estándar. El cliente los ve todos a través de la misma conexión: tu agente llama primero a inbox_list para descubrir cada buzón conectado y su id, así que no hay UUID que pegar en ningún sitio."
+    },
+    {
+      "q": "¿Puede Cline enviar correo sin que yo lo vea?",
+      "a": "Solo si tú lo permites. El envío depende del permiso send:email, así que una clave o un token sin ese permiso no puede enviar nada. Además, el propietario de una bandeja puede exigir aprobación humana en el panel, que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera."
+    },
+    {
+      "q": "¿Se guarda mi correo en los servidores de mcpemails?",
+      "a": "No. Cada mensaje se obtiene en vivo de tu proveedor para la solicitud que lo pidió y se entrega directamente a tu cliente. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, para que las llamadas futuras puedan autenticarse. Eliminar la bandeja en el panel, o revocar el acceso en tu proveedor, corta la conexión al instante."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a Cline una bandeja real",
+    "sub": "Un servidor remoto, una clave con permisos limitados. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

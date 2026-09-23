@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://o-seznam.cz/napoveda/email/mohlo-by-se-hodit/postovni-programy-a-aplikace/",
+    "https://o-seznam.cz/napoveda/email/moznosti-nastaveni/prace-s-vice-schrankami/nastaveni-pristupu-pro-aplikace/",
+    "https://napoveda.seznam.cz/cz/login/postovni-programy-caldav-dvoufazove-overeni"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Mot de passe Seznam",
+    "helpUrl": "https://napoveda.seznam.cz/cz/login/postovni-programy-caldav-dvoufazove-overeni",
+    "usernameForm": "Votre adresse complète, y compris tout ce qui suit l'arobase : name@seznam.cz ou name@email.cz.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connectez Seznam Email à Claude et à tout client MCP",
+    "description": "Connectez Seznam Email à Claude, Cursor et tout client MCP via IMAP sur imap.seznam.cz:993. Votre mot de passe Seznam suffit, sauf avec la double authentification."
+  },
+  "hero": {
+    "eyebrow": "Seznam Email + IA",
+    "titleLine1": "Connectez Seznam Email à Claude,",
+    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Seznam. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP avec le mot de passe que vous utilisez déjà, dans tous les clients MCP et pas seulement un.",
+    "answer": "Claude ne peut pas accéder seul à Seznam Email. mcpemails est un serveur MCP hébergé qui le connecte via IMAP sur imap.seznam.cz, port 993, en se connectant avec votre adresse complète et votre mot de passe Seznam habituel, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Si vous avez activé la double authentification, le mot de passe du compte ne fonctionne plus pour les protocoles de messagerie et vous définissez à la place un Heslo pro aplikace distinct. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe du compte, sauf double authentification",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Seznam Email se connecte : IMAP et votre mot de passe Seznam",
+    "body": "Seznam sert IMAP sur <code>imap.seznam.cz</code>, port 993, et SMTP sur <code>smtp.seznam.cz</code>, port 465, tous deux en TLS implicite et non en STARTTLS. Vous vous connectez avec l'adresse complète, y compris la partie après l'arobase, et votre mot de passe Seznam normal. Il n'y a rien à activer au préalable. L'aide de Seznam indique que POP3 et IMAP sont actifs en permanence sur une boîte et ne peuvent pas être désactivés, ce qui est inhabituel : la plupart des webmails vous obligent à trouver une option avant qu'un client puisse se connecter. La seule chose qui change le mot de passe, c'est la double authentification, <b>dvoufázové ověření</b>. Activez-la et le mot de passe du compte n'est plus accepté en IMAP, POP3, SMTP et CalDAV : un <b>Heslo pro aplikace</b> distinct prend le relais, pour ces protocoles uniquement."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Vérifiez si la double authentification est activée dans Seznam Účet",
+      "p": "Connectez-vous à votre compte Seznam et ouvrez <b>Zabezpečení účtu</b> (sécurité du compte). Si <b>Dvoufázové ověření</b> est désactivé, c'est votre mot de passe Seznam habituel qu'il faut utiliser et il n'y a rien d'autre à faire ici. S'il est activé, trouvez la ligne <b>Heslo pro aplikace</b> (mot de passe d'application), cliquez sur <b>Nastavit</b> (configurer), saisissez deux fois un nouveau mot de passe et cliquez sur <b>Uložit změny</b> (enregistrer les modifications). Seznam refuse une valeur identique à votre mot de passe de connexion."
+    },
+    {
+      "h": "Collez l'adresse et le mot de passe dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, saisissez l'adresse en entier, y compris la partie après l'arobase, et collez le mot de passe qui s'applique. Les serveurs et ports sont préremplis à partir des valeurs vérifiées sur cette page."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "La double authentification retire discrètement votre mot de passe aux clients de messagerie",
+      "p": "Seznam documente précisément cet échec : la première fois qu'un client tente de se connecter après l'activation de dvoufázové ověření, vous obtenez un message du type <code>Přihlášení k serveru imap.seznam.cz selhalo</code>, qui ressemble à une faute de frappe plutôt qu'à une règle. La solution est la ligne <b>Heslo pro aplikace</b> sous Zabezpečení účtu. Deux détails piègent les gens. Le mot de passe d'application doit être différent de votre mot de passe de connexion, et une fois défini, vous ne pouvez plus le supprimer, seulement le modifier. Désactiver à nouveau la double authentification désactive le mot de passe d'application et redonne la main au mot de passe habituel du compte."
+    },
+    {
+      "h": "Il n'y a aucune option IMAP à chercher",
+      "p": "Le premier réflexe sur un webmail est de fouiller les paramètres à la recherche d'un interrupteur pour activer IMAP. Sur Seznam, cette recherche est inutile : les pages d'aide indiquent qu'IMAP et POP3 sont actifs en permanence sur chaque boîte et ne peuvent pas être désactivés. L'écran des paramètres d'application sous Nastavení, Více schránek, Nastavení přístupů pro aplikace ne contrôle que le comportement de téléchargement POP3, comme <b>Přes POP3 stahovat jen nepřečtené e-maily</b> et <b>Ponechat zprávy na serveru</b>. Une connexion refusée sur Seznam est donc toujours une question d'identifiants, jamais de protocole désactivé."
+    },
+    {
+      "h": "Seznam n'annonce pas IDLE, donc rien n'est poussé",
+      "p": "Le serveur IMAP omet la capacité IDLE, ce qui signifie qu'un client ne peut pas garder une connexion ouverte pour être prévenu de l'arrivée du courrier. Il doit interroger le serveur à intervalles. Pour un agent, cela ne pose aucun problème, car mcpemails ouvre une connexion et récupère les messages quand votre IA pose une question, au lieu de rester sur un socket. C'est tout de même utile à savoir, car cela explique pourquoi un client de bureau sur un compte Seznam remarque le nouveau courrier plus tard que le webmail, et pourquoi un outil qui dépend d'IDLE semblera en panne ici tout en fonctionnant ailleurs."
+    }
+  ],
+  "limits": [
+    "Seznam n'annonce pas SPECIAL-USE, donc les dossiers sont reconnus par leur nom et non par leur rôle. Sur une boîte tchèque, cela signifie Doručená pošta, Odeslaná pošta, Koncepty et Koš. Si vous avez renommé un dossier, indiquez-le explicitement quand vous demandez un déplacement.",
+    "Le serveur SMTP plafonne un message à 50 Mo pièces jointes encodées comprises, donc un gros fichier est refusé à l'envoi plutôt que tronqué."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec Seznam Email ?",
+      "a": "Pas directement. Claude n'a pas de connecteur Seznam intégré et ne peut pas ouvrir seul une connexion IMAP. Connecter un serveur MCP comme mcpemails à votre boîte seznam.cz ou email.cz donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne dans Cursor et les autres clients MCP."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de Seznam ?",
+      "a": "IMAP : imap.seznam.cz sur le port 993 en TLS implicite. SMTP : smtp.seznam.cz sur le port 465, également en TLS implicite. Le nom d'utilisateur est votre adresse complète, y compris tout ce qui suit l'arobase, et si votre logiciel de messagerie propose une case Server requires authentication, cochez-la. Les deux serveurs ont été confirmés via une connexion TLS réelle."
+    },
+    {
+      "q": "Pourquoi mon mot de passe Seznam est-il refusé dans un client de messagerie ?",
+      "a": "Presque toujours parce que la double authentification est activée. Seznam cesse d'accepter le mot de passe du compte en IMAP, POP3, SMTP et CalDAV dès que dvoufázové ověření est activé, et attend un Heslo pro aplikace distinct que vous définissez vous-même sous Zabezpečení účtu. Il ne peut pas être identique à votre mot de passe de connexion."
+    },
+    {
+      "q": "Cela fonctionne-t-il avec une boîte Email Profi sur mon propre domaine ?",
+      "a": "Oui. Les boîtes Email Profi utilisent les mêmes serveurs Seznam. Seznam précise que sur Email Profi, vous devez saisir l'adresse complète dans le champ du nom d'utilisateur, y compris la partie après l'arobase, et pas seulement la partie locale. La règle de la double authentification sur les mots de passe d'application s'applique de la même façon."
+    },
+    {
+      "q": "Mon courrier Seznam est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis Seznam via IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Seznam à votre IA",
+    "sub": "Connectez Seznam Email en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

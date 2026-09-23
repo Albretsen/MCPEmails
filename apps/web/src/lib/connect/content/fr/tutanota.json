@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://tuta.com/blog/desktop-clients-tutanota",
+    "https://tuta.com/encryption",
+    "https://tuta.com/support",
+    "https://tuta.com/blog/tuta-release-update-february"
+  ],
+  "auth": {
+    "method": "none",
+    "label": "Aucun protocole client n'existe",
+    "helpUrl": "https://tuta.com/support",
+    "usernameForm": "Il n'y a rien à saisir. Tuta ne fait tourner aucun service IMAP, POP ou SMTP : une adresse Tuta n'a donc aucun identifiant de client de messagerie, de quelque sorte que ce soit.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Tuta Mail et Claude : ni IMAP, ni SMTP, ni bridge",
+    "description": "Tuta n'offre aucun service IMAP, POP ou SMTP, par conception, ni aucun bridge : aucun serveur MCP ne peut connecter une boîte Tuta. Pourquoi, et quoi faire à la place."
+  },
+  "hero": {
+    "eyebrow": "Tuta Mail + IA",
+    "titleLine1": "Tuta Mail n'a ni IMAP",
+    "titleLine2": "ni SMTP, et il n'existe aucun bridge",
+    "lead": "Tuta, anciennement Tutanota, ne fait tourner aucun des protocoles dont un client de messagerie ou un serveur MCP a besoin, et contrairement à Proton, il ne fournit aucun bridge local pour en simuler un. Cette page explique pourquoi, et ce qui vous est réellement accessible.",
+    "answer": "Non, et il n'y a pas de solution de contournement. Tuta n'offre aucun accès IMAP, POP ou SMTP : mcpemails ne peut pas connecter une boîte Tuta, pas plus que Thunderbird, Apple Mail ou tout autre client. Cela découle du fonctionnement du chiffrement de Tuta : objets, corps des messages, pièces jointes, contacts et entrées d'agenda sont tous chiffrés avec une clé qui ne quitte jamais votre appareil, et les serveurs de Tuta ne détiennent que du texte chiffré. IMAP suppose un serveur capable de lire les objets, de trier, de rechercher et de remettre du texte en clair à un client, soit précisément la capacité que Tuta a supprimée. Contrairement à Proton, il n'existe pas non plus d'application bridge à exécuter localement : si vous voulez qu'un agent IA travaille sur du courrier, ce doit être une boîte chez un fournisseur qui parle IMAP, et mcpemails en connecte une gratuitement."
+  },
+  "method": {
+    "title": "Comment Tuta se connecte : uniquement via ses propres applications",
+    "body": "Tuta accède à votre boîte via son client web, ses clients de bureau pour Windows, macOS et Linux, et ses applications mobiles, au moyen d'un protocole chiffré propriétaire. Il n'y a ni serveur à configurer, ni port, ni mot de passe à générer pour un logiciel extérieur. Selon Tuta, prendre en charge IMAP ne serait possible que si les messages étaient téléchargés et stockés non chiffrés sur l'appareil, ce qui contredit la promesse que vos données sont chiffrées de bout en bout partout, y compris sur votre propre machine. La conséquence pour les outils est totale : lecture, envoi et recherche passent tous par le même protocole, il n'y a donc aucune capacité partielle à exposer. Ce que Tuta vous donne, en revanche, c'est un export complet. Les clients de bureau récents exportent un message en <code>.eml</code> ou une boîte entière en <code>.mbox</code> en un clic, sur les trois plateformes de bureau, et cet export est disponible avec l'offre gratuite."
+  },
+  "setup": [
+    {
+      "h": "Créez le compte mcpemails gratuit",
+      "p": "Une adresse e-mail, sans carte bancaire. Une boîte connectée est gratuite pour toujours, et les deux étapes suivantes déterminent ce qu'elle contiendra."
+    },
+    {
+      "h": "Choisissez l'adresse sur laquelle un agent doit travailler",
+      "p": "C'est une vraie décision, pas une formalité. Choisissez une boîte chez un fournisseur qui fait tourner IMAP : votre propre domaine, un compte professionnel, Fastmail, Migadu, Gmail. La correspondance qui a sa place derrière le chiffrement de Tuta doit rester chez Tuta, et le courrier que vous voulez faire trier, traiter et classer automatiquement vit dans le compte connecté."
+    },
+    {
+      "h": "Transférez l'archive si vous avez besoin de l'historique là-bas",
+      "p": "Dans un client de bureau Tuta, ouvrez un message et utilisez le menu à trois points pour l'exporter, ou exportez la boîte en <code>.mbox</code>. Importez ce fichier dans le compte connectable avec son propre outil d'import. L'export est un instantané pris à ce moment-là, pas un lien actif : répétez-le si vous avez besoin qu'il soit à jour."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et l'agent a la boîte connectée, avec lecture, recherche, envoi, réponse, planification et classement."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Tuta chiffre l'objet : un serveur IMAP n'aurait donc rien à servir",
+      "p": "C'est la partie que la plupart des explications omettent. IMAP n'est pas qu'un transport : le serveur analyse les messages, renvoie les données d'enveloppe, dont l'objet et l'expéditeur, trie et exécute SEARCH sur le contenu. Les serveurs de Tuta détiennent du texte chiffré et n'ont jamais la clé : une façade IMAP ne pourrait renvoyer rien de plus utile que des blocs opaques, et toutes les fonctions client reposant sur l'enveloppe et la recherche côté serveur cesseraient de fonctionner. Chiffrer uniquement le corps aurait laissé IMAP possible, et Tuta a choisi l'autre voie."
+    },
+    {
+      "h": "Il n'existe pas de bridge Tuta, et beaucoup arrivent en s'attendant à en trouver un",
+      "p": "Proton a résolu le même problème de chiffrement avec une application de bureau locale qui déchiffre sur votre machine et sert IMAP à un client sur le même ordinateur. Tuta ne fournit aucun équivalent. Il n'existe aucun composant pris en charge, officiel ou non, qui transforme un compte Tuta en point d'accès IMAP sur une machine quelconque : l'astuce du localhost, qui fonctionne au moins pour un client de bureau avec Proton, n'existe pas ici."
+    },
+    {
+      "h": "Des annuaires de réglages publient des noms de serveurs Tuta qui n'existent pas",
+      "p": "Cherchez les réglages IMAP de Tuta ou Tutanota et vous trouverez des pages indiquant un nom de serveur, un port et une méthode de chiffrement, générées par le même modèle que ces sites appliquent à tous les fournisseurs. Aucun serveur de ce type ne tourne. Un client pointé vers l'un de ces serveurs échoue à la connexion ou à l'authentification, et l'échec ressemble à un problème d'identifiants, ce qui pousse à chercher un mot de passe d'application qu'il n'a jamais été possible de créer."
+    },
+    {
+      "h": "Un domaine personnalisé chez Tuta reste une boîte Tuta",
+      "p": "Les offres payantes vous permettent d'utiliser votre propre domaine, avec des enregistrements MX pointant vers Tuta. Cela vous donne l'adresse, pas un serveur à vous : il n'y a donc aucun <code>mail.yourdomain.com</code> auprès duquel s'authentifier. La situation côté protocole est identique à celle d'une adresse tutanota.com ou tuta.com."
+    }
+  ],
+  "limits": [
+    "Il n'existe pas de juste milieu en lecture seule. Lister, lire, rechercher et envoyer dépendent tous du même protocole que Tuta ne fait pas tourner : aucune forme d'accès réduite ou plus sûre ne peut vous être proposée.",
+    "Une boîte exportée est une archive. Un agent travaillant sur un historique .mbox importé peut y chercher et en citer des extraits, mais il ne verra rien de ce qui est arrivé chez Tuta par la suite et ne peut pas répondre dans un fil Tuta."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec Tuta Mail ?",
+      "a": "Non. Claude n'a pas de connecteur Tuta et aucun serveur MCP ne peut en construire un, car Tuta n'expose aucune interface IMAP, POP ou SMTP à laquelle se connecter. La réponse pratique est de garder Tuta pour le courrier que vous voulez chiffré et de donner à votre agent une boîte distincte chez un fournisseur qui prend en charge IMAP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de Tuta ?",
+      "a": "Il n'y en a pas. Tuta n'exploite aucun serveur IMAP, POP ou SMTP pour les boîtes des utilisateurs : il n'y a donc aucun nom de serveur, port ou réglage de chiffrement à saisir nulle part. Les pages qui en indiquent remplissent un modèle. Le courrier Tuta n'est accessible que via les clients web, de bureau et mobiles de Tuta."
+    },
+    {
+      "q": "Pourquoi Tuta ne prend-il pas en charge IMAP ?",
+      "a": "À cause de ce que Tuta chiffre. Objets, corps des messages, pièces jointes, contacts et agendas sont chiffrés avec une clé détenue sur votre appareil : les serveurs de Tuta ne peuvent rien en lire. Servir IMAP reviendrait soit à remettre aux clients du texte chiffré inutilisable, soit à stocker le courrier non chiffré, c'est-à-dire la garantie que vend Tuta. Tuta a clairement indiqué qu'il n'y renoncerait pas."
+    },
+    {
+      "q": "Existe-t-il un bridge Tuta comme Proton Mail Bridge ?",
+      "a": "Non. Proton fournit une application de bureau qui déchiffre localement et propose IMAP aux clients du même ordinateur. Tuta n'a pas de composant de ce type, quelle que soit l'offre : il n'y a donc pas non plus de point d'accès local. Les outils tiers qui prétendent faire le pont avec Tuta ne reposent sur aucune interface prise en charge, et leur confier votre mot de passe Tuta revient à leur donner votre boîte."
+    },
+    {
+      "q": "Puis-je exporter mon courrier hors de Tuta ?",
+      "a": "Oui, et c'est gratuit. Les clients de bureau Tuta sous Windows, macOS et Linux exportent un message en .eml ou la boîte entière en .mbox depuis le menu du message. Ce fichier s'importe dans la plupart des autres services de messagerie, et c'est la voie suivie quand on veut disposer de l'historique dans un compte accessible à l'automatisation."
+    },
+    {
+      "q": "Que faire si je veux qu'un agent IA gère mon courrier ?",
+      "a": "Utilisez délibérément deux adresses. Gardez la correspondance privée chez Tuta, où rien d'automatisé ne peut l'atteindre, et utilisez une boîte IMAP distincte pour le courrier que vous voulez faire trier, traiter, planifier et classer par un agent. mcpemails connecte cette seconde boîte à Claude, Cursor ou ChatGPT, une boîte gratuite, et ne voit jamais celle de Tuta."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez à votre IA une boîte qu'elle peut vraiment ouvrir",
+    "sub": "Tuta reste scellé. Connectez une boîte IMAP pour le travail à automatiser, gratuite pour toujours."
+  }
+}

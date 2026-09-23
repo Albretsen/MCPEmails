@@ -1,37 +1,87 @@
 {
+  "_sources": [
+    "https://yandex.com/support/mail/mail-clients/others.html",
+    "https://yandex.com/support/id/authorization/app-passwords.html"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "App-passord",
+    "helpUrl": "https://id.yandex.com/security/app-passwords",
+    "usernameForm": "Hele adressen din, inkludert domenet: name@yandex.com."
+  },
   "meta": {
-    "title": "Koble Yandex Mail til Claude (og enhver AI)",
-    "description": "Koble Yandex Mail til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med et app-passord. La AI lese, sende, planlegge og organisere Yandex Mail. 1 innboks gratis, for alltid."
+    "title": "Koble Yandex Mail til Claude, Cursor og MCP-klienter",
+    "description": "Koble Yandex Mail til Claude, Cursor og enhver MCP-klient via IMAP på imap.yandex.com:993. Verifiserte innstillinger, app-passord kreves. Én innboks gratis."
   },
   "hero": {
     "eyebrow": "Yandex Mail + AI",
     "titleLine1": "Koble Yandex Mail til Claude,",
     "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
-    "lead": "Gi AI-agenten din en ekte Yandex-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og et app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "lead": "Gi AI-agenten din en ekte Yandex-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP med et Yandex-app-passord, i alle MCP-klienter i stedet for bare én.",
+    "answer": "Claude når ikke Yandex Mail på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.yandex.com port 993 og autentiserer med et Yandex-app-passord i stedet for kontopassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Yandex krever at du setter postkassen over på tilgang med app-passord før noen e-postklient kan logge inn; oppsettet tar et par minutter, og én innboks er gratis.",
     "meta0": "1 innboks gratis, for alltid",
-    "meta1": "App-passord, ingen OAuth-oppsett",
+    "meta1": "App-passord, ikke kontopassordet ditt",
     "meta2": "E-post hentes direkte, lagres aldri"
   },
   "method": {
-    "title": "Slik kobler Yandex seg til: IMAP og et app-passord",
-    "body": "Yandex Mail kobles til via IMAP/SMTP. I Yandex Mail-innstillingene aktiverer du IMAP og slår på app-passord og OAuth-tokener, oppretter så et app-passord i Yandex ID under Sikkerhet, og limer det inn i mcpemails sammen med Yandex-adressen din."
+    "title": "Slik kobler Yandex Mail seg til: IMAP og et app-passord",
+    "body": "Yandex tilbyr IMAP på <code>imap.yandex.com</code> port 993 over TLS, og SMTP på <code>smtp.yandex.com</code> port 465. Det vanlige Yandex-passordet ditt autentiserer ikke en e-postklient: du må opprette et <b>app-passord</b> for e-post, og slå på tilgang med app-passord for postkassen, før innloggingen lykkes. Kontoer på <code>yandex.ru</code> bruker de samme vertsnavnene, så innstillingene under er de samme uansett hvilket domene adressen din slutter på."
   },
   "setup": [
     {
-      "h": "Opprett en gratis konto",
-      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "h": "Slå på IMAP-tilgang i Yandex Mail",
+      "p": "Åpne innstillingene i Yandex Mail, gå til Mail clients og slå på IMAP-tilgang. Yandex avviser klientinnlogginger helt til dette er på, og feilen ser nøyaktig ut som et feil passord."
     },
     {
-      "h": "Aktiver IMAP og opprett et app-passord",
-      "p": "I Yandex Mail-innstillingene aktiverer du IMAP og slår på app-passord og OAuth-tokener. Opprett så et app-passord i Yandex ID under Sikkerhet."
+      "h": "Opprett et app-passord for e-post",
+      "p": "På id.yandex.com åpner du Security, så App passwords, og oppretter et av typen Mail. Yandex viser passordet én gang. Kopier det nå; det vanlige kontopassordet ditt virker ikke her."
     },
     {
       "h": "Lim det inn i mcpemails",
-      "p": "Legg til Yandex-adressen din og app-passordet for å koble til innboksen trygt."
+      "p": "Velg IMAP / SMTP, skriv inn hele Yandex-adressen din og lim inn app-passordet. Vertene under er forhåndsutfylt."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
       "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Yandex annonserer ikke SASL-IR, og de fleste klienter antar det",
+      "p": "Yandex' IMAP-server mangler SASL-IR-funksjonen, så den avviser autentisering i ett steg, der påloggingsdetaljene sendes sammen med AUTHENTICATE-kommandoen. Klienter som antar SASL-IR, får en naken BAD uten forklaring, som ser ut som feil påloggingsdetaljer. mcpemails oppdager BAD-svaret og prøver utvekslingen i to steg på nytt, så denne er allerede håndtert for deg, men det er grunnen til at andre IMAP-verktøy feiler mot Yandex mens de virker overalt ellers."
+    },
+    {
+      "h": "Kontopassordet virker aldri, selv uten 2FA",
+      "p": "Yandex krever et app-passord for e-postklienter uansett om tofaktorautentisering er på eller ikke. De fleste innloggingsfeil mot Yandex er dette, ikke en skrivefeil."
+    },
+    {
+      "h": "yandex.com og yandex.ru deler ett sett verter",
+      "p": "Adresser på begge domenene, og på egne domener i Yandex 360, autentiserer mot de samme vertene imap.yandex.com og smtp.yandex.com. Det finnes ikke noe regionalt vertsnavn å slå opp."
+    }
+  ],
+  "limits": [
+    "Yandex annonserer ikke SPECIAL-USE-utvidelsen, så mapper matches etter navn i stedet for rolle. En postkasse med mapper omdøpt på russisk kan trenge at mappen velges eksplisitt."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Yandex Mail?",
+      "a": "Ikke direkte. Claude har ingen innebygd Yandex-kobling. Kobler du en MCP-server som mcpemails til Yandex-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Yandex?",
+      "a": "IMAP er imap.yandex.com på port 993 med implisitt TLS. SMTP er smtp.yandex.com på port 465, også med implisitt TLS. Logg inn med hele e-postadressen din og et Yandex-app-passord. Begge vertene ble verifisert via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvorfor blir Yandex-passordet mitt avvist?",
+      "a": "To grunner, i denne rekkefølgen: IMAP-tilgang er av i innstillingene i Yandex Mail under Mail clients, eller du bruker kontopassordet i stedet for et app-passord. Yandex krever et app-passord for e-postklienter uansett om du bruker tofaktorautentisering."
+    },
+    {
+      "q": "Virker dette med et eget domene i Yandex 360?",
+      "a": "Ja. Yandex 360-postkasser på ditt eget domene bruker de samme vertene imap.yandex.com og smtp.yandex.com og det samme kravet om app-passord."
+    },
+    {
+      "q": "Lagres Yandex-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Yandex via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring; meldingsinnhold beholdes ikke."
     }
   ],
   "ctaBand": {

@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://faq.optimum.net/taxonomy/term/1250",
+    "https://faq.optimum.net/taxonomy/term/3677",
+    "https://faq.optimum.net/node/13446"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Optimum ID 密码",
+    "helpUrl": "https://faq.optimum.net/taxonomy/term/1250",
+    "usernameForm": "你的完整地址，无论使用哪个 Optimum 域名：name@optimum.net、name@optonline.net 或 Suddenlink 地址。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 Optimum 与 Optonline 邮箱连接到 Claude",
+    "description": "用 Optimum ID 密码，通过 IMAP（mail.optimum.net:993）将 Optimum、Optonline 或 Suddenlink 邮箱连接到 Claude 及任意 MCP 客户端。"
+  },
+  "hero": {
+    "eyebrow": "Optimum 邮箱 + AI",
+    "titleLine1": "将你的 Optimum 收件箱连接到",
+    "titleLine2": "Claude、Cursor、任意 MCP 客户端",
+    "lead": "Optimum 多年前就已停止发放新地址，但现有的邮箱仍然支持 IMAP。mcpemails 连接这样一个邮箱，让你的 AI 代理可以读取、搜索、发送、回复和归档邮件。",
+    "answer": "Claude 无法自行连接 Optimum 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 mail.optimum.net 的 993 端口，用你完整的 optimum.net、optonline.net 或 Suddenlink 地址和 Optimum ID 密码登录。无需生成应用密码，也没有需要开启的开关，因为 Optimum 从未做过这两样东西。请注意，Optimum 自 2021 年 5 月 4 日起不再允许任何人创建新邮箱账户，所以这只适用于你已有的地址，而不能新建。一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "Optimum ID 密码，无需应用密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Optimum 如何连接：IMAP 加普通的 Optimum ID",
+    "body": "Optimum 为旗下所有品牌运行同一台邮件服务器。<code>mail.optimum.net</code> 在 993 端口以自己的证书通过 TLS 响应 IMAP，同一主机名也在 465 端口承担提交。<code>optimum.net</code>、<code>optonline.net</code> 以及 Optimum 收购的 Suddenlink 各域名上的地址都落在这台服务器上。认证方式简单得令人舒心：你的 <b>Optimum ID</b> 及其密码，用户名填完整邮箱地址。Optimum 不签发应用专用密码，也没有需要寻找的第三方访问开关，因此这里的登录失败就是真正的凭据问题，而不是某个隐藏设置。在把代理指向该邮箱之前，唯一需要了解的是：Optimum 自 2021 年 5 月 4 日起停止创建邮箱账户，并建议想要新地址的人改用 Gmail、Outlook.com 或 Yahoo。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "确认邮箱并先检查存储空间",
+      "p": "用 Optimum ID 登录 optimum.net，打开 Email，查看收件箱左下角的存储空间显示。Optimum 将每个邮箱上限设为 5 GB，且不出售额外空间。用满 100% 时账户会停止收发邮件，所以在交给代理之前，请先清空 Deleted 和 Junk 文件夹。"
+    },
+    {
+      "h": "输入地址和 Optimum ID 密码",
+      "p": "在 mcpemails 中选择 IMAP / SMTP，在用户名栏填写完整地址，例如 <code>name@optonline.net</code>，并使用该 Optimum ID 的密码。服务器已自动填好，并已通过实时 TLS 连接验证。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Optimum 不声明 SASL-IR，而大多数客户端默认它存在",
+      "p": "Optimum 的 IMAP 服务器省略了 SASL-IR 能力，因此会拒绝在 AUTHENTICATE 命令中一并发送凭据的一步认证。默认支持 SASL-IR 的客户端会收到一个没有任何解释的 <code>BAD</code>，看起来和密码错误一模一样，于是人们跑去重置一个本来没问题的 Optimum ID。mcpemails 会识别这个响应并改用两步交换重试，所以在这里已经处理好了，但这正是其他 IMAP 工具在别处正常、却唯独连不上 Optimum 的原因。"
+    },
+    {
+      "h": "Junk 和 Deleted 会自动清空，非 Optimum 域名只保留三天",
+      "p": "Optimum 会按一个你无法更改的时间表，永久删除 Junk 和 Deleted 中的邮件。<code>optimum.net</code> 和 <code>optonline.net</code> 地址的两个文件夹都是 30 天。Optimum 托管的其他所有域名则是 <b>3 天</b>。过期的邮件会直接消失，无法恢复。如果你让代理把邮件归入已删除文件夹作为软删除，在那些其他域名上，你大约只有一个长周末的时间反悔。"
+    },
+    {
+      "h": "5 GB 是上限，没有可购买的升级",
+      "p": "Optimum 为每个邮箱提供 5 GB，Inbox、Sent、My folders、Deleted 和 Junk 都计入其中，并声明不提供购买额外存储的选项。超过上限后账户既不能发送也不能接收，在代理看来就像连接坏了，而不是磁盘满了。服务器确实声明了 IMAP QUOTA 扩展，因此用量可以读取，但解决办法永远是删除邮件。"
+    },
+    {
+      "h": "没有 SPECIAL-USE，而 Optimum 的文件夹名是它自己的一套",
+      "p": "服务器不声明 SPECIAL-USE，因此客户端无法询问哪个是已发送、哪个是已删除，只能按名称匹配。Optimum 用的是 <code>Deleted</code> 而不是 Trash，用户创建的文件夹树叫 <code>My folders</code>，这与大多数工具的猜测不同。如果代理找不到你的归档文件夹，请直接写明文件夹名，而不要假设它用的是标准名称。"
+    }
+  ],
+  "limits": [
+    "邮箱上限为 5 GB，没有付费升级，存满后会停止收发邮件。",
+    "Optimum 自 2021 年 5 月 4 日起未再发放新邮箱账户，因此只能连接已有地址。",
+    "Optimum 的提交服务器在 465 端口未响应我们的探测，因此我们不公布该服务商外发邮件的已验证能力列表。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Optimum 邮箱吗？",
+      "a": "不能直接使用。Claude 没有内置的 Optimum 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到该邮箱后，Claude 就能对你的 optimum.net、optonline.net 或 Suddenlink 邮件进行读取、搜索、发送、回复、定时和整理，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Optimum 的 IMAP 设置是什么？",
+      "a": "IMAP 为 mail.optimum.net，端口 993，隐式 TLS，已在本页所示日期通过实时 TLS 连接验证。提交使用同一主机名的 465 端口。用户名是你的完整邮箱地址，密码是你的 Optimum ID 密码。"
+    },
+    {
+      "q": "Optimum 邮箱需要应用密码吗？",
+      "a": "不需要。Optimum 不签发应用专用密码，也没有为外部邮件客户端单独开启的开关。直接使用 Optimum ID 密码即可。如果你看到关于为 optonline.net 生成应用密码的建议，那描述的是其他服务商的流程；Optimum 的设置中并没有这样的页面。"
+    },
+    {
+      "q": "我能创建新的 Optimum 邮箱地址吗？",
+      "a": "不能。Optimum 自己的说法是，自 2021 年 5 月 4 日起，不再为新老互联网客户提供创建新 Optimum 邮箱账户的功能，并建议改用 Gmail、Outlook.com 或 Yahoo Mail。在此日期之前创建的地址仍可继续使用，包括 Suddenlink 各域名上的地址。"
+    },
+    {
+      "q": "我的 Optimum 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 Optimum 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Optimum 收件箱",
+    "sub": "无需应用密码，无需开关。一个收件箱永久免费，无需信用卡。"
+  }
+}

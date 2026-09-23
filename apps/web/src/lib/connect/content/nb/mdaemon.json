@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://help.mdaemon.com/mdaemon/en/default-domain-and-servers_ports.html",
+    "https://help.mdaemon.com/mdaemon/en/ae_mail-services.html",
+    "https://help.mdaemon.com/MDaemon/en/screening_location-screening.html",
+    "https://help.mdaemon.com/mdaemon/en/ssl_lets-encrypt.html",
+    "https://knowledge.mdaemon.com/what-ports-need-to-be-open-for-mdaemon-to-communicate-through-a-firewall"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Kontopassord",
+    "helpUrl": "https://help.mdaemon.com/mdaemon/en/ae_mail-services.html",
+    "usernameForm": "Hele postkasseadressen slik den vises i Account Manager, for eksempel you@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "MDaemon-e-post til Claude: IMAP, MCP og Screening",
+    "description": "Koble en MDaemon-postkasse til Claude, Cursor og ChatGPT over IMAP på 993. Hvor portfeltene ligger, og hvorfor Location Screening blokkerer en driftet klient."
+  },
+  "hero": {
+    "eyebrow": "MDaemon + AI",
+    "titleLine1": "Koble MDaemon til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "MDaemon har kjørt e-post på din egen Windows-server i årevis uten å spørre noen om lov. Å sette en AI-agent på den trenger ikke endre det: mcpemails kobler til over vanlig IMAP og henter hver melding direkte.",
+    "answer": "Claude kan ikke nå en MDaemon-server på egen hånd. mcpemails er en driftet MCP-server som kobler til din over IMAP på ditt eget vertsnavn, på IMAP SSL-porten, som MDaemon setter til 993 som standard, med kontopassordet fra Account Manager. Det lar Claude, Cursor eller enhver MCP-klient lese, søke i, sende og organisere e-posten i den postkassen. MDaemon er programvare du kjører selv, så det finnes ingen felles vert å slå opp: serveren må være tilgjengelig fra internett, kontoen må ha IMAP-tilgang aktivert, og screeningfunksjonene i MDaemon må slippe tilkoblingen gjennom. Én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Kontopassord, IMAP-tilgang på",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles MDaemon til: IMAP-tilgang per konto, på IMAP SSL-porten",
+    "body": "To skjermer avgjør om en e-postklient kan nå en MDaemon-postkasse. Den første er portlisten, som MDaemon har under <b>Setup, then Server Settings, then DNS and IPs</b>, et lite sannsynlig sted å lete etter den. Den skjermen har egne felt for IMAP-porten for innkommende og IMAP SSL-porten, ved siden av tilsvarende for SMTP, MSA og POP, og MDaemon leveres med 143 og 993. Den andre gjelder per postkasse: i Account Manager har hver konto en <b>Mail Services</b>-skjerm som styrer hvilke tjenester den kan bruke, med en <b>Enable IMAP access</b>-avkrysningsboks ved siden av POP, MultiPOP og MDaemon Connector. Tilgang via Webmail styres separat på en egen skjerm, så en konto kan være helt brukbar i en nettleser og samtidig avvise alle e-postklienter. Påloggingsopplysningene er det vanlige kontopassordet. MDaemon har ingen ordning med app-passord."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Én innboks er gratis for alltid, og det kreves ikke kort, så du kan teste dette mot en ekte MDaemon-postkasse først."
+    },
+    {
+      "h": "Bekreft portene og sertifikatet",
+      "p": "I MDaemon åpner du Setup, Server Settings og deretter DNS and IPs, og leser feltet for IMAP SSL-porten. Hvis noen har flyttet den bort fra 993, trenger du det riktige tallet. Sjekk deretter Security, Security Manager, SSL and TLS for å se hvilket sertifikat MDaemon leverer, og om Let's Encrypt-jobben fortsatt fornyer det."
+    },
+    {
+      "h": "Aktiver IMAP-tilgang på kontoen",
+      "p": "Åpne Account Manager, finn postkassen, og på Mail Services-skjermen dens sørger du for at <b>Enable IMAP access</b> er huket av. Legg deretter til innboksen i mcpemails: velg IMAP / SMTP, skriv inn MDaemon-vertsnavnet ditt, hele adressen og kontopassordet."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Location Screening avbryter tilkoblingen på grunn av hvor den kom fra",
+      "p": "Dette er den som er spesiell for MDaemon, og den gir det minst hjelpsomme symptomet av alle innstillingene på denne siden. Location Screening blokkerer innkommende tilkoblinger etter landet som er knyttet til IP-adressen som kobler til, og MDaemon bruker det på IMAP i tillegg til SMTP, POP, Webmail, ActiveSync, Remote Administration og resten. Svært mange MDaemon-servere er satt opp til å tillate ett land og avvise resten av verden, fordi det er fornuftig når alle brukerne sitter på ett kontor. En driftet MCP-server kobler til fra et datasenter, og det datasenteret kan godt geolokaliseres til et annet sted. Tilkoblingen avvises da før autentisering i det hele tatt blir forsøkt, så ingenting vises i e-postloggene, og klienten rapporterer et tidsavbrudd eller en tilbakestilling. Beviset ligger i Screening-loggen. Tillat de aktuelle adressene, eller landet de slås opp til, før du trekker noen konklusjon om påloggingsopplysningene. Den samme Screening-delen inneholder Dynamic Screening, som blokkerer en adresse etter gjentatte autentiseringsfeil, så en skrivefeil i passordet som lagres noen ganger, kan stenge deg ute i det konfigurerte tidsrommet etterpå."
+    },
+    {
+      "h": "Portfeltene gjør ingenting før du tar dem i bruk",
+      "p": "MDaemons egen dokumentasjon sier tydelig at en endret portverdi ikke har noen effekt før du trykker på knappen som tar i bruk endringen, og at den ellers venter til neste serverstart. På en maskin som har stått oppe i månedesvis, kan en endring gjort i en fart bli liggende ubrukt på ubestemt tid, slik at skjermen og socketen er uenige. IMAP SSL-porten er dessuten et felt med en verdi i, ikke en fast konstant, og herdede installasjoner flytter den noen ganger bort fra 993. Les tallet fra den skjermen i stedet for å anta standardverdien, og bekreft utenfra nettverket med <code>Test-NetConnection mail.yourdomain.com -Port 993</code> før du åpner en supportsak."
+    },
+    {
+      "h": "Sertifikater kommer fra et medfølgende PowerShell-skript, ikke fra en kjørende tjeneste",
+      "p": "MDaemon kjører ikke en egen ACME-klient. Den leveres med et PowerShell-skript i mappen <code>MDaemon\\LetsEncrypt</code>, som konfigureres og startes fra Let's Encrypt-skjermen under Security, og skriptet fullfører http-01-utfordringen ved å skrive filer inn i HTTP-mappen til Webmail. Det trenger derfor at port 80 er ledig og at Webmail faktisk leverer den, pluss PowerShell 5.1 og .NET Framework 4.7.2 på maskinen. Setter du IIS foran MDaemon, flytter Webmail til en annen port eller stenger 80 etter oppsettet, stopper den planlagte fornyelsen i det stille. Sertifikatet på 993 fungerer fint frem til dagen det utløper, og da feiler alle strenge klienter på en gang. Når skriptet lykkes, tar MDaemon i bruk det nye sertifikatet for MDaemon, Webmail og Remote Administration samtidig."
+    }
+  ],
+  "limits": [
+    "MDaemon-servere står som regel bak en bedriftsbrannmur med bare port 25 publisert, og dette krever i tillegg en innkommende IMAP-tilkobling. Å åpne 993 mot internett er en beslutning for den som eier brannmuren, ikke en innstilling i MDaemon. Hvis svaret er nei, kan mcpemails driftes selv på det samme interne nettverket, der den når MDaemon på samme måte som en skrivebordsklient på lokalnettet allerede gjør.",
+    "TLS-validering er streng. MDaemons standard selvsignerte sertifikat, eller et utløpt sertifikat, blir avvist uten mulighet til å fortsette likevel.",
+    "Sending går ut gjennom din egen MDaemon SMTP-tjeneste, så leveringsevnen avhenger av SPF-, DKIM- og DMARC-postene dine og av omdømmet til adressen serveren din sender fra."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med MDaemon?",
+      "a": "Ikke direkte. Claude har ingen MDaemon-kobling og kan ikke åpne en IMAP-socket mot en server du drifter. Ved å koble en MCP-server som mcpemails til MDaemon-verten din får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i en postkasse på den, med de samme påloggingsopplysningene som enhver skrivebordsklient ville brukt."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for MDaemon?",
+      "a": "Vertsnavnet er din egen server. Portene finner du under Setup, Server Settings, DNS and IPs, der MDaemon har egne felt for IMAP-porten for innkommende og IMAP SSL-porten, med 143 og 993 som standard. SMTP, MSA og SMTP SSL-porten står på samme skjerm. Logg inn med hele e-postadressen og kontopassordet."
+    },
+    {
+      "q": "Hvorfor avviser MDaemon-kontoen min IMAP, men fungerer i Webmail?",
+      "a": "Fordi det er to ulike tillatelser. Account Manager gir hver konto en Mail Services-skjerm med en Enable IMAP access-avkrysningsboks, mens nettlesertilgang gis på en egen Web Services-skjerm. En konto med Webmail på og IMAP av oppfører seg nøyaktig slik du beskriver, og ingen mengde sjekking av vertsnavn vil endre det."
+    },
+    {
+      "q": "Trenger MDaemon et app-passord?",
+      "a": "Nei. MDaemon har ingen funksjon for app-passord. E-postklienter autentiserer med kontoens eget passord, som du kan angi i Account Manager. Hvis kontoen bruker tofaktorautentisering for Webmail, gjelder det nettlesergrensesnittet og ikke IMAP-økten."
+    },
+    {
+      "q": "Tilkoblingen min får tidsavbrudd uten noen loggoppføring. Hva skjer?",
+      "a": "Sjekk Screening-loggen. Location Screening i MDaemon avviser tilkoblinger fra land du ikke har tillatt, før autentisering og før e-postloggen registrerer noe, og det gjelder IMAP. En driftet tjeneste kobler til fra en datasenteradresse som kan slås opp til et annet land. Dynamic Screening kan gi den samme stillheten etter gjentatte mislykkede innlogginger."
+    },
+    {
+      "q": "Lagres MDaemon-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra MDaemon-serveren din over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke beholdt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en MDaemon-innboks",
+    "sub": "Koble til en postkasse fra din egen MDaemon-server. Én innboks gratis for alltid, uten kort."
+  }
+}

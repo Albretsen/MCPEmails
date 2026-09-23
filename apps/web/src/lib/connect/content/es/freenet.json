@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://kundenservice.freenet.de/faq/e-mail-client-mail/einstellungen-serverdaten-fuer-alle-e-mail-programme/",
+    "https://kundenservice.freenet.de/faq/e-mail-client-mail/pop3-imap-und-smtp-aktivieren/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña de freenet Mail",
+    "helpUrl": "https://kundenservice.freenet.de/faq/e-mail-client-mail/pop3-imap-und-smtp-aktivieren/",
+    "usernameForm": "Tu dirección completa con la forma nombre@dominio, por ejemplo max.mustermann@freenet.de. Es la forma en que freenet describe el campo Benutzer o Kontoname.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "freenet Mail en Claude: el interruptor IMAP que necesitas",
+    "description": "Conecta freenet.de a Claude y clientes MCP por IMAP en mx.freenet.de:993. El acceso de clientes está tras una casilla que freenet aconseja dejar desactivada."
+  },
+  "hero": {
+    "eyebrow": "freenet Mail + IA",
+    "titleLine1": "Conecta tu bandeja de freenet.de",
+    "titleLine2": "a Claude, Cursor y cualquier cliente MCP",
+    "lead": "freenet admite IMAP, pero lo guarda tras un interruptor que preferiría que no tocaras. Actívalo una vez y mcpemails conecta el buzón para que tu agente de IA pueda leer, buscar, enviar, responder y archivar ese correo.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de freenet.de. mcpemails es un servidor MCP alojado que lo conecta por IMAP en mx.freenet.de en el puerto 993, autenticándose con tu dirección completa y tu contraseña de freenet Mail. Lo único que debes hacer antes es marcar POP3, IMAP und SMTP aktivieren en los ajustes del buzón, porque freenet bloquea todo acceso de clientes tras esa casilla y recomienda dejarla desactivada. Una vez activada, Claude, Cursor o cualquier otro cliente MCP puede leer, buscar, enviar y organizar ese correo, y una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Hay que activar el acceso de clientes",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta freenet: un nombre de servidor, una casilla",
+    "body": "freenet publica un único nombre de servidor para todo: <code>mx.freenet.de</code> es el servidor IMAP y el servidor SMTP, y advierte en la misma tabla que uses solo los nombres que indica y nunca una dirección IP ni un nombre alternativo. IMAP responde en el puerto 993 con TLS y en el 143 con STARTTLS; el envío funciona en el 465 con TLS y en el 587 con STARTTLS, con la autenticación SMTP activada. El nombre de usuario es la dirección completa y la contraseña es la de freenet Mail. Lo que diferencia a freenet de la mayoría de proveedores es la barrera que hay delante de todo ello. El acceso de clientes es una casilla en los ajustes del buzón llamada <b>POP3, IMAP und SMTP aktivieren</b>, y el propio artículo de ayuda de freenet recomienda desactivar estas funciones porque los clientes nativos no admiten todas las funciones de seguridad modernas. Es su consejo; la decisión es tuya: mientras la casilla esté sin marcar, ningún cliente de ningún tipo puede iniciar sesión."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
+    },
+    {
+      "h": "Marca POP3, IMAP und SMTP aktivieren en freenet Mail",
+      "p": "Inicia sesión en mail.freenet.de, abre los ajustes desde el icono de engranaje arriba a la derecha, elige <b>POP3/IMAP/SMTP</b> y luego <b>Einrichtung POP3/IMAP</b>, y marca la casilla <b>POP3, IMAP und SMTP aktivieren</b>. La misma casilla vuelve a desactivar el acceso de clientes más adelante si quieres quitarlo."
+    },
+    {
+      "h": "Introduce la dirección y la contraseña de freenet Mail",
+      "p": "En mcpemails elige IMAP / SMTP e introduce la dirección completa como <code>name@freenet.de</code> con la contraseña de ese buzón. Ambas direcciones usan <code>mx.freenet.de</code>, que aquí ya viene rellenado y se verificó con una conexión TLS real."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "freenet te aconseja activamente mantener desactivado el acceso de clientes",
+      "p": "No es un ajuste latente que alguien olvidó activar. La página de ayuda de freenet empieza diciendo que los clientes nativos como Outlook y Thunderbird siempre usan POP3, IMAP y SMTP, que esos protocolos no admiten todas las funciones de seguridad modernas y por tanto son más fáciles de atacar, y que recomienda desactivar esas funciones en tu buzón. Así que cuenta con que la casilla esté sin marcar, con que nada te avise de que esa es la causa y con que una contraseña correcta se rechace hasta que la marques."
+    },
+    {
+      "h": "Un nombre de servidor para ambas direcciones, y freenet lo dice en serio",
+      "p": "No existe <code>imap.freenet.de</code> ni <code>smtp.freenet.de</code>. Tanto la entrada como la salida usan <code>mx.freenet.de</code>, lo que parece un error a cualquiera acostumbrado a los prefijos habituales y la gente lo «corrige» sin darse cuenta al configurar de memoria. freenet también indica en la misma tabla que no sustituyas los nombres por direcciones IP ni por nombres alternativos, porque eso causa problemas de uso."
+    },
+    {
+      "h": "Las carpetas se llaman inbox, sent y drafts, en minúsculas",
+      "p": "freenet documenta las carpetas del buzón como <code>inbox</code>, <code>sent</code> y <code>drafts</code>, y señala que, según el cliente, aparecen como <code>inbox.sent</code> e <code>inbox.drafts</code> con la bandeja de entrada como carpeta padre. Como el servidor no anuncia SPECIAL-USE, nada le dice a un cliente qué carpeta es cuál, así que tiene que identificarlas por esos nombres. Las herramientas que buscan Sent, Gesendet o Gesendete Objekte no encuentran nada. Indica la carpeta explícitamente si un agente no la localiza."
+    },
+    {
+      "h": "Sin MOVE ni UIDPLUS, aunque IDLE sí está",
+      "p": "El servidor omite la extensión MOVE, así que archivar un mensaje se ejecuta como COPY, luego STORE de la marca de borrado y luego EXPUNGE en lugar de un único comando atómico, y sin UIDPLUS el id de la nueva copia no se devuelve y hay que encontrarlo buscando en la carpeta de destino. IDLE sí está disponible, así que el correo nuevo llega por push y no por consulta periódica, algo que varios otros proveedores de esta categoría no consiguen."
+    }
+  ],
+  "limits": [
+    "Mover no es atómico y las funciones de las carpetas se identifican por nombre, porque MOVE, UIDPLUS y SPECIAL-USE no están implementados en este servidor.",
+    "El acceso de clientes se puede volver a desactivar desde la misma pantalla de ajustes, y cuando se hace, todas las conexiones dejan de funcionar con lo que parece un error de autenticación."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de freenet.de?",
+      "a": "No directamente. Claude no tiene un conector integrado para freenet. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de freenet.de, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP. Antes hay que activar el acceso de clientes en el buzón."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de freenet?",
+      "a": "Ambos son mx.freenet.de. IMAP usa el puerto 993 con TLS implícito o el 143 con STARTTLS, y SMTP el puerto 465 con TLS implícito o el 587 con STARTTLS, con la autenticación SMTP activada. El nombre de usuario es tu dirección completa. Los servidores se verificaron con una conexión TLS real en la fecha que indica esta página."
+    },
+    {
+      "q": "¿Por qué freenet rechaza mi contraseña en un cliente de correo?",
+      "a": "Casi siempre porque POP3, IMAP y SMTP no están activados en el buzón. freenet guarda el acceso de clientes tras una casilla en los ajustes, en POP3/IMAP/SMTP y luego Einrichtung POP3/IMAP, y recomienda dejarla desactivada. Mientras lo esté, el servidor rechaza credenciales correctas con un error que parece una errata."
+    },
+    {
+      "q": "¿Emite freenet contraseñas de aplicación?",
+      "a": "No. No hay ninguna contraseña específica de aplicación que crear. Un cliente se autentica con la contraseña del propio buzón de freenet Mail, una vez activado el acceso de clientes. Si quieres revocar una conexión, desmarca la casilla de activación o cambia la contraseña del buzón."
+    },
+    {
+      "q": "¿Se almacena mi correo de freenet en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de freenet por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de freenet Mail",
+    "sub": "Marca una casilla en freenet Mail y conéctala. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

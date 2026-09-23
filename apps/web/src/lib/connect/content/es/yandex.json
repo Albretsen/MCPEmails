@@ -1,41 +1,91 @@
 {
+  "_sources": [
+    "https://yandex.com/support/mail/mail-clients/others.html",
+    "https://yandex.com/support/id/authorization/app-passwords.html"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Contraseña de aplicación",
+    "helpUrl": "https://id.yandex.com/security/app-passwords",
+    "usernameForm": "Tu dirección completa, incluido el dominio: name@yandex.com."
+  },
   "meta": {
-    "title": "Conecta Yandex Mail a Claude (y a cualquier IA)",
-    "description": "Conecta Yandex Mail a Claude, Cursor, ChatGPT y a cualquier cliente MCP por IMAP con una contraseña de aplicación. Deja que la IA lea, envíe, programe y organice tu Yandex Mail. Una bandeja gratis, para siempre."
+    "title": "Conecta Yandex Mail a Claude, Cursor y clientes MCP",
+    "description": "Conecta Yandex Mail a Claude, Cursor y cualquier cliente MCP por IMAP en imap.yandex.com:993. Ajustes verificados, contraseña de aplicación obligatoria."
   },
   "hero": {
     "eyebrow": "Yandex Mail + IA",
     "titleLine1": "Conecta Yandex Mail a Claude,",
     "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
-    "lead": "Dale a tu agente de IA una bandeja Yandex real en minutos. Lee, busca, envía, responde, programa y organiza correo con IMAP y una contraseña de aplicación, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+    "lead": "Dale a tu agente de IA una bandeja real de Yandex. Lee, busca, envía, responde, programa y organiza correo por IMAP con una contraseña de aplicación de Yandex, en todos los clientes MCP y no solo en uno.",
+    "answer": "Claude no puede acceder por sí solo a Yandex Mail. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.yandex.com en el puerto 993, autenticándose con una contraseña de aplicación de Yandex y no con la contraseña de tu cuenta, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Yandex exige que cambies el buzón al acceso con contraseña de aplicación antes de que cualquier cliente de correo pueda iniciar sesión; la configuración lleva un par de minutos y una bandeja es gratis.",
     "meta0": "1 bandeja gratis, para siempre",
-    "meta1": "Contraseña de aplicación, sin configurar OAuth",
+    "meta1": "Contraseña de aplicación, no la de tu cuenta",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
   },
   "method": {
-    "title": "Cómo se conecta Yandex: IMAP y una contraseña de aplicación",
-    "body": "Yandex Mail se conecta por IMAP/SMTP. En la configuración de Yandex Mail, activa IMAP y habilita las contraseñas de aplicación y los tokens OAuth, luego crea una contraseña de aplicación en Yandex ID, Seguridad, y pégala en mcpemails junto con tu dirección de Yandex."
+    "title": "Cómo se conecta Yandex Mail: IMAP y una contraseña de aplicación",
+    "body": "Yandex ofrece IMAP en <code>imap.yandex.com</code> en el puerto 993 con TLS, y SMTP en <code>smtp.yandex.com</code> en el puerto 465. Tu contraseña normal de Yandex no autentica a un cliente de correo: tienes que crear una <b>contraseña de aplicación</b> para el correo y activar el acceso con contraseña de aplicación en el buzón antes de que el inicio de sesión funcione. Las cuentas de <code>yandex.ru</code> usan los mismos nombres de servidor, así que los ajustes de abajo son los mismos sea cual sea el dominio de tu dirección."
   },
   "setup": [
     {
-      "h": "Crea una cuenta gratis",
-      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+      "h": "Activa el acceso IMAP en Yandex Mail",
+      "p": "Abre los ajustes de Yandex Mail, ve a Mail clients (clientes de correo) y habilita el acceso IMAP. Yandex rechaza de plano los inicios de sesión de clientes hasta que esto esté activado, y el fallo parece exactamente una contraseña incorrecta."
     },
     {
-      "h": "Activa IMAP y crea una contraseña de aplicación",
-      "p": "En la configuración de Yandex Mail, activa IMAP y habilita las contraseñas de aplicación y los tokens OAuth. Luego crea una contraseña de aplicación en Yandex ID, Seguridad."
+      "h": "Crea una contraseña de aplicación para el correo",
+      "p": "En id.yandex.com, abre Security, luego App passwords, y crea una del tipo Mail. Yandex muestra la contraseña una sola vez. Cópiala ahora; la contraseña normal de tu cuenta no funcionará aquí."
     },
     {
       "h": "Pégala en mcpemails",
-      "p": "Añade tu dirección de Yandex y la contraseña de aplicación para conectar la bandeja de forma segura."
+      "p": "Elige IMAP / SMTP, introduce tu dirección completa de Yandex y pega la contraseña de aplicación. Los servidores indicados abajo ya vienen rellenados."
     },
     {
       "h": "Pega la URL MCP en tu IA",
       "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
     }
   ],
+  "gotchas": [
+    {
+      "h": "Yandex no anuncia SASL-IR, y la mayoría de los clientes lo dan por hecho",
+      "p": "El servidor IMAP de Yandex omite la capacidad SASL-IR, así que rechaza la autenticación en un solo paso que envía las credenciales junto con el comando AUTHENTICATE. Los clientes que dan por hecho SASL-IR reciben un BAD escueto sin explicación, que parece un error de credenciales. mcpemails detecta el BAD y reintenta con el intercambio en dos pasos, así que esto ya está resuelto para ti, pero es la razón por la que otras herramientas IMAP fallan con Yandex mientras funcionan en todas partes."
+    },
+    {
+      "h": "La contraseña de la cuenta nunca funciona, ni siquiera sin 2FA",
+      "p": "Yandex exige una contraseña de aplicación para los clientes de correo tanto si la autenticación de dos factores está activada como si no. La mayoría de los inicios de sesión fallidos con Yandex se deben a esto, no a una errata."
+    },
+    {
+      "h": "yandex.com y yandex.ru comparten un mismo conjunto de servidores",
+      "p": "Las direcciones de cualquiera de los dos dominios, y las de dominios propios en Yandex 360, se autentican contra los mismos imap.yandex.com y smtp.yandex.com. No hay ningún servidor regional que buscar."
+    }
+  ],
+  "limits": [
+    "Yandex no anuncia la extensión SPECIAL-USE, así que las carpetas se identifican por su nombre y no por su función. En un buzón cuyas carpetas se renombraron en ruso puede que haya que elegir la carpeta explícitamente."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Yandex Mail?",
+      "a": "No directamente. Claude no tiene un conector integrado para Yandex. Conectar un servidor MCP como mcpemails a tu buzón de Yandex por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Yandex?",
+      "a": "IMAP es imap.yandex.com en el puerto 993 con TLS implícito. SMTP es smtp.yandex.com en el puerto 465, también con TLS implícito. Inicia sesión con tu dirección de correo completa y una contraseña de aplicación de Yandex. Ambos servidores se verificaron con una conexión TLS real en la fecha que figura en esta página."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de Yandex?",
+      "a": "Por dos motivos, en este orden: el acceso IMAP está desactivado en los ajustes de Yandex Mail, en Mail clients, o estás usando la contraseña de tu cuenta en lugar de una contraseña de aplicación. Yandex exige una contraseña de aplicación para los clientes de correo, uses o no la autenticación de dos factores."
+    },
+    {
+      "q": "¿Funciona con un dominio propio de Yandex 360?",
+      "a": "Sí. Los buzones de Yandex 360 en tu propio dominio usan los mismos servidores imap.yandex.com y smtp.yandex.com y el mismo requisito de contraseña de aplicación."
+    },
+    {
+      "q": "¿Se almacena mi correo de Yandex en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Yandex por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo; el cuerpo de los mensajes no se conserva."
+    }
+  ],
   "ctaBand": {
-    "title": "Dale a tu IA una bandeja Yandex",
+    "title": "Dale a tu IA una bandeja de Yandex",
     "sub": "Conecta Yandex Mail en minutos. Una bandeja gratis para siempre, sin tarjeta."
   }
 }

@@ -1,0 +1,93 @@
+{
+  "_sources": [
+    "https://docs.hetzner.com/konsoleh/account-management/email/setting-up-an-email-account/",
+    "https://docs.hetzner.com/konsoleh/account-management/email/mailboxes/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://docs.hetzner.com/konsoleh/account-management/email/setting-up-an-email-account/",
+    "usernameForm": "你的完整地址，包括域名：info@your-domain.de。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 Hetzner 邮箱连接到 Claude 与 MCP 客户端",
+    "description": "通过 mail.your-server.de:993 的 IMAP 将 Hetzner Web Hosting 邮箱连接到 Claude、Cursor 及任意 MCP 客户端。1 个收件箱永久免费，无需信用卡。"
+  },
+  "hero": {
+    "eyebrow": "Hetzner 邮箱 + AI",
+    "titleLine1": "将你的 Hetzner 邮箱连接到",
+    "titleLine2": "Claude、Cursor 及任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Hetzner 收件箱。使用你在 konsoleH 中设置的邮箱密码，通过 mail.your-server.de 的 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行访问 Hetzner 邮箱。mcpemails 是一个托管 MCP 服务器，通过 mail.your-server.de 端口 993 的 IMAP 连接 Hetzner Web Hosting 邮箱，使用你的完整邮箱地址和你在 konsoleH 中创建账户时设置的邮箱密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。对每位客户来说，主机名就是字面上的 mail.your-server.de，而不是你自己域名的某种变体。1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "在 konsoleH 中设置的邮箱密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Hetzner 邮箱如何连接：mail.your-server.de 上的 IMAP",
+    "body": "Hetzner 的共享邮件平台，也就是通过 <b>konsoleH</b> 管理的 Web Hosting 和 Managed Server 套餐背后的那个平台，在 <code>mail.your-server.de</code> 端口 993 上以隐式 TLS 提供 IMAP，在同一服务器的端口 465 上提供 SMTP。这个主机名是一个字面字符串，对每位 Hetzner 主机客户都相同，Hetzner 自己的文档也正是这样写的。用户名是完整的邮箱地址，例如 <code>info@your-domain.de</code>，密码是在 konsoleH 中创建邮箱时在两个密码字段中输入的那个。这个邮箱密码与你用来管理账户的 konsoleH 登录凭据是不同的。本页讨论的是这种托管邮箱。你自己在 Hetzner Cloud 或独立服务器上安装并运行的邮件服务器，是完全不同的情况，下文会说明。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "在 konsoleH 中设置或重置邮箱密码",
+      "p": "登录 konsoleH，选择域名，依次打开 E-Mail、Mailboxes。选择该地址，如果你不知道当前密码，就在两个密码字段中输入新密码。请注意，创建邮箱时只填写 @ 符号前面的本地部分，但在任何客户端中作为用户名输入的都是完整地址。"
+    },
+    {
+      "h": "粘贴到 mcpemails",
+      "p": "选择 IMAP / SMTP，输入完整地址，并粘贴邮箱密码。服务器 mail.your-server.de 以及端口 993 和 465 已预填，并经实时 TLS 连接验证。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "主机名不是由你的域名构成的",
+      "p": "Hetzner 最常见的设置失败，是把 <code>mail.your-domain.de</code> 中的域名换成自己的真实域名后填入，因为几乎所有其他主机商都是这样做的。Hetzner 不是。字符串 <code>mail.your-server.de</code> 就是真实的主机名，由所有主机客户共用，把它换成你自己的域名，要么导致 DNS 解析失败，要么连到某台恰好在该名称上响应的无关服务器。Hetzner 的文档写的是字面主机名，而人们把它当成了占位符。"
+    },
+    {
+      "h": "Hetzner Cloud 或独立服务器不属于这种情况",
+      "p": "Hetzner 销售两种截然不同、却都被称为“Hetzner 邮箱”的东西。Web Hosting 和 Managed Server 套餐包含本页所述共享平台上的邮箱。Cloud 和独立服务器则根本不含邮箱：如果你想在上面收发邮件，就要自己安装并运行邮件服务器，主机名、端口和凭据都取决于你的配置。那是一台恰好位于 Hetzner 的自托管邮件服务器，连接方式与任何自托管服务器相同。开始之前值得知道的是：Hetzner 默认封锁新云服务器的外发 SMTP，只有在申请后才会解封，所以在那里自己运行的邮件服务器，在你提出申请之前无法发信。"
+    },
+    {
+      "h": "没有 MOVE，没有 UIDPLUS，文件夹按名称匹配",
+      "p": "<code>mail.your-server.de</code> 背后的 Dovecot 版本不声明 MOVE 扩展，因此移动操作以复制、更新标记和清除的方式完成，而不是一条原子命令。它也不支持 UIDPLUS，所以复制后邮件在目标文件夹中的 UID 不会返回，只能通过搜索找到。SPECIAL-USE 同样缺失，这意味着 Sent、Drafts、Trash 和 Junk 按名称匹配。在德语邮箱中，它们常常是 Gesendet、Entwuerfe、Papierkorb 和 Spam，所以如果代理找不到某个文件夹，请明确写出它的名称。"
+    }
+  ],
+  "limits": [
+    "本页只涵盖 Hetzner 托管邮件平台上的邮箱。你自己在 Hetzner Cloud 或独立服务器上运行的邮件服务器，需要使用它自己的主机名和凭据。",
+    "由于服务器不支持 MOVE，移动操作不是原子的。如果连接在操作中途断开，邮件可能会短暂地同时存在于两个文件夹中。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Hetzner 邮箱吗？",
+      "a": "不能单独使用。Claude 没有内置的 Hetzner 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向你的 Hetzner 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Hetzner 的 IMAP 和 SMTP 设置是什么？",
+      "a": "两者都是 mail.your-server.de。IMAP 使用端口 993 和隐式 TLS，SMTP 使用端口 465，同样是隐式 TLS。用户名是你的完整邮箱地址，密码是 konsoleH 中的邮箱密码。该主机是所有 Hetzner 主机客户共用的字面名称，已经实时 TLS 连接确认。"
+    },
+    {
+      "q": "为什么我的 konsoleH 密码被 IMAP 拒绝？",
+      "a": "因为它是错误的凭据。konsoleH 登录用于管理主机账户，而每个邮箱都有自己的密码，在 Mailboxes 页面创建时设定。如果没人记下这个密码，请打开该页面，在两个密码字段中输入新密码，然后在客户端中使用新密码。"
+    },
+    {
+      "q": "可以连接运行在我 Hetzner Cloud VPS 上的邮件服务器吗？",
+      "a": "可以，但不是用本页的设置。自己运行的邮件服务器使用你为它配置的主机名和凭据，而不是 mail.your-server.de。请按通用 IMAP 服务器连接。记住，Hetzner 会封锁新云服务器的外发 SMTP 端口，直到你请客服解封。"
+    },
+    {
+      "q": "我的 Hetzner 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 Hetzner 实时获取邮件，并交给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Hetzner 收件箱",
+    "sub": "几分钟即可连接你的 Hetzner 邮箱。1 个收件箱永久免费，无需信用卡。"
+  }
+}

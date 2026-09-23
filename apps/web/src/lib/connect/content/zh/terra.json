@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://www.terra.com.br/nossaterra/sala-de-imprensa/faq-clientes-terramail,fbd5387ca5d4564236664d5f8ed8bb94uwqbteac.html",
+    "https://www.getmailbird.com/setup/access-terra-com-br-via-imap-smtp",
+    "https://www.dinamize.com.br/blog/terra-encerra-atividades-de-e-mail-gratuito-atualize-seus-contatos/",
+    "https://www.validity.com/blog/terra-mails-free-email-service-closure/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Terra Mail 密码，需有效的付费套餐",
+    "helpUrl": null,
+    "usernameForm": "包含域名的完整地址：nome@terra.com.br。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "巴西 Terra Mail 接入 Claude：付费套餐上的 IMAP",
+    "description": "通过 imap.terra.com.br:993 将 terra.com.br 邮箱连接到 Claude 或任意 MCP 客户端。Terra 已停止免费邮箱，因此需要有效的付费套餐。"
+  },
+  "hero": {
+    "eyebrow": "Terra Mail + AI",
+    "titleLine1": "将 Terra Mail 连接到 Claude，",
+    "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Terra 收件箱。在拥有有效付费套餐的巴西 terra.com.br 邮箱上，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行连接 Terra Mail。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.terra.com.br 的 993 端口，用你的完整地址和 Terra Mail 密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Terra 已停止免费邮箱，因此没有有效付费 Terra Mail 套餐的地址会被封锁，而不只是受限；Terra 的非巴西域名多年前就已关闭，根本没有服务器。只有 terra.com.br 仍在运行。mcpemails 上一个收件箱免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "有效的付费 Terra Mail 套餐",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Terra Mail 如何连接：terra.com.br 上的 IMAP，别无他处",
+    "body": "Terra 在 <code>imap.terra.com.br</code> 的 993 端口通过隐式 TLS 提供 IMAP，在 <code>smtp.terra.com.br</code> 的 465 端口提供 SMTP。认证方式很普通：以完整地址作为用户名，加上邮箱密码。没有应用密码，没有授权码，网页邮箱里也没有藏着协议开关。Terra 的复杂之处在于哪些邮箱还存在。Terra 关闭了其国际邮件域名，另外又停止销售免费 <code>terra.com.br</code> 邮箱所依托的免费套餐，导致这些账户在客户购买付费 Terra Mail 套餐之前一直被封锁。如果你的地址处于有效的巴西套餐中，这里的连接在该地区属于比较简单的一类。如果不是，任何客户端配置都无济于事，本页下文会说明如何区分这两种情况。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱并始终免费，无需信用卡。"
+    },
+    {
+      "h": "确认 Terra 邮箱处于有效的付费套餐中",
+      "p": "登录 Terra 网页邮箱。如果网页邮箱本身拒绝你，或提示套餐需要更新，那么该邮箱就属于 Terra 免费服务终止时受影响的账户，在其上开通付费 Terra Mail 套餐之前，任何邮件客户端都无法连接。如果网页邮箱能正常打开，说明账户有效，可以继续。"
+    },
+    {
+      "h": "在 mcpemails 中输入地址和密码",
+      "p": "选择 IMAP / SMTP，输入完整地址（例如 <code>nome@terra.com.br</code>）和邮箱密码。Terra 的服务器和端口已自动填好，并已通过实时 TLS 连接确认。Terra 不签发应用专用密码，所以如果你一直在设置里找它，那里什么都没有。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI 客户端",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理即可读取、搜索、发送、回复、转发、定时和整理该 Terra 邮箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Terra 的免费邮箱已停止服务，而封锁看起来像密码错误",
+      "p": "Terra 停止提供免费邮件套餐，多年来一直免费的账户被直接封锁，而不是降级。只有购买付费 Terra Mail 套餐才能恢复访问。对于配置客户端的人来说，重要的是这不会有任何提示：服务器拒绝登录的方式与密码错误完全一样。长期使用的巴西地址（有些已有几十年历史）在客户这边毫无变化的情况下停止工作。在花时间研究主机名和端口之前，先确认该邮箱在 Terra 网页邮箱中还能打开。"
+    },
+    {
+      "h": "只有 terra.com.br 仍然存在，其他 Terra 域名没有服务器",
+      "p": "Terra 曾在一系列国家域名上运营邮件，包括 <code>terra.com</code>、<code>terra.com.ar</code>、<code>mi.terra.cl</code>、<code>terra.com.co</code>、<code>terra.com.mx</code>、<code>terra.com.pe</code>、<code>terra.com.ve</code> 和 <code>terra.com.ec</code>。这些服务已经停止，账户和存储的邮件都已无法访问。巴西的 <code>terra.com.br</code> 域名不在那次关闭之列，也是本页介绍的对象。如果你的地址位于其他任何一个域名上，就没有可以让客户端指向的主机，也没有任何配置能找回邮件：它们是彻底没了，而不是配置错了。"
+    },
+    {
+      "h": "服务器提供 IDLE 却不提供 UIDPLUS，这种搭配并不常见",
+      "p": "Terra 的能力列表包含 <code>IDLE</code>，所以客户端可以保持连接打开、在新邮件到达时收到通知，而不必轮询，这比它的几个巴西同行做得更好。它缺少 <code>UIDPLUS</code> 和 <code>MOVE</code>。这种组合在归档邮件时有实际影响：移动以复制、更新标记再删除的方式进行，而由于缺少 UIDPLUS，服务器不会报告复制后邮件的新标识符，事后只能在目标文件夹中搜索定位。归档可以正常进行，只是比返回新 UID 的服务器更慢、更不确定。"
+    }
+  ],
+  "limits": [
+    "需要付费的 Terra Mail 套餐。已经没有可以连接的免费 terra.com.br 邮箱，mcpemails 也无法绕过 Terra 自身服务器实施的封锁。",
+    "由于 MOVE 和 UIDPLUS 都缺失，归档邮件不是原子操作，结果需要通过搜索确认。中断的操作可能让一封邮件短暂同时存在于两个文件夹中。",
+    "缺少 SPECIAL-USE，因此文件夹按名称而不是按用途匹配。在葡萄牙语邮箱中，名称通常是 Enviados、Rascunhos、Lixeira 和 Spam。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Terra Mail 吗？",
+      "a": "不能直接使用。Claude 没有内置的 Terra 连接器，也无法自行建立 IMAP 连接。将 mcpemails 这样的 MCP 服务器连接到你的 terra.com.br 邮箱后，Claude 就能读取、搜索、发送、回复、转发、定时和整理其中的邮件，同一个连接也可在 Cursor 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Terra 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.terra.com.br，端口 993，隐式 TLS。SMTP 为 smtp.terra.com.br，端口 465，同样是隐式 TLS。使用完整的 terra.com.br 地址和邮箱密码登录。两台服务器均已在本页所示日期通过实时 TLS 连接验证。"
+    },
+    {
+      "q": "Terra Mail 还免费吗？",
+      "a": "不免费了。Terra 停止销售免费邮箱所依托的免费套餐，这些账户在客户购买付费 Terra Mail 套餐之前一直被封锁。这同时影响网页邮箱和邮件客户端，所以一个在浏览器中打不开的邮箱，无论你用什么设置，也无法通过 IMAP 连接。"
+    },
+    {
+      "q": "为什么我的 Terra 密码被拒绝？",
+      "a": "先检查套餐，再检查密码。Terra 免费服务终止后遗留的邮箱，在登录时被拒绝的方式与密码错误完全一样。如果网页邮箱能正常登录，说明账户有效，可能的原因是地址输错了或密码已在别处修改，因为 Terra 不签发单独的应用密码。"
+    },
+    {
+      "q": "我能连接 terra.com 或 terra.com.mx 地址吗？",
+      "a": "不能。Terra 的国际邮件域名已经停止服务，邮箱和存储的邮件也随之消失。这些地址背后没有可以认证的服务器。只有巴西的 terra.com.br 服务仍在运行，这些设置也只适用于它。"
+    },
+    {
+      "q": "我的 Terra 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 Terra 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文在相应请求完成后不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Terra 收件箱",
+    "sub": "几分钟即可连接有效的 terra.com.br 邮箱。mcpemails 上一个收件箱永久免费，无需信用卡。"
+  }
+}

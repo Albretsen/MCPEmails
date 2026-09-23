@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://pomoc.wp.pl/jak-skonfigurowac-program-pocztowy",
+    "https://pomoc.wp.pl/aktywacja-dostepu-dla-programow-pocztowych",
+    "https://pomoc.wp.pl/wpkonto/hasla-do-aplikacji-zewnetrznej"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "WP 账户密码，开启两步登录后使用邮件程序密码",
+    "helpUrl": "https://pomoc.wp.pl/aktywacja-dostepu-dla-programow-pocztowych",
+    "usernameForm": "你的完整地址，例如 name@wp.pl。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "在 Claude 中使用 WP.pl Poczta：先开启 IMAP",
+    "description": "通过 IMAP（imap.wp.pl:993）将 WP.pl Poczta 连接到 Claude 及任意 MCP 客户端。须先在 Opcje 中开启 IMAP，开启两步登录后密码会改变。"
+  },
+  "hero": {
+    "eyebrow": "WP.pl Poczta + AI",
+    "titleLine1": "将你的 WP.pl 邮箱连接到",
+    "titleLine2": "Claude、Cursor、任意 MCP 客户端",
+    "lead": "WP Poczta 一旦开启就支持 IMAP。mcpemails 连接该邮箱，让你的 AI 代理可以在所有 MCP 客户端（而不止一个应用）中读取、搜索、发送、回复和归档邮件。",
+    "answer": "Claude 无法自行连接 WP.pl 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.wp.pl 的 993 端口，用你的完整地址登录。决定登录能否成功的有两件事：必须在网页邮箱 Opcje 的 IMAP/POP 标签中开启 IMAP；如果你使用两步登录，普通密码会被拒绝，你需要改为创建一个邮件程序密码。解决这两点后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送和整理邮件，一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "先在 Opcje 中开启 IMAP",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "WP.pl 如何连接：开启 IMAP，再选对密码",
+    "body": "WP 在 <code>imap.wp.pl</code> 的 993 端口通过 SSL 提供 IMAP，在 <code>smtp.wp.pl</code> 的 465 端口提供提交服务，同样使用 SSL，并要求 SMTP 认证。用户名是完整地址。在这一切有意义之前，必须先开启客户端访问：登录网页邮箱，打开 <b>Opcje</b>，进入 <b>IMAP/POP</b> 标签并开启 IMAP，WP 自己的帮助页面将其描述为既能下载也能发送邮件的选项。之后使用哪个密码取决于一项账户设置。未开启两步登录时，账户密码可直接认证。开启两步登录后，WP 声明你完全不能用浏览器密码登录邮件程序：你需要为每个使用 IMAP 或 POP 的程序单独创建一个<b>邮件程序密码</b>。WP 的帮助页面没有为这些设置任何套餐条件。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "在 WP Poczta 的 Opcje 中开启 IMAP",
+      "p": "在浏览器中登录 WP 邮箱，点击 <b>Opcje</b>，选择 <b>IMAP/POP</b> 标签并开启 IMAP，也就是 WP 描述为下载和发送邮件的那个选项。POP 是同一页面上的另一个开关，你不需要它。在 IMAP 开启之前，任何客户端都无法登录，而失败看起来像是密码错误。"
+    },
+    {
+      "h": "决定连接使用哪个密码",
+      "p": "如果未开启两步登录，使用普通的 WP 账户密码。如果已开启，打开账户安全部分，进入 <b>Two-step login</b>（两步登录）标签，找到邮件程序密码部分，选择 <b>Create password</b>（创建密码），填写 WP 要求的程序名称和设备名称。生成的字符串只在屏幕上显示一次。为你连接的每个程序分别创建一个。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "在 mcpemails 中选择 IMAP / SMTP，输入地址和密码（WP 的服务器已自动填好），然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中并完成授权。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "不开启两步登录，就无法创建邮件程序密码",
+      "p": "这会难住那些出于安全考虑想要按应用区分密钥的人。WP 的帮助说得很具体：在通过 App 验证码或安全密钥开启两步登录之前，邮件程序密码部分的按钮一直处于不可用状态。因此，既无法在账户仍使用单一密码的情况下给代理一个范围受限的凭据，也无法在开启两步登录后继续使用账户密码。一个设置同时翻转了两种行为，而再次关闭两步登录会让你创建的程序密码全部失效。"
+    },
+    {
+      "h": "在你开启之前 IMAP 是关闭的，而错误不会告诉你",
+      "p": "WP 把客户端访问放在 Opcje 的 IMAP/POP 标签后面，一个只在浏览器中使用过的邮箱，这里是未开启的。在未开启期间，服务器会拒绝正确的凭据，让人兜着圈子重置一个从来都没问题的密码。如果你第一次登录就失败，请先检查这一项。"
+    },
+    {
+      "h": "只有 AUTH=PLAIN，没有 SASL-IR",
+      "p": "<code>imap.wp.pl</code> 声明了 <code>AUTH=PLAIN</code>，但没有声明 SASL-IR，因此会拒绝在 AUTHENTICATE 命令中一并发送凭据的一步认证，也不为写死使用 LOGIN 机制的客户端提供任何东西。两种失败返回的都是一个看起来像凭据错误的简单拒绝。mcpemails 会用两步交换重试，这就是为什么在其他 IMAP 工具中失败的 WP 邮箱在这里能连上。"
+    },
+    {
+      "h": "有 MOVE 和 UIDPLUS，但没有 SPECIAL-USE",
+      "p": "WP 的服务器比这一类中的大多数更强：它实现了 MOVE，所以归档一封邮件是一条原子命令；实现了 UIDPLUS，所以新 id 会被返回；还有 IDLE，所以新邮件是推送而不是轮询。它没有声明的是 SPECIAL-USE，所以没有任何东西告诉客户端哪个是已发送、草稿或已删除文件夹。在波兰语邮箱中，这些文件夹使用波兰语名称，所以如果代理找不到某个文件夹，请按网页邮箱中显示的名称告诉它。"
+    }
+  ],
+  "limits": [
+    "由于服务器未声明 SPECIAL-USE，文件夹用途按名称匹配，而不是由服务器告知。",
+    "只有开启两步登录后才有按应用区分的凭据。否则，连接持有的是你的主账户密码。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 WP.pl 邮箱吗？",
+      "a": "不能直接使用。Claude 没有内置的 WP 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到该邮箱后，Claude 就能对你的 wp.pl 邮件进行读取、搜索、发送、回复、定时和整理，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。必须先在邮箱上开启 IMAP。"
+    },
+    {
+      "q": "WP.pl 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.wp.pl，端口 993，使用 SSL；SMTP 为 smtp.wp.pl，端口 465，同样使用 SSL，并需要认证。WP 文档另列出 995 端口的 pop3.wp.pl 作为 POP 备选。这里使用的两台服务器均已通过实时 TLS 连接验证。用户名是你的完整邮箱地址。"
+    },
+    {
+      "q": "如何在 WP Poczta 上开启 IMAP？",
+      "a": "登录网页邮箱，点击 Opcje，打开 IMAP/POP 标签并开启 IMAP，WP 将其描述为下载和发送邮件的选项。更改立即生效。没有单独的审批步骤，WP 的帮助页面也没有为此附加任何套餐要求。"
+    },
+    {
+      "q": "WP.pl 有应用密码吗？",
+      "a": "有邮件程序密码，但只有开启两步登录后才有。WP 声明，开启两步登录后你不能在邮件程序中使用浏览器密码，需要在两步登录标签中为每个程序创建一个密码，并填写程序和设备名称。未开启两步登录时，创建按钮不可用，认证使用的是账户密码。"
+    },
+    {
+      "q": "我的 WP.pl 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 WP 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 WP.pl 收件箱",
+    "sub": "在 Opcje 中开启 IMAP，然后连接。一个收件箱永久免费，无需信用卡。"
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://www.kpn.com/service/ugs/instellen-e-mail-laptop-pc",
+    "https://community.kpn.com/e-mail-en-cloud-10/kpn-e-mail-wordt-verbeterd-wat-betekent-dit-voor-jouw-e-mailadres-648121",
+    "https://community.kpn.com/e-mail-en-cloud-10/vanaf-10-juni-2026-stopt-het-aanmaken-van-een-standaard-kpn-e-mailadres-648499"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "你的 KPN 邮箱密码",
+    "helpUrl": "https://www.kpn.com/service/ugs/instellen-e-mail-laptop-pc",
+    "usernameForm": "你的完整地址，包括域名：naam@kpnmail.nl，或旧的 KPN 域名，例如 naam@planet.nl、naam@hetnet.nl 或 naam@xs4all.nl。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "KPN Mail IMAP 设置与 Claude MCP 接入",
+    "description": "通过 imap.kpnmail.nl:993 将 KPN、Planet、Het Net 或 XS4ALL 邮箱连接到 Claude 及任意 MCP 客户端。所有旧 KPN 域名共用一台服务器和一个密码。"
+  },
+  "hero": {
+    "eyebrow": "KPN Mail + AI",
+    "titleLine1": "将你的 KPN 邮箱连接到",
+    "titleLine2": "Claude、Cursor 及任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 KPN 收件箱。无论你的地址以哪个 KPN 域名结尾，都可以通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行访问 KPN 邮箱。mcpemails 是一个托管 MCP 服务器，通过 imap.kpnmail.nl 端口 993 的 IMAP 与之连接，使用你的完整地址和 KPN 邮箱密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。KPN 没有应用专用密码，也没有客户端访问开关，而且同一组服务器为所有 KPN 邮箱域名提供服务，包括继承而来的 planet.nl、hetnet.nl 和 xs4all.nl 地址。1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "KPN 邮箱密码即可，无需应用专用密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "KPN 如何连接：三十来个域名背后的同一个平台",
+    "body": "KPN 在 <code>imap.kpnmail.nl</code> 端口 993 上以隐式 TLS 提供 IMAP。对于外发邮件，KPN 自己的设置页面给出的是端口 587 上的 <code>smtp.kpnmail.nl</code>，使用 TLS；同一台服务器也在端口 465 上以隐式 TLS 响应，mcpemails 预填的正是这一项，因为从服务器端保持单一的隐式加密连接更可预期。认证使用你的 KPN 邮箱密码，用户名为<b>完整</b>地址，KPN 的页面写得再直白不过：<b>Gebruikersnaam: KPN e-mailadres</b>（用户名：KPN 邮箱地址），<b>Wachtwoord: KPN wachtwoord</b>（密码：KPN 密码）。无需生成应用专用密码。值得了解的是这两个主机名背后的家底：KPN 吸收了 Planet Internet、Het Net、XS4ALL 以及一长串其他荷兰服务商，这些邮箱域名如今都位于同一个 KPN 平台上，使用相同的设置。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "在 email.kpn.com 确认邮箱密码",
+      "p": "用你要连接的地址登录 KPN 网页邮箱。如果密码不对，请在那里重置，而不是在 MijnKPN 中：IMAP 服务器校验的是邮箱凭据。请按原样使用地址，包括它所结尾的那个 KPN 域名。"
+    },
+    {
+      "h": "忽略域名，使用 kpnmail 服务器",
+      "p": "<b>planet.nl</b>、<b>hetnet.nl</b> 或 <b>xs4all.nl</b> 地址并没有自己的服务器。所有 KPN 邮箱域名都通过 <code>imap.kpnmail.nl</code> 和 <code>smtp.kpnmail.nl</code> 认证。没有需要按域名查找的东西，而用猜出来的 <code>imap.planet.nl</code> 配置客户端，是最常见的卡壳方式。"
+    },
+    {
+      "h": "粘贴到 mcpemails，再把 MCP URL 粘贴到你的 AI",
+      "p": "选择 IMAP / SMTP，输入完整地址和邮箱密码。KPN 的服务器地址和端口已预填，并经实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "服务器仍在运行，但 KPN 已于 2026 年 6 月 10 日暂停开设新邮箱",
+      "p": "这是两件不同的事，不要混为一谈。<code>imap.kpnmail.nl</code> 如今仍在响应，现有邮箱也和以往一样能从邮件客户端连接；KPN 员工对此的答复是 <b>je kunt e-mailclients blijven gebruiken zoals je gewend bent</b>（你可以像往常一样继续使用邮件客户端）。停止的是发放：自 2026 年 6 月 10 日起，在所有邮箱迁移到新平台期间，你无法再创建标准 KPN 邮箱地址或额外账户。KPN 称这次暂停是临时的（<b>deze situatie is tijdelijk</b>，即“这种情况是暂时的”）。所以本页能连接你已有的地址，但目前无法帮你获得新地址。"
+    },
+    {
+      "h": "三十来个继承的域名，一个主机名，而且不再有新域名",
+      "p": "KPN 仍在一长串它收购的域名上提供邮件服务，包括 <b>planet.nl</b>、<b>hetnet.nl</b>、<b>xs4all.nl</b>、<b>demon.nl</b>、<b>tiscali.nl</b> 和 <b>worldonline.nl</b>。它们都通过 <code>imap.kpnmail.nl</code> 认证。但 KPN 明确表示，新地址只能在 <b>@kpnmail.nl</b> 上创建：<b>andere domeinen zijn niet mogelijk</b>（其他域名不可用）。而且只有实际在使用的地址才会迁移到新邮件平台，所以一个没人登录过的旧地址风险最大。"
+    },
+    {
+      "h": "服务器异常简陋：没有 UIDPLUS、MOVE 和 SPECIAL-USE",
+      "p": "KPN 的 IMAP 横幅提供 <code>SASL-IR</code>、<code>IDLE</code> 和 <code>LITERAL+</code>，仅此而已。没有 <code>MOVE</code>，归档邮件要以复制、更新标记和清除的方式完成，而不是一条原子命令。没有 <code>UIDPLUS</code>，副本的新 UID 不会返回，只能在目标文件夹中搜索，这让批量归档明显变慢。没有 <code>SPECIAL-USE</code>，Sent、Drafts 和 Trash 按名称匹配，而荷兰语的 KPN 邮箱通常把它们命名为 <b>Verzonden</b>、<b>Concepten</b> 和 <b>Prullenbak</b>。"
+    },
+    {
+      "h": "SMTP 只提供 LOGIN 机制",
+      "p": "<code>smtp.kpnmail.nl</code> 只声明 <code>AUTH LOGIN</code>，没有 PLAIN。而 IMAP 则同时提供 PLAIN 和 LOGIN。发信时写死使用 SASL PLAIN 的客户端或库，能顺利读取收件箱，却会在第一次发信时失败，看起来像是权限问题，而不是机制不匹配。mcpemails 会在每一侧协商服务器实际提供的机制。"
+    }
+  ],
+  "limits": [
+    "外发邮件在编码后上限约为 50 MB，因此代理转发的大附件可能会在 SMTP 这一步被拒绝。",
+    "由于服务器不支持 MOVE，移动操作不是原子的。如果连接在操作中途断开，邮件可能会短暂地同时存在于两个文件夹中。",
+    "在 KPN 迁移期间，你无法创建一个新的 KPN 地址专门给代理使用。请连接现有地址，或使用其他服务商的邮箱。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 KPN 邮箱吗？",
+      "a": "不能单独使用。Claude 没有内置的 KPN 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接随后也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "KPN 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.kpnmail.nl，端口 993，使用 SSL。对于外发邮件，KPN 文档给出的是 smtp.kpnmail.nl，端口 587，使用 TLS；同一台服务器也在 465 上以隐式 TLS 响应，mcpemails 使用的就是这一项。用户名是你的完整 KPN 邮箱地址，密码是你的 KPN 邮箱密码。"
+    },
+    {
+      "q": "planet.nl、hetnet.nl 和 xs4all.nl 地址使用不同的服务器吗？",
+      "a": "不是。所有 KPN 邮箱域名都运行在同一个平台上，使用 imap.kpnmail.nl 和 smtp.kpnmail.nl。没有 imap.planet.nl 或 imap.xs4all.nl 可找。请按原样输入带自身域名的地址作为用户名，并使用 KPN 的主机名。"
+    },
+    {
+      "q": "我还能创建新的 KPN 邮箱地址吗？",
+      "a": "目前不能。在把所有邮箱迁移到新平台期间，KPN 已于 2026 年 6 月 10 日停止创建标准 KPN 邮箱地址和额外账户，并称这次暂停是临时的。在此期间，现有邮箱可继续在邮件客户端中使用。恢复之后，新地址也只能是 @kpnmail.nl。"
+    },
+    {
+      "q": "KPN 需要应用专用密码吗？",
+      "a": "不需要。KPN 不签发应用专用密码。邮件客户端使用你的 KPN 邮箱地址和 KPN 邮箱密码进行认证，也就是 email.kpn.com 网页邮箱接受的同一个凭据。如果被拒绝，请先在那里重置，再去别处排查。"
+    },
+    {
+      "q": "我的 KPN 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 KPN 实时获取邮件，并交给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 KPN 收件箱",
+    "sub": "几分钟即可连接 KPN、Planet、Het Net 或 XS4ALL 邮箱。1 个收件箱永久免费，无需信用卡。"
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://support.loopia.com/wiki/email-servers/",
+    "https://support.loopia.se/wiki/administrera-e-postkonto/",
+    "https://support.loopia.se/wiki/skapa-en-e-postadress/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe du compte e-mail",
+    "helpUrl": "https://support.loopia.se/wiki/administrera-e-postkonto/",
+    "usernameForm": "Votre adresse complète, domaine compris : namn@dittdoman.se.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connecter l'e-mail Loopia à Claude et aux clients MCP",
+    "description": "Connectez l'e-mail Loopia à Claude, Cursor et tout client MCP en IMAP via mailcluster.loopia.se:993, un serveur unique pour tous les domaines. 1 boîte gratuite."
+  },
+  "hero": {
+    "eyebrow": "E-mail Loopia + IA",
+    "titleLine1": "Connectez l'e-mail Loopia à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Loopia. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec le mot de passe défini pour le compte dans Loopia Kundzon.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Loopia. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur mailcluster.loopia.se, port 993, en s'authentifiant avec votre adresse e-mail complète et le mot de passe défini pour ce compte dans Loopia Kundzon, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Loopia utilise un seul nom de cluster partagé pour tous ses clients : il n'y a donc aucun serveur par domaine à chercher ni de mot de passe d'application à générer. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe du compte défini dans Loopia Kundzon",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Loopia se connecte : un seul serveur cluster, IMAP et SMTP",
+    "body": "Loopia fait tourner les deux protocoles sur un seul nom d'hôte, <code>mailcluster.loopia.se</code> : le port 993 pour l'IMAP en TLS implicite et le port 465 pour le SMTP, également en TLS implicite. Le même serveur dessert tous les clients Loopia, quel que soit le domaine de l'adresse. La documentation de Loopia est claire sur l'identifiant : c'est toujours votre adresse e-mail complète, par exemple <code>namn@exempel.se</code>, en réception comme en envoi, et l'authentification est obligatoire pour envoyer. Le mot de passe est celui choisi lors de la création de l'adresse dans Loopia Kundzon, et Loopia permet de le changer soit là, soit sur <code>mailadmin.loopia.se</code>. Il n'y a ni mot de passe d'application ni option IMAP par boîte."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
+    },
+    {
+      "h": "Définissez le mot de passe du compte dans Kundzon ou Mailadmin",
+      "p": "Connectez-vous à Loopia Kundzon, ouvrez la liste des adresses e-mail de votre domaine, cliquez sur l'adresse et choisissez Edit (modifier). Un champ de mot de passe apparaît à côté de Password : saisissez-en un nouveau et enregistrez. La même modification peut se faire sur mailadmin.loopia.se si vous administrez le courrier sans accès complet à Kundzon."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète et collez le mot de passe du compte. Le serveur mailcluster.loopia.se et les ports 993 et 465 sont préremplis et ont été vérifiés par une vraie connexion TLS."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Ajoutez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Il n'y a pas de mail.votredomaine.se chez Loopia",
+      "p": "Loopia fait aboutir tout le courrier de ses clients sur un cluster unique, et le nom d'hôte est <code>mailcluster.loopia.se</code> pour tout le monde. Les guides écrits pour les hébergeurs de type cPanel vous disent d'utiliser <code>mail.</code> suivi de votre propre domaine ; chez Loopia, ce nom n'existe généralement pas du tout dans le DNS, ou pointe vers votre hébergement web plutôt que vers la messagerie. L'échec ressemble à un problème réseau plutôt qu'à une erreur de configuration, ce qui envoie les gens vers le mauvais article d'aide."
+    },
+    {
+      "h": "Le mot de passe de la boîte mail se gère à deux endroits différents",
+      "p": "Loopia propose l'administration de la messagerie à la fois dans Kundzon, à côté de vos domaines et factures, et séparément sur <code>mailadmin.loopia.se</code>, qui existe pour qu'une personne puisse gérer le courrier sans détenir les identifiants du compte. Un mot de passe changé à un endroit s'applique à la boîte dans les deux. Les équipes qui utilisent les deux interfaces réinitialisent parfois un mot de passe dans Mailadmin, puis se demandent pourquoi la valeur notée depuis Kundzon il y a des mois ne fonctionne plus."
+    },
+    {
+      "h": "Ni MOVE ni SPECIAL-USE, et les noms de dossiers sont en suédois",
+      "p": "Le serveur n'annonce pas l'extension MOVE : déplacer un message se fait donc par une copie, une mise à jour d'indicateur et un expunge au lieu d'une seule commande atomique, et comme UIDPLUS manque, le nouvel UID doit être retrouvé en cherchant dans le dossier de destination. SPECIAL-USE est également absent, ce qui signifie que Envoyés, Brouillons, Corbeille et Indésirables sont identifiés par leur nom. Les boîtes Loopia créées via l'interface suédoise portent couramment Skickat, Utkast, Papperskorgen et Skräppost : si un agent ne trouve pas votre corbeille, nommez-la explicitement."
+    }
+  ],
+  "limits": [
+    "Comme le serveur ne prend pas en charge MOVE, un déplacement n'est pas atomique. Si une connexion tombe en pleine opération, un message peut brièvement exister dans les deux dossiers.",
+    "Les rôles des dossiers sont déduits de leurs noms : pour une boîte dont les dossiers ont été renommés, il faut nommer le dossier explicitement dans la demande."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec l'e-mail Loopia ?",
+      "a": "Pas tout seul. Claude n'a pas de connecteur Loopia intégré. Relier un serveur MCP comme mcpemails à votre boîte Loopia en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de Loopia ?",
+      "a": "Les deux utilisent mailcluster.loopia.se. L'IMAP est sur le port 993 en TLS implicite et le SMTP sur le port 465, également en TLS implicite, avec authentification obligatoire pour l'envoi. L'identifiant est toujours votre adresse e-mail complète et le mot de passe est celui du compte défini dans Kundzon. Le serveur a été vérifié par une vraie connexion TLS."
+    },
+    {
+      "q": "Pourquoi mon mot de passe Loopia est-il refusé ?",
+      "a": "En général parce que vous avez saisi l'identifiant de Loopia Kundzon plutôt que le mot de passe défini sur le compte e-mail concerné, ou parce que quelqu'un d'autre a changé le mot de passe sur mailadmin.loopia.se. Ouvrez l'adresse dans Kundzon, choisissez Edit, définissez un nouveau mot de passe et utilisez-le. Vérifiez aussi que l'identifiant est bien l'adresse complète."
+    },
+    {
+      "q": "Loopia a-t-il besoin d'un mot de passe d'application ?",
+      "a": "Non. Loopia ne délivre pas de mot de passe d'application pour la messagerie et il n'y a rien à activer par boîte avant qu'un client puisse se connecter. Le mot de passe du compte authentifie à la fois l'IMAP et le SMTP. Si vous préférez ne pas réutiliser un mot de passe existant, définissez-en un nouveau pour l'adresse dans Kundzon."
+    },
+    {
+      "q": "Mon courrier Loopia est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct chez Loopia via IMAP pour chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le contenu des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA une boîte Loopia",
+    "sub": "Connectez l'e-mail Loopia en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

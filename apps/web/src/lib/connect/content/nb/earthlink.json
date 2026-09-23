@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://help.earthlink.net/portal/en/kb/articles/email-server-settings",
+    "https://help.earthlink.net/portal/en/kb/articles/set-up-earthlink-email-on-a-new-mobile-device"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "E-postpassord",
+    "helpUrl": "https://help.earthlink.net/portal/en/kb/articles/email-server-settings",
+    "usernameForm": "Hele adressen din, uansett hvilket eldre domene den bruker: navn@earthlink.net, navn@mindspring.com, navn@peoplepc.com eller navn@ix.netcom.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble EarthLink- og Mindspring-e-post til Claude",
+    "description": "Koble EarthLink-e-post til Claude og enhver MCP-klient over IMAP på imap.earthlink.net:993. E-postpassordet ditt virker; utgående e-post bruker en egen vert."
+  },
+  "hero": {
+    "eyebrow": "EarthLink Mail + AI",
+    "titleLine1": "Koble en EarthLink-innboks",
+    "titleLine2": "til Claude, Cursor og enhver MCP-klient",
+    "lead": "EarthLink driver fortsatt sine egne e-postservere, eldre enn det meste av internett og fortsatt i drift. mcpemails kobler til en av dem over IMAP slik at AI-agenten din kan lese, søke i, sende, svare på og arkivere e-posten.",
+    "answer": "Claude kan ikke nå en EarthLink-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP på imap.earthlink.net, port 993, og logger inn med hele e-postadressen din og det vanlige e-postpassordet ditt. EarthLink utsteder ingen app-spesifikke passord og har ingen bryter for klienttilgang å slå på, så påloggingsopplysningen du allerede bruker, er den som virker, og de samme innstillingene dekker mindspring.com-, peoplepc.com- og ix.netcom.com-adressene EarthLink fortsatt har. Utgående e-post bruker et annet vertsnavn, smtpauth.earthlink.net på port 587. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "E-postpassordet ditt, uten app-passord",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles EarthLink til: IMAP inn, en egen autentisert SMTP ut",
+    "body": "EarthLink oppgir én IMAP-vert for alle domenene selskapet har. <code>imap.earthlink.net</code> svarer på port 993 over TLS, og brukernavnet er hele adressen med sitt eget domene intakt, så en Mindspring- eller PeoplePC-adresse skrives inn uendret. Utgående e-post er det folk gjør feil: den deler ikke navn med innkommende. Innsending skjer på <code>smtpauth.earthlink.net</code> på port <b>587</b> med STARTTLS, et vertsnavn som finnes fordi EarthLink tidligere drev et eget uautentisert relé for kunder på sitt eget nettverk og holdt det autentiserte under et eget navn. EarthLinks dokumentasjon sier at du skal bruke hele e-postadressen og passordet på begge, og det finnes ikke noe app-passord å lage. POP er det eneste stedet domenene skiller lag: EarthLink dokumenterer POP-verter per domene, som <code>pop.mindspring.com</code>, og derfor ser noen gamle oppsettveiledninger domenespesifikke ut selv om IMAP-siden ikke er det."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
+    },
+    {
+      "h": "Sjekk passordet på selve postkassen, ikke faktureringspåloggingen",
+      "p": "Logg inn i EarthLink-webmail med adressen du vil koble til, og bekreft at passordet virker der. EarthLink-kontoer har ofte flere postkasser under ett abonnement, hver med sitt eget passord, og passordet på kontoen du betaler med, er ikke nødvendigvis det samme som på adressen du kobler til."
+    },
+    {
+      "h": "Skriv inn hele adressen og det passordet",
+      "p": "Velg IMAP / SMTP i mcpemails og skriv inn adressen nøyaktig slik den er skrevet, <code>name@mindspring.com</code> inkludert. EarthLinks verter og porter nedenfor er forhåndsutfylt og ble bekreftet via en faktisk TLS-tilkobling, også den separate utgående verten på port 587."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "EarthLink annonserer ingen brukbar SASL-mekanisme, og strenge klienter gir opp i stedet for å logge inn",
+      "p": "Kapabilitetslisten EarthLink returnerer før pålogging, tilbyr <code>AUTH=CRAM-MD5</code>, <code>AUTH=EL-TAC</code> og <code>AUTH=EL-VOICE</code>. De to siste er EarthLinks egne mekanismer, og ingen vanlig e-postklient implementerer dem. Det finnes verken <code>AUTH=PLAIN</code> eller <code>AUTH=LOGIN</code> i den listen. En klient som er skrevet for å velge en SASL-mekanisme blant dem serveren annonserer, finner derfor ingenting den kan bruke, og rapporterer en autentiseringsfeil uten noen gang å sende et passord. Det som faktisk virker, er den vanlige IMAP-kommandoen <code>LOGIN</code>, som serveren godtar fordi den ikke annonserer LOGINDISABLED. mcpemails faller tilbake på den. Dette er det aller nyttigste faktumet på denne siden, og ingen annen veiledning for EarthLink-innstillinger nevner det."
+    },
+    {
+      "h": "Den utgående serveren er ikke imap eller smtp punktum earthlink punktum net",
+      "p": "Den er <code>smtpauth.earthlink.net</code>, på port 587 med STARTTLS i stedet for implisitt TLS på 465. Veiledninger som gjetter ut fra den innkommende verten, eller som antar 465 fordi de fleste leverandører bruker den, gir en konfigurasjon som kobler til for lesing og feiler stille ved første sending. Hvis e-post kommer inn, men ingenting går ut, er dette grunnen."
+    },
+    {
+      "h": "Heller ingen SASL-IR, så autentiseringen er en utveksling i to steg",
+      "p": "EarthLink annonserer ikke SASL-IR, så den avviser ettstegsformen som sender påloggingsopplysningene sammen med AUTHENTICATE-kommandoen. Sammen med mekanismelisten ovenfor kan et autentiseringsforsøk mot EarthLink feile på to forskjellige måter som begge ser ut som et feil passord. mcpemails prøver igjen med utvekslingen i to steg i stedet for å behandle den første avvisningen som endelig."
+    },
+    {
+      "h": "Ingen IDLE, ingen MOVE, ingen SPECIAL-USE på denne serveren",
+      "p": "EarthLinks IMAP-tjeneste er gammel, og det synes i kapabilitetslisten. Uten IDLE finnes det ingen push, så ny e-post oppdages ved polling. Uten MOVE kjøres arkivering av en melding som COPY, deretter STORE av slettet-flagget, deretter EXPUNGE. Uten SPECIAL-USE sier serveren aldri hvilken mappe som er Sendt eller Papirkurv, så de matches på navn. UIDPLUS finnes, som i det minste betyr at en kopiert melding oppgir sin nye ID."
+    }
+  ],
+  "limits": [
+    "EarthLinks SMTP-vert oppgir en maksimal meldingsstørrelse på 50 MB, så en sending med større vedlegg avvises før den går ut.",
+    "Ingen IDLE-støtte, så ny e-post oppdages ved polling i stedet for å bli dyttet ut.",
+    "Flyttinger er ikke atomiske, og mapperoller matches på navn, fordi MOVE og SPECIAL-USE ikke er implementert på denne serveren."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med EarthLink-e-post?",
+      "a": "Ikke direkte. Claude har ingen innebygd EarthLink-kobling. Kobler du en MCP-server som mcpemails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere earthlink.net- eller mindspring.com-e-posten din, og den samme tilkoblingen fungerer i Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for EarthLink?",
+      "a": "IMAP er imap.earthlink.net på port 993 med implisitt TLS. Utgående e-post er smtpauth.earthlink.net på port 587 med STARTTLS, og autentisering kreves. Begge ble bekreftet via en faktisk TLS-tilkobling. EarthLinks egen dokumentasjon sier at du skal bruke hele e-postadressen og e-postpassordet på begge."
+    },
+    {
+      "q": "Bruker mindspring.com- og peoplepc.com-adresser de samme innstillingene?",
+      "a": "For IMAP, ja. EarthLink betjener de eldre domenene selskapet kjøpte opp, fra den samme verten imap.earthlink.net, og brukernavnet er ganske enkelt hele adressen med sitt eget domene. POP er unntaket: EarthLink dokumenterer POP-vertsnavn per domene, som pop.mindspring.com, og derfor ser eldre veiledninger domenespesifikke ut."
+    },
+    {
+      "q": "Trenger EarthLink et app-passord?",
+      "a": "Nei. EarthLink utsteder ingen app-spesifikke passord og har ingen side for å lage et. En e-postklient logger inn med passordet til postkassen. Hvis et riktig passord likevel avvises, er årsaken som regel autentiseringsmekanismen og ikke påloggingsopplysningen, siden EarthLink ikke annonserer noen standard SASL-mekanisme før pålogging."
+    },
+    {
+      "q": "Lagres EarthLink-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra EarthLink over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en EarthLink-innboks",
+    "sub": "Det eksisterende e-postpassordet ditt er alt som skal til. Én innboks gratis for alltid, uten kort."
+  }
+}

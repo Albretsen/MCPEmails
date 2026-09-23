@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://help.krystal.io/email/configure-your-email-client",
+    "https://help.krystal.io/sales-faq/onyx-managed-word-press-vs-shared-hosting",
+    "https://help.krystal.io/email/adding-a-new-c-panel-email-account"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte mail",
+    "helpUrl": "https://help.krystal.io/email/configure-your-email-client",
+    "usernameForm": "Votre adresse e-mail complète, par exemple me@yourdomain.co.uk, exactement telle que la boîte a été créée.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "E-mail Krystal vers Claude : IMAP cPanel et Onyx",
+    "description": "L'hébergement mutualisé Krystal inclut des boîtes cPanel, Onyx non. Identifiez votre offre, puis connectez-la à Claude en IMAP sur le port 993. 1 boîte gratuite."
+  },
+  "hero": {
+    "eyebrow": "Krystal + IA",
+    "titleLine1": "Connectez l'e-mail Krystal à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Donnez à votre agent IA une vraie boîte mail Krystal. Lisez, recherchez, envoyez, répondez, planifiez et organisez vos e-mails en IMAP, sur l'hébergement mutualisé cPanel ou avec l'option e-mail d'Onyx.",
+    "answer": "Claude ne peut pas accéder seul à une boîte mail Krystal. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP standard sur le port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Krystal n'a pas de nom d'hôte de messagerie commun : vous utilisez soit mail.yourdomain.co.uk, soit le nom propre de votre serveur d'hébergement, tous deux affichés sur l'écran Connect Devices de cPanel. Avant de commencer, vérifiez que votre offre inclut bien l'e-mail, car la plateforme WordPress infogérée Onyx de Krystal est livrée sans boîtes mail sauf si vous avez acheté l'option. L'authentification se fait avec le mot de passe de la boîte mail, et une boîte est gratuite.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe de la boîte mail depuis cPanel",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment l'e-mail Krystal se connecte : deux plateformes, un seul protocole IMAP",
+    "body": "Krystal est un hébergeur britannique qui propose deux produits très différents. <b>L'hébergement mutualisé et revendeur</b> tourne sous cPanel et inclut un nombre illimité d'adresses sur votre domaine, avec des quotas de boîte de 5GB sur les petites offres et de 50GB sur les plus grandes. <b>Onyx</b>, leur plateforme WordPress infogérée, n'inclut aucun e-mail ; les boîtes mail sont une option payante achetée à la commande ou plus tard depuis le portail Onyx, et elles se gèrent là, pas dans cPanel. Les deux parlent IMAP sur le port 993 en TLS, avec le SMTP sur le 465, ou le 587 en STARTTLS. Pour les comptes cPanel, Krystal recommande d'utiliser le nom de votre serveur d'hébergement exactement tel qu'il apparaît sur l'écran des paramètres, et précise que <code>mail.yourdomain.co.uk</code> fonctionne aussi. L'identifiant est l'adresse complète."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et ne demande pas de carte bancaire."
+    },
+    {
+      "h": "Vérifiez que l'offre inclut l'e-mail, puis ouvrez le bon écran",
+      "p": "Sur l'<b>hébergement mutualisé</b>, connectez-vous à cPanel, allez dans <b>Email</b>, puis <b>Email Accounts</b>, et cliquez sur <b>Connect Devices</b> à côté de l'adresse. Le nom du serveur et les ports s'y affichent. Sur <b>Onyx</b>, les boîtes mail se trouvent dans la section e-mail du portail Onyx, pas dans cPanel, et n'existent que si l'option e-mail a été achetée. Si aucun de ces deux endroits n'affiche d'adresse, il n'y a pas encore de boîte à connecter."
+    },
+    {
+      "h": "Définissez le mot de passe de la boîte mail",
+      "p": "Les boîtes Krystal s'authentifient avec le mot de passe défini sur l'adresse elle-même, pas avec votre identifiant de l'espace client Krystal. Sur l'hébergement mutualisé, utilisez <b>Manage</b> sur la ligne de l'adresse dans Email Accounts pour en définir un. Saisissez-le ensuite dans mcpemails, avec l'adresse complète comme identifiant et le nom d'hôte que vous avez copié."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Ajoutez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Onyx est livré sans e-mail, il n'y a donc peut-être rien à connecter",
+      "p": "La plateforme WordPress infogérée de Krystal est volontairement dépourvue de messagerie. Les clients qui ont déplacé un site de l'hébergement mutualisé Krystal vers Onyx supposent souvent que leurs boîtes ont suivi ; ce n'est pas le cas, sauf si l'option e-mail a été achetée. Krystal fournit un outil de migration pour importer une boîte IMAP existante dans cette option, et c'est là l'indice : si l'on ne vous a jamais proposé de migrer, la boîte est probablement encore sur l'ancienne plateforme, ou elle a disparu. Vérifiez que le portail Onyx comporte une section e-mail avant de chercher un problème d'identifiants."
+    },
+    {
+      "h": "mail.yourdomain ne fonctionne que tant que l'enregistrement A du domaine pointe vers Krystal",
+      "p": "Krystal émet automatiquement le certificat gratuit pour ce nom, mais seulement une fois que le domaine résout vers leur serveur. Si vous utilisez un DNS externe, si le domaine passe par le proxy de Cloudflare, ou si vous venez d'emménager et que l'enregistrement ne s'est pas encore propagé, le nom <code>mail.</code> soit ne résout pas, soit résout vers un endroit sans service de messagerie. Aucune de ces pannes ne ressemble à un problème de messagerie. Utilisez le nom de serveur affiché sur l'écran Connect Devices, et la dépendance au DNS disparaît complètement."
+    },
+    {
+      "h": "Les boîtes cPanel et Onyx se configurent à des endroits différents, avec des guides différents",
+      "p": "La base de connaissances de Krystal présente côte à côte des articles e-mail pour cPanel et pour Onyx, et ils ne décrivent pas le même système. Un tutoriel cPanel vous envoie vers Email Accounts et Connect Devices ; une boîte Onyx n'a ni l'un ni l'autre et s'administre depuis le portail Onyx. Vérifiez sur quelle plateforme se trouve votre site avant de suivre les instructions e-mail de Krystal, car la première étape du mauvais article n'existe tout simplement pas dans votre panneau."
+    }
+  ],
+  "limits": [
+    "La taille des boîtes est plafonnée selon l'offre sur l'hébergement mutualisé Krystal, à 5GB sur les petites offres et 50GB sur les plus grandes. Une boîte pleine rejette le nouveau courrier au lieu de se dégrader discrètement.",
+    "mcpemails connecte uniquement la boîte mail. Les réglages au niveau du domaine, les redirections et les règles antispam restent dans cPanel ou dans le portail Onyx."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec l'e-mail Krystal ?",
+      "a": "Pas directement. Claude n'a pas de connecteur Krystal. Connecter un serveur MCP comme mcpemails à votre boîte Krystal en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, que la boîte soit sur l'hébergement mutualisé cPanel de Krystal ou sur l'option e-mail d'Onyx."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de Krystal ?",
+      "a": "L'IMAP utilise le port 993 en SSL/TLS et le SMTP le port 465 en SSL/TLS, ou le 587 en STARTTLS. Le nom d'hôte est le nom de votre serveur d'hébergement tel qu'il apparaît sur l'écran Connect Devices de cPanel, et mail.yourdomain.co.uk fonctionne aussi lorsque le DNS du domaine pointe vers Krystal. Connectez-vous avec votre adresse e-mail complète."
+    },
+    {
+      "q": "Krystal Onyx inclut-il l'e-mail ?",
+      "a": "Non. Onyx, la plateforme WordPress infogérée de Krystal, est fournie sans boîtes mail par défaut. L'e-mail est une option payante, achetable à la commande ou plus tard via le portail Onyx, et elle se gère là, pas dans cPanel. Les offres d'hébergement mutualisé de Krystal, en revanche, incluent un nombre illimité d'adresses sur votre domaine."
+    },
+    {
+      "q": "Pourquoi le mot de passe de mon e-mail Krystal est-il refusé ?",
+      "a": "Parce que la boîte a son propre mot de passe, défini lors de la création de l'adresse, qui n'est pas votre identifiant de l'espace client Krystal. Réinitialisez-le dans cPanel via le lien Manage à côté de l'adresse, sous Email Accounts. Vérifiez aussi que l'identifiant est bien l'adresse e-mail entière et pas seulement la partie avant l'arobase."
+    },
+    {
+      "q": "Mon courrier Krystal est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis Krystal en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le contenu des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA une boîte Krystal",
+    "sub": "Connectez une boîte mail Krystal en quelques minutes. 1 boîte gratuite, pour toujours, sans carte bancaire."
+  }
+}

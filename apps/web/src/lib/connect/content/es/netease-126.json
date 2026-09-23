@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://jingyan.baidu.com/article/17bd8e526ddb4185aa2bb852.html",
+    "https://help.mail.163.com/faqDetail.do?code=d7a5dc8471cd0c0e8b4b8f4f8e49998b374173cfe9171305fa1ce630d7f67ac286624f309a1a7089",
+    "https://help.lunkr.cn/126-IMAP-Login-Tutorial/IMAP-Login-Tutorial-126.html",
+    "https://www.laifa.xin/en/youxiang/107-wangyi-163youxiang-netease-personal-email"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Código de autorización de cliente (客户端授权码)",
+    "helpUrl": "https://help.mail.163.com/faqDetail.do?code=d7a5dc8471cd0c0e8b4b8f4f8e49998b374173cfe9171305fa1ce630d7f67ac286624f309a1a7089",
+    "usernameForm": "Tu dirección completa, incluido el dominio: name@126.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta el correo 126.com a Claude, Cursor y MCP",
+    "description": "Conecta un buzón 126.com de NetEase a Claude o cualquier cliente MCP por IMAP en imap.126.com:993. Usa su propio código de autorización, no el de tu cuenta 163."
+  },
+  "hero": {
+    "eyebrow": "126 Mail + IA",
+    "titleLine1": "Conecta el correo 126.com a Claude,",
+    "titleLine2": "Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA un buzón real de 126.com. Lee, busca, envía, responde, programa y organiza el correo por IMAP con un código de autorización de NetEase emitido para ese buzón, no para uno hermano.",
+    "answer": "Claude no puede acceder a un buzón 126 de NetEase por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.126.com, puerto 993, y se autentica con el código de autorización de cliente de 16 caracteres (客户端授权码) que NetEase emite para ese buzón en lugar de tu contraseña. Casi todas las guías en inglés sobre el correo de NetEase están escritas para 163.com, y apuntar una dirección 126 a los servidores de 163 falla como un error de autenticación y no de enrutamiento, lo que lleva a la gente a regenerar un código que nunca estuvo mal. Una bandeja es gratis.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Su propio código de autorización 126",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta 126 Mail: IMAP en sus propios servidores, con su propio código",
+    "body": "126.com es el segundo dominio de correo gratuito de NetEase, abierto cuando se llenó el espacio de nombres de 163.com, y es donde vive realmente una gran parte de las direcciones personales chinas. Funciona sobre la misma plataforma Coremail que 163.com y se comporta igual, pero es un buzón distinto en servidores distintos: IMAP en <code>imap.126.com</code>, puerto 993, con TLS, y SMTP en <code>smtp.126.com</code>, puerto 465. Deben cumplirse dos condiciones para que un cliente inicie sesión. El protocolo de cliente tiene que estar activado en la configuración del buzón, que es lo que genera el <b>código de autorización de 16 caracteres</b> que sustituye a tu contraseña. Y el cliente tiene que identificarse con el comando IMAP <code>ID</code> antes de autenticarse, porque NetEase rechaza los clientes anónimos con un mensaje <code>Unsafe Login</code> que no tiene nada que ver con las credenciales. mcpemails hace ambas cosas."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y sigue siendo gratis, sin tarjeta. Ten el teléfono a mano: NetEase te pide enviar un SMS de verificación a mitad del siguiente paso."
+    },
+    {
+      "h": "Activa el protocolo de cliente en mail.126.com",
+      "p": "Inicia sesión en mail.126.com, no en mail.163.com, aunque tengas ambos. Abre 设置 (Configuración) y elige POP3/SMTP/IMAP. Activa el servicio IMAP/SMTP y confirma en la ventana emergente. NetEase te ofrecerá primero su propio cliente 邮箱大师; continúa sin él. Mientras este servicio no esté activado, imap.126.com rechaza todos los inicios de sesión sea cual sea la contraseña que envíes."
+    },
+    {
+      "h": "Envía el SMS de verificación y copia el código en mcpemails",
+      "p": "NetEase muestra un código QR que redacta un SMS de verificación en tu teléfono, con una opción de envío manual debajo. Envía el mensaje, espera un momento y confirma que lo has enviado. El código de autorización de 16 caracteres aparece una sola vez y no vuelve a mostrarse. Cópialo, elige IMAP / SMTP en mcpemails, escribe tu dirección 126 completa y pega el código en el campo de contraseña. Los servidores de 126 vienen rellenados."
+    },
+    {
+      "h": "Pega la URL MCP en tu cliente de IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente podrá leer, buscar, enviar, responder, reenviar, programar y organizar ese buzón 126."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "La configuración de 163 no funciona para una dirección 126, y el error lo oculta",
+      "p": "Este es el problema que más tiempo hace perder a los usuarios de 126, y es un efecto secundario de la documentación, no del servicio. La inmensa mayoría de las guías, configuraciones de ejemplo y respuestas de Stack Overflow sobre el correo de NetEase se escribieron para 163.com, así que la gente copia <code>imap.163.com</code> y <code>smtp.163.com</code>. Una dirección <code>name@126.com</code> presentada al servidor de 163 es simplemente una cuenta que allí no existe, y el servidor lo notifica como un inicio de sesión fallido. Nada en el mensaje indica que estás en el servidor equivocado. Antes de regenerar un código, comprueba que los nombres de servidor digan realmente 126."
+    },
+    {
+      "h": "Un solo inicio de sesión de NetEase, varios buzones, un código para cada uno",
+      "p": "NetEase gestiona 126.com junto con 163.com, yeah.net y 188.com, y te permite asociarlos para acceder a varios buzones con un único inicio de sesión. Esa comodidad hace suponer que la credencial también se comparte. No es así. Cada buzón tiene su propio interruptor de protocolo de cliente, su propio código de autorización y sus propios servidores, y un código emitido para tu dirección 163 no autentica nada en imap.126.com. Si tienes ambos, conéctalos en mcpemails como dos bandejas separadas con dos códigos separados."
+    },
+    {
+      "h": "Un código correcto puede ser rechazado igualmente, por dos motivos sin relación",
+      "p": "Primero, NetEase exige que los clientes de terceros se identifiquen con el comando IMAP <code>ID</code> del RFC 2971 antes de autenticarse. Un cliente que lo omite es rechazado con <code>Unsafe Login</code>, y NetEase además deja un mensaje de aviso en el buzón. La dirección de referencia de ese mensaje está en otro dominio más de NetEase, lo que aumenta la confusión. Segundo, la línea de capacidades del servidor anuncia <code>AUTH=XOAUTH2</code> y nada más, así que un cliente que elige un mecanismo de la lista anunciada no encuentra ninguno que pueda usar con una contraseña y nunca prueba el comando <code>LOGIN</code> simple, que sí funciona. Ambos casos parecen exactamente un código de autorización incorrecto. mcpemails gestiona los dos."
+    }
+  ],
+  "limits": [
+    "El servidor de 126 no anuncia la extensión MOVE, así que cada operación de archivado es una copia, una actualización de marcas y un expunge. Tu agente seguirá archivando el correo correctamente, pero una operación sobre cientos de mensajes tarda bastante más que en un servidor con MOVE.",
+    "No se ofrece IDLE, así que el correo nuevo se descubre consultando periódicamente en lugar de recibirse por push en la conexión. Un agente que vigila el buzón ve un mensaje en su siguiente comprobación, no cuando llega.",
+    "Los servidores de 126 están en China continental, así que cada solicitud de un cliente fuera del país paga latencia transfronteriza en cada ida y vuelta IMAP. Las búsquedas grandes se notan más lentas que la misma búsqueda en un buzón europeo o norteamericano."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo 126.com?",
+      "a": "No directamente. Claude no tiene un conector integrado para NetEase y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como mcpemails a tu buzón 126 le da a Claude acceso para leer, buscar, enviar, responder, reenviar, programar y organizar, y la misma conexión funciona desde Cursor y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuál es la configuración IMAP y SMTP de 126.com?",
+      "a": "IMAP es imap.126.com en el puerto 993 con TLS implícito. SMTP es smtp.126.com en el puerto 465. Inicia sesión con tu dirección 126.com completa y el código de autorización de cliente de 16 caracteres en lugar de la contraseña de tu buzón. Ambos servidores se verificaron con una conexión TLS real en la fecha que aparece en esta página."
+    },
+    {
+      "q": "¿Puedo usar mi código de autorización de 163 para un buzón 126?",
+      "a": "No. Son buzones separados en servidores separados, aunque ambos sean accesibles desde un único inicio de sesión de NetEase. Cada uno emite su propio código desde su propia pantalla de configuración, y cada uno tiene su propio interruptor de protocolo de cliente que hay que activar. Genera un código en mail.126.com para la dirección 126."
+    },
+    {
+      "q": "¿Dónde consigo el código de autorización de 126?",
+      "a": "Inicia sesión en mail.126.com, abre 设置 y luego POP3/SMTP/IMAP, y activa el servicio IMAP y SMTP. NetEase te pide entonces que envíes un SMS de verificación desde el teléfono vinculado a la cuenta. Una vez confirmado, el código de 16 caracteres se muestra una sola vez, así que cópialo antes de cerrar el diálogo."
+    },
+    {
+      "q": "¿Es 126.com el mismo servicio que 163.com?",
+      "a": "Es la misma empresa y la misma plataforma Coremail, con el mismo flujo de código de autorización y el mismo requisito de identificación IMAP, pero es un dominio de correo distinto con sus propios servidores. Trátalo como un proveedor aparte al configurar un cliente y lee con atención los nombres de servidor, porque difieren en tres caracteres."
+    },
+    {
+      "q": "¿Se almacena mi correo de 126 en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de NetEase por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva después de la solicitud que los pidió."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de 126 Mail",
+    "sub": "Conecta tu buzón 126.com en minutos con su propio código de autorización. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

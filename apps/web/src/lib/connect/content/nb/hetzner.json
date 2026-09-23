@@ -1,0 +1,93 @@
+{
+  "_sources": [
+    "https://docs.hetzner.com/konsoleh/account-management/email/setting-up-an-email-account/",
+    "https://docs.hetzner.com/konsoleh/account-management/email/mailboxes/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://docs.hetzner.com/konsoleh/account-management/email/setting-up-an-email-account/",
+    "usernameForm": "Hele adressen din, inkludert domenet: info@your-domain.de.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Hetzner-e-post til Claude og MCP-klienter",
+    "description": "Koble en Hetzner Web Hosting-postkasse til Claude, Cursor og enhver MCP-klient over IMAP på mail.your-server.de:993. Én innboks gratis, for alltid, uten kort."
+  },
+  "hero": {
+    "eyebrow": "Hetzner-e-post + AI",
+    "titleLine1": "Koble Hetzner-postkassen din",
+    "titleLine2": "til Claude, Cursor og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Hetzner-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP på mail.your-server.de, med postkassepassordet du satte i konsoleH.",
+    "answer": "Claude kan ikke nå en Hetzner-postkasse på egen hånd. mcpemails er en driftet MCP-server som kobler til e-post på Hetzner Web Hosting over IMAP på mail.your-server.de, port 993, og autentiserer med hele e-postadressen din og postkassepassordet du satte da du opprettet kontoen i konsoleH, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Vertsnavnet er bokstavelig talt mail.your-server.de for alle kunder, ikke en variant av ditt eget domene. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord satt i konsoleH",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles Hetzner-e-post til: IMAP på mail.your-server.de",
+    "body": "Hetzners delte e-postplattform, den som ligger bak Web Hosting- og Managed Server-planene som administreres via <b>konsoleH</b>, leverer IMAP på <code>mail.your-server.de</code> på port 993 med implisitt TLS og SMTP på samme vert på port 465. Det vertsnavnet er en bokstavelig streng, lik for alle Hetzners webhotellkunder, og Hetzners egen dokumentasjon skriver det nøyaktig slik. Brukernavnet er hele e-postadressen, for eksempel <code>info@your-domain.de</code>, og passordet er det som ble skrevet inn i de to passordfeltene da postkassen ble opprettet i konsoleH. Det postkassepassordet er en egen påloggingsopplysning, atskilt fra konsoleH-innloggingen du bruker til å administrere kontoen. Denne siden handler om den driftede postkassen. En e-postserver du har installert og drifter selv på en Hetzner Cloud- eller dedikert maskin, er en helt annen situasjon, som omtales nedenfor."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og krever ikke kort."
+    },
+    {
+      "h": "Sett eller tilbakestill postkassepassordet i konsoleH",
+      "p": "Logg inn i konsoleH, velg domenet og åpne E-Mail, deretter Mailboxes. Velg adressen og skriv inn et nytt passord i begge passordfeltene hvis du ikke har det nåværende. Merk at postkassen opprettes med bare den lokale delen foran krøllalfaen, men det er hele adressen du skriver inn som brukernavn i en klient."
+    },
+    {
+      "h": "Lim det inn i mcpemails",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen og lim inn postkassepassordet. Verten mail.your-server.de og portene 993 og 465 er forhåndsutfylt og ble bekreftet med en direkte TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Vertsnavnet bygges ikke fra domenet ditt",
+      "p": "Den vanligste oppsettfeilen hos Hetzner er å skrive inn <code>mail.your-domain.de</code> med ditt faktiske domene satt inn, fordi det er slik nesten alle andre verter fungerer. Det gjør ikke Hetzner. Strengen <code>mail.your-server.de</code> er det faktiske vertsnavnet, felles for alle webhotellkunder, og skriver du ditt eget domene i stedet, får du enten en DNS-feil eller en tilkobling til en helt urelatert server som tilfeldigvis svarer på det navnet. Hetzners dokumentasjon skriver det bokstavelige vertsnavnet, og folk leser det som en plassholder."
+    },
+    {
+      "h": "En Hetzner Cloud- eller dedikert server er ikke dette",
+      "p": "Hetzner selger to svært forskjellige ting som begge kalles «Hetzner-e-post». Web Hosting- og Managed Server-planene inkluderer postkasser på den delte plattformen som beskrives her. Cloud- og dedikerte servere inkluderer ingen postkasse i det hele tatt: vil du ha e-post på en slik, installerer og drifter du en e-postserver selv, og vertsnavn, porter og påloggingsopplysninger er det du har konfigurert. Det er en selvdriftet e-postserver som tilfeldigvis står hos Hetzner, og den kobles til på samme måte som enhver annen selvdriftet server. Verdt å vite før du begynner: Hetzner blokkerer utgående SMTP på nye skyservere som standard og åpner det bare på forespørsel, så en selvdriftet e-postserver der kan ikke sende før du ber dem om det."
+    },
+    {
+      "h": "Ingen MOVE, ingen UIDPLUS, og mapper gjenkjennes på navn",
+      "p": "Dovecot-versjonen bak <code>mail.your-server.de</code> annonserer ikke MOVE-utvidelsen, så en flytting utføres som en kopiering etterfulgt av en flaggoppdatering og en expunge, i stedet for én atomisk kommando. UIDPLUS mangler også, så mål-UID-en til en kopiert melding returneres ikke og må finnes ved søk. SPECIAL-USE mangler i tillegg, noe som betyr at Sent, Drafts, Trash og Junk gjenkjennes på navnene sine. På en tyskspråklig postkasse heter de ofte Gesendet, Entwuerfe, Papierkorb og Spam, så oppgi mappen eksplisitt hvis en agent ikke finner den."
+    }
+  ],
+  "limits": [
+    "Bare postkasser på Hetzners driftede e-postplattform dekkes her. En e-postserver du drifter selv på en Hetzner Cloud- eller dedikert maskin, trenger sitt eget vertsnavn og sine egne påloggingsopplysninger.",
+    "Fordi serveren ikke støtter MOVE, er en flytting ikke atomisk. Hvis en tilkobling brytes midt i operasjonen, kan en melding en kort stund finnes i begge mappene."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Hetzner-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd kobling for Hetzner. Peker du en MCP-server som mcpemails mot Hetzner-postkassen din over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere den, og den samme tilkoblingen fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Hetzner?",
+      "a": "Begge er mail.your-server.de. IMAP bruker port 993 med implisitt TLS, og SMTP bruker port 465, også med implisitt TLS. Brukernavnet er hele e-postadressen din, og passordet er postkassepassordet fra konsoleH. Den verten er et bokstavelig navn som deles av alle Hetzners webhotellkunder, og den ble bekreftet med en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Hvorfor avvises konsoleH-passordet mitt av IMAP?",
+      "a": "Fordi det er feil påloggingsopplysning. konsoleH-innloggingen administrerer webhotellkontoen, mens hver postkasse har sitt eget passord, satt da den ble opprettet på skjermen Mailboxes. Hvis ingen noterte det, åpner du den skjermen og skriver inn et nytt i begge passordfeltene, og bruker deretter det nye i klienten."
+    },
+    {
+      "q": "Kan jeg koble til en e-postserver som kjører på min Hetzner Cloud-VPS?",
+      "a": "Ja, men ikke med innstillingene på denne siden. En selvdriftet e-postserver bruker det vertsnavnet og de påloggingsopplysningene du har konfigurert for den, og mail.your-server.de er ikke det. Koble den til som en generell IMAP-server. Husk at Hetzner blokkerer utgående SMTP-porter på nye skyservere til du ber kundestøtten om å åpne dem."
+    },
+    {
+      "q": "Lagres Hetzner-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Hetzner over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Hetzner-innboks",
+    "sub": "Koble til Hetzner-postkassen din på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

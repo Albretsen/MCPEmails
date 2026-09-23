@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://help.smartertools.com/smartermail/current/topics/systemadmin/settings/bindings/ipaddresses",
+    "https://help.smartertools.com/SmarterMail/current/Topics/SystemAdmin/Settings/ProtocolSettings",
+    "https://help.smartertools.com/SmarterMail/v16/Topics/SystemAdmin/Security/Advanced/AbuseDetection.aspx",
+    "https://help.smartertools.com/smartermail/current/topics/systemadmin/manage/currentblocks",
+    "https://help.smartertools.com/smartermail/current/topics/systemadmin/manage/userdefaults"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://help.smartertools.com/smartermail/current/topics/systemadmin/settings/bindings/ipaddresses",
+    "usernameForm": "包含域名的完整邮箱地址，例如 you@yourdomain.com，因为一台 SmarterMail 服务器会托管多个域名。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "SmarterMail 接入 Claude：IMAP 绑定与 IDS 封锁",
+    "description": "通过 993 端口的 IMAP 将 SmarterMail 邮箱连接到 Claude、Cursor 和 ChatGPT。绑定在哪里设置端口加密，以及 IDS 规则如何封锁重复连接的客户端。"
+  },
+  "hero": {
+    "eyebrow": "SmarterMail + AI",
+    "titleLine1": "将 SmarterMail 连接到 Claude，",
+    "titleLine2": "Cursor、ChatGPT 及任意 MCP 客户端",
+    "lead": "SmarterMail 已经为你的用户提供了网页邮箱、日历和聊天。MCP 服务器补上了它唯一做不到的一件事：一个能在邮箱中读取、搜索、发送、回复、定时和归档邮件的 AI 代理。",
+    "answer": "Claude 无法自行连接 SmarterMail 服务器。mcpemails 是一个托管 MCP 服务器，通过 IMAP 在你自己的主机名上（通常是 993 端口、隐式 TLS）使用邮箱密码连接你的服务器，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。SmarterMail 是由你或你的主机商运行的软件，所以没有共享的主机名：服务器必须能从互联网访问，邮箱必须在其 Service Access 设置中启用 IMAP，而且 SmarterMail 的滥用检测不能封锁发起连接的地址。一个收件箱免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "邮箱密码，Service Access 中启用 IMAP",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "SmarterMail 如何连接：绑定、协议设置与 Service Access",
+    "body": "系统管理员界面中的三个页面决定了 IMAP 客户端能否进入。<b>Settings 下的 Bindings</b> 是 SmarterMail 将服务器网卡上的物理 IP 地址、SMTP、IMAP、POP、LDAP、XMPP 和 Submission 所用的端口，以及各端口所用的加密方式关联在一起的地方，因此它是“什么服务在哪里监听”的权威答案。<b>Settings 下的 Other Protocols</b> 管理 IMAP 行为：问候语、默认 30 分钟的命令超时、会话被断开前最多 8 条错误命令、1000 个连接的上限、IDLE 开关，以及在未加密连接上拒绝不安全认证的选项。<b>Service Access</b> 设置在用户上，并从域和系统默认值继承，决定该邮箱是否可以使用 IMAP。凭据是普通的邮箱密码。SmarterMail 没有应用密码机制。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。一个收件箱永久免费，无需信用卡。"
+    },
+    {
+      "h": "查看 IMAP 绑定，而不要想当然",
+      "p": "在系统管理员界面中打开 Settings，然后是 Bindings，找到 IMAP 相关的行。记下每一行的 IP 地址、端口和加密方式。在有多个地址的 Windows 机器上，IMAP 只绑定在其中一个地址上是完全正常的，而公网名称可能解析到另一个地址。"
+    },
+    {
+      "h": "检查邮箱的 Service Access，然后添加它",
+      "p": "打开该用户，确认其 Service Access 设置中已启用 IMAP。然后在 mcpemails 中添加收件箱：选择 IMAP / SMTP，输入你的 SmarterMail 主机名、完整邮箱地址及其密码。如果你是域管理员而不是系统管理员，这是你自己能访问的页面。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "IDS 规则会封锁地址，而本地客户端被豁免，所以没人察觉",
+      "p": "SmarterMail 的滥用检测默认启用，规则类型包括 <b>Denial of Service</b>、<b>Password Brute Force by IP</b> 和 <b>Password Brute Force by Email</b>，它按协议封锁发起连接的地址，而不是拒绝登录。让这件事如此令人困惑的细节是豁免列表：回环地址以及私有网段 10.x、172.16 至 172.31 和 192.168.x 永远不会被封锁。所以你在内网做的每一次测试都能成功，只有外部客户端被拒绝，这让问题看起来出在外部客户端身上。请在 Manage 下的 IDS Blocks 中按 IMAP 筛选，看看该地址是否在列。在那里解除封锁只能清除当前的封锁，规则依然存在，所以还会再次发生。持久的解决办法是为该地址添加白名单条目，并启用绕过暴力破解检测的选项。"
+    },
+    {
+      "h": "Service Access 是继承的，修改默认值修复不了任何人",
+      "p": "邮箱的 IMAP 权限来自用户上的 Service Access，它由域的默认值初始化，而域的默认值又由系统的 User Defaults 初始化。修改默认值只影响之后创建的用户，所以两年前的一次策略变更，留下了一长串仍单独关闭着 IMAP 的账户。症状是某一个邮箱失败，而域的配置看起来完全正确。还有第二个迹象：对于账户已禁用 IMAP 的用户，即使 IMAP 在整体上已为 Autodiscover 启用，SmarterMail 也不会响应其 IMAP Autodiscover 请求，所以如果客户端自动设置莫名其妙地只提供 POP 或 Exchange ActiveSync，原因是同一个。"
+    },
+    {
+      "h": "Other Protocols 可能在 143 端口上拒绝 993 端口接受的登录",
+      "p": "Other Protocols 页面有一个在非 SSL 连接上禁用不安全认证方式的选项。开启后，通过未加密的 143 端口进行的普通登录会被拒绝，而完全相同的凭据在 993 上却能成功，当两个客户端配置不同时，这看起来像是时有时无的密码问题。同一页面还设置了 SmarterMail 关闭会话前最多 8 条错误命令，并包含 IDLE 开关：在整个服务器上关闭 IDLE，期待推送通知的客户端就会悄悄降级为轮询。这些都不会产生点明相关设置的错误信息，所以值得把这个页面通读一遍，而不是根据症状去诊断。"
+    }
+  ],
+  "limits": [
+    "托管 MCP 服务器必须能从外部访问你的 SmarterMail 服务器。只绑定在内部地址上，或只对办公网段开放的服务器，无法以这种方式连接。如果你希望 IMAP 会话永远不离开你的网络，mcpemails 支持自托管。",
+    "证书校验是严格的，所以 993 上的绑定需要一个对你输入的主机名有效的证书。Windows 上的 SmarterMail 通常使用 Windows 证书存储中的证书，而为机器名而非邮件主机名签发的证书会被拒绝。",
+    "这个连接只传输邮件。SmarterMail 的日历、联系人、任务和聊天由其自身的网页界面以及 Exchange ActiveSync 或 EWS 提供，而不是 IMAP。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 SmarterMail 吗？",
+      "a": "不能单独使用。Claude 没有 SmarterMail 连接器，也无法向你或你的主机商运行的服务器打开 IMAP 会话。将 mcpemails 这样的 MCP 服务器连接到你的 SmarterMail 主机名后，Claude 就能读取、搜索、发送、回复、定时和整理其上某个邮箱中的邮件，之后同一个收件箱在 Cursor 或 ChatGPT 中也能使用。"
+    },
+    {
+      "q": "SmarterMail 的 IMAP 和 SMTP 设置是什么？",
+      "a": "主机名是你自己的服务器或主机商的邮件服务器。端口以 Bindings 页面为准，默认安装中 IMAP 为 143 和 993，发信为 25 和 587。该页面是权威的，因为 SmarterMail 允许管理员移动端口并更改每个端口的加密方式。使用完整邮箱地址及其密码登录。"
+    },
+    {
+      "q": "为什么我的 SmarterMail 登录在一台机器上被拒、在另一台上却不会？",
+      "a": "先查看 IDS 封锁。SmarterMail 的滥用检测会在多次失败或连接过多后按协议封锁地址，并自动豁免回环地址和私有网段，所以本地网络上的一切都不受影响，而外部客户端被拒绝。被封锁的地址列在 Manage 下的 IDS Blocks 中。"
+    },
+    {
+      "q": "SmarterMail 需要应用密码吗？",
+      "a": "不需要。SmarterMail 没有应用专用密码功能。邮件客户端使用邮箱密码认证。如果账户为网页邮箱开启了两步验证，那只作用于浏览器登录，而不作用于 IMAP 会话，所以客户端使用的仍是邮箱密码。"
+    },
+    {
+      "q": "我的 SmarterMail 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从你的 SmarterMail 服务器实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 SmarterMail 收件箱",
+    "sub": "连接你自己 SmarterMail 服务器上的邮箱。一个收件箱永久免费，无需信用卡。"
+  }
+}

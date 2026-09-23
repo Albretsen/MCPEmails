@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.inmotionhosting.com/support/email/email-client-configuration-email-over-ssl/",
+    "https://www.inmotionhosting.com/support/tools/email-configuration/",
+    "https://www.inmotionhosting.com/support/email/how-to-find-email-settings/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://www.inmotionhosting.com/support/email/email-client-configuration-email-over-ssl/",
+    "usernameForm": "你的完整邮箱地址，例如 info@yourdomain.com。不是你的 AMP 登录名，也不是 cPanel 用户名。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "通过 IMAP（MCP）将 InMotion Hosting 邮箱连接到 Claude",
+    "description": "InMotion 在 secureNN.inmotionhosting.com 上保护邮件，NN 是 AMP 中显示的服务器编号。通过 IMAP 993 将该邮箱连接到 Claude。1 个收件箱免费。"
+  },
+  "hero": {
+    "eyebrow": "InMotion Hosting + AI",
+    "titleLine1": "将 InMotion Hosting 邮箱连接到",
+    "titleLine2": "Claude、Cursor 及任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 InMotion 邮箱。在 InMotion 为你的服务器分配的安全主机名上，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行访问 InMotion Hosting 邮箱。mcpemails 是一个托管 MCP 服务器，通过端口 993 的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。InMotion 没有一台统一的共用邮件服务器：安全连接时，你要使用账户的安全主机名，形如 secureNN.inmotionhosting.com，其中 NN 是你 Account Management Panel 技术详情中显示的服务器编号。认证使用在 cPanel 中为邮箱设置的密码，1 个收件箱免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "来自 cPanel 的邮箱密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "InMotion 邮箱如何连接：secureNN.inmotionhosting.com，IMAP 993",
+    "body": "InMotion 运行 cPanel，邮箱在端口 993 上响应 IMAP，在 465 上通过 TLS 响应 SMTP。有两个主机名可用，但不能互换。<code>mail.yourdomain.com</code> 是非安全形式。对于加密会话，InMotion 文档给出了一个专用的安全主机名 <code>secureNN.inmotionhosting.com</code>，其中 NN 是你账户所在共享服务器的编号。他们的证书是签发给这个名称的，所以能通过校验的是它。这个编号无法从你的域名推导出来；它列在你 Account Management Panel 的账户技术详情中，也会出现在 cPanel 的服务器信息里。用户名始终是完整的邮箱地址，收信和发信都一样。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "让 InMotion 的 Email Configuration Tool 告诉你设置",
+      "p": "InMotion 在 inmotionhosting.com/support/tools/email-configuration 提供一个公开查询工具。输入完整邮箱地址，它就会返回该账户正确的安全收信和发信主机名及端口，无需登录。如果你更愿意从面板中读取，服务器编号在 <b>AMP</b> 的账户技术详情中，cPanel 也会在 Server Information 下显示它。"
+    },
+    {
+      "h": "在 cPanel 中设置邮箱密码",
+      "p": "IMAP 校验的是单个地址上的密码，而不是你的 AMP 登录密码。在 cPanel 中打开 <b>Email Accounts</b>，点击该地址的 <b>Manage</b>，设置一个密码。然后在 mcpemails 中输入它，用户名为完整地址，服务器为 <code>secureNN.inmotionhosting.com</code>。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "InMotion 账户有三个独立的密码，只有一个能用于邮件认证",
+      "p": "你的 <b>AMP</b> 登录用于账单和账户管理。你的 <b>cPanel</b> 登录用于主机控制面板。<b>邮箱</b>密码则在创建每个邮箱地址时单独设置。它们是三个不同的凭据；与面板和客户区共用登录的主机商不同，InMotion 把 AMP 完全分开。人们首先会想到 AMP 密码，因为那是他们输入得最多的一个。它永远无法通过 IMAP 认证。"
+    },
+    {
+      "h": "secureNN 中的 NN 无法猜测，猜错了会连到一个正在运行的陌生人服务器",
+      "p": "安全主机名按共享服务器编号，所以 <code>secure22.inmotionhosting.com</code> 和 <code>secure45.inmotionhosting.com</code> 都是真实、正常运行的主机，分属不同的客户。输错编号不会产生提醒你出错的 DNS 失败，而是与一台并不托管你邮箱的服务器建立有效的 TLS 连接，然后得到一个看起来像密码错误的认证拒绝。请从 AMP 的技术详情中获取编号，而不是从某篇指南中。"
+    },
+    {
+      "h": "InMotion 自己的查询工具能免去猜测，而大多数人从未发现它",
+      "p": "在 cPanel 主机商中不同寻常的是，InMotion 提供一个公开的 Email Configuration Tool，只需输入邮箱地址，无需登录即可返回该账户准确的服务器设置。它一步就能得出安全主机名和端口。如果你在为一位你没有其 AMP 凭据的客户配置邮箱，这就是捷径，而且对 InMotion 来说，它比任何第三方设置页面都更可靠。"
+    }
+  ],
+  "limits": [
+    "通过 TLS 时只能使用安全主机名。证书是签发给 secureNN.inmotionhosting.com 的，所以端口 993 上的 mail.yourdomain.com 即使连到了正确的机器，也无法通过名称校验。",
+    "如果 InMotion 把你的账户迁移到另一台共享服务器，NN 就会改变。症状是出示的证书上是一个你不认识的服务器编号，而不是服务中断。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 InMotion Hosting 邮箱吗？",
+      "a": "不能直接使用。Claude 没有 InMotion 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到你的 InMotion 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，所用凭据与桌面邮件客户端相同。"
+    },
+    {
+      "q": "InMotion Hosting 的 IMAP 和 SMTP 设置是什么？",
+      "a": "安全 IMAP 为端口 993，安全 SMTP 为端口 465，都位于你账户的安全主机名上，形如 secureNN.inmotionhosting.com。收信和发信的用户名都是你的完整邮箱地址，发信需要认证。未加密的对应设置使用 mail.yourdomain.com，你不应使用。"
+    },
+    {
+      "q": "如何找到我的 InMotion 服务器编号？",
+      "a": "登录 Account Management Panel，打开该主机账户的技术详情。服务器编号列在那里，cPanel 的 Server Information 下也会重复显示。你也可以把邮箱地址输入 InMotion 公开的 Email Configuration Tool，它无需任何登录就会返回完整的安全主机名。"
+    },
+    {
+      "q": "为什么我的 InMotion 邮箱密码被拒绝？",
+      "a": "最常见的原因是你用的是 AMP 或 cPanel 密码，而不是邮箱密码。在 InMotion 上，这是三个独立的凭据。请在 cPanel 的 Email Accounts 下点击该地址的 Manage 重置邮箱密码。同时也请检查服务器编号，因为编号错误时连接会成功，然后拒绝登录。"
+    },
+    {
+      "q": "我的 InMotion 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从你的 InMotion 服务器实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 InMotion Hosting 收件箱",
+    "sub": "几分钟即可连接 InMotion 邮箱。1 个收件箱永久免费，无需信用卡。"
+  }
+}

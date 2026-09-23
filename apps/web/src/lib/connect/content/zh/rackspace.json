@@ -1,21 +1,33 @@
 {
+  "_sources": [
+    "https://docs.rackspace.com/docs/set-up-multifactor-authentification-applications-for-cloud-office",
+    "https://docs.rackspace.com/docs/manage-multi-factor-authentication-for-rackspace-webmail",
+    "https://docs.rackspace.com/docs/configure-multi-factor-authentication"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码，开启多重验证后使用应用密码",
+    "helpUrl": "https://docs.rackspace.com/docs/set-up-multifactor-authentification-applications-for-cloud-office",
+    "usernameForm": "你自有域名下的完整邮箱地址。Rackspace 以完整地址作为登录名，没有单独的用户名。",
+    "status": "active"
+  },
   "meta": {
-    "title": "将 Rackspace Email 连接到 Claude（及任意 AI）",
-    "description": "用邮箱密码通过 IMAP 将 Rackspace Email 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的邮件，1 个收件箱永久免费。"
+    "title": "将 Rackspace Email 连接到 Claude、Cursor 与 MCP",
+    "description": "通过 IMAP（secure.emailsrvr.com:993）将 Rackspace Email 连接到 Claude、Cursor 及任意 MCP 客户端。主机是共享的，从不根据你的域名构造。"
   },
   "hero": {
     "eyebrow": "Rackspace Email + AI",
     "titleLine1": "将 Rackspace Email 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
-    "lead": "几分钟即可为你的 AI 代理接入一个真正的 Rackspace Email 收件箱。用 IMAP 和邮箱密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+    "lead": "几分钟即可为你的 AI 代理接入一个真正的 Rackspace Email 收件箱。用 IMAP 和邮箱密码即可读取、搜索、发送、回复、定时与整理邮件，同一个收件箱可在所有 MCP 客户端中使用，而不止一个。",
     "meta0": "1 个收件箱永久免费",
-    "meta1": "邮箱密码，无需 OAuth 配置",
+    "meta1": "使用邮箱密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行连接 Rackspace Email。mcpemails 是一个托管 MCP 服务器，用邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱永久免费。"
+    "answer": "Claude 无法自行连接 Rackspace Email。mcpemails 是一个托管 MCP 服务器，用你的邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱免费。"
   },
   "method": {
     "title": "Rackspace Email 如何连接：IMAP 与邮箱密码",
-    "body": "Rackspace Email 通过 IMAP/SMTP 连接，使用你的邮箱密码。无论你自己的域名是什么，两个服务器都是 <code>secure.emailsrvr.com</code>，而这正是最容易被忽略的一点：邮件服务器不是由你的域名推导出来的。可在 Rackspace Cloud Office 控制面板中设置或重置邮箱密码。"
+    "body": "Rackspace Email 通过 IMAP/SMTP 使用你的邮箱密码连接。无论你的域名是什么，两台服务器都是 <code>secure.emailsrvr.com</code>，而这正是人们容易忽略的地方：邮件主机并不是从你的域名派生的。请在 Rackspace Cloud Office 控制面板中设置或重置邮箱密码。"
   },
   "setup": [
     {
@@ -23,8 +35,8 @@
       "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
-      "h": "取得 Rackspace 邮箱密码",
-      "p": "在 Cloud Office 控制面板中打开该邮箱并设置密码。请使用加密的服务器 secure.emailsrvr.com，不要用未加密的那个。"
+      "h": "获取你的 Rackspace 邮箱密码",
+      "p": "在 Cloud Office 控制面板中打开该邮箱并设置其密码。请使用加密主机 secure.emailsrvr.com，而不是未加密的那个。"
     },
     {
       "h": "粘贴到 mcpemails",
@@ -33,6 +45,55 @@
     {
       "h": "将 MCP URL 粘贴到你的 AI",
       "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "邮件主机并不从你的域名派生，这在企业邮件产品中并不常见",
+      "p": "Rackspace Email 用 <code>secure.emailsrvr.com</code> 为所有客户提供收信和发信服务。<code>mail.yourdomain.com</code> 不是 Rackspace 的名称，除非你自己创建过，否则并不存在。由于 <code>emailsrvr.com</code> 没有任何 Rackspace 品牌标识，在旧配置中看到它的人常以为它是错的，把它换成看起来更合理的名称，结果什么都连不上。它是正确的。我们的探测与它完成了 TLS 握手，证书上的名称是 <code>secure.emailsrvr.com</code>。"
+    },
+    {
+      "h": "开启多重身份验证会悄悄让你的邮箱密码失效",
+      "p": "Rackspace 的应用密码只有在开启多重身份验证后才存在，而一旦开启，邮箱密码就会在所有使用 IMAP 或 SMTP 的地方失效，却仍能在网页邮箱中使用。正是这种割裂让人困惑：你能用客户端被拒绝的那个密码登录网页邮箱。请在 Rackspace 网页邮箱或 Cloud Office 控制面板的账户安全设置中创建应用密码，按所服务的客户端为其标注名称，并立即复制，因为它只显示一次。丢失后只能删除该条目并重新生成。"
+    },
+    {
+      "h": "Rackspace 销售三种不同的邮件产品，只有一种在 emailsrvr 上",
+      "p": "<b>Rackspace Email</b> 是独立的 IMAP 邮箱产品，也是本页介绍的对象。Rackspace 还销售 <b>Hosted Exchange</b>（在 Rackspace 自己的基础设施上运行 Exchange），并转售 <b>Microsoft 365</b>，其邮箱位于 Microsoft 的服务器上、受 Microsoft 身份平台管理。只有 Rackspace Email 在 <code>secure.emailsrvr.com</code> 上响应。我们不声称能连接 Microsoft 365 邮箱，因为 Microsoft 的默认租户策略会阻止普通最终用户自行同意第三方读写邮件的权限。如果你的网页邮箱是 Outlook 网页版，那就是 Microsoft 的产品。"
+    },
+    {
+      "h": "你连接的是代理，看到的能力也是代理的",
+      "p": "IMAP 问候语中显示的是 <code>proxy7.mail.iad3b.rsapps.net</code> 这样的机器名，所以连接落在前端层，而不是存放你邮件的存储上。这一层有意只声明了一小组能力：<code>SASL-IR</code>、<code>IDLE</code>、<code>LITERAL+</code> 和 <code>AUTH=PLAIN</code>，没有 <code>AUTH=LOGIN</code>，没有 MOVE、UIDPLUS 和 SPECIAL-USE。缺失的 <b>AUTH=LOGIN</b> 最容易出问题：写死使用 LOGIN 机制的客户端库（针对 Exchange 编写的工具中很常见）会在认证时失败，而不会返回有用的错误；而 SMTP 一侧同时接受 PLAIN 和 LOGIN。因此同一个账户在同一个客户端中，可能发信成功而收信失败。"
+    }
+  ],
+  "limits": [
+    "由于服务器未声明 MOVE 或 UIDPLUS，移动操作以复制、标记再删除的方式完成，且不是原子的。",
+    "由于未声明 SPECIAL-USE，文件夹按名称而不是按用途匹配。文件夹被重命名过的邮箱可能需要明确指定目标文件夹。",
+    "Rackspace 销售的 Hosted Exchange 和 Microsoft 365 邮箱不在 secure.emailsrvr.com 上，而 Microsoft 365 邮箱完全无法连接。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Rackspace Email 吗？",
+      "a": "不能单独使用。Claude 没有内置的 Rackspace 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且由于使用的是标准 IMAP，同一个邮箱在 Cursor、ChatGPT 和其他 MCP 客户端中同样可用。"
+    },
+    {
+      "q": "Rackspace Email 的 IMAP 和 SMTP 设置是什么？",
+      "a": "两者都是 secure.emailsrvr.com。IMAP 为 993 端口 SSL/TLS，SMTP 为 465 端口，同样是 SSL/TLS。登录名是你的完整邮箱地址，密码是邮箱密码。该主机由所有 Rackspace Email 客户共享，而不是根据你的域名构造，并已通过实时 TLS 连接确认。"
+    },
+    {
+      "q": "为什么我的 Rackspace 密码在邮件客户端中被拒绝，在网页邮箱中却正常？",
+      "a": "这种特定情况说明邮箱开启了多重身份验证。Rackspace 在网页上继续接受邮箱密码，而 IMAP 和 SMTP 则要求应用密码。请在网页邮箱或 Cloud Office 控制面板的账户安全设置中生成一个，并用它代替邮箱密码。"
+    },
+    {
+      "q": "如何创建 Rackspace 应用密码？",
+      "a": "应用密码只有在开启多重身份验证后才会出现。开启后，在 Rackspace 网页邮箱或 Cloud Office 控制面板中打开账户安全设置，找到应用密码区域并创建一个，按所属客户端为其标注名称。它只显示一次，请立即复制。"
+    },
+    {
+      "q": "secure.emailsrvr.com 真的是我的服务器吗？",
+      "a": "是的。emailsrvr.com 是 Rackspace 不带品牌的邮件域名，secure.emailsrvr.com 是每位 Rackspace Email 客户使用的 TLS 端点。没有按域名区分的主机名需要查询，而把它替换成基于你自己域名的名称，是 Rackspace 配置完全连不上的最常见原因。"
+    },
+    {
+      "q": "我的 Rackspace 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 Rackspace 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
     }
   ],
   "ctaBand": {

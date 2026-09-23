@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://www.terra.com.br/nossaterra/sala-de-imprensa/faq-clientes-terramail,fbd5387ca5d4564236664d5f8ed8bb94uwqbteac.html",
+    "https://www.getmailbird.com/setup/access-terra-com-br-via-imap-smtp",
+    "https://www.dinamize.com.br/blog/terra-encerra-atividades-de-e-mail-gratuito-atualize-seus-contatos/",
+    "https://www.validity.com/blog/terra-mails-free-email-service-closure/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Mot de passe Terra Mail, avec une offre payante active",
+    "helpUrl": null,
+    "usernameForm": "Votre adresse complète, domaine compris : nome@terra.com.br.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Terra Mail (Brésil) et Claude : IMAP sur offre payante",
+    "description": "Connectez une boîte terra.com.br à Claude ou tout client MCP sur imap.terra.com.br:993. Terra a supprimé son offre gratuite : une offre payante active est requise."
+  },
+  "hero": {
+    "eyebrow": "Terra Mail + IA",
+    "titleLine1": "Connectez Terra Mail à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Terra. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP, sur une boîte brésilienne terra.com.br avec une offre payante active.",
+    "answer": "Claude ne peut pas atteindre Terra Mail tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.terra.com.br, port 993, en s'authentifiant avec votre adresse complète et votre mot de passe Terra Mail, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Terra a supprimé ses boîtes gratuites : une adresse sans offre Terra Mail payante active est bloquée, pas simplement limitée, et les domaines non brésiliens de Terra ont été fermés il y a des années et n'ont plus aucun serveur. Seul terra.com.br est encore en service. Une boîte est gratuite sur mcpemails.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Offre Terra Mail payante active",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Terra Mail se connecte : IMAP sur terra.com.br, et nulle part ailleurs",
+    "body": "Terra sert IMAP sur <code>imap.terra.com.br</code>, port 993, en TLS implicite, et SMTP sur <code>smtp.terra.com.br</code>, port 465. L'authentification est ordinaire : l'adresse complète comme identifiant et le mot de passe de la boîte. Pas de mot de passe d'application, pas de code d'autorisation, pas d'interrupteur de protocole enfoui dans le webmail. Chez Terra, les complications portent sur les boîtes qui existent encore. Terra a fermé ses domaines de messagerie internationaux et, par ailleurs, a cessé de vendre les formules sans prix sur lesquelles reposaient les boîtes gratuites <code>terra.com.br</code>, ce qui a laissé ces comptes bloqués jusqu'à ce que le client souscrive une offre Terra Mail payante. Si votre adresse relève d'une offre brésilienne active, la connexion est l'une des plus simples de la région. Sinon, aucune configuration de client n'y changera rien, et la page explique ci-dessous comment distinguer les deux cas."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et reste gratuite, sans carte bancaire."
+    },
+    {
+      "h": "Vérifiez que la boîte Terra relève d'une offre payante active",
+      "p": "Connectez-vous au webmail Terra. Si le webmail lui-même vous refuse ou vous indique que l'offre doit être mise à jour, la boîte fait partie des comptes touchés par la fin de l'offre gratuite de Terra, et aucun client de messagerie ne s'y connectera tant qu'une offre Terra Mail payante n'y est pas active. Si le webmail s'ouvre normalement, le compte est actif et vous pouvez continuer."
+    },
+    {
+      "h": "Saisissez votre adresse et votre mot de passe dans mcpemails",
+      "p": "Choisissez IMAP / SMTP et saisissez l'adresse complète, par exemple <code>nome@terra.com.br</code>, avec le mot de passe de la boîte. Les serveurs et ports Terra sont préremplis et ont été confirmés par une connexion TLS réelle. Terra n'émet pas de mot de passe spécifique aux applications : si vous en cherchiez un dans les réglages, il n'y a rien à trouver."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre client IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent peut lire, rechercher, envoyer, répondre, transférer, planifier et organiser la boîte Terra."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Les boîtes gratuites de Terra ont été supprimées, et le blocage ressemble à un échec de mot de passe",
+      "p": "Terra a cessé de proposer ses formules de messagerie sans prix, et des comptes gratuits depuis des années ont été bloqués plutôt que rétrogradés. L'accès n'est rétabli qu'en souscrivant une offre Terra Mail payante. Le point important pour quiconque configure un client, c'est que rien ne l'annonce : la connexion est refusée par le serveur exactement comme avec un mauvais mot de passe. Des adresses brésiliennes anciennes, certaines vieilles de plusieurs décennies, ont cessé de fonctionner sans aucun changement du côté du client. Avant de passer du temps sur les serveurs et les ports, vérifiez que la boîte s'ouvre toujours dans le webmail Terra."
+    },
+    {
+      "h": "Seul terra.com.br existe encore, et les autres domaines Terra n'ont plus de serveur",
+      "p": "Terra proposait la messagerie sur une famille de domaines nationaux, dont <code>terra.com</code>, <code>terra.com.ar</code>, <code>mi.terra.cl</code>, <code>terra.com.co</code>, <code>terra.com.mx</code>, <code>terra.com.pe</code>, <code>terra.com.ve</code> et <code>terra.com.ec</code>. Ces services ont été arrêtés, et les comptes comme les messages stockés sont devenus inaccessibles. Le domaine brésilien <code>terra.com.br</code> n'était pas concerné par cette fermeture et c'est celui que couvre cette page. Si votre adresse est sur l'un des autres, il n'y a aucun serveur vers lequel pointer un client et aucune configuration ne récupère le courrier : il a disparu, il n'est pas mal configuré."
+    },
+    {
+      "h": "Le serveur propose IDLE mais pas UIDPLUS, une combinaison inhabituelle",
+      "p": "La ligne de capacités de Terra inclut <code>IDLE</code> : un client peut donc garder une connexion ouverte et être prévenu du nouveau courrier au lieu d'interroger périodiquement, ce qui est mieux que plusieurs de ses voisins brésiliens. Elle omet <code>UIDPLUS</code> et <code>MOVE</code>. Cette combinaison a une conséquence pratique lors du classement : un déplacement se fait par une copie, une mise à jour d'indicateur et un expunge, et comme UIDPLUS manque, le serveur ne communique pas le nouvel identifiant du message copié, qu'il faut ensuite retrouver en cherchant dans le dossier de destination. Le classement fonctionne, il est simplement plus lent et moins sûr que sur un serveur qui renvoie le nouvel UID."
+    }
+  ],
+  "limits": [
+    "Une offre Terra Mail payante est requise. Il n'existe plus de boîte terra.com.br gratuite à connecter, et mcpemails ne peut pas contourner un blocage appliqué par le serveur de Terra lui-même.",
+    "Comme MOVE et UIDPLUS sont tous deux absents, classer un message n'est pas atomique et le résultat doit être confirmé par une recherche. Une opération interrompue peut laisser un message brièvement présent dans deux dossiers.",
+    "SPECIAL-USE est absent : les dossiers sont reconnus par leur nom plutôt que par leur rôle. Sur une boîte en portugais, les noms sont généralement Enviados, Rascunhos, Lixeira et Spam."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec Terra Mail ?",
+      "a": "Pas directement. Claude n'a pas de connecteur Terra intégré et ne peut pas ouvrir seul une connexion IMAP. Connecter un serveur MCP comme mcpemails à votre boîte terra.com.br donne à Claude un accès en lecture, recherche, envoi, réponse, transfert, planification et organisation, et la même connexion fonctionne depuis Cursor et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de Terra ?",
+      "a": "IMAP est imap.terra.com.br sur le port 993 en TLS implicite. SMTP est smtp.terra.com.br sur le port 465, également en TLS implicite. Connectez-vous avec votre adresse terra.com.br complète et le mot de passe de la boîte. Les deux serveurs ont été vérifiés par une connexion TLS réelle à la date indiquée sur cette page."
+    },
+    {
+      "q": "Terra Mail est-il encore gratuit ?",
+      "a": "Non. Terra a cessé de vendre les formules sans prix dont dépendaient les boîtes gratuites, et ces comptes sont bloqués jusqu'à ce que le client souscrive une offre Terra Mail payante. Cela touche le webmail comme les clients de messagerie : une boîte que vous ne pouvez pas ouvrir dans un navigateur ne se connectera pas non plus en IMAP, quels que soient les réglages utilisés."
+    },
+    {
+      "q": "Pourquoi mon mot de passe Terra est-il refusé ?",
+      "a": "Vérifiez l'offre avant le mot de passe. Une boîte laissée de côté par la fin de l'offre gratuite de Terra est refusée à la connexion exactement comme avec un mauvais mot de passe. Si le webmail vous connecte normalement, le compte est actif et les causes probables sont une adresse mal saisie ou un mot de passe changé ailleurs, puisque Terra n'émet pas de mot de passe d'application distinct."
+    },
+    {
+      "q": "Puis-je connecter une adresse terra.com ou terra.com.mx ?",
+      "a": "Non. Les domaines de messagerie internationaux de Terra ont été arrêtés, et les boîtes comme les messages stockés ont disparu avec eux. Il n'y a aucun serveur derrière ces adresses auprès duquel s'authentifier. Seul le service brésilien terra.com.br fonctionne encore, et c'est le seul auquel ces réglages s'appliquent."
+    },
+    {
+      "q": "Mon courrier Terra est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis Terra en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos, et le corps des messages n'est pas conservé après la requête qui l'a demandé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Terra à votre IA",
+    "sub": "Connectez une boîte terra.com.br active en quelques minutes. Une boîte gratuite pour toujours sur mcpemails, sans carte bancaire."
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.optus.com.au/support/email",
+    "https://www.optus.com.au/support/answer/using_an_email_application_with_optusnet_email_1434"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "OptusNet 邮箱密码",
+    "helpUrl": "https://www.optus.com.au/support/answer/using_an_email_application_with_optusnet_email_1434",
+    "usernameForm": "Optus 表示地址和用户名应始终完整填写，例如 username@optusnet.com.au。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "在 Claude 中使用 OptusNet 邮箱：到底变了什么",
+    "description": "通过 IMAP（mail.optusnet.com.au:993）将 OptusNet 邮箱连接到 Claude 及任意 MCP 客户端。Optus 并未关闭邮箱服务，但在 2025 年更换了套餐。"
+  },
+  "hero": {
+    "eyebrow": "OptusNet 邮箱 + AI",
+    "titleLine1": "将你的 OptusNet 收件箱连接到",
+    "titleLine2": "Claude、Cursor、任意 MCP 客户端",
+    "lead": "不管网上一半的说法如何，OptusNet 邮箱并没有关闭。它在 2025 年转入新的套餐和新的条款，并停止接受新注册。你现有的邮箱仍然支持 IMAP。",
+    "answer": "Claude 无法自行连接 OptusNet 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 mail.optusnet.com.au 的 993 端口，用完整填写的地址和 OptusNet 邮箱密码登录。无需生成应用密码。在此基础上搭建之前，有两个事实很重要：Optus 自 2025 年 5 月起将该服务转入新套餐和新条款，并要求邮箱套餐关联一项符合条件的 Optus 服务；而且它已不再接受新的 OptusNet 邮箱注册。对于你已有的地址，一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "邮箱密码，无需应用密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "OptusNet 如何连接：一个主机名，收发两用",
+    "body": "Optus 的收信和发信使用同一个名称。<code>mail.optusnet.com.au</code> 在 993 端口以 SSL/TLS 响应 IMAP，同一主机的提交服务使用 587 端口（STARTTLS）或 465 端口（SSL/TLS）。Optus 自己的建议是新的邮件客户端今后应使用 587 或 465，但也提到 25 端口仍受支持，并明确表示鼓励使用 IMAP 而不是 POP3。用户名始终是完整地址。凭据就是邮箱密码，没有任何附加包装：Optus 不签发应用专用密码，网页邮箱里也没有藏着客户端访问开关。Optus 真正改变的是商业层面而非技术层面的东西，在把代理指向该邮箱之前，下面这部分值得一读。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "确认邮箱处于当前的 OptusNet 邮箱套餐中",
+      "p": "登录 <code>webmail.optusnet.com.au</code>。自 2025 年 5 月起，该服务按新条款的套餐提供，而 Optus 公布的套餐必须关联一项符合条件的 Optus 服务。如果邮箱因为你的 Optus 服务终止而处于闲置状态，请先解决这个问题，再把任何东西连接上去。"
+    },
+    {
+      "h": "输入完整地址和邮箱密码",
+      "p": "在 mcpemails 中选择 IMAP / SMTP，在用户名栏按 Optus 自己的格式填写完整地址 <code>username@optusnet.com.au</code>。使用该邮箱的密码。下方的服务器和端口已自动填好，并已通过实时 TLS 连接验证。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "邮箱容量 500 MB，这就是全部额度",
+      "p": "Optus 公布的 OptusNet Email 套餐列明存储空间为 500 MB。这不是笔误，也不是按文件夹计算。一个只归档不删除的助手，或者一个自套餐变更以来悄悄积累附件的邮箱，会远比任何人预期的更早碰到这个上限，而邮箱满了就会停止接收邮件。在把账户交给代理之前先检查用量，之后也要定期清理。"
+    },
+    {
+      "h": "不管新闻标题怎么说，Optus 并没有关闭 OptusNet 邮箱",
+      "p": "2025 年发布的很多页面宣布了 OptusNet 邮箱的终结。Optus 自己的支持页面讲的却是另一回事：它从 2025 年 2 月起就变更事宜致函客户，从 2025 年 5 月起开始按公布的套餐和新条款提供该服务，并将这项工作描述为对更安全、更现代服务的投入。真实情况是：新的 OptusNet 邮箱服务不再开放注册，且邮箱套餐必须关联一项符合条件的 Optus 服务。现有邮箱并没有被成批关闭。"
+    },
+    {
+      "h": "旧的邮件客户端是被有意放弃的",
+      "p": "Optus 表示大多数客户不会感受到变化，但某些第三方客户端的旧版本（点名了 Outlook 2010）已不再受支持，因为它们不再获得更新，可能不符合当前的加密和安全标准。所以，一个在变更前后出问题、被归咎于服务器的配置，更可能是客户端的问题。mcpemails 使用当前的 TLS 连接，正处于你希望所在的那一边。"
+    },
+    {
+      "h": "有 SPECIAL-USE 和 IDLE，没有 MOVE 和 UIDPLUS",
+      "p": "这是一个不寻常的组合，它改变了哪些操作代价低、哪些代价高。由于声明了 SPECIAL-USE，服务器会告诉客户端哪个是已发送、草稿、已删除和垃圾邮件文件夹，无需猜测名称。由于声明了 IDLE，新邮件通过推送到达。但缺少 MOVE，因此归档一封邮件要依次执行 COPY、STORE 删除标记、EXPUNGE；也缺少 UIDPLUS，因此新副本的 id 不会返回，必须在目标文件夹中搜索。"
+    }
+  ],
+  "limits": [
+    "公布的 OptusNet Email 套餐邮箱存储为 500 MB，且套餐必须关联一项符合条件的 Optus 服务。",
+    "不再发放新的 OptusNet 邮箱地址，因此只能连接已有邮箱。",
+    "移动操作不是原子的，因为该服务器未实现 MOVE 和 UIDPLUS。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 OptusNet 邮箱吗？",
+      "a": "不能直接使用。Claude 没有内置的 Optus 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到该邮箱后，Claude 就能对你的 optusnet.com.au 邮件进行读取、搜索、发送、回复、定时和整理，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "OptusNet 的 IMAP 和 SMTP 设置是什么？",
+      "a": "两者都使用 mail.optusnet.com.au。IMAP 为 993 端口，SSL/TLS。发信为 587 端口（STARTTLS）或 465 端口（SSL/TLS），这是我们通过实时 TLS 连接验证过的组合。Optus 表示用户名应始终完整填写为 username@optusnet.com.au，并鼓励使用 IMAP 而不是 POP3。"
+    },
+    {
+      "q": "Optus 要关闭它的邮箱服务吗？",
+      "a": "按 Optus 的说法，不会。其支持页面介绍了从 2025 年 2 月起就变更事宜致函客户，以及从 2025 年 5 月起按新套餐和新条款提供 OptusNet Email。停止的是新注册：Optus 表示其重点是已有 OptusNet 邮箱的客户，新服务目前不开放注册。"
+    },
+    {
+      "q": "OptusNet 邮箱需要应用密码吗？",
+      "a": "不需要。Optus 不签发应用专用密码，也没有为外部邮件客户端单独开启的开关。邮箱密码可直接认证。如果正确的密码被拒绝，请检查邮箱是否仍处于关联了符合条件的 Optus 服务的有效套餐中，而不是去找什么安全设置页面。"
+    },
+    {
+      "q": "我的 OptusNet 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 Optus 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 OptusNet 收件箱",
+    "sub": "仍在运行，仍然支持 IMAP。一个收件箱永久免费，无需信用卡。"
+  }
+}

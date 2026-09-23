@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www2.telenet.be/residential/nl/klantenservice/internet/e-mail/e-mail-instellen.html",
+    "https://www2.telenet.be/residential/nl/klantenservice/internet/e-mail/mailbox-beheren-in-mijn-telenet.html",
+    "https://www2.telenet.be/nl/klantenservice/stepplan-snippets/e-mailprogramma-instellen-voor-je-telenet-e-mailadres/livemail_stap4",
+    "https://www.bipt.be/consumenten/faq/kan-je-jouw-e-mailadres-behouden"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte, défini dans MyTelenet",
+    "helpUrl": "https://www2.telenet.be/residential/nl/klantenservice/internet/e-mail/mailbox-beheren-in-mijn-telenet.html",
+    "usernameForm": "Votre adresse complète, domaine compris : naam@telenet.be.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Paramètres IMAP Telenet et accès MCP pour Claude",
+    "description": "Connectez une boîte telenet.be à Claude, Cursor et tout client MCP sur imap.telenet.be:993, avec le mot de passe de la boîte défini dans MyTelenet sous Je mailbox."
+  },
+  "hero": {
+    "eyebrow": "Telenet + IA",
+    "titleLine1": "Connectez votre boîte Telenet",
+    "titleLine2": "à Claude, Cursor, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Telenet. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP avec le mot de passe de la boîte défini dans MyTelenet.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Telenet. mcpemails est un serveur MCP hébergé qui la connecte via IMAP sur imap.telenet.be, port 993, en s'authentifiant avec votre adresse telenet.be complète et le mot de passe défini sur cette boîte dans MyTelenet, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Telenet ne délivre pas de mot de passe propre à une application et n'a pas d'option d'accès client : chaque boîte est créée, et reçoit son mot de passe, sur l'écran Je mailbox de MyTelenet. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe de la boîte depuis MyTelenet",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Telenet se connecte : IMAP via un proxy, avec un mot de passe par boîte",
+    "body": "Telenet sert IMAP sur <code>imap.telenet.be</code>, port 993 en TLS implicite. Pour le courrier sortant, les pages de configuration de Telenet documentent <code>smtp.telenet.be</code> sur le port 587 avec TLS et SMTP authentifié ; le même serveur répond aussi sur le port 465 en TLS implicite, et c'est ce que mcpemails préremplit. Telenet est explicite sur la forme du nom d'utilisateur : <b>Gebruikersnaam: je volledige e-mailadres</b>. Le mot de passe est celui rattaché à la boîte individuelle, et non un identifiant d'application distinct, et les boîtes se créent et s'administrent dans MyTelenet : un <b>beheerder</b> (administrateur) du compte peut créer jusqu'à dix boîtes, un simple <b>gebruiker</b> (utilisateur) une seule. Ce qui répond sur ces noms d'hôte est un proxy (<code>* OK IMAP4rev1 proxy server ready</code>) placé devant le stockage du courrier, ce qui explique le maigre jeu de capacités décrit plus bas."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Ouvrez Je mailbox dans MyTelenet et définissez le mot de passe",
+      "p": "Connectez-vous sur mijn.telenet.be et allez dans <b>Je mailbox</b>, l'écran de gestion des boîtes. Chaque boîte du compte a son propre mot de passe, attribué à sa création ; une boîte sans mot de passe attribué doit en recevoir un de l'administrateur du compte avant que quoi que ce soit puisse s'y connecter. Si personne ne s'en souvient, définissez-en un nouveau à cet endroit."
+    },
+    {
+      "h": "Envisagez de donner à l'agent sa propre boîte",
+      "p": "Un administrateur de compte peut créer jusqu'à dix boîtes Telenet, un utilisateur ordinaire une seule. Si vous préférez ne pas confier à un agent l'adresse que vous utilisez depuis quinze ans, créez une seconde boîte sur le même compte et connectez plutôt celle-là. Même serveur, mêmes ports, et un mot de passe que vous pouvez changer sans rien perturber d'autre."
+    },
+    {
+      "h": "Collez-le dans mcpemails, puis collez l'URL MCP dans votre IA",
+      "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple naam@telenet.be, et collez le mot de passe de la boîte. Les serveurs et ports Telenet sont préremplis et ont été vérifiés via une connexion TLS réelle. Mettez ensuite https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Changer votre mot de passe Telenet casse discrètement tous les clients connectés",
+      "p": "Telenet le dit en toutes lettres dans son propre guide de configuration : si vous changez le mot de passe de votre nom d'utilisateur ou de votre adresse e-mail Telenet, <b>verander dan ook het wachtwoord in je e-mailprogramma</b> (changez aussi le mot de passe dans votre logiciel de messagerie). Aucun mot de passe d'application n'isole le client du compte, donc un changement de mot de passe de routine dans MyTelenet met l'agent hors ligne avec lui. L'échec apparaît sous forme d'erreur d'authentification des heures plus tard, bien après que quiconque puisse le relier à ce qu'il a fait dans le portail. Si vous changez le mot de passe Telenet, mettez à jour mcpemails dans la foulée."
+    },
+    {
+      "h": "Vous parlez à un proxy, qui n'annonce ni MOVE ni SPECIAL-USE",
+      "p": "La bannière est <code>* OK IMAP4rev1 proxy server ready</code>, et non un stockage de courrier qui s'identifie. Il propose <code>SASL-IR</code>, <code>IDLE</code> et <code>UIDPLUS</code>, mais pas <code>MOVE</code>, donc classer un message passe par une copie, une mise à jour de drapeau et un expunge plutôt que par une seule commande atomique, ni <code>SPECIAL-USE</code>, donc Envoyés, Brouillons et Corbeille sont reconnus par leur nom et non par leur rôle. Une boîte Telenet en néerlandais les nomme généralement <b>Verzonden</b>, <b>Concepten</b> et <b>Prullenbak</b> : indiquez le dossier explicitement si un agent ne le trouve pas."
+    },
+    {
+      "h": "La boîte appartient à l'abonnement, et les règles belges vous accordent 18 mois",
+      "p": "Une adresse e-mail Telenet est liée à une boîte Telenet sur un abonnement Telenet. Selon les règles belges décrites par le régulateur des télécoms, l'IBPT (BIPT), quand vous quittez un fournisseur, vous avez le droit de continuer à utiliser l'adresse, ou de faire transférer le courrier, pendant dix-huit mois, et vous devez le demander avant la fin de l'abonnement. Au-delà de cette période, un arrêté royal en vigueur depuis le 1er janvier 2024 plafonne ce qu'un opérateur peut facturer pour prolonger ce service à 1,50 euro par mois. Bon à savoir avant de bâtir un flux de travail d'agent sur une adresse que vous ne détenez que tant que vous êtes client."
+    },
+    {
+      "h": "L'envoi est plafonné à 20 Mo, ce qui est bas pour la catégorie",
+      "p": "<code>smtp.telenet.be</code> annonce une taille maximale de message de 20 971 520 octets. C'est la taille encodée du message entier, et le base64 gonfle une pièce jointe d'environ un tiers, donc un fichier de plus d'environ 15 Mo sur disque ne passera pas. Un agent à qui l'on demande de transférer un gros PDF reçoit un refus SMTP ferme plutôt qu'un envoi lent."
+    }
+  ],
+  "limits": [
+    "Comme le serveur ne prend pas en charge MOVE, un déplacement n'est pas atomique. Si une connexion tombe en cours d'opération, un message peut brièvement exister dans les deux dossiers.",
+    "Le plafond de soumission de 20 Mo est la limite pratique de tout ce que votre agent envoie depuis cette boîte.",
+    "Telenet ne délivre pas de mot de passe propre à une application, donc l'identifiant que vous donnez à mcpemails est le mot de passe de la boîte lui-même. Changez-le dans MyTelenet et mettez-le à jour ici en même temps."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec l'e-mail Telenet ?",
+      "a": "Pas seul. Claude n'a pas de connecteur Telenet intégré. Pointer un serveur MCP comme mcpemails vers la boîte via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et les autres clients MCP."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de Telenet ?",
+      "a": "IMAP : imap.telenet.be sur le port 993 avec SSL. Pour le courrier sortant, Telenet documente smtp.telenet.be sur le port 587 avec TLS et SMTP authentifié ; le même serveur répond aussi sur le 465 en TLS implicite, et c'est ce qu'utilise mcpemails. Le nom d'utilisateur est votre adresse telenet.be complète."
+    },
+    {
+      "q": "Telenet nécessite-t-il un mot de passe d'application ?",
+      "a": "Non. Telenet ne délivre pas de mots de passe propres à une application. Un client de messagerie s'authentifie avec le mot de passe défini sur cette boîte précise dans MyTelenet, sous Je mailbox. Comme il n'existe pas d'identifiant d'application distinct, changer le mot de passe du compte implique de le changer aussi dans chaque client connecté."
+    },
+    {
+      "q": "Pourquoi mon client de messagerie Telenet a-t-il cessé de fonctionner après un changement de mot de passe ?",
+      "a": "Parce que le client utilise directement le mot de passe du compte. Telenet recommande lui-même de changer le mot de passe dans votre logiciel de messagerie chaque fois que vous le changez pour votre nom d'utilisateur ou votre adresse Telenet. Remplacez le mot de passe enregistré dans mcpemails par la nouvelle valeur et la connexion reprend immédiatement."
+    },
+    {
+      "q": "Combien de boîtes Telenet puis-je créer ?",
+      "a": "Un administrateur de compte peut créer jusqu'à dix boîtes ; un utilisateur ordinaire du compte peut en créer une. Elles se gèrent toutes sur l'écran Je mailbox de MyTelenet, qui est aussi l'endroit où chacune reçoit son mot de passe. Créer une boîte dédiée à un agent est généralement plus propre que de connecter votre adresse principale."
+    },
+    {
+      "q": "Mon courrier Telenet est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis Telenet via IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Telenet à votre IA",
+    "sub": "Connectez votre messagerie Telenet en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

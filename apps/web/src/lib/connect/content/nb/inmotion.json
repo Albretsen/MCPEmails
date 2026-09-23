@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.inmotionhosting.com/support/email/email-client-configuration-email-over-ssl/",
+    "https://www.inmotionhosting.com/support/tools/email-configuration/",
+    "https://www.inmotionhosting.com/support/email/how-to-find-email-settings/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://www.inmotionhosting.com/support/email/email-client-configuration-email-over-ssl/",
+    "usernameForm": "Hele e-postadressen din, for eksempel info@yourdomain.com. Ikke AMP-innloggingen din og ikke cPanel-brukernavnet ditt.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "InMotion Hosting-e-post til Claude over IMAP (MCP)",
+    "description": "InMotion sikrer e-post på secureNN.inmotionhosting.com, der NN er servernummeret ditt fra AMP. Koble postkassen til Claude over IMAP 993. Én innboks gratis."
+  },
+  "hero": {
+    "eyebrow": "InMotion Hosting + AI",
+    "titleLine1": "Koble InMotion Hosting-e-post",
+    "titleLine2": "til Claude, Cursor og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte InMotion-postkasse. Les, søk, send, svar, planlegg og organiser e-post over IMAP på det sikre vertsnavnet InMotion tildeler serveren din.",
+    "answer": "Claude kan ikke nå en InMotion Hosting-postkasse på egen hånd. mcpemails er en driftet MCP-server som kobler til den over vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. InMotion har ingen felles e-postserver for alle: for en sikker tilkobling bruker du kontoens sikre vertsnavn, på formen secureNN.inmotionhosting.com, der NN er servernummeret som vises i de tekniske detaljene i Account Management Panel. Autentisering skjer med passordet som er satt på postkassen i cPanel, og én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord fra cPanel",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles InMotion-e-post til: secureNN.inmotionhosting.com, IMAP 993",
+    "body": "InMotion kjører cPanel, og postkassene svarer på IMAP på port 993 med SMTP på 465 for TLS. To vertsnavn fungerer, og de kan ikke byttes om. <code>mail.yourdomain.com</code> er den usikre varianten. For en kryptert økt dokumenterer InMotion et eget sikkert vertsnavn, <code>secureNN.inmotionhosting.com</code>, der NN er nummeret på den delte serveren kontoen din ligger på. Sertifikatet deres er utstedt for det navnet, så det er det som blir godkjent. Nummeret kan ikke utledes fra domenet ditt; det står i Account Management Panel under kontoens tekniske detaljer, og det vises også i serverinformasjonen i cPanel. Brukernavnet er alltid hele e-postadressen, både for innkommende og utgående e-post."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og krever ikke kort."
+    },
+    {
+      "h": "La InMotions Email Configuration Tool gi deg innstillingene",
+      "p": "InMotion publiserer et offentlig oppslagsverktøy på inmotionhosting.com/support/tools/email-configuration. Skriv inn hele e-postadressen, så returnerer det riktige sikre vertsnavn og porter for innkommende og utgående e-post for akkurat den kontoen, uten at du må logge inn. Vil du heller lese det fra panelet, står servernummeret i <b>AMP</b> under kontoens tekniske detaljer, og cPanel viser det under Server Information."
+    },
+    {
+      "h": "Sett postkassepassordet i cPanel",
+      "p": "IMAP sjekker passordet på den enkelte adressen, ikke AMP-innloggingen din. I cPanel åpner du <b>Email Accounts</b>, klikker <b>Manage</b> på adressen og setter et passord. Skriv det deretter inn i mcpemails med hele adressen som brukernavn og <code>secureNN.inmotionhosting.com</code> som vert."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "InMotion-kontoer har tre separate passord, og bare ett av dem autentiserer e-post",
+      "p": "<b>AMP</b>-innloggingen din er for fakturering og kontoadministrasjon. <b>cPanel</b>-innloggingen din er for kontrollpanelet til webhotellet. <b>Postkassepassordet</b> settes per e-postadresse når adressen opprettes. Det er tre forskjellige påloggingsopplysninger, og i motsetning til verter der panelet og kundeområdet deler innlogging, holder InMotion AMP helt adskilt. Folk griper først etter AMP-passordet fordi det er det de skriver oftest. Det vil aldri autentisere IMAP."
+    },
+    {
+      "h": "NN i secureNN kan ikke gjettes, og et feil nummer havner på en fremmeds server som er i drift",
+      "p": "Det sikre vertsnavnet er nummerert per delt server, så <code>secure22.inmotionhosting.com</code> og <code>secure45.inmotionhosting.com</code> er begge ekte, fungerende verter som tilhører forskjellige kunder. Skriver du feil nummer, får du ingen DNS-feil som forteller deg at noe er galt; du får en gyldig TLS-tilkobling til en server postkassen din ikke ligger på, og deretter en avvist autentisering som ser ut som feil passord. Hent nummeret fra de tekniske detaljene i AMP, ikke fra en veiledning."
+    },
+    {
+      "h": "InMotions eget oppslagsverktøy fjerner gjettingen, og de fleste finner det aldri",
+      "p": "Uvanlig blant cPanel-verter driver InMotion et offentlig Email Configuration Tool som bare tar en e-postadresse og returnerer de nøyaktige serverinnstillingene for den kontoen, uten innlogging. Det finner både det sikre vertsnavnet og portene i ett steg. Hvis du setter opp e-post for en kunde du ikke har AMP-påloggingen til, er dette snarveien, og den er mer pålitelig enn noen innstillingsside fra en tredjepart for InMotion."
+    }
+  ],
+  "limits": [
+    "Bruk bare det sikre vertsnavnet over TLS. Sertifikatet er utstedt for secureNN.inmotionhosting.com, så mail.yourdomain.com på port 993 feiler navnevalideringen selv om det når riktig maskin.",
+    "Hvis InMotion flytter kontoen din til en annen delt server, endres NN. Symptomet er et sertifikat for et servernummer du ikke kjenner igjen, ikke et driftsavbrudd."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med InMotion Hosting-e-post?",
+      "a": "Ikke direkte. Claude har ingen InMotion-kobling. Kobler du en MCP-server som mcpemails til InMotion-postkassen din over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den, med de samme påloggingsopplysningene som en e-postklient på datamaskinen ville brukt."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for InMotion Hosting?",
+      "a": "Sikker IMAP er port 993 og sikker SMTP er port 465, begge på kontoens sikre vertsnavn på formen secureNN.inmotionhosting.com. Brukernavnet er hele e-postadressen din for både innkommende og utgående e-post, og utgående krever autentisering. De ukrypterte motstykkene bruker mail.yourdomain.com, som du ikke bør bruke."
+    },
+    {
+      "q": "Hvordan finner jeg servernummeret mitt hos InMotion?",
+      "a": "Logg inn i Account Management Panel og åpne de tekniske detaljene for webhotellkontoen. Servernummeret står der, og cPanel gjentar det under Server Information. Du kan også skrive inn e-postadressen i InMotions offentlige Email Configuration Tool, som returnerer hele det sikre vertsnavnet uten innlogging."
+    },
+    {
+      "q": "Hvorfor blir InMotion-e-postpassordet mitt avvist?",
+      "a": "Som oftest fordi det er AMP- eller cPanel-passordet ditt og ikke postkassepassordet. Det er tre separate påloggingsopplysninger hos InMotion. Tilbakestill postkassepassordet fra cPanel under Email Accounts ved å klikke Manage på adressen. Sjekk også servernummeret, siden et feil nummer kobler til uten problemer og deretter avviser innloggingen."
+    },
+    {
+      "q": "Lagres InMotion-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra InMotion-serveren din over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke beholdt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en InMotion Hosting-innboks",
+    "sub": "Koble til en InMotion-postkasse på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

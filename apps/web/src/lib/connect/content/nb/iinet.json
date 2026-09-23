@@ -1,0 +1,96 @@
+{
+  "_sources": [
+    "https://help.iinet.net.au/iinet-email-messaging-company"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord fra din nåværende e-postleverandør",
+    "helpUrl": "https://help.iinet.net.au/iinet-email-messaging-company",
+    "usernameForm": "Hele iinet.net.au-adressen din. Hvilken server den hører til nå, avhenger av om adressen ble meldt inn hos The Messaging Company.",
+    "status": "discontinued"
+  },
+  "meta": {
+    "title": "iiNet har gitt opp e-post: dette kan kobles til Claude",
+    "description": "iiNet har sluttet med e-post, og iinet.net.au-adresser er flyttet til The Messaging Company. Hva som fortsatt kobles til Claude over IMAP, og hva som er slettet."
+  },
+  "hero": {
+    "eyebrow": "iiNet-e-post + AI",
+    "titleLine1": "iiNet har sluttet å drive e-post.",
+    "titleLine2": "Dette kan fortsatt kobles til",
+    "lead": "iiNet overlot postkassene sine til et annet selskap og sluttet å utstede adresser. Det endrer hvor innstillingene dine kommer fra, ikke om en AI-agent kan jobbe i postkassen.",
+    "answer": "iiNet har gått ut av e-postvirksomheten. Selskapet overførte iinet.net.au-adresser til en annen australsk leverandør, The Messaging Company, avsluttet innmeldingsperioden, slettet alle adresser som ikke ble meldt inn, og opplyser at det ikke er mulig å opprette nye e-postadresser på domenet iinet.net.au. Spørsmålet er derfor ikke om Claude kan nå iiNet, men hvilken server som har postkassen din i dag. mcpemails er en driftet MCP-server som kobler til enhver IMAP-postkasse, også en tidligere iiNet-adresse hos den nye verten, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Innstillingene kommer fra den nye leverandøren",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles en iinet.net.au-adresse til nå: ikke via iiNet",
+    "body": "iiNets egen hjelpeside er utvetydig. Adressene ble overført til <b>The Messaging Company</b>, innmeldingsvinduet er stengt, alt som ikke ble meldt inn, er slettet og kan ikke gjenopprettes, og iiNet ber kundene rette brukerstøttespørsmål til The Messaging Company fordi iiNet ikke lenger kan hjelpe. Adresser som fulgte med et iiNet-abonnement, var gratis fram til 15. september 2024, og etter det satte The Messaging Company sine egne priser. Vertsnavnet <code>mail.iinet.net.au</code> har ikke forsvunnet: det fullfører fortsatt et TLS-håndtrykk på port 993 og returnerer et capability-banner, under et sertifikat utstedt for <code>mail.tpg.com.au</code>, der TPG er konsernet iiNet tilhører. Ta det for nøyaktig det det er. Det beviser at verten lever, det beviser ikke at postkassen din ligger der, og det betyr i hvert fall ikke at iiNet utsteder adresser igjen."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
+    },
+    {
+      "h": "Finn ut hvem som har postkassen i dag",
+      "p": "Hvis du meldte inn adressen, ligger den hos The Messaging Company, og det er de som kan gi deg servernavn, porter og passord for den. iiNet kan ikke, og sier det selv. Hvis du aldri meldte den inn, ble adressen slettet, og det finnes ingenting å koble til; iiNet opplyser at slettede adresser ikke kan gjenopprettes."
+    },
+    {
+      "h": "Skriv inn innstillingene du får fra din nåværende leverandør",
+      "p": "I mcpemails velger du IMAP / SMTP og fyller inn vert, port og passord nøyaktig slik leverandøren dokumenterer dem, med hele adressen som brukernavn. Vi publiserer bare innstillinger vi selv har åpnet en tilkobling til, så vi oppgir ikke vertsnavnene til The Messaging Company her. Hent dem fra deres egne hjelpesider, ikke fra en blogg hos en tredjepart."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Et vertsnavn som svarer, er ikke en tjeneste som lever",
+      "p": "<code>mail.iinet.net.au</code> svarer på IMAP over TLS i dag og annonserer SASL-IR, IDLE, SPECIAL-USE og COMPRESS=DEFLATE, altså en helt frisk server. Folk tar det som bevis på at iiNet-e-posten er i orden, og at varslene om flyttingen bare var støy. Det er ikke bevis for det. Et vertsnavn kan fortsatt slås opp og en server kan fortsette å kjøre lenge etter at virksomheten bak har sluttet å utstede kontoer, og iiNets egen side sier at ingen nye iinet.net.au-adresser kan opprettes. Hold de to påstandene fra hverandre når du feilsøker."
+    },
+    {
+      "h": "Adresser som aldri ble meldt inn, er borte, ikke i dvale",
+      "p": "Innmeldingen var noe hver kunde aktivt måtte gjøre. iiNet formulerer det slik at innmeldingsperioden er avsluttet, og at alle adresser som ikke ble meldt inn, nå er slettet og ikke kan gjenopprettes. Hvis innloggingen din sluttet å virke og ingen finner postkassen, er det sannsynlige svaret altså ikke et glemt passord. Det finnes ingen gjenoppretting, ikke noe arkiv å be om og ingen erstatningsadresse på samme domene."
+    },
+    {
+      "h": "Postkassen ble et betalt produkt, og det er ikke iiNet som fakturerer",
+      "p": "iiNet dekket adressen fram til 15. september 2024 for kunder som hadde e-post inkludert i abonnementet, og The Messaging Company skulle kontakte kundene minst 60 dager i forveien med prisene som ville gjelde etter det. En adresse som falt bort fordi den ikke ble betalt, er en sak for dem. iiNet henviser all brukerstøtte for disse adressene til The Messaging Company og foretar seg ingenting med dem."
+    },
+    {
+      "h": "Supporthenvendelser går til et selskap de fleste veiledninger ikke nevner",
+      "p": "Søkeresultater for iiNet-e-postinnstillinger er fortsatt fulle av sider som beskriver en tjeneste drevet av iiNet med iiNet-vertsnavn, skrevet før overføringen og aldri oppdatert. Følger du dem, havner du i telefonkø hos feil selskap. iiNets egen side oppgir den nye operatøren og kontaktinformasjonen deres, og det er det eneste utgangspunktet som er verdt å bruke."
+    }
+  ],
+  "limits": [
+    "Vi publiserer ingen verifiserte innstillinger for The Messaging Company, fordi vi ikke har åpnet en tilkobling til vertene deres. Hent dem fra leverandøren din og legg dem inn manuelt.",
+    "En slettet iinet.net.au-adresse kan ikke kobles til, gjenopprettes eller opprettes på nytt. Ingen MCP-server endrer på det."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med iiNet-e-post?",
+      "a": "Claude har ingen innebygd kobling for det, og iiNet driver ikke lenger tjenesten. Hvis iinet.net.au-adressen din overlevde overføringen til The Messaging Company, gir en MCP-server som mcpemails koblet til den over IMAP Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, med serverinnstillingene din nåværende leverandør gir deg."
+    },
+    {
+      "q": "Hva skjedde med iiNet-e-post?",
+      "a": "iiNet gikk ut av e-post og overførte kundenes adresser til en annen australsk e-postleverandør, The Messaging Company. Innmeldingsperioden er avsluttet, adresser som ikke ble meldt inn, er slettet og kan ikke gjenopprettes, og iiNet opplyser at det ikke er mulig å opprette nye adresser på domenet iinet.net.au."
+    },
+    {
+      "q": "Hvorfor svarer mail.iinet.net.au fortsatt hvis tjenesten er flyttet?",
+      "a": "Fordi verten fortsatt kjører. Den fullfører et TLS-håndtrykk på port 993 og returnerer et capability-banner under et sertifikat for mail.tpg.com.au. Det forteller deg at serveren svarer, og ingenting mer. Om akkurat din postkasse betjenes der, og om påloggingsopplysningene dine fortsatt er gyldige, er egne spørsmål som bare din nåværende leverandør kan svare på."
+    },
+    {
+      "q": "Kan jeg få en ny iinet.net.au-e-postadresse?",
+      "a": "Nei. iiNets hjelpeside sier rett ut at det ikke er mulig å opprette nye e-postadresser på domenet iinet.net.au. Trenger du en ny postkasse som en assistent kan jobbe i, må den ligge hos en leverandør som fortsatt utsteder dem, og mcpemails kobler til alle slike over IMAP."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra leverandøren din over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke beholdt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en postkasse den kan nå",
+    "sub": "Uansett hvor den gamle iiNet-adressen din holder til nå, kan du koble den til over IMAP. Én innboks gratis for alltid, uten kort."
+  }
+}

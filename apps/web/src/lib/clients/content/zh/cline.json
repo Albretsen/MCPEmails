@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "apps/web/app/api/mcp/route.ts",
+    "https://docs.cline.bot/mcp/configuring-mcp-servers"
+  ],
+  "meta": {
+    "title": "将邮箱连接到 Cline：远程 MCP 服务器设置",
+    "description": "用一个限定范围的 API 密钥，把真实收件箱作为远程 Streamable HTTP 服务器接入 Cline。在 VS Code 中读取、搜索、发送和定时发送邮件。1 个收件箱免费。"
+  },
+  "hero": {
+    "eyebrow": "Cline + 邮件",
+    "titleLine1": "把你的收件箱连接到 Cline",
+    "titleLine2": "作为远程 MCP 服务器",
+    "lead": "在 VS Code 中为 Cline 接入一个真实邮箱。读取、搜索、发送、回复、转发、定时发送和整理邮件，所用的密钥只包含你希望智能体做的事。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "限定范围的 API 密钥，一键撤销",
+    "meta2": "邮件实时获取，从不存储",
+    "answer": "在 Cline 面板中打开 MCP Servers，然后打开 Remote Servers。粘贴 https://mcpemails.com/api/mcp ，将传输类型设为 Streamable HTTP，添加服务器，然后添加一个 Authorization Bearer 标头，填入仪表盘中的 API 密钥。"
+  },
+  "method": {
+    "title": "Cline 如何连接：限定范围的 API 密钥",
+    "body": "Cline 不会对远程 MCP 服务器执行浏览器 OAuth 流程，因此改用 bearer 令牌进行认证。在仪表盘中创建一个 API 密钥，只勾选智能体需要的权限范围，然后把它作为 <code>Authorization: Bearer</code> 标头粘贴到 Cline 中。密钥连接和 OAuth 连接访问的是同一个端点，拿到的是同一套工具目录；唯一的区别在于令牌的获取方式。"
+  },
+  "setup": [
+    {
+      "h": "创建免费账户并连接邮箱",
+      "p": "在 mcpemails.com 注册，无需绑卡，然后前往 Dashboard、Inboxes、Connect Inbox。Gmail 通过 Google 一键登录连接；iCloud、Fastmail、Yahoo、Zoho 和 Yandex 需要应用专用密码；其他邮箱都可通过标准 IMAP 与 SMTP 连接。免费版包含 1 个收件箱，永久有效。"
+    },
+    {
+      "h": "创建限定范围的 API 密钥",
+      "p": "在 Dashboard、API Keys 中点击 Create key。为它命名，并只勾选这个智能体需要的权限范围：<code>read:email</code>、<code>search:email</code>、<code>send:email</code>、<code>manage:folders</code>、<code>delete:email</code>、<code>manage:drafts</code>、<code>manage:contacts</code>、<code>schedule:email</code> 和 <code>manage:automations</code>。密钥的格式是 <code>mcpe_</code> 后跟 64 个十六进制字符，只显示一次，所以请在关闭对话框前复制下来。"
+    },
+    {
+      "h": "添加远程服务器",
+      "p": "在 Cline 面板中点击 MCP Servers 图标，打开 <b>Remote Servers</b> 标签页，输入名称并粘贴 <code>https://mcpemails.com/api/mcp</code>。将 Transport Type 设为 <b>Streamable HTTP</b>，然后点击 Add Server。"
+    },
+    {
+      "h": "添加 Authorization 标头",
+      "p": "添加一个名为 <code>Authorization</code> 的标头，值为 <code>Bearer</code> 加一个空格再加你的密钥。服务器只接受该标头中的 bearer 令牌。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "用 Streamable HTTP，不是 SSE",
+      "p": "Remote Servers 标签页提供不止一种传输方式。本服务器使用 2025-06-18 协议修订版下的 Streamable HTTP。如果选了 SSE，服务器看起来添加得很顺利，之后却永远不会响应，要花很长时间才能发现只是一个字段填错了。"
+    },
+    {
+      "h": "Bearer 这个词是值的一部分",
+      "p": "标头的值是 <code>Bearer</code>、一个空格，然后是密钥。只粘贴密钥本身是这里出现 401 最常见的原因，而这个端点返回的 401 带的是 OAuth 发现指引，而不是提示标头格式错误的消息，所以很难猜到问题所在。"
+    },
+    {
+      "h": "按智能体限定密钥的范围，因为密钥就是全部的权限模型",
+      "p": "Cline 不执行 OAuth 授权同意流程，所以创建密钥时勾选的权限范围就是全部边界。一个包含 <code>read:email</code>、<code>search:email</code> 和 <code>manage:drafts</code> 的密钥可以让 Cline 分拣和起草邮件，但无法发送或删除任何内容。以后需要更大权限时，请签发第二个密钥，而不是放宽第一个。"
+    },
+    {
+      "h": "原始密钥只显示一次",
+      "p": "我们只存储密钥的 SHA-256 哈希值，因此无法再次显示它。如果丢失了，撤销它并创建一个新的。在 Dashboard、API Keys 中撤销后，下一次调用即生效。"
+    }
+  ],
+  "limits": [
+    "每个密钥的请求上限为每分钟 100 次、每小时 1,000 次、每天 10,000 次，此外还受你所在套餐的计费操作上限约束。",
+    "服务器只做请求与响应。没有 webhook，也没有服务器主动发起的事件，所以新邮件永远不会自己唤醒你的智能体。要对新到的邮件作出反应，请按计划轮询。",
+    "每次调用都会从你的邮箱服务商实时获取邮件，从不存储。我们只保存加密后的 OAuth 令牌或应用专用密码，因此令牌一经撤销或邮箱密码一经更改，访问会立即终止。"
+  ],
+  "faq": [
+    {
+      "q": "如何将邮箱连接到 Cline？",
+      "a": "把 mcpemails 添加为远程服务器：MCP Servers、Remote Servers，粘贴 https://mcpemails.com/api/mcp ，将 Transport Type 设为 Streamable HTTP，并添加一个带有仪表盘中 API 密钥的 Authorization Bearer 标头。之后 Cline 就拥有了读取、搜索、发送、回复、转发、整理和定时发送邮件的工具。"
+    },
+    {
+      "q": "为什么 Cline 需要 API 密钥，而 Cursor 不需要？",
+      "a": "因为这两个客户端处理远程 MCP 认证的方式不同。Cursor 执行浏览器 OAuth 流程，并自行保存令牌。Cline 则使用你配置的标头进行认证，所以 bearer 密钥才是可行的路径。两者访问同一个端点，拿到相同的工具；只是令牌的获取方式不同。"
+    },
+    {
+      "q": "密钥泄露了怎么办？",
+      "a": "撤销它。密钥列在 Dashboard、API Keys 中，撤销对下一次调用立即生效，无需等待。由于密钥只携带你勾选的权限范围，泄露的只读密钥也不可能发送或删除过任何内容。"
+    },
+    {
+      "q": "Cline 通过这种方式能访问哪些邮箱？",
+      "a": "Gmail 通过 Google 登录；iCloud、Fastmail、Yahoo、Zoho 和 Yandex 使用应用专用密码；以及任何在标准端口上支持 IMAP 与 SMTP 的其他邮箱。客户端通过同一个连接看到所有邮箱：你的智能体会先调用 inbox_list 来发现每个已连接的邮箱及其 id，所以不需要在任何地方粘贴 UUID。"
+    },
+    {
+      "q": "Cline 会在我不知情的情况下发送邮件吗？",
+      "a": "只有在你允许的情况下才会。发送受 send:email 权限范围控制，没有该权限的密钥或令牌根本无法发送。此外，收件箱所有者还可以在仪表盘中要求人工审批，届时每一次发送、回复、转发、草稿发送和定时发送都会被暂扣，直到有人放行。"
+    },
+    {
+      "q": "我的邮件会存储在你们的服务器上吗？",
+      "a": "不会。每封邮件都是为发起请求的那次调用从你的邮箱服务商实时获取，并直接交给你的客户端。我们只保存加密后的 OAuth 令牌或应用专用密码，以便后续调用能够完成认证。在仪表盘中删除该收件箱，或在邮箱服务商处撤销访问权限，连接会立即终止。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给 Cline 一个真正的收件箱",
+    "sub": "一个远程服务器，一个限定范围的密钥。1 个收件箱永久免费，无需绑卡。"
+  }
+}

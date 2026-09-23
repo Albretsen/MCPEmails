@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://kb.mailbox.org/en/private/e-mail/e-mail-configuration/",
+    "https://kb.mailbox.org/en/private/security-and-privacy/e-mail-password/",
+    "https://kb.mailbox.org/en/private/security-and-privacy/access-security-for-mailbox-2fa-app-passwords-and-e-mail-passwords/",
+    "https://kb.mailbox.org/en/private/encryption/your-encrypted-mailbox/"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Contraseña de aplicación de correo (con 2FA) o la contraseña de tu buzón",
+    "helpUrl": "https://kb.mailbox.org/en/private/security-and-privacy/e-mail-password/",
+    "usernameForm": "Tu dirección principal de mailbox.org, completa. No un alias, ni una extensión de correo, ni una dirección desechable.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta mailbox.org a Claude y a cualquier cliente MCP",
+    "description": "Conecta mailbox.org a Claude, Cursor y cualquier cliente MCP por IMAP en imap.mailbox.org:993. Con la 2FA activada, hace falta una contraseña de aplicación."
+  },
+  "hero": {
+    "eyebrow": "mailbox.org + IA",
+    "titleLine1": "Conecta mailbox.org a Claude,",
+    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de mailbox.org. Lee, busca, envía, responde, programa y organiza correo por IMAP, en todos los clientes MCP y no solo en uno, con la contrapartida del cifrado explicada claramente y no pasada por alto.",
+    "answer": "Claude no puede acceder por sí solo a mailbox.org. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.mailbox.org en el puerto 993, y por SMTP en smtp.mailbox.org en el puerto 465, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Inicias sesión con tu dirección principal de mailbox.org, y con la autenticación en dos factores activada debes usar una contraseña de aplicación de correo creada en All settings, Security, Email app-passwords en lugar de la contraseña de tu buzón. Si has activado el cifrado de la bandeja de entrada, el correo entrante llega a cualquier cliente IMAP como texto cifrado PGP y un agente no podrá leerlo. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña de aplicación de correo con la 2FA activada",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta mailbox.org: IMAP, tu dirección principal y una contraseña de aplicación por protocolo",
+    "body": "mailbox.org sirve IMAP en <code>imap.mailbox.org</code> en el puerto 993 con SSL/TLS, POP3 en <code>pop3.mailbox.org</code> en el 995 y SMTP en <code>smtp.mailbox.org</code> en el 465, con el 587 documentado para STARTTLS. El nombre de usuario es tu dirección <b>principal</b>, aquella con la que se abrió la cuenta. mailbox.org reparte alias, extensiones de correo, direcciones desechables y variantes <code>@secure.mailbox.org</code>, y ninguna de ellas autentica. Sin autenticación en dos factores, tu contraseña normal del buzón funciona. Con ella activada, mailbox.org deja de aceptar esa contraseña por IMAP y SMTP y espera en su lugar una <b>contraseña de aplicación de correo</b>, generada por cliente y limitada a los protocolos que marques al crearla. El banner anuncia además <code>AUTH=OAUTHBEARER</code> y <code>AUTH=XOAUTH2</code>, que pertenecen a las integraciones propias de App Suite de mailbox.org y no puede usarlas un tercero. Aquí la vía es la autenticación por contraseña."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja, para siempre, sin tarjeta. Al final obtienes una URL MCP y una clave."
+    },
+    {
+      "h": "Genera una contraseña de aplicación de correo en mailbox.org",
+      "p": "En la interfaz web abre <b>All settings</b>, luego <b>Security</b>, luego <b>Email app-passwords</b>. Ponle un nombre para esta conexión, marca <b>tanto</b> IMAP como SMTP en la lista de protocolos y haz clic en Generate password. Copia el valor de inmediato. Si la autenticación en dos factores está desactivada, puedes usar en su lugar la contraseña de tu buzón, pero una credencial limitada que puedes revocar por separado es mejor opción para dársela a un tercero."
+    },
+    {
+      "h": "Añade el buzón en mcpemails",
+      "p": "Elige IMAP / SMTP e introduce tu dirección <b>principal</b> de mailbox.org como nombre de usuario y luego la contraseña de aplicación. Los servidores ya vienen rellenados con <code>imap.mailbox.org</code> y <code>smtp.mailbox.org</code> y se verificaron con una conexión TLS real. Las credenciales se cifran en reposo y el correo en sí se obtiene en cada solicitud en lugar de copiarse."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Un alias en el campo de nombre de usuario falla con un error de contraseña",
+      "p": "mailbox.org fomenta los alias, las extensiones de correo y las direcciones desechables, y su propia guía de configuración deja claro que el nombre de usuario del cliente es tu dirección de correo principal. Pon ahí un alias y el servidor te rechaza exactamente igual que si la contraseña fuera incorrecta, lo que lleva a la gente a restablecer una contraseña que nunca fue el problema. Si no recuerdas cuál es la dirección principal, es la que aparece como principal de la cuenta en la interfaz web, no el alias que das realmente."
+    },
+    {
+      "h": "La contraseña de aplicación se limita por protocolo, así que es posible configurar solo la mitad",
+      "p": "Al generar una contraseña de aplicación de correo marcas qué protocolos puede usar. Marca IMAP y olvida SMTP y tendrás un buzón que se lee perfectamente y no puede enviar ni un solo mensaje, con el fallo apareciendo solo en el momento en que tu agente intenta responder. También ocurre al revés. Marca ambos, o genera dos y usa cada una en su campo. Esta es además la palanca para revocar el acceso más adelante: borrar esa contraseña de aplicación concreta desconecta este cliente y deja intactos tu teléfono y tu ordenador."
+    },
+    {
+      "h": "El cifrado de la bandeja de entrada convierte el correo nuevo en texto cifrado para todos los clientes, incluido este",
+      "p": "En <b>All settings</b>, <b>Read and write e-mail</b>, <b>Inbox encryption</b>, mailbox.org puede cifrar con PGP cada mensaje que llega con tu clave pública mediante una regla Sieve del servidor, lo haya cifrado o no el remitente. Es una protección real y funciona exactamente como se anuncia: un cliente IMAP, este incluido, recibe un bloque con armadura en lugar del cuerpo. mcpemails no tiene tu clave privada, así que un agente puede ver el remitente, el asunto y la fecha y puede archivar o marcar el mensaje, pero no leerlo. La asimetría que conviene conocer es que mailbox.org no guarda actualmente cifrada tu carpeta Enviados, así que un agente sigue pudiendo leer lo que enviaste aunque no pueda leer lo que recibiste."
+    },
+    {
+      "h": "Sin MOVE ni SPECIAL-USE, pero con UIDPLUS",
+      "p": "El servidor Dovecot anuncia IDLE, SASL-IR y UIDPLUS, pero ni MOVE ni SPECIAL-USE. Mover un mensaje es por tanto un COPY, un STORE de la marca \\Deleted y un EXPUNGE en lugar de un único comando atómico, aunque UIDPLUS al menos significa que el UID de destino se devuelve sin una segunda búsqueda. La falta de SPECIAL-USE importa más en el día a día: nada en la conexión dice qué carpeta es Enviados o Papelera, así que las funciones se deducen de los nombres. Los buzones en alemán suelen mostrar Gesendete Objekte, Entwürfe y Papierkorb, así que indica la carpeta explícitamente si un agente archiva algo en el lugar equivocado."
+    }
+  ],
+  "limits": [
+    "Conectar cualquier buzón a un cliente de IA significa que ese proveedor de IA lee el contenido de los mensajes con los que se le pide trabajar. mcpemails obtiene el correo en vivo de mailbox.org en cada solicitud y no almacena el cuerpo de los mensajes, y las credenciales se cifran en reposo, pero el texto sigue llegando a Claude, Cursor o el cliente al que lo conectes. El alojamiento en Alemania y la política de protección de datos de mailbox.org cubren a mailbox.org, y no se extienden a un proveedor de IA que conectes tú.",
+    "Todo lo cifrado con tu clave OpenPGP, ya sea por un remitente o por el propio cifrado de la bandeja de entrada de mailbox.org, es ilegible para un agente por IMAP. Esos hilos hay que leerlos en la interfaz web o en un cliente que tenga tu clave privada.",
+    "Como el servidor no anuncia MOVE, mover no es atómico. Si la conexión se corta a mitad de la operación, un mensaje puede existir un momento en las dos carpetas."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con mailbox.org?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para mailbox.org y no puede hablar IMAP. Apuntar un servidor MCP como mcpemails al buzón le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar por IMAP, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP sin volver a configurar nada."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de mailbox.org?",
+      "a": "IMAP es imap.mailbox.org en el puerto 993 con SSL/TLS. SMTP es smtp.mailbox.org en el puerto 465, con el 587 documentado como alternativa STARTTLS, y POP3 es pop3.mailbox.org en el 995. El nombre de usuario es en todos los casos tu dirección principal de mailbox.org. Los dos servidores de aquí se confirmaron con una conexión TLS real."
+    },
+    {
+      "q": "¿Dónde creo una contraseña de aplicación de mailbox.org?",
+      "a": "En la interfaz web, abre All settings, luego Security, luego Email app-passwords. Introduce un nombre para el cliente, selecciona los protocolos que puede usar y genera la contraseña. mailbox.org te la muestra para que la copies. Cada contraseña de aplicación se puede borrar por separado, lo que revoca ese cliente sin afectar a tus otros dispositivos ni a tu contraseña principal."
+    },
+    {
+      "q": "¿Por qué mailbox.org rechaza mi contraseña en un cliente de correo?",
+      "a": "Dos causas explican casi todos los casos. O introdujiste un alias en lugar de tu dirección principal en el campo de nombre de usuario, o la autenticación en dos factores está activada y por tanto la contraseña de tu buzón ya no se acepta por IMAP y SMTP. Crea una contraseña de aplicación de correo en Security y usa esa. Revisa primero el nombre de usuario; es lo más barato de descartar."
+    },
+    {
+      "q": "¿Puede mi IA leer mi correo cifrado de mailbox.org?",
+      "a": "No. Un mensaje cifrado con tu clave OpenPGP llega por IMAP como un bloque de texto cifrado con armadura, y mcpemails nunca tiene tu clave privada. Eso se aplica tanto al correo que cifró un remitente como al que cifró al llegar el cifrado de la bandeja de entrada de mailbox.org. El agente ve las cabeceras y puede mover o marcar el mensaje; el cuerpo sigue sellado."
+    },
+    {
+      "q": "¿Se almacena mi correo de mailbox.org en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de imap.mailbox.org en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva. El cliente de IA que conectes sí recibe el contenido de todo lo que lee, lo cual es una decisión distinta de dónde se almacena el correo y conviene tomarla a propósito."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de mailbox.org",
+    "sub": "Conecta mailbox.org en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

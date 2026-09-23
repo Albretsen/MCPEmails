@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://help.aliyun.com/zh/document_detail/36687.html",
+    "https://help.aliyun.com/zh/document_detail/444269.html",
+    "https://help.aliyun.com/document_detail/444380.html",
+    "https://help.aliyun.com/zh/document_detail/465546.html",
+    "https://help.aliyun.com/zh/document_detail/465307.html"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Postkassepassord, med mindre et sikkerhetspassord for klienter er slått på",
+    "helpUrl": "https://help.aliyun.com/zh/document_detail/444269.html",
+    "usernameForm": "Hele adressen din, med domenet: name@aliyun.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "IMAP-innstillinger for Alibaba Mail (Aliyun) i Claude",
+    "description": "Koble Alibaba Mail til Claude, Cursor eller enhver MCP-klient over IMAP på imap.aliyun.com:993. Postkassepassordet fungerer, med mindre et klientpassord er på."
+  },
+  "hero": {
+    "eyebrow": "Alibaba Mail + AI",
+    "titleLine1": "Koble Alibaba Mail til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Aliyun-postkasse. Les, søk, send, svar, planlegg og organiser e-post over IMAP, i alle MCP-klienter i stedet for bare én.",
+    "answer": "Claude kan ikke nå Alibaba Mail på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP på imap.aliyun.com, port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Alibaba er den ene store kinesiske leverandøren som ikke tvinger deg til å bruke en autorisasjonskode: det vanlige postkassepassordet ditt fungerer, så lenge POP/IMAP-innhenting er slått på i postkasseinnstillingene. Hvis du eller domeneadministratoren din har slått på sikkerhetspassordet for tredjepartsklienter (三方客户端安全密码), erstatter det 16 tegn lange passordet postkassepassordet overalt der en klient ber om et. Én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord eller sikkerhetspassord for klienter",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles Alibaba Mail til: IMAP, og et passord som avhenger av én innstilling",
+    "body": "Alibaba Mail tilbyr IMAP på <code>imap.aliyun.com</code>, port 993 med implisitt TLS, og SMTP på <code>smtp.aliyun.com</code>, port 465. Disse to vertene hører til den personlige <code>@aliyun.com</code>-tjenesten. Alibaba Mail på ditt eget domene er et eget bedriftsprodukt med vertsnavn som vises i dets egen administrasjonskonsoll, så hent dem fra konsollen og ikke fra denne siden. Autentiseringen er der Alibaba skiller seg fra alle andre store kinesiske e-posttjenester. QQ, NetEase og Sina avviser alle kontopassordet blankt og utsteder en autorisasjonskode i stedet. Det gjør ikke Alibaba: som standard er det <b>postkassepassordet</b> klienten sender. Unntaket er <b>三方客户端安全密码</b>, sikkerhetspassordet for tredjepartsklienter. Når det er slått på, genererer Alibaba et passord på 16 tegn for klienter, og postkassepassordet slutter å virke i dem. En bruker kan slå det på selv, og en domeneadministrator kan tvinge det på for hele organisasjonen, og derfor kan to personer i samme bedrift ha motstridende erfaringer med den samme serveren."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og forblir gratis, uten kort. La fanen være åpen: du limer inn Aliyun-påloggingsopplysningene dine der i trinn tre."
+    },
+    {
+      "h": "Slå på POP/IMAP-innhenting i postkasseinnstillingene",
+      "p": "Logg inn på webmailen, åpne 设置 (Settings) fra tannhjulikonet øverst til høyre, gå til 帐户设置 (Account settings) og deretter POP设置 (POP settings), og slå på POP/IMAP代收功能, funksjonen for POP- og IMAP-innhenting. I Alibaba Mail for bedrifter er det domeneadministratoren og ikke du som har denne tillatelsen: Alibaba blokkerer tredjepartsklienter som standard der, og administratoren gir POP3- eller IMAP-tilgang per konto før noen klient kan logge inn."
+    },
+    {
+      "h": "Finn ut hvilket passord kontoen din faktisk vil ha",
+      "p": "Åpne 设置, deretter 查看更多设置 (view more settings), så 账户与安全 (Account and security) og 账户安全 (Account safety), og se på 三方客户端登录安全管理, delen for påloggingssikkerhet for tredjepartsklienter. Hvis 三方客户端安全密码 er av, er postkassepassordet ditt påloggingsopplysningen, og du trenger ikke gjøre noe mer. Hvis det er på, eller hvis du slår det på her, klikker du 生成新密码 (generate new password), fullfører mobilbekreftelsen og kopierer passordet på 16 tegn. Alibaba viser det bare én gang. Lim inn hele adressen din og det av de to passordene som gjelder, i mcpemails; vertene er forhåndsutfylt."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-klienten",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så kan agenten lese, søke, sende, svare, videresende, planlegge og organisere i Aliyun-postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "IMAP-serveren annonserer ingen passordmekanisme i det hele tatt",
+      "p": "Alibabas IMAP-banner lister opp <code>AUTH=EXTERNAL</code>, <code>AUTH=XOAUTH</code> og <code>AUTH=XOAUTH2</code>, og stopper der. Det står ingen <code>AUTH=PLAIN</code> og ingen <code>AUTH=LOGIN</code> i capability-linjen, så en klient som velger autentiseringsmekanisme ut fra det serveren annonserer, finner ingenting den kan bruke med et passord, og gir opp før den prøver. Det som faktisk fungerer, er den vanlige IMAP-kommandoen <code>LOGIN</code> på port 993, som serveren godtar selv om den aldri annonserer den. Dette er grunnen til at nøye IMAP-biblioteker feiler mot <code>imap.aliyun.com</code> mens de kobler til alt annet, og det ser ut som et problem med påloggingsopplysningene uten å være det. SMTP-siden er speilbildet: den tilbyr <code>PLAIN</code> og <code>LOGIN</code> som normalt, pluss Alibabas egen mekanisme <code>XALIOAUTH</code>, så sendehalvdelen av den samme kontoen oppfører seg annerledes enn mottakshalvdelen."
+    },
+    {
+      "h": "En domeneadministrator kan endre passordkravet uten at du merker det",
+      "p": "I domenekonsollen for Alibaba Mail kan en administrator som er logget inn som postmaster, åpne 安全管理 (security management), deretter 账号安全策略 (account security policy), og tvinge 安全密码 på for alle eller for utvalgte avdelinger og kontoer. I det øyeblikket regelen gjelder for postkassen din, slutter passordet i e-postklienten din å virke, uten forvarsel og uten at noe er endret hos deg. Hvis en tilkobling som har gått i månedsvis plutselig ikke klarer å autentisere, bør du spørre om den regelen er slått på før du begynner å sjekke passordet på nytt."
+    },
+    {
+      "h": "Sikkerhetspassordet utstedes per enhet, opptil ti, og vises én gang",
+      "p": "Alibaba behandler disse som enhetspassord snarere enn som én felles påloggingsopplysning for kontoen. Du kan ha opptil ti samtidig, og anbefalt praksis er ett eget per enhet. Hvert passord vises én gang når det opprettes og aldri igjen, så et passord du har mistet, erstattes i stedet for å gjenopprettes. Generer et eget passord for mcpemails i stedet for å gjenbruke det som allerede ligger i telefonen din: da påvirker tilbakekalling av ett passord bare det det ble utstedt til."
+    }
+  ],
+  "limits": [
+    "Alibabas IMAP-server støtter ikke MOVE-utvidelsen, så å flytte en melding til en mappe skjer som en kopi, en flaggoppdatering og en expunge i stedet for én atomisk kommando. Resultatet er det samme, men en stor bunke krever tre ganger så mange rundturer.",
+    "SPECIAL-USE mangler, så mapper matches etter navn og ikke etter rolle. I en kinesiskspråklig postkasse heter de 已发送 (Sent), 已删除 (Deleted), 草稿 (Drafts) og 垃圾邮件 (Spam). Oppgi målmappen eksplisitt hvis agenten legger noe et uventet sted.",
+    "imap.aliyun.com og smtp.aliyun.com betjenes fra fastlands-Kina. Et søk i en stor postkasse fra utlandet får forsinkelse fra grensekryssende rundturer i tillegg til de vanlige IMAP-rundturene."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Alibaba Mail?",
+      "a": "Ikke direkte. Claude har ingen innebygd Aliyun-kobling og kan ikke åpne en IMAP-tilkobling på egen hånd. Kobler du en MCP-server som mcpemails til Alibaba-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere i den, og den samme tilkoblingen fungerer fra Cursor og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Alibaba Mail?",
+      "a": "IMAP er imap.aliyun.com på port 993 med implisitt TLS. SMTP er smtp.aliyun.com på port 465, også med implisitt TLS. Logg inn med hele aliyun.com-adressen din. Begge vertene ble bekreftet via en faktisk TLS-tilkobling på datoen som vises på denne siden, og begge hører til den personlige tjenesten og ikke til Alibaba Mail for bedrifter på et eget domene."
+    },
+    {
+      "q": "Trenger Alibaba Mail en autorisasjonskode, slik som QQ eller 163?",
+      "a": "Nei, ikke som standard. Dette er den viktigste praktiske forskjellen mellom Alibaba og de andre store kinesiske leverandørene. Postkassepassordet ditt autentiserer en klient så snart POP- og IMAP-innhenting er slått på. Bare hvis funksjonen for sikkerhetspassord for tredjepartsklienter er slått på, av deg eller av domeneadministratoren din, blir et eget passord på 16 tegn påloggingsopplysningen."
+    },
+    {
+      "q": "Hvorfor blir Alibaba Mail-passordet mitt avvist?",
+      "a": "Tre årsaker, i rekkefølge etter hvor sannsynlige de er. POP- og IMAP-innhenting er fortsatt av i postkasseinnstillingene. Eller du bruker Alibaba Mail for bedrifter, der tredjepartsklienter er blokkert til en administrator gir kontoen IMAP-tillatelse. Eller sikkerhetspassordet for tredjepartsklienter er slått på, og da virker postkassepassordet ikke lenger i noen klient, og du trenger det genererte passordet."
+    },
+    {
+      "q": "Kan jeg koble til Alibaba Mail på mitt eget domene?",
+      "a": "Ja, men ikke med vertsnavnene på denne siden. Alibaba Mail for bedrifter kjører på egne servernavn, som står i administrasjonskonsollen for domenet ditt. Hent inngående og utgående vert derfra, og koble dem til i mcpemails som en vanlig IMAP- og SMTP-postkasse. Reglene for sikkerhetspassord som beskrives her, gjelder også for de kontoene."
+    },
+    {
+      "q": "Lagres Alibaba-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Alibaba Mail over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke oppbevart etter forespørselen som ba om det."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Alibaba Mail-innboks",
+    "sub": "Koble til Aliyun-e-post på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://cursor.com/docs/mcp"
+  ],
+  "meta": {
+    "title": "Connecter l'e-mail à Cursor : serveur MCP via mcp.json",
+    "description": "Ajoutez une vraie boîte à Cursor avec quatre lignes dans mcp.json. Cursor lance la connexion OAuth, sans clé API : lisez, cherchez, envoyez, planifiez. 1 boîte gratuite."
+  },
+  "hero": {
+    "eyebrow": "Cursor + e-mail",
+    "titleLine1": "Connectez votre boîte à Cursor",
+    "titleLine2": "avec quatre lignes de mcp.json",
+    "lead": "Donnez une vraie boîte à l'éditeur. Répondez à un rapport de bug depuis le fichier qui l'a causé, envoyez le correctif à un client ou videz une boîte sans changer de fenêtre.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "OAuth, aucune clé API requise",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Ajoutez une entrée sous mcpServers dans ~/.cursor/mcp.json avec l'url https://mcpemails.com/api/mcp. Cursor vous invite ensuite à vous connecter via OAuth, sans aucune clé API."
+  },
+  "method": {
+    "title": "Comment Cursor se connecte : OAuth, sans clé API",
+    "body": "Cursor exécute le flux OAuth MCP standard auprès de ce serveur. Il s'enregistre lui-même via l'<b>enregistrement dynamique de client RFC 7591</b>, donc aucun client ID à créer, et s'autorise avec un <b>code d'autorisation plus PKCE</b> en S256. Aucun secret client n'est jamais transmis, et le jeton ne porte que les autorisations que vous approuvez sur notre écran de consentement. Le jeton d'accès reçu dure une heure et se renouvelle tout seul ; il apparaît dans Dashboard, API Keys sous la forme <code>OAuth:</code> suivi du nom du client, et c'est là que vous révoquez la connexion."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit et connectez une boîte",
+      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Gmail se connecte en un clic via la connexion Google ; iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
+    },
+    {
+      "h": "Ouvrez votre mcp.json",
+      "p": "Modifiez <code>~/.cursor/mcp.json</code> pour tous les projets, ou <code>.cursor/mcp.json</code> dans un seul projet."
+    },
+    {
+      "h": "Ajoutez le serveur",
+      "p": "Ajoutez l'entrée ci-dessous sous <code>mcpServers</code>. Le champ que Cursor attend ici est <code>url</code>."
+    },
+    {
+      "h": "Autorisez",
+      "p": "Cursor vous invite à vous connecter via OAuth. Autorisez avec mcpemails et approuvez les autorisations que l'éditeur doit détenir."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Configuration de projet et configuration globale sont deux fichiers différents, et les deux existent",
+      "p": "Un serveur dans <code>~/.cursor/mcp.json</code> vous suit dans tous les projets ; un serveur dans <code>.cursor/mcp.json</code> n'appartient qu'à ce dépôt. Le courrier vous concerne généralement vous, pas le dépôt, donc le fichier global est le meilleur endroit, et il garde l'entrée hors d'un dépôt que d'autres clonent."
+    },
+    {
+      "h": "Un mcp.json de projet est un fichier que vous pourriez committer par accident",
+      "p": "L'entrée elle-même ne contient aucun secret, juste une URL publique, et les jetons OAuth sont stockés par Cursor plutôt qu'écrits ici. Tout change dès que quelqu'un remplace l'entrée OAuth par une clé API bearer écrite en clair. Si vous passez par une clé, gardez-la hors de tout fichier commité, et révoquez toute clé qui a déjà été poussée : les clés se révoquent depuis Dashboard, API Keys en un clic."
+    },
+    {
+      "h": "Donnez à l'éditeur moins que ce que vous donneriez à une app de messagerie",
+      "p": "Un agent de code avec <code>delete:email</code>, c'est un pouvoir étrange à confier à un outil dont le métier principal est le refactoring. Les autorisations de lecture, de recherche et de brouillons couvrent presque tous les usages dans un éditeur. Vous pouvez toujours émettre une deuxième connexion, plus large, pour l'assistant où vous triez vraiment vos e-mails."
+    }
+  ],
+  "limits": [
+    "Les requêtes sont limitées à 100 par minute, 1 000 par heure et 10 000 par jour et par clé, en plus du plafond d'actions facturables de votre plan.",
+    "Le serveur fonctionne uniquement en requête-réponse. Il n'y a ni webhooks ni événements déclenchés par le serveur, donc un nouveau message ne réveille jamais votre agent de lui-même. Pour réagir au courrier entrant, interrogez la boîte à intervalles réguliers.",
+    "Le courrier est récupéré en direct chez votre fournisseur à chaque appel et n'est jamais stocké. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, donc un jeton révoqué ou un mot de passe de boîte modifié coupe l'accès immédiatement."
+  ],
+  "faq": [
+    {
+      "q": "Comment connecter l'e-mail à Cursor ?",
+      "a": "Ajoutez une entrée sous mcpServers dans ~/.cursor/mcp.json avec l'url https://mcpemails.com/api/mcp, puis terminez la connexion OAuth que Cursor vous propose. Cursor dispose alors d'outils pour lire, rechercher, envoyer, répondre, transférer, organiser et planifier des e-mails dans toutes les boîtes que vous avez connectées."
+    },
+    {
+      "q": "Ai-je besoin d'une clé API pour Cursor ?",
+      "a": "Non. Cursor exécute le flux OAuth dans le navigateur auprès de ce serveur, en s'enregistrant dynamiquement et en s'autorisant avec PKCE, donc le fichier de configuration ne contient rien de secret. Une clé API bearer reste une option pour les configurations scriptées ou sans interface graphique."
+    },
+    {
+      "q": "Pourquoi le champ s'appelle-t-il url ici et serverUrl dans Windsurf ?",
+      "a": "Parce que les deux clients ont choisi des schémas de configuration différents pour la même idée. Cursor lit url sous mcpServers, Windsurf lit serverUrl, VS Code attend type et url sous servers, et Gemini CLI attend httpUrl. Le point de terminaison est identique dans les quatre ; seul le nom de la clé change, et copier un extrait d'un client à l'autre est la raison habituelle pour laquelle une configuration ne fait rien, sans le moindre message."
+    },
+    {
+      "q": "Quelles boîtes Cursor peut-il atteindre ainsi ?",
+      "a": "Gmail via la connexion Google ; iCloud, Fastmail, Yahoo, Zoho et Yandex avec un mot de passe d'application ; et toute autre boîte qui parle IMAP et SMTP sur les ports standard. Le client les voit toutes par la même connexion : votre agent appelle d'abord inbox_list pour découvrir chaque boîte connectée et son identifiant, donc aucun UUID à coller nulle part."
+    },
+    {
+      "q": "Cursor peut-il envoyer un e-mail sans que je le voie ?",
+      "a": "Seulement si vous l'y autorisez. L'envoi dépend de l'autorisation send:email : une clé ou un jeton sans cette autorisation ne peut rien envoyer du tout. En plus, le propriétaire d'une boîte peut exiger une validation humaine dans le tableau de bord, qui retient chaque envoi, réponse, transfert, envoi de brouillon et envoi planifié jusqu'à ce qu'une personne le libère."
+    },
+    {
+      "q": "Mes e-mails sont-ils stockés sur vos serveurs ?",
+      "a": "Non. Chaque message est récupéré en direct chez votre fournisseur pour la requête qui l'a demandé, puis transmis directement à votre client. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, pour que les appels suivants puissent s'authentifier. Supprimer la boîte dans le tableau de bord, ou révoquer l'accès chez votre fournisseur, coupe la connexion aussitôt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez une vraie boîte à Cursor",
+    "sub": "Quatre lignes de configuration, une connexion. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

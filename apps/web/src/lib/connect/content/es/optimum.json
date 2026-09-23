@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://faq.optimum.net/taxonomy/term/1250",
+    "https://faq.optimum.net/taxonomy/term/3677",
+    "https://faq.optimum.net/node/13446"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña de tu Optimum ID",
+    "helpUrl": "https://faq.optimum.net/taxonomy/term/1250",
+    "usernameForm": "Tu dirección completa, sea cual sea el dominio de Optimum que use: name@optimum.net, name@optonline.net o una dirección de Suddenlink.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta el correo de Optimum y Optonline a Claude",
+    "description": "Conecta un buzón de Optimum, Optonline o Suddenlink a Claude y a cualquier cliente MCP por IMAP en mail.optimum.net:993 con la contraseña de tu Optimum ID."
+  },
+  "hero": {
+    "eyebrow": "Correo de Optimum + IA",
+    "titleLine1": "Conecta tu bandeja de Optimum",
+    "titleLine2": "a Claude, Cursor, cualquier cliente MCP",
+    "lead": "Optimum dejó de dar direcciones nuevas hace años, pero los buzones que existen siguen hablando IMAP. mcpemails conecta uno para que tu agente de IA pueda leer, buscar, enviar, responder y archivar ese correo.",
+    "answer": "Claude no puede llegar a un buzón de Optimum por su cuenta. mcpemails es un servidor MCP alojado que lo conecta por IMAP en mail.optimum.net, puerto 993, iniciando sesión con tu dirección completa de optimum.net, optonline.net o Suddenlink y la contraseña de tu Optimum ID. No hay contraseña de aplicación que generar ni interruptor que activar, porque Optimum nunca creó ninguno de los dos. Ten en cuenta que Optimum dejó de permitir la creación de cuentas de correo nuevas el 4 de mayo de 2021, así que esto sirve para una dirección que ya tienes, no para una nueva. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña del Optimum ID, sin contraseña de aplicación",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Optimum: IMAP con tu Optimum ID de siempre",
+    "body": "Optimum usa un único servidor de correo para todas sus marcas. <code>mail.optimum.net</code> responde a IMAP en el puerto 993 sobre TLS con su propio certificado, y el mismo nombre atiende el envío en el puerto 465. Las direcciones de <code>optimum.net</code>, <code>optonline.net</code> y de los dominios de Suddenlink que Optimum absorbió llegan todas a él. La autenticación es de una sencillez que se agradece: tu <b>Optimum ID</b> y su contraseña, con la dirección de correo completa como nombre de usuario. Optimum no emite contraseñas específicas de aplicación ni tiene un interruptor de acceso para terceros que buscar, así que un inicio de sesión que falla aquí es un problema real de credenciales y no un ajuste escondido. Lo único que conviene saber antes de conectar un agente al buzón es que Optimum dejó de crear cuentas de correo el 4 de mayo de 2021 y remite a quien quiera una dirección nueva a Gmail, Outlook.com o Yahoo."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
+    },
+    {
+      "h": "Confirma el buzón y revisa antes su almacenamiento",
+      "p": "Inicia sesión en optimum.net con tu Optimum ID, abre Email y mira el indicador de almacenamiento en la esquina inferior izquierda de la bandeja. Optimum limita cada buzón a 5 GB y no vende espacio adicional. Al llegar al 100 por ciento la cuenta deja de enviar y recibir, así que vacía las carpetas Deleted y Junk antes de dárselo a un agente."
+    },
+    {
+      "h": "Introduce la dirección y la contraseña del Optimum ID",
+      "p": "En mcpemails elige IMAP / SMTP, escribe la dirección completa en el campo de usuario, por ejemplo <code>name@optonline.net</code>, y usa la contraseña de ese Optimum ID. El servidor ya viene rellenado y se verificó con una conexión TLS en vivo."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Optimum no anuncia SASL-IR, y la mayoría de los clientes lo dan por hecho",
+      "p": "El servidor IMAP de Optimum omite la capacidad SASL-IR, así que rechaza la autenticación en un solo paso que envía las credenciales junto con el comando AUTHENTICATE. Un cliente que da por hecho SASL-IR recibe un <code>BAD</code> a secas, sin explicación, que parece exactamente una contraseña incorrecta y lleva a la gente a restablecer un Optimum ID que estaba bien. mcpemails detecta esa respuesta y reintenta con el intercambio en dos pasos, así que aquí está resuelto, pero es la razón por la que otras herramientas IMAP fallan con Optimum mientras funcionan en otros sitios."
+    },
+    {
+      "h": "Junk y Deleted se vacían solas, y en dominios que no son de Optimum ocurre en tres días",
+      "p": "Optimum elimina de forma permanente el correo de Junk y Deleted según un plazo que no puedes cambiar. En direcciones de <code>optimum.net</code> y <code>optonline.net</code> son 30 días para ambas carpetas. En cualquier otro dominio que aloje Optimum son <b>3 días</b>. Lo que caduca desaparece y no se puede recuperar. Si dejas que un agente mueva correo a la papelera como borrado reversible, en esos otros dominios tienes más o menos un fin de semana largo para cambiar de opinión."
+    },
+    {
+      "h": "5 GB es el techo y no hay ampliación que comprar",
+      "p": "Optimum da a cada buzón 5 GB, cuenta Inbox, Sent, My folders, Deleted y Junk para ese total, y declara que no ofrece la opción de comprar almacenamiento adicional. Superado el límite, la cuenta no puede ni enviar ni recibir, lo que desde el lado del agente parece una conexión rota y no un disco lleno. El servidor sí anuncia la extensión IMAP QUOTA, así que la cifra se puede leer, pero la solución siempre pasa por borrar correo."
+    },
+    {
+      "h": "Sin SPECIAL-USE, y los nombres de carpeta de Optimum son solo suyos",
+      "p": "El servidor no anuncia SPECIAL-USE, así que un cliente no puede preguntar qué carpeta es Enviados y cuál es la papelera, y tiene que guiarse por los nombres. Los de Optimum son <code>Deleted</code> en lugar de Trash y <code>My folders</code> para el árbol creado por el usuario, que no es lo que adivina la mayoría de las herramientas. Si un agente no encuentra tu archivo, indica el nombre de la carpeta de forma explícita en vez de suponer la etiqueta estándar."
+    }
+  ],
+  "limits": [
+    "El buzón está limitado a 5 GB sin ampliación de pago, y el envío y la recepción se detienen cuando se llena.",
+    "Optimum no ha creado cuentas de correo nuevas desde el 4 de mayo de 2021, así que solo se puede conectar una dirección existente.",
+    "El servidor de envío de Optimum no respondió a nuestra prueba en el puerto 465, así que no publicamos una lista verificada de capacidades del correo saliente para este proveedor."
+  ],
+  "faq": [
+    {
+      "q": "¿Claude funciona con el correo de Optimum?",
+      "a": "No directamente. Claude no tiene un conector integrado para Optimum. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de optimum.net, optonline.net o Suddenlink, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuál es la configuración IMAP de Optimum?",
+      "a": "IMAP es mail.optimum.net en el puerto 993 con TLS implícito, verificado con una conexión TLS en vivo en la fecha que se indica en esta página. El envío usa el mismo nombre de servidor en el puerto 465. El usuario es tu dirección de correo completa y la contraseña es la de tu Optimum ID."
+    },
+    {
+      "q": "¿Necesito una contraseña de aplicación para el correo de Optimum?",
+      "a": "No. Optimum no emite contraseñas específicas de aplicación ni tiene un interruptor aparte para habilitar clientes de correo externos. Usas directamente la contraseña del Optimum ID. Si encuentras consejos sobre cómo generar una contraseña de aplicación para optonline.net, describen el proceso de otro proveedor; esa página no existe en la configuración de Optimum."
+    },
+    {
+      "q": "¿Puedo crear una dirección de correo nueva de Optimum?",
+      "a": "No. La respuesta de la propia Optimum es que, desde el 4 de mayo de 2021, ya no ofrece a clientes de Internet nuevos ni existentes la posibilidad de crear cuentas de correo de Optimum nuevas, y remite a Gmail, Outlook.com o Yahoo Mail. Las direcciones creadas antes de esa fecha siguen funcionando, también en los dominios de Suddenlink."
+    },
+    {
+      "q": "¿Se almacena mi correo de Optimum en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Optimum por IMAP en cada petición y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Optimum",
+    "sub": "Sin contraseña de aplicación, sin interruptores. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

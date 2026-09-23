@@ -1,0 +1,95 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/api/mcp/route.ts",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://code.claude.com/docs/en/mcp",
+    "docs/token-cost/research-spec.md"
+  ],
+  "meta": {
+    "title": "Connecter l'e-mail à Claude Code : MCP en une commande",
+    "description": "Ajoutez une vraie boîte à la CLI Claude Code avec claude mcp add. OAuth dans le terminal, sans clé API : lisez, cherchez, envoyez et planifiez depuis le shell. 1 boîte gratuite."
+  },
+  "hero": {
+    "eyebrow": "Claude Code + e-mail",
+    "titleLine1": "Connectez votre boîte à Claude Code",
+    "titleLine2": "en une seule commande",
+    "lead": "Donnez une vraie boîte à la CLI où vous passez déjà vos journées. Triez le courrier de la nuit avant le stand-up, envoyez une note de version ou transformez un fil en ticket, sans quitter le terminal.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "OAuth dans le terminal, sans clé API",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Lancez claude mcp add --transport http mcpemails https://mcpemails.com/api/mcp, puis authentifiez-vous dans le navigateur quand Claude Code vous le demande. C'est toute la configuration : pas de clé API, pas de fichier de configuration à modifier à la main."
+  },
+  "method": {
+    "title": "Comment Claude Code se connecte : OAuth, sans clé API",
+    "body": "Claude Code exécute le flux OAuth MCP standard auprès de ce serveur. Il s'enregistre lui-même via l'<b>enregistrement dynamique de client RFC 7591</b>, donc aucun client ID à créer, et s'autorise avec un <b>code d'autorisation plus PKCE</b> en S256. Aucun secret client n'est jamais transmis, et le jeton ne porte que les autorisations que vous approuvez sur notre écran de consentement. Le jeton d'accès reçu dure une heure et se renouvelle tout seul ; il apparaît dans Dashboard, API Keys sous la forme <code>OAuth:</code> suivi du nom du client, et c'est là que vous révoquez la connexion."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit et connectez une boîte",
+      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Gmail se connecte en un clic via la connexion Google ; iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
+    },
+    {
+      "h": "Ajoutez le serveur",
+      "p": "Lancez la commande ci-dessous. <code>--transport http</code> correspond au transport Streamable HTTP, celui que parle ce serveur."
+    },
+    {
+      "h": "Authentifiez-vous",
+      "p": "Lancez <code>/mcp</code> dans une session Claude Code, choisissez ce serveur et suivez le flux dans le navigateur. Si le navigateur ne s'ouvre pas tout seul, copiez l'URL affichée."
+    },
+    {
+      "h": "Demandez quelque chose",
+      "p": "Essayez « résume tout ce qui n'est pas lu aujourd'hui ». Claude Code appelle d'abord <code>inbox_list</code> pour découvrir vos boîtes, donc aucun identifiant à coller."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Claude Code diffère les définitions d'outils MCP, et c'est ici un avantage",
+      "p": "Par défaut, Claude Code ne charge que les noms des outils et les instructions du serveur au démarrage de la session, puis récupère un schéma complet quand il en a besoin. Concrètement, ajouter ce serveur coûte une fraction du contexte qu'exigerait un serveur MCP naïf, et un outil que vous n'utilisez jamais ne vous coûte jamais son schéma."
+    },
+    {
+      "h": "Limitez la connexion à ce dont la session a besoin",
+      "p": "L'écran de consentement OAuth décide de ce que la CLI peut faire pendant toute la durée de vie du jeton. Une session de code qui doit lire le courrier sans jamais en envoyer, c'est un jeton sans <code>send:email</code>. Si vous voulez plus ensuite, reconnectez-vous et approuvez l'ensemble élargi ; rien ne s'étend tout seul."
+    },
+    {
+      "h": "Une boucle d'agent plus une autorisation d'envoi, c'est une combinaison à peser",
+      "p": "Claude Code tourne longtemps sans surveillance, précisément le moment où un envoi accidentel fait le plus de dégâts. Deux leviers existent pour cela : laisser <code>send:email</code> hors du jeton, ou activer la validation humaine dans le tableau de bord pour que chaque envoi, réponse, transfert et envoi planifié attende une personne. La validation se règle par boîte et s'applique quel que soit le client qui a fait l'appel."
+    }
+  ],
+  "limits": [
+    "Les requêtes sont limitées à 100 par minute, 1 000 par heure et 10 000 par jour et par clé, en plus du plafond d'actions facturables de votre plan.",
+    "Le serveur fonctionne uniquement en requête-réponse. Il n'y a ni webhooks ni événements déclenchés par le serveur, donc un nouveau message ne réveille jamais votre agent de lui-même. Pour réagir au courrier entrant, interrogez la boîte à intervalles réguliers.",
+    "Le courrier est récupéré en direct chez votre fournisseur à chaque appel et n'est jamais stocké. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, donc un jeton révoqué ou un mot de passe de boîte modifié coupe l'accès immédiatement.",
+    "Le flux OAuth a besoin d'un navigateur une fois. Sur une machine sans interface graphique, ajoutez plutôt le serveur avec une clé API dans un en-tête Authorization et passez complètement le flux. Si vous tenez à OAuth là-bas, <code>--callback-port</code> fixe le callback sur un port que vous pouvez rediriger."
+  ],
+  "faq": [
+    {
+      "q": "Comment connecter l'e-mail à Claude Code ?",
+      "a": "Ajoutez ce serveur MCP par son URL : claude mcp add --transport http mcpemails https://mcpemails.com/api/mcp. Lancez ensuite /mcp dans une session et terminez la connexion dans le navigateur. Claude Code dispose alors d'outils pour lire, rechercher, envoyer, répondre, transférer, organiser et planifier des e-mails."
+    },
+    {
+      "q": "Puis-je utiliser une clé API au lieu d'OAuth ?",
+      "a": "Oui. Claude Code accepte un en-tête dans la commande add : passer un en-tête Authorization avec une clé bearer issue de Dashboard, API Keys évite complètement le navigateur. C'est le bon choix sur une machine sans interface graphique ou en CI, où il n'y a nulle part où terminer une connexion."
+    },
+    {
+      "q": "Est-ce que ça marche dans un devcontainer ou via SSH ?",
+      "a": "Oui, à ceci près que le flux OAuth a besoin d'un navigateur une fois. Soit vous terminez la connexion là où un navigateur existe, soit vous ajoutez le serveur avec un en-tête de clé API bearer et vous passez le flux. Tout le reste n'est que du HTTPS vers un seul point de terminaison."
+    },
+    {
+      "q": "Quelles boîtes Claude Code peut-il atteindre ainsi ?",
+      "a": "Gmail via la connexion Google ; iCloud, Fastmail, Yahoo, Zoho et Yandex avec un mot de passe d'application ; et toute autre boîte qui parle IMAP et SMTP sur les ports standard. Le client les voit toutes par la même connexion : votre agent appelle d'abord inbox_list pour découvrir chaque boîte connectée et son identifiant, donc aucun UUID à coller nulle part."
+    },
+    {
+      "q": "Claude Code peut-il envoyer un e-mail sans que je le voie ?",
+      "a": "Seulement si vous l'y autorisez. L'envoi dépend de l'autorisation send:email : une clé ou un jeton sans cette autorisation ne peut rien envoyer du tout. En plus, le propriétaire d'une boîte peut exiger une validation humaine dans le tableau de bord, qui retient chaque envoi, réponse, transfert, envoi de brouillon et envoi planifié jusqu'à ce qu'une personne le libère."
+    },
+    {
+      "q": "Mes e-mails sont-ils stockés sur vos serveurs ?",
+      "a": "Non. Chaque message est récupéré en direct chez votre fournisseur pour la requête qui l'a demandé, puis transmis directement à votre client. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, pour que les appels suivants puissent s'authentifier. Supprimer la boîte dans le tableau de bord, ou révoquer l'accès chez votre fournisseur, coupe la connexion aussitôt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Mettez votre boîte dans le terminal",
+    "sub": "Une commande, une connexion dans le navigateur. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

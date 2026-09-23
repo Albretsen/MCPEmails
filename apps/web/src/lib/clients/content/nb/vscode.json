@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://code.visualstudio.com/docs/copilot/customization/mcp-servers"
+  ],
+  "meta": {
+    "title": "Koble e-post til VS Code: MCP-oppsett for Copilot-agent",
+    "description": "Gi agentmodusen i GitHub Copilot i VS Code en ekte innboks. Kjør MCP: Add Server, velg HTTP, autoriser med OAuth. Ingen API-nøkkel. Én innboks gratis."
+  },
+  "hero": {
+    "eyebrow": "VS Code + e-post",
+    "titleLine1": "Koble innboksen din til VS Code",
+    "titleLine2": "og agentmodusen i Copilot",
+    "lead": "Legg til en ekte postkasse i editoren du allerede har åpen. Les, søk i, send, svar på, videresend, planlegg og organiser e-post fra agentmodusen i Copilot.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "OAuth, ingen API-nøkkel nødvendig",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "Kjør MCP: Add Server fra Command Palette, velg HTTP og lim inn https://mcpemails.com/api/mcp. Start serveren fra MCP-visningen og autoriser når du blir bedt om det. Ingen API-nøkkel er involvert."
+  },
+  "method": {
+    "title": "Slik kobler VS Code seg til: OAuth, ingen API-nøkkel",
+    "body": "VS Code kjører standard MCP OAuth-flyt mot denne serveren. Den registrerer seg selv med <b>RFC 7591 dynamisk klientregistrering</b>, så du trenger ikke opprette noen klient-ID, og autoriserer med <b>autorisasjonskode pluss PKCE</b> med S256. Ingen klienthemmelighet sendes noen gang, og tokenet har bare de tilgangene (scopes) du godkjenner på samtykkeskjermen vår. Tilgangstokenet den får varer i én time og fornyes automatisk. Det vises under Dashboard, API Keys som <code>OAuth:</code> etterfulgt av klientnavnet, og det er der du tilbakekaller tilkoblingen."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto og koble til en postkasse",
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Gmail kobles til med Google-innlogging med ett klikk; iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+    },
+    {
+      "h": "Kjør MCP: Add Server",
+      "p": "Åpne Command Palette med Shift Cmd P, eller Shift Ctrl P på Windows og Linux, og kjør <b>MCP: Add Server</b>."
+    },
+    {
+      "h": "Velg HTTP",
+      "p": "Velg <b>HTTP</b>, lim inn <code>https://mcpemails.com/api/mcp</code> og gi den et navn. VS Code skriver oppføringen nedenfor inn i <code>.vscode/mcp.json</code>."
+    },
+    {
+      "h": "Start den og autoriser",
+      "p": "Start serveren fra MCP-visningen og fullfør innloggingen når VS Code ber om det. Godkjenn tilgangene du vil at Copilot skal ha."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Transporten er faktisk HTTP, ikke stdio, og feil valg feiler i det stille",
+      "p": "Add Server-flyten tilbyr en kommandobasert stdio-server først, som er det de fleste MCP-servere er. Denne er ekstern og hostet, så den har ingen kommando å kjøre. Velg HTTP, og merk at konfigurasjonsnøkkelen er <code>type</code> satt til <code>http</code>. En stdio-oppføring som peker på en URL gir en server som aldri starter, uten noen åpenbar grunn."
+    },
+    {
+      "h": "Verktøyene vises bare i agentmodus",
+      "p": "MCP-verktøy er tilgjengelige for Copilot i agentmodus. Mangler e-postverktøyene i verktøyvelgeren etter en vellykket tilkobling, er den vanlige årsaken at du er i ask- eller edit-modus og ikke i agentmodus. MCP-visningen er stedet der du bekrefter at serveren faktisk kjører."
+    },
+    {
+      "h": "En .vscode/mcp.json er repositoriekonfigurasjon, så pass på hva du committer",
+      "p": "Standardplasseringen er inne i prosjektet, som betyr at den kan committes og deles. URL-en er offentlig, og OAuth-tokens skrives ikke hit, så standardoppsettet er trygt å dele. Det slutter å være trygt i det øyeblikket noen legger inn en bearer-API-nøkkel direkte i stedet. Enhver nøkkel som havner i et repositorium, bør tilbakekalles fra Dashboard, API Keys."
+    }
+  ],
+  "limits": [
+    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger.",
+    "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post vekker aldri agenten din av seg selv. Vil du reagere på innkommende e-post, må du polle etter en tidsplan.",
+    "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
+  ],
+  "faq": [
+    {
+      "q": "Hvordan kobler jeg e-post til VS Code?",
+      "a": "Kjør MCP: Add Server fra Command Palette, velg HTTP, lim inn https://mcpemails.com/api/mcp, start deretter serveren og autoriser når du blir bedt om det. Da har agentmodusen i Copilot verktøy for å lese, søke, sende, svare, videresende, organisere og planlegge e-post."
+    },
+    {
+      "q": "Trenger jeg en API-nøkkel for VS Code?",
+      "a": "Nei. VS Code gjennomfører OAuth-flyten i nettleseren med denne serveren, så ingen token skrives inn i konfigurasjonen din. En bearer-API-nøkkel er fortsatt tilgjengelig for bruk uten skjerm eller i skript."
+    },
+    {
+      "q": "Fungerer dette med Copilot i andre editorer?",
+      "a": "Denne siden dekker VS Code spesifikt, fordi Add Server-flyten og mcp.json-skjemaet er funksjoner i VS Code. JetBrains AI Assistant er et eget oppsett og bruker en bearer-API-nøkkel i stedet for OAuth; det finnes en egen side for det."
+    },
+    {
+      "q": "Hvilke postkasser kan VS Code nå på denne måten?",
+      "a": "Gmail via Google-innlogging, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord, og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Klienten ser alle gjennom den samme tilkoblingen: agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
+    },
+    {
+      "q": "Kan VS Code sende e-post uten at jeg ser det?",
+      "a": "Bare hvis du tillater det. Sending krever tilgangen send:email, så en nøkkel eller et token uten den tilgangen kan ikke sende i det hele tatt. I tillegg kan eieren av en innboks kreve menneskelig godkjenning i dashbordet, som holder tilbake hver sending, hvert svar, hver videresending, hvert utkast som sendes og hver planlagte sending til en person slipper den gjennom."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Hver melding hentes direkte fra leverandøren din for forespørselen som ba om den, og sendes rett videre til klienten din. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, slik at fremtidige kall kan autentiseres. Sletter du innboksen i dashbordet, eller tilbakekaller tilgangen hos leverandøren, avsluttes tilkoblingen med en gang."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi VS Code en ekte innboks",
+    "sub": "Én kommando, én innlogging. Én innboks gratis for alltid, uten kort."
+  }
+}

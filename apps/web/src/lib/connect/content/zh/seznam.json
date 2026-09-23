@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://o-seznam.cz/napoveda/email/mohlo-by-se-hodit/postovni-programy-a-aplikace/",
+    "https://o-seznam.cz/napoveda/email/moznosti-nastaveni/prace-s-vice-schrankami/nastaveni-pristupu-pro-aplikace/",
+    "https://napoveda.seznam.cz/cz/login/postovni-programy-caldav-dvoufazove-overeni"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Seznam 密码",
+    "helpUrl": "https://napoveda.seznam.cz/cz/login/postovni-programy-caldav-dvoufazove-overeni",
+    "usernameForm": "包括 @ 之后所有内容的完整地址：name@seznam.cz 或 name@email.cz。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 Seznam 邮箱连接到 Claude 与任意 MCP 客户端",
+    "description": "通过 IMAP（imap.seznam.cz:993）将 Seznam 邮箱连接到 Claude、Cursor 及任意 MCP 客户端。未开启两步验证时用 Seznam 密码，开启后改用应用密码。"
+  },
+  "hero": {
+    "eyebrow": "Seznam 邮箱 + AI",
+    "titleLine1": "将 Seznam 邮箱连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Seznam 邮箱。用你已在使用的密码通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用，而不止一个。",
+    "answer": "Claude 无法自行连接 Seznam 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.seznam.cz 的 993 端口，用你的完整地址和普通 Seznam 密码登录，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。如果你开启了双重认证，账户密码将无法再用于邮件协议，你需要另设一个 Heslo pro aplikace（应用密码）。一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "账户密码，除非开启了两步验证",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Seznam 邮箱如何连接：IMAP 与你的 Seznam 密码",
+    "body": "Seznam 在 <code>imap.seznam.cz</code> 的 993 端口提供 IMAP，在 <code>smtp.seznam.cz</code> 的 465 端口提供 SMTP，两者都使用隐式 TLS 而不是 STARTTLS。你用完整地址（包括 @ 之后的部分）和普通的 Seznam 密码登录。不需要先开启任何东西。Seznam 自己的帮助页面说明，POP3 和 IMAP 在邮箱上永久启用且无法关闭，这很少见：大多数网页邮箱服务商都要你先找到一个开关，客户端才能登录。唯一会改变密码的是双重认证，即 <b>dvoufázové ověření</b>。开启后，IMAP、POP3、SMTP 和 CalDAV 将不再接受账户密码，改由单独的 <b>Heslo pro aplikace</b>（应用密码）接管，且仅限这些协议。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "在 Seznam Účet 中检查是否开启了两步验证",
+      "p": "登录你的 Seznam 账户，打开 <b>Zabezpečení účtu</b>（账户安全）。如果 <b>Dvoufázové ověření</b> 处于关闭状态，就使用普通的 Seznam 密码，这一步无需再做任何事。如果已开启，找到 <b>Heslo pro aplikace</b>（应用密码）一行，点击 <b>Nastavit</b>（设置），输入两次新密码，然后点击 <b>Uložit změny</b>（保存更改）。Seznam 不接受与你登录密码相同的值。"
+    },
+    {
+      "h": "把地址和密码粘贴到 mcpemails",
+      "p": "选择 IMAP / SMTP，完整输入地址（包括 @ 之后的部分），并粘贴适用的密码。服务器和端口已按本页经过验证的值自动填好。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "两步验证会悄悄让你的密码在邮件客户端中失效",
+      "p": "Seznam 对这种失败有准确的描述：开启 dvoufázové ověření 后，客户端第一次尝试连接时，你会收到类似 <code>Přihlášení k serveru imap.seznam.cz selhalo</code> 的消息，看起来像是输错了字，而不是一项策略。解决办法是 Zabezpečení účtu 下的 <b>Heslo pro aplikace</b> 一行。有两个细节容易让人中招。应用密码必须与登录密码不同，而且一旦设置就无法删除，只能修改。再次关闭两步验证会停用应用密码，并重新由你的普通账户密码负责认证。"
+    },
+    {
+      "h": "没有需要去找的 IMAP 开关",
+      "p": "在网页邮箱服务商那里，通常的第一步是在设置中翻找启用 IMAP 的开关。在 Seznam 上这种寻找是白费功夫：帮助页面说明 IMAP 和 POP3 在每个邮箱上永久启用且无法关闭。位于 Nastavení、Více schránek、Nastavení přístupů pro aplikace 的应用设置页面只控制 POP3 的下载行为，例如 <b>Přes POP3 stahovat jen nepřečtené e-maily</b>（通过 POP3 只下载未读邮件）和 <b>Ponechat zprávy na serveru</b>（在服务器上保留邮件）。所以在 Seznam 上登录被拒，永远是凭据问题，而不是协议被禁用的问题。"
+    },
+    {
+      "h": "Seznam 不声明 IDLE，所以不会推送任何东西",
+      "p": "IMAP 服务器省略了 IDLE 能力，这意味着客户端无法保持连接打开并在邮件到达时收到通知，只能轮询。对代理来说这不成问题，因为 mcpemails 是在你的 AI 提出问题时才打开连接并获取邮件，而不是一直守着一个套接字。不过了解这一点仍有意义，因为它解释了为什么 Seznam 账户上的桌面客户端比网页邮箱更晚发现新邮件，也解释了为什么依赖 IDLE 的工具在别处正常、在这里却看起来坏了。"
+    }
+  ],
+  "limits": [
+    "Seznam 不声明 SPECIAL-USE，因此文件夹按名称而不是按用途匹配。在捷克语邮箱中，这意味着 Doručená pošta、Odeslaná pošta、Koncepty 和 Koš。如果你重命名过某个文件夹，要求移动邮件时请明确写出其名称。",
+    "SMTP 服务器将单封邮件（含编码后的附件）上限设为 50 MB，因此大文件会在发送时被拒绝，而不会被裁剪。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Seznam 邮箱吗？",
+      "a": "不能直接使用。Claude 没有内置的 Seznam 连接器，也无法自行建立 IMAP 连接。将 mcpemails 这样的 MCP 服务器连接到你的 seznam.cz 或 email.cz 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Seznam 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.seznam.cz，端口 993，隐式 TLS。SMTP 为 smtp.seznam.cz，端口 465，同样是隐式 TLS。用户名是包括 @ 之后所有内容的完整地址；如果你的邮件程序提供“服务器需要认证”复选框，请勾选。两台服务器均已通过实时 TLS 连接确认。"
+    },
+    {
+      "q": "为什么邮件客户端拒绝我的 Seznam 密码？",
+      "a": "几乎总是因为开启了双重认证。一旦启用 dvoufázové ověření，Seznam 就不再在 IMAP、POP3、SMTP 和 CalDAV 上接受账户密码，而是要求你在 Zabezpečení účtu 下自行设置一个单独的 Heslo pro aplikace。它不能与你的登录密码相同。"
+    },
+    {
+      "q": "这适用于我自有域名上的 Email Profi 邮箱吗？",
+      "a": "适用。Email Profi 邮箱使用相同的 Seznam 服务器。Seznam 明确说明，在 Email Profi 上必须在用户名栏输入完整地址（包括 @ 之后的部分），而不只是本地部分。关于应用密码的两步验证规则同样适用。"
+    },
+    {
+      "q": "我的 Seznam 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 Seznam 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Seznam 收件箱",
+    "sub": "几分钟即可连接 Seznam 邮箱。一个收件箱永久免费，无需信用卡。"
+  }
+}

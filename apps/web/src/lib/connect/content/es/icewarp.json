@@ -1,0 +1,96 @@
+{
+  "_sources": [
+    "https://docs.icewarp.com/Content/IceWarp-Server/Administration-Nodes/System%20Node/Services/Service%20Ports.htm",
+    "https://docs.icewarp.com/Content/IceWarp-Server/Administration-Nodes/System%20Node/Certificates/Certificates.htm",
+    "https://support.icewarp.com/hc/en-us/articles/16288796581393-How-to-use-Let-s-Encrypt-certificate-in-IceWarp",
+    "https://support.icewarp.com/hc/en-us/community/posts/15569043482257-how-to-disable-specific-service-for-specific-users"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://support.icewarp.com/hc/en-us/articles/46410555968145-How-to-configure-IceWarp-email-accounts-on-Windows-and-macOS",
+    "usernameForm": "La dirección completa de la cuenta de usuario tal como aparece bajo el dominio en la consola de administración, por ejemplo you@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "IceWarp a Claude: puertos del servicio IMAP y acceso MCP",
+    "description": "Conecta un buzón de IceWarp a Claude, Cursor y ChatGPT por IMAP en el 993. Dónde está el servicio IMAP en la consola de administración y la trampa de Mailbox Type."
+  },
+  "hero": {
+    "eyebrow": "IceWarp + IA",
+    "titleLine1": "Conecta IceWarp a Claude,",
+    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
+    "lead": "IceWarp ya gestiona tu correo, tus calendarios y tu chat. Añadir un servidor MCP encima permite que un agente de IA trabaje en el propio buzón: leer, buscar, enviar, responder, programar y archivar, con las mismas credenciales que usa cualquier cliente de escritorio.",
+    "answer": "Claude no puede acceder por sí solo a un servidor IceWarp. mcpemails es un servidor MCP alojado que se conecta a tu instalación de IceWarp por IMAP en tu propio nombre de servidor, en el puerto 993 con TLS implícito, con la contraseña del buzón guardada en la consola de administración de IceWarp, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. IceWarp es software que alojas tú, así que no hay un nombre de servidor compartido que publicar: el servidor tiene que poder resolverse y ser accesible desde internet, y el certificado del 993 tiene que ser válido para el nombre al que te conectas. Una bandeja es gratis.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña del buzón desde la consola",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta IceWarp: el servicio IMAP bajo el nodo System",
+    "body": "IceWarp Server se administra desde una consola organizada en nodos, y todo lo relevante para un cliente de correo está bajo dos de ellos. <b>System</b> contiene Services, donde haces doble clic en el servicio IMAP para cambiar cómo escucha, y Certificates, donde se emite y guarda el material TLS. <b>Domains and Accounts</b> contiene los usuarios. Los puertos documentados de IceWarp son el 143 para IMAP y el 993 para IMAP con SSL/TLS, con SMTP en el 25, envío en el 587 con STARTTLS y SMTPS en el 465. Conviene saberlo antes de elegir: la propia referencia de puertos de IceWarp marca el 465 como obsoleto y te orienta al 587, justo lo contrario de lo que aconsejan la mayoría de servidores de correo. La autenticación usa la contraseña del buzón guardada en la cuenta de usuario, la misma credencial con la que se inicia sesión en IceWarp WebClient. No hay ningún mecanismo de contraseñas de aplicación que generar."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. Una bandeja es gratis para siempre y no se pide tarjeta, lo que basta para probarlo con una cuenta real de IceWarp."
+    },
+    {
+      "h": "Abre el servicio IMAP en la consola de administración",
+      "p": "Ve al nodo System, luego Services, y haz doble clic en IMAP. Confirma que el servicio está en marcha y que el puerto seguro es el 993. Ya que estás en System, abre Certificates y comprueba qué certificado está vinculado al nombre de servidor que vas a darle a mcpemails."
+    },
+    {
+      "h": "Revisa el Mailbox Type de la cuenta y añade la bandeja",
+      "p": "En Domains and Accounts, abre el usuario y mira la pestaña Options. El ajuste <code>Mailbox: Type</code> tiene que tener el valor combinado de IMAP y POP3, no solo POP3. Después añade la bandeja en mcpemails: elige IMAP / SMTP e introduce el nombre de tu servidor IceWarp, la dirección completa y la contraseña del buzón."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Mailbox Type es un ajuste con un valor solo POP3, no una casilla",
+      "p": "IceWarp no da a un usuario un interruptor para activar o desactivar IMAP. Le da un <b>tipo</b> de buzón en la pestaña Options de la cuenta, y uno de los valores disponibles es POP3 en lugar del combinado IMAP y POP3. Una cuenta configurada así responde en el 110 y rechaza IMAP, y como el cambio lo hizo una vez durante el aprovisionamiento quien creó la plantilla de cuentas, nadie recuerda que está ahí. El síntoma es un único usuario que no puede conectarse mientras todos los demás del mismo servidor sí pueden. Revisa el tipo de la cuenta antes de revisar nada de la red."
+    },
+    {
+      "h": "POP3 e IMAP son un solo módulo, así que no puedes detener uno de ellos",
+      "p": "IceWarp ejecuta POP3 e IMAP como un único módulo. Detenerlo o reiniciarlo tumba ambos protocolos a la vez, lo que importa en dos sentidos. Si alguien desactivó POP3 por seguridad deteniendo el servicio, IMAP se fue con él y desde entonces nada escucha en el 993. Y cuando reinicias el módulo para aplicar un cambio de puerto o de certificado, todos los clientes POP3 del servidor se desconectan en el mismo momento. Planifica el reinicio en lugar de hacerlo en plena jornada laboral."
+    },
+    {
+      "h": "IceWarp emite sus propios certificados, así que otro servidor web en el puerto 80 lo impide",
+      "p": "Los certificados se emiten desde System, luego Certificates, luego Add Certificate, eligiendo la opción gratuita de Let's Encrypt y el dominio. La condición asociada es fácil de romper en una máquina Windows: el <b>propio IceWarp WebService</b> tiene que ser lo que responde en los puertos 80 y 443, y el registro DNS del servidor tiene que resolver públicamente. IIS viene instalado y escuchando en el 80 por defecto en muchísimos servidores Windows, y un proxy inverso delante de IceWarp tiene el mismo efecto, así que la solicitud falla y, más discretamente, también cada reemisión automática posterior. El certificado existente sigue funcionando hasta su fecha de caducidad y entonces todos los clientes estrictos fallan la misma mañana. IceWarp tampoco puede emitir certificados comodín por esta vía, así que un nombre de servidor que no figura en el certificado no se validará por bien configurado que esté todo lo demás."
+    }
+  ],
+  "limits": [
+    "Un servidor MCP alojado tiene que abrir una conexión entrante a tu servidor IceWarp, así que un servidor publicado solo en una red interna, o accesible solo a través de una VPN corporativa, no se puede conectar de esta forma. mcpemails se puede alojar por tu cuenta si quieres que la sesión IMAP se quede dentro del perímetro.",
+    "La validación de certificados es estricta y no se puede omitir, así que un certificado caducado o emitido para otro nombre se rechazará en lugar de aceptarse con un aviso.",
+    "Los calendarios, contactos y chat de IceWarp no forman parte de esto. mcpemails habla IMAP y SMTP, así que funciona con el correo, no con las funciones de groupware que hay a su lado."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con IceWarp?",
+      "a": "No por sí solo. Claude no tiene un conector para IceWarp y no puede abrir una sesión IMAP hacia un servidor que gestionas tú. Conectar un servidor MCP como mcpemails a tu servidor IceWarp le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar un buzón en él, y la misma bandeja queda disponible después en Cursor y ChatGPT."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de IceWarp?",
+      "a": "El nombre de servidor es el de tu propio servidor. Los puertos son los predeterminados que documenta IceWarp: IMAP en el 143, IMAP con SSL en el 993, SMTP en el 25, envío en el 587 con STARTTLS y SMTPS en el 465. La propia documentación de IceWarp marca el 465 como obsoleto y prefiere el 587. Inicia sesión con la dirección de correo completa y la contraseña del buzón."
+    },
+    {
+      "q": "¿Por qué un usuario de IceWarp puede conectarse por IMAP y otro no?",
+      "a": "Casi siempre por el Mailbox Type de la cuenta. En la consola de administración, abre el usuario, ve a la pestaña Options y mira el tipo de buzón: si dice POP3 en lugar del valor combinado IMAP y POP3, esa cuenta no tiene servicio IMAP haga lo que haga el servidor. Es un ajuste por cuenta, por eso afecta a personas concretas y no a todos."
+    },
+    {
+      "q": "¿Necesita IceWarp una contraseña de aplicación?",
+      "a": "No. IceWarp no tiene un esquema de contraseñas específicas de aplicación. Los clientes se autentican con la contraseña del buzón guardada en la cuenta de usuario, la misma que se usa para WebClient. Si nadie la sabe, restablécela en la cuenta desde la consola de administración en lugar de intentar recuperarla."
+    },
+    {
+      "q": "¿Se almacena mi correo de IceWarp en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de tu servidor IceWarp por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de IceWarp",
+    "sub": "Conecta un buzón de tu propio servidor IceWarp. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

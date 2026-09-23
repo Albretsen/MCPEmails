@@ -1,21 +1,32 @@
 {
+  "_sources": [
+    "https://help.mail.ru/mail/security/protection/external/",
+    "https://help.mail.ru/mail/mailer/password/"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "外部应用专用密码",
+    "helpUrl": "https://help.mail.ru/mail/security/protection/external/",
+    "usernameForm": "你的完整地址，带有你注册时所用的确切域名：name@mail.ru、name@bk.ru、name@list.ru 或 name@inbox.ru。",
+    "status": "active"
+  },
   "meta": {
-    "title": "将 Mail.ru 连接到 Claude（及任意 AI）",
-    "description": "用应用专用密码通过 IMAP 将 Mail.ru 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的邮件，1 个收件箱永久免费。"
+    "title": "将 Mail.ru 连接到 Claude、Cursor 与 MCP 客户端",
+    "description": "使用外部应用专用密码，通过 imap.mail.ru:993 的 IMAP 将 Mail.ru 连接到 Claude、Cursor 及任意 MCP 客户端。网站登录密码无法使用。"
   },
   "hero": {
     "eyebrow": "Mail.ru + AI",
     "titleLine1": "将 Mail.ru 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
-    "lead": "几分钟即可为你的 AI 代理接入一个真正的 Mail.ru 收件箱。用一个应用专用密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+    "lead": "几分钟即可为你的 AI 代理接入一个真正的 Mail.ru 收件箱。用一个应用专用密码即可读取、搜索、发送、回复、定时与整理邮件，同一个收件箱可在所有 MCP 客户端中使用，而不止一个。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "应用专用密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行连接 Mail.ru。mcpemails 是一个托管 MCP 服务器，用应用专用密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱永久免费。"
+    "answer": "Claude 无法自行访问 Mail.ru。mcpemails 是一个托管 MCP 服务器，使用应用专用密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，1 个收件箱免费。"
   },
   "method": {
     "title": "Mail.ru 如何连接：IMAP 与应用专用密码",
-    "body": "Mail.ru 通过 IMAP/SMTP 连接，需要一个<b>外部应用专用密码</b>。用于登录网站的密码在邮件客户端中无法使用。请在 Mail.ru 的安全设置、外部应用密码中创建一个，再连同 Mail.ru 地址粘贴到 mcpemails。创建前 Mail.ru 要求账户已绑定手机号。"
+    "body": "Mail.ru 通过 IMAP/SMTP 连接，需要一个<b>外部应用专用密码</b>。你登录网站所用的密码在邮件客户端中无法使用。请在 Mail.ru 的 Security、Passwords for external applications 中创建一个，然后连同你的 Mail.ru 地址一起粘贴到 mcpemails。Mail.ru 要求账户先绑定手机号，才会签发这种密码。"
   },
   "setup": [
     {
@@ -24,19 +35,63 @@
     },
     {
       "h": "创建外部应用专用密码",
-      "p": "在 Mail.ru 中打开安全设置，创建一个外部应用密码。mcpemails 需要的是它，而不是你在网站上用的密码。"
+      "p": "在 Mail.ru 中打开 Security，创建一个外部应用专用密码。mcpemails 需要的是这个密码，而不是你在网站上使用的那个。"
     },
     {
       "h": "粘贴到 mcpemails",
-      "p": "选择 IMAP / SMTP，填入你的 Mail.ru 地址、下方的服务器地址和密码，安全连接收件箱。"
+      "p": "选择 IMAP / SMTP，填入你的 Mail.ru 地址、下方的服务器地址和密码，安全地连接收件箱。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
       "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],
+  "gotchas": [
+    {
+      "h": "自 2022 年起，网站密码已被禁止在邮件客户端中使用",
+      "p": "Mail.ru 已不再接受外部应用使用普通账户密码，所以现在每个邮件客户端都需要在 Security 下的 <b>Passwords for external applications</b> 中创建一个专用密码。这与双重身份验证无关：无论你是否使用它都适用，也没有任何设置能把它重新关闭。拒绝返回的是普通的认证错误，这就是为什么那么多人要花一下午时间，坚信自己是输错了什么。"
+    },
+    {
+      "h": "Mail.ru 要求先确认手机号，才会签发这种密码",
+      "p": "创建外部应用专用密码要经过 Mail.ru 的两步安全页面，而这些页面要求账户上有已确认的手机号。没有手机号的账户根本进不了密码页面，所以请先添加并验证手机号。创建后的密码只显示一次，并且只绑定到那一个应用，所以请单独生成一个，而不要复用其他客户端的现有密码。"
+    },
+    {
+      "h": "bk.ru、list.ru 和 inbox.ru 是同一项服务，但用户名中的域名很重要",
+      "p": "Mail.ru 的四个域名都通过同一台 <code>imap.mail.ru</code> 认证，所以不需要查找单独的主机名。然而，用户名是包括你注册时确切域名在内的完整地址。对一个实际上是 <code>@bk.ru</code> 的地址输入 <code>@mail.ru</code> 形式会失败，而报错看起来同样像是密码错误，而不是用户名错误。"
+    },
+    {
+      "h": "没有 IDLE，没有 SPECIAL-USE，也没有 AUTH=LOGIN",
+      "p": "Mail.ru 的 IMAP 声明支持 <code>MOVE</code>、<code>UIDPLUS</code> 和 <code>SASL-IR</code>，所以移动是原子的，认证也只需一次往返。它不声明 <code>IDLE</code>，所以不会向你推送任何东西，新邮件要靠查询发现。它也不声明 <code>SPECIAL-USE</code>，所以 Sent、Drafts、Spam 和 Trash 按名称而不是按角色匹配。在俄语邮箱中，这些文件夹叫 Отправленные、Черновики、Спам 和 Корзина，寻找名为“Sent”的文件夹的代理是找不到的。明确写出文件夹名称就能正常工作。它的认证列表是 <code>AUTH=PLAIN</code> 和 <code>AUTH=XOAUTH2</code>，没有 <code>AUTH=LOGIN</code>，所以写死使用 LOGIN 机制的客户端，即使密码完全正确也无法通过认证。"
+    }
+  ],
+  "limits": [
+    "Mail.ru 不支持 IDLE，所以新邮件是在代理查询时发现的，而不是在到达的那一刻推送。",
+    "Mail.ru 的提交服务器声明的单封邮件上限约为 70 MB。通过 mcpemails 读取附件时，每次请求上限为 25 MB。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Mail.ru 吗？",
+      "a": "不能单独使用。Claude 没有内置的 Mail.ru 连接器。使用外部应用专用密码，通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Mail.ru 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.mail.ru，端口 993，使用隐式 TLS。SMTP 为 smtp.mail.ru，端口 465，同样是隐式 TLS。用户名是包括确切域名在内的完整地址，密码是外部应用专用密码，而不是你的网站密码。两个服务器均已在本页所示日期通过实时 TLS 连接确认。"
+    },
+    {
+      "q": "为什么我的 Mail.ru 密码被拒绝？",
+      "a": "因为自 2022 年起，你登录网站所用的密码已被禁止在外部应用中使用。请在你 Mail.ru 账户的 Security 下创建一个外部应用专用密码，并改用它。如果你进不了那个页面，说明账户缺少已确认的手机号，而 Mail.ru 要求先有手机号才会签发这种密码。"
+    },
+    {
+      "q": "bk.ru、list.ru 和 inbox.ru 地址能用吗？",
+      "a": "能。它们是同一服务器上的同一项服务，使用相同的外部应用专用密码。请用带有真实域名的完整地址作为用户名，因为域名是凭据的一部分。这些域名没有单独的主机名：它们都通过 imap.mail.ru 和 smtp.mail.ru 认证。"
+    },
+    {
+      "q": "我的 Mail.ru 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 Mail.ru 实时获取邮件，并交给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。在 Mail.ru 安全设置中删除外部应用专用密码，会立即在 Mail.ru 那一端终止连接。"
+    }
+  ],
   "ctaBand": {
     "title": "给你的 AI 一个 Mail.ru 收件箱",
-    "sub": "几分钟即可连接 Mail.ru。一个收件箱永久免费，无需信用卡。"
+    "sub": "几分钟即可连接 Mail.ru。1 个收件箱永久免费，无需信用卡。"
   }
 }

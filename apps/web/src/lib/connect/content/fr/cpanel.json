@@ -1,21 +1,32 @@
 {
+  "_sources": [
+    "https://docs.cpanel.net/cpanel/email/email-accounts/",
+    "https://docs.cpanel.net/cpanel/email/set-up-mail-client/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte",
+    "helpUrl": "https://docs.cpanel.net/cpanel/email/set-up-mail-client/",
+    "usernameForm": "L'adresse e-mail complète, par exemple you@yourdomain.com. Jamais l'identifiant de votre compte cPanel.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Connecter cPanel à Claude (et à toute IA)",
-    "description": "Connectez cPanel à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de la boîte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+    "title": "Connecter cPanel à Claude, Cursor et aux clients MCP",
+    "description": "Connectez une boîte cPanel à Claude, Cursor et tout client MCP via IMAP. Relevez votre vrai serveur dans Email Accounts, Connect Devices."
   },
   "hero": {
     "eyebrow": "cPanel + IA",
     "titleLine1": "Connectez cPanel à Claude,",
     "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
-    "lead": "Offrez à votre agent IA une vraie boîte cPanel en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de la boîte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "lead": "Offrez à votre agent IA une vraie boîte cPanel en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de votre boîte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
     "meta0": "1 boîte gratuite, pour toujours",
-    "meta1": "Le mot de passe de la boîte, pas de configuration OAuth",
+    "meta1": "Le mot de passe de votre boîte, sans configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude ne peut pas atteindre cPanel tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+    "answer": "Claude ne peut pas accéder seul à cPanel. mcpemails est un serveur MCP hébergé qui connecte la boîte via IMAP avec son mot de passe, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes et une boîte est gratuite."
   },
   "method": {
     "title": "Comment cPanel se connecte : IMAP et le mot de passe de la boîte",
-    "body": "Une boîte cPanel, celle que vous consultez dans le webmail Roundcube ou Horde, se connecte via IMAP/SMTP avec le mot de passe défini dans cPanel, section Email Accounts. Pas de mot de passe d'application, pas d'OAuth. Le serveur est en général <code>mail.votredomaine.com</code>, et cPanel affiche les valeurs exactes dans Email Accounts, Connect Devices, sous Mail Client Manual Settings. Utilisez la colonne sécurisée SSL/TLS, pas celle en clair."
+    "body": "Une boîte cPanel, celle que vous lisez dans le webmail Roundcube ou Horde, se connecte via IMAP/SMTP avec le mot de passe défini dans cPanel sous Email Accounts. Il n'y a ni mot de passe d'application ni OAuth. Le serveur est généralement <code>mail.yourdomain.com</code>, et cPanel affiche les valeurs exactes sous Email Accounts, Connect Devices, dans Mail Client Manual Settings. Utilisez la colonne sécurisée SSL/TLS, pas celle en clair."
   },
   "setup": [
     {
@@ -24,15 +35,64 @@
     },
     {
       "h": "Relevez vos réglages dans cPanel",
-      "p": "Dans cPanel, ouvrez Email Accounts puis Connect Devices pour la boîte. Copiez les serveurs et ports IMAP et SMTP sécurisés depuis Mail Client Manual Settings. Si vous ignorez le mot de passe de la boîte, définissez-en un nouveau sur le même écran."
+      "p": "Dans cPanel, ouvrez Email Accounts et cliquez sur Connect Devices pour la boîte. Copiez les serveurs et ports IMAP et SMTP sécurisés depuis Mail Client Manual Settings. Si vous ne connaissez pas le mot de passe de la boîte, définissez-en un nouveau sur le même écran."
     },
     {
-      "h": "Collez-le dans mcpemails",
+      "h": "Collez-les dans mcpemails",
       "p": "Choisissez IMAP / SMTP, ajoutez votre adresse cPanel, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
-      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a accès à la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Il n'existe pas de serveur de messagerie cPanel, seulement le vôtre, et seul le panneau fait autorité sur son nom",
+      "p": "cPanel est un logiciel exploité par votre hébergeur, pas un service de messagerie : il n'existe donc aucun nom de serveur commun à préremplir. Chaque compte répond sur la machine qui l'héberge. Le seul endroit qui affiche la vérité pour votre compte est <b>Email Accounts</b>, puis <b>Connect Devices</b> sur la ligne de l'adresse, puis le bloc <b>Mail Client Manual Settings</b>. cPanel y affiche deux tableaux : <b>Secure SSL/TLS Settings</b> avec IMAP sur 993, POP3 sur 995 et SMTP sur 465, et un tableau non-SSL avec 143, 110 et 587 que vous devez ignorer. Copiez le serveur entrant et sortant du tableau sécurisé exactement tel qu'il est affiché, y compris un serveur qui ne ressemble en rien à votre domaine."
+    },
+    {
+      "h": "mail.yourdomain.com se résout généralement, et échoue généralement à la vérification du certificat",
+      "p": "La recommandation par défaut de cPanel est <code>mail.example.com</code>, et ce nom pointe normalement vers la bonne machine, c'est pourquoi les ports en clair semblent fonctionner. En TLS, souvent non, car le certificat présenté par le serveur appartient au serveur mutualisé et non à votre domaine. cPanel gère cela par substitution : sa propre documentation indique que le système utilise le nom d'hôte du serveur quand le domaine n'a pas de certificat valide, et le sous-domaine <code>mail</code> quand le certificat ne correspond pas au nom d'hôte. C'est précisément cette substitution qui explique pourquoi la valeur dans Connect Devices est parfois un nom de serveur que vous n'avez jamais vu. Utilisez-le quand même. Une non-concordance de certificat est ici un problème de nommage, pas une attaque, et ignorer l'avertissement n'est pas la bonne solution."
+    },
+    {
+      "h": "Une boîte peut être bloquée à la connexion ou à l'envoi tout en paraissant parfaitement saine",
+      "p": "cPanel place un bloc <b>Restrictions</b> sur chaque boîte, accessible depuis <b>Email Accounts</b>, puis <b>Manage</b>. Logging In peut être réglé sur Suspend, ce qui bloque le webmail et tous les clients de messagerie sans changer le mot de passe. Sending Outgoing Email peut être réglé sur Suspend, ce qui rejette les messages sortants, ou sur <b>Hold</b>, qui les met silencieusement en file d'attente pendant quatre jours puis abandonne. Hold est le pire des trois pour un agent IA : l'envoi est accepté, il semble réussi, et rien n'arrive jamais. Si des messages semblent disparaître, ouvrez Restrictions avant de chercher ailleurs."
+    },
+    {
+      "h": "Votre hébergeur peut publier sa propre variante de ces réglages, et c'est lui qui a raison",
+      "p": "Cette page décrit le schéma générique de cPanel. Certains hébergeurs s'en écartent et documentent eux-mêmes cet écart. Bluehost, par exemple, ne met <code>mail.example.com</code> que dans le bloc non chiffré et donne le domaine seul pour le bloc sécurisé. A2 Hosting, désormais hosting.com, vous demande d'utiliser le nom complet du serveur, comme <code>mi3-ss78.a2hosting.com</code>, car le certificat mutualisé couvre le serveur. Si nous avons une page pour votre hébergeur, suivez-la, car elle contient les valeurs exactes. Sinon, le panneau Connect Devices de votre propre cPanel a le dernier mot."
+    }
+  ],
+  "limits": [
+    "Nous ne pouvons pas préremplir les serveurs d'une boîte cPanel, car le nom d'hôte appartient à votre serveur et non à un service partagé. Vous devez le coller depuis Connect Devices.",
+    "Certains hébergeurs bloquent par pare-feu la soumission sortante ou désactivent l'IMAP externe sur les offres mutualisées. cPanel affiche quand même les réglages dans ce cas : un refus relève alors de votre hébergeur, pas d'un problème de réglages.",
+    "mcpemails connecte la boîte. Les redirections, alias, répondeurs automatiques, filtres et quotas restent dans cPanel et ne sont pas visibles par votre client IA."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec l'e-mail cPanel ?",
+      "a": "Pas directement. Claude n'a pas de connecteur intégré pour les serveurs de messagerie cPanel. Connecter un serveur MCP comme mcpemails à la boîte via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, avec les mêmes identifiants qu'un client de messagerie de bureau, et la même connexion fonctionne aussi depuis Cursor et ChatGPT."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de cPanel ?",
+      "a": "Les ports sont standard : IMAP sur 993 et SMTP sur 465, tous deux en TLS implicite, avec 143 et 587 comme équivalents non chiffrés à ne pas utiliser. Le nom d'hôte, lui, n'est pas standard et varie selon le compte d'hébergement. Relevez-le dans Email Accounts, Connect Devices, Mail Client Manual Settings, et utilisez le tableau Secure SSL/TLS."
+    },
+    {
+      "q": "Comment trouver le nom d'hôte de mon serveur de messagerie cPanel ?",
+      "a": "Connectez-vous à cPanel, ouvrez Email Accounts et cliquez sur Connect Devices à côté de l'adresse. Descendez jusqu'à Mail Client Manual Settings et lisez le serveur entrant et sortant dans le tableau Secure SSL/TLS. Il peut s'agir de mail.yourdomain.com, de votre domaine seul ou d'un nom de serveur appartenant à votre hébergeur. Celui qui est affiché est le bon pour TLS."
+    },
+    {
+      "q": "Pourquoi ai-je un avertissement de certificat pour mail.mydomain.com ?",
+      "a": "Parce que le serveur présente un certificat émis pour la machine mutualisée et non pour votre domaine. Le nom que vous avez saisi ne figure pas sur ce certificat, donc un client qui valide strictement refuse la connexion. La solution est de vous connecter au nom d'hôte que cPanel indique dans le tableau Secure SSL/TLS, qui est le nom réellement couvert par le certificat."
+    },
+    {
+      "q": "Pourquoi le mot de passe de ma boîte cPanel est-il refusé ?",
+      "a": "Trois causes dominent. Vous avez utilisé l'identifiant de votre compte cPanel au lieu du mot de passe défini pour l'adresse e-mail elle-même. La boîte a Logging In réglé sur Suspend sous Restrictions. Ou vous pointez vers un nom d'hôte qui se résout ailleurs. Réinitialisez le mot de passe de la boîte depuis Email Accounts, puis Manage, et vérifiez Restrictions sur le même écran."
+    },
+    {
+      "q": "Mon courrier cPanel est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis votre propre serveur via IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le contenu des messages n'est pas conservé."
     }
   ],
   "ctaBand": {

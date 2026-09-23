@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.infomaniak.com/en/support/faq/1321/add-a-device-create-an-email-password",
+    "https://www.infomaniak.com/en/support/faq/2429/configure-em-client-with-imap-email",
+    "https://www.infomaniak.com/en/support/faq/2855/manage-application-passwords"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Mot de passe d'appareil",
+    "helpUrl": "https://www.infomaniak.com/en/support/faq/1321/add-a-device-create-an-email-password",
+    "usernameForm": "Votre adresse complète, domaine compris : name@yourdomain.ch.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connecter Infomaniak Mail à Claude et aux clients MCP",
+    "description": "Connectez Infomaniak Mail à Claude, Cursor et tout client MCP en IMAP sur mail.infomaniak.com:993. Exige un mot de passe d'appareil, pas celui du compte."
+  },
+  "hero": {
+    "eyebrow": "Infomaniak Mail + IA",
+    "titleLine1": "Connectez Infomaniak Mail à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Infomaniak. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec un mot de passe d'appareil généré pour cette adresse.",
+    "answer": "Claude ne peut pas accéder seul à Infomaniak Mail. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur mail.infomaniak.com, port 993, en s'authentifiant avec un mot de passe d'appareil généré pour cette adresse mail plutôt qu'avec le mot de passe de votre compte Infomaniak, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Infomaniak n'accepte pas du tout le mot de passe du compte en IMAP, et ses mots de passe d'application, distincts, sont une autre chose qui ne fonctionnera pas ici. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe d'appareil, pas celui du compte",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Infomaniak se connecte : IMAP et un mot de passe d'appareil",
+    "body": "Infomaniak sert IMAP sur <code>mail.infomaniak.com</code> au port 993 en TLS implicite, et SMTP sur le même serveur au port 465. Ces noms d'hôte sont partagés par tous les clients Infomaniak Mail, y compris pour les adresses sur votre propre domaine et sur une offre kSuite : il n'y a donc aucun serveur propre à chaque client à rechercher. C'est l'authentification qui distingue Infomaniak de presque tous les autres hébergeurs de cette catégorie : le mot de passe de votre Infomaniak Manager n'est accepté ni par IMAP ni par SMTP. Chaque adresse mail délivre ses propres <b>mots de passe d'appareil</b>, générés un par client dans l'onglet Devices de l'adresse, d'au moins seize caractères, affichés une seule fois et révocables individuellement. Comme ce sont des identifiants distincts, activer l'authentification à deux facteurs sur votre compte Infomaniak ne change rien pour les clients mail : les mots de passe d'appareil continuent de fonctionner avant comme après."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
+    },
+    {
+      "h": "Générez un mot de passe d'appareil pour l'adresse",
+      "p": "Ouvrez manager.infomaniak.com, allez dans Mail Service, cliquez sur votre domaine, puis sur l'adresse mail elle-même. Ouvrez l'onglet Devices et choisissez Add a device. Laissez l'utilisateur sur « No user », sauf si vous voulez délibérément lier des restrictions SMTP à un compte précis, donnez-lui un nom que vous reconnaîtrez plus tard, et copiez immédiatement le mot de passe généré. Infomaniak ne l'affichera plus."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, saisissez l'adresse mail complète et collez le mot de passe d'appareil. Le serveur mail.infomaniak.com et les ports 993 et 465 sont préremplis et ont été vérifiés par une vraie connexion TLS."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Ajoutez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Un mot de passe d'appareil n'est pas un mot de passe d'application",
+      "p": "Infomaniak délivre deux types distincts d'identifiants secondaires, et ils ne sont pas interchangeables. Les <b>mots de passe d'application</b>, créés dans les paramètres de sécurité de votre compte, authentifient des outils et services auprès de votre compte Infomaniak quand l'authentification à deux facteurs est activée. Les <b>mots de passe d'appareil</b>, créés sur chaque adresse mail, sont ceux qu'acceptent IMAP, POP et SMTP. La documentation d'Infomaniak indique clairement qu'un mot de passe d'application n'est pas un mot de passe d'appareil et ne permettra pas de synchroniser une adresse e-mail. Ceux qui lisent « mot de passe d'application » dans un guide de configuration générique choisissent le mauvais, le génèrent sans problème, puis ne comprennent pas pourquoi la boîte refuse toujours la connexion."
+    },
+    {
+      "h": "Infomaniak n'annonce pas SASL-IR, et la plupart des clients le supposent",
+      "p": "Le serveur IMAP n'annonce pas la capacité SASL-IR : il rejette donc l'authentification en une étape qui envoie les identifiants sur la même ligne que la commande AUTHENTICATE. Un client qui suppose SASL-IR reçoit un simple <code>BAD</code> sans explication, qui ressemble exactement à un mauvais mot de passe. mcpemails le détecte et relance l'échange en deux étapes, donc la connexion aboutit ici, mais c'est une cause fréquente d'échecs d'autres outils IMAP avec Infomaniak."
+    },
+    {
+      "h": "La bannière d'accueil ne contient aucune liste de capacités",
+      "p": "Le serveur d'Infomaniak répond par un simple <code>* OK IMAP4 ready</code> et rien d'autre, alors que la plupart des serveurs annoncent leurs extensions dès l'accueil. Un client qui ne lit les capacités que dans la bannière en conclut que le serveur ne prend rien en charge, et soit se rabat sur le comportement le plus rudimentaire, soit abandonne. La bonne méthode consiste à envoyer une commande CAPABILITY explicite après l'accueil, puis de nouveau après l'authentification, et c'est ce que fait mcpemails."
+    }
+  ],
+  "limits": [
+    "Le serveur n'annonce pas l'extension MOVE : déplacer un message se fait donc par copie, marquage et purge plutôt qu'en une seule commande atomique.",
+    "SPECIAL-USE est absent : Envoyés, Brouillons, Corbeille et Indésirables sont reconnus par leur nom. Sur une boîte en français, ils s'appellent généralement Envoyes, Brouillons, Corbeille et Indesirables."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec Infomaniak Mail ?",
+      "a": "Pas seul. Claude n'a pas de connecteur Infomaniak intégré. Diriger un serveur MCP comme mcpemails vers votre adresse Infomaniak en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP d'Infomaniak ?",
+      "a": "IMAP : mail.infomaniak.com sur le port 993 en TLS implicite. SMTP : mail.infomaniak.com sur le port 465, également en TLS implicite, avec authentification obligatoire. L'identifiant est votre adresse mail complète et le mot de passe est un mot de passe d'appareil généré pour cette adresse. Les deux serveurs ont été confirmés par une vraie connexion TLS."
+    },
+    {
+      "q": "Pourquoi mon mot de passe Infomaniak ne fonctionne-t-il pas ?",
+      "a": "Parce que le mot de passe de votre Infomaniak Manager n'est jamais accepté par IMAP ni par SMTP. Les clients mail s'authentifient uniquement avec un mot de passe d'appareil créé sur l'adresse mail concernée, dans son onglet Devices du Manager. Si vous avez généré un mot de passe d'application à la place, c'est un autre identifiant, qui n'authentifiera pas une boîte."
+    },
+    {
+      "q": "Activer l'authentification à deux facteurs casse-t-il mon client mail ?",
+      "a": "Non. Les mots de passe d'appareil sont indépendants de la connexion à votre compte : IMAP, POP et SMTP se comportent de la même façon avant et après l'activation de l'authentification à deux facteurs sur le compte Infomaniak. C'est d'ailleurs pour cette raison qu'Infomaniak impose des mots de passe d'appareil au lieu d'autoriser le mot de passe du compte en IMAP."
+    },
+    {
+      "q": "Puis-je révoquer l'accès sans casser mes autres appareils ?",
+      "a": "Oui. Chaque mot de passe d'appareil est distinct : vous pouvez en créer un pour mcpemails, le nommer en conséquence, puis supprimer uniquement celui-ci plus tard. Les connexions existantes depuis votre téléphone et votre client de bureau continuent de fonctionner, car elles ont leurs propres mots de passe."
+    },
+    {
+      "q": "Mon courrier Infomaniak est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct chez Infomaniak en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le contenu des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA une boîte Infomaniak",
+    "sub": "Connectez Infomaniak Mail en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

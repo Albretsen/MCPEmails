@@ -1,42 +1,101 @@
 {
+  "_sources": [
+    "https://help.aol.com/articles/Create-and-manage-app-password",
+    "https://help.aol.com/articles/how-do-i-use-other-email-applications-to-send-and-receive-my-aol-mail"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "App-passord",
+    "helpUrl": "https://help.aol.com/articles/Create-and-manage-app-password",
+    "usernameForm": "Hele AOL-adressen din, med domenet: name@aol.com. Eldre aim.com-adresser og AOL-adresser for andre land har samme form.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Koble AOL Mail til Claude (og enhver AI)",
-    "description": "Koble AOL Mail til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med et app-passord. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+    "title": "Koble AOL Mail til Claude, Cursor og MCP-klienter",
+    "description": "Koble AOL Mail til Claude, Cursor og enhver MCP-klient over IMAP på imap.aol.com:993 med et AOL-app-passord. AOL-passordet alene fungerer ikke."
   },
   "hero": {
     "eyebrow": "AOL Mail + AI",
     "titleLine1": "Koble AOL Mail til Claude,",
-    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
-    "lead": "Gi AI-agenten din en ekte AOL Mail-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med et enkelt app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte AOL Mail-innboks på få minutter. Les, søk, send, svar, planlegg og organiser e-post med ett enkelt app-passord, og bruk den samme innboksen i alle MCP-klienter, ikke bare én.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "App-passord, ingen OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude når ikke AOL Mail på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med et app-passord, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    "answer": "Claude kan ikke nå AOL Mail på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP med et app-passord, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
   },
   "method": {
-    "title": "Slik kobler AOL Mail seg til: IMAP og et app-passord",
-    "body": "AOL Mail kobles til via IMAP/SMTP med et <b>AOL app-passord</b>. Det vanlige AOL-passordet ditt godtas ikke av en e-postklient, så en avvist innlogging her skyldes nesten alltid et manglende app-passord. Slå på totrinnsbekreftelse, opprett et app-passord under Kontoinformasjon, Kontosikkerhet, og lim det inn i mcpemails sammen med hele AOL-adressen din."
+    "title": "Slik kobles AOL Mail til: IMAP og et app-passord",
+    "body": "AOL Mail kobles til over IMAP/SMTP med et <b>AOL-app-passord</b>. Det vanlige AOL-passordet ditt autentiserer ikke en e-postklient, så en avvist pålogging her skyldes nesten alltid et manglende app-passord. Slå på 2-Step Verification, generer et app-passord under Account Info, Account Security, og lim det deretter inn i mcpemails sammen med hele AOL-adressen din."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg hos mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
-      "h": "Opprett et AOL app-passord",
-      "p": "I AOL Mail åpner du Kontoinformasjon, Kontosikkerhet, slår på totrinnsbekreftelse hvis den er av, og oppretter et app-passord. Kopier det med én gang, AOL viser det bare én gang."
+      "h": "Generer et AOL-app-passord",
+      "p": "I AOL Mail åpner du Account Info, Account Security, slår på 2-Step Verification hvis det er av, og genererer et app-passord. Kopier det med en gang, AOL viser det bare én gang."
     },
     {
       "h": "Lim det inn i mcpemails",
-      "p": "Velg IMAP / SMTP, legg til AOL Mail-adressen din, vertene under og passordet for å koble til innboksen trygt."
+      "p": "Velg IMAP / SMTP, legg til AOL Mail-adressen din, vertene nedenfor og passordet for å koble til innboksen på en sikker måte."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
       "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
     }
   ],
+  "gotchas": [
+    {
+      "h": "AOL Mail kjører på Yahoos plattform, men app-passordet må komme fra AOL",
+      "p": "<code>imap.aol.com</code> peker til den samme <code>yahoodns.net</code>-e-posttjenesten som betjener Yahoo Mail, og de to serverne hilser deg med det samme banneret. Det som ikke deles, er kontoen. En AOL-adresse administreres fra <b>AOL</b>-siden Account Security, og et app-passord generert i en Yahoo-konto åpner ikke en AOL-postkasse. Dette er viktig fordi søk etter AOL-innstillinger ofte gir deg en Yahoo-hjelpeartikkel: trinnene som beskrives er riktige, men nettstedet du skal være på, er feil."
+    },
+    {
+      "h": "App-passordet lages i en veiviser, vises én gang, og et passordbytte tilbakekaller det ikke",
+      "p": "På AOL-siden Account Security velger du Generate app password (noen kontoer viser Generate and manage app passwords), deretter Get Started, gir appen et navn og velger Generate password. AOL viser det bare én gang. Etterpå fortsetter det å virke selv om du bytter hovedpassordet for AOL, så et passordbytte kobler <b>ikke</b> fra en e-postklient. Å slette akkurat det app-passordet i det samme skjermbildet er den eneste måten å tilbakekalle tilgangen på."
+    },
+    {
+      "h": "AOLs IMAP tilbyr ikke AUTH=LOGIN, men SMTP-serveren gjør det",
+      "p": "Da vi undersøkte den, annonserte AOLs IMAP-server <code>AUTH=PLAIN</code> sammen med de to OAuth-mekanismene, og ingen <code>AUTH=LOGIN</code>. Innsendingsserveren godtar derimot både PLAIN og LOGIN. Derfor kan inngående og utgående halvdel av én konto oppføre seg ulikt i den samme klienten: verktøy som er hardkodet til LOGIN-mekanismen, noe som er vanlig i kode skrevet mot Exchange, sender e-post uten problemer og klarer så ikke å lese den, med en autentiseringsfeil som ser nøyaktig ut som et feil passord."
+    },
+    {
+      "h": "Systemmapper finnes via rolle, så det er trygt å gi dem nytt navn",
+      "p": "AOL annonserer <code>SPECIAL-USE</code>, <code>MOVE</code>, <code>UIDPLUS</code> og <code>IDLE</code>. Enkelt sagt: Sent, Drafts, Spam og Trash identifiseres ut fra hva de er og ikke hva de heter, så en agent finner fortsatt Sendt-mappen din etter at du har gitt den nytt navn, og å flytte en melding er én atomisk kommando i stedet for en kopi etterfulgt av en sletting. Det er en bedre IMAP-server enn flere betalte leverandører tilbyr, og det gjør AOL til en uvanlig veloppdragen postkasse å automatisere."
+    }
+  ],
+  "limits": [
+    "AOLs innsendingsserver oppgir en maksimal meldingsstørrelse på omtrent 41 MB. Lesing av vedlegg gjennom mcpemails er begrenset til 25 MB per forespørsel.",
+    "Et app-passord forblir gyldig etter at du har byttet AOL-passordet. Å slette det på AOL-siden Account Security er den eneste måten å stenge tilgangen på."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med AOL Mail?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd AOL-kobling. Kobler du en MCP-server som mcpemails til AOL-postkassen din over IMAP med et AOL-app-passord, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den, og den samme tilkoblingen fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for AOL Mail?",
+      "a": "IMAP er imap.aol.com på port 993 med implisitt TLS. SMTP er smtp.aol.com på port 465, også med implisitt TLS. Brukernavnet er hele AOL-adressen din, og passordet er et AOL-app-passord og ikke kontopassordet ditt. Begge vertene ble bekreftet via en faktisk TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvorfor blir AOL-passordet mitt avvist?",
+      "a": "AOL godtar ikke det vanlige kontopassordet ditt fra e-postprogrammer fra tredjeparter. Du trenger et app-passord fra AOL-siden Account Security. Den nest vanligste årsaken er at det er generert på feil sted: et app-passord opprettet i en Yahoo-konto fungerer ikke for en AOL-adresse, selv om de to tjenestene deler den samme e-postplattformen."
+    },
+    {
+      "q": "Er AOL Mail det samme som Yahoo Mail?",
+      "a": "De kjører på den samme infrastrukturen og oppfører seg nesten likt over IMAP, men de er separate kontoer med separate vertsnavn og separate sikkerhetssider. Koble til en aol.com-adresse med AOL-vertene og et AOL-app-passord. Koble til en yahoo.com-, ymail.com- eller rocketmail.com-adresse som Yahoo. Påloggingsopplysninger kan ikke brukes på tvers av de to."
+    },
+    {
+      "q": "Fungerer gamle aim.com-adresser og AOL-adresser for andre land fortsatt?",
+      "a": "Ja, så lenge postkassen fortsatt er aktiv. De er vanlige AOL Mail-kontoer på de samme vertene, bruker den samme fremgangsmåten for app-passord, og har hele adressen som brukernavn. Svært gamle oppsettsguider viser AOL-innstillinger fra før flyttingen til denne plattformen, så bruk vertene på denne siden og ikke det et ti år gammelt foruminnlegg viser."
+    },
+    {
+      "q": "Lagres AOL-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra AOL over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke oppbevart. Sletter du app-passordet i AOL Account Security, avsluttes tilkoblingen umiddelbart hos dem."
+    }
+  ],
   "ctaBand": {
     "title": "Gi AI-en din en AOL Mail-innboks",
-    "sub": "Koble til AOL Mail på minutter. Én innboks gratis for alltid, uten kort."
+    "sub": "Koble til AOL Mail på få minutter. Én innboks gratis for alltid, uten kort."
   }
 }

@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/programme/passwort-definition",
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/programm-passwort-verwalten",
+    "https://www.telekom.de/hilfe/vertrag-meine-daten/login-daten-passwoerter/welche-passwoerter-fuer-welchen-zweck",
+    "https://www.netzwelt.de/galerie/19784-e-mail-passwort-e-mail-adressen-t-online-einrichten.html"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Passwort für E-Mail-Programme (passord for e-postprogrammer)",
+    "helpUrl": "https://www.telekom.de/hilfe/apps-dienste/e-mail/programm-passwort-verwalten",
+    "usernameForm": "Hele adressen din, inkludert domenet: name@t-online.de. Eldre kontoer autentiserer noen ganger fortsatt med det 12-sifrede T-Online-nummeret, men adressen er det Telekom dokumenterer i dag.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "T-Online-e-post i Claude: det separate e-postpassordet",
+    "description": "Koble en T-Online-postkasse til Claude og MCP-klienter på secureimap.t-online.de:993. Krever det separate Passwort für E-Mail-Programme, ikke Telekom-innloggingen."
+  },
+  "hero": {
+    "eyebrow": "T-Online + AI",
+    "titleLine1": "Koble T-Online-postkassen din",
+    "titleLine2": "til Claude, Cursor, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Telekom-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP med det egne passordet Telekom utsteder for e-postprogrammer.",
+    "answer": "Claude når ikke en T-Online-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på secureimap.t-online.de port 993 og autentiserer med det separate Passwort für E-Mail-Programme som Telekom utsteder for e-postklienter, i stedet for Telekom-innloggingspassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. Har du aldri opprettet det passordet, har ingen klient noen gang kunnet logge inn på postkassen, og feilen ser ut som en skrivefeil. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Telekoms passord for e-postprogrammer kreves",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler T-Online seg til: IMAP og et andre, separat passord",
+    "body": "Telekom tilbyr IMAP på <code>secureimap.t-online.de</code> port 993 over implisitt TLS, og SMTP-innsending på <code>securesmtp.t-online.de</code> port 465. Begge navnene står foran en IMAP-proxy og ikke en postkasseserver du snakker direkte med, noe som forklarer flere av særtrekkene under. Delen nesten alle gjør feil, er påloggingen. Telekom har to passord på én konto: passordet for <b>Telekom Login</b>, brukt for Kundencenter og telekom.de, og et andre <b>Passwort für E-Mail-Programme</b>, med Telekoms egne ord beregnet <b>für das Verwenden eines E-Mail-Programms</b>. Bare det andre autentiserer mot <code>secureimap.t-online.de</code>. Telekom anbefaler at de to aldri er like, og på mange kontoer finnes passordet for e-postprogrammer rett og slett ikke før noen oppretter det."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Opprett Passwort für E-Mail-Programme",
+      "p": "I E-Mail Center på email.t-online.de åpner du <b>Menü</b>, så <b>Einstellungen</b>, så <b>Passwörter</b> i venstre kolonne. Under overskriften <b>E-Mail-Passwort, für das Verwenden eines E-Mail-Programms</b> velger du <b>E-Mail-Passwort ändern</b>, skriver det nye passordet to ganger og lagrer. Den samme påloggingen kan nås fra Kundencenter under <b>Profil</b>, så <b>Login-Daten und Passwörter</b>, så <b>weitere Passwörter</b>. Sett det selv om du tror du allerede har et: på mange kontoer er det aldri blitt opprettet."
+    },
+    {
+      "h": "Lim det inn i mcpemails",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel name@t-online.de, og lim inn passordet for e-postprogrammer. Telekom-vertene og -portene er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Telekom-innloggingspassordet avvises, og det er med vilje",
+      "p": "Dette er den aller vanligste tilkoblingsfeilen med T-Online, og den gir en vanlig autentiseringsfeil uten noe som forteller deg hvorfor. Telekom deler kontoen i et innloggingspassord for telekom.de og Kundencenter, og et separat <b>Passwort für E-Mail-Programme</b> for IMAP, POP3 og SMTP. E-postserveren godtar bare det andre. Telekom anbefaler eksplisitt at de to skal være forskjellige, så å sette dem til samme streng er heller ikke den tiltenkte løsningen; opprett passordet for e-postprogrammer, og bruk det på både inngående og utgående side av tilkoblingen."
+    },
+    {
+      "h": "IMAP-proxyen annonserer ingen AUTH-mekanisme i det hele tatt før innlogging",
+      "p": "Funksjonsbanneret Telekom returnerer, er <code>IMAP4 IMAP4rev1 QUOTA LITERAL+ NAMESPACE UIDPLUS IDLE SORT</code>. Det er ingen <code>AUTH=PLAIN</code>, ingen <code>AUTH=LOGIN</code> og ingen <code>SASL-IR</code> i det. I praksis forventer serveren den vanlige IMAP-kommandoen <code>LOGIN</code> i stedet for en SASL <code>AUTHENTICATE</code>-utveksling. Klientbiblioteker som lister annonserte SASL-mekanismer og nekter å fortsette når listen er tom, gir opp før de i det hele tatt sender påloggingsdetaljer, og derfor melder noen IMAP-verktøy at T-Online ikke kan nås, mens Thunderbird kobler til samme postkasse uten problemer. mcpemails håndterer den nakne LOGIN-veien, så denne er allerede tatt hånd om for deg."
+    },
+    {
+      "h": "Ingen MOVE og ingen SPECIAL-USE, på en postkasse med tyske mappenavn",
+      "p": "Serveren annonserer ikke IMAP-utvidelsen <code>MOVE</code>, så arkivering av en melding utføres som en kopi, en flaggoppdatering og en expunge i stedet for én atomisk kommando. Den mangler også <code>SPECIAL-USE</code>, som betyr at Sent, Drafts, Trash og Junk identifiseres etter navn og ikke rolle. En T-Online-postkasse kaller dem normalt <b>Gesendet</b>, <b>Entwürfe</b>, <b>Papierkorb</b> og <b>Spam</b>, så finner ikke en agent arkivet eller Sendt-mappen din, oppgi den i instruksjonen."
+    },
+    {
+      "h": "Sending er begrenset til 50 MB per melding",
+      "p": "<code>securesmtp.t-online.de</code> annonserer en maksimal meldingsstørrelse på 52 428 800 byte. Det er størrelsen på hele den kodede meldingen, så base64-vedlegg teller omtrent en tredjedel mer enn størrelsen på disk. En agent som blir bedt om å videresende et stort vedlegg, får en hard SMTP-avvisning i stedet for en treg sending."
+    }
+  ],
+  "limits": [
+    "Fordi serveren ikke støtter MOVE, er en flytting ikke atomisk. Hvis en tilkobling brytes midt i operasjonen, kan en melding kortvarig finnes i begge mapper.",
+    "Telekom avgrenser passordet for e-postprogrammer til e-postklienter. Det låser ikke opp Kundencenter, og å bytte Telekom-innloggingspassordet bytter ikke det, så de to må vedlikeholdes hver for seg."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med T-Online-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Telekom- eller T-Online-kobling. Peker du en MCP-server som mcpemails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for T-Online?",
+      "a": "IMAP er secureimap.t-online.de på port 993 med implisitt TLS. SMTP er securesmtp.t-online.de på port 465, også med implisitt TLS. Logg inn med hele t-online.de-adressen din og Passwort für E-Mail-Programme. Begge vertene ble bekreftet via en direkte TLS-tilkobling og er felles for alle T-Online-postkasser."
+    },
+    {
+      "q": "Hvorfor blir T-Online-passordet mitt avvist i et e-postprogram?",
+      "a": "Nesten alltid fordi du skrev inn Telekom-innloggingspassordet. Telekom utsteder en andre pålogging, Passwort für E-Mail-Programme, og bare den autentiserer mot e-postserverne. Opprett eller tilbakestill det i E-Mail Center under Einstellungen, så Passwörter, eller i Kundencenter under Profil, så Login-Daten und Passwörter, så weitere Passwörter."
+    },
+    {
+      "q": "Hvor oppretter jeg Passwort für E-Mail-Programme?",
+      "a": "Logg inn i E-Mail Center på email.t-online.de, åpne Menü, så Einstellungen, så Passwörter. Blokken med overskriften E-Mail-Passwort, für das Verwenden eines E-Mail-Programms har en knapp for å endre. Skriv det nye passordet to ganger og lagre det. Bruk den verdien i e-postklienten din og i mcpemails, for både innkommende og utgående server."
+    },
+    {
+      "q": "Virker dette med magenta.de og andre Telekom-e-postdomener?",
+      "a": "Enhver postkasse som ligger i Telekom E-Mail Center, autentiserer mot de samme vertene secureimap.t-online.de og securesmtp.t-online.de med det samme passordet for e-postprogrammer. Det som teller, er at postkassen er en Telekom E-Mail Center-postkasse, ikke teksten etter krøllalfa."
+    },
+    {
+      "q": "Lagres T-Online-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Telekom via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en T-Online-innboks",
+    "sub": "Koble til Telekom-postkassen din på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "_sources": [
+    "https://help.one.com/hc/en-us/articles/115005594285-How-to-set-an-email-account-in-for-example-Outlook",
+    "https://help.one.com/hc/en-us/articles/115005586289-Creating-a-new-email-account",
+    "https://help.one.com/hc/en-us/articles/115005586349-How-do-I-change-my-email-password"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Passord for e-postkontoen",
+    "helpUrl": "https://help.one.com/hc/en-us/articles/115005586349-How-do-I-change-my-email-password",
+    "usernameForm": "Hele adressen din, inkludert domenet: name@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble one.com-e-post til Claude og MCP-klienter",
+    "description": "Koble en one.com-postkasse til Claude, Cursor og enhver MCP-klient via IMAP på imap.one.com:993. Utgående e-post bruker send.one.com, ikke smtp.one.com."
+  },
+  "hero": {
+    "eyebrow": "one.com-e-post + AI",
+    "titleLine1": "Koble one.com-e-post til Claude,",
+    "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte one.com-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP med passordet du satte da du opprettet adressen.",
+    "answer": "Claude når ikke en one.com-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.one.com port 993 og sender gjennom send.one.com port 465, og autentiserer med hele e-postadressen din og passordet du satte for kontoen i one.com Control Panel. Claude, Cursor eller enhver MCP-klient kan da lese, søke, sende og organisere e-posten. Det er ikke noe app-passord å generere. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Passord for e-postkontoen fra Control Panel",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler one.com seg til: IMAP inn, send.one.com ut",
+    "body": "one.com deler de to e-postvertsnavnene sine på en måte som lurer folk. Innkommende e-post er <code>imap.one.com</code> på port 993 med implisitt TLS. Utgående e-post er <code>send.one.com</code> på port 465, også med implisitt TLS, med krav om autentisering med de samme påloggingsdetaljene. Begge er delte verter for alle one.com-kunder, så ingenting utledes fra ditt eget domene. Påloggingen er passordet du skrev da adressen ble opprettet i Control Panel, sammen med delen av adressen før krøllalfa. Det passordet bruker både webmail og enhver e-postklient, og det er adskilt fra innloggingen du bruker til selve one.com Control Panel."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Bekreft at adressen finnes, og sett passordet",
+      "p": "Logg inn i one.com Control Panel og åpne flisen Email. Adressen må være opprettet der før noen klient kan nå den. Klikk på adressen for å redigere den og sett et passord, eller endre det eksisterende. Du kan også endre et e-postpassord inne i one.com Webmail når du allerede er logget inn."
+    },
+    {
+      "h": "Lim det inn i mcpemails",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen og lim inn passordet for e-postkontoen. Vertene imap.one.com og send.one.com og portene 993 og 465 er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Utgående server er send.one.com, og smtp.one.com finnes ikke",
+      "p": "Så å si alle andre leverandører kaller innsendingsverten <code>smtp.something</code>, så folk fyller inn det mønsteret av ren vane og får et vertsnavn som ikke slås opp. one.com bruker <code>send.one.com</code>. Asymmetrien med <code>imap.one.com</code> får det til å se ut som en skrivefeil i dokumentasjonen, men det er det ikke. Hvis lesing av e-post virker, men sending tidsavbrytes eller ikke kan slås opp, er dette grunnen."
+    },
+    {
+      "h": "one.com videreselger også Microsoft 365, og den postkassen kan ikke kobles til",
+      "p": "Flisen i Control Panel heter Email and Microsoft 365, og one.com selger begge under samme konto. En one.com-e-postkonto, opprettet i den flisen med eget passord, er en vanlig IMAP-postkasse på one.coms servere og kobler fint til. En Microsoft 365-lisens kjøpt gjennom one.com er en Microsoft-postkasse på Microsofts servere, og Microsofts standard tenant-policy hindrer en sluttbruker i å samtykke til lese- og skrivetilgang til e-post for tredjeparter. Vi hevder ikke å koble til disse. Hvis webmailen din er Outlook på nettet i stedet for one.coms eget grensesnitt, har du Microsoft-produktet."
+    },
+    {
+      "h": "Totrinnsbekreftelse i Control Panel når ikke postkassen din",
+      "p": "one.com tilbyr totrinnsbekreftelse på innloggingen til Control Panel. Den beskytter panelet, der domenene og faktureringen din ligger, og har ingen betydning for IMAP eller SMTP, som fortsetter å godta passordet for e-postkontoen alene. Å slå den på ødelegger ikke mcpemails, men beskytter heller ikke postkassen. Vil du sikre selve postkassen, er virkemiddelet et sterkt, unikt passord på den adressen, ikke panelets 2FA."
+    }
+  ],
+  "limits": [
+    "Serveren annonserer ikke MOVE eller UIDPLUS, så en flytting utføres som kopi, flagg og expunge, og mål-UID-en må finnes ved søk.",
+    "SPECIAL-USE mangler, så Sent, Drafts, Trash og Junk matches etter navn. Danske, svenske og norske one.com-postkasser har ofte lokaliserte mappenavn.",
+    "Microsoft 365-lisenser solgt gjennom one.com kan ikke kobles til."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med one.com-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd one.com-kobling. Peker du en MCP-server som mcpemails mot one.com-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for one.com?",
+      "a": "IMAP er imap.one.com på port 993 med implisitt TLS. Utgående e-post går til send.one.com på port 465, også med implisitt TLS, med krav om autentisering. Brukernavnet er hele e-postadressen din, og passordet er det som er satt for kontoen i Control Panel. Begge vertene ble bekreftet via en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Hvorfor blir one.com-passordet mitt avvist?",
+      "a": "To vanlige årsaker. Du skriver inn innloggingen til one.com Control Panel i stedet for passordet som er satt på den enkelte e-postkontoen, eller adressen ble aldri faktisk opprettet i flisen Email i Control Panel. Sjekk ved å logge inn i one.com Webmail med de samme påloggingsdetaljene: feiler det også, er problemet postkassen, ikke klienten."
+    },
+    {
+      "q": "Trenger one.com et app-passord?",
+      "a": "Nei. one.com utsteder ikke programspesifikke passord for e-post, og det finnes ingen IMAP-bryter per postkasse å slå på. Passordet for e-postkontoen autentiserer både IMAP og SMTP. Totrinnsbekreftelse i Control Panel endrer ikke det."
+    },
+    {
+      "q": "Lagres one.com-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra one.com via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en one.com-innboks",
+    "sub": "Koble til en one.com-postkasse på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

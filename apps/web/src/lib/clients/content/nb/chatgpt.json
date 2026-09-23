@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://help.openai.com/en/articles/12584461"
+  ],
+  "meta": {
+    "title": "Koble e-post til ChatGPT: oppsett av MCP-kobling",
+    "description": "Gi ChatGPT en ekte innboks med utviklermodus og en egendefinert MCP-kobling. OAuth, ingen API-nøkkel, så lese, søke, sende og planlegge e-post. Én innboks gratis."
+  },
+  "hero": {
+    "eyebrow": "ChatGPT + e-post",
+    "titleLine1": "Koble innboksen din til ChatGPT",
+    "titleLine2": "som en egendefinert MCP-kobling",
+    "lead": "Slå på utviklermodus, opprett en kobling som peker på én URL, og ChatGPT kan lese, søke i, sende, svare på, videresende, planlegge og organisere den ekte e-posten din.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "OAuth, ingen API-nøkkel nødvendig",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "I ChatGPT slår du på utviklermodus under Settings, Apps and Connectors, Advanced settings. Opprett en kobling, lim inn https://mcpemails.com/api/mcp som koblings-URL, velg OAuth og autoriser med mcpemails. Full MCP-støtte er en beta som bare er tilgjengelig i arbeidsområder for ChatGPT Business og Enterprise eller Edu."
+  },
+  "method": {
+    "title": "Slik kobler ChatGPT seg til: OAuth, ingen API-nøkkel",
+    "body": "ChatGPT kjører standard MCP OAuth-flyt mot denne serveren. Den registrerer seg selv med <b>RFC 7591 dynamisk klientregistrering</b>, så du trenger ikke opprette noen klient-ID, og autoriserer med <b>autorisasjonskode pluss PKCE</b> med S256. Ingen klienthemmelighet sendes noen gang, og tokenet har bare de tilgangene (scopes) du godkjenner på samtykkeskjermen vår. Tilgangstokenet den får varer i én time og fornyes automatisk. Det vises under Dashboard, API Keys som <code>OAuth:</code> etterfulgt av klientnavnet, og det er der du tilbakekaller tilkoblingen."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto og koble til en postkasse",
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Gmail kobles til med Google-innlogging med ett klikk; iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+    },
+    {
+      "h": "Slå på utviklermodus",
+      "p": "Åpne Settings, Apps and Connectors, Advanced settings, og slå på Developer mode (utviklermodus)."
+    },
+    {
+      "h": "Opprett koblingen",
+      "p": "Gå tilbake til Apps and Connectors og klikk Create. Skriv inn et navn og lim inn <code>https://mcpemails.com/api/mcp</code> som Connector URL."
+    },
+    {
+      "h": "Velg OAuth og autoriser",
+      "p": "Velg OAuth, klikk Create, autoriser deretter med mcpemails og godkjenn tilgangene du vil at koblingen skal ha."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Full MCP i ChatGPT er en beta, og ikke alle arbeidsområder har den",
+      "p": "Utviklermodus med vilkårlige MCP-koblinger er begrenset til arbeidsområder for ChatGPT Business og Enterprise eller Edu. På en personlig Plus-konto mangler Create-knappen for en egendefinert kobling, eller så avviser den serveren, og ingen endring på vår side låser den opp. Hvis det er der du står, fungerer den samme innboksen og den samme URL-en allerede i dag i Claude, Cursor, VS Code eller CLI-klientene, så ingenting er bortkastet mens du venter."
+    },
+    {
+      "h": "Velg OAuth, ikke ingen autentisering, når du oppretter koblingen",
+      "p": "Koblingsskjemaet spør hvordan du vil autentisere. Denne serveren avviser anonyme kall: en uautentisert forespørsel får en 401 med en peker til OAuth-oppdagelse, som er det en standardkompatibel klient følger for å starte flyten. Velger du ingen autentisering, får du en kobling som feiler ved første verktøykall i stedet for under oppsettet, som er den forvirrende rekkefølgen."
+    },
+    {
+      "h": "Kun lesetilgang er et reelt valg, og ofte det riktige å starte med",
+      "p": "Samtykkeskjermen lar deg gi ChatGPT bare <code>read:email</code> og <code>search:email</code>. Det er nok til sortering, oppsummering og å finne ting, og det tar alle irreversible handlinger ut av bildet mens du bestemmer deg for hvor mye lenger du vil gå."
+    }
+  ],
+  "limits": [
+    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger.",
+    "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post vekker aldri agenten din av seg selv. Vil du reagere på innkommende e-post, må du polle etter en tidsplan.",
+    "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
+  ],
+  "faq": [
+    {
+      "q": "Kan ChatGPT lese og sende e-posten min?",
+      "a": "Ja, gjennom en egendefinert MCP-kobling. ChatGPT kan ikke nå en postkasse på egen hånd; når du peker en kobling mot mcpemails, får den verktøy for å lese, søke, sende, svare, videresende, organisere og planlegge e-post, begrenset til tilgangene du godkjenner under oppsettet."
+    },
+    {
+      "q": "Hvorfor kan jeg ikke opprette en kobling i ChatGPT-kontoen min?",
+      "a": "Utviklermodus og egendefinerte MCP-koblinger er en beta som er begrenset til arbeidsområder for ChatGPT Business og Enterprise eller Edu. En personlig konto kan ikke legge til en, uansett server. Dette er en produktbeslutning hos OpenAI, og ingenting på vår side endrer det."
+    },
+    {
+      "q": "Trenger jeg en API-nøkkel for ChatGPT?",
+      "a": "Nei. Velg OAuth når du oppretter koblingen, så registrerer ChatGPT seg selv og fullfører en flyt med autorisasjonskode pluss PKCE. API-nøkler er for klienter som ikke kan gjøre det, og for skript."
+    },
+    {
+      "q": "Hvilke postkasser kan ChatGPT nå på denne måten?",
+      "a": "Gmail via Google-innlogging, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord, og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Klienten ser alle gjennom den samme tilkoblingen: agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
+    },
+    {
+      "q": "Kan ChatGPT sende e-post uten at jeg ser det?",
+      "a": "Bare hvis du tillater det. Sending krever tilgangen send:email, så en nøkkel eller et token uten den tilgangen kan ikke sende i det hele tatt. I tillegg kan eieren av en innboks kreve menneskelig godkjenning i dashbordet, som holder tilbake hver sending, hvert svar, hver videresending, hvert utkast som sendes og hver planlagte sending til en person slipper den gjennom."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Hver melding hentes direkte fra leverandøren din for forespørselen som ba om den, og sendes rett videre til klienten din. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, slik at fremtidige kall kan autentiseres. Sletter du innboksen i dashbordet, eller tilbakekaller tilgangen hos leverandøren, avsluttes tilkoblingen med en gang."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi ChatGPT en ekte innboks",
+    "sub": "Én kobling, alle postkassene du har koblet til. Én innboks gratis for alltid."
+  }
+}

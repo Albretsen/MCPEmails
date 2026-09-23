@@ -1,0 +1,93 @@
+{
+  "_sources": [
+    "https://domene.shop/faq?id=237",
+    "https://domene.shop/faq?id=331"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://domene.shop/faq?id=237",
+    "usernameForm": "Hele adressen din, med domenet: navn@dittdomene.no.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Domeneshop-e-post til Claude og MCP-klienter",
+    "description": "Koble Domeneshop-e-post til Claude, Cursor og enhver MCP-klient over IMAP på imap.domeneshop.no:993 med postkassepassordet. Én innboks gratis, for alltid."
+  },
+  "hero": {
+    "eyebrow": "Domeneshop + AI",
+    "titleLine1": "Koble Domeneshop-e-post til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Domeneshop-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP med postkassepassordet du satte i kontrollpanelet hos Domeneshop.",
+    "answer": "Claude kan ikke nå en Domeneshop-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP på imap.domeneshop.no, port 993, og autentiserer med hele e-postadressen din og passordet du valgte for postkassen i kontrollpanelet hos Domeneshop, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Det finnes ikke noe app-passord og ingen ekstra bryter å slå på hos Domeneshop, men sending har en særregel som er beskrevet nedenfor. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord fra kontrollpanelet",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles Domeneshop til: IMAP og postkassepassordet",
+    "body": "Domeneshop tilbyr IMAP på <code>imap.domeneshop.no</code>, port 993, over implisitt TLS, og SMTP-innsending på <code>smtp.domeneshop.no</code>, port 465. Alle Domeneshop-postkasser ligger på det samme paret av delte vertsnavn, uansett hvilket domene adressen din slutter på, så det er ingenting kundespesifikt å slå opp. Autentiseringen er det vanlige postkassepassordet: det du satte da du opprettet adressen under E-post i kontrollpanelet hos Domeneshop, oppgitt sammen med <b>hele</b> adressen som brukernavn. Domeneshop krever SMTP-autentisering med de samme påloggingsopplysningene; en klient som lar utgående brukernavn og passord stå tomme, kobler til og feiler så ved sending."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Finn eller tilbakestill postkassepassordet hos Domeneshop",
+      "p": "Logg inn på domene.shop, åpne domenet ditt og gå til E-post. Hver adresse som står der, har sitt eget passord, satt da adressen ble opprettet. Hvis ingen husker det, setter du et nytt på det skjermbildet. Påloggingen til Domeneshop-kontoen er ikke postkassepassordet og fungerer ikke mot IMAP."
+    },
+    {
+      "h": "Lim det inn i mcpemails",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel post@dittdomene.no, og lim inn postkassepassordet. Domeneshops verter og porter er forhåndsutfylt og ble bekreftet via en faktisk TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Domeneshop avviser SMTP-innsending fra skynettverk med 550 [ACR04]",
+      "p": "Det er denne som overrasker folk, og den er en policy, ikke en feil. Domeneshop dokumenterer <code>smtp.domeneshop.no</code> som en server for personlig e-post sendt fra din egen PC, Mac, telefon eller nettbrett, og uttrykkelig ikke for sending fra skytjenester, webservere, nyhetsbrev, markedsføring, masseutsendelser, annen automatisert sending eller dedikerte e-postservere. En innsending som kommer fra IP-området til en skyleverandør, avvises permanent med et <code>550</code>-svar som inneholder koden <code>[ACR04]</code>. Å prøve igjen fra samme nettverk hjelper aldri, og meldingen ser ut som et autentiseringsproblem selv om påloggingsopplysningene dine er i orden. mcpemails omgår dette med en <b>reserverute for utgående trafikk</b> som ikke ligger i IP-områdene til en stor skyleverandør, så en vanlig sending i menneskelig skala fra agenten din går ut. Reserveruten endrer ikke Domeneshops policy: masseutsendelser og automatisert massesending via Domeneshop er fortsatt ikke tillatt, og du bør ikke bygge et nyhetsbrev på toppen av det."
+    },
+    {
+      "h": "IMAP-serveren annonserer AUTH=PLAIN og ingenting annet",
+      "p": "Domeneshops IMAP-banner tilbyr bare <code>AUTH=PLAIN</code>, uten <code>AUTH=LOGIN</code>. Klienter og biblioteker som er hardkodet til LOGIN-mekanismen, noe som er vanlig i verktøy skrevet mot Exchange, får en avvisning ved autentiseringssteget i stedet for en nyttig feilmelding. SMTP-siden godtar både PLAIN og LOGIN, så de to halvdelene av samme konto kan oppføre seg forskjellig i samme klient."
+    },
+    {
+      "h": "Ingen MOVE, ingen UIDPLUS, og mapper matches på navn",
+      "p": "Serveren annonserer ikke IMAP-utvidelsen MOVE, så å flytte en melding gjøres som en kopiering, en flaggoppdatering og en expunge i stedet for én atomisk kommando. UIDPLUS mangler også, så den nye UID-en til en kopiert melding rapporteres ikke tilbake og må finnes ved å søke i målmappen. SPECIAL-USE mangler også, som betyr at Sendt, Utkast, Papirkurv og Søppelpost identifiseres på navnet. I en norsk postkasse heter de ofte Sendt, Utkast, Slettet og Søppelpost, så hvis en agent ikke finner arkivmappen din, oppgir du den eksplisitt."
+    }
+  ],
+  "limits": [
+    "Domeneshops SMTP-policy utelukker masseutsendelser, nyhetsbrev og automatiserte massesendinger. Bruk den til vanlig korrespondanse, ikke til kampanjer.",
+    "Siden serveren ikke støtter MOVE, er en flytting ikke atomisk. Hvis en tilkobling brytes midt i operasjonen, kan en melding et kort øyeblikk finnes i begge mappene."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Domeneshop-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd kobling for Domeneshop. Peker du en MCP-server som mcpemails mot Domeneshop-postkassen din over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og den samme tilkoblingen fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Domeneshop?",
+      "a": "IMAP er imap.domeneshop.no på port 993 med implisitt TLS. SMTP er smtp.domeneshop.no på port 465, også med implisitt TLS. Logg inn med hele e-postadressen din og postkassepassordet fra kontrollpanelet. Begge vertene ble bekreftet via en faktisk TLS-tilkobling, og begge deles av alle Domeneshop-kunder."
+    },
+    {
+      "q": "Hvorfor feiler sending med 550 [ACR04]?",
+      "a": "Domeneshop avviser SMTP-innsending fra IP-områder for sky og webhotell som et tiltak mot misbruk. Avvisningen er permanent og har ingenting med passordet ditt å gjøre. mcpemails sender berørte meldinger via en reserverute for utgående trafikk som ikke ligger i de områdene, slik at vanlige sendinger går gjennom. Massesending via Domeneshop er fortsatt i strid med deres oppgitte policy."
+    },
+    {
+      "q": "Trenger Domeneshop et app-passord?",
+      "a": "Nei. Domeneshop utsteder ikke app-spesifikke passord. E-postklienter autentiserer med passordet som er satt for den enkelte postkassen under E-post i kontrollpanelet. Det er en annen påloggingsopplysning enn påloggingen til Domeneshop-kontoen, og derfor avvises kontopassordet."
+    },
+    {
+      "q": "Lagres Domeneshop-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Domeneshop over IMAP for hver forespørsel og overleveres til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Domeneshop-innboks",
+    "sub": "Koble til Domeneshop-e-post på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://purelymail.com/docs/setup/technical",
+    "https://support.purelymail.com/support/solutions/articles/159000430778-server-settings-imap-smtp-and-pop3",
+    "https://support.purelymail.com/support/solutions/articles/159000412945-how-to-create-an-app-password",
+    "https://purelymail.com/docs/users",
+    "https://purelymail.com/docs/features",
+    "https://purelymail.com/docs/deviceSetup",
+    "https://purelymail.com/pricing"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Postkassepassord (app-passord hvis 2FA er på)",
+    "helpUrl": "https://support.purelymail.com/support/solutions/articles/159000430778-server-settings-imap-smtp-and-pop3",
+    "usernameForm": "Postkassens fullstendige adresse, med domenet: you@yourdomain.com, ikke Purelymail-kontonavnet du logger inn i portalen med.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Purelymail til Claude, Cursor og MCP-klienter",
+    "description": "Koble Purelymail til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP på imap.purelymail.com:993 med postkassepassordet. Én innboks gratis, for alltid."
+  },
+  "hero": {
+    "eyebrow": "Purelymail + AI",
+    "titleLine1": "Koble Purelymail til Claude,",
+    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Purelymail-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP med postkassens eget passord, i alle MCP-klienter i stedet for bare én.",
+    "answer": "Claude når ikke Purelymail på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.purelymail.com port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Purelymail har ingen IMAP-bryter å lete etter: du autentiserer med postkassens fullstendige e-postadresse og postkassens eget passord, eller et app-passord hvis postkassen har tofaktorautentisering slått på. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord, eller app-passord",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Purelymail seg til: IMAP og postkassens eget passord",
+    "body": "Purelymail tilbyr IMAP på <code>imap.purelymail.com</code> port 993 over TLS, og SMTP på <code>smtp.purelymail.com</code> port 465, også med implisitt TLS. Det er ingenting å slå på først. Purelymail behandler IMAP, POP3 og SMTP som vanlig tilgang, og alle postkasser har dem fra det øyeblikket de opprettes, noe som allerede setter den foran de fleste webmail-leverandører. Det folk gjør feil her, er <b>hvilke påloggingsdetaljer de skriver</b>. Purelymail holder <b>kontoen</b> din, innloggingen til administrasjonsportalen og den faste regningen på $10 i året, adskilt fra <b>brukerne</b> dine, som er postkassene som faktisk sender og mottar. IMAP vil ha en bruker: den fullstendige adressen med domenet, pluss den brukerens eget passord. Det gjelder enten adressen ligger på et delt Purelymail-domene eller på et eget domene du tok med, fordi vertsnavnene er de samme for alle kunder."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Det kreves ikke kort, og gratisplanen kobler til én innboks så lenge du vil ha den."
+    },
+    {
+      "h": "Åpne brukersiden i Purelymail-portalen",
+      "p": "Logg inn i Purelymails kontoportal og klikk <b>User</b> i toppmenyen. Adressen som står der, er brukernavnet du skal bruke, skrevet ut i sin helhet med domenet. Kontonavnet du registrerte deg med, er ikke en postkasse og vil aldri autentisere via IMAP."
+    },
+    {
+      "h": "Legg til et app-passord hvis brukeren har 2FA, og koble så til",
+      "p": "Er flerfaktorautentisering på for brukeren, åpner du brukeren, blar ned til <b>App Passwords</b>, klikker <b>Add New</b>, gir det et navn og kopierer koden. Purelymail viser den én gang. Velg nå IMAP / SMTP i mcpemails, skriv inn hele adressen og det passordet. Vertene under er forhåndsutfylt."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Portalinnloggingen er ikke en postkasseinnlogging",
+      "p": "Purelymail skiller med vilje kontoen som logger inn i administrasjonsportalen og betaler regningen, fra brukerne som holder e-post. IMAP og SMTP godtar bare en bruker, og bare fullstendig: <code>you@yourdomain.com</code>, aldri en naken lokal del, og aldri kontonavnet du valgte ved registrering. Serveren svarer på et feil kontonavn og et feil passord med den samme flate autentiseringsfeilen, så dette ser ut som en skrivefeil snarere enn en kategorifeil."
+    },
+    {
+      "h": "Et alias eller en catch-all har ingen postkasse bak seg å logge inn på",
+      "p": "Purelymail lar deg levere <code>info@yourdomain.com</code> til en eksisterende innboks med en rutingregel, og en catch-all-regel kan ta imot alle adresser på et domene, uten at noen av de adressene finnes som brukere. Purelymails egen dokumentasjon sier eksplisitt at du ikke trenger å opprette brukerkontoer for dem. De er leveringsmål, ikke innlogginger, så det er ingenting å autentisere mot. Koble til brukeren regelen leverer til, og la agenten din filtrere på To-headeren."
+    },
+    {
+      "h": "Kravet om app-passord gjelder per postkasse, ikke per konto",
+      "p": "Purelymail tvinger frem et app-passord bare for brukere som har flerfaktorautentisering slått på, og MFA konfigureres individuelt på hver bruker. Én postkasse på kontoen din kan derfor koble til med det vanlige passordet mens en annen på samme domene avviser det. Sjekk den enkelte brukeren i portalen før du antar at passordet er feil. App-passord ligger i brukerens App Passwords-seksjon og vises bare én gang."
+    }
+  ],
+  "limits": [
+    "Purelymails IMAP-server annonserer ikke SPECIAL-USE-utvidelsen, så mapper matches etter navn i stedet for rolle. Sent, Drafts, Junk og Trash fungerer normalt under Purelymails standard Roundcube-navngiving, men en mappe du har omdøpt selv, må kanskje oppgis eksplisitt når du ber agenten arkivere noe.",
+    "Purelymails SMTP-server annonserer en maksimal meldingsstørrelse på omtrent 51 MB. En agent som videresender et veldig stort vedlegg, avvises ved innsending i stedet for at vedlegget forsvinner i det stille."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Purelymail?",
+      "a": "Ikke direkte. Claude har ingen innebygd Purelymail-kobling og kan ikke åpne en IMAP-økt selv. Kobler du en MCP-server som mcpemails til Purelymail-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer i Cursor, ChatGPT og alle andre MCP-klienter i stedet for bare i én app."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Purelymail?",
+      "a": "IMAP er imap.purelymail.com på port 993 med implisitt TLS. SMTP er smtp.purelymail.com på port 465, også med implisitt TLS. Logg inn med postkassens fullstendige e-postadresse og postkassens passord, eller et app-passord hvis brukeren har tofaktorautentisering på. Begge vertene ble verifisert via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Må jeg slå på IMAP i Purelymail først?",
+      "a": "Nei. Purelymail har ingen IMAP-bryter og ikke noe betalt nivå som låser klienttilgang, så en postkasse kan nås i det øyeblikket du oppretter den. Feiler en innlogging, er årsaken påloggingsdetaljene og ikke en innstilling du ikke har funnet ennå."
+    },
+    {
+      "q": "Hvorfor blir Purelymail-passordet mitt avvist?",
+      "a": "Tre årsaker, i den rekkefølgen det er verdt å sjekke dem. Du bruker Purelymail-kontonavnet i stedet for postkasseadressen. Adressen du skrev inn, er et alias eller en catch-all-regel i stedet for en ekte bruker. Eller brukeren har flerfaktorautentisering på, som betyr at bare et app-passord fra brukerens App Passwords-seksjon vil autentisere."
+    },
+    {
+      "q": "Virker dette med et eget domene på Purelymail?",
+      "a": "Ja. Purelymail tar ikke noe ekstra for brukere på domener du eier, og postkasser på eget domene bruker nøyaktig de samme vertene imap.purelymail.com og smtp.purelymail.com som adresser på de delte domenene. Bare brukernavnet endres."
+    },
+    {
+      "q": "Lagres Purelymail-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Purelymail via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring; meldingsinnhold beholdes ikke etter forespørselen som ba om det."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Purelymail-innboks",
+    "sub": "Koble til Purelymail på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

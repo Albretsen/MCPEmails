@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.verizon.com/support/residential/email",
+    "https://help.aol.com/articles/verizon-move-to-aol-mail-setting-up-your-new-aol-account-in-a-third-party-email-program-or-mobile-device-imap",
+    "https://help.aol.com/articles/how-do-i-use-other-email-applications-to-send-and-receive-my-aol-mail"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "AOL-app-passord",
+    "helpUrl": "https://help.aol.com/articles/how-do-i-use-other-email-applications-to-send-and-receive-my-aol-mail",
+    "usernameForm": "Hele verizon.net-adressen din, med @verizon.net. Det er AOL-brukernavnet ditt nå, så ikke forkort det og ikke bytt det ut med en aol.com-adresse.",
+    "status": "discontinued"
+  },
+  "meta": {
+    "title": "Verizon.net-e-post er AOL nå: koble den til Claude",
+    "description": "Verizon avviklet e-posttjenesten sin, og verizon.net-postkasser ble flyttet til AOL. Koble en til Claude via IMAP på imap.aol.com med et AOL-app-passord."
+  },
+  "hero": {
+    "eyebrow": "Verizon.net + AI",
+    "titleLine1": "Verizon avviklet e-posttjenesten sin.",
+    "titleLine2": "verizon.net-innboksen din kobler fortsatt til",
+    "lead": "Verizon driver ikke postkasser lenger. En gjenlevende verizon.net-adresse er en AOL-konto, og mcpemails kobler den til via IMAP, slik at AI-agenten din kan lese, søke, sende, svare og arkivere den e-posten.",
+    "answer": "Claude når ikke en verizon.net-postkasse på egen hånd, og det gjør heller ikke Verizon: selskapet avviklet e-posttjenesten for privatkunder og flyttet postkassene til AOL Mail og Yahoo Mail. Overlevde adressen din den migreringen, er den en AOL-konto med et verizon.net-brukernavn, og mcpemails er en hostet MCP-server som kobler den til via IMAP på imap.aol.com port 993 med et AOL-app-passord i stedet for passordet du skriver i webmail. Når den er koblet til, kan Claude, Cursor eller enhver annen MCP-klient lese, søke, sende, svare og organisere den e-posten. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "AOL-app-passord, ikke webmail-passordet",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler verizon.net seg til: det er en AOL-postkasse, via IMAP",
+    "body": "Verizons egen supportside er rett frem om situasjonen: de har avviklet e-posttjenesten, varslingene er ferdige, og kunder har ikke lenger mulighet til å beholde en verizon.net-adresse. Det som skjedde i praksis, er en migrering og ikke en avstenging. Postkasser gikk til <b>AOL Mail</b> på mail.aol.com og til Yahoo Mail, alt som ikke ble migrert, ble slettet ved utgangen av 2017, og adressen som overlevde, beholdt navnet sitt. Så innstillingene som betyr noe, er AOLs. IMAP svarer på <code>imap.aol.com</code> port 993 over TLS og SMTP på <code>smtp.aol.com</code> port 465, også med implisitt TLS, og du logger inn med hele adressen inkludert <code>@verizon.net</code>. AOL godtar ikke det vanlige passordet ditt fra en e-postklient: du slår på totrinnsbekreftelse og genererer et <b>app-passord</b> under Account Security, og den strengen går i passordfeltet."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
+    },
+    {
+      "h": "Logg inn på AOL med verizon.net-adressen",
+      "p": "Gå til login.aol.com og logg inn med hele <code>name@verizon.net</code>-adressen, ikke en aol.com-adresse. Feiler den innloggingen, overlevde ikke postkassen migreringen, og det er ingenting å koble til; Verizon slettet kontoer som ikke ble migrert, og kan ikke gjenopprette dem."
+    },
+    {
+      "h": "Generer et AOL-app-passord under Account Security",
+      "p": "Åpne Account Info, så <b>Account Security</b>. Slå på totrinnsbekreftelse hvis den er av, generer så et app-passord og gi det et navn som <code>mcpemails</code>. AOL viser det én gang. Lim det inn i mcpemails sammen med hele verizon.net-adressen; AOL-vertene under er forhåndsutfylt."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Det finnes ingen Verizon-e-postserver å peke mot lenger",
+      "p": "Gamle veiledninger lister vertsnavn som <code>incoming.verizon.net</code> og <code>outgoing.verizon.net</code>. Verizon driver ikke e-post for privatkunder, så de navnene beskriver en tjeneste som ikke finnes lenger. Alle gjeldende innstillinger for en verizon.net-adresse er AOL-innstillinger, og derfor sender denne siden deg til AOLs skjerm for kontosikkerhet og ikke til en Verizon-skjerm. Verizon-support kan heller ikke tilbakestille postkassepassordet; AOL eier den kontoen nå."
+    },
+    {
+      "h": "Noen verizon.net-adresser gikk til Yahoo, ikke AOL",
+      "p": "Verizons side om avviklingen nevner to destinasjoner: AOL Mail og Yahoo Mail. De fleste havnet hos AOL, og imap.aol.com er det denne siden er bygd rundt, men virker innloggingen din bare på en Yahoo-adresse, ligger postkassen din på Yahoo-siden, og app-passordet må genereres på Yahoos side for kontosikkerhet i stedet. Prøv AOL-innloggingen først; det er det vanlige tilfellet."
+    },
+    {
+      "h": "Brukernavnet er verizon.net-adressen, for alltid",
+      "p": "Migreringen beholdt adressen som kontonavn, så <code>name@verizon.net</code> er det som går i brukernavnfeltet selv om alt bak er AOL. Skriver du inn et aol.com-alias, eller dropper domenet, får du en autentiseringsfeil som ser ut som et feil passord. Dette lurer folk som senere har lagt til en aol.com-adresse på samme konto."
+    },
+    {
+      "h": "Det finnes ingen nye verizon.net-adresser, og ingen gjenåpning",
+      "p": "Verizon sier at kunder ikke lenger har mulighet til å beholde en verizon.net-adresse, og innhold som aldri ble migrert, ble slettet 15. desember 2017. Denne siden er derfor bare nyttig for en postkasse som allerede er i live. Ble din stille for mange år siden, finnes det ingen gjenopprettingsvei og ingen måte å opprette en erstatning på samme domene."
+    }
+  ],
+  "limits": [
+    "AOLs SMTP-vert annonserer en maksimal meldingsstørrelse på omtrent 39 MB, så en sending med store vedlegg avvises før den går ut.",
+    "Bare en eksisterende, allerede migrert verizon.net-postkasse kan kobles til. Verizon utsteder ingen nye, og mcpemails kan ikke gjenopplive en slettet konto."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Verizon-e-post?",
+      "a": "Ikke direkte, og ikke gjennom Verizon, som ikke lenger driver e-post. Er verizon.net-adressen din i live hos AOL, gir en MCP-server som mcpemails koblet til den via IMAP Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer i Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for verizon.net?",
+      "a": "AOLs. IMAP er imap.aol.com på port 993 med implisitt TLS, og SMTP er smtp.aol.com på port 465, også med implisitt TLS, med krav om autentisering. Begge ble verifisert via en direkte TLS-tilkobling. Brukernavnet er hele verizon.net-adressen din, og passordfeltet tar et AOL-app-passord."
+    },
+    {
+      "q": "Hva skjedde med Verizon-e-post?",
+      "a": "Verizon gikk ut av e-postvirksomheten og avviklet tjenesten. Eksisterende verizon.net-postkasser ble migrert til AOL Mail og Yahoo Mail, og alt som ikke ble migrert, ble slettet i desember 2017. Verizons supportside sier at kunder ikke lenger har mulighet til å beholde en verizon.net-adresse, så ingenting nytt utstedes."
+    },
+    {
+      "q": "Hvorfor virker ikke verizon.net-passordet mitt i Outlook eller en e-postklient?",
+      "a": "Fordi postkassen er en AOL-konto, og AOL krever et app-passord for klienter som ikke bruker AOLs eget innloggingsvindu. Passordet du bruker i webmail, er riktig og avvises likevel via IMAP. Slå på totrinnsbekreftelse, generer et app-passord under Account Security og bruk den strengen i stedet."
+    },
+    {
+      "q": "Lagres verizon.net-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra AOL via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer, app-passordet inkludert, krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din verizon.net-innboksen din",
+    "sub": "Verizon forlot e-post. Adressen virker fortsatt. Én innboks gratis for alltid, uten kort."
+  }
+}

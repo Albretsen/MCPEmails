@@ -1,21 +1,33 @@
 {
+  "_sources": [
+    "https://www.namecheap.com/support/knowledgebase/article.aspx/1179/2175/general-private-email-configuration-for-mail-clients-and-mobile-devices/",
+    "https://www.namecheap.com/support/knowledgebase/article.aspx/10374/2178/how-to-set-up-applicationspecific-password-for-private-email/",
+    "https://www.namecheap.com/support/knowledgebase/article.aspx/10782/2306/new-how-to-set-up-twofactor-authentication-2fa-in-private-email/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón, o una contraseña de aplicación con 2FA",
+    "helpUrl": "https://www.namecheap.com/support/knowledgebase/article.aspx/1179/2175/general-private-email-configuration-for-mail-clients-and-mobile-devices/",
+    "usernameForm": "Tu dirección completa en tu propio dominio, por ejemplo you@yourdomain.com. La guía de Namecheap indica la dirección de correo como nombre de usuario.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Conecta Namecheap Private Email a Claude (y a cualquier IA)",
-    "description": "Conecta Namecheap Private Email a Claude, Cursor, ChatGPT y a cualquier cliente MCP por IMAP con la contraseña del buzón. Deja que la IA lea, envíe, programe y organice tu correo. Una bandeja gratis, para siempre."
+    "title": "Conecta Namecheap Private Email a Claude y MCP",
+    "description": "Conecta Namecheap Private Email a Claude y cualquier cliente MCP por IMAP en mail.privateemail.com:993. Usa la contraseña del buzón, nunca tu acceso a Namecheap."
   },
   "hero": {
     "eyebrow": "Namecheap Private Email + IA",
     "titleLine1": "Conecta Namecheap Private Email a Claude,",
     "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
-    "lead": "Dale a tu agente de IA una bandeja Namecheap Private Email real en minutos. Lee, busca, envía, responde, programa y organiza correo con IMAP y la contraseña del buzón, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+    "lead": "Dale a tu agente de IA una bandeja real de Namecheap Private Email en minutos. Lee, busca, envía, responde, programa y organiza el correo con IMAP y la contraseña de tu buzón, y usa la misma bandeja en todos tus clientes MCP, no solo en uno.",
     "meta0": "1 bandeja gratis, para siempre",
-    "meta1": "La contraseña del buzón, sin configurar OAuth",
+    "meta1": "La contraseña de tu buzón, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no puede llegar a Namecheap Private Email por su cuenta. mcpemails es un servidor MCP alojado que lo conecta por IMAP con la contraseña del buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
+    "answer": "Claude no puede acceder a Namecheap Private Email por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP puedan leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
   },
   "method": {
-    "title": "Cómo se conecta Namecheap Private Email: IMAP y la contraseña del buzón",
-    "body": "Namecheap Private Email se conecta por IMAP/SMTP con la <b>contraseña del buzón</b>, la que se definió al crearlo, no la de tu cuenta de Namecheap. Ambos servidores son <code>mail.privateemail.com</code> sea cual sea tu dominio. Si no la tienes, cámbiala desde el panel de control de Private Email."
+    "title": "Cómo se conecta Namecheap Private Email: IMAP y la contraseña de tu buzón",
+    "body": "Namecheap Private Email se conecta por IMAP/SMTP con la <b>contraseña del buzón</b>, la que se estableció al crear el buzón, no la contraseña de tu cuenta de Namecheap. Ambos servidores son <code>mail.privateemail.com</code> sea cual sea tu dominio. Si no tienes la contraseña, restablécela desde el panel de control de Private Email."
   },
   "setup": [
     {
@@ -23,20 +35,69 @@
       "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
-      "h": "Localiza la contraseña de tu buzón de Private Email",
-      "p": "Usa la contraseña del buzón en sí, no la de tu cuenta de Namecheap. Puedes cambiarla en cualquier momento desde el panel de control de Private Email."
+      "h": "Busca la contraseña de tu buzón de Private Email",
+      "p": "Usa la contraseña del propio buzón, no la contraseña de tu cuenta de Namecheap. Puedes restablecerla en cualquier momento desde el panel de control de Private Email."
     },
     {
       "h": "Pégala en mcpemails",
-      "p": "Elige IMAP / SMTP, añade tu dirección de Namecheap Private Email, los servidores de abajo y la contraseña para conectar la bandeja de forma segura."
+      "p": "Elige IMAP / SMTP y añade tu dirección de Namecheap Private Email, los servidores indicados abajo y la contraseña para conectar la bandeja de forma segura."
     },
     {
       "h": "Pega la URL MCP en tu IA",
       "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
     }
   ],
+  "gotchas": [
+    {
+      "h": "El acceso a tu cuenta de Namecheap no es la contraseña del buzón, y nunca lo será",
+      "p": "La credencial que usas en namecheap.com para renovar dominios no tiene nada que ver con el correo. La propia guía de configuración de Namecheap pide la <b>Master or Application password for this email account</b> (contraseña maestra o de aplicación de esta cuenta de correo), que es la contraseña que se estableció en el buzón al crearlo y que se gestiona desde el área de Private Email de tu panel o desde el webmail en privateemail.com. Esto confunde a casi todos los que compran un dominio y un buzón en el mismo pedido, porque ambas credenciales pertenecen a la misma compra y una de ellas incluso es la misma dirección."
+    },
+    {
+      "h": "La autenticación de dos factores de Private Email es solo para el webmail y bloquea todos los clientes de correo",
+      "p": "Namecheap documenta que la 2FA de Private Email protege la interfaz web. En cuanto la activas, tu contraseña habitual del buzón deja de autenticar por IMAP y SMTP, y el rechazo llega como un simple fallo de inicio de sesión, sin mencionar el segundo factor. La solución es una <b>contraseña específica de aplicación</b>: en el webmail de Private Email abre <b>Settings</b>, luego <b>Security</b> y después <b>Application Passwords</b>, elige el tipo de cliente en el desplegable y genera una. Pégala en mcpemails en lugar de la contraseña del buzón. Si nunca has activado la 2FA, no existe ninguna contraseña de aplicación y no la necesitas."
+    },
+    {
+      "h": "El servidor es mail.privateemail.com para todos los clientes, y Namecheap indica que no se cambie",
+      "p": "A diferencia de un buzón de hosting, Private Email no está en un servidor con el nombre de tu dominio. El artículo de configuración de Namecheap indica <code>mail.privateemail.com</code> tanto para el correo entrante como para el saliente y añade que no debe cambiarse. Mucha gente prueba <code>mail.theirdomain.com</code>, que o bien no responde o apunta a una cuenta de hosting cPanel de Namecheap con un buzón completamente distinto. Tener un dominio de Namecheap tampoco implica tener un buzón de Namecheap: Private Email es una suscripción aparte, y si nunca la compraste, no hay nada en esa dirección que conectar."
+    },
+    {
+      "h": "El servidor es Dovecot y omite MOVE, UIDPLUS y SPECIAL-USE",
+      "p": "El saludo identifica a Dovecot y anuncia <code>AUTH=PLAIN</code>, <code>AUTH=LOGIN</code>, <code>SASL-IR</code>, <code>IDLE</code> y <code>LITERAL+</code>, pero no MOVE, UIDPLUS ni SPECIAL-USE. En la práctica eso significa tres cosas. Mover un mensaje se hace como copia, marca y expunge en lugar de un único comando atómico. El identificador de la copia no se devuelve y hay que encontrarlo buscando en la carpeta de destino. Y Enviados, Borradores, Papelera y Spam se reconocen por su nombre y no por una marca de función, así que un buzón con carpetas renombradas necesita que se indique la carpeta explícitamente."
+    }
+  ],
+  "limits": [
+    "Como el servidor no anuncia MOVE, mover un mensaje no es atómico. Si la conexión se corta a mitad, un mensaje puede existir brevemente en ambas carpetas.",
+    "Private Email es una suscripción independiente del dominio. Tener un dominio de Namecheap no significa que tengas un buzón de Namecheap que conectar.",
+    "mcpemails conecta el buzón. Los alias, reenvíos, reglas catch-all y la creación de buzones siguen gestionándose en el panel de control de Namecheap Private Email."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Namecheap Private Email?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para Namecheap. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y esa misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP, no solo desde uno."
+    },
+    {
+      "q": "¿Cuál es la configuración IMAP y SMTP de Namecheap Private Email?",
+      "a": "Ambos son mail.privateemail.com. IMAP usa el puerto 993 con SSL y SMTP el puerto 465 con SSL, con 143 y 587 documentados como alternativas STARTTLS. El nombre de usuario es tu dirección de correo completa y la contraseña es la del buzón. Namecheap indica que el nombre del servidor no debe cambiarse, y se confirmó con una conexión TLS real."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de Namecheap Private Email?",
+      "a": "Las dos causas habituales son usar el acceso a tu cuenta de Namecheap en lugar de la contraseña del buzón y tener activada la autenticación de dos factores en el buzón. Con la 2FA activada, Private Email solo acepta una contraseña específica de aplicación por IMAP, y el fallo es idéntico al de una contraseña incorrecta. Comprueba ambas cosas antes de restablecer nada."
+    },
+    {
+      "q": "¿Cómo creo una contraseña de aplicación de Namecheap?",
+      "a": "Inicia sesión en el webmail de Private Email en privateemail.com y abre Settings, luego Security y después Application Passwords. Elige la aplicación o el tipo de cliente en el desplegable y genera una contraseña. Cópiala de inmediato y pégala en mcpemails en lugar de la contraseña del buzón. Solo la necesitas si tienes activada la autenticación de dos factores."
+    },
+    {
+      "q": "¿Puedo usar mail.mydomain.com en lugar de mail.privateemail.com?",
+      "a": "No. Los buzones de Private Email no están alojados en un servidor con el nombre de tu dominio, y la propia documentación de Namecheap indica que el nombre del servidor no debe cambiarse. Si mail.yourdomain.com resuelve, lo más probable es que apunte a un hosting cPanel de Namecheap, que contiene otro buzón con otra contraseña."
+    },
+    {
+      "q": "¿Se almacena mi correo de Namecheap en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Private Email por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
   "ctaBand": {
-    "title": "Dale a tu IA una bandeja Namecheap Private Email",
+    "title": "Dale a tu IA una bandeja de Namecheap Private Email",
     "sub": "Conecta Namecheap Private Email en minutos. Una bandeja gratis para siempre, sin tarjeta."
   }
 }

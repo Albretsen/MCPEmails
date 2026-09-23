@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://www.att.com/support/article/email-support/KM1240308/",
+    "https://www.att.com/support/article/email-support/KM1240462/",
+    "https://www.att.com/support/article/email-support/KM1010472/"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Secure mail key (sikker e-postnøkkel)",
+    "helpUrl": "https://www.att.com/support/article/email-support/KM1240308/",
+    "usernameForm": "Hele AT&T-adressen din, uansett hvilket domene den slutter på: name@att.net, name@sbcglobal.net, name@bellsouth.net og de andre AT&T-domenene bruker alle det samme påloggingsfeltet.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble AT&T Mail til Claude med en secure mail key",
+    "description": "Koble AT&T Mail (att.net, sbcglobal.net, bellsouth.net) til Claude og enhver MCP-klient over IMAP på imap.mail.att.net. Krever en secure mail key, ikke passordet."
+  },
+  "hero": {
+    "eyebrow": "AT&T Mail + AI",
+    "titleLine1": "Koble AT&T Mail til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte att.net- eller sbcglobal.net-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP med en AT&T secure mail key, i alle MCP-klienter i stedet for bare én.",
+    "answer": "Claude kan ikke nå en AT&T Mail-innboks på egen hånd. mcpemails er en hostet MCP-server som kobler til att.net, sbcglobal.net, bellsouth.net og de andre AT&T-domenene over IMAP på imap.mail.att.net, port 993, og autentiserer med en secure mail key på 16 tegn som du oppretter i myAT&T, i stedet for med AT&T-passordet ditt. Når den er koblet til, kan Claude, Cursor eller enhver annen MCP-klient lese, søke i, sende, svare på og organisere den e-posten. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Secure mail key, ikke passordet ditt",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles AT&T Mail til: IMAP og en secure mail key",
+    "body": "AT&T Mail kjører på Yahoos infrastruktur, men påloggingsopplysningen utstedes av AT&T. IMAP svarer på <code>imap.mail.att.net</code>, port 993 over TLS, og SMTP på <code>smtp.mail.att.net</code>, port 465, også med implisitt TLS. AT&T sluttet å godta kontopassordet fra e-postapper som ikke støtter selskapets OAuth-flyt: i stedet genererer du en <b>secure mail key</b> (sikker e-postnøkkel), en kode på 16 tegn, i myAT&T, og skriver den inn i passordfeltet. Nøkkelen utløper aldri, et bytte av AT&T-passordet gjør den ikke ugyldig, og du kan opprette en egen nøkkel for hver app eller enhet, slik at tilbakekalling av én ikke påvirker de andre. De samme vertene og den samme nøkkelordningen gjelder for alle AT&T-e-postdomener, inkludert <code>sbcglobal.net</code>, <code>bellsouth.net</code>, <code>ameritech.net</code>, <code>pacbell.net</code> og <code>currently.com</code>."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
+    },
+    {
+      "h": "Generer en secure mail key i myAT&T",
+      "p": "Logg inn på AT&T-profilen din, åpne delen for secure mail key, velg e-postadressen du kobler til, velg <b>Add secure mail key</b>, gi den et kallenavn som <code>mcpemails</code>, og velg <b>Create</b>. AT&T viser nøkkelen på 16 tegn én gang. Kopier den før du forlater siden."
+    },
+    {
+      "h": "Skriv inn nøkkelen, ikke AT&T-passordet ditt",
+      "p": "I mcpemails velger du IMAP / SMTP, skriver inn hele AT&T-adressen din og limer inn secure mail key i passordfeltet. Alle AT&T-domener bruker <code>imap.mail.att.net</code> og <code>smtp.mail.att.net</code>, så vertene er forhåndsutfylt for deg."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "AT&T-passordet ditt blir ikke avvist fordi det er feil",
+      "p": "AT&T deler e-postklienter i to grupper. Apper som AT&T har integrert med sin OAuth-pålogging, får en nettleserforespørsel og ser aldri et passord. Alt annet, også mcpemails, må oppgi en secure mail key. Limer du inn AT&T-kontopassordet, får du en autentiseringsfeil som ser helt lik ut som en skrivefeil, og ingen mengde tilbakestillinger av kontopassordet løser det."
+    },
+    {
+      "h": "Postkassen ligger hos Yahoo, men Yahoos side for app-passord er feil side",
+      "p": "AT&T Mail har blitt levert fra Yahoos infrastruktur i årevis, og IMAP-banneret er Yahoos. Det får folk til å gå til Yahoos sikkerhetsside for kontoen for å opprette et app-passord. Det hjelper ikke. Påloggingsopplysningen for en att.net- eller sbcglobal.net-adresse utstedes av AT&T i myAT&T, ikke av Yahoo."
+    },
+    {
+      "h": "Én nøkkel per adresse, og underkontoer trenger sin egen",
+      "p": "En secure mail key er knyttet til én enkelt AT&T-e-postadresse. Hvis husstanden din har underkontoer på den samme AT&T-ID-en, trenger hver adresse du vil koble til, en nøkkel opprettet for akkurat den adressen. Å gjenbruke hovedkontoens nøkkel for en underkonto mislykkes."
+    },
+    {
+      "h": "Port 465 er her implisitt TLS, ikke STARTTLS",
+      "p": "SMTP-verten vi bekreftet, åpner TLS-økten umiddelbart på port 465 og annonserer ikke STARTTLS på den porten. Eldre oppsettsguider fra AT&T som ber deg krysse av for <b>STARTTLS</b> sammen med port 465, beskriver en kombinasjon denne verten ikke vil fullføre. mcpemails bruker implisitt TLS på 465, som er det serveren faktisk tilbyr."
+    }
+  ],
+  "limits": [
+    "AT&Ts SMTP-vert oppgir en maksimal meldingsstørrelse på omtrent 39 MB, så en sending med store vedlegg avvises av AT&T før den går ut.",
+    "mcpemails autentiserer med secure mail key og ikke med mekanismene OAUTHBEARER og XOAUTH2 som denne verten også annonserer. Det er med vilje: OAuth-veien er bare åpen for apper som AT&T har registrert."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med AT&T Mail?",
+      "a": "Ikke direkte. Claude har ingen innebygd AT&T-kobling. Kobler du en MCP-server som mcpemails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i att.net- eller sbcglobal.net-e-posten din, og den samme tilkoblingen fungerer i Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for AT&T?",
+      "a": "IMAP er imap.mail.att.net på port 993 med implisitt TLS. SMTP er smtp.mail.att.net på port 465, også med implisitt TLS. Brukernavnet er hele AT&T-e-postadressen din, og i passordfeltet skriver du en secure mail key. Begge vertene ble bekreftet via en faktisk TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hva er en AT&T secure mail key, og hvor får jeg tak i en?",
+      "a": "Det er en kode på 16 tegn som erstatter passordet ditt i e-postapper som ikke bruker AT&Ts OAuth-pålogging. Du oppretter den i myAT&T-profilen din, én per e-postadresse, og gir hver av dem et kallenavn. Den utløper aldri, og et bytte av AT&T-passordet ødelegger den ikke."
+    },
+    {
+      "q": "Fungerer sbcglobal.net- og bellsouth.net-adresser på samme måte?",
+      "a": "Ja. AT&T kjører adresser på att.net, sbcglobal.net, bellsouth.net, ameritech.net, pacbell.net og currently.com på den samme plattformen. De deler de samme IMAP- og SMTP-vertene og det samme kravet om secure mail key, så ingenting på denne siden endres med domenet."
+    },
+    {
+      "q": "Hvorfor sier e-postappen min at passordet er endret når jeg ikke har endret det?",
+      "a": "Den meldingen betyr vanligvis at appen ble satt opp før AT&T krevde secure mail key, og at den fortsatt sender kontopassordet. Opprett en nøkkel i myAT&T og erstatt det lagrede passordet med den. Hvis du allerede hadde opprettet en nøkkel og senere slettet den i profilen din, genererer du en ny; en slettet nøkkel slutter å virke umiddelbart."
+    },
+    {
+      "q": "Lagres AT&T-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra AT&T over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger, også secure mail key, er kryptert ved lagring, og meldingsinnhold blir ikke oppbevart."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en AT&T Mail-innboks",
+    "sub": "Koble til att.net eller sbcglobal.net på få minutter med en secure mail key. Én innboks gratis for alltid, uten kort."
+  }
+}

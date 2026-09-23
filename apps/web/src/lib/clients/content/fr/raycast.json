@@ -1,0 +1,88 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://manual.raycast.com/ai/model-context-protocol"
+  ],
+  "meta": {
+    "title": "Connecter l'e-mail à Raycast AI : serveur MCP",
+    "description": "Ajoutez une vraie boîte à Raycast AI. Installez le serveur MCP, réglez le transport sur HTTP, collez une URL et connectez-vous. Sans clé API. 1 boîte gratuite."
+  },
+  "hero": {
+    "eyebrow": "Raycast + e-mail",
+    "titleLine1": "Connectez votre boîte à Raycast AI",
+    "titleLine2": "depuis la barre de commande",
+    "lead": "Triez, cherchez et envoyez vos e-mails depuis le lanceur que vous ouvrez déjà sans y penser. Lisez, recherchez, envoyez, répondez, transférez, planifiez et organisez vos e-mails dans toutes les boîtes que vous avez connectées.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "OAuth, aucune clé API requise",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Lancez la commande Install MCP Server dans Raycast, réglez Transport sur HTTP, collez https://mcpemails.com/api/mcp, installez-le, puis cliquez sur Sign In pour autoriser avec mcpemails."
+  },
+  "method": {
+    "title": "Comment Raycast se connecte : OAuth, sans clé API",
+    "body": "Raycast exécute le flux OAuth MCP standard auprès de ce serveur. Il s'enregistre lui-même via l'<b>enregistrement dynamique de client RFC 7591</b>, donc aucun client ID à créer, et s'autorise avec un <b>code d'autorisation plus PKCE</b> en S256. Aucun secret client n'est jamais transmis, et le jeton ne porte que les autorisations que vous approuvez sur notre écran de consentement. Le jeton d'accès reçu dure une heure et se renouvelle tout seul ; il apparaît dans Dashboard, API Keys sous la forme <code>OAuth:</code> suivi du nom du client, et c'est là que vous révoquez la connexion."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit et connectez une boîte",
+      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Gmail se connecte en un clic via la connexion Google ; iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
+    },
+    {
+      "h": "Lancez Install MCP Server",
+      "p": "Lancez la commande <b>Install MCP Server</b>, ou <b>Manage MCP Servers</b> si vous en avez déjà."
+    },
+    {
+      "h": "Saisissez le serveur",
+      "p": "Saisissez un nom, réglez Transport sur <b>HTTP</b> et collez <code>https://mcpemails.com/api/mcp</code>."
+    },
+    {
+      "h": "Installez et connectez-vous",
+      "p": "Appuyez sur <b>Install MCP Server</b>, puis cliquez sur <b>Sign In</b> pour autoriser avec mcpemails. Approuvez les autorisations que Raycast doit détenir."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Sign In est une étape distincte d'Install",
+      "p": "Installer le serveur et l'autoriser sont deux actions distinctes dans Raycast, et le serveur apparaît dans la liste dès la première. Un serveur fraîchement installé mais non autorisé produit des appels d'outils qui échouent avec un 401, ce qui ressemble à un serveur cassé plutôt qu'à une configuration inachevée. Cliquez sur Sign In."
+    },
+    {
+      "h": "Un lanceur est rapide, et c'est à double tranchant",
+      "p": "Tout l'intérêt de Raycast, c'est qu'une action a lieu deux frappes après l'idée. C'est excellent pour la recherche et le tri, et c'est justement pourquoi l'envoi mérite ici un second regard, plus que dans un client plus lent. Soit vous laissez <code>send:email</code> hors de cette connexion, soit vous activez la validation humaine pour qu'un envoi attende une personne."
+    },
+    {
+      "h": "Rien n'arrive tout seul",
+      "p": "Le serveur fonctionne uniquement en requête-réponse, sans webhooks ni push. Raycast voit le courrier quand vous lui demandez de regarder, ce qui convient bien à un lanceur : vous l'ouvrez, vous demandez, vous obtenez une réponse. Cela veut dire en revanche que ce n'est pas un outil de notification, et qu'un « préviens-moi quand X arrive » permanent n'est pas à la portée de la connexion."
+    }
+  ],
+  "limits": [
+    "Les requêtes sont limitées à 100 par minute, 1 000 par heure et 10 000 par jour et par clé, en plus du plafond d'actions facturables de votre plan.",
+    "Le serveur fonctionne uniquement en requête-réponse. Il n'y a ni webhooks ni événements déclenchés par le serveur, donc un nouveau message ne réveille jamais votre agent de lui-même. Pour réagir au courrier entrant, interrogez la boîte à intervalles réguliers.",
+    "Le courrier est récupéré en direct chez votre fournisseur à chaque appel et n'est jamais stocké. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, donc un jeton révoqué ou un mot de passe de boîte modifié coupe l'accès immédiatement."
+  ],
+  "faq": [
+    {
+      "q": "Comment connecter l'e-mail à Raycast ?",
+      "a": "Lancez la commande Install MCP Server, réglez Transport sur HTTP, collez https://mcpemails.com/api/mcp, installez-le, puis cliquez sur Sign In et autorisez avec mcpemails. Raycast AI dispose alors d'outils pour lire, rechercher, envoyer, répondre, transférer, organiser et planifier des e-mails."
+    },
+    {
+      "q": "Ai-je besoin d'une clé API pour Raycast ?",
+      "a": "Non. Raycast exécute le flux OAuth via son action Sign In, donc rien de secret n'est saisi dans la commande. Une clé bearer est disponible pour les autres clients qui ne savent pas le faire."
+    },
+    {
+      "q": "Quelles boîtes Raycast peut-il atteindre ainsi ?",
+      "a": "Gmail via la connexion Google ; iCloud, Fastmail, Yahoo, Zoho et Yandex avec un mot de passe d'application ; et toute autre boîte qui parle IMAP et SMTP sur les ports standard. Le client les voit toutes par la même connexion : votre agent appelle d'abord inbox_list pour découvrir chaque boîte connectée et son identifiant, donc aucun UUID à coller nulle part."
+    },
+    {
+      "q": "Raycast peut-il envoyer un e-mail sans que je le voie ?",
+      "a": "Seulement si vous l'y autorisez. L'envoi dépend de l'autorisation send:email : une clé ou un jeton sans cette autorisation ne peut rien envoyer du tout. En plus, le propriétaire d'une boîte peut exiger une validation humaine dans le tableau de bord, qui retient chaque envoi, réponse, transfert, envoi de brouillon et envoi planifié jusqu'à ce qu'une personne le libère."
+    },
+    {
+      "q": "Mes e-mails sont-ils stockés sur vos serveurs ?",
+      "a": "Non. Chaque message est récupéré en direct chez votre fournisseur pour la requête qui l'a demandé, puis transmis directement à votre client. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, pour que les appels suivants puissent s'authentifier. Supprimer la boîte dans le tableau de bord, ou révoquer l'accès chez votre fournisseur, coupe la connexion aussitôt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Mettez votre boîte dans la barre de commande",
+    "sub": "Un serveur, une connexion. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

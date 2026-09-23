@@ -1,0 +1,105 @@
+{
+  "_sources": [
+    "https://comeinsidebox.com/naver-mail-imap-pop3/",
+    "https://servertrix.com/1879",
+    "https://www.clien.net/service/board/cm_iphonien/19011627",
+    "https://www.enterapps.kr/notice/?bmode=view&idx=168294489",
+    "https://www.getmailbird.com/setup/access-naver-com-via-imap-smtp"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Programpassord (애플리케이션 비밀번호)",
+    "helpUrl": "https://nid.naver.com/",
+    "usernameForm": "Hele adressen din, inkludert domenet: name@naver.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Naver Mail til Claude med et app-passord",
+    "description": "Koble Naver Mail til Claude, Cursor eller enhver MCP-klient via IMAP på imap.naver.com:993. Siden juni 2025 kreves totrinnsbekreftelse pluss et app-passord."
+  },
+  "hero": {
+    "eyebrow": "Naver Mail + AI",
+    "titleLine1": "Koble Naver Mail til Claude,",
+    "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Naver-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP med et Naver-programpassord, i alle MCP-klienter i stedet for bare én.",
+    "answer": "Claude når ikke Naver Mail på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.naver.com port 993 og autentiserer med et Naver-programpassord (애플리케이션 비밀번호) i stedet for kontopassordet ditt. Siden 24. juni 2025 har Naver krevd totrinnsbekreftelse på kontoen pluss et programpassord for hver POP3-, IMAP- og SMTP-tilkobling, så kontopassordet autentiserer ikke lenger noen e-postklient i det hele tatt. Du må også slå på IMAP i innstillingene i Naver Mail, som er en egen bryter, adskilt fra passordet. Én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Totrinnsbekreftelse pluss app-passord",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Naver Mail seg til: IMAP, totrinnsbekreftelse og et programpassord",
+    "body": "Naver tilbyr IMAP på <code>imap.naver.com</code> port 993 over implisitt TLS, og SMTP på <code>smtp.naver.com</code> port 465. Vertene har vært stabile i årevis. Det som er endret, er påloggingen. <b>24. juni 2025</b> gjorde Naver totrinnsbekreftelse og programpassord obligatorisk for POP3-, IMAP- og SMTP-tilgang, og etter en overgangsperiode som nå er utløpt, sluttet e-postklienter med det gamle kontopassordet å virke helt. To separate ting må nå være på plass. IMAP og SMTP må være slått på i Naver Mails egne innstillinger, som er en bryter per postkasse. Og Naver-ID-en din må ha totrinnsbekreftelse på, fordi skjermen for programpassord bare finnes når den er det. Programpassordet er det du limer inn i en klient; kontopassordet brukes aldri mer til e-post."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og forblir gratis, uten kort. To ting genereres i de neste stegene: hold fanen åpen til det siste."
+    },
+    {
+      "h": "Slå på IMAP/SMTP i innstillingene i Naver Mail",
+      "p": "Åpne Naver Mail og klikk 환경설정 (innstillinger) nede til venstre, bytt så til fanen POP3/IMAP 설정 øverst og velg fanen IMAP/SMTP 설정 inni den. Sett IMAP/SMTP 사용 til 사용함 (bruk), og trykk 확인 for å lagre. Dette er en bryter på postkassenivå og slår ikke på noe på Naver-kontoen din; uten den avviser imap.naver.com innloggingen uansett hvilket passord du sender."
+    },
+    {
+      "h": "Slå på totrinnsbekreftelse og generer et programpassord",
+      "p": "Gå til nid.naver.com, åpne 보안설정 (sikkerhetsinnstillinger), og sett opp 2단계 인증 (totrinnsbekreftelse) hvis den ikke allerede er på, og klikk så 관리 (administrer). Der inne åpner du 애플리케이션 비밀번호 관리 (administrasjon av programpassord) og klikker 생성하기 (generer). Velg alternativet for direkte inntasting, gi det et navn som mcpemails, og kopier passordet Naver viser deg. I mcpemails velger du IMAP / SMTP, skriver inn hele Naver-adressen din og limer inn programpassordet i stedet for Naver-passordet."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-klienten",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så kan agenten lese, søke, sende, svare, videresende, planlegge og organisere Naver-postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Naver ødela alle eksisterende klienter med vilje i 2025",
+      "p": "Hvis du hadde Naver Mail i Thunderbird, Apple Mail eller et skript og det sluttet å virke, har ingenting endret seg på din side. Fra 24. juni 2025 krevde Naver totrinnsbekreftelse og et programpassord for POP3, IMAP og SMTP, hadde en overgangsperiode for eksisterende tilkoblinger, og stengte den så. Kontopassordet feiler nå ved innlogging med en vanlig autentiseringsfeil, som ser akkurat ut som et utdatert passord, så den naturlige reaksjonen er å skrive kontopassordet på nytt og se det feile igjen. Løsningen er ikke et bedre passord, men en annen type passord."
+    },
+    {
+      "h": "Å slå på IMAP og å opprette programpassordet skjer i to forskjellige produkter",
+      "p": "Protokollbryteren ligger i Naver Mail under 환경설정. Programpassordet ligger i Naver-ID-kontoen din på nid.naver.com, bak totrinnsbekreftelse. Gjør du det ene uten det andre, får du samme autentiseringsfeil, og ingen av skjermene nevner den andre. De fleste tilkoblingsproblemer med Naver skyldes at en av disse to halvdelene mangler, ikke noe med vertsnavn eller porter."
+    },
+    {
+      "h": "Den eneste mekanismen Naver annonserer, er AUTH=PLAIN",
+      "p": "Navers IMAP-funksjonslinje tilbyr <code>AUTH=PLAIN</code> og ingen <code>AUTH=LOGIN</code>. Klienter og biblioteker som er hardkodet til LOGIN-mekanismen, noe som er vanlig i verktøy skrevet først mot Exchange, avvises på autentiseringstrinnet med en lite nyttig feilmelding i stedet for å falle tilbake. SMTP-siden godtar både PLAIN og LOGIN, så sendehalvdelen av kontoen kan fungere i en klient der mottakshalvdelen ikke gjør det."
+    },
+    {
+      "h": "Naver Works er en annen tjeneste, og disse innstillingene gjelder ikke",
+      "p": "Naver Works, forretningspakken som selges til koreanske selskaper, er ikke samme produkt som en personlig <code>@naver.com</code>-postkasse. Den har egen administrasjon, egne protokollinnstillinger og egne servernavn. Hvis adressen din er på et firmadomene administrert gjennom Naver Works, henter du vertene fra den konsollen i stedet for fra denne siden, og kobler så postkassen til i mcpemails som en vanlig IMAP- og SMTP-konto."
+    }
+  ],
+  "limits": [
+    "Naver annonserer ikke IDLE, så e-post hentes ved polling i stedet for push. Agenten din ser en ny melding neste gang den sjekker postkassen, ikke i det øyeblikket den kommer.",
+    "Naver annonserer en append-grense på rundt 40 MB på IMAP, og SMTP-serveren godtar meldinger opptil omtrent 38 MB. En videresending med vedlegg større enn det avvises ved sending i stedet for å settes i kø.",
+    "Et programpassord er knyttet til totrinnsbekreftelse. Slår du av totrinnsbekreftelse på Naver-kontoen, slutter programpassordet å være gyldig, og tilkoblingen faller ut."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Naver Mail?",
+      "a": "Ikke direkte. Claude har ingen innebygd Naver-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som mcpemails til Naver-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer fra Cursor og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Naver?",
+      "a": "IMAP er imap.naver.com på port 993 med implisitt TLS. SMTP er smtp.naver.com på port 465, også med implisitt TLS. Logg inn med hele naver.com-adressen din og et Naver-programpassord. Begge vertene ble verifisert via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvorfor virker ikke Naver-passordet mitt lenger?",
+      "a": "Fordi Naver sluttet å godta det. Siden 24. juni 2025 krever POP3, IMAP og SMTP totrinnsbekreftelse på kontoen og et programpassord generert fra Naver-ID-en din. Tilkoblinger som hadde fungert i årevis, feilet da overgangsperioden var over. Generer et programpassord på nid.naver.com og bruk det i stedet."
+    },
+    {
+      "q": "Hvordan oppretter jeg et Naver-programpassord?",
+      "a": "Logg inn på nid.naver.com, åpne 보안설정, og slå på 2단계 인증 hvis den er av. Klikk 관리 ved siden av, åpne så 애플리케이션 비밀번호 관리 og klikk 생성하기. Gi passordet et navn så du kan trekke det tilbake separat senere, og kopier det inn i passordfeltet i e-postklienten din eller i mcpemails."
+    },
+    {
+      "q": "Må jeg fortsatt slå på IMAP i innstillingene i Naver Mail?",
+      "a": "Ja. Programpassordet er en pålogging på kontonivå, og IMAP-bryteren er en innstilling på postkassenivå, og begge kreves. I Naver Mail åpner du 환경설정, går til fanen POP3/IMAP 설정, velger IMAP/SMTP 설정, setter den til 사용함 og lagrer. Hopper du over dette, har du et gyldig passord og en lukket dør."
+    },
+    {
+      "q": "Lagres Naver-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Naver via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke etter forespørselen som ba om det."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Naver-innboks",
+    "sub": "Koble til Naver Mail på minutter med et programpassord. Én innboks gratis for alltid, uten kort."
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://www.swisscom.ch/en/residential/help/e-mail/setup.html",
+    "https://www.swisscom.ch/de/privatkunden/hilfe/internet/e-mail-setup-ssl.tab-auf-dem-computer.html"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña de correo de Bluewin",
+    "helpUrl": "https://www.swisscom.ch/en/residential/help/e-mail/setup.html",
+    "usernameForm": "Tu dirección de Bluewin completa, por ejemplo firstname.lastname@bluewin.ch.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta el correo Bluewin (Swisscom) a Claude por IMAP",
+    "description": "Conecta el correo Bluewin a Claude y a cualquier cliente MCP por IMAP en imaps.bluewin.ch:993. Hace falta la contraseña de correo aparte, no tu acceso a Swisscom."
+  },
+  "hero": {
+    "eyebrow": "Bluewin + IA",
+    "titleLine1": "Conecta el correo Bluewin a Claude,",
+    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de bluewin.ch. Lee, busca, envía, responde, programa y organiza correo por IMAP con tu contraseña de correo de Swisscom, en todos los clientes MCP y no solo en uno.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de Bluewin. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imaps.bluewin.ch en el puerto 993, iniciando sesión con tu dirección bluewin.ch completa y tu contraseña de correo de Bluewin, que Swisscom mantiene separada de la contraseña de acceso a My Swisscom. Una vez conectada, Claude, Cursor o cualquier otro cliente MCP puede leer, buscar, enviar, responder y organizar ese correo. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña de correo, no el acceso a Swisscom",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Bluewin: IMAP y la contraseña de correo aparte",
+    "body": "Swisscom sirve el correo Bluewin por IMAP en <code>imaps.bluewin.ch</code> en el puerto 993 y acepta correo saliente en <code>smtpauths.bluewin.ch</code> en el puerto 465, ambos con TLS establecido en cuanto se abre la conexión. La credencial es donde Bluewin se diferencia de la mayoría de proveedores: Swisscom indica claramente que la contraseña de correo no corresponde a la contraseña del acceso a Swisscom. Hay una contraseña de correo por dirección, la defines o la cambias en My Swisscom, y la misma contraseña se usa para IMAP, SMTP y los protocolos de calendario y contactos. Tu nombre de usuario es la dirección completa, normalmente con el formato <code>firstname.lastname@bluewin.ch</code>."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
+    },
+    {
+      "h": "Define o comprueba la contraseña de correo en My Swisscom",
+      "p": "Inicia sesión en My Swisscom y abre la sección para cambiar la contraseña de correo de la dirección de Bluewin que quieres conectar. Es una contraseña distinta de la que usaste para entrar en My Swisscom. Si nunca la has definido, hazlo ahora; el valor que elijas aquí es el que usa un cliente de correo."
+    },
+    {
+      "h": "Introduce la dirección y la contraseña de correo en mcpemails",
+      "p": "Elige IMAP / SMTP, introduce tu dirección <code>@bluewin.ch</code> completa y pega la contraseña de correo, no la contraseña de acceso a Swisscom. Los servidores de Bluewin ya vienen rellenados, incluidas las letras finales que es fácil escribir mal."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "La contraseña de acceso a Swisscom nunca funcionará en un cliente de correo",
+      "p": "Swisscom gestiona dos credenciales sobre una misma cuenta: el acceso a Swisscom, que te lleva a My Swisscom y al portal de cliente, y la contraseña de correo, que es la única que aceptan IMAP y SMTP. Pueden tener valores distintos y normalmente los tienen. Casi todos los fallos de autenticación de Bluewin son esto, y restablecer la contraseña de acceso a Swisscom no lo arregla porque no es la contraseña que se comprueba."
+    },
+    {
+      "h": "Los nombres de servidor son imaps y smtpauths, no imap y smtp",
+      "p": "Los nombres de servidor de Bluewin llevan letras extra que la gente omite al escribirlos de memoria: el servidor entrante termina en <code>imaps</code>, con s, y el saliente es <code>smtpauths</code>, no <code>smtp</code>. Un nombre abreviado no resuelve a un servidor de correo de Swisscom, así que el cliente informa de un fallo de conexión y no de autenticación. Si introduces los ajustes a mano en otro sitio, cópialos en lugar de volver a escribirlos."
+    },
+    {
+      "h": "Sin SPECIAL-USE, las carpetas se identifican por el nombre que ves en el webmail",
+      "p": "El servidor IMAP de Bluewin no anuncia la extensión SPECIAL-USE, que es como un cliente sabe normalmente qué carpeta es Enviados y cuál es Papelera. Por eso las carpetas se tienen que identificar por nombre, y Bluewin las nombra en el idioma configurado en tu webmail, así que una cuenta en alemán tiene Gesendet donde una en inglés tiene Sent. Si un agente archiva algo en el lugar equivocado, indica la carpeta de destino exactamente como la muestra el webmail de Bluewin."
+    },
+    {
+      "h": "Faltan tanto MOVE como UIDPLUS",
+      "p": "Este servidor no implementa ni MOVE ni UIDPLUS. Archivar un mensaje se ejecuta por tanto como COPY, luego STORE de la marca de borrado y luego EXPUNGE, y el servidor nunca informa del id que asignó a la nueva copia. mcpemails gestiona la secuencia, pero aquí mover no es atómico y un mensaje archivado se confirma buscando en la carpeta de destino, no por id."
+    }
+  ],
+  "limits": [
+    "El servidor SMTP de Bluewin anuncia un tamaño máximo de mensaje de unos 25 MB, inferior al de la mayoría de proveedores de este sitio, así que un envío con varios adjuntos grandes se rechaza antes de salir.",
+    "Las funciones de las carpetas se identifican por nombre porque no se anuncia SPECIAL-USE. En un buzón cuyas carpetas se hayan renombrado puede que haya que indicar la carpeta explícitamente."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo Bluewin?",
+      "a": "No directamente. Claude no tiene un conector integrado para Bluewin ni para Swisscom. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de bluewin.ch, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Bluewin?",
+      "a": "IMAP es imaps.bluewin.ch en el puerto 993 con TLS desde el inicio de la conexión. SMTP es smtpauths.bluewin.ch en el puerto 465, también con TLS implícito y con autenticación obligatoria. El nombre de usuario es tu dirección bluewin.ch completa. Ambos servidores se verificaron con una conexión TLS real en la fecha que indica esta página."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de Bluewin?",
+      "a": "Porque un cliente de correo necesita la contraseña de correo de Bluewin, y la mayoría de la gente prueba la contraseña de acceso a Swisscom. Swisscom documenta que son dos credenciales separadas. Define o restablece la contraseña de correo de esa dirección concreta en My Swisscom y usa el nuevo valor. Cambiar tu contraseña de acceso a Swisscom no cambia lo que acepta IMAP."
+    },
+    {
+      "q": "¿Necesito una contraseña de aplicación para Bluewin?",
+      "a": "No. Swisscom no emite contraseñas por aplicación. Hay una única contraseña de correo por dirección, definida en My Swisscom, que se usa igual para IMAP, SMTP y los protocolos de calendario y contactos. Eso también significa que cambiarla desconecta todos los clientes a la vez, así que actualízalos juntos."
+    },
+    {
+      "q": "¿Se almacena mi correo de Bluewin en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Swisscom por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Bluewin",
+    "sub": "Conecta una dirección bluewin.ch en minutos con tu contraseña de correo de Swisscom. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

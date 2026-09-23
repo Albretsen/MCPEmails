@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.telenor.no/kundeservice/e-post/oppsett/",
+    "https://www.telenor.no/kundeservice/e-post/",
+    "https://www.telenor.no/vilkar/telenor-online-epost/",
+    "https://www.telenor.no/epost/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe e-post défini sur Mine Sider",
+    "helpUrl": "https://www.telenor.no/kundeservice/e-post/oppsett/",
+    "usernameForm": "Pas l'adresse complète. Telenor indique comme identifiant la partie avant @online.no, 8 caractères au maximum.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Réglages IMAP Online.no et accès MCP pour Claude",
+    "description": "Connectez une boîte Telenor Online.no à Claude et tout client MCP sur imap.online.no:993. L'accès des clients tiers doit d'abord être autorisé sur Mine Sider."
+  },
+  "hero": {
+    "eyebrow": "Online.no + IA",
+    "titleLine1": "Connectez votre boîte Online.no",
+    "titleLine2": "à Claude, Cursor, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Telenor Online. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP, une fois l'accès des clients tiers autorisé sur Mine Sider.",
+    "answer": "Claude ne peut pas atteindre une boîte Telenor Online.no tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.online.no, port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Deux particularités de Telenor déterminent si cela fonctionne : l'autorisation d'utiliser Online e-post dans des programmes de messagerie tiers est un interrupteur sur Mine Sider, et l'identifiant n'est pas votre adresse mais la partie avant @online.no, huit caractères au maximum. Le mot de passe est le mot de passe e-post défini sur Mine Sider, pas votre TelenorID. Une boîte sur mcpemails est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Autorisez les clients tiers sur Mine Sider",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Online.no se connecte : une autorisation, un identifiant court et un mot de passe distinct",
+    "body": "Telenor sert IMAP sur <code>imap.online.no</code>, port 993, en TLS implicite, et la soumission SMTP sur <code>smtp.online.no</code>, port 465. Les pages de configuration actuelles de Telenor indiquent <code>mail.online.no</code> pour les deux rôles et précisent que les anciens noms <code>imap.online.no</code> et <code>smtp.online.no</code> fonctionnent aussi ; les deux ont répondu lors d'une connexion TLS réelle, et c'est l'ancienne paire que mcpemails préremplit. Le reste de la configuration est là où Online.no se distingue de tous les autres. Telenor définit l'identifiant comme <b>det som er før @online.no, maks 8 tegn</b> (ce qui précède @online.no, 8 caractères max.), donc la partie locale plutôt que l'adresse complète. L'identifiant de connexion est le mot de passe e-post, et les conditions de Telenor précisent : <b>om kunden bruker et e-postprogram settes passordet til e-postkontoen opp på Mine Sider</b> (si le client utilise un programme de messagerie, le mot de passe du compte e-mail se définit sur Mine Sider). Et l'autorisation d'utiliser la boîte depuis un programme tiers est elle-même un réglage à activer à cet endroit. Online e-post est un service Telenor payant, pas un bonus gratuit lié à un abonnement haut débit."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
+    },
+    {
+      "h": "Activez l'accès des programmes tiers sur Mine Sider",
+      "p": "Connectez-vous à <b>Mine Sider</b> de Telenor avec votre TelenorID. L'aide de Telenor le dit clairement : <b>nå kan du skru av eller på tillatelser til å bruke Online e-post i tredjeparts e-postprogrammer som Outlook eller Apple Mail på Mine sider</b> (vous pouvez désormais activer ou désactiver sur Mine Sider l'autorisation d'utiliser Online e-post dans des programmes tiers comme Outlook ou Apple Mail). Activez cette autorisation pour le compte à connecter. Si votre mot de passe est ancien, Telenor vous obligera à le changer avant même de vous laisser activer l'autorisation."
+    },
+    {
+      "h": "Définissez le mot de passe du compte e-post sur Mine Sider",
+      "p": "Toujours sur Mine Sider, définissez le mot de passe du compte de messagerie lui-même. Les conditions d'Online e-post indiquent que lorsqu'un client utilise un programme de messagerie, le mot de passe du compte e-post se définit sur Mine Sider. C'est un identifiant différent de votre connexion TelenorID, et c'est la cause la plus fréquente d'une connexion refusée."
+    },
+    {
+      "h": "Collez-le dans mcpemails, puis collez l'URL MCP dans votre IA",
+      "p": "Choisissez IMAP / SMTP, saisissez comme identifiant la partie avant <code>@online.no</code> et collez le mot de passe e-post. Les serveurs et ports Telenor sont préremplis et ont été vérifiés par une connexion TLS réelle. Mettez ensuite https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "L'identifiant est la partie locale, pas l'adresse, et il est limité à huit caractères",
+      "p": "Presque tous les autres fournisseurs de ce site veulent l'adresse complète dans le champ identifiant. Pas Telenor. Ses pages de configuration définissent l'identifiant comme <b>det som er før @online.no, maks 8 tegn</b>. Saisissez <code>navn@online.no</code> là où <code>navn</code> était attendu et le serveur le rejette comme de mauvais identifiants, sans rien indiquer sur le fait que c'est l'adresse elle-même qui pose problème. Telenor ne précise pas si la forme complète est aussi acceptée : utilisez la forme courte qu'il publie."
+    },
+    {
+      "h": "L'autorisation sur Mine Sider verrouille le protocole, et un vieux mot de passe bloque l'autorisation",
+      "p": "Telenor a fait de l'accès des programmes de messagerie tiers une activation explicite sur Mine Sider plutôt qu'une possibilité offerte à toutes les boîtes. Deux conséquences piègent les utilisateurs. D'abord, une boîte dont l'autorisation n'a jamais été activée refuse les connexions des clients avec une erreur d'identifiants, même quand le mot de passe est parfait. Ensuite, Telenor indique que <b>hvis det er lenge siden du byttet passord sist, vil du måtte bytte passord for å kunne skru på tillatelser på Mine Sider</b> : avec un mot de passe inchangé depuis longtemps, vous ne pouvez même pas atteindre l'interrupteur tant que vous ne l'avez pas changé. Faites ces deux choses dans cet ordre et la connexion s'établit."
+    },
+    {
+      "h": "Le serveur propose uniquement AUTH=LOGIN, sans AUTH=PLAIN",
+      "p": "Online.no répond avec <code>* OK [CAPABILITY IMAP4REV1 LITERAL+ UTF8=ALL STATUS=SIZE STARTTLS SASL-IR AUTH=LOGIN ID] Bigfoot</code>. Cette liste annoncée contient <code>AUTH=LOGIN</code> et pas <code>AUTH=PLAIN</code>, soit l'inverse de presque tous les autres fournisseurs ici. Les bibliothèques clientes modernes utilisent souvent PLAIN par défaut et traitent LOGIN comme une solution de repli historique ; chez Online.no, c'est PLAIN qui manque. Les outils qui ne basculent pas reçoivent un refus d'authentification qui ressemble à un mauvais mot de passe. mcpemails négocie à partir de ce que le serveur annonce réellement."
+    },
+    {
+      "h": "Les conditions de Telenor limitent ce que vous pouvez mettre dans la ligne From",
+      "p": "Les conditions d'Online e-post stipulent que <b>bruker skal kun bruke egne online.no adresser som avsender</b> : vous ne pouvez envoyer qu'avec vos propres adresses online.no comme expéditeur. Le schéma « envoyer en tant que », où un agent envoie depuis une adresse professionnelle ou de domaine via un serveur SMTP pratique, est donc exclu ici pour une raison contractuelle et non technique. Si votre agent doit envoyer sous une autre identité, connectez la boîte à laquelle appartient cette identité."
+    }
+  ],
+  "limits": [
+    "Online e-post est un service Telenor payant. Telenor l'affiche à 99 couronnes par mois pour 5 GB et 109 couronnes par mois pour 15 GB : une adresse dormante que vous connectez à un agent coûte donc quand même de l'argent.",
+    "Le serveur n'annonce ni MOVE, ni UIDPLUS, ni SPECIAL-USE : le classement se fait par copie, indicateur et expunge, le nouvel UID de la copie doit être retrouvé par une recherche, et Sent, Drafts et Trash sont reconnus par leur nom. Sur une boîte norvégienne, ce sont généralement Sendt, Utkast et Slettet.",
+    "Les messages sortants sont limités à environ 50 MB de message encodé : une grosse pièce jointe transférée par un agent peut donc être rejetée à l'étape SMTP."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec l'e-mail Online.no ?",
+      "a": "Pas tout seul. Claude n'a pas de connecteur Telenor ou Online.no intégré. Pointer un serveur MCP comme mcpemails vers la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP d'Online.no ?",
+      "a": "IMAP est imap.online.no sur le port 993 en SSL et SMTP est smtp.online.no sur le port 465 en SSL. Les pages actuelles de Telenor indiquent aussi mail.online.no pour les deux rôles et précisent que les anciens noms fonctionnent toujours. L'identifiant est la partie avant @online.no, huit caractères au maximum, et le mot de passe est le mot de passe e-post défini sur Mine Sider."
+    },
+    {
+      "q": "Pourquoi mon mot de passe Online.no est-il refusé dans un client de messagerie ?",
+      "a": "Trois pistes, dans cet ordre. L'accès des programmes tiers n'a pas été autorisé sur Mine Sider. Ou vous avez saisi l'adresse complète là où Telenor n'attend que la partie avant @online.no. Ou vous avez utilisé votre connexion TelenorID au lieu du mot de passe du compte e-post que Mine Sider définit pour les programmes de messagerie."
+    },
+    {
+      "q": "Comment autoriser Outlook ou un autre programme à utiliser Online e-post ?",
+      "a": "Connectez-vous à Mine Sider et activez l'autorisation d'utiliser Online e-post dans des programmes de messagerie tiers. Si votre mot de passe n'a pas été changé depuis longtemps, Telenor exige que vous le changiez avant de pouvoir activer l'autorisation. Définissez le mot de passe du compte e-post sur les mêmes pages et utilisez cette valeur dans le client."
+    },
+    {
+      "q": "L'e-mail Online.no est-il gratuit ?",
+      "a": "Non. Telenor vend Online e-post comme un service payant, affiché à 99 couronnes par mois pour 5 GB et 109 couronnes par mois pour 15 GB, à commander sur Mine Sider sous Tjenester. Mieux vaut en tenir compte avant de créer une deuxième adresse Online.no uniquement pour un agent."
+    },
+    {
+      "q": "Mon courrier Online.no est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis Telenor en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Online.no à votre IA",
+    "sub": "Autorisez l'accès tiers sur Mine Sider et connectez-vous en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

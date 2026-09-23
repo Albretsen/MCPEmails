@@ -1,0 +1,106 @@
+{
+  "_sources": [
+    "https://support.titan.email/hc/en-us/articles/900000215446-Configure-Titan-on-other-apps-using-IMAP-POP",
+    "https://support.titan.email/hc/en-us/articles/25005307786905-Enable-Titan-on-other-apps",
+    "https://support.titan.email/hc/en-us/articles/59899461438233-Application-Password-in-Titan-for-Third-Party-Clients",
+    "https://support.titan.email/hc/en-us/articles/4406867379865-Configure-Titan-on-other-apps-using-IMAP-POP-for-EU-hosted-users",
+    "https://support.titan.email/hc/en-us/articles/9820407299737-Setting-up-and-editing-Two-Factor-Authentication-settings",
+    "https://www.godaddy.com/help/use-imap-settings-to-add-my-professional-email-to-a-client-32204"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Titan-postkassepassord (programpassord hvis 2FA er på)",
+    "helpUrl": "https://support.titan.email/hc/en-us/articles/25005307786905-Enable-Titan-on-other-apps",
+    "usernameForm": "Hele Titan-adressen din på ditt eget domene, for eksempel jack@yourdomain.com. Titan dokumenterer at den samme adressen skal skrives i brukernavnfeltet når en klient ber om det separat.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Titan Email til Claude, Cursor og MCP-klienter",
+    "description": "Koble Titan Email til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP på imap.titan.email:993. Slå på Titan i andre apper først. Én innboks gratis, for alltid."
+  },
+  "hero": {
+    "eyebrow": "Titan Email + AI",
+    "titleLine1": "Koble Titan Email til Claude,",
+    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Titan-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP, i alle MCP-klienter i stedet for bare én.",
+    "answer": "Claude når ikke Titan Email på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.titan.email port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Titan avviser alle tredjepartsklienter til du slår på Enable Titan on Other Apps i webmail-innstillingene, og en postkasse med tofaktorautentisering trenger et Titan-programpassord i stedet for det vanlige. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Tredjepartstilgang må slås på",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Titan Email seg til: IMAP, når tredjepartstilgang er låst opp",
+    "body": "Titan tilbyr IMAP på <code>imap.titan.email</code> port 993 over TLS, og SMTP på <code>smtp.titan.email</code> port 465, også med implisitt TLS. To ting kommer først. Tredjepartstilgang er <b>av</b> på en Titan-postkasse til noen slår den på, og ingenting kommer forbi innloggingen før det. Og Titan selges under andre selskapers merkenavn, så <b>hvor du kjøpte postkassen, avgjør hvilke vertsnavn du bruker</b>. Mange kommer hit usikre på om postkassen i det hele tatt er Titan, fordi verten som solgte den, aldri nevnte ordet. Tre sjekker avgjør det: Titan-webmail ligger på <code>app.titan.email</code>, domenets MX-oppføringer peker på <code>mx1.titan.email</code> og <code>mx2.titan.email</code>, og verten din solgte det til deg som Titan Email, slik Hostinger gjør, eller som Professional Email, som er det GoDaddy kaller det samme produktet."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Det kreves ikke kort, og gratisplanen kobler til én innboks så lenge du vil ha den."
+    },
+    {
+      "h": "Slå på Enable Titan on Other Apps",
+      "p": "Logg inn i Titan-webmail på app.titan.email, klikk ikonet <b>Settings</b> øverst til høyre, og klikk <b>Enable Titan on Other Apps</b>. En kort omvisning åpnes; klikk knappen igjen for å bekrefte. Mangler den oppføringen og du ser <b>Configure 3rd party apps</b> i stedet, er tredjepartstilgang allerede på for postkassen."
+    },
+    {
+      "h": "Bekreft vertsnavnene, og lim så alt inn i mcpemails",
+      "p": "De fleste Titan-postkasser bruker vertene som er forhåndsutfylt under. Administreres domenet ditt gjennom GoDaddy, dokumenterer GoDaddy i stedet <code>imap.secureserver.net</code> på 993 og <code>smtpout.secureserver.net</code> på 465. Kjøpte du Titan fra Blacknight, MonoVM, DomainDiscount24, Fluccs eller Domain Central, dokumenterer Titan <code>imap0101.titan.email</code> og <code>smtp0101.titan.email</code>. Velg IMAP / SMTP i mcpemails, skriv inn hele Titan-adressen din og passordet."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Titan avviser alle e-postklienter til du slår én bryter",
+      "p": "En Titan-postkasse leveres med tredjepartstilgang slått av, og Titans egen oppsettveiledning åpner med å si det. IMAP, POP og SMTP feiler alle på innloggingstrinnet med en feil som ser nøyaktig ut som et feil passord, så det første instinktet er å tilbakestille passordet. Bryteren ligger i Titan-webmail under <b>Settings</b>, så <b>Enable Titan on Other Apps</b>. Titan gir deg et tegn: har det menypunktet allerede blitt erstattet av <b>Configure 3rd party apps</b>, er tilgangen på og problemet ligger et annet sted."
+    },
+    {
+      "h": "Hvor du kjøpte Titan, endrer vertsnavnet",
+      "p": "Titan selges under andres merkenavn gjennom hostingselskaper, så merket på fakturaen er ikke merket på e-postserveren. GoDaddy videreselger det som Professional Email og peker klienter mot <code>imap.secureserver.net</code> og <code>smtpout.secureserver.net</code>. Titan kjøpt gjennom Blacknight, MonoVM, DomainDiscount24, Fluccs eller Domain Central er hostet i EU og svarer på <code>imap0101.titan.email</code> og <code>smtp0101.titan.email</code>. Alle andre bruker vanlig <code>imap.titan.email</code>. Ett produkt, tre vertsfamilier, og feil familie feiler ved tilkoblingen, ikke ved innloggingen."
+    },
+    {
+      "h": "Titans egen feilsøking sier at du skal slå av 2FA. Det trenger du ikke",
+      "p": "Feilsøkingsdelen av Titans IMAP-veiledning skylder på tofaktorautentisering når et passord avvises, og ber deg slå den av. Titan støtter programpassord, men de er godt gjemt: <b>Settings</b>, <b>Preferences</b>, <b>Account and Security</b>, <b>Security and Access</b>, og så <b>Manage</b> under Two-Factor Authentication, der du skriver inn passordet og en sekssifret kode på nytt før <b>Generate App Password</b> i det hele tatt vises. Generer et der og la 2FA stå på. Titan viser det én gang, og du kan trekke det tilbake fra samme skjerm."
+    },
+    {
+      "h": "Titans IMAP-server er uvanlig naken, og det endrer oppførselen",
+      "p": "Titans funksjonsbanner annonserer lite utover IMAP4rev1, AUTH=PLAIN og SASL-IR. Den tilbyr ikke MOVE, så flytting av en melding blir en kopi, et flagg og en expunge i stedet for én atomisk kommando, og en avbrutt flytting kan etterlate originalen. Den tilbyr ikke IDLE, så ingen klient kan holde en tilkobling åpen og vente på ny e-post; mcpemails henter direkte per forespørsel, men en skrivebordsklient på samme postkasse vil polle. UIDPLUS og SPECIAL-USE mangler også, og derfor matches mapper her etter navn."
+    }
+  ],
+  "limits": [
+    "Innstillingstabellen på denne siden er Titans standard vertspar. GoDaddy Professional Email og postkasser fra EU-forhandlere trenger egne vertsnavn, skrevet inn manuelt når du kobler til, i stedet for å godta de forhåndsutfylte.",
+    "Uten SPECIAL-USE trenger en Titan-postkasse med omdøpte mapper at mappen oppgis eksplisitt når du ber agenten arkivere noe.",
+    "Titans SMTP-server godtar meldinger opptil 50 MB, så en videresending med et veldig stort vedlegg avvises ved innsending."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Titan Email?",
+      "a": "Ikke direkte. Claude har ingen innebygd Titan-kobling og kan ikke åpne en IMAP-økt selv. Kobler du en MCP-server som mcpemails til Titan-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer i Cursor og alle andre MCP-klienter i stedet for bare i én app."
+    },
+    {
+      "q": "Hvordan vet jeg om postkassen min faktisk er Titan?",
+      "a": "Sjekk tre ting. Webmailen din ligger på app.titan.email, selv om verten din lenker til den under sitt eget navn. Domenets MX-oppføringer peker på mx1.titan.email og mx2.titan.email. Og leverandøren din selger det som Titan Email, slik Hostinger gjør, eller som Professional Email, GoDaddys navn på den samme tjenesten."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Titan Email?",
+      "a": "IMAP er imap.titan.email på port 993 med implisitt TLS. SMTP er smtp.titan.email på port 465, også med implisitt TLS. Logg inn med hele Titan-adressen din og postkassepassordet. Begge vertene ble verifisert via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvorfor avviser Titan passordet mitt?",
+      "a": "Nesten alltid fordi tredjepartstilgang aldri ble slått på for postkassen, noe som gir en autentiseringsfeil i stedet for en nyttig melding. Slå på Enable Titan on Other Apps i webmail-innstillingene først. Er den allerede på og innloggingen fortsatt feiler, har postkassen tofaktorautentisering og trenger et programpassord fra skjermen Security and Access."
+    },
+    {
+      "q": "Virker dette med GoDaddy Professional Email?",
+      "a": "Ja, med andre vertsnavn. GoDaddy Professional Email er Titan i bunnen, men GoDaddy dokumenterer imap.secureserver.net på port 993 og smtpout.secureserver.net på port 465, og Titans egen veiledning sender GoDaddy-administrerte domener dit. Skriv inn de vertene manuelt i stedet for det forhåndsutfylte paret."
+    },
+    {
+      "q": "Lagres Titan-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Titan via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring; meldingsinnhold beholdes ikke etter forespørselen som ba om det."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Titan Email-innboks",
+    "sub": "Koble til Titan på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

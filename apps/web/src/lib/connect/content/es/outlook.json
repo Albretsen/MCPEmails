@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://support.microsoft.com/en-us/office/outlook-and-other-apps-are-unable-to-connect-to-outlook-com-when-using-basic-authentication-f4202ebf-89c6-4a8a-bec3-3d60cf7deaef",
+    "https://learn.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth",
+    "https://support.microsoft.com/en-us/accounts-billing/manage/how-to-get-and-use-app-passwords"
+  ],
+  "auth": {
+    "method": "oauth",
+    "label": "Solo OAuth 2.0, sin contraseña de aplicación",
+    "helpUrl": "https://support.microsoft.com/en-us/office/outlook-and-other-apps-are-unable-to-connect-to-outlook-com-when-using-basic-authentication-f4202ebf-89c6-4a8a-bec3-3d60cf7deaef",
+    "usernameForm": "Ninguna credencial que puedas escribir funcionará. El servicio IMAP de las cuentas personales de Microsoft solo ofrece XOAUTH2, así que acepta un token de acceso y nada más.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Outlook.com e IA: solo OAuth, adiós a las contraseñas de app",
+    "description": "El IMAP de Outlook.com ya solo anuncia AUTH=XOAUTH2, así que ninguna contraseña, ni de aplicación, lo conecta a un servidor MCP. Qué cambió y qué hacer."
+  },
+  "hero": {
+    "eyebrow": "Outlook.com + IA",
+    "titleLine1": "Outlook.com ya no acepta",
+    "titleLine2": "ninguna contraseña por IMAP",
+    "lead": "Las cuentas personales de Microsoft, tanto si la dirección termina en outlook.com como en hotmail.com, live.com o msn.com, dejaron de aceptar la autenticación básica desde aplicaciones que no son de Microsoft. El servidor funciona. Simplemente ya no le queda ningún mecanismo de contraseña que ofrecer.",
+    "answer": "No. mcpemails no puede conectar un buzón de Outlook.com, y el obstáculo es la autenticación, no la conectividad. El servicio IMAP de las cuentas personales de Microsoft responde en outlook.office365.com, puerto 993, y el handshake TLS funciona, pero su línea de capacidades ahora solo anuncia AUTH=XOAUTH2: no hay ningún mecanismo de contraseña disponible, así que ni la contraseña de la cuenta ni una contraseña de aplicación pueden autenticarse. Microsoft puso fin a la autenticación básica para las cuentas personales que se conectan desde aplicaciones que no son de Microsoft a partir del 16 de septiembre de 2024, y dejó OAuth 2.0 como única vía de entrada. mcpemails no ofrece una conexión OAuth de Microsoft, así que aquí no se puede conectar un buzón de Outlook.com. Si quieres un agente trabajando con tu correo hoy, conecta un buzón que acepte una contraseña por IMAP, que es gratis para una bandeja, y reenvía a él tu correo de Outlook.com si quieres una copia espejo."
+  },
+  "method": {
+    "title": "Cómo se conecta Outlook.com: XOAUTH2 y nada más",
+    "body": "Outlook.com y los buzones empresariales de Microsoft 365 son dos servicios distintos que casualmente llegan al mismo servidor IMAP, y la diferencia se ve en el primer intercambio. Conéctate a <code>outlook.office365.com</code> en el 993 con una dirección empresarial y la línea de capacidades todavía muestra <code>AUTH=PLAIN</code> junto a <code>AUTH=XOAUTH2</code>, un anuncio obsoleto de un mecanismo que el servicio rechaza. Conéctate con una cuenta personal y <code>AUTH=PLAIN</code> ni siquiera aparece. El servicio de consumo ha dejado de ofrecer la autenticación por contraseña en lugar de limitarse a rechazarla, lo que es un fallo más limpio y a la vez más confuso, porque los clientes que esperan enviar una contraseña reciben un rechazo a nivel de protocolo en vez de un error de inicio de sesión. El SMTP de las cuentas personales es <code>smtp-mail.outlook.com</code> en el puerto 587 con STARTTLS, y se aplica la misma historia de autenticación. La buena noticia, si se le puede llamar así, es que en las cuentas personales no hay administrador de tenant: ninguna política de consentimiento te bloquea, porque no hay nada que consentir."
+  },
+  "setup": [
+    {
+      "h": "Crea la cuenta gratis de mcpemails",
+      "p": "Una dirección de correo, sin tarjeta. Una bandeja conectada es gratis para siempre. Los dos pasos siguientes eligen qué buzón será, porque no será el de Outlook.com."
+    },
+    {
+      "h": "Elige un buzón que siga aceptando una contraseña por IMAP",
+      "p": "Tu propio dominio en Fastmail o Migadu, una cuenta personal de Gmail, una dirección de proyecto en cualquier proveedor corriente. Esa cuenta es la que conecta mcpemails y donde tu agente lee, redacta borradores, responde, programa y archiva."
+    },
+    {
+      "h": "Activa el reenvío en Outlook.com si quieres una copia espejo",
+      "p": "En Outlook.com en la web, abre Settings, ve a Mail y luego a Forwarding, y activa el reenvío a la dirección que acabas de conectar. Deja marcada la opción de conservar una copia de los mensajes reenviados para que tu buzón de Outlook.com siga completo. A partir de ahí el correo nuevo llega a los dos sitios y el agente trabaja sobre la copia."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y el agente tendrá la bandeja conectada."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Outlook.com y Microsoft 365 comparten servidor, pero no línea de capacidades",
+      "p": "Ambos servicios resuelven a <code>outlook.office365.com</code> para IMAP, lo que los hace parecer intercambiables en todas las tablas de configuración de internet. No lo son. El lado empresarial anuncia <code>AUTH=PLAIN</code> y lo rechaza. El lado personal ni siquiera lo anuncia. Ninguno acepta una contraseña, pero fallan de forma distinta, así que un artículo de soporte escrito para uno diagnosticará mal el otro. Los servidores SMTP también difieren: las cuentas personales usan <code>smtp-mail.outlook.com</code>."
+    },
+    {
+      "h": "Una contraseña de aplicación es una credencial de autenticación básica, así que no tiene dónde iniciar sesión",
+      "p": "Microsoft todavía te deja generar contraseñas de aplicación en una cuenta personal para casos heredados, como una versión antigua de Outlook de escritorio o una consola Xbox, y por eso tantas guías siguen diciéndote que crees una para IMAP. No sirve de nada. Una contraseña de aplicación es una contraseña, y la autenticación por contraseña es justo lo que el servicio IMAP ya no ofrece. Generar una nueva y ver cómo vuelve a fallar es la hora perdida más habitual con este proveedor."
+    },
+    {
+      "h": "Las direcciones de hotmail.com, live.com y msn.com son el mismo servicio",
+      "p": "El servicio de correo de consumo detrás de todos esos dominios es un único sistema, con un único conjunto de endpoints y una única política de autenticación. Una dirección antigua de hotmail.com que lleva quince años funcionando en un cliente de correo está sujeta al mismo cambio que una dirección de outlook.com creada ayer, y en cuanto su cliente intenta volver a autenticarse, deja de funcionar."
+    },
+    {
+      "h": "El servicio IMAP no anuncia SPECIAL-USE",
+      "p": "Las cuentas personales de Microsoft admiten MOVE, UIDPLUS e IDLE, pero un cliente no puede preguntar al servidor qué carpeta es Junk o Sent y tiene que guiarse por el nombre. Outlook.com llama a su carpeta de spam Junk Email y no Junk, y las cuentas en otros idiomas usan nombres traducidos, así que las herramientas que buscan nombres de carpeta literales en inglés no encuentran nada sobre lo que actuar, sin avisar."
+    }
+  ],
+  "limits": [
+    "El reenvío te da una copia, no el buzón. Las respuestas que envía tu agente salen desde la otra dirección, y nada de lo que archiva o marca se refleja en Outlook.com.",
+    "Esta página describe el servicio de cuentas de consumo de Microsoft. Si tu dirección está en un tenant de trabajo o de centro educativo, se aplican además las reglas de consentimiento empresariales a todo lo que se explica aquí, y tu administrador forma parte de la respuesta."
+  ],
+  "faq": [
+    {
+      "q": "¿Claude funciona con Outlook.com?",
+      "a": "No a través de mcpemails. Outlook.com solo acepta OAuth 2.0 en IMAP, y no ofrecemos una conexión OAuth de Microsoft, así que no hay forma de conectar ese buzón aquí. La vía que funciona hoy es conectar otro buzón que acepte un inicio de sesión IMAP normal y reenviar a él tu correo de Outlook.com."
+    },
+    {
+      "q": "¿Cuál es la configuración IMAP y SMTP de Outlook.com?",
+      "a": "IMAP es outlook.office365.com en el puerto 993 con TLS implícito. SMTP es smtp-mail.outlook.com en el puerto 587 con STARTTLS. Ambos se confirmaron con una conexión TLS en vivo. Los valores son correctos, pero ya no bastan por sí solos, porque el servicio IMAP solo autentica con un token de acceso OAuth 2.0."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de Outlook.com?",
+      "a": "Más que rechazarse, nunca se llega a ofrecer. Desde el 16 de septiembre de 2024 Microsoft dejó de admitir la autenticación básica para las cuentas personales que se conectan desde aplicaciones que no son de Microsoft, y el servicio IMAP ahora solo anuncia XOAUTH2. Un cliente que intenta enviar una contraseña no tiene ningún mecanismo por el que enviarla."
+    },
+    {
+      "q": "¿Puedo usar una contraseña de aplicación para el IMAP de Outlook.com?",
+      "a": "No. Las contraseñas de aplicación siguen existiendo en las cuentas personales de Microsoft para ciertas aplicaciones heredadas, pero son credenciales de autenticación básica y el servicio de correo ya no acepta esa forma de autenticación. Crear una no cambiará el resultado, por muchos tutoriales antiguos que la propongan como solución."
+    },
+    {
+      "q": "¿Es la misma situación que en Microsoft 365 para empresas?",
+      "a": "El resultado final coincide, la causa no. Una cuenta personal no tiene administrador de tenant ni política de consentimiento de por medio; simplemente la autenticación por contraseña ha desaparecido. Un buzón empresarial tiene la misma eliminación de la autenticación más un requisito de consentimiento, por el que un administrador debe aprobar los permisos de correo que pide una aplicación."
+    },
+    {
+      "q": "¿Se almacena mi correo en sus servidores?",
+      "a": "No. En los buzones que mcpemails sí conecta, los mensajes se obtienen en vivo por IMAP en cada petición y se entregan a tu cliente de IA, con las credenciales cifradas en reposo y sin conservar el cuerpo de los mensajes. No guardamos ninguna credencial de Outlook.com, puesto que no es posible ninguna conexión con Outlook.com."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja en la que pueda iniciar sesión",
+    "sub": "Outlook.com se queda donde está. Conecta un buzón IMAP para el trabajo automatizado, gratis para siempre."
+  }
+}

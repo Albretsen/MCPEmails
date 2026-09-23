@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://assistance.free.fr/articles/609"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Passord for Free-kontoen",
+    "helpUrl": "https://assistance.free.fr/articles/609",
+    "usernameForm": "Hele adressen din med domenet, for eksempel navn@free.fr. Frees egen instruks er å skrive inn hele adressen, ikke den korte påloggingen.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Free.fr-e-post i Claude: IMAP-innstillinger som virker",
+    "description": "Koble en Free.fr-postkasse til Claude og enhver MCP-klient over IMAP på imap.free.fr:993 med passordet til Free-kontoen. Uten app-passord, ingen bryter å slå på."
+  },
+  "hero": {
+    "eyebrow": "Free.fr Mail + AI",
+    "titleLine1": "Koble Free.fr-innboksen din",
+    "titleLine2": "til Claude, Cursor og enhver MCP-klient",
+    "lead": "Free gir hver abonnent en postkasse og enkel IMAP-tilgang til den. mcpemails kobler til innboksen slik at AI-agenten din kan lese, søke i, sende, svare på og arkivere e-post fra enhver MCP-klient i stedet for én app.",
+    "answer": "Claude kan ikke nå en Free.fr-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP på imap.free.fr, port 993, og autentiserer med hele adressen din og passordet til Free-kontoen din. Free utsteder ingen app-spesifikke passord og krever ikke at noe slås på først, noe som gjør den til en av de enkleste leverandørene å koble til, men IMAP-serveren er uvanlig sparsom, og det har konsekvenser som er beskrevet nedenfor. Når den er koblet til, kan Claude, Cursor eller en hvilken som helst annen MCP-klient lese, søke i, sende og organisere e-posten, og én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Passordet til Free-kontoen, ingenting annet",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles Free.fr til: IMAP med kontopassordet",
+    "body": "Free tilbyr IMAP på <code>imap.free.fr</code>, port 993, over TLS og innsending på <code>smtp.free.fr</code>, som godtar implisitt TLS på port 465 og STARTTLS på 587. Påloggingsopplysningen er passordet til <b>Free-kontoen</b> din, det du bruker i espace abonné (abonnentsiden), og brukernavnet er hele adressen og ikke bare påloggingsnavnet. Free krever SMTP-autentisering, så en klient som lar utgående brukernavn og passord stå tomme, kobler til og feiler så ved første sending. Det finnes ikke noe app-passord å lage og ingen egen innstilling for e-postklienter å slå på, noe som høres enkelt ut og er det, men selve serveren er minimal: den annonserer nesten ingen av IMAP-utvidelsene moderne klienter forventer, og det er der overraskelsene ligger."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
+    },
+    {
+      "h": "Vit hvilket passord du skal bruke",
+      "p": "Postkassepassordet er passordet til Free-kontoen din. Endrer du det i espace abonné, endres det for alle e-postklienter samtidig, også denne, så hvis du bytter det senere, må du regne med å oppdatere tilkoblingen. Har du glemt det, tilbakestiller du det der i stedet for å lete etter en egen påloggingsopplysning for e-post; det finnes ingen."
+    },
+    {
+      "h": "Skriv inn hele adressen i mcpemails",
+      "p": "Velg IMAP / SMTP og skriv hele adressen, <code>name@free.fr</code>, i brukernavnfeltet. Frees egen dokumentasjon sier at du skal oppgi hele adressen med domenet. Vertene og portene nedenfor er forhåndsutfylt og ble bekreftet via en faktisk TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Free annonserer bare AUTH=PLAIN, og uten SASL-IR",
+      "p": "Kapabilitetsbanneret fra <code>imap.free.fr</code> er omtrent så kort som et IMAP-banner kan bli. Det tilbyr <code>AUTH=PLAIN</code> og ingenting annet, og det annonserer ikke SASL-IR, så serveren avviser ettstegsformen som sender påloggingsopplysningene sammen med AUTHENTICATE-kommandoen. En klient som er hardkodet til LOGIN-mekanismen, eller som forutsetter SASL-IR, får en naken avvisning som ser ut som et feil passord. mcpemails prøver igjen med utvekslingen i to steg i stedet for å behandle avvisningen som endelig."
+    },
+    {
+      "h": "Den utgående serveren godtar mekanismer som den innkommende ikke gjør",
+      "p": "<code>smtp.free.fr</code> annonserer PLAIN, LOGIN, CRAM-MD5 og DIGEST-MD5, en langt rikere liste enn den ene PLAIN på IMAP-siden. Dermed oppfører de to halvdelene av samme konto seg forskjellig i samme klient, og et verktøy som tester den ene og gjenbruker svaret for den andre, kan velge en mekanisme som bare virker i én retning. Konfigurer dem hver for seg."
+    },
+    {
+      "h": "Ingen MOVE, ingen UIDPLUS, ingen SPECIAL-USE, ingen IDLE",
+      "p": "Frees server implementerer grunnprotokollen og svært lite i tillegg. Arkivering av en melding kjøres som COPY, deretter STORE av slettet-flagget, deretter EXPUNGE i stedet for én atomisk kommando, og fordi UIDPLUS mangler, oppgir ikke serveren ID-en til den nye kopien, så den må finnes ved å søke i målmappen. Ingenting forteller hvilken mappe som er Sendt eller Papirkurv, så de matches på navn, og i en fransk postkasse er navnene som regel de franske. Uten IDLE finnes det ingen push, så ny e-post oppdages ved polling."
+    },
+    {
+      "h": "Ett passord, én sprengradius",
+      "p": "Fordi påloggingsopplysningen for e-post er passordet til Free-kontoen og ikke en hemmelighet per program, har alt du limer det inn i, nøklene til kontoen, og å trekke tilbake tilgangen for ett verktøy betyr å endre passordet for alle. Det er en egenskap ved Frees design og ikke en kritikk av det, men det er verdt å vite før du kobler til. mcpemails krypterer lagrede påloggingsopplysninger, og du kan koble fra innboksen i dashbordet når som helst."
+    }
+  ],
+  "limits": [
+    "Frees SMTP-vert oppgir en maksimal meldingsstørrelse på omtrent 75 MB, så en sending med større vedlegg avvises før den går ut.",
+    "Flyttinger er ikke atomiske, og mapperoller matches på navn, fordi MOVE, UIDPLUS og SPECIAL-USE ikke er implementert på denne serveren.",
+    "Ingen IDLE, så ny e-post oppdages ved polling i stedet for å bli dyttet ut."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Free.fr-e-post?",
+      "a": "Ikke direkte. Claude har ingen innebygd Free-kobling. Kobler du en MCP-server som mcpemails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere free.fr-e-posten din, og den samme tilkoblingen fungerer i Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Free.fr?",
+      "a": "IMAP er imap.free.fr på port 993 med implisitt TLS. SMTP er smtp.free.fr, på port 465 med implisitt TLS eller port 587 med STARTTLS, og autentisering kreves. Begge vertene ble bekreftet via en faktisk TLS-tilkobling. Brukernavnet er hele e-postadressen din, og passordet er passordet til Free-kontoen din."
+    },
+    {
+      "q": "Trenger Free.fr et app-passord eller en IMAP-bryter?",
+      "a": "Nei til begge. Free utsteder ingen app-spesifikke passord, og det er ingen bryter for e-postklienter å slå på i webmailen før en klient kan logge inn. Passordet til Free-kontoen autentiserer direkte, og derfor skyldes en avvist pålogging her som regel et mekanismeproblem eller et faktisk feil passord, ikke en skjult innstilling."
+    },
+    {
+      "q": "Hvorfor kan Free.fr-e-posten min sende, men ikke motta, eller omvendt?",
+      "a": "Fordi den innkommende og den utgående serveren annonserer forskjellige autentiseringsmekanismer. IMAP tilbyr bare PLAIN og ikke SASL-IR, mens SMTP tilbyr PLAIN, LOGIN, CRAM-MD5 og DIGEST-MD5. En klient som velger én mekanisme for begge ender, kan lykkes i én retning og feile i den andre, noe som ser ut som et delvis driftsavbrudd, men er et konfigurasjonsavvik."
+    },
+    {
+      "q": "Lagres Free.fr-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Free over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Free.fr-innboks",
+    "sub": "Uten app-passord, uten bryter, uten venting. Én innboks gratis for alltid, uten kort."
+  }
+}

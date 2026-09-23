@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "https://www.jetbrains.com/help/ai-assistant/configure-an-mcp-server.html"
+  ],
+  "meta": {
+    "title": "Connecter l'e-mail à JetBrains AI Assistant : MCP",
+    "description": "Ajoutez une vraie boîte à AI Assistant dans IntelliJ, PyCharm ou WebStorm. Streamable HTTP et une clé API limitée dans un en-tête Authorization. 1 boîte gratuite."
+  },
+  "hero": {
+    "eyebrow": "JetBrains + e-mail",
+    "titleLine1": "Connectez votre boîte à JetBrains",
+    "titleLine2": "AI Assistant",
+    "lead": "Ajoutez une vraie boîte à AI Assistant dans tout IDE JetBrains qui le prend en charge. Lisez, recherchez, envoyez, répondez, planifiez et organisez vos e-mails sans quitter l'IDE.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Clé API à portée limitée, révocable en un clic",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Ouvrez Settings, Tools, AI Assistant, Model Context Protocol. Ajoutez un serveur, choisissez Streamable HTTP comme type de connexion, collez https://mcpemails.com/api/mcp et ajoutez un en-tête Authorization Bearer contenant une clé API de votre tableau de bord."
+  },
+  "method": {
+    "title": "Comment JetBrains AI Assistant se connecte : une clé API à portée limitée",
+    "body": "JetBrains AI Assistant n'exécute pas le flux OAuth dans le navigateur auprès d'un serveur MCP distant, il s'authentifie donc avec un jeton bearer. Créez une clé API dans votre tableau de bord, cochez uniquement les autorisations dont l'agent a besoin, et collez-la dans JetBrains AI Assistant comme en-tête <code>Authorization: Bearer</code>. Les connexions par clé et les connexions OAuth atteignent le même point de terminaison et reçoivent le même catalogue d'outils ; seule change la manière d'obtenir le jeton."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit et connectez une boîte",
+      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Gmail se connecte en un clic via la connexion Google ; iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
+    },
+    {
+      "h": "Créez une clé API à portée limitée",
+      "p": "Dans Dashboard, API Keys, cliquez sur Create key. Donnez-lui un nom et cochez uniquement les autorisations dont cet agent a besoin : <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> et <code>manage:automations</code>. La clé se présente sous la forme <code>mcpe_</code> suivi de 64 caractères hexadécimaux et ne s'affiche qu'une fois : copiez-la avant de fermer la fenêtre."
+    },
+    {
+      "h": "Ouvrez les réglages MCP",
+      "p": "Ouvrez <b>Settings</b>, puis <b>Tools</b>, puis <b>AI Assistant</b>, puis <b>Model Context Protocol (MCP)</b>."
+    },
+    {
+      "h": "Ajoutez le serveur",
+      "p": "Cliquez sur Add et sélectionnez <b>Streamable HTTP</b> comme type de connexion. Collez <code>https://mcpemails.com/api/mcp</code>, puis ajoutez un en-tête nommé <code>Authorization</code> avec pour valeur <code>Bearer</code> suivi d'une espace et de votre clé."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Streamable HTTP, ni stdio ni SSE",
+      "p": "La liste des types de connexion propose d'abord un serveur local lancé par une commande, parce que c'est ce que sont la plupart des serveurs MCP. Celui-ci est distant et hébergé, il n'y a donc aucune commande à lancer. Choisissez Streamable HTTP, le transport que parle ce serveur selon la révision 2025-06-18."
+    },
+    {
+      "h": "Ici, la clé est tout le modèle d'autorisations",
+      "p": "AI Assistant n'exécute pas le flux de consentement OAuth, il n'y a donc pas de second écran pour restreindre ce que la connexion peut faire. Ce que vous cochez à la création de la clé est ce que l'IDE détient jusqu'à ce que vous la révoquiez. Pour un IDE, les autorisations de lecture, de recherche et de brouillons couvrent presque tout ce qui vaut la peine d'être fait."
+    },
+    {
+      "h": "Les réglages de l'IDE se synchronisent, et un jeton bearer est un identifiant secret",
+      "p": "Si la synchronisation des réglages entre machines est activée, traitez la clé comme n'importe quel autre identifiant qui voyage avec eux. Les clés ne coûtent rien : émettez-en une par machine, nommez-les pour que la liste reste lisible, et révoquez celle que vous ne reconnaissez plus. De notre côté, seul un hachage SHA-256 est stocké : la clé en clair est irrécupérable, et une clé perdue se remplace, elle ne se récupère pas."
+    }
+  ],
+  "limits": [
+    "Les requêtes sont limitées à 100 par minute, 1 000 par heure et 10 000 par jour et par clé, en plus du plafond d'actions facturables de votre plan.",
+    "Le serveur fonctionne uniquement en requête-réponse. Il n'y a ni webhooks ni événements déclenchés par le serveur, donc un nouveau message ne réveille jamais votre agent de lui-même. Pour réagir au courrier entrant, interrogez la boîte à intervalles réguliers.",
+    "Le courrier est récupéré en direct chez votre fournisseur à chaque appel et n'est jamais stocké. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, donc un jeton révoqué ou un mot de passe de boîte modifié coupe l'accès immédiatement."
+  ],
+  "faq": [
+    {
+      "q": "Comment connecter l'e-mail à JetBrains AI Assistant ?",
+      "a": "Ouvrez Settings, Tools, AI Assistant, Model Context Protocol, ajoutez un serveur avec le type de connexion Streamable HTTP, collez https://mcpemails.com/api/mcp et ajoutez un en-tête Authorization Bearer avec une clé API de votre tableau de bord. AI Assistant dispose alors d'outils pour lire, rechercher, envoyer, répondre, organiser et planifier des e-mails."
+    },
+    {
+      "q": "Dans quels IDE JetBrains cela fonctionne-t-il ?",
+      "a": "Dans tout IDE JetBrains où AI Assistant peut configurer un serveur MCP. Le chemin des réglages et le type de connexion Streamable HTTP appartiennent à AI Assistant et non à un IDE particulier, donc la configuration est la même partout où le plugin est disponible. Si l'écran Model Context Protocol manque dans vos Settings, c'est le plugin qui est en cause, pas ce serveur."
+    },
+    {
+      "q": "Pourquoi une clé API plutôt qu'OAuth ?",
+      "a": "Parce qu'AI Assistant authentifie un serveur MCP distant avec un en-tête configuré plutôt qu'en exécutant un flux OAuth dans le navigateur. Une clé bearer est la voie qui fonctionne là. Le point de terminaison et les outils sont identiques à ceux des clients OAuth ; seule change la manière d'obtenir le jeton."
+    },
+    {
+      "q": "Quelles boîtes AI Assistant peut-il atteindre ainsi ?",
+      "a": "Gmail via la connexion Google ; iCloud, Fastmail, Yahoo, Zoho et Yandex avec un mot de passe d'application ; et toute autre boîte qui parle IMAP et SMTP sur les ports standard. Le client les voit toutes par la même connexion : votre agent appelle d'abord inbox_list pour découvrir chaque boîte connectée et son identifiant, donc aucun UUID à coller nulle part."
+    },
+    {
+      "q": "AI Assistant peut-il envoyer un e-mail sans que je le voie ?",
+      "a": "Seulement si vous l'y autorisez. L'envoi dépend de l'autorisation send:email : une clé ou un jeton sans cette autorisation ne peut rien envoyer du tout. En plus, le propriétaire d'une boîte peut exiger une validation humaine dans le tableau de bord, qui retient chaque envoi, réponse, transfert, envoi de brouillon et envoi planifié jusqu'à ce qu'une personne le libère."
+    },
+    {
+      "q": "Mes e-mails sont-ils stockés sur vos serveurs ?",
+      "a": "Non. Chaque message est récupéré en direct chez votre fournisseur pour la requête qui l'a demandé, puis transmis directement à votre client. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, pour que les appels suivants puissent s'authentifier. Supprimer la boîte dans le tableau de bord, ou révoquer l'accès chez votre fournisseur, coupe la connexion aussitôt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez une vraie boîte à votre IDE",
+    "sub": "Un serveur MCP, une clé à portée limitée. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

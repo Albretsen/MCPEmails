@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://www.axigen.com/documentation/configuring-the-imap-service-p1373439188",
+    "https://www.axigen.com/documentation/managing-service-listeners-p1373438963",
+    "https://www.axigen.com/documentation/lets-encrypt-support-p54493192",
+    "https://www.axigen.com/knowledgebase/List-of-Default-Ports-Required-by-Axigen_169.html",
+    "https://www.axigen.com/documentation/domains-accounts-p1373439545"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Kontopassord",
+    "helpUrl": "https://www.axigen.com/documentation/configuring-the-imap-service-p1373439188",
+    "usernameForm": "Hele kontoadressen slik Axigen har den, for eksempel you@yourdomain.com. Axigen-kontoer adresseres med domenet de hører til, så et brukernavn uten domene er tvetydig på en server med flere domener.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Axigen-e-postserver til Claude: oppsett av IMAP-lytter",
+    "description": "Koble en Axigen-postkasse til Claude, Cursor og ChatGPT over IMAP på 993. Hvor tjenestelytterne ligger i WebAdmin, og hvorfor SSL er en avkrysning per lytter."
+  },
+  "hero": {
+    "eyebrow": "Axigen + AI",
+    "titleLine1": "Koble en Axigen-postkasse",
+    "titleLine2": "til Claude, Cursor og ChatGPT",
+    "lead": "Du drifter e-postserveren, så innstillingene er dine å kontrollere, ikke å slå opp. Pek mcpemails mot Axigen-verten din, så kan Claude lese, søke i, sende, svare på, planlegge og arkivere e-post i kontoene du allerede administrerer.",
+    "answer": "Claude kan ikke nå en Axigen-server på egen hånd. mcpemails er en hostet MCP-server som kobler seg til Axigen-installasjonen din over IMAP på ditt eget vertsnavn, normalt på port 993 med implisitt TLS, og autentiserer med kontopassordet som Axigen allerede godtar fra enhver e-postklient, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Det finnes ikke noe felles vertsnavn å publisere: verten er det navnet serveren din svarer på, den må kunne nås fra det offentlige internettet, og lytteren på 993 må levere et sertifikat som er gyldig for det navnet. Én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Kontopassordet fra WebAdmin",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles Axigen til: tjenestelyttere i WebAdmin",
+    "body": "Axigen er en e-postserver du har installert selv, så ingen kan publisere et vertsnavn for den. Det du derimot kan slå presist opp, er hvordan den er konfigurert, fordi Axigen legger hver protokoll under en tjeneste med sitt eget sett av <b>lyttere</b> (listeners). Åpne WebAdmin, som svarer på port 9000 eller 9443 over SSL, og gå til IMAP-tjenesten. Som standard oppretter Axigen lyttere på <code>0.0.0.0</code> og <code>:::</code> for port 143, den ukrypterte IMAP-porten, og for port 993, som brukes til implisitt SSL/TLS. SMTP følger det samme mønsteret med 25 for overføring og 465 for SMTPS. Hver lytter har sin egen fane SSL Settings der kryptering slås på og et sertifikat velges, så tilstanden til port 993 er en egenskap ved akkurat den lytteren og ikke ved IMAP-tjenesten som helhet. Fra og med Axigen X3 administreres SSL-sertifikater, også Let's Encrypt-sertifikater, sentralt i WebAdmin, og Let's Encrypt-sertifikater som Axigen administrerer, fornyes automatisk 25 dager før de utløper; på eldre versjoner peker en lytter i stedet til en sertifikatfil på disken. Påloggingsopplysningene er det vanlige kontopassordet som ligger i Axigen, det samme som kontoen bruker i WebMail. Det finnes ingen egen app-passordordning å generere passord fra."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort, og det holder for å teste dette mot en ekte konto på din egen server."
+    },
+    {
+      "h": "Sjekk IMAP-lytterne i WebAdmin",
+      "p": "Logg inn i Axigen WebAdmin og åpne IMAP-tjenesten. Bekreft at det finnes en lytter på port 993, at kryptering er slått på i fanen SSL Settings, og at sertifikatet som er valgt der, stemmer med vertsnavnet du har tenkt å bruke. Mens du er i tjenesten, ser du på Flow Control og noterer grensene for peer-tilkoblinger, fordi en hostet klient kommer fra én adresse."
+    },
+    {
+      "h": "Bekreft at kontoen kan bruke IMAP, og legg den så til",
+      "p": "Under Domains and Accounts åpner du kontoen eller kontoklassen den hører til, og sjekker at IMAP er blant tjenestene den har tillatelse til. Legg deretter til innboksen i mcpemails: velg IMAP / SMTP, og skriv inn Axigen-vertsnavnet ditt, hele kontoadressen og passordet."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "En lytter kan holde port 993 med SSL slått av",
+      "p": "I Axigen hører krypteringen til lytteren og ikke til protokollen. Hver lytter har et valg <b>Enable SSL for this listener</b>, og ingenting hindrer en lytter i å oppta 993 uten at den boksen er krysset av. Resultatet er ukryptert IMAP som svarer på porten alt behandler som implisitt TLS. En klient som starter et TLS-håndtrykk der, får en håndtrykkfeil eller et uforståelig svar i stedet for en autentiseringsfeil, og det får folk til å sjekke passord i en time. Åpne 993-lytteren i WebAdmin, se på fanen SSL Settings, og bekreft både at SSL er på og at sertifikatet som er valgt, er det du fornyet og ikke standardsertifikatet fra installasjonen."
+    },
+    {
+      "h": "Grensene for peer-tilkoblinger teller hele integrasjonen din som én klient",
+      "p": "IMAP-tjenesten i Axigen har Flow Control-innstillinger som ikke bare begrenser totalt antall tilkoblinger, men også <b>peer-tilkoblinger</b> og peer-tilkoblinger per intervall, altså tilkoblinger fra én enkelt ekstern adresse. En hostet MCP-server kommer fra et lite sett utgående adresser, så for Axigen ser den ut som én svært travel motpart snarere enn en hel etasje med brukere. Hvis økter blir brutt eller avvist under belastning mens en skrivebordsklient på et annet nettverk fungerer fint, bør du øke peer-grensene på IMAP-tjenesten før du antar at noe er galt med påloggingsopplysningene. Tjenestens Error Control-del bryter i tillegg en tilkobling etter et gitt antall mislykkede autentiseringer, så et feil passord som er lagret to ganger, kan bli til en avvisning som varer lenger enn skrivefeilen."
+    },
+    {
+      "h": "Kontoklasser avgjør hvilke tjenester en konto i det hele tatt kan bruke",
+      "p": "Axigen lar deg slå IMAP, POP3, WebMail og RPOP av eller på per konto, slik at tjenestenivåer kan skilles fra hverandre, og på de fleste installasjoner tas den avgjørelsen én gang i en <b>kontoklasse</b> (account class) og arves av alle kontoene i den, i stedet for å settes på hver enkelt postkasse. En klasse laget for brukere som bare skal ha webmail, avviser IMAP uansett hvor riktige vertsnavnet, porten og passordet er. Sjekk klassen før du sjekker noe annet, fordi kontoskjermbildet kan se helt fint ut mens det er klassen bak det som svarer."
+    }
+  ],
+  "limits": [
+    "Axigen binder hver lytter til en adresse, så for å nå serveren fra en hostet MCP-tjeneste må du ha en IMAP-lytter på en adresse som internettet kan rute til. Der retningslinjene sier at e-post aldri skal forlate det interne nettverket, gjelder de retningslinjene, og denne hostede tjenesten passer ikke for deg. mcpemails kan i stedet kjøres på egen server og kobles til den samme interne lytteren som skrivebordsklientene dine allerede bruker.",
+    "TLS-valideringen er streng, og den kan ikke overstyres. Et selvsignert sertifikat, et utløpt sertifikat eller et sertifikat utstedt for et annet navn enn verten du oppgir, blir avvist.",
+    "Utgående e-post sendes gjennom din egen Axigen SMTP-tjeneste, så leveringsevnen styres av SPF-, DKIM- og DMARC-postene dine og omdømmet til avsenderadressen din."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Axigen?",
+      "a": "Ikke på egen hånd. Claude har ingen Axigen-kobling og kan ikke åpne en IMAP-tilkobling til en server du drifter. Kobler du en MCP-server som mcpemails til Axigen-verten din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i en konto på den, og den samme innboksen fungerer deretter også fra Cursor eller ChatGPT."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Axigen?",
+      "a": "Vertsnavnet er din egen server, så det kan ikke publiseres for deg. Portene er Axigens dokumenterte standarder: IMAP på 143, IMAP over implisitt SSL på 993, SMTP på 25 og SMTPS på 465, med POP3 på 110 og 995 hvis det er slått på. Logg inn med hele kontoadressen og kontopassordet."
+    },
+    {
+      "q": "Trenger Axigen et app-passord?",
+      "a": "Nei. Axigen utsteder ikke appspesifikke passord. En e-postklient autentiserer med det samme kontopassordet som brukes i WebMail, og derfor må en konto der du ikke kjenner passordet, tilbakestilles i WebAdmin under Domains and Accounts i stedet for å gjenopprettes."
+    },
+    {
+      "q": "Hvorfor blir Axigen-påloggingen min avvist når passordet er riktig?",
+      "a": "Gå gjennom tre lag. Bekreft at kontoklassen tillater IMAP, siden en klasse som bare har webmail, avviser det blankt. Bekreft at 993-lytteren har SSL slått på og et sertifikat som stemmer med vertsnavnet ditt. Sjekk deretter IMAP-tjenestens logg, som registrerer den mislykkede autentiseringen og årsaken, i stedet for å gjette fra klientsiden."
+    },
+    {
+      "q": "Hvor finner jeg WebAdmin-grensesnittet?",
+      "a": "Axigen leverer WebAdmin på port 9000, eller 9443 med SSL, på serverens vertsnavn. Det er et eget grensesnitt, adskilt fra WebMail, og det er der tjenester, lyttere, sertifikater, domener og kontoer konfigureres. Det er heller ikke en postkasse, så administratorpåloggingen der er ikke en påloggingsopplysning du kan koble til over IMAP."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Axigen-serveren din over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke oppbevart."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Axigen-innboks",
+    "sub": "Pek mcpemails mot din egen Axigen-vert. Én innboks gratis for alltid, uten kort."
+  }
+}

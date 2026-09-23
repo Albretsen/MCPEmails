@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://www.ziggo.nl/klantenservice/e-mail/serverinstellingen",
+    "https://www.ziggo.nl/klantenservice/e-mail/e-mail-mogelijkheden",
+    "https://www.ziggo.nl/klantenservice/e-mail/beheren/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "E-mailwachtwoord（邮箱密码）",
+    "helpUrl": "https://www.ziggo.nl/klantenservice/e-mail/serverinstellingen",
+    "usernameForm": "包含域名的完整地址：naam@ziggo.nl。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Ziggo 邮箱 IMAP 设置与 Claude MCP 接入",
+    "description": "将 Ziggo 邮箱连接到 Claude、Cursor 及任意 MCP 客户端。IMAP 为 imap.ziggo.nl:993，但发信是 smtp.ziggo.nl:587 上的 STARTTLS，而不是 465 上的隐式 TLS。"
+  },
+  "hero": {
+    "eyebrow": "Ziggo Mail + AI",
+    "titleLine1": "将你的 Ziggo 邮箱连接到",
+    "titleLine2": "Claude、Cursor、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Ziggo 收件箱。用你在 Mijn Ziggo 中设置的 e-mailwachtwoord（邮箱密码），通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行连接 Ziggo 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.ziggo.nl 的 993 端口，用你的完整地址和你在 Mijn Ziggo 中为该地址设置的 e-mailwachtwoord 认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Ziggo 没有应用密码，也没有客户端访问开关，但发信是这一类中的例外：它在 smtp.ziggo.nl 的 587 端口使用 STARTTLS，而不是 465 端口的隐式 TLS。一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "Mijn Ziggo 中的 e-mailwachtwoord",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Ziggo 如何连接：IMAP 用 993，发信用 STARTTLS",
+    "body": "Ziggo 在 <code>imap.ziggo.nl</code> 的 993 端口通过 TLS 提供 IMAP，在 <code>smtp.ziggo.nl</code> 的 <b>587</b> 端口使用 STARTTLS 提供 SMTP 提交。这种分工比听起来更重要。这一类中几乎所有其他消费者服务商都在 465 端口以隐式 TLS 接受提交，所以把 465 写死为<b>安全端口</b>的客户端或脚本，能完美读取 Ziggo 邮箱，却会在第一次发信时挂起或失败。Ziggo 自己的服务器设置页面正是这样写的：收信为 <b>serverpoort 993, type versleuteling TLS/SSL</b>（服务器端口 993，加密类型 TLS/SSL），发信为 <b>serverpoort 587, type versleuteling STARTTLS, TLS of SSL</b>（服务器端口 587，加密类型 STARTTLS、TLS 或 SSL）。两端的认证方式相同：<b>gebruikersnaam: volledig e-mailadres</b>（用户名：完整邮箱地址）和 <b>wachtwoord: je e-mailwachtwoord</b>（密码：你的邮箱密码），即附属于该具体邮件地址的密码，而不是你的 Mijn Ziggo 登录密码。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "在 Mijn Ziggo 中设置或重置 e-mailwachtwoord",
+      "p": "邮件地址、别名及其密码都在 <b>Mijn Ziggo</b> 中管理，位于 Ziggo 称为 <b>E-mailadressen beheren</b>（管理邮箱地址）的页面。你可以在那里创建额外的地址，或为现有地址设置新密码。IMAP 服务器检查的凭据就是该邮件地址的密码，所以如果没人记得它，请在那里设置一个新的。"
+    },
+    {
+      "h": "决定给代理哪个地址",
+      "p": "有互联网订阅时，Ziggo 允许你创建最多六个邮箱地址；仅有电话订阅则只有一个。如果你不想把主地址交给代理，可以在 Mijn Ziggo 中再创建一个并连接它。请注意，主地址与互联网订阅绑定，取消订阅后就会失效。"
+    },
+    {
+      "h": "粘贴到 mcpemails，再把 MCP URL 粘贴到你的 AI",
+      "p": "选择 IMAP / SMTP，输入完整地址（例如 naam@ziggo.nl），粘贴 e-mailwachtwoord。Ziggo 的服务器和端口（包括 STARTTLS 提交端口）已自动填好，并已通过实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "发信是 587 端口上的 STARTTLS，假定为 465 是最常见的 Ziggo 故障",
+      "p": "在这里的欧洲消费者服务商中，Ziggo 是个例外。收信和其他所有服务商一样是 993 端口的隐式 TLS，所以读取立即就能工作，给你一种虚假的信心。发信则是 <code>smtp.ziggo.nl</code> 的 <b>587</b> 端口，连接以明文开始，再通过 <code>STARTTLS</code> 命令升级。把客户端指向 465 并期待 TLS 握手，你得到的是停滞的连接或超时，而不是清晰的协议错误，而这个症状（读取正常、发信失败）会让人去翻查本来就没错的凭据。"
+    },
+    {
+      "h": "IMAP 问候语只有两项能力，其中一项还是协议名称",
+      "p": "Ziggo 的响应是 <code>* OK [CAPABILITY IMAP4rev1 AUTH=PLAIN] VodafoneZiggo server ready.</code>，仅此而已。没有 <code>IDLE</code>，所以新邮件只能通过轮询发现，永远不会被推送。没有 <code>UIDPLUS</code>，所以复制的邮件不会报告新 UID。没有 <code>MOVE</code>，所以归档是复制加标记再删除。没有 <code>SPECIAL-USE</code>，所以文件夹按名称匹配。也没有 <code>SASL-IR</code>，所以凭据要在单独的步骤中发送。这是本站所有服务商中最精简的能力集，虽然这些都不会妨碍代理工作，但确实意味着在 Ziggo 上批量整理邮件，比在几乎任何其他服务商上都需要更多往返。"
+    },
+    {
+      "h": "e-mailwachtwoord 不是你的 Mijn Ziggo 登录密码",
+      "p": "Ziggo 的服务器设置页面说得很具体：邮件客户端的密码是 <b>je e-mailwachtwoord</b>，即附属于该单个地址的密码。Mijn Ziggo 有自己的登录凭据。由于两者在同一个门户中管理，人们会先去用账户密码，然后得到一个毫无帮助的认证失败。如果你不确定哪个是哪个，请在 <b>E-mailadressen beheren</b> 下重置邮件密码，并使用你刚设置的值。"
+    },
+    {
+      "h": "邮箱与订阅绑定，而不是与你绑定",
+      "p": "你的 Ziggo 主地址之所以存在，是因为背后有互联网订阅，订阅结束时它就会失效。如果代理工作流要依赖这个邮箱，就值得有意识地对待这个依赖：你自己控制的域名上的地址，或你直接付费的服务商上的地址，不会因为你更换宽带供应商而消失。"
+    }
+  ],
+  "limits": [
+    "外发邮件的编码后大小上限约为 30 MB，因此代理转发的大附件可能在 SMTP 步骤被拒绝。",
+    "由于没有 IDLE，像“回复一到就告诉我”这样的指令，受限于邮箱的轮询频率，而不是 Ziggo 的投递速度。",
+    "由于服务器不支持 MOVE，移动操作不是原子的。如果连接在操作中途断开，一封邮件可能会短暂同时存在于两个文件夹中。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Ziggo 邮箱吗？",
+      "a": "不能单独使用。Claude 没有内置的 Ziggo 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Ziggo 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.ziggo.nl，端口 993，使用 TLS/SSL。SMTP 为 smtp.ziggo.nl，端口 587，使用 STARTTLS，而不是 465 端口的隐式 TLS。用户名是你的完整邮箱地址，密码是你的 e-mailwachtwoord。两台服务器均已通过实时连接确认，与 Ziggo 公布的服务器设置一致。"
+    },
+    {
+      "q": "为什么我能读取 Ziggo 邮件却发不出去？",
+      "a": "几乎总是提交端口的问题。Ziggo 在 587 端口使用 STARTTLS，而不是 465 端口的隐式 TLS，所以配置为 465 的客户端完成了 IMAP 一侧，却在 SMTP 一侧停滞。把发信端口改为 587 加 STARTTLS，发信认证也使用同样的地址和 e-mailwachtwoord。"
+    },
+    {
+      "q": "Ziggo 需要应用密码吗？",
+      "a": "不需要。Ziggo 不签发应用专用密码。邮件客户端使用在 Mijn Ziggo 中为该单个邮件地址设置的 e-mailwachtwoord 认证。它与你的 Mijn Ziggo 账户登录凭据不同，这就是账户密码被拒绝的原因。"
+    },
+    {
+      "q": "我可以有多少个 Ziggo 邮箱地址？",
+      "a": "有互联网订阅时，你可以在 Mijn Ziggo 中创建最多六个地址；仅有电话订阅则只有一个。额外的地址和别名在 E-mailadressen beheren 页面中创建并设置密码，这让你很容易给代理一个专属地址，而不是你的主地址。"
+    },
+    {
+      "q": "我的 Ziggo 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 Ziggo 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Ziggo 收件箱",
+    "sub": "用正确的端口，几分钟即可连接 Ziggo 邮箱。一个收件箱永久免费，无需信用卡。"
+  }
+}

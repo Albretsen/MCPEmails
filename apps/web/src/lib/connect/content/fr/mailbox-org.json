@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://kb.mailbox.org/en/private/e-mail/e-mail-configuration/",
+    "https://kb.mailbox.org/en/private/security-and-privacy/e-mail-password/",
+    "https://kb.mailbox.org/en/private/security-and-privacy/access-security-for-mailbox-2fa-app-passwords-and-e-mail-passwords/",
+    "https://kb.mailbox.org/en/private/encryption/your-encrypted-mailbox/"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Mot de passe d'application e-mail (avec 2FA) ou mot de passe de la boîte mail",
+    "helpUrl": "https://kb.mailbox.org/en/private/security-and-privacy/e-mail-password/",
+    "usernameForm": "Votre adresse mailbox.org principale, en entier. Ni un alias, ni une extension d'adresse, ni une adresse jetable.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connecter mailbox.org à Claude et à tout client MCP",
+    "description": "Connectez mailbox.org à Claude, Cursor et tout client MCP en IMAP via imap.mailbox.org:993. Avec la 2FA, un client exige un mot de passe d'application."
+  },
+  "hero": {
+    "eyebrow": "mailbox.org + IA",
+    "titleLine1": "Connectez mailbox.org à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte mailbox.org. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP, dans tous les clients MCP et pas un seul, avec le compromis lié au chiffrement exposé clairement plutôt que passé sous silence.",
+    "answer": "Claude ne peut pas accéder seul à mailbox.org. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.mailbox.org, port 993, et en SMTP sur smtp.mailbox.org, port 465, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Vous vous connectez avec votre adresse mailbox.org principale et, si la double authentification est activée, vous devez utiliser un mot de passe d'application e-mail créé sous All settings, Security, Email app-passwords plutôt que le mot de passe de la boîte mail. Si vous avez activé le chiffrement de la boîte de réception, le courrier entrant arrive dans tout client IMAP sous forme de texte chiffré PGP et un agent ne pourra pas le lire. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe d'application e-mail si la 2FA est activée",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment mailbox.org se connecte : IMAP, votre adresse principale et un mot de passe d'application par protocole",
+    "body": "mailbox.org sert l'IMAP sur <code>imap.mailbox.org</code>, port 993, en SSL/TLS, le POP3 sur <code>pop3.mailbox.org</code>, port 995, et le SMTP sur <code>smtp.mailbox.org</code>, port 465, avec 587 documenté pour STARTTLS. L'identifiant est votre adresse <b>principale</b>, celle avec laquelle le compte a été ouvert. mailbox.org fournit des alias, des extensions d'adresse, des adresses jetables et des variantes <code>@secure.mailbox.org</code>, et aucune ne permet de s'authentifier. Sans double authentification, votre mot de passe habituel de la boîte mail fonctionne. Avec elle, mailbox.org n'accepte plus ce mot de passe en IMAP et SMTP et attend à la place un <b>mot de passe d'application e-mail</b>, généré par client et limité aux protocoles que vous cochez lors de sa création. La bannière annonce aussi <code>AUTH=OAUTHBEARER</code> et <code>AUTH=XOAUTH2</code>, qui servent aux intégrations App Suite propres à mailbox.org et ne peuvent pas être utilisés par un tiers. L'authentification par mot de passe est la voie à suivre ici."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte, pour toujours, sans carte bancaire. Vous obtenez à la fin une URL MCP et une clé."
+    },
+    {
+      "h": "Générez un mot de passe d'application e-mail dans mailbox.org",
+      "p": "Dans l'interface web, ouvrez <b>All settings</b>, puis <b>Security</b>, puis <b>Email app-passwords</b>. Donnez-lui le nom de cette connexion, cochez <b>à la fois</b> IMAP et SMTP dans la liste des protocoles, puis cliquez sur Generate password. Copiez la valeur tout de suite. Si la double authentification est désactivée, vous pouvez utiliser le mot de passe de la boîte mail, mais un identifiant limité et révocable indépendamment est préférable à confier à un tiers."
+    },
+    {
+      "h": "Ajoutez la boîte dans mcpemails",
+      "p": "Choisissez IMAP / SMTP et saisissez votre adresse mailbox.org <b>principale</b> comme identifiant, puis le mot de passe d'application. Les serveurs sont préremplis sur <code>imap.mailbox.org</code> et <code>smtp.mailbox.org</code> et ont été vérifiés par une vraie connexion TLS. Les identifiants sont chiffrés au repos et le courrier lui-même est récupéré à chaque requête plutôt que copié."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Ajoutez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Un alias dans le champ identifiant échoue avec une erreur de mot de passe",
+      "p": "mailbox.org encourage les alias, les extensions d'adresse et les adresses jetables, et son propre guide de configuration indique explicitement que l'identifiant du client est votre adresse e-mail principale. Mettez-y un alias et le serveur vous refuse exactement comme si le mot de passe était faux, ce qui pousse à réinitialiser un mot de passe qui n'a jamais été le problème. Si vous ne savez plus quelle adresse est la principale, c'est celle affichée comme adresse principale du compte dans l'interface web, et non l'alias que vous communiquez réellement."
+    },
+    {
+      "h": "Le mot de passe d'application est limité par protocole, donc une configuration à moitié faite est possible",
+      "p": "Quand vous générez un mot de passe d'application e-mail, vous cochez les protocoles qu'il peut utiliser. Cochez IMAP en oubliant SMTP et vous obtenez une boîte qui se lit parfaitement mais ne peut envoyer aucun message, l'échec n'apparaissant qu'au moment où votre agent essaie de répondre. L'inverse arrive aussi. Cochez les deux, ou générez-en deux et placez-les dans les bons champs. C'est aussi le levier pour révoquer l'accès plus tard : supprimer ce mot de passe d'application déconnecte ce client sans toucher à votre téléphone ni à votre ordinateur."
+    },
+    {
+      "h": "Le chiffrement de la boîte de réception transforme le nouveau courrier en texte chiffré pour tous les clients, y compris celui-ci",
+      "p": "Sous <b>All settings</b>, <b>Read and write e-mail</b>, <b>Inbox encryption</b>, mailbox.org peut chiffrer en PGP chaque message entrant avec votre clé publique grâce à une règle Sieve côté serveur, que l'expéditeur l'ait chiffré ou non. C'est une vraie protection et elle fonctionne exactement comme annoncé : un client IMAP, celui-ci compris, reçoit un bloc armuré au lieu d'un corps de message. mcpemails ne détient pas votre clé privée : un agent peut voir l'expéditeur, l'objet et la date, et peut classer ou marquer le message, mais pas le lire. L'asymétrie à connaître : mailbox.org ne stocke pas actuellement votre dossier Envoyés chiffré, donc un agent peut encore lire ce que vous avez envoyé même s'il ne peut pas lire ce que vous avez reçu."
+    },
+    {
+      "h": "Ni MOVE ni SPECIAL-USE, mais UIDPLUS est là",
+      "p": "Le serveur Dovecot annonce IDLE, SASL-IR et UIDPLUS, mais ni MOVE ni SPECIAL-USE. Déplacer un message consiste donc en un COPY, un STORE de l'indicateur \\Deleted et un EXPUNGE plutôt qu'en une seule commande atomique, même si UIDPLUS permet au moins de récupérer l'UID de destination sans seconde recherche. L'absence de SPECIAL-USE pèse davantage au quotidien : rien dans le protocole n'indique quel dossier est Envoyés ou Corbeille, donc les rôles sont déduits des noms. Les boîtes en allemand affichent généralement Gesendete Objekte, Entwürfe et Papierkorb : nommez le dossier explicitement si un agent classe quelque chose au mauvais endroit."
+    }
+  ],
+  "limits": [
+    "Connecter une boîte à un client IA signifie que le fournisseur de cette IA lit le contenu des messages qu'on lui demande de traiter. mcpemails récupère le courrier en direct chez mailbox.org à chaque requête et ne stocke pas le contenu des messages, et les identifiants sont chiffrés au repos, mais le texte parvient tout de même à Claude, Cursor ou au client que vous connectez. L'hébergement allemand et la politique de protection des données de mailbox.org couvrent mailbox.org, et ne s'étendent pas à un fournisseur d'IA que vous connectez vous-même.",
+    "Tout ce qui est chiffré avec votre clé OpenPGP, que ce soit par un expéditeur ou par le chiffrement de la boîte de réception de mailbox.org, est illisible pour un agent via IMAP. Ces fils doivent être lus dans l'interface web ou dans un client qui détient votre clé privée.",
+    "Comme le serveur n'annonce pas MOVE, un déplacement n'est pas atomique. Si la connexion tombe en pleine opération, un message peut brièvement exister dans les deux dossiers."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec mailbox.org ?",
+      "a": "Pas tout seul. Claude n'a pas de connecteur mailbox.org intégré et ne parle pas IMAP. Relier un serveur MCP comme mcpemails à la boîte donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation via IMAP, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et d'autres clients MCP sans rien reconfigurer."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de mailbox.org ?",
+      "a": "L'IMAP est imap.mailbox.org sur le port 993 en SSL/TLS. Le SMTP est smtp.mailbox.org sur le port 465, avec 587 documenté comme alternative STARTTLS, et le POP3 est pop3.mailbox.org sur 995. L'identifiant est dans tous les cas votre adresse mailbox.org principale. Les deux serveurs indiqués ici ont été vérifiés par une vraie connexion TLS."
+    },
+    {
+      "q": "Où créer un mot de passe d'application mailbox.org ?",
+      "a": "Dans l'interface web, ouvrez All settings, puis Security, puis Email app-passwords. Saisissez un nom pour le client, sélectionnez les protocoles qu'il peut utiliser et générez le mot de passe. mailbox.org l'affiche pour que vous le copiiez. Chaque mot de passe d'application peut être supprimé individuellement, ce qui révoque ce seul client sans perturber vos autres appareils ni votre mot de passe principal."
+    },
+    {
+      "q": "Pourquoi mailbox.org refuse-t-il mon mot de passe dans un logiciel de messagerie ?",
+      "a": "Deux causes expliquent presque tous les cas. Soit vous avez saisi un alias plutôt que votre adresse principale dans le champ identifiant, soit la double authentification est activée et le mot de passe de votre boîte mail n'est donc plus accepté en IMAP et SMTP. Créez un mot de passe d'application e-mail sous Security et utilisez-le. Vérifiez d'abord l'identifiant : c'est ce qu'il y a de plus simple à écarter."
+    },
+    {
+      "q": "Mon IA peut-elle lire mon courrier mailbox.org chiffré ?",
+      "a": "Non. Un message chiffré avec votre clé OpenPGP arrive via IMAP sous forme de bloc chiffré armuré, et mcpemails ne détient jamais votre clé privée. Cela vaut à la fois pour le courrier chiffré par un expéditeur et pour celui chiffré à l'arrivée par le chiffrement de la boîte de réception de mailbox.org. L'agent voit les en-têtes et peut déplacer ou marquer le message ; le corps reste scellé."
+    },
+    {
+      "q": "Mon courrier mailbox.org est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis imap.mailbox.org pour chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le contenu des messages n'est pas conservé. Le client IA que vous connectez reçoit bien le contenu de ce qu'il lit, ce qui est une décision distincte de l'endroit où le courrier est stocké, et qui mérite d'être prise en connaissance de cause."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA une boîte mailbox.org",
+    "sub": "Connectez mailbox.org en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

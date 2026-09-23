@@ -1,0 +1,93 @@
+{
+  "_sources": [
+    "https://docs.hetzner.com/konsoleh/account-management/email/setting-up-an-email-account/",
+    "https://docs.hetzner.com/konsoleh/account-management/email/mailboxes/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte mail",
+    "helpUrl": "https://docs.hetzner.com/konsoleh/account-management/email/setting-up-an-email-account/",
+    "usernameForm": "Votre adresse complète, domaine compris : info@your-domain.de.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connecter Hetzner Mail à Claude et aux clients MCP",
+    "description": "Connectez une boîte Hetzner Web Hosting à Claude, Cursor et tout client MCP en IMAP sur mail.your-server.de:993. 1 boîte gratuite, pour toujours, sans carte bancaire."
+  },
+  "hero": {
+    "eyebrow": "Messagerie Hetzner + IA",
+    "titleLine1": "Connectez votre boîte Hetzner",
+    "titleLine2": "à Claude, Cursor, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Hetzner. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP sur mail.your-server.de, avec le mot de passe de boîte défini dans konsoleH.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Hetzner. mcpemails est un serveur MCP hébergé qui connecte la messagerie Hetzner Web Hosting en IMAP sur mail.your-server.de, port 993, en s'authentifiant avec votre adresse e-mail complète et le mot de passe de boîte défini lors de la création du compte dans konsoleH, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Le nom d'hôte est littéralement mail.your-server.de pour tous les clients, et non une variante de votre propre domaine. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe de boîte défini dans konsoleH",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment la messagerie Hetzner se connecte : IMAP sur mail.your-server.de",
+    "body": "La plateforme de messagerie mutualisée de Hetzner, celle des offres Web Hosting et Managed Server administrées via <b>konsoleH</b>, sert IMAP sur <code>mail.your-server.de</code> au port 993 en TLS implicite, et SMTP sur le même serveur au port 465. Ce nom d'hôte est une chaîne littérale, identique pour tous les clients d'hébergement Hetzner, et la documentation de Hetzner l'écrit exactement ainsi. L'identifiant est l'adresse mail complète, par exemple <code>info@your-domain.de</code>, et le mot de passe est celui saisi dans les deux champs de mot de passe lors de la création de la boîte dans konsoleH. Ce mot de passe de boîte est un identifiant distinct de la connexion konsoleH qui sert à administrer le compte. Cette page concerne cette boîte hébergée. Un serveur mail que vous avez installé et que vous exploitez vous-même sur une machine Hetzner Cloud ou dédiée relève d'une situation entièrement différente, traitée plus bas."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
+    },
+    {
+      "h": "Définissez ou réinitialisez le mot de passe de la boîte dans konsoleH",
+      "p": "Connectez-vous à konsoleH, sélectionnez le domaine et ouvrez E-Mail, puis Mailboxes. Choisissez l'adresse et saisissez un nouveau mot de passe dans les deux champs si vous n'avez pas le mot de passe actuel. Notez que la boîte est créée avec la seule partie locale avant l'arobase, mais que c'est l'adresse complète que vous saisissez comme identifiant dans tout client."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète et collez le mot de passe de la boîte. Le serveur mail.your-server.de et les ports 993 et 465 sont préremplis et ont été vérifiés par une vraie connexion TLS."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Ajoutez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Le nom d'hôte n'est pas construit à partir de votre domaine",
+      "p": "L'erreur de configuration Hetzner la plus fréquente consiste à saisir <code>mail.your-domain.de</code> en remplaçant par votre vrai domaine, puisque c'est ainsi que fonctionnent presque tous les autres hébergeurs. Pas Hetzner. La chaîne <code>mail.your-server.de</code> est le vrai nom d'hôte, partagé par tous les clients d'hébergement, et y substituer votre propre domaine produit soit une erreur DNS, soit une connexion à un serveur sans rapport qui se trouve répondre sous ce nom. La documentation de Hetzner écrit le nom d'hôte littéral, et les gens le prennent pour un exemple à remplacer."
+    },
+    {
+      "h": "Un serveur Hetzner Cloud ou dédié, ce n'est pas la même chose",
+      "p": "Hetzner vend deux choses très différentes que l'on appelle toutes deux « la messagerie Hetzner ». Les offres Web Hosting et Managed Server incluent des boîtes sur la plateforme mutualisée décrite ici. Les serveurs Cloud et dédiés n'incluent aucune boîte : si vous voulez de la messagerie dessus, vous installez et exploitez vous-même un serveur mail, et le nom d'hôte, les ports et les identifiants sont ceux que vous avez configurés. C'est alors un serveur mail auto-hébergé qui se trouve chez Hetzner, et il se connecte comme n'importe quel serveur auto-hébergé. Bon à savoir avant de commencer : Hetzner bloque par défaut le SMTP sortant sur les nouveaux serveurs cloud et ne le débloque que sur demande, donc un serveur mail que vous y exploitez ne peut pas envoyer tant que vous ne l'avez pas demandé."
+    },
+    {
+      "h": "Pas de MOVE, pas d'UIDPLUS, et les dossiers sont reconnus par leur nom",
+      "p": "La version de Dovecot derrière <code>mail.your-server.de</code> n'annonce pas l'extension MOVE : un déplacement se fait donc par une copie suivie d'une mise à jour des indicateurs et d'une purge, plutôt qu'en une seule commande atomique. UIDPLUS est également absent : l'UID de destination d'un message copié n'est pas renvoyé et doit être retrouvé par une recherche. SPECIAL-USE manque aussi, ce qui signifie qu'Envoyés, Brouillons, Corbeille et Indésirables sont reconnus par leur nom. Sur une boîte en allemand, ils s'appellent souvent Gesendet, Entwuerfe, Papierkorb et Spam : nommez donc le dossier explicitement si un agent ne le trouve pas."
+    }
+  ],
+  "limits": [
+    "Seules les boîtes de la plateforme de messagerie hébergée de Hetzner sont couvertes ici. Un serveur mail que vous exploitez vous-même sur une machine Hetzner Cloud ou dédiée nécessite son propre nom d'hôte et ses propres identifiants.",
+    "Comme le serveur ne prend pas en charge MOVE, un déplacement n'est pas atomique. Si une connexion tombe en cours d'opération, un message peut brièvement exister dans les deux dossiers."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec la messagerie Hetzner ?",
+      "a": "Pas seul. Claude n'a pas de connecteur Hetzner intégré. Diriger un serveur MCP comme mcpemails vers votre boîte Hetzner en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de Hetzner ?",
+      "a": "Les deux utilisent mail.your-server.de. IMAP utilise le port 993 en TLS implicite et SMTP le port 465, également en TLS implicite. L'identifiant est votre adresse e-mail complète et le mot de passe est celui de la boîte défini dans konsoleH. Ce serveur est un nom littéral partagé par tous les clients d'hébergement Hetzner et a été confirmé par une vraie connexion TLS."
+    },
+    {
+      "q": "Pourquoi mon mot de passe konsoleH est-il refusé en IMAP ?",
+      "a": "Parce que ce n'est pas le bon identifiant. La connexion konsoleH sert à administrer le compte d'hébergement, tandis que chaque boîte a son propre mot de passe, défini à sa création dans l'écran Mailboxes. Si personne ne l'a noté, ouvrez cet écran, saisissez-en un nouveau dans les deux champs de mot de passe, puis utilisez-le dans le client."
+    },
+    {
+      "q": "Puis-je connecter un serveur mail qui tourne sur mon VPS Hetzner Cloud ?",
+      "a": "Oui, mais pas avec les réglages de cette page. Un serveur mail que vous exploitez vous-même utilise le nom d'hôte et les identifiants que vous lui avez configurés, et ce n'est pas mail.your-server.de. Connectez-le comme un serveur IMAP générique. N'oubliez pas que Hetzner bloque les ports SMTP sortants sur les nouveaux serveurs cloud tant que vous n'avez pas demandé à l'assistance de les débloquer."
+    },
+    {
+      "q": "Mon courrier Hetzner est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct chez Hetzner en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le contenu des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA une boîte Hetzner",
+    "sub": "Connectez votre boîte Hetzner en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

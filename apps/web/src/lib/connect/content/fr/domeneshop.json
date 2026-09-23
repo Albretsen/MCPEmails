@@ -1,0 +1,93 @@
+{
+  "_sources": [
+    "https://domene.shop/faq?id=237",
+    "https://domene.shop/faq?id=331"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte",
+    "helpUrl": "https://domene.shop/faq?id=237",
+    "usernameForm": "Votre adresse complète, domaine compris : name@yourdomain.no.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connecter l'e-mail Domeneshop à Claude et aux clients MCP",
+    "description": "Connectez Domeneshop à Claude, Cursor et tout client MCP via IMAP sur imap.domeneshop.no:993 avec le mot de passe de la boîte. 1 boîte gratuite, pour toujours."
+  },
+  "hero": {
+    "eyebrow": "Domeneshop + IA",
+    "titleLine1": "Connectez l'e-mail Domeneshop à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Domeneshop. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP avec le mot de passe de boîte défini dans le panneau de contrôle Domeneshop.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Domeneshop. mcpemails est un serveur MCP hébergé qui la connecte via IMAP sur imap.domeneshop.no, port 993, en s'authentifiant avec votre adresse e-mail complète et le mot de passe choisi pour cette boîte dans le panneau de contrôle Domeneshop, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Il n'y a ni mot de passe d'application ni option supplémentaire à activer chez Domeneshop, mais l'envoi comporte une particularité de politique expliquée ci-dessous. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe de la boîte, depuis le panneau de contrôle",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Domeneshop se connecte : IMAP et le mot de passe de la boîte",
+    "body": "Domeneshop sert IMAP sur <code>imap.domeneshop.no</code>, port 993, en TLS implicite, et la soumission SMTP sur <code>smtp.domeneshop.no</code>, port 465. Toutes les boîtes Domeneshop utilisent la même paire de noms de serveur partagés, quel que soit le domaine de votre adresse : il n'y a donc rien de propre à chaque client à rechercher. L'authentification se fait avec le mot de passe ordinaire de la boîte, celui que vous avez défini en créant l'adresse sous E-post dans le panneau de contrôle Domeneshop, saisi avec l'adresse <b>complète</b> comme identifiant. Domeneshop exige l'authentification SMTP avec ces mêmes identifiants ; un client qui laisse vides l'identifiant et le mot de passe sortants se connecte, puis échoue à envoyer."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
+    },
+    {
+      "h": "Retrouvez ou réinitialisez le mot de passe de la boîte chez Domeneshop",
+      "p": "Connectez-vous sur domene.shop, ouvrez votre domaine et allez dans E-post. Chaque adresse listée a son propre mot de passe, défini lors de sa création. Si personne ne s'en souvient, définissez-en un nouveau sur cet écran. L'identifiant de votre compte Domeneshop n'est pas le mot de passe de la boîte et ne permet pas de s'authentifier en IMAP."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple post@yourdomain.no, et collez le mot de passe de la boîte. Les serveurs et ports Domeneshop sont préremplis et ont été vérifiés par une connexion TLS réelle."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a accès à la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Domeneshop rejette la soumission SMTP depuis les réseaux cloud avec 550 [ACR04]",
+      "p": "C'est le piège le plus courant, et il relève d'une politique, pas d'une panne. Domeneshop présente <code>smtp.domeneshop.no</code> comme un serveur destiné au courrier personnel envoyé depuis votre propre PC, Mac, téléphone ou tablette, et explicitement pas à l'envoi depuis des services cloud, des serveurs web, des newsletters, du marketing, des envois de masse, d'autres envois automatisés ou des serveurs de messagerie dédiés. Une soumission provenant de la plage d'adresses IP d'un fournisseur cloud est refusée définitivement par une réponse <code>550</code> portant le code <code>[ACR04]</code>. Réessayer depuis le même réseau ne sert jamais à rien, et le message ressemble à un problème d'authentification alors que vos identifiants sont corrects. mcpemails contourne cela avec une <b>route de sortie de secours</b> qui ne fait pas partie des plages d'un grand fournisseur cloud, de sorte qu'un envoi ordinaire, à échelle humaine, de votre agent part bien. Cette route de secours ne change pas la politique de Domeneshop : l'envoi en masse et automatisé via Domeneshop reste interdit, et vous ne devez pas bâtir une newsletter dessus."
+    },
+    {
+      "h": "Le serveur IMAP annonce AUTH=PLAIN et rien d'autre",
+      "p": "La bannière IMAP de Domeneshop propose uniquement <code>AUTH=PLAIN</code>, sans <code>AUTH=LOGIN</code>. Les clients et bibliothèques câblés sur le mécanisme LOGIN, courant dans les outils écrits pour Exchange, reçoivent un refus à l'étape d'authentification au lieu d'une erreur utile. Côté SMTP, PLAIN et LOGIN sont tous deux acceptés : les deux moitiés d'un même compte peuvent donc se comporter différemment dans le même client."
+    },
+    {
+      "h": "Ni MOVE ni UIDPLUS, et les dossiers sont reconnus par leur nom",
+      "p": "Le serveur n'annonce pas l'extension IMAP MOVE : déplacer un message se fait donc par une copie, une mise à jour de drapeau et un expunge, au lieu d'une seule commande atomique. Il omet aussi UIDPLUS : le nouvel UID d'un message copié n'est pas renvoyé et doit être retrouvé en cherchant dans le dossier de destination. SPECIAL-USE est également absent, ce qui signifie que Sent, Drafts, Trash et Junk sont identifiés par leur nom. Sur une boîte norvégienne, ces noms sont souvent Sendt, Utkast, Slettet et Søppelpost : si un agent ne trouve pas votre dossier d'archives, nommez-le explicitement."
+    }
+  ],
+  "limits": [
+    "La politique SMTP de Domeneshop exclut l'envoi en masse, les newsletters et les envois de masse automatisés. Utilisez-le pour une correspondance normale, pas pour des campagnes.",
+    "Comme le serveur ne prend pas en charge MOVE, un déplacement n'est pas atomique. Si la connexion tombe en cours d'opération, un message peut brièvement se trouver dans les deux dossiers."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec l'e-mail Domeneshop ?",
+      "a": "Pas seul. Claude n'a pas de connecteur intégré pour Domeneshop. Pointer un serveur MCP comme mcpemails vers votre boîte Domeneshop via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de Domeneshop ?",
+      "a": "IMAP : imap.domeneshop.no sur le port 993 en TLS implicite. SMTP : smtp.domeneshop.no sur le port 465, également en TLS implicite. Connectez-vous avec votre adresse e-mail complète et le mot de passe de la boîte défini dans le panneau de contrôle. Les deux serveurs ont été confirmés par une connexion TLS réelle, et tous deux sont partagés par l'ensemble des clients Domeneshop."
+    },
+    {
+      "q": "Pourquoi l'envoi échoue-t-il avec 550 [ACR04] ?",
+      "a": "Domeneshop refuse la soumission SMTP depuis les plages IP de cloud et d'hébergement, par mesure anti-abus. Le rejet est définitif et n'a rien à voir avec votre mot de passe. mcpemails fait passer les envois concernés par une sortie de secours hors de ces plages, pour que les envois ordinaires aboutissent. L'envoi en masse via Domeneshop reste contraire à la politique qu'il affiche."
+    },
+    {
+      "q": "Domeneshop exige-t-il un mot de passe d'application ?",
+      "a": "Non. Domeneshop ne délivre pas de mots de passe propres à une application. Les clients de messagerie s'authentifient avec le mot de passe défini pour chaque boîte sous E-post dans le panneau de contrôle. C'est un identifiant différent de celui de votre compte Domeneshop, c'est pourquoi le mot de passe du compte est refusé."
+    },
+    {
+      "q": "Mon courrier Domeneshop est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct chez Domeneshop via IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le contenu des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Domeneshop à votre IA",
+    "sub": "Connectez l'e-mail Domeneshop en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

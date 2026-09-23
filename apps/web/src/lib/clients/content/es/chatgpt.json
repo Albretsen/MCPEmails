@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://help.openai.com/en/articles/12584461"
+  ],
+  "meta": {
+    "title": "Conecta el correo a ChatGPT: conector MCP paso a paso",
+    "description": "Añade una bandeja real a ChatGPT con el modo desarrollador y un conector MCP personalizado. OAuth, sin clave de API; lee, busca, envía y programa correo. Una bandeja gratis."
+  },
+  "hero": {
+    "eyebrow": "ChatGPT + correo",
+    "titleLine1": "Conecta tu bandeja a ChatGPT",
+    "titleLine2": "como conector MCP personalizado",
+    "lead": "Activa el modo desarrollador, crea un conector que apunte a una URL y ChatGPT podrá leer, buscar, enviar, responder, reenviar, programar y organizar tu correo real.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "OAuth, sin clave de API",
+    "meta2": "Correo obtenido en vivo, nunca almacenado",
+    "answer": "En ChatGPT, activa el modo desarrollador en Settings, Apps and Connectors, Advanced settings. Crea un conector, pega https://mcpemails.com/api/mcp como URL del conector, elige OAuth y autoriza con mcpemails. La compatibilidad completa con MCP es una beta limitada a los espacios de trabajo de ChatGPT Business y Enterprise o Edu."
+  },
+  "method": {
+    "title": "Cómo se conecta ChatGPT: OAuth, sin clave de API",
+    "body": "ChatGPT ejecuta el flujo OAuth estándar de MCP contra este servidor. Se registra solo mediante <b>registro dinámico de clientes RFC 7591</b>, así que no hay ningún client ID que crear, y se autoriza con <b>código de autorización más PKCE</b> usando S256. Nunca se transmite un secreto de cliente, y el token solo lleva los permisos que apruebas en nuestra pantalla de consentimiento. El token de acceso que recibe dura una hora y se renueva solo; aparece en Dashboard, API Keys como <code>OAuth:</code> seguido del nombre del cliente, y ahí es donde revocas la conexión."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis y conecta un buzón",
+      "p": "Regístrate en mcpemails.com, sin tarjeta, y luego ve a Dashboard, Inboxes, Connect Inbox. Gmail se conecta con el inicio de sesión de Google en un clic; iCloud, Fastmail, Yahoo, Zoho y Yandex requieren una contraseña de aplicación; cualquier otro se conecta por IMAP y SMTP estándar. El plan gratuito incluye una bandeja, para siempre."
+    },
+    {
+      "h": "Activa el modo desarrollador",
+      "p": "Abre Settings, Apps and Connectors, Advanced settings, y activa Developer mode (modo desarrollador)."
+    },
+    {
+      "h": "Crea el conector",
+      "p": "De vuelta en Apps and Connectors, haz clic en Create. Escribe un nombre y pega <code>https://mcpemails.com/api/mcp</code> como Connector URL."
+    },
+    {
+      "h": "Elige OAuth y autoriza",
+      "p": "Selecciona OAuth, haz clic en Create, luego autoriza con mcpemails y aprueba los permisos que quieres que tenga el conector."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "MCP completo en ChatGPT es una beta, y no todos los espacios de trabajo lo tienen",
+      "p": "El modo desarrollador con conectores MCP arbitrarios está limitado a los espacios de trabajo de ChatGPT Business y Enterprise o Edu. En una cuenta Plus personal, el botón Create para un conector personalizado no aparece o rechaza el servidor, y ningún cambio por nuestra parte lo desbloquea. Si ese es tu caso, la misma bandeja y la misma URL ya funcionan hoy en Claude, Cursor, VS Code o los clientes de línea de comandos, así que no pierdes nada mientras esperas."
+    },
+    {
+      "h": "Elige OAuth, no sin autenticación, al crear el conector",
+      "p": "El formulario del conector pregunta cómo autenticarse. Este servidor rechaza las llamadas anónimas: una solicitud sin autenticar recibe un 401 con un puntero de descubrimiento OAuth, que es lo que sigue un cliente compatible para iniciar el flujo. Si eliges sin autenticación, obtienes un conector que falla en su primera llamada a una herramienta en lugar de durante la configuración, que es la forma más confusa de descubrirlo."
+    },
+    {
+      "h": "Solo lectura es una opción real y a menudo la mejor para empezar",
+      "p": "La pantalla de consentimiento te permite darle a ChatGPT únicamente <code>read:email</code> y <code>search:email</code>. Eso basta para clasificar, resumir y encontrar cosas, y deja fuera toda acción irreversible mientras decides hasta dónde quieres llegar."
+    }
+  ],
+  "limits": [
+    "Las solicitudes están limitadas a 100 por minuto, 1.000 por hora y 10.000 al día por clave, además del tope de acciones facturables de tu plan.",
+    "El servidor funciona solo por petición y respuesta. No hay webhooks ni eventos iniciados por el servidor, así que el correo nuevo nunca despierta a tu agente por sí solo. Para reaccionar al correo entrante, consulta periódicamente según un horario.",
+    "El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, así que un token revocado o un cambio de contraseña del buzón corta el acceso de inmediato."
+  ],
+  "faq": [
+    {
+      "q": "¿Puede ChatGPT leer y enviar mi correo?",
+      "a": "Con un conector MCP personalizado, sí. ChatGPT no puede acceder a un buzón por sí solo; si apuntas un conector a mcpemails, le das herramientas para leer, buscar, enviar, responder, reenviar, organizar y programar correo, limitadas a los permisos que apruebas durante la configuración."
+    },
+    {
+      "q": "¿Por qué no puedo crear un conector en mi cuenta de ChatGPT?",
+      "a": "El modo desarrollador y los conectores MCP personalizados son una beta restringida a los espacios de trabajo de ChatGPT Business y Enterprise o Edu. Una cuenta personal no puede añadir uno, sea cual sea el servidor. Es una decisión de producto de OpenAI y nada de nuestra parte lo cambia."
+    },
+    {
+      "q": "¿Necesito una clave de API para ChatGPT?",
+      "a": "No. Elige OAuth al crear el conector y ChatGPT se registra solo y completa un flujo de código de autorización más PKCE. Las claves de API son para los clientes que no pueden hacerlo y para scripts."
+    },
+    {
+      "q": "¿Qué buzones puede alcanzar ChatGPT de esta forma?",
+      "a": "Gmail con el inicio de sesión de Google; iCloud, Fastmail, Yahoo, Zoho y Yandex con una contraseña de aplicación; y cualquier otro buzón que hable IMAP y SMTP en los puertos estándar. El cliente los ve todos a través de la misma conexión: tu agente llama primero a inbox_list para descubrir cada buzón conectado y su id, así que no hay UUID que pegar en ningún sitio."
+    },
+    {
+      "q": "¿Puede ChatGPT enviar correo sin que yo lo vea?",
+      "a": "Solo si tú lo permites. El envío depende del permiso send:email, así que una clave o un token sin ese permiso no puede enviar nada. Además, el propietario de una bandeja puede exigir aprobación humana en el panel, que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera."
+    },
+    {
+      "q": "¿Se guarda mi correo en los servidores de mcpemails?",
+      "a": "No. Cada mensaje se obtiene en vivo de tu proveedor para la solicitud que lo pidió y se entrega directamente a tu cliente. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, para que las llamadas futuras puedan autenticarse. Eliminar la bandeja en el panel, o revocar el acceso en tu proveedor, corta la conexión al instante."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a ChatGPT una bandeja real",
+    "sub": "Un conector, todos los buzones que tengas conectados. Una bandeja gratis para siempre."
+  }
+}

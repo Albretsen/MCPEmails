@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.telstra.com.au/support/email/imap-pop-smtp-mail-server-settings",
+    "https://www.telstra.com.au/support/email/faq",
+    "https://www.telstra.com.au/support/email/email-phone-tablet"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Telstra-e-postpassord",
+    "helpUrl": "https://www.telstra.com.au/support/email/imap-pop-smtp-mail-server-settings",
+    "usernameForm": "Hele adressen din som slutter på @bigpond.com, @bigpond.net.au eller @telstra.com. Telstra påpeker at passordet skiller mellom store og små bokstaver.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Telstra BigPond-e-post til Claude via IMAP",
+    "description": "Koble Telstra BigPond-e-post til Claude og enhver MCP-klient over IMAP på imap.telstra.com:993. Bigpond-adresser ligger nå på Telstra Mail-verter, ikke bigpond-verter."
+  },
+  "hero": {
+    "eyebrow": "Telstra BigPond + AI",
+    "titleLine1": "Koble Telstra BigPond-e-post",
+    "titleLine2": "til Claude, Cursor og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte bigpond.com-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP med Telstra-e-postpassordet ditt, i alle MCP-klienter i stedet for bare én.",
+    "answer": "Claude kan ikke nå en Telstra BigPond-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP på imap.telstra.com, port 993, og logger inn med hele bigpond.com-, bigpond.net.au- eller telstra.com-adressen din og Telstra-e-postpassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Bigpond-postkassene er slått sammen med Telstra Mail-plattformen, så de gamle bigpond-vertsnavnene er ikke lenger de en klient skal bruke. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Telstra-e-postpassordet ditt fungerer",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles BigPond til: Telstra Mail-verter og e-postpassordet ditt",
+    "body": "BigPond-adresser er nå Telstra Mail-kontoer. Postkassen svarer på IMAP på <code>imap.telstra.com</code>, port 993 over TLS, og tar imot utgående e-post på <code>smtp.telstra.com</code>, port 465, også med implisitt TLS, med autentisering slått på. Det finnes ikke noe eget app-passord å generere: Telstra godtar det vanlige e-postpassordet du bruker i webmail, og brukernavnet er hele adressen med domenet. Det som får folk til å snuble, er vertsnavnet, ikke påloggingsopplysningen. En <code>@bigpond.com</code>-adresse kobler seg ikke til en bigpond-server; den kobler seg til Telstra-serveren, og det gjør også en <code>@bigpond.net.au</code>- eller <code>@telstra.com</code>-adresse. Alle tre domenene deler ett sett med verter og ett sett med innstillinger."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
+    },
+    {
+      "h": "Bekreft passordet i Telstras webmail først",
+      "p": "Logg inn i Telstra Mail i en nettleser med adressen du skal koble til. Telstras egen dokumentasjon påpeker at passordet skiller mellom store og små bokstaver, og ved å bekrefte det i webmail skiller du et reelt problem med påloggingsopplysningene fra et innstillingsproblem før du går videre."
+    },
+    {
+      "h": "Skriv inn hele adressen i mcpemails",
+      "p": "Velg IMAP / SMTP og skriv adressen i sin helhet, inkludert <code>@bigpond.com</code>, <code>@bigpond.net.au</code> eller <code>@telstra.com</code>. Telstra-vertene er forhåndsutfylt. Ikke bytt dem ut med et eldre bigpond-servernavn som du kanskje fortsatt har lagret i en annen e-postapp."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Gamle bigpond-vertsnavn er den vanligste årsaken til et BigPond-oppsett som ikke virker",
+      "p": "Telstra dokumenterer nøyaktig tre vertsnavn for e-postklienter, og alle ligger på <code>telstra.com</code>. Hvis en telefon eller en skrivebordsklient ble satt opp for flere år siden mot et bigpond-servernavn, peker den mot et navn Telstra ikke lenger publiserer for klienttilgang. Adressen er den samme, serveren er det ikke."
+    },
+    {
+      "h": "Denne serveren støtter ikke MOVE, så å organisere e-post krever tre kommandoer",
+      "p": "Telstras IMAP-server annonserer ikke MOVE-utvidelsen, så å flytte en melding til en mappe gjøres som COPY, deretter STORE av slettet-flagget, deretter EXPUNGE. mcpemails gjør dette for deg, og resultatet er identisk, men en flytting er ikke atomisk her: hvis tilkoblingen brytes midt i sekvensen, kan meldingen bli liggende i begge mappene, og derfor trenger en gjentatt organisering hos denne leverandøren av og til en ekstra sjekk."
+    },
+    {
+      "h": "Uten UIDPLUS forteller ikke serveren oss den nye meldings-ID-en",
+      "p": "Telstras server mangler UIDPLUS, så den returnerer ikke UID-en den tildelte etter en kopiering eller en append. En klient kan ikke bekrefte en flyttet eller lagret melding via ID, og må i stedet søke etter den i målmappen. Derfor er en operasjon som melder suksess hos Telstra, litt dårligere dokumentert enn den samme operasjonen hos en leverandør som støtter UIDPLUS."
+    },
+    {
+      "h": "Å bytte en konto fra POP til IMAP sletter POP-mappene",
+      "p": "Telstra advarer om at alle POP-mapper og e-poster går tapt når en konto byttes fra POP til IMAP. Hvis postkassen du kobler til, har brukt POP med e-post arkivert lokalt, bør du laste den ned eller eksportere den før du endrer kontoen til IMAP. mcpemails bruker bare IMAP, så dette er en avgjørelse du tar én gang, bevisst, før du kobler til."
+    }
+  ],
+  "limits": [
+    "Telstras SMTP-vert oppgir en maksimal meldingsstørrelse på omtrent 30 MB, så en sending med store vedlegg avvises før den går ut.",
+    "Flyttinger faller tilbake til COPY pluss STORE pluss EXPUNGE fordi serveren ikke støtter MOVE."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Telstra BigPond-e-post?",
+      "a": "Ikke direkte. Claude har ingen innebygd Telstra-kobling. Kobler du en MCP-server som mcpemails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i BigPond-e-posten din, og den samme tilkoblingen fungerer i Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for BigPond?",
+      "a": "IMAP er imap.telstra.com på port 993 med implisitt TLS. SMTP er smtp.telstra.com på port 465, også med implisitt TLS, med autentisering for utgående e-post slått på. Brukernavnet er hele e-postadressen din, og passordet er Telstra-e-postpassordet ditt. Begge vertene ble bekreftet via en faktisk TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Adressen min slutter på bigpond.com. Bruker jeg en bigpond-server?",
+      "a": "Nei. Telstra flyttet BigPond-postkassene over på Telstra Mail-plattformen, og vertsnavnene en e-postklient skal bruke, er Telstras. Adresser på bigpond.com, bigpond.net.au og telstra.com kobler seg alle til de samme to vertene, uten variasjon per kunde som du må slå opp."
+    },
+    {
+      "q": "Trenger jeg et app-passord for BigPond?",
+      "a": "Nei. Telstra utsteder ikke appspesifikke passord for e-postklienter. Du logger inn med det samme e-postpassordet som du bruker i Telstras webmail. Hvis det avvises, sjekker du store og små bokstaver i hvert tegn og bekrefter passordet i webmail først, fordi Telstra skiller mellom store og små bokstaver."
+    },
+    {
+      "q": "Lagres BigPond-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Telstra over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke oppbevart."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Telstra BigPond-innboks",
+    "sub": "Koble til en bigpond.com- eller telstra.com-adresse på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

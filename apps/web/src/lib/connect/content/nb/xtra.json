@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.spark.co.nz/help/get-more/xtra/xtra-mail-setup/",
+    "https://www.spark.co.nz/help/get-more/xtra/two-step-verification/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Xtra Mail-passord",
+    "helpUrl": "https://www.spark.co.nz/help/get-more/xtra/xtra-mail-setup/",
+    "usernameForm": "Hele e-postadressen din, i Sparks eget eksempel joe.bloggs@xtra.co.nz.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Spark Xtra Mail til Claude: intet app-passord nødvendig",
+    "description": "Koble Spark Xtra Mail til Claude og enhver MCP-klient via IMAP på imap.xtra.co.nz:993. Xtra-passordet ditt virker: Spark utsteder ingen app-passord for klienter."
+  },
+  "hero": {
+    "eyebrow": "Spark Xtra Mail + AI",
+    "titleLine1": "Koble Xtra Mail-innboksen din",
+    "titleLine2": "til Claude, Cursor, enhver MCP-klient",
+    "lead": "Xtra Mail tar et vanlig passord via IMAP, uten app-passord å generere og uten noen andre faktor i veien. mcpemails kobler den til, slik at AI-agenten din kan lese, søke, sende, svare og arkivere den e-posten.",
+    "answer": "Claude når ikke en Xtra Mail-innboks på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.xtra.co.nz port 993 og logger inn med hele xtra.co.nz-adressen din og det vanlige Xtra Mail-passordet ditt. Spark utsteder ingen programspesifikke passord for Xtra Mail og sier at totrinnsbekreftelsen deres bare gjelder i webmail-portalen og ikke for e-postklienter, så et riktig passord autentiserer direkte selv med totrinnsbekreftelse på. Når den er koblet til, kan Claude, Cursor eller enhver annen MCP-klient lese, søke, sende og organisere den e-posten. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Xtra-passordet ditt, ikke app-passord",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Xtra Mail seg til: IMAP med passordet du allerede har",
+    "body": "Spark publiserer <code>imap.xtra.co.nz</code> på port 993 for innkommende e-post og <code>send.xtra.co.nz</code> for utgående, med brukernavnet oppgitt som hele adressen. Autentisering skjer med postkassepassordet, uendret. Det er uvanlig nok i 2026 til å være verdt å si to ganger, fordi Sparks egen side om totrinnsbekreftelse har en merknad øverst om at den bare er tilgjengelig i webmail-portalen og ikke vil gjelde for e-postklienter som Outlook, Mail og Gmail. Så det finnes ikke noe app-passord å finne, ingen sikkerhetsside å besøke og ingen andre faktor å omgå, og hele feilflaten krymper til om passordet er riktig og om klienten din oppfyller Sparks transportkrav. Spark har slike krav: de ber om at appen støtter 1024-bit eller 2048-bit AES-chiffer og TLS 1.0 eller høyere, og sier at RC4, SSL og SSL3 ikke støttes."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
+    },
+    {
+      "h": "Sørg for at Xtra Mail-abonnementet er aktivt i MySpark",
+      "p": "Xtra Mail er et abonnement, ikke et automatisk tillegg. I MySpark åpner du <b>Subscriptions</b> under Products, og sjekker at Xtra Mail står der og er aktivert med en opprettet postkasse. Står det <b>Ready to activate</b>, fullfør det først; det finnes ingen postkasse å koble til før skjemaet for å opprette postkasse er fylt ut."
+    },
+    {
+      "h": "Skriv inn hele adressen og Xtra Mail-passordet ditt",
+      "p": "I mcpemails velger du IMAP / SMTP og skriver inn adressen nøyaktig slik Spark skriver den, for eksempel <code>joe.bloggs@xtra.co.nz</code>, med passordet du bruker til å logge inn i Xtra-webmail. Vertene og portene under er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Xtra Mail har ikke vært en Yahoo-tjeneste siden 2017, så Yahoo-råd gjelder ikke",
+      "p": "Spark flyttet Xtra-e-post fra Yahoo over til den newzealandske leverandøren SMX i 2017, og migrerte hundretusener av postkasser over omtrent tre måneder. Yahoo-æraen etterlot en lang hale av veiledninger som ber xtra.co.nz-brukere generere et Yahoo-app-passord eller logge inn gjennom et Yahoo-vindu. Ingenting av det stemmer lenger. Det finnes ingen Yahoo-konto bak en Xtra-adresse, og følger du de instruksjonene, ender du opp med å lete etter en sikkerhetsside som ikke finnes for postkassen din."
+    },
+    {
+      "h": "Totrinnsbekreftelse beskytter bare webmail, og stenger ikke ute en klient",
+      "p": "Sparks egen side om totrinnsbekreftelse sier i en merknad øverst at den bare er tilgjengelig i webmail-portalen og ikke vil gjelde for e-postklienter som Outlook, Mail og Gmail. Det gjelder begge veier. Det betyr at det å slå på totrinnsbekreftelse ikke ødelegger denne tilkoblingen og at du aldri trenger et app-passord, og det betyr at IMAP-døren forblir kun passordbasert uansett hva du setter i webmail. Behandle Xtra Mail-passordet deretter."
+    },
+    {
+      "h": "Spark dokumenterer port 587 for sending, og port 465 svarer også",
+      "p": "Sparks oppsettside oppgir utgående server som <code>send.xtra.co.nz</code> på port <b>587</b> med StartTLS. Tilkoblingen vi verifiserte på samme vert, er port <b>465</b> med implisitt TLS, som fullførte et håndtrykk og tilbød PLAIN og LOGIN. Begge er ekte. Tabellen på denne siden viser det vi testet; insisterer en klient på den dokumenterte kombinasjonen, er 587 med STARTTLS Sparks publiserte svar og bør også virke."
+    },
+    {
+      "h": "Ingen SASL-IR, ingen IDLE, ingen MOVE og ingen SPECIAL-USE",
+      "p": "Xtra-serveren annonserer en kort liste: IMAP4rev1, UIDPLUS, NAMESPACE, ID, og mekanismene PLAIN og LOGIN. Uten SASL-IR avviser den autentiseringen i ett steg som de fleste klienter prøver først, og det kommer tilbake som en naken avvisning som ser ut som et feil passord. Uten IDLE finnes det ingen push, så ny e-post oppdages ved polling. Uten MOVE kjøres arkivering som COPY, så STORE, så EXPUNGE. Uten SPECIAL-USE matches Sent og Trash etter navn. UIDPLUS finnes, så en kopiert melding rapporterer sin nye ID."
+    }
+  ],
+  "limits": [
+    "Sparks SMTP-vert annonserer en maksimal meldingsstørrelse på omtrent 100 MB, som er rundhåndet, men en større sending avvises likevel før den går ut.",
+    "Ingen IDLE, så ny e-post oppdages ved polling i stedet for å bli pushet.",
+    "Flyttinger er ikke atomiske, og mapperoller matches etter navn, fordi MOVE og SPECIAL-USE ikke er implementert på denne serveren."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Xtra Mail?",
+      "a": "Ikke direkte. Claude har ingen innebygd Spark- eller Xtra-kobling. Kobler du en MCP-server som mcpemails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere xtra.co.nz-e-posten din, og samme tilkobling fungerer i Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Xtra Mail?",
+      "a": "IMAP er imap.xtra.co.nz på port 993 med TLS. Utgående e-post er send.xtra.co.nz, som Spark dokumenterer på port 587 med StartTLS, og som også svarer på port 465 med implisitt TLS, kombinasjonen vi verifiserte. Brukernavnet er hele e-postadressen din. Spark dokumenterer pop3.xtra.co.nz på 995 som POP-alternativet."
+    },
+    {
+      "q": "Trenger jeg et app-passord for Xtra Mail?",
+      "a": "Nei. Spark utsteder ingen, og siden deres om totrinnsbekreftelse sier at funksjonen bare er tilgjengelig i webmail-portalen og ikke vil gjelde for e-postklienter. En e-postklient logger inn med det vanlige Xtra Mail-passordet ditt uansett om totrinnsbekreftelse er slått på for webmail eller ikke."
+    },
+    {
+      "q": "Hvem driver Xtra Mail nå?",
+      "a": "Spark, på en plattform levert av det newzealandske selskapet SMX. Xtra-e-post ble hostet av Yahoo fra Telecom NZ-tiden til Spark fullførte migreringen til SMX i 2017. Derfor leder Yahoo-spesifikke instruksjoner som fortsatt sirkulerer for xtra.co.nz-adresser, ikke lenger noe nyttig sted."
+    },
+    {
+      "q": "Lagres Xtra-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Spark via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Xtra Mail-innboks",
+    "sub": "Ett passord, ingen andre faktor i veien. Én innboks gratis for alltid, uten kort."
+  }
+}

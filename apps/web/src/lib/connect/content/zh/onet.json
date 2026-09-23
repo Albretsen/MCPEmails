@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.telepolis.pl/tech/aplikacje/onet-wyciaga-wtyczke-nic-juz-nie-zrobisz-w-ten-sposob",
+    "https://webinsider.pl/newslog/onet-poczta-koniec-pop3-a-imap-tylko-w-platnych/",
+    "https://seohost.pl/pomoc/blokada-poczty-pop3-onet-poczta",
+    "https://www.instalki.pl/news/internet/korzystacie-jeszcze-z-poczty-onet-za-te-funkcje-trzeba-bedzie-placic/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Onet 密码，需付费邮箱套餐",
+    "helpUrl": "https://poczta.onet.pl/",
+    "usernameForm": "包含域名的完整地址：nazwa@onet.pl 或 nazwa@poczta.onet.pl。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Onet Poczta IMAP：仅限付费套餐，及 Claude 设置",
+    "description": "Onet Poczta 已将 IMAP 限定为付费套餐，并于 2026 年 3 月停用 POP3。imap.poczta.onet.pl:993 上还有哪些可用，以及如何将其连接到 Claude。"
+  },
+  "hero": {
+    "eyebrow": "Onet Poczta + AI",
+    "titleLine1": "通过 IMAP 使用 Onet Poczta，",
+    "titleLine2": "在 Claude、Cursor、任意 MCP 客户端中",
+    "lead": "Onet 在 2026 年将邮件客户端访问改为付费套餐功能。如果你的账户包含该功能，AI 代理就能通过 IMAP 读取、搜索、发送、回复、定时与整理邮箱。",
+    "answer": "Claude 无法自行连接 Onet 邮箱，而且自 2026 年 3 月 31 日起，任何其他东西也无法连接免费 Onet 账户。Onet 为所有用户停用了 POP3，并将 IMAP 纳入付费邮箱套餐，因此免费账户现在只能使用网页邮箱和手机 App。在付费套餐或保留原有权益的永久账户上，mcpemails 这个托管 MCP 服务器可以用你的 Onet 密码，通过 IMAP 连接 imap.poczta.onet.pl 的 993 端口，让 Claude、Cursor 或任意 MCP 客户端读取、搜索、发送并整理邮件。mcpemails 上一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "需要付费 Onet 邮箱套餐",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Onet 如何连接：IMAP，但仅限有权使用的账户",
+    "body": "Onet 在 <code>imap.poczta.onet.pl</code> 的 993 端口通过隐式 TLS 提供 IMAP，在 <code>smtp.poczta.onet.pl</code> 的 465 端口提供 SMTP 提交。两台服务器如今都在线并能响应，IMAP 服务器声明支持 <code>AUTH=PLAIN</code>、<code>AUTH=LOGIN</code> 和 <code>AUTH=XOAUTH2</code>。但服务器能响应，不等于你的账户被允许使用它们。自 <b>2026 年 3 月 31 日</b>起，Onet 完全停止支持 POP3，所有用户无一例外，并将 IMAP 限定为付费邮箱套餐，据报道为 <b>Poczta Plus</b> 和 <b>Poczta Standard</b>。免费账户的邮件仍然保留，失去的是协议访问。旧的永久账户（<b>konta wieczyste</b>）持有人获得豁免，可继续免费使用 IMAP。所以对于 Onet 邮箱，实际问题不是用哪台服务器，而是账户属于这三类中的哪一类。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "检查你的 Onet 账户是否有权使用 IMAP",
+      "p": "登录 poczta.onet.pl 查看账户的套餐。2026 年 3 月之后的免费账户没有 IMAP，也没有 POP3，因此任何客户端都无法连接。付费邮箱套餐可恢复 IMAP。永久账户（<b>konto wieczyste</b>）无需付费即可保留 IMAP。这里没有可以找的开关：这是账单状态，而不是一项设置。"
+    },
+    {
+      "h": "使用 Onet 密码，并删除残留的 POP3 配置",
+      "p": "Onet 不为邮件客户端签发应用专用密码；你用 Onet 账户密码和完整地址认证。如果你正在从旧客户端迁移设置，不要把 POP3 服务器带过来。POP3 是被直接停用而不是逐步淘汰，所以 995 端口上已不会有任何响应。"
+    },
+    {
+      "h": "粘贴到 mcpemails，再把 MCP URL 粘贴到你的 AI",
+      "p": "选择 IMAP / SMTP，输入完整地址（例如 nazwa@onet.pl）并输入密码。Onet 的服务器和端口已自动填好，并已通过实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "免费 Onet 账户什么都连不上，而服务器依然会响应",
+      "p": "这就是 Onet 在 2026 年的全部情况，而且确实难以诊断，因为 <code>imap.poczta.onet.pl</code> 在线，接受 TLS 连接，并像往常一样声明其认证机制。限制在账户上，而不在服务器上。如果你的是免费账户，Outlook、Thunderbird、Apple Mail、Android 和 iOS 自带客户端，以及包括本服务在内的所有托管 MCP 服务器都处于同样的处境：没有协议访问。Onet 声明的免费途径是网站和官方手机 App。购买邮箱套餐是唯一能改变这一点的办法。"
+    },
+    {
+      "h": "POP3 已完全停用，付费账户也一样",
+      "p": "IMAP 限制和 POP3 停用是在同一天生效的两项独立变更，人们常把它们混为一谈。付费套餐可恢复 IMAP，但不会带回 POP3。Onet 为所有用户无一例外地停用了 POP3。如果你有通过 POP3 收信的旧客户端或旧集成，付费套餐也救不了它，必须迁移到 IMAP。"
+    },
+    {
+      "h": "永久账户获得豁免，所以两个 Onet 邮箱可能表现不同",
+      "p": "<b>konta wieczyste</b> 持有人可继续免费使用 IMAP。这意味着同一客户端中并排的两个 Onet 地址，看起来都是免费的，能力却可能不同，而且只有其中一个能连接。在拿一个能用的 Onet 连接去排查另一个失败的连接之前，先确认你比较的是同一类型的账户。"
+    },
+    {
+      "h": "没有 IDLE 也没有 MOVE，归档和及时性都要多花往返",
+      "p": "Onet 的 IMAP 问候语声明了 <code>SASL-IR</code> 和 <code>LITERAL+</code>，但没有 <code>IDLE</code>，因此新邮件通过轮询发现，而不是在打开的连接上推送。它也缺少 <code>MOVE</code> 和 <code>UIDPLUS</code>，因此归档一封邮件要经过复制、更新标记再删除，副本的新 UID 不会返回，必须在目标文件夹中搜索。两者都不致命，但都会让批量整理比看起来更慢。"
+    }
+  ],
+  "limits": [
+    "免费 Onet 账户上没有可以连接的东西。这是服务商的限制，任何 MCP 服务器（包括我们）都无法绕过。",
+    "缺少 SPECIAL-USE，因此已发送、草稿和已删除文件夹按名称而不是按用途匹配。如果代理找不到文件夹，请在指令中写明文件夹名。",
+    "由于服务器不支持 MOVE，移动操作不是原子的。如果连接在操作中途断开，一封邮件可能会短暂同时存在于两个文件夹中。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Onet Poczta 吗？",
+      "a": "只有在账户拥有 IMAP 时才可以，自 2026 年 3 月起，这意味着付费 Onet 邮箱套餐或保留原有权益的永久账户。满足这一条件后，将 mcpemails 这样的 MCP 服务器指向该邮箱，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Onet 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.poczta.onet.pl，端口 993，隐式 TLS。SMTP 为 smtp.poczta.onet.pl，端口 465，同样是隐式 TLS。用户名是你的完整地址，密码是你的 Onet 账户密码。两台服务器均已通过实时 TLS 连接确认，但免费账户仍会在认证步骤被拒绝。"
+    },
+    {
+      "q": "为什么 Outlook 不能再收发我的 Onet 邮件了？",
+      "a": "因为 2026 年 3 月 31 日的变更。Onet 为所有用户停用了 POP3，并将 IMAP 纳入付费套餐。如果你的 Outlook 配置使用的是 POP3，那么无论付多少钱，Onet 都已不再提供该协议。如果用的是免费账户上的 IMAP，该账户已不再有协议访问权限，需要付费套餐。"
+    },
+    {
+      "q": "使用 IMAP 需要哪个 Onet 套餐？",
+      "a": "Onet 的付费邮箱套餐（据报道为 Poczta Plus 和 Poczta Standard）可恢复 IMAP 访问，同时提供更多存储空间且没有运营商广告。购买前请在 Onet 自己的订阅页面查看当前的套餐列表和价格，因为这些套餐已经调整过一次。"
+    },
+    {
+      "q": "Onet 会签发应用密码吗？",
+      "a": "不会。Onet 没有为邮件客户端公布应用专用密码机制。认证使用普通的 Onet 账户密码加完整地址。服务器确实声明了 XOAUTH2，但普通用户没有自助获取令牌的途径。"
+    },
+    {
+      "q": "我的 Onet 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 Onet 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Onet 收件箱",
+    "sub": "如果你的 Onet 套餐包含 IMAP，几分钟即可完成连接。一个收件箱永久免费，无需信用卡。"
+  }
+}

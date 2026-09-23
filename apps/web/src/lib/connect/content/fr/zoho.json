@@ -1,20 +1,33 @@
 {
+  "_sources": [
+    "https://www.zoho.com/mail/help/imap-access.html",
+    "https://www.zoho.com/mail/help/zoho-smtp.html",
+    "https://help.zoho.com/portal/en/kb/accounts/multi-factor-authentication/articles/application-specific-passwords"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Mot de passe spécifique à l'application",
+    "helpUrl": "https://help.zoho.com/portal/en/kb/accounts/multi-factor-authentication/articles/application-specific-passwords",
+    "usernameForm": "Votre adresse Zoho complète, domaine compris : nom@votredomaine.com sur un domaine personnalisé, ou nom@zohomail.com sur un compte personnel gratuit.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Connecter Zoho Mail à Claude (et à toute IA)",
-    "description": "Connectez Zoho Mail à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser Zoho. 1 boîte gratuite, pour toujours."
+    "title": "Connectez Zoho Mail à Claude, Cursor et aux clients MCP",
+    "description": "Connectez Zoho Mail à Claude, Cursor et tout client MCP en IMAP sur imap.zoho.com:993. L'IMAP est désactivé par défaut et le serveur dépend de votre centre Zoho."
   },
   "hero": {
     "eyebrow": "Zoho Mail + IA",
     "titleLine1": "Connectez Zoho Mail à Claude,",
     "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
-    "lead": "Offrez à votre agent IA une vraie boîte Zoho en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et un mot de passe d'application, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "lead": "Offrez à votre agent IA une vraie boîte Zoho en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec l'IMAP et un mot de passe d'application, et utilisez la même boîte dans tous vos clients MCP, pas un seul.",
     "meta0": "1 boîte gratuite, pour toujours",
-    "meta1": "Mot de passe d'application, pas de configuration OAuth",
-    "meta2": "E-mails récupérés en direct, jamais stockés"
+    "meta1": "Mot de passe d'application, sans configuration OAuth",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Claude ne peut pas accéder seul à Zoho Mail. mcpemails est un serveur MCP hébergé qui le connecte en IMAP sur imap.zoho.com, port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Deux points doivent d'abord être réglés : l'accès IMAP est désactivé sur une nouvelle boîte Zoho tant que vous ne l'activez pas, et le nom de serveur dépend de votre centre de données Zoho, si bien qu'un compte créé dans l'UE ou en Inde en utilise un autre. Une boîte est gratuite, pour toujours."
   },
   "method": {
     "title": "Comment Zoho se connecte : IMAP et un mot de passe d'application",
-    "body": "Zoho Mail se connecte via IMAP/SMTP. Activez d'abord l'accès IMAP dans Zoho (il est désactivé par défaut), générez un mot de passe spécifique à l'application si vous utilisez l'authentification à deux facteurs, puis collez-le dans mcpemails avec votre adresse Zoho. mcpemails prend en charge toutes les régions de centres de données Zoho."
+    "body": "Zoho Mail se connecte en IMAP/SMTP. Activez d'abord l'accès IMAP dans Zoho (il est désactivé par défaut), générez un mot de passe spécifique à l'application si vous utilisez l'authentification à deux facteurs, puis collez-le dans mcpemails avec votre adresse Zoho. mcpemails prend en charge toutes les régions de centres de données Zoho."
   },
   "setup": [
     {
@@ -22,8 +35,8 @@
       "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
-      "h": "Activez IMAP et générez un mot de passe d'application",
-      "p": "Dans Zoho Mail, activez l'accès IMAP (Paramètres, Comptes de messagerie, Accès IMAP). Si vous utilisez l'authentification à deux facteurs, générez un mot de passe spécifique à l'application dans Zoho Account, Sécurité."
+      "h": "Activez l'IMAP et générez un mot de passe d'application",
+      "p": "Dans Zoho Mail, activez l'accès IMAP (Settings, Mail Accounts, IMAP Access). Si vous utilisez l'authentification à deux facteurs, générez un mot de passe spécifique à l'application dans Zoho Account, Security."
     },
     {
       "h": "Collez-le dans mcpemails",
@@ -32,6 +45,55 @@
     {
       "h": "Collez l'URL MCP dans votre IA",
       "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Zoho exploite six centres de données, et votre nom de serveur suit celui où vous vous êtes inscrit",
+      "p": "Zoho gère des centres de données régionaux distincts, accessibles sur <code>zoho.com</code>, <code>zoho.eu</code>, <code>zoho.in</code>, <code>zoho.com.au</code>, <code>zoho.jp</code> et <code>zohocloud.ca</code>. Une boîte créée dans l'un n'est pas joignable via le nom de serveur d'un autre, et les paramètres du tableau de cette page sont ceux des États-Unis. La vérification en cinq secondes : connectez-vous sur mail.zoho.com et observez ce que devient la barre d'adresse. Si elle se fixe sur <code>zoho.eu</code>, vos serveurs IMAP et SMTP se terminent eux aussi par <code>.eu</code>. Zoho affiche aussi la paire exacte pour votre compte dans Settings, Mail Accounts, sous Server Configuration Details. <b>Une région incorrecte est la cause la plus fréquente d'échec d'une connexion Zoho</b>, et elle se manifeste par une erreur d'authentification plutôt que par une erreur de serveur, d'où ces utilisateurs qui réinitialisent leur mot de passe quatre fois avant de trouver."
+    },
+    {
+      "h": "L'IMAP reste désactivé tant que quelqu'un ne l'active pas, boîte par boîte",
+      "p": "Zoho livre ses boîtes avec l'accès IMAP désactivé. Activez-le dans Settings, puis Mail Accounts, cliquez sur l'adresse, cochez <b>IMAP Access</b> et enregistrez. Deux détails piègent souvent. Le réglage se fait sur chaque boîte individuellement : l'activer pour votre propre adresse ne change rien pour celle d'un collègue. Et tant qu'il n'est pas activé, Zoho refuse catégoriquement la connexion, avec un échec impossible à distinguer d'un mauvais mot de passe."
+    },
+    {
+      "h": "Les comptes Zoho gratuits et payants sont documentés sur des noms de serveur différents",
+      "p": "La page de configuration de Zoho indique <code>imap.zoho.com</code> et <code>smtp.zoho.com</code> pour les comptes personnels et gratuits, et <code>imappro.zoho.com</code> et <code>smtppro.zoho.com</code> pour les comptes d'organisation payants, la règle du suffixe régional ci-dessus s'appliquant en plus aux deux. Le serveur vérifié pour cette page est <code>imap.zoho.com</code>. Si votre adresse est sur un domaine personnalisé avec une offre payante, prenez la paire que Zoho affiche sous Server Configuration Details plutôt que de supposer la paire générique, car c'est la réponse qui fait foi pour votre compte précis."
+    },
+    {
+      "h": "Ni SPECIAL-USE, ni AUTH=LOGIN",
+      "p": "Le serveur IMAP de Zoho annonce bien <code>MOVE</code>, <code>UIDPLUS</code>, <code>IDLE</code> et <code>SASL-IR</code> : les déplacements sont atomiques et l'authentification se fait en un seul aller-retour. Il n'annonce pas <code>SPECIAL-USE</code>, ce qui signifie que les dossiers Envoyés, Brouillons, Corbeille et Spam sont identifiés par leur nom plutôt que par leur rôle : renommez un dossier système, ou créez la boîte dans une interface non anglaise, et un agent qui cherche \"Sent\" ne le trouvera pas à moins que vous ne nommiez le dossier explicitement. Sa liste d'authentification est également courte, <code>AUTH=PLAIN</code> et <code>AUTH=XOAUTH2</code> sans <code>AUTH=LOGIN</code> : un client codé en dur pour le mécanisme LOGIN échoue donc à l'étape d'authentification, même avec le bon mot de passe."
+    }
+  ],
+  "limits": [
+    "Le serveur d'envoi de Zoho annonce une taille maximale de message d'environ 31 Mo, inférieure à celle de la plupart des fournisseurs grand public.",
+    "L'IMAP doit être activé sur chaque boîte Zoho depuis les paramètres de cette boîte elle-même. Personne ne peut l'activer pour vous de l'extérieur.",
+    "Les comptes qui utilisent l'authentification à deux facteurs, la connexion fédérée ou SAML doivent utiliser un mot de passe spécifique à l'application. Le mot de passe habituel du compte ne permet pas de s'authentifier."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec Zoho Mail ?",
+      "a": "Pas seul. Claude n'a pas de connecteur Zoho intégré. Connecter un serveur MCP comme mcpemails à votre boîte Zoho en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et les autres clients MCP. Vous devez d'abord activer l'accès IMAP sur la boîte."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de Zoho Mail ?",
+      "a": "Pour un compte gratuit américain, l'IMAP est imap.zoho.com sur le port 993 en TLS implicite et le SMTP est smtp.zoho.com sur le port 465, également en TLS implicite, tous deux vérifiés par une connexion TLS réelle. Les comptes d'organisation payants sont documentés sur les noms imappro et smtppro, et chaque centre de données régional change le suffixe de domaine. Le nom d'utilisateur est votre adresse complète."
+    },
+    {
+      "q": "Dans quel centre de données Zoho se trouve mon compte ?",
+      "a": "Connectez-vous sur mail.zoho.com et regardez où aboutit le navigateur. Une redirection vers zoho.eu, zoho.in, zoho.com.au, zoho.jp ou zohocloud.ca vous indique la région, et vos noms de serveur de messagerie portent le même suffixe. Pour une réponse exacte, ouvrez Settings, puis Mail Accounts, et lisez la section Server Configuration Details, qui affiche les serveurs et ports que Zoho attend de votre client."
+    },
+    {
+      "q": "Pourquoi mon mot de passe Zoho est-il refusé ?",
+      "a": "Trois causes, dans cet ordre. L'accès IMAP n'a pas été activé sur cette boîte sous Settings, Mail Accounts. Le nom de serveur appartient à un autre centre de données Zoho que celui où se trouve votre compte. Ou le compte utilise l'authentification à deux facteurs, la connexion fédérée ou SAML, auquel cas Zoho exige un mot de passe spécifique à l'application au lieu de votre mot de passe habituel."
+    },
+    {
+      "q": "Cela fonctionne-t-il avec un domaine personnalisé Zoho ou Zoho Workplace ?",
+      "a": "Oui. Une boîte sur votre propre domaine se connecte de la même façon, avec l'adresse complète comme nom d'utilisateur, une fois l'accès IMAP activé. Prenez les noms de serveur dans Server Configuration Details au sein de ce compte plutôt que dans un guide générique, car les comptes d'organisation payants et les régions hors États-Unis changent tous deux les noms."
+    },
+    {
+      "q": "Mon courrier Zoho est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct chez Zoho en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé. Révoquer le mot de passe spécifique à l'application dans Zoho, ou désactiver à nouveau l'accès IMAP, déconnecte la boîte immédiatement."
     }
   ],
   "ctaBand": {

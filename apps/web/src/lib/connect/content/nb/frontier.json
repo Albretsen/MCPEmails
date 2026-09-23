@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://frontier.com/helpcenter/internet/how-to-use-your-frontier-email-on-yahoo",
+    "https://help.yahoo.com/kb/SLN15241.html"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Yahoo-app-passord",
+    "helpUrl": "https://help.yahoo.com/kb/SLN15241.html",
+    "usernameForm": "Hele Frontier-adressen din, for eksempel navn@frontier.com. Det er nå også påloggingsnavnet ditt hos Yahoo.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Frontier-e-post kjører på Yahoo: koble den til Claude",
+    "description": "Frontier overlot e-posten sin til Yahoo i mars 2024. Koble en frontier.com-innboks til Claude over IMAP på imap.frontier.com:993 med et Yahoo-app-passord."
+  },
+  "hero": {
+    "eyebrow": "Frontier Mail + AI",
+    "titleLine1": "Koble en Frontier-innboks",
+    "titleLine2": "til Claude, Cursor og enhver MCP-klient",
+    "lead": "Frontier sluttet å drifte sin egen e-post og overlot tjenesten til Yahoo. frontier.com-adressen fungerer fortsatt over IMAP, og mcpemails kobler den til slik at AI-agenten din kan lese, søke i, sende, svare på og sortere den e-posten.",
+    "answer": "Claude kan ikke nå en Frontier-postkasse på egen hånd. mcpemails er en driftet MCP-server som kobler den til over IMAP på imap.frontier.com, port 993, som fortsatt svarer selv om Frontiers e-posttjeneste og kundestøtte har vært håndtert av Yahoo siden 20. mars 2024. Fordi kontoen bak adressen er en Yahoo-konto, er påloggingsopplysningen et Yahoo-app-passord som lages på kontoens sikkerhetsside, ikke passordet du bruker i webmail. Når den er koblet til, kan Claude, Cursor eller enhver annen MCP-klient lese, søke i, sende og organisere e-posten, og én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Yahoo-app-passord, ikke webmail-passordet",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles Frontier til: en IMAP-proxy foran en Yahoo-konto",
+    "body": "Frontiers hjelpesenter har nå én eneste instruks om e-post: fra 20. mars 2024 håndteres e-posttjenesten og kundestøtten av Yahoo, og du logger inn på login.yahoo.com. Det publiserer ingen servernavn, ingen porter og ingen veiledning for e-postklienter i det hele tatt. <code>frontier.com</code>-vertsnavnene forsvant likevel ikke sammen med dokumentasjonen. <code>imap.frontier.com</code> svarer på port 993 over TLS med et sertifikat for <code>*.frontier.com</code>, og den presenterer seg som en <b>IMAP4rev1-proxyserver</b> og ikke som Yahoo. Det du snakker med, er altså et Frontier-grensesnitt som videreformidler til postkassen, ikke Yahoos egen IMAP-vert. Påloggingsopplysningen kommer fra Yahoo-siden: et app-passord som lages på Yahoo-kontoens sikkerhetsside under External connections og brukes i stedet for det vanlige passordet ditt."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og krever ikke kort."
+    },
+    {
+      "h": "Logg inn hos Yahoo med frontier.com-adressen din",
+      "p": "Gå til login.yahoo.com og logg inn med hele <code>name@frontier.com</code>-adressen og det nåværende passordet ditt. Det er hit Frontiers eget hjelpesenter nå sender alle, og det bekrefter at postkassen er i live før du går videre."
+    },
+    {
+      "h": "Lag et app-passord under External connections",
+      "p": "På sikkerhetssiden for Yahoo-kontoen finner du <b>External connections</b> og velger <b>Create app password</b>. Kall det <code>mcpemails</code>, kopier koden som vises, og lim den inn i mcpemails sammen med hele frontier.com-adressen din. Frontier-vertene nedenfor er forhåndsutfylt."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Frontier publiserer ikke lenger noen innstillinger for e-postklienter, så alle veiledninger du finner, er fra tredjeparter",
+      "p": "Søker du etter IMAP-innstillinger for Frontier, får du et dusin selvsikre sider, og ingen av dem er Frontiers. Hjelpeartikkelen om e-post hos Frontier sier bare at Yahoo håndterer tjenesten, og lenker til Yahoos kundestøtte. Betrakt alle vertsnavn du ser andre steder, som ubekreftede. Vertene i tabellen på denne siden er dem vi faktisk åpnet en direkte TLS-tilkobling til, og det er en annen og sterkere påstand enn å kopiere en liste med innstillinger."
+    },
+    {
+      "h": "Frontier-proxyen er tynnere enn Yahoo-verten andre partnere får",
+      "p": "AT&T, Cox og Rogers eksponerer Yahoos egen IMAP-server, som annonserer MOVE, SPECIAL-USE, IDLE og UIDPLUS. Frontier-proxyen annonserer SASL-IR, UIDPLUS og lite annet: ingen MOVE, ingen IDLE, ingen SPECIAL-USE. I praksis betyr det at flytting av en melding kjøres som COPY, så STORE av slettet-flagget, så EXPUNGE i stedet for én kommando. Mapperoller som Sent og Trash gjenkjennes på navn i stedet for å bli oppgitt av serveren, og det finnes ingen IDLE-push, så ny e-post oppdages ved polling. mcpemails håndterer alt dette, men det er grunnen til at Frontier reagerer tregere enn andre Yahoo-baserte kontoer."
+    },
+    {
+      "h": "Yahoo avgjør om du i det hele tatt får lage et app-passord",
+      "p": "Når du lager et app-passord, kjøres først en kvalifikasjonssjekk. Yahoo ber deg bruke en nettleser du har logget inn på Yahoo fra flere dager på rad, og ikke et privat vindu, og opplyser at kundeservice ikke kan overstyre sjekken. Mangler valget <b>Create app password</b>, er det derfor, og verken Frontier eller Yahoos kundestøtte kan gi deg et i stedet."
+    },
+    {
+      "h": "Testen vår nådde Frontiers IMAP-vert, men fikk ikke svar fra SMTP-verten",
+      "p": "Vi publiserer det vi har bekreftet. IMAP-siden fullførte et TLS-håndtrykk og returnerte funksjonsbanneret sitt. SMTP-verten på port 465 svarte ikke i tide i den samme kjøringen, så vi har ingen bekreftet funksjonsliste for utgående e-post hos Frontier, og vi kommer ikke til å finne på en. Lesing og søk er delene vi kan gå god for. Hvis en sending feiler, logg inn hos Yahoo og sjekk kontoen der i stedet for å anta at innstillingene er feil."
+    }
+  ],
+  "limits": [
+    "Ingen MOVE og ingen SPECIAL-USE på Frontier-proxyen, så flyttinger er ikke atomiske og mapperoller gjenkjennes på navn. En postkasse med omdøpte mapper kan kreve at mappen navngis eksplisitt.",
+    "Ingen IDLE, så ny e-post oppdages ved polling i stedet for å bli pushet.",
+    "Frontiers SMTP-vert svarte ikke på testen vår, så utgående oppførsel hos denne leverandøren er den ene delen av siden vi ikke har bekreftet selv."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Frontier-e-post?",
+      "a": "Ikke direkte. Claude har ingen innebygd Frontier-kobling, og Frontier drifter ikke lenger e-posttjenesten. Kobler du en MCP-server som mcpemails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere frontier.com-e-posten din, og den samme tilkoblingen fungerer i Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP-innstillingene for Frontier?",
+      "a": "IMAP er imap.frontier.com på port 993 med implisitt TLS, bekreftet med en direkte TLS-tilkobling på datoen som vises på denne siden. Brukernavnet er hele frontier.com-adressen din, og passordfeltet tar et Yahoo-app-passord. Frontier publiserer selv ingen innstillinger lenger, så alle andre lister du finner, er noens gjetning."
+    },
+    {
+      "q": "Hva skjedde med Frontier-e-post?",
+      "a": "Frontier sluttet å drifte e-post. Hjelpesenteret opplyser at e-posttjenesten og kundestøtten fra 20. mars 2024 håndteres av Yahoo, og ber kundene logge inn på login.yahoo.com og rette alle spørsmål om e-post til Yahoo. Adressen er den samme, men kontoen bak den er en Yahoo-konto."
+    },
+    {
+      "q": "Hvorfor avvises Frontier-passordet mitt i en e-postklient?",
+      "a": "Fordi kontoen nå er en Yahoo-konto, og Yahoo krever et app-passord for klienter som ikke åpner Yahoos eget innloggingsvindu. Passordet som fungerer i webmail, avvises over IMAP. Lag et app-passord på sikkerhetssiden for Yahoo-kontoen under External connections, og bruk det i passordfeltet i stedet."
+    },
+    {
+      "q": "Lagres Frontier-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger, også app-passordet, er kryptert ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Frontier-innboks",
+    "sub": "Ett Yahoo-app-passord, så er du tilkoblet. Én innboks gratis for alltid, uten kort."
+  }
+}

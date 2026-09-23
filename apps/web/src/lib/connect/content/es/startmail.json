@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.startmail.com/features/",
+    "https://support.startmail.com/",
+    "https://www.getmailbird.com/best-startmail-app-macos/",
+    "https://discussions.apple.com/thread/256239542"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Contraseña de dispositivo de confianza",
+    "helpUrl": "https://support.startmail.com/",
+    "usernameForm": "Tu dirección de StartMail completa, también si es de un dominio propio. El nombre de usuario nunca es solo la parte local.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "StartMail en Claude: la contraseña de dispositivo",
+    "description": "Conecta StartMail a Claude, Cursor o cualquier cliente MCP por IMAP en imap.startmail.com:993. Tu contraseña de cuenta nunca sirve: usa una de dispositivo de confianza."
+  },
+  "hero": {
+    "eyebrow": "StartMail + IA",
+    "titleLine1": "Conecta StartMail a Claude,",
+    "titleLine2": "Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de StartMail. Lee, busca, envía, responde, programa y organiza correo por IMAP, en todos los clientes MCP y no solo en uno, con una contraseña de dispositivo que puedes revocar por separado.",
+    "answer": "Claude no puede acceder a StartMail por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.startmail.com en el puerto 993, y por SMTP en smtp.startmail.com en el puerto 465, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La contraseña de tu cuenta de StartMail no autentica en absoluto un cliente de correo: StartMail emite una contraseña generada distinta para cada dispositivo conectado, desde la sección de dispositivos de confianza de tus ajustes, y la muestra una sola vez. Usa tu dirección de StartMail completa como nombre de usuario y ese valor generado como contraseña. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña de dispositivo generada, se muestra una vez",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta StartMail: IMAP y una contraseña generada por dispositivo",
+    "body": "StartMail ofrece IMAP en <code>imap.startmail.com</code> en el puerto 993 con TLS, y SMTP en <code>smtp.startmail.com</code> en el puerto 465, y presenta el acceso completo por IMAP y SMTP como una función y no como algo secundario. Lo que no hace es aceptar la contraseña de tu cuenta por esos protocolos. El modelo de StartMail es una credencial generada por cada dispositivo conectado: añades un dispositivo en la interfaz web, StartMail produce una contraseña aleatoria de unos dieciséis caracteres, y ese valor va tanto en el campo de contraseña de entrada como en el de salida. Se muestra una vez y nada permite recuperarla después, así que si la pierdes borras esa entrada de dispositivo y añades otra. Es un planteamiento mejor que el de la mayoría de los proveedores centrados en la privacidad, porque la credencial que entregas a un tercero no es la que abre tu cuenta, y retirarla no afecta a nada más que tengas conectado."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja, para siempre, sin tarjeta. Al final obtienes una URL MCP y una clave."
+    },
+    {
+      "h": "Añade un dispositivo en StartMail y copia la contraseña generada",
+      "p": "Inicia sesión en StartMail en un navegador, abre <b>Settings</b> (ajustes) y ve a la sección <b>trusted devices</b> (dispositivos de confianza), que es donde se gestiona el acceso IMAP. Elige <b>Add device</b> (añadir dispositivo) y ponle un nombre que identifique esta conexión. StartMail genera una contraseña aleatoria y la muestra una vez, así que cópiala antes de cerrar el cuadro de diálogo. Esa sección también controla el acceso IMAP de la cuenta, así que si un inicio de sesión se rechaza antes incluso de haber usado la contraseña, comprueba ahí que IMAP está activado."
+    },
+    {
+      "h": "Añade el buzón en mcpemails",
+      "p": "Elige IMAP / SMTP, escribe tu dirección de StartMail completa como nombre de usuario y pega la contraseña de dispositivo generada. Usa el mismo valor para el correo saliente: StartMail autentica el envío con la credencial del dispositivo, no con la contraseña de tu cuenta. Los servidores vienen rellenados como <code>imap.startmail.com</code> y <code>smtp.startmail.com</code> y se verificaron mediante una conexión TLS real."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "La contraseña de tu cuenta de StartMail no es nunca una contraseña para clientes de correo",
+      "p": "Esto explica la mayoría de los problemas con clientes de StartMail, y no es un efecto secundario de los dos factores como en otros proveedores. StartMail simplemente no autentica IMAP ni SMTP con tu contraseña de inicio de sesión en ninguna configuración. Escribe la contraseña que usas en la web y el servidor te rechaza, el cliente informa de credenciales incorrectas, y la gente restablece la contraseña de la cuenta y vuelve a intentarlo, lo que no cambia nada. Necesitas una contraseña de dispositivo de la sección de dispositivos de confianza, tanto en el campo de entrada como en el de salida."
+    },
+    {
+      "h": "La contraseña generada se muestra una vez y no hay forma de volver a verla",
+      "p": "StartMail muestra el valor en el momento en que crea la entrada del dispositivo y no guarda una copia legible para que la consultes después. Si cierras el cuadro de diálogo, o la copias en un cliente de una máquina y luego la necesitas en otra, añade un segundo dispositivo en lugar de buscar la primera contraseña. Ese es el diseño previsto: una credencial por conexión, que se borra de forma individual. Borrar la entrada de esta desconecta el servidor MCP y deja funcionando tu teléfono y tu portátil."
+    },
+    {
+      "h": "StartMail anuncia XLIST pero no SPECIAL-USE",
+      "p": "Un detalle de capacidades poco habitual con una consecuencia práctica. El saludo IMAP ofrece <code>XLIST</code>, la extensión preestándar de Google para identificar qué carpeta es Enviados, Borradores o Papelera, pero no <code>SPECIAL-USE</code>, la capacidad de la RFC 6154 que la sustituyó. La mayoría de los clientes modernos abandonaron XLIST hace años y solo buscan SPECIAL-USE, así que las funciones de las carpetas se identifican por nombre. Si renombras una carpeta en la interfaz web de StartMail, puede que un agente deje de reconocerla como tu archivo, así que indícala explícitamente cuando pidas archivar algo."
+    },
+    {
+      "h": "Solo PLAIN en IMAP, y sin MOVE ni UIDPLUS",
+      "p": "El servidor ofrece <code>AUTH=PLAIN</code> sin <code>AUTH=LOGIN</code>, así que las herramientas que dependen del mecanismo LOGIN reciben un rechazo en el paso de autenticación en lugar de un error útil, mientras que el lado SMTP acepta ambos. También omite MOVE y UIDPLUS, así que archivar un mensaje es un COPY, un STORE de la marca \\Deleted y un EXPUNGE, y el nuevo UID se encuentra buscando en el destino en lugar de recibirse en la respuesta. Ambas cosas están resueltas aquí, y son la razón de que una reorganización masiva en StartMail vaya más lenta que en un servidor con MOVE."
+    }
+  ],
+  "limits": [
+    "Conectar un buzón de StartMail a un cliente de IA implica que ese proveedor de IA lee el contenido de los mensajes con los que trabaja. mcpemails obtiene el correo en vivo de imap.startmail.com en cada solicitud y no almacena el cuerpo de los mensajes, y las credenciales se cifran en reposo, pero el texto sigue llegando a Claude, Cursor o el cliente que conectes. El alojamiento en Países Bajos de StartMail y su postura contra el rastreo describen a StartMail, y no acompañan a un mensaje cuando llega a un proveedor de IA que conectas tú mismo. Tómalo como una decisión sobre qué correspondencia estás dispuesto a exponer, no como una extensión de la privacidad que contrataste.",
+    "Los mensajes cifrados con PGP son ilegibles para un agente. La gestión de claves de StartMail está en tu cuenta de StartMail y sirve a su propia interfaz web; un cliente IMAP recibe un bloque de texto cifrado armado, y mcpemails no tiene ninguna clave privada tuya. El agente puede ver el remitente, el asunto y la fecha, y puede archivar o marcar esos hilos, pero no leerlos.",
+    "El servidor SMTP de StartMail anuncia un límite de tamaño de mensaje de unos 37 MB, inferior al de la mayoría de los proveedores de aquí. Un adjunto grande que un agente intente enviar se rechaza en el envío en lugar de devolverse más tarde, así que usa un enlace para cualquier cosa de cierto tamaño."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con StartMail?",
+      "a": "No directamente. Claude no tiene un conector de StartMail integrado y no puede hablar IMAP por sí mismo. Conectar un servidor MCP como mcpemails a tu buzón de StartMail le da a Claude acceso por IMAP para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después en Cursor, ChatGPT y otros clientes MCP sin volver a configurarla."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de StartMail?",
+      "a": "IMAP es imap.startmail.com en el puerto 993 con TLS y SMTP es smtp.startmail.com en el puerto 465 con TLS. El nombre de usuario es tu dirección de StartMail completa, y la contraseña es una contraseña de dispositivo generada, no la de tu cuenta. Ambos servidores se verificaron mediante una conexión TLS real, y el certificado está emitido para el propio imap.startmail.com."
+    },
+    {
+      "q": "¿Por qué mi contraseña de StartMail no funciona en un cliente de correo?",
+      "a": "Porque no está pensada para eso. StartMail no acepta la contraseña de tu cuenta por IMAP ni SMTP en absoluto. Emite una contraseña generada distinta para cada dispositivo conectado, desde la sección de dispositivos de confianza de tus ajustes. Restablecer la contraseña de la cuenta no servirá. Añade un dispositivo, copia el valor generado y úsalo tanto en el campo de contraseña de entrada como en el de salida."
+    },
+    {
+      "q": "¿Dónde genero una contraseña IMAP de StartMail?",
+      "a": "En la interfaz web de StartMail, abre Settings y ve a la sección de dispositivos de confianza, que es donde se gestiona el acceso IMAP. Elige añadir un dispositivo, ponle un nombre, y StartMail genera una contraseña aleatoria de unos dieciséis caracteres y la muestra una vez. Cópiala enseguida; no hay forma de volver a leerla, solo de borrar el dispositivo y añadir otro."
+    },
+    {
+      "q": "¿Puede mi IA leer mis mensajes de StartMail cifrados con PGP?",
+      "a": "No. Un mensaje cifrado con tu clave OpenPGP llega por IMAP como texto cifrado, y mcpemails nunca recibe tu clave privada. Esos mensajes siguen siendo legibles en la propia interfaz de StartMail, donde está la gestión de claves. Tu agente puede ordenarlos, marcarlos y archivarlos, y puede leer todo lo que llegó sin cifrar."
+    },
+    {
+      "q": "¿Se almacena mi correo de StartMail en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de imap.startmail.com en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva. El cliente de IA que conectes sí recibe el contenido de todo lo que lee, y eso es lo que hay que sopesar antes de conectar un buzón para el que elegiste StartMail."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de StartMail",
+    "sub": "Conecta StartMail con una contraseña de dispositivo que puedes revocar por separado. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

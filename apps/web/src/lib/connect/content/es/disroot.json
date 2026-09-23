@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://disroot.org/en/services/email",
+    "https://disroot.org/en/faq",
+    "https://howto.disroot.org/en/tutorials/email/clients"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña de Disroot",
+    "helpUrl": "https://disroot.org/en/services/email",
+    "usernameForm": "Tu dirección de Disroot completa, name@disroot.org. Las pantallas de inicio de sesión de Disroot aceptan el nombre de usuario sin el dominio, así que prueba así si se rechaza la dirección completa.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta el correo de Disroot a Claude y clientes MCP",
+    "description": "Conecta el correo de Disroot a Claude, Cursor y cualquier cliente MCP por IMAP en disroot.org:993, con la contraseña de tu cuenta: no hay contraseñas de aplicación."
+  },
+  "hero": {
+    "eyebrow": "Disroot + IA",
+    "titleLine1": "Conecta Disroot a Claude,",
+    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de Disroot. Lee, busca, envía, responde, programa y organiza correo por IMAP, en todos los clientes MCP y no solo en uno, con la contrapartida de privacidad explicada sin rodeos.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de Disroot. mcpemails es un servidor MCP alojado que lo conecta por IMAP en disroot.org en el puerto 993, y por SMTP en el puerto 465, autenticándose con la misma contraseña de Disroot que usas para el webmail y la Cloud, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Disroot no emite contraseñas de aplicación, así que ten en cuenta que la credencial que guardas es la de tu cuenta. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "La contraseña de tu cuenta de Disroot",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Disroot: un nombre de servidor, una contraseña",
+    "body": "Disroot lo sirve todo en el dominio sin prefijo. IMAP es <code>disroot.org</code> en el puerto 993 con TLS implícito, y SMTP es <code>disroot.org</code> en el puerto 465. No hay que añadir ningún prefijo <code>imap.</code> o <code>smtp.</code> ni buscar variantes regionales. La autenticación es una <b>contraseña normal</b>: la misma contraseña de Disroot con la que inicias sesión en el webmail, la instancia de Nextcloud, Akkoma y el chat XMPP. Disroot no emite contraseñas específicas de aplicación ni de dispositivo, así que no hay forma de dar a un cliente una credencial limitada. Conviene pensarlo antes de conectar nada, incluido esto."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja, para siempre, sin tarjeta. Al final obtienes una URL MCP y una clave."
+    },
+    {
+      "h": "Confirma tu nombre de inicio de sesión de Disroot",
+      "p": "Las preguntas frecuentes de Disroot dejan claro que el inicio de sesión de la cuenta es tu nombre de usuario <b>sin</b> el dominio. La mayoría de clientes de correo se autentican bien con la dirección completa <code>name@disroot.org</code>, pero si el servidor te rechaza y la contraseña es sin duda correcta, vuelve a intentarlo solo con la parte del nombre de usuario. Ese único detalle explica la mayoría de los inicios de sesión fallidos en Disroot."
+    },
+    {
+      "h": "Añade el buzón en mcpemails",
+      "p": "Elige IMAP / SMTP e introduce tu dirección de Disroot y tu contraseña de Disroot. Los servidores ya vienen rellenados con <code>disroot.org</code> en ambas direcciones. Las credenciales se cifran en reposo; el correo en sí se obtiene en vivo en cada solicitud y no se guarda."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Una sola contraseña abre todos los servicios de Disroot",
+      "p": "Tu contraseña de Disroot se comparte entre el correo, la Cloud de Nextcloud, Akkoma y el chat. Disroot no ofrece contraseñas de aplicación para el correo, así que un cliente de correo guarda el mismo secreto que abre tus archivos. Si alguna vez quieres revocar ese acceso, la única palanca es cambiar la contraseña de la cuenta, y cambiarla también te obliga a regenerar la clave de cifrado de Nextcloud desde la página de ajustes Personal o tus archivos dejarán de abrirse. La autenticación en dos factores de Disroot cubre la Cloud, no IMAP, así que activarla no bloqueará un cliente de correo en ningún caso."
+    },
+    {
+      "h": "El servidor IMAP de Disroot no anuncia MOVE ni UIDPLUS",
+      "p": "La instancia Dovecot de <code>disroot.org</code> ofrece IMAP4rev1 con IDLE y SASL-IR, pero sin MOVE y sin UIDPLUS. Mover un mensaje es por tanto un COPY, luego un STORE de la marca \\Deleted y luego un EXPUNGE, y sin UIDPLUS el servidor no informa del nuevo UID, así que la copia movida hay que volver a encontrarla con una búsqueda. Funciona, solo que es más lento y ruidoso que en un servidor que admite MOVE, y por eso una reorganización masiva en Disroot tarda notablemente más."
+    },
+    {
+      "h": "Sin SPECIAL-USE, las carpetas se identifican por nombre",
+      "p": "Disroot no anuncia la extensión SPECIAL-USE, así que nada en la conexión indica qué carpeta es Enviados, Borradores, Papelera o Archivo. Las funciones de las carpetas se deducen de sus nombres. Si renombraste tus carpetas en el webmail, o tu cliente creó una segunda carpeta de enviados hace años, indica la carpeta explícitamente cuando le pidas a un agente que archive algo."
+    },
+    {
+      "h": "El buzón tiene 1 GB por defecto",
+      "p": "El límite documentado del buzón de Disroot es de 1 GB y el de los adjuntos de 64 MB; el propio servidor SMTP anuncia un máximo de mensaje de 70 MB. El almacenamiento se puede ampliar mediante una contribución. Un buzón lleno devuelve el correo entrante, y un agente que envíe adjuntos grandes chocará con el límite de tamaño antes que con la cuota."
+    }
+  ],
+  "limits": [
+    "Conectar cualquier buzón a un cliente de IA significa que ese proveedor de IA lee el contenido de tus mensajes. Disroot no puede impedirlo y nosotros tampoco. mcpemails obtiene el correo en vivo de Disroot en cada solicitud y no almacena el cuerpo de los mensajes, y las credenciales se cifran en reposo, pero el texto sigue llegando a Claude, Cursor o el cliente al que lo conectes. Si un buzón de Disroot contiene correspondencia que no quieres que procese un gran proveedor de IA, no lo conectes.",
+    "El correo que llega cifrado con GPG, algo que Disroot fomenta activamente, llega a un cliente IMAP como un bloque de texto cifrado con armadura. mcpemails no tiene tu clave privada, así que un agente ve el sobre y la carga cifrada, no el mensaje. Esos hilos hay que leerlos en un cliente que tenga tu clave.",
+    "No hay credenciales limitadas. Disroot no ofrece contraseñas de aplicación, así que mcpemails guarda la misma contraseña que abre tus archivos de la Cloud."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Disroot?",
+      "a": "No directamente. Claude no tiene un conector integrado para Disroot ni forma de hablar IMAP. Conectar un servidor MCP como mcpemails a tu buzón de Disroot le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona en Cursor y otros clientes MCP sin volver a configurarla."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Disroot?",
+      "a": "IMAP es disroot.org en el puerto 993 con TLS implícito. SMTP es disroot.org en el puerto 465, también con TLS implícito, con STARTTLS en el 587 como alternativa documentada. No hay subdominio imap. ni smtp. Inicia sesión con tu dirección de Disroot y tu contraseña normal de Disroot. Ambos servidores se verificaron con una conexión TLS real."
+    },
+    {
+      "q": "¿Tiene Disroot contraseñas de aplicación para clientes de correo?",
+      "a": "No. Disroot emite una contraseña por cuenta y se usa igual para el correo, la Cloud, Akkoma y el chat. Todo lo que conectes recibe esa credencial. La autenticación en dos factores de Disroot se aplica a la Cloud y no a IMAP, así que ni bloquea ni protege el inicio de sesión de un cliente de correo."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de Disroot?",
+      "a": "Normalmente es el nombre de usuario, no la contraseña. Las preguntas frecuentes de Disroot dicen que el inicio de sesión de la cuenta es el nombre de usuario sin el dominio, y las contraseñas distinguen entre mayúsculas y minúsculas. Prueba con el nombre de usuario solo en lugar de la dirección completa. Si sigue fallando, confirma que la cuenta se aprobó; Disroot revisa los registros antes de activarlos."
+    },
+    {
+      "q": "¿Puede mi IA leer mi correo de Disroot cifrado con PGP?",
+      "a": "No. Un mensaje cifrado con tu clave OpenPGP llega por IMAP como texto cifrado, y mcpemails nunca tiene tu clave privada. El agente puede ver el remitente, el asunto y la fecha, y puede mover o marcar el mensaje, pero el cuerpo sigue siendo ilegible. Así es como debe funcionar, y es la razón por la que los hilos cifrados de extremo a extremo siguen siendo privados frente a un cliente de IA."
+    },
+    {
+      "q": "¿Se almacena mi correo de Disroot en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de disroot.org por IMAP en cada solicitud y se pasan directamente a tu cliente de IA. Las credenciales se cifran en reposo; el cuerpo de los mensajes no se conserva. El cliente de IA que conectes sí recibe el contenido de todo lo que lee, lo cual es una cuestión aparte y conviene decidirla a conciencia."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Disroot",
+    "sub": "Conecta Disroot en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

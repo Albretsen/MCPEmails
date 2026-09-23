@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://help.smartertools.com/smartermail/current/topics/systemadmin/settings/bindings/ipaddresses",
+    "https://help.smartertools.com/SmarterMail/current/Topics/SystemAdmin/Settings/ProtocolSettings",
+    "https://help.smartertools.com/SmarterMail/v16/Topics/SystemAdmin/Security/Advanced/AbuseDetection.aspx",
+    "https://help.smartertools.com/smartermail/current/topics/systemadmin/manage/currentblocks",
+    "https://help.smartertools.com/smartermail/current/topics/systemadmin/manage/userdefaults"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://help.smartertools.com/smartermail/current/topics/systemadmin/settings/bindings/ipaddresses",
+    "usernameForm": "Hele postkasseadressen inkludert domenet, for eksempel you@yourdomain.com, siden én SmarterMail-server hoster mange domener.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "SmarterMail til Claude: IMAP-bindinger og IDS-blokkeringer",
+    "description": "Koble en SmarterMail-postkasse til Claude, Cursor og ChatGPT via IMAP på 993. Hvor bindinger styrer portkryptering, og hvordan IDS-regler blokkerer klienter."
+  },
+  "hero": {
+    "eyebrow": "SmarterMail + AI",
+    "titleLine1": "Koble SmarterMail til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "SmarterMail gir allerede brukerne dine webmail, kalendere og chat. En MCP-server legger til det ene den ikke kan: en AI-agent som leser, søker, sender, svarer, planlegger og arkiverer e-post i selve postkassen.",
+    "answer": "Claude når ikke en SmarterMail-server på egen hånd. mcpemails er en hostet MCP-server som kobler til din via IMAP på ditt eget vertsnavn, normalt på port 993 med implisitt TLS, med postkassepassordet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. SmarterMail er programvare du eller verten din kjører, så det finnes ikke noe felles vertsnavn: serveren må kunne nås fra internett, postkassen må ha IMAP i Service Access-innstillingene, og SmarterMails misbruksdeteksjon må ikke blokkere adressen som kobler til. Én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord, IMAP i Service Access",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler SmarterMail seg til: bindinger, protokollinnstillinger og Service Access",
+    "body": "Tre skjermer i systemadministratorgrensesnittet avgjør om en IMAP-klient kommer inn. <b>Settings, så Bindings</b> er der SmarterMail knytter sammen de fysiske IP-adressene på serverens nettverkskort, portene som brukes av SMTP, IMAP, POP, LDAP, XMPP og Submission, og krypteringen som gjelder for hver av de portene, så det er det autoritative svaret på hva som lytter hvor. <b>Settings, så Other Protocols</b> har IMAP-oppførselen: banneret, en tidsavbrudd for kommandoer som er 30 minutter som standard, maks 8 ugyldige kommandoer før økten avsluttes, et tak på 1000 tilkoblinger, IDLE-bryteren og et alternativ for å avvise usikker autentisering på ukrypterte tilkoblinger. <b>Service Access</b>, satt på brukeren og arvet fra standardinnstillingene for domene og system, avgjør om akkurat den postkassen i det hele tatt får bruke IMAP. Påloggingen er det vanlige postkassepassordet. SmarterMail har ingen ordning med app-passord."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Én innboks er gratis for alltid, og det kreves ikke kort."
+    },
+    {
+      "h": "Les IMAP-bindingen, ikke anta den",
+      "p": "I systemadministratorgrensesnittet åpner du Settings og så Bindings, og finner IMAP-radene. Noter IP-adressen, porten og krypteringen som er satt på hver av dem. På en Windows-maskin med flere adresser er det helt normalt at IMAP er bundet til én av dem, og at det offentlige navnet slås opp til en annen."
+    },
+    {
+      "h": "Sjekk Service Access på postkassen, og legg den så til",
+      "p": "Åpne brukeren og bekreft at IMAP er slått på i Service Access-innstillingene. Legg så til innboksen i mcpemails: velg IMAP / SMTP, skriv inn SmarterMail-vertsnavnet ditt, hele postkasseadressen og passordet. Er du domeneadministrator og ikke systemadministrator, er dette skjermen du selv har tilgang til."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "IDS-regler blokkerer adressen, og lokale klienter er unntatt, så ingen merker det",
+      "p": "SmarterMails misbruksdeteksjon leveres påslått med regeltyper som <b>Denial of Service</b>, <b>Password Brute Force by IP</b> og <b>Password Brute Force by Email</b>, og den blokkerer adressen som kobler til per protokoll i stedet for å avvise innloggingen. Detaljen som gjør dette så forvirrende, er unntakslisten: loopback og de private områdene 10.x, 172.16 til 172.31 og 192.168.x blokkeres aldri. Så alle tester du kjører fra innsiden av nettverket, lykkes, og bare den eksterne klienten avvises, noe som får problemet til å se ut som den eksterne klienten. Se under Manage, så IDS Blocks, filtrer på IMAP og sjekk om adressen står der. Å fjerne blokkeringen der rydder den nåværende blokkeringen, men lar regelen stå, så det vil skje igjen. Den varige løsningen er en hvitelisteoppføring for adressen med alternativet for å omgå brute force-deteksjon slått på."
+    },
+    {
+      "h": "Service Access arves, og å endre standarden fikser ingen",
+      "p": "IMAP-tillatelse for en postkasse kommer fra Service Access på brukeren, som ble satt fra domenets standarder, som ble satt fra systemets User Defaults. Å redigere en standard påvirker bare brukere som opprettes etterpå, så en policyendring gjort for to år siden etterlot en lang hale av kontoer som fortsatt har IMAP slått av individuelt. Symptomet er at én postkasse feiler mens domenet ser riktig konfigurert ut. Det finnes et tegn til: SmarterMail svarer ikke på en IMAP Autodiscover-forespørsel for en bruker med IMAP slått av, selv når IMAP er slått på for Autodiscover generelt, så et automatisk klientoppsett som mystisk bare tilbyr POP eller Exchange ActiveSync, peker mot den samme årsaken."
+    },
+    {
+      "h": "Other Protocols kan avvise innloggingen på 143 som 993 godtar",
+      "p": "Skjermen Other Protocols har et alternativ for å slå av usikre autentiseringsmetoder på tilkoblinger uten SSL. Med det på avvises en vanlig innlogging over ukryptert port 143, mens nøyaktig de samme påloggingsdetaljene lykkes på 993, noe som ser ut som et periodisk passordproblem når to klienter er satt opp ulikt. Den samme skjermen setter maks 8 ugyldige kommandoer før SmarterMail lukker økten, og har IDLE-bryteren: slår du av IDLE for hele serveren, faller klienter som forventer push-varsler, stille tilbake til polling. Ingen av disse gir en feilmelding som nevner innstillingen som er ansvarlig, så det er verdt å lese skjermen én gang i stedet for å diagnostisere ut fra symptomer."
+    }
+  ],
+  "limits": [
+    "En hostet MCP-server må nå SmarterMail-maskinen din utenfra. En server som bare er bundet til en intern adresse, eller bare publisert til kontorets adresseområde, kan ikke kobles til på denne måten. mcpemails kan selvhostes hvis du heller vil at IMAP-økten aldri forlater nettverket ditt.",
+    "Sertifikatvalidering er streng, så bindingen på 993 trenger et sertifikat som er gyldig for vertsnavnet du skriver inn. SmarterMail på Windows bruker ofte et sertifikat fra Windows-sertifikatlageret, og et som er utstedt for maskinnavnet i stedet for e-postvertsnavnet, blir avvist.",
+    "Bare e-post går over denne tilkoblingen. SmarterMails kalendere, kontakter, oppgaver og chat betjenes av eget webgrensesnitt og av Exchange ActiveSync eller EWS, ikke av IMAP."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med SmarterMail?",
+      "a": "Ikke på egen hånd. Claude har ingen SmarterMail-kobling og kan ikke åpne en IMAP-økt mot en server du eller verten din kjører. Kobler du en MCP-server som mcpemails til SmarterMail-vertsnavnet ditt, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i en postkasse der, og samme innboks fungerer da fra Cursor eller ChatGPT."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for SmarterMail?",
+      "a": "Vertsnavnet er din egen server eller hostingleverandørens e-postserver. Portene er det Bindings-skjermen sier, som på en standardinstallasjon er 143 og 993 for IMAP og 25 og 587 for sending. Den skjermen er autoritativ fordi SmarterMail lar en administrator flytte portene og endre krypteringen på hver av dem. Logg inn med hele postkasseadressen og passordet."
+    },
+    {
+      "q": "Hvorfor avvises SmarterMail-innloggingen min fra én maskin, men ikke fra en annen?",
+      "a": "Se på IDS-blokkeringer først. SmarterMails misbruksdeteksjon blokkerer adresser per protokoll etter gjentatte feil eller for mange tilkoblinger, og unntar automatisk loopback og private områder, så alt på det lokale nettverket er upåvirket mens en ekstern klient avvises. De blokkerte adressene står under Manage, så IDS Blocks."
+    },
+    {
+      "q": "Trenger SmarterMail et app-passord?",
+      "a": "Nei. SmarterMail har ingen funksjon for programspesifikke passord. E-postklienter autentiserer med postkassepassordet. Har kontoen totrinnsautentisering slått på for webmail, gjelder det innloggingen i nettleseren og ikke IMAP-økten, så postkassepassordet er fortsatt det en klient bruker."
+    },
+    {
+      "q": "Lagres SmarterMail-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra SmarterMail-serveren din via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en SmarterMail-innboks",
+    "sub": "Koble til en postkasse fra din egen SmarterMail-server. Én innboks gratis for alltid, uten kort."
+  }
+}

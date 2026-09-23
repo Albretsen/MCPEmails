@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://help.krystal.io/email/configure-your-email-client",
+    "https://help.krystal.io/sales-faq/onyx-managed-word-press-vs-shared-hosting",
+    "https://help.krystal.io/email/adding-a-new-c-panel-email-account"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://help.krystal.io/email/configure-your-email-client",
+    "usernameForm": "你的完整邮箱地址，例如 me@yourdomain.co.uk，与创建邮箱时完全一致。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Krystal 邮箱连接 Claude：cPanel 与 Onyx IMAP 设置",
+    "description": "Krystal 共享主机包含 cPanel 邮箱，Onyx 则没有。先弄清你用的是哪一种，再通过端口 993 的 IMAP 将其连接到 Claude。1 个收件箱永久免费。"
+  },
+  "hero": {
+    "eyebrow": "Krystal + AI",
+    "titleLine1": "将 Krystal 邮箱连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Krystal 邮箱。无论是 cPanel 共享主机还是 Onyx 邮箱附加服务，都可以通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行访问 Krystal 邮箱。mcpemails 是一个托管 MCP 服务器，通过端口 993 的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。Krystal 没有共用的邮件主机名：你要使用 mail.yourdomain.co.uk 或你主机服务器自己的名称，两者都列在 cPanel 的 Connect Devices 页面上。开始之前，请确认你的套餐确实包含邮箱，因为 Krystal 的 Onyx 托管 WordPress 平台默认不带邮箱，除非你购买了附加服务。认证使用邮箱密码，1 个收件箱免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "来自 cPanel 的邮箱密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Krystal 邮箱如何连接：两个平台，同一种 IMAP 协议",
+    "body": "Krystal 是一家英国主机商，有两款截然不同的产品。<b>共享和经销商主机</b>运行 cPanel，包含你域名下不限数量的地址，邮箱配额在较小的套餐上为 5GB，在较大的套餐上为 50GB。<b>Onyx</b> 是他们的托管 WordPress 平台，完全不包含邮箱；邮箱是一项付费附加服务，可在结账时或之后从 Onyx 门户购买，并在那里而不是在 cPanel 中管理。两者都在端口 993 上通过 TLS 提供 IMAP，在 465（或 587 加 STARTTLS）上提供 SMTP。Krystal 对 cPanel 账户的建议是：完全按照设置页面上显示的名称使用你的主机服务器名，并说明 <code>mail.yourdomain.co.uk</code> 也可以用。用户名是完整地址。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "确认套餐包含邮箱，然后打开正确的页面",
+      "p": "在<b>共享主机</b>上，登录 cPanel，进入 <b>Email</b>，然后打开 <b>Email Accounts</b>，点击该地址旁的 <b>Connect Devices</b>。服务器名称和端口就显示在那里。在 <b>Onyx</b> 上，邮箱位于 Onyx 门户的邮箱部分而不是 cPanel 中，而且只有购买了邮箱附加服务才会存在。如果两处都没有列出任何地址，那就还没有可连接的邮箱。"
+    },
+    {
+      "h": "设置邮箱密码",
+      "p": "Krystal 邮箱使用为地址本身设置的密码进行认证，而不是你的 Krystal 客户区登录密码。在共享主机上，请在 Email Accounts 中该地址所在行点击 <b>Manage</b> 设置密码。然后在 mcpemails 中输入它，用户名为完整地址，服务器为你复制的主机名。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Onyx 不带邮箱，所以可能根本没有可连接的东西",
+      "p": "Krystal 的托管 WordPress 平台是有意不带邮箱的。把网站从 Krystal 共享主机迁到 Onyx 的客户，常常以为邮箱也一起搬过来了；其实没有，除非购买了邮箱附加服务。Krystal 提供了一个迁移工具，可以把现有的 IMAP 邮箱导入该附加服务，这就是判断依据：如果你从未被提示迁移，邮箱很可能还在旧平台上，或者已经没了。在排查凭据之前，请先检查 Onyx 门户中是否有邮箱部分。"
+    },
+    {
+      "h": "mail.yourdomain 只有在域名的 A 记录指向 Krystal 时才有效",
+      "p": "Krystal 会自动为该名称签发免费证书，但前提是域名解析到了他们的服务器。如果你使用外部 DNS，或通过 Cloudflare 代理域名，或者刚刚迁入而记录尚未生效，那么 <code>mail.</code> 名称要么无法解析，要么解析到一个没有邮件服务的地方。这两种失败看起来都不像邮件问题。使用 Connect Devices 页面上显示的服务器名称，对 DNS 的依赖就完全消失了。"
+    },
+    {
+      "h": "cPanel 邮箱和 Onyx 邮箱在不同的地方配置，指南也不同",
+      "p": "Krystal 的知识库里 cPanel 邮箱文章和 Onyx 邮箱文章并列，但它们描述的不是同一个系统。cPanel 教程会带你去 Email Accounts 和 Connect Devices；Onyx 邮箱两者都没有，是在 Onyx 门户中管理的。在按照任何 Krystal 邮箱说明操作之前，请先确认你的网站在哪个平台上，因为错误文章的第一步在你的面板里根本不存在。"
+    }
+  ],
+  "limits": [
+    "在 Krystal 共享主机上，邮箱大小按套餐设有上限，较小档位为 5GB，较大档位为 50GB。邮箱满后会拒收新邮件，而不是悄悄降级。",
+    "mcpemails 只连接邮箱。域名级设置、转发器和垃圾邮件规则仍在 cPanel 或 Onyx 门户中管理。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Krystal 邮箱吗？",
+      "a": "不能直接使用。Claude 没有 Krystal 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到你的 Krystal 邮箱后，无论邮箱位于 Krystal 的 cPanel 共享主机还是 Onyx 邮箱附加服务上，Claude 都能读取、搜索、发送、回复、定时和整理其中的邮件。"
+    },
+    {
+      "q": "Krystal 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为端口 993，使用 SSL/TLS；SMTP 为端口 465，使用 SSL/TLS，或端口 587 加 STARTTLS。主机名是 cPanel 的 Connect Devices 页面上显示的主机服务器名称；当域名的 DNS 指向 Krystal 时，mail.yourdomain.co.uk 也可以用。请用你的完整邮箱地址登录。"
+    },
+    {
+      "q": "Krystal Onyx 包含邮箱吗？",
+      "a": "不包含。Onyx 是 Krystal 的托管 WordPress 平台，默认不带邮箱。邮箱是一项付费附加服务，可以在结账时或之后通过 Onyx 门户购买，并在那里而不是在 cPanel 中管理。相比之下，Krystal 的共享主机套餐包含你域名下不限数量的地址。"
+    },
+    {
+      "q": "为什么我的 Krystal 邮箱密码被拒绝？",
+      "a": "因为邮箱有自己的密码，在创建地址时设定，它不是你的 Krystal 客户区登录密码。请在 cPanel 的 Email Accounts 下，通过地址旁的 Manage 链接重置。同时确认用户名是完整的邮箱地址，而不只是 @ 符号前面的部分。"
+    },
+    {
+      "q": "我的 Krystal 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 Krystal 实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Krystal 收件箱",
+    "sub": "几分钟即可连接 Krystal 邮箱。1 个收件箱永久免费，无需信用卡。"
+  }
+}

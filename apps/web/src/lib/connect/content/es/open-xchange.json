@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://documentation.open-xchange.com/8.20/middleware/mail/mail_access_via_xoauth2_or_oauthbearer.html",
+    "https://documentation.open-xchange.com/7.10.4/middleware/mail/mail_proxy_configuration.html",
+    "https://documentation.open-xchange.com/7.8.2/middleware/components/search/crossfolder_fts_in_mail.html",
+    "https://www.oxpedia.org/wiki/index.php?title=Authentication_IMAP_Plugin_description",
+    "https://wiki.open-xchange.com/wiki/index.php?title=Install_and_configure_the_mail-account_plugin"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://documentation.open-xchange.com/8.20/middleware/mail/mail_access_via_xoauth2_or_oauthbearer.html",
+    "usernameForm": "Lo que espere el servidor IMAP que hay detrás de App Suite, que suele ser la dirección completa, por ejemplo you@yourdomain.com, pero puede ser un nombre de inicio de sesión aparte. El ajuste del middleware com.openexchange.mail.loginSource decide cuál de los dos envía el propio App Suite.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Open-Xchange y Claude: conecta el backend IMAP",
+    "description": "Open-Xchange App Suite es una interfaz de groupware, no un servidor IMAP. Conecta el backend Dovecot que hay detrás a Claude, Cursor y ChatGPT por IMAP."
+  },
+  "hero": {
+    "eyebrow": "Open-Xchange + IA",
+    "titleLine1": "Conecta un buzón de Open-Xchange",
+    "titleLine2": "a Claude, Cursor y ChatGPT",
+    "lead": "App Suite es la interfaz, no el almacén de correo. Una vez que sabes qué servidor IMAP hay detrás, conectar un agente de IA es trabajo corriente: leer, buscar, enviar, responder, programar y archivar desde cualquier cliente MCP.",
+    "answer": "Claude no puede acceder a un buzón de Open-Xchange por sí solo, y Open-Xchange App Suite no es en sí el servidor al que hay que apuntarlo. App Suite es un middleware de groupware que se comunica con un backend IMAP y SMTP aparte, que en la mayoría de las implantaciones es Dovecot. mcpemails es un servidor MCP alojado que se conecta a ese backend por IMAP, normalmente en el puerto 993, con la contraseña del buzón, para que Claude, Cursor o cualquier cliente MCP puedan leer, buscar, enviar y organizar el correo. El servidor que debes usar es el servidor de correo que publica tu implantación o tu proveedor, no la dirección de la interfaz web de App Suite. Una bandeja es gratis.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña del buzón del backend, no la URL web",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Open-Xchange: a través del servidor de correo al que App Suite hace de proxy",
+    "body": "Open-Xchange App Suite almacena calendarios, contactos, tareas y archivos, pero no almacena correo. Para el correo es un cliente: abre sesiones IMAP contra un servidor aparte en nombre del usuario y muestra el resultado en el navegador. La propia recomendación de Open-Xchange es que cualquier sistema que ofrezca IMAP y SMTP puede servir de backend, y que Dovecot es la opción recomendada para una implantación nueva. El servidor que usa cada instalación está escrito en <code>/opt/open-xchange/etc/mail.properties</code>, en <code>com.openexchange.mail.mailServer</code> para IMAP y <code>com.openexchange.mail.transportServer</code> para el envío, y el comportamiento específico de IMAP, como <code>com.openexchange.imap.imapSearch</code>, está al lado, en <code>imap.properties</code>. Ese backend es al que se conecta mcpemails. Todo lo que dice nuestra página de Dovecot sobre listeners, funciones de carpeta y certificados se aplica a él, porque en la mayoría de las implantaciones de App Suite es literalmente Dovecot."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. Una bandeja es gratis para siempre, sin tarjeta."
+    },
+    {
+      "h": "Encuentra el servidor IMAP que hay detrás de App Suite",
+      "p": "Si administras la implantación, lee <code>com.openexchange.mail.mailServer</code> en <code>/opt/open-xchange/etc/mail.properties</code> en un nodo del middleware. Si App Suite es el webmail de tu proveedor, olvídate del middleware y usa el nombre de servidor IMAP que ese proveedor documenta para los clientes de correo, que es la respuesta que ya publica."
+    },
+    {
+      "h": "Confirma el nombre de inicio de sesión que espera el backend",
+      "p": "Inicia sesión en un cliente de correo de escritorio, o revisa <code>com.openexchange.mail.loginSource</code> en la configuración del middleware, para ver si el backend espera la dirección de correo completa o un nombre de inicio de sesión aparte. Después añade la bandeja en mcpemails: elige IMAP / SMTP y escribe ese servidor, el nombre de inicio de sesión y la contraseña del buzón."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "La dirección web de App Suite no es un servidor de correo, y a menudo nada responde en ella",
+      "p": "Este es el error que hace dar vueltas a la gente. Lees el correo en algo como <code>webmail.yourprovider.com</code>, así que parece el servidor de correo, pero es un nodo de aplicación HTTP. El puerto 993 en él suele estar cerrado, y cuando responde puede ser un balanceador de carga que no termina nada útil. Peor aún, en una implantación autoalojada el valor de <code>com.openexchange.mail.mailServer</code> es muy a menudo una dirección interna, a veces <code>127.0.0.1:143</code> en la misma máquina o un nombre interno que solo se resuelve dentro del clúster, porque el único cliente que debía llegar a él era el propio middleware. Si esa es tu situación, tienes que publicar a propósito un endpoint IMAP externo, con su propio certificado, antes de que cualquier cliente externo, incluido este, pueda conectarse."
+    },
+    {
+      "h": "Si App Suite venía con tu hosting, la respuesta está en la configuración de tu proveedor",
+      "p": "Open-Xchange vende App Suite a operadores y no a usuarios finales, así que la mayoría de la gente lo encuentra como el webmail de otra empresa sin que el nombre del producto aparezca nunca en pantalla. IONOS y Namecheap Private Email son dos que quizá reconozcas. Si has llegado aquí por esa vía, ninguno de los archivos de configuración anteriores existe en ninguna máquina a la que tengas acceso, y no los necesitas: tu proveedor publica nombres de servidor IMAP y SMTP para clientes de escritorio, y eso es exactamente lo que necesita mcpemails. Usa el servidor que documenta el proveedor, su puerto y la contraseña del buzón que te dio, y trata App Suite como una simple coincidencia del webmail que eligieron licenciar."
+    },
+    {
+      "h": "loginSource decide el nombre de usuario, y la autenticación maestra puede dejarte sin ninguno",
+      "p": "App Suite no envía necesariamente tu dirección de correo como nombre de usuario IMAP. El ajuste del middleware <code>com.openexchange.mail.loginSource</code> elige entre la dirección principal, el nombre de inicio de sesión de App Suite y otras formas, y por eso la credencial con la que entras en la interfaz del navegador no siempre es la que ve el servidor de correo. Las implantaciones que usan autenticación con contraseña maestra van más allá: el middleware se autentica en el servidor IMAP como usuario maestro e indica a la vez el buzón de destino, así que un usuario concreto puede no tener ninguna contraseña IMAP propia. En ese caso, un cliente normal no puede iniciar sesión como ese usuario hasta que el operador le asigne una, y por mucho que reintentes con la contraseña web no servirá. Algunas implantaciones también han pasado el backend a <code>XOAUTH2</code> u <code>OAUTHBEARER</code>, y entonces la autenticación con contraseña simple se rechaza directamente."
+    }
+  ],
+  "limits": [
+    "Por esta conexión solo viaja el correo. Los calendarios, la libreta de direcciones, las tareas y los archivos de Drive de App Suite los sirve el middleware a través de su propia API HTTP y no forman parte de una sesión IMAP, así que un agente conectado de esta forma ve el correo y nada más.",
+    "Un backend accesible solo dentro de tu red no se puede conectar a un servicio alojado. mcpemails se puede autoalojar, que es la vía sensata si el servidor IMAP se mantuvo fuera de internet a propósito.",
+    "En una implantación con autenticación maestra, conectar cualquier cliente exige que el operador asigne una credencial IMAP real por usuario. Es una decisión de quien administra la plataforma, no algo que puedas resolver desde el navegador."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Open-Xchange?",
+      "a": "Sí, a través del servidor de correo que hay detrás. Claude no tiene un conector para Open-Xchange y App Suite no ofrece ningún endpoint MCP, pero el buzón en sí está en un servidor IMAP normal. Conectar mcpemails a ese servidor le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar el mismo correo que ves en App Suite, y la misma bandeja funciona en Cursor y ChatGPT."
+    },
+    {
+      "q": "¿Cuál es la configuración IMAP y SMTP de Open-Xchange?",
+      "a": "No hay una respuesta única, porque Open-Xchange es software que implantan los operadores, no un servicio de correo con nombres de servidor fijos. En una instalación autoalojada, el backend figura en mail.properties. Si App Suite llegó como parte de un paquete de hosting, usa los nombres de servidor IMAP y SMTP que tu proveedor publica para los clientes de correo, que suelen ser el 993 para IMAP y el 465 o 587 para el envío."
+    },
+    {
+      "q": "¿Es Open-Xchange lo mismo que Dovecot?",
+      "a": "No, pero normalmente se implantan juntos. Open-Xchange es la capa de groupware que muestra el correo, los calendarios y los archivos. Dovecot es el servidor IMAP que realmente guarda los mensajes, y Open-Xchange lo recomienda como backend para las implantaciones nuevas. Nuestra página de Dovecot explica el comportamiento de listeners, certificados y carpetas que encontrarás al conectarte a él."
+    },
+    {
+      "q": "¿Por qué el puerto 993 de mi dirección de webmail rechaza la conexión?",
+      "a": "Porque esa dirección pertenece a la capa web de App Suite, que habla HTTP. El servidor IMAP es otra máquina u otro nombre, y en muchas instalaciones no se publica en internet a propósito. Encuentra el nombre real del servidor de correo en la documentación de configuración de clientes de tu proveedor, o en la configuración del middleware si la implantación es tuya."
+    },
+    {
+      "q": "¿Se almacena mi correo en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo por IMAP del servidor que tenga tu buzón, en cada solicitud, y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Open-Xchange",
+    "sub": "Conecta el servidor de correo que hay detrás de App Suite. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

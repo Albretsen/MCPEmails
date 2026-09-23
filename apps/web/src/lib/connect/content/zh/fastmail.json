@@ -1,20 +1,34 @@
 {
+  "_sources": [
+    "https://www.fastmail.com/blog/an-mcp-server-for-fastmail/",
+    "https://www.fastmail.help/hc/en-us/articles/360058752854-App-passwords",
+    "https://www.fastmail.help/hc/en-us/articles/1500000279921-IMAP-POP-and-SMTP",
+    "https://www.fastmail.help/hc/en-us/articles/1500000278342-Server-names-and-ports"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "应用专用密码",
+    "helpUrl": "https://www.fastmail.help/hc/en-us/articles/360058752854-App-passwords",
+    "usernameForm": "你的完整 Fastmail 地址，包括域名：name@fastmail.com；如果你使用自己的域名，则填该域名下的地址。",
+    "status": "active"
+  },
   "meta": {
-    "title": "将 Fastmail 连接到 Claude（及任意 AI）",
-    "description": "用应用专用密码将 Fastmail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的 Fastmail，1 个收件箱永久免费。"
+    "title": "将 Fastmail 连接到 Claude、Cursor 与 MCP 客户端",
+    "description": "使用 Fastmail 应用专用密码，通过 imap.fastmail.com:993 的 IMAP 将 Fastmail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。1 个收件箱永久免费。"
   },
   "hero": {
     "eyebrow": "Fastmail + AI",
     "titleLine1": "将 Fastmail 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
-    "lead": "几分钟即可为你的 AI 代理接入一个真正的 Fastmail 收件箱。用一个应用专用密码即可读取、搜索、发送、回复、定时与整理邮件：同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+    "lead": "几分钟即可为你的 AI 代理接入一个真正的 Fastmail 收件箱。用一个应用专用密码即可读取、搜索、发送、回复、定时与整理邮件，同一个收件箱可在所有 MCP 客户端中使用，而不止一个。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "应用专用密码，无需 OAuth 配置",
-    "meta2": "邮件实时获取，绝不存储"
+    "meta2": "邮件实时获取，绝不存储",
+    "answer": "Claude 无法自行访问 Fastmail。mcpemails 是一个托管 MCP 服务器，通过 imap.fastmail.com 端口 993 的 IMAP 与之连接，使用 Fastmail 应用专用密码而不是账户密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。Fastmail 运行着一个仅服务于 Fastmail 的官方 MCP 服务器；改用本服务的理由是，一个 URL 也能涵盖你的其他邮箱。1 个收件箱永久免费。"
   },
   "method": {
     "title": "Fastmail 如何连接：应用专用密码",
-    "body": "Fastmail 通过 IMAP/SMTP 使用<b>Fastmail 应用专用密码</b>连接：在 Fastmail 的「设置 → 隐私与安全 → 应用专用密码」中生成一个，粘贴到 mcpemails 即可连接。无需 OAuth 流程，也没有浏览器弹窗。"
+    "body": "Fastmail 通过 IMAP/SMTP 连接，需要一个 <b>Fastmail 应用专用密码</b>。在 Fastmail 的 Settings → Privacy & Security → App passwords 中生成一个，粘贴到 mcpemails，即可完成连接。无需繁琐的 OAuth 流程，也没有浏览器弹窗。"
   },
   "setup": [
     {
@@ -23,19 +37,63 @@
     },
     {
       "h": "生成 Fastmail 应用专用密码",
-      "p": "在 Fastmail 中进入「设置 → 隐私与安全 → 应用专用密码」，为邮件（IMAP/SMTP）创建一个。"
+      "p": "在 Fastmail 中打开 Settings → Privacy & Security → App passwords，创建一个用于邮件（IMAP/SMTP）的应用专用密码。"
     },
     {
       "h": "粘贴到 mcpemails",
-      "p": "填入你的 Fastmail 地址和应用专用密码，安全连接收件箱。"
+      "p": "填入你的 Fastmail 地址和应用专用密码，安全地连接收件箱。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
       "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],
+  "gotchas": [
+    {
+      "h": "Fastmail 有自己的 MCP 服务器，而且做得不错",
+      "p": "2026 年 4 月，Fastmail 推出了官方 MCP 服务器，地址为 <code>https://api.fastmail.com/mcp</code>，使用 OAuth 认证，提供只读、写入或发送权限，覆盖邮件、日历和通讯录。如果 Fastmail 是你唯一想让助手访问的邮箱，那它就是最直接的途径，我们会直说。mcpemails 解决的是另一个问题：<b>一个</b> MCP URL 同时容纳你的 Fastmail 账户以及 iCloud、Zoho、Yahoo、GMX 或公司 IMAP 邮箱，对所有邮箱提供同样的十六个工具，让代理可以跨邮箱搜索，而你只需配置一台服务器，而不是五台。在这里，对你有用比替我们说好话更重要。"
+    },
+    {
+      "h": "Fastmail Basic 账户完全不能使用 IMAP",
+      "p": "Fastmail 的 Basic 套餐不包含 IMAP、POP、SMTP、CalDAV 或 CardDAV，该套餐的账户也无法创建应用专用密码。只能使用网页邮箱和 Fastmail 自己的应用。所以，如果应用专用密码页面没有提供任何可创建的选项，那是套餐的原因而不是 bug，反复输入密码也无济于事。Standard 和 Professional 账户支持这些协议，可以连接。"
+    },
+    {
+      "h": "应用专用密码的访问级别必须包含邮件",
+      "p": "应用专用密码的创建路径是：Settings，然后 Privacy & Security，然后 Connected apps & API tokens 部分，然后 Manage app passwords and access，最后 New app password。默认访问级别是 <b>Mail, Contacts & Calendars</b>，这正是 IMAP 和 SMTP 所需要的。如果改选 Files (WebDAV)，密码照样能顺利创建，但随后无法登录邮件。Fastmail 只显示一次密码，所以离开页面前请先复制；另外请注意，你的普通 Fastmail 密码永远无法让邮件客户端通过认证。"
+    }
+  ],
+  "limits": [
+    "Fastmail Basic 不包含 IMAP 或 SMTP，因此 Basic 邮箱无法连接。Standard 和 Professional 可以。",
+    "Fastmail 的提交服务器声明的单封邮件上限约为 71 MB。通过 mcpemails 读取附件时，每次请求上限为 25 MB，更大的附件需要在 Fastmail 中获取。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Fastmail 吗？",
+      "a": "能，有两种不同的途径。Fastmail 运行着自己的 MCP 服务器，Claude 可以通过 OAuth 直接连接它。或者，mcpemails 使用应用专用密码通过 IMAP 连接同一个邮箱，并通过一个 MCP URL 把它连同你添加的其他邮箱一起提供出来，这个 URL 在 Cursor 和 ChatGPT 中也能使用。无论哪种方式，Claude 都能读取、搜索、发送、回复和整理邮件。"
+    },
+    {
+      "q": "我应该用 Fastmail 自己的 MCP 服务器，还是这个？",
+      "a": "如果 Fastmail 是你唯一的邮箱，而且你的客户端支持它，就用 Fastmail 的：它是官方的，使用 OAuth，并允许你选择只读、写入或发送权限。如果你希望在一个 URL 后面接入多家服务商，或者你还有 iCloud、Zoho 或工作用的 IMAP 邮箱，又或者你希望同样的工具在多个 MCP 客户端中表现一致，就用 mcpemails。"
+    },
+    {
+      "q": "Fastmail 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.fastmail.com，端口 993，使用隐式 TLS。SMTP 为 smtp.fastmail.com，端口 465，同样是隐式 TLS。用户名是你的完整 Fastmail 地址，密码是应用专用密码，绝不是账户密码。两个服务器均已在本页所示日期通过实时 TLS 连接确认。"
+    },
+    {
+      "q": "为什么我的 Fastmail 密码被拒绝？",
+      "a": "按可能性从高到低有三种原因。你用的是账户密码而不是应用专用密码，Fastmail 在 IMAP 或 SMTP 上从不接受账户密码。应用专用密码是以 Files 访问级别而不是 Mail, Contacts & Calendars 创建的。或者账户使用的是 Basic 套餐，根本不包含 IMAP 或 SMTP。"
+    },
+    {
+      "q": "可以用于 Fastmail 自定义域名吗？",
+      "a": "可以。托管在 Fastmail 上的自有域名地址，与 fastmail.com 地址使用相同的 imap.fastmail.com 和 smtp.fastmail.com 服务器以及相同的应用专用密码。用户名填你域名下的完整地址即可。没有需要另外查找的主机名，也没有需要额外启用的东西。"
+    },
+    {
+      "q": "我的 Fastmail 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 Fastmail 实时获取邮件，并交给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。在 Fastmail 中删除应用专用密码，会立即在 Fastmail 那一端切断连接。"
+    }
+  ],
   "ctaBand": {
     "title": "给你的 AI 一个 Fastmail 收件箱",
-    "sub": "几分钟即可连接 Fastmail。一个收件箱永久免费，无需信用卡。"
+    "sub": "几分钟即可连接 Fastmail。1 个收件箱永久免费，无需信用卡。"
   }
 }

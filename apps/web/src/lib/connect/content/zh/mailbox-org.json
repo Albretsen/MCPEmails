@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://kb.mailbox.org/en/private/e-mail/e-mail-configuration/",
+    "https://kb.mailbox.org/en/private/security-and-privacy/e-mail-password/",
+    "https://kb.mailbox.org/en/private/security-and-privacy/access-security-for-mailbox-2fa-app-passwords-and-e-mail-passwords/",
+    "https://kb.mailbox.org/en/private/encryption/your-encrypted-mailbox/"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "邮件应用专用密码（开启 2FA 时）或邮箱密码",
+    "helpUrl": "https://kb.mailbox.org/en/private/security-and-privacy/e-mail-password/",
+    "usernameForm": "你完整的 mailbox.org 主地址。不是别名，不是邮件扩展地址，也不是一次性地址。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 mailbox.org 连接到 Claude 与任意 MCP 客户端",
+    "description": "通过 imap.mailbox.org:993 的 IMAP 将 mailbox.org 连接到 Claude、Cursor 及任意 MCP 客户端。开启双重身份验证后，客户端需要邮件应用专用密码。"
+  },
+  "hero": {
+    "eyebrow": "mailbox.org + AI",
+    "titleLine1": "将 mailbox.org 连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 mailbox.org 收件箱。通过 IMAP 在所有 MCP 客户端（而不只是一个）中读取、搜索、发送、回复、定时与整理邮件，并把加密方面的取舍讲清楚，而不是一笔带过。",
+    "answer": "Claude 无法自行访问 mailbox.org。mcpemails 是一个托管 MCP 服务器，通过 imap.mailbox.org 端口 993 的 IMAP 以及 smtp.mailbox.org 端口 465 的 SMTP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。你用 mailbox.org 主地址登录；开启双重身份验证后，你必须使用在 All settings、Security、Email app-passwords 下创建的邮件应用专用密码，而不是邮箱密码。如果你开启了收件箱加密，收到的邮件在任何 IMAP 客户端中都是 PGP 密文，代理将无法读取。1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "开启 2FA 时使用邮件应用专用密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "mailbox.org 如何连接：IMAP、你的主地址，以及按协议区分的应用专用密码",
+    "body": "mailbox.org 在 <code>imap.mailbox.org</code> 端口 993 上以 SSL/TLS 提供 IMAP，在 <code>pop3.mailbox.org</code> 端口 995 上提供 POP3，在 <code>smtp.mailbox.org</code> 端口 465 上提供 SMTP，文档中另有用于 STARTTLS 的 587。用户名是你的<b>主</b>地址，也就是开户时使用的那个。mailbox.org 会发放别名、邮件扩展地址、一次性地址以及 <code>@secure.mailbox.org</code> 变体，但它们都无法用于认证。未开启双重身份验证时，你的普通邮箱密码即可使用。开启后，mailbox.org 将不再通过 IMAP 和 SMTP 接受该密码，而是要求使用<b>邮件应用专用密码</b>，它按客户端分别生成，权限范围限于你创建时勾选的协议。横幅中还声明了 <code>AUTH=OAUTHBEARER</code> 和 <code>AUTH=XOAUTH2</code>，它们属于 mailbox.org 自己的 App Suite 集成，第三方无法使用。在这里要走的是密码认证。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。完成后你会得到一个 MCP URL 和一个密钥。"
+    },
+    {
+      "h": "在 mailbox.org 中生成邮件应用专用密码",
+      "p": "在网页界面中依次打开 <b>All settings</b>、<b>Security</b>、<b>Email app-passwords</b>。为这个连接命名，在协议列表中<b>同时</b>勾选 IMAP 和 SMTP，然后点击 Generate password。请立即复制该值。如果未开启双重身份验证，你也可以改用邮箱密码，但交给第三方的，最好是一个可以单独撤销、权限受限的凭据。"
+    },
+    {
+      "h": "在 mcpemails 中添加邮箱",
+      "p": "选择 IMAP / SMTP，以你的 mailbox.org <b>主</b>地址作为用户名，然后填入应用专用密码。服务器已预填为 <code>imap.mailbox.org</code> 和 <code>smtp.mailbox.org</code>，并经实时 TLS 连接验证。凭据静态加密存储，邮件本身按请求获取，而不是复制保存。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "在用户名字段中填别名，会以密码错误的形式失败",
+      "p": "mailbox.org 鼓励使用别名、邮件扩展地址和一次性地址，而它自己的配置指南明确说明，客户端用户名是你的主邮箱地址。在那里填别名，服务器拒绝你的方式与密码错误完全一样，结果人们跑去重置一个根本没问题的密码。如果你记不清哪个是主地址，它就是网页界面中显示为账户主地址的那个，而不是你实际对外使用的某个别名。"
+    },
+    {
+      "h": "应用专用密码按协议划分权限，所以可能只配好了一半",
+      "p": "生成邮件应用专用密码时，你要勾选它可以使用哪些协议。勾了 IMAP 却忘了 SMTP，你得到的邮箱能完美读取，却一封邮件也发不出去，而这种失败只会在代理尝试回复的那一刻才显现。反过来的情况也会发生。请两个都勾选，或者生成两个并分别填入正确的字段。这也是日后撤销访问的手段：删除那一个应用专用密码，就能断开这个客户端，而你的手机和桌面客户端不受影响。"
+    },
+    {
+      "h": "收件箱加密会让新邮件在所有客户端中都变成密文，包括本服务",
+      "p": "在 <b>All settings</b>、<b>Read and write e-mail</b>、<b>Inbox encryption</b> 下，mailbox.org 可以通过服务器端的 Sieve 规则，用你的公钥对每封到达的邮件进行 PGP 加密，无论发件人是否加密过。这是一项真正的保护，而且完全如其所述地工作：IMAP 客户端（包括本服务）收到的是 ASCII 封装的加密块而不是正文。mcpemails 不持有你的私钥，所以代理能看到发件人、主题和日期，也能归档或标记邮件，但无法阅读。需要知道的不对称之处是：mailbox.org 目前不会加密存储你的 Sent 文件夹，所以即使代理读不了你收到的邮件，仍能读到你发出的邮件。"
+    },
+    {
+      "h": "没有 MOVE 和 SPECIAL-USE，但有 UIDPLUS",
+      "p": "该 Dovecot 服务器声明支持 IDLE、SASL-IR 和 UIDPLUS，但既没有 MOVE 也没有 SPECIAL-USE。因此移动邮件要执行 COPY、STORE \\Deleted 标记和 EXPUNGE，而不是一条原子命令；不过有了 UIDPLUS，至少目标 UID 无需再次搜索就会返回。缺少 SPECIAL-USE 在日常使用中影响更大：协议层面没有任何信息说明哪个文件夹是 Sent 或 Trash，只能根据名称推断角色。德语邮箱通常显示 Gesendete Objekte、Entwürfe 和 Papierkorb，所以如果代理把邮件归到了错误的位置，请明确写出文件夹名称。"
+    }
+  ],
+  "limits": [
+    "将任何邮箱连接到 AI 客户端，都意味着该 AI 服务商会读取它被要求处理的邮件内容。mcpemails 按请求从 mailbox.org 实时获取邮件，不存储邮件正文，凭据也静态加密存储，但文本仍会到达 Claude、Cursor 或你所指向的任何客户端。mailbox.org 的德国托管和数据保护立场涵盖的是 mailbox.org，并不延伸到你自己连接的 AI 厂商。",
+    "任何用你的 OpenPGP 密钥加密的内容，无论是发件人加密的，还是 mailbox.org 自己的收件箱加密所加密的，代理都无法通过 IMAP 读取。这些会话必须在网页界面中，或在持有你私钥的客户端中阅读。",
+    "由于服务器不声明 MOVE，移动操作不是原子的。如果连接在操作中途断开，邮件可能会短暂地同时存在于两个文件夹中。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 mailbox.org 吗？",
+      "a": "不能单独使用。Claude 没有内置的 mailbox.org 连接器，也无法使用 IMAP。将 mcpemails 这样的 MCP 服务器指向该邮箱后，Claude 就能通过 IMAP 读取、搜索、发送、回复、定时和整理邮件，而且同一个连接随后无需重新设置，即可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "mailbox.org 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.mailbox.org，端口 993，使用 SSL/TLS。SMTP 为 smtp.mailbox.org，端口 465，文档中另有作为 STARTTLS 替代的 587；POP3 为 pop3.mailbox.org，端口 995。任何情况下，用户名都是你的 mailbox.org 主地址。这里的两个服务器均经实时 TLS 连接确认。"
+    },
+    {
+      "q": "在哪里创建 mailbox.org 应用专用密码？",
+      "a": "在网页界面中依次打开 All settings、Security、Email app-passwords。输入客户端名称，选择它可以使用的协议，然后生成密码。mailbox.org 会显示出来供你复制。每个应用专用密码都可以单独删除，这样可以撤销某一个客户端，而不影响你的其他设备或主密码。"
+    },
+    {
+      "q": "为什么 mailbox.org 在邮件客户端中拒绝我的密码？",
+      "a": "几乎所有情况都出自两个原因。要么你在用户名字段中输入的是别名而不是主地址，要么开启了双重身份验证，导致你的邮箱密码不再被 IMAP 和 SMTP 接受。请在 Security 下创建邮件应用专用密码并使用它。先检查用户名，这是更容易排除的一项。"
+    },
+    {
+      "q": "我的 AI 能读取加密的 mailbox.org 邮件吗？",
+      "a": "不能。用你的 OpenPGP 密钥加密的邮件，通过 IMAP 到达时是 ASCII 封装的密文块，而 mcpemails 从不持有你的私钥。这既适用于发件人加密的邮件，也适用于 mailbox.org 收件箱加密在到达时加密的邮件。代理能看到邮件头，也能移动或标记邮件；正文始终是封存的。"
+    },
+    {
+      "q": "我的 mailbox.org 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都从 imap.mailbox.org 实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。你连接的 AI 客户端确实会收到它读取的任何内容，这与邮件存储在哪里是两回事，值得你有意识地做出决定。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 mailbox.org 收件箱",
+    "sub": "几分钟即可连接 mailbox.org。1 个收件箱永久免费，无需信用卡。"
+  }
+}

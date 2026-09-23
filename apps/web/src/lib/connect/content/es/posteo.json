@@ -1,0 +1,105 @@
+{
+  "_sources": [
+    "https://posteo.de/en/help/how-do-i-set-up-posteo-in-an-email-client-pop3-imap-and-smtp",
+    "https://posteo.de/en/help/activating-additional-email-account-protection",
+    "https://posteo.de/en/blog/how-to-use-app-passwords-with-posteo",
+    "https://posteo.de/en/help/how-do-i-activate-inbound-encryption-with-my-public-pgp-key",
+    "https://posteo.de/en/help/how-do-i-activate-posteo-crypto-mail-storage"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña de Posteo o una contraseña de aplicación",
+    "helpUrl": "https://posteo.de/en/blog/how-to-use-app-passwords-with-posteo",
+    "usernameForm": "Tu dirección completa de Posteo, termine en el dominio de Posteo que termine: name@posteo.de, name@posteo.net, name@posteo.org y los demás se autentican todos contra el mismo servidor.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta Posteo a Claude, Cursor y clientes MCP",
+    "description": "Conecta Posteo a Claude, Cursor y cualquier cliente MCP por IMAP en posteo.de:993. Con la protección adicional, cualquier cliente necesita contraseña de aplicación."
+  },
+  "hero": {
+    "eyebrow": "Posteo + IA",
+    "titleLine1": "Conecta Posteo a Claude,",
+    "titleLine2": "Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja de Posteo real. Lee, busca, envía, responde, programa y organiza correo por IMAP, en todos los clientes MCP y no solo en uno, con una respuesta clara sobre lo que el cifrado de Posteo oculta y lo que no oculta a un agente.",
+    "answer": "Claude no puede llegar a Posteo por su cuenta. mcpemails es un servidor MCP alojado que lo conecta por IMAP en posteo.de, puerto 993, y por SMTP en posteo.de, puerto 465, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. No hay prefijo imap. ni smtp.: el dominio a secas es el servidor de todas las direcciones de Posteo, termine la tuya en el dominio de Posteo que termine. La autenticación usa tu contraseña normal de Posteo, salvo que hayas activado la protección adicional de la cuenta de correo; a partir de ahí IMAP, POP3 y SMTP solo aceptan una contraseña de aplicación creada en tu configuración de Posteo. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña de aplicación con la protección adicional activada",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Posteo: un único nombre de servidor y una contraseña que depende de un ajuste",
+    "body": "Posteo publica un solo nombre de servidor para todo. IMAP es <code>posteo.de</code> en el puerto 993 con SSL/TLS, o en el 143 con STARTTLS. POP3 es el mismo servidor en el 995 o el 110. SMTP es <code>posteo.de</code> en el 465 o el 587. Posteo solo acepta conexiones cifradas y exige autenticación SMTP incluso cuando un cliente marca la contraseña de salida como opcional, así que rellena los dos campos. El nombre de usuario es tu dirección <b>completa</b>. Posteo vende direcciones en unos veinte dominios y <code>posteo.de</code> sigue siendo el servidor de todos ellos, así que no hay nada que consultar por dominio ni ningún servidor <code>imap.</code> que adivinar. Qué contraseña necesitas lo decide un único interruptor. Por defecto funciona tu contraseña normal de Posteo. Activa la <b>protección adicional de la cuenta de correo</b> en Password and security y Posteo deja de aceptarla por completo en IMAP, POP3 y SMTP, y solo quedan las <b>contraseñas de aplicación</b>. El webmail sigue funcionando con la contraseña normal en ambos casos."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja, para siempre, sin tarjeta. Al terminar obtienes una URL MCP y una clave."
+    },
+    {
+      "h": "Crea una contraseña de aplicación en tu configuración de Posteo",
+      "p": "Inicia sesión en el webmail de Posteo y abre <b>Settings</b>, luego <b>Password and security</b>, donde se crean y gestionan las contraseñas de aplicación. Posteo exige que cada una tenga al menos 16 caracteres, con al menos un número y una mayúscula, y puedes tener hasta cinco a la vez. Ponle un nombre que identifique esta conexión para saber cuál borrar más adelante. Puedes saltarte este paso si la protección adicional está desactivada, pero una credencial que puedes revocar por separado es mejor opción para dársela a un tercero."
+    },
+    {
+      "h": "Añade el buzón en mcpemails",
+      "p": "Elige IMAP / SMTP e introduce tu dirección completa de Posteo y luego la contraseña. El servidor ya viene rellenado como <code>posteo.de</code> para ambos sentidos, verificado con una conexión TLS en vivo, y la contraseña de salida debe rellenarse además de la de entrada, porque Posteo siempre autentica el envío."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "La protección adicional de la cuenta de correo bloquea la contraseña de la cuenta sin avisar al cliente",
+      "p": "Esta es la que genera las consultas a soporte. Con ese ajuste activado, Posteo documenta que el acceso por IMAP, POP3 y SMTP solo es posible con una contraseña de aplicación, mientras que el webmail sigue aceptando tu contraseña normal como antes. Desde fuera parece que el cliente se ha roto solo: el inicio de sesión web sigue funcionando, así que la contraseña está bien, y sin embargo todos los dispositivos la rechazan. La solución no es restablecer la contraseña. Es una contraseña de aplicación de Password and security, introducida en los campos de entrada y de salida."
+    },
+    {
+      "h": "El almacenamiento cifrado del correo y el cifrado entrante suenan parecido y se comportan de forma totalmente distinta por IMAP",
+      "p": "Posteo ofrece dos cosas que la gente confunde. El <b>almacenamiento cifrado del correo</b> (crypto mail storage) cifra tu buzón en reposo en los servidores de Posteo y es transparente para el cliente: inicias sesión, el servidor descifra e IMAP funciona exactamente igual que antes, así que un agente lee tu correo con normalidad. El <b>cifrado entrante</b> (inbound encryption) es lo contrario. Toma tu clave pública PGP o S/MIME y cifra con ella cada mensaje nuevo que llega, lo haya cifrado o no el remitente, y el resultado es texto cifrado para cualquier cliente que no tenga tu clave privada, este incluido. Posteo señala que solo afecta al correo nuevo, que no cifra las cabeceras y que con S/MIME no puedes leer tu propio correo en el webmail. Si quieres un agente que pueda leer tu bandeja, el almacenamiento cifrado es compatible con eso y el cifrado entrante no."
+    },
+    {
+      "h": "No existe imap.posteo.de, ni un servidor por dominio",
+      "p": "Las direcciones de Posteo existen en unos veinte dominios, entre ellos posteo.net, posteo.org, posteo.eu, posteo.at y posteo.ch, y todos se sirven desde el nombre <code>posteo.de</code> a secas, tanto para IMAP como para POP3 y SMTP. Los clientes que construyen un nombre de servidor añadiendo un prefijo a tu propio dominio, la suposición habitual de la autoconfiguración, acaban buscando algo que no es el servidor documentado. Escribe <code>posteo.de</code> a mano y usa la dirección completa como nombre de usuario."
+    },
+    {
+      "h": "Sin MOVE ni UIDPLUS, así que archivar correo es una operación de tres pasos",
+      "p": "El servidor Dovecot de Posteo anuncia IDLE y SASL-IR, pero ni MOVE ni UIDPLUS ni SPECIAL-USE. Por eso un movimiento es un COPY, un STORE del indicador \\Deleted y un EXPUNGE, y sin UIDPLUS el servidor nunca informa del UID nuevo, así que hay que volver a localizar la copia buscando en el destino. Es correcto pero más lento que en un servidor con MOVE, y se nota cuando un agente reorganiza cientos de mensajes a la vez. Sin SPECIAL-USE, las funciones de las carpetas salen de los nombres, y los nombres por defecto de Posteo son los ingleses Sent, Drafts y Trash."
+    }
+  ],
+  "limits": [
+    "Conectar un buzón de Posteo a un cliente de IA significa que ese proveedor de IA lee el contenido de todo aquello con lo que se le pide trabajar. mcpemails obtiene el correo en vivo de Posteo en cada petición y no almacena el cuerpo de los mensajes, y las credenciales se cifran en reposo, pero el texto sigue llegando a Claude, Cursor o el cliente que conectes. El registro anónimo, el pago anónimo y el alojamiento en Alemania de Posteo protegen la relación entre tú y Posteo. Nada de eso acompaña a un mensaje hasta un proveedor de IA que conectas tú mismo.",
+    "Con el cifrado entrante activado, un agente no puede leer tu correo en absoluto. Los mensajes llegan como texto cifrado PGP o S/MIME, mcpemails no tiene ninguna clave privada tuya, y solo quedan disponibles las cabeceras, las fechas y las operaciones con carpetas.",
+    "El buzón estándar de Posteo es pequeño para lo que se estila hoy, y un buzón que llega a su cuota rechaza el correo entrante. Un agente que archiva y marca no libera espacio; borrar y vaciar la papelera sí."
+  ],
+  "faq": [
+    {
+      "q": "¿Claude funciona con Posteo?",
+      "a": "No por sí solo. Claude no tiene un conector para Posteo y no habla IMAP. Apuntar un servidor MCP como mcpemails a tu buzón de Posteo le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP sin configurarla una segunda vez."
+    },
+    {
+      "q": "¿Cuál es la configuración IMAP y SMTP de Posteo?",
+      "a": "IMAP es posteo.de en el puerto 993 con SSL/TLS, o en el 143 con STARTTLS. SMTP es posteo.de en el puerto 465 con SSL/TLS, o en el 587 con STARTTLS. POP3 es el mismo servidor en el 995 o el 110. El nombre de usuario es tu dirección completa de Posteo en cualquier dominio de Posteo, y la autenticación SMTP siempre es obligatoria. Ambos servidores se verificaron con una conexión TLS en vivo."
+    },
+    {
+      "q": "¿Posteo necesita una contraseña de aplicación?",
+      "a": "Solo si has activado la protección adicional de la cuenta de correo. Por defecto, tu contraseña normal de Posteo autentica IMAP, POP3 y SMTP. Con esa protección activada, solo funcionan las contraseñas de aplicación para esos protocolos. Se crean en Settings, Password and security, deben tener al menos 16 caracteres con un número y una mayúscula, y puedes tener cinco a la vez."
+    },
+    {
+      "q": "¿Por qué mi cliente de correo de Posteo dejó de funcionar si el webmail sigue iniciando sesión?",
+      "a": "Casi seguro porque se activó la protección adicional de la cuenta de correo. Ese ajuste bloquea la contraseña de la cuenta para IMAP, POP3 y SMTP y deja el webmail intacto, que es exactamente lo que estás viendo. Crea una contraseña de aplicación en Settings, en Password and security, y ponla en los campos de contraseña de entrada y de salida."
+    },
+    {
+      "q": "¿El almacenamiento cifrado del correo de Posteo impide que mi IA lea mi correo?",
+      "a": "No. El almacenamiento cifrado del correo cifra tu buzón en reposo del lado de Posteo y se descifra de forma transparente cuando te autenticas, así que IMAP se comporta con normalidad y un agente lee tu correo como siempre. La función que sí hace que el correo sea ilegible para un cliente es el cifrado entrante, que cifra con PGP o S/MIME cada mensaje nuevo con tu propia clave pública."
+    },
+    {
+      "q": "¿Se almacena mi correo de Posteo en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de posteo.de por IMAP en cada petición y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva. El cliente de IA que conectes sí recibe el contenido de todo lo que lee, y esa es la otra cuestión que conviene decidir a conciencia."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Posteo",
+    "sub": "Conecta Posteo en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

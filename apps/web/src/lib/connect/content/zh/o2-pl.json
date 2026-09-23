@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://pomoc.o2.pl/jak-skonfigurowac-program-pocztowy",
+    "https://pomoc.o2.pl/aktywacja-dostepu-dla-programow-pocztowych"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "账户密码，开启两步验证后使用邮件程序专用密码",
+    "helpUrl": "https://pomoc.o2.pl/aktywacja-dostepu-dla-programow-pocztowych",
+    "usernameForm": "包含域名的完整地址：nazwa@o2.pl。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "o2.pl Poczta 的 IMAP 设置与 Claude MCP 接入",
+    "description": "通过 poczta.o2.pl:993 将 o2.pl 邮箱连接到 Claude、Cursor 及任意 MCP 客户端。须先在 Opcje 中开启 IMAP，开启两步验证后需使用专用邮件密码。"
+  },
+  "hero": {
+    "eyebrow": "o2.pl Poczta + AI",
+    "titleLine1": "将你的 o2.pl 邮箱连接到",
+    "titleLine2": "Claude、Cursor、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 o2.pl 收件箱。在邮箱选项中开启 IMAP 后，即可通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行连接 o2.pl 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 poczta.o2.pl 的 993 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。o2.pl 默认关闭邮件程序访问：你需要在网页邮箱的 Opcje 中，于 IMAP/POP 标签下开启。如果账户开启了两步登录，就要使用为此创建的 hasło do programu pocztowego（邮件程序密码）认证，而不是浏览器登录密码。一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "先在 Opcje 中开启 IMAP",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "o2.pl 如何连接：收发共用一台服务器，外加一个开关",
+    "body": "o2.pl 在 <code>poczta.o2.pl</code> 的 993 端口通过隐式 TLS 提供 IMAP，SMTP 提交也在<b>同一个主机名</b>的 465 端口上，这让期待有单独 <code>smtp.</code> 名称的人措手不及。o2 自己的配置页面为收发两个方向都列出 <code>poczta.o2.pl</code>，均使用 SSL，并要求 SMTP 认证。使用哪种凭据取决于账户的安全设置。普通单因素登录时，就是你平时的 o2 密码。开启两步登录后，o2 要求不要使用浏览器密码，而是创建专用的 <b>hasło do programu pocztowego</b>（邮件程序密码），每个外部客户端一个。无论哪种情况，用户名都是完整地址。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "在 o2 网页邮箱中开启 IMAP",
+      "p": "登录邮箱，点击 <b>Opcje</b>，打开 <b>IMAP/POP</b> 标签并启用 <b>IMAP</b>，o2 将其描述为既能下载也能发送邮件的选项（<b>pobieraj i wysyłaj wiadomości</b>）。POP 只能下载，所以你需要的是 IMAP。开启之前，外部客户端都会被拒绝。"
+    },
+    {
+      "h": "如果开启了两步登录，请创建邮件程序密码",
+      "p": "o2 在文档中说明，开启双重认证后不应使用你在浏览器中输入的密码，而是创建一个 <b>hasło do programu pocztowego</b>，即为每个使用 IMAP 或 POP3 的外部客户端单独设置的专用密码。mcpemails 需要的就是它。如果未开启两步登录，普通账户密码即可直接使用。"
+    },
+    {
+      "h": "粘贴到 mcpemails，再把 MCP URL 粘贴到你的 AI",
+      "p": "选择 IMAP / SMTP，输入完整地址（例如 nazwa@o2.pl）并粘贴密码。服务器和端口已自动填好，并已通过实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "两步登录不会把你锁在门外，但会改变哪个密码有效",
+      "p": "这正是 o2.pl 与其他波兰服务商的不同之处。Interia 在开启两步登录后会直接阻止邮件程序。o2 则让它们继续工作，改为签发单独的 <b>hasło do programu pocztowego</b>，每个外部客户端各一个。陷阱在于没有任何提示告诉你当前处于哪种模式：开启双重认证后，浏览器密码会悄无声息地变成错误的凭据，而由此产生的认证错误看起来和输错字一样。在断定连接坏了之前，先检查账户的登录设置。"
+    },
+    {
+      "h": "在 Opcje 中开启之前 IMAP 是关闭的，而 POP 是另一个开关",
+      "p": "<b>Opcje</b> 中的 <b>IMAP/POP</b> 标签有各自独立的开关。o2 将 IMAP 描述为 <b>pobieraj i wysyłaj wiadomości</b>（收取并发送），将 POP 描述为 <b>pobieraj wiadomości</b>（仅收取）。开启 POP 并不会打开 IMAP。如果代理能读取却无法归档，或客户端能连 995 却连不上 993，通常就是这个原因：开错了两个开关中的那一个。"
+    },
+    {
+      "h": "不支持 SASL-IR，默认它存在的客户端会收到一个无法解释的 BAD",
+      "p": "o2 的 IMAP 问候语非常简短（<code>* OK IMAP4 ready</code>），声明了 <code>AUTH=PLAIN</code>，但没有 <code>SASL-IR</code>。在 <code>AUTHENTICATE</code> 中一步发送凭据的客户端会被一个光秃秃的 <code>BAD</code> 拒绝，看起来像是凭据错误。mcpemails 会自动回退到两步交换。了解这一点很有用，因为这正是通用 IMAP 工具有时会报告 o2.pl 无法连接、而账户其实完全正常的原因。"
+    },
+    {
+      "h": "这里支持 MOVE，但文件夹仍按名称匹配",
+      "p": "在这一类服务商中少见的是，o2.pl 确实声明了 IMAP <code>MOVE</code> 扩展，因此归档一封邮件是一条原子命令，而不是复制加标记再删除。它没有声明的是 <code>SPECIAL-USE</code>，所以已发送、草稿和已删除文件夹是按名称识别的。波兰语 o2 邮箱通常将它们命名为 <b>Wysłane</b>、<b>Robocze</b> 和 <b>Kosz</b>，因此如果代理找不到某个文件夹，请直接说出文件夹名，而不是描述它的用途。"
+    }
+  ],
+  "limits": [
+    "由于缺少 SPECIAL-USE，代理按名称识别已发送、草稿和已删除文件夹。文件夹被重命名过的邮箱需要在指令中写明文件夹名。",
+    "o2 的邮件程序密码按客户端分别创建。更换账户密码不会使它们失效，所以请删除不再使用的密码。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 o2.pl 邮箱吗？",
+      "a": "不能单独使用。Claude 没有内置的 o2.pl 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "o2.pl 的 IMAP 和 SMTP 设置是什么？",
+      "a": "收发两个方向使用同一个主机名。IMAP 为 poczta.o2.pl，端口 993，使用 SSL；SMTP 为 poczta.o2.pl，端口 465，同样使用 SSL，并需要认证。用户名是你的完整地址。服务器和端口已通过实时 TLS 连接确认，与 o2 公布的一致。"
+    },
+    {
+      "q": "为什么邮件客户端拒绝我的 o2.pl 密码？",
+      "a": "两个原因，按顺序排查。邮箱没有开启 IMAP，可在 Opcje 的 IMAP/POP 标签中解决。或者账户开启了两步登录，此时 o2 要求使用专用的 hasło do programu pocztowego，而不是你在浏览器中输入的密码。"
+    },
+    {
+      "q": "使用 IMAP 需要 o2 的付费套餐吗？",
+      "a": "不需要。o2 自己关于为邮件程序开启访问的说明将其描述为邮箱的一项设置，而不是套餐功能，也没有把它限制在订阅之后。如果登录被拒绝，请先排查 IMAP/POP 开关和两步登录问题，再考虑是否是套餐限制。"
+    },
+    {
+      "q": "o2.pl 邮箱和 WP.pl 邮箱一样吗？",
+      "a": "虽然两者都属于 Wirtualna Polska 集团，但它们是独立的邮箱，使用各自的主机名。o2.pl 地址连接到 poczta.o2.pl。不要把 o2 账户指向 WP 的主机名，反之亦然；请使用该地址对应服务商的页面及其中自动填好的服务器。"
+    },
+    {
+      "q": "我的 o2.pl 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 o2 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 o2.pl 收件箱",
+    "sub": "几分钟即可连接 o2.pl 邮箱。一个收件箱永久免费，无需信用卡。"
+  }
+}

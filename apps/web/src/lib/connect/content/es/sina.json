@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://help.sina.com.cn/comquestiondetail/view/1566/",
+    "https://help.sina.com.cn/comquestiondetail/view/1567/",
+    "https://mail.sina.com.cn/mobile/help/help_s.html",
+    "https://mail.sina.cn/mobile/help/help_i.html"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Código de autorización de cliente (客户端授权码)",
+    "helpUrl": "https://help.sina.com.cn/comquestiondetail/view/1567/",
+    "usernameForm": "Tu dirección completa, incluido el dominio: name@sina.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta Sina Mail a Claude con un código de autorización",
+    "description": "Conecta Sina Mail a Claude, Cursor o cualquier cliente MCP por IMAP en imap.sina.com:993. Requiere un código de autorización de 16 caracteres y el servicio activado."
+  },
+  "hero": {
+    "eyebrow": "Sina Mail + IA",
+    "titleLine1": "Conecta Sina Mail a Claude,",
+    "titleLine2": "Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA un buzón real de Sina. Lee, busca, envía, responde, programa y organiza correo por IMAP con un código de autorización de Sina, en todos los clientes MCP y no solo en uno.",
+    "answer": "Claude no puede acceder a Sina Mail por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.sina.com en el puerto 993, autenticándose con el código de autorización de cliente de 16 caracteres (客户端授权码) que emite Sina en lugar de la contraseña de tu buzón. El código y el servicio POP/IMAP/SMTP son dos interruptores distintos en el mismo cuadro de diálogo, y activar solo uno de ellos es la razón más habitual de que falle una conexión con Sina. El servidor IMAP de Sina, además, apenas anuncia capacidades, lo que desconcierta a los clientes que negocian antes de autenticarse. Una bandeja es gratis.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Código de 16 caracteres, servicio activado",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Sina Mail: IMAP, un código de autorización y un servidor muy callado",
+    "body": "Sina ofrece IMAP en <code>imap.sina.com</code> en el puerto 993 sobre TLS implícito, y SMTP en <code>smtp.sina.com</code> en el puerto 465. Los buzones gratuitos se reparten entre dominios, y los nombres de servidor siguen al dominio y no a la cuenta: Sina documenta <code>imap.sina.cn</code> para las direcciones <code>@sina.cn</code> y una familia de servidores <code>vip</code> aparte para los buzones VIP de pago. Aquí solo se confirmó mediante una conexión TLS real el par <code>sina.com</code> de arriba, así que toma los demás de las propias páginas de ayuda de Sina. La autenticación usa un <b>客户端授权码</b>, un código de autorización de cliente de 16 caracteres formado por letras y dígitos. Sina afirma sin rodeos que, una vez activado el código, la contraseña de inicio de sesión ya no se puede usar para la verificación POP, IMAP o SMTP en ningún cliente. El propio servidor es inusualmente escueto, lo que importa más de lo que parece y se explica más abajo."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y sigue siendo gratis, sin tarjeta. Ten a mano el teléfono vinculado a tu cuenta de Sina: el siguiente paso le envía un SMS de verificación."
+    },
+    {
+      "h": "Abre los ajustes de cliente en el webmail de Sina",
+      "p": "Inicia sesión en mail.sina.com.cn y abre 设置 (ajustes); luego busca 客户端pop/imap/smtp, la sección de protocolos de cliente. Pon 授权码状态 (estado del código de autorización) en 开启 (activado). Sina abre un cuadro de diálogo y te pide completar 手机验证, la verificación por móvil, con el número de teléfono vinculado al buzón."
+    },
+    {
+      "h": "Copia el código y marca la casilla del servicio en el mismo cuadro",
+      "p": "Tras la verificación, Sina muestra una sola vez el código de autorización de 16 caracteres. Cópialo antes de cerrar nada. En el mismo cuadro hay una casilla aparte para 开启pop/imap/smtp服务, activar el servicio POP, IMAP y SMTP. Márcala. La propia ayuda de Sina dice explícitamente que tener el código sin activar el servicio no te permitirá iniciar sesión desde un cliente de terceros. Después elige IMAP / SMTP en mcpemails, escribe tu dirección de Sina completa y pega el código como contraseña."
+    },
+    {
+      "h": "Pega la URL MCP en tu cliente de IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente podrá leer, buscar, enviar, responder, reenviar, programar y organizar el buzón de Sina."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "El servidor IMAP de Sina anuncia dos capacidades y nada más",
+      "p": "El saludo de <code>imap.sina.com</code> es <code>[CAPABILITY IMAP4rev1 ID]</code>. Esa es la lista completa. No se ofrece ningún mecanismo de autenticación antes del inicio de sesión y falta <code>SASL-IR</code>, así que la autenticación en un solo paso que envía las credenciales junto con el comando <code>AUTHENTICATE</code> se rechaza con un <code>BAD</code> a secas y sin explicación. Un cliente que lee la línea de capacidades para decidir cómo iniciar sesión concluye que no hay ninguna forma admitida de hacerlo y se detiene. Lo que funciona es el comando IMAP <code>LOGIN</code> normal con tu código de autorización, y un intercambio en dos pasos cuando hace falta un mecanismo. mcpemails detecta el <code>BAD</code> a secas y reintenta en dos pasos, así que esto está resuelto, pero es la razón de que otras herramientas IMAP informen de un fallo con Sina que parece de credenciales incorrectas."
+    },
+    {
+      "h": "Generar el código no es lo mismo que activar el servicio",
+      "p": "Son dos controles en un mismo cuadro de diálogo, y la gente completa el primero, copia los 16 caracteres y cierra la ventana. El buzón queda entonces con un código de autorización válido y sin servicio POP, IMAP ni SMTP detrás, así que todos los inicios de sesión se rechazan. Nada en el error apunta a la casilla que falta. Si tu código recién creado no funciona, vuelve a 客户端pop/imap/smtp y confirma que el propio servicio está activado."
+    },
+    {
+      "h": "El código no se puede volver a ver, solo restablecer, y las aplicaciones antiguas fallan al hacerlo",
+      "p": "Sina no vuelve a mostrar un código de autorización existente. Si lo pierdes, la única vía es restablecerlo, y un restablecimiento invalida el código guardado en todos los demás clientes que ya hayas configurado. Sina también advierte que las versiones antiguas de sus propias aplicaciones móviles no son compatibles con el inicio de sesión por código de autorización y hay que actualizarlas. Planifica un restablecimiento como una ronda para volver a introducir el código nuevo en todas partes, no como un cambio aislado."
+    },
+    {
+      "h": "sina.com, sina.cn y los buzones VIP son tres familias de servidores distintas",
+      "p": "Sina publica un conjunto de servidores para las direcciones gratuitas <code>@sina.com</code>, otro para las direcciones gratuitas <code>@sina.cn</code> y un tercero para los buzones VIP de pago. Los nombres solo se diferencian por un sufijo, lo que hace fácil confundirlos y escribirlos mal. Apuntar una dirección <code>sina.cn</code> al servidor <code>sina.com</code> falla como un error de autenticación y no de enrutamiento, así que el síntoma te devuelve a revisar el código, que nunca fue el problema."
+    }
+  ],
+  "limits": [
+    "El servidor de Sina no anuncia ni MOVE ni UIDPLUS. Mover un mensaje se hace con copia, marca y expunge, y como falta UIDPLUS no se devuelve el nuevo identificador del mensaje copiado, así que hay que encontrarlo después buscando en la carpeta de destino.",
+    "No hay soporte de IDLE, así que el correo se consulta periódicamente en lugar de recibirse en tiempo real. Tu agente ve los mensajes nuevos la próxima vez que mira, no en el momento en que llegan.",
+    "Falta SPECIAL-USE, así que las carpetas se identifican por nombre. En un buzón en chino esos nombres son 已发送 (Enviados), 已删除 (Eliminados), 草稿箱 (Borradores) y 垃圾邮件 (Spam)."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Sina Mail?",
+      "a": "No directamente. Claude no tiene un conector de Sina integrado y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como mcpemails a tu buzón de Sina le da a Claude acceso para leer, buscar, enviar, responder, reenviar, programar y organizar, y la misma conexión funciona desde Cursor y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Sina Mail?",
+      "a": "IMAP es imap.sina.com en el puerto 993 con TLS implícito. SMTP es smtp.sina.com en el puerto 465, también con TLS implícito. Inicia sesión con tu dirección sina.com completa y el código de autorización de 16 caracteres en lugar de tu contraseña. Ambos servidores se verificaron mediante una conexión TLS real en la fecha que se indica en esta página."
+    },
+    {
+      "q": "¿Cómo obtengo el código de autorización de Sina Mail?",
+      "a": "Inicia sesión en mail.sina.com.cn, abre 设置 y busca 客户端pop/imap/smtp. Activa el estado del código de autorización, completa la verificación por SMS enviada a tu teléfono vinculado y copia el código de 16 caracteres del cuadro de diálogo. Antes de cerrarlo, marca la casilla del mismo cuadro que activa el servicio POP, IMAP y SMTP."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de Sina?",
+      "a": "Porque Sina deja de aceptarla. Una vez activado el código de autorización, la documentación de Sina indica que la contraseña de inicio de sesión ya no se puede usar para la verificación POP, IMAP o SMTP. Cualquier cliente que siga teniendo la contraseña antigua falla al iniciar sesión, y el error no se distingue de una errata. Sustitúyela por el código de autorización."
+    },
+    {
+      "q": "¿Usa una dirección sina.cn estos ajustes?",
+      "a": "No. Sina usa nombres de servidor distintos para los buzones gratuitos sina.cn y para los buzones VIP de pago, que se diferencian de los de sina.com por un sufijo. Toma los servidores exactos para tu dominio de las propias páginas de ayuda de Sina y luego conecta el buzón en mcpemails como una cuenta IMAP y SMTP normal. El requisito del código de autorización es el mismo en los tres."
+    },
+    {
+      "q": "¿Se almacena mi correo de Sina en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Sina por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo, y el cuerpo de los mensajes no se conserva después de la solicitud que lo pidió."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Sina Mail",
+    "sub": "Conecta Sina Mail en minutos con tu código de autorización. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

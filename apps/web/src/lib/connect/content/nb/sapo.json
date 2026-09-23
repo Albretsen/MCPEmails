@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://ajuda.sapo.pt/configurar-programa-de-email-70015",
+    "https://ajuda.sapo.pt/sapo-mail-premium-99980"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "SAPO-passord, på en Premium-konto",
+    "helpUrl": "https://ajuda.sapo.pt/configurar-programa-de-email-70015",
+    "usernameForm": "Hele adressen din, inkludert domenet: nome@sapo.pt.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "SAPO Mail IMAP: bare Premium, og MCP-oppsett for Claude",
+    "description": "SAPO begrenser IMAP, POP og SMTP til Premium-kontoer. Hva det betyr for å koble imap.sapo.pt:993 til Claude, og hva en gratis Base-konto fortsatt kan gjøre."
+  },
+  "hero": {
+    "eyebrow": "SAPO Mail + AI",
+    "titleLine1": "SAPO Mail via IMAP,",
+    "titleLine2": "i Claude, Cursor, enhver MCP-klient",
+    "lead": "SAPO legger tilgang for e-postklienter på Premium-nivået. Har kontoen din det, kan en AI-agent lese, søke, sende, svare, planlegge og organisere postkassen via IMAP.",
+    "answer": "Claude når ikke en SAPO-postkasse på egen hånd, og på en gratis SAPO Base-konto kan heller ikke noe annet det: SAPO skriver i sin egen dokumentasjon at o acesso IMAP/POP está disponível apenas para contas Premium. På en Premium-konto er mcpemails en hostet MCP-server som kobler til postkassen via IMAP på imap.sapo.pt port 993 med SAPO-adressen og -passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. Det finnes ikke noe app-passord og ingen bryter å slå på: sperren er abonnementet. Én innboks på mcpemails er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Krever en SAPO Premium-konto",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler SAPO seg til: IMAP på en Premium-konto, ingenting på en Base-konto",
+    "body": "SAPO tilbyr IMAP på <code>imap.sapo.pt</code> port 993 over implisitt TLS og SMTP-innsending på <code>smtp.sapo.pt</code> port 465, med krav om autentisering. Deres egen konfigurasjonsside formulerer vertene som <b>imap.sapo.pt para endereços terminados @sapo.pt</b>, og påloggingen som <b>o seu endereço de e-mail SAPO e a respetiva password</b>. Det finnes ikke noe programspesifikt passord og ingen bryter for klienttilgang per postkasse. Det ene som avgjør om noe av dette virker, er abonnementet på kontoen. SAPOs hjelpesider sier begrensningen rett ut: <b>O acesso por IMAP, POP e SMTP só está disponível para contas Premium.</b> En gratis Base-konto beholder e-posten og webmailen på mail.sapo.pt og mister protokollene, som betyr alle e-postklienter på datamaskin og mobil, og alle hostede MCP-servere, denne inkludert."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Sjekk om SAPO-kontoen er Base eller Premium",
+      "p": "Logg inn på mail.sapo.pt og se på abonnementet på kontoen. Base er gratisnivået og har verken IMAP, POP eller SMTP: det er bare webmail og SAPO-appen. Premium gir protokollene tilbake sammen med større postkasse og ingen reklame. Dette er en faktureringsstatus og ikke en innstilling, så det finnes ingenting på skjermen for e-postalternativer som endrer det."
+    },
+    {
+      "h": "Bruk SAPO-adressen og -passordet ditt",
+      "p": "SAPO utsteder ikke programspesifikke passord. Påloggingen er det vanlige SAPO-passordet ditt med hele adressen som brukernavn, brukt på både innkommende og utgående side. Godtar webmailen det og klienten ikke, er kontoen nesten helt sikkert på Base-nivået og ikke Premium."
+    },
+    {
+      "h": "Lim det inn i mcpemails, og lim så MCP-URL-en inn i AI-en",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel nome@sapo.pt, og skriv inn passordet. SAPO-vertene og -portene er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Serverne svarer, men gratiskontoen kan likevel ikke logge inn",
+      "p": "<code>imap.sapo.pt</code> er oppe, fullfører et TLS-håndtrykk og hilser deg med <code>Welcome to PTMail</code> uansett hvem som spør. Det gjør Premium-begrensningen virkelig vanskelig å diagnostisere, fordi alle symptomer peker mot påloggingsdetaljene. Godtar SAPO-webmailen passordet ditt og en e-postklient ikke, slutt å teste passordet. Abonnementet er forskjellen. Dette gjelder likt for Outlook, Thunderbird, Apple Mail, mobilklientene og alle MCP-servere, vår inkludert: ingen tredjepartsverktøy kan gi protokolltilgang som kontoen ikke har."
+    },
+    {
+      "h": "En ubrukt Base-konto slutter å motta e-post etter 90 dager",
+      "p": "SAPO setter gratis Base-kontoer som står ubrukt i mer enn 90 dager, i dvale: <b>as contas Base inativas por mais de 90 dias são hibernadas, deixando de receber mensagens</b>, og innholdet på en konto i dvale kan fjernes. Premium-kontoer settes aldri i dvale. Dette betyr noe spesielt for den fristende ideen om å opprette en ekstra SAPO-adresse, gi den til en agent og så glemme den. En Base-konto du ikke logger inn på, slutter å være en fungerende postkasse."
+    },
+    {
+      "h": "Bare PLAIN på IMAP, både PLAIN og LOGIN på SMTP",
+      "p": "IMAP-banneret tilbyr <code>AUTH=PLAIN</code> og ingenting annet, uten <code>AUTH=LOGIN</code>. Klientbiblioteker som er hardkodet til LOGIN-mekanismen, noe som er vanlig i verktøy skrevet mot Exchange, avvises på autentiseringstrinnet med en feil som ser ut som feil påloggingsdetaljer. SMTP-siden godtar både PLAIN og LOGIN, så de to halvdelene av samme konto kan oppføre seg ulikt i én klient. mcpemails forhandler det hver del faktisk tilbyr."
+    },
+    {
+      "h": "Ingen MOVE og ingen SPECIAL-USE på en postkasse med portugisiske navn",
+      "p": "Serveren annonserer ikke IMAP-utvidelsen <code>MOVE</code>, så arkivering av en melding kjøres som en kopi, en flaggoppdatering og en expunge i stedet for én atomisk kommando. Den mangler også <code>SPECIAL-USE</code>, så Sent, Drafts og Trash matches etter navn i stedet for rolle. En portugisisk SAPO-postkasse kaller dem som regel <b>Enviadas</b>, <b>Rascunhos</b> og <b>Lixo</b>, så oppgi mappen eksplisitt hvis en agent ikke finner den."
+    }
+  ],
+  "limits": [
+    "På en gratis SAPO Base-konto er det ingenting å koble til. Dette er en begrensning hos leverandøren, og ingen MCP-server, vår inkludert, kan omgå den.",
+    "Utgående meldinger er begrenset til omtrent 30 MB kodet melding, så et stort vedlegg som en agent videresender, kan avvises på SMTP-trinnet.",
+    "Fordi serveren ikke støtter MOVE, er en flytting ikke atomisk. Hvis en tilkobling brytes midt i operasjonen, kan en melding kortvarig finnes i begge mapper."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med SAPO Mail?",
+      "a": "Bare på en Premium-konto. SAPO begrenser IMAP, POP og SMTP til Premium, så en gratis Base-konto kan ikke kobles til av noen e-postklient eller MCP-server. Med Premium gir mcpemails pekt mot postkassen Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer fra Cursor og ChatGPT."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for SAPO?",
+      "a": "IMAP er imap.sapo.pt på port 993 med SSL. SMTP er smtp.sapo.pt på port 465 med SSL og krav om autentisering. Brukernavnet er hele sapo.pt-adressen din, og passordet er SAPO-passordet ditt. Begge vertene ble bekreftet via en direkte TLS-tilkobling og stemmer med det SAPO publiserer."
+    },
+    {
+      "q": "Hvorfor virker ikke Outlook lenger med SAPO-adressen min?",
+      "a": "Fordi IMAP- og POP-tilgang ble flyttet til Premium-nivået. SAPOs egen hjelp sier at IMAP og POP bare er tilgjengelig for Premium-kontoer. En gratis Base-konto beholder webmail på mail.sapo.pt og SAPO-appen, og mister alle protokoller en klient på datamaskin eller mobil ville brukt."
+    },
+    {
+      "q": "Utsteder SAPO app-passord?",
+      "a": "Nei. SAPO publiserer ingen mekanisme for programspesifikke passord. E-postklienter autentiserer med det vanlige SAPO-kontopassordet sammen med hele adressen, på både innkommende og utgående server. Virker det passordet i webmail, men ikke i en klient, er årsaken kontonivået og ikke påloggingen."
+    },
+    {
+      "q": "Hva skjer med en SAPO-konto jeg slutter å bruke?",
+      "a": "Gratis Base-kontoer som er inaktive i mer enn 90 dager, settes i dvale og slutter å motta meldinger, og innholdet kan fjernes. Kontoer over lagringsgrensen i mer enn 90 dager behandles på samme måte. Premium-kontoer settes ikke i dvale. Ikke parker en ubrukt Base-adresse som egen postkasse for en agent."
+    },
+    {
+      "q": "Lagres SAPO-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra SAPO via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en SAPO-innboks",
+    "sub": "Er SAPO-kontoen din Premium, kobler du den til på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

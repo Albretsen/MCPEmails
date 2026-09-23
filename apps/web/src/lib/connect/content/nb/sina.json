@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://help.sina.com.cn/comquestiondetail/view/1566/",
+    "https://help.sina.com.cn/comquestiondetail/view/1567/",
+    "https://mail.sina.com.cn/mobile/help/help_s.html",
+    "https://mail.sina.cn/mobile/help/help_i.html"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Klientautorisasjonskode (客户端授权码)",
+    "helpUrl": "https://help.sina.com.cn/comquestiondetail/view/1567/",
+    "usernameForm": "Hele adressen din, inkludert domenet: name@sina.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Sina Mail til Claude med en autorisasjonskode",
+    "description": "Koble Sina Mail til Claude, Cursor eller enhver MCP-klient via IMAP på imap.sina.com:993. Krever en autorisasjonskode på 16 tegn og at tjenesten er slått på."
+  },
+  "hero": {
+    "eyebrow": "Sina Mail + AI",
+    "titleLine1": "Koble Sina Mail til Claude,",
+    "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Sina-postkasse. Les, søk, send, svar, planlegg og organiser e-post via IMAP med en Sina-autorisasjonskode, i alle MCP-klienter i stedet for bare én.",
+    "answer": "Claude når ikke Sina Mail på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.sina.com port 993 og autentiserer med klientautorisasjonskoden på 16 tegn (客户端授权码) som Sina utsteder, i stedet for postkassepassordet ditt. Koden og POP/IMAP/SMTP-tjenesten er to separate brytere i samme dialog, og å slå på bare den ene er den vanligste grunnen til at en Sina-tilkobling feiler. Sinas IMAP-server annonserer også nesten ingen funksjoner, noe som slår ut klienter som forhandler før de autentiserer. Én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Kode på 16 tegn, tjenesten slått på",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Sina Mail seg til: IMAP, en autorisasjonskode og en svært stille server",
+    "body": "Sina tilbyr IMAP på <code>imap.sina.com</code> port 993 over implisitt TLS, og SMTP på <code>smtp.sina.com</code> port 465. Gratispostkasser er fordelt på flere domener, og vertsnavnene følger domenet, ikke kontoen: Sina dokumenterer <code>imap.sina.cn</code> for <code>@sina.cn</code>-adresser og en egen <code>vip</code>-vertsfamilie for betalte VIP-postkasser. Bare <code>sina.com</code>-paret over ble bekreftet her via en direkte TLS-tilkobling, så hent de andre fra Sinas egne hjelpesider. Autentisering bruker en <b>客户端授权码</b>, en klientautorisasjonskode på 16 tegn bestående av bokstaver og sifre. Sina sier rett ut at når koden er slått på, kan innloggingspassordet ikke lenger brukes til POP-, IMAP- eller SMTP-verifisering i noen klient. Selve serveren er uvanlig fåmælt, noe som betyr mer enn det høres ut som, og er dekket under."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og forblir gratis, uten kort. Ha telefonen som er knyttet til Sina-kontoen din i nærheten: neste steg sender den en bekreftelses-SMS."
+    },
+    {
+      "h": "Åpne klientinnstillingene i Sina-webmail",
+      "p": "Logg inn på mail.sina.com.cn og åpne 设置 (innstillinger), og finn så 客户端pop/imap/smtp, delen for klientprotokoller. Sett 授权码状态 (status for autorisasjonskode) til 开启 (på). Sina åpner en dialog og ber deg fullføre 手机验证, mobilbekreftelse, med telefonnummeret som er knyttet til postkassen."
+    },
+    {
+      "h": "Ta koden og kryss av for tjenesten i samme dialog",
+      "p": "Etter bekreftelsen viser Sina autorisasjonskoden på 16 tegn én gang. Kopier den før du lukker noe. I samme dialog finnes en egen avkrysningsboks for 开启pop/imap/smtp服务, å slå på POP-, IMAP- og SMTP-tjenesten. Kryss av for den. Sinas egen hjelp sier eksplisitt at det å ha koden uten å slå på tjenesten ikke lar deg logge inn fra en tredjepartsklient. Velg så IMAP / SMTP i mcpemails, skriv inn hele Sina-adressen din og lim inn koden som passord."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-klienten",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så kan agenten lese, søke, sende, svare, videresende, planlegge og organisere Sina-postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Sinas IMAP-server annonserer to funksjoner og ingenting annet",
+      "p": "Hilsenen fra <code>imap.sina.com</code> er <code>[CAPABILITY IMAP4rev1 ID]</code>. Det er hele listen. Ingen autentiseringsmekanismer tilbys før innlogging, og <code>SASL-IR</code> mangler, så autentisering i ett steg, der påloggingen sendes sammen med <code>AUTHENTICATE</code>-kommandoen, avvises med en naken <code>BAD</code> uten forklaring. En klient som leser funksjonslinjen for å avgjøre hvordan den skal logge inn, konkluderer med at det ikke finnes noen støttet måte og stopper. Det som virker, er den vanlige IMAP-kommandoen <code>LOGIN</code> med autorisasjonskoden, og en utveksling i to steg der en mekanisme trengs. mcpemails oppdager den nakne <code>BAD</code> og prøver på nytt i to steg, så dette er håndtert, men det er grunnen til at andre IMAP-verktøy rapporterer en Sina-feil som ser ut som feil påloggingsdetaljer."
+    },
+    {
+      "h": "Å generere koden er ikke det samme som å slå på tjenesten",
+      "p": "Dette er to kontroller i én dialog, og folk fullfører den første, kopierer de 16 tegnene og lukker vinduet. Postkassen har da en gyldig autorisasjonskode og ingen POP-, IMAP- eller SMTP-tjeneste bak seg, så alle innlogginger avvises. Ingenting i feilen peker mot den manglende avkrysningen. Virker ikke den helt nye koden din, gå tilbake til 客户端pop/imap/smtp og bekreft at selve tjenesten er på."
+    },
+    {
+      "h": "Koden kan ikke leses tilbake, bare tilbakestilles, og gamle apper slutter å virke når du tilbakestiller den",
+      "p": "Sina viser ikke en eksisterende autorisasjonskode igjen. Mister du den, er eneste vei å tilbakestille, og en tilbakestilling ugyldiggjør koden som ligger i alle andre klienter du allerede har satt opp. Sina advarer også om at eldre versjoner av deres egne mobilapper ikke er kompatible med innlogging med autorisasjonskode og må oppdateres. Planlegg en tilbakestilling som en runde med å legge inn den nye koden overalt, ikke som en privat endring."
+    },
+    {
+      "h": "sina.com, sina.cn og VIP-postkasser er tre forskjellige vertsfamilier",
+      "p": "Sina publiserer ett sett servere for gratis <code>@sina.com</code>-adresser, et annet for gratis <code>@sina.cn</code>-adresser og et tredje for betalte VIP-postkasser. Navnene skiller seg bare med et suffiks, noe som gjør dem lette å blande og lette å skrive feil. Å peke en <code>sina.cn</code>-adresse mot <code>sina.com</code>-verten feiler som en autentiseringsfeil i stedet for en rutingfeil, så symptomet sender deg tilbake til å sjekke koden som aldri var problemet."
+    }
+  ],
+  "limits": [
+    "Sinas server annonserer verken MOVE eller UIDPLUS. En flytting kjøres som kopi, flagg og expunge, og fordi UIDPLUS mangler, rapporteres ikke den nye identifikatoren til den kopierte meldingen tilbake, så den må finnes ved å søke i målmappen etterpå.",
+    "Det finnes ikke IDLE-støtte, så e-post hentes ved polling i stedet for push. Agenten din ser nye meldinger neste gang den ser etter, ikke i det øyeblikket de kommer.",
+    "SPECIAL-USE mangler, så mapper matches etter navn. På en kinesiskspråklig postkasse er de navnene 已发送 (sendt), 已删除 (slettet), 草稿箱 (utkast) og 垃圾邮件 (spam)."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Sina Mail?",
+      "a": "Ikke direkte. Claude har ingen innebygd Sina-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som mcpemails til Sina-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer fra Cursor og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Sina Mail?",
+      "a": "IMAP er imap.sina.com på port 993 med implisitt TLS. SMTP er smtp.sina.com på port 465, også med implisitt TLS. Logg inn med hele sina.com-adressen din og autorisasjonskoden på 16 tegn i stedet for passordet ditt. Begge vertene ble verifisert via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvordan får jeg autorisasjonskoden for Sina Mail?",
+      "a": "Logg inn på mail.sina.com.cn, åpne 设置 og finn 客户端pop/imap/smtp. Sett statusen for autorisasjonskode til på, fullfør SMS-bekreftelsen som sendes til den tilknyttede telefonen, og kopier så koden på 16 tegn fra dialogen. Kryss av for boksen i samme dialog som slår på POP-, IMAP- og SMTP-tjenesten før du lukker den."
+    },
+    {
+      "q": "Hvorfor blir Sina-passordet mitt avvist?",
+      "a": "Fordi Sina slutter å godta det. Når autorisasjonskoden er slått på, sier Sinas dokumentasjon at innloggingspassordet ikke lenger kan brukes til POP-, IMAP- eller SMTP-verifisering. Enhver klient som fortsatt har det gamle passordet, feiler ved innlogging, og feilen kan ikke skilles fra en skrivefeil. Erstatt det med autorisasjonskoden."
+    },
+    {
+      "q": "Bruker en sina.cn-adresse disse innstillingene?",
+      "a": "Nei. Sina kjører egne servernavn for gratis sina.cn-postkasser og for betalte VIP-postkasser, som skiller seg fra sina.com-navnene med et suffiks. Hent de nøyaktige vertene for domenet ditt fra Sinas egne hjelpesider, og koble så postkassen til i mcpemails som en vanlig IMAP- og SMTP-konto. Kravet om autorisasjonskode er det samme på alle tre."
+    },
+    {
+      "q": "Lagres Sina-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Sina via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke etter forespørselen som ba om det."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Sina Mail-innboks",
+    "sub": "Koble til Sina Mail på minutter med autorisasjonskoden din. Én innboks gratis for alltid, uten kort."
+  }
+}

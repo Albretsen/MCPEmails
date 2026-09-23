@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.telenor.no/kundeservice/e-post/oppsett/",
+    "https://www.telenor.no/kundeservice/e-post/",
+    "https://www.telenor.no/vilkar/telenor-online-epost/",
+    "https://www.telenor.no/epost/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "E-postpassord fra Mine Sider",
+    "helpUrl": "https://www.telenor.no/kundeservice/e-post/oppsett/",
+    "usernameForm": "Ikke hele adressen. Telenor dokumenterer brukernavnet som delen før @online.no, maks 8 tegn.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "IMAP-innstillinger for Online.no og Claude via MCP",
+    "description": "Koble en Telenor Online.no-postkasse til Claude og enhver MCP-klient på imap.online.no:993. Tilgang for tredjepartsklienter må først tillates på Mine Sider."
+  },
+  "hero": {
+    "eyebrow": "Online.no + AI",
+    "titleLine1": "Koble Online.no-postkassen din",
+    "titleLine2": "til Claude, Cursor, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Telenor Online-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP, når tilgang for tredjepartsklienter er tillatt på Mine Sider.",
+    "answer": "Claude når ikke en Telenor Online.no-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.online.no port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. To Telenor-særtrekk avgjør om det virker: tillatelse til å bruke Online e-post i tredjeparts e-postprogrammer er en bryter på Mine Sider, og brukernavnet er ikke adressen din, men delen før @online.no, maks åtte tegn. Passordet er e-postpassordet som er satt på Mine Sider, ikke TelenorID-en din. Én innboks på mcpemails er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Tillat tredjepartsklienter på Mine Sider",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Online.no seg til: en tillatelse, et kort brukernavn og et eget passord",
+    "body": "Telenor tilbyr IMAP på <code>imap.online.no</code> port 993 over implisitt TLS og SMTP-innsending på <code>smtp.online.no</code> port 465. Telenors gjeldende oppsettsider oppgir <code>mail.online.no</code> for begge roller og sier at de eldre navnene <code>imap.online.no</code> og <code>smtp.online.no</code> også virker; begge svarte på en direkte TLS-tilkobling, og det eldre paret er det mcpemails forhåndsutfyller. Resten av konfigurasjonen er der Online.no skiller seg fra alt annet. Telenor dokumenterer brukernavnet som <b>det som er før @online.no, maks 8 tegn</b>, altså den lokale delen og ikke hele adressen. Påloggingen er e-postpassordet, og Telenors egne vilkår sier <b>om kunden bruker et e-postprogram settes passordet til e-postkontoen opp på Mine Sider</b>. Og tillatelsen til å bruke postkassen fra et tredjepartsprogram er i seg selv en innstilling du slår på der. Online e-post er en betalt Telenor-tjeneste, ikke et gratis tillegg til et bredbåndsabonnement."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Slå på tilgang for tredjepartsprogrammer på Mine Sider",
+      "p": "Logg inn på Telenors <b>Mine Sider</b> med TelenorID-en din. Telenors hjelpesider sier det rett ut: <b>nå kan du skru av eller på tillatelser til å bruke Online e-post i tredjeparts e-postprogrammer som Outlook eller Apple Mail på Mine sider</b>. Slå på den tillatelsen for kontoen du vil koble til. Er passordet ditt gammelt, krever Telenor at du bytter det før du i det hele tatt får slå på tillatelsen."
+    },
+    {
+      "h": "Sett passordet for e-postkontoen på Mine Sider",
+      "p": "Fortsatt på Mine Sider setter du passordet for selve e-postkontoen. Telenors vilkår for Online e-post sier at når en kunde bruker et e-postprogram, settes passordet for e-postkontoen opp på Mine Sider. Det er en annen pålogging enn TelenorID-innloggingen din, og forvekslingen er den vanligste årsaken til en avvist innlogging."
+    },
+    {
+      "h": "Lim det inn i mcpemails, og lim så MCP-URL-en inn i AI-en",
+      "p": "Velg IMAP / SMTP, skriv inn brukernavnet som delen før <code>@online.no</code> og lim inn e-postpassordet. Telenors verter og porter er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Brukernavnet er den lokale delen, ikke adressen, og det er begrenset til åtte tegn",
+      "p": "Nesten alle andre leverandører på dette nettstedet vil ha hele adressen i brukernavnfeltet. Det vil ikke Telenor. Oppsettsidene definerer brukernavnet som <b>det som er før @online.no, maks 8 tegn</b>. Skriver du <code>navn@online.no</code> der <code>navn</code> var forventet, avviser serveren det som feil påloggingsdetaljer, uten noe som tyder på at det var selve adressen som var problemet. Om hele formen tilfeldigvis også godtas, dokumenterer ikke Telenor, så bruk den korte formen de publiserer."
+    },
+    {
+      "h": "Tillatelsen på Mine Sider styrer protokollen, og et gammelt passord blokkerer tillatelsen",
+      "p": "Telenor har gjort tilgang for tredjeparts e-postprogrammer til et eksplisitt valg på Mine Sider i stedet for noe alle postkasser har. To konsekvenser overrasker folk. For det første avviser en postkasse som aldri har fått tillatelsen slått på, klientinnlogginger med en feil om påloggingsdetaljer selv når passordet er helt riktig. For det andre sier Telenor at <b>hvis det er lenge siden du byttet passord sist, vil du måtte bytte passord for å kunne skru på tillatelser på Mine Sider</b>: med et passord som har ligget urørt lenge, kommer du ikke engang til bryteren før du har byttet passordet. Gjør de to tingene i den rekkefølgen, så kommer tilkoblingen opp."
+    },
+    {
+      "h": "Serveren tilbyr bare AUTH=LOGIN, uten AUTH=PLAIN",
+      "p": "Online.no svarer med <code>* OK [CAPABILITY IMAP4REV1 LITERAL+ UTF8=ALL STATUS=SIZE STARTTLS SASL-IR AUTH=LOGIN ID] Bigfoot</code>. Den annonserte listen har <code>AUTH=LOGIN</code> og ingen <code>AUTH=PLAIN</code>, som er det motsatte av nesten alle andre leverandører her. Moderne klientbiblioteker bruker ofte PLAIN som standard og behandler LOGIN som den gamle reserven; mot Online.no er det PLAIN som mangler. Verktøy som ikke faller tilbake, får en autentiseringsavvisning som ser ut som et feil passord. mcpemails forhandler ut fra det serveren faktisk annonserer."
+    },
+    {
+      "h": "Telenors vilkår begrenser hva du kan sette i From-linjen",
+      "p": "Vilkårene for Online e-post sier at <b>bruker skal kun bruke egne online.no adresser som avsender</b>: du kan bare sende med dine egne online.no-adresser som avsender. Så send-som-mønsteret, der en agent sender fra en jobb- eller domeneadresse gjennom en praktisk SMTP-server, er utelukket her som et kontraktsspørsmål, ikke et teknisk spørsmål. Trenger agenten din å sende som en annen identitet, kobler du til postkassen som eier den identiteten."
+    }
+  ],
+  "limits": [
+    "Online e-post er en betalt Telenor-tjeneste. Telenor oppgir 99 kroner i måneden for 5 GB og 109 kroner i måneden for 15 GB, så en ubrukt adresse du kobler til en agent, koster fortsatt penger.",
+    "Serveren annonserer verken MOVE, UIDPLUS eller SPECIAL-USE, så arkivering kjøres som kopi pluss flagg pluss expunge, kopiens nye UID må finnes ved søk, og Sent, Drafts og Trash matches etter navn. I en norsk postkasse heter de som regel Sendt, Utkast og Slettet.",
+    "Utgående meldinger er begrenset til omtrent 50 MB kodet melding, så et stort vedlegg som en agent videresender, kan avvises på SMTP-trinnet."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Online.no-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Telenor- eller Online.no-kobling. Peker du en MCP-server som mcpemails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Online.no?",
+      "a": "IMAP er imap.online.no på port 993 med SSL, og SMTP er smtp.online.no på port 465 med SSL. Telenors gjeldende sider oppgir også mail.online.no for begge roller og sier at de eldre navnene fortsatt virker. Brukernavnet er delen før @online.no, maks åtte tegn, og passordet er e-postpassordet som er satt på Mine Sider."
+    },
+    {
+      "q": "Hvorfor blir Online.no-passordet mitt avvist i en e-postklient?",
+      "a": "Tre kandidater, i denne rekkefølgen. Tilgang for tredjepartsprogrammer er ikke tillatt på Mine Sider. Eller du skrev inn hele adressen der Telenor bare forventer delen før @online.no. Eller du brukte TelenorID-innloggingen i stedet for passordet for e-postkontoen som Mine Sider setter for e-postprogrammer."
+    },
+    {
+      "q": "Hvordan lar jeg Outlook eller et annet program bruke Online e-post?",
+      "a": "Logg inn på Mine Sider og slå på tillatelsen til å bruke Online e-post i tredjeparts e-postprogrammer. Har passordet ditt ikke vært byttet på lenge, krever Telenor at du bytter det før tillatelsen kan slås på. Sett passordet for e-postkontoen på de samme sidene og bruk den verdien i klienten."
+    },
+    {
+      "q": "Er Online.no-e-post gratis?",
+      "a": "Nei. Telenor selger Online e-post som en betalt tjeneste, oppført til 99 kroner i måneden for 5 GB og 109 kroner i måneden for 15 GB, bestilt fra Mine Sider under Tjenester. Det er verdt å ta med i beregningen før du oppretter en ekstra Online.no-adresse bare for at en agent skal bruke den."
+    },
+    {
+      "q": "Lagres Online.no-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Telenor via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Online.no-innboks",
+    "sub": "Tillat tredjepartstilgang på Mine Sider og koble til på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

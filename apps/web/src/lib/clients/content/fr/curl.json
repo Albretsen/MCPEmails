@@ -1,0 +1,93 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "apps/web/app/api/mcp/route.ts",
+    "apps/web/messages/en/docs.json"
+  ],
+  "meta": {
+    "title": "API du serveur MCP e-mail : curl, JSON-RPC et Bearer",
+    "description": "Appelez le serveur MCP de mcpemails en HTTP. Un point de terminaison Streamable HTTP, JSON-RPC 2.0, une clé bearer limitée et tous les outils. 1 boîte gratuite."
+  },
+  "hero": {
+    "eyebrow": "HTTP + e-mail",
+    "titleLine1": "Appelez le serveur MCP e-mail",
+    "titleLine2": "directement depuis curl ou un script",
+    "lead": "Pas de client, pas de SDK. Un seul point de terminaison Streamable HTTP qui parle JSON-RPC 2.0, authentifié par une clé bearer à portée limitée que vous pouvez révoquer en un clic.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Clé API à portée limitée, révocable en un clic",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Envoyez en POST du JSON-RPC 2.0 à https://mcpemails.com/api/mcp avec un en-tête Authorization Bearer contenant une clé API de votre tableau de bord. Les méthodes prises en charge sont initialize, tools/list, tools/call, prompts/list et prompts/get."
+  },
+  "method": {
+    "title": "Comment un script ou un client HTTP brut se connecte : une clé API à portée limitée",
+    "body": "Un script ou un client HTTP brut n'exécute pas le flux OAuth dans le navigateur auprès d'un serveur MCP distant, il s'authentifie donc avec un jeton bearer. Créez une clé API dans votre tableau de bord, cochez uniquement les autorisations dont l'agent a besoin, et placez-la dans le script ou le client HTTP comme en-tête <code>Authorization: Bearer</code>. Les connexions par clé et les connexions OAuth atteignent le même point de terminaison et reçoivent le même catalogue d'outils ; seule change la manière d'obtenir le jeton."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit et connectez une boîte",
+      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Gmail se connecte en un clic via la connexion Google ; iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
+    },
+    {
+      "h": "Créez une clé API à portée limitée",
+      "p": "Dans Dashboard, API Keys, cliquez sur Create key. Donnez-lui un nom et cochez uniquement les autorisations dont cet agent a besoin : <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> et <code>manage:automations</code>. La clé se présente sous la forme <code>mcpe_</code> suivi de 64 caractères hexadécimaux et ne s'affiche qu'une fois : copiez-la avant de fermer la fenêtre."
+    },
+    {
+      "h": "Appelez le point de terminaison",
+      "p": "Envoyez en POST un corps JSON-RPC 2.0 à <code>https://mcpemails.com/api/mcp</code> avec la clé dans l'en-tête <code>Authorization</code>. Commencez par <code>tools/list</code> pour voir le catalogue, puis <code>inbox_list</code> pour découvrir les identifiants de vos boîtes."
+    },
+    {
+      "h": "Traitez la réponse",
+      "p": "Les résultats reviennent en JSON-RPC 2.0. Les résultats réussis portent aussi un objet typé <code>structuredContent</code>, pour qu'un script n'ait pas à analyser de la prose."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Envoyez la clé dans l'en-tête, pas dans la query string",
+      "p": "Une clé passée en <code>?key=</code> ou <code>?api_key=</code> est encore acceptée pour les intégrations antérieures à l'en-tête, mais ne doit pas être utilisée pour quoi que ce soit de nouveau. Les identifiants dans l'URL subsistent dans l'historique du navigateur, les logs de proxy, les en-têtes referrer et les systèmes de supervision, dont aucun n'est sous votre contrôle. L'en-tête <code>Authorization</code> est la voie prise en charge."
+    },
+    {
+      "h": "Les appels sortants acceptent une clé d'idempotence, et réessayer sans est un vrai risque",
+      "p": "Send, reply, forward, l'envoi de brouillon et l'envoi planifié acceptent une clé d'idempotence facultative, respectée pendant 24 heures. Un timeout réseau sur un envoi est ambigu par nature : l'e-mail est peut-être bien parti. Avec une clé d'idempotence, la nouvelle tentative est sûre. Sans elle, une nouvelle tentative est un second e-mail."
+    },
+    {
+      "h": "Les opérations longues sont vraiment longues",
+      "p": "Un search-and-move sur une grande boîte a été observé en production autour de 152 secondes, et le proxy accorde jusqu'à 270 secondes avant d'abandonner de lui-même. Réglez un timeout client en conséquence plutôt que les quelques secondes habituelles, sinon vous annulerez des opérations sur le point de réussir."
+    },
+    {
+      "h": "Pas de push, dans aucun sens",
+      "p": "Pas de webhooks, pas d'événements déclenchés par le serveur, pas d'URL de callback à enregistrer. Réagir au nouveau courrier signifie interroger régulièrement, par exemple <code>email_read</code> avec <code>action: \"list\"</code> et les non-lus uniquement, à l'intervalle dont votre workflow a besoin. Les limites sont de 100 par minute, 1 000 par heure et 10 000 par jour et par clé."
+    }
+  ],
+  "limits": [
+    "Les requêtes sont limitées à 100 par minute, 1 000 par heure et 10 000 par jour et par clé, en plus du plafond d'actions facturables de votre plan.",
+    "Le serveur fonctionne uniquement en requête-réponse. Il n'y a ni webhooks ni événements déclenchés par le serveur, donc un nouveau message ne réveille jamais votre agent de lui-même. Pour réagir au courrier entrant, interrogez la boîte à intervalles réguliers.",
+    "Le courrier est récupéré en direct chez votre fournisseur à chaque appel et n'est jamais stocké. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, donc un jeton révoqué ou un mot de passe de boîte modifié coupe l'accès immédiatement."
+  ],
+  "faq": [
+    {
+      "q": "Puis-je l'utiliser sans client MCP ?",
+      "a": "Oui. C'est un point de terminaison HTTPS ordinaire qui parle JSON-RPC 2.0 : curl, une tâche cron, un service backend ou n'importe quelle bibliothèque HTTP peut l'appeler. Authentifiez-vous avec une clé API bearer issue de Dashboard, API Keys. Le catalogue d'outils est identique à celui que voit un client MCP."
+    },
+    {
+      "q": "Quelles méthodes JSON-RPC sont prises en charge ?",
+      "a": "initialize, tools/list, tools/call, prompts/list et prompts/get. Les résultats réussis portent un objet typé structuredContent à côté du contenu lisible, et c'est lui qu'un script doit lire."
+    },
+    {
+      "q": "Comment rendre les nouvelles tentatives sûres ?",
+      "a": "Passez une clé d'idempotence sur les opérations sortantes. Send, reply, forward, l'envoi de brouillon et l'envoi planifié en acceptent une et la respectent pendant 24 heures : relancer la même requête après un timeout ne peut donc pas produire un second e-mail. Les lectures peuvent naturellement être relancées sans risque."
+    },
+    {
+      "q": "Quelles sont les limites de débit ?",
+      "a": "100 requêtes par minute, 1 000 par heure et 10 000 par jour et par clé, en plus du plafond d'actions facturables de votre plan. Les appels en échec et inbox_list ne sont pas facturés."
+    },
+    {
+      "q": "Mes e-mails sont-ils stockés sur vos serveurs ?",
+      "a": "Non. Chaque message est récupéré en direct chez votre fournisseur pour la requête qui l'a demandé, puis transmis directement à votre client. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, pour que les appels suivants puissent s'authentifier. Supprimer la boîte dans le tableau de bord, ou révoquer l'accès chez votre fournisseur, coupe la connexion aussitôt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Pilotez votre boîte par script",
+    "sub": "Un point de terminaison, une clé à portée limitée. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

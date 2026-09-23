@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://help.krystal.io/email/configure-your-email-client",
+    "https://help.krystal.io/sales-faq/onyx-managed-word-press-vs-shared-hosting",
+    "https://help.krystal.io/email/adding-a-new-c-panel-email-account"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://help.krystal.io/email/configure-your-email-client",
+    "usernameForm": "Hele e-postadressen din, for eksempel me@yourdomain.co.uk, nøyaktig slik postkassen ble opprettet.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Krystal-e-post til Claude: IMAP-oppsett for cPanel og Onyx",
+    "description": "Krystal delt hosting har cPanel-postkasser, Onyx har det ikke. Finn ut hva du har, og koble det til Claude over IMAP på port 993. Én innboks gratis for alltid."
+  },
+  "hero": {
+    "eyebrow": "Krystal + AI",
+    "titleLine1": "Koble Krystal-e-post til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Krystal-postkasse. Les, søk, send, svar, planlegg og organiser e-post over IMAP, på cPanel delt hosting eller på e-posttillegget til Onyx.",
+    "answer": "Claude kan ikke nå en Krystal-postkasse på egen hånd. mcpemails er en driftet MCP-server som kobler den til over vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Krystal har ikke et felles vertsnavn for e-post: du bruker enten mail.yourdomain.co.uk eller navnet på din egen hostingserver, og begge står på Connect Devices-skjermen i cPanel. Før du begynner, sjekk at planen faktisk inkluderer e-post, for Krystals administrerte WordPress-plattform Onyx leveres uten postkasser med mindre du har kjøpt tillegget. Autentisering skjer med postkassepassordet, og én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord fra cPanel",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles Krystal-e-post til: to plattformer, én IMAP-protokoll",
+    "body": "Krystal er en britisk vertsleverandør med to ganske ulike produkter. <b>Delt hosting og forhandlerhosting</b> kjører cPanel og inkluderer ubegrenset med adresser på domenet ditt, med postkassekvoter på 5GB på de minste planene og 50GB på de største. <b>Onyx</b>, den administrerte WordPress-plattformen deres, inkluderer ingen e-post i det hele tatt; postkasser er et betalt tillegg som kjøpes i kassen eller senere fra Onyx-portalen, og de administreres der og ikke i cPanel. Begge bruker IMAP på port 993 over TLS, med SMTP på 465, eller 587 med STARTTLS. Krystal anbefaler for cPanel-kontoer at du bruker navnet på hostingserveren din nøyaktig slik det vises på innstillingsskjermen, og påpeker at <code>mail.yourdomain.co.uk</code> også fungerer. Brukernavnet er hele adressen."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og krever ikke kort."
+    },
+    {
+      "h": "Bekreft at planen har e-post, og åpne riktig skjerm",
+      "p": "På <b>delt hosting</b> logger du inn i cPanel, går til <b>Email</b>, deretter <b>Email Accounts</b>, og klikker <b>Connect Devices</b> ved siden av adressen. Servernavnet og portene vises der. På <b>Onyx</b> ligger postkassene i Onyx-portalen under e-postdelen, ikke i cPanel, og de finnes bare hvis e-posttillegget er kjøpt. Hvis ingen av stedene viser en adresse, finnes det ennå ingen postkasse å koble til."
+    },
+    {
+      "h": "Angi postkassepassordet",
+      "p": "Krystal-postkasser autentiserer med passordet som er satt på selve adressen, ikke innloggingen til Krystal-kundeområdet ditt. På delt hosting bruker du <b>Manage</b> på adresseraden i Email Accounts for å angi ett. Skriv det deretter inn i mcpemails med hele adressen som brukernavn og vertsnavnet du kopierte."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Onyx leveres uten e-post, så det kan hende det ikke finnes noe å koble til",
+      "p": "Krystals administrerte WordPress-plattform er bevisst uten e-post. Kunder som har flyttet et nettsted fra Krystal delt hosting til Onyx, antar ofte at postkassene ble med; det ble de ikke, med mindre e-posttillegget ble kjøpt. Krystal tilbyr et migreringsverktøy for å importere en eksisterende IMAP-postkasse til tillegget, og det er kjennetegnet: hvis du aldri ble bedt om å migrere, ligger postkassen trolig fortsatt på den gamle plattformen, eller den er borte. Se etter en e-postdel i Onyx-portalen før du feilsøker påloggingsopplysningene."
+    },
+    {
+      "h": "mail.yourdomain fungerer bare så lenge domenets A-post peker til Krystal",
+      "p": "Krystal utsteder gratissertifikatet for det navnet automatisk, men først når domenet peker til serveren deres. Bruker du ekstern DNS, sender du domenet gjennom Cloudflare som proxy, eller har du nettopp flyttet inn og posten ikke har spredt seg ennå, vil <code>mail.</code>-navnet enten ikke slå opp i det hele tatt eller peke et sted uten e-posttjeneste. Ingen av feilene ser ut som et e-postproblem. Bruk servernavnet som står på Connect Devices-skjermen, så forsvinner avhengigheten av DNS helt."
+    },
+    {
+      "h": "cPanel- og Onyx-postkasser konfigureres på ulike steder, med ulike veiledninger",
+      "p": "Krystals kunnskapsbase har e-postartikler for cPanel og for Onyx side om side, og de beskriver ikke det samme systemet. En cPanel-veiledning sender deg til Email Accounts og Connect Devices; en Onyx-postkasse har ingen av delene og administreres fra Onyx-portalen. Bekreft hvilken plattform nettstedet ditt ligger på før du følger noen av Krystals e-postinstruksjoner, for det første steget i feil artikkel finnes rett og slett ikke i panelet ditt."
+    }
+  ],
+  "limits": [
+    "Postkassestørrelsen er begrenset etter plan på Krystal delt hosting, til 5GB på de minste nivåene og 50GB på de største. En full postkasse avviser ny e-post i stedet for å svikte i det stille.",
+    "mcpemails kobler bare til postkassen. Innstillinger på domenenivå, videresendinger og spamregler blir værende i cPanel eller Onyx-portalen."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Krystal-e-post?",
+      "a": "Ikke direkte. Claude har ingen Krystal-kobling. Ved å koble en MCP-server som mcpemails til Krystal-postkassen din over IMAP får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den, enten postkassen ligger på Krystals cPanel delt hosting eller på e-posttillegget til Onyx."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Krystal?",
+      "a": "IMAP er port 993 med SSL/TLS, og SMTP er port 465 med SSL/TLS, eller 587 med STARTTLS. Vertsnavnet er navnet på hostingserveren din slik det vises på Connect Devices-skjermen i cPanel, og mail.yourdomain.co.uk fungerer også når domenets DNS peker til Krystal. Logg inn med hele e-postadressen din."
+    },
+    {
+      "q": "Inkluderer Krystal Onyx e-post?",
+      "a": "Nei. Onyx, Krystals administrerte WordPress-plattform, kommer uten postkasser som standard. E-post er et betalt tillegg som kan kjøpes i kassen eller senere via Onyx-portalen, og det administreres der og ikke i cPanel. Krystals delte hostingplaner inkluderer derimot ubegrenset med adresser på domenet ditt."
+    },
+    {
+      "q": "Hvorfor blir passordet til Krystal-e-posten min avvist?",
+      "a": "Fordi postkassen har sitt eget passord, satt da adressen ble opprettet, og det er ikke innloggingen til Krystal-kundeområdet ditt. Tilbakestill det i cPanel via Manage-lenken ved siden av adressen under Email Accounts. Bekreft også at brukernavnet er hele e-postadressen og ikke bare delen før krøllalfaen."
+    },
+    {
+      "q": "Lagres Krystal-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Krystal over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke beholdt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Krystal-innboks",
+    "sub": "Koble til en Krystal-postkasse på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

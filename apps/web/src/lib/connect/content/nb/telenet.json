@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www2.telenet.be/residential/nl/klantenservice/internet/e-mail/e-mail-instellen.html",
+    "https://www2.telenet.be/residential/nl/klantenservice/internet/e-mail/mailbox-beheren-in-mijn-telenet.html",
+    "https://www2.telenet.be/nl/klantenservice/stepplan-snippets/e-mailprogramma-instellen-voor-je-telenet-e-mailadres/livemail_stap4",
+    "https://www.bipt.be/consumenten/faq/kan-je-jouw-e-mailadres-behouden"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord fra MyTelenet",
+    "helpUrl": "https://www2.telenet.be/residential/nl/klantenservice/internet/e-mail/mailbox-beheren-in-mijn-telenet.html",
+    "usernameForm": "Hele adressen din, inkludert domenet: naam@telenet.be.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "IMAP-innstillinger for Telenet-e-post og Claude via MCP",
+    "description": "Koble en telenet.be-postkasse til Claude, Cursor og enhver MCP-klient på imap.telenet.be:993, med postkassepassordet som er satt i MyTelenet under Je mailbox."
+  },
+  "hero": {
+    "eyebrow": "Telenet + AI",
+    "titleLine1": "Koble Telenet-postkassen din",
+    "titleLine2": "til Claude, Cursor, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Telenet-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP med postkassepassordet du har satt i MyTelenet.",
+    "answer": "Claude når ikke en Telenet-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.telenet.be port 993 og autentiserer med hele telenet.be-adressen din og passordet som er satt på den postkassen i MyTelenet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. Telenet utsteder ikke programspesifikke passord og har ingen bryter for klienttilgang: alle postkasser opprettes, og får passordet sitt, på skjermen Je mailbox i MyTelenet. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord fra MyTelenet",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Telenet seg til: IMAP mot en proxy, med passord per postkasse",
+    "body": "Telenet tilbyr IMAP på <code>imap.telenet.be</code> port 993 over implisitt TLS. For utgående e-post dokumenterer Telenets egne oppsettsider <code>smtp.telenet.be</code> på port 587 med TLS og autentisert SMTP; den samme verten svarer også på port 465 med implisitt TLS, som er det mcpemails forhåndsutfyller. Telenet er tydelig på formen for brukernavnet: <b>Gebruikersnaam: je volledige e-mailadres</b>. Passordet er det som hører til den enkelte postkassen, ikke en egen app-pålogging, og postkasser opprettes og administreres i MyTelenet: en <b>beheerder</b> på kontoen kan opprette opptil ti postkasser, en vanlig <b>gebruiker</b> én. Det som svarer på de vertsnavnene, er en proxy (<code>* OK IMAP4rev1 proxy server ready</code>) foran e-postlageret, noe som forklarer det tynne funksjonssettet beskrevet under."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Åpne Je mailbox i MyTelenet og sett passordet",
+      "p": "Logg inn på mijn.telenet.be og gå til <b>Je mailbox</b>, skjermen for postkasseadministrasjon. Hver postkasse på kontoen har sitt eget passord, tildelt da den ble opprettet; en postkasse uten tildelt passord må få et satt av kontoadministratoren før noe kan logge inn. Husker ingen det, setter du et nytt der."
+    },
+    {
+      "h": "Vurder å gi agenten sin egen postkasse",
+      "p": "En kontoadministrator kan opprette opptil ti Telenet-postkasser, en vanlig bruker én. Vil du helst ikke gi en agent adressen du har brukt i femten år, oppretter du en ekstra postkasse på samme konto og kobler til den i stedet. Det er samme vert, samme porter og et passord du kan bytte uten å forstyrre noe annet."
+    },
+    {
+      "h": "Lim det inn i mcpemails, og lim så MCP-URL-en inn i AI-en",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel naam@telenet.be, og lim inn postkassepassordet. Telenet-vertene og -portene er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Å endre Telenet-passordet ditt ødelegger stille alle tilkoblede klienter",
+      "p": "Telenet sier det rett ut i sin egen oppsettveiledning: endrer du passordet til Telenet-brukernavnet eller e-postadressen din, <b>verander dan ook het wachtwoord in je e-mailprogramma</b>. Det finnes ikke noe app-passord som skjermer klienten fra kontoen, så en rutinemessig passordbytte i MyTelenet tar agenten ned sammen med det. Feilen dukker opp som en autentiseringsfeil timer senere, lenge etter at noen kobler den til det de gjorde i portalen. Bytter du Telenet-passordet, oppdater mcpemails i samme slengen."
+    },
+    {
+      "h": "Du snakker med en proxy, og den annonserer verken MOVE eller SPECIAL-USE",
+      "p": "Banneret er <code>* OK IMAP4rev1 proxy server ready</code>, ikke et e-postlager som identifiserer seg. Det tilbyr <code>SASL-IR</code>, <code>IDLE</code> og <code>UIDPLUS</code>, men ikke <code>MOVE</code>, så arkivering av en melding kjøres som en kopi, en flaggoppdatering og en expunge i stedet for én atomisk kommando, og ikke <code>SPECIAL-USE</code>, så Sent, Drafts og Trash matches etter navn i stedet for rolle. En nederlandskspråklig Telenet-postkasse kaller dem som regel <b>Verzonden</b>, <b>Concepten</b> og <b>Prullenbak</b>, så oppgi mappen eksplisitt hvis en agent ikke finner den."
+    },
+    {
+      "h": "Postkassen hører til abonnementet, og belgiske regler gir deg 18 måneder",
+      "p": "En Telenet-e-postadresse er knyttet til en Telenet-postkasse på et Telenet-abonnement. Etter belgiske regler, slik telekomregulatoren BIPT beskriver dem, har du rett til å fortsette å bruke adressen, eller få e-post videresendt, i atten måneder når du forlater en leverandør, og du må be om det før abonnementet avsluttes. Utover det vinduet begrenser en kongelig forordning i kraft siden 1. januar 2024 hva en operatør kan ta for å videreføre tjenesten, til 1,50 euro i måneden. Verdt å vite før du bygger en agentflyt på en adresse du bare har så lenge du er kunde."
+    },
+    {
+      "h": "Sending er begrenset til 20 MB, som er lavt for kategorien",
+      "p": "<code>smtp.telenet.be</code> annonserer en maksimal meldingsstørrelse på 20 971 520 byte. Det er den kodede størrelsen på hele meldingen, og base64 blåser opp et vedlegg med omtrent en tredjedel, så en fil over omtrent 15 MB på disk kommer ikke gjennom. En agent som blir bedt om å videresende en stor PDF, får en hard SMTP-avvisning i stedet for en treg sending."
+    }
+  ],
+  "limits": [
+    "Fordi serveren ikke støtter MOVE, er en flytting ikke atomisk. Hvis en tilkobling brytes midt i operasjonen, kan en melding kortvarig finnes i begge mapper.",
+    "Innsendingsgrensen på 20 MB er det praktiske taket for alt agenten din sender fra denne postkassen.",
+    "Telenet utsteder ikke programspesifikke passord, så påloggingen du gir mcpemails, er selve postkassepassordet. Bytt det i MyTelenet og oppdater det her samtidig."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Telenet-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Telenet-kobling. Peker du en MCP-server som mcpemails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Telenet?",
+      "a": "IMAP er imap.telenet.be på port 993 med SSL. For utgående e-post dokumenterer Telenet smtp.telenet.be på port 587 med TLS og autentisert SMTP; den samme verten svarer også på 465 med implisitt TLS, som er det mcpemails bruker. Brukernavnet er hele telenet.be-adressen din."
+    },
+    {
+      "q": "Trenger Telenet et app-passord?",
+      "a": "Nei. Telenet utsteder ikke programspesifikke passord. En e-postklient autentiserer med passordet som er satt på den enkelte postkassen i MyTelenet, under Je mailbox. Fordi det ikke finnes noen egen app-pålogging, betyr det å endre kontopassordet at du også må endre det i alle tilkoblede klienter."
+    },
+    {
+      "q": "Hvorfor sluttet Telenet-e-postklienten min å virke etter en passordendring?",
+      "a": "Fordi klienten bruker kontopassordet direkte. Telenets egen veiledning er å endre passordet i e-postprogrammet ditt hver gang du endrer det for Telenet-brukernavnet eller -adressen din. Oppdater det lagrede passordet i mcpemails til den nye verdien, så gjenopptas tilkoblingen med en gang."
+    },
+    {
+      "q": "Hvor mange Telenet-postkasser kan jeg opprette?",
+      "a": "En kontoadministrator kan opprette opptil ti postkasser; en vanlig bruker på kontoen kan opprette én. Alle administreres på skjermen Je mailbox i MyTelenet, som også er der hver av dem får passordet sitt. Å opprette en egen postkasse for en agent er som regel ryddigere enn å koble til hovedadressen din."
+    },
+    {
+      "q": "Lagres Telenet-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Telenet via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Telenet-innboks",
+    "sub": "Koble til Telenet-e-post på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

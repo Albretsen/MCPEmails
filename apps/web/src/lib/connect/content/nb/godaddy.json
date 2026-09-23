@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.godaddy.com/help/use-imap-settings-to-add-my-professional-email-to-a-client-32204",
+    "https://www.godaddy.com/help/my-workspace-email-is-moving-to-microsoft-365-32394",
+    "https://www.godaddy.com/help/configuring-mail-clients-with-cpanel-email-8861",
+    "https://support.titan.email/hc/en-us/articles/25005307786905-Enable-Titan-on-other-apps"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "E-postpassord",
+    "helpUrl": "https://www.godaddy.com/help/use-imap-settings-to-add-my-professional-email-to-a-client-32204",
+    "usernameForm": "Hele adressen din, inkludert domenet: navn@dittdomene.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble GoDaddy-e-post til Claude, Cursor og MCP",
+    "description": "Koble GoDaddy Professional Email til Claude og enhver MCP-klient over IMAP på imap.secureserver.net:993. Microsoft 365-postkasser kjøpt via GoDaddy kan ikke kobles til."
+  },
+  "hero": {
+    "eyebrow": "GoDaddy-e-post + AI",
+    "titleLine1": "Koble GoDaddy-e-post til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte GoDaddy-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP, så snart du vet hvilket av GoDaddys mange e-postprodukter adressen din faktisk ligger på.",
+    "answer": "Claude kan ikke nå en GoDaddy-postkasse på egen hånd. mcpemails er en driftet MCP-server som kobler til GoDaddy Professional Email over IMAP på imap.secureserver.net, port 993, og autentiserer med hele adressen din og postkassens eget e-postpassord, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. GoDaddy selger mer enn ett e-postprodukt under det samme merkenavnet, og en Microsoft 365-postkasse kjøpt via GoDaddy er en Microsoft-postkasse som vi ikke kan koble til, så sjekk først hvilken du har. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassens eget e-postpassord",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles GoDaddy til: finn produktet, så IMAP",
+    "body": "«GoDaddy-e-post» er tre eller fire ulike tjenester som deler ett merkenavn, og de deler ikke innstillinger. <b>Professional Email</b>, som GoDaddy selger på Titan-plattformen, er dagens hovedprodukt og er dokumentert av GoDaddy med <code>imap.secureserver.net</code> port 993 og <code>smtpout.secureserver.net</code> port 465, begge med implisitt TLS, med adressen som brukernavn og postkassens eget passord. Det avviklede produktet <b>Workspace Email</b> brukte de samme secureserver-vertsnavnene, og det er derfor så mange gamle veiledninger på nettet fortsatt viser dem. <b>Microsoft 365 fra GoDaddy</b> er ikke en GoDaddy-postkasse i det hele tatt: det er en Microsoft-tenant som GoDaddy videreselger og fakturerer, og den ligger på Microsofts egne servere. Og en postkasse opprettet i <b>cPanel Web Hosting</b> ligger på webhotellserveren din, ikke på secureserver, og bruker den serverens eget vertsnavn. Treffer du riktig produkt, tar resten av oppsettet to minutter."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og krever ikke kort."
+    },
+    {
+      "h": "Sjekk hvilket e-postprodukt fra GoDaddy du har",
+      "p": "Logg inn hos GoDaddy og åpne dashbordet Email & Office under My Products. Plannavnet på flisen er svaret. Professional Email er det Titan-baserte produktet og bruker secureserver-vertene. Microsoft 365 åpner Outlook på nettet og er en Microsoft-postkasse. Hvis adressen i stedet ble opprettet i cPanel under Email Accounts, er innstillingene de som vises på yourdomain.com/webmail under Configure Mail Client, ikke secureserver-innstillingene."
+    },
+    {
+      "h": "Hent postkassepassordet og tillat eksterne klienter",
+      "p": "I dashbordet Email & Office åpner du Manage ved siden av adressen og setter eller tilbakestiller e-postpassordet. Dette er postkassens eget passord, ikke innloggingen til GoDaddy-kontoen din. Hvis innloggingen fortsatt avvises, sjekk sikkerhetsinnstillingene for postkassen etter bryteren for tredjeparts eller eksterne e-postklienter, og merk at Titan blokkerer eksterne klienter så lenge tofaktorautentisering er slått på for den postkassen."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Legg inn adressen og passordet ditt i mcpemails, og lim deretter https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "En Microsoft 365-postkasse kjøpt fra GoDaddy kan ikke kobles til her",
+      "p": "GoDaddy videreselger Microsoft 365 og har flyttet sine gamle Workspace Email-kunder over dit, så en stor andel av dem som tror de har «en GoDaddy-e-post», har nå en Microsoft-postkasse med en faktura fra GoDaddy. Disse postkassene ligger ikke på <code>imap.secureserver.net</code>; de ligger på Microsofts servere og styres av Microsofts identitetsplattform. Microsofts standardpolicy for tenanter hindrer en vanlig sluttbruker i å gi samtykke til lese- og skrivetilgang til e-post for en tredjepartsapplikasjon, og den blokkeringen settes av Microsoft og av tenant-administratoren din, ikke av GoDaddy og ikke av oss. Vi påstår ikke at vi kobler til slike postkasser. Kjennetegnet er enkelt: havner du i Outlook på nettet når du logger inn på webmailen din, er det Microsoft-produktet."
+    },
+    {
+      "h": "Halvparten av IMAP-veiledningene for GoDaddy på nettet gjelder et produkt som ikke finnes lenger",
+      "p": "Workspace Email er avviklet og kundene flyttet til Microsoft 365, men veiledningene som ble skrevet for det, er fortsatt de øverste treffene for «GoDaddy IMAP settings», og de viser secureserver-vertsnavnene. Forvirrende nok er de vertsnavnene fortsatt riktige, fordi GoDaddys nåværende Professional Email bruker de samme. Dermed følger en flyttet bruker en veiledning, legger inn innstillinger som ser riktige ut, og får en autentiseringsfeil uten å skjønne hvorfor: innstillingene var i orden, postkassen er bare ikke der lenger."
+    },
+    {
+      "h": "Titan blokkerer eksterne klienter så lenge 2FA er på for postkassen",
+      "p": "GoDaddy Professional Email kjører på Titan, som sperrer IMAP, POP og SMTP bak en innstilling for tilgang fra tredjepartsapper på postkassen, og som avviser tilkoblinger fra eksterne klienter så lenge tofaktorautentisering er slått på for den postkassen. Avvisningen viser seg som en innloggingsfeil, så den forveksles rutinemessig med et feil passord. Sjekk den bryteren før du tilbakestiller noe."
+    },
+    {
+      "h": "GoDaddys IMAP-server annonserer ikke SASL-IR",
+      "p": "IMAP-serveren bak <code>imap.secureserver.net</code> presenterer seg som Fenix og utelater SASL-IR-funksjonen, så den avviser ettrinnsautentiseringen som sender påloggingsopplysningene på samme linje som AUTHENTICATE-kommandoen. Klienter som forutsetter SASL-IR, får et nakent <code>BAD</code> uten forklaring, som ser nøyaktig ut som feil påloggingsopplysninger. mcpemails oppdager dette og prøver på nytt med totrinnsutvekslingen, så tilkoblingen lykkes, men det er grunnen til at annet IMAP-verktøy feiler mot GoDaddy mens det fungerer andre steder."
+    }
+  ],
+  "limits": [
+    "Microsoft 365-postkasser solgt via GoDaddy kan ikke kobles til. Microsofts standardpolicy for tenanter blokkerer sluttbrukersamtykke til e-posttilgang for tredjeparter.",
+    "Postkasser på cPanel-webhotell ligger ikke på secureserver-vertene. Koble dem til med vertsnavnet som vises på skjermen Configure Mail Client i cPanel i stedet.",
+    "Serveren annonserer ikke MOVE-utvidelsen, så flytting av en melding utføres som kopiering, flagging og expunge i stedet for én atomisk kommando."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med GoDaddy-e-post?",
+      "a": "Det fungerer med GoDaddy Professional Email, det Titan-baserte produktet, så snart en MCP-server som mcpemails er koblet til postkassen over IMAP. Claude har ingen innebygd GoDaddy-kobling. Det fungerer ikke med en Microsoft 365-postkasse kjøpt via GoDaddy, fordi Microsofts standardpolicy for tenanter blokkerer samtykke til e-posttilgang for tredjeparter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for GoDaddy?",
+      "a": "For Professional Email er IMAP imap.secureserver.net på port 993 med implisitt TLS, og SMTP er smtpout.secureserver.net på port 465, også med implisitt TLS. Brukernavnet er hele e-postadressen din, og passordet er postkassens eget e-postpassord. Begge vertene er dokumentert av GoDaddy og ble bekreftet med en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Hvordan ser jeg om jeg har Professional Email eller Microsoft 365?",
+      "a": "Åpne My Products i GoDaddy-kontoen din og se på dashbordet Email & Office. Plannavnet står på flisen for hver adresse. En raskere sjekk: logg inn på webmailen din. Havner du i Outlook på nettet, er det Microsoft 365. Havner du i Titans webmailgrensesnitt, er det Professional Email, og secureserver-innstillingene gjelder."
+    },
+    {
+      "q": "Hvorfor avvises e-postpassordet mitt hos GoDaddy?",
+      "a": "Tre vanlige årsaker, i denne rekkefølgen. Du bruker innloggingen til GoDaddy-kontoen i stedet for postkassens eget e-postpassord. Tofaktorautentisering er slått på for postkassen, noe som får Titan til å avvise eksterne klienter. Eller postkassen er flyttet til Microsoft 365 og finnes ikke lenger på secureserver-vertene i det hele tatt."
+    },
+    {
+      "q": "Hva med e-postadresser jeg har opprettet på cPanel-webhotellet?",
+      "a": "Det er vanlige IMAP-postkasser på din egen webhotellserver og kan kobles til, men ikke med secureserver-vertsnavnene. Logg inn på yourdomain.com/webmail, åpne Configure Mail Client og bruk de manuelle innstillingene som vises der. Passordet er det du satte for den adressen under Email Accounts i cPanel."
+    },
+    {
+      "q": "Lagres GoDaddy-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra GoDaddy over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en GoDaddy-innboks",
+    "sub": "Koble til GoDaddy Professional Email på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

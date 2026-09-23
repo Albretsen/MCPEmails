@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://kb.kolabnow.com/documentation/generic-imap-client-setup-guide",
+    "https://kb.kolabnow.com/faq/how-do-i-setup-my-client"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Kolab Now 密码",
+    "helpUrl": "https://kb.kolabnow.com/documentation/generic-imap-client-setup-guide",
+    "usernameForm": "你的 Kolab Now 主邮箱地址，不是别名，也不是单独的用户名。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 Kolab Now 连接到 Claude、Cursor 与 MCP 客户端",
+    "description": "通过 imap.kolabnow.com:993 的 IMAP 将 Kolab Now 连接到 Claude、Cursor 及任意 MCP 客户端。已验证的设置与应用专用密码规则。1 个收件箱免费。"
+  },
+  "hero": {
+    "eyebrow": "Kolab Now + AI",
+    "titleLine1": "将 Kolab Now 连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Kolab Now 收件箱。通过来自瑞士的 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用而不止一个。",
+    "answer": "Claude 无法自行访问 Kolab Now。mcpemails 是一个托管 MCP 服务器，通过 imap.kolabnow.com 端口 993 的 IMAP 以及 smtp.kolabnow.com 端口 465 的 SMTP 与之连接，使用你的 Kolab Now 主地址和账户密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。无论你的地址位于哪个域名（包括你自己的域名），都使用这两个主机名。1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "主地址与账户密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Kolab Now 如何连接：Cyrus IMAP 与你的主地址",
+    "body": "Kolab Now 在 <code>imap.kolabnow.com</code> 端口 993 上以隐式 TLS 提供 IMAP，在 <code>smtp.kolabnow.com</code> 端口 465 上提供 SMTP。后端是 <b>Cyrus IMAP</b>，这一点比听起来更重要：与大多数注重隐私的服务商不同，Kolab Now 声明支持 MOVE、UIDPLUS 和 SPECIAL-USE，所以文件夹角色能被正确识别，移动也是原子操作。认证使用普通密码，对应你的<b>主邮箱地址</b>。Kolab Now 的文档特别强调，即使你的地址位于 <code>mykolab.com</code> 或你自己的域名下，你仍然连接这两个主机名。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。完成后你会得到一个 MCP URL 和一个密钥。"
+    },
+    {
+      "h": "找到你的主地址，而不是别名",
+      "p": "Kolab Now 以账户的主邮箱地址进行认证。如果你的邮件会发到多个地址，或者邮箱位于你自己的域名下，只有主地址能登录。它显示在你的 Kolab Now 账户设置中；在用户名字段中填写别名，只会得到一个普通的认证失败，没有任何原因提示。"
+    },
+    {
+      "h": "在 mcpemails 中添加邮箱",
+      "p": "选择 IMAP / SMTP，输入主地址和你的 Kolab Now 密码。服务器已预填为 <code>imap.kolabnow.com</code> 和 <code>smtp.kolabnow.com</code>，无论你地址的域名是什么都正确。凭据静态加密存储；邮件按请求实时获取，不做保留。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "你的域名从不出现在主机名中",
+      "p": "这常常难住使用自定义域名的客户。Kolab Now 在 kolabnow.com、较早的 mykolab.com 以及你自带的域名上托管地址，但没有按域名区分的邮件服务器：<code>imap.kolabnow.com</code> 和 <code>smtp.kolabnow.com</code> 为所有这些地址提供服务。不要按照惯常的直觉去猜 <code>mail.yourdomain.com</code>，也不要相信指向别处的自动发现结果。"
+    },
+    {
+      "h": "Kolab Now 会拒绝不满足其 TLS 要求的客户端",
+      "p": "Kolab Now 自己的知识库说，如果你的客户端不在列表中，而通用指南又行不通，那么该客户端很可能不符合其服务器强制执行的 PCI 安全标准，根本无法连接。旧软件会在这里直接失败，而不是向下协商。邮箱上没有任何需要开启的东西，所以在认证之前就断开的连接，通常是客户端的 TLS 栈问题，而不是你的账户问题。"
+    },
+    {
+      "h": "它是这里少数完整支持 MOVE 和 SPECIAL-USE 的服务商之一",
+      "p": "Kolab Now 的 Cyrus 服务器声明支持 MOVE、UIDPLUS、SPECIAL-USE 和 IDLE。实际上，这意味着代理归档邮件时发出的是真正的 MOVE，而不是本列表中大多数其他服务商强制的复制、标记、清除三步走；新的 UID 会立即返回；Sent、Drafts 和 Trash 按其声明的角色识别，而不是从名称猜测。因此，批量整理 Kolab Now 邮箱明显更快，也更不容易出错。"
+    },
+    {
+      "h": "共享文件夹和群组文件夹出现在同一棵树中",
+      "p": "Cyrus 会把共享文件夹以及其他人与你共享的文件夹，与你自己的文件夹一起显示。如果你的账户属于某个群组，列出文件夹的代理会看到它们，也可以把邮件归档进去。下达指令时请说明你指的是哪个文件夹，或者把指令限定在收件箱内，否则一个宽泛的请求可能会动到其他人也在阅读的邮件。"
+    }
+  ],
+  "limits": [
+    "将 Kolab Now 邮箱连接到 AI 客户端，意味着该 AI 服务商会读取你的邮件内容。Kolab Now 的瑞士托管和 Kolab 的自由软件栈，并不延伸到连接另一端的 AI 客户端。mcpemails 按请求从 Kolab Now 实时获取邮件，不存储邮件正文，凭据也静态加密存储，但文本仍会到达 Claude、Cursor 或你所指向的任何客户端。如果某个邮箱之所以放在 Kolab Now，正是为了让其内容留在一个司法管辖区内，那么把它连接到大型 AI 厂商就违背了这一初衷。",
+    "用你的 OpenPGP 或 S/MIME 密钥加密的邮件，通过 IMAP 到达时是密文。mcpemails 不持有任何私钥，所以代理能读取邮件头并归档邮件，但看不到正文。",
+    "Kolab Now 没有应用专用密码或设备密码，所以 mcpemails 保存的凭据就是你的账户密码。要撤销单个连接，就得修改账户密码。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Kolab Now 吗？",
+      "a": "不能直接使用。Claude 没有内置的 Kolab Now 连接器，自身也无法使用 IMAP。将 mcpemails 这样的 MCP 服务器连接到你的 Kolab Now 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理邮件，而且同一个连接可在 Cursor 和其他 MCP 客户端中复用。"
+    },
+    {
+      "q": "Kolab Now 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.kolabnow.com，端口 993，使用隐式 TLS。SMTP 为 smtp.kolabnow.com，端口 465，同样是隐式 TLS；端口 587 上的 STARTTLS 仅作为临时变通方案提供。用户名是你的 Kolab Now 主邮箱地址。两个服务器均经实时 TLS 连接验证。"
+    },
+    {
+      "q": "我在 Kolab Now 上使用自己的域名，设置会变吗？",
+      "a": "不会。Kolab Now 的文档说明，即使你的主地址位于 mykolab.com 或你自己的域名下，也要连接 imap.kolabnow.com 和 smtp.kolabnow.com。没有需要配置的按域名区分的邮件主机名，而自己编造一个，正是自定义域名配置失败最常见的原因。"
+    },
+    {
+      "q": "为什么我的 Kolab Now 登录被拒绝？",
+      "a": "请检查你用的是账户的主邮箱地址而不是别名，并且输入的是完整地址而不是单独的用户名。如果认证根本没有开始，可能是你的客户端不满足 Kolab Now 强制执行的 TLS 要求，这会在检查任何密码之前就失败。"
+    },
+    {
+      "q": "我的 Kolab Now 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 imap.kolabnow.com 实时获取邮件，并直接传给你的 AI 客户端。凭据静态加密存储；邮件正文不会保留。AI 客户端读取的任何内容确实会到达该 AI 服务商，这是需要你另外慎重做出的决定。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Kolab Now 收件箱",
+    "sub": "几分钟即可连接 Kolab Now。1 个收件箱永久免费，无需信用卡。"
+  }
+}

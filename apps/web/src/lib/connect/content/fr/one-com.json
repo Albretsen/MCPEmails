@@ -1,0 +1,95 @@
+{
+  "_sources": [
+    "https://help.one.com/hc/en-us/articles/115005594285-How-to-set-an-email-account-in-for-example-Outlook",
+    "https://help.one.com/hc/en-us/articles/115005586289-Creating-a-new-email-account",
+    "https://help.one.com/hc/en-us/articles/115005586349-How-do-I-change-my-email-password"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe du compte e-mail",
+    "helpUrl": "https://help.one.com/hc/en-us/articles/115005586349-How-do-I-change-my-email-password",
+    "usernameForm": "Votre adresse complète, domaine compris : name@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connecter l'e-mail one.com à Claude et aux clients MCP",
+    "description": "Connectez une boîte one.com à Claude, Cursor et tout client MCP en IMAP sur imap.one.com:993. Le courrier sortant passe par send.one.com, pas smtp.one.com."
+  },
+  "hero": {
+    "eyebrow": "E-mail one.com + IA",
+    "titleLine1": "Connectez l'e-mail one.com à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte one.com. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec le mot de passe défini à la création de l'adresse.",
+    "answer": "Claude ne peut pas atteindre une boîte one.com tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.one.com, port 993, et envoie via send.one.com, port 465, en s'authentifiant avec votre adresse e-mail complète et le mot de passe défini pour ce compte dans le Control Panel de one.com. Claude, Cursor ou tout client MCP peut alors lire, rechercher, envoyer et organiser le courrier. Il n'y a pas de mot de passe d'application à générer. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe du compte e-mail, défini dans le Control Panel",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment one.com se connecte : IMAP en entrée, send.one.com en sortie",
+    "body": "one.com répartit ses deux noms de serveurs de messagerie d'une façon qui piège souvent. Le courrier entrant est sur <code>imap.one.com</code>, port 993, en TLS implicite. Le courrier sortant est sur <code>send.one.com</code>, port 465, également en TLS implicite, avec authentification obligatoire à l'aide des mêmes identifiants. Ce sont deux serveurs partagés par tous les clients one.com : rien n'est déduit de votre propre domaine. L'identifiant est le mot de passe saisi lors de la création de l'adresse dans le Control Panel, en même temps que la partie de l'adresse avant l'arobase. C'est ce mot de passe qu'utilisent le webmail et tout client de messagerie, et il est distinct de l'identifiant que vous utilisez pour le Control Panel de one.com lui-même."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
+    },
+    {
+      "h": "Vérifiez que l'adresse existe et définissez son mot de passe",
+      "p": "Connectez-vous au Control Panel de one.com et ouvrez la tuile Email. L'adresse doit y être créée avant qu'un client puisse l'atteindre. Cliquez sur l'adresse pour la modifier et définissez un mot de passe, ou changez l'existant. Vous pouvez aussi changer un mot de passe e-mail depuis one.com Webmail une fois connecté."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète et collez le mot de passe du compte e-mail. Les serveurs imap.one.com et send.one.com et les ports 993 et 465 sont préremplis et ont été vérifiés par une connexion TLS réelle."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Le serveur sortant est send.one.com, et smtp.one.com n'existe pas",
+      "p": "Presque tous les autres fournisseurs nomment leur serveur d'envoi <code>smtp.something</code> : on remplit donc ce modèle par réflexe et on obtient un nom de serveur qui ne se résout pas. one.com utilise <code>send.one.com</code>. L'asymétrie avec <code>imap.one.com</code> fait penser à une coquille dans la documentation, et ce n'en est pas une. Si la lecture du courrier fonctionne mais que l'envoi expire ou ne se résout pas, voilà la raison."
+    },
+    {
+      "h": "one.com revend aussi Microsoft 365, et cette boîte-là n'est pas connectable",
+      "p": "La tuile du Control Panel s'intitule Email and Microsoft 365, et one.com vend les deux sous le même compte. Un compte e-mail one.com, créé dans cette tuile avec son propre mot de passe, est une boîte IMAP ordinaire sur les serveurs de one.com et se connecte sans problème. Une licence Microsoft 365 achetée via one.com est une boîte Microsoft sur les serveurs de Microsoft, et la stratégie de tenant par défaut de Microsoft empêche un utilisateur final de consentir à un accès tiers en lecture et écriture sur son courrier. Nous ne prétendons pas connecter celles-là. Si votre webmail est Outlook sur le web plutôt que l'interface propre à one.com, vous avez le produit Microsoft."
+    },
+    {
+      "h": "La validation en deux étapes du Control Panel ne s'applique pas à votre boîte",
+      "p": "one.com propose la validation en deux étapes pour la connexion au Control Panel. Elle protège le panneau, où se trouvent vos domaines et votre facturation, et n'a aucun effet sur IMAP ou SMTP, qui continuent d'accepter seuls le mot de passe du compte e-mail. L'activer ne cassera pas mcpemails, mais ne protégera pas non plus la boîte. Si vous voulez sécuriser la boîte elle-même, le levier est un mot de passe fort et unique sur cette adresse, pas la 2FA du panneau."
+    }
+  ],
+  "limits": [
+    "Le serveur n'annonce ni MOVE ni UIDPLUS : un déplacement se fait donc par copie, indicateur et expunge, et l'UID de destination doit être retrouvé par une recherche.",
+    "SPECIAL-USE est absent : Sent, Drafts, Trash et Junk sont reconnus par leur nom. Les boîtes one.com danoises, suédoises et norvégiennes ont souvent des noms de dossiers localisés.",
+    "Les licences Microsoft 365 vendues via one.com ne peuvent pas être connectées."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec l'e-mail one.com ?",
+      "a": "Pas tout seul. Claude n'a pas de connecteur one.com intégré. Pointer un serveur MCP comme mcpemails vers votre boîte one.com en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de one.com ?",
+      "a": "IMAP est imap.one.com sur le port 993 en TLS implicite. Le courrier sortant part vers send.one.com sur le port 465, également en TLS implicite, avec authentification obligatoire. L'identifiant est votre adresse e-mail complète et le mot de passe est celui défini pour ce compte dans le Control Panel. Les deux serveurs ont été confirmés par une connexion TLS réelle."
+    },
+    {
+      "q": "Pourquoi mon mot de passe one.com est-il refusé ?",
+      "a": "Deux causes habituelles. Vous saisissez l'identifiant de votre Control Panel one.com au lieu du mot de passe défini sur le compte e-mail lui-même, ou l'adresse n'a jamais été réellement créée dans la tuile Email du Control Panel. Vérifiez en vous connectant à one.com Webmail avec les mêmes identifiants : si cela échoue aussi, le problème vient de la boîte, pas du client."
+    },
+    {
+      "q": "one.com exige-t-il un mot de passe d'application ?",
+      "a": "Non. one.com n'émet pas de mots de passe spécifiques aux applications pour le courrier, et il n'y a pas d'interrupteur IMAP par boîte à activer. Le mot de passe du compte e-mail authentifie à la fois IMAP et SMTP. La validation en deux étapes du Control Panel n'y change rien."
+    },
+    {
+      "q": "Mon courrier one.com est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis one.com en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte one.com à votre IA",
+    "sub": "Connectez une boîte one.com en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

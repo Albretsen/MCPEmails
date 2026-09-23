@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://www.ziggo.nl/klantenservice/e-mail/serverinstellingen",
+    "https://www.ziggo.nl/klantenservice/e-mail/e-mail-mogelijkheden",
+    "https://www.ziggo.nl/klantenservice/e-mail/beheren/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "E-postpassord (e-mailwachtwoord)",
+    "helpUrl": "https://www.ziggo.nl/klantenservice/e-mail/serverinstellingen",
+    "usernameForm": "Hele adressen din, inkludert domenet: naam@ziggo.nl.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "IMAP-innstillinger for Ziggo Mail og Claude via MCP",
+    "description": "Koble en Ziggo-postkasse til Claude, Cursor og enhver MCP-klient. IMAP er imap.ziggo.nl:993, men sending er STARTTLS på smtp.ziggo.nl:587, ikke implisitt TLS på 465."
+  },
+  "hero": {
+    "eyebrow": "Ziggo Mail + AI",
+    "titleLine1": "Koble Ziggo-postkassen din",
+    "titleLine2": "til Claude, Cursor, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Ziggo-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP med e-mailwachtwoord-et du har satt i Mijn Ziggo.",
+    "answer": "Claude når ikke en Ziggo-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.ziggo.nl port 993 og autentiserer med hele adressen din og e-mailwachtwoord-et du har satt for den adressen i Mijn Ziggo, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. Ziggo har ikke app-passord og ingen bryter for klienttilgang, men utgående e-post er unntaket i denne kategorien: den kjører STARTTLS på smtp.ziggo.nl port 587, ikke implisitt TLS på 465. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "E-mailwachtwoord fra Mijn Ziggo",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Ziggo seg til: IMAP på 993, men STARTTLS for sending",
+    "body": "Ziggo tilbyr IMAP på <code>imap.ziggo.nl</code> port 993 med TLS, og SMTP-innsending på <code>smtp.ziggo.nl</code> port <b>587</b> med STARTTLS. Den delingen betyr mer enn den høres ut som. Nesten alle andre forbrukerleverandører i denne kategorien bruker implisitt TLS på 465 for innsending, så en klient eller et skript som hardkoder 465 som <b>den sikre porten</b>, vil lese en Ziggo-postkasse perfekt og så henge eller feile på første sending. Ziggos egen side med serverinnstillinger oppgir paret nøyaktig slik: <b>serverpoort 993, type versleuteling TLS/SSL</b> for innkommende, og <b>serverpoort 587, type versleuteling STARTTLS, TLS of SSL</b> for utgående. Autentiseringen er den samme på begge delene: <b>gebruikersnaam: volledig e-mailadres</b> og <b>wachtwoord: je e-mailwachtwoord</b>, passordet som hører til den spesifikke e-postadressen og ikke innloggingen til Mijn Ziggo."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Sett eller tilbakestill e-mailwachtwoord i Mijn Ziggo",
+      "p": "E-postadresser, aliaser og passordene deres administreres alle i <b>Mijn Ziggo</b>, på skjermen Ziggo kaller <b>E-mailadressen beheren</b>. Det er der du oppretter en ekstra adresse eller setter et nytt passord for en eksisterende. Passordet på e-postadressen er påloggingen IMAP-serveren sjekker, så husker ingen det, setter du et nytt der."
+    },
+    {
+      "h": "Bestem hvilken adresse agenten får",
+      "p": "Med et internettabonnement lar Ziggo deg opprette opptil seks e-postadresser; et abonnement med bare telefon får én. Vil du helst ikke gi en agent hovedadressen din, lager du en ekstra i Mijn Ziggo og kobler til den i stedet. Merk at hovedadressen er knyttet til internettabonnementet og faller bort hvis du sier det opp."
+    },
+    {
+      "h": "Lim det inn i mcpemails, og lim så MCP-URL-en inn i AI-en",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel naam@ziggo.nl, og lim inn e-mailwachtwoord-et. Ziggo-vertene og -portene er forhåndsutfylt, inkludert STARTTLS-porten for innsending, og ble verifisert via en direkte TLS-tilkobling. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Sending er STARTTLS på 587, og å anta 465 er den vanligste Ziggo-feilen",
+      "p": "Ziggo er den som skiller seg ut blant europeiske forbrukerleverandører her. Innkommende e-post er implisitt TLS på 993 som for alle andre, så lesing virker umiddelbart og gir deg falsk trygghet. Utgående e-post er <code>smtp.ziggo.nl</code> på <b>587</b>, der tilkoblingen starter ukryptert og oppgraderes med kommandoen <code>STARTTLS</code>. Peker du en klient mot 465 og venter et TLS-håndtrykk, får du en tilkobling som henger eller et tidsavbrudd i stedet for en ryddig protokollfeil, og symptomet (lesing fungerer, sending er ødelagt) får folk til å lete gjennom påloggingsdetaljer som aldri var feil."
+    },
+    {
+      "h": "IMAP-banneret er to funksjoner langt, og den ene er protokollnavnet",
+      "p": "Ziggo svarer med <code>* OK [CAPABILITY IMAP4rev1 AUTH=PLAIN] VodafoneZiggo server ready.</code> og ingenting mer. Ingen <code>IDLE</code>, så ny e-post oppdages bare ved polling og skyves aldri. Ingen <code>UIDPLUS</code>, så en kopiert melding rapporterer ikke sin nye UID tilbake. Ingen <code>MOVE</code>, så arkivering er kopi pluss flagg pluss expunge. Ingen <code>SPECIAL-USE</code>, så mapper matches etter navn. Heller ingen <code>SASL-IR</code>, så påloggingen sendes i et eget steg. Dette er det nakneste funksjonssettet av alle leverandører på dette nettstedet, og selv om ingenting av det hindrer en agent i å jobbe, betyr det at masseorganisering tar flere rundturer mot Ziggo enn mot nesten noe annet."
+    },
+    {
+      "h": "E-mailwachtwoord er ikke Mijn Ziggo-innloggingen din",
+      "p": "Ziggos side med serverinnstillinger er konkret: passordet for en e-postklient er <b>je e-mailwachtwoord</b>, det som hører til den enkelte adressen. Mijn Ziggo har sin egen innlogging. Fordi begge administreres i samme portal, griper folk etter kontopassordet først og får en autentiseringsfeil som ikke sier noe nyttig. Er du usikker på hvilken som er hvilken, tilbakestill e-postpassordet under <b>E-mailadressen beheren</b> og bruk verdien du nettopp satte."
+    },
+    {
+      "h": "Postkassen er knyttet til abonnementet, ikke til deg",
+      "p": "Hoved-Ziggo-adressen din finnes på grunn av internettabonnementet bak den, og den faller bort når abonnementet avsluttes. Skal en agentflyt avhenge av denne postkassen, er det en avhengighet verdt å ta bevisst stilling til: en adresse på et domene du kontrollerer, eller hos en leverandør du betaler direkte, forsvinner ikke når du bytter bredbåndsleverandør."
+    }
+  ],
+  "limits": [
+    "Utgående meldinger er begrenset til omtrent 30 MB kodet melding, så et stort vedlegg som en agent videresender, kan avvises på SMTP-trinnet.",
+    "Uten IDLE begrenses en instruksjon som si fra så snart et svar kommer, av hvor ofte postkassen polles, ikke av hvor raskt Ziggo leverer.",
+    "Fordi serveren ikke støtter MOVE, er en flytting ikke atomisk. Hvis en tilkobling brytes midt i operasjonen, kan en melding kortvarig finnes i begge mapper."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Ziggo-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Ziggo-kobling. Peker du en MCP-server som mcpemails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Ziggo?",
+      "a": "IMAP er imap.ziggo.nl på port 993 med TLS/SSL. SMTP er smtp.ziggo.nl på port 587 med STARTTLS, ikke implisitt TLS på 465. Brukernavnet er hele e-postadressen din, og passordet er e-mailwachtwoord-et ditt. Begge vertene ble bekreftet via en direkte tilkobling og stemmer med Ziggos publiserte serverinnstillinger."
+    },
+    {
+      "q": "Hvorfor kan jeg lese Ziggo-e-post, men ikke sende den?",
+      "a": "Nesten alltid innsendingsporten. Ziggo bruker STARTTLS på 587 i stedet for implisitt TLS på 465, så en klient satt opp for 465 fullfører IMAP-siden og henger så på SMTP-siden. Endre utgående port til 587 med STARTTLS, og bruk samme adresse og e-mailwachtwoord for utgående autentisering."
+    },
+    {
+      "q": "Trenger Ziggo et app-passord?",
+      "a": "Nei. Ziggo utsteder ikke programspesifikke passord. E-postklienter autentiserer med e-mailwachtwoord-et som er satt på den enkelte e-postadressen i Mijn Ziggo. Det er en annen pålogging enn innloggingen til Mijn Ziggo-kontoen din, og derfor avvises kontopassordet."
+    },
+    {
+      "q": "Hvor mange Ziggo-e-postadresser kan jeg ha?",
+      "a": "Med et internettabonnement kan du opprette opptil seks adresser i Mijn Ziggo; med et abonnement med bare telefon, én. Ekstra adresser og aliaser opprettes og får passordene sine på skjermen E-mailadressen beheren, noe som gjør det enkelt å gi en agent sin egen adresse i stedet for hovedadressen din."
+    },
+    {
+      "q": "Lagres Ziggo-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Ziggo via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Ziggo-innboks",
+    "sub": "Koble til Ziggo-e-post på minutter, på de riktige portene. Én innboks gratis for alltid, uten kort."
+  }
+}

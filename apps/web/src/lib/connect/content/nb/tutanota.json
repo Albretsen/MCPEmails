@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://tuta.com/blog/desktop-clients-tutanota",
+    "https://tuta.com/encryption",
+    "https://tuta.com/support",
+    "https://tuta.com/blog/tuta-release-update-february"
+  ],
+  "auth": {
+    "method": "none",
+    "label": "Ingen klientprotokoll finnes",
+    "helpUrl": "https://tuta.com/support",
+    "usernameForm": "Det er ingenting å skrive inn. Tuta kjører ingen IMAP-, POP- eller SMTP-tjeneste, så en Tuta-adresse har ingen pålogging for e-postklienter av noe slag.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Tuta Mail og Claude: ingen IMAP, ingen SMTP, ingen bro",
+    "description": "Tuta kjører med vilje ingen IMAP-, POP- eller SMTP-tjeneste og har ingen bro, så ingen MCP-server kan koble til en Tuta-postkasse. Årsaken, og hva du kan gjøre."
+  },
+  "hero": {
+    "eyebrow": "Tuta Mail + AI",
+    "titleLine1": "Tuta Mail har ingen IMAP",
+    "titleLine2": "eller SMTP, og det finnes ingen bro",
+    "lead": "Tuta, tidligere Tutanota, kjører ingen av protokollene en e-postklient eller en MCP-server trenger, og i motsetning til Proton leverer den ingen lokal bro som kan etterligne en. Denne siden forklarer hvorfor, og hva som faktisk er tilgjengelig for deg.",
+    "answer": "Nei, og det finnes ingen omvei. Tuta tilbyr ingen IMAP-, POP- eller SMTP-tilgang i det hele tatt, så mcpemails kan ikke koble til en Tuta-postkasse, og det kan heller ikke Thunderbird, Apple Mail eller noen annen klient. Dette følger av hvordan Tutas kryptering virker: emnelinjer, innhold, vedlegg, kontakter og kalenderoppføringer krypteres alle med en nøkkel som aldri forlater enheten din, og Tutas servere har bare chiffertekst. Standard IMAP forutsetter en server som kan lese emner, sortere, søke og gi en klient klartekst, som er nøyaktig evnen Tuta fjernet. I motsetning til Proton finnes det heller ingen broapplikasjon å kjøre lokalt, så vil du ha en AI-agent som jobber med e-post, må det være en postkasse hos en leverandør som snakker IMAP, og mcpemails kobler til én av dem gratis."
+  },
+  "method": {
+    "title": "Slik kobler Tuta seg til: bare gjennom egne apper",
+    "body": "Tuta når postkassen din gjennom webklienten, skrivebordsklientene for Windows, macOS og Linux, og mobilappene, over en proprietær kryptert protokoll. Det er ingen vert å konfigurere, ingen port og intet passord å generere for ekstern programvare. Tutas egen forklaring er at støtte for IMAP bare ville vært mulig hvis meldinger ble lastet ned og lagret ukryptert på enheten, noe som strider mot løftet om at dataene dine er ende-til-ende-kryptert overalt, også på din egen maskin. Konsekvensen for verktøy er total: lesetilgang, sendetilgang og søk går alle over den samme protokollen, så det finnes ingen delvis evne å eksponere. Det Tuta gir deg, er en full eksport. Nyere skrivebordsklienter eksporterer én melding som <code>.eml</code> eller en hel postkasse som <code>.mbox</code> med ett klikk, på alle tre skrivebordsplattformene, og den eksporten er tilgjengelig på gratisabonnementet."
+  },
+  "setup": [
+    {
+      "h": "Opprett den gratis mcpemails-kontoen",
+      "p": "En e-postadresse, uten kort. Én tilkoblet innboks er gratis for alltid, og de neste to stegene avgjør hva som havner i den."
+    },
+    {
+      "h": "Velg adressen du vil ha en agent til å jobbe med",
+      "p": "Dette er en reell beslutning, ikke en formalitet. Velg en postkasse hos en leverandør som kjører IMAP: ditt eget domene, en jobbkonto, Fastmail, Migadu, Gmail. Korrespondanse som hører hjemme bak Tutas kryptering, bør bli i Tuta, og e-posten du vil ha sortert, besvart og arkivert automatisk, ligger i den tilkoblede kontoen."
+    },
+    {
+      "h": "Flytt arkivet over hvis du trenger historikken der",
+      "p": "I en Tuta-skrivebordsklient åpner du en melding og bruker tre-prikkers-menyen for å eksportere den, eller eksporterer postkassen som <code>.mbox</code>. Importer den filen til kontoen som kan kobles til, med kontoens eget importverktøy. Eksporten er et øyeblikksbilde tatt på det tidspunktet, ikke en levende kobling, så gjenta den hvis du trenger den oppdatert."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten den tilkoblede postkassen med lesing, søk, sending, svar, planlegging og arkivering."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Tuta krypterer emnelinjen, så en IMAP-server ville ikke hatt noe å levere",
+      "p": "Dette er delen de fleste forklaringer hopper over. IMAP er ikke bare en transport: serveren tolker meldinger, returnerer konvoluttdata inkludert emne og avsender, sorterer og kjører SEARCH på innholdet. Tutas servere har chiffertekst og aldri nøkkelen, så et IMAP-grensesnitt kunne ikke returnert noe mer nyttig enn ugjennomsiktige klumper, og alle klientfunksjoner bygd på konvoluttdata og søk på serversiden ville sluttet å virke. Å kryptere bare innholdet ville latt IMAP være mulig, og Tuta valgte den andre veien."
+    },
+    {
+      "h": "Det finnes ingen Tuta-bro, og folk kommer hit og forventer en",
+      "p": "Proton løste det samme krypteringsproblemet med en lokal skrivebordsapplikasjon som dekrypterer på maskinen din og leverer IMAP til en klient på samme datamaskin. Tuta leverer ikke noe tilsvarende. Det finnes ingen støttet komponent, offisiell eller annen, som gjør en Tuta-konto til et IMAP-endepunkt på noen maskin, så localhost-trikset som i det minste virker for en skrivebordsklient med Proton, finnes ikke her."
+    },
+    {
+      "h": "Innstillingsoversikter publiserer Tuta-vertsnavn som ikke finnes",
+      "p": "Søker du etter IMAP-innstillinger for Tuta eller Tutanota, finner du sider som lister et vertsnavn, en port og en krypteringsmetode, generert av den samme malen de nettstedene bruker for alle leverandører. Ingen slik server kjører. En klient pekt mot en av de vertene feiler ved tilkobling eller innlogging, og feilen ser ut som et problem med påloggingsdetaljene, noe som får folk til å lete etter et app-passord som aldri var mulig å opprette."
+    },
+    {
+      "h": "Et eget domene hos Tuta er fortsatt en Tuta-postkasse",
+      "p": "Betalte abonnement lar deg bruke ditt eget domene, med MX-oppføringer som peker på Tuta. Det gir deg adressen, ikke en egen server, så det finnes ingen <code>mail.yourdomain.com</code> å autentisere mot. Protokollsituasjonen er identisk med en tutanota.com- eller tuta.com-adresse."
+    }
+  ],
+  "limits": [
+    "Det finnes ingen mellomløsning med bare lesetilgang. Listing, lesing, søk og sending avhenger alle av den samme protokollen Tuta ikke kjører, så det finnes ingen redusert eller tryggere form for tilgang å tilby deg.",
+    "En eksportert postkasse er et arkiv. En agent som jobber fra importert .mbox-historikk, kan søke i og sitere den, men ser ikke noe som kom inn i Tuta etterpå, og kan ikke svare inne i en Tuta-tråd."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Tuta Mail?",
+      "a": "Nei. Claude har ingen Tuta-kobling, og ingen MCP-server kan lage en, fordi Tuta ikke eksponerer noe IMAP-, POP- eller SMTP-grensesnitt noe kan koble til. Det praktiske svaret er å beholde Tuta for e-posten du vil ha kryptert, og gi agenten din en separat postkasse hos en leverandør som støtter IMAP."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Tuta?",
+      "a": "Det finnes ingen. Tuta driver ingen IMAP-, POP- eller SMTP-servere for brukerpostkasser, så det er ikke noe vertsnavn, ingen port og ingen krypteringsinnstilling å skrive inn noe sted. Sider som lister dem, fyller ut en mal. Tuta-e-post kan bare nås gjennom Tutas egne web-, skrivebords- og mobilklienter."
+    },
+    {
+      "q": "Hvorfor støtter ikke Tuta IMAP?",
+      "a": "På grunn av hva Tuta krypterer. Emner, innhold, vedlegg, kontakter og kalendere krypteres med en nøkkel som holdes på enheten din, så Tutas servere kan ikke lese noe av det. Å levere IMAP ville bety enten å gi klienter chiffertekst de ikke kan bruke, eller å lagre e-post ukryptert, som er garantien Tuta selger. Tuta har vært tydelig på at de ikke vil bytte det bort."
+    },
+    {
+      "q": "Finnes det en Tuta-bro som Proton Mail Bridge?",
+      "a": "Nei. Proton leverer en skrivebordsapplikasjon som dekrypterer lokalt og tilbyr IMAP til klienter på samme datamaskin. Tuta har ingen slik komponent på noe abonnement, så det finnes heller ikke noe lokalt endepunkt. Tredjepartsverktøy som hevder å bygge bro til Tuta, er ikke bygd på noe støttet grensesnitt, og gir du et av dem Tuta-passordet ditt, gir du det postkassen din."
+    },
+    {
+      "q": "Kan jeg eksportere e-posten min ut av Tuta?",
+      "a": "Ja, og det er gratis. Tutas skrivebordsklienter på Windows, macOS og Linux eksporterer én melding som .eml eller hele postkassen som .mbox fra meldingsmenyen. Den filen kan importeres til de fleste andre e-posttjenester, som er veien folk går når de vil ha historikken i en konto som automatisering kan nå."
+    },
+    {
+      "q": "Hva bør jeg gjøre hvis jeg vil ha en AI-agent til å håndtere e-posten min?",
+      "a": "Ha to adresser med vilje. Behold privat korrespondanse i Tuta, der ingenting automatisert kan nå den, og bruk en separat IMAP-postkasse for e-posten du vil at en agent skal sortere, besvare, planlegge og arkivere. mcpemails kobler den andre postkassen til Claude, Cursor eller ChatGPT, én innboks gratis, og ser aldri Tuta-postkassen."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en innboks den faktisk kan åpne",
+    "sub": "Tuta forblir forseglet. Koble til én IMAP-postkasse for arbeidet du vil automatisere, gratis for alltid."
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.inmotionhosting.com/support/email/email-client-configuration-email-over-ssl/",
+    "https://www.inmotionhosting.com/support/tools/email-configuration/",
+    "https://www.inmotionhosting.com/support/email/how-to-find-email-settings/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://www.inmotionhosting.com/support/email/email-client-configuration-email-over-ssl/",
+    "usernameForm": "Tu dirección de correo completa, por ejemplo info@yourdomain.com. No tu acceso a AMP ni tu usuario de cPanel.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Correo de InMotion Hosting a Claude por IMAP (MCP)",
+    "description": "InMotion protege el correo en secureNN.inmotionhosting.com, donde NN es tu número de servidor en AMP. Conecta ese buzón a Claude por IMAP 993. Una bandeja gratis."
+  },
+  "hero": {
+    "eyebrow": "InMotion Hosting + IA",
+    "titleLine1": "Conecta el correo de InMotion Hosting",
+    "titleLine2": "a Claude, Cursor y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA un buzón real de InMotion. Lee, busca, envía, responde, programa y organiza correo por IMAP en el nombre de servidor seguro que InMotion asigna a tu servidor.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de InMotion Hosting. mcpemails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. InMotion no tiene un único servidor de correo compartido: para una conexión segura usas el nombre de servidor seguro de tu cuenta, con la forma secureNN.inmotionhosting.com, donde NN es el número de servidor que aparece en los detalles técnicos de tu Account Management Panel. La autenticación usa la contraseña definida en el buzón en cPanel, y una bandeja es gratis.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña del buzón desde cPanel",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta el correo de InMotion: secureNN.inmotionhosting.com, IMAP 993",
+    "body": "InMotion usa cPanel, y los buzones responden por IMAP en el puerto 993 con SMTP en el 465 para TLS. Funcionan dos nombres de servidor, y no son intercambiables. <code>mail.yourdomain.com</code> es la forma no segura. Para una sesión cifrada, InMotion documenta un nombre de servidor seguro dedicado, <code>secureNN.inmotionhosting.com</code>, donde NN es el número del servidor compartido en el que está tu cuenta. Su certificado está emitido para ese nombre, así que es el que se valida. El número no se puede deducir de tu dominio; aparece en tu Account Management Panel, en los detalles técnicos de la cuenta, y también en la información del servidor de cPanel. El nombre de usuario es siempre la dirección de correo completa, tanto para la entrada como para la salida."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
+    },
+    {
+      "h": "Deja que la Email Configuration Tool de InMotion te dé los ajustes",
+      "p": "InMotion publica una herramienta de consulta pública en inmotionhosting.com/support/tools/email-configuration. Escribe la dirección de correo completa y te devuelve los nombres de servidor y puertos seguros correctos, de entrada y de salida, para esa cuenta concreta, sin necesidad de iniciar sesión. Si prefieres leerlo en el panel, el número de servidor está en <b>AMP</b>, en los detalles técnicos de la cuenta, y cPanel lo muestra en Server Information."
+    },
+    {
+      "h": "Define la contraseña del buzón en cPanel",
+      "p": "IMAP comprueba la contraseña de la dirección concreta, no tu acceso a AMP. En cPanel abre <b>Email Accounts</b>, haz clic en <b>Manage</b> en la dirección y define una contraseña. Después introdúcela en mcpemails con la dirección completa como nombre de usuario y <code>secureNN.inmotionhosting.com</code> como servidor."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Las cuentas de InMotion tienen tres contraseñas distintas, y solo una autentica el correo",
+      "p": "Tu acceso a <b>AMP</b> es para la facturación y la gestión de la cuenta. Tu acceso a <b>cPanel</b> es para el panel de control del hosting. La contraseña del <b>buzón</b> se define para cada dirección de correo al crearla. Son tres credenciales distintas y, a diferencia de los proveedores donde el panel y el área de cliente comparten acceso, InMotion mantiene AMP totalmente separado. La gente prueba primero la contraseña de AMP porque es la que más escribe. Nunca autenticará IMAP."
+    },
+    {
+      "h": "El NN de secureNN no se puede adivinar, y uno equivocado te lleva al servidor activo de un desconocido",
+      "p": "El nombre de servidor seguro está numerado por servidor compartido, así que <code>secure22.inmotionhosting.com</code> y <code>secure45.inmotionhosting.com</code> son servidores reales y en funcionamiento de clientes distintos. Escribir un número equivocado no produce un fallo de DNS que te avise de que algo va mal; produce una conexión TLS válida a un servidor en el que no está tu buzón, y después un rechazo de autenticación que parece una contraseña incorrecta. Toma el número de los detalles técnicos de AMP, no de una guía."
+    },
+    {
+      "h": "La herramienta de consulta de InMotion elimina las conjeturas, y casi nadie la encuentra",
+      "p": "Algo poco habitual entre los proveedores cPanel: InMotion tiene una Email Configuration Tool pública que solo pide una dirección de correo y devuelve los ajustes de servidor exactos de esa cuenta sin iniciar sesión. Resuelve en un solo paso el nombre de servidor seguro y los puertos. Si configuras el correo de un cliente cuyas credenciales de AMP no tienes, este es el atajo, y es más fiable que cualquier página de ajustes de terceros para InMotion."
+    }
+  ],
+  "limits": [
+    "Usa solo el nombre de servidor seguro con TLS. El certificado está emitido para secureNN.inmotionhosting.com, así que mail.yourdomain.com en el puerto 993 falla la validación del nombre aunque llegue a la máquina correcta.",
+    "Si InMotion migra tu cuenta a otro servidor compartido, el NN cambia. El síntoma es un certificado presentado para un número de servidor que no reconoces, no una caída del servicio."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de InMotion Hosting?",
+      "a": "No directamente. Claude no tiene un conector para InMotion. Conectar un servidor MCP como mcpemails a tu buzón de InMotion por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, con las mismas credenciales que usaría un cliente de correo de escritorio."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de InMotion Hosting?",
+      "a": "El IMAP seguro usa el puerto 993 y el SMTP seguro el puerto 465, ambos en el nombre de servidor seguro de tu cuenta, con la forma secureNN.inmotionhosting.com. El nombre de usuario es tu dirección de correo completa tanto para la entrada como para la salida, y la salida exige autenticación. Los equivalentes sin cifrar usan mail.yourdomain.com, que no deberías usar."
+    },
+    {
+      "q": "¿Cómo encuentro mi número de servidor de InMotion?",
+      "a": "Inicia sesión en el Account Management Panel y abre los detalles técnicos de la cuenta de hosting. El número de servidor aparece ahí, y cPanel lo repite en Server Information. También puedes introducir la dirección de correo en la Email Configuration Tool pública de InMotion, que devuelve el nombre de servidor seguro completo sin iniciar sesión."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de correo de InMotion?",
+      "a": "Casi siempre porque es tu contraseña de AMP o de cPanel y no la del buzón. En InMotion son tres credenciales distintas. Restablece la contraseña del buzón desde cPanel, en Email Accounts, haciendo clic en Manage en la dirección. Comprueba también el número de servidor, ya que uno equivocado se conecta bien y luego rechaza el inicio de sesión."
+    },
+    {
+      "q": "¿Se almacena mi correo de InMotion en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de tu servidor de InMotion por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de InMotion Hosting",
+    "sub": "Conecta un buzón de InMotion en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

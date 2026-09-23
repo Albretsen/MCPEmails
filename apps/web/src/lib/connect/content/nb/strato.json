@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://www.strato.de/faq/mail/so-lauten-die-strato-e-mail-server/",
+    "https://www.strato.de/faq/mail/e-mail-authentifizierung-nach-abschaltung-von-md5-challenge-response/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://www.strato.de/faq/mail/so-lauten-die-strato-e-mail-server/",
+    "usernameForm": "Hele adressen din, inkludert domenet: name@ihredomain.de.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble STRATO-e-post til Claude og MCP-klienter",
+    "description": "Koble STRATO-e-post til Claude, Cursor og enhver MCP-klient via IMAP på imap.strato.de:993. Bruk vanlig passordautentisering: STRATO har fjernet CRAM-MD5."
+  },
+  "hero": {
+    "eyebrow": "STRATO-e-post + AI",
+    "titleLine1": "Koble STRATO-e-post til Claude,",
+    "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte STRATO-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP med postkassepassordet, ikke STRATO-kundeinnloggingen din.",
+    "answer": "Claude når ikke en STRATO-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.strato.de port 993 og autentiserer med hele e-postadressen din og passordet som er satt på den postkassen, ikke STRATO-kundeinnloggingen, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. STRATO godtar bare vanlig passordautentisering over en kryptert tilkobling, etter å ha slått av den eldre challenge-response-metoden. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord, ikke kundeinnloggingen",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler STRATO seg til: IMAP, bare TLS, vanlig passord",
+    "body": "STRATO tilbyr IMAP på <code>imap.strato.de</code> port 993 med implisitt TLS og SMTP på <code>smtp.strato.de</code> port 465, også med implisitt TLS. STRATO sier at alle postkassene deres utelukkende bruker krypterte tilkoblinger og at ukrypterte ikke støttes i det hele tatt, og de begrenser tilkoblingen til TLS 1.2 og 1.3. Brukernavnet er hele e-postadressen din, og passordet er det som er valgt for den postkassen, som er en annen pålogging enn kundeinnloggingen du bruker til STRATO Kundenlogin. Autentisering må settes opp som vanlig passord over den krypterte kanalen: STRATO slo av challenge-response-mekanismen CRAM-MD5, så alle klienter som fortsatt er satt opp for den, vil feile."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Sett postkassepassordet i STRATO Kundenlogin",
+      "p": "Logg inn i STRATO Kundenlogin, åpne pakken din og gå til E-Mail, så E-Mail-Adressen verwalten. Velg adressen og sett et nytt passord der. Dette passordet hører bare til postkassen og er ikke det du nettopp brukte for å komme inn i Kundenlogin."
+    },
+    {
+      "h": "Lim det inn i mcpemails",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen og lim inn postkassepassordet. Vertene imap.strato.de og smtp.strato.de og portene 993 og 465 er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "STRATO slo av CRAM-MD5, og gamle klienter ber fortsatt om det",
+      "p": "STRATO støtter ikke lenger autentiseringsmetoden MD5 challenge-response. Innstillingen heter ofte <b>encrypted password</b> eller <b>secure password authentication</b> i e-postklienter, og den står én linje under <b>normal password</b> i samme nedtrekksliste, så den ble mye valgt ut fra den rimelige antakelsen om at mer kryptering er bedre. Alle klienter eller skript som står igjen på den innstillingen, feiler nå ved innlogging med en feil som ikke kan skilles fra feil påloggingsdetaljer, selv om passordet er riktig. Riktig konfigurasjon er vanlig passord over TLS-tilkoblingen, som allerede er kryptert hele veien."
+    },
+    {
+      "h": "STRATO annonserer ikke SASL-IR",
+      "p": "IMAP-serveren mangler SASL-IR-funksjonen, så den avviser autentisering i ett steg, der påloggingsdetaljene sendes på samme linje som AUTHENTICATE-kommandoen. En klient som antar SASL-IR, får en naken <code>BAD</code> uten forklaring, som igjen ser ut som et passordproblem. mcpemails oppdager det svaret og prøver utvekslingen i to steg på nytt, så tilkoblingen lykkes, men sammen med fjerningen av CRAM-MD5 er det grunnen til at STRATO gir så mange falske meldinger om feil passord."
+    },
+    {
+      "h": "STRATO er den best utstyrte IMAP-serveren i sin prisklasse",
+      "p": "Uvanlig for e-post på delt hosting annonserer STRATO MOVE, UIDPLUS, SPECIAL-USE, SORT, QUOTA og LIST-EXTENDED. I praksis betyr det at flyttinger er én atomisk kommando i stedet for en kopi pluss expunge, at mål-UID-en returneres så en flyttet melding kan spores, og at Sent, Drafts, Trash og Junk identifiseres etter rolle i stedet for å gjettes fra tyske mappenavn som Gesendet og Papierkorb. Velger du mellom verter for agentstyrt e-post, er den kombinasjonen verdt mer enn den høres ut som."
+    },
+    {
+      "h": "Det er en hard grense på 100 MB for både sending og opplasting",
+      "p": "STRATO annonserer en APPENDLIMIT på 104857600 byte på IMAP og samme tall som maksimal meldingsstørrelse på SMTP. Det styrer både hva en agent kan sende og hva den kan skrive inn i en mappe som et utkast eller en tilføyd melding. Et stort sett med vedlegg avvises helt i stedet for å bli kuttet."
+    }
+  ],
+  "limits": [
+    "Ukrypterte tilkoblinger støttes ikke i det hele tatt, og bare TLS 1.2 og 1.3 godtas. Svært gamle klientbiblioteker kan ikke forhandle frem en økt.",
+    "Meldinger og tilføyinger er begrenset til 100 MB av serveren."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med STRATO-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd STRATO-kobling. Peker du en MCP-server som mcpemails mot STRATO-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for STRATO?",
+      "a": "IMAP er imap.strato.de på port 993 med implisitt TLS. SMTP er smtp.strato.de på port 465, også med implisitt TLS. Brukernavnet er hele e-postadressen din, og passordet er postkassepassordet. Autentisering må settes til vanlig passord. Begge vertene ble bekreftet via en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Hvorfor blir STRATO-passordet mitt avvist?",
+      "a": "Tre årsaker verdt å sjekke i rekkefølge. Klienten er satt til kryptert passord eller CRAM-MD5, som STRATO har slått av. Du bruker passordet til STRATO Kundenlogin i stedet for postkassepassordet. Eller klienten prøver en ukryptert tilkobling, som STRATO avviser helt i stedet for å nedgradere."
+    },
+    {
+      "q": "Trenger STRATO et app-passord?",
+      "a": "Nei. STRATO utsteder ikke programspesifikke passord for e-post, og det finnes ingen IMAP-bryter per postkasse å slå på. Postkassepassordet som er satt i Kundenlogin, autentiserer både IMAP og SMTP. Vil du ikke gjenbruke et eksisterende passord, setter du et nytt for den adressen."
+    },
+    {
+      "q": "Lagres STRATO-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra STRATO via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en STRATO-innboks",
+    "sub": "Koble til STRATO-e-post på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

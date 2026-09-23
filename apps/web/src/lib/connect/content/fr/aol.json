@@ -1,21 +1,32 @@
 {
+  "_sources": [
+    "https://help.aol.com/articles/Create-and-manage-app-password",
+    "https://help.aol.com/articles/how-do-i-use-other-email-applications-to-send-and-receive-my-aol-mail"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Mot de passe d'application",
+    "helpUrl": "https://help.aol.com/articles/Create-and-manage-app-password",
+    "usernameForm": "Votre adresse AOL complète, domaine compris : name@aol.com. Les anciennes adresses aim.com et AOL nationales prennent la même forme.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Connecter AOL Mail à Claude (et à toute IA)",
-    "description": "Connectez AOL Mail à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+    "title": "Connecter AOL Mail à Claude, Cursor et aux clients MCP",
+    "description": "Connectez AOL Mail à Claude, Cursor et tout client MCP en IMAP sur imap.aol.com:993 avec un mot de passe d'application AOL. Votre mot de passe AOL seul ne suffit pas."
   },
   "hero": {
     "eyebrow": "AOL Mail + IA",
     "titleLine1": "Connectez AOL Mail à Claude,",
     "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
-    "lead": "Offrez à votre agent IA une vraie boîte AOL Mail en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un simple mot de passe d'application, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "lead": "Donnez à votre agent IA une vraie boîte AOL Mail en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un seul mot de passe d'application, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
     "meta0": "1 boîte gratuite, pour toujours",
-    "meta1": "Mot de passe d'application, pas de configuration OAuth",
+    "meta1": "Mot de passe d'application, aucune configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude ne peut pas atteindre AOL Mail tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec un mot de passe d'application, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+    "answer": "Claude ne peut pas accéder seul à AOL Mail. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec un mot de passe d'application, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes et une boîte est gratuite."
   },
   "method": {
     "title": "Comment AOL Mail se connecte : IMAP et un mot de passe d'application",
-    "body": "AOL Mail se connecte via IMAP/SMTP avec un <b>mot de passe d'application AOL</b>. Votre mot de passe AOL habituel ne fonctionne pas depuis un client de messagerie : une connexion refusée ici vient presque toujours d'un mot de passe d'application manquant. Activez la validation en deux étapes, créez un mot de passe d'application dans Informations du compte, Sécurité du compte, puis collez-le dans mcpemails avec votre adresse AOL complète."
+    "body": "AOL Mail se connecte en IMAP/SMTP avec un <b>mot de passe d'application AOL</b>. Votre mot de passe AOL habituel n'authentifie pas un client de messagerie : une connexion refusée ici vient donc presque toujours d'un mot de passe d'application manquant. Activez 2-Step Verification (validation en deux étapes), générez un mot de passe d'application sous Account Info, Account Security, puis collez-le dans mcpemails avec votre adresse AOL complète."
   },
   "setup": [
     {
@@ -23,8 +34,8 @@
       "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
-      "h": "Créez un mot de passe d'application AOL",
-      "p": "Dans AOL Mail, ouvrez Informations du compte, Sécurité du compte, activez la validation en deux étapes si elle est inactive, puis créez un mot de passe d'application. Copiez-le tout de suite, AOL ne l'affiche qu'une fois."
+      "h": "Générez un mot de passe d'application AOL",
+      "p": "Dans AOL Mail, ouvrez Account Info, Account Security, activez 2-Step Verification si elle est désactivée, puis générez un mot de passe d'application. Copiez-le immédiatement : AOL ne l'affiche qu'une fois."
     },
     {
       "h": "Collez-le dans mcpemails",
@@ -32,11 +43,59 @@
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
-      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+      "p": "Ajoutez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "AOL Mail tourne sur la plateforme Yahoo, mais le mot de passe d'application doit venir d'AOL",
+      "p": "<code>imap.aol.com</code> se résout via le même service de messagerie <code>yahoodns.net</code> que Yahoo Mail, et les deux serveurs vous accueillent avec la même bannière. Ce qui n'est pas partagé, c'est le compte. Une adresse AOL se gère depuis la page Account Security d'<b>AOL</b>, et un mot de passe d'application généré dans un compte Yahoo n'ouvrira pas une boîte AOL. C'est important, car les résultats de recherche sur les réglages AOL renvoient souvent vers un article d'aide Yahoo : les étapes décrites sont justes, mais le site sur lequel vous devez être ne l'est pas."
+    },
+    {
+      "h": "Le mot de passe d'application passe par un assistant, s'affiche une fois, et changer votre mot de passe ne le révoque pas",
+      "p": "Sur la page Account Security d'AOL, choisissez Generate app password (certains comptes affichent Generate and manage app passwords), puis Get Started, nommez l'application, puis Generate password. AOL l'affiche une seule fois. Ensuite, il continue de fonctionner même si vous changez votre mot de passe AOL principal : changer votre mot de passe ne déconnecte donc <b>pas</b> un client de messagerie. Supprimer ce mot de passe d'application précis sur le même écran est le seul moyen de révoquer l'accès."
+    },
+    {
+      "h": "L'IMAP d'AOL ne propose pas AUTH=LOGIN, mais son SMTP oui",
+      "p": "Interrogé, le serveur IMAP d'AOL a annoncé <code>AUTH=PLAIN</code> à côté des deux mécanismes OAuth, et pas de <code>AUTH=LOGIN</code>. Son serveur de soumission, en revanche, accepte PLAIN et LOGIN. Les moitiés entrante et sortante d'un même compte peuvent donc se comporter différemment dans le même client : un outil codé en dur sur le mécanisme LOGIN, fréquent dans le code écrit pour Exchange, envoie du courrier sans souci puis échoue à le lire, avec une erreur d'authentification qui ressemble exactement à un mauvais mot de passe."
+    },
+    {
+      "h": "Les dossiers système sont identifiés par leur rôle, les renommer est donc sans risque",
+      "p": "AOL annonce <code>SPECIAL-USE</code>, <code>MOVE</code>, <code>UIDPLUS</code> et <code>IDLE</code>. Concrètement : Envoyés, Brouillons, Spam et Corbeille sont identifiés par ce qu'ils sont plutôt que par leur nom, donc un agent retrouve votre dossier Envoyés même après que vous l'avez renommé, et déplacer un message est une seule commande atomique au lieu d'une copie suivie d'une suppression. C'est un meilleur serveur IMAP que celui de plusieurs fournisseurs payants, et cela fait d'AOL une boîte particulièrement facile à automatiser."
+    }
+  ],
+  "limits": [
+    "Le serveur de soumission d'AOL annonce une taille maximale de message d'environ 41 Mo. Les lectures de pièces jointes via mcpemails sont plafonnées à 25 Mo par requête.",
+    "Un mot de passe d'application reste valide après un changement de votre mot de passe AOL. Le supprimer sur la page Account Security d'AOL est le seul moyen de couper l'accès."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec AOL Mail ?",
+      "a": "Pas tout seul. Claude n'a pas de connecteur AOL intégré. Connecter un serveur MCP comme mcpemails à votre boîte AOL en IMAP, avec un mot de passe d'application AOL, donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP d'AOL Mail ?",
+      "a": "IMAP est imap.aol.com sur le port 993 en TLS implicite. SMTP est smtp.aol.com sur le port 465, également en TLS implicite. Le nom d'utilisateur est votre adresse AOL complète et le mot de passe est un mot de passe d'application AOL plutôt que le mot de passe de votre compte. Les deux serveurs ont été confirmés par une connexion TLS réelle à la date indiquée sur cette page."
+    },
+    {
+      "q": "Pourquoi mon mot de passe AOL est-il refusé ?",
+      "a": "AOL n'accepte pas le mot de passe habituel de votre compte depuis les applications de messagerie tierces. Il vous faut un mot de passe d'application depuis la page Account Security d'AOL. La deuxième cause fréquente est de le générer au mauvais endroit : un mot de passe d'application créé dans un compte Yahoo ne fonctionnera pas pour une adresse AOL, même si les deux services partagent la même plateforme de messagerie."
+    },
+    {
+      "q": "AOL Mail est-il identique à Yahoo Mail ?",
+      "a": "Ils tournent sur la même infrastructure et se comportent presque à l'identique en IMAP, mais ce sont des comptes distincts, avec des noms d'hôte distincts et des pages de sécurité distinctes. Connectez une adresse aol.com avec les serveurs AOL et un mot de passe d'application AOL. Connectez une adresse yahoo.com, ymail.com ou rocketmail.com en tant que Yahoo. Les identifiants ne passent pas de l'un à l'autre."
+    },
+    {
+      "q": "Les anciennes adresses aim.com et AOL nationales fonctionnent-elles encore ?",
+      "a": "Oui, à condition que la boîte soit toujours active. Ce sont des comptes AOL Mail ordinaires sur les mêmes serveurs, avec la même procédure de mot de passe d'application, et l'adresse complète sert de nom d'utilisateur. De très anciens guides de configuration listent des réglages AOL antérieurs au passage sur cette plateforme : utilisez les serveurs de cette page plutôt que ceux d'un message de forum vieux de dix ans."
+    },
+    {
+      "q": "Mes e-mails AOL sont-ils stockés sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis AOL en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le contenu des messages n'est pas conservé. Supprimer le mot de passe d'application dans Account Security d'AOL coupe immédiatement la connexion de leur côté."
     }
   ],
   "ctaBand": {
-    "title": "Offrez une boîte AOL Mail à votre IA",
+    "title": "Donnez à votre IA une boîte AOL Mail",
     "sub": "Connectez AOL Mail en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
   }
 }

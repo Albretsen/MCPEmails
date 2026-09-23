@@ -1,0 +1,95 @@
+{
+  "_sources": [
+    "https://docs.gandi.net/en/gandimail/standard_email_settings/",
+    "https://docs.gandi.net/en/gandimail/common_operations/changing_email_password.html",
+    "https://docs.gandi.net/en/gandimail/common_operations/manage_2fa.html",
+    "https://news.gandi.net/en/2023/06/faq-new-mailbox-service/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://docs.gandi.net/en/gandimail/common_operations/changing_email_password.html",
+    "usernameForm": "完整的邮箱地址，包括 @yourdomain.tld。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 Gandi Mail 连接到 Claude、Cursor 与 MCP",
+    "description": "使用邮箱密码（而非 Gandi 账户登录密码），通过 mail.gandi.net:993 的 IMAP 将 Gandi 邮箱连接到 Claude、Cursor 及任意 MCP 客户端。"
+  },
+  "hero": {
+    "eyebrow": "Gandi Mail + AI",
+    "titleLine1": "将 Gandi Mail 连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Gandi 收件箱。使用为邮箱本身（而不是 Gandi 账户）设置的密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行访问 Gandi 邮箱。mcpemails 是一个托管 MCP 服务器，通过 mail.gandi.net 端口 993 的 IMAP 与之连接，使用完整邮箱地址和为该邮箱设定的密码进行认证；Gandi 将这个密码与你的 gandi.net 账户密码分开管理。之后，Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。没有需要生成的应用专用密码，也没有需要寻找的按邮箱 IMAP 开关。1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "邮箱密码，而非账户登录密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Gandi Mail 如何连接：IMAP 与邮箱密码",
+    "body": "Gandi 用同一个主机名提供两种协议：<code>mail.gandi.net</code>，端口 993 用于 IMAP（隐式 TLS），端口 465 用于 SMTP（同样是隐式 TLS）。无论地址位于哪个域名下，这一台服务器都覆盖所有 Gandi 邮箱。Gandi 的文档明确说明，用户名是<b>完整的邮箱地址</b>，包括 @ 符号之后的部分，密码是创建邮箱时你设定的那个。Gandi 在自己的文档中声明，Gandi 邮箱地址的密码与你 Gandi 账户的密码是分开的，这样你就可以把一个邮箱交给同事，而不必交出你的域名注册商登录凭据。SMTP 要求使用同一组凭据进行认证。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "在 Gandi 管理后台设置邮箱密码",
+      "p": "登录 gandi.net，在左侧菜单中选择 Domains，选中该地址所属的域名，打开其 Email 选项卡。点击该邮箱或其三点菜单，然后选择 Manage，在 Configuration 部分点击 Password 旁的 Change。你也可以在 Gandi 的 Roundcube 网页邮箱中通过 Settings、Password 修改。"
+    },
+    {
+      "h": "粘贴到 mcpemails",
+      "p": "选择 IMAP / SMTP，输入完整地址，并粘贴邮箱密码。服务器 mail.gandi.net 以及端口 993 和 465 已预填，并经实时 TLS 连接验证。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Gandi 邮箱的双重身份验证只覆盖网页邮箱，无法覆盖 IMAP",
+      "p": "如果你为某个 Gandi 邮箱开启了双重身份验证，它只作用于 SOGo 和 Roundcube 网页邮箱门户，别处都不生效。Gandi 的文档直接说明，2FA 只能通过其网页邮箱门户使用，不支持 Thunderbird 或 Outlook 等邮件客户端，而停用 POP、IMAP 和 SMTP 是用 2FA 完全保护邮箱的唯一方法。这带来两个实际后果。第一，开启 2FA 并不会阻止 mcpemails 连接：邮箱密码仍可通过 IMAP 认证。第二，如果你为了让 2FA 真正起作用而特意在邮箱上停用了 IMAP 协议，那么在你重新启用之前，任何客户端都无法连接。"
+    },
+    {
+      "h": "免费邮箱已于 2023 年结束，旧地址可能已经不存在",
+      "p": "Gandi 过去在域名注册期内附送两个免费邮箱。这项优惠已于 2023 年 11 月 30 日结束，邮箱变为单独计价的服务。从未转为付费套餐的地址已不复存在，因此用这样的地址进行 IMAP 登录，只会得到认证错误，而不会有任何提示说明邮箱已停用。如果你多年前用过的某个 Gandi 地址拒绝登录，请先检查该域名的 Email 选项卡，再去怀疑密码问题。"
+    },
+    {
+      "h": "用户名是完整地址，IMAP 服务器只提供 AUTH=PLAIN",
+      "p": "Gandi 不接受只有本地部分的用户名，这会难倒从接受这种写法的主机商迁移设置的人。另外，IMAP 服务器声明 <code>AUTH=PLAIN</code> 而没有 <code>AUTH=LOGIN</code>，所以写死使用 LOGIN 机制的客户端或库会在认证这一步失败，报错也毫无帮助。SMTP 一侧两种机制都接受，因此同一账户可能发信成功而读信失败。"
+    }
+  ],
+  "limits": [
+    "服务器不声明 MOVE 或 UIDPLUS，因此移动邮件以复制、标记和清除的方式完成，目标 UID 需要通过搜索找到。",
+    "服务器不支持 SPECIAL-USE，因此 Sent、Drafts、Trash 和 Junk 按名称匹配。在法语的 Gandi 邮箱中，它们通常是 Envoyes、Brouillons、Corbeille 和 Indesirables。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Gandi Mail 吗？",
+      "a": "不能单独使用。Claude 没有内置的 Gandi 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向你的 Gandi 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Gandi 的 IMAP 和 SMTP 设置是什么？",
+      "a": "两者使用同一个主机名 mail.gandi.net。IMAP 为端口 993，使用隐式 TLS；SMTP 为端口 465，同样是隐式 TLS，并要求认证。用户名是包括域名在内的完整邮箱地址，密码是邮箱密码。该服务器已经实时 TLS 连接确认。"
+    },
+    {
+      "q": "为什么我的 Gandi 密码被拒绝？",
+      "a": "几乎总是因为你输入的是 gandi.net 账户密码。Gandi 将邮箱密码分开管理，以便在不共享注册商访问权限的情况下委派邮箱。请在 Domains、你的域名、Email 选项卡中，点击该邮箱的 Manage 来设置或重置。同时请确认你在用户名中填写了完整地址。"
+    },
+    {
+      "q": "Gandi 需要应用专用密码吗？",
+      "a": "不需要。Gandi 不为邮件签发应用专用密码。IMAP 和 SMTP 接受的是邮箱密码，无论网页邮箱门户是否开启了双重身份验证，它都有效，因为那项 2FA 并不涵盖客户端协议。"
+    },
+    {
+      "q": "我的 Gandi 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 Gandi 实时获取邮件，并交给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Gandi 收件箱",
+    "sub": "几分钟即可连接 Gandi 邮箱。1 个收件箱永久免费，无需信用卡。"
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "_sources": [
+    "https://domene.shop/faq?id=237",
+    "https://domene.shop/faq?id=331"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://domene.shop/faq?id=237",
+    "usernameForm": "Tu dirección completa, incluido el dominio: name@yourdomain.no.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta el correo de Domeneshop a Claude y clientes MCP",
+    "description": "Conecta el correo de Domeneshop a Claude, Cursor y cualquier cliente MCP por IMAP en imap.domeneshop.no:993 con la contraseña de tu buzón. Una bandeja gratis, para siempre."
+  },
+  "hero": {
+    "eyebrow": "Domeneshop + IA",
+    "titleLine1": "Conecta el correo de Domeneshop a Claude,",
+    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de Domeneshop. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña del buzón que definiste en el panel de control de Domeneshop.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de Domeneshop. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.domeneshop.no en el puerto 993, autenticándose con tu dirección de correo completa y la contraseña que elegiste para ese buzón en el panel de control de Domeneshop, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. En Domeneshop no hay contraseña de aplicación ni ningún interruptor extra que activar, pero el envío tiene una peculiaridad de política que se explica más abajo. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña del buzón desde el panel de control",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Domeneshop: IMAP y la contraseña del buzón",
+    "body": "Domeneshop sirve IMAP en <code>imap.domeneshop.no</code> en el puerto 993 con TLS implícito, y el envío SMTP en <code>smtp.domeneshop.no</code> en el puerto 465. Todos los buzones de Domeneshop están en la misma pareja de nombres de servidor compartidos, termine tu dirección en el dominio que termine, así que no hay nada específico de cada cliente que consultar. La autenticación usa la contraseña normal del buzón: la que definiste al crear la dirección en E-post, en el panel de control de Domeneshop, junto con la dirección <b>completa</b> como nombre de usuario. Domeneshop exige autenticación SMTP con esas mismas credenciales; un cliente que deja en blanco el usuario y la contraseña de salida se conectará y luego no podrá enviar."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
+    },
+    {
+      "h": "Encuentra o restablece la contraseña del buzón en Domeneshop",
+      "p": "Inicia sesión en domene.shop, abre tu dominio y ve a E-post. Cada dirección que aparece ahí tiene su propia contraseña, definida al crear la dirección. Si nadie la recuerda, define una nueva en esa pantalla. El acceso a tu cuenta de Domeneshop no es la contraseña del buzón y no sirve para autenticarse en IMAP."
+    },
+    {
+      "h": "Pégala en mcpemails",
+      "p": "Elige IMAP / SMTP, introduce la dirección completa, como post@yourdomain.no, y pega la contraseña del buzón. Los servidores y puertos de Domeneshop ya vienen rellenados y se verificaron con una conexión TLS real."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Domeneshop rechaza el envío SMTP desde redes en la nube con 550 [ACR04]",
+      "p": "Esta es la que pilla a la gente, y es una política, no un fallo. Domeneshop documenta <code>smtp.domeneshop.no</code> como un servidor para correo personal enviado desde tu propio PC, Mac, teléfono o tableta, y explícitamente no para enviar desde servicios en la nube, servidores web, boletines, marketing, envíos masivos, otros envíos automatizados ni servidores de correo dedicados. Un envío que llega desde el rango de IP de un proveedor en la nube se rechaza de forma permanente con una respuesta <code>550</code> que lleva el código <code>[ACR04]</code>. Reintentar desde la misma red nunca sirve, y el mensaje parece un problema de autenticación aunque tus credenciales estén bien. mcpemails lo sortea con una <b>ruta de salida alternativa</b> que no está en los rangos de un gran proveedor en la nube, de modo que un envío normal, a escala humana, de tu agente sale. Esa alternativa no cambia la política de Domeneshop: los envíos masivos y automatizados a través de Domeneshop siguen sin estar permitidos, y no deberías montar un boletín sobre ello."
+    },
+    {
+      "h": "El servidor IMAP anuncia AUTH=PLAIN y nada más",
+      "p": "El banner IMAP de Domeneshop ofrece solo <code>AUTH=PLAIN</code>, sin <code>AUTH=LOGIN</code>. Los clientes y bibliotecas programados para usar siempre el mecanismo LOGIN, algo habitual en herramientas escritas para Exchange, reciben un rechazo en el paso de autenticación en lugar de un error útil. El lado SMTP sí acepta tanto PLAIN como LOGIN, así que las dos mitades de la misma cuenta pueden comportarse distinto en el mismo cliente."
+    },
+    {
+      "h": "Sin MOVE, sin UIDPLUS, y las carpetas se identifican por nombre",
+      "p": "El servidor no anuncia la extensión IMAP MOVE, así que mover un mensaje se hace como una copia, una actualización de marcas y un expunge en lugar de un único comando atómico. También omite UIDPLUS, así que el nuevo UID de un mensaje copiado no se devuelve y hay que encontrarlo buscando en la carpeta de destino. Tampoco hay SPECIAL-USE, lo que significa que Enviados, Borradores, Papelera y Correo no deseado se identifican por sus nombres. En un buzón en noruego esos nombres suelen ser Sendt, Utkast, Slettet y Søppelpost, así que si un agente no encuentra tu carpeta de archivo, indícala explícitamente."
+    }
+  ],
+  "limits": [
+    "La política SMTP de Domeneshop excluye los envíos masivos, los boletines y los envíos automatizados en masa. Úsalo para correspondencia normal, no para campañas.",
+    "Como el servidor no admite MOVE, mover no es atómico. Si una conexión se corta a mitad de la operación, un mensaje puede existir un momento en las dos carpetas."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de Domeneshop?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para Domeneshop. Apuntar un servidor MCP como mcpemails a tu buzón de Domeneshop por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Domeneshop?",
+      "a": "IMAP es imap.domeneshop.no en el puerto 993 con TLS implícito. SMTP es smtp.domeneshop.no en el puerto 465, también con TLS implícito. Inicia sesión con tu dirección de correo completa y la contraseña del buzón del panel de control. Ambos servidores se confirmaron con una conexión TLS real, y ambos son compartidos por todos los clientes de Domeneshop."
+    },
+    {
+      "q": "¿Por qué falla el envío con 550 [ACR04]?",
+      "a": "Domeneshop rechaza el envío SMTP desde rangos de IP de nube y hosting como medida contra el abuso. El rechazo es permanente y no tiene nada que ver con tu contraseña. mcpemails dirige los envíos afectados por una salida alternativa que no está en esos rangos, para que los envíos normales se completen. Los envíos masivos a través de Domeneshop siguen yendo contra su política declarada."
+    },
+    {
+      "q": "¿Necesita Domeneshop una contraseña de aplicación?",
+      "a": "No. Domeneshop no emite contraseñas específicas de aplicación. Los clientes de correo se autentican con la contraseña definida para ese buzón concreto en E-post, en el panel de control. Es una credencial distinta del acceso a tu cuenta de Domeneshop, y por eso la contraseña de la cuenta se rechaza."
+    },
+    {
+      "q": "¿Se almacena mi correo de Domeneshop en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Domeneshop por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Domeneshop",
+    "sub": "Conecta el correo de Domeneshop en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

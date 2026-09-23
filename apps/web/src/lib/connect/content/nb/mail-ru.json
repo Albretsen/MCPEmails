@@ -1,42 +1,97 @@
 {
+  "_sources": [
+    "https://help.mail.ru/mail/security/protection/external/",
+    "https://help.mail.ru/mail/mailer/password/"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Passord for eksterne applikasjoner",
+    "helpUrl": "https://help.mail.ru/mail/security/protection/external/",
+    "usernameForm": "Hele adressen din med nøyaktig det domenet du registrerte deg på: name@mail.ru, name@bk.ru, name@list.ru eller name@inbox.ru.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Koble Mail.ru til Claude (og enhver AI)",
-    "description": "Koble Mail.ru til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med et app-passord. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+    "title": "Koble Mail.ru til Claude, Cursor og MCP-klienter",
+    "description": "Koble Mail.ru til Claude, Cursor og enhver MCP-klient over IMAP på imap.mail.ru:993 med et passord for eksterne applikasjoner. Nettstedspassordet fungerer ikke."
   },
   "hero": {
     "eyebrow": "Mail.ru + AI",
     "titleLine1": "Koble Mail.ru til Claude,",
-    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
-    "lead": "Gi AI-agenten din en ekte Mail.ru-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med et enkelt app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Mail.ru-innboks på få minutter. Les, søk, send, svar, planlegg og organiser e-post med ett enkelt app-passord, og bruk den samme innboksen i alle MCP-klienter, ikke bare én.",
     "meta0": "1 innboks gratis, for alltid",
-    "meta1": "App-passord, ingen OAuth-oppsett",
+    "meta1": "App-passord, uten OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude når ikke Mail.ru på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med et app-passord, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    "answer": "Claude kan ikke nå Mail.ru på egen hånd. mcpemails er en driftet MCP-server som kobler den til over IMAP med et app-passord, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
   },
   "method": {
-    "title": "Slik kobler Mail.ru seg til: IMAP og et app-passord",
-    "body": "Mail.ru kobles til via IMAP/SMTP med et <b>passord for eksterne applikasjoner</b>. Passordet du logger inn på nettsiden med, fungerer ikke fra en e-postklient. Opprett ett i Mail.ru under Sikkerhet, Passord for eksterne applikasjoner, og lim det inn i mcpemails sammen med Mail.ru-adressen din. Mail.ru krever et telefonnummer på kontoen før du får opprette ett."
+    "title": "Slik kobles Mail.ru til: IMAP og et app-passord",
+    "body": "Mail.ru kobles til over IMAP/SMTP med et <b>passord for eksterne applikasjoner</b>. Passordet du logger inn på nettstedet med, fungerer ikke fra en e-postklient. Opprett et i Mail.ru under Security, Passwords for external applications, og lim det deretter inn i mcpemails sammen med Mail.ru-adressen din. Mail.ru krever et telefonnummer på kontoen før de utsteder et slikt passord."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg hos mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Opprett et passord for eksterne applikasjoner",
-      "p": "I Mail.ru åpner du Sikkerhet og oppretter et passord for eksterne applikasjoner. Det er passordet mcpemails trenger, ikke det du bruker på nettsiden."
+      "p": "I Mail.ru åpner du Security og oppretter et passord for eksterne applikasjoner. Det er passordet mcpemails trenger, ikke det du bruker på nettstedet."
     },
     {
       "h": "Lim det inn i mcpemails",
-      "p": "Velg IMAP / SMTP, legg til Mail.ru-adressen din, vertene under og passordet for å koble til innboksen trygt."
+      "p": "Velg IMAP / SMTP, legg inn Mail.ru-adressen din, vertene nedenfor og passordet for å koble til innboksen på en sikker måte."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
       "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
     }
   ],
+  "gotchas": [
+    {
+      "h": "Nettstedspassordet har vært blokkert i e-postklienter siden 2022",
+      "p": "Mail.ru sluttet å godta det vanlige kontopassordet i eksterne applikasjoner, så alle e-postklienter trenger nå et eget passord opprettet under Security, deretter <b>Passwords for external applications</b>. Dette er ikke knyttet til tofaktorautentisering: det gjelder enten du bruker det eller ikke, og det finnes ingen innstilling som slår det av igjen. Avvisningen kommer tilbake som en vanlig autentiseringsfeil, og det er derfor så mange bruker en hel ettermiddag på å tro at de har skrevet noe feil."
+    },
+    {
+      "h": "Mail.ru vil ha et bekreftet telefonnummer før de utsteder et slikt passord",
+      "p": "Opprettelse av et passord for eksterne applikasjoner går gjennom sikkerhetsskjermene for totrinnsbekreftelse hos Mail.ru, og de krever et bekreftet telefonnummer på kontoen. En konto uten det kommer ikke til passordskjermen i det hele tatt, så legg til og bekreft nummeret først. Når passordet er opprettet, vises det én gang og er knyttet til den ene applikasjonen, så generer et eget i stedet for å gjenbruke et eksisterende passord fra en annen klient."
+    },
+    {
+      "h": "bk.ru, list.ru og inbox.ru er samme tjeneste, og domenet i brukernavnet har betydning",
+      "p": "Alle de fire Mail.ru-domenene autentiserer mot den samme verten <code>imap.mail.ru</code>, så det finnes ikke noe eget vertsnavn å slå opp. Brukernavnet er derimot hele adressen, inkludert nøyaktig det domenet du registrerte deg på. Skriver du <code>@mail.ru</code>-formen for en adresse som egentlig er <code>@bk.ru</code>, feiler det, og feilen ser igjen ut som feil passord og ikke feil brukernavn."
+    },
+    {
+      "h": "Ingen IDLE, ingen SPECIAL-USE og ingen AUTH=LOGIN",
+      "p": "IMAP hos Mail.ru annonserer <code>MOVE</code>, <code>UIDPLUS</code> og <code>SASL-IR</code>, så flyttinger er atomiske og autentisering tar én rundtur. Den annonserer ikke <code>IDLE</code>, så ingenting dyttes ut til deg, og ny e-post oppdages ved å se etter. Den annonserer heller ikke <code>SPECIAL-USE</code>, så Sendt, Utkast, Spam og Papirkurv gjenkjennes etter navn og ikke etter rolle. I en russiskspråklig postkasse heter disse mappene Отправленные, Черновики, Спам og Корзина, og en agent som leter etter en mappe som heter \"Sent\", finner ingen. Oppgi mappen eksplisitt, så fungerer det. Autentiseringslisten er <code>AUTH=PLAIN</code> og <code>AUTH=XOAUTH2</code> uten <code>AUTH=LOGIN</code>, så en klient som er satt opp med LOGIN-mekanismen, klarer ikke å autentisere selv med et helt riktig passord."
+    }
+  ],
+  "limits": [
+    "Mail.ru støtter ikke IDLE, så ny e-post blir funnet når agenten din ser etter, i stedet for å bli dyttet ut i det øyeblikket den kommer.",
+    "Innsendingsserveren til Mail.ru oppgir et meldingstak på omtrent 70 MB. Lesing av vedlegg via mcpemails er begrenset til 25 MB per forespørsel."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Mail.ru?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Mail.ru-kobling. Ved å koble en MCP-server som mcpemails til postkassen over IMAP, med et passord for eksterne applikasjoner, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den, og den samme tilkoblingen fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Mail.ru?",
+      "a": "IMAP er imap.mail.ru på port 993 med implisitt TLS. SMTP er smtp.mail.ru på port 465, også med implisitt TLS. Brukernavnet er hele adressen din inkludert nøyaktig domene, og passordet er et passord for eksterne applikasjoner, ikke nettstedspassordet ditt. Begge vertene ble bekreftet fra en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvorfor blir Mail.ru-passordet mitt avvist?",
+      "a": "Fordi passordet du logger inn på nettstedet med, har vært blokkert i eksterne applikasjoner siden 2022. Opprett et passord for eksterne applikasjoner under Security i Mail.ru-kontoen din og bruk det i stedet. Hvis du ikke kommer til den skjermen, mangler kontoen et bekreftet telefonnummer, som Mail.ru krever før de utsteder et slikt passord."
+    },
+    {
+      "q": "Fungerer adresser på bk.ru, list.ru og inbox.ru?",
+      "a": "Ja. De er samme tjeneste på de samme serverne og bruker samme type passord for eksterne applikasjoner. Skriv inn hele adressen med det riktige domenet som brukernavn, for domenet er en del av påloggingsopplysningen. Det finnes ikke egne vertsnavn for disse domenene: alle autentiserer mot imap.mail.ru og smtp.mail.ru."
+    },
+    {
+      "q": "Lagres Mail.ru-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Mail.ru over IMAP for hver forespørsel og overleveres til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke beholdt. Sletter du passordet for eksterne applikasjoner i sikkerhetsinnstillingene hos Mail.ru, avsluttes tilkoblingen umiddelbart fra deres side."
+    }
+  ],
   "ctaBand": {
     "title": "Gi AI-en din en Mail.ru-innboks",
-    "sub": "Koble til Mail.ru på minutter. Én innboks gratis for alltid, uten kort."
+    "sub": "Koble til Mail.ru på få minutter. Én innboks gratis for alltid, uten kort."
   }
 }

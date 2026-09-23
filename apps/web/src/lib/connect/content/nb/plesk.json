@@ -1,0 +1,95 @@
+{
+  "_sources": [
+    "https://docs.plesk.com/en-US/obsidian/customer-guide/quick-start-with-plesk/set-up-mail-accounts/2-access-your-mailbox.65691/",
+    "https://support.plesk.com/hc/en-us/articles/12377513710359-How-to-configure-a-secure-connection-when-setting-up-a-Plesk-email-account-in-an-email-client",
+    "https://support.plesk.com/hc/en-us/articles/12377516977175-How-to-assign-an-SSL-certificate-per-domain-to-secure-the-mail-server-in-Plesk-SNI-support",
+    "https://support.plesk.com/hc/en-us/articles/12387614382743-The-default-certificate-is-used-for-IMAP-connection-when-the-Plesk-Premium-Mail-is-installed"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://docs.plesk.com/en-US/obsidian/customer-guide/quick-start-with-plesk/set-up-mail-accounts/2-access-your-mailbox.65691/",
+    "usernameForm": "Hele e-postadressen din, for eksempel johndoe@example.com. Plesk avviser den lokale delen alene.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Plesk-e-post til Claude: IMAP-innstillinger og MCP-tilgang",
+    "description": "Plesk-postkasser kobles til Claude via IMAP 993. Bruk selve domenet, ikke mail.domain.com: IMAP har ikke SNI, så mail-underdomenet får feil sertifikat."
+  },
+  "hero": {
+    "eyebrow": "Plesk + AI",
+    "titleLine1": "Koble en Plesk-postkasse til Claude,",
+    "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Plesk-postkasse. Les, søk, send, svar, planlegg og organiser e-post via IMAP, på enhver server som kjører Plesk Obsidian, uansett hvem som hoster den.",
+    "answer": "Claude når ikke en Plesk-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Plesk er kontrollpanelprogramvare, ikke et hostingselskap, så det finnes ikke noe felles vertsnavn: e-postserveren er ditt eget domene eller serverens vertsnavn, og Plesk viser det nøyaktige paret under Mail Accounts, så Mail Client Setup. Autentisering skjer med passordet som er satt på postkassen i Plesk, ikke panelinnloggingen, og én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord satt i Plesk",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Plesk-e-post seg til: selve domenet, IMAP 993",
+    "body": "Plesk er kontrollpanelprogramvare som tusenvis av verter og selvadministrerte servere kjører, så innstillingene avhenger av serveren og ikke av en leverandør. Formen er alltid den samme: IMAP på port 993 med SSL, SMTP på 465, eller 587 der innsendingsporten er slått på, og hele e-postadressen som brukernavn. Plesks egen hurtigstart ber deg skrive inn <b>domenenavnet ditt</b>, for eksempel <code>example.com</code>, som innkommende og utgående server. Det er med vilje og ikke en forenkling. Plesk sikrer e-post med domenets sertifikat når du ber om det, og det dekker domenet, men ikke et <code>mail.</code>-underdomene, så <code>mail.example.com</code> svarer ofte med serverens standardsertifikat i stedet. Les verdiene av under <b>Websites & Domains</b>, domenet, <b>Mail Accounts</b>, <b>Mail Client Setup</b>, og bruk nøyaktig det som står der."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og krever ikke kort."
+    },
+    {
+      "h": "Åpne Mail Client Setup i Plesk",
+      "p": "I Plesk går du til <b>Websites & Domains</b>, velger domenet du vil ha e-posten fra, åpner <b>Mail Accounts</b> og klikker ikonet <b>Mail Client Setup</b> ved adressen. Plesk viser innkommende og utgående vertsnavn, IMAP- og SMTP-portene og sikkerhetstypen det forventer for den serveren. Kopier dem ordrett. Plesk-installasjoner varierer i hvordan TLS for e-post ble satt opp, så denne skjermen er mer pålitelig enn noen generell Plesk-veiledning, denne inkludert."
+    },
+    {
+      "h": "Sett postkassepassordet, og sjekk at sertifikatet dekker verten",
+      "p": "I <b>Mail Accounts</b> åpner du adressen og setter et passord der. Det passordet er det IMAP sjekker, ikke Plesk-innloggingen din. Er verten selvadministrert, sørg for at et gyldig sertifikat er tildelt e-postserveren under <b>Tools & Settings</b>, så <b>SSL/TLS Certificates</b>, og at navnet på det stemmer med vertsnavnet du skal bruke."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "IMAP og SMTP kan ikke gjøre SNI, så mail.yourdomain.com får serverens standardsertifikat",
+      "p": "HTTPS velger riktig sertifikat fordi nettleseren oppgir vertsnavnet under håndtrykket. E-postprotokollene virker ikke slik: tjenesten har ingen pålitelig måte å vite hvilket navn du ringte på, så den leverer ett sertifikat per tilkobling uansett. I en standard Plesk-installasjon betyr det at bare selve domenet og serverens vertsnavn er ordentlig sikret, og <code>mail.example.com</code> viser det som er serverens standard. Navnemismatchen som følger, er ikke en feilkonfigurasjon på din side, det er slik protokollen virker."
+    },
+    {
+      "h": "Løsningen er én avkrysningsboks når sertifikatet utstedes, og den er lett å overse",
+      "p": "Når du utsteder et Let's Encrypt-sertifikat i Plesk, kryss av for <b>Assign the certificate to the mail domain</b>. Deretter, under domenets <b>Mail Settings</b>, velger du det for <b>SSL/TLS certificate for mail</b>. Begge stegene trengs. Utstedes sertifikatet uten avkrysningen, blir e-posten på standardsertifikatet selv om nettstedet er fullt sikret, og derfor har så mange Plesk-servere et gyldig nettsted og et ødelagt e-posthåndtrykk samtidig."
+    },
+    {
+      "h": "Installasjon av Plesk Premium Mail setter stille IMAP tilbake til standardsertifikatet",
+      "p": "Plesk har et dokumentert tilfelle der aktivering av Premium Mail på et abonnement får IMAP-tilkoblinger til å falle tilbake til serverens standardsertifikat, selv der sertifikatet per domene var riktig tildelt fra før. E-posten fortsetter å flyte og webmail fortsetter å virke, så ingenting varsler om endringen; bare strenge klienter merker det. Løsningen er i panelet: åpne <b>Subscriptions</b>, domenet, <b>Plesk Premium Email</b>, og trykk <b>Fix</b>."
+    }
+  ],
+  "limits": [
+    "Plesk er programvare, ikke et hostingselskap, så leverandøren din kan ha endret standardinnstillingene. Der denne siden og skjermen Mail Client Setup er uenige, har skjermen rett.",
+    "Noen verter slår av port 587 og lar bare 465 stå igjen, eller omvendt. Plesks Mail Client Setup viser hvilken innsendingsport den serveren faktisk godtar."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med en Plesk-postkasse?",
+      "a": "Ikke direkte. Claude har ingen kobling for Plesk-servere. Kobler du en MCP-server som mcpemails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere. Fordi Plesk-e-post er vanlig IMAP og SMTP, virker dette likt hos alle verter som kjører Plesk."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Plesk?",
+      "a": "IMAP er port 993 med SSL, og SMTP er port 465 med SSL, eller 587 der innsendingsporten er slått på. Plesks egen dokumentasjon sier at du skal skrive inn domenenavnet ditt, for eksempel example.com, som både innkommende og utgående server, og bruke hele e-postadressen som brukernavn. Bekreft på skjermen Mail Client Setup for domenet ditt."
+    },
+    {
+      "q": "Hvorfor gir Plesk-e-post en navnemismatch på sertifikatet?",
+      "a": "Fordi e-postprotokollene ikke støtter SNI slik HTTPS gjør, så serveren viser ett sertifikat per tilkobling. Som standard dekker det domenet og serverens vertsnavn, ikke mail.yourdomain.com. Utsted et sertifikat med alternativet for å tildele det til e-postdomenet, og velg det så under domenets Mail Settings for TLS for e-post."
+    },
+    {
+      "q": "Hvor finner jeg e-postinnstillingene i Plesk?",
+      "a": "Gå til Websites and Domains, velg domenet, åpne Mail Accounts og klikk ikonet Mail Client Setup ved siden av adressen. Plesk viser vertsnavnene, portene og krypteringstypen akkurat denne serveren forventer. Fordi Plesk-installasjoner konfigureres ulikt av hver vert, er den skjermen fasiten for serveren din."
+    },
+    {
+      "q": "Lagres Plesk-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Plesk-serveren din via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Plesk-innboks",
+    "sub": "Koble til en Plesk-postkasse på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

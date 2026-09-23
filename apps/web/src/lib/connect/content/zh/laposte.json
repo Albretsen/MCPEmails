@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://aide.laposte.net/contents/comment-parametrer-un-logiciel-de-messagerie-pour-envoyer-et-recevoir-mes-courriers-electroniques",
+    "https://aide.laposte.net/contents/comment-parametrer-laposte-net-sur-mon-logiciel-de-messagerie-suite-a-l-arret-des-protocoles-en-clair-non-cryptes",
+    "https://postmaster.laposte.net/contents/comment-parametrer-et-activer-la-double-authentification-2fa-sur-un-compte-laposte-net"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "你的 laposte.net 密码",
+    "helpUrl": "https://aide.laposte.net/contents/comment-parametrer-un-logiciel-de-messagerie-pour-envoyer-et-recevoir-mes-courriers-electroniques",
+    "usernameForm": "你的完整地址，包括域名：prenom.nom@laposte.net。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "La Poste.net IMAP 设置与 Claude MCP 接入",
+    "description": "通过 imap.laposte.net:993 将 laposte.net 邮箱连接到 Claude、Cursor 及任意 MCP 客户端。自 2023 年起只开放加密端口，外发邮件上限为 15 MB。"
+  },
+  "hero": {
+    "eyebrow": "laposte.net + AI",
+    "titleLine1": "将你的 laposte.net 收件箱连接到",
+    "titleLine2": "Claude、Cursor 及任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 laposte.net 收件箱。使用你普通的 laposte.net 密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行访问 laposte.net 邮箱。mcpemails 是一个托管 MCP 服务器，通过 imap.laposte.net 端口 993 的 IMAP 与之连接，使用你的完整地址和普通 laposte.net 密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。La Poste 不签发应用专用密码，也没有需要寻找的客户端访问开关，但该邮箱只接受加密端口，而且外发邮件的大小上限异常低。1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "你普通的 laposte.net 密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "laposte.net 如何连接：使用账户密码的 TLS 加密 IMAP",
+    "body": "La Poste 在 <code>imap.laposte.net</code> 端口 993 上以隐式 TLS 提供 IMAP。对于外发邮件，La Poste 自己的帮助页面给出的是端口 587 上的 <code>smtp.laposte.net</code>，使用 TLS；同一台服务器上的端口 465 也以隐式 TLS 响应，mcpemails 预填的正是这一项，因为从服务器端维持单一的隐式加密连接更简单。认证使用你普通的 laposte.net 密码，用户名为<b>完整</b>地址。没有需要生成的应用专用密码，也没有需要寻找的 <b>autoriser les logiciels de messagerie</b>（允许邮件软件）开关，这让 laposte.net 成为较容易连接的法国邮箱之一。麻烦在别处：服务器被刻意设计得很精简，而 La Poste 一次性关闭了所有未加密协议，至今仍让多年前配置的客户端无法使用。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "确认你的 laposte.net 密码在网页邮箱中仍然有效",
+      "p": "用你打算交给 mcpemails 的同一地址和密码登录 laposte.net。这值得花三十秒，因为如果失败，没有另一个邮件凭据可以怪罪：只要网页邮箱接受，IMAP 服务器也会接受。"
+    },
+    {
+      "h": "连接之前查看你的安全设置",
+      "p": "在 laposte.net 网页邮箱中打开 <b>Paramètres</b>，然后打开 <b>Sécurité</b>。双重身份验证就在那里开启和关闭。La Poste 关于 laposte.net 双重身份验证的文档描述的是向已配对移动设备推送确认，并没有记载任何供邮件软件使用的应用密码机制，所以在排查登录被拒之前，请先弄清你的账户处于哪种状态。"
+    },
+    {
+      "h": "粘贴到 mcpemails，再把 MCP URL 粘贴到你的 AI",
+      "p": "选择 IMAP / SMTP，输入完整地址（例如 prenom.nom@laposte.net）和密码。La Poste 的服务器地址和端口已预填，并经实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "外发邮件上限约为 15 MB，是法国主要服务商中最小的",
+      "p": "<code>smtp.laposte.net</code> 声明的单封邮件大小上限为 15,800,000 字节。这是整封邮件编码后的大小，而 base64 会让附件膨胀约三分之一，所以一个 12 MB 的 PDF 就已经太大了。让代理转发一份扫描文档，你可能会遇到 SMTP 硬性拒绝，而同样的邮件在 Orange 或 Gmail 上会顺利发出。如果非发不可，请把文件放到某处，然后发送链接。"
+    },
+    {
+      "h": "所有未加密端口已于 2023 年 7 月 4 日关闭，而报错毫无帮助",
+      "p": "La Poste 在那一天停用了所有明文通信。仍指向旧明文端口的客户端，得到的是类似 <b>invalid command</b> 的错误，而不是任何与加密有关的信息，所以一个用了十年的配置，突然看起来像是账户坏了。现在唯一支持的组合是 IMAP 993、POP 995 和 SMTP 587，全部至少使用 SSL 或 TLS 1.2。如果你要把某个客户端的设置迁移到 mcpemails，请不要沿用旧端口。"
+    },
+    {
+      "h": "没有 SASL-IR，而大多数客户端库默认它支持",
+      "p": "laposte.net 的 IMAP 服务器不声明 <code>SASL-IR</code>，因此会拒绝随 <code>AUTHENTICATE</code> 命令一起发送凭据的一步式认证。默认假设支持 SASL-IR 的客户端会收到一个没有任何解释的 <code>BAD</code>，看起来与密码错误一模一样。mcpemails 会检测到这个 <code>BAD</code> 并改用两步交互重试，所以已经替你处理好了，但这正是其他 IMAP 工具在别处都能用、却在 laposte.net 上失败的原因。"
+    },
+    {
+      "h": "法语命名的邮箱上没有 IDLE、没有 MOVE、也没有 SPECIAL-USE",
+      "p": "它的横幅几乎是 IMAP 横幅所能达到的最短程度：<code>* OK IMAP4 ready</code>。没有 <code>IDLE</code>，所以新邮件是通过轮询发现的，而不是推送。没有 <code>MOVE</code>，所以归档邮件要以复制、更新标记和清除的方式完成。也没有 <code>SPECIAL-USE</code>，所以 Sent、Drafts 和 Trash 按名称匹配，在 laposte.net 邮箱中通常是 <b>Envoyés</b>、<b>Brouillons</b> 和 <b>Corbeille</b>。如果代理找不到某个文件夹，请明确写出它的名称。"
+    }
+  ],
+  "limits": [
+    "15 MB 的外发上限，是代理从这个邮箱发出的任何内容（包括附件）的实际上限。",
+    "由于服务器不支持 MOVE，移动操作不是原子的。如果连接在操作中途断开，邮件可能会短暂地同时存在于两个文件夹中。",
+    "La Poste 没有为 laposte.net 邮件客户端公布任何应用密码机制，所以如果双重身份验证阻止了客户端登录，没有文档记载的按应用区分的凭据可以退而使用。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 laposte.net 邮箱吗？",
+      "a": "不能单独使用。Claude 没有内置的 La Poste 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接随后也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "laposte.net 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.laposte.net，端口 993，使用隐式 TLS。对于外发邮件，La Poste 文档给出的是 smtp.laposte.net，端口 587，使用 TLS；同一台服务器上的端口 465 也以隐式 TLS 响应，mcpemails 使用的就是这一项。请用完整地址和 laposte.net 密码登录。两个服务器均经实时 TLS 连接确认。"
+    },
+    {
+      "q": "laposte.net 需要应用专用密码吗？",
+      "a": "不需要。La Poste 不为 laposte.net 签发应用专用密码。邮件客户端使用与网页邮箱相同的密码，并配合你的完整地址进行认证。如果该密码被拒绝，请先在网页邮箱中核对，因为不存在第二个可能出问题的凭据。"
+    },
+    {
+      "q": "为什么我的邮件客户端突然连不上 laposte.net？",
+      "a": "最常见的原因是它仍配置为未加密端口。La Poste 已于 2023 年 7 月 4 日关闭所有明文协议，使用旧端口的客户端会收到 invalid command 错误，而不是明确的提示。请把账户改为 IMAP 993 或 POP 995，以及 SMTP 587，全部使用 SSL 或 TLS。"
+    },
+    {
+      "q": "为什么从 laposte.net 发送附件失败？",
+      "a": "SMTP 服务器对单封邮件的上限约为 15.8 MB（含编码开销），与大多数服务商相比偏小。磁盘上超过约 11 MB 的文件，编码后通常就会超出上限。拒绝发生在提交时，所以不会有任何内容进入队列或被部分投递。"
+    },
+    {
+      "q": "我的 laposte.net 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 La Poste 实时获取邮件，并交给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 laposte.net 收件箱",
+    "sub": "几分钟即可连接 laposte.net。1 个收件箱永久免费，无需信用卡。"
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://support.microsoft.com/en-us/office/outlook-and-other-apps-are-unable-to-connect-to-outlook-com-when-using-basic-authentication-f4202ebf-89c6-4a8a-bec3-3d60cf7deaef",
+    "https://learn.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth",
+    "https://support.microsoft.com/en-us/accounts-billing/manage/how-to-get-and-use-app-passwords"
+  ],
+  "auth": {
+    "method": "oauth",
+    "label": "Bare OAuth 2.0, ikke app-passord",
+    "helpUrl": "https://support.microsoft.com/en-us/office/outlook-and-other-apps-are-unable-to-connect-to-outlook-com-when-using-basic-authentication-f4202ebf-89c6-4a8a-bec3-3d60cf7deaef",
+    "usernameForm": "Ingen pålogging du kan skrive inn, vil virke. IMAP-tjenesten for personlige Microsoft-kontoer tilbyr bare XOAUTH2, så den godtar et tilgangstoken og ingenting annet.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Outlook.com og AI: bare OAuth, app-passord er døde",
+    "description": "Outlook.com IMAP annonserer nå bare AUTH=XOAUTH2, så verken passord eller app-passord kobler den til en MCP-server. Hva som er endret, og hva du kan gjøre."
+  },
+  "hero": {
+    "eyebrow": "Outlook.com + AI",
+    "titleLine1": "Outlook.com godtar ikke lenger",
+    "titleLine2": "passord på IMAP i det hele tatt",
+    "lead": "Personlige Microsoft-kontoer, enten adressen slutter på outlook.com, hotmail.com, live.com eller msn.com, sluttet å godta Basic-autentisering fra apper som ikke er fra Microsoft. Serveren er oppe. Den har rett og slett ingen passordmekanisme igjen å tilby.",
+    "answer": "Nei. mcpemails kan ikke koble til en Outlook.com-postkasse, og hindringen er autentisering, ikke tilgjengelighet. IMAP-tjenesten for personlige Microsoft-kontoer svarer på outlook.office365.com port 993 og TLS-håndtrykket lykkes, men funksjonslinjen annonserer nå bare AUTH=XOAUTH2: det finnes ingen passordmekanisme å velge, så verken kontopassord eller app-passord kan autentisere. Microsoft avsluttet Basic-autentisering for personlige kontoer som kobler til fra programmer som ikke er fra Microsoft, fra 16. september 2024, og OAuth 2.0 er dermed eneste vei inn. mcpemails tilbyr ikke en Microsoft OAuth-tilkobling, så en Outlook.com-postkasse kan ikke kobles til her. Vil du ha en agent som jobber med e-post i dag, kobler du til en postkasse som godtar passord via IMAP, som er gratis for én innboks, og videresender Outlook.com-e-posten dit hvis du vil ha en kopi."
+  },
+  "method": {
+    "title": "Slik kobler Outlook.com seg til: XOAUTH2, og ingenting annet",
+    "body": "Outlook.com og Microsoft 365-postkasser for bedrifter er to forskjellige tjenester som tilfeldigvis havner på samme IMAP-vert, og forskjellen vises i første utveksling. Kobler du til <code>outlook.office365.com</code> på 993 med en bedriftsadresse, lister funksjonslinjen fortsatt <code>AUTH=PLAIN</code> ved siden av <code>AUTH=XOAUTH2</code>, en utdatert annonsering av en mekanisme tjenesten avviser. Kobler du til med en personlig konto, er <code>AUTH=PLAIN</code> ikke der i det hele tatt. Forbrukertjenesten har sluttet å tilby passordautentisering i stedet for bare å avvise den, noe som er en ryddigere feil og en mer forvirrende en, fordi klienter som forventer å sende et passord, får en avvisning på protokollnivå i stedet for en innloggingsfeil. SMTP for personlige kontoer er <code>smtp-mail.outlook.com</code> på port 587 med STARTTLS, og den samme autentiseringshistorien gjelder. Den gode nyheten, for hva den er verdt, er at det ikke finnes noen tenant-administrator i bildet for personlige kontoer: ingen samtykkepolicy blokkerer deg, fordi det ikke er noe å samtykke til."
+  },
+  "setup": [
+    {
+      "h": "Opprett den gratis mcpemails-kontoen",
+      "p": "En e-postadresse, ingen kort. Én tilkoblet innboks er gratis for alltid. De neste to stegene velger hvilken postkasse det blir, for det blir ikke Outlook.com-postkassen."
+    },
+    {
+      "h": "Velg en postkasse som fortsatt godtar passord via IMAP",
+      "p": "Ditt eget domene hos Fastmail eller Migadu, en personlig Gmail-konto, en prosjektadresse hos en hvilken som helst vanlig vert. Den kontoen er det mcpemails kobler til, og der agenten din leser, lager utkast, svarer, planlegger og arkiverer."
+    },
+    {
+      "h": "Slå på videresending i Outlook.com hvis du vil ha en kopi",
+      "p": "I Outlook.com på nettet åpner du Settings, går til Mail og så Forwarding, og slår på videresending til adressen du nettopp koblet til. Behold alternativet for å beholde en kopi av videresendte meldinger, slik at Outlook.com-postkassen forblir komplett. Ny e-post kommer da begge steder, og agenten jobber på kopien."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten den tilkoblede innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Outlook.com og Microsoft 365 deler vert, men ikke funksjonslinje",
+      "p": "Begge tjenestene slås opp til <code>outlook.office365.com</code> for IMAP, noe som får dem til å se utskiftbare ut i alle innstillingstabeller på internett. Det er de ikke. Bedriftssiden annonserer <code>AUTH=PLAIN</code> og avviser det. Den personlige siden annonserer det ikke i det hele tatt. Ingen av dem godtar passord, men de feiler ulikt, så en supportartikkel skrevet for den ene vil feildiagnostisere den andre. SMTP-vertene er også forskjellige: personlige kontoer bruker <code>smtp-mail.outlook.com</code>."
+    },
+    {
+      "h": "Et app-passord er en Basic-autentiseringspålogging, så det har ingenting å logge inn på",
+      "p": "Microsoft lar deg fortsatt generere app-passord på en personlig konto for eldre scenarier som en gammel Outlook-skrivebordsversjon eller en Xbox-konsoll, og derfor ber så mange veiledninger deg fortsatt lage et for IMAP. Det kan ikke hjelpe. Et app-passord er et passord, og passordautentisering er akkurat det IMAP-tjenesten ikke lenger tilbyr. Å generere et nytt og se det feile igjen er den vanligste bortkastede timen hos denne leverandøren."
+    },
+    {
+      "h": "hotmail.com-, live.com- og msn.com-adresser er samme tjeneste",
+      "p": "Forbruker-e-posttjenesten bak alle de domenene er ett system med ett sett endepunkter og én autentiseringspolicy. En eldre hotmail.com-adresse som har virket i en e-postklient i femten år, er omfattet av den samme endringen som en outlook.com-adresse opprettet i går, og i det øyeblikket klienten prøver å autentisere på nytt, stopper den."
+    },
+    {
+      "h": "IMAP-tjenesten annonserer ikke SPECIAL-USE",
+      "p": "Personlige Microsoft-kontoer støtter MOVE, UIDPLUS og IDLE, men en klient kan ikke spørre serveren hvilken mappe som er Junk eller Sent, og må matche etter navn i stedet. Outlook.com kaller spam-mappen Junk Email i stedet for Junk, og lokaliserte kontoer bruker oversatte navn, så verktøy som matcher bokstavelige engelske mappenavn, finner stille ingenting å jobbe med."
+    }
+  ],
+  "limits": [
+    "Videresending gir deg en kopi, ikke postkassen. Svar agenten din sender, går ut fra den andre adressen, og ingenting den arkiverer eller flagger, speiles tilbake i Outlook.com.",
+    "Denne siden beskriver tjenesten for personlige Microsoft-kontoer. Ligger adressen din i stedet på en jobb- eller skoletenant, gjelder bedriftens samtykkeregler i tillegg til alt her, og administratoren din er en del av svaret."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Outlook.com?",
+      "a": "Ikke gjennom mcpemails. Outlook.com godtar bare OAuth 2.0 på IMAP, og vi tilbyr ikke en Microsoft OAuth-tilkobling, så det finnes ingen måte å koble til den postkassen her. Å koble til en annen postkasse som godtar en vanlig IMAP-innlogging, og videresende Outlook.com-e-posten dit, er veien som virker i dag."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Outlook.com?",
+      "a": "IMAP er outlook.office365.com på port 993 med implisitt TLS. SMTP er smtp-mail.outlook.com på port 587 med STARTTLS. Begge ble bekreftet via en direkte TLS-tilkobling. Verdiene er riktige, men ikke lenger nok alene, fordi IMAP-tjenesten bare autentiserer med et OAuth 2.0-tilgangstoken."
+    },
+    {
+      "q": "Hvorfor blir Outlook.com-passordet mitt avvist?",
+      "a": "Det blir ikke så mye avvist som aldri tilbudt. Fra 16. september 2024 sluttet Microsoft å støtte Basic-autentisering for personlige kontoer som kobler til fra programmer som ikke er fra Microsoft, og IMAP-tjenesten annonserer nå bare XOAUTH2. En klient som prøver å sende et passord, har ingen mekanisme å sende det gjennom."
+    },
+    {
+      "q": "Kan jeg bruke et app-passord for Outlook.com IMAP?",
+      "a": "Nei. App-passord finnes fortsatt på personlige Microsoft-kontoer for spesifikke eldre apper, men de er Basic-autentiseringspålogginger, og e-posttjenesten godtar ikke lenger den formen for autentisering. Å opprette et endrer ikke utfallet, uansett hvor mange eldre veiledninger som foreslår det som løsningen."
+    },
+    {
+      "q": "Er dette samme situasjon som Microsoft 365 for bedrifter?",
+      "a": "Sluttresultatet er det samme, årsaken er det ikke. En personlig konto har ingen tenant-administrator og ingen samtykkepolicy i veien; det er utelukkende at passordautentisering er borte. En bedriftspostkasse har den samme fjerningen av autentisering pluss et krav om samtykke, der en administrator må godkjenne e-posttillatelsene et program ber om."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. For postkassene mcpemails faktisk kobler til, hentes meldinger direkte via IMAP for hver forespørsel og leveres til AI-klienten din, med påloggingsdetaljer kryptert ved lagring og meldingsinnhold som ikke beholdes. Vi har ingen Outlook.com-påloggingsdetaljer i det hele tatt, siden ingen Outlook.com-tilkobling er mulig."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en innboks den kan logge inn på",
+    "sub": "Outlook.com blir der den er. Koble til én IMAP-postkasse for det automatiserte arbeidet, gratis for alltid."
+  }
+}

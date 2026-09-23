@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://disroot.org/en/services/email",
+    "https://disroot.org/en/faq",
+    "https://howto.disroot.org/en/tutorials/email/clients"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Disroot 密码",
+    "helpUrl": "https://disroot.org/en/services/email",
+    "usernameForm": "你的完整 Disroot 地址，即 name@disroot.org。Disroot 自己的登录页面使用不带域名的用户名，所以如果完整地址被拒绝，请改用用户名试试。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 Disroot 邮箱连接到 Claude 与 MCP 客户端",
+    "description": "通过 disroot.org:993 的 IMAP 将 Disroot 邮箱连接到 Claude、Cursor 及任意 MCP 客户端。使用你的 Disroot 账户密码，Disroot 不提供应用专用密码。1 个收件箱免费。"
+  },
+  "hero": {
+    "eyebrow": "Disroot + AI",
+    "titleLine1": "将 Disroot 连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Disroot 收件箱。通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用而不止一个，并且坦白说明其中的隐私取舍。",
+    "answer": "Claude 无法自行访问 Disroot 邮箱。mcpemails 是一个托管 MCP 服务器，通过 disroot.org 的 IMAP（端口 993）和 SMTP（端口 465）与之连接，使用你登录网页邮箱和 Cloud 时用的同一个 Disroot 密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。Disroot 不提供应用专用密码，因此请清楚：你存储的凭据就是你的账户凭据。1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "你的 Disroot 账户密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Disroot 如何连接：一个主机名，一个密码",
+    "body": "Disroot 的所有服务都运行在裸域名上。IMAP 是端口 993 上的 <code>disroot.org</code>，使用隐式 TLS；SMTP 是端口 465 上的 <code>disroot.org</code>。无需添加 <code>imap.</code> 或 <code>smtp.</code> 前缀，也没有需要查找的地区变体。认证使用<b>普通密码</b>：就是登录网页邮箱、Nextcloud 实例、Akkoma 和 XMPP 聊天的同一个 Disroot 密码。Disroot 不提供应用专用密码或设备密码，因此无法给客户端一个权限受限的凭据。在连接任何东西（包括本服务）之前，这一点值得先想清楚。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。完成后你会得到一个 MCP URL 和一个密钥。"
+    },
+    {
+      "h": "确认你的 Disroot 登录名",
+      "p": "Disroot 的 FAQ 明确说明，账户登录名是<b>不带</b>域名的用户名。大多数邮件客户端用完整的 <code>name@disroot.org</code> 地址也能正常认证，但如果服务器拒绝登录，而密码确定无误，请只用用户名部分重试。Disroot 客户端登录失败，大多是因为这一个细节。"
+    },
+    {
+      "h": "在 mcpemails 中添加邮箱",
+      "p": "选择 IMAP / SMTP，填入你的 Disroot 地址和 Disroot 密码。收发两个方向的服务器都已预填为 <code>disroot.org</code>。凭据静态加密存储；邮件本身按请求实时获取，不做保留。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "一个密码可解锁所有 Disroot 服务",
+      "p": "你的 Disroot 密码同时用于邮箱、Nextcloud Cloud、Akkoma 和聊天。Disroot 不为邮件提供应用专用密码，因此邮件客户端持有的密钥与打开你文件的密钥是同一个。如果你想撤销这种访问，唯一的办法是修改账户密码；而修改密码后，你还必须在 Personal settings（个人设置）页面重新设置 Nextcloud 的加密密钥，否则文件将无法打开。Disroot 的双重身份验证只保护 Cloud，不涵盖 IMAP，所以无论开启与否，都不会阻止邮件客户端登录。"
+    },
+    {
+      "h": "Disroot 的 IMAP 服务器不声明 MOVE 或 UIDPLUS",
+      "p": "<code>disroot.org</code> 上的 Dovecot 实例提供带 IDLE 和 SASL-IR 的 IMAP4rev1，但没有 MOVE，也没有 UIDPLUS。因此移动一封邮件要先 COPY，再 STORE \\Deleted 标记，最后 EXPUNGE；而没有 UIDPLUS，服务器不会返回新的 UID，所以移动后的副本需要再次搜索才能找到。这样可以正常工作，只是比支持 MOVE 的服务器更慢、操作更多，这也是在 Disroot 上进行大批量整理明显更耗时的原因。"
+    },
+    {
+      "h": "没有 SPECIAL-USE，文件夹按名称匹配",
+      "p": "Disroot 不声明 SPECIAL-USE 扩展，因此协议层面没有任何信息说明哪个文件夹是 Sent、Drafts、Trash 或 Archive，文件夹的角色只能根据名称推断。如果你在网页邮箱中重命名过文件夹，或者你的客户端多年前创建过第二个 Sent 文件夹，那么在让代理归档邮件时，请明确写出文件夹名称。"
+    },
+    {
+      "h": "邮箱默认容量为 1 GB",
+      "p": "Disroot 公布的邮箱上限为 1 GB，附件上限为 64 MB；SMTP 服务器本身声明的单封邮件上限为 70 MB。存储空间可以通过捐助扩容。邮箱满后，收到的邮件会被退回；而代理发送大附件时，会先碰到大小限制，再碰到配额。"
+    }
+  ],
+  "limits": [
+    "将任何邮箱连接到 AI 客户端，都意味着该 AI 服务商会读取你的邮件内容。Disroot 无法阻止这一点，我们也不能。mcpemails 按请求从 Disroot 实时获取邮件，不存储邮件正文，凭据也静态加密存储，但文本仍会到达 Claude、Cursor 或你所使用的任何客户端。如果某个 Disroot 邮箱中有你不希望大型 AI 厂商处理的往来邮件，请不要连接它。",
+    "以 GPG 加密方式到达的邮件（Disroot 积极鼓励这样做）在 IMAP 客户端中显示为 ASCII 封装的密文块。mcpemails 不持有你的私钥，因此代理只能看到信封信息和加密载荷，看不到邮件内容。这些会话必须在持有你密钥的客户端中阅读。",
+    "没有权限受限的凭据。Disroot 不提供应用专用密码，因此 mcpemails 存储的就是能打开你 Cloud 文件的那个密码。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Disroot 吗？",
+      "a": "不能直接使用。Claude 没有内置的 Disroot 连接器，也无法使用 IMAP 协议。将 mcpemails 这样的 MCP 服务器连接到你的 Disroot 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接无需重新设置，即可在 Cursor 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Disroot 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 disroot.org，端口 993，使用隐式 TLS。SMTP 为 disroot.org，端口 465，同样是隐式 TLS；官方文档给出的替代方式是端口 587 上的 STARTTLS。没有 imap. 或 smtp. 子域名。使用你的 Disroot 地址和普通 Disroot 密码登录。两个服务器均通过实时 TLS 连接验证。"
+    },
+    {
+      "q": "Disroot 有供邮件客户端使用的应用专用密码吗？",
+      "a": "没有。Disroot 每个账户只有一个密码，邮箱、Cloud、Akkoma 和聊天共用。你连接的任何东西都会拿到这个凭据。Disroot 的双重身份验证作用于 Cloud 而非 IMAP，因此它既不会阻止、也不会保护邮件客户端的登录。"
+    },
+    {
+      "q": "为什么我的 Disroot 密码被拒绝？",
+      "a": "通常问题出在用户名，而不是密码。Disroot 自己的 FAQ 说明账户登录名是不带域名的用户名，而且密码区分大小写。请用单独的用户名代替完整地址再试。如果仍然登录失败，请确认账户已通过审核；Disroot 会先审核注册申请，账户才会生效。"
+    },
+    {
+      "q": "我的 AI 能读取经过 PGP 加密的 Disroot 邮件吗？",
+      "a": "不能。用你的 OpenPGP 密钥加密的邮件通过 IMAP 到达时是密文，而 mcpemails 从不持有你的私钥。代理可以看到发件人、主题和日期，也可以移动或标记这封邮件，但正文始终无法读取。这是预期行为，也正是端到端加密的会话能对 AI 客户端保密的原因。"
+    },
+    {
+      "q": "我的 Disroot 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 disroot.org 实时获取邮件，并直接传给你的 AI 客户端。凭据静态加密存储；邮件正文不会保留。你连接的 AI 客户端确实会收到它读取的任何内容，这是另一个问题，值得你慎重决定。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Disroot 收件箱",
+    "sub": "几分钟即可连接 Disroot。1 个收件箱永久免费，无需信用卡。"
+  }
+}

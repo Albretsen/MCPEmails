@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://soverin.zammad.com/help/en-gb/12-email-apps-and-imap/38-imap-and-smtp-settings",
+    "https://soverin.zammad.com/help/en-gb/13-account/37-two-factor-authentication-2fa",
+    "https://soverin.com/product/pricing",
+    "https://soverin.com/resources/faq"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Soverin 账户密码",
+    "helpUrl": "https://soverin.zammad.com/help/en-gb/12-email-apps-and-imap/38-imap-and-smtp-settings",
+    "usernameForm": "你完整的 Soverin 邮箱地址，包括自定义域名：name@yourdomain.eu。Soverin 规定以邮箱地址作为用户名。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 Soverin 邮箱连接到 Claude 与 MCP 客户端",
+    "description": "通过 IMAP（imap.soverin.net:993）将 Soverin 连接到 Claude、Cursor 及任意 MCP 客户端。Soverin 的两步验证只作用于控制台和网页邮箱，从不作用于 IMAP。"
+  },
+  "hero": {
+    "eyebrow": "Soverin + AI",
+    "titleLine1": "将 Soverin 连接到 Claude，",
+    "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Soverin 收件箱。在任意 MCP 客户端中通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，包括你自有域名上的邮箱，并坦白说明什么在保护这个连接、什么没有。",
+    "answer": "Claude 无法自行连接 Soverin 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.soverin.net 的 993 端口，通过 SMTP 连接 smtp.soverin.net 的 465 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Soverin 规定用户名是你的邮箱地址，密码是你的账户密码，而且同样这两台服务器既服务 soverin.net 邮箱，也服务自定义域名邮箱。Soverin 不签发应用密码，其双重认证保护的是控制台和网页邮箱而不是 IMAP，所以你在这里保存的凭据就是账户密码。一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "你的 Soverin 账户密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Soverin 如何连接：不管地址写的是什么，都用 soverin.net 主机",
+    "body": "Soverin 在 <code>imap.soverin.net</code> 的 993 端口（SSL）或 143 端口（STARTTLS）提供 IMAP，在 <code>smtp.soverin.net</code> 的 465 端口（SSL）或 587 端口（STARTTLS）提供 SMTP。Soverin 自己的帮助页面说得很直接：你的 Soverin 邮箱地址也就是你的用户名，密码是你的账户密码。重要的推论是，你自有域名上的邮箱仍然在 <code>soverin.net</code> 主机上认证。邮件服务由 Soverin 运行；你的域名只决定你的地址长什么样以及 MX 记录指向哪里。这里没有应用密码机制，而 Soverin 的双重认证在文档中被说明为保护 Soverin Dashboard 和集成的网页邮箱，这意味着开启它既不会让邮件客户端失效，也不会保护邮件客户端。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。完成后你会得到一个 MCP URL 和一个密钥。"
+    },
+    {
+      "h": "确认邮箱用于认证的地址",
+      "p": "在 Soverin Dashboard 中打开要连接的邮箱。邮箱本身的地址才是用户名，而不是你指向它的某个别名。Soverin 为每个邮箱提供无限别名，所以你很可能多年前就不再使用最初的地址，也不再把它当作登录名。"
+    },
+    {
+      "h": "在 mcpemails 中添加邮箱",
+      "p": "选择 IMAP / SMTP，输入该完整地址和你的 Soverin 账户密码。服务器已自动填为 <code>imap.soverin.net</code> 和 <code>smtp.soverin.net</code>，并已通过实时 TLS 连接验证。不要换成基于你自己域名构造的主机名；证书是为 Soverin 自己的名称签发的，严格校验的客户端会拒绝它。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "双重认证不作用于 IMAP，也不存在应用密码",
+      "p": "Soverin 自己的两步验证文章把该功能的范围限定在两处：用于管理账户和设置的 <b>Soverin Dashboard</b>，以及集成的网页邮箱。IMAP、POP 和 SMTP 不在其列，Soverin 也没有公布配套的应用密码机制。实际结果有两个。开启两步验证不会让这个连接或任何其他邮件客户端失效，这与 Runbox 或 Posteo 的情况正好相反。而且在这里限制已连接客户端的也不是两步验证：唯一的凭据是你的账户密码，所以撤销一个连接意味着修改该密码并在所有地方重新输入。请保管好 Soverin 签发的恢复码，因为没有它，一旦丢失身份验证器，就会失去控制台访问权限。"
+    },
+    {
+      "h": "IMAP 服务器不提供 AUTH=LOGIN，而 SMTP 提供",
+      "p": "Soverin 的 IMAP 问候语声明了 <code>AUTH=PLAIN</code>、<code>AUTH=OAUTHBEARER</code> 和 <code>AUTH=XOAUTH2</code>，没有 <code>AUTH=LOGIN</code>。SMTP 服务器则同时接受 PLAIN 和 LOGIN。因此写死使用 LOGIN 机制的客户端（在最初针对 Exchange 编写的工具中很常见）会在同一账户、同一凭据下读信失败而发信正常，调试起来很让人困惑。那两个 OAuth 机制属于 Soverin 自己的平台集成，第三方无法为其获取令牌，所以密码认证才是正途。"
+    },
+    {
+      "h": "自定义域名并不会给你一台自己的邮件主机",
+      "p": "Soverin 销售你自有域名上的邮箱，人们自然会以为 <code>mail.yourdomain.eu</code> 就是服务器。其实不是。你的 MX 记录指向 Soverin 的基础设施，客户端在 <code>imap.soverin.net</code> 和 <code>smtp.soverin.net</code> 上认证，与 soverin.net 地址完全一样。这些主机上的证书是为 Soverin 自己的名称签发的，所以把客户端指向你域名上的主机名，得到的是证书不匹配，而不是一个可用的连接。"
+    },
+    {
+      "h": "没有 MOVE、UIDPLUS 和 SPECIAL-USE",
+      "p": "该 Dovecot 服务器声明了 IDLE 和 SASL-IR，但没有 MOVE、UIDPLUS 或 SPECIAL-USE。归档一封邮件是一次 COPY、一次为其 STORE \\Deleted 标记和一次 EXPUNGE，而不是一条命令；由于没有 UIDPLUS，服务器不会报告新 UID，只能在目标文件夹中搜索重新找到移动后的副本。文件夹用途来自名称，因为协议中没有任何东西声明它们，所以重命名过或使用荷兰语命名的已发送或已删除文件夹，在让代理归档邮件时可能需要明确写出名称。"
+    }
+  ],
+  "limits": [
+    "将 Soverin 邮箱连接到 AI 客户端，意味着该 AI 服务商会读取它所处理的邮件内容。mcpemails 每次请求都实时从 imap.soverin.net 获取邮件，不存储邮件正文，凭据也经过静态加密，但文本仍会到达 Claude、Cursor 或你连接的任何客户端。Soverin 仅在欧盟托管、依靠订阅收入、承诺不扫描或分析你的邮件，这些描述的都是 Soverin。一旦邮件进入你自己接入的 AI 厂商，这些都不会随之而去。",
+    "没有范围受限的凭据。Soverin 没有应用密码，所以这里保存的是你的账户密码，也就是打开 Soverin Dashboard 的那个密码。撤回这个连接意味着修改该密码，而不是删除某个单独的令牌。",
+    "mcpemails 连接的是邮箱，而不是账户。别名、其他邮箱、域名设置和转发仍在 Soverin Dashboard 中，你的 AI 客户端既看不到也无法更改。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Soverin 吗？",
+      "a": "不能直接使用。Claude 没有 Soverin 连接器，自身也不会 IMAP。将 mcpemails 这样的 MCP 服务器连接到你的 Soverin 邮箱后，Claude 就能通过 IMAP 读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接无需重复设置，也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Soverin 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.soverin.net，993 端口 SSL，或 143 端口 STARTTLS。SMTP 为 smtp.soverin.net，465 端口 SSL，或 587 端口 STARTTLS。用户名是你完整的 Soverin 邮箱地址，密码是你的账户密码。两台服务器均已通过实时 TLS 连接验证，也都服务自定义域名邮箱。"
+    },
+    {
+      "q": "Soverin 有应用密码吗？两步验证覆盖 IMAP 吗？",
+      "a": "两个答案都是否。Soverin 没有为邮件客户端公布应用密码机制，其双重认证在文档中说明覆盖的是 Soverin Dashboard 和集成的网页邮箱。无论两步验证开启与否，IMAP 和 SMTP 都继续接受你的账户密码，所以开启它既不会干扰这个连接，也不会限制它。"
+    },
+    {
+      "q": "我在自己的域名上使用 Soverin，应该用哪个主机？",
+      "a": "同样的主机：imap.soverin.net 和 smtp.soverin.net。自定义域名改变的是你的地址和 MX 记录，而不是客户端认证所用的服务器。用你自己的域名构造主机名，会得到一个不匹配的证书，大多数客户端会直接拒绝，也不应该让任何客户端忽略它。"
+    },
+    {
+      "q": "为什么客户端能读我的 Soverin 邮件却不能发信，或者反过来？",
+      "a": "通常是认证机制的问题。Soverin 的 IMAP 服务器提供 PLAIN 而不提供 LOGIN，SMTP 服务器则两者都提供，所以固定使用 LOGIN 机制的客户端会在一侧失败、另一侧成功，而凭据完全相同。请把两侧都配置为在 TLS 连接内使用普通密码认证，而不是指定某个机制。"
+    },
+    {
+      "q": "我的 Soverin 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 imap.soverin.net 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。你连接的 AI 客户端确实会收到它读取的任何内容，这才是值得认真决定的事，而不是存储问题。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Soverin 收件箱",
+    "sub": "几分钟即可连接 Soverin，包括自定义域名。一个收件箱永久免费，无需信用卡。"
+  }
+}

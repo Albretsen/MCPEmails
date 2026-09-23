@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://www.centurylink.com/home/help/internet/email/how-to-set-up-your-email-server-settings-to-go-through-pop-and-smtp.html",
+    "https://www.centurylink.com/home/help/internet/email/setup-email-edit-settings-on-iphone.html",
+    "https://www.brightspeed.com/former-century-link-customers/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "CenturyLink-e-postpassord",
+    "helpUrl": "https://www.centurylink.com/home/help/internet/email/how-to-set-up-your-email-server-settings-to-go-through-pop-and-smtp.html",
+    "usernameForm": "Hele adressen din, uansett hvilket CenturyLink-domene den bruker: name@centurylink.net, name@centurytel.net eller name@embarqmail.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble CenturyLink-e-post til Claude over IMAP",
+    "description": "Koble CenturyLink-e-post til Claude og enhver MCP-klient over IMAP på mail.centurylink.net:993, SMTP på 587. Postkasser som ikke brukes på et år, deaktiveres og tømmes."
+  },
+  "hero": {
+    "eyebrow": "CenturyLink + AI",
+    "titleLine1": "Koble CenturyLink-e-post",
+    "titleLine2": "til Claude, Cursor og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte centurylink.net-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP med CenturyLink-e-postpassordet ditt, i alle MCP-klienter i stedet for bare én.",
+    "answer": "Claude kan ikke nå en CenturyLink-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP på mail.centurylink.net, port 993, med utgående e-post på smtp.centurylink.net, port 587 med STARTTLS, og logger inn med hele adressen din og CenturyLink-e-postpassordet ditt. Når den er koblet til, kan Claude, Cursor eller enhver annen MCP-klient lese, søke i, sende, svare på og organisere den e-posten. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "CenturyLink-e-postpassordet ditt fungerer",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles CenturyLink til: IMAP, STARTTLS på 587 og en gammel server",
+    "body": "CenturyLink leverer IMAP på <code>mail.centurylink.net</code>, port 993 over TLS, og tar imot utgående e-post på <code>smtp.centurylink.net</code>, port 587 med STARTTLS. Den fordelingen er viktig: innkommende bruker implisitt TLS, utgående forhandler TLS etter at tilkoblingen er opprettet, og port 25 filtreres av CenturyLink, så den er ikke et alternativ. Det finnes ikke noe app-passord å opprette; postkassen godtar det vanlige CenturyLink-e-postpassordet ditt med hele adressen som brukernavn. De samme innstillingene gjelder for <code>centurytel.net</code>, <code>embarqmail.com</code> og de andre eldre domenene CenturyLink har tatt over. Bak vertsnavnet står en Mail2World-server, en eldre plattform enn Dovecot- og Yahoo-systemene de fleste leverandørene på dette nettstedet kjører, og det merkes på hva den kan og ikke kan gjøre."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
+    },
+    {
+      "h": "Logg inn i centurylink.net-webmailen først",
+      "p": "Åpne CenturyLinks hjemmeside og logg inn i webmailen med adressen du skal koble til. Det bekrefter passordet, og det nullstiller også inaktivitetsklokken: CenturyLink deaktiverer kontoer som ikke har vært brukt på et år, og sletter innholdet."
+    },
+    {
+      "h": "Skriv inn hele adressen i mcpemails",
+      "p": "Velg IMAP / SMTP og skriv inn hele adressen, inkludert <code>@centurylink.net</code>, <code>@centurytel.net</code> eller <code>@embarqmail.com</code>, sammen med e-postpassordet ditt. Vertene og den blandede kombinasjonen av 993 med TLS og 587 med STARTTLS er forhåndsutfylt."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Denne serveren tilbyr AUTH=LOGIN og ingenting annet",
+      "p": "CenturyLinks IMAP-vert annonserer én enkelt SASL-mekanisme, LOGIN, og annonserer ikke SASL-IR. De fleste moderne klienter prøver PLAIN med påloggingsopplysningene sendt sammen med AUTHENTICATE-kommandoen, finner ingen mekanisme de forventet, og enten krasjer eller returnerer en feil som ser ut som feil påloggingsopplysninger. mcpemails bruker den trinnvise LOGIN-utvekslingen som denne serveren faktisk støtter. Det er derfor generiske IMAP-verktøy som fungerer overalt ellers, kan feile her allerede på første kommando."
+    },
+    {
+      "h": "Et år uten pålogging sletter postkassen og alt i den",
+      "p": "CenturyLink opplyser at kontoer som ikke har vært brukt på et år, deaktiveres og får innholdet slettet. Det er en kortere frist enn hos de fleste leverandører, og det finnes ingen gjenoppretting etterpå. Hvis dette er en sekundæradresse du bare leser gjennom en agent, bør du bevisst logge inn i CenturyLinks webmail av og til i stedet for å anta at aktivitet i postkassen teller."
+    },
+    {
+      "h": "Brightspeed overtok internettjenesten, men ikke e-posten",
+      "p": "Hvis CenturyLink-tjenesten din ble overført til Brightspeed, flyttet ikke e-posten din med. Brightspeed tilbyr ikke e-post, og centurylink.net-postkasser nås fortsatt på centurylink.net, med CenturyLink som står for e-poststøtten. Å lete etter disse innstillingene i en Brightspeed-konto er en blindvei; postkassen ligger fortsatt hos CenturyLink."
+    },
+    {
+      "h": "Ingen IDLE, ingen MOVE og en lav sendegrense",
+      "p": "Serveren annonserer verken IDLE eller MOVE, så det finnes ingen push-varsling om ny e-post (vi sjekker jevnlig i stedet), og å flytte en melding til en mappe skjer som COPY, deretter STORE av slettet-flagget, deretter EXPUNGE. CenturyLink dokumenterer også en maksimal størrelse på 10 MB for utgående meldinger og en postkasse på 700 MB, begge langt under det de fleste leverandører tillater, så store vedlegg og et langt, uryddet arkiv møter begge veggen her tidligere enn du forventer."
+    }
+  ],
+  "limits": [
+    "CenturyLink dokumenterer en grense på 10 MB for utgående meldinger, så sendinger med store vedlegg avvises av CenturyLink.",
+    "Den dokumenterte kvoten for postkassen er 700 MB. En full postkasse slutter å ta imot ny e-post, og det ser ut som et leveringsproblem og ikke et lagringsproblem.",
+    "Det finnes ingen IMAP IDLE på denne verten, så ny e-post hentes når agenten spør etter den, ikke dyttes ut i det øyeblikket den kommer."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med CenturyLink-e-post?",
+      "a": "Ikke direkte. Claude har ingen innebygd CenturyLink-kobling. Kobler du en MCP-server som mcpemails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i centurylink.net-e-posten din, og den samme tilkoblingen fungerer i Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for CenturyLink?",
+      "a": "IMAP er mail.centurylink.net på port 993 med implisitt TLS. SMTP er smtp.centurylink.net på port 587 med STARTTLS, ikke implisitt TLS, og port 25 filtreres av CenturyLink. Brukernavnet er hele e-postadressen din. Begge vertene ble bekreftet via en faktisk TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Bruker centurytel.net og embarqmail.com de samme innstillingene?",
+      "a": "Ja. CenturyLink kjører centurylink.net, centurytel.net, embarqmail.com og de andre eldre domenene sine på én plattform med ett sett vertsnavn. Bruk hele adressen din som brukernavn, så endres ingenting annet på denne siden med domenet."
+    },
+    {
+      "q": "Jeg er Brightspeed-kunde nå. Kan jeg fortsatt koble til denne postkassen?",
+      "a": "Ja, hvis postkassen fortsatt er aktiv. Brightspeed leverer ikke e-post, og tidligere CenturyLink-kunder når fortsatt den eksisterende postkassen sin gjennom CenturyLink, som også står for e-poststøtten. Det er innstillingene på denne siden du skal bruke, ikke noe fra en kontoside hos Brightspeed."
+    },
+    {
+      "q": "Trenger jeg et app-passord for CenturyLink?",
+      "a": "Nei. CenturyLink utsteder ikke appspesifikke passord for e-postklienter. Logg inn med det samme e-postpassordet som du bruker i CenturyLinks webmail, og bruk hele adressen som brukernavn. Hvis det avvises, bekrefter du passordet i webmail før du endrer noe i klientinnstillingene."
+    },
+    {
+      "q": "Lagres CenturyLink-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra CenturyLink over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke oppbevart."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en CenturyLink-innboks",
+    "sub": "Koble til en centurylink.net-adresse på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

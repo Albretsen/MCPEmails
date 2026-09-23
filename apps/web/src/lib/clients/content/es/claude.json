@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/messages/en/docs.json",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/app/.well-known/oauth-protected-resource/route.ts",
+    "https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp"
+  ],
+  "meta": {
+    "title": "Conecta el correo a Claude: MCP para Gmail e IMAP",
+    "description": "Añade una bandeja real a claude.ai y Claude Desktop como conector personalizado. Pega una URL, autoriza con OAuth y Claude lee, busca, envía y programa correo. Una bandeja gratis."
+  },
+  "hero": {
+    "eyebrow": "Claude + correo",
+    "titleLine1": "Conecta tu bandeja a Claude",
+    "titleLine2": "como conector personalizado",
+    "lead": "Claude no tiene un cliente de correo propio. mcpemails es el servidor MCP alojado que se lo da: leer, buscar, enviar, responder, reenviar, programar y organizar correo real desde claude.ai o Claude Desktop.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "OAuth, sin clave de API",
+    "meta2": "Correo obtenido en vivo, nunca almacenado",
+    "answer": "Añade https://mcpemails.com/api/mcp como conector personalizado en Claude, haz clic en Connect e inicia sesión con tu cuenta de mcpemails. Claude se registra automáticamente y pide los permisos que tú apruebas. No hay clave de API que crear ni archivo de configuración que editar."
+  },
+  "method": {
+    "title": "Cómo se conecta Claude: OAuth, sin clave de API",
+    "body": "Claude ejecuta el flujo OAuth estándar de MCP contra este servidor. Se registra solo mediante <b>registro dinámico de clientes RFC 7591</b>, así que no hay ningún client ID que crear, y se autoriza con <b>código de autorización más PKCE</b> usando S256. Nunca se transmite un secreto de cliente, y el token solo lleva los permisos que apruebas en nuestra pantalla de consentimiento. El token de acceso que recibe dura una hora y se renueva solo; aparece en Dashboard, API Keys como <code>OAuth:</code> seguido del nombre del cliente, y ahí es donde revocas la conexión."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis y conecta un buzón",
+      "p": "Regístrate en mcpemails.com, sin tarjeta, y luego ve a Dashboard, Inboxes, Connect Inbox. Gmail se conecta con el inicio de sesión de Google en un clic; iCloud, Fastmail, Yahoo, Zoho y Yandex requieren una contraseña de aplicación; cualquier otro se conecta por IMAP y SMTP estándar. El plan gratuito incluye una bandeja, para siempre."
+    },
+    {
+      "h": "Abre los ajustes de conectores",
+      "p": "En claude.ai o Claude Desktop, abre Settings y luego Connectors."
+    },
+    {
+      "h": "Añade un conector personalizado",
+      "p": "Haz clic en Add custom connector, pega <code>https://mcpemails.com/api/mcp</code> como URL del conector y haz clic en Add."
+    },
+    {
+      "h": "Conecta y autoriza",
+      "p": "Haz clic en Connect e inicia sesión con mcpemails para autorizar. Aprueba los permisos que quieres que tenga Claude. No necesitas clave de API."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Un conector personalizado no es lo mismo que el conector de Gmail integrado en Claude",
+      "p": "Anthropic ofrece su propio conector de Google, y es otro camino: un proveedor, dentro de una app. Un conector personalizado apunta Claude a un servidor MCP, por eso la misma configuración cubre también iCloud, Fastmail, Zoho, Yandex y cualquier buzón IMAP de empresa detrás de una sola URL, y por eso esa misma URL funciona en Cursor, ChatGPT y el resto."
+    },
+    {
+      "h": "Apruebas los permisos una vez, y son lo único que puede hacer el token",
+      "p": "La pantalla de consentimiento es nuestra, no un trámite. Un token emitido sin <code>send:email</code> no puede enviar, y un token sin <code>delete:email</code> no puede eliminar, le pidan lo que le pidan al modelo. Si quieres que Claude lea y redacte pero nunca envíe, deja <code>send:email</code> sin marcar y concede <code>manage:drafts</code> en su lugar."
+    },
+    {
+      "h": "La conexión funciona por consulta, así que Claude no verá el correo por su cuenta",
+      "p": "No hay webhooks ni notificaciones push. Claude ve el correo nuevo cuando hace una llamada, es decir, cuando tú se lo pides. Una instrucción fija como \"revisa si hay algo de finanzas antes de empezar\" es lo que lo convierte en una rutina; nada llega sin que se pida."
+    }
+  ],
+  "limits": [
+    "Las solicitudes están limitadas a 100 por minuto, 1.000 por hora y 10.000 al día por clave, además del tope de acciones facturables de tu plan.",
+    "El servidor funciona solo por petición y respuesta. No hay webhooks ni eventos iniciados por el servidor, así que el correo nuevo nunca despierta a tu agente por sí solo. Para reaccionar al correo entrante, consulta periódicamente según un horario.",
+    "El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, así que un token revocado o un cambio de contraseña del buzón corta el acceso de inmediato."
+  ],
+  "faq": [
+    {
+      "q": "¿Puede Claude leer mi correo?",
+      "a": "No por sí solo. Claude solo puede acceder a un buzón a través de un conector, y un conector personalizado que apunte a mcpemails es una forma de darle uno. Una vez conectado, Claude puede listar, leer, buscar, enviar, responder, reenviar, organizar y programar correo en todas las bandejas que tengas conectadas, dentro de los permisos que aprobaste."
+    },
+    {
+      "q": "¿Necesito una clave de API para Claude?",
+      "a": "No. Claude hace el flujo OAuth en el navegador con este servidor: se registra de forma dinámica y se autoriza con PKCE. Las claves de API existen para los clientes que no pueden hacerlo, como Cline y JetBrains AI Assistant, y para scripts."
+    },
+    {
+      "q": "¿Qué buzones puede alcanzar Claude de esta forma?",
+      "a": "Gmail con el inicio de sesión de Google; iCloud, Fastmail, Yahoo, Zoho y Yandex con una contraseña de aplicación; y cualquier otro buzón que hable IMAP y SMTP en los puertos estándar. El cliente los ve todos a través de la misma conexión: tu agente llama primero a inbox_list para descubrir cada buzón conectado y su id, así que no hay UUID que pegar en ningún sitio."
+    },
+    {
+      "q": "¿Puede Claude enviar correo sin que yo lo vea?",
+      "a": "Solo si tú lo permites. El envío depende del permiso send:email, así que una clave o un token sin ese permiso no puede enviar nada. Además, el propietario de una bandeja puede exigir aprobación humana en el panel, que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera."
+    },
+    {
+      "q": "¿Se guarda mi correo en los servidores de mcpemails?",
+      "a": "No. Cada mensaje se obtiene en vivo de tu proveedor para la solicitud que lo pidió y se entrega directamente a tu cliente. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, para que las llamadas futuras puedan autenticarse. Eliminar la bandeja en el panel, o revocar el acceso en tu proveedor, corta la conexión al instante."
+    },
+    {
+      "q": "¿Funciona en Claude Desktop además de en claude.ai?",
+      "a": "Sí. Ambos acceden a los conectores personalizados desde la misma pantalla Settings, Connectors y ambos comparten la misma conexión, así que un buzón añadido en uno está disponible en el otro. Para la terminal, consulta la guía aparte de Claude Code."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a Claude una bandeja real",
+    "sub": "Conecta un buzón en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

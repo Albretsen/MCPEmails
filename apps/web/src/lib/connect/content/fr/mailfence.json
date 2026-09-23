@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://kb.mailfence.com/kb/how-can-use-mailfence-messages-with-thunderbird-using-smtp-and-imap-pop/",
+    "https://kb.mailfence.com/kb/setup-2fa/",
+    "https://kb.mailfence.com/kb/your-ultimate-guide-to-mailfence/",
+    "https://mailfence.com/en/faq.jsp"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Mot de passe Mailfence, ou mot de passe spécifique à un service",
+    "helpUrl": "https://kb.mailfence.com/kb/how-can-use-mailfence-messages-with-thunderbird-using-smtp-and-imap-pop/",
+    "usernameForm": "Votre adresse Mailfence principale ou votre nom d'utilisateur Mailfence. Les adresses alias sont refusées.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Mailfence et Claude : l'IMAP est réservé aux offres payantes",
+    "description": "L'IMAP Mailfence sur imap.mailfence.com:993 se connecte à Claude et à tout client MCP, mais seulement en offre payante. Le gratuit est webmail, les alias refusés."
+  },
+  "hero": {
+    "eyebrow": "Mailfence + IA",
+    "titleLine1": "Connectez Mailfence à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Mailfence. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP, dans tout client MCP, avec l'exigence d'offre et la réserve sur la double authentification annoncées d'emblée plutôt que découvertes plus tard.",
+    "answer": "Claude ne peut pas accéder seul à Mailfence. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.mailfence.com, port 993, et en SMTP sur smtp.mailfence.com, port 465, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Deux conditions décident si cela fonctionnera : IMAP, POP et SMTP ne sont disponibles que sur les offres payantes de Mailfence, pas sur le compte gratuit, et l'identifiant doit être votre adresse principale ou votre nom d'utilisateur plutôt qu'un alias. L'authentification se fait avec votre mot de passe Mailfence ou, mieux, un mot de passe spécifique à un service généré sous Settings, Account, Security. Une boîte est gratuite chez nous, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Offre Mailfence payante requise pour l'IMAP",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Mailfence se connecte : IMAP sur une offre payante, avec un mot de passe spécifique au service",
+    "body": "Mailfence sert l'IMAP sur <code>imap.mailfence.com</code>, port 993, et le SMTP sur <code>smtp.mailfence.com</code>, port 465, tous deux avec SSL obligatoire, et le POP3 sur 995. Vos propres valeurs sont affichées dans le compte sous <b>Settings</b>, puis <b>Account</b>, puis <b>My connection settings</b>. Ce qui décide de tout le reste, c'est votre offre : l'accès par protocole est une fonction des formules payantes, et un compte Mailfence gratuit se limite au webmail, si bien qu'aucun client, le nôtre compris, ne peut s'y connecter. L'authentification utilise par défaut votre mot de passe Mailfence. Mailfence permet aussi de générer un <b>mot de passe spécifique à un service</b> par protocole sous <b>Settings</b>, <b>Account</b>, <b>Security</b>, <b>Services access</b>, et de désactiver les protocoles que vous n'utilisez pas. Le même écran peut désactiver complètement l'IMAP, ce qui est bon à savoir dans les deux sens."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte, pour toujours, sans carte bancaire. Vous obtenez à la fin une URL MCP et une clé."
+    },
+    {
+      "h": "Vérifiez que votre offre Mailfence inclut l'accès par protocole",
+      "p": "Ouvrez <b>Settings</b>, puis <b>Account</b>, puis <b>My connection settings</b>. Si votre offre comprend l'accès IMAP, POP et SMTP, cette page affiche les serveurs et ports de votre compte. Sur un compte gratuit, l'accès n'existe tout simplement pas, et aucune combinaison de serveur, de port et de mot de passe n'y changera rien. Mailfence documente l'accès par protocole comme une fonction des offres payantes."
+    },
+    {
+      "h": "Générez un mot de passe spécifique au service et désactivez ce dont vous n'avez pas besoin",
+      "p": "Sous <b>Settings</b>, <b>Account</b>, <b>Security</b>, <b>Services access</b>, créez un mot de passe limité à l'IMAP et un pour le SMTP plutôt que de réutiliser le mot de passe du compte, et désactivez POP, xDAV et tout autre protocole que vous n'utilisez pas. C'est exactement ce que recommande Mailfence pour renforcer la sécurité. Ajoutez ensuite la boîte dans mcpemails avec votre adresse <b>principale</b> ou votre nom d'utilisateur et ce mot de passe."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Ajoutez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "L'offre gratuite n'a aucun IMAP, et l'échec ressemble à un mauvais mot de passe",
+      "p": "Mailfence réserve IMAP, POP et SMTP à ses abonnements payants. Un compte gratuit est un compte webmail. Comme le serveur répond quand même sur 993 et refuse quand même vos identifiants, le rejet est impossible à distinguer d'une faute de frappe, et on passe un après-midi à réinitialiser des mots de passe qui étaient corrects depuis le début. Vérifiez d'abord <b>My connection settings</b> : si la page ne vous donne pas les détails des protocoles, l'offre en est la cause et passer à une formule payante est la seule solution."
+    },
+    {
+      "h": "La double authentification ne couvre ni l'IMAP, ni le POP, ni le SMTP",
+      "p": "Mailfence l'écrit clairement dans sa propre documentation 2FA : la double authentification ne s'applique pas aux connexions hors web telles que SMTP, IMAP, POP, EAS, xDAV et XMPP. L'activer protège votre connexion au webmail et ne change rien pour un logiciel de messagerie, qui continue de fonctionner avec le mot de passe qu'il a déjà. Votre client ne cassera donc pas quand vous activerez la 2FA, contrairement à la plupart des fournisseurs, et la 2FA n'est pas le mécanisme qui limite un client connecté. C'est le rôle d'un mot de passe spécifique au service sous Services access, car il peut être limité à un protocole et révoqué sans toucher au mot de passe du compte."
+    },
+    {
+      "h": "Seuls l'adresse principale ou le nom d'utilisateur permettent de s'authentifier",
+      "p": "La documentation client de Mailfence indique explicitement que seuls l'adresse e-mail principale ou le nom d'utilisateur peuvent servir à l'authentification. Les alias, les adresses supplémentaires et le courrier d'un second domaine que vous avez rattaché arrivent tous dans la même boîte, mais aucun ne vous fera passer la connexion. Utilisez l'adresse avec laquelle le compte a été créé, ou le nom d'utilisateur Mailfence seul, et mettez l'adresse d'envoi souhaitée dans l'identité plutôt que dans l'identifiant de connexion."
+    },
+    {
+      "h": "MOVE et UIDPLUS sont présents, SPECIAL-USE ne l'est pas",
+      "p": "Chose rare sur ce segment du marché, le serveur IMAP de Mailfence annonce MOVE, UIDPLUS, IDLE et SASL-IR : classer du courrier est donc une seule commande atomique et une réorganisation en masse est rapide, sans la danse copie-indicateur-expunge. Ce qu'il n'annonce pas, c'est SPECIAL-USE : rien dans le protocole n'indique quel dossier est Envoyés, Brouillons, Corbeille ou Indésirables, et les rôles sont déduits des noms. Il ne propose en outre que <code>AUTH=PLAIN</code> en IMAP, sans <code>AUTH=LOGIN</code>, alors que le SMTP accepte les deux : un outil câblé sur LOGIN ne peut donc rien lire mais envoie sans problème."
+    }
+  ],
+  "limits": [
+    "Connecter une boîte Mailfence à un client IA signifie que le fournisseur de cette IA lit le contenu des messages qu'il traite. mcpemails récupère le courrier en direct chez Mailfence à chaque requête et ne stocke pas le contenu des messages, et les identifiants sont chiffrés au repos, mais le texte parvient tout de même à Claude, Cursor ou au client que vous connectez. La juridiction belge de Mailfence et son refus du pistage s'appliquent à Mailfence, et ne suivent pas un message chez un fournisseur d'IA que vous branchez vous-même.",
+    "Le trousseau OpenPGP de Mailfence est la raison d'être du produit pour beaucoup de ses utilisateurs, et un message chiffré avec votre clé arrive via IMAP sous forme de texte chiffré. mcpemails ne détient aucune de vos clés privées : un agent peut trier, marquer et classer ces messages, mais pas les lire. Ils restent lisibles dans l'interface web de Mailfence, où se trouve la clé.",
+    "Un compte Mailfence gratuit ne peut pas du tout être connecté ici. C'est une restriction de l'offre Mailfence et non une limite du serveur MCP, et il n'existe aucun contournement en dehors d'une offre payante."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec Mailfence ?",
+      "a": "Pas directement. Claude n'a pas de connecteur Mailfence intégré. Relier un serveur MCP comme mcpemails à un compte Mailfence payant en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne dans Cursor et d'autres clients MCP sans refaire la configuration."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de Mailfence ?",
+      "a": "L'IMAP est imap.mailfence.com sur le port 993 avec SSL, le SMTP est smtp.mailfence.com sur le port 465 avec SSL, et le POP3 est sur 995. L'identifiant est votre adresse Mailfence principale ou votre nom d'utilisateur, jamais un alias. Votre compte affiche les mêmes valeurs sous Settings, Account, My connection settings. Les deux serveurs indiqués ici ont été vérifiés par une vraie connexion TLS."
+    },
+    {
+      "q": "L'IMAP Mailfence fonctionne-t-il avec l'offre gratuite ?",
+      "a": "Non. Mailfence fait de l'accès IMAP, POP et SMTP une fonction des offres payantes : un compte gratuit est donc limité au webmail et aux applications de Mailfence. Aucun client tiers ni aucun serveur MCP ne peut se connecter à un compte gratuit. Passer à l'une des formules payantes active l'accès par protocole pour cette boîte."
+    },
+    {
+      "q": "La double authentification protège-t-elle mon accès IMAP Mailfence ?",
+      "a": "Non, et Mailfence le dit lui-même. Sa documentation indique que la 2FA ne s'applique pas aux connexions hors web, dont IMAP, POP et SMTP. L'activer ne sécurise que la connexion web. Pour contrôler ce à quoi un client connecté peut accéder, générez un mot de passe spécifique au service sous Settings, Account, Security, Services access, et désactivez les protocoles que vous n'utilisez pas."
+    },
+    {
+      "q": "Mon IA peut-elle lire mon courrier Mailfence chiffré en OpenPGP ?",
+      "a": "Non. Le chiffrement de Mailfence repose sur une clé que votre client IA n'a pas et que mcpemails ne reçoit jamais : un message chiffré arrive donc via IMAP sous forme de bloc chiffré armuré. L'agent peut voir l'expéditeur, l'objet et la date, et peut déplacer ou marquer le message, mais le corps est illisible hors de l'interface Mailfence."
+    },
+    {
+      "q": "Mon courrier Mailfence est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis imap.mailfence.com pour chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le contenu des messages n'est pas conservé. Le client IA reçoit en revanche tout ce qu'on lui demande de lire, et c'est ce point qu'il faut peser avant de connecter une boîte pour laquelle vous avez justement choisi Mailfence."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA une boîte Mailfence",
+    "sub": "Connectez une boîte Mailfence payante en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

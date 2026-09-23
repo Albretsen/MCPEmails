@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://help.runbox.com/email-program-settings/",
+    "https://help.runbox.com/more-about-two-factor-authentication-and-app-passwords/",
+    "https://help.runbox.com/usernames-and-passwords/",
+    "https://help.runbox.com/account-security/"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "App Password（开启两步验证后必需）",
+    "helpUrl": "https://help.runbox.com/more-about-two-factor-authentication-and-app-passwords/",
+    "usernameForm": "你的主 Runbox 邮箱地址。runbox.com 地址也可以只用用户名认证；自定义域名地址必须完整填写。别名永远无法登录。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "用 App Password 将 Runbox 连接到 Claude",
+    "description": "通过 IMAP（mail.runbox.com:993）将 Runbox 连接到 Claude、Cursor 及任意 MCP 客户端。开启 Runbox 两步验证后，邮件客户端只能用 App Password 认证。"
+  },
+  "hero": {
+    "eyebrow": "Runbox + AI",
+    "titleLine1": "将 Runbox 连接到 Claude，",
+    "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Runbox 收件箱。通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用而不止一个；App Password 规则和无声的认证失败，这里都会讲清楚。",
+    "answer": "Claude 无法自行连接 Runbox。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 mail.runbox.com 的 993 端口，通过 SMTP 连接同一主机的 465 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。请用你的主 Runbox 地址登录，绝不要用别名。如果账户开启了双重认证，普通 Runbox 密码将完全无法用于 IMAP、POP、SMTP 或 CalDAV 认证，你必须改用在 Runbox 账户中创建的 App Password。一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "开启两步验证后使用 App Password",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Runbox 如何连接：一台主机、主地址和一个 App Password",
+    "body": "Runbox 的邮件服务使用同一个主机名。IMAP 为 <code>mail.runbox.com</code>，993 端口 TLS，POP3 是同一主机的 995 端口，SMTP 为 <code>mail.runbox.com</code>，465 端口 TLS 或 587 端口 STARTTLS。Runbox 提到 465 的连接安全性更好，而 587 有时与旧程序更兼容。用户名是你的<b>主</b> Runbox 地址：<code>runbox.com</code> 地址可以完整填写，也可以只填用户名；自有域名上的地址必须完整填写；Runbox 明确表示别名地址不能用于登录。你需要哪个密码取决于一项账户设置。Runbox 的 <b>App Passwords</b> 无论是否开启双重认证都可以使用，但一旦开启两步验证，它们就不再是可选项：除网页界面外，所有协议都会拒绝账户密码。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。完成后你会得到一个 MCP URL 和一个密钥。"
+    },
+    {
+      "h": "在 Runbox 账户中创建 App Password",
+      "p": "登录网页版 Runbox，在账户设置中打开 App Passwords 页面。以这个连接为它命名，提交并复制其值。无论是否使用双重认证都建议这样做：App Password 可以单独撤销，而且 Runbox 禁止用 App Password 登录网页邮箱，所以这里保存的凭据无法用来登录并修改你的账户。"
+    },
+    {
+      "h": "在 mcpemails 中用主地址添加邮箱",
+      "p": "选择 IMAP / SMTP。以你的<b>主</b> Runbox 地址作为用户名，也就是登录 Runbox 网页邮箱时右上角显示的地址，然后粘贴 App Password。收发两个方向的主机都已自动填为 <code>mail.runbox.com</code>，并已通过实时 TLS 连接验证。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Runbox 不声明 SASL-IR，而大多数客户端库默认它存在",
+      "p": "服务器只返回一个简单的 <code>* OK IMAP4 ready</code>，提供 <code>AUTH=PLAIN</code> 而没有 SASL-IR 能力，因此会拒绝在 AUTHENTICATE 命令中一并发送凭据的一步认证。默认支持 SASL-IR 的客户端会收到一个没有任何解释的 BAD，而上层的每一层都把它报告为登录失败，于是你会去查一个根本不存在的密码问题。mcpemails 会识别这个 BAD 并回退到两步交换，所以连接能在这里完成。这正是很多本来可靠的 IMAP 工具在别处都正常、唯独连不上 Runbox 的原因。"
+    },
+    {
+      "h": "开启两步验证会让所有协议同时失效，不只是邮件",
+      "p": "Runbox 文档说明，开启双重认证后，你平时的账户密码将同时无法用于 IMAP、POP、SMTP、FTP 以及 CalDAV 或 CardDAV。网页邮箱继续工作，所以账户看起来一切正常，而每台设备却同时失败。它们每一个都需要 App Password。开启两步验证时请同时设置一个 Unlock Code：没有它，一旦丢失身份验证器，你就只能联系 Runbox 支持，而无法自行关闭两步验证。"
+    },
+    {
+      "h": "别名无法登录，无论有多少邮件经由它到达",
+      "p": "Runbox 声明别名地址不能用于登录账户，用户名是你的主 Runbox 邮箱地址，显示在网页邮箱的邮件列表上方。这会坑到那些早已悄悄改用别名处理一切、已经记不清账户是用哪个地址开的人。发往任何别名的邮件仍会落入同一个邮箱，代理也照样能看到；只有凭据这一环比较挑剔。"
+    },
+    {
+      "h": "有服务器端 SORT 和 THREAD，没有 MOVE",
+      "p": "这是一个不寻常的能力组合。Runbox 声明了 QUOTA、NAMESPACE、CHILDREN、SORT，以及 THREAD=REFERENCES 和 THREAD=ORDEREDSUBJECT，所以排序和会话归并在服务器上完成，而不需要拉取邮件头，这让搜索大邮箱比能力列表其余部分所暗示的更快。它没有声明 MOVE，所以归档一封邮件是一次 COPY、一次为其 STORE \\Deleted 标记和一次 EXPUNGE。UIDPLUS 是有的，所以至少目标 UID 会直接返回，无需再次搜索。"
+    }
+  ],
+  "limits": [
+    "将 Runbox 邮箱连接到 AI 客户端，意味着该 AI 服务商会读取它所处理的邮件内容。mcpemails 每次请求都实时从 mail.runbox.com 获取邮件，不存储邮件正文，凭据也经过静态加密，但文本仍会到达 Claude、Cursor 或你连接的任何客户端。Runbox 的挪威司法管辖和隐私承诺只覆盖 Runbox，并不延伸到你自己接入该邮箱的 AI 厂商。",
+    "服务器不声明 SPECIAL-USE，所以协议中没有任何信息说明哪个是已发送、草稿、已删除或垃圾邮件文件夹，用途只能从名称推断。如果你在 Runbox 7 中重命名过文件夹，或因旧的导入有不止一个已发送文件夹，让代理归档邮件时请明确写出文件夹名。",
+    "由于缺少 MOVE，移动操作不是原子的。如果连接中途断开，一封邮件可能会短暂同时存在于源文件夹和目标文件夹中。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Runbox 吗？",
+      "a": "不能直接使用。Claude 没有内置的 Runbox 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到你的 Runbox 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接无需重新设置，也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Runbox 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 mail.runbox.com，993 端口 TLS，POP3 是同一主机的 995 端口。SMTP 为 mail.runbox.com，465 端口 TLS，或 587 端口 STARTTLS。用户名是你的主 Runbox 地址，对于 runbox.com 地址，只填用户名也可以。两台服务器均已通过实时 TLS 连接验证。"
+    },
+    {
+      "q": "我需要 Runbox App Password 吗？",
+      "a": "如果开启了双重认证就需要，因为此时 Runbox 会拒绝将账户密码用于 IMAP、POP、SMTP、FTP 和 CalDAV。App Password 在未开启两步验证时也能使用，而且无论如何使用它都是更好的选择：它可以单独撤销，且 Runbox 不接受用 App Password 登录网页邮箱，所以保存的凭据无法用来登录你的账户。"
+    },
+    {
+      "q": "为什么我的 Runbox 登录失败却没有任何有用的错误信息？",
+      "a": "通常是因为客户端默认服务器支持 SASL-IR，而 Runbox 并未声明该能力。服务器对一步认证尝试只回复一个简单的 BAD，客户端则将其报告为凭据错误。mcpemails 会用两步交换重试，所以在这里能正常连接。另一个常见原因是输入了别名，而不是主地址。"
+    },
+    {
+      "q": "我能用 Runbox 别名地址登录吗？",
+      "a": "不能。Runbox 明确表示别名地址不能用于登录。用户名是账户的主地址，显示在 Runbox 网页邮箱的右上角。别名仍会把邮件投递到同一个邮箱，所以代理能正常读取发给它们的邮件，你也仍可以把别名设为身份来用它发信。"
+    },
+    {
+      "q": "我的 Runbox 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 mail.runbox.com 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。你连接的 AI 客户端确实会收到它读取的任何内容，这与邮件存放在哪里是两个不同的决定。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Runbox 收件箱",
+    "sub": "几分钟即可用 App Password 连接 Runbox。一个收件箱永久免费，无需信用卡。"
+  }
+}

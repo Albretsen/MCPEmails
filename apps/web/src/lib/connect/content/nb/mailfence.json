@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://kb.mailfence.com/kb/how-can-use-mailfence-messages-with-thunderbird-using-smtp-and-imap-pop/",
+    "https://kb.mailfence.com/kb/setup-2fa/",
+    "https://kb.mailfence.com/kb/your-ultimate-guide-to-mailfence/",
+    "https://mailfence.com/en/faq.jsp"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Mailfence-passord, eller et tjenestespesifikt passord",
+    "helpUrl": "https://kb.mailfence.com/kb/how-can-use-mailfence-messages-with-thunderbird-using-smtp-and-imap-pop/",
+    "usernameForm": "Den primære Mailfence-adressen din eller Mailfence-brukernavnet ditt. Aliasadresser avvises.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Mailfence til Claude: IMAP krever betalt plan",
+    "description": "Mailfence-IMAP på imap.mailfence.com:993 kobles til Claude og MCP-klienter, men bare på betalte planer. Gratiskontoer er kun webmail, og alias kan ikke logge inn."
+  },
+  "hero": {
+    "eyebrow": "Mailfence + AI",
+    "titleLine1": "Koble Mailfence til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Mailfence-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP, i enhver MCP-klient, med plankravet og forbeholdet om tofaktor forklart på forhånd i stedet for oppdaget i etterkant.",
+    "answer": "Claude kan ikke nå Mailfence på egen hånd. mcpemails er en driftet MCP-server som kobler den til over IMAP på imap.mailfence.com port 993 og SMTP på smtp.mailfence.com port 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. To forhold avgjør om det fungerer: IMAP, POP og SMTP er bare tilgjengelig på Mailfences betalte planer, ikke på gratiskontoen, og innloggingen må være den primære adressen eller brukernavnet ditt, ikke et alias. Autentisering skjer med Mailfence-passordet ditt, eller helst et tjenestespesifikt passord generert under Settings, Account, Security. Én innboks er gratis hos oss, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Betalt Mailfence-plan kreves for IMAP",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles Mailfence til: IMAP på en betalt plan, med et tjenestespesifikt passord",
+    "body": "Mailfence tilbyr IMAP på <code>imap.mailfence.com</code> port 993 og SMTP på <code>smtp.mailfence.com</code> port 465, begge med påkrevd SSL, og POP3 på 995. Dine egne verdier står inne i kontoen under <b>Settings</b>, deretter <b>Account</b>, deretter <b>My connection settings</b>. Det som avgjør alt annet, er planen din: protokolltilgang er en funksjon i de betalte nivåene, og en gratis Mailfence-konto er kun webmail, så ingen klient, vår inkludert, kan logge inn på en slik konto. Autentisering bruker Mailfence-passordet ditt som standard. Mailfence lar deg også generere et <b>tjenestespesifikt passord</b> per protokoll under <b>Settings</b>, <b>Account</b>, <b>Security</b>, <b>Services access</b>, og slå av protokollene du ikke bruker. Den samme skjermen kan deaktivere IMAP helt, noe som er verdt å vite i begge retninger."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, uten kort. Til slutt får du en MCP-URL og en nøkkel."
+    },
+    {
+      "h": "Bekreft at Mailfence-planen din inkluderer protokolltilgang",
+      "p": "Åpne <b>Settings</b>, deretter <b>Account</b>, deretter <b>My connection settings</b>. Hvis planen din har tilgang til IMAP, POP og SMTP, viser den siden serverne og portene for kontoen din. På en gratiskonto finnes tilgangen rett og slett ikke, og ingen kombinasjon av vertsnavn, port og passord endrer det. Mailfence dokumenterer protokolltilgang som en funksjon for betalte planer."
+    },
+    {
+      "h": "Generer et tjenestespesifikt passord og slå av det du ikke trenger",
+      "p": "Under <b>Settings</b>, <b>Account</b>, <b>Security</b>, <b>Services access</b> oppretter du et passord avgrenset til IMAP og ett for SMTP i stedet for å gjenbruke kontopassordet, og deaktiverer POP, xDAV og andre protokoller du ikke bruker. Mailfences egne råd om sikring er å gjøre nettopp dette. Legg deretter til postkassen i mcpemails med den <b>primære</b> adressen eller brukernavnet ditt og det passordet."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Gratisplanen har ikke IMAP i det hele tatt, og feilen ser ut som feil passord",
+      "p": "Mailfence låser IMAP, POP og SMTP bak de betalte abonnementene. En gratiskonto er en webmailkonto. Fordi serveren fortsatt svarer på 993 og fortsatt avviser påloggingsopplysningene dine, kan avvisningen ikke skilles fra en skrivefeil, og folk bruker en hel ettermiddag på å tilbakestille passord som var riktige hele tiden. Sjekk <b>My connection settings</b> først: hvis den ikke gir deg protokolldetaljer, er planen årsaken, og oppgradering er eneste løsning."
+    },
+    {
+      "h": "Tofaktorautentisering dekker ikke IMAP, POP eller SMTP",
+      "p": "Mailfence sier dette rett ut i sin egen 2FA-dokumentasjon: tofaktorautentisering gjelder ikke for tilkoblinger utenom nettet, som SMTP, IMAP, POP, EAS, xDAV og XMPP. Slår du det på, beskytter det webmailinnloggingen din og endrer ingenting for en e-postklient, som fortsetter å fungere med passordet den allerede har. Klienten din slutter altså ikke å virke når du aktiverer 2FA, i motsetning til hos de fleste leverandører, og 2FA er ikke kontrollen som begrenser en tilkoblet klient. Det er et tjenestespesifikt passord under Services access, fordi det kan avgrenses til én protokoll og tilbakekalles uten å røre kontopassordet ditt."
+    },
+    {
+      "h": "Bare den primære adressen eller brukernavnet kan autentisere",
+      "p": "Mailfences klientdokumentasjon sier tydelig at bare den primære e-postadressen eller brukernavnet kan brukes til autentisering. Alias, ekstra adresser og e-post på et annet domene du har knyttet til, leveres alle til den samme postkassen, men ingen av dem kommer gjennom innloggingen. Bruk adressen kontoen ble opprettet med, eller bare Mailfence-brukernavnet, og legg adressen du faktisk vil sende fra, i identiteten og ikke i påloggingsopplysningen."
+    },
+    {
+      "h": "MOVE og UIDPLUS finnes, SPECIAL-USE gjør det ikke",
+      "p": "Uvanlig for denne delen av markedet annonserer IMAP-serveren til Mailfence MOVE, UIDPLUS, IDLE og SASL-IR, så arkivering av e-post er én atomisk kommando, og omorganisering i bulk går raskt i stedet for å være en dans av kopi, flagg og expunge. Det den ikke annonserer, er SPECIAL-USE, så ingenting i protokollen angir hvilken mappe som er Sendt, Utkast, Papirkurv eller Søppelpost, og roller utledes fra navn. Den tilbyr også bare <code>AUTH=PLAIN</code> på IMAP, uten <code>AUTH=LOGIN</code>, mens SMTP godtar begge, så verktøy som er hardkodet til LOGIN, kan ikke lese noe og likevel sende helt fint."
+    }
+  ],
+  "limits": [
+    "Å koble en Mailfence-postkasse til en AI-klient betyr at AI-leverandøren leser meldingsinnholdet den jobber med. mcpemails henter e-post direkte fra Mailfence per forespørsel og lagrer ikke meldingsinnhold, og påloggingsopplysninger er kryptert ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du kobler til. Mailfences belgiske jurisdiksjon og holdning mot sporing gjelder Mailfence, og følger ikke med en melding inn til en AI-leverandør du kobler til selv.",
+    "OpenPGP-nøkkellageret til Mailfence er hele poenget med produktet for mange av brukerne, og en melding som er kryptert til nøkkelen din, kommer over IMAP som chiffertekst. mcpemails har ingen privat nøkkel fra deg, så en agent kan sortere, flagge og arkivere slike meldinger, men ikke lese dem. De forblir lesbare i Mailfence sitt nettgrensesnitt, der nøkkelen ligger.",
+    "En gratis Mailfence-konto kan ikke kobles til her i det hele tatt. Det er en begrensning i Mailfences planer og ikke i MCP-serveren, og det finnes ingen omvei utenom en betalt plan."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Mailfence?",
+      "a": "Ikke direkte. Claude har ingen innebygd Mailfence-kobling. Ved å koble en MCP-server som mcpemails til en betalt Mailfence-konto over IMAP får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den, og den samme tilkoblingen fungerer i Cursor og andre MCP-klienter uten å gjenta oppsettet."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Mailfence?",
+      "a": "IMAP er imap.mailfence.com på port 993 med SSL, SMTP er smtp.mailfence.com på port 465 med SSL, og POP3 er på 995. Brukernavnet er den primære Mailfence-adressen eller brukernavnet ditt, aldri et alias. Din egen konto viser de samme verdiene under Settings, Account, My connection settings. Begge vertene her ble verifisert fra en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Fungerer Mailfence-IMAP på gratisplanen?",
+      "a": "Nei. Mailfence gjør tilgang til IMAP, POP og SMTP til en funksjon for betalte planer, så en gratiskonto er begrenset til webmail og Mailfences egne apper. Ingen tredjepartsklient og ingen MCP-server kan logge inn på en gratiskonto. Oppgradering til et hvilket som helst av de betalte nivåene slår på protokolltilgang for den postkassen."
+    },
+    {
+      "q": "Beskytter tofaktorautentisering IMAP-tilgangen min hos Mailfence?",
+      "a": "Nei, og det sier Mailfence selv. Dokumentasjonen deres sier at 2FA ikke gjelder for tilkoblinger utenom nettet, inkludert IMAP, POP og SMTP. Aktivering sikrer bare webinnloggingen. Hvis du vil kontrollere hva en tilkoblet klient kan nå, generer et tjenestespesifikt passord under Settings, Account, Security, Services access, og deaktiver protokollene du ikke bruker."
+    },
+    {
+      "q": "Kan AI-en min lese OpenPGP-kryptert e-post hos Mailfence?",
+      "a": "Nei. Krypteringen hos Mailfence bygger på en nøkkel som AI-klienten din ikke har og som mcpemails aldri mottar, så en kryptert melding kommer over IMAP som en armert chiffertekstblokk. Agenten kan se avsender, emne og dato og kan flytte eller flagge meldingen, men innholdet er uleselig utenfor Mailfence-grensesnittet."
+    },
+    {
+      "q": "Lagres Mailfence-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra imap.mailfence.com for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke beholdt. Selve AI-klienten mottar likevel det den blir bedt om å lese, og det er den delen du bør veie før du kobler til en postkasse du i utgangspunktet valgte Mailfence for."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Mailfence-innboks",
+    "sub": "Koble til en betalt Mailfence-postkasse på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.spark.co.nz/help/get-more/xtra/xtra-mail-setup/",
+    "https://www.spark.co.nz/help/get-more/xtra/two-step-verification/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña de Xtra Mail",
+    "helpUrl": "https://www.spark.co.nz/help/get-more/xtra/xtra-mail-setup/",
+    "usernameForm": "Tu dirección de correo completa; en el propio ejemplo de Spark, joe.bloggs@xtra.co.nz.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Spark Xtra Mail en Claude: sin contraseña de aplicación",
+    "description": "Conecta Spark Xtra Mail a Claude y cualquier cliente MCP por IMAP en imap.xtra.co.nz:993. Tu contraseña de Xtra sirve: Spark no emite contraseñas de aplicación."
+  },
+  "hero": {
+    "eyebrow": "Spark Xtra Mail + IA",
+    "titleLine1": "Conecta tu bandeja de Xtra Mail",
+    "titleLine2": "a Claude, Cursor y cualquier cliente MCP",
+    "lead": "Xtra Mail acepta una contraseña normal por IMAP, sin contraseña de aplicación que generar y sin un segundo factor de por medio. mcpemails la conecta para que tu agente de IA pueda leer, buscar, enviar, responder y archivar ese correo.",
+    "answer": "Claude no puede acceder por sí solo a una bandeja de Xtra Mail. mcpemails es un servidor MCP alojado que la conecta por IMAP en imap.xtra.co.nz en el puerto 993, iniciando sesión con tu dirección xtra.co.nz completa y tu contraseña normal de Xtra Mail. Spark no emite contraseñas específicas de aplicación para Xtra Mail e indica que su verificación en dos pasos solo se aplica en el portal de webmail y no a los clientes de correo, así que una contraseña correcta autentica directamente incluso con la verificación en dos pasos activada. Una vez conectada, Claude, Cursor o cualquier otro cliente MCP puede leer, buscar, enviar y organizar ese correo. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Tu contraseña de Xtra, sin contraseña de aplicación",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Xtra Mail: IMAP con la contraseña que ya tienes",
+    "body": "Spark publica <code>imap.xtra.co.nz</code> en el puerto 993 para el correo entrante y <code>send.xtra.co.nz</code> para el saliente, con la dirección completa como nombre de usuario. La autenticación es la contraseña del buzón, sin modificar. Eso es lo bastante inusual en 2026 como para decirlo dos veces, porque la propia página de verificación en dos pasos de Spark lleva una nota al principio que dice que solo está disponible en el portal de webmail y que no se aplicará a clientes de correo como Outlook, Mail y Gmail. Así que no hay contraseña de aplicación que buscar, ni página de seguridad que visitar, ni segundo factor que sortear, y todo lo que puede fallar se reduce a si la contraseña es correcta y si tu cliente cumple los requisitos de transporte de Spark. Porque Spark sí los tiene: pide que la aplicación admita cifrados AES de 1024 o 2048 bits y TLS 1.0 o superior, e indica que RC4, SSL y SSL3 no son compatibles."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
+    },
+    {
+      "h": "Comprueba en MySpark que la suscripción a Xtra Mail esté activa",
+      "p": "Xtra Mail es una suscripción, no un extra automático. En MySpark, abre <b>Subscriptions</b> (suscripciones) en Products y comprueba que Xtra Mail aparece y está activada, con un buzón creado. Si dice <b>Ready to activate</b> (lista para activar), termina eso primero; no hay ningún buzón que conectar hasta que se completa el formulario de creación del buzón."
+    },
+    {
+      "h": "Introduce la dirección completa y tu contraseña de Xtra Mail",
+      "p": "En mcpemails elige IMAP / SMTP e introduce la dirección exactamente como la escribe Spark, por ejemplo <code>joe.bloggs@xtra.co.nz</code>, con la contraseña que usas para iniciar sesión en el webmail de Xtra. Los servidores y puertos indicados abajo ya vienen rellenados y se verificaron con una conexión TLS real."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Xtra Mail no es un servicio de Yahoo desde 2017, así que los consejos de Yahoo no aplican",
+      "p": "Spark sacó el correo de Xtra de Yahoo y lo pasó al proveedor neozelandés SMX en 2017, migrando cientos de miles de buzones en unos tres meses. La etapa de Yahoo dejó una larga cola de guías que indican a los usuarios de xtra.co.nz que generen una contraseña de aplicación de Yahoo o que inicien sesión a través de una ventana de Yahoo. Nada de eso es cierto ya. No hay ninguna cuenta de Yahoo detrás de una dirección de Xtra, y seguir esas instrucciones te deja buscando una página de seguridad que no existe para tu buzón."
+    },
+    {
+      "h": "La verificación en dos pasos solo protege el webmail, y no bloquea a un cliente",
+      "p": "La propia página de verificación en dos pasos de Spark indica, en una nota al principio, que solo está disponible en el portal de webmail y que no se aplicará a clientes de correo como Outlook, Mail y Gmail. Eso tiene dos caras. Significa que activar la verificación en dos pasos no rompe esta conexión y que nunca necesitas una contraseña de aplicación, y significa también que la puerta IMAP sigue protegida solo por contraseña, configures lo que configures en el webmail. Trata la contraseña de Xtra Mail en consecuencia."
+    },
+    {
+      "h": "Spark documenta el puerto 587 para enviar, y el puerto 465 también responde",
+      "p": "La página de configuración de Spark indica como servidor saliente <code>send.xtra.co.nz</code> en el puerto <b>587</b> con StartTLS. La conexión que verificamos en ese mismo servidor es el puerto <b>465</b> con TLS implícito, que completó un handshake y ofreció PLAIN y LOGIN. Ambas son reales. La tabla de esta página muestra lo que probamos; si un cliente se empeña en la combinación documentada, el 587 con STARTTLS es la respuesta publicada por Spark y también debería funcionar."
+    },
+    {
+      "h": "Sin SASL-IR, sin IDLE, sin MOVE y sin SPECIAL-USE",
+      "p": "El servidor de Xtra anuncia una lista corta: IMAP4rev1, UIDPLUS, NAMESPACE, ID y los mecanismos PLAIN y LOGIN. Sin SASL-IR rechaza la autenticación en un solo paso que la mayoría de los clientes prueban primero, y la respuesta es un rechazo escueto que parece una contraseña incorrecta. Sin IDLE no hay push, así que el correo nuevo se encuentra consultando periódicamente. Sin MOVE, archivar se ejecuta como COPY, luego STORE y luego EXPUNGE. Sin SPECIAL-USE, Enviados y Papelera se identifican por su nombre. UIDPLUS sí está, así que un mensaje copiado informa de su nuevo id."
+    }
+  ],
+  "limits": [
+    "El servidor SMTP de Spark anuncia un tamaño máximo de mensaje de unos 100 MB, que es generoso, pero un envío más grande se sigue rechazando antes de salir.",
+    "Sin IDLE, así que el correo nuevo se descubre consultando periódicamente en lugar de enviarse a la conexión.",
+    "Los movimientos no son atómicos y las funciones de las carpetas se identifican por su nombre, porque MOVE y SPECIAL-USE no están implementados en este servidor."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Xtra Mail?",
+      "a": "No directamente. Claude no tiene un conector integrado para Spark ni para Xtra. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de xtra.co.nz, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Xtra Mail?",
+      "a": "IMAP es imap.xtra.co.nz en el puerto 993 con TLS. El correo saliente es send.xtra.co.nz, que Spark documenta en el puerto 587 con StartTLS y que también responde en el puerto 465 con TLS implícito, la combinación que verificamos. El nombre de usuario es tu dirección de correo completa. Spark documenta pop3.xtra.co.nz en el 995 como alternativa POP."
+    },
+    {
+      "q": "¿Necesito una contraseña de aplicación para Xtra Mail?",
+      "a": "No. Spark no emite ninguna, y su página de verificación en dos pasos dice que la función solo está disponible en el portal de webmail y que no se aplicará a los clientes de correo. Un cliente de correo inicia sesión con tu contraseña normal de Xtra Mail, tengas o no activada la verificación en dos pasos para el webmail."
+    },
+    {
+      "q": "¿Quién gestiona Xtra Mail ahora?",
+      "a": "Spark, en una plataforma suministrada por la empresa neozelandesa SMX. El correo de Xtra estuvo alojado en Yahoo desde la época de Telecom NZ hasta que Spark completó la migración a SMX en 2017. Por eso las instrucciones específicas de Yahoo que aún circulan para direcciones xtra.co.nz ya no llevan a ningún sitio útil."
+    },
+    {
+      "q": "¿Se almacena mi correo de Xtra en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Spark por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Xtra Mail",
+    "sub": "Una contraseña, sin segundo factor de por medio. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

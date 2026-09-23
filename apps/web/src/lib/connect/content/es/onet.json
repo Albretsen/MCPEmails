@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.telepolis.pl/tech/aplikacje/onet-wyciaga-wtyczke-nic-juz-nie-zrobisz-w-ten-sposob",
+    "https://webinsider.pl/newslog/onet-poczta-koniec-pop3-a-imap-tylko-w-platnych/",
+    "https://seohost.pl/pomoc/blokada-poczty-pop3-onet-poczta",
+    "https://www.instalki.pl/news/internet/korzystacie-jeszcze-z-poczty-onet-za-te-funkcje-trzeba-bedzie-placic/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña de Onet, con un plan de correo de pago",
+    "helpUrl": "https://poczta.onet.pl/",
+    "usernameForm": "Tu dirección completa, incluido el dominio: nazwa@onet.pl o nazwa@poczta.onet.pl.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Onet Poczta IMAP: solo planes de pago y conexión a Claude",
+    "description": "Onet Poczta pasó IMAP a planes de pago y retiró POP3 en marzo de 2026. Qué sigue funcionando en imap.poczta.onet.pl:993 y cómo conectarlo a Claude."
+  },
+  "hero": {
+    "eyebrow": "Onet Poczta + IA",
+    "titleLine1": "Onet Poczta por IMAP,",
+    "titleLine2": "en Claude, Cursor, cualquier cliente MCP",
+    "lead": "Onet pasó el acceso desde clientes de correo a un plan de pago en 2026. Si tu cuenta lo incluye, un agente de IA puede leer, buscar, enviar, responder, programar y organizar el buzón por IMAP.",
+    "answer": "Claude no puede acceder a un buzón de Onet por sí solo, y desde el 31 de marzo de 2026 tampoco puede hacerlo nada más en una cuenta gratuita de Onet. Onet retiró POP3 para todos y pasó IMAP a sus paquetes de correo de pago, así que una cuenta gratuita ahora es solo webmail y app móvil. Con un plan de pago, o con una de las cuentas perpetuas que conservan sus condiciones anteriores, mcpemails es un servidor MCP alojado que conecta el buzón por IMAP en imap.poczta.onet.pl, puerto 993, con tu contraseña de Onet, y da a Claude, Cursor o cualquier cliente MCP acceso para leer, buscar, enviar y organizar. Una bandeja en mcpemails es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Requiere un plan de correo de pago de Onet",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Onet: IMAP, pero solo si la cuenta tiene derecho a usarlo",
+    "body": "Onet ofrece IMAP en <code>imap.poczta.onet.pl</code>, puerto 993, con TLS implícito, y el envío SMTP en <code>smtp.poczta.onet.pl</code>, puerto 465. Ambos servidores están activos y responden hoy, y el servidor IMAP anuncia <code>AUTH=PLAIN</code>, <code>AUTH=LOGIN</code> y <code>AUTH=XOAUTH2</code>. Que los servidores respondan no significa que tu cuenta pueda usarlos. Desde el <b>31 de marzo de 2026</b> Onet retiró por completo el soporte de POP3, para todos los usuarios sin excepción, y limitó IMAP a sus paquetes de correo de pago, que según las informaciones son <b>Poczta Plus</b> y <b>Poczta Standard</b>. Las cuentas gratuitas conservan su correo; lo que pierden es el protocolo. Los titulares de las antiguas cuentas perpetuas (<b>konta wieczyste</b>) quedaron exentos y mantienen IMAP sin coste. Así que la pregunta práctica para un buzón de Onet no es qué servidor usar, sino en cuál de esas tres categorías entra la cuenta."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
+    },
+    {
+      "h": "Comprueba si tu cuenta de Onet tiene derecho a IMAP",
+      "p": "Inicia sesión en poczta.onet.pl y mira el plan de la cuenta. Una cuenta gratuita después de marzo de 2026 no tiene IMAP ni POP3, así que ningún cliente podrá conectarse nunca. Un paquete de correo de pago restablece IMAP. Una cuenta perpetua (<b>konto wieczyste</b>) mantiene IMAP sin pagar. Aquí no hay ningún interruptor que buscar: es un estado de facturación, no un ajuste."
+    },
+    {
+      "h": "Usa tu contraseña de Onet y elimina cualquier configuración POP3 que aún tengas",
+      "p": "Onet no emite contraseñas específicas de aplicación para clientes de correo; te autenticas con la contraseña de tu cuenta de Onet y la dirección completa. Si migras la configuración de un cliente antiguo, no copies el servidor POP3. POP3 se retiró por completo, no quedó en desuso, así que ya nada te responderá en el puerto 995."
+    },
+    {
+      "h": "Pégala en mcpemails y después pega la URL MCP en tu IA",
+      "p": "Elige IMAP / SMTP, escribe la dirección completa, por ejemplo nazwa@onet.pl, e introduce la contraseña. Los servidores y puertos de Onet vienen rellenados y se verificaron con una conexión TLS real. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Nada puede conectar una cuenta gratuita de Onet, y los servidores siguen respondiendo",
+      "p": "Esto es todo lo que hay que saber de Onet en 2026, y resulta realmente confuso de diagnosticar, porque <code>imap.poczta.onet.pl</code> está activo, acepta una conexión TLS y anuncia sus mecanismos de autenticación exactamente igual que siempre. La barrera está en la cuenta, no en el servidor. Si la tuya es una cuenta gratuita, Outlook, Thunderbird, Apple Mail, los clientes integrados de Android e iOS y todos los servidores MCP alojados, incluido este, están en la misma situación: sin acceso por protocolo. La vía gratuita que indica Onet es el sitio web y la app móvil oficial. Comprar un paquete de correo es lo único que cambia eso."
+    },
+    {
+      "h": "POP3 ha desaparecido por completo, también para las cuentas de pago",
+      "p": "La restricción de IMAP y la retirada de POP3 son dos cambios distintos que llegaron en la misma fecha, y la gente los confunde. Pagar un plan restablece IMAP; no recupera POP3. Onet retiró POP3 para todos los usuarios sin excepción. Si tienes un cliente antiguo o una integración heredada que descarga por POP3, un plan de pago no la salvará y tiene que pasarse a IMAP."
+    },
+    {
+      "h": "Las cuentas perpetuas quedaron exentas, así que dos buzones de Onet pueden comportarse de forma distinta",
+      "p": "Los titulares de <b>konta wieczyste</b> mantienen el acceso IMAP gratuito. Eso significa que dos direcciones de Onet, una junto a otra en el mismo cliente y aparentemente gratuitas las dos, pueden tener capacidades distintas, y solo una de ellas se conectará. Antes de comparar una conexión de Onet que falla con una que funciona, comprueba que estás comparando cuentas del mismo tipo."
+    },
+    {
+      "h": "Sin IDLE ni MOVE, así que archivar y mantenerse al día cuestan idas y vueltas extra",
+      "p": "El banner IMAP de Onet anuncia <code>SASL-IR</code> y <code>LITERAL+</code> pero no <code>IDLE</code>, así que el correo nuevo se descubre consultando periódicamente en lugar de recibirse por push en una conexión abierta. También omite <code>MOVE</code> y <code>UIDPLUS</code>, así que archivar un mensaje se hace como una copia, una actualización de marcas y un expunge, y el nuevo UID de la copia no se devuelve y hay que encontrarlo buscando en la carpeta de destino. Ninguna de las dos cosas es grave, pero ambas hacen que organizar en bloque sea más lento de lo que parece."
+    }
+  ],
+  "limits": [
+    "En una cuenta gratuita de Onet no hay nada que conectar. Es una restricción del proveedor y ningún servidor MCP, incluido el nuestro, puede sortearla.",
+    "Falta SPECIAL-USE, así que Enviados, Borradores y Papelera se identifican por nombre y no por función. Indica el nombre de la carpeta en la instrucción si un agente no la encuentra.",
+    "Como el servidor no admite MOVE, mover un mensaje no es atómico. Si la conexión se corta a mitad de la operación, un mensaje puede existir brevemente en ambas carpetas."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Onet Poczta?",
+      "a": "Solo si la cuenta tiene IMAP, lo que desde marzo de 2026 significa un paquete de correo de pago de Onet o una cuenta perpetua que conserva sus condiciones anteriores. En ese caso, apuntar un servidor MCP como mcpemails al buzón le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuál es la configuración IMAP y SMTP de Onet?",
+      "a": "IMAP es imap.poczta.onet.pl en el puerto 993 con TLS implícito. SMTP es smtp.poczta.onet.pl en el puerto 465, también con TLS implícito. El nombre de usuario es tu dirección completa y la contraseña es la de tu cuenta de Onet. Ambos servidores se confirmaron con una conexión TLS real, aunque una cuenta gratuita seguirá siendo rechazada en el paso de autenticación."
+    },
+    {
+      "q": "¿Por qué dejó de funcionar Outlook con mi correo de Onet?",
+      "a": "Por el cambio del 31 de marzo de 2026. Onet retiró POP3 para todos los usuarios y pasó IMAP a sus paquetes de pago. Si tu perfil de Outlook usaba POP3, ese protocolo ya no existe en Onet a ningún precio. Si usaba IMAP en una cuenta gratuita, la cuenta ya no tiene acceso por protocolo y necesita un plan de pago."
+    },
+    {
+      "q": "¿Qué plan de Onet necesito para IMAP?",
+      "a": "Los paquetes de correo de pago de Onet, que según las informaciones son Poczta Plus y Poczta Standard, restablecen el acceso IMAP junto con más almacenamiento y sin publicidad del operador. Consulta la lista de planes y precios actual en la propia página de suscripción de Onet antes de comprar, porque los paquetes ya han cambiado una vez."
+    },
+    {
+      "q": "¿Emite Onet contraseñas de aplicación?",
+      "a": "No. Onet no publica ningún mecanismo de contraseñas específicas de aplicación para clientes de correo. La autenticación es la contraseña normal de tu cuenta de Onet junto con la dirección completa. El servidor sí anuncia XOAUTH2, pero un usuario normal no tiene forma de obtener por su cuenta un token para usarlo."
+    },
+    {
+      "q": "¿Se almacena mi correo de Onet en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Onet por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Onet",
+    "sub": "Si tu plan de Onet incluye IMAP, conéctalo en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

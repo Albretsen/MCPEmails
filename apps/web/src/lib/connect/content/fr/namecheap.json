@@ -1,21 +1,33 @@
 {
+  "_sources": [
+    "https://www.namecheap.com/support/knowledgebase/article.aspx/1179/2175/general-private-email-configuration-for-mail-clients-and-mobile-devices/",
+    "https://www.namecheap.com/support/knowledgebase/article.aspx/10374/2178/how-to-set-up-applicationspecific-password-for-private-email/",
+    "https://www.namecheap.com/support/knowledgebase/article.aspx/10782/2306/new-how-to-set-up-twofactor-authentication-2fa-in-private-email/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte, ou mot de passe d'application avec la 2FA",
+    "helpUrl": "https://www.namecheap.com/support/knowledgebase/article.aspx/1179/2175/general-private-email-configuration-for-mail-clients-and-mobile-devices/",
+    "usernameForm": "Votre adresse complète sur votre propre domaine, par exemple you@yourdomain.com. Le guide de Namecheap indique l'adresse e-mail comme identifiant.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Connecter Namecheap Private Email à Claude (et à toute IA)",
-    "description": "Connectez Namecheap Private Email à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de la boîte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+    "title": "Connecter Namecheap Private Email à Claude et MCP",
+    "description": "Connectez Namecheap Private Email à Claude et tout client MCP en IMAP sur mail.privateemail.com:993, avec le mot de passe de la boîte, jamais votre compte Namecheap."
   },
   "hero": {
     "eyebrow": "Namecheap Private Email + IA",
     "titleLine1": "Connectez Namecheap Private Email à Claude,",
     "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
-    "lead": "Offrez à votre agent IA une vraie boîte Namecheap Private Email en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de la boîte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "lead": "Offrez à votre agent IA une vraie boîte Namecheap Private Email en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec le mot de passe de votre boîte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
     "meta0": "1 boîte gratuite, pour toujours",
-    "meta1": "Le mot de passe de la boîte, pas de configuration OAuth",
+    "meta1": "Le mot de passe de votre boîte, pas de configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude ne peut pas atteindre Namecheap Private Email tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+    "answer": "Claude ne peut pas atteindre Namecheap Private Email tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de votre boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
   },
   "method": {
     "title": "Comment Namecheap Private Email se connecte : IMAP et le mot de passe de la boîte",
-    "body": "Namecheap Private Email se connecte via IMAP/SMTP avec le <b>mot de passe de la boîte</b>, celui défini à sa création et non celui de votre compte Namecheap. Les deux serveurs sont <code>mail.privateemail.com</code> quel que soit votre domaine. Si vous ne l'avez pas, réinitialisez-le depuis le panneau de contrôle Private Email."
+    "body": "Namecheap Private Email se connecte en IMAP/SMTP avec le <b>mot de passe de la boîte</b>, celui défini à la création de la boîte, et non le mot de passe de votre compte Namecheap. Les deux serveurs sont <code>mail.privateemail.com</code>, quel que soit votre domaine. Si vous n'avez pas ce mot de passe, réinitialisez-le depuis le panneau de contrôle Private Email."
   },
   "setup": [
     {
@@ -33,6 +45,55 @@
     {
       "h": "Collez l'URL MCP dans votre IA",
       "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "L'identifiant du compte Namecheap n'est pas le mot de passe de la boîte, et ne le sera jamais",
+      "p": "L'identifiant que vous utilisez sur namecheap.com pour renouveler vos domaines n'a rien à voir avec le courrier. Le guide de configuration de Namecheap demande le <b>Master or Application password for this email account</b> (mot de passe principal ou d'application de ce compte e-mail), c'est-à-dire le mot de passe défini sur la boîte à sa création, géré depuis l'espace Private Email de votre tableau de bord ou depuis le webmail sur privateemail.com. Presque tous ceux qui achètent un domaine et une boîte dans la même commande s'y laissent prendre, car les deux identifiants relèvent du même achat et l'un d'eux est même la même adresse."
+    },
+    {
+      "h": "La double authentification de Private Email ne protège que le webmail, et elle bloque tous les clients de messagerie",
+      "p": "Namecheap décrit la 2FA de Private Email comme une protection de l'interface web. Dès que vous l'activez, votre mot de passe de boîte habituel ne permet plus de s'authentifier en IMAP et SMTP, et le refus se présente comme un simple échec de connexion, sans mention du second facteur. La solution est un <b>mot de passe spécifique à l'application</b> : dans le webmail Private Email, ouvrez <b>Settings</b>, puis <b>Security</b>, puis <b>Application Passwords</b>, choisissez le type de client dans la liste déroulante et générez-en un. Collez-le dans mcpemails à la place du mot de passe de la boîte. Si vous n'avez jamais activé la 2FA, aucun mot de passe d'application n'existe et vous n'en avez pas besoin."
+    },
+    {
+      "h": "Le serveur est mail.privateemail.com pour tous les clients, et Namecheap demande de ne pas le changer",
+      "p": "Contrairement à une boîte d'hébergement, Private Email n'est pas sur un serveur portant le nom de votre domaine. L'article de configuration de Namecheap indique <code>mail.privateemail.com</code> pour l'entrant comme pour le sortant et précise qu'il ne faut pas le modifier. On essaie souvent <code>mail.theirdomain.com</code>, qui soit ne répond pas, soit pointe vers un compte d'hébergement cPanel Namecheap contenant une tout autre boîte. Un domaine Namecheap n'implique pas non plus une boîte Namecheap : Private Email est un abonnement séparé, et si vous ne l'avez jamais acheté, il n'y a rien à connecter à cette adresse."
+    },
+    {
+      "h": "Le serveur est Dovecot, et il omet MOVE, UIDPLUS et SPECIAL-USE",
+      "p": "La bannière d'accueil identifie Dovecot et annonce <code>AUTH=PLAIN</code>, <code>AUTH=LOGIN</code>, <code>SASL-IR</code>, <code>IDLE</code> et <code>LITERAL+</code>, mais pas MOVE, UIDPLUS ni SPECIAL-USE. En pratique, cela signifie trois choses. Déplacer un message se fait par copie, indicateur et expunge plutôt qu'en une seule commande atomique. L'identifiant de la copie n'est pas renvoyé et doit être retrouvé en cherchant dans le dossier de destination. Enfin, Sent, Drafts, Trash et Junk sont reconnus par leur nom plutôt que par un indicateur de rôle : une boîte dont les dossiers ont été renommés exige de nommer le dossier explicitement."
+    }
+  ],
+  "limits": [
+    "Comme le serveur n'annonce pas MOVE, un déplacement n'est pas atomique. Si une connexion tombe en cours de route, un message peut brièvement se trouver dans les deux dossiers.",
+    "Private Email est un abonnement distinct du domaine. Posséder un domaine Namecheap ne signifie pas que vous avez une boîte Namecheap à connecter.",
+    "mcpemails connecte la boîte. Les alias, les redirections, les règles fourre-tout (catch-all) et la création de boîtes restent dans le panneau de contrôle Namecheap Private Email."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec Namecheap Private Email ?",
+      "a": "Pas tout seul. Claude n'a pas de connecteur Namecheap intégré. Connecter un serveur MCP comme mcpemails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et d'autres clients MCP, pas un seul."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de Namecheap Private Email ?",
+      "a": "Les deux sont mail.privateemail.com. IMAP utilise le port 993 en SSL, et SMTP le port 465 en SSL, les ports 143 et 587 étant documentés comme alternatives STARTTLS. L'identifiant est votre adresse e-mail complète et le mot de passe est celui de la boîte. Namecheap indique que le nom du serveur ne doit pas être modifié, et il a été confirmé par une connexion TLS réelle."
+    },
+    {
+      "q": "Pourquoi mon mot de passe Namecheap Private Email est-il refusé ?",
+      "a": "Les deux causes habituelles : utiliser l'identifiant de votre compte Namecheap au lieu du mot de passe de la boîte, et avoir activé la double authentification sur la boîte. Avec la 2FA, Private Email n'accepte en IMAP qu'un mot de passe spécifique à l'application, et l'échec ressemble exactement à un mauvais mot de passe. Vérifiez les deux avant de réinitialiser quoi que ce soit."
+    },
+    {
+      "q": "Comment créer un mot de passe d'application Namecheap ?",
+      "a": "Connectez-vous au webmail Private Email sur privateemail.com, ouvrez Settings, puis Security, puis Application Passwords. Choisissez l'application ou le type de client dans la liste déroulante et générez un mot de passe. Copiez-le immédiatement et collez-le dans mcpemails à la place du mot de passe de la boîte. Vous n'en avez besoin que si la double authentification est activée."
+    },
+    {
+      "q": "Puis-je utiliser mail.mydomain.com au lieu de mail.privateemail.com ?",
+      "a": "Non. Les boîtes Private Email ne sont pas hébergées sur un serveur portant le nom de votre domaine, et la documentation de Namecheap précise que le nom du serveur ne doit pas être modifié. Si mail.yourdomain.com répond, il pointe probablement vers un hébergement cPanel Namecheap, qui contient une autre boîte avec un autre mot de passe."
+    },
+    {
+      "q": "Mon courrier Namecheap est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis Private Email en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
     }
   ],
   "ctaBand": {

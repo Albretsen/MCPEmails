@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.123-reg.co.uk/welcome-tsohost/",
+    "https://www.123-reg.co.uk/help",
+    "https://help.tsohost.com/knowledge-base/article/11676",
+    "https://support.titan.email/hc/en-us/articles/900006137746-Send-email-using-Post-SMTP-plugin-tsoHost-Users"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte",
+    "helpUrl": "https://www.123-reg.co.uk/help",
+    "usernameForm": "Votre adresse e-mail complète, par exemple you@yourdomain.co.uk. Jamais l'identifiant de votre panneau de contrôle tsoHost ou 123 Reg.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "E-mail Tsohost et Claude après le passage à 123 Reg",
+    "description": "Les boîtes Tsohost se connectent toujours à Claude en IMAP sur le port 993. La marque est passée chez 123 Reg : lisez votre vrai serveur dans cPanel, sous Connect Devices."
+  },
+  "hero": {
+    "eyebrow": "Tsohost + IA",
+    "titleLine1": "Connectez l'e-mail Tsohost à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Tsohost. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP, avec les réglages tirés du seul écran qui fait encore foi après deux migrations.",
+    "answer": "Claude ne peut pas atteindre une boîte Tsohost tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en simple IMAP sur le port 993 et en SMTP sur le 465, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Il n'existe pas de serveur de messagerie tsohost.com partagé vers lequel pointer un client : le nom du serveur est construit à partir de votre propre domaine ou du nom de votre serveur d'hébergement, et la version qui fait foi est affichée dans cPanel, sous Email Accounts, puis Connect Devices. L'authentification se fait avec le mot de passe défini sur cette boîte précise, jamais avec l'identifiant de votre panneau de contrôle. La marque tsoHost a été absorbée par 123 Reg : commencez donc par le Control Panel de 123 Reg. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe de la boîte, défini dans cPanel",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment la messagerie Tsohost se connecte : votre propre nom de serveur, et une marque qui a déménagé",
+    "body": "Les boîtes Tsohost sont des boîtes cPanel. Elles répondent en IMAP sur le port 993 et en SMTP sur le 465 en TLS implicite, avec 143 et 587 comme équivalents STARTTLS, et le nom du serveur est propre à chaque client plutôt que partagé : soit <code>mail.yourdomain.co.uk</code>, construit à partir de votre domaine, soit le nom du serveur qui héberge votre compte. Aucun des deux ne se devine, et c'est pourquoi toute réponse exacte commence dans cPanel plutôt que dans un tableau de réglages. La complication propre à Tsohost, c'est que la marque n'existe plus en tant qu'entreprise distincte. tsoHost a été intégré à <b>123 Reg</b> : <code>tsohost.com</code> redirige vers une page d'accueil 123 Reg, l'ancienne base de connaissances <code>help.tsohost.com</code> redirige vers le centre d'aide de 123 Reg, et 123 Reg demande aux clients tsoHost de se connecter avec leurs identifiants existants et de retrouver leurs services dans l'onglet <b>My products</b> du Control Panel de 123 Reg. Vos boîtes ont suivi. Vos favoris et les anciens numéros d'articles, non."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
+    },
+    {
+      "h": "Accédez au cPanel qui contient la boîte",
+      "p": "Connectez-vous sur 123-reg.co.uk avec vos identifiants tsoHost, ouvrez le <b>Control Panel</b> et allez dans l'onglet <b>My products</b>. Trouvez l'offre d'hébergement à laquelle appartient le domaine et ouvrez son cPanel. Certains comptes dépendent encore d'un Control Panel tsoHost et d'autres ont déjà migré, et 123 Reg oriente le support différemment selon le cas : notez donc où vous arrivez avant d'avoir besoin d'aide."
+    },
+    {
+      "h": "Lisez le vrai serveur dans Connect Devices",
+      "p": "Dans cPanel, allez dans <b>Email</b>, puis <b>Email Accounts</b>, et cliquez sur <b>Connect Devices</b> sur la ligne de l'adresse. Descendez jusqu'à <b>Mail Client Manual Settings</b> et utilisez le bloc <b>Secure SSL/TLS Settings</b>, pas le bloc standard. Copiez le serveur entrant exactement tel qu'il est affiché, avec IMAP sur le 993 et SMTP sur le 465. Si personne n'a le mot de passe de la boîte, cliquez sur <b>Manage</b> à côté de l'adresse et définissez-en un nouveau ; la messagerie cPanel n'a pas de mécanisme de mot de passe d'application."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Ajoutez la boîte dans mcpemails avec l'adresse complète et ce mot de passe, puis mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Toutes les pages de réglages Tsohost que vous aviez en favoris ont été redirigées",
+      "p": "C'est le piège qui fait perdre un après-midi. Les clients Tsohost ont subi deux déménagements successifs : l'ancienne plateforme d'hébergement tsoHost a été migrée vers cPanel, puis la marque tsoHost elle-même a été absorbée par 123 Reg. Les deux ont changé l'endroit où se trouve la vérité. Les liens vers les articles de <code>help.tsohost.com</code> répondent désormais par une redirection vers le centre d'aide de 123 Reg plutôt que par l'article enregistré, et tout nom de serveur copié depuis un guide tsoHost d'avant cPanel décrit une plateforme sur laquelle votre boîte ne tourne plus. Le panneau Connect Devices du cPanel auquel votre compte donne accès aujourd'hui est la seule source qui reflète l'emplacement réel de la boîte."
+    },
+    {
+      "h": "Une boîte qui se connecte parfaitement peut quand même être la mauvaise",
+      "p": "cPanel crée et authentifie sans broncher une boîte sur un serveur vers lequel le courrier de votre domaine n'est plus acheminé, et Tsohost vendait un hébergement de messagerie basé sur Titan en parallèle de la messagerie cPanel, Titan publiant d'ailleurs ses propres consignes de configuration pour tsoHost. Vérifiez donc d'abord l'enregistrement MX du domaine. S'il pointe vers l'infrastructure de Titan, votre vraie boîte est chez Titan sur <code>imap.titan.email</code>, et le compte cPanel du même nom est une boîte vide qui accepte votre mot de passe et ne vous montre rien. Un agent qui signale une boîte vide pour une adresse que vous savez active, c'est presque toujours cela."
+    },
+    {
+      "h": "Le certificat de mail.yourdomain.co.uk n'est émis que si ce nom pointe vers le serveur",
+      "p": "AutoSSL de cPanel demande un certificat couvrant votre domaine et les sous-domaines de service, <code>mail.</code>, <code>webmail.</code>, <code>cpanel.</code> et les autres, mais il écarte ceux qui ne pointent pas vers ce serveur au moment de l'émission. Beaucoup de domaines Tsohost ont leur DNS géré ailleurs que chez l'hébergeur, et beaucoup ont vu leurs enregistrements réécrits pendant la migration : <code>mail.yourdomain.co.uk</code> finit donc par ne plus se résoudre, ou par se résoudre sans SAN correspondant. La négociation présente alors le certificat du nom d'hôte du serveur, et un client strict refuse avec une erreur de nom qui ressemble à une attaque. La solution est le nom du serveur indiqué dans Connect Devices, pas d'ignorer l'avertissement."
+    },
+    {
+      "h": "Deux migrations plus tard, plus personne ne se souvient du mot de passe de la boîte",
+      "p": "IMAP s'authentifie avec le mot de passe défini sur l'adresse e-mail elle-même dans cPanel, un identifiant différent de la connexion au panneau de contrôle tsoHost ou 123 Reg, et différent encore du mot de passe du compte cPanel. Après une migration de plateforme et une migration de marque, ce mot de passe par boîte est souvent la seule chose que personne n'a notée, et comme la connexion au panneau fonctionne toujours, on suppose que le mot de passe de messagerie doit être le même et on accuse le nom du serveur. Réinitialisez-le depuis <b>Manage</b>, à côté de l'adresse dans Email Accounts."
+    }
+  ],
+  "limits": [
+    "mcpemails connecte la boîte, pas le compte d'hébergement. Les redirections, alias, réponses automatiques, filtres anti-spam et le DNS restent dans cPanel et le Control Panel de 123 Reg, et votre client IA ne peut ni les voir ni les modifier.",
+    "Si l'adresse s'avère être une boîte Titan plutôt qu'une boîte cPanel, aucun des réglages ci-dessus ne s'applique. Connectez-la plutôt comme une boîte Titan, avec les serveurs de Titan et le mot de passe de la boîte défini dans le panneau de contrôle Titan.",
+    "Cette page décrit la messagerie cPanel telle qu'elle existe après la migration. Les noms de serveurs de l'ancienne plateforme tsoHost, d'avant le passage à cPanel, ne correspondent plus à l'emplacement de votre boîte et ne mèneront pas à elle."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec l'e-mail Tsohost ?",
+      "a": "Pas directement. Claude n'a pas de connecteur intégré pour les hébergeurs de messagerie cPanel. Connecter un serveur MCP comme mcpemails à votre boîte Tsohost en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, avec les identifiants qu'utiliserait un client de messagerie de bureau, et la même connexion fonctionne depuis Cursor et ChatGPT."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de Tsohost ?",
+      "a": "IMAP utilise le port 993 en TLS implicite et SMTP le port 465, avec 143 et 587 comme équivalents STARTTLS. Le nom du serveur est propre à votre compte plutôt que partagé, soit mail.yourdomain.co.uk, soit le nom de votre serveur, et cPanel affiche le bon sous Email Accounts, puis Connect Devices, dans le bloc Secure SSL/TLS. L'identifiant est toujours l'adresse e-mail complète."
+    },
+    {
+      "q": "Tsohost est désormais 123 Reg. Où trouver mes réglages de messagerie ?",
+      "a": "Connectez-vous sur 123-reg.co.uk avec vos identifiants tsoHost existants, ouvrez le Control Panel et utilisez l'onglet My products pour atteindre l'offre d'hébergement. Ouvrez son cPanel, puis Email Accounts, puis Connect Devices pour l'adresse. Vos boîtes et leur contenu ont été transférés sans changement ; seuls la marque, la page de connexion et le centre d'aide ont déménagé."
+    },
+    {
+      "q": "Pourquoi mon client de messagerie m'avertit-il au sujet du certificat de mail.mydomain.co.uk ?",
+      "a": "Parce que ce nom ne figure pas sur le certificat présenté par le serveur. AutoSSL de cPanel n'inclut le sous-domaine mail que s'il pointe vers le serveur d'hébergement, et beaucoup de domaines Tsohost ont leur DNS ailleurs ou ont vu leurs enregistrements modifiés pendant la migration. Utilisez le nom du serveur indiqué dans Connect Devices au lieu du préfixe mail, et ne désactivez pas la validation du certificat pour passer outre."
+    },
+    {
+      "q": "Ma boîte Tsohost se connecte mais ne contient aucun courrier. Que se passe-t-il ?",
+      "a": "Vérifiez l'enregistrement MX du domaine. Une boîte cPanel existe et accepte les connexions, que le courrier du domaine soit ou non acheminé vers ce serveur : un mot de passe correct sur la mauvaise boîte ressemble donc à une boîte vide. Si le MX pointe vers Titan, la boîte active est celle de Titan et doit être connectée avec les serveurs de Titan plutôt qu'avec ceux de votre hébergement."
+    },
+    {
+      "q": "Mon courrier Tsohost est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis votre serveur d'hébergement en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé. Le client IA que vous connectez reçoit bien le contenu de tout ce qu'il lit, ce qui mérite une décision réfléchie pour une boîte professionnelle."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Tsohost à votre IA",
+    "sub": "Connectez une boîte Tsohost en quelques minutes avec le serveur indiqué dans Connect Devices. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

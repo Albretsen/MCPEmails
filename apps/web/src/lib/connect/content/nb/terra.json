@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://www.terra.com.br/nossaterra/sala-de-imprensa/faq-clientes-terramail,fbd5387ca5d4564236664d5f8ed8bb94uwqbteac.html",
+    "https://www.getmailbird.com/setup/access-terra-com-br-via-imap-smtp",
+    "https://www.dinamize.com.br/blog/terra-encerra-atividades-de-e-mail-gratuito-atualize-seus-contatos/",
+    "https://www.validity.com/blog/terra-mails-free-email-service-closure/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Terra Mail-passord, på et aktivt betalt abonnement",
+    "helpUrl": null,
+    "usernameForm": "Hele adressen din, inkludert domenet: nome@terra.com.br.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Terra Mail Brasil til Claude: IMAP på betalt abonnement",
+    "description": "Koble en terra.com.br-postkasse til Claude eller enhver MCP-klient på imap.terra.com.br:993. Terra har avviklet gratisnivået, så et aktivt betalt abonnement kreves."
+  },
+  "hero": {
+    "eyebrow": "Terra Mail + AI",
+    "titleLine1": "Koble Terra Mail til Claude,",
+    "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Terra-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP, på en brasiliansk terra.com.br-postkasse med et aktivt betalt abonnement.",
+    "answer": "Claude når ikke Terra Mail på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.terra.com.br port 993 og autentiserer med hele adressen din og Terra Mail-passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Terra har avviklet gratispostkassene sine, så en adresse uten en aktiv betalt Terra Mail-pakke er blokkert, ikke bare begrenset, og Terras ikke-brasilianske domener ble stengt for mange år siden og har ingen server i det hele tatt. Bare terra.com.br er fortsatt i drift. Én innboks er gratis på mcpemails.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Aktiv betalt Terra Mail-pakke",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Terra Mail seg til: IMAP på terra.com.br, og ingen andre steder",
+    "body": "Terra tilbyr IMAP på <code>imap.terra.com.br</code> port 993 over implisitt TLS, og SMTP på <code>smtp.terra.com.br</code> port 465. Autentiseringen er helt vanlig: hele adressen som brukernavn og postkassepassordet. Det finnes ikke noe app-passord, ingen autorisasjonskode og ingen protokollbryter gjemt i webmailen. Komplikasjonene hos Terra handler om hvilke postkasser som fortsatt finnes. Terra stengte de internasjonale e-postdomenene sine, og sluttet i tillegg å selge de gratis pakkene som gratis <code>terra.com.br</code>-postkasser lå på, noe som gjorde at de kontoene ble blokkert til kunden tar en betalt Terra Mail-pakke. Er adressen din på et aktivt brasiliansk abonnement, er tilkoblingen en av de enkleste i denne regionen. Er den ikke det, hjelper ingen klientkonfigurasjon, og siden forklarer under hvordan du skiller de to tilfellene."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og forblir gratis, uten kort."
+    },
+    {
+      "h": "Sjekk at Terra-postkassen er på en aktiv betalt pakke",
+      "p": "Logg inn i Terra-webmailen. Avviser selve webmailen deg eller sier at pakken må oppdateres, er postkassen en av kontoene som ble rammet da Terras gratisnivå ble avviklet, og ingen e-postklient vil koble til før en betalt Terra Mail-pakke er aktiv på den. Åpner webmailen normalt, er kontoen aktiv og du kan fortsette."
+    },
+    {
+      "h": "Skriv inn adressen og passordet ditt i mcpemails",
+      "p": "Velg IMAP / SMTP og skriv inn hele adressen, for eksempel <code>nome@terra.com.br</code>, med postkassepassordet. Terra-vertene og -portene er forhåndsutfylt og ble bekreftet via en direkte TLS-tilkobling. Terra utsteder ikke programspesifikke passord, så har du lett etter et i innstillingene, er det ingenting å finne."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-klienten",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så kan agenten lese, søke, sende, svare, videresende, planlegge og organisere Terra-postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Terras gratispostkasser ble avviklet, og blokkeringen ser ut som en passordfeil",
+      "p": "Terra sluttet å tilby de gratis e-postpakkene sine, og kontoer som hadde vært gratis i årevis, ble blokkert i stedet for nedgradert. Tilgangen gjenopprettes bare ved å ta en betalt Terra Mail-pakke. Det viktige for alle som setter opp en klient, er at dette ikke melder seg selv: innloggingen avvises på serveren på samme måte som et feil passord. Mangeårige brasilianske adresser, noen av dem flere tiår gamle, sluttet å virke uten noen endring på kundens side. Før du bruker tid på vertsnavn og porter, bekreft at postkassen fortsatt åpnes i Terra-webmailen."
+    },
+    {
+      "h": "Bare terra.com.br finnes fortsatt, og de andre Terra-domenene har ingen server",
+      "p": "Terra drev e-post på en familie av landsdomener, blant annet <code>terra.com</code>, <code>terra.com.ar</code>, <code>mi.terra.cl</code>, <code>terra.com.co</code>, <code>terra.com.mx</code>, <code>terra.com.pe</code>, <code>terra.com.ve</code> og <code>terra.com.ec</code>. De tjenestene ble avviklet, og både kontoene og de lagrede meldingene ble utilgjengelige. Det brasilianske domenet <code>terra.com.br</code> var ikke en del av den nedleggelsen og er det denne siden dekker. Er adressen din på et av de andre, finnes det ingen vert å peke en klient mot og ingen konfigurasjon som gjenoppretter e-posten: den er borte, ikke feilkonfigurert."
+    },
+    {
+      "h": "Serveren tilbyr IDLE, men ikke UIDPLUS, som er en uvanlig kombinasjon",
+      "p": "Terras funksjonslinje inkluderer <code>IDLE</code>, så en klient kan holde en tilkobling åpen og få beskjed om ny e-post i stedet for å polle, noe som er bedre enn flere av de brasilianske naboene klarer. Den mangler <code>UIDPLUS</code> og <code>MOVE</code>. Den kombinasjonen har en praktisk følge ved arkivering: en flytting kjøres som en kopi, en flaggoppdatering og en expunge, og fordi UIDPLUS mangler, rapporterer ikke serveren den nye identifikatoren til den kopierte meldingen, så den må finnes ved å søke i målmappen etterpå. Arkivering virker, den er bare tregere og mindre sikker enn på en server som returnerer den nye UID-en."
+    }
+  ],
+  "limits": [
+    "En betalt Terra Mail-pakke kreves. Det finnes ingen gratis terra.com.br-postkasse igjen å koble til, og mcpemails kan ikke omgå en blokkering som håndheves på Terras egen server.",
+    "Fordi både MOVE og UIDPLUS mangler, er arkivering av en melding ikke atomisk, og resultatet må bekreftes med et søk. En avbrutt operasjon kan etterlate en melding kortvarig i to mapper.",
+    "SPECIAL-USE mangler, så mapper matches etter navn i stedet for rolle. I en portugisisk postkasse heter de som regel Enviados, Rascunhos, Lixeira og Spam."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Terra Mail?",
+      "a": "Ikke direkte. Claude har ingen innebygd Terra-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som mcpemails til terra.com.br-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer fra Cursor og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Terra?",
+      "a": "IMAP er imap.terra.com.br på port 993 med implisitt TLS. SMTP er smtp.terra.com.br på port 465, også med implisitt TLS. Logg inn med hele terra.com.br-adressen din og postkassepassordet. Begge vertene ble verifisert via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Er Terra Mail fortsatt gratis?",
+      "a": "Nei. Terra sluttet å selge de gratis pakkene som gratispostkasser var avhengige av, og de kontoene er blokkert til kunden tar en betalt Terra Mail-pakke. Dette rammer webmailen så vel som e-postklienter, så en postkasse du ikke kan åpne i en nettleser, kobler heller ikke til via IMAP, uansett hvilke innstillinger du bruker."
+    },
+    {
+      "q": "Hvorfor blir Terra-passordet mitt avvist?",
+      "a": "Sjekk abonnementet før passordet. En postkasse som ble etterlatt da Terras gratisnivå ble avviklet, avvises ved innlogging på nøyaktig samme måte som et feil passord. Logger webmailen deg inn normalt, er kontoen aktiv, og de sannsynlige årsakene er en feilskrevet adresse eller et passord endret et annet sted, siden Terra ikke utsteder noe eget app-passord."
+    },
+    {
+      "q": "Kan jeg koble til en terra.com- eller terra.com.mx-adresse?",
+      "a": "Nei. Terras internasjonale e-postdomener ble avviklet, og postkassene og de lagrede meldingene forsvant med dem. Det finnes ingen server bak de adressene å autentisere mot. Bare den brasilianske terra.com.br-tjenesten er fortsatt i drift, og det er den eneste disse innstillingene gjelder for."
+    },
+    {
+      "q": "Lagres Terra-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Terra via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke etter forespørselen som ba om det."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Terra-innboks",
+    "sub": "Koble til en aktiv terra.com.br-postkasse på minutter. Én innboks gratis for alltid på mcpemails, uten kort."
+  }
+}

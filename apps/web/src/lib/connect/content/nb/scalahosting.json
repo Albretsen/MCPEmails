@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.scalahosting.com/kb/use-imap-settings-to-add-my-email-address-to-an-email-client/",
+    "https://www.scalahosting.com/kb/how-to-setup-email-account-client-setup-ssl-tls-settings-pop-imap/",
+    "https://www.scalahosting.com/blog/scalahosting-introduces-spanel-powered-shared-and-email-hosting-plans/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://www.scalahosting.com/kb/use-imap-settings-to-add-my-email-address-to-an-email-client/",
+    "usernameForm": "Hele e-postadressen din, for eksempel team@yourdomain.com, slik den ble opprettet i SPanel eller cPanel.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "ScalaHosting-e-post til Claude: IMAP i SPanel og cPanel",
+    "description": "ScalaHosting kjører SPanel på noen abonnement og cPanel på andre. Finn innstillingene under Connect device, og gi Claude postkassen via IMAP 993. Én innboks gratis."
+  },
+  "hero": {
+    "eyebrow": "ScalaHosting + AI",
+    "titleLine1": "Koble ScalaHosting-e-post til Claude,",
+    "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte ScalaHosting-postkasse. Les, søk, send, svar, planlegg og organiser e-post via IMAP, enten kontoen din kjører SPanel eller cPanel.",
+    "answer": "Claude når ikke en ScalaHosting-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. ScalaHosting har ikke noe felles e-postvertsnavn: e-postserveren din er ditt eget domene eller hostingserverens navn, og begge panelene viser det under Connect device på adressen. Hvilket panel du får, avhenger av abonnementet, fordi både SPanel og cPanel er i bruk. Autentisering skjer med postkassepassordet, og én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord fra SPanel",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler ScalaHosting-e-post seg til: SPanel eller cPanel, IMAP 993",
+    "body": "ScalaHosting er uvanlig ved at de leverer sitt eget kontrollpanel ved siden av bransjestandarden. <b>SPanel</b> er deres egenutviklede panel, gratis med administrerte VPS-abonnement og nå også bak SPanel-drevne abonnement for delt hosting og e-posthosting. <b>cPanel</b> er fortsatt tilgjengelig, som grunnlag for eldre delte abonnement og som et betalt tillegg ved bestilling på administrert VPS. E-post oppfører seg likt uansett: IMAP på port 993 med SSL og SMTP på 465, med 587 dokumentert som alternativ for innsending, og hele e-postadressen som brukernavn. Vertsnavnet er navnet på din egen server, og derfor henter du det fra panelet og ikke fra en artikkel. I SPanel er det <b>Email Accounts</b>, den blå <b>Action</b>-knappen og så <b>Connect device</b>. I cPanel er det <b>Email Accounts</b> og så <b>Connect Devices</b>."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og krever ikke kort."
+    },
+    {
+      "h": "Åpne Connect device i det panelet du har",
+      "p": "SPanel nås på <code>yourdomain.com/spanel/login</code>, på din egen server. Når du er inne, åpner du <b>Email Accounts</b>, finner adressen, klikker den blå <b>Action</b>-knappen og velger <b>Connect device</b>. SPanel viser innkommende og utgående vertsnavn og porter i et popup-vindu. På en cPanel-konto er det tilsvarende <b>Email Accounts</b>, så <b>Connect Devices</b>, og så blokken Mail Client Manual Settings."
+    },
+    {
+      "h": "Sett eller gjenopprett postkassepassordet",
+      "p": "IMAP sjekker passordet på adressen, som ikke er innloggingen til ScalaHostings kundeområde. I SPanel oppretter eller redigerer du adressen under Email Accounts, og bruker Generate-knappen hvis du vil ha en sterk verdi. Lim det så inn i mcpemails med hele adressen som brukernavn og vertsnavnet du kopierte."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "SPanel har ingen sentral innloggingsside, og folk kaster bort tid på å lete etter en",
+      "p": "Det finnes ingen <code>spanel.scalahosting.com</code> å logge inn på. SPanel kjører på din egen server, og du når det på ditt eget domene, på <code>yourdomain.com/spanel/login</code>. Det overrasker folk som er vant til å logge inn på vertens nettsted først. Det betyr også at hvis domenets DNS ikke lenger peker på ScalaHosting, når du ikke panelet med det navnet heller, og trenger serverens IP eller vertsnavn i stedet."
+    },
+    {
+      "h": "Hvilket panel du har, er en kjøpsbeslutning, ikke et abonnementsnivå",
+      "p": "cPanel er et betalt tillegg på administrert VPS, mens SPanel er inkludert, og ScalaHostings egne tall plasserer det store flertallet av nye VPS-kunder på SPanel. Eldre abonnement for delt hosting og e-posthosting var basert på cPanel; nyere SPanel-drevne er det ikke. To ScalaHosting-kunder som betaler omtrent det samme, kan altså ha helt forskjellige paneler, og en veiledning skrevet for det ene har ingen tilsvarende skjerm i det andre. Sjekk hva du faktisk ser på før du følger en e-postveiledning fra ScalaHosting."
+    },
+    {
+      "h": "Innstillingene ble sendt på e-post ved registrering og er arkivert i kundeområdet",
+      "p": "ScalaHosting sender kontoens e-postserverdetaljer i velkomst-e-posten. Er den for lengst borte, kan de hentes frem uten å kontakte support: logg inn i kundeområdet og åpne <b>My Details</b>, så <b>Email History</b>, som tar vare på alle meldinger de har sendt deg. Det arkivet er den raskeste veien til serverens vertsnavn når du ikke kommer inn i panelet, og nesten ingen vet at det finnes."
+    }
+  ],
+  "limits": [
+    "mcpemails kobler til postkasser, ikke serveren. SPanels egne verktøy, sikkerhetskopier og sikkerhetsfunksjoner blir der de er.",
+    "På en administrert VPS kan du ha endret e-postoppsettet etter provisjonering. I så fall rapporterer popup-vinduet Connect device fortsatt det SPanel konfigurerte, som kanskje ikke lenger er det som lytter."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med ScalaHosting-e-post?",
+      "a": "Ikke direkte. Claude har ingen ScalaHosting-kobling. Kobler du en MCP-server som mcpemails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere. Dette virker likt på SPanel-kontoer og cPanel-kontoer, siden begge leverer vanlig IMAP."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for ScalaHosting?",
+      "a": "IMAP er port 993 med SSL, og SMTP er port 465 med SSL, eller 587 for innsending. Vertsnavnet er navnet på din egen hostingserver og ikke en felles ScalaHosting-adresse, så les det av popup-vinduet Connect device i SPanel eller fra Connect Devices i cPanel. Brukernavnet er hele e-postadressen din for begge."
+    },
+    {
+      "q": "Hvor finner jeg e-postinnstillingene i SPanel?",
+      "a": "Logg inn i SPanel på yourdomain.com/spanel/login, åpne Email Accounts, finn adressen i listen, klikk den blå Action-knappen og velg Connect device. SPanel viser da innkommende og utgående vertsnavn, porter og kryptering i et popup-vindu. De samme verdiene står også i velkomst-e-posten som ble sendt da kontoen ble opprettet."
+    },
+    {
+      "q": "Hvorfor blir ScalaHosting-e-postpassordet mitt avvist?",
+      "a": "Fordi postkassepassordet er adskilt fra innloggingen til ScalaHostings kundeområde og fra SPanels administratorpassord. Tilbakestill det ved å redigere adressen under Email Accounts i panelet. Bekreft at brukernavnet er hele e-postadressen, og at du brukte serverens vertsnavn som panelet viser, ikke et gjettet."
+    },
+    {
+      "q": "Lagres ScalaHosting-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra ScalaHosting-serveren din via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en ScalaHosting-innboks",
+    "sub": "Koble til en ScalaHosting-postkasse på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

@@ -1,21 +1,33 @@
 {
+  "_sources": [
+    "https://docs.rackspace.com/docs/set-up-multifactor-authentification-applications-for-cloud-office",
+    "https://docs.rackspace.com/docs/manage-multi-factor-authentication-for-rackspace-webmail",
+    "https://docs.rackspace.com/docs/configure-multi-factor-authentication"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón, o una contraseña de aplicación con MFA",
+    "helpUrl": "https://docs.rackspace.com/docs/set-up-multifactor-authentification-applications-for-cloud-office",
+    "usernameForm": "Tu dirección de correo completa en tu propio dominio. Rackspace usa la dirección entera como nombre de inicio de sesión, no un nombre de usuario aparte.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Conecta Rackspace Email a Claude (y a cualquier IA)",
-    "description": "Conecta Rackspace Email a Claude, Cursor, ChatGPT y a cualquier cliente MCP por IMAP con la contraseña del buzón. Deja que la IA lea, envíe, programe y organice tu correo. Una bandeja gratis, para siempre."
+    "title": "Conecta Rackspace Email a Claude, Cursor y clientes MCP",
+    "description": "Conecta Rackspace Email a Claude, Cursor y cualquier cliente MCP por IMAP en secure.emailsrvr.com:993. El servidor es compartido, no depende de tu dominio."
   },
   "hero": {
     "eyebrow": "Rackspace Email + IA",
     "titleLine1": "Conecta Rackspace Email a Claude,",
     "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
-    "lead": "Dale a tu agente de IA una bandeja Rackspace Email real en minutos. Lee, busca, envía, responde, programa y organiza correo con IMAP y la contraseña del buzón, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+    "lead": "Dale a tu agente de IA una bandeja real de Rackspace Email en minutos. Lee, busca, envía, responde, programa y organiza correo con IMAP y la contraseña de tu buzón, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
     "meta0": "1 bandeja gratis, para siempre",
-    "meta1": "La contraseña del buzón, sin configurar OAuth",
+    "meta1": "La contraseña de tu buzón, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no puede llegar a Rackspace Email por su cuenta. mcpemails es un servidor MCP alojado que lo conecta por IMAP con la contraseña del buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
+    "answer": "Claude no puede acceder a Rackspace Email por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
   },
   "method": {
-    "title": "Cómo se conecta Rackspace Email: IMAP y la contraseña del buzón",
-    "body": "Rackspace Email se conecta por IMAP/SMTP con la contraseña de tu buzón. Ambos servidores son <code>secure.emailsrvr.com</code> sea cual sea tu propio dominio, y eso es lo que se suele pasar por alto: el servidor de correo no se deduce del nombre de tu dominio. Define o cambia la contraseña del buzón en el panel de control de Rackspace Cloud Office."
+    "title": "Cómo se conecta Rackspace Email: IMAP y la contraseña de tu buzón",
+    "body": "Rackspace Email se conecta por IMAP/SMTP con la contraseña de tu buzón. Ambos servidores son <code>secure.emailsrvr.com</code> sea cual sea tu dominio, y eso es lo que se suele pasar por alto: el servidor de correo no se deriva del nombre de tu dominio. Establece o restablece la contraseña del buzón en el panel de control de Rackspace Cloud Office."
   },
   "setup": [
     {
@@ -24,19 +36,68 @@
     },
     {
       "h": "Consigue la contraseña de tu buzón de Rackspace",
-      "p": "En el panel de control de Cloud Office, abre el buzón y define su contraseña. Usa el servidor seguro, secure.emailsrvr.com, no el que va sin cifrar."
+      "p": "En el panel de control de Cloud Office, abre el buzón y establece su contraseña. Usa el servidor seguro, secure.emailsrvr.com, no el que va sin cifrar."
     },
     {
       "h": "Pégala en mcpemails",
-      "p": "Elige IMAP / SMTP, añade tu dirección de Rackspace Email, los servidores de abajo y la contraseña para conectar la bandeja de forma segura."
+      "p": "Elige IMAP / SMTP y añade tu dirección de Rackspace Email, los servidores de abajo y la contraseña para conectar la bandeja de forma segura."
     },
     {
       "h": "Pega la URL MCP en tu IA",
       "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
     }
   ],
+  "gotchas": [
+    {
+      "h": "El servidor de correo no se deriva de tu dominio, algo poco habitual en un producto de correo para empresas",
+      "p": "Rackspace Email atiende a todos sus clientes desde <code>secure.emailsrvr.com</code>, tanto para el correo entrante como para el saliente. <code>mail.yourdomain.com</code> no es un nombre de Rackspace y no existe salvo que lo hayas creado tú. Como <code>emailsrvr.com</code> no lleva la marca Rackspace, quien lo encuentra en una configuración antigua suele pensar que está mal y lo sustituye por algo que parece más razonable, y a partir de ahí nada conecta. Es correcto. Nuestra sonda completó un handshake TLS contra él y el certificado nombra <code>secure.emailsrvr.com</code>."
+    },
+    {
+      "h": "Activar la autenticación multifactor es lo que retira sin avisar la contraseña de tu buzón",
+      "p": "Las contraseñas de aplicación de Rackspace solo existen cuando la autenticación multifactor está activada, y en cuanto lo está, la contraseña del buzón deja de funcionar en todo lo que hable IMAP o SMTP, aunque sigue funcionando en el webmail. Esa división es lo que resulta tan confuso: puedes entrar al webmail con la misma contraseña que tu cliente ve rechazada. Crea una contraseña de aplicación desde los ajustes de seguridad de la cuenta en el webmail de Rackspace o en el panel de control de Cloud Office, ponle una etiqueta con el cliente al que sirve y cópiala en el momento, porque solo se muestra una vez. Si la pierdes, tendrás que borrar la entrada y generar otra."
+    },
+    {
+      "h": "Rackspace vende tres productos de correo distintos, y solo uno está en emailsrvr",
+      "p": "<b>Rackspace Email</b> es el producto de buzón IMAP independiente y el que cubre esta página. Rackspace también vende <b>Hosted Exchange</b>, que ejecuta Exchange en la infraestructura propia de Rackspace, y revende <b>Microsoft 365</b>, donde el buzón vive en los servidores de Microsoft bajo su plataforma de identidad. Solo Rackspace Email responde en <code>secure.emailsrvr.com</code>. No afirmamos poder conectar un buzón de Microsoft 365, porque la política predeterminada de inquilino de Microsoft impide que un usuario final corriente dé su consentimiento a un acceso de terceros para leer y escribir correo. Si tu webmail es Outlook en la web, se trata del producto de Microsoft."
+    },
+    {
+      "h": "Estás hablando con un proxy, y las capacidades que ves son las del proxy",
+      "p": "El saludo IMAP nombra una máquina como <code>proxy7.mail.iad3b.rsapps.net</code>, así que las conexiones llegan a una capa frontal y no al almacén que guarda tu correo. Esa capa anuncia a propósito un conjunto reducido de capacidades: <code>SASL-IR</code>, <code>IDLE</code>, <code>LITERAL+</code> y <code>AUTH=PLAIN</code>, sin <code>AUTH=LOGIN</code>, sin MOVE, sin UIDPLUS y sin SPECIAL-USE. La ausencia de <b>AUTH=LOGIN</b> es la que da problemas: las bibliotecas cliente que dependen del mecanismo LOGIN, algo común en herramientas escritas para Exchange, fallan en la autenticación en lugar de devolver un error útil, mientras que el lado SMTP acepta tanto PLAIN como LOGIN. Por eso, en un mismo cliente, la misma cuenta puede enviar sin problema y fallar al leer."
+    }
+  ],
+  "limits": [
+    "Como el servidor no anuncia MOVE ni UIDPLUS, mover un mensaje se hace con copia, marca y expunge, y no es atómico.",
+    "Las carpetas se identifican por nombre y no por función, ya que no se anuncia SPECIAL-USE. En un buzón con carpetas renombradas puede que haya que indicar el destino de forma explícita.",
+    "Los buzones de Hosted Exchange y Microsoft 365 que vende Rackspace no están en secure.emailsrvr.com, y los buzones de Microsoft 365 no se pueden conectar en absoluto."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Rackspace Email?",
+      "a": "No por sí solo. Claude no tiene un conector de Rackspace integrado. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y como es IMAP estándar, el mismo buzón queda disponible también en Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Rackspace Email?",
+      "a": "Ambos son secure.emailsrvr.com. IMAP usa el puerto 993 con SSL/TLS y SMTP el puerto 465, también con SSL/TLS. El nombre de inicio de sesión es tu dirección de correo completa y la contraseña es la del buzón. El servidor es compartido por todos los clientes de Rackspace Email en lugar de construirse a partir de tu dominio, y se confirmó mediante una conexión TLS real."
+    },
+    {
+      "q": "¿Por qué mi contraseña de Rackspace se rechaza en un cliente de correo pero funciona en el webmail?",
+      "a": "Ese patrón concreto indica que la autenticación multifactor está activada en el buzón. Rackspace sigue aceptando la contraseña del buzón en la web, pero exige una contraseña de aplicación para IMAP y SMTP. Genera una en los ajustes de seguridad de la cuenta en el webmail o en el panel de control de Cloud Office y úsala en lugar de la contraseña del buzón."
+    },
+    {
+      "q": "¿Cómo creo una contraseña de aplicación de Rackspace?",
+      "a": "Las contraseñas de aplicación solo aparecen cuando la autenticación multifactor está activada. Con MFA activa, abre los ajustes de seguridad de tu cuenta en el webmail de Rackspace o en el panel de control de Cloud Office, busca la sección de contraseñas de aplicación y crea una, con una etiqueta para el cliente al que pertenece. Solo se muestra una vez, así que cópiala enseguida."
+    },
+    {
+      "q": "¿De verdad secure.emailsrvr.com es mi servidor?",
+      "a": "Sí. emailsrvr.com es el dominio de correo sin marca de Rackspace, y secure.emailsrvr.com es el punto de acceso TLS que usan todos los clientes de Rackspace Email. No hay un nombre de servidor por dominio que buscar, y sustituirlo por un nombre basado en tu propio dominio es la causa más habitual de que una configuración de Rackspace no conecte en absoluto."
+    },
+    {
+      "q": "¿Se almacena mi correo de Rackspace en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Rackspace por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
   "ctaBand": {
-    "title": "Dale a tu IA una bandeja Rackspace Email",
+    "title": "Dale a tu IA una bandeja de Rackspace Email",
     "sub": "Conecta Rackspace Email en minutos. Una bandeja gratis para siempre, sin tarjeta."
   }
 }

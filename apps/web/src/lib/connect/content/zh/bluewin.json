@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://www.swisscom.ch/en/residential/help/e-mail/setup.html",
+    "https://www.swisscom.ch/de/privatkunden/hilfe/internet/e-mail-setup-ssl.tab-auf-dem-computer.html"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Bluewin 邮箱密码",
+    "helpUrl": "https://www.swisscom.ch/en/residential/help/e-mail/setup.html",
+    "usernameForm": "你的完整 Bluewin 地址，例如 firstname.lastname@bluewin.ch。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "通过 IMAP 将 Bluewin（Swisscom）邮箱连接到 Claude",
+    "description": "通过 imaps.bluewin.ch:993 的 IMAP 将 Bluewin 邮箱连接到 Claude 及任意 MCP 客户端。Swisscom 邮件客户端需要单独的邮箱密码，而不是你的登录密码。"
+  },
+  "hero": {
+    "eyebrow": "Bluewin + AI",
+    "titleLine1": "将 Bluewin 邮箱连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 bluewin.ch 收件箱。使用你的 Swisscom 邮箱密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用而不止一个。",
+    "answer": "Claude 无法自行访问 Bluewin 邮箱。mcpemails 是一个托管 MCP 服务器，通过 imaps.bluewin.ch 端口 993 的 IMAP 与之连接，使用你完整的 bluewin.ch 地址和 Bluewin 邮箱密码登录；Swisscom 将这个密码与 My Swisscom 登录密码分开管理。连接后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送、回复和整理这些邮件。1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "邮箱密码，而非 Swisscom 登录密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Bluewin 如何连接：IMAP 与单独的邮箱密码",
+    "body": "Swisscom 在 <code>imaps.bluewin.ch</code> 端口 993 上通过 IMAP 提供 Bluewin 邮件，在 <code>smtpauths.bluewin.ch</code> 端口 465 上接收外发邮件，两者都在连接建立时立即启用 TLS。凭据是 Bluewin 与大多数服务商不同的地方：Swisscom 明确说明，邮箱密码与 Swisscom 登录密码不是同一个。每个地址有一个邮箱密码，在 My Swisscom 中设置或修改，同一个密码用于 IMAP、SMTP 以及日历和通讯录协议。用户名是完整地址，通常为 <code>firstname.lastname@bluewin.ch</code> 形式。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "在 My Swisscom 中设置或核对邮箱密码",
+      "p": "登录 My Swisscom，打开你要连接的 Bluewin 地址的邮箱密码修改部分。这个密码与你登录 My Swisscom 的密码不同。如果你从未设置过，现在就设置；你在这里设定的值就是邮件客户端要用的密码。"
+    },
+    {
+      "h": "在 mcpemails 中输入地址和邮箱密码",
+      "p": "选择 IMAP / SMTP，输入完整的 <code>@bluewin.ch</code> 地址，并粘贴邮箱密码，而不是 Swisscom 登录密码。Bluewin 的服务器地址已预填，包括末尾那几个容易输错的字母。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Swisscom 登录密码在邮件客户端中永远无效",
+      "p": "Swisscom 为一个账户设置了两套凭据：Swisscom 登录密码，用于进入 My Swisscom 和客户门户；邮箱密码，是 IMAP 和 SMTP 唯一接受的密码。两者可以设为不同的值，而且通常也确实不同。几乎所有 Bluewin 认证失败都是这个原因，而重置 Swisscom 登录密码毫无帮助，因为被校验的根本不是它。"
+    },
+    {
+      "h": "主机名是 imaps 和 smtpauths，而不是 imap 和 smtp",
+      "p": "Bluewin 的服务器名称带有额外的字母，人们凭记忆输入时常会漏掉：收信服务器以带 s 的 <code>imaps</code> 开头，发信服务器是 <code>smtpauths</code>，而不是 <code>smtp</code>。缩短的名称解析不到 Swisscom 的邮件服务器，因此客户端报告的是连接失败而不是认证失败。如果你在其他地方手动填写设置，请复制粘贴，不要重新输入。"
+    },
+    {
+      "h": "没有 SPECIAL-USE，文件夹按网页邮箱中显示的名称匹配",
+      "p": "Bluewin 的 IMAP 服务器不声明 SPECIAL-USE 扩展，而客户端通常正是借助它得知哪个文件夹是 Sent、哪个是 Trash。因此文件夹只能按名称匹配，而 Bluewin 会用你网页邮箱设置的语言来命名，所以德语账户中叫 Gesendet 的文件夹，在英语账户中叫 Sent。如果代理把邮件归到了错误的位置，请完全按照 Bluewin 网页邮箱中显示的名称写出目标文件夹。"
+    },
+    {
+      "h": "MOVE 和 UIDPLUS 都不支持",
+      "p": "该服务器既不支持 MOVE，也不支持 UIDPLUS。因此归档一封邮件要依次执行 COPY、STORE 删除标记、EXPUNGE，而且服务器从不报告它为新副本分配的 ID。mcpemails 会处理这一系列操作，但这里的移动不是原子操作，已归档的邮件是通过在目标文件夹中搜索来确认的，而不是通过 ID。"
+    }
+  ],
+  "limits": [
+    "Bluewin 的 SMTP 服务器声明的单封邮件大小上限约为 25 MB，低于本站介绍的大多数服务商，因此带多个大附件的邮件在发出前就会被拒绝。",
+    "由于服务器不声明 SPECIAL-USE，文件夹角色按名称匹配。文件夹被重命名过的邮箱，可能需要明确写出文件夹名称。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Bluewin 邮箱吗？",
+      "a": "不能直接使用。Claude 没有内置的 Bluewin 或 Swisscom 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 bluewin.ch 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Bluewin 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imaps.bluewin.ch，端口 993，从连接一开始就使用 TLS。SMTP 为 smtpauths.bluewin.ch，端口 465，同样是隐式 TLS，并要求认证。用户名是你的完整 bluewin.ch 地址。两个服务器均已在本页所示日期通过实时 TLS 连接验证。"
+    },
+    {
+      "q": "为什么我的 Bluewin 密码被拒绝？",
+      "a": "因为邮件客户端需要的是 Bluewin 邮箱密码，而大多数人试的是 Swisscom 登录密码。Swisscom 的文档把这两者列为两套独立的凭据。请在 My Swisscom 中为该地址设置或重置邮箱密码，然后使用新密码。修改 Swisscom 登录密码不会改变 IMAP 接受的密码。"
+    },
+    {
+      "q": "Bluewin 需要应用专用密码吗？",
+      "a": "不需要。Swisscom 不签发按应用区分的密码。每个地址只有一个在 My Swisscom 中设置的邮箱密码，IMAP、SMTP 以及日历和通讯录协议都使用它。这也意味着修改它会让所有客户端同时断开，所以请一并更新。"
+    },
+    {
+      "q": "我的 Bluewin 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 Swisscom 实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Bluewin 收件箱",
+    "sub": "用你的 Swisscom 邮箱密码，几分钟即可连接 bluewin.ch 地址。1 个收件箱永久免费，无需信用卡。"
+  }
+}

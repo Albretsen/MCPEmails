@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://support.loopia.com/wiki/email-servers/",
+    "https://support.loopia.se/wiki/administrera-e-postkonto/",
+    "https://support.loopia.se/wiki/skapa-en-e-postadress/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña de la cuenta de correo",
+    "helpUrl": "https://support.loopia.se/wiki/administrera-e-postkonto/",
+    "usernameForm": "Tu dirección completa, incluido el dominio: namn@dittdoman.se.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta el correo de Loopia a Claude y clientes MCP",
+    "description": "Conecta el correo de Loopia a Claude, Cursor y cualquier cliente MCP por IMAP en mailcluster.loopia.se:993, un servidor compartido para todos los dominios. Una bandeja gratis."
+  },
+  "hero": {
+    "eyebrow": "Correo de Loopia + IA",
+    "titleLine1": "Conecta el correo de Loopia a Claude,",
+    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de Loopia. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña definida para la cuenta en Loopia Kundzon.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de Loopia. mcpemails es un servidor MCP alojado que lo conecta por IMAP en mailcluster.loopia.se en el puerto 993, autenticándose con tu dirección de correo completa y la contraseña definida para esa cuenta en Loopia Kundzon, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. Loopia usa un único nombre de servidor de clúster compartido para todos los clientes, así que no hay ningún servidor por dominio que consultar ni contraseña de aplicación que generar. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña de la cuenta definida en Loopia Kundzon",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Loopia: un servidor de clúster, IMAP y SMTP",
+    "body": "Loopia sirve ambos protocolos en un único nombre de servidor, <code>mailcluster.loopia.se</code>: puerto 993 para IMAP con TLS implícito y puerto 465 para SMTP, también con TLS implícito. El mismo servidor atiende a todos los clientes de Loopia, sea cual sea el dominio de la dirección. La documentación de Loopia es directa sobre el nombre de usuario: siempre es tu dirección de correo completa, por ejemplo <code>namn@exempel.se</code>, tanto en la entrada como en la salida, y el envío exige autenticación. La contraseña es la que se eligió al crear la dirección en Loopia Kundzon, y Loopia te deja cambiarla allí o en <code>mailadmin.loopia.se</code>. No hay contraseña específica de aplicación ni ningún interruptor IMAP por buzón."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
+    },
+    {
+      "h": "Define la contraseña de la cuenta en Kundzon o Mailadmin",
+      "p": "Inicia sesión en Loopia Kundzon, abre la lista de direcciones de correo de tu dominio, haz clic en la dirección y elige Edit. Aparece un campo de contraseña junto a Password: introduce una nueva y guarda. El mismo cambio se puede hacer en mailadmin.loopia.se si administras el correo sin acceso completo a Kundzon."
+    },
+    {
+      "h": "Pégala en mcpemails",
+      "p": "Elige IMAP / SMTP, introduce la dirección completa y pega la contraseña de la cuenta. El servidor mailcluster.loopia.se y los puertos 993 y 465 ya vienen rellenados y se verificaron con una conexión TLS real."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "En Loopia no existe mail.yourdomain.se",
+      "p": "Loopia centraliza todo el correo de sus clientes en un único clúster, y el nombre de servidor es <code>mailcluster.loopia.se</code> para todos. Las guías escritas para proveedores tipo cPanel te dicen que uses <code>mail.</code> seguido de tu propio dominio, y en Loopia ese nombre normalmente ni siquiera existe en el DNS, o apunta a tu hosting web en lugar de al correo. El fallo parece un problema de red y no un error de configuración, y eso lleva a la gente al artículo de soporte equivocado."
+    },
+    {
+      "h": "La contraseña del buzón se gestiona en dos sitios distintos",
+      "p": "Loopia ofrece la administración del correo tanto dentro de Kundzon, junto a tus dominios y facturas, como aparte en <code>mailadmin.loopia.se</code>, que existe para que alguien pueda gestionar el correo sin tener el acceso a la cuenta. Una contraseña cambiada en un sitio se aplica al buzón en ambos. Los equipos que usan las dos interfaces a veces restablecen una contraseña en Mailadmin y luego no entienden por qué ya no funciona el valor que anotaron desde Kundzon hace meses."
+    },
+    {
+      "h": "Sin MOVE ni SPECIAL-USE, y los nombres de carpeta están en sueco",
+      "p": "El servidor no anuncia la extensión MOVE, así que mover un mensaje se ejecuta como una copia, una actualización de marcas y un expunge en lugar de un único comando atómico, y falta UIDPLUS, así que el nuevo UID hay que encontrarlo buscando en el destino. Tampoco hay SPECIAL-USE, lo que significa que Enviados, Borradores, Papelera y Correo no deseado se identifican por nombre. Los buzones de Loopia creados desde la interfaz sueca suelen tener Skickat, Utkast, Papperskorgen y Skräppost, así que si un agente no encuentra tu papelera, indícala explícitamente."
+    }
+  ],
+  "limits": [
+    "Como el servidor no admite MOVE, mover no es atómico. Si una conexión se corta a mitad de la operación, un mensaje puede existir un momento en las dos carpetas.",
+    "Las funciones de las carpetas se deducen de sus nombres, así que en un buzón con carpetas renombradas hay que indicar la carpeta explícitamente en la petición."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de Loopia?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para Loopia. Apuntar un servidor MCP como mcpemails a tu buzón de Loopia por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Loopia?",
+      "a": "Ambos usan mailcluster.loopia.se. IMAP usa el puerto 993 con TLS implícito y SMTP el puerto 465, también con TLS implícito y con autenticación obligatoria para enviar. El nombre de usuario es siempre tu dirección de correo completa y la contraseña es la de la cuenta en Kundzon. El servidor se confirmó con una conexión TLS real."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de Loopia?",
+      "a": "Normalmente porque introdujiste el acceso a Loopia Kundzon en lugar de la contraseña definida en la cuenta de correo concreta, o porque otra persona cambió la contraseña en mailadmin.loopia.se. Abre la dirección en Kundzon, elige Edit, define una contraseña nueva y usa esa. Comprueba también que el nombre de usuario es la dirección completa."
+    },
+    {
+      "q": "¿Necesita Loopia una contraseña de aplicación?",
+      "a": "No. Loopia no emite contraseñas específicas de aplicación para el correo y no hay nada que activar por buzón antes de que un cliente pueda iniciar sesión. La contraseña de la cuenta autentica tanto IMAP como SMTP. Si prefieres no reutilizar una contraseña existente, define una nueva para la dirección en Kundzon."
+    },
+    {
+      "q": "¿Se almacena mi correo de Loopia en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Loopia por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Loopia",
+    "sub": "Conecta el correo de Loopia en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://help.aliyun.com/zh/document_detail/36687.html",
+    "https://help.aliyun.com/zh/document_detail/444269.html",
+    "https://help.aliyun.com/document_detail/444380.html",
+    "https://help.aliyun.com/zh/document_detail/465546.html",
+    "https://help.aliyun.com/zh/document_detail/465307.html"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña del buzón, salvo que esté activada una contraseña de seguridad de cliente",
+    "helpUrl": "https://help.aliyun.com/zh/document_detail/444269.html",
+    "usernameForm": "Tu dirección completa, incluido el dominio: name@aliyun.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Ajustes IMAP de Alibaba Mail (Aliyun) para Claude",
+    "description": "Conecta Alibaba Mail a Claude, Cursor o cualquier cliente MCP por IMAP en imap.aliyun.com:993. Sirve la contraseña del buzón, salvo con contraseña de seguridad activa."
+  },
+  "hero": {
+    "eyebrow": "Alibaba Mail + IA",
+    "titleLine1": "Conecta Alibaba Mail a Claude,",
+    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA un buzón real de Aliyun. Lee, busca, envía, responde, programa y organiza correo por IMAP, en todos los clientes MCP y no solo en uno.",
+    "answer": "Claude no puede acceder por sí solo a Alibaba Mail. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.aliyun.com en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Alibaba es el único gran proveedor chino que no obliga a usar un código de autorización: tu contraseña normal del buzón sirve para autenticarte, siempre que la recogida POP/IMAP esté activada en los ajustes del buzón. Si tú o el administrador de tu dominio han activado la contraseña de seguridad para clientes de terceros (三方客户端安全密码), esa contraseña de 16 caracteres sustituye a la del buzón en cualquier cliente que pida una. Una bandeja es gratis.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña del buzón o contraseña de seguridad de cliente",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Alibaba Mail: IMAP y una contraseña que depende de un ajuste",
+    "body": "Alibaba Mail sirve IMAP en <code>imap.aliyun.com</code> en el puerto 993 con TLS implícito, y SMTP en <code>smtp.aliyun.com</code> en el puerto 465. Esos dos servidores pertenecen al servicio personal <code>@aliyun.com</code>. Alibaba Mail en tu propio dominio es un producto empresarial distinto, cuyos nombres de servidor aparecen en su propia consola de administración, así que tómalos de la consola y no de esta página. La autenticación es donde Alibaba se diferencia de todos los demás grandes servicios de correo chinos. QQ, NetEase y Sina rechazan directamente la contraseña de la cuenta y emiten en su lugar un código de autorización. Alibaba no: por defecto, lo que envía un cliente es la <b>contraseña del buzón</b>. La excepción es la <b>三方客户端安全密码</b>, la contraseña de seguridad para clientes de terceros. Una vez activada, Alibaba genera una contraseña de 16 caracteres para los clientes y la contraseña del buzón deja de funcionar en ellos. Un usuario puede activarla, y un administrador de dominio puede imponerla a toda la organización, por eso dos personas de la misma empresa pueden tener experiencias contradictorias con el mismo servidor."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y sigue siendo gratis, sin tarjeta. Deja la pestaña abierta: en el paso tres pegarás ahí tus credenciales de Aliyun."
+    },
+    {
+      "h": "Activa la recogida POP/IMAP en los ajustes del buzón",
+      "p": "Inicia sesión en el webmail, abre 设置 (Settings, ajustes) desde el icono de engranaje arriba a la derecha, ve a 帐户设置 (Account settings) y luego a POP设置 (POP settings), y activa POP/IMAP代收功能, la función de recogida POP e IMAP. En Alibaba Mail empresarial este permiso corresponde al administrador del dominio y no a ti: allí Alibaba bloquea por defecto los clientes de terceros, y el administrador concede acceso POP3 o IMAP cuenta por cuenta antes de que ningún cliente pueda iniciar sesión."
+    },
+    {
+      "h": "Averigua qué contraseña pide realmente tu cuenta",
+      "p": "Abre 设置, luego 查看更多设置 (ver más ajustes), luego 账户与安全 (Account and security) y 账户安全 (Account safety), y busca 三方客户端登录安全管理, la sección de seguridad del inicio de sesión de clientes de terceros. Si 三方客户端安全密码 está desactivada, tu contraseña del buzón es la credencial y no hay que hacer nada más. Si está activada, o si la activas aquí, haz clic en 生成新密码 (generar nueva contraseña), supera la verificación por móvil y copia la contraseña de 16 caracteres. Alibaba la muestra una sola vez. Pega en mcpemails tu dirección completa y la contraseña que corresponda de las dos; los servidores ya vienen rellenados."
+    },
+    {
+      "h": "Pega la URL MCP en tu cliente de IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente podrá leer, buscar, enviar, responder, reenviar, programar y organizar ese buzón de Aliyun."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "El servidor IMAP no anuncia ningún mecanismo de contraseña",
+      "p": "El banner IMAP de Alibaba enumera <code>AUTH=EXTERNAL</code>, <code>AUTH=XOAUTH</code> y <code>AUTH=XOAUTH2</code>, y nada más. No hay <code>AUTH=PLAIN</code> ni <code>AUTH=LOGIN</code> en la línea de capacidades, así que un cliente que elige su mecanismo de autenticación según lo que anuncia el servidor no encuentra nada que pueda usar con una contraseña y se rinde antes de intentarlo. Lo que sí funciona es el comando IMAP <code>LOGIN</code> simple en el puerto 993, que el servidor acepta aunque nunca lo anuncie. Por eso las bibliotecas IMAP cuidadosas fallan contra <code>imap.aliyun.com</code> mientras se conectan a todo lo demás, y parece un problema de credenciales cuando no lo es. El lado SMTP es la imagen inversa: ofrece <code>PLAIN</code> y <code>LOGIN</code> con normalidad, además del mecanismo propio de Alibaba <code>XALIOAUTH</code>, así que la mitad de envío de la misma cuenta se comporta distinto que la mitad de recepción."
+    },
+    {
+      "h": "Un administrador de dominio puede cambiarte el requisito de contraseña sin avisar",
+      "p": "En la consola de dominio de Alibaba Mail, un administrador que haya iniciado sesión como postmaster puede abrir 安全管理 (gestión de seguridad), luego 账号安全策略 (política de seguridad de cuentas), e imponer 安全密码 a todos o a departamentos y cuentas concretos. En cuanto esa política se aplica a tu buzón, la contraseña guardada en tu cliente de correo deja de funcionar, sin aviso y sin ningún cambio por tu parte. Si una conexión que lleva meses funcionando de repente no logra autenticarse, pregunta si se activó esa política antes de volver a revisar la contraseña."
+    },
+    {
+      "h": "La contraseña de seguridad se emite por dispositivo, hasta diez, y se muestra una vez",
+      "p": "Alibaba las trata como credenciales de dispositivo y no como una credencial única de la cuenta. Puedes tener hasta diez a la vez, y la práctica recomendada es una distinta por dispositivo. Cada una se muestra una vez al crearla y nunca más, así que una perdida se sustituye, no se recupera. Genera una contraseña dedicada para mcpemails en lugar de reutilizar la que ya está en tu teléfono: así, revocar una contraseña solo afecta a aquello para lo que se emitió."
+    }
+  ],
+  "limits": [
+    "El servidor IMAP de Alibaba no implementa la extensión MOVE, así que archivar un mensaje se ejecuta como una copia, una actualización de marcas y un expunge en lugar de un único comando atómico. El resultado es el mismo, pero un lote grande supone el triple de viajes de ida y vuelta.",
+    "Falta SPECIAL-USE, así que las carpetas se identifican por nombre y no por función. En un buzón en chino esos nombres son 已发送 (Enviados), 已删除 (Eliminados), 草稿 (Borradores) y 垃圾邮件 (Spam). Indica explícitamente la carpeta de destino si tu agente archiva algo en un lugar inesperado.",
+    "imap.aliyun.com y smtp.aliyun.com se sirven desde China continental. Una búsqueda en un buzón grande desde fuera del país añade la latencia transfronteriza a los viajes de ida y vuelta habituales de IMAP."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Alibaba Mail?",
+      "a": "No directamente. Claude no tiene un conector integrado para Aliyun y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como mcpemails a tu buzón de Alibaba le da a Claude acceso para leer, buscar, enviar, responder, reenviar, programar y organizar, y la misma conexión funciona desde Cursor y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Alibaba Mail?",
+      "a": "IMAP es imap.aliyun.com en el puerto 993 con TLS implícito. SMTP es smtp.aliyun.com en el puerto 465, también con TLS implícito. Inicia sesión con tu dirección aliyun.com completa. Ambos servidores se verificaron con una conexión TLS real en la fecha que indica esta página, y ambos pertenecen al servicio personal, no a Alibaba Mail empresarial en un dominio propio."
+    },
+    {
+      "q": "¿Necesita Alibaba Mail un código de autorización como QQ o 163?",
+      "a": "No, no por defecto. Esta es la principal diferencia práctica entre Alibaba y los demás grandes proveedores chinos. Tu contraseña del buzón autentica a un cliente una vez activada la recogida POP e IMAP. Solo si se ha activado la función de contraseña de seguridad para clientes de terceros, por ti o por el administrador de tu dominio, pasa a ser la credencial una contraseña aparte de 16 caracteres."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de Alibaba Mail?",
+      "a": "Tres causas, por orden de probabilidad. La recogida POP e IMAP sigue desactivada en los ajustes del buzón. O usas Alibaba Mail empresarial, donde los clientes de terceros están bloqueados hasta que un administrador concede a la cuenta el permiso IMAP. O está activada la contraseña de seguridad para clientes de terceros, en cuyo caso la contraseña del buzón ya no funciona en ningún cliente y necesitas la generada."
+    },
+    {
+      "q": "¿Puedo conectar Alibaba Mail en mi propio dominio?",
+      "a": "Sí, pero no con los servidores de esta página. Alibaba Mail empresarial funciona con sus propios nombres de servidor, que aparecen en la consola de administración de tu dominio. Toma de ahí los servidores entrante y saliente y conéctalos en mcpemails como un buzón IMAP y SMTP normal. Las reglas de la contraseña de seguridad descritas aquí también se aplican a esas cuentas."
+    },
+    {
+      "q": "¿Se almacena mi correo de Alibaba en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Alibaba Mail por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva después de la solicitud que lo pidió."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Alibaba Mail",
+    "sub": "Conecta el correo de Aliyun en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

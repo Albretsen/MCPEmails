@@ -1,0 +1,105 @@
+{
+  "_sources": [
+    "https://posteo.de/en/help/how-do-i-set-up-posteo-in-an-email-client-pop3-imap-and-smtp",
+    "https://posteo.de/en/help/activating-additional-email-account-protection",
+    "https://posteo.de/en/blog/how-to-use-app-passwords-with-posteo",
+    "https://posteo.de/en/help/how-do-i-activate-inbound-encryption-with-my-public-pgp-key",
+    "https://posteo.de/en/help/how-do-i-activate-posteo-crypto-mail-storage"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Mot de passe Posteo, ou mot de passe d'application",
+    "helpUrl": "https://posteo.de/en/blog/how-to-use-app-passwords-with-posteo",
+    "usernameForm": "Votre adresse Posteo complète, quel que soit le domaine Posteo : name@posteo.de, name@posteo.net, name@posteo.org et les autres s'authentifient tous auprès du même serveur.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connecter Posteo à Claude, Cursor et aux clients MCP",
+    "description": "Connectez Posteo à Claude, Cursor et tout client MCP en IMAP via posteo.de:993. La protection renforcée impose un mot de passe d'application à tout client."
+  },
+  "hero": {
+    "eyebrow": "Posteo + IA",
+    "titleLine1": "Connectez Posteo à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Posteo. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP, dans tous vos clients MCP et pas un seul, avec une réponse claire sur ce que le chiffrement de Posteo cache ou non à un agent.",
+    "answer": "Claude ne peut pas accéder seul à Posteo. mcpemails est un serveur MCP hébergé qui l'y connecte en IMAP via posteo.de sur le port 993, et en SMTP via posteo.de sur le port 465, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Il n'y a pas de préfixe imap. ou smtp. : le domaine nu est le serveur de toutes les adresses Posteo, quel que soit le domaine Posteo de la vôtre. L'authentification se fait avec votre mot de passe Posteo habituel, sauf si vous avez activé la protection supplémentaire du compte de messagerie : dès lors, IMAP, POP3 et SMTP n'acceptent plus qu'un mot de passe d'application créé dans vos réglages Posteo. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe d'application si la protection renforcée est active",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Posteo se connecte : un nom d'hôte nu, et un mot de passe qui dépend d'un seul réglage",
+    "body": "Posteo publie un seul nom de serveur pour tout. IMAP : <code>posteo.de</code> sur le port 993 en SSL/TLS, ou 143 en STARTTLS. POP3 : le même serveur sur 995 ou 110. SMTP : <code>posteo.de</code> sur 465 ou 587. Posteo n'accepte que les connexions chiffrées et exige l'authentification SMTP même quand un client indique que le mot de passe sortant est facultatif : remplissez donc les deux champs. Le nom d'utilisateur est votre adresse <b>complète</b>. Posteo propose des adresses sur une vingtaine de domaines et <code>posteo.de</code> reste le serveur de tous : il n'y a rien à rechercher par domaine et aucun nom d'hôte <code>imap.</code> à deviner. Le mot de passe nécessaire dépend d'un seul interrupteur. Par défaut, votre mot de passe Posteo habituel fonctionne. Activez la <b>protection supplémentaire du compte de messagerie</b> sous Password and security, et Posteo cesse complètement de l'accepter en IMAP, POP3 et SMTP, ne laissant que les <b>mots de passe d'application</b>. Le webmail, lui, continue d'accepter le mot de passe habituel dans tous les cas."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours. Vous obtenez à la fin une URL MCP et une clé."
+    },
+    {
+      "h": "Créez un mot de passe d'application dans vos réglages Posteo",
+      "p": "Connectez-vous au webmail Posteo et ouvrez <b>Settings</b>, puis <b>Password and security</b>, où les mots de passe d'application se créent et se gèrent. Posteo exige que chacun compte au moins 16 caractères, dont au moins un chiffre et une majuscule, et vous pouvez en avoir jusqu'à cinq à la fois. Nommez-le d'après cette connexion pour savoir lequel supprimer plus tard. Vous pouvez sauter cette étape si la protection renforcée est désactivée, mais un identifiant révocable séparément est préférable à confier à un tiers."
+    },
+    {
+      "h": "Ajoutez la boîte dans mcpemails",
+      "p": "Choisissez IMAP / SMTP et saisissez votre adresse Posteo complète, puis le mot de passe. Le serveur est prérempli avec <code>posteo.de</code> dans les deux sens, vérifié par une connexion TLS réelle, et le mot de passe sortant doit être renseigné en plus du mot de passe entrant, car Posteo authentifie toujours la soumission."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "La protection supplémentaire du compte bloque le mot de passe du compte sans prévenir les clients",
+      "p": "C'est celle qui génère les tickets d'assistance. Une fois ce réglage activé, Posteo indique que l'accès en IMAP, POP3 et SMTP n'est possible qu'avec un mot de passe d'application, tandis que le webmail continue d'accepter votre mot de passe habituel. Vu de l'extérieur, on dirait que le client s'est cassé tout seul : la connexion web fonctionne toujours, le mot de passe est donc manifestement bon, et pourtant chaque appareil refuse. La solution n'est pas de réinitialiser le mot de passe. C'est un mot de passe d'application créé sous Password and security, saisi à la fois dans les champs entrant et sortant."
+    },
+    {
+      "h": "Le stockage chiffré et le chiffrement entrant se ressemblent de nom et se comportent tout autrement en IMAP",
+      "p": "Posteo propose deux fonctions que l'on confond. Le <b>stockage chiffré du courrier</b> (crypto mail storage) chiffre votre boîte au repos sur les serveurs de Posteo et reste transparent pour un client : vous vous connectez, le serveur déchiffre, et l'IMAP fonctionne exactement comme avant, donc un agent lit votre courrier normalement. Le <b>chiffrement entrant</b> (inbound encryption) fait l'inverse. Il prend votre clé publique PGP ou S/MIME et chiffre avec elle chaque nouveau message reçu, que l'expéditeur ait chiffré quoi que ce soit ou non, et le résultat est illisible pour tout client ne disposant pas de votre clé privée, celui-ci compris. Posteo précise que cela ne concerne que le nouveau courrier, ne chiffre pas les en-têtes et, avec S/MIME, vous empêche de lire votre propre courrier dans le webmail. Si vous voulez un agent capable de lire votre boîte, le stockage chiffré est compatible avec cela, le chiffrement entrant ne l'est pas."
+    },
+    {
+      "h": "Il n'existe pas d'imap.posteo.de, ni de serveur par domaine",
+      "p": "Les adresses Posteo existent sur une vingtaine de domaines, dont posteo.net, posteo.org, posteo.eu, posteo.at et posteo.ch, et tous sont servis par le nom d'hôte nu <code>posteo.de</code>, pour l'IMAP, le POP3 comme le SMTP. Les clients qui construisent un nom de serveur en ajoutant un préfixe à votre domaine, la supposition habituelle de la configuration automatique, finissent par chercher autre chose que le serveur documenté. Saisissez <code>posteo.de</code> à la main et utilisez l'adresse complète comme nom d'utilisateur."
+    },
+    {
+      "h": "Ni MOVE ni UIDPLUS : classer du courrier se fait en trois étapes",
+      "p": "Le serveur Dovecot de Posteo annonce IDLE et SASL-IR, mais ni MOVE, ni UIDPLUS, ni SPECIAL-USE. Un déplacement consiste donc en un COPY, un STORE du drapeau \\Deleted et un EXPUNGE, et sans UIDPLUS le serveur ne communique jamais le nouvel UID : la copie doit être retrouvée en cherchant dans le dossier de destination. C'est correct mais plus lent que sur un serveur doté de MOVE, ce qui se voit quand un agent réorganise des centaines de messages d'un coup. L'absence de SPECIAL-USE signifie que les rôles des dossiers se déduisent de leur nom, et les noms par défaut de Posteo sont simplement Sent, Drafts et Trash, en anglais."
+    }
+  ],
+  "limits": [
+    "Connecter une boîte Posteo à un client IA signifie que ce fournisseur d'IA lit le contenu de tout ce sur quoi on lui demande de travailler. mcpemails récupère le courrier en direct depuis Posteo à chaque requête et ne stocke pas le corps des messages, et les identifiants sont chiffrés au repos, mais le texte parvient tout de même à Claude, Cursor ou au client que vous connectez. L'inscription anonyme, le paiement anonyme et l'hébergement en Allemagne de Posteo protègent la relation entre vous et Posteo. Rien de cela ne suit un message chez un fournisseur d'IA que vous connectez vous-même.",
+    "Avec le chiffrement entrant activé, un agent ne peut pas lire votre courrier du tout. Les messages arrivent chiffrés en PGP ou S/MIME, mcpemails ne détient aucune de vos clés privées, et seuls les en-têtes, les dates et les opérations sur les dossiers restent disponibles.",
+    "La boîte standard de Posteo est petite selon les critères actuels, et une boîte qui atteint son quota refuse le courrier entrant. Un agent qui classe et marque des messages ne libère pas d'espace ; supprimer et vider la corbeille, si."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec Posteo ?",
+      "a": "Pas seul. Claude n'a pas de connecteur Posteo et ne parle pas l'IMAP. Pointer un serveur MCP comme mcpemails vers votre boîte Posteo donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et d'autres clients MCP sans avoir à la configurer une seconde fois."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de Posteo ?",
+      "a": "IMAP : posteo.de sur le port 993 en SSL/TLS, ou 143 en STARTTLS. SMTP : posteo.de sur le port 465 en SSL/TLS, ou 587 en STARTTLS. POP3 : le même serveur sur 995 ou 110. Le nom d'utilisateur est votre adresse Posteo complète, sur n'importe quel domaine Posteo, et l'authentification SMTP est toujours obligatoire. Les deux serveurs ont été vérifiés par une connexion TLS réelle."
+    },
+    {
+      "q": "Posteo exige-t-il un mot de passe d'application ?",
+      "a": "Seulement si vous avez activé la protection supplémentaire du compte de messagerie. Par défaut, votre mot de passe Posteo habituel authentifie l'IMAP, le POP3 et le SMTP. Avec cette protection active, seuls les mots de passe d'application fonctionnent pour ces protocoles. Ils se créent sous Settings, Password and security, doivent compter au moins 16 caractères avec un chiffre et une majuscule, et vous pouvez en avoir cinq à la fois."
+    },
+    {
+      "q": "Pourquoi mon logiciel de messagerie Posteo a-t-il cessé de fonctionner alors que le webmail se connecte toujours ?",
+      "a": "Presque certainement parce que la protection supplémentaire du compte de messagerie a été activée. Ce réglage bloque le mot de passe du compte pour l'IMAP, le POP3 et le SMTP sans toucher au webmail, ce qui correspond exactement à ce que vous constatez. Créez un mot de passe d'application dans Settings, sous Password and security, et saisissez-le dans les champs de mot de passe entrant et sortant."
+    },
+    {
+      "q": "Le stockage chiffré de Posteo empêche-t-il mon IA de lire mon courrier ?",
+      "a": "Non. Le stockage chiffré chiffre votre boîte au repos du côté de Posteo et se déchiffre de façon transparente quand vous vous authentifiez : l'IMAP se comporte normalement et un agent lit votre courrier comme d'habitude. La fonction qui rend réellement le courrier illisible pour un client est le chiffrement entrant, qui chiffre chaque nouveau message en PGP ou S/MIME avec votre propre clé publique."
+    },
+    {
+      "q": "Mon courrier Posteo est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis posteo.de en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé. Le client IA que vous connectez reçoit, lui, le contenu de tout ce qu'il lit : c'est une question distincte, qui mérite d'être tranchée en connaissance de cause."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Posteo à votre IA",
+    "sub": "Connectez Posteo en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

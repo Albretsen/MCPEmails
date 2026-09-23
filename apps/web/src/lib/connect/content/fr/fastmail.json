@@ -1,20 +1,34 @@
 {
+  "_sources": [
+    "https://www.fastmail.com/blog/an-mcp-server-for-fastmail/",
+    "https://www.fastmail.help/hc/en-us/articles/360058752854-App-passwords",
+    "https://www.fastmail.help/hc/en-us/articles/1500000279921-IMAP-POP-and-SMTP",
+    "https://www.fastmail.help/hc/en-us/articles/1500000278342-Server-names-and-ports"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Mot de passe d'application",
+    "helpUrl": "https://www.fastmail.help/hc/en-us/articles/360058752854-App-passwords",
+    "usernameForm": "Votre adresse Fastmail complète, domaine compris : name@fastmail.com, ou votre propre domaine si vous en utilisez un.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Connecter Fastmail à Claude (et à toute IA)",
-    "description": "Connectez Fastmail à Claude, Cursor, ChatGPT et tout client MCP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser Fastmail. 1 boîte gratuite, pour toujours."
+    "title": "Connecter Fastmail à Claude, Cursor et aux clients MCP",
+    "description": "Connectez Fastmail à Claude, Cursor, ChatGPT et tout client MCP via IMAP sur imap.fastmail.com:993 avec un mot de passe d'application. 1 boîte gratuite."
   },
   "hero": {
     "eyebrow": "Fastmail + IA",
-    "titleLine1": "Connectez Fastmail à Claude",
+    "titleLine1": "Connectez Fastmail à Claude,",
     "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte Fastmail en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un seul mot de passe d'application, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
     "meta0": "1 boîte gratuite, pour toujours",
-    "meta1": "Mot de passe d'application, pas d'OAuth",
-    "meta2": "E-mails récupérés en direct, jamais stockés"
+    "meta1": "Mot de passe d'application, sans configuration OAuth",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Claude ne peut pas accéder seul à Fastmail. mcpemails est un serveur MCP hébergé qui connecte la boîte via IMAP sur imap.fastmail.com, port 993, en s'authentifiant avec un mot de passe d'application Fastmail plutôt qu'avec le mot de passe de votre compte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Fastmail propose son propre serveur MCP, limité à Fastmail ; l'intérêt d'utiliser celui-ci à la place est qu'une seule URL couvre aussi vos autres boîtes. Une boîte est gratuite, pour toujours."
   },
   "method": {
     "title": "Comment Fastmail se connecte : un mot de passe d'application",
-    "body": "Fastmail se connecte via IMAP/SMTP avec un <b>mot de passe d'application Fastmail</b> : générez-en un dans Fastmail sous Paramètres → Confidentialité et sécurité → Mots de passe d'application, collez-le dans mcpemails, et c'est connecté. Pas de parcours OAuth, pas de fenêtres pop-up."
+    "body": "Fastmail se connecte via IMAP/SMTP avec un <b>mot de passe d'application Fastmail</b>. Générez-en un dans Fastmail sous Settings → Privacy & Security → App passwords, collez-le dans mcpemails, et c'est connecté. Pas de parcours OAuth, pas de fenêtres pop-up."
   },
   "setup": [
     {
@@ -23,7 +37,7 @@
     },
     {
       "h": "Générez un mot de passe d'application Fastmail",
-      "p": "Dans Fastmail, allez dans Paramètres → Confidentialité et sécurité → Mots de passe d'application et créez-en un pour le courrier (IMAP/SMTP)."
+      "p": "Dans Fastmail, allez dans Settings → Privacy & Security → App passwords (paramètres, confidentialité et sécurité, mots de passe d'application) et créez-en un pour le courrier (IMAP/SMTP)."
     },
     {
       "h": "Collez-le dans mcpemails",
@@ -31,7 +45,51 @@
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
-      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a accès à la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Fastmail propose son propre serveur MCP, et il est bon",
+      "p": "En avril 2026, Fastmail a lancé un serveur MCP officiel à l'adresse <code>https://api.fastmail.com/mcp</code>, authentifié par OAuth, qui offre un accès en lecture seule, en écriture ou en envoi et couvre le courrier, le calendrier et les contacts. Si Fastmail est la seule boîte à laquelle vous voulez donner accès à un assistant, c'est la voie la plus directe, et nous le disons franchement. mcpemails répond à une autre question : <b>une seule</b> URL MCP qui contient à la fois votre compte Fastmail et votre boîte iCloud, Zoho, Yahoo, GMX ou IMAP d'entreprise, avec les mêmes seize outils pour toutes, afin qu'un agent puisse chercher dans plusieurs boîtes et que vous configuriez un serveur au lieu de cinq. Ici, vous être utile compte davantage que nous mettre en valeur."
+    },
+    {
+      "h": "Les comptes Fastmail Basic ne peuvent pas du tout utiliser IMAP",
+      "p": "L'offre Basic de Fastmail n'inclut ni IMAP, ni POP, ni SMTP, ni CalDAV, ni CardDAV, et ses comptes ne peuvent pas créer de mots de passe d'application. Le webmail et les applications de Fastmail sont tout ce qu'elle offre. Si l'écran des mots de passe d'application ne vous propose rien à créer, c'est donc l'offre et non un bug, et ressaisir le mot de passe n'y changera rien. Les comptes Standard et Professional disposent des protocoles et peuvent se connecter."
+    },
+    {
+      "h": "Le niveau d'accès du mot de passe d'application doit inclure le courrier",
+      "p": "Les mots de passe d'application se créent dans Settings, puis Privacy & Security, puis la section Connected apps & API tokens, puis Manage app passwords and access, puis New app password. Le niveau d'accès par défaut est <b>Mail, Contacts & Calendars</b>, celui dont IMAP et SMTP ont besoin. Choisissez plutôt Files (WebDAV) et le mot de passe est créé sans aucun problème, puis échoue à se connecter au courrier. Fastmail n'affiche le mot de passe qu'une fois, copiez-le donc avant de quitter l'écran, et sachez que votre mot de passe Fastmail habituel n'authentifiera jamais un client de messagerie."
+    }
+  ],
+  "limits": [
+    "Fastmail Basic n'inclut ni IMAP ni SMTP : une boîte Basic ne peut donc pas être connectée. Standard et Professional le peuvent.",
+    "Le serveur de soumission de Fastmail annonce une taille maximale de message d'environ 71 MB. La lecture des pièces jointes via mcpemails est plafonnée à 25 MB par requête : tout fichier plus lourd doit être récupéré dans Fastmail directement."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec Fastmail ?",
+      "a": "Oui, par deux voies différentes. Fastmail gère son propre serveur MCP, vers lequel Claude peut pointer directement avec OAuth. Sinon, mcpemails connecte la même boîte via IMAP avec un mot de passe d'application et l'expose, avec toutes les autres boîtes que vous ajoutez, via une seule URL MCP qui fonctionne aussi dans Cursor et ChatGPT. Dans les deux cas, Claude peut lire, rechercher, envoyer, répondre et organiser le courrier."
+    },
+    {
+      "q": "Dois-je utiliser le serveur MCP de Fastmail ou celui-ci ?",
+      "a": "Utilisez celui de Fastmail si Fastmail est votre seule boîte et que votre client le prend en charge : il est officiel, utilise OAuth et vous permet de choisir un accès en lecture seule, en écriture ou en envoi. Utilisez mcpemails si vous voulez plusieurs fournisseurs derrière une seule URL, si vous avez aussi une boîte iCloud, Zoho ou IMAP professionnelle, ou si vous voulez que les mêmes outils se comportent de façon identique dans plusieurs clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de Fastmail ?",
+      "a": "IMAP : imap.fastmail.com sur le port 993 en TLS implicite. SMTP : smtp.fastmail.com sur le port 465, également en TLS implicite. L'identifiant est votre adresse Fastmail complète et le mot de passe est un mot de passe d'application, jamais celui de votre compte. Les deux serveurs ont été confirmés par une connexion TLS réelle à la date indiquée sur cette page."
+    },
+    {
+      "q": "Pourquoi mon mot de passe Fastmail est-il refusé ?",
+      "a": "Trois causes, par ordre de probabilité. Vous utilisez le mot de passe de votre compte au lieu d'un mot de passe d'application, ce que Fastmail n'accepte jamais en IMAP ni en SMTP. Le mot de passe d'application a été créé avec le niveau d'accès Files au lieu de Mail, Contacts & Calendars. Ou le compte est sur l'offre Basic, qui n'inclut ni IMAP ni SMTP."
+    },
+    {
+      "q": "Cela fonctionne-t-il avec un domaine personnalisé chez Fastmail ?",
+      "a": "Oui. Une adresse sur votre propre domaine hébergée chez Fastmail utilise les mêmes serveurs imap.fastmail.com et smtp.fastmail.com et le même mot de passe d'application qu'une adresse fastmail.com. Saisissez l'adresse complète sur votre domaine comme identifiant. Il n'y a pas de nom de serveur distinct à chercher ni rien de plus à activer."
+    },
+    {
+      "q": "Mon courrier Fastmail est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct chez Fastmail via IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le contenu des messages n'est pas conservé. Supprimer le mot de passe d'application dans Fastmail coupe immédiatement la connexion de leur côté."
     }
   ],
   "ctaBand": {

@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://www.xfinity.com/support/articles/third-party-email-access",
+    "https://www.xfinity.com/support/articles/email-only-faqs"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Passord for Xfinity ID",
+    "helpUrl": "https://www.xfinity.com/support/articles/third-party-email-access",
+    "usernameForm": "Hele comcast.net-adressen din, som normalt er Xfinity ID-en din.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Comcast Xfinity-e-post til Claude via IMAP",
+    "description": "Koble Comcast Xfinity-e-post til Claude og enhver MCP-klient over IMAP på imap.comcast.net:993. Third Party Access Security må være på, ellers feiler alle pålogginger."
+  },
+  "hero": {
+    "eyebrow": "Comcast Xfinity + AI",
+    "titleLine1": "Koble Comcast Xfinity-e-post",
+    "titleLine2": "til Claude, Cursor og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte comcast.net-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP med Xfinity ID-en din, i alle MCP-klienter i stedet for bare én.",
+    "answer": "Claude kan ikke nå en Comcast Xfinity-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP på imap.comcast.net, port 993, og logger inn med hele comcast.net-adressen din og passordet for Xfinity ID-en din. Xfinity blokkerer alle eksterne e-postklienter til du krysser av for Third Party Access Security i innstillingene for Xfinity Email, så slå det på først, ellers blir selv riktig passord avvist. Oppsettet tar et par minutter, og én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Tredjepartstilgang må være på",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles Xfinity til: IMAP, når du har låst opp tredjepartstilgang",
+    "body": "Comcast leverer IMAP på <code>imap.comcast.net</code>, port 993 over TLS, og SMTP på <code>smtp.comcast.net</code>, port 465, også med implisitt TLS. Påloggingsopplysningen er det vanlige passordet for Xfinity ID-en din; det finnes ikke noe app-passord å generere. Hindringen er en innstilling, ikke en hemmelighet. Xfinity har en bryter som heter <b>Third Party Access Security</b> i e-postinnstillingene, og den er bare krysset av for kontoer som allerede brukte en ekstern klient. For alle andre er den av, og så lenge den er av, avviser serveren alle pålogginger fra alle klienter med en feilmelding som ser nøyaktig ut som et feil passord. Slå den på én gang, i webmailen, så begynner de samme påloggingsopplysningene som ble avvist, å fungere."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
+    },
+    {
+      "h": "Kryss av for Third Party Access Security i Xfinity Email",
+      "p": "Logg inn i Xfinity Email på connect.xfinity.com, klikk tannhjulikonet, velg <b>Settings</b>, deretter <b>Security</b>, og kryss av i boksen under <b>Third Party Access Security</b>. Xfinity advarer deg om risikoen ved eksterne klienter mens du gjør det. Ingenting annet på denne siden fungerer før den boksen er krysset av."
+    },
+    {
+      "h": "Skriv inn Xfinity ID-en og passordet ditt i mcpemails",
+      "p": "Velg IMAP / SMTP, skriv inn hele <code>@comcast.net</code>-adressen din og passordet for den Xfinity ID-en. Comcast-vertene er forhåndsutfylt. Hvis kontoen din bruker totrinnsbekreftelse, fullfører du den i webmailen først, slik at påloggingen ikke fortsatt venter."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Third Party Access Security er av som standard, og den kan slå seg av igjen av seg selv",
+      "p": "Hvis du aldri har brukt Outlook, Apple Mail eller Thunderbird med denne postkassen, er boksen ikke krysset av, og det sier Comcasts egen artikkel også. Brukere melder dessuten at den slår seg av igjen etter en tvungen tilbakestilling av passordet. Så når en tilkobling som virket i går, begynner å feile i dag med en autentiseringsfeil, bør du sjekke den boksen før du rører noe annet. Den ligger på connect.xfinity.com under tannhjulikonet, Settings, deretter Security."
+    },
+    {
+      "h": "Tidligere kunder mister postkassen med mindre de logger inn på nettstedet",
+      "p": "Hvis du ikke lenger kjøper tjenester fra Xfinity, beholder Comcast adressen bare hvis du hadde logget inn på nettstedet Xfinity Email i løpet av de 90 dagene før frakoblingen, og den holdes bare i live hvis du logger inn der minst én gang hver niende måned. Kravet er formulert rundt nettstedet Xfinity Email, så ikke anta at en agent som sjekker over IMAP, oppfyller det. Logg inn med en nettleser et par ganger i året."
+    },
+    {
+      "h": "Ingen SPECIAL-USE og ingen MOVE i Comcasts frontend",
+      "p": "Dovecot-frontenden på imap.comcast.net annonserer ikke SPECIAL-USE, så en klient kan ikke spørre hvilken mappe som er Sendt og hvilken som er Papirkurv, og må i stedet matche dem etter navn. Den mangler også MOVE og UIDPLUS, så å flytte en melding til en mappe skjer som COPY, deretter STORE av slettet-flagget, deretter EXPUNGE, og serveren oppgir ikke ID-en til den nye kopien. mcpemails gjør alt dette for deg; det er derfor en flytting hos Comcast ikke er én atomisk operasjon."
+    },
+    {
+      "h": "Serveren annonserer OAuth-mekanismer du ikke kan bruke",
+      "p": "imap.comcast.net tilbyr OAUTHBEARER og XOAUTH2 sammen med PLAIN og LOGIN. Disse OAuth-mekanismene er for Comcasts egne partnere og ikke for hvem som helst som spør, og det finnes ingen selvbetjeningsside der en kunde kan skaffe et token. Passordautentisering med tredjepartstilgang slått på er veien som er tilgjengelig for deg, og det er den mcpemails bruker."
+    }
+  ],
+  "limits": [
+    "Comcasts SMTP-vert oppgir en maksimal meldingsstørrelse på omtrent 35 MB, så en sending med store vedlegg avvises før den går ut.",
+    "Mapperoller matches etter navn fordi SPECIAL-USE ikke annonseres, og flyttinger faller tilbake til COPY pluss STORE pluss EXPUNGE fordi MOVE ikke er implementert."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Comcast Xfinity-e-post?",
+      "a": "Ikke direkte. Claude har ingen innebygd Comcast-kobling. Kobler du en MCP-server som mcpemails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i comcast.net-e-posten din, og den samme tilkoblingen fungerer i Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Comcast?",
+      "a": "IMAP er imap.comcast.net på port 993 med implisitt TLS. SMTP er smtp.comcast.net på port 465, også med implisitt TLS, og autentisering er påkrevd. Brukernavnet er hele comcast.net-adressen din. Begge vertene ble bekreftet via en faktisk TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvorfor avviser Xfinity passordet mitt i en e-postklient?",
+      "a": "Nesten alltid fordi Third Party Access Security er slått av. Xfinity lar den være av for kontoer som ikke allerede brukte en ekstern e-postklient, og så lenge den er av, avviser serveren riktige påloggingsopplysninger. Kryss av i boksen på connect.xfinity.com under tannhjulikonet, deretter Settings, deretter Security, og prøv igjen."
+    },
+    {
+      "q": "Trenger jeg et app-passord for Xfinity-e-post?",
+      "a": "Nei. Comcast utsteder ikke appspesifikke passord. En e-postklient logger inn med passordet for Xfinity ID-en din når tredjepartstilgang er slått på. Ser du råd om å generere et app-passord for comcast.net, beskriver de en annen leverandørs fremgangsmåte, og det finnes ingen slik side i Xfinity-innstillingene."
+    },
+    {
+      "q": "Kan jeg koble til en comcast.net-adresse etter at jeg har sagt opp Xfinity?",
+      "a": "Bare hvis postkassen fortsatt er aktiv. Comcast lar tidligere kunder beholde adressen hvis de logget inn på nettstedet Xfinity Email i løpet av de 90 dagene før frakoblingen, og krever en pålogging der minst én gang hver niende måned for å beholde den. En stengt postkasse kan ikke kobles til og kan ikke gjenopprettes."
+    },
+    {
+      "q": "Lagres Comcast-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Comcast over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke oppbevart."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Comcast Xfinity-innboks",
+    "sub": "Kryss av for tredjepartstilgang og koble til på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.siteground.com/kb/how_to_configure_my_mail_client",
+    "https://www.siteground.com/kb/get-pop-warning-using-ssltls-email-client",
+    "https://www.siteground.com/blog/cpanel-to-site-tools-status-report"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte",
+    "helpUrl": "https://www.siteground.com/kb/how_to_configure_my_mail_client",
+    "usernameForm": "Votre adresse e-mail complète, par exemple username@yourdomain.com, en entrée comme en sortie.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "E-mail SiteGround vers Claude : paramètres IMAP Site Tools",
+    "description": "SiteGround a abandonné cPanel pour Site Tools. Relevez votre vrai serveur IMAP dans Mail Configuration, puis connectez la boîte à Claude sur le port 993. 1 boîte gratuite."
+  },
+  "hero": {
+    "eyebrow": "SiteGround + IA",
+    "titleLine1": "Connectez l'e-mail SiteGround à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte SiteGround. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP, avec les paramètres que Site Tools affiche pour votre compte.",
+    "answer": "Claude ne peut pas accéder seul à une boîte SiteGround. mcpemails est un serveur MCP hébergé qui la connecte en IMAP standard sur le port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. SiteGround n'exploite aucun nom d'hôte de messagerie partagé : votre serveur est mail.yourdomain.com, ou le nom de serveur sécurisé de la forme secureNNN.sgcpanel.com, et Site Tools affiche le bon sous Email, Accounts, Mail Configuration. L'authentification se fait avec le mot de passe défini sur la boîte, jamais avec votre identifiant de la Client Area SiteGround, et une boîte est gratuite.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe de la boîte depuis Site Tools",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment le courrier SiteGround se connecte : Site Tools, IMAP 993",
+    "body": "Chaque offre SiteGround inclut des adresses illimitées sur votre domaine, qui parlent IMAP sur le port 993 en TLS et SMTP sur le 465. C'est le panneau qui piège les gens. SiteGround a retiré cPanel et l'a remplacé par son propre <b>Site Tools</b>, si bien que rien d'un tutoriel cPanel ne correspond à ce que vous avez sous les yeux. Les paramètres se trouvent dans <b>Site Tools</b>, puis <b>Email</b>, puis <b>Accounts</b>, puis le menu à trois points sur la ligne du compte, puis <b>Mail Configuration</b>, et enfin l'onglet <b>Manual Settings</b>. Deux noms d'hôte y figurent. <code>mail.yourdomain.com</code> est la forme générale, et un nom de serveur sécurisé de la forme <code>secureNNN.sgcpanel.com</code> est celui qui correspond au certificat de SiteGround. Le nom d'utilisateur est votre adresse e-mail complète, en entrée comme en sortie."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Ouvrez Mail Configuration dans Site Tools",
+      "p": "Dans la Client Area SiteGround, ouvrez le site, puis <b>Site Tools</b>. Allez dans <b>Email</b>, puis <b>Accounts</b>, trouvez l'adresse sous Manage Email Accounts, ouvrez le menu à trois points sur sa ligne et choisissez <b>Mail Configuration</b>. Passez à l'onglet <b>Manual Settings</b>. C'est cet onglet, et non l'onglet de configuration automatique qui s'ouvre en premier, qui affiche les noms d'hôte et ports exacts."
+    },
+    {
+      "h": "Prenez le nom de serveur sécurisé, pas seulement mail.yourdomain.com",
+      "p": "Notez la valeur <code>secureNNN.sgcpanel.com</code> affichée pour votre compte et utilisez-la pour IMAP comme pour SMTP. Définissez le mot de passe de la boîte depuis le même écran Accounts si vous ne l'avez pas ; ce n'est pas votre mot de passe de la Client Area. Saisissez ensuite l'adresse, le serveur et le mot de passe dans mcpemails."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Il n'y a pas de cPanel chez SiteGround, donc la plupart des guides e-mail SiteGround sont obsolètes",
+      "p": "SiteGround a laissé cPanel derrière lui et migré tous les comptes vers son propre Site Tools. Les résultats de recherche regorgent pourtant d'instructions SiteGround qui commencent par vous dire d'ouvrir cPanel et de cliquer sur Email Accounts. Ces écrans n'existent sur aucune offre SiteGround actuelle, et il n'y a aucun moyen de les activer. Si un guide mentionne cPanel, il est antérieur à la migration et chaque étape après la première est fausse. Site Tools est le seul panneau, et Mail Configuration est l'endroit où se trouvent les paramètres."
+    },
+    {
+      "h": "Le numéro du serveur sécurisé vient du serveur SiteGround qui héberge votre site",
+      "p": "Le certificat de messagerie de SiteGround couvre <code>sgcpanel.com</code>, pas les domaines des clients, donc un client TLS strict rejette <code>mail.yourdomain.com</code> sur le port 993. Le serveur qui fonctionne est <code>secureNNN.sgcpanel.com</code>, où NNN est le numéro du serveur SiteGround qui héberge le compte : un site sur <code>siteground164.com</code> utilise <code>secure164.sgcpanel.com</code>. C'est une valeur propre à chaque compte, elle change si SiteGround déplace votre site, et Mail Configuration est la source qui fait foi pour la lire."
+    },
+    {
+      "h": "Mail Configuration s'ouvre sur l'onglet de configuration automatique et cache les valeurs utiles",
+      "p": "La première chose que SiteGround propose sur cet écran est un fichier de configuration téléchargeable pour Outlook, Apple Mail et Thunderbird. C'est vraiment pratique pour un client de bureau, et inutile pour tout ce qui a besoin des noms d'hôte bruts, ce dont une intégration IMAP a besoin. Les valeurs brutes se trouvent derrière l'onglet <b>Manual Settings</b> juste à côté. Beaucoup en concluent que SiteGround ne publie pas les paramètres, alors qu'ils sont à un onglet de distance."
+    }
+  ],
+  "limits": [
+    "SiteGround applique des limites d'envoi sortant par heure selon l'offre. Une rafale d'envois automatisés peut être freinée, ce qui se traduit par un message refusé ou différé plutôt que par un échec de connexion.",
+    "mcpemails connecte uniquement la boîte. Filtres, redirections, réponses automatiques et protection antispam restent dans Site Tools."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec l'e-mail SiteGround ?",
+      "a": "Pas directement. Claude n'a pas de connecteur SiteGround. Connecter un serveur MCP comme mcpemails à votre boîte SiteGround via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, avec les mêmes identifiants que vous donneriez à Apple Mail ou Thunderbird."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de SiteGround ?",
+      "a": "IMAP utilise le port 993 et SMTP le port 465, tous deux avec SSL. Le nom d'hôte est soit mail.yourdomain.com, soit, pour un certificat qui se valide, le nom de serveur sécurisé de la forme secureNNN.sgcpanel.com propre à votre compte. Utilisez l'adresse e-mail complète comme nom d'utilisateur des deux côtés. POP3 sur le 995 existe mais retire le courrier du serveur."
+    },
+    {
+      "q": "Où sont les paramètres e-mail dans Site Tools de SiteGround ?",
+      "a": "Ouvrez Site Tools, puis Email, puis Accounts. Cliquez sur le menu à trois points de la ligne de votre adresse et choisissez Mail Configuration, puis passez à l'onglet Manual Settings. SiteGround n'a pas de cPanel, donc les guides qui vous disent de regarder dans Email Accounts sous cPanel décrivent un panneau que votre compte n'a pas."
+    },
+    {
+      "q": "Pourquoi l'e-mail SiteGround affiche-t-il un avertissement SSL ?",
+      "a": "Parce que le certificat de messagerie de SiteGround est émis pour sgcpanel.com et non pour votre domaine, donc mail.yourdomain.com échoue à la validation du nom en TLS. Remplacez le nom d'hôte par le nom de serveur sécurisé de votre compte, qui ressemble à secure164.sgcpanel.com, et l'avertissement disparaît sans ajouter d'exception."
+    },
+    {
+      "q": "Mon courrier SiteGround est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis SiteGround via IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte SiteGround à votre IA",
+    "sub": "Connectez une boîte SiteGround en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

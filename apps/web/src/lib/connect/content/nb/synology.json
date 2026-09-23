@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://kb.synology.com/en-my/DSM/help/MailPlus-Server/mailplus_server_service?version=6",
+    "https://kb.synology.com/en-global/UG/Synology_MailPlus_Server_admin_guide_3/7",
+    "https://www.synology.com/en-us/products/MailPlus_License",
+    "https://kb.synology.com/en-br/DSM/tutorial/How_do_I_set_up_my_MailPlus_account_in_Microsoft_Outlook"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Passord for DSM-kontoen",
+    "helpUrl": "https://kb.synology.com/en-my/DSM/help/MailPlus-Server/mailplus_server_service?version=6",
+    "usernameForm": "Hele e-postadressen til en konto som er aktivert i MailPlus Server, for eksempel you@yourdomain.com. MailPlus-kontoer er DSM-brukere, så passordet er den brukerens DSM-passord.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Synology MailPlus til Claude: IMAP fra din NAS",
+    "description": "Koble en Synology MailPlus-postkasse til Claude, Cursor og ChatGPT via IMAP på 993. Portvideresending, CGNAT og tildeling av DSM-sertifikatet til MailPlus."
+  },
+  "hero": {
+    "eyebrow": "Synology MailPlus + AI",
+    "titleLine1": "Koble Synology MailPlus",
+    "titleLine2": "til Claude, Cursor og enhver MCP-klient",
+    "lead": "E-posten din ligger på en boks i ditt eget bygg. En AI-agent kan jobbe med den over den samme IMAP-en enhver e-postklient bruker, forutsatt at NAS-en faktisk kan nås utenfra, som er delen de fleste aldri har måttet ordne.",
+    "answer": "Claude når ikke en Synology NAS på egen hånd. mcpemails er en hostet MCP-server som kobler til MailPlus Server via IMAP på port 993, på det offentlige navnet NAS-en din svarer på, med DSM-passordet til en konto som er aktivert i MailPlus, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Fordi serveren er en NAS og ikke en hostet tjeneste, er de to tingene du må ordne først, tilgjengelighet og sertifikatet: 993 må videresendes til NAS-en fra internett, og sertifikatet som er tildelt tjenesten MailPlus Server, må være gyldig for navnet du kobler til. Én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "DSM-passordet til en MailPlus-konto",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Synology MailPlus seg til: Service, Protocol, IMAP/POP3",
+    "body": "MailPlus er to pakker. <b>MailPlus Server</b> er e-postserveren, og <b>MailPlus</b> er webklienten brukerne dine leser e-post i. Bare serveren betyr noe her. Åpne MailPlus Server og gå til <b>Service</b>, så fanen <b>Protocol</b>, så <b>IMAP/POP3</b>, der IMAP slås på slik at tredjeparts e-postklienter i det hele tatt kan nå postkassene. Den samme skjermen har SSL/TLS-alternativene, og MailPlus slår som standard på et alternativ som forbyr klartekstautentisering over en ukryptert tilkobling, som er en god standard og en grunn til å bruke implisitt TLS på 993 i stedet for 143. Portene er standardsettet: 143 og 993 for IMAP, 25 for overføring, 587 for innsending og 465 for SMTPS. Kontopåloggingen er en DSM-brukers passord, fordi MailPlus-kontoer er DSM-brukere som er aktivert for e-post. Det finnes ikke noe eget e-postpassord og ingen ordning med app-passord."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Én innboks er gratis for alltid, og det kreves ikke kort."
+    },
+    {
+      "h": "Slå på IMAP og gi NAS-en et offentlig navn",
+      "p": "I MailPlus Server åpner du Service, Protocol, IMAP/POP3 og slår på IMAP med SSL/TLS. Ordne så hvordan omverdenen finner NAS-en: et DDNS-navn fra Control Panel, External Access, DDNS hvis du ikke har en statisk adresse, og en portvideresending på ruteren som sender TCP 993 til NAS-en. Test det fra en telefon på mobildata med wifi av."
+    },
+    {
+      "h": "Tildel et ekte sertifikat til MailPlus Server",
+      "p": "I Control Panel, Security, Certificate skaffer du et Let's Encrypt-sertifikat for det offentlige navnet, og bruker så sertifikatets tjenestetildeling til å peke <b>MailPlus Server</b> mot det. Å skaffe et sertifikat knytter det ikke til noe. Legg så til innboksen i mcpemails: velg IMAP / SMTP, skriv inn det offentlige navnet, hele e-postadressen og DSM-passordet."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "En NAS på ditt LAN er usynlig for en hostet tjeneste, og QuickConnect hjelper ikke",
+      "p": "Det er denne som stopper de fleste Synology-tilkoblinger før noe annet i det hele tatt er forsøkt. En hostet MCP-server åpner en innkommende TCP-tilkobling til port 993, og en NAS på <code>192.168.1.20</code> eller som bare kan nås på <code>diskstation.local</code>, har ingen adresse noe utenfor huset ditt kan ringe. Fire konkrete ting går galt her. For det første trenger du en portvideresending på ruteren som sender TCP 993, og 465 eller 587 for sending, til NAS-ens faste interne adresse. For det andre, hvis boksen fra internettleverandøren er en ruter og du har lagt til din egen ruter bak den, er du bak to lag NAT, og en videresending på bare den indre gjør ingenting: den ytre enheten må også videresende, eller settes i bromodus. For det tredje setter et økende antall internettleverandører for hjem og mobil kunder bak carrier-grade NAT, og da finnes det ingen offentlig IPv4-adresse å videresende fra i det hele tatt, og ingen konfigurasjon på din side kan lage en. Be leverandøren om en offentlig adresse, eller godta at denne veien er stengt. For det fjerde redder ikke QuickConnect noe av dette: den videreformidler DSMs egne webapplikasjoner, ikke vilkårlig TCP, så en <code>quickconnect.to</code>-adresse er ikke et e-postvertsnavn og blir det aldri. Sett opp DDNS fra Control Panel, External Access i stedet, og verifiser utenfra ditt eget nettverk før du endrer noe annet. Vil du heller ikke eksponere NAS-en i det hele tatt, kan mcpemails selvhostes på nettverket ditt, som holder IMAP-økten på LAN-et der NAS-en allerede er."
+    },
+    {
+      "h": "Å skaffe et sertifikat er ikke det samme som å gi det til MailPlus",
+      "p": "DSM holder sertifikater i Control Panel, Security, Certificate, og holder separat en oversikt over hvilken tjeneste som bruker hvilket sertifikat. Å be om et Let's Encrypt-sertifikat fyller den første og endrer ingenting ved den andre, så MailPlus Server fortsetter å vise det selvsignerte sertifikatet DSM genererte da NAS-en ble satt opp. Ingen merker det, fordi alle når DSM i en nettleser der advarselen ble klikket bort én gang for mange år siden, og fordi MailPlus-webklienten leveres over DSMs egen HTTPS og ikke over 993. En streng IMAP-klient avviser umiddelbart. Åpne sertifikatet, bruk tjenestetildelingen og velg MailPlus Server eksplisitt. DSM tillater bare ett sertifikat per tjeneste, så når du NAS-en med mer enn ett navn, må alle navnene være alternative emnenavn på det ene sertifikatet. Merk også at DSMs Let's Encrypt-forespørsel krever at port 80 og 443 er videresendt til NAS-en, som er en ekstra portvideresending utover e-postportene."
+    },
+    {
+      "h": "MailPlus-kontoer er lisensierte, og en inaktiv konto har ingen postkasse",
+      "p": "MailPlus Server inkluderer fem gratis e-postkontoer, og utover det selger Synology License Packs som dekker fem eller tjue aktive kontoer, lagt til på fanen License. En lisens utløper ikke når den er aktivert, men hver nøkkel virker på ett Synology-produkt om gangen. Den praktiske følgen er at det ikke er nok å være DSM-bruker: kontoen må være aktivert i MailPlus Server, og er du ved lisenstaket, kan den ikke det. En inaktiv konto har ingen postkasse å autentisere mot, så IMAP feiler på en måte som ser nøyaktig ut som et feil passord. Sjekk kontolisten i MailPlus Server før du sjekker noe annet om påloggingsdetaljer."
+    }
+  ],
+  "limits": [
+    "Privat bredbånd blokkerer ofte innkommende port 25, så en NAS på en hjemmelinje får kanskje aldri e-post fra internett i utgangspunktet. Det er et leveringsproblem og ikke et tilkoblingsproblem, og det er verdt å bekrefte at e-posten din faktisk kommer frem før du lurer på hvorfor en agent finner en tom innboks.",
+    "NAS-modeller for forbrukere har beskjedne prosessorer og disker som går i dvale. Store IMAP-søk i en stor postkasse er merkbart tregere enn hos en hostet leverandør, og den første forespørselen etter en periode uten aktivitet venter på diskene.",
+    "TLS-validering er streng og kan ikke fravikes, så DSMs standard selvsignerte sertifikat blir avvist i stedet for godtatt med en advarsel."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Synology MailPlus?",
+      "a": "Ikke alene. Claude har ingen Synology-kobling og kan ikke åpne en IMAP-økt mot en NAS. Kobler du en MCP-server som mcpemails til MailPlus Server, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i en postkasse der, og samme innboks fungerer da fra Cursor eller ChatGPT, forutsatt at NAS-en kan nås fra internett."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Synology MailPlus?",
+      "a": "Vertsnavnet er NAS-ens offentlige navn, som regel et DDNS-navn du har satt opp i Control Panel, og aldri en QuickConnect-adresse. IMAP er 993 med SSL/TLS, eller 143 uten. Sending er 587 med STARTTLS eller 465 med implisitt TLS. Logg inn med hele e-postadressen og DSM-passordet til den kontoen, etter at IMAP er slått på under Service, Protocol, IMAP/POP3."
+    },
+    {
+      "q": "Kan jeg koble til MailPlus uten å eksponere NAS-en min mot internett?",
+      "a": "Ikke til en hostet tjeneste, nei. mcpemails kobler innkommende til port 993, så en NAS uten noen rute utenfra kan ikke nås, og QuickConnect bærer ikke IMAP. Alternativet er å selvhoste mcpemails på ditt eget nettverk, der den når NAS-en over LAN-et og ingenting ved e-postserveren blir offentlig synlig."
+    },
+    {
+      "q": "Hvorfor blir MailPlus-passordet mitt avvist?",
+      "a": "Bekreft at kontoen er aktivert i MailPlus Server og ikke bare finnes som DSM-bruker, siden MailPlus lisensieres per aktiv konto og en inaktiv konto ikke har postkasse. Bekreft så at IMAP er slått på under Service, Protocol, IMAP/POP3. Er begge riktige, skyldes feilen mer sannsynlig sertifikatet på 993 enn passordet."
+    },
+    {
+      "q": "Trenger MailPlus et app-passord?",
+      "a": "Nei. MailPlus-kontoer er DSM-brukere og autentiserer med DSM-passordet. Har den DSM-kontoen tofaktorautentisering slått på, merk at det gjelder webgrensesnittene for DSM og MailPlus og ikke IMAP, så kontopassordet er fortsatt det en e-postklient sender."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra NAS-en din via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke, noe som antakelig er en del av grunnen til at e-posten ligger på en NAS du eier i utgangspunktet."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en MailPlus-innboks",
+    "sub": "Koble til postkassen på din egen NAS. Én innboks gratis for alltid, uten kort."
+  }
+}

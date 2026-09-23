@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://assistance.orange.fr/ordinateurs-peripheriques/installer-et-utiliser/l-utilisation-du-mail-et-services-associes/mail-orange/parametrer-la-boite-mail/mail-orange-comment-acceder-a-sa-boite-mail-orange-depuis-une-application-ou-un-logiciel-de-messagerie-non-fourni-par-orange_434630-964290",
+    "https://assistance.orange.fr/ordinateurs-peripheriques/installer-et-utiliser/l-utilisation-du-mail-et-du-cloud/mail-orange/le-mail-orange-nouvelle-version/parametrer-la-boite-mail/mail-orange-comment-activer-ou-desactiver-les-acces-pop-imap-pour-les-logiciels-ou-applications-de-messagerie-tiers_427398-957069"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "专用密码（mot de passe dédié）",
+    "helpUrl": "https://assistance.orange.fr/ordinateurs-peripheriques/installer-et-utiliser/l-utilisation-du-mail-et-services-associes/mail-orange/parametrer-la-boite-mail/mail-orange-comment-acceder-a-sa-boite-mail-orange-depuis-une-application-ou-un-logiciel-de-messagerie-non-fourni-par-orange_434630-964290",
+    "usernameForm": "包含域名的完整地址：nom@orange.fr；旧的 Wanadoo 地址则为 nom@wanadoo.fr。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Orange 邮箱 IMAP 设置与 Claude MCP 接入",
+    "description": "通过 imap.orange.fr:993 将 Orange.fr 邮箱连接到 Claude 及任意 MCP 客户端。须先开启 POP/IMAP 访问，Orange 还会提供一个专用密码。"
+  },
+  "hero": {
+    "eyebrow": "Orange + AI",
+    "titleLine1": "将你的 Orange 邮箱连接到",
+    "titleLine2": "Claude、Cursor、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Orange 收件箱。开启 Orange 默认关闭的 POP/IMAP 访问后，即可通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行连接 Orange 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.orange.fr 的 993 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。有两件事必须先做对：Orange 出于安全原因在邮箱上关闭了 POP 和 IMAP 访问，因此你需要在网页邮箱的 Sécurité 中开启；此外，Orange 建议使用 Espace client 中的 mot de passe dédié（专用密码）认证，而不是普通的 Orange 密码。一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "开启 POP/IMAP，使用专用密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Orange 如何连接：IMAP、一个开关和一个专用密码",
+    "body": "Orange 在 <code>imap.orange.fr</code> 的 993 端口通过隐式 TLS 提供 IMAP，在 <code>smtp.orange.fr</code> 的 465 端口提供 SMTP 提交，背后的服务器自称 Dovecot。<code>orange.fr</code> 以及较早的 <code>wanadoo.fr</code> 域名上的地址都使用同一对主机名，因此不需要查询任何按地区或按客户区分的信息。Orange 的特殊之处在于连接两端的一切。Orange 声明，出于安全原因 POP 和 IMAP 访问默认是关闭的，所以全新客户端的登录在检查密码之前就会被拒绝。此外，Orange 提供一个 <b>mot de passe dédié</b>（专用密码），用他们自己的话说是专门用于 POP、IMAP 和 SMTP 访问的密码，你可以在 Espace client 的 <b>Connexion et sécurité</b> 中获取，并用它代替普通的 Orange 密码。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "在 Orange 网页邮箱中开启 POP/IMAP 访问",
+      "p": "在浏览器中打开 Orange 邮箱，点击齿轮图标（<b>roue crantée</b>），选择 <b>tous les paramètres</b>，然后是 <b>Sécurité</b>，再到 <b>Protocoles POP ou IMAP</b>。点击 <b>Modifier</b>，勾选 <b>Activer POP/IMAP</b>，并点击 <b>Valider</b> 确认。请首先完成这一步：开启之前，所有客户端登录都会被拒绝，而错误看起来就像密码不对。"
+    },
+    {
+      "h": "从 Espace client 获取 mot de passe dédié",
+      "p": "登录 orange.fr 上的 Espace client，打开 <b>Connexion et sécurité</b> 部分。那里显示的专用密码就是 Orange 希望你用于 POP、IMAP 和 SMTP 的密码。它与你登录 orange.fr 的密码是不同的值，Orange 专门推荐将其用于邮件软件。"
+    },
+    {
+      "h": "粘贴到 mcpemails，再把 MCP URL 粘贴到你的 AI",
+      "p": "选择 IMAP / SMTP，输入完整地址（例如 nom@orange.fr），粘贴专用密码。Orange 的服务器和端口已自动填好。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "POP/IMAP 在你开启之前是关闭的，而拒绝看起来像密码错误",
+      "p": "Orange 关于连接非 Orange 提供的邮件应用的指南要求你检查邮箱设置中是否已开启访问，因为 <b>pour des raisons de sécurité, ces accès sont désactivés par défaut</b>（出于安全原因，这些访问默认处于关闭状态）。未开启时收到的拒绝没有任何解释。人们会更换密码、重新输入地址、重装客户端，但都无济于事，因为凭据本身从来就没有错。Orange 的各帮助页面对默认状态的说法并不总是一致，所以请把 <b>Sécurité</b> 中的 <b>Protocoles POP ou IMAP</b> 页面作为首先检查的地方，而不是最后。"
+    },
+    {
+      "h": "mot de passe dédié 与你的 orange.fr 登录凭据是分开的",
+      "p": "Orange 将其描述为专用于 POP、IMAP 和 SMTP 访问的密码，在 Espace client 的 <b>Connexion et sécurité</b> 中获取。由于这是大多数人从不查看的第二个值，它会逐渐与主密码脱节：修改主 Orange 密码不会改变它，反之亦然。请在连接的收信端和发信端都使用专用密码。如果发信正常而收信不行，或者反过来，通常是因为只更新了其中一半。"
+    },
+    {
+      "h": "服务器不提供 IDLE，因此邮件靠轮询而不是推送到达",
+      "p": "Orange 的 IMAP 问候语声明了 <code>SASL-IR</code> 和 <code>LOGIN-REFERRALS</code>，但没有 <code>IDLE</code>，因此服务器无法在打开的连接上通知新邮件。所有客户端（包括我们的）都必须主动询问。日常使用中察觉不到这一点，但这意味着像<b>回复一到就立刻告诉我</b>这样的指令，受限于检查邮箱的频率，而不是 Orange 投递的速度。"
+    },
+    {
+      "h": "没有 MOVE，没有 SPECIAL-USE，文件夹名是法语",
+      "p": "服务器不声明 <code>MOVE</code> 扩展，因此归档一封邮件要经过复制、更新标记再删除，而不是一条原子命令。<code>SPECIAL-USE</code> 也缺失，这意味着已发送、草稿、已删除和垃圾邮件文件夹按名称而不是按用途匹配。Orange 邮箱通常将它们命名为 <b>Envoyés</b>、<b>Brouillons</b>、<b>Corbeille</b> 和 <b>Spams</b>，所以如果代理找不到文件夹，请明确写出文件夹名。"
+    }
+  ],
+  "limits": [
+    "Orange 将外发邮件的编码后大小上限设为约 46 MB，因此代理转发的大附件可能在 SMTP 步骤被直接拒绝。",
+    "由于服务器不支持 MOVE，移动操作不是原子的。如果连接在操作中途断开，一封邮件可能会短暂同时存在于两个文件夹中。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Orange 邮箱吗？",
+      "a": "不能直接使用。Claude 没有自带 Orange 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，之后同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Orange 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.orange.fr，端口 993，隐式 TLS。SMTP 为 smtp.orange.fr，端口 465，同样是隐式 TLS，并需要认证。使用完整地址和 Orange 的专用密码登录。两台服务器均已通过实时 TLS 连接确认，orange.fr 和 wanadoo.fr 地址使用的都是它们。"
+    },
+    {
+      "q": "为什么 Orange 在邮件客户端中拒绝我的密码？",
+      "a": "两个原因，按顺序排查。邮箱的 POP/IMAP 访问已关闭，可在网页邮箱的 Sécurité 中进入 Protocoles POP ou IMAP 解决。或者你用的是 orange.fr 登录密码，而不是 Orange 在 Espace client 的 Connexion et sécurité 中为 POP、IMAP 和 SMTP 提供的 mot de passe dédié。"
+    },
+    {
+      "q": "wanadoo.fr 地址使用不同的服务器吗？",
+      "a": "不是。旧的 wanadoo.fr 地址就是 Orange 邮箱，在同样的 imap.orange.fr 和 smtp.orange.fr 上认证，使用同样的 POP/IMAP 开关和同样的专用密码。请按原样输入地址，包括 wanadoo.fr 域名。"
+    },
+    {
+      "q": "我的 Orange 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 Orange 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Orange 收件箱",
+    "sub": "几分钟即可连接 Orange 邮箱。一个收件箱永久免费，无需信用卡。"
+  }
+}

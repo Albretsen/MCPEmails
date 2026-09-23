@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://purelymail.com/docs/setup/technical",
+    "https://support.purelymail.com/support/solutions/articles/159000430778-server-settings-imap-smtp-and-pop3",
+    "https://support.purelymail.com/support/solutions/articles/159000412945-how-to-create-an-app-password",
+    "https://purelymail.com/docs/users",
+    "https://purelymail.com/docs/features",
+    "https://purelymail.com/docs/deviceSetup",
+    "https://purelymail.com/pricing"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Mot de passe de la boîte (mot de passe d'application si la 2FA est active)",
+    "helpUrl": "https://support.purelymail.com/support/solutions/articles/159000430778-server-settings-imap-smtp-and-pop3",
+    "usernameForm": "L'adresse complète de la boîte, domaine compris : you@yourdomain.com, et non le nom de compte Purelymail qui sert à vous connecter au portail.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connecter Purelymail à Claude, Cursor et aux clients MCP",
+    "description": "Connectez Purelymail à Claude, Cursor, ChatGPT et tout client MCP en IMAP via imap.purelymail.com:993 avec le mot de passe de la boîte. Une boîte gratuite."
+  },
+  "hero": {
+    "eyebrow": "Purelymail + IA",
+    "titleLine1": "Connectez Purelymail à Claude,",
+    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Purelymail. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec le mot de passe propre à la boîte, dans tous vos clients MCP et pas un seul.",
+    "answer": "Claude ne peut pas accéder seul à Purelymail. mcpemails est un serveur MCP hébergé qui l'y connecte en IMAP via imap.purelymail.com sur le port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Purelymail n'a aucun interrupteur IMAP à chercher : vous vous authentifiez avec l'adresse e-mail complète de la boîte et le mot de passe propre à cette boîte, ou un mot de passe d'application si la boîte a l'authentification à deux facteurs activée. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe de la boîte, ou mot de passe d'application",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Purelymail se connecte : IMAP et le mot de passe propre à la boîte",
+    "body": "Purelymail sert l'IMAP sur <code>imap.purelymail.com</code> au port 993 en TLS, et le SMTP sur <code>smtp.purelymail.com</code> au port 465, également en TLS implicite. Il n'y a rien à activer au préalable. Purelymail considère l'IMAP, le POP3 et le SMTP comme un accès ordinaire, et chaque boîte en dispose dès sa création, ce qui le place déjà devant la plupart des fournisseurs de webmail. Là où l'on se trompe, c'est sur <b>les identifiants à saisir</b>. Purelymail sépare votre <b>compte</b>, qui sert à vous connecter au portail de gestion et porte la facture forfaitaire de 10 $ par an, de vos <b>utilisateurs</b>, c'est-à-dire les boîtes qui envoient et reçoivent réellement. L'IMAP attend un utilisateur : l'adresse complète, domaine compris, plus le mot de passe propre à cet utilisateur. C'est vrai que l'adresse soit sur un domaine Purelymail partagé ou sur un domaine personnalisé que vous avez apporté, car les noms de serveurs sont les mêmes pour tous les clients."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, aussi longtemps que vous le souhaitez."
+    },
+    {
+      "h": "Ouvrez la page des utilisateurs dans le portail Purelymail",
+      "p": "Connectez-vous au portail de votre compte Purelymail et cliquez sur <b>User</b> dans la navigation du haut. L'adresse qui y figure est le nom d'utilisateur que vous emploierez, écrit en entier avec son domaine. Le nom de compte choisi à l'inscription n'est pas une boîte et ne s'authentifiera jamais en IMAP."
+    },
+    {
+      "h": "Ajoutez un mot de passe d'application si cet utilisateur a la 2FA, puis connectez-vous",
+      "p": "Si l'authentification multifacteur est active pour cet utilisateur, ouvrez-le, descendez jusqu'à <b>App Passwords</b>, cliquez sur <b>Add New</b>, donnez-lui un nom et copiez le code. Purelymail ne l'affiche qu'une fois. Choisissez ensuite IMAP / SMTP dans mcpemails, saisissez l'adresse complète et ce mot de passe. Les serveurs ci-dessous sont préremplis."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "L'identifiant du portail n'est pas celui d'une boîte",
+      "p": "Purelymail sépare délibérément le compte qui se connecte au portail de gestion et paie la facture des utilisateurs qui contiennent le courrier. L'IMAP et le SMTP n'acceptent qu'un utilisateur, et seulement en entier : <code>you@yourdomain.com</code>, jamais une partie locale seule, et jamais le nom de compte choisi à l'inscription. Le serveur répond à un mauvais nom de compte et à un mauvais mot de passe par le même échec d'authentification sans détail, si bien que l'erreur passe pour une faute de frappe plutôt que pour une confusion de catégorie."
+    },
+    {
+      "h": "Un alias ou une adresse fourre-tout n'a aucune boîte derrière à laquelle se connecter",
+      "p": "Purelymail permet de livrer <code>info@yourdomain.com</code> dans une boîte existante grâce à une règle de routage, et une règle fourre-tout peut absorber toutes les adresses d'un domaine, sans qu'aucune de ces adresses n'existe en tant qu'utilisateur. La documentation de Purelymail précise explicitement qu'il n'est pas nécessaire de créer des comptes utilisateur pour elles. Ce sont des destinations de livraison, pas des identifiants : il n'y a rien auprès de quoi s'authentifier. Connectez l'utilisateur dans lequel la règle livre, et laissez votre agent filtrer sur l'en-tête To."
+    },
+    {
+      "h": "L'obligation de mot de passe d'application s'applique par boîte, pas par compte",
+      "p": "Purelymail n'impose un mot de passe d'application qu'aux utilisateurs dont l'authentification multifacteur est activée, et la MFA se configure individuellement pour chaque utilisateur. Une boîte de votre compte peut donc se connecter avec son mot de passe ordinaire tandis qu'une autre du même domaine le refuse. Vérifiez l'utilisateur concerné dans le portail avant de conclure que le mot de passe est faux. Les mots de passe d'application se trouvent dans la section App Passwords de cet utilisateur et ne sont affichés qu'une seule fois."
+    }
+  ],
+  "limits": [
+    "Le serveur IMAP de Purelymail n'annonce pas l'extension SPECIAL-USE : les dossiers sont donc reconnus par leur nom et non par leur rôle. Sent, Drafts, Junk et Trash se résolvent normalement avec les noms Roundcube par défaut de Purelymail, mais un dossier que vous avez renommé vous-même devra peut-être être nommé explicitement quand vous demandez à votre agent d'y classer quelque chose.",
+    "Le serveur SMTP de Purelymail annonce une taille de message maximale d'environ 51 Mo. Un agent qui transfère une pièce jointe très volumineuse est refusé à la soumission, au lieu de la perdre sans rien dire."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec Purelymail ?",
+      "a": "Pas directement. Claude n'a pas de connecteur Purelymail intégré et ne peut pas ouvrir seul une session IMAP. Connecter un serveur MCP comme mcpemails à votre boîte Purelymail donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne dans Cursor, ChatGPT et tout autre client MCP, pas dans une seule application."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de Purelymail ?",
+      "a": "IMAP : imap.purelymail.com sur le port 993 en TLS implicite. SMTP : smtp.purelymail.com sur le port 465, également en TLS implicite. Connectez-vous avec l'adresse e-mail complète de la boîte et le mot de passe de cette boîte, ou un mot de passe d'application si l'utilisateur a activé l'authentification à deux facteurs. Les deux serveurs ont été vérifiés par une connexion TLS réelle à la date indiquée sur cette page."
+    },
+    {
+      "q": "Faut-il d'abord activer l'IMAP dans Purelymail ?",
+      "a": "Non. Purelymail n'a ni interrupteur IMAP ni offre payante qui conditionne l'accès des clients : une boîte est joignable dès sa création. Si une connexion échoue, la cause est dans les identifiants, pas dans un réglage que vous n'auriez pas encore trouvé."
+    },
+    {
+      "q": "Pourquoi mon mot de passe Purelymail est-il refusé ?",
+      "a": "Trois causes, dans l'ordre où il vaut la peine de les vérifier. Vous utilisez le nom de compte Purelymail au lieu de l'adresse de la boîte. L'adresse saisie est un alias ou une règle fourre-tout plutôt qu'un véritable utilisateur. Ou cet utilisateur a l'authentification multifacteur activée, ce qui signifie que seul un mot de passe d'application de sa section App Passwords permettra de s'authentifier."
+    },
+    {
+      "q": "Cela fonctionne-t-il avec un domaine personnalisé sur Purelymail ?",
+      "a": "Oui. Purelymail ne facture rien de plus pour les utilisateurs sur des domaines qui vous appartiennent, et les boîtes sur domaine personnalisé utilisent exactement les mêmes serveurs imap.purelymail.com et smtp.purelymail.com que les adresses sur les domaines partagés. Seul le nom d'utilisateur change."
+    },
+    {
+      "q": "Mon courrier Purelymail est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis Purelymail en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos ; le corps des messages n'est pas conservé au-delà de la requête qui l'a demandé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Purelymail à votre IA",
+    "sub": "Connectez Purelymail en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

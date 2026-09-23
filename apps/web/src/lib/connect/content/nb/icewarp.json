@@ -1,0 +1,96 @@
+{
+  "_sources": [
+    "https://docs.icewarp.com/Content/IceWarp-Server/Administration-Nodes/System%20Node/Services/Service%20Ports.htm",
+    "https://docs.icewarp.com/Content/IceWarp-Server/Administration-Nodes/System%20Node/Certificates/Certificates.htm",
+    "https://support.icewarp.com/hc/en-us/articles/16288796581393-How-to-use-Let-s-Encrypt-certificate-in-IceWarp",
+    "https://support.icewarp.com/hc/en-us/community/posts/15569043482257-how-to-disable-specific-service-for-specific-users"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://support.icewarp.com/hc/en-us/articles/46410555968145-How-to-configure-IceWarp-email-accounts-on-Windows-and-macOS",
+    "usernameForm": "Den fullstendige adressen til brukerkontoen slik den vises under domenet i administrasjonskonsollen, for eksempel you@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "IceWarp til Claude: IMAP-tjenesteporter og MCP-tilgang",
+    "description": "Koble en IceWarp-postkasse til Claude, Cursor og ChatGPT over IMAP på 993. Hvor IMAP-tjenesten ligger i adminkonsollen, og fellen med Mailbox Type."
+  },
+  "hero": {
+    "eyebrow": "IceWarp + AI",
+    "titleLine1": "Koble IceWarp til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "IceWarp kjører allerede e-posten, kalenderne og chatten din. Legger du en MCP-server oppå, kan en AI-agent jobbe direkte i postkassen: lese, søke, sende, svare, planlegge og sortere, med de samme påloggingsopplysningene som enhver e-postklient på datamaskinen bruker.",
+    "answer": "Claude kan ikke nå en IceWarp-server på egen hånd. mcpemails er en driftet MCP-server som kobler seg til IceWarp-installasjonen din over IMAP på ditt eget vertsnavn, på port 993 med implisitt TLS, med postkassepassordet som ligger i IceWarps administrasjonskonsoll, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. IceWarp er programvare du drifter selv, så det finnes ikke noe felles vertsnavn å oppgi: serveren må kunne slås opp og nås fra internett, og sertifikatet på 993 må være gyldig for navnet du kobler til. Én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord fra konsollen",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles IceWarp til: IMAP-tjenesten under System-noden",
+    "body": "IceWarp Server administreres fra en konsoll som er delt inn i noder, og alt som angår en e-postklient ligger under to av dem. <b>System</b> inneholder Services, der du dobbeltklikker på IMAP-tjenesten for å endre hvordan den lytter, og Certificates, der TLS-sertifikater utstedes og lagres. <b>Domains and Accounts</b> inneholder brukerne. IceWarps dokumenterte porter er 143 for IMAP og 993 for IMAP over SSL/TLS, med SMTP på 25, innsending på 587 med STARTTLS og SMTPS på 465. Verdt å vite før du velger: IceWarps egen portoversikt merker 465 som foreldet og styrer deg mot 587 i stedet, altså det motsatte av rådet de fleste andre e-postservere gir. Autentisering skjer med postkassepassordet som er lagret på brukerkontoen, den samme påloggingen som brukes i IceWarp WebClient. Det finnes ingen mekanisme for å generere app-passord."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Én innboks er gratis for alltid, og du blir ikke bedt om kort, så det holder for å teste mot en ekte IceWarp-konto."
+    },
+    {
+      "h": "Åpne IMAP-tjenesten i administrasjonskonsollen",
+      "p": "Gå til System-noden, deretter Services, og dobbeltklikk på IMAP. Bekreft at tjenesten kjører, og at den sikre porten er 993. Mens du er i System, åpner du Certificates og sjekker hvilket sertifikat som er knyttet til vertsnavnet du har tenkt å gi til mcpemails."
+    },
+    {
+      "h": "Sjekk kontoens Mailbox Type, og legg så til innboksen",
+      "p": "Under Domains and Accounts åpner du brukeren og ser på fanen Options. Innstillingen <code>Mailbox: Type</code> må ha den kombinerte verdien for IMAP og POP3, ikke bare POP3. Legg deretter til innboksen i mcpemails: velg IMAP / SMTP, og skriv inn IceWarp-vertsnavnet, den fullstendige adressen og postkassepassordet."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Mailbox Type er en innstilling med en ren POP3-verdi, ikke en avkrysningsboks",
+      "p": "IceWarp gir ikke brukeren en av/på-bryter for IMAP. Brukeren får i stedet en postkasse<b>type</b> på kontoens Options-fane, og en av de tilgjengelige verdiene er POP3 i stedet for den kombinerte IMAP og POP3. En konto som er satt slik, svarer på 110 og avviser IMAP, og fordi endringen ble gjort én gang under klargjøringen av den som laget kontomalen, er det ingen som husker at den er der. Symptomet er én enkelt bruker som ikke får koblet til, mens alle andre på samme server kan. Sjekk typen på kontoen før du sjekker noe som helst med nettverket."
+    },
+    {
+      "h": "POP3 og IMAP er én modul, så du kan ikke stoppe bare den ene",
+      "p": "IceWarp kjører POP3 og IMAP som én modul. Stopper eller starter du den på nytt, går begge protokollene ned samtidig, og det får betydning i to retninger. Hvis noen har deaktivert POP3 av sikkerhetshensyn ved å stoppe tjenesten, forsvant IMAP også, og ingenting har lyttet på 993 siden. Og når du starter modulen på nytt for å ta i bruk en port- eller sertifikatendring, faller alle POP3-klienter på serveren ut i samme øyeblikk. Planlegg omstarten i stedet for å klikke på den midt i arbeidsdagen."
+    },
+    {
+      "h": "IceWarp utsteder sine egne sertifikater, så en annen webserver på port 80 stopper det",
+      "p": "Sertifikater utstedes fra System, deretter Certificates, deretter Add Certificate, der du velger det gratis Let's Encrypt-alternativet og domenet. Betingelsen som følger med, er lett å bryte på en Windows-maskin: det må være <b>IceWarp WebService selv</b> som svarer på port 80 og 443, og serverens DNS-oppføring må kunne slås opp offentlig. IIS er installert og lytter på 80 som standard på svært mange Windows-servere, og en omvendt proxy foran IceWarp har samme effekt, så forespørselen feiler, og, mer i det stille, det gjør også hver eneste automatiske fornyelse etterpå. Det eksisterende sertifikatet fortsetter å virke helt fram til utløpsdatoen, og så feiler alle strenge klienter samme morgen. IceWarp kan heller ikke utstede wildcard-sertifikater på denne måten, så et vertsnavn som ikke står på sertifikatet, blir ikke godkjent uansett hvor godt resten er satt opp."
+    }
+  ],
+  "limits": [
+    "En driftet MCP-server må åpne en innkommende tilkobling til IceWarp-verten din, så en server som bare er publisert på et internt nettverk, eller som bare kan nås via en bedrifts-VPN, kan ikke kobles til på denne måten. mcpemails kan driftes selv hvis du vil at IMAP-økten skal holde seg innenfor perimeteren.",
+    "Sertifikatvalideringen er streng og kan ikke fravikes, så et utløpt sertifikat eller et som er utstedt for et annet navn, blir avvist i stedet for godtatt med en advarsel.",
+    "IceWarps kalendere, kontakter og chat er ikke en del av dette. mcpemails snakker IMAP og SMTP, så det fungerer med e-post, ikke med groupware-funksjonene som ligger ved siden av."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med IceWarp?",
+      "a": "Ikke på egen hånd. Claude har ingen IceWarp-kobling og kan ikke åpne en IMAP-økt mot en server du drifter. Kobler du en MCP-server som mcpemails til IceWarp-verten din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i en postkasse der, og den samme innboksen er da også tilgjengelig i Cursor og ChatGPT."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for IceWarp?",
+      "a": "Vertsnavnet er din egen server. Portene er IceWarps dokumenterte standarder: IMAP på 143, IMAP over SSL på 993, SMTP på 25, innsending på 587 med STARTTLS og SMTPS på 465. IceWarps egen dokumentasjon merker 465 som foreldet og foretrekker 587. Logg inn med den fullstendige e-postadressen og postkassepassordet."
+    },
+    {
+      "q": "Hvorfor kan én IceWarp-bruker koble til over IMAP mens en annen ikke kan?",
+      "a": "Nesten alltid på grunn av Mailbox Type på kontoen. I administrasjonskonsollen åpner du brukeren, går til fanen Options og ser på postkassetypen: står det POP3 i stedet for den kombinerte verdien for IMAP og POP3, har den kontoen ingen IMAP-tjeneste, uansett hva serveren gjør. Det er en innstilling per konto, og derfor rammer den enkeltpersoner og ikke alle."
+    },
+    {
+      "q": "Trenger IceWarp et app-passord?",
+      "a": "Nei. IceWarp har ingen ordning med appspesifikke passord. Klienter autentiserer seg med postkassepassordet som er lagret på brukerkontoen, det samme som brukes i WebClient. Hvis ingen kjenner det, tilbakestiller du det på kontoen i administrasjonskonsollen i stedet for å prøve å gjenopprette det."
+    },
+    {
+      "q": "Lagres IceWarp-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra IceWarp-serveren din over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke beholdt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en IceWarp-innboks",
+    "sub": "Koble til en postkasse fra din egen IceWarp-server. Én innboks gratis for alltid, uten kort."
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://help.hushmail.com/hc/en-us/articles/213269023-POP-IMAP-and-SMTP-server-hostnames-and-ports",
+    "https://help.hushmail.com/article/686-sign-in-to-desktop-and-mobile-email-applications-with-two-step-verification-security-code",
+    "https://help.hushmail.com/article/673-thunderbird-imap"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Hushmail-passord",
+    "helpUrl": "https://help.hushmail.com/article/686-sign-in-to-desktop-and-mobile-email-applications-with-two-step-verification-security-code",
+    "usernameForm": "Hele Hushmail-adressen din, inkludert domenet, også når feltet heter brukernavn.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Hushmail til Claude, Cursor og MCP-klienter",
+    "description": "Koble Hushmail til Claude, Cursor og enhver MCP-klient over IMAP. Bekreftede innstillinger, IMAP krever betalt plan og eget tilgangspassord. Én innboks gratis."
+  },
+  "hero": {
+    "eyebrow": "Hushmail + AI",
+    "titleLine1": "Koble Hushmail til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Hushmail-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP, i alle MCP-klienter, med særheten ved totrinnsbekreftelse som ødelegger de fleste oppsett, forklart på forhånd.",
+    "answer": "Claude kan ikke nå Hushmail på egen hånd. mcpemails er en driftet MCP-server som kobler den til over IMAP på imap.hushmail.com, port 993, og SMTP på smtp.hushmail.com, port 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Autentiseringen skjer med hele Hushmail-adressen din og Hushmail-passordet ditt, bortsett fra at passordfeltet med totrinnsbekreftelse slått på må inneholde passordet ditt, et mellomrom og sikkerhetskoden på 20 tegn fra Preferences. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Passord pluss sikkerhetskode for totrinnsbekreftelse",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles Hushmail til: IMAP og en sammenslått sikkerhetskode",
+    "body": "Hushmail leverer IMAP på <code>imap.hushmail.com</code> på port 993 med SSL, og SMTP på <code>smtp.hushmail.com</code> på port 465, med 587 dokumentert som reserve hvis 465 filtreres på nettverket ditt. Brukernavnet er alltid <b>hele e-postadressen</b> din, også der en klient kaller feltet «username», og det gjelder også Hushmail-kontoer på eget domene. Hvis totrinnsbekreftelse er av, er passordet rett og slett Hushmail-passordet ditt. Hvis det er på, utsteder ikke Hushmail et eget app-passord: tjenesten forventer passordet ditt og en sikkerhetskode på 20 tegn i <b>samme felt</b>, adskilt med et mellomrom."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, uten kort. Til slutt får du en MCP-URL og en nøkkel."
+    },
+    {
+      "h": "Hent sikkerhetskoden din hvis totrinnsbekreftelse er på",
+      "p": "Logg inn på Hushmail webmail, åpne <b>Preferences</b> fra menyen øverst til høyre, deretter fanen <b>Security</b>, og rull ned til seksjonen med overskriften «Using a desktop or mobile email application». Der vises en plassholder etterfulgt av en kode på 20 bokstaver i fire grupper. Hvis totrinnsbekreftelse er av, hopper du helt over dette steget og bruker det vanlige passordet ditt."
+    },
+    {
+      "h": "Legg til postkassen i mcpemails",
+      "p": "Velg IMAP / SMTP og skriv inn hele Hushmail-adressen din. I passordfeltet skriver du Hushmail-passordet ditt, deretter et mellomrom, deretter de fire kodegruppene nøyaktig slik de vises, med mellomrom og uten mellomrom til slutt. Vertene er forhåndsutfylt som <code>imap.hushmail.com</code> og <code>smtp.hushmail.com</code>."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Totrinnsbekreftelse gjør passordet ditt om til passord pluss kode",
+      "p": "Det er denne som tar alle. Hushmail utsteder ikke app-passord. Med totrinnsbekreftelse slått på forventer hver IMAP- og SMTP-innlogging <code>yourpassword xxxxx xxxxx xxxxx xxxxx</code> i ett felt: det vanlige passordet ditt, ett mellomrom, og deretter sikkerhetskoden på 20 bokstaver delt i fire grupper med mellomrom. Får du en gruppe feil, legger til et mellomrom på slutten eller limer inn bare koden, avviser serveren deg med en vanlig autentiseringsfeil som ser nøyaktig ut som et feil passord. Koden ligger i webmail under Preferences, fanen Security."
+    },
+    {
+      "h": "Hushmails IMAP-server annonserer ikke SASL-IR",
+      "p": "Serveren svarer med et nakent <code>* OK IMAP4 ready</code> og tilbyr bare AUTH=PLAIN, uten SASL-IR-funksjonen. Det betyr at den avviser ettrinnsautentiseringen som sender påloggingsopplysningene sammen med AUTHENTICATE-kommandoen, og klienter som forutsetter SASL-IR, får et nakent BAD uten forklaring, som ser ut som feil påloggingsopplysninger. mcpemails oppdager BAD-svaret og prøver på nytt med totrinnsutvekslingen, så dette er allerede håndtert, men det er grunnen til at noe IMAP-verktøy feiler mot Hushmail mens det fungerer overalt ellers."
+    },
+    {
+      "h": "E-post du sender via SMTP, havner i Sent som chiffertekst",
+      "p": "Hushmail dokumenterer at når du sender fra en tredjepartsklient, lagres kopien din i Sent-mappen <b>kryptert</b>, selv når selve meldingen gikk ut ukryptert. En agent som blir bedt om å gå gjennom det du sendte forrige uke, vil derfor finne krypterte klumper i stedet for lesbar tekst i den mappen, mens de samme meldingene kan leses helt fint i Hushmail webmail. Utgående meldinger sendt via SMTP er også ukryptert som standard, med mindre mottakeren er en Hushmail-bruker eller allerede har et passord satt for kryptert levering."
+    },
+    {
+      "h": "Ingen MOVE og ingen SPECIAL-USE",
+      "p": "Hushmails IMAP-server støtter UIDPLUS, men annonserer verken MOVE eller SPECIAL-USE, og tilbyr ikke IDLE. Flyttinger faller tilbake til COPY, STORE \\Deleted og EXPUNGE; mapperoller gjenkjennes på navn i stedet for på rolle; og det finnes ingen push, så ny e-post oppdages ved neste polling og ikke i det øyeblikket den kommer."
+    }
+  ],
+  "limits": [
+    "Å koble en Hushmail-postkasse til en AI-klient betyr at den AI-leverandøren leser meldingsinnholdet. mcpemails henter e-post direkte fra Hushmail per forespørsel og lagrer ikke meldingsinnhold, og påloggingsopplysninger er kryptert ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du enn kobler til. Hushmail brukes mye av terapeuter og klinikker som opererer under en HIPAA business associate agreement. Den avtalen dekker Hushmail, ikke en tredjeparts AI-leverandør, så en postkasse med pasientopplysninger er en avgjørelse du må ta med dine egne compliance-forpliktelser foran deg, ikke en selvfølge.",
+    "Krypterte Hushmail-meldinger, inkludert dine egne Sent-kopier skrevet fra en tredjepartsklient, er uleselige for en agent. Den ser avsender, emne og dato, og kan flagge eller sortere dem, men ikke lese innholdet.",
+    "Det finnes ingen avgrenset påloggingsopplysning å gi fra seg. Hushmail har ikke app-passord, så hemmeligheten som lagres, er kontopassordet ditt, eller passordet ditt sammenslått med sikkerhetskoden for totrinnsbekreftelse."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Hushmail?",
+      "a": "Ikke direkte. Claude har ingen innebygd Hushmail-kobling. Kobler du en MCP-server som mcpemails til Hushmail-kontoen din over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og den samme tilkoblingen fungerer i Cursor og andre MCP-klienter uten at du må gjenta oppsettet."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Hushmail?",
+      "a": "IMAP er imap.hushmail.com på port 993 med SSL. SMTP er smtp.hushmail.com på port 465 med SSL, og Hushmail dokumenterer port 587 som alternativ hvis 465 er blokkert. Brukernavnet er i alle tilfeller hele Hushmail-e-postadressen din. Begge vertene ble bekreftet med en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Hvorfor avviser Hushmail passordet mitt i en e-postklient?",
+      "a": "Nesten alltid på grunn av totrinnsbekreftelse. Hushmail forventer passordet ditt, deretter et mellomrom, deretter en sikkerhetskode på 20 tegn, alt skrevet inn i det ene passordfeltet. Du finner koden i webmail under Preferences, deretter fanen Security, i seksjonen om e-postprogrammer for datamaskin og mobil. Kopier den med mellomrommene inni, og ikke la det stå et mellomrom til slutt."
+    },
+    {
+      "q": "Utsteder Hushmail app-passord?",
+      "a": "Nei. Der andre leverandører gir deg et app-passord som kan tilbakekalles, gir Hushmail deg en sikkerhetskode som legges til bak det eksisterende passordet ditt. Den er knyttet til oppsettet ditt for totrinnsbekreftelse og ikke til den enkelte klienten, så du kan ikke tilbakekalle tilgangen for ett tilkoblet program uten å påvirke de andre."
+    },
+    {
+      "q": "Kan AI-en min lese krypterte Hushmail-meldinger?",
+      "a": "Nei. Alt som er lagret kryptert, inkludert meldinger du sendte via en tredjepartsklient, kommer over IMAP som chiffertekst. mcpemails har ingen dekrypteringsnøkkel for det. Agenten kan se hodefeltene og kan flytte eller flagge meldingen, men innholdet forblir forseglet og må leses i Hushmail webmail."
+    },
+    {
+      "q": "Lagres Hushmail-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra imap.hushmail.com for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring; meldingsinnhold beholdes ikke. Selve AI-klienten mottar derimot det den leser, og det er den delen som er verdt å veie før du kobler til en postkasse med konfidensiell klientkorrespondanse."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Hushmail-innboks",
+    "sub": "Koble til Hushmail på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

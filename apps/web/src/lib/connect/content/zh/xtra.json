@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.spark.co.nz/help/get-more/xtra/xtra-mail-setup/",
+    "https://www.spark.co.nz/help/get-more/xtra/two-step-verification/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Xtra Mail 密码",
+    "helpUrl": "https://www.spark.co.nz/help/get-more/xtra/xtra-mail-setup/",
+    "usernameForm": "你的完整邮箱地址，Spark 自己的示例是 joe.bloggs@xtra.co.nz。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Spark Xtra Mail 接入 Claude：无需应用密码",
+    "description": "通过 IMAP（imap.xtra.co.nz:993）将 Spark Xtra Mail 连接到 Claude 及任意 MCP 客户端。你的 Xtra 密码即可使用：Spark 不为客户端签发应用密码。"
+  },
+  "hero": {
+    "eyebrow": "Spark Xtra Mail + AI",
+    "titleLine1": "将你的 Xtra Mail 收件箱连接到",
+    "titleLine2": "Claude、Cursor、任意 MCP 客户端",
+    "lead": "Xtra Mail 通过 IMAP 接受普通密码，无需生成应用密码，也没有第二重验证挡路。mcpemails 连接它，让你的 AI 代理可以读取、搜索、发送、回复和归档邮件。",
+    "answer": "Claude 无法自行连接 Xtra Mail 收件箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.xtra.co.nz 的 993 端口，用你完整的 xtra.co.nz 地址和普通的 Xtra Mail 密码登录。Spark 不为 Xtra Mail 签发应用专用密码，并声明其两步验证只作用于网页邮箱门户、不适用于邮件客户端，所以即使开启了两步验证，正确的密码也能直接通过认证。连接后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送和整理邮件。一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "你的 Xtra 密码，无需应用密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Xtra Mail 如何连接：用你已有的密码走 IMAP",
+    "body": "Spark 公布的收信服务器是 <code>imap.xtra.co.nz</code> 的 993 端口，发信服务器是 <code>send.xtra.co.nz</code>，用户名为完整地址。认证使用邮箱密码，不做任何改动。在 2026 年这已经少见到值得强调两遍，因为 Spark 自己的两步验证页面顶部有一条说明：该功能仅在网页邮箱门户中可用，不适用于 Outlook、Mail 和 Gmail 等邮件客户端。所以没有应用密码需要寻找，没有安全页面需要访问，也没有第二重验证需要绕过，所有可能的失败只归结为密码是否正确，以及你的客户端是否满足 Spark 的传输要求。Spark 确实有这些要求：它要求应用支持 1024 位或 2048 位 AES 加密套件以及 TLS 1.0 或更高版本，并声明不支持 RC4、SSL 和 SSL3。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "确认 Xtra Mail 订阅在 MySpark 中处于有效状态",
+      "p": "Xtra Mail 是一项订阅，而不是自动附带的功能。在 MySpark 中打开 Products 下的 <b>Subscriptions</b>，确认 Xtra Mail 在列、已激活且已创建邮箱。如果显示 <b>Ready to activate</b>，请先完成激活；在填写完创建邮箱的表单之前，没有邮箱可以连接。"
+    },
+    {
+      "h": "输入完整地址和你的 Xtra Mail 密码",
+      "p": "在 mcpemails 中选择 IMAP / SMTP，按 Spark 的写法原样输入地址，例如 <code>joe.bloggs@xtra.co.nz</code>，以及你登录 Xtra 网页邮箱所用的密码。下方的服务器和端口已自动填好，并已通过实时 TLS 连接验证。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Xtra Mail 自 2017 年起就不再是 Yahoo 的服务，所以 Yahoo 的建议不适用",
+      "p": "Spark 在 2017 年把 Xtra 邮箱从 Yahoo 迁到了新西兰服务商 SMX，在大约三个月内迁移了数十万个邮箱。Yahoo 时代留下了一长串指南，告诉 xtra.co.nz 用户去生成 Yahoo 应用密码，或通过 Yahoo 窗口登录。这些都已不再成立。Xtra 地址背后没有 Yahoo 账户，照着那些说明去做，只会让你去找一个对你的邮箱并不存在的安全页面。"
+    },
+    {
+      "h": "两步验证只保护网页邮箱，不会把客户端锁在门外",
+      "p": "Spark 自己的两步验证页面在顶部的说明中指出，该功能仅在网页邮箱门户中可用，不适用于 Outlook、Mail 和 Gmail 等邮件客户端。这是一把双刃剑。它意味着开启两步验证不会破坏这个连接，你也永远不需要应用密码；它也意味着无论你在网页邮箱中如何设置，IMAP 的大门都只凭密码把守。请相应地对待你的 Xtra Mail 密码。"
+    },
+    {
+      "h": "Spark 文档写的是 587 端口发信，而 465 端口也会响应",
+      "p": "Spark 的设置页面列出的发信服务器是 <code>send.xtra.co.nz</code> 的 <b>587</b> 端口，使用 StartTLS。我们在同一主机上验证的连接是 <b>465</b> 端口的隐式 TLS，完成了握手并提供 PLAIN 和 LOGIN。两者都是真实可用的。本页的表格显示的是我们测试过的组合；如果某个客户端坚持使用文档中的组合，587 加 STARTTLS 是 Spark 公布的答案，也应该能用。"
+    },
+    {
+      "h": "没有 SASL-IR、IDLE、MOVE 和 SPECIAL-USE",
+      "p": "Xtra 服务器声明的列表很短：IMAP4rev1、UIDPLUS、NAMESPACE、ID，以及 PLAIN 和 LOGIN 机制。没有 SASL-IR，它会拒绝大多数客户端首先尝试的一步认证，返回一个看起来像密码错误的简单拒绝。没有 IDLE 就没有推送，新邮件要通过轮询发现。没有 MOVE，归档要依次执行 COPY、STORE、EXPUNGE。没有 SPECIAL-USE，已发送和已删除文件夹按名称匹配。UIDPLUS 是有的，所以复制的邮件会报告其新 id。"
+    }
+  ],
+  "limits": [
+    "Spark 的 SMTP 主机声明的最大邮件大小约为 100 MB，已经相当宽裕，但更大的邮件仍会在发出之前被拒绝。",
+    "没有 IDLE，因此新邮件通过轮询发现，而不是推送。",
+    "移动操作不是原子的，文件夹用途按名称匹配，因为该服务器未实现 MOVE 和 SPECIAL-USE。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Xtra Mail 吗？",
+      "a": "不能直接使用。Claude 没有内置的 Spark 或 Xtra 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到该邮箱后，Claude 就能对你的 xtra.co.nz 邮件进行读取、搜索、发送、回复、定时和整理，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Xtra Mail 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.xtra.co.nz，端口 993，使用 TLS。发信为 send.xtra.co.nz，Spark 文档给出的是 587 端口 StartTLS，它也在 465 端口以隐式 TLS 响应，后者是我们验证过的组合。用户名是你的完整邮箱地址。Spark 文档另列出 995 端口的 pop3.xtra.co.nz 作为 POP 备选。"
+    },
+    {
+      "q": "Xtra Mail 需要应用密码吗？",
+      "a": "不需要。Spark 不签发应用密码，其两步验证页面说明该功能仅在网页邮箱门户中可用，不适用于邮件客户端。无论网页邮箱是否开启了两步验证，邮件客户端都用你普通的 Xtra Mail 密码登录。"
+    },
+    {
+      "q": "现在谁在运营 Xtra Mail？",
+      "a": "Spark，平台由新西兰公司 SMX 提供。从 Telecom NZ 时代起，Xtra 邮箱一直由 Yahoo 托管，直到 Spark 在 2017 年完成向 SMX 的迁移。这就是为什么仍在流传的、针对 xtra.co.nz 地址的 Yahoo 专用说明已经不再有用。"
+    },
+    {
+      "q": "我的 Xtra 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 Spark 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Xtra Mail 收件箱",
+    "sub": "一个密码，没有第二重验证挡路。一个收件箱永久免费，无需信用卡。"
+  }
+}

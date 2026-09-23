@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "https://www.jetbrains.com/help/ai-assistant/configure-an-mcp-server.html"
+  ],
+  "meta": {
+    "title": "将邮箱连接到 JetBrains AI Assistant：MCP 设置",
+    "description": "为 IntelliJ、PyCharm 或 WebStorm 中的 AI Assistant 接入真实收件箱。使用 Streamable HTTP，并在 Authorization 标头中放入限定范围的 API 密钥。1 个收件箱免费。"
+  },
+  "hero": {
+    "eyebrow": "JetBrains + 邮件",
+    "titleLine1": "把你的收件箱连接到 JetBrains",
+    "titleLine2": "AI Assistant",
+    "lead": "在任何支持 AI Assistant 的 JetBrains IDE 中为它接入一个真实邮箱。读取、搜索、发送、回复、定时发送和整理邮件，无需离开 IDE。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "限定范围的 API 密钥，一键撤销",
+    "meta2": "邮件实时获取，从不存储",
+    "answer": "打开 Settings、Tools、AI Assistant、Model Context Protocol。添加一个服务器，连接类型选择 Streamable HTTP，粘贴 https://mcpemails.com/api/mcp ，并添加一个 Authorization Bearer 标头，填入仪表盘中的 API 密钥。"
+  },
+  "method": {
+    "title": "JetBrains AI Assistant 如何连接：限定范围的 API 密钥",
+    "body": "JetBrains AI Assistant 不会对远程 MCP 服务器执行浏览器 OAuth 流程，因此改用 bearer 令牌进行认证。在仪表盘中创建一个 API 密钥，只勾选智能体需要的权限范围，然后把它作为 <code>Authorization: Bearer</code> 标头粘贴到 JetBrains AI Assistant 中。密钥连接和 OAuth 连接访问的是同一个端点，拿到的是同一套工具目录；唯一的区别在于令牌的获取方式。"
+  },
+  "setup": [
+    {
+      "h": "创建免费账户并连接邮箱",
+      "p": "在 mcpemails.com 注册，无需绑卡，然后前往 Dashboard、Inboxes、Connect Inbox。Gmail 通过 Google 一键登录连接；iCloud、Fastmail、Yahoo、Zoho 和 Yandex 需要应用专用密码；其他邮箱都可通过标准 IMAP 与 SMTP 连接。免费版包含 1 个收件箱，永久有效。"
+    },
+    {
+      "h": "创建限定范围的 API 密钥",
+      "p": "在 Dashboard、API Keys 中点击 Create key。为它命名，并只勾选这个智能体需要的权限范围：<code>read:email</code>、<code>search:email</code>、<code>send:email</code>、<code>manage:folders</code>、<code>delete:email</code>、<code>manage:drafts</code>、<code>manage:contacts</code>、<code>schedule:email</code> 和 <code>manage:automations</code>。密钥的格式是 <code>mcpe_</code> 后跟 64 个十六进制字符，只显示一次，所以请在关闭对话框前复制下来。"
+    },
+    {
+      "h": "打开 MCP 设置",
+      "p": "依次打开 <b>Settings</b>、<b>Tools</b>、<b>AI Assistant</b>，然后打开 <b>Model Context Protocol (MCP)</b>。"
+    },
+    {
+      "h": "添加服务器",
+      "p": "点击 Add，连接类型选择 <b>Streamable HTTP</b>。粘贴 <code>https://mcpemails.com/api/mcp</code>，然后添加一个名为 <code>Authorization</code> 的标头，值为 <code>Bearer</code> 加一个空格再加你的密钥。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "用 Streamable HTTP，不是 stdio，也不是 SSE",
+      "p": "连接类型列表首先提供的是基于本地命令的服务器，因为大多数 MCP 服务器都是这种形式。本服务器是远程托管的，没有需要运行的命令。请选择 Streamable HTTP，这是本服务器在 2025-06-18 修订版下使用的传输方式。"
+    },
+    {
+      "h": "在这里，密钥就是全部的权限模型",
+      "p": "AI Assistant 不执行 OAuth 授权同意流程，所以没有第二个页面可以让你收窄连接的权限。创建密钥时勾选了什么，IDE 就会一直拥有什么，直到你撤销它。对于 IDE 来说，读取、搜索和草稿权限范围几乎能覆盖所有值得做的事。"
+    },
+    {
+      "h": "IDE 设置会同步，而 bearer 令牌是一种凭据",
+      "p": "如果你开启了跨机器的设置同步，请像对待随设置一起同步的其他凭据一样对待这个密钥。密钥的成本很低：每台机器签发一个，起一个让列表一目了然的名字，并撤销你认不出来的那个。我们这边只存储 SHA-256 哈希值，所以原始密钥无法找回，丢失的密钥只能替换，不能取回。"
+    }
+  ],
+  "limits": [
+    "每个密钥的请求上限为每分钟 100 次、每小时 1,000 次、每天 10,000 次，此外还受你所在套餐的计费操作上限约束。",
+    "服务器只做请求与响应。没有 webhook，也没有服务器主动发起的事件，所以新邮件永远不会自己唤醒你的智能体。要对新到的邮件作出反应，请按计划轮询。",
+    "每次调用都会从你的邮箱服务商实时获取邮件，从不存储。我们只保存加密后的 OAuth 令牌或应用专用密码，因此令牌一经撤销或邮箱密码一经更改，访问会立即终止。"
+  ],
+  "faq": [
+    {
+      "q": "如何将邮箱连接到 JetBrains AI Assistant？",
+      "a": "打开 Settings、Tools、AI Assistant、Model Context Protocol，添加一个连接类型为 Streamable HTTP 的服务器，粘贴 https://mcpemails.com/api/mcp ，并添加一个带有仪表盘中 API 密钥的 Authorization Bearer 标头。之后 AI Assistant 就拥有了读取、搜索、发送、回复、整理和定时发送邮件的工具。"
+    },
+    {
+      "q": "哪些 JetBrains IDE 可以使用？",
+      "a": "任何 AI Assistant 能配置 MCP 服务器的 JetBrains IDE。设置路径和 Streamable HTTP 连接类型属于 AI Assistant，而不是某个特定的 IDE，所以只要该插件可用，设置方法都一样。如果你的 Settings 中没有 Model Context Protocol 页面，问题在插件，而不在本服务器。"
+    },
+    {
+      "q": "为什么用 API 密钥而不是 OAuth？",
+      "a": "因为 AI Assistant 通过配置好的标头来认证远程 MCP 服务器，而不是运行浏览器 OAuth 流程。在那里，bearer 密钥才是可行的路径。端点和工具与 OAuth 客户端完全相同；只是令牌的获取方式不同。"
+    },
+    {
+      "q": "AI Assistant 通过这种方式能访问哪些邮箱？",
+      "a": "Gmail 通过 Google 登录；iCloud、Fastmail、Yahoo、Zoho 和 Yandex 使用应用专用密码；以及任何在标准端口上支持 IMAP 与 SMTP 的其他邮箱。客户端通过同一个连接看到所有邮箱：你的智能体会先调用 inbox_list 来发现每个已连接的邮箱及其 id，所以不需要在任何地方粘贴 UUID。"
+    },
+    {
+      "q": "AI Assistant 会在我不知情的情况下发送邮件吗？",
+      "a": "只有在你允许的情况下才会。发送受 send:email 权限范围控制，没有该权限的密钥或令牌根本无法发送。此外，收件箱所有者还可以在仪表盘中要求人工审批，届时每一次发送、回复、转发、草稿发送和定时发送都会被暂扣，直到有人放行。"
+    },
+    {
+      "q": "我的邮件会存储在你们的服务器上吗？",
+      "a": "不会。每封邮件都是为发起请求的那次调用从你的邮箱服务商实时获取，并直接交给你的客户端。我们只保存加密后的 OAuth 令牌或应用专用密码，以便后续调用能够完成认证。在仪表盘中删除该收件箱，或在邮箱服务商处撤销访问权限，连接会立即终止。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 IDE 一个真正的收件箱",
+    "sub": "一个 MCP 服务器，一个限定范围的密钥。1 个收件箱永久免费，无需绑卡。"
+  }
+}

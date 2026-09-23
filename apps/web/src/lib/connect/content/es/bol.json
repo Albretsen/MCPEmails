@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://bluemail.me/pt/setup/bol-com-br-email-account-settings/",
+    "https://www.getmailspring.com/setup/access-bol-com-br-via-imap-smtp",
+    "https://en.wikipedia.org/wiki/Brasil_Online"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña de BOL, en un plan de pago de BOL",
+    "helpUrl": null,
+    "usernameForm": "Tu dirección completa, incluido el dominio: name@bol.com.br.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "BOL Mail a Claude: IMAP requiere BOL Completo",
+    "description": "Conecta un buzón de BOL a Claude o a cualquier cliente MCP en imap.bol.com.br:993. Las cuentas gratuitas son solo webmail: IMAP requiere el plan de pago BOL Completo."
+  },
+  "hero": {
+    "eyebrow": "BOL Mail + IA",
+    "titleLine1": "Conecta BOL Mail a Claude,",
+    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de BOL. Lee, busca, envía, responde, programa y organiza correo por IMAP, siempre que el buzón esté en un plan de pago de BOL y no en el nivel gratuito de solo webmail.",
+    "answer": "Claude no puede acceder por sí solo a BOL Mail. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.bol.com.br en el puerto 993, autenticándose con tu contraseña de BOL, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La pega está en el plan, no en el protocolo: BOL retiró el acceso IMAP y POP de sus cuentas gratuitas, que son solo webmail, así que una dirección bol.com.br gratuita normal no se puede conectar desde ningún cliente hasta que se pase a un plan de pago de BOL. Una bandeja en mcpemails es gratis.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Plan de pago de BOL, luego tu contraseña",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta BOL Mail: IMAP solo en el nivel de pago",
+    "body": "BOL sirve IMAP en <code>imap.bol.com.br</code> en el puerto 993 con TLS implícito, y el envío en <code>smtps.bol.com.br</code> en el puerto 465, también con TLS implícito. BOL lo opera UOL, y el servidor detrás de ambos es la misma instalación de Dovecot que gestiona UOL, con el mismo tamaño máximo de mensaje y la misma nomenclatura. La diferencia que importa es comercial. El buzón gratuito de BOL, que es el que tienen la mayoría de las direcciones bol.com.br, funciona en el webmail y en ningún otro sitio: el acceso por POP e IMAP se eliminó del plan gratuito, así que no hay ningún nombre de servidor que puedas introducir para que una cuenta gratuita inicie sesión desde un cliente. El nivel de pago, que se vende como <b>BOL Completo</b>, recupera el acceso desde clientes, y a partir de ahí la autenticación es normal. No hay contraseña de aplicación ni código de autorización aparte, solo tu contraseña de BOL y la dirección completa como nombre de usuario."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y sigue siendo gratis, sin tarjeta. Antes de seguir, comprueba en qué plan de BOL está el buzón, porque eso decide si el resto de esta página te sirve."
+    },
+    {
+      "h": "Confirma que el buzón está en un plan de pago de BOL",
+      "p": "Inicia sesión en el webmail de BOL y comprueba el plan de la cuenta. Una cuenta gratuita de BOL no tiene ningún acceso de clientes que activar: POP e IMAP se eliminaron de ese nivel, así que al buzón solo se llega por la interfaz web. Pasar a BOL Completo es lo que hace posible una conexión IMAP. Si la cuenta sigue siendo gratuita, conecta otro buzón en mcpemails y reenvía a él el correo de BOL."
+    },
+    {
+      "h": "Introduce tu dirección y tu contraseña en mcpemails",
+      "p": "Elige IMAP / SMTP e introduce la dirección completa, como <code>nome@bol.com.br</code>, junto con tu contraseña de BOL. Los servidores y puertos ya vienen rellenados y se confirmaron con una conexión TLS real. Fíjate en el puerto de salida: BOL usa TLS implícito en el 465, que no es el mismo ajuste que usa su servicio hermano."
+    },
+    {
+      "h": "Pega la URL MCP en tu cliente de IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente podrá leer, buscar, enviar, responder, reenviar, programar y organizar el buzón de BOL."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Una cuenta gratuita de BOL no se puede conectar con nada",
+      "p": "Esta es la respuesta a casi todas las preguntas sobre clientes de BOL y rara vez se dice claramente. Los buzones gratuitos de BOL solo funcionan en el webmail. El acceso POP e IMAP se eliminó del plan gratuito, así que Thunderbird, Outlook, Apple Mail, un script y un servidor MCP alojado fallan todos igual, y fallan en el inicio de sesión con un error de credenciales que no dice nada de planes. La gente concluye que la contraseña es incorrecta, la restablece y vuelve a fallar con la nueva. Comprueba el plan antes que cualquier otra cosa. Ninguna configuración lo arregla; solo pasar a BOL Completo."
+    },
+    {
+      "h": "Los ajustes de UOL parecen lo bastante similares para copiarlos, y el puerto SMTP es distinto",
+      "p": "BOL lo gestiona UOL sobre la misma plataforma, y los dos juegos de ajustes se parecen tanto que la gente usa uno por otro. Es en el transporte donde eso falla. El servidor de envío de BOL usa <b>TLS implícito en el puerto 465</b>. El de UOL usa <b>STARTTLS en el puerto 587</b>. Ambos servidores llevan el mismo prefijo <code>smtps</code>, así que el nombre no te avisa. Usar la combinación equivocada suele dejar la conexión colgada en lugar de dar un error, porque un cliente que espera un handshake TLS en un puerto sin cifrar espera un saludo que nunca llega."
+    },
+    {
+      "h": "Sin MOVE, sin SPECIAL-USE y con nombres de carpeta en portugués",
+      "p": "El servidor IMAP de BOL no anuncia la extensión MOVE, así que archivar un mensaje se ejecuta como una copia, una actualización de marcas y un expunge en lugar de un único comando atómico, y una conexión perdida a mitad puede dejar el mensaje un momento en las dos carpetas. También omite SPECIAL-USE, así que las carpetas se identifican por nombre y no por función. En un buzón en portugués esos nombres suelen ser Enviados (Enviados), Rascunhos (Borradores), Lixeira (Papelera) y Spam. Indica explícitamente la carpeta de destino si tu agente archiva algo en el lugar equivocado."
+    }
+  ],
+  "limits": [
+    "IMAP requiere un plan de pago de BOL. Si el buzón está en el nivel gratuito no hay nada que conectar, y mcpemails no puede sortearlo porque la restricción la aplica el servidor de BOL.",
+    "No hay soporte de IDLE, así que el correo se consulta periódicamente en lugar de recibirse al instante. Tu agente ve un mensaje nuevo la próxima vez que revisa, no en el momento en que llega.",
+    "El servidor SMTP acepta mensajes de hasta unos 33 MB. Un reenvío con adjuntos más grandes se rechaza al enviarlo en lugar de quedar en cola."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de BOL?",
+      "a": "Solo en un plan de pago de BOL. Claude no tiene un conector integrado para BOL y no puede abrir una conexión IMAP por sí mismo, así que necesita un servidor MCP como mcpemails delante del buzón. Esa conexión es por IMAP, que las cuentas gratuitas de BOL no ofrecen, así que una dirección bol.com.br gratuita tiene que pasar antes a un plan de pago."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de BOL?",
+      "a": "IMAP es imap.bol.com.br en el puerto 993 con TLS implícito. El correo saliente es smtps.bol.com.br en el puerto 465, también con TLS implícito. Inicia sesión con tu dirección bol.com.br completa y tu contraseña de BOL. Ambos servidores se verificaron con una conexión TLS real en la fecha que indica esta página."
+    },
+    {
+      "q": "¿Por qué mi contraseña de BOL no funciona en un cliente de correo?",
+      "a": "Lo más probable es que el buzón esté en el plan gratuito, del que se eliminó el acceso POP e IMAP. El servidor sigue rechazando el inicio de sesión con un error de credenciales normal, y eso hace que parezca un problema de contraseña. Confirma el plan en el webmail de BOL antes de restablecer nada. En un plan de pago, la contraseña normal de BOL es la credencial correcta."
+    },
+    {
+      "q": "¿BOL es lo mismo que UOL?",
+      "a": "BOL lo opera UOL y funciona sobre la misma plataforma de correo, pero son servicios distintos con buzones distintos, nombres de servidor distintos y planes distintos. Los ajustes no son intercambiables y, en concreto, el puerto y el cifrado de salida difieren entre los dos, así que copiar la configuración de uno en el otro no funciona."
+    },
+    {
+      "q": "¿Necesita BOL una contraseña de aplicación?",
+      "a": "No. BOL no tiene un esquema de contraseñas específicas de aplicación ni emite un código de autorización aparte. En un plan de pago, tu contraseña normal de BOL autentica tanto IMAP como SMTP. Eso también significa que cambiar tu contraseña de BOL rompe cualquier cliente conectado hasta que actualices la credencial guardada."
+    },
+    {
+      "q": "¿Se almacena mi correo de BOL en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de BOL por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva después de la solicitud que lo pidió."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de BOL",
+    "sub": "Conecta un buzón de pago de BOL en minutos. Una bandeja gratis para siempre en mcpemails, sin tarjeta."
+  }
+}

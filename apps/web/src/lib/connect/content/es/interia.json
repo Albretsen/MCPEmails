@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://pomoc.poczta.interia.pl/programy-pocztowe/news-parametry-do-konfiguracji-programow-pocztowych,nId,2136275",
+    "https://pomoc.poczta.interia.pl/programy-pocztowe/news-sprawdz-poprawnosc-konfiguracji-programu-pocztowego,nId,2246569",
+    "https://pomoc.poczta.interia.pl/popularne-artykuly/news-jak-uruchomic-dwuetapowe-logowanie,nId,6766558"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Tu contraseña de Interia",
+    "helpUrl": "https://pomoc.poczta.interia.pl/programy-pocztowe/news-parametry-do-konfiguracji-programow-pocztowych,nId,2136275",
+    "usernameForm": "Tu dirección completa, incluido el dominio: nazwa@interia.pl, nazwa@poczta.fm o un dominio hub de Interia como jan@kowalski.hub.pl.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Ajustes IMAP de Interia Poczta y acceso MCP para Claude",
+    "description": "Conecta Interia Poczta a Claude, Cursor y cualquier cliente MCP en poczta.interia.pl:993. IMAP sigue desactivado hasta que pones korzystam z programu pocztowego en TAK."
+  },
+  "hero": {
+    "eyebrow": "Interia Poczta + IA",
+    "titleLine1": "Conecta Interia Poczta a Claude,",
+    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de Interia. Lee, busca, envía, responde, programa y organiza correo por IMAP, una vez activado el canal para programas de correo en los ajustes de tu cuenta.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de Interia. mcpemails es un servidor MCP alojado que lo conecta por IMAP en poczta.interia.pl en el puerto 993, autenticándose con tu dirección completa y tu contraseña normal de Interia, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. Interia mantiene cerrados los canales POP3 e IMAP hasta que pones korzystam z programu pocztowego en TAK en los parámetros de tu cuenta, y un buzón con el inicio de sesión en dos pasos activado no se puede usar desde ningún programa de correo. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Activa primero el canal para programas de correo",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Interia: un nombre de servidor, un interruptor, una contraseña",
+    "body": "Interia lo pone todo en un solo nombre. IMAP es <code>poczta.interia.pl</code> en el puerto 993 con TLS implícito, y el envío SMTP es el <b>mismo servidor</b> en el puerto 465, lo que sorprende a quien está acostumbrado a un nombre <code>smtp.</code> aparte. La propia página de configuración de Interia te dice que escribas <code>poczta.interia.pl</code> tanto en el campo del servidor entrante como en el del saliente. La autenticación usa tu contraseña normal de Interia con la dirección completa como nombre de usuario, y eso vale igual para <code>interia.pl</code>, <code>poczta.fm</code> y los dominios hub de Interia. Lo único que debes hacer antes es abrir el canal: Interia desactiva POP3 e IMAP en una cuenta hasta que declaras que usas un programa de correo."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
+    },
+    {
+      "h": "Activa el canal para programas de correo en Interia",
+      "p": "Inicia sesión en tu buzón de Interia desde un navegador y ve a <b>Ustawienia</b>, luego <b>ustawienia główne</b>, luego la pestaña <b>parametry</b>. En la sección de programas de correo, pon <b>korzystam z programu pocztowego</b> (uso un programa de correo) en <b>TAK</b> (sí) y guarda. Hasta que esté activado, POP3 e IMAP están cerrados y el inicio de sesión se rechaza sin nada que indique por qué."
+    },
+    {
+      "h": "Confirma que el inicio de sesión en dos pasos está desactivado en este buzón",
+      "p": "El inicio de sesión en dos pasos de Interia (<b>logowanie dwuetapowe</b>) y los programas de correo son mutuamente excluyentes. Interia lo dice en la pantalla donde lo activas: con el inicio de sesión en dos pasos activado, la cuenta no se puede usar en un programa de correo. Interia no emite ninguna contraseña de aplicación para sortearlo, así que si el buzón lo tiene activado tienes que decidir antes de seguir."
+    },
+    {
+      "h": "Pégala en mcpemails y luego pega la URL MCP en tu IA",
+      "p": "Elige IMAP / SMTP, introduce la dirección completa, como nazwa@interia.pl, y tu contraseña de Interia. Los servidores y puertos ya vienen rellenados y se verificaron con una conexión TLS real. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "El inicio de sesión en dos pasos y los programas de correo no pueden estar activados a la vez, y no hay contraseña de aplicación",
+      "p": "Este es el fallo de Interia que no tiene solución alternativa. La ayuda de Interia para activar el <b>logowanie dwuetapowe</b> dice claramente que, una vez activado, la cuenta no se puede usar en un programa de correo, y el acceso es solo por el sitio web y la aplicación oficial. La mayoría de proveedores lo resuelven con una contraseña específica de aplicación. Interia no emite ninguna. Así que un buzón de Interia o es accesible por IMAP o está protegido con el inicio de sesión en dos pasos, y tienes que elegir. Si quieres conectar el agente, esa decisión es tuya y conviene tomarla a conciencia en lugar de descubrirla como un error de inicio de sesión."
+    },
+    {
+      "h": "POP3 e IMAP están cerrados hasta que declaras que usas un programa de correo",
+      "p": "El interruptor está en <b>Ustawienia</b>, luego <b>ustawienia główne</b>, luego la pestaña <b>parametry</b>, formulado como <b>korzystam z programu pocztowego</b> con una respuesta TAK o NIE. Parece una preferencia y se comporta como un cortafuegos. Con él en NIE, el servidor rechaza el inicio de sesión antes de evaluar siquiera tu contraseña, por eso la gente cambia credenciales durante una hora antes de encontrar el ajuste."
+    },
+    {
+      "h": "Sin SASL-IR, y los clientes que lo dan por hecho reciben un BAD seco",
+      "p": "El banner de Interia anuncia <code>AUTH=PLAIN</code> pero no <code>SASL-IR</code>, así que rechaza la autenticación de un solo paso que envía la credencial junto con el comando <code>AUTHENTICATE</code>. Los clientes que dan por hecho SASL-IR reciben un <code>BAD</code> sin explicación, indistinguible de una contraseña incorrecta. mcpemails lo detecta y reintenta con el intercambio en dos pasos, así que esto ya está resuelto, pero explica por qué algunas herramientas IMAP dan Interia por roto mientras Thunderbird se conecta sin problema."
+    },
+    {
+      "h": "El envío y la recepción van por el mismo nombre de servidor, y en IMAP solo se ofrece PLAIN",
+      "p": "No hay ningún <code>smtp.interia.pl</code> en la configuración documentada de Interia: el correo saliente va a <code>poczta.interia.pl</code> en el 465, el mismo nombre que IMAP. Por otro lado, el lado IMAP anuncia <code>AUTH=PLAIN</code> y nada más, sin <code>AUTH=LOGIN</code>. Las bibliotecas programadas para usar siempre el mecanismo LOGIN, algo habitual en herramientas escritas para Exchange, fallan en el paso de autenticación. El lado SMTP sí acepta tanto PLAIN como LOGIN, así que las dos mitades de la misma cuenta pueden comportarse distinto dentro de un mismo cliente."
+    }
+  ],
+  "limits": [
+    "Interia no anuncia MOVE ni SPECIAL-USE, así que archivar se ejecuta como copia más marca más expunge, y Enviados, Borradores y Papelera se identifican por nombre. En un buzón en polaco suelen ser Wysłane, Kopie robocze y Kosz, así que indica la carpeta si un agente no la encuentra.",
+    "Activar el inicio de sesión en dos pasos en la cuenta de Interia desconecta el buzón de todos los clientes de correo, mcpemails incluido, y no existe ninguna contraseña de aplicación para restablecerlo."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Interia Poczta?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para Interia. Apuntar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Interia?",
+      "a": "Ambos usan el mismo nombre de servidor. IMAP es poczta.interia.pl en el puerto 993 con SSL/TLS, y SMTP es poczta.interia.pl en el puerto 465, también con SSL/TLS y con autenticación obligatoria. Inicia sesión con tu dirección completa, incluido interia.pl, poczta.fm o tu dominio hub. Los servidores se confirmaron con una conexión TLS real."
+    },
+    {
+      "q": "¿Por qué Interia rechaza mi contraseña en un cliente de correo?",
+      "a": "Normalmente porque el canal para programas de correo está desactivado. Abre Ustawienia, luego ustawienia główne, luego la pestaña parametry, y pon korzystam z programu pocztowego en TAK. Si ya está activado, comprueba si la cuenta tiene activado el inicio de sesión en dos pasos, porque Interia bloquea todo acceso desde programas de correo mientras lo esté."
+    },
+    {
+      "q": "¿Ofrece Interia contraseñas de aplicación?",
+      "a": "No. Interia no emite contraseñas específicas de aplicación. Los clientes de correo se autentican con la misma contraseña que usas en el webmail. Eso también significa que no hay forma de mantener activado el inicio de sesión en dos pasos y seguir conectando un cliente, porque la contraseña de aplicación con la que otros proveedores salvan esa distancia aquí no existe."
+    },
+    {
+      "q": "¿Las direcciones poczta.fm funcionan igual?",
+      "a": "Sí. poczta.fm es un buzón de Interia y usa el mismo nombre de servidor poczta.interia.pl, los mismos puertos y el mismo interruptor para programas de correo. Introduce la dirección tal cual está escrita, con el dominio poczta.fm, como nombre de usuario."
+    },
+    {
+      "q": "¿Se almacena mi correo de Interia en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Interia por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Interia",
+    "sub": "Conecta Interia Poczta en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

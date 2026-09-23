@@ -52,7 +52,7 @@ export const CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp',
-    locales: ['en'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh'],
   },
   {
     slug: 'claude-code',
@@ -65,7 +65,7 @@ export const CLIENTS = [
     configFile: 'terminal',
     config: (url) => `claude mcp add --transport http mcpemails ${url}`,
     guide: 'https://code.claude.com/docs/en/mcp',
-    locales: ['en'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh'],
   },
   {
     slug: 'chatgpt',
@@ -78,7 +78,7 @@ export const CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://help.openai.com/en/articles/12584461',
-    locales: ['en'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh'],
   },
   {
     slug: 'cursor',
@@ -97,7 +97,7 @@ export const CLIENTS = [
   }
 }`,
     guide: 'https://cursor.com/docs/mcp',
-    locales: ['en'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh'],
   },
   {
     slug: 'vscode',
@@ -117,7 +117,7 @@ export const CLIENTS = [
   }
 }`,
     guide: 'https://code.visualstudio.com/docs/copilot/customization/mcp-servers',
-    locales: ['en'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh'],
   },
   {
     slug: 'cline',
@@ -130,7 +130,7 @@ export const CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://docs.cline.bot/mcp/configuring-mcp-servers',
-    locales: ['en'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh'],
   },
   {
     slug: 'windsurf',
@@ -149,7 +149,7 @@ export const CLIENTS = [
   }
 }`,
     guide: 'https://docs.windsurf.com/windsurf/cascade/mcp',
-    locales: ['en'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh'],
   },
   {
     slug: 'gemini-cli',
@@ -168,7 +168,7 @@ export const CLIENTS = [
   }
 }`,
     guide: 'https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md',
-    locales: ['en'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh'],
   },
   {
     slug: 'zed',
@@ -187,7 +187,7 @@ export const CLIENTS = [
   }
 }`,
     guide: 'https://zed.dev/docs/ai/mcp',
-    locales: ['en'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh'],
   },
   {
     slug: 'jetbrains',
@@ -200,7 +200,7 @@ export const CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://www.jetbrains.com/help/ai-assistant/configure-an-mcp-server.html',
-    locales: ['en'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh'],
   },
   {
     slug: 'raycast',
@@ -213,7 +213,7 @@ export const CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://manual.raycast.com/ai/model-context-protocol',
-    locales: ['en'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh'],
   },
   {
     slug: 'warp',
@@ -226,7 +226,7 @@ export const CLIENTS = [
     configFile: null,
     config: null,
     guide: 'https://docs.warp.dev/agent-platform/capabilities/mcp/',
-    locales: ['en'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh'],
   },
   {
     slug: 'curl',
@@ -243,7 +243,7 @@ export const CLIENTS = [
   -H "Content-Type: application/json" \\
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'`,
     guide: null,
-    locales: ['en'],
+    locales: ['en', 'nb', 'es', 'fr', 'zh'],
   },
 ];
 

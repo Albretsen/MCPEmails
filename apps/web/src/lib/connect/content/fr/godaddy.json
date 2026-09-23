@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.godaddy.com/help/use-imap-settings-to-add-my-professional-email-to-a-client-32204",
+    "https://www.godaddy.com/help/my-workspace-email-is-moving-to-microsoft-365-32394",
+    "https://www.godaddy.com/help/configuring-mail-clients-with-cpanel-email-8861",
+    "https://support.titan.email/hc/en-us/articles/25005307786905-Enable-Titan-on-other-apps"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de messagerie",
+    "helpUrl": "https://www.godaddy.com/help/use-imap-settings-to-add-my-professional-email-to-a-client-32204",
+    "usernameForm": "Votre adresse complète, domaine compris : name@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connecter la messagerie GoDaddy à Claude et MCP",
+    "description": "Connectez GoDaddy Professional Email à Claude et tout client MCP en IMAP sur imap.secureserver.net:993. Les boîtes Microsoft 365 de GoDaddy ne peuvent pas se connecter."
+  },
+  "hero": {
+    "eyebrow": "Messagerie GoDaddy + IA",
+    "titleLine1": "Connectez votre messagerie GoDaddy à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte GoDaddy. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP, une fois que vous savez sur lequel des différents produits de messagerie GoDaddy se trouve réellement votre adresse.",
+    "answer": "Claude ne peut pas accéder seul à une boîte GoDaddy. mcpemails est un serveur MCP hébergé qui connecte GoDaddy Professional Email en IMAP sur imap.secureserver.net, port 993, en s'authentifiant avec votre adresse complète et le mot de passe de messagerie propre à cette boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. GoDaddy vend plus d'un produit de messagerie sous la même marque, et une boîte Microsoft 365 achetée via GoDaddy est une boîte Microsoft que nous ne pouvons pas connecter : vérifiez donc d'abord laquelle vous avez. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Le mot de passe de messagerie propre à la boîte",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment GoDaddy se connecte : identifiez le produit, puis IMAP",
+    "body": "« La messagerie GoDaddy », ce sont trois ou quatre services différents sous une même marque, et ils ne partagent pas les mêmes réglages. <b>Professional Email</b>, que GoDaddy vend sur la plateforme Titan, est le produit grand public actuel ; GoDaddy le documente sur <code>imap.secureserver.net</code> port 993 et <code>smtpout.secureserver.net</code> port 465, tous deux en TLS implicite, avec l'adresse comme identifiant et le mot de passe propre à la boîte. L'ancien produit <b>Workspace Email</b>, aujourd'hui retiré, utilisait les mêmes noms d'hôte secureserver, ce qui explique pourquoi tant de vieux guides en ligne les affichent encore. <b>Microsoft 365 from GoDaddy</b> n'est pas du tout une boîte GoDaddy : c'est un tenant Microsoft que GoDaddy revend et facture, hébergé sur les propres serveurs de Microsoft. Enfin, une boîte créée dans l'<b>hébergement web cPanel</b> se trouve sur votre serveur d'hébergement, pas sur secureserver, et utilise le nom d'hôte de ce serveur. Identifiez le bon produit, et le reste de la configuration prend deux minutes."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
+    },
+    {
+      "h": "Vérifiez quel produit de messagerie GoDaddy vous avez",
+      "p": "Connectez-vous à GoDaddy et ouvrez le tableau de bord Email & Office sous My Products. Le nom de l'offre sur la vignette vous donne la réponse. Professional Email est le produit basé sur Titan et utilise les serveurs secureserver. Microsoft 365 ouvre Outlook sur le web et correspond à une boîte Microsoft. Si l'adresse a plutôt été créée dans cPanel sous Email Accounts, ses réglages sont ceux affichés sur yourdomain.com/webmail sous Configure Mail Client, et non ceux de secureserver."
+    },
+    {
+      "h": "Récupérez le mot de passe de la boîte et autorisez les clients externes",
+      "p": "Dans le tableau de bord Email & Office, ouvrez Manage à côté de l'adresse et définissez ou réinitialisez son mot de passe de messagerie. C'est le mot de passe propre à la boîte, pas l'identifiant de votre compte GoDaddy. Si la connexion est toujours refusée, vérifiez dans les paramètres de sécurité de la boîte l'option relative aux clients mail tiers ou externes, et sachez que Titan bloque les clients externes tant que l'authentification à deux facteurs est activée pour cette boîte."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Ajoutez votre adresse et votre mot de passe dans mcpemails, puis collez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Une boîte Microsoft 365 achetée chez GoDaddy ne peut pas être connectée ici",
+      "p": "GoDaddy revend Microsoft 365 et y migre ses anciens clients Workspace Email : une grande partie des personnes qui pensent avoir « une adresse GoDaddy » ont donc désormais une boîte Microsoft avec une facture GoDaddy. Ces boîtes ne se trouvent pas sur <code>imap.secureserver.net</code> ; elles sont hébergées sur les serveurs de Microsoft et régies par la plateforme d'identité de Microsoft. La règle par défaut des tenants Microsoft empêche un utilisateur ordinaire de consentir à l'accès en lecture et en écriture à sa messagerie pour une application tierce, et ce blocage est fixé par Microsoft et par l'administrateur de votre tenant, ni par GoDaddy ni par nous. Nous ne prétendons pas connecter ces boîtes. Le signe est simple : si la connexion à votre webmail vous amène dans Outlook sur le web, il s'agit du produit Microsoft."
+    },
+    {
+      "h": "La moitié des guides IMAP GoDaddy en ligne concernent un produit qui n'existe plus",
+      "p": "Workspace Email a été retiré et ses clients ont été transférés vers Microsoft 365, mais les guides rédigés pour ce produit restent les premiers résultats pour « GoDaddy IMAP settings », et ils affichent les noms d'hôte secureserver. Pour ne rien simplifier, ces noms d'hôte sont toujours corrects, car l'actuel Professional Email de GoDaddy utilise les mêmes. Un utilisateur migré suit donc un guide, saisit des réglages qui semblent justes et obtient un échec d'authentification sans comprendre pourquoi : les réglages étaient bons, c'est simplement que la boîte n'est plus là."
+    },
+    {
+      "h": "Titan bloque les clients externes tant que la 2FA est activée sur la boîte",
+      "p": "GoDaddy Professional Email fonctionne sur Titan, qui conditionne IMAP, POP et SMTP à une option d'accès pour les applications tierces sur la boîte, et refuse les connexions de clients externes tant que l'authentification à deux facteurs est activée pour cette boîte. Le refus apparaît comme un échec de connexion, et il est donc régulièrement confondu avec un mauvais mot de passe. Vérifiez cette option avant de réinitialiser quoi que ce soit."
+    },
+    {
+      "h": "Le serveur IMAP de GoDaddy n'annonce pas SASL-IR",
+      "p": "Le serveur IMAP derrière <code>imap.secureserver.net</code> s'identifie comme Fenix et n'annonce pas la capacité SASL-IR : il rejette donc l'authentification en une étape qui envoie les identifiants sur la même ligne que la commande AUTHENTICATE. Les clients qui supposent SASL-IR reçoivent un simple <code>BAD</code> sans explication, qui ressemble exactement à de mauvais identifiants. mcpemails le détecte et relance l'échange en deux étapes, donc la connexion aboutit, mais c'est pourquoi d'autres outils IMAP échouent avec GoDaddy alors qu'ils fonctionnent ailleurs."
+    }
+  ],
+  "limits": [
+    "Les boîtes Microsoft 365 vendues via GoDaddy ne peuvent pas être connectées. La règle par défaut des tenants Microsoft bloque le consentement des utilisateurs à l'accès tiers à la messagerie.",
+    "Les boîtes de l'hébergement cPanel ne se trouvent pas sur les serveurs secureserver. Connectez-les plutôt avec le nom d'hôte affiché dans l'écran Configure Mail Client de cPanel.",
+    "Le serveur n'annonce pas l'extension MOVE : déplacer un message se fait donc par copie, marquage et purge plutôt qu'en une seule commande atomique."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec la messagerie GoDaddy ?",
+      "a": "Il fonctionne avec GoDaddy Professional Email, le produit basé sur Titan, dès qu'un serveur MCP comme mcpemails est connecté à la boîte en IMAP. Claude n'a pas de connecteur GoDaddy intégré. Il ne fonctionne pas avec une boîte Microsoft 365 achetée via GoDaddy, car la règle par défaut des tenants Microsoft bloque le consentement à l'accès tiers à la messagerie."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de GoDaddy ?",
+      "a": "Pour Professional Email, IMAP est imap.secureserver.net sur le port 993 en TLS implicite, et SMTP est smtpout.secureserver.net sur le port 465, également en TLS implicite. L'identifiant est votre adresse e-mail complète et le mot de passe est le mot de passe de messagerie propre à cette boîte. Les deux serveurs sont documentés par GoDaddy et ont été confirmés par une vraie connexion TLS."
+    },
+    {
+      "q": "Comment savoir si j'ai Professional Email ou Microsoft 365 ?",
+      "a": "Ouvrez My Products dans votre compte GoDaddy et regardez le tableau de bord Email & Office. Le nom de l'offre figure sur la vignette de chaque adresse. Vérification plus rapide : connectez-vous à votre webmail. Si vous arrivez dans Outlook sur le web, c'est Microsoft 365. Si vous arrivez dans l'interface webmail de Titan, c'est Professional Email et les réglages secureserver s'appliquent."
+    },
+    {
+      "q": "Pourquoi mon mot de passe de messagerie GoDaddy est-il refusé ?",
+      "a": "Trois causes courantes, dans cet ordre. Vous utilisez l'identifiant de votre compte GoDaddy au lieu du mot de passe de messagerie propre à la boîte. L'authentification à deux facteurs est activée sur la boîte, ce qui amène Titan à refuser les clients externes. Ou la boîte a été migrée vers Microsoft 365 et n'existe plus du tout sur les serveurs secureserver."
+    },
+    {
+      "q": "Et les adresses e-mail créées dans l'hébergement cPanel ?",
+      "a": "Ce sont des boîtes IMAP classiques sur votre propre serveur d'hébergement, et elles peuvent être connectées, mais pas avec les noms d'hôte secureserver. Connectez-vous sur yourdomain.com/webmail, ouvrez Configure Mail Client et utilisez les réglages manuels affichés. Le mot de passe est celui que vous avez défini pour cette adresse sous Email Accounts dans cPanel."
+    },
+    {
+      "q": "Mon courrier GoDaddy est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct chez GoDaddy en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le contenu des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA une boîte GoDaddy",
+    "sub": "Connectez GoDaddy Professional Email en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

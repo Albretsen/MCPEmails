@@ -1,20 +1,32 @@
 {
+  "_sources": [
+    "https://help.yahoo.com/kb/SLN4075.html",
+    "https://help.yahoo.com/kb/SLN15241.html"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Contraseña de aplicación",
+    "helpUrl": "https://help.yahoo.com/kb/SLN15241.html",
+    "usernameForm": "Tu dirección completa de Yahoo, incluido el dominio: name@yahoo.com, o la forma ymail.com o rocketmail.com con la que te registraste.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Conecta Yahoo Mail a Claude (y a cualquier IA)",
-    "description": "Conecta Yahoo Mail a Claude, Cursor, ChatGPT y a cualquier cliente MCP con una contraseña de aplicación. Deja que la IA lea, envíe, programe y organice tu Yahoo Mail. Una bandeja gratis, para siempre."
+    "title": "Conecta Yahoo Mail a Claude, Cursor y clientes MCP",
+    "description": "Conecta Yahoo Mail a Claude, Cursor y cualquier cliente MCP por IMAP (puerto 993) con una contraseña de aplicación. La normal no sirve. Una bandeja gratis."
   },
   "hero": {
     "eyebrow": "Yahoo Mail + IA",
     "titleLine1": "Conecta Yahoo Mail a Claude,",
     "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
-    "lead": "Dale a tu agente de IA una bandeja Yahoo real en minutos. Lee, busca, envía, responde, programa y organiza correo con una sola contraseña de aplicación, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+    "lead": "Dale a tu agente de IA una bandeja real de Yahoo en minutos. Lee, busca, envía, responde, programa y organiza correo con una sola contraseña de aplicación, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Contraseña de aplicación, sin configurar OAuth",
-    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+    "meta2": "El correo se obtiene en vivo, nunca se almacena",
+    "answer": "Claude no puede acceder por sí solo a Yahoo Mail. mcpemails es un servidor MCP alojado que lo conecta por IMAP en el puerto 993, autenticándose con una contraseña de aplicación de Yahoo creada en External connections (conexiones externas) de tu página Account Security, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Tu contraseña normal de Yahoo nunca se acepta desde un cliente de correo. La configuración lleva un par de minutos y una bandeja es gratis, para siempre."
   },
   "method": {
-    "title": "Cómo se conecta Yahoo: una contraseña de aplicación",
-    "body": "Yahoo Mail se conecta por IMAP/SMTP con una <b>contraseña de aplicación de Yahoo</b>. Activa la verificación en dos pasos, genera una contraseña de aplicación en Seguridad de la cuenta de Yahoo y pégala en mcpemails junto con tu dirección de Yahoo. Sin trámite de OAuth ni ventanas emergentes."
+    "title": "Cómo se conecta Yahoo: con una contraseña de aplicación",
+    "body": "Yahoo Mail se conecta por IMAP/SMTP con una <b>contraseña de aplicación de Yahoo</b>. Activa la verificación en dos pasos, genera una contraseña de aplicación en Yahoo Account Security (seguridad de la cuenta) y pégala en mcpemails junto con tu dirección de Yahoo. Sin flujo OAuth ni ventanas emergentes del navegador."
   },
   "setup": [
     {
@@ -23,7 +35,7 @@
     },
     {
       "h": "Genera una contraseña de aplicación de Yahoo",
-      "p": "Activa la verificación en dos pasos y luego genera una contraseña de aplicación en Seguridad de la cuenta de Yahoo."
+      "p": "Activa la verificación en dos pasos y genera una contraseña de aplicación en Yahoo Account Security."
     },
     {
       "h": "Pégala en mcpemails",
@@ -34,8 +46,52 @@
       "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
     }
   ],
+  "gotchas": [
+    {
+      "h": "El servidor que documenta Yahoo y el servidor al que nos conectamos son dos nombres de una misma máquina",
+      "p": "El propio artículo de ayuda de Yahoo indica <code>imap.mail.yahoo.com</code>. La tabla de ajustes de esta página muestra <code>export.imap.mail.yahoo.com</code>. Ninguno de los dos está mal: ambos nombres son alias del mismo <code>jimap.imap.mail.yahoo.com</code>, resuelven a las mismas direcciones, y el certificado que presenta Yahoo es un comodín para <code>*.imap.mail.yahoo.com</code> que cubre los dos. Publicamos el nombre con el que abrimos una conexión TLS real. Si alguno de tus clientes de correo ya está configurado con el nombre documentado, déjalo como está: habla con la misma máquina."
+    },
+    {
+      "h": "La contraseña de aplicación está en External connections, y sobrevive al cambio de tu contraseña",
+      "p": "Yahoo genera contraseñas de aplicación en la página Account Security, en <b>External connections</b>: Create app password, pon un nombre a la aplicación, Generate password. Yahoo la muestra una sola vez. Lo que la gente pasa por alto es lo que ocurre después. Una contraseña de aplicación sigue siendo válida incluso después de cambiar tu contraseña principal de Yahoo, así que cambiar tu contraseña no revoca el acceso de un cliente de correo. La única forma de cortar una conexión desde el lado de Yahoo es eliminar esa contraseña de aplicación concreta en la misma pantalla."
+    },
+    {
+      "h": "Yahoo y AOL comparten plataforma pero no cuenta, y las credenciales no se cruzan",
+      "p": "Las direcciones de ymail.com y rocketmail.com son cuentas normales de Yahoo y corresponden a esta página. AOL Mail funciona sobre la misma infraestructura subyacente, y <code>imap.aol.com</code> resuelve a través del mismo servicio <code>yahoodns.net</code>, pero AOL tiene sus propios nombres de servidor y su propia página de seguridad de la cuenta. Una contraseña de aplicación generada en una cuenta de Yahoo no abre un buzón de AOL, ni al revés. Conecta una dirección de AOL como AOL."
+    },
+    {
+      "h": "El IMAP de Yahoo es más capaz que el de la mayoría de los buzones gratuitos, y eso juega a tu favor",
+      "p": "Al probarlo, Yahoo anunció <code>SASL-IR</code>, <code>MOVE</code>, <code>UIDPLUS</code>, <code>IDLE</code> y <code>SPECIAL-USE</code>. En la práctica, eso significa que mover es un único comando atómico en lugar de una copia seguida de un borrado, y que Enviados, Borradores, Spam y Papelera se identifican por su <b>función</b> y no por su nombre, así que una carpeta del sistema renombrada o que no esté en inglés se sigue resolviendo correctamente. No anuncia <code>AUTH=LOGIN</code> en IMAP, solo PLAIN y los mecanismos OAuth, así que las herramientas programadas de forma fija para el mecanismo LOGIN fallan en la autenticación incluso con una contraseña de aplicación correcta."
+    }
+  ],
+  "limits": [
+    "El servidor de envío de Yahoo anuncia un tamaño máximo de mensaje de unos 41 MB. La lectura de adjuntos a través de mcpemails está limitada a 25 MB por solicitud, así que cualquier cosa más grande hay que descargarla en el propio Yahoo Mail.",
+    "Las contraseñas de aplicación no caducan y sobreviven a un cambio de tu contraseña de Yahoo. Eliminar la contraseña de aplicación en Account Security es la única forma de revocar el acceso."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Yahoo Mail?",
+      "a": "No directamente. Claude no tiene un conector integrado para Yahoo. Conectar un servidor MCP como mcpemails a tu buzón de Yahoo por IMAP, con una contraseña de aplicación de Yahoo, le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar. La misma conexión funciona después sin cambios desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Yahoo Mail?",
+      "a": "IMAP está en el puerto 993 con TLS implícito, y SMTP es smtp.mail.yahoo.com en el puerto 465, también con TLS implícito. Yahoo documenta el servidor entrante como imap.mail.yahoo.com; la tabla de esta página muestra export.imap.mail.yahoo.com, que es un alias del mismo servidor y es el nombre que verificamos en vivo. Inicia sesión con tu dirección completa y una contraseña de aplicación."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de Yahoo?",
+      "a": "Porque Yahoo no acepta la contraseña de tu cuenta desde una aplicación de correo de terceros. Necesitas una contraseña de aplicación creada en la página Account Security de Yahoo, en External connections. Cópiala cuando aparezca, porque Yahoo no vuelve a mostrarla. Si una contraseña de aplicación antigua dejó de funcionar, genera una nueva en lugar de reutilizarla."
+    },
+    {
+      "q": "¿Necesito la verificación en dos pasos para obtener una contraseña de aplicación de Yahoo?",
+      "a": "Yahoo crea las contraseñas de aplicación en la página Account Security, en External connections. Si esa opción no aparece en tu cuenta, activa la verificación en dos pasos y vuelve a mirar: Yahoo ha movido y vuelto a restringir esta pantalla más de una vez a lo largo de los años. Genera la contraseña en un navegador desde el que ya hayas iniciado sesión antes, y no en una ventana privada."
+    },
+    {
+      "q": "¿Se almacena mi correo de Yahoo en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Yahoo por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva. Eliminar la contraseña de aplicación en Yahoo Account Security termina la conexión desde el lado de Yahoo de inmediato."
+    }
+  ],
   "ctaBand": {
-    "title": "Dale a tu IA una bandeja Yahoo",
+    "title": "Dale a tu IA una bandeja de Yahoo",
     "sub": "Conecta Yahoo Mail en minutos. Una bandeja gratis para siempre, sin tarjeta."
   }
 }

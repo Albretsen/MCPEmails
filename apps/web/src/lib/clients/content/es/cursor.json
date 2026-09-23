@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://cursor.com/docs/mcp"
+  ],
+  "meta": {
+    "title": "Conecta el correo a Cursor: servidor MCP en mcp.json",
+    "description": "Añade una bandeja real a Cursor con cuatro líneas en mcp.json. Cursor pide el inicio de sesión OAuth, sin clave de API; lee, busca, envía y programa correo. Una bandeja gratis."
+  },
+  "hero": {
+    "eyebrow": "Cursor + correo",
+    "titleLine1": "Conecta tu bandeja a Cursor",
+    "titleLine2": "con cuatro líneas de mcp.json",
+    "lead": "Dale al editor un buzón real. Responde a un informe de error desde el archivo que lo causó, envía la corrección a un cliente o vacía una bandeja sin cambiar de ventana.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "OAuth, sin clave de API",
+    "meta2": "Correo obtenido en vivo, nunca almacenado",
+    "answer": "Añade una entrada en mcpServers de ~/.cursor/mcp.json con la url https://mcpemails.com/api/mcp. Después Cursor te pide iniciar sesión con OAuth, sin ninguna clave de API de por medio."
+  },
+  "method": {
+    "title": "Cómo se conecta Cursor: OAuth, sin clave de API",
+    "body": "Cursor ejecuta el flujo OAuth estándar de MCP contra este servidor. Se registra solo mediante <b>registro dinámico de clientes RFC 7591</b>, así que no hay ningún client ID que crear, y se autoriza con <b>código de autorización más PKCE</b> usando S256. Nunca se transmite un secreto de cliente, y el token solo lleva los permisos que apruebas en nuestra pantalla de consentimiento. El token de acceso que recibe dura una hora y se renueva solo; aparece en Dashboard, API Keys como <code>OAuth:</code> seguido del nombre del cliente, y ahí es donde revocas la conexión."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis y conecta un buzón",
+      "p": "Regístrate en mcpemails.com, sin tarjeta, y luego ve a Dashboard, Inboxes, Connect Inbox. Gmail se conecta con el inicio de sesión de Google en un clic; iCloud, Fastmail, Yahoo, Zoho y Yandex requieren una contraseña de aplicación; cualquier otro se conecta por IMAP y SMTP estándar. El plan gratuito incluye una bandeja, para siempre."
+    },
+    {
+      "h": "Abre tu mcp.json",
+      "p": "Edita <code>~/.cursor/mcp.json</code> para todos los proyectos, o <code>.cursor/mcp.json</code> dentro de un proyecto concreto."
+    },
+    {
+      "h": "Añade el servidor",
+      "p": "Añade la entrada de abajo en <code>mcpServers</code>. El campo que Cursor espera aquí es <code>url</code>."
+    },
+    {
+      "h": "Autoriza",
+      "p": "Cursor te pide iniciar sesión con OAuth. Autoriza con mcpemails y aprueba los permisos que quieres que tenga el editor."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "La configuración de proyecto y la global son archivos distintos, y existen los dos",
+      "p": "Un servidor en <code>~/.cursor/mcp.json</code> te acompaña a todos los proyectos; uno en <code>.cursor/mcp.json</code> pertenece solo a ese repositorio. El correo suele ser algo tuyo, no del repositorio, así que el archivo global es mejor sitio, y además mantiene la entrada fuera de un repo que otras personas clonan."
+    },
+    {
+      "h": "Un mcp.json de proyecto es un archivo que podrías confirmar en el repo sin querer",
+      "p": "La entrada en sí no contiene ningún secreto, solo una URL pública, y Cursor guarda los tokens OAuth por su cuenta en lugar de escribirlos aquí. Eso cambia en cuanto alguien sustituye la entrada OAuth por una clave de API bearer escrita en línea. Si vas por la vía de la clave, mantenla fuera de cualquier archivo confirmado y revoca toda clave que haya llegado a subirse: las claves se revocan desde Dashboard, API Keys con un clic."
+    },
+    {
+      "h": "Dale al editor menos de lo que le darías a una app de correo",
+      "p": "Un agente de programación con <code>delete:email</code> es un poder extraño para una herramienta cuyo trabajo principal es refactorizar. Los permisos de lectura, búsqueda y borradores cubren casi cualquier flujo de trabajo en un editor. Siempre puedes emitir una segunda conexión, más amplia, para el asistente con el que de verdad gestionas el correo."
+    }
+  ],
+  "limits": [
+    "Las solicitudes están limitadas a 100 por minuto, 1.000 por hora y 10.000 al día por clave, además del tope de acciones facturables de tu plan.",
+    "El servidor funciona solo por petición y respuesta. No hay webhooks ni eventos iniciados por el servidor, así que el correo nuevo nunca despierta a tu agente por sí solo. Para reaccionar al correo entrante, consulta periódicamente según un horario.",
+    "El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, así que un token revocado o un cambio de contraseña del buzón corta el acceso de inmediato."
+  ],
+  "faq": [
+    {
+      "q": "¿Cómo conecto el correo a Cursor?",
+      "a": "Añade una entrada en mcpServers de ~/.cursor/mcp.json con la url https://mcpemails.com/api/mcp y completa el inicio de sesión OAuth que te pide Cursor. A partir de ahí Cursor tiene herramientas para leer, buscar, enviar, responder, reenviar, organizar y programar correo en todos los buzones que tengas conectados."
+    },
+    {
+      "q": "¿Necesito una clave de API para Cursor?",
+      "a": "No. Cursor ejecuta el flujo OAuth en el navegador contra este servidor, registrándose de forma dinámica y autorizándose con PKCE, así que el archivo de configuración no contiene nada secreto. Una clave de API bearer sigue siendo una opción para configuraciones con scripts o sin interfaz gráfica."
+    },
+    {
+      "q": "¿Por qué aquí el campo se llama url y en Windsurf serverUrl?",
+      "a": "Porque los dos clientes eligieron esquemas de configuración distintos para la misma idea. Cursor lee url dentro de mcpServers, Windsurf lee serverUrl, VS Code quiere type y url dentro de servers, y Gemini CLI quiere httpUrl. El endpoint es idéntico en los cuatro; solo cambia el nombre de la clave, y copiar un fragmento de un cliente a otro es el motivo habitual de que una configuración no haga nada sin avisar."
+    },
+    {
+      "q": "¿Qué buzones puede alcanzar Cursor de esta forma?",
+      "a": "Gmail con el inicio de sesión de Google; iCloud, Fastmail, Yahoo, Zoho y Yandex con una contraseña de aplicación; y cualquier otro buzón que hable IMAP y SMTP en los puertos estándar. El cliente los ve todos a través de la misma conexión: tu agente llama primero a inbox_list para descubrir cada buzón conectado y su id, así que no hay UUID que pegar en ningún sitio."
+    },
+    {
+      "q": "¿Puede Cursor enviar correo sin que yo lo vea?",
+      "a": "Solo si tú lo permites. El envío depende del permiso send:email, así que una clave o un token sin ese permiso no puede enviar nada. Además, el propietario de una bandeja puede exigir aprobación humana en el panel, que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera."
+    },
+    {
+      "q": "¿Se guarda mi correo en los servidores de mcpemails?",
+      "a": "No. Cada mensaje se obtiene en vivo de tu proveedor para la solicitud que lo pidió y se entrega directamente a tu cliente. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, para que las llamadas futuras puedan autenticarse. Eliminar la bandeja en el panel, o revocar el acceso en tu proveedor, corta la conexión al instante."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a Cursor una bandeja real",
+    "sub": "Cuatro líneas de configuración, un inicio de sesión. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/api/mcp/route.ts",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://code.claude.com/docs/en/mcp",
+    "docs/token-cost/research-spec.md"
+  ],
+  "meta": {
+    "title": "Conecta el correo a Claude Code: MCP en un comando",
+    "description": "Añade una bandeja real a la CLI de Claude Code con claude mcp add. OAuth en la terminal, sin clave de API; lee, busca, envía y programa correo desde tu shell. Una bandeja gratis."
+  },
+  "hero": {
+    "eyebrow": "Claude Code + correo",
+    "titleLine1": "Conecta tu bandeja a Claude Code",
+    "titleLine2": "con un solo comando",
+    "lead": "Dale un buzón real a la CLI en la que ya vives. Clasifica el correo de la noche antes del standup, envía una nota de versión o convierte un hilo en una incidencia, sin salir de la terminal.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "OAuth en la terminal, sin clave de API",
+    "meta2": "Correo obtenido en vivo, nunca almacenado",
+    "answer": "Ejecuta claude mcp add --transport http mcpemails https://mcpemails.com/api/mcp y autentícate en el navegador cuando Claude Code te lo pida. Esa es toda la configuración: sin clave de API y sin archivo de configuración que editar a mano."
+  },
+  "method": {
+    "title": "Cómo se conecta Claude Code: OAuth, sin clave de API",
+    "body": "Claude Code ejecuta el flujo OAuth estándar de MCP contra este servidor. Se registra solo mediante <b>registro dinámico de clientes RFC 7591</b>, así que no hay ningún client ID que crear, y se autoriza con <b>código de autorización más PKCE</b> usando S256. Nunca se transmite un secreto de cliente, y el token solo lleva los permisos que apruebas en nuestra pantalla de consentimiento. El token de acceso que recibe dura una hora y se renueva solo; aparece en Dashboard, API Keys como <code>OAuth:</code> seguido del nombre del cliente, y ahí es donde revocas la conexión."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis y conecta un buzón",
+      "p": "Regístrate en mcpemails.com, sin tarjeta, y luego ve a Dashboard, Inboxes, Connect Inbox. Gmail se conecta con el inicio de sesión de Google en un clic; iCloud, Fastmail, Yahoo, Zoho y Yandex requieren una contraseña de aplicación; cualquier otro se conecta por IMAP y SMTP estándar. El plan gratuito incluye una bandeja, para siempre."
+    },
+    {
+      "h": "Añade el servidor",
+      "p": "Ejecuta el comando de abajo. <code>--transport http</code> es el transporte Streamable HTTP, que es el que habla este servidor."
+    },
+    {
+      "h": "Autentícate",
+      "p": "Ejecuta <code>/mcp</code> dentro de una sesión de Claude Code, elige este servidor y sigue el flujo en el navegador. Si el navegador no se abre solo, copia la URL que imprime."
+    },
+    {
+      "h": "Pide algo",
+      "p": "Prueba con \"resume todo lo no leído de hoy\". Claude Code llama primero a <code>inbox_list</code> para descubrir tus buzones, así que no hay ids que pegar."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Claude Code aplaza las definiciones de herramientas MCP, y aquí eso es una ventaja",
+      "p": "Por defecto, Claude Code carga solo los nombres de las herramientas y las instrucciones del servidor al iniciar la sesión, y obtiene el esquema completo cuando lo necesita. En la práctica, añadir este servidor cuesta una fracción del contexto que costaría un servidor MCP ingenuo, y una herramienta que nunca usas nunca te cuesta su esquema."
+    },
+    {
+      "h": "Limita la conexión a lo que necesita la sesión",
+      "p": "La pantalla de consentimiento OAuth decide qué puede hacer la CLI durante toda la vida del token. Una sesión de programación que debe leer correo pero nunca enviarlo es un token sin <code>send:email</code>. Si más adelante quieres más, vuelve a conectar y aprueba el conjunto más amplio; nada escala por sí solo."
+    },
+    {
+      "h": "Un bucle de agente con permiso de envío es una combinación que conviene pensar",
+      "p": "Claude Code funciona sin supervisión durante largos ratos, que es justo cuando un envío accidental hace más daño. Para eso hay dos interruptores: deja <code>send:email</code> fuera del token, o activa la aprobación humana en el panel para que cada envío, respuesta, reenvío y envío programado espere a una persona. La aprobación es por bandeja y se aplica sea cual sea el cliente que hizo la llamada."
+    }
+  ],
+  "limits": [
+    "Las solicitudes están limitadas a 100 por minuto, 1.000 por hora y 10.000 al día por clave, además del tope de acciones facturables de tu plan.",
+    "El servidor funciona solo por petición y respuesta. No hay webhooks ni eventos iniciados por el servidor, así que el correo nuevo nunca despierta a tu agente por sí solo. Para reaccionar al correo entrante, consulta periódicamente según un horario.",
+    "El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, así que un token revocado o un cambio de contraseña del buzón corta el acceso de inmediato.",
+    "El flujo OAuth necesita un navegador una vez. En una máquina sin interfaz gráfica, añade el servidor con una clave de API en un encabezado Authorization y sáltate el flujo por completo. Si ahí sí quieres OAuth, <code>--callback-port</code> fija el callback en un puerto que puedas redirigir."
+  ],
+  "faq": [
+    {
+      "q": "¿Cómo conecto el correo a Claude Code?",
+      "a": "Añade este servidor MCP por URL: claude mcp add --transport http mcpemails https://mcpemails.com/api/mcp. Luego ejecuta /mcp en una sesión y completa el inicio de sesión en el navegador. A partir de ahí Claude Code tiene herramientas para leer, buscar, enviar, responder, reenviar, organizar y programar correo."
+    },
+    {
+      "q": "¿Puedo usar una clave de API en lugar de OAuth?",
+      "a": "Sí. Claude Code acepta un encabezado en el comando add, así que al pasar un encabezado Authorization con una clave bearer de Dashboard, API Keys te saltas el navegador por completo. Es la opción correcta en una máquina sin interfaz gráfica o en CI, donde no hay dónde completar un inicio de sesión."
+    },
+    {
+      "q": "¿Funciona en un devcontainer o por SSH?",
+      "a": "Sí, con la salvedad de que el flujo OAuth necesita un navegador una vez. O completas el inicio de sesión donde haya un navegador, o añades el servidor con un encabezado de clave de API bearer y te saltas el flujo. Todo lo demás es HTTPS normal hacia un único endpoint."
+    },
+    {
+      "q": "¿Qué buzones puede alcanzar Claude Code de esta forma?",
+      "a": "Gmail con el inicio de sesión de Google; iCloud, Fastmail, Yahoo, Zoho y Yandex con una contraseña de aplicación; y cualquier otro buzón que hable IMAP y SMTP en los puertos estándar. El cliente los ve todos a través de la misma conexión: tu agente llama primero a inbox_list para descubrir cada buzón conectado y su id, así que no hay UUID que pegar en ningún sitio."
+    },
+    {
+      "q": "¿Puede Claude Code enviar correo sin que yo lo vea?",
+      "a": "Solo si tú lo permites. El envío depende del permiso send:email, así que una clave o un token sin ese permiso no puede enviar nada. Además, el propietario de una bandeja puede exigir aprobación humana en el panel, que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera."
+    },
+    {
+      "q": "¿Se guarda mi correo en los servidores de mcpemails?",
+      "a": "No. Cada mensaje se obtiene en vivo de tu proveedor para la solicitud que lo pidió y se entrega directamente a tu cliente. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, para que las llamadas futuras puedan autenticarse. Eliminar la bandeja en el panel, o revocar el acceso en tu proveedor, corta la conexión al instante."
+    }
+  ],
+  "ctaBand": {
+    "title": "Lleva tu bandeja a la terminal",
+    "sub": "Un comando, un inicio de sesión en el navegador. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

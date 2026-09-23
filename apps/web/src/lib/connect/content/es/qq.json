@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://help.mail.qq.com/detail/106/985",
+    "https://cloud.tencent.com/developer/article/2457378",
+    "https://www.laifa.xin/en/youxiang/106-tengxun-qqyouxiang-tencent-personal-email"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Código de autorización (授权码)",
+    "helpUrl": "https://help.mail.qq.com/detail/106/985",
+    "usernameForm": "Tu dirección completa, con el dominio: 123456789@qq.com, o name@foxmail.com si usas el alias.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta QQ Mail a Claude con un código de autorización",
+    "description": "Conecta QQ Mail y Foxmail a Claude, Cursor o cualquier cliente MCP por IMAP en imap.qq.com:993. Requiere un código de autorización de 16 caracteres, no tu contraseña."
+  },
+  "hero": {
+    "eyebrow": "QQ Mail + IA",
+    "titleLine1": "Conecta QQ Mail a Claude,",
+    "titleLine2": "Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA un buzón de QQ real. Lee, busca, envía, responde, programa y organiza correo por IMAP con un código de autorización de Tencent, en todos los clientes MCP y no solo en uno.",
+    "answer": "Claude no puede llegar a QQ Mail por su cuenta. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.qq.com, puerto 993, autenticándose con el código de autorización de 16 caracteres (授权码) que Tencent emite para clientes de terceros, y no con tu contraseña de QQ. Tienes que activar el servicio POP3/IMAP/SMTP dentro de QQ Mail y generar ese código antes de que ningún cliente pueda iniciar sesión, y el mismo código sirve tanto para tu dirección @qq.com como para tu alias @foxmail.com. Una bandeja es gratis.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Código de autorización de 16 caracteres, no tu contraseña",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta QQ Mail: IMAP y un código de autorización de 16 caracteres",
+    "body": "QQ Mail sirve IMAP en <code>imap.qq.com</code>, puerto 993, sobre TLS, y SMTP en <code>smtp.qq.com</code>, puerto 465, también con TLS implícito. Tencent no deja que un cliente de correo se autentique con la contraseña de tu cuenta de QQ. Activas el servicio POP3/IMAP/SMTP dentro de QQ Mail y Tencent genera un <b>授权码</b>, un código de autorización de 16 caracteres que hace de contraseña para cada cliente de terceros y cada API que conectes. Foxmail no es un servicio aparte: un alias <code>@foxmail.com</code> es el mismo buzón de Tencent, al que se llega por los mismos dos nombres de servidor y con el mismo código."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y sigue siendo gratis, sin tarjeta. Deja la pestaña abierta; dentro de dos pasos pegarás en ella el código de autorización de QQ."
+    },
+    {
+      "h": "Activa el servicio POP3/IMAP/SMTP en QQ Mail",
+      "p": "Abre QQ Mail en la web y ve a 设置 (Configuración), luego a 账号与安全 (Cuenta y seguridad) y a 安全设置 (Ajustes de seguridad). Las versiones antiguas de la interfaz ponen el mismo control en 设置 y luego 账户, en la línea que empieza por POP3/IMAP/SMTP. Activa el servicio. Mientras no esté activado, imap.qq.com rechaza cualquier intento de inicio de sesión, envíes la contraseña que envíes."
+    },
+    {
+      "h": "Genera el 授权码 y pégalo en mcpemails",
+      "p": "Con el servicio activado, haz clic en 生成授权码 (generar código de autorización) y completa la verificación de identidad que pide Tencent, que es tu contraseña de QQ o un escaneo desde la app de QQ o de WeChat. Tencent muestra el código de 16 caracteres una sola vez y no vuelve a mostrarlo. Cópialo, elige IMAP / SMTP en mcpemails, introduce tu dirección de QQ completa y pega el código en el campo de contraseña. Los servidores ya vienen rellenados."
+    },
+    {
+      "h": "Pega la URL MCP en tu cliente de IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente podrá leer, buscar, enviar, responder, reenviar, programar y organizar ese buzón de QQ."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Tu contraseña de QQ se rechaza a propósito, y el error parece una errata",
+      "p": "Tencent exige el código de autorización para todos los clientes de terceros, así que enviar la contraseña de tu cuenta de QQ produce un fallo de autenticación que parece exactamente una contraseña incorrecta. En el lado SMTP vuelve como un error <code>535</code>. Es con diferencia el motivo más común por el que falla una conexión con QQ Mail, y por mucho que vuelvas a escribir la contraseña de la cuenta no se va a arreglar. Genera el 授权码 y usa eso."
+    },
+    {
+      "h": "@qq.com y @foxmail.com son un solo buzón y un solo código",
+      "p": "Tencent da un alias de Foxmail junto a tu dirección numérica de QQ, y la gente a menudo supone que Foxmail es un proveedor aparte con sus propios servidores. No lo es. El alias de Foxmail está en el mismo buzón, se autentica contra <code>imap.qq.com</code> y <code>smtp.qq.com</code> y usa el mismo código de autorización. Conéctalo una vez; no intentes conectarlo dos veces como si fueran dos cuentas."
+    },
+    {
+      "h": "QQ Mail no anuncia SPECIAL-USE, y sus carpetas tienen nombres en chino",
+      "p": "El servidor IMAP de QQ omite la extensión SPECIAL-USE, así que un cliente no puede preguntar qué carpeta es la de Enviados y cuál es la Papelera. Las carpetas se identifican por nombre, y en una cuenta en chino esos nombres son 已发送 (Enviados), 已删除 (Eliminados), 草稿箱 (Borradores) y 垃圾邮件 (Spam). Si tu agente archiva un mensaje en un sitio inesperado, indica la carpeta de destino de forma explícita en lugar de confiar en la función."
+    }
+  ],
+  "limits": [
+    "Tencent no publica un límite de envío SMTP por buzón. Unos pocos mensajes al día no llaman la atención, pero un envío masivo desde un código de autorización recién generado puede activar controles de riesgo que pausan el correo saliente durante un tiempo.",
+    "El servidor SMTP de QQ anuncia un tamaño máximo de mensaje de unos 70 MB, así que un reenvío con adjuntos más grandes se rechaza en el momento del envío en lugar de quedar en cola.",
+    "imap.qq.com y smtp.qq.com se sirven desde China continental. Cada petición que hace tu agente cruza ese enlace, así que una búsqueda en un buzón grande desde fuera de China es notablemente más lenta que la misma búsqueda contra un servidor europeo o norteamericano."
+  ],
+  "faq": [
+    {
+      "q": "¿Claude funciona con QQ Mail?",
+      "a": "No directamente. Claude no tiene un conector integrado para QQ Mail y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como mcpemails a tu buzón de QQ le da a Claude acceso para leer, buscar, enviar, responder, reenviar, programar y organizar, y la misma conexión funciona en Cursor y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuál es la configuración IMAP y SMTP de QQ Mail?",
+      "a": "IMAP es imap.qq.com en el puerto 993 con TLS implícito. SMTP es smtp.qq.com en el puerto 465, también con TLS implícito. Inicia sesión con tu dirección de QQ completa y el código de autorización de 16 caracteres, no con tu contraseña de QQ. Ambos servidores se verificaron con una conexión TLS en vivo en la fecha que se indica en esta página."
+    },
+    {
+      "q": "¿Dónde consigo el código de autorización de QQ Mail?",
+      "a": "En QQ Mail en la web, abre 设置, luego 账号与安全 y 安全设置, y activa el servicio POP3/IMAP/SMTP. Tencent te ofrece entonces 生成授权码 y te pide confirmar tu identidad con tu contraseña de QQ o un escaneo desde la app de QQ o de WeChat. El código de 16 caracteres aparece una sola vez, así que cópialo antes de cerrar el cuadro de diálogo."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de QQ Mail?",
+      "a": "Por dos motivos, en este orden: el servicio POP3/IMAP/SMTP sigue desactivado en la configuración de QQ Mail, o estás usando la contraseña de tu cuenta de QQ en lugar del código de autorización. Tencent bloquea la contraseña de la cuenta para los clientes de terceros sea cual sea tu configuración de seguridad, y el fallo resultante es idéntico al de una contraseña mal escrita."
+    },
+    {
+      "q": "¿Funciona con una dirección de Foxmail?",
+      "a": "Sí. Una dirección @foxmail.com es un alias de Tencent en el mismo buzón que tu dirección @qq.com. Usa los mismos servidores, el mismo código de autorización y la misma configuración. Puedes enviar desde cualquiera de las dos direcciones una vez conectado el buzón."
+    },
+    {
+      "q": "¿Se almacena mi correo de QQ en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de QQ Mail por IMAP en cada petición y se pasan a tu cliente de IA. Las credenciales se cifran en reposo; el cuerpo de los mensajes no se conserva después de la petición que lo solicitó."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de QQ Mail",
+    "sub": "Conecta QQ Mail en minutos con tu código de autorización. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/programme/passwort-definition",
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/programm-passwort-verwalten",
+    "https://www.telekom.de/hilfe/vertrag-meine-daten/login-daten-passwoerter/welche-passwoerter-fuer-welchen-zweck",
+    "https://www.netzwelt.de/galerie/19784-e-mail-passwort-e-mail-adressen-t-online-einrichten.html"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Passwort für E-Mail-Programme（邮件程序密码）",
+    "helpUrl": "https://www.telekom.de/hilfe/apps-dienste/e-mail/programm-passwort-verwalten",
+    "usernameForm": "包含域名的完整地址：name@t-online.de。较老的账户有时仍用 12 位 T-Online 号码认证，但 Telekom 如今文档中写的是地址。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "在 Claude 中使用 T-Online 邮箱：单独的邮件密码",
+    "description": "通过 secureimap.t-online.de:993 将 T-Online 邮箱连接到 Claude 及任意 MCP 客户端。需要单独的 Passwort für E-Mail-Programme，而不是 Telekom 登录密码。"
+  },
+  "hero": {
+    "eyebrow": "T-Online + AI",
+    "titleLine1": "将你的 T-Online 邮箱连接到",
+    "titleLine2": "Claude、Cursor、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Telekom 收件箱。使用 Telekom 为邮件程序签发的专用密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行连接 T-Online 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 secureimap.t-online.de 的 993 端口，使用 Telekom 为邮件客户端签发的单独 Passwort für E-Mail-Programme（邮件程序密码）而不是 Telekom 登录密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。如果你从未创建过这个密码，那么从来没有任何客户端能登录这个邮箱，而失败看起来就像输错了字。一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "需要 Telekom 邮件程序密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "T-Online 如何连接：IMAP 与第二个单独的密码",
+    "body": "Telekom 在 <code>secureimap.t-online.de</code> 的 993 端口通过隐式 TLS 提供 IMAP，在 <code>securesmtp.t-online.de</code> 的 465 端口提供 SMTP 提交。这两个名称背后都是 IMAP 代理，而不是你直接对话的邮箱服务器，这解释了下文的几个怪癖。几乎所有人都会弄错的是凭据。Telekom 在一个账户上保存两个密码：用于 Kundencenter 和 telekom.de 的 <b>Telekom Login</b> 密码，以及第二个 <b>Passwort für E-Mail-Programme</b>，按 Telekom 自己的说法，它是 <b>für das Verwenden eines E-Mail-Programms</b>（用于使用邮件程序）。只有第二个能在 <code>secureimap.t-online.de</code> 上通过认证。Telekom 建议两者永远不要相同，而在很多账户上，邮件程序密码在有人创建之前根本不存在。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "创建 Passwort für E-Mail-Programme",
+      "p": "在 email.t-online.de 的 E-Mail Center 中，打开 <b>Menü</b>，然后是 <b>Einstellungen</b>，再点击左栏的 <b>Passwörter</b>。在 <b>E-Mail-Passwort, für das Verwenden eines E-Mail-Programms</b> 标题下，选择 <b>E-Mail-Passwort ändern</b>，输入两次新密码并保存。同一凭据也可以在 Kundencenter 中通过 <b>Profil</b>、<b>Login-Daten und Passwörter</b>、<b>weitere Passwörter</b> 找到。即使你以为已经有了，也请重新设置：很多账户从未创建过它。"
+    },
+    {
+      "h": "粘贴到 mcpemails",
+      "p": "选择 IMAP / SMTP，输入完整地址（例如 name@t-online.de），粘贴邮件程序密码。Telekom 的服务器和端口已自动填好，并已通过实时 TLS 连接验证。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Telekom 登录密码会被拒绝，这是有意设计的",
+      "p": "这是最常见的 T-Online 连接失败，它产生的是一个普通的认证错误，其中没有任何说明原因的信息。Telekom 把账户分成用于 telekom.de 和 Kundencenter 的登录密码，以及用于 IMAP、POP3 和 SMTP 的单独的 <b>Passwort für E-Mail-Programme</b>。邮件服务器只接受后者。Telekom 明确建议两者应该不同，所以即使把它们设成同一个字符串也不是预期的解决办法；请创建邮件程序密码，然后在连接的收信端和发信端都使用它。"
+    },
+    {
+      "h": "IMAP 代理在登录前完全不声明任何 AUTH 机制",
+      "p": "Telekom 返回的能力列表是 <code>IMAP4 IMAP4rev1 QUOTA LITERAL+ NAMESPACE UIDPLUS IDLE SORT</code>。其中没有 <code>AUTH=PLAIN</code>，没有 <code>AUTH=LOGIN</code>，也没有 <code>SASL-IR</code>。实际上服务器期望的是普通的 IMAP <code>LOGIN</code> 命令，而不是 SASL <code>AUTHENTICATE</code> 交换。那些枚举声明的 SASL 机制、在列表为空时拒绝继续的客户端库，在发送凭据之前就放弃了，这就是为什么有些 IMAP 工具报告 T-Online 无法访问，而 Thunderbird 却能毫无怨言地连接同一个邮箱。mcpemails 支持纯 LOGIN 路径，所以这个问题已经替你处理好了。"
+    },
+    {
+      "h": "德语文件夹名的邮箱，没有 MOVE 也没有 SPECIAL-USE",
+      "p": "服务器不声明 IMAP <code>MOVE</code> 扩展，因此归档一封邮件要经过复制、更新标记再删除，而不是一条原子命令。它也缺少 <code>SPECIAL-USE</code>，这意味着已发送、草稿、已删除和垃圾邮件文件夹按名称而不是按用途识别。T-Online 邮箱通常将它们命名为 <b>Gesendet</b>、<b>Entwürfe</b>、<b>Papierkorb</b> 和 <b>Spam</b>，所以如果代理找不到你的归档或已发送文件夹，请在指令中写明名称。"
+    },
+    {
+      "h": "发信上限为每封 50 MB",
+      "p": "<code>securesmtp.t-online.de</code> 声明的最大邮件大小为 52,428,800 字节。这是整封邮件编码后的大小，所以 base64 附件大约比其磁盘大小多出三分之一。被要求转发大附件的代理会收到明确的 SMTP 拒绝，而不是慢慢发送。"
+    }
+  ],
+  "limits": [
+    "由于服务器不支持 MOVE，移动操作不是原子的。如果连接在操作中途断开，一封邮件可能会短暂同时存在于两个文件夹中。",
+    "Telekom 将邮件程序密码限定用于邮件客户端。它无法打开 Kundencenter，更换 Telekom 登录密码也不会更换它，所以两者需要分别维护。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 T-Online 邮箱吗？",
+      "a": "不能单独使用。Claude 没有内置的 Telekom 或 T-Online 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "T-Online 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 secureimap.t-online.de，端口 993，隐式 TLS。SMTP 为 securesmtp.t-online.de，端口 465，同样是隐式 TLS。使用完整的 t-online.de 地址和 Passwort für E-Mail-Programme 登录。两台服务器均已通过实时 TLS 连接确认，由所有 T-Online 邮箱共享。"
+    },
+    {
+      "q": "为什么邮件程序拒绝我的 T-Online 密码？",
+      "a": "几乎总是因为你输入的是 Telekom 登录密码。Telekom 签发了第二个凭据 Passwort für E-Mail-Programme，只有它能在邮件服务器上认证。请在 E-Mail Center 的 Einstellungen、Passwörter 中，或在 Kundencenter 的 Profil、Login-Daten und Passwörter、weitere Passwörter 中创建或重置它。"
+    },
+    {
+      "q": "在哪里创建 Passwort für E-Mail-Programme？",
+      "a": "登录 email.t-online.de 的 E-Mail Center，打开 Menü，然后是 Einstellungen，再到 Passwörter。标题为 E-Mail-Passwort, für das Verwenden eines E-Mail-Programms 的区块中有一个修改按钮。输入两次新密码并保存。在你的邮件客户端和 mcpemails 中，收信和发信服务器都使用这个值。"
+    },
+    {
+      "q": "这适用于 magenta.de 和其他 Telekom 邮件域名吗？",
+      "a": "任何位于 Telekom E-Mail Center 中的邮箱，都使用同一个邮件程序密码，在同样的 secureimap.t-online.de 和 securesmtp.t-online.de 上认证。关键在于该邮箱是否是 Telekom E-Mail Center 邮箱，而不在于 @ 后面的文字。"
+    },
+    {
+      "q": "我的 T-Online 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 Telekom 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 T-Online 收件箱",
+    "sub": "几分钟即可连接你的 Telekom 邮箱。一个收件箱永久免费，无需信用卡。"
+  }
+}

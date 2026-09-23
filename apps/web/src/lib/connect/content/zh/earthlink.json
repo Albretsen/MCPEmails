@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://help.earthlink.net/portal/en/kb/articles/email-server-settings",
+    "https://help.earthlink.net/portal/en/kb/articles/set-up-earthlink-email-on-a-new-mobile-device"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://help.earthlink.net/portal/en/kb/articles/email-server-settings",
+    "usernameForm": "你的完整地址，无论使用哪个旧域名：name@earthlink.net、name@mindspring.com、name@peoplepc.com 或 name@ix.netcom.com。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 EarthLink 与 Mindspring 邮箱连接到 Claude",
+    "description": "通过 imap.earthlink.net:993 的 IMAP 将 EarthLink 邮箱连接到 Claude 及任意 MCP 客户端。邮箱密码即可使用；外发邮件使用另一台服务器。"
+  },
+  "hero": {
+    "eyebrow": "EarthLink Mail + AI",
+    "titleLine1": "将 EarthLink 收件箱连接到",
+    "titleLine2": "Claude、Cursor 及任意 MCP 客户端",
+    "lead": "EarthLink 仍在运行自己的邮件服务器，它们比大部分互联网都要古老，却依然在响应。mcpemails 通过 IMAP 连接其中一台，让你的 AI 代理能读取、搜索、发送、回复和归档这些邮件。",
+    "answer": "Claude 无法自行访问 EarthLink 邮箱。mcpemails 是一个托管 MCP 服务器，通过 imap.earthlink.net 端口 993 的 IMAP 与之连接，使用你的完整邮箱地址和普通邮箱密码登录。EarthLink 不签发应用专用密码，也没有需要打开的客户端访问开关，所以你已经在用的凭据就是可用的凭据；同样的设置也适用于 EarthLink 仍在托管的 mindspring.com、peoplepc.com 和 ix.netcom.com 地址。外发邮件使用另一个主机名：smtpauth.earthlink.net，端口 587。1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "邮箱密码即可，无需应用专用密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "EarthLink 如何连接：IMAP 收信，另一台需认证的 SMTP 发信",
+    "body": "EarthLink 为其承载的所有域名只公布一台 IMAP 服务器。<code>imap.earthlink.net</code> 在端口 993 上通过 TLS 响应，用户名是保留自身域名的完整地址，所以 Mindspring 或 PeoplePC 地址原样填入即可。人们常出错的是发信部分：它与收信服务器名称不同。邮件提交在 <code>smtpauth.earthlink.net</code> 端口 <b>587</b> 上以 STARTTLS 进行；之所以有这个主机名，是因为 EarthLink 过去为自己网络内的客户运行了一个无需认证的独立转发服务器，而把需要认证的那台放在了单独的名称下。EarthLink 的文档说明，两者都使用你的完整邮箱地址和密码，也没有需要创建的应用专用密码。只有 POP 会因域名而异：EarthLink 文档列出了按域名区分的 POP 服务器，例如 <code>pop.mindspring.com</code>，这就是为什么一些旧的设置指南看起来与域名相关，而 IMAP 一侧并非如此。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "核对邮箱本身的密码，而不是账单登录密码",
+      "p": "用你要连接的地址登录 EarthLink 网页邮箱，确认密码在那里可用。EarthLink 账户常常在一个订阅下有多个邮箱，每个都有自己的密码，而你付费账户的密码不一定就是你要连接的那个地址的密码。"
+    },
+    {
+      "h": "输入完整地址和该密码",
+      "p": "在 mcpemails 中选择 IMAP / SMTP，按原样输入地址，包括 <code>name@mindspring.com</code> 这样的形式。下方的 EarthLink 服务器和端口已预填，并经实时 TLS 连接验证，包括端口 587 上单独的发信服务器。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "EarthLink 不声明任何可用的 SASL 机制，严格的客户端会直接放弃登录",
+      "p": "EarthLink 在登录前返回的能力列表提供 <code>AUTH=CRAM-MD5</code>、<code>AUTH=EL-TAC</code> 和 <code>AUTH=EL-VOICE</code>。后两者是 EarthLink 自己的机制，没有任何普通邮件客户端实现它们。列表中根本没有 <code>AUTH=PLAIN</code>，也没有 <code>AUTH=LOGIN</code>。因此，按服务器声明来选择 SASL 机制的客户端找不到可用的机制，在根本没发送密码的情况下就报告认证失败。真正可行的是普通的 IMAP <code>LOGIN</code> 命令，服务器会接受它，因为它没有声明 LOGINDISABLED。mcpemails 会退回使用这个命令。这是本页最有用的一条信息，其他任何 EarthLink 设置指南都没有提到。"
+    },
+    {
+      "h": "发信服务器不是 imap 或 smtp.earthlink.net",
+      "p": "它是 <code>smtpauth.earthlink.net</code>，端口 587，使用 STARTTLS，而不是 465 上的隐式 TLS。根据收信服务器照葫芦画瓢的指南，或因为大多数服务商用 465 就假定用 465 的指南，得出的配置能连上收信，却在第一次发信时悄无声息地失败。如果邮件能收到却发不出去，原因就在这里。"
+    },
+    {
+      "h": "也没有 SASL-IR，因此认证是两步交互",
+      "p": "EarthLink 不声明 SASL-IR，所以会拒绝随 AUTHENTICATE 命令一起发送凭据的一步式形式。再加上上面的机制列表，对 EarthLink 的认证尝试可能以两种不同的方式失败，而两者看起来都像密码错误。mcpemails 会重试两步交互，而不是把第一次拒绝当作最终结果。"
+    },
+    {
+      "h": "该服务器没有 IDLE、没有 MOVE、没有 SPECIAL-USE",
+      "p": "EarthLink 的 IMAP 服务很老，这从它的能力列表就能看出来。没有 IDLE 就没有推送，新邮件只能通过轮询发现。没有 MOVE，归档一封邮件要依次执行 COPY、STORE 删除标记、EXPUNGE。没有 SPECIAL-USE，服务器从不说明哪个文件夹是 Sent 或 Trash，只能按名称匹配。它支持 UIDPLUS，这至少意味着复制后的邮件会报告其新 ID。"
+    }
+  ],
+  "limits": [
+    "EarthLink 的 SMTP 服务器声明的单封邮件大小上限为 50 MB，因此带更大附件的邮件在发出前就会被拒绝。",
+    "不支持 IDLE，因此新邮件是通过轮询发现的，而不是推送。",
+    "由于该服务器未实现 MOVE 和 SPECIAL-USE，移动操作不是原子的，文件夹角色按名称匹配。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 EarthLink 邮箱吗？",
+      "a": "不能直接使用。Claude 没有内置的 EarthLink 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 earthlink.net 或 mindspring.com 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "EarthLink 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.earthlink.net，端口 993，使用隐式 TLS。发信服务器为 smtpauth.earthlink.net，端口 587，使用 STARTTLS 并要求认证。两者均经实时 TLS 连接验证。EarthLink 自己的文档说明，两者都使用你的完整邮箱地址和邮箱密码。"
+    },
+    {
+      "q": "mindspring.com 和 peoplepc.com 地址使用相同的设置吗？",
+      "a": "就 IMAP 而言，是的。EarthLink 用同一台 imap.earthlink.net 服务器为其收购的旧域名提供服务，用户名就是带有自身域名的完整地址。POP 是例外：EarthLink 文档列出了按域名区分的 POP 主机名，例如 pop.mindspring.com，这就是为什么旧指南看起来与域名相关。"
+    },
+    {
+      "q": "EarthLink 需要应用专用密码吗？",
+      "a": "不需要。EarthLink 不签发应用专用密码，也没有创建它的页面。邮件客户端使用该邮箱的密码登录。如果正确的密码仍被拒绝，原因通常是认证机制而不是凭据，因为 EarthLink 在登录前不声明任何标准 SASL 机制。"
+    },
+    {
+      "q": "我的 EarthLink 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 EarthLink 实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 EarthLink 收件箱",
+    "sub": "只需你现有的邮箱密码。1 个收件箱永久免费，无需信用卡。"
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://www.xfinity.com/support/articles/third-party-email-access",
+    "https://www.xfinity.com/support/articles/email-only-faqs"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña del Xfinity ID",
+    "helpUrl": "https://www.xfinity.com/support/articles/third-party-email-access",
+    "usernameForm": "Tu dirección comcast.net completa, que normalmente es tu Xfinity ID.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta el correo Comcast Xfinity a Claude por IMAP",
+    "description": "Conecta el correo Comcast Xfinity a Claude y clientes MCP por IMAP en imap.comcast.net:993. Sin marcar Third Party Access Security, todo inicio de sesión falla."
+  },
+  "hero": {
+    "eyebrow": "Comcast Xfinity + IA",
+    "titleLine1": "Conecta el correo Comcast Xfinity",
+    "titleLine2": "a Claude, Cursor y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de comcast.net. Lee, busca, envía, responde, programa y organiza correo por IMAP con tu Xfinity ID, en todos los clientes MCP y no solo en uno.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de Comcast Xfinity. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.comcast.net en el puerto 993, iniciando sesión con tu dirección comcast.net completa y la contraseña de tu Xfinity ID. Xfinity bloquea todos los clientes de correo externos hasta que marcas Third Party Access Security en los ajustes de Xfinity Email, así que actívalo primero o la contraseña correcta seguirá siendo rechazada. La configuración lleva un par de minutos y una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "El acceso de terceros debe estar activado",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Xfinity: IMAP, una vez desbloqueado el acceso de terceros",
+    "body": "Comcast sirve IMAP en <code>imap.comcast.net</code> en el puerto 993 con TLS y SMTP en <code>smtp.comcast.net</code> en el puerto 465, también con TLS implícito. La credencial es la contraseña normal de tu Xfinity ID; no hay contraseña de aplicación que generar. El obstáculo es un ajuste, no un secreto. Xfinity tiene un interruptor llamado <b>Third Party Access Security</b> en los ajustes de correo, y solo está marcado en las cuentas que ya usaban un cliente externo. Para todos los demás está desactivado, y mientras lo esté el servidor rechaza cualquier inicio de sesión desde cualquier cliente con un error idéntico al de una contraseña incorrecta. Actívalo una vez, en el webmail, y las mismas credenciales que se rechazaban empiezan a funcionar."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
+    },
+    {
+      "h": "Marca Third Party Access Security en Xfinity Email",
+      "p": "Inicia sesión en Xfinity Email en connect.xfinity.com, haz clic en el icono de engranaje, elige <b>Settings</b>, luego <b>Security</b>, y marca la casilla de <b>Third Party Access Security</b>. Xfinity te advierte del riesgo de los clientes externos al hacerlo. Nada más de esta página funciona hasta que esa casilla esté marcada."
+    },
+    {
+      "h": "Introduce tu Xfinity ID y tu contraseña en mcpemails",
+      "p": "Elige IMAP / SMTP e introduce tu dirección <code>@comcast.net</code> completa y la contraseña de ese Xfinity ID. Los servidores de Comcast ya vienen rellenados. Si tu cuenta usa verificación en dos pasos, complétala antes en el webmail para que el inicio de sesión no quede pendiente."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Third Party Access Security está desactivado por defecto, y puede volver a desactivarse solo",
+      "p": "Si nunca has usado Outlook, Apple Mail o Thunderbird con este buzón, la casilla está sin marcar, y el propio artículo de Comcast lo dice. Los usuarios también cuentan que se desactiva de nuevo tras un restablecimiento forzado de contraseña. Así que cuando una conexión que ayer funcionaba empieza hoy a fallar con un error de autenticación, revisa esa casilla antes de tocar nada más. Está en connect.xfinity.com, en el icono de engranaje, Settings y luego Security."
+    },
+    {
+      "h": "Los antiguos clientes pierden el buzón si no inician sesión en el sitio web",
+      "p": "Si ya no contratas el servicio de Xfinity, Comcast solo conserva la dirección si habías iniciado sesión en el sitio web de Xfinity Email en los 90 días previos a la baja, y solo la mantiene activa si inicias sesión ahí al menos una vez cada nueve meses. El requisito se refiere al sitio web de Xfinity Email, así que no des por hecho que un agente que consulta por IMAP lo cumple. Inicia sesión desde un navegador un par de veces al año."
+    },
+    {
+      "h": "Sin SPECIAL-USE ni MOVE en el front end de Comcast",
+      "p": "El front end Dovecot de imap.comcast.net no anuncia SPECIAL-USE, así que un cliente no puede preguntar qué carpeta es Enviados y cuál es Papelera y tiene que identificarlas por nombre. También omite MOVE y UIDPLUS, así que archivar un mensaje se ejecuta como COPY, luego STORE de la marca de borrado y luego EXPUNGE, y el servidor no informa del id de la nueva copia. mcpemails hace todo esto por ti; por eso mover en Comcast no es una única operación atómica."
+    },
+    {
+      "h": "El servidor anuncia mecanismos OAuth que no puedes usar",
+      "p": "imap.comcast.net ofrece OAUTHBEARER y XOAUTH2 junto a PLAIN y LOGIN. Esos mecanismos OAuth son para los socios de Comcast y no para cualquiera que los pida, y no hay ninguna página de autoservicio donde un cliente obtenga un token. La autenticación por contraseña con el acceso de terceros activado es la vía que tienes disponible, y es la que usa mcpemails."
+    }
+  ],
+  "limits": [
+    "El servidor SMTP de Comcast anuncia un tamaño máximo de mensaje de unos 35 MB, así que un envío con adjuntos grandes se rechaza antes de salir.",
+    "Las funciones de las carpetas se identifican por nombre porque no se anuncia SPECIAL-USE, y los movimientos recurren a COPY más STORE más EXPUNGE porque MOVE no está implementado."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo Comcast Xfinity?",
+      "a": "No directamente. Claude no tiene un conector integrado para Comcast. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de comcast.net, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Comcast?",
+      "a": "IMAP es imap.comcast.net en el puerto 993 con TLS implícito. SMTP es smtp.comcast.net en el puerto 465, también con TLS implícito y con autenticación obligatoria. El nombre de usuario es tu dirección comcast.net completa. Ambos servidores se verificaron con una conexión TLS real en la fecha que indica esta página."
+    },
+    {
+      "q": "¿Por qué Xfinity rechaza mi contraseña en un cliente de correo?",
+      "a": "Casi siempre porque Third Party Access Security está desactivado. Xfinity lo deja desactivado en las cuentas que no usaban ya un cliente de correo externo, y mientras lo esté el servidor rechaza credenciales correctas. Marca la casilla en connect.xfinity.com, en el icono de engranaje, luego Settings y luego Security, y vuelve a intentarlo."
+    },
+    {
+      "q": "¿Necesito una contraseña de aplicación para el correo de Xfinity?",
+      "a": "No. Comcast no emite contraseñas específicas de aplicación. Un cliente de correo inicia sesión con la contraseña de tu Xfinity ID una vez activado el acceso de terceros. Si ves consejos sobre generar una contraseña de aplicación para comcast.net, describen el proceso de otro proveedor y en los ajustes de Xfinity no existe esa página."
+    },
+    {
+      "q": "¿Puedo conectar una dirección comcast.net después de darme de baja de Xfinity?",
+      "a": "Solo si el buzón sigue activo. Comcast permite a los antiguos clientes conservar la dirección si iniciaron sesión en el sitio web de Xfinity Email en los 90 días previos a la baja, y exige iniciar sesión ahí al menos una vez cada nueve meses para mantenerla. Un buzón cerrado no se puede conectar ni recuperar."
+    },
+    {
+      "q": "¿Se almacena mi correo de Comcast en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Comcast por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Comcast Xfinity",
+    "sub": "Marca el acceso de terceros y conéctala en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

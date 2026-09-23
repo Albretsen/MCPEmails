@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://frontier.com/helpcenter/internet/how-to-use-your-frontier-email-on-yahoo",
+    "https://help.yahoo.com/kb/SLN15241.html"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Contraseña de aplicación de Yahoo",
+    "helpUrl": "https://help.yahoo.com/kb/SLN15241.html",
+    "usernameForm": "Tu dirección de Frontier completa, como name@frontier.com. Ahora es tu nombre de inicio de sesión en Yahoo.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "El correo de Frontier funciona en Yahoo: conéctalo a Claude",
+    "description": "Frontier traspasó su correo a Yahoo en marzo de 2024. Conecta una bandeja frontier.com a Claude por IMAP en imap.frontier.com:993 con una contraseña de aplicación de Yahoo."
+  },
+  "hero": {
+    "eyebrow": "Frontier Mail + IA",
+    "titleLine1": "Conecta una bandeja de Frontier",
+    "titleLine2": "a Claude, Cursor y cualquier cliente MCP",
+    "lead": "Frontier dejó de gestionar su propio correo y traspasó el servicio a Yahoo. La dirección frontier.com sigue funcionando por IMAP, y mcpemails la conecta para que tu agente de IA pueda leer, buscar, enviar, responder y archivar ese correo.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de Frontier. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.frontier.com en el puerto 993, que sigue respondiendo aunque el servicio de correo y el soporte de Frontier los gestiona Yahoo desde el 20 de marzo de 2024. Como la cuenta detrás de la dirección es una cuenta de Yahoo, la credencial es una contraseña de aplicación de Yahoo generada desde la página de seguridad de la cuenta, no la contraseña que usas en el webmail. Una vez conectada, Claude, Cursor o cualquier otro cliente MCP puede leer, buscar, enviar y organizar ese correo, y una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña de aplicación de Yahoo, no la del webmail",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Frontier: un proxy IMAP delante de una cuenta de Yahoo",
+    "body": "El centro de ayuda de Frontier tiene ahora una sola instrucción sobre el correo: desde el 20 de marzo de 2024 su servicio de correo y el soporte los gestiona Yahoo, y se inicia sesión en login.yahoo.com. No publica nombres de servidor, ni puertos, ni ninguna guía para clientes. Los nombres de servidor <code>frontier.com</code>, sin embargo, no desaparecieron con la documentación. <code>imap.frontier.com</code> responde en el puerto 993 con TLS bajo un certificado para <code>*.frontier.com</code>, y se identifica como un <b>IMAP4rev1 proxy server</b> y no como Yahoo, así que con lo que hablas es un front end de Frontier que retransmite al buzón y no el servidor IMAP propio de Yahoo. La credencial viene del lado de Yahoo: una contraseña de aplicación creada en la página de seguridad de la cuenta de Yahoo, en External connections, que se usa en lugar de tu contraseña normal."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
+    },
+    {
+      "h": "Inicia sesión en Yahoo con tu dirección frontier.com",
+      "p": "Ve a login.yahoo.com e inicia sesión con la dirección completa <code>name@frontier.com</code> y tu contraseña actual. Es el paso al que ahora envía a todo el mundo el propio centro de ayuda de Frontier, y confirma que el buzón está activo antes de seguir."
+    },
+    {
+      "h": "Crea una contraseña de aplicación en External connections",
+      "p": "En la página de seguridad de la cuenta de Yahoo, busca <b>External connections</b> y elige <b>Create app password</b>. Llámala <code>mcpemails</code>, copia el código que aparece y pégalo en mcpemails junto con tu dirección frontier.com completa. Los servidores de Frontier de abajo ya vienen rellenados."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Frontier ya no publica ningún ajuste para clientes de correo, así que todas las guías que encuentres son de terceros",
+      "p": "Busca los ajustes IMAP de Frontier y te saldrá una docena de páginas muy seguras de sí mismas, ninguna de Frontier. El artículo del centro de ayuda de Frontier sobre el correo solo dice que Yahoo gestiona el servicio y enlaza al centro de soporte de Yahoo. Trata como no verificado cualquier nombre de servidor que veas en otro sitio. Los servidores de la tabla de esta página son aquellos con los que abrimos una conexión TLS real, que es una afirmación distinta y más sólida que copiar una lista de ajustes."
+    },
+    {
+      "h": "El proxy de Frontier es más limitado que el servidor de Yahoo que reciben otros socios",
+      "p": "AT&T, Cox y Rogers presentan el servidor IMAP propio de Yahoo, que anuncia MOVE, SPECIAL-USE, IDLE y UIDPLUS. El proxy de Frontier anuncia SASL-IR, UIDPLUS y poco más: sin MOVE, sin IDLE, sin SPECIAL-USE. En la práctica, archivar un mensaje se ejecuta como COPY, luego STORE de la marca de borrado y luego EXPUNGE en lugar de un solo comando, las funciones de carpeta como Enviados y Papelera se identifican por nombre en lugar de anunciarlas el servidor, y no hay push por IDLE, así que el correo nuevo se detecta consultando periódicamente. mcpemails se encarga de todo eso, pero por eso Frontier parece reaccionar más despacio que otras cuentas respaldadas por Yahoo."
+    },
+    {
+      "h": "Yahoo decide si puedes crear una contraseña de aplicación",
+      "p": "La creación de contraseñas de aplicación pasa primero por una comprobación de elegibilidad. Yahoo te dice que uses un navegador desde el que hayas iniciado sesión en Yahoo varios días seguidos y no una ventana privada, y afirma que atención al cliente no puede anular la comprobación. Si falta la opción <b>Create app password</b>, esa es la razón, y ni el soporte de Frontier ni el de Yahoo pueden darte una en su lugar."
+    },
+    {
+      "h": "Nuestra prueba llegó al servidor IMAP de Frontier pero no obtuvo respuesta de su servidor SMTP",
+      "p": "Publicamos lo que verificamos. El lado IMAP completó un handshake TLS y devolvió su banner de capacidades. El servidor SMTP en el puerto 465 no respondió a tiempo en la misma prueba, así que no tenemos una lista de capacidades verificada para el correo saliente de Frontier y no vamos a inventarla. Leer y buscar son las partes que podemos garantizar; si un envío falla, inicia sesión en Yahoo y revisa la cuenta ahí en lugar de suponer que los ajustes son incorrectos."
+    }
+  ],
+  "limits": [
+    "El proxy de Frontier no tiene MOVE ni SPECIAL-USE, así que mover no es atómico y las funciones de las carpetas se identifican por nombre. En un buzón con carpetas renombradas puede que haya que indicar la carpeta explícitamente.",
+    "Sin IDLE, así que el correo nuevo se descubre consultando periódicamente, no se recibe al instante.",
+    "El servidor SMTP de Frontier no respondió a nuestra prueba, así que el comportamiento del correo saliente en este proveedor es la única parte de la página que no hemos confirmado nosotros mismos."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de Frontier?",
+      "a": "No directamente. Claude no tiene un conector integrado para Frontier, y Frontier ya no gestiona el servicio de correo. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de frontier.com, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP de Frontier?",
+      "a": "IMAP es imap.frontier.com en el puerto 993 con TLS implícito, verificado con una conexión TLS real en la fecha que indica esta página. El nombre de usuario es tu dirección frontier.com completa y en el campo de contraseña va una contraseña de aplicación de Yahoo. Frontier ya no publica ajustes, así que cualquier otra lista que encuentres es una suposición de alguien."
+    },
+    {
+      "q": "¿Qué pasó con el correo de Frontier?",
+      "a": "Frontier dejó de gestionar el correo. Su centro de ayuda indica que desde el 20 de marzo de 2024 el servicio de correo y el soporte los gestiona Yahoo, y dirige a los clientes a iniciar sesión en login.yahoo.com y a llevar todas las consultas de soporte de correo a Yahoo. La dirección sigue siendo la misma; la cuenta que hay detrás es una cuenta de Yahoo."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de Frontier en un cliente de correo?",
+      "a": "Porque la cuenta es ahora una cuenta de Yahoo, y Yahoo exige una contraseña de aplicación a los clientes que no abren su propia ventana de inicio de sesión. La contraseña que funciona en el webmail se rechaza por IMAP. Crea una contraseña de aplicación en la página de seguridad de la cuenta de Yahoo, en External connections, y ponla en el campo de contraseña."
+    },
+    {
+      "q": "¿Se almacena mi correo de Frontier en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales, incluida la contraseña de aplicación, se cifran en reposo, y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Frontier",
+    "sub": "Una contraseña de aplicación de Yahoo y listo. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

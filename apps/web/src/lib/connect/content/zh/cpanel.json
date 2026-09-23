@@ -1,21 +1,32 @@
 {
+  "_sources": [
+    "https://docs.cpanel.net/cpanel/email/email-accounts/",
+    "https://docs.cpanel.net/cpanel/email/set-up-mail-client/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://docs.cpanel.net/cpanel/email/set-up-mail-client/",
+    "usernameForm": "完整邮箱地址，例如 you@yourdomain.com。绝不是你的 cPanel 账户登录名。",
+    "status": "active"
+  },
   "meta": {
-    "title": "将 cPanel 连接到 Claude（及任意 AI）",
-    "description": "用邮箱密码通过 IMAP 将 cPanel 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的邮件，1 个收件箱永久免费。"
+    "title": "将 cPanel 邮箱连接到 Claude、Cursor 与 MCP 客户端",
+    "description": "通过 IMAP 将 cPanel 邮箱连接到 Claude、Cursor 及任意 MCP 客户端。在 Email Accounts、Connect Devices、Mail Client Manual Settings 中读取你真正的服务器。"
   },
   "hero": {
     "eyebrow": "cPanel + AI",
-    "titleLine1": "将 cPanel 连接到 Claude，",
+    "titleLine1": "将 cPanel 邮箱连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
-    "lead": "几分钟即可为你的 AI 代理接入一个真正的 cPanel 收件箱。用 IMAP 和邮箱密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+    "lead": "几分钟即可为你的 AI 代理接入一个真正的 cPanel 收件箱。通过 IMAP 和你的邮箱密码读取、搜索、发送、回复、定时与整理邮件，同一个收件箱可在所有 MCP 客户端中使用，而不止一个。",
     "meta0": "1 个收件箱永久免费",
-    "meta1": "邮箱密码，无需 OAuth 配置",
+    "meta1": "使用邮箱密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行连接 cPanel。mcpemails 是一个托管 MCP 服务器，用邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱永久免费。"
+    "answer": "Claude 无法自行访问 cPanel 邮箱。mcpemails 是一个托管 MCP 服务器，使用你的邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，1 个收件箱免费。"
   },
   "method": {
-    "title": "cPanel 如何连接：IMAP 与邮箱密码",
-    "body": "cPanel 邮箱，也就是你在 Roundcube 或 Horde 网页邮箱里读的那个，通过 IMAP/SMTP 连接，使用在 cPanel 的 Email Accounts 中设置的密码。没有应用专用密码，也没有 OAuth。服务器通常是 <code>mail.yourdomain.com</code>，cPanel 会在 Email Accounts、Connect Devices 的 Mail Client Manual Settings 中给出准确数值。请使用加密的 SSL/TLS 那一列，不要用明文那列。"
+    "title": "cPanel 邮箱如何连接：IMAP 与你的邮箱密码",
+    "body": "cPanel 邮箱（也就是你在 Roundcube 或 Horde 网页邮箱中阅读的那种）通过 IMAP/SMTP 连接，使用在 cPanel 的 Email Accounts 中设置的密码。没有应用专用密码，也没有 OAuth。服务器通常是 <code>mail.yourdomain.com</code>，cPanel 会在 Email Accounts、Connect Devices 下的 Mail Client Manual Settings 中列出准确的值。请使用安全的 SSL/TLS 一栏，而不是明文那一栏。"
   },
   "setup": [
     {
@@ -23,20 +34,69 @@
       "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
-      "h": "从 cPanel 中读取设置",
-      "p": "在 cPanel 中打开 Email Accounts，为该邮箱点击 Connect Devices。从 Mail Client Manual Settings 复制加密的 IMAP 与 SMTP 服务器和端口。如果不知道邮箱密码，可以在同一页面重新设置一个。"
+      "h": "从 cPanel 读取你的设置",
+      "p": "在 cPanel 中打开 Email Accounts，点击该邮箱的 Connect Devices。从 Mail Client Manual Settings 中复制安全的 IMAP 和 SMTP 服务器及端口。如果你不知道邮箱密码，可以在同一页面设置一个新密码。"
     },
     {
       "h": "粘贴到 mcpemails",
-      "p": "选择 IMAP / SMTP，填入你的 cPanel 地址、下方的服务器地址和密码，安全连接收件箱。"
+      "p": "选择 IMAP / SMTP，填入你的 cPanel 邮箱地址、下方的服务器地址和密码，安全地连接收件箱。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
       "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],
+  "gotchas": [
+    {
+      "h": "没有所谓的 cPanel 邮件服务器，只有你的服务器，而面板是其名称的唯一权威来源",
+      "p": "cPanel 是你的主机商运行的软件，而不是邮箱服务，所以不存在可以预填的共用主机名。每个账户都在其所在的机器上响应。唯一能如实显示你账户信息的地方是 <b>Email Accounts</b>，然后在该地址所在行点击 <b>Connect Devices</b>，再看 <b>Mail Client Manual Settings</b> 区块。cPanel 在那里显示两个表格：<b>Secure SSL/TLS Settings</b>，其中 IMAP 为 993、POP3 为 995、SMTP 为 465；以及一个使用 143、110 和 587 的非 SSL 表格，你应该忽略它。请从安全表格中原样复制收信和发信服务器，即使它看起来和你的域名毫不相干。"
+    },
+    {
+      "h": "mail.yourdomain.com 通常能解析，但通常过不了证书校验",
+      "p": "cPanel 的默认建议是 <code>mail.example.com</code>，这个名称通常指向正确的机器，所以明文端口看起来能用。但通过 TLS 往往不行，因为服务器出示的证书属于共享服务器，而不是你的域名。cPanel 的处理方式是替换：它自己的文档说明，当域名没有有效证书时，系统会使用服务器的主机名；当证书与主机名不匹配时，会使用 <code>mail</code> 子域名。正是这种替换，让 Connect Devices 中的值有时是一个你从未见过的主机名。照样使用它。这里的证书不匹配是命名问题，不是攻击，直接点过警告并不是正确的解决办法。"
+    },
+    {
+      "h": "邮箱可能被限制登录或发信，表面上却完全正常",
+      "p": "cPanel 为每个邮箱设有一个 <b>Restrictions</b> 区块，可从 <b>Email Accounts</b> 进入 <b>Manage</b> 找到。Logging In 可以设为 Suspend，这会阻止网页邮箱和所有邮件客户端登录，而密码不变。Sending Outgoing Email 可以设为 Suspend，这会拒绝外发邮件；也可以设为 <b>Hold</b>，这会把邮件悄悄排队四天，然后放弃。对 AI 代理来说，Hold 是三者中最棘手的：提交被接受，发送看起来成功，却什么也没有送达。如果邮件好像凭空消失了，请先打开 Restrictions，再排查其他问题。"
+    },
+    {
+      "h": "你的主机商可能公布了自己的设置变体，以主机商为准",
+      "p": "本页介绍的是通用的 cPanel 模式。各家主机商会有所偏离，并自行在文档中说明。例如 Bluehost 只在未加密区块中给出 <code>mail.example.com</code>，安全区块给出的是裸域名。A2 Hosting（现为 hosting.com）让你使用完整的服务器名称，例如 <code>mi3-ss78.a2hosting.com</code>，因为共享证书覆盖的是服务器。如果我们有针对你所用主机商的页面，请按那个页面操作，因为它给出了准确的值。如果没有，你自己 cPanel 中的 Connect Devices 面板就是最终依据。"
+    }
+  ],
+  "limits": [
+    "我们无法为 cPanel 邮箱预填服务器地址，因为主机名属于你的服务器，而不是某项共用服务。你需要从 Connect Devices 中复制粘贴。",
+    "有些主机商在共享套餐上会用防火墙拦截外发提交，或禁用外部 IMAP。即便如此，cPanel 仍会显示这些设置，所以在这种情况下被拒绝，需要去问主机商，而不是设置问题。",
+    "mcpemails 连接的是邮箱。转发器、别名、自动回复、过滤器和配额仍在 cPanel 中管理，你的 AI 客户端看不到它们。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 cPanel 邮箱吗？",
+      "a": "不能直接使用。Claude 没有针对 cPanel 邮件服务器的内置连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，所用凭据与桌面邮件客户端相同，而且同一个连接也可在 Cursor 和 ChatGPT 中使用。"
+    },
+    {
+      "q": "cPanel 的 IMAP 和 SMTP 设置是什么？",
+      "a": "端口是标准的：IMAP 为 993，SMTP 为 465，都使用隐式 TLS；143 和 587 是未加密的对应端口，你不应使用。主机名则不标准，每个主机账户都不同。请从 Email Accounts、Connect Devices、Mail Client Manual Settings 中获取，并使用 Secure SSL/TLS 表格。"
+    },
+    {
+      "q": "如何找到我的 cPanel 邮件服务器主机名？",
+      "a": "登录 cPanel，打开 Email Accounts，点击地址旁的 Connect Devices。滚动到 Mail Client Manual Settings，从 Secure SSL/TLS 表格中读取收信和发信服务器。它可能是 mail.yourdomain.com、你的裸域名，或属于你主机商的某个服务器名称。无论显示的是哪一个，都是 TLS 下正确的那个。"
+    },
+    {
+      "q": "为什么 mail.mydomain.com 会出现证书警告？",
+      "a": "因为服务器出示的证书是签发给共享机器的，而不是给你的域名。你输入的名称不在该证书上，所以严格校验的客户端会拒绝连接。解决办法是连接 cPanel 在 Secure SSL/TLS 表格中列出的主机名，那才是证书真正覆盖的名称。"
+    },
+    {
+      "q": "为什么我的 cPanel 邮箱密码被拒绝？",
+      "a": "主要有三个原因。你用的是 cPanel 账户登录密码，而不是为该邮箱地址单独设置的密码。邮箱在 Restrictions 中把 Logging In 设为了 Suspend。或者你指向的主机名解析到了别处。请在 Email Accounts 的 Manage 中重置邮箱密码，并在同一页面检查 Restrictions。"
+    },
+    {
+      "q": "我的 cPanel 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从你自己的服务器实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
   "ctaBand": {
     "title": "给你的 AI 一个 cPanel 收件箱",
-    "sub": "几分钟即可连接 cPanel。一个收件箱永久免费，无需信用卡。"
+    "sub": "几分钟即可连接 cPanel 邮箱。1 个收件箱永久免费，无需信用卡。"
   }
 }

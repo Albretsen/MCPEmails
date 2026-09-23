@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "apps/web/app/api/mcp/route.ts",
+    "https://docs.cline.bot/mcp/configuring-mcp-servers"
+  ],
+  "meta": {
+    "title": "Koble e-post til Cline: oppsett av ekstern MCP-server",
+    "description": "Gi Cline en ekte innboks som ekstern Streamable HTTP-server med en avgrenset API-nøkkel. Les, søk, send og planlegg e-post fra VS Code. Én innboks gratis."
+  },
+  "hero": {
+    "eyebrow": "Cline + e-post",
+    "titleLine1": "Koble innboksen din til Cline",
+    "titleLine2": "som en ekstern MCP-server",
+    "lead": "Legg til en ekte postkasse i Cline i VS Code. Les, søk i, send, svar på, videresend, planlegg og organiser e-post, med en nøkkel som er avgrenset til nøyaktig det du vil at agenten skal gjøre.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Avgrenset API-nøkkel, kan tilbakekalles med ett klikk",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "I Cline-panelet åpner du MCP Servers og deretter Remote Servers. Lim inn https://mcpemails.com/api/mcp, sett transporttypen til Streamable HTTP, legg til serveren, og legg så til en Authorization Bearer-header med en API-nøkkel fra dashbordet ditt."
+  },
+  "method": {
+    "title": "Slik kobler Cline seg til: en avgrenset API-nøkkel",
+    "body": "Cline kjører ikke OAuth-flyten i nettleseren mot en ekstern MCP-server, så den autentiserer med et bearer-token i stedet. Opprett en API-nøkkel i dashbordet, kryss av bare for tilgangene (scopes) agenten trenger, og lim den inn i Cline som en <code>Authorization: Bearer</code>-header. Tilkoblinger med nøkkel og med OAuth treffer det samme endepunktet og får den samme verktøykatalogen; forskjellen er bare hvordan tokenet skaffes."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto og koble til en postkasse",
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Gmail kobles til med Google-innlogging med ett klikk; iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+    },
+    {
+      "h": "Opprett en avgrenset API-nøkkel",
+      "p": "I Dashboard, API Keys klikker du Create key. Gi den et navn og kryss av bare for tilgangene denne agenten trenger: <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> og <code>manage:automations</code>. Nøkkelen ser ut som <code>mcpe_</code> etterfulgt av 64 heksadesimale tegn og vises bare én gang, så kopier den før du lukker dialogen."
+    },
+    {
+      "h": "Legg til den eksterne serveren",
+      "p": "I Cline-panelet klikker du MCP Servers-ikonet, åpner fanen <b>Remote Servers</b>, skriver inn et navn og limer inn <code>https://mcpemails.com/api/mcp</code>. Sett Transport Type til <b>Streamable HTTP</b>, og klikk Add Server."
+    },
+    {
+      "h": "Legg til Authorization-headeren",
+      "p": "Legg til en header som heter <code>Authorization</code> med verdien <code>Bearer</code> etterfulgt av et mellomrom og nøkkelen din. Serveren godtar bearer-tokens bare i den headeren."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Streamable HTTP, ikke SSE",
+      "p": "Fanen Remote Servers tilbyr mer enn én transport. Denne serveren bruker Streamable HTTP under protokollrevisjonen 2025-06-18. Velger du SSE, får du en server som ser ut til å bli lagt til uten problemer og så aldri svarer, som er en treg måte å oppdage en feil i ett enkelt felt på."
+    },
+    {
+      "h": "Ordet Bearer er en del av verdien",
+      "p": "Headerverdien er <code>Bearer</code>, ett mellomrom, og så nøkkelen. Å lime inn bare den rå nøkkelen er den vanligste årsaken til en 401 her, og en 401 fra dette endepunktet har en peker til OAuth-oppdagelse i stedet for en melding om at headeren var feilformatert, noe som ikke hjelper deg å gjette."
+    },
+    {
+      "h": "Avgrens nøkkelen til agenten, for nøkkelen er hele tilgangsmodellen",
+      "p": "Cline kjører ikke OAuth-samtykkeflyten, så tilgangene du krysser av når du oppretter nøkkelen, er hele grensen. En nøkkel med <code>read:email</code>, <code>search:email</code> og <code>manage:drafts</code> lar Cline sortere og skrive utkast, og kan ikke sende eller slette noe. Utvid senere ved å utstede en ny nøkkel i stedet for å løsne på den første."
+    },
+    {
+      "h": "Den rå nøkkelen vises bare én gang",
+      "p": "Bare en SHA-256-hash av nøkkelen lagres, så det finnes ingen måte å vise den igjen. Mister du den, tilbakekaller du den og oppretter en ny. Tilbakekalling fra Dashboard, API Keys gjelder fra neste kall."
+    }
+  ],
+  "limits": [
+    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger.",
+    "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post vekker aldri agenten din av seg selv. Vil du reagere på innkommende e-post, må du polle etter en tidsplan.",
+    "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
+  ],
+  "faq": [
+    {
+      "q": "Hvordan kobler jeg e-post til Cline?",
+      "a": "Legg til mcpemails som en ekstern server: MCP Servers, Remote Servers, lim inn https://mcpemails.com/api/mcp, sett Transport Type til Streamable HTTP, og legg til en Authorization Bearer-header med en API-nøkkel fra dashbordet ditt. Da har Cline verktøy for å lese, søke, sende, svare, videresende, organisere og planlegge e-post."
+    },
+    {
+      "q": "Hvorfor trenger Cline en API-nøkkel når Cursor ikke gjør det?",
+      "a": "Fordi de to klientene håndterer autentisering mot eksterne MCP-servere ulikt. Cursor kjører OAuth-flyten i nettleseren og lagrer tokenet selv. Cline autentiserer med den headeren du konfigurerer, så en bearer-nøkkel er veien som fungerer. Begge treffer det samme endepunktet og får de samme verktøyene; bare måten tokenet skaffes på er forskjellig."
+    },
+    {
+      "q": "Hva kan jeg gjøre hvis nøkkelen lekker?",
+      "a": "Tilbakekall den. Nøkler er listet under Dashboard, API Keys, og tilbakekalling gjelder fra neste kall, uten ventetid. Siden en nøkkel bare har tilgangene du krysset av, kan en lekket nøkkel med kun lesetilgang heller ikke ha sendt eller slettet noe."
+    },
+    {
+      "q": "Hvilke postkasser kan Cline nå på denne måten?",
+      "a": "Gmail via Google-innlogging, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord, og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Klienten ser alle gjennom den samme tilkoblingen: agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
+    },
+    {
+      "q": "Kan Cline sende e-post uten at jeg ser det?",
+      "a": "Bare hvis du tillater det. Sending krever tilgangen send:email, så en nøkkel eller et token uten den tilgangen kan ikke sende i det hele tatt. I tillegg kan eieren av en innboks kreve menneskelig godkjenning i dashbordet, som holder tilbake hver sending, hvert svar, hver videresending, hvert utkast som sendes og hver planlagte sending til en person slipper den gjennom."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Hver melding hentes direkte fra leverandøren din for forespørselen som ba om den, og sendes rett videre til klienten din. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, slik at fremtidige kall kan autentiseres. Sletter du innboksen i dashbordet, eller tilbakekaller tilgangen hos leverandøren, avsluttes tilkoblingen med en gang."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi Cline en ekte innboks",
+    "sub": "Én ekstern server, én avgrenset nøkkel. Én innboks gratis for alltid, uten kort."
+  }
+}

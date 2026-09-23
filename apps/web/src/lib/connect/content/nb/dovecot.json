@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://doc.dovecot.org/2.3/configuration_manual/dovecot_ssl_configuration/",
+    "https://doc.dovecot.org/",
+    "https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/deploying_mail_servers/configuring-and-maintaining-a-dovecot-imap-and-pop3-server_deploying-mail-servers"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://doc.dovecot.org/2.3/configuration_manual/dovecot_ssl_configuration/",
+    "usernameForm": "Det påloggingsnavnet userdb returnerer, vanligvis hele adressen bruker@dittdomene.no, men bare brukernavnet på installasjoner som bruker en system-passdb.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Dovecot IMAP til Claude og enhver MCP-klient",
+    "description": "Koble din egen Dovecot-server til Claude, Cursor og ChatGPT over IMAP. Hvilken inet_listener som betjener 993, ssl_cert-linjene som teller, og hvorfor port 143 avviser pålogging."
+  },
+  "hero": {
+    "eyebrow": "Dovecot + AI",
+    "titleLine1": "Koble Dovecot-serveren din",
+    "titleLine2": "til Claude, Cursor og enhver MCP-klient",
+    "lead": "Du drifter IMAP-serveren, så du bestemmer hva en agent kan nå. Pek mcpemails mot din egen Dovecot-vert og la Claude lese, søke i, sende, svare på, planlegge og arkivere e-post i postkassene du allerede drifter.",
+    "answer": "Claude kan ikke nå en Dovecot-server på egen hånd. mcpemails er en hostet MCP-server som kobler seg til Dovecot-installasjonen din over IMAP på ditt eget vertsnavn, vanligvis mail.yourdomain.com på port 993, med postkassepassordet din passdb allerede godtar, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Det finnes ikke noe felles vertsnavn å slå opp: verten er det serveren din heter, den må kunne nås fra internett, og TLS-sertifikatet må være gyldig for navnet du kobler til. Én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Det eksisterende Dovecot-postkassepassordet ditt",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles Dovecot til: din egen vert, din egen passdb",
+    "body": "Dovecot er ikke en e-postleverandør, det er IMAP-serveren du installerte, så det finnes ikke noe felles vertsnavn og ingen leverandørkonto å logge inn på. Verten er navnet serveren din svarer på, vanligvis noe som <code>mail.yourdomain.com</code>. Hvilke porter den svarer på, bestemmes i <code>conf.d/10-master.conf</code>, der blokken <code>service imap-login</code> har en <code>inet_listener imap</code> for port 143 og en <code>inet_listener imaps</code> for port 993 med <code>ssl = yes</code>. Å sette en listeners <code>port = 0</code> slår den av, og det er slik mange herdede oppsett ender opp med bare 993. Påloggingsopplysningene er det din passdb validerer, så på et oppsett med virtuelle postkasser er det passordet du satte i SQL- eller LDAP-brukertabellen, og på et oppsett med systembrukere er det passordet til Unix-kontoen. Kjør <code>doveconf -n</code> på maskinen for å se konfigurasjonen Dovecot faktisk lastet, ikke den du tror du skrev."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto",
+      "p": "Registrer deg hos mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid, som er nok til å prøve dette mot en ekte postkasse på din egen server."
+    },
+    {
+      "h": "Bekreft hva Dovecot lytter på",
+      "p": "Kjør <code>doveconf -n</code> på serveren og les blokken <code>service imap-login</code>. Legg merke til om <code>inet_listener imaps</code> finnes på 993, og sjekk <code>listen</code>-innstillingen: står det <code>127.0.0.1</code>, svarer Dovecot bare på loopback, og ingenting utenfor maskinen kan nå den."
+    },
+    {
+      "h": "Sjekk sertifikatet på 993 utenfra",
+      "p": "Kjør <code>openssl s_client -connect mail.yourdomain.com:993</code> fra en maskin som ikke er e-postserveren din. Du vil ha en kjede som verifiseres og et subjektnavn som samsvarer med verten du skal skrive inn i mcpemails. Legg så til innboksen: velg IMAP / SMTP, skriv inn vertsnavnet, postkassepåloggingen og passordet."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Uten special_use-oppføringer leverer Dovecot ingen mapperoller",
+      "p": "Dovecot annonserer bare SPECIAL-USE-utvidelsen for postkasser du har deklarert. Med mindre <code>15-mailboxes.conf</code> har oppføringer som <code>mailbox Sent { special_use = \\Sent }</code>, får en IMAP-klient en flat liste med navn og må gjette hvilken mappe som er Sendt, Utkast, Søppelpost eller Papirkurv. mcpemails faller tilbake på navnematching, så på en server der mappene heter Sent Items, Gesendet eller Papierkorb, kan det hende mappen må velges manuelt én gang. Å legge til special_use-linjene løser det permanent for alle klientene dine."
+    },
+    {
+      "h": "Et navneromsprefiks skriver om hvert mappenavn du ser",
+      "p": "Maildir++-oppsett setter ofte et innboksnavnerom med <code>prefix = INBOX.</code> og <code>separator = .</code>, så mappene kommer som <code>INBOX.Sent</code> og <code>INBOX.Archive</code> i stedet for <code>Sent</code> og <code>Archive</code>. Det er ingen feil, men det betyr at mappenavn du kopierte fra webmailen, ikke vil samsvare med det IMAP rapporterer. Les de faktiske navnene fra <code>doveadm mailbox list -u user@yourdomain.com</code> før du antar at noe mangler."
+    },
+    {
+      "h": "disable_plaintext_auth gjør et riktig passord til en BAD på 143",
+      "p": "Med <code>disable_plaintext_auth = yes</code>, som er standard på de fleste distribusjoner, avviser Dovecot LOGIN på port 143 til klienten har sendt STARTTLS. Klienten ser en autentiseringsfeil, og brukeren konkluderer med at passordet er feil. Det er det ikke: tilkoblingen var bare ikke kryptert ennå. Port 993 berøres ikke, fordi implisitt TLS allerede er oppe før autentiseringen starter, og det er enda en grunn til å bruke 993."
+    },
+    {
+      "h": "ssl_cert trenger <-prefikset, og ett sertifikat per navn trenger local_name",
+      "p": "I <code>10-ssl.conf</code> er den innledende <code>&lt;</code> i <code>ssl_cert = &lt;/etc/letsencrypt/live/mail.yourdomain.com/fullchain.pem</code> obligatorisk: den ber Dovecot lese innholdet i filen i stedet for å behandle stien som sertifikatet. Pek den mot <code>fullchain.pem</code> og ikke <code>cert.pem</code>, ellers mangler mellomsertifikatet, og strenge validatorer avviser et sertifikat som nettleseren din godtok. Hvis maskinen betjener flere vertsnavn, trenger hvert av dem sin egen <code>local_name</code>-blokk, ellers får alle tilkoblinger standardsertifikatet, og bare ett vertsnavn valideres."
+    }
+  ],
+  "limits": [
+    "Dovecot-serveren din må godta tilkoblinger fra det åpne internettet for at en hostet MCP-server skal kunne nå den. Hvis policyen din er at IMAP aldri forlater LAN-et eller VPN-et, er det et legitimt svar, og dette produktet kan ikke betjene deg som hostet tjeneste. mcpemails kan i stedet driftes selv, som holder IMAP-tilkoblingen inne i ditt eget nettverk.",
+    "Streng TLS-validering er ikke valgfritt her. Et selvsignert sertifikat, et utløpt sertifikat eller et som er utstedt for et annet vertsnavn, blir avvist, og det finnes ingen avkrysningsboks for å godta det likevel.",
+    "Sending går ut gjennom din egen innsendingstjeneste, så SPF-, DKIM- og DMARC-postene dine styrer leveringsevnen akkurat som for alle andre klienter på den serveren."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Dovecot?",
+      "a": "Ikke direkte. Claude har ingen måte å åpne en IMAP-socket mot en server du drifter. Kobler du en MCP-server som mcpemails til Dovecot-verten din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i postkassene der, med de samme påloggingsopplysningene som en hvilken som helst annen IMAP-klient ville brukt."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Dovecot?",
+      "a": "Vertsnavnet er din egen server, så ingen kan publisere det for deg. Portene kommer fra blokken <code>service imap-login</code> i <code>conf.d/10-master.conf</code>: 993 for implisitt TLS og 143 for STARTTLS, med mindre noen har endret dem. SMTP-innsending håndteres av Postfix eller Exim ved siden av Dovecot, vanligvis på 587 eller 465."
+    },
+    {
+      "q": "Hvorfor blir Dovecot-passordet mitt avvist?",
+      "a": "Sjekk serverloggen i stedet for å gjette. De to vanlige årsakene er at klartekstautentisering avvises på en ukryptert tilkobling til port 143, og at påloggingsnavnet ikke samsvarer med det passdb forventer, siden virtuelle oppsett vil ha hele adressen mens oppsett med systembrukere vil ha bare brukernavnet. Kjør <code>doveadm auth login user@yourdomain.com</code> på serveren for å teste påloggingsopplysningen uten at nettverket er i veien."
+    },
+    {
+      "q": "Må Dovecot-serveren min kunne nås fra internett?",
+      "a": "Ja, for den hostede tjenesten. mcpemails kobler seg inn til IMAP-porten din, så en server som er bundet til loopback, brannmurbeskyttet til kontorets adresseområde eller bare kan nås over VPN, kan ikke kobles til. Vil du heller ikke eksponere IMAP offentlig, kan mcpemails driftes selv og kjøre i samme nettverk som e-postserveren."
+    },
+    {
+      "q": "Hvilke produkter er bygget på Dovecot?",
+      "a": "Flere av de ferdigpakkede e-postserverne folk kjører, har Dovecot i bunnen, blant annet mailcow, Mail-in-a-Box og Poste.io, og Open-Xchange App Suite settes normalt opp mot Dovecot som e-postbakende. Alt på denne siden om listenere, sertifikater og mapperoller gjelder også for dem, selv om hvert av dem har sitt eget administrasjonsgrensesnitt for å endre det."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Dovecot-serveren din over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Dovecot-innboks",
+    "sub": "Pek mcpemails mot din egen server. Én innboks gratis for alltid, uten kort."
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://www.axigen.com/documentation/configuring-the-imap-service-p1373439188",
+    "https://www.axigen.com/documentation/managing-service-listeners-p1373438963",
+    "https://www.axigen.com/documentation/lets-encrypt-support-p54493192",
+    "https://www.axigen.com/knowledgebase/List-of-Default-Ports-Required-by-Axigen_169.html",
+    "https://www.axigen.com/documentation/domains-accounts-p1373439545"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña de la cuenta",
+    "helpUrl": "https://www.axigen.com/documentation/configuring-the-imap-service-p1373439188",
+    "usernameForm": "La dirección completa de la cuenta tal como la tiene Axigen, por ejemplo you@yourdomain.com. Las cuentas de Axigen se identifican con el dominio al que pertenecen, así que un nombre de usuario sin dominio es ambiguo en un servidor con varios dominios.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Axigen Mail Server a Claude: configurar el listener IMAP",
+    "description": "Conecta un buzón de Axigen a Claude, Cursor y ChatGPT por IMAP en el 993. Dónde están los listeners de servicio en WebAdmin y por qué SSL es una casilla de cada listener."
+  },
+  "hero": {
+    "eyebrow": "Axigen + IA",
+    "titleLine1": "Conecta un buzón de Axigen",
+    "titleLine2": "a Claude, Cursor y ChatGPT",
+    "lead": "Tú gestionas el servidor de correo, así que los ajustes los compruebas tú en lugar de buscarlos. Apunta mcpemails a tu servidor Axigen y Claude podrá leer, buscar, enviar, responder, programar y archivar correo en las cuentas que ya administras.",
+    "answer": "Claude no puede acceder por sí solo a un servidor Axigen. mcpemails es un servidor MCP alojado que se conecta a tu instalación de Axigen por IMAP en tu propio nombre de servidor, normalmente en el puerto 993 con TLS implícito, autenticándose con la contraseña de la cuenta que Axigen ya acepta de cualquier cliente de correo, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. No hay un nombre de servidor compartido que publicar: el servidor es el nombre al que responda el tuyo, tiene que ser accesible desde internet y el listener del 993 tiene que servir un certificado válido para ese nombre. Una bandeja es gratis.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "La contraseña de la cuenta desde WebAdmin",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Axigen: listeners de servicio en WebAdmin",
+    "body": "Axigen es un servidor de correo que instalaste tú, así que nadie puede publicar un nombre de servidor para él. Lo que sí se puede consultar con precisión es cómo está configurado, porque Axigen organiza cada protocolo bajo un servicio con su propio conjunto de <b>listeners</b>. Abre WebAdmin, que responde en el puerto 9000 o en el 9443 con SSL, y ve al servicio IMAP. De serie, Axigen crea listeners en <code>0.0.0.0</code> y <code>:::</code> para el puerto 143, el puerto IMAP sin cifrar, y para el puerto 993, usado para SSL/TLS implícito. SMTP sigue el mismo patrón, con el 25 para transferencia y el 465 para SMTPS. Cada listener tiene su propia pestaña SSL Settings donde se activa el cifrado y se elige un certificado, así que el estado del puerto 993 es una propiedad de ese listener concreto y no del servicio IMAP en su conjunto. A partir de Axigen X3, los certificados SSL, incluidos los de Let's Encrypt, se gestionan de forma centralizada en WebAdmin, y los certificados Let's Encrypt gestionados por Axigen se renuevan automáticamente 25 días antes de caducar; en versiones anteriores, un listener apunta en cambio a un archivo de certificado en disco. Las credenciales son la contraseña normal de la cuenta guardada en Axigen, la misma que la cuenta usa para WebMail. No hay ningún esquema aparte de contraseñas de aplicación que generar."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta, lo que basta para probarlo con una cuenta real de tu propio servidor."
+    },
+    {
+      "h": "Revisa los listeners IMAP en WebAdmin",
+      "p": "Inicia sesión en Axigen WebAdmin y abre el servicio IMAP. Comprueba que hay un listener en el puerto 993, que su pestaña SSL Settings tiene el cifrado activado y que el certificado elegido ahí corresponde al nombre de servidor que vas a usar. Ya que estás en el servicio, mira Flow Control y anota los límites de conexiones por peer, porque un cliente alojado llega desde una sola dirección."
+    },
+    {
+      "h": "Confirma que la cuenta puede usar IMAP y añádela",
+      "p": "En Domains and Accounts, abre la cuenta o la clase de cuenta a la que pertenece y comprueba que IMAP está entre los servicios permitidos. Después añade la bandeja en mcpemails: elige IMAP / SMTP e introduce el nombre de tu servidor Axigen, la dirección completa de la cuenta y su contraseña."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Un listener puede ocupar el puerto 993 con SSL desactivado",
+      "p": "En Axigen, el cifrado pertenece al listener y no al protocolo. Cada listener tiene una opción <b>Enable SSL for this listener</b>, y nada impide que un listener ocupe el 993 con esa casilla sin marcar. El resultado es IMAP sin cifrar respondiendo en el puerto que todo el mundo trata como TLS implícito. Un cliente que abre ahí un handshake TLS recibe un fallo de handshake o una respuesta ininteligible en lugar de un error de autenticación, y eso tiene a la gente una hora revisando contraseñas. Abre el listener del 993 en WebAdmin, mira su pestaña SSL Settings y confirma tanto que SSL está activado como que el certificado elegido es el que renovaste y no el predeterminado de la instalación."
+    },
+    {
+      "h": "Los límites de conexiones por peer cuentan toda tu integración como un solo cliente",
+      "p": "El servicio IMAP de Axigen tiene ajustes de Flow Control que limitan no solo el total de conexiones sino también las <b>peer connections</b> y las peer connections por intervalo, es decir, las conexiones desde una misma dirección remota. Un servidor MCP alojado llega desde un pequeño conjunto de direcciones de salida, así que para Axigen parece un único peer muy activo y no una planta llena de usuarios. Si las sesiones se cortan o se rechazan bajo carga mientras un cliente de escritorio en otra red funciona bien, sube los límites por peer del servicio IMAP antes de suponer que hay algún problema con las credenciales. La sección Error Control del servicio, por su parte, corta una conexión tras un número determinado de autenticaciones fallidas, así que una contraseña incorrecta guardada dos veces puede convertirse en un rechazo que dura más que la errata."
+    },
+    {
+      "h": "Las clases de cuenta deciden qué servicios puede usar una cuenta",
+      "p": "Axigen te permite activar o desactivar IMAP, POP3, WebMail y RPOP por cuenta para diferenciar niveles de servicio, y en la mayoría de las instalaciones esa decisión se toma una vez en una <b>account class</b> (clase de cuenta) y la heredan todas sus cuentas, en lugar de fijarse buzón por buzón. Una clase creada para usuarios solo de webmail rechaza IMAP por muy correctos que sean el nombre de servidor, el puerto y la contraseña. Revisa la clase antes que cualquier otra cosa, porque la pantalla de la cuenta puede parecer perfectamente sana mientras es la clase que hay detrás la que responde."
+    }
+  ],
+  "limits": [
+    "Axigen vincula cada listener a una dirección, así que para llegar al servidor desde un servicio MCP alojado hace falta un listener IMAP en una dirección enrutable desde internet. Si tu política dice que el correo nunca sale de la red interna, esa política manda y este servicio alojado no encaja contigo. En su lugar puedes alojar tú mismo mcpemails, conectándolo al mismo listener interno que ya usan tus clientes de escritorio.",
+    "La validación TLS es estricta y no se puede desactivar. Se rechazará un certificado autofirmado, uno caducado o uno emitido para un nombre distinto del servidor que introduzcas.",
+    "El correo saliente sale por tu propio servicio SMTP de Axigen, así que la entregabilidad depende de tus registros SPF, DKIM y DMARC y de la reputación de tu dirección de envío."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Axigen?",
+      "a": "No por sí solo. Claude no tiene un conector para Axigen y no puede abrir un socket IMAP hacia un servidor que gestionas tú. Conectar un servidor MCP como mcpemails a tu servidor Axigen le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar una cuenta en él, y la misma bandeja funciona también desde Cursor o ChatGPT."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Axigen?",
+      "a": "El nombre de servidor es el de tu propio servidor, así que no se puede publicar por ti. Los puertos son los predeterminados que documenta Axigen: IMAP en el 143, IMAP con SSL implícito en el 993, SMTP en el 25 y SMTPS en el 465, con POP3 en el 110 y el 995 si está activado. Inicia sesión con la dirección completa de la cuenta y la contraseña de la cuenta."
+    },
+    {
+      "q": "¿Necesita Axigen una contraseña de aplicación?",
+      "a": "No. Axigen no emite contraseñas específicas de aplicación. Un cliente de correo se autentica con la misma contraseña de la cuenta que se usa en WebMail, por eso la contraseña de una cuenta que no conoces tiene que restablecerse en WebAdmin, en Domains and Accounts, en lugar de recuperarse."
+    },
+    {
+      "q": "¿Por qué se rechaza mi inicio de sesión en Axigen si la contraseña es correcta?",
+      "a": "Revisa tres capas en orden. Confirma que la clase de cuenta permite IMAP, porque una clase solo de webmail lo rechaza directamente. Confirma que el listener del 993 tiene SSL activado y un certificado que corresponde a tu nombre de servidor. Después consulta el registro del servicio IMAP, que anota la autenticación fallida y el motivo, en lugar de adivinar desde el lado del cliente."
+    },
+    {
+      "q": "¿Dónde encuentro la interfaz WebAdmin?",
+      "a": "Axigen sirve WebAdmin en el puerto 9000, o en el 9443 con SSL, en el nombre de tu servidor. Es una interfaz distinta de WebMail, y es donde se configuran servicios, listeners, certificados, dominios y cuentas. Tampoco es un buzón, así que el acceso de administrador ahí no es una credencial que puedas conectar por IMAP."
+    },
+    {
+      "q": "¿Se almacena mi correo en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de tu servidor Axigen por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Axigen",
+    "sub": "Apunta mcpemails a tu propio servidor Axigen. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

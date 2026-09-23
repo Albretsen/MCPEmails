@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.getmailspring.com/setup/access-uol-com-br-via-imap-smtp",
+    "https://www.getmailbird.com/setup/access-uol-com-br-via-imap-smtp",
+    "https://learn.microsoft.com/pt-br/answers/questions/4469574/uol-mail-configurar-seu-e-mail",
+    "https://en.wikipedia.org/wiki/Brasil_Online"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "UOL-passord, med IMAP aktivert i webmail",
+    "helpUrl": null,
+    "usernameForm": "Hele adressen din, name@uol.com.br. Avvises den, dokumenterer UOL også innloggingen alene, uten domenet.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble UOL Mail til Claude via IMAP (Brasil)",
+    "description": "Koble en UOL-postkasse til Claude, Cursor eller enhver MCP-klient via IMAP på imap.uol.com.br:993. IMAP må først aktiveres i innstillingene i UOL-webmailen."
+  },
+  "hero": {
+    "eyebrow": "UOL Mail + AI",
+    "titleLine1": "Koble UOL Mail til Claude,",
+    "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte UOL-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP, i alle MCP-klienter i stedet for bare én.",
+    "answer": "Claude når ikke UOL Mail på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.uol.com.br port 993 og autentiserer med UOL-passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. UOL leverer postkasser med IMAP slått av: du må åpne innstillingene i webmailen og bruke Ativar IMAP før noen klient kan logge inn, og til du gjør det, avvises et riktig passord. Utgående e-post går gjennom smtps.uol.com.br på port 587 med STARTTLS, til tross for vertsnavnet. Én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "UOL-passord, IMAP aktivert først",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler UOL Mail seg til: IMAP etter at du aktiverer det, og en merkelig navngitt SMTP-vert",
+    "body": "UOL tilbyr IMAP på <code>imap.uol.com.br</code> port 993 over implisitt TLS. Serveren bak er Dovecot, som hilsenen sier rett ut. Innsending er delen som lurer folk: verten heter <code>smtps.uol.com.br</code>, og den verifiserte fungerende konfigurasjonen er port <b>587 med STARTTLS</b>, ikke implisitt TLS på 465. Navnet lover én ting, og porten gjør noe annet. UOL-e-post er en betalt tjeneste og ikke en gratis webmail, solgt enten som del av et UOL-abonnement eller som et frittstående UOL Mail-abonnement, og det finnes ingen ordning med app-passord: UOL-passordet ditt er påloggingen. Det som finnes i stedet, er en bryter. IMAP er av til du slår det på i webmailen, og en klient som kommer før du har gjort det, får en autentiseringsfeil i stedet for en melding som forklarer at protokollen er slått av."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og forblir gratis, uten kort. La den stå åpen; UOL-delen tar omtrent ett minutt."
+    },
+    {
+      "h": "Aktiver IMAP i UOL-webmailen",
+      "p": "Logg inn i UOL-webmailen, åpne Configurações (innstillinger) og bruk alternativet Ativar IMAP, og lagre endringen. Dette er steget nesten alle mislykkede UOL-tilkoblinger mangler. Ingenting i innloggingsfeilen som følger, nevner at IMAP er av, så folk bruker tiden sin på passordet og portene i stedet."
+    },
+    {
+      "h": "Skriv inn adressen og passordet ditt i mcpemails",
+      "p": "Velg IMAP / SMTP, og skriv så inn postkasseadressen og UOL-passordet ditt. Vertene og portene er forhåndsutfylt og ble bekreftet via en direkte TLS-tilkobling. Avvises hele adressen ved innlogging, prøv innloggingsnavnet alene uten <code>@uol.com.br</code>: UOL dokumenterer brukernavnet i den kortere formen, og noen av postkassene deres godtar det bare slik."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-klienten",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så kan agenten lese, søke, sende, svare, videresende, planlegge og organisere UOL-postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Den utgående verten heter smtps, og den er ikke implisitt TLS",
+      "p": "Alt ved navnet <code>smtps.uol.com.br</code> antyder SMTP over implisitt TLS på port 465, som er det bokstaven s i <code>smtps</code> vanligvis betyr og det mange kopierte konfigurasjoner antar. UOLs fungerende innsendingstjeneste er på port <b>587 med STARTTLS</b>: tilkoblingen åpnes ukryptert og oppgraderes før autentisering. En klient pekt mot 465 med implisitt TLS henger typisk til den tidsavbrytes i stedet for å gi en nyttig feilmelding, som er en langt verre feil enn en avvisning. Bruk 587 og STARTTLS. mcpemails forhåndsutfyller det riktig."
+    },
+    {
+      "h": "IMAP er av til du aktiverer det, og feilen legger skylden på passordet ditt",
+      "p": "UOL slår ikke på IMAP på en ny postkasse. Til du åpner innstillingene i webmailen og bruker Ativar IMAP, godtar serveren tilkoblingen, godtar innloggingsforsøket og avviser påloggingsdetaljene. Ingenting skiller det fra et feil passord. Denne ene innstillingen står for flere mislykkede klientoppsett hos UOL enn vertsnavn, porter og TLS til sammen, og den må gjøres fra webmailen fordi det ikke finnes noe annet sted å nå den."
+    },
+    {
+      "h": "Brukernavnet er ikke alltid hele adressen",
+      "p": "De fleste leverandører forventer hele adressen i brukernavnfeltet, og UOL godtar den som regel, men UOLs egen klientdokumentasjon beskriver påloggingen som innloggingsnavnet uten <code>@uol.com.br</code> lagt til. Der en eldre postkasse insisterer på den korte formen, avvises hele adressen på nøyaktig samme måte som et feil passord. Er alt annet riktig og innloggingen fortsatt feiler, er det å bytte mellom de to formene en test på ti sekunder som er verdt å kjøre før noe annet."
+    },
+    {
+      "h": "BOL er samme plattform, og innstillingene er ikke utskiftbare",
+      "p": "UOL driver også BOL, og de to kjører synlig på samme infrastruktur: samme Dovecot-server, samme tak for meldingsstørrelse, samme navnekonvensjon. Den likheten frister til å kopiere innstillinger fra den ene til den andre, og den avgjørende detaljen overlever ikke kopieringen. BOLs innsendingstjeneste er implisitt TLS på port 465, mens UOLs er STARTTLS på 587. Samme selskap, samme programvare, ulik transport. En BOL-adresse trenger BOL-vertene og BOL-porten."
+    }
+  ],
+  "limits": [
+    "En UOL-postkasse krever et betalt UOL-abonnement eller et frittstående UOL Mail-abonnement. Det finnes ikke noe gratisnivå å koble til, og et utløpt abonnement tar IMAP-tilgangen med seg.",
+    "UOLs IMAP-server annonserer verken MOVE eller IDLE. Arkivering av en melding kjøres som kopi, flagg og expunge i stedet for én kommando, og ny e-post oppdages ved polling i stedet for å skyves til tilkoblingen.",
+    "SMTP-serveren godtar meldinger opptil omtrent 33 MB, som er lavere enn hos de fleste moderne leverandører. En videresending med større vedlegg avvises ved sending."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med UOL Mail?",
+      "a": "Ikke direkte. Claude har ingen innebygd UOL-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som mcpemails til UOL-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer fra Cursor og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for UOL?",
+      "a": "IMAP er imap.uol.com.br på port 993 med implisitt TLS. Utgående e-post er smtps.uol.com.br på port 587 med STARTTLS, ikke implisitt TLS, til tross for vertsnavnet. Logg inn med påloggingsdetaljene for UOL-postkassen din. Begge vertene ble verifisert via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvorfor blir UOL-passordet mitt avvist?",
+      "a": "Nesten alltid fordi IMAP ikke er aktivert. Logg inn i UOL-webmailen, åpne Configurações, bruk Ativar IMAP og lagre. Er innstillingen allerede på, prøv brukernavnet uten domenedelen, siden UOL dokumenterer innloggingen i den formen. UOL utsteder ikke app-passord, så det finnes ingen tredje pålogging å lete etter."
+    },
+    {
+      "q": "Trenger UOL Mail et app-passord?",
+      "a": "Nei. UOL har ingen ordning med programspesifikke passord og ingen pålogging per klient. Det vanlige UOL-passordet ditt autentiserer IMAP og SMTP når protokollen er aktivert i webmailen. Det betyr også at passordet i e-postklienten din endres hver gang du endrer UOL-passordet, så oppdater tilkoblingen når du gjør det."
+    },
+    {
+      "q": "Kan jeg koble til en gratis UOL-e-postkonto?",
+      "a": "Det finnes ingen gratis UOL-postkasse å koble til. UOL-e-post følger med et betalt UOL-abonnement eller et frittstående UOL Mail-abonnement. Den beslektede BOL-tjenesten tilbyr gratiskontoer, men de er bare webmail og kan ikke nås via IMAP i det hele tatt uten oppgradering."
+    },
+    {
+      "q": "Lagres UOL-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra UOL via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke etter forespørselen som ba om det."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en UOL-innboks",
+    "sub": "Koble til UOL Mail på minutter når IMAP er aktivert. Én innboks gratis for alltid, uten kort."
+  }
+}

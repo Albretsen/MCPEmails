@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://cs.kakao.com/helps_html/1073209983",
+    "https://cs.daum.net/faq/service/43/category/9234/detail/24081",
+    "https://cs.daum.net/faq/43/9234.html",
+    "https://hanmail-notice.daum.net/list/907?index=1"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Kakao-app-passord (앱 비밀번호)",
+    "helpUrl": "https://cs.kakao.com/helps_html/1073209983",
+    "usernameForm": "Hele adressen din, med domenet: navn@daum.net, eller navn@hanmail.net hvis det er den formen postkassen din bruker.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Daum Mail til Claude med et Kakao-app-passord",
+    "description": "Koble Daum Mail (daum.net, hanmail.net) til Claude eller enhver MCP-klient over IMAP på imap.daum.net:993. Siden januar 2025 kreves et Kakao-app-passord."
+  },
+  "hero": {
+    "eyebrow": "Daum Mail + AI",
+    "titleLine1": "Koble Daum Mail til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Daum- eller Hanmail-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP med et Kakao-app-passord, i alle MCP-klienter i stedet for bare én.",
+    "answer": "Claude kan ikke nå Daum Mail på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP på imap.daum.net, port 993, og autentiserer med et Kakao-app-passord (앱 비밀번호) i stedet for passordet til Kakao-kontoen din. Siden 2. januar 2025 har Daum krevd totrinnsbekreftelse på Kakao-kontoen bak postkassen og et app-passord for hver IMAP- og POP3-pålogging, så det vanlige passordet virker ikke lenger i noen e-postklient. IMAP er i tillegg en egen bryter i innstillingene for Daum Mail og må også slås på. Én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Kakao-app-passord, ikke passordet ditt",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles Daum Mail til: IMAP i Daum, passordet i Kakao",
+    "body": "Daum tilbyr IMAP på <code>imap.daum.net</code>, port 993, over implisitt TLS, og SMTP på <code>smtp.daum.net</code>, port 465. Det uvanlige er at de to tingene du trenger, ligger i to forskjellige produkter. Protokollbryteren er i Daum Mail, under <b>환경설정</b> og deretter <b>IMAP/POP3 설정</b>. Påloggingsopplysningen ligger i Kakao-kontoen din, fordi Daum-påloggingen ble slått sammen med Kakao, og postkassen nå ligger bak en 카카오계정 (Kakao-konto). Fra <b>2. januar 2025</b> gjorde Kakao totrinnsbekreftelse obligatorisk for IMAP- og POP3-pålogging og krevde et <b>앱 비밀번호</b>, et app-passord, i stedet for kontopassordet. Både <code>@daum.net</code> og de eldre <code>@hanmail.net</code>-adressene er samme postkasse på samme servere, så det er alltid bare én tilkobling å sette opp."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og forblir gratis, uten kort. De to neste stegene skjer på to forskjellige Kakao-tjenester, så regn med å veksle mellom dem."
+    },
+    {
+      "h": "Slå på IMAP i Daum Mail",
+      "p": "Åpne Daum Mail og gå til 환경설정 (Innstillinger), deretter IMAP/POP3 설정. Sett IMAP til i bruk og lagre. Dette gjelder per postkasse og er atskilt fra alt på Kakao-kontoen din: når det er av, avviser imap.daum.net påloggingen, og feilen kan ikke skilles fra et feil passord."
+    },
+    {
+      "h": "Lag et app-passord i Kakao-kontoen din",
+      "p": "Gå til accounts.kakao.com og åpne 계정 보안 (Kontosikkerhet), deretter 2단계 인증 (totrinnsbekreftelse), deretter 앱 비밀번호 (app-passord). Det samme skjermbildet finnes i KakaoTalk under 설정, 카카오계정, 2단계 인증, 앱 비밀번호. Totrinnsbekreftelse må være slått på før et app-passord kan opprettes. Lag ett, velg deretter IMAP / SMTP i mcpemails, skriv inn hele Daum- eller Hanmail-adressen din, og lim inn app-passordet i stedet for Kakao-passordet."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-klienten din",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så kan agenten lese, søke i, sende, svare på, videresende, planlegge og organisere e-posten i Daum-postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Påloggingsopplysningen flyttet til Kakao, og Daums egne innstillinger nevner det aldri",
+      "p": "Siden for IMAP-innstillinger i Daum Mail forteller deg verten, porten og hvordan du slår på protokollen. Det er ikke der passordet kommer fra. Etter at Daum-kontoer ble Kakao-kontoer, opprettes app-passordet på accounts.kakao.com under 계정 보안, og Kakaos hjelpesider er det eneste stedet som sier det. Folk slår på IMAP i Daum, prøver Kakao-passordet, blir avvist, og går tilbake til Daums innstillingsside for å lete etter en feil som ikke finnes. Leter du etter et skjermbilde for Daum-app-passord, er du på feil nettsted."
+    },
+    {
+      "h": "Totrinnsbekreftelse har vært obligatorisk siden 2. januar 2025, ikke valgfritt",
+      "p": "Kakaos egen veiledning er tydelig: for IMAP og POP3 må du slå på totrinnsbekreftelse og logge inn med et eget generert app-passord i stedet for det eksisterende passordet. Dette var ikke en anbefaling med en reserveløsning. Klienter som hadde fungert i årevis, feilet ved pålogging, og fordi serveren svarer med en vanlig autentiseringsfeil, er det naturlig å tro at man har glemt passordet. Å slå av totrinnsbekreftelse igjen gir ikke tilbake passordpålogging, det fjerner bare muligheten til å lage app-passordet."
+    },
+    {
+      "h": "hanmail.net og daum.net er én postkasse, og adressen du skriver inn, betyr noe",
+      "p": "Daum holdt det eldre domenet <code>@hanmail.net</code> i live ved siden av <code>@daum.net</code>, og begge fører til samme postkasse på samme servere. Det er ingenting å koble til to ganger. Det som betyr noe, er at du skriver inn adressen i den formen kontoen din faktisk har, fordi brukernavnet du sender ved pålogging må samsvare med en adresse postkassen eier. Hvis den ene formen avvises, prøver du den andre før du rører app-passordet."
+    },
+    {
+      "h": "SPECIAL-USE mangler, og mappenavnene er på koreansk",
+      "p": "Daums IMAP-server annonserer ikke SPECIAL-USE-utvidelsen, så en klient kan ikke spørre hvilken mappe som har sendt e-post og hvilken som er papirkurven. Mapper matches på navn, og i en koreansk postkasse heter de 받은편지함 (Innboks), 보낸편지함 (Sendt), 임시보관함 (Utkast), 휴지통 (Papirkurv) og 스팸함 (Søppelpost). Hvis agenten legger en melding et uventet sted, oppgir du målmappen eksplisitt i stedet for å stole på rollen."
+    }
+  ],
+  "limits": [
+    "Daum annonserer ikke IDLE, så e-post hentes ved polling i stedet for å bli dyttet ut. En agent som følger med på postkassen, ser en ny melding ved neste sjekk og ikke idet den kommer.",
+    "App-passordet tilhører Kakao-kontoen og ikke postkassen. Slår du av totrinnsbekreftelse, eller tilbakekaller passordet i Kakao, brytes tilkoblingen umiddelbart og uten varsel på Daum-siden.",
+    "Daums SMTP-server godtar meldinger på opptil omtrent 70 MB. En videresending med vedlegg over det avvises ved sending i stedet for å bli lagt i kø."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Daum Mail?",
+      "a": "Ikke direkte. Claude har ingen innebygd Daum-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som mcpemails til Daum-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og den samme tilkoblingen fungerer fra Cursor og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Daum Mail?",
+      "a": "IMAP er imap.daum.net på port 993 med implisitt TLS. SMTP er smtp.daum.net på port 465, også med implisitt TLS. Logg inn med hele daum.net- eller hanmail.net-adressen din og et Kakao-app-passord. Begge vertene ble bekreftet via en faktisk TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvorfor kan jeg ikke logge inn med riktig Kakao-passord?",
+      "a": "Fordi Kakao ikke lenger godtar det for e-post. Siden 2. januar 2025 krever IMAP og POP3 totrinnsbekreftelse på Kakao-kontoen og et eget generert app-passord. Det riktige kontopassordet gir nå samme autentiseringsfeil som et feil passord, og derfor blir problemet så ofte feildiagnostisert."
+    },
+    {
+      "q": "Hvor lager jeg Daum-app-passordet?",
+      "a": "Ikke i Daum. Logg inn på accounts.kakao.com, åpne 계정 보안, deretter 2단계 인증, deretter 앱 비밀번호. I KakaoTalk er veien 설정, 카카오계정, 2단계 인증, 앱 비밀번호. Totrinnsbekreftelse må allerede være slått på, ellers dukker ikke valget for app-passord opp. Kopier det genererte passordet inn i passordfeltet i klienten."
+    },
+    {
+      "q": "Bruker hanmail.net-adresser de samme innstillingene?",
+      "a": "Ja. Hanmail var Daums opprinnelige e-postdomene, og både det og daum.net peker på samme postkasse på samme servere, med samme IMAP-bryter og samme Kakao-app-passord. Koble til postkassen én gang, med den adresseformen kontoen din har, så fungerer begge for sending."
+    },
+    {
+      "q": "Lagres Daum-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Daum over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold beholdes ikke etter forespørselen som ba om det."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Daum Mail-innboks",
+    "sub": "Koble til Daum eller Hanmail på få minutter med et Kakao-app-passord. Én innboks gratis for alltid, uten kort."
+  }
+}

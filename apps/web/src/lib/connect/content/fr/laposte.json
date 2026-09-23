@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://aide.laposte.net/contents/comment-parametrer-un-logiciel-de-messagerie-pour-envoyer-et-recevoir-mes-courriers-electroniques",
+    "https://aide.laposte.net/contents/comment-parametrer-laposte-net-sur-mon-logiciel-de-messagerie-suite-a-l-arret-des-protocoles-en-clair-non-cryptes",
+    "https://postmaster.laposte.net/contents/comment-parametrer-et-activer-la-double-authentification-2fa-sur-un-compte-laposte-net"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Votre mot de passe laposte.net",
+    "helpUrl": "https://aide.laposte.net/contents/comment-parametrer-un-logiciel-de-messagerie-pour-envoyer-et-recevoir-mes-courriers-electroniques",
+    "usernameForm": "Votre adresse complète, domaine compris : prenom.nom@laposte.net.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Réglages IMAP La Poste.net et accès MCP pour Claude",
+    "description": "Connectez une boîte laposte.net à Claude, Cursor et tout client MCP via imap.laposte.net:993. Ports chiffrés uniquement depuis 2023, envois plafonnés à 15 Mo."
+  },
+  "hero": {
+    "eyebrow": "laposte.net + IA",
+    "titleLine1": "Connectez votre boîte laposte.net",
+    "titleLine2": "à Claude, Cursor, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte laposte.net. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec votre mot de passe laposte.net habituel.",
+    "answer": "Claude ne peut pas accéder seul à une boîte laposte.net. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.laposte.net, port 993, en s'authentifiant avec votre adresse complète et votre mot de passe laposte.net habituel, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. La Poste ne délivre pas de mot de passe d'application et il n'y a aucune option d'accès des logiciels de messagerie à activer, mais la boîte n'accepte que les ports chiffrés et son plafond de taille à l'envoi est inhabituellement bas. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Votre mot de passe laposte.net habituel",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment laposte.net se connecte : IMAP sur TLS avec le mot de passe du compte",
+    "body": "La Poste sert l'IMAP sur <code>imap.laposte.net</code>, port 993, en TLS implicite. Pour l'envoi, les pages d'aide de La Poste indiquent <code>smtp.laposte.net</code> sur le port 587 avec TLS ; le port 465 en TLS implicite répond sur le même serveur et c'est lui que mcpemails préremplit, car une seule connexion chiffrée d'emblée est plus simple à maintenir depuis un serveur. L'authentification se fait avec votre mot de passe laposte.net habituel et l'adresse <b>complète</b> comme identifiant. Il n'y a pas de mot de passe d'application à générer ni d'interrupteur <b>autoriser les logiciels de messagerie</b> à chercher, ce qui fait de laposte.net l'une des boîtes françaises les plus simples à connecter. Les difficultés sont ailleurs : le serveur est volontairement minimal, et La Poste a coupé d'un seul coup tous les protocoles non chiffrés, ce qui laisse encore en plan des clients configurés il y a des années."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
+    },
+    {
+      "h": "Vérifiez que votre mot de passe laposte.net fonctionne toujours dans le webmail",
+      "p": "Connectez-vous sur laposte.net avec l'adresse et le mot de passe que vous comptez donner à mcpemails. Cela vaut trente secondes, car il n'existe aucun identifiant de messagerie distinct à incriminer en cas d'échec : si le webmail l'accepte, le serveur IMAP l'acceptera aussi."
+    },
+    {
+      "h": "Regardez vos paramètres de sécurité avant de vous connecter",
+      "p": "Dans le webmail laposte.net, ouvrez <b>Paramètres</b>, puis <b>Sécurité</b>. C'est là que la double authentification s'active et se désactive. La documentation de La Poste sur la double authentification laposte.net décrit une confirmation par notification sur un appareil mobile associé et ne documente aucun mécanisme de mot de passe d'application pour les logiciels de messagerie : sachez donc dans quel état se trouve votre compte avant de chercher pourquoi une connexion est refusée."
+    },
+    {
+      "h": "Collez-le dans mcpemails, puis collez l'URL MCP dans votre IA",
+      "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple prenom.nom@laposte.net, puis le mot de passe. Les serveurs et ports de La Poste sont préremplis et ont été vérifiés par une vraie connexion TLS. Ajoutez ensuite https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Les envois sont plafonnés à environ 15 Mo, le plus petit plafond des grands fournisseurs français",
+      "p": "<code>smtp.laposte.net</code> annonce une taille maximale de message de 15 800 000 octets. C'est la taille encodée du message entier, et le base64 gonfle une pièce jointe d'environ un tiers : un PDF de 12 Mo est donc déjà trop gros pour partir. Demandez à un agent de transférer un document scanné et vous pouvez recevoir un refus SMTP ferme là où le même message passerait sans problème chez Orange ou Gmail. Si l'envoi doit se faire, déposez le fichier quelque part et envoyez un lien."
+    },
+    {
+      "h": "Tous les ports non chiffrés ont été coupés le 4 juillet 2023, et l'erreur n'aide pas",
+      "p": "La Poste a désactivé toute communication en clair à cette date. Les clients encore réglés sur les anciens ports non chiffrés reçoivent une erreur du type <b>invalid command</b> plutôt qu'un message sur le chiffrement, si bien qu'une configuration qui fonctionnait depuis dix ans ressemble soudain à un compte cassé. Les seules combinaisons prises en charge sont désormais IMAP sur 993, POP sur 995 et SMTP sur 587, toutes avec SSL ou TLS 1.2 au minimum. Si vous reprenez les réglages d'un client pour mcpemails, ne recopiez pas les anciens ports."
+    },
+    {
+      "h": "Pas de SASL-IR, alors que la plupart des bibliothèques clientes le supposent",
+      "p": "Le serveur IMAP de laposte.net n'annonce pas <code>SASL-IR</code> : il rejette donc l'authentification en une étape qui envoie l'identifiant avec la commande <code>AUTHENTICATE</code>. Un client qui suppose SASL-IR reçoit un simple <code>BAD</code> sans explication, qui ressemble en tout point à un mauvais mot de passe. mcpemails détecte ce <code>BAD</code> et relance l'échange en deux étapes, donc c'est géré pour vous, mais c'est la raison pour laquelle d'autres outils IMAP échouent sur laposte.net alors qu'ils fonctionnent partout ailleurs."
+    },
+    {
+      "h": "Ni IDLE, ni MOVE, ni SPECIAL-USE, sur une boîte aux dossiers en français",
+      "p": "La bannière est à peu près la plus courte qui soit : <code>* OK IMAP4 ready</code>. Il n'y a pas d'<code>IDLE</code>, donc le nouveau courrier est découvert par interrogation régulière plutôt que poussé. Il n'y a pas de <code>MOVE</code>, donc classer un message se fait par une copie, une mise à jour d'indicateur et un expunge. Et il n'y a pas de <code>SPECIAL-USE</code>, donc les dossiers Sent, Drafts et Trash (envoyés, brouillons, corbeille) sont reconnus par leur nom, ce qui sur une boîte laposte.net signifie en général <b>Envoyés</b>, <b>Brouillons</b> et <b>Corbeille</b>. Nommez le dossier explicitement si un agent ne le trouve pas."
+    }
+  ],
+  "limits": [
+    "La limite d'envoi de 15 Mo est le plafond pratique de tout ce que votre agent envoie depuis cette boîte, pièces jointes comprises.",
+    "Comme le serveur ne prend pas en charge MOVE, un déplacement n'est pas atomique. Si une connexion tombe en pleine opération, un message peut brièvement exister dans les deux dossiers.",
+    "La Poste ne publie aucun mécanisme de mot de passe d'application pour les logiciels de messagerie laposte.net : si la double authentification bloque la connexion d'un client, il n'existe aucun identifiant par application documenté sur lequel se rabattre."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec l'e-mail laposte.net ?",
+      "a": "Pas tout seul. Claude n'a pas de connecteur La Poste intégré. Relier un serveur MCP comme mcpemails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de laposte.net ?",
+      "a": "L'IMAP est imap.laposte.net sur le port 993 en TLS implicite. Pour l'envoi, La Poste indique smtp.laposte.net sur le port 587 avec TLS ; le port 465 en TLS implicite répond sur le même serveur et c'est celui qu'utilise mcpemails. Connectez-vous avec votre adresse complète et votre mot de passe laposte.net. Les deux serveurs ont été vérifiés par une vraie connexion TLS."
+    },
+    {
+      "q": "laposte.net a-t-il besoin d'un mot de passe d'application ?",
+      "a": "Non. La Poste ne délivre pas de mot de passe d'application pour laposte.net. Les logiciels de messagerie s'authentifient avec le même mot de passe que le webmail, saisi avec votre adresse complète. Si ce mot de passe est refusé, vérifiez-le d'abord dans le webmail, car aucun second identifiant ne peut être en cause."
+    },
+    {
+      "q": "Pourquoi mon logiciel de messagerie ne se connecte-t-il soudain plus à laposte.net ?",
+      "a": "Le plus souvent parce qu'il est encore réglé sur un port non chiffré. La Poste a coupé tous les protocoles en clair le 4 juillet 2023, et les clients sur les anciens ports reçoivent une erreur invalid command au lieu d'un message clair. Passez le compte en IMAP sur 993 ou POP sur 995, et SMTP sur 587, tous avec SSL ou TLS."
+    },
+    {
+      "q": "Pourquoi une pièce jointe n'est-elle pas partie depuis laposte.net ?",
+      "a": "Le serveur SMTP plafonne un message à environ 15,8 Mo, surcoût d'encodage compris, ce qui est peu comparé à la plupart des fournisseurs. Un fichier de plus de 11 Mo environ sur disque le dépassera généralement une fois encodé. Le refus a lieu au moment de la soumission : rien n'est mis en file d'attente ni partiellement distribué."
+    },
+    {
+      "q": "Mon courrier laposte.net est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct chez La Poste via IMAP pour chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le contenu des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA une boîte laposte.net",
+    "sub": "Connectez laposte.net en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

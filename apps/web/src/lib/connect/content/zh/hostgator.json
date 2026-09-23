@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.hostgator.com/help/article/pop3-or-imap-with-ssl",
+    "https://www.hostgator.com/help/article/email-connection-settings",
+    "https://www.hostgator.com/help/article/professional-email-product-overview"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://www.hostgator.com/help/article/pop3-or-imap-with-ssl",
+    "usernameForm": "你的完整邮箱地址，例如 sales@yourdomain.com。不是你的 cPanel 用户名。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "在 Claude 中使用 HostGator 邮箱：可用的 IMAP 设置",
+    "description": "HostGator 的通配符证书覆盖的是 gator1234.hostgator.com，而不是你的域名。IMAP 993 请使用服务器主机名，然后免费将邮箱连接到 Claude。"
+  },
+  "hero": {
+    "eyebrow": "HostGator + AI",
+    "titleLine1": "将 HostGator 邮箱连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 HostGator 邮箱。使用 HostGator 证书真正覆盖的服务器主机名，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行访问 HostGator 邮箱。mcpemails 是一个托管 MCP 服务器，通过端口 993 的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。HostGator 并不运行一台共用的邮件服务器：安全连接时，你要指向你自己服务器的主机名，在共享和云套餐上是 gatorNNNN.hostgator.com，在经销商套餐上是 servername.websitewelcome.com，因为它们的通配符证书覆盖的正是这些名称。认证使用在 cPanel 中为邮箱设置的密码，1 个收件箱免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "来自 cPanel 的邮箱密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "HostGator 邮箱如何连接：服务器主机名，IMAP 993",
+    "body": "HostGator 运行 cPanel，安全连接时邮箱在端口 993 上提供 IMAP、在 465 上提供 SMTP；未加密时则为 143 以及 25 或 587。人们出错的地方是主机名。<code>mail.yourdomain.com</code> 可用于未加密的会话，但 HostGator 用<b>通配符</b>证书保护邮件，在共享和云账户上覆盖 <code>.hostgator.com</code>，在经销商账户上覆盖 <code>.websitewelcome.com</code>。你自己的域名不在任何一张证书上。所以使用 TLS 时，你要用服务器自己的主机名，形如 <code>gator1234.hostgator.com</code> 或 <code>servername.websitewelcome.com</code>。HostGator 自己的 SSL 文章正是这样说的，并建议更新设置，而不是屏蔽警告。用户名始终是完整的邮箱地址。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "从 cPanel 的 URL 中读取服务器主机名",
+      "p": "在 HostGator Customer Portal 中依次选择 <b>Hosting</b>、<b>Manage</b>，然后在 Quick Links 下选择 <b>cPanel</b>。cPanel 打开后，看浏览器的地址栏。URL 中的主机名就是你的服务器：共享和云套餐上是 <code>gator1234.hostgator.com</code>，经销商套餐上是某个 <code>websitewelcome.com</code> 名称。IMAP 和 SMTP 都使用这个值。它也列在 Email Accounts 的 <b>Connect Devices</b> 下的 <b>Mail Client Manual Settings</b> 区块中。"
+    },
+    {
+      "h": "使用邮箱密码，而不是 cPanel 密码",
+      "p": "IMAP 验证的是为单个地址设置的密码。在 cPanel 中打开 <b>Email Accounts</b>，点击该地址旁的 <b>Manage</b> 设置密码。然后把它粘贴到 mcpemails，用户名填完整邮箱地址，服务器填你刚复制的服务器主机名。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "共享账户和经销商账户使用不同的证书体系",
+      "p": "共享或云账户由 <code>.hostgator.com</code> 通配符证书覆盖；经销商账户由 <code>.websitewelcome.com</code> 的证书覆盖。这意味着，经销商如果照着共享主机的 HostGator 指南输入 <code>gator</code> 主机名，得到的不只是证书警告，而是连到了完全错误的机器。在复制任何人的设置之前（包括 HostGator 自己的文章，其中好几篇只针对一种情况），请先确认你用的是哪种产品。"
+    },
+    {
+      "h": "浏览器地址栏是找到服务器名称最快的地方",
+      "p": "HostGator 没有在门户中醒目地显示服务器主机名，而 <code>gator1234</code> 中的数字无法从你的域名、账号或你已知的任何信息推导出来。可靠的办法是打开 cPanel，直接从 URL 中读取主机名。客服和 Connect Devices 页面也会告诉你同样的值，但地址栏只需一次点击，而且不会看错。"
+    },
+    {
+      "h": "点过证书警告是错误的解决办法，还会掩盖真正的问题",
+      "p": "由于名称不匹配在 HostGator 上极为常见，通常的变通方法是接受证书或添加例外。桌面客户端允许你这样做。而来自服务器的自动化 IMAP 连接（MCP 集成正是这种连接）通常不允许，也不应该允许：一旦你习惯性地忽略名称不匹配，就无法察觉真正的不匹配。指向服务器主机名，证书就能正常通过校验，任何地方都不需要例外。"
+    }
+  ],
+  "limits": [
+    "Professional Email 是 HostGator 基于 Titan 的付费产品，是位于另一组服务器上的独立邮箱。它的设置不是本页的 cPanel 设置，两者也不共用密码。",
+    "通过 HostGator 迁移到 Google Workspace 的域名，其邮件已完全不在 HostGator 服务器上。它的 MX 记录指向 Google，邮箱必须按 Gmail 连接。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 HostGator 邮箱吗？",
+      "a": "不能直接使用。Claude 没有 HostGator 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，所用凭据与任何桌面邮件客户端相同。"
+    },
+    {
+      "q": "HostGator 的 IMAP 和 SMTP 设置是什么？",
+      "a": "安全 IMAP 为端口 993，安全 SMTP 为端口 465，都使用隐式 TLS。主机名是你服务器自己的名称：在共享和云套餐上，是 gator 加你的服务器编号再加 hostgator.com；在经销商套餐上，是某个 websitewelcome.com 名称。收信和发信都以完整邮箱地址作为用户名。"
+    },
+    {
+      "q": "为什么 HostGator 邮箱会出现 SSL 证书错误？",
+      "a": "因为 HostGator 用 hostgator.com 和 websitewelcome.com 的通配符证书保护邮件，而你自己的域名不在上面。因此，通过 TLS 把客户端指向 mail.yourdomain.com 会导致名称校验失败。把主机名换成你服务器的名称，错误就会消失，无需添加任何例外。"
+    },
+    {
+      "q": "如何找到我的 HostGator 服务器名称？",
+      "a": "登录 Customer Portal，依次选择 Hosting、Manage、cPanel。cPanel 打开后，浏览器地址栏中的主机名就是你的服务器名称。同样的值也出现在 cPanel 的 Email Accounts、Connect Devices 下的 Mail Client Manual Settings 部分。"
+    },
+    {
+      "q": "我的 HostGator 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从你的 HostGator 服务器实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 HostGator 收件箱",
+    "sub": "几分钟即可连接 HostGator 邮箱。1 个收件箱永久免费，无需信用卡。"
+  }
+}

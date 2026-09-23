@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://help.mail.163.com/faqDetail.do?code=d7a5dc8471cd0c0e8b4b8f4f8e49998b374173cfe9171305fa1ce630d7f67ac286624f309a1a7089",
+    "https://help.vip.163.com/faqDetail.do?code=d7a5dc8471cd0c0e8b4b8f4f8e49998b374173cfe9171305fa1ce630d7f67ac26322b70fe063261c",
+    "https://help.mail.163.com/faqDetail.do?code=d7a5dc8471cd0c0e8b4b8f4f8e49998b374173cfe9171305fa1ce630d7f67ac2eda07326646e6eb0"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Klientautorisasjonskode (授权码)",
+    "helpUrl": "https://help.mail.163.com/faqDetail.do?code=d7a5dc8471cd0c0e8b4b8f4f8e49998b374173cfe9171305fa1ce630d7f67ac286624f309a1a7089",
+    "usernameForm": "Hele adressen din, inkludert domenet: name@163.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble NetEase 163 Mail til Claude via IMAP",
+    "description": "Koble NetEase 163 Mail til Claude, Cursor eller enhver MCP-klient via IMAP på imap.163.com:993. Krever en klientautorisasjonskode på 16 tegn, ikke passordet ditt."
+  },
+  "hero": {
+    "eyebrow": "NetEase 163 Mail + AI",
+    "titleLine1": "Koble 163.com-e-post til Claude,",
+    "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte 163.com-postkasse. Les, søk, send, svar, planlegg og organiser e-post via IMAP med en NetEase-autorisasjonskode, i alle MCP-klienter i stedet for bare én.",
+    "answer": "Claude når ikke NetEase 163 Mail på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.163.com port 993 og autentiserer med klientautorisasjonskoden på 16 tegn (授权码) som NetEase utsteder, i stedet for postkassepassordet ditt. Du må slå på klientprotokollen i innstillingene i 163 Mail og bestå en SMS-sjekk før koden utstedes, og NetEase blokkerer også klienter som ikke identifiserer seg med IMAP-kommandoen ID. Én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Autorisasjonskode, utstedt etter SMS-sjekk",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler 163 Mail seg til: IMAP, en autorisasjonskode og et IMAP ID-håndtrykk",
+    "body": "163 Mail kjører på NetEases Coremail-plattform og tilbyr IMAP på <code>imap.163.com</code> port 993 over TLS, med SMTP på <code>smtp.163.com</code> port 465. To ting må være på plass før en klient logger inn. For det første må klientprotokollen være slått på i postkasseinnstillingene, som gir deg en <b>autorisasjonskode på 16 store bokstaver</b> som erstatter postkassepassordet overalt der en klient ber om det. For det andre må klienten sende IMAP-kommandoen <code>ID</code> og identifisere seg før den autentiserer: NetEase avviser klienter som hopper over den med <code>Unsafe Login</code>, som slett ikke er et problem med påloggingsdetaljene. mcpemails gjør begge deler."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og forblir gratis, uten kort. Ha telefonen klar: NetEase ber deg sende en bekreftelses-SMS i neste steg."
+    },
+    {
+      "h": "Slå på klientprotokollen i 163 Mail",
+      "p": "Logg inn på mail.163.com, åpne 设置 (innstillinger) og så 常规设置 (generelle innstillinger), og velg POP3/SMTP/IMAP i sidefeltet til venstre. Slå på IMAP/SMTP. NetEase foreslår først sin egen 邮箱大师-klient; klikk 继续开启 (fortsett å aktivere) for å gå videre."
+    },
+    {
+      "h": "Bestå SMS-sjekken, og lim så koden inn i mcpemails",
+      "p": "NetEase viser en QR-kode som lager en bekreftelses-SMS på telefonen din, med 试试手动发送短信 (prøv å sende SMS-en manuelt) som reserve. Send den, vent opptil ett minutt, og klikk 我已发送 (jeg har sendt den). Autorisasjonskoden på 16 store bokstaver vises én gang. Kopier den, velg IMAP / SMTP i mcpemails, skriv inn hele 163-adressen din og lim inn koden som passord."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-klienten",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så kan agenten lese, søke, sende, svare, videresende, planlegge og organisere 163-postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "«Unsafe Login» er ikke et passordproblem",
+      "p": "NetEase krever at tredjepartsklienter presenterer seg med IMAP-kommandoen <code>ID</code> fra RFC 2971, med navn, versjon, leverandør og supportadresse, før de autentiserer. En klient som hopper over den, avvises med <code>Unsafe Login. Please contact kefu@188.com for help</code>, og NetEase legger i tillegg en advarsel i postkassen. Fordi den kommer akkurat der en innloggingsfeil ville kommet, konkluderer de fleste med at autorisasjonskoden er feil og genererer en ny, noe som ikke endrer noe. mcpemails sender ID-håndtrykket, så denne er allerede håndtert."
+    },
+    {
+      "h": "Den eneste mekanismen 163 annonserer, er XOAUTH2",
+      "p": "163s IMAP-server lister <code>AUTH=XOAUTH2</code> i funksjonene sine og ingenting annet, så en klient som velger autentiseringsmekanisme fra den annonserte listen, finner ingenting den kan bruke og gir opp før den i det hele tatt prøver. Den vanlige IMAP-kommandoen <code>LOGIN</code> med autorisasjonskoden er det som faktisk virker på port 993. Derfor feiler noen ellers fornuftige IMAP-biblioteker mot 163 mens de kobler til alt annet."
+    },
+    {
+      "h": "Autorisasjonskoden vises én gang og kan ikke leses tilbake",
+      "p": "NetEase lagrer koden hashet, så innstillingsskjermen viser den aldri til deg igjen. Mister du den, er eneste vei å legge til en ny fra 设置 og så POP3/SMTP/IMAP, eller fra NetEase Mail Master-appen under 我, 邮箱管理, 第三方登录管理, 通用授权码. Postkassepassordet er ikke noen reserve her; når klientprotokollene er på, er koden påloggingen."
+    },
+    {
+      "h": "126.com er samme plattform, på andre vertsnavn",
+      "p": "NetEase driver 126.com, 188.com og yeah.net ved siden av 163.com på samme Coremail-stakk, med samme flyt for autorisasjonskode og samme krav om IMAP ID. Vertsnavnene er ikke utskiftbare. En <code>name@126.com</code>-adresse autentiserer mot <code>imap.126.com</code>, ikke mot <code>imap.163.com</code>, og peker du feil vert mot feil domene, feiler det som en autentiseringsfeil i stedet for en rutingfeil."
+    }
+  ],
+  "limits": [
+    "163s IMAP-server implementerer ikke MOVE-utvidelsen, så flytting av en melding utføres som en kopi, et sletteflagg og en expunge. Resultatet blir det samme, men en flytting er tre rundturer i stedet for én, noe som merkes når agenten din arkiverer en stor mengde.",
+    "Det finnes ikke IDLE-støtte, så e-post hentes ved polling i stedet for push. Agenten din ser nye meldinger neste gang den ser etter, ikke i det øyeblikket de kommer.",
+    "imap.163.com og smtp.163.com betjenes fra det kinesiske fastlandet, så hver forespørsel fra en klient utenfor Kina har grensekryssende rundturforsinkelse i tillegg til de vanlige IMAP-rundturene."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med NetEase 163 Mail?",
+      "a": "Ikke direkte. Claude har ingen innebygd 163-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som mcpemails til 163-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer i Cursor og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for 163.com?",
+      "a": "IMAP er imap.163.com på port 993 med implisitt TLS. SMTP er smtp.163.com på port 465. Logg inn med hele 163-adressen din og klientautorisasjonskoden på 16 tegn i stedet for postkassepassordet. Begge vertene ble verifisert via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvordan får jeg 163-autorisasjonskoden?",
+      "a": "Logg inn på mail.163.com, åpne 设置 og så 常规设置, velg POP3/SMTP/IMAP og slå på IMAP/SMTP. Klikk 继续开启 forbi anbefalingen om å bruke NetEase Mail Master, send bekreftelses-SMS-en fra den tilknyttede telefonen, og klikk så 我已发送. Koden på 16 store bokstaver vises én gang."
+    },
+    {
+      "q": "Hvorfor sier 163 Unsafe Login?",
+      "a": "Fordi klienten ikke sendte IMAP-kommandoen ID og identifiserte seg før autentisering. NetEase krever det av tredjepartsklienter og avviser ellers tilkoblingen med den meldingen. Det har ingenting med passordet eller autorisasjonskoden din å gjøre, og en ny kode fjerner det ikke."
+    },
+    {
+      "q": "Er 126.com det samme som 163.com?",
+      "a": "Det er samme NetEase-plattform med samme flyt for autorisasjonskode, men en annen postkasse på andre vertsnavn. En 126.com-adresse kobler til på imap.126.com og smtp.126.com. Har du begge, kobler du dem til som to separate innbokser, hver med sin egen kode."
+    },
+    {
+      "q": "Lagres 163-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra 163 via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring; meldingsinnhold beholdes ikke etter forespørselen som ba om det."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en 163 Mail-innboks",
+    "sub": "Koble til NetEase 163 Mail på minutter med autorisasjonskoden din. Én innboks gratis for alltid, uten kort."
+  }
+}

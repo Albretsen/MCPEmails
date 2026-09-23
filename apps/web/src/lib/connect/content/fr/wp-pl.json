@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://pomoc.wp.pl/jak-skonfigurowac-program-pocztowy",
+    "https://pomoc.wp.pl/aktywacja-dostepu-dla-programow-pocztowych",
+    "https://pomoc.wp.pl/wpkonto/hasla-do-aplikacji-zewnetrznej"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Mot de passe du compte WP, ou un mot de passe de programme de messagerie avec la connexion en deux étapes",
+    "helpUrl": "https://pomoc.wp.pl/aktywacja-dostepu-dla-programow-pocztowych",
+    "usernameForm": "Votre adresse complète, par exemple nom@wp.pl.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "WP.pl Poczta dans Claude : activez d'abord IMAP",
+    "description": "Connectez WP.pl Poczta à Claude et tout client MCP en IMAP sur imap.wp.pl:993. Activez d'abord IMAP dans Opcje ; la connexion en deux étapes change le mot de passe."
+  },
+  "hero": {
+    "eyebrow": "WP.pl Poczta + IA",
+    "titleLine1": "Connectez votre boîte WP.pl",
+    "titleLine2": "à Claude, Cursor, tout client MCP",
+    "lead": "WP Poczta parle IMAP dès que vous l'activez. mcpemails connecte la boîte pour que votre agent IA puisse lire, rechercher, envoyer, répondre et classer le courrier depuis tous les clients MCP plutôt que depuis une seule application.",
+    "answer": "Claude ne peut pas accéder seul à une boîte WP.pl. mcpemails est un serveur MCP hébergé qui la connecte en IMAP sur imap.wp.pl, port 993, en se connectant avec votre adresse complète. Deux choses décident si la connexion fonctionne : IMAP doit être activé dans le webmail sous Opcje, onglet IMAP/POP, et si vous utilisez la connexion en deux étapes, votre mot de passe habituel est refusé et vous devez créer à la place un mot de passe de programme de messagerie. Une fois ces points réglés, Claude, Cursor ou tout autre client MCP peut lire, rechercher, envoyer et organiser ce courrier, et une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Activez d'abord IMAP dans Opcje",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment WP.pl se connecte : activez IMAP, puis choisissez le bon mot de passe",
+    "body": "WP sert IMAP sur <code>imap.wp.pl</code>, port 993, en SSL, et l'envoi sur <code>smtp.wp.pl</code>, port 465, également en SSL, avec authentification SMTP obligatoire. Le nom d'utilisateur est l'adresse entière. Avant tout cela, l'accès client doit être activé : connectez-vous au webmail, ouvrez <b>Opcje</b>, allez dans l'onglet <b>IMAP/POP</b> et activez IMAP, que l'aide de WP décrit comme l'option qui permet à la fois de télécharger et d'envoyer des messages. Le mot de passe à utiliser dépend ensuite d'un seul réglage du compte. Sans connexion en deux étapes, le mot de passe du compte authentifie directement. Avec la connexion en deux étapes, WP précise que vous ne vous connectez pas du tout aux programmes de messagerie avec votre mot de passe du navigateur : pour chaque programme qui utilise IMAP ou POP, vous créez un <b>mot de passe de programme de messagerie</b> distinct. Les pages d'aide de WP n'associent aucune condition d'offre à tout cela."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et ne demande pas de carte bancaire."
+    },
+    {
+      "h": "Activez IMAP sous Opcje dans WP Poczta",
+      "p": "Connectez-vous à votre messagerie WP dans un navigateur, cliquez sur <b>Opcje</b>, choisissez l'onglet <b>IMAP/POP</b> et activez IMAP, l'option que WP décrit comme permettant de télécharger et d'envoyer des messages. POP est un interrupteur distinct sur le même écran et vous n'en avez pas besoin. Tant qu'IMAP n'est pas activé, aucun client ne peut se connecter et l'échec ressemble à un mauvais mot de passe."
+    },
+    {
+      "h": "Choisissez le mot de passe qu'utilisera la connexion",
+      "p": "Si la connexion en deux étapes est désactivée, utilisez votre mot de passe habituel du compte WP. Si elle est activée, ouvrez la section de sécurité du compte, allez dans l'onglet <b>Two-step login</b> (connexion en deux étapes), trouvez la section des mots de passe de programmes de messagerie, choisissez <b>Create password</b> (créer un mot de passe), et renseignez le nom du programme et le nom de l'appareil demandés par WP. La chaîne générée n'apparaît qu'une fois à l'écran. Créez-en une distincte pour chaque programme que vous connectez."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Saisissez l'adresse et le mot de passe dans mcpemails sous IMAP / SMTP, avec les serveurs WP préremplis, puis mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT et autorisez."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Impossible de créer un mot de passe de programme de messagerie sans la connexion en deux étapes",
+      "p": "Cela surprend ceux qui veulent un secret propre à chaque application par sécurité. L'aide de WP est précise : le bouton de la section des mots de passe de programmes de messagerie reste inactif tant que la connexion en deux étapes n'est pas activée avec un code d'application ou une clé de sécurité. Il n'y a donc aucun moyen de confier à un agent un identifiant restreint tout en laissant le compte sur un mot de passe unique, ni de continuer à utiliser le mot de passe du compte une fois la connexion en deux étapes activée. C'est un seul réglage qui bascule les deux comportements à la fois, et désactiver de nouveau la connexion en deux étapes invalide les mots de passe de programmes que vous avez créés."
+    },
+    {
+      "h": "IMAP est désactivé tant que vous ne l'activez pas, et l'erreur ne le dit pas",
+      "p": "WP place l'accès client derrière l'onglet IMAP/POP d'Opcje, et une boîte qui n'a jamais été utilisée que dans le navigateur l'a désactivé. Tant qu'il l'est, le serveur refuse des identifiants corrects, ce qui pousse les gens à réinitialiser en boucle un mot de passe qui n'a jamais été le problème. Si votre connexion échoue au premier essai, vérifiez ce point avant tout le reste."
+    },
+    {
+      "h": "AUTH=PLAIN uniquement, et pas de SASL-IR",
+      "p": "<code>imap.wp.pl</code> annonce <code>AUTH=PLAIN</code> et n'annonce pas SASL-IR : il rejette donc l'authentification en une étape qui envoie les identifiants avec la commande AUTHENTICATE, et il n'offre rien aux clients figés sur le mécanisme LOGIN. Les deux échecs reviennent sous forme d'un simple refus qui ressemble à de mauvais identifiants. mcpemails réessaie avec l'échange en deux étapes, c'est pourquoi une boîte WP se connecte ici après avoir échoué dans d'autres outils IMAP."
+    },
+    {
+      "h": "MOVE et UIDPLUS sont là, mais pas SPECIAL-USE",
+      "p": "Le serveur de WP est plus complet que la plupart dans cette catégorie : il implémente MOVE, donc classer un message est une seule commande atomique, UIDPLUS, donc le nouvel identifiant est renvoyé, et IDLE, donc le nouveau courrier est poussé au lieu d'être interrogé périodiquement. Ce qu'il n'annonce pas, c'est SPECIAL-USE : rien n'indique donc à un client quel dossier est Envoyés, Brouillons ou Corbeille. Sur une boîte polonaise, ces dossiers portent leur nom polonais ; si un agent ne trouve pas un dossier, donnez-lui le nom tel qu'il apparaît dans le webmail."
+    }
+  ],
+  "limits": [
+    "Les rôles des dossiers sont reconnus par leur nom plutôt qu'annoncés par le serveur, car SPECIAL-USE n'est pas annoncé.",
+    "Un identifiant propre à l'application n'existe que si vous activez la connexion en deux étapes. Sans elle, la connexion détient le mot de passe principal de votre compte."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec l'e-mail WP.pl ?",
+      "a": "Pas directement. Claude n'a pas de connecteur WP intégré. Connecter un serveur MCP comme mcpemails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier wp.pl, et la même connexion fonctionne dans Cursor, ChatGPT et les autres clients MCP. IMAP doit d'abord être activé sur la boîte."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de WP.pl ?",
+      "a": "IMAP : imap.wp.pl sur le port 993 en SSL, et SMTP : smtp.wp.pl sur le port 465, également en SSL, avec authentification obligatoire. WP documente pop3.wp.pl sur 995 comme alternative POP. Les deux serveurs utilisés ici ont été vérifiés par une connexion TLS réelle. Le nom d'utilisateur est votre adresse e-mail complète."
+    },
+    {
+      "q": "Comment activer IMAP sur WP Poczta ?",
+      "a": "Connectez-vous au webmail, cliquez sur Opcje, ouvrez l'onglet IMAP/POP et activez IMAP, que WP décrit comme l'option pour télécharger et envoyer des messages. La modification prend effet immédiatement. Il n'y a pas d'étape d'approbation distincte et l'aide de WP n'y associe aucune condition d'offre."
+    },
+    {
+      "q": "WP.pl propose-t-il des mots de passe d'application ?",
+      "a": "Il propose des mots de passe de programmes de messagerie, mais seulement si la connexion en deux étapes est activée. WP indique qu'avec la connexion en deux étapes, vous n'utilisez pas votre mot de passe du navigateur dans un programme de messagerie, et que vous créez un mot de passe par programme depuis l'onglet de connexion en deux étapes, en nommant le programme et l'appareil. Sans connexion en deux étapes, le bouton de création est inactif et c'est le mot de passe du compte qui authentifie."
+    },
+    {
+      "q": "Mon courrier WP.pl est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis WP en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte WP.pl à votre IA",
+    "sub": "Activez IMAP dans Opcje, puis connectez-vous. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

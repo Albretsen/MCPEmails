@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://www.swisscom.ch/en/residential/help/e-mail/setup.html",
+    "https://www.swisscom.ch/de/privatkunden/hilfe/internet/e-mail-setup-ssl.tab-auf-dem-computer.html"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Bluewin-e-postpassord",
+    "helpUrl": "https://www.swisscom.ch/en/residential/help/e-mail/setup.html",
+    "usernameForm": "Hele Bluewin-adressen din, for eksempel firstname.lastname@bluewin.ch.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Bluewin-e-post (Swisscom) til Claude via IMAP",
+    "description": "Koble Bluewin-e-post til Claude og enhver MCP-klient over IMAP på imaps.bluewin.ch:993. Swisscom krever det egne e-postpassordet i klienter, ikke påloggingen din."
+  },
+  "hero": {
+    "eyebrow": "Bluewin + AI",
+    "titleLine1": "Koble Bluewin-e-post til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte bluewin.ch-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP med Swisscom-e-postpassordet ditt, i alle MCP-klienter i stedet for bare én.",
+    "answer": "Claude kan ikke nå en Bluewin-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP på imaps.bluewin.ch, port 993, og logger inn med hele bluewin.ch-adressen din og Bluewin-e-postpassordet ditt, som Swisscom holder adskilt fra passordet til My Swisscom-påloggingen. Når den er koblet til, kan Claude, Cursor eller enhver annen MCP-klient lese, søke i, sende, svare på og organisere den e-posten. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "E-postpassord, ikke Swisscom-pålogging",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles Bluewin til: IMAP og det egne e-postpassordet",
+    "body": "Swisscom leverer Bluewin-e-post over IMAP på <code>imaps.bluewin.ch</code>, port 993, og tar imot utgående e-post på <code>smtpauths.bluewin.ch</code>, port 465, begge med TLS etablert i det øyeblikket tilkoblingen åpnes. Påloggingsopplysningen er der Bluewin skiller seg fra de fleste leverandører: Swisscom sier rett ut at e-postpassordet ikke tilsvarer passordet til Swisscom-påloggingen. Det finnes ett e-postpassord per adresse, du setter eller endrer det i My Swisscom, og det samme passordet brukes for IMAP, SMTP og protokollene for kalender og kontakter. Brukernavnet ditt er hele adressen, vanligvis på formen <code>firstname.lastname@bluewin.ch</code>."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
+    },
+    {
+      "h": "Sett eller sjekk e-postpassordet i My Swisscom",
+      "p": "Logg inn i My Swisscom og åpne delen for å endre e-postpassordet for Bluewin-adressen du vil koble til. Dette er et annet passord enn det du brukte for å komme inn i My Swisscom. Hvis du aldri har satt det, gjør du det nå; verdien du velger her, er den en e-postklient bruker."
+    },
+    {
+      "h": "Skriv inn adressen og e-postpassordet i mcpemails",
+      "p": "Velg IMAP / SMTP, skriv inn hele <code>@bluewin.ch</code>-adressen din, og lim inn e-postpassordet i stedet for passordet til Swisscom-påloggingen. Bluewin-vertene er forhåndsutfylt, inkludert de avsluttende bokstavene som er lette å skrive feil."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Passordet til Swisscom-påloggingen vil aldri fungere i en e-postklient",
+      "p": "Swisscom bruker to påloggingsopplysninger for én konto: Swisscom-påloggingen, som gir deg tilgang til My Swisscom og kundeportalen, og e-postpassordet, som er det eneste IMAP og SMTP godtar. De kan settes til ulike verdier, og det er de som regel. Nesten alle autentiseringsfeil med Bluewin skyldes dette, og å tilbakestille passordet til Swisscom-påloggingen hjelper ikke, fordi det ikke er det passordet som sjekkes."
+    },
+    {
+      "h": "Vertsnavnene er imaps og smtpauths, ikke imap og smtp",
+      "p": "Bluewins servernavn har ekstra bokstaver som folk glemmer når de skriver fra hukommelsen: den innkommende verten slutter på <code>imaps</code> med s, og den utgående verten er <code>smtpauths</code>, ikke <code>smtp</code>. Et forkortet navn peker ikke til en e-postserver hos Swisscom, så klienten melder en tilkoblingsfeil og ikke en autentiseringsfeil. Hvis du skriver inn innstillinger for hånd andre steder, bør du kopiere dem i stedet for å skrive dem på nytt."
+    },
+    {
+      "h": "Ingen SPECIAL-USE, så mapper matches etter navnet du ser i webmail",
+      "p": "Bluewins IMAP-server annonserer ikke SPECIAL-USE-utvidelsen, som er måten en klient vanligvis får vite hvilken mappe som er Sendt og hvilken som er Papirkurv. Mapper må derfor matches etter navn, og Bluewin navngir dem på språket webmailen din er satt til, så en tysk konto har Gesendet der en engelsk har Sent. Hvis en agent legger noe på feil sted, oppgir du målmappen nøyaktig slik Bluewins webmail viser den."
+    },
+    {
+      "h": "Både MOVE og UIDPLUS mangler",
+      "p": "Denne serveren støtter verken MOVE eller UIDPLUS. Å flytte en melding til en mappe skjer derfor som COPY, deretter STORE av slettet-flagget, deretter EXPUNGE, og serveren oppgir aldri ID-en den tildelte den nye kopien. mcpemails håndterer sekvensen, men en flytting er ikke atomisk her, og en flyttet melding bekreftes ved å søke i målmappen i stedet for via ID."
+    }
+  ],
+  "limits": [
+    "Bluewins SMTP-vert oppgir en maksimal meldingsstørrelse på omtrent 25 MB, som er lavere enn hos de fleste leverandørene på dette nettstedet, så en sending med flere store vedlegg avvises før den går ut.",
+    "Mapperoller matches etter navn fordi SPECIAL-USE ikke annonseres. En postkasse der mappene har fått nye navn, kan kreve at mappen oppgis eksplisitt."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Bluewin-e-post?",
+      "a": "Ikke direkte. Claude har ingen innebygd kobling for Bluewin eller Swisscom. Kobler du en MCP-server som mcpemails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i bluewin.ch-e-posten din, og den samme tilkoblingen fungerer i Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Bluewin?",
+      "a": "IMAP er imaps.bluewin.ch på port 993 med TLS fra starten av tilkoblingen. SMTP er smtpauths.bluewin.ch på port 465, også med implisitt TLS, og autentisering er påkrevd. Brukernavnet er hele bluewin.ch-adressen din. Begge vertene ble bekreftet via en faktisk TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvorfor blir Bluewin-passordet mitt avvist?",
+      "a": "Fordi en e-postklient trenger Bluewin-e-postpassordet, og de fleste prøver passordet til Swisscom-påloggingen. Swisscom dokumenterer disse som to separate påloggingsopplysninger. Sett eller tilbakestill e-postpassordet for akkurat den adressen i My Swisscom, og bruk deretter den nye verdien. Å endre passordet til Swisscom-påloggingen endrer ikke det IMAP godtar."
+    },
+    {
+      "q": "Trenger jeg et app-passord for Bluewin?",
+      "a": "Nei. Swisscom utsteder ikke passord per applikasjon. Det finnes ett enkelt e-postpassord per adresse, satt i My Swisscom, og det brukes for IMAP, SMTP og protokollene for kalender og kontakter. Det betyr også at en endring av det kobler fra alle klienter samtidig, så oppdater dem samlet."
+    },
+    {
+      "q": "Lagres Bluewin-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Swisscom over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke oppbevart."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Bluewin-innboks",
+    "sub": "Koble til en bluewin.ch-adresse på få minutter med Swisscom-e-postpassordet ditt. Én innboks gratis for alltid, uten kort."
+  }
+}

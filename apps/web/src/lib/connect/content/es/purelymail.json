@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://purelymail.com/docs/setup/technical",
+    "https://support.purelymail.com/support/solutions/articles/159000430778-server-settings-imap-smtp-and-pop3",
+    "https://support.purelymail.com/support/solutions/articles/159000412945-how-to-create-an-app-password",
+    "https://purelymail.com/docs/users",
+    "https://purelymail.com/docs/features",
+    "https://purelymail.com/docs/deviceSetup",
+    "https://purelymail.com/pricing"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña del buzón (contraseña de aplicación si la 2FA está activada)",
+    "helpUrl": "https://support.purelymail.com/support/solutions/articles/159000430778-server-settings-imap-smtp-and-pop3",
+    "usernameForm": "La dirección completa del buzón, con el dominio: you@yourdomain.com, no el nombre de cuenta de Purelymail con el que inicias sesión en el portal.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta Purelymail a Claude, Cursor y clientes MCP",
+    "description": "Conecta Purelymail a Claude, Cursor, ChatGPT y cualquier cliente MCP por IMAP en imap.purelymail.com:993 con la contraseña del buzón. 1 bandeja gratis, para siempre."
+  },
+  "hero": {
+    "eyebrow": "Purelymail + IA",
+    "titleLine1": "Conecta Purelymail a Claude,",
+    "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja de Purelymail real. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña propia del buzón, en todos los clientes MCP y no solo en uno.",
+    "answer": "Claude no puede llegar a Purelymail por su cuenta. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.purelymail.com, puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Purelymail no tiene ningún interruptor de IMAP que buscar: te autenticas con la dirección de correo completa del buzón y la contraseña propia de ese buzón, o con una contraseña de aplicación si el buzón tiene activada la autenticación de dos factores. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña del buzón o contraseña de aplicación",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Purelymail: IMAP y la contraseña propia del buzón",
+    "body": "Purelymail sirve IMAP en <code>imap.purelymail.com</code>, puerto 993, sobre TLS, y SMTP en <code>smtp.purelymail.com</code>, puerto 465, también con TLS implícito. No hay nada que activar antes. Purelymail trata IMAP, POP3 y SMTP como un acceso normal y cada buzón los tiene desde el momento en que se crea, lo que ya lo pone por delante de la mayoría de los proveedores de webmail. En lo que la gente se equivoca aquí es en <b>qué credenciales escribe</b>. Purelymail separa tu <b>cuenta</b> (account), que es el inicio de sesión del portal de gestión y la factura fija de $10 al año, de tus <b>usuarios</b> (users), que son los buzones que realmente envían y reciben. IMAP quiere un usuario: la dirección completa con el dominio, más la contraseña propia de ese usuario. Esto vale tanto si la dirección está en un dominio compartido de Purelymail como en un dominio personalizado que hayas traído tú, porque los nombres de servidor son los mismos para todos los clientes."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. No hace falta tarjeta, y el plan gratuito conecta una bandeja durante todo el tiempo que quieras."
+    },
+    {
+      "h": "Abre la página de usuarios en el portal de Purelymail",
+      "p": "Inicia sesión en el portal de cuenta de Purelymail y haz clic en <b>User</b> en la navegación superior. La dirección que aparece ahí es el nombre de usuario que vas a usar, escrito completo con su dominio. El nombre de cuenta con el que te registraste no es un buzón y nunca se autenticará por IMAP."
+    },
+    {
+      "h": "Añade una contraseña de aplicación si ese usuario tiene 2FA, y conecta",
+      "p": "Si la autenticación multifactor está activada para ese usuario, abre el usuario, baja hasta <b>App Passwords</b>, haz clic en <b>Add New</b>, ponle un nombre y copia el código. Purelymail lo muestra una sola vez. Ahora elige IMAP / SMTP en mcpemails e introduce la dirección completa y esa contraseña. Los servidores de abajo ya vienen rellenados."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "El inicio de sesión del portal no es el inicio de sesión de un buzón",
+      "p": "Purelymail separa a propósito la cuenta que inicia sesión en el portal de gestión y paga la factura de los usuarios que contienen el correo. IMAP y SMTP solo aceptan un usuario, y solo completo: <code>you@yourdomain.com</code>, nunca la parte local sola y nunca el nombre de cuenta que elegiste al registrarte. El servidor responde a un nombre de cuenta incorrecto y a una contraseña incorrecta con el mismo fallo de autenticación genérico, así que parece una errata y no un error de concepto."
+    },
+    {
+      "h": "Un alias o un catch-all no tiene detrás ningún buzón en el que iniciar sesión",
+      "p": "Purelymail te permite entregar <code>info@yourdomain.com</code> en una bandeja existente con una regla de enrutamiento, y una regla catch-all puede recoger todas las direcciones de un dominio, sin que ninguna de esas direcciones exista como usuario. La propia documentación de Purelymail dice explícitamente que no necesitas crear cuentas de usuario para ellas. Son destinos de entrega, no inicios de sesión, así que no hay nada contra lo que autenticarse. Conecta el usuario al que entrega la regla y deja que tu agente filtre por la cabecera To."
+    },
+    {
+      "h": "La exigencia de contraseña de aplicación es por buzón, no por cuenta",
+      "p": "Purelymail solo obliga a usar una contraseña de aplicación a los usuarios que tienen activada la autenticación multifactor, y la MFA se configura por separado en cada usuario. Por eso un buzón de tu cuenta puede conectarse con su contraseña normal mientras otro del mismo dominio la rechaza. Revisa el usuario concreto en el portal antes de dar por hecho que la contraseña está mal. Las contraseñas de aplicación están en la sección App Passwords de ese usuario y solo se muestran una vez."
+    }
+  ],
+  "limits": [
+    "El servidor IMAP de Purelymail no anuncia la extensión SPECIAL-USE, así que las carpetas se identifican por nombre y no por función. Sent, Drafts, Junk y Trash se resuelven con normalidad con los nombres por defecto de Roundcube que usa Purelymail, pero puede que tengas que nombrar de forma explícita una carpeta que hayas renombrado tú cuando le pidas a tu agente que archive algo.",
+    "El servidor SMTP de Purelymail anuncia un tamaño máximo de mensaje de unos 51 MB. Un agente que reenvía un adjunto muy grande recibe un rechazo en el envío en lugar de perderlo sin avisar."
+  ],
+  "faq": [
+    {
+      "q": "¿Claude funciona con Purelymail?",
+      "a": "No directamente. Claude no tiene un conector integrado para Purelymail y no puede abrir una sesión IMAP por sí mismo. Conectar un servidor MCP como mcpemails a tu buzón de Purelymail le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona en Cursor, ChatGPT y cualquier otro cliente MCP, no solo en una aplicación."
+    },
+    {
+      "q": "¿Cuál es la configuración IMAP y SMTP de Purelymail?",
+      "a": "IMAP es imap.purelymail.com en el puerto 993 con TLS implícito. SMTP es smtp.purelymail.com en el puerto 465, también con TLS implícito. Inicia sesión con la dirección de correo completa del buzón y la contraseña de ese buzón, o con una contraseña de aplicación si el usuario tiene activada la autenticación de dos factores. Ambos servidores se verificaron con una conexión TLS en vivo en la fecha que se indica en esta página."
+    },
+    {
+      "q": "¿Tengo que activar IMAP antes en Purelymail?",
+      "a": "No. Purelymail no tiene interruptor de IMAP ni un plan de pago que limite el acceso de clientes, así que un buzón es accesible desde el momento en que lo creas. Si un inicio de sesión falla, la causa son las credenciales y no un ajuste que aún no has encontrado."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de Purelymail?",
+      "a": "Tres causas, en el orden en que conviene revisarlas. Estás usando el nombre de cuenta de Purelymail en lugar de la dirección del buzón. La dirección que introdujiste es un alias o una regla catch-all y no un usuario real. O ese usuario tiene activada la autenticación multifactor, lo que significa que solo se autenticará una contraseña de aplicación de su sección App Passwords."
+    },
+    {
+      "q": "¿Funciona con un dominio personalizado en Purelymail?",
+      "a": "Sí. Purelymail no cobra nada extra por los usuarios en dominios que son tuyos, y los buzones de dominio personalizado usan exactamente los mismos servidores imap.purelymail.com y smtp.purelymail.com que las direcciones de los dominios compartidos. Solo cambia el nombre de usuario."
+    },
+    {
+      "q": "¿Se almacena mi correo de Purelymail en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Purelymail por IMAP en cada petición y se pasan a tu cliente de IA. Las credenciales se cifran en reposo; el cuerpo de los mensajes no se conserva después de la petición que lo solicitó."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Purelymail",
+    "sub": "Conecta Purelymail en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

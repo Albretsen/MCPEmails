@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://www.rogers.com/customer/support/article/update-email-settings",
+    "https://ca.help.yahoo.com/kb/rogers/SLN15241.html",
+    "https://ca.help.yahoo.com/kb/rogers/SLN28681.html",
+    "https://business.shaw.ca/support/products/shaw-hosting-sunset"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Rogers Yahoo-app-passord",
+    "helpUrl": "https://ca.help.yahoo.com/kb/rogers/SLN15241.html",
+    "usernameForm": "Hele Rogers Yahoo-adressen din, vanligvis name@rogers.com, skrevet inn i sin helhet.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Rogers Yahoo-e-post og Claude: haken ved app-passordet",
+    "description": "Rogers-e-post kjører på Yahoo. Koble rogers.com til Claude via IMAP på imap.broadband.rogers.com, men Rogers sier nå at generering av app-passord er avsluttet."
+  },
+  "hero": {
+    "eyebrow": "Rogers Yahoo Mail + AI",
+    "titleLine1": "Koble en Rogers Yahoo-innboks",
+    "titleLine2": "til Claude, Cursor, enhver MCP-klient",
+    "lead": "Rogers-e-post er Yahoo-e-post med et rogers.com-navn på. mcpemails kobler den til via IMAP, slik at AI-agenten din kan lese, søke, sende, svare og arkivere den e-posten, forutsatt at kontoen din fortsatt kan lage et app-passord.",
+    "answer": "Claude når ikke en Rogers Yahoo-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.broadband.rogers.com port 993 og autentiserer med et Rogers Yahoo-app-passord i stedet for passordet du skriver inn i webmail. Det er en reell hake du bør sjekke først: Rogers' egen oppsettartikkel sier nå at generering av app-passord ikke lenger er tilgjengelig, mens Yahoos Rogers-hjelp fortsatt dokumenterer knappen Create app password, så åpne kontoens sikkerhetsside før du planlegger rundt dette. Finnes det et app-passord eller kan det fortsatt opprettes, er én innboks gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "App-passord, hvis din kan lage et",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Rogers Yahoo Mail seg til: IMAP, og spørsmålet om pålogging",
+    "body": "Alle rogers.com-postkasser er Yahoo-postkasser bak et Rogers-merke. SMTP-serveren vi koblet til, svarer med et <code>smtp.mail.yahoo.com</code>-banner selv om den nås på <code>smtp.broadband.rogers.com</code>, og IMAP svarer på <code>imap.broadband.rogers.com</code> port 993 over TLS. Den plattformen er god å automatisere mot: den annonserer MOVE, UIDPLUS, SPECIAL-USE, IDLE og SASL-IR, så mapperoller er kjent, flyttinger er atomiske og nye meldings-ID-er kommer tilbake ved kopiering. Det åpne spørsmålet er ikke transporten, men påloggingen. En e-postklient som ikke kan åpne Yahoos eget innloggingsvindu, trenger et app-passord, og Rogers' gjeldende oppsettartikkel sier rett ut at <b>app password generation is no longer available</b> og viser til Rogers' FAQ om endringer i Rogers Yahoo Mail, mens Yahoos Rogers-hjelpeseksjon fortsatt beskriver hvordan du oppretter et under External connections. Sjekk kontoens egen sikkerhetsside i stedet for noen av dokumentene."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
+    },
+    {
+      "h": "Åpne sikkerhetssiden for Rogers Yahoo-kontoen og se etter app-passord",
+      "p": "Logg inn med <code>@rogers.com</code>-adressen din, åpne kontosikkerhet og se under <b>External connections</b> etter <b>Create app password</b>. Er den der, oppretter du ett med navnet <code>mcpemails</code> og kopierer koden; Yahoo viser den én gang. Mangler alternativet, er det Rogers' endring og ikke en feil, og en passordbasert tilkobling er ikke tilgjengelig på den kontoen."
+    },
+    {
+      "h": "Skriv inn rogers.com-adressen og app-passordet",
+      "p": "I mcpemails velger du IMAP / SMTP, skriver hele rogers.com-adressen i brukernavnfeltet og limer inn app-passordet. Ikke bruk webmail-passordet for Rogers Yahoo; det avvises på IMAP-nivå. Vertene og portene under er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Rogers og Yahoo dokumenterer for tiden motsatte ting om app-passord",
+      "p": "Rogers' egen artikkel om oppsett av Rogers Yahoo-e-post åpner med at generering av app-passord ikke lenger er tilgjengelig. Yahoos Rogers-hjelpeseksjon leder deg derimot fortsatt gjennom å opprette et på kontoens sikkerhetsside og påpeker at et app-passord forblir gyldig selv etter at du endrer hovedpassordet. Begge er levende leverandørsider. Den praktiske tolkningen er at Rogers styrer alle mot det innebygde Rogers Yahoo-innloggingsvinduet, at eksisterende app-passord fortsetter å virke til de slettes, og at om et nytt kan opprettes, avgjøres på kontoen din og ikke i dokumentasjonen. Se på siden før du konkluderer."
+    },
+    {
+      "h": "OAuth-mekanismene serveren annonserer, er ikke åpne for deg",
+      "p": "Rogers' IMAP-vert tilbyr OAUTHBEARER og XOAUTH2 ved siden av PLAIN. De er for e-postappene Rogers og Yahoo har registrert, de som åpner et Rogers Yahoo-innloggingsvindu inne i appen. Det finnes ingen selvbetjent side der en kunde kan skaffe et token til eget bruk, så at du ser OAuth i funksjonslisten, betyr ikke at det finnes en alternativ vei hvis app-passord er stengt."
+    },
+    {
+      "h": "Rogers Business-e-post fases ut, og det er en annen tjeneste",
+      "p": "Rogers har stengt eldre Rogers Business-e-post og hostede domener og underdomener fra september 2025, med kontoer som deaktiveres og data som slettes permanent. Supportmaterialet deres sier eksplisitt at dette ikke gjelder <code>rogers.com</code>- eller <code>shaw.ca</code>-adresser for privatkunder, som fortsetter å virke. En bedriftspostkasse på et hostet domene er altså på vei mot sletting og må flyttes, mens en personlig rogers.com-adresse ikke berøres av det programmet."
+    },
+    {
+      "h": "Det utstedes ingen nye rogers.com- eller shaw.ca-adresser",
+      "p": "Du kan beholde privatadressen du allerede har, men Rogers oppretter ikke lenger nye rogers.com- eller shaw.ca-postkasser. Planlegger du en ny adresse som en agent skal jobbe i, kan den ikke være på disse domenene, og postkassen du kobler til, må være en som allerede finnes."
+    }
+  ],
+  "limits": [
+    "Yahoo-SMTP-verten bak Rogers annonserer en maksimal meldingsstørrelse på omtrent 39 MB, så en sending med store vedlegg avvises før den går ut.",
+    "Kan kontoen din ikke lenger lage et app-passord, kan mcpemails ikke koble den til. Det finnes ingen reserve med bare passord, og vi er ikke en av appene som er registrert for Rogers Yahoo OAuth-vinduet."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Rogers-e-post?",
+      "a": "Ikke direkte. Claude har ingen innebygd Rogers-kobling. Kobler du en MCP-server som mcpemails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere rogers.com-e-posten din, og samme tilkobling fungerer i Cursor, ChatGPT og andre MCP-klienter. Det forutsetter at kontoen din kan bruke et app-passord."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Rogers?",
+      "a": "IMAP er imap.broadband.rogers.com på port 993 med implisitt TLS, og SMTP er smtp.broadband.rogers.com på port 465, også med implisitt TLS. Begge ble verifisert via en direkte TLS-tilkobling, og begge er Yahoo-infrastruktur under Rogers-navn. Brukernavnet er hele rogers.com-adressen din."
+    },
+    {
+      "q": "Kan jeg fortsatt opprette et Rogers-app-passord?",
+      "a": "Det avhenger av kontoen din, og leverandørdokumentasjonen motsier seg selv. Rogers' oppsettartikkel sier at generering av app-passord ikke lenger er tilgjengelig; Yahoos Rogers-hjelp beskriver fortsatt knappen Create app password under External connections. Åpne sikkerhetssiden for Rogers Yahoo-kontoen din og se hva som stemmer for deg. Et app-passord du allerede har, virker til du sletter det."
+    },
+    {
+      "q": "Er Rogers-bedriftse-posten min berørt?",
+      "a": "Eldre Rogers Business-e-post og hostede domener har vært på vei mot utfasing siden september 2025, med postkasser som deaktiveres og data som slettes. Det programmet er adskilt fra rogers.com- og shaw.ca-adresser for privatkunder, som fortsetter å virke. Ligger adressen din på et hostet bedriftsdomene, flytt den før den slås av i stedet for å koble den til her."
+    },
+    {
+      "q": "Lagres Rogers-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer, app-passordet inkludert, krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Rogers Yahoo-innboks",
+    "sub": "Sjekk app-passordet først, og koble så til på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

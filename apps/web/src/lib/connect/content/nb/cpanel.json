@@ -1,42 +1,102 @@
 {
+  "_sources": [
+    "https://docs.cpanel.net/cpanel/email/email-accounts/",
+    "https://docs.cpanel.net/cpanel/email/set-up-mail-client/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://docs.cpanel.net/cpanel/email/set-up-mail-client/",
+    "usernameForm": "Hele e-postadressen, for eksempel du@dittdomene.no. Aldri påloggingen til cPanel-kontoen.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Koble cPanel til Claude (og enhver AI)",
-    "description": "Koble cPanel til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med postkassepassordet ditt. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+    "title": "Koble cPanel til Claude, Cursor og MCP-klienter",
+    "description": "Koble en cPanel-postkasse til Claude, Cursor og enhver MCP-klient over IMAP. Finn din egen vert under Email Accounts, Connect Devices, Mail Client Manual Settings."
   },
   "hero": {
     "eyebrow": "cPanel + AI",
     "titleLine1": "Koble cPanel til Claude,",
-    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
-    "lead": "Gi AI-agenten din en ekte cPanel-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte cPanel-innboks på få minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk den samme innboksen i alle MCP-klienter, ikke bare én.",
     "meta0": "1 innboks gratis, for alltid",
-    "meta1": "Postkassepassordet ditt, ingen OAuth-oppsett",
+    "meta1": "Postkassepassordet ditt, uten OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude når ikke cPanel på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    "answer": "Claude kan ikke nå cPanel på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
   },
   "method": {
-    "title": "Slik kobler cPanel seg til: IMAP og postkassepassordet ditt",
-    "body": "En cPanel-postkasse, den du leser i Roundcube eller Horde-webmail, kobles til via IMAP/SMTP med passordet som er satt i cPanel under Email Accounts. Det finnes ingen app-passord og ingen OAuth. Verten er som regel <code>mail.dittdomene.no</code>, og cPanel viser de nøyaktige verdiene under Email Accounts, Connect Devices, i Mail Client Manual Settings. Bruk den sikre SSL/TLS-kolonnen, ikke den ukrypterte."
+    "title": "Slik kobles cPanel til: IMAP og postkassepassordet ditt",
+    "body": "En cPanel-postkasse, den typen du leser i Roundcube- eller Horde-webmail, kobles til over IMAP/SMTP med passordet som er satt i cPanel under Email Accounts. Det finnes verken app-passord eller OAuth. Verten er vanligvis <code>mail.yourdomain.com</code>, og cPanel viser de nøyaktige verdiene under Email Accounts, Connect Devices, i Mail Client Manual Settings. Bruk den sikre SSL/TLS-kolonnen, ikke den ukrypterte."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg hos mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Hent innstillingene fra cPanel",
-      "p": "I cPanel åpner du Email Accounts og klikker Connect Devices for postkassen. Kopier de sikre IMAP- og SMTP-vertene og portene fra Mail Client Manual Settings. Kjenner du ikke postkassepassordet, setter du et nytt på samme skjerm."
+      "p": "Åpne Email Accounts i cPanel og klikk Connect Devices for postkassen. Kopier de sikre IMAP- og SMTP-vertene og -portene fra Mail Client Manual Settings. Hvis du ikke kan postkassepassordet, kan du sette et nytt på samme skjermbilde."
     },
     {
       "h": "Lim det inn i mcpemails",
-      "p": "Velg IMAP / SMTP, legg til cPanel-adressen din, vertene under og passordet for å koble til innboksen trygt."
+      "p": "Velg IMAP / SMTP, legg inn cPanel-adressen din, vertene nedenfor og passordet for å koble til innboksen på en sikker måte."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
       "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
     }
   ],
+  "gotchas": [
+    {
+      "h": "Det finnes ingen cPanel-e-postserver, bare din server, og panelet er den eneste autoriteten på navnet",
+      "p": "cPanel er programvare som webhotellet ditt kjører, ikke en e-posttjeneste, så det finnes ikke noe felles vertsnavn å forhåndsutfylle. Hver konto svarer på maskinen den ligger på. Det eneste stedet som viser sannheten for kontoen din, er <b>Email Accounts</b>, deretter <b>Connect Devices</b> på raden for adressen, deretter blokken <b>Mail Client Manual Settings</b>. cPanel viser to tabeller der: <b>Secure SSL/TLS Settings</b> med IMAP på 993, POP3 på 995 og SMTP på 465, og en tabell uten SSL med 143, 110 og 587 som du skal se bort fra. Kopier innkommende og utgående vert fra den sikre tabellen nøyaktig slik de står, også om verten ikke ligner domenet ditt i det hele tatt."
+    },
+    {
+      "h": "mail.yourdomain.com slår som regel opp riktig, og feiler som regel sertifikatsjekken",
+      "p": "Standardveiledningen i cPanel er <code>mail.example.com</code>, og det navnet peker normalt på riktig maskin, som er grunnen til at de ukrypterte portene ser ut til å virke. Over TLS gjør det ofte ikke det, fordi sertifikatet serveren viser frem tilhører den delte serveren og ikke domenet ditt. cPanel løser dette ved å bytte ut navnet: ifølge cPanels egen dokumentasjon bruker systemet serverens vertsnavn når domenet ikke har et gyldig sertifikat, og <code>mail</code>-underdomenet når sertifikatet ikke samsvarer med vertsnavnet. Det er nettopp derfor verdien i Connect Devices noen ganger er et vertsnavn du aldri har sett. Bruk det likevel. Et sertifikatavvik her er et navneproblem, ikke et angrep, og å klikke seg forbi advarselen er feil løsning."
+    },
+    {
+      "h": "En postkasse kan være sperret for pålogging eller sending og likevel se helt frisk ut",
+      "p": "cPanel har en <b>Restrictions</b>-blokk (begrensninger) på hver postkasse, som du når via <b>Email Accounts</b> og deretter <b>Manage</b>. Logging In kan settes til Suspend, som blokkerer webmail og alle e-postklienter uten å endre passordet. Sending Outgoing Email kan settes til Suspend, som avviser utgående meldinger, eller til <b>Hold</b>, som legger dem stille i kø i fire dager og så gir opp. Hold er den verste av de tre for en AI-agent: innsendingen godtas, sendingen ser vellykket ut, og ingenting kommer noen gang frem. Hvis e-post ser ut til å forsvinne, åpner du Restrictions før du feilsøker noe annet."
+    },
+    {
+      "h": "Webhotellet ditt kan publisere sin egen variant av innstillingene, og da gjelder webhotellets",
+      "p": "Denne siden beskriver det generelle cPanel-mønsteret. Enkelte webhotell avviker fra det og dokumenterer avviket selv. Bluehost legger for eksempel <code>mail.example.com</code> bare i den ukrypterte blokken og oppgir selve domenet for den sikre. A2 Hosting, nå hosting.com, ber deg bruke hele servernavnet, for eksempel <code>mi3-ss78.a2hosting.com</code>, fordi det delte sertifikatet dekker serveren. Har vi en egen side for webhotellet ditt, følger du den, fordi den har de nøyaktige verdiene. Der vi ikke har det, er Connect Devices-panelet i din egen cPanel det endelige svaret."
+    }
+  ],
+  "limits": [
+    "Vi kan ikke forhåndsutfylle verter for en cPanel-postkasse, fordi vertsnavnet tilhører serveren din og ikke en felles tjeneste. Du må lime det inn fra Connect Devices.",
+    "Noen webhotell blokkerer utgående innsending i brannmuren eller slår av ekstern IMAP på delte planer. cPanel viser innstillingene også da, så en avvisning der er et spørsmål til webhotellet ditt, ikke et innstillingsproblem.",
+    "mcpemails kobler til postkassen. Videresendinger, aliaser, autosvar, filtre og kvoter blir værende i cPanel og er ikke synlige for AI-klienten din."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med cPanel-e-post?",
+      "a": "Ikke direkte. Claude har ingen innebygd kobling for cPanel-e-postservere. Kobler du en MCP-server som mcpemails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, med de samme påloggingsopplysningene som en e-postklient på datamaskinen ville brukt, og den samme tilkoblingen fungerer også fra Cursor og ChatGPT."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for cPanel?",
+      "a": "Portene er standard: IMAP på 993 og SMTP på 465, begge med implisitt TLS, med 143 og 587 som de ukrypterte motstykkene du ikke bør bruke. Vertsnavnet er ikke standard og varierer fra webhotellkonto til webhotellkonto. Hent det fra Email Accounts, Connect Devices, Mail Client Manual Settings, og bruk tabellen Secure SSL/TLS."
+    },
+    {
+      "q": "Hvordan finner jeg vertsnavnet til e-postserveren min i cPanel?",
+      "a": "Logg inn i cPanel, åpne Email Accounts og klikk Connect Devices ved siden av adressen. Rull ned til Mail Client Manual Settings og les innkommende og utgående server fra tabellen Secure SSL/TLS. Det kan være mail.yourdomain.com, selve domenet ditt eller et servernavn som tilhører webhotellet ditt. Det som står der, er det riktige for TLS."
+    },
+    {
+      "q": "Hvorfor får jeg en sertifikatadvarsel for mail.mydomain.com?",
+      "a": "Fordi serveren viser frem et sertifikat utstedt for den delte maskinen og ikke for domenet ditt. Navnet du skrev inn står ikke på det sertifikatet, så en klient som validerer strengt, avviser tilkoblingen. Løsningen er å koble til vertsnavnet cPanel oppgir i tabellen Secure SSL/TLS, som er navnet sertifikatet faktisk dekker."
+    },
+    {
+      "q": "Hvorfor blir passordet til cPanel-e-posten min avvist?",
+      "a": "Tre årsaker dominerer. Du brukte påloggingen til cPanel-kontoen i stedet for passordet som er satt på den enkelte e-postadressen. Postkassen har Logging In satt til Suspend under Restrictions. Eller du peker mot et vertsnavn som går et annet sted. Tilbakestill postkassepassordet fra Email Accounts og deretter Manage, og sjekk Restrictions på samme skjermbilde."
+    },
+    {
+      "q": "Lagres cPanel-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra din egen server over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
   "ctaBand": {
     "title": "Gi AI-en din en cPanel-innboks",
-    "sub": "Koble til cPanel på minutter. Én innboks gratis for alltid, uten kort."
+    "sub": "Koble til cPanel på få minutter. Én innboks gratis for alltid, uten kort."
   }
 }

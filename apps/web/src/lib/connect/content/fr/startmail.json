@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.startmail.com/features/",
+    "https://support.startmail.com/",
+    "https://www.getmailbird.com/best-startmail-app-macos/",
+    "https://discussions.apple.com/thread/256239542"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Mot de passe d'appareil de confiance",
+    "helpUrl": "https://support.startmail.com/",
+    "usernameForm": "Votre adresse StartMail complète, domaine personnalisé compris. Le nom d'utilisateur n'est jamais la seule partie locale.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "StartMail vers Claude : le mot de passe d'appareil de confiance",
+    "description": "Connectez StartMail à Claude, Cursor ou tout client MCP via IMAP sur imap.startmail.com:993. Le mot de passe du compte ne marche jamais : utilisez un mot de passe d'appareil."
+  },
+  "hero": {
+    "eyebrow": "StartMail + IA",
+    "titleLine1": "Connectez StartMail à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte StartMail. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP, dans tous les clients MCP et pas un seul, avec un mot de passe d'appareil révocable indépendamment.",
+    "answer": "Claude ne peut pas accéder seul à StartMail. mcpemails est un serveur MCP hébergé qui le connecte via IMAP sur imap.startmail.com, port 993, et SMTP sur smtp.startmail.com, port 465, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Le mot de passe de votre compte StartMail n'authentifie aucun client de messagerie : StartMail délivre un mot de passe généré distinct pour chaque appareil connecté, depuis la section des appareils de confiance de vos paramètres, et ne l'affiche qu'une fois. Utilisez votre adresse StartMail complète comme nom d'utilisateur et cette valeur générée comme mot de passe. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe d'appareil généré, affiché une fois",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment StartMail se connecte : IMAP et un mot de passe généré par appareil",
+    "body": "StartMail sert IMAP sur <code>imap.startmail.com</code>, port 993 avec TLS, et SMTP sur <code>smtp.startmail.com</code>, port 465, et présente l'accès IMAP et SMTP complet comme une fonction à part entière et non comme un ajout après coup. Ce qu'il ne fait pas, c'est accepter le mot de passe de votre compte sur ces protocoles. Le modèle de StartMail repose sur un identifiant généré par appareil connecté : vous ajoutez un appareil dans l'interface web, StartMail produit un mot de passe aléatoire d'environ seize caractères, et cette valeur va dans les champs de mot de passe entrant et sortant. Il n'est affiché qu'une fois et rien ne permet de le retrouver ensuite, donc si vous le perdez, vous supprimez cette entrée d'appareil et en ajoutez une nouvelle. C'est un meilleur dispositif que chez la plupart des fournisseurs axés sur la confidentialité, car l'identifiant que vous confiez à un tiers n'est pas celui qui ouvre votre compte, et le retirer n'affecte rien d'autre de ce que vous avez connecté."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours. Vous obtenez à la fin une URL MCP et une clé."
+    },
+    {
+      "h": "Ajoutez un appareil dans StartMail et copiez le mot de passe généré",
+      "p": "Connectez-vous à StartMail dans un navigateur, ouvrez <b>Settings</b> et allez dans la section <b>trusted devices</b> (appareils de confiance), où se gère l'accès IMAP. Choisissez <b>Add device</b> et nommez-le d'après cette connexion. StartMail génère un mot de passe aléatoire et l'affiche une seule fois, donc copiez-le avant de fermer la fenêtre. Cette section contrôle aussi l'accès IMAP du compte : si une connexion est refusée avant même que vous ayez utilisé le mot de passe, vérifiez qu'IMAP y est activé."
+    },
+    {
+      "h": "Ajoutez la boîte dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, saisissez votre adresse StartMail complète comme nom d'utilisateur et collez le mot de passe d'appareil généré. Utilisez la même valeur pour le courrier sortant : StartMail authentifie la soumission avec l'identifiant de l'appareil, pas avec le mot de passe de votre compte. Les serveurs sont préremplis avec <code>imap.startmail.com</code> et <code>smtp.startmail.com</code> et ont été vérifiés via une connexion TLS réelle."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Le mot de passe de votre compte StartMail n'est jamais un mot de passe de client de messagerie",
+      "p": "C'est la cause de la plupart des problèmes de clients StartMail, et ce n'est pas un effet secondaire de la double authentification comme chez d'autres fournisseurs. StartMail n'authentifie tout simplement pas IMAP ni SMTP avec votre mot de passe de connexion, quelle que soit la configuration. Saisissez le mot de passe que vous utilisez sur le site et le serveur vous refuse, le client signale de mauvais identifiants, et les gens réinitialisent le mot de passe du compte pour réessayer, ce qui ne change rien. Il vous faut un mot de passe d'appareil issu de la section des appareils de confiance, dans le champ entrant comme dans le champ sortant."
+    },
+    {
+      "h": "Le mot de passe généré est affiché une fois, sans retour possible",
+      "p": "StartMail affiche la valeur au moment où il crée l'entrée d'appareil et n'en conserve aucune copie lisible à consulter plus tard. Si vous fermez la fenêtre, ou si vous l'avez copiée dans un client sur une machine et en avez besoin sur une autre, ajoutez un second appareil plutôt que de chercher le premier mot de passe. C'est le fonctionnement voulu : un identifiant par connexion, supprimé individuellement. Supprimer l'entrée de celle-ci coupe le serveur MCP et laisse votre téléphone et votre ordinateur portable fonctionner."
+    },
+    {
+      "h": "StartMail annonce XLIST mais pas SPECIAL-USE",
+      "p": "Un détail de capacité inhabituel, avec une conséquence pratique. La bannière IMAP propose <code>XLIST</code>, l'extension pré-standard de Google pour identifier quel dossier est Envoyés, Brouillons ou Corbeille, mais pas <code>SPECIAL-USE</code>, la capacité RFC 6154 qui l'a remplacée. La plupart des clients modernes ont abandonné XLIST depuis des années et ne cherchent que SPECIAL-USE, donc les rôles des dossiers se rabattent sur une correspondance par nom. Renommez un dossier dans l'interface web de StartMail et un agent risque de ne plus le reconnaître comme votre archive : indiquez-le explicitement quand vous demandez à classer quelque chose."
+    },
+    {
+      "h": "Seulement PLAIN en IMAP, et ni MOVE ni UIDPLUS",
+      "p": "Le serveur propose <code>AUTH=PLAIN</code> sans <code>AUTH=LOGIN</code>, donc les outils codés en dur sur le mécanisme LOGIN reçoivent un refus à l'étape d'authentification plutôt qu'une erreur utile, alors que le côté SMTP accepte les deux. Il omet aussi MOVE et UIDPLUS, donc classer un message passe par un COPY, un STORE du drapeau \\Deleted et un EXPUNGE, le nouvel UID étant retrouvé en cherchant dans la destination plutôt que renvoyé. Les deux cas sont gérés ici, et expliquent pourquoi une réorganisation en masse sur StartMail est plus lente que sur un serveur doté de MOVE."
+    }
+  ],
+  "limits": [
+    "Connecter une boîte StartMail à un client IA signifie que ce fournisseur d'IA lit le contenu des messages qu'il traite. mcpemails récupère le courrier en direct depuis imap.startmail.com à chaque requête et ne stocke pas le corps des messages, et les identifiants sont chiffrés au repos, mais le texte parvient tout de même à Claude, Cursor ou au client que vous connectez. L'hébergement néerlandais de StartMail et sa politique sans pistage décrivent StartMail, et ne suivent pas un message chez un fournisseur d'IA que vous branchez vous-même. Considérez cela comme une décision sur la correspondance que vous acceptez d'exposer, et non comme une extension de la confidentialité que vous avez achetée.",
+    "Les messages chiffrés avec PGP sont illisibles pour un agent. La gestion des clés de StartMail réside dans votre compte StartMail et sert sa propre interface web ; un client IMAP reçoit un bloc de texte chiffré armuré, et mcpemails ne détient aucune de vos clés privées. L'agent voit l'expéditeur, l'objet et la date, et peut classer ou marquer ces fils, mais pas les lire.",
+    "Le serveur SMTP de StartMail annonce une taille maximale de message d'environ 37 Mo, plus basse que chez la plupart des fournisseurs présentés ici. Une grosse pièce jointe qu'un agent tente d'envoyer est refusée à la soumission plutôt que de rebondir plus tard : utilisez un lien pour tout fichier volumineux."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec StartMail ?",
+      "a": "Pas directement. Claude n'a pas de connecteur StartMail intégré et ne parle pas IMAP par lui-même. Connecter un serveur MCP comme mcpemails à votre boîte StartMail donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation via IMAP, et la même connexion fonctionne ensuite dans Cursor, ChatGPT et les autres clients MCP sans la reconfigurer."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de StartMail ?",
+      "a": "IMAP : imap.startmail.com sur le port 993 avec TLS ; SMTP : smtp.startmail.com sur le port 465 avec TLS. Le nom d'utilisateur est votre adresse StartMail complète, et le mot de passe est un mot de passe d'appareil généré plutôt que celui de votre compte. Les deux serveurs ont été vérifiés via une connexion TLS réelle, et le certificat est émis pour imap.startmail.com lui-même."
+    },
+    {
+      "q": "Pourquoi mon mot de passe StartMail ne fonctionne-t-il pas dans un client de messagerie ?",
+      "a": "Parce qu'il n'est pas fait pour cela. StartMail n'accepte pas du tout le mot de passe de votre compte en IMAP ou SMTP. Il délivre un mot de passe généré distinct pour chaque appareil connecté, depuis la section des appareils de confiance de vos paramètres. Réinitialiser le mot de passe du compte n'aidera pas. Ajoutez un appareil, copiez la valeur générée et utilisez-la dans les champs de mot de passe entrant et sortant."
+    },
+    {
+      "q": "Où générer un mot de passe IMAP StartMail ?",
+      "a": "Dans l'interface web de StartMail, ouvrez Settings et allez dans la section trusted devices, où se gère l'accès IMAP. Choisissez d'ajouter un appareil, donnez-lui un nom, et StartMail génère un mot de passe aléatoire d'environ seize caractères qu'il affiche une fois. Copiez-le immédiatement ; il est impossible de le relire, seulement de supprimer l'appareil et d'en ajouter un autre."
+    },
+    {
+      "q": "Mon IA peut-elle lire mes messages StartMail chiffrés avec PGP ?",
+      "a": "Non. Un message chiffré pour votre clé OpenPGP arrive via IMAP sous forme de texte chiffré, et mcpemails ne reçoit jamais votre clé privée. Ces messages restent lisibles dans l'interface de StartMail, où réside la gestion des clés. Votre agent peut toujours les trier, les marquer et les classer, et lire tout ce qui est arrivé non chiffré."
+    },
+    {
+      "q": "Mon courrier StartMail est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis imap.startmail.com à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé. Le client IA que vous connectez reçoit bien le contenu de tout ce qu'il lit : c'est ce point qu'il faut peser avant de connecter une boîte pour laquelle vous avez choisi StartMail."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte StartMail à votre IA",
+    "sub": "Connectez StartMail avec un mot de passe d'appareil révocable indépendamment. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

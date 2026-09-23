@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www2.telenet.be/residential/nl/klantenservice/internet/e-mail/e-mail-instellen.html",
+    "https://www2.telenet.be/residential/nl/klantenservice/internet/e-mail/mailbox-beheren-in-mijn-telenet.html",
+    "https://www2.telenet.be/nl/klantenservice/stepplan-snippets/e-mailprogramma-instellen-voor-je-telenet-e-mailadres/livemail_stap4",
+    "https://www.bipt.be/consumenten/faq/kan-je-jouw-e-mailadres-behouden"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "MyTelenet 中的邮箱密码",
+    "helpUrl": "https://www2.telenet.be/residential/nl/klantenservice/internet/e-mail/mailbox-beheren-in-mijn-telenet.html",
+    "usernameForm": "包含域名的完整地址：naam@telenet.be。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Telenet 邮箱 IMAP 设置与 Claude MCP 接入",
+    "description": "通过 imap.telenet.be:993 将 telenet.be 邮箱连接到 Claude、Cursor 及任意 MCP 客户端，使用在 MyTelenet 的 Je mailbox 中设置的邮箱密码。"
+  },
+  "hero": {
+    "eyebrow": "Telenet + AI",
+    "titleLine1": "将你的 Telenet 邮箱连接到",
+    "titleLine2": "Claude、Cursor、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Telenet 收件箱。用你在 MyTelenet 中设置的邮箱密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行连接 Telenet 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.telenet.be 的 993 端口，用你完整的 telenet.be 地址和在 MyTelenet 中为该邮箱设置的密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Telenet 不签发应用专用密码，也没有客户端访问开关：每个邮箱都是在 MyTelenet 的 Je mailbox 页面中创建并设置密码的。一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "MyTelenet 中的邮箱密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Telenet 如何连接：面向代理的 IMAP，每个邮箱一个密码",
+    "body": "Telenet 在 <code>imap.telenet.be</code> 的 993 端口通过隐式 TLS 提供 IMAP。对于发信，Telenet 自己的设置页面给出的是 <code>smtp.telenet.be</code>，587 端口，使用 TLS 和认证 SMTP；同一主机也在 465 端口以隐式 TLS 响应，mcpemails 自动填入的就是后者。Telenet 对用户名形式说得很明确：<b>Gebruikersnaam: je volledige e-mailadres</b>（用户名：你的完整邮箱地址）。密码是附属于单个邮箱的密码，而不是单独的应用凭据，邮箱在 MyTelenet 中创建和管理：账户的 <b>beheerder</b>（管理员）最多可创建十个邮箱，普通 <b>gebruiker</b>（用户）可创建一个。在这些主机名上响应的是位于邮件存储之前的代理（<code>* OK IMAP4rev1 proxy server ready</code>），这解释了下文所述的精简能力集。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "在 MyTelenet 中打开 Je mailbox 并设置密码",
+      "p": "登录 mijn.telenet.be，进入邮箱管理页面 <b>Je mailbox</b>。账户中的每个邮箱都有自己的密码，在创建时分配；尚未分配密码的邮箱，必须由账户管理员设置后才能登录。如果没人记得密码，就在那里设置一个新的。"
+    },
+    {
+      "h": "考虑给代理一个自己的邮箱",
+      "p": "账户管理员最多可创建十个 Telenet 邮箱，普通用户可创建一个。如果你不想把用了十五年的地址交给代理，可以在同一账户下再创建一个邮箱并连接它。服务器相同、端口相同，密码可以单独更换而不影响其他任何东西。"
+    },
+    {
+      "h": "粘贴到 mcpemails，再把 MCP URL 粘贴到你的 AI",
+      "p": "选择 IMAP / SMTP，输入完整地址（例如 naam@telenet.be），粘贴邮箱密码。Telenet 的服务器和端口已自动填好，并已通过实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "修改 Telenet 密码会悄无声息地让所有已连接的客户端失效",
+      "p": "Telenet 在自己的设置指南中说得很明白：如果你修改了 Telenet 用户名或邮箱地址的密码，<b>verander dan ook het wachtwoord in je e-mailprogramma</b>（也要修改邮件程序中的密码）。没有应用密码把客户端与账户隔开，所以在 MyTelenet 中例行更换密码，代理也会随之掉线。故障会在几小时后以认证错误的形式出现，那时早已没人把它和自己在门户中做的事联系起来。如果你更换了 Telenet 密码，请同时更新 mcpemails。"
+    },
+    {
+      "h": "你连接的是代理，它不声明 MOVE 也不声明 SPECIAL-USE",
+      "p": "问候语是 <code>* OK IMAP4rev1 proxy server ready</code>，而不是邮件存储在自报家门。它提供 <code>SASL-IR</code>、<code>IDLE</code> 和 <code>UIDPLUS</code>，但没有 <code>MOVE</code>，所以归档一封邮件要经过复制、更新标记再删除，而不是一条原子命令；也没有 <code>SPECIAL-USE</code>，所以已发送、草稿和已删除文件夹按名称而不是按用途匹配。荷兰语 Telenet 邮箱通常将它们命名为 <b>Verzonden</b>、<b>Concepten</b> 和 <b>Prullenbak</b>，所以如果代理找不到文件夹，请明确写出文件夹名。"
+    },
+    {
+      "h": "邮箱属于订阅，比利时法规给你 18 个月",
+      "p": "Telenet 邮箱地址与 Telenet 订阅中的 Telenet 邮箱绑定。根据电信监管机构 BIPT 介绍的比利时规定，离开服务商时，你有权继续使用该地址或让邮件被转发十八个月，但必须在订阅结束前提出申请。在此期限之外，自 2024 年 1 月 1 日起生效的一项皇家法令将运营商继续提供该服务的收费上限定为每月 1.50 欧元。如果你打算在一个只有作为客户时才持有的地址上搭建代理工作流，这一点值得提前知道。"
+    },
+    {
+      "h": "发信上限为 20 MB，在这一类中偏低",
+      "p": "<code>smtp.telenet.be</code> 声明的最大邮件大小为 20,971,520 字节。这是整封邮件编码后的大小，而 base64 会让附件膨胀约三分之一，所以磁盘上超过约 15 MB 的文件是发不出去的。被要求转发大 PDF 的代理会收到明确的 SMTP 拒绝，而不是慢慢发送。"
+    }
+  ],
+  "limits": [
+    "由于服务器不支持 MOVE，移动操作不是原子的。如果连接在操作中途断开，一封邮件可能会短暂同时存在于两个文件夹中。",
+    "20 MB 的提交上限，是代理从该邮箱发出任何内容的实际上限。",
+    "Telenet 不签发应用专用密码，所以你交给 mcpemails 的凭据就是邮箱密码本身。在 MyTelenet 中更换它时，请同时在这里更新。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Telenet 邮箱吗？",
+      "a": "不能单独使用。Claude 没有内置的 Telenet 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Telenet 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.telenet.be，端口 993，使用 SSL。对于发信，Telenet 文档给出的是 smtp.telenet.be，587 端口，使用 TLS 和认证 SMTP；同一主机也在 465 端口以隐式 TLS 响应，mcpemails 使用的是后者。用户名是你完整的 telenet.be 地址。"
+    },
+    {
+      "q": "Telenet 需要应用密码吗？",
+      "a": "不需要。Telenet 不签发应用专用密码。邮件客户端使用在 MyTelenet 的 Je mailbox 中为该邮箱设置的密码认证。由于没有单独的应用凭据，修改账户密码就意味着也要在每个已连接的客户端中修改。"
+    },
+    {
+      "q": "为什么修改密码后我的 Telenet 邮件客户端停止工作了？",
+      "a": "因为客户端直接使用的是账户密码。Telenet 自己的建议是，每当你修改 Telenet 用户名或地址的密码时，也要修改邮件程序中的密码。把 mcpemails 中保存的密码更新为新值，连接会立即恢复。"
+    },
+    {
+      "q": "我能创建多少个 Telenet 邮箱？",
+      "a": "账户管理员最多可创建十个邮箱；账户中的普通用户可创建一个。它们都在 MyTelenet 的 Je mailbox 页面中管理，每个邮箱的密码也在那里设置。为代理创建一个专用邮箱，通常比连接你的主地址更整洁。"
+    },
+    {
+      "q": "我的 Telenet 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 Telenet 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Telenet 收件箱",
+    "sub": "几分钟即可连接 Telenet 邮箱。一个收件箱永久免费，无需信用卡。"
+  }
+}

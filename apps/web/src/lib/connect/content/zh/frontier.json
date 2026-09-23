@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://frontier.com/helpcenter/internet/how-to-use-your-frontier-email-on-yahoo",
+    "https://help.yahoo.com/kb/SLN15241.html"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Yahoo 应用专用密码",
+    "helpUrl": "https://help.yahoo.com/kb/SLN15241.html",
+    "usernameForm": "你的完整 Frontier 地址，例如 name@frontier.com。它现在就是你的 Yahoo 登录名。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Frontier 邮箱运行在 Yahoo 上：将其连接到 Claude",
+    "description": "Frontier 已于 2024 年 3 月把邮箱服务交给 Yahoo。使用 Yahoo 应用专用密码，通过 imap.frontier.com:993 的 IMAP 将 frontier.com 收件箱连接到 Claude。"
+  },
+  "hero": {
+    "eyebrow": "Frontier Mail + AI",
+    "titleLine1": "将 Frontier 收件箱连接到",
+    "titleLine2": "Claude、Cursor 及任意 MCP 客户端",
+    "lead": "Frontier 已不再自己运营邮箱，而是把服务交给了 Yahoo。frontier.com 地址仍可通过 IMAP 使用，mcpemails 连接它，让你的 AI 代理能读取、搜索、发送、回复和归档这些邮件。",
+    "answer": "Claude 无法自行访问 Frontier 邮箱。mcpemails 是一个托管 MCP 服务器，通过 imap.frontier.com 端口 993 的 IMAP 与之连接；尽管自 2024 年 3 月 20 日起 Frontier 的邮箱服务和支持已由 Yahoo 负责，这台服务器仍在响应。由于地址背后的账户是 Yahoo 账户，凭据是在账户安全页面生成的 Yahoo 应用专用密码，而不是你在网页邮箱中使用的密码。连接后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送、回复和整理这些邮件，1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "Yahoo 应用专用密码，而非网页邮箱密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Frontier 如何连接：Yahoo 账户前面的一个 IMAP 代理",
+    "body": "Frontier 的帮助中心现在关于邮箱只有一条说明：自 2024 年 3 月 20 日起，其邮箱服务和支持由 Yahoo 负责，请在 login.yahoo.com 登录。它没有公布任何服务器名称、端口或客户端配置教程。不过，<code>frontier.com</code> 主机名并没有随文档一起消失。<code>imap.frontier.com</code> 在端口 993 上通过 TLS 响应，使用 <code>*.frontier.com</code> 证书，并自称 <b>IMAP4rev1 proxy server</b>（IMAP4rev1 代理服务器）而不是 Yahoo，所以你连接的是一个把请求转发到邮箱的 Frontier 前端，而不是 Yahoo 自己的 IMAP 服务器。凭据来自 Yahoo 一侧：在 Yahoo 账户安全页面的 External connections 下创建的应用专用密码，用来代替你的普通密码。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "用你的 frontier.com 地址登录 Yahoo",
+      "p": "前往 login.yahoo.com，用完整的 <code>name@frontier.com</code> 地址和当前密码登录。这正是 Frontier 自己的帮助中心现在让所有人去做的一步，它也能在你继续之前确认邮箱仍然有效。"
+    },
+    {
+      "h": "在 External connections 下创建应用专用密码",
+      "p": "在 Yahoo 账户安全页面找到 <b>External connections</b>，选择 <b>Create app password</b>。将其命名为 <code>mcpemails</code>，复制出现的代码，并连同你的完整 frontier.com 地址一起粘贴到 mcpemails 中。下方的 Frontier 服务器地址已预填。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Frontier 已不再公布任何邮件客户端设置，你找到的所有指南都来自第三方",
+      "p": "搜索 Frontier IMAP 设置，你会得到十几个言之凿凿的页面，但没有一个是 Frontier 的。Frontier 帮助中心关于邮箱的文章只说服务由 Yahoo 负责，并链接到 Yahoo 支持中心。请把你在别处看到的任何主机名都视为未经验证。本页表格中的服务器，是我们实际建立过 TLS 连接的那些，这与照抄一份设置清单是不同的、也更有力的说法。"
+    },
+    {
+      "h": "Frontier 代理比其他合作伙伴使用的 Yahoo 服务器更简陋",
+      "p": "AT&T、Cox 和 Rogers 提供的是 Yahoo 自己的 IMAP 服务器，它声明支持 MOVE、SPECIAL-USE、IDLE 和 UIDPLUS。Frontier 代理只声明 SASL-IR、UIDPLUS，几乎没有其他：没有 MOVE，没有 IDLE，没有 SPECIAL-USE。实际上这意味着，归档一封邮件要依次执行 COPY、STORE 删除标记、EXPUNGE，而不是一条命令；Sent 和 Trash 等文件夹角色按名称匹配，而不是由服务器声明；也没有 IDLE 推送，新邮件要靠轮询发现。mcpemails 会处理这一切，但这就是为什么 Frontier 的反应比其他以 Yahoo 为后端的账户要慢。"
+    },
+    {
+      "h": "能否创建应用专用密码由 Yahoo 决定",
+      "p": "创建应用专用密码之前要先通过资格检查。Yahoo 让你使用连续数天登录过 Yahoo 的浏览器，不要使用隐私窗口，并声明客服无法干预这项检查。如果 <b>Create app password</b> 选项不见了，原因就在这里，Frontier 和 Yahoo 的客服都无法另外给你一个。"
+    },
+    {
+      "h": "我们的探测连上了 Frontier 的 IMAP 服务器，但 SMTP 服务器没有响应",
+      "p": "我们只公布经过验证的内容。IMAP 一侧完成了 TLS 握手并返回了能力横幅。在同一次运行中，端口 465 上的 SMTP 服务器没有及时回复，所以我们没有 Frontier 外发邮件的已验证能力列表，也不会编造一个。读取和搜索是我们能担保的部分；如果发信失败，请登录 Yahoo 检查账户，而不要认定是设置有误。"
+    }
+  ],
+  "limits": [
+    "Frontier 代理没有 MOVE 和 SPECIAL-USE，因此移动操作不是原子的，文件夹角色按名称匹配。文件夹被重命名过的邮箱，可能需要明确写出文件夹名称。",
+    "没有 IDLE，因此新邮件是通过轮询发现的，而不是推送。",
+    "Frontier 的 SMTP 服务器没有响应我们的探测，因此这家服务商的发信行为是本页中我们唯一没有亲自确认的部分。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Frontier 邮箱吗？",
+      "a": "不能直接使用。Claude 没有内置的 Frontier 连接器，而且 Frontier 已不再运营邮箱服务。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 frontier.com 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Frontier 的 IMAP 设置是什么？",
+      "a": "IMAP 为 imap.frontier.com，端口 993，使用隐式 TLS，已在本页所示日期通过实时 TLS 连接验证。用户名是你的完整 frontier.com 地址，密码字段填 Yahoo 应用专用密码。Frontier 自己已不再公布任何设置，所以你找到的其他任何清单都只是别人的猜测。"
+    },
+    {
+      "q": "Frontier 邮箱怎么了？",
+      "a": "Frontier 已不再运营邮箱。其帮助中心声明，自 2024 年 3 月 20 日起，邮箱服务和支持由 Yahoo 负责，并引导客户在 login.yahoo.com 登录，所有邮箱支持问题都去找 Yahoo。地址保持不变；其背后的账户是 Yahoo 账户。"
+    },
+    {
+      "q": "为什么我的 Frontier 密码在邮件客户端中被拒绝？",
+      "a": "因为账户现在是 Yahoo 账户，而 Yahoo 要求不打开其自有登录窗口的客户端使用应用专用密码。在网页邮箱中可用的密码，通过 IMAP 会被拒绝。请在 Yahoo 账户安全页面的 External connections 下创建应用专用密码，并把它填入密码字段。"
+    },
+    {
+      "q": "我的 Frontier 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 实时获取邮件，并传给你的 AI 客户端。凭据（包括应用专用密码）静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Frontier 收件箱",
+    "sub": "一个 Yahoo 应用专用密码即可完成连接。1 个收件箱永久免费，无需信用卡。"
+  }
+}

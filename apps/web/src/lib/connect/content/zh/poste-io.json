@@ -1,0 +1,96 @@
+{
+  "_sources": [
+    "https://poste.io/doc",
+    "https://help.time4vps.com/en/articles/374799-how-to-create-a-mail-server-using-poste-io-on-debian-ubuntu",
+    "https://gist.github.com/analogic/51fbe91b580d7913b72320f89bf994cc",
+    "https://doc.dovecot.org/2.3/configuration_manual/dovecot_ssl_configuration/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://poste.io/doc",
+    "usernameForm": "在 Poste.io 管理界面中创建的邮箱的完整地址，例如 you@yourdomain.com。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Poste.io 接入 Claude：容器中的 Dovecot IMAP",
+    "description": "通过 993 端口的 IMAP 将 Poste.io 邮箱连接到 Claude、Cursor 和 ChatGPT。容器主机名就是你的邮件主机，以及反向代理为何会掩盖错误的证书。"
+  },
+  "hero": {
+    "eyebrow": "Poste.io + AI",
+    "titleLine1": "将 Poste.io 连接到 Claude，",
+    "titleLine2": "Cursor、ChatGPT 及任意 MCP 客户端",
+    "lead": "一个容器、一个主机名、一台完整的邮件服务器。把 mcpemails 指向它，AI 代理就能在你于 Poste.io 管理界面中创建的邮箱里读取、搜索、发送、回复、定时和归档邮件。",
+    "answer": "Claude 无法自行连接 Poste.io 服务器。mcpemails 是一个托管 MCP 服务器，通过 993 端口的 IMAP，在你启动容器时为其指定的主机名上连接你的服务器，使用在 Poste.io 管理界面中创建的邮箱的密码，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Poste.io 在容器内运行 Dovecot 提供 IMAP，所以协议行为就是普通的 Dovecot。容器必须将 993 端口发布到互联网，并提供一个对你所连接主机名有效的证书。一个收件箱免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "使用管理界面中的邮箱密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Poste.io 如何连接：容器内 993 端口上的 Dovecot",
+    "body": "Poste.io 把一台完整的邮件服务器打包进一个 Docker 镜像，由 <b>Dovecot</b> 提供 IMAP 和 POP3，<b>Haraka</b> 处理 SMTP，前面是统一的管理界面 <code>https://your-hostname/admin</code>。由于 IMAP 一侧是 Dovecot，我们 Dovecot 页面上关于文件夹用途、命名空间前缀和证书处理的所有内容在这里同样适用，区别在于你是通过 Poste.io 界面而不是编辑 <code>conf.d</code> 文件来配置。在本页中，主机名比什么都重要：它在创建容器时通过 <code>-h</code> 参数设置，例如 <code>-h mail.example.com</code>，管理界面在这个名称上响应，Haraka 向其他服务器问候时使用它，内置的 Let's Encrypt 证书也是为它签发的。请原样把它用作 IMAP 和 SMTP 主机。发布的端口是常见的一组：25、143、465、587、993 和 995，外加用于网页界面的 80 和 443，以及用于 Sieve 的 4190。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。一个收件箱永久免费，无需信用卡。"
+    },
+    {
+      "h": "确认容器主机名以及 993 端口已发布",
+      "p": "对容器运行 <code>docker inspect</code>，或查看你的 compose 文件，记下两件事：容器被指定的主机名，以及 <code>993</code> 是否出现在已发布端口列表中。创建时未使用 <code>-h</code> 的容器会以自己的 ID 命名，这不是任何东西能解析或为其签发证书的名称。"
+    },
+    {
+      "h": "检查证书，然后添加邮箱",
+      "p": "在 Poste.io 管理界面中打开 TLS 证书设置，确认确实已签发 Let's Encrypt 证书，而不是仍在使用自签名证书。然后在 mcpemails 中添加收件箱：选择 IMAP / SMTP，输入容器主机名、完整邮箱地址以及管理界面中为其设置的密码。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "浏览器里的小锁属于代理，而不是 993 端口",
+      "p": "Poste.io 经常运行在 Traefik、nginx 或 Caddy 之后，而这种架构恰恰掩盖了最常见的故障。代理用自己获取的证书终止 HTTPS，所以管理界面和网页邮箱看起来完全安全。与此同时，Poste.io 自己的 Let's Encrypt 请求需要在容器的 80 端口上响应 HTTP 质询，如果代理把它拦下了，或者 <code>/.well-known/</code> 路径从未被转发进来，请求就永远不会完成。Dovecot 会继续提供安装时生成的自签名证书，严格的 IMAP 客户端拒绝连接，而系统上的每个人都看到绿色小锁，认定服务器没问题。请用 <code>openssl s_client -connect mail.yourdomain.com:993</code> 测试 993 端口上实际提供的是什么。如果你在代理处终止 TLS 并把证书复制进容器，请关闭 Poste.io 内置的 Let's Encrypt，以免两者互相覆盖。"
+    },
+    {
+      "h": "Docker 端口发布不受主机防火墙约束",
+      "p": "这会在两个方向上让人意外。Docker 会写入自己的规则，并在 <code>ufw</code> 管理的规则之前生效，所以用 <code>-p 993:993</code> 发布的端口即使防火墙显示已关闭，也是对互联网开放的。这不是 Poste.io 的错，但意味着邮件服务器比防火墙所显示的更加暴露。另一个方向则更隐蔽：从未出现在 <code>-p</code> 列表中的端口，无论防火墙多宽松都无法访问，因为没有任何东西把它转发进容器。如果容器运行正常而连接仍然超时，在动其他任何东西之前，先数一数已发布的端口。"
+    },
+    {
+      "h": "SMTP 一侧是 Haraka，所以 Postfix 的建议不适用",
+      "p": "网上几乎所有关于自托管邮件的文章都默认使用 Postfix。Poste.io 并不用它。发信由 Haraka（一个 Node.js SMTP 服务器）处理，所以容器内没有 <code>main.cf</code>、没有 <code>postconf</code>、没有 <code>postqueue</code>，也没有 <code>mailq</code>，人们从论坛回答中粘贴的命令根本不存在。请通过 Poste.io 界面和 Haraka 自己的日志诊断发信问题。IMAP 一侧是 Dovecot，其行为与 Dovecot 文档完全一致，这是这种分工中有用的那一半：<code>doveadm</code> 可以使用，Dovecot 的文件夹和命名空间行为也都符合预期。"
+    }
+  ],
+  "limits": [
+    "容器必须接受来自互联网的 993 端口入站连接，托管 MCP 服务器才能访问它。运行在家庭服务器或私有网络上的 Poste.io 无法以这种方式连接。mcpemails 支持自托管，所以如果你希望不让任何外部服务接触邮件服务器，可以在同一网络中同时运行两者。",
+    "TLS 校验是严格的，无法绕过。全新 Poste.io 生成的自签名证书会被拒绝，这就是为什么配置真正的证书是一个设置步骤，而不是可有可无的润色。",
+    "发信通过 Haraka 从你自己的 IP 地址发出，因此下游是否接收邮件取决于 SPF、DKIM 和 DMARC 记录以及你的地址信誉。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Poste.io 吗？",
+      "a": "不能单独使用。Claude 没有 Poste.io 连接器，也无法向你运行的容器打开 IMAP 会话。将 mcpemails 这样的 MCP 服务器连接到你的 Poste.io 主机名后，Claude 就能读取、搜索、发送、回复、定时和整理其上某个邮箱中的邮件，之后同一个收件箱在 Cursor 或 ChatGPT 中也能使用。"
+    },
+    {
+      "q": "Poste.io 的 IMAP 和 SMTP 设置是什么？",
+      "a": "主机就是你为容器指定的主机名，也就是你访问管理界面所用的名称。IMAP 为 993 端口隐式 TLS，或 143 端口 STARTTLS。提交为 465 端口隐式 TLS，或 587 端口 STARTTLS。使用完整邮箱地址和管理界面中为该邮箱设置的密码登录。"
+    },
+    {
+      "q": "Poste.io 是基于 Dovecot 构建的吗？",
+      "a": "IMAP 和 POP3 是。Poste.io 把用于邮箱访问的 Dovecot 和用于 SMTP 的 Haraka 打包进一个 Docker 镜像，上面再加一个管理界面。凡是 Dovecot IMAP 行为的特点在这里都成立，所以关于文件夹用途、命名空间前缀和证书处理，请参考我们的 Dovecot 页面。"
+    },
+    {
+      "q": "为什么我的 Poste.io 邮箱密码被拒绝？",
+      "a": "请确认你使用的是邮箱而不是别名，因为别名只负责转发，没有自己的密码；也请确认你没有使用管理员登录，除非该管理员同时也是一个真实邮箱。如果凭据确定无误，就看看连接是否其实在 TLS 阶段失败：993 端口上的自签名证书产生的失败，很多客户端会报告为登录问题。"
+    },
+    {
+      "q": "我的邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从你的 Poste.io 容器实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Poste.io 收件箱",
+    "sub": "连接你自己容器中的邮箱。一个收件箱永久免费，无需信用卡。"
+  }
+}

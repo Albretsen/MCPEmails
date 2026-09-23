@@ -1,7 +1,20 @@
 {
+  "_sources": [
+    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/mx-plan/email-generalities",
+    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/microsoft-exchange/how-to-configure-thunderbird-windows",
+    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/email-pro/first-config",
+    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/microsoft-exchange/exchange-starting-hosted"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/mx-plan/email-generalities",
+    "usernameForm": "Hele e-postadressen på ditt eget domene. OVH angir hele adressen for både innkommende og utgående server, på alle e-postproduktene sine.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Koble OVH til Claude (og enhver AI)",
-    "description": "Koble OVH til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med postkassepassordet ditt. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+    "title": "Koble OVH til Claude, Cursor og MCP-klienter",
+    "description": "Koble OVHcloud MX Plan-e-post til Claude og enhver MCP-klient via IMAP på ssl0.ovh.net:993. Email Pro og Hosted Exchange bruker egne vertsnavn per server."
   },
   "hero": {
     "eyebrow": "OVH + AI",
@@ -15,7 +28,7 @@
   },
   "method": {
     "title": "Slik kobler OVH seg til: IMAP og postkassepassordet ditt",
-    "body": "En OVH MX Plan-postkasse kobles til via IMAP/SMTP med postkassepassordet fra OVH-kontrollpanelet, og begge vertene er <code>ssl0.ovh.net</code>. OVH Hosted Exchange er en annen tjeneste: vertene ser ut som <code>ex4.mail.ovh.net</code>, og utgående e-post går over STARTTLS på port 587, aldri 465, som er grunnen til at standardverdiene for delt webhotell bare henger. mcpemails kjenner igjen begge og velger riktig par."
+    "body": "En OVH MX Plan-postkasse kobles til via IMAP/SMTP med postkassepassordet fra OVHs kontrollpanel, og begge vertene er <code>ssl0.ovh.net</code>. OVH Hosted Exchange er en annen tjeneste: vertene ser ut som <code>ex4.mail.ovh.net</code>, og utgående e-post går over STARTTLS på port 587, aldri 465, og derfor henger standardinnstillingene for delt hosting rett og slett mot den. mcpemails gjenkjenner begge og velger riktig par."
   },
   "setup": [
     {
@@ -23,8 +36,8 @@
       "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
-      "h": "Hent OVH-postkassepassordet",
-      "p": "I OVH-kontrollpanelet åpner du e-posttjenesten, velger adressen og endrer passordet. Kopier e-postverten OVH viser for postkassen hvis den ikke er ssl0.ovh.net."
+      "h": "Hent OVH-postkassepassordet ditt",
+      "p": "I OVHs kontrollpanel åpner du e-posttjenesten, velger adressen og endrer passordet. Kopier e-postverten OVH viser for den postkassen hvis den ikke er ssl0.ovh.net."
     },
     {
       "h": "Lim det inn i mcpemails",
@@ -33,6 +46,55 @@
     {
       "h": "Lim MCP-URL-en inn i AI-en",
       "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "OVH kjører tre e-postprodukter på tre vertsmønstre, og å havne på feil ett er den vanligste feilen her",
+      "p": "Dette er OVH-problemet. <b>MX Plan</b>, postkassen som følger med domener og webhotell, er dokumentert på <code>ssl0.ovh.net</code> (OVH oppgir også <code>imap.mail.ovh.net</code> og <code>smtp.mail.ovh.net</code>), IMAP på 993 med SSL/TLS og SMTP på 465 med SSL/TLS. <b>Email Pro</b> svarer på <code>pro</code> pluss servernummeret ditt pluss <code>.mail.ovh.net</code>, IMAP 993 med SSL og SMTP på <b>587 med STARTTLS</b>. <b>Hosted Exchange</b> svarer på <code>ex</code> pluss servernummeret ditt pluss <code>.mail.ovh.net</code>, igjen IMAP 993 og SMTP 587 med STARTTLS. De tre er ikke utskiftbare i noen retning. Å peke en Exchange- eller Email Pro-postkasse mot <code>ssl0.ovh.net</code> feiler, og MX Plan på port 587 med STARTTLS er ikke der OVH dokumenterer den."
+    },
+    {
+      "h": "Vertsnavnene for Email Pro og Exchange inneholder et servernummer som ikke kan gjettes",
+      "p": "OVH gir ikke Email Pro og Hosted Exchange et felles vertsnavn. Hver tjeneste står på en nummerert maskin, og nummeret er en del av navnet, og derfor virker <code>ex4.mail.ovh.net</code> for én kunde og gir ingenting for den neste. OVH viser det i OVHcloud Control Panel: åpne tjenesten, gå til fanen <b>General information</b> og les boksen <b>Connection</b>. Det finnes ingen måte å utlede det fra domenet ditt og ingen autodiscovery som finner det for deg, så kopier det fra panelet før du starter."
+    },
+    {
+      "h": "Ingenting i adressen din forteller hvilket OVH-produkt du har",
+      "p": "Alle tre produktene leverer e-post på ditt eget domene, så <code>you@yourdomain.fr</code> ser lik ut uansett hvilket den ligger på. Svaret finnes i OVHcloud Control Panel under Web Cloud, der MX Plan vises under Emails, Email Pro har sin egen seksjon og Hosted Exchange en annen. Sjekk det først, for alle andre innstillinger avhenger av det. Gjaldt OVH-bestillingen din Microsoft 365 i stedet for OVHs egen Hosted Exchange, ligger postkassen på Microsofts servere under Microsofts identitetsplattform, og Microsofts standard tenant-policy blokkerer sluttbrukersamtykke for tredjeparts e-posttilgang. Vi hevder ikke å koble til disse."
+    },
+    {
+      "h": "MX Plan kjører Dovecot uten MOVE, UIDPLUS eller SPECIAL-USE",
+      "p": "Hilsenen fra <code>ssl0.ovh.net</code> identifiserer seg som Dovecot og annonserer <code>SASL-IR</code>, <code>IDLE</code>, <code>AUTH=PLAIN</code> og <code>AUTH=LOGIN</code>, men ikke MOVE, UIDPLUS eller SPECIAL-USE. Flytting av en melding utføres derfor som en kopi, en flaggoppdatering og en expunge i stedet for én atomisk kommando, og den nye identifikatoren til kopien må finnes ved å søke i målmappen. Mapper matches etter navn i stedet for rolle, noe som betyr mer hos OVH enn andre steder fordi så mange OVH-postkasser er franske: en agent som leter etter Sent, må kanskje få beskjed om at mappen heter <code>Elements envoyes</code>, og Trash kan være <code>Corbeille</code>."
+    }
+  ],
+  "limits": [
+    "Microsoft 365-postkasser bestilt gjennom OVHcloud kan ikke kobles til. Microsofts standard tenant-policy blokkerer sluttbrukersamtykke for tredjeparts e-posttilgang.",
+    "Vertsnavnene for Email Pro og Hosted Exchange inneholder et servernummer per tjeneste, så vi kan ikke forhåndsutfylle dem. Hent verdien fra boksen Connection i OVHcloud Control Panel.",
+    "MX Plan annonserer ikke MOVE, så en flytting er ikke atomisk. Hvis en tilkobling brytes underveis, kan en melding kortvarig finnes i begge mapper."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med OVH-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd OVHcloud-kobling. Kobler du en MCP-server som mcpemails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere. Det ene du må finne ut først, er hvilket OVH-e-postprodukt adressen tilhører, fordi vertsnavnene er helt forskjellige mellom dem."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for OVH?",
+      "a": "For MX Plan dokumenterer OVH ssl0.ovh.net for begge, IMAP på 993 med SSL/TLS og SMTP på 465 med SSL/TLS, og oppgir også imap.mail.ovh.net og smtp.mail.ovh.net som likeverdige. Email Pro og Hosted Exchange bruker i stedet en nummerert vert på formen pro4.mail.ovh.net eller ex4.mail.ovh.net, IMAP på 993 og SMTP på 587 med STARTTLS."
+    },
+    {
+      "q": "Hvordan vet jeg om jeg har MX Plan, Email Pro eller Hosted Exchange?",
+      "a": "Logg inn i OVHcloud Control Panel og åpne Web Cloud. MX Plan-postkasser er oppført under Emails, og Email Pro og Hosted Exchange har hver sin seksjon i menyen til venstre. Selve adressen avslører ingenting, siden alle tre leverer e-post på ditt eget domene, så panelet er det eneste pålitelige svaret."
+    },
+    {
+      "q": "Hvor finner jeg OVH-servernummeret mitt?",
+      "a": "Åpne Email Pro- eller Hosted Exchange-tjenesten i OVHcloud Control Panel, velg fanen General information og se på boksen Connection. Nummeret som vises der, er sifferet i vertsnavnet ditt, som gir navn som pro4.mail.ovh.net eller ex4.mail.ovh.net. Det kan ikke utledes fra domenenavnet ditt."
+    },
+    {
+      "q": "Hvorfor virker ikke ssl0.ovh.net for postkassen min?",
+      "a": "Fordi postkassen din sannsynligvis ikke er en MX Plan-postkasse. ssl0.ovh.net betjener bare MX Plan. En Email Pro- eller Hosted Exchange-postkasse svarer på sin egen nummererte vert og vil avvise eller overse en tilkobling rettet mot ssl0.ovh.net, noe som ser ut som et heng eller et feil passord snarere enn feil server."
+    },
+    {
+      "q": "Lagres OVH-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra OVHcloud via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
     }
   ],
   "ctaBand": {

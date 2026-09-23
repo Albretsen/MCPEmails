@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.greengeeks.com/support/article/where-to-find-mail-server-login-information-for-greengeeks-hosted-domains/",
+    "https://www.greengeeks.com/support/article/how-do-i-setup-an-e-mail-account/",
+    "https://www.greengeeks.com/support/article/getting-started-setting-up-email-applications/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://www.greengeeks.com/support/article/where-to-find-mail-server-login-information-for-greengeeks-hosted-domains/",
+    "usernameForm": "Hele e-postadressen din, for eksempel hello@dittdomene.com, ikke bare delen foran krøllalfaen.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "GreenGeeks IMAP-innstillinger og Claude MCP-oppsett",
+    "description": "GreenGeeks viser den faktiske e-postverten din under cPanel, Email Accounts, Connect Devices. Koble postkassen til Claude over IMAP 993. Én innboks gratis, for alltid."
+  },
+  "hero": {
+    "eyebrow": "GreenGeeks + AI",
+    "titleLine1": "Koble GreenGeeks-e-post til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte GreenGeeks-postkasse. Les, søk, send, svar, planlegg og organiser e-post over IMAP med passordet du satte da adressen ble opprettet.",
+    "answer": "Claude kan ikke nå en GreenGeeks-postkasse på egen hånd. mcpemails er en driftet MCP-server som kobler den til over vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. GreenGeeks kjører standard cPanel og har ikke noe felles vertsnavn for e-post: verten din bygges fra ditt eget domene eller fra serveren kontoen din ligger på, og cPanel viser den nøyaktige verdien under Email Accounts, deretter Connect Devices, i blokken Mail Client Manual Settings. Du autentiserer med postkassepassordet, ikke innloggingen til GreenGeeks-dashbordet, og én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord fra cPanel",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles GreenGeeks-e-post til: cPanel viser verten, IMAP 993",
+    "body": "GreenGeeks er et helt vanlig cPanel-webhotell. Alle webhotellplaner inkluderer postkasser på ditt eget domene, og de snakker IMAP på port 993 over TLS, med SMTP på 465. Det finnes ingen <code>imap.greengeeks.com</code> å peke mot, fordi postkassen ligger på den bestemte serveren kontoen din ble satt opp på. GreenGeeks genererer de riktige verdiene per konto i stedet for å publisere dem i en artikkel, og kundestøttedokumentasjonen deres sier det rett ut: innstillingene ville ikke vært riktige for alle om de ble oppgitt generelt. Innkommende vert er enten <code>mail.yourdomain.com</code> eller servernavnet, og brukernavnet er alltid hele e-postadressen. Passordet er det du skrev inn, eller genererte, da du opprettet adressen i cPanel."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og krever ikke kort."
+    },
+    {
+      "h": "Hent innstillingene fra Connect Devices i cPanel",
+      "p": "Logg inn på my.greengeeks.com, åpne cPanel for webhotellkontoen, og klikk <b>Email Accounts</b> under <b>Email</b>. Finn raden for adressen du vil bruke, og klikk <b>Connect Devices</b>. Rull ned til <b>Mail Client Manual Settings</b>. Den blokken gir deg den nøyaktige sikre innkommende verten, IMAP-porten og SMTP-porten for kontoen din. Kopier dem i stedet for å skrive inn det du husker."
+    },
+    {
+      "h": "Sett eller bekreft postkassepassordet",
+      "p": "IMAP sjekker passordet som hører til e-postadressen, og det er atskilt fra passordet til GreenGeeks-dashbordet og fra cPanel-innloggingen. Har du det ikke, bruker du <b>Manage</b> på adresseraden i Email Accounts for å sette et nytt, og limer det deretter inn i mcpemails med hele adressen som brukernavn."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Velkomst-e-posten med innstillingene dine leveres til selve den nye postkassen",
+      "p": "Når du oppretter en adresse, tilbyr cPanel å sende en velkomstmelding med klientkonfigurasjonen. GreenGeeks lar det valget stå avkrysset. Meldingen leveres til adressen du nettopp opprettet, så den eneste måten å lese den på er via webmail, med påloggingsopplysningene du prøver å finne. Den er et nyttig dokument når du først er inne, men ikke let etter den i den personlige innboksen din, og ikke tolk det som et tegn på at noe har feilet at den ikke ligger der."
+    },
+    {
+      "h": "Det samme cPanel viser innstillingene to steder, med to detaljnivåer",
+      "p": "<b>Connect Devices</b> på adresseraden gir hele blokken Mail Client Manual Settings, inkludert både SSL- og ikke-SSL-variantene. Menyen med tre prikker på den samme raden har en kortere visning, <b>Mail Configuration</b>, som lister brukernavn, innkommende server og port, og utgående server og port. De som havner på den korte visningen, konkluderer av og til med at serveren deres ikke har sikre innstillinger. Det har den. Gå tilbake og bruk Connect Devices."
+    },
+    {
+      "h": "Gjentatte mislykkede innlogginger får den tilkoblende adressen blokkert i brannmuren, og det ser ut som et tidsavbrudd",
+      "p": "GreenGeeks-serverne kjører en vertsbrannmur som blokkerer en IP-adresse etter flere mislykkede SMTP- eller IMAP-autentiseringer. Når den er blokkert, returnerer neste forsøk ingen autentiseringsfeil; tilkoblingen fullføres rett og slett aldri, så symptomet endrer seg fra en tydelig avvisning til at det henger eller får tidsavbrudd. Hvis en postkasse som fungerte, plutselig slutter å svare etter at du rettet et feil passord, er passordet nå riktig, og det er blokkeringen som er problemet. Kundestøtten fjerner den."
+    }
+  ],
+  "limits": [
+    "GreenGeeks har grenser for utgående sending per time på delte planer. Automatisert sending i stort volum fra en AI-agent kan treffe dem, og feilen viser seg som en utsatt eller avvist sending, ikke som en tilkoblingsfeil.",
+    "mcpemails kobler bare til postkassen. Aliaser, videresendinger, autosvar og spaminnstillinger blir værende i cPanel."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med GreenGeeks-e-post?",
+      "a": "Ikke direkte. Claude leveres uten noen kobling for cPanel-baserte e-postverter. Kobler du en MCP-server som mcpemails til GreenGeeks-postkassen din over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, med de samme påloggingsopplysningene du ville lagt inn i Thunderbird eller Apple Mail."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for GreenGeeks?",
+      "a": "IMAP er port 993 med implisitt TLS, og SMTP er port 465. Vertsnavnet er spesifikt for kontoen din og publiseres ikke i noen artikkel, fordi det avhenger av hvilken server webhotellet ditt ligger på. Les det av i cPanel under Email Accounts, deretter Connect Devices, i blokken Mail Client Manual Settings. Brukernavnet er hele e-postadressen din."
+    },
+    {
+      "q": "Hvor finner jeg servernavnet for e-post hos GreenGeeks?",
+      "a": "Åpne Email Accounts i cPanel, klikk Connect Devices på raden for adressen, og rull ned til Mail Client Manual Settings. Den siden viser de nøyaktige vertsnavnene for innkommende og utgående e-post på serveren din, sammen med både de sikre og de usikre portparene. Det sikre paret er det du skal bruke."
+    },
+    {
+      "q": "Hvorfor avvises e-postpassordet mitt hos GreenGeeks?",
+      "a": "Som regel fordi det er feil passord, ikke feil server. Postkassen har sitt eget passord, satt da adressen ble opprettet, og verken passordet til my.greengeeks.com-dashbordet eller cPanel-passordet autentiserer mot IMAP. Tilbakestill det via lenken Manage på adresseraden i Email Accounts."
+    },
+    {
+      "q": "Lagres GreenGeeks-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra GreenGeeks-serveren din over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en GreenGeeks-innboks",
+    "sub": "Koble til en GreenGeeks-postkasse på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

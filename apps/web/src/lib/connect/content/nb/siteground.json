@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.siteground.com/kb/how_to_configure_my_mail_client",
+    "https://www.siteground.com/kb/get-pop-warning-using-ssltls-email-client",
+    "https://www.siteground.com/blog/cpanel-to-site-tools-status-report"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://www.siteground.com/kb/how_to_configure_my_mail_client",
+    "usernameForm": "Hele e-postadressen din, for eksempel username@yourdomain.com, for både innkommende og utgående.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "SiteGround-e-post til Claude: IMAP-innstillinger i Site Tools",
+    "description": "SiteGround byttet ut cPanel med Site Tools. Hent IMAP-verten fra Mail Configuration, og koble postkassen til Claude på port 993. Én innboks gratis."
+  },
+  "hero": {
+    "eyebrow": "SiteGround + AI",
+    "titleLine1": "Koble SiteGround-e-post til Claude,",
+    "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte SiteGround-postkasse. Les, søk, send, svar, planlegg og organiser e-post via IMAP, med innstillingene Site Tools viser for kontoen din.",
+    "answer": "Claude når ikke en SiteGround-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. SiteGround har ikke noe felles e-postvertsnavn: verten din er mail.yourdomain.com, eller det sikre servernavnet på formen secureNNN.sgcpanel.com, og Site Tools viser det riktige under Email, Accounts, Mail Configuration. Autentisering skjer med passordet som er satt på postkassen, aldri innloggingen til SiteGround Client Area, og én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord fra Site Tools",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler SiteGround-e-post seg til: Site Tools, IMAP 993",
+    "body": "Alle SiteGround-abonnement inkluderer ubegrenset med adresser på domenet ditt, og de snakker IMAP på port 993 over TLS med SMTP på 465. Panelet er delen som lurer folk. SiteGround pensjonerte cPanel og erstattet det med sitt eget <b>Site Tools</b>, så ingenting i en cPanel-veiledning tilsvarer det du ser på. Innstillingene ligger under <b>Site Tools</b>, så <b>Email</b>, så <b>Accounts</b>, så tre-prikkers-menyen på kontoraden, så <b>Mail Configuration</b>, og til slutt fanen <b>Manual Settings</b>. To vertsnavn vises der. <code>mail.yourdomain.com</code> er den generelle formen, og et sikkert servernavn på formen <code>secureNNN.sgcpanel.com</code> er det som stemmer med SiteGrounds sertifikat. Brukernavnet er hele e-postadressen din for både innkommende og utgående."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og krever ikke kort."
+    },
+    {
+      "h": "Åpne Mail Configuration i Site Tools",
+      "p": "I SiteGround Client Area åpner du nettstedet, så <b>Site Tools</b>. Gå til <b>Email</b>, så <b>Accounts</b>, finn adressen under Manage Email Accounts, åpne tre-prikkers-menyen på raden og velg <b>Mail Configuration</b>. Bytt til fanen <b>Manual Settings</b>. Det er den fanen, ikke fanen for automatisk konfigurasjon som åpnes først, som viser de nøyaktige vertsnavnene og portene."
+    },
+    {
+      "h": "Bruk det sikre servernavnet, ikke bare mail.yourdomain.com",
+      "p": "Noter <code>secureNNN.sgcpanel.com</code>-verdien som vises for kontoen din, og bruk den for både IMAP og SMTP. Sett postkassepassordet fra den samme Accounts-skjermen hvis du ikke har det; det er ikke passordet til Client Area. Skriv så inn adressen, verten og passordet i mcpemails."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Det finnes ingen cPanel hos SiteGround, så de fleste SiteGround-e-postveiledninger er døde",
+      "p": "SiteGround forlot cPanel og flyttet alle kontoer til sitt eget Site Tools. Søkeresultatene er fortsatt fulle av SiteGround-instruksjoner som begynner med å be deg åpne cPanel og klikke Email Accounts. De skjermene finnes ikke på noe gjeldende SiteGround-abonnement, og det finnes ingen måte å slå dem på. Nevner en veiledning cPanel, er den eldre enn overgangen, og hvert steg etter det første er feil. Site Tools er det eneste panelet, og Mail Configuration er der innstillingene er."
+    },
+    {
+      "h": "Nummeret i det sikre servernavnet kommer fra SiteGround-serveren nettstedet ditt ligger på",
+      "p": "SiteGrounds e-postsertifikat dekker <code>sgcpanel.com</code>, ikke kundedomener, så en streng TLS-klient avviser <code>mail.yourdomain.com</code> på port 993. Verten som virker, er <code>secureNNN.sgcpanel.com</code>, der NNN er nummeret på SiteGround-serveren som hoster kontoen: et nettsted på <code>siteground164.com</code> bruker <code>secure164.sgcpanel.com</code>. Det er en verdi per konto, den endres hvis SiteGround flytter nettstedet ditt, og Mail Configuration er det autoritative stedet å lese den."
+    },
+    {
+      "h": "Mail Configuration åpner på fanen for automatisk oppsett og skjuler verdiene du vil ha",
+      "p": "Det første SiteGround tilbyr på den skjermen, er en nedlastbar konfigurasjonsfil for Outlook, Apple Mail og Thunderbird. Den er virkelig praktisk for en skrivebordsklient, og ubrukelig for alt som trenger de rå vertsnavnene, som er det en IMAP-integrasjon trenger. De rene verdiene ligger bak fanen <b>Manual Settings</b> ved siden av. Folk konkluderer med at SiteGround ikke publiserer innstillingene, når de er én fane unna."
+    }
+  ],
+  "limits": [
+    "SiteGround har grenser for utgående sending per time etter abonnement. En serie automatiserte sendinger kan strupes, noe som vises som en avvist eller utsatt melding og ikke som en tilkoblingsfeil.",
+    "mcpemails kobler bare til postkassen. Filtre, videresendinger, autosvar og spambeskyttelse blir værende i Site Tools."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med SiteGround-e-post?",
+      "a": "Ikke direkte. Claude har ingen SiteGround-kobling. Kobler du en MCP-server som mcpemails til SiteGround-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, med de samme påloggingsdetaljene du ville gitt Apple Mail eller Thunderbird."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for SiteGround?",
+      "a": "IMAP er port 993 og SMTP er port 465, begge med SSL. Vertsnavnet er enten mail.yourdomain.com eller, for et sertifikat som valideres, det sikre servernavnet på formen secureNNN.sgcpanel.com for kontoen din. Bruk hele e-postadressen som brukernavn på begge. POP3 på 995 finnes, men fjerner e-posten fra serveren."
+    },
+    {
+      "q": "Hvor er e-postinnstillingene i SiteGround Site Tools?",
+      "a": "Åpne Site Tools, så Email, så Accounts. Klikk tre-prikkers-menyen på raden for adressen din og velg Mail Configuration, og bytt så til fanen Manual Settings. SiteGround har ikke cPanel, så veiledninger som ber deg se i Email Accounts inne i cPanel, beskriver et panel kontoen din ikke har."
+    },
+    {
+      "q": "Hvorfor gir SiteGround-e-post en SSL-advarsel?",
+      "a": "Fordi SiteGrounds e-postsertifikat er utstedt for sgcpanel.com og ikke for domenet ditt, så mail.yourdomain.com feiler navnevalideringen over TLS. Erstatt vertsnavnet med det sikre servernavnet for kontoen din, som ser ut som secure164.sgcpanel.com, så forsvinner advarselen uten at du legger til noe unntak."
+    },
+    {
+      "q": "Lagres SiteGround-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra SiteGround via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en SiteGround-innboks",
+    "sub": "Koble til en SiteGround-postkasse på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

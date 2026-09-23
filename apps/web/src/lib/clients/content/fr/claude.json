@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/messages/en/docs.json",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/app/.well-known/oauth-protected-resource/route.ts",
+    "https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp"
+  ],
+  "meta": {
+    "title": "Connecter l'e-mail à Claude : MCP pour Gmail et IMAP",
+    "description": "Ajoutez une vraie boîte à claude.ai et Claude Desktop comme connecteur personnalisé. Une URL, OAuth, et Claude lit, cherche, envoie et planifie vos e-mails. 1 boîte gratuite."
+  },
+  "hero": {
+    "eyebrow": "Claude + e-mail",
+    "titleLine1": "Connectez votre boîte à Claude",
+    "titleLine2": "comme connecteur personnalisé",
+    "lead": "Claude n'a pas de client mail à lui. mcpemails est le serveur MCP hébergé qui lui en donne un : lire, rechercher, envoyer, répondre, transférer, planifier et organiser de vrais e-mails depuis claude.ai ou Claude Desktop.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "OAuth, aucune clé API requise",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Ajoutez https://mcpemails.com/api/mcp comme connecteur personnalisé dans Claude, cliquez sur Connect et connectez-vous avec votre compte mcpemails. Claude s'enregistre automatiquement et demande les autorisations que vous approuvez. Aucune clé API à créer, aucun fichier de configuration à modifier."
+  },
+  "method": {
+    "title": "Comment Claude se connecte : OAuth, sans clé API",
+    "body": "Claude exécute le flux OAuth MCP standard auprès de ce serveur. Il s'enregistre lui-même via l'<b>enregistrement dynamique de client RFC 7591</b>, donc aucun client ID à créer, et s'autorise avec un <b>code d'autorisation plus PKCE</b> en S256. Aucun secret client n'est jamais transmis, et le jeton ne porte que les autorisations que vous approuvez sur notre écran de consentement. Le jeton d'accès reçu dure une heure et se renouvelle tout seul ; il apparaît dans Dashboard, API Keys sous la forme <code>OAuth:</code> suivi du nom du client, et c'est là que vous révoquez la connexion."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit et connectez une boîte",
+      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Gmail se connecte en un clic via la connexion Google ; iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
+    },
+    {
+      "h": "Ouvrez les réglages des connecteurs",
+      "p": "Dans claude.ai ou Claude Desktop, ouvrez Settings, puis Connectors."
+    },
+    {
+      "h": "Ajoutez un connecteur personnalisé",
+      "p": "Cliquez sur Add custom connector, collez <code>https://mcpemails.com/api/mcp</code> comme URL du connecteur, puis cliquez sur Add."
+    },
+    {
+      "h": "Connectez et autorisez",
+      "p": "Cliquez sur Connect et connectez-vous avec mcpemails pour autoriser. Approuvez les autorisations que Claude doit détenir. Aucune clé API nécessaire."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Un connecteur personnalisé n'est pas le connecteur Gmail intégré à Claude",
+      "p": "Anthropic propose son propre connecteur Google, et c'est un autre chemin : un seul fournisseur, dans une seule app. Un connecteur personnalisé fait pointer Claude vers un serveur MCP, c'est pourquoi la même configuration couvre alors iCloud, Fastmail, Zoho, Yandex et n'importe quelle boîte IMAP d'entreprise derrière une seule URL, et pourquoi cette même URL fonctionne dans Cursor, ChatGPT et les autres."
+    },
+    {
+      "h": "Vous approuvez les autorisations une fois, et c'est tout ce que le jeton peut faire",
+      "p": "L'écran de consentement est le nôtre, pas une formalité. Un jeton émis sans <code>send:email</code> ne peut pas envoyer, et un jeton sans <code>delete:email</code> ne peut pas supprimer, quoi qu'on demande au modèle. Si vous voulez que Claude lise et rédige sans jamais envoyer, laissez <code>send:email</code> décoché et accordez plutôt <code>manage:drafts</code>."
+    },
+    {
+      "h": "La connexion fonctionne par interrogation, donc Claude ne remarquera pas le courrier de lui-même",
+      "p": "Il n'y a ni webhooks ni push. Claude voit le nouveau courrier quand il fait un appel, c'est-à-dire quand vous le lui demandez. Une consigne permanente comme « vérifie s'il y a quelque chose de la compta avant qu'on commence » est ce qui en fait une routine ; rien n'arrive sans qu'on le demande."
+    }
+  ],
+  "limits": [
+    "Les requêtes sont limitées à 100 par minute, 1 000 par heure et 10 000 par jour et par clé, en plus du plafond d'actions facturables de votre plan.",
+    "Le serveur fonctionne uniquement en requête-réponse. Il n'y a ni webhooks ni événements déclenchés par le serveur, donc un nouveau message ne réveille jamais votre agent de lui-même. Pour réagir au courrier entrant, interrogez la boîte à intervalles réguliers.",
+    "Le courrier est récupéré en direct chez votre fournisseur à chaque appel et n'est jamais stocké. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, donc un jeton révoqué ou un mot de passe de boîte modifié coupe l'accès immédiatement."
+  ],
+  "faq": [
+    {
+      "q": "Claude peut-il lire mes e-mails ?",
+      "a": "Pas tout seul. Claude ne peut atteindre une boîte qu'à travers un connecteur, et un connecteur personnalisé pointé vers mcpemails est une façon de lui en donner un. Une fois connecté, Claude peut lister, lire, rechercher, envoyer, répondre, transférer, organiser et planifier des e-mails dans toutes les boîtes que vous avez rattachées, dans la limite des autorisations approuvées."
+    },
+    {
+      "q": "Ai-je besoin d'une clé API pour Claude ?",
+      "a": "Non. Claude mène le flux OAuth dans le navigateur avec ce serveur, en s'enregistrant dynamiquement et en s'autorisant avec PKCE. Les clés API existent pour les clients qui ne savent pas le faire, comme Cline et JetBrains AI Assistant, et pour les scripts."
+    },
+    {
+      "q": "Quelles boîtes Claude peut-il atteindre ainsi ?",
+      "a": "Gmail via la connexion Google ; iCloud, Fastmail, Yahoo, Zoho et Yandex avec un mot de passe d'application ; et toute autre boîte qui parle IMAP et SMTP sur les ports standard. Le client les voit toutes par la même connexion : votre agent appelle d'abord inbox_list pour découvrir chaque boîte connectée et son identifiant, donc aucun UUID à coller nulle part."
+    },
+    {
+      "q": "Claude peut-il envoyer un e-mail sans que je le voie ?",
+      "a": "Seulement si vous l'y autorisez. L'envoi dépend de l'autorisation send:email : une clé ou un jeton sans cette autorisation ne peut rien envoyer du tout. En plus, le propriétaire d'une boîte peut exiger une validation humaine dans le tableau de bord, qui retient chaque envoi, réponse, transfert, envoi de brouillon et envoi planifié jusqu'à ce qu'une personne le libère."
+    },
+    {
+      "q": "Mes e-mails sont-ils stockés sur vos serveurs ?",
+      "a": "Non. Chaque message est récupéré en direct chez votre fournisseur pour la requête qui l'a demandé, puis transmis directement à votre client. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, pour que les appels suivants puissent s'authentifier. Supprimer la boîte dans le tableau de bord, ou révoquer l'accès chez votre fournisseur, coupe la connexion aussitôt."
+    },
+    {
+      "q": "Est-ce que ça marche dans Claude Desktop comme dans claude.ai ?",
+      "a": "Oui. Les deux accèdent aux connecteurs personnalisés depuis le même écran Settings, Connectors et partagent la même connexion : une boîte ajoutée dans l'un est disponible dans l'autre. Pour le terminal, voyez le guide Claude Code séparé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez une vraie boîte à Claude",
+    "sub": "Connectez une boîte en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

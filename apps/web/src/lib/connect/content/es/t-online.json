@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/programme/passwort-definition",
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/programm-passwort-verwalten",
+    "https://www.telekom.de/hilfe/vertrag-meine-daten/login-daten-passwoerter/welche-passwoerter-fuer-welchen-zweck",
+    "https://www.netzwelt.de/galerie/19784-e-mail-passwort-e-mail-adressen-t-online-einrichten.html"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Passwort für E-Mail-Programme (contraseña para programas de correo)",
+    "helpUrl": "https://www.telekom.de/hilfe/apps-dienste/e-mail/programm-passwort-verwalten",
+    "usernameForm": "Tu dirección completa, incluido el dominio: name@t-online.de. Algunas cuentas antiguas todavía se autentican con el número de T-Online de 12 dígitos, pero la dirección es lo que Telekom documenta hoy.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Correo de T-Online en Claude: la contraseña de correo aparte",
+    "description": "Conecta un buzón de T-Online a Claude y cualquier cliente MCP en secureimap.t-online.de:993. Requiere el Passwort für E-Mail-Programme, no el acceso de Telekom."
+  },
+  "hero": {
+    "eyebrow": "T-Online + IA",
+    "titleLine1": "Conecta tu buzón de T-Online",
+    "titleLine2": "a Claude, Cursor, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de Telekom. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña específica que Telekom emite para los programas de correo.",
+    "answer": "Claude no puede acceder a un buzón de T-Online por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en secureimap.t-online.de en el puerto 993, autenticándose con el Passwort für E-Mail-Programme aparte que Telekom emite para los clientes de correo, no con la contraseña de tu Telekom Login, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. Si nunca has creado esa contraseña, ningún cliente ha podido iniciar sesión nunca en el buzón y el fallo parece una errata. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Requiere la contraseña de Telekom para programas de correo",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta T-Online: IMAP y una segunda contraseña aparte",
+    "body": "Telekom ofrece IMAP en <code>secureimap.t-online.de</code> en el puerto 993 sobre TLS implícito, y el envío SMTP en <code>securesmtp.t-online.de</code> en el puerto 465. Ambos nombres están delante de un proxy IMAP y no de un servidor de buzones con el que hables directamente, lo que explica varias de las peculiaridades de abajo. Lo que casi todo el mundo hace mal es la credencial. Telekom mantiene dos contraseñas en una misma cuenta: la contraseña del <b>Telekom Login</b>, que se usa para el Kundencenter y telekom.de, y una segunda <b>Passwort für E-Mail-Programme</b>, descrita con las palabras de la propia Telekom como <b>für das Verwenden eines E-Mail-Programms</b> (para usar un programa de correo). Solo la segunda se autentica contra <code>secureimap.t-online.de</code>. Telekom recomienda que las dos no sean nunca iguales, y en muchas cuentas la contraseña para programas de correo simplemente no existe hasta que alguien la crea."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
+    },
+    {
+      "h": "Crea el Passwort für E-Mail-Programme",
+      "p": "En el E-Mail Center de email.t-online.de, abre <b>Menü</b>, luego <b>Einstellungen</b> (ajustes) y luego <b>Passwörter</b> (contraseñas) en la columna izquierda. Bajo el encabezado <b>E-Mail-Passwort, für das Verwenden eines E-Mail-Programms</b>, elige <b>E-Mail-Passwort ändern</b> (cambiar contraseña de correo), escribe la nueva contraseña dos veces y guarda. A la misma credencial se llega desde el Kundencenter en <b>Profil</b>, luego <b>Login-Daten und Passwörter</b> y luego <b>weitere Passwörter</b>. Establécela aunque creas que ya tienes una: en muchas cuentas nunca se ha creado."
+    },
+    {
+      "h": "Pégala en mcpemails",
+      "p": "Elige IMAP / SMTP, escribe la dirección completa, como name@t-online.de, y pega la contraseña para programas de correo. Los servidores y puertos de Telekom vienen rellenados y se verificaron mediante una conexión TLS real."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "La contraseña del Telekom Login se rechaza, y es a propósito",
+      "p": "Es el fallo de conexión con T-Online más habitual con diferencia, y produce un error de autenticación corriente sin nada que explique el motivo. Telekom divide la cuenta en una contraseña de inicio de sesión para telekom.de y el Kundencenter, y un <b>Passwort für E-Mail-Programme</b> aparte para IMAP, POP3 y SMTP. El servidor de correo solo acepta la segunda. Telekom aconseja expresamente que las dos sean distintas, así que ponerles la misma cadena tampoco es la solución prevista; crea la contraseña para programas de correo y úsala tanto en la parte de entrada como en la de salida de la conexión."
+    },
+    {
+      "h": "El proxy IMAP no anuncia ningún mecanismo AUTH antes del inicio de sesión",
+      "p": "El saludo de capacidades que devuelve Telekom es <code>IMAP4 IMAP4rev1 QUOTA LITERAL+ NAMESPACE UIDPLUS IDLE SORT</code>. No incluye <code>AUTH=PLAIN</code>, ni <code>AUTH=LOGIN</code>, ni <code>SASL-IR</code>. En la práctica, el servidor espera el comando IMAP <code>LOGIN</code> normal en lugar de un intercambio SASL <code>AUTHENTICATE</code>. Las bibliotecas cliente que enumeran los mecanismos SASL anunciados y se niegan a continuar cuando la lista está vacía se rinden antes de enviar las credenciales, por eso algunas herramientas IMAP dicen que T-Online es inaccesible mientras Thunderbird se conecta al mismo buzón sin problemas. mcpemails gestiona la vía del LOGIN simple, así que esto ya lo tienes resuelto."
+    },
+    {
+      "h": "Sin MOVE ni SPECIAL-USE, en un buzón con nombres de carpeta en alemán",
+      "p": "El servidor no anuncia la extensión IMAP <code>MOVE</code>, así que archivar un mensaje se hace como una copia, una actualización de marcas y un expunge en lugar de un único comando atómico. También omite <code>SPECIAL-USE</code>, lo que significa que Enviados, Borradores, Papelera y Spam se identifican por nombre y no por función. Un buzón de T-Online suele llamarlas <b>Gesendet</b>, <b>Entwürfe</b>, <b>Papierkorb</b> y <b>Spam</b>, así que si un agente no encuentra tu archivo o tu carpeta de enviados, nómbrala en la instrucción."
+    },
+    {
+      "h": "El envío tiene un límite de 50 MB por mensaje",
+      "p": "<code>securesmtp.t-online.de</code> anuncia un tamaño máximo de mensaje de 52.428.800 bytes. Es el tamaño de todo el mensaje codificado, así que los adjuntos en base64 cuentan aproximadamente un tercio más que su tamaño en disco. Un agente al que se pida reenviar un adjunto grande recibirá un rechazo SMTP rotundo, no un envío lento."
+    }
+  ],
+  "limits": [
+    "Como el servidor no admite MOVE, mover un mensaje no es atómico. Si una conexión se corta a mitad de la operación, un mensaje puede existir brevemente en ambas carpetas.",
+    "Telekom limita la contraseña para programas de correo a los clientes de correo. No desbloquea el Kundencenter, y cambiar la contraseña de tu Telekom Login no la cambia, así que hay que mantener las dos por separado."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de T-Online?",
+      "a": "No por sí solo. Claude no tiene un conector de Telekom ni de T-Online integrado. Apuntar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de T-Online?",
+      "a": "IMAP es secureimap.t-online.de en el puerto 993 con TLS implícito. SMTP es securesmtp.t-online.de en el puerto 465, también con TLS implícito. Inicia sesión con tu dirección t-online.de completa y el Passwort für E-Mail-Programme. Ambos servidores se confirmaron mediante una conexión TLS real y son comunes a todos los buzones de T-Online."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de T-Online en un programa de correo?",
+      "a": "Casi siempre porque escribiste la contraseña del Telekom Login. Telekom emite una segunda credencial, el Passwort für E-Mail-Programme, y solo esa se autentica contra los servidores de correo. Créala o restablécela en el E-Mail Center en Einstellungen, luego Passwörter, o en el Kundencenter en Profil, luego Login-Daten und Passwörter y luego weitere Passwörter."
+    },
+    {
+      "q": "¿Dónde creo el Passwort für E-Mail-Programme?",
+      "a": "Inicia sesión en el E-Mail Center en email.t-online.de, abre Menü, luego Einstellungen y luego Passwörter. El bloque con el encabezado E-Mail-Passwort, für das Verwenden eines E-Mail-Programms tiene un botón para cambiarla. Escribe la nueva contraseña dos veces y guárdala. Usa ese valor en tu cliente de correo y en mcpemails, tanto para el servidor entrante como para el saliente."
+    },
+    {
+      "q": "¿Funciona con magenta.de y otros dominios de correo de Telekom?",
+      "a": "Cualquier buzón que esté en el E-Mail Center de Telekom se autentica contra los mismos servidores secureimap.t-online.de y securesmtp.t-online.de con la misma contraseña para programas de correo. Lo que importa es que el buzón sea un buzón del E-Mail Center de Telekom, no el texto que va después de la arroba."
+    },
+    {
+      "q": "¿Se almacena mi correo de T-Online en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Telekom por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de T-Online",
+    "sub": "Conecta tu buzón de Telekom en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.verizon.com/support/residential/email",
+    "https://help.aol.com/articles/verizon-move-to-aol-mail-setting-up-your-new-aol-account-in-a-third-party-email-program-or-mobile-device-imap",
+    "https://help.aol.com/articles/how-do-i-use-other-email-applications-to-send-and-receive-my-aol-mail"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "AOL 应用密码",
+    "helpUrl": "https://help.aol.com/articles/how-do-i-use-other-email-applications-to-send-and-receive-my-aol-mail",
+    "usernameForm": "你完整的 verizon.net 地址，包括 @verizon.net。它现在就是你的 AOL 用户名，所以不要缩写，也不要换成 aol.com 地址。",
+    "status": "discontinued"
+  },
+  "meta": {
+    "title": "Verizon.net 邮箱现属 AOL：将其连接到 Claude",
+    "description": "Verizon 已停止其邮箱服务，verizon.net 邮箱已迁至 AOL。用 AOL 应用密码通过 IMAP（imap.aol.com）将其连接到 Claude。"
+  },
+  "hero": {
+    "eyebrow": "Verizon.net + AI",
+    "titleLine1": "Verizon 已停止其邮件服务。",
+    "titleLine2": "你的 verizon.net 收件箱仍可连接",
+    "lead": "Verizon 已不再运营邮箱。仍然存在的 verizon.net 地址是一个 AOL 账户，mcpemails 通过 IMAP 连接它，让你的 AI 代理可以读取、搜索、发送、回复和归档邮件。",
+    "answer": "Claude 无法自行连接 verizon.net 邮箱，Verizon 自己也不行：它已停止消费者邮箱服务，并把邮箱迁移到了 AOL Mail 和 Yahoo Mail。如果你的地址在那次迁移中保留了下来，它就是一个以 verizon.net 为用户名的 AOL 账户，mcpemails 这个托管 MCP 服务器会通过 IMAP 连接 imap.aol.com 的 993 端口，使用 AOL 应用密码而不是你在网页邮箱中输入的密码。连接后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送、回复和整理邮件。一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "AOL 应用密码，而不是网页邮箱密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "verizon.net 如何连接：它是一个 AOL 邮箱，通过 IMAP 连接",
+    "body": "Verizon 自己的支持页面对现状说得很直白：它已停止邮箱服务，通知工作已经结束，客户也不再有保留 verizon.net 地址的选项。实际发生的是迁移而不是关停。邮箱迁到了 mail.aol.com 上的 <b>AOL Mail</b> 和 Yahoo Mail，未迁移的内容在 2017 年底被删除，保留下来的地址沿用了原来的名称。所以真正重要的是 AOL 的设置。IMAP 在 <code>imap.aol.com</code> 的 993 端口通过 TLS 响应，SMTP 在 <code>smtp.aol.com</code> 的 465 端口响应，同样是隐式 TLS，登录时要使用包括 <code>@verizon.net</code> 在内的完整地址。AOL 不接受邮件客户端使用你的普通密码：你需要开启两步验证，在 Account Security 下生成一个<b>应用密码</b>，然后把这串字符填入密码栏。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "用 verizon.net 地址登录 AOL",
+      "p": "前往 login.aol.com，用完整的 <code>name@verizon.net</code> 地址登录，而不是 aol.com 地址。如果登录失败，说明该邮箱没有在迁移中保留下来，也就没有可以连接的东西；Verizon 删除了未迁移的账户，且无法恢复。"
+    },
+    {
+      "h": "在 Account Security 下生成 AOL 应用密码",
+      "p": "打开 Account Info，然后是 <b>Account Security</b>。如果两步验证未开启，请先开启，然后生成一个应用密码，命名为 <code>mcpemails</code> 之类的名称。AOL 只显示一次。把它连同完整的 verizon.net 地址一起粘贴到 mcpemails；下方的 AOL 服务器已自动填好。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "已经没有可以指向的 Verizon 邮件服务器了",
+      "p": "旧指南列出的是 <code>incoming.verizon.net</code> 和 <code>outgoing.verizon.net</code> 这样的主机名。Verizon 已不再运营消费者邮件，所以这些名称描述的是一个不复存在的服务。verizon.net 地址当前的所有设置都是 AOL 的设置，这就是为什么本页让你去 AOL 的账户安全页面，而不是 Verizon 的。Verizon 支持也无法重置邮箱密码；这个账户现在归 AOL 所有。"
+    },
+    {
+      "h": "有些 verizon.net 地址迁到了 Yahoo，而不是 AOL",
+      "p": "Verizon 的停用页面列出了两个去处：AOL Mail 和 Yahoo Mail。大多数人落在了 AOL，本页也是围绕 imap.aol.com 编写的；但如果你只能用 Yahoo 地址登录，那么你的邮箱在 Yahoo 一侧，应用密码必须改在 Yahoo 的账户安全页面生成。请先尝试 AOL 登录；那是常见情况。"
+    },
+    {
+      "h": "用户名永远是 verizon.net 地址",
+      "p": "迁移保留了地址作为账户名，所以即使背后的一切都是 AOL，用户名栏里填的也是 <code>name@verizon.net</code>。输入 aol.com 别名，或者省略域名，都会产生一个看起来像密码错误的认证失败。那些后来在同一账户上添加了 aol.com 地址的人常会在这里中招。"
+    },
+    {
+      "h": "不存在新的 verizon.net 地址，也无法重新开通",
+      "p": "Verizon 声明客户不再有保留 verizon.net 地址的选项，从未迁移的内容已于 2017 年 12 月 15 日删除。所以本页只对仍然存活的邮箱有用。如果你的邮箱多年前就没了动静，没有任何恢复途径，也无法在同一域名上创建替代地址。"
+    }
+  ],
+  "limits": [
+    "AOL 的 SMTP 主机声明的最大邮件大小约为 39 MB，因此带大附件的邮件在发出之前就会被拒绝。",
+    "只能连接已经存在并完成迁移的 verizon.net 邮箱。Verizon 不再发放新邮箱，mcpemails 也无法恢复已删除的账户。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Verizon 邮箱吗？",
+      "a": "不能直接使用，也不能通过已不再运营邮件的 Verizon 使用。如果你的 verizon.net 地址在 AOL 上仍然有效，通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到它，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "verizon.net 的 IMAP 和 SMTP 设置是什么？",
+      "a": "就是 AOL 的设置。IMAP 为 imap.aol.com，端口 993，隐式 TLS；SMTP 为 smtp.aol.com，端口 465，同样是隐式 TLS，并需要认证。两者均已通过实时 TLS 连接验证。用户名是你完整的 verizon.net 地址，密码栏填 AOL 应用密码。"
+    },
+    {
+      "q": "Verizon 邮箱怎么了？",
+      "a": "Verizon 退出了邮件业务并停止了该服务。现有的 verizon.net 邮箱被迁移到 AOL Mail 和 Yahoo Mail，未迁移的内容于 2017 年 12 月被删除。Verizon 的支持页面说明客户不再有保留 verizon.net 地址的选项，所以不会再发放任何新地址。"
+    },
+    {
+      "q": "为什么我的 verizon.net 密码在 Outlook 或邮件客户端中无效？",
+      "a": "因为该邮箱是一个 AOL 账户，而 AOL 要求不使用其自身登录窗口的客户端使用应用密码。你在网页邮箱中使用的密码是正确的，但在 IMAP 上仍会被拒绝。请开启两步验证，在 Account Security 下生成应用密码，并改用这串字符。"
+    },
+    {
+      "q": "我的 verizon.net 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 AOL 实时获取邮件并交给你的 AI 客户端。凭据（包括应用密码）经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 你的 verizon.net 收件箱",
+    "sub": "Verizon 退出了邮件业务，地址仍然可用。一个收件箱永久免费，无需信用卡。"
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "_sources": [
+    "https://support.mail.com/pop-imap/index.html",
+    "https://support.mail.com/pop-imap/imap/index.html",
+    "https://support.mail.com/pop-imap/imap/server.html",
+    "https://support.mail.com/pop-imap/imap/outlook.html",
+    "https://support.mail.com/pop-imap/setup-emailprogram-fails.html",
+    "https://support.mail.com/security/2fa/index.html",
+    "https://support.mail.com/security/2fa/application-specific-passwords.html"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "账户密码（开启 2FA 时为应用专用密码）",
+    "helpUrl": "https://support.mail.com/pop-imap/index.html",
+    "usernameForm": "你的完整 mail.com 地址，与发放时完全一致，无论它以 mail.com 系列中的哪个域名结尾，例如 you@email.com 或 you@usa.com。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 Mail.com 连接到 Claude、Cursor 与 MCP 客户端",
+    "description": "通过 imap.mail.com:993 的 IMAP 将 mail.com 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。POP3/IMAP 是 mail.com Premium 功能，默认关闭。"
+  },
+  "hero": {
+    "eyebrow": "Mail.com + AI",
+    "titleLine1": "将 Mail.com 连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 mail.com 收件箱。开启客户端访问后，即可通过 IMAP 在所有 MCP 客户端（而不只是一个）中读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行访问 mail.com。mcpemails 是一个托管 MCP 服务器，通过 imap.mail.com 端口 993 的 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。mail.com 有两个前提条件：POP3、IMAP 和 SMTP 是 Premium 功能；而且即使是 Premium，访问也默认关闭，直到你在 Email、Settings、POP3 and IMAP 中启用。开启之后，连接一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "Premium 账户，开启 IMAP",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "mail.com 如何连接：Premium IMAP，需手动开启",
+    "body": "mail.com 在 <code>imap.mail.com</code> 端口 993 上通过 TLS 提供 IMAP。对于外发邮件，其帮助中心列出的是端口 587 上的 <code>smtp.mail.com</code>，使用 STARTTLS，并提供端口 465 加 SSL/TLS 作为替代，mcpemails 使用的是后者。mail.com 由 1&1 Mail and Media 运营，与 GMX 和 WEB.DE 同属一个集团，也继承了它们的规矩：<b>浏览器之外的访问是付费功能，而且默认关闭</b>。mail.com 自己的第三方应用页面说明，POP、IMAP 和 SMTP 仅为 Premium 功能；其故障排除页面另外说明，你邮箱中的 POP3 或 IMAP 收取功能默认是关闭的。免费的 mail.com 地址在账户升级之前，无法被本服务或任何其他邮件客户端连接；升级后的账户也仍需勾选该复选框。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。无需信用卡，免费套餐可连接一个收件箱，想用多久就用多久。"
+    },
+    {
+      "h": "在 mail.com 中开启 POP3 和 IMAP",
+      "p": "登录 mail.com，依次进入 <b>Email</b>、<b>Settings</b>、<b>POP3 and IMAP</b>。勾选 <b>Enable access to this account via POP3 and IMAP</b>，然后点击 <b>Save</b>。如果该部分不存在或无法保存，说明邮箱仍处于免费套餐，完全不包含 POP3、IMAP 或 SMTP。"
+    },
+    {
+      "h": "如果开启了 2FA，创建应用专用密码，然后连接",
+      "p": "开启双重身份验证后，你的普通 mail.com 密码在客户端中将失效。依次点击 <b>profile icon</b>、<b>Security Options</b>、<b>Manage application-specific passwords</b>、<b>Create new application-specific password</b>。mail.com 只显示一次。然后在 mcpemails 中选择 IMAP / SMTP，输入你的完整地址（无论它位于 mail.com 系列的哪个域名）以及该密码。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "IMAP 是 Premium 功能，说明这一点的那句话很容易被忽略",
+      "p": "mail.com 的帮助中心只在其第三方应用页面上用一句话写明了这项限制：POP、IMAP 和 SMTP 仅为 Premium 功能。没有试用期，没有部分访问，客户端中也不会有任何解释：免费邮箱拒绝登录的方式与密码错误一模一样。升级是唯一的途径，任何 MCP 服务器（包括我们的）都无法绕过。这是 mail.com 连接失败最常见的原因。"
+    },
+    {
+      "h": "开启双重身份验证会悄悄把 IMAP 重新关闭",
+      "p": "mail.com 的双重身份验证文档指出，开启 2FA 后，必须在邮箱设置中重新启用 POP3 和 IMAP 访问。所以，一个已连接并正常工作的邮箱，会在你加强账户安全的那一刻停止工作，你几周前设置的开关已被悄悄清除。请回到 <b>Email</b>、<b>Settings</b>、<b>POP3 and IMAP</b>，重新勾选复选框并保存，然后把连接改为使用应用专用密码，因为你的普通密码也不再能通过认证了。"
+    },
+    {
+      "h": "你的地址很可能不是以 @mail.com 结尾",
+      "p": "mail.com 在注册时提供 100 多个域名可选，所以实际在用的 mail.com 邮箱地址形如 <code>@email.com</code>、<code>@usa.com</code>、<code>@engineer.com</code> 和 <code>@dr.com</code>。它们全都通过 <code>imap.mail.com</code> 认证。请按发放时的样子输入地址，包括域名。用户名绝不只是 @ 前面的部分，主机名也不会随你的域名变化，所以不要去找什么 imap.usa.com。"
+    },
+    {
+      "h": "连接失效可能是一种只有网页邮箱才会显示的封锁",
+      "p": "mail.com 自己的故障排除页面警告说，有些错误（尤其是临时的账户封锁）在第三方客户端中无法正常显示。连接只是失败，没有任何有用的信息。他们的建议是在桌面浏览器中登录 mail.com，阅读登录后立即出现的通知，其中写明了真正的原因和解除的步骤。如果凭据正确且 IMAP 已开启，请在修改其他设置之前先检查网页邮箱。"
+    }
+  ],
+  "limits": [
+    "免费的 mail.com 邮箱根本无法连接，无论是我们还是任何邮件客户端，因为 POP3、IMAP 和 SMTP 仅限 Premium 账户。",
+    "mail.com 的 IMAP 服务器数据页面还列出了端口 143，除非客户端协商 STARTTLS，否则它是未加密的。mcpemails 只在 993 上以隐式 TLS 连接，不提供明文端口。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 mail.com 吗？",
+      "a": "不能直接使用，而在免费 mail.com 账户上则完全不能。Claude 没有内置的 mail.com 连接器。在已启用 POP3 和 IMAP 的 Premium 邮箱上，连接 mcpemails 这样的 MCP 服务器后，Claude 就能读取、搜索、发送、回复、定时和整理邮件，而且同一个连接也可在 Cursor、ChatGPT 和任何其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "使用 IMAP 需要 mail.com Premium 吗？",
+      "a": "需要。mail.com 的帮助中心明确说明，POP、IMAP 和 SMTP 仅为 Premium 功能，并引导免费用户前往升级页面。这项限制在 mail.com 自己的服务器上强制执行，所以在免费套餐上，浏览器和 mail.com 移动应用是你唯一的访问方式。"
+    },
+    {
+      "q": "mail.com 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.mail.com，端口 993，使用隐式 TLS。对于 SMTP，mail.com 文档给出的是 smtp.mail.com，端口 587 加 STARTTLS，以及作为同等替代的端口 465 加 SSL/TLS；mcpemails 使用 465。请用你的完整 mail.com 地址和账户密码登录；如果开启了双重身份验证，则使用应用专用密码。"
+    },
+    {
+      "q": "开启双重身份验证后，我的 mail.com 连接断了，为什么？",
+      "a": "因为开启 2FA 会重置客户端访问。mail.com 要求此后在邮箱设置中重新启用 POP3 和 IMAP，而你的普通密码也不再能让客户端通过认证。请在 Email、Settings、POP3 and IMAP 中重新启用该设置，然后在 Security Options 中生成应用专用密码并改用它。"
+    },
+    {
+      "q": "@email.com、@usa.com 以及其他 mail.com 域名也能用吗？",
+      "a": "能。mail.com 在 100 多个域名上发放地址，它们都是同一组主机名背后的同一个邮箱平台。请按发放时的样子输入地址，无论域名是什么都连接 imap.mail.com。Premium 要求和开关在所有这些域名上都完全一样适用。"
+    },
+    {
+      "q": "我的 mail.com 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 mail.com 实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储；邮件正文在发起该请求之后不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Mail.com 收件箱",
+    "sub": "几分钟即可连接 mail.com Premium。mcpemails 上 1 个收件箱永久免费，无需信用卡。"
+  }
+}

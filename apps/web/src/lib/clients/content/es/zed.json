@@ -1,0 +1,88 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://zed.dev/docs/ai/mcp"
+  ],
+  "meta": {
+    "title": "Conecta el correo a Zed: MCP en el Agent Panel",
+    "description": "Añade una bandeja real al Agent Panel de Zed como context server. Pega una URL y autoriza con OAuth, sin clave de API. Lee, busca, envía y programa correo. Una bandeja gratis."
+  },
+  "hero": {
+    "eyebrow": "Zed + correo",
+    "titleLine1": "Conecta tu bandeja a Zed",
+    "titleLine2": "desde el Agent Panel",
+    "lead": "Añade un buzón real a Zed como context server. Lee, busca, envía, responde, reenvía, programa y organiza correo sin salir del editor.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "OAuth, sin clave de API",
+    "meta2": "Correo obtenido en vivo, nunca almacenado",
+    "answer": "En los ajustes del Agent Panel haz clic en Add Custom Server, o añade una entrada en context_servers de settings.json con la url https://mcpemails.com/api/mcp. Zed lanza el flujo OAuth cuando no hay ningún encabezado Authorization configurado."
+  },
+  "method": {
+    "title": "Cómo se conecta Zed: OAuth, sin clave de API",
+    "body": "Zed ejecuta el flujo OAuth estándar de MCP contra este servidor. Se registra solo mediante <b>registro dinámico de clientes RFC 7591</b>, así que no hay ningún client ID que crear, y se autoriza con <b>código de autorización más PKCE</b> usando S256. Nunca se transmite un secreto de cliente, y el token solo lleva los permisos que apruebas en nuestra pantalla de consentimiento. El token de acceso que recibe dura una hora y se renueva solo; aparece en Dashboard, API Keys como <code>OAuth:</code> seguido del nombre del cliente, y ahí es donde revocas la conexión."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis y conecta un buzón",
+      "p": "Regístrate en mcpemails.com, sin tarjeta, y luego ve a Dashboard, Inboxes, Connect Inbox. Gmail se conecta con el inicio de sesión de Google en un clic; iCloud, Fastmail, Yahoo, Zoho y Yandex requieren una contraseña de aplicación; cualquier otro se conecta por IMAP y SMTP estándar. El plan gratuito incluye una bandeja, para siempre."
+    },
+    {
+      "h": "Abre los ajustes del Agent Panel",
+      "p": "En los ajustes del Agent Panel haz clic en <b>Add Custom Server</b>, o edita <code>settings.json</code> directamente."
+    },
+    {
+      "h": "Añade el servidor",
+      "p": "Añade la entrada de abajo en <code>context_servers</code>."
+    },
+    {
+      "h": "Autoriza",
+      "p": "Zed lanza el flujo OAuth cuando no hay ningún encabezado Authorization configurado. Inicia sesión con mcpemails y aprueba los permisos que quieres que tenga Zed."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Deja el encabezado Authorization vacío a propósito",
+      "p": "Zed elige entre OAuth y un token estático según si configuraste un encabezado Authorization. Si pones uno, Zed lo usa y nunca pregunta; si lo dejas vacío, Zed ejecuta el flujo en el navegador. Rellenar ese campo a medias es como la gente acaba con un servidor que ni pregunta ni se autentica."
+    },
+    {
+      "h": "Zed los llama context servers; todos los demás, servidores MCP",
+      "p": "La clave de configuración es <code>context_servers</code>. Es el mismo MCP, y un fragmento de otro cliente es correcto salvo por la clave que lo envuelve, que es justo el tipo de diferencia que sobrevive a una lectura atenta."
+    },
+    {
+      "h": "Las herramientas aparecen en el Agent Panel",
+      "p": "Las herramientas de correo son herramientas del agente. Una conexión correcta no cambia nada en los autocompletados en línea; el sitio para confirmar que funcionó, y para ver qué herramientas llegaron, es el Agent Panel."
+    }
+  ],
+  "limits": [
+    "Las solicitudes están limitadas a 100 por minuto, 1.000 por hora y 10.000 al día por clave, además del tope de acciones facturables de tu plan.",
+    "El servidor funciona solo por petición y respuesta. No hay webhooks ni eventos iniciados por el servidor, así que el correo nuevo nunca despierta a tu agente por sí solo. Para reaccionar al correo entrante, consulta periódicamente según un horario.",
+    "El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, así que un token revocado o un cambio de contraseña del buzón corta el acceso de inmediato."
+  ],
+  "faq": [
+    {
+      "q": "¿Cómo conecto el correo a Zed?",
+      "a": "Añade un servidor personalizado desde los ajustes del Agent Panel, o añade una entrada en context_servers de settings.json con la url https://mcpemails.com/api/mcp. Deja vacío el encabezado Authorization y Zed ejecutará el flujo OAuth. A partir de ahí el Agent Panel tiene herramientas para leer, buscar, enviar, responder, reenviar, organizar y programar correo."
+    },
+    {
+      "q": "¿Necesito una clave de API para Zed?",
+      "a": "No, siempre que dejes sin configurar el encabezado Authorization, que es lo que hace que Zed lance el flujo OAuth. Una clave bearer es la alternativa si prefieres gestionar el token tú mismo."
+    },
+    {
+      "q": "¿Qué buzones puede alcanzar Zed de esta forma?",
+      "a": "Gmail con el inicio de sesión de Google; iCloud, Fastmail, Yahoo, Zoho y Yandex con una contraseña de aplicación; y cualquier otro buzón que hable IMAP y SMTP en los puertos estándar. El cliente los ve todos a través de la misma conexión: tu agente llama primero a inbox_list para descubrir cada buzón conectado y su id, así que no hay UUID que pegar en ningún sitio."
+    },
+    {
+      "q": "¿Puede Zed enviar correo sin que yo lo vea?",
+      "a": "Solo si tú lo permites. El envío depende del permiso send:email, así que una clave o un token sin ese permiso no puede enviar nada. Además, el propietario de una bandeja puede exigir aprobación humana en el panel, que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera."
+    },
+    {
+      "q": "¿Se guarda mi correo en los servidores de mcpemails?",
+      "a": "No. Cada mensaje se obtiene en vivo de tu proveedor para la solicitud que lo pidió y se entrega directamente a tu cliente. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, para que las llamadas futuras puedan autenticarse. Eliminar la bandeja en el panel, o revocar el acceso en tu proveedor, corta la conexión al instante."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a Zed una bandeja real",
+    "sub": "Un context server, un inicio de sesión. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

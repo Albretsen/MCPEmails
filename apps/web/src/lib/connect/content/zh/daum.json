@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://cs.kakao.com/helps_html/1073209983",
+    "https://cs.daum.net/faq/service/43/category/9234/detail/24081",
+    "https://cs.daum.net/faq/43/9234.html",
+    "https://hanmail-notice.daum.net/list/907?index=1"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Kakao 应用专用密码（앱 비밀번호）",
+    "helpUrl": "https://cs.kakao.com/helps_html/1073209983",
+    "usernameForm": "你的完整地址，包括域名：name@daum.net；如果你的邮箱使用 name@hanmail.net 形式，则填这个。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "用 Kakao 应用专用密码将 Daum Mail 连接到 Claude",
+    "description": "通过 imap.daum.net:993 的 IMAP 将 Daum Mail（daum.net、hanmail.net）连接到 Claude 或任意 MCP 客户端。自 2025 年 1 月起需要 Kakao 应用专用密码。"
+  },
+  "hero": {
+    "eyebrow": "Daum Mail + AI",
+    "titleLine1": "将 Daum Mail 连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Daum 或 Hanmail 收件箱。使用 Kakao 应用专用密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用而不止一个。",
+    "answer": "Claude 无法自行访问 Daum Mail。mcpemails 是一个托管 MCP 服务器，通过 imap.daum.net 端口 993 的 IMAP 与之连接，使用 Kakao 应用专用密码（앱 비밀번호）而不是你的 Kakao 账户密码进行认证。自 2025 年 1 月 2 日起，Daum 要求邮箱背后的 Kakao 账户开启两步验证，并要求每次 IMAP 和 POP3 登录都使用应用专用密码，因此普通密码在任何邮件客户端中都已无效。IMAP 本身是 Daum Mail 设置中的另一个开关，也必须打开。1 个收件箱免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "Kakao 应用专用密码，而非你的密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Daum Mail 如何连接：IMAP 在 Daum，密码在 Kakao",
+    "body": "Daum 在 <code>imap.daum.net</code> 端口 993 上通过隐式 TLS 提供 IMAP，在 <code>smtp.daum.net</code> 端口 465 上提供 SMTP。不寻常的是，你需要的两样东西分别位于两个不同的产品中。协议开关在 Daum Mail 中，位于 <b>환경설정</b> 下的 <b>IMAP/POP3 설정</b>。凭据则在你的 Kakao 账户中，因为 Daum 登录已并入 Kakao，邮箱现在隶属于一个 카카오계정（Kakao 账户）。自 <b>2025 年 1 月 2 日</b>起，Kakao 强制要求 IMAP 和 POP3 登录开启两步验证，并要求使用<b>앱 비밀번호</b>（应用专用密码）代替账户密码。<code>@daum.net</code> 和较早的 <code>@hanmail.net</code> 地址是位于同一服务器上的同一个邮箱，所以只需建立一个连接。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱并永久免费，无需信用卡。接下来的两步分别在两个不同的 Kakao 产品中进行，需要在两者之间切换。"
+    },
+    {
+      "h": "在 Daum Mail 中启用 IMAP",
+      "p": "打开 Daum Mail，进入 환경설정（设置），然后打开 IMAP/POP3 설정。将 IMAP 设为使用中并保存。这是按邮箱设置的，与 Kakao 账户上的任何设置无关：关闭时，imap.daum.net 会拒绝登录，而且这种失败与密码错误无法区分。"
+    },
+    {
+      "h": "在 Kakao 账户中生成应用专用密码",
+      "p": "前往 accounts.kakao.com，依次打开 계정 보안（账户安全）、2단계 인증（两步验证）、앱 비밀번호（应用专用密码）。在 KakaoTalk 中也可以通过 설정、카카오계정、2단계 인증、앱 비밀번호 进入同一页面。必须先开启两步验证，才能创建应用专用密码。生成一个密码，然后在 mcpemails 中选择 IMAP / SMTP，输入完整的 Daum 或 Hanmail 地址，并粘贴应用专用密码，而不是你的 Kakao 密码。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI 客户端",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，你的代理就能读取、搜索、发送、回复、转发、定时和整理这个 Daum 邮箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "凭据已移到 Kakao，而 Daum 自己的设置页对此只字未提",
+      "p": "Daum Mail 的 IMAP 设置页告诉你服务器、端口以及如何开启协议，但密码并不从那里来。自从 Daum 账户变成 Kakao 账户后，应用专用密码要在 accounts.kakao.com 的 계정 보안 下创建，而只有 Kakao 的帮助文档提到这一点。人们在 Daum 中启用 IMAP，试了 Kakao 密码，被拒绝后又回到 Daum 设置页去找一个根本不存在的错误。如果你正在寻找 Daum 的应用专用密码页面，那你就找错网站了。"
+    },
+    {
+      "h": "自 2025 年 1 月 2 日起，两步验证是强制的，而非可选",
+      "p": "Kakao 自己的说明很明确：使用 IMAP 和 POP3 时，你必须开启两步验证，并用单独生成的应用专用密码登录，而不是现有密码。这不是一条有退路的建议。用了多年的客户端在登录时失败，而服务器返回的是普通的认证错误，所以人们自然会以为是忘了密码。重新关闭两步验证并不能恢复密码登录，反而会让你无法创建应用专用密码。"
+    },
+    {
+      "h": "hanmail.net 和 daum.net 是同一个邮箱，但你输入的地址很重要",
+      "p": "Daum 在 <code>@daum.net</code> 之外保留了较早的 <code>@hanmail.net</code> 域名，两者都指向同一服务器上的同一个邮箱。无需连接两次。真正重要的是按照你账户实际使用的形式输入地址，因为登录时发送的用户名必须与邮箱拥有的某个地址相符。如果一种形式被拒绝，请先试另一种，再去动应用专用密码。"
+    },
+    {
+      "h": "没有 SPECIAL-USE，文件夹名称是韩语",
+      "p": "Daum 的 IMAP 服务器不声明 SPECIAL-USE 扩展，因此客户端无法询问哪个文件夹存放已发送邮件、哪个是回收站。文件夹按名称匹配，在韩语邮箱中，这些名称是 받은편지함（收件箱）、보낸편지함（已发送）、임시보관함（草稿）、휴지통（已删除）和 스팸함（垃圾邮件）。如果代理把邮件归到了意外的位置，请明确写出目标文件夹名称，而不要依赖其角色。"
+    }
+  ],
+  "limits": [
+    "Daum 不声明 IDLE，因此邮件是轮询获取而不是推送的。监视邮箱的代理会在下次检查时看到新邮件，而不是在邮件到达时。",
+    "应用专用密码属于 Kakao 账户，而不是邮箱。关闭两步验证或在 Kakao 中撤销该密码，会立即切断连接，而 Daum 一侧不会有任何提示。",
+    "Daum 的 SMTP 服务器接受的邮件最大约为 70 MB。附件超过此大小的转发会在发送时被拒绝，而不会进入队列。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Daum Mail 吗？",
+      "a": "不能直接使用。Claude 没有内置的 Daum 连接器，也无法自行建立 IMAP 连接。将 mcpemails 这样的 MCP 服务器连接到你的 Daum 邮箱后，Claude 就能读取、搜索、发送、回复、转发、定时和整理其中的邮件，而且同一个连接也可在 Cursor 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Daum Mail 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.daum.net，端口 993，使用隐式 TLS。SMTP 为 smtp.daum.net，端口 465，同样是隐式 TLS。请用完整的 daum.net 或 hanmail.net 地址和 Kakao 应用专用密码登录。两个服务器均已在本页所示日期通过实时 TLS 连接验证。"
+    },
+    {
+      "q": "Kakao 密码正确，为什么还是登录不了？",
+      "a": "因为 Kakao 已不再接受它用于邮件。自 2025 年 1 月 2 日起，IMAP 和 POP3 要求 Kakao 账户开启两步验证，并使用单独生成的应用专用密码。现在正确的账户密码和错误密码会产生相同的认证错误，这就是这个问题常被误判的原因。"
+    },
+    {
+      "q": "在哪里创建 Daum 应用专用密码？",
+      "a": "不在 Daum。登录 accounts.kakao.com，依次打开 계정 보안、2단계 인증、앱 비밀번호。在 KakaoTalk 中的路径是 설정、카카오계정、2단계 인증、앱 비밀번호。必须先开启两步验证，否则不会出现应用专用密码选项。把生成的密码复制到客户端的密码字段中。"
+    },
+    {
+      "q": "hanmail.net 地址使用相同的设置吗？",
+      "a": "是的。Hanmail 是 Daum 最初的邮箱域名，它和 daum.net 都指向同一服务器上的同一个邮箱，使用相同的 IMAP 开关和相同的 Kakao 应用专用密码。按你账户使用的地址形式连接一次邮箱即可，两个地址都可用于发信。"
+    },
+    {
+      "q": "我的 Daum 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 Daum 实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储，邮件正文在发起该请求之后不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Daum Mail 收件箱",
+    "sub": "用 Kakao 应用专用密码，几分钟即可连接 Daum 或 Hanmail。1 个收件箱永久免费，无需信用卡。"
+  }
+}

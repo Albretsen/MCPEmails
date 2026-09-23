@@ -1,0 +1,95 @@
+{
+  "_sources": [
+    "https://docs.plesk.com/en-US/obsidian/customer-guide/quick-start-with-plesk/set-up-mail-accounts/2-access-your-mailbox.65691/",
+    "https://support.plesk.com/hc/en-us/articles/12377513710359-How-to-configure-a-secure-connection-when-setting-up-a-Plesk-email-account-in-an-email-client",
+    "https://support.plesk.com/hc/en-us/articles/12377516977175-How-to-assign-an-SSL-certificate-per-domain-to-secure-the-mail-server-in-Plesk-SNI-support",
+    "https://support.plesk.com/hc/en-us/articles/12387614382743-The-default-certificate-is-used-for-IMAP-connection-when-the-Plesk-Premium-Mail-is-installed"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://docs.plesk.com/en-US/obsidian/customer-guide/quick-start-with-plesk/set-up-mail-accounts/2-access-your-mailbox.65691/",
+    "usernameForm": "你的完整邮箱地址，例如 johndoe@example.com。Plesk 会拒绝只填本地部分。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 Plesk 邮箱接入 Claude：IMAP 设置与 MCP 访问",
+    "description": "Plesk 邮箱通过 IMAP 993 连接到 Claude。请使用域名本身而不是 mail.domain.com：IMAP 不支持 SNI，mail 子域名会拿到错误的证书。"
+  },
+  "hero": {
+    "eyebrow": "Plesk + AI",
+    "titleLine1": "将 Plesk 邮箱连接到 Claude，",
+    "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Plesk 邮箱。在任何运行 Plesk Obsidian 的服务器上（无论由谁托管），都能通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行连接 Plesk 邮箱。mcpemails 是一个托管 MCP 服务器，通过 993 端口的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Plesk 是控制面板软件而不是主机公司，所以没有共享的主机名：邮件服务器就是你自己的域名或服务器的主机名，Plesk 会在 Mail Accounts 的 Mail Client Setup 中列出确切的一对。认证使用在 Plesk 中为邮箱设置的密码，而不是面板登录密码。一个收件箱免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "在 Plesk 中设置的邮箱密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Plesk 邮箱如何连接：域名本身，IMAP 993",
+    "body": "Plesk 是成千上万家主机商和自管服务器都在运行的控制面板软件，所以设置取决于服务器，而不是某个厂商。形式始终相同：IMAP 使用 993 端口 SSL，SMTP 使用 465 端口，若开启了提交端口也可用 587，用户名是完整邮箱地址。Plesk 自己的快速入门要求你把<b>你的域名</b>（例如 <code>example.com</code>）填为收信和发信服务器。这是有意为之，而不是简化说法。按你的要求，Plesk 会用该域名的证书保护邮件，证书覆盖域名本身，但不覆盖 <code>mail.</code> 子域名，所以 <code>mail.example.com</code> 通常会返回服务器范围的默认证书。请在 <b>Websites & Domains</b>、该域名、<b>Mail Accounts</b>、<b>Mail Client Setup</b> 中读取这些值，并完全照抄其中显示的内容。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "在 Plesk 中打开 Mail Client Setup",
+      "p": "在 Plesk 中进入 <b>Websites & Domains</b>，选择要连接邮件的域名，打开 <b>Mail Accounts</b>，点击该地址上的 <b>Mail Client Setup</b> 图标。Plesk 会显示该服务器期望的收信和发信主机名、IMAP 和 SMTP 端口以及加密类型。请原样复制。各个 Plesk 安装配置邮件 TLS 的方式不同，所以这个页面比任何通用的 Plesk 指南（包括本页）都更可靠。"
+    },
+    {
+      "h": "设置邮箱密码，并确认证书覆盖该主机",
+      "p": "在 <b>Mail Accounts</b> 中打开该地址并在那里设置密码。IMAP 检查的是这个密码，而不是你的 Plesk 登录密码。如果服务器由你自行管理，请确认已在 <b>Tools & Settings</b> 的 <b>SSL/TLS Certificates</b> 中为邮件服务器分配了有效证书，且证书上的名称与你即将使用的主机名一致。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "IMAP 和 SMTP 无法使用 SNI，所以 mail.yourdomain.com 拿到的是服务器默认证书",
+      "p": "HTTPS 能选中正确的证书，是因为浏览器在握手时会告知主机名。邮件协议不是这样工作的：守护进程无法可靠地知道你拨入的是哪个名称，所以每个连接都只提供一个证书。在默认的 Plesk 安装中，这意味着只有域名本身和服务器主机名受到正确保护，而 <code>mail.example.com</code> 呈现的是服务器范围的默认证书。随之而来的名称不匹配并不是你这边配置错误，而是协议本身的工作方式。"
+    },
+    {
+      "h": "修复只需在签发时勾选一个复选框，却很容易漏掉",
+      "p": "在 Plesk 中签发 Let's Encrypt 证书时，勾选 <b>Assign the certificate to the mail domain</b>。然后在该域名的 <b>Mail Settings</b> 中，将其选为 <b>SSL/TLS certificate for mail</b>。两步缺一不可。签发证书时不勾选该复选框，即使网站已完全受保护，邮件仍会使用默认证书，这就是为什么那么多 Plesk 服务器同时拥有一个有效的网站和一个出错的邮件握手。"
+    },
+    {
+      "h": "安装 Plesk Premium Mail 会悄悄把 IMAP 恢复为默认证书",
+      "p": "Plesk 记录过这样一种情况：在订阅上启用 Premium Mail 后，IMAP 连接会退回使用服务器默认证书，即使之前已正确分配了按域名的证书。邮件照常流转，网页邮箱照常工作，所以没有任何东西提示这一变化，只有严格的客户端才会察觉。解决办法在面板中：打开 <b>Subscriptions</b>、该域名、<b>Plesk Premium Email</b>，然后点击 <b>Fix</b>。"
+    }
+  ],
+  "limits": [
+    "Plesk 是软件而不是主机公司，所以你的服务商可能改过默认设置。本页与你的 Mail Client Setup 页面不一致时，以该页面为准。",
+    "有些主机商禁用了 587 端口只留 465，或者反过来。Plesk 的 Mail Client Setup 会显示该服务器实际接受的提交端口。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Plesk 邮箱吗？",
+      "a": "不能直接使用。Claude 没有针对 Plesk 服务器的连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件。由于 Plesk 邮件是普通的 IMAP 和 SMTP，这在任何运行 Plesk 的主机上都同样适用。"
+    },
+    {
+      "q": "Plesk 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 993 端口 SSL，SMTP 为 465 端口 SSL，若开启了提交端口也可用 587。Plesk 自己的文档要求把你的域名（例如 example.com）同时填为收信和发信服务器，并以完整邮箱地址作为用户名。请在你域名的 Mail Client Setup 页面上确认。"
+    },
+    {
+      "q": "为什么 Plesk 邮箱会出现证书名称不匹配？",
+      "a": "因为邮件协议不像 HTTPS 那样支持 SNI，所以服务器每个连接只提供一个证书。默认情况下它覆盖域名和服务器主机名，而不覆盖 mail.yourdomain.com。签发证书时选择将其分配给邮件域名的选项，然后在该域名的 Mail Settings 中将其选为邮件 TLS 证书。"
+    },
+    {
+      "q": "在 Plesk 中哪里可以找到邮箱设置？",
+      "a": "进入 Websites and Domains，选择域名，打开 Mail Accounts，点击地址旁的 Mail Client Setup 图标。Plesk 会列出这台服务器期望的主机名、端口和加密类型。由于每家主机商对 Plesk 的配置各不相同，该页面对你的服务器来说才是权威的。"
+    },
+    {
+      "q": "我的 Plesk 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从你的 Plesk 服务器实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Plesk 收件箱",
+    "sub": "几分钟即可连接 Plesk 邮箱。一个收件箱永久免费，无需信用卡。"
+  }
+}

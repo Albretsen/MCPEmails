@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://soverin.zammad.com/help/en-gb/12-email-apps-and-imap/38-imap-and-smtp-settings",
+    "https://soverin.zammad.com/help/en-gb/13-account/37-two-factor-authentication-2fa",
+    "https://soverin.com/product/pricing",
+    "https://soverin.com/resources/faq"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Passord for Soverin-kontoen",
+    "helpUrl": "https://soverin.zammad.com/help/en-gb/12-email-apps-and-imap/38-imap-and-smtp-settings",
+    "usernameForm": "Hele Soverin-e-postadressen din, også på eget domene: name@yourdomain.eu. Soverin dokumenterer adressen som brukernavn.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Soverin Mail til Claude og MCP-klienter",
+    "description": "Koble Soverin til Claude, Cursor og enhver MCP-klient via IMAP på imap.soverin.net:993. Soverins 2FA dekker bare dashbordet og webmail, aldri IMAP."
+  },
+  "hero": {
+    "eyebrow": "Soverin + AI",
+    "titleLine1": "Koble Soverin til Claude,",
+    "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Soverin-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP, i enhver MCP-klient, også postkasser på ditt eget domene, med en ærlig gjennomgang av hva som beskytter tilkoblingen og hva som ikke gjør det.",
+    "answer": "Claude når ikke en Soverin-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.soverin.net port 993, og SMTP på smtp.soverin.net port 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Soverin dokumenterer e-postadressen din som brukernavn og kontopassordet ditt som passord, og de samme to vertene betjener postkasser på eget domene i tillegg til soverin.net-postkasser. Soverin utsteder ingen app-passord, og tofaktorautentiseringen deres beskytter dashbordet og webmailen og ikke IMAP, så påloggingen du lagrer her, er kontopassordet. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Passordet til Soverin-kontoen din",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Soverin seg til: soverin.net-verter, uansett hva adressen din sier",
+    "body": "Soverin tilbyr IMAP på <code>imap.soverin.net</code> port 993 med SSL, eller 143 med STARTTLS, og SMTP på <code>smtp.soverin.net</code> port 465 med SSL, eller 587 med STARTTLS. Soverins egen hjelp sier det rett ut: Soverin-e-postadressen din er også brukernavnet ditt, og passordet er kontopassordet ditt. Den viktige konsekvensen er at en postkasse på et domene du eier, fortsatt autentiserer mot <code>soverin.net</code>-vertene. Soverin drifter e-posttjenesten; domenet ditt avgjør bare hvordan adressen din ser ut og hvor MX-oppføringene peker. Det finnes ingen mekanisme for app-passord her, og Soverins tofaktorautentisering er dokumentert som en beskyttelse av Soverin Dashboard og den integrerte webmailen, noe som betyr at det å slå den på verken ødelegger eller sikrer en e-postklient."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, uten kort. Til slutt får du en MCP-URL og en nøkkel."
+    },
+    {
+      "h": "Bekreft adressen postkassen autentiserer som",
+      "p": "I Soverin Dashboard åpner du postkassen du vil koble til. Adressen på selve postkassen er brukernavnet, ikke et av aliasene du har pekt mot den. Soverin gir hver postkasse ubegrenset med aliaser, så det er lett å ha sluttet å bruke den opprinnelige adressen for mange år siden og ikke lenger tenke på den som innloggingen."
+    },
+    {
+      "h": "Legg til postkassen i mcpemails",
+      "p": "Velg IMAP / SMTP, skriv inn den fullstendige adressen og passordet til Soverin-kontoen din. Vertene er forhåndsutfylt som <code>imap.soverin.net</code> og <code>smtp.soverin.net</code> og ble verifisert via en direkte TLS-tilkobling. Ikke erstatt dem med et vertsnavn bygd fra ditt eget domene; sertifikatet er utstedt for Soverins eget navn, og en klient som validerer strengt, vil avvise det."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Tofaktorautentisering når ikke IMAP, og det finnes ingen app-passord",
+      "p": "Soverins egen 2FA-artikkel avgrenser funksjonen til to steder: <b>Soverin Dashboard</b>, for å administrere kontoen og innstillingene, og den integrerte webmailen. IMAP, POP og SMTP står ikke på den listen, og Soverin publiserer ingen mekanisme for app-passord i tillegg. To praktiske følger. Å slå på 2FA ødelegger ikke denne tilkoblingen eller noen annen e-postklient, det motsatte av hva som skjer hos Runbox eller Posteo. Og 2FA er ikke det som begrenser en tilkoblet klient her: den eneste påloggingen er kontopassordet, så å trekke tilbake en tilkobling betyr å endre det passordet og legge det inn på nytt overalt. Ta vare på gjenopprettingskoden Soverin utsteder, for mister du autentiseringsappen uten den, mister du tilgangen til dashbordet."
+    },
+    {
+      "h": "IMAP-serveren tilbyr ingen AUTH=LOGIN, mens SMTP gjør det",
+      "p": "Soverins IMAP-banner annonserer <code>AUTH=PLAIN</code>, <code>AUTH=OAUTHBEARER</code> og <code>AUTH=XOAUTH2</code>, uten <code>AUTH=LOGIN</code>. SMTP-serveren godtar både PLAIN og LOGIN. Klienter som er hardkodet til LOGIN-mekanismen, vanlig i verktøy opprinnelig skrevet mot Exchange, feiler derfor på lesing mens de sender fint fra samme konto med de samme påloggingsdetaljene, noe som er forvirrende å feilsøke. De to OAuth-mekanismene hører til Soverins egne plattformintegrasjoner, og en tredjepart kan ikke skaffe et token til dem, så passordautentisering er veien."
+    },
+    {
+      "h": "Et eget domene gir deg ikke en egen e-postvert",
+      "p": "Soverin selger postkasser på domener du eier, og den naturlige antakelsen er at <code>mail.yourdomain.eu</code> da må være serveren. Det er den ikke. MX-oppføringene dine peker inn i Soverins infrastruktur, og klienter autentiserer mot <code>imap.soverin.net</code> og <code>smtp.soverin.net</code> nøyaktig som en soverin.net-adresse ville gjort. Sertifikatet på de vertene er utstedt for Soverins eget navn, så å peke en klient mot et vertsnavn på domenet ditt gir en sertifikatmismatch og ikke en fungerende tilkobling."
+    },
+    {
+      "h": "Ingen MOVE, ingen UIDPLUS, ingen SPECIAL-USE",
+      "p": "Dovecot-serveren annonserer IDLE og SASL-IR, men ikke MOVE, UIDPLUS eller SPECIAL-USE. Arkivering av en melding er en COPY, en STORE av flagget \\Deleted og en EXPUNGE i stedet for én kommando, og uten UIDPLUS rapporterer ikke serveren den nye UID-en, så den flyttede kopien må finnes igjen ved å søke i målmappen. Mapperoller kommer fra navn fordi ingenting på linjen deklarerer dem, så en omdøpt eller nederlandsk navngitt Sent- eller Trash-mappe må kanskje oppgis eksplisitt når du ber en agent arkivere noe."
+    }
+  ],
+  "limits": [
+    "Å koble en Soverin-postkasse til en AI-klient betyr at den AI-leverandøren leser innholdet i meldingene den jobber med. mcpemails henter e-post direkte fra imap.soverin.net for hver forespørsel og lagrer ikke meldingsinnhold, og påloggingsdetaljer krypteres ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du kobler til. Soverins hosting kun i EU, abonnementsfinansieringen og løftet om ikke å skanne eller profilere e-posten din beskriver alle Soverin. Ingen av dem følger en melding inn til en AI-leverandør du selv kobler til.",
+    "Det finnes ingen avgrenset pålogging. Soverin har ikke app-passord, så det som lagres her, er kontopassordet ditt, det samme som åpner Soverin Dashboard. Å trekke tilbake denne tilkoblingen betyr å endre det passordet i stedet for å slette ett enkelt token.",
+    "mcpemails kobler til postkassen, ikke kontoen. Aliaser, ekstra postkasser, domeneinnstillinger og videresending blir værende i Soverin Dashboard og er verken synlige for eller kan endres av AI-klienten din."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Soverin?",
+      "a": "Ikke direkte. Claude har ingen Soverin-kobling og kan ikke snakke IMAP selv. Kobler du en MCP-server som mcpemails til Soverin-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere via IMAP, og samme tilkobling fungerer da i Cursor, ChatGPT og andre MCP-klienter uten at oppsettet må gjentas."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Soverin?",
+      "a": "IMAP er imap.soverin.net på port 993 med SSL, eller 143 med STARTTLS. SMTP er smtp.soverin.net på port 465 med SSL, eller 587 med STARTTLS. Brukernavnet er hele Soverin-e-postadressen din, og passordet er kontopassordet ditt. Begge vertene ble verifisert via en direkte TLS-tilkobling, og begge betjener også postkasser på eget domene."
+    },
+    {
+      "q": "Har Soverin app-passord, og dekker 2FA IMAP?",
+      "a": "Nei til begge. Soverin publiserer ingen mekanisme for app-passord for e-postklienter, og tofaktorautentiseringen er dokumentert som å dekke Soverin Dashboard og den integrerte webmailen. IMAP og SMTP fortsetter å godta kontopassordet ditt uansett om 2FA er på eller av, så å slå det på forstyrrer ikke denne tilkoblingen og begrenser den heller ikke."
+    },
+    {
+      "q": "Jeg bruker Soverin på mitt eget domene. Hvilken vert bruker jeg?",
+      "a": "De samme: imap.soverin.net og smtp.soverin.net. Et eget domene endrer adressen din og MX-oppføringene dine, ikke serverne klienten din autentiserer mot. Bygger du et vertsnavn fra ditt eget domene, får du et sertifikat som ikke stemmer, noe de fleste klienter avviser direkte og som ingen klient bør bes om å overse."
+    },
+    {
+      "q": "Hvorfor kan en klient lese Soverin-e-posten min, men ikke sende, eller omvendt?",
+      "a": "Som regel autentiseringsmekanismen. Soverins IMAP-server tilbyr PLAIN, men ikke LOGIN, mens SMTP-serveren tilbyr begge, så en klient låst til LOGIN-mekanismen feiler på den ene siden og virker på den andre med identiske påloggingsdetaljer. Sett opp begge sider for vanlig passordautentisering inne i TLS-tilkoblingen i stedet for en navngitt mekanisme."
+    },
+    {
+      "q": "Lagres Soverin-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra imap.soverin.net via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke. AI-klienten du kobler til, mottar innholdet i det den leser, og det er beslutningen som er verdt å ta bevisst, mer enn lagringsspørsmålet."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Soverin-innboks",
+    "sub": "Koble til Soverin på minutter, egne domener inkludert. Én innboks gratis for alltid, uten kort."
+  }
+}

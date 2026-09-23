@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://documentation.open-xchange.com/8.20/middleware/mail/mail_access_via_xoauth2_or_oauthbearer.html",
+    "https://documentation.open-xchange.com/7.10.4/middleware/mail/mail_proxy_configuration.html",
+    "https://documentation.open-xchange.com/7.8.2/middleware/components/search/crossfolder_fts_in_mail.html",
+    "https://www.oxpedia.org/wiki/index.php?title=Authentication_IMAP_Plugin_description",
+    "https://wiki.open-xchange.com/wiki/index.php?title=Install_and_configure_the_mail-account_plugin"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://documentation.open-xchange.com/8.20/middleware/mail/mail_access_via_xoauth2_or_oauthbearer.html",
+    "usernameForm": "Det IMAP-serveren bak App Suite forventer, som som regel er hele adressen, for eksempel you@yourdomain.com, men kan være et eget innloggingsnavn. Middleware-innstillingen com.openexchange.mail.loginSource avgjør hvilken av de to App Suite selv sender.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Open-Xchange og Claude: koble til IMAP-backenden",
+    "description": "Open-Xchange App Suite er et groupware-grensesnitt, ikke en IMAP-server. Koble Dovecot-backenden bak den til Claude, Cursor og ChatGPT via IMAP."
+  },
+  "hero": {
+    "eyebrow": "Open-Xchange + AI",
+    "titleLine1": "Koble en Open-Xchange-postkasse",
+    "titleLine2": "til Claude, Cursor og ChatGPT",
+    "lead": "App Suite er grensesnittet, ikke e-postlageret. Når du vet hvilken IMAP-server som står bak, er det å koble til en AI-agent helt vanlig arbeid: les, søk, send, svar, planlegg og arkiver, fra enhver MCP-klient.",
+    "answer": "Claude når ikke en Open-Xchange-postkasse på egen hånd, og Open-Xchange App Suite er ikke selv serveren du skal peke den mot. App Suite er groupware-middleware som snakker med en separat IMAP- og SMTP-backend, i de fleste installasjoner Dovecot. mcpemails er en hostet MCP-server som kobler til den backenden via IMAP, normalt på port 993, med postkassepassordet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. Verten du skal bruke, er e-postserveren installasjonen din eller leverandøren din publiserer, ikke adressen til App Suite-webgrensesnittet. Én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Backendens postkassepassord, ikke web-URL-en",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Open-Xchange seg til: gjennom e-postserveren App Suite videreformidler til",
+    "body": "Open-Xchange App Suite lagrer kalendere, kontakter, oppgaver og filer, men lagrer ikke e-post. For e-post er den en klient som åpner IMAP-økter mot en separat server på brukerens vegne og viser resultatet i nettleseren. Open-Xchanges egen veiledning er at ethvert system som tilbyr IMAP og SMTP, kan fungere som backend, og at Dovecot er det anbefalte valget for en ny installasjon. Hvilken server en gitt installasjon bruker, står i <code>/opt/open-xchange/etc/mail.properties</code>, i <code>com.openexchange.mail.mailServer</code> for IMAP og <code>com.openexchange.mail.transportServer</code> for innsending, mens IMAP-spesifikk oppførsel som <code>com.openexchange.imap.imapSearch</code> ligger ved siden av i <code>imap.properties</code>. Den backenden er det mcpemails kobler til. Alt på Dovecot-siden vår om lyttere, mapperoller og sertifikater gjelder for den, fordi den på de fleste App Suite-installasjoner bokstavelig talt er Dovecot."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Én innboks er gratis for alltid, og det kreves ikke kort."
+    },
+    {
+      "h": "Finn IMAP-verten bak App Suite",
+      "p": "Drifter du installasjonen selv, leser du <code>com.openexchange.mail.mailServer</code> ut av <code>/opt/open-xchange/etc/mail.properties</code> på en middleware-node. Er App Suite leverandørens webmail, ser du helt bort fra middlewaren og bruker IMAP-vertsnavnet leverandøren dokumenterer for e-postklienter, som er svaret de allerede publiserer."
+    },
+    {
+      "h": "Bekreft hvilket innloggingsnavn backenden vil ha",
+      "p": "Logg inn i en e-postklient på datamaskinen, eller sjekk <code>com.openexchange.mail.loginSource</code> i middleware-konfigurasjonen, for å se om backenden forventer hele e-postadressen eller et eget innloggingsnavn. Legg så til innboksen i mcpemails: velg IMAP / SMTP, skriv inn verten, innloggingsnavnet og postkassepassordet."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "App Suite-webadressen er ikke en e-postvert, og ofte svarer ingenting der",
+      "p": "Det er denne feilen som sender folk i ring. Du leser e-post på noe som <code>webmail.yourprovider.com</code>, så det føles som e-postserveren, men det er en HTTP-applikasjonsnode. Port 993 på den er ofte stengt, og når den svarer, kan det være en lastbalanserer som ikke terminerer noe nyttig. Verre er det at i en selvhostet installasjon er verdien av <code>com.openexchange.mail.mailServer</code> svært ofte en intern adresse, noen ganger <code>127.0.0.1:143</code> på samme maskin eller et internt navn som bare slås opp inne i klyngen, fordi den eneste klienten som noen gang skulle nå den, var middlewaren selv. Er det din situasjon, må du bevisst publisere et eksternt IMAP-endepunkt med eget sertifikat før noen ekstern klient, denne inkludert, kan koble til."
+    },
+    {
+      "h": "Fulgte App Suite med webhotellet ditt, er leverandørens egne innstillinger svaret",
+      "p": "Open-Xchange selger App Suite til operatører, ikke til sluttbrukere, så de fleste møter den som noen andres webmail uten at produktet noen gang nevnes på skjermen. IONOS og Namecheap Private Email er to du kanskje kjenner igjen. Er det slik du havnet her, finnes ingen av konfigurasjonsfilene over på noen maskin du kan nå, og du trenger dem ikke: leverandøren din publiserer IMAP- og SMTP-vertsnavn for e-postklienter, og det er nøyaktig det mcpemails vil ha. Bruk leverandørens dokumenterte vert, leverandørens port og postkassepassordet de utstedte, og se på App Suite som en tilfeldighet med hensyn til hvilken webmail de valgte å lisensiere."
+    },
+    {
+      "h": "loginSource avgjør brukernavnet, og master-autentisering kan bety at du ikke har noe",
+      "p": "App Suite sender ikke nødvendigvis e-postadressen din som IMAP-brukernavn. Middleware-innstillingen <code>com.openexchange.mail.loginSource</code> velger mellom primæradressen, App Suite-innloggingsnavnet og andre former, og derfor er påloggingen som logger deg inn i nettlesergrensesnittet, ikke alltid den e-postserveren ser. Installasjoner som bruker master-passordautentisering, går lenger: middlewaren autentiserer mot IMAP-serveren som en master-bruker og oppgir målpostkassen ved siden av, så en enkelt bruker har kanskje ikke noe eget IMAP-passord i det hele tatt. Da kan en vanlig klient ikke logge inn som den brukeren før operatøren oppretter et, og uansett hvor mange ganger du prøver webpassordet, hjelper det ikke. Noen installasjoner har også flyttet backenden over på <code>XOAUTH2</code> eller <code>OAUTHBEARER</code>, og da avvises vanlig passordautentisering helt."
+    }
+  ],
+  "limits": [
+    "Bare e-post går over denne tilkoblingen. App Suites kalendere, adressebok, oppgaver og Drive-filer betjenes av middlewaren over dens eget HTTP-API og er ikke del av en IMAP-økt, så en agent koblet til på denne måten ser e-post og ingenting annet.",
+    "En backend som bare kan nås inne i nettverket ditt, kan ikke kobles til en hostet tjeneste. mcpemails kan selvhostes, som er den fornuftige veien hvis IMAP-serveren bevisst ble holdt borte fra det offentlige internettet.",
+    "I en installasjon med master-autentisering krever det i det hele tatt å koble til en klient at operatøren oppretter en ekte IMAP-pålogging per bruker. Det er en beslutning for den som drifter plattformen, ikke noe du kan ordne fra nettleseren."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Open-Xchange?",
+      "a": "Ja, gjennom e-postserveren bak den. Claude har ingen Open-Xchange-kobling og App Suite tilbyr ikke noe MCP-endepunkt, men selve postkassen ligger på en vanlig IMAP-server. Kobler du mcpemails til den serveren, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere den samme e-posten du ser i App Suite, og samme innboks fungerer i Cursor og ChatGPT."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Open-Xchange?",
+      "a": "Det finnes ikke ett svar, fordi Open-Xchange er programvare som operatører installerer, ikke en e-posttjeneste med faste vertsnavn. I en selvhostet installasjon er backenden oppgitt i mail.properties. Kom App Suite som del av en hostingpakke, bruker du IMAP- og SMTP-vertsnavnene leverandøren din publiserer for e-postklienter, som typisk er 993 for IMAP og 465 eller 587 for innsending."
+    },
+    {
+      "q": "Er Open-Xchange det samme som Dovecot?",
+      "a": "Nei, men de installeres som regel sammen. Open-Xchange er groupware-laget som viser e-post, kalendere og filer. Dovecot er IMAP-serveren som faktisk holder meldingene, og Open-Xchange anbefaler den som backend for nye installasjoner. Dovecot-siden vår dekker lyttere, sertifikater og mappeoppførsel du møter når du kobler til den."
+    },
+    {
+      "q": "Hvorfor avviser port 993 på webmail-adressen min tilkoblingen?",
+      "a": "Fordi den adressen tilhører App Suites webnivå, som snakker HTTP. IMAP-serveren er en annen maskin eller et annet navn, og i mange installasjoner er den bevisst ikke publisert på internett i det hele tatt. Finn det ekte e-postvertsnavnet i leverandørens dokumentasjon for klientoppsett, eller i middleware-konfigurasjonen hvis installasjonen er din."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte via IMAP fra den serveren som holder postkassen din, for hver forespørsel, og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Open-Xchange-innboks",
+    "sub": "Koble til e-postserveren bak App Suite. Én innboks gratis for alltid, uten kort."
+  }
+}

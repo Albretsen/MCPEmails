@@ -1,0 +1,95 @@
+{
+  "_sources": [
+    "https://help.dreamhost.com/hc/en-us/articles/214918038-Email-client-configuration-overview",
+    "https://help.dreamhost.com/hc/en-us/articles/216479177-Change-password-Mail-users",
+    "https://help.dreamhost.com/hc/en-us/articles/216479147-Passwords-overview"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del usuario de correo",
+    "helpUrl": "https://help.dreamhost.com/hc/en-us/articles/216479177-Change-password-Mail-users",
+    "usernameForm": "Tu dirección completa, incluido el dominio: name@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta el correo de DreamHost a Claude y clientes MCP",
+    "description": "Conecta el correo de DreamHost a Claude, Cursor y clientes MCP por IMAP en imap.dreamhost.com:993, con la contraseña del usuario de correo, no la del panel."
+  },
+  "hero": {
+    "eyebrow": "Correo de DreamHost + IA",
+    "titleLine1": "Conecta el correo de DreamHost a Claude,",
+    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de DreamHost. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña del usuario de correo del panel de DreamHost.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de DreamHost. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.dreamhost.com en el puerto 993, autenticándose con tu dirección de correo completa y la contraseña del usuario de correo de esa dirección, que DreamHost mantiene separada de la contraseña con la que entras al panel. Así Claude, Cursor o cualquier cliente MCP puede leer, buscar, enviar y organizar el correo. No hay contraseña de aplicación ni interruptor IMAP que activar. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña del usuario de correo, no el acceso al panel",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta DreamHost: IMAP y la contraseña del usuario de correo",
+    "body": "DreamHost sirve IMAP en <code>imap.dreamhost.com</code> en el puerto 993 con TLS implícito y SMTP en <code>smtp.dreamhost.com</code> en el puerto 465. Ambos son nombres de servidor compartidos por todos los clientes de correo de DreamHost, así que aquí nada se deriva de tu propio dominio. Lo que hay que entender es el modelo de cuentas de DreamHost: una cuenta de DreamHost contiene varios tipos de usuario, y cada uno tiene su propia contraseña. Un <b>panel user</b> (usuario del panel) inicia sesión en el panel de control. Un <b>mail user</b> (usuario de correo) es una dirección de correo, y lleva la contraseña que elegiste al crear la dirección. IMAP y SMTP solo aceptan la contraseña del usuario de correo. SMTP exige autenticación con las mismas credenciales que IMAP; DreamHost deja claro que el correo saliente no se retransmite sin ella."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
+    },
+    {
+      "h": "Define la contraseña del usuario de correo en el panel de DreamHost",
+      "p": "Inicia sesión en el panel de DreamHost, abre Mail, luego Manage Email, busca la dirección y haz clic en Manage. Baja hasta la sección Change Password y genera una o define la tuya. DreamHost documenta que esto no se puede hacer desde el webmail: tienes que usar el panel o la interfaz de buzones aparte."
+    },
+    {
+      "h": "Pégala en mcpemails",
+      "p": "Elige IMAP / SMTP, introduce la dirección completa y pega la contraseña del usuario de correo. Los servidores imap.dreamhost.com y smtp.dreamhost.com y los puertos 993 y 465 ya vienen rellenados y se verificaron con una conexión TLS real."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "DreamHost tiene varios tipos de usuario, y solo uno puede leer el correo",
+      "p": "Este es el fallo que más tiempo hace perder en DreamHost. El panel permite crear usuarios de sitio web, usuarios de correo, usuarios de MySQL, usuarios del panel y más, cada uno con una contraseña independiente, y es totalmente normal que una misma persona tenga tres o cuatro. IMAP solo acepta la contraseña del usuario de correo de esa dirección concreta. Introducir la contraseña del panel, o la de un usuario de FTP o de shell, da un fallo de autenticación que no dice qué credencial era la incorrecta. Si no sabes cuál tienes, restablece la contraseña del usuario de correo desde Manage Email y usa el nuevo valor."
+    },
+    {
+      "h": "El webmail no puede cambiar la contraseña que usa el propio webmail",
+      "p": "DreamHost indica que no es posible actualizar la contraseña de un usuario de correo desde el webmail. Tienes que usar el panel o la interfaz de buzones. Quien inicia sesión bien en el webmail y luego busca una pantalla de contraseña para dar una credencial a otra herramienta llega a un callejón sin salida, y a menudo concluye que el buzón es de alguna forma de solo lectura."
+    },
+    {
+      "h": "El nombre de usuario corto funciona lo bastante a menudo como para ser una trampa",
+      "p": "La propia guía de DreamHost señala que un cliente puede necesitar la dirección de correo completa para conectarse, pero que muy a menudo basta con la parte anterior a la arroba. Esa ambigüedad no importa en una cuenta con un solo dominio y se convierte en un problema en cuanto dos de tus dominios tienen una dirección con la misma parte local, porque la forma corta ya no identifica un único buzón. Introduce siempre la dirección completa. mcpemails envía la dirección completa."
+    }
+  ],
+  "limits": [
+    "El servidor no anuncia MOVE ni UIDPLUS, así que mover se hace como copia, marca y expunge, y el nuevo UID hay que localizarlo buscando en la carpeta de destino.",
+    "No hay SPECIAL-USE, así que Enviados, Borradores, Papelera y Correo no deseado se identifican por nombre y no por función.",
+    "SMTP anuncia un límite de tamaño de mensaje de unos 40 MB, lo que limita lo que un agente puede enviar como adjuntos en un solo mensaje."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de DreamHost?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para DreamHost. Apuntar un servidor MCP como mcpemails a tu buzón de DreamHost por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de DreamHost?",
+      "a": "IMAP es imap.dreamhost.com en el puerto 993 con TLS implícito. SMTP es smtp.dreamhost.com en el puerto 465, también con TLS implícito, y el correo saliente exige autenticación. Usa tu dirección de correo completa como nombre de usuario y la contraseña del usuario de correo. Ambos servidores se confirmaron con una conexión TLS real."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de DreamHost?",
+      "a": "Porque DreamHost emite una contraseña distinta para cada tipo de usuario de la cuenta, e IMAP solo acepta la contraseña del usuario de correo de esa dirección. La contraseña del panel es otra credencial. Restablece la contraseña del usuario de correo en Mail, Manage Email, Manage, y usa el valor que definas ahí."
+    },
+    {
+      "q": "¿Necesita DreamHost una contraseña de aplicación?",
+      "a": "No. DreamHost no emite contraseñas específicas de aplicación para el correo, y no hay ningún interruptor IMAP por buzón que activar. La contraseña del usuario de correo autentica IMAP y SMTP directamente. Si prefieres no reutilizar una contraseña existente, define una nueva para la dirección en el panel."
+    },
+    {
+      "q": "¿Se almacena mi correo de DreamHost en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de DreamHost por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de DreamHost",
+    "sub": "Conecta el correo de DreamHost en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

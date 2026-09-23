@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.bluehost.com/help/article/email-application-setup",
+    "https://www.bluehost.com/help/article/email-product-overview",
+    "https://www.bluehost.com/help/article/configure-bluehost-professional-email-on-other-apps"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://www.bluehost.com/help/article/email-application-setup",
+    "usernameForm": "你的完整邮箱地址，例如 you@yourdomain.com。绝不是你的 Bluehost 门户登录名。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Bluehost 邮箱连接 Claude：cPanel 与 Titan IMAP 设置",
+    "description": "Bluehost 销售三种不同的邮箱产品。先弄清你用的是哪一种，再通过端口 993 的 IMAP 将其连接到 Claude。1 个收件箱永久免费，无需信用卡。"
+  },
+  "hero": {
+    "eyebrow": "Bluehost + AI",
+    "titleLine1": "将 Bluehost 邮箱连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Bluehost 邮箱。无论是 cPanel Email 账户还是 Professional Email 邮箱，都可以通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行访问 Bluehost 邮箱。mcpemails 是一个托管 MCP 服务器，通过端口 993 的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。首先要弄清你用的是 Bluehost 三种邮箱产品中的哪一种，因为 cPanel Email 在由你自己域名构成的服务器上响应，而 Professional Email 在 Titan 的服务器上响应，两套设置不能互换。无论哪种，你都使用邮箱本身设置的密码进行认证，绝不是你的 Bluehost 门户密码，1 个收件箱免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "邮箱密码，而非门户登录密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Bluehost 邮箱如何连接：先弄清你用的是哪种产品",
+    "body": "Bluehost 以三种方式销售邮箱，它们的设置完全不同。<b>cPanel Email</b> 是主机套餐附带的邮箱，位于你网站所在的服务器上，收信服务器由你自己的域名构成。<b>Professional Email</b> 是运行在 Titan 上的付费产品，Bluehost 自己的指南给出的是端口 993 上的 <code>imap.titan.email</code> 和端口 465 上的 <code>smtp.titan.email</code>。<b>Google Workspace</b> 是转售的 Gmail，你的 MX 记录指向 Google，不涉及任何 Bluehost 邮件服务器。三者都支持 IMAP，也都可以连接，但你必须采用与你实际购买的产品相对应的指南中的设置。对于 cPanel Email，Bluehost 公布的是一组不寻常的设置：安全设置区块把裸域名 <code>example.com</code> 同时用作收信和发信服务器，只有未加密的区块才使用 <code>mail.example.com</code>。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "弄清该地址使用的是哪种 Bluehost 邮箱产品",
+      "p": "登录 Bluehost Portal，在左侧菜单中打开 <b>Hosting</b>。如果有 <b>cPanel Email</b> 按钮，且你的地址列在其下，那就是 cPanel 邮箱。如果地址出现在 <b>Professional Email</b> 下，那就是位于 Titan 自有服务器上的 Titan 邮箱。如果你域名的 MX 记录指向 Google，那就是 Google Workspace，应按 Gmail 而不是 Bluehost 来连接。"
+    },
+    {
+      "h": "复制该产品的准确设置",
+      "p": "cPanel Email：依次打开 <b>Hosting</b>、<b>cPanel Email</b>、<b>Email Accounts</b>、<b>Continue</b>，然后点击地址旁的 <b>Connect Devices</b>。使用 Secure SSL/TLS 区块，IMAP 端口 993。Professional Email：从 Bluehost 的 Professional Email 指南中获取 Titan 的服务器地址。两种情况下，密码都是邮箱本身设置的密码。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "三种产品共用一个品牌，照着错误的指南永远无法通过认证",
+      "p": "这是 Bluehost 邮箱最常见的失败原因。有人拥有 Professional Email 邮箱，却照着 cPanel Email 的教程操作，把客户端指向自己的域名，结果被拒绝，看起来像是密码错误。其实不是：邮箱根本不在那台服务器上，而在 Titan 的服务器上。反过来的情况也会发生。在动任何设置之前，先在门户的 Hosting 下确认该地址属于哪种产品，因为在这一点弄对之前，改动其他任何东西都无济于事。"
+    },
+    {
+      "h": "Bluehost 的 cPanel 安全设置是裸域名，而不是 mail.yourdomain.com",
+      "p": "几乎所有关于 cPanel 邮箱的第三方指南都让你使用 <code>mail.example.com</code>。Bluehost 自己的文章只把 <code>mail.example.com</code> 放在 Standard（未加密）区块中，而在端口 993 和 465 的 Secure SSL/TLS 区块中给出的是单纯的 <code>example.com</code>。这是因为 AutoSSL 证书覆盖的是域名本身。通过 TLS 使用 <code>mail.</code> 前缀，正是导致证书警告的原因，人们随后还会试图点过这个警告。"
+    },
+    {
+      "h": "你用的是哪种产品，取决于你购买套餐的时间",
+      "p": "cPanel Email 是旧版主机套餐附带的传统配置，Bluehost 至今仍在提供文档和支持。较新的购买在结账时会被引导到 Professional Email 和 Google Workspace，很多账户是两者混用的，一个域名用 cPanel 邮箱，另一个用 Titan。不要因为你的某个 Bluehost 地址能用某台服务器连接，就假定下一个也能。"
+    }
+  ],
+  "limits": [
+    "通过 Bluehost 购买的 Google Workspace 邮箱是 Google 邮箱。请通过 Google OAuth 按 Gmail 连接，而不是使用 Bluehost 凭据。",
+    "mcpemails 连接的是邮箱，而不是主机账户。转发器、别名和过滤器仍在 Bluehost 门户中管理。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Bluehost 邮箱吗？",
+      "a": "不能直接使用。Claude 没有内置的 Bluehost 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件。只要你为自己的产品使用正确的服务器，cPanel Email 账户和 Professional Email 账户都适用。"
+    },
+    {
+      "q": "Bluehost 的 IMAP 和 SMTP 设置是什么？",
+      "a": "对于 cPanel Email，Bluehost 的安全设置是把你的裸域名同时用作收信和发信服务器，IMAP 端口 993，SMTP 端口 465，用户名为完整邮箱地址。对于 Professional Email，Bluehost 文档给出的是端口 993 上的 imap.titan.email 和端口 465 上的 smtp.titan.email。请采用与你的产品相对应的指南中的值。"
+    },
+    {
+      "q": "如何判断我用的是 Bluehost cPanel Email 还是 Professional Email？",
+      "a": "登录 Bluehost Portal，在左侧菜单中打开 Hosting。cPanel 邮箱列在 cPanel Email 按钮后面。Professional Email 邮箱作为单独的产品列在 Professional Email 下，有自己的订阅。如果两处都没有列出该地址，请检查你域名的 MX 记录，它们可能指向 Google Workspace。"
+    },
+    {
+      "q": "为什么我的 Bluehost 邮箱密码被拒绝？",
+      "a": "主要有两个原因。要么你用的是 Bluehost 门户密码，而不是为该邮箱单独设置的密码；要么你把客户端指向了另一种产品的服务器。对于 cPanel 邮箱，请在 Email Accounts 中重置邮箱密码；对于 Titan 邮箱，请在 Professional Email 管理页面中重置，然后再试。"
+    },
+    {
+      "q": "我的 Bluehost 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Bluehost 收件箱",
+    "sub": "几分钟即可连接 Bluehost 邮箱。1 个收件箱永久免费，无需信用卡。"
+  }
+}

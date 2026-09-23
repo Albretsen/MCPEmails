@@ -1,0 +1,96 @@
+{
+  "_sources": [
+    "https://help.iinet.net.au/iinet-email-messaging-company"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "你当前邮箱服务商的邮箱密码",
+    "helpUrl": "https://help.iinet.net.au/iinet-email-messaging-company",
+    "usernameForm": "你的完整 iinet.net.au 地址。它现在属于哪台服务器，取决于该地址是否选择加入了 The Messaging Company。",
+    "status": "discontinued"
+  },
+  "meta": {
+    "title": "iiNet 邮箱已离开 iiNet：哪些还能连接 Claude",
+    "description": "iiNet 已退出邮箱业务，iinet.net.au 地址转移到了 The Messaging Company。哪些仍可通过 IMAP 连接到 Claude，哪些已被永久删除。"
+  },
+  "hero": {
+    "eyebrow": "iiNet 邮箱 + AI",
+    "titleLine1": "iiNet 已停止运营邮箱。",
+    "titleLine2": "以下是仍然可以连接的部分",
+    "lead": "iiNet 已把邮箱交给另一家公司，并停止发放地址。这改变的是你设置的来源，而不是 AI 代理能否在邮箱中工作。",
+    "answer": "iiNet 已退出邮箱业务。它把 iinet.net.au 地址转移给了另一家澳大利亚服务商 The Messaging Company，关闭了选择加入期，删除了所有未选择加入的地址，并声明无法再在 iinet.net.au 域名下创建新的邮箱地址。所以问题不在于 Claude 能否访问 iiNet，而在于你的邮箱如今位于哪台服务器上。mcpemails 是一个可以连接任何 IMAP 邮箱的托管 MCP 服务器，包括位于新服务商处的原 iiNet 地址，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送和整理这些邮件。1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "设置来自你的新服务商",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "iinet.net.au 地址现在如何连接：不通过 iiNet",
+    "body": "iiNet 自己的帮助页面说得毫不含糊。地址已转移给 <b>The Messaging Company</b>，选择加入的窗口已经关闭，任何未选择加入的地址都已被删除且无法恢复，iiNet 请客户把支持问题交给 The Messaging Company，因为它已无法提供协助。随 iiNet 服务附带的地址在 2024 年 9 月 15 日之前免费，此后由 The Messaging Company 自行定价。<code>mail.iinet.net.au</code> 主机名并没有消失：它仍能在端口 993 上完成 TLS 握手并返回能力横幅，使用的证书签发给 <code>mail.tpg.com.au</code>（TPG 是 iiNet 所属的集团）。请如实看待这一点。它证明这台主机还活着；它不能证明你的邮箱在上面，更不意味着 iiNet 又开始发放地址了。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "弄清如今是谁在托管这个邮箱",
+      "p": "如果你为该地址选择了加入，那它就在 The Messaging Company，能告诉你服务器名称、端口和密码的是他们。iiNet 做不到，它自己也这么说。如果你从未选择加入，该地址已被删除，没有可以连接的东西；iiNet 声明，已删除的地址无法恢复。"
+    },
+    {
+      "h": "输入当前服务商提供的设置",
+      "p": "在 mcpemails 中选择 IMAP / SMTP，完全按照你的服务商文档填写服务器、端口和密码，用户名为完整地址。我们只公布自己实际连接过的设置，所以这里不列出 The Messaging Company 的主机名。请从他们的支持资料中获取，而不要从第三方博客上抄。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "主机名还在，不等于服务还在",
+      "p": "<code>mail.iinet.net.au</code> 如今仍通过 TLS 响应 IMAP，并声明 SASL-IR、IDLE、SPECIAL-USE 和 COMPRESS=DEFLATE，完全是一台健康的服务器。人们据此认为 iiNet 邮箱一切正常，迁移通知只是噪音。但这并不能证明这一点。在背后的业务停止发放账户之后，主机名仍可长期解析，服务器也仍可继续运行，而 iiNet 自己的页面说明无法再创建新的 iinet.net.au 地址。在诊断故障时，请把这两件事分开看。"
+    },
+    {
+      "h": "从未选择加入的地址已经消失，而不是处于休眠",
+      "p": "选择加入是每位客户都必须主动完成的操作。iiNet 的说法是，选择加入期已经结束，任何未选择加入的地址现已被删除且无法恢复。所以，如果你的登录失效了，而且没人能找到这个邮箱，最可能的原因并不是忘了密码。没有恢复，没有可以申请的归档，也没有同一域名下的替代地址。"
+    },
+    {
+      "h": "邮箱变成了付费产品，而收费方不是 iiNet",
+      "p": "对于邮箱随服务附带的客户，iiNet 承担地址费用至 2024 年 9 月 15 日；The Messaging Company 会在此前至少 60 天联系客户，告知此后适用的价格。因未付费而失效的地址，要由他们处理。iiNet 把这些地址的所有支持都转给 The Messaging Company，自己不会处理。"
+    },
+    {
+      "h": "支持工单要交给一家大多数指南都没提到的公司",
+      "p": "搜索 iiNet 邮箱设置，结果中仍然充斥着描述由 iiNet 运营、使用 iiNet 主机名的服务的页面，它们写于转移之前，从未更新。照着它们做，你最终会在错误的公司那里排队等候。iiNet 自己的页面写明了新的运营方及其联系方式，这是唯一值得采用的起点。"
+    }
+  ],
+  "limits": [
+    "我们没有公布 The Messaging Company 的已验证设置，因为我们没有连接过他们的服务器。请从你的服务商处获取，并手动输入。",
+    "已删除的 iinet.net.au 地址无法连接、恢复或重新创建。任何 MCP 服务器都改变不了这一点。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 iiNet 邮箱吗？",
+      "a": "Claude 没有针对它的内置连接器，而 iiNet 也已不再运营该服务。如果你的 iinet.net.au 地址在转移到 The Messaging Company 后得以保留，通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到它，并使用你当前服务商提供的服务器设置，Claude 就能读取、搜索、发送、回复、定时和整理邮件。"
+    },
+    {
+      "q": "iiNet 邮箱怎么了？",
+      "a": "iiNet 退出了邮箱业务，把客户地址转移给了另一家澳大利亚邮箱服务商 The Messaging Company。选择加入期已经结束，未选择加入的地址已被删除且无法恢复，iiNet 还声明无法在 iinet.net.au 域名下创建新地址。"
+    },
+    {
+      "q": "服务已经迁移，为什么 mail.iinet.net.au 还在响应？",
+      "a": "因为这台主机仍在运行。它在端口 993 上完成 TLS 握手，并使用签发给 mail.tpg.com.au 的证书返回能力横幅。这只能说明服务器在响应，仅此而已。你的邮箱是否由它提供服务、你的凭据是否仍然有效，是另外的问题，只有你当前的服务商能回答。"
+    },
+    {
+      "q": "我还能获得新的 iinet.net.au 邮箱地址吗？",
+      "a": "不能。iiNet 的帮助页面直接说明，无法再使用 iinet.net.au 域名创建新的邮箱地址。如果你需要一个新邮箱供助手使用，它必须来自仍在发放地址的服务商，而 mcpemails 可以通过 IMAP 连接其中任何一家。"
+    },
+    {
+      "q": "我的邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从你的服务商实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个它能访问的邮箱",
+    "sub": "无论你原来的 iiNet 地址现在位于何处，都可以通过 IMAP 连接。1 个收件箱永久免费，无需信用卡。"
+  }
+}

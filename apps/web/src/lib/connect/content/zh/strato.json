@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://www.strato.de/faq/mail/so-lauten-die-strato-e-mail-server/",
+    "https://www.strato.de/faq/mail/e-mail-authentifizierung-nach-abschaltung-von-md5-challenge-response/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://www.strato.de/faq/mail/so-lauten-die-strato-e-mail-server/",
+    "usernameForm": "包含域名的完整地址：name@ihredomain.de。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 STRATO 邮箱连接到 Claude 与 MCP 客户端",
+    "description": "通过 IMAP（imap.strato.de:993）将 STRATO 邮箱连接到 Claude、Cursor 及任意 MCP 客户端。请使用普通密码认证：STRATO 已移除 CRAM-MD5。"
+  },
+  "hero": {
+    "eyebrow": "STRATO 邮箱 + AI",
+    "titleLine1": "将 STRATO 邮箱连接到 Claude，",
+    "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 STRATO 收件箱。用邮箱密码（而不是你的 STRATO 客户登录密码）通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行连接 STRATO 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.strato.de 的 993 端口，用你的完整邮箱地址和为该邮箱设置的密码（而不是 STRATO 客户登录密码）认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。STRATO 只接受在加密连接上进行的普通密码认证，旧的质询响应方式已被关闭。一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "邮箱密码，而不是客户登录密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "STRATO 如何连接：IMAP，仅限 TLS，普通密码",
+    "body": "STRATO 在 <code>imap.strato.de</code> 的 993 端口通过隐式 TLS 提供 IMAP，在 <code>smtp.strato.de</code> 的 465 端口提供 SMTP，同样是隐式 TLS。STRATO 声明其所有邮箱都只使用加密连接，完全不支持未加密连接，并将连接限制为 TLS 1.2 和 1.3。用户名是你的完整邮箱地址，密码是为该邮箱选定的密码，这与你登录 STRATO Kundenlogin（客户登录）所用的凭据不同。认证必须配置为在该加密通道上使用普通密码：STRATO 已关闭 CRAM-MD5 质询响应机制，所以仍设置为它的客户端都会失败。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "在 STRATO Kundenlogin 中设置邮箱密码",
+      "p": "登录 STRATO Kundenlogin，打开你的套餐，进入 E-Mail，然后是 E-Mail-Adressen verwalten。选择该地址并在那里设置新密码。这个密码只属于该邮箱，而不是你刚才用来进入 Kundenlogin 的那个。"
+    },
+    {
+      "h": "粘贴到 mcpemails",
+      "p": "选择 IMAP / SMTP，输入完整地址，粘贴邮箱密码。服务器 imap.strato.de 和 smtp.strato.de 以及端口 993 和 465 已自动填好，并已通过实时 TLS 连接验证。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "STRATO 关闭了 CRAM-MD5，而旧客户端仍在请求它",
+      "p": "STRATO 不再支持 MD5 质询响应认证方式。在邮件客户端中，这个设置通常标为 <b>encrypted password</b>（加密密码）或 <b>secure password authentication</b>（安全密码认证），位于同一下拉菜单中 <b>normal password</b>（普通密码）的下一行，所以很多人基于“加密越多越好”的合理假设选择了它。任何停留在该设置上的客户端或脚本，现在都会在登录时失败，错误与凭据错误无法区分，即使密码是正确的。正确的配置是在 TLS 连接上使用普通密码，而该连接本身已经是端到端加密的。"
+    },
+    {
+      "h": "STRATO 不声明 SASL-IR",
+      "p": "IMAP 服务器省略了 SASL-IR 能力，因此会拒绝在 AUTHENTICATE 命令同一行携带凭据的一步认证。默认支持 SASL-IR 的客户端会收到一个没有任何解释的 <code>BAD</code>，看起来又像是密码问题。mcpemails 会识别这个响应并用两步交换重试，所以连接能够成功，但它与移除 CRAM-MD5 一起，正是 STRATO 产生这么多虚假密码错误报告的原因。"
+    },
+    {
+      "h": "STRATO 是同价位中配置最完善的 IMAP 服务器",
+      "p": "在共享主机邮件中很少见的是，STRATO 声明了 MOVE、UIDPLUS、SPECIAL-USE、SORT、QUOTA 和 LIST-EXTENDED。实际上这意味着移动是一条原子命令，而不是复制加删除；目标 UID 会被返回，所以移动后的邮件可以被追踪；已发送、草稿、已删除和垃圾邮件文件夹按用途识别，而不是从 Gesendet、Papierkorb 这类德语文件夹名中猜测。如果你正在为代理驱动的邮件挑选服务商，这个组合的价值比听起来要大。"
+    },
+    {
+      "h": "发送和上传都有 100 MB 的硬性上限",
+      "p": "STRATO 在 IMAP 上声明的 APPENDLIMIT 为 104857600 字节，SMTP 的最大邮件大小也是同一数值。这同时限制了代理能发送什么，以及它能以草稿或追加邮件的形式写入文件夹的内容。超大的附件组合会被直接拒绝，而不会被截断。"
+    }
+  ],
+  "limits": [
+    "完全不支持未加密连接，且只接受 TLS 1.2 和 1.3。非常旧的客户端库无法协商建立会话。",
+    "服务器将邮件和追加内容的上限设为 100 MB。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 STRATO 邮箱吗？",
+      "a": "不能单独使用。Claude 没有内置的 STRATO 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向你的 STRATO 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "STRATO 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.strato.de，端口 993，隐式 TLS。SMTP 为 smtp.strato.de，端口 465，同样是隐式 TLS。用户名是你的完整邮箱地址，密码是邮箱密码。认证必须设为普通密码。两台服务器均已通过实时 TLS 连接确认。"
+    },
+    {
+      "q": "为什么我的 STRATO 密码被拒绝？",
+      "a": "有三个原因值得按顺序检查。客户端设置为加密密码或 CRAM-MD5，而 STRATO 已将其关闭。你用的是 STRATO Kundenlogin 密码，而不是邮箱密码。或者客户端尝试使用未加密连接，STRATO 会直接拒绝而不是降级。"
+    },
+    {
+      "q": "STRATO 需要应用密码吗？",
+      "a": "不需要。STRATO 不为邮件签发应用专用密码，也没有需要开启的单邮箱 IMAP 开关。在 Kundenlogin 中设置的邮箱密码同时用于 IMAP 和 SMTP 认证。如果你不想重复使用现有密码，可以为该地址设置一个新密码。"
+    },
+    {
+      "q": "我的 STRATO 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 STRATO 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 STRATO 收件箱",
+    "sub": "几分钟即可连接 STRATO 邮箱。一个收件箱永久免费，无需信用卡。"
+  }
+}

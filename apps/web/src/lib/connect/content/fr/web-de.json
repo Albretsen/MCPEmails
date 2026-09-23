@@ -1,7 +1,21 @@
 {
+  "_sources": [
+    "https://hilfe.web.de/pop-imap/einschalten.html",
+    "https://hilfe.web.de/pop-imap/index.html",
+    "https://hilfe.web.de/pop-imap/imap/index.html",
+    "https://hilfe.web.de/sicherheit/2fa/anwendungsspezifisches-passwort.html",
+    "https://hilfe.web.de/pop-imap/einrichtung-mailprogramm-scheitert.html"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Mot de passe WEB.DE, ou un mot de passe d'application avec la 2FA",
+    "helpUrl": "https://hilfe.web.de/pop-imap/einschalten.html",
+    "usernameForm": "Votre adresse WEB.DE complète, domaine compris : nom@web.de.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Connecter WEB.DE à Claude (et à toute IA)",
-    "description": "Connectez WEB.DE à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de votre compte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+    "title": "Connecter WEB.DE à Claude, Cursor et aux clients MCP",
+    "description": "Connectez WEB.DE à Claude, Cursor et tout client MCP en IMAP sur imap.web.de:993. L'accès POP3 et IMAP est désactivé par défaut et doit d'abord être activé."
   },
   "hero": {
     "eyebrow": "WEB.DE + IA",
@@ -9,13 +23,13 @@
     "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte WEB.DE en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de votre compte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
     "meta0": "1 boîte gratuite, pour toujours",
-    "meta1": "Le mot de passe de votre compte, pas de configuration OAuth",
+    "meta1": "Le mot de passe de votre compte, sans configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude ne peut pas atteindre WEB.DE tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de votre compte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+    "answer": "Claude ne peut pas accéder seul à WEB.DE. mcpemails est un serveur MCP hébergé qui le connecte en IMAP avec le mot de passe de votre compte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes et une boîte est gratuite."
   },
   "method": {
     "title": "Comment WEB.DE se connecte : IMAP et le mot de passe de votre compte",
-    "body": "WEB.DE se connecte via IMAP/SMTP, mais <b>l'accès POP3 et IMAP est désactivé par défaut</b>. Activez-le dans WEB.DE, dans Paramètres e-mail, Récupération POP3/IMAP, puis connectez-vous avec votre adresse et votre mot de passe WEB.DE. Le courrier sortant passe par STARTTLS sur le port 587 plutôt que par TLS implicite sur le 465, et mcpemails le sélectionne pour vous."
+    "body": "WEB.DE se connecte en IMAP/SMTP, mais <b>l'accès POP3 et IMAP est désactivé par défaut</b>. Activez-le dans WEB.DE sous E-mail settings, POP3/IMAP retrieval (réglages e-mail, récupération POP3/IMAP), puis connectez-vous avec votre adresse et votre mot de passe WEB.DE. WEB.DE répond sur les deux transports sortants standard, TLS implicite sur le port 465 et STARTTLS sur le port 587 : le port n'est donc presque jamais la raison d'un échec d'envoi. mcpemails utilise la paire en 465 ci-dessous et bascule seul sur l'autre si besoin."
   },
   "setup": [
     {
@@ -24,15 +38,64 @@
     },
     {
       "h": "Activez l'accès IMAP dans WEB.DE",
-      "p": "Dans WEB.DE, ouvrez Paramètres e-mail, Récupération POP3/IMAP, et autorisez POP3 et IMAP."
+      "p": "Dans WEB.DE, ouvrez E-mail settings, POP3/IMAP retrieval, et autorisez l'accès POP3 et IMAP."
     },
     {
       "h": "Collez-le dans mcpemails",
-      "p": "Choisissez IMAP / SMTP, ajoutez votre adresse WEB.DE, les serveurs ci-dessous et le mot de passe pour connecter la boîte en toute sécurité."
+      "p": "Choisissez IMAP / SMTP, ajoutez votre adresse WEB.DE, les serveurs ci-dessous et le mot de passe pour connecter la boîte de façon sécurisée."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
       "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "La récupération POP3 et IMAP est désactivée tant que vous ne l'activez pas",
+      "p": "WEB.DE livre chaque boîte FreeMail avec la récupération externe désactivée, et c'est la raison pour laquelle la plupart des configurations de clients WEB.DE échouent au premier essai. Connectez-vous sur web.de, cliquez sur le cercle avec vos initiales dans la barre du haut, ouvrez <b>E-Mail-Einstellungen</b>, puis sous <b>E-Mail empfangen</b> choisissez <b>POP3/IMAP</b>. Placez le curseur sur <b>POP3- und IMAP-Zugriff erlauben</b> et résolvez le petit puzzle affiché par WEB.DE, où vous faites glisser deux symboles l'un sur l'autre. Tant que ce curseur n'est pas activé, <code>imap.web.de</code> refuse chaque connexion avec un échec d'authentification, impossible à distinguer d'un mauvais mot de passe."
+    },
+    {
+      "h": "WEB.DE désactive de nouveau l'accès si rien ne se connecte pendant un moment",
+      "p": "Celui-ci piège les gens des mois plus tard. WEB.DE indique que si vous n'utilisez pas le programme ou l'application pendant une période prolongée, la récupération en POP3 et IMAP est automatiquement désactivée de nouveau. Une connexion qui a parfaitement fonctionné toute l'année peut donc se mettre à échouer après une période calme, sans notification et sans aucun changement de votre côté. Si une boîte qui fonctionnait s'arrête soudain, vérifiez le curseur avant de toucher au mot de passe. Un agent qui lit la boîte régulièrement maintient l'accès actif de lui-même."
+    },
+    {
+      "h": "Activer l'authentification à deux facteurs met votre mot de passe hors service pour les clients de messagerie",
+      "p": "L'authentification à deux facteurs de WEB.DE protège la connexion web, et une fois activée, votre mot de passe WEB.DE habituel cesse de fonctionner dans tout ce qui parle IMAP ou SMTP. Il vous faut alors un <b>anwendungsspezifisches Passwort</b> (mot de passe d'application), généré dans la boîte sous Account verwalten, puis Login & Sicherheit, puis Anwendungsspezifische Passwörter. Créez-en un pour le courrier, collez-le dans mcpemails à la place de votre mot de passe habituel, et gardez ce dernier pour le site web. Sans 2FA, le mot de passe du compte est le bon identifiant et il n'y a pas de mot de passe d'application à créer."
+    },
+    {
+      "h": "Les deux transports SMTP répondent, donc un échec d'envoi vient rarement du port",
+      "p": "Les guides WEB.DE ne s'accordent pas sur le courrier sortant : certains donnent <code>smtp.web.de</code> sur le port 465 en TLS implicite, d'autres le port 587 avec STARTTLS. Les deux fonctionnent, et notre sonde a terminé une négociation TLS sur 465, le serveur proposant PLAIN et LOGIN. Alterner entre les deux ports est donc un effort inutile. Si l'envoi est refusé, la cause est le curseur de récupération, le mot de passe d'application manquant, ou une adresse From qui ne fait pas partie des adresses enregistrées sur le compte."
+    }
+  ],
+  "limits": [
+    "mcpemails connecte uniquement la boîte WEB.DE. WEB.DE Online-Speicher, le carnet d'adresses et le calendrier sont des produits distincts et ne sont pas exposés à votre client IA.",
+    "Le curseur POP3/IMAP est contrôlé par WEB.DE, pas par nous. Si WEB.DE désactive la récupération après une longue période d'inactivité, la connexion doit être réactivée dans WEB.DE avant de fonctionner de nouveau.",
+    "WEB.DE est une boîte grand public avec ses propres limites d'envoi anti-abus. Utilisez-la pour une correspondance ordinaire, pas pour des envois en masse ou des campagnes."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec WEB.DE ?",
+      "a": "Pas seul. Claude n'a pas de connecteur WEB.DE intégré. Brancher un serveur MCP comme mcpemails sur votre boîte WEB.DE en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et les autres clients MCP, pas un seul."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de WEB.DE ?",
+      "a": "IMAP : imap.web.de sur le port 993 en TLS implicite, et SMTP : smtp.web.de sur le port 465, également en TLS implicite. WEB.DE accepte aussi 587 avec STARTTLS pour le courrier sortant. Le nom d'utilisateur est votre adresse WEB.DE complète, domaine compris. Les deux serveurs ont été confirmés par une connexion TLS réelle à la date indiquée sur cette page."
+    },
+    {
+      "q": "Comment activer IMAP dans WEB.DE ?",
+      "a": "Connectez-vous sur web.de, cliquez sur vos initiales dans la barre du haut et ouvrez E-Mail-Einstellungen. Sous E-Mail empfangen, choisissez POP3/IMAP, puis placez le curseur sur POP3- und IMAP-Zugriff erlauben et terminez le puzzle à glisser affiché par WEB.DE. La récupération est désactivée par défaut sur chaque boîte, cette étape est donc obligatoire avant qu'un client puisse se connecter."
+    },
+    {
+      "q": "Pourquoi mon mot de passe WEB.DE est-il refusé ?",
+      "a": "Presque toujours pour l'une de deux raisons. Soit la récupération POP3 et IMAP est désactivée dans vos réglages WEB.DE, ce qui produit un simple échec d'authentification sans indice sur la vraie cause, soit vous avez activé l'authentification à deux facteurs et il vous faut un mot de passe d'application au lieu du mot de passe de votre compte. Vérifiez d'abord le curseur, car c'est le cas le plus fréquent des deux."
+    },
+    {
+      "q": "WEB.DE a-t-il besoin d'un mot de passe d'application ?",
+      "a": "Seulement si l'authentification à deux facteurs est activée. Sans 2FA, votre mot de passe WEB.DE habituel authentifie les clients de messagerie une fois la récupération activée. Avec la 2FA, générez un mot de passe d'application sous Account verwalten, Login und Sicherheit, Anwendungsspezifische Passwörter, et utilisez-le dans mcpemails."
+    },
+    {
+      "q": "Mon courrier WEB.DE est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis WEB.DE en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
     }
   ],
   "ctaBand": {

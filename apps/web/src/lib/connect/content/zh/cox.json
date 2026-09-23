@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://help.yahoo.com/kb/mail/SLN36637.html",
+    "https://help.yahoo.com/kb/SLN15241.html",
+    "https://www.cox.com/residential/support/coxnet-email-transitioning-to-yahoo.html"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Yahoo 应用专用密码",
+    "helpUrl": "https://help.yahoo.com/kb/mail/SLN36637.html",
+    "usernameForm": "你的完整 cox.net 地址。邮箱现在是 Yahoo 账户，但用户名仍是你一直在用的 cox.net 地址。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Yahoo 上的 Cox 邮箱：将 cox.net 连接到 Claude",
+    "description": "Cox 已把 cox.net 邮箱交给 Yahoo。使用 Yahoo 应用专用密码（而不是旧的 Cox 密码），通过 IMAP 将该邮箱连接到 Claude 及任意 MCP 客户端。"
+  },
+  "hero": {
+    "eyebrow": "Cox Email + AI",
+    "titleLine1": "将你的 cox.net 收件箱连接到",
+    "titleLine2": "Claude、Cursor 及任意 MCP 客户端",
+    "lead": "Cox 已退出邮箱业务，cox.net 邮箱现由 Yahoo 运营。地址依然有效，mcpemails 通过 IMAP 连接它，让你的 AI 代理能读取、搜索、发送、回复和归档这些邮件。",
+    "answer": "Claude 无法自行访问 cox.net 邮箱。mcpemails 是一个托管 MCP 服务器，通过下表中 Yahoo 服务器端口 993 的 IMAP 与之连接，因为 Cox 已把邮箱服务交给 Yahoo，cox.net 邮件现在由 Yahoo 而非 Cox 的基础设施提供。凭据是在账户安全页面生成的 Yahoo 应用专用密码，既不是你旧的 Cox 密码，也不是你在网页邮箱中输入的密码。连接后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送、回复和整理这些邮件，1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "Yahoo 应用专用密码，而非 Cox 密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "cox.net 如何连接：通过 IMAP 接入 Yahoo，使用应用专用密码",
+    "body": "Cox 退出了邮箱业务，分批把所有 cox.net 邮箱迁移到了 Yahoo，所以你地址背后的登录、网页邮箱和邮件服务器现在都是 Yahoo 的。这带来两个实际后果。第一，旧的 Cox 主机名已经失效：<code>pop.cox.net</code> 和 <code>smtp.cox.net</code> 不再为邮箱提供服务，仍指向它们的客户端无论输入什么密码都会失败。第二，认证遵循 Yahoo 的规则，也就是说，不使用 Yahoo 自有 OAuth 登录的邮件客户端必须提供<b>应用专用密码</b>。Yahoo 对此说得很明确：你必须使用应用专用密码，而不是普通的账户密码。即使你修改了账户的主密码，应用专用密码仍然有效；要撤销它，就把它删除。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "在 Yahoo 账户安全页面生成应用专用密码",
+      "p": "用你的 <code>@cox.net</code> 地址登录 Yahoo，打开账户安全页面，找到 <b>External connections</b>，选择 <b>Create app password</b>。给它起一个日后能认出的名字，例如 <code>mcpemails</code>。Yahoo 只显示一次该代码，所以请在关闭页面前复制。"
+    },
+    {
+      "h": "输入 cox.net 地址和应用专用密码",
+      "p": "在 mcpemails 中选择 IMAP / SMTP，在用户名字段填入完整的 cox.net 地址，并粘贴应用专用密码，而不是你的 Cox 账户密码。下方的服务器地址和端口已预填，并经实时 TLS 连接验证。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Yahoo 可能拒绝创建应用专用密码，客服也无法破例",
+      "p": "在 Yahoo 显示代码之前，创建应用专用密码要先通过资格检查。Yahoo 自己的说明是：使用你连续数天登录过 Yahoo 的浏览器，不要使用隐私或无痕窗口；它还明确表示，客服无法干预决定资格的流程。如果 <b>Create app password</b> 选项不见了，或者尝试失败，原因就是这项检查。请用你平时的浏览器登录几天后再试；没有任何工单能跳过它。"
+    },
+    {
+      "h": "所有旧指南里的 Cox 主机名都已失效",
+      "p": "在迁移到 Yahoo 之前写的指南会让你使用 <code>pop.cox.net</code>、<code>imap.cox.net</code> 或 <code>smtp.cox.net</code>。这些已不再是邮箱所在的服务器。邮件现在由 Yahoo 的服务器响应，这就是为什么一个用了多年的客户端，在你的账户于某一批迁移中被转移后突然失效。只更新密码而不更新主机名是没有用的。"
+    },
+    {
+      "h": "Yahoo 为 cox.net 公布了一个主机名，而我们验证的是另一个",
+      "p": "Yahoo 的 cox.net 设置文章列出的是 <code>imap.mail.yahoo.com</code>。本页表格中记录的服务器，是我们针对 cox.net 实际建立过 TLS 连接的那一个，也是 Yahoo 用于 cox.net 和 Rogers 等合作伙伴品牌邮箱的导出服务器。两者都是 Yahoo 自己的基础设施，都在端口 993 上以相同的服务器横幅响应。如果你的账户被其中一个拒绝，就试另一个。"
+    },
+    {
+      "h": "Cox 自 2019 年起不再发放 cox.net 地址",
+      "p": "Cox 自己的支持说明是：自 2019 年 8 月 15 日起，它不再为新的或现有的 Cox Internet 客户提供创建新 Cox Email 账户的功能。所以你无法再获得新的 cox.net 地址；如果你现有的地址在取消服务后被关闭，也不会再回来。Cox 给已断开服务的账户留出的宽限期是以周而不是以年计算的，之后邮箱就会被删除。"
+    }
+  ],
+  "limits": [
+    "Yahoo 的 SMTP 服务器声明的单封邮件大小上限约为 39 MB，因此带大附件的邮件在发出前就会被拒绝。",
+    "由于 Cox 不再发放地址，本页只对现有的 cox.net 邮箱有用。无法新建一个来连接。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Cox 邮箱吗？",
+      "a": "不能直接使用。Claude 没有内置的 Cox 连接器，而且 Cox 已不再自己运营邮箱服务。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 cox.net 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "现在 Cox 的 IMAP 和 SMTP 设置是什么？",
+      "a": "现在用的是 Yahoo 的设置，而不是 Cox 的。IMAP 在端口 993 上使用隐式 TLS，SMTP 在端口 465 上同样使用隐式 TLS，服务器见本页表格，均经实时 TLS 连接验证。用户名仍是你的完整 cox.net 地址。旧的 pop.cox.net 和 smtp.cox.net 已不再可用。"
+    },
+    {
+      "q": "为什么我的 Cox 密码在邮件客户端中被拒绝？",
+      "a": "因为邮箱现在是 Yahoo 账户，而 Yahoo 要求不使用其自有登录窗口的客户端使用应用专用密码。你的网页邮箱密码是正确的，但在 IMAP 层仍会被拒绝。请在 Yahoo 账户安全页面的 External connections 下生成应用专用密码，改用它。"
+    },
+    {
+      "q": "我还能申请新的 cox.net 邮箱地址吗？",
+      "a": "不能。Cox 自 2019 年 8 月 15 日起不再允许客户创建 Cox Email 账户，把服务迁移到 Yahoo 也没有重新开放。只有在那之前创建的地址才存在，这也是本页面向已有地址用户撰写的原因。"
+    },
+    {
+      "q": "我的 Cox 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 实时获取邮件，并传给你的 AI 客户端。凭据（包括应用专用密码）静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 接入 cox.net 收件箱",
+    "sub": "一个应用专用密码，几分钟即可完成。1 个收件箱永久免费，无需信用卡。"
+  }
+}

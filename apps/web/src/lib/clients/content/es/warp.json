@@ -1,0 +1,88 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://docs.warp.dev/agent-platform/capabilities/mcp/"
+  ],
+  "meta": {
+    "title": "Conecta el correo a Warp: servidor MCP para agentes",
+    "description": "Añade una bandeja real a los agentes de Warp. Settings, Agents, MCP servers: un servidor Streamable HTTP por URL y OAuth en el navegador. Sin clave de API. Una bandeja gratis."
+  },
+  "hero": {
+    "eyebrow": "Warp + correo",
+    "titleLine1": "Conecta tu bandeja a Warp",
+    "titleLine2": "y a sus agentes",
+    "lead": "Dale a la terminal un buzón real. Lee, busca, envía, responde, reenvía, programa y organiza correo desde un agente de Warp, en todas las bandejas que tengas conectadas.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "OAuth, sin clave de API",
+    "meta2": "Correo obtenido en vivo, nunca almacenado",
+    "answer": "Abre Settings, Agents, MCP servers, haz clic en Add, elige la pestaña Streamable HTTP or SSE Server (URL), pega https://mcpemails.com/api/mcp y confirma. Warp completa el flujo OAuth en el navegador cuando se te pide."
+  },
+  "method": {
+    "title": "Cómo se conecta Warp: OAuth, sin clave de API",
+    "body": "Warp ejecuta el flujo OAuth estándar de MCP contra este servidor. Se registra solo mediante <b>registro dinámico de clientes RFC 7591</b>, así que no hay ningún client ID que crear, y se autoriza con <b>código de autorización más PKCE</b> usando S256. Nunca se transmite un secreto de cliente, y el token solo lleva los permisos que apruebas en nuestra pantalla de consentimiento. El token de acceso que recibe dura una hora y se renueva solo; aparece en Dashboard, API Keys como <code>OAuth:</code> seguido del nombre del cliente, y ahí es donde revocas la conexión."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis y conecta un buzón",
+      "p": "Regístrate en mcpemails.com, sin tarjeta, y luego ve a Dashboard, Inboxes, Connect Inbox. Gmail se conecta con el inicio de sesión de Google en un clic; iCloud, Fastmail, Yahoo, Zoho y Yandex requieren una contraseña de aplicación; cualquier otro se conecta por IMAP y SMTP estándar. El plan gratuito incluye una bandeja, para siempre."
+    },
+    {
+      "h": "Abre los ajustes de MCP",
+      "p": "Abre <b>Settings</b>, luego <b>Agents</b>, luego <b>MCP servers</b>, y haz clic en <b>+ Add</b>."
+    },
+    {
+      "h": "Elige la pestaña de URL",
+      "p": "Selecciona la pestaña <b>Streamable HTTP or SSE Server (URL)</b> en lugar de la basada en comandos."
+    },
+    {
+      "h": "Pega y autoriza",
+      "p": "Pega <code>https://mcpemails.com/api/mcp</code> y confirma; después completa el flujo OAuth en el navegador cuando se te pida. Aprueba los permisos que quieres que tenga el agente."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Elige la pestaña de URL, no la de comando",
+      "p": "Warp ofrece un servidor basado en comando y otro basado en URL. Este servidor está alojado, así que no tiene ningún comando que ejecutar ni paquete que instalar. La pestaña de URL es la única que puede funcionar, y elegir la otra produce un servidor que nunca arranca."
+    },
+    {
+      "h": "Un agente de terminal trabaja mucho rato y sin supervisión",
+      "p": "Ese es su atractivo, y también es la razón de que aquí importe la decisión sobre los permisos. Un agente que recorre una lista de tareas con <code>send:email</code> puede enviar un correo a alguien en cualquier punto de esa lista. Dejar fuera ese permiso, o activar la aprobación humana para que los envíos esperen a una persona, conserva la parte útil sin la sorpresa."
+    },
+    {
+      "h": "Nada llega por sí solo",
+      "p": "El servidor funciona solo por petición y respuesta, sin webhooks ni push. Un agente de Warp ve el correo cuando mira, así que una comprobación programada o pedida de forma explícita es lo que lo convierte en un monitor. Vigila los límites de uso si consultas de forma agresiva."
+    }
+  ],
+  "limits": [
+    "Las solicitudes están limitadas a 100 por minuto, 1.000 por hora y 10.000 al día por clave, además del tope de acciones facturables de tu plan.",
+    "El servidor funciona solo por petición y respuesta. No hay webhooks ni eventos iniciados por el servidor, así que el correo nuevo nunca despierta a tu agente por sí solo. Para reaccionar al correo entrante, consulta periódicamente según un horario.",
+    "El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, así que un token revocado o un cambio de contraseña del buzón corta el acceso de inmediato."
+  ],
+  "faq": [
+    {
+      "q": "¿Cómo conecto el correo a Warp?",
+      "a": "Abre Settings, Agents, MCP servers, haz clic en Add, elige la pestaña Streamable HTTP or SSE Server (URL), pega https://mcpemails.com/api/mcp y confirma; después completa el flujo OAuth en el navegador. A partir de ahí los agentes de Warp tienen herramientas para leer, buscar, enviar, responder, reenviar, organizar y programar correo."
+    },
+    {
+      "q": "¿Necesito una clave de API para Warp?",
+      "a": "No. Warp completa un flujo OAuth en el navegador contra este servidor, así que no va nada secreto en los ajustes. Una clave bearer sigue disponible para scripts y máquinas sin interfaz gráfica."
+    },
+    {
+      "q": "¿Qué buzones puede alcanzar Warp de esta forma?",
+      "a": "Gmail con el inicio de sesión de Google; iCloud, Fastmail, Yahoo, Zoho y Yandex con una contraseña de aplicación; y cualquier otro buzón que hable IMAP y SMTP en los puertos estándar. El cliente los ve todos a través de la misma conexión: tu agente llama primero a inbox_list para descubrir cada buzón conectado y su id, así que no hay UUID que pegar en ningún sitio."
+    },
+    {
+      "q": "¿Puede un agente de Warp enviar correo sin que yo lo vea?",
+      "a": "Solo si tú lo permites. El envío depende del permiso send:email, así que una clave o un token sin ese permiso no puede enviar nada. Además, el propietario de una bandeja puede exigir aprobación humana en el panel, que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera."
+    },
+    {
+      "q": "¿Se guarda mi correo en los servidores de mcpemails?",
+      "a": "No. Cada mensaje se obtiene en vivo de tu proveedor para la solicitud que lo pidió y se entrega directamente a tu cliente. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, para que las llamadas futuras puedan autenticarse. Eliminar la bandeja en el panel, o revocar el acceso en tu proveedor, corta la conexión al instante."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu terminal una bandeja real",
+    "sub": "Una URL, un inicio de sesión. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

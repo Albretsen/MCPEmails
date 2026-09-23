@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://faq.optimum.net/taxonomy/term/1250",
+    "https://faq.optimum.net/taxonomy/term/3677",
+    "https://faq.optimum.net/node/13446"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Passord for Optimum ID",
+    "helpUrl": "https://faq.optimum.net/taxonomy/term/1250",
+    "usernameForm": "Hele adressen din, uansett hvilket Optimum-domene den bruker: name@optimum.net, name@optonline.net eller en Suddenlink-adresse.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Optimum- og Optonline-e-post til Claude",
+    "description": "Koble en Optimum-, Optonline- eller Suddenlink-postkasse til Claude og enhver MCP-klient via IMAP på mail.optimum.net:993 med passordet for Optimum ID."
+  },
+  "hero": {
+    "eyebrow": "Optimum Email + AI",
+    "titleLine1": "Koble Optimum-innboksen din",
+    "titleLine2": "til Claude, Cursor, enhver MCP-klient",
+    "lead": "Optimum sluttet å dele ut adresser for mange år siden, men postkassene som finnes, snakker fortsatt IMAP. mcpemails kobler til en, slik at AI-agenten din kan lese, søke, sende, svare og arkivere den e-posten.",
+    "answer": "Claude når ikke en Optimum-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på mail.optimum.net port 993 og logger inn med hele optimum.net-, optonline.net- eller Suddenlink-adressen din og passordet for Optimum ID. Det er ikke noe app-passord å generere og ingen bryter å slå på, fordi Optimum aldri laget noen av delene. Merk at Optimum sluttet å la noen opprette nye e-postkontoer 4. mai 2021, så dette virker for en adresse du allerede har, ikke en ny. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Passord for Optimum ID, ikke app-passord",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Optimum seg til: IMAP med din vanlige Optimum ID",
+    "body": "Optimum driver én e-postvert for alle merkene sine. <code>mail.optimum.net</code> svarer på IMAP på port 993 over TLS med eget sertifikat, og samme navn håndterer innsending på port 465. Adresser på <code>optimum.net</code>, <code>optonline.net</code> og Suddenlink-domenene Optimum overtok, havner alle der. Autentiseringen er forfriskende enkel: din <b>Optimum ID</b> og passordet til den, med hele e-postadressen som brukernavn. Optimum utsteder ingen programspesifikke passord og har ingen bryter for tredjepartstilgang å lete etter, så en innlogging som feiler her, er et ekte problem med påloggingsdetaljene og ikke en skjult innstilling. Det ene du bør vite før du peker en agent mot postkassen, er at Optimum sluttet å opprette e-postkontoer 4. mai 2021 og ber alle som vil ha en ny adresse, gå til Gmail, Outlook.com eller Yahoo i stedet."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
+    },
+    {
+      "h": "Bekreft postkassen og sjekk lagringen først",
+      "p": "Logg inn på optimum.net med Optimum ID-en din, åpne Email og se på lagringsvisningen nede til venstre i innboksen. Optimum begrenser en postkasse til 5 GB og selger ikke ekstra plass. Ved 100 prosent slutter kontoen å sende og motta, så tøm mappene Deleted og Junk før du gir den til en agent."
+    },
+    {
+      "h": "Skriv inn adressen og passordet for Optimum ID",
+      "p": "I mcpemails velger du IMAP / SMTP, skriver hele adressen i brukernavnfeltet, for eksempel <code>name@optonline.net</code>, og bruker passordet for den Optimum ID-en. Verten er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Optimum annonserer ikke SASL-IR, og de fleste klienter antar det",
+      "p": "Optimums IMAP-server mangler funksjonen SASL-IR, så den avviser autentisering i ett steg, der påloggingsdetaljene sendes sammen med AUTHENTICATE-kommandoen. En klient som antar SASL-IR, får en naken <code>BAD</code> uten forklaring, som ser nøyaktig ut som et feil passord og får folk til å tilbakestille en Optimum ID som var i orden. mcpemails oppdager det svaret og prøver utvekslingen i to steg på nytt, så det er håndtert her, men det er grunnen til at andre IMAP-verktøy feiler mot Optimum mens de virker andre steder."
+    },
+    {
+      "h": "Junk og Deleted tømmer seg selv, og på domener som ikke er Optimums skjer det etter tre dager",
+      "p": "Optimum sletter e-post i Junk og Deleted permanent etter en tidsplan du ikke kan endre. På <code>optimum.net</code>- og <code>optonline.net</code>-adresser er det 30 dager for begge mappene. På alle andre domener Optimum hoster, er det <b>3 dager</b>. Alt som går ut på tid, er borte og kan ikke gjenopprettes. Lar du en agent legge e-post i papirkurven som en myk sletting, har du på de andre domenene omtrent en langhelg på å ombestemme deg."
+    },
+    {
+      "h": "5 GB er taket, og det finnes ingen oppgradering å kjøpe",
+      "p": "Optimum gir hver postkasse 5 GB, teller Inbox, Sent, My folders, Deleted og Junk med, og sier at de ikke tilbyr noen mulighet til å kjøpe ekstra lagring. Over grensen kan kontoen verken sende eller motta, noe som fra agentens side ser ut som en ødelagt tilkobling snarere enn en full disk. Serveren annonserer IMAP-utvidelsen QUOTA, så tallet kan leses, men løsningen er alltid å slette e-post."
+    },
+    {
+      "h": "Ingen SPECIAL-USE, og Optimums mappenavn er deres egne",
+      "p": "Serveren annonserer ikke SPECIAL-USE, så en klient kan ikke spørre hvilken mappe som er Sent og hvilken som er Trash, og må matche på navn. Optimums navn er <code>Deleted</code> i stedet for Trash og <code>My folders</code> for treet brukeren har laget, som ikke er det de fleste verktøy gjetter. Finner ikke en agent arkivet ditt, oppgi mappen eksplisitt i stedet for å anta standardnavnet."
+    }
+  ],
+  "limits": [
+    "Postkassen er begrenset til 5 GB uten betalt oppgradering, og sending og mottak stopper når den er full.",
+    "Optimum har ikke utstedt nye e-postkontoer siden 4. mai 2021, så bare en eksisterende adresse kan kobles til.",
+    "Optimums innsendingsvert svarte ikke på testen vår på port 465, så vi publiserer ingen verifisert funksjonsliste for utgående e-post hos denne leverandøren."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Optimum-e-post?",
+      "a": "Ikke direkte. Claude har ingen innebygd Optimum-kobling. Kobler du en MCP-server som mcpemails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere optimum.net-, optonline.net- eller Suddenlink-e-posten din, og samme tilkobling fungerer i Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP-innstillingene for Optimum?",
+      "a": "IMAP er mail.optimum.net på port 993 med implisitt TLS, verifisert via en direkte TLS-tilkobling på datoen som vises på denne siden. Innsending bruker samme vertsnavn på port 465. Brukernavnet er hele e-postadressen din, og passordet er det for Optimum ID-en din."
+    },
+    {
+      "q": "Trenger jeg et app-passord for Optimum-e-post?",
+      "a": "Nei. Optimum utsteder ingen programspesifikke passord og har ingen egen bryter for å tillate eksterne e-postklienter. Du bruker passordet for Optimum ID direkte. Finner du råd om å generere et app-passord for optonline.net, beskriver det en annen leverandørs prosess; ingen slik side finnes i Optimums innstillinger."
+    },
+    {
+      "q": "Kan jeg opprette en ny Optimum-e-postadresse?",
+      "a": "Nei. Optimums eget svar er at de fra 4. mai 2021 ikke lenger tilbyr nye eller eksisterende internettkunder å opprette nye Optimum-e-postkontoer, og de henviser folk til Gmail, Outlook.com eller Yahoo Mail i stedet. Adresser opprettet før den datoen virker fortsatt, også på Suddenlink-domenene."
+    },
+    {
+      "q": "Lagres Optimum-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Optimum via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Optimum-innboks",
+    "sub": "Ingen app-passord, ingen bryter. Én innboks gratis for alltid, uten kort."
+  }
+}

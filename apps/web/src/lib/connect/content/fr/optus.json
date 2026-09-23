@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.optus.com.au/support/email",
+    "https://www.optus.com.au/support/answer/using_an_email_application_with_optusnet_email_1434"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Mot de passe de la messagerie OptusNet",
+    "helpUrl": "https://www.optus.com.au/support/answer/using_an_email_application_with_optusnet_email_1434",
+    "usernameForm": "Optus indique que l'adresse et l'identifiant doivent toujours être saisis en entier, par exemple username@optusnet.com.au.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "OptusNet dans Claude : ce qui a vraiment changé",
+    "description": "Connectez une boîte OptusNet à Claude et tout client MCP en IMAP sur mail.optusnet.com.au:993. Optus n'a pas fermé sa messagerie, mais a changé l'offre en 2025."
+  },
+  "hero": {
+    "eyebrow": "OptusNet Email + IA",
+    "titleLine1": "Connectez votre boîte OptusNet",
+    "titleLine2": "à Claude, Cursor, tout client MCP",
+    "lead": "Contrairement à ce que dit la moitié d'internet, la messagerie OptusNet n'a pas fermé. Elle est passée à une nouvelle offre avec de nouvelles conditions en 2025 et n'accepte plus de nouvelles inscriptions. La boîte que vous avez parle toujours IMAP.",
+    "answer": "Claude ne peut pas atteindre une boîte OptusNet tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur mail.optusnet.com.au, port 993, avec votre adresse saisie en entier et le mot de passe de votre messagerie OptusNet. Il n'y a pas de mot de passe d'application à générer. Deux faits comptent avant de bâtir dessus : Optus a fait passer le service à une nouvelle offre avec de nouvelles conditions à partir de mai 2025 et exige que l'offre de messagerie soit liée à un service Optus éligible, et il n'accepte plus d'inscriptions à la messagerie OptusNet. Pour une adresse que vous avez déjà, une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe de la messagerie, pas de mot de passe d'application",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment OptusNet se connecte : un seul nom de serveur, dans les deux sens",
+    "body": "Optus fait tourner l'entrant et le sortant sous le même nom. <code>mail.optusnet.com.au</code> répond en IMAP sur le port 993 en SSL/TLS, et l'envoi sur le même serveur utilise le port 587 avec STARTTLS ou le port 465 en SSL/TLS. Optus recommande aux nouveaux clients de messagerie d'utiliser désormais le 587 ou le 465, tout en notant que le port 25 reste pris en charge, et indique clairement qu'il encourage IMAP plutôt que POP3. L'identifiant est toujours l'adresse complète. L'identifiant de connexion est le mot de passe de la boîte, sans rien autour : Optus n'émet pas de mots de passe spécifiques aux applications et aucun interrupteur d'accès client n'est caché dans le webmail. Ce qu'Optus a changé est d'ordre commercial plutôt que technique, et la section ci-dessous est celle à lire avant de confier la boîte à un agent."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et ne demande pas de carte bancaire."
+    },
+    {
+      "h": "Vérifiez que la boîte relève d'une offre de messagerie OptusNet en cours",
+      "p": "Connectez-vous sur <code>webmail.optusnet.com.au</code>. Depuis mai 2025, le service est fourni dans le cadre d'une offre aux nouvelles conditions, et l'offre publiée par Optus doit être liée à un service Optus éligible. Si la boîte est en sommeil parce que votre service Optus a pris fin, réglez cela avant d'y connecter quoi que ce soit."
+    },
+    {
+      "h": "Saisissez l'adresse complète et le mot de passe de la messagerie",
+      "p": "Dans mcpemails, choisissez IMAP / SMTP et mettez l'adresse entière dans le champ identifiant, au format d'Optus <code>username@optusnet.com.au</code>. Utilisez le mot de passe de cette boîte. Le serveur et les ports ci-dessous sont préremplis et ont été vérifiés par une connexion TLS réelle."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "La boîte contient 500 MB, et c'est toute l'allocation",
+      "p": "L'offre OptusNet Email publiée par Optus indique 500 MB de stockage. Ce n'est pas une coquille, et ce n'est pas par dossier. Un assistant qui classe au lieu de supprimer, ou une boîte qui accumule discrètement des pièces jointes depuis le changement d'offre, atteint ce plafond bien plus tôt que prévu, et une boîte pleine cesse d'accepter du courrier. Vérifiez l'utilisation avant de confier le compte à un agent, puis faites le ménage régulièrement."
+    },
+    {
+      "h": "Optus n'a pas fermé la messagerie OptusNet, quoi qu'en disent les gros titres",
+      "p": "De nombreuses pages publiées en 2025 ont annoncé la fin de la messagerie OptusNet. La page d'assistance d'Optus raconte une autre histoire : à partir de février 2025, Optus a écrit à ses clients au sujet de changements, et à partir de mai 2025, il a commencé à fournir le service dans le cadre d'une offre publiée et de nouvelles conditions générales, présentant ce travail comme un investissement dans un service plus sûr et plus moderne. Ce qui est vrai, c'est que l'inscription à de nouveaux services de messagerie OptusNet n'est pas possible, et que l'offre de messagerie doit être liée à un service Optus éligible. Les boîtes existantes n'ont pas été coupées en masse."
+    },
+    {
+      "h": "Les anciens clients de messagerie ont été abandonnés volontairement",
+      "p": "Optus indique que la plupart des clients ne voient aucun changement, mais que d'anciennes versions de certains clients tiers, dont Outlook 2010, ne sont plus prises en charge, car elles ne reçoivent plus de mises à jour et peuvent ne pas respecter les normes actuelles de chiffrement et de sécurité. Une configuration qui a cessé de fonctionner au moment du changement et qu'on a imputée au serveur vient donc plus probablement du client. mcpemails se connecte avec un TLS actuel, soit du bon côté de cette ligne."
+    },
+    {
+      "h": "SPECIAL-USE et IDLE sont présents, MOVE et UIDPLUS non",
+      "p": "C'est une combinaison inhabituelle, et elle change ce qui est bon marché et ce qui ne l'est pas. Comme SPECIAL-USE est annoncé, le serveur indique au client quel dossier est Sent, Drafts, Trash et Junk : inutile de deviner les noms. Comme IDLE est annoncé, le nouveau courrier arrive par push. Mais MOVE est absent : classer un message se fait par COPY, puis STORE de l'indicateur de suppression, puis EXPUNGE, et UIDPLUS est aussi absent : l'identifiant de la nouvelle copie n'est pas renvoyé et doit être retrouvé en cherchant dans le dossier de destination."
+    }
+  ],
+  "limits": [
+    "500 MB de stockage de boîte sur l'offre OptusNet Email publiée, et l'offre doit être liée à un service Optus éligible.",
+    "Aucune nouvelle adresse OptusNet n'est émise : seule une boîte existante peut être connectée.",
+    "Les déplacements ne sont pas atomiques, car MOVE et UIDPLUS ne sont pas implémentés sur ce serveur."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec la messagerie OptusNet ?",
+      "a": "Pas directement. Claude n'a pas de connecteur Optus intégré. Connecter un serveur MCP comme mcpemails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier optusnet.com.au, et la même connexion fonctionne dans Cursor, ChatGPT et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP d'OptusNet ?",
+      "a": "Les deux utilisent mail.optusnet.com.au. IMAP est sur le port 993 en SSL/TLS. Le sortant est sur le port 587 avec STARTTLS ou le port 465 en SSL/TLS, la combinaison que nous avons vérifiée par une connexion TLS réelle. Optus indique que l'identifiant doit toujours être saisi en entier, sous la forme username@optusnet.com.au, et qu'il encourage IMAP plutôt que POP3."
+    },
+    {
+      "q": "Optus ferme-t-il son service de messagerie ?",
+      "a": "Pas selon Optus. Sa page d'assistance explique avoir écrit aux clients à partir de février 2025 au sujet de changements, et fournir OptusNet Email dans le cadre d'une nouvelle offre et de nouvelles conditions depuis mai 2025. Ce qui s'est arrêté, ce sont les nouvelles inscriptions : Optus dit se concentrer sur les clients ayant déjà une messagerie OptusNet, et l'inscription à de nouveaux services n'est pas disponible actuellement."
+    },
+    {
+      "q": "Faut-il un mot de passe d'application pour la messagerie OptusNet ?",
+      "a": "Non. Optus n'émet pas de mots de passe spécifiques aux applications et il n'y a pas d'interrupteur distinct pour autoriser les clients de messagerie externes. Le mot de passe de la boîte s'authentifie directement. Si un mot de passe correct est refusé, vérifiez si la boîte relève toujours d'une offre active liée à un service Optus éligible plutôt que de chercher une page de sécurité."
+    },
+    {
+      "q": "Mon courrier OptusNet est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis Optus en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte OptusNet à votre IA",
+    "sub": "Toujours en service, toujours en IMAP. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

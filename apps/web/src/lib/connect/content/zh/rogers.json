@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://www.rogers.com/customer/support/article/update-email-settings",
+    "https://ca.help.yahoo.com/kb/rogers/SLN15241.html",
+    "https://ca.help.yahoo.com/kb/rogers/SLN28681.html",
+    "https://business.shaw.ca/support/products/shaw-hosting-sunset"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Rogers Yahoo 应用密码",
+    "helpUrl": "https://ca.help.yahoo.com/kb/rogers/SLN15241.html",
+    "usernameForm": "你完整的 Rogers Yahoo 地址，通常是 name@rogers.com，请完整输入。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Rogers Yahoo 邮箱与 Claude：应用密码的陷阱",
+    "description": "Rogers 邮箱运行在 Yahoo 上。通过 IMAP（imap.broadband.rogers.com）将 rogers.com 连接到 Claude，但 Rogers 现在表示已停止生成应用密码。"
+  },
+  "hero": {
+    "eyebrow": "Rogers Yahoo Mail + AI",
+    "titleLine1": "将 Rogers Yahoo 收件箱连接到",
+    "titleLine2": "Claude、Cursor、任意 MCP 客户端",
+    "lead": "Rogers 邮箱就是挂着 rogers.com 名字的 Yahoo 邮箱。mcpemails 通过 IMAP 连接它，让你的 AI 代理可以读取、搜索、发送、回复和归档邮件，前提是你的账户仍能生成应用密码。",
+    "answer": "Claude 无法自行连接 Rogers Yahoo 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.broadband.rogers.com 的 993 端口，使用 Rogers Yahoo 应用密码而不是你在网页邮箱中输入的密码认证。有一个真正的陷阱需要先检查：Rogers 自己的设置文章现在声明已不再提供应用密码生成，而 Yahoo 的 Rogers 帮助页面仍在介绍 Create app password 按钮，所以在据此做计划之前，请先打开你的账户安全页面看看。如果已有应用密码或仍能创建，一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "应用密码（如果你的账户还能生成）",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Rogers Yahoo Mail 如何连接：IMAP，以及凭据问题",
+    "body": "每个 rogers.com 邮箱都是挂着 Rogers 品牌的 Yahoo 邮箱。我们连接的 SMTP 服务器虽然通过 <code>smtp.broadband.rogers.com</code> 访问，返回的却是 <code>smtp.mail.yahoo.com</code> 的问候语，而 IMAP 在 <code>imap.broadband.rogers.com</code> 的 993 端口通过 TLS 响应。这个平台很适合自动化：它声明了 MOVE、UIDPLUS、SPECIAL-USE、IDLE 和 SASL-IR，所以文件夹用途是已知的，移动是原子的，复制时会返回新的邮件 id。悬而未决的不是传输，而是凭据。无法打开 Yahoo 自己登录窗口的邮件客户端需要应用密码，而 Rogers 当前的设置文章明确写道<b>应用密码生成已不再可用</b>，并指向其 Rogers Yahoo Mail 变更常见问题；与此同时，Yahoo 的 Rogers 帮助栏目仍在介绍如何在 External connections 下创建应用密码。请检查你自己的账户安全页面，而不是依赖其中任何一份文档。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "打开 Rogers Yahoo 账户安全页面，查找应用密码",
+      "p": "用你的 <code>@rogers.com</code> 地址登录，打开账户安全，在 <b>External connections</b> 下查找 <b>Create app password</b>。如果有，创建一个名为 <code>mcpemails</code> 的应用密码并复制代码；Yahoo 只显示一次。如果没有这个选项，那是 Rogers 的变更而不是故障，该账户无法使用基于密码的连接。"
+    },
+    {
+      "h": "输入 rogers.com 地址和应用密码",
+      "p": "在 mcpemails 中选择 IMAP / SMTP，在用户名栏填写完整的 rogers.com 地址，粘贴应用密码。不要使用 Rogers Yahoo 网页邮箱密码，它会在 IMAP 层被拒绝。下方的服务器和端口已自动填好，并已通过实时 TLS 连接验证。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "关于应用密码，Rogers 和 Yahoo 目前的文档说法相反",
+      "p": "Rogers 自己关于设置 Rogers Yahoo 邮箱的文章开头就写着应用密码生成已不再可用。与此同时，Yahoo 的 Rogers 帮助栏目仍在一步步教你在账户安全页面创建应用密码，并指出即使修改主密码，应用密码仍然有效。两者都是厂商的现行页面。务实的理解是：Rogers 正在引导所有人使用原生的 Rogers Yahoo 登录窗口，已有的应用密码在删除前继续有效，而能否创建新的应用密码，取决于你的账户，而不是文档。下结论之前先看看那个页面。"
+    },
+    {
+      "h": "服务器声明的 OAuth 机制并不向你开放",
+      "p": "Rogers 的 IMAP 主机在 PLAIN 之外还提供 OAUTHBEARER 和 XOAUTH2。它们是给 Rogers 和 Yahoo 已注册的邮件应用用的，也就是那些在应用内弹出 Rogers Yahoo 登录窗口的应用。没有任何自助页面能让客户为自己获取令牌，所以在能力列表中看到 OAuth，并不意味着应用密码关闭后还有替代途径。"
+    },
+    {
+      "h": "Rogers Business 邮箱正在停用，那是另一项服务",
+      "p": "Rogers 自 2025 年 9 月起一直在关闭旧的 Rogers Business 邮箱以及托管的域名和子域名，账户被禁用，数据被永久删除。其支持材料明确指出，这不涉及消费者 <code>rogers.com</code> 或 <code>shaw.ca</code> 地址，它们继续可用。因此，托管域名上的企业邮箱正走在被删除的路上，需要迁移，而个人 rogers.com 地址不受该计划影响。"
+    },
+    {
+      "h": "不再发放新的 rogers.com 或 shaw.ca 地址",
+      "p": "你可以保留已有的消费者地址，但 Rogers 不再创建新的 rogers.com 或 shaw.ca 邮箱。如果你打算为代理开一个新地址，它不能在这些域名上，你连接的邮箱必须是已经存在的。"
+    }
+  ],
+  "limits": [
+    "Rogers 背后的 Yahoo SMTP 主机声明的最大邮件大小约为 39 MB，因此带大附件的邮件在发出之前就会被拒绝。",
+    "如果你的账户已无法生成应用密码，mcpemails 就无法连接它。没有仅凭密码的备选方案，我们也不是在 Rogers Yahoo OAuth 登录窗口中注册的应用之一。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Rogers 邮箱吗？",
+      "a": "不能直接使用。Claude 没有内置的 Rogers 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到该邮箱后，Claude 就能对你的 rogers.com 邮件进行读取、搜索、发送、回复、定时和整理，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。前提是你的账户能够使用应用密码。"
+    },
+    {
+      "q": "Rogers 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.broadband.rogers.com，端口 993，隐式 TLS；SMTP 为 smtp.broadband.rogers.com，端口 465，同样是隐式 TLS。两者均已通过实时 TLS 连接验证，都是挂着 Rogers 名称的 Yahoo 基础设施。用户名是你完整的 rogers.com 地址。"
+    },
+    {
+      "q": "我还能创建 Rogers 应用密码吗？",
+      "a": "取决于你的账户，而厂商文档自相矛盾。Rogers 的设置文章说应用密码生成已不再可用；Yahoo 的 Rogers 帮助页面仍在介绍 External connections 下的 Create app password 按钮。请打开你的 Rogers Yahoo 账户安全页面，看看哪种说法对你成立。你已有的应用密码在删除之前会继续有效。"
+    },
+    {
+      "q": "我的 Rogers 企业邮箱会受影响吗？",
+      "a": "旧的 Rogers Business 邮箱和托管域名自 2025 年 9 月起已进入停用流程，邮箱被禁用、数据被删除。该计划与消费者 rogers.com 和 shaw.ca 地址无关，它们继续可用。如果你的地址位于企业托管域名上，请在它被关闭之前迁移，而不是在这里连接它。"
+    },
+    {
+      "q": "我的 Rogers 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 实时获取邮件并交给你的 AI 客户端。凭据（包括应用密码）经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Rogers Yahoo 收件箱",
+    "sub": "先确认你的应用密码，然后几分钟即可连接。一个收件箱永久免费，无需信用卡。"
+  }
+}

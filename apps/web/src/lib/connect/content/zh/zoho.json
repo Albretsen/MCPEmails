@@ -1,20 +1,33 @@
 {
+  "_sources": [
+    "https://www.zoho.com/mail/help/imap-access.html",
+    "https://www.zoho.com/mail/help/zoho-smtp.html",
+    "https://help.zoho.com/portal/en/kb/accounts/multi-factor-authentication/articles/application-specific-passwords"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "应用专用密码",
+    "helpUrl": "https://help.zoho.com/portal/en/kb/accounts/multi-factor-authentication/articles/application-specific-passwords",
+    "usernameForm": "你完整的 Zoho 地址，包括域名：自定义域名上为 name@yourdomain.com，免费个人账户为 name@zohomail.com。",
+    "status": "active"
+  },
   "meta": {
-    "title": "将 Zoho Mail 连接到 Claude（及任意 AI）",
-    "description": "用应用专用密码通过 IMAP 将 Zoho Mail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的 Zoho Mail，1 个收件箱永久免费。"
+    "title": "将 Zoho Mail 连接到 Claude、Cursor 与 MCP 客户端",
+    "description": "通过 IMAP（imap.zoho.com:993）将 Zoho Mail 连接到 Claude、Cursor 及任意 MCP 客户端。IMAP 默认关闭，主机名取决于你的 Zoho 数据中心。"
   },
   "hero": {
     "eyebrow": "Zoho Mail + AI",
     "titleLine1": "将 Zoho Mail 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
-    "lead": "几分钟即可为你的 AI 代理接入一个真正的 Zoho 收件箱。用 IMAP 和一个应用专用密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+    "lead": "几分钟即可为你的 AI 代理接入一个真正的 Zoho 收件箱。用 IMAP 和应用密码即可读取、搜索、发送、回复、定时与整理邮件，同一个收件箱可在所有 MCP 客户端中使用，而不止一个。",
     "meta0": "1 个收件箱永久免费",
-    "meta1": "应用专用密码，无需 OAuth 配置",
-    "meta2": "邮件实时获取，绝不存储"
+    "meta1": "应用密码，无需 OAuth 配置",
+    "meta2": "邮件实时获取，绝不存储",
+    "answer": "Claude 无法自行连接 Zoho Mail。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.zoho.com 的 993 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。有两件事必须先做对：新 Zoho 邮箱的 IMAP 访问在你开启之前是关闭的；主机名取决于你的 Zoho 数据中心，所以在欧盟或印度创建的账户使用的是不同的主机名。一个收件箱永久免费。"
   },
   "method": {
-    "title": "Zoho 如何连接：IMAP 与应用专用密码",
-    "body": "Zoho Mail 通过 IMAP/SMTP 连接。先在 Zoho 中启用 IMAP 访问（默认是关闭的），如果你启用了双重认证则生成一个应用专用密码，再连同你的 Zoho 地址一起粘贴到 mcpemails。mcpemails 支持 Zoho 的所有数据中心区域。"
+    "title": "Zoho 如何连接：IMAP 与应用密码",
+    "body": "Zoho Mail 通过 IMAP/SMTP 连接。先在 Zoho 中开启 IMAP 访问（默认关闭），如果使用双重认证，请生成应用专用密码，然后连同 Zoho 地址一起粘贴到 mcpemails。mcpemails 支持所有 Zoho 数据中心区域。"
   },
   "setup": [
     {
@@ -22,8 +35,8 @@
       "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
-      "h": "启用 IMAP 并生成应用专用密码",
-      "p": "在 Zoho Mail 中开启 IMAP 访问（设置 → 邮件账户 → IMAP 访问）。如果你启用了双重认证，请在 Zoho 账户的安全设置中生成一个应用专用密码。"
+      "h": "开启 IMAP 并生成应用密码",
+      "p": "在 Zoho Mail 中开启 IMAP 访问（Settings、Mail Accounts、IMAP Access）。如果使用双重认证，请在 Zoho Account 的 Security 中生成应用专用密码。"
     },
     {
       "h": "粘贴到 mcpemails",
@@ -34,8 +47,57 @@
       "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],
+  "gotchas": [
+    {
+      "h": "Zoho 运营六个数据中心，你的主机名跟随你注册时所在的那一个",
+      "p": "Zoho 保持着各自独立的区域数据中心，分别通过 <code>zoho.com</code>、<code>zoho.eu</code>、<code>zoho.in</code>、<code>zoho.com.au</code>、<code>zoho.jp</code> 和 <code>zohocloud.ca</code> 访问。在其中一个创建的邮箱，无法通过另一个的主机名访问，而本页表格中的设置是美国区的。五秒钟的检查方法：在 mail.zoho.com 登录，看地址栏最终变成什么。如果停在 <code>zoho.eu</code>，你的 IMAP 和 SMTP 主机也以 <code>.eu</code> 结尾。Zoho 也会在 Settings、Mail Accounts 的 Server Configuration Details 下列出适用于你账户的确切主机对。<b>区域不匹配是 Zoho 连接失败最常见的原因</b>，而它表现为认证错误而不是服务器错误，这就是为什么人们要重置四次密码才找到它。"
+    },
+    {
+      "h": "在有人开启之前 IMAP 是关闭的，而且要逐个邮箱开启",
+      "p": "Zoho 的邮箱出厂时禁用了 IMAP 访问。请依次进入 Settings、Mail Accounts，点击该地址，勾选 <b>IMAP Access</b> 并保存。有两个细节容易让人中招。它是按邮箱单独设置的，所以为你自己的地址开启，对同事的地址毫无作用。而在开启之前，Zoho 会直接拒绝登录，失败与密码错误无法区分。"
+    },
+    {
+      "h": "免费和付费 Zoho 账户在文档中使用不同的主机名",
+      "p": "Zoho 自己的配置页面为个人和免费账户列出 <code>imap.zoho.com</code> 和 <code>smtp.zoho.com</code>，为付费组织账户列出 <code>imappro.zoho.com</code> 和 <code>smtppro.zoho.com</code>，并在两者之上叠加上述区域后缀规则。本页验证的主机是 <code>imap.zoho.com</code>。如果你的地址位于付费套餐下的自定义域名上，请使用 Zoho 在 Server Configuration Details 下列出的主机对，而不要假设是通用的那一对，因为那才是针对你具体账户的权威答案。"
+    },
+    {
+      "h": "没有 SPECIAL-USE，也没有 AUTH=LOGIN",
+      "p": "Zoho 的 IMAP 服务器确实声明了 <code>MOVE</code>、<code>UIDPLUS</code>、<code>IDLE</code> 和 <code>SASL-IR</code>，所以移动是原子的，认证只需一次往返。它没有声明 <code>SPECIAL-USE</code>，这意味着已发送、草稿、已删除和垃圾邮件文件夹按名称而不是按用途匹配：重命名一个系统文件夹，或者在非英文界面中创建邮箱，寻找“Sent”的代理就会找不到它，除非你明确写出文件夹名。它的认证列表也很短，只有 <code>AUTH=PLAIN</code> 和 <code>AUTH=XOAUTH2</code>，没有 <code>AUTH=LOGIN</code>，所以写死使用 LOGIN 机制的客户端即使拿着正确的密码，也会在认证步骤失败。"
+    }
+  ],
+  "limits": [
+    "Zoho 的提交服务器声明的最大邮件大小约为 31 MB，低于大多数消费者服务商。",
+    "IMAP 必须在每个 Zoho 邮箱自己的设置中开启。没有人能从外部替你开启。",
+    "使用双重认证、联合登录或 SAML 的账户必须使用应用专用密码。普通账户密码无法通过认证。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Zoho Mail 吗？",
+      "a": "不能单独使用。Claude 没有内置的 Zoho 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到你的 Zoho 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。你必须先在邮箱上开启 IMAP 访问。"
+    },
+    {
+      "q": "Zoho Mail 的 IMAP 和 SMTP 设置是什么？",
+      "a": "对于美国区免费账户，IMAP 为 imap.zoho.com，端口 993，隐式 TLS；SMTP 为 smtp.zoho.com，端口 465，同样是隐式 TLS，两者均已通过实时 TLS 连接验证。付费组织账户在文档中使用 imappro 和 smtppro 名称，而每个区域数据中心都会改变域名后缀。用户名是你的完整地址。"
+    },
+    {
+      "q": "我的账户在哪个 Zoho 数据中心？",
+      "a": "在 mail.zoho.com 登录，看浏览器最终跳转到哪里。重定向到 zoho.eu、zoho.in、zoho.com.au、zoho.jp 或 zohocloud.ca 就说明了区域，你的邮件主机名也带有同样的后缀。要获得确切答案，请打开 Settings，然后是 Mail Accounts，阅读 Server Configuration Details 部分，其中列出了 Zoho 期望你的客户端使用的主机和端口。"
+    },
+    {
+      "q": "为什么我的 Zoho 密码被拒绝？",
+      "a": "三个原因，按顺序排查。该邮箱尚未在 Settings、Mail Accounts 下开启 IMAP 访问。主机名属于与你账户所在不同的 Zoho 数据中心。或者该账户使用了双重认证、联合登录或 SAML，此时 Zoho 要求使用应用专用密码，而不是普通密码。"
+    },
+    {
+      "q": "这适用于 Zoho 自定义域名或 Zoho Workplace 吗？",
+      "a": "适用。你自有域名上的邮箱在开启 IMAP 访问后以同样的方式连接，以完整地址作为用户名。请从该账户内的 Server Configuration Details 获取主机名，而不是从通用指南中获取，因为付费组织账户和非美国区域都会改变名称。"
+    },
+    {
+      "q": "我的 Zoho 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 Zoho 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。在 Zoho 中撤销应用专用密码，或重新关闭 IMAP 访问，都会立即断开该邮箱。"
+    }
+  ],
   "ctaBand": {
     "title": "给你的 AI 一个 Zoho 收件箱",
-    "sub": "几分钟即可连接 Zoho 邮箱。一个收件箱永久免费，无需信用卡。"
+    "sub": "几分钟即可连接 Zoho Mail。一个收件箱永久免费，无需信用卡。"
   }
 }

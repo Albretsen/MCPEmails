@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.scalahosting.com/kb/use-imap-settings-to-add-my-email-address-to-an-email-client/",
+    "https://www.scalahosting.com/kb/how-to-setup-email-account-client-setup-ssl-tls-settings-pop-imap/",
+    "https://www.scalahosting.com/blog/scalahosting-introduces-spanel-powered-shared-and-email-hosting-plans/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://www.scalahosting.com/kb/use-imap-settings-to-add-my-email-address-to-an-email-client/",
+    "usernameForm": "你在 SPanel 或 cPanel 中创建的完整邮箱地址，例如 team@yourdomain.com。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "ScalaHosting 邮箱接入 Claude：SPanel 与 cPanel IMAP",
+    "description": "ScalaHosting 部分套餐用 SPanel，部分用 cPanel。在 Connect device 中找到设置，再通过 IMAP 993 把邮箱交给 Claude。一个收件箱免费。"
+  },
+  "hero": {
+    "eyebrow": "ScalaHosting + AI",
+    "titleLine1": "将 ScalaHosting 邮箱连接到 Claude，",
+    "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 ScalaHosting 邮箱。无论你的账户运行 SPanel 还是 cPanel，都能通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行连接 ScalaHosting 邮箱。mcpemails 是一个托管 MCP 服务器，通过 993 端口的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。ScalaHosting 没有共享的邮件主机名：你的邮件服务器是你自己的域名或托管服务器的名称，两种面板都会在该地址的 Connect device 下列出。你用的是哪种面板取决于套餐，因为 SPanel 和 cPanel 都在使用中。认证使用邮箱密码。一个收件箱免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "SPanel 中的邮箱密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "ScalaHosting 邮箱如何连接：SPanel 或 cPanel，IMAP 993",
+    "body": "ScalaHosting 的不寻常之处在于，它在行业标准面板之外还提供自家的控制面板。<b>SPanel</b> 是它们的自研面板，托管 VPS 套餐免费附带，如今也用于以 SPanel 驱动的共享主机和邮件托管。<b>cPanel</b> 仍然可用，既是旧共享主机套餐的基础，也是托管 VPS 结账时的付费附加项。无论哪种，邮件的表现都一样：IMAP 使用 993 端口 SSL，SMTP 使用 465 端口，文档中另列出 587 作为提交备选，用户名是完整邮箱地址。主机名是你自己服务器的名称，所以要从面板而不是某篇文章中获取。在 SPanel 中，依次是 <b>Email Accounts</b>、蓝色的 <b>Action</b> 按钮、<b>Connect device</b>。在 cPanel 中，依次是 <b>Email Accounts</b>、<b>Connect Devices</b>。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "在你所用的面板中打开 Connect device",
+      "p": "SPanel 位于你自己的服务器上，通过 <code>yourdomain.com/spanel/login</code> 访问。登录后打开 <b>Email Accounts</b>，找到该地址，点击蓝色的 <b>Action</b> 按钮并选择 <b>Connect device</b>。SPanel 会在弹窗中显示收信和发信的主机名与端口。在 cPanel 账户中，对应的是 <b>Email Accounts</b>、<b>Connect Devices</b>，然后查看 Mail Client Manual Settings 区块。"
+    },
+    {
+      "h": "设置或找回邮箱密码",
+      "p": "IMAP 检查的是该地址的密码，而不是你的 ScalaHosting 客户区登录密码。在 SPanel 中，于 Email Accounts 下创建或编辑该地址，如需强密码可使用 Generate 按钮。然后把它粘贴到 mcpemails，以完整地址作为用户名，并填入你复制的主机名。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "SPanel 没有统一的登录页面，人们常在找它上浪费时间",
+      "p": "并不存在可以登录的 <code>spanel.scalahosting.com</code>。SPanel 运行在你自己的服务器上，你要通过自己的域名访问，即 <code>yourdomain.com/spanel/login</code>。这会让习惯先在主机商网站登录的人摸不着头脑。这也意味着，如果你域名的 DNS 已不再指向 ScalaHosting，你也无法通过该名称访问面板，需要改用服务器的 IP 或主机名。"
+    },
+    {
+      "h": "你用的是哪种面板取决于购买选择，而不是套餐等级",
+      "p": "在托管 VPS 上，cPanel 是付费附加项，而 SPanel 是附带的，按 ScalaHosting 自己的数据，绝大多数新 VPS 客户用的是 SPanel。较早的共享主机和邮件托管套餐基于 cPanel；较新的 SPanel 驱动套餐则不是。所以两位花费相近的 ScalaHosting 客户可能拥有完全不同的面板，为其中一种写的指南在另一种中找不到对应的界面。在照着任何 ScalaHosting 邮箱教程操作之前，先确认你眼前的是哪种面板。"
+    },
+    {
+      "h": "你的设置在注册时已通过邮件发送，并存档在客户区中",
+      "p": "ScalaHosting 会在欢迎邮件中发送账户的邮件服务器信息。即使那封邮件早已不见，也无需联系支持就能找回：登录客户区，打开 <b>My Details</b>，然后是 <b>Email History</b>，那里保存了他们发给你的每一封邮件。无法进入面板时，这个存档是获取服务器主机名最快的途径，而几乎没人知道它的存在。"
+    }
+  ],
+  "limits": [
+    "mcpemails 连接的是邮箱，而不是服务器。SPanel 自己的工具、备份和安全功能保持原样。",
+    "在托管 VPS 上，你可能在开通后更改过邮件系统。如果是这样，Connect device 弹窗报告的仍是 SPanel 当初配置的内容，可能已不再是实际在监听的服务。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 ScalaHosting 邮箱吗？",
+      "a": "不能直接使用。Claude 没有 ScalaHosting 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件。这在 SPanel 账户和 cPanel 账户上完全一样，因为两者提供的都是普通 IMAP。"
+    },
+    {
+      "q": "ScalaHosting 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 993 端口 SSL，SMTP 为 465 端口 SSL，提交也可用 587。主机名是你自己托管服务器的名称，而不是 ScalaHosting 的共享地址，所以请从 SPanel 的 Connect device 弹窗或 cPanel 的 Connect Devices 中读取。两者的用户名都是你的完整邮箱地址。"
+    },
+    {
+      "q": "在 SPanel 中哪里可以找到邮箱设置？",
+      "a": "在 yourdomain.com/spanel/login 登录 SPanel，打开 Email Accounts，在列表中找到该地址，点击蓝色的 Action 按钮并选择 Connect device。SPanel 随后会在弹窗中显示收信和发信的主机名、端口和加密方式。创建账户时发送的欢迎邮件中也有同样的值。"
+    },
+    {
+      "q": "为什么我的 ScalaHosting 邮箱密码被拒绝？",
+      "a": "因为邮箱密码与你的 ScalaHosting 客户区登录密码是分开的，也与 SPanel 管理员密码是分开的。请在面板的 Email Accounts 下编辑该地址来重置密码。确认用户名是完整的邮箱地址，并且使用的是面板显示的服务器主机名，而不是猜测的名称。"
+    },
+    {
+      "q": "我的 ScalaHosting 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从你的 ScalaHosting 服务器实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 ScalaHosting 收件箱",
+    "sub": "几分钟即可连接 ScalaHosting 邮箱。一个收件箱永久免费，无需信用卡。"
+  }
+}

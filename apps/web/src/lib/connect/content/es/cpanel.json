@@ -1,21 +1,32 @@
 {
+  "_sources": [
+    "https://docs.cpanel.net/cpanel/email/email-accounts/",
+    "https://docs.cpanel.net/cpanel/email/set-up-mail-client/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://docs.cpanel.net/cpanel/email/set-up-mail-client/",
+    "usernameForm": "La dirección de correo completa, por ejemplo you@yourdomain.com. Nunca el acceso a tu cuenta de cPanel.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Conecta cPanel a Claude (y a cualquier IA)",
-    "description": "Conecta cPanel a Claude, Cursor, ChatGPT y a cualquier cliente MCP por IMAP con la contraseña del buzón. Deja que la IA lea, envíe, programe y organice tu correo. Una bandeja gratis, para siempre."
+    "title": "Conecta cPanel a Claude, Cursor y clientes MCP",
+    "description": "Conecta un buzón de cPanel a Claude, Cursor y cualquier cliente MCP por IMAP. Consulta tu servidor real en Email Accounts, Connect Devices, Mail Client Manual Settings."
   },
   "hero": {
     "eyebrow": "cPanel + IA",
-    "titleLine1": "Conecta cPanel a Claude,",
+    "titleLine1": "Conecta cPanel a Claude",
     "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
-    "lead": "Dale a tu agente de IA una bandeja cPanel real en minutos. Lee, busca, envía, responde, programa y organiza correo con IMAP y la contraseña del buzón, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+    "lead": "Dale a tu agente de IA una bandeja real de cPanel en minutos. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña de tu buzón, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
     "meta0": "1 bandeja gratis, para siempre",
-    "meta1": "La contraseña del buzón, sin configurar OAuth",
+    "meta1": "La contraseña de tu buzón, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no puede llegar a cPanel por su cuenta. mcpemails es un servidor MCP alojado que lo conecta por IMAP con la contraseña del buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
+    "answer": "Claude no puede acceder por sí solo a cPanel. mcpemails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
   },
   "method": {
-    "title": "Cómo se conecta cPanel: IMAP y la contraseña del buzón",
-    "body": "Un buzón de cPanel, el que lees en el webmail Roundcube u Horde, se conecta por IMAP/SMTP con la contraseña definida en cPanel, en Email Accounts. No hay contraseña de aplicación ni OAuth. El servidor suele ser <code>mail.tudominio.com</code>, y cPanel muestra los valores exactos en Email Accounts, Connect Devices, dentro de Mail Client Manual Settings. Usa la columna segura SSL/TLS, no la que va sin cifrar."
+    "title": "Cómo se conecta cPanel: IMAP y la contraseña de tu buzón",
+    "body": "Un buzón de cPanel, del tipo que lees en el webmail Roundcube o Horde, se conecta por IMAP/SMTP con la contraseña definida en cPanel en Email Accounts. No hay contraseña de aplicación ni OAuth. El servidor suele ser <code>mail.yourdomain.com</code>, y cPanel muestra los valores exactos en Email Accounts, Connect Devices, en Mail Client Manual Settings. Usa la columna segura SSL/TLS, no la que va sin cifrar."
   },
   "setup": [
     {
@@ -24,19 +35,68 @@
     },
     {
       "h": "Consulta tus ajustes en cPanel",
-      "p": "En cPanel, abre Email Accounts y pulsa Connect Devices en el buzón. Copia los servidores y puertos seguros de IMAP y SMTP desde Mail Client Manual Settings. Si no conoces la contraseña del buzón, define una nueva en esa misma pantalla."
+      "p": "En cPanel, abre Email Accounts y haz clic en Connect Devices para el buzón. Copia los servidores y puertos IMAP y SMTP seguros de Mail Client Manual Settings. Si no sabes la contraseña del buzón, define una nueva en esa misma pantalla."
     },
     {
-      "h": "Pégala en mcpemails",
-      "p": "Elige IMAP / SMTP, añade tu dirección de cPanel, los servidores de abajo y la contraseña para conectar la bandeja de forma segura."
+      "h": "Pégalo en mcpemails",
+      "p": "Elige IMAP / SMTP y añade tu dirección de cPanel, los servidores de abajo y la contraseña para conectar la bandeja de forma segura."
     },
     {
       "h": "Pega la URL MCP en tu IA",
       "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
     }
   ],
+  "gotchas": [
+    {
+      "h": "No hay un servidor de correo cPanel, solo tu servidor, y el panel es la única autoridad sobre su nombre",
+      "p": "cPanel es un software que ejecuta tu empresa de hosting, no un servicio de correo, así que no existe un nombre de servidor compartido que rellenar de antemano. Cada cuenta responde en la máquina en la que está alojada. El único lugar que muestra la verdad para tu cuenta es <b>Email Accounts</b>, luego <b>Connect Devices</b> en la fila de la dirección, luego el bloque <b>Mail Client Manual Settings</b>. cPanel muestra ahí dos tablas: <b>Secure SSL/TLS Settings</b>, con IMAP en el 993, POP3 en el 995 y SMTP en el 465, y una tabla sin SSL con el 143, el 110 y el 587 que debes ignorar. Copia el servidor entrante y el saliente de la tabla segura exactamente como aparecen, incluso si el nombre no se parece en nada a tu dominio."
+    },
+    {
+      "h": "mail.yourdomain.com suele resolver y suele fallar la comprobación del certificado",
+      "p": "La indicación predeterminada de cPanel es <code>mail.example.com</code>, y ese nombre normalmente apunta a la máquina correcta, por eso los puertos sin cifrar parecen funcionar. Con TLS a menudo no, porque el certificado que presenta el servidor pertenece al servidor compartido y no a tu dominio. cPanel lo resuelve con una sustitución: su propia documentación dice que el sistema usa el nombre del servidor cuando el dominio no tiene un certificado válido, y usa el subdominio <code>mail</code> cuando el certificado no coincide con el nombre del servidor. Esa sustitución es justamente la razón por la que el valor de Connect Devices es a veces un nombre de servidor que nunca has visto. Úsalo igualmente. Una discrepancia de certificado aquí es un problema de nombres, no un ataque, y saltarse el aviso no es la solución."
+    },
+    {
+      "h": "Un buzón puede tener restringido el inicio de sesión o el envío mientras parece perfectamente sano",
+      "p": "cPanel pone un bloque <b>Restrictions</b> en cada buzón, accesible desde <b>Email Accounts</b>, luego <b>Manage</b>. Logging In se puede poner en Suspend, lo que bloquea el webmail y cualquier cliente de correo sin cambiar la contraseña. Sending Outgoing Email se puede poner en Suspend, que rechaza los mensajes salientes, o en <b>Hold</b>, que los deja en cola en silencio durante cuatro días y luego desiste. Hold es la peor de las tres para un agente de IA: el envío se acepta, parece que ha salido bien y nunca llega nada. Si el correo parece desaparecer, abre Restrictions antes de depurar cualquier otra cosa."
+    },
+    {
+      "h": "Tu proveedor puede publicar su propia variante de estos ajustes, y la suya manda",
+      "p": "Esta página describe el patrón genérico de cPanel. Cada empresa de hosting se desvía de él y documenta ella misma la desviación. Bluehost, por ejemplo, pone <code>mail.example.com</code> solo en el bloque sin cifrar y da el dominio sin prefijo para el seguro. A2 Hosting, ahora hosting.com, te dice que uses el nombre completo del servidor, como <code>mi3-ss78.a2hosting.com</code>, porque el certificado compartido cubre el servidor. Si tenemos una página para tu proveedor concreto, sigue esa, porque lleva los valores exactos. Si no, el panel Connect Devices dentro de tu propio cPanel tiene la última palabra."
+    }
+  ],
+  "limits": [
+    "No podemos rellenar de antemano los servidores de un buzón de cPanel, porque el nombre de servidor pertenece a tu servidor y no a un servicio compartido. Tienes que pegarlo desde Connect Devices.",
+    "Algunas empresas de hosting bloquean con cortafuegos el envío saliente o desactivan el IMAP externo en los planes compartidos. cPanel sigue mostrando los ajustes en ese caso, así que un rechazo ahí es una cuestión para tu proveedor, no un problema de ajustes.",
+    "mcpemails conecta el buzón. Los reenviadores, alias, respuestas automáticas, filtros y cuotas se quedan en cPanel y no son visibles para tu cliente de IA."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de cPanel?",
+      "a": "No directamente. Claude no tiene un conector integrado para servidores de correo cPanel. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, con las mismas credenciales que usaría un cliente de correo de escritorio, y la misma conexión funciona también desde Cursor y ChatGPT."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de cPanel?",
+      "a": "Los puertos son estándar: IMAP en el 993 y SMTP en el 465, ambos con TLS implícito, con el 143 y el 587 como equivalentes sin cifrar que no deberías usar. El nombre de servidor no es estándar y varía según la cuenta de hosting. Tómalo de Email Accounts, Connect Devices, Mail Client Manual Settings, y usa la tabla Secure SSL/TLS."
+    },
+    {
+      "q": "¿Cómo encuentro el nombre de mi servidor de correo cPanel?",
+      "a": "Inicia sesión en cPanel, abre Email Accounts y haz clic en Connect Devices junto a la dirección. Baja hasta Mail Client Manual Settings y lee el servidor entrante y el saliente en la tabla Secure SSL/TLS. Puede ser mail.yourdomain.com, tu dominio sin prefijo o un nombre de servidor de tu proveedor. El que aparezca es el correcto para TLS."
+    },
+    {
+      "q": "¿Por qué recibo un aviso de certificado para mail.mydomain.com?",
+      "a": "Porque el servidor presenta un certificado emitido para la máquina compartida y no para tu dominio. El nombre que escribiste no figura en ese certificado, así que un cliente que valida de forma estricta rechaza la conexión. La solución es conectarse al nombre de servidor que cPanel indica en la tabla Secure SSL/TLS, que es el nombre que el certificado cubre realmente."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de correo de cPanel?",
+      "a": "Predominan tres causas. Usaste el acceso a tu cuenta de cPanel en lugar de la contraseña definida en la dirección de correo concreta. El buzón tiene Logging In en Suspend dentro de Restrictions. O estás apuntando a un nombre de servidor que resuelve a otro sitio. Restablece la contraseña del buzón desde Email Accounts, luego Manage, y revisa Restrictions en esa misma pantalla."
+    },
+    {
+      "q": "¿Se almacena mi correo de cPanel en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de tu propio servidor por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
   "ctaBand": {
-    "title": "Dale a tu IA una bandeja cPanel",
+    "title": "Dale a tu IA una bandeja de cPanel",
     "sub": "Conecta cPanel en minutos. Una bandeja gratis para siempre, sin tarjeta."
   }
 }

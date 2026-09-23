@@ -1,0 +1,95 @@
+{
+  "_sources": [
+    "https://docs.plesk.com/en-US/obsidian/customer-guide/quick-start-with-plesk/set-up-mail-accounts/2-access-your-mailbox.65691/",
+    "https://support.plesk.com/hc/en-us/articles/12377513710359-How-to-configure-a-secure-connection-when-setting-up-a-Plesk-email-account-in-an-email-client",
+    "https://support.plesk.com/hc/en-us/articles/12377516977175-How-to-assign-an-SSL-certificate-per-domain-to-secure-the-mail-server-in-Plesk-SNI-support",
+    "https://support.plesk.com/hc/en-us/articles/12387614382743-The-default-certificate-is-used-for-IMAP-connection-when-the-Plesk-Premium-Mail-is-installed"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://docs.plesk.com/en-US/obsidian/customer-guide/quick-start-with-plesk/set-up-mail-accounts/2-access-your-mailbox.65691/",
+    "usernameForm": "Tu dirección de correo completa, por ejemplo johndoe@example.com. Plesk rechaza la parte local sola.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Correo de Plesk en Claude: configuración IMAP y acceso MCP",
+    "description": "Los buzones de Plesk se conectan a Claude por IMAP 993. Usa el propio dominio, no mail.domain.com: sin SNI, el subdominio mail recibe otro certificado."
+  },
+  "hero": {
+    "eyebrow": "Plesk + IA",
+    "titleLine1": "Conecta un buzón de Plesk a Claude,",
+    "titleLine2": "Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA un buzón de Plesk real. Lee, busca, envía, responde, programa y organiza correo por IMAP, en cualquier servidor con Plesk Obsidian, lo aloje quien lo aloje.",
+    "answer": "Claude no puede llegar a un buzón de Plesk por su cuenta. mcpemails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Plesk es un software de panel de control y no una empresa de alojamiento, así que no hay un nombre de servidor compartido: el servidor de correo es tu propio dominio, o el nombre del servidor, y Plesk muestra el par exacto en Mail Accounts, luego Mail Client Setup. La autenticación usa la contraseña que se configura en el buzón en Plesk, no el acceso al panel, y una bandeja es gratis.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña del buzón configurada en Plesk",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta el correo de Plesk: el propio dominio, IMAP 993",
+    "body": "Plesk es un software de panel de control que usan miles de proveedores de alojamiento y servidores autogestionados, así que la configuración depende del servidor y no de un proveedor. La forma siempre es la misma: IMAP en el puerto 993 con SSL, SMTP en el 465, o en el 587 donde el puerto de envío está habilitado, y la dirección de correo completa como nombre de usuario. La guía de inicio rápido de Plesk te dice que introduzcas <b>tu nombre de dominio</b>, por ejemplo <code>example.com</code>, como servidor entrante y saliente. Es algo deliberado y no una simplificación. Plesk protege el correo con el certificado del dominio cuando se lo pides, que cubre el dominio pero no un subdominio <code>mail.</code>, así que <code>mail.example.com</code> suele responder con el certificado por defecto de todo el servidor. Lee los valores en <b>Websites & Domains</b>, el dominio, <b>Mail Accounts</b>, <b>Mail Client Setup</b>, y usa exactamente lo que aparece ahí."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no necesita tarjeta."
+    },
+    {
+      "h": "Abre Mail Client Setup en Plesk",
+      "p": "En Plesk ve a <b>Websites & Domains</b>, selecciona el dominio cuyo correo quieres, abre <b>Mail Accounts</b> y haz clic en el icono <b>Mail Client Setup</b> de la dirección. Plesk muestra los nombres de servidor entrante y saliente, los puertos IMAP y SMTP y el tipo de seguridad que espera ese servidor. Cópialos tal cual. Cada instalación de Plesk configura el TLS del correo a su manera, así que esta pantalla es más fiable que cualquier guía general de Plesk, incluida esta."
+    },
+    {
+      "h": "Configura la contraseña del buzón y comprueba que el certificado cubre el servidor",
+      "p": "En <b>Mail Accounts</b>, abre la dirección y configura ahí una contraseña. Esa contraseña es la que comprueba IMAP, no tu acceso a Plesk. Si tu servidor es autogestionado, asegúrate de que el servidor de correo tiene asignado un certificado válido en <b>Tools & Settings</b>, luego <b>SSL/TLS Certificates</b>, y de que el nombre que figura en él coincide con el nombre de servidor que vas a usar."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "IMAP y SMTP no admiten SNI, así que mail.tudominio.com recibe el certificado por defecto del servidor",
+      "p": "HTTPS elige el certificado correcto porque el navegador anuncia el nombre del servidor durante el handshake. Los protocolos de correo no funcionan así: el daemon no tiene una forma fiable de saber qué nombre marcaste, así que sirve un certificado por conexión pase lo que pase. En una instalación estándar de Plesk eso significa que solo el propio dominio y el nombre del servidor están bien protegidos, y <code>mail.example.com</code> presenta el que sea el certificado por defecto del servidor. La discrepancia de nombre resultante no es un error de configuración por tu parte, es cómo funciona el protocolo."
+    },
+    {
+      "h": "La solución es una casilla al emitir el certificado, y es fácil pasarla por alto",
+      "p": "Cuando emitas un certificado de Let's Encrypt en Plesk, marca <b>Assign the certificate to the mail domain</b>. Después, en los <b>Mail Settings</b> de ese dominio, selecciónalo en <b>SSL/TLS certificate for mail</b>. Hacen falta los dos pasos. Emitir el certificado sin la casilla deja el correo con el certificado por defecto aunque el sitio web esté perfectamente protegido, y por eso tantos servidores Plesk tienen a la vez un sitio válido y un handshake de correo roto."
+    },
+    {
+      "h": "Instalar Plesk Premium Mail devuelve IMAP al certificado por defecto sin avisar",
+      "p": "Plesk tiene un caso documentado en el que activar Premium Mail en una suscripción hace que las conexiones IMAP vuelvan al certificado por defecto del servidor, incluso donde el certificado por dominio estaba bien asignado antes. El correo sigue fluyendo y el webmail sigue funcionando, así que nada anuncia el cambio; solo lo notan los clientes estrictos. La solución está en el panel: abre <b>Subscriptions</b>, el dominio, <b>Plesk Premium Email</b>, y pulsa <b>Fix</b>."
+    }
+  ],
+  "limits": [
+    "Plesk es software, no una empresa de alojamiento, así que tu proveedor puede haber cambiado los valores por defecto. Donde esta página y tu pantalla Mail Client Setup no coincidan, manda la pantalla.",
+    "Algunos proveedores deshabilitan el puerto 587 y dejan solo el 465, o al revés. El Mail Client Setup de Plesk muestra qué puerto de envío acepta realmente ese servidor."
+  ],
+  "faq": [
+    {
+      "q": "¿Claude funciona con un buzón de Plesk?",
+      "a": "No directamente. Claude no tiene un conector para servidores Plesk. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar. Como el correo de Plesk es IMAP y SMTP normales, funciona igual en cualquier proveedor que use Plesk."
+    },
+    {
+      "q": "¿Cuál es la configuración IMAP y SMTP de Plesk?",
+      "a": "IMAP es el puerto 993 con SSL y SMTP el puerto 465 con SSL, o el 587 donde el puerto de envío está habilitado. La documentación de Plesk dice que introduzcas tu nombre de dominio, por ejemplo example.com, como servidor entrante y saliente, y que uses la dirección de correo completa como nombre de usuario. Confírmalo en la pantalla Mail Client Setup de tu dominio."
+    },
+    {
+      "q": "¿Por qué el correo de Plesk da un error de nombre de certificado?",
+      "a": "Porque los protocolos de correo no admiten SNI como HTTPS, así que el servidor presenta un solo certificado por conexión. Por defecto cubre el dominio y el nombre del servidor, no mail.tudominio.com. Emite un certificado con la opción de asignarlo al dominio de correo y luego selecciónalo en los Mail Settings del dominio para el TLS del correo."
+    },
+    {
+      "q": "¿Dónde encuentro la configuración de correo en Plesk?",
+      "a": "Ve a Websites and Domains, elige el dominio, abre Mail Accounts y haz clic en el icono Mail Client Setup junto a la dirección. Plesk muestra los nombres de servidor, los puertos y el tipo de cifrado que espera ese servidor en concreto. Como cada proveedor configura Plesk de forma distinta, esa pantalla es la referencia válida para tu servidor."
+    },
+    {
+      "q": "¿Se almacena mi correo de Plesk en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de tu servidor Plesk por IMAP en cada petición y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Plesk",
+    "sub": "Conecta un buzón de Plesk en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

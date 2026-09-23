@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://kb.hosting.com/docs/accessing-e-mail-accounts-with-client-applications",
+    "https://hosting.com/blog/a-new-chapter-begins-a2-hosting/",
+    "https://www.prnewswire.com/news-releases/a2-hosting-becomes-hostingcom-with-aim-to-be-the-most-trusted-brand-in-hosting-302448950.html"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://kb.hosting.com/docs/accessing-e-mail-accounts-with-client-applications",
+    "usernameForm": "你的完整邮箱地址，例如 webmaster@yourdomain.com。不是 cPanel 用户名，也不是账单登录名。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 A2 Hosting 邮箱连接到 Claude 与 MCP 客户端",
+    "description": "A2 Hosting（现为 hosting.com）的邮箱通过端口 993 的 IMAP 连接到 Claude。请使用完整的服务器名称（如 mi3-ss78.a2hosting.com），以免出现 SSL 警告。"
+  },
+  "hero": {
+    "eyebrow": "A2 Hosting + AI",
+    "titleLine1": "将 A2 Hosting 邮箱连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 A2 Hosting 邮箱。使用你在 cPanel 中为邮箱设置的密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用而不止一个。",
+    "answer": "Claude 无法自行访问 A2 Hosting 邮箱。mcpemails 是一个托管 MCP 服务器，通过端口 993 的标准 IMAP 与之连接，使用你账户所在的邮件服务器，而不是某个共用的 a2hosting.com 地址，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。A2 Hosting 已于 2025 年 4 月更名为 hosting.com，但邮件平台没有变化：cPanel 会在 Email Accounts 下的 Connect Devices 中列出你的准确服务器地址。认证使用邮箱本身设置的密码，而不是控制面板的登录密码，1 个收件箱免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "来自 cPanel 的邮箱密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "A2 Hosting 邮箱如何连接：你自己的服务器名称，IMAP 993",
+    "body": "A2 Hosting 于 2025 年 4 月更名为 hosting.com，而邮件平台并没有随名称一起迁移。共享主机和经销商账户仍运行 cPanel，邮箱仍在端口 993 上提供 IMAP、在端口 465 上提供 SMTP，另有端口 587 可用于 STARTTLS。并不存在一个统一的 a2hosting.com 邮件服务器可供客户端指向，因为每个账户都位于各自的机器上。知识库给出了两种都可用的写法：用你自己的域名构成的 <code>mail.yourdomain.com</code>，以及完整的服务器名称，在原 A2 服务器群上形如 <code>mi3-ss78.a2hosting.com</code>，在 supercp 服务器群上形如 <code>sr10.supercp.com</code>。对于 TLS 连接，关键是服务器名称，因为共享证书覆盖的是服务器，而不是你的域名。请用完整邮箱地址和在 cPanel 中为该邮箱设置的密码登录。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "从 cPanel 中读取你真正的邮件服务器",
+      "p": "登录 hosting.com，打开该主机账户的 cPanel，进入 Email，然后打开 <b>Email Accounts</b>。在你要连接的地址所在行点击 <b>Connect Devices</b>。<b>Mail Client Manual Settings</b> 区块会列出你账户准确的安全收信服务器，它是服务器名称而不是你的域名，旁边列有端口 993 和 465。请原样复制该服务器地址。"
+    },
+    {
+      "h": "使用邮箱密码，而不是面板密码",
+      "p": "IMAP 验证的是邮箱地址本身设置的密码。如果你不知道这个密码，请在 Email Accounts 中点击该地址旁的 <b>Manage</b>，设置一个新密码。A2 Hosting 邮箱没有需要另外生成的应用专用密码。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "共享证书写的是 A2 服务器名，而不是你的域名",
+      "p": "<code>mail.yourdomain.com</code> 通常能解析到正确的机器，但 TLS 握手返回的证书是签发给 hosting.com 服务器的，而不是你的域名。严格校验证书的客户端会拒绝它，而且报错看起来像遭到攻击，而不像配置错误。A2 自己的文档对解决办法写得很明确：需要安全访问时，请用完整的服务器名称代替你的域名。请从 Connect Devices 中获取，不要凭记忆填写。"
+    },
+    {
+      "h": "两套服务器命名体系同时在用，更名也没有改动其中任何一套",
+      "p": "原 A2 服务器群上的账户，其服务器形如 <code>mi3-ss78.a2hosting.com</code>，开头部分代表数据中心。另一服务器群上的账户则形如 <code>sr10.supercp.com</code>。迁移到 hosting.com 并没有重命名这两套中的任何一套，所以你多年前记下的 <code>a2hosting.com</code> 主机名很可能仍然正确，而 <code>supercp.com</code> 主机名也并非钓鱼痕迹。两者都无法从你的域名推导出来，所以在这里靠猜测失败的概率，比只有一种命名方式的主机商更高。"
+    },
+    {
+      "h": "A2 没有应用专用密码，不管第三方指南怎么说",
+      "p": "好几篇流行的教程会告诉你，因为开启了双重身份验证，所以要生成应用专用密码。这条建议说的是 cPanel 和客户区的登录。IMAP 和 SMTP 直接验证邮箱密码，既没有第二因素，也根本没有应用专用密码机制。如果邮件登录被拒绝，那就是邮箱密码确实错了，请在 Email Accounts 中重置，不要去找一个并不存在的令牌。"
+    }
+  ],
+  "limits": [
+    "mcpemails 作用于邮箱，而不是主机账户。别名、转发器、自动回复和垃圾邮件过滤器仍在 cPanel 中管理，你的 AI 客户端看不到它们。",
+    "经销商和 VPS 账户可能位于 A2 在知识库中从未公布过的主机名上。该账户自己 cPanel 里的 Connect Devices 面板是唯一权威的来源。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 A2 Hosting 邮箱吗？",
+      "a": "不能直接使用。Claude 没有针对 cPanel 邮件主机的内置连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到你的 A2 Hosting 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，所用凭据与任何桌面邮件客户端相同。"
+    },
+    {
+      "q": "A2 Hosting 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 使用端口 993 和隐式 TLS，SMTP 使用端口 465，另有端口 587 可用于 STARTTLS。服务器地址因账户而异：要么是 mail.yourdomain.com，要么是完整的服务器名称，例如 mi3-ss78.a2hosting.com 或 sr10.supercp.com。A2 文档中还列出了 143 以及 25 或 2525 作为未加密的对应端口，你不应使用它们。"
+    },
+    {
+      "q": "更名为 hosting.com 改变了我的邮箱设置吗？",
+      "a": "没有。A2 Hosting 于 2025 年 4 月更名为 hosting.com，现有客户的套餐、服务器和主机名都保持不变。你的 a2hosting.com 或 supercp.com 邮件服务器名称仍可解析，出示的证书也相同。改变的只是网站和客户区的品牌。"
+    },
+    {
+      "q": "为什么我的 A2 Hosting 邮箱密码被拒绝？",
+      "a": "几乎总是因为你用了 cPanel 或客户区的密码。IMAP 检查的是创建各个邮箱地址时为其设置的密码。请在 cPanel 的 Email Accounts 中点击该地址旁的 Manage 进行重置，然后使用新密码。用户名必须是完整地址，而不是 @ 符号前面的部分。"
+    },
+    {
+      "q": "我的 A2 Hosting 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从你的 A2 Hosting 服务器实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 A2 Hosting 收件箱",
+    "sub": "几分钟即可连接 A2 Hosting 邮箱。1 个收件箱永久免费，无需信用卡。"
+  }
+}

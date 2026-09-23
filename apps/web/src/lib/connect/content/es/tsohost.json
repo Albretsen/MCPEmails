@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.123-reg.co.uk/welcome-tsohost/",
+    "https://www.123-reg.co.uk/help",
+    "https://help.tsohost.com/knowledge-base/article/11676",
+    "https://support.titan.email/hc/en-us/articles/900006137746-Send-email-using-Post-SMTP-plugin-tsoHost-Users"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://www.123-reg.co.uk/help",
+    "usernameForm": "Tu dirección de correo completa, por ejemplo you@yourdomain.co.uk. Nunca tu acceso al panel de control de tsoHost o 123 Reg.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Correo de Tsohost en Claude tras el paso a 123 Reg",
+    "description": "Los buzones de Tsohost se siguen conectando a Claude por IMAP en el 993. La marca pasó a 123 Reg, así que toma tu servidor real de cPanel, en Connect Devices."
+  },
+  "hero": {
+    "eyebrow": "Tsohost + IA",
+    "titleLine1": "Conecta el correo de Tsohost a Claude,",
+    "titleLine2": "Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA un buzón real de Tsohost. Lee, busca, envía, responde, programa y organiza correo por IMAP, con los ajustes tomados de la única pantalla que sigue siendo fiable tras dos migraciones.",
+    "answer": "Claude no puede acceder a un buzón de Tsohost por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993 y SMTP en el 465, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. No hay un servidor de correo compartido de tsohost.com al que apuntar un cliente: el servidor se construye a partir de tu propio dominio o del nombre de tu servidor de alojamiento, y la copia fiable está en cPanel, en Email Accounts y luego Connect Devices. La autenticación es con la contraseña establecida en ese buzón concreto, nunca con tu acceso al panel de control. La marca tsoHost se ha integrado en 123 Reg, así que empieza por el Control Panel de 123 Reg. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña del buzón desde cPanel",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta el correo de Tsohost: tu propio servidor y una marca que se ha mudado",
+    "body": "Los buzones de Tsohost son buzones de cPanel. Responden por IMAP en el puerto 993 y por SMTP en el 465 sobre TLS implícito, con el 143 y el 587 como equivalentes STARTTLS, y el nombre del servidor es propio de cada cliente y no compartido: o bien <code>mail.yourdomain.co.uk</code>, construido a partir de tu dominio, o bien el nombre del servidor en el que está tu cuenta. Ninguno se puede adivinar, por eso toda respuesta correcta empieza en cPanel y no en una tabla de ajustes. La complicación propia de Tsohost es que la marca ya no existe como empresa independiente. tsoHost se ha integrado en <b>123 Reg</b>: <code>tsohost.com</code> redirige a una página de bienvenida de 123 Reg, la antigua base de conocimiento <code>help.tsohost.com</code> redirige al centro de ayuda de 123 Reg, y 123 Reg indica a los clientes de tsoHost que inicien sesión con sus credenciales de siempre y busquen sus servicios en la pestaña <b>My products</b> del Control Panel de 123 Reg. Tus buzones se mantienen. Tus marcadores y los números de artículo antiguos, no."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
+    },
+    {
+      "h": "Entra en el cPanel que contiene el buzón",
+      "p": "Inicia sesión en 123-reg.co.uk con tus credenciales de tsoHost, abre el <b>Control Panel</b> y ve a la pestaña <b>My products</b>. Busca el paquete de alojamiento al que pertenece el dominio y abre su cPanel. Algunas cuentas todavía responden a un Control Panel de tsoHost y otras ya se han trasladado, y 123 Reg gestiona el soporte de forma distinta para cada una, así que anota en cuál acabas antes de necesitar ayuda."
+    },
+    {
+      "h": "Toma el servidor real de Connect Devices",
+      "p": "En cPanel ve a <b>Email</b>, luego <b>Email Accounts</b>, y pulsa <b>Connect Devices</b> en la fila de la dirección. Baja hasta <b>Mail Client Manual Settings</b> y usa el bloque <b>Secure SSL/TLS Settings</b>, no el estándar. Copia el servidor entrante exactamente como aparece, con IMAP en el 993 y SMTP en el 465. Si nadie tiene la contraseña del buzón, pulsa <b>Manage</b> junto a la dirección y establece una nueva; el correo de cPanel no tiene mecanismo de contraseñas de aplicación."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Añade el buzón en mcpemails con la dirección completa y esa contraseña, y luego pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Todas las páginas de ajustes de Tsohost que guardaste se han redirigido a otra parte",
+      "p": "Esto es lo que te hace perder una tarde. Los clientes de Tsohost pasaron por dos mudanzas seguidas: la plataforma de alojamiento heredada de tsoHost se migró a cPanel, y después la propia marca tsoHost se integró en 123 Reg. Ambas cambiaron dónde está la información correcta. Los enlaces a artículos de <code>help.tsohost.com</code> responden ahora con una redirección al centro de ayuda de 123 Reg en lugar del artículo que guardaste, y cualquier nombre de servidor copiado de una guía de tsoHost anterior a cPanel describe una plataforma en la que tu buzón ya no funciona. El panel Connect Devices dentro del cPanel que abre hoy tu cuenta es la única fuente que refleja dónde está realmente el buzón."
+    },
+    {
+      "h": "Un buzón que inicia sesión perfectamente puede seguir siendo el buzón equivocado",
+      "p": "cPanel crea y autentica sin problema un buzón en un servidor al que ya no se dirige el correo de tu dominio, y Tsohost vendía alojamiento de correo con Titan junto al correo de cPanel, con Titan publicando sus propias indicaciones de configuración específicas para tsoHost. Así que comprueba primero el registro MX del dominio. Si apunta a la infraestructura de Titan, tu buzón real está en Titan en <code>imap.titan.email</code>, y la cuenta de cPanel con el mismo nombre es una caja vacía que acepta tu contraseña y no te muestra nada. Un agente que informa de una bandeja vacía en una dirección que sabes que tiene mucho movimiento casi siempre es esto."
+    },
+    {
+      "h": "El certificado de mail.yourdomain.co.uk solo se emite si ese nombre resuelve al servidor",
+      "p": "AutoSSL de cPanel pide un certificado que cubra tu dominio y los subdominios de servicio, <code>mail.</code>, <code>webmail.</code>, <code>cpanel.</code> y el resto, pero descarta los que no resuelven a ese servidor en el momento de la emisión. Muchos dominios de Tsohost tienen el DNS gestionado en otro sitio distinto del alojamiento, y muchos tuvieron registros reescritos durante la migración, así que <code>mail.yourdomain.co.uk</code> acaba sin resolver o resolviendo sin un SAN que coincida. El handshake presenta entonces el certificado del nombre propio del servidor, y un cliente estricto lo rechaza con una discrepancia de nombre que parece un ataque. La solución es el nombre del servidor de Connect Devices, no aceptar el aviso."
+    },
+    {
+      "h": "Dos migraciones después, nadie recuerda la contraseña del buzón",
+      "p": "IMAP se autentica con la contraseña establecida en la dirección de correo concreta en cPanel, una credencial distinta del acceso al panel de control de tsoHost o 123 Reg y distinta a su vez de la contraseña de la cuenta de cPanel. Tras una migración de plataforma y otra de marca, esa contraseña por buzón suele ser lo único que nadie apuntó, y como el acceso al panel sigue funcionando, la gente supone que la contraseña del correo debe coincidir y culpa al nombre del servidor. Restablécela desde <b>Manage</b> junto a la dirección en Email Accounts."
+    }
+  ],
+  "limits": [
+    "mcpemails conecta el buzón, no la cuenta de alojamiento. Los reenvíos, alias, respuestas automáticas, filtros de spam y el DNS siguen en cPanel y en el Control Panel de 123 Reg, y tu cliente de IA no puede verlos ni cambiarlos.",
+    "Si la dirección resulta ser un buzón de Titan y no de cPanel, ninguno de estos ajustes se aplica. Conéctala como Titan, con los servidores propios de Titan y la contraseña del buzón del panel de control de Titan.",
+    "Esta página describe el correo de cPanel tal como existe después de la migración. Los nombres de servidor de la plataforma heredada de tsoHost, anteriores al paso a cPanel, ya no describen dónde está tu buzón y no resolverán a él."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de Tsohost?",
+      "a": "No directamente. Claude no tiene un conector integrado para servidores de correo cPanel. Conectar un servidor MCP como mcpemails a tu buzón de Tsohost por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, con las credenciales que usaría un cliente de correo de escritorio, y la misma conexión funciona desde Cursor y ChatGPT."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Tsohost?",
+      "a": "IMAP usa el puerto 993 con TLS implícito y SMTP el puerto 465, con el 143 y el 587 como equivalentes STARTTLS. El nombre del servidor es propio de tu cuenta y no compartido, o bien mail.yourdomain.co.uk o bien el nombre propio de tu servidor, y cPanel muestra el correcto en Email Accounts, luego Connect Devices, en el bloque Secure SSL/TLS. El nombre de usuario es siempre la dirección de correo completa."
+    },
+    {
+      "q": "Tsohost ahora es 123 Reg. ¿Dónde encuentro mis ajustes de correo?",
+      "a": "Inicia sesión en 123-reg.co.uk con tus credenciales de tsoHost de siempre, abre el Control Panel y usa la pestaña My products para llegar al paquete de alojamiento. Abre su cPanel, luego Email Accounts y luego Connect Devices para la dirección. Tus buzones y su contenido se trasladaron sin cambios; solo se movieron la marca, la página de inicio de sesión y el centro de ayuda."
+    },
+    {
+      "q": "¿Por qué mi cliente de correo avisa del certificado de mail.mydomain.co.uk?",
+      "a": "Porque ese nombre no figura en el certificado que presenta el servidor. AutoSSL de cPanel solo incluye el subdominio de correo cuando resuelve al servidor de alojamiento, y muchos dominios de Tsohost tienen el DNS en otro sitio o sufrieron cambios de registros durante la migración. Usa el nombre del servidor que aparece en Connect Devices en lugar del prefijo mail, y no desactives la validación de certificados para saltarte el aviso."
+    },
+    {
+      "q": "Mi buzón de Tsohost se conecta pero no tiene correo. ¿Qué pasa?",
+      "a": "Comprueba el registro MX del dominio. Un buzón de cPanel existe y acepta inicios de sesión tanto si el correo del dominio se dirige a ese servidor como si no, así que una contraseña correcta en el buzón equivocado parece una bandeja vacía. Si el MX apunta a Titan, el buzón activo es el de Titan y debe conectarse con los servidores de Titan y no con los de tu servidor de alojamiento."
+    },
+    {
+      "q": "¿Se almacena mi correo de Tsohost en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de tu servidor de alojamiento por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva. El cliente de IA que conectes sí recibe el contenido de todo lo que lee, algo que conviene decidir de forma deliberada con un buzón de empresa."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Tsohost",
+    "sub": "Conecta un buzón de Tsohost en minutos con el servidor de Connect Devices. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

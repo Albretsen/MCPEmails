@@ -1,0 +1,93 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "apps/web/app/api/mcp/route.ts",
+    "apps/web/messages/en/docs.json"
+  ],
+  "meta": {
+    "title": "API for e-post-MCP-server: curl, JSON-RPC og Bearer-auth",
+    "description": "Kall mcpemails sin MCP-server direkte over HTTP. Ett Streamable HTTP-endepunkt, JSON-RPC 2.0, en avgrenset bearer-nøkkel og hele verktøykatalogen. Én innboks gratis."
+  },
+  "hero": {
+    "eyebrow": "HTTP + e-post",
+    "titleLine1": "Kall MCP-serveren for e-post",
+    "titleLine2": "rett fra curl eller et skript",
+    "lead": "Ingen klient, ingen SDK. Ett Streamable HTTP-endepunkt som snakker JSON-RPC 2.0, autentisert med en avgrenset bearer-nøkkel du kan tilbakekalle med ett klikk.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Avgrenset API-nøkkel, kan tilbakekalles med ett klikk",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "Send JSON-RPC 2.0 med POST til https://mcpemails.com/api/mcp med en Authorization Bearer-header som inneholder en API-nøkkel fra dashbordet ditt. Støttede metoder er initialize, tools/list, tools/call, prompts/list og prompts/get."
+  },
+  "method": {
+    "title": "Slik kobler et skript eller en rå HTTP-klient seg til: en avgrenset API-nøkkel",
+    "body": "Et skript eller en rå HTTP-klient kjører ikke OAuth-flyten i nettleseren mot en ekstern MCP-server, så den autentiserer med et bearer-token i stedet. Opprett en API-nøkkel i dashbordet, kryss av bare for tilgangene (scopes) agenten trenger, og send den fra skriptet eller HTTP-klienten som en <code>Authorization: Bearer</code>-header. Tilkoblinger med nøkkel og med OAuth treffer det samme endepunktet og får den samme verktøykatalogen; forskjellen er bare hvordan tokenet skaffes."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto og koble til en postkasse",
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Gmail kobles til med Google-innlogging med ett klikk; iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+    },
+    {
+      "h": "Opprett en avgrenset API-nøkkel",
+      "p": "I Dashboard, API Keys klikker du Create key. Gi den et navn og kryss av bare for tilgangene denne agenten trenger: <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> og <code>manage:automations</code>. Nøkkelen ser ut som <code>mcpe_</code> etterfulgt av 64 heksadesimale tegn og vises bare én gang, så kopier den før du lukker dialogen."
+    },
+    {
+      "h": "Kall endepunktet",
+      "p": "Send en JSON-RPC 2.0-body med POST til <code>https://mcpemails.com/api/mcp</code> med nøkkelen i <code>Authorization</code>-headeren. Start med <code>tools/list</code> for å se katalogen, og deretter <code>inbox_list</code> for å finne ID-ene til postkassene dine."
+    },
+    {
+      "h": "Håndter svaret",
+      "p": "Resultatene kommer tilbake som JSON-RPC 2.0. Vellykkede resultater har også et typet <code>structuredContent</code>-objekt, så et skript slipper å tolke fritekst."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Send nøkkelen i headeren, ikke i spørrestrengen",
+      "p": "En nøkkel i <code>?key=</code> eller <code>?api_key=</code> godtas fortsatt for integrasjoner som er eldre enn headeren, men den bør ikke brukes i noe nytt. Legitimasjon i URL-er blir liggende i nettleserhistorikk, proxylogger, referrer-headere og overvåkingssystemer, som du ikke har kontroll over. <code>Authorization</code>-headeren er den støttede veien."
+    },
+    {
+      "h": "Utgående kall tar en idempotensnøkkel, og nye forsøk uten en er en reell risiko",
+      "p": "Sending, svar, videresending, sending av utkast og planlagt sending godtar en valgfri idempotensnøkkel, som respekteres i 24 timer. Et nettverkstidsavbrudd under en sending er tvetydig av natur: e-posten kan godt ha gått. Med en idempotensnøkkel er et nytt forsøk trygt. Uten en er et nytt forsøk en ny e-post."
+    },
+    {
+      "h": "Lange operasjoner tar faktisk lang tid",
+      "p": "Et søk-og-flytt i en stor postkasse har i produksjon blitt målt til rundt 152 sekunder, og proxyen tillater opptil 270 sekunder før den gir opp av seg selv. Sett et tidsavbrudd i klienten som tar høyde for det, i stedet for de vanlige få sekundene, ellers avbryter du operasjoner som var i ferd med å lykkes."
+    },
+    {
+      "h": "Det finnes ingen push, i noen retning",
+      "p": "Ingen webhooks, ingen hendelser startet av serveren, ingen callback-URL å registrere. Å reagere på ny e-post betyr polling, for eksempel <code>email_read</code> med <code>action: \"list\"</code> og bare uleste, med det intervallet arbeidsflyten din trenger. Grensene er 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel."
+    }
+  ],
+  "limits": [
+    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger.",
+    "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post vekker aldri agenten din av seg selv. Vil du reagere på innkommende e-post, må du polle etter en tidsplan.",
+    "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
+  ],
+  "faq": [
+    {
+      "q": "Kan jeg bruke dette uten en MCP-klient?",
+      "a": "Ja. Det er et vanlig HTTPS-endepunkt som snakker JSON-RPC 2.0, så curl, en cron-jobb, en backend-tjeneste eller et hvilket som helst HTTP-bibliotek kan kalle det. Autentiser med en bearer-API-nøkkel fra Dashboard, API Keys. Verktøykatalogen er identisk med den en MCP-klient ser."
+    },
+    {
+      "q": "Hvilke JSON-RPC-metoder støttes?",
+      "a": "initialize, tools/list, tools/call, prompts/list og prompts/get. Vellykkede resultater har et typet structuredContent-objekt ved siden av det menneskelesbare innholdet, og det er det et skript bør lese."
+    },
+    {
+      "q": "Hvordan gjør jeg nye forsøk trygge?",
+      "a": "Send med en idempotensnøkkel på utgående operasjoner. Sending, svar, videresending, sending av utkast og planlagt sending godtar en og respekterer den i 24 timer, så å prøve den samme forespørselen på nytt etter et tidsavbrudd kan ikke gi en ny e-post. Lesing er naturlig trygt å prøve på nytt."
+    },
+    {
+      "q": "Hva er grensene for antall forespørsler?",
+      "a": "100 forespørsler per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger. Mislykkede kall og inbox_list faktureres ikke."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Hver melding hentes direkte fra leverandøren din for forespørselen som ba om den, og sendes rett videre til klienten din. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, slik at fremtidige kall kan autentiseres. Sletter du innboksen i dashbordet, eller tilbakekaller tilgangen hos leverandøren, avsluttes tilkoblingen med en gang."
+    }
+  ],
+  "ctaBand": {
+    "title": "Automatiser innboksen med skript",
+    "sub": "Ett endepunkt, én avgrenset nøkkel. Én innboks gratis for alltid, uten kort."
+  }
+}

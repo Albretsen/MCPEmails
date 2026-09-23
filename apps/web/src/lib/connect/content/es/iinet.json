@@ -1,0 +1,96 @@
+{
+  "_sources": [
+    "https://help.iinet.net.au/iinet-email-messaging-company"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón de tu proveedor de correo actual",
+    "helpUrl": "https://help.iinet.net.au/iinet-email-messaging-company",
+    "usernameForm": "Tu dirección iinet.net.au completa. A qué servidor pertenece ahora depende de si la dirección se inscribió en The Messaging Company.",
+    "status": "discontinued"
+  },
+  "meta": {
+    "title": "El correo de iiNet dejó iiNet: qué se conecta a Claude",
+    "description": "iiNet abandonó el correo y las direcciones iinet.net.au pasaron a The Messaging Company. Qué sigue conectándose a Claude por IMAP y qué se borró para siempre."
+  },
+  "hero": {
+    "eyebrow": "Correo de iiNet + IA",
+    "titleLine1": "iiNet dejó de gestionar el correo.",
+    "titleLine2": "Esto es lo que sigue conectándose",
+    "lead": "iiNet traspasó sus buzones a otra empresa y dejó de emitir direcciones. Eso cambia de dónde salen tus ajustes, no que un agente de IA pueda trabajar en el buzón.",
+    "answer": "iiNet ha salido del negocio del correo. Transfirió las direcciones iinet.net.au a otro proveedor australiano, The Messaging Company, cerró el periodo de inscripción, borró todas las direcciones que no se inscribieron e indica que no es posible crear nuevas direcciones de correo en el dominio iinet.net.au. Así que la pregunta no es si Claude puede llegar a iiNet, sino qué servidor tiene hoy tu buzón. mcpemails es un servidor MCP alojado que conecta cualquier buzón IMAP, incluida una antigua dirección de iiNet en su nuevo proveedor, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Los ajustes vienen de tu nuevo proveedor",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta ahora una dirección iinet.net.au: no a través de iiNet",
+    "body": "La página de ayuda de iiNet no deja lugar a dudas. Las direcciones se transfirieron a <b>The Messaging Company</b>, el plazo de inscripción ha terminado, todo lo que no se inscribió se ha borrado y no se puede recuperar, e iiNet pide a los clientes que lleven sus consultas de soporte a The Messaging Company porque ya no puede ayudarles. Las direcciones incluidas con un servicio de iiNet fueron gratuitas hasta el 15 de septiembre de 2024; después, The Messaging Company fijó sus propios precios. El nombre de servidor <code>mail.iinet.net.au</code> no ha desaparecido: sigue completando un handshake TLS en el puerto 993 y devolviendo un banner de capacidades, con un certificado emitido para <code>mail.tpg.com.au</code>, ya que TPG es el grupo al que pertenece iiNet. Tómalo exactamente por lo que es. Demuestra que el servidor está vivo; no demuestra que tu buzón esté en él, y desde luego no significa que iiNet vuelva a emitir direcciones."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
+    },
+    {
+      "h": "Averigua quién tiene hoy el buzón",
+      "p": "Si inscribiste la dirección, está en The Messaging Company, y son ellos quienes pueden decirte los nombres de servidor, los puertos y la contraseña. iiNet no puede, y lo dice. Si nunca la inscribiste, la dirección se borró y no hay nada que conectar; iiNet indica que las direcciones borradas no se pueden recuperar."
+    },
+    {
+      "h": "Introduce los ajustes que te da tu proveedor actual",
+      "p": "En mcpemails elige IMAP / SMTP y rellena el servidor, el puerto y la contraseña exactamente como los documente tu proveedor, con la dirección completa como nombre de usuario. Solo publicamos ajustes con los que hemos abierto nosotros mismos una conexión, así que aquí no mostramos los nombres de servidor de The Messaging Company. Tómalos de su material de soporte y no de un blog de terceros."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Un nombre de servidor activo no es un servicio activo",
+      "p": "<code>mail.iinet.net.au</code> responde hoy por IMAP con TLS y anuncia SASL-IR, IDLE, SPECIAL-USE y COMPRESS=DEFLATE, lo que corresponde a un servidor perfectamente sano. La gente lo toma como prueba de que el correo de iiNet está bien y de que los avisos de migración eran ruido. No lo prueba. Un nombre de servidor sigue resolviendo y un servidor sigue funcionando mucho después de que la empresa que hay detrás deje de emitir cuentas, y la propia página de iiNet dice que no se pueden crear nuevas direcciones iinet.net.au. Mantén separadas las dos afirmaciones cuando diagnostiques un fallo."
+    },
+    {
+      "h": "Las direcciones que nunca se inscribieron han desaparecido, no están latentes",
+      "p": "La inscripción era una acción que cada cliente tenía que realizar. Según iiNet, el periodo de inscripción ha terminado y cualquier dirección que no se inscribió se ha borrado y no se puede recuperar. Así que si tu inicio de sesión dejó de funcionar y nadie encuentra el buzón, la respuesta probable no es una contraseña olvidada. No hay restauración, ni archivo que solicitar, ni dirección de sustitución en el mismo dominio."
+    },
+    {
+      "h": "El buzón pasó a ser un producto de pago, y quien factura no es iiNet",
+      "p": "iiNet cubrió la dirección hasta el 15 de septiembre de 2024 para los clientes cuyo correo venía con su servicio, y The Messaging Company debía contactar con los clientes al menos 60 días antes con los precios que se aplicarían después. Una dirección que caducó por impago es asunto suyo. iiNet dirige todo el soporte de estas direcciones a The Messaging Company y no actuará sobre ellas."
+    },
+    {
+      "h": "Las solicitudes de soporte van a una empresa que la mayoría de guías no mencionan",
+      "p": "Los resultados de búsqueda sobre los ajustes de correo de iiNet siguen llenos de páginas que describen un servicio gestionado por iiNet con nombres de servidor de iiNet, escritas antes de la transferencia y nunca actualizadas. Si las sigues, acabarás esperando al teléfono con la empresa equivocada. La propia página de iiNet nombra al nuevo operador y da sus datos de contacto, que es el único punto de partida que merece la pena."
+    }
+  ],
+  "limits": [
+    "No publicamos ajustes verificados de The Messaging Company, porque no hemos abierto ninguna conexión con sus servidores. Tómalos de tu proveedor e introdúcelos a mano.",
+    "Una dirección iinet.net.au borrada no se puede conectar, recuperar ni volver a crear. Ningún servidor MCP cambia eso."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de iiNet?",
+      "a": "Claude no tiene un conector integrado para él, e iiNet ya no gestiona el servicio. Si tu dirección iinet.net.au sobrevivió a la transferencia a The Messaging Company, conectar un servidor MCP como mcpemails a ella por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, con los ajustes de servidor que te dé tu proveedor actual."
+    },
+    {
+      "q": "¿Qué pasó con el correo de iiNet?",
+      "a": "iiNet abandonó el correo y transfirió las direcciones de sus clientes a otro proveedor de correo australiano, The Messaging Company. El periodo de inscripción ha terminado, las direcciones que no se inscribieron se han borrado y no se pueden recuperar, e iiNet indica que no es posible crear nuevas direcciones en el dominio iinet.net.au."
+    },
+    {
+      "q": "¿Por qué sigue respondiendo mail.iinet.net.au si el servicio se trasladó?",
+      "a": "Porque el servidor sigue funcionando. Completa un handshake TLS en el puerto 993 y devuelve un banner de capacidades con un certificado para mail.tpg.com.au. Eso te dice que el servidor responde, y nada más. Si tu buzón concreto se sirve ahí, y si tus credenciales siguen siendo válidas, son cuestiones aparte que solo tu proveedor actual puede responder."
+    },
+    {
+      "q": "¿Puedo conseguir una dirección de correo iinet.net.au nueva?",
+      "a": "No. La página de ayuda de iiNet indica directamente que no es posible crear nuevas direcciones de correo con el dominio iinet.net.au. Si necesitas un buzón nuevo para que trabaje un asistente, tiene que ser en un proveedor que siga emitiéndolos, y mcpemails conecta cualquiera de ellos por IMAP."
+    },
+    {
+      "q": "¿Se almacena mi correo en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de tu proveedor por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA un buzón al que pueda llegar",
+    "sub": "Esté donde esté ahora tu antigua dirección de iiNet, conéctala por IMAP. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

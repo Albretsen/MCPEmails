@@ -1,20 +1,32 @@
 {
+  "_sources": [
+    "https://support.apple.com/en-us/102525",
+    "https://support.apple.com/en-us/102654"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "App 专用密码",
+    "helpUrl": "https://support.apple.com/en-us/102654",
+    "usernameForm": "Apple 的文档规定用户名是 iCloud 地址中的名称部分，即 johnappleseed 而不是 johnappleseed@icloud.com。如果被拒绝，请使用完整地址。",
+    "status": "active"
+  },
   "meta": {
-    "title": "将 iCloud 邮件连接到 Claude（及任意 AI）",
-    "description": "用 Apple App 专用密码将 iCloud 邮件连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的 iCloud 邮件，1 个收件箱永久免费。"
+    "title": "iCloud MCP 服务器：将 iCloud 邮件连接到 Claude",
+    "description": "是的，Claude 可以使用 iCloud 邮件。用 Apple App 专用密码两分钟即可连接，然后在任意 MCP 客户端中读取、搜索、发送和整理邮件。"
   },
   "hero": {
     "eyebrow": "iCloud 邮件 + AI",
-    "titleLine1": "将 iCloud 邮件连接到 Claude，",
-    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
-    "lead": "几分钟即可为你的 AI 代理接入一个真正的 iCloud 收件箱。用一个 Apple App 专用密码即可读取、搜索、发送、回复、定时与整理邮件：同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+    "titleLine1": "iCloud MCP 服务器",
+    "titleLine2": "适用于 Claude、Cursor 和 ChatGPT",
+    "lead": "几分钟即可为你的 AI 代理接入一个真正的 iCloud 收件箱。使用 Apple App 专用密码读取、搜索、发送、回复、定时与整理邮件，同一个收件箱可在所有 MCP 客户端中使用，而不止一个。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "App 专用密码，无需 OAuth",
-    "meta2": "邮件实时获取，绝不存储"
+    "meta2": "邮件实时获取，绝不存储",
+    "answer": "Apple 没有为 iCloud 邮件提供 OAuth，所以 Claude 无法直接连接它。mcpemails 使用 Apple App 专用密码通过 IMAP 连接你的 iCloud 收件箱，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置大约只需两分钟，1 个收件箱免费。"
   },
   "method": {
     "title": "iCloud 如何连接：App 专用密码",
-    "body": "iCloud 邮件通过 IMAP/SMTP 使用 <b>Apple App 专用密码</b>连接。在 appleid.apple.com 的「登录与安全 → App 专用密码」中生成一个（需开启双重认证），再连同你的 iCloud 地址一起粘贴到 mcpemails。"
+    "body": "iCloud 邮件使用 <b>Apple App 专用密码</b>通过 IMAP/SMTP 连接。在 appleid.apple.com 的 Sign-In & Security → App-Specific Passwords（登录与安全、App 专用密码）中生成一个（需要开启双重认证），然后连同你的 iCloud 地址一起粘贴到 mcpemails。"
   },
   "setup": [
     {
@@ -23,19 +35,69 @@
     },
     {
       "h": "生成 App 专用密码",
-      "p": "在 appleid.apple.com 进入「登录与安全 → App 专用密码」，创建一个（必须开启双重认证）。"
+      "p": "在 appleid.apple.com 进入 Sign-In & Security → App-Specific Passwords，创建一个密码（必须已开启双重认证）。"
     },
     {
       "h": "粘贴到 mcpemails",
-      "p": "填入你的 iCloud 地址和 App 专用密码，安全连接收件箱。"
+      "p": "填入你的 iCloud 地址和 App 专用密码，安全地连接收件箱。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
       "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],
+  "gotchas": [
+    {
+      "h": "双重认证是前提条件，而不是可选项",
+      "p": "Apple 只为受双重认证保护的 Apple 账户签发 App 专用密码。如果 account.apple.com 的 Sign-In and Security 中没有 App-Specific Passwords，原因就在这里，开启双重认证是第一步，而不是可有可无的加固措施。没有其他途径：Apple 没有为 iCloud 邮件提供 OAuth，而你的普通 Apple 账户密码在任何配置下都无法让邮件客户端通过认证。"
+    },
+    {
+      "h": "用户名通常不是你的完整邮箱地址",
+      "p": "Apple 的文档规定，收信用户名是 iCloud 地址的<b>名称部分</b>，例如 <code>johnappleseed</code> 而不是 <code>johnappleseed@icloud.com</code>。这与本站几乎所有其他服务商正好相反，习惯性地填入完整地址的人常会因此出错。较早的 <code>@me.com</code> 和 <code>@mac.com</code> 地址，以及 iCloud+ 自定义域名地址，都以同一个主账户名称登录。如果短格式被拒绝，Apple 自己的文档给出的备选方案是完整地址。"
+    },
+    {
+      "h": "发信使用 587 上的 STARTTLS，升级之前什么都不提供",
+      "p": "Apple 的提交服务器是端口 587 上的 <code>smtp.mail.me.com</code>，它以明文连接开始，再通过 STARTTLS 升级。本站列出的大多数服务商使用 465 上的隐式 TLS，所以对 iCloud 默认使用 465 的客户端只会卡住。同一处还有第二个陷阱：我们探测时，服务器在 STARTTLS 之前<b>完全没有声明任何认证机制</b>。过早读取机制列表的客户端会断定不支持认证并放弃，而实际上它只需要先升级连接。"
+    },
+    {
+      "h": "Apple 的 IMAP 服务器几乎什么都不声明，这改变了邮件的移动方式",
+      "p": "我们从 <code>imap.mail.me.com</code> 读回的能力列表异常简略。没有 <code>MOVE</code>，所以移动邮件以复制、更新标记和清除的方式完成，而不是一条原子命令，连接中途断开可能会让邮件同时留在两个文件夹中。没有 <code>IDLE</code>，所以无法向你推送任何东西，新邮件要靠查询才能发现。没有 <code>UIDPLUS</code>，所以复制后邮件的标识符不会返回，只能在目标文件夹中搜索。也没有 <code>SPECIAL-USE</code>，所以 Sent、Drafts、Trash 和 Junk 按名称而不是按角色匹配：对于用其他语言创建的邮箱，请明确写出文件夹名称，代理就能找到它。"
+    }
+  ],
+  "limits": [
+    "iCloud 不支持 IDLE，所以新邮件是在代理查询时发现的，而不是在到达的那一刻推送。",
+    "由于没有 MOVE 扩展，移动操作不是原子的。操作中途连接断开，可能会让邮件短暂地出现在两个文件夹中。",
+    "Apple 没有为 iCloud 邮件提供 OAuth。App 专用密码是唯一的途径，在你的 Apple 账户中撤销它会立即断开收件箱。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 iCloud 邮件吗？",
+      "a": "不能单独使用。Claude 没有内置的 iCloud 连接器，Apple 也没有为 iCloud 邮件公布 OAuth 接口。使用 Apple App 专用密码，通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理邮件，而且同一个连接也可在 Cursor 和 ChatGPT 中使用。"
+    },
+    {
+      "q": "iCloud 邮件的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.mail.me.com，端口 993，使用隐式 TLS。SMTP 为 smtp.mail.me.com，端口 587，使用 STARTTLS，而不是 465 上的隐式 TLS。两者的密码都是 Apple App 专用密码。Apple 的文档规定收信用户名为地址的名称部分。两个服务器均已在本页所示日期通过实时 TLS 连接确认。"
+    },
+    {
+      "q": "为什么我的 Apple 密码被拒绝？",
+      "a": "因为 iCloud 从不接受邮件客户端使用 Apple 账户密码。你需要在 account.apple.com 的 Sign-In and Security 下创建一个 App 专用密码，而该部分只有在开启双重认证后才会出现。如果密码正确但登录仍然失败，请尝试以地址的名称部分而不是完整地址作为用户名。"
+    },
+    {
+      "q": "可以用于 @me.com、@mac.com 或 iCloud+ 自定义域名吗？",
+      "a": "可以。它们都是同一个 iCloud 邮箱，通过相同的服务器和相同的 App 专用密码访问。iCloud+ 自定义域名地址是你 iCloud 账户上的一个别名，而不是单独的邮箱，所以它以你的主账户名称认证，其邮件也会进入同样的文件夹。"
+    },
+    {
+      "q": "我的 iCloud 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 Apple 实时获取邮件，并交给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。在你的 Apple 账户中撤销 App 专用密码，会立即在 Apple 那一端终止连接。"
+    }
+  ],
   "ctaBand": {
     "title": "给你的 AI 一个 iCloud 收件箱",
-    "sub": "几分钟即可连接 iCloud 邮箱。一个收件箱永久免费，无需信用卡。"
+    "sub": "几分钟即可连接 iCloud 邮件。1 个收件箱永久免费，无需信用卡。"
+  },
+  "guide": {
+    "intro": "也要连接 Fastmail 或其他 IMAP 邮箱？",
+    "label": "如何将 iCloud、Fastmail 或任意 IMAP 收件箱连接到 Claude",
+    "href": "/blog/connect-icloud-fastmail-imap-to-claude"
   }
 }

@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.hey.com/faqs/",
+    "https://www.hey.com/features/send-as/",
+    "https://github.com/basecamp/hey-cli"
+  ],
+  "auth": {
+    "method": "none",
+    "label": "Aucune connexion client n'existe",
+    "helpUrl": "https://www.hey.com/faqs/",
+    "usernameForm": "Il n'y a rien à saisir. HEY n'accepte aucune connexion IMAP, POP ou SMTP depuis un client, donc aucun identifiant de client mail n'existe pour une adresse HEY.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "HEY et l'IA : pas d'IMAP, et ce qui marche à la place",
+    "description": "HEY n'accepte aucune connexion IMAP, POP ou SMTP : mcpemails ne peut donc pas connecter une boîte HEY. Pourquoi 37signals l'a voulu ainsi, et les deux voies qui marchent."
+  },
+  "hero": {
+    "eyebrow": "HEY + IA",
+    "titleLine1": "HEY n'a pas d'IMAP, donc aucun",
+    "titleLine2": "serveur MCP hébergé ne peut l'atteindre",
+    "lead": "HEY est une messagerie fermée à dessein. Aucun client tiers et aucun serveur hébergé ne peut se connecter à une boîte hey.com. Cette page vous donne une image exacte de la situation et les voies qui permettent réellement à un agent IA d'accéder à votre courrier.",
+    "answer": "Non, et ce n'est pas faute d'une fonctionnalité de notre côté. HEY n'accepte aucune connexion IMAP, POP ou SMTP, que ce soit sur les adresses hey.com ou sur les domaines personnalisés HEY for Domains : mcpemails ne peut donc pas connecter une boîte HEY, et aucun autre serveur MCP hébergé non plus. 37signals considère cela comme un choix de conception plutôt que comme une lacune : le filtrage des expéditeurs, les règles par contact et l'organisation des fils de HEY vivent sur ses serveurs, et seules ses propres applications parlent ce protocole. Si vous voulez un agent dans HEY, 37signals propose hey-cli, qui fait tourner un serveur MCP en local sur votre compte connecté. mcpemails sert aux boîtes IMAP que vous gardez à côté, et une boîte y est gratuite.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Aucune connexion IMAP, POP ou SMTP",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment HEY se connecte : il ne se connecte pas, et c'est le produit",
+    "body": "La FAQ de HEY est sans détour : <b>HEY ne prend en charge ni IMAP ni POP</b>, et n'accepte pas non plus l'envoi par SMTP. Il n'y a aucun serveur vers lequel pointer un client, aucun port à ouvrir et aucun mot de passe d'application à générer. La raison est architecturale et non commerciale. Le filtrage des expéditeurs, la séparation entre Imbox et Paper Trail, les règles par contact et la gestion du « répondre à tous » de HEY sont tous des comportements côté serveur qu'un client IMAP générique ramènerait à de simples dossiers et indicateurs : 37signals n'a donc jamais exposé le protocole. Ce que HEY propose, ce sont des passerelles à la marge : vous pouvez transférer le courrier d'autres services <b>vers</b> HEY, envoyer depuis des adresses externes via leurs propres serveurs SMTP, et exporter toute la boîte sous forme de fichier <code>MBOX</code> à tout moment. Aucune de ces options n'est une connexion entrante, et c'est précisément ce dont un serveur MCP a besoin."
+  },
+  "setup": [
+    {
+      "h": "Créez le compte mcpemails gratuit",
+      "p": "Il suffit d'une adresse e-mail, sans carte bancaire. Vous obtenez une boîte connectée gratuite, que les étapes suivantes remplissent."
+    },
+    {
+      "h": "Choisissez la boîte dans laquelle l'agent travaillera vraiment",
+      "p": "Choisissez une boîte qui parle IMAP : votre adresse professionnelle, une boîte sur votre domaine chez Fastmail ou Migadu, un compte Gmail, n'importe quelle boîte avec un vrai serveur. C'est ce compte que mcpemails connecte, et c'est depuis lui que votre agent lit, envoie et classe."
+    },
+    {
+      "h": "Redirigez HEY vers elle, ou exportez depuis HEY",
+      "p": "Les clients HEY payants peuvent transférer le courrier entrant vers n'importe quelle autre adresse, ce qui recopie le nouveau courrier dans la boîte connectable. Pour tout ce qui se trouve déjà dans HEY, utilisez l'export <code>MBOX</code> et importez-le dans l'autre compte. Ce sont deux copies à sens unique : considérez la boîte HEY comme l'original."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Ajoutez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et l'agent dispose de cette boîte. Pour HEY lui-même, installez hey-cli de 37signals et lancez son serveur MCP en local dans un client capable de démarrer un processus local."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Send-As vous montre des réglages SMTP, mais uniquement vers l'extérieur",
+      "p": "La fonction Send-As de HEY demande le serveur SMTP, l'identifiant et le mot de passe d'un autre fournisseur, ou OAuth2 pour les comptes Gmail et Outlook, afin que HEY puisse envoyer depuis cette adresse. Les gens tombent sur cet écran, voient les mots SMTP et mot de passe, et en concluent que HEY parle ce protocole. C'est le cas, en tant que client, face au serveur de quelqu'un d'autre. Rien, nulle part, ne peut être un client SMTP ou IMAP face à HEY. Comme le dit leur propre documentation, SMTP sert à envoyer et n'a rien à voir avec la consultation du courrier."
+    },
+    {
+      "h": "HEY for Domains ne donne pas de serveur mail à votre domaine",
+      "p": "Sur un domaine personnalisé, vos enregistrements MX pointent vers l'infrastructure de HEY. Il n'y a derrière aucun <code>mail.yourdomain.com</code> auquel un client pourrait se connecter, car la boîte vit dans HEY, et non dans un panneau de contrôle d'hébergement qui vous appartient. Souscrire l'offre domaine change l'adresse de votre courrier, pas les protocoles."
+    },
+    {
+      "h": "HEY ne récupère pas le courrier de la boîte depuis laquelle vous avez transféré",
+      "p": "Le transfert fonctionne strictement à sens unique. HEY ne se connecte pas à des comptes externes pour en rapatrier le courrier : si vous recopiez le courrier dans l'autre sens pour le rendre connectable, l'agent voit la copie brute et non la version HEY. Les décisions du Screener, la séparation entre Imbox et Paper Trail et tout ce que vous avez classé dans HEY sont invisibles de l'autre côté."
+    }
+  ],
+  "limits": [
+    "Le travail effectué dans une copie transférée reste dans la copie. Une réponse que votre agent envoie depuis l'autre boîte n'apparaîtra pas dans le fil HEY, et les destinataires voient l'autre adresse, sauf si vous la définissez comme identité Send-As dans HEY.",
+    "Le serveur MCP de hey-cli tourne sur votre propre machine via stdin et stdout. C'est un processus local, pas une URL hébergée : il fonctionne dans les clients capables de lancer une commande, et non dans ceux qui n'acceptent qu'une adresse de point de terminaison."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec la messagerie HEY ?",
+      "a": "Pas via un serveur MCP hébergé, car HEY n'accepte aucune connexion IMAP ou SMTP. Cela fonctionne en revanche via hey-cli, l'outil en ligne de commande de 37signals, qui expose les boîtes, la recherche, les fils, les contacts, les tâches et les agendas sous forme d'outils MCP exécutés en local sur votre compte HEY connecté. Cette voie nécessite un client capable de démarrer un processus local."
+    },
+    {
+      "q": "HEY prend-il en charge IMAP ou POP ?",
+      "a": "Non. La FAQ de HEY indique clairement qu'il ne prend en charge ni IMAP ni POP, et il n'accepte pas non plus l'envoi SMTP depuis des clients. C'est le cas depuis le lancement de HEY, et c'est un choix produit délibéré, pas une fonctionnalité en attente. Il n'y a ni serveur, ni port, ni mot de passe d'application à trouver."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de HEY ?",
+      "a": "Il n'y en a aucun à publier. Toute page qui liste un nom d'hôte et un port pour hey.com fait une supposition. Les seuls réglages SMTP qui apparaissent dans HEY appartiennent à vos autres fournisseurs, saisis dans l'écran Send-As pour que HEY puisse envoyer du courrier depuis ces adresses."
+    },
+    {
+      "q": "Puis-je connecter une adresse HEY for Domains en IMAP ?",
+      "a": "Non. Un domaine personnalisé chez HEY reste une boîte HEY, avec des enregistrements MX pointant vers les serveurs de HEY. Le domaine vous donne l'adresse que vous voulez, pas un serveur mail à vous auprès duquel vous authentifier."
+    },
+    {
+      "q": "Quelle est la solution pratique pour donner accès à un agent IA à mon courrier si j'utilise HEY ?",
+      "a": "Deux options, que vous pouvez utiliser ensemble. Utilisez hey-cli en local pour HEY lui-même. Connectez une boîte IMAP distincte à mcpemails pour la correspondance que vous voulez faire traiter depuis n'importe quel client MCP, y compris ceux qui n'acceptent qu'une URL, et transférez-y le courrier si vous voulez un miroir de ce qui arrive dans HEY."
+    },
+    {
+      "q": "Puis-je exporter mon courrier hors de HEY ?",
+      "a": "Oui. HEY exporte à tout moment un fichier MBOX contenant votre courrier et vos pièces jointes, et ce fichier s'importe dans Apple Mail, Gmail, Outlook et d'autres services. Une archive importée ailleurs est lisible par un agent, mais c'est un instantané, pas votre boîte HEY en direct."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA une boîte qu'elle peut vraiment atteindre",
+    "sub": "HEY reste où il est. Connectez une boîte IMAP à côté, gratuite pour toujours, sans carte bancaire."
+  }
+}

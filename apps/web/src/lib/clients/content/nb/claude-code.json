@@ -1,0 +1,95 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/api/mcp/route.ts",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://code.claude.com/docs/en/mcp",
+    "docs/token-cost/research-spec.md"
+  ],
+  "meta": {
+    "title": "Koble e-post til Claude Code: MCP-oppsett med én kommando",
+    "description": "Gi Claude Code-CLI-en en ekte innboks med claude mcp add. OAuth i terminalen, ingen API-nøkkel, så lese, søke, sende og planlegge e-post fra skallet. Én innboks gratis."
+  },
+  "hero": {
+    "eyebrow": "Claude Code + e-post",
+    "titleLine1": "Koble innboksen din til Claude Code",
+    "titleLine2": "med én kommando",
+    "lead": "Gi CLI-en du allerede lever i en ekte postkasse. Sorter nattens e-post før morgenmøtet, send ut et utgivelsesnotat eller gjør en tråd om til en sak, uten å forlate terminalen.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "OAuth i terminalen, ingen API-nøkkel",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "Kjør claude mcp add --transport http mcpemails https://mcpemails.com/api/mcp, og autentiser i nettleseren når Claude Code ber deg om det. Det er hele oppsettet: ingen API-nøkkel og ingen konfigurasjonsfil å redigere for hånd."
+  },
+  "method": {
+    "title": "Slik kobler Claude Code seg til: OAuth, ingen API-nøkkel",
+    "body": "Claude Code kjører standard MCP OAuth-flyt mot denne serveren. Den registrerer seg selv med <b>RFC 7591 dynamisk klientregistrering</b>, så du trenger ikke opprette noen klient-ID, og autoriserer med <b>autorisasjonskode pluss PKCE</b> med S256. Ingen klienthemmelighet sendes noen gang, og tokenet har bare de tilgangene (scopes) du godkjenner på samtykkeskjermen vår. Tilgangstokenet den får varer i én time og fornyes automatisk. Det vises under Dashboard, API Keys som <code>OAuth:</code> etterfulgt av klientnavnet, og det er der du tilbakekaller tilkoblingen."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto og koble til en postkasse",
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Gmail kobles til med Google-innlogging med ett klikk; iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+    },
+    {
+      "h": "Legg til serveren",
+      "p": "Kjør kommandoen nedenfor. <code>--transport http</code> er Streamable HTTP-transporten, som er det denne serveren bruker."
+    },
+    {
+      "h": "Autentiser",
+      "p": "Kjør <code>/mcp</code> i en Claude Code-økt, velg denne serveren og følg flyten i nettleseren. Hvis nettleseren ikke åpner seg av seg selv, kopierer du URL-en som skrives ut."
+    },
+    {
+      "h": "Be om noe",
+      "p": "Prøv \"oppsummer alt som er ulest fra i dag\". Claude Code kaller <code>inbox_list</code> først for å finne postkassene dine, så det er ingen ID-er å lime inn."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Claude Code utsetter lasting av MCP-verktøydefinisjoner, og det er en fordel her",
+      "p": "Som standard laster Claude Code bare verktøynavnene og serverinstruksjonene når økten starter, og henter et fullstendig skjema når det trengs. I praksis betyr det at denne serveren koster en brøkdel av konteksten en naiv MCP-server ville brukt, og at et verktøy du aldri bruker, aldri koster deg skjemaet sitt."
+    },
+    {
+      "h": "Tilpass tilgangene til det økten skal brukes til",
+      "p": "OAuth-samtykkeskjermen bestemmer hva CLI-en kan gjøre så lenge tokenet lever. En kodeøkt som skal lese e-post, men aldri sende, er et token uten <code>send:email</code>. Vil du ha mer senere, kobler du til på nytt og godkjenner et bredere sett; ingenting utvides av seg selv."
+    },
+    {
+      "h": "En agentløkke og sendetilgang er en kombinasjon verdt å tenke gjennom",
+      "p": "Claude Code kjører uten tilsyn i lange perioder, og det er nettopp da en utilsiktet sending gjør mest skade. Det finnes to brytere for det: la <code>send:email</code> være ute av tokenet, eller slå på menneskelig godkjenning i dashbordet slik at hver sending, hvert svar, hver videresending og hver planlagte sending venter på en person. Godkjenning gjelder per innboks, uansett hvilken klient som gjorde kallet."
+    }
+  ],
+  "limits": [
+    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger.",
+    "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post vekker aldri agenten din av seg selv. Vil du reagere på innkommende e-post, må du polle etter en tidsplan.",
+    "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart.",
+    "OAuth-flyten trenger en nettleser én gang. På en maskin uten skjerm legger du heller til serveren med en API-nøkkel i en Authorization-header og hopper helt over flyten. Vil du likevel bruke OAuth der, låser <code>--callback-port</code> tilbakekallet til en port du kan videresende."
+  ],
+  "faq": [
+    {
+      "q": "Hvordan kobler jeg e-post til Claude Code?",
+      "a": "Legg til denne MCP-serveren via URL: claude mcp add --transport http mcpemails https://mcpemails.com/api/mcp. Kjør så /mcp i en økt og fullfør innloggingen i nettleseren. Da har Claude Code verktøy for å lese, søke, sende, svare, videresende, organisere og planlegge e-post."
+    },
+    {
+      "q": "Kan jeg bruke en API-nøkkel i stedet for OAuth?",
+      "a": "Ja. Claude Code godtar en header på add-kommandoen, så hvis du sender en Authorization-header med en bearer-nøkkel fra Dashboard, API Keys, hopper du helt over nettleseren. Det er riktig valg på en maskin uten skjerm eller i CI, der det ikke finnes noe sted å fullføre en innlogging."
+    },
+    {
+      "q": "Fungerer det i en devcontainer eller over SSH?",
+      "a": "Ja, med det forbeholdet at OAuth-flyten trenger en nettleser én gang. Enten fullfører du innloggingen der det finnes en nettleser, eller så legger du til serveren med en bearer-API-nøkkel i en header og hopper over flyten. Alt etter det er vanlig HTTPS mot ett endepunkt."
+    },
+    {
+      "q": "Hvilke postkasser kan Claude Code nå på denne måten?",
+      "a": "Gmail via Google-innlogging, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord, og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Klienten ser alle gjennom den samme tilkoblingen: agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
+    },
+    {
+      "q": "Kan Claude Code sende e-post uten at jeg ser det?",
+      "a": "Bare hvis du tillater det. Sending krever tilgangen send:email, så en nøkkel eller et token uten den tilgangen kan ikke sende i det hele tatt. I tillegg kan eieren av en innboks kreve menneskelig godkjenning i dashbordet, som holder tilbake hver sending, hvert svar, hver videresending, hvert utkast som sendes og hver planlagte sending til en person slipper den gjennom."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Hver melding hentes direkte fra leverandøren din for forespørselen som ba om den, og sendes rett videre til klienten din. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, slik at fremtidige kall kan autentiseres. Sletter du innboksen i dashbordet, eller tilbakekaller tilgangen hos leverandøren, avsluttes tilkoblingen med en gang."
+    }
+  ],
+  "ctaBand": {
+    "title": "Ta innboksen med inn i terminalen",
+    "sub": "Én kommando, én innlogging i nettleseren. Én innboks gratis for alltid, uten kort."
+  }
+}

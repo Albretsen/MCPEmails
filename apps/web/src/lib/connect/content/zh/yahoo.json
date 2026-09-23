@@ -1,20 +1,32 @@
 {
+  "_sources": [
+    "https://help.yahoo.com/kb/SLN4075.html",
+    "https://help.yahoo.com/kb/SLN15241.html"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "应用密码",
+    "helpUrl": "https://help.yahoo.com/kb/SLN15241.html",
+    "usernameForm": "你完整的 Yahoo 地址，包括域名：name@yahoo.com，或你注册时使用的 ymail.com、rocketmail.com 形式。",
+    "status": "active"
+  },
   "meta": {
-    "title": "将 Yahoo Mail 连接到 Claude（及任意 AI）",
-    "description": "用应用专用密码将 Yahoo Mail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的 Yahoo Mail，1 个收件箱永久免费。"
+    "title": "将 Yahoo Mail 连接到 Claude、Cursor 与 MCP 客户端",
+    "description": "用 Yahoo 应用密码通过 IMAP 993 端口将 Yahoo Mail 连接到 Claude、Cursor 及任意 MCP 客户端。账户密码无法使用。一个收件箱免费。"
   },
   "hero": {
     "eyebrow": "Yahoo Mail + AI",
     "titleLine1": "将 Yahoo Mail 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
-    "lead": "几分钟即可为你的 AI 代理接入一个真正的 Yahoo 收件箱。用一个应用专用密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+    "lead": "几分钟即可为你的 AI 代理接入一个真正的 Yahoo 收件箱。只需一个应用密码即可读取、搜索、发送、回复、定时与整理邮件，同一个收件箱可在所有 MCP 客户端中使用，而不止一个。",
     "meta0": "1 个收件箱永久免费",
-    "meta1": "应用专用密码，无需 OAuth 配置",
-    "meta2": "邮件实时获取，绝不存储"
+    "meta1": "应用密码，无需 OAuth 配置",
+    "meta2": "邮件实时获取，绝不存储",
+    "answer": "Claude 无法自行连接 Yahoo Mail。mcpemails 是一个托管 MCP 服务器，通过 993 端口的 IMAP 连接它，使用在 Account Security 页面 External connections 下创建的 Yahoo 应用密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。邮件客户端永远无法使用你普通的 Yahoo 密码。设置只需几分钟，一个收件箱永久免费。"
   },
   "method": {
-    "title": "Yahoo 如何连接：应用专用密码",
-    "body": "Yahoo Mail 通过 IMAP/SMTP 使用 <b>Yahoo 应用专用密码</b>连接。先开启两步验证，在 Yahoo 账户安全设置中生成一个应用专用密码，再连同你的 Yahoo 地址一起粘贴到 mcpemails。无需 OAuth 流程，也没有浏览器弹窗。"
+    "title": "Yahoo 如何连接：应用密码",
+    "body": "Yahoo Mail 通过 IMAP/SMTP 使用 <b>Yahoo 应用密码</b>连接。开启两步验证，在 Yahoo Account Security 中生成应用密码，然后连同 Yahoo 地址一起粘贴到 mcpemails。没有 OAuth 流程，也没有浏览器弹窗。"
   },
   "setup": [
     {
@@ -22,20 +34,64 @@
       "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
-      "h": "生成 Yahoo 应用专用密码",
-      "p": "开启两步验证，然后在 Yahoo 账户安全设置中生成一个应用专用密码。"
+      "h": "生成 Yahoo 应用密码",
+      "p": "开启两步验证，然后在 Yahoo Account Security 中生成应用密码。"
     },
     {
       "h": "粘贴到 mcpemails",
-      "p": "填入你的 Yahoo 地址和应用专用密码，安全连接收件箱。"
+      "p": "填入你的 Yahoo 地址和应用密码，安全连接收件箱。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
       "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],
+  "gotchas": [
+    {
+      "h": "Yahoo 文档中的主机和我们连接的主机，是同一台服务器的两个名字",
+      "p": "Yahoo 自己的帮助文章列出的是 <code>imap.mail.yahoo.com</code>。本页的设置表显示的是 <code>export.imap.mail.yahoo.com</code>。两者都没错：它们都是指向同一台 <code>jimap.imap.mail.yahoo.com</code> 的别名，解析到相同的地址，Yahoo 提供的证书是覆盖两者的 <code>*.imap.mail.yahoo.com</code> 通配符证书。我们公布的是我们实际建立过实时 TLS 连接的名称。如果你现有的某个邮件客户端配置的是文档中的名称，不必改动：它连接的是同一台机器。"
+    },
+    {
+      "h": "应用密码位于 External connections 下，而且在你修改密码后依然有效",
+      "p": "Yahoo 在 Account Security 页面的 <b>External connections</b> 下生成应用密码：Create app password，为应用命名，Generate password。Yahoo 只显示一次。人们容易忽略的是之后发生的事。即使你修改了 Yahoo 主密码，应用密码依然有效，所以修改密码并不会撤销邮件客户端的访问。在 Yahoo 一端切断连接的唯一办法，是在同一页面删除那个具体的应用密码。"
+    },
+    {
+      "h": "Yahoo 和 AOL 共用平台而不共用账户，凭据不能互通",
+      "p": "ymail.com 和 rocketmail.com 上的地址是普通的 Yahoo 账户，适用于本页。AOL Mail 运行在同一套底层基础设施上，<code>imap.aol.com</code> 也通过同一个 <code>yahoodns.net</code> 服务解析，但 AOL 有自己的主机名和自己的账户安全页面。在 Yahoo 账户中生成的应用密码打不开 AOL 邮箱，反之亦然。AOL 地址请按 AOL 连接。"
+    },
+    {
+      "h": "Yahoo 的 IMAP 比大多数免费邮箱更强，这对你有利",
+      "p": "探测时，Yahoo 声明了 <code>SASL-IR</code>、<code>MOVE</code>、<code>UIDPLUS</code>、<code>IDLE</code> 和 <code>SPECIAL-USE</code>。实际上这意味着移动是一条原子命令，而不是先复制再删除；已发送、草稿、垃圾邮件和已删除文件夹按<b>用途</b>而不是按名称识别，所以重命名过的或非英文的系统文件夹也能被正确识别。它在 IMAP 上没有声明 <code>AUTH=LOGIN</code>，只有 PLAIN 和 OAuth 机制，所以写死使用 LOGIN 机制的工具即使拿着正确的应用密码，也会在认证时失败。"
+    }
+  ],
+  "limits": [
+    "Yahoo 的提交服务器声明的最大邮件大小约为 41 MB。通过 mcpemails 读取附件每次请求上限为 25 MB，更大的附件需要在 Yahoo Mail 中直接获取。",
+    "应用密码不会过期，修改 Yahoo 密码后仍然有效。在 Account Security 中删除应用密码是撤销访问的唯一方式。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Yahoo Mail 吗？",
+      "a": "不能直接使用。Claude 没有内置的 Yahoo 连接器。使用 Yahoo 应用密码，通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到你的 Yahoo 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件。同一个连接无需任何改动，也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Yahoo Mail 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 使用 993 端口隐式 TLS，SMTP 为 smtp.mail.yahoo.com，端口 465，同样是隐式 TLS。Yahoo 文档中的收信主机是 imap.mail.yahoo.com；本页表格显示的是 export.imap.mail.yahoo.com，它是指向同一台服务器的别名，也是我们实时验证过的名称。使用完整地址和应用密码登录。"
+    },
+    {
+      "q": "为什么我的 Yahoo 密码被拒绝？",
+      "a": "因为 Yahoo 不接受第三方邮件应用使用你的账户密码。你需要在 Yahoo Account Security 页面的 External connections 下创建的应用密码。显示时请立即复制，因为 Yahoo 不会再次显示。如果旧的应用密码不能用了，请生成一个新的，而不是重复使用旧的。"
+    },
+    {
+      "q": "获取 Yahoo 应用密码需要两步验证吗？",
+      "a": "Yahoo 在 Account Security 页面的 External connections 下创建应用密码。如果你的账户上看不到该选项，请开启两步验证后再看一次：多年来 Yahoo 已不止一次移动过这个页面并更改其前置条件。请在你以前登录过的浏览器中生成密码，不要使用隐私窗口。"
+    },
+    {
+      "q": "我的 Yahoo 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 Yahoo 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。在 Yahoo Account Security 中删除应用密码，会立即在 Yahoo 一端终止连接。"
+    }
+  ],
   "ctaBand": {
     "title": "给你的 AI 一个 Yahoo 收件箱",
-    "sub": "几分钟即可连接 Yahoo 邮箱。一个收件箱永久免费，无需信用卡。"
+    "sub": "几分钟即可连接 Yahoo Mail。一个收件箱永久免费，无需信用卡。"
   }
 }

@@ -1,0 +1,106 @@
+{
+  "_sources": [
+    "https://support.mail.com/pop-imap/index.html",
+    "https://support.mail.com/pop-imap/imap/index.html",
+    "https://support.mail.com/pop-imap/imap/server.html",
+    "https://support.mail.com/pop-imap/imap/outlook.html",
+    "https://support.mail.com/pop-imap/setup-emailprogram-fails.html",
+    "https://support.mail.com/security/2fa/index.html",
+    "https://support.mail.com/security/2fa/application-specific-passwords.html"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Kontopassord (applikasjonsspesifikt passord hvis 2FA er på)",
+    "helpUrl": "https://support.mail.com/pop-imap/index.html",
+    "usernameForm": "Hele mail.com-adressen din nøyaktig slik den ble utstedt, uansett hvilket av mail.com-familiens domener den ender på, for eksempel you@email.com eller you@usa.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Mail.com til Claude, Cursor og MCP-klienter",
+    "description": "Koble mail.com til Claude, Cursor, ChatGPT og enhver MCP-klient over IMAP på imap.mail.com:993. POP3/IMAP er en Premium-funksjon hos mail.com, av som standard."
+  },
+  "hero": {
+    "eyebrow": "Mail.com + AI",
+    "titleLine1": "Koble Mail.com til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte mail.com-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP, i alle MCP-klienter og ikke bare én, så snart klienttilgang er slått på.",
+    "answer": "Claude kan ikke nå mail.com på egen hånd. mcpemails er en driftet MCP-server som kobler den til over IMAP på imap.mail.com port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. To krav hos mail.com kommer først: POP3, IMAP og SMTP er Premium-funksjoner, og selv med Premium er tilgangen slått av til du aktiverer den under Email, Settings, POP3 and IMAP. Når den er på, er det gratis å koble til én innboks, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Premium-konto, IMAP slått på",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles mail.com til: Premium-IMAP, slått på manuelt",
+    "body": "mail.com tilbyr IMAP på <code>imap.mail.com</code> port 993 over TLS. For utgående e-post oppgir hjelpesenteret <code>smtp.mail.com</code> på port 587 med STARTTLS og tilbyr deretter port 465 med SSL/TLS som alternativ, og det er den mcpemails bruker. mail.com drives av 1&1 Mail and Media, samme konsern som står bak GMX og WEB.DE, og arver husregelen deres: <b>tilgang utenfor nettleseren er en betalt funksjon, og den er slått av fra start</b>. mail.com sin egen side om tredjepartsapplikasjoner sier at POP, IMAP og SMTP bare er Premium-funksjoner, og feilsøkingssiden deres sier i tillegg at henting via POP3 eller IMAP er slått av som standard i postkassen din. En gratis mail.com-adresse kan ikke kobles til med denne eller noen annen e-postklient før kontoen er oppgradert, og en oppgradert konto må fortsatt ha avkrysningsboksen huket av."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Det kreves ikke kort, og gratisplanen kobler til én innboks så lenge du vil ha den."
+    },
+    {
+      "h": "Slå på POP3 og IMAP i mail.com",
+      "p": "Logg inn på mail.com og gå til <b>Email</b>, deretter <b>Settings</b>, deretter <b>POP3 and IMAP</b>. Huk av for <b>Enable access to this account via POP3 and IMAP</b> og klikk <b>Save</b>. Hvis den delen mangler eller ikke vil lagres, er postkassen fortsatt på gratisplanen, som ikke har POP3, IMAP eller SMTP i det hele tatt."
+    },
+    {
+      "h": "Opprett et applikasjonsspesifikt passord hvis 2FA er på, og koble til",
+      "p": "Med tofaktorautentisering aktivert slutter det vanlige mail.com-passordet ditt å fungere i klienter. Klikk <b>profilikonet</b>, deretter <b>Security Options</b>, deretter <b>Manage application-specific passwords</b>, deretter <b>Create new application-specific password</b>. mail.com viser det bare én gang. Velg nå IMAP / SMTP i mcpemails og skriv inn hele adressen din, uansett hvilket domene i mail.com-familien den ligger på, sammen med det passordet."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "IMAP er Premium, og setningen som sier det, er lett å overse",
+      "p": "Hjelpesenteret til mail.com nevner begrensningen i én setning på siden om tredjepartsapplikasjoner: POP, IMAP og SMTP er bare Premium-funksjoner. Det finnes ingen prøveperiode, ingen delvis tilgang og ingen melding i klienten som forklarer det: en gratis postkasse avviser påloggingen på samme måte som ved feil passord. Oppgradering er eneste vei, og ingen MCP-server, vår inkludert, kan omgå det. Dette er den vanligste grunnen til at en mail.com-tilkobling feiler."
+    },
+    {
+      "h": "Å slå på tofaktorautentisering slår IMAP av igjen i det stille",
+      "p": "Dokumentasjonen for tofaktorautentisering hos mail.com påpeker at etter at du har aktivert 2FA, må tilgang via POP3 og IMAP aktiveres på nytt i e-postinnstillingene. En postkasse som var tilkoblet og fungerte, slutter altså å virke i det øyeblikket du styrker kontoen, og bryteren du satte for flere uker siden, er stille og rolig nullstilt. Gå tilbake til <b>Email</b>, <b>Settings</b>, <b>POP3 and IMAP</b>, huk av boksen igjen og lagre, og flytt deretter tilkoblingen over til et applikasjonsspesifikt passord, for det vanlige passordet ditt vil heller ikke lenger autentisere."
+    },
+    {
+      "h": "Adressen din ender sannsynligvis ikke på @mail.com",
+      "p": "mail.com tilbyr et utvalg på over 100 domener ved registrering, så aktive mail.com-postkasser ligger på adresser som <code>@email.com</code>, <code>@usa.com</code>, <code>@engineer.com</code> og <code>@dr.com</code>. Alle autentiserer mot <code>imap.mail.com</code>. Skriv inn adressen nøyaktig slik den ble utstedt, med domenet. Brukernavnet er aldri bare delen før @, og vertsnavnet endres ikke for å passe domenet ditt, så ikke let etter en imap.usa.com."
+    },
+    {
+      "h": "En død tilkobling kan være en sperring som bare webmailen viser deg",
+      "p": "mail.com sin egen feilsøkingsveiledning advarer om at enkelte feil, særlig midlertidige kontosperringer, ikke vises riktig i en tredjepartsklient. Tilkoblingen feiler bare, uten noe nyttig informasjon. Instruksen deres er å logge inn på mail.com i en nettleser på datamaskin og lese meldingen som vises rett etter innlogging, som inneholder den egentlige årsaken og hva du må gjøre for å fjerne den. Hvis påloggingsopplysningene er riktige og IMAP er på, sjekk webmailen før du endrer flere innstillinger."
+    }
+  ],
+  "limits": [
+    "En gratis mail.com-postkasse kan ikke kobles til i det hele tatt, verken av oss eller av noen e-postklient, fordi POP3, IMAP og SMTP er forbeholdt Premium-kontoer.",
+    "Siden med IMAP-serverdata hos mail.com oppgir også port 143, som er ukryptert med mindre klienten forhandler STARTTLS. mcpemails kobler bare til på 993 med implisitt TLS og tilbyr ikke klartekstporten."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med mail.com?",
+      "a": "Ikke direkte, og ikke i det hele tatt på en gratis mail.com-konto. Claude har ingen innebygd mail.com-kobling. På en Premium-postkasse med POP3 og IMAP aktivert gir tilkobling av en MCP-server som mcpemails Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og den samme tilkoblingen fungerer i Cursor, ChatGPT og enhver annen MCP-klient."
+    },
+    {
+      "q": "Trenger jeg mail.com Premium for å bruke IMAP?",
+      "a": "Ja. Hjelpesenteret til mail.com sier klart at POP, IMAP og SMTP bare er Premium-funksjoner, og henviser gratisbrukere til oppgraderingssiden. Begrensningen håndheves på mail.com sine egne servere, så på gratisplanen er nettleseren og mail.com sine mobilapper den eneste tilgangen du har."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for mail.com?",
+      "a": "IMAP er imap.mail.com på port 993 med implisitt TLS. For SMTP dokumenterer mail.com smtp.mail.com på port 587 med STARTTLS og port 465 med SSL/TLS som et likeverdig alternativ; mcpemails bruker 465. Logg inn med hele mail.com-adressen din og kontopassordet ditt, eller et applikasjonsspesifikt passord hvis tofaktorautentisering er på."
+    },
+    {
+      "q": "mail.com-tilkoblingen min sluttet å virke etter at jeg slo på tofaktorautentisering. Hvorfor?",
+      "a": "Fordi aktivering av 2FA nullstiller klienttilgangen. mail.com krever at POP3 og IMAP aktiveres på nytt i e-postinnstillingene etterpå, og det vanlige passordet ditt vil ikke lenger autentisere en klient. Aktiver innstillingen igjen under Email, Settings, POP3 and IMAP, generer deretter et applikasjonsspesifikt passord fra Security Options og bruk det i stedet."
+    },
+    {
+      "q": "Fungerer dette med @email.com, @usa.com og de andre mail.com-domenene?",
+      "a": "Ja. mail.com utsteder adresser på over 100 domener, og alle er samme postkasseplattform bak ett sett vertsnavn. Skriv inn adressen slik den ble utstedt, og koble til imap.mail.com uansett domene. Premium-kravet og bryteren gjelder likt for alle."
+    },
+    {
+      "q": "Lagres mail.com-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra mail.com over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring; meldingsinnhold beholdes ikke etter forespørselen som ba om det."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Mail.com-innboks",
+    "sub": "Koble til mail.com Premium på få minutter. Én innboks gratis for alltid hos mcpemails, uten kort."
+  }
+}

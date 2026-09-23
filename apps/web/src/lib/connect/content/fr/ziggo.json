@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://www.ziggo.nl/klantenservice/e-mail/serverinstellingen",
+    "https://www.ziggo.nl/klantenservice/e-mail/e-mail-mogelijkheden",
+    "https://www.ziggo.nl/klantenservice/e-mail/beheren/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "E-mailwachtwoord",
+    "helpUrl": "https://www.ziggo.nl/klantenservice/e-mail/serverinstellingen",
+    "usernameForm": "Votre adresse complète, domaine compris : naam@ziggo.nl.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Paramètres IMAP de Ziggo Mail et accès MCP pour Claude",
+    "description": "Connectez une boîte Ziggo à Claude, Cursor et tout client MCP. IMAP sur imap.ziggo.nl:993, mais l'envoi passe en STARTTLS sur smtp.ziggo.nl:587, pas en TLS implicite sur 465."
+  },
+  "hero": {
+    "eyebrow": "Ziggo Mail + IA",
+    "titleLine1": "Connectez votre boîte Ziggo",
+    "titleLine2": "à Claude, Cursor, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Ziggo. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec l'e-mailwachtwoord (mot de passe e-mail) défini dans Mijn Ziggo.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Ziggo. mcpemails est un serveur MCP hébergé qui la connecte en IMAP sur imap.ziggo.nl, port 993, en s'authentifiant avec votre adresse complète et l'e-mailwachtwoord (mot de passe e-mail) défini pour cette adresse dans Mijn Ziggo, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Ziggo n'a ni mot de passe d'application ni option d'accès client à activer, mais le courrier sortant fait exception dans cette catégorie : il passe en STARTTLS sur smtp.ziggo.nl, port 587, et non en TLS implicite sur le port 465. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "E-mailwachtwoord défini dans Mijn Ziggo",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Ziggo se connecte : IMAP sur 993, mais STARTTLS pour l'envoi",
+    "body": "Ziggo sert l'IMAP sur <code>imap.ziggo.nl</code>, port 993 en TLS, et la soumission SMTP sur <code>smtp.ziggo.nl</code>, port <b>587</b>, en STARTTLS. Cette différence compte plus qu'il n'y paraît. Presque tous les autres fournisseurs grand public de cette catégorie acceptent le TLS implicite sur le port 465 pour la soumission : un client ou un script qui code en dur 465 comme <b>le port sécurisé</b> lira donc parfaitement une boîte Ziggo, puis se bloquera ou échouera au premier envoi. La page de paramètres serveur de Ziggo présente la paire exactement ainsi : <b>serverpoort 993, type versleuteling TLS/SSL</b> pour le courrier entrant, et <b>serverpoort 587, type versleuteling STARTTLS, TLS of SSL</b> pour le sortant. L'authentification est la même dans les deux sens : <b>gebruikersnaam: volledig e-mailadres</b> et <b>wachtwoord: je e-mailwachtwoord</b>, c'est-à-dire le mot de passe associé à cette adresse précise, et non votre identifiant Mijn Ziggo."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
+    },
+    {
+      "h": "Définissez ou réinitialisez l'e-mailwachtwoord dans Mijn Ziggo",
+      "p": "Les adresses e-mail, les alias et leurs mots de passe se gèrent tous dans <b>Mijn Ziggo</b>, sur l'écran que Ziggo intitule <b>E-mailadressen beheren</b> (gérer les adresses e-mail). C'est là que vous créez une adresse supplémentaire ou définissez un nouveau mot de passe pour une adresse existante. Le mot de passe de l'adresse e-mail est l'identifiant que vérifie le serveur IMAP : si personne ne s'en souvient, définissez-en un nouveau à cet endroit."
+    },
+    {
+      "h": "Choisissez l'adresse que recevra l'agent",
+      "p": "Avec un abonnement internet, Ziggo vous permet de créer jusqu'à six adresses e-mail ; un abonnement téléphone seul n'en donne qu'une. Si vous préférez ne pas confier votre adresse principale à un agent, créez-en une deuxième dans Mijn Ziggo et connectez-la à la place. Notez que l'adresse principale est liée à l'abonnement internet et disparaît si vous le résiliez."
+    },
+    {
+      "h": "Collez-le dans mcpemails, puis collez l'URL MCP dans votre IA",
+      "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple naam@ziggo.nl, et collez l'e-mailwachtwoord. Les serveurs et ports Ziggo sont préremplis, y compris le port de soumission STARTTLS, et ont été vérifiés par une connexion TLS réelle. Mettez ensuite https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "L'envoi passe en STARTTLS sur 587, et supposer 465 est l'échec Ziggo le plus courant",
+      "p": "Ziggo fait figure d'exception parmi les fournisseurs grand public européens présentés ici. Le courrier entrant est en TLS implicite sur 993 comme partout ailleurs : la lecture fonctionne donc immédiatement et donne une fausse assurance. Le courrier sortant passe par <code>smtp.ziggo.nl</code> sur le port <b>587</b>, où la connexion démarre en clair puis est chiffrée par la commande <code>STARTTLS</code>. Pointez un client vers 465 en attendant une négociation TLS et vous obtenez une connexion bloquée ou un délai dépassé plutôt qu'une erreur de protocole nette, et le symptôme (lecture correcte, envoi en panne) pousse à passer au crible des identifiants qui n'ont jamais été faux."
+    },
+    {
+      "h": "La bannière IMAP tient en deux capacités, dont l'une est le nom du protocole",
+      "p": "Ziggo répond par <code>* OK [CAPABILITY IMAP4rev1 AUTH=PLAIN] VodafoneZiggo server ready.</code> et rien de plus. Pas de <code>IDLE</code> : le nouveau courrier n'est détecté que par interrogation périodique, jamais poussé. Pas de <code>UIDPLUS</code> : un message copié ne renvoie pas son nouvel UID. Pas de <code>MOVE</code> : le classement se fait par copie, puis marquage, puis expunge. Pas de <code>SPECIAL-USE</code> : les dossiers sont identifiés par leur nom. Pas de <code>SASL-IR</code> non plus : l'identifiant est donc envoyé dans une étape séparée. C'est l'ensemble de capacités le plus maigre de tous les fournisseurs de ce site, et même si rien de tout cela n'empêche un agent de travailler, l'organisation en masse demande plus d'allers-retours avec Ziggo qu'avec presque n'importe quel autre fournisseur."
+    },
+    {
+      "h": "L'e-mailwachtwoord n'est pas votre identifiant Mijn Ziggo",
+      "p": "La page de paramètres serveur de Ziggo est précise : le mot de passe d'un client de messagerie est <b>je e-mailwachtwoord</b>, celui associé à cette adresse individuelle. Mijn Ziggo a son propre identifiant de connexion. Comme les deux se gèrent dans le même portail, on essaie d'abord le mot de passe du compte et on obtient un échec d'authentification qui n'explique rien. Si vous ne savez pas lequel est lequel, réinitialisez le mot de passe e-mail sous <b>E-mailadressen beheren</b> et utilisez la valeur que vous venez de définir."
+    },
+    {
+      "h": "La boîte est liée à l'abonnement, pas à vous",
+      "p": "Votre adresse Ziggo principale existe grâce à l'abonnement internet qui la porte, et elle disparaît quand cet abonnement prend fin. Si un workflow d'agent doit dépendre de cette boîte, c'est une dépendance à assumer en connaissance de cause : une adresse sur un domaine que vous contrôlez, ou chez un fournisseur que vous payez directement, ne disparaît pas quand vous changez de fournisseur d'accès internet."
+    }
+  ],
+  "limits": [
+    "Les messages sortants sont plafonnés à environ 30 Mo de message encodé : une grosse pièce jointe transférée par un agent peut donc être refusée à l'étape SMTP.",
+    "Sans IDLE, une instruction comme « préviens-moi dès qu'une réponse arrive » est limitée par la fréquence d'interrogation de la boîte plutôt que par la vitesse de distribution de Ziggo.",
+    "Comme le serveur ne prend pas en charge MOVE, un déplacement n'est pas atomique. Si la connexion tombe en cours d'opération, un message peut brièvement exister dans les deux dossiers."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec le courrier Ziggo ?",
+      "a": "Pas seul. Claude n'a pas de connecteur Ziggo intégré. Pointer un serveur MCP comme mcpemails vers la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et les autres clients MCP."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de Ziggo ?",
+      "a": "L'IMAP est imap.ziggo.nl sur le port 993 avec TLS/SSL. Le SMTP est smtp.ziggo.nl sur le port 587 avec STARTTLS, et non en TLS implicite sur 465. Le nom d'utilisateur est votre adresse e-mail complète et le mot de passe est votre e-mailwachtwoord. Les deux serveurs ont été confirmés par une connexion réelle et correspondent aux paramètres serveur publiés par Ziggo."
+    },
+    {
+      "q": "Pourquoi puis-je lire mon courrier Ziggo mais pas en envoyer ?",
+      "a": "Presque toujours à cause du port de soumission. Ziggo utilise STARTTLS sur 587 plutôt que le TLS implicite sur 465 : un client configuré pour 465 réussit donc la partie IMAP puis se bloque côté SMTP. Passez le port sortant à 587 avec STARTTLS et utilisez la même adresse et le même e-mailwachtwoord pour l'authentification sortante."
+    },
+    {
+      "q": "Ziggo nécessite-t-il un mot de passe d'application ?",
+      "a": "Non. Ziggo n'émet aucun mot de passe spécifique aux applications. Les clients de messagerie s'authentifient avec l'e-mailwachtwoord défini pour cette adresse précise dans Mijn Ziggo. C'est un identifiant différent de celui de votre compte Mijn Ziggo, ce qui explique pourquoi le mot de passe du compte est refusé."
+    },
+    {
+      "q": "Combien d'adresses e-mail Ziggo puis-je avoir ?",
+      "a": "Avec un abonnement internet, vous pouvez créer jusqu'à six adresses dans Mijn Ziggo ; avec un abonnement téléphone seul, une. Les adresses supplémentaires et les alias sont créés, et reçoivent leur mot de passe, sur l'écran E-mailadressen beheren, ce qui permet facilement de donner à un agent sa propre adresse plutôt que votre adresse principale."
+    },
+    {
+      "q": "Mon courrier Ziggo est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct chez Ziggo en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Ziggo à votre IA",
+    "sub": "Connectez le courrier Ziggo en quelques minutes, sur les bons ports. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

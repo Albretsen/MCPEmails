@@ -1,21 +1,32 @@
 {
+  "_sources": [
+    "https://help.mail.ru/mail/security/protection/external/",
+    "https://help.mail.ru/mail/mailer/password/"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Mot de passe pour applications externes",
+    "helpUrl": "https://help.mail.ru/mail/security/protection/external/",
+    "usernameForm": "Votre adresse complète avec le domaine exact sur lequel vous vous êtes inscrit : name@mail.ru, name@bk.ru, name@list.ru ou name@inbox.ru.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Connecter Mail.ru à Claude (et à toute IA)",
-    "description": "Connectez Mail.ru à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+    "title": "Connecter Mail.ru à Claude, Cursor et aux clients MCP",
+    "description": "Connectez Mail.ru à Claude, Cursor et tout client MCP en IMAP via imap.mail.ru:993 avec un mot de passe pour applications externes. Celui du site échoue."
   },
   "hero": {
     "eyebrow": "Mail.ru + IA",
     "titleLine1": "Connectez Mail.ru à Claude,",
     "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
-    "lead": "Offrez à votre agent IA une vraie boîte Mail.ru en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un simple mot de passe d'application, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "lead": "Offrez à votre agent IA une vraie boîte Mail.ru en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec un seul mot de passe d'application, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
     "meta0": "1 boîte gratuite, pour toujours",
-    "meta1": "Mot de passe d'application, pas de configuration OAuth",
+    "meta1": "Mot de passe d'application, sans configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude ne peut pas atteindre Mail.ru tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec un mot de passe d'application, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+    "answer": "Claude ne peut pas accéder seul à Mail.ru. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec un mot de passe d'application, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes et une boîte est gratuite."
   },
   "method": {
     "title": "Comment Mail.ru se connecte : IMAP et un mot de passe d'application",
-    "body": "Mail.ru se connecte via IMAP/SMTP avec un <b>mot de passe pour applications externes</b>. Le mot de passe du site web ne fonctionne pas depuis un client de messagerie. Créez-en un dans Mail.ru, section Sécurité, Mots de passe pour applications externes, puis collez-le dans mcpemails avec votre adresse Mail.ru. Mail.ru exige un numéro de téléphone sur le compte avant de le délivrer."
+    "body": "Mail.ru se connecte en IMAP/SMTP avec un <b>mot de passe pour applications externes</b>. Le mot de passe avec lequel vous vous connectez au site ne fonctionne pas depuis un logiciel de messagerie. Créez-en un dans Mail.ru sous Security, Passwords for external applications (Sécurité, mots de passe pour applications externes), puis collez-le dans mcpemails avec votre adresse Mail.ru. Mail.ru exige un numéro de téléphone sur le compte avant d'en délivrer un."
   },
   "setup": [
     {
@@ -24,7 +35,7 @@
     },
     {
       "h": "Créez un mot de passe pour applications externes",
-      "p": "Dans Mail.ru, ouvrez Sécurité et créez un mot de passe pour applications externes. C'est ce mot de passe dont mcpemails a besoin, pas celui du site."
+      "p": "Dans Mail.ru, ouvrez Security (Sécurité) et créez un mot de passe pour applications externes. C'est ce mot de passe dont mcpemails a besoin, pas celui que vous utilisez sur le site."
     },
     {
       "h": "Collez-le dans mcpemails",
@@ -32,11 +43,55 @@
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
-      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+      "p": "Ajoutez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Le mot de passe du site est bloqué dans les logiciels de messagerie depuis 2022",
+      "p": "Mail.ru n'accepte plus le mot de passe habituel du compte dans les applications externes : tout logiciel de messagerie a désormais besoin d'un mot de passe dédié créé sous Security, puis <b>Passwords for external applications</b>. Ce n'est pas lié à la double authentification : cela s'applique que vous l'utilisiez ou non, et aucun réglage ne permet de revenir en arrière. Le refus se présente comme une simple erreur d'authentification, ce qui explique pourquoi tant de gens passent un après-midi convaincus d'avoir mal tapé quelque chose."
+    },
+    {
+      "h": "Mail.ru exige un numéro de téléphone confirmé avant d'en délivrer un",
+      "p": "La création d'un mot de passe pour applications externes passe par les écrans de sécurité en deux étapes de Mail.ru, qui exigent un numéro de téléphone confirmé sur le compte. Un compte sans numéro ne peut pas du tout accéder à l'écran du mot de passe : ajoutez et vérifiez d'abord le numéro. Une fois créé, le mot de passe n'est affiché qu'une fois et il est lié à cette seule application, donc générez-en un distinct plutôt que de réutiliser un mot de passe existant d'un autre client."
+    },
+    {
+      "h": "bk.ru, list.ru et inbox.ru sont le même service, et le domaine de l'identifiant compte",
+      "p": "Les quatre domaines Mail.ru s'authentifient sur le même serveur <code>imap.mail.ru</code> : il n'y a donc pas de nom de serveur distinct à chercher. L'identifiant, en revanche, est l'adresse complète avec le domaine exact sur lequel vous vous êtes inscrit. Saisir la forme <code>@mail.ru</code> pour une adresse qui est en réalité en <code>@bk.ru</code> échoue, et l'erreur ressemble là encore à un mauvais mot de passe plutôt qu'à un mauvais identifiant."
+    },
+    {
+      "h": "Ni IDLE, ni SPECIAL-USE, ni AUTH=LOGIN",
+      "p": "L'IMAP de Mail.ru annonce <code>MOVE</code>, <code>UIDPLUS</code> et <code>SASL-IR</code> : les déplacements sont donc atomiques et l'authentification se fait en un seul aller-retour. Il n'annonce pas <code>IDLE</code>, donc rien ne vous est poussé et le nouveau courrier est découvert en allant voir. Il n'annonce pas non plus <code>SPECIAL-USE</code>, donc les dossiers Sent, Drafts, Spam et Trash sont reconnus par leur nom plutôt que par leur rôle. Sur une boîte en russe, ces dossiers s'appellent Отправленные, Черновики, Спам et Корзина, et un agent qui cherche un dossier nommé \"Sent\" n'en trouvera pas. Nommez le dossier explicitement et cela fonctionne. Sa liste d'authentification comprend <code>AUTH=PLAIN</code> et <code>AUTH=XOAUTH2</code> sans <code>AUTH=LOGIN</code>, si bien qu'un client câblé sur le mécanisme LOGIN échoue à s'authentifier avec un mot de passe parfaitement correct."
+    }
+  ],
+  "limits": [
+    "Mail.ru ne prend pas en charge IDLE : le nouveau courrier est trouvé quand votre agent va voir, et non poussé dès son arrivée.",
+    "Le serveur d'envoi de Mail.ru annonce une taille maximale de message d'environ 70 Mo. La lecture des pièces jointes via mcpemails est plafonnée à 25 Mo par requête."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec Mail.ru ?",
+      "a": "Pas tout seul. Claude n'a pas de connecteur Mail.ru intégré. Relier un serveur MCP comme mcpemails à la boîte en IMAP, avec un mot de passe pour applications externes, donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de Mail.ru ?",
+      "a": "L'IMAP est imap.mail.ru sur le port 993 en TLS implicite. Le SMTP est smtp.mail.ru sur le port 465, également en TLS implicite. L'identifiant est votre adresse complète avec son domaine exact, et le mot de passe est un mot de passe pour applications externes, pas celui du site. Les deux serveurs ont été vérifiés par une vraie connexion TLS à la date indiquée sur cette page."
+    },
+    {
+      "q": "Pourquoi mon mot de passe Mail.ru est-il refusé ?",
+      "a": "Parce que le mot de passe avec lequel vous vous connectez au site est bloqué dans les applications externes depuis 2022. Créez un mot de passe pour applications externes sous Security dans votre compte Mail.ru et utilisez-le à la place. Si vous n'arrivez pas à cet écran, il manque au compte un numéro de téléphone confirmé, que Mail.ru exige avant d'en délivrer un."
+    },
+    {
+      "q": "Les adresses bk.ru, list.ru et inbox.ru fonctionnent-elles ?",
+      "a": "Oui. C'est le même service sur les mêmes serveurs, avec le même mot de passe pour applications externes. Saisissez l'adresse complète avec son vrai domaine comme identifiant, car le domaine fait partie de l'identifiant. Il n'y a pas de serveur distinct pour ces domaines : tous s'authentifient sur imap.mail.ru et smtp.mail.ru."
+    },
+    {
+      "q": "Mon courrier Mail.ru est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct chez Mail.ru via IMAP pour chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le contenu des messages n'est pas conservé. Supprimer le mot de passe pour applications externes dans les paramètres de sécurité de Mail.ru coupe immédiatement la connexion de leur côté."
     }
   ],
   "ctaBand": {
-    "title": "Offrez une boîte Mail.ru à votre IA",
+    "title": "Donnez à votre IA une boîte Mail.ru",
     "sub": "Connectez Mail.ru en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
   }
 }

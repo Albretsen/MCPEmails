@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://www.att.com/support/article/email-support/KM1240308/",
+    "https://www.att.com/support/article/email-support/KM1240462/",
+    "https://www.att.com/support/article/email-support/KM1010472/"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Secure mail key (clé de messagerie sécurisée)",
+    "helpUrl": "https://www.att.com/support/article/email-support/KM1240308/",
+    "usernameForm": "Votre adresse AT&T complète, quel que soit son domaine : name@att.net, name@sbcglobal.net, name@bellsouth.net et les autres domaines AT&T utilisent tous le même champ d'identifiant.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connecter AT&T Mail à Claude avec une secure mail key",
+    "description": "Connectez AT&T Mail (att.net, sbcglobal.net, bellsouth.net) à Claude et tout client MCP en IMAP sur imap.mail.att.net. Exige une secure mail key, pas votre mot de passe."
+  },
+  "hero": {
+    "eyebrow": "AT&T Mail + IA",
+    "titleLine1": "Connectez AT&T Mail à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Donnez à votre agent IA une vraie boîte att.net ou sbcglobal.net. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec une secure mail key AT&T, dans tous les clients MCP et pas un seul.",
+    "answer": "Claude ne peut pas accéder seul à une boîte AT&T Mail. mcpemails est un serveur MCP hébergé qui connecte att.net, sbcglobal.net, bellsouth.net et les autres domaines AT&T en IMAP sur imap.mail.att.net, port 993, en s'authentifiant avec une secure mail key de 16 caractères que vous créez dans myAT&T plutôt qu'avec votre mot de passe AT&T. Une fois la connexion établie, Claude, Cursor ou tout autre client MCP peut lire, rechercher, envoyer, répondre et organiser ce courrier. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Secure mail key, pas votre mot de passe",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment AT&T Mail se connecte : IMAP et une secure mail key",
+    "body": "AT&T Mail tourne sur l'infrastructure Yahoo, mais l'identifiant est délivré par AT&T. IMAP répond sur <code>imap.mail.att.net</code>, port 993, en TLS, et SMTP sur <code>smtp.mail.att.net</code>, port 465, également en TLS implicite. AT&T n'accepte plus le mot de passe du compte depuis les applications de messagerie qui ne prennent pas en charge son flux OAuth : vous générez à la place une <b>secure mail key</b>, un code de 16 caractères, dans myAT&T, et vous la saisissez dans le champ du mot de passe. La clé n'expire jamais, changer votre mot de passe AT&T ne l'invalide pas, et vous pouvez en créer une distincte pour chaque application ou appareil, de sorte qu'en révoquer une ne perturbe pas les autres. Les mêmes serveurs et le même mécanisme de clé couvrent tous les domaines de messagerie AT&T, y compris <code>sbcglobal.net</code>, <code>bellsouth.net</code>, <code>ameritech.net</code>, <code>pacbell.net</code> et <code>currently.com</code>."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et ne demande pas de carte."
+    },
+    {
+      "h": "Générez une secure mail key dans myAT&T",
+      "p": "Connectez-vous à votre profil AT&T, ouvrez la section des secure mail keys, choisissez l'adresse e-mail que vous connectez, sélectionnez <b>Add secure mail key</b>, donnez-lui un surnom comme <code>mcpemails</code>, puis sélectionnez <b>Create</b>. AT&T affiche la clé de 16 caractères une seule fois. Copiez-la avant de quitter la page."
+    },
+    {
+      "h": "Saisissez la clé, pas votre mot de passe AT&T",
+      "p": "Dans mcpemails, choisissez IMAP / SMTP, saisissez votre adresse AT&T complète et collez la secure mail key dans le champ du mot de passe. Tous les domaines AT&T utilisent <code>imap.mail.att.net</code> et <code>smtp.mail.att.net</code>, les serveurs sont donc préremplis pour vous."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Ajoutez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Votre mot de passe AT&T n'est pas refusé parce qu'il est faux",
+      "p": "AT&T répartit les clients de messagerie en deux groupes. Les applications qu'AT&T a intégrées à sa connexion OAuth affichent une invite dans le navigateur et ne voient jamais de mot de passe. Toutes les autres, mcpemails compris, doivent présenter une secure mail key. Si vous collez le mot de passe de votre compte AT&T, vous obtenez un échec d'authentification identique à celui d'une faute de frappe, et aucune réinitialisation du mot de passe du compte n'y changera rien."
+    },
+    {
+      "h": "La boîte est hébergée chez Yahoo, mais la page des mots de passe d'application Yahoo n'est pas la bonne",
+      "p": "AT&T Mail est servi depuis l'infrastructure Yahoo depuis des années, et la bannière IMAP est celle de Yahoo. Cela pousse les gens vers la page de sécurité du compte Yahoo pour créer un mot de passe d'application. Cela ne servira à rien. L'identifiant d'une adresse att.net ou sbcglobal.net est délivré par AT&T dans myAT&T, pas par Yahoo."
+    },
+    {
+      "h": "Une clé par adresse, et les sous-comptes ont besoin de la leur",
+      "p": "Une secure mail key est liée à une seule adresse e-mail AT&T. Si votre foyer a des sous-comptes sur le même identifiant AT&T, chaque adresse que vous voulez connecter a besoin d'une clé créée pour cette adresse. Réutiliser la clé du compte principal pour un sous-compte échoue."
+    },
+    {
+      "h": "Le port 465 est ici en TLS implicite, pas en STARTTLS",
+      "p": "Le serveur SMTP que nous avons vérifié ouvre la session TLS immédiatement sur le port 465 et n'annonce pas STARTTLS sur ce port. Les anciens guides de configuration AT&T qui vous disent de cocher <b>STARTTLS</b> avec le port 465 décrivent une combinaison que ce serveur ne mènera pas à bien. mcpemails utilise le TLS implicite sur le 465, ce que le serveur propose réellement."
+    }
+  ],
+  "limits": [
+    "Le serveur SMTP d'AT&T annonce une taille maximale de message d'environ 39 Mo : un envoi avec de grosses pièces jointes est donc refusé par AT&T avant de partir.",
+    "mcpemails s'authentifie avec la secure mail key plutôt qu'avec les mécanismes OAUTHBEARER et XOAUTH2 que ce serveur annonce aussi. C'est voulu : la voie OAuth n'est ouverte qu'aux applications enregistrées par AT&T."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec AT&T Mail ?",
+      "a": "Pas directement. Claude n'a pas de connecteur AT&T intégré. Connecter un serveur MCP comme mcpemails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier att.net ou sbcglobal.net, et la même connexion fonctionne dans Cursor, ChatGPT et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP d'AT&T ?",
+      "a": "IMAP est imap.mail.att.net sur le port 993 en TLS implicite. SMTP est smtp.mail.att.net sur le port 465, également en TLS implicite. Le nom d'utilisateur est votre adresse e-mail AT&T complète et le champ du mot de passe reçoit une secure mail key. Les deux serveurs ont été vérifiés par une connexion TLS réelle à la date indiquée sur cette page."
+    },
+    {
+      "q": "Qu'est-ce qu'une secure mail key AT&T et où l'obtenir ?",
+      "a": "C'est un code de 16 caractères qui remplace votre mot de passe dans les applications de messagerie qui n'utilisent pas la connexion OAuth d'AT&T. Vous la créez dans votre profil myAT&T, une par adresse e-mail, en donnant un surnom à chacune. Elle n'expire jamais, et changer votre mot de passe AT&T ne la casse pas."
+    },
+    {
+      "q": "Les adresses sbcglobal.net et bellsouth.net fonctionnent-elles de la même façon ?",
+      "a": "Oui. AT&T gère les adresses att.net, sbcglobal.net, bellsouth.net, ameritech.net, pacbell.net et currently.com sur la même plateforme. Elles partagent les mêmes serveurs IMAP et SMTP et la même exigence de secure mail key : rien sur cette page ne change selon le domaine."
+    },
+    {
+      "q": "Pourquoi mon application de messagerie dit-elle que le mot de passe a changé alors que je ne l'ai pas modifié ?",
+      "a": "Ce message signifie généralement que l'application a été configurée avant qu'AT&T n'exige les secure mail keys et qu'elle envoie encore le mot de passe du compte. Créez une clé dans myAT&T et remplacez le mot de passe enregistré par celle-ci. Si vous aviez déjà créé une clé puis l'avez supprimée dans votre profil, générez-en une nouvelle ; une clé supprimée cesse de fonctionner immédiatement."
+    },
+    {
+      "q": "Mes e-mails AT&T sont-ils stockés sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis AT&T en IMAP à chaque requête et transmis à votre client IA. Les identifiants, secure mail key comprise, sont chiffrés au repos, et le contenu des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA une boîte AT&T Mail",
+    "sub": "Connectez att.net ou sbcglobal.net en quelques minutes avec une secure mail key. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://pomoc.poczta.interia.pl/programy-pocztowe/news-parametry-do-konfiguracji-programow-pocztowych,nId,2136275",
+    "https://pomoc.poczta.interia.pl/programy-pocztowe/news-sprawdz-poprawnosc-konfiguracji-programu-pocztowego,nId,2246569",
+    "https://pomoc.poczta.interia.pl/popularne-artykuly/news-jak-uruchomic-dwuetapowe-logowanie,nId,6766558"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "你的 Interia 密码",
+    "helpUrl": "https://pomoc.poczta.interia.pl/programy-pocztowe/news-parametry-do-konfiguracji-programow-pocztowych,nId,2136275",
+    "usernameForm": "你的完整地址，包括域名：nazwa@interia.pl、nazwa@poczta.fm，或 Interia hub 域名，例如 jan@kowalski.hub.pl。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Interia Poczta IMAP 设置与 Claude MCP 接入",
+    "description": "通过 poczta.interia.pl:993 将 Interia Poczta 连接到 Claude、Cursor 及任意 MCP 客户端。在你把 korzystam z programu pocztowego 设为 TAK 之前，IMAP 保持关闭。"
+  },
+  "hero": {
+    "eyebrow": "Interia Poczta + AI",
+    "titleLine1": "将 Interia Poczta 连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Interia 收件箱。在账户设置中开启邮件程序通道后，即可通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行访问 Interia 邮箱。mcpemails 是一个托管 MCP 服务器，通过 poczta.interia.pl 端口 993 的 IMAP 与之连接，使用你的完整地址和普通 Interia 密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。在你于账户参数中把 korzystam z programu pocztowego 设为 TAK 之前，Interia 会保持 POP3 和 IMAP 通道关闭；而开启了两步登录的邮箱则完全无法在任何邮件程序中使用。1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "先开启邮件程序通道",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Interia 如何连接：一个主机名，一个开关，一个密码",
+    "body": "Interia 把一切都放在同一个名称上。IMAP 是端口 993 上的 <code>poczta.interia.pl</code>，使用隐式 TLS；SMTP 提交则是端口 465 上的<b>同一台服务器</b>，这会让习惯了单独 <code>smtp.</code> 名称的人感到意外。Interia 自己的配置页面让你在收信和发信服务器字段中都填写 <code>poczta.interia.pl</code>。认证使用你的普通 Interia 密码，用户名为完整地址，这同样适用于 <code>interia.pl</code>、<code>poczta.fm</code> 和 Interia hub 域名。你必须先做的一件事是打开通道：在你声明自己使用邮件程序之前，Interia 会在账户上禁用 POP3 和 IMAP。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "在 Interia 中开启邮件程序通道",
+      "p": "在浏览器中登录你的 Interia 邮箱，依次进入 <b>Ustawienia</b>、<b>ustawienia główne</b>，然后打开 <b>parametry</b> 选项卡。在邮件程序部分，将 <b>korzystam z programu pocztowego</b> 设为 <b>TAK</b> 并保存。在开启之前，POP3 和 IMAP 是关闭的，登录会被拒绝，而且没有任何提示说明原因。"
+    },
+    {
+      "h": "确认该邮箱的两步登录已关闭",
+      "p": "Interia 的两步登录（<b>logowanie dwuetapowe</b>）与邮件程序是互斥的。Interia 在开启它的页面上就说明了：开启两步登录后，该账户无法在邮件程序中使用。Interia 不提供可以绕过它的应用专用密码，所以如果邮箱已开启两步登录，你需要在继续之前做出选择。"
+    },
+    {
+      "h": "粘贴到 mcpemails，再把 MCP URL 粘贴到你的 AI",
+      "p": "选择 IMAP / SMTP，输入完整地址（例如 nazwa@interia.pl），并输入你的 Interia 密码。服务器地址和端口已预填，并经实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "两步登录和邮件程序不能同时开启，而且没有应用专用密码",
+      "p": "这是 Interia 上无法绕过的失败原因。Interia 关于开启 <b>logowanie dwuetapowe</b> 的帮助文档明确说明，一旦开启，该账户就无法在邮件程序中使用，只能通过网站和官方应用访问。大多数服务商用应用专用密码解决这个问题，Interia 却不提供。所以一个 Interia 邮箱要么可以通过 IMAP 访问，要么受两步登录保护，你必须二选一。如果你希望连接代理，这个决定由你来做，值得慎重考虑，而不是等到登录报错时才发现。"
+    },
+    {
+      "h": "在你声明使用邮件程序之前，POP3 和 IMAP 都是关闭的",
+      "p": "这个开关位于 <b>Ustawienia</b>、<b>ustawienia główne</b> 下的 <b>parametry</b> 选项卡，表述为 <b>korzystam z programu pocztowego</b>，选项为 TAK 或 NIE。它读起来像一项偏好设置，作用却像防火墙。设为 NIE 时，服务器会在评估你的密码之前就拒绝登录，这就是为什么人们要反复更换凭据一个小时才找到这项设置。"
+    },
+    {
+      "h": "没有 SASL-IR，默认支持它的客户端会收到光秃秃的 BAD",
+      "p": "Interia 的横幅声明了 <code>AUTH=PLAIN</code>，但没有 <code>SASL-IR</code>，因此它会拒绝随 <code>AUTHENTICATE</code> 命令一起发送凭据的一步式认证。默认假设支持 SASL-IR 的客户端会收到一个没有任何解释的 <code>BAD</code>，与密码错误无法区分。mcpemails 会检测到这一点并改用两步交互重试，所以这已经处理好了，但这解释了为什么有些 IMAP 工具报告 Interia 有问题，而 Thunderbird 却能正常连接。"
+    },
+    {
+      "h": "收信和发信使用同一个主机名，IMAP 上只提供 PLAIN",
+      "p": "Interia 文档中的配置里没有 <code>smtp.interia.pl</code>：外发邮件发往端口 465 上的 <code>poczta.interia.pl</code>，与 IMAP 同名。另外，IMAP 一侧只声明 <code>AUTH=PLAIN</code>，没有 <code>AUTH=LOGIN</code>。写死使用 LOGIN 机制的库（在针对 Exchange 编写的工具中很常见）会在认证这一步失败。SMTP 一侧则同时接受 PLAIN 和 LOGIN，所以同一账户的两部分在同一个客户端中可能表现不同。"
+    }
+  ],
+  "limits": [
+    "Interia 不声明 MOVE 或 SPECIAL-USE，因此归档以复制加标记加清除的方式完成，Sent、Drafts 和 Trash 按名称匹配。在波兰语邮箱中，它们通常是 Wysłane、Kopie robocze 和 Kosz，所以如果代理找不到某个文件夹，请写出它的名称。",
+    "在 Interia 账户上开启两步登录，会让邮箱与所有邮件客户端（包括 mcpemails）断开连接，而且不存在可以恢复连接的应用专用密码。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Interia Poczta 吗？",
+      "a": "不能单独使用。Claude 没有内置的 Interia 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接随后也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Interia 的 IMAP 和 SMTP 设置是什么？",
+      "a": "两者使用同一个主机名。IMAP 为 poczta.interia.pl，端口 993，使用 SSL/TLS；SMTP 为 poczta.interia.pl，端口 465，同样使用 SSL/TLS，并要求认证。请用完整地址登录，包括 interia.pl、poczta.fm 或你的 hub 域名。服务器已经实时 TLS 连接确认。"
+    },
+    {
+      "q": "为什么 Interia 在邮件客户端中拒绝我的密码？",
+      "a": "通常是因为邮件程序通道处于关闭状态。请依次打开 Ustawienia、ustawienia główne、parametry 选项卡，把 korzystam z programu pocztowego 设为 TAK。如果它已经开启，请检查账户是否开启了两步登录，因为开启期间 Interia 会阻止所有邮件程序访问。"
+    },
+    {
+      "q": "Interia 提供应用专用密码吗？",
+      "a": "不提供。Interia 不签发应用专用密码。邮件客户端使用与网页邮箱相同的密码进行认证。这也意味着无法在保持两步登录开启的同时连接客户端，因为其他服务商用来弥合这一差距的应用专用密码在这里并不存在。"
+    },
+    {
+      "q": "poczta.fm 地址的用法一样吗？",
+      "a": "一样。poczta.fm 是 Interia 邮箱，使用相同的 poczta.interia.pl 主机名、相同的端口和相同的邮件程序开关。请按原样输入带 poczta.fm 域名的地址作为用户名。"
+    },
+    {
+      "q": "我的 Interia 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 Interia 实时获取邮件，并交给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Interia 收件箱",
+    "sub": "几分钟即可连接 Interia Poczta。1 个收件箱永久免费，无需信用卡。"
+  }
+}

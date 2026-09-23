@@ -1,0 +1,105 @@
+{
+  "_sources": [
+    "https://posteo.de/en/help/how-do-i-set-up-posteo-in-an-email-client-pop3-imap-and-smtp",
+    "https://posteo.de/en/help/activating-additional-email-account-protection",
+    "https://posteo.de/en/blog/how-to-use-app-passwords-with-posteo",
+    "https://posteo.de/en/help/how-do-i-activate-inbound-encryption-with-my-public-pgp-key",
+    "https://posteo.de/en/help/how-do-i-activate-posteo-crypto-mail-storage"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Posteo 密码，或应用密码",
+    "helpUrl": "https://posteo.de/en/blog/how-to-use-app-passwords-with-posteo",
+    "usernameForm": "你的完整 Posteo 地址，无论以哪个 Posteo 域名结尾：name@posteo.de、name@posteo.net、name@posteo.org 等都在同一台服务器上认证。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 Posteo 连接到 Claude、Cursor 与 MCP 客户端",
+    "description": "通过 IMAP（posteo.de:993）将 Posteo 连接到 Claude、Cursor 及任意 MCP 客户端。开启额外账户保护后，每个邮件客户端都必须使用应用密码。"
+  },
+  "hero": {
+    "eyebrow": "Posteo + AI",
+    "titleLine1": "将 Posteo 连接到 Claude，",
+    "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Posteo 收件箱。通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用而不止一个，并坦白告诉你 Posteo 的加密对代理能隐藏什么、不能隐藏什么。",
+    "answer": "Claude 无法自行连接 Posteo。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 posteo.de 的 993 端口，通过 SMTP 连接 posteo.de 的 465 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。没有 imap. 或 smtp. 前缀：无论你的地址以哪个 Posteo 域名结尾，服务器都是这个裸域名。认证使用你普通的 Posteo 密码，除非你开启了额外的邮箱账户保护，此后 IMAP、POP3 和 SMTP 只接受在 Posteo 设置中创建的应用密码。一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "开启额外保护后使用应用密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Posteo 如何连接：一个裸主机名，密码取决于一个设置",
+    "body": "Posteo 为所有服务公布同一个服务器名称。IMAP 为 <code>posteo.de</code>，993 端口 SSL/TLS，或 143 端口 STARTTLS。POP3 是同一主机的 995 或 110 端口。SMTP 为 <code>posteo.de</code>，465 或 587 端口。Posteo 只接受加密连接，并且即使客户端将发信密码标为可选，也要求 SMTP 认证，所以两栏都要填。用户名是你的<b>完整</b>地址。Posteo 在大约二十个域名上出售地址，而 <code>posteo.de</code> 仍是所有这些域名的服务器，所以没有需要按域名查找的东西，也不需要猜 <code>imap.</code> 主机名。你需要哪个密码由一个开关决定。默认情况下，普通 Posteo 密码即可使用。在 Password and security 中开启<b>额外的邮箱账户保护</b>后，Posteo 将完全不再通过 IMAP、POP3 和 SMTP 接受它，只接受<b>应用密码</b>。无论哪种情况，网页邮箱都继续使用普通密码。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。完成后你会得到一个 MCP URL 和一个密钥。"
+    },
+    {
+      "h": "在 Posteo 设置中创建应用密码",
+      "p": "登录 Posteo 网页邮箱，打开 <b>Settings</b>，然后是 <b>Password and security</b>，应用密码在这里创建和管理。Posteo 要求每个应用密码至少 16 个字符，包含至少一个数字和一个大写字母，最多可同时持有五个。以这个连接为它命名，以便日后知道该删除哪个。如果额外保护未开启，可以跳过这一步，但交给第三方时，一个可以单独撤销的凭据更好。"
+    },
+    {
+      "h": "在 mcpemails 中添加邮箱",
+      "p": "选择 IMAP / SMTP，输入完整的 Posteo 地址，然后输入密码。收发两个方向的主机都已自动填为 <code>posteo.de</code>，并已通过实时 TLS 连接验证。发信密码和收信密码都必须填写，因为 Posteo 始终对提交进行认证。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "额外的邮箱账户保护会在不通知客户端的情况下封锁账户密码",
+      "p": "这是产生支持工单最多的问题。Posteo 文档说明，一旦开启该设置，通过 IMAP、POP3 和 SMTP 的访问就只能使用应用密码，而网页邮箱仍像以前一样接受普通密码。从外面看，就像客户端自己坏了：网页登录仍然正常，所以密码显然没问题，可每台设备都被拒绝。解决办法不是重置密码，而是在 Password and security 中创建应用密码，并同时填入收信和发信两栏。"
+    },
+    {
+      "h": "加密邮件存储和入站加密听起来相似，在 IMAP 上的表现却完全不同",
+      "p": "Posteo 提供两样常被混淆的东西。<b>加密邮件存储（crypto mail storage）</b>在 Posteo 服务器上对你的邮箱进行静态加密，对客户端是透明的：你登录，服务器解密，IMAP 完全照常工作，所以代理能正常读取邮件。<b>入站加密（inbound encryption）</b>则恰恰相反。它用你的 PGP 或 S/MIME 公钥加密每一封新到的邮件，无论发件人是否加密过，结果对任何没有你私钥的客户端（包括本服务）来说都是密文。Posteo 指出它只影响新邮件，不加密邮件头，而使用 S/MIME 时你将无法在网页邮箱中阅读自己的邮件。如果你想要一个能读你收件箱的代理，加密邮件存储与之兼容，入站加密则不兼容。"
+    },
+    {
+      "h": "没有 imap.posteo.de，也没有按域名区分的服务器",
+      "p": "Posteo 地址存在于大约二十个域名上，包括 posteo.net、posteo.org、posteo.eu、posteo.at 和 posteo.ch，它们的 IMAP、POP3 和 SMTP 全部由裸主机名 <code>posteo.de</code> 提供。那些在你的域名前加前缀来构造服务器名的客户端（常见的自动配置猜测方式），最终找的并不是文档中的服务器。请手动输入 <code>posteo.de</code>，并以完整地址作为用户名。"
+    },
+    {
+      "h": "没有 MOVE 也没有 UIDPLUS，所以归档邮件要分三步",
+      "p": "Posteo 的 Dovecot 服务器声明了 IDLE 和 SASL-IR，但没有 MOVE、UIDPLUS 或 SPECIAL-USE。因此移动操作是一次 COPY、一次为邮件 STORE \\Deleted 标记，再加一次 EXPUNGE；由于没有 UIDPLUS，服务器从不报告新 UID，只能在目标文件夹中搜索重新定位副本。这样做是正确的，但比支持 MOVE 的服务器更慢，在代理一次性整理数百封邮件时会显现出来。缺少 SPECIAL-USE 意味着文件夹用途由名称决定，Posteo 的默认名称是朴素的英文 Sent、Drafts 和 Trash。"
+    }
+  ],
+  "limits": [
+    "将 Posteo 邮箱连接到 AI 客户端，意味着该 AI 服务商会读取它被要求处理的任何内容。mcpemails 每次请求都实时从 Posteo 获取邮件，不存储邮件正文，凭据也经过静态加密，但文本仍会到达 Claude、Cursor 或你连接的任何客户端。Posteo 的匿名注册、匿名付款和德国托管保护的是你与 Posteo 之间的关系。一旦邮件进入你自己连接的 AI 厂商，这些保护都不会随之而去。",
+    "开启入站加密后，代理完全无法读取你的邮件。邮件以 PGP 或 S/MIME 密文形式到达，mcpemails 不持有你的任何私钥，只剩邮件头、日期和文件夹操作可用。",
+    "按现代标准，Posteo 的标准邮箱容量较小，达到配额的邮箱会拒收新邮件。代理归档和标记邮件并不会释放空间；删除邮件并清空已删除文件夹才会。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Posteo 吗？",
+      "a": "不能单独使用。Claude 没有 Posteo 连接器，也不会 IMAP。将 mcpemails 这样的 MCP 服务器指向你的 Posteo 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接无需再次设置，也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Posteo 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 posteo.de，993 端口 SSL/TLS，或 143 端口 STARTTLS。SMTP 为 posteo.de，465 端口 SSL/TLS，或 587 端口 STARTTLS。POP3 是同一主机的 995 或 110 端口。用户名是你在任一 Posteo 域名上的完整地址，SMTP 始终需要认证。两台服务器均已通过实时 TLS 连接验证。"
+    },
+    {
+      "q": "Posteo 需要应用密码吗？",
+      "a": "只有在你开启了额外的邮箱账户保护时才需要。默认情况下，普通 Posteo 密码即可用于 IMAP、POP3 和 SMTP 认证。开启该保护后，这些协议只接受应用密码。应用密码在 Settings 的 Password and security 中创建，至少 16 个字符，须包含数字和大写字母，最多可同时持有五个。"
+    },
+    {
+      "q": "为什么网页邮箱仍能登录，我的 Posteo 邮件客户端却停止工作了？",
+      "a": "几乎可以肯定是因为开启了额外的邮箱账户保护。该设置会阻止账户密码用于 IMAP、POP3 和 SMTP，而网页邮箱不受影响，这正是你所看到的情况。请在 Settings 的 Password and security 中创建应用密码，并填入收信和发信两个密码栏。"
+    },
+    {
+      "q": "Posteo 的加密邮件存储会阻止我的 AI 读取邮件吗？",
+      "a": "不会。加密邮件存储在 Posteo 一侧对邮箱进行静态加密，你认证时会被透明解密，所以 IMAP 表现正常，代理照常读取邮件。真正让客户端无法读取邮件的功能是入站加密，它会用 PGP 或 S/MIME 把每封新邮件加密到你自己的公钥。"
+    },
+    {
+      "q": "我的 Posteo 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 posteo.de 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。你连接的 AI 客户端确实会收到它读取的任何内容，这是另一个值得你认真决定的问题。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Posteo 收件箱",
+    "sub": "几分钟即可连接 Posteo。一个收件箱永久免费，无需信用卡。"
+  }
+}

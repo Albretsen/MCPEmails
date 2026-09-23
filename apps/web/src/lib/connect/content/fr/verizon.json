@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.verizon.com/support/residential/email",
+    "https://help.aol.com/articles/verizon-move-to-aol-mail-setting-up-your-new-aol-account-in-a-third-party-email-program-or-mobile-device-imap",
+    "https://help.aol.com/articles/how-do-i-use-other-email-applications-to-send-and-receive-my-aol-mail"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Mot de passe d'application AOL",
+    "helpUrl": "https://help.aol.com/articles/how-do-i-use-other-email-applications-to-send-and-receive-my-aol-mail",
+    "usernameForm": "Votre adresse verizon.net complète, @verizon.net inclus. C'est désormais votre nom d'utilisateur AOL : ne la raccourcissez pas et ne la remplacez pas par une adresse aol.com.",
+    "status": "discontinued"
+  },
+  "meta": {
+    "title": "L'e-mail Verizon.net est chez AOL : connectez-le à Claude",
+    "description": "Verizon a fermé son e-mail, les boîtes verizon.net sont chez AOL. Connectez-en une à Claude en IMAP sur imap.aol.com avec un mot de passe d'application AOL."
+  },
+  "hero": {
+    "eyebrow": "Verizon.net + IA",
+    "titleLine1": "Verizon a fermé son service e-mail.",
+    "titleLine2": "Votre boîte verizon.net se connecte toujours",
+    "lead": "Verizon n'héberge plus de boîtes. Une adresse verizon.net encore active est un compte AOL, et mcpemails la connecte en IMAP pour que votre agent IA puisse lire, rechercher, envoyer, répondre et classer ce courrier.",
+    "answer": "Claude ne peut pas accéder seul à une boîte verizon.net, et Verizon non plus : l'opérateur a fermé son service e-mail grand public et transféré les boîtes vers AOL Mail et Yahoo Mail. Si votre adresse a survécu à cette migration, c'est un compte AOL avec un nom d'utilisateur verizon.net, et mcpemails est un serveur MCP hébergé qui le connecte en IMAP sur imap.aol.com, port 993, avec un mot de passe d'application AOL plutôt que le mot de passe que vous tapez dans le webmail. Une fois la boîte connectée, Claude, Cursor ou tout autre client MCP peut lire, rechercher, envoyer, répondre et organiser ce courrier. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe d'application AOL, pas celui du webmail",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment verizon.net se connecte : c'est une boîte AOL, en IMAP",
+    "body": "La page d'assistance de Verizon est sans détour : l'opérateur a fermé son service e-mail, les notifications sont terminées, et les clients n'ont plus la possibilité de conserver une adresse verizon.net. Concrètement, il s'est agi d'une migration plutôt que d'une coupure. Les boîtes sont parties vers <b>AOL Mail</b> sur mail.aol.com et vers Yahoo Mail, tout ce qui n'a pas été migré a été supprimé fin 2017, et les adresses qui ont survécu ont gardé leur nom. Ce sont donc les réglages d'AOL qui comptent. IMAP répond sur <code>imap.aol.com</code>, port 993, en TLS, et SMTP sur <code>smtp.aol.com</code>, port 465, également en TLS implicite, et vous vous connectez avec l'adresse entière, <code>@verizon.net</code> compris. AOL n'accepte pas votre mot de passe habituel depuis un client de messagerie : vous activez la validation en deux étapes et générez un <b>mot de passe d'application</b> sous Account Security (Sécurité du compte), et c'est cette chaîne qui va dans le champ du mot de passe."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et ne demande pas de carte bancaire."
+    },
+    {
+      "h": "Connectez-vous à AOL avec l'adresse verizon.net",
+      "p": "Allez sur login.aol.com et connectez-vous avec l'adresse complète <code>name@verizon.net</code>, pas une adresse aol.com. Si cette connexion échoue, la boîte n'a pas survécu à la migration et il n'y a rien à connecter ; Verizon a supprimé les comptes non migrés et ne peut pas les restaurer."
+    },
+    {
+      "h": "Générez un mot de passe d'application AOL sous Account Security",
+      "p": "Ouvrez Account Info, puis <b>Account Security</b>. Activez la validation en deux étapes si elle est désactivée, puis générez un mot de passe d'application et donnez-lui un nom, par exemple <code>mcpemails</code>. AOL ne l'affiche qu'une fois. Collez-le dans mcpemails avec l'adresse verizon.net complète ; les serveurs AOL ci-dessous sont préremplis."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Il n'existe plus de serveur de messagerie Verizon à configurer",
+      "p": "Les anciens guides indiquent des serveurs comme <code>incoming.verizon.net</code> et <code>outgoing.verizon.net</code>. Verizon n'exploite plus de messagerie grand public, ces noms décrivent donc un service qui n'existe plus. Tous les réglages actuels d'une adresse verizon.net sont des réglages AOL, c'est pourquoi cette page vous envoie vers l'écran de sécurité du compte AOL plutôt que vers un écran Verizon. L'assistance Verizon ne peut pas non plus réinitialiser le mot de passe de la boîte ; c'est AOL qui détient désormais ce compte."
+    },
+    {
+      "h": "Certaines adresses verizon.net sont parties chez Yahoo, pas chez AOL",
+      "p": "La page de fermeture de Verizon cite deux destinations : AOL Mail et Yahoo Mail. La plupart des gens se sont retrouvés chez AOL, et cette page est construite autour d'imap.aol.com, mais si votre connexion ne fonctionne que sur Yahoo, votre boîte est côté Yahoo et le mot de passe d'application doit alors être généré sur la page de sécurité du compte Yahoo. Essayez d'abord la connexion AOL ; c'est le cas le plus courant."
+    },
+    {
+      "h": "Le nom d'utilisateur reste l'adresse verizon.net, pour toujours",
+      "p": "La migration a conservé l'adresse comme nom de compte, donc c'est <code>name@verizon.net</code> qui va dans le champ du nom d'utilisateur, même si tout ce qui se trouve derrière est AOL. Saisir un alias aol.com, ou omettre le domaine, provoque un échec d'authentification qui ressemble à un mauvais mot de passe. Cela piège ceux qui ont ajouté plus tard une adresse aol.com au même compte."
+    },
+    {
+      "h": "Aucune nouvelle adresse verizon.net n'existe, et aucune réouverture n'est possible",
+      "p": "Verizon indique que les clients n'ont plus la possibilité de conserver une adresse verizon.net, et le contenu jamais migré a été supprimé le 15 décembre 2017. Cette page n'est donc utile que pour une boîte encore active. Si la vôtre s'est éteinte il y a des années, il n'existe aucune voie de récupération et aucun moyen d'en créer une nouvelle sur le même domaine."
+    }
+  ],
+  "limits": [
+    "Le serveur SMTP d'AOL annonce une taille maximale de message d'environ 39 MB : un envoi avec de grosses pièces jointes est donc refusé avant de partir.",
+    "Seule une boîte verizon.net existante et déjà migrée peut être connectée. Verizon n'en crée plus de nouvelles et mcpemails ne peut pas ranimer un compte supprimé."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec l'e-mail Verizon ?",
+      "a": "Pas directement, et pas via Verizon, qui n'exploite plus de messagerie. Si votre adresse verizon.net est active chez AOL, y connecter un serveur MCP comme mcpemails en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne dans Cursor, ChatGPT et les autres clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de verizon.net ?",
+      "a": "Ceux d'AOL. IMAP : imap.aol.com sur le port 993 en TLS implicite, et SMTP : smtp.aol.com sur le port 465, également en TLS implicite, avec authentification obligatoire. Les deux ont été vérifiés par une connexion TLS réelle. Le nom d'utilisateur est votre adresse verizon.net complète et le champ du mot de passe attend un mot de passe d'application AOL."
+    },
+    {
+      "q": "Qu'est devenu l'e-mail Verizon ?",
+      "a": "Verizon a quitté le secteur de l'e-mail et fermé le service. Les boîtes verizon.net existantes ont été migrées vers AOL Mail et Yahoo Mail, et tout ce qui n'a pas été migré a été supprimé en décembre 2017. La page d'assistance de Verizon indique que les clients n'ont plus la possibilité de conserver une adresse verizon.net, aucune nouvelle adresse n'est donc créée."
+    },
+    {
+      "q": "Pourquoi mon mot de passe verizon.net ne fonctionne-t-il pas dans Outlook ou un client de messagerie ?",
+      "a": "Parce que la boîte est un compte AOL et qu'AOL exige un mot de passe d'application pour les clients qui n'utilisent pas sa propre fenêtre de connexion. Le mot de passe que vous utilisez dans le webmail est correct et reste pourtant refusé en IMAP. Activez la validation en deux étapes, générez un mot de passe d'application sous Account Security, et utilisez cette chaîne à la place."
+    },
+    {
+      "q": "Mon courrier verizon.net est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis AOL en IMAP à chaque requête et transmis à votre client IA. Les identifiants, mot de passe d'application compris, sont chiffrés au repos, et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez votre boîte verizon.net à votre IA",
+    "sub": "Verizon a quitté l'e-mail. L'adresse fonctionne toujours. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

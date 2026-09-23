@@ -1,26 +1,41 @@
 {
+  "_sources": [
+    "https://datatracker.ietf.org/doc/html/rfc8314",
+    "https://datatracker.ietf.org/doc/html/rfc6186",
+    "https://datatracker.ietf.org/doc/html/rfc6154",
+    "https://datatracker.ietf.org/doc/html/rfc6851",
+    "https://datatracker.ietf.org/doc/html/rfc4959",
+    "https://wiki.mozilla.org/Thunderbird:Autoconfiguration"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte mail",
+    "helpUrl": null,
+    "usernameForm": "Presque toujours votre adresse e-mail complète. Quelques hébergeurs ne veulent que la partie avant le @, et c'est ce que documente iCloud d'Apple.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Connecter n'importe quelle boîte IMAP à Claude (et à toute IA)",
-    "description": "Connectez toutes les boîtes IMAP de votre entreprise à Claude, Cursor, ChatGPT et tout client MCP. Apportez votre serveur, votre port et votre mot de passe, et laissez l'IA lire, envoyer, planifier et organiser le courrier. 1 boîte gratuite, pour toujours."
+    "title": "Connecter toute boîte IMAP à Claude, Cursor et MCP",
+    "description": "Connectez toute boîte IMAP de votre entreprise à Claude, Cursor et tout client MCP. Serveur et mot de passe suffisent : IMAP 993 ou 143, SMTP 465 ou 587, détectés."
   },
   "hero": {
     "eyebrow": "IMAP + IA",
-    "titleLine1": "Connectez n'importe quelle boîte IMAP à Claude,",
+    "titleLine1": "Connectez toute boîte IMAP à Claude,",
     "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
-    "lead": "Connectez toutes les boîtes que gère votre entreprise, quel qu'en soit l'hébergeur : info@, ventes@, factures@ et la vôtre. Votre agent IA lit, recherche, envoie, répond, planifie et organise ce courrier en IMAP et SMTP classiques, et les mêmes boîtes fonctionnent dans tous les clients MCP, pas un seul.",
+    "lead": "Connectez toutes les boîtes de votre entreprise, quel que soit leur hébergeur : info@, sales@, invoices@ et la vôtre. Votre agent IA lit, recherche, envoie, répond, planifie et organise ce courrier en IMAP et SMTP standard, et les mêmes boîtes fonctionnent dans tous les clients MCP, pas un seul.",
     "meta0": "1 boîte gratuite, pour toujours",
-    "meta1": "Tout serveur IMAP, pas de configuration OAuth",
+    "meta1": "Tout serveur IMAP, sans configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude n'a pas de client IMAP. mcpemails est un serveur MCP hébergé qui se connecte à votre serveur de messagerie en IMAP et SMTP avec l'adresse, le serveur et le mot de passe que votre fournisseur vous a déjà donnés, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Tout hébergeur qui parle IMAP convient, les adresses d'une entreprise se connectent comme une adresse personnelle, et une boîte est gratuite."
+    "answer": "Claude n'a pas de client IMAP à lui. mcpemails est un serveur MCP hébergé qui se connecte à votre serveur mail en IMAP et SMTP avec l'adresse, le serveur et le mot de passe que votre fournisseur vous a déjà donnés, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Tout serveur qui parle IMAP fonctionne, les adresses génériques d'une entreprise se connectent de la même façon qu'une adresse personnelle, et une boîte est gratuite."
   },
   "persona": {
     "intro": "Vous gérez plusieurs boîtes d'entreprise ?",
-    "label": "Voyez comment une seule personne traite toutes les adresses de l'entreprise depuis un seul agent",
+    "label": "Découvrez comment une seule personne gère toutes les adresses de l'entreprise avec un seul agent",
     "href": "/for/business"
   },
   "method": {
     "title": "Comment une boîte IMAP générique se connecte",
-    "body": "Il vous faut quatre choses : votre adresse, votre serveur de messagerie, votre mot de passe et, si votre fournisseur l'exige, un mot de passe d'application. Saisissez d'abord l'adresse : mcpemails reconnaît les hébergeurs courants et remplit les deux serveurs, les deux ports et les modes de sécurité. Si le transport tenté ne répond pas, il essaie l'autre standard tout seul, <b>993 ou 143</b> pour IMAP et <b>465 ou 587</b> pour SMTP : personne n'a à deviner pour STARTTLS."
+    "body": "Il vous faut quatre choses : votre adresse, votre serveur mail, votre mot de passe et, si votre fournisseur l'exige, un mot de passe d'application. Saisissez d'abord votre adresse : mcpemails reconnaît les hébergeurs courants et remplit pour vous les deux serveurs, les deux ports et les modes de sécurité. Si le transport qu'il essaie ne répond pas, il essaie de lui-même l'autre transport standard, <b>993 ou 143</b> pour IMAP et <b>465 ou 587</b> pour SMTP : personne n'a à deviner s'il faut STARTTLS."
   },
   "setup": [
     {
@@ -29,19 +44,73 @@
     },
     {
       "h": "Rassemblez vos réglages IMAP et SMTP",
-      "p": "Votre fournisseur les publie, le plus souvent sous la forme imap.votredomaine.com et smtp.votredomaine.com sur les ports 993 et 465. Si votre fournisseur exige un mot de passe d'application pour les clients de messagerie, créez-le maintenant."
+      "p": "Votre fournisseur les publie, le plus souvent sous la forme imap.yourdomain.com et smtp.yourdomain.com sur les ports 993 et 465. Si votre fournisseur exige un mot de passe d'application pour les clients mail, générez-en un maintenant."
     },
     {
       "h": "Collez-les dans mcpemails",
-      "p": "Choisissez IMAP / SMTP, ajoutez votre adresse, les deux serveurs et le mot de passe. Les ports et les modes de sécurité sont sous Avancé, préremplis avec les valeurs standard."
+      "p": "Choisissez IMAP / SMTP, ajoutez votre adresse, les deux serveurs et le mot de passe. Les ports et les modes de sécurité se trouvent sous Advanced, préremplis avec les valeurs standard."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
-      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+      "p": "Ajoutez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Trouver votre vrai nom d'hôte, dans l'ordre qui fonctionne vraiment",
+      "p": "Il y a quatre endroits où chercher, du plus simple au plus technique. <b>Un</b> : la page d'aide de votre fournisseur, en cherchant son nom suivi des mots IMAP settings ; c'est à cela que servent les autres pages fournisseurs de ce site. <b>Deux</b> : le panneau de contrôle. Dans cPanel, c'est Email Accounts, puis Connect Devices, puis le bloc des réglages manuels ; dans Plesk, c'est Mail, puis l'adresse, puis l'écran de connexion à la boîte ; la plupart des panneaux d'hébergement ont un écran équivalent, qui fait foi pour votre compte. <b>Trois</b> : le DNS. Un fournisseur qui suit la RFC 6186 publie un enregistrement SRV <code>_imaps._tcp.yourdomain.com</code> qui indique directement le serveur et le port. <b>Quatre</b> : votre enregistrement MX, qui nomme la machine qui reçoit votre courrier et appartient très souvent à la même famille de noms que le serveur IMAP. Ce qui ne marche pas, c'est de deviner <code>imap.yourdomain.com</code> en espérant : bien des hébergeurs servent votre courrier sous un nom qui n'a rien à voir avec votre domaine."
+    },
+    {
+      "h": "C'est le certificat qui fait échouer un nom d'hôte personnalisé",
+      "p": "La plupart des hébergeurs vous laissent volontiers faire pointer <code>mail.yourdomain.com</code> vers leur serveur mail, et cela fonctionne dans un client qui ne vérifie pas attentivement. Le serveur présente un certificat émis pour le nom de l'hébergeur, quelque chose comme <code>server24.hostingprovider.net</code> ou un wildcard sur leur domaine, et non pour le vôtre. Un client qui valide correctement TLS refuse la connexion pour <b>discordance de nom d'hôte</b>, un échec différent d'un mot de passe refusé, même si la plupart des interfaces confondent les deux. Désactiver la validation n'est pas une solution acceptable pour une boîte depuis laquelle un agent IA peut envoyer du courrier. Le remède consiste à se connecter au nom d'hôte partagé pour lequel le certificat est réellement émis, c'est-à-dire le nom que documente votre fournisseur, et c'est celui que nous utilisons."
+    },
+    {
+      "h": "993 ou 143, 465 ou 587, et ce qu'un fournisseur entend par « SSL » ou « TLS »",
+      "p": "La RFC 8314 demande aux fournisseurs de privilégier le TLS implicite, c'est-à-dire une connexion chiffrée dès le premier octet : port <code>993</code> pour IMAP et <code>465</code> pour la soumission. Les configurations plus anciennes utilisent <code>143</code> et <code>587</code>, qui démarrent en clair puis passent en chiffré avec STARTTLS. Les fournisseurs les étiquettent de façon incohérente, et ces étiquettes sont la principale source de confusion : « SSL/TLS » dans un tableau de réglages désigne presque toujours le TLS implicite sur le 993 ou le 465, tandis que « TLS » ou « STARTTLS » désigne presque toujours le 143 ou le 587. Vous n'avez pas à le déterminer vous-même. Saisissez votre adresse et mcpemails remplit les deux serveurs, les deux ports et les deux modes de sécurité pour les hébergeurs qu'il reconnaît, et si le transport qu'il essaie ne répond pas, il réessaie de lui-même avec l'autre transport standard."
+    },
+    {
+      "h": "Trois capacités du serveur déterminent le comportement de votre boîte, et aucun serveur ne ressemble à un autre",
+      "p": "<b>SASL-IR</b> (RFC 4959) : un serveur qui ne l'annonce pas rejette les identifiants envoyés sur la même ligne que la commande <code>AUTHENTICATE</code> et répond par un simple <code>BAD</code> sans explication, qui ressemble exactement à un mauvais mot de passe. mcpemails le détecte et relance l'échange en deux étapes, ce qui explique pourquoi certains hébergeurs fonctionnent ici et échouent avec d'autres outils. <b>MOVE</b> (RFC 6851) : sans lui, un message ne peut pas être déplacé de façon atomique ; un déplacement devient une copie, une mise à jour des indicateurs et une purge, et une connexion coupée au milieu peut laisser le message dans les deux dossiers. <b>SPECIAL-USE</b> (RFC 6154) : sans lui, le serveur n'étiquette pas Envoyés, Brouillons, Corbeille et Indésirables selon leur rôle ; les dossiers sont donc reconnus par leur nom, et une boîte créée en allemand, en norvégien ou en russe a des dossiers système sous des noms que votre agent ne reconnaîtra pas tant que vous ne les nommez pas. Quand une opération sur un dossier se comporte bizarrement, l'une de ces trois capacités en est généralement la cause."
+    }
+  ],
+  "limits": [
+    "Le serveur doit être joignable depuis l'Internet public. Une boîte sur un réseau privé, derrière un VPN ou sur une adresse IP privée est refusée volontairement : le nom d'hôte est résolu et toute adresse appartenant à une plage privée est rejetée.",
+    "Seuls les ports mail standard sont utilisés : 143 et 993 pour IMAP, et 25, 465 et 587 pour SMTP. Un serveur qui écoute sur un port personnalisé ne peut pas être connecté.",
+    "Une boîte qui exige OAuth et n'accepte pas de mot de passe en IMAP ne peut pas être connectée de cette façon. Microsoft 365 est le cas le plus fréquent, et nous ne prétendons pas le prendre en charge."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec n'importe quelle boîte IMAP ?",
+      "a": "Claude n'a pas de client IMAP à lui, donc pas directement. Dirigez un serveur MCP comme mcpemails vers la boîte avec votre adresse, votre serveur et votre mot de passe, et Claude peut lire, rechercher, envoyer, répondre, planifier et organiser ce courrier. Tout serveur qui parle IMAP et SMTP sur les ports standard fonctionne, quel que soit son hébergeur, et la même connexion fonctionne ensuite aussi depuis Cursor et ChatGPT."
+    },
+    {
+      "q": "Comment trouver les réglages de mon serveur IMAP ?",
+      "a": "Commencez par la page d'aide de votre fournisseur, puis votre panneau de contrôle d'hébergement, où cPanel comme Plesk affichent les serveurs et ports exacts de chaque adresse. Si aucun des deux n'est disponible, un fournisseur qui suit la RFC 6186 publie un enregistrement SRV _imaps._tcp pour votre domaine, et votre enregistrement MX nomme la machine qui accepte votre courrier, généralement liée au serveur IMAP. Ne devinez pas à partir de votre nom de domaine."
+    },
+    {
+      "q": "Dois-je utiliser le port 993 ou le 143 ?",
+      "a": "Utilisez le 993, sauf indication contraire de votre fournisseur. Le port 993 est en TLS implicite, chiffré dès le premier octet, et c'est ce que recommandent les normes actuelles. Le port 143 démarre sans chiffrement puis passe en chiffré avec STARTTLS, ce qui fonctionne toujours mais relève de l'ancienne méthode. Pour l'envoi, la même distinction oppose le 465 en TLS implicite au 587 en STARTTLS. mcpemails essaie la paire standard et se rabat de lui-même sur l'autre."
+    },
+    {
+      "q": "Pourquoi mon client mail se connecte-t-il alors que cette connexion échoue ?",
+      "a": "Trois causes habituelles. Votre client pointe vers un nom d'hôte personnalisé dont le certificat est émis pour un autre nom, et il ne le valide pas strictement. Votre fournisseur exige un mot de passe d'application pour tout ce qui n'est pas sa propre application. Ou le serveur rejette l'authentification SASL en une étape et répond par un simple BAD qui ressemble à de mauvais identifiants. Essayez le nom d'hôte documenté par votre fournisseur plutôt qu'un nom construit à partir de votre domaine."
+    },
+    {
+      "q": "Ai-je besoin d'un mot de passe d'application ?",
+      "a": "Cela dépend entièrement du fournisseur. iCloud d'Apple, Yahoo, AOL, Fastmail, Yandex et Mail.ru refusent tous le mot de passe du compte depuis un client mail et en exigent un dédié. Zoho en exige un quand l'authentification à deux facteurs est activée. La plupart des hébergeurs indépendants et des serveurs cPanel acceptent directement le mot de passe de la boîte. Si un mot de passe apparemment correct est refusé, l'exigence d'un mot de passe d'application est la première chose à vérifier."
+    },
+    {
+      "q": "Mon courrier est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct sur votre serveur en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le contenu des messages n'est pas conservé. Changer le mot de passe de la boîte chez votre fournisseur déconnecte la boîte jusqu'à ce que vous saisissiez le nouveau, ce qui est le moyen le plus rapide de couper l'accès."
     }
   ],
   "ctaBand": {
-    "title": "Offrez à votre IA les boîtes que votre entreprise gère déjà",
+    "title": "Donnez à votre IA les boîtes que votre entreprise utilise déjà",
     "sub": "Connectez n'importe quelle boîte IMAP en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  },
+  "guide": {
+    "intro": "Vous préférez un guide pas à pas avec captures d'écran ?",
+    "label": "Connecteur IMAP pour Claude : connectez n'importe quelle boîte IMAP à Claude",
+    "href": "/blog/claude-imap-connector"
   }
 }

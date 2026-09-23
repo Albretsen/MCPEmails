@@ -1,21 +1,34 @@
 {
+  "_sources": [
+    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/mx-plan/email-generalities",
+    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/microsoft-exchange/how-to-configure-thunderbird-windows",
+    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/email-pro/first-config",
+    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/microsoft-exchange/exchange-starting-hosted"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/mx-plan/email-generalities",
+    "usernameForm": "La dirección de correo completa de tu propio dominio. OVH indica la dirección completa tanto para el servidor entrante como para el saliente, en todos sus productos de correo.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Conecta OVH a Claude (y a cualquier IA)",
-    "description": "Conecta OVH a Claude, Cursor, ChatGPT y a cualquier cliente MCP por IMAP con la contraseña del buzón. Deja que la IA lea, envíe, programe y organice tu correo. Una bandeja gratis, para siempre."
+    "title": "Conecta OVH a Claude, Cursor y clientes MCP",
+    "description": "Conecta el correo MX Plan de OVHcloud a Claude y a cualquier cliente MCP por IMAP en ssl0.ovh.net:993. Email Pro y Hosted Exchange usan servidores numerados."
   },
   "hero": {
     "eyebrow": "OVH + IA",
     "titleLine1": "Conecta OVH a Claude,",
     "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
-    "lead": "Dale a tu agente de IA una bandeja OVH real en minutos. Lee, busca, envía, responde, programa y organiza correo con IMAP y la contraseña del buzón, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+    "lead": "Dale a tu agente de IA una bandeja de OVH real en minutos. Lee, busca, envía, responde, programa y organiza correo con IMAP y la contraseña de tu buzón, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
     "meta0": "1 bandeja gratis, para siempre",
-    "meta1": "La contraseña del buzón, sin configurar OAuth",
+    "meta1": "La contraseña de tu buzón, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no puede llegar a OVH por su cuenta. mcpemails es un servidor MCP alojado que lo conecta por IMAP con la contraseña del buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
+    "answer": "Claude no puede llegar a OVH por su cuenta. mcpemails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
   },
   "method": {
-    "title": "Cómo se conecta OVH: IMAP y la contraseña del buzón",
-    "body": "Un buzón de OVH MX Plan se conecta por IMAP/SMTP con la contraseña del buzón que hay en el panel de control de OVH, y ambos servidores son <code>ssl0.ovh.net</code>. OVH Hosted Exchange es otro servicio: sus servidores tienen forma de <code>ex4.mail.ovh.net</code> y el correo saliente usa STARTTLS en el puerto 587, nunca el 465, por eso los valores por defecto del hosting compartido se quedan colgados contra él. mcpemails reconoce ambos y elige la combinación correcta."
+    "title": "Cómo se conecta OVH: IMAP y la contraseña de tu buzón",
+    "body": "Un buzón MX Plan de OVH se conecta por IMAP/SMTP con la contraseña del buzón del panel de control de OVH, y ambos servidores son <code>ssl0.ovh.net</code>. OVH Hosted Exchange es un servicio distinto: sus servidores tienen nombres como <code>ex4.mail.ovh.net</code> y el correo saliente va por STARTTLS en el puerto 587, nunca en el 465, y por eso los valores por defecto del alojamiento compartido simplemente se quedan colgados con él. mcpemails reconoce ambos y elige el par correcto."
   },
   "setup": [
     {
@@ -23,8 +36,8 @@
       "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
-      "h": "Consigue la contraseña de tu buzón de OVH",
-      "p": "En el panel de control de OVH, abre el servicio de correo, elige la dirección y cambia su contraseña. Copia el servidor de correo que OVH indique para ese buzón si no es ssl0.ovh.net."
+      "h": "Obtén la contraseña de tu buzón de OVH",
+      "p": "En el panel de control de OVH, abre el servicio de correo, elige la dirección y cambia su contraseña. Copia el servidor de correo que OVH muestra para ese buzón si no es ssl0.ovh.net."
     },
     {
       "h": "Pégala en mcpemails",
@@ -35,8 +48,57 @@
       "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
     }
   ],
+  "gotchas": [
+    {
+      "h": "OVH tiene tres productos de correo con tres patrones de servidor, y acabar en el equivocado es el fallo más común aquí",
+      "p": "Este es el problema de OVH. <b>MX Plan</b>, el buzón incluido con los dominios y el alojamiento web, está documentado en <code>ssl0.ovh.net</code> (OVH también indica <code>imap.mail.ovh.net</code> y <code>smtp.mail.ovh.net</code>), con IMAP en el 993 con SSL/TLS y SMTP en el 465 con SSL/TLS. <b>Email Pro</b> responde en <code>pro</code> más el número de tu servidor más <code>.mail.ovh.net</code>, con IMAP en el 993 con SSL y SMTP en el <b>587 con STARTTLS</b>. <b>Hosted Exchange</b> responde en <code>ex</code> más el número de tu servidor más <code>.mail.ovh.net</code>, de nuevo con IMAP en el 993 y SMTP en el 587 con STARTTLS. Los tres no son intercambiables en ningún sentido. Apuntar un buzón de Exchange o Email Pro a <code>ssl0.ovh.net</code> falla, y MX Plan en el puerto 587 con STARTTLS no es donde OVH lo documenta."
+    },
+    {
+      "h": "Los servidores de Email Pro y Exchange llevan un número de servidor que no se puede adivinar",
+      "p": "OVH no da a Email Pro ni a Hosted Exchange un nombre de servidor compartido. Cada servicio está en una máquina numerada, y el número forma parte del nombre, por eso <code>ex4.mail.ovh.net</code> funciona para un cliente y no devuelve nada para el siguiente. OVH lo muestra en el OVHcloud Control Panel: abre el servicio, ve a la pestaña <b>General information</b> y mira el recuadro <b>Connection</b>. No hay forma de deducirlo a partir de tu dominio ni ningún autodescubrimiento que lo encuentre por ti, así que cópialo del panel antes de empezar."
+    },
+    {
+      "h": "Nada en tu dirección indica qué producto de OVH tienes",
+      "p": "Los tres productos sirven correo en tu propio dominio, así que <code>you@yourdomain.fr</code> tiene el mismo aspecto esté en el que esté. La respuesta está en el OVHcloud Control Panel, en Web Cloud, donde MX Plan aparece en Emails, Email Pro tiene su propia sección y Hosted Exchange otra. Compruébalo primero, porque todos los demás ajustes dependen de ello. Si lo que contrataste en OVH fue Microsoft 365 y no el Hosted Exchange propio de OVH, el buzón está en los servidores de Microsoft bajo la plataforma de identidad de Microsoft, y la política de tenant por defecto de Microsoft bloquea el consentimiento del usuario final para el acceso de terceros al correo. No afirmamos poder conectar esos buzones."
+    },
+    {
+      "h": "MX Plan usa Dovecot sin MOVE, UIDPLUS ni SPECIAL-USE",
+      "p": "El saludo de <code>ssl0.ovh.net</code> se identifica como Dovecot y anuncia <code>SASL-IR</code>, <code>IDLE</code>, <code>AUTH=PLAIN</code> y <code>AUTH=LOGIN</code>, pero no MOVE, UIDPLUS ni SPECIAL-USE. Por eso mover un mensaje se hace como una copia, una actualización de indicadores y un expunge en lugar de un único comando atómico, y el identificador nuevo de la copia hay que encontrarlo buscando en el destino. Las carpetas se identifican por nombre y no por función, lo que importa más en OVH que en otros sitios porque muchísimos buzones de OVH están en francés: puede que haya que decirle a un agente que busca Enviados que la carpeta se llama <code>Elements envoyes</code>, y la papelera puede ser <code>Corbeille</code>."
+    }
+  ],
+  "limits": [
+    "No se pueden conectar buzones de Microsoft 365 contratados a través de OVHcloud. La política de tenant por defecto de Microsoft bloquea el consentimiento del usuario final para el acceso de terceros al correo.",
+    "Los nombres de servidor de Email Pro y Hosted Exchange incluyen un número de servidor propio de cada servicio, así que no podemos rellenarlos de antemano. Toma el valor del recuadro Connection del OVHcloud Control Panel.",
+    "MX Plan no anuncia MOVE, así que un movimiento no es atómico. Si la conexión se corta a mitad, un mensaje puede existir brevemente en las dos carpetas."
+  ],
+  "faq": [
+    {
+      "q": "¿Claude funciona con el correo de OVH?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para OVHcloud. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar. Lo único que tienes que averiguar antes es a qué producto de correo de OVH pertenece la dirección, porque los nombres de servidor son totalmente distintos entre ellos."
+    },
+    {
+      "q": "¿Cuál es la configuración IMAP y SMTP de OVH?",
+      "a": "Para MX Plan, OVH documenta ssl0.ovh.net para ambos, IMAP en el 993 con SSL/TLS y SMTP en el 465 con SSL/TLS, y también indica imap.mail.ovh.net y smtp.mail.ovh.net como equivalentes. Email Pro y Hosted Exchange usan en cambio un servidor numerado con la forma pro4.mail.ovh.net o ex4.mail.ovh.net, IMAP en el 993 y SMTP en el 587 con STARTTLS."
+    },
+    {
+      "q": "¿Cómo sé si tengo MX Plan, Email Pro o Hosted Exchange?",
+      "a": "Inicia sesión en el OVHcloud Control Panel y abre Web Cloud. Los buzones MX Plan aparecen en Emails, y Email Pro y Hosted Exchange tienen cada uno su propia sección en el menú de la izquierda. La dirección en sí no revela nada, ya que los tres sirven correo en tu propio dominio, así que el panel es la única respuesta fiable."
+    },
+    {
+      "q": "¿Dónde encuentro el número de mi servidor de OVH?",
+      "a": "Abre el servicio de Email Pro o Hosted Exchange en el OVHcloud Control Panel, selecciona la pestaña General information y mira el recuadro Connection. El número que aparece ahí es la cifra de tu nombre de servidor, lo que da nombres como pro4.mail.ovh.net o ex4.mail.ovh.net. No se puede deducir a partir de tu nombre de dominio."
+    },
+    {
+      "q": "¿Por qué ssl0.ovh.net no funciona con mi buzón?",
+      "a": "Porque probablemente tu buzón no es de MX Plan. ssl0.ovh.net solo sirve MX Plan. Un buzón de Email Pro o Hosted Exchange responde en su propio servidor numerado y rechazará o ignorará una conexión dirigida a ssl0.ovh.net, lo que parece un cuelgue o una contraseña incorrecta y no un servidor equivocado."
+    },
+    {
+      "q": "¿Se almacena mi correo de OVH en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de OVHcloud por IMAP en cada petición y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
   "ctaBand": {
-    "title": "Dale a tu IA una bandeja OVH",
+    "title": "Dale a tu IA una bandeja de OVH",
     "sub": "Conecta OVH en minutos. Una bandeja gratis para siempre, sin tarjeta."
   }
 }

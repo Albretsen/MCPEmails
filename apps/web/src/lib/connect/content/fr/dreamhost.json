@@ -1,0 +1,95 @@
+{
+  "_sources": [
+    "https://help.dreamhost.com/hc/en-us/articles/214918038-Email-client-configuration-overview",
+    "https://help.dreamhost.com/hc/en-us/articles/216479177-Change-password-Mail-users",
+    "https://help.dreamhost.com/hc/en-us/articles/216479147-Passwords-overview"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe du mail user",
+    "helpUrl": "https://help.dreamhost.com/hc/en-us/articles/216479177-Change-password-Mail-users",
+    "usernameForm": "Votre adresse complète, domaine compris : name@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connecter l'e-mail DreamHost à Claude et aux clients MCP",
+    "description": "Connectez l'e-mail DreamHost à Claude, Cursor et tout client MCP via IMAP sur imap.dreamhost.com:993, avec le mot de passe du mail user et non celui du panel."
+  },
+  "hero": {
+    "eyebrow": "E-mail DreamHost + IA",
+    "titleLine1": "Connectez l'e-mail DreamHost à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte DreamHost. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP avec le mot de passe du mail user défini dans le panel DreamHost.",
+    "answer": "Claude ne peut pas accéder seul à une boîte DreamHost. mcpemails est un serveur MCP hébergé qui la connecte via IMAP sur imap.dreamhost.com, port 993, en s'authentifiant avec votre adresse e-mail complète et le mot de passe du mail user de cette adresse, que DreamHost distingue du mot de passe du panel avec lequel vous vous connectez. Claude, Cursor ou tout client MCP peut alors lire, rechercher, envoyer et organiser le courrier. Il n'y a ni mot de passe d'application ni option IMAP à activer. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe du mail user, pas celui du panel",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment DreamHost se connecte : IMAP et le mot de passe du mail user",
+    "body": "DreamHost sert IMAP sur <code>imap.dreamhost.com</code>, port 993, en TLS implicite, et SMTP sur <code>smtp.dreamhost.com</code>, port 465. Ce sont des noms de serveur partagés par tous les clients mail de DreamHost : rien ici ne dépend de votre propre domaine. C'est le modèle de compte de DreamHost qu'il faut comprendre : un compte DreamHost contient plusieurs types d'utilisateurs, chacun avec son propre mot de passe. Un <b>panel user</b> (utilisateur du panel) se connecte au panneau de contrôle. Un <b>mail user</b> (utilisateur mail) est une adresse e-mail, et il porte le mot de passe choisi lors de la création de l'adresse. IMAP et SMTP n'acceptent que le mot de passe du mail user. SMTP exige une authentification avec les mêmes identifiants qu'IMAP ; DreamHost précise que le courrier sortant n'est pas relayé sans elle."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
+    },
+    {
+      "h": "Définissez le mot de passe du mail user dans le panel DreamHost",
+      "p": "Connectez-vous au panel DreamHost, ouvrez Mail, puis Manage Email, trouvez l'adresse et cliquez sur Manage. Descendez jusqu'à la section Change Password et générez un mot de passe ou définissez le vôtre. DreamHost indique que cela ne peut pas se faire depuis le webmail : vous devez passer par le panel ou par l'interface distincte des boîtes."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète et collez le mot de passe du mail user. Les serveurs imap.dreamhost.com et smtp.dreamhost.com et les ports 993 et 465 sont préremplis et ont été vérifiés par une connexion TLS réelle."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a accès à la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "DreamHost a plusieurs types d'utilisateurs, et un seul peut lire le courrier",
+      "p": "C'est la cause d'échec qui fait perdre le plus de temps chez DreamHost. Le panel permet de créer des utilisateurs de site web, des mail users, des utilisateurs MySQL, des panel users et d'autres encore, chacun avec un mot de passe indépendant, et il est tout à fait normal qu'une même personne en détienne trois ou quatre. IMAP n'accepte que le mot de passe du mail user de cette adresse précise. Saisir le mot de passe du panel, ou celui d'un utilisateur FTP ou shell, produit un échec d'authentification qui n'indique pas quel identifiant était faux. En cas de doute, réinitialisez le mot de passe du mail user depuis Manage Email et utilisez la nouvelle valeur."
+    },
+    {
+      "h": "Le webmail ne permet pas de changer le mot de passe qu'il utilise",
+      "p": "DreamHost indique qu'il n'est pas possible de modifier le mot de passe d'un mail user depuis le webmail. Il faut passer par le panel ou l'interface des boîtes. Quiconque se connecte au webmail sans problème, puis cherche un écran de mot de passe pour fournir un identifiant à un autre outil, se retrouve dans une impasse et en conclut souvent que la boîte est en lecture seule."
+    },
+    {
+      "h": "L'identifiant court fonctionne assez souvent pour être un piège",
+      "p": "Les consignes de DreamHost indiquent qu'un client peut avoir besoin de l'adresse e-mail complète pour se connecter, mais que bien souvent seule la partie avant l'arobase suffit. Cette ambiguïté ne pose pas de problème sur un compte à un seul domaine, et en devient un dès que deux de vos domaines ont une adresse avec la même partie locale, puisque la forme courte n'identifie plus une seule boîte. Saisissez toujours l'adresse complète. mcpemails envoie l'adresse complète."
+    }
+  ],
+  "limits": [
+    "Le serveur n'annonce ni MOVE ni UIDPLUS : un déplacement s'effectue donc par copie, drapeau et expunge, et le nouvel UID doit être retrouvé en cherchant dans le dossier de destination.",
+    "SPECIAL-USE est absent : Sent, Drafts, Trash et Junk sont donc reconnus par leur nom plutôt que par leur rôle.",
+    "SMTP annonce une taille maximale de message d'environ 40 MB, ce qui limite ce qu'un agent peut envoyer en pièces jointes dans un seul message."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec l'e-mail DreamHost ?",
+      "a": "Pas seul. Claude n'a pas de connecteur DreamHost intégré. Pointer un serveur MCP comme mcpemails vers votre boîte DreamHost via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de DreamHost ?",
+      "a": "IMAP : imap.dreamhost.com sur le port 993 en TLS implicite. SMTP : smtp.dreamhost.com sur le port 465, également en TLS implicite, et l'authentification est obligatoire pour le courrier sortant. Utilisez votre adresse e-mail complète comme identifiant et le mot de passe du mail user. Les deux serveurs ont été confirmés par une connexion TLS réelle."
+    },
+    {
+      "q": "Pourquoi mon mot de passe DreamHost est-il refusé ?",
+      "a": "Parce que DreamHost délivre un mot de passe distinct pour chaque type d'utilisateur du compte, et qu'IMAP n'accepte que le mot de passe du mail user de cette adresse. Le mot de passe du panel est un autre identifiant. Réinitialisez le mot de passe du mail user sous Mail, Manage Email, Manage, et utilisez la valeur définie à cet endroit."
+    },
+    {
+      "q": "DreamHost exige-t-il un mot de passe d'application ?",
+      "a": "Non. DreamHost ne délivre pas de mots de passe propres à une application pour le courrier, et il n'y a pas d'option IMAP à activer par boîte. Le mot de passe du mail user authentifie directement IMAP et SMTP. Si vous préférez ne pas réutiliser un mot de passe existant, définissez-en un nouveau pour l'adresse dans le panel."
+    },
+    {
+      "q": "Mon courrier DreamHost est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct chez DreamHost via IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le contenu des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte DreamHost à votre IA",
+    "sub": "Connectez l'e-mail DreamHost en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

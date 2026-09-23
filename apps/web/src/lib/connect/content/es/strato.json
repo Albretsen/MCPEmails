@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://www.strato.de/faq/mail/so-lauten-die-strato-e-mail-server/",
+    "https://www.strato.de/faq/mail/e-mail-authentifizierung-nach-abschaltung-von-md5-challenge-response/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://www.strato.de/faq/mail/so-lauten-die-strato-e-mail-server/",
+    "usernameForm": "Tu dirección completa, incluido el dominio: name@ihredomain.de.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta el correo de STRATO a Claude y clientes MCP",
+    "description": "Conecta el correo de STRATO a Claude, Cursor y cualquier cliente MCP por IMAP en imap.strato.de:993. Usa autenticación de contraseña normal: STRATO eliminó CRAM-MD5."
+  },
+  "hero": {
+    "eyebrow": "Correo de STRATO + IA",
+    "titleLine1": "Conecta el correo de STRATO a Claude,",
+    "titleLine2": "Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de STRATO. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña del buzón, no con tu acceso de cliente de STRATO.",
+    "answer": "Claude no puede acceder a un buzón de STRATO por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.strato.de en el puerto 993, autenticándose con tu dirección de correo completa y la contraseña establecida en ese buzón, no con tu acceso de cliente de STRATO, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. STRATO solo acepta la autenticación de contraseña normal sobre una conexión cifrada, tras haber desactivado el antiguo método de desafío-respuesta. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña del buzón, no el acceso de cliente",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta STRATO: IMAP, solo TLS, contraseña normal",
+    "body": "STRATO ofrece IMAP en <code>imap.strato.de</code> en el puerto 993 con TLS implícito y SMTP en <code>smtp.strato.de</code> en el puerto 465, también con TLS implícito. STRATO afirma que todos sus buzones usan exclusivamente conexiones cifradas y que las conexiones sin cifrar no se admiten en absoluto, y limita la conexión a TLS 1.2 y 1.3. El nombre de usuario es tu dirección de correo completa y la contraseña es la elegida para ese buzón, una credencial distinta del acceso de cliente que usas para el STRATO Kundenlogin. La autenticación debe configurarse como contraseña simple o normal sobre ese canal cifrado: STRATO desactivó el mecanismo de desafío-respuesta CRAM-MD5, así que cualquier cliente que siga configurado con él fallará."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
+    },
+    {
+      "h": "Establece la contraseña del buzón en el STRATO Kundenlogin",
+      "p": "Inicia sesión en el STRATO Kundenlogin (área de cliente), abre tu paquete y ve a E-Mail y luego a E-Mail-Adressen verwalten (gestionar direcciones de correo). Selecciona la dirección y establece ahí una contraseña nueva. Esta contraseña pertenece solo al buzón y no es la que acabas de usar para entrar en el Kundenlogin."
+    },
+    {
+      "h": "Pégala en mcpemails",
+      "p": "Elige IMAP / SMTP, escribe la dirección completa y pega la contraseña del buzón. Los servidores imap.strato.de y smtp.strato.de y los puertos 993 y 465 vienen rellenados y se verificaron mediante una conexión TLS real."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "STRATO desactivó CRAM-MD5, y los clientes antiguos todavía lo piden",
+      "p": "STRATO ya no admite el método de autenticación de desafío-respuesta MD5. En los clientes de correo el ajuste suele llamarse <b>encrypted password</b> (contraseña cifrada) o <b>secure password authentication</b> (autenticación de contraseña segura), y aparece justo debajo de <b>normal password</b> (contraseña normal) en el mismo desplegable, así que se eligió mucho con la razonable suposición de que más cifrado es mejor. Cualquier cliente o script que se haya quedado con ese ajuste falla ahora al iniciar sesión con un error que no se distingue de unas credenciales incorrectas, aunque la contraseña sea correcta. La configuración correcta es contraseña normal o simple sobre la conexión TLS, que ya está cifrada de extremo a extremo."
+    },
+    {
+      "h": "STRATO no anuncia SASL-IR",
+      "p": "El servidor IMAP omite la capacidad SASL-IR, así que rechaza la autenticación en un solo paso que lleva las credenciales en la misma línea que el comando AUTHENTICATE. Un cliente que da por hecho SASL-IR recibe un <code>BAD</code> a secas sin explicación, que de nuevo parece un problema de contraseña. mcpemails detecta esa respuesta y reintenta con el intercambio en dos pasos, así que la conexión funciona, pero, sumado a la eliminación de CRAM-MD5, es la razón de que STRATO genere tantos falsos avisos de contraseña incorrecta."
+    },
+    {
+      "h": "STRATO tiene el servidor IMAP mejor equipado de su rango de precio",
+      "p": "Algo poco habitual en el correo de alojamiento compartido: STRATO anuncia MOVE, UIDPLUS, SPECIAL-USE, SORT, QUOTA y LIST-EXTENDED. En la práctica significa que los movimientos son un único comando atómico en lugar de una copia más un expunge, que se devuelve el UID de destino para poder seguir un mensaje movido, y que Enviados, Borradores, Papelera y Spam se identifican por su función en lugar de adivinarse a partir de nombres de carpeta en alemán como Gesendet y Papierkorb. Si estás eligiendo proveedor para correo gestionado por agentes, esa combinación vale más de lo que parece."
+    },
+    {
+      "h": "Hay un límite estricto de 100 MB tanto para enviar como para subir",
+      "p": "STRATO anuncia un APPENDLIMIT de 104857600 bytes en IMAP y la misma cifra como tamaño máximo de mensaje en SMTP. Eso determina tanto lo que un agente puede enviar como lo que puede escribir en una carpeta como borrador o mensaje añadido. Un conjunto de adjuntos grande se rechaza directamente en lugar de recortarse."
+    }
+  ],
+  "limits": [
+    "Las conexiones sin cifrar no se admiten en absoluto, y solo se aceptan TLS 1.2 y 1.3. Las bibliotecas cliente muy antiguas no pueden negociar una sesión.",
+    "El servidor limita los mensajes y los añadidos a 100 MB."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de STRATO?",
+      "a": "No por sí solo. Claude no tiene un conector de STRATO integrado. Apuntar un servidor MCP como mcpemails a tu buzón de STRATO por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de STRATO?",
+      "a": "IMAP es imap.strato.de en el puerto 993 con TLS implícito. SMTP es smtp.strato.de en el puerto 465, también con TLS implícito. El nombre de usuario es tu dirección de correo completa y la contraseña es la del buzón. La autenticación debe configurarse como contraseña normal o simple. Ambos servidores se confirmaron mediante una conexión TLS real."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de STRATO?",
+      "a": "Hay tres causas que conviene revisar por orden. El cliente está configurado con contraseña cifrada o CRAM-MD5, que STRATO ha desactivado. Estás usando la contraseña del STRATO Kundenlogin en lugar de la del buzón. O el cliente intenta una conexión sin cifrar, que STRATO rechaza por completo en lugar de rebajar la seguridad."
+    },
+    {
+      "q": "¿Necesita STRATO una contraseña de aplicación?",
+      "a": "No. STRATO no emite contraseñas específicas de aplicación para el correo y no hay un interruptor de IMAP por buzón que activar. La contraseña del buzón establecida en el Kundenlogin autentica tanto IMAP como SMTP. Si prefieres no reutilizar una contraseña existente, establece una nueva para esa dirección."
+    },
+    {
+      "q": "¿Se almacena mi correo de STRATO en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de STRATO por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de STRATO",
+    "sub": "Conecta el correo de STRATO en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

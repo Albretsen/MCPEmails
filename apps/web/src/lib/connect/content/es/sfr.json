@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://webmail.sfr.fr/",
+    "https://actuneuf.com/sfr/internet/imap",
+    "https://actuneuf.com/sfr/espace-client/changer-mot-de-passe",
+    "https://actuneuf.com/sfr/internet/creer-adresse-mail"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña de SFR Mail",
+    "helpUrl": "https://webmail.sfr.fr/",
+    "usernameForm": "Tu dirección completa, incluido el dominio: prenom.nom@sfr.fr.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Ajustes IMAP de SFR Mail y acceso MCP para Claude",
+    "description": "Conecta un buzón de SFR Mail a Claude, Cursor y cualquier cliente MCP en imap.sfr.fr:993. La contraseña de SFR Mail es distinta de la de tu Espace Client."
+  },
+  "hero": {
+    "eyebrow": "SFR Mail + IA",
+    "titleLine1": "Conecta tu buzón de SFR",
+    "titleLine2": "a Claude, Cursor, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de SFR. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña que pertenece al buzón y no a tu cuenta de cliente.",
+    "answer": "Claude no puede acceder a un buzón de SFR por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.sfr.fr en el puerto 993, autenticándose con tu dirección sfr.fr completa y tu contraseña de SFR Mail, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. Conviene saber de antemano dónde está el punto de fallo, la credencial: SFR Mail tiene su propia contraseña, distinta de la de tu Espace Client, y cambiar una no cambia la otra. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña de SFR Mail, no la de Espace Client",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta SFR: IMAP y una contraseña propia del buzón",
+    "body": "SFR ofrece IMAP en <code>imap.sfr.fr</code> en el puerto 993 sobre TLS implícito y el envío SMTP en <code>smtp.sfr.fr</code> en el puerto 465, con autenticación obligatoria. Ambos servidores se confirmaron mediante una conexión TLS real y son comunes a todos los buzones de SFR; no hay nada regional ni por cliente que buscar. Lo específico de SFR es el modelo de credenciales. El Espace Client de sfr.fr y SFR Mail son dos cuentas con dos contraseñas. Puedes ponerles la misma cadena, pero siguen siendo independientes, así que cambiar la contraseña del Espace Client no toca la del buzón y un cliente de correo sigue funcionando, mientras que cambiar la contraseña del buzón desconecta todos los clientes y deja intacto el Espace Client. La contraseña del buzón se cambia dentro del propio SFR Mail, en la sección de ajustes para configurar tus buzones, no en el portal de cliente."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
+    },
+    {
+      "h": "Confirma o restablece la contraseña de SFR Mail dentro del webmail",
+      "p": "Inicia sesión en webmail.sfr.fr con la dirección que quieres conectar. Abre los ajustes (el control de herramientas o <b>Réglages</b> arriba a la derecha) y la sección para configurar tus buzones (<b>Configuration de mes boîtes mails</b>). Ahí está el cambio de contraseña. Esa es la credencial que comprueba el servidor IMAP, y no es la que escribes en el Espace Client de sfr.fr."
+    },
+    {
+      "h": "Plantéate darle al agente una dirección secundaria",
+      "p": "SFR permite al abonado crear direcciones y alias adicionales desde la misma pantalla de configuración del buzón, junto a la dirección principal que venía con la línea. Si prefieres no darle a un agente la dirección a la que te escribe todo el mundo, crea una segunda ahí y conecta esa. Usa los mismos servidores y puertos."
+    },
+    {
+      "h": "Pégala en mcpemails y luego pega la URL MCP en tu IA",
+      "p": "Elige IMAP / SMTP, escribe la dirección completa, como prenom.nom@sfr.fr, y pega la contraseña de SFR Mail. Los servidores y puertos de SFR vienen rellenados y se verificaron mediante una conexión TLS real. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "La contraseña del Espace Client y la de SFR Mail son dos cosas distintas",
+      "p": "Este es el fallo de SFR que más tiempo hace perder, porque ambas credenciales pertenecen a la misma persona, las dos se llaman <b>mot de passe SFR</b> en el uso corriente, y cualquiera de ellas se puede escribir en un cliente de correo sin que aparezca un error que explique nada. Son cuentas independientes: cambiar una no cambia la otra, aunque en algún momento les pusieras a propósito el mismo valor y des por hecho que siguen sincronizadas. Cuando un cliente vea rechazado el inicio de sesión, entra en el propio SFR Mail, restablece ahí la contraseña del buzón y usa exactamente ese valor en mcpemails."
+    },
+    {
+      "h": "Sin SASL-IR, así que un cliente que lo da por hecho recibe un BAD a secas",
+      "p": "El saludo IMAP de SFR es de lo más escueto (<code>* OK IMAP4 ready</code>) y no anuncia <code>SASL-IR</code>. Por eso el servidor rechaza la autenticación en un solo paso que envía la credencial junto con el comando <code>AUTHENTICATE</code>, y responde con un <code>BAD</code> sin más que no se distingue de unas credenciales incorrectas. Con la confusión de contraseñas descrita arriba, es una combinación especialmente poco útil: las dos causas más probables de un fallo de inicio de sesión en SFR producen el mismo mensaje. mcpemails detecta el <code>BAD</code> y reintenta con el intercambio en dos pasos, así que esta parte ya la tienes resuelta."
+    },
+    {
+      "h": "El envío tiene un límite de 20 MB, bajo para un proveedor francés",
+      "p": "<code>smtp.sfr.fr</code> anuncia un tamaño máximo de mensaje de 20.971.520 bytes. Es el tamaño codificado del mensaje completo, y base64 aumenta un adjunto en aproximadamente un tercio, así que un archivo de más de unos 15 MB en disco no saldrá. Un agente al que se pida reenviar un adjunto grande recibe un rechazo SMTP rotundo en el momento del envío, no un envío lento ni una devolución posterior."
+    },
+    {
+      "h": "Sin IDLE, sin MOVE y sin SPECIAL-USE en un buzón con nombres en francés",
+      "p": "El servidor no anuncia ninguna de ellas. Sin <code>IDLE</code>, el correo nuevo se descubre consultando periódicamente en lugar de recibirse en una conexión abierta. Sin <code>MOVE</code>, archivar se hace como una copia, una actualización de marcas y un expunge. Sin <code>SPECIAL-USE</code>, Enviados, Borradores y Papelera se identifican por nombre, y un buzón de SFR suele llamarlas <b>Envoyés</b>, <b>Brouillons</b> y <b>Corbeille</b>. Sí ofrece <code>UIDPLUS</code>, así que al menos un mensaje copiado devuelve su nuevo UID y no hay que encontrarlo buscando."
+    }
+  ],
+  "limits": [
+    "El límite de envío de 20 MB es el techo práctico de todo lo que tu agente envíe desde este buzón.",
+    "Sin IDLE, una instrucción como avísame en cuanto llegue una respuesta depende de la frecuencia con que se consulte el buzón y no de la velocidad de entrega de SFR.",
+    "Como el servidor no admite MOVE, mover un mensaje no es atómico. Si una conexión se corta a mitad de la operación, un mensaje puede existir brevemente en ambas carpetas."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con SFR Mail?",
+      "a": "No por sí solo. Claude no tiene un conector de SFR integrado. Apuntar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de SFR?",
+      "a": "IMAP es imap.sfr.fr en el puerto 993 con TLS implícito. SMTP es smtp.sfr.fr en el puerto 465, también con TLS implícito, con autenticación obligatoria. El nombre de usuario es tu dirección sfr.fr completa y la contraseña es tu contraseña de SFR Mail. Ambos servidores se confirmaron mediante una conexión TLS real y son comunes a todos los buzones de SFR."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de SFR en un cliente de correo?",
+      "a": "Casi siempre porque es la contraseña del Espace Client y no la de SFR Mail. Las dos cuentas son independientes y cambiar una no afecta a la otra. Inicia sesión en webmail.sfr.fr, abre la sección de configuración del buzón en los ajustes, restablece ahí la contraseña del correo y usa exactamente ese valor en el cliente."
+    },
+    {
+      "q": "¿Emite SFR contraseñas de aplicación?",
+      "a": "SFR no ofrece ningún mecanismo de contraseñas específicas de aplicación para clientes de correo. Lo que tiene en su lugar es una contraseña de buzón que ya está separada de la contraseña de tu cuenta de cliente, lo que cumple una función parecida: puedes cambiarla sin tocar tu acceso al Espace Client, y cambiar la contraseña del Espace Client no desconecta tus clientes."
+    },
+    {
+      "q": "¿Puedo darle a un agente una segunda dirección de SFR?",
+      "a": "Sí. Los abonados de SFR pueden crear direcciones y alias adicionales desde la pantalla de configuración del buzón en los ajustes de SFR Mail. Una dirección secundaria se conecta por los mismos servidores imap.sfr.fr y smtp.sfr.fr, y mantiene la actividad de tu agente fuera de la dirección que usan realmente tus contactos."
+    },
+    {
+      "q": "¿Se almacena mi correo de SFR en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de SFR por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de SFR",
+    "sub": "Conecta SFR Mail en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

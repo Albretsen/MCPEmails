@@ -1,0 +1,105 @@
+{
+  "_sources": [
+    "https://posteo.de/en/help/how-do-i-set-up-posteo-in-an-email-client-pop3-imap-and-smtp",
+    "https://posteo.de/en/help/activating-additional-email-account-protection",
+    "https://posteo.de/en/blog/how-to-use-app-passwords-with-posteo",
+    "https://posteo.de/en/help/how-do-i-activate-inbound-encryption-with-my-public-pgp-key",
+    "https://posteo.de/en/help/how-do-i-activate-posteo-crypto-mail-storage"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Posteo-passord, eller et app-passord",
+    "helpUrl": "https://posteo.de/en/blog/how-to-use-app-passwords-with-posteo",
+    "usernameForm": "Hele Posteo-adressen din, uansett hvilket Posteo-domene den slutter på: name@posteo.de, name@posteo.net, name@posteo.org og resten autentiserer alle mot samme server.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Posteo til Claude, Cursor og MCP-klienter",
+    "description": "Koble Posteo til Claude, Cursor og enhver MCP-klient via IMAP på posteo.de:993. Ekstra kontobeskyttelse gjør app-passord obligatorisk for alle e-postklienter."
+  },
+  "hero": {
+    "eyebrow": "Posteo + AI",
+    "titleLine1": "Koble Posteo til Claude,",
+    "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Posteo-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP, i alle MCP-klienter i stedet for én, med et ærlig svar på hva Posteos kryptering skjuler og ikke skjuler for en agent.",
+    "answer": "Claude når ikke Posteo på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på posteo.de port 993, og SMTP på posteo.de port 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Det er ikke noe imap.- eller smtp.-prefiks: det nakne domenet er serveren for alle Posteo-adresser, uansett hvilket Posteo-domene din slutter på. Autentisering skjer med det vanlige Posteo-passordet ditt, med mindre du har slått på ekstra beskyttelse av e-postkontoen, og da godtar IMAP, POP3 og SMTP bare et app-passord opprettet i Posteo-innstillingene. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "App-passord når ekstra beskyttelse er på",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Posteo seg til: ett naket vertsnavn, og et passord som avhenger av én innstilling",
+    "body": "Posteo publiserer ett enkelt servernavn for alt. IMAP er <code>posteo.de</code> på port 993 med SSL/TLS, eller 143 med STARTTLS. POP3 er samme vert på 995 eller 110. SMTP er <code>posteo.de</code> på 465 eller 587. Posteo godtar bare krypterte tilkoblinger, og krever SMTP-autentisering selv der en klient merker det utgående passordet som valgfritt, så fyll ut begge feltene. Brukernavnet er den <b>fullstendige</b> adressen din. Posteo selger adresser på rundt tjue domener, og <code>posteo.de</code> er fortsatt serveren for alle, så det er ingenting per domene å slå opp og ikke noe <code>imap.</code>-vertsnavn å gjette. Hvilket passord du trenger, avgjøres av én bryter. Som standard virker det vanlige Posteo-passordet ditt. Slår du på <b>additional email account protection</b> under Password and security, slutter Posteo helt å godta det via IMAP, POP3 og SMTP, og bare <b>app-passord</b> gjenstår. Webmail fortsetter med det vanlige passordet uansett."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, uten kort. Til slutt får du en MCP-URL og en nøkkel."
+    },
+    {
+      "h": "Opprett et app-passord i Posteo-innstillingene",
+      "p": "Logg inn i Posteo-webmailen og åpne <b>Settings</b>, så <b>Password and security</b>, der app-passord opprettes og administreres. Posteo krever at hvert av dem er minst 16 tegn med minst ett tall og én stor bokstav, og du kan ha opptil fem samtidig. Gi det et navn etter denne tilkoblingen, så du vet hvilket du skal slette senere. Du kan hoppe over dette hvis ekstra beskyttelse er av, men en pålogging du kan trekke tilbake for seg selv, er en bedre ting å gi til en tredjepart."
+    },
+    {
+      "h": "Legg til postkassen i mcpemails",
+      "p": "Velg IMAP / SMTP og skriv inn hele Posteo-adressen din, så passordet. Verten er forhåndsutfylt som <code>posteo.de</code> for begge retninger, verifisert via en direkte TLS-tilkobling, og det utgående passordet må fylles ut i tillegg til det innkommende, fordi Posteo alltid autentiserer innsending."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Ekstra beskyttelse av e-postkontoen stenger ute kontopassordet uten å varsle klienten",
+      "p": "Det er denne som skaper supporthenvendelsene. Når den innstillingen er på, dokumenterer Posteo at tilgang via IMAP, POP3 og SMTP bare er mulig med et app-passord, mens webmail fortsetter å godta det vanlige passordet som før. Utenfra ser det ut som klienten gikk i stykker av seg selv: webinnloggingen virker fortsatt, så passordet er åpenbart i orden, og likevel avviser alle enheter. Løsningen er ikke å tilbakestille passordet. Det er et app-passord fra Password and security, lagt inn i både inngående og utgående felt."
+    },
+    {
+      "h": "Kryptert e-postlagring og kryptering av innkommende e-post høres like ut og oppfører seg helt ulikt via IMAP",
+      "p": "Posteo tilbyr to ting folk blander sammen. <b>Kryptert e-postlagring</b> (crypto mail storage) krypterer postkassen din ved lagring på Posteos servere og er usynlig for en klient: du logger inn, serveren dekrypterer, og IMAP virker nøyaktig som før, så en agent leser e-posten din som normalt. <b>Kryptering av innkommende e-post</b> (inbound encryption) er det motsatte. Den tar din offentlige PGP- eller S/MIME-nøkkel og krypterer hver ny melding som kommer inn til den, uansett om avsenderen krypterte noe, og resultatet er chiffertekst for alle klienter uten din private nøkkel, denne inkludert. Posteo påpeker at den bare gjelder ny e-post, ikke krypterer headere, og med S/MIME gjør at du ikke kan lese din egen e-post i webmail. Vil du ha en agent som kan lese innboksen din, er kryptert e-postlagring forenlig med det, mens kryptering av innkommende e-post ikke er det."
+    },
+    {
+      "h": "Det finnes ingen imap.posteo.de, og ingen server per domene",
+      "p": "Posteo-adresser finnes på omtrent tjue domener, blant annet posteo.net, posteo.org, posteo.eu, posteo.at og posteo.ch, og alle betjenes av det nakne vertsnavnet <code>posteo.de</code> for IMAP, POP3 og SMTP. Klienter som bygger et servernavn ved å sette et prefiks foran ditt eget domene, den vanlige autokonfigurasjonsgjetningen, ender opp med å lete etter noe som ikke er den dokumenterte serveren. Skriv inn <code>posteo.de</code> manuelt og bruk hele adressen som brukernavn."
+    },
+    {
+      "h": "Ingen MOVE og ingen UIDPLUS, så arkivering av e-post er en operasjon i tre steg",
+      "p": "Posteos Dovecot-server annonserer IDLE og SASL-IR, men verken MOVE, UIDPLUS eller SPECIAL-USE. En flytting er derfor en COPY, en STORE av flagget \\Deleted og en EXPUNGE, og uten UIDPLUS rapporterer serveren aldri den nye UID-en, så kopien må finnes igjen ved å søke i målmappen. Det er korrekt, men tregere enn på en server med MOVE, noe som merkes når en agent omorganiserer hundrevis av meldinger på én gang. Manglende SPECIAL-USE betyr at mapperoller kommer fra navn, og Posteos standard er de enkle engelske Sent, Drafts og Trash."
+    }
+  ],
+  "limits": [
+    "Å koble en Posteo-postkasse til en AI-klient betyr at den AI-leverandøren leser innholdet i det den blir bedt om å jobbe med. mcpemails henter e-post direkte fra Posteo for hver forespørsel og lagrer ikke meldingsinnhold, og påloggingsdetaljer krypteres ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du kobler til. Posteos anonyme registrering, anonyme betaling og tyske hosting beskytter forholdet mellom deg og Posteo. Ingenting av det følger en melding inn til en AI-leverandør du selv kobler til.",
+    "Med kryptering av innkommende e-post slått på kan en agent ikke lese e-posten din i det hele tatt. Meldinger kommer som PGP- eller S/MIME-chiffertekst, mcpemails har ingen privat nøkkel av deg, og bare headere, datoer og mappeoperasjoner er tilgjengelige.",
+    "Posteos standard postkasse er liten etter moderne mål, og en postkasse på kvoten avviser innkommende e-post. En agent som arkiverer og flagger, frigjør ikke plass; det gjør sletting og tømming av papirkurven."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Posteo?",
+      "a": "Ikke på egen hånd. Claude har ingen Posteo-kobling og kan ikke snakke IMAP. Peker du en MCP-server som mcpemails mot Posteo-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter uten at du må sette den opp en gang til."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Posteo?",
+      "a": "IMAP er posteo.de på port 993 med SSL/TLS, eller 143 med STARTTLS. SMTP er posteo.de på port 465 med SSL/TLS, eller 587 med STARTTLS. POP3 er samme vert på 995 eller 110. Brukernavnet er hele Posteo-adressen din på et hvilket som helst Posteo-domene, og SMTP-autentisering kreves alltid. Begge vertene ble verifisert via en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Trenger Posteo et app-passord?",
+      "a": "Bare hvis du har slått på ekstra beskyttelse av e-postkontoen. Som standard autentiserer det vanlige Posteo-passordet IMAP, POP3 og SMTP. Med den beskyttelsen på virker bare app-passord for de protokollene. De opprettes under Settings, Password and security, må være minst 16 tegn med et tall og en stor bokstav, og du kan ha fem samtidig."
+    },
+    {
+      "q": "Hvorfor sluttet Posteo-e-postklienten min å virke når webmail fortsatt logger inn?",
+      "a": "Nesten helt sikkert fordi ekstra beskyttelse av e-postkontoen ble slått på. Den innstillingen blokkerer kontopassordet for IMAP, POP3 og SMTP og lar webmail være urørt, som er nøyaktig mønsteret du ser. Opprett et app-passord i Settings under Password and security og legg det inn i både inngående og utgående passordfelt."
+    },
+    {
+      "q": "Hindrer Posteos krypterte e-postlagring AI-en min i å lese e-posten?",
+      "a": "Nei. Kryptert e-postlagring krypterer postkassen din ved lagring hos Posteo og dekrypteres usynlig når du autentiserer, så IMAP oppfører seg normalt og en agent leser e-posten din som vanlig. Funksjonen som faktisk gjør e-post uleselig for en klient, er kryptering av innkommende e-post, som krypterer hver ny melding med PGP eller S/MIME til din egen offentlige nøkkel."
+    },
+    {
+      "q": "Lagres Posteo-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra posteo.de via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke. AI-klienten du kobler til, mottar innholdet i alt den leser, og det er det separate spørsmålet det er verdt å ta stilling til med vilje."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Posteo-innboks",
+    "sub": "Koble til Posteo på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

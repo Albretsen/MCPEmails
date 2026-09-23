@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://webmail.sfr.fr/",
+    "https://actuneuf.com/sfr/internet/imap",
+    "https://actuneuf.com/sfr/espace-client/changer-mot-de-passe",
+    "https://actuneuf.com/sfr/internet/creer-adresse-mail"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Passord for SFR Mail",
+    "helpUrl": "https://webmail.sfr.fr/",
+    "usernameForm": "Hele adressen din, inkludert domenet: prenom.nom@sfr.fr.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "IMAP-innstillinger for SFR Mail og Claude via MCP",
+    "description": "Koble en SFR Mail-postkasse til Claude, Cursor og enhver MCP-klient på imap.sfr.fr:993. Passordet for SFR Mail er adskilt fra passordet til Espace Client."
+  },
+  "hero": {
+    "eyebrow": "SFR Mail + AI",
+    "titleLine1": "Koble SFR-postkassen din",
+    "titleLine2": "til Claude, Cursor, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte SFR-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP med passordet som hører til postkassen, ikke til kundekontoen din.",
+    "answer": "Claude når ikke en SFR-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.sfr.fr port 993 og autentiserer med hele sfr.fr-adressen din og passordet for SFR Mail, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. Påloggingen er feilpunktet det er verdt å kjenne på forhånd: SFR Mail har sitt eget passord, adskilt fra passordet til Espace Client, og å endre det ene endrer ikke det andre. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Passord for SFR Mail, ikke Espace Client",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler SFR seg til: IMAP, og et eget postkassepassord",
+    "body": "SFR tilbyr IMAP på <code>imap.sfr.fr</code> port 993 over implisitt TLS og SMTP-innsending på <code>smtp.sfr.fr</code> port 465, med krav om autentisering. Begge vertene ble bekreftet via en direkte TLS-tilkobling og er felles for alle SFR-postkasser; det er ingenting regionalt eller kundespesifikt å slå opp. Det som er spesielt for SFR, er påloggingsmodellen. Espace Client på sfr.fr og SFR Mail er to kontoer med to passord. Du kan gjerne sette dem til samme streng, men de forblir uavhengige, så å bytte passordet til Espace Client lar postkassepassordet være urørt og en e-postklient fortsetter å virke, mens å bytte postkassepassordet tar alle klienter ned og lar Espace Client være i fred. Postkassepassordet endres inne i selve SFR Mail, under innstillingsdelen for å konfigurere postkassene dine, ikke i kundeportalen."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Bekreft eller tilbakestill passordet for SFR Mail inne i webmailen",
+      "p": "Logg inn på webmail.sfr.fr med adressen du vil koble til. Åpne innstillingene (verktøy- eller <b>Réglages</b>-kontrollen øverst til høyre) og delen for å konfigurere postkassene dine (<b>Configuration de mes boîtes mails</b>). Passordendringen ligger der. Det er påloggingen IMAP-serveren sjekker, og det er ikke den du skriver inn i Espace Client på sfr.fr."
+    },
+    {
+      "h": "Vurder å gi agenten en sekundær adresse",
+      "p": "SFR lar en abonnent opprette ekstra adresser og aliaser fra den samme skjermen for postkassekonfigurasjon, ved siden av hovedadressen som fulgte med linjen. Vil du helst ikke gi en agent adressen alle du kjenner skriver til, oppretter du en ny der og kobler til den. Det er de samme vertene og portene."
+    },
+    {
+      "h": "Lim det inn i mcpemails, og lim så MCP-URL-en inn i AI-en",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel prenom.nom@sfr.fr, og lim inn passordet for SFR Mail. SFR-vertene og -portene er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Passordet til Espace Client og passordet for SFR Mail er to forskjellige ting",
+      "p": "Dette er SFR-feilen som kaster bort mest tid, fordi begge påloggingene tilhører samme person, begge kalles <b>mot de passe SFR</b> i daglig tale, og begge kan skrives inn i en e-postklient uten en feilmelding som forklarer noe. De er uavhengige kontoer: å endre den ene endrer ikke den andre, selv om du en gang bevisst satte dem til samme verdi og antar at de fortsatt er synkronisert. Når en klientinnlogging avvises, går du inn i selve SFR Mail og tilbakestiller postkassepassordet der, og bruker nøyaktig den verdien i mcpemails."
+    },
+    {
+      "h": "Ingen SASL-IR, så en klient som antar det, får en naken BAD",
+      "p": "SFRs IMAP-banner er så kort som det blir (<code>* OK IMAP4 ready</code>), og det annonserer ikke <code>SASL-IR</code>. Serveren avviser derfor autentisering i ett steg, der påloggingen sendes sammen med <code>AUTHENTICATE</code>-kommandoen, og svarer med en ukvalifisert <code>BAD</code> som ikke kan skilles fra feil påloggingsdetaljer. Med passordforvirringen over er det en spesielt lite nyttig kombinasjon: de to mest sannsynlige årsakene til en mislykket SFR-innlogging gir samme melding. mcpemails oppdager <code>BAD</code> og prøver utvekslingen i to steg på nytt, så denne halvdelen er allerede håndtert for deg."
+    },
+    {
+      "h": "Sending er begrenset til 20 MB, som er lavt for en fransk internettleverandør",
+      "p": "<code>smtp.sfr.fr</code> annonserer en maksimal meldingsstørrelse på 20 971 520 byte. Det er den kodede størrelsen på hele meldingen, og base64 blåser opp et vedlegg med omtrent en tredjedel, så en fil over omtrent 15 MB på disk kommer ikke gjennom. En agent som blir bedt om å videresende et stort vedlegg, får en hard SMTP-avvisning ved innsending i stedet for en treg sending eller en retur senere."
+    },
+    {
+      "h": "Ingen IDLE, ingen MOVE og ingen SPECIAL-USE på en postkasse med franske navn",
+      "p": "Serveren annonserer ingen av dem. Uten <code>IDLE</code> oppdages ny e-post ved polling i stedet for å skyves over en åpen tilkobling. Uten <code>MOVE</code> kjøres arkivering som en kopi, en flaggoppdatering og en expunge. Uten <code>SPECIAL-USE</code> matches Sent, Drafts og Trash etter navn, og en SFR-postkasse kaller dem som regel <b>Envoyés</b>, <b>Brouillons</b> og <b>Corbeille</b>. Den tilbyr <code>UIDPLUS</code>, så i det minste rapporterer en kopiert melding sin nye UID tilbake og må ikke finnes ved søk."
+    }
+  ],
+  "limits": [
+    "Innsendingsgrensen på 20 MB er det praktiske taket for alt agenten din sender fra denne postkassen.",
+    "Uten IDLE begrenses en instruksjon som si fra så snart et svar kommer, av hvor ofte postkassen polles, ikke av hvor raskt SFR leverer.",
+    "Fordi serveren ikke støtter MOVE, er en flytting ikke atomisk. Hvis en tilkobling brytes midt i operasjonen, kan en melding kortvarig finnes i begge mapper."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med SFR Mail?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd SFR-kobling. Peker du en MCP-server som mcpemails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for SFR?",
+      "a": "IMAP er imap.sfr.fr på port 993 med implisitt TLS. SMTP er smtp.sfr.fr på port 465, også med implisitt TLS, med krav om autentisering. Brukernavnet er hele sfr.fr-adressen din, og passordet er passordet for SFR Mail. Begge vertene ble bekreftet via en direkte TLS-tilkobling og er felles for alle SFR-postkasser."
+    },
+    {
+      "q": "Hvorfor blir SFR-passordet mitt avvist i en e-postklient?",
+      "a": "Nesten alltid fordi det er passordet til Espace Client og ikke passordet for SFR Mail. De to kontoene er uavhengige, og å endre den ene lar den andre være. Logg inn på webmail.sfr.fr, åpne delen for postkassekonfigurasjon i innstillingene, tilbakestill e-postpassordet der og bruk nøyaktig den verdien i klienten."
+    },
+    {
+      "q": "Utsteder SFR app-passord?",
+      "a": "SFR publiserer ingen mekanisme for programspesifikke passord for e-postklienter. Det de har i stedet, er et postkassepassord som allerede er adskilt fra kundekontopassordet ditt, noe som tjener et lignende formål: du kan bytte det uten å røre innloggingen til Espace Client, og å bytte passordet til Espace Client kobler ikke fra klientene dine."
+    },
+    {
+      "q": "Kan jeg gi en agent en ekstra SFR-adresse?",
+      "a": "Ja. SFR-abonnenter kan opprette ekstra adresser og aliaser fra skjermen for postkassekonfigurasjon i innstillingene for SFR Mail. En sekundær adresse kobler til via de samme vertene imap.sfr.fr og smtp.sfr.fr, og holder agentens aktivitet borte fra adressen korrespondentene dine faktisk bruker."
+    },
+    {
+      "q": "Lagres SFR-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra SFR via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en SFR-innboks",
+    "sub": "Koble til SFR Mail på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

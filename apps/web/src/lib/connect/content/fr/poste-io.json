@@ -1,0 +1,96 @@
+{
+  "_sources": [
+    "https://poste.io/doc",
+    "https://help.time4vps.com/en/articles/374799-how-to-create-a-mail-server-using-poste-io-on-debian-ubuntu",
+    "https://gist.github.com/analogic/51fbe91b580d7913b72320f89bf994cc",
+    "https://doc.dovecot.org/2.3/configuration_manual/dovecot_ssl_configuration/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte",
+    "helpUrl": "https://poste.io/doc",
+    "usernameForm": "L'adresse complète d'une boîte créée dans l'interface d'administration de Poste.io, par exemple you@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Poste.io vers Claude : l'IMAP Dovecot dans un conteneur",
+    "description": "Connectez une boîte Poste.io à Claude, Cursor et ChatGPT en IMAP sur 993. Le nom d'hôte du conteneur est le serveur ; un proxy inverse masque un mauvais certificat."
+  },
+  "hero": {
+    "eyebrow": "Poste.io + IA",
+    "titleLine1": "Connectez Poste.io à Claude,",
+    "titleLine2": "Cursor, ChatGPT et tout client MCP",
+    "lead": "Un conteneur, un nom d'hôte, un serveur de messagerie complet. Pointez mcpemails dessus et un agent IA peut lire, rechercher, envoyer, répondre, planifier et classer le courrier dans les boîtes que vous avez créées dans l'interface d'administration de Poste.io.",
+    "answer": "Claude ne peut pas accéder seul à un serveur Poste.io. mcpemails est un serveur MCP hébergé qui se connecte au vôtre en IMAP sur le port 993, au nom d'hôte donné au conteneur lors de son lancement, avec le mot de passe d'une boîte créée dans l'interface d'administration de Poste.io, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Poste.io utilise Dovecot pour l'IMAP à l'intérieur du conteneur : le comportement du protocole est donc celui d'un Dovecot ordinaire. Le conteneur doit publier le port 993 sur Internet et servir un certificat valide pour le nom d'hôte auquel vous vous connectez. Une boîte est gratuite.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe de la boîte depuis l'interface d'admin",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Poste.io se connecte : Dovecot sur 993 dans le conteneur",
+    "body": "Poste.io réunit un serveur de messagerie complet dans une seule image Docker, avec <b>Dovecot</b> pour l'IMAP et le POP3 et <b>Haraka</b> pour le SMTP, derrière une interface d'administration unique à <code>https://your-hostname/admin</code>. Comme la partie IMAP est Dovecot, tout ce que dit notre page Dovecot sur les rôles de dossiers, les préfixes d'espace de noms et la gestion des certificats s'applique ici aussi, à ceci près que vous configurez tout via l'interface de Poste.io plutôt qu'en modifiant les fichiers <code>conf.d</code>. Le nom d'hôte compte plus que tout le reste sur cette page : il est défini par l'option <code>-h</code> à la création du conteneur, par exemple <code>-h mail.example.com</code>, et c'est sur ce nom que répond l'interface d'administration, celui qu'Haraka utilise pour saluer les autres serveurs, et celui pour lequel le certificat Let's Encrypt intégré est émis. Utilisez-le tel quel comme serveur IMAP et SMTP. Les ports publiés sont les habituels : 25, 143, 465, 587, 993 et 995, plus 80 et 443 pour l'interface web et 4190 pour Sieve."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Vérifiez le nom d'hôte du conteneur et la publication du port 993",
+      "p": "Lancez <code>docker inspect</code> sur le conteneur, ou lisez votre fichier compose, et notez deux choses : le nom d'hôte attribué au conteneur, et la présence de <code>993</code> dans la liste des ports publiés. Un conteneur créé sans <code>-h</code> finit nommé d'après son propre identifiant, un nom que rien ne peut résoudre ni certifier."
+    },
+    {
+      "h": "Vérifiez le certificat, puis ajoutez la boîte",
+      "p": "Dans l'interface d'administration de Poste.io, ouvrez les réglages du certificat TLS et confirmez qu'un certificat Let's Encrypt a bien été émis et que ce n'est pas encore le certificat autosigné qui est servi. Ajoutez ensuite la boîte dans mcpemails : choisissez IMAP / SMTP, saisissez le nom d'hôte du conteneur, l'adresse complète de la boîte et son mot de passe défini dans l'interface d'administration."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Le cadenas de votre navigateur appartient au proxy, pas au port 993",
+      "p": "Poste.io tourne très souvent derrière Traefik, nginx ou Caddy, et cette configuration masque la panne la plus courante. Le proxy termine le HTTPS avec un certificat qu'il a obtenu lui-même, si bien que l'interface d'administration et le webmail semblent parfaitement sécurisés. Pendant ce temps, la demande Let's Encrypt de Poste.io doit répondre à un défi HTTP sur le port 80 du conteneur, et si le proxy l'a intercepté, ou si le chemin <code>/.well-known/</code> n'a jamais été relayé, la demande n'a jamais abouti. Dovecot continue de servir le certificat autosigné généré à l'installation, et un client IMAP strict refuse de se connecter alors que tous les humains du système voient un cadenas vert et concluent que le serveur va bien. Testez ce qui est réellement servi sur 993 avec <code>openssl s_client -connect mail.yourdomain.com:993</code>. Si vous terminez le TLS au niveau du proxy et copiez plutôt les certificats dans le conteneur, désactivez le Let's Encrypt interne de Poste.io pour que les deux ne s'écrasent pas mutuellement."
+    },
+    {
+      "h": "La publication de ports Docker ne respecte pas le pare-feu de l'hôte",
+      "p": "Cela surprend dans les deux sens. Docker écrit ses propres règles, évaluées avant celles que gère <code>ufw</code> : un port publié avec <code>-p 993:993</code> est donc ouvert sur Internet même si votre pare-feu le dit fermé. Ce n'est pas un défaut de Poste.io, mais cela signifie que le serveur de messagerie est plus exposé que ne le laisse croire le pare-feu. L'autre sens est plus discret : un port qui n'a jamais figuré dans la liste <code>-p</code> est injoignable, aussi permissif que soit le pare-feu, parce que rien ne le redirige vers le conteneur. Si le conteneur est en bonne santé et que les connexions expirent quand même, comptez les ports publiés avant de toucher à quoi que ce soit d'autre."
+    },
+    {
+      "h": "La partie SMTP est Haraka : les conseils pour Postfix ne s'appliquent pas",
+      "p": "Presque tous les articles sur l'autohébergement de la messagerie supposent Postfix. Poste.io ne l'utilise pas. L'envoi est assuré par Haraka, un serveur SMTP en Node.js : il n'y a donc ni <code>main.cf</code>, ni <code>postconf</code>, ni <code>postqueue</code>, ni <code>mailq</code> dans le conteneur, et les commandes copiées depuis les forums n'existent tout simplement pas. Diagnostiquez l'envoi via l'interface de Poste.io et les journaux d'Haraka. La partie IMAP est Dovecot et se comporte exactement comme documenté, ce qui est la moitié utile de la répartition : <code>doveadm</code> fonctionne, et le comportement des dossiers et des espaces de noms de Dovecot est celui que vous attendez."
+    }
+  ],
+  "limits": [
+    "Le conteneur doit accepter les connexions entrantes sur 993 depuis Internet pour qu'un serveur MCP hébergé puisse l'atteindre. Un Poste.io tournant sur un serveur domestique ou un réseau privé ne peut pas être connecté ainsi. mcpemails peut être autohébergé : si vous préférez que rien d'externe ne touche au serveur de messagerie, vous pouvez faire tourner les deux dans le même réseau.",
+    "La validation TLS est stricte et ne peut pas être contournée. Le certificat autosigné qu'un Poste.io fraîchement installé génère sera refusé, c'est pourquoi obtenir un vrai certificat est une étape de configuration et non une finition facultative.",
+    "L'envoi part via Haraka depuis votre propre adresse IP : ce sont donc vos enregistrements SPF, DKIM et DMARC et la réputation de votre adresse qui déterminent si le courrier est accepté en aval."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec Poste.io ?",
+      "a": "Pas seul. Claude n'a pas de connecteur Poste.io et ne peut pas ouvrir de session IMAP vers un conteneur que vous gérez. Connecter un serveur MCP comme mcpemails à votre nom d'hôte Poste.io donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à une boîte de ce serveur, et la même boîte fonctionne ensuite depuis Cursor ou ChatGPT."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de Poste.io ?",
+      "a": "Le serveur est le nom d'hôte donné au conteneur, le même que celui de l'interface d'administration. IMAP : 993 en TLS implicite ou 143 en STARTTLS. Soumission : 465 en TLS implicite ou 587 en STARTTLS. Connectez-vous avec l'adresse complète de la boîte et le mot de passe défini pour cette boîte dans l'interface d'administration."
+    },
+    {
+      "q": "Poste.io repose-t-il sur Dovecot ?",
+      "a": "Oui pour l'IMAP et le POP3. Poste.io réunit Dovecot pour l'accès aux boîtes et Haraka pour le SMTP dans une seule image Docker, avec une interface d'administration par-dessus. Tout ce qui vaut pour le comportement IMAP de Dovecot vaut ici : notre page Dovecot fait donc référence pour les rôles de dossiers, les préfixes d'espace de noms et la gestion des certificats."
+    },
+    {
+      "q": "Pourquoi le mot de passe de ma boîte Poste.io est-il refusé ?",
+      "a": "Vérifiez que vous utilisez une boîte et non un alias, puisque les alias ne font que transférer et n'ont pas de mot de passe propre, et que vous n'utilisez pas l'identifiant d'administration, sauf si cet administrateur est aussi une vraie boîte. Si les identifiants sont à coup sûr corrects, regardez plutôt si la connexion échoue au niveau du TLS : un certificat autosigné sur 993 provoque un échec que beaucoup de clients présentent comme un problème de connexion."
+    },
+    {
+      "q": "Mon courrier est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis votre conteneur Poste.io en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Poste.io à votre IA",
+    "sub": "Connectez une boîte de votre propre conteneur. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "_sources": [
+    "https://comeinsidebox.com/naver-mail-imap-pop3/",
+    "https://servertrix.com/1879",
+    "https://www.clien.net/service/board/cm_iphonien/19011627",
+    "https://www.enterapps.kr/notice/?bmode=view&idx=168294489",
+    "https://www.getmailbird.com/setup/access-naver-com-via-imap-smtp"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Contraseña de aplicación (애플리케이션 비밀번호)",
+    "helpUrl": "https://nid.naver.com/",
+    "usernameForm": "Tu dirección completa, incluido el dominio: name@naver.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta Naver Mail a Claude con una contraseña de aplicación",
+    "description": "Conecta Naver Mail a Claude, Cursor o cualquier cliente MCP por IMAP en imap.naver.com:993. Desde junio de 2025 exige 2FA y contraseña de aplicación."
+  },
+  "hero": {
+    "eyebrow": "Naver Mail + IA",
+    "titleLine1": "Conecta Naver Mail a Claude,",
+    "titleLine2": "Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de Naver. Lee, busca, envía, responde, programa y organiza el correo por IMAP con una contraseña de aplicación de Naver, en todos tus clientes MCP y no solo en uno.",
+    "answer": "Claude no puede acceder a Naver Mail por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.naver.com, puerto 993, y se autentica con una contraseña de aplicación de Naver (애플리케이션 비밀번호) en lugar de la contraseña de tu cuenta. Desde el 24 de junio de 2025, Naver exige la verificación en dos pasos en la cuenta y una contraseña de aplicación para toda conexión POP3, IMAP y SMTP, así que la contraseña de la cuenta ya no autentica ningún cliente de correo. Además tienes que activar IMAP en la configuración de Naver Mail, un control independiente de la contraseña. Una bandeja es gratis.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Verificación en dos pasos y contraseña de aplicación",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Naver Mail: IMAP, verificación en dos pasos y una contraseña de aplicación",
+    "body": "Naver ofrece IMAP en <code>imap.naver.com</code>, puerto 993, con TLS implícito, y SMTP en <code>smtp.naver.com</code>, puerto 465. Los servidores llevan años sin cambiar. Lo que cambió es la credencial. El <b>24 de junio de 2025</b> Naver hizo obligatorias la verificación en dos pasos y una contraseña de aplicación para el acceso POP3, IMAP y SMTP, y tras un periodo de gracia que ya ha terminado, los clientes de correo que usaban la antigua contraseña de la cuenta dejaron de funcionar por completo. Ahora deben cumplirse dos condiciones distintas. IMAP y SMTP tienen que estar activados en la propia configuración de Naver Mail, un interruptor por buzón. Y tu Naver ID tiene que tener activada la verificación en dos pasos, porque la pantalla de contraseñas de aplicación solo aparece cuando lo está. La contraseña de aplicación es la que pegas en un cliente; la contraseña de la cuenta ya no se usa nunca para el correo."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y sigue siendo gratis, sin tarjeta. En los próximos pasos se generan dos cosas: mantén la pestaña abierta para la última."
+    },
+    {
+      "h": "Activa IMAP/SMTP en la configuración de Naver Mail",
+      "p": "Abre Naver Mail y haz clic en 환경설정 (Configuración) abajo a la izquierda, cambia a la pestaña POP3/IMAP 설정 de la parte superior y elige dentro la pestaña IMAP/SMTP 설정. Pon IMAP/SMTP 사용 en 사용함 (usar) y pulsa 확인 para guardar. Es un interruptor a nivel de buzón y no activa nada en tu cuenta de Naver; sin él, imap.naver.com rechaza el inicio de sesión sea cual sea la contraseña que envíes."
+    },
+    {
+      "h": "Activa la verificación en dos pasos y genera una contraseña de aplicación",
+      "p": "Ve a nid.naver.com, abre 보안설정 (Configuración de seguridad), configura 2단계 인증 (verificación en dos pasos) si aún no está activada y haz clic en 관리 (gestionar). Dentro, abre 애플리케이션 비밀번호 관리 (gestión de contraseñas de aplicación) y haz clic en 생성하기 (generar). Elige la opción de introducción directa, ponle un nombre como mcpemails y copia la contraseña que te muestra Naver. En mcpemails, elige IMAP / SMTP, escribe tu dirección completa de Naver y pega esa contraseña de aplicación en lugar de tu contraseña de Naver."
+    },
+    {
+      "h": "Pega la URL MCP en tu cliente de IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente podrá leer, buscar, enviar, responder, reenviar, programar y organizar el buzón de Naver."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Naver dejó sin servicio a propósito todos los clientes existentes en 2025",
+      "p": "Si tenías Naver Mail funcionando en Thunderbird, Apple Mail o un script y dejó de funcionar, no cambiaste nada por tu parte. A partir del 24 de junio de 2025 Naver exigió la verificación en dos pasos y una contraseña de aplicación para POP3, IMAP y SMTP, abrió un periodo de gracia para las conexiones existentes y después lo cerró. La contraseña de la cuenta ahora falla al iniciar sesión con un error de autenticación corriente, idéntico al de una contraseña obsoleta, así que lo natural es volver a escribir la contraseña de la cuenta y ver cómo falla otra vez. La solución no es una contraseña mejor, sino otro tipo de contraseña."
+    },
+    {
+      "h": "Activar IMAP y crear la contraseña de aplicación se hacen en dos productos distintos",
+      "p": "El interruptor del protocolo está en Naver Mail, en 환경설정. La contraseña de aplicación está en tu cuenta de Naver ID en nid.naver.com, detrás de la verificación en dos pasos. Hacer una cosa sin la otra produce el mismo fallo de autenticación, y ninguna de las dos pantallas menciona la otra. La mayoría de los problemas de conexión con Naver se deben a que falta una de estas dos mitades, no a nada relacionado con servidores o puertos."
+    },
+    {
+      "h": "El único mecanismo que anuncia Naver es AUTH=PLAIN",
+      "p": "La línea de capacidades IMAP de Naver ofrece <code>AUTH=PLAIN</code> y no <code>AUTH=LOGIN</code>. Los clientes y bibliotecas fijados al mecanismo LOGIN, algo habitual en herramientas escritas primero para Exchange, son rechazados en el paso de autenticación con un error poco útil en lugar de recurrir a otro mecanismo. El lado SMTP acepta tanto PLAIN como LOGIN, así que el envío de la cuenta puede funcionar en un cliente donde la recepción no funciona."
+    },
+    {
+      "h": "Naver Works es un servicio distinto y esta configuración no se aplica",
+      "p": "Naver Works, la suite empresarial que se vende a compañías coreanas, no es el mismo producto que un buzón personal <code>@naver.com</code>. Tiene su propia administración, sus propios controles de protocolo y sus propios nombres de servidor. Si tu dirección está en un dominio de empresa administrado con Naver Works, toma los servidores de esa consola y no de esta página, y después conecta el buzón en mcpemails como una cuenta IMAP y SMTP normal."
+    }
+  ],
+  "limits": [
+    "Naver no anuncia IDLE, así que el correo se consulta periódicamente en lugar de recibirse por push. Tu agente ve un mensaje nuevo la próxima vez que revisa el buzón, no en el instante en que llega.",
+    "Naver anuncia un límite de APPEND de unos 40 MB en IMAP y su servidor SMTP acepta mensajes de hasta unos 38 MB. Un reenvío con adjuntos más grandes se rechaza al enviarlo en lugar de quedar en cola.",
+    "Una contraseña de aplicación está vinculada a la verificación en dos pasos. Si desactivas la verificación en dos pasos en la cuenta de Naver, la contraseña de aplicación deja de ser válida y la conexión se corta."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Naver Mail?",
+      "a": "No directamente. Claude no tiene un conector integrado para Naver y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como mcpemails a tu buzón de Naver le da a Claude acceso para leer, buscar, enviar, responder, reenviar, programar y organizar, y la misma conexión funciona desde Cursor y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuál es la configuración IMAP y SMTP de Naver?",
+      "a": "IMAP es imap.naver.com en el puerto 993 con TLS implícito. SMTP es smtp.naver.com en el puerto 465, también con TLS implícito. Inicia sesión con tu dirección naver.com completa y una contraseña de aplicación de Naver. Ambos servidores se verificaron con una conexión TLS real en la fecha que aparece en esta página."
+    },
+    {
+      "q": "¿Por qué ya no funciona mi contraseña de Naver?",
+      "a": "Porque Naver dejó de aceptarla. Desde el 24 de junio de 2025, POP3, IMAP y SMTP exigen la verificación en dos pasos en la cuenta y una contraseña de aplicación generada desde tu Naver ID. Conexiones que funcionaron durante años fallaron al terminar el periodo de gracia. Genera una contraseña de aplicación en nid.naver.com y úsala en su lugar."
+    },
+    {
+      "q": "¿Cómo creo una contraseña de aplicación de Naver?",
+      "a": "Inicia sesión en nid.naver.com, abre 보안설정 y activa 2단계 인증 si está desactivada. Haz clic en 관리 junto a esa opción, abre 애플리케이션 비밀번호 관리 y haz clic en 생성하기. Ponle un nombre a la contraseña para poder revocarla por separado más adelante y cópiala en el campo de contraseña de tu cliente de correo o de mcpemails."
+    },
+    {
+      "q": "¿Sigo teniendo que activar IMAP en la configuración de Naver Mail?",
+      "a": "Sí. La contraseña de aplicación es una credencial a nivel de cuenta y el interruptor de IMAP es un ajuste a nivel de buzón, y ambos son necesarios. En Naver Mail abre 환경설정, ve a la pestaña POP3/IMAP 설정, elige IMAP/SMTP 설정, ponlo en 사용함 y guarda. Si te saltas este paso, tendrás una contraseña válida y la puerta cerrada."
+    },
+    {
+      "q": "¿Se almacena mi correo de Naver en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Naver por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva después de la solicitud que los pidió."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Naver",
+    "sub": "Conecta Naver Mail en minutos con una contraseña de aplicación. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

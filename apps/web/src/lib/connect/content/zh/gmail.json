@@ -1,20 +1,33 @@
 {
+  "_sources": [
+    "https://developers.google.com/gmail/api/guides",
+    "https://cloud.google.com/blog/products/ai-machine-learning/announcing-official-mcp-support-for-google-services",
+    "https://support.google.com/a/answer/7281227"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "应用专用密码",
+    "helpUrl": "https://support.google.com/accounts/answer/185833",
+    "usernameForm": "你的完整 Gmail 地址，例如 you@gmail.com。应用专用密码用来代替你的普通 Google 密码；普通密码无法使用。",
+    "status": "active"
+  },
   "meta": {
-    "title": "将 Gmail 连接到 Claude（及任意 AI）",
-    "description": "用 Google 应用专用密码通过 IMAP 将 Gmail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的 Gmail，1 个收件箱永久免费。"
+    "title": "适用于 Claude、Cursor 和 ChatGPT 的 Gmail MCP 服务器",
+    "description": "托管的 Gmail MCP 服务器。用 Google 应用专用密码通过 IMAP 连接 Gmail，然后在 Claude、Cursor 或任意 MCP 客户端中读取、搜索、发送和定时邮件。1 个收件箱免费。"
   },
   "hero": {
     "eyebrow": "Gmail + AI",
-    "titleLine1": "将 Gmail 连接到 Claude，",
-    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
-    "lead": "几分钟即可为你的 AI 代理接入一个真正的 Gmail 收件箱。用 Google 应用专用密码即可读取、搜索、发送、回复、定时与整理邮件：同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+    "titleLine1": "Gmail MCP 服务器",
+    "titleLine2": "适用于 Claude、Cursor 和 ChatGPT",
+    "lead": "几分钟即可为你的 AI 代理接入一个真正的 Gmail 收件箱。使用 Google 应用专用密码读取、搜索、发送、回复、定时与整理邮件，同一个收件箱可在所有 MCP 客户端中使用，而不止一个。",
     "meta0": "1 个收件箱永久免费",
-    "meta1": "使用 Google 应用专用密码连接",
-    "meta2": "邮件实时获取，绝不存储"
+    "meta1": "用 Google 应用专用密码连接",
+    "meta2": "邮件实时获取，绝不存储",
+    "answer": "Claude 无法自行访问 Gmail。mcpemails 是位于两者之间的托管 MCP 服务器：你只需创建一次 Google 应用专用密码，把一个 URL 粘贴到你的 MCP 客户端，Claude、Cursor 或 ChatGPT 就能读取、搜索、发送、回复和定时你的 Gmail 邮件。1 个收件箱永久免费。"
   },
   "method": {
     "title": "Gmail 如何连接：Google 应用专用密码",
-    "body": "Gmail 通过 <b>Google 应用专用密码</b>以 IMAP 与 SMTP 连接。Google 仅对已<b>开启两步验证</b>的账户提供应用专用密码，因此请先开启，然后在 <b>myaccount.google.com/apppasswords</b> 创建一个。密码为 16 个小写字母、分四组，粘贴时用它替代你平时的 Google 密码（平时的密码无法使用）。你可随时在同一个 Google 页面撤销，或在 mcpemails 中删除该收件箱。"
+    "body": "Gmail 使用 <b>Google 应用专用密码</b>通过 IMAP 和 SMTP 连接。Google 只为<b>已开启两步验证</b>的账户提供应用专用密码，所以请先开启两步验证，然后在 <b>myaccount.google.com/apppasswords</b> 创建一个。它由 16 个小写字母组成，分为四组，用来代替你的普通 Google 密码粘贴进去，普通密码是无法使用的。你可以随时在同一个 Google 页面撤销它，或者在 mcpemails 中删除该收件箱。"
   },
   "setup": [
     {
@@ -23,15 +36,69 @@
     },
     {
       "h": "创建 Google 应用专用密码",
-      "p": "如果尚未开启，请先在 Google 账户中开启两步验证，然后访问 myaccount.google.com/apppasswords 创建一个。将这 16 个字符连同完整的 Gmail 地址粘贴到 mcpemails。密码中的空格可忽略。"
+      "p": "如果你的 Google 账户尚未开启两步验证，请先开启，然后前往 myaccount.google.com/apppasswords 创建一个。把这 16 个字符连同你的完整 Gmail 地址一起粘贴到 mcpemails。代码中的空格无关紧要。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
       "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],
+  "gotchas": [
+    {
+      "h": "Google 发布了自己的 Gmail MCP 服务器，如果只用 Gmail，那是更短的路径",
+      "p": "Google 宣布为其服务提供官方 MCP 支持，其中包括一个覆盖 Gmail 以及 Drive、Calendar 和 Chat 的 Workspace MCP 服务器。我们不会假装没有这回事。如果 Gmail 是你唯一想让助手接触的邮箱，而且你的客户端能连接 Google 的服务器，那就用它。把 mcpemails 指向 Gmail 的理由在于，同一台服务器还能容纳你的 iCloud、Fastmail、Zoho、Yahoo 或公司 IMAP 邮箱，通过<b>一个</b> MCP URL 提供所有这些邮箱，并且在 Claude、Cursor 和 ChatGPT 中表现一致。它要避免的，正是每家服务商一个连接器、各自有各自的认证和工具名称的局面。"
+    },
+    {
+      "h": "工作用的 Gmail 可能被 Workspace 管理员阻止，Google 会在错误中说明",
+      "p": "Google Workspace 管理员在 Security、API controls、App access control 下控制第三方 API 访问。管理员可以直接阻止所有第三方应用，或者只允许某个应用使用指定的 OAuth 范围。如果开启了这项限制，Google 会在自己的授权页面上以 <code>Error 400: admin_policy_enforced</code> 拒绝，请求根本不会到达我们这里。我们这边无法绕过：必须由管理员为该应用放行 Gmail 范围。以 <code>@gmail.com</code> 结尾的个人账户没有这种策略，不受影响。"
+    },
+    {
+      "h": "Gmail 用的是标签而不是文件夹，所以移动并不是真正的移动",
+      "p": "该连接与 Gmail API 通信，在那里，AI 客户端向你显示的每个文件夹都是一个 Gmail 标签。一封邮件可以同时带有多个标签，所以移动邮件意味着添加一个标签并移除另一个，而归档只是移除 <code>INBOX</code>。删除会把邮件放入 Gmail 的 Trash，而不是彻底清除。如果你让代理把邮件归档到一个尚不存在的文件夹，需要先创建该标签，之后它会出现在所有设备的 Gmail 中。"
+    },
+    {
+      "h": "Google Workspace 管理员可以关闭应用专用密码",
+      "p": "在个人 Google 账户上，唯一的前提是两步验证。在 Google Workspace 账户上，管理员可以为整个域名停用应用专用密码，这时 myaccount.google.com/apppasswords 对你来说根本无法使用，在邮箱内你也无能为力。请联系你的管理员，或者连接另一个邮箱。"
+    }
+  ],
+  "limits": [
+    "该连接只请求 Gmail 的读取、发送、修改和基本设置范围。不会请求 Drive、Calendar、Chat 和 Docs，也无法访问它们。",
+    "管理员阻止了第三方 API 访问的 Google Workspace 邮箱无法连接。这一决定在 Admin console 中做出，只有管理员能够更改。",
+    "删除会把邮件移入 Gmail 的 Trash。要永久清除邮件，请在 Gmail 中操作。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Gmail 吗？",
+      "a": "能，只要在两者之间有一个替 Claude 与 Gmail 通信的东西。mcpemails 就是其中之一：你用 Google 登录，粘贴一个 MCP URL，Claude 就能读取、搜索、发送、回复、转发和定时邮件。Google 也发布了覆盖 Gmail 的官方 Workspace MCP 服务器。实际的区别在于，mcpemails 不限于 Google，所以同一个 URL 也能为你的其他邮箱服务。"
+    },
+    {
+      "q": "Google 有官方的 Gmail MCP 服务器吗？",
+      "a": "有。Google 宣布为其服务提供官方 MCP 支持，其中的 Workspace MCP 服务器涵盖 Gmail、Drive、Calendar 和 Chat。如果只涉及 Gmail 一个邮箱，而且你的客户端支持它，就用它。如果你想在一个 MCP URL 后面接入多家服务商，或者希望在 Claude、Cursor 和 ChatGPT 中获得完全一致的表现，就选择 mcpemails 这样的第三方服务器。"
+    },
+    {
+      "q": "Gmail 需要应用专用密码吗？",
+      "a": "需要。Gmail 使用 Google 应用专用密码通过 IMAP 和 SMTP 连接，而不是你的普通 Google 密码。Google 只在开启了两步验证的账户上显示应用专用密码，所以请先开启两步验证，然后在 myaccount.google.com/apppasswords 创建一个，大约只需一分钟。Google 登录仍作为备选方式提供，但会显示一个应用未经验证的警告，你需要点击跳过。"
+    },
+    {
+      "q": "为什么 Google 拒绝在我的工作账户上登录？",
+      "a": "几乎总是管理员策略所致。Google Workspace 管理员在 Security、API controls、App access control 下限制哪些第三方应用可以使用 Gmail 范围。如果该应用未被允许，Google 会在任何请求到达我们之前，以 Error 400: admin_policy_enforced 终止流程。必须由你的管理员放行该应用。个人 Gmail 账户不会遇到这种情况。"
+    },
+    {
+      "q": "可以用于 Google Workspace 自定义域名吗？",
+      "a": "可以。使用你自己域名的 Workspace 邮箱，与 gmail.com 地址走相同的 Google 授权流程，之后的表现也完全相同。唯一的条件是上面提到的管理员策略：必须允许该账户进行第三方 API 访问，否则 Google 会阻止授权页面。"
+    },
+    {
+      "q": "我的 Gmail 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都从 Google 实时获取邮件，并交给你的 AI 客户端。OAuth 令牌静态加密存储，邮件正文不会保留。在你的 Google 账户中撤销访问权限，或在 mcpemails 中删除该收件箱，都会立即终止连接。"
+    }
+  ],
   "ctaBand": {
     "title": "给你的 AI 一个 Gmail 收件箱",
-    "sub": "几分钟即可连接 Gmail。一个收件箱永久免费，无需信用卡。"
+    "sub": "几分钟即可连接 Gmail。1 个收件箱永久免费，无需信用卡。"
+  },
+  "guide": {
+    "intro": "更喜欢带截图的分步教程？",
+    "label": "如何将 Gmail 连接到 Claude",
+    "href": "/blog/connect-gmail-to-claude"
   }
 }

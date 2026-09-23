@@ -1,0 +1,93 @@
+{
+  "_sources": [
+    "https://domene.shop/faq?id=237",
+    "https://domene.shop/faq?id=331"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://domene.shop/faq?id=237",
+    "usernameForm": "你的完整地址，包括域名：name@yourdomain.no。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 Domeneshop 邮箱连接到 Claude 与 MCP 客户端",
+    "description": "使用邮箱密码，通过 imap.domeneshop.no:993 的 IMAP 将 Domeneshop 邮箱连接到 Claude、Cursor 及任意 MCP 客户端。1 个收件箱永久免费。"
+  },
+  "hero": {
+    "eyebrow": "Domeneshop + AI",
+    "titleLine1": "将 Domeneshop 邮箱连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Domeneshop 收件箱。使用你在 Domeneshop 控制面板中设置的邮箱密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行访问 Domeneshop 邮箱。mcpemails 是一个托管 MCP 服务器，通过 imap.domeneshop.no 端口 993 的 IMAP 与之连接，使用你的完整邮箱地址和你在 Domeneshop 控制面板中为该邮箱设定的密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。Domeneshop 没有应用专用密码，也没有需要额外打开的开关，但发信方面有一个政策上的特殊之处，下文会说明。1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "控制面板中的邮箱密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Domeneshop 如何连接：IMAP 与邮箱密码",
+    "body": "Domeneshop 在 <code>imap.domeneshop.no</code> 端口 993 上通过隐式 TLS 提供 IMAP，在 <code>smtp.domeneshop.no</code> 端口 465 上提供 SMTP 提交。无论你的地址以哪个域名结尾，所有 Domeneshop 邮箱都位于同一对共享主机名上，所以不需要查找任何因客户而异的信息。认证使用普通的邮箱密码：就是你在 Domeneshop 控制面板的 E-post 下创建该地址时设置的密码，用户名填<b>完整</b>地址。Domeneshop 要求使用同一组凭据进行 SMTP 认证；如果客户端的发信用户名和密码留空，它能连上，但随后会发信失败。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "在 Domeneshop 中找到或重置邮箱密码",
+      "p": "登录 domene.shop，打开你的域名，进入 E-post。那里列出的每个地址都有自己的密码，在创建地址时设定。如果没人记得，就在该页面设置一个新密码。你的 Domeneshop 账户登录密码不是邮箱密码，无法通过 IMAP 认证。"
+    },
+    {
+      "h": "粘贴到 mcpemails",
+      "p": "选择 IMAP / SMTP，输入完整地址（例如 post@yourdomain.no），并粘贴邮箱密码。Domeneshop 的服务器地址和端口已预填，并经实时 TLS 连接验证。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Domeneshop 以 550 [ACR04] 拒绝来自云网络的 SMTP 提交",
+      "p": "这是最容易让人栽跟头的一点，而且它是政策，不是故障。Domeneshop 的文档把 <code>smtp.domeneshop.no</code> 定位为从你自己的 PC、Mac、手机或平板发送个人邮件的服务器，并明确表示不用于从云服务、网站服务器发信，也不用于新闻通讯、营销、群发、其他自动发送或专用邮件服务器。来自云服务商 IP 段的提交会被永久拒绝，回复为 <code>550</code>，并带有代码 <code>[ACR04]</code>。从同一网络重试永远无济于事，而且这条消息读起来像认证问题，尽管你的凭据完全正确。mcpemails 通过一条不在大型云服务商 IP 段内的<b>备用出口路由</b>来绕开它，让代理发出的普通、人工规模的邮件能够送出。这条备用路由并不改变 Domeneshop 的政策：通过 Domeneshop 进行批量和自动群发仍然是不允许的，你不应在其上搭建新闻通讯。"
+    },
+    {
+      "h": "IMAP 服务器只声明 AUTH=PLAIN",
+      "p": "Domeneshop 的 IMAP 横幅只提供 <code>AUTH=PLAIN</code>，没有 <code>AUTH=LOGIN</code>。写死使用 LOGIN 机制的客户端和库（在针对 Exchange 编写的工具中很常见）会在认证这一步被拒绝，而得不到有用的错误信息。SMTP 一侧则同时接受 PLAIN 和 LOGIN，因此同一账户的两部分在同一个客户端中可能表现不同。"
+    },
+    {
+      "h": "没有 MOVE，没有 UIDPLUS，文件夹按名称匹配",
+      "p": "该服务器不声明 IMAP MOVE 扩展，因此移动邮件要以复制、更新标记和清除的方式完成，而不是一条原子命令。它也不支持 UIDPLUS，所以复制后邮件的新 UID 不会返回，需要在目标文件夹中搜索才能找到。SPECIAL-USE 同样缺失，这意味着 Sent、Drafts、Trash 和 Junk 是按名称识别的。在挪威语邮箱中，这些名称通常是 Sendt、Utkast、Slettet 和 Søppelpost，所以如果代理找不到你的归档文件夹，请明确写出它的名称。"
+    }
+  ],
+  "limits": [
+    "Domeneshop 的 SMTP 政策不允许批量发送、新闻通讯和自动群发。请用它处理普通往来邮件，而不是营销活动。",
+    "由于服务器不支持 MOVE，移动操作不是原子的。如果连接在操作中途断开，邮件可能会短暂地同时存在于两个文件夹中。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Domeneshop 邮箱吗？",
+      "a": "不能单独使用。Claude 没有内置的 Domeneshop 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向你的 Domeneshop 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Domeneshop 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.domeneshop.no，端口 993，使用隐式 TLS。SMTP 为 smtp.domeneshop.no，端口 465，同样是隐式 TLS。请用完整邮箱地址和控制面板中的邮箱密码登录。两个服务器均经实时 TLS 连接确认，且由所有 Domeneshop 客户共用。"
+    },
+    {
+      "q": "为什么发信失败并提示 550 [ACR04]？",
+      "a": "作为反滥用措施，Domeneshop 拒绝来自云服务和托管 IP 段的 SMTP 提交。这种拒绝是永久性的，与你的密码无关。mcpemails 会把受影响的发信请求经由不在这些 IP 段内的备用出口发出，让普通邮件顺利完成。通过 Domeneshop 批量发送仍然违反其公布的政策。"
+    },
+    {
+      "q": "Domeneshop 需要应用专用密码吗？",
+      "a": "不需要。Domeneshop 不签发应用专用密码。邮件客户端使用在控制面板 E-post 下为该邮箱单独设置的密码进行认证。它与你的 Domeneshop 账户登录凭据不同，这就是账户密码会被拒绝的原因。"
+    },
+    {
+      "q": "我的 Domeneshop 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 Domeneshop 实时获取邮件，并交给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Domeneshop 收件箱",
+    "sub": "几分钟即可连接 Domeneshop 邮箱。1 个收件箱永久免费，无需信用卡。"
+  }
+}

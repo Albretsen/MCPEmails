@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://jingyan.baidu.com/article/17bd8e526ddb4185aa2bb852.html",
+    "https://help.mail.163.com/faqDetail.do?code=d7a5dc8471cd0c0e8b4b8f4f8e49998b374173cfe9171305fa1ce630d7f67ac286624f309a1a7089",
+    "https://help.lunkr.cn/126-IMAP-Login-Tutorial/IMAP-Login-Tutorial-126.html",
+    "https://www.laifa.xin/en/youxiang/107-wangyi-163youxiang-netease-personal-email"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Klientautorisasjonskode (客户端授权码)",
+    "helpUrl": "https://help.mail.163.com/faqDetail.do?code=d7a5dc8471cd0c0e8b4b8f4f8e49998b374173cfe9171305fa1ce630d7f67ac286624f309a1a7089",
+    "usernameForm": "Hele adressen din, inkludert domenet: name@126.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble 126.com-e-post til Claude, Cursor og MCP",
+    "description": "Koble en NetEase 126.com-postkasse til Claude eller enhver MCP-klient via IMAP på imap.126.com:993. Bruker sin egen autorisasjonskode, ikke den fra 163-kontoen."
+  },
+  "hero": {
+    "eyebrow": "126 Mail + AI",
+    "titleLine1": "Koble 126.com-e-post til Claude,",
+    "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte 126.com-postkasse. Les, søk, send, svar, planlegg og organiser e-post via IMAP med en NetEase-autorisasjonskode utstedt for akkurat den postkassen, ikke for en søsterpostkasse.",
+    "answer": "Claude når ikke en NetEase 126-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.126.com port 993 og autentiserer med den 16 tegn lange klientautorisasjonskoden (客户端授权码) NetEase utsteder for den postkassen, i stedet for passordet ditt. Nesten alle engelske veiledninger for NetEase-e-post er skrevet for 163.com, og en 126-adresse pekt mot 163-vertsnavnene feiler som en autentiseringsfeil i stedet for en rutingfeil, noe som sender folk tilbake til å generere en kode som aldri var feil. Én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Egen 126-autorisasjonskode",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler 126 Mail seg til: IMAP på egne vertsnavn, med egen kode",
+    "body": "126.com er NetEases andre gratis e-postdomene, åpnet etter at navnerommet på 163.com ble fullt, og det er der en stor andel av kinesiske privatadresser faktisk holder til. Det kjører på samme Coremail-plattform som 163.com og oppfører seg likt, men det er en annen postkasse på andre servere: IMAP på <code>imap.126.com</code> port 993 over TLS, og SMTP på <code>smtp.126.com</code> port 465. To betingelser må være oppfylt før en klient logger inn. Klientprotokollen må være slått på i postkasseinnstillingene, som er det som gir deg den <b>16 tegn lange autorisasjonskoden</b> som erstatter passordet ditt. Og klienten må identifisere seg med IMAP-kommandoen <code>ID</code> før den autentiserer, fordi NetEase avviser anonyme klienter med meldingen <code>Unsafe Login</code>, som ikke har noe med påloggingsdetaljene å gjøre. mcpemails gjør begge deler."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og forblir gratis, uten kort. Ha telefonen klar: NetEase ber deg sende en bekreftelses-SMS midt i neste steg."
+    },
+    {
+      "h": "Slå på klientprotokollen på mail.126.com",
+      "p": "Logg inn på mail.126.com, ikke mail.163.com, selv om du har begge. Åpne 设置 (innstillinger) og velg POP3/SMTP/IMAP. Slå på IMAP/SMTP-tjenesten og bekreft i popup-vinduet. NetEase tilbyr først sin egen 邮箱大师-klient; gå forbi den. Før denne tjenesten er på, avviser imap.126.com alle innlogginger uansett hvilket passord du sender."
+    },
+    {
+      "h": "Send bekreftelses-SMS-en, og kopier så koden inn i mcpemails",
+      "p": "NetEase viser en QR-kode som lager en bekreftelses-SMS på telefonen din, med manuell sending som reserve under. Send meldingen, vent et øyeblikk, og bekreft at du har sendt den. Autorisasjonskoden på 16 tegn vises én gang og aldri igjen. Kopier den, velg IMAP / SMTP i mcpemails, skriv inn hele 126-adressen din og lim koden inn i passordfeltet. 126-vertene er forhåndsutfylt."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-klienten",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så kan agenten lese, søke, sende, svare, videresende, planlegge og organisere den 126-postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "163-innstillinger virker ikke for en 126-adresse, og feilmeldingen skjuler det",
+      "p": "Det er denne som koster 126-brukere mest tid, og den skyldes dokumentasjonen, ikke tjenesten. De aller fleste veiledninger, eksempelkonfigurasjoner og Stack Overflow-svar om NetEase-e-post ble skrevet for 163.com, så det er <code>imap.163.com</code> og <code>smtp.163.com</code> folk kopierer. En <code>name@126.com</code>-adresse som presenteres for 163-serveren, er rett og slett en konto som ikke finnes der, og serveren rapporterer det som en mislykket innlogging. Ingenting i meldingen sier at du er på feil vert. Før du genererer en ny kode, sjekk at vertsnavnene faktisk sier 126."
+    },
+    {
+      "h": "Én NetEase-innlogging, flere postkasser, én kode hver",
+      "p": "NetEase driver 126.com ved siden av 163.com, yeah.net og 188.com, og lar deg knytte dem sammen slik at flere postkasser kan nås fra én innlogging. Den bekvemmeligheten får folk til å tro at påloggingen også er felles. Det er den ikke. Hver postkasse har sin egen klientprotokollbryter, sin egen autorisasjonskode og sine egne vertsnavn, og en kode laget for 163-adressen din autentiserer ingenting på imap.126.com. Har du begge, kobler du dem til i mcpemails som to separate innbokser med to separate koder."
+    },
+    {
+      "h": "En riktig kode kan likevel avvises, av to urelaterte grunner",
+      "p": "For det første krever NetEase at tredjepartsklienter presenterer seg med IMAP-kommandoen <code>ID</code> fra RFC 2971 før de autentiserer. En klient som hopper over den, avvises med <code>Unsafe Login</code>, og NetEase legger i tillegg en advarsel i postkassen. Henvisningsadressen i den meldingen er på enda et NetEase-domene, noe som øker forvirringen. For det andre annonserer serverens funksjonslinje <code>AUTH=XOAUTH2</code> og ingenting annet, så en klient som velger mekanisme fra den annonserte listen, finner ingen den kan bruke med et passord og prøver aldri den vanlige <code>LOGIN</code>-kommandoen som faktisk virker. Begge ser nøyaktig ut som en feil autorisasjonskode. mcpemails håndterer begge."
+    }
+  ],
+  "limits": [
+    "126-serveren annonserer ikke MOVE-utvidelsen, så hver arkivering er en kopi, en flaggoppdatering og en expunge. Agenten din arkiverer fortsatt e-post riktig, men en kjøring over hundrevis av meldinger tar merkbart lengre tid enn på en server med MOVE.",
+    "IDLE tilbys ikke, så ny e-post oppdages ved polling i stedet for å skyves til tilkoblingen. En agent som følger med på postkassen, ser en melding ved neste sjekk, ikke når den kommer.",
+    "126-vertene står på det kinesiske fastlandet, så hver forespørsel fra en klient utenfor landet betaler grensekryssende forsinkelse på hver IMAP-rundtur. Store søk føles tregere enn det samme søket mot en europeisk eller nordamerikansk postkasse."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med 126.com-e-post?",
+      "a": "Ikke direkte. Claude har ingen innebygd NetEase-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som mcpemails til 126-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer fra Cursor og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for 126.com?",
+      "a": "IMAP er imap.126.com på port 993 med implisitt TLS. SMTP er smtp.126.com på port 465. Logg inn med hele 126.com-adressen din og klientautorisasjonskoden på 16 tegn i stedet for postkassepassordet. Begge vertene ble verifisert via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Kan jeg bruke 163-autorisasjonskoden min for en 126-postkasse?",
+      "a": "Nei. Det er separate postkasser på separate vertsnavn, selv når begge kan nås fra én NetEase-innlogging. Hver av dem utsteder sin egen kode fra sin egen innstillingsskjerm, og hver har sin egen klientprotokollbryter som må slås på. Generer en kode på mail.126.com for 126-adressen."
+    },
+    {
+      "q": "Hvor får jeg 126-autorisasjonskoden?",
+      "a": "Logg inn på mail.126.com, åpne 设置 og så POP3/SMTP/IMAP, og slå på IMAP- og SMTP-tjenesten. NetEase ber deg så sende en bekreftelses-SMS fra telefonen som er knyttet til kontoen. Når det er bekreftet, vises koden på 16 tegn én eneste gang, så kopier den før du lukker dialogen."
+    },
+    {
+      "q": "Er 126.com samme tjeneste som 163.com?",
+      "a": "Det er samme selskap og samme Coremail-plattform, med samme flyt for autorisasjonskode og samme krav om IMAP-identifikasjon, men det er et annet e-postdomene med egne servere. Behandle det som en separat leverandør når du konfigurerer en klient, og les vertsnavnene nøye, for de skiller seg med tre tegn."
+    },
+    {
+      "q": "Lagres 126-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra NetEase via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke etter forespørselen som ba om det."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en 126 Mail-innboks",
+    "sub": "Koble til 126.com-postkassen din på minutter med dens egen autorisasjonskode. Én innboks gratis for alltid, uten kort."
+  }
+}

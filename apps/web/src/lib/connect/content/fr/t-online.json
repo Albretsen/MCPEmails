@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/programme/passwort-definition",
+    "https://www.telekom.de/hilfe/apps-dienste/e-mail/programm-passwort-verwalten",
+    "https://www.telekom.de/hilfe/vertrag-meine-daten/login-daten-passwoerter/welche-passwoerter-fuer-welchen-zweck",
+    "https://www.netzwelt.de/galerie/19784-e-mail-passwort-e-mail-adressen-t-online-einrichten.html"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Passwort für E-Mail-Programme",
+    "helpUrl": "https://www.telekom.de/hilfe/apps-dienste/e-mail/programm-passwort-verwalten",
+    "usernameForm": "Votre adresse complète, domaine compris : name@t-online.de. Les comptes anciens s'authentifient parfois encore avec le numéro T-Online à 12 chiffres, mais c'est l'adresse que Telekom documente aujourd'hui.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "E-mail T-Online dans Claude : le mot de passe mail distinct",
+    "description": "Connectez une boîte T-Online à Claude et tout client MCP sur secureimap.t-online.de:993. Il faut le Passwort für E-Mail-Programme, pas l'identifiant Telekom."
+  },
+  "hero": {
+    "eyebrow": "T-Online + IA",
+    "titleLine1": "Connectez votre boîte T-Online",
+    "titleLine2": "à Claude, Cursor, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Telekom. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP avec le mot de passe dédié que Telekom délivre pour les logiciels de messagerie.",
+    "answer": "Claude ne peut pas accéder seul à une boîte T-Online. mcpemails est un serveur MCP hébergé qui la connecte via IMAP sur secureimap.t-online.de, port 993, en s'authentifiant avec le Passwort für E-Mail-Programme distinct que Telekom délivre pour les clients de messagerie, et non avec le mot de passe de votre identifiant Telekom, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Si vous n'avez jamais créé ce mot de passe, aucun client n'a jamais pu se connecter à la boîte, et l'échec ressemble à une faute de frappe. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe Telekom pour logiciels de messagerie requis",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment T-Online se connecte : IMAP et un second mot de passe distinct",
+    "body": "Telekom sert IMAP sur <code>secureimap.t-online.de</code>, port 993 en TLS implicite, et la soumission SMTP sur <code>securesmtp.t-online.de</code>, port 465. Ces deux noms se trouvent devant un proxy IMAP et non devant un serveur de boîtes auquel vous parleriez directement, ce qui explique plusieurs des particularités décrites plus bas. Le point sur lequel presque tout le monde se trompe, c'est l'identifiant. Telekom gère deux mots de passe sur un même compte : le mot de passe <b>Telekom Login</b>, utilisé pour le Kundencenter et telekom.de, et un second <b>Passwort für E-Mail-Programme</b>, décrit dans les termes mêmes de Telekom comme étant <b>für das Verwenden eines E-Mail-Programms</b>. Seul le second permet de s'authentifier sur <code>secureimap.t-online.de</code>. Telekom recommande que les deux ne soient jamais identiques, et sur de nombreux comptes, le mot de passe pour logiciels de messagerie n'existe tout simplement pas tant que quelqu'un ne l'a pas créé."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Créez le Passwort für E-Mail-Programme",
+      "p": "Dans l'E-Mail Center sur email.t-online.de, ouvrez <b>Menü</b>, puis <b>Einstellungen</b>, puis <b>Passwörter</b> dans la colonne de gauche. Sous l'intitulé <b>E-Mail-Passwort, für das Verwenden eines E-Mail-Programms</b>, choisissez <b>E-Mail-Passwort ändern</b>, saisissez deux fois le nouveau mot de passe et enregistrez. Le même identifiant est accessible depuis le Kundencenter sous <b>Profil</b>, puis <b>Login-Daten und Passwörter</b>, puis <b>weitere Passwörter</b>. Définissez-le même si vous pensez en avoir déjà un : sur de nombreux comptes, il n'a jamais été créé."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple name@t-online.de, et collez le mot de passe pour logiciels de messagerie. Les serveurs et ports Telekom sont préremplis et ont été vérifiés via une connexion TLS réelle."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Le mot de passe de l'identifiant Telekom est refusé, et c'est voulu",
+      "p": "C'est l'échec de connexion T-Online le plus fréquent, et il produit une erreur d'authentification ordinaire sans rien qui explique pourquoi. Telekom divise le compte entre un mot de passe de connexion pour telekom.de et le Kundencenter, et un <b>Passwort für E-Mail-Programme</b> distinct pour IMAP, POP3 et SMTP. Le serveur de messagerie n'accepte que le second. Telekom conseille explicitement que les deux diffèrent, donc leur donner la même valeur n'est pas la solution prévue ; créez le mot de passe pour logiciels de messagerie, puis utilisez-le côté entrant comme côté sortant de la connexion."
+    },
+    {
+      "h": "Le proxy IMAP n'annonce aucun mécanisme AUTH avant la connexion",
+      "p": "La bannière de capacités renvoyée par Telekom est <code>IMAP4 IMAP4rev1 QUOTA LITERAL+ NAMESPACE UIDPLUS IDLE SORT</code>. Elle ne contient ni <code>AUTH=PLAIN</code>, ni <code>AUTH=LOGIN</code>, ni <code>SASL-IR</code>. En pratique, le serveur attend la commande IMAP <code>LOGIN</code> simple plutôt qu'un échange SASL <code>AUTHENTICATE</code>. Les bibliothèques clientes qui énumèrent les mécanismes SASL annoncés et refusent de continuer quand la liste est vide abandonnent avant même d'envoyer les identifiants, ce qui explique pourquoi certains outils IMAP déclarent T-Online injoignable alors que Thunderbird se connecte à la même boîte sans difficulté. mcpemails gère la voie LOGIN simple, donc ce point est déjà réglé pour vous."
+    },
+    {
+      "h": "Ni MOVE ni SPECIAL-USE, sur une boîte aux dossiers en allemand",
+      "p": "Le serveur n'annonce pas l'extension IMAP <code>MOVE</code>, donc classer un message s'effectue par une copie, une mise à jour de drapeau et un expunge plutôt que par une seule commande atomique. Il omet aussi <code>SPECIAL-USE</code>, ce qui signifie qu'Envoyés, Brouillons, Corbeille et Spam sont identifiés par leur nom et non par leur rôle. Une boîte T-Online les nomme normalement <b>Gesendet</b>, <b>Entwürfe</b>, <b>Papierkorb</b> et <b>Spam</b> : si un agent ne trouve pas votre dossier d'archive ou d'envoi, nommez-le dans la consigne."
+    },
+    {
+      "h": "L'envoi est plafonné à 50 Mo par message",
+      "p": "<code>securesmtp.t-online.de</code> annonce une taille maximale de message de 52 428 800 octets. C'est la taille du message encodé entier, donc les pièces jointes en base64 comptent environ un tiers de plus que leur taille sur disque. Un agent à qui l'on demande de transférer une grosse pièce jointe recevra un refus SMTP ferme plutôt qu'un envoi lent."
+    }
+  ],
+  "limits": [
+    "Comme le serveur ne prend pas en charge MOVE, un déplacement n'est pas atomique. Si une connexion tombe en cours d'opération, un message peut brièvement exister dans les deux dossiers.",
+    "Telekom limite le mot de passe pour logiciels de messagerie aux clients de messagerie. Il n'ouvre pas le Kundencenter, et changer le mot de passe de votre identifiant Telekom ne le change pas, donc les deux doivent être gérés séparément."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec l'e-mail T-Online ?",
+      "a": "Pas seul. Claude n'a pas de connecteur Telekom ou T-Online intégré. Pointer un serveur MCP comme mcpemails vers la boîte via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et les autres clients MCP."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de T-Online ?",
+      "a": "IMAP : secureimap.t-online.de sur le port 993 en TLS implicite. SMTP : securesmtp.t-online.de sur le port 465, également en TLS implicite. Connectez-vous avec votre adresse t-online.de complète et le Passwort für E-Mail-Programme. Les deux serveurs ont été confirmés via une connexion TLS réelle et sont communs à toutes les boîtes T-Online."
+    },
+    {
+      "q": "Pourquoi mon mot de passe T-Online est-il refusé dans un logiciel de messagerie ?",
+      "a": "Presque toujours parce que vous avez saisi le mot de passe de l'identifiant Telekom. Telekom délivre un second identifiant, le Passwort für E-Mail-Programme, et seul celui-ci permet de s'authentifier sur les serveurs de messagerie. Créez-le ou réinitialisez-le dans l'E-Mail Center sous Einstellungen, puis Passwörter, ou dans le Kundencenter sous Profil, puis Login-Daten und Passwörter, puis weitere Passwörter."
+    },
+    {
+      "q": "Où créer le Passwort für E-Mail-Programme ?",
+      "a": "Connectez-vous à l'E-Mail Center sur email.t-online.de, ouvrez Menü, puis Einstellungen, puis Passwörter. Le bloc intitulé E-Mail-Passwort, für das Verwenden eines E-Mail-Programms comporte un bouton de modification. Saisissez deux fois le nouveau mot de passe et enregistrez-le. Utilisez cette valeur dans votre client de messagerie et dans mcpemails, pour le serveur entrant comme pour le serveur sortant."
+    },
+    {
+      "q": "Cela fonctionne-t-il avec magenta.de et les autres domaines de messagerie Telekom ?",
+      "a": "Toute boîte hébergée dans l'E-Mail Center de Telekom s'authentifie auprès des mêmes serveurs secureimap.t-online.de et securesmtp.t-online.de avec le même mot de passe pour logiciels de messagerie. Ce qui compte, c'est que la boîte soit une boîte de l'E-Mail Center Telekom, pas ce qui suit l'arobase."
+    },
+    {
+      "q": "Mon courrier T-Online est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis Telekom via IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte T-Online à votre IA",
+    "sub": "Connectez votre boîte Telekom en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

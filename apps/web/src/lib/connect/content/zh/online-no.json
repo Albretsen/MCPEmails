@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.telenor.no/kundeservice/e-post/oppsett/",
+    "https://www.telenor.no/kundeservice/e-post/",
+    "https://www.telenor.no/vilkar/telenor-online-epost/",
+    "https://www.telenor.no/epost/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "在 Mine Sider 中设置的 e-post 密码",
+    "helpUrl": "https://www.telenor.no/kundeservice/e-post/oppsett/",
+    "usernameForm": "不是完整地址。Telenor 规定用户名为 @online.no 之前的部分，最多 8 个字符。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Online.no 邮箱 IMAP 设置与 Claude MCP 接入",
+    "description": "通过 imap.online.no:993 将 Telenor Online.no 邮箱连接到 Claude 及任意 MCP 客户端。须先在 Mine Sider 中允许第三方客户端访问。"
+  },
+  "hero": {
+    "eyebrow": "Online.no + AI",
+    "titleLine1": "将你的 Online.no 邮箱连接到",
+    "titleLine2": "Claude、Cursor、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Telenor Online 收件箱。在 Mine Sider 中允许第三方客户端访问后，即可通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行连接 Telenor Online.no 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.online.no 的 993 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。能否成功取决于 Telenor 的两个特殊之处：在第三方邮件程序中使用 Online e-post 的权限是 Mine Sider 中的一个开关；用户名不是你的地址，而是 @online.no 之前的部分，最多八个字符。密码是在 Mine Sider 中设置的 e-post 密码，而不是你的 TelenorID。mcpemails 上一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "在 Mine Sider 中允许第三方客户端",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Online.no 如何连接：一项权限、一个短用户名和一个单独的密码",
+    "body": "Telenor 在 <code>imap.online.no</code> 的 993 端口通过隐式 TLS 提供 IMAP，在 <code>smtp.online.no</code> 的 465 端口提供 SMTP 提交。Telenor 当前的设置页面为两种用途都给出 <code>mail.online.no</code>，并说明较早的 <code>imap.online.no</code> 和 <code>smtp.online.no</code> 同样可用；两者都在实时 TLS 连接中响应，mcpemails 自动填入的是较早的那一对。其余配置则是 Online.no 与其他服务商截然不同的地方。Telenor 规定用户名为 <b>det som er før @online.no, maks 8 tegn</b>（@online.no 之前的部分，最多 8 个字符），也就是本地部分而不是完整地址。凭据是 e-post 密码，Telenor 自己的条款写道 <b>om kunden bruker et e-postprogram settes passordet til e-postkontoen opp på Mine Sider</b>（客户使用邮件程序时，邮箱账户的密码在 Mine Sider 中设置）。而允许第三方程序使用该邮箱，本身也是需要在那里开启的一项设置。Online e-post 是 Telenor 的付费服务，而不是宽带线路附送的免费功能。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "在 Mine Sider 中开启第三方程序访问",
+      "p": "用你的 TelenorID 登录 Telenor 的 <b>Mine Sider</b>。Telenor 的帮助页面说得很直白：<b>nå kan du skru av eller på tillatelser til å bruke Online e-post i tredjeparts e-postprogrammer som Outlook eller Apple Mail på Mine sider</b>（现在你可以在 Mine Sider 中开启或关闭在 Outlook、Apple Mail 等第三方邮件程序中使用 Online e-post 的权限）。为要连接的账户开启该权限。如果你的密码用了很久，Telenor 会要求你先修改密码，才允许开启该权限。"
+    },
+    {
+      "h": "在 Mine Sider 中设置 e-post 账户密码",
+      "p": "仍在 Mine Sider 中，为邮件账户本身设置密码。Telenor 的 Online e-post 条款规定，客户使用邮件程序时，e-post 账户的密码在 Mine Sider 中设置。这与你的 TelenorID 登录凭据不同，也是登录被拒最常见的原因。"
+    },
+    {
+      "h": "粘贴到 mcpemails，再把 MCP URL 粘贴到你的 AI",
+      "p": "选择 IMAP / SMTP，用户名填 <code>@online.no</code> 之前的部分，并粘贴 e-post 密码。Telenor 的服务器和端口已自动填好，并已通过实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "用户名是本地部分而不是地址，且最多八个字符",
+      "p": "本站几乎所有其他服务商都要求在用户名栏填写完整地址，Telenor 不是。它的设置页面将用户名定义为 <b>det som er før @online.no, maks 8 tegn</b>（@online.no 之前的部分，最多 8 个字符）。在应填 <code>navn</code> 的地方输入 <code>navn@online.no</code>，服务器会以凭据错误拒绝，而没有任何迹象表明问题出在地址本身。完整形式是否恰好也能被接受，Telenor 并未说明，所以请使用它公布的简短形式。"
+    },
+    {
+      "h": "Mine Sider 中的权限控制协议访问，而旧密码会挡住这项权限",
+      "p": "Telenor 将第三方邮件程序访问设为需要在 Mine Sider 中明确开启的选项，而不是每个邮箱默认都有。这带来两个容易让人中招的后果。第一，从未开启该权限的邮箱，即使密码完全正确，也会以凭据错误拒绝客户端登录。第二，Telenor 指出 <b>hvis det er lenge siden du byttet passord sist, vil du måtte bytte passord for å kunne skru på tillatelser på Mine Sider</b>（如果你很久没有修改密码，必须先修改密码才能在 Mine Sider 中开启权限）：长期未更换的密码会让你连开关都够不着，必须先更换密码。按这个顺序完成这两件事，连接就能建立。"
+    },
+    {
+      "h": "服务器只提供 AUTH=LOGIN，没有 AUTH=PLAIN",
+      "p": "Online.no 的响应是 <code>* OK [CAPABILITY IMAP4REV1 LITERAL+ UTF8=ALL STATUS=SIZE STARTTLS SASL-IR AUTH=LOGIN ID] Bigfoot</code>。声明的列表中有 <code>AUTH=LOGIN</code>，没有 <code>AUTH=PLAIN</code>，这与这里几乎所有其他服务商正好相反。现代客户端库通常默认使用 PLAIN，把 LOGIN 当作旧式备选；而在 Online.no 上，缺席的恰恰是 PLAIN。不会回退的工具会收到一个看起来像密码错误的认证拒绝。mcpemails 会根据服务器实际声明的内容进行协商。"
+    },
+    {
+      "h": "Telenor 的条款限制了发件人一栏可以填什么",
+      "p": "Online e-post 条款规定 <b>bruker skal kun bruke egne online.no adresser som avsender</b>：你只能使用自己的 online.no 地址作为发件人。因此，让代理借用一台方便的 SMTP 服务器以工作地址或自有域名地址发信的做法，在这里是合同层面而非技术层面的禁区。如果需要代理以另一个身份发信，请连接拥有该身份的邮箱。"
+    }
+  ],
+  "limits": [
+    "Online e-post 是 Telenor 的付费服务。Telenor 标价为 5 GB 每月 99 克朗、15 GB 每月 109 克朗，因此连接给代理的闲置地址仍然要花钱。",
+    "服务器未声明 MOVE、UIDPLUS 和 SPECIAL-USE，因此归档以复制加标记再删除的方式进行，副本的新 UID 需要通过搜索找到，已发送、草稿和已删除文件夹按名称匹配。在挪威语邮箱中，它们通常叫 Sendt、Utkast 和 Slettet。",
+    "外发邮件的编码后大小上限约为 50 MB，因此代理转发的大附件可能在 SMTP 步骤被拒绝。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Online.no 邮箱吗？",
+      "a": "不能单独使用。Claude 没有内置的 Telenor 或 Online.no 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Online.no 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.online.no，端口 993，使用 SSL；SMTP 为 smtp.online.no，端口 465，使用 SSL。Telenor 当前的页面也为两种用途给出 mail.online.no，并说明旧名称仍然可用。用户名是 @online.no 之前的部分，最多八个字符，密码是在 Mine Sider 中设置的 e-post 密码。"
+    },
+    {
+      "q": "为什么邮件客户端拒绝我的 Online.no 密码？",
+      "a": "三种可能，按顺序排查。尚未在 Mine Sider 中允许第三方程序访问。或者你输入了完整地址，而 Telenor 只需要 @online.no 之前的部分。或者你用的是 TelenorID 登录凭据，而不是 Mine Sider 为邮件程序设置的 e-post 账户密码。"
+    },
+    {
+      "q": "如何允许 Outlook 或其他程序使用 Online e-post？",
+      "a": "登录 Mine Sider，开启在第三方邮件程序中使用 Online e-post 的权限。如果你的密码很久没有修改，Telenor 会要求你先修改密码，才能开启该权限。在同一处设置 e-post 账户密码，并在客户端中使用它。"
+    },
+    {
+      "q": "Online.no 邮箱免费吗？",
+      "a": "不免费。Telenor 将 Online e-post 作为付费服务销售，标价为 5 GB 每月 99 克朗、15 GB 每月 109 克朗，在 Mine Sider 的 Tjenester 下订购。如果你打算专门为代理再开一个 Online.no 地址，值得先把这一点考虑进去。"
+    },
+    {
+      "q": "我的 Online.no 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 Telenor 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Online.no 收件箱",
+    "sub": "在 Mine Sider 中允许第三方访问，几分钟即可完成连接。一个收件箱永久免费，无需信用卡。"
+  }
+}

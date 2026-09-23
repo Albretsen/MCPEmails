@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://kb.kolabnow.com/documentation/generic-imap-client-setup-guide",
+    "https://kb.kolabnow.com/faq/how-do-i-setup-my-client"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Kolab Now-passord",
+    "helpUrl": "https://kb.kolabnow.com/documentation/generic-imap-client-setup-guide",
+    "usernameForm": "Den primære Kolab Now-e-postadressen din, ikke et alias og ikke et rent brukernavn.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Kolab Now til Claude, Cursor og MCP-klienter",
+    "description": "Koble Kolab Now til Claude, Cursor og enhver MCP-klient over IMAP på imap.kolabnow.com:993. Verifiserte innstillinger og regler for passord. Én innboks gratis."
+  },
+  "hero": {
+    "eyebrow": "Kolab Now + AI",
+    "titleLine1": "Koble Kolab Now til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Kolab Now-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP fra Sveits, i alle MCP-klienter i stedet for bare én.",
+    "answer": "Claude kan ikke nå Kolab Now på egen hånd. mcpemails er en driftet MCP-server som kobler til over IMAP på imap.kolabnow.com på port 993, og SMTP på smtp.kolabnow.com på port 465, og autentiserer med den primære Kolab Now-adressen din og kontopassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. De to vertsnavnene brukes uansett hvilket domene adressen din ligger på, også ditt eget. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Primæradresse og kontopassord",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles Kolab Now til: Cyrus IMAP og primæradressen din",
+    "body": "Kolab Now leverer IMAP på <code>imap.kolabnow.com</code> på port 993 med implisitt TLS, og SMTP på <code>smtp.kolabnow.com</code> på port 465. Bakenden er <b>Cyrus IMAP</b>, og det betyr mer enn det høres ut som: i motsetning til de fleste personvernleverandørene annonserer Kolab Now MOVE, UIDPLUS og SPECIAL-USE, så mapperoller løses riktig og flyttinger er atomiske. Autentisering skjer med et vanlig passord mot <b>den primære e-postadressen</b> din. Kolab Nows dokumentasjon understreker at selv når adressen din ligger på <code>mykolab.com</code> eller et domene du eier, kobler du fortsatt til de samme to vertsnavnene."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, uten kort. Til slutt får du en MCP-URL og en nøkkel."
+    },
+    {
+      "h": "Finn primæradressen din, ikke et alias",
+      "p": "Kolab Now autentiserer mot kontoens primære e-postadresse. Hvis e-posten din kommer inn på flere adresser, eller postkassen ligger på ditt eget domene, er det bare den primære som kan logge inn. Den vises i kontoinnstillingene dine hos Kolab Now; et alias i brukernavnfeltet gir en helt vanlig autentiseringsfeil uten noe hint om hvorfor."
+    },
+    {
+      "h": "Legg til postkassen i mcpemails",
+      "p": "Velg IMAP / SMTP, og skriv inn primæradressen og Kolab Now-passordet ditt. Vertene er forhåndsutfylt som <code>imap.kolabnow.com</code> og <code>smtp.kolabnow.com</code>, som er riktige uansett hvilket domene adressen din har. Påloggingsopplysninger er kryptert ved lagring; e-post hentes direkte per forespørsel og beholdes ikke."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Domenet ditt står aldri i vertsnavnet",
+      "p": "Dette snubler kunder med eget domene i hele tiden. Kolab Now har adresser på kolabnow.com, på det eldre mykolab.com og på domener du tar med selv, men det finnes ingen e-postvert per domene: <code>imap.kolabnow.com</code> og <code>smtp.kolabnow.com</code> betjener alle sammen. Ikke følg den vanlige refleksen med å gjette på <code>mail.yourdomain.com</code>, og ikke stol på et autodiscover-resultat som peker et annet sted."
+    },
+    {
+      "h": "Kolab Now avviser klienter som ikke oppfyller TLS-kravene",
+      "p": "Kolab Nows egen kunnskapsbase sier at hvis klienten din ikke står på listen og den generelle veiledningen ikke fungerer, oppfyller klienten mest sannsynlig ikke PCI-sikkerhetsstandardene serverne deres håndhever, og den vil ikke koble til i det hele tatt. Gammel programvare feiler her i stedet for å forhandle seg ned. Ingenting på postkassen må slås på, så en tilkobling som dør før autentisering, skyldes som regel klientens TLS-stakk, ikke kontoen din."
+    },
+    {
+      "h": "Den er en av få her med full støtte for MOVE og SPECIAL-USE",
+      "p": "Kolab Nows Cyrus-server annonserer MOVE, UIDPLUS, SPECIAL-USE og IDLE. I praksis betyr det at en agent som sorterer e-post, sender en ekte MOVE i stedet for dansen med COPY, flagging og expunge som de fleste andre leverandørene på denne listen tvinger fram, får den nye UID-en tilbake med én gang, og identifiserer Sendt, Utkast og Papirkurv etter deklarert rolle i stedet for å gjette ut fra navn. Å omorganisere en Kolab Now-postkasse i stor skala blir dermed målbart raskere og mindre utsatt for feil."
+    },
+    {
+      "h": "Delte mapper og gruppemapper vises i samme tre",
+      "p": "Cyrus viser delte mapper og alle mapper som er delt med deg, ved siden av dine egne. Hvis kontoen din tilhører en gruppe, ser en agent som lister mapper, disse og kan sortere e-post inn i dem. Si hvilken mappe du mener når du gir en instruks, eller avgrens instruksen til innboksen, ellers kan en bred forespørsel røre e-post som andre også leser."
+    }
+  ],
+  "limits": [
+    "Å koble en Kolab Now-postkasse til en AI-klient betyr at AI-leverandøren leser innholdet i meldingene dine. Kolab Nows sveitsiske drift og Kolabs fri programvare-plattform strekker seg ikke til AI-klienten i den andre enden av tilkoblingen. mcpemails henter e-post direkte fra Kolab Now per forespørsel og lagrer ikke meldingsinnhold, og påloggingsopplysninger er kryptert ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du peker den mot. Hvis en postkasse ligger hos Kolab Now nettopp for å holde innholdet i én jurisdiksjon, oppheves det når du kobler den til en stor AI-leverandør.",
+    "Meldinger som er kryptert til OpenPGP- eller S/MIME-nøkkelen din, kommer over IMAP som chiffertekst. mcpemails har ingen privat nøkkel, så en agent kan lese headerne og sortere meldingen, men ikke innholdet.",
+    "Kolab Now har ikke app-passord eller enhetspassord, så påloggingsopplysningen mcpemails lagrer, er kontopassordet ditt. Å tilbakekalle én enkelt tilkobling betyr å endre kontopassordet."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Kolab Now?",
+      "a": "Ikke direkte. Claude har ingen innebygd Kolab Now-kobling og kan ikke snakke IMAP selv. Kobler du en MCP-server som mcpemails til Kolab Now-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og den samme tilkoblingen kan gjenbrukes fra Cursor og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Kolab Now?",
+      "a": "IMAP er imap.kolabnow.com på port 993 med implisitt TLS. SMTP er smtp.kolabnow.com på port 465, også med implisitt TLS, der STARTTLS på 587 bare tilbys som en midlertidig nødløsning. Brukernavnet er den primære Kolab Now-e-postadressen din. Begge vertene ble verifisert via en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Jeg bruker mitt eget domene med Kolab Now. Endres innstillingene?",
+      "a": "Nei. Kolab Now dokumenterer at selv når primæradressen din ligger på mykolab.com eller et domene du eier, kobler du til imap.kolabnow.com og smtp.kolabnow.com. Det finnes ikke noe vertsnavn per domene å sette opp, og å finne på et er den vanligste grunnen til at et oppsett med eget domene feiler."
+    },
+    {
+      "q": "Hvorfor blir Kolab Now-innloggingen min avvist?",
+      "a": "Sjekk at du bruker kontoens primære e-postadresse og ikke et alias, og at du har skrevet inn hele adressen og ikke bare et brukernavn. Hvis autentiseringen aldri engang starter, oppfyller kanskje ikke klienten din TLS-kravene Kolab Now håndhever, og da feiler det før noe passord blir sjekket."
+    },
+    {
+      "q": "Lagres Kolab Now-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra imap.kolabnow.com over IMAP for hver forespørsel og sendes rett videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring; meldingsinnhold blir ikke beholdt. Det AI-klienten leser, når likevel den AI-leverandøren, og det er en separat og bevisst beslutning fra din side."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Kolab Now-innboks",
+    "sub": "Koble til Kolab Now på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

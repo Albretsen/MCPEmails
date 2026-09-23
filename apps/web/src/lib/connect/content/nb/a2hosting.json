@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://kb.hosting.com/docs/accessing-e-mail-accounts-with-client-applications",
+    "https://hosting.com/blog/a-new-chapter-begins-a2-hosting/",
+    "https://www.prnewswire.com/news-releases/a2-hosting-becomes-hostingcom-with-aim-to-be-the-most-trusted-brand-in-hosting-302448950.html"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://kb.hosting.com/docs/accessing-e-mail-accounts-with-client-applications",
+    "usernameForm": "Hele e-postadressen din, for eksempel webmaster@yourdomain.com. Ikke cPanel-brukernavnet ditt, og ikke fakturapåloggingen.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble A2 Hosting-e-post til Claude og MCP-klienter",
+    "description": "A2 Hosting-postkasser (nå hosting.com) kobles til Claude over IMAP på port 993. Bruk hele servernavnet, som mi3-ss78.a2hosting.com, for å unngå SSL-varsler."
+  },
+  "hero": {
+    "eyebrow": "A2 Hosting + AI",
+    "titleLine1": "Koble A2 Hosting-e-post til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte A2 Hosting-postkasse. Les, søk, send, svar, planlegg og organiser e-post over IMAP med passordet du satte på postkassen i cPanel, i alle MCP-klienter i stedet for bare én.",
+    "answer": "Claude kan ikke nå en A2 Hosting-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler den til over vanlig IMAP på port 993, med e-postverten som kontoen din faktisk ligger på i stedet for en felles a2hosting.com-adresse, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. A2 Hosting ble til hosting.com i april 2025, men e-postplattformen er uendret: cPanel viser den nøyaktige verten din under Email Accounts, deretter Connect Devices. Autentiseringen bruker passordet som er satt på postkassen, ikke påloggingen til kontrollpanelet, og én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord fra cPanel",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles A2 Hosting-e-post til: ditt eget servernavn, IMAP 993",
+    "body": "A2 Hosting skiftet navn til hosting.com i april 2025, og e-postplattformen fulgte ikke med navnet. Delte kontoer og forhandlerkontoer kjører fortsatt cPanel, og postkassene svarer fortsatt på IMAP på port 993 og SMTP på 465, med 587 tilgjengelig for STARTTLS. Det finnes ingen felles a2hosting.com-e-postserver å peke en klient mot, fordi hver konto ligger på sin egen maskin. Kunnskapsbasen oppgir to former som begge fungerer: <code>mail.yourdomain.com</code>, bygget fra ditt eget domene, og hele servernavnet, som ser ut som <code>mi3-ss78.a2hosting.com</code> på den opprinnelige A2-serverparken eller <code>sr10.supercp.com</code> på supercp-parken. For en TLS-tilkobling er det servernavnet som teller, fordi det delte sertifikatet dekker serveren og ikke domenet ditt. Logg inn med hele e-postadressen og passordet som er satt på den postkassen i cPanel."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og krever ikke kort."
+    },
+    {
+      "h": "Finn den faktiske e-postverten din i cPanel",
+      "p": "Logg inn på hosting.com, åpne cPanel for webhotellkontoen, og gå til Email, deretter <b>Email Accounts</b>. Klikk <b>Connect Devices</b> på raden for adressen du vil bruke. Blokken <b>Mail Client Manual Settings</b> viser den nøyaktige sikre innkommende verten for kontoen din, som vil være servernavnet og ikke domenet ditt, sammen med portene 993 og 465. Kopier verten nøyaktig slik den står."
+    },
+    {
+      "h": "Bruk postkassepassordet, ikke panelpassordet",
+      "p": "IMAP autentiserer mot passordet som er satt på selve e-postadressen. Hvis du ikke har det, klikker du <b>Manage</b> ved siden av adressen i Email Accounts og setter et nytt. Det finnes ikke noe eget app-passord å generere for A2 Hosting-e-post."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Det delte sertifikatet navngir A2-serveren, aldri domenet ditt",
+      "p": "<code>mail.yourdomain.com</code> peker som regel til riktig maskin, men TLS-håndtrykket returnerer et sertifikat utstedt for hosting.com-serveren, ikke for domenet ditt. En klient som validerer strengt, avviser det, og feilmeldingen ser ut som et angrep snarere enn en konfigurasjonsfeil. A2s egen dokumentasjon er tydelig på løsningen: for sikker tilgang skal du bruke hele servernavnet i stedet for domenenavnet ditt. Hent det fra Connect Devices, ikke fra hukommelsen."
+    },
+    {
+      "h": "To familier av servernavn er i bruk samtidig, og navnebyttet endret ingen av dem",
+      "p": "Kontoer på den opprinnelige A2-serverparken har verter som <code>mi3-ss78.a2hosting.com</code>, der første ledd er datasenteret. Kontoer på den andre parken ser ut som <code>sr10.supercp.com</code>. Overgangen til hosting.com ga ingen av familiene nytt navn, så et <code>a2hosting.com</code>-vertsnavn du noterte for flere år siden, er høyst sannsynlig fortsatt riktig, og et <code>supercp.com</code>-navn er ikke et tegn på phishing. Ingen av dem kan utledes fra domenet ditt, og derfor slår gjetting feil oftere her enn hos verter med én navneordning."
+    },
+    {
+      "h": "A2 har ikke app-passord, uansett hva tredjepartsguider sier",
+      "p": "Flere populære veiledninger ber deg generere et app-passord fordi tofaktorautentisering er slått på. Det rådet gjelder påloggingen til cPanel og kundeområdet. IMAP og SMTP autentiserer direkte mot postkassepassordet, uten andre faktor og uten noen app-passordordning i det hele tatt. Hvis en e-postpålogging blir avvist, er postkassepassordet faktisk feil, så tilbakestill det i Email Accounts i stedet for å lete etter et token som ikke finnes."
+    }
+  ],
+  "limits": [
+    "mcpemails jobber med postkassen, ikke med webhotellkontoen. Alias, videresendinger, autosvar og spamfiltre administreres fortsatt i cPanel og er ikke synlige for AI-klienten din.",
+    "Forhandler- og VPS-kontoer kan ligge på et vertsnavn som A2 ikke publiserer noe sted i kunnskapsbasen. Connect Devices-panelet i den kontoens egen cPanel er den eneste autoritative kilden for det."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med A2 Hosting-e-post?",
+      "a": "Ikke direkte. Claude har ingen innebygd kobling for cPanel-baserte e-postverter. Kobler du en MCP-server som mcpemails til A2 Hosting-postkassen din over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den, med de samme påloggingsopplysningene som en vanlig e-postklient på datamaskinen ville brukt."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for A2 Hosting?",
+      "a": "IMAP er port 993 med implisitt TLS, og SMTP er port 465, med 587 tilgjengelig for STARTTLS. Verten er knyttet til kontoen din: enten mail.yourdomain.com eller hele servernavnet, som mi3-ss78.a2hosting.com eller sr10.supercp.com. A2 dokumenterer 143 og 25 eller 2525 som de ukrypterte variantene, og dem bør du ikke bruke."
+    },
+    {
+      "q": "Endret navnebyttet til hosting.com e-postinnstillingene mine?",
+      "a": "Nei. A2 Hosting ble til hosting.com i april 2025, og eksisterende kunder beholder abonnementer, servere og vertsnavn. Servernavnet ditt på a2hosting.com eller supercp.com svarer fortsatt og presenterer fortsatt det samme sertifikatet. Det er bare merkevaren på nettstedet og i kundeområdet som er endret."
+    },
+    {
+      "q": "Hvorfor blir A2 Hosting-e-postpassordet mitt avvist?",
+      "a": "Nesten alltid fordi du brukte passordet til cPanel eller kundeområdet. IMAP sjekker passordet som ble satt på den enkelte e-postadressen da den ble opprettet. Tilbakestill det i cPanel under Email Accounts ved å klikke Manage ved siden av adressen, og bruk deretter det passordet. Brukernavnet må være hele adressen, ikke bare delen foran krøllalfaen."
+    },
+    {
+      "q": "Lagres A2 Hosting-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra A2 Hosting-serveren din over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke oppbevart."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en A2 Hosting-innboks",
+    "sub": "Koble til en A2 Hosting-postkasse på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

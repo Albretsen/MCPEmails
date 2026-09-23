@@ -1,21 +1,32 @@
 {
+  "_sources": [
+    "https://support.gmx.com/pop-imap/toggle.html",
+    "https://support.gmx.com/pop-imap/imap/index.html"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "GMX 密码",
+    "helpUrl": "https://support.gmx.com/pop-imap/toggle.html",
+    "usernameForm": "你的完整 GMX Mail 地址，包括域名：name@gmx.net、name@gmx.com、name@gmx.de 或 name@gmx.at。",
+    "status": "active"
+  },
   "meta": {
-    "title": "将 GMX 连接到 Claude（及任意 AI）",
-    "description": "用账户密码通过 IMAP 将 GMX 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的邮件，1 个收件箱永久免费。"
+    "title": "将 GMX 连接到 Claude、Cursor 与 MCP 客户端",
+    "description": "通过 imap.gmx.net:993 的 IMAP 将 GMX Mail 连接到 Claude、Cursor 及任意 MCP 客户端。GMX 默认关闭 POP3 和 IMAP，必须先将其开启。"
   },
   "hero": {
     "eyebrow": "GMX + AI",
     "titleLine1": "将 GMX 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
-    "lead": "几分钟即可为你的 AI 代理接入一个真正的 GMX 收件箱。用 IMAP 和你的账户密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+    "lead": "几分钟即可为你的 AI 代理接入一个真正的 GMX 收件箱。通过 IMAP 和你的账户密码读取、搜索、发送、回复、定时与整理邮件，同一个收件箱可在所有 MCP 客户端中使用，而不止一个。",
     "meta0": "1 个收件箱永久免费",
-    "meta1": "你的账户密码，无需 OAuth 配置",
+    "meta1": "使用账户密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行连接 GMX。mcpemails 是一个托管 MCP 服务器，用账户密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱永久免费。"
+    "answer": "Claude 无法自行访问 GMX。mcpemails 是一个托管 MCP 服务器，使用你的账户密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，1 个收件箱免费。"
   },
   "method": {
-    "title": "GMX 如何连接：IMAP 与账户密码",
-    "body": "GMX 通过 IMAP/SMTP 连接，但<b>POP3 与 IMAP 访问默认是关闭的</b>。先在 GMX 的邮件设置、POP3/IMAP 收取中开启，然后用 GMX 地址和密码连接。如果 GMX 要求创建应用专用密码，请改用该密码。德国账户使用 .net 服务器，即 <code>imap.gmx.net</code> 与 <code>mail.gmx.net</code>。"
+    "title": "GMX 如何连接：IMAP 与你的账户密码",
+    "body": "GMX 通过 IMAP/SMTP 连接，但 <b>POP3 和 IMAP 访问默认是关闭的</b>。请在 GMX 的 E-mail settings、POP3/IMAP retrieval 中将其开启，然后用你的 GMX 地址和密码连接。如果 GMX 要求你创建应用专用密码，请改用它。德国账户使用 .net 服务器：<code>imap.gmx.net</code> 和 <code>mail.gmx.net</code>。"
   },
   "setup": [
     {
@@ -24,19 +35,63 @@
     },
     {
       "h": "在 GMX 中开启 IMAP 访问",
-      "p": "在 GMX 中打开邮件设置、POP3/IMAP 收取，允许 POP3 与 IMAP 访问。若账户长期不用，GMX 会再次关闭它。"
+      "p": "在 GMX 中打开 E-mail settings、POP3/IMAP retrieval，允许 POP3 和 IMAP 访问。如果账户长时间未使用，GMX 会再次将其关闭。"
     },
     {
       "h": "粘贴到 mcpemails",
-      "p": "选择 IMAP / SMTP，填入你的 GMX 地址、下方的服务器地址和密码，安全连接收件箱。"
+      "p": "选择 IMAP / SMTP，填入你的 GMX 地址、下方的服务器地址和密码，安全地连接收件箱。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
       "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],
+  "gotchas": [
+    {
+      "h": "GMX 默认关闭 POP3 和 IMAP，之后还会再次关闭",
+      "p": "在你启用之前，GMX Mail 账户的外部访问是停用的：打开 Email 选项卡，然后依次进入 Settings、POP3 & IMAP，勾选 <b>Enable access to this account via POP3 and IMAP</b>，然后保存。GMX 的文档中还有一点常被人忽略：出于安全考虑，如果邮箱长时间没有任何 POP3 或 IMAP 活动，它会自动再次关闭这项权限。所以一个已正常运行数月的连接，可能在你这边毫无变化的情况下，突然因登录失败而中断。这项设置在 GMX 手机应用中也不存在，所以你必须在浏览器中操作。"
+    },
+    {
+      "h": "发信服务器是 mail.gmx.net，而不是 smtp.gmx.net",
+      "p": "GMX 打破了几乎所有其他服务商都遵循的命名惯例。收信服务器是 <code>imap.gmx.net</code>，而发信提交服务器是端口 465 上的 <code>mail.gmx.net</code>。猜测出来的 <code>smtp.gmx.net</code> 不会响应，按模式自动填写主机名的客户端每次都会弄错。本页的两个名称都经实时 TLS 连接确认，而且 GMX 出示的证书是签发给 <code>mail.gmx.net</code> 的。"
+    },
+    {
+      "h": "GMX 会接受一封 135 MB 的邮件，而收件方随后会拒收",
+      "p": "GMX Mail 的提交服务器声明的单封邮件大小上限约为 135 MB，远远高于本站介绍的任何其他服务商。这是 GMX 愿意从你这里接收的上限，而不是送达的保证。接收方服务器有自己的限制，大多在 10 MB 到 50 MB 之间，所以 GMX 欣然接受的大附件，几分钟后仍可能被对方退回。如果代理要发送大文件，请改为分享链接。"
+    },
+    {
+      "h": "开启双重身份验证会改变客户端所需的密码",
+      "p": "在未开启双重身份验证时，只要勾选了 POP3 和 IMAP 复选框，你的普通 GMX 密码就能在邮件客户端中使用。如果你开启了双重身份验证，并且 GMX 要求你使用应用专用密码，请改用它：此时普通密码在外部程序中将失效，而这种失败看起来像是输错了，而不是策略变化。GMX 的 IMAP 只提供 <code>PLAIN</code> 和 <code>LOGIN</code> 机制，没有 OAuth 途径，所以凭据始终是这两种密码之一。"
+    }
+  ],
+  "limits": [
+    "如果长时间没有协议活动，GMX 可能会再次停用 POP3 和 IMAP，这会断开邮箱连接，直到你在网页界面中重新开启。",
+    "GMX Mail 没有 OAuth 选项，因此保存的凭据是密码。修改 GMX 密码后，邮箱会断开连接，直到你输入新密码。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 GMX Mail 吗？",
+      "a": "不能单独使用。Claude 没有内置的 GMX 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到你的 GMX 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。你需要先在 GMX 中启用 POP3 和 IMAP 访问。"
+    },
+    {
+      "q": "GMX Mail 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.gmx.net，端口 993，使用隐式 TLS。外发邮件发往 mail.gmx.net，端口 465，同样是隐式 TLS，而不是一个叫 smtp.gmx.net 的服务器，那个服务器并不存在。用户名是你的完整 GMX 地址。两个服务器均已在本页所示日期通过实时 TLS 连接确认。"
+    },
+    {
+      "q": "如何在 GMX 中启用 IMAP？",
+      "a": "在网页浏览器中登录 GMX，打开 Email 选项卡，点击 Settings，然后打开 POP3 & IMAP，勾选允许通过 POP3 和 IMAP 访问该账户的复选框，并保存。GMX 手机应用中没有这个选项。在开启之前，GMX 会拒绝所有邮件客户端的登录，报错看起来与密码错误一模一样。"
+    },
+    {
+      "q": "为什么我的 GMX 连接会自己停止工作？",
+      "a": "GMX 的文档说明，出于安全考虑，当邮箱长时间未使用这些协议时，它会自动停用 POP3 和 IMAP 访问。这不需要你这边有任何改动就会发生。请通过浏览器登录，在 Settings 中重新勾选 POP3 和 IMAP 复选框，连接就会用原来的密码恢复工作。"
+    },
+    {
+      "q": "我的 GMX 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 GMX 实时获取邮件，并交给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。在 GMX 中重新关闭 POP3 和 IMAP 访问，会立即在 GMX 那一端切断连接。"
+    }
+  ],
   "ctaBand": {
     "title": "给你的 AI 一个 GMX 收件箱",
-    "sub": "几分钟即可连接 GMX。一个收件箱永久免费，无需信用卡。"
+    "sub": "几分钟即可连接 GMX。1 个收件箱永久免费，无需信用卡。"
   }
 }

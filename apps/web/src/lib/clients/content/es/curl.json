@@ -1,0 +1,93 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "apps/web/app/api/mcp/route.ts",
+    "apps/web/messages/en/docs.json"
+  ],
+  "meta": {
+    "title": "API del servidor MCP de correo: curl, JSON-RPC y Bearer",
+    "description": "Llama al servidor MCP de mcpemails por HTTP. Un endpoint Streamable HTTP, JSON-RPC 2.0, una clave bearer limitada y todas las herramientas. Una bandeja gratis."
+  },
+  "hero": {
+    "eyebrow": "HTTP + correo",
+    "titleLine1": "Llama al servidor MCP de correo",
+    "titleLine2": "directamente desde curl o un script",
+    "lead": "Sin cliente, sin SDK. Un único endpoint Streamable HTTP que habla JSON-RPC 2.0, autenticado con una clave bearer de permisos limitados que puedes revocar con un clic.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Clave de API con permisos limitados, revocable con un clic",
+    "meta2": "Correo obtenido en vivo, nunca almacenado",
+    "answer": "Haz un POST de JSON-RPC 2.0 a https://mcpemails.com/api/mcp con un encabezado Authorization Bearer que lleve una clave de API de tu panel. Los métodos admitidos son initialize, tools/list, tools/call, prompts/list y prompts/get."
+  },
+  "method": {
+    "title": "Cómo se conecta un script o un cliente HTTP directo: una clave de API con permisos limitados",
+    "body": "Un script o un cliente HTTP directo no ejecuta el flujo OAuth en el navegador contra un servidor MCP remoto, así que se autentica con un token bearer. Crea una clave de API en tu panel, marca solo los permisos que necesita el agente y ponla en el script o cliente HTTP como encabezado <code>Authorization: Bearer</code>. Las conexiones con clave y las conexiones OAuth llegan al mismo endpoint y reciben el mismo catálogo de herramientas; la única diferencia es cómo se obtiene el token."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis y conecta un buzón",
+      "p": "Regístrate en mcpemails.com, sin tarjeta, y luego ve a Dashboard, Inboxes, Connect Inbox. Gmail se conecta con el inicio de sesión de Google en un clic; iCloud, Fastmail, Yahoo, Zoho y Yandex requieren una contraseña de aplicación; cualquier otro se conecta por IMAP y SMTP estándar. El plan gratuito incluye una bandeja, para siempre."
+    },
+    {
+      "h": "Crea una clave de API con permisos limitados",
+      "p": "En Dashboard, API Keys, haz clic en Create key. Ponle un nombre y marca solo los permisos que necesita este agente: <code>read:email</code>, <code>search:email</code>, <code>send:email</code>, <code>manage:folders</code>, <code>delete:email</code>, <code>manage:drafts</code>, <code>manage:contacts</code>, <code>schedule:email</code> y <code>manage:automations</code>. La clave tiene la forma <code>mcpe_</code> seguida de 64 caracteres hexadecimales y solo se muestra una vez, así que cópiala antes de cerrar el diálogo."
+    },
+    {
+      "h": "Llama al endpoint",
+      "p": "Haz un POST con un cuerpo JSON-RPC 2.0 a <code>https://mcpemails.com/api/mcp</code> con la clave en el encabezado <code>Authorization</code>. Empieza con <code>tools/list</code> para ver el catálogo y luego <code>inbox_list</code> para descubrir los ids de tus buzones."
+    },
+    {
+      "h": "Procesa la respuesta",
+      "p": "Los resultados llegan como JSON-RPC 2.0. Los resultados correctos incluyen además un objeto tipado <code>structuredContent</code>, así que un script no tiene que analizar prosa."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Envía la clave en el encabezado, no en la query string",
+      "p": "Una clave en <code>?key=</code> o <code>?api_key=</code> todavía se acepta para integraciones anteriores al encabezado, pero no debería usarse en nada nuevo. Las credenciales en la URL quedan en el historial del navegador, en los logs de proxies, en los encabezados referrer y en los sistemas de monitorización, y nada de eso lo controlas tú. El encabezado <code>Authorization</code> es la vía admitida."
+    },
+    {
+      "h": "Las llamadas salientes aceptan una clave de idempotencia, y reintentar sin ella es un riesgo real",
+      "p": "Send, reply, forward, el envío de borradores y el envío programado aceptan una clave de idempotencia opcional, respetada durante 24 horas. Un timeout de red en un envío es ambiguo por naturaleza: puede que el correo sí haya salido. Con una clave de idempotencia, el reintento es seguro. Sin ella, un reintento es un segundo correo."
+    },
+    {
+      "h": "Las operaciones largas son largas de verdad",
+      "p": "Se ha observado en producción que un search-and-move sobre un buzón grande tarda unos 152 segundos, y el proxy permite hasta 270 segundos antes de rendirse por su cuenta. Configura un timeout de cliente acorde, en lugar de los pocos segundos habituales, o cancelarás operaciones que estaban a punto de terminar bien."
+    },
+    {
+      "h": "No hay push, en ninguna dirección",
+      "p": "Sin webhooks, sin eventos iniciados por el servidor, sin URL de callback que registrar. Reaccionar al correo nuevo significa consultar periódicamente, por ejemplo <code>email_read</code> con <code>action: \"list\"</code> y solo no leídos, con el intervalo que necesite tu flujo de trabajo. Los límites son 100 por minuto, 1.000 por hora y 10.000 al día por clave."
+    }
+  ],
+  "limits": [
+    "Las solicitudes están limitadas a 100 por minuto, 1.000 por hora y 10.000 al día por clave, además del tope de acciones facturables de tu plan.",
+    "El servidor funciona solo por petición y respuesta. No hay webhooks ni eventos iniciados por el servidor, así que el correo nuevo nunca despierta a tu agente por sí solo. Para reaccionar al correo entrante, consulta periódicamente según un horario.",
+    "El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, así que un token revocado o un cambio de contraseña del buzón corta el acceso de inmediato."
+  ],
+  "faq": [
+    {
+      "q": "¿Puedo usarlo sin un cliente MCP?",
+      "a": "Sí. Es un endpoint HTTPS normal que habla JSON-RPC 2.0, así que curl, un cron, un servicio backend o cualquier librería HTTP pueden llamarlo. Autentícate con una clave de API bearer de Dashboard, API Keys. El catálogo de herramientas es idéntico al que ve un cliente MCP."
+    },
+    {
+      "q": "¿Qué métodos JSON-RPC se admiten?",
+      "a": "initialize, tools/list, tools/call, prompts/list y prompts/get. Los resultados correctos llevan un objeto tipado structuredContent junto al contenido legible, y eso es lo que debería leer un script."
+    },
+    {
+      "q": "¿Cómo hago que los reintentos sean seguros?",
+      "a": "Pasa una clave de idempotencia en las operaciones salientes. Send, reply, forward, el envío de borradores y el envío programado la aceptan y la respetan durante 24 horas, así que reintentar la misma solicitud tras un timeout no puede generar un segundo correo. Las lecturas se pueden reintentar sin riesgo por naturaleza."
+    },
+    {
+      "q": "¿Cuáles son los límites de uso?",
+      "a": "100 solicitudes por minuto, 1.000 por hora y 10.000 al día por clave, además del tope de acciones facturables de tu plan. Las llamadas fallidas e inbox_list no se facturan."
+    },
+    {
+      "q": "¿Se guarda mi correo en los servidores de mcpemails?",
+      "a": "No. Cada mensaje se obtiene en vivo de tu proveedor para la solicitud que lo pidió y se entrega directamente a tu cliente. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, para que las llamadas futuras puedan autenticarse. Eliminar la bandeja en el panel, o revocar el acceso en tu proveedor, corta la conexión al instante."
+    }
+  ],
+  "ctaBand": {
+    "title": "Automatiza tu bandeja con scripts",
+    "sub": "Un endpoint, una clave con permisos limitados. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

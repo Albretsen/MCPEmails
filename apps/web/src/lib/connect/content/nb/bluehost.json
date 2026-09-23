@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.bluehost.com/help/article/email-application-setup",
+    "https://www.bluehost.com/help/article/email-product-overview",
+    "https://www.bluehost.com/help/article/configure-bluehost-professional-email-on-other-apps"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://www.bluehost.com/help/article/email-application-setup",
+    "usernameForm": "Hele e-postadressen din, for eksempel you@yourdomain.com. Aldri påloggingen til Bluehost-portalen.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Bluehost-e-post til Claude: IMAP-oppsett for cPanel og Titan",
+    "description": "Bluehost selger tre ulike e-postprodukter. Finn ut hvilket du har, og koble det til Claude over IMAP på port 993. Én innboks gratis for alltid, uten kort."
+  },
+  "hero": {
+    "eyebrow": "Bluehost + AI",
+    "titleLine1": "Koble Bluehost-e-post til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Bluehost-postkasse. Les, søk, send, svar, planlegg og organiser e-post over IMAP, enten postkassen er en cPanel Email-konto eller en Professional Email-postkasse.",
+    "answer": "Claude kan ikke nå en Bluehost-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler den til over vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Det første du må finne ut, er hvilket av Bluehosts tre e-postprodukter du har, fordi cPanel Email svarer på en vert bygget fra ditt eget domene, mens Professional Email svarer på Titans servere, og de to settene med innstillinger kan ikke byttes om. Uansett autentiserer du med passordet som er satt på postkassen, aldri med passordet til Bluehost-portalen, og én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord, ikke portalpålogging",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles Bluehost-e-post til: finn først ut hvilket produkt du har",
+    "body": "Bluehost selger e-post på tre måter, og innstillingene er helt forskjellige mellom dem. <b>cPanel Email</b> er postkassen som følger med webhotellet; den ligger på serveren nettstedet ditt ligger på, og den innkommende verten er bygget fra ditt eget domene. <b>Professional Email</b> er et betalt produkt som kjører på Titan, der Bluehosts egen veiledning oppgir <code>imap.titan.email</code> på 993 og <code>smtp.titan.email</code> på 465. <b>Google Workspace</b> er videresolgt Gmail, der MX-postene dine peker til Google og ingen Bluehost-e-postserver er involvert. Alle tre bruker IMAP, og alle tre kan kobles til, men du må hente innstillingene fra veiledningen for produktet du faktisk har kjøpt. For cPanel Email publiserer Bluehost et uvanlig par: den sikre blokken bruker det rene domenet, <code>example.com</code>, som både innkommende og utgående server, og det er bare den ukrypterte blokken som bruker <code>mail.example.com</code>."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og krever ikke kort."
+    },
+    {
+      "h": "Finn ut hvilket Bluehost-e-postprodukt denne adressen bruker",
+      "p": "Logg inn i Bluehost Portal og åpne <b>Hosting</b> i menyen til venstre. Hvis det finnes en <b>cPanel Email</b>-knapp og adressen din står oppført under den, har du en cPanel-postkasse. Hvis adressen i stedet står under <b>Professional Email</b>, er det en Titan-postkasse på Titans egne servere. Hvis domenets MX-poster peker til Google, er det Google Workspace, og da bør du koble den til som Gmail og ikke som Bluehost."
+    },
+    {
+      "h": "Kopier de nøyaktige innstillingene for det produktet",
+      "p": "For cPanel Email: <b>Hosting</b>, deretter <b>cPanel Email</b>, deretter <b>Email Accounts</b>, deretter <b>Continue</b>, deretter <b>Connect Devices</b> ved siden av adressen. Bruk blokken Secure SSL/TLS, IMAP på 993. For Professional Email henter du Titan-vertene fra Bluehosts veiledning for Professional Email. I begge tilfeller er passordet det som er satt på postkassen."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Tre produkter deler ett merkenavn, og feil veiledning fører aldri til vellykket pålogging",
+      "p": "Dette er den aller vanligste feilen med Bluehost-e-post. Noen med en Professional Email-postkasse følger en veiledning for cPanel Email, peker en klient mot sitt eget domene og får en avvisning som ser ut som et feil passord. Det er det ikke: postkassen ligger ikke på den serveren i det hele tatt, den ligger hos Titan. Det motsatte skjer også. Sjekk under Hosting i portalen hvilket produkt adressen hører til før du rører noen innstilling, fordi ingenting annet du endrer, hjelper før dette er riktig."
+    },
+    {
+      "h": "Bluehosts sikre cPanel-innstilling er det rene domenet, ikke mail.yourdomain.com",
+      "p": "Nesten alle tredjepartsguider for cPanel-e-post ber deg bruke <code>mail.example.com</code>. Bluehosts egen artikkel setter <code>mail.example.com</code> bare i den ukrypterte blokken Standard, og oppgir bare <code>example.com</code> for blokken Secure SSL/TLS på portene 993 og 465. Det er fordi AutoSSL-sertifikatet dekker selve domenet. Å bruke <code>mail.</code>-prefikset over TLS er det som gir sertifikatvarselet folk så prøver å klikke seg forbi."
+    },
+    {
+      "h": "Hvilket produkt du har, avhenger av når du kjøpte abonnementet",
+      "p": "cPanel Email er den eldre inkluderte tjenesten som fulgte med eldre webhotellabonnementer, og Bluehost dokumenterer og støtter den fortsatt. Nyere kjøp styres mot Professional Email og Google Workspace i kassen, og mange kontoer har en blanding, med ett domene på cPanel-e-post og et annet hos Titan. Ikke anta at fordi én av Bluehost-adressene dine kobler seg til med en gitt vert, vil den neste gjøre det samme."
+    }
+  ],
+  "limits": [
+    "En Google Workspace-postkasse kjøpt gjennom Bluehost er en Google-postkasse. Koble den til som Gmail via Google OAuth, ikke med Bluehost-påloggingsopplysninger.",
+    "mcpemails kobler til postkasser, ikke webhotellkontoen. Videresendinger, alias og filtre forblir i Bluehost-portalen."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Bluehost-e-post?",
+      "a": "Ikke direkte. Claude har ingen innebygd Bluehost-kobling. Kobler du en MCP-server som mcpemails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den. Dette fungerer både for cPanel Email-kontoer og Professional Email-kontoer, så lenge du bruker riktig vert for produktet du har."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Bluehost?",
+      "a": "For cPanel Email er Bluehosts sikre innstillinger det rene domenet ditt som både innkommende og utgående server, IMAP på 993 og SMTP på 465, med hele e-postadressen som brukernavn. For Professional Email dokumenterer Bluehost imap.titan.email på 993 og smtp.titan.email på 465. Hent verdiene fra veiledningen som passer til produktet ditt."
+    },
+    {
+      "q": "Hvordan ser jeg om jeg har Bluehost cPanel Email eller Professional Email?",
+      "a": "Logg inn i Bluehost Portal og åpne Hosting i menyen til venstre. cPanel-postkasser står oppført bak knappen cPanel Email. Professional Email-postkasser står under Professional Email som et eget produkt med eget abonnement. Hvis ingen av dem viser adressen, sjekker du domenets MX-poster; de kan peke til Google Workspace."
+    },
+    {
+      "q": "Hvorfor blir Bluehost-e-postpassordet mitt avvist?",
+      "a": "To årsaker dominerer. Enten bruker du passordet til Bluehost-portalen i stedet for passordet som er satt på den enkelte postkassen, eller så peker du klienten mot serveren til feil produkt. Tilbakestill postkassepassordet fra Email Accounts for cPanel-e-post, eller fra administrasjonsskjermbildet for Professional Email for en Titan-postkasse, og prøv igjen."
+    },
+    {
+      "q": "Lagres Bluehost-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke oppbevart."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Bluehost-innboks",
+    "sub": "Koble til en Bluehost-postkasse på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

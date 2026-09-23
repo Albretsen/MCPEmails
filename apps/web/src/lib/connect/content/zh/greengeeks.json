@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.greengeeks.com/support/article/where-to-find-mail-server-login-information-for-greengeeks-hosted-domains/",
+    "https://www.greengeeks.com/support/article/how-do-i-setup-an-e-mail-account/",
+    "https://www.greengeeks.com/support/article/getting-started-setting-up-email-applications/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://www.greengeeks.com/support/article/where-to-find-mail-server-login-information-for-greengeeks-hosted-domains/",
+    "usernameForm": "你的完整邮箱地址，例如 hello@yourdomain.com，而不是 @ 符号前面的部分。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "GreenGeeks 邮箱 IMAP 设置与 Claude MCP 配置",
+    "description": "GreenGeeks 在 cPanel 的 Email Accounts、Connect Devices 下列出你真正的邮件服务器。通过 IMAP 993 将该邮箱连接到 Claude。1 个收件箱永久免费。"
+  },
+  "hero": {
+    "eyebrow": "GreenGeeks + AI",
+    "titleLine1": "将 GreenGeeks 邮箱连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 GreenGeeks 邮箱。使用创建地址时设置的密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行访问 GreenGeeks 邮箱。mcpemails 是一个托管 MCP 服务器，通过端口 993 的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。GreenGeeks 运行标准的 cPanel，并不提供共用的邮件主机名：你的服务器由你自己的域名或你账户所在的服务器构成，cPanel 会在 Email Accounts、Connect Devices 下的 Mail Client Manual Settings 区块中列出准确的值。认证使用邮箱密码，而不是你的 GreenGeeks 控制台登录密码，1 个收件箱免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "来自 cPanel 的邮箱密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "GreenGeeks 邮箱如何连接：cPanel 列出服务器，IMAP 993",
+    "body": "GreenGeeks 是一家简单直接的 cPanel 主机商。每个主机套餐都包含使用你自己域名的邮箱，它们在端口 993 上通过 TLS 提供 IMAP，在 465 上提供 SMTP。没有可以指向的 <code>imap.greengeeks.com</code>，因为邮箱位于你账户所开通的那台特定服务器上。GreenGeeks 按账户生成正确的值，而不是在文章中公布，其支持文档也明确说明了这一点：如果以通用方式列出，这些设置并不对所有人都正确。收信服务器要么是 <code>mail.yourdomain.com</code>，要么是服务器主机名，用户名始终是完整的邮箱地址。密码是你在 cPanel 中创建该地址时输入或生成的那个。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "从 cPanel 的 Connect Devices 中获取设置",
+      "p": "登录 my.greengeeks.com，打开该主机账户的 cPanel，在 <b>Email</b> 下点击 <b>Email Accounts</b>。找到你要连接的地址所在行，点击 <b>Connect Devices</b>。滚动到 <b>Mail Client Manual Settings</b>。该区块给出了你账户准确的安全收信服务器、IMAP 端口和 SMTP 端口。请复制这些值，而不要凭记忆输入。"
+    },
+    {
+      "h": "设置或确认邮箱密码",
+      "p": "IMAP 校验的是邮箱地址所附带的密码，它与你的 GreenGeeks 控制台密码和 cPanel 登录密码都不同。如果你不知道这个密码，请在 Email Accounts 中该地址所在行点击 <b>Manage</b> 设置一个新密码，然后以完整地址作为用户名，把密码粘贴到 mcpemails。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "包含设置信息的欢迎邮件会发送到新邮箱本身",
+      "p": "创建地址时，cPanel 会提供发送一封包含客户端配置的欢迎邮件的选项。GreenGeeks 默认勾选这个选项。这封邮件会发到你刚创建的地址，所以只能通过网页邮箱阅读，而登录网页邮箱所需的凭据正是你想查找的东西。登录之后它是一份有用的文档，但不要去你的个人收件箱里找它，也不要因为那里没有就以为出了什么问题。"
+    },
+    {
+      "h": "同一个 cPanel 在两个地方显示设置，详略不同",
+      "p": "地址所在行的 <b>Connect Devices</b> 给出完整的 Mail Client Manual Settings 区块，包括 SSL 和非 SSL 两种版本。同一行的三点菜单中有一个较简短的 <b>Mail Configuration</b> 视图，列出用户名、收信服务器和端口，以及发信服务器和端口。进入简短视图的人有时会以为自己的服务器没有安全设置。其实有。请回去使用 Connect Devices。"
+    },
+    {
+      "h": "多次登录失败会让连接地址被防火墙拦截，看起来像超时",
+      "p": "GreenGeeks 的服务器运行着主机防火墙，会在多次 SMTP 或 IMAP 认证失败后封锁该 IP。一旦被封，下一次尝试不会返回认证错误，而是连接始终无法完成，因此症状会从明确的拒绝变成卡住或超时。如果一个原本能用的邮箱在你改正错误密码后突然没有响应，那么密码现在已经正确，问题出在封锁上。联系客服即可解除。"
+    }
+  ],
+  "limits": [
+    "GreenGeeks 在共享套餐上设有每小时外发数量限制。AI 代理的大量自动发送可能会触及上限，表现为发送被延迟或拒绝，而不是连接错误。",
+    "mcpemails 只连接邮箱。别名、转发器、自动回复和垃圾邮件设置仍在 cPanel 中管理。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 GreenGeeks 邮箱吗？",
+      "a": "不能直接使用。Claude 没有针对 cPanel 邮件主机的连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到你的 GreenGeeks 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理邮件，所用凭据与你在 Thunderbird 或 Apple Mail 中填写的相同。"
+    },
+    {
+      "q": "GreenGeeks 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 使用端口 993 和隐式 TLS，SMTP 使用端口 465。主机名因账户而异，没有在任何文章中公布，因为它取决于你的主机位于哪台服务器上。请在 cPanel 的 Email Accounts、Connect Devices 下的 Mail Client Manual Settings 区块中读取。用户名是你的完整邮箱地址。"
+    },
+    {
+      "q": "在哪里找到我的 GreenGeeks 邮件服务器名称？",
+      "a": "在 cPanel 中打开 Email Accounts，在该地址所在行点击 Connect Devices，然后滚动到 Mail Client Manual Settings。该页面显示了你服务器准确的收信和发信主机名，以及安全和不安全两组端口。请使用安全的那一组。"
+    },
+    {
+      "q": "为什么我的 GreenGeeks 邮箱密码被拒绝？",
+      "a": "通常是因为密码不对，而不是服务器不对。邮箱有自己的密码，在创建地址时设定，你的 my.greengeeks.com 控制台密码和 cPanel 密码都无法通过 IMAP 认证。请在 Email Accounts 中该地址所在行的 Manage 链接中重置。"
+    },
+    {
+      "q": "我的 GreenGeeks 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从你的 GreenGeeks 服务器实时获取邮件，并交给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 GreenGeeks 收件箱",
+    "sub": "几分钟即可连接 GreenGeeks 邮箱。1 个收件箱永久免费，无需信用卡。"
+  }
+}

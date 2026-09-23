@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://kb.mailbox.org/en/private/e-mail/e-mail-configuration/",
+    "https://kb.mailbox.org/en/private/security-and-privacy/e-mail-password/",
+    "https://kb.mailbox.org/en/private/security-and-privacy/access-security-for-mailbox-2fa-app-passwords-and-e-mail-passwords/",
+    "https://kb.mailbox.org/en/private/encryption/your-encrypted-mailbox/"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "E-post-app-passord (med 2FA) eller postkassepassordet ditt",
+    "helpUrl": "https://kb.mailbox.org/en/private/security-and-privacy/e-mail-password/",
+    "usernameForm": "Hele hovedadressen din hos mailbox.org. Ikke et alias, ikke en adresseutvidelse, ikke en engangsadresse.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble mailbox.org til Claude og enhver MCP-klient",
+    "description": "Koble mailbox.org til Claude, Cursor og enhver MCP-klient over IMAP på imap.mailbox.org:993. Med tofaktor på trenger en klient et e-post-app-passord."
+  },
+  "hero": {
+    "eyebrow": "mailbox.org + AI",
+    "titleLine1": "Koble mailbox.org til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte mailbox.org-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP, i alle MCP-klienter og ikke bare én, med avveiningen rundt kryptering forklart i stedet for glattet over.",
+    "answer": "Claude kan ikke nå mailbox.org på egen hånd. mcpemails er en driftet MCP-server som kobler den til over IMAP på imap.mailbox.org port 993 og SMTP på smtp.mailbox.org port 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Du logger inn med hovedadressen din hos mailbox.org, og med tofaktorautentisering slått på må du bruke et e-post-app-passord opprettet under All settings, Security, Email app-passwords i stedet for postkassepassordet. Hvis du har slått på innbokskryptering, kommer innkommende e-post til enhver IMAP-klient som PGP-chiffertekst, og en agent vil ikke kunne lese den. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "E-post-app-passord når 2FA er på",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles mailbox.org til: IMAP, hovedadressen din og et app-passord per protokoll",
+    "body": "mailbox.org tilbyr IMAP på <code>imap.mailbox.org</code> port 993 med SSL/TLS, POP3 på <code>pop3.mailbox.org</code> port 995 og SMTP på <code>smtp.mailbox.org</code> port 465, med 587 dokumentert for STARTTLS. Brukernavnet er <b>hovedadressen</b> din, den kontoen ble opprettet med. mailbox.org deler ut alias, adresseutvidelser, engangsadresser og <code>@secure.mailbox.org</code>-varianter, og ingen av dem kan brukes til å autentisere. Uten tofaktorautentisering fungerer det vanlige postkassepassordet ditt. Med det slått på slutter mailbox.org å godta det passordet over IMAP og SMTP og forventer i stedet et <b>e-post-app-passord</b>, generert per klient og begrenset til protokollene du huker av når du oppretter det. Banneret annonserer også <code>AUTH=OAUTHBEARER</code> og <code>AUTH=XOAUTH2</code>, som hører til mailbox.org sine egne App Suite-integrasjoner og ikke kan brukes av en tredjepart. Passordautentisering er veien å gå her."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, uten kort. Til slutt får du en MCP-URL og en nøkkel."
+    },
+    {
+      "h": "Generer et e-post-app-passord i mailbox.org",
+      "p": "I nettgrensesnittet åpner du <b>All settings</b>, deretter <b>Security</b>, deretter <b>Email app-passwords</b>. Gi det et navn for denne tilkoblingen, huk av for <b>både</b> IMAP og SMTP i protokollisten, og klikk Generate password. Kopier verdien med en gang. Hvis tofaktorautentisering er av, kan du bruke postkassepassordet i stedet, men en avgrenset påloggingsopplysning som du kan tilbakekalle for seg, er det bedre å gi til en tredjepart."
+    },
+    {
+      "h": "Legg til postkassen i mcpemails",
+      "p": "Velg IMAP / SMTP og skriv inn <b>hovedadressen</b> din hos mailbox.org som brukernavn, deretter app-passordet. Vertene er fylt inn på forhånd som <code>imap.mailbox.org</code> og <code>smtp.mailbox.org</code> og ble verifisert fra en direkte TLS-tilkobling. Påloggingsopplysninger er kryptert ved lagring, og selve e-posten hentes per forespørsel i stedet for å kopieres."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Et alias i brukernavnfeltet feiler med en passordfeil",
+      "p": "mailbox.org oppfordrer til bruk av alias, adresseutvidelser og engangsadresser, og deres egen konfigurasjonsveiledning sier tydelig at brukernavnet i klienten er hovedadressen din. Setter du inn et alias der, avviser serveren deg nøyaktig som om passordet var feil, og det får folk til å tilbakestille et passord som aldri var problemet. Hvis du ikke husker hvilken adresse som er hovedadressen, er det den som vises som kontoens primære adresse i nettgrensesnittet, ikke det aliaset du faktisk gir ut."
+    },
+    {
+      "h": "App-passordet er avgrenset per protokoll, så et halvt oppsett er mulig",
+      "p": "Når du genererer et e-post-app-passord, huker du av for hvilke protokoller det kan brukes til. Huker du av IMAP og glemmer SMTP, får du en postkasse som leser perfekt og ikke kan sende en eneste melding, og feilen viser seg først i det øyeblikket agenten din prøver å svare. Det motsatte skjer også. Huk av for begge, eller generer to og bruk dem i riktige felt. Dette er også spaken for å tilbakekalle tilgang senere: sletter du det ene app-passordet, kobles denne klienten fra, mens telefonen og datamaskinen din ikke berøres."
+    },
+    {
+      "h": "Innbokskryptering gjør ny e-post om til chiffertekst for alle klienter, også denne",
+      "p": "Under <b>All settings</b>, <b>Read and write e-mail</b>, <b>Inbox encryption</b> kan mailbox.org PGP-kryptere hver innkommende melding til den offentlige nøkkelen din med en Sieve-regel på serveren, enten avsenderen krypterte den eller ikke. Det er en reell beskyttelse, og den fungerer nøyaktig som lovet: en IMAP-klient, denne inkludert, mottar en armert blokk i stedet for meldingsinnhold. mcpemails har ikke den private nøkkelen din, så en agent kan se avsender, emne og dato og kan arkivere eller flagge meldingen, men ikke lese den. Asymmetrien du bør kjenne til, er at mailbox.org for øyeblikket ikke lagrer Sendt-mappen din kryptert, så en agent kan fortsatt lese det du har sendt, selv når den ikke kan lese det du har mottatt."
+    },
+    {
+      "h": "Ingen MOVE og ingen SPECIAL-USE, men UIDPLUS finnes",
+      "p": "Dovecot-serveren annonserer IDLE, SASL-IR og UIDPLUS, men verken MOVE eller SPECIAL-USE. Å flytte en melding er derfor en COPY, en STORE av \\Deleted-flagget og en EXPUNGE i stedet for én atomisk kommando, men UIDPLUS betyr i det minste at UID-en i målmappen kommer tilbake uten et nytt søk. Den manglende SPECIAL-USE betyr mer i det daglige: ingenting i protokollen sier hvilken mappe som er Sendt eller Papirkurv, så roller utledes fra navn. Tyskspråklige postkasser viser typisk Gesendete Objekte, Entwürfe og Papierkorb, så oppgi mappen eksplisitt hvis en agent arkiverer noe på feil sted."
+    }
+  ],
+  "limits": [
+    "Å koble en hvilken som helst postkasse til en AI-klient betyr at AI-leverandøren leser meldingsinnholdet den blir bedt om å jobbe med. mcpemails henter e-post direkte fra mailbox.org for hver forespørsel og lagrer ikke meldingsinnhold, og påloggingsopplysninger er kryptert ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du peker mot den. mailbox.org sin tyske drift og personvernprofil dekker mailbox.org, og strekker seg ikke til en AI-leverandør du kobler til selv.",
+    "Alt som er kryptert til OpenPGP-nøkkelen din, enten av en avsender eller av mailbox.org sin egen innbokskryptering, er uleselig for en agent over IMAP. Slike tråder må leses i nettgrensesnittet eller i en klient som har den private nøkkelen din.",
+    "Fordi serveren ikke annonserer MOVE, er en flytting ikke atomisk. Hvis tilkoblingen brytes midt i operasjonen, kan en melding en kort stund finnes i begge mappene."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med mailbox.org?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd mailbox.org-kobling og kan ikke snakke IMAP. Ved å peke en MCP-server som mcpemails mot postkassen får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere over IMAP, og den samme tilkoblingen fungerer deretter fra Cursor, ChatGPT og andre MCP-klienter uten at noe må settes opp på nytt."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for mailbox.org?",
+      "a": "IMAP er imap.mailbox.org på port 993 med SSL/TLS. SMTP er smtp.mailbox.org på port 465, med 587 dokumentert som STARTTLS-alternativet, og POP3 er pop3.mailbox.org på 995. Brukernavnet er hovedadressen din hos mailbox.org i alle tilfeller. Begge vertene her ble bekreftet fra en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Hvor oppretter jeg et app-passord hos mailbox.org?",
+      "a": "I nettgrensesnittet åpner du All settings, deretter Security, deretter Email app-passwords. Skriv inn et navn på klienten, velg protokollene den kan bruke, og generer passordet. mailbox.org viser det slik at du kan kopiere det. Hvert app-passord kan slettes for seg, noe som tilbakekaller den ene klienten uten å forstyrre de andre enhetene dine eller hovedpassordet ditt."
+    },
+    {
+      "q": "Hvorfor avviser mailbox.org passordet mitt i en e-postklient?",
+      "a": "To årsaker står for nesten alle tilfellene. Enten har du skrevet inn et alias i stedet for hovedadressen i brukernavnfeltet, eller så er tofaktorautentisering aktivert, og postkassepassordet ditt godtas derfor ikke lenger over IMAP og SMTP. Opprett et e-post-app-passord under Security og bruk det. Sjekk brukernavnet først; det er det enkleste å utelukke."
+    },
+    {
+      "q": "Kan AI-en min lese kryptert e-post hos mailbox.org?",
+      "a": "Nei. En melding som er kryptert til OpenPGP-nøkkelen din, kommer over IMAP som en armert chiffertekstblokk, og mcpemails har aldri den private nøkkelen din. Det gjelder både e-post en avsender har kryptert, og e-post som mailbox.org sin innbokskryptering krypterte ved mottak. Agenten ser hodefeltene og kan flytte eller flagge meldingen; innholdet forblir forseglet."
+    },
+    {
+      "q": "Lagres mailbox.org-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra imap.mailbox.org for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke beholdt. AI-klienten du kobler til, mottar likevel innholdet i det den leser, og det er en egen beslutning, atskilt fra hvor e-posten lagres, som er verdt å ta bevisst."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en mailbox.org-innboks",
+    "sub": "Koble til mailbox.org på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

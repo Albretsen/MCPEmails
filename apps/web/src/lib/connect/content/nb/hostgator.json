@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.hostgator.com/help/article/pop3-or-imap-with-ssl",
+    "https://www.hostgator.com/help/article/email-connection-settings",
+    "https://www.hostgator.com/help/article/professional-email-product-overview"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://www.hostgator.com/help/article/pop3-or-imap-with-ssl",
+    "usernameForm": "Hele e-postadressen din, for eksempel sales@dittdomene.com. Ikke cPanel-brukernavnet ditt.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "HostGator-e-post i Claude: IMAP-innstillinger som virker",
+    "description": "HostGators wildcard-sertifikat dekker gator1234.hostgator.com, ikke domenet ditt. Bruk servernavnet for IMAP 993 og koble postkassen til Claude, gratis."
+  },
+  "hero": {
+    "eyebrow": "HostGator + AI",
+    "titleLine1": "Koble HostGator-e-post til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte HostGator-postkasse. Les, søk, send, svar, planlegg og organiser e-post over IMAP, med servernavnet som HostGators sertifikat faktisk dekker.",
+    "answer": "Claude kan ikke nå en HostGator-postkasse på egen hånd. mcpemails er en driftet MCP-server som kobler den til over vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. HostGator har ikke én felles e-postserver: for en sikker tilkobling peker du mot din egen servers vertsnavn, som er gatorNNNN.hostgator.com på delte planer og skyplaner og servername.websitewelcome.com på forhandlerplaner, fordi det er de navnene wildcard-sertifikatet deres dekker. Autentiseringen skjer med passordet som er satt på postkassen i cPanel, og én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord fra cPanel",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles HostGator-e-post til: servernavnet, IMAP 993",
+    "body": "HostGator kjører cPanel, og postkassene snakker IMAP på port 993 med SMTP på 465 for sikre tilkoblinger, eller 143 og 25 eller 587 ukryptert. Det folk tar feil av, er vertsnavnet. <code>mail.yourdomain.com</code> fungerer for en ukryptert økt, men HostGator sikrer e-post med <b>wildcard</b>-sertifikater som dekker <code>.hostgator.com</code> på delte kontoer og skykontoer og <code>.websitewelcome.com</code> på forhandlerkontoer. Ditt eget domene står ikke på noen av sertifikatene. For TLS bruker du derfor serverens eget vertsnavn, på formen <code>gator1234.hostgator.com</code> eller <code>servername.websitewelcome.com</code>. HostGators egen artikkel om SSL sier nøyaktig dette, og anbefaler å oppdatere innstillingene i stedet for å undertrykke advarselen. Brukernavnet er alltid hele e-postadressen."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og krever ikke kort."
+    },
+    {
+      "h": "Les servernavnet ditt ut av cPanel-URL-en",
+      "p": "I HostGator Customer Portal velger du <b>Hosting</b>, deretter <b>Manage</b>, deretter <b>cPanel</b> under Quick Links. Når cPanel åpnes, ser du på adresselinjen i nettleseren. Vertsnavnet i den URL-en er serveren din: <code>gator1234.hostgator.com</code> på delt hosting og sky, eller et <code>websitewelcome.com</code>-navn på forhandlerplaner. Det er verdien du skal bruke for både IMAP og SMTP. Den står også under Email Accounts, deretter <b>Connect Devices</b>, i blokken <b>Mail Client Manual Settings</b>."
+    },
+    {
+      "h": "Bruk postkassepassordet, ikke cPanel-passordet",
+      "p": "IMAP autentiserer mot passordet som er satt på den enkelte adressen. Åpne <b>Email Accounts</b> i cPanel og klikk <b>Manage</b> ved siden av adressen for å sette et. Lim det deretter inn i mcpemails sammen med hele e-postadressen som brukernavn og servernavnet du nettopp kopierte."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Delte kontoer og forhandlerkontoer ligger under ulike sertifikatfamilier",
+      "p": "En delt konto eller skykonto dekkes av wildcard-sertifikatet for <code>.hostgator.com</code>; en forhandlerkonto dekkes av det for <code>.websitewelcome.com</code>. Det betyr at en forhandler som følger en HostGator-veiledning for delt hosting og skriver inn et <code>gator</code>-vertsnavn, ikke bare får en sertifikatadvarsel, men kobler seg til en helt annen maskin. Sjekk hvilket produkt du har før du kopierer noens innstillinger, også HostGators egne artikler, hvorav flere er skrevet for bare det ene tilfellet."
+    },
+    {
+      "h": "Adresselinjen i nettleseren er det raskeste stedet å finne servernavnet",
+      "p": "HostGator viser ikke servernavnet tydelig i portalen, og tallet i <code>gator1234</code> kan ikke utledes fra domenet ditt, kontonummeret ditt eller noe annet du allerede vet. Det pålitelige trikset er å åpne cPanel og lese vertsnavnet rett ut av URL-en. Kundestøtten og Connect Devices-siden vil begge fortelle deg det samme, men adresselinjen er ett klikk unna og kan ikke feiltolkes."
+    },
+    {
+      "h": "Å klikke seg forbi sertifikatadvarselen er feil løsning, og den skjuler en ekte en",
+      "p": "Fordi uoverensstemmelsen er så vanlig hos HostGator, er den vanlige nødløsningen å godta sertifikatet eller legge til et unntak. En skrivebordsklient lar deg gjøre det. En automatisert IMAP-tilkobling fra en server, som er det en MCP-integrasjon er, gjør det som regel ikke, og bør heller ikke gjøre det: når du vaner deg til å ignorere navneavviket, har du ingen mulighet til å oppdage et ekte et. Pek mot servernavnet, så valideres sertifikatet som det skal, uten unntak noe sted."
+    }
+  ],
+  "limits": [
+    "Professional Email, HostGators betalte Titan-baserte produkt, er en separat postkasse på separate servere. Innstillingene for den er ikke cPanel-innstillingene på denne siden, og de to deler ikke passord.",
+    "Et domene som er flyttet til Google Workspace via HostGator, har ikke lenger e-post på HostGator-serveren i det hele tatt. MX-postene peker mot Google, og postkassen må kobles til som Gmail."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med HostGator-e-post?",
+      "a": "Ikke direkte. Claude har ingen HostGator-kobling. Kobler du en MCP-server som mcpemails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere den, med de samme påloggingsopplysningene som enhver e-postklient på datamaskinen ville brukt."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for HostGator?",
+      "a": "Sikker IMAP er port 993 og sikker SMTP er port 465, begge med implisitt TLS. Vertsnavnet er serverens eget navn: gator etterfulgt av servernummeret ditt og hostgator.com på delte planer og skyplaner, eller et websitewelcome.com-navn på forhandlerplaner. Bruk hele e-postadressen som brukernavn for både innkommende og utgående."
+    },
+    {
+      "q": "Hvorfor gir HostGator-e-post en feil med SSL-sertifikatet?",
+      "a": "Fordi HostGator sikrer e-post med wildcard-sertifikater for hostgator.com og websitewelcome.com, og ditt eget domene står ikke på dem. Peker du en klient mot mail.yourdomain.com over TLS, feiler derfor navnevalideringen. Bytt ut vertsnavnet med serverens navn, så forsvinner feilen uten at noe unntak må legges til."
+    },
+    {
+      "q": "Hvordan finner jeg servernavnet mitt hos HostGator?",
+      "a": "Logg inn i Customer Portal, velg Hosting, deretter Manage, deretter cPanel. Når cPanel åpnes, er vertsnavnet i adresselinjen i nettleseren servernavnet ditt. Den samme verdien vises i cPanel under Email Accounts, deretter Connect Devices, i seksjonen Mail Client Manual Settings."
+    },
+    {
+      "q": "Lagres HostGator-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra HostGator-serveren din over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en HostGator-innboks",
+    "sub": "Koble til en HostGator-postkasse på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.hey.com/faqs/",
+    "https://www.hey.com/features/send-as/",
+    "https://github.com/basecamp/hey-cli"
+  ],
+  "auth": {
+    "method": "none",
+    "label": "Det finnes ingen klientinnlogging",
+    "helpUrl": "https://www.hey.com/faqs/",
+    "usernameForm": "Det er ingenting å fylle inn. HEY godtar ingen IMAP-, POP- eller SMTP-innlogging fra noen klient, så det finnes ingen påloggingsopplysning for e-postklienter for en HEY-adresse.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "HEY-e-post og AI: ingen IMAP, og hva som virker i stedet",
+    "description": "HEY godtar ingen IMAP-, POP- eller SMTP-tilkoblinger, så mcpemails kan ikke koble til en HEY-postkasse. Hvorfor 37signals bygde det slik, og to veier som fungerer."
+  },
+  "hero": {
+    "eyebrow": "HEY + AI",
+    "titleLine1": "HEY har ingen IMAP, så ingen",
+    "titleLine2": "driftet MCP-server kan nå den",
+    "lead": "HEY er et lukket e-postsystem med vilje. Ingen tredjepartsklient og ingen driftet server kan logge inn på en hey.com-postkasse. Denne siden gir deg det korrekte bildet og veiene som faktisk gir en AI-agent tilgang til e-posten din.",
+    "answer": "Nei, og ikke fordi det mangler en funksjon hos oss. HEY godtar ingen IMAP-, POP- eller SMTP-tilkoblinger i det hele tatt, verken på hey.com-adresser eller på egne domener i HEY for Domains, så mcpemails kan ikke koble til en HEY-postkasse, og det kan heller ingen annen driftet MCP-server. 37signals ser på dette som et designvalg og ikke som en mangel: screening, regler per kontakt og HEYs trådvisning ligger på deres servere, og bare deres egne apper snakker den protokollen. Vil du ha en agent inne i HEY, leverer 37signals hey-cli, som kjører en MCP-server lokalt mot den innloggede kontoen din. mcpemails er for IMAP-postkassene du har ved siden av, og én innboks der er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Ingen IMAP-, POP- eller SMTP-innlogging",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles HEY til: det gjør den ikke, og det er selve produktet",
+    "body": "HEYs egen FAQ er rett på sak: <b>HEY støtter ikke IMAP eller POP</b>, og tjenesten godtar heller ikke SMTP-innsending. Det finnes ingen vert å peke en klient mot, ingen port å åpne og ikke noe app-passord å lage. Årsaken er arkitektonisk, ikke kommersiell. Screening, delingen i Imbox og Paper Trail, regler per kontakt og HEYs håndtering av svar til alle er oppførsel på serversiden som en generisk IMAP-klient ville flatet ut til mapper og flagg igjen, så 37signals har aldri eksponert protokollen. Det HEY faktisk tilbyr, er bevegelse i kantene: du kan videresende e-post fra andre tjenester <b>inn i</b> HEY, du kan sende fra eksterne adresser via deres egne SMTP-servere, og du kan når som helst eksportere hele postkassen som en <code>MBOX</code>-fil. Ingen av disse er en innkommende tilkobling, og det er det en MCP-server trenger."
+  },
+  "setup": [
+    {
+      "h": "Opprett den gratis mcpemails-kontoen",
+      "p": "Det krever en e-postadresse og ikke noe kort. Du får én tilkoblet innboks gratis, og det er den resten av stegene fyller."
+    },
+    {
+      "h": "Bestem hvilken postkasse agenten faktisk skal jobbe i",
+      "p": "Velg en postkasse som snakker IMAP: jobbadressen din, en domenepostkasse hos Fastmail eller Migadu, en Gmail-konto, hva som helst med en ekte server. Det er den kontoen mcpemails kobler til, og den agenten leser, sender og sorterer fra."
+    },
+    {
+      "h": "Pek HEY mot den, eller eksporter fra HEY",
+      "p": "Betalende HEY-kunder kan videresende innkommende e-post til en hvilken som helst annen adresse, noe som speiler ny e-post inn i postkassen som kan kobles til. For alt som allerede ligger i HEY, bruker du <code>MBOX</code>-eksporten og importerer den til den andre kontoen. Begge deler er enveiskopier, så betrakt HEY-postkassen som originalen."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten den innboksen. For selve HEY installerer du hey-cli fra 37signals og kjører MCP-serveren lokalt i en klient som kan starte en lokal prosess."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Send-As viser deg SMTP-innstillinger, og de peker bare utover",
+      "p": "Funksjonen Send-As i HEY ber om en annen leverandørs SMTP-server, brukernavn og passord, eller OAuth2 for Gmail- og Outlook-kontoer, slik at HEY kan sende som den adressen. Folk finner den skjermen, ser ordene SMTP og passord, og konkluderer med at HEY snakker protokollen. Det gjør den, men som klient, mot noen andres server. Ingenting noe sted kan være en SMTP- eller IMAP-klient mot HEY. Som deres egen dokumentasjon formulerer det: SMTP er for sending og har ingenting med henting av e-post å gjøre."
+    },
+    {
+      "h": "HEY for Domains gir ikke domenet ditt en e-postvert",
+      "p": "På et eget domene peker MX-postene dine mot HEYs infrastruktur. Det står ingen <code>mail.yourdomain.com</code> og venter bak den som en klient kan logge inn på, fordi postkassen ligger i HEY, ikke i et kontrollpanel for webhotell som du eier. Kjøper du domeneplanen, endres adressen på e-posten din, ikke protokollene."
+    },
+    {
+      "h": "HEY henter ikke fra postkassen du videresendte fra",
+      "p": "Videresending går strengt én vei. HEY logger ikke inn på eksterne kontoer og henter e-post, så hvis du speiler e-post den andre veien for å gjøre den mulig å koble til, ser agenten den rå kopien og ikke HEYs versjon av den. Screener-avgjørelser, delingen i Imbox og Paper Trail og alt du har sortert i HEY, er usynlig på den andre siden."
+    }
+  ],
+  "limits": [
+    "Arbeid som gjøres i en videresendt kopi, blir værende i kopien. Et svar agenten din sender fra den andre postkassen, vises ikke i HEY-tråden, og mottakerne ser den andre adressen med mindre du setter den opp som en Send-As-identitet i HEY.",
+    "MCP-serveren i hey-cli kjører på din egen maskin over stdin og stdout. Det er en lokal prosess, ikke en driftet URL, så den fungerer i klienter som kan starte en kommando, og ikke i klienter som bare godtar en endepunktadresse."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med HEY-e-post?",
+      "a": "Ikke via noen driftet MCP-server, fordi HEY ikke godtar noen IMAP- eller SMTP-tilkobling. Det fungerer via hey-cli, 37signals' eget kommandolinjeverktøy, som eksponerer bokser, søk, tråder, kontakter, gjøremål og kalendere som MCP-verktøy som kjører lokalt mot den innloggede HEY-kontoen din. Den veien krever en klient som kan starte en lokal prosess."
+    },
+    {
+      "q": "Støtter HEY IMAP eller POP?",
+      "a": "Nei. HEYs FAQ sier rett ut at tjenesten ikke støtter IMAP eller POP, og den godtar heller ikke SMTP-innsending fra klienter. Slik har det vært siden HEY ble lansert, og det er et bevisst produktvalg, ikke en funksjon som står i kø. Det finnes ingen vert, port eller app-passord å finne."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for HEY?",
+      "a": "Det finnes ingen å publisere. Enhver side som oppgir et vertsnavn og en port for hey.com, gjetter. De eneste SMTP-innstillingene som dukker opp noe sted i HEY, tilhører de andre leverandørene dine og legges inn på Send-As-skjermen slik at HEY kan sende utgående e-post som de adressene."
+    },
+    {
+      "q": "Kan jeg koble til en HEY for Domains-adresse over IMAP?",
+      "a": "Nei. Et eget domene hos HEY er fortsatt en HEY-postkasse, med MX-poster som peker mot HEYs servere. Domenet gir deg adressen du vil ha, ikke en egen e-postserver å autentisere mot."
+    },
+    {
+      "q": "Hva er den praktiske måten å gi en AI-agent tilgang til e-posten min på hvis jeg bruker HEY?",
+      "a": "To alternativer, og du kan bruke begge. Bruk hey-cli lokalt for selve HEY. Koble en separat IMAP-postkasse til mcpemails for korrespondansen du vil ha håndtert fra enhver MCP-klient, også de som bare tar imot en URL, og videresend e-post inn i den hvis du vil ha et speil av det som kommer inn i HEY."
+    },
+    {
+      "q": "Kan jeg eksportere e-posten min ut av HEY?",
+      "a": "Ja. HEY eksporterer når som helst en MBOX-fil med e-posten og vedleggene dine, og den filen kan importeres i Apple Mail, Gmail, Outlook og andre tjenester. Et arkiv som er importert et annet sted, kan leses av en agent, men det er et øyeblikksbilde og ikke den levende HEY-postkassen din."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en postkasse den faktisk kan nå",
+    "sub": "HEY blir der den er. Koble til en IMAP-innboks ved siden av, gratis for alltid, uten kort."
+  }
+}

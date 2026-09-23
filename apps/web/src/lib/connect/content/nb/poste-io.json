@@ -1,0 +1,96 @@
+{
+  "_sources": [
+    "https://poste.io/doc",
+    "https://help.time4vps.com/en/articles/374799-how-to-create-a-mail-server-using-poste-io-on-debian-ubuntu",
+    "https://gist.github.com/analogic/51fbe91b580d7913b72320f89bf994cc",
+    "https://doc.dovecot.org/2.3/configuration_manual/dovecot_ssl_configuration/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://poste.io/doc",
+    "usernameForm": "Hele adressen til en postkasse opprettet i Poste.io-admingrensesnittet, for eksempel you@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Poste.io til Claude: Dovecot IMAP i en container",
+    "description": "Koble en Poste.io-postkasse til Claude, Cursor og ChatGPT via IMAP på 993. Containerens vertsnavn er e-postverten, og en reverse proxy kan skjule et dårlig sertifikat."
+  },
+  "hero": {
+    "eyebrow": "Poste.io + AI",
+    "titleLine1": "Koble Poste.io til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Én container, ett vertsnavn, en komplett e-postserver. Pek mcpemails mot den, så kan en AI-agent lese, søke, sende, svare, planlegge og arkivere e-post i postkassene du opprettet i Poste.io-admingrensesnittet.",
+    "answer": "Claude når ikke en Poste.io-server på egen hånd. mcpemails er en hostet MCP-server som kobler til din via IMAP på port 993, på vertsnavnet du ga containeren da du startet den, med passordet til en postkasse opprettet i Poste.io-admingrensesnittet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Poste.io kjører Dovecot for IMAP inne i containeren, så protokolloppførselen er vanlig Dovecot. Containeren må publisere 993 mot internett og levere et sertifikat som er gyldig for vertsnavnet du kobler til. Én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord fra admingrensesnittet",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Poste.io seg til: Dovecot på 993 inne i containeren",
+    "body": "Poste.io pakker en komplett e-postserver i ett enkelt Docker-image, med <b>Dovecot</b> for IMAP og POP3 og <b>Haraka</b> for SMTP, bak ett admingrensesnitt på <code>https://your-hostname/admin</code>. Fordi IMAP-siden er Dovecot, gjelder alt på Dovecot-siden vår om mapperoller, navneromsprefikser og sertifikathåndtering også her, med den forskjellen at du konfigurerer det gjennom Poste.io-grensesnittet i stedet for å redigere <code>conf.d</code>-filer. Vertsnavnet betyr mer enn noe annet på denne siden: det settes med flagget <code>-h</code> når containeren opprettes, for eksempel <code>-h mail.example.com</code>, og det navnet er det admingrensesnittet svarer på, det Haraka bruker når den hilser på andre servere, og det det innebygde Let's Encrypt-sertifikatet utstedes for. Bruk det ordrett som IMAP- og SMTP-vert. De publiserte portene er det vanlige settet: 25, 143, 465, 587, 993 og 995, pluss 80 og 443 for webgrensesnittet og 4190 for Sieve."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Én innboks er gratis for alltid, og det kreves ikke kort."
+    },
+    {
+      "h": "Bekreft containerens vertsnavn og at 993 er publisert",
+      "p": "Kjør <code>docker inspect</code> på containeren, eller les compose-filen din, og noter to ting: vertsnavnet containeren fikk, og om <code>993</code> står i listen over publiserte porter. En container opprettet uten <code>-h</code> ender opp med navn etter sin egen ID, som ikke er et navn noe kan slå opp eller sertifisere."
+    },
+    {
+      "h": "Sjekk sertifikatet, og legg så til postkassen",
+      "p": "I Poste.io-admingrensesnittet åpner du TLS-sertifikatinnstillingene og bekrefter at et Let's Encrypt-sertifikat faktisk ble utstedt, i stedet for at det selvsignerte fortsatt leveres. Legg så til innboksen i mcpemails: velg IMAP / SMTP, skriv inn containerens vertsnavn, hele postkasseadressen og passordet fra admingrensesnittet."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Hengelåsen i nettleseren tilhører proxyen, ikke port 993",
+      "p": "Poste.io kjøres svært ofte bak Traefik, nginx eller Caddy, og det oppsettet skjuler den aller vanligste feilen. Proxyen terminerer HTTPS med et sertifikat den har skaffet selv, så admingrensesnittet og webmailen ser helt sikre ut. Samtidig må Poste.ios egen Let's Encrypt-forespørsel svare på en HTTP-utfordring på port 80 i containeren, og hvis proxyen svelget den, eller stien <code>/.well-known/</code> aldri ble videresendt, ble forespørselen aldri fullført. Dovecot fortsetter å levere det selvsignerte sertifikatet den genererte ved installasjonen, og en streng IMAP-klient nekter å koble til mens alle mennesker på systemet ser en grønn hengelås og konkluderer med at serveren er i orden. Test hva som faktisk ligger på 993 med <code>openssl s_client -connect mail.yourdomain.com:993</code>. Terminerer du TLS i proxyen og kopierer sertifikater inn i containeren i stedet, slå av Poste.ios interne Let's Encrypt, så de to ikke overskriver hverandre."
+    },
+    {
+      "h": "Docker-portpublisering adlyder ikke brannmuren på verten",
+      "p": "Dette overrasker folk i begge retninger. Docker skriver sine egne regler som vurderes før dem <code>ufw</code> administrerer, så en port du publiserte med <code>-p 993:993</code>, er åpen mot internett selv om brannmuren sier at den er stengt. Det er ikke Poste.ios feil, men det betyr at e-postserveren er mer eksponert enn brannmuren gir inntrykk av. Den andre retningen er stillere: en port som aldri sto i <code>-p</code>-listen, kan ikke nås uansett hvor tillatende brannmuren er, fordi ingenting videresender den inn i containeren. Er containeren frisk og tilkoblinger likevel tidsavbrytes, tell de publiserte portene før du rører noe annet."
+    },
+    {
+      "h": "SMTP-halvdelen er Haraka, så Postfix-råd gjelder ikke",
+      "p": "Nesten alle artikler om selvhostet e-post på internett forutsetter Postfix. Poste.io bruker det ikke. Sending håndteres av Haraka, en SMTP-server i Node.js, så det finnes ingen <code>main.cf</code>, ingen <code>postconf</code>, ingen <code>postqueue</code> og ingen <code>mailq</code> i containeren, og kommandoene folk limer inn fra forumsvar, finnes rett og slett ikke. Feilsøk sending gjennom Poste.io-grensesnittet og Harakas egne logger. IMAP-halvdelen er Dovecot og oppfører seg nøyaktig som dokumentert der, som er den nyttige halvdelen av delingen: <code>doveadm</code> virker, og Dovecots mappe- og navneromsoppførsel er som du ville forvente."
+    }
+  ],
+  "limits": [
+    "Containeren må godta innkommende tilkoblinger på 993 fra internett for at en hostet MCP-server skal nå den. En Poste.io som kjører på en hjemmeserver eller et privat nettverk, kan ikke kobles til på denne måten. mcpemails kan selvhostes, så vil du heller at ingenting eksternt rører e-postserveren, kan du kjøre begge i samme nettverk.",
+    "TLS-validering er streng og kan ikke omgås. Det selvsignerte sertifikatet en ny Poste.io genererer, blir avvist, og derfor er det å skaffe et ekte sertifikat et oppsettssteg og ikke valgfri finpuss.",
+    "Sending går ut gjennom Haraka på din egen IP-adresse, så SPF-, DKIM- og DMARC-oppføringer og adressens omdømme avgjør om e-posten godtas videre."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Poste.io?",
+      "a": "Ikke på egen hånd. Claude har ingen Poste.io-kobling og kan ikke åpne en IMAP-økt mot en container du kjører. Kobler du en MCP-server som mcpemails til Poste.io-vertsnavnet ditt, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i en postkasse der, og samme innboks fungerer da fra Cursor eller ChatGPT."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Poste.io?",
+      "a": "Verten er vertsnavnet du ga containeren, det samme navnet du bruker for admingrensesnittet. IMAP er 993 med implisitt TLS eller 143 med STARTTLS. Innsending er 465 med implisitt TLS eller 587 med STARTTLS. Logg inn med hele postkasseadressen og passordet som er satt for postkassen i admingrensesnittet."
+    },
+    {
+      "q": "Er Poste.io bygget på Dovecot?",
+      "a": "Ja, for IMAP og POP3. Poste.io pakker Dovecot for postkassetilgang og Haraka for SMTP i ett Docker-image med et admingrensesnitt på toppen. Alt som stemmer om Dovecots IMAP-oppførsel, stemmer her, så Dovecot-siden vår er referansen for mapperoller, navneromsprefikser og sertifikathåndtering."
+    },
+    {
+      "q": "Hvorfor blir Poste.io-postkassepassordet mitt avvist?",
+      "a": "Sjekk at du bruker en postkasse og ikke et alias, siden aliaser videresender og ikke har eget passord, og at du ikke bruker admininnloggingen med mindre den adminen også er en ekte postkasse. Er påloggingsdetaljene helt sikkert riktige, se om tilkoblingen i stedet feiler på TLS: et selvsignert sertifikat på 993 gir en feil mange klienter rapporterer som et innloggingsproblem."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Poste.io-containeren din via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Poste.io-innboks",
+    "sub": "Koble til en postkasse fra din egen container. Én innboks gratis for alltid, uten kort."
+  }
+}

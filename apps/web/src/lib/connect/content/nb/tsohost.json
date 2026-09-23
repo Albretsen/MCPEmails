@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.123-reg.co.uk/welcome-tsohost/",
+    "https://www.123-reg.co.uk/help",
+    "https://help.tsohost.com/knowledge-base/article/11676",
+    "https://support.titan.email/hc/en-us/articles/900006137746-Send-email-using-Post-SMTP-plugin-tsoHost-Users"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://www.123-reg.co.uk/help",
+    "usernameForm": "Hele e-postadressen din, for eksempel you@yourdomain.co.uk. Aldri innloggingen til kontrollpanelet hos tsoHost eller 123 Reg.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Tsohost-e-post til Claude etter flyttingen til 123 Reg",
+    "description": "Tsohost-postkasser kobles fortsatt til Claude via IMAP på port 993. Merket er flyttet til 123 Reg, så les den ekte e-postverten i cPanel under Connect Devices."
+  },
+  "hero": {
+    "eyebrow": "Tsohost + AI",
+    "titleLine1": "Koble Tsohost-e-post til Claude,",
+    "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Tsohost-postkasse. Les, søk, send, svar, planlegg og organiser e-post via IMAP, med innstillingene hentet fra den ene skjermen som fortsatt er autoritativ etter to migreringer.",
+    "answer": "Claude når ikke en Tsohost-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via vanlig IMAP på port 993 og SMTP på 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Det finnes ingen felles tsohost.com-e-postserver å peke en klient mot: verten bygges fra ditt eget domene eller fra navnet på hostingserveren din, og den autoritative versjonen står inne i cPanel under Email Accounts, så Connect Devices. Autentisering skjer med passordet som er satt på den enkelte postkassen, aldri innloggingen til kontrollpanelet. tsoHost-merket er avviklet og innlemmet i 123 Reg, så start fra 123 Reg Control Panel. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord fra cPanel",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Tsohost-e-post seg til: ditt eget vertsnavn, og et merke som har flyttet",
+    "body": "Tsohost-postkasser er cPanel-postkasser. De svarer på IMAP på port 993 og SMTP på 465 over implisitt TLS, med 143 og 587 som STARTTLS-alternativer, og vertsnavnet er per kunde og ikke felles: enten <code>mail.yourdomain.co.uk</code>, bygd fra ditt eget domene, eller navnet på serveren kontoen din ligger på. Ingen av dem kan gjettes, og derfor starter alle riktige svar i cPanel og ikke i en innstillingstabell. Komplikasjonen som er spesiell for Tsohost, er at merket ikke lenger finnes som en egen virksomhet. tsoHost er innlemmet i <b>123 Reg</b>: <code>tsohost.com</code> videresender til en velkomstside hos 123 Reg, den gamle kunnskapsbasen <code>help.tsohost.com</code> videresender til 123 Regs hjelpesenter, og 123 Reg ber tsoHost-kunder logge inn med sine eksisterende påloggingsdetaljer og finne tjenestene sine under fanen <b>My products</b> i 123 Reg Control Panel. Postkassene dine er med over. Bokmerkene og de gamle artikkelnumrene dine er det ikke."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Kom deg inn i cPanel-en som holder postkassen",
+      "p": "Logg inn på 123-reg.co.uk med tsoHost-påloggingsdetaljene dine, åpne <b>Control Panel</b> og gå til fanen <b>My products</b>. Finn hostingpakken domenet hører til, og åpne cPanel-en for den. Noen kontoer svarer fortsatt til et tsoHost Control Panel og noen er allerede flyttet, og 123 Reg ruter support ulikt for hver, så noter hvor du havner før du trenger hjelp."
+    },
+    {
+      "h": "Les den ekte verten fra Connect Devices",
+      "p": "I cPanel går du til <b>Email</b>, så <b>Email Accounts</b>, og klikker <b>Connect Devices</b> på raden for adressen. Bla ned til <b>Mail Client Manual Settings</b> og bruk blokken <b>Secure SSL/TLS Settings</b>, ikke standardblokken. Kopier innkommende server nøyaktig slik den står, med IMAP på 993 og SMTP på 465. Har ingen postkassepassordet, klikker du <b>Manage</b> ved siden av adressen og setter et nytt; cPanel-e-post har ingen mekanisme for app-passord."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Legg til postkassen i mcpemails med hele adressen og det passordet, lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Alle Tsohost-innstillingssider du har bokmerket, er videresendt bort",
+      "p": "Det er denne som kaster bort en ettermiddag. Tsohost-kunder gikk gjennom to flyttinger på rad: den gamle tsoHost-hostingplattformen ble migrert over på cPanel, og så ble selve tsoHost-merket avviklet og innlemmet i 123 Reg. Begge endret hvor sannheten ligger. Artikkellenker fra <code>help.tsohost.com</code> svarer nå med en videresending til 123 Regs hjelpesenter i stedet for artikkelen du lagret, og ethvert vertsnavn kopiert fra en tsoHost-veiledning fra før cPanel beskriver en plattform postkassen din ikke lenger kjører på. Panelet Connect Devices inne i cPanel-en kontoen din åpner i dag, er den eneste kilden som viser hvor postkassen faktisk er."
+    },
+    {
+      "h": "En postkasse som logger inn perfekt, kan likevel være feil postkasse",
+      "p": "cPanel oppretter og autentiserer gjerne en postkasse på en server domenets e-post ikke lenger rutes til, og Tsohost solgte Titan-drevet e-posthosting ved siden av cPanel-e-post, med Titan som publiserer sin egen tsoHost-spesifikke oppsettveiledning. Så sjekk domenets MX-oppføring først. Peker den inn i Titans infrastruktur, er den ekte postkassen din hos Titan på <code>imap.titan.email</code>, og cPanel-kontoen med samme navn er en tom boks som godtar passordet ditt og ikke viser deg noe. En agent som melder om en tom innboks på en adresse du vet er travel, er nesten alltid dette."
+    },
+    {
+      "h": "Sertifikatet på mail.yourdomain.co.uk utstedes bare hvis det navnet peker til serveren",
+      "p": "cPanels AutoSSL ber om et sertifikat som dekker domenet ditt pluss tjenesteunderdomenene, <code>mail.</code>, <code>webmail.</code>, <code>cpanel.</code> og resten, men dropper alle som ikke peker til den serveren i utstedelsesøyeblikket. Mange Tsohost-domener har DNS administrert et annet sted enn hostingen, og mange fikk oppføringene omskrevet under migreringen, så <code>mail.yourdomain.co.uk</code> ender opp uten oppslag eller med et oppslag uten matchende SAN. Håndtrykket viser da serverens eget vertsnavnsertifikat, og en streng klient avviser med en navnemismatch som ser ut som et angrep. Løsningen er serverens vertsnavn fra Connect Devices, ikke å klikke seg forbi advarselen."
+    },
+    {
+      "h": "To migreringer senere husker ingen postkassepassordet",
+      "p": "IMAP autentiserer mot passordet som er satt på den enkelte e-postadressen i cPanel, som er en annen pålogging enn innloggingen til kontrollpanelet hos tsoHost eller 123 Reg, og en annen igjen enn passordet til cPanel-kontoen. Etter en plattformmigrering og en merkemigrering er det passordet per postkasse ofte det eneste ingen skrev ned, og fordi panelinnloggingen fortsatt virker, antar folk at e-postpassordet må være det samme og skylder på vertsnavnet i stedet. Tilbakestill det fra <b>Manage</b> ved siden av adressen i Email Accounts."
+    }
+  ],
+  "limits": [
+    "mcpemails kobler til postkassen, ikke hostingkontoen. Videresendinger, aliaser, autosvar, spamfiltre og DNS blir alle værende i cPanel og 123 Reg Control Panel, og AI-klienten din kan verken se eller endre dem.",
+    "Viser adressen seg å være en Titan-postkasse og ikke en cPanel-postkasse, gjelder ingen av innstillingene her. Koble den til som Titan i stedet, med Titans egne verter og postkassepassordet fra Titans kontrollpanel.",
+    "Denne siden beskriver cPanel-e-post slik den er etter migreringen. Vertsnavn fra den gamle tsoHost-plattformen, fra før overgangen til cPanel, beskriver ikke lenger hvor postkassen din ligger, og slås ikke opp til den."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Tsohost-e-post?",
+      "a": "Ikke direkte. Claude har ingen innebygd kobling for cPanel-e-postverter. Kobler du en MCP-server som mcpemails til Tsohost-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, med de påloggingsdetaljene en e-postklient på datamaskinen ville brukt, og samme tilkobling fungerer fra Cursor og ChatGPT."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Tsohost?",
+      "a": "IMAP er port 993 med implisitt TLS, og SMTP er port 465, med 143 og 587 som STARTTLS-alternativer. Vertsnavnet er spesifikt for kontoen din og ikke felles, enten mail.yourdomain.co.uk eller serverens eget navn, og cPanel viser det riktige under Email Accounts, så Connect Devices, i blokken Secure SSL/TLS. Brukernavnet er alltid hele e-postadressen."
+    },
+    {
+      "q": "Tsohost er nå 123 Reg. Hvor finner jeg e-postinnstillingene mine?",
+      "a": "Logg inn på 123-reg.co.uk med de eksisterende tsoHost-påloggingsdetaljene dine, åpne Control Panel og bruk fanen My products for å nå hostingpakken. Åpne cPanel-en for den, så Email Accounts, så Connect Devices for adressen. Postkassene og innholdet deres ble med uendret; bare merket, innloggingssiden og hjelpesenteret flyttet."
+    },
+    {
+      "q": "Hvorfor advarer e-postklienten min om sertifikatet på mail.mydomain.co.uk?",
+      "a": "Fordi det navnet ikke står på sertifikatet serveren viser. cPanels AutoSSL tar bare med e-postunderdomenet når det peker til hostingserveren, og mange Tsohost-domener har DNS et annet sted eller fikk oppføringer endret under migreringen. Bruk serverens vertsnavn som vises i Connect Devices i stedet for mail-prefikset, og ikke slå av sertifikatvalidering for å komme forbi det."
+    },
+    {
+      "q": "Tsohost-postkassen min kobler til, men det er ingen e-post i den. Hva er galt?",
+      "a": "Sjekk domenets MX-oppføring. En cPanel-postkasse finnes og godtar innlogginger uansett om domenets e-post rutes til den serveren eller ikke, så et riktig passord på feil postkasse ser ut som en tom innboks. Peker MX mot Titan, er den levende postkassen Titan-postkassen, og den bør kobles til med Titans verter i stedet for hostingserverens."
+    },
+    {
+      "q": "Lagres Tsohost-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra hostingserveren din via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke. AI-klienten du kobler til, mottar innholdet i alt den leser, og det er verdt å ta stilling til bevisst for en bedriftspostkasse."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Tsohost-innboks",
+    "sub": "Koble til en Tsohost-postkasse på minutter med verten fra Connect Devices. Én innboks gratis for alltid, uten kort."
+  }
+}

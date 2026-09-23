@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://o-seznam.cz/napoveda/email/mohlo-by-se-hodit/postovni-programy-a-aplikace/",
+    "https://o-seznam.cz/napoveda/email/moznosti-nastaveni/prace-s-vice-schrankami/nastaveni-pristupu-pro-aplikace/",
+    "https://napoveda.seznam.cz/cz/login/postovni-programy-caldav-dvoufazove-overeni"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Seznam-passord",
+    "helpUrl": "https://napoveda.seznam.cz/cz/login/postovni-programy-caldav-dvoufazove-overeni",
+    "usernameForm": "Hele adressen din, inkludert alt etter krøllalfa: name@seznam.cz eller name@email.cz.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Seznam Email til Claude og enhver MCP-klient",
+    "description": "Koble Seznam Email til Claude, Cursor og enhver MCP-klient via IMAP på imap.seznam.cz:993. Seznam-passordet virker til tofaktor er på, deretter et app-passord."
+  },
+  "hero": {
+    "eyebrow": "Seznam Email + AI",
+    "titleLine1": "Koble Seznam Email til Claude,",
+    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Seznam-postkasse. Les, søk, send, svar, planlegg og organiser e-post via IMAP med passordet du allerede bruker, i alle MCP-klienter i stedet for bare én.",
+    "answer": "Claude når ikke Seznam Email på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.seznam.cz port 993 og logger inn med hele adressen din og det vanlige Seznam-passordet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Har du slått på tofaktorautentisering, slutter kontopassordet å virke for e-postprotokoller, og du setter i stedet et eget Heslo pro aplikace. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Kontopassord, med mindre tofaktor er på",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Seznam Email seg til: IMAP og Seznam-passordet ditt",
+    "body": "Seznam tilbyr IMAP på <code>imap.seznam.cz</code> port 993 og SMTP på <code>smtp.seznam.cz</code> port 465, begge med implisitt TLS i stedet for STARTTLS. Du logger inn med hele adressen, inkludert delen etter krøllalfa, og det vanlige Seznam-passordet ditt. Det er ingenting å slå på først. Seznams egen hjelp sier at POP3 og IMAP er permanent aktive på en postkasse og ikke kan slås av, noe som er uvanlig: de fleste webmail-leverandører får deg til å finne en bryter før en klient kan logge inn. Det eneste som endrer passordet, er tofaktorautentisering, <b>dvoufázové ověření</b>. Slår du det på, slutter kontopassordet å bli godtatt på IMAP, POP3, SMTP og CalDAV, og et eget <b>Heslo pro aplikace</b> tar over for bare de protokollene."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, og ber ikke om kort."
+    },
+    {
+      "h": "Sjekk om tofaktor er på i Seznam Účet",
+      "p": "Logg inn på Seznam-kontoen din og åpne <b>Zabezpečení účtu</b> (kontosikkerhet). Er <b>Dvoufázové ověření</b> av, er det vanlige Seznam-passordet det du skal bruke, og det er ingenting mer å gjøre her. Er det på, finner du raden <b>Heslo pro aplikace</b> (app-passord), klikker <b>Nastavit</b> (sett opp), skriver et nytt passord to ganger og klikker <b>Uložit změny</b> (lagre endringer). Seznam avviser en verdi som er identisk med innloggingspassordet ditt."
+    },
+    {
+      "h": "Lim adressen og passordet inn i mcpemails",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen, inkludert delen etter krøllalfa, og lim inn det passordet som gjelder. Vertene og portene er forhåndsutfylt med de verifiserte verdiene på denne siden."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Tofaktor pensjonerer i det stille passordet ditt for e-postklienter",
+      "p": "Seznam dokumenterer denne feilen presist: første gang en klient prøver å koble til etter at du har slått på dvoufázové ověření, får du en melding av typen <code>Přihlášení k serveru imap.seznam.cz selhalo</code>, og den ser ut som en skrivefeil snarere enn en policy. Løsningen er raden <b>Heslo pro aplikace</b> under Zabezpečení účtu. To detaljer overrasker folk. App-passordet må være forskjellig fra innloggingspassordet, og når du har satt det, kan du ikke slette det, bare endre det. Slår du av tofaktor igjen, deaktiveres app-passordet og det vanlige kontopassordet tar over igjen."
+    },
+    {
+      "h": "Det finnes ingen IMAP-bryter å lete etter",
+      "p": "Det vanlige første trekket hos en webmail-leverandør er å lete gjennom innstillingene etter en bryter for å slå på IMAP. Hos Seznam er det bortkastet: hjelpesidene sier at IMAP og POP3 er permanent aktive på alle postkasser og ikke kan slås av. Innstillingsskjermen for applikasjoner under Nastavení, Více schránek, Nastavení přístupů pro aplikace styrer bare POP3-nedlasting, som <b>Přes POP3 stahovat jen nepřečtené e-maily</b> og <b>Ponechat zprávy na serveru</b>. En avvist innlogging hos Seznam er derfor alltid et spørsmål om påloggingsdetaljer, aldri om en avslått protokoll."
+    },
+    {
+      "h": "Seznam annonserer ikke IDLE, så ingenting blir pushet",
+      "p": "IMAP-serveren mangler IDLE-funksjonen, som betyr at en klient ikke kan holde en tilkobling åpen og få beskjed når e-post kommer. Den må polle. For en agent er dette et ikke-problem, fordi mcpemails åpner en tilkobling og henter når AI-en din stiller et spørsmål i stedet for å sitte på en socket. Det er likevel verdt å vite, fordi det forklarer hvorfor en skrivebordsklient på en Seznam-konto merker ny e-post senere enn webmailen gjør, og hvorfor et verktøy som er avhengig av IDLE, ser ødelagt ut her mens det virker andre steder."
+    }
+  ],
+  "limits": [
+    "Seznam annonserer ikke SPECIAL-USE, så mapper matches etter navn i stedet for rolle. I en tsjekkisk postkasse betyr det Doručená pošta, Odeslaná pošta, Koncepty og Koš. Har du omdøpt en mappe, oppgi den eksplisitt når du ber om en flytting.",
+    "SMTP-serveren begrenser en melding til 50 MB inkludert kodede vedlegg, så en stor fil avvises ved sending i stedet for å bli kuttet."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Seznam Email?",
+      "a": "Ikke direkte. Claude har ingen innebygd Seznam-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som mcpemails til seznam.cz- eller email.cz-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer i Cursor og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Seznam?",
+      "a": "IMAP er imap.seznam.cz på port 993 med implisitt TLS. SMTP er smtp.seznam.cz på port 465, også med implisitt TLS. Brukernavnet er hele adressen din, inkludert alt etter krøllalfa, og tilbyr e-postprogrammet ditt en avkrysningsboks for Server requires authentication, kryss av for den. Begge vertene ble bekreftet via en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Hvorfor blir Seznam-passordet mitt avvist i en e-postklient?",
+      "a": "Nesten alltid fordi tofaktorautentisering er på. Seznam slutter å godta kontopassordet på IMAP, POP3, SMTP og CalDAV når dvoufázové ověření er slått på, og forventer et eget Heslo pro aplikace som du setter selv under Zabezpečení účtu. Det kan ikke være den samme strengen som innloggingspassordet ditt."
+    },
+    {
+      "q": "Virker dette med en Email Profi-postkasse på mitt eget domene?",
+      "a": "Ja. Email Profi-postkasser bruker de samme Seznam-vertene. Seznam sier eksplisitt at du på Email Profi må skrive hele adressen i brukernavnfeltet, inkludert delen etter krøllalfa, og ikke bare den lokale delen. Tofaktorregelen om app-passord gjelder på samme måte."
+    },
+    {
+      "q": "Lagres Seznam-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Seznam via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Seznam-innboks",
+    "sub": "Koble til Seznam Email på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

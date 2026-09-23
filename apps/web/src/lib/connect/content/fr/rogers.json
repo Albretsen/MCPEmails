@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://www.rogers.com/customer/support/article/update-email-settings",
+    "https://ca.help.yahoo.com/kb/rogers/SLN15241.html",
+    "https://ca.help.yahoo.com/kb/rogers/SLN28681.html",
+    "https://business.shaw.ca/support/products/shaw-hosting-sunset"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Mot de passe d'application Rogers Yahoo",
+    "helpUrl": "https://ca.help.yahoo.com/kb/rogers/SLN15241.html",
+    "usernameForm": "Votre adresse Rogers Yahoo complète, normalement name@rogers.com, saisie en entier.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Rogers Yahoo et Claude : le piège du mot de passe d'application",
+    "description": "La messagerie Rogers tourne sur Yahoo. Connectez rogers.com à Claude en IMAP via imap.broadband.rogers.com, mais Rogers annonce la fin des mots de passe d'application."
+  },
+  "hero": {
+    "eyebrow": "Rogers Yahoo Mail + IA",
+    "titleLine1": "Connectez une boîte Rogers Yahoo",
+    "titleLine2": "à Claude, Cursor, tout client MCP",
+    "lead": "La messagerie Rogers est une messagerie Yahoo portant le nom rogers.com. mcpemails la connecte en IMAP pour que votre agent IA puisse lire, rechercher, envoyer, répondre et classer ce courrier, à condition que votre compte puisse encore produire un mot de passe d'application.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Rogers Yahoo. mcpemails est un serveur MCP hébergé qui l'y connecte en IMAP via imap.broadband.rogers.com sur le port 993, en s'authentifiant avec un mot de passe d'application Rogers Yahoo plutôt qu'avec le mot de passe que vous saisissez dans le webmail. Il y a un vrai piège à vérifier d'abord : l'article de configuration de Rogers indique désormais que la génération de mots de passe d'application n'est plus disponible, tandis que l'aide Rogers de Yahoo documente toujours le bouton Create app password. Ouvrez donc la page de sécurité de votre compte avant de vous organiser en conséquence. Si un mot de passe d'application existe ou peut encore être créé, une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe d'application, si le vôtre peut en créer un",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Rogers Yahoo Mail se connecte : IMAP, et la question de l'identifiant",
+    "body": "Chaque boîte rogers.com est une boîte Yahoo sous la marque Rogers. Le serveur SMTP auquel nous nous sommes connectés répond avec une bannière <code>smtp.mail.yahoo.com</code> alors qu'on l'atteint via <code>smtp.broadband.rogers.com</code>, et l'IMAP répond sur <code>imap.broadband.rogers.com</code> au port 993 en TLS. Cette plateforme se prête bien à l'automatisation : elle annonce MOVE, UIDPLUS, SPECIAL-USE, IDLE et SASL-IR, si bien que les rôles des dossiers sont connus, que les déplacements sont atomiques et que les nouveaux identifiants de messages sont renvoyés lors d'une copie. La question ouverte n'est pas le transport, c'est l'identifiant. Un logiciel de messagerie qui ne peut pas ouvrir la fenêtre de connexion propre à Yahoo a besoin d'un mot de passe d'application, et l'article de configuration actuel de Rogers affirme sans détour que <b>la génération de mots de passe d'application n'est plus disponible</b>, en renvoyant à sa FAQ sur les changements de Rogers Yahoo Mail, tandis que la section d'aide Rogers de Yahoo décrit toujours comment en créer un sous External connections. Vérifiez la page de sécurité de votre propre compte plutôt que l'un ou l'autre document."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Ouvrez la page de sécurité du compte Rogers Yahoo et cherchez les mots de passe d'application",
+      "p": "Connectez-vous avec votre adresse <code>@rogers.com</code>, ouvrez la sécurité du compte et cherchez <b>Create app password</b> sous <b>External connections</b> (connexions externes). Si l'option est présente, créez-en un nommé <code>mcpemails</code> et copiez le code ; Yahoo ne l'affiche qu'une fois. Si l'option est absente, c'est le changement de Rogers et non une panne, et aucune connexion par mot de passe n'est possible sur ce compte."
+    },
+    {
+      "h": "Saisissez l'adresse rogers.com et le mot de passe d'application",
+      "p": "Dans mcpemails, choisissez IMAP / SMTP, mettez l'adresse rogers.com complète dans le champ du nom d'utilisateur et collez le mot de passe d'application. N'utilisez pas votre mot de passe de webmail Rogers Yahoo : il est refusé au niveau IMAP. Les serveurs et ports ci-dessous sont préremplis et ont été vérifiés par une connexion TLS réelle."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Rogers et Yahoo documentent actuellement l'inverse l'un de l'autre sur les mots de passe d'application",
+      "p": "L'article de Rogers sur la configuration de la messagerie Rogers Yahoo commence par indiquer que la génération de mots de passe d'application n'est plus disponible. La section d'aide Rogers de Yahoo, elle, explique toujours comment en créer un sur la page de sécurité du compte et précise qu'un mot de passe d'application reste valable même après un changement de votre mot de passe principal. Les deux pages sont en ligne chez les fournisseurs. En pratique, Rogers oriente tout le monde vers la fenêtre de connexion native Rogers Yahoo, les mots de passe d'application existants continuent de fonctionner jusqu'à leur suppression, et la possibilité d'en créer un nouveau se décide sur votre compte, pas dans la documentation. Regardez la page avant de conclure quoi que ce soit."
+    },
+    {
+      "h": "Les mécanismes OAuth annoncés par le serveur ne vous sont pas ouverts",
+      "p": "Le serveur IMAP de Rogers propose OAUTHBEARER et XOAUTH2 à côté de PLAIN. Ils sont réservés aux applications de messagerie enregistrées par Rogers et Yahoo, celles qui ouvrent une fenêtre de connexion Rogers Yahoo dans l'application. Il n'existe aucune page en libre-service où un client pourrait obtenir un jeton pour son propre usage : voir OAuth dans la liste des capacités ne signifie donc pas qu'une autre voie existe si les mots de passe d'application sont fermés."
+    },
+    {
+      "h": "La messagerie Rogers Business est en cours de mise hors service, et c'est un service différent",
+      "p": "Rogers ferme les anciennes messageries Rogers Business ainsi que les domaines et sous-domaines hébergés, depuis septembre 2025, avec des comptes désactivés et leurs données supprimées définitivement. Ses documents d'assistance précisent explicitement que cela ne concerne pas les adresses grand public <code>rogers.com</code> ou <code>shaw.ca</code>, qui continuent de fonctionner. Une boîte professionnelle sur un domaine hébergé est donc vouée à la suppression et doit être migrée, tandis qu'une adresse rogers.com personnelle n'est pas concernée par ce programme."
+    },
+    {
+      "h": "Aucune nouvelle adresse rogers.com ou shaw.ca n'est délivrée",
+      "p": "Vous pouvez conserver l'adresse grand public que vous avez déjà, mais Rogers ne crée plus de nouvelles boîtes rogers.com ou shaw.ca. Si vous prévoyez une nouvelle adresse pour le travail d'un agent, elle ne pourra pas être sur ces domaines, et la boîte que vous connectez doit déjà exister."
+    }
+  ],
+  "limits": [
+    "Le serveur SMTP Yahoo derrière Rogers annonce une taille de message maximale d'environ 39 Mo : un envoi avec de grosses pièces jointes est refusé avant de partir.",
+    "Si votre compte ne peut plus produire de mot de passe d'application, mcpemails ne peut pas le connecter. Il n'existe aucune solution de repli par simple mot de passe, et nous ne faisons pas partie des applications enregistrées pour la fenêtre OAuth Rogers Yahoo."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec la messagerie Rogers ?",
+      "a": "Pas directement. Claude n'a pas de connecteur Rogers intégré. Connecter un serveur MCP comme mcpemails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier rogers.com, et la même connexion fonctionne dans Cursor, ChatGPT et d'autres clients MCP. Cela suppose que votre compte puisse utiliser un mot de passe d'application."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de Rogers ?",
+      "a": "IMAP : imap.broadband.rogers.com sur le port 993 en TLS implicite. SMTP : smtp.broadband.rogers.com sur le port 465, également en TLS implicite. Les deux ont été vérifiés par une connexion TLS réelle, et les deux sont une infrastructure Yahoo sous des noms Rogers. Le nom d'utilisateur est votre adresse rogers.com complète."
+    },
+    {
+      "q": "Puis-je encore créer un mot de passe d'application Rogers ?",
+      "a": "Cela dépend de votre compte, et la documentation des fournisseurs se contredit. L'article de configuration de Rogers indique que la génération de mots de passe d'application n'est plus disponible ; l'aide Rogers de Yahoo décrit toujours le bouton Create app password sous External connections. Ouvrez la page de sécurité de votre compte Rogers Yahoo et voyez ce qui vaut pour vous. Un mot de passe d'application que vous avez déjà continue de fonctionner jusqu'à ce que vous le supprimiez."
+    },
+    {
+      "q": "Ma messagerie professionnelle Rogers est-elle concernée ?",
+      "a": "Les anciennes messageries Rogers Business et les domaines hébergés sont en voie de mise hors service depuis septembre 2025, avec des boîtes désactivées et des données supprimées. Ce programme est distinct des adresses grand public rogers.com et shaw.ca, qui continuent de fonctionner. Si votre adresse se trouve sur un domaine professionnel hébergé, migrez-la avant sa désactivation plutôt que de la connecter ici."
+    },
+    {
+      "q": "Mon courrier Rogers est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct en IMAP à chaque requête et transmis à votre client IA. Les identifiants, mot de passe d'application compris, sont chiffrés au repos, et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Rogers Yahoo à votre IA",
+    "sub": "Vérifiez d'abord votre mot de passe d'application, puis connectez-vous en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.startmail.com/features/",
+    "https://support.startmail.com/",
+    "https://www.getmailbird.com/best-startmail-app-macos/",
+    "https://discussions.apple.com/thread/256239542"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "受信任设备密码",
+    "helpUrl": "https://support.startmail.com/",
+    "usernameForm": "你完整的 StartMail 地址，包括自定义域名。用户名绝不是单独的本地部分。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "StartMail 接入 Claude：受信任设备密码",
+    "description": "通过 IMAP（imap.startmail.com:993）将 StartMail 连接到 Claude、Cursor 或任意 MCP 客户端。账户密码永远无效：请使用受信任设备密码。"
+  },
+  "hero": {
+    "eyebrow": "StartMail + AI",
+    "titleLine1": "将 StartMail 连接到 Claude，",
+    "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 StartMail 收件箱。使用一个可单独撤销的设备密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用，而不止一个。",
+    "answer": "Claude 无法自行连接 StartMail。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.startmail.com 的 993 端口，通过 SMTP 连接 smtp.startmail.com 的 465 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。你的 StartMail 账户密码完全无法让邮件客户端通过认证：StartMail 会在设置的受信任设备部分为每台连接的设备单独生成一个密码，并且只显示一次。请以完整的 StartMail 地址作为用户名，以生成的值作为密码。一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "生成的设备密码，只显示一次",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "StartMail 如何连接：IMAP 与按设备生成的密码",
+    "body": "StartMail 在 <code>imap.startmail.com</code> 的 993 端口通过 TLS 提供 IMAP，在 <code>smtp.startmail.com</code> 的 465 端口提供 SMTP，并把完整的 IMAP 和 SMTP 访问作为一项功能来宣传，而不是事后补充。它不做的是通过这些协议接受你的账户密码。StartMail 的模式是每台连接设备一个生成的凭据：你在网页界面中添加一台设备，StartMail 生成一个约十六个字符的随机密码，这个值同时填入收信和发信的密码栏。它只显示一次，之后无法找回，所以如果丢失，就删除该设备条目并添加一个新的。这比大多数隐私服务商的做法都好，因为你交给第三方的凭据并不是打开你账户的那一个，而撤回它也不会影响你连接的其他任何东西。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。完成后你会得到一个 MCP URL 和一个密钥。"
+    },
+    {
+      "h": "在 StartMail 中添加设备并复制生成的密码",
+      "p": "在浏览器中登录 StartMail，打开 <b>Settings</b>，进入管理 IMAP 访问的 <b>trusted devices</b>（受信任设备）部分。选择 <b>Add device</b>，以这个连接为它命名。StartMail 会生成一个随机密码并只显示一次，所以请在关闭对话框前复制。该部分也控制账户的 IMAP 访问，所以如果你还没用上密码登录就被拒绝，请检查那里是否已开启 IMAP。"
+    },
+    {
+      "h": "在 mcpemails 中添加邮箱",
+      "p": "选择 IMAP / SMTP，以完整的 StartMail 地址作为用户名，粘贴生成的设备密码。发信也使用同一个值：StartMail 用设备凭据而不是账户密码对提交进行认证。服务器已自动填为 <code>imap.startmail.com</code> 和 <code>smtp.startmail.com</code>，并已通过实时 TLS 连接验证。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "你的 StartMail 账户密码永远不是邮件客户端密码",
+      "p": "这是 StartMail 客户端问题的主要来源，而且它不像其他服务商那样是双重认证的副作用。StartMail 在任何配置下都不用你的登录密码对 IMAP 或 SMTP 进行认证。输入你在网站上使用的密码，服务器会拒绝，客户端报告凭据错误，人们于是重置账户密码再试，但什么都不会改变。你需要的是受信任设备部分中的设备密码，并同时填入收信和发信两栏。"
+    },
+    {
+      "h": "生成的密码只显示一次，无法找回",
+      "p": "StartMail 在创建设备条目时显示该值，之后不会保留一份可供你查看的副本。如果你关掉了对话框，或者在一台机器的客户端里用了它、又需要在另一台机器上使用，请再添加一台设备，而不是去找第一个密码。这正是它的设计初衷：每个连接一个凭据，可单独删除。删除这个连接对应的条目，就能切断 MCP 服务器，而你的手机和笔记本电脑照常工作。"
+    },
+    {
+      "h": "StartMail 声明了 XLIST，却没有 SPECIAL-USE",
+      "p": "这是一个不寻常的能力细节，却有实际影响。IMAP 问候语提供 <code>XLIST</code>，这是 Google 在标准化之前用于识别已发送、草稿或已删除文件夹的扩展，但没有提供取代它的 RFC 6154 能力 <code>SPECIAL-USE</code>。大多数现代客户端多年前就已放弃 XLIST，只查找 SPECIAL-USE，所以文件夹用途会退回到按名称匹配。在 StartMail 网页界面中重命名一个文件夹，代理可能就不再把它识别为你的归档文件夹，所以要求归档时请明确写出文件夹名。"
+    },
+    {
+      "h": "IMAP 只有 PLAIN，没有 MOVE 或 UIDPLUS",
+      "p": "服务器提供 <code>AUTH=PLAIN</code> 而没有 <code>AUTH=LOGIN</code>，所以写死使用 LOGIN 机制的工具会在认证步骤被拒绝，而得不到有用的错误，而 SMTP 一侧两者都接受。它也缺少 MOVE 和 UIDPLUS，所以归档一封邮件是一次 COPY、一次为其 STORE \\Deleted 标记和一次 EXPUNGE，新 UID 要在目标文件夹中搜索，而不会被返回。这些在这里都已处理，但它们正是针对 StartMail 的批量整理比针对支持 MOVE 的服务器更慢的原因。"
+    }
+  ],
+  "limits": [
+    "将 StartMail 邮箱连接到 AI 客户端，意味着该 AI 服务商会读取它所处理的邮件内容。mcpemails 每次请求都实时从 imap.startmail.com 获取邮件，不存储邮件正文，凭据也经过静态加密，但文本仍会到达 Claude、Cursor 或你连接的任何客户端。StartMail 的荷兰托管和不追踪立场描述的是 StartMail，并不会随邮件进入你自己接入的 AI 厂商。请把这当作一个关于你愿意暴露哪些往来邮件的决定，而不是你所购买的隐私的延伸。",
+    "PGP 加密的邮件对代理来说是不可读的。StartMail 的密钥处理在你的 StartMail 账户中进行，服务于其自身的网页界面；IMAP 客户端收到的是一段 ASCII 封装的密文，mcpemails 不持有你的任何私钥。代理能看到发件人、主题和日期，也能归档或标记这些会话，但无法阅读内容。",
+    "StartMail 的 SMTP 服务器声明的邮件大小上限约为 37 MB，低于这里的大多数服务商。代理尝试发送的大附件会在提交时被拒绝，而不是稍后退信，所以较大的文件请使用链接。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 StartMail 吗？",
+      "a": "不能直接使用。Claude 没有内置的 StartMail 连接器，自身也不会 IMAP。将 mcpemails 这样的 MCP 服务器连接到你的 StartMail 邮箱后，Claude 就能通过 IMAP 读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接无需再次设置，也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "StartMail 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.startmail.com，993 端口 TLS；SMTP 为 smtp.startmail.com，465 端口 TLS。用户名是你完整的 StartMail 地址，密码是生成的设备密码，而不是你的账户密码。两台服务器均已通过实时 TLS 连接验证，证书就是为 imap.startmail.com 本身签发的。"
+    },
+    {
+      "q": "为什么我的 StartMail 密码在邮件客户端中无效？",
+      "a": "因为它本来就不是为此设计的。StartMail 完全不通过 IMAP 或 SMTP 接受你的账户密码。它会在设置的受信任设备部分，为每台连接的设备单独生成一个密码。重置账户密码无济于事。请添加一台设备，复制生成的值，并同时用于收信和发信密码栏。"
+    },
+    {
+      "q": "在哪里生成 StartMail 的 IMAP 密码？",
+      "a": "在 StartMail 网页界面中打开 Settings，进入管理 IMAP 访问的受信任设备部分。选择添加设备并命名，StartMail 会生成一个约十六个字符的随机密码并显示一次。请立即复制；之后无法再次查看，只能删除该设备并添加另一个。"
+    },
+    {
+      "q": "我的 AI 能读取 StartMail 中 PGP 加密的邮件吗？",
+      "a": "不能。用你的 OpenPGP 密钥加密的邮件通过 IMAP 到达时是密文，而 mcpemails 从不会收到你的私钥。这些邮件在 StartMail 自己的界面中仍然可读，密钥处理就在那里进行。你的代理仍然可以对它们进行分类、标记和归档，也能阅读所有未加密到达的邮件。"
+    },
+    {
+      "q": "我的 StartMail 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都从 imap.startmail.com 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。你连接的 AI 客户端确实会收到它读取的任何内容，在连接一个你当初为隐私而选择 StartMail 的邮箱之前，这才是需要权衡的部分。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 StartMail 收件箱",
+    "sub": "用一个可单独撤销的设备密码连接 StartMail。一个收件箱永久免费，无需信用卡。"
+  }
+}

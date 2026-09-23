@@ -1,21 +1,32 @@
 {
+  "_sources": [
+    "https://help.aol.com/articles/Create-and-manage-app-password",
+    "https://help.aol.com/articles/how-do-i-use-other-email-applications-to-send-and-receive-my-aol-mail"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "应用专用密码",
+    "helpUrl": "https://help.aol.com/articles/Create-and-manage-app-password",
+    "usernameForm": "你的完整 AOL 地址，包括域名：name@aol.com。旧的 aim.com 地址和各国家/地区的 AOL 地址也采用同样的格式。",
+    "status": "active"
+  },
   "meta": {
-    "title": "将 AOL Mail 连接到 Claude（及任意 AI）",
-    "description": "用应用专用密码通过 IMAP 将 AOL Mail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的邮件，1 个收件箱永久免费。"
+    "title": "将 AOL Mail 连接到 Claude、Cursor 与 MCP 客户端",
+    "description": "使用 AOL 应用专用密码，通过 imap.aol.com:993 的 IMAP 将 AOL Mail 连接到 Claude、Cursor 及任意 MCP 客户端。仅凭 AOL 登录密码无法连接。"
   },
   "hero": {
     "eyebrow": "AOL Mail + AI",
     "titleLine1": "将 AOL Mail 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
-    "lead": "几分钟即可为你的 AI 代理接入一个真正的 AOL Mail 收件箱。用一个应用专用密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+    "lead": "几分钟即可为你的 AI 代理接入一个真正的 AOL Mail 收件箱。用一个应用专用密码即可读取、搜索、发送、回复、定时与整理邮件，同一个收件箱可在所有 MCP 客户端中使用，而不止一个。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "应用专用密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行连接 AOL Mail。mcpemails 是一个托管 MCP 服务器，用应用专用密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱永久免费。"
+    "answer": "Claude 无法自行访问 AOL Mail。mcpemails 是一个托管 MCP 服务器，使用应用专用密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，1 个收件箱免费。"
   },
   "method": {
     "title": "AOL Mail 如何连接：IMAP 与应用专用密码",
-    "body": "AOL Mail 通过 IMAP/SMTP 连接，需要一个 <b>AOL 应用专用密码</b>。普通的 AOL 登录密码无法在邮件客户端中通过验证，所以这里登录被拒绝几乎总是因为缺少应用专用密码。先开启两步验证，在账户信息、账户安全中生成一个应用专用密码，再连同完整的 AOL 地址粘贴到 mcpemails。"
+    "body": "AOL Mail 通过 IMAP/SMTP 连接，需要一个 <b>AOL 应用专用密码</b>。普通的 AOL 密码无法让邮件客户端通过认证，所以这里登录被拒绝几乎总是因为缺少应用专用密码。请先开启两步验证，在 Account Info、Account Security（账户信息、账户安全）中生成一个应用专用密码，再连同完整的 AOL 地址粘贴到 mcpemails。"
   },
   "setup": [
     {
@@ -24,19 +35,67 @@
     },
     {
       "h": "生成 AOL 应用专用密码",
-      "p": "在 AOL Mail 中打开账户信息、账户安全，若未开启则先开启两步验证，然后生成一个应用专用密码。请立即复制，AOL 只显示一次。"
+      "p": "在 AOL Mail 中打开 Account Info、Account Security，如果两步验证尚未开启，请先开启，然后生成一个应用专用密码。请立即复制，AOL 只显示一次。"
     },
     {
       "h": "粘贴到 mcpemails",
-      "p": "选择 IMAP / SMTP，填入你的 AOL Mail 地址、下方的服务器地址和密码，安全连接收件箱。"
+      "p": "选择 IMAP / SMTP，填入你的 AOL Mail 地址、下方的服务器地址和密码，安全地连接收件箱。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
       "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],
+  "gotchas": [
+    {
+      "h": "AOL Mail 运行在 Yahoo 的平台上，但应用专用密码必须来自 AOL",
+      "p": "<code>imap.aol.com</code> 解析到为 Yahoo Mail 提供服务的同一个 <code>yahoodns.net</code> 邮件服务，两台服务器的欢迎横幅也一模一样。不共享的是账户。AOL 地址要在 <b>AOL</b> 的 Account Security 页面管理，在 Yahoo 账户中生成的应用专用密码打不开 AOL 邮箱。这一点很重要，因为搜索 AOL 设置时，结果常常给你一篇 Yahoo 帮助文章：步骤描述是对的，你该去的网站却错了。"
+    },
+    {
+      "h": "应用专用密码通过向导生成，只显示一次，修改密码也不会使其失效",
+      "p": "在 AOL 的 Account Security 页面选择 Generate app password（部分账户显示为 Generate and manage app passwords），然后点 Get Started，为应用命名，再点 Generate password。AOL 只显示一次。此后即使你修改了 AOL 主密码，它仍然有效，所以修改密码<b>不会</b>断开邮件客户端。在同一页面删除该应用专用密码，是撤销访问的唯一方法。"
+    },
+    {
+      "h": "AOL 的 IMAP 不提供 AUTH=LOGIN，但 SMTP 提供",
+      "p": "探测时，AOL 的 IMAP 服务器声明了 <code>AUTH=PLAIN</code> 和两种 OAuth 机制，没有 <code>AUTH=LOGIN</code>。而它的提交服务器则同时接受 PLAIN 和 LOGIN。因此，同一账户的收信和发信两部分在同一个客户端里可能表现不同：写死使用 LOGIN 机制的工具（在针对 Exchange 编写的代码中很常见）能顺利发信，却读不了信，报出的认证错误看起来和密码错误一模一样。"
+    },
+    {
+      "h": "系统文件夹按角色识别，重命名是安全的",
+      "p": "AOL 声明支持 <code>SPECIAL-USE</code>、<code>MOVE</code>、<code>UIDPLUS</code> 和 <code>IDLE</code>。通俗地说：Sent、Drafts、Spam 和 Trash 是按其用途而不是名称来识别的，所以即使你重命名了 Sent 文件夹，代理仍能找到它；移动邮件也是一条原子命令，而不是先复制再删除。这比好几家付费服务商的 IMAP 服务器都要好，也让 AOL 成为一个特别适合自动化的邮箱。"
+    }
+  ],
+  "limits": [
+    "AOL 的提交服务器声明的单封邮件大小上限约为 41 MB。通过 mcpemails 读取附件时，每次请求上限为 25 MB。",
+    "修改 AOL 密码后，应用专用密码依然有效。在 AOL 的 Account Security 页面将其删除，是切断访问的唯一方法。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 AOL Mail 吗？",
+      "a": "不能单独使用。Claude 没有内置的 AOL 连接器。使用 AOL 应用专用密码，通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到你的 AOL 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "AOL Mail 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.aol.com，端口 993，使用隐式 TLS。SMTP 为 smtp.aol.com，端口 465，同样是隐式 TLS。用户名是你的完整 AOL 地址，密码是 AOL 应用专用密码，而不是你的账户密码。两个服务器均已在本页所示日期通过实时 TLS 连接确认。"
+    },
+    {
+      "q": "为什么我的 AOL 密码被拒绝？",
+      "a": "AOL 不接受第三方邮件应用使用你的普通账户密码。你需要在 AOL 的 Account Security 页面生成应用专用密码。第二个常见原因是在错误的地方生成了密码：在 Yahoo 账户中创建的应用专用密码不能用于 AOL 地址，即使两项服务共用同一个邮件平台。"
+    },
+    {
+      "q": "AOL Mail 和 Yahoo Mail 是一回事吗？",
+      "a": "它们运行在同一套基础设施上，通过 IMAP 使用时表现也几乎相同，但它们是不同的账户，主机名不同，安全设置页面也不同。aol.com 地址请使用 AOL 的服务器和 AOL 应用专用密码连接。yahoo.com、ymail.com 或 rocketmail.com 地址请按 Yahoo 连接。两者的凭据不能互用。"
+    },
+    {
+      "q": "旧的 aim.com 地址和各国家/地区的 AOL 地址还能用吗？",
+      "a": "能，只要邮箱仍处于活跃状态。它们都是位于相同服务器上的普通 AOL Mail 账户，使用相同的应用专用密码流程，用户名也是完整地址。很老的配置指南列出的是迁移到当前平台之前的 AOL 设置，所以请使用本页上的服务器地址，而不是十年前某个论坛帖子里的内容。"
+    },
+    {
+      "q": "我的 AOL 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 AOL 实时获取邮件，并交给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。在 AOL 的 Account Security 中删除应用专用密码，会立即在 AOL 那一端终止连接。"
+    }
+  ],
   "ctaBand": {
     "title": "给你的 AI 一个 AOL Mail 收件箱",
-    "sub": "几分钟即可连接 AOL Mail。一个收件箱永久免费，无需信用卡。"
+    "sub": "几分钟即可连接 AOL Mail。1 个收件箱永久免费，无需信用卡。"
   }
 }

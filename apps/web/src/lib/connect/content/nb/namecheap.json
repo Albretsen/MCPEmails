@@ -1,7 +1,19 @@
 {
+  "_sources": [
+    "https://www.namecheap.com/support/knowledgebase/article.aspx/1179/2175/general-private-email-configuration-for-mail-clients-and-mobile-devices/",
+    "https://www.namecheap.com/support/knowledgebase/article.aspx/10374/2178/how-to-set-up-applicationspecific-password-for-private-email/",
+    "https://www.namecheap.com/support/knowledgebase/article.aspx/10782/2306/new-how-to-set-up-twofactor-authentication-2fa-in-private-email/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord, eller et programpassord med 2FA",
+    "helpUrl": "https://www.namecheap.com/support/knowledgebase/article.aspx/1179/2175/general-private-email-configuration-for-mail-clients-and-mobile-devices/",
+    "usernameForm": "Hele adressen din på ditt eget domene, for eksempel you@yourdomain.com. Namecheaps veiledning oppgir e-postadressen som brukernavn.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Koble Namecheap Private Email til Claude (og enhver AI)",
-    "description": "Koble Namecheap Private Email til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med postkassepassordet ditt. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+    "title": "Koble Namecheap Private Email til Claude og MCP",
+    "description": "Koble Namecheap Private Email til Claude og enhver MCP-klient via IMAP på mail.privateemail.com:993. Bruker postkassepassordet, aldri Namecheap-innloggingen."
   },
   "hero": {
     "eyebrow": "Namecheap Private Email + AI",
@@ -15,7 +27,7 @@
   },
   "method": {
     "title": "Slik kobler Namecheap Private Email seg til: IMAP og postkassepassordet ditt",
-    "body": "Namecheap Private Email kobles til via IMAP/SMTP med <b>postkassepassordet</b>, det som ble satt da postkassen ble opprettet, ikke Namecheap-kontopassordet ditt. Begge vertene er <code>mail.privateemail.com</code> uansett domene. Har du ikke passordet, nullstiller du det i Private Email-kontrollpanelet."
+    "body": "Namecheap Private Email kobles til via IMAP/SMTP med <b>postkassepassordet</b>, det som ble satt da postkassen ble opprettet, ikke passordet til Namecheap-kontoen din. Begge vertene er <code>mail.privateemail.com</code> uansett domene. Har du ikke passordet, tilbakestiller du det fra kontrollpanelet for Private Email."
   },
   "setup": [
     {
@@ -23,8 +35,8 @@
       "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
-      "h": "Finn passordet til Private Email-postkassen",
-      "p": "Bruk passordet til selve postkassen, ikke Namecheap-kontopassordet. Du kan når som helst nullstille det i Private Email-kontrollpanelet."
+      "h": "Finn postkassepassordet for Private Email",
+      "p": "Bruk passordet til selve postkassen, ikke passordet til Namecheap-kontoen. Du kan når som helst tilbakestille det fra kontrollpanelet for Private Email."
     },
     {
       "h": "Lim det inn i mcpemails",
@@ -33,6 +45,55 @@
     {
       "h": "Lim MCP-URL-en inn i AI-en",
       "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Namecheap-kontoinnloggingen er ikke postkassepassordet, og blir det aldri",
+      "p": "Påloggingen du bruker på namecheap.com for å fornye domener, har ingenting med e-post å gjøre. Namecheaps egen konfigurasjonsveiledning ber om <b>Master or Application password for this email account</b>, altså passordet som ble satt på postkassen da den ble opprettet, administrert fra Private Email-delen av dashbordet eller fra webmailen på privateemail.com. Dette lurer nesten alle som kjøper domene og postkasse i samme bestilling, fordi begge påloggingene hører til samme kjøp og den ene til og med er den samme adressen."
+    },
+    {
+      "h": "Tofaktorautentisering på Private Email gjelder bare webmail, og den stenger ute alle e-postklienter",
+      "p": "Namecheap dokumenterer 2FA for Private Email som en beskyttelse av webgrensesnittet. I det øyeblikket du slår det på, slutter det vanlige postkassepassordet å autentisere via IMAP og SMTP, og avvisningen kommer som en vanlig innloggingsfeil uten noen omtale av den andre faktoren. Løsningen er et <b>programspesifikt passord</b>: i Private Email-webmailen åpner du <b>Settings</b>, så <b>Security</b>, så <b>Application Passwords</b>, velger klienttype fra nedtrekkslisten og genererer et. Lim det inn i mcpemails i stedet for postkassepassordet. Har du aldri slått på 2FA, finnes det ikke noe programpassord, og du trenger heller ikke et."
+    },
+    {
+      "h": "Verten er mail.privateemail.com for alle kunder, og Namecheap sier den ikke skal endres",
+      "p": "I motsetning til en postkasse på et webhotell ligger ikke Private Email på en server oppkalt etter domenet ditt. Namecheaps konfigurasjonsartikkel oppgir <code>mail.privateemail.com</code> for både innkommende og utgående og legger til at den ikke skal endres. Folk prøver ofte <code>mail.theirdomain.com</code>, som enten er død eller peker på en Namecheap cPanel-hostingkonto med en helt annen postkasse. Et Namecheap-domene betyr heller ikke at du har en Namecheap-postkasse: Private Email er et separat abonnement, og har du aldri kjøpt det, finnes det ingenting på den adressen å koble til."
+    },
+    {
+      "h": "Serveren er Dovecot, og den mangler MOVE, UIDPLUS og SPECIAL-USE",
+      "p": "Hilsenen identifiserer Dovecot og annonserer <code>AUTH=PLAIN</code>, <code>AUTH=LOGIN</code>, <code>SASL-IR</code>, <code>IDLE</code> og <code>LITERAL+</code>, men ikke MOVE, UIDPLUS eller SPECIAL-USE. I praksis betyr det tre ting. Flytting av en melding utføres som kopi, flagg og expunge i stedet for én atomisk kommando. Identifikatoren til kopien rapporteres ikke tilbake og må finnes ved å søke i målmappen. Og Sent, Drafts, Trash og Junk gjenkjennes på navn i stedet for et rolleflagg, så en postkasse med omdøpte mapper trenger at mappen oppgis eksplisitt."
+    }
+  ],
+  "limits": [
+    "Fordi serveren ikke annonserer MOVE, er en flytting ikke atomisk. Hvis en tilkobling brytes underveis, kan en melding kortvarig finnes i begge mapper.",
+    "Private Email er et abonnement separat fra domenet. Å eie et Namecheap-domene betyr ikke at du har en Namecheap-postkasse å koble til.",
+    "mcpemails kobler til postkassen. Aliaser, videresendinger, catch-all-regler og oppretting av postkasser blir værende i kontrollpanelet for Namecheap Private Email."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Namecheap Private Email?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Namecheap-kobling. Kobler du en MCP-server som mcpemails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter i stedet for bare én."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Namecheap Private Email?",
+      "a": "Begge er mail.privateemail.com. IMAP er port 993 med SSL, og SMTP er port 465 med SSL, med 143 og 587 dokumentert som STARTTLS-alternativer. Brukernavnet er hele e-postadressen din, og passordet er postkassepassordet. Namecheap sier at vertsnavnet ikke skal endres, og det ble bekreftet via en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Hvorfor blir Namecheap Private Email-passordet mitt avvist?",
+      "a": "De to vanlige årsakene er at du bruker Namecheap-kontoinnloggingen i stedet for postkassepassordet, og at tofaktorautentisering er slått på for postkassen. Med 2FA på godtar Private Email bare et programspesifikt passord via IMAP, og feilen ser nøyaktig ut som et feil passord. Sjekk begge før du tilbakestiller noe."
+    },
+    {
+      "q": "Hvordan oppretter jeg et programpassord hos Namecheap?",
+      "a": "Logg inn på Private Email-webmailen på privateemail.com, åpne Settings, så Security, så Application Passwords. Velg program- eller klienttype fra nedtrekkslisten og generer et passord. Kopier det med en gang og lim det inn i mcpemails i stedet for postkassepassordet. Du trenger bare et hvis tofaktorautentisering er slått på."
+    },
+    {
+      "q": "Kan jeg bruke mail.mydomain.com i stedet for mail.privateemail.com?",
+      "a": "Nei. Private Email-postkasser ligger ikke på en server oppkalt etter domenet ditt, og Namecheaps egen dokumentasjon sier at vertsnavnet ikke skal endres. Hvis mail.yourdomain.com i det hele tatt slås opp, peker det sannsynligvis på Namecheap cPanel-hosting, som har en annen postkasse med et annet passord."
+    },
+    {
+      "q": "Lagres Namecheap-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Private Email via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
     }
   ],
   "ctaBand": {

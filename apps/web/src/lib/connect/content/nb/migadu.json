@@ -1,7 +1,19 @@
 {
+  "_sources": [
+    "https://admin.migadu.com/mail/config-v1.1.xml",
+    "https://migadu.com/guides/identities/",
+    "https://migadu.com/api/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://migadu.com/guides/identities/",
+    "usernameForm": "Hele adressen på ditt eget domene, for eksempel you@yourdomain.com. Migadus autoconfig oppgir hele adressen som brukernavn for både IMAP og SMTP.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Koble Migadu til Claude (og enhver AI)",
-    "description": "Koble Migadu til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med postkassepassordet ditt. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+    "title": "Koble Migadu til Claude, Cursor og MCP-klienter",
+    "description": "Koble Migadu til Claude, Cursor og enhver MCP-klient via IMAP på imap.migadu.com:993 med postkassepassordet fra adminområdet, ikke kontoinnloggingen."
   },
   "hero": {
     "eyebrow": "Migadu + AI",
@@ -15,7 +27,7 @@
   },
   "method": {
     "title": "Slik kobler Migadu seg til: IMAP og postkassepassordet ditt",
-    "body": "Migadu kobles til via IMAP/SMTP med <b>postkassepassordet</b>, som ikke er passordet til Migadu-administratorkontoen din. Sett eller nullstill det i Migadu-adminområdet under Mailboxes, og lim det inn i mcpemails sammen med adressen din. Alle Migadu-postkasser bruker de samme to vertene uansett domene, så det er ingenting å slå opp."
+    "body": "Migadu kobles til via IMAP/SMTP med <b>postkassepassordet</b>, som ikke er passordet til Migadu-adminkontoen din. Sett eller tilbakestill det i Migadus adminområde under Mailboxes, og lim det så inn i mcpemails sammen med adressen din. Alle Migadu-postkasser bruker de samme to vertene uansett domene, så det er ingenting å slå opp."
   },
   "setup": [
     {
@@ -24,7 +36,7 @@
     },
     {
       "h": "Sett et postkassepassord i Migadu",
-      "p": "I Migadu-adminområdet åpner du Mailboxes, velger postkassen og setter passordet. E-postklienter autentiserer med det passordet; admin-innloggingen din fungerer ikke."
+      "p": "I Migadus adminområde åpner du Mailboxes, velger postkassen og setter passordet. E-postklienter autentiserer med det passordet; admininnloggingen din fungerer ikke."
     },
     {
       "h": "Lim det inn i mcpemails",
@@ -33,6 +45,55 @@
     {
       "h": "Lim MCP-URL-en inn i AI-en",
       "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Postkassepassordet og Migadu-kontopassordet er to forskjellige påloggingsdetaljer",
+      "p": "Migadu-kontoen din, den du logger inn med på admin.migadu.com, styrer domener, postkasser, videresendinger og fakturering. Den autentiserer ikke e-post. Hver postkasse har sitt eget passord, satt på selve postkassen i adminområdet under <b>Mailboxes</b>, og det er den eneste påloggingen <code>imap.migadu.com</code> godtar. Det er lett å blande dem, fordi begge innloggingene ser ut som en e-postadresse på ditt eget domene. Hvis en klient blir avvist, åpner du postkassen i adminområdet og setter et nytt passord i stedet for å skrive inn kontopassordet på nytt."
+    },
+    {
+      "h": "Et alias har ikke passord, så du kan ikke logge inn som et alias",
+      "p": "Migadu skiller mellom postkasser, som holder e-post og har påloggingsdetaljer, og aliaser, som bare videresender. Et alias har ingenting å autentisere med, så en klient som peker mot en aliasadresse feiler uansett hvilket passord du skriver. Migadus løsning er <b>identiteter</b>: i adminområdet åpner du postkassen og legger til en identitet for adressen med eget passord. Identiteter kan begrenses til bestemte tjenester som POP, IMAP og ManageSieve, noe som gjør dem til det nærmeste Migadu har et programspesifikt passord. Å gi en AI-agent en identitet begrenset til IMAP, i stedet for selve postkassepassordet, er det ryddigste oppsettet, og den kan trekkes tilbake for seg selv."
+    },
+    {
+      "h": "Migadus IMAP-server er IMAP4rev2 bak en proxy, og den annonserer uvanlig lite",
+      "p": "Hilsenen er <code>IMAP4rev2 IMAP4rev1 SASL-IR LITERAL- AUTH=PLAIN</code> etterfulgt av <code>Proxy Ready</code>, og den korte listen er hele historien. Migadu tilbyr <b>AUTH=PLAIN</b> og ingenting annet, uten <code>AUTH=LOGIN</code>, så klientbiblioteker som er hardkodet til LOGIN-mekanismen, noe som er vanlig i verktøy skrevet mot Exchange, feiler på autentiseringstrinnet i stedet for å gi en nyttig feilmelding. SMTP-siden godtar både PLAIN og LOGIN, så de to halvdelene av én konto kan oppføre seg ulikt i samme klient. Migadu er også en av svært få verter som annonserer IMAP4rev2, som er nyere enn de fleste klientbiblioteker forventer. SASL-IR er til stede, så autentisering i ett steg fungerer som normalt."
+    },
+    {
+      "h": "Ingen MOVE, ingen UIDPLUS, ingen SPECIAL-USE og ingen IDLE",
+      "p": "Migadus annonserte funksjonssett mangler fire utvidelser som de fleste verter har. Uten <b>MOVE</b> utføres flytting av en melding som en kopi, en flaggoppdatering og en expunge i stedet for én atomisk kommando. Uten <b>UIDPLUS</b> rapporterer ikke serveren den nye identifikatoren til en kopiert melding, så den må finnes ved å søke i målmappen. Uten <b>SPECIAL-USE</b> matches Sent, Drafts, Trash og Archive etter navn i stedet for rolle, så en postkasse med omdøpte mapper trenger at mappen oppgis eksplisitt. Uten <b>IDLE</b> finnes det ingen push-kanal i det hele tatt. Ingenting av dette hindrer tilkoblingen i å fungere, og mcpemails leser ved behov i stedet for å vente på push, men det forklarer oppførsel du ikke ser hos andre leverandører."
+    }
+  ],
+  "limits": [
+    "Fordi serveren ikke annonserer MOVE, er en flytting ikke atomisk. Hvis en tilkobling brytes underveis, kan en melding kortvarig finnes i begge mapper.",
+    "Mapper matches etter navn i stedet for rolle, så en postkasse med omdøpte eller ikke-engelske mappenavn kan trenge at målmappen oppgis eksplisitt.",
+    "mcpemails kobler til en postkasse. Domener, videresendinger, omskrivinger og Migadus egne sende- og mottakskvoter blir værende i Migadus adminområde."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Migadu?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Migadu-kobling. Kobler du en MCP-server som mcpemails til Migadu-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og fordi tilkoblingen er vanlig IMAP, er samme postkasse også tilgjengelig i Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Migadu?",
+      "a": "IMAP er imap.migadu.com på port 993 med implisitt TLS, og SMTP er smtp.migadu.com på port 465, også med implisitt TLS. Migadus egen autoconfig-fil angir hele e-postadressen som brukernavn for begge. Alle Migadu-postkasser bruker disse to vertene uansett hvilket domene adressen din slutter på, og begge ble bekreftet via en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Hvorfor blir Migadu-passordet mitt avvist?",
+      "a": "Som regel fordi du skrev Migadu-kontopassordet i stedet for postkassepassordet. Det er separate påloggingsdetaljer, og begge ser ut som en e-postadresse, så feilen er vanlig. Den andre hyppige årsaken er å sikte mot et alias i stedet for en postkasse: et alias har ikke eget passord og kan ikke logges inn på. Sett et postkassepassord i adminområdet og bruk det."
+    },
+    {
+      "q": "Har Migadu app-passord?",
+      "a": "Ikke under det navnet, men identiteter gjør samme jobb. I adminområdet åpner du postkassen og oppretter en identitet for den med eget passord, og begrenser så identiteten til IMAP. Klienten din autentiserer som identiteten, og du kan trekke den tilbake senere uten å endre postkassepassordet eller forstyrre noe annet som bruker postkassen."
+    },
+    {
+      "q": "Kan jeg koble til et Migadu-alias eller sende fra et?",
+      "a": "Du kan ikke logge inn som et alias, fordi det ikke har påloggingsdetaljer. For å sende fra en aliasadresse oppretter du enten en identitet for den med eget passord, eller slår på wildcard-avsenderinnstillingen på postkassen, slik at postkassens påloggingsdetaljer får sende med aliaset i From-headeren."
+    },
+    {
+      "q": "Lagres Migadu-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Migadu via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
     }
   ],
   "ctaBand": {

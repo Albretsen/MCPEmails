@@ -1,42 +1,97 @@
 {
+  "_sources": [
+    "https://support.gmx.com/pop-imap/toggle.html",
+    "https://support.gmx.com/pop-imap/imap/index.html"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "GMX-passord",
+    "helpUrl": "https://support.gmx.com/pop-imap/toggle.html",
+    "usernameForm": "Hele GMX Mail-adressen din, inkludert domenet: navn@gmx.net, navn@gmx.com, navn@gmx.de eller navn@gmx.at.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Koble GMX til Claude (og enhver AI)",
-    "description": "Koble GMX til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med kontopassordet ditt. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+    "title": "Koble GMX til Claude, Cursor og MCP-klienter",
+    "description": "Koble GMX Mail til Claude, Cursor og enhver MCP-klient over IMAP på imap.gmx.net:993. POP3 og IMAP er av som standard i GMX og må slås på først."
   },
   "hero": {
     "eyebrow": "GMX + AI",
     "titleLine1": "Koble GMX til Claude,",
-    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
-    "lead": "Gi AI-agenten din en ekte GMX-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og kontopassordet ditt, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte GMX-innboks på få minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og kontopassordet ditt, og bruk den samme innboksen i alle MCP-klienter, ikke bare én.",
     "meta0": "1 innboks gratis, for alltid",
-    "meta1": "Kontopassordet ditt, ingen OAuth-oppsett",
+    "meta1": "Kontopassordet ditt, uten OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude når ikke GMX på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med kontopassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    "answer": "Claude kan ikke nå GMX på egen hånd. mcpemails er en driftet MCP-server som kobler den til over IMAP med kontopassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
   },
   "method": {
-    "title": "Slik kobler GMX seg til: IMAP og kontopassordet ditt",
-    "body": "GMX kobles til via IMAP/SMTP, men <b>POP3- og IMAP-tilgang er slått av som standard</b>. Slå det på i GMX under E-postinnstillinger, POP3/IMAP-henting, og koble så til med GMX-adressen og passordet ditt. Hvis GMX ber deg opprette et programspesifikt passord, bruker du det i stedet. Tyske kontoer bruker .net-vertene, <code>imap.gmx.net</code> og <code>mail.gmx.net</code>."
+    "title": "Slik kobles GMX til: IMAP og kontopassordet ditt",
+    "body": "GMX kobles til over IMAP/SMTP, men <b>POP3- og IMAP-tilgang er slått av som standard</b>. Slå det på i GMX under E-mail settings, POP3/IMAP retrieval, og koble deretter til med GMX-adressen og passordet ditt. Hvis GMX ber deg lage et applikasjonsspesifikt passord, bruker du det i stedet. Tyske kontoer bruker .net-vertene, <code>imap.gmx.net</code> og <code>mail.gmx.net</code>."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg hos mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
       "h": "Slå på IMAP-tilgang i GMX",
-      "p": "I GMX åpner du E-postinnstillinger, POP3/IMAP-henting, og tillater POP3- og IMAP-tilgang. GMX slår det av igjen hvis kontoen står ubrukt lenge."
+      "p": "Åpne E-mail settings, POP3/IMAP retrieval i GMX, og tillat POP3- og IMAP-tilgang. GMX slår det av igjen hvis kontoen står ubrukt lenge."
     },
     {
       "h": "Lim det inn i mcpemails",
-      "p": "Velg IMAP / SMTP, legg til GMX-adressen din, vertene under og passordet for å koble til innboksen trygt."
+      "p": "Velg IMAP / SMTP, legg inn GMX-adressen din, vertene nedenfor og passordet for å koble til innboksen på en sikker måte."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
       "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
     }
   ],
+  "gotchas": [
+    {
+      "h": "GMX slår av POP3 og IMAP som standard, og slår dem av igjen senere",
+      "p": "Ekstern tilgang til en GMX Mail-konto er deaktivert til du slår den på: åpne fanen Email, deretter Settings, deretter POP3 & IMAP, huk av for <b>Enable access to this account via POP3 and IMAP</b> og lagre. GMX dokumenterer noe folk sjelden legger merke til i farten: av sikkerhetshensyn slår tjenesten tillatelsen automatisk av igjen hvis postkassen går lenge uten POP3- eller IMAP-aktivitet. En tilkobling som har fungert i månedsvis, kan dermed stoppe med en innloggingsfeil uten at noe som helst er endret på din side. Innstillingen finnes heller ikke i GMX-mobilappen, så du må gjøre dette i en nettleser."
+    },
+    {
+      "h": "Utgående server er mail.gmx.net, ikke smtp.gmx.net",
+      "p": "GMX bryter navnekonvensjonen nesten alle andre leverandører følger. Innkommende er <code>imap.gmx.net</code>, men utgående innsending er <code>mail.gmx.net</code> på port 465. En gjettet <code>smtp.gmx.net</code> svarer ikke, og klienter som fyller inn vertsnavn etter mønster, tar feil hver gang. Begge navnene på denne siden ble bekreftet ved å åpne en direkte TLS-tilkobling til dem, og sertifikatet GMX presenterer, er utstedt for <code>mail.gmx.net</code>."
+    },
+    {
+      "h": "GMX godtar en melding på 135 MB som mottakeren deretter avviser",
+      "p": "Innsendingsserveren til GMX Mail oppgir en maksimal meldingsstørrelse på omtrent 135 MB, som med god margin er den største blant alle leverandørene på dette nettstedet. Det er et tak for hva GMX tar imot fra deg, ikke et løfte om levering. Mottakerserveren har sin egen grense, og de fleste ligger et sted mellom 10 MB og 50 MB, så et stort vedlegg som GMX villig godtar, kan fortsatt returneres fra den andre enden noen minutter senere. Hvis en agent skal sende noe stort, del heller en lenke."
+    },
+    {
+      "h": "Når du slår på tofaktorautentisering, endres hvilket passord klienten trenger",
+      "p": "Med tofaktorautentisering av fungerer det vanlige GMX-passordet ditt i en e-postklient så snart avkrysningsboksen for POP3 og IMAP er huket av. Hvis du har slått på tofaktorautentisering og GMX ber deg om et applikasjonsspesifikt passord, bruker du det i stedet: da slutter det vanlige passordet å fungere i eksterne programmer, og feilen ser ut som en skrivefeil og ikke som en endret policy. IMAP hos GMX tilbyr bare mekanismene <code>PLAIN</code> og <code>LOGIN</code>, uten noen OAuth-vei, så påloggingsopplysningen er alltid et passord av den ene eller den andre typen."
+    }
+  ],
+  "limits": [
+    "GMX kan deaktivere POP3 og IMAP igjen etter en lang periode uten protokollaktivitet, noe som kobler fra postkassen til du slår det på igjen i nettgrensesnittet.",
+    "Det finnes ikke noe OAuth-alternativ for GMX Mail, så påloggingsopplysningen som lagres, er et passord. Endrer du GMX-passordet ditt, kobles postkassen fra til du legger inn det nye."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med GMX Mail?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd GMX-kobling. Kobler du en MCP-server som mcpemails til GMX-postkassen din over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere den, og den samme tilkoblingen fungerer fra Cursor, ChatGPT og andre MCP-klienter. Du må slå på POP3- og IMAP-tilgang i GMX først."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for GMX Mail?",
+      "a": "IMAP er imap.gmx.net på port 993 med implisitt TLS. Utgående e-post går til mail.gmx.net på port 465, også med implisitt TLS, og ikke til en vert som heter smtp.gmx.net, som ikke finnes. Brukernavnet er hele GMX-adressen din. Begge vertene ble bekreftet med en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvordan slår jeg på IMAP i GMX?",
+      "a": "Logg inn på GMX i en nettleser, åpne fanen Email, klikk Settings og deretter POP3 & IMAP, og huk av boksen som gir tilgang til kontoen via POP3 og IMAP. Lagre. Valget finnes ikke i GMX-mobilappen. Før dette er på, avviser GMX alle innlogginger fra e-postklienter, og feilen ser nøyaktig ut som et feil passord."
+    },
+    {
+      "q": "Hvorfor sluttet GMX-tilkoblingen min å virke av seg selv?",
+      "a": "GMX dokumenterer at tjenesten av sikkerhetshensyn deaktiverer POP3- og IMAP-tilgang automatisk når en postkasse går lenge uten å bruke disse protokollene. Ingenting på din side trenger å endres for at det skal skje. Logg inn via en nettleser, huk av POP3- og IMAP-boksen i Settings igjen, så fungerer tilkoblingen igjen med det samme passordet."
+    },
+    {
+      "q": "Lagres GMX-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra GMX over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold beholdes ikke. Slår du av POP3- og IMAP-tilgangen i GMX igjen, brytes tilkoblingen umiddelbart i deres ende."
+    }
+  ],
   "ctaBand": {
     "title": "Gi AI-en din en GMX-innboks",
-    "sub": "Koble til GMX på minutter. Én innboks gratis for alltid, uten kort."
+    "sub": "Koble til GMX på få minutter. Én innboks gratis for alltid, uten kort."
   }
 }

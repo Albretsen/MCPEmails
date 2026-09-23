@@ -1,42 +1,103 @@
 {
+  "_sources": [
+    "https://www.ionos.com/help/email/general-topics/ionos-mail-server-details-for-imap-pop3-and-smtp/",
+    "https://www.ionos.com/help/email/other-email-programs/setting-up-an-ionos-email-account-in-apple-mail/",
+    "https://www.ionos.com/help/office/setting-up-microsoft-365/migrating-emails-from-11-ionos-mail-accounts-to-office-365/",
+    "https://www.ionos.co.uk/help/email/mail-basic/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "E-postpassord",
+    "helpUrl": "https://www.ionos.com/help/email/general-topics/ionos-mail-server-details-for-imap-pop3-and-smtp/",
+    "usernameForm": "Hele e-postadressen, for eksempel john.doe@example.com. IONOS gir hver adresse sitt eget passord.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Koble IONOS til Claude (og enhver AI)",
-    "description": "Koble IONOS til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med postkassepassordet ditt. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+    "title": "Koble IONOS til Claude, Cursor og MCP-klienter",
+    "description": "Koble IONOS-e-post til Claude, Cursor og enhver MCP-klient over IMAP på imap.ionos.com:993. Hver adresse har sitt eget passord, atskilt fra IONOS-innloggingen."
   },
   "hero": {
     "eyebrow": "IONOS + AI",
     "titleLine1": "Koble IONOS til Claude,",
-    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
-    "lead": "Gi AI-agenten din en ekte IONOS-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "titleLine2": "og Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte IONOS-innboks på få minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk den samme innboksen i alle MCP-klienter, ikke bare én.",
     "meta0": "1 innboks gratis, for alltid",
-    "meta1": "Postkassepassordet ditt, ingen OAuth-oppsett",
+    "meta1": "Postkassepassordet ditt, uten OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude når ikke IONOS på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    "answer": "Claude kan ikke nå IONOS på egen hånd. mcpemails er en driftet MCP-server som kobler til over IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
   },
   "method": {
-    "title": "Slik kobler IONOS seg til: IMAP og postkassepassordet ditt",
-    "body": "IONOS kobles til via IMAP/SMTP med <b>e-postpassordet</b> du setter i IONOS-kontrollpanelet under E-post, som er noe annet enn IONOS-innloggingen din. IONOS svarer på begge standardtransportene, 993 med TLS og 143 med STARTTLS, og å gjette mellom dem er den vanligste måten en IONOS-tilkobling feiler på. mcpemails fyller inn et par som fungerer og prøver det andre hvis det første ikke svarer, så en avvist innlogging her handler faktisk om passordet."
+    "title": "Slik kobles IONOS til: IMAP og postkassepassordet ditt",
+    "body": "IONOS kobles til over IMAP/SMTP med <b>e-postpassordet</b> du setter i IONOS-kontrollpanelet under Email, som er atskilt fra IONOS-innloggingen din. IONOS svarer på begge standardtransportene, 993 med TLS og 143 med STARTTLS, og å gjette mellom dem er den vanligste måten en IONOS-tilkobling feiler på. mcpemails fyller inn et par som fungerer og prøver det andre hvis det første ikke svarer, så en avvist innlogging her skyldes virkelig passordet."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg hos mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
-      "h": "Hent IONOS-postkassepassordet",
-      "p": "I IONOS-kontrollpanelet åpner du E-post, velger adressen og setter eller nullstiller passordet. Det er ikke passordet du logger inn på IONOS med."
+      "h": "Skaff postkassepassordet ditt hos IONOS",
+      "p": "I IONOS-kontrollpanelet åpner du Email, velger adressen og setter eller tilbakestiller passordet for den. Det er ikke passordet du bruker for å logge inn på selve IONOS."
     },
     {
       "h": "Lim det inn i mcpemails",
-      "p": "Velg IMAP / SMTP, legg til IONOS-adressen din, vertene under og passordet for å koble til innboksen trygt."
+      "p": "Velg IMAP / SMTP, og legg inn IONOS-adressen din, vertene nedenfor og passordet for å koble til innboksen på en sikker måte."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
       "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
     }
   ],
+  "gotchas": [
+    {
+      "h": "Hos IONOS er porten nesten aldri årsaken, og å bytte porter sløser bort dager",
+      "p": "Dette er det mest nyttige vi kan fortelle deg om IONOS, og det kommer fra våre egne tilkoblingslogger, ikke fra noen håndbok. Ett arbeidsområde gjorde tolv mislykkede forsøk på rad mot <code>imap.ionos.com</code>, vekselvis på 993 med implisitt TLS og 143 med STARTTLS, i den tro at én av de to transportene var feil. IONOS svarer på begge. Passordet var problemet hele tiden. IONOS dokumenterer 993 for IMAP og 465 for SMTP, og tilbyr 587 med STARTTLS som et alternativ for utgående e-post på nettverk som blokkerer 465, så transporten er genuint fleksibel og genuint ikke det som avviser innloggingen din. Hvis serveren svarer og deretter avviser deg, behandler du det som et problem med påloggingsopplysningene og går rett til kontrollpanelet."
+    },
+    {
+      "h": "Hver IONOS-adresse har sitt eget passord, og det er ikke IONOS-innloggingen din",
+      "p": "IONOS sier rett ut at hver e-postadresse har sitt eget passord. Påloggingsopplysningene du bruker for å logge inn på selve IONOS, som svært ofte også er en e-postadresse, gir tilgang til kontrollpanelet og ingenting annet. Sett eller tilbakestill postkassepassordet i IONOS-kontrollpanelet under <b>Email</b> ved å velge adressen og bruke passordvalget på den. Fordi begge ser helt like ut i et innloggingsskjema, er dette den aller vanligste feilen ved IONOS-tilkoblinger, og det er nettopp denne feilen portbyttingen ovenfor ble forvekslet med."
+    },
+    {
+      "h": "Microsoft 365 solgt av IONOS er en Microsoft-postkasse, ikke en IONOS-postkasse",
+      "p": "IONOS videreselger Microsoft 365 ved siden av sine egne produkter Mail Basic og Mail Business, og mange kunder som tror de har IONOS-e-post, har egentlig en Microsoft-tenant med en faktura fra IONOS. Ingenting på <code>imap.ionos.com</code> gjelder for de postkassene: de ligger på Microsofts servere og administreres fra Microsoft 365 Admin Center, ikke fra IONOS-kontrollpanelet. Microsofts standard tenant-policy hindrer en vanlig sluttbruker i å gi samtykke til lese- og skrivetilgang til e-post for tredjeparter, og det bestemmes av Microsoft og av tenant-administratoren din. Vi hevder ikke å koble dem til. Kjennetegnet er hvor webmailen din tar deg: Outlook på nettet betyr Microsoft."
+    },
+    {
+      "h": "Alle IONOS-landmerker, og alle eldre 1&1-adresser, bruker de samme to vertene",
+      "p": "IONOS driver separate nettbutikker på ionos.de, ionos.co.uk, ionos.fr, ionos.es, ionos.it og ionos.com, og de finnes av hensyn til fakturering og markedsføring, ikke fordi e-postplattformen er regional. IMAP er <code>imap.ionos.com</code> og SMTP er <code>smtp.ionos.com</code>, uansett hvilken nettbutikk som solgte deg postkassen. Veiledninger fra tredjeparter som fortsatt insisterer på regionspesifikke navn bygget på det gamle 1&1-merket, er eldre enn navneskiftet, og følger du dem, havner du på et vertsnavn som ikke svarer. Det finnes ingen regional vert å lete etter."
+    }
+  ],
+  "limits": [
+    "Microsoft 365-postkasser kjøpt gjennom IONOS kan ikke kobles til. Microsofts standard tenant-policy blokkerer sluttbrukersamtykke til e-posttilgang for tredjeparter.",
+    "mcpemails kobler til en postkasse. IONOS-alias, videresendinger, catch-all-regler og spaminnstillinger blir værende i IONOS-kontrollpanelet og er ikke synlige for AI-klienten din."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med IONOS-e-post?",
+      "a": "Det fungerer med en IONOS-postkasse, den typen som betjenes av imap.ionos.com, når en MCP-server som mcpemails er koblet til den over IMAP. Claude har ingen innebygd IONOS-kobling. Det fungerer ikke med en Microsoft 365-postkasse kjøpt gjennom IONOS, fordi Microsofts standard tenant-policy blokkerer samtykke til e-posttilgang for tredjeparter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for IONOS?",
+      "a": "IMAP er imap.ionos.com på port 993 med SSL/TLS, og SMTP er smtp.ionos.com på port 465, også med SSL/TLS. IONOS dokumenterer port 587 med STARTTLS som et alternativ for utgående e-post hvis nettverket ditt blokkerer 465. Brukernavnet er hele e-postadressen din. Begge vertene ble bekreftet via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Skal jeg bruke port 993 eller 143 hos IONOS?",
+      "a": "Bruk 993 med implisitt TLS, som er det IONOS dokumenterer. Grunnen til at spørsmålet dukker opp så ofte, er at klienter foreslår 143 automatisk og IONOS svarer der også, så folk konkluderer med at porten er variabelen når en innlogging avvises. Det er den ikke. Hvis serveren svarer og avviser påloggingsopplysningene, er det passordet som er feil."
+    },
+    {
+      "q": "Hvorfor blir IONOS-e-postpassordet mitt avvist?",
+      "a": "Fordi IONOS gir hver e-postadresse sitt eget passord, og du bruker sannsynligvis IONOS-kontoinnloggingen i stedet. Åpne IONOS-kontrollpanelet, gå til Email, velg adressen og sett et nytt passord for den, og bruk så det. Hvis adressen er migrert til Microsoft 365, finnes den ikke lenger på IONOS sine e-postservere i det hele tatt."
+    },
+    {
+      "q": "Bruker IONOS-kontoer i Storbritannia, Tyskland og Frankrike forskjellige servere?",
+      "a": "Nei. De regionale IONOS-nettbutikkene deler én e-postplattform, og hver postkasse bruker imap.ionos.com og smtp.ionos.com uavhengig av hvilket lands nettsted som solgte den. Veiledninger som viser regionspesifikke vertsnavn bygget på det gamle 1&1-merket, er utdaterte, og de navnene vil ikke koble til."
+    },
+    {
+      "q": "Lagres IONOS-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra IONOS over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke beholdt."
+    }
+  ],
   "ctaBand": {
     "title": "Gi AI-en din en IONOS-innboks",
-    "sub": "Koble til IONOS på minutter. Én innboks gratis for alltid, uten kort."
+    "sub": "Koble til IONOS på få minutter. Én innboks gratis for alltid, uten kort."
   }
 }

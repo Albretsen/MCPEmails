@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://support.loopia.com/wiki/email-servers/",
+    "https://support.loopia.se/wiki/administrera-e-postkonto/",
+    "https://support.loopia.se/wiki/skapa-en-e-postadress/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱账户密码",
+    "helpUrl": "https://support.loopia.se/wiki/administrera-e-postkonto/",
+    "usernameForm": "你的完整地址，包括域名：namn@dittdoman.se。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 Loopia 邮箱连接到 Claude 与 MCP 客户端",
+    "description": "通过 mailcluster.loopia.se:993 的 IMAP 将 Loopia 邮箱连接到 Claude、Cursor 及任意 MCP 客户端，所有域名共用一台服务器。1 个收件箱永久免费。"
+  },
+  "hero": {
+    "eyebrow": "Loopia 邮箱 + AI",
+    "titleLine1": "将 Loopia 邮箱连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Loopia 收件箱。使用在 Loopia Kundzon 中为该账户设置的密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行访问 Loopia 邮箱。mcpemails 是一个托管 MCP 服务器，通过 mailcluster.loopia.se 端口 993 的 IMAP 与之连接，使用你的完整邮箱地址和在 Loopia Kundzon 中为该账户设置的密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。Loopia 为所有客户使用同一个集群主机名，所以没有需要按域名查找的服务器，也没有需要生成的应用专用密码。1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "在 Loopia Kundzon 中设置的账户密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Loopia 如何连接：一台集群主机，IMAP 与 SMTP",
+    "body": "Loopia 在同一个主机名 <code>mailcluster.loopia.se</code> 上运行两种协议：端口 993 用于 IMAP（隐式 TLS），端口 465 用于 SMTP（同样是隐式 TLS）。无论地址属于哪个域名，这台主机都为所有 Loopia 客户服务。Loopia 的文档对用户名说得很直接：收信和发信两侧都始终是你的完整邮箱地址，例如 <code>namn@exempel.se</code>，而且发信需要认证。密码是在 Loopia Kundzon 中创建地址时设定的那个，Loopia 允许你在那里或在 <code>mailadmin.loopia.se</code> 修改它。没有应用专用密码，也没有按邮箱区分的 IMAP 开关。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "在 Kundzon 或 Mailadmin 中设置账户密码",
+      "p": "登录 Loopia Kundzon，打开你域名下的邮箱地址列表，点击该地址并选择 Edit。Password 旁会出现一个密码字段：输入新密码并保存。如果你在没有完整 Kundzon 访问权限的情况下管理邮箱，也可以在 mailadmin.loopia.se 进行同样的修改。"
+    },
+    {
+      "h": "粘贴到 mcpemails",
+      "p": "选择 IMAP / SMTP，输入完整地址，并粘贴账户密码。服务器 mailcluster.loopia.se 以及端口 993 和 465 已预填，并经实时 TLS 连接验证。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Loopia 上没有 mail.yourdomain.se",
+      "p": "Loopia 把所有客户的邮件都终结在一个集群上，主机名对所有人都是 <code>mailcluster.loopia.se</code>。为 cPanel 类主机编写的指南会让你使用 <code>mail.</code> 加你自己的域名，而在 Loopia，这个名称通常在 DNS 中根本不存在，或者指向的是你的网站主机而不是邮件服务。这种失败看起来像网络问题而不是配置错误，会把人引向错误的支持文章。"
+    },
+    {
+      "h": "邮箱密码在两个不同的地方管理",
+      "p": "Loopia 既在 Kundzon 中（与你的域名和发票放在一起）提供邮箱管理，也在单独的 <code>mailadmin.loopia.se</code> 提供，后者的存在是为了让别人在不持有账户登录的情况下管理邮箱。在任一处修改的密码都会作用于同一个邮箱。同时使用两个界面的团队，有时会在 Mailadmin 中重置了密码，然后纳闷为什么几个月前从 Kundzon 记下的密码不管用了。"
+    },
+    {
+      "h": "没有 MOVE 或 SPECIAL-USE，文件夹名称是瑞典语",
+      "p": "服务器不声明 MOVE 扩展，因此移动邮件以复制、更新标记和清除的方式完成，而不是一条原子命令；它也不支持 UIDPLUS，所以新的 UID 必须在目标文件夹中搜索才能找到。SPECIAL-USE 同样缺失，这意味着 Sent、Drafts、Trash 和 Junk 按名称识别。通过瑞典语界面创建的 Loopia 邮箱通常使用 Skickat、Utkast、Papperskorgen 和 Skräppost，所以如果代理找不到你的废纸篓文件夹，请明确写出它的名称。"
+    }
+  ],
+  "limits": [
+    "由于服务器不支持 MOVE，移动操作不是原子的。如果连接在操作中途断开，邮件可能会短暂地同时存在于两个文件夹中。",
+    "文件夹角色是根据名称推断的，所以文件夹被重命名过的邮箱，需要在请求中明确写出文件夹名称。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Loopia 邮箱吗？",
+      "a": "不能单独使用。Claude 没有内置的 Loopia 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向你的 Loopia 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Loopia 的 IMAP 和 SMTP 设置是什么？",
+      "a": "两者都使用 mailcluster.loopia.se。IMAP 为端口 993，使用隐式 TLS；SMTP 为端口 465，同样是隐式 TLS，发信需要认证。用户名始终是你的完整邮箱地址，密码是 Kundzon 中的账户密码。该服务器已经实时 TLS 连接确认。"
+    },
+    {
+      "q": "为什么我的 Loopia 密码被拒绝？",
+      "a": "通常是因为你输入的是 Loopia Kundzon 登录密码，而不是为单个邮箱账户设置的密码，或者是别人在 mailadmin.loopia.se 修改了密码。请在 Kundzon 中打开该地址，选择 Edit，设置一个新密码并使用它。同时检查用户名是否为完整地址。"
+    },
+    {
+      "q": "Loopia 需要应用专用密码吗？",
+      "a": "不需要。Loopia 不为邮件签发应用专用密码，在客户端登录之前也没有任何需要按邮箱开启的东西。账户密码可同时用于 IMAP 和 SMTP 认证。如果你不想复用现有密码，可以在 Kundzon 中为该地址设置一个新密码。"
+    },
+    {
+      "q": "我的 Loopia 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 Loopia 实时获取邮件，并交给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Loopia 收件箱",
+    "sub": "几分钟即可连接 Loopia 邮箱。1 个收件箱永久免费，无需信用卡。"
+  }
+}

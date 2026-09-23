@@ -1,7 +1,18 @@
 {
+  "_sources": [
+    "https://support.gmx.com/pop-imap/toggle.html",
+    "https://support.gmx.com/pop-imap/imap/index.html"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Mot de passe GMX",
+    "helpUrl": "https://support.gmx.com/pop-imap/toggle.html",
+    "usernameForm": "Votre adresse GMX Mail complète, domaine compris : name@gmx.net, name@gmx.com, name@gmx.de ou name@gmx.at.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Connecter GMX à Claude (et à toute IA)",
-    "description": "Connectez GMX à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de votre compte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+    "title": "Connecter GMX à Claude, Cursor et aux clients MCP",
+    "description": "Connectez GMX Mail à Claude, Cursor et tout client MCP en IMAP sur imap.gmx.net:993. POP3 et IMAP sont désactivés par défaut chez GMX et doivent d'abord être activés."
   },
   "hero": {
     "eyebrow": "GMX + IA",
@@ -9,13 +20,13 @@
     "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
     "lead": "Offrez à votre agent IA une vraie boîte GMX en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de votre compte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
     "meta0": "1 boîte gratuite, pour toujours",
-    "meta1": "Le mot de passe de votre compte, pas de configuration OAuth",
+    "meta1": "Le mot de passe de votre compte, sans configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude ne peut pas atteindre GMX tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de votre compte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+    "answer": "Claude ne peut pas accéder seul à GMX. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de votre compte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
   },
   "method": {
     "title": "Comment GMX se connecte : IMAP et le mot de passe de votre compte",
-    "body": "GMX se connecte via IMAP/SMTP, mais <b>l'accès POP3 et IMAP est désactivé par défaut</b>. Activez-le dans GMX, dans Paramètres e-mail, Récupération POP3/IMAP, puis connectez-vous avec votre adresse et votre mot de passe GMX. Si GMX vous demande de créer un mot de passe spécifique à l'application, utilisez celui-là. Les comptes allemands utilisent les serveurs .net, <code>imap.gmx.net</code> et <code>mail.gmx.net</code>."
+    "body": "GMX se connecte en IMAP/SMTP, mais <b>l'accès POP3 et IMAP est désactivé par défaut</b>. Activez-le dans GMX sous E-mail settings, POP3/IMAP retrieval, puis connectez-vous avec votre adresse et votre mot de passe GMX. Si GMX vous demande de créer un mot de passe spécifique à l'application, utilisez-le à la place. Les comptes allemands utilisent les serveurs .net, <code>imap.gmx.net</code> et <code>mail.gmx.net</code>."
   },
   "setup": [
     {
@@ -24,7 +35,7 @@
     },
     {
       "h": "Activez l'accès IMAP dans GMX",
-      "p": "Dans GMX, ouvrez Paramètres e-mail, Récupération POP3/IMAP, et autorisez POP3 et IMAP. GMX le désactive de nouveau si le compte reste longtemps inutilisé."
+      "p": "Dans GMX, ouvrez E-mail settings, POP3/IMAP retrieval, et autorisez l'accès POP3 et IMAP. GMX le désactive de nouveau si le compte reste longtemps inutilisé."
     },
     {
       "h": "Collez-le dans mcpemails",
@@ -32,11 +43,55 @@
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
-      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+      "p": "Ajoutez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "GMX désactive POP3 et IMAP par défaut, puis les désactive à nouveau plus tard",
+      "p": "L'accès externe à un compte GMX Mail reste désactivé tant que vous ne l'activez pas : ouvrez l'onglet Email, puis Settings, puis POP3 & IMAP, cochez <b>Enable access to this account via POP3 and IMAP</b> (autoriser l'accès à ce compte via POP3 et IMAP) et enregistrez. GMX documente un point que l'on remarque rarement au passage : il retire automatiquement cette autorisation, par sécurité, si la boîte reste longtemps sans aucune activité POP3 ou IMAP. Une connexion qui fonctionnait depuis des mois peut donc s'arrêter sur un échec de connexion alors que rien n'a changé de votre côté. Le réglage n'apparaît pas non plus dans l'application mobile GMX : il faut passer par un navigateur."
+    },
+    {
+      "h": "Le serveur sortant est mail.gmx.net, pas smtp.gmx.net",
+      "p": "GMX rompt avec la convention de nommage que suivent presque tous les autres fournisseurs. Le serveur entrant est <code>imap.gmx.net</code>, mais l'envoi passe par <code>mail.gmx.net</code> sur le port 465. Un <code>smtp.gmx.net</code> deviné ne répond pas, et les clients qui remplissent les noms d'hôte selon un modèle se trompent à chaque fois. Les deux noms de cette page ont été confirmés en ouvrant une vraie connexion TLS, et le certificat présenté par GMX est émis pour <code>mail.gmx.net</code>."
+    },
+    {
+      "h": "GMX accepte un message de 135 MB que le destinataire refusera ensuite",
+      "p": "Le serveur d'envoi de GMX Mail annonce une taille maximale de message d'environ 135 MB, de loin la plus élevée de tous les fournisseurs de ce site. C'est un plafond sur ce que GMX accepte de vous, pas une promesse de livraison. Le serveur de réception applique sa propre limite, et la plupart se situent entre 10 MB et 50 MB : une grosse pièce jointe que GMX accepte sans broncher peut donc être renvoyée quelques minutes plus tard par l'autre côté. Si un agent envoie quelque chose de volumineux, partagez plutôt un lien."
+    },
+    {
+      "h": "Activer l'authentification à deux facteurs change le mot de passe dont le client a besoin",
+      "p": "Sans authentification à deux facteurs, votre mot de passe GMX habituel fonctionne dans un client mail dès que la case POP3 et IMAP est cochée. Si l'authentification à deux facteurs est activée et que GMX vous demande un mot de passe spécifique à l'application, utilisez celui-ci : le mot de passe habituel cesse alors de fonctionner dans les programmes externes, et l'échec ressemble à une faute de frappe plutôt qu'à un changement de règle. L'IMAP de GMX ne propose que les mécanismes <code>PLAIN</code> et <code>LOGIN</code>, sans aucune voie OAuth : l'identifiant est donc toujours un mot de passe, de l'un ou l'autre type."
+    }
+  ],
+  "limits": [
+    "GMX peut désactiver de nouveau POP3 et IMAP après une longue période sans activité sur ces protocoles, ce qui déconnecte la boîte jusqu'à ce que vous les réactiviez dans l'interface web.",
+    "GMX Mail ne propose pas d'option OAuth : l'identifiant enregistré est donc un mot de passe. Changer votre mot de passe GMX déconnecte la boîte jusqu'à ce que vous saisissiez le nouveau."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec GMX Mail ?",
+      "a": "Pas seul. Claude n'a pas de connecteur GMX intégré. Connecter un serveur MCP comme mcpemails à votre boîte GMX en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP. Vous devez d'abord activer l'accès POP3 et IMAP dans GMX."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de GMX Mail ?",
+      "a": "IMAP : imap.gmx.net sur le port 993 en TLS implicite. Le courrier sortant passe par mail.gmx.net sur le port 465, également en TLS implicite, et non par un serveur appelé smtp.gmx.net, qui n'existe pas. L'identifiant est votre adresse GMX complète. Les deux serveurs ont été confirmés par une vraie connexion TLS à la date indiquée sur cette page."
+    },
+    {
+      "q": "Comment activer IMAP dans GMX ?",
+      "a": "Connectez-vous à GMX dans un navigateur, ouvrez l'onglet Email, cliquez sur Settings, puis POP3 & IMAP, et cochez la case qui autorise l'accès au compte via POP3 et IMAP. Enregistrez. L'option n'existe pas dans l'application mobile GMX. Tant qu'elle n'est pas activée, GMX refuse toute connexion depuis un client mail, et l'erreur ressemble exactement à un mauvais mot de passe."
+    },
+    {
+      "q": "Pourquoi ma connexion GMX a-t-elle cessé de fonctionner d'elle-même ?",
+      "a": "GMX indique qu'il désactive automatiquement l'accès POP3 et IMAP, pour des raisons de sécurité, quand une boîte reste longtemps sans utiliser ces protocoles. Rien n'a besoin de changer de votre côté pour que cela se produise. Connectez-vous dans un navigateur, cochez de nouveau la case POP3 et IMAP dans Settings, et la connexion refonctionne avec le même mot de passe."
+    },
+    {
+      "q": "Mon courrier GMX est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct chez GMX en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le contenu des messages n'est pas conservé. Désactiver de nouveau l'accès POP3 et IMAP dans GMX coupe immédiatement la connexion de leur côté."
     }
   ],
   "ctaBand": {
-    "title": "Offrez une boîte GMX à votre IA",
+    "title": "Donnez à votre IA une boîte GMX",
     "sub": "Connectez GMX en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
   }
 }

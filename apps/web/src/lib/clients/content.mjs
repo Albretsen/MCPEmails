@@ -11,10 +11,10 @@ import { CLIENTS, getClient, clientLocales } from './clients.mjs';
  *
  * Returns null rather than throwing when a locale has no translation, so
  * generateStaticParams and the hreflang alternates agree on exactly which
- * locale/client pairs exist. These pages ship in English only for now: an
- * hreflang pointing at a locale that does not exist is worse than no hreflang,
- * and a machine-translated page about Windsurf's config field name is the
- * scaled-content pattern search engines demote.
+ * locale/client pairs exist. Every client ships in all five locales. The
+ * config snippets, field names and URLs are kept byte-identical to English,
+ * which src/lib/connect/translation-parity.test.mjs enforces, so a translation
+ * can reword the prose but never the value a reader pastes.
  */
 export async function getClientContent(locale, slug) {
   if (!getClient(slug)) return null;

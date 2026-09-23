@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.getmailspring.com/setup/access-uol-com-br-via-imap-smtp",
+    "https://www.getmailbird.com/setup/access-uol-com-br-via-imap-smtp",
+    "https://learn.microsoft.com/pt-br/answers/questions/4469574/uol-mail-configurar-seu-e-mail",
+    "https://en.wikipedia.org/wiki/Brasil_Online"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "UOL 密码，需先在网页邮箱中开启 IMAP",
+    "helpUrl": null,
+    "usernameForm": "你的完整地址 name@uol.com.br。如果被拒绝，UOL 文档中也允许只填不带域名的登录名。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "通过 IMAP 将 UOL Mail 连接到 Claude（巴西）",
+    "description": "通过 IMAP（imap.uol.com.br:993）将 UOL 邮箱连接到 Claude、Cursor 或任意 MCP 客户端。须先在 UOL 网页邮箱设置中开启 IMAP。"
+  },
+  "hero": {
+    "eyebrow": "UOL Mail + AI",
+    "titleLine1": "将 UOL Mail 连接到 Claude，",
+    "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 UOL 收件箱。通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用，而不止一个。",
+    "answer": "Claude 无法自行连接 UOL Mail。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.uol.com.br 的 993 端口，用你的 UOL 密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。UOL 邮箱出厂时 IMAP 是关闭的：你必须打开网页邮箱设置并使用 Ativar IMAP，任何客户端才能登录，在此之前，正确的密码也会被拒绝。发信通过 smtps.uol.com.br 的 587 端口使用 STARTTLS，与主机名的暗示不同。一个收件箱免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "UOL 密码，先开启 IMAP",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "UOL Mail 如何连接：开启后的 IMAP，以及一个名字古怪的 SMTP 主机",
+    "body": "UOL 在 <code>imap.uol.com.br</code> 的 993 端口通过隐式 TLS 提供 IMAP。背后的服务器是 Dovecot，其问候语直言不讳。让人栽跟头的是提交服务：主机名叫 <code>smtps.uol.com.br</code>，而经过验证的可用配置是<b>587 端口加 STARTTLS</b>，而不是 465 端口的隐式 TLS。名字承诺一件事，端口做的是另一件事。UOL 邮箱是付费服务而不是免费网页邮箱，作为 UOL 订阅的一部分或单独的 UOL Mail 套餐出售，没有应用密码机制：你的 UOL 密码就是凭据。取而代之的是一个开关。在你于网页邮箱中开启之前 IMAP 是关闭的，在此之前连接的客户端会收到认证失败，而不是说明协议已禁用的消息。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱并始终免费，无需信用卡。请保持页面打开；UOL 那边大约需要一分钟。"
+    },
+    {
+      "h": "在 UOL 网页邮箱中开启 IMAP",
+      "p": "登录 UOL 网页邮箱，打开 Configurações（设置），使用 Ativar IMAP（开启 IMAP）选项，然后保存更改。几乎每一次失败的 UOL 连接都缺了这一步。由此产生的登录错误完全没有提到 IMAP 已关闭，所以人们把时间花在了密码和端口上。"
+    },
+    {
+      "h": "在 mcpemails 中输入地址和密码",
+      "p": "选择 IMAP / SMTP，然后输入邮箱地址和你的 UOL 密码。服务器和端口已自动填好，并已通过实时 TLS 连接确认。如果完整地址在登录时被拒绝，请试试不带 <code>@uol.com.br</code> 的登录名：UOL 文档中的用户名就是这种较短的形式，有些邮箱只接受这种形式。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI 客户端",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理即可读取、搜索、发送、回复、转发、定时和整理该 UOL 邮箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "发信主机叫 smtps，却不是隐式 TLS",
+      "p": "<code>smtps.uol.com.br</code> 这个名字的一切都暗示着 465 端口上的隐式 TLS SMTP，这正是 <code>smtps</code> 中字母 s 的惯常含义，也是很多照抄的配置所假设的。UOL 实际可用的提交服务在 <b>587 端口，使用 STARTTLS</b>：连接以明文打开，在认证之前升级。指向 465 端口隐式 TLS 的客户端通常会一直挂起直到超时，而不是返回有用的错误，这比被拒绝糟糕得多。请使用 587 和 STARTTLS。mcpemails 已正确自动填入。"
+    },
+    {
+      "h": "IMAP 在你开启之前是关闭的，而错误会怪到你的密码头上",
+      "p": "UOL 不会在新邮箱上启用 IMAP。在你打开网页邮箱设置并使用 Ativar IMAP 之前，服务器会接受连接、接受登录尝试，然后拒绝凭据。这与密码错误没有任何区别。这一个设置导致的 UOL 客户端配置失败，比主机名、端口和 TLS 加起来还多，而且只能在网页邮箱中完成，因为没有其他地方可以设置。"
+    },
+    {
+      "h": "用户名并不总是完整地址",
+      "p": "大多数服务商要求在用户名栏填写完整地址，UOL 通常也接受，但 UOL 自己的客户端文档把凭据描述为不带 <code>@uol.com.br</code> 的登录名。在坚持使用短形式的旧邮箱上，完整地址被拒绝的方式与密码错误完全一样。如果其他一切都正确而登录仍然失败，在做任何其他事之前，花十秒钟在两种形式之间切换测试一下是值得的。"
+    },
+    {
+      "h": "BOL 是同一平台，但设置不能互换",
+      "p": "UOL 还运营 BOL，两者显然运行在同一套基础设施上：同样的 Dovecot 服务器、同样的邮件大小上限、同样的命名规则。这种相似让人想把设置从一个照搬到另一个，而关键细节在照搬中丢失了。BOL 的提交服务是 465 端口的隐式 TLS，而 UOL 的是 587 端口的 STARTTLS。同一家公司、同一套软件，传输方式却不同。BOL 地址需要 BOL 的主机和 BOL 的端口。"
+    }
+  ],
+  "limits": [
+    "UOL 邮箱需要付费的 UOL 订阅或单独的 UOL Mail 套餐。没有可以连接的免费等级，订阅过期后 IMAP 访问也会随之失效。",
+    "UOL 的 IMAP 服务器既不声明 MOVE 也不声明 IDLE。归档一封邮件要经过复制、标记再删除，而不是一条命令；新邮件通过轮询发现，而不是推送到连接上。",
+    "SMTP 服务器接受的邮件最大约为 33 MB，低于大多数现代服务商。附件超过此大小的转发会在发送时被拒绝。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 UOL Mail 吗？",
+      "a": "不能直接使用。Claude 没有内置的 UOL 连接器，也无法自行建立 IMAP 连接。将 mcpemails 这样的 MCP 服务器连接到你的 UOL 邮箱后，Claude 就能读取、搜索、发送、回复、转发、定时和整理其中的邮件，同一个连接也可在 Cursor 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "UOL 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.uol.com.br，端口 993，隐式 TLS。发信为 smtps.uol.com.br，端口 587，使用 STARTTLS，而不是隐式 TLS，尽管主机名如此。使用你的 UOL 邮箱凭据登录。两台服务器均已在本页所示日期通过实时 TLS 连接验证。"
+    },
+    {
+      "q": "为什么我的 UOL 密码被拒绝？",
+      "a": "几乎总是因为尚未开启 IMAP。登录 UOL 网页邮箱，打开 Configurações，使用 Ativar IMAP 并保存。如果该设置已经开启，请试试不带域名部分的用户名，因为 UOL 文档中的登录名就是这种形式。UOL 不签发应用密码，所以没有第三种凭据需要寻找。"
+    },
+    {
+      "q": "UOL Mail 需要应用密码吗？",
+      "a": "不需要。UOL 没有应用专用密码机制，也没有按客户端区分的凭据。在网页邮箱中开启协议后，你普通的 UOL 密码即可用于 IMAP 和 SMTP 认证。这也意味着每当你修改 UOL 密码，邮件客户端中的密码也要随之修改，届时请更新连接。"
+    },
+    {
+      "q": "我能连接免费的 UOL 邮箱账户吗？",
+      "a": "没有可以连接的免费 UOL 邮箱。UOL 邮箱随付费 UOL 订阅或单独的 UOL Mail 套餐提供。相关的 BOL 服务确实提供免费账户，但那些只能使用网页邮箱，不升级就完全无法通过 IMAP 访问。"
+    },
+    {
+      "q": "我的 UOL 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 UOL 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文在相应请求完成后不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 UOL 收件箱",
+    "sub": "开启 IMAP 后，几分钟即可连接 UOL Mail。一个收件箱永久免费，无需信用卡。"
+  }
+}

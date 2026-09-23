@@ -1,0 +1,96 @@
+{
+  "_sources": [
+    "https://help.iinet.net.au/iinet-email-messaging-company"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte fourni par votre fournisseur de messagerie actuel",
+    "helpUrl": "https://help.iinet.net.au/iinet-email-messaging-company",
+    "usernameForm": "Votre adresse iinet.net.au complète. Le serveur dont elle dépend aujourd'hui varie selon que l'adresse a été transférée ou non chez The Messaging Company.",
+    "status": "discontinued"
+  },
+  "meta": {
+    "title": "iiNet a quitté l'e-mail : ce qui se connecte à Claude",
+    "description": "iiNet a abandonné l'e-mail et les adresses iinet.net.au sont passées chez The Messaging Company. Ce qui se connecte encore à Claude en IMAP, et ce qui a été supprimé."
+  },
+  "hero": {
+    "eyebrow": "iiNet Email + IA",
+    "titleLine1": "iiNet ne gère plus la messagerie.",
+    "titleLine2": "Voici ce qui se connecte encore",
+    "lead": "iiNet a confié ses boîtes à une autre société et a cessé de créer des adresses. Cela change la provenance de vos réglages, pas la possibilité pour un agent IA de travailler dans la boîte.",
+    "answer": "iiNet a quitté le secteur de la messagerie. Elle a transféré les adresses iinet.net.au à un autre fournisseur australien, The Messaging Company, a clos la période d'adhésion, a supprimé toutes les adresses qui n'avaient pas été transférées, et indique qu'il n'est pas possible de créer de nouvelles adresses sur le domaine iinet.net.au. La question n'est donc pas de savoir si Claude peut atteindre iiNet, mais quel serveur héberge votre boîte aujourd'hui. mcpemails est un serveur MCP hébergé qui connecte toute boîte IMAP, y compris une ancienne adresse iiNet chez son nouvel hébergeur, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Réglages fournis par votre nouveau fournisseur",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment une adresse iinet.net.au se connecte aujourd'hui : pas via iiNet",
+    "body": "La page d'aide d'iiNet est sans ambiguïté. Les adresses ont été transférées à <b>The Messaging Company</b>, la période d'adhésion est close, tout ce qui n'a pas été transféré a été supprimé et ne peut pas être récupéré, et iiNet demande aux clients d'adresser leurs questions à The Messaging Company, car elle ne peut plus les aider. Les adresses incluses avec un service iiNet étaient gratuites jusqu'au 15 septembre 2024, date après laquelle The Messaging Company a fixé ses propres tarifs. Le nom d'hôte <code>mail.iinet.net.au</code> n'a pas disparu : il mène toujours à bien une négociation TLS sur le port 993 et renvoie une liste de capacités, sous un certificat émis pour <code>mail.tpg.com.au</code>, TPG étant le groupe auquel appartient iiNet. Prenez-le exactement pour ce que c'est. Cela prouve que le serveur est actif ; cela ne prouve pas que votre boîte s'y trouve, et cela ne signifie certainement pas qu'iiNet crée de nouveau des adresses."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et ne demande pas de carte bancaire."
+    },
+    {
+      "h": "Déterminez qui héberge la boîte aujourd'hui",
+      "p": "Si vous avez demandé le transfert de l'adresse, elle se trouve chez The Messaging Company, et c'est cette société qui peut vous indiquer les noms de serveur, les ports et le mot de passe. iiNet ne le peut pas, et le dit. Si vous n'avez jamais demandé le transfert, l'adresse a été supprimée et il n'y a rien à connecter ; iiNet indique que les adresses supprimées ne peuvent pas être récupérées."
+    },
+    {
+      "h": "Saisissez les réglages fournis par votre fournisseur actuel",
+      "p": "Dans mcpemails, choisissez IMAP / SMTP et renseignez le serveur, le port et le mot de passe exactement comme votre fournisseur les documente, avec l'adresse complète comme identifiant. Nous ne publions que des réglages vers lesquels nous avons nous-mêmes ouvert une connexion : nous n'indiquons donc pas ici les noms d'hôte de The Messaging Company. Prenez-les dans leur documentation d'assistance plutôt que sur un blog tiers."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Ajoutez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Un nom d'hôte actif n'est pas un service actif",
+      "p": "<code>mail.iinet.net.au</code> répond aujourd'hui en IMAP sur TLS et annonce SASL-IR, IDLE, SPECIAL-USE et COMPRESS=DEFLATE : un serveur en parfaite santé. Certains y voient la preuve que la messagerie iiNet va bien et que les avis de migration n'étaient que du bruit. Ce n'en est pas une. Un nom d'hôte reste résolvable et un serveur continue de tourner longtemps après que l'entreprise qui l'exploite a cessé de créer des comptes, et la page d'iiNet elle-même indique qu'aucune nouvelle adresse iinet.net.au ne peut être créée. Gardez ces deux constats bien séparés quand vous diagnostiquez un échec."
+    },
+    {
+      "h": "Les adresses jamais transférées ont disparu, elles ne sont pas en sommeil",
+      "p": "Le transfert était une démarche que chaque client devait effectuer activement. Selon iiNet, la période d'adhésion est close et toute adresse qui n'a pas été transférée a été supprimée et ne peut pas être récupérée. Si votre connexion a cessé de fonctionner et que personne ne trouve la boîte, la réponse probable n'est donc pas un mot de passe oublié. Il n'y a ni restauration, ni archive à demander, ni adresse de remplacement sur le même domaine."
+    },
+    {
+      "h": "La boîte est devenue un produit payant, et ce n'est pas iiNet qui facture",
+      "p": "iiNet a pris en charge l'adresse jusqu'au 15 septembre 2024 pour les clients dont la messagerie était incluse dans leur service, et The Messaging Company devait contacter les clients au moins 60 jours à l'avance pour leur communiquer les tarifs applicables ensuite. Une adresse suspendue faute de paiement relève de cette société. iiNet renvoie toute l'assistance pour ces adresses vers The Messaging Company et n'interviendra pas."
+    },
+    {
+      "h": "Les demandes d'assistance vont à une société que la plupart des guides ne mentionnent pas",
+      "p": "Les résultats de recherche sur les réglages de messagerie iiNet regorgent encore de pages décrivant un service géré par iiNet avec des noms d'hôte iiNet, rédigées avant le transfert et jamais mises à jour. En les suivant, vous finirez en attente au téléphone avec la mauvaise société. La page d'iiNet nomme le nouvel opérateur et donne ses coordonnées : c'est le seul point de départ qui vaille."
+    }
+  ],
+  "limits": [
+    "Nous ne publions aucun réglage vérifié pour The Messaging Company, car nous n'avons pas ouvert de connexion vers leurs serveurs. Obtenez-les auprès de votre fournisseur et saisissez-les manuellement.",
+    "Une adresse iinet.net.au supprimée ne peut être ni connectée, ni récupérée, ni recréée. Aucun serveur MCP n'y change rien."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec la messagerie iiNet ?",
+      "a": "Claude n'a pas de connecteur intégré pour elle, et iiNet ne gère plus le service. Si votre adresse iinet.net.au a survécu au transfert vers The Messaging Company, connecter un serveur MCP comme mcpemails à cette boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, avec les réglages de serveur fournis par votre fournisseur actuel."
+    },
+    {
+      "q": "Qu'est devenue la messagerie iiNet ?",
+      "a": "iiNet a quitté la messagerie et transféré les adresses de ses clients à un autre fournisseur australien, The Messaging Company. La période d'adhésion est close, les adresses non transférées ont été supprimées et ne peuvent pas être récupérées, et iiNet indique qu'il n'est pas possible de créer de nouvelles adresses sur le domaine iinet.net.au."
+    },
+    {
+      "q": "Pourquoi mail.iinet.net.au répond-il encore si le service a déménagé ?",
+      "a": "Parce que le serveur tourne toujours. Il mène à bien une négociation TLS sur le port 993 et renvoie une liste de capacités sous un certificat pour mail.tpg.com.au. Cela vous dit que le serveur répond, et rien de plus. Savoir si votre boîte y est hébergée, et si vos identifiants sont toujours valides, sont des questions distinctes auxquelles seul votre fournisseur actuel peut répondre."
+    },
+    {
+      "q": "Puis-je obtenir une nouvelle adresse iinet.net.au ?",
+      "a": "Non. La page d'aide d'iiNet indique directement qu'il n'est pas possible de créer de nouvelles adresses sur le domaine iinet.net.au. Si vous avez besoin d'une nouvelle boîte dans laquelle un assistant puisse travailler, elle doit être chez un fournisseur qui en crée encore, et mcpemails connecte n'importe lequel d'entre eux en IMAP."
+    },
+    {
+      "q": "Mon courrier est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct chez votre fournisseur en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le contenu des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA une boîte qu'elle peut atteindre",
+    "sub": "Où que se trouve aujourd'hui votre ancienne adresse iiNet, connectez-la en IMAP. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

@@ -1,21 +1,35 @@
 {
+  "_sources": [
+    "https://hilfe.web.de/pop-imap/einschalten.html",
+    "https://hilfe.web.de/pop-imap/index.html",
+    "https://hilfe.web.de/pop-imap/imap/index.html",
+    "https://hilfe.web.de/sicherheit/2fa/anwendungsspezifisches-passwort.html",
+    "https://hilfe.web.de/pop-imap/einrichtung-mailprogramm-scheitert.html"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "WEB.DE 密码，开启两步验证后使用应用密码",
+    "helpUrl": "https://hilfe.web.de/pop-imap/einschalten.html",
+    "usernameForm": "你完整的 WEB.DE 地址，包括域名：name@web.de。",
+    "status": "active"
+  },
   "meta": {
-    "title": "将 WEB.DE 连接到 Claude（及任意 AI）",
-    "description": "用账户密码通过 IMAP 将 WEB.DE 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的邮件，1 个收件箱永久免费。"
+    "title": "将 WEB.DE 连接到 Claude、Cursor 与 MCP 客户端",
+    "description": "通过 IMAP（imap.web.de:993）将 WEB.DE 连接到 Claude、Cursor 及任意 MCP 客户端。POP3 和 IMAP 访问默认关闭，必须先开启。"
   },
   "hero": {
     "eyebrow": "WEB.DE + AI",
     "titleLine1": "将 WEB.DE 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
-    "lead": "几分钟即可为你的 AI 代理接入一个真正的 WEB.DE 收件箱。用 IMAP 和你的账户密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+    "lead": "几分钟即可为你的 AI 代理接入一个真正的 WEB.DE 收件箱。用 IMAP 和账户密码即可读取、搜索、发送、回复、定时与整理邮件，同一个收件箱可在所有 MCP 客户端中使用，而不止一个。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "你的账户密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行连接 WEB.DE。mcpemails 是一个托管 MCP 服务器，用账户密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱永久免费。"
+    "answer": "Claude 无法自行连接 WEB.DE。mcpemails 是一个托管 MCP 服务器，用你的账户密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱免费。"
   },
   "method": {
     "title": "WEB.DE 如何连接：IMAP 与账户密码",
-    "body": "WEB.DE 通过 IMAP/SMTP 连接，但<b>POP3 与 IMAP 访问默认是关闭的</b>。先在 WEB.DE 的邮件设置、POP3/IMAP 收取中开启，然后用 WEB.DE 地址和密码连接。发件走 587 端口的 STARTTLS，而不是 465 端口的隐式 TLS，mcpemails 会自动为你选择。"
+    "body": "WEB.DE 通过 IMAP/SMTP 连接，但 <b>POP3 和 IMAP 访问默认是关闭的</b>。请在 WEB.DE 的邮件设置、POP3/IMAP 收取中开启，然后用 WEB.DE 地址和密码连接。WEB.DE 在两种标准发信传输方式上都会响应，即 465 端口的隐式 TLS 和 587 端口的 STARTTLS，所以端口几乎从来不是发信失败的原因。mcpemails 使用下方的 465 组合，并会自动回退到另一种。"
   },
   "setup": [
     {
@@ -24,7 +38,7 @@
     },
     {
       "h": "在 WEB.DE 中开启 IMAP 访问",
-      "p": "在 WEB.DE 中打开邮件设置、POP3/IMAP 收取，允许 POP3 与 IMAP 访问。"
+      "p": "在 WEB.DE 中打开邮件设置、POP3/IMAP 收取，允许 POP3 和 IMAP 访问。"
     },
     {
       "h": "粘贴到 mcpemails",
@@ -33,6 +47,55 @@
     {
       "h": "将 MCP URL 粘贴到你的 AI",
       "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "在你开启之前，POP3 和 IMAP 收取是关闭的",
+      "p": "WEB.DE 的每个 FreeMail 邮箱出厂时都禁用了外部收取，这也是大多数 WEB.DE 客户端配置第一次尝试就失败的原因。登录 web.de，点击顶栏中显示你姓名首字母的圆圈，打开 <b>E-Mail-Einstellungen</b>，在 <b>E-Mail empfangen</b> 下选择 <b>POP3/IMAP</b>。把滑块移到 <b>POP3- und IMAP-Zugriff erlauben</b>（允许 POP3 和 IMAP 访问），并完成 WEB.DE 显示的小拼图，即把两个符号拖到一起。在该滑块开启之前，<code>imap.web.de</code> 会以认证失败拒绝每一次登录，与密码错误无法区分。"
+    },
+    {
+      "h": "如果一段时间没有连接，WEB.DE 会再次关闭访问",
+      "p": "这个问题会在几个月后找上门来。WEB.DE 文档说明，如果你长时间不使用程序或 App，通过 POP3 和 IMAP 的收取会自动再次关闭。所以一个全年都工作正常的连接，可能会在一段空闲期后开始失败，没有任何通知，你这边也没有任何变化。如果一个原本正常的收件箱突然停止工作，在动密码之前先检查滑块。定期读取邮箱的代理本身就能让访问保持开启。"
+    },
+    {
+      "h": "开启两步验证会让你的密码在邮件客户端中失效",
+      "p": "WEB.DE 的双重认证保护的是网页登录，一旦开启，你普通的 WEB.DE 密码就无法在任何使用 IMAP 或 SMTP 的东西中使用。此时你需要一个 <b>anwendungsspezifisches Passwort</b>（应用专用密码），在邮箱中依次进入 Account verwalten、Login & Sicherheit、Anwendungsspezifische Passwörter 生成。为邮件创建一个，把它而不是普通密码粘贴到 mcpemails，普通密码留给网站使用。未开启两步验证时，账户密码就是正确的凭据，也没有应用密码可以创建。"
+    },
+    {
+      "h": "两种 SMTP 传输方式都会响应，所以发信失败很少是端口问题",
+      "p": "关于 WEB.DE 发信的指南说法不一：有的给出 <code>smtp.web.de</code> 的 465 端口隐式 TLS，有的给出 587 端口 STARTTLS。两者都可用，我们的探测在 465 上完成了 TLS 握手，服务器提供 PLAIN 和 LOGIN。因此在两个端口之间来回切换是白费力气。如果发信被拒，原因是收取滑块、缺少应用密码，或者发件人地址不是该账户上登记的地址之一。"
+    }
+  ],
+  "limits": [
+    "mcpemails 只连接 WEB.DE 邮箱。WEB.DE Online-Speicher（在线存储）、通讯录和日历是独立的产品，不会开放给你的 AI 客户端。",
+    "POP3/IMAP 滑块由 WEB.DE 控制，而不是我们。如果 WEB.DE 在长时间空闲后停用了收取，必须在 WEB.DE 中重新开启，连接才能恢复。",
+    "WEB.DE 是有自身反滥用发信限额的消费者邮箱。请用它处理普通往来邮件，而不是批量或营销发送。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 WEB.DE 吗？",
+      "a": "不能单独使用。Claude 没有内置的 WEB.DE 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向你的 WEB.DE 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用，而不止一个。"
+    },
+    {
+      "q": "WEB.DE 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.web.de，端口 993，隐式 TLS；SMTP 为 smtp.web.de，端口 465，同样是隐式 TLS。WEB.DE 发信另外也接受 587 端口 STARTTLS。用户名是包括域名在内的完整 WEB.DE 地址。两台服务器均已在本页所示日期通过实时 TLS 连接确认。"
+    },
+    {
+      "q": "如何在 WEB.DE 中开启 IMAP？",
+      "a": "登录 web.de，点击顶栏中你的姓名首字母，打开 E-Mail-Einstellungen。在 E-Mail empfangen 下选择 POP3/IMAP，然后把滑块移到 POP3- und IMAP-Zugriff erlauben，并完成 WEB.DE 显示的拖动拼图。每个邮箱的收取默认都是关闭的，所以任何客户端登录之前都必须完成这一步。"
+    },
+    {
+      "q": "为什么我的 WEB.DE 密码被拒绝？",
+      "a": "几乎总是以下两者之一。要么你的 WEB.DE 设置中 POP3 和 IMAP 收取处于关闭状态，这会产生一个毫无真实原因提示的普通认证失败；要么你开启了双重认证，需要应用专用密码而不是账户密码。先检查滑块，因为它是两者中更常见的那个。"
+    },
+    {
+      "q": "WEB.DE 需要应用密码吗？",
+      "a": "只有在开启了双重认证时才需要。未开启两步验证时，开启收取后你普通的 WEB.DE 密码即可用于邮件客户端认证。开启两步验证后，请在 Account verwalten、Login und Sicherheit、Anwendungsspezifische Passwörter 下生成应用专用密码，并在 mcpemails 中使用它。"
+    },
+    {
+      "q": "我的 WEB.DE 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 WEB.DE 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
     }
   ],
   "ctaBand": {

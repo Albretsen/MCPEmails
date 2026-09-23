@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://ajuda.sapo.pt/configurar-programa-de-email-70015",
+    "https://ajuda.sapo.pt/sapo-mail-premium-99980"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña de SAPO, en una cuenta Premium",
+    "helpUrl": "https://ajuda.sapo.pt/configurar-programa-de-email-70015",
+    "usernameForm": "Tu dirección completa, incluido el dominio: nome@sapo.pt.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "IMAP de SAPO Mail: solo Premium, y configuración MCP",
+    "description": "SAPO limita IMAP, POP y SMTP a las cuentas Premium. Qué implica para conectar imap.sapo.pt:993 a Claude y qué puede hacer aún una cuenta Base gratuita."
+  },
+  "hero": {
+    "eyebrow": "SAPO Mail + IA",
+    "titleLine1": "SAPO Mail por IMAP,",
+    "titleLine2": "en Claude, Cursor, cualquier cliente MCP",
+    "lead": "SAPO reserva el acceso desde clientes de correo a su nivel Premium. Si tu cuenta lo tiene, un agente de IA puede leer, buscar, enviar, responder, programar y organizar el buzón por IMAP.",
+    "answer": "Claude no puede acceder a un buzón de SAPO por sí solo, y en una cuenta gratuita SAPO Base tampoco puede nada más: SAPO afirma en su propia documentación que o acesso IMAP/POP está disponível apenas para contas Premium (el acceso IMAP/POP solo está disponible para cuentas Premium). En una cuenta Premium, mcpemails es un servidor MCP alojado que conecta el buzón por IMAP en imap.sapo.pt en el puerto 993 con tu dirección y contraseña de SAPO, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. No hay contraseña de aplicación ni ningún interruptor que activar: la barrera es el plan. Una bandeja en mcpemails es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Requiere una cuenta SAPO Premium",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta SAPO: IMAP en una cuenta Premium, nada en una Base",
+    "body": "SAPO ofrece IMAP en <code>imap.sapo.pt</code> en el puerto 993 sobre TLS implícito y el envío SMTP en <code>smtp.sapo.pt</code> en el puerto 465, con autenticación obligatoria. Su propia página de configuración describe los servidores como <b>imap.sapo.pt para endereços terminados @sapo.pt</b>, y la credencial como <b>o seu endereço de e-mail SAPO e a respetiva password</b>. No hay contraseña específica de aplicación ni un interruptor de acceso para clientes por buzón. Lo único que decide si todo esto funciona es el plan de la cuenta. Las páginas de ayuda de SAPO lo dicen sin rodeos: <b>O acesso por IMAP, POP e SMTP só está disponível para contas Premium.</b> (el acceso por IMAP, POP y SMTP solo está disponible para cuentas Premium). Una cuenta Base gratuita conserva su correo y su webmail en mail.sapo.pt y pierde los protocolos, es decir, todos los clientes de correo de escritorio y móvil, y todos los servidores MCP alojados, incluido este."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
+    },
+    {
+      "h": "Comprueba si la cuenta de SAPO es Base o Premium",
+      "p": "Inicia sesión en mail.sapo.pt y mira el plan de la cuenta. Base es el nivel gratuito y no tiene IMAP, POP ni SMTP: solo webmail y la aplicación de SAPO. Premium recupera los protocolos junto con un buzón más grande y sin publicidad. Es una cuestión de facturación y no un ajuste, así que nada en la pantalla de opciones de correo lo va a cambiar."
+    },
+    {
+      "h": "Usa tu dirección y contraseña de SAPO",
+      "p": "SAPO no emite contraseñas específicas de aplicación. La credencial es tu contraseña normal de SAPO con la dirección completa como nombre de usuario, tanto para el correo entrante como para el saliente. Si el webmail la acepta y el cliente no, es casi seguro que la cuenta está en el nivel Base y no en Premium."
+    },
+    {
+      "h": "Pégala en mcpemails y luego pega la URL MCP en tu IA",
+      "p": "Elige IMAP / SMTP, escribe la dirección completa, como nome@sapo.pt, e introduce la contraseña. Los servidores y puertos de SAPO vienen rellenados y se verificaron mediante una conexión TLS real. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Los servidores responden, pero la cuenta gratuita sigue sin poder iniciar sesión",
+      "p": "<code>imap.sapo.pt</code> está en línea, completa un handshake TLS y te saluda con <code>Welcome to PTMail</code> sea quien sea quien pregunte. Eso hace que la restricción Premium sea realmente difícil de diagnosticar, porque todos los síntomas apuntan a las credenciales. Si el webmail de SAPO acepta tu contraseña y un cliente de correo no, deja de probar la contraseña. La diferencia está en el plan. Esto vale igual para Outlook, Thunderbird, Apple Mail, los clientes del móvil y todos los servidores MCP, el nuestro incluido: ninguna herramienta de terceros puede conceder un acceso por protocolo que la cuenta no tiene."
+    },
+    {
+      "h": "Una cuenta Base inactiva deja de recibir correo a los 90 días",
+      "p": "SAPO hiberna las cuentas Base gratuitas que no se usan durante más de 90 días: <b>as contas Base inativas por mais de 90 dias são hibernadas, deixando de receber mensagens</b> (las cuentas Base inactivas durante más de 90 días se hibernan y dejan de recibir mensajes), y el contenido de una cuenta hibernada puede eliminarse. Las cuentas Premium nunca se hibernan. Esto importa sobre todo ante la tentadora idea de crear una dirección de SAPO de sobra para dársela a un agente y luego olvidarse de ella. Una cuenta Base en la que no inicias sesión deja de ser un buzón operativo."
+    },
+    {
+      "h": "Solo PLAIN en IMAP, PLAIN y LOGIN en SMTP",
+      "p": "El saludo IMAP ofrece <code>AUTH=PLAIN</code> y nada más, sin <code>AUTH=LOGIN</code>. Las bibliotecas cliente que dependen del mecanismo LOGIN, algo común en herramientas escritas para Exchange, reciben un rechazo en el paso de autenticación con un error que parece de credenciales incorrectas. El lado SMTP acepta tanto PLAIN como LOGIN, así que las dos mitades de la misma cuenta pueden comportarse de forma distinta dentro de un mismo cliente. mcpemails negocia lo que ofrezca realmente cada tramo."
+    },
+    {
+      "h": "Sin MOVE ni SPECIAL-USE en un buzón con nombres en portugués",
+      "p": "El servidor no anuncia la extensión IMAP <code>MOVE</code>, así que archivar un mensaje se hace como una copia, una actualización de marcas y un expunge en lugar de un único comando atómico. Tampoco anuncia <code>SPECIAL-USE</code>, así que Enviados, Borradores y Papelera se identifican por nombre y no por función. Un buzón de SAPO en portugués suele llamarlas <b>Enviadas</b>, <b>Rascunhos</b> y <b>Lixo</b>, así que indica la carpeta explícitamente si un agente no la encuentra."
+    }
+  ],
+  "limits": [
+    "En una cuenta gratuita SAPO Base no hay nada que conectar. Es una restricción del proveedor y ningún servidor MCP, el nuestro incluido, puede sortearla.",
+    "Los mensajes salientes tienen un límite de unos 30 MB de mensaje codificado, así que un adjunto grande reenviado por un agente puede rechazarse en el paso SMTP.",
+    "Como el servidor no admite MOVE, mover un mensaje no es atómico. Si una conexión se corta a mitad de la operación, un mensaje puede existir brevemente en ambas carpetas."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con SAPO Mail?",
+      "a": "Solo en una cuenta Premium. SAPO limita IMAP, POP y SMTP a Premium, así que ningún cliente de correo ni servidor MCP puede conectar una cuenta Base gratuita. Con Premium, apuntar mcpemails al buzón le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor y ChatGPT."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de SAPO?",
+      "a": "IMAP es imap.sapo.pt en el puerto 993 con SSL. SMTP es smtp.sapo.pt en el puerto 465 con SSL y autenticación obligatoria. El nombre de usuario es tu dirección sapo.pt completa y la contraseña es tu contraseña de SAPO. Ambos servidores se confirmaron mediante una conexión TLS real y coinciden con lo que publica SAPO."
+    },
+    {
+      "q": "¿Por qué Outlook ya no funciona con mi dirección de SAPO?",
+      "a": "Porque el acceso IMAP y POP pasó al nivel Premium. La propia ayuda de SAPO afirma que IMAP y POP solo están disponibles para cuentas Premium. Una cuenta Base gratuita conserva el webmail en mail.sapo.pt y la aplicación de SAPO, y pierde todos los protocolos que usaría un cliente de escritorio o móvil."
+    },
+    {
+      "q": "¿Emite SAPO contraseñas de aplicación?",
+      "a": "No. SAPO no ofrece ningún mecanismo de contraseñas específicas de aplicación. Los clientes de correo se autentican con la contraseña normal de la cuenta de SAPO junto con la dirección completa, tanto en el servidor entrante como en el saliente. Si esa contraseña funciona en el webmail pero no en un cliente, la causa es el nivel de la cuenta y no la credencial."
+    },
+    {
+      "q": "¿Qué pasa con una cuenta de SAPO que dejo de usar?",
+      "a": "Las cuentas Base gratuitas inactivas durante más de 90 días se hibernan y dejan de recibir mensajes, y su contenido puede eliminarse. Las cuentas que superan su límite de almacenamiento durante más de 90 días reciben el mismo trato. Las cuentas Premium no se hibernan. No dejes aparcada una dirección Base sin usar como buzón dedicado de un agente."
+    },
+    {
+      "q": "¿Se almacena mi correo de SAPO en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de SAPO por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de SAPO",
+    "sub": "Si tu cuenta de SAPO es Premium, conéctala en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

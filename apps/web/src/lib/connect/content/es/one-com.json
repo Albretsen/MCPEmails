@@ -1,0 +1,95 @@
+{
+  "_sources": [
+    "https://help.one.com/hc/en-us/articles/115005594285-How-to-set-an-email-account-in-for-example-Outlook",
+    "https://help.one.com/hc/en-us/articles/115005586289-Creating-a-new-email-account",
+    "https://help.one.com/hc/en-us/articles/115005586349-How-do-I-change-my-email-password"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña de la cuenta de correo",
+    "helpUrl": "https://help.one.com/hc/en-us/articles/115005586349-How-do-I-change-my-email-password",
+    "usernameForm": "Tu dirección completa, incluido el dominio: name@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta el correo de one.com a Claude y clientes MCP",
+    "description": "Conecta un buzón de one.com a Claude, Cursor y cualquier cliente MCP por IMAP en imap.one.com:993. El correo saliente usa send.one.com, no smtp.one.com."
+  },
+  "hero": {
+    "eyebrow": "Correo de one.com + IA",
+    "titleLine1": "Conecta el correo de one.com a Claude,",
+    "titleLine2": "Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de one.com. Lee, busca, envía, responde, programa y organiza el correo por IMAP con la contraseña que estableciste al crear la dirección.",
+    "answer": "Claude no puede acceder a un buzón de one.com por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.one.com, puerto 993, y envía a través de send.one.com, puerto 465, autenticándose con tu dirección de correo completa y la contraseña que estableciste para esa cuenta en el Control Panel de one.com. Así Claude, Cursor o cualquier cliente MCP pueden leer, buscar, enviar y organizar el correo. No hay que generar ninguna contraseña de aplicación. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña de la cuenta de correo del Control Panel",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta one.com: IMAP para recibir, send.one.com para enviar",
+    "body": "one.com separa sus dos nombres de servidor de correo de una forma que confunde a la gente. El correo entrante es <code>imap.one.com</code> en el puerto 993 con TLS implícito. El saliente es <code>send.one.com</code> en el puerto 465, también con TLS implícito, con autenticación obligatoria usando las mismas credenciales. Ambos son servidores compartidos para todos los clientes de one.com, así que nada se deriva de tu propio dominio. La credencial es la contraseña que escribiste al crear la dirección en el Control Panel, junto con la parte de la dirección anterior a la arroba. Esa contraseña es la que usan tanto el webmail como cualquier cliente de correo, y es distinta del acceso que usas para el propio Control Panel de one.com."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
+    },
+    {
+      "h": "Confirma que la dirección existe y establece su contraseña",
+      "p": "Inicia sesión en el Control Panel de one.com y abre el mosaico Email. La dirección tiene que crearse allí antes de que un cliente pueda acceder a ella. Haz clic en la dirección para editarla y establece una contraseña, o cambia la actual. También puedes cambiar la contraseña de un correo desde one.com Webmail una vez que hayas iniciado sesión."
+    },
+    {
+      "h": "Pégala en mcpemails",
+      "p": "Elige IMAP / SMTP, escribe la dirección completa y pega la contraseña de la cuenta de correo. Los servidores imap.one.com y send.one.com y los puertos 993 y 465 vienen rellenados y se verificaron con una conexión TLS real."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "El servidor saliente es send.one.com, y smtp.one.com no existe",
+      "p": "Prácticamente todos los demás proveedores llaman a su servidor de envío con el patrón <code>smtp.something</code>, así que la gente rellena ese patrón por costumbre y obtiene un nombre de servidor que no se resuelve. one.com usa <code>send.one.com</code>. La asimetría con <code>imap.one.com</code> hace que parezca una errata en la documentación, y no lo es. Si leer correo funciona pero el envío agota el tiempo de espera o no se resuelve, este es el motivo."
+    },
+    {
+      "h": "one.com también revende Microsoft 365, y ese buzón no se puede conectar",
+      "p": "El mosaico del Control Panel se llama Email and Microsoft 365, y one.com vende ambos en la misma cuenta. Una cuenta de correo de one.com, creada en ese mosaico con su propia contraseña, es un buzón IMAP normal en los servidores de one.com y se conecta sin problemas. Una licencia de Microsoft 365 comprada a través de one.com es un buzón de Microsoft en los servidores de Microsoft, y la directiva predeterminada del tenant de Microsoft impide que un usuario final dé su consentimiento para el acceso de lectura y escritura de correo de terceros. No afirmamos poder conectarlos. Si tu webmail es Outlook en la web y no la interfaz propia de one.com, tienes el producto de Microsoft."
+    },
+    {
+      "h": "La verificación en dos pasos del Control Panel no llega a tu buzón",
+      "p": "one.com ofrece verificación en dos pasos para el inicio de sesión en el Control Panel. Protege el panel, donde están tus dominios y tu facturación, y no afecta a IMAP ni a SMTP, que siguen aceptando por sí solos la contraseña de la cuenta de correo. Activarla no romperá mcpemails, pero tampoco protegerá el buzón. Si quieres proteger el propio buzón, lo que cuenta es una contraseña fuerte y única en esa dirección, no la 2FA del panel."
+    }
+  ],
+  "limits": [
+    "El servidor no anuncia MOVE ni UIDPLUS, así que mover un mensaje se hace como copia, marca y expunge, y el UID de destino hay que encontrarlo buscando.",
+    "Falta SPECIAL-USE, así que Enviados, Borradores, Papelera y Spam se identifican por nombre. Los buzones daneses, suecos y noruegos de one.com suelen tener nombres de carpeta localizados.",
+    "Las licencias de Microsoft 365 vendidas a través de one.com no se pueden conectar."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de one.com?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para one.com. Apuntar un servidor MCP como mcpemails a tu buzón de one.com por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuál es la configuración IMAP y SMTP de one.com?",
+      "a": "IMAP es imap.one.com en el puerto 993 con TLS implícito. El correo saliente va a send.one.com en el puerto 465, también con TLS implícito y autenticación obligatoria. El nombre de usuario es tu dirección de correo completa y la contraseña es la establecida para esa cuenta en el Control Panel. Ambos servidores se confirmaron con una conexión TLS real."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de one.com?",
+      "a": "Hay dos causas habituales. Estás escribiendo tu acceso al Control Panel de one.com en lugar de la contraseña establecida en la cuenta de correo concreta, o la dirección nunca llegó a crearse en el mosaico Email del Control Panel. Compruébalo iniciando sesión en one.com Webmail con las mismas credenciales: si también falla, el problema es el buzón, no el cliente."
+    },
+    {
+      "q": "¿Necesita one.com una contraseña de aplicación?",
+      "a": "No. one.com no emite contraseñas específicas de aplicación para el correo, y no hay ningún interruptor IMAP por buzón que activar. La contraseña de la cuenta de correo autentica tanto IMAP como SMTP. La verificación en dos pasos del Control Panel no cambia eso."
+    },
+    {
+      "q": "¿Se almacena mi correo de one.com en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de one.com por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de one.com",
+    "sub": "Conecta un buzón de one.com en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

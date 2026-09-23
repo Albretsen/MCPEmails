@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://help.krystal.io/email/configure-your-email-client",
+    "https://help.krystal.io/sales-faq/onyx-managed-word-press-vs-shared-hosting",
+    "https://help.krystal.io/email/adding-a-new-c-panel-email-account"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://help.krystal.io/email/configure-your-email-client",
+    "usernameForm": "Tu dirección de correo completa, por ejemplo me@yourdomain.co.uk, exactamente como se creó el buzón.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Correo de Krystal a Claude: IMAP de cPanel y Onyx",
+    "description": "El hosting compartido de Krystal incluye buzones cPanel; Onyx no. Averigua cuál tienes y conéctalo a Claude por IMAP en el puerto 993. Una bandeja gratis, para siempre."
+  },
+  "hero": {
+    "eyebrow": "Krystal + IA",
+    "titleLine1": "Conecta el correo de Krystal a Claude,",
+    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA un buzón real de Krystal. Lee, busca, envía, responde, programa y organiza correo por IMAP, en el hosting compartido con cPanel o en el complemento de correo de Onyx.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de Krystal. mcpemails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Krystal no tiene un nombre de servidor de correo compartido: usas mail.yourdomain.co.uk o el nombre propio de tu servidor de hosting, y ambos aparecen en la pantalla Connect Devices de cPanel. Antes de empezar, comprueba que el plan incluye realmente correo, porque la plataforma de WordPress gestionado Onyx de Krystal viene sin buzones salvo que hayas comprado el complemento. La autenticación usa la contraseña del buzón, y una bandeja es gratis.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña del buzón desde cPanel",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta el correo de Krystal: dos plataformas, un protocolo IMAP",
+    "body": "Krystal es un proveedor británico con dos productos bastante distintos. El <b>hosting compartido y de revendedor</b> funciona con cPanel e incluye direcciones ilimitadas en tu dominio, con cuotas de buzón de 5GB en los planes pequeños y 50GB en los grandes. <b>Onyx</b>, su plataforma de WordPress gestionado, no incluye correo en absoluto; los buzones son un complemento de pago que se compra al contratar o más tarde desde el portal de Onyx, y se gestionan allí y no en cPanel. Ambos hablan IMAP en el puerto 993 con TLS y SMTP en el 465, o en el 587 con STARTTLS. La indicación de Krystal para las cuentas cPanel es usar el nombre de tu servidor de hosting exactamente como aparece en la pantalla de ajustes, y señala que <code>mail.yourdomain.co.uk</code> también funciona. El nombre de usuario es la dirección completa."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
+    },
+    {
+      "h": "Confirma que el plan tiene correo y abre la pantalla correcta",
+      "p": "En el <b>hosting compartido</b>, inicia sesión en cPanel, ve a <b>Email</b>, luego <b>Email Accounts</b>, y haz clic en <b>Connect Devices</b> junto a la dirección. Ahí aparecen el nombre del servidor y los puertos. En <b>Onyx</b>, los buzones están en el portal de Onyx, en su sección de correo, no en cPanel, y solo existen si se compró el complemento de correo. Si ninguno de los dos sitios muestra una dirección, todavía no hay ningún buzón que conectar."
+    },
+    {
+      "h": "Define la contraseña del buzón",
+      "p": "Los buzones de Krystal se autentican con la contraseña definida en la propia dirección, no con tu acceso al área de cliente de Krystal. En el hosting compartido, usa <b>Manage</b> en la fila de la dirección en Email Accounts para definir una. Después introdúcela en mcpemails con la dirección completa como nombre de usuario y el nombre de servidor que copiaste."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Onyx viene sin correo, así que puede que no haya nada que conectar",
+      "p": "La plataforma de WordPress gestionado de Krystal no tiene correo a propósito. Los clientes que pasaron un sitio del hosting compartido de Krystal a Onyx suelen dar por hecho que los buzones se trasladaron también; no fue así, salvo que se comprara el complemento de correo. Krystal ofrece una utilidad de migración para importar un buzón IMAP existente a ese complemento, y esa es la señal: si nunca se te pidió migrar, lo más probable es que el buzón siga en la plataforma antigua o haya desaparecido. Busca una sección de correo en el portal de Onyx antes de revisar credenciales."
+    },
+    {
+      "h": "mail.yourdomain solo funciona mientras el registro A del dominio apunte a Krystal",
+      "p": "Krystal emite automáticamente el certificado gratuito para ese nombre, pero solo cuando el dominio resuelve a su servidor. Si usas un DNS externo, o pasas el dominio por el proxy de Cloudflare, o acabas de mudarte y el registro no se ha propagado, el nombre <code>mail.</code> o no resuelve o resuelve a un sitio sin servicio de correo. Ninguno de los dos fallos parece un problema de correo. Usa el nombre de servidor que aparece en la pantalla Connect Devices y la dependencia del DNS desaparece por completo."
+    },
+    {
+      "h": "Los buzones de cPanel y de Onyx se configuran en sitios distintos, con guías distintas",
+      "p": "La base de conocimiento de Krystal tiene artículos de correo de cPanel y de Onyx uno al lado del otro, y no describen el mismo sistema. Una guía de cPanel te lleva a Email Accounts y Connect Devices; un buzón de Onyx no tiene ninguna de las dos cosas y se administra desde el portal de Onyx. Confirma en qué plataforma está tu sitio antes de seguir cualquier instrucción de correo de Krystal, porque el primer paso del artículo equivocado simplemente no existe en tu panel."
+    }
+  ],
+  "limits": [
+    "El tamaño del buzón está limitado por plan en el hosting compartido de Krystal, a 5GB en los niveles pequeños y 50GB en los grandes. Un buzón lleno rechaza el correo nuevo en lugar de degradarse sin avisar.",
+    "mcpemails solo conecta el buzón. Los ajustes del dominio, los reenviadores y las reglas de spam se quedan en cPanel o en el portal de Onyx."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de Krystal?",
+      "a": "No directamente. Claude no tiene un conector para Krystal. Conectar un servidor MCP como mcpemails a tu buzón de Krystal por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, tanto si el buzón está en el hosting compartido con cPanel de Krystal como en el complemento de correo de Onyx."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Krystal?",
+      "a": "IMAP usa el puerto 993 con SSL/TLS y SMTP el puerto 465 con SSL/TLS, o el 587 con STARTTLS. El nombre de servidor es el de tu servidor de hosting tal como aparece en la pantalla Connect Devices de cPanel, y mail.yourdomain.co.uk también funciona cuando el DNS del dominio apunta a Krystal. Inicia sesión con tu dirección de correo completa."
+    },
+    {
+      "q": "¿Incluye correo Krystal Onyx?",
+      "a": "No. Onyx, la plataforma de WordPress gestionado de Krystal, viene sin buzones por defecto. El correo es un complemento de pago que se puede comprar al contratar o más tarde desde el portal de Onyx, y se gestiona allí y no en cPanel. Los planes de hosting compartido de Krystal, en cambio, incluyen direcciones ilimitadas en tu dominio."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de correo de Krystal?",
+      "a": "Porque el buzón tiene su propia contraseña, definida al crear la dirección, que no es tu acceso al área de cliente de Krystal. Restablécela en cPanel desde el enlace Manage junto a la dirección en Email Accounts. Comprueba también que el nombre de usuario es la dirección de correo entera y no solo la parte anterior a la arroba."
+    },
+    {
+      "q": "¿Se almacena mi correo de Krystal en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Krystal por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Krystal",
+    "sub": "Conecta un buzón de Krystal en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

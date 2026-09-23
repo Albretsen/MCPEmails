@@ -1,7 +1,19 @@
 {
+  "_sources": [
+    "https://www.zoho.com/mail/help/imap-access.html",
+    "https://www.zoho.com/mail/help/zoho-smtp.html",
+    "https://help.zoho.com/portal/en/kb/accounts/multi-factor-authentication/articles/application-specific-passwords"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Programspesifikt passord",
+    "helpUrl": "https://help.zoho.com/portal/en/kb/accounts/multi-factor-authentication/articles/application-specific-passwords",
+    "usernameForm": "Hele Zoho-adressen din, inkludert domenet: name@yourdomain.com på et eget domene, eller name@zohomail.com på en gratis personlig konto.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Koble Zoho Mail til Claude (og enhver AI)",
-    "description": "Koble Zoho Mail til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med et app-passord. La AI lese, sende, planlegge og organisere Zoho Mail. 1 innboks gratis, for alltid."
+    "title": "Koble Zoho Mail til Claude, Cursor og MCP-klienter",
+    "description": "Koble Zoho Mail til Claude, Cursor og enhver MCP-klient via IMAP på imap.zoho.com:993. IMAP er av som standard, og verten følger Zoho-datasenteret ditt."
   },
   "hero": {
     "eyebrow": "Zoho Mail + AI",
@@ -10,11 +22,12 @@
     "lead": "Gi AI-agenten din en ekte Zoho-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og et app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "App-passord, ingen OAuth-oppsett",
-    "meta2": "E-post hentes direkte, lagres aldri"
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "Claude når ikke Zoho Mail på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.zoho.com port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. To ting må være riktige først: IMAP-tilgang er slått av på en ny Zoho-postkasse til du slår den på, og vertsnavnet følger Zoho-datasenteret ditt, så en konto opprettet i EU eller India bruker et annet. Én innboks er gratis, for alltid."
   },
   "method": {
     "title": "Slik kobler Zoho seg til: IMAP og et app-passord",
-    "body": "Zoho Mail kobles til via IMAP/SMTP. Aktiver IMAP-tilgang i Zoho først (det er av som standard), generer et app-spesifikt passord hvis du bruker tofaktorautentisering, og lim det så inn i mcpemails sammen med Zoho-adressen din. mcpemails støtter alle Zoho-datasenterregioner."
+    "body": "Zoho Mail kobles til via IMAP/SMTP. Slå på IMAP-tilgang i Zoho først (den er av som standard), generer et programspesifikt passord hvis du bruker tofaktorautentisering, og lim det så inn i mcpemails sammen med Zoho-adressen din. mcpemails støtter alle Zohos datasenterregioner."
   },
   "setup": [
     {
@@ -22,8 +35,8 @@
       "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
-      "h": "Aktiver IMAP og generer et app-passord",
-      "p": "I Zoho Mail slår du på IMAP-tilgang (Innstillinger, E-postkontoer, IMAP-tilgang). Hvis du bruker tofaktorautentisering, genererer du et app-spesifikt passord i Zoho-kontoen din under Sikkerhet."
+      "h": "Slå på IMAP og generer et app-passord",
+      "p": "I Zoho Mail slår du på IMAP-tilgang (Settings, Mail Accounts, IMAP Access). Bruker du tofaktorautentisering, genererer du et programspesifikt passord i Zoho Account, Security."
     },
     {
       "h": "Lim det inn i mcpemails",
@@ -32,6 +45,55 @@
     {
       "h": "Lim MCP-URL-en inn i AI-en",
       "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Zoho driver seks datasentre, og vertsnavnet ditt følger det du registrerte deg i",
+      "p": "Zoho har separate regionale datasentre, nådd på <code>zoho.com</code>, <code>zoho.eu</code>, <code>zoho.in</code>, <code>zoho.com.au</code>, <code>zoho.jp</code> og <code>zohocloud.ca</code>. En postkasse opprettet i ett kan ikke nås på et annets vertsnavn, og innstillingene i tabellen på denne siden er de amerikanske. Sjekken på fem sekunder: logg inn på mail.zoho.com og se hva adressefeltet blir til. Ender det på <code>zoho.eu</code>, slutter IMAP- og SMTP-vertene dine også på <code>.eu</code>. Zoho viser også det nøyaktige paret for kontoen din i Settings, Mail Accounts, under Server Configuration Details. <b>Feil region er den vanligste måten en Zoho-tilkobling feiler på</b>, og den viser seg som en autentiseringsfeil og ikke som en feil server, og derfor tilbakestiller folk passordet fire ganger før de finner den."
+    },
+    {
+      "h": "IMAP er slått av til noen slår det på, én postkasse om gangen",
+      "p": "Zoho leverer postkasser med IMAP-tilgang slått av. Slå den på under Settings, så Mail Accounts, klikk så adressen, kryss av for <b>IMAP Access</b> og lagre. To detaljer overrasker folk. Den settes på hver postkasse for seg, så å slå den på for din egen adresse gjør ingenting for en kollegas. Og til den er på, avviser Zoho innloggingen helt, med en feil som ikke kan skilles fra et feil passord."
+    },
+    {
+      "h": "Gratis og betalte Zoho-kontoer er dokumentert på ulike vertsnavn",
+      "p": "Zohos egen konfigurasjonsside oppgir <code>imap.zoho.com</code> og <code>smtp.zoho.com</code> for personlige og gratis kontoer, og <code>imappro.zoho.com</code> og <code>smtppro.zoho.com</code> for betalte organisasjonskontoer, med regel om regionalt suffiks over lagt på begge. Verten som er verifisert for denne siden, er <code>imap.zoho.com</code>. Er adressen din på et eget domene under et betalt abonnement, bruk paret Zoho viser under Server Configuration Details i stedet for å anta det generelle, fordi det er det autoritative svaret for akkurat din konto."
+    },
+    {
+      "h": "Ingen SPECIAL-USE og ingen AUTH=LOGIN",
+      "p": "Zohos IMAP-server annonserer <code>MOVE</code>, <code>UIDPLUS</code>, <code>IDLE</code> og <code>SASL-IR</code>, så flyttinger er atomiske og autentisering er én enkelt rundtur. Den annonserer ikke <code>SPECIAL-USE</code>, som betyr at Sent, Drafts, Trash og Spam matches etter navn i stedet for rolle: omdøper du en systemmappe, eller oppretter postkassen i et ikke-engelsk grensesnitt, vil en agent som leter etter «Sent», ikke finne den med mindre du oppgir mappen eksplisitt. Autentiseringslisten er også kort, <code>AUTH=PLAIN</code> og <code>AUTH=XOAUTH2</code> uten <code>AUTH=LOGIN</code>, så en klient som er hardkodet til LOGIN-mekanismen, feiler på autentiseringstrinnet med et riktig passord i hånden."
+    }
+  ],
+  "limits": [
+    "Zohos innsendingsserver annonserer en maksimal meldingsstørrelse på omtrent 31 MB, lavere enn hos de fleste forbrukerleverandører.",
+    "IMAP må slås på for hver Zoho-postkasse inne fra den postkassens egne innstillinger. Ingen kan slå det på for deg utenfra.",
+    "Kontoer som bruker tofaktorautentisering, føderert innlogging eller SAML, må bruke et programspesifikt passord. Det vanlige kontopassordet vil ikke autentisere."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Zoho Mail?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Zoho-kobling. Kobler du en MCP-server som mcpemails til Zoho-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer fra Cursor, ChatGPT og andre MCP-klienter. Du må slå på IMAP-tilgang på postkassen først."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Zoho Mail?",
+      "a": "For en amerikansk gratiskonto er IMAP imap.zoho.com på port 993 med implisitt TLS, og SMTP er smtp.zoho.com på port 465, også med implisitt TLS, begge verifisert via en direkte TLS-tilkobling. Betalte organisasjonskontoer er dokumentert på navnene imappro og smtppro, og hvert regionale datasenter endrer domenesuffikset. Brukernavnet er hele adressen din."
+    },
+    {
+      "q": "Hvilket Zoho-datasenter er kontoen min i?",
+      "a": "Logg inn på mail.zoho.com og se hvor nettleseren ender opp. En videresending til zoho.eu, zoho.in, zoho.com.au, zoho.jp eller zohocloud.ca forteller deg regionen, og e-postvertsnavnene dine har samme suffiks. For et nøyaktig svar åpner du Settings, så Mail Accounts, og leser delen Server Configuration Details, som viser vertene og portene Zoho forventer at klienten din bruker."
+    },
+    {
+      "q": "Hvorfor blir Zoho-passordet mitt avvist?",
+      "a": "Tre årsaker, i denne rekkefølgen. IMAP-tilgang er ikke slått på for den postkassen under Settings, Mail Accounts. Vertsnavnet tilhører et annet Zoho-datasenter enn det kontoen din ligger i. Eller kontoen bruker tofaktorautentisering, føderert innlogging eller SAML, og da krever Zoho et programspesifikt passord i stedet for det vanlige."
+    },
+    {
+      "q": "Virker dette med et eget domene i Zoho eller Zoho Workplace?",
+      "a": "Ja. En postkasse på ditt eget domene kobles til på samme måte, med hele adressen som brukernavn, når IMAP-tilgang er slått på for den. Hent vertsnavnene fra Server Configuration Details inne i den kontoen i stedet for fra en generell veiledning, fordi både betalte organisasjonskontoer og ikke-amerikanske regioner endrer navnene."
+    },
+    {
+      "q": "Lagres Zoho-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Zoho via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke. Trekker du tilbake det programspesifikke passordet i Zoho, eller slår av IMAP-tilgang igjen, kobles postkassen fra med en gang."
     }
   ],
   "ctaBand": {

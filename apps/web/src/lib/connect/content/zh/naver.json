@@ -1,0 +1,105 @@
+{
+  "_sources": [
+    "https://comeinsidebox.com/naver-mail-imap-pop3/",
+    "https://servertrix.com/1879",
+    "https://www.clien.net/service/board/cm_iphonien/19011627",
+    "https://www.enterapps.kr/notice/?bmode=view&idx=168294489",
+    "https://www.getmailbird.com/setup/access-naver-com-via-imap-smtp"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "应用密码（애플리케이션 비밀번호）",
+    "helpUrl": "https://nid.naver.com/",
+    "usernameForm": "包含域名的完整地址：name@naver.com。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "用应用密码将 Naver Mail 连接到 Claude",
+    "description": "通过 IMAP（imap.naver.com:993）将 Naver Mail 连接到 Claude、Cursor 或任意 MCP 客户端。自 2025 年 6 月起，需要开启两步验证并使用应用密码。"
+  },
+  "hero": {
+    "eyebrow": "Naver Mail + AI",
+    "titleLine1": "将 Naver Mail 连接到 Claude，",
+    "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Naver 收件箱。用 Naver 应用密码通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用，而不止一个。",
+    "answer": "Claude 无法自行连接 Naver Mail。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.naver.com 的 993 端口，使用 Naver 应用密码（애플리케이션 비밀번호）而不是账户密码认证。自 2025 年 6 月 24 日起，Naver 要求账户开启两步验证，并为每个 POP3、IMAP 和 SMTP 连接使用应用密码，因此账户密码已无法让任何邮件客户端通过认证。你还需要在 Naver Mail 设置中开启 IMAP，这与密码是两个独立的开关。一个收件箱免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "两步验证加应用密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Naver Mail 如何连接：IMAP、两步验证与应用密码",
+    "body": "Naver 在 <code>imap.naver.com</code> 的 993 端口通过隐式 TLS 提供 IMAP，在 <code>smtp.naver.com</code> 的 465 端口提供 SMTP。这些服务器多年来一直没变，变的是凭据。<b>2025 年 6 月 24 日</b>，Naver 将两步验证和应用密码设为 POP3、IMAP 和 SMTP 访问的必要条件，宽限期结束后（现已结束），仍使用旧账户密码的邮件客户端全部停止工作。现在必须同时满足两件事：一是在 Naver Mail 自己的设置中开启 IMAP 和 SMTP，这是针对单个邮箱的开关；二是你的 Naver ID 必须开启两步验证，因为只有开启后才会出现应用密码页面。填入客户端的是应用密码，账户密码再也不会用于收发邮件。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱并始终免费，无需信用卡。接下来的步骤会生成两样东西：请保持此标签页打开，最后一步要用。"
+    },
+    {
+      "h": "在 Naver Mail 设置中开启 IMAP/SMTP",
+      "p": "打开 Naver Mail，点击左下角的 환경설정（设置），切换到顶部的 POP3/IMAP 설정 标签，再选择其中的 IMAP/SMTP 설정 标签。将 IMAP/SMTP 사용 设为 사용함（使用），然后按 확인 保存。这是邮箱级别的开关，不会在你的 Naver 账户上开启任何东西；没有它，无论发送哪个密码，imap.naver.com 都会拒绝登录。"
+    },
+    {
+      "h": "开启两步验证并生成应用密码",
+      "p": "前往 nid.naver.com，打开 보안설정（安全设置），如果尚未开启，请设置 2단계 인증（两步验证），然后点击 관리（管理）。在其中打开 애플리케이션 비밀번호 관리（应用密码管理）并点击 생성하기（生成）。选择直接输入选项，命名为 mcpemails 之类的名称，复制 Naver 显示的密码。在 mcpemails 中选择 IMAP / SMTP，输入完整的 Naver 地址，粘贴该应用密码，而不是你的 Naver 密码。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI 客户端",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理即可读取、搜索、发送、回复、转发、定时和整理该 Naver 邮箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Naver 在 2025 年有意让所有现有客户端失效",
+      "p": "如果你的 Naver Mail 原本在 Thunderbird、Apple Mail 或脚本中工作正常，后来突然停止，你这边其实什么都没变。自 2025 年 6 月 24 日起，Naver 要求 POP3、IMAP 和 SMTP 使用两步验证和应用密码，为现有连接设置了宽限期，随后将其关闭。账户密码现在会在登录时返回一个普通的认证错误，看起来和密码过期完全一样，所以人们自然会重新输入账户密码，然后眼看它再次失败。解决办法不是换一个更好的密码，而是换一种密码。"
+    },
+    {
+      "h": "开启 IMAP 和创建应用密码分别位于两个不同的产品中",
+      "p": "协议开关在 Naver Mail 的 환경설정 中。应用密码在 nid.naver.com 的 Naver ID 账户中，位于两步验证之后。只做其中一件，会得到同样的认证失败，而两个页面都不会提到另一个。大多数 Naver 连接问题都是缺了这两半中的一半，而与主机名或端口无关。"
+    },
+    {
+      "h": "Naver 唯一声明的认证机制是 AUTH=PLAIN",
+      "p": "Naver 的 IMAP 能力列表只提供 <code>AUTH=PLAIN</code>，没有 <code>AUTH=LOGIN</code>。写死使用 LOGIN 机制的客户端和库（在最初针对 Exchange 编写的工具中很常见）会在认证步骤被拒绝，并返回一个没有帮助的错误，而不会自动回退。SMTP 端同时接受 PLAIN 和 LOGIN，因此在某个客户端中，账户的发信部分可能正常，而收信部分却不行。"
+    },
+    {
+      "h": "Naver Works 是另一项服务，这些设置不适用",
+      "p": "Naver Works 是面向韩国企业销售的办公套件，与个人 <code>@naver.com</code> 邮箱不是同一个产品。它有自己的管理后台、自己的协议控制和自己的服务器名称。如果你的地址属于通过 Naver Works 管理的公司域名，请从该控制台获取服务器地址，而不是本页，然后在 mcpemails 中将该邮箱作为普通 IMAP 和 SMTP 账户连接。"
+    }
+  ],
+  "limits": [
+    "Naver 未声明支持 IDLE，因此邮件是轮询获取而不是推送。代理会在下一次检查邮箱时看到新邮件，而不是邮件到达的那一刻。",
+    "Naver 声明 IMAP 的追加上限约为 40 MB，其 SMTP 服务器接受的邮件最大约为 38 MB。附件超过此大小的转发会在发送时被拒绝，而不会排队。",
+    "应用密码与两步验证绑定。如果你在 Naver 账户上关闭两步验证，应用密码将失效，连接随之中断。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Naver Mail 吗？",
+      "a": "不能直接使用。Claude 没有内置的 Naver 连接器，也无法自行建立 IMAP 连接。将 mcpemails 这样的 MCP 服务器连接到你的 Naver 邮箱后，Claude 就能读取、搜索、发送、回复、转发、定时和整理其中的邮件，同一个连接也可在 Cursor 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Naver 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.naver.com，端口 993，隐式 TLS。SMTP 为 smtp.naver.com，端口 465，同样是隐式 TLS。使用完整的 naver.com 地址和 Naver 应用密码登录。两台服务器均已在本页所示日期通过实时 TLS 连接验证。"
+    },
+    {
+      "q": "为什么我的 Naver 密码不能用了？",
+      "a": "因为 Naver 不再接受它。自 2025 年 6 月 24 日起，POP3、IMAP 和 SMTP 要求账户开启两步验证，并使用从 Naver ID 生成的应用密码。多年来一直正常的连接在宽限期结束后都失败了。请在 nid.naver.com 生成应用密码并改用它。"
+    },
+    {
+      "q": "如何创建 Naver 应用密码？",
+      "a": "登录 nid.naver.com，打开 보안설정，如果 2단계 인증 未开启就先开启。点击旁边的 관리，然后打开 애플리케이션 비밀번호 관리 并点击 생성하기。为密码命名，以便日后单独撤销，然后把它复制到邮件客户端或 mcpemails 的密码栏中。"
+    },
+    {
+      "q": "我还需要在 Naver Mail 设置中开启 IMAP 吗？",
+      "a": "需要。应用密码是账户级别的凭据，IMAP 开关是邮箱级别的设置，两者缺一不可。在 Naver Mail 中打开 환경설정，进入 POP3/IMAP 설정 标签，选择 IMAP/SMTP 설정，设为 사용함 并保存。跳过这一步，你手里就是一个有效的密码和一扇关着的门。"
+    },
+    {
+      "q": "我的 Naver 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 Naver 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文在相应请求完成后不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Naver 收件箱",
+    "sub": "几分钟即可用应用密码连接 Naver Mail。一个收件箱永久免费，无需信用卡。"
+  }
+}

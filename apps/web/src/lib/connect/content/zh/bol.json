@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://bluemail.me/pt/setup/bol-com-br-email-account-settings/",
+    "https://www.getmailspring.com/setup/access-bol-com-br-via-imap-smtp",
+    "https://en.wikipedia.org/wiki/Brasil_Online"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "BOL 密码（需付费 BOL 套餐）",
+    "helpUrl": null,
+    "usernameForm": "你的完整地址，包括域名：name@bol.com.br。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "BOL 邮箱连接 Claude：IMAP 需要 BOL Completo",
+    "description": "通过 imap.bol.com.br:993 将 BOL 邮箱连接到 Claude 或任意 MCP 客户端。免费 BOL 账户仅限网页邮箱，因此 IMAP 需要付费的 BOL Completo 套餐。"
+  },
+  "hero": {
+    "eyebrow": "BOL Mail + AI",
+    "titleLine1": "将 BOL Mail 连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 BOL 收件箱。只要邮箱使用的是付费 BOL 套餐而非免费网页邮箱档位，就可以通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行访问 BOL Mail。mcpemails 是一个托管 MCP 服务器，通过 imap.bol.com.br 端口 993 的 IMAP 与之连接，使用你的 BOL 密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。关键在于套餐，而不是协议：BOL 已从免费账户中取消了 IMAP 和 POP 访问，免费账户仅限网页邮箱，所以普通的免费 bol.com.br 地址在升级到付费 BOL 套餐之前，任何客户端都无法连接。mcpemails 上的 1 个收件箱免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "付费 BOL 套餐，再加你的密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "BOL Mail 如何连接：仅付费档位提供 IMAP",
+    "body": "BOL 在 <code>imap.bol.com.br</code> 端口 993 上通过隐式 TLS 提供 IMAP，在 <code>smtps.bol.com.br</code> 端口 465 上提供邮件提交，同样是隐式 TLS。BOL 由 UOL 运营，两者背后是 UOL 运行的同一套 Dovecot 系统，单封邮件大小上限和命名方式都相同。真正起作用的区别在商业层面。BOL 的免费邮箱（大多数 bol.com.br 地址都属于此类）只能在网页邮箱中使用，别处都不行：POP 和 IMAP 访问已从免费套餐中移除，所以不存在任何主机名能让免费账户从客户端登录。以 <b>BOL Completo</b> 名义销售的付费档位恢复了客户端访问，此后的认证就很普通了。没有应用专用密码，也没有单独的授权码，只需你的 BOL 密码，用户名是完整地址。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱并永久免费，无需信用卡。在继续之前，先确认该邮箱使用的是哪种 BOL 套餐，因为这决定了本页其余内容是否适用。"
+    },
+    {
+      "h": "确认邮箱使用的是付费 BOL 套餐",
+      "p": "登录 BOL 网页邮箱，查看账户的套餐。免费 BOL 账户没有可以开启的客户端访问：POP 和 IMAP 已从该档位移除，邮箱只能通过网页界面访问。升级到 BOL Completo 才能建立 IMAP 连接。如果账户继续保持免费，请改为在 mcpemails 中连接另一个邮箱，并把 BOL 邮件转发到那里。"
+    },
+    {
+      "h": "在 mcpemails 中输入地址和密码",
+      "p": "选择 IMAP / SMTP，输入完整地址（例如 <code>nome@bol.com.br</code>）以及你的 BOL 密码。服务器地址和端口已预填，并经实时 TLS 连接确认。注意发信端口：BOL 在 465 上使用隐式 TLS，这与其姊妹服务使用的设置不同。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI 客户端",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，你的代理就能读取、搜索、发送、回复、转发、定时和整理这个 BOL 邮箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "免费 BOL 账户根本无法被任何东西连接",
+      "p": "这几乎是所有 BOL 客户端问题的答案，却很少有人直白地说出来。免费 BOL 邮箱只能在网页邮箱中使用。POP 和 IMAP 访问已从免费套餐中移除，所以 Thunderbird、Outlook、Apple Mail、脚本和托管 MCP 服务器都会以同样的方式失败，而且都在登录这一步报出凭据错误，对套餐只字不提。人们以为密码错了，重置之后用新密码再次失败。请先检查套餐，再检查其他任何东西。没有任何配置能解决这个问题，只有升级到 BOL Completo 才行。"
+    },
+    {
+      "h": "UOL 的设置看起来足以照抄，但 SMTP 端口不同",
+      "p": "BOL 由 UOL 在同一平台上运营，两套设置相似到人们常常互相替换。问题出在传输方式上。BOL 的提交服务器使用<b>端口 465 上的隐式 TLS</b>，UOL 的则使用<b>端口 587 上的 STARTTLS</b>。两台服务器都以相同的 <code>smtps</code> 前缀命名，所以从名称上看不出任何提示。用错组合通常会卡住而不是报错，因为期待 TLS 握手的客户端连到明文端口后，会一直等待一个永远不会到来的欢迎消息。"
+    },
+    {
+      "h": "没有 MOVE，没有 SPECIAL-USE，文件夹名称是葡萄牙语",
+      "p": "BOL 的 IMAP 服务器不声明 MOVE 扩展，因此归档一封邮件要依次执行复制、更新标记和清除，而不是一条原子命令；如果连接中途断开，邮件可能会短暂地同时出现在两个文件夹中。它也不支持 SPECIAL-USE，所以文件夹按名称而不是按角色匹配。在葡萄牙语邮箱中，这些名称通常是 Enviados（已发送）、Rascunhos（草稿）、Lixeira（已删除）和 Spam。如果代理把邮件归到了错误的位置，请明确写出目标文件夹名称。"
+    }
+  ],
+  "limits": [
+    "IMAP 需要付费 BOL 套餐。如果邮箱处于免费档位，就没有可连接的东西，mcpemails 也无法绕过，因为这项限制是在 BOL 的服务器上强制执行的。",
+    "不支持 IDLE，因此邮件是轮询获取而不是推送的。你的代理会在下次检查时看到新邮件，而不是在邮件到达的那一刻。",
+    "SMTP 服务器接受的邮件最大约为 33 MB。带有更大附件的转发会在发送时被拒绝，而不会进入队列。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 BOL 邮箱吗？",
+      "a": "只能在付费 BOL 套餐上使用。Claude 没有内置的 BOL 连接器，也无法自行建立 IMAP 连接，所以需要在邮箱前面接一个 mcpemails 这样的 MCP 服务器。这个连接走的是 IMAP，而免费 BOL 账户不提供 IMAP，所以免费的 bol.com.br 地址必须先升级。"
+    },
+    {
+      "q": "BOL 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.bol.com.br，端口 993，使用隐式 TLS。发信服务器为 smtps.bol.com.br，端口 465，同样是隐式 TLS。请用完整的 bol.com.br 地址和 BOL 密码登录。两个服务器均已在本页所示日期通过实时 TLS 连接验证。"
+    },
+    {
+      "q": "为什么我的 BOL 密码在邮件客户端中无效？",
+      "a": "最可能的原因是邮箱使用的是免费套餐，其 POP 和 IMAP 访问已被移除。服务器拒绝登录时仍然报出普通的凭据错误，让人以为是密码问题。在重置任何东西之前，请先在 BOL 网页邮箱中确认套餐。在付费套餐上，普通的 BOL 密码就是正确的凭据。"
+    },
+    {
+      "q": "BOL 和 UOL 是一回事吗？",
+      "a": "BOL 由 UOL 运营，运行在同一个邮件平台上，但它们是不同的服务，邮箱、主机名和套餐都各自独立。两者的设置不能互换，尤其是发信端口和加密方式不同，所以把其中一套配置照搬到另一套上是行不通的。"
+    },
+    {
+      "q": "BOL 需要应用专用密码吗？",
+      "a": "不需要。BOL 没有应用专用密码机制，也不签发单独的授权码。在付费套餐上，你的普通 BOL 密码即可用于 IMAP 和 SMTP 认证。这也意味着修改 BOL 密码后，所有已连接的客户端都会断开，直到你更新保存的凭据。"
+    },
+    {
+      "q": "我的 BOL 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 BOL 实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储，邮件正文在发起该请求之后不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 BOL 收件箱",
+    "sub": "几分钟即可连接付费 BOL 邮箱。mcpemails 上 1 个收件箱永久免费，无需信用卡。"
+  }
+}

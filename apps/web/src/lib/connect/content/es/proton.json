@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://proton.me/support/imap-smtp-and-pop3-setup",
+    "https://proton.me/support/smtp-submission",
+    "https://proton.me/support/email-forwarding",
+    "https://proton.me/mail/bridge"
+  ],
+  "auth": {
+    "method": "none",
+    "label": "No existe inicio de sesión remoto",
+    "helpUrl": "https://proton.me/support/imap-smtp-and-pop3-setup",
+    "usernameForm": "Aquí no hay nada que introducir. Proton solo emite credenciales para clientes de correo dentro de Proton Mail Bridge, y solo son válidas contra Bridge en el equipo donde se ejecuta.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Proton Mail y Claude: por qué Bridge impide la conexión",
+    "description": "Proton Mail no tiene IMAP remoto: solo existe en Proton Mail Bridge, una app de escritorio de pago en localhost, así que ningún servidor MCP alojado llega a él."
+  },
+  "hero": {
+    "eyebrow": "Proton Mail + IA",
+    "titleLine1": "Proton Mail no se puede",
+    "titleLine2": "conectar a un servidor MCP alojado",
+    "lead": "Proton no tiene ningún servidor IMAP en internet. El único IMAP que existe para un buzón de Proton se ejecuta en tu propio ordenador, dentro de Proton Mail Bridge, y por eso todas las herramientas alojadas chocan con el mismo muro.",
+    "answer": "No. Proton Mail no expone ningún punto de acceso IMAP, POP ni SMTP en el que pueda iniciar sesión un cliente situado en otro lugar. La única forma en que un cliente de correo llega a Proton es Proton Mail Bridge, una aplicación de escritorio disponible en los planes de pago de Proton que descifra tu correo localmente y sirve IMAP y SMTP en localhost, es decir, en la dirección de loopback del equipo en el que se ejecuta. Un servidor MCP alojado como mcpemails funciona en nuestra infraestructura, no en tu escritorio, y nada en internet puede enrutar hasta tu localhost, así que la conexión es imposible, no algo pendiente de implementar. Si quieres un agente de IA trabajando con el correo que llega a tu dirección de Proton, las opciones honestas son el reenvío automático de pago de Proton hacia un buzón que sí hable IMAP, que mcpemails conecta gratis para una bandeja, o el envío SMTP de Proton, que solo sirve para el correo saliente."
+  },
+  "method": {
+    "title": "Cómo se conecta Proton Mail: en local, a través de Bridge, o de ninguna manera",
+    "body": "La documentación de soporte de Proton deja claro que los clientes de correo de terceros pasan por <b>Proton Mail Bridge</b> y que Proton no ofrece POP3 en absoluto. Bridge funciona en Windows, macOS y Linux, guarda tus claves, descifra los mensajes a medida que llegan a tu equipo y vuelve a cifrar el correo saliente antes de entregárselo a Proton, y presenta esa vista en texto claro como un servidor IMAP y SMTP normal vinculado a la interfaz de loopback. Tu cliente de correo se conecta a ese servidor local con credenciales que Bridge genera para él. Esas credenciales no son tu contraseña de Proton y no sirven desde ningún otro sitio, porque el servidor contra el que autentican solo existe mientras Bridge se ejecuta en ese ordenador. Bridge requiere un plan de pago: Proton Mail Plus, Proton Unlimited, Proton Business o superior. En Proton Free no hay acceso de clientes de ningún tipo."
+  },
+  "setup": [
+    {
+      "h": "Crea la cuenta gratis de mcpemails",
+      "p": "Una dirección de correo, sin tarjeta. Una bandeja conectada es gratis para siempre, y los dos pasos siguientes deciden qué bandeja será."
+    },
+    {
+      "h": "Elige el buzón que se encargará del trabajo automatizado",
+      "p": "Elige una dirección en un proveedor que tenga un servidor IMAP de verdad: un buzón de dominio propio, una cuenta del trabajo, Fastmail, Migadu, Gmail. Esa es la cuenta que conecta mcpemails y desde la que tu agente lee, envía, archiva y programa. Tu dirección de Proton se queda exactamente como está."
+    },
+    {
+      "h": "Añade una regla de reenvío en la configuración de Proton",
+      "p": "En Proton Mail en la web, abre Settings, luego All settings, luego <b>Forward and auto-reply</b>, y elige Add forwarding rule. Selecciona la dirección de Proton desde la que reenviar y la dirección de destino, y deja las condiciones vacías para reenviarlo todo. Proton envía al destino una solicitud de confirmación que hay que aceptar antes de que llegue nada. Lee primero la sección siguiente: reenviar a una dirección que no es de Proton cambia la situación del cifrado."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y el agente trabajará en el buzón conectado, incluidas las copias que llegan desde Proton."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Bridge está vinculado a localhost, y ese único hecho es todo el bloqueo",
+      "p": "Bridge escucha en la dirección de loopback del equipo en el que se ejecuta. El tráfico de loopback nunca sale de esa máquina, así que no hay ningún nombre de servidor que un servicio alojado pueda resolver ni ningún puerto al que pueda llegar, tenga las credenciales que tenga. Por eso todos los asistentes alojados, servidores MCP y herramientas de automatización en la nube se detienen exactamente en el mismo punto con Proton, y por eso la respuesta no cambia aunque mejores tu plan."
+    },
+    {
+      "h": "Bridge no está disponible en Proton Free",
+      "p": "Quienes están en el plan gratuito a menudo llegan a descargar Bridge antes de descubrirlo. Bridge requiere un plan de pago de Proton Mail, así que en Proton Free no hay ninguna forma admitida de usar un cliente de correo de terceros, local o no. Eso incluye Thunderbird y Apple Mail, no solo las herramientas de automatización."
+    },
+    {
+      "h": "El envío SMTP de Proton parece la solución y no puede leer ni un solo mensaje",
+      "p": "Proton ofrece envío SMTP en los planes de pago con direcciones de dominio personalizado, autenticado con un token que generas en la configuración en lugar de la contraseña de tu cuenta. La documentación de Proton indica que es solo para enviar, a diferencia del protocolo IMAP que usan los clientes de terceros para obtener el correo recibido. Así que una aplicación puede enviar como tu dirección de Proton y nunca puede ver la respuesta. Para un agente que lee un hilo antes de responderlo, eso no es ni siquiera una solución parcial."
+    },
+    {
+      "h": "Reenviar fuera de Proton desactiva el cifrado de extremo a extremo para esa dirección",
+      "p": "Proton lo dice directamente: el correo reenviado a otra dirección de Proton sigue cifrado de extremo a extremo, y reenviar a una dirección que no es de Proton desactiva el cifrado de extremo a extremo para el correo que va y viene de la dirección de reenvío. Si usas Proton precisamente porque Proton no puede leer tu correo, replicarlo en un buzón normal renuncia a eso para el correo que replicas. Reenvía un conjunto concreto de correspondencia en lugar de toda la bandeja, o no reenvíes nada."
+    }
+  ],
+  "limits": [
+    "Exponer Bridge a internet mediante un túnel o una redirección de puertos no es una configuración admitida y no lo recomendamos. Bridge está hecho para que lo use un cliente en la misma máquina, y poner una vista descifrada de tu buzón en un puerto público anula el motivo por el que elegiste Proton.",
+    "Una copia reenviada es un espejo, no el buzón. Las respuestas que envía tu agente salen desde la otra dirección, y nada de lo que hace aparece en tus hilos, carpetas o etiquetas de Proton."
+  ],
+  "faq": [
+    {
+      "q": "¿Claude funciona con Proton Mail?",
+      "a": "No directamente, ni a través de ningún servidor MCP alojado. Proton no tiene ningún punto de acceso IMAP expuesto a internet, y la aplicación local Bridge que proporciona IMAP solo es accesible desde el ordenador en el que se ejecuta. La pauta que funciona es reenviar el correo que quieres que se gestione a un buzón que sí hable IMAP y conectar ese en su lugar."
+    },
+    {
+      "q": "¿Cuál es la configuración IMAP y SMTP de Proton Mail?",
+      "a": "No hay un par público que publicar. Los datos IMAP y SMTP de un buzón de Proton los genera Proton Mail Bridge en tu propio ordenador y se muestran en la ventana de Bridge, apuntando a la dirección de loopback con credenciales propias de esa instalación. Cualquier directorio de configuraciones que indique un servidor IMAP de Proton al que puedas llegar desde otro sitio está equivocado."
+    },
+    {
+      "q": "¿Puedo usar Proton Mail Bridge con un servidor MCP alojado?",
+      "a": "No. Bridge sirve IMAP en localhost, que por definición solo es accesible desde la máquina en la que se ejecuta Bridge. Un servidor alojado está en otra infraestructura, sin ninguna ruta hasta tu interfaz de loopback. Es un hecho de red, no una política que podamos saltarnos."
+    },
+    {
+      "q": "¿Necesito un plan de pago de Proton para usar IMAP?",
+      "a": "Sí. Bridge es la única vía a IMAP o SMTP para un buzón de Proton y requiere un plan de pago: Proton Mail Plus, Proton Unlimited, Proton Business o superior. Proton Free no tiene acceso de clientes de terceros en absoluto, así que una cuenta gratuita no puede conectar Thunderbird, Apple Mail ni nada más."
+    },
+    {
+      "q": "¿Puede una IA al menos enviar correo desde mi dirección de Proton?",
+      "a": "Sí, mediante la función de envío SMTP de Proton, disponible en los planes de pago con direcciones de dominio personalizado, que usa un token que generas en la configuración. Solo sirve para enviar. Nada que la use puede listar, leer ni buscar en tu buzón, así que un agente podría enviar en tu nombre sin ver nunca lo que ha llegado."
+    },
+    {
+      "q": "¿Se almacena mi correo en sus servidores?",
+      "a": "No. En los buzones que mcpemails sí conecta, los mensajes se obtienen en vivo por IMAP en cada petición y se pasan a tu cliente de IA, con las credenciales cifradas en reposo y sin conservar el cuerpo de los mensajes. Nunca guardamos credenciales de Proton, porque no hay ninguna conexión con Proton que hacer."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja a la que pueda llegar",
+    "sub": "Proton sigue siendo privado y sin conectar. Dale a tu agente un buzón IMAP en su lugar, gratis para siempre."
+  }
+}

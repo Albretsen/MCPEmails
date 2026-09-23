@@ -1,0 +1,105 @@
+{
+  "_sources": [
+    "https://riseup.net/en/email/clients",
+    "https://riseup.net/en/email/settings/mail-passwords",
+    "https://riseup.net/en/email",
+    "https://account.riseup.net/user/new",
+    "https://support.riseup.net/help/en-us/1-e-mail/7-how-do-i-create-a-new-email-account"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña de la cuenta de Riseup",
+    "helpUrl": "https://riseup.net/en/email/clients",
+    "usernameForm": "Solo el nombre de tu cuenta de Riseup, por ejemplo joehill, no joehill@riseup.net.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta el correo de Riseup a Claude por IMAP",
+    "description": "Conecta un buzón de Riseup a Claude, Cursor o cualquier cliente MCP por IMAP en mail.riseup.net:993. Usa el nombre de cuenta, no la dirección riseup.net completa."
+  },
+  "hero": {
+    "eyebrow": "Riseup + IA",
+    "titleLine1": "Conecta el correo de Riseup a Claude,",
+    "titleLine2": "Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de Riseup. Lee, busca, envía, responde, programa y organiza correo por IMAP, con la peculiaridad de inicio de sesión que rompe la mayoría de las configuraciones explicada y la contrapartida expuesta en lugar de omitida.",
+    "answer": "Claude no puede acceder a un buzón de Riseup por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en mail.riseup.net en el puerto 993, y por SMTP en el puerto 465, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. El detalle que decide si el inicio de sesión funciona es el nombre de usuario: Riseup espera solo el nombre de tu cuenta, como joehill, y no la dirección completa joehill@riseup.net. Riseup no emite contraseñas de aplicación para el correo, así que la credencial que guardas es la contraseña de tu cuenta de Riseup. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Nombre de cuenta, no la dirección completa",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Riseup: un solo servidor y un usuario sin el dominio",
+    "body": "Riseup atiende ambos sentidos desde un único nombre de servidor. IMAP es <code>mail.riseup.net</code> en el puerto 993 con TLS, o 143 con STARTTLS. SMTP es <code>mail.riseup.net</code> en el puerto 465 con TLS, o 587 con STARTTLS, y Riseup señala que el 587 se bloquea con menos frecuencia que el 465 si te conectas a través de Tor. La credencial es la contraseña normal de tu cuenta de Riseup: no hay contraseñas de aplicación para el correo, y Riseup es un servicio gestionado de forma colectiva y financiado con donaciones, no uno con planes por niveles, así que no hay nada que contratar para desbloquear IMAP. El nombre de usuario es lo que confunde a la gente. La propia documentación de clientes de Riseup lo indica como el nombre de la cuenta a secas, <code>joehill</code> en lugar de <code>joehill@riseup.net</code>, y los clientes que rellenan amablemente tu dirección completa reciben un rechazo."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja, para siempre, sin tarjeta. Al final obtienes una URL MCP y una clave."
+    },
+    {
+      "h": "Comprueba que tu contraseña de Riseup funciona fuera del webmail",
+      "p": "La página de contraseñas de correo de Riseup advierte que una contraseña con caracteres especiales puede funcionar en <code>mail.riseup.net</code> desde el navegador y aun así fallar en un cliente de correo. Si la tuya tiene caracteres poco comunes y el inicio de sesión se rechaza, cámbiala en account.riseup.net por una larga pero sencilla antes de suponer que falla otra cosa. Riseup no ofrece actualmente autenticación de dos factores en su webmail, así que no hay un segundo factor que sortear."
+    },
+    {
+      "h": "Añade el buzón en mcpemails con el nombre de cuenta a secas",
+      "p": "Elige IMAP / SMTP. En el campo de usuario escribe el nombre de tu cuenta de Riseup <b>sin</b> <code>@riseup.net</code>, e introduce la contraseña de tu cuenta. El servidor viene rellenado como <code>mail.riseup.net</code> para ambos sentidos y se verificó mediante una conexión TLS real. Deja desactivada cualquier opción llamada autenticación segura, contraseña cifrada o CRAM-MD5; Riseup pide que no se usen."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "El nombre de usuario es el nombre de tu cuenta, no tu dirección de correo",
+      "p": "La documentación de clientes de Riseup indica que el nombre de usuario es el nombre de la cuenta a secas: <code>joehill</code>, no <code>joehill@riseup.net</code>. Casi todos los demás proveedores piden la dirección completa, así que la configuración automática, la costumbre y las guías de terceros te empujan hacia el valor equivocado, y el servidor responde con un simple fallo de autenticación que parece exactamente una contraseña mal escrita. Si Riseup rechaza el inicio de sesión y estás seguro de la contraseña, cambia esto primero."
+    },
+    {
+      "h": "Dos trampas de contraseña que parecen una contraseña incorrecta",
+      "p": "La primera: Riseup pide que no actives opciones llamadas contraseña segura o autenticación segura, porque esos mecanismos de desafío-respuesta obligan al servidor a guardar una copia en claro de tu contraseña, algo que Riseup no hace. Un cliente configurado para CRAM-MD5 no llega a ninguna parte. Usa autenticación con contraseña normal dentro de la conexión TLS, que para eso está el transporte cifrado. La segunda: Riseup documenta que, si tu contraseña funciona en mail.riseup.net desde el navegador pero no en un cliente de correo, debes comprobar si contiene caracteres especiales. Ambos fallos se manifiestan igual, y en ninguno de los dos casos has olvidado la contraseña."
+    },
+    {
+      "h": "La política de cuentas de Riseup forma parte de la configuración, no de la letra pequeña",
+      "p": "Riseup funciona por invitación: las cuentas nuevas necesitan un código de invitación de un usuario existente, y una cuenta recién creada no puede emitir invitaciones. El almacenamiento es de 1 GB, y el servidor SMTP acepta mensajes de hasta unos 25 MB, el límite más estricto de esta categoría, así que los adjuntos grandes que un agente intente enviar se rechazan al enviarlos. Riseup también indica que una cuenta puede eliminarse sin aviso si se usa para enviar correo masivo no solicitado, si no inicias sesión durante un periodo prolongado o si se usa para contribuir a dañar o abusar de otras personas. No uses la cuenta para envíos masivos automatizados, y no des por hecho que un agente consultando IMAP sustituye a que tú uses la cuenta."
+    },
+    {
+      "h": "Sin MOVE, sin UIDPLUS, sin SPECIAL-USE",
+      "p": "El servidor IMAP de Riseup anuncia IDLE y SASL-IR, suficiente para una lectura ágil, pero no MOVE, UIDPLUS ni SPECIAL-USE. Archivar un mensaje es un COPY, luego un STORE de la marca \\Deleted y luego un EXPUNGE, y sin UIDPLUS el nuevo UID se encuentra buscando en lugar de recibirse en la respuesta. Las funciones de las carpetas se identifican por nombre porque nada en el protocolo las declara, lo que importa si has renombrado carpetas o si un cliente creó una segunda carpeta Sent hace años."
+    }
+  ],
+  "limits": [
+    "Conectar cualquier buzón a un cliente de IA implica que ese proveedor de IA lee el contenido de los mensajes con los que trabaja. mcpemails obtiene el correo en vivo de mail.riseup.net en cada solicitud y no almacena el cuerpo de los mensajes, y las credenciales se cifran en reposo, pero el texto sigue llegando a Claude, Cursor o el cliente que conectes. Mucha gente tiene una cuenta de Riseup precisamente para mantener su correspondencia lejos de las grandes empresas tecnológicas comerciales, y conectarla aquí va en contra de eso. Es una decisión sobre tu propio modelo de amenazas más que una limitación técnica, y conviene tomarla antes de conectar, no después.",
+    "No hay una credencial acotada para el correo. Riseup te deja establecer contraseñas aparte para la VPN y el chat en account.riseup.net, pero el correo no tiene contraseña de aplicación, así que el secreto que se guarda aquí es la contraseña de la cuenta. Revocar esta conexión implica cambiar esa contraseña y volver a introducirla en todos los demás sitios.",
+    "El correo que llega cifrado con OpenPGP aparece en un cliente IMAP como un bloque de texto cifrado armado. mcpemails no tiene ninguna clave privada tuya, así que un agente ve las cabeceras y puede archivar o marcar esos mensajes, pero no leerlos."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de Riseup?",
+      "a": "No directamente. Claude no tiene conector de Riseup y no puede hablar IMAP por sí mismo. Conectar un servidor MCP como mcpemails a tu buzón de Riseup le da a Claude acceso por IMAP para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP sin repetir la configuración."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Riseup?",
+      "a": "IMAP es mail.riseup.net en el puerto 993 con TLS, o 143 con STARTTLS. SMTP es mail.riseup.net en el puerto 465 con TLS, o 587 con STARTTLS, y Riseup recomienda el 587 a quienes usan Tor porque los nodos de salida lo bloquean con menos frecuencia. El nombre de usuario es el nombre de tu cuenta sin el dominio. Ambos servidores se verificaron mediante una conexión TLS real."
+    },
+    {
+      "q": "¿Por qué mi contraseña de Riseup se rechaza en un cliente de correo?",
+      "a": "Tres causas lo explican casi todo. Has escrito tu dirección completa en lugar del nombre de cuenta a secas. Tu cliente tiene activada la autenticación segura o CRAM-MD5, que Riseup no admite a propósito. O tu contraseña contiene caracteres especiales que funcionan al iniciar sesión en el navegador pero no en un cliente. Prueba primero con el nombre de usuario a secas y luego con autenticación de contraseña normal sobre TLS."
+    },
+    {
+      "q": "¿Tiene Riseup contraseñas de aplicación o autenticación de dos factores?",
+      "a": "No para el correo. Riseup no emite contraseñas específicas de aplicación para el correo y no ofrece actualmente autenticación de dos factores en su webmail. Puedes establecer contraseñas aparte para la VPN y el chat en account.riseup.net, lo que mantiene esas credenciales fuera de un dispositivo en el que no confías del todo, pero un cliente de correo siempre recibe la propia contraseña de la cuenta."
+    },
+    {
+      "q": "¿Necesito un código de invitación para una cuenta de Riseup?",
+      "a": "Sí. Riseup exige un código de invitación de un usuario existente en lugar de un número de teléfono o datos personales, y una cuenta recién creada no puede generar invitaciones para otros. Es una cuestión de la cuenta de Riseup, no de la conexión: si ya tienes un buzón de Riseup que funciona, no necesitas nada más para conectarlo aquí."
+    },
+    {
+      "q": "¿Se almacena mi correo de Riseup en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de mail.riseup.net por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva. El cliente de IA que conectes sí recibe el contenido de todo lo que lee, lo cual es un asunto distinto del almacenamiento y lo que más merece la pena pensar aquí."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Riseup",
+    "sub": "Conecta Riseup en minutos, con el nombre de cuenta como usuario. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

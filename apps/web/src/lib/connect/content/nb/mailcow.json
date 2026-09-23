@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://docs.mailcow.email/post_installation/firststeps-ssl/",
+    "https://docs.mailcow.email/",
+    "https://doc.dovecot.org/2.3/configuration_manual/dovecot_ssl_configuration/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://docs.mailcow.email/post_installation/firststeps-ssl/",
+    "usernameForm": "Hele postkasseadressen nøyaktig slik den vises i Mailboxes-listen, for eksempel you@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble mailcow til Claude, Cursor og MCP-klienter",
+    "description": "Koble mailcow til Claude, Cursor og ChatGPT over IMAP på 993. Hvorfor acme-mailcow bare sertifiserer MAILCOW_HOSTNAME, og hva SKIP_LETS_ENCRYPT ødelegger."
+  },
+  "hero": {
+    "eyebrow": "mailcow + AI",
+    "titleLine1": "Koble mailcow til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "mailcow gir deg allerede Dovecot, Postfix og SOGo i én stack. Legg en MCP-server på toppen, så kan agenten din lese, søke, sende, svare, planlegge og arkivere e-post i postkassene du drifter selv.",
+    "answer": "Claude kan ikke nå en mailcow-server på egen hånd. mcpemails er en driftet MCP-server som kobler til mailcow-installasjonen din over IMAP på port 993, på vertsnavnet du satte som MAILCOW_HOSTNAME i mailcow.conf, med postkassepassordet fra Mailboxes-listen, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Det finnes ingen felles vert: det er din server, den må være tilgjengelig fra internett, og du må koble til med nøyaktig det vertsnavnet som står på sertifikatet acme-mailcow utstedte. Én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord fra mailcow-grensesnittet",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles mailcow til: MAILCOW_HOSTNAME på 993",
+    "body": "mailcow er en Docker Compose-stack, og e-postdelen av den er Dovecot for IMAP og Postfix for innsending, så protokolloppførselen er vanlig og godt kjent. Det som er spesielt for mailcow, er vertsnavnet. Stacken har nøyaktig ett kanonisk navn, <code>MAILCOW_HOSTNAME</code>, som settes i <code>mailcow.conf</code> ved installasjon og egentlig aldri endres etterpå, og det er navnet du skal bruke som IMAP- og SMTP-vert. Dovecot svarer på 993 med implisitt TLS og 143 med STARTTLS. Postfix svarer på 465 og 587. Påloggingsopplysningene er postkassepassordet du angir under Mailboxes, ikke administratorpassordet du bruker for selve mailcow-grensesnittet: det er separate kontoer, og administratorinnloggingen er ikke en postkasse."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto",
+      "p": "Registrer deg hos mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+    },
+    {
+      "h": "Les MAILCOW_HOSTNAME ut av mailcow.conf",
+      "p": "Kjør <code>grep MAILCOW_HOSTNAME /opt/mailcow-dockerized/mailcow.conf</code> på verten. Den verdien, ikke det nakne domenet og ikke maskinens eget navn, er IMAP- og SMTP-vertsnavnet ditt, fordi det er navnet acme-mailcow ba om sertifikat for."
+    },
+    {
+      "h": "Bekreft postkassen og passordet",
+      "p": "I mailcow-grensesnittet åpner du Configuration og deretter Mailboxes. Bekreft at adressen er aktiv, og hvis du ikke kjenner passordet, angi et nytt der. Legg deretter til innboksen i mcpemails: velg IMAP / SMTP, skriv inn MAILCOW_HOSTNAME-verten og påloggingsopplysningene for postkassen."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Sertifikatet dekker MAILCOW_HOSTNAME og nesten ingenting annet",
+      "p": "acme-mailcow ber om et sertifikat for <code>MAILCOW_HOSTNAME</code>, pluss <code>autodiscover.</code> og <code>autoconfig.</code> for hvert e-postdomene du legger til, pluss alt du har oppført i <code>ADDITIONAL_SAN</code>. Det nakne apex-domenet ditt står ikke på den listen. Tilkobling til <code>yourdomain.com:993</code> feiler derfor sertifikatvalideringen selv om sertifikatet er helt gyldig, fordi navnet ikke stemmer. Bruk MAILCOW_HOSTNAME-verdien ordrett, så forsvinner avviket."
+    },
+    {
+      "h": "SKIP_LETS_ENCRYPT etterlater et snakeoil-sertifikat som nettlesere skjuler for deg",
+      "p": "Hvis <code>SKIP_LETS_ENCRYPT=y</code> er satt i <code>mailcow.conf</code>, eller acme-mailcow aldri fullførte en utfordring, fortsetter stacken å levere det selvsignerte sertifikatet den genererte ved installasjon. Alle klikket seg forbi nettleseradvarselen for flere måneder siden og glemte det, så ingenting ser ødelagt ut lokalt, men en klient som validerer ordentlig, avviser tilkoblingen. Sjekk hva som faktisk leveres med <code>openssl s_client -connect $MAILCOW_HOSTNAME:993</code> i stedet for å stole på grensesnittet."
+    },
+    {
+      "h": "Port 80 må være tilgjengelig, ellers slutter sertifikatet stille å fornyes",
+      "p": "ACME-klienten i mailcow bruker HTTP-01-utfordringen, og dokumentasjonen sier tydelig at mailcow må være tilgjengelig på port 80 for at den skal fungere. Driftere som stenger 80 i brannmuren etter oppsettet, eller setter en annen webserver foran stacken, får et utstedt sertifikat som fornyes en stund og så ikke lenger. IMAP på 993 fortsetter å fungere frem til dagen det utløper, og da feiler alle klienter på en gang. Hvis du ikke kan la 80 være åpen, bytt oppsettet til en DNS-01-utfordring i stedet."
+    },
+    {
+      "h": "Å publisere en port på et privat grensesnitt skjuler serveren for alt utenfor",
+      "p": "Portbindingene i <code>mailcow.conf</code> tar både en adresse og en port. En binding som <code>IMAPS_PORT=127.0.0.1:993</code> er en vanlig måte å kjøre mailcow bak en proxy på, og det betyr at <code>docker ps</code> viser containeren som frisk mens ingenting utenfor verten kan åpne porten i det hele tatt. Bekreft at serveren er tilgjengelig fra en maskin på et annet nettverk før du antar at påloggingsopplysningene er problemet."
+    }
+  ],
+  "limits": [
+    "En driftet MCP-server må åpne en innkommende IMAP-tilkobling til stacken din, så en mailcow som bare er publisert på et privat grensesnitt eller bare kan nås via VPN, kan ikke kobles til på denne måten. mcpemails kan driftes selv ved siden av mailcow hvis du helst vil at ingenting eksternt skal røre 993.",
+    "Sending håndteres av din egen Postfix, så om meldinger blir godtatt videre, avhenger helt av SPF-, DKIM- og DMARC-postene dine og av om IP-adressen din er svartelistet noe sted."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med mailcow?",
+      "a": "Ikke på egen hånd. Claude har ingen mailcow-kobling og kan ikke åpne en IMAP-økt mot en server du drifter. Ved å koble en MCP-server som mcpemails til mailcow-installasjonen din får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i postkassene på den, i hvilken MCP-klient du enn bruker."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for mailcow?",
+      "a": "Verten er din MAILCOW_HOSTNAME, som du kan lese i mailcow.conf. IMAP er port 993 med implisitt TLS, eller 143 med STARTTLS. Innsending er 465 med implisitt TLS eller 587 med STARTTLS. Logg inn med hele postkasseadressen og passordet som er satt for den postkassen i mailcow-grensesnittet."
+    },
+    {
+      "q": "Hvorfor blir mailcow-innloggingen min avvist?",
+      "a": "Den vanligste årsaken er at du bruker administratorkontoen i mailcow i stedet for en postkasse. Administratorinnloggingen finnes bare for nettgrensesnittet og har ingen IMAP-postkasse bak seg. Bekreft at du bruker en adresse som vises under Configuration og deretter Mailboxes, og at postkassen er aktiv og ikke deaktivert."
+    },
+    {
+      "q": "Er mailcow det samme som Dovecot?",
+      "a": "mailcow pakker Dovecot som IMAP-server, sammen med Postfix, SOGo og Rspamd, i en Docker Compose-stack med et nettgrensesnitt på toppen. Alt som gjelder for IMAP-oppførselen til Dovecot, gjelder også her, og det er derfor Dovecot-siden vår er verdt å lese hvis du må endre lyttere eller mapperoller direkte."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra mailcow-serveren din over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke beholdt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en mailcow-innboks",
+    "sub": "Koble til en postkasse fra din egen stack. Én innboks gratis for alltid, uten kort."
+  }
+}

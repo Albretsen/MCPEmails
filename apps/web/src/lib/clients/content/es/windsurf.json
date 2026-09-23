@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://docs.windsurf.com/windsurf/cascade/mcp"
+  ],
+  "meta": {
+    "title": "Conecta el correo a Windsurf: servidor MCP en Cascade",
+    "description": "Añade una bandeja real a Cascade en Windsurf. Una entrada en mcp_config.json con serverUrl y luego autoriza con OAuth. Sin clave de API. Una bandeja gratis."
+  },
+  "hero": {
+    "eyebrow": "Windsurf + correo",
+    "titleLine1": "Conecta tu bandeja a Windsurf",
+    "titleLine2": "y a Cascade",
+    "lead": "Añade un buzón real a Cascade. Lee, busca, envía, responde, reenvía, programa y organiza correo desde el editor, en todas las bandejas que tengas conectadas.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "OAuth, sin clave de API",
+    "meta2": "Correo obtenido en vivo, nunca almacenado",
+    "answer": "Añade una entrada en mcpServers de ~/.codeium/windsurf/mcp_config.json usando el campo serverUrl, no url, con https://mcpemails.com/api/mcp. Actualiza los servidores MCP en Cascade y autoriza cuando se te pida."
+  },
+  "method": {
+    "title": "Cómo se conecta Windsurf: OAuth, sin clave de API",
+    "body": "Windsurf ejecuta el flujo OAuth estándar de MCP contra este servidor. Se registra solo mediante <b>registro dinámico de clientes RFC 7591</b>, así que no hay ningún client ID que crear, y se autoriza con <b>código de autorización más PKCE</b> usando S256. Nunca se transmite un secreto de cliente, y el token solo lleva los permisos que apruebas en nuestra pantalla de consentimiento. El token de acceso que recibe dura una hora y se renueva solo; aparece en Dashboard, API Keys como <code>OAuth:</code> seguido del nombre del cliente, y ahí es donde revocas la conexión."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis y conecta un buzón",
+      "p": "Regístrate en mcpemails.com, sin tarjeta, y luego ve a Dashboard, Inboxes, Connect Inbox. Gmail se conecta con el inicio de sesión de Google en un clic; iCloud, Fastmail, Yahoo, Zoho y Yandex requieren una contraseña de aplicación; cualquier otro se conecta por IMAP y SMTP estándar. El plan gratuito incluye una bandeja, para siempre."
+    },
+    {
+      "h": "Abre los ajustes MCP de Cascade",
+      "p": "Abre los ajustes MCP de Cascade, o edita <code>~/.codeium/windsurf/mcp_config.json</code> directamente."
+    },
+    {
+      "h": "Añade el servidor",
+      "p": "Añade la entrada de abajo. Aquí el nombre del campo es <code>serverUrl</code>, no <code>url</code>."
+    },
+    {
+      "h": "Actualiza y autoriza",
+      "p": "Actualiza los servidores MCP en Cascade y autoriza con mcpemails cuando se te pida. Aprueba los permisos que quieres que tenga Cascade."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "El campo es serverUrl, y url falla en silencio",
+      "p": "Es el error de configuración más común en Windsurf, y es totalmente comprensible: Cursor, Zed y VS Code leen <code>url</code>, así que un fragmento copiado de cualquiera de ellos parece correcto. Windsurf lee <code>serverUrl</code>. Con la clave equivocada, la entrada se analiza bien, el servidor aparece en la lista y nunca llega ninguna herramienta."
+    },
+    {
+      "h": "Cascade necesita que lo actualices, no vigila el archivo",
+      "p": "Editar <code>mcp_config.json</code> en un editor no hace que Cascade lo recargue. Usa la acción de actualizar del panel MCP después de cualquier cambio. Una entrada correcta que no se ha actualizado parece exactamente igual que una rota."
+    },
+    {
+      "h": "Decide desde el principio si Cascade debe poder enviar",
+      "p": "Eso se decide en la pantalla de consentimiento. Los permisos de lectura y borradores encajan con un asistente de editor, y dejar fuera <code>send:email</code> significa que ningún prompt, ningún jailbreak y ningún bucle confuso puede enviar correo desde esta conexión. La aprobación humana en el panel es la doble protección si sí quieres enviar."
+    }
+  ],
+  "limits": [
+    "Las solicitudes están limitadas a 100 por minuto, 1.000 por hora y 10.000 al día por clave, además del tope de acciones facturables de tu plan.",
+    "El servidor funciona solo por petición y respuesta. No hay webhooks ni eventos iniciados por el servidor, así que el correo nuevo nunca despierta a tu agente por sí solo. Para reaccionar al correo entrante, consulta periódicamente según un horario.",
+    "El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, así que un token revocado o un cambio de contraseña del buzón corta el acceso de inmediato."
+  ],
+  "faq": [
+    {
+      "q": "¿Cómo conecto el correo a Windsurf?",
+      "a": "Añade una entrada en mcpServers de ~/.codeium/windsurf/mcp_config.json con serverUrl igual a https://mcpemails.com/api/mcp, actualiza los servidores MCP en Cascade y autoriza cuando se te pida. A partir de ahí Cascade tiene herramientas para leer, buscar, enviar, responder, reenviar, organizar y programar correo."
+    },
+    {
+      "q": "¿Por qué mi configuración de Windsurf no funciona si el mismo JSON funciona en Cursor?",
+      "a": "Casi siempre es el nombre del campo. Cursor lee url, Windsurf lee serverUrl. El resto de la entrada es idéntico, y precisamente por eso el error sobrevive a una lectura atenta."
+    },
+    {
+      "q": "¿Necesito una clave de API para Windsurf?",
+      "a": "No. Windsurf ejecuta el flujo OAuth contra este servidor, así que el archivo de configuración solo contiene una URL pública. Una clave de API bearer sigue disponible para uso con scripts o sin interfaz gráfica."
+    },
+    {
+      "q": "¿Qué buzones puede alcanzar Windsurf de esta forma?",
+      "a": "Gmail con el inicio de sesión de Google; iCloud, Fastmail, Yahoo, Zoho y Yandex con una contraseña de aplicación; y cualquier otro buzón que hable IMAP y SMTP en los puertos estándar. El cliente los ve todos a través de la misma conexión: tu agente llama primero a inbox_list para descubrir cada buzón conectado y su id, así que no hay UUID que pegar en ningún sitio."
+    },
+    {
+      "q": "¿Puede Cascade enviar correo sin que yo lo vea?",
+      "a": "Solo si tú lo permites. El envío depende del permiso send:email, así que una clave o un token sin ese permiso no puede enviar nada. Además, el propietario de una bandeja puede exigir aprobación humana en el panel, que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera."
+    },
+    {
+      "q": "¿Se guarda mi correo en los servidores de mcpemails?",
+      "a": "No. Cada mensaje se obtiene en vivo de tu proveedor para la solicitud que lo pidió y se entrega directamente a tu cliente. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, para que las llamadas futuras puedan autenticarse. Eliminar la bandeja en el panel, o revocar el acceso en tu proveedor, corta la conexión al instante."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a Cascade una bandeja real",
+    "sub": "Una entrada de configuración, un inicio de sesión. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

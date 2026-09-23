@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://help.yahoo.com/kb/mail/SLN36637.html",
+    "https://help.yahoo.com/kb/SLN15241.html",
+    "https://www.cox.com/residential/support/coxnet-email-transitioning-to-yahoo.html"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Mot de passe d'application Yahoo",
+    "helpUrl": "https://help.yahoo.com/kb/mail/SLN36637.html",
+    "usernameForm": "Votre adresse cox.net complète. La boîte est désormais un compte Yahoo, mais l'identifiant reste l'adresse cox.net que vous avez toujours eue.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Cox Email chez Yahoo : connecter cox.net à Claude",
+    "description": "Cox a confié la messagerie cox.net à Yahoo. Connectez la boîte à Claude et à tout client MCP via IMAP avec un mot de passe d'application Yahoo."
+  },
+  "hero": {
+    "eyebrow": "Cox Email + IA",
+    "titleLine1": "Connectez votre boîte cox.net",
+    "titleLine2": "à Claude, Cursor, tout client MCP",
+    "lead": "Cox a quitté le secteur de l'e-mail et c'est Yahoo qui gère désormais les boîtes cox.net. L'adresse fonctionne toujours, et mcpemails la connecte via IMAP pour que votre agent IA puisse lire, rechercher, envoyer, répondre et classer ce courrier.",
+    "answer": "Claude ne peut pas accéder seul à une boîte cox.net. mcpemails est un serveur MCP hébergé qui la connecte via IMAP sur le port 993, sur le serveur Yahoo indiqué dans le tableau ci-dessous, car Cox a confié son service de messagerie à Yahoo et le courrier cox.net est désormais servi par l'infrastructure de Yahoo et non plus par celle de Cox. L'identifiant à utiliser est un mot de passe d'application Yahoo généré depuis la page de sécurité du compte, pas votre ancien mot de passe Cox ni celui que vous saisissez dans le webmail. Une fois la boîte connectée, Claude, Cursor ou tout autre client MCP peut lire, rechercher, envoyer, répondre et organiser ce courrier, et une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe d'application Yahoo, pas celui de Cox",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment cox.net se connecte : IMAP chez Yahoo, avec un mot de passe d'application",
+    "body": "Cox a abandonné l'e-mail et a transféré toutes les boîtes cox.net chez Yahoo, par vagues successives : la connexion, le webmail et les serveurs de messagerie derrière votre adresse sont donc désormais ceux de Yahoo. Deux conséquences pratiques en découlent. D'abord, les anciens noms de serveur de Cox sont morts : <code>pop.cox.net</code> et <code>smtp.cox.net</code> ne desservent plus la boîte, et tout client encore configuré avec eux échoue, quel que soit le mot de passe fourni. Ensuite, l'authentification suit les règles de Yahoo : un client de messagerie qui n'utilise pas la connexion OAuth de Yahoo doit présenter un <b>mot de passe d'application</b>. Yahoo est explicite : vous devez utiliser un mot de passe d'application et non le mot de passe habituel de votre compte. Le mot de passe d'application continue de fonctionner même si vous changez le mot de passe principal du compte, et vous le supprimez pour le révoquer."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et ne demande pas de carte bancaire."
+    },
+    {
+      "h": "Générez un mot de passe d'application sur la page de sécurité du compte Yahoo",
+      "p": "Connectez-vous chez Yahoo avec votre adresse <code>@cox.net</code>, ouvrez la page de sécurité du compte, trouvez <b>External connections</b> (connexions externes) et choisissez <b>Create app password</b> (créer un mot de passe d'application). Donnez-lui un nom que vous reconnaîtrez plus tard, par exemple <code>mcpemails</code>. Yahoo n'affiche le code qu'une seule fois, copiez-le donc avant de fermer la page."
+    },
+    {
+      "h": "Saisissez l'adresse cox.net et le mot de passe d'application",
+      "p": "Dans mcpemails, choisissez IMAP / SMTP, indiquez votre adresse cox.net complète dans le champ identifiant et collez le mot de passe d'application plutôt que le mot de passe de votre compte Cox. Les serveurs et ports ci-dessous sont préremplis et ont été vérifiés par une connexion TLS réelle."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a accès à la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Yahoo peut refuser de créer le mot de passe d'application, et le support ne peut pas passer outre",
+      "p": "La création d'un mot de passe d'application passe par une vérification d'éligibilité avant que Yahoo ne vous montre le code. La consigne de Yahoo est d'utiliser un navigateur depuis lequel vous vous êtes connecté à Yahoo plusieurs jours de suite, et de ne pas utiliser de fenêtre privée ou de navigation incognito ; Yahoo précise clairement que le service client ne peut pas passer outre le processus qui détermine l'éligibilité. Si l'option <b>Create app password</b> est absente ou si la tentative échoue, c'est à cause de cette vérification. Connectez-vous depuis votre navigateur habituel pendant quelques jours et réessayez : aucun ticket de support ne permet de la contourner."
+    },
+    {
+      "h": "Les noms de serveur Cox de tous les anciens guides ont disparu",
+      "p": "Les guides écrits avant le passage chez Yahoo vous disent d'utiliser <code>pop.cox.net</code>, <code>imap.cox.net</code> ou <code>smtp.cox.net</code>. Ils ne correspondent plus à la boîte. Le courrier répond désormais sur des serveurs Yahoo, c'est pourquoi un client qui fonctionnait depuis des années s'est soudain arrêté une fois votre compte déplacé lors des vagues de migration. Mettre à jour le mot de passe sans mettre à jour les noms de serveur ne sert à rien."
+    },
+    {
+      "h": "Yahoo publie un nom de serveur pour cox.net et nous en avons vérifié un autre",
+      "p": "L'article de configuration cox.net de Yahoo indique <code>imap.mail.yahoo.com</code>. Le serveur inscrit dans le tableau de cette page est celui auquel nous avons réellement ouvert une connexion TLS pour cox.net : c'est le serveur d'export que Yahoo utilise pour les boîtes de marque partenaire comme cox.net et Rogers. Les deux font partie de l'infrastructure de Yahoo et les deux ont répondu sur le port 993 avec la même bannière de serveur. Si l'un est refusé pour votre compte, essayez l'autre."
+    },
+    {
+      "h": "Cox a cessé de créer des adresses cox.net en 2019",
+      "p": "Selon le support de Cox, depuis le 15 août 2019, Cox ne permet plus à ses clients Internet, nouveaux ou existants, de créer de nouveaux comptes Cox Email. Il n'existe donc aucun moyen d'obtenir une nouvelle adresse cox.net, et si la vôtre est fermée après la résiliation de votre abonnement, elle ne reviendra pas. Cox accorde aux comptes résiliés un délai de grâce qui se compte en semaines, pas en années, avant la suppression de la boîte."
+    }
+  ],
+  "limits": [
+    "Le serveur SMTP de Yahoo annonce une taille de message maximale d'environ 39 MB : un envoi avec de grosses pièces jointes est donc refusé avant de partir.",
+    "Comme Cox ne crée plus d'adresses, cette page ne concerne qu'une boîte cox.net existante. Il n'est pas possible d'en créer une pour la connecter."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec l'e-mail de Cox ?",
+      "a": "Pas directement. Claude n'a pas de connecteur Cox intégré, et Cox ne gère plus lui-même le service de messagerie. Connecter un serveur MCP comme mcpemails à la boîte via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier cox.net, et la même connexion fonctionne dans Cursor, ChatGPT et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont désormais les réglages IMAP et SMTP de Cox ?",
+      "a": "Ce sont ceux de Yahoo, pas ceux de Cox. IMAP répond sur le port 993 en TLS implicite et SMTP sur le port 465, également en TLS implicite, sur les serveurs indiqués dans le tableau de cette page, vérifiés par une connexion TLS réelle. L'identifiant reste votre adresse cox.net complète. Les anciens noms pop.cox.net et smtp.cox.net ne fonctionnent plus."
+    },
+    {
+      "q": "Pourquoi mon mot de passe Cox est-il refusé dans un client de messagerie ?",
+      "a": "Parce que la boîte est désormais un compte Yahoo, et Yahoo exige un mot de passe d'application pour les clients qui n'utilisent pas sa propre fenêtre de connexion. Votre mot de passe webmail est correct et il est pourtant refusé au niveau IMAP. Générez un mot de passe d'application depuis la page de sécurité du compte Yahoo, sous External connections, et utilisez-le à la place."
+    },
+    {
+      "q": "Puis-je encore obtenir une nouvelle adresse cox.net ?",
+      "a": "Non. Cox a cessé de permettre à ses clients de créer des comptes Cox Email le 15 août 2019, et le transfert du service chez Yahoo n'a pas rouvert cette possibilité. Seules les adresses créées avant cette date existent, c'est pourquoi cette page s'adresse aux personnes qui en ont déjà une."
+    },
+    {
+      "q": "Mon courrier Cox est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct via IMAP à chaque requête et transmis à votre client IA. Les identifiants, y compris le mot de passe d'application, sont chiffrés au repos, et le contenu des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez votre boîte cox.net à votre IA",
+    "sub": "Un mot de passe d'application, quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://pomoc.o2.pl/jak-skonfigurowac-program-pocztowy",
+    "https://pomoc.o2.pl/aktywacja-dostepu-dla-programow-pocztowych"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña de la cuenta, o una contraseña para programas de correo con 2FA",
+    "helpUrl": "https://pomoc.o2.pl/aktywacja-dostepu-dla-programow-pocztowych",
+    "usernameForm": "Tu dirección completa, incluido el dominio: nazwa@o2.pl.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "o2.pl Poczta: configuración IMAP y acceso MCP de Claude",
+    "description": "Conecta un buzón o2.pl a Claude, Cursor y cualquier cliente MCP en poczta.o2.pl:993. Activa IMAP en Opcje; con 2FA hace falta una contraseña de correo propia."
+  },
+  "hero": {
+    "eyebrow": "o2.pl Poczta + IA",
+    "titleLine1": "Conecta tu buzón de o2.pl",
+    "titleLine2": "a Claude, Cursor, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de o2.pl. Lee, busca, envía, responde, programa y organiza el correo por IMAP, una vez que IMAP esté activado en las opciones del buzón.",
+    "answer": "Claude no puede acceder a un buzón de o2.pl por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en poczta.o2.pl, puerto 993, para que Claude, Cursor o cualquier cliente MCP puedan leer, buscar, enviar y organizar el correo. o2.pl viene con el acceso para programas de correo cerrado: lo abres en el webmail, en Opcje, pestaña IMAP/POP. Si la cuenta tiene activado el inicio de sesión en dos pasos, te autenticas con un hasło do programu pocztowego creado para ello en lugar de tu contraseña del navegador. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Activa primero IMAP en Opcje",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta o2.pl: un solo servidor para ambos sentidos, más un interruptor",
+    "body": "o2.pl ofrece IMAP en <code>poczta.o2.pl</code>, puerto 993, con TLS implícito, y el envío SMTP en el <b>mismo nombre de servidor</b>, puerto 465, lo que sorprende a quien espera un nombre <code>smtp.</code> aparte. La propia página de configuración de o2 indica <code>poczta.o2.pl</code> para ambos sentidos, con SSL en cada uno y autenticación SMTP obligatoria. La credencial depende de cómo esté protegida la cuenta. Con un inicio de sesión normal de un solo factor, es tu contraseña habitual de o2. Con el inicio de sesión en dos pasos activado, o2 indica que no uses la contraseña del navegador y que crees en su lugar una <b>hasło do programu pocztowego</b> (contraseña para programas de correo) dedicada, una por cada cliente externo. En ambos casos, el nombre de usuario es la dirección completa."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
+    },
+    {
+      "h": "Activa IMAP en el webmail de o2",
+      "p": "Inicia sesión en tu buzón, haz clic en <b>Opcje</b>, abre la pestaña <b>IMAP/POP</b> y activa <b>IMAP</b>, que o2 presenta como la opción que descarga y envía mensajes (<b>pobieraj i wysyłaj wiadomości</b>). POP solo descarga, así que IMAP es la que necesitas. Mientras no esté activada, los clientes externos son rechazados."
+    },
+    {
+      "h": "Si el inicio de sesión en dos pasos está activado, crea una contraseña para programas de correo",
+      "p": "o2 documenta que, con la autenticación de dos factores activada, no debes usar la contraseña que escribes en el navegador. En su lugar creas una <b>hasło do programu pocztowego</b>, una contraseña dedicada para cada cliente externo que use IMAP o POP3. Ese es el valor que necesita mcpemails. Si el inicio de sesión en dos pasos está desactivado, tu contraseña habitual de la cuenta funciona tal cual."
+    },
+    {
+      "h": "Pégala en mcpemails y después pega la URL MCP en tu IA",
+      "p": "Elige IMAP / SMTP, escribe la dirección completa, por ejemplo nazwa@o2.pl, y pega la contraseña. Los servidores y puertos vienen rellenados y se verificaron con una conexión TLS real. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "El inicio de sesión en dos pasos no te bloquea, pero cambia qué contraseña funciona",
+      "p": "En esto o2.pl se diferencia de sus vecinos polacos. Interia simplemente bloquea los programas de correo cuando se activa el inicio de sesión en dos pasos. o2 los mantiene funcionando y emite en su lugar una <b>hasło do programu pocztowego</b> aparte, creada para cada cliente externo. La trampa es que nada te dice en qué régimen estás: con el segundo factor activado, tu contraseña del navegador pasa a ser, sin aviso, la credencial equivocada, y el error de autenticación resultante es igual al de una errata. Revisa la configuración de inicio de sesión de la cuenta antes de concluir que la conexión está rota."
+    },
+    {
+      "h": "IMAP está cerrado hasta que lo abres en Opcje, y POP es otro interruptor",
+      "p": "La pestaña <b>IMAP/POP</b> de <b>Opcje</b> tiene interruptores separados. o2 describe IMAP como <b>pobieraj i wysyłaj wiadomości</b> (descargar y enviar) y POP como <b>pobieraj wiadomości</b> (solo descargar). Activar POP no abre IMAP. Un agente que puede leer pero no archivar, o un cliente que se conecta en el 995 y no en el 993, suele deberse a esto: se activó el interruptor equivocado de los dos."
+    },
+    {
+      "h": "Sin SASL-IR, así que un cliente que lo da por hecho recibe un BAD sin explicación",
+      "p": "El banner IMAP de o2 es mínimo (<code>* OK IMAP4 ready</code>) y anuncia <code>AUTH=PLAIN</code> sin <code>SASL-IR</code>. Los clientes que envían la credencial en un solo paso junto con <code>AUTHENTICATE</code> son rechazados con un <code>BAD</code> escueto que parece un problema de credenciales. mcpemails recurre automáticamente al intercambio en dos pasos. Conviene saberlo porque es la razón por la que las herramientas IMAP genéricas a veces dan o2.pl por inaccesible cuando la cuenta está perfectamente."
+    },
+    {
+      "h": "MOVE funciona aquí, pero las carpetas se siguen identificando por nombre",
+      "p": "Algo poco habitual en este grupo de proveedores: o2.pl sí anuncia la extensión IMAP <code>MOVE</code>, así que archivar un mensaje es un único comando atómico en lugar de copia más marca más expunge. Lo que no anuncia es <code>SPECIAL-USE</code>, así que Enviados, Borradores y Papelera se identifican por su nombre. Un buzón polaco de o2 suele llamarlos <b>Wysłane</b>, <b>Robocze</b> y <b>Kosz</b>, así que si un agente no encuentra una carpeta, nómbrala explícitamente en lugar de describir su función."
+    }
+  ],
+  "limits": [
+    "Como falta SPECIAL-USE, un agente identifica Enviados, Borradores y Papelera por su nombre. Un buzón con carpetas renombradas necesita que la instrucción indique el nombre de la carpeta.",
+    "Las contraseñas para programas de correo de o2 se crean por cliente. Cambiar la contraseña de la cuenta no las invalida, así que retira las que dejes de usar."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de o2.pl?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para o2.pl. Apuntar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y esa misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuál es la configuración IMAP y SMTP de o2.pl?",
+      "a": "Ambos sentidos usan el mismo nombre de servidor. IMAP es poczta.o2.pl en el puerto 993 con SSL, y SMTP es poczta.o2.pl en el puerto 465, también con SSL y con autenticación obligatoria. El nombre de usuario es tu dirección completa. Los servidores y puertos se confirmaron con una conexión TLS real y coinciden con lo que publica o2."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de o2.pl en un cliente de correo?",
+      "a": "Por dos motivos, en este orden. IMAP no está activado en el buzón, lo que se soluciona en Opcje, pestaña IMAP/POP. O la cuenta tiene activado el inicio de sesión en dos pasos, en cuyo caso o2 exige una hasło do programu pocztowego dedicada en lugar de la contraseña que escribes en el navegador."
+    },
+    {
+      "q": "¿Necesito un plan de pago de o2 para usar IMAP?",
+      "a": "No. Las propias instrucciones de o2 para activar el acceso de programas de correo lo describen como un ajuste del buzón y no como una función del plan, y no lo condicionan a una suscripción. Si se rechaza tu inicio de sesión, revisa el interruptor IMAP/POP y la cuestión del inicio de sesión en dos pasos antes de suponer una restricción del plan."
+    },
+    {
+      "q": "¿Es el correo de o2.pl lo mismo que el de WP.pl?",
+      "a": "Son buzones distintos con nombres de servidor distintos, aunque ambos pertenecen al grupo Wirtualna Polska. Una dirección o2.pl se conecta a poczta.o2.pl. No apuntes una cuenta de o2 a un servidor de WP ni al revés; usa la página del proveedor de tu dirección y el servidor que viene rellenado allí."
+    },
+    {
+      "q": "¿Se almacena mi correo de o2.pl en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de o2 por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de o2.pl",
+    "sub": "Conecta el correo de o2.pl en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

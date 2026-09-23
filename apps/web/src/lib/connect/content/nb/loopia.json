@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://support.loopia.com/wiki/email-servers/",
+    "https://support.loopia.se/wiki/administrera-e-postkonto/",
+    "https://support.loopia.se/wiki/skapa-en-e-postadress/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Passord for e-postkontoen",
+    "helpUrl": "https://support.loopia.se/wiki/administrera-e-postkonto/",
+    "usernameForm": "Hele adressen din, inkludert domenet: namn@dittdoman.se.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Loopia-e-post til Claude og MCP-klienter",
+    "description": "Koble Loopia-e-post til Claude, Cursor og enhver MCP-klient over IMAP på mailcluster.loopia.se:993, én felles vert for alle domener. Én innboks gratis for alltid."
+  },
+  "hero": {
+    "eyebrow": "Loopia-e-post + AI",
+    "titleLine1": "Koble Loopia-e-post til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Loopia-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP med passordet som er satt på kontoen i Loopia Kundzon.",
+    "answer": "Claude kan ikke nå en Loopia-postkasse på egen hånd. mcpemails er en driftet MCP-server som kobler den til over IMAP på mailcluster.loopia.se port 993, og autentiserer med hele e-postadressen din og passordet som er satt for den kontoen i Loopia Kundzon, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Loopia bruker ett felles klyngevertsnavn for alle kunder, så det finnes ingen egen server per domene å slå opp og ikke noe app-passord å generere. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Kontopassord satt i Loopia Kundzon",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles Loopia til: én klyngevert, IMAP og SMTP",
+    "body": "Loopia kjører begge protokollene på ett enkelt vertsnavn, <code>mailcluster.loopia.se</code>: port 993 for IMAP med implisitt TLS og port 465 for SMTP, også med implisitt TLS. Den samme verten betjener alle Loopia-kunder, uansett hvilket domene adressen tilhører. Loopias dokumentasjon er tydelig på brukernavnet: det er alltid hele e-postadressen din, for eksempel <code>namn@exempel.se</code>, både for innkommende og utgående e-post, og autentisering kreves for å sende. Passordet er det som ble valgt da adressen ble opprettet i Loopia Kundzon, og Loopia lar deg endre det enten der eller på <code>mailadmin.loopia.se</code>. Det finnes ikke noe app-passord og ingen IMAP-bryter per postkasse."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Angi kontopassordet i Kundzon eller Mailadmin",
+      "p": "Logg inn i Loopia Kundzon, åpne listen over e-postadresser for domenet ditt, klikk på adressen og velg Edit. Et passordfelt vises ved siden av Password: skriv inn et nytt og lagre. Den samme endringen kan gjøres på mailadmin.loopia.se hvis du administrerer e-post uten full tilgang til Kundzon."
+    },
+    {
+      "h": "Lim det inn i mcpemails",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen og lim inn kontopassordet. Verten mailcluster.loopia.se og portene 993 og 465 er fylt inn på forhånd og ble verifisert fra en direkte TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Det finnes ingen mail.dittdomene.se hos Loopia",
+      "p": "Loopia håndterer all kundepost på én klynge, og vertsnavnet er <code>mailcluster.loopia.se</code> for alle. Veiledninger skrevet for cPanel-lignende verter ber deg bruke <code>mail.</code> etterfulgt av ditt eget domene, og hos Loopia finnes det navnet som regel ikke i DNS i det hele tatt, eller det peker til webhotellet ditt i stedet for til e-post. Feilen ser ut som et nettverksproblem og ikke som en konfigurasjonsfeil, noe som sender folk til feil supportartikkel."
+    },
+    {
+      "h": "Postkassepassordet administreres på to forskjellige steder",
+      "p": "Loopia tilbyr e-postadministrasjon både i Kundzon, sammen med domenene og fakturaene dine, og separat på <code>mailadmin.loopia.se</code>, som finnes for at noen skal kunne drifte e-posten uten å ha kontoinnloggingen. Et passord som endres ett sted, gjelder for postkassen begge steder. Team som bruker begge grensesnittene, tilbakestiller noen ganger et passord i Mailadmin og lurer så på hvorfor verdien de noterte fra Kundzon for flere måneder siden, ikke lenger fungerer."
+    },
+    {
+      "h": "Ingen MOVE eller SPECIAL-USE, og mappenavnene er svenske",
+      "p": "Serveren annonserer ikke MOVE-utvidelsen, så flytting av en melding kjøres som en kopi, en flaggoppdatering og en expunge i stedet for én atomisk kommando, og UIDPLUS mangler, så den nye UID-en må finnes ved å søke i målmappen. SPECIAL-USE mangler også, noe som betyr at Sendt, Utkast, Papirkurv og Søppelpost gjenkjennes etter navn. Loopia-postkasser som er opprettet via det svenske grensesnittet, har ofte Skickat, Utkast, Papperskorgen og Skräppost, så hvis en agent ikke finner papirkurvmappen din, oppgi den eksplisitt."
+    }
+  ],
+  "limits": [
+    "Fordi serveren ikke støtter MOVE, er en flytting ikke atomisk. Hvis en tilkobling brytes midt i operasjonen, kan en melding en kort stund finnes i begge mappene.",
+    "Mapperoller utledes fra navn, så en postkasse der mappene har fått nytt navn, trenger at mappen oppgis eksplisitt i forespørselen."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Loopia-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Loopia-kobling. Ved å peke en MCP-server som mcpemails mot Loopia-postkassen din over IMAP får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den, og den samme tilkoblingen fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Loopia?",
+      "a": "Begge bruker mailcluster.loopia.se. IMAP er port 993 med implisitt TLS og SMTP er port 465, også med implisitt TLS, og autentisering kreves for å sende. Brukernavnet er alltid hele e-postadressen din, og passordet er kontopassordet fra Kundzon. Verten ble bekreftet fra en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Hvorfor blir Loopia-passordet mitt avvist?",
+      "a": "Som regel fordi du skrev inn innloggingen til Loopia Kundzon i stedet for passordet som er satt på den enkelte e-postkontoen, eller fordi noen andre har endret passordet på mailadmin.loopia.se. Åpne adressen i Kundzon, velg Edit, angi et nytt passord og bruk det. Sjekk også at brukernavnet er hele adressen."
+    },
+    {
+      "q": "Trenger Loopia et app-passord?",
+      "a": "Nei. Loopia utsteder ikke app-passord for e-post, og det er ingenting som må slås på per postkasse før en klient kan logge inn. Kontopassordet autentiserer både IMAP og SMTP. Hvis du helst ikke vil gjenbruke et eksisterende passord, angi et nytt for adressen i Kundzon."
+    },
+    {
+      "q": "Lagres Loopia-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Loopia over IMAP for hver forespørsel og overleveres til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke beholdt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Loopia-innboks",
+    "sub": "Koble til Loopia-e-post på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

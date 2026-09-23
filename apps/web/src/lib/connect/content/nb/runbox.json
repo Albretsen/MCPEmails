@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://help.runbox.com/email-program-settings/",
+    "https://help.runbox.com/more-about-two-factor-authentication-and-app-passwords/",
+    "https://help.runbox.com/usernames-and-passwords/",
+    "https://help.runbox.com/account-security/"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "App-passord (påkrevd når 2FA er på)",
+    "helpUrl": "https://help.runbox.com/more-about-two-factor-authentication-and-app-passwords/",
+    "usernameForm": "Den primære Runbox-e-postadressen din. En runbox.com-adresse autentiserer også som bare brukernavnet; en adresse på eget domene må oppgis i sin helhet. Aliaser virker aldri.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Runbox til Claude med et app-passord",
+    "description": "Koble Runbox til Claude, Cursor og enhver MCP-klient via IMAP på mail.runbox.com:993. Slår du på 2FA i Runbox, autentiserer bare et app-passord en e-postklient."
+  },
+  "hero": {
+    "eyebrow": "Runbox + AI",
+    "titleLine1": "Koble Runbox til Claude,",
+    "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Runbox-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP, i alle MCP-klienter i stedet for én, med både regelen om app-passord og den stille autentiseringsfeilen dekket.",
+    "answer": "Claude når ikke Runbox på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på mail.runbox.com port 993, og SMTP på samme vert port 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Logg inn med den primære Runbox-adressen din, aldri et alias. Er tofaktorautentisering slått på for kontoen, autentiserer det vanlige Runbox-passordet ditt ikke lenger IMAP, POP, SMTP eller CalDAV i det hele tatt, og du må bruke et app-passord opprettet i Runbox-kontoen i stedet. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "App-passord når 2FA er på",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Runbox seg til: én vert, den primære adressen din og et app-passord",
+    "body": "Runbox kjører e-post på ett enkelt vertsnavn. IMAP er <code>mail.runbox.com</code> på port 993 med TLS, POP3 er samme vert på 995, og SMTP er <code>mail.runbox.com</code> på port 465 med TLS eller 587 med STARTTLS. Runbox påpeker at 465 gir bedre tilkoblingssikkerhet, mens 587 noen ganger er mer kompatibel med eldre programmer. Brukernavnet er den <b>primære</b> Runbox-adressen din: en <code>runbox.com</code>-adresse virker enten fullstendig eller som bare brukernavnet, en adresse på et domene du eier, må oppgis i sin helhet, og Runbox sier eksplisitt at aliasadresser ikke kan brukes til å logge inn. Hvilket passord du trenger, avhenger av én kontoinnstilling. Runbox <b>App Passwords</b> virker med eller uten tofaktorautentisering, men når 2FA er på, er de ikke lenger valgfrie: kontopassordet avvises av alle protokoller unntatt webgrensesnittet."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, uten kort. Til slutt får du en MCP-URL og en nøkkel."
+    },
+    {
+      "h": "Opprett et app-passord i Runbox-kontoen din",
+      "p": "Logg inn i Runbox på nettet og åpne skjermen App Passwords i kontoinnstillingene. Gi det et navn etter denne tilkoblingen, send inn og kopier verdien. Gjør dette uansett om du bruker tofaktorautentisering eller ikke: et app-passord kan trekkes tilbake for seg selv, og Runbox blokkerer app-passord fra webmail-innlogging, så påloggingen som lagres her, kan ikke brukes til å logge inn og endre kontoen din."
+    },
+    {
+      "h": "Legg til postkassen i mcpemails med den primære adressen din",
+      "p": "Velg IMAP / SMTP. Skriv inn den <b>primære</b> Runbox-adressen din som brukernavn, som er adressen som vises øverst til høyre i Runbox-webmail når du er logget inn, og lim inn app-passordet. Verten er forhåndsutfylt som <code>mail.runbox.com</code> for begge retninger og ble verifisert via en direkte TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Runbox annonserer ikke SASL-IR, og de fleste klientbiblioteker antar det",
+      "p": "Serveren svarer med et naket <code>* OK IMAP4 ready</code> og tilbyr <code>AUTH=PLAIN</code> uten SASL-IR-funksjonen, så den avviser autentisering i ett steg, der påloggingsdetaljene sendes sammen med AUTHENTICATE-kommandoen. En klient som antar SASL-IR, får en naken BAD uten forklaring, og alle lag over den rapporterer det som en innloggingsfeil, så du leter etter et passordproblem som ikke finnes. mcpemails oppdager BAD-svaret og faller tilbake til utvekslingen i to steg, så tilkoblingen fullføres her. Det er grunnen til at mange ellers solide IMAP-verktøy feiler mot Runbox mens de virker overalt ellers."
+    },
+    {
+      "h": "Å slå på 2FA ødelegger alle protokoller på én gang, ikke bare e-post",
+      "p": "Runbox dokumenterer at når du aktiverer tofaktorautentisering, slutter det vanlige kontopassordet å virke for IMAP, POP, SMTP, FTP og CalDAV eller CardDAV samtidig. Webmail fortsetter å virke, så kontoen ser frisk ut mens alle enheter feiler på en gang. Hver av dem trenger et app-passord. Sett en Unlock Code samtidig som du slår på 2FA: uten en betyr tap av autentiseringsappen at du må kontakte Runbox-support i stedet for å slå av 2FA selv."
+    },
+    {
+      "h": "Et alias logger ikke inn, uansett hvor mye e-post som kommer gjennom det",
+      "p": "Runbox sier at aliasadresser ikke kan brukes til å logge inn på kontoen, og at brukernavnet er den primære Runbox-e-postadressen din, vist over meldingslisten i webmail. Dette rammer folk som i det stille har gått over til å bruke et alias til alt og ikke lenger husker hvilken adresse kontoen ble åpnet med. E-post sendt til et hvilket som helst alias havner fortsatt i samme postkasse, og agenten din ser den fortsatt; det er bare påloggingen som er kresen."
+    },
+    {
+      "h": "SORT og THREAD på serversiden finnes, MOVE gjør ikke",
+      "p": "En uvanlig funksjonsmiks. Runbox annonserer QUOTA, NAMESPACE, CHILDREN, SORT og både THREAD=REFERENCES og THREAD=ORDEREDSUBJECT, så sortering og tråding skjer på serveren i stedet for ved å hente ned headere, noe som gjør søk i en stor postkasse raskere enn resten av funksjonslisten skulle tilsi. Den annonserer ikke MOVE, så arkivering av en melding er en COPY, en STORE av flagget \\Deleted og en EXPUNGE. UIDPLUS finnes, så mål-UID-en kommer i det minste tilbake uten et nytt søk."
+    }
+  ],
+  "limits": [
+    "Å koble en Runbox-postkasse til en AI-klient betyr at den AI-leverandøren leser innholdet i meldingene den jobber med. mcpemails henter e-post direkte fra mail.runbox.com for hver forespørsel og lagrer ikke meldingsinnhold, og påloggingsdetaljer krypteres ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du kobler til. Runboxs norske jurisdiksjon og personvernforpliktelser gjelder Runbox. De strekker seg ikke til en AI-leverandør du selv kobler til postkassen.",
+    "Serveren annonserer ikke SPECIAL-USE, så ingenting på linjen sier hvilken mappe som er Sent, Drafts, Trash eller Spam, og rollene utledes fra navn. Har du omdøpt mapper i Runbox 7, eller har mer enn én Sent-mappe fra en gammel import, oppgi mappen eksplisitt når du ber en agent arkivere noe.",
+    "Fordi MOVE mangler, er en flytting ikke atomisk. Hvis en tilkobling brytes underveis, kan en melding kortvarig finnes i både kilde- og målmappen."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Runbox?",
+      "a": "Ikke direkte. Claude har ingen innebygd Runbox-kobling. Kobler du en MCP-server som mcpemails til Runbox-postkassen din via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da i Cursor, ChatGPT og andre MCP-klienter uten at noe må settes opp på nytt."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Runbox?",
+      "a": "IMAP er mail.runbox.com på port 993 med TLS, og POP3 er samme vert på 995. SMTP er mail.runbox.com på port 465 med TLS, eller 587 med STARTTLS. Brukernavnet er den primære Runbox-adressen din, og for en runbox.com-adresse virker også bare brukernavnet. Begge vertene ble verifisert via en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Trenger jeg et Runbox-app-passord?",
+      "a": "Du trenger et hvis tofaktorautentisering er slått på, fordi Runbox da avviser kontopassordet for IMAP, POP, SMTP, FTP og CalDAV. App-passord virker også uten 2FA, og å bruke et er det bedre valget uansett: det kan trekkes tilbake enkeltvis, og Runbox godtar ikke app-passord for webmail-innlogging, så den lagrede påloggingen kan ikke brukes til å logge inn på kontoen din."
+    },
+    {
+      "q": "Hvorfor feiler Runbox-innloggingen min uten noen nyttig feilmelding?",
+      "a": "Som regel fordi klienten antok SASL-IR-funksjonen, som Runbox ikke annonserer. Serveren svarer med en naken BAD på autentiseringsforsøket i ett steg, og klienten rapporterer det som en feil med påloggingsdetaljene. mcpemails prøver på nytt med utvekslingen i to steg, så tilkoblingen virker her. Den andre vanlige årsaken er å skrive inn et alias i stedet for den primære adressen."
+    },
+    {
+      "q": "Kan jeg logge inn med en Runbox-aliasadresse?",
+      "a": "Nei. Runbox sier eksplisitt at aliasadresser ikke kan brukes til å logge inn. Brukernavnet er den primære adressen på kontoen, vist øverst til høyre i Runbox-webmail. Aliaser leverer fortsatt til samme postkasse, så en agent leser e-post sendt til dem som normalt, og du kan fortsatt sende fra et alias ved å sette det opp som en identitet."
+    },
+    {
+      "q": "Lagres Runbox-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra mail.runbox.com via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke. AI-klienten du kobler til, mottar innholdet i alt den leser, og det er en separat beslutning fra hvor e-posten ligger."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Runbox-innboks",
+    "sub": "Koble til Runbox på minutter med et app-passord. Én innboks gratis for alltid, uten kort."
+  }
+}

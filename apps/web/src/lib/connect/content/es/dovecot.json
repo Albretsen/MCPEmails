@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://doc.dovecot.org/2.3/configuration_manual/dovecot_ssl_configuration/",
+    "https://doc.dovecot.org/",
+    "https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/deploying_mail_servers/configuring-and-maintaining-a-dovecot-imap-and-pop3-server_deploying-mail-servers"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://doc.dovecot.org/2.3/configuration_manual/dovecot_ssl_configuration/",
+    "usernameForm": "Lo que tu userdb devuelva como nombre de inicio de sesión, normalmente la dirección completa user@yourdomain.com, pero un nombre de usuario sin dominio en instalaciones que usan un passdb del sistema.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta Dovecot IMAP a Claude y cualquier cliente MCP",
+    "description": "Conecta tu servidor Dovecot a Claude, Cursor y ChatGPT por IMAP. Qué inet_listener sirve el 993, qué líneas ssl_cert importan y por qué el 143 rechaza inicios de sesión."
+  },
+  "hero": {
+    "eyebrow": "Dovecot + IA",
+    "titleLine1": "Conecta tu servidor Dovecot",
+    "titleLine2": "a Claude, Cursor y cualquier cliente MCP",
+    "lead": "Tú gestionas el servidor IMAP, así que tú decides a qué puede llegar un agente. Apunta mcpemails a tu propio servidor Dovecot y deja que Claude lea, busque, envíe, responda, programe y archive correo en los buzones que ya gestionas.",
+    "answer": "Claude no puede acceder por sí solo a un servidor Dovecot. mcpemails es un servidor MCP alojado que se conecta a tu instalación de Dovecot por IMAP en tu propio nombre de servidor, normalmente mail.yourdomain.com en el puerto 993, con la contraseña del buzón que tu passdb ya acepta, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. No hay un nombre de servidor compartido que consultar: el servidor es como se llame el tuyo, tiene que ser accesible desde internet y su certificado TLS tiene que ser válido para el nombre al que te conectas. Una bandeja es gratis.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "La contraseña de tu buzón de Dovecot actual",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Dovecot: tu propio servidor, tu propio passdb",
+    "body": "Dovecot no es un proveedor de buzones, es el servidor IMAP que instalaste, así que no hay nombre de servidor compartido ni cuenta de proveedor en la que iniciar sesión. El servidor es el nombre al que responde tu máquina, normalmente algo como <code>mail.yourdomain.com</code>. En qué puertos responde se decide en <code>conf.d/10-master.conf</code>, donde el bloque <code>service imap-login</code> contiene un <code>inet_listener imap</code> para el puerto 143 y un <code>inet_listener imaps</code> para el puerto 993 con <code>ssl = yes</code>. Poner <code>port = 0</code> en un listener lo desactiva, y así es como muchas instalaciones endurecidas acaban solo con el 993. Las credenciales son las que valide tu passdb, así que en una configuración de buzones virtuales es la contraseña que definiste en tu tabla de usuarios SQL o LDAP, y en una configuración de usuarios del sistema es la contraseña de la cuenta Unix. Ejecuta <code>doveconf -n</code> en la máquina para ver la configuración que Dovecot cargó realmente y no la que crees que escribiste."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis",
+      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre, lo que basta para probarlo con un buzón real de tu propio servidor."
+    },
+    {
+      "h": "Confirma en qué escucha Dovecot",
+      "p": "En el servidor, ejecuta <code>doveconf -n</code> y lee el bloque <code>service imap-login</code>. Fíjate en si <code>inet_listener imaps</code> está presente en el 993, y revisa el ajuste <code>listen</code>: si dice <code>127.0.0.1</code>, Dovecot solo responde en loopback y nada fuera de la máquina puede alcanzarlo."
+    },
+    {
+      "h": "Comprueba el certificado del 993 desde fuera",
+      "p": "Desde una máquina que no sea tu servidor de correo, ejecuta <code>openssl s_client -connect mail.yourdomain.com:993</code>. Quieres una cadena que se verifique y un nombre de sujeto que coincida con el servidor que vas a escribir en mcpemails. Después añade la bandeja: elige IMAP / SMTP e introduce tu nombre de servidor, el usuario del buzón y su contraseña."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Sin entradas special_use, Dovecot no define funciones de carpeta",
+      "p": "Dovecot solo anuncia la extensión SPECIAL-USE para los buzones que hayas declarado. Salvo que <code>15-mailboxes.conf</code> tenga entradas como <code>mailbox Sent { special_use = \\Sent }</code>, un cliente IMAP recibe una lista plana de nombres y tiene que adivinar qué carpeta es Enviados, Borradores, Correo no deseado o Papelera. mcpemails recurre a identificarlas por nombre, así que en un servidor cuyas carpetas se llamen Sent Items, Gesendet o Papierkorb puede que haya que elegir la carpeta a mano una vez. Añadir las líneas special_use lo arregla para siempre en todos tus clientes."
+    },
+    {
+      "h": "Un prefijo de namespace reescribe todos los nombres de carpeta que ves",
+      "p": "Las estructuras Maildir++ suelen definir un namespace de bandeja de entrada con <code>prefix = INBOX.</code> y <code>separator = .</code>, así que las carpetas llegan como <code>INBOX.Sent</code> e <code>INBOX.Archive</code> en lugar de <code>Sent</code> y <code>Archive</code>. No es un fallo, pero significa que los nombres de carpeta que copiaste de tu webmail no coincidirán con los que informa IMAP. Consulta los nombres reales con <code>doveadm mailbox list -u user@yourdomain.com</code> antes de suponer que falta algo."
+    },
+    {
+      "h": "disable_plaintext_auth convierte una contraseña correcta en un BAD en el 143",
+      "p": "Con <code>disable_plaintext_auth = yes</code>, el valor predeterminado en la mayoría de distribuciones, Dovecot rechaza LOGIN en el puerto 143 hasta que el cliente ha enviado STARTTLS. El cliente ve un fallo de autenticación y el usuario concluye que la contraseña es incorrecta. No lo es: la conexión aún no estaba cifrada. El puerto 993 no se ve afectado porque el TLS implícito ya está activo antes de empezar la autenticación, una razón más para usar el 993."
+    },
+    {
+      "h": "ssl_cert necesita el prefijo <, y un certificado por nombre necesita local_name",
+      "p": "En <code>10-ssl.conf</code>, el <code>&lt;</code> inicial de <code>ssl_cert = &lt;/etc/letsencrypt/live/mail.yourdomain.com/fullchain.pem</code> es obligatorio: le indica a Dovecot que lea el contenido del archivo en lugar de tratar la ruta como el certificado. Apúntalo a <code>fullchain.pem</code> y no a <code>cert.pem</code>, o faltará el intermedio y los validadores estrictos rechazarán un certificado que tu navegador aceptaba. Si la máquina sirve varios nombres de servidor, cada uno necesita su propio bloque <code>local_name</code>; si no, todas las conexiones reciben el certificado predeterminado y solo valida un nombre."
+    }
+  ],
+  "limits": [
+    "Tu servidor Dovecot tiene que aceptar conexiones desde internet para que un servidor MCP alojado pueda alcanzarlo. Si tu política es que IMAP nunca sale de la LAN o de la VPN, es una respuesta legítima y este producto no puede servirte como servicio alojado. En su lugar puedes alojar tú mismo mcpemails, lo que mantiene la conexión IMAP dentro de tu propia red.",
+    "Aquí la validación TLS estricta no es opcional. Se rechazará un certificado autofirmado, uno caducado o uno emitido para otro nombre de servidor, y no hay ninguna casilla para aceptarlo igualmente.",
+    "Los envíos salen por tu propio servicio de envío, así que tus registros SPF, DKIM y DMARC determinan la entregabilidad exactamente igual que para cualquier otro cliente de ese servidor."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Dovecot?",
+      "a": "No directamente. Claude no tiene forma de abrir un socket IMAP hacia un servidor que gestionas tú. Conectar un servidor MCP como mcpemails a tu servidor Dovecot le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar los buzones que hay en él, con las mismas credenciales que usaría cualquier otro cliente IMAP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Dovecot?",
+      "a": "El nombre de servidor es el de tu propio servidor, así que nadie puede publicarlo por ti. Los puertos vienen del bloque <code>service imap-login</code> en <code>conf.d/10-master.conf</code>: 993 para TLS implícito y 143 para STARTTLS, salvo que alguien los haya cambiado. El envío SMTP lo gestiona Postfix o Exim junto a Dovecot, normalmente en el 587 o el 465."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de Dovecot?",
+      "a": "Consulta el registro del servidor en lugar de adivinar. Las dos causas habituales son que se rechaza la autenticación en texto plano en una conexión sin cifrar al puerto 143, y que el nombre de inicio de sesión no coincide con lo que espera tu passdb, ya que las configuraciones virtuales quieren la dirección completa mientras que las de usuarios del sistema quieren un nombre de usuario sin dominio. Ejecuta <code>doveadm auth login user@yourdomain.com</code> en el servidor para probar la credencial sin que la red se interponga."
+    },
+    {
+      "q": "¿Tiene que ser accesible mi servidor Dovecot desde internet?",
+      "a": "Sí, para el servicio alojado. mcpemails se conecta hacia dentro a tu puerto IMAP, así que un servidor vinculado a loopback, limitado por cortafuegos al rango de tu oficina o accesible solo por VPN no se puede conectar. Si prefieres no exponer IMAP públicamente, mcpemails se puede alojar por tu cuenta y ejecutarse dentro de la misma red que el servidor de correo."
+    },
+    {
+      "q": "¿Qué productos están construidos sobre Dovecot?",
+      "a": "Varios de los servidores de correo empaquetados que usa la gente llevan Dovecot por debajo, como mailcow, Mail-in-a-Box y Poste.io, y Open-Xchange App Suite se despliega normalmente con Dovecot como backend de correo. Todo lo que dice esta página sobre listeners, certificados y funciones de carpeta se les aplica también, aunque cada uno tiene su propia interfaz de administración para cambiarlo."
+    },
+    {
+      "q": "¿Se almacena mi correo en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de tu servidor Dovecot por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Dovecot",
+    "sub": "Apunta mcpemails a tu propio servidor. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

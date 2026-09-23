@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://code.visualstudio.com/docs/copilot/customization/mcp-servers"
+  ],
+  "meta": {
+    "title": "将邮箱连接到 VS Code：Copilot 智能体模式 MCP 设置",
+    "description": "为 VS Code 中 GitHub Copilot 的智能体模式接入真实收件箱。运行 MCP: Add Server，选择 HTTP，通过 OAuth 授权。无需 API 密钥。1 个收件箱免费。"
+  },
+  "hero": {
+    "eyebrow": "VS Code + 邮件",
+    "titleLine1": "把你的收件箱连接到 VS Code",
+    "titleLine2": "以及 Copilot 智能体模式",
+    "lead": "为你已经打开的编辑器接入一个真实邮箱。在 Copilot 智能体模式中读取、搜索、发送、回复、转发、定时发送和整理邮件。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "OAuth，无需 API 密钥",
+    "meta2": "邮件实时获取，从不存储",
+    "answer": "从命令面板运行 MCP: Add Server，选择 HTTP，然后粘贴 https://mcpemails.com/api/mcp 。在 MCP 视图中启动服务器，并在提示时完成授权。全程不涉及 API 密钥。"
+  },
+  "method": {
+    "title": "VS Code 如何连接：OAuth，无需 API 密钥",
+    "body": "VS Code 会对本服务器执行标准的 MCP OAuth 流程。它通过 <b>RFC 7591 动态客户端注册</b> 自行注册，所以不需要创建 client ID，并使用 S256 以 <b>授权码加 PKCE</b> 完成授权。整个过程从不传输客户端密钥，令牌也只携带你在我们的授权同意页面上批准的权限范围。它拿到的访问令牌有效期为一小时，并会自动刷新；令牌会以 <code>OAuth:</code> 加客户端名称的形式列在 Dashboard、API Keys 中，你也在那里撤销该连接。"
+  },
+  "setup": [
+    {
+      "h": "创建免费账户并连接邮箱",
+      "p": "在 mcpemails.com 注册，无需绑卡，然后前往 Dashboard、Inboxes、Connect Inbox。Gmail 通过 Google 一键登录连接；iCloud、Fastmail、Yahoo、Zoho 和 Yandex 需要应用专用密码；其他邮箱都可通过标准 IMAP 与 SMTP 连接。免费版包含 1 个收件箱，永久有效。"
+    },
+    {
+      "h": "运行 MCP: Add Server",
+      "p": "用 Shift Cmd P（Windows 和 Linux 上为 Shift Ctrl P）打开命令面板，然后运行 <b>MCP: Add Server</b>。"
+    },
+    {
+      "h": "选择 HTTP",
+      "p": "选择 <b>HTTP</b>，粘贴 <code>https://mcpemails.com/api/mcp</code>，并为它命名。VS Code 会把下面的条目写入 <code>.vscode/mcp.json</code>。"
+    },
+    {
+      "h": "启动并授权",
+      "p": "在 MCP 视图中启动服务器，并在 VS Code 提示时完成登录。批准你希望 Copilot 拥有的权限范围。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "传输方式确实是 HTTP，不是 stdio，选错了会悄无声息地失败",
+      "p": "Add Server 流程首先提供的是基于命令的 stdio 服务器，因为大多数 MCP 服务器都是这种形式。本服务器是远程托管的，没有需要运行的命令。请选择 HTTP，并注意配置键是 <code>type</code>，值为 <code>http</code>。指向 URL 的 stdio 条目会产生一个永远启动不了的服务器，而且看不出任何原因。"
+    },
+    {
+      "h": "工具只在智能体模式中出现",
+      "p": "MCP 工具在智能体模式下对 Copilot 可用。如果连接成功后工具选择器里没有邮件工具，常见原因是你处于 ask 或 edit 模式，而不是 agent 模式。可以在 MCP 视图中确认服务器是否真的在运行。"
+    },
+    {
+      "h": ".vscode/mcp.json 是仓库配置，所以要注意提交了什么",
+      "p": "默认位置在项目内部，这意味着它可能被提交和共享。URL 是公开的，OAuth 令牌也不会写在这里，所以默认配置可以放心共享。但一旦有人改为内联 bearer API 密钥，就不再安全了。任何进入过仓库的密钥都应在 Dashboard、API Keys 中撤销。"
+    }
+  ],
+  "limits": [
+    "每个密钥的请求上限为每分钟 100 次、每小时 1,000 次、每天 10,000 次，此外还受你所在套餐的计费操作上限约束。",
+    "服务器只做请求与响应。没有 webhook，也没有服务器主动发起的事件，所以新邮件永远不会自己唤醒你的智能体。要对新到的邮件作出反应，请按计划轮询。",
+    "每次调用都会从你的邮箱服务商实时获取邮件，从不存储。我们只保存加密后的 OAuth 令牌或应用专用密码，因此令牌一经撤销或邮箱密码一经更改，访问会立即终止。"
+  ],
+  "faq": [
+    {
+      "q": "如何将邮箱连接到 VS Code？",
+      "a": "从命令面板运行 MCP: Add Server，选择 HTTP，粘贴 https://mcpemails.com/api/mcp ，然后启动服务器并在提示时完成授权。之后 Copilot 智能体模式就拥有了读取、搜索、发送、回复、转发、整理和定时发送邮件的工具。"
+    },
+    {
+      "q": "VS Code 需要 API 密钥吗？",
+      "a": "不需要。VS Code 会与本服务器完成浏览器 OAuth 流程，所以不会有任何令牌写入你的配置。bearer API 密钥仍可用于无图形界面或脚本化的场景。"
+    },
+    {
+      "q": "在其他编辑器中的 Copilot 也能用吗？",
+      "a": "本页专门介绍 VS Code，因为 Add Server 流程和 mcp.json schema 都是 VS Code 的功能。JetBrains AI Assistant 需要单独设置，并且使用 bearer API 密钥而非 OAuth；它有专门的页面。"
+    },
+    {
+      "q": "VS Code 通过这种方式能访问哪些邮箱？",
+      "a": "Gmail 通过 Google 登录；iCloud、Fastmail、Yahoo、Zoho 和 Yandex 使用应用专用密码；以及任何在标准端口上支持 IMAP 与 SMTP 的其他邮箱。客户端通过同一个连接看到所有邮箱：你的智能体会先调用 inbox_list 来发现每个已连接的邮箱及其 id，所以不需要在任何地方粘贴 UUID。"
+    },
+    {
+      "q": "VS Code 会在我不知情的情况下发送邮件吗？",
+      "a": "只有在你允许的情况下才会。发送受 send:email 权限范围控制，没有该权限的密钥或令牌根本无法发送。此外，收件箱所有者还可以在仪表盘中要求人工审批，届时每一次发送、回复、转发、草稿发送和定时发送都会被暂扣，直到有人放行。"
+    },
+    {
+      "q": "我的邮件会存储在你们的服务器上吗？",
+      "a": "不会。每封邮件都是为发起请求的那次调用从你的邮箱服务商实时获取，并直接交给你的客户端。我们只保存加密后的 OAuth 令牌或应用专用密码，以便后续调用能够完成认证。在仪表盘中删除该收件箱，或在邮箱服务商处撤销访问权限，连接会立即终止。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给 VS Code 一个真正的收件箱",
+    "sub": "一条命令，一次登录。1 个收件箱永久免费，无需绑卡。"
+  }
+}

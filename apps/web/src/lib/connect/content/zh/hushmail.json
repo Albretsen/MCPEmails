@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://help.hushmail.com/hc/en-us/articles/213269023-POP-IMAP-and-SMTP-server-hostnames-and-ports",
+    "https://help.hushmail.com/article/686-sign-in-to-desktop-and-mobile-email-applications-with-two-step-verification-security-code",
+    "https://help.hushmail.com/article/673-thunderbird-imap"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Hushmail 密码",
+    "helpUrl": "https://help.hushmail.com/article/686-sign-in-to-desktop-and-mobile-email-applications-with-two-step-verification-security-code",
+    "usernameForm": "你的完整 Hushmail 地址，包括域名，即使该字段标注为用户名也一样。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 Hushmail 连接到 Claude、Cursor 与 MCP 客户端",
+    "description": "通过 IMAP 将 Hushmail 连接到 Claude、Cursor 及任意 MCP 客户端。已验证的设置；IMAP 需要付费套餐和单独的访问密码。1 个收件箱免费。"
+  },
+  "hero": {
+    "eyebrow": "Hushmail + AI",
+    "titleLine1": "将 Hushmail 连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Hushmail 收件箱。通过 IMAP 在所有 MCP 客户端中读取、搜索、发送、回复、定时与整理邮件，并且提前说明让大多数配置失败的两步验证特殊之处。",
+    "answer": "Claude 无法自行访问 Hushmail。mcpemails 是一个托管 MCP 服务器，通过 imap.hushmail.com 端口 993 的 IMAP 以及 smtp.hushmail.com 端口 465 的 SMTP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。认证使用你的完整 Hushmail 地址和 Hushmail 密码；不过，开启两步验证后，密码字段必须填写你的密码、一个空格，以及 Preferences 中的 20 位安全码。1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "密码加两步验证安全码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Hushmail 如何连接：IMAP 与拼接的安全码",
+    "body": "Hushmail 在 <code>imap.hushmail.com</code> 端口 993 上通过 SSL 提供 IMAP，在 <code>smtp.hushmail.com</code> 端口 465 上提供 SMTP；文档中说明，如果你的网络过滤了 465，可以改用 587。用户名始终是你的<b>完整邮箱地址</b>，即使客户端把该字段标注为“用户名”也一样，使用自定义域名的 Hushmail 账户同样如此。如果两步验证处于关闭状态，密码就是你的 Hushmail 密码。如果已开启，Hushmail 不会另外签发应用专用密码：它要求你在<b>同一个字段</b>中填写密码和一个 20 位安全码，两者之间用空格隔开。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。完成后你会得到一个 MCP URL 和一个密钥。"
+    },
+    {
+      "h": "如果开启了两步验证，获取你的安全码",
+      "p": "登录 Hushmail 网页邮箱，从右上角菜单打开 <b>Preferences</b>，然后打开 <b>Security</b> 选项卡，滚动到标题为“Using a desktop or mobile email application”的部分。那里显示一个占位符，后面跟着分为四组的 20 个字母的代码。如果两步验证处于关闭状态，请完全跳过这一步，使用你的普通密码。"
+    },
+    {
+      "h": "在 mcpemails 中添加邮箱",
+      "p": "选择 IMAP / SMTP，输入你的完整 Hushmail 地址。在密码字段中输入你的 Hushmail 密码，然后一个空格，再按显示的样子输入四组代码，包括组间空格，末尾不要留空格。服务器已预填为 <code>imap.hushmail.com</code> 和 <code>smtp.hushmail.com</code>。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "两步验证会把你的密码变成密码加代码",
+      "p": "这一点会难住所有人。Hushmail 不签发应用专用密码。开启两步验证后，每次 IMAP 和 SMTP 登录都要求在一个字段中填写 <code>yourpassword xxxxx xxxxx xxxxx xxxxx</code>：你的普通密码，一个空格，然后是用空格分为四组的 20 个字母的安全码。只要有一组写错、末尾多了空格，或只粘贴了代码，服务器就会以普通的认证失败拒绝你，看起来与密码错误完全一样。代码位于网页邮箱的 Preferences、Security 选项卡中。"
+    },
+    {
+      "h": "Hushmail 的 IMAP 服务器不声明 SASL-IR",
+      "p": "服务器只回应一个光秃秃的 <code>* OK IMAP4 ready</code>，只提供 AUTH=PLAIN，没有 SASL-IR 能力。这意味着它会拒绝随 AUTHENTICATE 命令一起发送凭据的一步式认证，默认假设支持 SASL-IR 的客户端会收到一个没有任何解释的 BAD，看起来像是凭据错误。mcpemails 会检测到 BAD 并改用两步交互重试，所以这一点已经处理好了，但这正是一些 IMAP 工具在别处都能用、却在 Hushmail 上失败的原因。"
+    },
+    {
+      "h": "通过 SMTP 发送的邮件以密文形式存入 Sent",
+      "p": "Hushmail 的文档说明，当你从第三方客户端发信时，你的副本会以<b>加密</b>形式保存到 Sent 文件夹，即使邮件本身是未加密发出的。所以，让代理回顾你上周发了什么时，它在该文件夹中找到的是加密数据块而不是可读文本，而同样的邮件在 Hushmail 网页邮箱中可以正常阅读。此外，通过 SMTP 发出的邮件默认不加密，除非收件人是 Hushmail 用户，或已为加密投递设置了密码。"
+    },
+    {
+      "h": "没有 MOVE，也没有 SPECIAL-USE",
+      "p": "Hushmail 的 IMAP 服务器支持 UIDPLUS，但既不声明 MOVE 也不声明 SPECIAL-USE，也不提供 IDLE。移动操作会退回为 COPY、STORE \\Deleted 和 EXPUNGE；文件夹角色按名称而不是按角色匹配；也没有推送，所以新邮件会在下一次轮询时才被发现，而不是在到达的那一刻。"
+    }
+  ],
+  "limits": [
+    "将 Hushmail 邮箱连接到 AI 客户端，意味着该 AI 服务商会读取邮件内容。mcpemails 按请求从 Hushmail 实时获取邮件，不存储邮件正文，凭据也静态加密存储，但文本仍会到达 Claude、Cursor 或你所连接的任何客户端。Hushmail 被大量根据 HIPAA 业务伙伴协议执业的心理治疗师和诊所使用。该协议涵盖的是 Hushmail，而不是第三方 AI 厂商，所以是否连接一个含有患者信息的邮箱，需要你对照自己的合规义务来决定，而不是默认就连。",
+    "加密的 Hushmail 邮件（包括由第三方客户端写入的你自己的 Sent 副本）对代理来说是不可读的。代理能看到发件人、主题和日期，也能标记或归档它们，但看不到正文。",
+    "没有权限受限的凭据可以交出。Hushmail 没有应用专用密码，所以保存的密钥就是你的账户密码，或者是拼接了两步验证安全码的密码。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Hushmail 吗？",
+      "a": "不能直接使用。Claude 没有内置的 Hushmail 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到你的 Hushmail 账户后，Claude 就能读取、搜索、发送、回复、定时和整理邮件，而且同一个连接无需重复设置，即可在 Cursor 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Hushmail 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.hushmail.com，端口 993，使用 SSL。SMTP 为 smtp.hushmail.com，端口 465，使用 SSL；Hushmail 文档说明，如果 465 被封锁，可改用端口 587。任何情况下，用户名都是你的完整 Hushmail 邮箱地址。两个服务器均经实时 TLS 连接验证。"
+    },
+    {
+      "q": "为什么 Hushmail 在邮件客户端中拒绝我的密码？",
+      "a": "几乎总是两步验证的缘故。Hushmail 要求你在同一个密码字段中依次输入密码、一个空格和一个 20 位安全码。在网页邮箱的 Preferences、Security 选项卡中关于桌面和移动邮件应用的部分可以找到该代码。复制时要保留其中的空格，末尾不要留空格。"
+    },
+    {
+      "q": "Hushmail 签发应用专用密码吗？",
+      "a": "不签发。其他服务商会给你一个可撤销的应用专用密码，而 Hushmail 给你的是一个附加在现有密码后面的安全码。它与你的两步验证设置绑定，而不是与单个客户端绑定，所以你无法在不影响其他已连接应用的情况下，单独撤销某一个应用的访问。"
+    },
+    {
+      "q": "我的 AI 能读取加密的 Hushmail 邮件吗？",
+      "a": "不能。任何以加密形式存储的内容（包括你通过第三方客户端发送的邮件）通过 IMAP 到达时都是密文。mcpemails 不持有它的解密密钥。代理可以看到邮件头，也可以移动或标记邮件，但内容始终是封存的，必须在 Hushmail 网页邮箱中阅读。"
+    },
+    {
+      "q": "我的 Hushmail 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都从 imap.hushmail.com 实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储；邮件正文不会保留。AI 客户端本身确实会收到它读取的任何内容，在连接一个含有保密客户往来邮件的邮箱之前，这一点值得权衡。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Hushmail 收件箱",
+    "sub": "几分钟即可连接 Hushmail。1 个收件箱永久免费，无需信用卡。"
+  }
+}

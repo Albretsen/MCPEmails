@@ -1,0 +1,105 @@
+{
+  "_sources": [
+    "https://riseup.net/en/email/clients",
+    "https://riseup.net/en/email/settings/mail-passwords",
+    "https://riseup.net/en/email",
+    "https://account.riseup.net/user/new",
+    "https://support.riseup.net/help/en-us/1-e-mail/7-how-do-i-create-a-new-email-account"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Riseup 账户密码",
+    "helpUrl": "https://riseup.net/en/email/clients",
+    "usernameForm": "只填 Riseup 账户名，例如 joehill，而不是 joehill@riseup.net。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "通过 IMAP 将 Riseup 邮箱连接到 Claude",
+    "description": "通过 IMAP（mail.riseup.net:993）将 Riseup 邮箱连接到 Claude、Cursor 或任意 MCP 客户端。用账户名登录，而不是完整的 riseup.net 地址。"
+  },
+  "hero": {
+    "eyebrow": "Riseup + AI",
+    "titleLine1": "将 Riseup 邮箱连接到 Claude，",
+    "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Riseup 收件箱。通过 IMAP 读取、搜索、发送、回复、定时与整理邮件；我们会解释让大多数配置失败的登录怪癖，也会直说其中的取舍，而不是一笔带过。",
+    "answer": "Claude 无法自行连接 Riseup 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 mail.riseup.net 的 993 端口，通过 SMTP 连接 465 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。决定登录成败的细节是用户名：Riseup 只需要你的账户名，例如 joehill，而不是完整的 joehill@riseup.net 地址。Riseup 不为邮件签发应用密码，所以你保存的凭据就是 Riseup 账户密码。一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "账户名，而不是完整地址",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Riseup 如何连接：一台主机，用户名不带域名",
+    "body": "Riseup 用同一个主机名提供收发两个方向的服务。IMAP 为 <code>mail.riseup.net</code>，993 端口 TLS，或 143 端口 STARTTLS。SMTP 为 <code>mail.riseup.net</code>，465 端口 TLS，或 587 端口 STARTTLS，Riseup 提到如果你通过 Tor 连接，587 比 465 更少被封锁。凭据就是普通的 Riseup 账户密码：邮件没有应用密码，而且 Riseup 是集体运营、靠捐赠维持的服务，而不是按套餐分级的服务，所以不存在需要升级才能解锁 IMAP 的情况。让人栽跟头的是用户名。Riseup 自己的客户端文档规定它只是账户名，即 <code>joehill</code> 而不是 <code>joehill@riseup.net</code>，那些好心帮你填入完整地址的客户端会被拒绝。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。完成后你会得到一个 MCP URL 和一个密钥。"
+    },
+    {
+      "h": "确认你的 Riseup 密码在网页邮箱之外也能用",
+      "p": "Riseup 的邮件密码页面指出，包含特殊字符的密码可能在浏览器中的 <code>mail.riseup.net</code> 上能用，却在邮件客户端中失败。如果你的密码含有不常见的字符且登录被拒，请先在 account.riseup.net 将其改为一个足够长但字符普通的密码，再考虑其他原因。Riseup 目前不为网页邮箱提供双重认证，所以没有第二重验证需要绕过。"
+    },
+    {
+      "h": "在 mcpemails 中用纯账户名添加邮箱",
+      "p": "选择 IMAP / SMTP。在用户名栏输入你的 Riseup 账户名，<b>不带</b> <code>@riseup.net</code>，并输入账户密码。收发两个方向的主机都已自动填为 <code>mail.riseup.net</code>，并已通过实时 TLS 连接验证。任何标为安全认证、加密密码或 CRAM-MD5 的选项都请保持关闭；Riseup 要求不要使用这些。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "用户名是账户名，而不是邮箱地址",
+      "p": "Riseup 的客户端文档规定用户名只是账户名：<code>joehill</code>，而不是 <code>joehill@riseup.net</code>。几乎所有其他服务商都要求完整地址，所以自动配置、使用习惯和第三方指南都会把你推向错误的值，而服务器返回的只是一个与输错密码一模一样的普通认证失败。如果 Riseup 登录被拒而你确定密码没错，请首先修改这一项。"
+    },
+    {
+      "h": "两个看起来都像密码错误的密码陷阱",
+      "p": "第一，Riseup 要求不要开启名为安全密码或安全认证的选项，因为这些质询响应机制要求服务器保存你密码的明文副本，而 Riseup 不会这样做。配置为 CRAM-MD5 的客户端将一无所获。请在 TLS 连接内使用普通密码认证，加密传输正是为此而设。第二，Riseup 文档指出，如果你的密码在浏览器中的 mail.riseup.net 上能用、在邮件客户端中却不行，应检查它是否包含特殊字符。两种失败的表现完全相同，而且都不是你忘了密码。"
+    },
+    {
+      "h": "Riseup 的账户政策是设置的一部分，而不是小字条款",
+      "p": "Riseup 采用邀请制：新账户需要现有用户提供的邀请码，而新创建的账户本身不能发出邀请。存储空间为 1 GB，SMTP 服务器接受的邮件最大约为 25 MB，是这一类服务商中最严格的上限，因此代理尝试发送的大附件会在提交时被拒绝。Riseup 还声明，如果账户被用于发送未经请求的批量邮件、长期未登录，或被用于伤害和虐待他人，账户可能会在没有警告的情况下被删除。不要用它进行自动批量发送，也不要把代理轮询 IMAP 当作你自己在使用这个账户。"
+    },
+    {
+      "h": "没有 MOVE、UIDPLUS 和 SPECIAL-USE",
+      "p": "Riseup 的 IMAP 服务器声明了 IDLE 和 SASL-IR，足以保证读取响应及时，但没有 MOVE、UIDPLUS 或 SPECIAL-USE。归档一封邮件要先 COPY，再为其 STORE \\Deleted 标记，最后 EXPUNGE；由于没有 UIDPLUS，新 UID 要通过搜索找到，而不是由服务器报告。文件夹用途按名称匹配，因为协议中没有任何东西声明它们，如果你重命名过文件夹，或者某个客户端多年前创建了第二个已发送文件夹，这一点就很重要。"
+    }
+  ],
+  "limits": [
+    "将任何邮箱连接到 AI 客户端，都意味着该 AI 服务商会读取它所处理的邮件内容。mcpemails 每次请求都实时从 mail.riseup.net 获取邮件，不存储邮件正文，凭据也经过静态加密，但文本仍会到达 Claude、Cursor 或你连接的任何客户端。很多人持有 Riseup 账户，正是为了让通信远离大型商业科技公司，而在这里连接它恰恰与此背道而驰。这是关于你自身威胁模型的判断，而不是技术限制，值得在连接之前而不是之后想清楚。",
+    "邮件没有范围受限的凭据。Riseup 允许你在 account.riseup.net 为 VPN 和聊天分别设置密码，但邮件没有应用密码，所以这里保存的密钥就是账户密码。撤销此连接意味着修改该密码，并在其他所有地方重新输入。",
+    "以 OpenPGP 加密方式到达的邮件，在 IMAP 客户端中是一段 ASCII 封装的密文。mcpemails 不持有你的任何私钥，因此代理能看到邮件头，也能归档或标记这些邮件，但无法阅读其内容。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Riseup 邮箱吗？",
+      "a": "不能直接使用。Claude 没有 Riseup 连接器，自身也不会 IMAP。将 mcpemails 这样的 MCP 服务器连接到你的 Riseup 邮箱后，Claude 就能通过 IMAP 读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接无需重复设置，也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Riseup 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 mail.riseup.net，993 端口 TLS，或 143 端口 STARTTLS。SMTP 为 mail.riseup.net，465 端口 TLS，或 587 端口 STARTTLS，Riseup 建议 Tor 用户使用 587，因为出口节点较少封锁它。用户名是不带域名的账户名。两台服务器均已通过实时 TLS 连接验证。"
+    },
+    {
+      "q": "为什么邮件客户端拒绝我的 Riseup 密码？",
+      "a": "三个原因几乎涵盖所有情况。你输入了完整地址，而不是纯账户名。你的客户端开启了安全认证或 CRAM-MD5，而 Riseup 有意不支持这些。或者你的密码包含特殊字符，能通过浏览器登录却无法通过客户端登录。请先试纯用户名，然后在 TLS 上使用普通密码认证。"
+    },
+    {
+      "q": "Riseup 有应用密码或双重认证吗？",
+      "a": "邮件没有。Riseup 不为邮件签发应用专用密码，目前也不为网页邮箱提供双重认证。你可以在 account.riseup.net 为 VPN 和聊天设置单独的密码，这样这些凭据就不会出现在你不完全信任的设备上，但邮件客户端拿到的永远是账户密码本身。"
+    },
+    {
+      "q": "Riseup 账户需要邀请码吗？",
+      "a": "需要。Riseup 要求现有用户提供的邀请码，而不是电话号码或个人信息，新创建的账户也不能为他人生成邀请。这是 Riseup 账户层面的问题，与连接无关：如果你已经有一个可用的 Riseup 邮箱，在这里连接它不需要任何额外条件。"
+    },
+    {
+      "q": "我的 Riseup 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 mail.riseup.net 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。你连接的 AI 客户端确实会收到它读取的任何内容，这与存储是两回事，也是这里最值得思考的问题。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Riseup 收件箱",
+    "sub": "以账户名作为用户名，几分钟即可连接 Riseup。一个收件箱永久免费，无需信用卡。"
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://assistance.orange.fr/ordinateurs-peripheriques/installer-et-utiliser/l-utilisation-du-mail-et-services-associes/mail-orange/parametrer-la-boite-mail/mail-orange-comment-acceder-a-sa-boite-mail-orange-depuis-une-application-ou-un-logiciel-de-messagerie-non-fourni-par-orange_434630-964290",
+    "https://assistance.orange.fr/ordinateurs-peripheriques/installer-et-utiliser/l-utilisation-du-mail-et-du-cloud/mail-orange/le-mail-orange-nouvelle-version/parametrer-la-boite-mail/mail-orange-comment-activer-ou-desactiver-les-acces-pop-imap-pour-les-logiciels-ou-applications-de-messagerie-tiers_427398-957069"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe dédié (contraseña dedicada)",
+    "helpUrl": "https://assistance.orange.fr/ordinateurs-peripheriques/installer-et-utiliser/l-utilisation-du-mail-et-services-associes/mail-orange/parametrer-la-boite-mail/mail-orange-comment-acceder-a-sa-boite-mail-orange-depuis-une-application-ou-un-logiciel-de-messagerie-non-fourni-par-orange_434630-964290",
+    "usernameForm": "Tu dirección completa, con el dominio: nom@orange.fr, o nom@wanadoo.fr si es una antigua dirección de Wanadoo.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Configuración IMAP de Orange Mail y acceso MCP con Claude",
+    "description": "Conecta un buzón de Orange.fr a Claude y a cualquier cliente MCP en imap.orange.fr:993. Primero activa POP/IMAP; Orange emite una contraseña dedicada."
+  },
+  "hero": {
+    "eyebrow": "Orange + IA",
+    "titleLine1": "Conecta tu buzón de Orange",
+    "titleLine2": "a Claude, Cursor, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja de Orange real. Lee, busca, envía, responde, programa y organiza correo por IMAP, una vez que hayas activado el acceso POP/IMAP que Orange mantiene desactivado.",
+    "answer": "Claude no puede llegar a un buzón de Orange por su cuenta. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.orange.fr, puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. Antes tienen que estar bien dos cosas: Orange desactiva el acceso POP e IMAP del buzón por motivos de seguridad, así que lo activas en el webmail en Sécurité, y Orange recomienda autenticarse con el mot de passe dédié de tu Espace client en lugar de tu contraseña habitual de Orange. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Activa POP/IMAP, usa la contraseña dedicada",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Orange: IMAP, un interruptor y una contraseña dedicada",
+    "body": "Orange sirve IMAP en <code>imap.orange.fr</code>, puerto 993, sobre TLS implícito, y el envío SMTP en <code>smtp.orange.fr</code>, puerto 465, y el servidor que hay detrás se identifica como Dovecot. Las direcciones de <code>orange.fr</code> y del antiguo dominio <code>wanadoo.fr</code> viven en el mismo par de servidores, así que no hay nada regional ni por cliente que consultar. Lo propio de Orange es todo lo que rodea a la conexión. Orange declara que, por motivos de seguridad, el acceso POP e IMAP está desactivado por defecto, así que el inicio de sesión de un cliente nuevo se rechaza antes de comprobar ninguna contraseña. Y Orange publica un <b>mot de passe dédié</b>, descrito con sus propias palabras como una contraseña específica para el acceso POP, IMAP y SMTP, que obtienes en tu Espace client, en <b>Connexion et sécurité</b>, y usas en lugar de tu contraseña habitual de Orange."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
+    },
+    {
+      "h": "Activa el acceso POP/IMAP en el webmail de Orange",
+      "p": "Abre tu buzón de Orange en un navegador, haz clic en el engranaje (<b>roue crantée</b>), elige <b>tous les paramètres</b>, luego <b>Sécurité</b> y luego <b>Protocoles POP ou IMAP</b>. Haz clic en <b>Modifier</b>, marca <b>Activer POP/IMAP</b> y confirma con <b>Valider</b>. Hazlo antes que nada: mientras no esté activado, se rechaza cualquier inicio de sesión de un cliente y el error parece una contraseña incorrecta."
+    },
+    {
+      "h": "Obtén el mot de passe dédié en tu Espace client",
+      "p": "Inicia sesión en tu Espace client en orange.fr y abre la sección <b>Connexion et sécurité</b>. La contraseña dedicada que aparece ahí es la que Orange quiere que uses para POP, IMAP y SMTP. Es un valor distinto de la contraseña con la que inicias sesión en orange.fr, y Orange la recomienda específicamente para programas de correo."
+    },
+    {
+      "h": "Pégala en mcpemails y luego pega la URL MCP en tu IA",
+      "p": "Elige IMAP / SMTP, escribe la dirección completa, por ejemplo nom@orange.fr, y pega la contraseña dedicada. Los servidores y puertos de Orange ya vienen rellenados. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "POP/IMAP está desactivado hasta que lo activas, y el rechazo parece una contraseña incorrecta",
+      "p": "La propia guía de Orange para conectar una aplicación de correo no suministrada por Orange te pide comprobar que el acceso está activado en la configuración del buzón, porque <b>pour des raisons de sécurité, ces accès sont désactivés par défaut</b> (por motivos de seguridad, estos accesos están desactivados por defecto). El rechazo que recibes cuando está desactivado no trae ninguna explicación. La gente cambia la contraseña, vuelve a escribir la dirección y reinstala el cliente, y nada de eso ayuda, porque en la credencial nunca hubo nada mal. Las páginas de ayuda de Orange no siempre han coincidido entre sí sobre el estado por defecto, así que trata la pantalla <b>Sécurité</b>, luego <b>Protocoles POP ou IMAP</b>, como lo primero que revisar y no lo último."
+    },
+    {
+      "h": "El mot de passe dédié es una credencial distinta de tu inicio de sesión en orange.fr",
+      "p": "Orange la describe como una contraseña específica para el acceso POP, IMAP y SMTP, que se obtiene en el Espace client en <b>Connexion et sécurité</b>. Como es un segundo valor que la mayoría nunca mira, se desincroniza: cambiar tu contraseña principal de Orange no la cambia, y viceversa. Usa la dedicada tanto en el lado entrante como en el saliente de la conexión. Si el envío funciona y la lectura no, o al revés, suele ser porque solo se actualizó una de las dos mitades."
+    },
+    {
+      "h": "El servidor no ofrece IDLE, así que el correo llega por sondeo y no por push",
+      "p": "El banner IMAP de Orange anuncia <code>SASL-IR</code> y <code>LOGIN-REFERRALS</code> pero no <code>IDLE</code>, así que el servidor no tiene forma de avisar de correo nuevo en una conexión abierta. Todos los clientes, el nuestro incluido, tienen que preguntar. En el uso diario no se nota, pero significa que una instrucción como <b>avísame en cuanto llegue una respuesta</b> depende de cada cuánto se revisa el buzón, no de lo rápido que entrega Orange."
+    },
+    {
+      "h": "Sin MOVE, sin SPECIAL-USE y con nombres de carpeta en francés",
+      "p": "El servidor no anuncia la extensión <code>MOVE</code>, así que archivar un mensaje se ejecuta como una copia, una actualización de indicadores y un expunge en lugar de un único comando atómico. Tampoco está <code>SPECIAL-USE</code>, lo que significa que Enviados, Borradores, Papelera y Spam se identifican por nombre y no por función. Un buzón de Orange suele llamarlas <b>Envoyés</b>, <b>Brouillons</b>, <b>Corbeille</b> y <b>Spams</b>, así que indica el nombre de la carpeta de forma explícita si tu agente no la encuentra."
+    }
+  ],
+  "limits": [
+    "Orange limita los mensajes salientes a unos 46 MB de mensaje codificado, así que un adjunto grande reenviado por un agente puede rechazarse directamente en el paso SMTP.",
+    "Como el servidor no admite MOVE, un movimiento no es atómico. Si la conexión se corta a mitad de la operación, un mensaje puede existir brevemente en las dos carpetas."
+  ],
+  "faq": [
+    {
+      "q": "¿Claude funciona con el correo de Orange?",
+      "a": "No directamente. Claude no incluye un conector para Orange. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y después la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuál es la configuración IMAP y SMTP de Orange?",
+      "a": "IMAP es imap.orange.fr en el puerto 993 con TLS implícito. SMTP es smtp.orange.fr en el puerto 465, también con TLS implícito y con autenticación obligatoria. Inicia sesión con tu dirección completa y la contraseña dedicada de Orange. Ambos servidores se confirmaron con una conexión TLS en vivo y son los mismos para las direcciones de orange.fr y de wanadoo.fr."
+    },
+    {
+      "q": "¿Por qué Orange rechaza mi contraseña en un cliente de correo?",
+      "a": "Por dos motivos, en este orden. El acceso POP/IMAP está desactivado en el buzón, lo que se arregla en el webmail en Sécurité, luego Protocoles POP ou IMAP. O estás usando la contraseña con la que inicias sesión en orange.fr en lugar del mot de passe dédié que Orange publica en el Espace client, en Connexion et sécurité, para POP, IMAP y SMTP."
+    },
+    {
+      "q": "¿Las direcciones de wanadoo.fr usan otros servidores?",
+      "a": "No. Una antigua dirección de wanadoo.fr es un buzón de Orange y se autentica contra los mismos servidores imap.orange.fr y smtp.orange.fr, con el mismo interruptor POP/IMAP y la misma contraseña dedicada. Escribe la dirección exactamente como es, incluido el dominio wanadoo.fr."
+    },
+    {
+      "q": "¿Se almacena mi correo de Orange en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Orange por IMAP en cada petición y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Orange",
+    "sub": "Conecta el correo de Orange en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

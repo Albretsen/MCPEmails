@@ -1,21 +1,33 @@
 {
+  "_sources": [
+    "https://docs.rackspace.com/docs/set-up-multifactor-authentification-applications-for-cloud-office",
+    "https://docs.rackspace.com/docs/manage-multi-factor-authentication-for-rackspace-webmail",
+    "https://docs.rackspace.com/docs/configure-multi-factor-authentication"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte, ou mot de passe d'application avec MFA",
+    "helpUrl": "https://docs.rackspace.com/docs/set-up-multifactor-authentification-applications-for-cloud-office",
+    "usernameForm": "Votre adresse e-mail complète sur votre propre domaine. Rackspace utilise l'adresse entière comme identifiant de connexion, pas un nom d'utilisateur distinct.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Connecter Rackspace Email à Claude (et à toute IA)",
-    "description": "Connectez Rackspace Email à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de la boîte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+    "title": "Connecter Rackspace Email à Claude, Cursor et aux clients MCP",
+    "description": "Connectez Rackspace Email à Claude, Cursor et tout client MCP en IMAP via secure.emailsrvr.com:993. Le serveur est partagé, jamais déduit de votre domaine."
   },
   "hero": {
     "eyebrow": "Rackspace Email + IA",
     "titleLine1": "Connectez Rackspace Email à Claude,",
     "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
-    "lead": "Offrez à votre agent IA une vraie boîte Rackspace Email en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de la boîte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "lead": "Offrez à votre agent IA une vraie boîte Rackspace Email en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec le mot de passe de votre boîte, et utilisez la même boîte dans tous vos clients MCP, pas un seul.",
     "meta0": "1 boîte gratuite, pour toujours",
-    "meta1": "Le mot de passe de la boîte, pas de configuration OAuth",
+    "meta1": "Le mot de passe de votre boîte, sans configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude ne peut pas atteindre Rackspace Email tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+    "answer": "Claude ne peut pas accéder seul à Rackspace Email. mcpemails est un serveur MCP hébergé qui l'y connecte en IMAP avec le mot de passe de votre boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes et une boîte est gratuite."
   },
   "method": {
-    "title": "Comment Rackspace Email se connecte : IMAP et le mot de passe de la boîte",
-    "body": "Rackspace Email se connecte via IMAP/SMTP avec le mot de passe de votre boîte. Les deux serveurs sont <code>secure.emailsrvr.com</code> quel que soit votre propre domaine, et c'est ce que l'on oublie souvent : le serveur de messagerie ne se déduit pas de votre nom de domaine. Définissez ou réinitialisez le mot de passe de la boîte dans le panneau Rackspace Cloud Office."
+    "title": "Comment Rackspace Email se connecte : IMAP et le mot de passe de votre boîte",
+    "body": "Rackspace Email se connecte en IMAP/SMTP avec le mot de passe de votre boîte. Les deux serveurs sont <code>secure.emailsrvr.com</code>, quel que soit votre domaine, et c'est ce que beaucoup ratent : le serveur de messagerie n'est pas déduit de votre nom de domaine. Définissez ou réinitialisez le mot de passe de la boîte dans le panneau de contrôle Rackspace Cloud Office."
   },
   "setup": [
     {
@@ -23,8 +35,8 @@
       "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
-      "h": "Récupérez le mot de passe de votre boîte Rackspace",
-      "p": "Dans le panneau Cloud Office, ouvrez la boîte et définissez son mot de passe. Utilisez le serveur sécurisé, secure.emailsrvr.com, pas celui en clair."
+      "h": "Obtenez le mot de passe de votre boîte Rackspace",
+      "p": "Dans le panneau de contrôle Cloud Office, ouvrez la boîte et définissez son mot de passe. Utilisez le serveur sécurisé, secure.emailsrvr.com, et non celui qui n'est pas chiffré."
     },
     {
       "h": "Collez-le dans mcpemails",
@@ -33,6 +45,55 @@
     {
       "h": "Collez l'URL MCP dans votre IA",
       "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Le serveur de messagerie n'est pas déduit de votre domaine, ce qui est inhabituel pour une messagerie professionnelle",
+      "p": "Rackspace Email sert tous ses clients depuis <code>secure.emailsrvr.com</code>, en entrée comme en sortie. <code>mail.yourdomain.com</code> n'est pas un nom Rackspace et n'existe pas, sauf si vous l'avez créé vous-même. Comme <code>emailsrvr.com</code> ne porte aucune marque Rackspace, ceux qui le trouvent dans une ancienne configuration le croient souvent erroné et le remplacent par quelque chose de plus vraisemblable, après quoi plus rien ne se connecte. Il est correct. Notre sonde a établi une négociation TLS avec lui et le certificat mentionne <code>secure.emailsrvr.com</code>."
+    },
+    {
+      "h": "Activer l'authentification multifacteur met discrètement à la retraite le mot de passe de votre boîte",
+      "p": "Les mots de passe d'application Rackspace n'existent qu'une fois l'authentification multifacteur activée, et dès lors le mot de passe de la boîte cesse de fonctionner dans tout ce qui parle IMAP ou SMTP, tout en continuant de fonctionner dans le webmail. C'est ce partage qui rend la situation si déroutante : vous pouvez vous connecter au webmail avec le mot de passe que votre client se voit refuser. Créez un mot de passe d'application depuis les paramètres de sécurité du compte dans le webmail Rackspace ou dans le panneau de contrôle Cloud Office, nommez-le d'après le client qu'il sert et copiez-le immédiatement, car il ne s'affiche qu'une fois. Le perdre oblige à supprimer l'entrée et à en générer un nouveau."
+    },
+    {
+      "h": "Rackspace vend trois produits de messagerie différents, et un seul se trouve sur emailsrvr",
+      "p": "<b>Rackspace Email</b> est le produit de boîte IMAP autonome, celui que couvre cette page. Rackspace vend aussi <b>Hosted Exchange</b>, qui fait tourner Exchange sur l'infrastructure de Rackspace, et revend <b>Microsoft 365</b>, où la boîte est hébergée sur les serveurs de Microsoft, sous sa plateforme d'identité. Seul Rackspace Email répond sur <code>secure.emailsrvr.com</code>. Nous ne prétendons pas connecter une boîte Microsoft 365, car la politique de tenant par défaut de Microsoft empêche un utilisateur ordinaire de consentir à un accès tiers en lecture et en écriture à la messagerie. Si votre webmail est Outlook on the web, c'est le produit Microsoft."
+    },
+    {
+      "h": "Vous parlez à un proxy, et les capacités que vous voyez sont les siennes",
+      "p": "La bannière IMAP nomme une machine comme <code>proxy7.mail.iad3b.rsapps.net</code> : les connexions aboutissent donc sur une couche frontale et non sur le stockage qui contient votre courrier. Cette couche annonce un ensemble de capacités volontairement restreint : <code>SASL-IR</code>, <code>IDLE</code>, <code>LITERAL+</code> et <code>AUTH=PLAIN</code>, sans <code>AUTH=LOGIN</code>, ni MOVE, ni UIDPLUS, ni SPECIAL-USE. C'est l'absence d'<b>AUTH=LOGIN</b> qui pose problème : les bibliothèques clientes codées en dur pour le mécanisme LOGIN, fréquentes dans les outils écrits pour Exchange, échouent à l'authentification au lieu de renvoyer une erreur utile, alors que le côté SMTP accepte à la fois PLAIN et LOGIN. Un même compte peut donc réussir à envoyer et échouer à lire dans un même client."
+    }
+  ],
+  "limits": [
+    "Comme le serveur n'annonce ni MOVE ni UIDPLUS, un déplacement s'effectue par copie, marquage et expunge, et il n'est pas atomique.",
+    "Les dossiers sont reconnus par leur nom et non par leur rôle, puisque SPECIAL-USE n'est pas annoncé. Une boîte aux dossiers renommés peut nécessiter de nommer explicitement la cible.",
+    "Les boîtes Hosted Exchange et Microsoft 365 vendues par Rackspace ne sont pas sur secure.emailsrvr.com, et les boîtes Microsoft 365 ne peuvent pas être connectées du tout."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec Rackspace Email ?",
+      "a": "Pas seul. Claude n'a pas de connecteur Rackspace intégré. Connecter un serveur MCP comme mcpemails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et comme il s'agit d'IMAP standard, la même boîte est ensuite disponible dans Cursor, ChatGPT et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de Rackspace Email ?",
+      "a": "Les deux sont secure.emailsrvr.com. IMAP sur le port 993 en SSL/TLS et SMTP sur le port 465, également en SSL/TLS. L'identifiant est votre adresse e-mail complète et le mot de passe est celui de la boîte. Le serveur est partagé par tous les clients Rackspace Email au lieu d'être construit à partir de votre domaine, et il a été confirmé par une connexion TLS réelle."
+    },
+    {
+      "q": "Pourquoi mon mot de passe Rackspace est-il refusé dans un logiciel de messagerie alors qu'il fonctionne dans le webmail ?",
+      "a": "Ce cas précis signifie que l'authentification multifacteur est activée sur la boîte. Rackspace continue d'accepter le mot de passe de la boîte sur le web tout en exigeant un mot de passe d'application pour l'IMAP et le SMTP. Générez-en un depuis les paramètres de sécurité du compte dans le webmail ou le panneau de contrôle Cloud Office, et utilisez-le à la place du mot de passe de la boîte."
+    },
+    {
+      "q": "Comment créer un mot de passe d'application Rackspace ?",
+      "a": "Les mots de passe d'application n'apparaissent qu'une fois l'authentification multifacteur activée. Avec la MFA active, ouvrez les paramètres de sécurité de votre compte dans le webmail Rackspace ou dans le panneau de contrôle Cloud Office, trouvez la zone des mots de passe d'application et créez-en un, en le nommant d'après le client auquel il est destiné. Il ne s'affiche qu'une fois : copiez-le tout de suite."
+    },
+    {
+      "q": "secure.emailsrvr.com est-il vraiment mon serveur ?",
+      "a": "Oui. emailsrvr.com est le domaine de messagerie sans marque de Rackspace, et secure.emailsrvr.com est le point d'accès TLS qu'utilisent tous les clients Rackspace Email. Il n'y a aucun nom de serveur par domaine à rechercher, et le remplacer par un nom fondé sur votre propre domaine est la raison la plus fréquente pour laquelle une configuration Rackspace ne se connecte pas du tout."
+    },
+    {
+      "q": "Mon courrier Rackspace est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis Rackspace en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
     }
   ],
   "ctaBand": {

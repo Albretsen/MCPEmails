@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://help.earthlink.net/portal/en/kb/articles/email-server-settings",
+    "https://help.earthlink.net/portal/en/kb/articles/set-up-earthlink-email-on-a-new-mobile-device"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña de correo",
+    "helpUrl": "https://help.earthlink.net/portal/en/kb/articles/email-server-settings",
+    "usernameForm": "Tu dirección completa, sea cual sea el dominio heredado que use: name@earthlink.net, name@mindspring.com, name@peoplepc.com o name@ix.netcom.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta el correo de EarthLink y Mindspring a Claude",
+    "description": "Conecta el correo de EarthLink a Claude y a cualquier cliente MCP por IMAP en imap.earthlink.net:993. Tu contraseña de correo funciona; el correo saliente usa otro servidor."
+  },
+  "hero": {
+    "eyebrow": "EarthLink Mail + IA",
+    "titleLine1": "Conecta una bandeja de EarthLink",
+    "titleLine2": "a Claude, Cursor y cualquier cliente MCP",
+    "lead": "EarthLink sigue gestionando sus propios servidores de correo, más antiguos que buena parte de internet y todavía en marcha. mcpemails conecta uno por IMAP para que tu agente de IA pueda leer, buscar, enviar, responder y archivar ese correo.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de EarthLink. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.earthlink.net en el puerto 993, iniciando sesión con tu dirección de correo completa y tu contraseña de correo normal. EarthLink no emite contraseñas específicas de aplicación ni tiene ningún interruptor de acceso de clientes que activar, así que la credencial que ya usas es la que funciona, y los mismos ajustes sirven para las direcciones mindspring.com, peoplepc.com e ix.netcom.com que EarthLink sigue alojando. El correo saliente usa otro nombre de servidor, smtpauth.earthlink.net en el puerto 587. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Tu contraseña de correo, sin contraseña de aplicación",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta EarthLink: IMAP de entrada y un SMTP autenticado aparte de salida",
+    "body": "EarthLink publica un único servidor IMAP para todos los dominios que gestiona. <code>imap.earthlink.net</code> responde en el puerto 993 con TLS, y el nombre de usuario es la dirección entera con su propio dominio intacto, así que una dirección de Mindspring o PeoplePC se introduce tal cual. El correo saliente es lo que la gente configura mal: no comparte el nombre del entrante. El envío va por <code>smtpauth.earthlink.net</code> en el puerto <b>587</b> con STARTTLS, un nombre de servidor que existe porque EarthLink tenía históricamente un relay sin autenticación aparte para los clientes de su propia red y mantuvo el autenticado con su propio nombre. La documentación de EarthLink dice que uses tu dirección de correo completa y tu contraseña en ambos, y no hay contraseña de aplicación que crear. POP es el único punto en que los dominios difieren: EarthLink documenta servidores POP por dominio, como <code>pop.mindspring.com</code>, y por eso algunas guías de configuración antiguas parecen específicas de cada dominio cuando el lado IMAP no lo es."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
+    },
+    {
+      "h": "Comprueba la contraseña del propio buzón, no la del acceso de facturación",
+      "p": "Inicia sesión en el webmail de EarthLink con la dirección que quieres conectar y confirma que la contraseña funciona ahí. Las cuentas de EarthLink suelen tener varios buzones bajo una misma suscripción, cada uno con su propia contraseña, y la de la cuenta con la que pagas no es necesariamente la de la dirección que vas a conectar."
+    },
+    {
+      "h": "Introduce la dirección completa y esa contraseña",
+      "p": "En mcpemails elige IMAP / SMTP e introduce la dirección exactamente como está escrita, incluida <code>name@mindspring.com</code>. Los servidores y puertos de EarthLink de abajo ya vienen rellenados y se verificaron con una conexión TLS real, incluido el servidor de salida aparte en el puerto 587."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "EarthLink no anuncia ningún mecanismo SASL utilizable, y los clientes estrictos se rinden en lugar de iniciar sesión",
+      "p": "La lista de capacidades que EarthLink devuelve antes del inicio de sesión ofrece <code>AUTH=CRAM-MD5</code>, <code>AUTH=EL-TAC</code> y <code>AUTH=EL-VOICE</code>. Los dos últimos son mecanismos propios de EarthLink y ningún cliente de correo normal los implementa. En esa lista no hay ni <code>AUTH=PLAIN</code> ni <code>AUTH=LOGIN</code>. Un cliente programado para elegir un mecanismo SASL según lo que anuncia el servidor no encuentra por tanto nada que pueda usar e informa de un fallo de autenticación sin llegar a enviar la contraseña. Lo que sí funciona es el comando IMAP <code>LOGIN</code> simple, que el servidor acepta porque no anuncia LOGINDISABLED. mcpemails recurre a él. Es el dato más útil de esta página y ninguna otra guía de ajustes de EarthLink lo menciona."
+    },
+    {
+      "h": "El servidor de salida no es imap ni smtp punto earthlink punto net",
+      "p": "Es <code>smtpauth.earthlink.net</code>, en el puerto 587 con STARTTLS y no con TLS implícito en el 465. Las guías que lo deducen del servidor entrante, o que suponen el 465 porque lo usa la mayoría de proveedores, producen una configuración que se conecta para leer y falla sin avisar en el primer envío. Si el correo llega pero no sale nada, esta es la razón."
+    },
+    {
+      "h": "Tampoco hay SASL-IR, así que la autenticación es un intercambio en dos pasos",
+      "p": "EarthLink no anuncia SASL-IR, así que rechaza la forma de un solo paso que envía las credenciales con el comando AUTHENTICATE. Sumado a la lista de mecanismos de arriba, un intento de autenticación contra EarthLink puede fallar de dos formas distintas que parecen ambas una contraseña incorrecta. mcpemails reintenta con el intercambio en dos pasos en lugar de tomar el primer rechazo como definitivo."
+    },
+    {
+      "h": "Sin IDLE, sin MOVE y sin SPECIAL-USE en este servidor",
+      "p": "El servicio IMAP de EarthLink es antiguo y se nota en su lista de capacidades. Sin IDLE no hay push, así que el correo nuevo se encuentra consultando periódicamente. Sin MOVE, archivar un mensaje se ejecuta como COPY, luego STORE de la marca de borrado y luego EXPUNGE. Sin SPECIAL-USE el servidor nunca dice qué carpeta es Enviados o Papelera, así que se identifican por nombre. UIDPLUS sí está, lo que al menos significa que un mensaje copiado informa de su nuevo id."
+    }
+  ],
+  "limits": [
+    "El servidor SMTP de EarthLink anuncia un tamaño máximo de mensaje de 50 MB, así que un envío con adjuntos más grandes se rechaza antes de salir.",
+    "No hay soporte de IDLE, así que el correo nuevo se descubre consultando periódicamente, no se recibe al instante.",
+    "Mover no es atómico y las funciones de las carpetas se identifican por nombre, porque MOVE y SPECIAL-USE no están implementados en este servidor."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de EarthLink?",
+      "a": "No directamente. Claude no tiene un conector integrado para EarthLink. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de earthlink.net o mindspring.com, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de EarthLink?",
+      "a": "IMAP es imap.earthlink.net en el puerto 993 con TLS implícito. El correo saliente es smtpauth.earthlink.net en el puerto 587 con STARTTLS y autenticación obligatoria. Ambos se verificaron con una conexión TLS real. La propia documentación de EarthLink dice que uses tu dirección de correo completa y tu contraseña de correo en ambos."
+    },
+    {
+      "q": "¿Usan las direcciones mindspring.com y peoplepc.com los mismos ajustes?",
+      "a": "Para IMAP, sí. EarthLink sirve los dominios heredados que adquirió desde el mismo servidor imap.earthlink.net, y el nombre de usuario es simplemente la dirección completa con su propio dominio. POP es la excepción: EarthLink documenta nombres de servidor POP por dominio, como pop.mindspring.com, y por eso las guías antiguas parecen específicas de cada dominio."
+    },
+    {
+      "q": "¿Necesita EarthLink una contraseña de aplicación?",
+      "a": "No. EarthLink no emite contraseñas específicas de aplicación ni tiene una página para crearlas. Un cliente de correo inicia sesión con la contraseña de ese buzón. Si aun así se rechaza una contraseña correcta, la causa suele ser el mecanismo de autenticación y no la credencial, ya que EarthLink no anuncia ningún mecanismo SASL estándar antes del inicio de sesión."
+    },
+    {
+      "q": "¿Se almacena mi correo de EarthLink en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de EarthLink por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de EarthLink",
+    "sub": "Solo necesitas tu contraseña de correo actual. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

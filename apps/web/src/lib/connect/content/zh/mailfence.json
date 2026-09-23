@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://kb.mailfence.com/kb/how-can-use-mailfence-messages-with-thunderbird-using-smtp-and-imap-pop/",
+    "https://kb.mailfence.com/kb/setup-2fa/",
+    "https://kb.mailfence.com/kb/your-ultimate-guide-to-mailfence/",
+    "https://mailfence.com/en/faq.jsp"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Mailfence 密码，或服务专用密码",
+    "helpUrl": "https://kb.mailfence.com/kb/how-can-use-mailfence-messages-with-thunderbird-using-smtp-and-imap-pop/",
+    "usernameForm": "你的 Mailfence 主地址或 Mailfence 用户名。别名地址会被拒绝。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Mailfence 连接 Claude：IMAP 是付费套餐功能",
+    "description": "imap.mailfence.com:993 上的 Mailfence IMAP 可连接 Claude 及任意 MCP 客户端，但仅限付费套餐。免费账户只能用网页邮箱，别名也无法登录。"
+  },
+  "hero": {
+    "eyebrow": "Mailfence + AI",
+    "titleLine1": "将 Mailfence 连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Mailfence 收件箱。在任意 MCP 客户端中通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，并把套餐要求和双重身份验证方面的注意事项提前讲清楚，而不是事后才发现。",
+    "answer": "Claude 无法自行访问 Mailfence。mcpemails 是一个托管 MCP 服务器，通过 imap.mailfence.com 端口 993 的 IMAP 以及 smtp.mailfence.com 端口 465 的 SMTP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。能否成功取决于两个条件：IMAP、POP 和 SMTP 仅在 Mailfence 的付费套餐上提供，免费账户没有；登录名必须是你的主地址或用户名，而不是别名。认证使用你的 Mailfence 密码，更好的做法是使用在 Settings、Account、Security 下生成的服务专用密码。我们这边 1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "IMAP 需要付费 Mailfence 套餐",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Mailfence 如何连接：付费套餐上的 IMAP，配合服务专用密码",
+    "body": "Mailfence 在 <code>imap.mailfence.com</code> 端口 993 上提供 IMAP，在 <code>smtp.mailfence.com</code> 端口 465 上提供 SMTP，两者都要求 SSL，POP3 则在 995 上。你自己的设置值在账户内的 <b>Settings</b>、<b>Account</b>、<b>My connection settings</b> 中列出。决定其他一切的是你的套餐：协议访问是付费档位的功能，免费 Mailfence 账户只能用网页邮箱，所以任何客户端（包括我们）都无法登录免费账户。认证默认使用你的 Mailfence 密码。Mailfence 还允许你在 <b>Settings</b>、<b>Account</b>、<b>Security</b>、<b>Services access</b> 下为每种协议生成<b>服务专用密码</b>，并关闭你不用的协议。同一页面也可以完全禁用 IMAP，这一点从两个方向上都值得知道。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。完成后你会得到一个 MCP URL 和一个密钥。"
+    },
+    {
+      "h": "确认你的 Mailfence 套餐包含协议访问",
+      "p": "依次打开 <b>Settings</b>、<b>Account</b>、<b>My connection settings</b>。如果你的套餐包含 IMAP、POP 和 SMTP 访问，该页面会列出你账户的服务器和端口。在免费账户上，这项访问根本不存在，任何主机名、端口和密码的组合都改变不了这一点。Mailfence 的文档把协议访问列为付费套餐功能。"
+    },
+    {
+      "h": "生成服务专用密码，并关闭你不需要的功能",
+      "p": "在 <b>Settings</b>、<b>Account</b>、<b>Security</b>、<b>Services access</b> 下，分别创建一个限于 IMAP 的密码和一个用于 SMTP 的密码，而不是复用你的账户密码，并禁用 POP、xDAV 以及任何其他你不用的协议。Mailfence 自己的加固建议正是这样做。然后在 mcpemails 中用你的<b>主</b>地址或用户名以及该密码添加邮箱。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "免费套餐完全没有 IMAP，而失败看起来像是密码错误",
+      "p": "Mailfence 把 IMAP、POP 和 SMTP 放在付费订阅后面。免费账户就是网页邮箱账户。由于服务器仍然在 993 上响应，并且仍然拒绝你的凭据，这种拒绝与输错密码无法区分，于是人们花一下午时间重置本来就正确的密码。请先检查 <b>My connection settings</b>：如果它没有给出协议详情，原因就在套餐，唯一的解决办法是升级。"
+    },
+    {
+      "h": "双重身份验证不涵盖 IMAP、POP 或 SMTP",
+      "p": "Mailfence 在自己的 2FA 文档中说得很明白：双重身份验证不适用于非网页连接，例如 SMTP、IMAP、POP、EAS、xDAV 和 XMPP。开启它只保护你的网页邮箱登录，对邮件客户端毫无影响，客户端会继续用已有的密码工作。所以与大多数服务商不同，开启 2FA 不会让你的客户端失效，而限制已连接客户端的手段也不是 2FA，而是 Services access 下的服务专用密码，因为它可以限定为一种协议，并在不动账户密码的情况下撤销。"
+    },
+    {
+      "h": "只有主地址或用户名能用于认证",
+      "p": "Mailfence 的客户端文档明确说明，只有主邮箱地址或用户名可以用于认证。别名、额外地址以及你附加的第二个域名上的邮件，都会投递到同一个邮箱，但它们都无法让你通过登录。请使用创建账户时的地址，或单纯的 Mailfence 用户名，并把你实际想用来发信的地址放在身份设置中，而不是凭据中。"
+    },
+    {
+      "h": "有 MOVE 和 UIDPLUS，但没有 SPECIAL-USE",
+      "p": "在这一细分市场中不同寻常的是，Mailfence 的 IMAP 服务器声明支持 MOVE、UIDPLUS、IDLE 和 SASL-IR，所以归档邮件是一条原子命令，批量整理也很快，而不是复制、标记、清除三步走。它没有声明的是 SPECIAL-USE，所以协议层面没有任何信息说明哪个文件夹是 Sent、Drafts、Trash 或 Junk，角色只能根据名称推断。它在 IMAP 上也只提供 <code>AUTH=PLAIN</code>，没有 <code>AUTH=LOGIN</code>，而 SMTP 两者都接受，所以写死使用 LOGIN 的工具可能什么都读不了，发信却完全正常。"
+    }
+  ],
+  "limits": [
+    "将 Mailfence 邮箱连接到 AI 客户端，意味着该 AI 服务商会读取它所处理的邮件内容。mcpemails 按请求从 Mailfence 实时获取邮件，不存储邮件正文，凭据也静态加密存储，但文本仍会到达 Claude、Cursor 或你所连接的任何客户端。Mailfence 的比利时司法管辖和不追踪立场适用于 Mailfence，并不会跟随邮件进入你自己接入的 AI 厂商。",
+    "对许多用户来说，Mailfence 的 OpenPGP 密钥库正是这款产品的意义所在，而用你的密钥加密的邮件通过 IMAP 到达时是密文。mcpemails 不持有你的任何私钥，所以代理可以对这些邮件进行排序、标记和归档，但无法阅读。它们在密钥所在的 Mailfence 网页界面中仍然可读。",
+    "免费的 Mailfence 账户根本无法在这里连接。这是 Mailfence 的套餐限制，而不是 MCP 服务器的局限，除了付费套餐之外没有任何变通办法。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Mailfence 吗？",
+      "a": "不能直接使用。Claude 没有内置的 Mailfence 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到付费 Mailfence 账户后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接无需重复设置，即可在 Cursor 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Mailfence 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.mailfence.com，端口 993，使用 SSL；SMTP 为 smtp.mailfence.com，端口 465，使用 SSL；POP3 在 995 上。用户名是你的 Mailfence 主地址或用户名，绝不能是别名。你自己的账户在 Settings、Account、My connection settings 下列出了同样的值。这里的两个服务器均经实时 TLS 连接验证。"
+    },
+    {
+      "q": "Mailfence IMAP 在免费套餐上能用吗？",
+      "a": "不能。Mailfence 把 IMAP、POP 和 SMTP 访问设为付费套餐功能，所以免费账户只能使用网页邮箱和 Mailfence 自己的应用。任何第三方客户端和 MCP 服务器都无法登录免费账户。升级到任一付费档位，就会为该邮箱开启协议访问。"
+    },
+    {
+      "q": "双重身份验证能保护我的 Mailfence IMAP 访问吗？",
+      "a": "不能，Mailfence 自己也这么说。其文档说明，2FA 不适用于包括 IMAP、POP 和 SMTP 在内的非网页连接。开启它只能保护网页登录。如果你想控制已连接的客户端能访问什么，请在 Settings、Account、Security、Services access 下生成服务专用密码，并禁用你不用的协议。"
+    },
+    {
+      "q": "我的 AI 能读取用 OpenPGP 加密的 Mailfence 邮件吗？",
+      "a": "不能。Mailfence 的加密依赖一把你的 AI 客户端没有、mcpemails 也从未收到的密钥，所以加密邮件通过 IMAP 到达时是 ASCII 封装的密文块。代理能看到发件人、主题和日期，也能移动或标记邮件，但正文在 Mailfence 界面之外无法阅读。"
+    },
+    {
+      "q": "我的 Mailfence 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都从 imap.mailfence.com 实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。AI 客户端本身确实会收到它被要求读取的任何内容，如果你当初正是为此才选择 Mailfence，那么在连接邮箱之前，这一点需要好好权衡。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Mailfence 收件箱",
+    "sub": "几分钟即可连接付费 Mailfence 邮箱。1 个收件箱永久免费，无需信用卡。"
+  }
+}

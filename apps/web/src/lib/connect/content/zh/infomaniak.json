@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.infomaniak.com/en/support/faq/1321/add-a-device-create-an-email-password",
+    "https://www.infomaniak.com/en/support/faq/2429/configure-em-client-with-imap-email",
+    "https://www.infomaniak.com/en/support/faq/2855/manage-application-passwords"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "设备密码",
+    "helpUrl": "https://www.infomaniak.com/en/support/faq/1321/add-a-device-create-an-email-password",
+    "usernameForm": "你的完整地址，包括域名：name@yourdomain.ch。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 Infomaniak Mail 连接到 Claude 与 MCP 客户端",
+    "description": "通过 mail.infomaniak.com:993 的 IMAP 将 Infomaniak Mail 连接到 Claude、Cursor 及任意 MCP 客户端。需要设备密码，而不是你的账户密码。"
+  },
+  "hero": {
+    "eyebrow": "Infomaniak Mail + AI",
+    "titleLine1": "将 Infomaniak Mail 连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Infomaniak 收件箱。使用为该地址生成的设备密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行访问 Infomaniak Mail。mcpemails 是一个托管 MCP 服务器，通过 mail.infomaniak.com 端口 993 的 IMAP 与之连接，使用为该邮箱地址生成的设备密码（而不是你的 Infomaniak 账户密码）进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。Infomaniak 完全不接受通过 IMAP 使用账户密码，而它另外提供的应用密码是另一回事，在这里也行不通。1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "设备密码，而非账户密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Infomaniak 如何连接：IMAP 与设备密码",
+    "body": "Infomaniak 在 <code>mail.infomaniak.com</code> 端口 993 上以隐式 TLS 提供 IMAP，在同一服务器的端口 465 上提供 SMTP。这两个主机名由所有 Infomaniak Mail 客户共用，包括使用你自己域名和 kSuite 套餐的地址，所以不需要查找按客户区分的服务器。认证是 Infomaniak 与这一类别中几乎所有其他主机商的不同之处：IMAP 和 SMTP 不接受你的 Infomaniak Manager 密码。每个邮箱地址都会签发自己的<b>设备密码</b>，在该地址的 Devices 选项卡下为每个客户端生成一个，长度至少十六个字符，只显示一次，可以单独撤销。由于它们是独立的凭据，在 Infomaniak 账户上开启双重身份验证对邮件客户端没有任何影响：设备密码在开启前后都照常有效。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "为该地址生成设备密码",
+      "p": "打开 manager.infomaniak.com，进入 Mail Service，点击你的域名，再点击该邮箱地址本身。打开 Devices 选项卡，选择 Add a device。除非你有意把 SMTP 限制与某个特定账户绑定，否则将用户保留为“No user”，为它起一个日后能认出的名字，并立即复制生成的密码。Infomaniak 不会再次显示它。"
+    },
+    {
+      "h": "粘贴到 mcpemails",
+      "p": "选择 IMAP / SMTP，输入完整的邮箱地址，并粘贴设备密码。服务器 mail.infomaniak.com 以及端口 993 和 465 已预填，并经实时 TLS 连接验证。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "设备密码与应用密码不是一回事",
+      "p": "Infomaniak 签发两种不同的辅助凭据，而且不能互换。<b>应用密码</b>在你的账户安全设置中创建，用于在开启双重身份验证时让工具和服务通过你 Infomaniak 账户的认证。<b>设备密码</b>在单个邮箱地址上创建，是 IMAP、POP 和 SMTP 所接受的凭据。Infomaniak 自己的文档明确说明，应用密码不是设备密码，无法同步邮箱地址。在通用设置指南上看到“应用专用密码”的人会选错，顺利生成之后，却无法理解为什么邮箱仍然拒绝登录。"
+    },
+    {
+      "h": "Infomaniak 不声明 SASL-IR，而大多数客户端默认它支持",
+      "p": "该 IMAP 服务器不支持 SASL-IR 能力，因此会拒绝与 AUTHENTICATE 命令在同一行发送凭据的一步式认证。默认假设支持 SASL-IR 的客户端会收到一个没有任何解释的 <code>BAD</code>，看起来与密码错误一模一样。mcpemails 会检测到这一点并改用两步交互重试，所以这里的连接能够成功，但这是其他 IMAP 工具在 Infomaniak 上失败的常见原因。"
+    },
+    {
+      "h": "欢迎消息中不带能力列表",
+      "p": "Infomaniak 的服务器只回应一个光秃秃的 <code>* OK IMAP4 ready</code>，别无其他，而大多数服务器会在欢迎消息中声明其扩展。只从横幅中读取能力的客户端会断定服务器什么都不支持，要么降级到最原始的行为，要么直接放弃。正确的处理方式是在欢迎消息之后以及认证之后，分别显式发出 CAPABILITY 命令，mcpemails 就是这样做的。"
+    }
+  ],
+  "limits": [
+    "服务器不声明 MOVE 扩展，因此移动邮件以复制、标记和清除的方式完成，而不是一条原子命令。",
+    "服务器不支持 SPECIAL-USE，因此 Sent、Drafts、Trash 和 Junk 按名称匹配。在法语邮箱中，它们通常是 Envoyes、Brouillons、Corbeille 和 Indesirables。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Infomaniak Mail 吗？",
+      "a": "不能单独使用。Claude 没有内置的 Infomaniak 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向你的 Infomaniak 地址后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Infomaniak 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 mail.infomaniak.com，端口 993，使用隐式 TLS。SMTP 为 mail.infomaniak.com，端口 465，同样是隐式 TLS，并要求认证。用户名是你的完整邮箱地址，密码是为该地址生成的设备密码。两个服务器均经实时 TLS 连接确认。"
+    },
+    {
+      "q": "为什么我的 Infomaniak 密码无效？",
+      "a": "因为 IMAP 和 SMTP 从不接受你的 Infomaniak Manager 密码。邮件客户端只能使用在单个邮箱地址上（Manager 中该地址的 Devices 选项卡下）创建的设备密码进行认证。如果你生成的是应用密码，那是另一种凭据，无法让邮箱通过认证。"
+    },
+    {
+      "q": "开启双重身份验证会影响我的邮件客户端吗？",
+      "a": "不会。设备密码独立于你的账户登录，所以在 Infomaniak 账户上开启双重身份验证前后，IMAP、POP 和 SMTP 的表现都一样。这正是 Infomaniak 坚持使用设备密码、而一开始就不允许通过 IMAP 使用账户密码的原因。"
+    },
+    {
+      "q": "可以在不影响其他设备的情况下撤销访问吗？",
+      "a": "可以。每个设备密码都是独立的，所以你可以为 mcpemails 单独创建一个并相应命名，以后只删除这一个。你手机和桌面客户端的现有连接会继续工作，因为它们持有各自的密码。"
+    },
+    {
+      "q": "我的 Infomaniak 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 Infomaniak 实时获取邮件，并交给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Infomaniak 收件箱",
+    "sub": "几分钟即可连接 Infomaniak Mail。1 个收件箱永久免费，无需信用卡。"
+  }
+}

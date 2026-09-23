@@ -1,47 +1,116 @@
 {
+  "_sources": [
+    "https://datatracker.ietf.org/doc/html/rfc8314",
+    "https://datatracker.ietf.org/doc/html/rfc6186",
+    "https://datatracker.ietf.org/doc/html/rfc6154",
+    "https://datatracker.ietf.org/doc/html/rfc6851",
+    "https://datatracker.ietf.org/doc/html/rfc4959",
+    "https://wiki.mozilla.org/Thunderbird:Autoconfiguration"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": null,
+    "usernameForm": "Nesten alltid hele e-postadressen din. Noen få verter vil bare ha delen foran @, og Apples iCloud er dokumentert slik.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Koble en hvilken som helst IMAP-postkasse til Claude",
-    "description": "Koble alle firmaets IMAP-postkasser til Claude, Cursor, ChatGPT og enhver MCP-klient. Ta med vert, port og passord, og la AI lese, sende, planlegge og organisere e-post. 1 innboks gratis, for alltid."
+    "title": "Koble enhver IMAP-postkasse til Claude, Cursor og MCP",
+    "description": "Koble enhver IMAP-postkasse bedriften din har til Claude, Cursor og enhver MCP-klient. Oppgi vert og passord: IMAP på 993 eller 143, SMTP på 465 eller 587, oppdages for deg."
   },
   "hero": {
     "eyebrow": "IMAP + AI",
     "titleLine1": "Koble enhver IMAP-postkasse til Claude,",
-    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
-    "lead": "Koble til alle postkassene firmaet har, uansett hvem som drifter dem: post@, salg@, faktura@ og din egen. AI-agenten din leser, søker, sender, svarer, planlegger og organiserer den e-posten over vanlig IMAP og SMTP, og de samme postkassene virker i alle MCP-klienter, ikke bare én.",
+    "titleLine2": "og Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Koble til alle postkassene bedriften din har, uansett hvem som drifter dem: info@, salg@, faktura@ og din egen. AI-agenten din leser, søker, sender, svarer, planlegger og organiserer den e-posten over vanlig IMAP og SMTP, og de samme postkassene fungerer i alle MCP-klienter, ikke bare én.",
     "meta0": "1 innboks gratis, for alltid",
-    "meta1": "Enhver IMAP-vert, ingen OAuth-oppsett",
+    "meta1": "Enhver IMAP-vert, uten OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude har ingen egen IMAP-klient. mcpemails er en hostet MCP-server som logger inn på e-postserveren din over IMAP og SMTP med adressen, verten og passordet leverandøren allerede har gitt deg, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Enhver vert som snakker IMAP fungerer, firmaadresser kobles til på samme måte som en privat adresse, og én innboks er gratis."
+    "answer": "Claude har ingen egen IMAP-klient. mcpemails er en driftet MCP-server som logger inn på e-postserveren din over IMAP og SMTP med adressen, verten og passordet leverandøren din allerede har gitt deg, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Enhver vert som snakker IMAP fungerer, en bedrifts funksjonsadresser kobles til på samme måte som en personlig adresse, og én innboks er gratis."
   },
   "persona": {
-    "intro": "Tar du deg av flere firmapostkasser?",
-    "label": "Se hvordan én person håndterer alle firmaets adresser fra én agent",
+    "intro": "Har du flere bedriftspostkasser å holde styr på?",
+    "label": "Se hvordan én person håndterer alle bedriftens adresser fra én agent",
     "href": "/for/business"
   },
   "method": {
-    "title": "Slik kobler en generisk IMAP-postkasse seg til",
-    "body": "Du trenger fire ting: adressen din, e-postverten, passordet og, hvis leverandøren krever det, et app-passord. Skriv inn adressen først: mcpemails kjenner igjen de vanlige webhotellene og fyller inn begge vertene, begge portene og sikkerhetsmodusene for deg. Hvis transporten den prøver ikke svarer, prøver den den andre standarden på egen hånd, <b>993 eller 143</b> for IMAP og <b>465 eller 587</b> for SMTP, så ingen trenger å gjette på STARTTLS."
+    "title": "Slik kobles en vanlig IMAP-postkasse til",
+    "body": "Du trenger fire ting: adressen din, e-postverten din, passordet ditt og, hvis leverandøren krever det, et app-passord. Skriv inn adressen først: mcpemails kjenner igjen de vanligste webhotellene og fyller ut begge vertene, begge portene og sikkerhetsmodusene for deg. Hvis transporten den prøver ikke svarer, prøver den den andre standardvarianten på egen hånd, <b>993 eller 143</b> for IMAP og <b>465 eller 587</b> for SMTP, så ingen trenger å gjette seg fram til STARTTLS."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid. De betalte planene tar resten: tre postkasser med Personal, alle firmaets postkasser med Pro."
+      "p": "Registrer deg hos mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid. Betalte planer legger til resten: tre postkasser på Personal, alle bedriftens postkasser på Pro."
     },
     {
-      "h": "Finn IMAP- og SMTP-innstillingene dine",
-      "p": "Leverandøren publiserer dem, som regel som imap.dittdomene.no og smtp.dittdomene.no på port 993 og 465. Krever leverandøren et app-passord for e-postklienter, oppretter du det nå."
+      "h": "Finn fram IMAP- og SMTP-innstillingene dine",
+      "p": "Leverandøren din publiserer dem, oftest som imap.yourdomain.com og smtp.yourdomain.com på portene 993 og 465. Hvis leverandøren krever app-passord for e-postklienter, genererer du et nå."
     },
     {
       "h": "Lim dem inn i mcpemails",
-      "p": "Velg IMAP / SMTP, legg til adressen din, de to vertene og passordet. Porter og sikkerhetsmodus ligger under Avansert, forhåndsutfylt med standardverdiene."
+      "p": "Velg IMAP / SMTP, og legg inn adressen, de to vertene og passordet. Porter og sikkerhetsmoduser ligger under Advanced, forhåndsutfylt med standardverdiene."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
       "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
     }
   ],
+  "gotchas": [
+    {
+      "h": "Slik finner du det riktige vertsnavnet, i den rekkefølgen som faktisk fungerer",
+      "p": "Det finnes fire steder å lete, det enkleste først. <b>Én</b>: leverandørens egen hjelpeside, søkt opp med leverandørens navn pluss ordene IMAP settings; det er dette de andre leverandørsidene på dette nettstedet finnes for. <b>To</b>: kontrollpanelet. I cPanel er det Email Accounts, deretter Connect Devices, deretter blokken med manuelle innstillinger; i Plesk er det Mail, deretter adressen, deretter skjermen for å koble til postkassen; de fleste kontrollpaneler hos webhotell har en tilsvarende skjerm, og den er autoritativ for kontoen din. <b>Tre</b>: DNS. En leverandør som følger RFC 6186, publiserer en SRV-oppføring <code>_imaps._tcp.yourdomain.com</code> som oppgir vert og port direkte. <b>Fire</b>: MX-oppføringen din, som navngir maskinen som tar imot e-posten din, og som svært ofte er i samme navnefamilie som IMAP-verten. Det som ikke fungerer, er å gjette på <code>imap.yourdomain.com</code> og håpe: mange verter leverer e-posten din på et navn som ikke har noe med domenet ditt å gjøre."
+    },
+    {
+      "h": "Det er sertifikatet som knekker et egendefinert vertsnavn",
+      "p": "De fleste webhotell lar deg gjerne peke <code>mail.yourdomain.com</code> mot e-postserveren sin, og det fungerer i en klient som ikke sjekker nøye. Serveren viser fram et sertifikat utstedt for webhotellets eget navn, noe i retning av <code>server24.hostingprovider.net</code> eller et wildcard på deres domene, ikke for ditt. En klient som validerer TLS riktig, avviser tilkoblingen med en <b>vertsnavnfeil</b> (hostname mismatch), som er en annen feil enn et avvist passord, selv om de fleste grensesnitt blander de to. Å slå av valideringen er ingen akseptabel løsning for en postkasse en AI-agent kan sende fra. Løsningen er å koble til det felles vertsnavnet sertifikatet faktisk er utstedt for, altså navnet leverandøren din dokumenterer, og det er det navnet vi bruker."
+    },
+    {
+      "h": "993 eller 143, 465 eller 587, og hva en leverandør mener med «SSL» eller «TLS»",
+      "p": "RFC 8314 ber leverandører foretrekke implisitt TLS, altså at tilkoblingen er kryptert fra første byte: port <code>993</code> for IMAP og <code>465</code> for innsending. Eldre oppsett bruker <code>143</code> og <code>587</code>, som starter ukryptert og oppgraderes med STARTTLS. Leverandører merker disse inkonsekvent, og merkingen er den viktigste kilden til forvirring: «SSL/TLS» i en innstillingstabell betyr nesten alltid implisitt TLS på 993 eller 465, mens «TLS» eller «STARTTLS» nesten alltid betyr 143 eller 587. Du trenger ikke å finne ut av det selv. Skriv inn adressen din, så fyller mcpemails ut begge vertene, begge portene og begge sikkerhetsmodusene for vertene den kjenner igjen, og hvis transporten den prøver ikke svarer, prøver den den andre standardvarianten av seg selv."
+    },
+    {
+      "h": "Tre serverfunksjoner avgjør hvordan postkassen din oppfører seg, og ingen to servere er enige",
+      "p": "<b>SASL-IR</b> (RFC 4959): en server som ikke annonserer den, avviser påloggingsopplysninger sendt på samme linje som <code>AUTHENTICATE</code>-kommandoen og svarer med en naken <code>BAD</code> uten forklaring, noe som ser nøyaktig ut som feil passord. mcpemails oppdager det og prøver på nytt med utvekslingen i to trinn, og det er derfor noen verter fungerer her, men feiler i andre verktøy. <b>MOVE</b> (RFC 6851): uten den kan en melding ikke flyttes atomisk, så en flytting blir en kopi, en flaggoppdatering og en expunge, og en tilkobling som brytes underveis, kan etterlate meldingen i begge mapper. <b>SPECIAL-USE</b> (RFC 6154): uten den merker ikke serveren Sendt, Utkast, Papirkurv og Søppelpost etter rolle, så mapper matches på navn, og en postkasse opprettet på tysk, norsk eller russisk har systemmapper under navn agenten din ikke kjenner igjen med mindre du oppgir dem. Når en mappeoperasjon oppfører seg rart, er som regel én av disse tre årsaken."
+    }
+  ],
+  "limits": [
+    "Serveren må kunne nås fra det offentlige internettet. En postkasse på et privat nettverk, bak en VPN eller på en privat IP-adresse avvises med vilje: vertsnavnet slås opp, og enhver adresse i et privat område blir avvist.",
+    "Bare standardportene for e-post brukes: 143 og 993 for IMAP, og 25, 465 og 587 for SMTP. En server som lytter på en egendefinert port, kan ikke kobles til.",
+    "En postkasse som krever OAuth og ikke godtar passord over IMAP, kan ikke kobles til på denne måten. Microsoft 365 er tilfellet folk oftest støter på, og vi hevder ikke å støtte det."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med enhver IMAP-postkasse?",
+      "a": "Claude har ingen egen IMAP-klient, så ikke direkte. Pek en MCP-server som mcpemails mot postkassen med adressen, verten og passordet ditt, så kan Claude lese, søke, sende, svare, planlegge og organisere den e-posten. Enhver server som snakker IMAP og SMTP på standardportene fungerer, uansett hvem som drifter den, og den samme tilkoblingen fungerer da også fra Cursor og ChatGPT."
+    },
+    {
+      "q": "Hvordan finner jeg IMAP-serverinnstillingene mine?",
+      "a": "Begynn med leverandørens egen hjelpeside, og deretter kontrollpanelet hos webhotellet, der både cPanel og Plesk viser nøyaktige verter og porter for hver adresse. Er ingen av dem tilgjengelige, publiserer en leverandør som følger RFC 6186 en _imaps._tcp SRV-oppføring for domenet ditt, og MX-oppføringen din navngir maskinen som tar imot e-posten din, som som regel er beslektet med IMAP-verten. Ikke gjett ut fra domenenavnet ditt."
+    },
+    {
+      "q": "Skal jeg bruke port 993 eller 143?",
+      "a": "Bruk 993 med mindre leverandøren sier noe annet. Port 993 er implisitt TLS, kryptert fra første byte, og er det gjeldende standarder anbefaler. Port 143 starter ukryptert og oppgraderes med STARTTLS, noe som fortsatt fungerer, men er det eldre mønsteret. For sending er det samme skillet 465 for implisitt TLS og 587 for STARTTLS. mcpemails prøver standardparet og faller tilbake på det andre av seg selv."
+    },
+    {
+      "q": "Hvorfor kobler e-postklienten min til, mens denne innloggingen feiler?",
+      "a": "Tre vanlige årsaker. Klienten din er pekt mot et egendefinert vertsnavn med et sertifikat utstedt for et annet navn, og den validerer ikke strengt. Leverandøren din krever app-passord for alt som ikke er dens egen app. Eller serveren avviser SASL-autentisering i ett trinn og svarer med en naken BAD som ser ut som feil påloggingsopplysninger. Prøv vertsnavnet leverandøren dokumenterer i stedet for et som er satt sammen av domenet ditt."
+    },
+    {
+      "q": "Trenger jeg et app-passord?",
+      "a": "Det avhenger helt av leverandøren. Apples iCloud, Yahoo, AOL, Fastmail, Yandex og Mail.ru avviser alle kontopassordet fra en e-postklient og krever et eget passord. Zoho krever et når tofaktorautentisering er slått på. De fleste uavhengige webhotell og cPanel-servere godtar postkassepassordet direkte. Hvis et passord som ser riktig ut blir avvist, er et krav om app-passord det første du bør sjekke."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra serveren din over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke beholdt. Endrer du postkassepassordet hos leverandøren, kobles innboksen fra til du legger inn det nye, og det er den raskeste måten å stenge tilgangen på."
+    }
+  ],
   "ctaBand": {
-    "title": "Gi AI-en din postkassene firmaet allerede har",
-    "sub": "Koble til enhver IMAP-postkasse på minutter. Én innboks gratis for alltid, uten kort."
+    "title": "Gi AI-en din postkassene bedriften din allerede har",
+    "sub": "Koble til enhver IMAP-postkasse på få minutter. Én innboks gratis for alltid, uten kort."
+  },
+  "guide": {
+    "intro": "Foretrekker du en gjennomgang med skjermbilder?",
+    "label": "Claude IMAP-kobling: koble enhver IMAP-innboks til Claude",
+    "href": "/blog/claude-imap-connector"
   }
 }

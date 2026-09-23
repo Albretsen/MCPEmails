@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.telepolis.pl/tech/aplikacje/onet-wyciaga-wtyczke-nic-juz-nie-zrobisz-w-ten-sposob",
+    "https://webinsider.pl/newslog/onet-poczta-koniec-pop3-a-imap-tylko-w-platnych/",
+    "https://seohost.pl/pomoc/blokada-poczty-pop3-onet-poczta",
+    "https://www.instalki.pl/news/internet/korzystacie-jeszcze-z-poczty-onet-za-te-funkcje-trzeba-bedzie-placic/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Onet-passord, på et betalt e-postabonnement",
+    "helpUrl": "https://poczta.onet.pl/",
+    "usernameForm": "Hele adressen din, inkludert domenet: nazwa@onet.pl eller nazwa@poczta.onet.pl.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Onet Poczta IMAP: bare betalte abonnement, og Claude-oppsett",
+    "description": "Onet Poczta flyttet IMAP bak betalte abonnement og fjernet POP3 i mars 2026. Hva som fortsatt virker på imap.poczta.onet.pl:993, og hvordan du kobler det til Claude."
+  },
+  "hero": {
+    "eyebrow": "Onet Poczta + AI",
+    "titleLine1": "Onet Poczta via IMAP,",
+    "titleLine2": "i Claude, Cursor, enhver MCP-klient",
+    "lead": "Onet flyttet tilgang for e-postklienter bak et betalt abonnement i 2026. Har kontoen din det, kan en AI-agent lese, søke, sende, svare, planlegge og organisere postkassen via IMAP.",
+    "answer": "Claude når ikke en Onet-postkasse på egen hånd, og siden 31. mars 2026 kan heller ikke noe annet nå en gratis Onet-konto. Onet fjernet POP3 for alle og flyttet IMAP inn i de betalte e-postpakkene, så en gratiskonto er nå bare webmail og mobilapp. På et betalt abonnement, eller på en av de bevarte evigvarende kontoene, er mcpemails en hostet MCP-server som kobler til postkassen via IMAP på imap.poczta.onet.pl port 993 med Onet-passordet ditt, og gir Claude, Cursor eller enhver MCP-klient tilgang til å lese, søke, sende og organisere. Én innboks på mcpemails er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Krever et betalt Onet-e-postabonnement",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Onet seg til: IMAP, men bare hvis kontoen har rett til det",
+    "body": "Onet tilbyr IMAP på <code>imap.poczta.onet.pl</code> port 993 over implisitt TLS og SMTP-innsending på <code>smtp.poczta.onet.pl</code> port 465. Begge vertene er oppe og svarer i dag, og IMAP-serveren annonserer <code>AUTH=PLAIN</code>, <code>AUTH=LOGIN</code> og <code>AUTH=XOAUTH2</code>. At serverne svarer, er ikke det samme som at kontoen din får bruke dem. Fra <b>31. mars 2026</b> fjernet Onet POP3-støtten helt, for alle brukere uten unntak, og begrenset IMAP til de betalte e-postpakkene, omtalt som <b>Poczta Plus</b> og <b>Poczta Standard</b>. Gratiskontoer beholder e-posten sin; det de mister, er protokollen. Innehavere av de gamle evigvarende kontoene (<b>konta wieczyste</b>) ble unntatt og beholder IMAP uten kostnad. Så det praktiske spørsmålet for en Onet-postkasse er ikke hvilken vert du skal bruke, men hvilken av de tre kategoriene kontoen hører til."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Sjekk om Onet-kontoen din har rett til IMAP",
+      "p": "Logg inn på poczta.onet.pl og se på kontoens abonnement. En gratiskonto etter mars 2026 har verken IMAP eller POP3, så ingen klient vil noen gang koble til den. En betalt e-postpakke gir IMAP tilbake. En evigvarende konto (<b>konto wieczyste</b>) beholder IMAP uten å betale. Det finnes ingen bryter å lete etter her: dette er en faktureringsstatus, ikke en innstilling."
+    },
+    {
+      "h": "Bruk Onet-passordet ditt, og fjern eventuell POP3-konfigurasjon du fortsatt har",
+      "p": "Onet utsteder ikke programspesifikke passord for e-postklienter; du autentiserer med Onet-kontopassordet og hele adressen. Flytter du innstillinger fra en gammel klient, ikke ta med POP3-verten. POP3 ble fjernet helt, ikke bare faset ut, så ingenting på port 995 svarer deg lenger."
+    },
+    {
+      "h": "Lim det inn i mcpemails, og lim så MCP-URL-en inn i AI-en",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel nazwa@onet.pl, og skriv inn passordet. Onet-vertene og -portene er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "En gratis Onet-konto kan ikke kobles til av noe som helst, og serverne svarer likevel",
+      "p": "Dette er hele historien for Onet i 2026, og det er virkelig forvirrende å diagnostisere, fordi <code>imap.poczta.onet.pl</code> er oppe, godtar en TLS-tilkobling og annonserer autentiseringsmekanismene sine nøyaktig som før. Sperren ligger på kontoen, ikke verten. Har du en gratiskonto, er Outlook, Thunderbird, Apple Mail, de innebygde klientene i Android og iOS og alle hostede MCP-servere, denne inkludert, i samme situasjon: ingen protokolltilgang. Onets oppgitte gratisvei er nettsiden og den offisielle mobilappen. Å kjøpe en e-postpakke er det eneste som endrer det."
+    },
+    {
+      "h": "POP3 er helt borte, også for betalende kontoer",
+      "p": "IMAP-begrensningen og fjerningen av POP3 er to separate endringer som kom på samme dato, og folk blander dem sammen. Å betale for et abonnement gir IMAP tilbake; det bringer ikke tilbake POP3. Onet fjernet POP3 for alle brukere uten unntak. Har du en gammel klient eller en eldre integrasjon som henter via POP3, vil ikke et betalt abonnement redde den, og den må over på IMAP."
+    },
+    {
+      "h": "Evigvarende kontoer ble unntatt, så to Onet-postkasser kan oppføre seg ulikt",
+      "p": "Innehavere av <b>konta wieczyste</b> beholder gratis IMAP-tilgang. Det betyr at to Onet-adresser side om side i samme klient, begge tilsynelatende gratis, kan ha ulike muligheter, og bare den ene vil koble til. Før du feilsøker en Onet-tilkobling som feiler mot en som virker, sjekk at du sammenligner kontoer av samme type."
+    },
+    {
+      "h": "Ingen IDLE og ingen MOVE, så både arkivering og ferskhet koster ekstra rundturer",
+      "p": "Onets IMAP-banner annonserer <code>SASL-IR</code> og <code>LITERAL+</code>, men ikke <code>IDLE</code>, så ny e-post oppdages ved polling i stedet for å skyves over en åpen tilkobling. Det mangler også <code>MOVE</code> og <code>UIDPLUS</code>, så arkivering av en melding kjøres som en kopi, en flaggoppdatering og en expunge, og den nye UID-en til kopien rapporteres ikke tilbake og må finnes ved å søke i målmappen. Ingen av delene er fatale, men begge gjør massearkivering tregere enn det ser ut."
+    }
+  ],
+  "limits": [
+    "På en gratis Onet-konto er det ingenting å koble til. Dette er en begrensning hos leverandøren, og ingen MCP-server, vår inkludert, kan omgå den.",
+    "SPECIAL-USE mangler, så Sent, Drafts og Trash matches etter navn i stedet for rolle. Oppgi mappen i instruksjonen hvis en agent ikke finner den.",
+    "Fordi serveren ikke støtter MOVE, er en flytting ikke atomisk. Hvis en tilkobling brytes midt i operasjonen, kan en melding kortvarig finnes i begge mapper."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Onet Poczta?",
+      "a": "Bare hvis kontoen har IMAP, som siden mars 2026 betyr en betalt Onet-e-postpakke eller en bevart evigvarende konto. Er det på plass, gir en MCP-server som mcpemails pekt mot postkassen Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Onet?",
+      "a": "IMAP er imap.poczta.onet.pl på port 993 med implisitt TLS. SMTP er smtp.poczta.onet.pl på port 465, også med implisitt TLS. Brukernavnet er hele adressen din, og passordet er Onet-kontopassordet ditt. Begge vertene ble bekreftet via en direkte TLS-tilkobling, men en gratiskonto avvises likevel på autentiseringstrinnet."
+    },
+    {
+      "q": "Hvorfor sluttet Outlook å virke med Onet-e-posten min?",
+      "a": "På grunn av endringen 31. mars 2026. Onet fjernet POP3 for alle brukere og flyttet IMAP inn i de betalte pakkene. Brukte Outlook-profilen din POP3, finnes ikke den protokollen lenger hos Onet, uansett pris. Brukte den IMAP på en gratiskonto, har kontoen ikke lenger protokolltilgang og trenger et betalt abonnement."
+    },
+    {
+      "q": "Hvilket Onet-abonnement trenger jeg for IMAP?",
+      "a": "Onets betalte e-postpakker, omtalt som Poczta Plus og Poczta Standard, gir IMAP-tilgang tilbake sammen med mer lagring og ingen reklame fra operatøren. Sjekk den gjeldende listen over abonnement og priser på Onets egen abonnementsside før du kjøper, siden pakkene allerede har endret seg én gang."
+    },
+    {
+      "q": "Utsteder Onet app-passord?",
+      "a": "Nei. Onet publiserer ingen mekanisme for programspesifikke passord for e-postklienter. Autentisering skjer med det vanlige Onet-kontopassordet sammen med hele adressen. Serveren annonserer riktignok XOAUTH2, men det finnes ingen selvbetjent måte for en vanlig bruker å skaffe et token til det."
+    },
+    {
+      "q": "Lagres Onet-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Onet via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Onet-innboks",
+    "sub": "Hvis Onet-abonnementet ditt inkluderer IMAP, kobler du det til på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

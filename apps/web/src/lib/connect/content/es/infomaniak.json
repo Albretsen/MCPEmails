@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.infomaniak.com/en/support/faq/1321/add-a-device-create-an-email-password",
+    "https://www.infomaniak.com/en/support/faq/2429/configure-em-client-with-imap-email",
+    "https://www.infomaniak.com/en/support/faq/2855/manage-application-passwords"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Contraseña de dispositivo",
+    "helpUrl": "https://www.infomaniak.com/en/support/faq/1321/add-a-device-create-an-email-password",
+    "usernameForm": "Tu dirección completa, incluido el dominio: name@yourdomain.ch.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta Infomaniak Mail a Claude y clientes MCP",
+    "description": "Conecta Infomaniak Mail a Claude, Cursor y cualquier cliente MCP por IMAP en mail.infomaniak.com:993. Pide una contraseña de dispositivo, no la contraseña de tu cuenta."
+  },
+  "hero": {
+    "eyebrow": "Infomaniak Mail + IA",
+    "titleLine1": "Conecta Infomaniak Mail a Claude,",
+    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de Infomaniak. Lee, busca, envía, responde, programa y organiza correo por IMAP con una contraseña de dispositivo generada para esa dirección.",
+    "answer": "Claude no puede acceder por sí solo a Infomaniak Mail. mcpemails es un servidor MCP alojado que lo conecta por IMAP en mail.infomaniak.com en el puerto 993, autenticándose con una contraseña de dispositivo generada para esa dirección de correo y no con la contraseña de tu cuenta de Infomaniak, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. Infomaniak no acepta en absoluto la contraseña de la cuenta por IMAP, y sus contraseñas de aplicación, que son otra cosa, tampoco funcionan aquí. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña de dispositivo, no la de la cuenta",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Infomaniak: IMAP y una contraseña de dispositivo",
+    "body": "Infomaniak sirve IMAP en <code>mail.infomaniak.com</code> en el puerto 993 con TLS implícito y SMTP en el mismo servidor en el puerto 465. Ambos nombres de servidor son compartidos por todos los clientes de Infomaniak Mail, incluidas las direcciones en tu propio dominio y en un plan kSuite, así que no hay ningún servidor por cliente que consultar. La autenticación es donde Infomaniak se diferencia de casi todos los demás proveedores de esta categoría: IMAP y SMTP no aceptan tu contraseña de Infomaniak Manager. Cada dirección de correo emite sus propias <b>contraseñas de dispositivo</b>, generadas una por cliente en la pestaña Devices de la dirección, de al menos dieciséis caracteres, mostradas una sola vez y revocables una a una. Como son credenciales aparte, activar la autenticación en dos factores en tu cuenta de Infomaniak no cambia nada para los clientes de correo: las contraseñas de dispositivo siguen funcionando antes y después."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
+    },
+    {
+      "h": "Genera una contraseña de dispositivo para la dirección",
+      "p": "Abre manager.infomaniak.com, ve a Mail Service, haz clic en tu dominio y luego en la propia dirección de correo. Abre la pestaña Devices y elige Add a device. Deja el usuario como \"No user\" salvo que quieras a propósito restricciones SMTP ligadas a una cuenta concreta, ponle un nombre que reconozcas después y copia la contraseña generada de inmediato. Infomaniak no volverá a mostrarla."
+    },
+    {
+      "h": "Pégala en mcpemails",
+      "p": "Elige IMAP / SMTP, introduce la dirección de correo completa y pega la contraseña de dispositivo. El servidor mail.infomaniak.com y los puertos 993 y 465 ya vienen rellenados y se verificaron con una conexión TLS real."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Una contraseña de dispositivo no es lo mismo que una contraseña de aplicación",
+      "p": "Infomaniak emite dos tipos distintos de credencial secundaria y no son intercambiables. Las <b>contraseñas de aplicación</b>, creadas en los ajustes de seguridad de tu cuenta, autentican herramientas y servicios contra tu cuenta de Infomaniak cuando la autenticación en dos factores está activada. Las <b>contraseñas de dispositivo</b>, creadas en cada dirección de correo, son las que aceptan IMAP, POP y SMTP. La propia documentación de Infomaniak dice claramente que una contraseña de aplicación no es una contraseña de dispositivo y no sincronizará una dirección de correo. Quien lee «contraseña de aplicación» en una guía de configuración genérica elige la equivocada, la genera sin problema y luego no entiende por qué el buzón sigue rechazando el inicio de sesión."
+    },
+    {
+      "h": "Infomaniak no anuncia SASL-IR, y la mayoría de clientes lo dan por hecho",
+      "p": "El servidor IMAP omite la capacidad SASL-IR, así que rechaza la autenticación de un solo paso que envía las credenciales en la misma línea que el comando AUTHENTICATE. Un cliente que da por hecho SASL-IR recibe un <code>BAD</code> seco sin explicación, idéntico a una contraseña incorrecta. mcpemails lo detecta y reintenta con el intercambio en dos pasos, así que aquí la conexión funciona, pero es una causa frecuente de fallos de otras herramientas IMAP contra Infomaniak."
+    },
+    {
+      "h": "El saludo no lleva lista de capacidades",
+      "p": "El servidor de Infomaniak responde con un simple <code>* OK IMAP4 ready</code> y nada más, mientras que la mayoría de servidores anuncian sus extensiones en el saludo. Un cliente que solo lee las capacidades del banner concluye que el servidor no admite nada y o bien se degrada al comportamiento más rudimentario posible o bien se rinde. Lo correcto es enviar un comando CAPABILITY explícito tras el saludo y de nuevo tras la autenticación, que es lo que hace mcpemails."
+    }
+  ],
+  "limits": [
+    "El servidor no anuncia la extensión MOVE, así que mover un mensaje se hace como copia, marca y expunge en lugar de un único comando atómico.",
+    "No hay SPECIAL-USE, así que Enviados, Borradores, Papelera y Correo no deseado se identifican por nombre. En un buzón en francés suelen ser Envoyes, Brouillons, Corbeille e Indesirables."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Infomaniak Mail?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para Infomaniak. Apuntar un servidor MCP como mcpemails a tu dirección de Infomaniak por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Infomaniak?",
+      "a": "IMAP es mail.infomaniak.com en el puerto 993 con TLS implícito. SMTP es mail.infomaniak.com en el puerto 465, también con TLS implícito y con autenticación obligatoria. El nombre de usuario es tu dirección de correo completa y la contraseña es una contraseña de dispositivo generada para esa dirección. Ambos servidores se confirmaron con una conexión TLS real."
+    },
+    {
+      "q": "¿Por qué no funciona mi contraseña de Infomaniak?",
+      "a": "Porque IMAP y SMTP nunca aceptan tu contraseña de Infomaniak Manager. Los clientes de correo solo se autentican con una contraseña de dispositivo creada en la dirección de correo concreta, en su pestaña Devices del Manager. Si generaste en su lugar una contraseña de aplicación, es otra credencial y no autenticará un buzón."
+    },
+    {
+      "q": "¿Activar la autenticación en dos factores rompe mi cliente de correo?",
+      "a": "No. Las contraseñas de dispositivo son independientes del acceso a tu cuenta, así que IMAP, POP y SMTP se comportan igual antes y después de activar la autenticación en dos factores en la cuenta de Infomaniak. Esa es precisamente la razón por la que Infomaniak exige contraseñas de dispositivo en lugar de permitir la contraseña de la cuenta por IMAP."
+    },
+    {
+      "q": "¿Puedo revocar el acceso sin romper mis otros dispositivos?",
+      "a": "Sí. Cada contraseña de dispositivo es independiente, así que puedes crear una para mcpemails, nombrarla en consecuencia y borrar solo esa más adelante. Las conexiones existentes desde tu teléfono y tu cliente de escritorio siguen funcionando porque tienen sus propias contraseñas."
+    },
+    {
+      "q": "¿Se almacena mi correo de Infomaniak en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Infomaniak por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Infomaniak",
+    "sub": "Conecta Infomaniak Mail en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

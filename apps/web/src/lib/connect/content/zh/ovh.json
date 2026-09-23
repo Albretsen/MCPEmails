@@ -1,21 +1,34 @@
 {
+  "_sources": [
+    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/mx-plan/email-generalities",
+    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/microsoft-exchange/how-to-configure-thunderbird-windows",
+    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/email-pro/first-config",
+    "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/microsoft-exchange/exchange-starting-hosted"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://docs.ovhcloud.com/en/guides/web-cloud/email-and-collaborative-solutions/mx-plan/email-generalities",
+    "usernameForm": "你自有域名下的完整邮箱地址。OVH 在其每一款邮件产品中，收信和发信服务器都要求填写完整地址。",
+    "status": "active"
+  },
   "meta": {
-    "title": "将 OVH 连接到 Claude（及任意 AI）",
-    "description": "用邮箱密码通过 IMAP 将 OVH 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的邮件，1 个收件箱永久免费。"
+    "title": "将 OVH 连接到 Claude、Cursor 与 MCP 客户端",
+    "description": "通过 IMAP（ssl0.ovh.net:993）将 OVHcloud MX Plan 邮箱连接到 Claude 及任意 MCP 客户端。Email Pro 和 Hosted Exchange 使用各自按服务器编号的主机名。"
   },
   "hero": {
     "eyebrow": "OVH + AI",
     "titleLine1": "将 OVH 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
-    "lead": "几分钟即可为你的 AI 代理接入一个真正的 OVH 收件箱。用 IMAP 和邮箱密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+    "lead": "几分钟即可为你的 AI 代理接入一个真正的 OVH 收件箱。用 IMAP 和邮箱密码即可读取、搜索、发送、回复、定时与整理邮件，同一个收件箱可在所有 MCP 客户端中使用，而不止一个。",
     "meta0": "1 个收件箱永久免费",
-    "meta1": "邮箱密码，无需 OAuth 配置",
+    "meta1": "使用邮箱密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行连接 OVH。mcpemails 是一个托管 MCP 服务器，用邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱永久免费。"
+    "answer": "Claude 无法自行连接 OVH。mcpemails 是一个托管 MCP 服务器，用你的邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱免费。"
   },
   "method": {
     "title": "OVH 如何连接：IMAP 与邮箱密码",
-    "body": "OVH MX Plan 邮箱通过 IMAP/SMTP 连接，使用 OVH 控制面板中的邮箱密码，两个服务器都是 <code>ssl0.ovh.net</code>。OVH Hosted Exchange 是另一项服务：它的服务器形如 <code>ex4.mail.ovh.net</code>，发件走 587 端口的 STARTTLS，从不使用 465，这正是共享主机默认值对它会一直卡住的原因。mcpemails 能识别两者并选用正确的组合。"
+    "body": "OVH MX Plan 邮箱通过 IMAP/SMTP 使用 OVH 控制面板中的邮箱密码连接，两台服务器都是 <code>ssl0.ovh.net</code>。OVH Hosted Exchange 是另一项服务：它的主机名形如 <code>ex4.mail.ovh.net</code>，发信通过 587 端口的 STARTTLS 进行，从不使用 465，这就是为什么共享主机的默认设置对它只会一直挂起。mcpemails 能识别这两种情况，并选择正确的一对服务器。"
   },
   "setup": [
     {
@@ -23,8 +36,8 @@
       "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
-      "h": "取得 OVH 邮箱密码",
-      "p": "在 OVH 控制面板中打开邮箱服务，选择该地址并修改密码。如果 OVH 为该邮箱显示的服务器不是 ssl0.ovh.net，请把它复制下来。"
+      "h": "获取你的 OVH 邮箱密码",
+      "p": "在 OVH 控制面板中打开邮件服务，选择该地址并修改其密码。如果 OVH 为该邮箱显示的邮件主机不是 ssl0.ovh.net，请一并复制。"
     },
     {
       "h": "粘贴到 mcpemails",
@@ -33,6 +46,55 @@
     {
       "h": "将 MCP URL 粘贴到你的 AI",
       "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "OVH 的三款邮件产品使用三种主机名格式，连错是这里最常见的失败原因",
+      "p": "这就是 OVH 的问题所在。<b>MX Plan</b> 是随域名和虚拟主机附带的邮箱，文档中的服务器是 <code>ssl0.ovh.net</code>（OVH 也列出了 <code>imap.mail.ovh.net</code> 和 <code>smtp.mail.ovh.net</code>），IMAP 为 993 端口 SSL/TLS，SMTP 为 465 端口 SSL/TLS。<b>Email Pro</b> 的主机名是 <code>pro</code> 加服务器编号再加 <code>.mail.ovh.net</code>，IMAP 为 993 端口 SSL，SMTP 为 <b>587 端口 STARTTLS</b>。<b>Hosted Exchange</b> 的主机名是 <code>ex</code> 加服务器编号再加 <code>.mail.ovh.net</code>，同样是 IMAP 993、SMTP 587 STARTTLS。三者在任何方向上都不能互换。把 Exchange 或 Email Pro 邮箱指向 <code>ssl0.ovh.net</code> 会失败，而 MX Plan 使用 587 端口 STARTTLS 也不是 OVH 文档中的配置。"
+    },
+    {
+      "h": "Email Pro 和 Exchange 的主机名中含有无法猜到的服务器编号",
+      "p": "OVH 没有给 Email Pro 和 Hosted Exchange 一个共享主机名。每项服务都位于一台编号的机器上，而编号是名称的一部分，这就是为什么 <code>ex4.mail.ovh.net</code> 对一位客户有效，换一位客户就毫无响应。OVH 会在 OVHcloud Control Panel 中显示它：打开该服务，进入 <b>General information</b> 标签，查看 <b>Connection</b> 框。无法从你的域名推导出它，也没有能替你找到它的自动发现机制，所以开始之前请先从面板中复制。"
+    },
+    {
+      "h": "从地址上看不出你用的是哪款 OVH 产品",
+      "p": "三款产品都在你自己的域名下提供邮件服务，所以无论位于哪一款，<code>you@yourdomain.fr</code> 看起来都一模一样。答案在 OVHcloud Control Panel 的 Web Cloud 中：MX Plan 位于 Emails 下，Email Pro 有自己的栏目，Hosted Exchange 又有另一个栏目。请先确认这一点，因为其他所有设置都取决于它。如果你在 OVH 订购的是 Microsoft 365 而不是 OVH 自己的 Hosted Exchange，那么邮箱位于 Microsoft 的服务器上、受 Microsoft 身份平台管理，而 Microsoft 的默认租户策略会阻止最终用户自行同意第三方邮件访问。我们不声称能连接这类邮箱。"
+    },
+    {
+      "h": "MX Plan 运行的是 Dovecot，没有 MOVE、UIDPLUS 或 SPECIAL-USE",
+      "p": "<code>ssl0.ovh.net</code> 的问候语表明是 Dovecot，并声明支持 <code>SASL-IR</code>、<code>IDLE</code>、<code>AUTH=PLAIN</code> 和 <code>AUTH=LOGIN</code>，但没有 MOVE、UIDPLUS 或 SPECIAL-USE。因此移动邮件要通过复制、更新标记再删除来完成，而不是一条原子命令，副本的新标识符必须在目标文件夹中搜索。文件夹按名称而不是按用途匹配，这在 OVH 上比在别处更重要，因为很多 OVH 邮箱是法语的：寻找已发送文件夹的代理可能需要被告知该文件夹叫 <code>Elements envoyes</code>，已删除文件夹则可能叫 <code>Corbeille</code>。"
+    }
+  ],
+  "limits": [
+    "通过 OVHcloud 订购的 Microsoft 365 邮箱无法连接。Microsoft 的默认租户策略会阻止最终用户自行同意第三方邮件访问。",
+    "Email Pro 和 Hosted Exchange 的主机名中含有每项服务各自的服务器编号，因此我们无法自动填写。请从 OVHcloud Control Panel 的 Connection 框中获取。",
+    "MX Plan 未声明 MOVE，因此移动操作不是原子的。如果连接中途断开，一封邮件可能会短暂同时存在于两个文件夹中。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 OVH 邮箱吗？",
+      "a": "不能单独使用。Claude 没有内置的 OVHcloud 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到该邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件。你必须首先确定该地址属于哪款 OVH 邮件产品，因为它们的主机名完全不同。"
+    },
+    {
+      "q": "OVH 的 IMAP 和 SMTP 设置是什么？",
+      "a": "对于 MX Plan，OVH 文档中两者都是 ssl0.ovh.net，IMAP 为 993 端口 SSL/TLS，SMTP 为 465 端口 SSL/TLS，另列出 imap.mail.ovh.net 和 smtp.mail.ovh.net 作为等价名称。Email Pro 和 Hosted Exchange 则使用形如 pro4.mail.ovh.net 或 ex4.mail.ovh.net 的编号主机，IMAP 为 993 端口，SMTP 为 587 端口 STARTTLS。"
+    },
+    {
+      "q": "我怎么知道自己用的是 MX Plan、Email Pro 还是 Hosted Exchange？",
+      "a": "登录 OVHcloud Control Panel 并打开 Web Cloud。MX Plan 邮箱列在 Emails 下，Email Pro 和 Hosted Exchange 在左侧菜单中各有自己的栏目。地址本身看不出任何端倪，因为三者都在你自己的域名下提供邮件服务，所以面板是唯一可靠的答案。"
+    },
+    {
+      "q": "在哪里找到我的 OVH 服务器编号？",
+      "a": "在 OVHcloud Control Panel 中打开 Email Pro 或 Hosted Exchange 服务，选择 General information 标签，查看 Connection 框。其中显示的编号就是主机名中的数字，组成 pro4.mail.ovh.net 或 ex4.mail.ovh.net 这样的名称。它无法从你的域名推导出来。"
+    },
+    {
+      "q": "为什么 ssl0.ovh.net 对我的邮箱无效？",
+      "a": "因为你的邮箱很可能不是 MX Plan 邮箱。ssl0.ovh.net 只服务 MX Plan。Email Pro 或 Hosted Exchange 邮箱在自己的编号主机上响应，会拒绝或忽略指向 ssl0.ovh.net 的连接，看起来像是挂起或密码错误，而不是连错了服务器。"
+    },
+    {
+      "q": "我的 OVH 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 OVHcloud 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
     }
   ],
   "ctaBand": {

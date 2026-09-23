@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://mailinabox.email/guide.html",
+    "https://github.com/mail-in-a-box/mailinabox",
+    "https://doc.dovecot.org/2.3/configuration_manual/dovecot_ssl_configuration/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Passord for e-postbrukeren",
+    "helpUrl": "https://mailinabox.email/guide.html",
+    "usernameForm": "Hele adressen til en e-postbruker opprettet i administrasjonspanelet, for eksempel you@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Mail-in-a-Box til Claude og MCP-klienter",
+    "description": "Koble Mail-in-a-Box til Claude, Cursor og ChatGPT over IMAP på box.yourdomain.com:993. Innsending er 465, og fail2ban stenger deg ute ved gjentatte feil."
+  },
+  "hero": {
+    "eyebrow": "Mail-in-a-Box + AI",
+    "titleLine1": "Koble Mail-in-a-Box til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Du satte opp din egen boks for at ingen andre skulle ha e-posten din. Å legge til en AI-agent trenger ikke endre det: mcpemails kobler til boksen din over IMAP og henter hver melding direkte, uten å lagre noe av den.",
+    "answer": "Claude kan ikke nå en Mail-in-a-Box-server på egen hånd. mcpemails er en driftet MCP-server som kobler til din over IMAP på port 993, på bokse-vertsnavnet som oppsettsveiledningen ber deg bruke, vanligvis box.yourdomain.com, og autentiserer med passordet til en e-postbruker opprettet i administrasjonspanelet. Det lar Claude, Cursor eller enhver MCP-klient lese, søke i, sende og organisere e-posten på boksen din. Boksen må være tilgjengelig fra internett og ha et gyldig Let's Encrypt-sertifikat, som administrasjonspanelet ordner for deg. Én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Passord for e-postbrukeren fra administrasjonspanelet",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles Mail-in-a-Box til: boksens vertsnavn, ikke domenet ditt",
+    "body": "Mail-in-a-Box installerer Postfix, Dovecot, Nginx og et lite administrasjonspanel på én Ubuntu-maskin, så IMAP-oppførselen under er vanlig Dovecot. Det folk tar feil av, er vertsnavnet. Oppsettsveiledningen anbefaler å kalle boksen <code>box</code> pluss et punktum pluss domenenavnet ditt, altså <code>box.yourdomain.com</code>, og det er navnet i sertifikatet og navnet e-postklientene dine skal bruke. Det nakne domenet ditt er der e-post adresseres til, ikke der klienter kobler til. Den dokumenterte brannmurlisten er 22, 25, 53 for TCP og UDP, 80, 443, 465 for innsending, 993 for IMAP, 995 for POP og 4190 for Sieve. Påloggingsopplysningene er e-postbrukerens eget passord, satt under Mail og deretter Users i administrasjonspanelet; administratorkontoen i panelet er selv en e-postbruker, så den har faktisk en postkasse."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto",
+      "p": "Registrer deg hos mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+    },
+    {
+      "h": "Skaff et ekte sertifikat fra administrasjonspanelet",
+      "p": "Logg inn i administrasjonspanelet på boksen din og åpne System og deretter TLS (SSL) Certificates. En ny boks leverer et selvsignert sertifikat til du ordner det gratis Let's Encrypt-sertifikatet fra den siden, og strenge IMAP-klienter vil avvise det selvsignerte lenge etter at du sluttet å legge merke til nettleseradvarselen."
+    },
+    {
+      "h": "Bekreft e-postbrukeren og passordet",
+      "p": "Under Mail og deretter Users bekrefter du at adressen finnes, og angir et passord du kjenner. Legg deretter til innboksen i mcpemails: velg IMAP / SMTP, bruk <code>box.yourdomain.com</code> som vert, og skriv inn hele adressen og det passordet."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "fail2ban utestenger deg hvis du tester et feil passord",
+      "p": "Mail-in-a-Box leveres med fail2ban slått på og overvåkende e-posttjenestene, noe som er en av grunnene til at den er trygg å sette ut på det åpne internettet. Det betyr også at hvis du lagrer en tilkobling to eller tre ganger med en skrivefeil i passordet, blir adressen som kobler til utestengt, og alle senere forsøk får da tidsavbrudd eller avvises i stedet for å gi en autentiseringsfeil. Symptomet ser ut som at serveren har gått ned. Få passordet riktig først, og hvis du allerede har utløst den, fjern utestengingen på boksen før du prøver igjen."
+    },
+    {
+      "h": "Innsending er 465 her, og 587 står ikke i den dokumenterte portlisten",
+      "p": "De fleste oppsettsveiledninger for e-post på internett griper etter 587 med STARTTLS. Mail-in-a-Box sin egen veiledning oppgir 465 som innsendingsport blant portene som må være åpne, og oppgir ikke 587. Sett opp sending på 465 med implisitt TLS, så fungerer det på første forsøk; antar du 587 fordi det er det alt annet bruker, får du en tilkobling som henger i stedet for en tydelig feil."
+    },
+    {
+      "h": "Boksen kan ikke dele navn med et nettsted du drifter et annet sted",
+      "p": "Veiledningen sier rett ut at boksens navn ikke kan være et domene du har tenkt å levere et nettsted på fra en annen vert, fordi boksen vil svare på 80 og 443 for sine egne sertifikatfornyelser og administrasjonspanelet. Driftere som peker <code>mail.yourdomain.com</code> mot et CDN eller en omvendt proxy, ødelegger fornyelsen av Let's Encrypt uten at noe synlig går i stykker, og IMAP-sertifikatet utløper i det stille noen uker senere."
+    }
+  ],
+  "limits": [
+    "Boksen din må godta innkommende tilkoblinger på 993 utenfra for at en driftet MCP-server skal nå den. En Mail-in-a-Box på en hjemmelinje bak NAT, eller en som er begrenset av en sikkerhetsgruppe i skyen til din egen adresse, kan ikke kobles til. mcpemails kan driftes selv hvis du heller vil holde IMAP-økten innenfor ditt eget nettverk.",
+    "Mail-in-a-Box forventer å eie DNS og TLS for boksens vertsnavn, så dette fungerer best på en standard, uendret installasjon. En kraftig tilpasset boks viser kanskje ikke det sertifikatet administrasjonspanelet tror den gjør."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Mail-in-a-Box?",
+      "a": "Ikke direkte. Claude har ingen kobling for en e-postserver du drifter selv. Ved å koble en MCP-server som mcpemails til boksen din over IMAP får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i postkassene på den, og den samme innboksen fungerer da også i Cursor eller ChatGPT."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Mail-in-a-Box?",
+      "a": "Verten er boksens vertsnavn, vanligvis box.yourdomain.com. IMAP er port 993 med implisitt TLS. Innsending er port 465 med implisitt TLS, som er porten den offisielle veiledningen oppgir. Logg inn med hele e-postadressen til en e-postbruker og den brukerens passord."
+    },
+    {
+      "q": "Hvorfor blir Mail-in-a-Box-passordet mitt avvist?",
+      "a": "Sjekk at du bruker en e-postbruker og ikke et navn som bare finnes som alias, siden alias ikke har passord eller postkasse. Hvis passordet er riktig og tilkoblinger fortsatt feiler, kan fail2ban ha utestengt adressen som kobler til etter tidligere mislykkede forsøk, noe som viser seg som en avvist tilkobling eller et tidsavbrudd i stedet for en innloggingsfeil."
+    },
+    {
+      "q": "Må jeg eksponere boksen min mot internett?",
+      "a": "For den driftede tjenesten, ja: mcpemails kobler innkommende til port 993. Det er uansett den normale tilstanden for en Mail-in-a-Box, siden den må ta imot e-post på port 25 fra hele verden. Hvis du bevisst har begrenset tilgangen til dine egne adresser, drift mcpemails selv i stedet, så IMAP-tilkoblingen aldri forlater nettverket ditt."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra boksen din over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke beholdt, av samme grunn som du bygde boksen i utgangspunktet."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Mail-in-a-Box-innboks",
+    "sub": "Koble til din egen boks på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

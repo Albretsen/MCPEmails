@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://cs.kakao.com/helps_html/1073209983",
+    "https://cs.daum.net/faq/service/43/category/9234/detail/24081",
+    "https://cs.daum.net/faq/43/9234.html",
+    "https://hanmail-notice.daum.net/list/907?index=1"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Mot de passe d'application Kakao (앱 비밀번호)",
+    "helpUrl": "https://cs.kakao.com/helps_html/1073209983",
+    "usernameForm": "Votre adresse complète, domaine compris : name@daum.net, ou name@hanmail.net si c'est la forme qu'utilise votre boîte.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connecter Daum Mail à Claude avec un mot de passe Kakao",
+    "description": "Connectez Daum Mail (daum.net, hanmail.net) à Claude ou tout client MCP via IMAP sur imap.daum.net:993. Depuis janvier 2025 : mot de passe d'application Kakao."
+  },
+  "hero": {
+    "eyebrow": "Daum Mail + IA",
+    "titleLine1": "Connectez Daum Mail à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Daum ou Hanmail. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP avec un mot de passe d'application Kakao, dans tous les clients MCP et pas un seul.",
+    "answer": "Claude ne peut pas accéder seul à Daum Mail. mcpemails est un serveur MCP hébergé qui la connecte via IMAP sur imap.daum.net, port 993, en s'authentifiant avec un mot de passe d'application Kakao (앱 비밀번호) plutôt qu'avec le mot de passe de votre compte Kakao. Depuis le 2 janvier 2025, Daum exige la validation en deux étapes sur le compte Kakao associé à la boîte et un mot de passe d'application pour chaque connexion IMAP et POP3 : le mot de passe habituel ne fonctionne donc plus dans aucun client de messagerie. IMAP est par ailleurs une option distincte dans les réglages de Daum Mail, qu'il faut aussi activer. Une boîte est gratuite.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe d'application Kakao, pas votre mot de passe",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Daum Mail se connecte : IMAP dans Daum, le mot de passe dans Kakao",
+    "body": "Daum sert IMAP sur <code>imap.daum.net</code>, port 993, en TLS implicite, et SMTP sur <code>smtp.daum.net</code>, port 465. La particularité est que les deux éléments nécessaires se trouvent dans deux produits différents. L'activation du protocole se fait dans Daum Mail, sous <b>환경설정</b> puis <b>IMAP/POP3 설정</b>. L'identifiant se trouve dans votre compte Kakao, car la connexion Daum a été intégrée à Kakao et la boîte dépend désormais d'un 카카오계정. Depuis le <b>2 janvier 2025</b>, Kakao a rendu la validation en deux étapes obligatoire pour la connexion IMAP et POP3 et exige un <b>앱 비밀번호</b>, un mot de passe d'application, à la place du mot de passe du compte. Les adresses <code>@daum.net</code> et les plus anciennes <code>@hanmail.net</code> désignent la même boîte sur les mêmes serveurs : il n'y a donc jamais qu'une seule connexion à établir."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et reste gratuite, sans carte bancaire. Les deux étapes suivantes se déroulent sur deux services Kakao différents : attendez-vous à passer de l'un à l'autre."
+    },
+    {
+      "h": "Activez IMAP dans Daum Mail",
+      "p": "Ouvrez Daum Mail et allez dans 환경설정 (Paramètres), puis IMAP/POP3 설정. Réglez IMAP sur « en service » et enregistrez. Ce réglage est propre à chaque boîte et indépendant de votre compte Kakao : s'il est désactivé, imap.daum.net refuse la connexion et l'échec ne se distingue pas d'un mauvais mot de passe."
+    },
+    {
+      "h": "Générez un mot de passe d'application dans votre compte Kakao",
+      "p": "Allez sur accounts.kakao.com et ouvrez 계정 보안 (sécurité du compte), puis 2단계 인증 (validation en deux étapes), puis 앱 비밀번호 (mot de passe d'application). Le même écran est accessible dans KakaoTalk sous 설정, 카카오계정, 2단계 인증, 앱 비밀번호. La validation en deux étapes doit être activée avant de pouvoir créer un mot de passe d'application. Générez-en un, puis dans mcpemails choisissez IMAP / SMTP, saisissez votre adresse Daum ou Hanmail complète et collez le mot de passe d'application plutôt que votre mot de passe Kakao."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre client IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent peut lire, rechercher, envoyer, répondre, transférer, planifier et organiser cette boîte Daum."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "L'identifiant est passé chez Kakao, et les réglages de Daum n'en parlent jamais",
+      "p": "La page des réglages IMAP de Daum Mail vous donne le serveur, le port et la façon d'activer le protocole. Ce n'est pas là que se trouve le mot de passe. Depuis que les comptes Daum sont devenus des comptes Kakao, le mot de passe d'application se crée sur accounts.kakao.com sous 계정 보안, et seule l'aide de Kakao le dit. Beaucoup activent IMAP dans Daum, essaient leur mot de passe Kakao, se font refuser et retournent sur la page des réglages Daum chercher une erreur qui n'existe pas. Si vous cherchez un écran de mot de passe d'application Daum, vous êtes sur le mauvais site."
+    },
+    {
+      "h": "La validation en deux étapes est obligatoire depuis le 2 janvier 2025, pas facultative",
+      "p": "Les consignes de Kakao sont explicites : pour IMAP et POP3, vous devez activer la validation en deux étapes et vous connecter avec un mot de passe d'application généré à part, plutôt qu'avec le mot de passe existant. Ce n'était pas une recommandation assortie d'une solution de repli. Des clients qui fonctionnaient depuis des années ont échoué à la connexion, et comme le serveur répond par une erreur d'authentification ordinaire, on conclut naturellement à un mot de passe oublié. Désactiver à nouveau la validation en deux étapes ne rétablit pas la connexion par mot de passe : cela vous empêche de créer le mot de passe d'application."
+    },
+    {
+      "h": "hanmail.net et daum.net sont une seule boîte, et l'adresse que vous saisissez compte",
+      "p": "Daum a conservé l'ancien domaine <code>@hanmail.net</code> à côté de <code>@daum.net</code>, et les deux mènent à la même boîte sur les mêmes serveurs. Il n'y a rien à connecter deux fois. Ce qui compte, en revanche, c'est de saisir l'adresse sous la forme que porte réellement votre compte, car l'identifiant envoyé à la connexion doit correspondre à une adresse détenue par la boîte. Si une forme est refusée, essayez l'autre avant de toucher au mot de passe d'application."
+    },
+    {
+      "h": "SPECIAL-USE est absent et les noms de dossiers sont en coréen",
+      "p": "Le serveur IMAP de Daum n'annonce pas l'extension SPECIAL-USE : un client ne peut donc pas demander quel dossier contient les messages envoyés ni lequel est la corbeille. Les dossiers sont reconnus par leur nom, et sur une boîte coréenne ces noms sont 받은편지함 (boîte de réception), 보낸편지함 (envoyés), 임시보관함 (brouillons), 휴지통 (corbeille) et 스팸함 (spam). Si votre agent classe un message à un endroit inattendu, nommez explicitement le dossier de destination plutôt que de vous fier à son rôle."
+    }
+  ],
+  "limits": [
+    "Daum n'annonce pas IDLE : le courrier est donc relevé périodiquement plutôt que poussé. Un agent qui surveille la boîte voit un nouveau message à sa prochaine vérification, pas à son arrivée.",
+    "Le mot de passe d'application appartient au compte Kakao et non à la boîte. Désactiver la validation en deux étapes, ou révoquer le mot de passe depuis Kakao, coupe la connexion immédiatement et sans aucun avertissement côté Daum.",
+    "Le serveur SMTP de Daum accepte des messages jusqu'à environ 70 MB. Un transfert dont les pièces jointes dépassent cette taille est rejeté à l'envoi plutôt que mis en file d'attente."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec Daum Mail ?",
+      "a": "Pas directement. Claude n'a pas de connecteur Daum intégré et ne peut pas ouvrir lui-même une connexion IMAP. Connecter un serveur MCP comme mcpemails à votre boîte Daum donne à Claude un accès en lecture, recherche, envoi, réponse, transfert, planification et organisation, et la même connexion fonctionne depuis Cursor et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de Daum Mail ?",
+      "a": "IMAP : imap.daum.net sur le port 993 en TLS implicite. SMTP : smtp.daum.net sur le port 465, également en TLS implicite. Connectez-vous avec votre adresse daum.net ou hanmail.net complète et un mot de passe d'application Kakao. Les deux serveurs ont été vérifiés par une connexion TLS réelle à la date indiquée sur cette page."
+    },
+    {
+      "q": "Pourquoi ne puis-je pas me connecter avec le bon mot de passe Kakao ?",
+      "a": "Parce que Kakao ne l'accepte plus pour le courrier. Depuis le 2 janvier 2025, IMAP et POP3 exigent la validation en deux étapes sur le compte Kakao et un mot de passe d'application généré à part. Le bon mot de passe du compte produit désormais la même erreur d'authentification qu'un mauvais, c'est pourquoi le problème est si souvent mal diagnostiqué."
+    },
+    {
+      "q": "Où créer le mot de passe d'application Daum ?",
+      "a": "Pas dans Daum. Connectez-vous sur accounts.kakao.com, ouvrez 계정 보안, puis 2단계 인증, puis 앱 비밀번호. Dans KakaoTalk, le chemin est 설정, 카카오계정, 2단계 인증, 앱 비밀번호. La validation en deux étapes doit déjà être activée, sinon l'option de mot de passe d'application n'apparaît pas. Copiez le mot de passe généré dans le champ mot de passe du client."
+    },
+    {
+      "q": "Les adresses hanmail.net utilisent-elles les mêmes réglages ?",
+      "a": "Oui. Hanmail était le domaine de messagerie d'origine de Daum, et hanmail.net comme daum.net pointent vers la même boîte sur les mêmes serveurs, avec la même option IMAP et le même mot de passe d'application Kakao. Connectez la boîte une seule fois, avec la forme d'adresse que porte votre compte, et les deux fonctionnent pour l'envoi."
+    },
+    {
+      "q": "Mon courrier Daum est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis Daum via IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos, et le contenu des messages n'est pas conservé après la requête qui l'a demandé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Daum Mail à votre IA",
+    "sub": "Connectez Daum ou Hanmail en quelques minutes avec un mot de passe d'application Kakao. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

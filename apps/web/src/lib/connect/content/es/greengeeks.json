@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.greengeeks.com/support/article/where-to-find-mail-server-login-information-for-greengeeks-hosted-domains/",
+    "https://www.greengeeks.com/support/article/how-do-i-setup-an-e-mail-account/",
+    "https://www.greengeeks.com/support/article/getting-started-setting-up-email-applications/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://www.greengeeks.com/support/article/where-to-find-mail-server-login-information-for-greengeeks-hosted-domains/",
+    "usernameForm": "Tu dirección de correo completa, por ejemplo hello@yourdomain.com, no solo la parte anterior a la arroba.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Ajustes IMAP de GreenGeeks y configuración MCP para Claude",
+    "description": "GreenGeeks muestra tu servidor de correo real en cPanel, Email Accounts, Connect Devices. Conecta ese buzón a Claude por IMAP 993. Una bandeja gratis, para siempre."
+  },
+  "hero": {
+    "eyebrow": "GreenGeeks + IA",
+    "titleLine1": "Conecta el correo de GreenGeeks a Claude,",
+    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA un buzón real de GreenGeeks. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña que definiste al crear la dirección.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de GreenGeeks. mcpemails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. GreenGeeks usa cPanel estándar y no tiene un nombre de servidor de correo compartido: tu servidor se construye a partir de tu propio dominio o del servidor en el que está tu cuenta, y cPanel muestra el valor exacto en Email Accounts, luego Connect Devices, en el bloque Mail Client Manual Settings. Te autenticas con la contraseña del buzón y no con el acceso a tu panel de GreenGeeks, y una bandeja es gratis.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña del buzón desde cPanel",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta el correo de GreenGeeks: cPanel muestra el servidor, IMAP 993",
+    "body": "GreenGeeks es un proveedor cPanel sin complicaciones. Todos los planes de hosting incluyen buzones en tu propio dominio, que hablan IMAP en el puerto 993 con TLS y SMTP en el 465. No hay ningún <code>imap.greengeeks.com</code> al que apuntar, porque el buzón está en el servidor concreto en el que se aprovisionó tu cuenta. GreenGeeks genera los valores correctos para cada cuenta en lugar de publicarlos en un artículo, y su documentación de soporte lo dice explícitamente: los ajustes no serían correctos para todos si se publicaran de forma genérica. El servidor entrante es <code>mail.yourdomain.com</code> o el nombre del servidor, y el nombre de usuario es siempre la dirección de correo entera. La contraseña es la que escribiste, o generaste, al crear esa dirección en cPanel."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
+    },
+    {
+      "h": "Toma los ajustes de Connect Devices en cPanel",
+      "p": "Inicia sesión en my.greengeeks.com, abre el cPanel de la cuenta de hosting y, en <b>Email</b>, haz clic en <b>Email Accounts</b>. Busca la fila de la dirección que quieres y haz clic en <b>Connect Devices</b>. Baja hasta <b>Mail Client Manual Settings</b>. Ese bloque da el servidor entrante seguro exacto, el puerto IMAP y el puerto SMTP de tu cuenta. Cópialos en lugar de escribir lo que recuerdas."
+    },
+    {
+      "h": "Define o confirma la contraseña del buzón",
+      "p": "IMAP comprueba la contraseña asociada a la dirección de correo, que es distinta de la contraseña de tu panel de GreenGeeks y del acceso a cPanel. Si no la tienes, usa <b>Manage</b> en la fila de la dirección en Email Accounts para definir una nueva, y pégala en mcpemails con la dirección completa como nombre de usuario."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "El correo de bienvenida con tus ajustes se entrega en el propio buzón nuevo",
+      "p": "Al crear una dirección, cPanel ofrece enviar un mensaje de bienvenida con la configuración del cliente. GreenGeeks deja esa opción marcada. El mensaje se entrega en la dirección que acabas de crear, así que la única forma de leerlo es el webmail, con las credenciales que intentas averiguar. Es un documento útil una vez dentro, pero no lo busques en tu bandeja personal, y no tomes su ausencia ahí como señal de que algo falló."
+    },
+    {
+      "h": "El mismo cPanel muestra los ajustes en dos sitios, con dos niveles de detalle",
+      "p": "<b>Connect Devices</b> en la fila de la dirección da el bloque completo Mail Client Manual Settings, con las variantes SSL y sin SSL. El menú de tres puntos de la misma fila tiene una vista más corta, <b>Mail Configuration</b>, que muestra el nombre de usuario, el servidor y puerto entrantes y el servidor y puerto salientes. Quien acaba en la vista corta a veces concluye que su servidor no tiene ajustes seguros. Los tiene. Vuelve y usa Connect Devices."
+    },
+    {
+      "h": "Los inicios de sesión fallidos repetidos hacen que el cortafuegos bloquee la dirección que se conecta, y parece un timeout",
+      "p": "Los servidores de GreenGeeks tienen un cortafuegos que bloquea una IP tras varias autenticaciones SMTP o IMAP fallidas. Una vez bloqueada, el siguiente intento no devuelve un error de autenticación; la conexión simplemente nunca se completa, así que el síntoma pasa de un rechazo claro a un cuelgue o un timeout. Si un buzón que funcionaba deja de responder de repente después de corregir una contraseña incorrecta, la contraseña ya es correcta y el problema es el bloqueo. El soporte lo levanta."
+    }
+  ],
+  "limits": [
+    "GreenGeeks aplica límites de envío saliente por hora en los planes compartidos. Un envío automatizado de gran volumen desde un agente de IA puede alcanzarlos, y el fallo aparece como un envío aplazado o rechazado, no como un error de conexión.",
+    "mcpemails solo conecta el buzón. Los alias, reenviadores, respuestas automáticas y ajustes de spam se quedan en cPanel."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de GreenGeeks?",
+      "a": "No directamente. Claude no incluye un conector para servidores de correo cPanel. Conectar un servidor MCP como mcpemails a tu buzón de GreenGeeks por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, con las mismas credenciales que pondrías en Thunderbird o Apple Mail."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de GreenGeeks?",
+      "a": "IMAP usa el puerto 993 con TLS implícito y SMTP el puerto 465. El nombre de servidor es específico de tu cuenta y no se publica en ningún artículo, porque depende del servidor en el que esté tu hosting. Consúltalo en cPanel, en Email Accounts, luego Connect Devices, en el bloque Mail Client Manual Settings. El nombre de usuario es tu dirección de correo completa."
+    },
+    {
+      "q": "¿Dónde encuentro el nombre de mi servidor de correo de GreenGeeks?",
+      "a": "En cPanel, abre Email Accounts, haz clic en Connect Devices en la fila de la dirección y baja hasta Mail Client Manual Settings. Esa página muestra los nombres exactos de los servidores entrante y saliente de tu servidor, junto con los pares de puertos seguro y no seguro. El par seguro es el que debes usar."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de correo de GreenGeeks?",
+      "a": "Normalmente porque es la contraseña equivocada, no el servidor equivocado. El buzón tiene su propia contraseña, definida al crear la dirección, y ni la contraseña de tu panel en my.greengeeks.com ni la de cPanel autentican IMAP. Restablécela desde el enlace Manage en la fila de la dirección en Email Accounts."
+    },
+    {
+      "q": "¿Se almacena mi correo de GreenGeeks en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de tu servidor de GreenGeeks por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de GreenGeeks",
+    "sub": "Conecta un buzón de GreenGeeks en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

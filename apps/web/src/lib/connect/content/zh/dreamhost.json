@@ -1,0 +1,95 @@
+{
+  "_sources": [
+    "https://help.dreamhost.com/hc/en-us/articles/214918038-Email-client-configuration-overview",
+    "https://help.dreamhost.com/hc/en-us/articles/216479177-Change-password-Mail-users",
+    "https://help.dreamhost.com/hc/en-us/articles/216479147-Passwords-overview"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮件用户密码",
+    "helpUrl": "https://help.dreamhost.com/hc/en-us/articles/216479177-Change-password-Mail-users",
+    "usernameForm": "你的完整地址，包括域名：name@yourdomain.com。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 DreamHost 邮箱连接到 Claude 与 MCP 客户端",
+    "description": "使用邮件用户密码（而非面板登录密码），通过 imap.dreamhost.com:993 的 IMAP 将 DreamHost 邮箱连接到 Claude、Cursor 及任意 MCP 客户端。"
+  },
+  "hero": {
+    "eyebrow": "DreamHost 邮箱 + AI",
+    "titleLine1": "将 DreamHost 邮箱连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 DreamHost 收件箱。使用 DreamHost 面板中的邮件用户密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行访问 DreamHost 邮箱。mcpemails 是一个托管 MCP 服务器，通过 imap.dreamhost.com 端口 993 的 IMAP 与之连接，使用你的完整邮箱地址和该地址的邮件用户密码进行认证；DreamHost 将这个密码与你登录面板所用的密码分开管理。之后，Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。没有应用专用密码，也没有需要启用的 IMAP 开关。1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "邮件用户密码，而非面板登录密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "DreamHost 如何连接：IMAP 与邮件用户密码",
+    "body": "DreamHost 在 <code>imap.dreamhost.com</code> 端口 993 上以隐式 TLS 提供 IMAP，在 <code>smtp.dreamhost.com</code> 端口 465 上提供 SMTP。两者都是所有 DreamHost 邮箱客户共用的主机名，所以这里没有任何东西是从你自己的域名推导出来的。需要理解的是 DreamHost 的账户模型：一个 DreamHost 账户包含多种用户，每种都有自己的密码。<b>面板用户</b>用于登录控制面板。<b>邮件用户</b>就是一个邮箱地址，它带有你创建该地址时设定的密码。IMAP 和 SMTP 只接受邮件用户密码。SMTP 要求使用与 IMAP 相同的凭据进行认证；DreamHost 明确表示，没有认证，外发邮件就不会被转发。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "在 DreamHost 面板中设置邮件用户密码",
+      "p": "登录 DreamHost 面板，打开 Mail，然后打开 Manage Email，找到该地址并点击 Manage。滚动到 Change Password 部分，生成一个密码或自行设置。DreamHost 的文档说明，这一操作无法在网页邮箱中完成：你必须使用面板或单独的邮箱管理界面。"
+    },
+    {
+      "h": "粘贴到 mcpemails",
+      "p": "选择 IMAP / SMTP，输入完整地址，并粘贴邮件用户密码。服务器 imap.dreamhost.com 和 smtp.dreamhost.com 以及端口 993 和 465 已预填，并经实时 TLS 连接验证。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "DreamHost 有好几种用户，只有其中一种能读邮件",
+      "p": "这是在 DreamHost 上最耗时间的失败原因。面板允许你创建网站用户、邮件用户、MySQL 用户、面板用户等等，每种都有独立的密码，一个人同时拥有三四种完全正常。IMAP 只接受该地址的邮件用户密码。输入面板密码、FTP 或 shell 用户的密码，都会得到认证失败，而错误信息不会告诉你是哪个凭据错了。如果你不确定自己手上是哪一个，请在 Manage Email 中重置邮件用户密码，并使用新值。"
+    },
+    {
+      "h": "网页邮箱界面无法修改网页邮箱所用的密码",
+      "p": "DreamHost 声明，无法在网页邮箱内更新邮件用户的密码，你必须使用面板或邮箱管理界面。任何人成功登录网页邮箱后，想找个修改密码的页面以便把凭据交给其他工具，都会走进死胡同，还常常以为邮箱不知怎么变成了只读。"
+    },
+    {
+      "h": "短用户名常常能用，这恰恰是个陷阱",
+      "p": "DreamHost 自己的说明指出，客户端可能需要完整邮箱地址才能连接，但很多时候只需要 @ 符号前面的部分。在单域名账户上，这种模糊性无伤大雅；可一旦你的两个域名中有本地部分相同的地址，就成了问题，因为短格式已无法唯一确定一个邮箱。请始终输入完整地址。mcpemails 发送的就是完整地址。"
+    }
+  ],
+  "limits": [
+    "服务器不声明 MOVE 或 UIDPLUS，因此移动操作以复制、标记和清除的方式完成，新的 UID 需要在目标文件夹中搜索才能找到。",
+    "服务器不支持 SPECIAL-USE，因此 Sent、Drafts、Trash 和 Junk 按名称而不是按角色匹配。",
+    "SMTP 声明的邮件大小上限约为 40 MB，这限制了代理在单封邮件中能以附件形式发送的内容。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 DreamHost 邮箱吗？",
+      "a": "不能单独使用。Claude 没有内置的 DreamHost 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向你的 DreamHost 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "DreamHost 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.dreamhost.com，端口 993，使用隐式 TLS。SMTP 为 smtp.dreamhost.com，端口 465，同样是隐式 TLS，外发邮件需要认证。用户名填完整邮箱地址，密码填邮件用户密码。两个服务器均经实时 TLS 连接确认。"
+    },
+    {
+      "q": "为什么我的 DreamHost 密码被拒绝？",
+      "a": "因为 DreamHost 为账户上的每种用户分别签发密码，而 IMAP 只接受该地址的邮件用户密码。面板密码是另一个凭据。请在 Mail、Manage Email、Manage 下重置邮件用户密码，并使用你在那里设置的值。"
+    },
+    {
+      "q": "DreamHost 需要应用专用密码吗？",
+      "a": "不需要。DreamHost 不为邮件签发应用专用密码，也没有需要按邮箱开启的 IMAP 开关。邮件用户密码直接用于 IMAP 和 SMTP 认证。如果你不想复用现有密码，可以在面板中为该地址设置一个新密码。"
+    },
+    {
+      "q": "我的 DreamHost 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 DreamHost 实时获取邮件，并交给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 DreamHost 收件箱",
+    "sub": "几分钟即可连接 DreamHost 邮箱。1 个收件箱永久免费，无需信用卡。"
+  }
+}

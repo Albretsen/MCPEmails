@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://ajuda.sapo.pt/configurar-programa-de-email-70015",
+    "https://ajuda.sapo.pt/sapo-mail-premium-99980"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "SAPO 密码，需 Premium 账户",
+    "helpUrl": "https://ajuda.sapo.pt/configurar-programa-de-email-70015",
+    "usernameForm": "包含域名的完整地址：nome@sapo.pt。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "SAPO Mail IMAP：仅限 Premium，及 Claude MCP 设置",
+    "description": "SAPO 将 IMAP、POP 和 SMTP 限定为 Premium 账户。这对将 imap.sapo.pt:993 连接到 Claude 意味着什么，以及免费 Base 账户还能做什么。"
+  },
+  "hero": {
+    "eyebrow": "SAPO Mail + AI",
+    "titleLine1": "通过 IMAP 使用 SAPO Mail，",
+    "titleLine2": "在 Claude、Cursor、任意 MCP 客户端中",
+    "lead": "SAPO 把邮件客户端访问放在 Premium 等级。如果你的账户具备该权限，AI 代理就能通过 IMAP 读取、搜索、发送、回复、定时与整理邮箱。",
+    "answer": "Claude 无法自行连接 SAPO 邮箱，而在免费的 SAPO Base 账户上，任何其他东西也不行：SAPO 在自己的文档中声明 o acesso IMAP/POP está disponível apenas para contas Premium（IMAP/POP 访问仅对 Premium 账户开放）。在 Premium 账户上，mcpemails 这个托管 MCP 服务器可以用你的 SAPO 地址和密码，通过 IMAP 连接 imap.sapo.pt 的 993 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。没有应用密码，也没有需要开启的开关：门槛就是套餐。mcpemails 上一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "需要 SAPO Premium 账户",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "SAPO 如何连接：Premium 账户有 IMAP，Base 账户什么都没有",
+    "body": "SAPO 在 <code>imap.sapo.pt</code> 的 993 端口通过隐式 TLS 提供 IMAP，在 <code>smtp.sapo.pt</code> 的 465 端口提供 SMTP 提交，并要求认证。其配置页面对服务器的表述是 <b>imap.sapo.pt para endereços terminados @sapo.pt</b>（适用于以 @sapo.pt 结尾的地址），对凭据的表述是 <b>o seu endereço de e-mail SAPO e a respetiva password</b>（你的 SAPO 邮箱地址及其密码）。没有应用专用密码，也没有按邮箱设置的客户端访问开关。决定这一切能否工作的唯一因素是账户的套餐。SAPO 的帮助页面直接写明了这一限制：<b>O acesso por IMAP, POP e SMTP só está disponível para contas Premium.</b>（IMAP、POP 和 SMTP 访问仅对 Premium 账户开放。）免费的 Base 账户保留邮件和 mail.sapo.pt 网页邮箱，但失去协议访问，这意味着所有桌面和手机邮件客户端，以及包括本服务在内的所有托管 MCP 服务器都无法使用。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "检查 SAPO 账户是 Base 还是 Premium",
+      "p": "登录 mail.sapo.pt，查看账户的套餐。Base 是免费等级，没有 IMAP、POP 或 SMTP：只能使用网页邮箱和 SAPO App。Premium 会恢复这些协议，同时提供更大的邮箱且没有广告。这是账单状态而不是设置，所以邮件选项页面里没有任何东西能改变它。"
+    },
+    {
+      "h": "使用你的 SAPO 地址和密码",
+      "p": "SAPO 不签发应用专用密码。凭据就是普通的 SAPO 密码，以完整地址作为用户名，收信端和发信端都使用它。如果网页邮箱接受该密码而客户端不接受，账户几乎可以肯定是 Base 等级而不是 Premium。"
+    },
+    {
+      "h": "粘贴到 mcpemails，再把 MCP URL 粘贴到你的 AI",
+      "p": "选择 IMAP / SMTP，输入完整地址（例如 nome@sapo.pt）并输入密码。SAPO 的服务器和端口已自动填好，并已通过实时 TLS 连接验证。然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "服务器会响应，免费账户却仍然无法登录",
+      "p": "<code>imap.sapo.pt</code> 在线，能完成 TLS 握手，并且不管谁来都以 <code>Welcome to PTMail</code> 问候。这让 Premium 限制确实很难诊断，因为所有症状都指向凭据。如果 SAPO 网页邮箱接受你的密码而邮件客户端不接受，就别再测试密码了，区别在于套餐。这同样适用于 Outlook、Thunderbird、Apple Mail、手机客户端以及包括我们在内的所有 MCP 服务器：任何第三方工具都无法授予账户本身不具备的协议访问。"
+    },
+    {
+      "h": "闲置的 Base 账户在 90 天后会停止接收邮件",
+      "p": "SAPO 会让超过 90 天未使用的免费 Base 账户进入休眠：<b>as contas Base inativas por mais de 90 dias são hibernadas, deixando de receber mensagens</b>（超过 90 天未活动的 Base 账户将被休眠，不再接收邮件），休眠账户上的内容可能会被删除。Premium 账户永远不会被休眠。这一点对于创建一个备用 SAPO 地址交给代理、然后就把它抛在脑后的诱人想法尤其重要。你不登录的 Base 账户将不再是一个可用的邮箱。"
+    },
+    {
+      "h": "IMAP 只有 PLAIN，SMTP 同时支持 PLAIN 和 LOGIN",
+      "p": "IMAP 问候语只提供 <code>AUTH=PLAIN</code>，没有 <code>AUTH=LOGIN</code>。写死使用 LOGIN 机制的客户端库（针对 Exchange 编写的工具中很常见）会在认证步骤被拒绝，错误看起来像是凭据有误。SMTP 一侧同时接受 PLAIN 和 LOGIN，所以同一账户的两半在同一客户端中可能表现不同。mcpemails 会针对每一侧实际提供的机制进行协商。"
+    },
+    {
+      "h": "葡萄牙语命名的邮箱，没有 MOVE 也没有 SPECIAL-USE",
+      "p": "服务器不声明 IMAP <code>MOVE</code> 扩展，因此归档一封邮件要经过复制、更新标记再删除，而不是一条原子命令。它也缺少 <code>SPECIAL-USE</code>，所以已发送、草稿和已删除文件夹按名称而不是按用途匹配。葡萄牙语 SAPO 邮箱通常将它们命名为 <b>Enviadas</b>、<b>Rascunhos</b> 和 <b>Lixo</b>，所以如果代理找不到文件夹，请明确写出文件夹名。"
+    }
+  ],
+  "limits": [
+    "免费的 SAPO Base 账户上没有可以连接的东西。这是服务商的限制，任何 MCP 服务器（包括我们）都无法绕过。",
+    "外发邮件的编码后大小上限约为 30 MB，因此代理转发的大附件可能在 SMTP 步骤被拒绝。",
+    "由于服务器不支持 MOVE，移动操作不是原子的。如果连接在操作中途断开，一封邮件可能会短暂同时存在于两个文件夹中。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 SAPO Mail 吗？",
+      "a": "只有 Premium 账户可以。SAPO 将 IMAP、POP 和 SMTP 限定为 Premium，所以免费的 Base 账户无法被任何邮件客户端或 MCP 服务器连接。有了 Premium，将 mcpemails 指向该邮箱，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor 和 ChatGPT 中使用。"
+    },
+    {
+      "q": "SAPO 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.sapo.pt，端口 993，使用 SSL。SMTP 为 smtp.sapo.pt，端口 465，使用 SSL，并需要认证。用户名是你完整的 sapo.pt 地址，密码是你的 SAPO 密码。两台服务器均已通过实时 TLS 连接确认，与 SAPO 公布的一致。"
+    },
+    {
+      "q": "为什么 Outlook 不能再用我的 SAPO 地址了？",
+      "a": "因为 IMAP 和 POP 访问已移到 Premium 等级。SAPO 自己的帮助页面说明 IMAP 和 POP 仅对 Premium 账户开放。免费的 Base 账户保留 mail.sapo.pt 网页邮箱和 SAPO App，但失去了桌面或手机客户端所需的所有协议。"
+    },
+    {
+      "q": "SAPO 会签发应用密码吗？",
+      "a": "不会。SAPO 没有公布应用专用密码机制。邮件客户端在收信和发信服务器上都使用普通的 SAPO 账户密码加完整地址认证。如果该密码在网页邮箱中可用而在客户端中不可用，原因在于账户等级，而不是凭据。"
+    },
+    {
+      "q": "我停止使用的 SAPO 账户会怎样？",
+      "a": "超过 90 天未活动的免费 Base 账户会被休眠并停止接收邮件，其内容可能被删除。超出存储限额超过 90 天的账户也会受到同样处理。Premium 账户不会被休眠。不要把一个闲置的 Base 地址当作代理专用邮箱搁置不管。"
+    },
+    {
+      "q": "我的 SAPO 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 SAPO 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 SAPO 收件箱",
+    "sub": "如果你的 SAPO 账户是 Premium，几分钟即可完成连接。一个收件箱永久免费，无需信用卡。"
+  }
+}

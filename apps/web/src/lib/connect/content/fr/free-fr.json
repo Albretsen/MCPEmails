@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://assistance.free.fr/articles/609"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Mot de passe du compte Free",
+    "helpUrl": "https://assistance.free.fr/articles/609",
+    "usernameForm": "Votre adresse complète, domaine compris, par exemple name@free.fr. Free demande lui-même de saisir l'adresse complète, et non l'identifiant court.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "E-mail Free.fr dans Claude : les réglages IMAP qui marchent",
+    "description": "Connectez une boîte Free.fr à Claude et tout client MCP via IMAP sur imap.free.fr:993 avec le mot de passe du compte Free. Rien d'autre à créer ni à activer."
+  },
+  "hero": {
+    "eyebrow": "Free.fr Mail + IA",
+    "titleLine1": "Connectez votre boîte Free.fr",
+    "titleLine2": "à Claude, Cursor, tout client MCP",
+    "lead": "Free fournit à chaque abonné une boîte mail avec un accès IMAP simple. mcpemails connecte cette boîte pour que votre agent IA puisse lire, rechercher, envoyer, répondre et classer le courrier depuis n'importe quel client MCP, et pas une seule application.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Free.fr. mcpemails est un serveur MCP hébergé qui la connecte via IMAP sur imap.free.fr, port 993, en s'authentifiant avec votre adresse complète et le mot de passe de votre compte Free. Free ne délivre pas de mots de passe propres à une application et n'exige aucune activation préalable, ce qui en fait l'un des fournisseurs les plus simples à connecter, même si son serveur IMAP est inhabituellement dépouillé, avec des conséquences expliquées ci-dessous. Une fois la boîte connectée, Claude, Cursor ou tout autre client MCP peut lire, rechercher, envoyer et organiser ce courrier, et une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Le mot de passe de votre compte Free, rien d'autre",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Free.fr se connecte : IMAP avec le mot de passe du compte",
+    "body": "Free sert IMAP sur <code>imap.free.fr</code>, port 993, en TLS, et la soumission sur <code>smtp.free.fr</code>, qui accepte le TLS implicite sur le port 465 et STARTTLS sur le 587. L'identifiant à utiliser est le mot de passe de votre <b>compte Free</b>, celui de l'espace abonné, et le nom d'utilisateur est l'adresse complète plutôt que l'identifiant seul. Free exige l'authentification SMTP : un client qui laisse vides l'identifiant et le mot de passe sortants se connecte, puis échoue au premier envoi. Il n'y a pas de mot de passe d'application à générer ni de réglage client de messagerie distinct à activer, ce qui paraît simple et l'est, mais le serveur lui-même est minimal : il n'annonce presque aucune des extensions IMAP qu'attendent les clients modernes, et c'est là que se cachent les surprises."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et ne demande pas de carte bancaire."
+    },
+    {
+      "h": "Sachez quel mot de passe vous allez utiliser",
+      "p": "Le mot de passe de la boîte est celui de votre compte Free. Le changer dans l'espace abonné le change au même moment pour tous les clients de messagerie, celui-ci compris : si vous le renouvelez plus tard, prévoyez de mettre à jour la connexion. Si vous l'avez oublié, réinitialisez-le là-bas au lieu de chercher un identifiant propre au courrier : il n'en existe pas."
+    },
+    {
+      "h": "Saisissez l'adresse complète dans mcpemails",
+      "p": "Choisissez IMAP / SMTP et tapez l'adresse entière, <code>name@free.fr</code>, dans le champ identifiant. La documentation de Free demande de donner l'adresse complète, domaine compris. Les serveurs et ports ci-dessous sont préremplis et ont été vérifiés par une connexion TLS réelle."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a accès à la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Free n'annonce que AUTH=PLAIN, et sans SASL-IR",
+      "p": "La bannière de capacités de <code>imap.free.fr</code> est à peu près aussi courte qu'une bannière IMAP peut l'être. Elle propose <code>AUTH=PLAIN</code> et rien d'autre, et n'annonce pas SASL-IR : le serveur refuse donc la forme en une étape qui envoie les identifiants avec la commande AUTHENTICATE. Un client câblé sur le mécanisme LOGIN, ou qui suppose SASL-IR, reçoit un refus sec qui ressemble à un mauvais mot de passe. mcpemails réessaie l'échange en deux temps au lieu de considérer ce refus comme définitif."
+    },
+    {
+      "h": "Le serveur sortant accepte des mécanismes que le serveur entrant refuse",
+      "p": "<code>smtp.free.fr</code> annonce PLAIN, LOGIN, CRAM-MD5 et DIGEST-MD5, une liste bien plus riche que le seul PLAIN côté IMAP. Les deux moitiés d'un même compte se comportent donc différemment dans le même client, et un outil qui sonde l'un et réutilise la réponse pour l'autre peut choisir un mécanisme qui ne fonctionne que dans un sens. Configurez-les séparément."
+    },
+    {
+      "h": "Ni MOVE, ni UIDPLUS, ni SPECIAL-USE, ni IDLE",
+      "p": "Le serveur de Free implémente le protocole de base et très peu de choses en plus. Classer un message se fait par COPY, puis STORE du drapeau supprimé, puis EXPUNGE, au lieu d'une seule commande atomique, et comme UIDPLUS manque, le serveur n'indique pas l'identifiant de la nouvelle copie : elle doit être retrouvée en cherchant dans le dossier de destination. Rien n'indique quel dossier est Sent ou Trash : ils sont donc reconnus par leur nom, et sur une boîte française ces noms sont généralement en français. Sans IDLE, pas de notification instantanée : le nouveau courrier est détecté par relève périodique."
+    },
+    {
+      "h": "Un seul mot de passe, un seul point de défaillance",
+      "p": "Comme l'identifiant de messagerie est le mot de passe de votre compte Free et non un secret propre à chaque application, tout outil dans lequel vous le collez détient les clés du compte, et révoquer l'accès d'un outil implique de changer le mot de passe pour tous. C'est une caractéristique de la conception de Free et non une critique, mais il vaut mieux le savoir avant de connecter quoi que ce soit. mcpemails chiffre au repos les identifiants stockés, et vous pouvez déconnecter la boîte depuis le tableau de bord à tout moment."
+    }
+  ],
+  "limits": [
+    "Le serveur SMTP de Free annonce une taille maximale de message d'environ 75 MB : un envoi avec des pièces jointes plus lourdes est donc refusé avant de partir.",
+    "Les déplacements ne sont pas atomiques et les rôles des dossiers sont reconnus par leur nom, car MOVE, UIDPLUS et SPECIAL-USE ne sont pas implémentés sur ce serveur.",
+    "Pas d'IDLE : le nouveau courrier est donc détecté par relève périodique plutôt que poussé."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec l'e-mail Free.fr ?",
+      "a": "Pas directement. Claude n'a pas de connecteur Free intégré. Connecter un serveur MCP comme mcpemails à la boîte via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier free.fr, et la même connexion fonctionne dans Cursor, ChatGPT et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de Free.fr ?",
+      "a": "IMAP : imap.free.fr sur le port 993 en TLS implicite. SMTP : smtp.free.fr, sur le port 465 en TLS implicite ou le port 587 avec STARTTLS, authentification obligatoire. Les deux serveurs ont été vérifiés par une connexion TLS réelle. L'identifiant est votre adresse e-mail complète et le mot de passe est celui de votre compte Free."
+    },
+    {
+      "q": "Free.fr exige-t-il un mot de passe d'application ou l'activation d'IMAP ?",
+      "a": "Ni l'un ni l'autre. Free ne délivre pas de mots de passe propres à une application, et il n'y a pas d'option client de messagerie à activer dans le webmail avant qu'un client puisse se connecter. Le mot de passe de votre compte Free authentifie directement, c'est pourquoi un refus de connexion vient ici généralement d'un problème de mécanisme ou d'un mot de passe réellement faux, et non d'un réglage caché."
+    },
+    {
+      "q": "Pourquoi mon courrier Free.fr part-il sans arriver, ou l'inverse ?",
+      "a": "Parce que les serveurs entrant et sortant annoncent des mécanismes d'authentification différents. IMAP ne propose que PLAIN, sans SASL-IR, tandis que SMTP propose PLAIN, LOGIN, CRAM-MD5 et DIGEST-MD5. Un client qui choisit un seul mécanisme pour les deux côtés peut réussir dans un sens et échouer dans l'autre : cela ressemble à une panne partielle, mais c'est une incohérence de configuration."
+    },
+    {
+      "q": "Mon courrier Free.fr est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct chez Free via IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le contenu des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Free.fr à votre IA",
+    "sub": "Pas de mot de passe d'application, pas d'option à activer, pas d'attente. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

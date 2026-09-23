@@ -1,21 +1,33 @@
 {
+  "_sources": [
+    "https://admin.migadu.com/mail/config-v1.1.xml",
+    "https://migadu.com/guides/identities/",
+    "https://migadu.com/api/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://migadu.com/guides/identities/",
+    "usernameForm": "La dirección completa en tu propio dominio, por ejemplo you@yourdomain.com. La configuración automática de Migadu indica la dirección completa como nombre de usuario tanto para IMAP como para SMTP.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Conecta Migadu a Claude (y a cualquier IA)",
-    "description": "Conecta Migadu a Claude, Cursor, ChatGPT y a cualquier cliente MCP por IMAP con la contraseña del buzón. Deja que la IA lea, envíe, programe y organice tu correo. Una bandeja gratis, para siempre."
+    "title": "Conecta Migadu a Claude, Cursor y clientes MCP",
+    "description": "Conecta Migadu a Claude, Cursor y cualquier cliente MCP por IMAP en imap.migadu.com:993 con la contraseña del buzón del área de administración, no la de tu cuenta."
   },
   "hero": {
     "eyebrow": "Migadu + IA",
     "titleLine1": "Conecta Migadu a Claude,",
     "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
-    "lead": "Dale a tu agente de IA una bandeja Migadu real en minutos. Lee, busca, envía, responde, programa y organiza correo con IMAP y la contraseña del buzón, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+    "lead": "Dale a tu agente de IA una bandeja real de Migadu en minutos. Lee, busca, envía, responde, programa y organiza el correo con IMAP y la contraseña de tu buzón, y usa la misma bandeja en todos tus clientes MCP, no solo en uno.",
     "meta0": "1 bandeja gratis, para siempre",
-    "meta1": "La contraseña del buzón, sin configurar OAuth",
+    "meta1": "La contraseña de tu buzón, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no puede llegar a Migadu por su cuenta. mcpemails es un servidor MCP alojado que lo conecta por IMAP con la contraseña del buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
+    "answer": "Claude no puede acceder a Migadu por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP puedan leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
   },
   "method": {
-    "title": "Cómo se conecta Migadu: IMAP y la contraseña del buzón",
-    "body": "Migadu se conecta por IMAP/SMTP con la <b>contraseña del buzón</b>, que no es la de tu cuenta de administración de Migadu. Defínela o cámbiala en el área de administración de Migadu, en Mailboxes, y pégala en mcpemails con tu dirección. Todos los buzones de Migadu usan los mismos dos servidores sea cual sea tu dominio, así que no hay nada que buscar."
+    "title": "Cómo se conecta Migadu: IMAP y la contraseña de tu buzón",
+    "body": "Migadu se conecta por IMAP/SMTP con la <b>contraseña del buzón</b>, que no es la contraseña de tu cuenta de administración de Migadu. Establécela o restablécela en el área de administración de Migadu, en Mailboxes, y pégala en mcpemails junto con tu dirección. Todos los buzones de Migadu usan los mismos dos servidores sea cual sea tu dominio, así que no hay nada que buscar."
   },
   "setup": [
     {
@@ -23,20 +35,69 @@
       "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
-      "h": "Define una contraseña de buzón en Migadu",
-      "p": "En el área de administración de Migadu, abre Mailboxes, elige el buzón y define su contraseña. Los clientes de correo se autentican con esa contraseña; tu acceso de administrador no sirve."
+      "h": "Establece una contraseña de buzón en Migadu",
+      "p": "En el área de administración de Migadu, abre Mailboxes, elige el buzón y establece su contraseña. Los clientes de correo se autentican con esa contraseña; tu inicio de sesión de administrador no funcionará."
     },
     {
       "h": "Pégala en mcpemails",
-      "p": "Elige IMAP / SMTP, añade tu dirección de Migadu, los servidores de abajo y la contraseña para conectar la bandeja de forma segura."
+      "p": "Elige IMAP / SMTP y añade tu dirección de Migadu, los servidores indicados abajo y la contraseña para conectar la bandeja de forma segura."
     },
     {
       "h": "Pega la URL MCP en tu IA",
       "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
     }
   ],
+  "gotchas": [
+    {
+      "h": "La contraseña del buzón y la contraseña de la cuenta de Migadu son dos credenciales distintas",
+      "p": "Tu cuenta de Migadu, la que usas para iniciar sesión en admin.migadu.com, gestiona dominios, buzones, reenvíos y facturación. No autentica el correo. Cada buzón tiene su propia contraseña, que se establece en el propio buzón dentro del área de administración, en <b>Mailboxes</b>, y es la única credencial que <code>imap.migadu.com</code> aceptará. Es fácil confundirse porque ambos inicios de sesión parecen una dirección de correo en tu propio dominio. Si un cliente es rechazado, abre el buzón en el área de administración y establece una contraseña nueva en lugar de volver a escribir la de tu cuenta."
+    },
+    {
+      "h": "Un alias no tiene contraseña, así que no puedes iniciar sesión con él",
+      "p": "Migadu distingue entre buzones, que guardan correo y tienen credenciales, y alias, que solo reenvían. Un alias no tiene con qué autenticarse, así que apuntar un cliente a una dirección de alias falla sea cual sea la contraseña que escribas. La solución de Migadu son las <b>identidades</b>: en el área de administración, abre el buzón y añade una identidad para la dirección, con su propia contraseña. Las identidades pueden limitarse a servicios concretos como POP, IMAP y ManageSieve, lo que las convierte en lo más parecido que tiene Migadu a una contraseña específica de aplicación. Darle a un agente de IA una identidad limitada a IMAP, en lugar de la contraseña del propio buzón, es la configuración más ordenada y puede revocarse por separado."
+    },
+    {
+      "h": "El servidor IMAP de Migadu es IMAP4rev2 detrás de un proxy y anuncia inusualmente poco",
+      "p": "El saludo es <code>IMAP4rev2 IMAP4rev1 SASL-IR LITERAL- AUTH=PLAIN</code> seguido de <code>Proxy Ready</code>, y esa lista corta lo dice todo. Migadu ofrece <b>AUTH=PLAIN</b> y nada más, sin <code>AUTH=LOGIN</code>, así que las bibliotecas cliente fijadas al mecanismo LOGIN, algo habitual en herramientas escritas para Exchange, fallan en el paso de autenticación en lugar de devolver un error útil. El lado SMTP acepta tanto PLAIN como LOGIN, por lo que las dos mitades de una misma cuenta pueden comportarse de forma distinta en el mismo cliente. Migadu es además uno de los poquísimos servidores que anuncian IMAP4rev2, más reciente de lo que esperan la mayoría de las bibliotecas cliente. SASL-IR está presente, así que la autenticación en un solo paso funciona con normalidad."
+    },
+    {
+      "h": "Sin MOVE, sin UIDPLUS, sin SPECIAL-USE y sin IDLE",
+      "p": "El conjunto de capacidades que anuncia Migadu omite cuatro extensiones que tienen la mayoría de los servidores. Sin <b>MOVE</b>, mover un mensaje se hace como una copia, una actualización de marcas y un expunge en lugar de un único comando atómico. Sin <b>UIDPLUS</b>, el servidor no informa del nuevo identificador de un mensaje copiado, así que hay que encontrarlo buscando en el destino. Sin <b>SPECIAL-USE</b>, Enviados, Borradores, Papelera y Archivo se identifican por nombre y no por función, así que un buzón con carpetas renombradas necesita que se indique la carpeta explícitamente. Sin <b>IDLE</b>, no hay ningún canal push. Nada de esto impide que la conexión funcione, y mcpemails lee bajo demanda en lugar de esperar notificaciones push, pero explica comportamientos que no verás en otros proveedores."
+    }
+  ],
+  "limits": [
+    "Como el servidor no anuncia MOVE, mover un mensaje no es atómico. Si la conexión se corta a mitad, un mensaje puede existir brevemente en ambas carpetas.",
+    "Las carpetas se identifican por nombre y no por función, así que un buzón con carpetas renombradas o con nombres no ingleses puede necesitar que se indique la carpeta de destino explícitamente.",
+    "mcpemails conecta un buzón. Los dominios, reenvíos, reescrituras y las cuotas propias de envío y recepción de Migadu siguen gestionándose en el área de administración de Migadu."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Migadu?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para Migadu. Conectar un servidor MCP como mcpemails a tu buzón de Migadu por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y como la conexión es IMAP estándar, el mismo buzón también está disponible en Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuál es la configuración IMAP y SMTP de Migadu?",
+      "a": "IMAP es imap.migadu.com en el puerto 993 con TLS implícito, y SMTP es smtp.migadu.com en el puerto 465, también con TLS implícito. El propio archivo de configuración automática de Migadu indica la dirección de correo completa como nombre de usuario para ambos. Todos los buzones de Migadu usan estos dos servidores sea cual sea el dominio de tu dirección, y ambos se confirmaron con una conexión TLS real."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de Migadu?",
+      "a": "Normalmente porque escribiste la contraseña de tu cuenta de Migadu en lugar de la contraseña del buzón. Son credenciales distintas y ambas parecen una dirección de correo, así que el error es habitual. La otra causa frecuente es apuntar a un alias en lugar de a un buzón: un alias no tiene contraseña propia y no permite iniciar sesión. Establece una contraseña de buzón en el área de administración y usa esa."
+    },
+    {
+      "q": "¿Tiene Migadu contraseñas de aplicación?",
+      "a": "No con ese nombre, pero las identidades cumplen la misma función. En el área de administración, abre el buzón y crea una identidad con su propia contraseña, y después limita esa identidad a IMAP. Tu cliente se autentica como la identidad, y puedes revocarla más adelante sin cambiar la contraseña del buzón ni afectar a nada más que use el buzón."
+    },
+    {
+      "q": "¿Puedo conectar un alias de Migadu o enviar desde uno?",
+      "a": "No puedes iniciar sesión como un alias, porque no tiene credenciales. Para enviar desde una dirección de alias, crea una identidad para ella con su propia contraseña, o activa la opción de remitente comodín en el buzón para que las credenciales del buzón puedan enviar con el alias en la cabecera From."
+    },
+    {
+      "q": "¿Se almacena mi correo de Migadu en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Migadu por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
   "ctaBand": {
-    "title": "Dale a tu IA una bandeja Migadu",
+    "title": "Dale a tu IA una bandeja de Migadu",
     "sub": "Conecta Migadu en minutos. Una bandeja gratis para siempre, sin tarjeta."
   }
 }

@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.scalahosting.com/kb/use-imap-settings-to-add-my-email-address-to-an-email-client/",
+    "https://www.scalahosting.com/kb/how-to-setup-email-account-client-setup-ssl-tls-settings-pop-imap/",
+    "https://www.scalahosting.com/blog/scalahosting-introduces-spanel-powered-shared-and-email-hosting-plans/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://www.scalahosting.com/kb/use-imap-settings-to-add-my-email-address-to-an-email-client/",
+    "usernameForm": "Tu dirección de correo completa, por ejemplo team@yourdomain.com, tal como se creó en SPanel o cPanel.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Correo de ScalaHosting en Claude: IMAP con SPanel y cPanel",
+    "description": "ScalaHosting usa SPanel en unos planes y cPanel en otros. Busca tus ajustes en Connect device y dale a Claude el buzón por IMAP 993. Una bandeja gratis."
+  },
+  "hero": {
+    "eyebrow": "ScalaHosting + IA",
+    "titleLine1": "Conecta el correo de ScalaHosting a Claude,",
+    "titleLine2": "Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA un buzón real de ScalaHosting. Lee, busca, envía, responde, programa y organiza correo por IMAP, tanto si tu cuenta usa SPanel como cPanel.",
+    "answer": "Claude no puede acceder a un buzón de ScalaHosting por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. ScalaHosting no tiene un nombre de servidor de correo compartido: tu servidor de correo es tu propio dominio o el nombre del servidor de alojamiento, y ambos paneles lo muestran en Connect device para la dirección. El panel que te toca depende del plan, porque se usan tanto SPanel como cPanel. La autenticación es con la contraseña del buzón, y una bandeja es gratis.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña del buzón desde SPanel",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta el correo de ScalaHosting: SPanel o cPanel, IMAP 993",
+    "body": "ScalaHosting tiene la particularidad de ofrecer su propio panel de control junto al estándar del sector. <b>SPanel</b> es su panel propio, incluido gratis en los planes VPS gestionados y ahora también detrás del alojamiento compartido y de correo basado en SPanel. <b>cPanel</b> sigue disponible, como base de los planes compartidos más antiguos y como complemento de pago al contratar un VPS gestionado. El correo se comporta igual en ambos casos: IMAP en el puerto 993 con SSL y SMTP en el 465, con el 587 documentado como alternativa de envío, y la dirección de correo completa como nombre de usuario. El nombre del servidor es el de tu propio servidor, por eso lo tomas del panel y no de un artículo. En SPanel está en <b>Email Accounts</b>, el botón azul <b>Action</b> y luego <b>Connect device</b>. En cPanel está en <b>Email Accounts</b> y luego <b>Connect Devices</b>."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no necesita tarjeta."
+    },
+    {
+      "h": "Abre Connect device en el panel que tengas",
+      "p": "A SPanel se accede en <code>yourdomain.com/spanel/login</code>, en tu propio servidor. Una vez dentro, abre <b>Email Accounts</b>, busca la dirección, pulsa el botón azul <b>Action</b> y elige <b>Connect device</b>. SPanel muestra en una ventana emergente los nombres de servidor y puertos de entrada y salida. En una cuenta cPanel el equivalente es <b>Email Accounts</b>, luego <b>Connect Devices</b> y luego el bloque Mail Client Manual Settings."
+    },
+    {
+      "h": "Establece o recupera la contraseña del buzón",
+      "p": "IMAP comprueba la contraseña de la dirección, que no es tu acceso al área de cliente de ScalaHosting. En SPanel, crea o edita la dirección en Email Accounts, con el botón Generate si quieres un valor robusto. Después pégala en mcpemails con la dirección completa como nombre de usuario y el nombre de servidor que copiaste."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "SPanel no tiene una página de inicio de sesión central, y la gente pierde tiempo buscándola",
+      "p": "No existe un <code>spanel.scalahosting.com</code> donde iniciar sesión. SPanel se ejecuta en tu propio servidor y accedes a él en tu propio dominio, en <code>yourdomain.com/spanel/login</code>. Eso despista a quienes están acostumbrados a entrar primero en la web de su proveedor. También significa que, si el DNS de tu dominio ya no apunta a ScalaHosting, tampoco puedes llegar al panel con ese nombre, y necesitas la IP o el nombre del servidor."
+    },
+    {
+      "h": "El panel que tienes es una decisión de compra, no un nivel de plan",
+      "p": "cPanel es un complemento de pago en los VPS gestionados, mientras que SPanel viene incluido, y según las cifras de la propia ScalaHosting la gran mayoría de los nuevos clientes de VPS usan SPanel. Los planes de alojamiento compartido y de correo más antiguos se basaban en cPanel; los nuevos basados en SPanel no. Así que dos clientes de ScalaHosting que pagan algo parecido pueden tener paneles completamente distintos, y una guía escrita para uno no tiene pantallas equivalentes en el otro. Comprueba qué estás viendo realmente antes de seguir cualquier guía de correo de ScalaHosting."
+    },
+    {
+      "h": "Tus ajustes se enviaron por correo al registrarte y están archivados en el área de cliente",
+      "p": "ScalaHosting envía los datos del servidor de correo de la cuenta en el correo de bienvenida. Si hace tiempo que desapareció, se pueden recuperar sin contactar con soporte: inicia sesión en el área de cliente y abre <b>My Details</b> y luego <b>Email History</b>, que conserva todos los mensajes que te han enviado. Ese archivo es la vía más rápida para conseguir el nombre del servidor cuando no puedes entrar al panel, y casi nadie sabe que existe."
+    }
+  ],
+  "limits": [
+    "mcpemails conecta buzones, no el servidor. Las herramientas propias de SPanel, las copias de seguridad y las funciones de seguridad siguen donde están.",
+    "En un VPS gestionado puede que hayas cambiado el sistema de correo después del aprovisionamiento. Si es así, la ventana Connect device sigue mostrando lo que configuró SPanel, que quizá ya no sea lo que está escuchando."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de ScalaHosting?",
+      "a": "No directamente. Claude no tiene conector de ScalaHosting. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar. Funciona igual en cuentas SPanel y cPanel, ya que ambas sirven IMAP estándar."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de ScalaHosting?",
+      "a": "IMAP usa el puerto 993 con SSL y SMTP el puerto 465 con SSL, o el 587 para envío. El nombre del servidor es el de tu propio servidor de alojamiento y no una dirección compartida de ScalaHosting, así que tómalo de la ventana Connect device en SPanel o de Connect Devices en cPanel. El nombre de usuario es tu dirección de correo completa en ambos."
+    },
+    {
+      "q": "¿Dónde encuentro los ajustes de correo en SPanel?",
+      "a": "Inicia sesión en SPanel en yourdomain.com/spanel/login, abre Email Accounts, busca la dirección en la lista, pulsa el botón azul Action y elige Connect device. SPanel muestra entonces en una ventana emergente los nombres de servidor, puertos y cifrado de entrada y salida. Los mismos valores aparecen también en el correo de bienvenida que se envió al crear la cuenta."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de correo de ScalaHosting?",
+      "a": "Porque la contraseña del buzón es distinta de tu acceso al área de cliente de ScalaHosting y de la contraseña de administrador de SPanel. Restablécela editando la dirección en Email Accounts en el panel. Comprueba que el nombre de usuario es la dirección de correo completa y que usaste el nombre de servidor que muestra el panel y no uno supuesto."
+    },
+    {
+      "q": "¿Se almacena mi correo de ScalaHosting en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de tu servidor de ScalaHosting por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de ScalaHosting",
+    "sub": "Conecta un buzón de ScalaHosting en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

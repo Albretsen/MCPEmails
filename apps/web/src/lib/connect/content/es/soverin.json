@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://soverin.zammad.com/help/en-gb/12-email-apps-and-imap/38-imap-and-smtp-settings",
+    "https://soverin.zammad.com/help/en-gb/13-account/37-two-factor-authentication-2fa",
+    "https://soverin.com/product/pricing",
+    "https://soverin.com/resources/faq"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña de la cuenta de Soverin",
+    "helpUrl": "https://soverin.zammad.com/help/en-gb/12-email-apps-and-imap/38-imap-and-smtp-settings",
+    "usernameForm": "Tu dirección de Soverin completa, también si es de un dominio propio: name@yourdomain.eu. Soverin documenta la dirección como nombre de usuario.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta Soverin Mail a Claude y a clientes MCP",
+    "description": "Conecta Soverin a Claude, Cursor y cualquier cliente MCP por IMAP en imap.soverin.net:993. La 2FA de Soverin cubre solo el panel y el webmail, nunca IMAP."
+  },
+  "hero": {
+    "eyebrow": "Soverin + IA",
+    "titleLine1": "Conecta Soverin a Claude,",
+    "titleLine2": "Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de Soverin. Lee, busca, envía, responde, programa y organiza correo por IMAP, en cualquier cliente MCP, incluidos los buzones en tu propio dominio, con una explicación honesta de qué protege la conexión y qué no.",
+    "answer": "Claude no puede acceder a un buzón de Soverin por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.soverin.net en el puerto 993, y por SMTP en smtp.soverin.net en el puerto 465, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Soverin documenta tu dirección de correo como nombre de usuario y la contraseña de tu cuenta como contraseña, y esos mismos dos servidores atienden tanto los buzones con dominio propio como los de soverin.net. Soverin no emite contraseñas de aplicación, y su autenticación de dos factores protege el panel y el webmail, no IMAP, así que la credencial que guardas aquí es la contraseña de la cuenta. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "La contraseña de tu cuenta de Soverin",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Soverin: servidores soverin.net, diga lo que diga tu dirección",
+    "body": "Soverin ofrece IMAP en <code>imap.soverin.net</code> en el puerto 993 con SSL, o 143 con STARTTLS, y SMTP en <code>smtp.soverin.net</code> en el puerto 465 con SSL, o 587 con STARTTLS. La propia ayuda de Soverin lo dice claramente: tu dirección de correo de Soverin es también tu nombre de usuario, y la contraseña es la de tu cuenta. La consecuencia importante es que un buzón en un dominio tuyo sigue autenticándose contra los servidores <code>soverin.net</code>. Soverin gestiona el servicio de correo; tu dominio solo decide cómo es tu dirección y adónde apuntan los registros MX. Aquí no hay mecanismo de contraseñas de aplicación, y la autenticación de dos factores de Soverin está documentada como protección del Soverin Dashboard y del webmail integrado, lo que significa que activarla ni rompe un cliente de correo ni lo protege."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja, para siempre, sin tarjeta. Al final obtienes una URL MCP y una clave."
+    },
+    {
+      "h": "Confirma con qué dirección se autentica el buzón",
+      "p": "En el Soverin Dashboard, abre el buzón que quieres conectar. El nombre de usuario es la dirección del propio buzón, no uno de los alias que hayas apuntado a él. Soverin da a cada buzón alias ilimitados, así que es fácil haber dejado de usar la dirección original hace años y ya no pensar en ella como el inicio de sesión."
+    },
+    {
+      "h": "Añade el buzón en mcpemails",
+      "p": "Elige IMAP / SMTP y escribe esa dirección completa y la contraseña de tu cuenta de Soverin. Los servidores vienen rellenados como <code>imap.soverin.net</code> y <code>smtp.soverin.net</code> y se verificaron mediante una conexión TLS real. No los sustituyas por un nombre de servidor construido a partir de tu dominio; el certificado está emitido para el nombre propio de Soverin y un cliente que valide de forma estricta lo rechazará."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "La autenticación de dos factores no llega a IMAP, y no existen contraseñas de aplicación",
+      "p": "El propio artículo de Soverin sobre la 2FA limita la función a dos lugares: el <b>Soverin Dashboard</b>, para gestionar tu cuenta y tus ajustes, y el webmail integrado. IMAP, POP y SMTP no están en esa lista, y Soverin no publica ningún mecanismo de contraseñas de aplicación que la acompañe. Dos consecuencias prácticas. Activar la 2FA no romperá esta conexión ni ningún otro cliente de correo, justo lo contrario de lo que ocurre en Runbox o Posteo. Y la 2FA no es lo que limita a un cliente conectado aquí: la única credencial es la contraseña de tu cuenta, así que revocar una conexión implica cambiar esa contraseña y volver a introducirla en todas partes. Guarda el código de recuperación que emite Soverin, porque perder el autenticador sin él significa perder el acceso al panel."
+    },
+    {
+      "h": "El servidor IMAP no ofrece AUTH=LOGIN, mientras que SMTP sí",
+      "p": "El saludo IMAP de Soverin anuncia <code>AUTH=PLAIN</code>, <code>AUTH=OAUTHBEARER</code> y <code>AUTH=XOAUTH2</code>, sin <code>AUTH=LOGIN</code>. El servidor SMTP acepta tanto PLAIN como LOGIN. Por eso los clientes que dependen del mecanismo LOGIN, algo común en herramientas escritas originalmente para Exchange, no consiguen leer mientras envían sin problema desde la misma cuenta con las mismas credenciales, algo confuso de depurar. Los dos mecanismos OAuth pertenecen a las integraciones propias de la plataforma de Soverin y un tercero no puede obtener un token para ellos, así que la vía es la autenticación con contraseña."
+    },
+    {
+      "h": "Un dominio propio no te da un servidor de correo propio",
+      "p": "Soverin vende buzones en dominios que son tuyos, y lo natural es suponer que entonces <code>mail.yourdomain.eu</code> debe de ser el servidor. No lo es. Tus registros MX apuntan a la infraestructura de Soverin, y los clientes se autentican contra <code>imap.soverin.net</code> y <code>smtp.soverin.net</code> exactamente igual que lo haría una dirección soverin.net. El certificado de esos servidores está emitido para el nombre propio de Soverin, así que apuntar un cliente a un nombre de servidor de tu dominio produce una discrepancia de certificado en lugar de una conexión que funcione."
+    },
+    {
+      "h": "Sin MOVE, sin UIDPLUS, sin SPECIAL-USE",
+      "p": "El servidor Dovecot anuncia IDLE y SASL-IR, pero no MOVE, UIDPLUS ni SPECIAL-USE. Archivar un mensaje es un COPY, un STORE de la marca \\Deleted y un EXPUNGE en lugar de un único comando, y sin UIDPLUS el servidor no informa del nuevo UID, así que la copia movida se vuelve a encontrar buscando en el destino. Las funciones de las carpetas se deducen de los nombres porque nada en el protocolo las declara, así que puede que una carpeta de enviados o papelera renombrada o con nombre en neerlandés tenga que indicarse explícitamente cuando pidas a un agente que archive algo."
+    }
+  ],
+  "limits": [
+    "Conectar un buzón de Soverin a un cliente de IA implica que ese proveedor de IA lee el contenido de los mensajes con los que trabaja. mcpemails obtiene el correo en vivo de imap.soverin.net en cada solicitud y no almacena el cuerpo de los mensajes, y las credenciales se cifran en reposo, pero el texto sigue llegando a Claude, Cursor o el cliente que conectes. El alojamiento exclusivamente en la UE de Soverin, su financiación por suscripción y su compromiso de no escanear ni perfilar tu correo describen a Soverin. Nada de eso acompaña a un mensaje cuando llega a un proveedor de IA que conectas tú mismo.",
+    "No hay una credencial acotada. Soverin no tiene contraseñas de aplicación, así que lo que se guarda aquí es la contraseña de tu cuenta, la misma que abre el Soverin Dashboard. Retirar esta conexión implica cambiar esa contraseña en lugar de borrar un único token.",
+    "mcpemails conecta el buzón, no la cuenta. Los alias, los buzones adicionales, los ajustes de dominio y los reenvíos siguen en el Soverin Dashboard, y tu cliente de IA no puede verlos ni cambiarlos."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Soverin?",
+      "a": "No directamente. Claude no tiene conector de Soverin y no puede hablar IMAP por sí mismo. Conectar un servidor MCP como mcpemails a tu buzón de Soverin le da a Claude acceso por IMAP para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después en Cursor, ChatGPT y otros clientes MCP sin repetir la configuración."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Soverin?",
+      "a": "IMAP es imap.soverin.net en el puerto 993 con SSL, o 143 con STARTTLS. SMTP es smtp.soverin.net en el puerto 465 con SSL, o 587 con STARTTLS. El nombre de usuario es tu dirección de Soverin completa y la contraseña es la de tu cuenta. Ambos servidores se verificaron mediante una conexión TLS real y ambos atienden también buzones con dominio propio."
+    },
+    {
+      "q": "¿Tiene Soverin contraseñas de aplicación, y cubre la 2FA a IMAP?",
+      "a": "No a ambas cosas. Soverin no ofrece ningún mecanismo de contraseñas de aplicación para clientes de correo, y su autenticación de dos factores está documentada como protección del Soverin Dashboard y del webmail integrado. IMAP y SMTP siguen aceptando la contraseña de tu cuenta tanto si la 2FA está activada como si no, así que activarla no alterará esta conexión ni tampoco la restringirá."
+    },
+    {
+      "q": "Uso Soverin con mi propio dominio. ¿Qué servidor uso?",
+      "a": "Los mismos: imap.soverin.net y smtp.soverin.net. Un dominio propio cambia tu dirección y tus registros MX, no los servidores contra los que se autentica tu cliente. Construir un nombre de servidor a partir de tu dominio te da un certificado que no coincide, que la mayoría de los clientes rechazan directamente y que a ningún cliente se le debería decir que ignore."
+    },
+    {
+      "q": "¿Por qué un cliente puede leer mi correo de Soverin pero no enviar, o al revés?",
+      "a": "Normalmente por el mecanismo de autenticación. El servidor IMAP de Soverin ofrece PLAIN pero no LOGIN, mientras que su servidor SMTP ofrece ambos, así que un cliente fijado en el mecanismo LOGIN falla en un lado y funciona en el otro con credenciales idénticas. Configura ambos lados con autenticación de contraseña normal dentro de la conexión TLS en lugar de con un mecanismo concreto."
+    },
+    {
+      "q": "¿Se almacena mi correo de Soverin en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de imap.soverin.net por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva. El cliente de IA que conectes sí recibe el contenido de todo lo que lee, y esa es la decisión que conviene tomar de forma deliberada, más que la cuestión del almacenamiento."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Soverin",
+    "sub": "Conecta Soverin en minutos, dominios propios incluidos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

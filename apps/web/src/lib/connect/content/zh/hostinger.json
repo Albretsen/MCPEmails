@@ -1,21 +1,33 @@
 {
+  "_sources": [
+    "https://docs.hostinger.com/emails/setup-devices",
+    "https://www.hostinger.com/support/1575756-how-to-get-email-account-configuration-details-for-hostinger-email/",
+    "https://www.hostinger.com/support/5966022-how-to-get-email-account-configuration-details-for-titan-email-at-hostinger/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://www.hostinger.com/support/1575756-how-to-get-email-account-configuration-details-for-hostinger-email/",
+    "usernameForm": "你自己域名下的完整邮箱地址，而不是你的 Hostinger 账户登录名。",
+    "status": "active"
+  },
   "meta": {
-    "title": "将 Hostinger 连接到 Claude（及任意 AI）",
-    "description": "用邮箱密码通过 IMAP 将 Hostinger 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的邮件，1 个收件箱永久免费。"
+    "title": "将 Hostinger 连接到 Claude、Cursor 与 MCP 客户端",
+    "description": "通过 imap.hostinger.com:993 的 IMAP 将 Hostinger Email 连接到 Claude、Cursor 及任意 MCP 客户端。基于 Titan 的 Business Email 使用完全不同的服务器。"
   },
   "hero": {
     "eyebrow": "Hostinger + AI",
     "titleLine1": "将 Hostinger 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
-    "lead": "几分钟即可为你的 AI 代理接入一个真正的 Hostinger 收件箱。用 IMAP 和邮箱密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+    "lead": "几分钟即可为你的 AI 代理接入一个真正的 Hostinger 收件箱。通过 IMAP 和你的邮箱密码读取、搜索、发送、回复、定时与整理邮件，同一个收件箱可在所有 MCP 客户端中使用，而不止一个。",
     "meta0": "1 个收件箱永久免费",
-    "meta1": "邮箱密码，无需 OAuth 配置",
+    "meta1": "使用邮箱密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行连接 Hostinger。mcpemails 是一个托管 MCP 服务器，用邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱永久免费。"
+    "answer": "Claude 无法自行访问 Hostinger。mcpemails 是一个托管 MCP 服务器，使用你的邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，1 个收件箱免费。"
   },
   "method": {
-    "title": "Hostinger 如何连接：IMAP 与邮箱密码",
-    "body": "Hostinger Email 通过 IMAP/SMTP 连接，使用你在 hPanel 的 Emails 中设置的邮箱密码。没有应用专用密码，也没有 OAuth 步骤。所有域名的服务器都是 <code>imap.hostinger.com</code> 与 <code>smtp.hostinger.com</code>，无需查找。"
+    "title": "Hostinger 如何连接：IMAP 与你的邮箱密码",
+    "body": "Hostinger Email 使用你在 hPanel 的 Emails 下设置的邮箱密码，通过 IMAP/SMTP 连接。没有应用专用密码，也没有 OAuth 步骤。所有域名的服务器都是 <code>imap.hostinger.com</code> 和 <code>smtp.hostinger.com</code>，所以不需要查找任何东西。"
   },
   "setup": [
     {
@@ -23,20 +35,69 @@
       "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
-      "h": "取得 Hostinger 邮箱密码",
-      "p": "在 hPanel 中打开 Emails，选择该地址并设置或重置密码。mcpemails 就是用这个密码进行认证的。"
+      "h": "获取你的 Hostinger 邮箱密码",
+      "p": "在 hPanel 中打开 Emails，选择该地址，设置或重置其密码。mcpemails 就用这个密码进行认证。"
     },
     {
       "h": "粘贴到 mcpemails",
-      "p": "选择 IMAP / SMTP，填入你的 Hostinger 地址、下方的服务器地址和密码，安全连接收件箱。"
+      "p": "选择 IMAP / SMTP，填入你的 Hostinger 地址、下方的服务器地址和密码，安全地连接收件箱。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
       "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],
+  "gotchas": [
+    {
+      "h": "Hostinger 有两个邮件平台，你用的是哪个取决于购买时间",
+      "p": "<b>Hostinger Email</b> 是 Hostinger 自己的平台，文档给出的是端口 993 上的 <code>imap.hostinger.com</code> 和端口 465 上的 <code>smtp.hostinger.com</code>，POP3 则为端口 995 上的 <code>pop.hostinger.com</code>。Hostinger 的 <b>Business Email</b> 和 <b>Enterprise Email</b> 套餐由 Titan 提供支持，改为在 <code>imap.titan.email</code> 和 <code>smtp.titan.email</code> 上响应，Hostinger 文档给出的是 IMAP 端口 993，SMTP 端口 465 或 587。从地址本身看不出你用的是哪个。hPanel 可以告诉你：打开 <b>Emails</b>，点击域名旁的 <b>Manage</b>，选择 <b>Connect Apps & Devices</b>，它会列出该邮箱实际所在平台的值。对于 Titan 邮箱，同样的值也会出现在 Titan Webmail 的 Settings、Configure 3rd party apps 中。"
+    },
+    {
+      "h": "邮箱密码不是你的 hPanel 登录密码，而开启 2FA 又会改变它",
+      "p": "IMAP 验证的是为单个邮箱地址设置的密码，你可以在 hPanel 的 <b>Emails</b> 和邮箱列表中设置或重置。你的 Hostinger 账户登录密码（用于管理主机和账单的那个）是另一个凭据，会被拒绝。Hostinger 的文档还说明，密码是邮箱密码，<b>如果邮箱使用双重身份验证，则是应用专用密码</b>，所以开启了 2FA 的邮箱需要使用应用专用密码，而不是你设置的那个。这两种失败都表现为普通的认证错误。"
+    },
+    {
+      "h": "SMTP 服务器的单封邮件上限约为 46 MB，比大多数服务商小",
+      "p": "Hostinger 的提交服务器声明的单封邮件大小上限为 48,811,212 字节，约 46 MB。这是编码后邮件的大小，而不是你文件的大小，而 MIME 编码会让附件膨胀约三分之一，所以实际附件上限更接近 34 MB。这个限制明显低于其他好几家主机商，代理尝试转发大附件时，会在提交时被直接拒绝，而不是稍后被退回。当文件接近这个大小时，请改为发送链接。"
+    },
+    {
+      "h": "Hostinger Email 不支持 MOVE、UIDPLUS 和 SPECIAL-USE",
+      "p": "欢迎消息中声明了 <code>SASL-IR</code>、<code>IDLE</code>、<code>LITERAL+</code>、<code>AUTH=PLAIN</code> 和 <code>AUTH=LOGIN</code>，但没有 MOVE、UIDPLUS 或 SPECIAL-USE。因此，移动邮件以复制、更新标记和清除的方式完成，而不是一条原子命令；副本的标识符不会返回，需要在目标文件夹中搜索；Sent、Drafts、Trash 和 Junk 按名称而不是按角色匹配。如果代理在 Hostinger 邮箱中找不到你的归档文件夹，明确写出文件夹名称即可。"
+    }
+  ],
+  "limits": [
+    "外发邮件在编码后上限约为 46 MB，因此明显超过约 34 MB 的附件会在提交时被拒绝。",
+    "由于服务器不声明 MOVE，移动操作不是原子的。如果连接中途断开，邮件可能会短暂地同时存在于两个文件夹中。",
+    "Business 和 Enterprise Email 套餐运行在 Titan 而不是 Hostinger 自己的平台上，使用 Titan 的主机名。请从你要连接的邮箱的 Connect Apps and Devices 中获取设置。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Hostinger 邮箱吗？",
+      "a": "不能单独使用。Claude 没有内置的 Hostinger 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，而且同一个连接随后也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用，而不止一个。"
+    },
+    {
+      "q": "Hostinger 的 IMAP 和 SMTP 设置是什么？",
+      "a": "对于 Hostinger Email，IMAP 为 imap.hostinger.com，端口 993，使用 SSL；SMTP 为 smtp.hostinger.com，端口 465，使用 SSL；文档给出的发信替代方式是端口 587 加 STARTTLS。用户名是你的完整邮箱地址。两个服务器均已在本页所示日期通过实时 TLS 连接确认。"
+    },
+    {
+      "q": "如何在 hPanel 中找到我的 Hostinger 邮箱设置？",
+      "a": "在 hPanel 中打开 Emails，点击域名旁的 Manage，从侧边栏中选择 Connect Apps and Devices。该页面有针对各个应用的引导选项卡，下方是原始的服务器设置。它会列出你邮箱实际所在平台的值，如果你使用的是基于 Titan 的套餐，这一点很重要。"
+    },
+    {
+      "q": "为什么我的 Hostinger 邮箱密码被拒绝？",
+      "a": "通常是因为你用的是 Hostinger 账户登录密码，而不是为邮箱地址本身设置的密码。请在 hPanel 的 Emails 下重置邮箱密码，然后用它重试。如果邮箱开启了双重身份验证，Hostinger 要求邮件客户端改用应用专用密码，而这种拒绝看起来与密码错误完全一样。"
+    },
+    {
+      "q": "如果我的套餐使用 Titan Email 怎么办？",
+      "a": "那么 Hostinger 的主机名就不适用了。由 Titan 提供支持的 Business 和 Enterprise Email 邮箱使用端口 993 上的 imap.titan.email，以及端口 465 或 587 上的 smtp.titan.email。请从 hPanel 的 Connect Apps and Devices，或 Titan Webmail 中的 Settings、Configure 3rd party apps 获取准确的值。"
+    },
+    {
+      "q": "我的 Hostinger 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 Hostinger 实时获取邮件，并交给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
   "ctaBand": {
     "title": "给你的 AI 一个 Hostinger 收件箱",
-    "sub": "几分钟即可连接 Hostinger。一个收件箱永久免费，无需信用卡。"
+    "sub": "几分钟即可连接 Hostinger。1 个收件箱永久免费，无需信用卡。"
   }
 }

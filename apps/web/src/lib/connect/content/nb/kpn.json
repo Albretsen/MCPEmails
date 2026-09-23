@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://www.kpn.com/service/ugs/instellen-e-mail-laptop-pc",
+    "https://community.kpn.com/e-mail-en-cloud-10/kpn-e-mail-wordt-verbeterd-wat-betekent-dit-voor-jouw-e-mailadres-648121",
+    "https://community.kpn.com/e-mail-en-cloud-10/vanaf-10-juni-2026-stopt-het-aanmaken-van-een-standaard-kpn-e-mailadres-648499"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "KPN-e-postpassordet ditt",
+    "helpUrl": "https://www.kpn.com/service/ugs/instellen-e-mail-laptop-pc",
+    "usernameForm": "Hele adressen din, inkludert domenet: naam@kpnmail.nl, eller et eldre KPN-domene som naam@planet.nl, naam@hetnet.nl eller naam@xs4all.nl.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "KPN Mail: IMAP-innstillinger og MCP-tilgang for Claude",
+    "description": "Koble en KPN-, Planet-, Het Net- eller XS4ALL-postkasse til Claude og enhver MCP-klient på imap.kpnmail.nl:993. Alle eldre KPN-domener deler én vert og ett passord."
+  },
+  "hero": {
+    "eyebrow": "KPN Mail + AI",
+    "titleLine1": "Koble KPN-postkassen din",
+    "titleLine2": "til Claude, Cursor og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte KPN-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP, uansett hvilket KPN-domene adressen din tilfeldigvis slutter på.",
+    "answer": "Claude kan ikke nå en KPN-postkasse på egen hånd. mcpemails er en driftet MCP-server som kobler til den over IMAP på imap.kpnmail.nl på port 993, og autentiserer med hele adressen din og KPN-e-postpassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. KPN har verken app-passord eller noen bryter for klienttilgang, og det samme vertsparet betjener alle KPN-e-postdomener, også de arvede adressene på planet.nl, hetnet.nl og xs4all.nl. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "KPN-e-postpassordet ditt, uten app-passord",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles KPN til: én plattform bak rundt tretti domener",
+    "body": "KPN leverer IMAP på <code>imap.kpnmail.nl</code> på port 993 over implisitt TLS. For utgående e-post dokumenterer KPNs egen oppsettside <code>smtp.kpnmail.nl</code> på port 587 med TLS; den samme verten svarer også på port 465 med implisitt TLS, og det er det mcpemails forhåndsutfyller, fordi én enkelt tilkobling som er kryptert fra start, er mer forutsigbar å holde åpen fra en server. Autentisering skjer med KPN-e-postpassordet ditt og <b>hele</b> adressen som brukernavn, og KPNs side sier det like enkelt: <b>Gebruikersnaam: KPN e-mailadres</b>, <b>Wachtwoord: KPN wachtwoord</b> (brukernavn: KPN-e-postadresse, passord: KPN-passord). Det finnes ikke noe appspesifikt passord å generere. Det som er verdt å forstå, er alt som ligger bak de to vertsnavnene: KPN har tatt over Planet Internet, Het Net, XS4ALL og en lang rekke andre nederlandske leverandører, og alle disse e-postdomenene ligger nå på den samme KPN-plattformen med de samme innstillingene."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Bekreft e-postpassordet på email.kpn.com",
+      "p": "Logg inn i KPNs webmail med adressen du vil koble til. Hvis passordet ikke virker, tilbakestiller du det der og ikke i MijnKPN: det er postkassens påloggingsopplysning IMAP-serveren sjekker. Bruk adressen nøyaktig slik den er skrevet, inkludert det KPN-domenet den slutter på."
+    },
+    {
+      "h": "Se bort fra domenet, bruk kpnmail-vertene",
+      "p": "En adresse på <b>planet.nl</b>, <b>hetnet.nl</b> eller <b>xs4all.nl</b> får ikke sin egen server. Alle KPN-e-postdomener autentiserer mot <code>imap.kpnmail.nl</code> og <code>smtp.kpnmail.nl</code>. Det finnes ingenting per domene å slå opp, og å sette opp en klient med en gjettet <code>imap.planet.nl</code> er den aller vanligste måten å kjøre seg fast på."
+    },
+    {
+      "h": "Lim det inn i mcpemails, og lim så MCP-URL-en inn i AI-en",
+      "p": "Velg IMAP / SMTP, og skriv inn hele adressen og e-postpassordet. KPN-vertene og portene er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling. Lim deretter https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Verten er i drift, men KPN stanset nye postkasser 10. juni 2026",
+      "p": "Dette er to separate fakta, og det er viktig å ikke blande dem. <code>imap.kpnmail.nl</code> svarer i dag, og eksisterende postkasser kobler til fra e-postklienter som de alltid har gjort; svaret fra KPNs egne ansatte på dette er <b>je kunt e-mailclients blijven gebruiken zoals je gewend bent</b> (du kan fortsette å bruke e-postklienter som du er vant til). Det som har stoppet, er utstedelsen: fra 10. juni 2026 kan du ikke lenger opprette en standard KPN-e-postadresse eller en ekstra konto, mens alle postkasser migreres til en ny plattform. KPN beskriver pausen som midlertidig (<b>deze situatie is tijdelijk</b>). Denne siden kobler altså til adressen du allerede har, men kan ikke hjelpe deg med å få en ny akkurat nå."
+    },
+    {
+      "h": "Rundt tretti arvede domener, ett vertsnavn, og ingen nye",
+      "p": "KPN leverer fortsatt e-post på en lang rekke domener selskapet har kjøpt opp, blant dem <b>planet.nl</b>, <b>hetnet.nl</b>, <b>xs4all.nl</b>, <b>demon.nl</b>, <b>tiscali.nl</b> og <b>worldonline.nl</b>. Alle autentiserer mot <code>imap.kpnmail.nl</code>. Men KPN er tydelig på at nye adresser bare kan opprettes på <b>@kpnmail.nl</b>: <b>andere domeinen zijn niet mogelijk</b> (andre domener er ikke mulig). Og bare adresser som faktisk er i bruk, blir tatt med over til den nye e-postplattformen, så en eldre adresse som ingen har logget inn på, er den som er mest utsatt."
+    },
+    {
+      "h": "Serveren er uvanlig naken: ingen UIDPLUS, ingen MOVE, ingen SPECIAL-USE",
+      "p": "KPNs IMAP-banner tilbyr <code>SASL-IR</code>, <code>IDLE</code> og <code>LITERAL+</code> og stopper der. Uten <code>MOVE</code> utføres sortering av en melding som en kopi, en flaggoppdatering og en expunge i stedet for én atomisk kommando. Uten <code>UIDPLUS</code> blir den nye UID-en til kopien ikke rapportert tilbake og må finnes ved å søke i målmappen, noe som gjør sortering i stor skala merkbart tregere. Uten <code>SPECIAL-USE</code> matches Sendt, Utkast og Papirkurv på navn, og en nederlandsk KPN-postkasse kaller dem vanligvis <b>Verzonden</b>, <b>Concepten</b> og <b>Prullenbak</b>."
+    },
+    {
+      "h": "SMTP tilbyr bare LOGIN-mekanismen",
+      "p": "<code>smtp.kpnmail.nl</code> annonserer <code>AUTH LOGIN</code> og ingenting annet, ingen PLAIN. IMAP tilbyr derimot både PLAIN og LOGIN. En klient eller et bibliotek som er hardkodet til SASL PLAIN for innsending, leser innboksen din uten problemer og feiler så ved første sending, noe som ser ut som et tillatelsesproblem og ikke som en mekanisme som ikke passer. mcpemails forhandler fram det serveren faktisk tilbyr på hver del."
+    }
+  ],
+  "limits": [
+    "Utgående meldinger er begrenset til omtrent 50 MB kodet melding, så et stort vedlegg som en agent videresender, kan bli avvist i SMTP-steget.",
+    "Fordi serveren ikke støtter MOVE, er en flytting ikke atomisk. Hvis en tilkobling brytes midt i operasjonen, kan en melding en kort stund finnes i begge mapper.",
+    "Mens KPNs migrering pågår, kan du ikke opprette en ny KPN-adresse som er øremerket en agent. Koble til en eksisterende, eller bruk en postkasse fra en annen leverandør."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med KPN-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd KPN-kobling. Peker du en MCP-server som mcpemails mot postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den, og den samme tilkoblingen fungerer da også fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for KPN?",
+      "a": "IMAP er imap.kpnmail.nl på port 993 med SSL. For utgående e-post dokumenterer KPN smtp.kpnmail.nl på port 587 med TLS; den samme verten svarer også på 465 med implisitt TLS, og det er det mcpemails bruker. Brukernavnet er hele KPN-e-postadressen din, og passordet er KPN-e-postpassordet ditt."
+    },
+    {
+      "q": "Bruker adresser på planet.nl, hetnet.nl og xs4all.nl andre servere?",
+      "a": "Nei. Alle KPN-e-postdomener kjører på samme plattform og bruker imap.kpnmail.nl og smtp.kpnmail.nl. Det finnes ingen imap.planet.nl eller imap.xs4all.nl å lete etter. Skriv inn adressen nøyaktig slik den er skrevet, med sitt eget domene, som brukernavn, og bruk KPN-vertsnavnene."
+    },
+    {
+      "q": "Kan jeg fortsatt opprette en ny KPN-e-postadresse?",
+      "a": "Ikke for øyeblikket. KPN stanset opprettelsen av standard KPN-e-postadresser og ekstra kontoer 10. juni 2026 mens selskapet migrerer alle postkasser til en ny plattform, og beskriver pausen som midlertidig. Eksisterende postkasser fortsetter å virke fra e-postklienter hele veien. Når nye adresser kommer tilbake, blir de bare på @kpnmail.nl."
+    },
+    {
+      "q": "Trenger KPN et app-passord?",
+      "a": "Nei. KPN utsteder ingen appspesifikke passord. E-postklienter autentiserer seg med KPN-e-postadressen og KPN-e-postpassordet ditt, den samme påloggingen som webmailen på email.kpn.com godtar. Hvis det blir avvist, tilbakestiller du det der før du leter noe annet sted."
+    },
+    {
+      "q": "Lagres KPN-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra KPN over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke beholdt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en KPN-innboks",
+    "sub": "Koble til e-post fra KPN, Planet, Het Net eller XS4ALL på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

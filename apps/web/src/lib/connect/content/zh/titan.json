@@ -1,0 +1,106 @@
+{
+  "_sources": [
+    "https://support.titan.email/hc/en-us/articles/900000215446-Configure-Titan-on-other-apps-using-IMAP-POP",
+    "https://support.titan.email/hc/en-us/articles/25005307786905-Enable-Titan-on-other-apps",
+    "https://support.titan.email/hc/en-us/articles/59899461438233-Application-Password-in-Titan-for-Third-Party-Clients",
+    "https://support.titan.email/hc/en-us/articles/4406867379865-Configure-Titan-on-other-apps-using-IMAP-POP-for-EU-hosted-users",
+    "https://support.titan.email/hc/en-us/articles/9820407299737-Setting-up-and-editing-Two-Factor-Authentication-settings",
+    "https://www.godaddy.com/help/use-imap-settings-to-add-my-professional-email-to-a-client-32204"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Titan 邮箱密码（开启两步验证后使用应用密码）",
+    "helpUrl": "https://support.titan.email/hc/en-us/articles/25005307786905-Enable-Titan-on-other-apps",
+    "usernameForm": "你自有域名下的完整 Titan 地址，例如 jack@yourdomain.com。Titan 文档说明，当客户端单独要求用户名时，也填写同一个地址。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 Titan Email 连接到 Claude、Cursor 与 MCP 客户端",
+    "description": "通过 IMAP（imap.titan.email:993）将 Titan Email 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。请先开启 Enable Titan on other apps。一个收件箱永久免费。"
+  },
+  "hero": {
+    "eyebrow": "Titan Email + AI",
+    "titleLine1": "将 Titan Email 连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Titan 收件箱。通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用，而不止一个。",
+    "answer": "Claude 无法自行连接 Titan Email。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.titan.email 的 993 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。在你于网页邮箱设置中开启 Enable Titan on Other Apps 之前，Titan 会拒绝所有第三方客户端；开启了双重认证的邮箱需要 Titan 应用密码而不是普通密码。一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "必须开启第三方访问",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Titan Email 如何连接：解锁第三方访问后使用 IMAP",
+    "body": "Titan 在 <code>imap.titan.email</code> 的 993 端口通过 TLS 提供 IMAP，在 <code>smtp.titan.email</code> 的 465 端口提供 SMTP，同样是隐式 TLS。有两件事要先处理。Titan 邮箱的第三方访问默认是<b>关闭</b>的，在有人开启之前，什么都过不了登录这一关。而且 Titan 以其他公司的品牌出售，所以<b>你在哪里购买的邮箱，决定了你使用哪些主机名</b>。很多人来到这里时并不确定自己的邮箱是不是 Titan，因为卖给他们的主机商从未提过这个词。三项检查可以确定：Titan 网页邮箱位于 <code>app.titan.email</code>；你域名的 MX 记录指向 <code>mx1.titan.email</code> 和 <code>mx2.titan.email</code>；你的主机商以 Titan Email（如 Hostinger）或 Professional Email（GoDaddy 对同一产品的叫法）的名义出售给你。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。无需信用卡，免费套餐可一直连接一个收件箱。"
+    },
+    {
+      "h": "开启 Enable Titan on Other Apps",
+      "p": "登录 app.titan.email 上的 Titan 网页邮箱，点击右上角的 <b>Settings</b> 图标，然后点击 <b>Enable Titan on Other Apps</b>。会打开一个简短的功能介绍；再次点击该按钮确认。如果找不到该项，而是看到 <b>Configure 3rd party apps</b>，说明该邮箱的第三方访问已经开启。"
+    },
+    {
+      "h": "确认主机名，然后把所有信息粘贴到 mcpemails",
+      "p": "大多数 Titan 邮箱使用下方自动填好的服务器。如果你的域名通过 GoDaddy 管理，GoDaddy 的文档给出的则是 993 端口的 <code>imap.secureserver.net</code> 和 465 端口的 <code>smtpout.secureserver.net</code>。如果你是从 Blacknight、MonoVM、DomainDiscount24、Fluccs 或 Domain Central 购买的 Titan，Titan 文档给出的是 <code>imap0101.titan.email</code> 和 <code>smtp0101.titan.email</code>。在 mcpemails 中选择 IMAP / SMTP，输入你完整的 Titan 地址及其密码。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "在你拨动一个开关之前，Titan 会拒绝所有邮件客户端",
+      "p": "Titan 邮箱出厂时第三方访问是关闭的，Titan 自己的设置指南开篇就说明了这一点。IMAP、POP 和 SMTP 都会在登录步骤失败，错误看起来和密码错误一模一样，所以第一反应是重置密码。开关位于 Titan 网页邮箱的 <b>Settings</b> 中，名为 <b>Enable Titan on Other Apps</b>。Titan 给了你一个判断依据：如果该菜单项已被 <b>Configure 3rd party apps</b> 取代，说明访问已开启，问题出在别处。"
+    },
+    {
+      "h": "在哪里购买 Titan 会改变主机名",
+      "p": "Titan 通过主机公司以白标方式销售，所以发票上的品牌并不是你邮件服务器的品牌。GoDaddy 以 Professional Email 的名义转售，让客户端指向 <code>imap.secureserver.net</code> 和 <code>smtpout.secureserver.net</code>。通过 Blacknight、MonoVM、DomainDiscount24、Fluccs 或 Domain Central 购买的 Titan 托管在欧盟，在 <code>imap0101.titan.email</code> 和 <code>smtp0101.titan.email</code> 上响应。其他所有人使用普通的 <code>imap.titan.email</code>。同一个产品，三个主机系列，用错了会在连接阶段就失败，而不是在登录阶段。"
+    },
+    {
+      "h": "Titan 自己的故障排查说要关闭两步验证，其实你不必",
+      "p": "Titan IMAP 指南的故障排查部分把密码被拒归咎于双重认证，并让你将其关闭。Titan 其实支持应用密码，只是藏得很深：<b>Settings</b>、<b>Preferences</b>、<b>Account and Security</b>、<b>Security and Access</b>，然后是 Two-Factor Authentication 下的 <b>Manage</b>，你要重新输入密码和一个六位验证码，<b>Generate App Password</b> 才会出现。在那里生成一个，并保持两步验证开启。Titan 只显示一次，你可以在同一页面撤销它。"
+    },
+    {
+      "h": "Titan 的 IMAP 服务器异常精简，这会改变行为",
+      "p": "Titan 的能力列表除了 IMAP4rev1、AUTH=PLAIN 和 SASL-IR 之外几乎没有别的。它不提供 MOVE，所以移动邮件变成复制、标记再删除，而不是一条原子命令，中断的移动可能会把原邮件留在原处。它不提供 IDLE，所以任何客户端都无法保持连接等待新邮件；mcpemails 每次请求都实时获取，但同一邮箱上的桌面客户端只能轮询。UIDPLUS 和 SPECIAL-USE 也都缺失，这就是为什么这里的文件夹按名称匹配。"
+    }
+  ],
+  "limits": [
+    "本页的设置表列出的是 Titan 的标准主机对。GoDaddy Professional Email 和欧盟经销商的邮箱需要各自的主机名，连接时请手动输入，而不要接受自动填好的值。",
+    "由于没有 SPECIAL-USE，文件夹被重命名过的 Titan 邮箱，在让代理归档或存档邮件时需要明确写出文件夹名。",
+    "Titan 的 SMTP 服务器接受的邮件最大为 50 MB，因此带超大附件的转发会在提交时被拒绝。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Titan Email 吗？",
+      "a": "不能直接使用。Claude 没有内置的 Titan 连接器，也无法自行打开 IMAP 会话。将 mcpemails 这样的 MCP 服务器连接到你的 Titan 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor 和任何其他 MCP 客户端中使用，而不局限于一个应用。"
+    },
+    {
+      "q": "我怎么知道我的邮箱到底是不是 Titan？",
+      "a": "检查三件事。你的网页邮箱位于 app.titan.email，即使你的主机商以自己的名义链接到它。你域名的 MX 记录指向 mx1.titan.email 和 mx2.titan.email。以及你的服务商以 Titan Email（如 Hostinger）或 Professional Email（GoDaddy 对同一服务的叫法）的名义销售它。"
+    },
+    {
+      "q": "Titan Email 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.titan.email，端口 993，隐式 TLS。SMTP 为 smtp.titan.email，端口 465，同样是隐式 TLS。使用完整的 Titan 地址及其邮箱密码登录。两台服务器均已在本页所示日期通过实时 TLS 连接验证。"
+    },
+    {
+      "q": "为什么 Titan 拒绝我的密码？",
+      "a": "几乎总是因为该邮箱从未开启第三方访问，这会产生一个认证错误，而不是有用的提示。请先在网页邮箱设置中开启 Enable Titan on Other Apps。如果已经开启而登录仍然失败，说明该邮箱开启了双重认证，需要从 Security and Access 页面获取应用密码。"
+    },
+    {
+      "q": "这适用于 GoDaddy Professional Email 吗？",
+      "a": "适用，但主机名不同。GoDaddy Professional Email 的底层就是 Titan，但 GoDaddy 文档给出的是 993 端口的 imap.secureserver.net 和 465 端口的 smtpout.secureserver.net，Titan 自己的指南也把 GoDaddy 管理的域名指向那里。请手动输入这些主机，而不要使用自动填好的那一对。"
+    },
+    {
+      "q": "我的 Titan 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 Titan 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密；邮件正文在相应请求完成后不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Titan Email 收件箱",
+    "sub": "几分钟即可连接 Titan。一个收件箱永久免费，无需信用卡。"
+  }
+}

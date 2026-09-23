@@ -1,7 +1,18 @@
 {
+  "_sources": [
+    "https://help.yahoo.com/kb/SLN4075.html",
+    "https://help.yahoo.com/kb/SLN15241.html"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "App-passord",
+    "helpUrl": "https://help.yahoo.com/kb/SLN15241.html",
+    "usernameForm": "Hele Yahoo-adressen din, inkludert domenet: name@yahoo.com, eller ymail.com- eller rocketmail.com-formen du registrerte deg med.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Koble Yahoo Mail til Claude (og enhver AI)",
-    "description": "Koble Yahoo Mail til Claude, Cursor, ChatGPT og enhver MCP-klient med et app-passord. La AI lese, sende, planlegge og organisere Yahoo Mail. 1 innboks gratis, for alltid."
+    "title": "Koble Yahoo Mail til Claude, Cursor og MCP-klienter",
+    "description": "Koble Yahoo Mail til Claude, Cursor og enhver MCP-klient via IMAP port 993 med et Yahoo-app-passord. Kontopassordet ditt virker ikke. Én innboks gratis."
   },
   "hero": {
     "eyebrow": "Yahoo Mail + AI",
@@ -10,11 +21,12 @@
     "lead": "Gi AI-agenten din en ekte Yahoo-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med ett enkelt app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "App-passord, ingen OAuth-oppsett",
-    "meta2": "E-post hentes direkte, lagres aldri"
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "Claude når ikke Yahoo Mail på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på port 993 og autentiserer med et Yahoo-app-passord opprettet under External connections på Account Security-siden din, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Det vanlige Yahoo-passordet ditt godtas aldri fra en e-postklient. Oppsettet tar et par minutter, og én innboks er gratis, for alltid."
   },
   "method": {
     "title": "Slik kobler Yahoo seg til: et app-passord",
-    "body": "Yahoo Mail kobles til via IMAP/SMTP med et <b>Yahoo-app-passord</b>. Slå på tostegsbekreftelse, generer et app-passord under Yahoo-kontosikkerhet, og lim det så inn i mcpemails sammen med Yahoo-adressen din. Ingen OAuth-dans, ingen nettleser-popuper."
+    "body": "Yahoo Mail kobles til via IMAP/SMTP med et <b>Yahoo-app-passord</b>. Slå på totrinnsbekreftelse, generer et app-passord i Yahoo Account Security, og lim det så inn i mcpemails sammen med Yahoo-adressen din. Ingen OAuth-dans, ingen popup-vinduer i nettleseren."
   },
   "setup": [
     {
@@ -23,7 +35,7 @@
     },
     {
       "h": "Generer et Yahoo-app-passord",
-      "p": "Slå på tostegsbekreftelse, og generer så et app-passord under Yahoo-kontosikkerhet."
+      "p": "Slå på totrinnsbekreftelse, og generer så et app-passord i Yahoo Account Security."
     },
     {
       "h": "Lim det inn i mcpemails",
@@ -32,6 +44,50 @@
     {
       "h": "Lim MCP-URL-en inn i AI-en",
       "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Verten Yahoo dokumenterer og verten vi kobler til, er to navn på én server",
+      "p": "Yahoos egen hjelpeartikkel oppgir <code>imap.mail.yahoo.com</code>. Innstillingstabellen på denne siden viser <code>export.imap.mail.yahoo.com</code>. Ingen av dem er feil: begge navnene er aliaser til den samme <code>jimap.imap.mail.yahoo.com</code>, de slås opp til de samme adressene, og sertifikatet Yahoo viser, er et jokertegnsertifikat på <code>*.imap.mail.yahoo.com</code> som dekker begge. Vi publiserer navnet vi åpnet en direkte TLS-tilkobling mot. Er en eksisterende e-postklient hos deg satt opp med det dokumenterte navnet, la den være: den snakker med den samme maskinen."
+    },
+    {
+      "h": "App-passordet ligger under External connections, og det overlever at du endrer passordet",
+      "p": "Yahoo genererer app-passord på Account Security-siden, under <b>External connections</b>: Create app password, gi appen et navn, Generate password. Yahoo viser det én gang. Det folk overser, er hva som skjer etterpå. Et app-passord forblir gyldig selv etter at du endrer hovedpassordet for Yahoo, så å endre passordet trekker ikke tilbake en e-postklients tilgang. Den eneste måten å kutte en tilkobling hos Yahoo på, er å slette akkurat det app-passordet på samme skjerm."
+    },
+    {
+      "h": "Yahoo og AOL deler plattform, men ikke konto, og påloggingene krysser ikke over",
+      "p": "Adresser på ymail.com og rocketmail.com er vanlige Yahoo-kontoer og hører hjemme på denne siden. AOL Mail kjører på samme underliggende infrastruktur, og <code>imap.aol.com</code> slås opp gjennom den samme <code>yahoodns.net</code>-tjenesten, men AOL har egne vertsnavn og egen side for kontosikkerhet. Et app-passord generert i en Yahoo-konto åpner ikke en AOL-postkasse, og omvendt. Koble til en AOL-adresse som AOL."
+    },
+    {
+      "h": "Yahoos IMAP er mer kapabel enn de fleste gratispostkasser, og det virker i din favør",
+      "p": "Ved testing annonserte Yahoo <code>SASL-IR</code>, <code>MOVE</code>, <code>UIDPLUS</code>, <code>IDLE</code> og <code>SPECIAL-USE</code>. I praksis betyr det at en flytting er én atomisk kommando i stedet for en kopi etterfulgt av en sletting, og at Sent, Drafts, Spam og Trash identifiseres etter <b>rolle</b> i stedet for navn, så en omdøpt eller ikke-engelsk systemmappe fortsatt finnes riktig. Den annonserer ikke <code>AUTH=LOGIN</code> på IMAP, bare PLAIN og OAuth-mekanismene, så verktøy som er hardkodet til LOGIN-mekanismen, feiler ved autentisering selv med et riktig app-passord."
+    }
+  ],
+  "limits": [
+    "Yahoos innsendingsserver annonserer en maksimal meldingsstørrelse på omtrent 41 MB. Lesing av vedlegg gjennom mcpemails er begrenset til 25 MB per forespørsel, så alt større må hentes i selve Yahoo Mail.",
+    "App-passord utløper ikke og overlever at du endrer Yahoo-passordet. Å slette app-passordet i Account Security er den eneste måten å trekke tilbake tilgangen på."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Yahoo Mail?",
+      "a": "Ikke direkte. Claude har ingen innebygd Yahoo-kobling. Kobler du en MCP-server som mcpemails til Yahoo-postkassen din via IMAP, med et Yahoo-app-passord, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere. Samme tilkobling fungerer da uendret fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Yahoo Mail?",
+      "a": "IMAP er på port 993 med implisitt TLS, og SMTP er smtp.mail.yahoo.com på port 465, også med implisitt TLS. Yahoo dokumenterer innkommende vert som imap.mail.yahoo.com; tabellen på denne siden viser export.imap.mail.yahoo.com, som er et alias til den samme serveren og navnet vi verifiserte direkte. Logg inn med hele adressen din og et app-passord."
+    },
+    {
+      "q": "Hvorfor blir Yahoo-passordet mitt avvist?",
+      "a": "Fordi Yahoo ikke godtar kontopassordet ditt fra et tredjeparts e-postprogram. Du trenger et app-passord opprettet på Yahoo Account Security-siden under External connections. Kopier det når det vises, fordi Yahoo ikke viser det igjen. Har et gammelt app-passord sluttet å virke, generer et nytt i stedet for å gjenbruke det."
+    },
+    {
+      "q": "Trenger jeg totrinnsbekreftelse for å få et Yahoo-app-passord?",
+      "a": "Yahoo oppretter app-passord på Account Security-siden under External connections. Er det alternativet ikke synlig på kontoen din, slå på totrinnsbekreftelse og se igjen: Yahoo har flyttet og endret tilgangen til denne skjermen mer enn én gang gjennom årene. Generer passordet i en nettleser du har logget inn fra før, og ikke i et privat vindu."
+    },
+    {
+      "q": "Lagres Yahoo-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Yahoo via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke. Å slette app-passordet i Yahoo Account Security avslutter tilkoblingen hos Yahoo med en gang."
     }
   ],
   "ctaBand": {

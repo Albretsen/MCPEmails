@@ -123,7 +123,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.mail.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.mail.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": true, "idle": true, "uidplus": true, "specialUse": true, "banner": "* OK [CAPABILITY IMAP4rev1 CHILDREN ENABLE ID IDLE LIST-EXTENDED LIST-STATUS LITERAL- MOVE NAMESPACE SASL-IR SORT SPECIAL-USE THREAD=ORDEREDSUBJECT UIDPLUS UNSE", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "141557760"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "mail-ru",
@@ -193,7 +193,7 @@ export const PROVIDERS = [
     imap: {"host": "disroot.org", "port": 993, "security": "tls"},
     smtp: {"host": "disroot.org", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 LOGIN-REFERRALS ID ENABLE IDLE SASL-IR LITERAL+ AUTH=PLAIN AUTH=LOGIN] Dovecot ready.", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "73400320"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "hushmail",
@@ -207,7 +207,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.hushmail.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.hushmail.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": false, "move": false, "idle": false, "uidplus": true, "specialUse": false, "banner": "* OK IMAP4 ready", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "kolabnow",
@@ -221,7 +221,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.kolabnow.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.kolabnow.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": true, "idle": true, "uidplus": true, "specialUse": true, "banner": "* OK [CAPABILITY IMAP4rev1 LITERAL+ ID ENABLE MUPDATE=mupdate://mupdate.kolabnow.com/ AUTH=PLAIN AUTH=LOGIN SASL-IR] int-imapf018.kolabnow.com Cyrus IMAP 3.6.6.", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "83886080"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "mailbox-org",
@@ -235,7 +235,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.mailbox.org", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.mailbox.org", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "OAUTHBEARER", "PLAIN", "XOAUTH2"], "saslIr": true, "move": false, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE UIDPLUS LITERAL+ AUTH=PLAIN AUTH=LOGIN AUTH=OAUTHBEARER AUTH=XOAUTH2] Dovecot ready.", "smtpAuthMechs": ["PLAIN", "LOGIN", "XOAUTH2", "OAUTHBEARER"], "smtpStarttls": false, "smtpMaxSize": "143699726"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "mailfence",
@@ -249,7 +249,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.mailfence.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.mailfence.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": true, "move": true, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK IMAP4rev1 Service Ready", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": "50000000"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "posteo",
@@ -263,7 +263,7 @@ export const PROVIDERS = [
     imap: {"host": "posteo.de", "port": 993, "security": "tls"},
     smtp: {"host": "posteo.de", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR LOGIN-REFERRALS ID ENABLE IDLE AUTH=PLAIN AUTH=LOGIN] Dovecot ready.", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "143602323"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "riseup",
@@ -277,7 +277,7 @@ export const PROVIDERS = [
     imap: {"host": "mail.riseup.net", "port": 993, "security": "tls"},
     smtp: {"host": "mail.riseup.net", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN AUTH=LOGIN] howdy, ready.", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "25600000"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "runbox",
@@ -291,7 +291,7 @@ export const PROVIDERS = [
     imap: {"host": "mail.runbox.com", "port": 993, "security": "tls"},
     smtp: {"host": "mail.runbox.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": false, "move": false, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK IMAP4 ready", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "136314880"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "soverin",
@@ -305,7 +305,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.soverin.net", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.soverin.net", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["OAUTHBEARER", "PLAIN", "XOAUTH2"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN AUTH=OAUTHBEARER AUTH=XOAUTH2] Dovecot ready.", "smtpAuthMechs": ["PLAIN", "LOGIN", "OAUTHBEARER", "XOAUTH2"], "smtpStarttls": false, "smtpMaxSize": "73400320"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "startmail",
@@ -319,7 +319,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.startmail.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.startmail.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE XLIST LITERAL+ AUTH=PLAIN] Dovecot (Ubuntu) ready.", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "39321600"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "fastmail",
@@ -361,7 +361,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.purelymail.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.purelymail.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": true, "move": true, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK PM IMAP ready", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": "51200000"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "rackspace",
@@ -389,7 +389,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.titan.email", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.titan.email", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": true, "move": false, "idle": false, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 AUTH=PLAIN SASL-IR ID LITERAL-] At Your Service i.1014299d", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": true, "smtpMaxSize": "52428800"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "zoho",
@@ -417,7 +417,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.domeneshop.no", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.domeneshop.no", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN] director03 ready.", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "157286400"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "dreamhost",
@@ -431,7 +431,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.dreamhost.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.dreamhost.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN AUTH=LOGIN] Dovecot (Ubuntu) ready.", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "40960000"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "gandi",
@@ -445,7 +445,7 @@ export const PROVIDERS = [
     imap: {"host": "mail.gandi.net", "port": 993, "security": "tls"},
     smtp: {"host": "mail.gandi.net", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 LOGIN-REFERRALS ID ENABLE IDLE SASL-IR LITERAL+ AUTH=PLAIN] Dovecot ready.", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "35651584"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "godaddy",
@@ -459,7 +459,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.secureserver.net", "port": 993, "security": "tls"},
     smtp: {"host": "smtpout.secureserver.net", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": false, "move": false, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 UNSELECT ID CHILDREN NAMESPACE IDLE UIDPLUS AUTH=PLAIN] Fenix ready.", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": "30000000"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "hetzner",
@@ -473,7 +473,7 @@ export const PROVIDERS = [
     imap: {"host": "mail.your-server.de", "port": 993, "security": "tls"},
     smtp: {"host": "mail.your-server.de", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN AUTH=LOGIN] Dovecot (Debian) ready.", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": "104857600"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "hostinger",
@@ -501,7 +501,7 @@ export const PROVIDERS = [
     imap: {"host": "mail.infomaniak.com", "port": 993, "security": "tls"},
     smtp: {"host": "mail.infomaniak.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": false, "move": false, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK IMAP4 ready", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "ionos",
@@ -529,7 +529,7 @@ export const PROVIDERS = [
     imap: {"host": "mailcluster.loopia.se", "port": 993, "security": "tls"},
     smtp: {"host": "mailcluster.loopia.se", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN] Dovecot ready.", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "209715200"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "namecheap",
@@ -557,7 +557,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.one.com", "port": 993, "security": "tls"},
     smtp: {"host": "send.one.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN AUTH=LOGIN] Dovecot ready.", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": "104857600"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "ovh",
@@ -585,7 +585,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.strato.de", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.strato.de", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": false, "move": true, "idle": true, "uidplus": true, "specialUse": true, "banner": "* OK [CAPABILITY IMAP4 IMAP4rev1 APPENDLIMIT=104857600 AUTH=PLAIN AUTH=LOGIN ENABLE ID IDLE MOVE LIST-EXTENDED NAMESPACE QUOTA SORT SPECIAL-USE UIDPLUS] IMAP se", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "104857600"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "a2hosting",
@@ -599,7 +599,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "bluehost",
@@ -613,7 +613,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "cpanel",
@@ -641,7 +641,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "hostgator",
@@ -655,7 +655,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "inmotion",
@@ -669,7 +669,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "krystal",
@@ -683,7 +683,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "plesk",
@@ -697,7 +697,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "scalahosting",
@@ -711,7 +711,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "siteground",
@@ -725,7 +725,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "tsohost",
@@ -739,7 +739,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "axigen",
@@ -753,7 +753,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "dovecot",
@@ -767,7 +767,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "icewarp",
@@ -781,7 +781,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "mailcow",
@@ -795,7 +795,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "mailinabox",
@@ -809,7 +809,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "mdaemon",
@@ -823,7 +823,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "open-xchange",
@@ -837,7 +837,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "poste-io",
@@ -851,7 +851,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "smartermail",
@@ -865,7 +865,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "synology",
@@ -879,7 +879,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "zimbra",
@@ -893,7 +893,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "att",
@@ -907,7 +907,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.mail.att.net", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.mail.att.net", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["OAUTHBEARER", "PLAIN", "XOAUTH2"], "saslIr": true, "move": true, "idle": true, "uidplus": true, "specialUse": true, "banner": "* OK Welcome! IMAP Server up and ready to accept your request", "smtpAuthMechs": ["PLAIN", "LOGIN", "XOAUTH2", "OAUTHBEARER"], "smtpStarttls": false, "smtpMaxSize": "41697280"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "bigpond",
@@ -921,7 +921,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.telstra.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.telstra.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": true, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE SPECIAL-USE LITERAL+ AUTH=PLAIN AUTH=LOGIN] imap ready - claprdcma08", "smtpAuthMechs": ["LOGIN", "PLAIN", "XOAUTH2"], "smtpStarttls": false, "smtpMaxSize": "31457280"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "bluewin",
@@ -935,7 +935,7 @@ export const PROVIDERS = [
     imap: {"host": "imaps.bluewin.ch", "port": 993, "security": "tls"},
     smtp: {"host": "smtpauths.bluewin.ch", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["OAUTHBEARER", "PLAIN", "XOAUTH2"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN AUTH=OAUTHBEARER AUTH=XOAUTH2] Server ready.", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": "26214400"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "centurylink",
@@ -949,7 +949,7 @@ export const PROVIDERS = [
     imap: {"host": "mail.centurylink.net", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.centurylink.net", "port": 587, "security": "starttls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN"], "saslIr": false, "move": false, "idle": false, "uidplus": false, "specialUse": true, "banner": "* OK Mail2World IMAP4 Server v3.0.7625.15046 64bit (LUWEB06OC) ready", "smtpAuthMechs": ["LOGIN"], "smtpStarttls": true, "smtpMaxSize": "0"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "comcast",
@@ -963,7 +963,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.comcast.net", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.comcast.net", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "OAUTHBEARER", "PLAIN", "XOAUTH2"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN AUTH=LOGIN AUTH=OAUTHBEARER AUTH=XOAUTH2] Dovecot ready.", "smtpAuthMechs": ["LOGIN", "PLAIN", "XOAUTH2"], "smtpStarttls": false, "smtpMaxSize": "36700160"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "cox",
@@ -977,7 +977,7 @@ export const PROVIDERS = [
     imap: {"host": "export.imap.mail.yahoo.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.mail.yahoo.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["OAUTHBEARER", "PLAIN", "XOAUTH2"], "saslIr": true, "move": true, "idle": true, "uidplus": true, "specialUse": true, "banner": "* OK Welcome! IMAP Server up and ready to accept your request", "smtpAuthMechs": ["PLAIN", "LOGIN", "XOAUTH2", "OAUTHBEARER"], "smtpStarttls": false, "smtpMaxSize": "41697280"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "earthlink",
@@ -991,7 +991,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.earthlink.net", "port": 993, "security": "tls"},
     smtp: {"host": "smtpauth.earthlink.net", "port": 587, "security": "starttls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["CRAM-MD5", "EL-TAC", "EL-VOICE"], "saslIr": false, "move": false, "idle": false, "uidplus": true, "specialUse": false, "banner": "* OK earthlink.net IMAP Service 13250 imapd EL_0_1_44_OIM_1_P at oim-prod10.sys.elnk.net ready", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": true, "smtpMaxSize": "52428800"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "free-fr",
@@ -1005,7 +1005,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.free.fr", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.free.fr", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": false, "move": false, "idle": false, "uidplus": false, "specialUse": false, "banner": "* OK IMAP4 ready", "smtpAuthMechs": ["PLAIN", "LOGIN", "CRAM-MD5", "DIGEST-MD5"], "smtpStarttls": false, "smtpMaxSize": "78643200"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "freenet",
@@ -1019,7 +1019,7 @@ export const PROVIDERS = [
     imap: {"host": "mx.freenet.de", "port": 993, "security": "tls"},
     smtp: {"host": "mx.freenet.de", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 LOGIN-REFERRALS ID ENABLE IDLE SASL-IR LITERAL+ AUTH=PLAIN AUTH=LOGIN] Dovecot ready.", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": "209715200"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "frontier",
@@ -1033,7 +1033,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.frontier.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.frontier.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": true, "move": false, "idle": false, "uidplus": true, "specialUse": false, "banner": "* OK IMAP4rev1 proxy server ready", "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "iinet",
@@ -1047,7 +1047,7 @@ export const PROVIDERS = [
     imap: {"host": "mail.iinet.net.au", "port": 993, "security": "tls"},
     smtp: {"host": "mail.iinet.net.au", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": true, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE SPECIAL-USE COMPRESS=DEFLATE LITERAL+ STARTTLS AUTH=PLAIN AUTH=LOGIN] imap ready - cma-kakadu0", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": true, "smtpMaxSize": "83886080"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "interia",
@@ -1061,7 +1061,7 @@ export const PROVIDERS = [
     imap: {"host": "poczta.interia.pl", "port": 993, "security": "tls"},
     smtp: {"host": "poczta.interia.pl", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": false, "move": false, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 UIDPLUS CHILDREN ID XLIST NAMESPACE IDLE STARTTLS AUTH=PLAIN] IMAP4 ready.", "smtpAuthMechs": ["PLAIN", "LOGIN", "PLAIN", "LOGIN", "PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "157286400"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "kpn",
@@ -1075,7 +1075,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.kpnmail.nl", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.kpnmail.nl", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN AUTH=LOGIN] Server ready", "smtpAuthMechs": ["LOGIN"], "smtpStarttls": false, "smtpMaxSize": "52428800"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "laposte",
@@ -1089,7 +1089,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.laposte.net", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.laposte.net", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": false, "move": false, "idle": false, "uidplus": true, "specialUse": false, "banner": "* OK IMAP4 ready", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": "15800000"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "o2-pl",
@@ -1103,7 +1103,7 @@ export const PROVIDERS = [
     imap: {"host": "poczta.o2.pl", "port": 993, "security": "tls"},
     smtp: {"host": "poczta.o2.pl", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": false, "move": true, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK IMAP4 ready", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "onet",
@@ -1117,7 +1117,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.poczta.onet.pl", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.poczta.onet.pl", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN", "XOAUTH2"], "saslIr": true, "move": false, "idle": false, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID LITERAL+ AUTH=PLAIN AUTH=LOGIN AUTH=XOAUTH2] Onet server ready.", "smtpAuthMechs": ["PLAIN", "LOGIN", "XOAUTH2"], "smtpStarttls": false, "smtpMaxSize": "90000000"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "online-no",
@@ -1131,7 +1131,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.online.no", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.online.no", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4REV1 LITERAL+ UTF8=ALL STATUS=SIZE STARTTLS SASL-IR AUTH=LOGIN ID] mail170c60 IMAP4rev1 Bigfoot", "smtpAuthMechs": ["LOGIN"], "smtpStarttls": true, "smtpMaxSize": "52428800"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "optimum",
@@ -1145,7 +1145,7 @@ export const PROVIDERS = [
     imap: {"host": "mail.optimum.net", "port": 993, "security": "tls"},
     smtp: {"host": "mail.optimum.net", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": false, "move": true, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK IMAP4 server ready", "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "optus",
@@ -1159,7 +1159,7 @@ export const PROVIDERS = [
     imap: {"host": "mail.optusnet.com.au", "port": 993, "security": "tls"},
     smtp: {"host": "mail.optusnet.com.au", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": true, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE SPECIAL-USE COMPRESS=DEFLATE LITERAL+ STARTTLS AUTH=PLAIN AUTH=LOGIN] imap ready - cma-waratah", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": true, "smtpMaxSize": "83886080"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "orange-fr",
@@ -1173,7 +1173,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.orange.fr", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.orange.fr", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": false, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR LOGIN-REFERRALS ID ENABLE AUTH=PLAIN AUTH=LOGIN] Dovecot ready.", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": "46000000"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "rogers",
@@ -1187,7 +1187,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.broadband.rogers.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.broadband.rogers.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["OAUTHBEARER", "PLAIN", "XOAUTH2"], "saslIr": true, "move": true, "idle": true, "uidplus": true, "specialUse": true, "banner": "* OK Welcome! IMAP Server up and ready to accept your request", "smtpAuthMechs": ["PLAIN", "LOGIN", "XOAUTH2", "OAUTHBEARER"], "smtpStarttls": false, "smtpMaxSize": "41697280"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "sapo",
@@ -1201,7 +1201,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.sapo.pt", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.sapo.pt", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN] Welcome to PTMail", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": true, "smtpMaxSize": "31457280"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "seznam",
@@ -1215,7 +1215,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.seznam.cz", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.seznam.cz", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "OAUTHBEARER", "PLAIN", "XOAUTH2"], "saslIr": true, "move": true, "idle": false, "uidplus": true, "specialUse": false, "banner": "* OK Seznam IMAP server ready", "smtpAuthMechs": ["PLAIN", "LOGIN", "OAUTHBEARER", "XOAUTH2"], "smtpStarttls": false, "smtpMaxSize": "52428800"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "sfr",
@@ -1229,7 +1229,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.sfr.fr", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.sfr.fr", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": false, "move": false, "idle": false, "uidplus": true, "specialUse": false, "banner": "* OK IMAP4 ready", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": "20971520"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "t-online",
@@ -1243,7 +1243,7 @@ export const PROVIDERS = [
     imap: {"host": "secureimap.t-online.de", "port": 993, "security": "tls"},
     smtp: {"host": "securesmtp.t-online.de", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": [], "saslIr": false, "move": false, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4 IMAP4rev1 QUOTA LITERAL+ NAMESPACE UIDPLUS IDLE SORT] IMAP Proxy ready (secureimap.t-online.de)", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": "52428800"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "telenet",
@@ -1257,7 +1257,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.telenet.be", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.telenet.be", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK IMAP4rev1 proxy server ready", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": "20971520"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "verizon",
@@ -1271,7 +1271,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.aol.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.aol.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["OAUTHBEARER", "PLAIN", "XOAUTH2"], "saslIr": true, "move": true, "idle": true, "uidplus": true, "specialUse": true, "banner": "* OK Welcome! IMAP Server up and ready to accept your request", "smtpAuthMechs": ["PLAIN", "LOGIN", "XOAUTH2", "OAUTHBEARER"], "smtpStarttls": false, "smtpMaxSize": "41697280"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "wp-pl",
@@ -1285,7 +1285,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.wp.pl", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.wp.pl", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": false, "move": true, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK IMAP4 ready", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "xtra",
@@ -1299,7 +1299,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.xtra.co.nz", "port": 993, "security": "tls"},
     smtp: {"host": "send.xtra.co.nz", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": false, "move": false, "idle": false, "uidplus": true, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 UIDPLUS NAMESPACE ID AUTH=PLAIN AUTH=LOGIN] imap.xtra.co.nz IMAP4 server ready", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": "104857600"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "ziggo",
@@ -1313,7 +1313,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.ziggo.nl", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.ziggo.nl", "port": 587, "security": "starttls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": false, "move": false, "idle": false, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 AUTH=PLAIN] VodafoneZiggo server ready.", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": true, "smtpMaxSize": "31457280"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "aliyun",
@@ -1327,7 +1327,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.aliyun.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.aliyun.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["EXTERNAL", "XOAUTH", "XOAUTH2"], "saslIr": true, "move": false, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK AliYun IMAP Server Ready", "smtpAuthMechs": ["PLAIN", "LOGIN", "XOAUTH2", "XALIOAUTH"], "smtpStarttls": false, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "bol",
@@ -1341,7 +1341,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.bol.com.br", "port": 993, "security": "tls"},
     smtp: {"host": "smtps.bol.com.br", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": false, "uidplus": true, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4 IMAP4rev1 QUOTA UIDPLUS ID NO_ATOMIC_RENAME UNSELECT CHILDREN MULTIAPPEND BINARY SORT NAMESPACE SASL-IR AUTH=PLAIN AUTH=LOGIN] Dovecot re", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "34865152"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "daum",
@@ -1355,7 +1355,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.daum.net", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.daum.net", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": true, "move": true, "idle": false, "uidplus": true, "specialUse": false, "banner": "* OK IMAP4 ready XSX6wDpSJ4c", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": "73400320"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "naver",
@@ -1369,7 +1369,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.naver.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.naver.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": true, "move": true, "idle": false, "uidplus": true, "specialUse": true, "banner": "* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR ID CHILDREN UIDPLUS LIST-EXTENDED SPECIAL-USE UNSELECT QUOTA MOVE AUTH=PLAIN APPENDLIMIT=41943040] Naver Imap Server", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "39845888"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "netease-126",
@@ -1383,7 +1383,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.126.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.126.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["XOAUTH2"], "saslIr": true, "move": false, "idle": false, "uidplus": true, "specialUse": true, "banner": "* OK Coremail System IMap Server Ready(126com[6c62234a7721d45811debf430915950d])", "smtpAuthMechs": ["LOGIN", "PLAIN", "XOAUTH2"], "smtpStarttls": true, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "netease-163",
@@ -1397,7 +1397,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.163.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.163.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["XOAUTH2"], "saslIr": true, "move": false, "idle": false, "uidplus": true, "specialUse": true, "banner": "* OK Coremail System IMap Server Ready(163com[10774b260cc7a37d26d71b52404dcf5c])", "smtpAuthMechs": ["LOGIN", "PLAIN", "XOAUTH2"], "smtpStarttls": true, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "qq",
@@ -1411,7 +1411,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.qq.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.qq.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN", "XOAUTH2"], "saslIr": true, "move": true, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4 IMAP4rev1 ID AUTH=PLAIN AUTH=LOGIN AUTH=XOAUTH2 NAMESPACE] QQMail XMIMAP4Server ready", "smtpAuthMechs": ["LOGIN", "PLAIN", "XOAUTH", "XOAUTH2"], "smtpStarttls": false, "smtpMaxSize": "73400320"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "sina",
@@ -1425,7 +1425,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.sina.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.sina.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": [], "saslIr": false, "move": false, "idle": false, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 ID] sina imap server ready", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": true, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "terra",
@@ -1439,7 +1439,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.terra.com.br", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.terra.com.br", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN AUTH=LOGIN] terra.com.br.", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": "41943040"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "uol",
@@ -1453,7 +1453,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.uol.com.br", "port": 993, "security": "tls"},
     smtp: {"host": "smtps.uol.com.br", "port": 587, "security": "starttls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": false, "uidplus": true, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4 IMAP4rev1 QUOTA UIDPLUS ID NO_ATOMIC_RENAME UNSELECT CHILDREN MULTIAPPEND BINARY SORT NAMESPACE SASL-IR AUTH=PLAIN AUTH=LOGIN] Dovecot re", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": true, "smtpMaxSize": "34865152"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "hey",
@@ -1467,7 +1467,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "office365",
@@ -1481,7 +1481,7 @@ export const PROVIDERS = [
     imap: {"host": "outlook.office365.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.office365.com", "port": 587, "security": "starttls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN", "XOAUTH2"], "saslIr": true, "move": true, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK Microsoft Exchange IMAP4 service ready. 28e79741-268c-4463-b2b6-8ae5b453b488 (tcpproxy/15.21.0360.006 BACKENDAUTHENTICATE) [TwBMADEAUAAyADcAOQBDAEEAMAAwADI", "smtpAuthMechs": [], "smtpStarttls": true, "smtpMaxSize": "157286400"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "outlook",
@@ -1495,7 +1495,7 @@ export const PROVIDERS = [
     imap: {"host": "outlook.office365.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp-mail.outlook.com", "port": 587, "security": "starttls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["XOAUTH2"], "saslIr": true, "move": true, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK Microsoft Exchange IMAP4 service ready. f7727043-334d-49cc-8f5e-3d93fc232c38 (tcpproxy/15.21.0360.006 BACKENDAUTHENTICATE) [TwBMADEAUAAyADcAOQBDAEEAMAAwADI", "smtpAuthMechs": [], "smtpStarttls": true, "smtpMaxSize": "157286400"},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "proton",
@@ -1509,7 +1509,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
     slug: "tutanota",
@@ -1523,7 +1523,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
-    locales: ["en"],
+    locales: ["en", "nb", "es", "fr", "zh"],
   },
 ];
 

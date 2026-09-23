@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://proton.me/support/imap-smtp-and-pop3-setup",
+    "https://proton.me/support/smtp-submission",
+    "https://proton.me/support/email-forwarding",
+    "https://proton.me/mail/bridge"
+  ],
+  "auth": {
+    "method": "none",
+    "label": "Det finnes ingen ekstern innlogging",
+    "helpUrl": "https://proton.me/support/imap-smtp-and-pop3-setup",
+    "usernameForm": "Det er ingenting å skrive inn her. Proton utsteder påloggingsdetaljer for e-postklienter bare inne i Proton Mail Bridge, og de gjelder bare mot Bridge på maskinen som kjører den.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Proton Mail og Claude: hvorfor Bridge hindrer tilkobling",
+    "description": "Proton Mail har ingen ekstern IMAP. IMAP finnes bare i Proton Mail Bridge, en betalt skrivebordsapp på localhost, så ingen hostet MCP-server kan nå den."
+  },
+  "hero": {
+    "eyebrow": "Proton Mail + AI",
+    "titleLine1": "Proton Mail kan ikke",
+    "titleLine2": "kobles til en hostet MCP-server",
+    "lead": "Proton har ingen IMAP-server på internett. Den eneste IMAP-en som finnes for en Proton-postkasse, kjører på din egen datamaskin, inne i Proton Mail Bridge, og derfor treffer alle hostede verktøy den samme veggen.",
+    "answer": "Nei. Proton Mail eksponerer ikke noe IMAP-, POP- eller SMTP-endepunkt som en klient et annet sted kan logge inn på. Den eneste måten en e-postklient noen gang når Proton på, er Proton Mail Bridge, en skrivebordsapplikasjon på betalte Proton-abonnement som dekrypterer e-posten din lokalt og leverer IMAP og SMTP på localhost, altså loopback-adressen til maskinen den kjører på. En hostet MCP-server som mcpemails kjører på vår infrastruktur, ikke på pulten din, og ingenting på internett kan rutes til din localhost, så tilkoblingen er umulig, ikke bare uimplementert. Vil du ha en AI-agent som jobber med e-post som kommer til Proton-adressen din, er de ærlige alternativene Protons betalte automatiske videresending til en postkasse som snakker IMAP, som mcpemails kobler til gratis for én innboks, eller Protons SMTP-innsending, som bare kan sende, for utgående e-post alene."
+  },
+  "method": {
+    "title": "Slik kobler Proton Mail seg til: lokalt, gjennom Bridge, eller ikke i det hele tatt",
+    "body": "Protons egen supportdokumentasjon er tydelig på at tredjeparts e-postklienter går gjennom <b>Proton Mail Bridge</b>, og at Proton ikke tilbyr POP3 i det hele tatt. Bridge kjører på Windows, macOS og Linux, holder nøklene dine, dekrypterer meldinger når de kommer til maskinen din og krypterer utgående e-post på nytt før den leveres til Proton, og presenterer så den klartekstvisningen som en vanlig IMAP- og SMTP-server bundet til loopback-grensesnittet. E-postklienten din kobler til den lokale serveren med påloggingsdetaljer Bridge genererer for den. De påloggingsdetaljene er ikke Proton-passordet ditt og kan ikke brukes fra noe annet sted, fordi serveren de autentiserer mot, bare finnes mens Bridge kjører på den datamaskinen. Bridge krever et betalt abonnement: Proton Mail Plus, Proton Unlimited, Proton Business og oppover. På Proton Free finnes det ingen klienttilgang av noe slag."
+  },
+  "setup": [
+    {
+      "h": "Opprett den gratis mcpemails-kontoen",
+      "p": "En e-postadresse, ingen kort. Én tilkoblet innboks er gratis for alltid, og de neste to stegene avgjør hvilken innboks det blir."
+    },
+    {
+      "h": "Velg postkassen som skal bære det automatiserte arbeidet",
+      "p": "Velg en adresse hos en leverandør som kjører en ekte IMAP-server: en domenepostkasse, en jobbkonto, Fastmail, Migadu, Gmail. Det er kontoen mcpemails kobler til, og den agenten din leser, sender, arkiverer og planlegger fra. Proton-adressen din forblir nøyaktig som den er."
+    },
+    {
+      "h": "Legg til en videresendingsregel i Proton-innstillingene",
+      "p": "I Proton Mail på nettet åpner du Settings, så All settings, så <b>Forward and auto-reply</b>, og velger Add forwarding rule. Velg Proton-adressen det skal videresendes fra og måladressen, og la betingelsene stå tomme for å videresende alt. Proton sender måladressen en bekreftelsesforespørsel som må godtas før noe flyter. Les neste avsnitt først: videresending til en adresse utenfor Proton endrer krypteringsbildet."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så jobber agenten i den tilkoblede postkassen, inkludert kopiene som kommer fra Proton."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Bridge er bundet til localhost, og det ene faktumet er hele hindringen",
+      "p": "Bridge lytter på loopback-adressen til datamaskinen den kjører på. Loopback-trafikk forlater aldri den maskinen, så det finnes ikke noe vertsnavn en hostet tjeneste kan slå opp og ingen port den kan nå, uansett hvilke påloggingsdetaljer den har. Derfor stopper alle hostede assistenter, MCP-servere og skybaserte automatiseringsverktøy på nøyaktig samme sted med Proton, og derfor endrer ikke svaret seg om du oppgraderer abonnementet."
+    },
+    {
+      "h": "Bridge er ikke tilgjengelig på Proton Free",
+      "p": "Folk på gratisabonnementet kommer ofte så langt som å laste ned Bridge før de finner det ut. Bridge krever et betalt Proton Mail-abonnement, så på Proton Free finnes det ingen støttet måte å bruke noen tredjeparts e-postklient på, lokal eller annen. Det gjelder Thunderbird og Apple Mail også, ikke bare automatiseringsverktøy."
+    },
+    {
+      "h": "Protons SMTP-innsending ser ut som svaret og kan ikke lese en eneste melding",
+      "p": "Proton tilbyr SMTP-innsending på betalte abonnement med adresser på eget domene, autentisert med et token du genererer i innstillingene i stedet for kontopassordet. Protons dokumentasjon sier at det bare er for sending, i motsetning til IMAP-protokollen som tredjepartsklienter bruker for å hente mottatt e-post. Et program kan altså sende som Proton-adressen din og aldri se svaret. For en agent som leser en tråd før den svarer, er det ikke engang en delvis løsning."
+    },
+    {
+      "h": "Videresending ut av Proton slår av ende-til-ende-kryptering for den adressen",
+      "p": "Proton sier det rett ut: e-post videresendt til en annen Proton-adresse forblir ende-til-ende-kryptert, og videresending til en adresse utenfor Proton slår av ende-til-ende-kryptering for e-post til og fra videresendingsadressen. Er grunnen til at du bruker Proton at Proton ikke kan lese e-posten din, gir du opp det for e-posten du speiler til en vanlig postkasse. Videresend et bestemt utvalg korrespondanse i stedet for hele innboksen, eller ikke videresend i det hele tatt."
+    }
+  ],
+  "limits": [
+    "Å eksponere Bridge mot internett gjennom en tunnel eller en portvideresending er ikke en støttet konfigurasjon, og vi anbefaler det ikke. Bridge er laget for å nås av en klient på samme maskin, og å legge en dekryptert visning av postkassen din på en offentlig port opphever grunnen til at du valgte Proton.",
+    "En videresendt kopi er et speil, ikke postkassen. Svar agenten din sender, går ut fra den andre adressen, og ingenting den gjør, vises i Proton-trådene, -mappene eller -etikettene dine."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Proton Mail?",
+      "a": "Ikke direkte, og ikke gjennom noen hostet MCP-server. Proton har ikke noe IMAP-endepunkt mot internett, og den lokale Bridge-applikasjonen som gir IMAP, kan bare nås fra datamaskinen den kjører på. Mønsteret som fungerer, er å videresende e-posten du vil ha håndtert, til en postkasse som snakker IMAP, og koble til den i stedet."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Proton Mail?",
+      "a": "Det finnes ikke noe offentlig par å publisere. IMAP- og SMTP-detaljene for en Proton-postkasse genereres av Proton Mail Bridge på din egen datamaskin og vises i Bridge-vinduet, og peker mot loopback-adressen med påloggingsdetaljer spesifikke for den installasjonen. En innstillingsoversikt som lister et Proton IMAP-vertsnavn du kan nå fra et annet sted, tar feil."
+    },
+    {
+      "q": "Kan jeg bruke Proton Mail Bridge med en hostet MCP-server?",
+      "a": "Nei. Bridge leverer IMAP på localhost, som per definisjon bare kan nås fra maskinen Bridge kjører på. En hostet server står på annen infrastruktur uten noen rute til loopback-grensesnittet ditt. Dette er et nettverksfaktum, ikke en policy vi kunne gjort unntak fra."
+    },
+    {
+      "q": "Trenger jeg et betalt Proton-abonnement for å bruke IMAP?",
+      "a": "Ja. Bridge er den eneste veien til IMAP eller SMTP for en Proton-postkasse, og den krever et betalt abonnement, Proton Mail Plus, Proton Unlimited, Proton Business eller høyere. Proton Free har ingen tilgang for tredjepartsklienter i det hele tatt, så en gratiskonto kan ikke koble til Thunderbird, Apple Mail eller noe annet."
+    },
+    {
+      "q": "Kan en AI i det minste sende e-post fra Proton-adressen min?",
+      "a": "Det kan den, gjennom Protons funksjon for SMTP-innsending, som er tilgjengelig på betalte abonnement med adresser på eget domene og bruker et token du genererer i innstillingene. Den er bare for innsending. Ingenting som bruker den, kan liste, lese eller søke i postkassen din, så en agent kan sende på dine vegne uten noen gang å se hva som kom inn."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. For postkassene mcpemails faktisk kobler til, hentes meldinger direkte via IMAP for hver forespørsel og sendes videre til AI-klienten din, med påloggingsdetaljer kryptert ved lagring og meldingsinnhold som ikke beholdes. Vi har aldri Proton-påloggingsdetaljer i det hele tatt, fordi det ikke finnes noen Proton-tilkobling å opprette."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en innboks den kan nå",
+    "sub": "Proton forblir privat og frakoblet. Pek én IMAP-postkasse mot agenten din i stedet, gratis for alltid."
+  }
+}

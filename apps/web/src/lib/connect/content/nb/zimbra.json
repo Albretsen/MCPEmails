@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://github.com/Zimbra/adminguide/blob/master/imap.adoc",
+    "https://zimbra.netsample.com/zimbraAdmin/help/en_US/admin/managing_global_settings/configuring_imap.htm",
+    "https://wiki.zimbra.com/wiki/Zimbra_Proxy_Guide",
+    "https://wiki.zimbra.com/wiki/Zimbra_Proxy_Manual:Installing_,_Configuring,_Disabling_the_Zimbra_Proxy",
+    "https://zimbra.github.io/adminguide/8.8.11/index.html"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://zimbra.netsample.com/zimbraAdmin/help/en_US/admin/managing_global_settings/configuring_imap.htm",
+    "usernameForm": "Hele kontoadressen slik Zimbra har den, for eksempel you@yourdomain.com, også for kontoer på et domenealias.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Zimbra til Claude: IMAP på 993, eller 7993 uten proxy",
+    "description": "Koble en Zimbra-postkasse til Claude, Cursor og ChatGPT via IMAP. 993 tilhører proxyen, mailboxd lytter på 7993, og IMAP kan være slått av fire steder."
+  },
+  "hero": {
+    "eyebrow": "Zimbra + AI",
+    "titleLine1": "Koble Zimbra til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Zimbra har holdt organisasjonens e-post i årevis, og den snakker helt vanlig IMAP. Det er alt en AI-agent trenger for å lese, søke, sende, svare, planlegge og arkivere i en ekte postkasse.",
+    "answer": "Claude når ikke en Zimbra-server på egen hånd. mcpemails er en hostet MCP-server som kobler til din via IMAP på ditt eget vertsnavn, på port 993 der Zimbra-proxyen er installert, med postkassepassordet, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Zimbra er programvare organisasjonen din kjører, så det finnes ikke noe felles vertsnavn å publisere, og porten er verdt å sjekke i stedet for å anta: 993 og 143 tilhører Zimbra-proxyen, mens mailboxd selv lytter på 7993 og 7143. Serveren må kunne nås fra internett, og sertifikatet må valideres. Én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord, IMAP slått på i COS",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Zimbra seg til: proxyen foran, mailboxd bak",
+    "body": "Zimbras IMAP-oppsett har to lag, og å vite hvilket du snakker med, sparer en ettermiddag. Den innebygde IMAP-serveren kjører inne i prosessen <code>zimbra-mailboxd</code> og installeres som standard, styrt av <code>zimbraImapServerEnabled</code> og <code>zimbraImapSSLServerEnabled</code>, som begge er TRUE som standard. Dens egne porter er <code>zimbraImapBindPort</code>, med standard <b>7143</b>, og <code>zimbraImapSSLBindPort</code>, med standard <b>7993</b>. De kjente portene 143 og 993 er proxyens porter, <code>zimbraImapProxyBindPort</code> og <code>zimbraImapSSLProxyBindPort</code>, betjent av Zimbras IMAP- og POP-proxy, som inspiserer tilkoblingen og ruter den til den postkasseserveren som har kontoen. Nyere versjoner leverer også en frittstående <code>zimbra-imapd</code> ved siden av serveren i prosessen. Påloggingen er det vanlige postkassepassordet, det samme som brukes for Zimbra Web Client. Zimbra har ingen mekanisme for app-passord."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Én innboks er gratis for alltid, og det kreves ikke kort, som er nok til å prøve dette mot en ekte Zimbra-konto."
+    },
+    {
+      "h": "Bekreft at IMAP er slått på, og finn porten som svarer",
+      "p": "I administrasjonskonsollen åpner du Configure, så Global Settings, så IMAP, og krysser av for <b>Enable IMAP services</b> og <b>Enable SSL for IMAP service</b>. Bekreft så hvilken port som faktisk lytter utenfra: <code>openssl s_client -connect mail.yourdomain.com:993</code>, og er den stille, prøv 7993. På serveren rapporterer <code>zmprov gs yourserver</code> hvilke bindeporter den bruker."
+    },
+    {
+      "h": "Sjekk class of service, og legg så til kontoen",
+      "p": "Åpne Configure, så Class of Service, så klassen kontoen tilhører, og se på POP/IMAP-alternativene under Preferences. En klasse med IMAP slått av avviser alle kontoer i den. Legg så til innboksen i mcpemails: velg IMAP / SMTP, skriv inn Zimbra-vertsnavnet ditt, hele adressen og postkassepassordet."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Port 993 tilhører proxyen, så en server uten en svarer på 7993",
+      "p": "Zimbras postkasseprosess lytter ikke på 993. Den lytter på <b>7993</b> for IMAP over SSL og 7143 for vanlig IMAP, og standardportene betjenes av den separate pakken for Zimbras IMAP- og POP-proxy, som videresender hver tilkobling til riktig postkasselager. På en installasjon med én server der <code>zimbra-proxy</code> aldri ble valgt, eller der en administrator fjernet den, svarer ingenting på 993 i det hele tatt, og klienten melder en avvist tilkobling som ser ut som et brannmurproblem. Bruk 7993 i så fall, men forstå byttet: i en installasjon med flere servere er det proxyen som vet hvilket lager som har en gitt konto, så å koble direkte til en nodes 7993 virker bare hvis postkassen faktisk ligger på den noden. Har du mer enn én postkasseserver, er det riktige svaret å gjenopprette proxyen, ikke å rute rundt den."
+    },
+    {
+      "h": "Sertifikatet på 993 er proxyens, og det er selvsignert til noen endrer det",
+      "p": "Fordi proxyen terminerer tilkoblingen, er sertifikatet en klient validerer på 993, det nginx holder, ikke nødvendigvis det mailboxd viser på 7993. De to kan være forskjellige, og slik kan en server bestå en sjekk på én port og feile på den andre. Zimbra installerer også et selvsignert sertifikat ved oppsett, og mange installasjoner byttet det aldri ut fordi webklienten nås gjennom noe annet, eller fordi alle klikket seg forbi advarselen i 2019. Sertifikater rulles ut med <code>zmcertmgr</code> og vises i administrasjonskonsollen, men den eneste testen som teller, er det som faktisk ligger på linjen: kjør <code>openssl s_client -connect mail.yourdomain.com:993</code> fra en maskin utenfor og les kjeden den returnerer. Streng validering er ikke valgfritt hos oss, så et selvsignert eller utløpt sertifikat avslutter samtalen før autentisering."
+    },
+    {
+      "h": "IMAP kan være slått av på fire forskjellige steder",
+      "p": "Zimbra legger konfigurasjonen i lag, og hvert lag kan avvise en tilkobling på egen hånd mens de andre ser riktige ut. Globale innstillinger, under Configure, så Global Settings, så IMAP, har hovedbryteren <b>Enable IMAP services</b>. Hver server har egne innstillinger der portnumrene for IMAP og IMAP SSL settes og serveren i prosessen kan slås av, via <code>zimbraImapServerEnabled</code> og <code>zimbraImapSSLServerEnabled</code>. Hver class of service har POP- og IMAP-alternativer som gjelder alle kontoer i den. Og en enkelt konto kan overstyre klassen sin. Kommandolinjen leser dem i samme rekkefølge: <code>zmprov gcf</code> for global konfigurasjon, <code>zmprov gs</code> for en server, <code>zmprov gc</code> for en class of service og <code>zmprov ga</code> for en konto. Gå nedover den listen i stedet for å gjette, fordi feilen ser identisk ut på hvert nivå."
+    }
+  ],
+  "limits": [
+    "Zimbra-serveren din må godta en innkommende IMAP-tilkobling fra internett. En installasjon som bare er publisert inne i bedriftsnettet eller bak en VPN, kan ikke nås av en hostet tjeneste. mcpemails kan i stedet selvhostes inne i samme nettverk, noe som ofte er en enklere samtale å ta med et sikkerhetsteam enn å åpne en port.",
+    "Bare e-post går over en IMAP-tilkobling. Zimbras kalendere, kontakter, oppgaver og briefcase betjenes gjennom egen webklient og gjennom CalDAV, CardDAV eller Zimbra-API-et, så en agent koblet til på denne måten jobber bare med e-post.",
+    "Sending går ut gjennom din egen Zimbra-MTA, så leveringsevnen styres av SPF-, DKIM- og DMARC-oppføringene dine nøyaktig som for alle andre klienter på serveren."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Zimbra?",
+      "a": "Ikke direkte. Claude har ingen Zimbra-kobling og kan ikke åpne en IMAP-økt mot en server organisasjonen din kjører. Kobler du en MCP-server som mcpemails til Zimbra-verten din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i en postkasse der, med de samme påloggingsdetaljene som Zimbra Web Client bruker, og samme innboks fungerer da i Cursor eller ChatGPT."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Zimbra?",
+      "a": "Vertsnavnet er din egen Zimbra-server. IMAP er 993 med implisitt TLS og 143 med STARTTLS når Zimbra-proxyen er installert, som er det vanlige. Uten proxyen er mailboxd sine egne porter 7993 og 7143. Innsending er normalt 587 med STARTTLS eller 465 med implisitt TLS. Logg inn med hele kontoadressen og postkassepassordet."
+    },
+    {
+      "q": "Hvorfor svarer ingenting på port 993?",
+      "a": "Mest sannsynlig er ikke Zimbras IMAP- og POP-proxy installert, eller den er slått av, fordi 993 og 143 er proxyens porter og ikke postkasseserverens. Prøv 7993, som er standard for zimbraImapSSLBindPort på selve mailboxd. I en installasjon med flere postkasseservere er det bedre å gjeninnføre proxyen enn å koble direkte til en node."
+    },
+    {
+      "q": "Hvorfor blir Zimbra-passordet mitt avvist når webmail virker?",
+      "a": "Fordi webtilgang og IMAP-tilgang er separate tillatelser. Sjekk POP- og IMAP-alternativene på kontoens class of service først, så kontoens egne overstyringer, og så om IMAP-tjenester er slått på i Global Settings. Hvilken som helst av dem kan avvise en IMAP-innlogging mens Zimbra Web Client fortsetter å virke som normalt."
+    },
+    {
+      "q": "Trenger Zimbra et app-passord?",
+      "a": "Nei. Zimbra utsteder ingen programspesifikke passord, og en e-postklient autentiserer med kontoens eget passord. Bruker installasjonen din tofaktorautentisering for webklienten, sjekk med administratoren hvordan den er satt opp for e-postklienter, siden den policyen settes per class of service og ikke globalt av Zimbra."
+    },
+    {
+      "q": "Lagres Zimbra-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Zimbra-serveren din via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Zimbra-innboks",
+    "sub": "Koble til en postkasse fra din egen Zimbra-server. Én innboks gratis for alltid, uten kort."
+  }
+}

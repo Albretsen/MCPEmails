@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://documentation.open-xchange.com/8.20/middleware/mail/mail_access_via_xoauth2_or_oauthbearer.html",
+    "https://documentation.open-xchange.com/7.10.4/middleware/mail/mail_proxy_configuration.html",
+    "https://documentation.open-xchange.com/7.8.2/middleware/components/search/crossfolder_fts_in_mail.html",
+    "https://www.oxpedia.org/wiki/index.php?title=Authentication_IMAP_Plugin_description",
+    "https://wiki.open-xchange.com/wiki/index.php?title=Install_and_configure_the_mail-account_plugin"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://documentation.open-xchange.com/8.20/middleware/mail/mail_access_via_xoauth2_or_oauthbearer.html",
+    "usernameForm": "App Suite 背后的 IMAP 服务器要求的用户名，通常是完整地址（例如 you@yourdomain.com），但也可能是单独的登录名。App Suite 自身发送哪一种，由中间件设置 com.openexchange.mail.loginSource 决定。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Open-Xchange 与 Claude：连接 IMAP 后端",
+    "description": "Open-Xchange App Suite 是协作套件前端，而不是 IMAP 服务器。通过 IMAP 将其背后的 Dovecot 后端连接到 Claude、Cursor 和 ChatGPT。"
+  },
+  "hero": {
+    "eyebrow": "Open-Xchange + AI",
+    "titleLine1": "将 Open-Xchange 邮箱连接到",
+    "titleLine2": "Claude、Cursor 和 ChatGPT",
+    "lead": "App Suite 是界面，而不是邮件存储。一旦知道它背后是哪台 IMAP 服务器，连接 AI 代理就是常规操作：在任意 MCP 客户端中读取、搜索、发送、回复、定时与归档。",
+    "answer": "Claude 无法自行连接 Open-Xchange 邮箱，而 Open-Xchange App Suite 本身也不是应该连接的服务器。App Suite 是协作套件中间件，它与一个独立的 IMAP 和 SMTP 后端通信，在大多数部署中是 Dovecot。mcpemails 是一个托管 MCP 服务器，用邮箱密码通过 IMAP（通常是 993 端口）连接该后端，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。要使用的主机是你的部署或服务商公布的邮件服务器，而不是 App Suite 网页界面的地址。一个收件箱免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "后端邮箱密码，而不是网页地址",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Open-Xchange 如何连接：通过 App Suite 所代理的邮件服务器",
+    "body": "Open-Xchange App Suite 存储日历、联系人、任务和文件，但不存储邮件。对于邮件，它是一个客户端，代表用户向独立的服务器打开 IMAP 会话，并在浏览器中呈现结果。Open-Xchange 自己的指导是，任何提供 IMAP 和 SMTP 的系统都可以作为后端，而新部署推荐使用 Dovecot。某个安装使用哪台服务器，写在 <code>/opt/open-xchange/etc/mail.properties</code> 中：IMAP 是 <code>com.openexchange.mail.mailServer</code>，提交是 <code>com.openexchange.mail.transportServer</code>；IMAP 特有的行为，例如 <code>com.openexchange.imap.imapSearch</code>，则在旁边的 <code>imap.properties</code> 中。mcpemails 连接的就是这个后端。我们 Dovecot 页面上关于监听器、文件夹用途和证书的所有内容都适用于它，因为在大多数 App Suite 部署中，它本身就是 Dovecot。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。一个收件箱永久免费，无需信用卡。"
+    },
+    {
+      "h": "找到 App Suite 背后的 IMAP 主机",
+      "p": "如果部署由你运维，请在中间件节点上从 <code>/opt/open-xchange/etc/mail.properties</code> 中读取 <code>com.openexchange.mail.mailServer</code>。如果 App Suite 是你服务商的网页邮箱，请完全忽略中间件，使用该服务商为邮件客户端公布的 IMAP 主机名，答案他们早已公布。"
+    },
+    {
+      "h": "确认后端需要的登录名",
+      "p": "登录一个桌面邮件客户端，或检查中间件配置中的 <code>com.openexchange.mail.loginSource</code>，看看后端要求的是完整邮箱地址还是单独的登录名。然后在 mcpemails 中添加收件箱：选择 IMAP / SMTP，输入该主机、登录名和邮箱密码。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "App Suite 的网页地址不是邮件主机，那里往往没有任何响应",
+      "p": "这是让人兜圈子的错误。你在类似 <code>webmail.yourprovider.com</code> 的地址上看邮件，所以感觉那就是邮件服务器，但它其实是一个 HTTP 应用节点。它的 993 端口经常是关闭的，即使有响应，也可能只是一个什么有用的东西都不终止的负载均衡器。更糟的是，在自托管部署中，<code>com.openexchange.mail.mailServer</code> 的值经常是一个内部地址，有时是同一台机器上的 <code>127.0.0.1:143</code>，或者只能在集群内部解析的内部名称，因为原本唯一需要访问它的客户端就是中间件本身。如果你是这种情况，就必须有意识地发布一个外部 IMAP 端点，并配备自己的证书，任何外部客户端（包括本服务）才能连接。"
+    },
+    {
+      "h": "如果 App Suite 是随主机服务附带的，服务商自己的设置就是答案",
+      "p": "Open-Xchange 把 App Suite 卖给运营商而不是最终用户，所以大多数人是以别人的网页邮箱的形式接触到它的，屏幕上从未出现过这个产品名。IONOS 和 Namecheap Private Email 是你可能认得的两个例子。如果你是这样来到这里的，上面提到的配置文件不存在于你能访问的任何机器上，你也不需要它们：你的服务商会为桌面客户端公布 IMAP 和 SMTP 主机名，这正是 mcpemails 需要的。使用服务商文档中的主机、端口和他们签发的邮箱密码，把 App Suite 当作他们恰好采购的网页邮箱就好。"
+    },
+    {
+      "h": "loginSource 决定用户名，而主认证可能意味着你根本没有用户名",
+      "p": "App Suite 不一定会把你的邮箱地址作为 IMAP 用户名发送。中间件设置 <code>com.openexchange.mail.loginSource</code> 在主地址、App Suite 登录名和其他形式之间进行选择，这就是为什么让你登录浏览器界面的凭据，并不总是邮件服务器看到的凭据。使用主密码认证的部署更进一步：中间件以主用户身份向 IMAP 服务器认证，并附带提供目标邮箱，因此单个用户可能根本没有独立的 IMAP 密码。这种情况下，普通客户端在运营商为该用户开通凭据之前无法以其身份登录，反复尝试网页密码也无济于事。有些部署还已将后端迁移到 <code>XOAUTH2</code> 或 <code>OAUTHBEARER</code>，此时普通密码认证会被直接拒绝。"
+    }
+  ],
+  "limits": [
+    "这个连接只传输邮件。App Suite 的日历、通讯录、任务和 Drive 文件由中间件通过自己的 HTTP API 提供，不属于 IMAP 会话，因此以这种方式连接的代理只能看到邮件。",
+    "只能在你网络内部访问的后端无法连接到托管服务。mcpemails 支持自托管，如果 IMAP 服务器是有意不暴露在公网上的，这是明智的途径。",
+    "在主认证部署中，要连接任何客户端，都需要运营商开通真正的按用户 IMAP 凭据。这由平台运营者决定，你无法从浏览器中自行安排。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Open-Xchange 吗？",
+      "a": "可以，通过它背后的邮件服务器。Claude 没有 Open-Xchange 连接器，App Suite 也不提供 MCP 端点，但邮箱本身位于一台普通的 IMAP 服务器上。将 mcpemails 连接到该服务器后，Claude 就能对你在 App Suite 中看到的同一批邮件进行读取、搜索、发送、回复、定时和整理，同一个收件箱在 Cursor 和 ChatGPT 中也能使用。"
+    },
+    {
+      "q": "Open-Xchange 的 IMAP 和 SMTP 设置是什么？",
+      "a": "没有统一答案，因为 Open-Xchange 是由运营商部署的软件，而不是有固定主机名的邮件服务。在自托管安装中，后端写在 mail.properties 中。如果 App Suite 是主机套餐的一部分，请使用服务商为邮件客户端公布的 IMAP 和 SMTP 主机名，通常 IMAP 为 993 端口，提交为 465 或 587 端口。"
+    },
+    {
+      "q": "Open-Xchange 和 Dovecot 是一回事吗？",
+      "a": "不是，但它们通常一起部署。Open-Xchange 是呈现邮件、日历和文件的协作套件层。Dovecot 是真正存放邮件的 IMAP 服务器，Open-Xchange 推荐将其作为新部署的后端。我们的 Dovecot 页面介绍了连接后会遇到的监听器、证书和文件夹行为。"
+    },
+    {
+      "q": "为什么我网页邮箱地址的 993 端口拒绝连接？",
+      "a": "因为该地址属于 App Suite 的网页层，使用的是 HTTP。IMAP 服务器是另一台机器或另一个名称，而且在很多安装中是有意不对互联网公开的。请从服务商的客户端设置文档中找到真正的邮件主机名；如果部署归你管理，则从中间件配置中查找。"
+    },
+    {
+      "q": "我的邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从存放你邮箱的服务器实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Open-Xchange 收件箱",
+    "sub": "连接 App Suite 背后的邮件服务器。一个收件箱永久免费，无需信用卡。"
+  }
+}

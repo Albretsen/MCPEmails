@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://mailinabox.email/guide.html",
+    "https://github.com/mail-in-a-box/mailinabox",
+    "https://doc.dovecot.org/2.3/configuration_manual/dovecot_ssl_configuration/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮件用户密码",
+    "helpUrl": "https://mailinabox.email/guide.html",
+    "usernameForm": "在管理控制面板中创建的邮件用户的完整地址，例如 you@yourdomain.com。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 Mail-in-a-Box 连接到 Claude 与 MCP 客户端",
+    "description": "通过 box.yourdomain.com:993 的 IMAP 将 Mail-in-a-Box 邮箱连接到 Claude、Cursor 和 ChatGPT。提交端口是 465，而 fail2ban 是反复失败后被锁定的原因。"
+  },
+  "hero": {
+    "eyebrow": "Mail-in-a-Box + AI",
+    "titleLine1": "将 Mail-in-a-Box 连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT 和任意 MCP 客户端",
+    "lead": "你自建邮件服务器，就是为了不让别人掌握你的邮件。加入 AI 代理不必改变这一点：mcpemails 通过 IMAP 连接你的服务器，实时获取每封邮件，一封都不存储。",
+    "answer": "Claude 无法自行访问 Mail-in-a-Box 服务器。mcpemails 是一个托管 MCP 服务器，通过端口 993 的 IMAP 连接你的服务器，使用设置指南让你使用的主机名（通常是 box.yourdomain.com），并以在管理控制面板中创建的邮件用户的密码进行认证。这样 Claude、Cursor 或任意 MCP 客户端就能读取、搜索、发送并整理你服务器上的邮件。服务器必须能从互联网访问，并持有有效的 Let's Encrypt 证书，控制面板会为你配置该证书。1 个收件箱免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "控制面板中的邮件用户密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Mail-in-a-Box 如何连接：用服务器主机名，而不是你的域名",
+    "body": "Mail-in-a-Box 会在一台 Ubuntu 机器上安装 Postfix、Dovecot、Nginx 和一个小型管理控制面板，所以底层的 IMAP 行为就是普通的 Dovecot。人们出错的地方是主机名。设置指南建议把服务器命名为 <code>box</code> 加一个点再加你的域名，即 <code>box.yourdomain.com</code>，证书上写的就是这个名称，你的邮件客户端也应该使用它。你的裸域名是邮件的收件地址，而不是客户端连接的地方。文档中列出的防火墙端口是：22、25、53（TCP 和 UDP）、80、443、465（提交）、993（IMAP）、995（POP）和 4190（Sieve）。凭据是邮件用户自己的密码，在控制面板的 Mail、Users 下设置；控制面板的管理员账户本身也是一个邮件用户，所以它确实有邮箱。"
+  },
+  "setup": [
+    {
+      "h": "创建免费账户",
+      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+    },
+    {
+      "h": "从控制面板获取正式证书",
+      "p": "登录你服务器的管理控制面板，依次打开 System、TLS (SSL) Certificates。新装的服务器在你从该页面配置免费的 Let's Encrypt 证书之前，使用的是自签名证书，而在你早已不再注意浏览器警告之后很久，严格的 IMAP 客户端仍会拒绝这张自签名证书。"
+    },
+    {
+      "h": "确认邮件用户及其密码",
+      "p": "在 Mail、Users 下确认该地址存在，并设置一个你知道的密码。然后在 mcpemails 中添加收件箱：选择 IMAP / SMTP，服务器填 <code>box.yourdomain.com</code>，并输入完整地址和该密码。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "测试错误密码会让 fail2ban 封禁你",
+      "p": "Mail-in-a-Box 默认开启 fail2ban 并监视邮件服务，这也是它能安全地放在公网上的原因之一。但这也意味着，用带错字的密码保存两三次连接，就会让连接地址被封禁，之后的每次尝试都会超时或被拒绝，而不是返回认证错误。症状看起来像是服务器宕机了。请先把密码弄对；如果已经触发了封禁，请先在服务器上解除封禁再重试。"
+    },
+    {
+      "h": "这里的提交端口是 465，而 587 不在文档列出的端口中",
+      "p": "互联网上的大多数邮件设置说明都会用 587 加 STARTTLS。Mail-in-a-Box 自己的指南在必须开放的端口中把 465 列为提交端口，并没有列出 587。用 465 加隐式 TLS 配置发信，第一次就能成功；如果因为其他地方都用 587 就想当然地用 587，你得到的是一个卡住的连接，而不是明确的错误。"
+    },
+    {
+      "h": "服务器的名称不能与你在别处托管的网站共用",
+      "p": "指南直截了当地指出，服务器的名称不能是你打算在另一台主机上用来提供网站的域名，因为服务器需要在 80 和 443 上响应，用于自身的证书续期和控制面板。把 <code>mail.yourdomain.com</code> 指向 CDN 或反向代理的运维人员，会在不造成任何可见故障的情况下破坏 Let's Encrypt 续期，几周后 IMAP 证书就会悄悄过期。"
+    }
+  ],
+  "limits": [
+    "你的服务器必须接受来自外部的 993 入站连接，托管 MCP 服务器才能访问它。位于 NAT 之后的家庭网络上的 Mail-in-a-Box，或者被云安全组限制为只允许你自己地址访问的服务器，都无法连接。如果你希望 IMAP 会话留在自己的网络内，mcpemails 可以自托管。",
+    "Mail-in-a-Box 希望自己掌管服务器主机名的 DNS 和 TLS，所以在标准的、未经修改的安装上效果最好。经过大量定制的服务器，出示的证书可能与控制面板以为的不一样。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Mail-in-a-Box 吗？",
+      "a": "不能直接使用。Claude 没有针对你自己运行的邮件服务器的连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到你的服务器后，Claude 就能读取、搜索、发送、回复、定时和整理其上邮箱中的邮件，同一个收件箱随后也可在 Cursor 或 ChatGPT 中使用。"
+    },
+    {
+      "q": "Mail-in-a-Box 的 IMAP 和 SMTP 设置是什么？",
+      "a": "服务器是你的服务器主机名，通常是 box.yourdomain.com。IMAP 为端口 993，使用隐式 TLS。提交为端口 465，使用隐式 TLS，这是官方指南列出的端口。请用某个邮件用户的完整邮箱地址和该用户的密码登录。"
+    },
+    {
+      "q": "为什么我的 Mail-in-a-Box 密码被拒绝？",
+      "a": "请检查你用的是邮件用户，而不是一个只作为别名存在的名称，因为别名既没有密码也没有邮箱。如果密码正确而连接仍然失败，可能是 fail2ban 因之前的失败尝试封禁了连接地址，其表现是连接被拒绝或超时，而不是登录错误。"
+    },
+    {
+      "q": "我必须把服务器暴露在互联网上吗？",
+      "a": "对于托管服务来说，是的：mcpemails 需要从外部连入端口 993。无论如何这都是 Mail-in-a-Box 的正常状态，因为它本来就必须在端口 25 上接收来自全世界的邮件。如果你特意把访问限制为只允许你自己的地址，请改为自托管 mcpemails，让 IMAP 连接始终不离开你的网络。"
+    },
+    {
+      "q": "我的邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从你的服务器实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留，这也正是你当初自建服务器的原因。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Mail-in-a-Box 收件箱",
+    "sub": "几分钟即可连接你自己的服务器。1 个收件箱永久免费，无需信用卡。"
+  }
+}

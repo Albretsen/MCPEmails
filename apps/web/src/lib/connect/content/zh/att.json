@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://www.att.com/support/article/email-support/KM1240308/",
+    "https://www.att.com/support/article/email-support/KM1240462/",
+    "https://www.att.com/support/article/email-support/KM1010472/"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "安全邮件密钥（secure mail key）",
+    "helpUrl": "https://www.att.com/support/article/email-support/KM1240308/",
+    "usernameForm": "你的完整 AT&T 地址，无论以哪个域名结尾：name@att.net、name@sbcglobal.net、name@bellsouth.net 以及其他 AT&T 域名都使用同一个登录字段。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "用安全邮件密钥将 AT&T Mail 连接到 Claude",
+    "description": "通过 imap.mail.att.net 的 IMAP 将 AT&T Mail（att.net、sbcglobal.net、bellsouth.net）连接到 Claude 及任意 MCP 客户端。需要安全邮件密钥，而非你的密码。"
+  },
+  "hero": {
+    "eyebrow": "AT&T Mail + AI",
+    "titleLine1": "将 AT&T Mail 连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 att.net 或 sbcglobal.net 收件箱。使用 AT&T 安全邮件密钥，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用而不止一个。",
+    "answer": "Claude 无法自行访问 AT&T Mail 收件箱。mcpemails 是一个托管 MCP 服务器，通过 imap.mail.att.net 端口 993 的 IMAP 连接 att.net、sbcglobal.net、bellsouth.net 及其他 AT&T 域名，认证使用你在 myAT&T 中创建的 16 位安全邮件密钥，而不是你的 AT&T 密码。连接后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送、回复和整理这些邮件。1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "安全邮件密钥，而非你的密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "AT&T Mail 如何连接：IMAP 与安全邮件密钥",
+    "body": "AT&T Mail 运行在 Yahoo 的基础设施上，但凭据由 AT&T 签发。IMAP 服务器为 <code>imap.mail.att.net</code>，端口 993，使用 TLS；SMTP 服务器为 <code>smtp.mail.att.net</code>，端口 465，同样是隐式 TLS。对于不支持其 OAuth 流程的邮件应用，AT&T 已不再接受账户密码：你需要在 myAT&T 中生成一个<b>安全邮件密钥</b>（一个 16 位代码），并将其填入密码字段。该密钥永不过期，修改 AT&T 密码也不会使其失效，你还可以为每个应用或设备分别创建一个，这样撤销其中一个时不会影响其他。同样的服务器和同样的密钥机制适用于所有 AT&T 邮箱域名，包括 <code>sbcglobal.net</code>、<code>bellsouth.net</code>、<code>ameritech.net</code>、<code>pacbell.net</code> 和 <code>currently.com</code>。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "在 myAT&T 中生成安全邮件密钥",
+      "p": "登录你的 AT&T 个人资料，打开 secure mail key（安全邮件密钥）部分，选择你要连接的邮箱地址，点击 <b>Add secure mail key</b>，为它起一个昵称，例如 <code>mcpemails</code>，然后点击 <b>Create</b>。AT&T 只显示一次这个 16 位密钥。离开页面前请先复制。"
+    },
+    {
+      "h": "输入密钥，而不是你的 AT&T 密码",
+      "p": "在 mcpemails 中选择 IMAP / SMTP，输入完整的 AT&T 地址，并把安全邮件密钥粘贴到密码字段。所有 AT&T 域名都使用 <code>imap.mail.att.net</code> 和 <code>smtp.mail.att.net</code>，因此服务器地址已为你预填。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "你的 AT&T 密码被拒绝，并不是因为它错了",
+      "p": "AT&T 把邮件客户端分为两类。已接入 AT&T OAuth 登录的应用会弹出浏览器提示，从不接触密码。其他所有应用（包括 mcpemails）都必须提供安全邮件密钥。如果你粘贴的是 AT&T 账户密码，就会得到一个与输错密码完全一样的认证失败，而且无论怎么重置账户密码都解决不了。"
+    },
+    {
+      "h": "邮箱在 Yahoo 上，但 Yahoo 的应用专用密码页面是错误的地方",
+      "p": "AT&T Mail 多年来一直由 Yahoo 的基础设施提供服务，IMAP 横幅也是 Yahoo 的。这让人们跑到 Yahoo 的账户安全页面去创建应用专用密码。那样没用。att.net 或 sbcglobal.net 地址的凭据由 AT&T 在 myAT&T 中签发，而不是 Yahoo。"
+    },
+    {
+      "h": "每个地址一个密钥，子账户需要各自的密钥",
+      "p": "安全邮件密钥绑定到单个 AT&T 邮箱地址。如果你家在同一个 AT&T ID 下有多个子账户，那么每个要连接的地址都需要针对该地址单独创建密钥。把主账户的密钥用于子账户会失败。"
+    },
+    {
+      "h": "这里的端口 465 是隐式 TLS，不是 STARTTLS",
+      "p": "我们验证过的 SMTP 服务器在端口 465 上会立即建立 TLS 会话，且不在该端口声明 STARTTLS。较旧的 AT&T 设置指南让你在端口 465 的同时勾选 <b>STARTTLS</b>，这种组合在该服务器上无法完成。mcpemails 在 465 上使用隐式 TLS，这正是服务器实际提供的方式。"
+    }
+  ],
+  "limits": [
+    "AT&T 的 SMTP 服务器声明的单封邮件大小上限约为 39 MB，因此带大附件的邮件在发出前就会被 AT&T 拒绝。",
+    "mcpemails 使用安全邮件密钥认证，而不是该服务器同样声明的 OAUTHBEARER 和 XOAUTH2 机制。这是有意为之：OAuth 通道只对 AT&T 注册过的应用开放。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 AT&T Mail 吗？",
+      "a": "不能直接使用。Claude 没有内置的 AT&T 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 att.net 或 sbcglobal.net 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "AT&T 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.mail.att.net，端口 993，使用隐式 TLS。SMTP 为 smtp.mail.att.net，端口 465，同样是隐式 TLS。用户名是你的完整 AT&T 邮箱地址，密码字段填安全邮件密钥。两个服务器均已在本页所示日期通过实时 TLS 连接验证。"
+    },
+    {
+      "q": "什么是 AT&T 安全邮件密钥？在哪里获取？",
+      "a": "它是一个 16 位代码，在不使用 AT&T OAuth 登录的邮件应用中代替你的密码。你在 myAT&T 个人资料中创建它，每个邮箱地址一个，并为每个密钥起一个昵称。它永不过期，修改 AT&T 密码也不会使其失效。"
+    },
+    {
+      "q": "sbcglobal.net 和 bellsouth.net 地址的用法一样吗？",
+      "a": "一样。AT&T 在同一平台上运行 att.net、sbcglobal.net、bellsouth.net、ameritech.net、pacbell.net 和 currently.com 地址。它们共用相同的 IMAP 和 SMTP 服务器，也同样要求安全邮件密钥，所以本页内容不会因域名而有任何不同。"
+    },
+    {
+      "q": "我没有改密码，为什么邮件应用提示密码已更改？",
+      "a": "这条提示通常意味着该应用是在 AT&T 要求安全邮件密钥之前设置的，仍在发送账户密码。请在 myAT&T 中创建一个密钥，并用它替换保存的密码。如果你之前创建过密钥，后来又在个人资料中删除了，请生成一个新的；被删除的密钥会立即失效。"
+    },
+    {
+      "q": "我的 AT&T 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 AT&T 实时获取邮件，并传给你的 AI 客户端。凭据（包括安全邮件密钥）静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 AT&T Mail 收件箱",
+    "sub": "用安全邮件密钥，几分钟即可连接 att.net 或 sbcglobal.net。1 个收件箱永久免费，无需信用卡。"
+  }
+}

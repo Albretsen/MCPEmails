@@ -1,47 +1,116 @@
 {
+  "_sources": [
+    "https://datatracker.ietf.org/doc/html/rfc8314",
+    "https://datatracker.ietf.org/doc/html/rfc6186",
+    "https://datatracker.ietf.org/doc/html/rfc6154",
+    "https://datatracker.ietf.org/doc/html/rfc6851",
+    "https://datatracker.ietf.org/doc/html/rfc4959",
+    "https://wiki.mozilla.org/Thunderbird:Autoconfiguration"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": null,
+    "usernameForm": "Casi siempre tu dirección de correo completa. Unos pocos proveedores solo quieren la parte anterior a la @, y así está documentado iCloud de Apple.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Conecta cualquier buzón IMAP a Claude (y a cualquier IA)",
-    "description": "Conecta todos los buzones IMAP de tu empresa a Claude, Cursor, ChatGPT y a cualquier cliente MCP. Aporta tu servidor, puerto y contraseña, y deja que la IA lea, envíe, programe y organice el correo. Una bandeja gratis, para siempre."
+    "title": "Conecta cualquier buzón IMAP a Claude, Cursor y clientes MCP",
+    "description": "Conecta cualquier buzón IMAP de tu empresa a Claude, Cursor y clientes MCP. Aporta servidor y contraseña: IMAP en el 993 o 143 y SMTP en el 465 o 587, detectados solos."
   },
   "hero": {
     "eyebrow": "IMAP + IA",
-    "titleLine1": "Conecta cualquier buzón IMAP a Claude,",
+    "titleLine1": "Conecta cualquier buzón IMAP a Claude",
     "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
-    "lead": "Conecta todos los buzones que lleva tu empresa, los aloje quien los aloje: info@, ventas@, facturas@ y el tuyo. Tu agente de IA lee, busca, envía, responde, programa y organiza ese correo por IMAP y SMTP normales, y los mismos buzones funcionan en todos los clientes MCP, no solo en uno.",
+    "lead": "Conecta todos los buzones de tu empresa, los aloje quien los aloje: info@, sales@, invoices@ y el tuyo. Tu agente de IA lee, busca, envía, responde, programa y organiza ese correo por IMAP y SMTP estándar, y los mismos buzones funcionan en todos los clientes MCP, no solo en uno.",
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Cualquier servidor IMAP, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no tiene cliente IMAP propio. mcpemails es un servidor MCP alojado que entra en tu servidor de correo por IMAP y SMTP con la dirección, el servidor y la contraseña que ya te dio tu proveedor, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Sirve cualquier servidor que hable IMAP, las direcciones de una empresa se conectan igual que una personal, y una bandeja es gratis."
+    "answer": "Claude no tiene un cliente IMAP propio. mcpemails es un servidor MCP alojado que inicia sesión en tu servidor de correo por IMAP y SMTP con la dirección, el servidor y la contraseña que ya te dio tu proveedor, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Funciona cualquier servidor que hable IMAP, las direcciones genéricas de una empresa se conectan igual que una personal, y una bandeja es gratis."
   },
   "persona": {
-    "intro": "¿Llevas varios buzones de empresa?",
-    "label": "Mira cómo una sola persona atiende todas las direcciones de la empresa desde un solo agente",
+    "intro": "¿Gestionas varios buzones de empresa?",
+    "label": "Mira cómo una sola persona trabaja todas las direcciones de la empresa desde un agente",
     "href": "/for/business"
   },
   "method": {
     "title": "Cómo se conecta un buzón IMAP genérico",
-    "body": "Necesitas cuatro cosas: tu dirección, tu servidor de correo, tu contraseña y, si tu proveedor lo exige, una contraseña de aplicación. Escribe primero la dirección: mcpemails reconoce a los proveedores de hosting habituales y rellena los dos servidores, los dos puertos y los modos de seguridad. Si el transporte que prueba no responde, prueba el otro estándar por su cuenta, <b>993 o 143</b> para IMAP y <b>465 o 587</b> para SMTP, así nadie tiene que adivinar con STARTTLS."
+    "body": "Necesitas cuatro cosas: tu dirección, tu servidor de correo, tu contraseña y, si tu proveedor la exige, una contraseña de aplicación. Escribe primero tu dirección: mcpemails reconoce los proveedores de hosting habituales y rellena por ti los dos servidores, los dos puertos y los modos de seguridad. Si el transporte que prueba no responde, prueba por su cuenta el otro estándar, <b>993 o 143</b> para IMAP y <b>465 o 587</b> para SMTP, así que nadie tiene que adivinar lo de STARTTLS."
   },
   "setup": [
     {
       "h": "Crea una cuenta gratis",
-      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre. Los planes de pago añaden el resto: tres buzones con Personal, todos los buzones de la empresa con Pro."
+      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre. Los planes de pago añaden el resto: tres buzones en Personal, todos los buzones de la empresa en Pro."
     },
     {
-      "h": "Reúne tus ajustes de IMAP y SMTP",
-      "p": "Tu proveedor los publica, casi siempre como imap.tudominio.com y smtp.tudominio.com en los puertos 993 y 465. Si tu proveedor exige una contraseña de aplicación para clientes de correo, genérala ahora."
+      "h": "Reúne tus ajustes IMAP y SMTP",
+      "p": "Tu proveedor los publica, casi siempre como imap.yourdomain.com y smtp.yourdomain.com en los puertos 993 y 465. Si tu proveedor exige una contraseña de aplicación para los clientes de correo, genérala ahora."
     },
     {
       "h": "Pégalos en mcpemails",
-      "p": "Elige IMAP / SMTP, añade tu dirección, los dos servidores y la contraseña. Los puertos y los modos de seguridad están en Avanzado, con los valores estándar ya puestos."
+      "p": "Elige IMAP / SMTP y añade tu dirección, los dos servidores y la contraseña. Los puertos y los modos de seguridad están en Advanced, rellenados con los valores estándar."
     },
     {
       "h": "Pega la URL MCP en tu IA",
       "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
     }
   ],
+  "gotchas": [
+    {
+      "h": "Cómo encontrar tu nombre de servidor real, en el orden que de verdad funciona",
+      "p": "Hay cuatro sitios donde mirar, del más barato al más caro. <b>Uno</b>, la página de ayuda de tu proveedor, buscando el nombre de tu proveedor más las palabras IMAP settings; para eso existen las demás páginas de proveedores de este sitio. <b>Dos</b>, el panel de control: en cPanel es Email Accounts, luego Connect Devices, luego el bloque de ajustes manuales; en Plesk es Mail, luego la dirección, luego la pantalla de conexión al buzón; la mayoría de paneles de hosting tienen una pantalla equivalente y es la fuente fiable para tu cuenta. <b>Tres</b>, el DNS: un proveedor que sigue la RFC 6186 publica un registro SRV <code>_imaps._tcp.yourdomain.com</code> que indica directamente el servidor y el puerto. <b>Cuatro</b>, tu registro MX, que nombra la máquina que recibe tu correo y muy a menudo pertenece a la misma familia de nombres que el servidor IMAP. Lo que no funciona es adivinar <code>imap.yourdomain.com</code> y esperar que funcione: muchísimos proveedores sirven tu correo en un nombre que no tiene nada que ver con tu dominio."
+    },
+    {
+      "h": "El certificado es lo que rompe un nombre de servidor personalizado",
+      "p": "La mayoría de empresas de hosting te dejan sin problema apuntar <code>mail.yourdomain.com</code> a su servidor de correo, y funciona en un cliente que no comprueba con cuidado. El servidor presenta un certificado emitido para el nombre propio de la empresa de hosting, algo como <code>server24.hostingprovider.net</code> o un comodín en su dominio, no para el tuyo. Un cliente que valida TLS correctamente rechaza la conexión por una <b>discrepancia de nombre de servidor</b>, que es un fallo distinto de una contraseña rechazada aunque la mayoría de interfaces los confundan. Desactivar la validación no es una solución aceptable para un buzón desde el que puede enviar un agente de IA. La solución es conectarse al nombre de servidor compartido para el que está emitido realmente el certificado, que es el nombre que documenta tu proveedor y el que usamos nosotros."
+    },
+    {
+      "h": "993 o 143, 465 o 587, y qué quiere decir un proveedor con «SSL» o «TLS»",
+      "p": "La RFC 8314 pide a los proveedores que prefieran TLS implícito, es decir, que la conexión vaya cifrada desde el primer byte: puerto <code>993</code> para IMAP y <code>465</code> para el envío. Las configuraciones más antiguas usan el <code>143</code> y el <code>587</code>, que empiezan sin cifrar y se actualizan con STARTTLS. Los proveedores los etiquetan de forma inconsistente, y las etiquetas son la principal fuente de confusión: «SSL/TLS» en una tabla de ajustes casi siempre significa TLS implícito en el 993 o el 465, mientras que «TLS» o «STARTTLS» casi siempre significa el 143 o el 587. No tienes que averiguarlo. Escribe tu dirección y mcpemails rellena los dos servidores, los dos puertos y los dos modos de seguridad para los proveedores que reconoce, y si el transporte que prueba no responde, reintenta por su cuenta con el otro estándar."
+    },
+    {
+      "h": "Tres capacidades del servidor deciden cómo se comporta tu buzón, y no hay dos servidores que coincidan",
+      "p": "<b>SASL-IR</b> (RFC 4959): un servidor que no la anuncia rechaza las credenciales enviadas en la misma línea que el comando <code>AUTHENTICATE</code> y responde con un <code>BAD</code> seco y sin explicación, idéntico a una contraseña incorrecta. mcpemails lo detecta y reintenta con el intercambio en dos pasos, por eso algunos servidores funcionan aquí y fallan con otras herramientas. <b>MOVE</b> (RFC 6851): sin ella un mensaje no se puede mover de forma atómica, así que mover se convierte en una copia, una actualización de marcas y un expunge, y una conexión cortada a mitad puede dejar el mensaje en las dos carpetas. <b>SPECIAL-USE</b> (RFC 6154): sin ella el servidor no etiqueta Enviados, Borradores, Papelera y Correo no deseado por su función, así que las carpetas se identifican por nombre, y un buzón creado en alemán, noruego o ruso tiene las carpetas del sistema con nombres que tu agente no reconocerá salvo que se los indiques. Cuando una operación con carpetas se comporta de forma extraña, casi siempre es por una de estas tres."
+    }
+  ],
+  "limits": [
+    "El servidor tiene que ser accesible desde internet. Un buzón en una red privada, detrás de una VPN o en una dirección IP privada se rechaza a propósito: se resuelve el nombre de servidor y cualquier dirección en un rango privado se rechaza.",
+    "Solo se marcan los puertos de correo estándar: 143 y 993 para IMAP, y 25, 465 y 587 para SMTP. Un servidor que escucha en un puerto personalizado no se puede conectar.",
+    "Un buzón que exige OAuth y no acepta una contraseña por IMAP no se puede conectar de esta forma. Microsoft 365 es el caso con el que más se encuentra la gente, y no afirmamos admitirlo."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con cualquier buzón IMAP?",
+      "a": "Claude no tiene un cliente IMAP propio, así que no directamente. Apunta un servidor MCP como mcpemails al buzón con tu dirección, tu servidor y tu contraseña, y Claude podrá leer, buscar, enviar, responder, programar y organizar ese correo. Funciona cualquier servidor que hable IMAP y SMTP en los puertos estándar, lo aloje quien lo aloje, y la misma conexión funciona después también desde Cursor y ChatGPT."
+    },
+    {
+      "q": "¿Cómo encuentro los ajustes de mi servidor IMAP?",
+      "a": "Empieza por la página de ayuda de tu proveedor y luego por tu panel de control de hosting, donde tanto cPanel como Plesk muestran los servidores y puertos exactos de cada dirección. Si no tienes ninguna de las dos cosas, un proveedor que sigue la RFC 6186 publica un registro SRV _imaps._tcp para tu dominio, y tu registro MX nombra la máquina que acepta tu correo, que suele estar relacionada con el servidor IMAP. No lo adivines a partir de tu nombre de dominio."
+    },
+    {
+      "q": "¿Uso el puerto 993 o el 143?",
+      "a": "Usa el 993 salvo que tu proveedor diga otra cosa. El puerto 993 es TLS implícito, cifrado desde el primer byte, y es lo que recomiendan los estándares actuales. El puerto 143 empieza sin cifrar y se actualiza con STARTTLS, que sigue funcionando pero es el patrón antiguo. Para el envío, la misma distinción es el 465 para TLS implícito y el 587 para STARTTLS. mcpemails prueba la pareja estándar y recurre a la otra por su cuenta."
+    },
+    {
+      "q": "¿Por qué mi cliente de correo se conecta pero este inicio de sesión falla?",
+      "a": "Tres causas habituales. Tu cliente apunta a un nombre de servidor personalizado cuyo certificado está emitido para otro nombre, y no valida de forma estricta. Tu proveedor exige una contraseña de aplicación para todo lo que no sea su propia aplicación. O el servidor rechaza la autenticación SASL de un solo paso y responde con un BAD seco que parece unas credenciales incorrectas. Prueba con el nombre de servidor que documenta tu proveedor en lugar de uno construido a partir de tu dominio."
+    },
+    {
+      "q": "¿Necesito una contraseña de aplicación?",
+      "a": "Depende por completo del proveedor. iCloud de Apple, Yahoo, AOL, Fastmail, Yandex y Mail.ru rechazan todos la contraseña de la cuenta desde un cliente de correo y exigen una dedicada. Zoho la exige cuando la autenticación en dos factores está activada. La mayoría de proveedores de hosting independientes y de servidores cPanel aceptan directamente la contraseña del buzón. Si se rechaza una contraseña que parece correcta, lo primero que hay que comprobar es si se exige una contraseña de aplicación."
+    },
+    {
+      "q": "¿Se almacena mi correo en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de tu servidor por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva. Cambiar la contraseña del buzón en tu proveedor desconecta la bandeja hasta que introduzcas la nueva, que es la forma más rápida de cortar el acceso."
+    }
+  ],
   "ctaBand": {
     "title": "Dale a tu IA los buzones que tu empresa ya tiene",
     "sub": "Conecta cualquier buzón IMAP en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  },
+  "guide": {
+    "intro": "¿Prefieres una guía paso a paso con capturas?",
+    "label": "Conector IMAP para Claude: conecta cualquier bandeja IMAP a Claude",
+    "href": "/blog/claude-imap-connector"
   }
 }

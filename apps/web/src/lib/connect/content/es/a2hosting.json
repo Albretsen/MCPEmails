@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://kb.hosting.com/docs/accessing-e-mail-accounts-with-client-applications",
+    "https://hosting.com/blog/a-new-chapter-begins-a2-hosting/",
+    "https://www.prnewswire.com/news-releases/a2-hosting-becomes-hostingcom-with-aim-to-be-the-most-trusted-brand-in-hosting-302448950.html"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://kb.hosting.com/docs/accessing-e-mail-accounts-with-client-applications",
+    "usernameForm": "Tu dirección de correo completa, por ejemplo webmaster@yourdomain.com. No tu usuario de cPanel ni tu acceso de facturación.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta el correo de A2 Hosting a Claude y clientes MCP",
+    "description": "Los buzones de A2 Hosting (ahora hosting.com) se conectan a Claude por IMAP en el 993. Usa el nombre completo del servidor, como mi3-ss78.a2hosting.com, sin avisos SSL."
+  },
+  "hero": {
+    "eyebrow": "A2 Hosting + IA",
+    "titleLine1": "Conecta el correo de A2 Hosting a Claude,",
+    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA un buzón real de A2 Hosting. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña que definiste para el buzón en cPanel, en todos los clientes MCP y no solo en uno.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de A2 Hosting. mcpemails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993, usando el servidor de correo en el que está tu propia cuenta y no una dirección compartida de a2hosting.com, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. A2 Hosting pasó a ser hosting.com en abril de 2025, pero la plataforma de correo no ha cambiado: cPanel muestra tu servidor exacto en Email Accounts, luego Connect Devices. La autenticación usa la contraseña definida en el buzón, no el acceso al panel de control, y una bandeja es gratis.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña del buzón desde cPanel",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta el correo de A2 Hosting: tu propio servidor, IMAP 993",
+    "body": "A2 Hosting cambió su marca a hosting.com en abril de 2025, y la plataforma de correo no cambió con el nombre. Las cuentas compartidas y de revendedor siguen funcionando con cPanel, y los buzones siguen respondiendo por IMAP en el puerto 993 y por SMTP en el 465, con el 587 disponible para STARTTLS. No existe un único servidor de correo a2hosting.com al que apuntar un cliente, porque cada cuenta está en su propia máquina. La base de conocimiento indica dos formas que funcionan: <code>mail.yourdomain.com</code>, construida a partir de tu propio dominio, y el nombre completo del servidor, que tiene el aspecto <code>mi3-ss78.a2hosting.com</code> en la flota original de A2 o <code>sr10.supercp.com</code> en la flota supercp. Para una conexión TLS lo que importa es el nombre del servidor, porque el certificado compartido cubre el servidor y no tu dominio. Inicia sesión con la dirección de correo completa y la contraseña definida para ese buzón en cPanel."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
+    },
+    {
+      "h": "Consulta en cPanel tu servidor de correo real",
+      "p": "Inicia sesión en hosting.com, abre cPanel para la cuenta de hosting y ve a Email, luego <b>Email Accounts</b>. Haz clic en <b>Connect Devices</b> en la fila de la dirección que quieres. El bloque <b>Mail Client Manual Settings</b> muestra el servidor entrante seguro exacto de tu cuenta, que será el nombre del servidor y no tu dominio, junto con los puertos 993 y 465. Copia ese servidor tal cual."
+    },
+    {
+      "h": "Usa la contraseña del buzón, no la del panel",
+      "p": "IMAP se autentica con la contraseña definida en la propia dirección de correo. Si no la tienes, haz clic en <b>Manage</b> junto a la dirección en Email Accounts y define una nueva. No hay ninguna contraseña de aplicación aparte que generar para el correo de A2 Hosting."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "El certificado compartido nombra el servidor de A2, nunca tu dominio",
+      "p": "<code>mail.yourdomain.com</code> suele resolver a la máquina correcta, pero el handshake TLS devuelve un certificado emitido para el servidor de hosting.com, no para tu dominio. Un cliente que valida de forma estricta lo rechaza, y el error parece un ataque más que un error de configuración. La documentación de A2 es explícita sobre la solución: para un acceso seguro, usa el nombre completo del servidor en lugar de tu nombre de dominio. Tómalo de Connect Devices, no de memoria."
+    },
+    {
+      "h": "Hay dos familias de nombres de servidor activas a la vez, y el cambio de marca no renombró ninguna",
+      "p": "Las cuentas de la flota original de A2 tienen servidores como <code>mi3-ss78.a2hosting.com</code>, donde el primer segmento es el centro de datos. Las cuentas de la otra flota tienen el aspecto <code>sr10.supercp.com</code>. El paso a hosting.com no renombró ninguna de las dos familias, así que un nombre <code>a2hosting.com</code> que anotaste hace años muy probablemente sigue siendo correcto, y uno <code>supercp.com</code> no es un rastro de phishing. Ninguno se puede deducir de tu dominio, por eso adivinar falla aquí más a menudo que en proveedores con un solo esquema de nombres."
+    },
+    {
+      "h": "No existe la contraseña de aplicación de A2, digan lo que digan las guías de terceros",
+      "p": "Varias guías populares te dicen que generes una contraseña de aplicación porque la autenticación en dos pasos está activada. Ese consejo se refiere al acceso a cPanel y al área de cliente. IMAP y SMTP se autentican directamente con la contraseña del buzón, sin segundo factor y sin ningún mecanismo de contraseñas de aplicación. Si se rechaza un inicio de sesión de correo, la contraseña del buzón es realmente incorrecta, así que restablécela en Email Accounts en lugar de buscar un token que no existe."
+    }
+  ],
+  "limits": [
+    "mcpemails trabaja sobre el buzón, no sobre la cuenta de hosting. Los alias, reenviadores, respuestas automáticas y filtros de spam se siguen gestionando en cPanel y no son visibles para tu cliente de IA.",
+    "Las cuentas de revendedor y VPS pueden estar en un nombre de servidor que A2 no publica en ningún lugar de su base de conocimiento. El panel Connect Devices dentro del propio cPanel de esa cuenta es la única fuente fiable para obtenerlo."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de A2 Hosting?",
+      "a": "No directamente. Claude no tiene un conector integrado para servidores de correo cPanel. Conectar un servidor MCP como mcpemails a tu buzón de A2 Hosting por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, con las mismas credenciales que usaría cualquier cliente de correo de escritorio."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de A2 Hosting?",
+      "a": "IMAP usa el puerto 993 con TLS implícito y SMTP el puerto 465, con el 587 disponible para STARTTLS. El servidor es específico de tu cuenta: mail.yourdomain.com o el nombre completo del servidor, como mi3-ss78.a2hosting.com o sr10.supercp.com. A2 documenta el 143 y el 25 o 2525 como equivalentes sin cifrar, que no deberías usar."
+    },
+    {
+      "q": "¿El cambio de marca a hosting.com modificó mis ajustes de correo?",
+      "a": "No. A2 Hosting pasó a ser hosting.com en abril de 2025, y los clientes existentes conservan sus planes, servidores y nombres de servidor. Tu servidor de correo a2hosting.com o supercp.com sigue resolviendo y sigue presentando el mismo certificado. Solo cambió la marca en el sitio web y en el área de cliente."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de correo de A2 Hosting?",
+      "a": "Casi siempre porque usaste la contraseña de cPanel o del área de cliente. IMAP comprueba la contraseña que se definió para esa dirección de correo al crearla. Restablécela desde cPanel en Email Accounts haciendo clic en Manage junto a la dirección, y usa ese valor. El nombre de usuario debe ser la dirección completa, no solo la parte anterior a la arroba."
+    },
+    {
+      "q": "¿Se almacena mi correo de A2 Hosting en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de tu servidor de A2 Hosting por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de A2 Hosting",
+    "sub": "Conecta un buzón de A2 Hosting en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://pomoc.poczta.interia.pl/programy-pocztowe/news-parametry-do-konfiguracji-programow-pocztowych,nId,2136275",
+    "https://pomoc.poczta.interia.pl/programy-pocztowe/news-sprawdz-poprawnosc-konfiguracji-programu-pocztowego,nId,2246569",
+    "https://pomoc.poczta.interia.pl/popularne-artykuly/news-jak-uruchomic-dwuetapowe-logowanie,nId,6766558"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Interia-passordet ditt",
+    "helpUrl": "https://pomoc.poczta.interia.pl/programy-pocztowe/news-parametry-do-konfiguracji-programow-pocztowych,nId,2136275",
+    "usernameForm": "Hele adressen din, inkludert domenet: nazwa@interia.pl, nazwa@poczta.fm eller et Interia hub-domene som jan@kowalski.hub.pl.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Interia Poczta: IMAP-innstillinger og MCP-tilgang for Claude",
+    "description": "Koble Interia Poczta til Claude, Cursor og enhver MCP-klient på poczta.interia.pl:993. IMAP er av til du setter korzystam z programu pocztowego til TAK."
+  },
+  "hero": {
+    "eyebrow": "Interia Poczta + AI",
+    "titleLine1": "Koble Interia Poczta til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Interia-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP, så snart kanalen for e-postprogrammer er slått på i kontoinnstillingene dine.",
+    "answer": "Claude kan ikke nå en Interia-postkasse på egen hånd. mcpemails er en driftet MCP-server som kobler til den over IMAP på poczta.interia.pl på port 993, og autentiserer med hele adressen din og det vanlige Interia-passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Interia holder POP3- og IMAP-kanalene stengt til du setter korzystam z programu pocztowego til TAK i kontoparameterne dine, og en postkasse med totrinnsinnlogging slått på kan ikke brukes fra noe e-postprogram i det hele tatt. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Slå på kanalen for e-postprogrammer først",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles Interia til: ett vertsnavn, én bryter, ett passord",
+    "body": "Interia legger alt på ett enkelt navn. IMAP er <code>poczta.interia.pl</code> på port 993 over implisitt TLS, og SMTP-innsending er <b>samme vert</b> på port 465, noe som overrasker folk som er vant til et eget <code>smtp.</code>-navn. Interias egen konfigurasjonsside ber deg skrive <code>poczta.interia.pl</code> i både feltet for innkommende og utgående server. Autentisering skjer med det vanlige Interia-passordet ditt og hele adressen som brukernavn, og det gjelder <code>interia.pl</code>, <code>poczta.fm</code> og Interias hub-domener likt. Det eneste du må gjøre først, er å åpne kanalen: Interia slår av POP3 og IMAP på en konto til du oppgir at du bruker et e-postprogram."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Slå på kanalen for e-postprogrammer i Interia",
+      "p": "Logg inn i Interia-postkassen din i en nettleser og gå til <b>Ustawienia</b>, deretter <b>ustawienia główne</b>, deretter fanen <b>parametry</b>. I delen for e-postprogrammer setter du <b>korzystam z programu pocztowego</b> til <b>TAK</b> og lagrer. Før dette er slått på, er POP3 og IMAP stengt, og innloggingen avvises uten noe som helst som forklarer hvorfor."
+    },
+    {
+      "h": "Bekreft at totrinnsinnlogging er av for denne postkassen",
+      "p": "Interias totrinnsinnlogging (<b>logowanie dwuetapowe</b>) og e-postprogrammer utelukker hverandre. Interia sier det selv på skjermen der du slår den på: med totrinnsinnlogging på kan kontoen ikke brukes i et e-postprogram. Interia utsteder ikke noe app-passord for å komme rundt det, så hvis postkassen har det slått på, har du et valg å ta før du går videre."
+    },
+    {
+      "h": "Lim det inn i mcpemails, og lim så MCP-URL-en inn i AI-en",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel nazwa@interia.pl, og skriv inn Interia-passordet ditt. Vertene og portene er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling. Lim deretter https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Totrinnsinnlogging og e-postprogrammer kan ikke begge være på, og det finnes ikke app-passord",
+      "p": "Dette er Interia-feilen det ikke finnes noen omvei rundt. Interias hjelpeside for å slå på <b>logowanie dwuetapowe</b> sier rett ut at når den er på, kan kontoen ikke brukes i et e-postprogram, og tilgang skjer bare via nettsiden og den offisielle appen. De fleste leverandører løser dette med et appspesifikt passord. Interia utsteder ikke noe slikt. En Interia-postkasse kan altså enten nås via IMAP eller være beskyttet med totrinnsinnlogging, og du må velge. Vil du ha agenten koblet til, er det din beslutning, og den er verdt å ta bevisst i stedet for å oppdage den som en innloggingsfeil."
+    },
+    {
+      "h": "POP3 og IMAP er stengt til du oppgir at du bruker et e-postprogram",
+      "p": "Bryteren ligger under <b>Ustawienia</b>, deretter <b>ustawienia główne</b>, deretter fanen <b>parametry</b>, formulert som <b>korzystam z programu pocztowego</b> med svaret TAK eller NIE. Den ser ut som en preferanse og oppfører seg som en brannmur. Står den på NIE, avviser serveren innloggingen før passordet i det hele tatt blir vurdert, og derfor bytter folk påloggingsopplysninger i en time før de finner innstillingen."
+    },
+    {
+      "h": "Ingen SASL-IR, og klienter som tar det for gitt, får en naken BAD",
+      "p": "Interias banner annonserer <code>AUTH=PLAIN</code>, men ikke <code>SASL-IR</code>, så den avviser autentisering i ett trinn, der påloggingsopplysningen sendes sammen med <code>AUTHENTICATE</code>-kommandoen. Klienter som tar SASL-IR for gitt, får en <code>BAD</code> uten forklaring, umulig å skille fra feil passord. mcpemails oppdager det og prøver på nytt med utvekslingen i to trinn, så dette er allerede håndtert, men det forklarer hvorfor enkelte IMAP-verktøy melder at Interia er ødelagt, mens Thunderbird kobler til uten problemer."
+    },
+    {
+      "h": "Sending og mottak kjører på samme vertsnavn, og bare PLAIN tilbys på IMAP",
+      "p": "Det finnes ingen <code>smtp.interia.pl</code> i Interias dokumenterte konfigurasjon: utgående e-post går til <code>poczta.interia.pl</code> på 465, samme navn som IMAP. I tillegg annonserer IMAP-siden <code>AUTH=PLAIN</code> og ingenting annet, uten <code>AUTH=LOGIN</code>. Biblioteker som er hardkodet til LOGIN-mekanismen, noe som er vanlig i verktøy skrevet mot Exchange, feiler i autentiseringssteget. SMTP-siden godtar både PLAIN og LOGIN, så de to halvdelene av samme konto kan oppføre seg forskjellig i én og samme klient."
+    }
+  ],
+  "limits": [
+    "Interia annonserer ikke MOVE eller SPECIAL-USE, så sortering skjer som kopi pluss flagg pluss expunge, og Sendt, Utkast og Papirkurv matches på navn. I en polsk postkasse heter de vanligvis Wysłane, Kopie robocze og Kosz, så oppgi mappen hvis en agent ikke finner den.",
+    "Slår du på totrinnsinnlogging på Interia-kontoen, kobles postkassen fra alle e-postklienter, også mcpemails, og det finnes ikke noe app-passord som kan gjenopprette tilgangen."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Interia Poczta?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Interia-kobling. Peker du en MCP-server som mcpemails mot postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den, og den samme tilkoblingen fungerer da også fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Interia?",
+      "a": "Begge bruker samme vertsnavn. IMAP er poczta.interia.pl på port 993 med SSL/TLS, og SMTP er poczta.interia.pl på port 465, også med SSL/TLS, og krever autentisering. Logg inn med hele adressen din, inkludert interia.pl, poczta.fm eller hub-domenet ditt. Vertene ble bekreftet via en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Hvorfor avviser Interia passordet mitt i en e-postklient?",
+      "a": "Vanligvis fordi kanalen for e-postprogrammer er av. Åpne Ustawienia, deretter ustawienia główne, deretter fanen parametry, og sett korzystam z programu pocztowego til TAK. Hvis den allerede er på, sjekker du om totrinnsinnlogging er slått på for kontoen, fordi Interia blokkerer all tilgang fra e-postprogrammer så lenge den er det."
+    },
+    {
+      "q": "Tilbyr Interia app-passord?",
+      "a": "Nei. Interia utsteder ingen appspesifikke passord. E-postklienter autentiserer seg med det samme passordet du bruker i webmailen. Det betyr også at det ikke finnes noen måte å beholde totrinnsinnlogging på og likevel koble til en klient, fordi app-passordet andre leverandører bruker til å bygge bro over det, ikke finnes her."
+    },
+    {
+      "q": "Fungerer poczta.fm-adresser på samme måte?",
+      "a": "Ja. poczta.fm er en Interia-postkasse og bruker samme vertsnavn, poczta.interia.pl, de samme portene og den samme bryteren for e-postprogrammer. Skriv inn adressen nøyaktig slik den er skrevet, med poczta.fm-domenet, som brukernavn."
+    },
+    {
+      "q": "Lagres Interia-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Interia over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke beholdt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Interia-innboks",
+    "sub": "Koble til Interia Poczta på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

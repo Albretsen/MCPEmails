@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.bluehost.com/help/article/email-application-setup",
+    "https://www.bluehost.com/help/article/email-product-overview",
+    "https://www.bluehost.com/help/article/configure-bluehost-professional-email-on-other-apps"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://www.bluehost.com/help/article/email-application-setup",
+    "usernameForm": "Tu dirección de correo completa, por ejemplo you@yourdomain.com. Nunca tu acceso al portal de Bluehost.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Correo de Bluehost a Claude: IMAP de cPanel y Titan",
+    "description": "Bluehost vende tres productos de correo distintos. Averigua cuál tienes y conéctalo a Claude por IMAP en el puerto 993. Una bandeja gratis, para siempre, sin tarjeta."
+  },
+  "hero": {
+    "eyebrow": "Bluehost + IA",
+    "titleLine1": "Conecta el correo de Bluehost a Claude,",
+    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA un buzón real de Bluehost. Lee, busca, envía, responde, programa y organiza correo por IMAP, tanto si el buzón es una cuenta de cPanel Email como si es de Professional Email.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de Bluehost. mcpemails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Lo primero es averiguar cuál de los tres productos de correo de Bluehost tienes, porque cPanel Email responde en un servidor construido a partir de tu propio dominio mientras que Professional Email responde en los servidores de Titan, y los dos juegos de ajustes no son intercambiables. En ambos casos te autenticas con la contraseña definida en el buzón, nunca con la de tu portal de Bluehost, y una bandeja es gratis.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña del buzón, no el acceso al portal",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta el correo de Bluehost: primero averigua qué producto tienes",
+    "body": "Bluehost vende correo de tres formas, y los ajustes son completamente distintos entre ellas. <b>cPanel Email</b> es el buzón incluido con el hosting; está en el servidor donde está tu sitio, y el servidor entrante se construye a partir de tu propio dominio. <b>Professional Email</b> es un producto de pago que funciona sobre Titan, para el que la guía de Bluehost indica <code>imap.titan.email</code> en el 993 y <code>smtp.titan.email</code> en el 465. <b>Google Workspace</b> es Gmail revendido, donde tus registros MX apuntan a Google y no interviene ningún servidor de correo de Bluehost. Los tres hablan IMAP y los tres se pueden conectar, pero tienes que tomar los ajustes de la guía del producto que compraste realmente. Para cPanel Email, Bluehost publica una pareja poco habitual: el bloque seguro usa el dominio sin prefijo, <code>example.com</code>, como servidor entrante y saliente, y solo el bloque sin cifrar usa <code>mail.example.com</code>."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
+    },
+    {
+      "h": "Averigua qué producto de correo de Bluehost usa esta dirección",
+      "p": "Inicia sesión en el Bluehost Portal y abre <b>Hosting</b> en el menú de la izquierda. Si aparece un botón <b>cPanel Email</b> y tu dirección figura debajo, tienes un buzón de cPanel. Si la dirección aparece en cambio en <b>Professional Email</b>, es un buzón de Titan en los propios servidores de Titan. Si los registros MX de tu dominio apuntan a Google, es Google Workspace y debes conectarlo como Gmail, no como Bluehost."
+    },
+    {
+      "h": "Copia los ajustes exactos de ese producto",
+      "p": "Para cPanel Email: <b>Hosting</b>, luego <b>cPanel Email</b>, luego <b>Email Accounts</b>, luego <b>Continue</b> y luego <b>Connect Devices</b> junto a la dirección. Usa el bloque Secure SSL/TLS, IMAP en el 993. Para Professional Email, toma los servidores de Titan de la guía de Professional Email de Bluehost. En ambos casos la contraseña es la definida en el buzón."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Tres productos comparten una marca, y la guía equivocada nunca autentica",
+      "p": "Este es el fallo de correo más común en Bluehost. Alguien con un buzón de Professional Email sigue una guía de cPanel Email, apunta un cliente a su propio dominio y recibe un rechazo que parece una contraseña incorrecta. No lo es: el buzón ni siquiera está en ese servidor, está en el de Titan. También ocurre al revés. Comprueba en Hosting, dentro del portal, a qué producto pertenece la dirección antes de tocar ningún ajuste, porque nada más de lo que cambies servirá hasta que eso esté bien."
+    },
+    {
+      "h": "El ajuste seguro de cPanel en Bluehost es el dominio sin prefijo, no mail.yourdomain.com",
+      "p": "Casi todas las guías de terceros sobre correo cPanel te dicen que uses <code>mail.example.com</code>. El artículo de Bluehost pone <code>mail.example.com</code> solo en el bloque Standard, sin cifrar, y da el simple <code>example.com</code> para el bloque Secure SSL/TLS en los puertos 993 y 465. Es porque el certificado AutoSSL cubre el propio dominio. Usar el prefijo <code>mail.</code> con TLS es lo que provoca el aviso de certificado que luego la gente intenta saltarse."
+    },
+    {
+      "h": "El producto que tienes depende de cuándo compraste el plan",
+      "p": "cPanel Email es la inclusión heredada que venía con los planes de hosting antiguos, y Bluehost aún la documenta y la mantiene. Las compras más recientes se orientan hacia Professional Email y Google Workspace al pagar, y muchas cuentas tienen una mezcla, con un dominio en correo cPanel y otro en Titan. No des por hecho que, porque una de tus direcciones de Bluehost se conecta con un servidor determinado, la siguiente también lo hará."
+    }
+  ],
+  "limits": [
+    "Un buzón de Google Workspace comprado a través de Bluehost es un buzón de Google. Conéctalo como Gmail mediante Google OAuth, no con credenciales de Bluehost.",
+    "mcpemails conecta buzones, no la cuenta de hosting. Los reenviadores, alias y filtros se quedan en el portal de Bluehost."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de Bluehost?",
+      "a": "No directamente. Claude no tiene un conector integrado para Bluehost. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar. Funciona tanto con cuentas de cPanel Email como de Professional Email, siempre que uses el servidor correcto para el producto que tienes."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Bluehost?",
+      "a": "Para cPanel Email, los ajustes seguros de Bluehost son tu dominio sin prefijo como servidor entrante y saliente, IMAP en el 993 y SMTP en el 465, con la dirección de correo completa como nombre de usuario. Para Professional Email, Bluehost documenta imap.titan.email en el 993 y smtp.titan.email en el 465. Toma los valores de la guía que corresponda a tu producto."
+    },
+    {
+      "q": "¿Cómo sé si tengo cPanel Email o Professional Email de Bluehost?",
+      "a": "Inicia sesión en el Bluehost Portal y abre Hosting en el menú de la izquierda. Los buzones de cPanel aparecen detrás del botón cPanel Email. Los buzones de Professional Email aparecen en Professional Email como un producto aparte con su propia suscripción. Si la dirección no aparece en ninguno, revisa los registros MX de tu dominio; puede que apunten a Google Workspace."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de correo de Bluehost?",
+      "a": "Predominan dos causas. O estás usando la contraseña de tu portal de Bluehost en lugar de la definida en el buzón concreto, o estás apuntando el cliente al servidor del producto equivocado. Restablece la contraseña del buzón desde Email Accounts para el correo cPanel, o desde la pantalla de gestión de Professional Email para un buzón de Titan, y vuelve a intentarlo."
+    },
+    {
+      "q": "¿Se almacena mi correo de Bluehost en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Bluehost",
+    "sub": "Conecta un buzón de Bluehost en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

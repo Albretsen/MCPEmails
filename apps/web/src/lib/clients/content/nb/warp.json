@@ -1,0 +1,88 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://docs.warp.dev/agent-platform/capabilities/mcp/"
+  ],
+  "meta": {
+    "title": "Koble e-post til Warp: oppsett av MCP-server for agenter",
+    "description": "Gi Warp-agenter en ekte innboks. Settings, Agents, MCP servers: legg til en Streamable HTTP-server via URL og fullfør OAuth. Ingen API-nøkkel. Én innboks gratis."
+  },
+  "hero": {
+    "eyebrow": "Warp + e-post",
+    "titleLine1": "Koble innboksen din til Warp",
+    "titleLine2": "og agentene der",
+    "lead": "Gi terminalen en ekte postkasse. Les, søk i, send, svar på, videresend, planlegg og organiser e-post fra en Warp-agent, på tvers av alle innboksene du har koblet til.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "OAuth, ingen API-nøkkel nødvendig",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "Åpne Settings, Agents, MCP servers, klikk Add, velg fanen Streamable HTTP or SSE Server (URL), lim inn https://mcpemails.com/api/mcp og bekreft. Warp fullfører OAuth-flyten i nettleseren når du blir bedt om det."
+  },
+  "method": {
+    "title": "Slik kobler Warp seg til: OAuth, ingen API-nøkkel",
+    "body": "Warp kjører standard MCP OAuth-flyt mot denne serveren. Den registrerer seg selv med <b>RFC 7591 dynamisk klientregistrering</b>, så du trenger ikke opprette noen klient-ID, og autoriserer med <b>autorisasjonskode pluss PKCE</b> med S256. Ingen klienthemmelighet sendes noen gang, og tokenet har bare de tilgangene (scopes) du godkjenner på samtykkeskjermen vår. Tilgangstokenet den får varer i én time og fornyes automatisk. Det vises under Dashboard, API Keys som <code>OAuth:</code> etterfulgt av klientnavnet, og det er der du tilbakekaller tilkoblingen."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto og koble til en postkasse",
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Gmail kobles til med Google-innlogging med ett klikk; iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+    },
+    {
+      "h": "Åpne MCP-innstillingene",
+      "p": "Åpne <b>Settings</b>, deretter <b>Agents</b>, deretter <b>MCP servers</b>, og klikk <b>+ Add</b>."
+    },
+    {
+      "h": "Velg URL-fanen",
+      "p": "Velg fanen <b>Streamable HTTP or SSE Server (URL)</b> i stedet for den kommandobaserte."
+    },
+    {
+      "h": "Lim inn og autoriser",
+      "p": "Lim inn <code>https://mcpemails.com/api/mcp</code> og bekreft, og fullfør deretter OAuth-flyten i nettleseren når du blir bedt om det. Godkjenn tilgangene du vil at agenten skal ha."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Velg URL-fanen, ikke kommandofanen",
+      "p": "Warp tilbyr både en kommandobasert server og en URL-basert. Denne serveren er hostet, så den har ingen kommando å kjøre og ingen pakke å installere. URL-fanen er den eneste som kan fungere, og velger du den andre, får du en server som aldri starter."
+    },
+    {
+      "h": "En terminalagent kjører lenge og uten tilsyn",
+      "p": "Det er det som er det tiltalende, og det er også grunnen til at valget av tilganger betyr noe her. En agent som jobber seg gjennom en oppgaveliste med <code>send:email</code>, kan sende e-post til noen når som helst underveis. Lar du tilgangen være ute, eller slår på menneskelig godkjenning slik at sendinger venter i kø på en person, beholder du det nyttige uten overraskelsene."
+    },
+    {
+      "h": "Ingenting kommer av seg selv",
+      "p": "Serveren er rent forespørsel og svar, uten webhooks eller push. En Warp-agent ser e-post når den ser etter, så en planlagt eller uttrykkelig forespurt sjekk er det som gjør dette til en overvåker. Hold et øye med grensene for antall forespørsler hvis du poller aggressivt."
+    }
+  ],
+  "limits": [
+    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger.",
+    "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post vekker aldri agenten din av seg selv. Vil du reagere på innkommende e-post, må du polle etter en tidsplan.",
+    "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
+  ],
+  "faq": [
+    {
+      "q": "Hvordan kobler jeg e-post til Warp?",
+      "a": "Åpne Settings, Agents, MCP servers, klikk Add, velg fanen Streamable HTTP or SSE Server (URL), lim inn https://mcpemails.com/api/mcp og bekreft, og fullfør deretter OAuth-flyten i nettleseren. Da har Warp-agentene verktøy for å lese, søke, sende, svare, videresende, organisere og planlegge e-post."
+    },
+    {
+      "q": "Trenger jeg en API-nøkkel for Warp?",
+      "a": "Nei. Warp fullfører en OAuth-flyt i nettleseren mot denne serveren, så ingenting hemmelig havner i innstillingene. En bearer-nøkkel er fortsatt tilgjengelig for skript og maskiner uten skjerm."
+    },
+    {
+      "q": "Hvilke postkasser kan Warp nå på denne måten?",
+      "a": "Gmail via Google-innlogging, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord, og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Klienten ser alle gjennom den samme tilkoblingen: agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
+    },
+    {
+      "q": "Kan en Warp-agent sende e-post uten at jeg ser det?",
+      "a": "Bare hvis du tillater det. Sending krever tilgangen send:email, så en nøkkel eller et token uten den tilgangen kan ikke sende i det hele tatt. I tillegg kan eieren av en innboks kreve menneskelig godkjenning i dashbordet, som holder tilbake hver sending, hvert svar, hver videresending, hvert utkast som sendes og hver planlagte sending til en person slipper den gjennom."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Hver melding hentes direkte fra leverandøren din for forespørselen som ba om den, og sendes rett videre til klienten din. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, slik at fremtidige kall kan autentiseres. Sletter du innboksen i dashbordet, eller tilbakekaller tilgangen hos leverandøren, avsluttes tilkoblingen med en gang."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi terminalen din en ekte innboks",
+    "sub": "Én URL, én innlogging. Én innboks gratis for alltid, uten kort."
+  }
+}

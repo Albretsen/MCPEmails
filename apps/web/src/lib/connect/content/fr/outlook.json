@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://support.microsoft.com/en-us/office/outlook-and-other-apps-are-unable-to-connect-to-outlook-com-when-using-basic-authentication-f4202ebf-89c6-4a8a-bec3-3d60cf7deaef",
+    "https://learn.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth",
+    "https://support.microsoft.com/en-us/accounts-billing/manage/how-to-get-and-use-app-passwords"
+  ],
+  "auth": {
+    "method": "oauth",
+    "label": "OAuth 2.0 uniquement, pas de mot de passe d'application",
+    "helpUrl": "https://support.microsoft.com/en-us/office/outlook-and-other-apps-are-unable-to-connect-to-outlook-com-when-using-basic-authentication-f4202ebf-89c6-4a8a-bec3-3d60cf7deaef",
+    "usernameForm": "Aucun identifiant saisi à la main ne fonctionnera. Le service IMAP des comptes Microsoft personnels ne propose que XOAUTH2 : il accepte un jeton d'accès et rien d'autre.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Outlook.com et l'IA : OAuth seulement, fin des mots de passe",
+    "description": "L'IMAP d'Outlook.com n'annonce plus que AUTH=XOAUTH2 : aucun mot de passe, même d'application, ne le relie à un serveur MCP. Ce qui a changé, et que faire."
+  },
+  "hero": {
+    "eyebrow": "Outlook.com + IA",
+    "titleLine1": "Outlook.com n'accepte plus",
+    "titleLine2": "aucun mot de passe en IMAP",
+    "lead": "Les comptes Microsoft personnels, que l'adresse se termine par outlook.com, hotmail.com, live.com ou msn.com, n'acceptent plus l'authentification de base depuis les applications tierces. Le serveur répond. Il n'a simplement plus aucun mécanisme par mot de passe à proposer.",
+    "answer": "Non. mcpemails ne peut pas connecter une boîte Outlook.com, et le blocage vient de l'authentification, pas de l'accessibilité. Le service IMAP des comptes Microsoft personnels répond sur outlook.office365.com au port 993 et la négociation TLS aboutit, mais sa ligne de capacités n'annonce plus que AUTH=XOAUTH2 : aucun mécanisme par mot de passe n'est proposé, donc ni le mot de passe du compte ni un mot de passe d'application ne peuvent s'authentifier. Microsoft a mis fin à l'authentification de base pour les comptes personnels se connectant depuis des applications non Microsoft à partir du 16 septembre 2024, ne laissant qu'OAuth 2.0 comme voie d'accès. mcpemails ne propose pas de connexion OAuth Microsoft, une boîte Outlook.com n'est donc pas connectable ici. Si vous voulez qu'un agent travaille sur votre courrier dès aujourd'hui, connectez une boîte qui accepte un mot de passe en IMAP, gratuite pour une boîte, et transférez-y votre courrier Outlook.com si vous voulez un miroir."
+  },
+  "method": {
+    "title": "Comment Outlook.com se connecte : XOAUTH2, et rien d'autre",
+    "body": "Outlook.com et les boîtes professionnelles Microsoft 365 sont deux services différents qui aboutissent au même serveur IMAP, et la différence apparaît dès le premier échange. Connectez-vous à <code>outlook.office365.com</code> sur le port 993 avec une adresse professionnelle : la ligne de capacités affiche encore <code>AUTH=PLAIN</code> à côté de <code>AUTH=XOAUTH2</code>, annonce périmée d'un mécanisme que le service refuse. Connectez-vous avec un compte personnel : <code>AUTH=PLAIN</code> n'y figure plus du tout. Le service grand public a cessé de proposer l'authentification par mot de passe au lieu de simplement la refuser, ce qui donne un échec plus net et plus déroutant, car les clients qui s'attendent à envoyer un mot de passe reçoivent un refus au niveau du protocole au lieu d'une erreur de connexion. Le SMTP des comptes personnels est <code>smtp-mail.outlook.com</code> sur le port 587 avec STARTTLS, et la même règle d'authentification s'applique. La bonne nouvelle, si l'on peut dire, c'est qu'il n'y a pas d'administrateur de tenant pour un compte personnel : aucune politique de consentement ne vous bloque, puisqu'il n'y a rien à consentir."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Une adresse e-mail, sans carte bancaire. Une boîte connectée est gratuite, pour toujours. Les deux étapes suivantes déterminent de quelle boîte il s'agira, car ce ne sera pas celle d'Outlook.com."
+    },
+    {
+      "h": "Choisissez une boîte qui accepte encore un mot de passe en IMAP",
+      "p": "Votre propre domaine chez Fastmail ou Migadu, un compte Gmail personnel, une adresse de projet chez n'importe quel hébergeur classique. C'est ce compte que mcpemails connecte, et c'est là que votre agent lit, rédige, répond, planifie et classe."
+    },
+    {
+      "h": "Activez le transfert dans Outlook.com si vous voulez un miroir",
+      "p": "Dans Outlook.com sur le web, ouvrez Settings, allez dans Mail puis Forwarding (transfert), et activez le transfert vers l'adresse que vous venez de connecter. Gardez l'option qui conserve une copie des messages transférés, pour que votre boîte Outlook.com reste complète. Le nouveau courrier arrive alors aux deux endroits, et l'agent travaille sur la copie."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte connectée."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Outlook.com et Microsoft 365 partagent un serveur, pas une ligne de capacités",
+      "p": "Les deux services pointent vers <code>outlook.office365.com</code> pour l'IMAP, ce qui les fait paraître interchangeables dans tous les tableaux de paramètres du web. Ils ne le sont pas. Le côté professionnel annonce <code>AUTH=PLAIN</code> puis le refuse. Le côté personnel ne l'annonce pas du tout. Aucun des deux n'accepte de mot de passe, mais ils échouent différemment, si bien qu'un article d'aide écrit pour l'un posera un mauvais diagnostic sur l'autre. Les serveurs SMTP diffèrent aussi : les comptes personnels utilisent <code>smtp-mail.outlook.com</code>."
+    },
+    {
+      "h": "Un mot de passe d'application est un identifiant d'authentification de base : il n'a rien à quoi se connecter",
+      "p": "Microsoft permet encore de générer des mots de passe d'application sur un compte personnel pour des usages hérités, comme une ancienne version d'Outlook pour ordinateur ou une console Xbox, ce qui explique que tant de guides conseillent encore d'en créer un pour l'IMAP. Cela ne sert à rien. Un mot de passe d'application reste un mot de passe, et l'authentification par mot de passe est précisément ce que le service IMAP ne propose plus. En générer un nouveau et le voir échouer à nouveau est l'heure perdue la plus courante chez ce fournisseur."
+    },
+    {
+      "h": "Les adresses hotmail.com, live.com et msn.com relèvent du même service",
+      "p": "Le service de messagerie grand public derrière tous ces domaines est un seul système, avec un seul jeu de points d'accès et une seule politique d'authentification. Une vieille adresse hotmail.com qui fonctionne dans un logiciel de messagerie depuis quinze ans est soumise au même changement qu'une adresse outlook.com créée hier, et dès que son client tente de se réauthentifier, elle cesse de fonctionner."
+    },
+    {
+      "h": "Le service IMAP n'annonce pas SPECIAL-USE",
+      "p": "Les comptes Microsoft personnels prennent en charge MOVE, UIDPLUS et IDLE, mais un client ne peut pas demander au serveur quel dossier est Junk ou Sent et doit se fier au nom. Outlook.com appelle son dossier de spam Junk Email plutôt que Junk, et les comptes localisés utilisent des noms traduits : un outil qui cherche des noms de dossiers anglais littéraux ne trouve silencieusement rien sur quoi agir."
+    }
+  ],
+  "limits": [
+    "Le transfert vous donne une copie, pas la boîte. Les réponses envoyées par votre agent partent de l'autre adresse, et rien de ce qu'il classe ou marque n'est répercuté dans Outlook.com.",
+    "Cette page décrit le service de compte Microsoft grand public. Si votre adresse dépend en réalité d'un tenant professionnel ou scolaire, les règles de consentement professionnelles s'ajoutent à tout ce qui précède, et votre administrateur fait partie de la réponse."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec Outlook.com ?",
+      "a": "Pas via mcpemails. Outlook.com n'accepte qu'OAuth 2.0 en IMAP, et nous ne proposons pas de connexion OAuth Microsoft : il est donc impossible de connecter cette boîte ici. La solution qui fonctionne aujourd'hui consiste à connecter une autre boîte qui accepte une connexion IMAP classique et à y transférer votre courrier Outlook.com."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP d'Outlook.com ?",
+      "a": "IMAP : outlook.office365.com sur le port 993 en TLS implicite. SMTP : smtp-mail.outlook.com sur le port 587 avec STARTTLS. Les deux ont été confirmés par une connexion TLS réelle. Ces valeurs sont correctes mais ne suffisent plus à elles seules, car le service IMAP n'authentifie qu'avec un jeton d'accès OAuth 2.0."
+    },
+    {
+      "q": "Pourquoi mon mot de passe Outlook.com est-il refusé ?",
+      "a": "Il n'est pas tant refusé que jamais proposé. Depuis le 16 septembre 2024, Microsoft ne prend plus en charge l'authentification de base pour les comptes personnels se connectant depuis des applications non Microsoft, et le service IMAP n'annonce plus que XOAUTH2. Un client qui tente d'envoyer un mot de passe n'a aucun mécanisme pour le transmettre."
+    },
+    {
+      "q": "Puis-je utiliser un mot de passe d'application pour l'IMAP d'Outlook.com ?",
+      "a": "Non. Les mots de passe d'application existent encore sur les comptes Microsoft personnels pour certaines applications héritées, mais ce sont des identifiants d'authentification de base, et le service de messagerie n'accepte plus cette forme d'authentification. En créer un ne changera rien au résultat, quel que soit le nombre d'anciens tutoriels qui le présentent comme la solution."
+    },
+    {
+      "q": "Est-ce la même situation qu'avec Microsoft 365 professionnel ?",
+      "a": "Le résultat est le même, la cause non. Un compte personnel n'a ni administrateur de tenant ni politique de consentement qui fasse obstacle ; c'est uniquement que l'authentification par mot de passe a disparu. Une boîte professionnelle subit la même suppression de l'authentification, plus une exigence de consentement : un administrateur doit approuver les autorisations de messagerie qu'une application demande."
+    },
+    {
+      "q": "Mes e-mails sont-ils stockés sur vos serveurs ?",
+      "a": "Non. Pour les boîtes que mcpemails connecte, les messages sont récupérés en direct en IMAP à chaque requête et transmis à votre client IA, avec des identifiants chiffrés au repos et sans conservation du corps des messages. Nous ne détenons aucun identifiant Outlook.com, puisqu'aucune connexion Outlook.com n'est possible."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez à votre IA une boîte à laquelle elle peut se connecter",
+    "sub": "Outlook.com reste où il est. Connectez une boîte IMAP pour le travail automatisé, gratuite pour toujours."
+  }
+}

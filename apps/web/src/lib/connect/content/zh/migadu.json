@@ -1,21 +1,33 @@
 {
+  "_sources": [
+    "https://admin.migadu.com/mail/config-v1.1.xml",
+    "https://migadu.com/guides/identities/",
+    "https://migadu.com/api/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://migadu.com/guides/identities/",
+    "usernameForm": "你自有域名下的完整地址，例如 you@yourdomain.com。Migadu 的自动配置文件在 IMAP 和 SMTP 中都以完整地址作为用户名。",
+    "status": "active"
+  },
   "meta": {
-    "title": "将 Migadu 连接到 Claude（及任意 AI）",
-    "description": "用邮箱密码通过 IMAP 将 Migadu 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。让 AI 读取、发送、定时并整理你的邮件，1 个收件箱永久免费。"
+    "title": "将 Migadu 连接到 Claude、Cursor 与 MCP 客户端",
+    "description": "通过 IMAP（imap.migadu.com:993）将 Migadu 连接到 Claude、Cursor 及任意 MCP 客户端，使用管理后台中为邮箱单独设置的密码，而不是账户登录密码。"
   },
   "hero": {
     "eyebrow": "Migadu + AI",
     "titleLine1": "将 Migadu 连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
-    "lead": "几分钟即可为你的 AI 代理接入一个真正的 Migadu 收件箱。用 IMAP 和邮箱密码即可读取、搜索、发送、回复、定时与整理邮件，同一个邮箱可在所有 MCP 客户端中使用，而不止一个。",
+    "lead": "几分钟即可为你的 AI 代理接入一个真正的 Migadu 收件箱。用 IMAP 和邮箱密码即可读取、搜索、发送、回复、定时与整理邮件，同一个收件箱可在所有 MCP 客户端中使用，而不止一个。",
     "meta0": "1 个收件箱永久免费",
-    "meta1": "邮箱密码，无需 OAuth 配置",
+    "meta1": "使用邮箱密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行连接 Migadu。mcpemails 是一个托管 MCP 服务器，用邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱永久免费。"
+    "answer": "Claude 无法自行连接 Migadu。mcpemails 是一个托管 MCP 服务器，用你的邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱免费。"
   },
   "method": {
     "title": "Migadu 如何连接：IMAP 与邮箱密码",
-    "body": "Migadu 通过 IMAP/SMTP 连接，使用<b>邮箱密码</b>，而不是 Migadu 管理账户的密码。在 Migadu 管理后台的 Mailboxes 中设置或重置它，再连同你的地址粘贴到 mcpemails。无论你用什么域名，所有 Migadu 邮箱都使用同样两个服务器地址，无需查找。"
+    "body": "Migadu 通过 IMAP/SMTP 使用<b>邮箱密码</b>连接，它并不是你 Migadu 管理账户的密码。在 Migadu 管理后台的 Mailboxes（邮箱）中设置或重置该密码，然后连同地址一起粘贴到 mcpemails。无论你的域名是什么，所有 Migadu 邮箱都使用同样两台服务器，无需额外查询。"
   },
   "setup": [
     {
@@ -24,7 +36,7 @@
     },
     {
       "h": "在 Migadu 中设置邮箱密码",
-      "p": "在 Migadu 管理后台打开 Mailboxes，选中邮箱并设置密码。邮件客户端用的是这个密码，管理账户的登录密码无效。"
+      "p": "在 Migadu 管理后台打开 Mailboxes，选择该邮箱并设置密码。邮件客户端使用该密码认证，管理后台的登录密码无效。"
     },
     {
       "h": "粘贴到 mcpemails",
@@ -33,6 +45,55 @@
     {
       "h": "将 MCP URL 粘贴到你的 AI",
       "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "邮箱密码与 Migadu 账户密码是两套不同的凭据",
+      "p": "你的 Migadu 账户，也就是在 admin.migadu.com 登录的那个，用于管理域名、邮箱、转发和账单，并不用于邮件认证。每个邮箱都有自己的密码，在管理后台的 <b>Mailboxes</b> 中对该邮箱单独设置，这也是 <code>imap.migadu.com</code> 唯一接受的凭据。由于两种登录名看起来都是你自有域名下的邮箱地址，很容易混淆。如果客户端被拒绝，请在管理后台打开该邮箱并设置一个新密码，而不是再次输入账户密码。"
+    },
+    {
+      "h": "别名没有密码，因此无法以别名登录",
+      "p": "Migadu 区分邮箱和别名：邮箱存放邮件并拥有凭据，别名只负责转发。别名没有可用于认证的东西，因此让客户端指向别名地址，无论输入什么密码都会失败。Migadu 的解决办法是<b>身份（identities）</b>：在管理后台打开邮箱，为该地址添加一个身份，并为它设置独立密码。身份可以限定只用于特定服务，例如 POP、IMAP 和 ManageSieve，这使它成为 Migadu 中最接近应用专用密码的东西。给 AI 代理一个仅限 IMAP 的身份，而不是邮箱密码本身，配置更整洁，而且可以单独撤销。"
+    },
+    {
+      "h": "Migadu 的 IMAP 服务器是位于代理之后的 IMAP4rev2，声明的能力少得出奇",
+      "p": "问候语是 <code>IMAP4rev2 IMAP4rev1 SASL-IR LITERAL- AUTH=PLAIN</code>，后接 <code>Proxy Ready</code>，这份简短的列表就是全部。Migadu 只提供 <b>AUTH=PLAIN</b>，没有 <code>AUTH=LOGIN</code>，因此写死使用 LOGIN 机制的客户端库（针对 Exchange 编写的工具中很常见）会在认证步骤失败，而不会返回有用的错误信息。SMTP 端同时接受 PLAIN 和 LOGIN，所以同一账户的两半在同一客户端中可能表现不同。Migadu 也是极少数声明支持 IMAP4rev2 的服务商之一，这比多数客户端库预期的要新。SASL-IR 可用，因此一步认证可以正常工作。"
+    },
+    {
+      "h": "没有 MOVE、UIDPLUS、SPECIAL-USE，也没有 IDLE",
+      "p": "Migadu 声明的能力集中缺少了大多数服务商都支持的四个扩展。没有 <b>MOVE</b>，移动邮件要通过复制、更新标记再删除来完成，而不是一条原子命令。没有 <b>UIDPLUS</b>，服务器不会报告复制后邮件的新标识符，只能在目标文件夹中搜索找到它。没有 <b>SPECIAL-USE</b>，已发送、草稿、已删除和归档文件夹只能按名称而非按用途匹配，因此文件夹被重命名过的邮箱需要明确指定文件夹名。没有 <b>IDLE</b>，就完全没有推送通道。这些都不会影响连接正常工作，而且 mcpemails 是按需读取，并不依赖推送，但它能解释你在其他服务商那里看不到的一些行为。"
+    }
+  ],
+  "limits": [
+    "由于服务器未声明 MOVE，移动操作不是原子的。如果连接中途断开，一封邮件可能会短暂同时存在于两个文件夹中。",
+    "文件夹按名称而非按用途匹配，因此文件夹被重命名或使用非英文名称的邮箱，可能需要明确指定目标文件夹。",
+    "mcpemails 连接的是邮箱。域名、转发、改写规则以及 Migadu 自身的收发配额仍在 Migadu 管理后台中管理。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Migadu 吗？",
+      "a": "不能单独使用。Claude 没有内置的 Migadu 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到你的 Migadu 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件。由于连接使用的是标准 IMAP，同一个邮箱在 Cursor、ChatGPT 和其他 MCP 客户端中同样可用。"
+    },
+    {
+      "q": "Migadu 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.migadu.com，端口 993，隐式 TLS；SMTP 为 smtp.migadu.com，端口 465，同样是隐式 TLS。Migadu 自己的自动配置文件规定两者都以完整邮箱地址作为用户名。无论你的地址使用哪个域名，所有 Migadu 邮箱都使用这两台服务器，两者均已通过实时 TLS 连接确认。"
+    },
+    {
+      "q": "为什么我的 Migadu 密码被拒绝？",
+      "a": "通常是因为你输入的是 Migadu 账户密码，而不是邮箱密码。两者是不同的凭据，而且登录名看起来都是邮箱地址，所以这个错误很常见。另一个常见原因是连接的是别名而不是邮箱：别名没有自己的密码，无法登录。请在管理后台设置邮箱密码并使用它。"
+    },
+    {
+      "q": "Migadu 有应用专用密码吗？",
+      "a": "没有这个名称，但身份（identities）起到同样的作用。在管理后台打开邮箱，为它创建一个带独立密码的身份，并将该身份限定为 IMAP。客户端以该身份认证，之后你可以随时撤销它，而无需更改邮箱密码，也不会影响使用该邮箱的其他任何东西。"
+    },
+    {
+      "q": "我能连接 Migadu 别名或用别名发信吗？",
+      "a": "不能以别名登录，因为它没有凭据。要用别名地址发信，可以为它创建一个带独立密码的身份，或者在邮箱上启用通配发件人选项，允许用邮箱凭据在 From 头中使用该别名发信。"
+    },
+    {
+      "q": "我的 Migadu 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 Migadu 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
     }
   ],
   "ctaBand": {

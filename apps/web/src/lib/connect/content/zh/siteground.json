@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.siteground.com/kb/how_to_configure_my_mail_client",
+    "https://www.siteground.com/kb/get-pop-warning-using-ssltls-email-client",
+    "https://www.siteground.com/blog/cpanel-to-site-tools-status-report"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://www.siteground.com/kb/how_to_configure_my_mail_client",
+    "usernameForm": "收信和发信都使用你的完整邮箱地址，例如 username@yourdomain.com。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "SiteGround 邮箱接入 Claude：Site Tools 的 IMAP 设置",
+    "description": "SiteGround 已用 Site Tools 取代 cPanel。在 Mail Configuration 中获取真实的 IMAP 主机，再通过 993 端口将邮箱连接到 Claude。一个收件箱永久免费。"
+  },
+  "hero": {
+    "eyebrow": "SiteGround + AI",
+    "titleLine1": "将 SiteGround 邮箱连接到 Claude，",
+    "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 SiteGround 邮箱。使用 Site Tools 为你的账户列出的设置，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行连接 SiteGround 邮箱。mcpemails 是一个托管 MCP 服务器，通过 993 端口的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。SiteGround 没有共享的邮件主机名：你的主机是 mail.yourdomain.com，或形如 secureNNN.sgcpanel.com 的安全服务器名称，Site Tools 会在 Email、Accounts、Mail Configuration 中列出正确的那个。认证使用为邮箱设置的密码，绝不是你的 SiteGround Client Area 登录密码。一个收件箱免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "Site Tools 中的邮箱密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "SiteGround 邮箱如何连接：Site Tools，IMAP 993",
+    "body": "每个 SiteGround 套餐都包含你域名下不限数量的地址，它们通过 993 端口 TLS 提供 IMAP，通过 465 端口提供 SMTP。让人栽跟头的是面板。SiteGround 已停用 cPanel，改用自家的 <b>Site Tools</b>，所以 cPanel 教程中的任何内容都对应不上你眼前的界面。设置的位置依次是 <b>Site Tools</b>、<b>Email</b>、<b>Accounts</b>、账户那一行的三点菜单、<b>Mail Configuration</b>，最后是 <b>Manual Settings</b> 标签。那里会出现两个主机名。<code>mail.yourdomain.com</code> 是通用形式，而形如 <code>secureNNN.sgcpanel.com</code> 的安全服务器名称才与 SiteGround 的证书匹配。收信和发信的用户名都是你的完整邮箱地址。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "在 Site Tools 中打开 Mail Configuration",
+      "p": "在 SiteGround Client Area 中打开该网站，然后进入 <b>Site Tools</b>。前往 <b>Email</b>，再进入 <b>Accounts</b>，在 Manage Email Accounts 下找到该地址，打开其所在行的三点菜单并选择 <b>Mail Configuration</b>。切换到 <b>Manual Settings</b> 标签。确切的主机名和端口列在这个标签中，而不是最先打开的自动配置标签。"
+    },
+    {
+      "h": "使用安全服务器名称，而不只是 mail.yourdomain.com",
+      "p": "记下为你账户显示的 <code>secureNNN.sgcpanel.com</code> 值，并将其同时用于 IMAP 和 SMTP。如果你没有邮箱密码，可在同一个 Accounts 页面中设置；它不是你的 Client Area 密码。然后在 mcpemails 中输入地址、主机和密码。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "SiteGround 上没有 cPanel，所以大多数 SiteGround 邮箱指南都已失效",
+      "p": "SiteGround 已抛弃 cPanel，把所有账户迁移到自家的 Site Tools。搜索结果中仍充斥着一开头就让你打开 cPanel、点击 Email Accounts 的 SiteGround 教程。这些界面在任何当前的 SiteGround 套餐上都不存在，也无法开启。如果一篇指南提到 cPanel，它就早于这次迁移，第一步之后的每一步都是错的。Site Tools 是唯一的面板，设置就在 Mail Configuration 中。"
+    },
+    {
+      "h": "安全服务器编号来自你网站所在的 SiteGround 服务器",
+      "p": "SiteGround 的邮件证书覆盖的是 <code>sgcpanel.com</code>，而不是客户的域名，所以严格的 TLS 客户端会在 993 端口上拒绝 <code>mail.yourdomain.com</code>。可用的主机是 <code>secureNNN.sgcpanel.com</code>，其中 NNN 是托管该账户的 SiteGround 服务器编号：位于 <code>siteground164.com</code> 上的网站使用 <code>secure164.sgcpanel.com</code>。这是按账户区分的值，如果 SiteGround 迁移了你的网站，它也会改变，Mail Configuration 是读取它的权威位置。"
+    },
+    {
+      "h": "Mail Configuration 默认打开自动设置标签，把你要的值藏了起来",
+      "p": "SiteGround 在该页面上首先提供的是适用于 Outlook、Apple Mail 和 Thunderbird 的可下载配置文件。对于桌面客户端这确实方便，但对于需要原始主机名的东西（IMAP 集成正是如此）毫无用处。纯文本的值位于旁边的 <b>Manual Settings</b> 标签中。人们以为 SiteGround 没有公布设置，其实只差一个标签。"
+    }
+  ],
+  "limits": [
+    "SiteGround 按套餐设置每小时外发邮件限额。自动发送短时间内集中爆发可能会被限流，表现为邮件被拒绝或延迟，而不是连接失败。",
+    "mcpemails 只连接邮箱。过滤器、转发器、自动回复和垃圾邮件防护仍在 Site Tools 中管理。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 SiteGround 邮箱吗？",
+      "a": "不能直接使用。Claude 没有 SiteGround 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到你的 SiteGround 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，所用的凭据与你给 Apple Mail 或 Thunderbird 的相同。"
+    },
+    {
+      "q": "SiteGround 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 993 端口，SMTP 为 465 端口，两者都使用 SSL。主机名要么是 mail.yourdomain.com，要么是你账户对应的、形如 secureNNN.sgcpanel.com 的安全服务器名称（后者的证书才能通过校验）。两者都以完整邮箱地址作为用户名。995 端口的 POP3 也存在，但会从服务器上删除邮件。"
+    },
+    {
+      "q": "SiteGround Site Tools 中的邮箱设置在哪里？",
+      "a": "打开 Site Tools，然后是 Email，再到 Accounts。点击你地址所在行的三点菜单，选择 Mail Configuration，然后切换到 Manual Settings 标签。SiteGround 没有 cPanel，所以那些让你在 cPanel 的 Email Accounts 中查找的指南，描述的是你的账户并没有的面板。"
+    },
+    {
+      "q": "为什么 SiteGround 邮箱会出现 SSL 警告？",
+      "a": "因为 SiteGround 的邮件证书是为 sgcpanel.com 而不是你的域名签发的，所以 mail.yourdomain.com 在 TLS 上无法通过名称校验。把主机名换成你账户对应的安全服务器名称（形如 secure164.sgcpanel.com），警告就会消失，无需添加任何例外。"
+    },
+    {
+      "q": "我的 SiteGround 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 SiteGround 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 SiteGround 收件箱",
+    "sub": "几分钟即可连接 SiteGround 邮箱。一个收件箱永久免费，无需信用卡。"
+  }
+}

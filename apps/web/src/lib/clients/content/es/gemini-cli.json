@@ -1,0 +1,93 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/app/.well-known/oauth-protected-resource/route.ts",
+    "https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md"
+  ],
+  "meta": {
+    "title": "Conecta el correo a Gemini CLI: MCP con httpUrl",
+    "description": "Añade una bandeja real a Gemini CLI. Una entrada en settings.json con httpUrl; después la CLI descubre OAuth y abre el flujo en el navegador. Una bandeja gratis."
+  },
+  "hero": {
+    "eyebrow": "Gemini CLI + correo",
+    "titleLine1": "Conecta tu bandeja a Gemini CLI",
+    "titleLine2": "con una sola entrada de configuración",
+    "lead": "Dale a Gemini CLI un buzón real. Lee, busca, envía, responde, reenvía, programa y organiza correo desde la terminal, en todas las bandejas que tengas conectadas.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "OAuth descubierto automáticamente",
+    "meta2": "Correo obtenido en vivo, nunca almacenado",
+    "answer": "Añade una entrada en mcpServers de ~/.gemini/settings.json usando el campo httpUrl con https://mcpemails.com/api/mcp. En la primera conexión, la CLI descubre los metadatos OAuth y abre por sí sola el flujo en el navegador."
+  },
+  "method": {
+    "title": "Cómo se conecta Gemini CLI: OAuth, sin clave de API",
+    "body": "Gemini CLI ejecuta el flujo OAuth estándar de MCP contra este servidor. Se registra solo mediante <b>registro dinámico de clientes RFC 7591</b>, así que no hay ningún client ID que crear, y se autoriza con <b>código de autorización más PKCE</b> usando S256. Nunca se transmite un secreto de cliente, y el token solo lleva los permisos que apruebas en nuestra pantalla de consentimiento. El token de acceso que recibe dura una hora y se renueva solo; aparece en Dashboard, API Keys como <code>OAuth:</code> seguido del nombre del cliente, y ahí es donde revocas la conexión."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis y conecta un buzón",
+      "p": "Regístrate en mcpemails.com, sin tarjeta, y luego ve a Dashboard, Inboxes, Connect Inbox. Gmail se conecta con el inicio de sesión de Google en un clic; iCloud, Fastmail, Yahoo, Zoho y Yandex requieren una contraseña de aplicación; cualquier otro se conecta por IMAP y SMTP estándar. El plan gratuito incluye una bandeja, para siempre."
+    },
+    {
+      "h": "Abre tu settings.json",
+      "p": "Edita <code>~/.gemini/settings.json</code> para todos los proyectos, o <code>.gemini/settings.json</code> dentro de un proyecto concreto."
+    },
+    {
+      "h": "Añade el servidor",
+      "p": "Añade la entrada de abajo en <code>mcpServers</code>. Aquí, el campo para un servidor Streamable HTTP es <code>httpUrl</code>."
+    },
+    {
+      "h": "Conecta",
+      "p": "En la primera conexión, la CLI descubre OAuth automáticamente a partir de los metadatos del servidor y abre el flujo en el navegador. Aprueba los permisos que quieres que tenga la CLI."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "httpUrl es un campo distinto de url, y la diferencia es el transporte",
+      "p": "En la configuración de Gemini CLI, <code>httpUrl</code> significa un servidor Streamable HTTP, que es lo que es este. Otras claves del mismo objeto seleccionan otros transportes. Un fragmento copiado de una guía de Cursor, que usa <code>url</code>, no te dará aquí una conexión Streamable HTTP que funcione."
+    },
+    {
+      "h": "El descubrimiento es lo que lo hace sin configuración, y empieza con un 401",
+      "p": "No hace falta decirle a la CLI dónde autenticarse. Una llamada sin autenticar recibe un 401 cuyo encabezado <code>WWW-Authenticate</code> apunta a nuestros metadatos de recurso protegido, que indican el servidor de autorización, cuyos metadatos indican los endpoints de registro, autorización y token. Esa cadena es la razón de que no haya client ID que crear ni nada que pegar aparte de la URL."
+    },
+    {
+      "h": "Una CLI en una máquina compartida o sin interfaz gráfica pide la vía de la clave",
+      "p": "El flujo en el navegador necesita un navegador. En un agente de compilación o una máquina compartida, la configuración honesta es una clave de API bearer limitada exactamente a lo que debe hacer esa automatización, guardada en el entorno y no en un archivo de configuración confirmado en el repo."
+    }
+  ],
+  "limits": [
+    "Las solicitudes están limitadas a 100 por minuto, 1.000 por hora y 10.000 al día por clave, además del tope de acciones facturables de tu plan.",
+    "El servidor funciona solo por petición y respuesta. No hay webhooks ni eventos iniciados por el servidor, así que el correo nuevo nunca despierta a tu agente por sí solo. Para reaccionar al correo entrante, consulta periódicamente según un horario.",
+    "El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, así que un token revocado o un cambio de contraseña del buzón corta el acceso de inmediato."
+  ],
+  "faq": [
+    {
+      "q": "¿Cómo conecto el correo a Gemini CLI?",
+      "a": "Añade una entrada en mcpServers de ~/.gemini/settings.json con httpUrl igual a https://mcpemails.com/api/mcp. En la primera conexión, la CLI descubre OAuth a partir de los metadatos del servidor y abre el flujo en el navegador. A partir de ahí tiene herramientas para leer, buscar, enviar, responder, reenviar, organizar y programar correo."
+    },
+    {
+      "q": "¿Uso url o httpUrl?",
+      "a": "httpUrl. En la configuración de Gemini CLI esa clave selecciona el transporte Streamable HTTP, que es el que habla este servidor. Copiar una entrada url de otro cliente es el motivo habitual de que el servidor aparezca en la lista y no ofrezca ninguna herramienta."
+    },
+    {
+      "q": "¿Es lo mismo que el servidor MCP de Gmail que publica Google?",
+      "a": "No. Google publica un servidor MCP de Workspace que cubre Gmail junto con sus otros servicios, y para Gmail solo, en un flujo de trabajo exclusivamente de Google, ese es el camino más corto. mcpemails existe para el caso en que no todos los buzones son de Google, y en que la misma URL tiene que funcionar también en Claude, Cursor y ChatGPT."
+    },
+    {
+      "q": "¿Qué buzones puede alcanzar Gemini CLI de esta forma?",
+      "a": "Gmail con el inicio de sesión de Google; iCloud, Fastmail, Yahoo, Zoho y Yandex con una contraseña de aplicación; y cualquier otro buzón que hable IMAP y SMTP en los puertos estándar. El cliente los ve todos a través de la misma conexión: tu agente llama primero a inbox_list para descubrir cada buzón conectado y su id, así que no hay UUID que pegar en ningún sitio."
+    },
+    {
+      "q": "¿Puede Gemini CLI enviar correo sin que yo lo vea?",
+      "a": "Solo si tú lo permites. El envío depende del permiso send:email, así que una clave o un token sin ese permiso no puede enviar nada. Además, el propietario de una bandeja puede exigir aprobación humana en el panel, que retiene cada envío, respuesta, reenvío, envío de borrador y envío programado hasta que una persona lo libera."
+    },
+    {
+      "q": "¿Se guarda mi correo en los servidores de mcpemails?",
+      "a": "No. Cada mensaje se obtiene en vivo de tu proveedor para la solicitud que lo pidió y se entrega directamente a tu cliente. Solo se guarda el token OAuth o la contraseña de aplicación cifrados, para que las llamadas futuras puedan autenticarse. Eliminar la bandeja en el panel, o revocar el acceso en tu proveedor, corta la conexión al instante."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a Gemini CLI una bandeja real",
+    "sub": "Una entrada de configuración, un inicio de sesión. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

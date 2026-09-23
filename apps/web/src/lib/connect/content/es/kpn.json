@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://www.kpn.com/service/ugs/instellen-e-mail-laptop-pc",
+    "https://community.kpn.com/e-mail-en-cloud-10/kpn-e-mail-wordt-verbeterd-wat-betekent-dit-voor-jouw-e-mailadres-648121",
+    "https://community.kpn.com/e-mail-en-cloud-10/vanaf-10-juni-2026-stopt-het-aanmaken-van-een-standaard-kpn-e-mailadres-648499"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Tu contraseña de correo de KPN",
+    "helpUrl": "https://www.kpn.com/service/ugs/instellen-e-mail-laptop-pc",
+    "usernameForm": "Tu dirección completa, incluido el dominio: naam@kpnmail.nl, o un dominio heredado de KPN como naam@planet.nl, naam@hetnet.nl o naam@xs4all.nl.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Ajustes IMAP de KPN Mail y acceso MCP para Claude",
+    "description": "Conecta un buzón de KPN, Planet, Het Net o XS4ALL a Claude y clientes MCP en imap.kpnmail.nl:993. Todos los dominios de KPN comparten servidor y contraseña."
+  },
+  "hero": {
+    "eyebrow": "KPN Mail + IA",
+    "titleLine1": "Conecta tu buzón de KPN",
+    "titleLine2": "a Claude, Cursor y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de KPN. Lee, busca, envía, responde, programa y organiza correo por IMAP, termine tu dirección en el dominio de KPN que termine.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de KPN. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.kpnmail.nl en el puerto 993, autenticándose con tu dirección completa y tu contraseña de correo de KPN, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. En KPN no hay contraseña de aplicación ni interruptor de acceso de clientes, y la misma pareja de servidores sirve a todos los dominios de correo de KPN, incluidas las direcciones heredadas planet.nl, hetnet.nl y xs4all.nl. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Tu contraseña de correo de KPN, sin contraseña de aplicación",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta KPN: una plataforma detrás de una treintena de dominios",
+    "body": "KPN sirve IMAP en <code>imap.kpnmail.nl</code> en el puerto 993 con TLS implícito. Para el correo saliente, la página de configuración de KPN documenta <code>smtp.kpnmail.nl</code> en el puerto 587 con TLS; el mismo servidor responde también en el puerto 465 con TLS implícito, que es lo que rellena mcpemails porque una única conexión cifrada desde el principio es más predecible de mantener abierta desde un servidor. La autenticación usa tu contraseña de correo de KPN con la dirección <b>completa</b> como nombre de usuario, y la página de KPN lo dice así de claro: <b>Gebruikersnaam: KPN e-mailadres</b>, <b>Wachtwoord: KPN wachtwoord</b>. No hay ninguna contraseña específica de aplicación que generar. Lo que conviene entender es el patrimonio que hay detrás de esos dos nombres de servidor: KPN absorbió Planet Internet, Het Net, XS4ALL y una larga lista de otros proveedores neerlandeses, y todos esos dominios de correo están ahora en la misma plataforma de KPN con los mismos ajustes."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
+    },
+    {
+      "h": "Confirma la contraseña de correo en email.kpn.com",
+      "p": "Inicia sesión en el webmail de KPN con la dirección que quieres conectar. Si la contraseña no funciona, restablécela ahí y no en MijnKPN: la credencial del buzón es la que comprueba el servidor IMAP. Usa la dirección exactamente como está escrita, incluido el dominio de KPN en el que termine."
+    },
+    {
+      "h": "Olvídate del dominio, usa los servidores kpnmail",
+      "p": "Una dirección <b>planet.nl</b>, <b>hetnet.nl</b> o <b>xs4all.nl</b> no tiene su propio servidor. Todos los dominios de correo de KPN se autentican contra <code>imap.kpnmail.nl</code> y <code>smtp.kpnmail.nl</code>. No hay nada por dominio que consultar, y configurar un cliente con un <code>imap.planet.nl</code> supuesto es la forma más común de quedarse atascado."
+    },
+    {
+      "h": "Pégala en mcpemails y luego pega la URL MCP en tu IA",
+      "p": "Elige IMAP / SMTP e introduce la dirección completa y la contraseña de correo. Los servidores y puertos de KPN ya vienen rellenados y se verificaron con una conexión TLS real. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "El servidor está activo, pero KPN pausó los buzones nuevos el 10 de junio de 2026",
+      "p": "Son dos hechos distintos y es importante no confundirlos. <code>imap.kpnmail.nl</code> responde hoy y los buzones existentes se conectan desde clientes de correo como siempre; la respuesta del propio personal de KPN es <b>je kunt e-mailclients blijven gebruiken zoals je gewend bent</b> (puedes seguir usando los clientes de correo como de costumbre). Lo que se detuvo es la emisión: desde el 10 de junio de 2026 ya no puedes crear una dirección de correo estándar de KPN ni una cuenta adicional, mientras todos los buzones se migran a una nueva plataforma. KPN describe la pausa como temporal (<b>deze situatie is tijdelijk</b>). Así que esta página conectará la dirección que ya tienes, pero no puede ayudarte a conseguir una nueva ahora mismo."
+    },
+    {
+      "h": "Una treintena de dominios heredados, un nombre de servidor y ninguno nuevo",
+      "p": "KPN sigue sirviendo correo en una larga lista de dominios que adquirió, entre ellos <b>planet.nl</b>, <b>hetnet.nl</b>, <b>xs4all.nl</b>, <b>demon.nl</b>, <b>tiscali.nl</b> y <b>worldonline.nl</b>. Todos se autentican contra <code>imap.kpnmail.nl</code>. Pero KPN deja claro que las direcciones nuevas solo se pueden crear en <b>@kpnmail.nl</b>: <b>andere domeinen zijn niet mogelijk</b> (no es posible con otros dominios). Y solo las direcciones que están realmente en uso se trasladan a la nueva plataforma de correo, así que una dirección heredada en la que nadie ha iniciado sesión es la que más riesgo corre."
+    },
+    {
+      "h": "El servidor es inusualmente básico: sin UIDPLUS, sin MOVE, sin SPECIAL-USE",
+      "p": "El banner IMAP de KPN ofrece <code>SASL-IR</code>, <code>IDLE</code> y <code>LITERAL+</code> y ahí se queda. Sin <code>MOVE</code>, archivar un mensaje se ejecuta como una copia, una actualización de marcas y un expunge en lugar de un único comando atómico. Sin <code>UIDPLUS</code>, el nuevo UID de la copia no se devuelve y hay que encontrarlo buscando en la carpeta de destino, lo que hace notablemente más lento el archivado en bloque. Sin <code>SPECIAL-USE</code>, Enviados, Borradores y Papelera se identifican por nombre, y un buzón de KPN en neerlandés suele llamarlos <b>Verzonden</b>, <b>Concepten</b> y <b>Prullenbak</b>."
+    },
+    {
+      "h": "SMTP solo ofrece el mecanismo LOGIN",
+      "p": "<code>smtp.kpnmail.nl</code> anuncia <code>AUTH LOGIN</code> y nada más, ni siquiera PLAIN. IMAP, en cambio, ofrece tanto PLAIN como LOGIN. Un cliente o una biblioteca programados para usar siempre SASL PLAIN en el envío leerán tu bandeja sin problema y luego fallarán en el primer envío, lo que parece un problema de permisos y no un desajuste de mecanismos. mcpemails negocia en cada tramo lo que el servidor ofrece realmente."
+    }
+  ],
+  "limits": [
+    "Los mensajes salientes están limitados a unos 50 MB de mensaje codificado, así que un adjunto grande reenviado por un agente puede rechazarse en el paso SMTP.",
+    "Como el servidor no admite MOVE, mover no es atómico. Si una conexión se corta a mitad de la operación, un mensaje puede existir un momento en las dos carpetas.",
+    "Mientras dure la migración de KPN no puedes crear una dirección de KPN nueva para dedicarla a un agente. Conecta una existente o usa un buzón de otro proveedor."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de KPN?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para KPN. Apuntar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de KPN?",
+      "a": "IMAP es imap.kpnmail.nl en el puerto 993 con SSL. Para el correo saliente, KPN documenta smtp.kpnmail.nl en el puerto 587 con TLS; el mismo servidor responde también en el 465 con TLS implícito, que es lo que usa mcpemails. El nombre de usuario es tu dirección de correo de KPN completa y la contraseña es tu contraseña de correo de KPN."
+    },
+    {
+      "q": "¿Usan servidores distintos las direcciones planet.nl, hetnet.nl y xs4all.nl?",
+      "a": "No. Todos los dominios de correo de KPN funcionan en la misma plataforma y usan imap.kpnmail.nl y smtp.kpnmail.nl. No hay ningún imap.planet.nl ni imap.xs4all.nl que buscar. Introduce la dirección exactamente como está escrita, con su propio dominio, como nombre de usuario, y usa los nombres de servidor de KPN."
+    },
+    {
+      "q": "¿Todavía puedo crear una dirección de correo de KPN nueva?",
+      "a": "Por ahora no. KPN dejó de crear direcciones de correo estándar de KPN y cuentas adicionales el 10 de junio de 2026 mientras migra todos los buzones a una nueva plataforma, y describe la pausa como temporal. Los buzones existentes siguen funcionando desde clientes de correo durante todo el proceso. Cuando se reanuden, las direcciones nuevas serán solo @kpnmail.nl."
+    },
+    {
+      "q": "¿Necesita KPN una contraseña de aplicación?",
+      "a": "No. KPN no emite contraseñas específicas de aplicación. Los clientes de correo se autentican con tu dirección de correo de KPN y tu contraseña de correo de KPN, la misma credencial que acepta el webmail en email.kpn.com. Si se rechaza, restablécela ahí antes de buscar en ningún otro sitio."
+    },
+    {
+      "q": "¿Se almacena mi correo de KPN en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de KPN por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de KPN",
+    "sub": "Conecta el correo de KPN, Planet, Het Net o XS4ALL en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

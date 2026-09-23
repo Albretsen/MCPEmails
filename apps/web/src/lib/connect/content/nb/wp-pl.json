@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://pomoc.wp.pl/jak-skonfigurowac-program-pocztowy",
+    "https://pomoc.wp.pl/aktywacja-dostepu-dla-programow-pocztowych",
+    "https://pomoc.wp.pl/wpkonto/hasla-do-aplikacji-zewnetrznej"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "WP-kontopassord, eller et e-postprogrampassord med totrinnsinnlogging",
+    "helpUrl": "https://pomoc.wp.pl/aktywacja-dostepu-dla-programow-pocztowych",
+    "usernameForm": "Hele adressen din, for eksempel name@wp.pl.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "WP.pl Poczta i Claude: slå på IMAP først",
+    "description": "Koble WP.pl Poczta til Claude og enhver MCP-klient via IMAP på imap.wp.pl:993. IMAP må først slås på i Opcje, og totrinnsinnlogging endrer passordet."
+  },
+  "hero": {
+    "eyebrow": "WP.pl Poczta + AI",
+    "titleLine1": "Koble WP.pl-postkassen din",
+    "titleLine2": "til Claude, Cursor, enhver MCP-klient",
+    "lead": "WP Poczta snakker IMAP når du slår det på. mcpemails kobler til postkassen, slik at AI-agenten din kan lese, søke, sende, svare og arkivere e-post fra alle MCP-klienter i stedet for én app.",
+    "answer": "Claude når ikke en WP.pl-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.wp.pl port 993 og logger inn med hele adressen din. To ting avgjør om innloggingen virker: IMAP må være slått på i webmailen under Opcje, på fanen IMAP/POP, og bruker du totrinnsinnlogging, avvises det vanlige passordet ditt, og du må opprette et e-postprogrampassord i stedet. Når det er på plass, kan Claude, Cursor eller enhver annen MCP-klient lese, søke, sende og organisere den e-posten, og én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Slå på IMAP i Opcje først",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler WP.pl seg til: slå på IMAP, og velg så riktig passord",
+    "body": "WP tilbyr IMAP på <code>imap.wp.pl</code> port 993 med SSL og innsending på <code>smtp.wp.pl</code> port 465, også med SSL, med krav om SMTP-autorisasjon. Brukernavnet er hele adressen. Før noe av det betyr noe, må klienttilgang slås på: logg inn i webmailen, åpne <b>Opcje</b>, gå til fanen <b>IMAP/POP</b> og slå på IMAP, som WPs egen hjelp beskriver som alternativet som både laster ned og sender meldinger. Hvilket passord du så bruker, avhenger av én kontoinnstilling. Med totrinnsinnlogging av autentiserer kontopassordet direkte. Med totrinnsinnlogging på sier WP at du ikke logger inn i e-postprogrammer med nettleserpassordet i det hele tatt: for hvert program som bruker IMAP eller POP, oppretter du et eget <b>e-postprogrampassord</b>. WPs hjelpesider nevner ingen abonnementskrav for noe av dette."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
+    },
+    {
+      "h": "Slå på IMAP under Opcje i WP Poczta",
+      "p": "Logg inn i WP-e-posten din i en nettleser, klikk <b>Opcje</b>, velg fanen <b>IMAP/POP</b> og slå på IMAP, alternativet WP beskriver som å laste ned og sende meldinger. POP er en egen bryter på samme skjerm, og den trenger du ikke. Til IMAP er på, kan ingen klient logge inn, og feilen ser ut som et feil passord."
+    },
+    {
+      "h": "Bestem hvilket passord tilkoblingen bruker",
+      "p": "Er totrinnsinnlogging av, bruker du det vanlige WP-kontopassordet. Er den på, åpner du kontosikkerhetsdelen, går til fanen <b>Two-step login</b>, finner delen for e-postprogrampassord, velger <b>Create password</b> og fyller inn programnavnet og enhetsnavnet WP ber om. Den genererte strengen vises én gang på skjermen. Opprett ett eget for hvert program du kobler til."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Skriv inn adressen og passordet i mcpemails under IMAP / SMTP, med WP-vertene forhåndsutfylt, lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT og autoriser."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Du kan ikke opprette et e-postprogrampassord med mindre totrinnsinnlogging er på",
+      "p": "Dette overrasker folk som vil ha en hemmelighet per program av sikkerhetshensyn. WPs hjelp er konkret: knappen i delen for e-postprogrampassord forblir inaktiv til totrinnsinnlogging er slått på med en appkode eller en sikkerhetsnøkkel. Det finnes altså ingen måte å gi en agent en avgrenset pålogging mens kontoen står på ett enkelt passord, og ingen måte å fortsette å bruke kontopassordet når totrinnsinnlogging er på. Det er én innstilling som snur begge oppførslene samtidig, og slår du av totrinnsinnlogging igjen, ugyldiggjøres programpassordene du laget."
+    },
+    {
+      "h": "IMAP er av til du slår det på, og feilen sier det ikke",
+      "p": "WP holder klienttilgang bak fanen IMAP/POP i Opcje, og en postkasse som bare har vært brukt i nettleseren, har den avslått. Mens den er avslått, avviser serveren riktige påloggingsdetaljer, noe som sender folk rundt og rundt med å tilbakestille et passord som aldri var problemet. Feiler innloggingen på første forsøk, sjekk dette før noe annet."
+    },
+    {
+      "h": "Bare AUTH=PLAIN, og ingen SASL-IR",
+      "p": "<code>imap.wp.pl</code> annonserer <code>AUTH=PLAIN</code> og annonserer ikke SASL-IR, så den avviser autentisering i ett steg, der påloggingsdetaljene sendes med AUTHENTICATE-kommandoen, og den tilbyr ingenting til klienter som er hardkodet til LOGIN-mekanismen. Begge feilene kommer tilbake som en naken avvisning som ser ut som feil påloggingsdetaljer. mcpemails prøver utvekslingen i to steg på nytt, og derfor kobler en WP-postkasse til her etter å ha feilet i andre IMAP-verktøy."
+    },
+    {
+      "h": "MOVE og UIDPLUS finnes, men SPECIAL-USE gjør ikke",
+      "p": "WPs server er mer kapabel enn de fleste i denne kategorien: den implementerer MOVE, så arkivering av en melding er én atomisk kommando, UIDPLUS, så den nye ID-en kommer tilbake, og IDLE, så ny e-post skyves i stedet for å polles. Det den ikke annonserer, er SPECIAL-USE, så ingenting forteller en klient hvilken mappe som er Sent, Drafts eller Trash. I en polsk postkasse har de sine polske navn, så finner ikke en agent en mappe, gi den navnet slik det vises i webmail."
+    }
+  ],
+  "limits": [
+    "Mapperoller matches etter navn i stedet for å bli annonsert av serveren, fordi SPECIAL-USE ikke annonseres.",
+    "En pålogging per program finnes bare hvis du slår på totrinnsinnlogging. Uten den holder tilkoblingen hovedpassordet til kontoen din."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med WP.pl-e-post?",
+      "a": "Ikke direkte. Claude har ingen innebygd WP-kobling. Kobler du en MCP-server som mcpemails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere wp.pl-e-posten din, og samme tilkobling fungerer i Cursor, ChatGPT og andre MCP-klienter. IMAP må først være slått på for postkassen."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for WP.pl?",
+      "a": "IMAP er imap.wp.pl på port 993 med SSL, og SMTP er smtp.wp.pl på port 465, også med SSL, med krav om autorisasjon. WP dokumenterer pop3.wp.pl på 995 som POP-alternativet. Begge vertene som brukes her, ble verifisert via en direkte TLS-tilkobling. Brukernavnet er hele e-postadressen din."
+    },
+    {
+      "q": "Hvordan slår jeg på IMAP i WP Poczta?",
+      "a": "Logg inn i webmailen, klikk Opcje, åpne fanen IMAP/POP og slå på IMAP, som WP beskriver som alternativet for å laste ned og sende meldinger. Endringen trer i kraft med en gang. Det finnes ikke noe eget godkjenningssteg, og WPs hjelp knytter ingen abonnementskrav til det."
+    },
+    {
+      "q": "Har WP.pl app-passord?",
+      "a": "Det har e-postprogrampassord, men bare hvis totrinnsinnlogging er slått på. WP sier at med totrinnsinnlogging på bruker du ikke nettleserpassordet i et e-postprogram, og at du oppretter ett passord per program fra fanen for totrinnsinnlogging, med navn på programmet og enheten. Med totrinnsinnlogging av er opprett-knappen inaktiv, og kontopassordet er det som autentiserer."
+    },
+    {
+      "q": "Lagres WP.pl-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra WP via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en WP.pl-innboks",
+    "sub": "Slå på IMAP i Opcje, og koble så til. Én innboks gratis for alltid, uten kort."
+  }
+}

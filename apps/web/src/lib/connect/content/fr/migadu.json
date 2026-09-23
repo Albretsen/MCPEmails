@@ -1,21 +1,33 @@
 {
+  "_sources": [
+    "https://admin.migadu.com/mail/config-v1.1.xml",
+    "https://migadu.com/guides/identities/",
+    "https://migadu.com/api/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte",
+    "helpUrl": "https://migadu.com/guides/identities/",
+    "usernameForm": "L'adresse complète sur votre propre domaine, par exemple you@yourdomain.com. L'autoconfiguration de Migadu indique l'adresse entière comme identifiant, pour IMAP comme pour SMTP.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Connecter Migadu à Claude (et à toute IA)",
-    "description": "Connectez Migadu à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec le mot de passe de la boîte. Laissez l'IA lire, envoyer, planifier et organiser votre courrier. 1 boîte gratuite, pour toujours."
+    "title": "Connecter Migadu à Claude, Cursor et aux clients MCP",
+    "description": "Connectez Migadu à Claude, Cursor et tout client MCP en IMAP sur imap.migadu.com:993 avec le mot de passe de la boîte défini dans l'admin, pas celui du compte."
   },
   "hero": {
     "eyebrow": "Migadu + IA",
     "titleLine1": "Connectez Migadu à Claude,",
     "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
-    "lead": "Offrez à votre agent IA une vraie boîte Migadu en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et le mot de passe de la boîte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "lead": "Offrez à votre agent IA une vraie boîte Migadu en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec le mot de passe de votre boîte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
     "meta0": "1 boîte gratuite, pour toujours",
-    "meta1": "Le mot de passe de la boîte, pas de configuration OAuth",
+    "meta1": "Le mot de passe de votre boîte, pas de configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude ne peut pas atteindre Migadu tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de la boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+    "answer": "Claude ne peut pas atteindre Migadu tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de votre boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
   },
   "method": {
     "title": "Comment Migadu se connecte : IMAP et le mot de passe de la boîte",
-    "body": "Migadu se connecte via IMAP/SMTP avec le <b>mot de passe de la boîte</b>, qui n'est pas celui de votre compte d'administration Migadu. Définissez-le ou réinitialisez-le dans l'espace d'administration Migadu, section Mailboxes, puis collez-le dans mcpemails avec votre adresse. Toutes les boîtes Migadu utilisent les deux mêmes serveurs quel que soit votre domaine : il n'y a rien à chercher."
+    "body": "Migadu se connecte en IMAP/SMTP avec le <b>mot de passe de la boîte</b>, qui n'est pas le mot de passe de votre compte d'administration Migadu. Définissez-le ou réinitialisez-le dans l'espace d'administration Migadu, sous Mailboxes, puis collez-le dans mcpemails avec votre adresse. Toutes les boîtes Migadu utilisent les deux mêmes serveurs, quel que soit votre domaine : il n'y a rien à chercher."
   },
   "setup": [
     {
@@ -24,7 +36,7 @@
     },
     {
       "h": "Définissez un mot de passe de boîte dans Migadu",
-      "p": "Dans l'espace d'administration Migadu, ouvrez Mailboxes, choisissez la boîte et définissez son mot de passe. Les clients de messagerie s'authentifient avec ce mot de passe ; votre identifiant d'administration ne fonctionne pas."
+      "p": "Dans l'espace d'administration Migadu, ouvrez Mailboxes, choisissez la boîte et définissez son mot de passe. Les clients de messagerie s'authentifient avec ce mot de passe ; votre identifiant d'administration ne fonctionnera pas."
     },
     {
       "h": "Collez-le dans mcpemails",
@@ -33,6 +45,55 @@
     {
       "h": "Collez l'URL MCP dans votre IA",
       "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Le mot de passe de la boîte et celui du compte Migadu sont deux identifiants différents",
+      "p": "Votre compte Migadu, celui avec lequel vous vous connectez sur admin.migadu.com, gère les domaines, les boîtes, les transferts et la facturation. Il n'authentifie pas le courrier. Chaque boîte possède son propre mot de passe, défini sur la boîte elle-même dans l'espace d'administration sous <b>Mailboxes</b>, et c'est le seul identifiant que <code>imap.migadu.com</code> acceptera. La confusion est facile, car les deux identifiants ressemblent à une adresse e-mail sur votre propre domaine. Si un client est refusé, ouvrez la boîte dans l'espace d'administration et définissez un nouveau mot de passe au lieu de retaper celui du compte."
+    },
+    {
+      "h": "Un alias n'a pas de mot de passe, vous ne pouvez donc pas vous connecter avec",
+      "p": "Migadu distingue les boîtes, qui contiennent du courrier et ont des identifiants, des alias, qui ne font que transférer. Un alias n'a rien pour s'authentifier : pointer un client vers une adresse d'alias échoue, quel que soit le mot de passe saisi. La réponse de Migadu, ce sont les <b>identités</b> : dans l'espace d'administration, ouvrez la boîte et ajoutez une identité pour l'adresse, avec son propre mot de passe. Les identités peuvent être limitées à certains services comme POP, IMAP et ManageSieve, ce qui en fait l'équivalent le plus proche d'un mot de passe d'application chez Migadu. Donner à un agent IA une identité limitée à IMAP, plutôt que le mot de passe de la boîte lui-même, est la configuration la plus propre, et elle peut être révoquée séparément."
+    },
+    {
+      "h": "Le serveur IMAP de Migadu est un IMAP4rev2 derrière un proxy, et il annonce remarquablement peu de choses",
+      "p": "La bannière d'accueil est <code>IMAP4rev2 IMAP4rev1 SASL-IR LITERAL- AUTH=PLAIN</code> suivie de <code>Proxy Ready</code>, et cette courte liste dit tout. Migadu propose <b>AUTH=PLAIN</b> et rien d'autre, sans <code>AUTH=LOGIN</code> : les bibliothèques clientes codées en dur sur le mécanisme LOGIN, courantes dans les outils écrits pour Exchange, échouent à l'étape d'authentification au lieu de renvoyer une erreur utile. Côté SMTP, PLAIN et LOGIN sont tous deux acceptés, si bien que les deux moitiés d'un même compte peuvent se comporter différemment dans le même client. Migadu est aussi l'un des très rares hébergeurs à annoncer IMAP4rev2, plus récent que ce qu'attendent la plupart des bibliothèques clientes. SASL-IR est présent, donc l'authentification en une étape fonctionne normalement."
+    },
+    {
+      "h": "Ni MOVE, ni UIDPLUS, ni SPECIAL-USE, ni IDLE",
+      "p": "Les capacités annoncées par Migadu omettent quatre extensions que la plupart des hébergeurs proposent. Sans <b>MOVE</b>, déplacer un message se fait par une copie, une mise à jour d'indicateur et un expunge plutôt qu'en une seule commande atomique. Sans <b>UIDPLUS</b>, le serveur ne communique pas le nouvel identifiant d'un message copié, qu'il faut donc retrouver en cherchant dans le dossier de destination. Sans <b>SPECIAL-USE</b>, Sent, Drafts, Trash et Archive sont reconnus par leur nom plutôt que par leur rôle : une boîte dont les dossiers ont été renommés exige de nommer le dossier explicitement. Sans <b>IDLE</b>, il n'y a aucun canal push. Rien de tout cela n'empêche la connexion de fonctionner, et mcpemails lit à la demande au lieu d'attendre des notifications push, mais cela explique des comportements que vous ne verrez pas chez d'autres fournisseurs."
+    }
+  ],
+  "limits": [
+    "Comme le serveur n'annonce pas MOVE, un déplacement n'est pas atomique. Si une connexion tombe en cours de route, un message peut brièvement se trouver dans les deux dossiers.",
+    "Les dossiers sont reconnus par leur nom plutôt que par leur rôle : une boîte aux dossiers renommés ou nommés dans une autre langue que l'anglais peut exiger de nommer explicitement le dossier cible.",
+    "mcpemails connecte une boîte. Les domaines, transferts, réécritures et les quotas d'envoi et de réception propres à Migadu restent dans l'espace d'administration Migadu."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec Migadu ?",
+      "a": "Pas tout seul. Claude n'a pas de connecteur Migadu intégré. Connecter un serveur MCP comme mcpemails à votre boîte Migadu en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et comme la connexion est du simple IMAP, la même boîte est aussi disponible dans Cursor, ChatGPT et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de Migadu ?",
+      "a": "IMAP est imap.migadu.com sur le port 993 en TLS implicite, et SMTP est smtp.migadu.com sur le port 465, lui aussi en TLS implicite. Le fichier d'autoconfiguration de Migadu indique l'adresse e-mail complète comme identifiant pour les deux. Toutes les boîtes Migadu utilisent ces deux serveurs, quel que soit le domaine de votre adresse, et les deux ont été confirmés par une connexion TLS réelle."
+    },
+    {
+      "q": "Pourquoi mon mot de passe Migadu est-il refusé ?",
+      "a": "Généralement parce que vous avez saisi le mot de passe de votre compte Migadu au lieu de celui de la boîte. Ce sont des identifiants distincts qui ressemblent tous deux à une adresse e-mail, d'où une erreur fréquente. L'autre cause courante est de viser un alias plutôt qu'une boîte : un alias n'a pas de mot de passe et on ne peut pas s'y connecter. Définissez un mot de passe de boîte dans l'espace d'administration et utilisez-le."
+    },
+    {
+      "q": "Migadu propose-t-il des mots de passe d'application ?",
+      "a": "Pas sous ce nom, mais les identités jouent le même rôle. Dans l'espace d'administration, ouvrez la boîte et créez-lui une identité avec son propre mot de passe, puis limitez cette identité à IMAP. Votre client s'authentifie avec l'identité, et vous pourrez la révoquer plus tard sans changer le mot de passe de la boîte ni perturber quoi que ce soit d'autre qui l'utilise."
+    },
+    {
+      "q": "Puis-je connecter un alias Migadu ou envoyer depuis un alias ?",
+      "a": "Vous ne pouvez pas vous connecter avec un alias, car il n'a pas d'identifiants. Pour envoyer depuis une adresse d'alias, créez une identité pour cette adresse avec son propre mot de passe, ou activez l'option d'expéditeur générique (wildcard sender) sur la boîte afin que ses identifiants puissent envoyer avec l'alias dans l'en-tête From."
+    },
+    {
+      "q": "Mon courrier Migadu est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis Migadu en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
     }
   ],
   "ctaBand": {

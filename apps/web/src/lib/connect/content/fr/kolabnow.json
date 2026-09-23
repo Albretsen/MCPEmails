@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://kb.kolabnow.com/documentation/generic-imap-client-setup-guide",
+    "https://kb.kolabnow.com/faq/how-do-i-setup-my-client"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Mot de passe Kolab Now",
+    "helpUrl": "https://kb.kolabnow.com/documentation/generic-imap-client-setup-guide",
+    "usernameForm": "Votre adresse e-mail Kolab Now principale, pas un alias ni un simple nom d'utilisateur.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connecter Kolab Now à Claude, Cursor et aux clients MCP",
+    "description": "Connectez Kolab Now à Claude, Cursor et tout client MCP en IMAP via imap.kolabnow.com:993. Paramètres vérifiés et règles de mot de passe. 1 boîte gratuite."
+  },
+  "hero": {
+    "eyebrow": "Kolab Now + IA",
+    "titleLine1": "Connectez Kolab Now à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Donnez à votre agent IA une vraie boîte Kolab Now. Lisez, recherchez, envoyez, répondez, planifiez et organisez vos e-mails en IMAP depuis la Suisse, dans tous vos clients MCP plutôt que dans un seul.",
+    "answer": "Claude ne peut pas accéder seul à Kolab Now. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.kolabnow.com, port 993, et en SMTP sur smtp.kolabnow.com, port 465, en s'authentifiant avec votre adresse Kolab Now principale et le mot de passe de votre compte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Ces deux noms d'hôte s'utilisent quel que soit le domaine de votre adresse, y compris le vôtre. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Adresse principale et mot de passe du compte",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Kolab Now se connecte : Cyrus IMAP et votre adresse principale",
+    "body": "Kolab Now sert l'IMAP sur <code>imap.kolabnow.com</code>, port 993, en TLS implicite, et le SMTP sur <code>smtp.kolabnow.com</code>, port 465. Le serveur est <b>Cyrus IMAP</b>, ce qui compte plus qu'il n'y paraît : contrairement à la plupart des fournisseurs axés sur la confidentialité, Kolab Now annonce MOVE, UIDPLUS et SPECIAL-USE, si bien que les rôles des dossiers sont correctement résolus et que les déplacements sont atomiques. L'authentification se fait avec un mot de passe classique et votre <b>adresse e-mail principale</b>. La documentation de Kolab Now insiste : même si votre adresse est sur <code>mykolab.com</code> ou sur un domaine qui vous appartient, vous vous connectez à ces deux mêmes noms d'hôte."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte, pour toujours, sans carte bancaire. Vous obtenez une URL MCP et une clé à la fin."
+    },
+    {
+      "h": "Trouvez votre adresse principale, pas un alias",
+      "p": "Kolab Now authentifie sur l'adresse e-mail principale du compte. Si votre courrier arrive à plusieurs adresses, ou si la boîte est sur votre propre domaine, seule l'adresse principale permet de se connecter. Elle apparaît dans les paramètres de votre compte Kolab Now ; un alias dans le champ identifiant produit un simple échec d'authentification, sans aucun indice sur la cause."
+    },
+    {
+      "h": "Ajoutez la boîte dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, saisissez cette adresse principale et votre mot de passe Kolab Now. Les serveurs sont préremplis avec <code>imap.kolabnow.com</code> et <code>smtp.kolabnow.com</code>, qui sont corrects quel que soit le domaine de votre adresse. Les identifiants sont chiffrés au repos ; le courrier est récupéré en direct à chaque requête et n'est pas conservé."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Ajoutez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Votre domaine n'apparaît jamais dans le nom d'hôte",
+      "p": "Cela piège constamment les clients qui ont un domaine personnalisé. Kolab Now héberge des adresses sur kolabnow.com, sur l'ancien mykolab.com et sur les domaines que vous apportez vous-même, mais il n'existe pas de serveur de messagerie par domaine : <code>imap.kolabnow.com</code> et <code>smtp.kolabnow.com</code> les servent tous. Ne suivez pas le réflexe habituel qui consiste à deviner <code>mail.yourdomain.com</code>, et ne vous fiez pas à un résultat d'autodécouverte qui pointe ailleurs."
+    },
+    {
+      "h": "Kolab Now refuse les clients qui ne respectent pas ses exigences TLS",
+      "p": "La base de connaissances de Kolab Now indique que si votre client ne figure pas dans la liste et que le guide générique ne fonctionne pas, le client ne respecte très probablement pas les normes de sécurité PCI qu'imposent leurs serveurs, et il ne se connectera pas du tout. Les logiciels anciens échouent ici au lieu de négocier à la baisse. Rien n'est à activer sur la boîte : une connexion qui s'interrompt avant l'authentification vient donc généralement de la pile TLS du client, pas de votre compte."
+    },
+    {
+      "h": "C'est l'un des rares fournisseurs de cette liste à prendre pleinement en charge MOVE et SPECIAL-USE",
+      "p": "Le serveur Cyrus de Kolab Now annonce MOVE, UIDPLUS, SPECIAL-USE et IDLE. Concrètement, un agent qui classe du courrier émet un vrai MOVE au lieu de l'enchaînement COPY, marquage et purge que la plupart des autres fournisseurs de cette liste imposent, récupère immédiatement le nouvel UID et identifie Envoyés, Brouillons et Corbeille par leur rôle déclaré au lieu de deviner d'après les noms. Réorganiser en masse une boîte Kolab Now est de ce fait nettement plus rapide et moins sujet aux erreurs."
+    },
+    {
+      "h": "Les dossiers partagés et de groupe apparaissent dans la même arborescence",
+      "p": "Cyrus expose les dossiers partagés, et tous les dossiers partagés avec vous, à côté des vôtres. Si votre compte appartient à un groupe, un agent qui liste les dossiers les verra et pourra y classer du courrier. Précisez de quel dossier vous parlez quand vous donnez une instruction, ou limitez-la à la boîte de réception, sinon une demande trop large peut toucher du courrier que d'autres personnes lisent aussi."
+    }
+  ],
+  "limits": [
+    "Connecter une boîte Kolab Now à un client IA signifie que ce fournisseur d'IA lit le contenu de vos messages. L'hébergement suisse de Kolab Now et la pile logicielle libre de Kolab ne s'étendent pas au client IA situé à l'autre bout de la connexion. mcpemails récupère le courrier en direct depuis Kolab Now à chaque requête et ne stocke pas le contenu des messages, et les identifiants sont chiffrés au repos, mais le texte parvient tout de même à Claude, Cursor ou au client que vous y connectez. Si une boîte est chez Kolab Now précisément pour garder son contenu sous une seule juridiction, la connecter à un grand fournisseur d'IA annule cet avantage.",
+    "Les messages chiffrés avec votre clé OpenPGP ou S/MIME arrivent en IMAP sous forme de texte chiffré. mcpemails ne détient aucune clé privée : un agent peut donc lire les en-têtes et classer le message, mais pas son contenu.",
+    "Kolab Now ne propose ni mot de passe d'application ni mot de passe par appareil : l'identifiant que mcpemails stocke est donc le mot de passe de votre compte. Pour révoquer une seule connexion, il faut changer le mot de passe du compte."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec Kolab Now ?",
+      "a": "Pas directement. Claude n'a pas de connecteur Kolab Now intégré et ne parle pas IMAP par lui-même. Connecter un serveur MCP comme mcpemails à votre boîte Kolab Now donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion est réutilisable depuis Cursor et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de Kolab Now ?",
+      "a": "L'IMAP est imap.kolabnow.com sur le port 993 en TLS implicite. Le SMTP est smtp.kolabnow.com sur le port 465, également en TLS implicite, le port 587 en STARTTLS n'étant proposé que comme solution de contournement temporaire. L'identifiant est votre adresse e-mail Kolab Now principale. Les deux serveurs ont été vérifiés par une vraie connexion TLS."
+    },
+    {
+      "q": "J'utilise mon propre domaine avec Kolab Now. Les paramètres changent-ils ?",
+      "a": "Non. Kolab Now indique que même si votre adresse principale est sur mykolab.com ou sur un domaine qui vous appartient, vous vous connectez à imap.kolabnow.com et smtp.kolabnow.com. Il n'y a aucun nom d'hôte de messagerie par domaine à configurer, et en inventer un est la raison la plus fréquente de l'échec d'une configuration avec domaine personnalisé."
+    },
+    {
+      "q": "Pourquoi ma connexion Kolab Now est-elle refusée ?",
+      "a": "Vérifiez que vous utilisez l'adresse e-mail principale du compte et non un alias, et que vous avez saisi l'adresse complète et non un simple nom d'utilisateur. Si l'authentification ne commence même pas, votre client ne respecte peut-être pas les exigences TLS imposées par Kolab Now, ce qui échoue avant toute vérification du mot de passe."
+    },
+    {
+      "q": "Mon courrier Kolab Now est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis imap.kolabnow.com en IMAP à chaque requête et transmis directement à votre client IA. Les identifiants sont chiffrés au repos ; le contenu des messages n'est pas conservé. Ce que lit le client IA parvient bien à ce fournisseur d'IA, ce qui relève d'une décision distincte et délibérée de votre part."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA une boîte Kolab Now",
+    "sub": "Connectez Kolab Now en quelques minutes. 1 boîte gratuite, pour toujours, sans carte bancaire."
+  }
+}

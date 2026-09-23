@@ -1,41 +1,99 @@
 {
+  "_sources": [
+    "https://www.fastmail.com/blog/an-mcp-server-for-fastmail/",
+    "https://www.fastmail.help/hc/en-us/articles/360058752854-App-passwords",
+    "https://www.fastmail.help/hc/en-us/articles/1500000279921-IMAP-POP-and-SMTP",
+    "https://www.fastmail.help/hc/en-us/articles/1500000278342-Server-names-and-ports"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "App-passord",
+    "helpUrl": "https://www.fastmail.help/hc/en-us/articles/360058752854-App-passwords",
+    "usernameForm": "Hele Fastmail-adressen din, med domenet: navn@fastmail.com, eller ditt eget domene hvis du bruker et.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Koble Fastmail til Claude (og enhver AI)",
-    "description": "Koble Fastmail til Claude, Cursor, ChatGPT og enhver MCP-klient med et app-passord. La AI lese, sende, planlegge og organisere Fastmail-en din. 1 innboks gratis, for alltid."
+    "title": "Koble Fastmail til Claude, Cursor og MCP-klienter",
+    "description": "Koble Fastmail til Claude, Cursor, ChatGPT og enhver MCP-klient over IMAP på imap.fastmail.com:993 med et Fastmail-app-passord. Én innboks gratis, for alltid."
   },
   "hero": {
     "eyebrow": "Fastmail + AI",
-    "titleLine1": "Koble Fastmail til Claude",
-    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
-    "lead": "Gi AI-agenten din en ekte Fastmail-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med ett enkelt app-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "titleLine1": "Koble Fastmail til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Fastmail-innboks på få minutter. Les, søk, send, svar, planlegg og organiser e-post med ett enkelt app-passord, og bruk den samme innboksen i alle MCP-klienter, ikke bare én.",
     "meta0": "1 innboks gratis, for alltid",
-    "meta1": "App-passord, ingen OAuth-oppsett",
-    "meta2": "E-post hentes direkte, lagres aldri"
+    "meta1": "App-passord, uten OAuth-oppsett",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "Claude kan ikke nå Fastmail på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP på imap.fastmail.com, port 993, og autentiserer med et Fastmail-app-passord i stedet for kontopassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Fastmail har en egen MCP-server bare for Fastmail; grunnen til å bruke denne i stedet er at én enkelt URL også dekker de andre postkassene dine. Én innboks er gratis, for alltid."
   },
   "method": {
-    "title": "Slik kobler Fastmail seg til: et app-passord",
-    "body": "Fastmail kobles til via IMAP/SMTP med et <b>Fastmail-app-passord</b>: generer ett i Fastmail under Innstillinger → Personvern og sikkerhet → App-passord, lim det inn i mcpemails, og du er tilkoblet. Ingen OAuth-dans, ingen nettleser-popuper."
+    "title": "Slik kobles Fastmail til: et app-passord",
+    "body": "Fastmail kobles til over IMAP/SMTP med et <b>Fastmail-app-passord</b>. Lag et i Fastmail under Settings → Privacy & Security → App passwords, lim det inn i mcpemails, så er du koblet til. Ingen OAuth-runddans, ingen popup-vinduer i nettleseren."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg hos mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
-      "h": "Generer et Fastmail-app-passord",
-      "p": "I Fastmail går du til Innstillinger → Personvern og sikkerhet → App-passord og oppretter ett for e-post (IMAP/SMTP)."
+      "h": "Lag et Fastmail-app-passord",
+      "p": "Gå til Settings → Privacy & Security → App passwords i Fastmail og lag et for e-post (IMAP/SMTP)."
     },
     {
       "h": "Lim det inn i mcpemails",
-      "p": "Legg til Fastmail-adressen din og app-passordet for å koble til innboksen trygt."
+      "p": "Legg inn Fastmail-adressen din og app-passordet for å koble til innboksen på en sikker måte."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
       "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
     }
   ],
+  "gotchas": [
+    {
+      "h": "Fastmail leverer sin egen MCP-server, og den er god",
+      "p": "I april 2026 lanserte Fastmail en egen MCP-server på <code>https://api.fastmail.com/mcp</code>, autentisert med OAuth, med tilgang til bare lesing, skriving eller sending, og som dekker e-post, kalender og kontakter. Hvis Fastmail er den eneste postkassen du vil at en assistent skal nå, er det den mest direkte veien som finnes, og det sier vi rett ut. mcpemails svarer på et annet spørsmål: <b>én</b> MCP-URL som rommer Fastmail-kontoen din og iCloud-, Zoho-, Yahoo-, GMX- eller jobb-IMAP-postkassen din samtidig, med de samme seksten verktøyene over alle, slik at en agent kan søke på tvers av postkasser og du setter opp én server i stedet for fem. Det viktigste her er å være nyttig for deg, ikke å fremstille oss selv i best mulig lys."
+    },
+    {
+      "h": "Fastmail Basic-kontoer kan ikke bruke IMAP i det hele tatt",
+      "p": "Fastmails Basic-plan inkluderer ikke IMAP, POP, SMTP, CalDAV eller CardDAV, og kontoer på den kan ikke lage app-passord. Webmail og Fastmails egne apper er alt du får. Så hvis skjermbildet for app-passord ikke gir deg noe å lage, er det planen og ikke en feil, og det hjelper ikke hvor mange ganger du skriver inn passordet på nytt. Standard- og Professional-kontoer har protokollene og kan kobles til."
+    },
+    {
+      "h": "Tilgangsnivået til app-passordet må omfatte e-post",
+      "p": "App-passord lages i Settings, deretter Privacy & Security, deretter delen Connected apps & API tokens, deretter Manage app passwords and access, deretter New app password. Standard tilgangsnivå er <b>Mail, Contacts & Calendars</b>, som er det IMAP og SMTP trenger. Velger du Files (WebDAV) i stedet, blir passordet laget helt uten problemer og feiler så ved pålogging til e-post. Fastmail viser passordet bare én gang, så kopier det før du forlater skjermbildet, og merk at det vanlige Fastmail-passordet ditt aldri vil autentisere en e-postklient."
+    }
+  ],
+  "limits": [
+    "Fastmail Basic inkluderer ikke IMAP eller SMTP, så en Basic-postkasse kan ikke kobles til. Standard og Professional kan.",
+    "Fastmails innsendingsserver oppgir et tak på omtrent 71 MB per melding. Lesing av vedlegg via mcpemails er begrenset til 25 MB per forespørsel, så alt som er større, må hentes i Fastmail selv."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Fastmail?",
+      "a": "Ja, på to forskjellige måter. Fastmail har sin egen MCP-server som Claude kan pekes direkte mot med OAuth. Alternativt kobler mcpemails den samme postkassen til over IMAP med et app-passord og eksponerer den, sammen med alle andre postkasser du legger til, gjennom én enkelt MCP-URL som også fungerer i Cursor og ChatGPT. Uansett kan Claude lese, søke i, sende, svare på og organisere e-posten."
+    },
+    {
+      "q": "Bør jeg bruke Fastmails egen MCP-server eller denne?",
+      "a": "Bruk Fastmails hvis Fastmail er den eneste postkassen din og klienten din støtter den: den er førstepartsløsningen, bruker OAuth og lar deg velge tilgang til bare lesing, skriving eller sending. Bruk mcpemails hvis du vil ha mer enn én leverandør bak én URL, hvis du også har en iCloud-, Zoho- eller jobb-IMAP-postkasse, eller hvis du vil at de samme verktøyene skal oppføre seg likt i flere MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Fastmail?",
+      "a": "IMAP er imap.fastmail.com på port 993 med implisitt TLS. SMTP er smtp.fastmail.com på port 465, også med implisitt TLS. Brukernavnet er hele Fastmail-adressen din, og passordet er et app-passord, aldri kontopassordet. Begge vertene ble bekreftet via en faktisk TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvorfor blir Fastmail-passordet mitt avvist?",
+      "a": "Tre årsaker, i rekkefølge etter sannsynlighet. Du bruker kontopassordet i stedet for et app-passord, noe Fastmail aldri godtar på IMAP eller SMTP. App-passordet ble laget med tilgangsnivået Files i stedet for Mail, Contacts & Calendars. Eller kontoen er på Basic-planen, som ikke inkluderer IMAP eller SMTP i det hele tatt."
+    },
+    {
+      "q": "Fungerer dette med et eget domene hos Fastmail?",
+      "a": "Ja. En adresse på ditt eget domene som ligger hos Fastmail, bruker de samme vertene imap.fastmail.com og smtp.fastmail.com og det samme app-passordet som en fastmail.com-adresse. Skriv inn hele adressen på domenet ditt som brukernavn. Det er ikke noe eget vertsnavn å slå opp og ingenting ekstra å slå på."
+    },
+    {
+      "q": "Lagres Fastmail-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Fastmail over IMAP for hver forespørsel og overleveres til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold beholdes ikke. Sletter du app-passordet i Fastmail, brytes tilkoblingen umiddelbart fra deres side."
+    }
+  ],
   "ctaBand": {
     "title": "Gi AI-en din en Fastmail-innboks",
-    "sub": "Koble til Fastmail på minutter. Én innboks gratis for alltid, uten kort."
+    "sub": "Koble til Fastmail på få minutter. Én innboks gratis for alltid, uten kort."
   }
 }

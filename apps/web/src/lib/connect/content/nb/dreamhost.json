@@ -1,0 +1,95 @@
+{
+  "_sources": [
+    "https://help.dreamhost.com/hc/en-us/articles/214918038-Email-client-configuration-overview",
+    "https://help.dreamhost.com/hc/en-us/articles/216479177-Change-password-Mail-users",
+    "https://help.dreamhost.com/hc/en-us/articles/216479147-Passwords-overview"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Passord for e-postbruker",
+    "helpUrl": "https://help.dreamhost.com/hc/en-us/articles/216479177-Change-password-Mail-users",
+    "usernameForm": "Hele adressen din, med domenet: navn@dittdomene.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble DreamHost-e-post til Claude og MCP-klienter",
+    "description": "Koble DreamHost-e-post til Claude, Cursor og enhver MCP-klient over IMAP på imap.dreamhost.com:993, med passordet for e-postbrukeren, ikke panelpåloggingen."
+  },
+  "hero": {
+    "eyebrow": "DreamHost-e-post + AI",
+    "titleLine1": "Koble DreamHost-e-post til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte DreamHost-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP med passordet for e-postbrukeren fra DreamHost-panelet.",
+    "answer": "Claude kan ikke nå en DreamHost-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP på imap.dreamhost.com, port 993, og autentiserer med hele e-postadressen din og passordet for e-postbrukeren til den adressen, som DreamHost holder atskilt fra panelpassordet du logger inn med. Claude, Cursor eller enhver MCP-klient kan da lese, søke i, sende og organisere e-posten. Det finnes verken app-passord eller en IMAP-bryter å slå på. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Passord for e-postbruker, ikke panelpåloggingen",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles DreamHost til: IMAP og passordet for e-postbrukeren",
+    "body": "DreamHost tilbyr IMAP på <code>imap.dreamhost.com</code>, port 993, med implisitt TLS og SMTP på <code>smtp.dreamhost.com</code>, port 465. Begge er felles vertsnavn som brukes av alle DreamHosts e-postkunder, så ingenting her utledes fra ditt eget domene. Det du må forstå, er DreamHosts kontomodell: en DreamHost-konto inneholder flere typer brukere, og hver har sitt eget passord. En <b>panelbruker</b> logger inn i kontrollpanelet. En <b>e-postbruker</b> er en e-postadresse, og den har passordet du valgte da du opprettet adressen. IMAP og SMTP godtar bare passordet for e-postbrukeren. SMTP krever autentisering med de samme påloggingsopplysningene som IMAP; DreamHost sier tydelig at utgående e-post ikke videresendes uten det."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Sett passordet for e-postbrukeren i DreamHost-panelet",
+      "p": "Logg inn i DreamHost-panelet, åpne Mail og deretter Manage Email, finn adressen og klikk Manage. Rull ned til delen Change Password og generer et passord eller sett ditt eget. DreamHost dokumenterer at dette ikke kan gjøres fra webmail: du må bruke panelet eller det separate postkassegrensesnittet."
+    },
+    {
+      "h": "Lim det inn i mcpemails",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen og lim inn passordet for e-postbrukeren. Vertene imap.dreamhost.com og smtp.dreamhost.com og portene 993 og 465 er forhåndsutfylt og ble bekreftet via en faktisk TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "DreamHost har flere typer brukere, og bare én av dem kan lese e-post",
+      "p": "Dette er feilen som koster mest tid hos DreamHost. Panelet lar deg opprette nettstedsbrukere, e-postbrukere, MySQL-brukere, panelbrukere og mer, hver med sitt eget uavhengige passord, og det er helt normalt at én person har tre eller fire av dem. IMAP godtar bare passordet for e-postbrukeren til den bestemte adressen. Skriver du inn panelpassordet, eller passordet til en FTP- eller shell-bruker, får du en autentiseringsfeil som ikke sier noe om hvilken påloggingsopplysning som var feil. Er du usikker på hvilken du har, tilbakestiller du passordet for e-postbrukeren fra Manage Email og bruker den nye verdien."
+    },
+    {
+      "h": "Webmail-grensesnittet kan ikke endre passordet som webmail bruker",
+      "p": "DreamHost opplyser at det ikke er mulig å oppdatere passordet til en e-postbruker fra webmail. Du må bruke panelet eller postkassegrensesnittet. Den som logger inn i webmail uten problemer og så leter etter et passordskjermbilde for å gi en påloggingsopplysning til et annet verktøy, havner i en blindvei og konkluderer ofte med at postkassen på en eller annen måte er skrivebeskyttet."
+    },
+    {
+      "h": "Det korte brukernavnet virker ofte nok til å være en felle",
+      "p": "DreamHosts egen veiledning sier at en klient kan trenge hele e-postadressen for å koble til, men at svært ofte bare delen før krøllalfaen trengs. Den tvetydigheten er grei på en konto med ett domene og blir et problem i det øyeblikket to av domenene dine har en adresse med samme lokale del, siden den korte formen da ikke lenger identifiserer én postkasse. Skriv alltid inn hele adressen. mcpemails sender hele adressen."
+    }
+  ],
+  "limits": [
+    "Serveren annonserer verken MOVE eller UIDPLUS, så en flytting utføres som kopiering, flagging og expunge, og den nye UID-en må finnes ved å søke i målmappen.",
+    "SPECIAL-USE mangler, så Sendt, Utkast, Papirkurv og Søppelpost matches på navn i stedet for på rolle.",
+    "SMTP annonserer en grense for meldingsstørrelse på omtrent 40 MB, som setter et tak for hva en agent kan sende som vedlegg i én melding."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med DreamHost-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd DreamHost-kobling. Peker du en MCP-server som mcpemails mot DreamHost-postkassen din over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og den samme tilkoblingen fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for DreamHost?",
+      "a": "IMAP er imap.dreamhost.com på port 993 med implisitt TLS. SMTP er smtp.dreamhost.com på port 465, også med implisitt TLS, og autentisering kreves for utgående e-post. Bruk hele e-postadressen din som brukernavn og passordet for e-postbrukeren. Begge vertene ble bekreftet via en faktisk TLS-tilkobling."
+    },
+    {
+      "q": "Hvorfor blir DreamHost-passordet mitt avvist?",
+      "a": "Fordi DreamHost utsteder et eget passord for hver type bruker på kontoen, og IMAP godtar bare passordet for e-postbrukeren til den adressen. Panelpassordet er en annen påloggingsopplysning. Tilbakestill passordet for e-postbrukeren under Mail, Manage Email, Manage, og bruk verdien du satte der."
+    },
+    {
+      "q": "Trenger DreamHost et app-passord?",
+      "a": "Nei. DreamHost utsteder ikke app-spesifikke passord for e-post, og det finnes ingen IMAP-bryter per postkasse å slå på. Passordet for e-postbrukeren autentiserer IMAP og SMTP direkte. Vil du ikke gjenbruke et eksisterende passord, setter du et nytt for adressen i panelet."
+    },
+    {
+      "q": "Lagres DreamHost-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra DreamHost over IMAP for hver forespørsel og overleveres til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en DreamHost-innboks",
+    "sub": "Koble til DreamHost-e-post på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

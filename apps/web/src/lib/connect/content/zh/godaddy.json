@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.godaddy.com/help/use-imap-settings-to-add-my-professional-email-to-a-client-32204",
+    "https://www.godaddy.com/help/my-workspace-email-is-moving-to-microsoft-365-32394",
+    "https://www.godaddy.com/help/configuring-mail-clients-with-cpanel-email-8861",
+    "https://support.titan.email/hc/en-us/articles/25005307786905-Enable-Titan-on-other-apps"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://www.godaddy.com/help/use-imap-settings-to-add-my-professional-email-to-a-client-32204",
+    "usernameForm": "你的完整地址，包括域名：name@yourdomain.com。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 GoDaddy 邮箱连接到 Claude、Cursor 与 MCP",
+    "description": "通过 imap.secureserver.net:993 的 IMAP 将 GoDaddy Professional Email 连接到 Claude 及任意 MCP 客户端。通过 GoDaddy 购买的 Microsoft 365 邮箱无法连接。"
+  },
+  "hero": {
+    "eyebrow": "GoDaddy 邮箱 + AI",
+    "titleLine1": "将 GoDaddy 邮箱连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 GoDaddy 收件箱。弄清你的地址实际属于 GoDaddy 多款邮箱产品中的哪一款后，即可通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行访问 GoDaddy 邮箱。mcpemails 是一个托管 MCP 服务器，通过 imap.secureserver.net 端口 993 的 IMAP 连接 GoDaddy Professional Email，使用你的完整地址和该邮箱自己的邮箱密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。GoDaddy 以同一品牌销售不止一款邮箱产品，而通过 GoDaddy 购买的 Microsoft 365 邮箱是微软的邮箱，我们无法连接，所以请先确认你用的是哪一款。1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "该邮箱自己的邮箱密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "GoDaddy 如何连接：先确认产品，再用 IMAP",
+    "body": "“GoDaddy 邮箱”其实是共用一个品牌的三四种不同服务，它们的设置并不相同。<b>Professional Email</b> 是 GoDaddy 基于 Titan 平台销售的现行主流产品，GoDaddy 文档给出的是端口 993 上的 <code>imap.secureserver.net</code> 和端口 465 上的 <code>smtpout.secureserver.net</code>，两者都使用隐式 TLS，用户名为地址，密码为该邮箱自己的密码。已停售的 <b>Workspace Email</b> 产品使用相同的 secureserver 主机名，这就是为什么网上那么多旧指南仍显示这些名称。<b>Microsoft 365 from GoDaddy</b> 根本不是 GoDaddy 邮箱：它是 GoDaddy 转售并代为计费的微软租户，位于微软自己的服务器上。而在 <b>cPanel Web Hosting</b> 中创建的邮箱位于你的主机服务器上，而不是 secureserver，使用的是该服务器自己的主机名。把产品弄对了，剩下的设置只需两分钟。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "确认你用的是哪款 GoDaddy 邮箱产品",
+      "p": "登录 GoDaddy，在 My Products 下打开 Email & Office 控制台。卡片上的套餐名称就是答案。Professional Email 是基于 Titan 的产品，使用 secureserver 服务器。Microsoft 365 会打开 Outlook 网页版，是微软的邮箱。如果地址是在 cPanel 的 Email Accounts 中创建的，那么它的设置是 yourdomain.com/webmail 中 Configure Mail Client 下显示的那些，而不是 secureserver 的设置。"
+    },
+    {
+      "h": "获取邮箱密码并允许外部客户端",
+      "p": "在 Email & Office 控制台中点击该地址旁的 Manage，设置或重置其邮箱密码。这是邮箱自己的密码，不是你的 GoDaddy 账户登录密码。如果登录仍被拒绝，请在邮箱的安全设置中检查第三方或外部邮件客户端开关，并注意：当该邮箱开启了双重身份验证时，Titan 会阻止外部客户端。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "在 mcpemails 中添加你的地址和密码，然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "从 GoDaddy 购买的 Microsoft 365 邮箱无法在这里连接",
+      "p": "GoDaddy 转售 Microsoft 365，并一直在把旧的 Workspace Email 客户迁移过去，所以很大一部分自认为拥有“GoDaddy 邮箱”的人，现在拥有的其实是开着 GoDaddy 发票的微软邮箱。这些邮箱不在 <code>imap.secureserver.net</code> 上，而是在微软的服务器上，受微软身份平台管理。微软的默认租户策略会阻止普通终端用户同意第三方应用对邮件的读写访问，这项限制由微软和你的租户管理员设定，而不是 GoDaddy，也不是我们。我们不声称能连接这些邮箱。判断方法很简单：如果登录网页邮箱后进入的是 Outlook 网页版，那就是微软的产品。"
+    },
+    {
+      "h": "网上一半的 GoDaddy IMAP 指南针对的是已不存在的产品",
+      "p": "Workspace Email 已经停用，其客户已迁移到 Microsoft 365，但为它写的指南仍然是“GoDaddy IMAP 设置”的首批搜索结果，而且显示的是 secureserver 主机名。令人困惑的是，这些主机名仍然正确，因为 GoDaddy 现行的 Professional Email 使用相同的名称。于是，已被迁移的用户按照指南操作，输入看似正确的设置，却得到认证失败，而且毫无头绪：设置没问题，只是邮箱已经不在那里了。"
+    },
+    {
+      "h": "邮箱开启 2FA 时，Titan 会阻止外部客户端",
+      "p": "GoDaddy Professional Email 运行在 Titan 上，Titan 通过邮箱上的第三方应用访问设置来控制 IMAP、POP 和 SMTP，并且在该邮箱开启双重身份验证时拒绝外部客户端连接。这种拒绝表现为登录失败，所以常被误认为是密码错误。在重置任何东西之前，请先检查这个开关。"
+    },
+    {
+      "h": "GoDaddy 的 IMAP 服务器不声明 SASL-IR",
+      "p": "<code>imap.secureserver.net</code> 背后的 IMAP 服务器自称 Fenix，且不声明 SASL-IR 能力，因此会拒绝与 AUTHENTICATE 命令在同一行发送凭据的一步式认证。默认假设支持 SASL-IR 的客户端会收到一个光秃秃的 <code>BAD</code>，没有任何解释，看起来与凭据错误一模一样。mcpemails 会检测到这一点并改用两步交互重试，所以连接能够成功，但这正是其他 IMAP 工具在别处都能用、却在 GoDaddy 上失败的原因。"
+    }
+  ],
+  "limits": [
+    "通过 GoDaddy 销售的 Microsoft 365 邮箱无法连接。微软的默认租户策略会阻止终端用户同意第三方邮件访问。",
+    "cPanel 主机邮箱不在 secureserver 服务器上。请改用 cPanel 的 Configure Mail Client 页面中显示的主机名来连接。",
+    "服务器不声明 MOVE 扩展，因此移动邮件以复制、标记和清除的方式完成，而不是一条原子命令。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 GoDaddy 邮箱吗？",
+      "a": "只要将 mcpemails 这样的 MCP 服务器通过 IMAP 连接到邮箱，就能用于 GoDaddy Professional Email（基于 Titan 的产品）。Claude 没有内置的 GoDaddy 连接器。它不能用于通过 GoDaddy 购买的 Microsoft 365 邮箱，因为微软的默认租户策略会阻止第三方邮件访问的授权同意。"
+    },
+    {
+      "q": "GoDaddy 的 IMAP 和 SMTP 设置是什么？",
+      "a": "对于 Professional Email，IMAP 为 imap.secureserver.net，端口 993，使用隐式 TLS；SMTP 为 smtpout.secureserver.net，端口 465，同样是隐式 TLS。用户名是你的完整邮箱地址，密码是该邮箱自己的邮箱密码。两个服务器均由 GoDaddy 文档记载，并经实时 TLS 连接确认。"
+    },
+    {
+      "q": "如何判断我用的是 Professional Email 还是 Microsoft 365？",
+      "a": "在你的 GoDaddy 账户中打开 My Products，查看 Email & Office 控制台。每个地址的卡片上都印有套餐名称。更快的检查方法是：登录你的网页邮箱。如果进入的是 Outlook 网页版，那就是 Microsoft 365；如果进入的是 Titan 网页邮箱界面，那就是 Professional Email，适用 secureserver 设置。"
+    },
+    {
+      "q": "为什么我的 GoDaddy 邮箱密码被拒绝？",
+      "a": "常见原因有三个，按顺序排查。你用的是 GoDaddy 账户登录密码，而不是邮箱自己的邮箱密码。邮箱开启了双重身份验证，导致 Titan 拒绝外部客户端。或者邮箱已被迁移到 Microsoft 365，在 secureserver 服务器上根本不存在了。"
+    },
+    {
+      "q": "我在 cPanel 主机中创建的邮箱地址呢？",
+      "a": "这些是你自己主机服务器上的普通 IMAP 邮箱，可以连接，但不能用 secureserver 主机名。请登录 yourdomain.com/webmail，打开 Configure Mail Client，使用那里显示的手动设置。密码是你在 cPanel 的 Email Accounts 中为该地址设置的密码。"
+    },
+    {
+      "q": "我的 GoDaddy 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 GoDaddy 实时获取邮件，并交给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 GoDaddy 收件箱",
+    "sub": "几分钟即可连接 GoDaddy Professional Email。1 个收件箱永久免费，无需信用卡。"
+  }
+}

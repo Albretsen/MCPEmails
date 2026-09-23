@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://help.mdaemon.com/mdaemon/en/default-domain-and-servers_ports.html",
+    "https://help.mdaemon.com/mdaemon/en/ae_mail-services.html",
+    "https://help.mdaemon.com/MDaemon/en/screening_location-screening.html",
+    "https://help.mdaemon.com/mdaemon/en/ssl_lets-encrypt.html",
+    "https://knowledge.mdaemon.com/what-ports-need-to-be-open-for-mdaemon-to-communicate-through-a-firewall"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "账户密码",
+    "helpUrl": "https://help.mdaemon.com/mdaemon/en/ae_mail-services.html",
+    "usernameForm": "Account Manager 中显示的完整邮箱地址，例如 you@yourdomain.com。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "MDaemon 邮箱连接 Claude：IMAP、MCP 与筛选",
+    "description": "通过端口 993 的 IMAP 将 MDaemon 邮箱连接到 Claude、Cursor 和 ChatGPT。端口字段在哪里，以及为什么 Location Screening 会阻止托管客户端。"
+  },
+  "hero": {
+    "eyebrow": "MDaemon + AI",
+    "titleLine1": "将 MDaemon 连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT 和任意 MCP 客户端",
+    "lead": "多年来，MDaemon 一直在你自己的 Windows 服务器上运行邮件，从不需要征得任何人的许可。给它加上 AI 代理也不必改变这一点：mcpemails 通过普通的 IMAP 连接，实时获取每封邮件。",
+    "answer": "Claude 无法自行访问 MDaemon 服务器。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接你自己主机名上的服务器，使用 IMAP SSL 端口（MDaemon 默认设为 993），并以 Account Manager 中的账户密码进行认证。这样 Claude、Cursor 或任意 MCP 客户端就能读取、搜索、发送并整理该邮箱中的邮件。MDaemon 是由你运行的软件，所以没有可查的共用主机：服务器必须能从互联网访问，账户必须启用 IMAP 访问，而且 MDaemon 的筛选功能必须放行该连接。1 个收件箱免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "账户密码，开启 IMAP 访问",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "MDaemon 如何连接：按账户开启 IMAP 访问，使用 IMAP SSL 端口",
+    "body": "邮件客户端能否访问 MDaemon 邮箱，由两个页面决定。第一个是端口列表，MDaemon 把它放在 <b>Setup，然后 Server Settings，然后 DNS and IPs</b> 下，一个不太会想到去找的地方。该页面有单独的 IMAP 入站端口字段和 IMAP SSL 端口字段，旁边是 SMTP、MSA 和 POP 的对应字段，MDaemon 出厂设置为 143 和 993。第二个是按邮箱设置的：在 Account Manager 中，每个账户都有一个 <b>Mail Services</b> 页面，控制它可以使用哪些服务，其中 <b>Enable IMAP access</b> 复选框与 POP、MultiPOP 和 MDaemon Connector 并列。通过 Webmail 的访问则在单独的页面上控制，所以一个账户可能在浏览器中完全可用，却拒绝所有邮件客户端。凭据是普通的账户密码。MDaemon 没有应用专用密码机制。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。1 个收件箱永久免费，无需信用卡，所以你可以先用一个真实的 MDaemon 邮箱来测试。"
+    },
+    {
+      "h": "确认端口和证书",
+      "p": "在 MDaemon 中依次打开 Setup、Server Settings、DNS and IPs，查看 IMAP SSL 端口字段。如果有人把它从 993 改走了，你需要真实的端口号。然后检查 Security、Security Manager、SSL and TLS，看 MDaemon 正在使用哪张证书，以及 Let's Encrypt 任务是否仍在为其续期。"
+    },
+    {
+      "h": "在账户上启用 IMAP 访问",
+      "p": "打开 Account Manager，找到该邮箱，在其 Mail Services 页面上确认已勾选 <b>Enable IMAP access</b>。然后在 mcpemails 中添加收件箱：选择 IMAP / SMTP，输入你的 MDaemon 主机名、完整地址和账户密码。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Location Screening 会根据连接来源断开连接",
+      "p": "这是 MDaemon 特有的问题，它产生的症状在本页所有设置中最不直观。Location Screening 根据连接 IP 地址所属的国家来阻止入站连接，而 MDaemon 不仅把它应用于 SMTP、POP、Webmail、ActiveSync、Remote Administration 等，也应用于 IMAP。很多 MDaemon 服务器被配置为只允许一个国家、拒绝全世界，因为当所有用户都在同一间办公室时，这样做是合理的。托管 MCP 服务器从数据中心连入，而该数据中心的地理位置很可能在别的国家。于是连接在尝试认证之前就被拒绝，邮件日志中不会出现任何记录，客户端报告的是超时或重置。证据在 Screening 日志中。在对凭据下任何结论之前，请先放行相关地址或其所属的国家。同一 Screening 部分还有 Dynamic Screening，它会在多次认证失败后封锁地址，所以一个错误密码被保存几次，就可能让你在之后设定的时间段内被锁定。"
+    },
+    {
+      "h": "端口字段在你应用之前不会生效",
+      "p": "MDaemon 自己的文档明确说明，修改端口值后，在你按下应用更改的按钮之前不会生效，否则要等到下次服务器启动。在一台已运行数月的机器上，匆忙做出的修改可能一直没有应用，导致页面上的值与实际监听的套接字不一致。IMAP SSL 端口也是一个可以填值的字段而不是固定常量，经过加固的安装有时会把它从 993 改走。请从该页面读取端口号，而不要想当然地用默认值，并在提交支持工单之前，先在网络外部用 <code>Test-NetConnection mail.yourdomain.com -Port 993</code> 确认。"
+    },
+    {
+      "h": "证书来自一个附带的 PowerShell 脚本，而不是一个常驻服务",
+      "p": "MDaemon 自身不运行 ACME 客户端。它在 <code>MDaemon\\LetsEncrypt</code> 文件夹中附带一个 PowerShell 脚本，在 Security 下的 Let's Encrypt 页面中配置和启动，该脚本通过把文件写入 Webmail 的 HTTP 文件夹来完成 http-01 验证。因此它需要端口 80 空闲且确实由 Webmail 提供服务，机器上还需要 PowerShell 5.1 和 .NET Framework 4.7.2。在 MDaemon 前面放上 IIS、把 Webmail 移到其他端口，或在设置完成后关闭 80，计划中的续期都会悄无声息地停止。993 上的证书会一直正常工作到到期那天，然后所有严格的客户端同时失败。脚本成功时，MDaemon 会把新证书同时应用于 MDaemon、Webmail 和 Remote Administration。"
+    }
+  ],
+  "limits": [
+    "MDaemon 服务器通常位于公司防火墙之内，只发布了端口 25，而这里还需要一个入站 IMAP 连接。是否向互联网开放 993，要由防火墙的负责人决定，而不是 MDaemon 中的某项设置。如果答案是否定的，mcpemails 可以自托管在同一个内部网络中，像局域网内的桌面客户端那样访问 MDaemon。",
+    "TLS 校验是严格的。MDaemon 默认的自签名证书或过期的证书会被拒绝，没有“仍然继续”的选项。",
+    "发信通过你自己的 MDaemon SMTP 服务发出，因此送达率取决于你的 SPF、DKIM 和 DMARC 记录，以及你服务器发信地址的信誉。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 MDaemon 吗？",
+      "a": "不能直接使用。Claude 没有 MDaemon 连接器，也无法向你托管的服务器打开 IMAP 套接字。将 mcpemails 这样的 MCP 服务器连接到你的 MDaemon 主机后，Claude 就能读取、搜索、发送、回复、定时和整理其上某个邮箱中的邮件，所用凭据与任何桌面客户端相同。"
+    },
+    {
+      "q": "MDaemon 的 IMAP 和 SMTP 设置是什么？",
+      "a": "主机名就是你自己的服务器。端口来自 Setup、Server Settings、DNS and IPs，MDaemon 在那里为 IMAP 入站端口和 IMAP SSL 端口分别设有字段，默认为 143 和 993。SMTP、MSA 和 SMTP SSL 端口也在同一页面上。请用完整邮箱地址和账户密码登录。"
+    },
+    {
+      "q": "为什么我的 MDaemon 账户拒绝 IMAP，却能在 Webmail 中使用？",
+      "a": "因为这是两项不同的权限。Account Manager 为每个账户提供一个带有 Enable IMAP access 复选框的 Mail Services 页面，而浏览器访问是在单独的 Web Services 页面上授予的。开启了 Webmail 却关闭了 IMAP 的账户，表现正如你所描述的那样，无论怎么检查主机名都改变不了。"
+    },
+    {
+      "q": "MDaemon 需要应用专用密码吗？",
+      "a": "不需要。MDaemon 没有应用专用密码功能。邮件客户端使用账户自己的密码进行认证，你可以在 Account Manager 中设置。如果该账户为 Webmail 使用了双重身份验证，它作用于浏览器界面，而不作用于 IMAP 会话。"
+    },
+    {
+      "q": "我的连接超时，而且没有任何日志记录，这是怎么回事？",
+      "a": "请检查 Screening 日志。MDaemon 的 Location Screening 会在认证之前、在邮件日志记录任何内容之前，拒绝来自你未放行国家的连接，而且它适用于 IMAP。托管服务从数据中心地址连入，该地址可能解析到另一个国家。Dynamic Screening 在多次登录失败后也会造成同样的沉默。"
+    },
+    {
+      "q": "我的 MDaemon 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从你的 MDaemon 服务器实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 MDaemon 收件箱",
+    "sub": "连接你自己 MDaemon 服务器上的邮箱。1 个收件箱永久免费，无需信用卡。"
+  }
+}

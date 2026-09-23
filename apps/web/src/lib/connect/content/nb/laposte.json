@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://aide.laposte.net/contents/comment-parametrer-un-logiciel-de-messagerie-pour-envoyer-et-recevoir-mes-courriers-electroniques",
+    "https://aide.laposte.net/contents/comment-parametrer-laposte-net-sur-mon-logiciel-de-messagerie-suite-a-l-arret-des-protocoles-en-clair-non-cryptes",
+    "https://postmaster.laposte.net/contents/comment-parametrer-et-activer-la-double-authentification-2fa-sur-un-compte-laposte-net"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Passordet ditt for laposte.net",
+    "helpUrl": "https://aide.laposte.net/contents/comment-parametrer-un-logiciel-de-messagerie-pour-envoyer-et-recevoir-mes-courriers-electroniques",
+    "usernameForm": "Hele adressen din, inkludert domenet: prenom.nom@laposte.net.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "La Poste.net: IMAP-innstillinger og MCP-tilgang for Claude",
+    "description": "Koble en laposte.net-postkasse til Claude, Cursor og enhver MCP-klient på imap.laposte.net:993. Kun krypterte porter siden 2023, og 15 MB grense på utgående e-post."
+  },
+  "hero": {
+    "eyebrow": "laposte.net + AI",
+    "titleLine1": "Koble laposte.net-innboksen din",
+    "titleLine2": "til Claude, Cursor og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte laposte.net-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP med det vanlige laposte.net-passordet ditt.",
+    "answer": "Claude kan ikke nå en laposte.net-postkasse på egen hånd. mcpemails er en driftet MCP-server som kobler den til over IMAP på imap.laposte.net port 993, og autentiserer med hele adressen din og det vanlige laposte.net-passordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. La Poste utsteder ikke app-passord, og det finnes ingen bryter for klienttilgang å lete etter, men postkassen godtar bare krypterte porter, og størrelsesgrensen for utgående e-post er uvanlig lav. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Det vanlige laposte.net-passordet ditt",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles laposte.net til: IMAP over TLS med kontopassordet",
+    "body": "La Poste tilbyr IMAP på <code>imap.laposte.net</code> port 993 over implisitt TLS. For utgående e-post dokumenterer La Postes egne hjelpesider <code>smtp.laposte.net</code> på port 587 med TLS; port 465 med implisitt TLS svarer på samme vert og er det mcpemails fyller inn på forhånd, fordi én enkelt implisitt kryptert tilkobling er enklere å holde i live fra en server. Autentisering skjer med det vanlige laposte.net-passordet ditt og <b>hele</b> adressen som brukernavn. Det finnes ikke noe app-passord å generere og ingen <b>autoriser les logiciels de messagerie</b>-bryter å lete etter, noe som gjør laposte.net til en av de enklere franske postkassene å koble til. Friksjonen ligger andre steder: serveren er bevisst minimal, og La Poste slo av alle ukrypterte protokoller på én gang, noe som fortsatt etterlater klienter som ble satt opp for mange år siden uten forbindelse."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Sjekk at laposte.net-passordet ditt fortsatt fungerer i webmailen",
+      "p": "Logg inn på laposte.net med samme adresse og passord som du skal gi mcpemails. Det er verdt tretti sekunder, for det finnes ingen egen e-postpålogging å skylde på hvis det feiler: godtar webmailen passordet, gjør IMAP-serveren det også."
+    },
+    {
+      "h": "Se på sikkerhetsinnstillingene før du kobler til",
+      "p": "I laposte.net-webmailen åpner du <b>Paramètres</b> og deretter <b>Sécurité</b>. Der slås tofaktorautentisering av og på. La Postes egen dokumentasjon for tofaktorautentisering på laposte.net beskriver en push-bekreftelse til en paret mobilenhet og dokumenterer ingen mekanisme for applikasjonspassord til e-postprogrammer, så finn ut hvilken tilstand kontoen din er i før du feilsøker en avvist pålogging."
+    },
+    {
+      "h": "Lim det inn i mcpemails, og lim deretter MCP-URL-en inn i AI-en",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel prenom.nom@laposte.net, og skriv inn passordet. Vertene og portene til La Poste er fylt inn på forhånd og ble verifisert fra en direkte TLS-tilkobling. Lim deretter https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Utgående e-post er begrenset til omtrent 15 MB, den laveste grensen hos noen stor fransk leverandør",
+      "p": "<code>smtp.laposte.net</code> oppgir en maksimal meldingsstørrelse på 15 800 000 byte. Det er den kodede størrelsen på hele meldingen, og base64 gjør et vedlegg omtrent en tredjedel større, så en PDF på 12 MB er allerede for stor til å sendes. Ber du en agent videresende et skannet dokument, kan du få en hard SMTP-avvisning der den samme meldingen ville gått gjennom hos Orange eller Gmail uten kommentar. Hvis noe må sendes, legg filen et sted og send en lenke."
+    },
+    {
+      "h": "Alle ukrypterte porter ble slått av 4. juli 2023, og feilmeldingen hjelper ikke",
+      "p": "La Poste deaktiverte all klartekstkommunikasjon den datoen. Klienter som fortsatt peker mot de gamle ukrypterte portene, får en feil av typen <b>invalid command</b> i stedet for noe om kryptering, så et oppsett som har fungert i ti år, ser plutselig ut som en ødelagt konto. De eneste støttede kombinasjonene nå er IMAP på 993, POP på 995 og SMTP på 587, alle med SSL eller minst TLS 1.2. Hvis du flytter innstillingene fra en klient over til mcpemails, ikke ta med de gamle portene."
+    },
+    {
+      "h": "Ingen SASL-IR, og de fleste klientbiblioteker forutsetter det",
+      "p": "IMAP-serveren til laposte.net annonserer ikke <code>SASL-IR</code>, så den avviser autentisering i ett steg der påloggingsopplysningen sendes sammen med <code>AUTHENTICATE</code>-kommandoen. En klient som forutsetter SASL-IR, får et naket <code>BAD</code> uten forklaring, noe som ser nøyaktig ut som feil passord. mcpemails oppdager dette <code>BAD</code> og prøver på nytt med utvekslingen i to steg, så det håndteres for deg, men det er grunnen til at andre IMAP-verktøy feiler mot laposte.net mens de fungerer overalt ellers."
+    },
+    {
+      "h": "Ingen IDLE, ingen MOVE og ingen SPECIAL-USE på en postkasse med franske mappenavn",
+      "p": "Banneret er omtrent så kort som IMAP-bannere blir: <code>* OK IMAP4 ready</code>. Det finnes ingen <code>IDLE</code>, så ny e-post oppdages ved polling i stedet for å bli dyttet ut. Det finnes ingen <code>MOVE</code>, så arkivering av en melding kjøres som en kopi, en flaggoppdatering og en expunge. Og det finnes ingen <code>SPECIAL-USE</code>, så Sendt, Utkast og Papirkurv gjenkjennes etter navn, som i en laposte.net-postkasse vanligvis betyr <b>Envoyés</b>, <b>Brouillons</b> og <b>Corbeille</b>. Oppgi mappen eksplisitt hvis en agent ikke finner den."
+    }
+  ],
+  "limits": [
+    "Grensen på 15 MB for utgående e-post er det praktiske taket for alt agenten din sender fra denne postkassen, vedlegg inkludert.",
+    "Fordi serveren ikke støtter MOVE, er en flytting ikke atomisk. Hvis en tilkobling brytes midt i operasjonen, kan en melding en kort stund finnes i begge mappene.",
+    "La Poste publiserer ingen mekanisme for applikasjonspassord for e-postklienter på laposte.net, så hvis tofaktorautentisering blokkerer en klientpålogging, finnes det ingen dokumentert påloggingsopplysning per applikasjon å falle tilbake på."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med laposte.net-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd La Poste-kobling. Ved å peke en MCP-server som mcpemails mot postkassen over IMAP får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den, og den samme tilkoblingen fungerer deretter fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for laposte.net?",
+      "a": "IMAP er imap.laposte.net på port 993 med implisitt TLS. For utgående e-post dokumenterer La Poste smtp.laposte.net på port 587 med TLS; port 465 med implisitt TLS svarer på samme vert og er det mcpemails bruker. Logg inn med hele adressen din og laposte.net-passordet ditt. Begge vertene ble bekreftet fra en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Trenger laposte.net et app-passord?",
+      "a": "Nei. La Poste utsteder ikke app-passord for laposte.net. E-postklienter autentiserer med samme passord som du bruker i webmailen, sammen med hele adressen din. Hvis passordet avvises, sjekk det i webmailen først, for det finnes ingen annen påloggingsopplysning som kan være problemet."
+    },
+    {
+      "q": "Hvorfor får e-postklienten min plutselig ikke koblet til laposte.net?",
+      "a": "Oftest fordi den fortsatt er satt opp med en ukryptert port. La Poste slo av alle klartekstprotokoller 4. juli 2023, og klienter på de gamle portene får en invalid command-feil i stedet for en tydelig melding. Flytt kontoen til IMAP på 993 eller POP på 995 og SMTP på 587, alle med SSL eller TLS."
+    },
+    {
+      "q": "Hvorfor kunne ikke et vedlegg sendes fra laposte.net?",
+      "a": "SMTP-serveren begrenser en melding til omtrent 15,8 MB inkludert kodingsoverhead, noe som er lite sammenlignet med de fleste leverandører. En fil på over omtrent 11 MB på disk vil som regel overskride grensen når den er kodet. Avvisningen skjer ved innsending, så ingenting legges i kø eller leveres delvis."
+    },
+    {
+      "q": "Lagres laposte.net-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra La Poste over IMAP for hver forespørsel og overleveres til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke beholdt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en laposte.net-innboks",
+    "sub": "Koble til laposte.net på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

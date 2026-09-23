@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://tuta.com/blog/desktop-clients-tutanota",
+    "https://tuta.com/encryption",
+    "https://tuta.com/support",
+    "https://tuta.com/blog/tuta-release-update-february"
+  ],
+  "auth": {
+    "method": "none",
+    "label": "No existe ningún protocolo para clientes",
+    "helpUrl": "https://tuta.com/support",
+    "usernameForm": "No hay nada que introducir. Tuta no ofrece ningún servicio IMAP, POP ni SMTP, así que una dirección de Tuta no tiene ningún tipo de credencial para clientes de correo.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Tuta Mail y Claude: sin IMAP, sin SMTP, sin bridge",
+    "description": "Tuta no ofrece IMAP, POP ni SMTP por diseño, ni ningún bridge, así que ningún servidor MCP puede conectar un buzón de Tuta. El motivo, y qué puedes hacer en su lugar."
+  },
+  "hero": {
+    "eyebrow": "Tuta Mail + IA",
+    "titleLine1": "Tuta Mail no tiene IMAP",
+    "titleLine2": "ni SMTP, y no hay bridge",
+    "lead": "Tuta, antes Tutanota, no ofrece ninguno de los protocolos que necesita un cliente de correo o un servidor MCP, y a diferencia de Proton no incluye un bridge local que los simule. Esta página explica por qué y qué tienes realmente a tu alcance.",
+    "answer": "No, y no hay forma de sortearlo. Tuta no ofrece ningún acceso IMAP, POP ni SMTP, así que mcpemails no puede conectar un buzón de Tuta, ni tampoco Thunderbird, Apple Mail ni ningún otro cliente. Es consecuencia de cómo funciona el cifrado de Tuta: los asuntos, los cuerpos, los adjuntos, los contactos y las entradas del calendario se cifran con una clave que nunca sale de tu dispositivo, y los servidores de Tuta solo guardan texto cifrado. El IMAP estándar da por hecho un servidor capaz de leer asuntos, ordenar, buscar y entregar texto en claro a un cliente, que es justo la capacidad que Tuta eliminó. A diferencia de Proton, tampoco hay una aplicación bridge que ejecutar en local, así que si quieres un agente de IA trabajando con el correo, tiene que ser un buzón en un proveedor que hable IMAP, y mcpemails conecta uno de esos gratis."
+  },
+  "method": {
+    "title": "Cómo se conecta Tuta: solo a través de sus propias aplicaciones",
+    "body": "Tuta accede a tu buzón a través de su cliente web, sus clientes de escritorio para Windows, macOS y Linux, y sus aplicaciones móviles, mediante un protocolo cifrado propio. No hay servidor que configurar, ni puerto, ni contraseña que generar para software externo. La explicación de la propia Tuta es que admitir IMAP solo sería posible si los mensajes se descargaran y almacenaran sin cifrar en el dispositivo, lo que contradice la promesa de que tus datos están cifrados de extremo a extremo en todas partes, incluida tu propia máquina. La consecuencia para las herramientas es total: el acceso de lectura, el de envío y la búsqueda viajan por el mismo protocolo, así que no hay ninguna capacidad parcial que exponer. Lo que Tuta sí te da es una exportación completa. Los clientes de escritorio recientes exportan un mensaje suelto como <code>.eml</code> o un buzón entero como <code>.mbox</code> con un clic, en las tres plataformas de escritorio, y esa exportación está disponible en el plan gratuito."
+  },
+  "setup": [
+    {
+      "h": "Crea la cuenta gratis de mcpemails",
+      "p": "Una dirección de correo, sin tarjeta. Una bandeja conectada es gratis para siempre, y los dos pasos siguientes deciden qué va en ella."
+    },
+    {
+      "h": "Elige la dirección con la que quieres que trabaje un agente",
+      "p": "Es una decisión real, no un trámite. Elige un buzón en un proveedor que ofrezca IMAP: tu propio dominio, una cuenta del trabajo, Fastmail, Migadu, Gmail. La correspondencia que debe estar tras el cifrado de Tuta debe quedarse en Tuta, y el correo que quieres clasificar, responder y archivar automáticamente vive en la cuenta conectada."
+    },
+    {
+      "h": "Traslada el archivo si necesitas allí el historial",
+      "p": "En un cliente de escritorio de Tuta, abre un mensaje y usa el menú de tres puntos para exportarlo, o exporta el buzón como <code>.mbox</code>. Importa ese archivo en la cuenta que se puede conectar con su propia herramienta de importación. La exportación es una instantánea de ese momento, no un enlace en vivo, así que repítela si necesitas tenerla al día."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y el agente tendrá el buzón conectado con lectura, búsqueda, envío, respuesta, programación y archivo."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Tuta cifra el asunto, así que un servidor IMAP no tendría nada que servir",
+      "p": "Esta es la parte que la mayoría de las explicaciones se saltan. IMAP no es solo un transporte: el servidor analiza los mensajes, devuelve los datos del sobre, incluidos el asunto y el remitente, ordena y ejecuta SEARCH sobre el contenido. Los servidores de Tuta guardan texto cifrado y nunca tienen la clave, así que una interfaz IMAP no podría devolver nada más útil que bloques opacos, y todas las funciones de cliente basadas en el sobre y la búsqueda en el servidor dejarían de funcionar. Cifrar solo el cuerpo habría dejado IMAP como posibilidad, y Tuta eligió lo contrario."
+    },
+    {
+      "h": "No existe un bridge de Tuta, y la gente llega esperando uno",
+      "p": "Proton resolvió el mismo problema de cifrado con una aplicación de escritorio local que descifra en tu máquina y sirve IMAP a un cliente en el mismo ordenador. Tuta no ofrece nada equivalente. No hay ningún componente compatible, oficial ni de otro tipo, que convierta una cuenta de Tuta en un punto de acceso IMAP en ninguna máquina, así que el truco de localhost que con Proton al menos funciona para un cliente de escritorio aquí no existe."
+    },
+    {
+      "h": "Los directorios de ajustes publican nombres de servidor de Tuta que no existen",
+      "p": "Busca los ajustes IMAP de Tuta o Tutanota y encontrarás páginas que indican un nombre de servidor, un puerto y un método de cifrado, generados con la misma plantilla que esos sitios aplican a todos los proveedores. No hay ningún servidor así en funcionamiento. Un cliente apuntado a uno de esos servidores falla en la conexión o en el inicio de sesión, y el fallo parece un problema de credenciales, lo que lleva a la gente a buscar una contraseña de aplicación que nunca se pudo crear."
+    },
+    {
+      "h": "Un dominio propio en Tuta sigue siendo un buzón de Tuta",
+      "p": "Los planes de pago te permiten usar tu propio dominio, con registros MX que apuntan a Tuta. Eso te da la dirección, no un servidor propio, así que no hay ningún <code>mail.yourdomain.com</code> contra el que autenticarse. La situación de protocolos es idéntica a la de una dirección tutanota.com o tuta.com."
+    }
+  ],
+  "limits": [
+    "No hay término medio de solo lectura. Listar, leer, buscar y enviar dependen del mismo protocolo que Tuta no ofrece, así que no existe ninguna forma de acceso reducida o más segura que ofrecerte.",
+    "Un buzón exportado es un archivo. Un agente que trabaje con un historial .mbox importado puede buscarlo y citarlo, pero no verá nada de lo que llegue a Tuta después y no puede responder dentro de un hilo de Tuta."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Tuta Mail?",
+      "a": "No. Claude no tiene conector de Tuta y ningún servidor MCP puede crear uno, porque Tuta no expone ninguna interfaz IMAP, POP ni SMTP a la que conectarse. La respuesta práctica es mantener Tuta para el correo que quieres cifrado y darle a tu agente un buzón aparte en un proveedor que admita IMAP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Tuta?",
+      "a": "No hay ninguno. Tuta no tiene servidores IMAP, POP ni SMTP para los buzones de los usuarios, así que no hay nombre de servidor, puerto ni ajuste de cifrado que introducir en ningún sitio. Las páginas que los enumeran están rellenando una plantilla. Al correo de Tuta solo se accede a través de los clientes propios de Tuta para web, escritorio y móvil."
+    },
+    {
+      "q": "¿Por qué Tuta no admite IMAP?",
+      "a": "Por lo que cifra Tuta. Los asuntos, cuerpos, adjuntos, contactos y calendarios se cifran con una clave guardada en tu dispositivo, así que los servidores de Tuta no pueden leer nada de ello. Servir IMAP significaría o bien entregar a los clientes texto cifrado que no pueden usar, o bien almacenar el correo sin cifrar, que es precisamente la garantía que vende Tuta. Tuta ha dejado claro que no va a renunciar a ella."
+    },
+    {
+      "q": "¿Hay un bridge de Tuta como Proton Mail Bridge?",
+      "a": "No. Proton ofrece una aplicación de escritorio que descifra en local y proporciona IMAP a los clientes del mismo ordenador. Tuta no tiene ningún componente así en ningún plan, así que tampoco hay un punto de acceso local. Las herramientas de terceros que dicen hacer de bridge con Tuta no se basan en ninguna interfaz compatible, y darle a una tu contraseña de Tuta le da tu buzón."
+    },
+    {
+      "q": "¿Puedo exportar mi correo de Tuta?",
+      "a": "Sí, y es gratis. Los clientes de escritorio de Tuta para Windows, macOS y Linux exportan un mensaje suelto como .eml o el buzón entero como .mbox desde el menú del mensaje. Ese archivo se puede importar en la mayoría de los demás servicios de correo, que es la vía que sigue la gente cuando quiere el historial en una cuenta a la que llegue la automatización."
+    },
+    {
+      "q": "¿Qué hago si quiero que un agente de IA gestione mi correo?",
+      "a": "Usa dos direcciones a propósito. Mantén la correspondencia privada en Tuta, donde nada automatizado puede llegar, y usa un buzón IMAP aparte para el correo que quieres que un agente clasifique, responda, programe y archive. mcpemails conecta ese segundo buzón a Claude, Cursor o ChatGPT, con una bandeja gratis, y nunca ve el de Tuta."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja que de verdad pueda abrir",
+    "sub": "Tuta sigue sellado. Conecta un buzón IMAP para el trabajo que quieres automatizar, gratis para siempre."
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://www.centurylink.com/home/help/internet/email/how-to-set-up-your-email-server-settings-to-go-through-pop-and-smtp.html",
+    "https://www.centurylink.com/home/help/internet/email/setup-email-edit-settings-on-iphone.html",
+    "https://www.brightspeed.com/former-century-link-customers/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Mot de passe e-mail CenturyLink",
+    "helpUrl": "https://www.centurylink.com/home/help/internet/email/how-to-set-up-your-email-server-settings-to-go-through-pop-and-smtp.html",
+    "usernameForm": "Votre adresse complète, quel que soit le domaine CenturyLink utilisé : name@centurylink.net, name@centurytel.net ou name@embarqmail.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connecter l'e-mail CenturyLink à Claude en IMAP",
+    "description": "Connectez l'e-mail CenturyLink à Claude et tout client MCP en IMAP sur mail.centurylink.net:993, SMTP sur le 587. Une boîte inutilisée un an est désactivée et effacée."
+  },
+  "hero": {
+    "eyebrow": "CenturyLink + IA",
+    "titleLine1": "Connectez l'e-mail CenturyLink",
+    "titleLine2": "à Claude, Cursor, tout client MCP",
+    "lead": "Donnez à votre agent IA une vraie boîte centurylink.net. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec votre mot de passe e-mail CenturyLink, dans tous les clients MCP et pas un seul.",
+    "answer": "Claude ne peut pas accéder seul à une boîte CenturyLink. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur mail.centurylink.net, port 993, avec le courrier sortant sur smtp.centurylink.net, port 587, en STARTTLS, en se connectant avec votre adresse complète et votre mot de passe e-mail CenturyLink. Une fois la connexion établie, Claude, Cursor ou tout autre client MCP peut lire, rechercher, envoyer, répondre et organiser ce courrier. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Votre mot de passe e-mail CenturyLink fonctionne",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment CenturyLink se connecte : IMAP, STARTTLS sur le 587, et un vieux serveur",
+    "body": "CenturyLink sert IMAP sur <code>mail.centurylink.net</code>, port 993, en TLS, et reçoit le courrier sortant sur <code>smtp.centurylink.net</code>, port 587, en STARTTLS. Cette différence compte : l'entrant est en TLS implicite, le sortant négocie le TLS après connexion, et le port 25 est filtré par CenturyLink, il ne constitue donc pas une alternative. Il n'y a pas de mot de passe d'application à créer ; la boîte accepte votre mot de passe e-mail CenturyLink ordinaire, avec l'adresse complète comme nom d'utilisateur. Les mêmes réglages couvrent <code>centurytel.net</code>, <code>embarqmail.com</code> et les autres domaines historiques absorbés par CenturyLink. Derrière le nom d'hôte se trouve un serveur Mail2World, une plateforme plus ancienne que les systèmes Dovecot et Yahoo qu'utilisent la plupart des fournisseurs de ce site, et cela se voit dans ce qu'il sait faire ou non."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et ne demande pas de carte."
+    },
+    {
+      "h": "Connectez-vous d'abord au webmail centurylink.net",
+      "p": "Ouvrez la page d'accueil de CenturyLink et connectez-vous au webmail avec l'adresse que vous connectez. Cela confirme le mot de passe et remet aussi à zéro le compteur d'inactivité : CenturyLink désactive les comptes inutilisés depuis un an et supprime leur contenu."
+    },
+    {
+      "h": "Saisissez l'adresse complète dans mcpemails",
+      "p": "Choisissez IMAP / SMTP et saisissez l'adresse entière, avec <code>@centurylink.net</code>, <code>@centurytel.net</code> ou <code>@embarqmail.com</code>, ainsi que votre mot de passe e-mail. Les serveurs et la combinaison mixte TLS sur le 993 plus STARTTLS sur le 587 sont préremplis."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Ajoutez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Ce serveur propose AUTH=LOGIN et rien d'autre",
+      "p": "Le serveur IMAP de CenturyLink annonce un seul mécanisme SASL, LOGIN, et n'annonce pas SASL-IR. La plupart des clients modernes optent pour PLAIN avec les identifiants envoyés en même temps que la commande AUTHENTICATE, ne trouvent pas le mécanisme attendu, et soit plantent, soit renvoient une erreur qui ressemble à de mauvais identifiants. mcpemails utilise l'échange LOGIN pas à pas que ce serveur prend réellement en charge. C'est pourquoi un outil IMAP générique qui fonctionne partout ailleurs peut échouer ici dès la première commande."
+    },
+    {
+      "h": "Un an sans connexion supprime la boîte et tout son contenu",
+      "p": "CenturyLink indique que les comptes inutilisés pendant un an sont désactivés et leur contenu supprimé. C'est un délai plus court que chez la plupart des fournisseurs, et aucune récupération n'est possible ensuite. S'il s'agit d'une adresse secondaire que vous ne lisez jamais qu'à travers un agent, connectez-vous volontairement de temps en temps au webmail CenturyLink plutôt que de supposer que l'activité sur la boîte compte."
+    },
+    {
+      "h": "Brightspeed a repris le service internet, mais pas la messagerie",
+      "p": "Si votre service CenturyLink a été transféré à Brightspeed, votre e-mail n'a pas suivi. Brightspeed ne propose pas d'e-mail, et les boîtes centurylink.net restent accessibles sur centurylink.net, CenturyLink assurant l'assistance e-mail. Chercher ces réglages dans un compte Brightspeed est une impasse ; la boîte est toujours du côté de CenturyLink."
+    },
+    {
+      "h": "Pas d'IDLE, pas de MOVE, et une petite limite d'envoi",
+      "p": "Le serveur n'annonce ni IDLE ni MOVE : il n'y a donc pas de notification push des nouveaux messages (nous interrogeons le serveur à la place), et classer un message s'effectue par COPY, puis STORE de l'indicateur de suppression, puis EXPUNGE. CenturyLink documente aussi une taille maximale de message sortant de 10 Mo et une boîte de 700 Mo, deux valeurs bien inférieures à ce qu'autorisent la plupart des fournisseurs : les grosses pièces jointes comme une longue archive jamais élaguée se heurtent ici à des limites plus tôt que prévu."
+    }
+  ],
+  "limits": [
+    "CenturyLink documente une limite de 10 Mo sur les messages sortants : les envois avec des pièces jointes volumineuses sont donc refusés par CenturyLink.",
+    "Le quota de boîte documenté est de 700 Mo. Une boîte pleine cesse d'accepter du nouveau courrier, ce qui ressemble à un problème de distribution plutôt qu'à un problème de stockage.",
+    "Il n'y a pas d'IMAP IDLE sur ce serveur : le nouveau courrier est récupéré quand votre agent le demande plutôt que poussé dès son arrivée."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec l'e-mail CenturyLink ?",
+      "a": "Pas directement. Claude n'a pas de connecteur CenturyLink intégré. Connecter un serveur MCP comme mcpemails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation à votre courrier centurylink.net, et la même connexion fonctionne dans Cursor, ChatGPT et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de CenturyLink ?",
+      "a": "IMAP est mail.centurylink.net sur le port 993 en TLS implicite. SMTP est smtp.centurylink.net sur le port 587 en STARTTLS, pas en TLS implicite, et le port 25 est filtré par CenturyLink. Le nom d'utilisateur est votre adresse e-mail complète. Les deux serveurs ont été vérifiés par une connexion TLS réelle à la date indiquée sur cette page."
+    },
+    {
+      "q": "centurytel.net et embarqmail.com utilisent-ils les mêmes réglages ?",
+      "a": "Oui. CenturyLink gère centurylink.net, centurytel.net, embarqmail.com et ses autres domaines historiques sur une seule plateforme avec un seul jeu de noms d'hôte. Utilisez votre adresse complète comme nom d'utilisateur ; rien d'autre sur cette page ne change selon le domaine."
+    },
+    {
+      "q": "Je suis maintenant client Brightspeed. Puis-je encore connecter cette boîte ?",
+      "a": "Oui, si la boîte est toujours active. Brightspeed ne fournit pas d'e-mail, et les anciens clients CenturyLink continuent d'accéder à leur boîte existante via CenturyLink, qui assure aussi l'assistance e-mail. Ce sont les réglages de cette page qu'il faut utiliser, pas ceux d'une page de compte Brightspeed."
+    },
+    {
+      "q": "Ai-je besoin d'un mot de passe d'application pour CenturyLink ?",
+      "a": "Non. CenturyLink ne délivre pas de mots de passe propres à une application pour les clients de messagerie. Connectez-vous avec le même mot de passe e-mail que sur le webmail CenturyLink, et utilisez l'adresse complète comme nom d'utilisateur. S'il est refusé, vérifiez le mot de passe dans le webmail avant de modifier quoi que ce soit dans les réglages de votre client."
+    },
+    {
+      "q": "Mes e-mails CenturyLink sont-ils stockés sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis CenturyLink en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le contenu des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA une boîte CenturyLink",
+    "sub": "Connectez une adresse centurylink.net en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

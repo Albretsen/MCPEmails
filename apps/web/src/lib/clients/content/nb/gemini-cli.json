@@ -1,0 +1,93 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/app/.well-known/oauth-protected-resource/route.ts",
+    "https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md"
+  ],
+  "meta": {
+    "title": "Koble e-post til Gemini CLI: MCP-oppsett med httpUrl",
+    "description": "Gi Gemini CLI en ekte innboks. Én oppføring i settings.json med httpUrl, så finner CLI-en OAuth selv og åpner innloggingen i nettleseren. Én innboks gratis."
+  },
+  "hero": {
+    "eyebrow": "Gemini CLI + e-post",
+    "titleLine1": "Koble innboksen din til Gemini CLI",
+    "titleLine2": "med én innstilling",
+    "lead": "Gi Gemini CLI en ekte postkasse. Les, søk i, send, svar på, videresend, planlegg og organiser e-post fra terminalen, på tvers av alle innboksene du har koblet til.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "OAuth oppdages automatisk",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "Legg til én oppføring under mcpServers i ~/.gemini/settings.json med feltet httpUrl satt til https://mcpemails.com/api/mcp. Ved første tilkobling finner CLI-en OAuth-metadataene og åpner innloggingen i nettleseren av seg selv."
+  },
+  "method": {
+    "title": "Slik kobler Gemini CLI seg til: OAuth, ingen API-nøkkel",
+    "body": "Gemini CLI kjører standard MCP OAuth-flyt mot denne serveren. Den registrerer seg selv med <b>RFC 7591 dynamisk klientregistrering</b>, så du trenger ikke opprette noen klient-ID, og autoriserer med <b>autorisasjonskode pluss PKCE</b> med S256. Ingen klienthemmelighet sendes noen gang, og tokenet har bare de tilgangene (scopes) du godkjenner på samtykkeskjermen vår. Tilgangstokenet den får varer i én time og fornyes automatisk. Det vises under Dashboard, API Keys som <code>OAuth:</code> etterfulgt av klientnavnet, og det er der du tilbakekaller tilkoblingen."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto og koble til en postkasse",
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Gmail kobles til med Google-innlogging med ett klikk; iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+    },
+    {
+      "h": "Åpne settings.json",
+      "p": "Rediger <code>~/.gemini/settings.json</code> for alle prosjekter, eller <code>.gemini/settings.json</code> inne i ett enkelt prosjekt."
+    },
+    {
+      "h": "Legg til serveren",
+      "p": "Legg til oppføringen nedenfor under <code>mcpServers</code>. Feltet for en Streamable HTTP-server her er <code>httpUrl</code>."
+    },
+    {
+      "h": "Koble til",
+      "p": "Ved første tilkobling finner CLI-en OAuth automatisk fra servermetadataene og åpner innloggingen i nettleseren. Godkjenn tilgangene du vil at CLI-en skal ha."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "httpUrl er et annet felt enn url, og forskjellen er transporten",
+      "p": "I innstillingene for Gemini CLI betyr <code>httpUrl</code> en Streamable HTTP-server, og det er det denne er. Andre nøkler i det samme objektet velger andre transporter. En snutt kopiert fra en Cursor-guide, som bruker <code>url</code>, gir deg ikke en fungerende Streamable HTTP-tilkobling her."
+    },
+    {
+      "h": "Oppdagelse er det som gjør dette konfigurasjonsfritt, og den starter med en 401",
+      "p": "CLI-en trenger ikke å bli fortalt hvor den skal autentisere. Et uautentisert kall får en 401 der <code>WWW-Authenticate</code>-headeren peker på metadataene for den beskyttede ressursen vår, som navngir autorisasjonsserveren, hvis metadata igjen navngir endepunktene for registrering, autorisasjon og token. Den kjeden er grunnen til at det ikke finnes noen klient-ID å opprette og ingenting å lime inn utover URL-en."
+    },
+    {
+      "h": "En CLI på en delt maskin eller en maskin uten skjerm bør heller bruke nøkkelveien",
+      "p": "Nettleserflyten trenger en nettleser. På en byggeagent eller en delt maskin er det ærlige oppsettet en bearer-API-nøkkel avgrenset til nøyaktig det automatiseringen skal gjøre, lagret i miljøet i stedet for i en innstillingsfil som committes."
+    }
+  ],
+  "limits": [
+    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger.",
+    "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post vekker aldri agenten din av seg selv. Vil du reagere på innkommende e-post, må du polle etter en tidsplan.",
+    "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
+  ],
+  "faq": [
+    {
+      "q": "Hvordan kobler jeg e-post til Gemini CLI?",
+      "a": "Legg til en oppføring under mcpServers i ~/.gemini/settings.json med httpUrl satt til https://mcpemails.com/api/mcp. Ved første tilkobling finner CLI-en OAuth fra servermetadataene og åpner innloggingen i nettleseren. Deretter har den verktøy for å lese, søke, sende, svare, videresende, organisere og planlegge e-post."
+    },
+    {
+      "q": "Skal jeg bruke url eller httpUrl?",
+      "a": "httpUrl. I innstillingene for Gemini CLI velger den nøkkelen Streamable HTTP-transporten, som er transporten denne serveren bruker. Å kopiere en url-oppføring fra en annen klient er den vanlige grunnen til at serveren dukker opp i listen uten å gi noen verktøy."
+    },
+    {
+      "q": "Er dette det samme som Gmail-MCP-serveren Google publiserer?",
+      "a": "Nei. Google publiserer en Workspace-MCP-server som dekker Gmail sammen med de andre tjenestene deres, og for bare Gmail i en arbeidsflyt som kun bruker Google er det den korteste veien. mcpemails finnes for tilfellene der ikke alle postkassene er hos Google, og der den samme URL-en også må fungere i Claude, Cursor og ChatGPT."
+    },
+    {
+      "q": "Hvilke postkasser kan Gemini CLI nå på denne måten?",
+      "a": "Gmail via Google-innlogging, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord, og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Klienten ser alle gjennom den samme tilkoblingen: agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
+    },
+    {
+      "q": "Kan Gemini CLI sende e-post uten at jeg ser det?",
+      "a": "Bare hvis du tillater det. Sending krever tilgangen send:email, så en nøkkel eller et token uten den tilgangen kan ikke sende i det hele tatt. I tillegg kan eieren av en innboks kreve menneskelig godkjenning i dashbordet, som holder tilbake hver sending, hvert svar, hver videresending, hvert utkast som sendes og hver planlagte sending til en person slipper den gjennom."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Hver melding hentes direkte fra leverandøren din for forespørselen som ba om den, og sendes rett videre til klienten din. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, slik at fremtidige kall kan autentiseres. Sletter du innboksen i dashbordet, eller tilbakekaller tilgangen hos leverandøren, avsluttes tilkoblingen med en gang."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi Gemini CLI en ekte innboks",
+    "sub": "Én innstilling, én innlogging. Én innboks gratis for alltid, uten kort."
+  }
+}

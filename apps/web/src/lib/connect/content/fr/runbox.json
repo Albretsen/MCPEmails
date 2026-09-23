@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://help.runbox.com/email-program-settings/",
+    "https://help.runbox.com/more-about-two-factor-authentication-and-app-passwords/",
+    "https://help.runbox.com/usernames-and-passwords/",
+    "https://help.runbox.com/account-security/"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "App Password (obligatoire une fois la 2FA activée)",
+    "helpUrl": "https://help.runbox.com/more-about-two-factor-authentication-and-app-passwords/",
+    "usernameForm": "Votre adresse e-mail Runbox principale. Une adresse runbox.com s'authentifie aussi avec le nom d'utilisateur seul ; une adresse sur domaine personnalisé doit être saisie en entier. Les alias ne fonctionnent jamais.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connecter Runbox à Claude avec un App Password",
+    "description": "Connectez Runbox à Claude, Cursor et tout client MCP en IMAP via mail.runbox.com:993. Une fois la 2FA Runbox activée, seul un App Password authentifie un client."
+  },
+  "hero": {
+    "eyebrow": "Runbox + IA",
+    "titleLine1": "Connectez Runbox à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Runbox. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP, dans tous vos clients MCP et pas un seul, avec la règle des App Passwords et l'échec d'authentification silencieux tous deux expliqués.",
+    "answer": "Claude ne peut pas accéder seul à Runbox. mcpemails est un serveur MCP hébergé qui l'y connecte en IMAP via mail.runbox.com sur le port 993, et en SMTP sur le même serveur au port 465, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Connectez-vous avec votre adresse Runbox principale, jamais un alias. Si l'authentification à deux facteurs est activée sur le compte, votre mot de passe Runbox habituel n'authentifie plus du tout l'IMAP, le POP, le SMTP ni le CalDAV, et vous devez utiliser à la place un App Password (mot de passe d'application) créé dans votre compte Runbox. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "App Password une fois la 2FA activée",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Runbox se connecte : un seul serveur, votre adresse principale et un App Password",
+    "body": "Runbox fait tourner sa messagerie sur un seul nom d'hôte. IMAP : <code>mail.runbox.com</code> sur le port 993 en TLS ; POP3 : le même serveur sur 995 ; SMTP : <code>mail.runbox.com</code> sur le port 465 en TLS ou 587 en STARTTLS. Runbox note que le 465 offre une meilleure sécurité de connexion, tandis que le 587 est parfois plus compatible avec les anciens logiciels. Le nom d'utilisateur est votre adresse Runbox <b>principale</b> : une adresse <code>runbox.com</code> fonctionne en entier ou avec le nom d'utilisateur seul, une adresse sur un domaine qui vous appartient doit être saisie en entier, et Runbox précise explicitement que les adresses alias ne permettent pas de se connecter. Le mot de passe nécessaire dépend d'un seul réglage du compte. Les <b>App Passwords</b> de Runbox fonctionnent avec ou sans authentification à deux facteurs, mais une fois la 2FA activée ils ne sont plus facultatifs : le mot de passe du compte est refusé par tous les protocoles, sauf l'interface web."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours. Vous obtenez à la fin une URL MCP et une clé."
+    },
+    {
+      "h": "Créez un App Password dans votre compte Runbox",
+      "p": "Connectez-vous à Runbox sur le web et ouvrez l'écran App Passwords dans les paramètres de votre compte. Nommez-le d'après cette connexion, validez et copiez la valeur. Faites-le que vous utilisiez ou non l'authentification à deux facteurs : un App Password peut être révoqué séparément, et Runbox interdit l'utilisation des App Passwords pour se connecter au webmail, si bien que l'identifiant enregistré ici ne peut pas servir à se connecter à votre compte pour le modifier."
+    },
+    {
+      "h": "Ajoutez la boîte dans mcpemails avec votre adresse principale",
+      "p": "Choisissez IMAP / SMTP. Saisissez votre adresse Runbox <b>principale</b> comme nom d'utilisateur, c'est-à-dire l'adresse affichée en haut à droite du webmail Runbox lorsque vous êtes connecté, et collez l'App Password. Le serveur est prérempli avec <code>mail.runbox.com</code> dans les deux sens et a été vérifié par une connexion TLS réelle."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Runbox n'annonce pas SASL-IR, alors que la plupart des bibliothèques clientes le supposent",
+      "p": "Le serveur répond par un simple <code>* OK IMAP4 ready</code> et propose <code>AUTH=PLAIN</code> sans la capacité SASL-IR : il rejette donc l'authentification en une étape qui envoie les identifiants avec la commande AUTHENTICATE. Un client qui suppose SASL-IR reçoit un BAD nu sans explication, et chaque couche au-dessus le présente comme un échec de connexion : vous voilà à chercher un problème de mot de passe qui n'existe pas. mcpemails détecte le BAD et se replie sur l'échange en deux étapes, si bien que la connexion aboutit ici. C'est la raison pour laquelle beaucoup d'outils IMAP par ailleurs solides échouent face à Runbox tout en fonctionnant partout ailleurs."
+    },
+    {
+      "h": "Activer la 2FA casse tous les protocoles à la fois, pas seulement la messagerie",
+      "p": "Runbox indique que lorsque vous activez l'authentification à deux facteurs, votre mot de passe de compte habituel cesse de fonctionner d'un coup pour l'IMAP, le POP, le SMTP, le FTP et le CalDAV ou CardDAV. Le webmail continue de fonctionner, si bien que le compte semble en bonne santé alors que tous les appareils échouent simultanément. Chacun d'eux a besoin d'un App Password. Définissez un Unlock Code (code de déverrouillage) au moment où vous activez la 2FA : sans lui, perdre votre application d'authentification oblige à contacter l'assistance Runbox au lieu de désactiver la 2FA vous-même."
+    },
+    {
+      "h": "Un alias ne permet pas de se connecter, quelle que soit la quantité de courrier qu'il reçoit",
+      "p": "Runbox précise que les adresses alias ne peuvent pas servir à se connecter au compte, et que le nom d'utilisateur est votre adresse e-mail Runbox principale, affichée au-dessus de la liste des messages dans le webmail. Cela piège ceux qui sont passés discrètement à un alias pour tout et ne se souviennent plus avec quelle adresse le compte a été ouvert. Le courrier envoyé à n'importe quel alias arrive toujours dans la même boîte et votre agent le voit toujours ; seul l'identifiant est pointilleux."
+    },
+    {
+      "h": "SORT et THREAD côté serveur sont présents, MOVE ne l'est pas",
+      "p": "Un ensemble de capacités inhabituel. Runbox annonce QUOTA, NAMESPACE, CHILDREN, SORT ainsi que THREAD=REFERENCES et THREAD=ORDEREDSUBJECT : le tri et le regroupement en fils se font sur le serveur au lieu de rapatrier les en-têtes, ce qui rend la recherche dans une grande boîte plus rapide que ne le laisserait penser le reste de la liste des capacités. Il n'annonce pas MOVE : classer un message consiste donc en un COPY, un STORE du drapeau \\Deleted et un EXPUNGE. UIDPLUS est présent, si bien que l'UID de destination est au moins renvoyé sans seconde recherche."
+    }
+  ],
+  "limits": [
+    "Connecter une boîte Runbox à un client IA signifie que ce fournisseur d'IA lit le contenu des messages sur lesquels il travaille. mcpemails récupère le courrier en direct depuis mail.runbox.com à chaque requête et ne stocke pas le corps des messages, et les identifiants sont chiffrés au repos, mais le texte parvient tout de même à Claude, Cursor ou au client que vous connectez. La juridiction norvégienne de Runbox et ses engagements en matière de confidentialité couvrent Runbox. Ils ne s'étendent pas à un fournisseur d'IA que vous rattachez vous-même à la boîte.",
+    "Le serveur n'annonce pas SPECIAL-USE : rien dans le protocole n'indique quel dossier est Sent, Drafts, Trash ou Spam, et les rôles sont déduits des noms. Si vous avez renommé des dossiers dans Runbox 7, ou si vous avez plusieurs dossiers Sent issus d'une ancienne importation, nommez le dossier explicitement quand vous demandez à un agent d'y classer quelque chose.",
+    "En l'absence de MOVE, un déplacement n'est pas atomique. Si une connexion tombe en cours de route, un message peut brièvement exister à la fois dans le dossier source et dans le dossier de destination."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec Runbox ?",
+      "a": "Pas directement. Claude n'a pas de connecteur Runbox intégré. Connecter un serveur MCP comme mcpemails à votre boîte Runbox en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite dans Cursor, ChatGPT et d'autres clients MCP sans rien reconfigurer."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de Runbox ?",
+      "a": "IMAP : mail.runbox.com sur le port 993 en TLS, et POP3 : le même serveur sur 995. SMTP : mail.runbox.com sur le port 465 en TLS, ou 587 en STARTTLS. Le nom d'utilisateur est votre adresse Runbox principale, et pour une adresse runbox.com le nom d'utilisateur seul fonctionne aussi. Les deux serveurs ont été vérifiés par une connexion TLS réelle."
+    },
+    {
+      "q": "Ai-je besoin d'un App Password Runbox ?",
+      "a": "Oui si l'authentification à deux facteurs est activée, car Runbox refuse alors le mot de passe du compte pour l'IMAP, le POP, le SMTP, le FTP et le CalDAV. Les App Passwords fonctionnent aussi sans 2FA, et en utiliser un est de toute façon le meilleur choix : il peut être révoqué individuellement, et Runbox n'accepte pas les App Passwords pour se connecter au webmail, si bien que l'identifiant enregistré ne peut pas servir à se connecter à votre compte."
+    },
+    {
+      "q": "Pourquoi ma connexion Runbox échoue-t-elle sans message d'erreur utile ?",
+      "a": "Généralement parce que le client a supposé la capacité SASL-IR, que Runbox n'annonce pas. Le serveur répond par un simple BAD à la tentative d'authentification en une étape, et le client le présente comme un échec d'identifiants. mcpemails réessaie avec l'échange en deux étapes, la connexion fonctionne donc ici. L'autre cause fréquente est la saisie d'un alias au lieu de votre adresse principale."
+    },
+    {
+      "q": "Puis-je me connecter avec une adresse alias Runbox ?",
+      "a": "Non. Runbox précise explicitement que les adresses alias ne permettent pas de se connecter. Le nom d'utilisateur est l'adresse principale du compte, affichée en haut à droite du webmail Runbox. Les alias livrent toujours dans la même boîte, un agent lit donc normalement le courrier qui leur est adressé, et vous pouvez toujours envoyer depuis un alias en le définissant comme identité."
+    },
+    {
+      "q": "Mon courrier Runbox est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis mail.runbox.com en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé. Le client IA que vous connectez reçoit, lui, le contenu de tout ce qu'il lit : c'est une décision distincte de l'endroit où se trouve le courrier."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Runbox à votre IA",
+    "sub": "Connectez Runbox en quelques minutes avec un App Password. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

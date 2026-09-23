@@ -1,0 +1,105 @@
+{
+  "_sources": [
+    "https://comeinsidebox.com/naver-mail-imap-pop3/",
+    "https://servertrix.com/1879",
+    "https://www.clien.net/service/board/cm_iphonien/19011627",
+    "https://www.enterapps.kr/notice/?bmode=view&idx=168294489",
+    "https://www.getmailbird.com/setup/access-naver-com-via-imap-smtp"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Mot de passe d'application (애플리케이션 비밀번호)",
+    "helpUrl": "https://nid.naver.com/",
+    "usernameForm": "Votre adresse complète, domaine compris : name@naver.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connecter Naver Mail à Claude avec un mot de passe d'app",
+    "description": "Connectez Naver Mail à Claude, Cursor ou tout client MCP en IMAP sur imap.naver.com:993. Depuis juin 2025 : validation en deux étapes et mot de passe d'application."
+  },
+  "hero": {
+    "eyebrow": "Naver Mail + IA",
+    "titleLine1": "Connectez Naver Mail à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Naver. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec un mot de passe d'application Naver, dans tous les clients MCP plutôt qu'un seul.",
+    "answer": "Claude ne peut pas atteindre Naver Mail tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.naver.com, port 993, en s'authentifiant avec un mot de passe d'application Naver (애플리케이션 비밀번호) plutôt qu'avec le mot de passe de votre compte. Depuis le 24 juin 2025, Naver exige la validation en deux étapes sur le compte et un mot de passe d'application pour toute connexion POP3, IMAP et SMTP : le mot de passe du compte n'authentifie donc plus aucun client de messagerie. Vous devez aussi activer IMAP dans les réglages de Naver Mail, un contrôle distinct du mot de passe. Une boîte est gratuite.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Validation en deux étapes et mot de passe d'application",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Naver Mail se connecte : IMAP, validation en deux étapes et mot de passe d'application",
+    "body": "Naver sert IMAP sur <code>imap.naver.com</code>, port 993, en TLS implicite, et SMTP sur <code>smtp.naver.com</code>, port 465. Ces serveurs n'ont pas changé depuis des années. Ce qui a changé, c'est l'identifiant. Le <b>24 juin 2025</b>, Naver a rendu obligatoires la validation en deux étapes et un mot de passe d'application pour l'accès POP3, IMAP et SMTP, et après une période de grâce aujourd'hui terminée, les clients de messagerie utilisant l'ancien mot de passe du compte ont complètement cessé de fonctionner. Deux conditions distinctes doivent désormais être réunies. IMAP et SMTP doivent être activés dans les réglages propres à Naver Mail, un interrupteur propre à chaque boîte. Et la validation en deux étapes doit être activée sur votre identifiant Naver, car l'écran des mots de passe d'application n'existe qu'à cette condition. C'est le mot de passe d'application que vous collez dans un client ; le mot de passe du compte ne sert plus jamais pour le courrier."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et reste gratuite, sans carte bancaire. Deux éléments seront générés dans les étapes suivantes : gardez l'onglet ouvert pour la dernière."
+    },
+    {
+      "h": "Activez IMAP/SMTP dans les réglages de Naver Mail",
+      "p": "Ouvrez Naver Mail et cliquez sur 환경설정 (Réglages) en bas à gauche, puis passez à l'onglet POP3/IMAP 설정 en haut et choisissez l'onglet IMAP/SMTP 설정 à l'intérieur. Réglez IMAP/SMTP 사용 sur 사용함 (utiliser), puis appuyez sur 확인 pour enregistrer. Cet interrupteur agit au niveau de la boîte et n'active rien sur votre compte Naver ; sans lui, imap.naver.com refuse la connexion quel que soit le mot de passe envoyé."
+    },
+    {
+      "h": "Activez la validation en deux étapes et générez un mot de passe d'application",
+      "p": "Allez sur nid.naver.com, ouvrez 보안설정 (Réglages de sécurité) et configurez 2단계 인증 (validation en deux étapes) si elle n'est pas déjà active, puis cliquez sur 관리 (gérer). À l'intérieur, ouvrez 애플리케이션 비밀번호 관리 (gestion des mots de passe d'application) et cliquez sur 생성하기 (générer). Choisissez l'option de saisie directe, nommez-le par exemple mcpemails, et copiez le mot de passe affiché par Naver. Dans mcpemails, choisissez IMAP / SMTP, saisissez votre adresse Naver complète et collez ce mot de passe d'application plutôt que votre mot de passe Naver."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre client IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent peut lire, rechercher, envoyer, répondre, transférer, planifier et organiser la boîte Naver."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Naver a volontairement cassé tous les clients existants en 2025",
+      "p": "Si Naver Mail fonctionnait dans Thunderbird, Apple Mail ou un script et s'est arrêté, rien n'a changé de votre côté. À partir du 24 juin 2025, Naver a exigé la validation en deux étapes et un mot de passe d'application pour POP3, IMAP et SMTP, a accordé une période de grâce aux connexions existantes, puis l'a close. Le mot de passe du compte échoue désormais à la connexion avec une erreur d'authentification ordinaire, exactement comme un mot de passe périmé : le réflexe naturel est de le retaper et de le voir échouer à nouveau. La solution n'est pas un meilleur mot de passe, c'est un autre type de mot de passe."
+    },
+    {
+      "h": "Activer IMAP et créer le mot de passe d'application se font dans deux produits différents",
+      "p": "L'interrupteur du protocole se trouve dans Naver Mail, sous 환경설정. Le mot de passe d'application se trouve dans votre compte Naver ID sur nid.naver.com, derrière la validation en deux étapes. Faire l'un sans l'autre produit le même échec d'authentification, et aucun des deux écrans ne mentionne l'autre. La plupart des problèmes de connexion à Naver viennent de l'absence de l'une de ces deux moitiés, pas des noms de serveurs ni des ports."
+    },
+    {
+      "h": "Le seul mécanisme annoncé par Naver est AUTH=PLAIN",
+      "p": "La ligne de capacités IMAP de Naver propose <code>AUTH=PLAIN</code> et pas <code>AUTH=LOGIN</code>. Les clients et bibliothèques codés en dur sur le mécanisme LOGIN, courants dans les outils d'abord écrits pour Exchange, sont refusés à l'étape d'authentification avec une erreur peu parlante au lieu de basculer sur l'autre mécanisme. Côté SMTP, PLAIN et LOGIN sont tous deux acceptés : la partie envoi du compte peut donc fonctionner dans un client où la partie réception échoue."
+    },
+    {
+      "h": "Naver Works est un autre service, et ces réglages ne s'y appliquent pas",
+      "p": "Naver Works, la suite professionnelle vendue aux entreprises coréennes, n'est pas le même produit qu'une boîte personnelle <code>@naver.com</code>. Il a sa propre administration, ses propres contrôles de protocoles et ses propres noms de serveurs. Si votre adresse est sur un domaine d'entreprise administré via Naver Works, prenez les serveurs dans cette console plutôt que sur cette page, puis connectez la boîte dans mcpemails comme un compte IMAP et SMTP ordinaire."
+    }
+  ],
+  "limits": [
+    "Naver n'annonce pas IDLE : le courrier est donc interrogé périodiquement plutôt que poussé. Votre agent voit un nouveau message la prochaine fois qu'il consulte la boîte, pas à l'instant où il arrive.",
+    "Naver annonce une limite d'ajout (APPEND) d'environ 40 MB en IMAP, et son serveur SMTP accepte des messages jusqu'à environ 38 MB. Un transfert avec des pièces jointes plus volumineuses est refusé à l'envoi plutôt que mis en file d'attente.",
+    "Un mot de passe d'application est lié à la validation en deux étapes. Si vous désactivez la validation en deux étapes sur le compte Naver, le mot de passe d'application n'est plus valide et la connexion tombe."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec Naver Mail ?",
+      "a": "Pas directement. Claude n'a pas de connecteur Naver intégré et ne peut pas ouvrir seul une connexion IMAP. Connecter un serveur MCP comme mcpemails à votre boîte Naver donne à Claude un accès en lecture, recherche, envoi, réponse, transfert, planification et organisation, et la même connexion fonctionne depuis Cursor et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de Naver ?",
+      "a": "IMAP est imap.naver.com sur le port 993 en TLS implicite. SMTP est smtp.naver.com sur le port 465, également en TLS implicite. Connectez-vous avec votre adresse naver.com complète et un mot de passe d'application Naver. Les deux serveurs ont été vérifiés par une connexion TLS réelle à la date indiquée sur cette page."
+    },
+    {
+      "q": "Pourquoi mon mot de passe Naver ne fonctionne-t-il plus ?",
+      "a": "Parce que Naver a cessé de l'accepter. Depuis le 24 juin 2025, POP3, IMAP et SMTP exigent la validation en deux étapes sur le compte et un mot de passe d'application généré depuis votre Naver ID. Des connexions qui fonctionnaient depuis des années ont échoué à la fin de la période de grâce. Générez un mot de passe d'application sur nid.naver.com et utilisez-le à la place."
+    },
+    {
+      "q": "Comment créer un mot de passe d'application Naver ?",
+      "a": "Connectez-vous sur nid.naver.com, ouvrez 보안설정 et activez 2단계 인증 si elle est désactivée. Cliquez sur 관리 à côté, puis ouvrez 애플리케이션 비밀번호 관리 et cliquez sur 생성하기. Donnez un nom au mot de passe pour pouvoir le révoquer séparément plus tard, puis copiez-le dans le champ mot de passe de votre client de messagerie ou de mcpemails."
+    },
+    {
+      "q": "Dois-je quand même activer IMAP dans les réglages de Naver Mail ?",
+      "a": "Oui. Le mot de passe d'application est un identifiant au niveau du compte et l'interrupteur IMAP un réglage au niveau de la boîte, et les deux sont nécessaires. Dans Naver Mail, ouvrez 환경설정, allez dans l'onglet POP3/IMAP 설정, choisissez IMAP/SMTP 설정, réglez-le sur 사용함 et enregistrez. Sans cette étape, vous avez un mot de passe valide devant une porte fermée."
+    },
+    {
+      "q": "Mon courrier Naver est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis Naver en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos, et le corps des messages n'est pas conservé après la requête qui l'a demandé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Naver à votre IA",
+    "sub": "Connectez Naver Mail en quelques minutes avec un mot de passe d'application. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

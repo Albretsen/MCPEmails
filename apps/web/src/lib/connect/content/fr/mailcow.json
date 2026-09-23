@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://docs.mailcow.email/post_installation/firststeps-ssl/",
+    "https://docs.mailcow.email/",
+    "https://doc.dovecot.org/2.3/configuration_manual/dovecot_ssl_configuration/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte mail",
+    "helpUrl": "https://docs.mailcow.email/post_installation/firststeps-ssl/",
+    "usernameForm": "L'adresse complète de la boîte, exactement telle qu'elle apparaît dans la liste Mailboxes, par exemple you@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connecter mailcow à Claude, Cursor et aux clients MCP",
+    "description": "Connectez une boîte mailcow à Claude, Cursor et ChatGPT en IMAP sur 993. Pourquoi acme-mailcow ne certifie que MAILCOW_HOSTNAME et ce que casse SKIP_LETS_ENCRYPT."
+  },
+  "hero": {
+    "eyebrow": "mailcow + IA",
+    "titleLine1": "Connectez mailcow à Claude,",
+    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "lead": "mailcow vous donne déjà Dovecot, Postfix et SOGo dans une seule pile. Ajoutez un serveur MCP par-dessus et votre agent peut lire, rechercher, envoyer, répondre, planifier et classer le courrier dans les boîtes que vous hébergez vous-même.",
+    "answer": "Claude ne peut pas accéder seul à un serveur mailcow. mcpemails est un serveur MCP hébergé qui se connecte à votre installation mailcow en IMAP sur le port 993, au nom d'hôte que vous avez défini comme MAILCOW_HOSTNAME dans mailcow.conf, avec le mot de passe de la boîte issu de la liste Mailboxes, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Il n'y a pas de serveur partagé : c'est votre serveur, il doit être publié sur Internet, et vous devez vous connecter avec exactement le nom d'hôte figurant sur le certificat émis par acme-mailcow. Une boîte est gratuite.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe de la boîte depuis l'interface mailcow",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment mailcow se connecte : MAILCOW_HOSTNAME sur 993",
+    "body": "mailcow est une pile Docker Compose dont la partie messagerie repose sur Dovecot pour l'IMAP et Postfix pour la soumission : le comportement des protocoles est donc classique et bien connu. Ce qui est propre à mailcow, c'est le nom d'hôte. La pile a exactement un nom canonique, <code>MAILCOW_HOSTNAME</code>, défini dans <code>mailcow.conf</code> à l'installation et quasiment jamais modifié ensuite, et c'est ce nom qu'il faut utiliser comme serveur IMAP et SMTP. Dovecot répond sur 993 en TLS implicite et sur 143 avec STARTTLS. Postfix répond sur 465 et 587. Les identifiants sont le mot de passe de la boîte défini sous Mailboxes, et non le mot de passe administrateur de l'interface mailcow : ce sont des comptes distincts, et l'identifiant administrateur n'est pas une boîte mail."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Lisez MAILCOW_HOSTNAME dans mailcow.conf",
+      "p": "Sur la machine hôte, lancez <code>grep MAILCOW_HOSTNAME /opt/mailcow-dockerized/mailcow.conf</code>. Cette valeur, et non le domaine nu ni le nom propre de la machine, est votre nom de serveur IMAP et SMTP, car c'est le nom pour lequel acme-mailcow a demandé le certificat."
+    },
+    {
+      "h": "Vérifiez la boîte et son mot de passe",
+      "p": "Dans l'interface mailcow, ouvrez Configuration puis Mailboxes. Vérifiez que l'adresse est active et, si vous ne connaissez pas son mot de passe, définissez-en un nouveau à cet endroit. Ajoutez ensuite la boîte dans mcpemails : choisissez IMAP / SMTP, saisissez le serveur MAILCOW_HOSTNAME et les identifiants de la boîte."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Ajoutez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Le certificat couvre MAILCOW_HOSTNAME et presque rien d'autre",
+      "p": "acme-mailcow demande un certificat pour <code>MAILCOW_HOSTNAME</code>, plus <code>autodiscover.</code> et <code>autoconfig.</code> pour chaque domaine de messagerie ajouté, plus tout ce que vous avez listé dans <code>ADDITIONAL_SAN</code>. Votre domaine nu n'est pas dans cette liste. Se connecter à <code>yourdomain.com:993</code> échoue donc à la validation du certificat alors que celui-ci est parfaitement valide, simplement parce que le nom ne correspond pas. Utilisez la valeur de MAILCOW_HOSTNAME telle quelle et l'incohérence disparaît."
+    },
+    {
+      "h": "SKIP_LETS_ENCRYPT laisse un certificat snakeoil que les navigateurs vous cachent",
+      "p": "Si <code>SKIP_LETS_ENCRYPT=y</code> est défini dans <code>mailcow.conf</code>, ou si acme-mailcow n'a jamais réussi un challenge, la pile continue de servir le certificat auto-signé généré à l'installation. Tout le monde a cliqué sur l'avertissement du navigateur il y a des mois puis l'a oublié, donc rien ne semble cassé en local, mais un client qui valide correctement refuse la connexion. Vérifiez ce qui est réellement servi avec <code>openssl s_client -connect $MAILCOW_HOSTNAME:993</code> plutôt que de vous fier à l'interface."
+    },
+    {
+      "h": "Le port 80 doit rester joignable, sinon le certificat cesse discrètement de se renouveler",
+      "p": "Le client ACME de mailcow utilise le challenge HTTP-01, et la documentation indique explicitement que mailcow doit être accessible sur le port 80 pour que cela fonctionne. Les administrateurs qui ferment le port 80 après l'installation, ou placent un autre serveur web devant la pile, obtiennent un certificat qui se renouvelle un temps, puis plus du tout. L'IMAP sur 993 continue de fonctionner jusqu'au jour de l'expiration, puis tous les clients échouent en même temps. Si vous ne pouvez pas laisser le 80 ouvert, passez le déploiement à un challenge DNS-01."
+    },
+    {
+      "h": "Publier un port sur une interface privée cache le serveur à tout l'extérieur",
+      "p": "Les liaisons de ports dans <code>mailcow.conf</code> acceptent une adresse en plus d'un port. Une liaison comme <code>IMAPS_PORT=127.0.0.1:993</code> est une façon normale de faire tourner mailcow derrière un proxy, et elle signifie que <code>docker ps</code> montre le conteneur en bonne santé alors que rien hors de la machine ne peut ouvrir le port. Vérifiez la joignabilité depuis une machine sur un autre réseau avant de supposer que les identifiants sont en cause."
+    }
+  ],
+  "limits": [
+    "Un serveur MCP hébergé doit ouvrir une connexion IMAP entrante vers votre pile : un mailcow publié uniquement sur une interface privée ou joignable seulement via un VPN ne peut pas être connecté de cette façon. mcpemails peut être auto-hébergé à côté de mailcow si vous préférez que rien d'extérieur ne touche au 993.",
+    "L'envoi passe par votre propre Postfix : l'acceptation des messages en aval dépend donc entièrement de vos enregistrements SPF, DKIM et DMARC et de la présence éventuelle de votre IP sur une liste noire."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec mailcow ?",
+      "a": "Pas tout seul. Claude n'a pas de connecteur mailcow et ne peut pas ouvrir une session IMAP vers un serveur que vous gérez. Relier un serveur MCP comme mcpemails à votre installation mailcow donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation aux boîtes qu'elle héberge, dans le client MCP de votre choix."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de mailcow ?",
+      "a": "Le serveur est votre MAILCOW_HOSTNAME, que vous pouvez lire dans mailcow.conf. L'IMAP est sur le port 993 en TLS implicite, ou 143 avec STARTTLS. La soumission est sur 465 en TLS implicite ou 587 avec STARTTLS. Connectez-vous avec l'adresse complète de la boîte et le mot de passe défini pour elle dans l'interface mailcow."
+    },
+    {
+      "q": "Pourquoi ma connexion mailcow est-elle refusée ?",
+      "a": "La cause la plus fréquente est l'utilisation du compte administrateur mailcow au lieu d'une boîte mail. L'identifiant administrateur n'existe que pour l'interface web et n'a aucune boîte IMAP derrière lui. Vérifiez que vous utilisez une adresse qui figure sous Configuration puis Mailboxes, et que la boîte est active et non désactivée."
+    },
+    {
+      "q": "mailcow, est-ce la même chose que Dovecot ?",
+      "a": "mailcow intègre Dovecot comme serveur IMAP, avec Postfix, SOGo et Rspamd, dans une pile Docker Compose surmontée d'une interface web. Tout ce qui vaut pour le comportement IMAP de Dovecot vaut ici, c'est pourquoi notre page Dovecot mérite d'être lue si vous devez modifier directement les écouteurs ou les rôles des dossiers."
+    },
+    {
+      "q": "Mon courrier est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis votre serveur mailcow via IMAP pour chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le contenu des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA une boîte mailcow",
+    "sub": "Connectez une boîte de votre propre pile. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

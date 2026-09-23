@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.infomaniak.com/en/support/faq/1321/add-a-device-create-an-email-password",
+    "https://www.infomaniak.com/en/support/faq/2429/configure-em-client-with-imap-email",
+    "https://www.infomaniak.com/en/support/faq/2855/manage-application-passwords"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Enhetspassord",
+    "helpUrl": "https://www.infomaniak.com/en/support/faq/1321/add-a-device-create-an-email-password",
+    "usernameForm": "Hele adressen din, inkludert domenet: name@yourdomain.ch.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Infomaniak Mail til Claude og MCP-klienter",
+    "description": "Koble Infomaniak Mail til Claude, Cursor og enhver MCP-klient over IMAP på mail.infomaniak.com:993. Krever et enhetspassord, ikke kontopassordet ditt."
+  },
+  "hero": {
+    "eyebrow": "Infomaniak Mail + AI",
+    "titleLine1": "Koble Infomaniak Mail til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Infomaniak-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP med et enhetspassord generert for den adressen.",
+    "answer": "Claude kan ikke nå Infomaniak Mail på egen hånd. mcpemails er en driftet MCP-server som kobler til over IMAP på mail.infomaniak.com på port 993, og autentiserer med et enhetspassord generert for den e-postadressen, ikke med passordet til Infomaniak-kontoen din, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Infomaniak godtar ikke kontopassordet over IMAP i det hele tatt, og de separate applikasjonspassordene deres er noe annet som ikke fungerer her. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Enhetspassord, ikke kontopassordet",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles Infomaniak til: IMAP og et enhetspassord",
+    "body": "Infomaniak leverer IMAP på <code>mail.infomaniak.com</code> på port 993 med implisitt TLS, og SMTP på samme vert på port 465. Begge vertsnavnene er felles for alle Infomaniak Mail-kunder, også adresser på ditt eget domene og på en kSuite-plan, så det finnes ingen kundespesifikk server å slå opp. Det er på autentisering Infomaniak skiller seg fra nesten alle andre verter i denne kategorien: passordet til Infomaniak Manager godtas ikke av IMAP eller SMTP. Hver e-postadresse utsteder sine egne <b>enhetspassord</b> (device passwords), generert ett per klient under adressens Devices-fane, minst seksten tegn lange, vist én gang og mulig å tilbakekalle enkeltvis. Fordi de er separate påloggingsopplysninger, endrer det ingenting for e-postklienter å slå på tofaktorautentisering på Infomaniak-kontoen: enhetspassord fortsetter å virke før og etter."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Generer et enhetspassord for adressen",
+      "p": "Åpne manager.infomaniak.com, gå til Mail Service, klikk på domenet ditt og deretter på selve e-postadressen. Åpne fanen Devices og velg Add a device. La brukeren stå som \"No user\" med mindre du bevisst vil knytte SMTP-begrensninger til en bestemt konto, gi den et navn du kjenner igjen senere, og kopier det genererte passordet med én gang. Infomaniak viser det ikke igjen."
+    },
+    {
+      "h": "Lim det inn i mcpemails",
+      "p": "Velg IMAP / SMTP, skriv inn hele e-postadressen, og lim inn enhetspassordet. Verten mail.infomaniak.com og portene 993 og 465 er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Et enhetspassord er ikke det samme som et applikasjonspassord",
+      "p": "Infomaniak utsteder to separate typer sekundære påloggingsopplysninger, og de kan ikke byttes om. <b>Applikasjonspassord</b>, opprettet under sikkerhetsinnstillingene for kontoen din, autentiserer verktøy og tjenester mot Infomaniak-kontoen når tofaktorautentisering er slått på. <b>Enhetspassord</b>, opprettet på den enkelte e-postadressen, er det IMAP, POP og SMTP godtar. Infomaniaks egen dokumentasjon sier rett ut at et applikasjonspassord ikke er et enhetspassord og ikke vil synkronisere en e-postadresse. Folk som leser «app-passord» i en generell oppsettsveiledning, griper etter feil type, genererer det uten problemer og skjønner så ikke hvorfor postkassen fortsatt nekter innlogging."
+    },
+    {
+      "h": "Infomaniak annonserer ikke SASL-IR, og de fleste klienter tar det for gitt",
+      "p": "IMAP-serveren utelater SASL-IR-funksjonen, så den avviser autentisering i ett trinn, der påloggingsopplysningene sendes på samme linje som AUTHENTICATE-kommandoen. En klient som tar SASL-IR for gitt, får en naken <code>BAD</code> uten forklaring, noe som ser nøyaktig ut som feil passord. mcpemails oppdager det og prøver på nytt med utvekslingen i to trinn, så tilkoblingen lykkes her, men det er en hyppig årsak til feil med andre IMAP-verktøy mot Infomaniak."
+    },
+    {
+      "h": "Hilsenen inneholder ingen funksjonsliste",
+      "p": "Infomaniaks server svarer med en naken <code>* OK IMAP4 ready</code> og ingenting annet, der de fleste servere annonserer utvidelsene sine i hilsenen. En klient som bare leser funksjoner fra banneret, konkluderer med at serveren ikke støtter noe som helst, og faller enten tilbake på den enkleste mulige oppførselen eller gir opp. Riktig håndtering er å sende en eksplisitt CAPABILITY-kommando etter hilsenen og igjen etter autentisering, og det er det mcpemails gjør."
+    }
+  ],
+  "limits": [
+    "Serveren annonserer ikke MOVE-utvidelsen, så å flytte en melding utføres som kopi, flagging og expunge i stedet for én atomisk kommando.",
+    "SPECIAL-USE mangler, så Sendt, Utkast, Papirkurv og Søppelpost matches på navn. I en fransk postkasse heter de vanligvis Envoyes, Brouillons, Corbeille og Indesirables."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Infomaniak Mail?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Infomaniak-kobling. Peker du en MCP-server som mcpemails mot Infomaniak-adressen din over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere i den, og den samme tilkoblingen fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Infomaniak?",
+      "a": "IMAP er mail.infomaniak.com på port 993 med implisitt TLS. SMTP er mail.infomaniak.com på port 465, også med implisitt TLS, og krever autentisering. Brukernavnet er hele e-postadressen din, og passordet er et enhetspassord generert for den adressen. Begge vertene ble bekreftet via en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Hvorfor fungerer ikke Infomaniak-passordet mitt?",
+      "a": "Fordi passordet til Infomaniak Manager aldri godtas av IMAP eller SMTP. E-postklienter autentiserer seg bare med et enhetspassord opprettet på den enkelte e-postadressen, under fanen Devices i Manager. Hvis du i stedet genererte et applikasjonspassord, er det en annen type påloggingsopplysning, og den autentiserer ikke en postkasse."
+    },
+    {
+      "q": "Ødelegger tofaktorautentisering e-postklienten min?",
+      "a": "Nei. Enhetspassord er uavhengige av kontoinnloggingen din, så IMAP, POP og SMTP oppfører seg likt før og etter at du slår på tofaktorautentisering på Infomaniak-kontoen. Det er nettopp derfor Infomaniak krever enhetspassord i stedet for å tillate kontopassordet over IMAP."
+    },
+    {
+      "q": "Kan jeg tilbakekalle tilgangen uten å ødelegge for de andre enhetene mine?",
+      "a": "Ja. Hvert enhetspassord er separat, så du kan opprette ett for mcpemails, gi det et passende navn og senere slette bare det. Eksisterende tilkoblinger fra telefonen og e-postklienten på datamaskinen fortsetter å virke, fordi de har sine egne passord."
+    },
+    {
+      "q": "Lagres Infomaniak-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Infomaniak over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke beholdt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Infomaniak-innboks",
+    "sub": "Koble til Infomaniak Mail på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

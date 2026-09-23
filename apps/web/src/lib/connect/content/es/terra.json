@@ -1,0 +1,100 @@
+{
+  "_sources": [
+    "https://www.terra.com.br/nossaterra/sala-de-imprensa/faq-clientes-terramail,fbd5387ca5d4564236664d5f8ed8bb94uwqbteac.html",
+    "https://www.getmailbird.com/setup/access-terra-com-br-via-imap-smtp",
+    "https://www.dinamize.com.br/blog/terra-encerra-atividades-de-e-mail-gratuito-atualize-seus-contatos/",
+    "https://www.validity.com/blog/terra-mails-free-email-service-closure/"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña de Terra Mail, con un plan de pago activo",
+    "helpUrl": null,
+    "usernameForm": "Tu dirección completa, incluido el dominio: nome@terra.com.br.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Terra Mail Brasil en Claude: IMAP con un plan de pago",
+    "description": "Conecta un buzón terra.com.br a Claude o a cualquier cliente MCP en imap.terra.com.br:993. Terra retiró su nivel gratuito, así que se requiere un plan de pago activo."
+  },
+  "hero": {
+    "eyebrow": "Terra Mail + IA",
+    "titleLine1": "Conecta Terra Mail a Claude,",
+    "titleLine2": "Cursor, ChatGPT, cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de Terra. Lee, busca, envía, responde, programa y organiza correo por IMAP, en un buzón brasileño terra.com.br con un plan de pago activo.",
+    "answer": "Claude no puede acceder a Terra Mail por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.terra.com.br en el puerto 993, autenticándose con tu dirección completa y tu contraseña de Terra Mail, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. Terra retiró sus buzones gratuitos, así que una dirección sin un paquete de pago de Terra Mail activo queda bloqueada, no simplemente limitada, y los dominios de Terra fuera de Brasil se cerraron hace años y no tienen ningún servidor. Solo terra.com.br sigue activo. Una bandeja es gratis en mcpemails.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Paquete de pago de Terra Mail activo",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Terra Mail: IMAP en terra.com.br y en ningún otro sitio",
+    "body": "Terra ofrece IMAP en <code>imap.terra.com.br</code> en el puerto 993 sobre TLS implícito, y SMTP en <code>smtp.terra.com.br</code> en el puerto 465. La autenticación es la habitual: la dirección completa como nombre de usuario y la contraseña del buzón. No hay contraseña de aplicación, ni código de autorización, ni un interruptor de protocolo escondido en el webmail. Las complicaciones de Terra tienen que ver con qué buzones siguen existiendo. Terra cerró sus dominios de correo internacionales y, por otro lado, dejó de vender los paquetes sin coste en los que se apoyaban los buzones gratuitos <code>terra.com.br</code>, lo que dejó esas cuentas bloqueadas hasta que el cliente contrate un paquete de pago de Terra Mail. Si tu dirección está en un plan brasileño activo, la conexión es de las más sencillas de esta región. Si no, ninguna configuración del cliente servirá, y más abajo se explica cómo distinguir los dos casos."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y sigue siendo gratis, sin tarjeta."
+    },
+    {
+      "h": "Comprueba que el buzón de Terra tiene un paquete de pago activo",
+      "p": "Inicia sesión en el webmail de Terra. Si el propio webmail te rechaza o te dice que hay que actualizar el paquete, el buzón es una de las cuentas afectadas por el fin del nivel gratuito de Terra y ningún cliente de correo se conectará hasta que tenga activo un paquete de pago de Terra Mail. Si el webmail se abre con normalidad, la cuenta está activa y puedes seguir."
+    },
+    {
+      "h": "Introduce tu dirección y tu contraseña en mcpemails",
+      "p": "Elige IMAP / SMTP y escribe la dirección completa, como <code>nome@terra.com.br</code>, con la contraseña del buzón. Los servidores y puertos de Terra vienen rellenados y se confirmaron mediante una conexión TLS real. Terra no emite contraseñas específicas de aplicación, así que si has estado buscando una en los ajustes, no hay nada que encontrar."
+    },
+    {
+      "h": "Pega la URL MCP en tu cliente de IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente podrá leer, buscar, enviar, responder, reenviar, programar y organizar el buzón de Terra."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Los buzones gratuitos de Terra se retiraron, y el bloqueo parece un fallo de contraseña",
+      "p": "Terra dejó de ofrecer sus paquetes de correo sin coste, y las cuentas que llevaban años siendo gratuitas se bloquearon en lugar de rebajarse de nivel. El acceso solo se recupera contratando un paquete de pago de Terra Mail. Lo importante para quien configura un cliente es que esto no se anuncia: el servidor rechaza el inicio de sesión igual que con una contraseña incorrecta. Direcciones brasileñas de larga trayectoria, algunas con décadas de antigüedad, dejaron de funcionar sin ningún cambio por parte del cliente. Antes de dedicar tiempo a nombres de servidor y puertos, confirma que el buzón todavía se abre en el webmail de Terra."
+    },
+    {
+      "h": "Solo existe terra.com.br, y los demás dominios de Terra no tienen servidor",
+      "p": "Terra gestionaba correo en una familia de dominios por país, entre ellos <code>terra.com</code>, <code>terra.com.ar</code>, <code>mi.terra.cl</code>, <code>terra.com.co</code>, <code>terra.com.mx</code>, <code>terra.com.pe</code>, <code>terra.com.ve</code> y <code>terra.com.ec</code>. Esos servicios se suspendieron y tanto las cuentas como los mensajes almacenados quedaron inaccesibles. El dominio brasileño <code>terra.com.br</code> no formó parte de ese cierre y es el que cubre esta página. Si tu dirección está en cualquiera de los otros, no hay ningún servidor al que apuntar un cliente ni ninguna configuración que recupere el correo: ha desaparecido, no está mal configurado."
+    },
+    {
+      "h": "El servidor ofrece IDLE pero no UIDPLUS, una combinación poco habitual",
+      "p": "La línea de capacidades de Terra incluye <code>IDLE</code>, así que un cliente puede mantener una conexión abierta y recibir aviso del correo nuevo en lugar de consultar periódicamente, algo mejor de lo que consiguen varios de sus vecinos brasileños. Omite <code>UIDPLUS</code> y <code>MOVE</code>. Esa combinación tiene una consecuencia práctica al archivar correo: mover un mensaje se hace como una copia, una actualización de marcas y un expunge, y como falta UIDPLUS el servidor no informa del nuevo identificador del mensaje copiado, así que hay que localizarlo después buscando en la carpeta de destino. Archivar funciona, solo que es más lento y menos seguro que en un servidor que devuelve el nuevo UID."
+    }
+  ],
+  "limits": [
+    "Se requiere un paquete de pago de Terra Mail. Ya no queda ningún buzón gratuito terra.com.br que conectar, y mcpemails no puede sortear un bloqueo aplicado en el propio servidor de Terra.",
+    "Como faltan tanto MOVE como UIDPLUS, archivar un mensaje no es atómico y el resultado tiene que confirmarse con una búsqueda. Una operación interrumpida puede dejar un mensaje brevemente presente en dos carpetas.",
+    "Falta SPECIAL-USE, así que las carpetas se identifican por nombre y no por función. En un buzón en portugués los nombres suelen ser Enviados, Rascunhos, Lixeira y Spam."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Terra Mail?",
+      "a": "No directamente. Claude no tiene un conector de Terra integrado y no puede abrir una conexión IMAP por sí mismo. Conectar un servidor MCP como mcpemails a tu buzón terra.com.br le da a Claude acceso para leer, buscar, enviar, responder, reenviar, programar y organizar, y la misma conexión funciona desde Cursor y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Terra?",
+      "a": "IMAP es imap.terra.com.br en el puerto 993 con TLS implícito. SMTP es smtp.terra.com.br en el puerto 465, también con TLS implícito. Inicia sesión con tu dirección terra.com.br completa y la contraseña del buzón. Ambos servidores se verificaron mediante una conexión TLS real en la fecha que se indica en esta página."
+    },
+    {
+      "q": "¿Sigue siendo gratis Terra Mail?",
+      "a": "No. Terra dejó de vender los paquetes sin coste de los que dependían los buzones gratuitos, y esas cuentas están bloqueadas hasta que el cliente contrate un paquete de pago de Terra Mail. Esto afecta al webmail además de a los clientes de correo, así que un buzón que no puedes abrir en un navegador tampoco se conectará por IMAP, uses los ajustes que uses."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de Terra?",
+      "a": "Revisa el plan antes que la contraseña. Un buzón que quedó atrás con el fin del nivel gratuito de Terra se rechaza al iniciar sesión exactamente igual que con una contraseña incorrecta. Si el webmail te deja entrar con normalidad, la cuenta está activa y las causas probables son una dirección mal escrita o una contraseña cambiada en otro sitio, ya que Terra no emite una contraseña de aplicación aparte."
+    },
+    {
+      "q": "¿Puedo conectar una dirección terra.com o terra.com.mx?",
+      "a": "No. Los dominios de correo internacionales de Terra se suspendieron, y con ellos desaparecieron los buzones y los mensajes almacenados. No hay ningún servidor detrás de esas direcciones contra el que autenticarse. Solo sigue funcionando el servicio brasileño terra.com.br, y es el único al que se aplican estos ajustes."
+    },
+    {
+      "q": "¿Se almacena mi correo de Terra en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Terra por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo, y el cuerpo de los mensajes no se conserva después de la solicitud que lo pidió."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Terra",
+    "sub": "Conecta un buzón terra.com.br activo en minutos. Una bandeja gratis para siempre en mcpemails, sin tarjeta."
+  }
+}

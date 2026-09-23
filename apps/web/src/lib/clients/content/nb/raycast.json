@@ -1,0 +1,88 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://manual.raycast.com/ai/model-context-protocol"
+  ],
+  "meta": {
+    "title": "Koble e-post til Raycast AI: oppsett av MCP-server",
+    "description": "Gi Raycast AI en ekte innboks. Kjør Install MCP Server, sett transport til HTTP, lim inn én URL og logg inn. Ingen API-nøkkel. Én innboks gratis."
+  },
+  "hero": {
+    "eyebrow": "Raycast + e-post",
+    "titleLine1": "Koble innboksen din til Raycast AI",
+    "titleLine2": "fra kommandofeltet",
+    "lead": "Sorter, søk i og send e-post fra startprogrammet du allerede bruker. Les, søk i, send, svar på, videresend, planlegg og organiser e-post på tvers av alle innboksene du har koblet til.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "OAuth, ingen API-nøkkel nødvendig",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "Kjør kommandoen Install MCP Server i Raycast, sett Transport til HTTP, lim inn https://mcpemails.com/api/mcp, installer, og klikk deretter Sign In for å autorisere med mcpemails."
+  },
+  "method": {
+    "title": "Slik kobler Raycast seg til: OAuth, ingen API-nøkkel",
+    "body": "Raycast kjører standard MCP OAuth-flyt mot denne serveren. Den registrerer seg selv med <b>RFC 7591 dynamisk klientregistrering</b>, så du trenger ikke opprette noen klient-ID, og autoriserer med <b>autorisasjonskode pluss PKCE</b> med S256. Ingen klienthemmelighet sendes noen gang, og tokenet har bare de tilgangene (scopes) du godkjenner på samtykkeskjermen vår. Tilgangstokenet den får varer i én time og fornyes automatisk. Det vises under Dashboard, API Keys som <code>OAuth:</code> etterfulgt av klientnavnet, og det er der du tilbakekaller tilkoblingen."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto og koble til en postkasse",
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Gmail kobles til med Google-innlogging med ett klikk; iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+    },
+    {
+      "h": "Kjør Install MCP Server",
+      "p": "Kjør kommandoen <b>Install MCP Server</b>, eller <b>Manage MCP Servers</b> hvis du allerede har noen."
+    },
+    {
+      "h": "Legg inn serveren",
+      "p": "Skriv inn et navn, sett Transport til <b>HTTP</b>, og lim inn <code>https://mcpemails.com/api/mcp</code>."
+    },
+    {
+      "h": "Installer og logg inn",
+      "p": "Trykk <b>Install MCP Server</b>, og klikk deretter <b>Sign In</b> for å autorisere med mcpemails. Godkjenn tilgangene du vil at Raycast skal ha."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Sign In er et eget steg, atskilt fra Install",
+      "p": "Å installere serveren og å autorisere den er to handlinger i Raycast, og serveren vises i listen etter den første. En nyinstallert, men uautorisert server gir verktøykall som feiler med en 401, noe som ser ut som en ødelagt server i stedet for et uferdig oppsett. Klikk Sign In."
+    },
+    {
+      "h": "Et startprogram er raskt, og det har to sider",
+      "p": "Hele poenget med Raycast er at en handling skjer to tastetrykk etter tanken. Det er utmerket for søk og sortering, og det er grunnen til at sending fortjener en ekstra vurdering her, mer enn i en tregere klient. Enten lar du <code>send:email</code> være ute av denne tilkoblingen, eller så slår du på menneskelig godkjenning slik at en sending venter på en person."
+    },
+    {
+      "h": "Ingenting kommer av seg selv",
+      "p": "Serveren er rent forespørsel og svar, uten webhooks og uten push. Raycast ser e-post når du ber den se etter, og det passer et startprogram: du åpner det, du spør, du får et svar. Det betyr samtidig at dette ikke er en varslingstjeneste, og en fast \"si fra når X kommer\" er ikke noe tilkoblingen kan gjøre."
+    }
+  ],
+  "limits": [
+    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger.",
+    "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post vekker aldri agenten din av seg selv. Vil du reagere på innkommende e-post, må du polle etter en tidsplan.",
+    "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
+  ],
+  "faq": [
+    {
+      "q": "Hvordan kobler jeg e-post til Raycast?",
+      "a": "Kjør kommandoen Install MCP Server, sett Transport til HTTP, lim inn https://mcpemails.com/api/mcp, installer, og klikk deretter Sign In og autoriser med mcpemails. Da har Raycast AI verktøy for å lese, søke, sende, svare, videresende, organisere og planlegge e-post."
+    },
+    {
+      "q": "Trenger jeg en API-nøkkel for Raycast?",
+      "a": "Nei. Raycast kjører OAuth-flyten gjennom Sign In-handlingen, så ingenting hemmelig skrives inn i kommandoen. En bearer-nøkkel er tilgjengelig for andre klienter som ikke kan gjøre det."
+    },
+    {
+      "q": "Hvilke postkasser kan Raycast nå på denne måten?",
+      "a": "Gmail via Google-innlogging, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord, og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Klienten ser alle gjennom den samme tilkoblingen: agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
+    },
+    {
+      "q": "Kan Raycast sende e-post uten at jeg ser det?",
+      "a": "Bare hvis du tillater det. Sending krever tilgangen send:email, så en nøkkel eller et token uten den tilgangen kan ikke sende i det hele tatt. I tillegg kan eieren av en innboks kreve menneskelig godkjenning i dashbordet, som holder tilbake hver sending, hvert svar, hver videresending, hvert utkast som sendes og hver planlagte sending til en person slipper den gjennom."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Hver melding hentes direkte fra leverandøren din for forespørselen som ba om den, og sendes rett videre til klienten din. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, slik at fremtidige kall kan autentiseres. Sletter du innboksen i dashbordet, eller tilbakekaller tilgangen hos leverandøren, avsluttes tilkoblingen med en gang."
+    }
+  ],
+  "ctaBand": {
+    "title": "Ta innboksen med inn i kommandofeltet",
+    "sub": "Én server, én innlogging. Én innboks gratis for alltid, uten kort."
+  }
+}

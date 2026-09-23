@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.optus.com.au/support/email",
+    "https://www.optus.com.au/support/answer/using_an_email_application_with_optusnet_email_1434"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Contraseña del correo de OptusNet",
+    "helpUrl": "https://www.optus.com.au/support/answer/using_an_email_application_with_optusnet_email_1434",
+    "usernameForm": "Optus indica que la dirección y el nombre de usuario deben escribirse siempre completos, por ejemplo username@optusnet.com.au.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "El correo de OptusNet en Claude: qué cambió de verdad",
+    "description": "Conecta un buzón de OptusNet a Claude y a cualquier cliente MCP por IMAP en mail.optusnet.com.au:993. Optus no cerró el correo, pero cambió el plan en 2025."
+  },
+  "hero": {
+    "eyebrow": "Correo de OptusNet + IA",
+    "titleLine1": "Conecta tu bandeja de OptusNet",
+    "titleLine2": "a Claude, Cursor, cualquier cliente MCP",
+    "lead": "Diga lo que diga medio internet, el correo de OptusNet no cerró. En 2025 pasó a un plan nuevo con condiciones nuevas y dejó de admitir altas. El buzón que tienes sigue hablando IMAP.",
+    "answer": "Claude no puede llegar a un buzón de OptusNet por su cuenta. mcpemails es un servidor MCP alojado que lo conecta por IMAP en mail.optusnet.com.au, puerto 993, iniciando sesión con tu dirección escrita completa y la contraseña de tu correo de OptusNet. No hay contraseña de aplicación que generar. Hay dos hechos que importan antes de construir nada encima: desde mayo de 2025 Optus presta el servicio con un plan nuevo y condiciones nuevas, y exige que el plan de correo esté vinculado a un servicio de Optus que cumpla los requisitos; además, no acepta altas nuevas en el correo de OptusNet. Para una dirección que ya tienes, una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña del correo, sin contraseña de aplicación",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta OptusNet: un solo nombre de servidor en ambos sentidos",
+    "body": "Optus usa el mismo nombre para el correo entrante y el saliente. <code>mail.optusnet.com.au</code> responde a IMAP en el puerto 993 con SSL/TLS, y el envío en ese mismo servidor usa el puerto 587 con STARTTLS o el puerto 465 con SSL/TLS. La recomendación de la propia Optus es que los clientes de correo nuevos usen 587 o 465 en adelante, aunque señala que el puerto 25 sigue siendo compatible, y dice sin rodeos que recomienda IMAP antes que POP3. El nombre de usuario es siempre la dirección completa. La credencial es la contraseña del buzón, sin nada alrededor: Optus no emite contraseñas específicas de aplicación y no hay ningún interruptor de acceso para clientes escondido en el webmail. Lo que Optus sí cambió es comercial, no técnico, y la sección de abajo es la parte que merece la pena leer antes de conectar un agente al buzón."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
+    },
+    {
+      "h": "Confirma que el buzón está en un plan de correo de OptusNet vigente",
+      "p": "Inicia sesión en <code>webmail.optusnet.com.au</code>. Desde mayo de 2025 el servicio se presta con un plan de condiciones nuevas, y el plan que publica Optus debe estar vinculado a un servicio de Optus que cumpla los requisitos. Si el buzón está inactivo porque tu servicio de Optus terminó, resuélvelo antes de conectarle nada."
+    },
+    {
+      "h": "Introduce la dirección completa y la contraseña del correo",
+      "p": "En mcpemails elige IMAP / SMTP y escribe la dirección completa en el campo de usuario, con el formato de la propia Optus, <code>username@optusnet.com.au</code>. Usa la contraseña de ese buzón. El servidor y los puertos de abajo ya vienen rellenados y se verificaron con una conexión TLS en vivo."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "El buzón admite 500 MB, y esa es toda la cuota",
+      "p": "El plan OptusNet Email que publica Optus indica 500 MB de almacenamiento. No es una errata y no es por carpeta. Un asistente que archiva en lugar de borrar, o un buzón que lleva acumulando adjuntos en silencio desde que cambió el plan, llega a ese techo mucho antes de lo que nadie espera, y un buzón lleno deja de aceptar correo. Revisa el uso antes de entregarle la cuenta a un agente, y haz limpieza con regularidad después."
+    },
+    {
+      "h": "Optus no cerró el correo de OptusNet, dijeran lo que dijeran los titulares",
+      "p": "Muchas páginas publicadas en 2025 anunciaron el fin del correo de OptusNet. La página de soporte de la propia Optus cuenta otra historia: desde febrero de 2025 escribió a sus clientes sobre los cambios, y desde mayo de 2025 empezó a prestar el servicio con un plan publicado y términos y condiciones nuevos, y describió el trabajo como una inversión en un servicio más seguro y moderno. Lo que sí es cierto es que no se pueden contratar servicios de correo de OptusNet nuevos y que el plan de correo debe estar vinculado a un servicio de Optus que cumpla los requisitos. Los buzones existentes no se desactivaron en masa."
+    },
+    {
+      "h": "Los clientes de correo antiguos se dejaron fuera a propósito",
+      "p": "Optus afirma que la mayoría de los clientes no nota ningún cambio, pero que las versiones antiguas de algunos clientes de terceros, y cita Outlook 2010, ya no son compatibles porque no reciben actualizaciones y puede que no cumplan los estándares actuales de cifrado y seguridad. Así que una configuración que se rompió en torno al cambio y a la que se le ha echado la culpa al servidor probablemente sea cosa del cliente. mcpemails se conecta con TLS actual, que es el lado de esa línea en el que quieres estar."
+    },
+    {
+      "h": "SPECIAL-USE e IDLE están, MOVE y UIDPLUS no",
+      "p": "Es una combinación poco habitual y cambia qué resulta barato y qué no. Como se anuncia SPECIAL-USE, el servidor le dice al cliente qué carpeta es Enviados, Borradores, Papelera y Spam, así que no hace falta adivinar nombres. Como se anuncia IDLE, el correo nuevo llega por push. Pero falta MOVE, así que archivar un mensaje se ejecuta como COPY, luego STORE del indicador de borrado y luego EXPUNGE, y también falta UIDPLUS, así que no se informa del id de la copia nueva y hay que encontrarlo buscando en la carpeta de destino."
+    }
+  ],
+  "limits": [
+    "500 MB de almacenamiento de buzón en el plan OptusNet Email publicado, y el plan debe estar vinculado a un servicio de Optus que cumpla los requisitos.",
+    "No se están emitiendo direcciones nuevas de OptusNet, así que solo se puede conectar un buzón existente.",
+    "Los movimientos no son atómicos, porque este servidor no implementa MOVE ni UIDPLUS."
+  ],
+  "faq": [
+    {
+      "q": "¿Claude funciona con el correo de OptusNet?",
+      "a": "No directamente. Claude no tiene un conector integrado para Optus. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo de optusnet.com.au, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuál es la configuración IMAP y SMTP de OptusNet?",
+      "a": "Ambos usan mail.optusnet.com.au. IMAP es el puerto 993 con SSL/TLS. El saliente es el puerto 587 con STARTTLS o el puerto 465 con SSL/TLS, que es la combinación que verificamos con una conexión TLS en vivo. Optus indica que el nombre de usuario debe escribirse siempre completo, como username@optusnet.com.au, y que recomienda IMAP antes que POP3."
+    },
+    {
+      "q": "¿Optus va a cerrar su servicio de correo?",
+      "a": "No, según Optus. Su página de soporte explica que escribió a los clientes desde febrero de 2025 sobre los cambios y que presta OptusNet Email con un plan nuevo y condiciones nuevas desde mayo de 2025. Lo que se ha detenido son las altas nuevas: Optus dice que se centra en los clientes que ya tienen correo de OptusNet y que ahora mismo no se pueden contratar servicios nuevos."
+    },
+    {
+      "q": "¿Necesito una contraseña de aplicación para el correo de OptusNet?",
+      "a": "No. Optus no emite contraseñas específicas de aplicación y no hay un interruptor aparte para habilitar clientes de correo externos. La contraseña del buzón autentica directamente. Si rechaza una contraseña correcta, comprueba si el buzón sigue en un plan activo vinculado a un servicio de Optus que cumpla los requisitos en lugar de buscar una página de seguridad."
+    },
+    {
+      "q": "¿Se almacena mi correo de OptusNet en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Optus por IMAP en cada petición y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de OptusNet",
+    "sub": "Sigue funcionando, sigue siendo IMAP. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://mailinabox.email/guide.html",
+    "https://github.com/mail-in-a-box/mailinabox",
+    "https://doc.dovecot.org/2.3/configuration_manual/dovecot_ssl_configuration/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del usuario de correo",
+    "helpUrl": "https://mailinabox.email/guide.html",
+    "usernameForm": "La dirección completa de un usuario de correo creado en el panel de control de administración, por ejemplo you@yourdomain.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Conecta Mail-in-a-Box a Claude y clientes MCP",
+    "description": "Conecta un buzón de Mail-in-a-Box a Claude, Cursor y ChatGPT por IMAP en box.yourdomain.com:993. El envío va por el 465, y fail2ban explica los bloqueos tras fallos repetidos."
+  },
+  "hero": {
+    "eyebrow": "Mail-in-a-Box + IA",
+    "titleLine1": "Conecta Mail-in-a-Box a Claude,",
+    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
+    "lead": "Montaste tu propia box para que nadie más tuviera tu correo. Añadir un agente de IA no tiene por qué cambiar eso: mcpemails se conecta a tu box por IMAP y obtiene cada mensaje en vivo, sin almacenar nada.",
+    "answer": "Claude no puede acceder por sí solo a un servidor Mail-in-a-Box. mcpemails es un servidor MCP alojado que se conecta al tuyo por IMAP en el puerto 993, en el nombre de servidor de la box que indica la guía de instalación, que normalmente es box.yourdomain.com, autenticándose con la contraseña de un usuario de correo creado en el panel de control de administración. Eso permite a Claude, Cursor o cualquier cliente MCP leer, buscar, enviar y organizar el correo de tu box. La box tiene que ser accesible desde internet y tener un certificado de Let's Encrypt válido, que el panel de control te proporciona. Una bandeja es gratis.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña del usuario de correo desde el panel de control",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Mail-in-a-Box: el nombre de la box, no tu dominio",
+    "body": "Mail-in-a-Box instala Postfix, Dovecot, Nginx y un pequeño panel de control de administración en una sola máquina Ubuntu, así que el comportamiento IMAP de fondo es Dovecot sin más. Lo que la gente configura mal es el nombre de servidor. La guía de instalación recomienda llamar a la box <code>box</code> más un punto más tu nombre de dominio, es decir <code>box.yourdomain.com</code>, y ese es el nombre del certificado y el que deben usar tus clientes de correo. Tu dominio sin prefijo es a donde se dirige el correo, no a donde se conectan los clientes. La lista documentada del cortafuegos es 22, 25, 53 para TCP y UDP, 80, 443, 465 para el envío, 993 para IMAP, 995 para POP y 4190 para Sieve. Las credenciales son la contraseña propia del usuario de correo, definida en Mail y luego Users en el panel de control; la cuenta de administrador del panel es a su vez un usuario de correo, así que sí tiene buzón."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis",
+      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
+    },
+    {
+      "h": "Obtén un certificado real desde el panel de control",
+      "p": "Inicia sesión en el panel de control de administración de tu box y abre System y luego TLS (SSL) Certificates. Una box recién instalada sirve un certificado autofirmado hasta que obtienes el gratuito de Let's Encrypt desde esa página, y los clientes IMAP estrictos rechazarán el autofirmado mucho después de que dejaras de fijarte en el aviso del navegador."
+    },
+    {
+      "h": "Confirma el usuario de correo y su contraseña",
+      "p": "En Mail y luego Users, confirma que la dirección existe y define una contraseña que conozcas. Después añade la bandeja en mcpemails: elige IMAP / SMTP, usa <code>box.yourdomain.com</code> como servidor e introduce la dirección completa y esa contraseña."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "fail2ban te bloqueará por probar una contraseña incorrecta",
+      "p": "Mail-in-a-Box viene con fail2ban activado y vigilando los servicios de correo, una de las razones por las que es seguro ponerlo en internet. También significa que guardar una conexión dos o tres veces con una errata en la contraseña hace que se bloquee la dirección que se conecta, y todos los intentos posteriores caducan o se rechazan en lugar de devolver un error de autenticación. El síntoma parece una caída del servidor. Acierta primero con la contraseña y, si ya lo has activado, levanta el bloqueo en la box antes de volver a intentarlo."
+    },
+    {
+      "h": "Aquí el envío va por el 465, y el 587 no está en la lista de puertos documentada",
+      "p": "La mayoría de instrucciones de configuración de correo de internet recurren al 587 con STARTTLS. La propia guía de Mail-in-a-Box indica el 465 como puerto de envío entre los puertos que deben estar abiertos, y no menciona el 587. Configura el envío en el 465 con TLS implícito y funciona a la primera; da por hecho el 587 porque es lo que usa todo lo demás y obtendrás una conexión que se queda colgada en lugar de un error claro."
+    },
+    {
+      "h": "La box no puede compartir su nombre con un sitio web que alojas en otro sitio",
+      "p": "La guía es tajante: el nombre de la box no puede ser un dominio en el que pienses servir un sitio web desde otro servidor, porque la box quiere responder en el 80 y el 443 para sus propias renovaciones de certificado y para el panel de control. Los administradores que apuntan <code>mail.yourdomain.com</code> a una CDN o a un proxy inverso rompen la renovación de Let's Encrypt sin romper nada visible, y el certificado IMAP caduca sin avisar semanas después."
+    }
+  ],
+  "limits": [
+    "Tu box tiene que aceptar conexiones entrantes en el 993 desde fuera para que un servidor MCP alojado pueda llegar a ella. Un Mail-in-a-Box en una conexión doméstica detrás de NAT, o uno restringido por un grupo de seguridad en la nube a tu propia dirección, no se puede conectar. mcpemails se puede alojar por tu cuenta si prefieres mantener la sesión IMAP dentro de tu propia red.",
+    "Mail-in-a-Box espera controlar el DNS y el TLS del nombre de la box, así que esto funciona mejor con la instalación estándar sin modificar. Una box muy personalizada puede no presentar el certificado que cree el panel de control."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con Mail-in-a-Box?",
+      "a": "No directamente. Claude no tiene un conector para un servidor de correo que gestionas tú. Conectar un servidor MCP como mcpemails a tu box por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar los buzones que hay en ella, y la misma bandeja funciona después también en Cursor o ChatGPT."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Mail-in-a-Box?",
+      "a": "El servidor es el nombre de tu box, normalmente box.yourdomain.com. IMAP usa el puerto 993 con TLS implícito. El envío usa el puerto 465 con TLS implícito, que es el puerto que indica la guía oficial. Inicia sesión con la dirección de correo completa de un usuario de correo y la contraseña de ese usuario."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de Mail-in-a-Box?",
+      "a": "Comprueba que usas un usuario de correo y no un nombre que solo existe como alias, ya que los alias no tienen contraseña ni buzón. Si la contraseña es correcta y las conexiones siguen fallando, puede que fail2ban haya bloqueado la dirección que se conecta tras intentos fallidos anteriores, lo que se manifiesta como una conexión rechazada o caducada y no como un error de inicio de sesión."
+    },
+    {
+      "q": "¿Tengo que exponer mi box a internet?",
+      "a": "Para el servicio alojado, sí: mcpemails se conecta hacia dentro al puerto 993. Es el estado normal de un Mail-in-a-Box de todos modos, ya que tiene que aceptar correo del mundo en el puerto 25. Si has restringido a propósito el acceso a tus propias direcciones, aloja tú mismo mcpemails para que la conexión IMAP nunca salga de tu red."
+    },
+    {
+      "q": "¿Se almacena mi correo en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de tu box por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva, que es la misma razón por la que montaste la box."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Mail-in-a-Box",
+    "sub": "Conecta tu propia box en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

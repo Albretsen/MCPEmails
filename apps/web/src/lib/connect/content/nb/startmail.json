@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.startmail.com/features/",
+    "https://support.startmail.com/",
+    "https://www.getmailbird.com/best-startmail-app-macos/",
+    "https://discussions.apple.com/thread/256239542"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Passord for klarert enhet",
+    "helpUrl": "https://support.startmail.com/",
+    "usernameForm": "Hele StartMail-adressen din, også på eget domene. Brukernavnet er aldri bare den lokale delen.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "StartMail til Claude: passordet for klarert enhet",
+    "description": "Koble StartMail til Claude, Cursor eller enhver MCP-klient via IMAP på imap.startmail.com:993. Kontopassordet virker aldri: bruk et passord for klarert enhet."
+  },
+  "hero": {
+    "eyebrow": "StartMail + AI",
+    "titleLine1": "Koble StartMail til Claude,",
+    "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte StartMail-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP, i alle MCP-klienter i stedet for én, med et enhetspassord du kan trekke tilbake for seg selv.",
+    "answer": "Claude når ikke StartMail på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.startmail.com port 993, og SMTP på smtp.startmail.com port 465, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. StartMail-kontopassordet ditt autentiserer ikke en e-postklient i det hele tatt: StartMail utsteder et eget generert passord per tilkoblet enhet, fra delen for klarerte enheter i innstillingene, og viser det én gang. Bruk hele StartMail-adressen din som brukernavn og den genererte verdien som passord. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Generert enhetspassord, vist én gang",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler StartMail seg til: IMAP og et generert passord per enhet",
+    "body": "StartMail tilbyr IMAP på <code>imap.startmail.com</code> port 993 med TLS, og SMTP på <code>smtp.startmail.com</code> port 465, og markedsfører full IMAP- og SMTP-tilgang som en funksjon og ikke en ettertanke. Det den ikke gjør, er å godta kontopassordet ditt over de protokollene. StartMails modell er én generert pålogging per tilkoblet enhet: du legger til en enhet i webgrensesnittet, StartMail lager et tilfeldig passord på rundt seksten tegn, og den verdien går inn i både inngående og utgående passordfelt. Det vises én gang, og ingenting gjenoppretter det etterpå, så mister du det, sletter du den enhetsoppføringen og legger til en ny. Det er en bedre ordning enn de fleste personvernleverandører klarer, fordi påloggingen du gir en tredjepart, ikke er den som åpner kontoen din, og å trekke den tilbake påvirker ingenting annet du har koblet til."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, uten kort. Til slutt får du en MCP-URL og en nøkkel."
+    },
+    {
+      "h": "Legg til en enhet i StartMail og kopier det genererte passordet",
+      "p": "Logg inn i StartMail i en nettleser, åpne <b>Settings</b>, og gå til delen <b>trusted devices</b>, der IMAP-tilgang administreres. Velg <b>Add device</b> og gi den et navn etter denne tilkoblingen. StartMail genererer et tilfeldig passord og viser det én gang, så kopier det før du lukker dialogen. Den delen styrer også IMAP-tilgangen for kontoen, så hvis en innlogging avvises før du i det hele tatt har brukt passordet, sjekk at IMAP er slått på der."
+    },
+    {
+      "h": "Legg til postkassen i mcpemails",
+      "p": "Velg IMAP / SMTP, skriv inn hele StartMail-adressen din som brukernavn, og lim inn det genererte enhetspassordet. Bruk samme verdi for utgående e-post: StartMail autentiserer innsending med enhetspåloggingen, ikke med kontopassordet ditt. Vertene er forhåndsutfylt som <code>imap.startmail.com</code> og <code>smtp.startmail.com</code> og ble verifisert via en direkte TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "StartMail-kontopassordet ditt er aldri et passord for e-postklienter",
+      "p": "Dette står for de fleste klientproblemer med StartMail, og det er ikke en bieffekt av tofaktor slik det er hos andre leverandører. StartMail autentiserer rett og slett ikke IMAP eller SMTP med innloggingspassordet ditt i noen konfigurasjon. Skriver du passordet du bruker på nettsiden, avviser serveren deg, klienten melder feil påloggingsdetaljer, og folk tilbakestiller kontopassordet og prøver igjen, noe som ikke endrer noe. Du trenger et enhetspassord fra delen for klarerte enheter, i både inngående og utgående felt."
+    },
+    {
+      "h": "Det genererte passordet vises én gang, og det finnes ingen vei tilbake til det",
+      "p": "StartMail viser verdien i det øyeblikket enhetsoppføringen opprettes, og beholder ingen lesbar kopi du kan slå opp senere. Lukker du dialogen, eller kopierer det inn i en klient på én maskin og så trenger det på en annen, legger du til en ny enhet i stedet for å lete etter det første passordet. Det er meningen: én pålogging per tilkobling, slettet enkeltvis. Sletter du oppføringen for denne, kuttes MCP-serveren av, mens telefonen og den bærbare datamaskinen din fortsetter å virke."
+    },
+    {
+      "h": "StartMail annonserer XLIST, men ikke SPECIAL-USE",
+      "p": "En uvanlig funksjonsdetalj med en praktisk følge. IMAP-banneret tilbyr <code>XLIST</code>, Googles førstandardiserte utvidelse for å identifisere hvilken mappe som er Sent, Drafts eller Trash, men ikke <code>SPECIAL-USE</code>, RFC 6154-funksjonen som erstattet den. De fleste moderne klienter droppet XLIST for mange år siden og ser bare etter SPECIAL-USE, så mapperoller faller tilbake til navnematching. Omdøper du en mappe i StartMails webgrensesnitt, kan en agent slutte å gjenkjenne den som arkivet ditt, så oppgi den eksplisitt når du ber om at noe skal arkiveres."
+    },
+    {
+      "h": "Bare PLAIN på IMAP, og verken MOVE eller UIDPLUS",
+      "p": "Serveren tilbyr <code>AUTH=PLAIN</code> uten <code>AUTH=LOGIN</code>, så verktøy som er hardkodet til LOGIN-mekanismen, får en avvisning på autentiseringstrinnet i stedet for en nyttig feilmelding, mens SMTP-siden godtar begge. Den mangler også MOVE og UIDPLUS, så arkivering av en melding er en COPY, en STORE av flagget \\Deleted og en EXPUNGE, med den nye UID-en funnet ved søk i målmappen i stedet for rapportert tilbake. Begge er håndtert her, og de er grunnen til at en masseomorganisering mot StartMail går tregere enn mot en server med MOVE."
+    }
+  ],
+  "limits": [
+    "Å koble en StartMail-postkasse til en AI-klient betyr at den AI-leverandøren leser innholdet i meldingene den jobber med. mcpemails henter e-post direkte fra imap.startmail.com for hver forespørsel og lagrer ikke meldingsinnhold, og påloggingsdetaljer krypteres ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du kobler til. StartMails nederlandske hosting og holdning mot sporing beskriver StartMail, og følger ikke en melding inn til en AI-leverandør du selv kobler til. Se på dette som en beslutning om hvilken korrespondanse du er villig til å eksponere, ikke en forlengelse av personvernet du kjøpte.",
+    "PGP-krypterte meldinger er uleselige for en agent. StartMails nøkkelhåndtering ligger i StartMail-kontoen din og betjener deres eget webgrensesnitt; en IMAP-klient mottar en armert chiffertekstblokk, og mcpemails har ingen privat nøkkel av deg. Agenten kan se avsender, emne og dato, og kan arkivere eller flagge de trådene, men ikke lese dem.",
+    "StartMails SMTP-server annonserer et tak for meldingsstørrelse rundt 37 MB, som er lavere enn hos de fleste leverandørene her. Et stort vedlegg en agent prøver å sende, avvises ved innsending i stedet for å komme i retur senere, så bruk en lenke for alt av en viss størrelse."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med StartMail?",
+      "a": "Ikke direkte. Claude har ingen innebygd StartMail-kobling og kan ikke snakke IMAP selv. Kobler du en MCP-server som mcpemails til StartMail-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere via IMAP, og samme tilkobling fungerer da i Cursor, ChatGPT og andre MCP-klienter uten at den må settes opp på nytt."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for StartMail?",
+      "a": "IMAP er imap.startmail.com på port 993 med TLS, og SMTP er smtp.startmail.com på port 465 med TLS. Brukernavnet er hele StartMail-adressen din, og passordet er et generert enhetspassord i stedet for kontopassordet ditt. Begge vertene ble verifisert via en direkte TLS-tilkobling, og sertifikatet er utstedt for imap.startmail.com selv."
+    },
+    {
+      "q": "Hvorfor virker ikke StartMail-passordet mitt i en e-postklient?",
+      "a": "Fordi det ikke er meningen. StartMail godtar ikke kontopassordet ditt over IMAP eller SMTP i det hele tatt. Den utsteder et eget generert passord for hver tilkoblet enhet, fra delen for klarerte enheter i innstillingene. Å tilbakestille kontopassordet hjelper ikke. Legg til en enhet, kopier den genererte verdien og bruk den i både inngående og utgående passordfelt."
+    },
+    {
+      "q": "Hvor genererer jeg et IMAP-passord for StartMail?",
+      "a": "I StartMails webgrensesnitt åpner du Settings og går til delen trusted devices, der IMAP-tilgang administreres. Velg å legge til en enhet, gi den et navn, og StartMail genererer et tilfeldig passord på rundt seksten tegn og viser det én gang. Kopier det med en gang; det finnes ingen måte å lese det igjen på, bare å slette enheten og legge til en ny."
+    },
+    {
+      "q": "Kan AI-en min lese de PGP-krypterte StartMail-meldingene mine?",
+      "a": "Nei. En melding kryptert til OpenPGP-nøkkelen din kommer over IMAP som chiffertekst, og mcpemails mottar aldri den private nøkkelen din. De meldingene forblir lesbare i StartMails eget grensesnitt, der nøkkelhåndteringen ligger. Agenten din kan fortsatt sortere, flagge og arkivere dem, og kan lese alt som kom inn ukryptert."
+    },
+    {
+      "q": "Lagres StartMail-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra imap.startmail.com for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke. AI-klienten du kobler til, mottar innholdet i det den leser, og det er delen du bør veie før du kobler til en postkasse du valgte StartMail for."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en StartMail-innboks",
+    "sub": "Koble til StartMail med et enhetspassord du kan trekke tilbake for seg selv. Én innboks gratis for alltid, uten kort."
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://www.xfinity.com/support/articles/third-party-email-access",
+    "https://www.xfinity.com/support/articles/email-only-faqs"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Xfinity ID 密码",
+    "helpUrl": "https://www.xfinity.com/support/articles/third-party-email-access",
+    "usernameForm": "你的完整 comcast.net 地址，通常就是你的 Xfinity ID。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "通过 IMAP 将 Comcast Xfinity 邮箱连接到 Claude",
+    "description": "通过 imap.comcast.net:993 的 IMAP 将 Comcast Xfinity 邮箱连接到 Claude 及任意 MCP 客户端。必须勾选 Third Party Access Security，否则每次登录都会失败。"
+  },
+  "hero": {
+    "eyebrow": "Comcast Xfinity + AI",
+    "titleLine1": "将 Comcast Xfinity 邮箱连接到",
+    "titleLine2": "Claude、Cursor 及任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 comcast.net 收件箱。使用你的 Xfinity ID，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用而不止一个。",
+    "answer": "Claude 无法自行访问 Comcast Xfinity 邮箱。mcpemails 是一个托管 MCP 服务器，通过 imap.comcast.net 端口 993 的 IMAP 与之连接，使用你完整的 comcast.net 地址和 Xfinity ID 密码登录。在你于 Xfinity Email 设置中勾选 Third Party Access Security（第三方访问安全）之前，Xfinity 会阻止所有外部邮件客户端，所以请先开启它，否则即使密码正确也会被拒绝。设置只需几分钟，1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "必须开启第三方访问",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Xfinity 如何连接：解锁第三方访问后使用 IMAP",
+    "body": "Comcast 在 <code>imap.comcast.net</code> 端口 993 上通过 TLS 提供 IMAP，在 <code>smtp.comcast.net</code> 端口 465 上提供 SMTP，同样是隐式 TLS。凭据是你普通的 Xfinity ID 密码，无需生成应用专用密码。障碍在于一项设置，而不是某个密钥。Xfinity 在邮箱设置中有一个名为 <b>Third Party Access Security</b> 的开关，只有已经在使用外部客户端的账户才会默认勾选。其他所有人的都是关闭的，而在关闭状态下，服务器会拒绝所有客户端的每一次登录，报错看起来与密码错误一模一样。在网页邮箱中开启一次，之前被拒绝的同一组凭据就能正常使用了。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "在 Xfinity Email 中勾选 Third Party Access Security",
+      "p": "在 connect.xfinity.com 登录 Xfinity Email，点击齿轮图标，选择 <b>Settings</b>，然后选择 <b>Security</b>，勾选 <b>Third Party Access Security</b> 下的复选框。勾选时 Xfinity 会提醒你外部客户端的风险。在勾选之前，本页的其他步骤都不会生效。"
+    },
+    {
+      "h": "在 mcpemails 中输入 Xfinity ID 和密码",
+      "p": "选择 IMAP / SMTP，输入完整的 <code>@comcast.net</code> 地址和该 Xfinity ID 的密码。Comcast 的服务器地址已预填。如果你的账户使用两步验证，请先在网页邮箱中完成验证，以免登录仍处于待处理状态。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Third Party Access Security 默认关闭，而且可能会自行再次关闭",
+      "p": "如果你从未在这个邮箱上使用过 Outlook、Apple Mail 或 Thunderbird，那么该复选框是未勾选的，Comcast 自己的文章也这样说明。还有用户反映，在被强制重置密码后，它又自行关闭了。所以，如果昨天还能用的连接今天突然报认证错误，请在动其他任何东西之前先检查这个复选框。它位于 connect.xfinity.com 的齿轮图标下，依次为 Settings、Security。"
+    },
+    {
+      "h": "前客户如果不登录网站，就会失去邮箱",
+      "p": "如果你不再购买 Xfinity 服务，Comcast 只会在你断开服务前 90 天内登录过 Xfinity Email 网站的情况下保留该地址，而且之后你至少每九个月要在那里登录一次，邮箱才会继续有效。这项要求明确针对 Xfinity Email 网站，所以不要以为代理通过 IMAP 轮询就能满足它。请每年用浏览器登录几次。"
+    },
+    {
+      "h": "Comcast 前端没有 SPECIAL-USE，也没有 MOVE",
+      "p": "imap.comcast.net 上的 Dovecot 前端不声明 SPECIAL-USE，因此客户端无法询问哪个文件夹是 Sent、哪个是 Trash，只能按名称匹配。它也不支持 MOVE 和 UIDPLUS，所以归档一封邮件要依次执行 COPY、STORE 删除标记、EXPUNGE，服务器也不会报告新副本的 ID。mcpemails 会替你完成所有这些操作；这也是为什么在 Comcast 上移动邮件不是单一的原子操作。"
+    },
+    {
+      "h": "服务器声明了你用不了的 OAuth 机制",
+      "p": "imap.comcast.net 在 PLAIN 和 LOGIN 之外还提供 OAUTHBEARER 和 XOAUTH2。这些 OAuth 机制是给 Comcast 自己的合作伙伴用的，并不向任何人开放，也没有供客户自助获取令牌的页面。在开启第三方访问的前提下使用密码认证，是你能走的路，mcpemails 用的也正是这种方式。"
+    }
+  ],
+  "limits": [
+    "Comcast 的 SMTP 服务器声明的单封邮件大小上限约为 35 MB，因此带大附件的邮件在发出前就会被拒绝。",
+    "由于服务器不声明 SPECIAL-USE，文件夹角色按名称匹配；由于不支持 MOVE，移动操作会退回为 COPY 加 STORE 加 EXPUNGE。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Comcast Xfinity 邮箱吗？",
+      "a": "不能直接使用。Claude 没有内置的 Comcast 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 comcast.net 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Comcast 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.comcast.net，端口 993，使用隐式 TLS。SMTP 为 smtp.comcast.net，端口 465，同样是隐式 TLS，并要求认证。用户名是你的完整 comcast.net 地址。两个服务器均已在本页所示日期通过实时 TLS 连接验证。"
+    },
+    {
+      "q": "为什么 Xfinity 在邮件客户端中拒绝我的密码？",
+      "a": "几乎总是因为 Third Party Access Security 处于关闭状态。对于之前没有使用外部邮件客户端的账户，Xfinity 默认将其关闭，而关闭时服务器会拒绝正确的凭据。请在 connect.xfinity.com 的齿轮图标下依次打开 Settings、Security，勾选该复选框，然后再试。"
+    },
+    {
+      "q": "Xfinity 邮箱需要应用专用密码吗？",
+      "a": "不需要。Comcast 不签发应用专用密码。开启第三方访问后，邮件客户端使用你 Xfinity ID 的密码登录。如果你看到有建议让你为 comcast.net 生成应用专用密码，那说的是另一家服务商的流程，Xfinity 设置中并没有这样的页面。"
+    },
+    {
+      "q": "取消 Xfinity 服务后，还能连接 comcast.net 地址吗？",
+      "a": "只有在邮箱仍然有效时才能。如果前客户在断开服务前 90 天内登录过 Xfinity Email 网站，Comcast 允许其保留该地址，并要求至少每九个月在那里登录一次才能继续保留。已关闭的邮箱无法连接，也无法恢复。"
+    },
+    {
+      "q": "我的 Comcast 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 Comcast 实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Comcast Xfinity 收件箱",
+    "sub": "勾选第三方访问，几分钟即可连接。1 个收件箱永久免费，无需信用卡。"
+  }
+}

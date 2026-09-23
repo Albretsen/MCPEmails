@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://disroot.org/en/services/email",
+    "https://disroot.org/en/faq",
+    "https://howto.disroot.org/en/tutorials/email/clients"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Disroot-passord",
+    "helpUrl": "https://disroot.org/en/services/email",
+    "usernameForm": "Hele Disroot-adressen din, navn@disroot.org. Disroots egne påloggingsskjermer tar bare brukernavnet uten domenet, så prøv det hvis hele adressen avvises.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Disroot-e-post til Claude og MCP-klienter",
+    "description": "Koble Disroot-e-post til Claude, Cursor og enhver MCP-klient over IMAP på disroot.org:993. Bruker Disroot-passordet ditt, app-passord finnes ikke. Én innboks gratis."
+  },
+  "hero": {
+    "eyebrow": "Disroot + AI",
+    "titleLine1": "Koble Disroot til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Disroot-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP, i alle MCP-klienter i stedet for bare én, og med personvernavveiningen sagt rett ut.",
+    "answer": "Claude kan ikke nå en Disroot-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP på disroot.org, port 993, og SMTP på port 465, og autentiserer med det samme Disroot-passordet du bruker for webmail og Cloud, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Disroot utsteder ingen app-passord, så vær klar over at påloggingsopplysningen du lagrer, er kontopassordet ditt. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Passordet til Disroot-kontoen din",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles Disroot til: ett vertsnavn, ett passord",
+    "body": "Disroot kjører alt på selve domenet. IMAP er <code>disroot.org</code> på port 993 over implisitt TLS, og SMTP er <code>disroot.org</code> på port 465. Det er ikke noe <code>imap.</code>- eller <code>smtp.</code>-prefiks å legge til og ingen regional variant å slå opp. Autentiseringen er et <b>vanlig passord</b>: det samme Disroot-passordet som logger deg inn på webmail, Nextcloud-instansen, Akkoma og XMPP-chat. Disroot utsteder ikke app- eller enhetsspesifikke passord, så det finnes ingen måte å gi en klient en avgrenset påloggingsopplysning. Det er verdt å tenke over før du kobler til noe, også dette."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks, for alltid, uten kort. Til slutt får du en MCP-URL og en nøkkel."
+    },
+    {
+      "h": "Bekreft påloggingsnavnet ditt hos Disroot",
+      "p": "Disroots FAQ sier tydelig at kontopåloggingen er brukernavnet ditt <b>uten</b> domenet. De fleste e-postklienter autentiserer fint med hele <code>name@disroot.org</code>-adressen, men hvis serveren avviser deg og passordet helt sikkert er riktig, prøver du igjen med bare brukernavnet. Den ene detaljen forklarer de fleste mislykkede klientpålogginger hos Disroot."
+    },
+    {
+      "h": "Legg til postkassen i mcpemails",
+      "p": "Velg IMAP / SMTP, skriv inn Disroot-adressen og Disroot-passordet ditt. Vertene er forhåndsutfylt med <code>disroot.org</code> for begge retninger. Påloggingsopplysninger er kryptert ved lagring; selve e-posten hentes direkte per forespørsel og beholdes ikke."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Ett passord låser opp alle Disroot-tjenester",
+      "p": "Disroot-passordet ditt deles mellom e-post, Nextcloud-skyen, Akkoma og chat. Disroot tilbyr ingen app-passord for e-post, så en e-postklient har den samme hemmeligheten som åpner filene dine. Vil du noen gang trekke tilbake den tilgangen, er det eneste virkemiddelet å endre kontopassordet, og en endring tvinger deg også til å oppdatere Nextclouds krypteringsnøkkel fra siden Personal settings, ellers slutter filene dine å åpne seg. Tofaktorautentisering hos Disroot dekker Cloud, ikke IMAP, så å slå den på blokkerer heller ikke en e-postklient."
+    },
+    {
+      "h": "Disroots IMAP-server annonserer ikke MOVE eller UIDPLUS",
+      "p": "Dovecot-instansen på <code>disroot.org</code> tilbyr IMAP4rev1 med IDLE og SASL-IR, men verken MOVE eller UIDPLUS. Å flytte en melding er derfor en COPY, deretter en STORE av \\Deleted-flagget, deretter en EXPUNGE, og uten UIDPLUS oppgir ikke serveren den nye UID-en, så den flyttede kopien må finnes igjen med et søk. Det fungerer, det er bare tregere og mer støyende enn på en server som støtter MOVE, og det er grunnen til at en stor masseomorganisering mot Disroot tar merkbart lengre tid."
+    },
+    {
+      "h": "Ingen SPECIAL-USE, så mapper matches på navn",
+      "p": "Disroot annonserer ikke SPECIAL-USE-utvidelsen, så ingenting i protokollen sier hvilken mappe som er Sendt, Utkast, Papirkurv eller Arkiv. Mapperollene utledes i stedet fra navnene. Hvis du har gitt mappene nye navn i webmail, eller klienten din opprettet en ekstra Sendt-mappe for flere år siden, oppgir du mappen eksplisitt når du ber en agent arkivere noe."
+    },
+    {
+      "h": "Postkassen er på 1 GB som standard",
+      "p": "Disroots dokumenterte grense for postkassen er 1 GB og grensen for vedlegg er 64 MB; SMTP-serveren selv annonserer et tak på 70 MB per melding. Lagringen kan utvides gjennom et bidrag. En full postkasse returnerer innkommende e-post, og en agent som sender store vedlegg, treffer størrelsesgrensen før den treffer kvoten."
+    }
+  ],
+  "limits": [
+    "Å koble en postkasse til en AI-klient betyr at AI-leverandøren leser innholdet i meldingene dine. Det kan verken Disroot eller vi hindre. mcpemails henter e-post direkte fra Disroot per forespørsel og lagrer ikke meldingsinnhold, og påloggingsopplysninger er kryptert ved lagring, men teksten når likevel Claude, Cursor eller hvilken klient du enn peker den mot. Hvis en Disroot-postkasse inneholder korrespondanse du ikke vil at en stor AI-leverandør skal behandle, bør du ikke koble den til.",
+    "E-post som kommer GPG-kryptert, noe Disroot aktivt oppfordrer til, når en IMAP-klient som en armert chiffertekstblokk. mcpemails har ikke den private nøkkelen din, så en agent ser konvolutten og den krypterte nyttelasten, ikke meldingen. Slike tråder må leses i en klient som har nøkkelen din.",
+    "Det finnes ingen avgrenset påloggingsopplysning. Disroot tilbyr ikke app-passord, så mcpemails lagrer det samme passordet som åpner Cloud-filene dine."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Disroot?",
+      "a": "Ikke direkte. Claude har ingen innebygd Disroot-kobling og ingen måte å snakke IMAP på. Kobler du en MCP-server som mcpemails til Disroot-postkassen din, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og den samme tilkoblingen fungerer i Cursor og andre MCP-klienter uten nytt oppsett."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Disroot?",
+      "a": "IMAP er disroot.org på port 993 med implisitt TLS. SMTP er disroot.org på port 465, også med implisitt TLS, med STARTTLS på 587 som det dokumenterte alternativet. Det finnes ikke noe imap.- eller smtp.-underdomene. Logg inn med Disroot-adressen og det vanlige Disroot-passordet ditt. Begge vertene ble bekreftet via en faktisk TLS-tilkobling."
+    },
+    {
+      "q": "Har Disroot app-passord for e-postklienter?",
+      "a": "Nei. Disroot utsteder ett passord per konto, og det brukes likt for e-post, Cloud, Akkoma og chat. Alt du kobler til, får den påloggingsopplysningen. Disroots tofaktorautentisering gjelder Cloud og ikke IMAP, så den verken blokkerer eller beskytter en pålogging fra en e-postklient."
+    },
+    {
+      "q": "Hvorfor blir Disroot-passordet mitt avvist?",
+      "a": "Som regel er det brukernavnet, ikke passordet. Disroots egen FAQ sier at kontopåloggingen er brukernavnet uten domenet, og passord skiller mellom store og små bokstaver. Prøv bare brukernavnet i stedet for hele adressen. Hvis påloggingen fortsatt feiler, bekrefter du at kontoen er godkjent; Disroot går gjennom registreringer før de blir aktive."
+    },
+    {
+      "q": "Kan AI-en min lese PGP-kryptert Disroot-e-post?",
+      "a": "Nei. En melding som er kryptert til OpenPGP-nøkkelen din, kommer over IMAP som chiffertekst, og mcpemails har aldri den private nøkkelen din. Agenten kan se avsender, emne og dato, og kan flytte eller flagge meldingen, men innholdet forblir uleselig. Det er slik det skal være, og det er grunnen til at ende-til-ende-krypterte tråder forblir private overfor en AI-klient."
+    },
+    {
+      "q": "Lagres Disroot-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra disroot.org over IMAP for hver forespørsel og sendes rett videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring; meldingsinnhold beholdes ikke. AI-klienten du kobler til, mottar innholdet i alt den leser, og det er et eget spørsmål som er verdt å ta stilling til bevisst."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Disroot-innboks",
+    "sub": "Koble til Disroot på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

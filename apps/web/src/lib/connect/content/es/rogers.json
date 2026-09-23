@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://www.rogers.com/customer/support/article/update-email-settings",
+    "https://ca.help.yahoo.com/kb/rogers/SLN15241.html",
+    "https://ca.help.yahoo.com/kb/rogers/SLN28681.html",
+    "https://business.shaw.ca/support/products/shaw-hosting-sunset"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Contraseña de aplicación de Rogers Yahoo",
+    "helpUrl": "https://ca.help.yahoo.com/kb/rogers/SLN15241.html",
+    "usernameForm": "Tu dirección completa de Rogers Yahoo, normalmente nombre@rogers.com, escrita entera.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Rogers Yahoo Email y Claude: el problema de la contraseña",
+    "description": "El correo de Rogers funciona sobre Yahoo. Conecta rogers.com a Claude por IMAP en imap.broadband.rogers.com, aunque Rogers dice ya no generar contraseñas de aplicación."
+  },
+  "hero": {
+    "eyebrow": "Rogers Yahoo Mail + IA",
+    "titleLine1": "Conecta una bandeja de Rogers Yahoo",
+    "titleLine2": "a Claude, Cursor, cualquier cliente MCP",
+    "lead": "El correo de Rogers es correo de Yahoo con el nombre rogers.com. mcpemails lo conecta por IMAP para que tu agente de IA pueda leer, buscar, enviar, responder y archivar ese correo, siempre que tu cuenta todavía pueda generar una contraseña de aplicación.",
+    "answer": "Claude no puede acceder a un buzón de Rogers Yahoo por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.broadband.rogers.com en el puerto 993, autenticándose con una contraseña de aplicación de Rogers Yahoo en lugar de la contraseña que escribes en el webmail. Hay un problema real que conviene comprobar primero: el propio artículo de configuración de Rogers dice ahora que la generación de contraseñas de aplicación ya no está disponible, mientras que la ayuda de Yahoo para Rogers sigue documentando el botón Create app password, así que abre la página de seguridad de tu cuenta antes de hacer planes. Si ya existe una contraseña de aplicación o todavía se puede crear, una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña de aplicación, si tu cuenta la permite",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta Rogers Yahoo Mail: IMAP y la cuestión de la credencial",
+    "body": "Cada buzón rogers.com es un buzón de Yahoo con la marca Rogers. El servidor SMTP al que nos conectamos responde con un saludo de <code>smtp.mail.yahoo.com</code> aunque se accede a él en <code>smtp.broadband.rogers.com</code>, e IMAP responde en <code>imap.broadband.rogers.com</code> en el puerto 993 sobre TLS. Es una buena plataforma para automatizar: anuncia MOVE, UIDPLUS, SPECIAL-USE, IDLE y SASL-IR, así que se conocen las funciones de las carpetas, los movimientos son atómicos y los nuevos identificadores de mensaje se devuelven al copiar. La duda no está en el transporte, sino en la credencial. Un cliente de correo que no puede abrir la ventana de inicio de sesión propia de Yahoo necesita una contraseña de aplicación, y el artículo de configuración actual de Rogers dice sin rodeos que <b>la generación de contraseñas de aplicación ya no está disponible</b> y remite a sus preguntas frecuentes sobre los cambios en Rogers Yahoo Mail, mientras que la sección de ayuda de Yahoo para Rogers sigue describiendo cómo crear una en External connections. Consulta la página de seguridad de tu propia cuenta en lugar de fiarte de uno u otro documento."
+  },
+  "setup": [
+    {
+      "h": "Crea una cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja y no pide tarjeta."
+    },
+    {
+      "h": "Abre la página de seguridad de tu cuenta de Rogers Yahoo y busca las contraseñas de aplicación",
+      "p": "Inicia sesión con tu dirección <code>@rogers.com</code>, abre la seguridad de la cuenta y busca en <b>External connections</b> (conexiones externas) la opción <b>Create app password</b> (crear contraseña de aplicación). Si aparece, crea una llamada <code>mcpemails</code> y copia el código; Yahoo solo lo muestra una vez. Si la opción no está, se debe al cambio de Rogers y no a un fallo, y en esa cuenta no hay conexión posible basada en contraseña."
+    },
+    {
+      "h": "Introduce la dirección rogers.com y la contraseña de aplicación",
+      "p": "En mcpemails elige IMAP / SMTP, pon la dirección rogers.com completa en el campo de usuario y pega la contraseña de aplicación. No uses la contraseña del webmail de Rogers Yahoo; la capa IMAP la rechaza. Los servidores y puertos de abajo vienen rellenados y se verificaron mediante una conexión TLS real."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Rogers y Yahoo documentan ahora cosas opuestas sobre las contraseñas de aplicación",
+      "p": "El propio artículo de Rogers sobre cómo configurar el correo de Rogers Yahoo empieza diciendo que la generación de contraseñas de aplicación ya no está disponible. La sección de ayuda de Yahoo para Rogers, en cambio, sigue explicando paso a paso cómo crear una en la página de seguridad de la cuenta y señala que una contraseña de aplicación sigue siendo válida aunque cambies la contraseña principal. Ambas son páginas vigentes del proveedor. La lectura práctica es que Rogers está dirigiendo a todo el mundo a la ventana de inicio de sesión nativa de Rogers Yahoo, que las contraseñas de aplicación existentes siguen funcionando hasta que se borran y que si se puede crear una nueva se decide en tu cuenta, no en la documentación. Mira la página antes de sacar conclusiones."
+    },
+    {
+      "h": "Los mecanismos OAuth que anuncia el servidor no están a tu alcance",
+      "p": "El servidor IMAP de Rogers ofrece OAUTHBEARER y XOAUTH2 junto a PLAIN. Son para las aplicaciones de correo que Rogers y Yahoo han registrado, las que abren una ventana de inicio de sesión de Rogers Yahoo dentro de la aplicación. No existe ninguna página de autoservicio donde un cliente obtenga un token para su propio uso, así que ver OAuth en la lista de capacidades no significa que haya una vía alternativa si las contraseñas de aplicación están cerradas."
+    },
+    {
+      "h": "El correo de Rogers Business se está dando de baja, y es un servicio distinto",
+      "p": "Rogers ha ido cerrando el correo heredado de Rogers Business y los dominios y subdominios alojados desde septiembre de 2025, desactivando las cuentas y borrando sus datos de forma permanente. Su documentación de soporte deja claro que esto no afecta a las direcciones de consumo <code>rogers.com</code> o <code>shaw.ca</code>, que siguen funcionando. Así que un buzón de empresa en un dominio alojado va camino de ser eliminado y hay que migrarlo, mientras que una dirección personal rogers.com no se ve afectada por ese programa."
+    },
+    {
+      "h": "Ya no se emiten nuevas direcciones rogers.com ni shaw.ca",
+      "p": "Puedes conservar la dirección de consumo que ya tienes, pero Rogers ya no crea buzones nuevos rogers.com ni shaw.ca. Si piensas crear una dirección nueva para que trabaje un agente, no puede estar en estos dominios, y el buzón que conectes tiene que ser uno que ya exista."
+    }
+  ],
+  "limits": [
+    "El servidor SMTP de Yahoo que hay detrás de Rogers anuncia un tamaño máximo de mensaje de unos 39 MB, así que un envío con adjuntos grandes se rechaza antes de salir.",
+    "Si tu cuenta ya no puede generar una contraseña de aplicación, mcpemails no puede conectarla. No hay alternativa solo con contraseña, y no somos una de las aplicaciones registradas para la ventana OAuth de Rogers Yahoo."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de Rogers?",
+      "a": "No directamente. Claude no tiene un conector de Rogers integrado. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar tu correo rogers.com, y la misma conexión funciona en Cursor, ChatGPT y otros clientes MCP. Depende de que tu cuenta pueda usar una contraseña de aplicación."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Rogers?",
+      "a": "IMAP es imap.broadband.rogers.com en el puerto 993 con TLS implícito y SMTP es smtp.broadband.rogers.com en el puerto 465, también con TLS implícito. Ambos se verificaron mediante una conexión TLS real, y ambos son infraestructura de Yahoo con nombres de Rogers. El nombre de usuario es tu dirección rogers.com completa."
+    },
+    {
+      "q": "¿Todavía puedo crear una contraseña de aplicación de Rogers?",
+      "a": "Depende de tu cuenta, y la documentación del proveedor se contradice. El artículo de configuración de Rogers dice que la generación de contraseñas de aplicación ya no está disponible; la ayuda de Yahoo para Rogers sigue describiendo el botón Create app password en External connections. Abre la página de seguridad de tu cuenta de Rogers Yahoo y comprueba cuál es tu caso. Una contraseña de aplicación que ya tengas sigue funcionando hasta que la borres."
+    },
+    {
+      "q": "¿Afecta esto a mi correo de empresa de Rogers?",
+      "a": "El correo heredado de Rogers Business y los dominios alojados están en proceso de baja desde septiembre de 2025, con buzones desactivados y datos borrados. Ese programa es independiente de las direcciones de consumo rogers.com y shaw.ca, que siguen funcionando. Si tu dirección está en un dominio de empresa alojado, trasládala antes de que se desactive en lugar de conectarla aquí."
+    },
+    {
+      "q": "¿Se almacena mi correo de Rogers en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales, incluida la contraseña de aplicación, se cifran en reposo, y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de Rogers Yahoo",
+    "sub": "Comprueba primero tu contraseña de aplicación y conecta en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

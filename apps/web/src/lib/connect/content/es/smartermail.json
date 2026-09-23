@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://help.smartertools.com/smartermail/current/topics/systemadmin/settings/bindings/ipaddresses",
+    "https://help.smartertools.com/SmarterMail/current/Topics/SystemAdmin/Settings/ProtocolSettings",
+    "https://help.smartertools.com/SmarterMail/v16/Topics/SystemAdmin/Security/Advanced/AbuseDetection.aspx",
+    "https://help.smartertools.com/smartermail/current/topics/systemadmin/manage/currentblocks",
+    "https://help.smartertools.com/smartermail/current/topics/systemadmin/manage/userdefaults"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://help.smartertools.com/smartermail/current/topics/systemadmin/settings/bindings/ipaddresses",
+    "usernameForm": "La dirección completa del buzón, incluido el dominio, por ejemplo you@yourdomain.com, ya que un mismo servidor SmarterMail aloja muchos dominios.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "SmarterMail en Claude: bindings IMAP y bloqueos IDS",
+    "description": "Conecta un buzón de SmarterMail a Claude, Cursor y ChatGPT por IMAP en el 993. Dónde fijan los bindings el cifrado del puerto y cómo bloquean las reglas IDS."
+  },
+  "hero": {
+    "eyebrow": "SmarterMail + IA",
+    "titleLine1": "Conecta SmarterMail a Claude,",
+    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
+    "lead": "SmarterMail ya da a tus usuarios webmail, calendarios y chat. Un servidor MCP añade lo único que no puede ofrecer: un agente de IA que lee, busca, envía, responde, programa y archiva correo en el propio buzón.",
+    "answer": "Claude no puede acceder a un servidor SmarterMail por sí solo. mcpemails es un servidor MCP alojado que se conecta al tuyo por IMAP en tu propio nombre de servidor, normalmente en el puerto 993 con TLS implícito, usando la contraseña del buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. SmarterMail es software que ejecutas tú o tu proveedor, así que no hay un nombre de servidor compartido: el servidor debe ser accesible desde internet, el buzón debe tener IMAP en sus ajustes de Service Access y la detección de abusos de SmarterMail no debe estar bloqueando la dirección que se conecta. Una bandeja es gratis.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Contraseña del buzón, IMAP en Service Access",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta SmarterMail: bindings, ajustes de protocolo y Service Access",
+    "body": "Tres pantallas de la interfaz del administrador del sistema deciden si un cliente IMAP puede entrar. <b>Settings, then Bindings</b> (ajustes y luego vinculaciones) es donde SmarterMail relaciona las direcciones IP físicas de la tarjeta de red del servidor, los puertos que usan SMTP, IMAP, POP, LDAP, XMPP y Submission, y el cifrado aplicado a cada uno de esos puertos, así que es la respuesta fiable a qué está escuchando y dónde. <b>Settings, then Other Protocols</b> (ajustes y luego otros protocolos) contiene el comportamiento de IMAP: el saludo, un tiempo de espera de comandos que por defecto es de 30 minutos, un máximo de 8 comandos erróneos antes de cortar la sesión, un techo de 1000 conexiones, el interruptor de IDLE y una opción para rechazar la autenticación insegura en conexiones sin cifrar. <b>Service Access</b> (acceso a servicios), que se establece en el usuario y se hereda de los valores predeterminados del dominio y del sistema, decide si ese buzón concreto puede usar IMAP. Las credenciales son la contraseña normal del buzón. SmarterMail no tiene un sistema de contraseñas de aplicación."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis de mcpemails",
+      "p": "Regístrate en mcpemails.com. Una bandeja es gratis para siempre y no se pide tarjeta."
+    },
+    {
+      "h": "Lee el binding de IMAP, no lo supongas",
+      "p": "En la interfaz del administrador del sistema, abre Settings, luego Bindings, y busca las filas de IMAP. Anota la dirección IP, el puerto y el cifrado configurados en cada una. En una máquina Windows con varias direcciones es totalmente normal que IMAP esté vinculado a una de ellas y que el nombre público resuelva a otra distinta."
+    },
+    {
+      "h": "Comprueba Service Access en el buzón y luego añádelo",
+      "p": "Abre el usuario y confirma que IMAP está activado en sus ajustes de Service Access. Después añade la bandeja en mcpemails: elige IMAP / SMTP y escribe tu nombre de servidor de SmarterMail, la dirección completa del buzón y su contraseña. Si eres administrador de dominio y no administrador del sistema, esta es la pantalla a la que puedes llegar tú mismo."
+    },
+    {
+      "h": "Pega la URL MCP en tu IA",
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Las reglas IDS bloquean la dirección, y los clientes locales están exentos, así que nadie se da cuenta",
+      "p": "La detección de abusos de SmarterMail viene activada con tipos de regla como <b>Denial of Service</b>, <b>Password Brute Force by IP</b> y <b>Password Brute Force by Email</b>, y bloquea la dirección que se conecta por protocolo en lugar de rechazar el inicio de sesión. El detalle que lo hace tan confuso es la lista de exenciones: el loopback y los rangos privados 10.x, 172.16 a 172.31 y 192.168.x nunca se bloquean. Así que todas las pruebas que haces desde dentro de la red funcionan, y solo se rechaza al cliente externo, lo que hace que el problema parezca del cliente externo. Mira en Manage, luego IDS Blocks, filtra por IMAP y comprueba si la dirección aparece. Desbloquearla ahí elimina el bloqueo actual pero deja la regla en su sitio, así que volverá a pasar. La solución duradera es añadir la dirección a la lista blanca con la opción para omitir la detección de fuerza bruta activada."
+    },
+    {
+      "h": "Service Access se hereda, y cambiar el valor predeterminado no arregla a nadie",
+      "p": "El permiso de IMAP de un buzón viene del Service Access del usuario, que se inicializó con los valores predeterminados del dominio, que a su vez se inicializaron con los User Defaults del sistema. Editar un valor predeterminado solo afecta a los usuarios creados después, así que un cambio de política de hace dos años dejó una larga cola de cuentas que siguen teniendo IMAP desactivado de forma individual. El síntoma es un buzón que falla mientras el dominio parece bien configurado. Hay una segunda pista: SmarterMail no responde a una solicitud de Autodiscover de IMAP para un usuario cuya cuenta tiene IMAP desactivado, aunque IMAP esté activado para Autodiscover en general, así que una configuración automática de cliente que misteriosamente solo ofrece POP o Exchange ActiveSync apunta a la misma causa."
+    },
+    {
+      "h": "Other Protocols puede rechazar en el 143 el inicio de sesión que el 993 acepta",
+      "p": "La pantalla Other Protocols incluye una opción para desactivar los métodos de autenticación inseguros en conexiones sin SSL. Con ella activada, un inicio de sesión normal por el puerto 143 sin cifrar se rechaza mientras que exactamente las mismas credenciales funcionan en el 993, lo que parece un problema de contraseña intermitente cuando dos clientes están configurados de forma distinta. La misma pantalla fija un máximo de 8 comandos erróneos antes de que SmarterMail cierre la sesión, y contiene el interruptor de IDLE: si desactivas IDLE en todo el servidor, los clientes que esperan notificaciones en tiempo real pasan sin avisar a consultar periódicamente. Ninguno de estos ajustes produce un mensaje de error que nombre el ajuste responsable, así que merece la pena leer la pantalla una vez en lugar de diagnosticar por los síntomas."
+    }
+  ],
+  "limits": [
+    "Un servidor MCP alojado tiene que llegar a tu máquina SmarterMail desde fuera. Un servidor vinculado solo a una dirección interna, o publicado únicamente para el rango de tu oficina, no se puede conectar así. mcpemails se puede autoalojar si prefieres que la sesión IMAP nunca salga de tu red.",
+    "La validación de certificados es estricta, así que el binding en el 993 necesita un certificado válido para el nombre de servidor que introduzcas. SmarterMail en Windows suele usar un certificado del almacén de certificados de Windows, y uno emitido para el nombre de la máquina en lugar del nombre del servidor de correo será rechazado.",
+    "Por esta conexión solo pasa el correo. Los calendarios, contactos, tareas y chat de SmarterMail se sirven desde su propia interfaz web y por Exchange ActiveSync o EWS, no por IMAP."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con SmarterMail?",
+      "a": "No por sí solo. Claude no tiene conector de SmarterMail y no puede abrir una sesión IMAP con un servidor que ejecutas tú o tu proveedor. Conectar un servidor MCP como mcpemails a tu nombre de servidor de SmarterMail le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar un buzón alojado en él, y la misma bandeja funciona después desde Cursor o ChatGPT."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de SmarterMail?",
+      "a": "El nombre del servidor es tu propio servidor o el servidor de correo de tu proveedor de alojamiento. Los puertos son los que indique la pantalla Bindings, que en una instalación predeterminada son 143 y 993 para IMAP y 25 y 587 para el envío. Esa pantalla es la referencia porque SmarterMail permite a un administrador cambiar los puertos y el cifrado de cada uno. Inicia sesión con la dirección completa del buzón y su contraseña."
+    },
+    {
+      "q": "¿Por qué SmarterMail rechaza mi inicio de sesión desde una máquina y no desde otra?",
+      "a": "Mira primero los bloqueos IDS. La detección de abusos de SmarterMail bloquea direcciones por protocolo tras fallos repetidos o demasiadas conexiones, y exime automáticamente el loopback y los rangos privados, así que nada de la red local se ve afectado mientras que un cliente externo se rechaza. Las direcciones bloqueadas aparecen en Manage, luego IDS Blocks."
+    },
+    {
+      "q": "¿Necesita SmarterMail una contraseña de aplicación?",
+      "a": "No. SmarterMail no tiene una función de contraseñas específicas de aplicación. Los clientes de correo se autentican con la contraseña del buzón. Si la cuenta tiene activada la autenticación en dos pasos para el webmail, se aplica al inicio de sesión en el navegador y no a la sesión IMAP, así que un cliente sigue usando la contraseña del buzón."
+    },
+    {
+      "q": "¿Se almacena mi correo de SmarterMail en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de tu servidor SmarterMail por IMAP en cada solicitud y se pasan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de SmarterMail",
+    "sub": "Conecta un buzón de tu propio servidor SmarterMail. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

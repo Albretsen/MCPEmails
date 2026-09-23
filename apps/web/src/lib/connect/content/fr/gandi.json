@@ -1,0 +1,95 @@
+{
+  "_sources": [
+    "https://docs.gandi.net/en/gandimail/standard_email_settings/",
+    "https://docs.gandi.net/en/gandimail/common_operations/changing_email_password.html",
+    "https://docs.gandi.net/en/gandimail/common_operations/manage_2fa.html",
+    "https://news.gandi.net/en/2023/06/faq-new-mailbox-service/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte mail",
+    "helpUrl": "https://docs.gandi.net/en/gandimail/common_operations/changing_email_password.html",
+    "usernameForm": "L'adresse e-mail complète, @votredomaine.tld compris.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connecter Gandi Mail à Claude, Cursor et MCP",
+    "description": "Connectez une boîte Gandi à Claude, Cursor et tout client MCP en IMAP sur mail.gandi.net:993, avec le mot de passe de la boîte et non l'identifiant de votre compte Gandi."
+  },
+  "hero": {
+    "eyebrow": "Gandi Mail + IA",
+    "titleLine1": "Connectez Gandi Mail à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Gandi. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec le mot de passe défini sur la boîte elle-même, et non sur votre compte Gandi.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Gandi. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur mail.gandi.net, port 993, en s'authentifiant avec l'adresse e-mail complète et le mot de passe défini sur cette boîte, que Gandi distingue du mot de passe de votre compte gandi.net. Claude, Cursor ou tout client MCP peut ensuite lire, rechercher, envoyer et organiser le courrier. Il n'y a aucun mot de passe d'application à générer ni d'option IMAP à activer boîte par boîte. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe de la boîte, pas l'identifiant du compte",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Gandi Mail se connecte : IMAP et le mot de passe de la boîte",
+    "body": "Gandi sert les deux protocoles depuis un seul nom d'hôte : <code>mail.gandi.net</code>, port 993 pour IMAP en TLS implicite et port 465 pour SMTP, également en TLS implicite. Ce serveur unique couvre toutes les boîtes Gandi, quel que soit le domaine de l'adresse. La documentation de Gandi précise clairement que l'identifiant est <b>l'adresse e-mail complète</b>, partie après l'arobase comprise, et que le mot de passe est celui que vous avez défini à la création de la boîte. Gandi indique dans sa propre documentation que le mot de passe d'une adresse e-mail Gandi est distinct de celui de votre compte Gandi, ce qui vous permet de confier une boîte à un collègue sans lui donner votre accès au registrar. SMTP exige une authentification avec les mêmes identifiants."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte pour toujours et ne demande pas de carte bancaire."
+    },
+    {
+      "h": "Définissez le mot de passe de la boîte dans l'interface Gandi",
+      "p": "Connectez-vous sur gandi.net, choisissez Domains dans le menu de gauche, sélectionnez le domaine de l'adresse et ouvrez son onglet Email. Cliquez sur la boîte, ou sur son menu à trois points, puis sur Manage, et utilisez Change à côté de Password dans la section Configuration. Vous pouvez aussi le modifier depuis Settings, Password dans le webmail Roundcube de Gandi."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète et collez le mot de passe de la boîte. Le serveur mail.gandi.net et les ports 993 et 465 sont préremplis et ont été vérifiés par une vraie connexion TLS."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Ajoutez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "La 2FA de la messagerie Gandi ne couvre que le webmail, et ne peut pas couvrir IMAP",
+      "p": "Si vous avez activé l'authentification à deux facteurs sur une boîte Gandi, elle s'applique aux portails webmail SOGo et Roundcube, et nulle part ailleurs. La documentation de Gandi dit directement que la 2FA ne peut être utilisée que via ses portails webmail, que les clients mail comme Thunderbird ou Outlook ne sont pas pris en charge, et que désactiver POP, IMAP et SMTP est le seul moyen de sécuriser entièrement la boîte avec la 2FA. Deux conséquences pratiques. D'abord, la 2FA activée n'empêche pas mcpemails de se connecter : le mot de passe de la boîte fonctionne toujours en IMAP. Ensuite, si vous avez volontairement désactivé le protocole IMAP sur la boîte pour donner du sens à cette 2FA, aucun client ne peut se connecter tant que vous ne l'avez pas réactivé."
+    },
+    {
+      "h": "Les boîtes gratuites ont pris fin en 2023, et d'anciennes adresses peuvent tout simplement avoir disparu",
+      "p": "Gandi incluait auparavant deux boîtes gratuites pour toute la durée d'enregistrement d'un domaine. Cette offre a pris fin le 30 novembre 2023 et les boîtes sont devenues un service facturé séparément. Les adresses qui n'ont jamais été converties vers l'offre payante n'existent plus : une connexion IMAP à l'une d'elles échoue avec une erreur d'authentification, sans rien qui indique que la boîte a été supprimée. Si une adresse Gandi que vous n'avez pas utilisée depuis des années refuse la connexion, vérifiez l'onglet Email du domaine avant de soupçonner le mot de passe."
+    },
+    {
+      "h": "L'identifiant est l'adresse complète, et le serveur IMAP ne propose que AUTH=PLAIN",
+      "p": "Gandi refuse une partie locale seule comme identifiant, ce qui piège quiconque reprend les réglages d'un hébergeur qui l'acceptait. Par ailleurs, le serveur IMAP annonce <code>AUTH=PLAIN</code> et pas <code>AUTH=LOGIN</code> : un client ou une bibliothèque codé en dur pour le mécanisme LOGIN échoue à l'étape d'authentification avec un message d'erreur peu parlant. Le côté SMTP accepte les deux mécanismes, si bien que le même compte peut réussir à envoyer tout en échouant à lire."
+    }
+  ],
+  "limits": [
+    "Le serveur n'annonce ni MOVE ni UIDPLUS : déplacer un message se fait par copie, marquage et purge, et l'UID de destination doit être retrouvé par une recherche.",
+    "SPECIAL-USE est absent : Envoyés, Brouillons, Corbeille et Indésirables sont reconnus par leur nom. Sur une boîte Gandi en français, ces dossiers s'appellent souvent Envoyes, Brouillons, Corbeille et Indesirables."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec Gandi Mail ?",
+      "a": "Pas seul. Claude n'a pas de connecteur Gandi intégré. Diriger un serveur MCP comme mcpemails vers votre boîte Gandi en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne depuis Cursor, ChatGPT et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de Gandi ?",
+      "a": "Les deux utilisent le même nom d'hôte, mail.gandi.net. IMAP utilise le port 993 en TLS implicite et SMTP le port 465, également en TLS implicite, avec authentification obligatoire. L'identifiant est l'adresse e-mail complète, domaine compris, et le mot de passe est celui de la boîte. Le serveur a été confirmé par une vraie connexion TLS."
+    },
+    {
+      "q": "Pourquoi mon mot de passe Gandi est-il refusé ?",
+      "a": "Presque toujours parce que vous avez saisi le mot de passe de votre compte gandi.net. Gandi sépare le mot de passe de la boîte pour que les boîtes puissent être déléguées sans partager l'accès au registrar. Définissez-le ou réinitialisez-le sous Domains, votre domaine, l'onglet Email, puis Manage sur la boîte. Vérifiez aussi que vous avez saisi l'adresse complète comme identifiant."
+    },
+    {
+      "q": "Gandi exige-t-il un mot de passe d'application ?",
+      "a": "Non. Gandi ne délivre pas de mots de passe spécifiques aux applications pour la messagerie. C'est le mot de passe de la boîte qu'acceptent IMAP et SMTP, et il fonctionne que l'authentification à deux facteurs soit activée ou non sur les portails webmail, puisque cette 2FA ne s'étend pas aux protocoles des clients."
+    },
+    {
+      "q": "Mon courrier Gandi est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct chez Gandi en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le contenu des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA une boîte Gandi",
+    "sub": "Connectez une boîte Gandi en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.scalahosting.com/kb/use-imap-settings-to-add-my-email-address-to-an-email-client/",
+    "https://www.scalahosting.com/kb/how-to-setup-email-account-client-setup-ssl-tls-settings-pop-imap/",
+    "https://www.scalahosting.com/blog/scalahosting-introduces-spanel-powered-shared-and-email-hosting-plans/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte",
+    "helpUrl": "https://www.scalahosting.com/kb/use-imap-settings-to-add-my-email-address-to-an-email-client/",
+    "usernameForm": "Votre adresse e-mail complète, par exemple team@yourdomain.com, telle que créée dans SPanel ou cPanel.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "E-mail ScalaHosting vers Claude : IMAP SPanel et cPanel",
+    "description": "ScalaHosting utilise SPanel sur certaines offres et cPanel sur d'autres. Trouvez vos paramètres sous Connect device, puis confiez la boîte à Claude en IMAP 993. 1 boîte gratuite."
+  },
+  "hero": {
+    "eyebrow": "ScalaHosting + IA",
+    "titleLine1": "Connectez l'e-mail ScalaHosting à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte ScalaHosting. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP, que votre compte tourne sous SPanel ou sous cPanel.",
+    "answer": "Claude ne peut pas accéder seul à une boîte ScalaHosting. mcpemails est un serveur MCP hébergé qui la connecte en IMAP standard sur le port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. ScalaHosting n'exploite aucun nom d'hôte de messagerie partagé : votre serveur de courrier est votre propre domaine ou le nom du serveur d'hébergement, et les deux panneaux l'affichent sous Connect device pour l'adresse. Le panneau dont vous disposez dépend de l'offre, car SPanel et cPanel sont tous deux utilisés. L'authentification se fait avec le mot de passe de la boîte, et une boîte est gratuite.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe de la boîte depuis SPanel",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment le courrier ScalaHosting se connecte : SPanel ou cPanel, IMAP 993",
+    "body": "ScalaHosting a la particularité de fournir son propre panneau de contrôle à côté du standard du secteur. <b>SPanel</b> est leur panneau maison, inclus avec les offres VPS gérées et désormais aussi derrière l'hébergement mutualisé et e-mail propulsé par SPanel. <b>cPanel</b> reste disponible, comme base des anciennes offres mutualisées et comme option payante à la commande sur les VPS gérés. Le courrier se comporte de la même façon dans les deux cas : IMAP sur le port 993 avec SSL et SMTP sur le 465, le 587 étant documenté comme alternative de soumission, avec l'adresse e-mail complète comme nom d'utilisateur. Le nom d'hôte est celui de votre propre serveur, c'est pourquoi vous le relevez dans le panneau plutôt que dans un article. Dans SPanel, c'est <b>Email Accounts</b>, le bouton bleu <b>Action</b>, puis <b>Connect device</b>. Dans cPanel, c'est <b>Email Accounts</b>, puis <b>Connect Devices</b>."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Ouvrez Connect device dans le panneau dont vous disposez",
+      "p": "SPanel est accessible à <code>yourdomain.com/spanel/login</code>, sur votre propre serveur. Une fois connecté, ouvrez <b>Email Accounts</b>, trouvez l'adresse, cliquez sur le bouton bleu <b>Action</b> et choisissez <b>Connect device</b>. SPanel affiche les noms d'hôte et ports entrants et sortants dans une fenêtre. Sur un compte cPanel, l'équivalent est <b>Email Accounts</b>, puis <b>Connect Devices</b>, puis le bloc Mail Client Manual Settings."
+    },
+    {
+      "h": "Définissez ou récupérez le mot de passe de la boîte",
+      "p": "IMAP vérifie le mot de passe de l'adresse, qui n'est pas votre identifiant de l'espace client ScalaHosting. Dans SPanel, créez ou modifiez l'adresse sous Email Accounts, avec le bouton Generate si vous voulez une valeur robuste. Collez-le ensuite dans mcpemails avec l'adresse complète comme nom d'utilisateur et le nom d'hôte que vous avez copié."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "SPanel n'a pas de page de connexion centrale, et on perd du temps à la chercher",
+      "p": "Il n'existe pas de <code>spanel.scalahosting.com</code> où se connecter. SPanel tourne sur votre propre serveur et vous y accédez via votre propre domaine, à <code>yourdomain.com/spanel/login</code>. Cela piège ceux qui ont l'habitude de se connecter d'abord sur le site de leur hébergeur. Cela signifie aussi que si le DNS de votre domaine ne pointe plus vers ScalaHosting, vous ne pouvez plus atteindre le panneau par ce nom non plus, et il vous faut l'IP ou le nom d'hôte du serveur."
+    },
+    {
+      "h": "Le panneau dont vous disposez relève d'un achat, pas d'un niveau d'offre",
+      "p": "cPanel est une option payante sur les VPS gérés alors que SPanel est inclus, et selon les chiffres de ScalaHosting, la grande majorité des nouveaux clients VPS sont sur SPanel. Les anciennes offres d'hébergement mutualisé et e-mail reposaient sur cPanel ; les nouvelles, propulsées par SPanel, non. Deux clients ScalaHosting payant des montants similaires peuvent donc avoir des panneaux complètement différents, et un guide écrit pour l'un n'a aucun écran équivalent dans l'autre. Vérifiez ce que vous avez réellement sous les yeux avant de suivre un tutoriel e-mail ScalaHosting."
+    },
+    {
+      "h": "Vos paramètres vous ont été envoyés à l'inscription et sont archivés dans l'espace client",
+      "p": "ScalaHosting envoie les informations du serveur de courrier du compte dans l'e-mail de bienvenue. S'il a disparu depuis longtemps, elles sont récupérables sans contacter le support : connectez-vous à l'espace client et ouvrez <b>My Details</b>, puis <b>Email History</b>, qui conserve tous les messages qu'ils vous ont envoyés. Cette archive est le chemin le plus rapide vers le nom d'hôte du serveur quand vous ne pouvez pas entrer dans le panneau, et presque personne ne sait qu'elle existe."
+    }
+  ],
+  "limits": [
+    "mcpemails connecte des boîtes, pas le serveur. Les outils propres à SPanel, les sauvegardes et les fonctions de sécurité restent où ils sont.",
+    "Sur un VPS géré, vous avez peut-être modifié la pile de messagerie après le provisionnement. Dans ce cas, la fenêtre Connect device indique toujours ce que SPanel a configuré, ce qui ne correspond peut-être plus à ce qui écoute réellement."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec l'e-mail ScalaHosting ?",
+      "a": "Pas directement. Claude n'a pas de connecteur ScalaHosting. Connecter un serveur MCP comme mcpemails à la boîte via IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation. Cela fonctionne à l'identique sur les comptes SPanel et cPanel, puisque les deux servent un IMAP ordinaire."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de ScalaHosting ?",
+      "a": "IMAP utilise le port 993 avec SSL et SMTP le port 465 avec SSL, ou le 587 pour la soumission. Le nom d'hôte est celui de votre propre serveur d'hébergement et non une adresse ScalaHosting partagée : relevez-le dans la fenêtre Connect device de SPanel ou dans Connect Devices de cPanel. Le nom d'utilisateur est votre adresse e-mail complète pour les deux."
+    },
+    {
+      "q": "Où trouver les paramètres e-mail dans SPanel ?",
+      "a": "Connectez-vous à SPanel sur yourdomain.com/spanel/login, ouvrez Email Accounts, trouvez l'adresse dans la liste, cliquez sur le bouton bleu Action et choisissez Connect device. SPanel affiche alors les noms d'hôte entrants et sortants, les ports et le chiffrement dans une fenêtre. Les mêmes valeurs figurent aussi dans l'e-mail de bienvenue envoyé à la création du compte."
+    },
+    {
+      "q": "Pourquoi mon mot de passe e-mail ScalaHosting est-il refusé ?",
+      "a": "Parce que le mot de passe de la boîte est distinct de votre identifiant de l'espace client ScalaHosting et du mot de passe administrateur de SPanel. Réinitialisez-le en modifiant l'adresse sous Email Accounts dans le panneau. Vérifiez que le nom d'utilisateur est l'adresse e-mail entière et que vous utilisez le nom d'hôte affiché par le panneau plutôt qu'un nom deviné."
+    },
+    {
+      "q": "Mon courrier ScalaHosting est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis votre serveur ScalaHosting via IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte ScalaHosting à votre IA",
+    "sub": "Connectez une boîte ScalaHosting en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

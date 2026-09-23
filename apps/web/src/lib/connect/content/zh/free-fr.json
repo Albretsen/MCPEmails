@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://assistance.free.fr/articles/609"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Free 账户密码",
+    "helpUrl": "https://assistance.free.fr/articles/609",
+    "usernameForm": "包括域名在内的完整地址，例如 name@free.fr。Free 自己的说明是填写完整地址，而不是简短的登录名。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "在 Claude 中使用 Free.fr 邮箱：可用的 IMAP 设置",
+    "description": "使用 Free 账户密码，通过 imap.free.fr:993 的 IMAP 将 Free.fr 邮箱连接到 Claude 及任意 MCP 客户端。无需应用专用密码，也无需开启任何开关。"
+  },
+  "hero": {
+    "eyebrow": "Free.fr Mail + AI",
+    "titleLine1": "将你的 Free.fr 收件箱连接到",
+    "titleLine2": "Claude、Cursor 及任意 MCP 客户端",
+    "lead": "Free 为每位订户提供一个邮箱，并开放标准的 IMAP 访问。mcpemails 连接这个收件箱，让你的 AI 代理能在任意 MCP 客户端（而不只是某一个应用）中读取、搜索、发送、回复和归档邮件。",
+    "answer": "Claude 无法自行访问 Free.fr 邮箱。mcpemails 是一个托管 MCP 服务器，通过 imap.free.fr 端口 993 的 IMAP 与之连接，使用你的完整地址和 Free 账户密码进行认证。Free 不签发应用专用密码，也不需要事先打开任何开关，因此它是最容易连接的服务商之一；不过它的 IMAP 服务器异常精简，由此带来的影响会在下文说明。连接后，Claude、Cursor 或任何其他 MCP 客户端都能读取、搜索、发送和整理这些邮件，1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "只需你的 Free 账户密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Free.fr 如何连接：使用账户密码的 IMAP",
+    "body": "Free 在 <code>imap.free.fr</code> 端口 993 上通过 TLS 提供 IMAP，在 <code>smtp.free.fr</code> 上提供邮件提交，它接受端口 465 上的隐式 TLS 和端口 587 上的 STARTTLS。凭据是你 <b>Free 账户</b>的密码，也就是你在 espace abonné（用户中心）中使用的那个，用户名是完整地址而不是单纯的登录名。Free 要求 SMTP 认证，所以发信用户名和密码留空的客户端能连上，但第一次发信就会失败。没有需要生成的应用专用密码，也没有需要另外开启的邮件客户端设置，听起来简单，实际上也确实简单；但服务器本身非常精简：现代客户端期望的 IMAP 扩展，它几乎一个都不声明，意外也就出在这里。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "弄清你将要使用的是哪个密码",
+      "p": "邮箱密码就是你 Free 账户的密码。在 espace abonné 中修改它，会同时改变所有邮件客户端（包括本服务）所用的密码，所以如果你以后更换密码，请记得更新连接。如果你忘记了密码，请在那里重置，而不要去找邮件专用的凭据，因为根本没有。"
+    },
+    {
+      "h": "在 mcpemails 中输入完整地址",
+      "p": "选择 IMAP / SMTP，在用户名字段输入完整地址 <code>name@free.fr</code>。Free 自己的文档要求填写包括域名在内的完整地址。下方的服务器地址和端口已预填，并经实时 TLS 连接验证。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Free 只声明 AUTH=PLAIN，而且不带 SASL-IR",
+      "p": "<code>imap.free.fr</code> 的能力横幅几乎是 IMAP 横幅所能达到的最短程度。它只提供 <code>AUTH=PLAIN</code>，别无其他，也不声明 SASL-IR，因此服务器会拒绝随 AUTHENTICATE 命令一起发送凭据的一步式形式。写死使用 LOGIN 机制的客户端，或者默认假设支持 SASL-IR 的客户端，会得到一个光秃秃的拒绝，看起来像是密码错误。mcpemails 会改用两步交互重试，而不是把那次拒绝当作最终结果。"
+    },
+    {
+      "h": "发信服务器接受收信服务器不接受的机制",
+      "p": "<code>smtp.free.fr</code> 声明 PLAIN、LOGIN、CRAM-MD5 和 DIGEST-MD5，远比 IMAP 一侧唯一的 PLAIN 丰富。所以同一账户的两部分在同一个客户端中表现不同，探测其中一侧并把结果复用到另一侧的工具，可能会选出只在一个方向上有效的机制。请分别配置。"
+    },
+    {
+      "h": "没有 MOVE、UIDPLUS、SPECIAL-USE 和 IDLE",
+      "p": "Free 的服务器只实现了基础协议，之上几乎什么都没有。归档一封邮件要依次执行 COPY、STORE 删除标记、EXPUNGE，而不是一条原子命令；由于缺少 UIDPLUS，服务器不会报告新副本的 ID，只能在目标文件夹中搜索。没有任何信息说明哪个文件夹是 Sent 或 Trash，只能按名称匹配，而法语邮箱中的名称通常是法语。没有 IDLE 就没有推送，新邮件只能通过轮询发现。"
+    },
+    {
+      "h": "一个密码，一损俱损",
+      "p": "由于邮件凭据就是你的 Free 账户密码，而不是按应用区分的密钥，你粘贴到任何地方，那里就握有整个账户的钥匙；而撤销某一个工具的访问，意味着要为所有工具修改密码。这是 Free 设计上的特性，并不是批评，但在连接之前值得知道。mcpemails 对保存的凭据进行静态加密，你也可以随时在控制台中断开收件箱。"
+    }
+  ],
+  "limits": [
+    "Free 的 SMTP 服务器声明的单封邮件大小上限约为 75 MB，因此带更大附件的邮件在发出前就会被拒绝。",
+    "由于该服务器未实现 MOVE、UIDPLUS 和 SPECIAL-USE，移动操作不是原子的，文件夹角色按名称匹配。",
+    "没有 IDLE，因此新邮件是通过轮询发现的，而不是推送。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Free.fr 邮箱吗？",
+      "a": "不能直接使用。Claude 没有内置的 Free 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 free.fr 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "Free.fr 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.free.fr，端口 993，使用隐式 TLS。SMTP 为 smtp.free.fr，可用端口 465（隐式 TLS）或端口 587（STARTTLS），并要求认证。两个服务器均经实时 TLS 连接验证。用户名是你的完整邮箱地址，密码是你的 Free 账户密码。"
+    },
+    {
+      "q": "Free.fr 需要应用专用密码或 IMAP 开关吗？",
+      "a": "两者都不需要。Free 不签发应用专用密码，网页邮箱中也没有需要在客户端登录前开启的邮件客户端开关。你的 Free 账户密码可直接用于认证，所以这里登录被拒绝，通常是认证机制问题或密码确实错了，而不是某个隐藏的设置。"
+    },
+    {
+      "q": "为什么我的 Free.fr 邮件能发不能收，或者能收不能发？",
+      "a": "因为收信和发信服务器声明的认证机制不同。IMAP 只提供 PLAIN，且没有 SASL-IR；而 SMTP 提供 PLAIN、LOGIN、CRAM-MD5 和 DIGEST-MD5。为两端选用同一种机制的客户端，可能在一个方向上成功、在另一个方向上失败，看起来像是部分故障，其实是配置不匹配。"
+    },
+    {
+      "q": "我的 Free.fr 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 Free 实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Free.fr 收件箱",
+    "sub": "无需应用专用密码，无需开关，无需等待。1 个收件箱永久免费，无需信用卡。"
+  }
+}

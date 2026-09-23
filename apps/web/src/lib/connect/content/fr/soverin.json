@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://soverin.zammad.com/help/en-gb/12-email-apps-and-imap/38-imap-and-smtp-settings",
+    "https://soverin.zammad.com/help/en-gb/13-account/37-two-factor-authentication-2fa",
+    "https://soverin.com/product/pricing",
+    "https://soverin.com/resources/faq"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Mot de passe du compte Soverin",
+    "helpUrl": "https://soverin.zammad.com/help/en-gb/12-email-apps-and-imap/38-imap-and-smtp-settings",
+    "usernameForm": "Votre adresse e-mail Soverin complète, domaine personnalisé compris : name@yourdomain.eu. Soverin documente l'adresse comme nom d'utilisateur.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connectez Soverin Mail à Claude et aux clients MCP",
+    "description": "Connectez Soverin à Claude, Cursor et tout client MCP via IMAP sur imap.soverin.net:993. La 2FA de Soverin couvre le tableau de bord et le webmail, jamais IMAP."
+  },
+  "hero": {
+    "eyebrow": "Soverin + IA",
+    "titleLine1": "Connectez Soverin à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Soverin. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP, dans tout client MCP, y compris pour les boîtes sur votre propre domaine, avec un état des lieux honnête de ce qui protège la connexion et de ce qui ne la protège pas.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Soverin. mcpemails est un serveur MCP hébergé qui la connecte via IMAP sur imap.soverin.net, port 993, et SMTP sur smtp.soverin.net, port 465, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Soverin documente votre adresse e-mail comme nom d'utilisateur et le mot de passe de votre compte comme mot de passe, et ces deux mêmes serveurs servent les boîtes sur domaine personnalisé comme celles en soverin.net. Soverin ne délivre pas de mots de passe d'application, et sa double authentification protège le tableau de bord et le webmail plutôt qu'IMAP : l'identifiant que vous enregistrez ici est donc le mot de passe du compte. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Le mot de passe de votre compte Soverin",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Soverin se connecte : les serveurs soverin.net, quelle que soit votre adresse",
+    "body": "Soverin sert IMAP sur <code>imap.soverin.net</code>, port 993 avec SSL ou 143 avec STARTTLS, et SMTP sur <code>smtp.soverin.net</code>, port 465 avec SSL ou 587 avec STARTTLS. L'aide de Soverin le dit sans détour : votre adresse e-mail Soverin est aussi votre nom d'utilisateur, et le mot de passe est celui de votre compte. La conséquence importante, c'est qu'une boîte sur un domaine qui vous appartient s'authentifie toujours auprès des serveurs <code>soverin.net</code>. Soverin exploite le service de messagerie ; votre domaine décide seulement de l'apparence de votre adresse et de la destination des enregistrements MX. Il n'y a pas de mécanisme de mot de passe d'application, et la double authentification de Soverin est documentée comme protégeant le Soverin Dashboard et le webmail intégré : l'activer ne casse donc aucun client de messagerie, mais n'en sécurise aucun non plus."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours. Vous obtenez à la fin une URL MCP et une clé."
+    },
+    {
+      "h": "Vérifiez l'adresse avec laquelle la boîte s'authentifie",
+      "p": "Dans le Soverin Dashboard, ouvrez la boîte à connecter. Le nom d'utilisateur est l'adresse de la boîte elle-même, et non l'un des alias que vous avez fait pointer vers elle. Soverin donne à chaque boîte des alias illimités, donc il est facile d'avoir cessé d'utiliser l'adresse d'origine il y a des années et de ne plus la considérer comme l'identifiant."
+    },
+    {
+      "h": "Ajoutez la boîte dans mcpemails",
+      "p": "Choisissez IMAP / SMTP, saisissez cette adresse complète et le mot de passe de votre compte Soverin. Les serveurs sont préremplis avec <code>imap.soverin.net</code> et <code>smtp.soverin.net</code> et ont été vérifiés via une connexion TLS réelle. Ne les remplacez pas par un nom d'hôte construit à partir de votre propre domaine : le certificat est émis pour le nom de Soverin, et un client qui valide strictement le refusera."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "La double authentification ne s'étend pas à IMAP, et aucun mot de passe d'application n'existe",
+      "p": "L'article 2FA de Soverin limite la fonction à deux endroits : le <b>Soverin Dashboard</b>, pour gérer votre compte et vos paramètres, et le webmail intégré. IMAP, POP et SMTP ne figurent pas dans cette liste, et Soverin ne publie aucun mécanisme de mot de passe d'application pour les accompagner. Deux conséquences pratiques. Activer la 2FA ne cassera ni cette connexion ni aucun autre client de messagerie, contrairement à ce qui se passe chez Runbox ou Posteo. Et ce n'est pas la 2FA qui limite un client connecté ici : le seul identifiant est le mot de passe de votre compte, donc révoquer une connexion implique de changer ce mot de passe et de le ressaisir partout. Conservez le code de récupération que délivre Soverin, car perdre l'authentificateur sans lui, c'est perdre l'accès au tableau de bord."
+    },
+    {
+      "h": "Le serveur IMAP ne propose pas AUTH=LOGIN, contrairement au SMTP",
+      "p": "La bannière IMAP de Soverin annonce <code>AUTH=PLAIN</code>, <code>AUTH=OAUTHBEARER</code> et <code>AUTH=XOAUTH2</code>, sans <code>AUTH=LOGIN</code>. Le serveur SMTP accepte PLAIN et LOGIN. Les clients codés en dur sur le mécanisme LOGIN, fréquent dans les outils écrits à l'origine pour Exchange, échouent donc en lecture tout en envoyant sans problème depuis le même compte avec les mêmes identifiants, ce qui est déroutant à déboguer. Les deux mécanismes OAuth appartiennent aux intégrations propres à la plateforme Soverin et un tiers ne peut pas obtenir de jeton pour eux : l'authentification par mot de passe est donc la voie à suivre."
+    },
+    {
+      "h": "Un domaine personnalisé ne vous donne pas votre propre serveur de courrier",
+      "p": "Soverin vend des boîtes sur des domaines qui vous appartiennent, et l'hypothèse naturelle est que <code>mail.yourdomain.eu</code> doit donc être le serveur. Ce n'est pas le cas. Vos enregistrements MX pointent vers l'infrastructure de Soverin, et les clients s'authentifient auprès de <code>imap.soverin.net</code> et <code>smtp.soverin.net</code> exactement comme le ferait une adresse soverin.net. Le certificat de ces serveurs est émis pour le nom de Soverin, donc pointer un client vers un nom d'hôte de votre domaine produit une incohérence de certificat plutôt qu'une connexion fonctionnelle."
+    },
+    {
+      "h": "Ni MOVE, ni UIDPLUS, ni SPECIAL-USE",
+      "p": "Le serveur Dovecot annonce IDLE et SASL-IR, mais ni MOVE, ni UIDPLUS, ni SPECIAL-USE. Classer un message passe par un COPY, un STORE du drapeau \\Deleted et un EXPUNGE plutôt que par une seule commande, et sans UIDPLUS le serveur ne renvoie pas le nouvel UID : la copie déplacée est retrouvée en cherchant dans la destination. Les rôles des dossiers se déduisent de leurs noms, car rien dans le protocole ne les déclare, donc un dossier Envoyés ou Corbeille renommé ou nommé en néerlandais devra peut-être être indiqué explicitement quand vous demandez à un agent de classer quelque chose."
+    }
+  ],
+  "limits": [
+    "Connecter une boîte Soverin à un client IA signifie que ce fournisseur d'IA lit le contenu des messages qu'il traite. mcpemails récupère le courrier en direct depuis imap.soverin.net à chaque requête et ne stocke pas le corps des messages, et les identifiants sont chiffrés au repos, mais le texte parvient tout de même à Claude, Cursor ou au client que vous connectez. L'hébergement exclusivement dans l'UE de Soverin, son financement par abonnement et son engagement à ne pas analyser ni profiler votre courrier décrivent Soverin. Aucun de ces engagements ne suit un message chez un fournisseur d'IA que vous branchez vous-même.",
+    "Il n'existe pas d'identifiant à portée limitée. Soverin n'a pas de mots de passe d'application, donc ce qui est enregistré ici est le mot de passe de votre compte, celui-là même qui ouvre le Soverin Dashboard. Retirer cette connexion implique de changer ce mot de passe plutôt que de supprimer un simple jeton.",
+    "mcpemails connecte la boîte, pas le compte. Alias, boîtes supplémentaires, paramètres de domaine et redirections restent dans le Soverin Dashboard et ne sont ni visibles ni modifiables par votre client IA."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec Soverin ?",
+      "a": "Pas directement. Claude n'a pas de connecteur Soverin et ne parle pas IMAP par lui-même. Connecter un serveur MCP comme mcpemails à votre boîte Soverin donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation via IMAP, et la même connexion fonctionne ensuite dans Cursor, ChatGPT et les autres clients MCP sans refaire la configuration."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de Soverin ?",
+      "a": "IMAP : imap.soverin.net sur le port 993 avec SSL, ou 143 avec STARTTLS. SMTP : smtp.soverin.net sur le port 465 avec SSL, ou 587 avec STARTTLS. Le nom d'utilisateur est votre adresse e-mail Soverin complète et le mot de passe est celui de votre compte. Les deux serveurs ont été vérifiés via une connexion TLS réelle et servent aussi les boîtes sur domaine personnalisé."
+    },
+    {
+      "q": "Soverin a-t-il des mots de passe d'application, et la 2FA couvre-t-elle IMAP ?",
+      "a": "Non dans les deux cas. Soverin ne publie aucun mécanisme de mot de passe d'application pour les clients de messagerie, et sa double authentification est documentée comme couvrant le Soverin Dashboard et le webmail intégré. IMAP et SMTP continuent d'accepter le mot de passe de votre compte, que la 2FA soit activée ou non : l'activer ne perturbera donc pas cette connexion, et ne la restreindra pas non plus."
+    },
+    {
+      "q": "J'utilise Soverin sur mon propre domaine. Quel serveur dois-je utiliser ?",
+      "a": "Les mêmes : imap.soverin.net et smtp.soverin.net. Un domaine personnalisé change votre adresse et vos enregistrements MX, pas les serveurs auprès desquels votre client s'authentifie. Construire un nom d'hôte à partir de votre propre domaine vous donne un certificat qui ne correspond pas, que la plupart des clients refusent d'emblée et qu'aucun client ne devrait être configuré pour ignorer."
+    },
+    {
+      "q": "Pourquoi un client peut-il lire mon courrier Soverin mais pas envoyer, ou l'inverse ?",
+      "a": "En général à cause du mécanisme d'authentification. Le serveur IMAP de Soverin propose PLAIN mais pas LOGIN, alors que son serveur SMTP propose les deux, donc un client bloqué sur le mécanisme LOGIN échoue d'un côté et fonctionne de l'autre avec des identifiants identiques. Configurez les deux côtés pour une authentification par mot de passe normale à l'intérieur de la connexion TLS plutôt que pour un mécanisme nommé."
+    },
+    {
+      "q": "Mon courrier Soverin est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis imap.soverin.net via IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé. Le client IA que vous connectez reçoit bien le contenu de tout ce qu'il lit : c'est cette décision qu'il faut prendre en connaissance de cause, plus que la question du stockage."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Soverin à votre IA",
+    "sub": "Connectez Soverin en quelques minutes, domaines personnalisés compris. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "_sources": [
+    "https://purelymail.com/docs/setup/technical",
+    "https://support.purelymail.com/support/solutions/articles/159000430778-server-settings-imap-smtp-and-pop3",
+    "https://support.purelymail.com/support/solutions/articles/159000412945-how-to-create-an-app-password",
+    "https://purelymail.com/docs/users",
+    "https://purelymail.com/docs/features",
+    "https://purelymail.com/docs/deviceSetup",
+    "https://purelymail.com/pricing"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "邮箱密码（开启两步验证后使用应用密码）",
+    "helpUrl": "https://support.purelymail.com/support/solutions/articles/159000430778-server-settings-imap-smtp-and-pop3",
+    "usernameForm": "邮箱的完整地址，包括域名：you@yourdomain.com，而不是你登录管理门户所用的 Purelymail 账户名。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 Purelymail 连接到 Claude、Cursor 与 MCP 客户端",
+    "description": "用邮箱密码通过 IMAP（imap.purelymail.com:993）将 Purelymail 连接到 Claude、Cursor、ChatGPT 及任意 MCP 客户端。一个收件箱永久免费。"
+  },
+  "hero": {
+    "eyebrow": "Purelymail + AI",
+    "titleLine1": "将 Purelymail 连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Purelymail 收件箱。用邮箱自己的密码通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用，而不止一个。",
+    "answer": "Claude 无法自行连接 Purelymail。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.purelymail.com 的 993 端口，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Purelymail 没有需要寻找的 IMAP 开关：你用邮箱的完整地址和该邮箱自己的密码认证；如果该邮箱开启了双重认证，则使用应用密码。一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "邮箱密码，或应用密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Purelymail 如何连接：IMAP 与邮箱自己的密码",
+    "body": "Purelymail 在 <code>imap.purelymail.com</code> 的 993 端口通过 TLS 提供 IMAP，在 <code>smtp.purelymail.com</code> 的 465 端口提供 SMTP，同样是隐式 TLS。不需要先开启任何东西。Purelymail 把 IMAP、POP3 和 SMTP 视为普通访问方式，每个邮箱从创建那一刻起就拥有它们，这已经领先于大多数网页邮箱服务商。人们在这里出错的是<b>输入了哪套凭据</b>。Purelymail 将你的<b>账户</b>（管理门户的登录，以及每年固定 $10 的账单）与你的<b>用户</b>（真正收发邮件的邮箱）分开。IMAP 需要的是用户：包括域名的完整地址，加上该用户自己的密码。无论地址位于 Purelymail 的共享域名上，还是你自带的自定义域名上，都是如此，因为所有客户的主机名都相同。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。无需信用卡，免费套餐可一直连接一个收件箱。"
+    },
+    {
+      "h": "在 Purelymail 门户中打开 Users 页面",
+      "p": "登录 Purelymail 账户门户，点击顶部导航中的 <b>User</b>。那里列出的地址就是你要使用的用户名，需连同域名完整写出。你注册时使用的账户名不是邮箱，永远无法通过 IMAP 认证。"
+    },
+    {
+      "h": "如果该用户开启了两步验证，添加应用密码，然后连接",
+      "p": "如果该用户开启了多重身份验证，打开该用户，滚动到 <b>App Passwords</b>，点击 <b>Add New</b>，命名后复制该代码。Purelymail 只显示一次。然后在 mcpemails 中选择 IMAP / SMTP，输入完整地址和该密码。下方的服务器已自动填好。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "门户登录不是邮箱登录",
+      "p": "Purelymail 有意将登录管理门户并支付账单的账户，与存放邮件的用户分开。IMAP 和 SMTP 只接受用户，而且必须是完整形式：<code>you@yourdomain.com</code>，绝不能只填本地部分，也绝不能是你注册时选的账户名。对于错误的账户名和错误的密码，服务器给出的是同样平淡的认证失败，所以这看起来像是输错字，而不是弄错了类别。"
+    },
+    {
+      "h": "别名或全收地址背后没有可登录的邮箱",
+      "p": "Purelymail 允许你通过路由规则把 <code>info@yourdomain.com</code> 投递到现有收件箱，全收规则还能吸收一个域名上的所有地址，而这些地址都不作为用户存在。Purelymail 自己的文档明确说明你不需要为它们创建用户账户。它们是投递目标而不是登录账户，所以没有可以认证的对象。请连接规则投递到的那个用户，然后让代理按 To 头进行筛选。"
+    },
+    {
+      "h": "应用密码要求是按邮箱而不是按账户设置的",
+      "p": "Purelymail 只对开启了多重身份验证的用户强制使用应用密码，而多重身份验证是在每个用户上单独配置的。因此，你账户下的一个邮箱可以用普通密码连接，而同一域名下的另一个邮箱却会拒绝它。在认定密码错误之前，先在门户中检查具体的用户。应用密码位于该用户的 App Passwords 部分，且只显示一次。"
+    }
+  ],
+  "limits": [
+    "Purelymail 的 IMAP 服务器不声明 SPECIAL-USE 扩展，因此文件夹按名称而不是按用途匹配。在 Purelymail 默认的 Roundcube 命名下，Sent、Drafts、Junk 和 Trash 都能正常识别，但你自己重命名过的文件夹，在让代理归档邮件时可能需要明确写出名称。",
+    "Purelymail 的 SMTP 服务器声明的最大邮件大小约为 51 MB。代理转发超大附件时会在提交阶段被拒绝，而不会悄无声息地丢失。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Purelymail 吗？",
+      "a": "不能直接使用。Claude 没有内置的 Purelymail 连接器，也无法自行打开 IMAP 会话。将 mcpemails 这样的 MCP 服务器连接到你的 Purelymail 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和任何其他 MCP 客户端中使用，而不局限于一个应用。"
+    },
+    {
+      "q": "Purelymail 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.purelymail.com，端口 993，隐式 TLS。SMTP 为 smtp.purelymail.com，端口 465，同样是隐式 TLS。使用邮箱的完整地址和该邮箱的密码登录；如果该用户开启了双重认证，则使用应用密码。两台服务器均已在本页所示日期通过实时 TLS 连接验证。"
+    },
+    {
+      "q": "我需要先在 Purelymail 中开启 IMAP 吗？",
+      "a": "不需要。Purelymail 没有 IMAP 开关，也没有限制客户端访问的付费等级，邮箱一创建就能访问。如果登录失败，原因在于凭据，而不是某个你还没找到的设置。"
+    },
+    {
+      "q": "为什么我的 Purelymail 密码被拒绝？",
+      "a": "三个原因，按值得检查的顺序排列。你用的是 Purelymail 账户名而不是邮箱地址。你输入的地址是别名或全收规则，而不是真实用户。或者该用户开启了多重身份验证，这意味着只有其 App Passwords 部分中的应用密码才能通过认证。"
+    },
+    {
+      "q": "这适用于 Purelymail 上的自定义域名吗？",
+      "a": "适用。Purelymail 对你自有域名上的用户不额外收费，自定义域名邮箱与共享域名上的地址使用完全相同的 imap.purelymail.com 和 smtp.purelymail.com 主机。只有用户名不同。"
+    },
+    {
+      "q": "我的 Purelymail 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 Purelymail 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密；邮件正文在相应请求完成后不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Purelymail 收件箱",
+    "sub": "几分钟即可连接 Purelymail。一个收件箱永久免费，无需信用卡。"
+  }
+}

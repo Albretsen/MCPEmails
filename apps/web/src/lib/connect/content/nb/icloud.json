@@ -1,41 +1,103 @@
 {
+  "_sources": [
+    "https://support.apple.com/en-us/102525",
+    "https://support.apple.com/en-us/102654"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Appspesifikt passord",
+    "helpUrl": "https://support.apple.com/en-us/102654",
+    "usernameForm": "Apple oppgir brukernavnet som navnedelen av iCloud-adressen din, johnappleseed i stedet for johnappleseed@icloud.com. Hvis det blir avvist, bruker du hele adressen.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Koble iCloud Mail til Claude (og enhver AI)",
-    "description": "Koble iCloud til Claude, Cursor, ChatGPT og enhver MCP-klient med et Apple-app-passord. La AI lese, sende, planlegge og organisere iCloud Mail. 1 innboks gratis, for alltid."
+    "title": "iCloud MCP-server: koble iCloud Mail til Claude",
+    "description": "Ja, Claude kan bruke iCloud Mail. Koble til med et appspesifikt passord fra Apple på to minutter, og les, søk, send og organiser e-post fra enhver MCP-klient."
   },
   "hero": {
     "eyebrow": "iCloud Mail + AI",
-    "titleLine1": "Koble iCloud Mail til Claude",
-    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
-    "lead": "Gi AI-agenten din en ekte iCloud-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med et app-spesifikt Apple-passord, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "titleLine1": "MCP-serveren for iCloud",
+    "titleLine2": "for Claude, Cursor og ChatGPT",
+    "lead": "Gi AI-agenten din en ekte iCloud-innboks på få minutter. Les, søk, send, svar, planlegg og organiser e-post med et appspesifikt passord fra Apple, og bruk den samme innboksen i alle MCP-klienter, ikke bare én.",
     "meta0": "1 innboks gratis, for alltid",
-    "meta1": "App-spesifikt passord, ingen OAuth",
-    "meta2": "E-post hentes direkte, lagres aldri"
+    "meta1": "Appspesifikt passord, ingen OAuth",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "Apple tilbyr ikke OAuth for iCloud Mail, så Claude kan ikke koble seg direkte til den. mcpemails kobler iCloud-innboksen din til over IMAP med et appspesifikt passord fra Apple, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Oppsettet tar rundt to minutter, og én innboks er gratis."
   },
   "method": {
-    "title": "Slik kobler iCloud seg til: et app-spesifikt passord",
-    "body": "iCloud Mail kobles til via IMAP/SMTP med et <b>app-spesifikt Apple-passord</b>. Generer ett på appleid.apple.com under Pålogging og sikkerhet → App-spesifikke passord (tofaktorautentisering kreves), og lim det så inn i mcpemails sammen med iCloud-adressen din."
+    "title": "Slik kobles iCloud til: et appspesifikt passord",
+    "body": "iCloud Mail kobles til over IMAP/SMTP med et <b>appspesifikt passord fra Apple</b>. Generer et på appleid.apple.com under Sign-In & Security → App-Specific Passwords (krever tofaktorautentisering), og lim det deretter inn i mcpemails sammen med iCloud-adressen din."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg hos mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
-      "h": "Generer et app-spesifikt passord",
-      "p": "På appleid.apple.com går du til Pålogging og sikkerhet → App-spesifikke passord og oppretter ett (tofaktorautentisering må være på)."
+      "h": "Generer et appspesifikt passord",
+      "p": "På appleid.apple.com går du til Sign-In & Security → App-Specific Passwords og oppretter et (tofaktorautentisering må være slått på)."
     },
     {
       "h": "Lim det inn i mcpemails",
-      "p": "Legg til iCloud-adressen din og det app-spesifikke passordet for å koble til innboksen trygt."
+      "p": "Legg inn iCloud-adressen din og det appspesifikke passordet for å koble til innboksen på en sikker måte."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
       "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
     }
   ],
+  "gotchas": [
+    {
+      "h": "Tofaktorautentisering er et krav, ikke en preferanse",
+      "p": "Apple utsteder appspesifikke passord bare til en Apple-konto som er beskyttet med tofaktorautentisering. Mangler App-Specific Passwords under Sign-In and Security på account.apple.com, er det grunnen, og å slå på 2FA er første steg, ikke et valgfritt sikkerhetstiltak. Det finnes ingen annen vei: Apple tilbyr ingen OAuth for iCloud Mail, og det vanlige passordet til Apple-kontoen din vil ikke autentisere en e-postklient uansett oppsett."
+    },
+    {
+      "h": "Brukernavnet er vanligvis ikke hele e-postadressen din",
+      "p": "Apple oppgir brukernavnet for innkommende e-post som <b>navnedelen</b> av iCloud-adressen, for eksempel <code>johnappleseed</code> i stedet for <code>johnappleseed@icloud.com</code>. Det er det motsatte av nesten alle andre leverandører på dette nettstedet, og det tar folk som limer inn adressen av gammel vane. Eldre <code>@me.com</code>- og <code>@mac.com</code>-adresser, og adresser på egne domener i iCloud+, logger alle inn med det samme primære kontonavnet. Hvis kortformen blir avvist, oppgir Apples egen dokumentasjon hele adressen som reserveløsning."
+    },
+    {
+      "h": "Utgående e-post er STARTTLS på 587, og ingenting tilbys før oppgraderingen",
+      "p": "Apples innsendingsserver er <code>smtp.mail.me.com</code> på port 587, som starter som en ukryptert tilkobling og oppgraderes med STARTTLS. De fleste leverandørene på dette nettstedet bruker i stedet implisitt TLS på 465, så en klient som antar 465 mot iCloud, blir bare hengende. Det ligger en felle til på samme sted: da vi testet serveren, annonserte den <b>ingen autentiseringsmekanismer i det hele tatt</b> før STARTTLS. En klient som leser mekanismelisten for tidlig, konkluderer med at autentisering ikke støttes og gir opp, når den egentlig bare måtte oppgradere tilkoblingen først."
+    },
+    {
+      "h": "Apples IMAP-server annonserer nesten ingenting, og det endrer hvordan e-post flyttes",
+      "p": "Funksjonslisten vi leste tilbake fra <code>imap.mail.me.com</code>, er uvanlig sparsom. Det finnes ingen <code>MOVE</code>, så å flytte en melding utføres som en kopi, en flaggoppdatering og en expunge i stedet for én atomisk kommando, og en tilkobling som brytes halvveis, kan etterlate meldingen i begge mapper. Det finnes ingen <code>IDLE</code>, så ingenting kan dyttes ut til deg, og ny e-post oppdages ved å se etter. Det finnes ingen <code>UIDPLUS</code>, så identifikatoren til en kopiert melding blir ikke sendt tilbake og må finnes ved å søke i målmappen. Og det finnes ingen <code>SPECIAL-USE</code>, så Sendt, Utkast, Papirkurv og Søppelpost matches på navn i stedet for rolle: i en postkasse som er opprettet på et annet språk, oppgir du mappen eksplisitt, så finner agenten den."
+    }
+  ],
+  "limits": [
+    "iCloud støtter ikke IDLE, så ny e-post blir funnet når agenten ser etter, ikke dyttet ut i det øyeblikket den kommer.",
+    "Fordi det ikke finnes noen MOVE-utvidelse, er en flytting ikke atomisk. En tilkobling som brytes midt i operasjonen, kan en kort stund etterlate en melding i to mapper.",
+    "Apple tilbyr ingen OAuth for iCloud Mail. Et appspesifikt passord er den eneste veien inn, og tilbakekaller du det i Apple-kontoen din, kobles innboksen fra umiddelbart."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med iCloud Mail?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd iCloud-kobling, og Apple publiserer ikke noe OAuth-grensesnitt for iCloud Mail. Kobler du en MCP-server som mcpemails til postkassen over IMAP med et appspesifikt passord fra Apple, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og den samme tilkoblingen fungerer fra Cursor og ChatGPT."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for iCloud Mail?",
+      "a": "IMAP er imap.mail.me.com på port 993 med implisitt TLS. SMTP er smtp.mail.me.com på port 587 med STARTTLS, ikke implisitt TLS på 465. Passordet er et appspesifikt passord fra Apple for begge. Apple oppgir brukernavnet for innkommende e-post som navnedelen av adressen din. Begge vertene ble bekreftet via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvorfor blir Apple-passordet mitt avvist?",
+      "a": "Fordi iCloud aldri godtar passordet til Apple-kontoen fra en e-postklient. Du trenger et appspesifikt passord opprettet på account.apple.com under Sign-In and Security, og den delen vises først når tofaktorautentisering er slått på. Hvis passordet er riktig og innloggingen likevel feiler, prøver du navnedelen av adressen som brukernavn i stedet for hele adressen."
+    },
+    {
+      "q": "Fungerer det med @me.com, @mac.com eller et eget domene i iCloud+?",
+      "a": "Ja. Alle er den samme iCloud-postkassen, nådd via de samme vertene med det samme appspesifikke passordet. En adresse på et eget domene i iCloud+ er et alias på iCloud-kontoen din, ikke en egen postkasse, så den autentiserer med det primære kontonavnet ditt, og e-posten havner i de samme mappene."
+    },
+    {
+      "q": "Lagres iCloud-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Apple over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold blir ikke beholdt. Tilbakekaller du det appspesifikke passordet i Apple-kontoen din, avsluttes tilkoblingen hos Apple med én gang."
+    }
+  ],
   "ctaBand": {
     "title": "Gi AI-en din en iCloud-innboks",
-    "sub": "Koble til iCloud Mail på minutter. Én innboks gratis for alltid, uten kort."
+    "sub": "Koble til iCloud Mail på få minutter. Én innboks gratis for alltid, uten kort."
+  },
+  "guide": {
+    "intro": "Kobler du også til Fastmail eller en annen IMAP-vert?",
+    "label": "Slik kobler du iCloud, Fastmail eller en hvilken som helst IMAP-innboks til Claude",
+    "href": "/blog/connect-icloud-fastmail-imap-to-claude"
   }
 }

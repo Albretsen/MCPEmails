@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://help.mail.163.com/faqDetail.do?code=d7a5dc8471cd0c0e8b4b8f4f8e49998b374173cfe9171305fa1ce630d7f67ac286624f309a1a7089",
+    "https://help.vip.163.com/faqDetail.do?code=d7a5dc8471cd0c0e8b4b8f4f8e49998b374173cfe9171305fa1ce630d7f67ac26322b70fe063261c",
+    "https://help.mail.163.com/faqDetail.do?code=d7a5dc8471cd0c0e8b4b8f4f8e49998b374173cfe9171305fa1ce630d7f67ac2eda07326646e6eb0"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Code d'autorisation client (授权码)",
+    "helpUrl": "https://help.mail.163.com/faqDetail.do?code=d7a5dc8471cd0c0e8b4b8f4f8e49998b374173cfe9171305fa1ce630d7f67ac286624f309a1a7089",
+    "usernameForm": "Votre adresse complète, domaine compris : name@163.com.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connecter NetEase 163 Mail à Claude en IMAP",
+    "description": "Connectez NetEase 163 Mail à Claude, Cursor ou tout client MCP en IMAP sur imap.163.com:993. Exige un code d'autorisation client de 16 caractères, pas votre mot de passe."
+  },
+  "hero": {
+    "eyebrow": "NetEase 163 Mail + IA",
+    "titleLine1": "Connectez 163.com à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte 163.com. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec un code d'autorisation NetEase, dans tous les clients MCP plutôt qu'un seul.",
+    "answer": "Claude ne peut pas atteindre NetEase 163 Mail tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur imap.163.com, port 993, en s'authentifiant avec le code d'autorisation client de 16 caractères (授权码) émis par NetEase plutôt qu'avec le mot de passe de votre boîte. Vous devez activer le protocole client dans les réglages de 163 Mail et passer une vérification par SMS avant que le code soit émis, et NetEase bloque aussi les clients qui ne s'identifient pas avec la commande IMAP ID. Une boîte est gratuite.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Code d'autorisation, émis après vérification SMS",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment 163 Mail se connecte : IMAP, un code d'autorisation et une identification IMAP ID",
+    "body": "163 Mail tourne sur la plateforme Coremail de NetEase et sert IMAP sur <code>imap.163.com</code>, port 993, en TLS, et SMTP sur <code>smtp.163.com</code>, port 465. Deux conditions doivent être remplies avant qu'un client puisse se connecter. D'abord, le protocole client doit être activé dans les réglages de votre boîte, ce qui produit un <b>code d'autorisation de 16 caractères en lettres majuscules</b> qui remplace le mot de passe de votre boîte partout où un client en demande un. Ensuite, le client doit envoyer une commande IMAP <code>ID</code> pour s'identifier avant de s'authentifier : NetEase refuse les clients qui l'omettent avec <code>Unsafe Login</code>, ce qui n'est pas du tout un problème d'identifiants. mcpemails fait les deux."
+  },
+  "setup": [
+    {
+      "h": "Créez votre compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte et reste gratuite, sans carte bancaire. Gardez votre téléphone à portée de main : NetEase vous demandera d'envoyer un SMS de vérification à l'étape suivante."
+    },
+    {
+      "h": "Activez le protocole client dans 163 Mail",
+      "p": "Connectez-vous sur mail.163.com, ouvrez 设置 (Réglages) puis 常规设置 (Réglages généraux), et choisissez POP3/SMTP/IMAP dans la barre latérale gauche. Activez IMAP/SMTP. NetEase proposera d'abord son propre client 邮箱大师 ; cliquez sur 继续开启 (continuer l'activation) pour poursuivre."
+    },
+    {
+      "h": "Passez la vérification SMS, puis collez le code dans mcpemails",
+      "p": "NetEase affiche un QR code qui rédige un SMS de vérification sur votre téléphone, avec 试试手动发送短信 (essayer d'envoyer le SMS manuellement) comme solution de repli. Envoyez-le, patientez jusqu'à une minute, puis cliquez sur 我已发送 (je l'ai envoyé). Le code d'autorisation de 16 caractères en majuscules s'affiche une seule fois. Copiez-le, choisissez IMAP / SMTP dans mcpemails, saisissez votre adresse 163 complète et collez le code comme mot de passe."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre client IA",
+      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent peut lire, rechercher, envoyer, répondre, transférer, planifier et organiser la boîte 163."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "« Unsafe Login » n'est pas un problème de mot de passe",
+      "p": "NetEase exige que les clients tiers s'annoncent avec la commande IMAP <code>ID</code> de la RFC 2971, en indiquant un nom, une version, un éditeur et une adresse de support, avant de s'authentifier. Un client qui l'omet est refusé avec <code>Unsafe Login. Please contact kefu@188.com for help</code>, et NetEase dépose en plus un message d'avertissement dans la boîte. Comme ce refus arrive exactement là où apparaîtrait un échec de connexion, la plupart des gens en concluent que leur code d'autorisation est faux et le régénèrent, ce qui ne change rien. mcpemails envoie l'identification ID : ce point est donc déjà réglé."
+    },
+    {
+      "h": "Le seul mécanisme annoncé par 163 est XOAUTH2",
+      "p": "Le serveur IMAP de 163 liste <code>AUTH=XOAUTH2</code> dans ses capacités et rien d'autre : un client qui choisit son mécanisme d'authentification dans la liste annoncée ne trouve rien d'utilisable et abandonne avant même d'essayer. C'est la simple commande IMAP <code>LOGIN</code> avec votre code d'autorisation qui fonctionne réellement sur le port 993. Voilà pourquoi certaines bibliothèques IMAP par ailleurs raisonnables échouent avec 163 alors qu'elles se connectent à tout le reste."
+    },
+    {
+      "h": "Le code d'autorisation s'affiche une seule fois et ne peut pas être relu",
+      "p": "NetEase stocke le code sous forme hachée : l'écran des réglages ne vous le montrera donc plus jamais. Si vous le perdez, la seule solution est d'en ajouter un nouveau depuis 设置 puis POP3/SMTP/IMAP, ou depuis l'application NetEase Mail Master sous 我, 邮箱管理, 第三方登录管理, 通用授权码. Le mot de passe de votre boîte ne sert pas de solution de repli : une fois les protocoles client activés, c'est le code qui fait office d'identifiant."
+    },
+    {
+      "h": "126.com utilise la même plateforme, sur d'autres noms de serveurs",
+      "p": "NetEase exploite 126.com, 188.com et yeah.net aux côtés de 163.com sur la même pile Coremail, avec le même processus de code d'autorisation et la même exigence IMAP ID. Les noms de serveurs ne sont pas interchangeables. Une adresse <code>name@126.com</code> s'authentifie sur <code>imap.126.com</code>, pas sur <code>imap.163.com</code>, et associer le mauvais serveur au mauvais domaine échoue sous forme d'erreur d'authentification plutôt que d'erreur de routage."
+    }
+  ],
+  "limits": [
+    "Le serveur IMAP de 163 n'implémente pas l'extension MOVE : déplacer un message se fait par une copie, un indicateur de suppression et un expunge. Le résultat est le même, mais un déplacement demande trois allers-retours au lieu d'un, ce qui se remarque quand votre agent classe un gros lot.",
+    "IDLE n'est pas pris en charge : le courrier est donc interrogé périodiquement plutôt que poussé. Votre agent voit les nouveaux messages la prochaine fois qu'il regarde, pas à l'instant où ils arrivent.",
+    "imap.163.com et smtp.163.com sont servis depuis la Chine continentale : chaque requête d'un client situé hors de Chine subit une latence transfrontalière en plus des allers-retours IMAP habituels."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec NetEase 163 Mail ?",
+      "a": "Pas directement. Claude n'a pas de connecteur 163 intégré et ne peut pas ouvrir seul une connexion IMAP. Connecter un serveur MCP comme mcpemails à votre boîte 163 donne à Claude un accès en lecture, recherche, envoi, réponse, transfert, planification et organisation, et la même connexion fonctionne dans Cursor et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de 163.com ?",
+      "a": "IMAP est imap.163.com sur le port 993 en TLS implicite. SMTP est smtp.163.com sur le port 465. Connectez-vous avec votre adresse 163 complète et le code d'autorisation client de 16 caractères plutôt qu'avec le mot de passe de la boîte. Les deux serveurs ont été vérifiés par une connexion TLS réelle à la date indiquée sur cette page."
+    },
+    {
+      "q": "Comment obtenir le code d'autorisation 163 ?",
+      "a": "Connectez-vous sur mail.163.com, ouvrez 设置 puis 常规设置, choisissez POP3/SMTP/IMAP et activez IMAP/SMTP. Cliquez sur 继续开启 pour passer la recommandation d'utiliser NetEase Mail Master, envoyez le SMS de vérification depuis le téléphone associé, puis cliquez sur 我已发送. Le code de 16 caractères en majuscules s'affiche une seule fois."
+    },
+    {
+      "q": "Pourquoi 163 affiche-t-il Unsafe Login ?",
+      "a": "Parce que le client n'a pas envoyé la commande IMAP ID pour s'identifier avant de s'authentifier. NetEase l'exige des clients tiers et refuse sinon la connexion avec ce message. Cela n'a rien à voir avec votre mot de passe ou votre code d'autorisation, et régénérer le code ne résoudra rien."
+    },
+    {
+      "q": "126.com est-il la même chose que 163.com ?",
+      "a": "C'est la même plateforme NetEase avec le même processus de code d'autorisation, mais une boîte différente sur d'autres noms de serveurs. Une adresse 126.com se connecte sur imap.126.com et smtp.126.com. Si vous avez les deux, connectez-les comme deux boîtes distinctes, chacune avec son propre code."
+    },
+    {
+      "q": "Mon courrier 163 est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis 163 en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos ; le corps des messages n'est pas conservé après la requête qui l'a demandé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte 163 Mail à votre IA",
+    "sub": "Connectez NetEase 163 Mail en quelques minutes avec votre code d'autorisation. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

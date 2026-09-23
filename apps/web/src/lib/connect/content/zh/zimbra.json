@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://github.com/Zimbra/adminguide/blob/master/imap.adoc",
+    "https://zimbra.netsample.com/zimbraAdmin/help/en_US/admin/managing_global_settings/configuring_imap.htm",
+    "https://wiki.zimbra.com/wiki/Zimbra_Proxy_Guide",
+    "https://wiki.zimbra.com/wiki/Zimbra_Proxy_Manual:Installing_,_Configuring,_Disabling_the_Zimbra_Proxy",
+    "https://zimbra.github.io/adminguide/8.8.11/index.html"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://zimbra.netsample.com/zimbraAdmin/help/en_US/admin/managing_global_settings/configuring_imap.htm",
+    "usernameForm": "Zimbra 中保存的完整账户地址，例如 you@yourdomain.com，域别名上的账户也是如此。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Zimbra 接入 Claude：IMAP 993，无代理时用 7993",
+    "description": "通过 IMAP 将 Zimbra 邮箱连接到 Claude、Cursor 和 ChatGPT。993 属于代理，mailboxd 监听 7993，而 IMAP 可能在四个地方被关闭。"
+  },
+  "hero": {
+    "eyebrow": "Zimbra + AI",
+    "titleLine1": "将 Zimbra 连接到 Claude，",
+    "titleLine2": "Cursor、ChatGPT 及任意 MCP 客户端",
+    "lead": "Zimbra 多年来一直存放着你们组织的邮件，它使用的是完全普通的 IMAP。这正是 AI 代理在真实邮箱中读取、搜索、发送、回复、定时和归档所需的一切。",
+    "answer": "Claude 无法自行连接 Zimbra 服务器。mcpemails 是一个托管 MCP 服务器，通过 IMAP 在你自己的主机名上（安装了 Zimbra 代理时为 993 端口）使用邮箱密码连接你的服务器，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。Zimbra 是你们组织自己运行的软件，所以没有可公布的共享主机名，端口也值得确认而不是想当然：993 和 143 属于 Zimbra 代理，而 mailboxd 本身监听的是 7993 和 7143。服务器必须能从互联网访问，其证书也必须能通过校验。一个收件箱免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "邮箱密码，在 COS 中启用 IMAP",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Zimbra 如何连接：前面是代理，后面是 mailboxd",
+    "body": "Zimbra 的 IMAP 架构有两层，知道你在和哪一层打交道能省下一个下午。内置的 IMAP 服务器运行在 <code>zimbra-mailboxd</code> 进程内，默认安装，由 <code>zimbraImapServerEnabled</code> 和 <code>zimbraImapSSLServerEnabled</code> 控制，两者默认都是 TRUE。它自己的端口是 <code>zimbraImapBindPort</code>（默认 <b>7143</b>）和 <code>zimbraImapSSLBindPort</code>（默认 <b>7993</b>）。人们熟悉的 143 和 993 是代理的端口，即 <code>zimbraImapProxyBindPort</code> 和 <code>zimbraImapSSLProxyBindPort</code>，由 Zimbra IMAP 和 POP 代理提供，它会检查连接并将其路由到存放该账户的邮箱服务器。较新的版本还在进程内服务器之外提供独立的 <code>zimbra-imapd</code>。凭据就是普通的邮箱密码，与 Zimbra Web Client 使用的相同。Zimbra 没有应用密码机制。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。一个收件箱永久免费，无需信用卡，足以用一个真实的 Zimbra 账户来试一试。"
+    },
+    {
+      "h": "确认 IMAP 已启用，并找到有响应的端口",
+      "p": "在管理控制台中打开 Configure，然后是 Global Settings，再到 IMAP，勾选 <b>Enable IMAP services</b> 和 <b>Enable SSL for IMAP service</b>。然后从外部确认实际在监听的是哪个端口：<code>openssl s_client -connect mail.yourdomain.com:993</code>，如果没有响应，再试 7993。在服务器上，<code>zmprov gs yourserver</code> 会报告它正在使用的绑定端口。"
+    },
+    {
+      "h": "检查服务等级，然后添加账户",
+      "p": "打开 Configure，然后是 Class of Service，再选择该账户所属的服务等级，查看 Preferences 下的 POP/IMAP 选项。关闭了 IMAP 的服务等级会拒绝其中的每一个账户。然后在 mcpemails 中添加收件箱：选择 IMAP / SMTP，输入你的 Zimbra 主机名、完整地址和邮箱密码。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "993 端口属于代理，所以没有代理的服务器在 7993 上响应",
+      "p": "Zimbra 的邮箱进程并不监听 993。它在 <b>7993</b> 上监听 SSL 上的 IMAP，在 7143 上监听普通 IMAP，标准端口由单独的 Zimbra IMAP 和 POP 代理套件提供，它会把每个连接转发到正确的邮箱存储。在从未选择 <code>zimbra-proxy</code> 的单服务器安装上，或管理员移除了它的安装上，993 根本没有任何响应，客户端报告的连接被拒绝看起来像防火墙问题。这种情况下请使用 7993，但要明白其中的取舍：在多服务器部署中，只有代理知道哪个存储保存着某个账户，所以直接连接某个节点的 7993，只有在邮箱确实位于该节点上时才有效。如果你有不止一台邮箱服务器，正确的做法是恢复代理，而不是绕过它。"
+    },
+    {
+      "h": "993 上的证书是代理的，在有人更换之前它是自签名的",
+      "p": "由于代理终止了连接，客户端在 993 上校验的证书是 nginx 持有的那张，而不一定是 mailboxd 在 7993 上提供的那张。两者可能不同，这就是一台服务器能在一个端口上通过检查、在另一个端口上失败的原因。Zimbra 在安装时还会装一张自签名证书，很多部署从未更换过，因为网页客户端是通过别的途径访问的，或者因为大家早在 2019 年就点过了那个警告。证书用 <code>zmcertmgr</code> 部署，并可在管理控制台中查看，但唯一算数的测试是线上实际呈现的内容：从外部机器运行 <code>openssl s_client -connect mail.yourdomain.com:993</code>，读取它返回的证书链。在我们这边，严格校验不是可选项，所以自签名或过期的证书会让连接在认证之前就终止。"
+    },
+    {
+      "h": "IMAP 可能在四个不同的地方被关闭",
+      "p": "Zimbra 的配置是分层的，每一层都可能单独拒绝连接，而其他层看起来都正确。全局设置（Configure、Global Settings、IMAP）有总开关 <b>Enable IMAP services</b>。每台服务器都有自己的设置，在那里设置 IMAP 和 IMAP SSL 端口号，也可以通过 <code>zimbraImapServerEnabled</code> 和 <code>zimbraImapSSLServerEnabled</code> 关闭进程内服务器。每个服务等级都带有适用于其中所有账户的 POP 和 IMAP 选项。而单个账户还可以覆盖其服务等级。命令行按同样的顺序读取它们：全局配置用 <code>zmprov gcf</code>，服务器用 <code>zmprov gs</code>，服务等级用 <code>zmprov gc</code>，账户用 <code>zmprov ga</code>。请按这个顺序逐项排查，而不要去猜，因为每一层的失败表现都一模一样。"
+    }
+  ],
+  "limits": [
+    "你的 Zimbra 服务器必须接受来自互联网的入站 IMAP 连接。只在企业内网或 VPN 之后发布的部署，托管服务无法访问。mcpemails 也可以自托管在同一网络中，与安全团队商量这件事，通常比开放一个端口更容易。",
+    "IMAP 连接只传输邮件。Zimbra 的日历、联系人、任务和公文包通过其自身的网页客户端以及 CalDAV、CardDAV 或 Zimbra API 提供，所以以这种方式连接的代理只能处理邮件。",
+    "发信通过你自己的 Zimbra MTA 发出，所以投递能力取决于你的 SPF、DKIM 和 DMARC 记录，与服务器上的其他所有客户端完全一样。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Zimbra 吗？",
+      "a": "不能直接使用。Claude 没有 Zimbra 连接器，也无法向你们组织运行的服务器打开 IMAP 会话。将 mcpemails 这样的 MCP 服务器连接到你的 Zimbra 主机后，Claude 就能用与 Zimbra Web Client 相同的凭据，读取、搜索、发送、回复、定时和整理其上某个邮箱中的邮件，之后同一个收件箱在 Cursor 或 ChatGPT 中也能使用。"
+    },
+    {
+      "q": "Zimbra 的 IMAP 和 SMTP 设置是什么？",
+      "a": "主机名是你们自己的 Zimbra 服务器。安装了 Zimbra 代理时（通常如此），IMAP 为 993 端口隐式 TLS 和 143 端口 STARTTLS。没有代理时，mailboxd 自己的端口是 7993 和 7143。提交通常为 587 端口 STARTTLS 或 465 端口隐式 TLS。使用完整账户地址和邮箱密码登录。"
+    },
+    {
+      "q": "为什么 993 端口没有任何响应？",
+      "a": "最可能的原因是 Zimbra IMAP 和 POP 代理未安装或已被禁用，因为 993 和 143 是代理的端口，而不是邮箱服务器的端口。请试试 7993，它是 mailboxd 本身 zimbraImapSSLBindPort 的默认值。在有多台邮箱服务器的部署中，恢复代理比直接连接某个节点更好。"
+    },
+    {
+      "q": "为什么网页邮箱能用，我的 Zimbra 密码却被拒绝？",
+      "a": "因为网页访问和 IMAP 访问是两项独立的权限。先检查账户所属服务等级的 POP 和 IMAP 选项，然后是账户自身的覆盖设置，再看 Global Settings 中是否启用了 IMAP 服务。其中任何一项都可能拒绝 IMAP 登录，而 Zimbra Web Client 照常工作。"
+    },
+    {
+      "q": "Zimbra 需要应用密码吗？",
+      "a": "不需要。Zimbra 不签发应用专用密码，邮件客户端使用账户自己的密码认证。如果你们的部署为网页客户端启用了双重认证，请向管理员确认它对邮件客户端是如何配置的，因为该策略是按服务等级设置的，而不是由 Zimbra 全局设定。"
+    },
+    {
+      "q": "我的 Zimbra 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从你的 Zimbra 服务器实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Zimbra 收件箱",
+    "sub": "连接你们自己 Zimbra 服务器上的邮箱。一个收件箱永久免费，无需信用卡。"
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/messages/en/docs.json",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "apps/web/app/.well-known/oauth-protected-resource/route.ts",
+    "https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp"
+  ],
+  "meta": {
+    "title": "Koble e-post til Claude: MCP-oppsett for Gmail og IMAP",
+    "description": "Gi claude.ai og Claude Desktop en ekte innboks som egendefinert kobling. Lim inn én URL, autoriser med OAuth, og les, søk, send og planlegg e-post. Én innboks gratis."
+  },
+  "hero": {
+    "eyebrow": "Claude + e-post",
+    "titleLine1": "Koble innboksen din til Claude",
+    "titleLine2": "som en egendefinert kobling",
+    "lead": "Claude har ingen e-postklient av sitt eget. mcpemails er den hostede MCP-serveren som gir den en: les, søk i, send, svar på, videresend, planlegg og organiser ekte e-post fra claude.ai eller Claude Desktop.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "OAuth, ingen API-nøkkel nødvendig",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "Legg til https://mcpemails.com/api/mcp som en egendefinert kobling i Claude, klikk Connect og logg inn med mcpemails-kontoen din. Claude registrerer seg selv automatisk og ber om tilgangene du godkjenner. Det er ingen API-nøkkel å opprette og ingen konfigurasjonsfil å redigere."
+  },
+  "method": {
+    "title": "Slik kobler Claude seg til: OAuth, ingen API-nøkkel",
+    "body": "Claude kjører standard MCP OAuth-flyt mot denne serveren. Den registrerer seg selv med <b>RFC 7591 dynamisk klientregistrering</b>, så du trenger ikke opprette noen klient-ID, og autoriserer med <b>autorisasjonskode pluss PKCE</b> med S256. Ingen klienthemmelighet sendes noen gang, og tokenet har bare de tilgangene (scopes) du godkjenner på samtykkeskjermen vår. Tilgangstokenet den får varer i én time og fornyes automatisk. Det vises under Dashboard, API Keys som <code>OAuth:</code> etterfulgt av klientnavnet, og det er der du tilbakekaller tilkoblingen."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto og koble til en postkasse",
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Gmail kobles til med Google-innlogging med ett klikk; iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+    },
+    {
+      "h": "Åpne koblingsinnstillingene",
+      "p": "I claude.ai eller Claude Desktop åpner du Settings og deretter Connectors."
+    },
+    {
+      "h": "Legg til en egendefinert kobling",
+      "p": "Klikk Add custom connector, lim inn <code>https://mcpemails.com/api/mcp</code> som koblings-URL, og klikk Add."
+    },
+    {
+      "h": "Koble til og autoriser",
+      "p": "Klikk Connect og logg inn med mcpemails for å autorisere. Godkjenn tilgangene du vil at Claude skal ha. Ingen API-nøkkel nødvendig."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "En kobling er ikke det samme som Claudes innebygde Gmail-kobling",
+      "p": "Anthropic leverer sin egen Google-kobling, og det er en annen vei: én leverandør, inne i én app. En egendefinert kobling peker i stedet Claude mot en MCP-server, og derfor dekker det samme oppsettet også iCloud, Fastmail, Zoho, Yandex og enhver IMAP-postkasse på jobben bak én enkelt URL, og derfor fungerer den samme URL-en i Cursor, ChatGPT og resten."
+    },
+    {
+      "h": "Du godkjenner tilganger én gang, og de er det eneste tokenet kan gjøre",
+      "p": "Samtykkeskjermen er vår, og den er ingen formalitet. Et token utstedt uten <code>send:email</code> kan ikke sende, og et token uten <code>delete:email</code> kan ikke slette, uansett hva modellen blir bedt om. Vil du at Claude skal lese og skrive utkast, men aldri sende, lar du <code>send:email</code> være uavkrysset og gir <code>manage:drafts</code> i stedet."
+    },
+    {
+      "h": "Tilkoblingen baserer seg på polling, så Claude merker ikke ny e-post av seg selv",
+      "p": "Det finnes ingen webhooks og ingen push. Claude ser ny e-post når den gjør et kall, altså når du spør. En fast instruks som \"sjekk om det har kommet noe fra økonomi før vi starter\" er det som gjør dette til en rutine; ingenting kommer uten at du ber om det."
+    }
+  ],
+  "limits": [
+    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger.",
+    "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post vekker aldri agenten din av seg selv. Vil du reagere på innkommende e-post, må du polle etter en tidsplan.",
+    "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
+  ],
+  "faq": [
+    {
+      "q": "Kan Claude lese e-posten min?",
+      "a": "Ikke av seg selv. Claude kan bare nå en postkasse gjennom en kobling, og en egendefinert kobling som peker mot mcpemails er én måte å gi den det på. Når den er koblet til, kan Claude liste opp, lese, søke i, sende, svare på, videresende, organisere og planlegge e-post på tvers av alle innboksene du har koblet til, begrenset til tilgangene du godkjente."
+    },
+    {
+      "q": "Trenger jeg en API-nøkkel for Claude?",
+      "a": "Nei. Claude gjennomfører OAuth-flyten i nettleseren med denne serveren, registrerer seg dynamisk og autoriserer med PKCE. API-nøkler finnes for klienter som ikke kan gjøre det, som Cline og JetBrains AI Assistant, og for skript."
+    },
+    {
+      "q": "Hvilke postkasser kan Claude nå på denne måten?",
+      "a": "Gmail via Google-innlogging, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord, og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Klienten ser alle gjennom den samme tilkoblingen: agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
+    },
+    {
+      "q": "Kan Claude sende e-post uten at jeg ser det?",
+      "a": "Bare hvis du tillater det. Sending krever tilgangen send:email, så en nøkkel eller et token uten den tilgangen kan ikke sende i det hele tatt. I tillegg kan eieren av en innboks kreve menneskelig godkjenning i dashbordet, som holder tilbake hver sending, hvert svar, hver videresending, hvert utkast som sendes og hver planlagte sending til en person slipper den gjennom."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Hver melding hentes direkte fra leverandøren din for forespørselen som ba om den, og sendes rett videre til klienten din. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, slik at fremtidige kall kan autentiseres. Sletter du innboksen i dashbordet, eller tilbakekaller tilgangen hos leverandøren, avsluttes tilkoblingen med en gang."
+    },
+    {
+      "q": "Fungerer dette i Claude Desktop i tillegg til claude.ai?",
+      "a": "Ja. Begge når egendefinerte koblinger fra den samme skjermen Settings, Connectors, og begge deler den samme tilkoblingen, så en postkasse du legger til i den ene er tilgjengelig i den andre. For terminalen, se den egne guiden for Claude Code."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi Claude en ekte innboks",
+    "sub": "Koble til en postkasse på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

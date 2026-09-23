@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://assistance.orange.fr/ordinateurs-peripheriques/installer-et-utiliser/l-utilisation-du-mail-et-services-associes/mail-orange/parametrer-la-boite-mail/mail-orange-comment-acceder-a-sa-boite-mail-orange-depuis-une-application-ou-un-logiciel-de-messagerie-non-fourni-par-orange_434630-964290",
+    "https://assistance.orange.fr/ordinateurs-peripheriques/installer-et-utiliser/l-utilisation-du-mail-et-du-cloud/mail-orange/le-mail-orange-nouvelle-version/parametrer-la-boite-mail/mail-orange-comment-activer-ou-desactiver-les-acces-pop-imap-pour-les-logiciels-ou-applications-de-messagerie-tiers_427398-957069"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe dédié",
+    "helpUrl": "https://assistance.orange.fr/ordinateurs-peripheriques/installer-et-utiliser/l-utilisation-du-mail-et-services-associes/mail-orange/parametrer-la-boite-mail/mail-orange-comment-acceder-a-sa-boite-mail-orange-depuis-une-application-ou-un-logiciel-de-messagerie-non-fourni-par-orange_434630-964290",
+    "usernameForm": "Votre adresse complète, domaine compris : nom@orange.fr, ou nom@wanadoo.fr pour une ancienne adresse Wanadoo.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Paramètres IMAP Mail Orange et accès MCP pour Claude",
+    "description": "Connectez une boîte Orange.fr à Claude et à tout client MCP via imap.orange.fr:993. L'accès POP/IMAP doit d'abord être activé, avec le mot de passe dédié Orange."
+  },
+  "hero": {
+    "eyebrow": "Orange + IA",
+    "titleLine1": "Connectez votre boîte Orange à Claude,",
+    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte Orange. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP, une fois activé l'accès POP/IMAP qu'Orange laisse désactivé.",
+    "answer": "Claude ne peut pas accéder seul à une boîte Orange. mcpemails est un serveur MCP hébergé qui l'y connecte en IMAP via imap.orange.fr sur le port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Deux points doivent d'abord être réglés : Orange désactive l'accès POP et IMAP de la boîte pour des raisons de sécurité, vous l'activez donc dans le webmail sous Sécurité, et Orange recommande de s'authentifier avec le mot de passe dédié de votre Espace client plutôt qu'avec votre mot de passe Orange habituel. Une boîte est gratuite, pour toujours.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Activez POP/IMAP, utilisez le mot de passe dédié",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment Orange se connecte : IMAP, un interrupteur et un mot de passe dédié",
+    "body": "Orange sert l'IMAP sur <code>imap.orange.fr</code> au port 993 en TLS implicite et la soumission SMTP sur <code>smtp.orange.fr</code> au port 465, et le serveur qui se trouve derrière s'identifie comme Dovecot. Les adresses en <code>orange.fr</code> et sur l'ancien domaine <code>wanadoo.fr</code> utilisent la même paire de serveurs : il n'y a donc rien de régional ni de propre au client à rechercher. Ce qui est spécifique à Orange se situe de part et d'autre de la connexion. Orange indique que, pour des raisons de sécurité, l'accès POP et IMAP est désactivé par défaut, si bien que la connexion d'un nouveau client est refusée avant même la vérification du mot de passe. Et Orange publie un <b>mot de passe dédié</b>, décrit selon ses propres termes comme un mot de passe spécifique aux accès POP, IMAP et SMTP, que vous récupérez dans votre Espace client sous <b>Connexion et sécurité</b> et utilisez à la place de votre mot de passe Orange habituel."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Activez l'accès POP/IMAP dans le webmail Orange",
+      "p": "Ouvrez votre boîte Orange dans un navigateur, cliquez sur la <b>roue crantée</b>, choisissez <b>tous les paramètres</b>, puis <b>Sécurité</b>, puis <b>Protocoles POP ou IMAP</b>. Cliquez sur <b>Modifier</b>, cochez <b>Activer POP/IMAP</b> et confirmez avec <b>Valider</b>. Faites-le avant toute autre chose : tant que ce n'est pas activé, chaque connexion d'un client est refusée et l'erreur ressemble à un mauvais mot de passe."
+    },
+    {
+      "h": "Récupérez le mot de passe dédié dans votre Espace client",
+      "p": "Connectez-vous à votre Espace client sur orange.fr et ouvrez la rubrique <b>Connexion et sécurité</b>. Le mot de passe dédié qui y figure est celui qu'Orange prévoit pour POP, IMAP et SMTP. Il est distinct du mot de passe qui vous sert à vous connecter à orange.fr, et Orange le recommande spécifiquement pour les logiciels de messagerie."
+    },
+    {
+      "h": "Collez-le dans mcpemails, puis collez l'URL MCP dans votre IA",
+      "p": "Choisissez IMAP / SMTP, saisissez l'adresse complète, par exemple nom@orange.fr, et collez le mot de passe dédié. Les serveurs et ports Orange sont préremplis. Mettez ensuite https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "POP/IMAP reste désactivé tant que vous ne l'activez pas, et le refus ressemble à un mauvais mot de passe",
+      "p": "La propre aide d'Orange pour connecter une application de messagerie non fournie par Orange demande de vérifier que l'accès est activé dans les paramètres de la boîte, car <b>pour des raisons de sécurité, ces accès sont désactivés par défaut</b>. Le refus que vous obtenez quand il est désactivé n'est accompagné d'aucune explication. On change le mot de passe, on ressaisit l'adresse, on réinstalle le client, et rien n'y fait, parce que les identifiants n'ont jamais été en cause. Les pages d'aide d'Orange ne se sont pas toujours accordées sur l'état par défaut : considérez donc l'écran <b>Sécurité</b>, puis <b>Protocoles POP ou IMAP</b>, comme la première chose à vérifier, pas la dernière."
+    },
+    {
+      "h": "Le mot de passe dédié est un identifiant distinct de votre connexion orange.fr",
+      "p": "Orange le décrit comme un mot de passe spécifique aux accès POP, IMAP et SMTP, à récupérer dans l'Espace client sous <b>Connexion et sécurité</b>. Comme c'est une seconde valeur que la plupart des gens ne regardent jamais, elle se désynchronise : changer votre mot de passe Orange principal ne la modifie pas, et inversement. Utilisez le mot de passe dédié à la fois pour la réception et pour l'envoi. Si l'envoi fonctionne mais pas la lecture, ou l'inverse, c'est généralement qu'une seule des deux moitiés a été mise à jour."
+    },
+    {
+      "h": "Le serveur ne propose pas IDLE : le courrier arrive par interrogation, pas par notification",
+      "p": "La bannière IMAP d'Orange annonce <code>SASL-IR</code> et <code>LOGIN-REFERRALS</code> mais pas <code>IDLE</code>, le serveur n'a donc aucun moyen de signaler un nouveau message sur une connexion ouverte. Chaque client, le nôtre compris, doit le demander. C'est invisible au quotidien, mais cela signifie qu'une consigne comme <b>préviens-moi dès qu'une réponse arrive</b> dépend de la fréquence à laquelle la boîte est consultée, et non de la rapidité de livraison d'Orange."
+    },
+    {
+      "h": "Ni MOVE, ni SPECIAL-USE, et des noms de dossiers en français",
+      "p": "Le serveur n'annonce pas l'extension <code>MOVE</code> : classer un message passe donc par une copie, une mise à jour des drapeaux et un expunge au lieu d'une seule commande atomique. <code>SPECIAL-USE</code> est absent également, ce qui signifie que les dossiers Envoyés, Brouillons, Corbeille et Spam sont reconnus par leur nom et non par leur rôle. Une boîte Orange les nomme généralement <b>Envoyés</b>, <b>Brouillons</b>, <b>Corbeille</b> et <b>Spams</b> : indiquez le dossier explicitement si votre agent ne le trouve pas."
+    }
+  ],
+  "limits": [
+    "Orange plafonne les messages sortants à environ 46 Mo de message encodé : une pièce jointe volumineuse transférée par un agent peut donc être refusée d'emblée à l'étape SMTP.",
+    "Comme le serveur ne prend pas en charge MOVE, un déplacement n'est pas atomique. Si une connexion tombe en cours d'opération, un message peut brièvement exister dans les deux dossiers."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec la messagerie Orange ?",
+      "a": "Pas directement. Claude n'est livré avec aucun connecteur Orange. Connecter un serveur MCP comme mcpemails à la boîte en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, et la même connexion fonctionne ensuite depuis Cursor, ChatGPT et d'autres clients MCP."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP d'Orange ?",
+      "a": "IMAP : imap.orange.fr sur le port 993 en TLS implicite. SMTP : smtp.orange.fr sur le port 465, également en TLS implicite, avec authentification obligatoire. Connectez-vous avec votre adresse complète et le mot de passe dédié d'Orange. Les deux serveurs ont été confirmés par une connexion TLS réelle et sont les mêmes pour les adresses orange.fr et wanadoo.fr."
+    },
+    {
+      "q": "Pourquoi Orange refuse-t-il mon mot de passe dans un logiciel de messagerie ?",
+      "a": "Deux raisons, dans cet ordre. Soit l'accès POP/IMAP est désactivé sur la boîte, ce qui se corrige dans le webmail sous Sécurité, puis Protocoles POP ou IMAP. Soit vous utilisez votre mot de passe de connexion orange.fr au lieu du mot de passe dédié qu'Orange publie dans l'Espace client sous Connexion et sécurité pour POP, IMAP et SMTP."
+    },
+    {
+      "q": "Les adresses wanadoo.fr utilisent-elles d'autres serveurs ?",
+      "a": "Non. Une ancienne adresse wanadoo.fr est une boîte Orange et s'authentifie auprès des mêmes serveurs imap.orange.fr et smtp.orange.fr, avec le même interrupteur POP/IMAP et le même mot de passe dédié. Saisissez l'adresse exactement telle qu'elle s'écrit, domaine wanadoo.fr compris."
+    },
+    {
+      "q": "Mon courrier Orange est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct depuis Orange en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le corps des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Offrez une boîte Orange à votre IA",
+    "sub": "Connectez Orange en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

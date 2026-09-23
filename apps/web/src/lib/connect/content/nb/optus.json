@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.optus.com.au/support/email",
+    "https://www.optus.com.au/support/answer/using_an_email_application_with_optusnet_email_1434"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Passord for OptusNet-e-post",
+    "helpUrl": "https://www.optus.com.au/support/answer/using_an_email_application_with_optusnet_email_1434",
+    "usernameForm": "Optus sier at adressen og brukernavnet alltid skal skrives inn i sin helhet, for eksempel username@optusnet.com.au.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "OptusNet-e-post i Claude: hva som faktisk er endret",
+    "description": "Koble en OptusNet-postkasse til Claude og enhver MCP-klient via IMAP på mail.optusnet.com.au:993. Optus stengte ikke e-posten, men endret abonnementet i 2025."
+  },
+  "hero": {
+    "eyebrow": "OptusNet Email + AI",
+    "titleLine1": "Koble OptusNet-innboksen din",
+    "titleLine2": "til Claude, Cursor, enhver MCP-klient",
+    "lead": "Til tross for hva halve internett sier, ble ikke OptusNet-e-post stengt. Den ble flyttet over på et nytt abonnement med nye vilkår i 2025 og stengt for nye registreringer. Postkassen du har, snakker fortsatt IMAP.",
+    "answer": "Claude når ikke en OptusNet-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på mail.optusnet.com.au port 993 og logger inn med hele adressen din og passordet for OptusNet-e-posten. Det er ikke noe app-passord å generere. To fakta betyr noe før du bygger på det: Optus flyttet tjenesten over på et nytt abonnement med nye vilkår fra mai 2025 og krever at e-postabonnementet er knyttet til en kvalifiserende Optus-tjeneste, og de tar ikke imot registreringer for ny OptusNet-e-post. For en adresse du allerede har, er én innboks gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "E-postpassord, ikke app-passord",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler OptusNet seg til: ett vertsnavn, begge retninger",
+    "body": "Optus kjører innkommende og utgående på samme navn. <code>mail.optusnet.com.au</code> svarer på IMAP på port 993 med SSL/TLS, og innsending på samme vert tar port 587 med STARTTLS eller port 465 med SSL/TLS. Optus' egen veiledning er at nye e-postklienter bør bruke 587 eller 465 fremover, selv om de nevner at port 25 fortsatt støttes, og de sier rett ut at de anbefaler IMAP fremfor POP3. Brukernavnet er alltid hele adressen. Påloggingen er postkassepassordet uten noe rundt: Optus utsteder ingen programspesifikke passord, og det finnes ingen bryter for klienttilgang gjemt i webmailen. Det Optus faktisk endret, er kommersielt og ikke teknisk, og avsnittet under er delen det er verdt å lese før du peker en agent mot postkassen."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
+    },
+    {
+      "h": "Bekreft at postkassen er på et gjeldende OptusNet-e-postabonnement",
+      "p": "Logg inn på <code>webmail.optusnet.com.au</code>. Siden mai 2025 har tjenesten blitt levert under et abonnement med nye vilkår, og abonnementet Optus publiserer, må være knyttet til en kvalifiserende Optus-tjeneste. Ligger postkassen brakk fordi Optus-tjenesten din ble avsluttet, ordner du det før du kobler noe til den."
+    },
+    {
+      "h": "Skriv inn hele adressen og e-postpassordet",
+      "p": "I mcpemails velger du IMAP / SMTP og skriver hele adressen i brukernavnfeltet, i Optus' eget format <code>username@optusnet.com.au</code>. Bruk passordet for den postkassen. Vert og porter under er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Postkassen rommer 500 MB, og det er hele kvoten",
+      "p": "OptusNet Email-abonnementet Optus publiserer, oppgir 500 MB lagring. Det er ikke en skrivefeil, og det er ikke per mappe. En assistent som arkiverer i stedet for å slette, eller en postkasse som i det stille har samlet vedlegg siden abonnementet endret seg, når det taket langt tidligere enn noen forventer, og en full postkasse slutter å ta imot e-post. Sjekk bruken før du gir kontoen til en agent, og rydd jevnlig etterpå."
+    },
+    {
+      "h": "Optus stengte ikke OptusNet-e-post, uansett hva overskriftene sa",
+      "p": "Mange sider publisert i 2025 meldte slutten på OptusNet-e-post. Optus' egen supportside forteller en annen historie: fra februar 2025 skrev de til kundene om endringer, og fra mai 2025 begynte de å levere tjenesten under et publisert abonnement og nye vilkår, og beskrev arbeidet som en investering i en sikrere og mer moderne tjeneste. Det som stemmer, er at registrering for nye OptusNet-e-posttjenester ikke er tilgjengelig, og at e-postabonnementet må være knyttet til en kvalifiserende Optus-tjeneste. Eksisterende postkasser ble ikke slått av i stort omfang."
+    },
+    {
+      "h": "Gamle e-postklienter ble droppet med vilje",
+      "p": "Optus sier at de fleste kunder ikke merker noen endring, men at eldre versjoner av noen tredjepartsklienter, med Outlook 2010 nevnt ved navn, ikke lenger støttes fordi de ikke lenger får oppdateringer og kanskje ikke oppfyller dagens standarder for kryptering og sikkerhet. Et oppsett som sluttet å virke rundt endringen og har fått skylden lagt på serveren, skyldes derfor mer sannsynlig klienten. mcpemails kobler til med moderne TLS, som er den siden av den grensen du vil være på."
+    },
+    {
+      "h": "SPECIAL-USE og IDLE finnes, MOVE og UIDPLUS gjør ikke",
+      "p": "Dette er en uvanlig kombinasjon, og den endrer hva som er billig og hva som ikke er det. Fordi SPECIAL-USE annonseres, forteller serveren en klient hvilken mappe som er Sent, Drafts, Trash og Junk, så det trengs ingen navnegjetting. Fordi IDLE annonseres, kommer ny e-post via push. Men MOVE mangler, så arkivering av en melding kjøres som COPY, så STORE av sletteflagget, så EXPUNGE, og UIDPLUS mangler også, så ID-en til den nye kopien rapporteres ikke og må finnes ved å søke i målmappen."
+    }
+  ],
+  "limits": [
+    "500 MB postkasselagring på det publiserte OptusNet Email-abonnementet, og abonnementet må være knyttet til en kvalifiserende Optus-tjeneste.",
+    "Nye OptusNet-e-postadresser utstedes ikke, så bare en eksisterende postkasse kan kobles til.",
+    "Flyttinger er ikke atomiske, fordi MOVE og UIDPLUS ikke er implementert på denne serveren."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med OptusNet-e-post?",
+      "a": "Ikke direkte. Claude har ingen innebygd Optus-kobling. Kobler du en MCP-server som mcpemails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere optusnet.com.au-e-posten din, og samme tilkobling fungerer i Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for OptusNet?",
+      "a": "Begge bruker mail.optusnet.com.au. IMAP er port 993 med SSL/TLS. Utgående er port 587 med STARTTLS eller port 465 med SSL/TLS, som er kombinasjonen vi verifiserte via en direkte TLS-tilkobling. Optus sier at brukernavnet alltid skal skrives inn i sin helhet, som username@optusnet.com.au, og at de anbefaler IMAP fremfor POP3."
+    },
+    {
+      "q": "Legger Optus ned e-posttjenesten sin?",
+      "a": "Ikke ifølge Optus. Supportsiden deres beskriver at de skrev til kundene fra februar 2025 om endringer, og at de leverer OptusNet Email under et nytt abonnement og nye vilkår fra mai 2025. Det som har stoppet, er nye registreringer: Optus sier at fokuset er på kunder med en eksisterende OptusNet-e-post, og at registrering for nye tjenester for tiden ikke er tilgjengelig."
+    },
+    {
+      "q": "Trenger jeg et app-passord for OptusNet-e-post?",
+      "a": "Nei. Optus utsteder ingen programspesifikke passord, og det finnes ingen egen bryter for å tillate eksterne e-postklienter. Postkassepassordet autentiserer direkte. Avvises et riktig passord, sjekk om postkassen fortsatt er på et aktivt abonnement knyttet til en kvalifiserende Optus-tjeneste, i stedet for å lete etter en sikkerhetsside."
+    },
+    {
+      "q": "Lagres OptusNet-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Optus via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en OptusNet-innboks",
+    "sub": "Fortsatt i drift, fortsatt IMAP. Én innboks gratis for alltid, uten kort."
+  }
+}

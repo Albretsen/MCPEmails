@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://docs.mailcow.email/post_installation/firststeps-ssl/",
+    "https://docs.mailcow.email/",
+    "https://doc.dovecot.org/2.3/configuration_manual/dovecot_ssl_configuration/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://docs.mailcow.email/post_installation/firststeps-ssl/",
+    "usernameForm": "与 Mailboxes 列表中显示的完全一致的完整邮箱地址，例如 you@yourdomain.com。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 mailcow 连接到 Claude、Cursor 与 MCP 客户端",
+    "description": "通过端口 993 的 IMAP 将 mailcow 邮箱连接到 Claude、Cursor 和 ChatGPT。为什么 acme-mailcow 只为 MAILCOW_HOSTNAME 签发证书，以及 SKIP_LETS_ENCRYPT 会破坏什么。"
+  },
+  "hero": {
+    "eyebrow": "mailcow + AI",
+    "titleLine1": "将 mailcow 连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "mailcow 已经在一个栈中为你提供了 Dovecot、Postfix 和 SOGo。在它之上加一个 MCP 服务器，你的代理就能在你自己托管的邮箱中读取、搜索、发送、回复、定时和归档邮件。",
+    "answer": "Claude 无法自行访问 mailcow 服务器。mcpemails 是一个托管 MCP 服务器，通过端口 993 的 IMAP 连接你的 mailcow 实例，使用你在 mailcow.conf 中设置为 MAILCOW_HOSTNAME 的主机名，以及 Mailboxes 列表中的邮箱密码，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。没有共用主机：这是你的服务器，它必须发布到互联网上，而且你必须完全使用 acme-mailcow 签发的证书上的那个主机名来连接。1 个收件箱免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "mailcow 界面中的邮箱密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "mailcow 如何连接：993 上的 MAILCOW_HOSTNAME",
+    "body": "mailcow 是一个 Docker Compose 栈，其邮件部分由 Dovecot 负责 IMAP、Postfix 负责提交，所以协议行为都很常规，也广为人知。mailcow 特有的是主机名。整个栈只有一个规范名称，即 <code>MAILCOW_HOSTNAME</code>，在安装时于 <code>mailcow.conf</code> 中设定，之后基本不会再改，它就是你应使用的 IMAP 和 SMTP 服务器名称。Dovecot 在 993 上以隐式 TLS、在 143 上以 STARTTLS 响应。Postfix 在 465 和 587 上响应。凭据是你在 Mailboxes 下设置的邮箱密码，而不是你登录 mailcow 界面本身所用的管理员密码：它们是不同的账户，管理员登录并不是一个邮箱。"
+  },
+  "setup": [
+    {
+      "h": "创建免费账户",
+      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
+    },
+    {
+      "h": "从 mailcow.conf 中读取 MAILCOW_HOSTNAME",
+      "p": "在主机上运行 <code>grep MAILCOW_HOSTNAME /opt/mailcow-dockerized/mailcow.conf</code>。这个值（而不是裸域名，也不是机器自己的名称）就是你的 IMAP 和 SMTP 主机名，因为 acme-mailcow 申请证书时用的就是这个名称。"
+    },
+    {
+      "h": "确认邮箱及其密码",
+      "p": "在 mailcow 界面中依次打开 Configuration、Mailboxes。确认该地址处于启用状态；如果你不知道它的密码，就在那里设置一个新密码。然后在 mcpemails 中添加收件箱：选择 IMAP / SMTP，输入 MAILCOW_HOSTNAME 主机名和邮箱凭据。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "证书覆盖的是 MAILCOW_HOSTNAME，几乎别无其他",
+      "p": "acme-mailcow 申请的证书覆盖 <code>MAILCOW_HOSTNAME</code>，加上你添加的每个邮件域名的 <code>autodiscover.</code> 和 <code>autoconfig.</code>，再加上你在 <code>ADDITIONAL_SAN</code> 中列出的任何名称。你的裸顶级域名不在这个列表上。因此，连接 <code>yourdomain.com:993</code> 会导致证书校验失败，尽管证书本身完全有效，只是名称不匹配。原样使用 MAILCOW_HOSTNAME 的值，不匹配就会消失。"
+    },
+    {
+      "h": "SKIP_LETS_ENCRYPT 会留下一张被浏览器掩盖的自签名证书",
+      "p": "如果在 <code>mailcow.conf</code> 中设置了 <code>SKIP_LETS_ENCRYPT=y</code>，或者 acme-mailcow 从未完成过验证，该栈会一直使用安装时生成的自签名证书。几个月前大家都点过了浏览器警告，早已忘了这回事，所以在本地看起来一切正常，但正确校验证书的客户端会拒绝连接。请用 <code>openssl s_client -connect $MAILCOW_HOSTNAME:993</code> 检查网络上实际出示的是什么，而不要相信界面。"
+    },
+    {
+      "h": "端口 80 必须保持可访问，否则证书会悄悄停止续期",
+      "p": "mailcow 的 ACME 客户端使用 HTTP-01 验证，其文档明确说明，mailcow 必须能在端口 80 上访问才能正常工作。在安装后用防火墙封掉 80，或者在栈前面放了另一个 Web 服务器的运维人员，会得到一张先续期一阵子、然后不再续期的证书。993 上的 IMAP 会一直正常工作到证书到期那天，然后所有客户端同时失败。如果你无法开放 80，请把部署改为 DNS-01 验证。"
+    },
+    {
+      "h": "把端口发布在私有接口上，会让外部的一切都看不到服务器",
+      "p": "<code>mailcow.conf</code> 中的端口绑定除了端口之外还接受地址。像 <code>IMAPS_PORT=127.0.0.1:993</code> 这样的绑定，是在代理后面运行 mailcow 的常见方式，它意味着 <code>docker ps</code> 显示容器健康，而主机之外的任何东西都根本打不开这个端口。在认定是凭据问题之前，请从另一个网络上的机器确认可达性。"
+    }
+  ],
+  "limits": [
+    "托管 MCP 服务器必须向你的栈建立入站 IMAP 连接，所以只发布在私有接口上、或只能通过 VPN 访问的 mailcow 无法用这种方式连接。如果你不希望任何外部系统接触 993，可以把 mcpemails 与 mailcow 一起自托管。",
+    "发信由你自己的 Postfix 处理，所以下游是否接受邮件，完全取决于你的 SPF、DKIM 和 DMARC 记录，以及你的 IP 是否被列入任何黑名单。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 mailcow 吗？",
+      "a": "不能单独使用。Claude 没有 mailcow 连接器，也无法向你运行的服务器打开 IMAP 会话。将 mcpemails 这样的 MCP 服务器连接到你的 mailcow 实例后，无论你使用哪个 MCP 客户端，Claude 都能读取、搜索、发送、回复、定时和整理其上邮箱中的邮件。"
+    },
+    {
+      "q": "mailcow 的 IMAP 和 SMTP 设置是什么？",
+      "a": "服务器是你的 MAILCOW_HOSTNAME，可以从 mailcow.conf 中读取。IMAP 为端口 993（隐式 TLS）或 143（STARTTLS）。提交为 465（隐式 TLS）或 587（STARTTLS）。请用完整邮箱地址和在 mailcow 界面中为该邮箱设置的密码登录。"
+    },
+    {
+      "q": "为什么我的 mailcow 登录被拒绝？",
+      "a": "最常见的原因是使用了 mailcow 管理员账户而不是某个邮箱。管理员登录只用于网页界面，背后没有 IMAP 邮箱。请确认你使用的地址出现在 Configuration、Mailboxes 下，并且该邮箱处于启用而非禁用状态。"
+    },
+    {
+      "q": "mailcow 和 Dovecot 是一回事吗？",
+      "a": "mailcow 把 Dovecot 作为其 IMAP 服务器，与 Postfix、SOGo 和 Rspamd 一起打包进一个 Docker Compose 栈，并在上面加了一个网页界面。凡是 Dovecot 的 IMAP 行为，在这里同样成立，所以如果你需要直接修改监听器或文件夹角色，我们的 Dovecot 页面值得一读。"
+    },
+    {
+      "q": "我的邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从你的 mailcow 服务器实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 mailcow 收件箱",
+    "sub": "连接你自己栈中的邮箱。1 个收件箱永久免费，无需信用卡。"
+  }
+}

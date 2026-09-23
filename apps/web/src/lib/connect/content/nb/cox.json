@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://help.yahoo.com/kb/mail/SLN36637.html",
+    "https://help.yahoo.com/kb/SLN15241.html",
+    "https://www.cox.com/residential/support/coxnet-email-transitioning-to-yahoo.html"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Yahoo-app-passord",
+    "helpUrl": "https://help.yahoo.com/kb/mail/SLN36637.html",
+    "usernameForm": "Hele cox.net-adressen din. Postkassen er nå en Yahoo-konto, men brukernavnet er fortsatt den cox.net-adressen du alltid har hatt.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Cox Email på Yahoo: koble cox.net til Claude",
+    "description": "Cox overlot cox.net-e-posten til Yahoo. Koble postkassen til Claude og enhver MCP-klient over IMAP med et Yahoo-app-passord, ikke det gamle Cox-passordet."
+  },
+  "hero": {
+    "eyebrow": "Cox Email + AI",
+    "titleLine1": "Koble cox.net-innboksen din",
+    "titleLine2": "til Claude, Cursor og enhver MCP-klient",
+    "lead": "Cox har lagt ned e-posttjenesten sin, og Yahoo driver nå cox.net-postkassene. Adressen fungerer fortsatt, og mcpemails kobler den til over IMAP slik at AI-agenten din kan lese, søke i, sende, svare på og arkivere e-posten.",
+    "answer": "Claude kan ikke nå en cox.net-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler den til over IMAP på port 993 mot Yahoo-verten i tabellen nedenfor, fordi Cox overlot e-posttjenesten sin til Yahoo, og cox.net-e-post leveres nå fra Yahoos infrastruktur i stedet for fra Cox sin. Påloggingsopplysningen er et Yahoo-app-passord som du lager på siden for kontosikkerhet, ikke det gamle Cox-passordet og ikke passordet du skriver inn i webmail. Når den er koblet til, kan Claude, Cursor eller en hvilken som helst annen MCP-klient lese, søke i, sende, svare på og organisere e-posten, og én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Yahoo-app-passord, ikke Cox-passordet",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles cox.net til: IMAP mot Yahoo, med et app-passord",
+    "body": "Cox gikk ut av e-postmarkedet og flyttet alle cox.net-postkasser over til Yahoo i flere bølger, så påloggingen, webmailen og e-postserverne bak adressen din tilhører nå Yahoo. Det får to praktiske følger. For det første er de gamle Cox-vertsnavnene døde: <code>pop.cox.net</code> og <code>smtp.cox.net</code> betjener ikke lenger postkassen, og en klient som fortsatt peker dit, feiler uansett hvilket passord du gir den. For det andre følger autentiseringen Yahoos regler, som betyr at en e-postklient som ikke bruker Yahoos egen OAuth-pålogging, må oppgi et <b>app-passord</b>. Yahoo sier det tydelig: du må bruke et app-passord og ikke det vanlige kontopassordet. App-passordet fortsetter å virke selv om du endrer hovedpassordet på kontoen, og du sletter det for å tilbakekalle det."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og ber ikke om kort."
+    },
+    {
+      "h": "Lag et app-passord på Yahoos side for kontosikkerhet",
+      "p": "Logg inn hos Yahoo med <code>@cox.net</code>-adressen din, åpne siden for kontosikkerhet, finn <b>External connections</b> (eksterne tilkoblinger) og velg <b>Create app password</b> (opprett app-passord). Gi det et navn du kjenner igjen senere, for eksempel <code>mcpemails</code>. Yahoo viser koden bare én gang, så kopier den før du lukker siden."
+    },
+    {
+      "h": "Skriv inn cox.net-adressen og app-passordet",
+      "p": "Velg IMAP / SMTP i mcpemails, skriv hele cox.net-adressen i brukernavnfeltet og lim inn app-passordet i stedet for passordet til Cox-kontoen. Vertene og portene nedenfor er forhåndsutfylt og ble bekreftet via en faktisk TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Yahoo kan nekte å lage app-passordet, og kundestøtten kan ikke overstyre det",
+      "p": "Før Yahoo viser deg koden, går opprettelsen av app-passordet gjennom en kvalifikasjonssjekk. Yahoos egen anbefaling er å bruke en nettleser du har logget inn på Yahoo fra flere dager på rad, og ikke et privat vindu eller inkognitovindu, og Yahoo sier rett ut at kundeservice ikke kan overstyre prosessen som avgjør om du kvalifiserer. Hvis valget <b>Create app password</b> mangler eller forsøket feiler, er det denne sjekken som er årsaken. Logg inn fra den vanlige nettleseren din noen dager og prøv igjen; ingen supportsak lar deg hoppe over den."
+    },
+    {
+      "h": "Cox-vertsnavnene i alle gamle veiledninger er borte",
+      "p": "Veiledninger skrevet før flyttingen til Yahoo ber deg bruke <code>pop.cox.net</code>, <code>imap.cox.net</code> eller <code>smtp.cox.net</code>. Disse er ikke lenger postkassen. E-posten svarer nå på Yahoo-verter, og det er derfor en klient som har fungert i årevis plutselig sluttet å virke etter at kontoen din ble flyttet i en av migreringsbølgene. Å oppdatere passordet uten å oppdatere vertsnavnene hjelper ikke."
+    },
+    {
+      "h": "Yahoo oppgir ett vertsnavn for cox.net, og vi bekreftet et annet",
+      "p": "Yahoos oppsettartikkel for cox.net oppgir <code>imap.mail.yahoo.com</code>. Verten i tabellen på denne siden er den vi faktisk åpnet en TLS-tilkobling mot for cox.net, og det er eksportverten Yahoo bruker for partnermerkede postkasser som cox.net og Rogers. Begge er Yahoos egen infrastruktur, og begge svarte på port 993 med samme serverbanner. Hvis den ene avvises for kontoen din, er det den andre du bør prøve."
+    },
+    {
+      "h": "Cox sluttet å utstede cox.net-adresser i 2019",
+      "p": "Ifølge Cox' egen kundestøtte har selskapet siden 15. august 2019 ikke lenger gitt nye eller eksisterende Cox Internet-kunder mulighet til å opprette nye Cox Email-kontoer. Det finnes altså ingen vei til en ny cox.net-adresse, og hvis den du har blir stengt etter at du sier opp abonnementet, kommer den ikke tilbake. Cox gir frakoblede kontoer en frist målt i uker, ikke år, før postkassen slettes."
+    }
+  ],
+  "limits": [
+    "Yahoos SMTP-vert oppgir en maksimal meldingsstørrelse på omtrent 39 MB, så en sending med store vedlegg avvises før den går ut.",
+    "Siden Cox ikke lenger utsteder adresser, hjelper denne siden bare med en eksisterende cox.net-postkasse. Det finnes ingen måte å opprette en ny å koble til."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Cox-e-post?",
+      "a": "Ikke direkte. Claude har ingen innebygd Cox-kobling, og Cox driver ikke lenger e-posttjenesten selv. Kobler du en MCP-server som mcpemails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere cox.net-e-posten din, og den samme tilkoblingen fungerer i Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Cox nå?",
+      "a": "Det er Yahoos innstillinger, ikke Cox'. IMAP svarer på port 993 med implisitt TLS og SMTP på port 465, også med implisitt TLS, på vertene som vises i tabellen på denne siden, og som ble bekreftet via en faktisk TLS-tilkobling. Brukernavnet er fortsatt hele cox.net-adressen din. De gamle navnene pop.cox.net og smtp.cox.net fungerer ikke lenger."
+    },
+    {
+      "q": "Hvorfor blir Cox-passordet mitt avvist i en e-postklient?",
+      "a": "Fordi postkassen nå er en Yahoo-konto, og Yahoo krever et app-passord for klienter som ikke bruker Yahoos eget påloggingsvindu. Webmail-passordet ditt er riktig, men blir likevel avvist på IMAP-nivå. Lag et app-passord på Yahoos side for kontosikkerhet under External connections og bruk det i stedet."
+    },
+    {
+      "q": "Kan jeg fortsatt få en ny cox.net-adresse?",
+      "a": "Nei. Cox sluttet å la kunder opprette Cox Email-kontoer 15. august 2019, og flyttingen av tjenesten til Yahoo endret ikke på det. Bare adresser som ble opprettet før den datoen finnes, og derfor er denne siden skrevet for dem som allerede har en."
+    },
+    {
+      "q": "Lagres Cox-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger, app-passordet inkludert, er kryptert ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din cox.net-innboksen",
+    "sub": "Ett app-passord, et par minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

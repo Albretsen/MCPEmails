@@ -1,0 +1,97 @@
+{
+  "_sources": [
+    "https://assistance.orange.fr/ordinateurs-peripheriques/installer-et-utiliser/l-utilisation-du-mail-et-services-associes/mail-orange/parametrer-la-boite-mail/mail-orange-comment-acceder-a-sa-boite-mail-orange-depuis-une-application-ou-un-logiciel-de-messagerie-non-fourni-par-orange_434630-964290",
+    "https://assistance.orange.fr/ordinateurs-peripheriques/installer-et-utiliser/l-utilisation-du-mail-et-du-cloud/mail-orange/le-mail-orange-nouvelle-version/parametrer-la-boite-mail/mail-orange-comment-activer-ou-desactiver-les-acces-pop-imap-pour-les-logiciels-ou-applications-de-messagerie-tiers_427398-957069"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Eget passord (mot de passe dédié)",
+    "helpUrl": "https://assistance.orange.fr/ordinateurs-peripheriques/installer-et-utiliser/l-utilisation-du-mail-et-services-associes/mail-orange/parametrer-la-boite-mail/mail-orange-comment-acceder-a-sa-boite-mail-orange-depuis-une-application-ou-un-logiciel-de-messagerie-non-fourni-par-orange_434630-964290",
+    "usernameForm": "Hele adressen din, inkludert domenet: nom@orange.fr, eller nom@wanadoo.fr for en eldre Wanadoo-adresse.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "IMAP-innstillinger for Orange Mail og Claude via MCP",
+    "description": "Koble en Orange.fr-postkasse til Claude og enhver MCP-klient på imap.orange.fr:993. POP/IMAP-tilgang må slås på først, og Orange utsteder et eget passord."
+  },
+  "hero": {
+    "eyebrow": "Orange + AI",
+    "titleLine1": "Koble Orange-postkassen din",
+    "titleLine2": "til Claude, Cursor, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Orange-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP, når du har slått på POP/IMAP-tilgangen som Orange holder avslått.",
+    "answer": "Claude når ikke en Orange-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.orange.fr port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. To ting må være riktige først: Orange slår av POP- og IMAP-tilgang på postkassen av sikkerhetshensyn, så du slår det på i webmailen under Sécurité, og Orange anbefaler å autentisere med mot de passe dédié fra Espace client i stedet for det vanlige Orange-passordet ditt. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Slå på POP/IMAP, bruk det egne passordet",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler Orange seg til: IMAP, en bryter og et eget passord",
+    "body": "Orange tilbyr IMAP på <code>imap.orange.fr</code> port 993 over implisitt TLS og SMTP-innsending på <code>smtp.orange.fr</code> port 465, og serveren bak identifiserer seg som Dovecot. Adresser på <code>orange.fr</code> og på det eldre domenet <code>wanadoo.fr</code> ligger på det samme vertsparet, så det er ingenting regionalt eller kundespesifikt å slå opp. Det som er spesielt for Orange, er alt på hver side av tilkoblingen. Orange sier at POP- og IMAP-tilgang av sikkerhetshensyn er slått av som standard, så en helt ny klientinnlogging avvises før noe passord i det hele tatt sjekkes. Og Orange publiserer et <b>mot de passe dédié</b>, med deres egne ord et passord spesifikt for POP-, IMAP- og SMTP-tilgang, som du henter i Espace client under <b>Connexion et sécurité</b> og bruker i stedet for det vanlige Orange-passordet."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Slå på POP/IMAP-tilgang i Orange-webmailen",
+      "p": "Åpne Orange-postkassen i en nettleser, klikk tannhjulet (<b>roue crantée</b>), velg <b>tous les paramètres</b>, så <b>Sécurité</b>, så <b>Protocoles POP ou IMAP</b>. Klikk <b>Modifier</b>, kryss av for <b>Activer POP/IMAP</b> og bekreft med <b>Valider</b>. Gjør dette før noe annet: før det er på, avvises alle klientinnlogginger, og feilen ser ut som et feil passord."
+    },
+    {
+      "h": "Hent mot de passe dédié fra Espace client",
+      "p": "Logg inn i Espace client på orange.fr og åpne delen <b>Connexion et sécurité</b>. Det egne passordet som vises der, er det Orange mener du skal bruke for POP, IMAP og SMTP. Det er en annen verdi enn passordet du logger inn på orange.fr med, og Orange anbefaler det spesielt for e-postprogrammer."
+    },
+    {
+      "h": "Lim det inn i mcpemails, og lim så MCP-URL-en inn i AI-en",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel nom@orange.fr, og lim inn det egne passordet. Orange-vertene og -portene er forhåndsutfylt. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "POP/IMAP er av til du slår det på, og avvisningen ser ut som et feil passord",
+      "p": "Oranges egen veiledning for å koble til et e-postprogram som ikke leveres av Orange, ber deg sjekke at tilgangen er slått på i postkasseinnstillingene, fordi <b>pour des raisons de sécurité, ces accès sont désactivés par défaut</b>. Avvisningen du får når den er av, har ingen forklaring. Folk bytter passord, skriver adressen på nytt og installerer klienten på nytt, og ingenting av det hjelper, fordi ingenting ved påloggingen noen gang var feil. Oranges hjelpesider har ikke alltid vært enige med hverandre om standardtilstanden, så se på skjermen <b>Sécurité</b>, så <b>Protocoles POP ou IMAP</b> som det første du sjekker, ikke det siste."
+    },
+    {
+      "h": "Mot de passe dédié er en annen pålogging enn innloggingen på orange.fr",
+      "p": "Orange beskriver det som et passord spesifikt for POP-, IMAP- og SMTP-tilgang, hentet fra Espace client under <b>Connexion et sécurité</b>. Fordi det er en ekstra verdi de fleste aldri ser på, glir det fra hverandre: å endre hovedpassordet for Orange endrer ikke dette, og omvendt. Bruk det egne passordet på både inngående og utgående side av tilkoblingen. Virker sending men ikke lesing, eller omvendt, er det som regel fordi bare den ene halvdelen ble oppdatert."
+    },
+    {
+      "h": "Serveren tilbyr ikke IDLE, så e-post kommer ved polling i stedet for push",
+      "p": "Oranges IMAP-banner annonserer <code>SASL-IR</code> og <code>LOGIN-REFERRALS</code>, men ikke <code>IDLE</code>, så serveren har ingen måte å melde ny e-post på over en åpen tilkobling. Alle klienter, vår inkludert, må spørre. Det merkes ikke i det daglige, men det betyr at en instruksjon som <b>si fra i det øyeblikket et svar kommer</b> begrenses av hvor ofte postkassen sjekkes, ikke av hvor raskt Orange leverer."
+    },
+    {
+      "h": "Ingen MOVE, ingen SPECIAL-USE, og franske mappenavn",
+      "p": "Serveren annonserer ikke utvidelsen <code>MOVE</code>, så arkivering av en melding kjøres som en kopi, en flaggoppdatering og en expunge i stedet for én atomisk kommando. <code>SPECIAL-USE</code> mangler også, noe som betyr at Sent, Drafts, Trash og Junk matches etter navn i stedet for rolle. En Orange-postkasse kaller dem som regel <b>Envoyés</b>, <b>Brouillons</b>, <b>Corbeille</b> og <b>Spams</b>, så oppgi mappen eksplisitt hvis agenten din ikke finner den."
+    }
+  ],
+  "limits": [
+    "Orange begrenser utgående meldinger til omtrent 46 MB kodet melding, så et stort vedlegg som en agent videresender, kan avvises direkte på SMTP-trinnet.",
+    "Fordi serveren ikke støtter MOVE, er en flytting ikke atomisk. Hvis en tilkobling brytes midt i operasjonen, kan en melding kortvarig finnes i begge mapper."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Orange-e-post?",
+      "a": "Ikke direkte. Claude leveres uten Orange-kobling. Kobler du en MCP-server som mcpemails til postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer deretter fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Orange?",
+      "a": "IMAP er imap.orange.fr på port 993 med implisitt TLS. SMTP er smtp.orange.fr på port 465, også med implisitt TLS, med krav om autentisering. Logg inn med hele adressen din og Oranges egne passord. Begge vertene ble bekreftet via en direkte TLS-tilkobling og er de samme for orange.fr- og wanadoo.fr-adresser."
+    },
+    {
+      "q": "Hvorfor avviser Orange passordet mitt i en e-postklient?",
+      "a": "To grunner, i denne rekkefølgen. POP/IMAP-tilgang er slått av på postkassen, noe du fikser i webmailen under Sécurité, så Protocoles POP ou IMAP. Eller du bruker innloggingspassordet for orange.fr i stedet for mot de passe dédié som Orange publiserer i Espace client under Connexion et sécurité for POP, IMAP og SMTP."
+    },
+    {
+      "q": "Bruker wanadoo.fr-adresser andre servere?",
+      "a": "Nei. En eldre wanadoo.fr-adresse er en Orange-postkasse og autentiserer mot de samme vertene imap.orange.fr og smtp.orange.fr, med samme POP/IMAP-bryter og samme egne passord. Skriv inn adressen nøyaktig slik den er skrevet, inkludert wanadoo.fr-domenet."
+    },
+    {
+      "q": "Lagres Orange-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Orange via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Orange-innboks",
+    "sub": "Koble til Orange-e-post på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "_sources": [
+    "https://docs.icewarp.com/Content/IceWarp-Server/Administration-Nodes/System%20Node/Services/Service%20Ports.htm",
+    "https://docs.icewarp.com/Content/IceWarp-Server/Administration-Nodes/System%20Node/Certificates/Certificates.htm",
+    "https://support.icewarp.com/hc/en-us/articles/16288796581393-How-to-use-Let-s-Encrypt-certificate-in-IceWarp",
+    "https://support.icewarp.com/hc/en-us/community/posts/15569043482257-how-to-disable-specific-service-for-specific-users"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://support.icewarp.com/hc/en-us/articles/46410555968145-How-to-configure-IceWarp-email-accounts-on-Windows-and-macOS",
+    "usernameForm": "用户账户在管理控制台中该域名下显示的完整地址，例如 you@yourdomain.com。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "IceWarp 连接 Claude：IMAP 服务端口与 MCP 访问",
+    "description": "通过端口 993 的 IMAP 将 IceWarp 邮箱连接到 Claude、Cursor 和 ChatGPT。IMAP 服务在管理控制台中的位置，以及 Mailbox Type 陷阱。"
+  },
+  "hero": {
+    "eyebrow": "IceWarp + AI",
+    "titleLine1": "将 IceWarp 连接到 Claude，",
+    "titleLine2": "以及 Cursor、ChatGPT 和任意 MCP 客户端",
+    "lead": "IceWarp 已经在运行你的邮件、日历和聊天。在它之上加一个 MCP 服务器，就能让 AI 代理直接处理邮箱：读取、搜索、发送、回复、定时和归档，所用凭据与任何桌面客户端相同。",
+    "answer": "Claude 无法自行访问 IceWarp 服务器。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接你自己主机名上的 IceWarp 实例，使用端口 993 和隐式 TLS，并用 IceWarp 管理控制台中保存的邮箱密码认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。IceWarp 是由你托管的软件，所以没有可以公布的共用主机名：服务器必须能从互联网解析和访问，而 993 上的证书必须对你所连接的名称有效。1 个收件箱免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "来自控制台的邮箱密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "IceWarp 如何连接：System 节点下的 IMAP 服务",
+    "body": "IceWarp Server 通过一个按节点组织的控制台进行管理，与邮件客户端相关的一切都位于其中两个节点下。<b>System</b> 包含 Services（在这里双击 IMAP 服务即可修改其监听方式）和 Certificates（在这里签发和存储 TLS 证书）。<b>Domains and Accounts</b> 包含用户。IceWarp 文档中的端口是：IMAP 为 143，基于 SSL/TLS 的 IMAP 为 993，SMTP 为 25，提交为 587（STARTTLS），SMTPS 为 465。选择之前值得知道：IceWarp 自己的端口参考把 465 标为已过时，并引导你改用 587，这与大多数其他邮件服务器给出的建议正好相反。认证使用保存在用户账户上的邮箱密码，也就是登录 IceWarp WebClient 所用的同一个凭据。没有可以生成的应用专用密码机制。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。1 个收件箱永久免费，无需信用卡，足以用一个真实的 IceWarp 账户来试用。"
+    },
+    {
+      "h": "在管理控制台中打开 IMAP 服务",
+      "p": "进入 System 节点，然后打开 Services，双击 IMAP。确认该服务正在运行，且安全端口为 993。在 System 中顺便打开 Certificates，检查绑定到你打算交给 mcpemails 的主机名上的是哪张证书。"
+    },
+    {
+      "h": "检查账户的 Mailbox Type，然后添加收件箱",
+      "p": "在 Domains and Accounts 下打开该用户，查看 Options 选项卡。<code>Mailbox: Type</code> 设置必须是 IMAP 与 POP3 组合的那个值，而不是单独的 POP3。然后在 mcpemails 中添加收件箱：选择 IMAP / SMTP，输入你的 IceWarp 主机名、完整地址和邮箱密码。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Mailbox Type 是一个带有仅 POP3 选项的设置，而不是复选框",
+      "p": "IceWarp 不为用户提供 IMAP 开关，而是在账户的 Options 选项卡上提供一个邮箱<b>类型</b>，可选值之一是 POP3，而不是 IMAP 与 POP3 的组合。设成这样的账户会在 110 上响应并拒绝 IMAP；由于这项更改是在开通时由制作账户模板的人一次性设定的，所以没人记得它的存在。症状是：同一台服务器上其他人都能连接，只有某一个用户不行。在检查任何网络问题之前，请先检查该账户的类型。"
+    },
+    {
+      "h": "POP3 和 IMAP 是同一个模块，所以你无法只停用其中一个",
+      "p": "IceWarp 把 POP3 和 IMAP 作为一个模块运行。停止或重启它会同时关闭两种协议，这在两个方向上都很重要。如果有人出于安全考虑通过停止服务来禁用 POP3，IMAP 也随之关闭，此后 993 上就再也没有任何监听。而当你为了应用端口或证书更改而重启该模块时，服务器上的每个 POP3 客户端都会在同一时刻断开。请安排好重启时间，而不是在工作时间随手点击。"
+    },
+    {
+      "h": "IceWarp 自己签发证书，所以 80 端口上的其他 Web 服务器会阻止它",
+      "p": "证书通过 System、Certificates、Add Certificate 签发，选择免费的 Let's Encrypt 选项和域名。附带的条件在 Windows 机器上很容易被破坏：必须由 <b>IceWarp WebService 本身</b>在端口 80 和 443 上响应，而且服务器的 DNS 记录必须能被公开解析。很多 Windows 服务器默认安装了 IIS 并在 80 上监听，IceWarp 前面的反向代理也会造成同样的效果，于是请求失败，而且更隐蔽的是，此后的每次自动重新签发也都会失败。现有证书会一直正常工作到到期日，然后在同一个早上，所有严格的客户端都会失败。IceWarp 也无法通过这种方式签发通配符证书，所以一个没有写在证书上的主机名，无论其他部分配置得多好，都无法通过校验。"
+    }
+  ],
+  "limits": [
+    "托管 MCP 服务器必须向你的 IceWarp 主机建立入站连接，所以只在内部网络上发布、或只能通过企业 VPN 访问的服务器，无法用这种方式连接。如果你希望 IMAP 会话留在网络边界之内，mcpemails 可以自托管。",
+    "证书校验是严格的，不能豁免，因此过期的证书或签发给其他名称的证书会被拒绝，而不是带着警告被接受。",
+    "IceWarp 的日历、通讯录和聊天不在此范围内。mcpemails 使用 IMAP 和 SMTP，所以它处理的是邮件，而不是与之并列的群件功能。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 IceWarp 吗？",
+      "a": "不能单独使用。Claude 没有 IceWarp 连接器，也无法向你运行的服务器打开 IMAP 会话。将 mcpemails 这样的 MCP 服务器连接到你的 IceWarp 主机后，Claude 就能读取、搜索、发送、回复、定时和整理其上某个邮箱中的邮件，同一个收件箱随后也可在 Cursor 和 ChatGPT 中使用。"
+    },
+    {
+      "q": "IceWarp 的 IMAP 和 SMTP 设置是什么？",
+      "a": "主机名就是你自己的服务器。端口是 IceWarp 文档中的默认值：IMAP 为 143，基于 SSL 的 IMAP 为 993，SMTP 为 25，提交为 587（STARTTLS），SMTPS 为 465。IceWarp 自己的文档把 465 标为已过时，更推荐 587。请用完整邮箱地址和邮箱密码登录。"
+    },
+    {
+      "q": "为什么一个 IceWarp 用户能通过 IMAP 连接，另一个却不能？",
+      "a": "几乎总是账户上的 Mailbox Type 所致。在管理控制台中打开该用户，进入 Options 选项卡，查看邮箱类型：如果显示的是 POP3，而不是 IMAP 与 POP3 的组合值，那么无论服务器在做什么，该账户都没有 IMAP 服务。这是按账户的设置，所以它影响的是个别人，而不是所有人。"
+    },
+    {
+      "q": "IceWarp 需要应用专用密码吗？",
+      "a": "不需要。IceWarp 没有应用专用密码机制。客户端使用保存在用户账户上的邮箱密码进行认证，也就是 WebClient 所用的同一个密码。如果没人知道这个密码，请在管理控制台中重置该账户的密码，而不要试图找回。"
+    },
+    {
+      "q": "我的 IceWarp 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从你的 IceWarp 服务器实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 IceWarp 收件箱",
+    "sub": "连接你自己 IceWarp 服务器上的邮箱。1 个收件箱永久免费，无需信用卡。"
+  }
+}

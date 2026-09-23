@@ -1,0 +1,95 @@
+{
+  "_sources": [
+    "https://docs.gandi.net/en/gandimail/standard_email_settings/",
+    "https://docs.gandi.net/en/gandimail/common_operations/changing_email_password.html",
+    "https://docs.gandi.net/en/gandimail/common_operations/manage_2fa.html",
+    "https://news.gandi.net/en/2023/06/faq-new-mailbox-service/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://docs.gandi.net/en/gandimail/common_operations/changing_email_password.html",
+    "usernameForm": "Hele e-postadressen, inkludert @dittdomene.tld.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Gandi Mail til Claude, Cursor og MCP",
+    "description": "Koble en Gandi-postkasse til Claude, Cursor og enhver MCP-klient over IMAP på mail.gandi.net:993, med postkassepassordet og ikke innloggingen til Gandi-kontoen."
+  },
+  "hero": {
+    "eyebrow": "Gandi Mail + AI",
+    "titleLine1": "Koble Gandi Mail til Claude,",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Gandi-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP med passordet som er satt på selve postkassen, ikke på Gandi-kontoen din.",
+    "answer": "Claude kan ikke nå en Gandi-postkasse på egen hånd. mcpemails er en driftet MCP-server som kobler den til over IMAP på mail.gandi.net, port 993, og autentiserer med hele e-postadressen og passordet som er definert på postkassen. Gandi holder det passordet atskilt fra passordet til gandi.net-kontoen din. Claude, Cursor eller enhver MCP-klient kan deretter lese, søke i, sende og organisere e-posten. Det finnes ikke noe app-passord å lage og ingen IMAP-bryter per postkasse å lete etter. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Postkassepassord, ikke kontoinnloggingen",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobles Gandi Mail til: IMAP og postkassepassordet",
+    "body": "Gandi leverer begge protokollene fra ett vertsnavn: <code>mail.gandi.net</code>, port 993 for IMAP med implisitt TLS og port 465 for SMTP, også med implisitt TLS. Denne ene verten dekker alle Gandi-postkasser, uansett hvilket domene adressen ligger under. Gandis dokumentasjon sier tydelig at brukernavnet er <b>hele e-postadressen</b>, inkludert delen etter krøllalfaen, og at passordet er det du definerte da postkassen ble opprettet. Gandi opplyser i sin egen dokumentasjon at passordet for en Gandi-e-postadresse er atskilt fra passordet for Gandi-kontoen din, og det er dette som gjør at du kan gi en kollega en postkasse uten å gi vedkommende innloggingen til domeneregistratoren. SMTP krever autentisering med de samme påloggingsopplysningene."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og krever ikke kort."
+    },
+    {
+      "h": "Sett postkassepassordet i Gandi-administrasjonen",
+      "p": "Logg inn på gandi.net, velg Domains i menyen til venstre, velg domenet adressen hører til, og åpne fanen Email. Klikk på postkassen, eller på menyen med tre prikker, deretter Manage, og bruk Change ved siden av Password i seksjonen Configuration. Du kan også endre det under Settings, Password i Gandis Roundcube-webmail."
+    },
+    {
+      "h": "Lim det inn i mcpemails",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen og lim inn postkassepassordet. Verten mail.gandi.net og portene 993 og 465 er forhåndsutfylt og ble bekreftet med en direkte TLS-tilkobling."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Gandis tofaktorautentisering for e-post gjelder bare webmail og kan ikke dekke IMAP",
+      "p": "Har du slått på tofaktorautentisering for en Gandi-postkasse, gjelder den webmailportalene SOGo og Roundcube og ingen andre steder. Gandis dokumentasjon sier rett ut at 2FA bare kan brukes via webmailportalene, at e-postklienter som Thunderbird eller Outlook ikke støttes, og at det å slå av POP, IMAP og SMTP er den eneste måten å sikre postkassen fullt ut med 2FA. Det har to praktiske følger. For det første hindrer ikke 2FA mcpemails i å koble til: postkassepassordet autentiserer fortsatt over IMAP. For det andre, hvis du bevisst har slått av IMAP-protokollen på postkassen for at 2FA skal ha noen effekt, kan ingen klient koble til før du slår den på igjen."
+    },
+    {
+      "h": "Gratis postkasser ble avviklet i 2023, og gamle adresser kan rett og slett være borte",
+      "p": "Gandi inkluderte tidligere to gratis postkasser så lenge en domeneregistrering varte. Det tilbudet ble avsluttet 30. november 2023, og postkasser ble en tjeneste med egen pris. Adresser som aldri ble konvertert til den betalte planen, finnes ikke lenger, så en IMAP-innlogging for en slik adresse feiler med en autentiseringsfeil, ikke med noe som sier at postkassen er avviklet. Hvis en Gandi-adresse du sist brukte for flere år siden, nekter å logge inn, sjekk fanen Email for domenet før du antar at det er et passordproblem."
+    },
+    {
+      "h": "Brukernavnet er hele adressen, og IMAP-serveren tilbyr bare AUTH=PLAIN",
+      "p": "Gandi avviser en lokal del alene som brukernavn, noe som snubler alle som flytter innstillinger fra en vert som godtok det. I tillegg annonserer IMAP-serveren <code>AUTH=PLAIN</code> og ingen <code>AUTH=LOGIN</code>, så en klient eller et bibliotek som er hardkodet til LOGIN-mekanismen, feiler ved autentiseringen med en lite hjelpsom feilmelding. SMTP-siden godtar begge mekanismene, så den samme kontoen kan lykkes med å sende, men mislykkes med å lese."
+    }
+  ],
+  "limits": [
+    "Serveren annonserer ikke MOVE eller UIDPLUS, så flytting av en melding utføres som kopiering, flagging og expunge, og mål-UID-en må finnes ved søk.",
+    "SPECIAL-USE mangler, så Sent, Drafts, Trash og Junk gjenkjennes på navn. På en fransk Gandi-postkasse heter de ofte Envoyes, Brouillons, Corbeille og Indesirables."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Gandi Mail?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Gandi-kobling. Peker du en MCP-server som mcpemails mot Gandi-postkassen din over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere den, og den samme tilkoblingen fungerer fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Gandi?",
+      "a": "Begge bruker det samme vertsnavnet, mail.gandi.net. IMAP er port 993 med implisitt TLS, og SMTP er port 465, også med implisitt TLS og med påkrevd autentisering. Brukernavnet er hele e-postadressen inkludert domenet, og passordet er postkassepassordet. Verten ble bekreftet med en direkte TLS-tilkobling."
+    },
+    {
+      "q": "Hvorfor avvises Gandi-passordet mitt?",
+      "a": "Nesten alltid fordi du skrev inn passordet til gandi.net-kontoen din. Gandi holder postkassepassordet atskilt slik at postkasser kan delegeres uten å dele tilgangen til domeneregistratoren. Sett eller tilbakestill det under Domains, domenet ditt, fanen Email og deretter Manage på postkassen. Sjekk også at du skrev hele adressen som brukernavn."
+    },
+    {
+      "q": "Trenger Gandi et app-passord?",
+      "a": "Nei. Gandi utsteder ikke app-spesifikke passord for e-post. Postkassepassordet er det IMAP og SMTP godtar, og det fungerer uansett om tofaktorautentisering er slått på for webmailportalene, siden den 2FA-en ikke gjelder klientprotokollene."
+    },
+    {
+      "q": "Lagres Gandi-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Gandi over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en Gandi-innboks",
+    "sub": "Koble til en Gandi-postkasse på få minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

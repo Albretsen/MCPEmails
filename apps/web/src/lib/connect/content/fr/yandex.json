@@ -1,37 +1,87 @@
 {
+  "_sources": [
+    "https://yandex.com/support/mail/mail-clients/others.html",
+    "https://yandex.com/support/id/authorization/app-passwords.html"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Mot de passe d'application",
+    "helpUrl": "https://id.yandex.com/security/app-passwords",
+    "usernameForm": "Votre adresse complète, domaine compris : nom@yandex.com."
+  },
   "meta": {
-    "title": "Connecter Yandex Mail à Claude (et à toute IA)",
-    "description": "Connectez Yandex Mail à Claude, Cursor, ChatGPT et tout client MCP via IMAP avec un mot de passe d'application. Laissez l'IA lire, envoyer, planifier et organiser Yandex. 1 boîte gratuite, pour toujours."
+    "title": "Connectez Yandex Mail à Claude, Cursor et aux clients MCP",
+    "description": "Connectez Yandex Mail à Claude, Cursor et tout client MCP en IMAP sur imap.yandex.com:993. Paramètres vérifiés, mot de passe d'application requis. 1 boîte gratuite."
   },
   "hero": {
     "eyebrow": "Yandex Mail + IA",
     "titleLine1": "Connectez Yandex Mail à Claude,",
     "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
-    "lead": "Offrez à votre agent IA une vraie boîte Yandex en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier avec IMAP et un mot de passe d'application, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "lead": "Offrez à votre agent IA une vraie boîte Yandex. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec un mot de passe d'application Yandex, dans tous vos clients MCP plutôt qu'un seul.",
+    "answer": "Claude ne peut pas accéder seul à Yandex Mail. mcpemails est un serveur MCP hébergé qui le connecte en IMAP sur imap.yandex.com, port 993, en s'authentifiant avec un mot de passe d'application Yandex plutôt qu'avec le mot de passe de votre compte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. Yandex exige de passer la boîte en accès par mot de passe d'application avant qu'un client de messagerie puisse se connecter ; la configuration prend quelques minutes et une boîte est gratuite.",
     "meta0": "1 boîte gratuite, pour toujours",
-    "meta1": "Mot de passe d'application, pas de configuration OAuth",
+    "meta1": "Mot de passe d'application, pas celui du compte",
     "meta2": "E-mails récupérés en direct, jamais stockés"
   },
   "method": {
-    "title": "Comment Yandex se connecte : IMAP et un mot de passe d'application",
-    "body": "Yandex Mail se connecte via IMAP/SMTP. Dans les paramètres de Yandex Mail, activez IMAP et activez les mots de passe d'application et les jetons OAuth, puis créez un mot de passe d'application dans Yandex ID, Sécurité, et collez-le dans mcpemails avec votre adresse Yandex."
+    "title": "Comment Yandex Mail se connecte : IMAP et un mot de passe d'application",
+    "body": "Yandex sert l'IMAP sur <code>imap.yandex.com</code>, port 993 en TLS, et le SMTP sur <code>smtp.yandex.com</code>, port 465. Votre mot de passe Yandex habituel n'authentifiera pas un client de messagerie : vous devez créer un <b>mot de passe d'application</b> pour le courrier, et activer l'accès par mot de passe d'application pour la boîte, avant que la connexion réussisse. Les comptes en <code>yandex.ru</code> utilisent les mêmes noms de serveur : les paramètres ci-dessous sont donc identiques, quel que soit le domaine de votre adresse."
   },
   "setup": [
     {
-      "h": "Créez un compte gratuit",
-      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+      "h": "Activez l'accès IMAP dans Yandex Mail",
+      "p": "Ouvrez les paramètres de Yandex Mail, allez dans Mail clients (clients de messagerie) et activez l'accès IMAP. Yandex refuse catégoriquement les connexions des clients tant que cette option est désactivée, et l'échec ressemble exactement à un mauvais mot de passe."
     },
     {
-      "h": "Activez IMAP et créez un mot de passe d'application",
-      "p": "Dans les paramètres de Yandex Mail, activez IMAP et activez les mots de passe d'application et les jetons OAuth. Créez ensuite un mot de passe d'application dans Yandex ID, Sécurité."
+      "h": "Créez un mot de passe d'application pour le courrier",
+      "p": "Sur id.yandex.com, ouvrez Security, puis App passwords, et créez-en un de type Mail. Yandex n'affiche le mot de passe qu'une fois. Copiez-le tout de suite ; le mot de passe habituel de votre compte ne fonctionnera pas ici."
     },
     {
       "h": "Collez-le dans mcpemails",
-      "p": "Ajoutez votre adresse Yandex et le mot de passe d'application pour connecter la boîte en toute sécurité."
+      "p": "Choisissez IMAP / SMTP, saisissez votre adresse Yandex complète et collez le mot de passe d'application. Les serveurs ci-dessous sont préremplis."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
       "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Yandex n'annonce pas SASL-IR, alors que la plupart des clients le supposent",
+      "p": "Le serveur IMAP de Yandex omet la capacité SASL-IR : il rejette donc l'authentification en une étape qui envoie les identifiants avec la commande AUTHENTICATE. Les clients qui supposent SASL-IR reçoivent un simple BAD sans explication, qui ressemble à de mauvais identifiants. mcpemails détecte le BAD et relance l'échange en deux étapes : ce cas est donc déjà géré pour vous, mais c'est la raison pour laquelle d'autres outils IMAP échouent face à Yandex alors qu'ils fonctionnent partout ailleurs."
+    },
+    {
+      "h": "Le mot de passe du compte ne fonctionne jamais, même sans 2FA",
+      "p": "Yandex exige un mot de passe d'application pour les clients de messagerie, que l'authentification à deux facteurs soit activée ou non. La plupart des échecs de connexion à Yandex viennent de là, pas d'une faute de frappe."
+    },
+    {
+      "h": "yandex.com et yandex.ru partagent les mêmes serveurs",
+      "p": "Les adresses sur l'un ou l'autre domaine, ainsi que sur les domaines personnalisés Yandex 360, s'authentifient auprès des mêmes imap.yandex.com et smtp.yandex.com. Il n'y a aucun nom de serveur régional à chercher."
+    }
+  ],
+  "limits": [
+    "Yandex n'annonce pas l'extension SPECIAL-USE : les dossiers sont donc identifiés par leur nom plutôt que par leur rôle. Pour une boîte dont les dossiers ont été renommés en russe, il peut falloir choisir le dossier explicitement."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec Yandex Mail ?",
+      "a": "Pas directement. Claude n'a pas de connecteur Yandex intégré. Connecter un serveur MCP comme mcpemails à votre boîte Yandex en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de Yandex ?",
+      "a": "L'IMAP est imap.yandex.com sur le port 993 avec TLS implicite. Le SMTP est smtp.yandex.com sur le port 465, également en TLS implicite. Connectez-vous avec votre adresse e-mail complète et un mot de passe d'application Yandex. Les deux serveurs ont été vérifiés par une connexion TLS réelle à la date indiquée sur cette page."
+    },
+    {
+      "q": "Pourquoi mon mot de passe Yandex est-il refusé ?",
+      "a": "Deux raisons, dans cet ordre : l'accès IMAP est désactivé dans les paramètres de Yandex Mail sous Mail clients, ou vous utilisez le mot de passe de votre compte au lieu d'un mot de passe d'application. Yandex exige un mot de passe d'application pour les clients de messagerie, que vous utilisiez ou non l'authentification à deux facteurs."
+    },
+    {
+      "q": "Cela fonctionne-t-il avec un domaine personnalisé Yandex 360 ?",
+      "a": "Oui. Les boîtes Yandex 360 sur votre propre domaine utilisent les mêmes serveurs imap.yandex.com et smtp.yandex.com et la même exigence de mot de passe d'application."
+    },
+    {
+      "q": "Mon courrier Yandex est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct chez Yandex en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos ; le corps des messages n'est pas conservé."
     }
   ],
   "ctaBand": {

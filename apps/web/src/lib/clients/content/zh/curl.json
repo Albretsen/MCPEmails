@@ -1,0 +1,93 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/src/lib/api-keys/generate.ts + apps/web/src/lib/api-keys/scopes.ts",
+    "apps/web/app/api/mcp/route.ts",
+    "apps/web/messages/en/docs.json"
+  ],
+  "meta": {
+    "title": "邮件 MCP 服务器 API：curl、JSON-RPC 与 Bearer 认证",
+    "description": "通过 HTTP 直接调用 mcpemails MCP 服务器。一个 Streamable HTTP 端点、JSON-RPC 2.0、一个限定范围的 bearer 密钥，以及完整的工具目录。1 个收件箱免费。"
+  },
+  "hero": {
+    "eyebrow": "HTTP + 邮件",
+    "titleLine1": "调用邮件 MCP 服务器",
+    "titleLine2": "直接用 curl 或脚本",
+    "lead": "无需客户端，无需 SDK。一个使用 JSON-RPC 2.0 的 Streamable HTTP 端点，通过一个限定范围、可一键撤销的 bearer 密钥进行认证。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "限定范围的 API 密钥，一键撤销",
+    "meta2": "邮件实时获取，从不存储",
+    "answer": "向 https://mcpemails.com/api/mcp POST JSON-RPC 2.0 请求，并带上一个 Authorization Bearer 标头，其中是仪表盘中的 API 密钥。支持的方法有 initialize、tools/list、tools/call、prompts/list 和 prompts/get。"
+  },
+  "method": {
+    "title": "脚本或原始 HTTP 客户端如何连接：限定范围的 API 密钥",
+    "body": "脚本或原始 HTTP 客户端不会对远程 MCP 服务器执行浏览器 OAuth 流程，因此改用 bearer 令牌进行认证。在仪表盘中创建一个 API 密钥，只勾选智能体需要的权限范围，然后在脚本或 HTTP 客户端中把它作为 <code>Authorization: Bearer</code> 标头发送。密钥连接和 OAuth 连接访问的是同一个端点，拿到的是同一套工具目录；唯一的区别在于令牌的获取方式。"
+  },
+  "setup": [
+    {
+      "h": "创建免费账户并连接邮箱",
+      "p": "在 mcpemails.com 注册，无需绑卡，然后前往 Dashboard、Inboxes、Connect Inbox。Gmail 通过 Google 一键登录连接；iCloud、Fastmail、Yahoo、Zoho 和 Yandex 需要应用专用密码；其他邮箱都可通过标准 IMAP 与 SMTP 连接。免费版包含 1 个收件箱，永久有效。"
+    },
+    {
+      "h": "创建限定范围的 API 密钥",
+      "p": "在 Dashboard、API Keys 中点击 Create key。为它命名，并只勾选这个智能体需要的权限范围：<code>read:email</code>、<code>search:email</code>、<code>send:email</code>、<code>manage:folders</code>、<code>delete:email</code>、<code>manage:drafts</code>、<code>manage:contacts</code>、<code>schedule:email</code> 和 <code>manage:automations</code>。密钥的格式是 <code>mcpe_</code> 后跟 64 个十六进制字符，只显示一次，所以请在关闭对话框前复制下来。"
+    },
+    {
+      "h": "调用端点",
+      "p": "向 <code>https://mcpemails.com/api/mcp</code> POST 一个 JSON-RPC 2.0 请求体，并把密钥放在 <code>Authorization</code> 标头中。先用 <code>tools/list</code> 查看工具目录，再用 <code>inbox_list</code> 获取你的邮箱 id。"
+    },
+    {
+      "h": "处理响应",
+      "p": "结果以 JSON-RPC 2.0 格式返回。成功的结果还带有一个有类型的 <code>structuredContent</code> 对象，所以脚本无需解析自然语言文本。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "把密钥放在标头里，而不是查询字符串中",
+      "p": "为了兼容早于该标头出现的集成，放在 <code>?key=</code> 或 <code>?api_key=</code> 上的密钥仍然被接受，但任何新项目都不应该这样用。URL 中的凭据会留在浏览器历史、代理日志、referrer 标头和监控系统中，而这些都不在你的掌控之内。<code>Authorization</code> 标头才是受支持的方式。"
+    },
+    {
+      "h": "外发调用可以带幂等键，不带幂等键重试是真实存在的风险",
+      "p": "发送、回复、转发、草稿发送和定时发送都接受一个可选的幂等键，有效期 24 小时。发送时遇到网络超时本质上是不确定的：邮件很可能已经发出去了。带上幂等键，重试就是安全的。不带的话，重试就是第二封邮件。"
+    },
+    {
+      "h": "耗时操作确实很耗时",
+      "p": "在生产环境中观察到，对大型邮箱执行一次 search-and-move 大约需要 152 秒，而代理在自行放弃前最多允许 270 秒。请按这个量级设置客户端超时，而不是通常的几秒钟，否则你会取消那些马上就要成功的操作。"
+    },
+    {
+      "h": "没有任何方向的推送",
+      "p": "没有 webhook，没有服务器主动发起的事件，也没有需要注册的回调 URL。要对新邮件作出反应，就得轮询，例如以你的工作流所需的间隔，调用 <code>email_read</code> 并设置 <code>action: \"list\"</code>，只看未读邮件。速率限制为每个密钥每分钟 100 次、每小时 1,000 次、每天 10,000 次。"
+    }
+  ],
+  "limits": [
+    "每个密钥的请求上限为每分钟 100 次、每小时 1,000 次、每天 10,000 次，此外还受你所在套餐的计费操作上限约束。",
+    "服务器只做请求与响应。没有 webhook，也没有服务器主动发起的事件，所以新邮件永远不会自己唤醒你的智能体。要对新到的邮件作出反应，请按计划轮询。",
+    "每次调用都会从你的邮箱服务商实时获取邮件，从不存储。我们只保存加密后的 OAuth 令牌或应用专用密码，因此令牌一经撤销或邮箱密码一经更改，访问会立即终止。"
+  ],
+  "faq": [
+    {
+      "q": "没有 MCP 客户端也能用吗？",
+      "a": "能。它是一个使用 JSON-RPC 2.0 的普通 HTTPS 端点，所以 curl、cron 任务、后端服务或任何 HTTP 库都可以调用。使用 Dashboard、API Keys 中的 bearer API 密钥进行认证。工具目录与 MCP 客户端看到的完全相同。"
+    },
+    {
+      "q": "支持哪些 JSON-RPC 方法？",
+      "a": "initialize、tools/list、tools/call、prompts/list 和 prompts/get。成功的结果除了人类可读的内容外，还带有一个有类型的 structuredContent 对象，脚本应当读取的正是它。"
+    },
+    {
+      "q": "如何让重试变得安全？",
+      "a": "在外发操作上传入幂等键。发送、回复、转发、草稿发送和定时发送都接受幂等键，并在 24 小时内有效，所以超时后重试同一请求不会产生第二封邮件。读取操作天然可以安全重试。"
+    },
+    {
+      "q": "速率限制是多少？",
+      "a": "每个密钥每分钟 100 次请求、每小时 1,000 次、每天 10,000 次，此外还受你所在套餐的计费操作上限约束。失败的调用和 inbox_list 不计费。"
+    },
+    {
+      "q": "我的邮件会存储在你们的服务器上吗？",
+      "a": "不会。每封邮件都是为发起请求的那次调用从你的邮箱服务商实时获取，并直接交给你的客户端。我们只保存加密后的 OAuth 令牌或应用专用密码，以便后续调用能够完成认证。在仪表盘中删除该收件箱，或在邮箱服务商处撤销访问权限，连接会立即终止。"
+    }
+  ],
+  "ctaBand": {
+    "title": "用脚本操控你的收件箱",
+    "sub": "一个端点，一个限定范围的密钥。1 个收件箱永久免费，无需绑卡。"
+  }
+}

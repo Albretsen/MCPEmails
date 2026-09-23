@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://aide.laposte.net/contents/comment-parametrer-un-logiciel-de-messagerie-pour-envoyer-et-recevoir-mes-courriers-electroniques",
+    "https://aide.laposte.net/contents/comment-parametrer-laposte-net-sur-mon-logiciel-de-messagerie-suite-a-l-arret-des-protocoles-en-clair-non-cryptes",
+    "https://postmaster.laposte.net/contents/comment-parametrer-et-activer-la-double-authentification-2fa-sur-un-compte-laposte-net"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Tu contraseña de laposte.net",
+    "helpUrl": "https://aide.laposte.net/contents/comment-parametrer-un-logiciel-de-messagerie-pour-envoyer-et-recevoir-mes-courriers-electroniques",
+    "usernameForm": "Tu dirección completa, incluido el dominio: prenom.nom@laposte.net.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Ajustes IMAP de La Poste.net y acceso MCP para Claude",
+    "description": "Conecta un buzón laposte.net a Claude, Cursor y cualquier cliente MCP en imap.laposte.net:993. Solo puertos cifrados desde 2023 y un límite de 15 MB para el correo saliente."
+  },
+  "hero": {
+    "eyebrow": "laposte.net + IA",
+    "titleLine1": "Conecta tu bandeja de laposte.net",
+    "titleLine2": "a Claude, Cursor y cualquier cliente MCP",
+    "lead": "Dale a tu agente de IA una bandeja real de laposte.net. Lee, busca, envía, responde, programa y organiza correo por IMAP con tu contraseña normal de laposte.net.",
+    "answer": "Claude no puede acceder por sí solo a un buzón de laposte.net. mcpemails es un servidor MCP alojado que lo conecta por IMAP en imap.laposte.net en el puerto 993, autenticándose con tu dirección completa y tu contraseña normal de laposte.net, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. La Poste no emite contraseñas específicas de aplicación y no hay ningún interruptor de acceso de clientes que buscar, pero el buzón solo acepta puertos cifrados y su límite de tamaño de salida es inusualmente bajo. Una bandeja es gratis, para siempre.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Tu contraseña normal de laposte.net",
+    "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "method": {
+    "title": "Cómo se conecta laposte.net: IMAP con TLS y la contraseña de la cuenta",
+    "body": "La Poste sirve IMAP en <code>imap.laposte.net</code> en el puerto 993 con TLS implícito. Para el correo saliente, las páginas de ayuda de La Poste documentan <code>smtp.laposte.net</code> en el puerto 587 con TLS; el puerto 465 con TLS implícito responde en el mismo servidor y es lo que rellena mcpemails, porque una única conexión cifrada desde el principio es más sencilla de mantener viva desde un servidor. La autenticación usa tu contraseña normal de laposte.net con la dirección <b>completa</b> como nombre de usuario. No hay contraseña de aplicación que generar ni ningún interruptor <b>autoriser les logiciels de messagerie</b> (autorizar los programas de correo) que buscar, lo que hace de laposte.net uno de los buzones franceses más sencillos de conectar. Las dificultades están en otra parte: el servidor es mínimo a propósito, y La Poste desactivó de golpe todos los protocolos sin cifrar, lo que sigue dejando tirados a clientes configurados hace años."
+  },
+  "setup": [
+    {
+      "h": "Crea tu cuenta gratis en mcpemails",
+      "p": "Regístrate en mcpemails.com. El plan gratuito conecta una bandeja para siempre y no pide tarjeta."
+    },
+    {
+      "h": "Comprueba que tu contraseña de laposte.net sigue funcionando en el webmail",
+      "p": "Inicia sesión en laposte.net con la misma dirección y contraseña que vas a dar a mcpemails. Merece la pena dedicarle treinta segundos porque no hay ninguna credencial de correo aparte a la que echar la culpa si falla: si el webmail la acepta, el servidor IMAP también."
+    },
+    {
+      "h": "Revisa tus ajustes de seguridad antes de conectar",
+      "p": "En el webmail de laposte.net, abre <b>Paramètres</b>, luego <b>Sécurité</b>. Ahí se activa y desactiva la autenticación en dos factores. La documentación de La Poste sobre la autenticación en dos factores de laposte.net describe una confirmación push en un dispositivo móvil vinculado y no documenta ningún mecanismo de contraseñas de aplicación para programas de correo, así que ten claro en qué estado está tu cuenta antes de investigar un inicio de sesión rechazado."
+    },
+    {
+      "h": "Pégala en mcpemails y luego pega la URL MCP en tu IA",
+      "p": "Elige IMAP / SMTP, introduce la dirección completa, como prenom.nom@laposte.net, y la contraseña. Los servidores y puertos de La Poste ya vienen rellenados y se verificaron con una conexión TLS real. Después pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "El correo saliente está limitado a unos 15 MB, el límite más bajo de los grandes proveedores franceses",
+      "p": "<code>smtp.laposte.net</code> anuncia un tamaño máximo de mensaje de 15.800.000 bytes. Es el tamaño codificado del mensaje entero, y base64 aumenta un adjunto aproximadamente un tercio, así que un PDF de 12 MB ya es demasiado grande para enviarlo. Pídele a un agente que reenvíe un documento escaneado y puedes recibir un rechazo SMTP definitivo donde el mismo mensaje pasaría sin problema por Orange o Gmail. Si hay que enviarlo, sube el archivo a algún sitio y envía un enlace."
+    },
+    {
+      "h": "Todos los puertos sin cifrar se desactivaron el 4 de julio de 2023, y el error no ayuda",
+      "p": "La Poste desactivó ese día toda comunicación en texto plano. Los clientes que siguen apuntando a los antiguos puertos sin cifrar reciben un error del tipo <b>invalid command</b> en lugar de algo sobre el cifrado, así que una configuración que funcionó durante una década de repente parece una cuenta rota. Las únicas combinaciones admitidas ahora son IMAP en el 993, POP en el 995 y SMTP en el 587, todas con SSL o TLS 1.2 como mínimo. Si trasladas los ajustes de un cliente a mcpemails, no copies los puertos antiguos."
+    },
+    {
+      "h": "Sin SASL-IR, y la mayoría de bibliotecas de cliente lo dan por hecho",
+      "p": "El servidor IMAP de laposte.net no anuncia <code>SASL-IR</code>, así que rechaza la autenticación de un solo paso que envía la credencial junto con el comando <code>AUTHENTICATE</code>. Un cliente que da por hecho SASL-IR recibe un <code>BAD</code> seco sin explicación, idéntico a una contraseña incorrecta. mcpemails detecta ese <code>BAD</code> y reintenta con el intercambio en dos pasos, así que está resuelto, pero por eso otras herramientas IMAP fallan contra laposte.net y funcionan en todos los demás sitios."
+    },
+    {
+      "h": "Sin IDLE, sin MOVE y sin SPECIAL-USE en un buzón con nombres en francés",
+      "p": "El banner es de lo más corto que puede ser un banner IMAP: <code>* OK IMAP4 ready</code>. No hay <code>IDLE</code>, así que el correo nuevo se descubre consultando periódicamente en lugar de recibirse al instante. No hay <code>MOVE</code>, así que archivar un mensaje se ejecuta como una copia, una actualización de marcas y un expunge. Y no hay <code>SPECIAL-USE</code>, así que Enviados, Borradores y Papelera se identifican por nombre, que en un buzón de laposte.net suelen ser <b>Envoyés</b>, <b>Brouillons</b> y <b>Corbeille</b>. Indica la carpeta explícitamente si un agente no la encuentra."
+    }
+  ],
+  "limits": [
+    "El límite de salida de 15 MB es el tope práctico de todo lo que tu agente envíe desde este buzón, adjuntos incluidos.",
+    "Como el servidor no admite MOVE, mover no es atómico. Si una conexión se corta a mitad de la operación, un mensaje puede existir un momento en las dos carpetas.",
+    "La Poste no publica ningún mecanismo de contraseñas de aplicación para los clientes de correo de laposte.net, así que si la autenticación en dos factores bloquea el inicio de sesión de un cliente, no hay ninguna credencial por aplicación documentada a la que recurrir."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de laposte.net?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para La Poste. Apuntar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de laposte.net?",
+      "a": "IMAP es imap.laposte.net en el puerto 993 con TLS implícito. Para el correo saliente, La Poste documenta smtp.laposte.net en el puerto 587 con TLS; el puerto 465 con TLS implícito responde en el mismo servidor y es lo que usa mcpemails. Inicia sesión con tu dirección completa y tu contraseña de laposte.net. Ambos servidores se confirmaron con una conexión TLS real."
+    },
+    {
+      "q": "¿Necesita laposte.net una contraseña de aplicación?",
+      "a": "No. La Poste no emite contraseñas específicas de aplicación para laposte.net. Los clientes de correo se autentican con la misma contraseña que usas en el webmail, junto con tu dirección completa. Si esa contraseña se rechaza, compruébala antes en el webmail, porque no hay ninguna segunda credencial que pueda ser el problema."
+    },
+    {
+      "q": "¿Por qué mi cliente de correo de repente no puede conectarse a laposte.net?",
+      "a": "Casi siempre porque sigue configurado con un puerto sin cifrar. La Poste desactivó todos los protocolos en texto plano el 4 de julio de 2023, y los clientes en los puertos antiguos reciben un error de comando no válido en lugar de un mensaje claro. Pasa la cuenta a IMAP en el 993 o POP en el 995 y SMTP en el 587, todos con SSL o TLS."
+    },
+    {
+      "q": "¿Por qué no se envió un adjunto desde laposte.net?",
+      "a": "El servidor SMTP limita un mensaje a unos 15,8 MB incluida la sobrecarga de codificación, lo que es poco comparado con la mayoría de proveedores. Un archivo de más de unos 11 MB en disco suele superarlo una vez codificado. El rechazo ocurre al enviarlo, así que no queda nada en cola ni se entrega a medias."
+    },
+    {
+      "q": "¿Se almacena mi correo de laposte.net en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de La Poste por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
+  "ctaBand": {
+    "title": "Dale a tu IA una bandeja de laposte.net",
+    "sub": "Conecta laposte.net en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  }
+}

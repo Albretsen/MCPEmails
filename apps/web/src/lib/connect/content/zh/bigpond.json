@@ -1,0 +1,98 @@
+{
+  "_sources": [
+    "https://www.telstra.com.au/support/email/imap-pop-smtp-mail-server-settings",
+    "https://www.telstra.com.au/support/email/faq",
+    "https://www.telstra.com.au/support/email/email-phone-tablet"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Telstra 邮箱密码",
+    "helpUrl": "https://www.telstra.com.au/support/email/imap-pop-smtp-mail-server-settings",
+    "usernameForm": "你的完整地址，以 @bigpond.com、@bigpond.net.au 或 @telstra.com 结尾。Telstra 提醒，密码区分大小写。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "通过 IMAP 将 Telstra BigPond 邮箱连接到 Claude",
+    "description": "通过 imap.telstra.com:993 的 IMAP 将 Telstra BigPond 邮箱连接到 Claude 及任意 MCP 客户端。Bigpond 地址现在位于 Telstra Mail 服务器上，而非 bigpond 服务器。"
+  },
+  "hero": {
+    "eyebrow": "Telstra BigPond + AI",
+    "titleLine1": "将 Telstra BigPond 邮箱连接到",
+    "titleLine2": "Claude、Cursor 及任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 bigpond.com 收件箱。使用你的 Telstra 邮箱密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，可在所有 MCP 客户端中使用而不止一个。",
+    "answer": "Claude 无法自行访问 Telstra BigPond 邮箱。mcpemails 是一个托管 MCP 服务器，通过 imap.telstra.com 端口 993 的 IMAP 与之连接，使用你完整的 bigpond.com、bigpond.net.au 或 telstra.com 地址和 Telstra 邮箱密码登录，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。Bigpond 邮箱已并入 Telstra Mail 平台，所以客户端不应再使用旧的 bigpond 主机名。1 个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "Telstra 邮箱密码即可使用",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "BigPond 如何连接：Telstra Mail 服务器与你的邮箱密码",
+    "body": "BigPond 地址现在是 Telstra Mail 账户。邮箱在 <code>imap.telstra.com</code> 端口 993 上通过 TLS 提供 IMAP，在 <code>smtp.telstra.com</code> 端口 465 上接收外发邮件，同样使用隐式 TLS，并启用了认证。无需另外生成应用专用密码：Telstra 接受你登录网页邮箱所用的普通邮箱密码，用户名是包括域名在内的完整地址。让人出错的是主机名，而不是凭据。<code>@bigpond.com</code> 地址并不连接 bigpond 服务器，而是连接 Telstra 的服务器，<code>@bigpond.net.au</code> 或 <code>@telstra.com</code> 地址也一样。这三个域名共用同一组服务器和同一套设置。"
+  },
+  "setup": [
+    {
+      "h": "创建免费的 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "先在 Telstra 网页邮箱中确认密码",
+      "p": "在浏览器中用你要连接的地址登录 Telstra Mail。Telstra 自己的文档指出密码区分大小写，在网页邮箱中确认密码，可以在继续之前把真正的凭据问题和设置问题区分开来。"
+    },
+    {
+      "h": "在 mcpemails 中输入完整地址",
+      "p": "选择 IMAP / SMTP，输入完整地址，包括 <code>@bigpond.com</code>、<code>@bigpond.net.au</code> 或 <code>@telstra.com</code>。Telstra 的服务器地址已预填。不要换成你可能仍保存在其他邮件应用里的旧 bigpond 服务器名称。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "旧的 bigpond 主机名是 BigPond 设置失效的头号原因",
+      "p": "Telstra 为邮件客户端公布的主机名恰好三个，全部位于 <code>telstra.com</code> 之下。如果某台手机或桌面客户端多年前是按 bigpond 服务器名称配置的，它指向的就是 Telstra 已不再为客户端访问公布的名称。地址不变，服务器却变了。"
+    },
+    {
+      "h": "该服务器不支持 MOVE，所以整理邮件需要三条命令",
+      "p": "Telstra 的 IMAP 服务器不声明 MOVE 扩展，因此归档一封邮件要依次执行 COPY、STORE 删除标记、EXPUNGE。mcpemails 会替你完成，结果完全相同，但这里的移动不是原子操作：如果连接在中途断开，邮件可能会同时留在两个文件夹中，这就是为什么在这家服务商上重复整理有时需要再检查一遍。"
+    },
+    {
+      "h": "没有 UIDPLUS，服务器不会告诉我们新的邮件 ID",
+      "p": "Telstra 的服务器不支持 UIDPLUS，所以在复制或追加之后，它不会返回所分配的 UID。客户端无法按 ID 确认已归档或已保存的邮件，只能在目标文件夹中搜索。这就是为什么在 Telstra 上报告成功的操作，比在支持 UIDPLUS 的服务商上的同样操作，证据稍弱一些。"
+    },
+    {
+      "h": "把账户从 POP 切换到 IMAP 会清除 POP 文件夹",
+      "p": "Telstra 警告说，把账户从 POP 切换到 IMAP 时，所有 POP 文件夹和邮件都会丢失。如果你要连接的邮箱一直使用 POP 并在本地归档了邮件，请在把账户改为 IMAP 之前先下载或导出。mcpemails 只支持 IMAP，所以这是一个需要在连接之前慎重做出的一次性决定。"
+    }
+  ],
+  "limits": [
+    "Telstra 的 SMTP 服务器声明的单封邮件大小上限约为 30 MB，因此带大附件的邮件在发出前就会被拒绝。",
+    "由于服务器不支持 MOVE，移动操作会退回为 COPY 加 STORE 加 EXPUNGE。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Telstra BigPond 邮箱吗？",
+      "a": "不能直接使用。Claude 没有内置的 Telstra 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理你的 BigPond 邮件，而且同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "BigPond 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.telstra.com，端口 993，使用隐式 TLS。SMTP 为 smtp.telstra.com，端口 465，同样是隐式 TLS，并启用外发认证。用户名是你的完整邮箱地址，密码是你的 Telstra 邮箱密码。两个服务器均已在本页所示日期通过实时 TLS 连接验证。"
+    },
+    {
+      "q": "我的地址以 bigpond.com 结尾，要用 bigpond 服务器吗？",
+      "a": "不用。Telstra 已把 BigPond 邮箱迁移到 Telstra Mail 平台，邮件客户端应使用 Telstra 的主机名。bigpond.com、bigpond.net.au 和 telstra.com 地址都连接到相同的两台服务器，不存在需要逐个客户查找的差异。"
+    },
+    {
+      "q": "BigPond 需要应用专用密码吗？",
+      "a": "不需要。Telstra 不为邮件客户端签发应用专用密码。你用登录 Telstra 网页邮箱的同一个邮箱密码登录即可。如果被拒绝，请检查每个字符的大小写，并先在网页邮箱中确认密码，因为 Telstra 的密码区分大小写。"
+    },
+    {
+      "q": "我的 BigPond 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从 Telstra 实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Telstra BigPond 收件箱",
+    "sub": "几分钟即可连接 bigpond.com 或 telstra.com 地址。1 个收件箱永久免费，无需信用卡。"
+  }
+}

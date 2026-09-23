@@ -1,0 +1,104 @@
+{
+  "_sources": [
+    "https://www.123-reg.co.uk/welcome-tsohost/",
+    "https://www.123-reg.co.uk/help",
+    "https://help.tsohost.com/knowledge-base/article/11676",
+    "https://support.titan.email/hc/en-us/articles/900006137746-Send-email-using-Post-SMTP-plugin-tsoHost-Users"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://www.123-reg.co.uk/help",
+    "usernameForm": "你的完整邮箱地址，例如 you@yourdomain.co.uk。绝不是你的 tsoHost 或 123 Reg 控制面板登录名。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "迁入 123 Reg 后，将 Tsohost 邮箱接入 Claude",
+    "description": "Tsohost 邮箱仍可通过 993 端口的 IMAP 连接到 Claude。该品牌已并入 123 Reg，请在 cPanel 的 Connect Devices 中读取你真正的邮件主机。"
+  },
+  "hero": {
+    "eyebrow": "Tsohost + AI",
+    "titleLine1": "将 Tsohost 邮箱连接到 Claude，",
+    "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 Tsohost 邮箱。通过 IMAP 读取、搜索、发送、回复、定时与整理邮件，所用设置取自经历两次迁移后唯一仍然权威的那个页面。",
+    "answer": "Claude 无法自行连接 Tsohost 邮箱。mcpemails 是一个托管 MCP 服务器，通过 993 端口的标准 IMAP 和 465 端口的 SMTP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。没有可以让客户端指向的共享 tsohost.com 邮件服务器：主机名由你自己的域名或托管服务器的名称构成，其权威版本列在 cPanel 的 Email Accounts、Connect Devices 中。认证使用为该邮箱单独设置的密码，绝不是控制面板登录密码。tsoHost 品牌已并入 123 Reg，所以请从 123 Reg Control Panel 开始。一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "cPanel 中的邮箱密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Tsohost 邮箱如何连接：你自己的主机名，以及一个已经迁走的品牌",
+    "body": "Tsohost 邮箱就是 cPanel 邮箱。它们在 993 端口响应 IMAP，在 465 端口通过隐式 TLS 响应 SMTP，143 和 587 是对应的 STARTTLS 端口；主机名按客户区分而不是共享：要么是由你自己域名构成的 <code>mail.yourdomain.co.uk</code>，要么是你账户所在服务器的名称。两者都无法猜测，所以每个准确的答案都从 cPanel 而不是某张设置表开始。Tsohost 特有的复杂之处在于，这个品牌已不再作为独立业务存在。tsoHost 已并入 <b>123 Reg</b>：<code>tsohost.com</code> 会重定向到 123 Reg 的欢迎页，旧的 <code>help.tsohost.com</code> 知识库会重定向到 123 Reg 的帮助中心，123 Reg 告诉 tsoHost 客户用现有凭据登录，并在 123 Reg Control Panel 的 <b>My products</b> 标签中找到自己的服务。你的邮箱都迁移过来了，你的书签和旧文章编号则没有。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "进入存放该邮箱的 cPanel",
+      "p": "用你的 tsoHost 凭据登录 123-reg.co.uk，打开 <b>Control Panel</b>，进入 <b>My products</b> 标签。找到该域名所属的托管套餐并打开其 cPanel。有些账户仍对应 tsoHost Control Panel，有些已经迁移，123 Reg 对两者的支持渠道不同，所以在需要帮助之前，先记下你进入的是哪一个。"
+    },
+    {
+      "h": "从 Connect Devices 读取真正的主机",
+      "p": "在 cPanel 中进入 <b>Email</b>，然后是 <b>Email Accounts</b>，在该地址所在行点击 <b>Connect Devices</b>。滚动到 <b>Mail Client Manual Settings</b>，使用 <b>Secure SSL/TLS Settings</b> 区块，而不是标准区块。完全照抄其中列出的收信服务器，IMAP 用 993，SMTP 用 465。如果没人知道邮箱密码，点击地址旁的 <b>Manage</b> 设置一个新的；cPanel 邮件没有应用密码机制。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "在 mcpemails 中用完整地址和该密码添加邮箱，然后把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "你收藏的每一个 Tsohost 设置页面都已被重定向走了",
+      "p": "这是会浪费你一个下午的问题。Tsohost 客户接连经历了两次迁移：旧的 tsoHost 托管平台被迁移到 cPanel，随后 tsoHost 品牌本身又并入了 123 Reg。两次都改变了真实信息所在的位置。<code>help.tsohost.com</code> 的文章链接现在会重定向到 123 Reg 的帮助中心，而不是你保存的那篇文章；从 cPanel 之前的 tsoHost 指南中复制的任何主机名，描述的都是你的邮箱已不再运行的平台。你的账户如今打开的 cPanel 中的 Connect Devices 面板，是唯一反映邮箱实际所在位置的来源。"
+    },
+    {
+      "h": "能完美登录的邮箱仍可能是错误的邮箱",
+      "p": "cPanel 会欣然在一台你域名邮件已不再路由到的服务器上创建并认证邮箱，而 Tsohost 在 cPanel 邮件之外还销售由 Titan 提供的邮件托管，Titan 也发布了专门针对 tsoHost 的设置指南。所以请先检查域名的 MX 记录。如果它指向 Titan 的基础设施，你真正的邮箱在 Titan 的 <code>imap.titan.email</code> 上，而同名的 cPanel 账户是一个空箱子，它接受你的密码，却什么也不给你看。代理报告一个你明知很繁忙的地址收件箱为空，几乎总是这个原因。"
+    },
+    {
+      "h": "只有当 mail.yourdomain.co.uk 解析到该服务器时，才会为它签发证书",
+      "p": "cPanel 的 AutoSSL 会申请一张覆盖你的域名及 <code>mail.</code>、<code>webmail.</code>、<code>cpanel.</code> 等服务子域名的证书，但会剔除在签发时刻未解析到该服务器的任何子域名。很多 Tsohost 域名的 DNS 由托管之外的地方管理，还有很多在迁移期间被改写了记录，于是 <code>mail.yourdomain.co.uk</code> 最终无法解析，或者解析了却没有匹配的使用者可选名称。握手时呈现的是服务器自己主机名的证书，严格的客户端会以名称不匹配拒绝，看起来就像遭到攻击。解决办法是使用 Connect Devices 中的服务器主机名，而不是点击忽略警告。"
+    },
+    {
+      "h": "两次迁移之后，没人记得邮箱密码",
+      "p": "IMAP 以 cPanel 中为单个邮箱地址设置的密码进行认证，它与 tsoHost 或 123 Reg 控制面板登录凭据不同，与 cPanel 账户密码也不同。经过一次平台迁移和一次品牌迁移，这个按邮箱设置的密码常常是唯一没人记下来的东西，而由于面板登录仍然有效，人们以为邮件密码一定相同，转而怪罪主机名。请在 Email Accounts 中点击地址旁的 <b>Manage</b> 重置它。"
+    }
+  ],
+  "limits": [
+    "mcpemails 连接的是邮箱，而不是托管账户。转发器、别名、自动回复、垃圾邮件过滤器和 DNS 都留在 cPanel 和 123 Reg Control Panel 中，你的 AI 客户端既看不到也无法更改。",
+    "如果该地址其实是 Titan 邮箱而不是 cPanel 邮箱，这里的所有设置都不适用。请改为按 Titan 连接，使用 Titan 自己的主机和 Titan 控制面板中的邮箱密码。",
+    "本页描述的是迁移之后的 cPanel 邮件。旧 tsoHost 平台（迁移到 cPanel 之前）的主机名已不再对应你邮箱的所在位置，也不会解析到它。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 Tsohost 邮箱吗？",
+      "a": "不能直接使用。Claude 没有针对 cPanel 邮件主机的内置连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器连接到你的 Tsohost 邮箱后，Claude 就能用桌面邮件客户端会用的凭据读取、搜索、发送、回复、定时和整理邮件，同一个连接也可在 Cursor 和 ChatGPT 中使用。"
+    },
+    {
+      "q": "Tsohost 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 993 端口隐式 TLS，SMTP 为 465 端口，143 和 587 是对应的 STARTTLS 端口。主机名是你账户特有的而不是共享的，要么是 mail.yourdomain.co.uk，要么是你服务器自己的名称，cPanel 会在 Email Accounts、Connect Devices 的 Secure SSL/TLS 区块中列出正确的那个。用户名始终是完整的邮箱地址。"
+    },
+    {
+      "q": "Tsohost 现在是 123 Reg 了。我在哪里找到邮箱设置？",
+      "a": "用你现有的 tsoHost 凭据登录 123-reg.co.uk，打开 Control Panel，通过 My products 标签进入托管套餐。打开其 cPanel，然后是 Email Accounts，再点击该地址的 Connect Devices。你的邮箱及其内容原封不动地迁移过来了；变的只是品牌、登录页面和帮助中心。"
+    },
+    {
+      "q": "为什么我的邮件客户端对 mail.mydomain.co.uk 的证书发出警告？",
+      "a": "因为服务器呈现的证书上没有这个名称。cPanel 的 AutoSSL 只有在 mail 子域名解析到托管服务器时才会将其纳入，而很多 Tsohost 域名的 DNS 在别处，或在迁移期间被修改过。请使用 Connect Devices 中显示的服务器主机名代替 mail 前缀，不要为了绕过警告而关闭证书校验。"
+    },
+    {
+      "q": "我的 Tsohost 邮箱能连接，里面却没有邮件，这是怎么回事？",
+      "a": "检查域名的 MX 记录。无论域名的邮件是否路由到该服务器，cPanel 邮箱都存在并接受登录，所以在错误的邮箱上输入正确的密码，看起来就是一个空收件箱。如果 MX 指向 Titan，真正在用的邮箱是 Titan 上的那个，应使用 Titan 的主机而不是你的托管服务器来连接。"
+    },
+    {
+      "q": "我的 Tsohost 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从你的托管服务器实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。你连接的 AI 客户端确实会收到它读取的任何内容，对于企业邮箱，这一点值得你认真决定。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Tsohost 收件箱",
+    "sub": "使用 Connect Devices 中的主机，几分钟即可连接 Tsohost 邮箱。一个收件箱永久免费，无需信用卡。"
+  }
+}

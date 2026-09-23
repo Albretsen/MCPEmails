@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://docs.windsurf.com/windsurf/cascade/mcp"
+  ],
+  "meta": {
+    "title": "Connecter l'e-mail à Windsurf : serveur MCP Cascade",
+    "description": "Ajoutez une vraie boîte à Cascade dans Windsurf. Une entrée dans mcp_config.json avec serverUrl, puis autorisez avec OAuth. Sans clé API. 1 boîte gratuite."
+  },
+  "hero": {
+    "eyebrow": "Windsurf + e-mail",
+    "titleLine1": "Connectez votre boîte à Windsurf",
+    "titleLine2": "et à Cascade",
+    "lead": "Ajoutez une vraie boîte à Cascade. Lisez, recherchez, envoyez, répondez, transférez, planifiez et organisez vos e-mails depuis l'éditeur, dans toutes les boîtes que vous avez connectées.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "OAuth, aucune clé API requise",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Ajoutez une entrée sous mcpServers dans ~/.codeium/windsurf/mcp_config.json avec le champ serverUrl, et non url, et https://mcpemails.com/api/mcp. Rafraîchissez les serveurs MCP dans Cascade et autorisez quand on vous le demande."
+  },
+  "method": {
+    "title": "Comment Windsurf se connecte : OAuth, sans clé API",
+    "body": "Windsurf exécute le flux OAuth MCP standard auprès de ce serveur. Il s'enregistre lui-même via l'<b>enregistrement dynamique de client RFC 7591</b>, donc aucun client ID à créer, et s'autorise avec un <b>code d'autorisation plus PKCE</b> en S256. Aucun secret client n'est jamais transmis, et le jeton ne porte que les autorisations que vous approuvez sur notre écran de consentement. Le jeton d'accès reçu dure une heure et se renouvelle tout seul ; il apparaît dans Dashboard, API Keys sous la forme <code>OAuth:</code> suivi du nom du client, et c'est là que vous révoquez la connexion."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit et connectez une boîte",
+      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Gmail se connecte en un clic via la connexion Google ; iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
+    },
+    {
+      "h": "Ouvrez les réglages MCP de Cascade",
+      "p": "Ouvrez les réglages MCP de Cascade, ou modifiez directement <code>~/.codeium/windsurf/mcp_config.json</code>."
+    },
+    {
+      "h": "Ajoutez le serveur",
+      "p": "Ajoutez l'entrée ci-dessous. Ici, le nom du champ est <code>serverUrl</code>, et non <code>url</code>."
+    },
+    {
+      "h": "Rafraîchissez et autorisez",
+      "p": "Rafraîchissez les serveurs MCP dans Cascade et autorisez avec mcpemails quand on vous le demande. Approuvez les autorisations que Cascade doit détenir."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Le champ est serverUrl, et url échoue sans bruit",
+      "p": "C'est l'erreur de configuration Windsurf la plus courante, et elle est tout à fait compréhensible : Cursor, Zed et VS Code lisent tous <code>url</code>, donc un extrait copié de l'un d'eux a l'air correct. Windsurf lit <code>serverUrl</code>. Avec la mauvaise clé, l'entrée est bien lue, le serveur apparaît dans la liste, et aucun outil n'arrive jamais."
+    },
+    {
+      "h": "Cascade doit être rafraîchi, il ne surveille pas le fichier",
+      "p": "Modifier <code>mcp_config.json</code> dans un éditeur ne pousse pas Cascade à le recharger. Utilisez l'action de rafraîchissement du panneau MCP après chaque changement. Une entrée correcte non rafraîchie ressemble exactement à une entrée cassée."
+    },
+    {
+      "h": "Décidez d'emblée si Cascade doit pouvoir envoyer",
+      "p": "C'est l'écran de consentement qui tranche. Les autorisations de lecture et de brouillons conviennent à un assistant d'éditeur, et laisser <code>send:email</code> de côté signifie qu'aucun prompt, aucun jailbreak et aucune boucle égarée ne peut envoyer d'e-mail depuis cette connexion. La validation humaine dans le tableau de bord est la double sécurité si vous voulez quand même envoyer."
+    }
+  ],
+  "limits": [
+    "Les requêtes sont limitées à 100 par minute, 1 000 par heure et 10 000 par jour et par clé, en plus du plafond d'actions facturables de votre plan.",
+    "Le serveur fonctionne uniquement en requête-réponse. Il n'y a ni webhooks ni événements déclenchés par le serveur, donc un nouveau message ne réveille jamais votre agent de lui-même. Pour réagir au courrier entrant, interrogez la boîte à intervalles réguliers.",
+    "Le courrier est récupéré en direct chez votre fournisseur à chaque appel et n'est jamais stocké. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, donc un jeton révoqué ou un mot de passe de boîte modifié coupe l'accès immédiatement."
+  ],
+  "faq": [
+    {
+      "q": "Comment connecter l'e-mail à Windsurf ?",
+      "a": "Ajoutez une entrée sous mcpServers dans ~/.codeium/windsurf/mcp_config.json avec serverUrl défini sur https://mcpemails.com/api/mcp, rafraîchissez les serveurs MCP dans Cascade et autorisez quand on vous le demande. Cascade dispose alors d'outils pour lire, rechercher, envoyer, répondre, transférer, organiser et planifier des e-mails."
+    },
+    {
+      "q": "Pourquoi ma configuration Windsurf ne marche-t-elle pas alors que le même JSON marche dans Cursor ?",
+      "a": "Presque toujours à cause du nom du champ. Cursor lit url, Windsurf lit serverUrl. Le reste de l'entrée est identique, et c'est précisément pour cela que l'erreur résiste à une relecture attentive."
+    },
+    {
+      "q": "Ai-je besoin d'une clé API pour Windsurf ?",
+      "a": "Non. Windsurf exécute le flux OAuth auprès de ce serveur, donc le fichier de configuration ne contient qu'une URL publique. Une clé API bearer reste disponible pour un usage scripté ou sans interface graphique."
+    },
+    {
+      "q": "Quelles boîtes Windsurf peut-il atteindre ainsi ?",
+      "a": "Gmail via la connexion Google ; iCloud, Fastmail, Yahoo, Zoho et Yandex avec un mot de passe d'application ; et toute autre boîte qui parle IMAP et SMTP sur les ports standard. Le client les voit toutes par la même connexion : votre agent appelle d'abord inbox_list pour découvrir chaque boîte connectée et son identifiant, donc aucun UUID à coller nulle part."
+    },
+    {
+      "q": "Cascade peut-il envoyer un e-mail sans que je le voie ?",
+      "a": "Seulement si vous l'y autorisez. L'envoi dépend de l'autorisation send:email : une clé ou un jeton sans cette autorisation ne peut rien envoyer du tout. En plus, le propriétaire d'une boîte peut exiger une validation humaine dans le tableau de bord, qui retient chaque envoi, réponse, transfert, envoi de brouillon et envoi planifié jusqu'à ce qu'une personne le libère."
+    },
+    {
+      "q": "Mes e-mails sont-ils stockés sur vos serveurs ?",
+      "a": "Non. Chaque message est récupéré en direct chez votre fournisseur pour la requête qui l'a demandé, puis transmis directement à votre client. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, pour que les appels suivants puissent s'authentifier. Supprimer la boîte dans le tableau de bord, ou révoquer l'accès chez votre fournisseur, coupe la connexion aussitôt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez une vraie boîte à Cascade",
+    "sub": "Une entrée de configuration, une connexion. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

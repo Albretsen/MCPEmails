@@ -1,0 +1,103 @@
+{
+  "_sources": [
+    "https://doc.dovecot.org/2.3/configuration_manual/dovecot_ssl_configuration/",
+    "https://doc.dovecot.org/",
+    "https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/deploying_mail_servers/configuring-and-maintaining-a-dovecot-imap-and-pop3-server_deploying-mail-servers"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱密码",
+    "helpUrl": "https://doc.dovecot.org/2.3/configuration_manual/dovecot_ssl_configuration/",
+    "usernameForm": "你的 userdb 作为登录名返回的任何值，通常是完整地址 user@yourdomain.com；但在使用系统 passdb 的安装中，是不带域名的用户名。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 Dovecot IMAP 连接到 Claude 与任意 MCP 客户端",
+    "description": "通过 IMAP 将你自己的 Dovecot 服务器连接到 Claude、Cursor 和 ChatGPT。哪个 inet_listener 服务 993、哪些 ssl_cert 配置行关键，以及为什么端口 143 会拒绝登录。"
+  },
+  "hero": {
+    "eyebrow": "Dovecot + AI",
+    "titleLine1": "将你的 Dovecot 服务器连接到",
+    "titleLine2": "Claude、Cursor 及任意 MCP 客户端",
+    "lead": "IMAP 服务器由你运行，所以代理能访问什么由你决定。把 mcpemails 指向你自己的 Dovecot 主机，让 Claude 在你已经运营的邮箱中读取、搜索、发送、回复、定时和归档邮件。",
+    "answer": "Claude 无法自行访问 Dovecot 服务器。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接你自己主机名上的 Dovecot 实例（通常是 mail.yourdomain.com，端口 993），使用你的 passdb 本来就接受的邮箱密码，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。没有可查的共用主机名：主机就是你服务器的名称，它必须能从互联网访问，而且其 TLS 证书必须对你所连接的名称有效。1 个收件箱免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "你现有的 Dovecot 邮箱密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "Dovecot 如何连接：你自己的主机，你自己的 passdb",
+    "body": "Dovecot 不是邮箱服务商，而是你安装的 IMAP 服务器，所以既没有共用主机名，也没有需要登录的厂商账户。主机就是你服务器所响应的名称，通常类似 <code>mail.yourdomain.com</code>。它在哪些端口上响应，由 <code>conf.d/10-master.conf</code> 决定：其中的 <code>service imap-login</code> 块包含用于端口 143 的 <code>inet_listener imap</code>，以及用于端口 993、带 <code>ssl = yes</code> 的 <code>inet_listener imaps</code>。把某个监听器设为 <code>port = 0</code> 会将其关闭，许多加固过的部署就是这样只剩下 993 的。凭据是你的 passdb 所校验的任何东西：在虚拟邮箱配置中，是你在 SQL 或 LDAP 用户表中设置的密码；在系统用户配置中，是 Unix 账户密码。请在服务器上运行 <code>doveconf -n</code>，查看 Dovecot 实际加载的配置，而不是你以为自己写的那份。"
+  },
+  "setup": [
+    {
+      "h": "创建免费账户",
+      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱，足以用你自己服务器上的真实邮箱来试用。"
+    },
+    {
+      "h": "确认 Dovecot 在监听什么",
+      "p": "在服务器上运行 <code>doveconf -n</code>，查看 <code>service imap-login</code> 块。确认 993 上是否有 <code>inet_listener imaps</code>，并检查 <code>listen</code> 设置：如果它是 <code>127.0.0.1</code>，说明 Dovecot 只在回环地址上响应，本机之外的任何东西都访问不到。"
+    },
+    {
+      "h": "从外部检查 993 上的证书",
+      "p": "在一台不是你邮件服务器的机器上运行 <code>openssl s_client -connect mail.yourdomain.com:993</code>。你需要看到一条能通过校验的证书链，以及与你将在 mcpemails 中输入的主机名相符的主题名称。然后添加收件箱：选择 IMAP / SMTP，输入主机名、邮箱登录名及其密码。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "没有 special_use 条目，Dovecot 就不提供文件夹角色",
+      "p": "Dovecot 只为你声明过的邮箱文件夹声明 SPECIAL-USE 扩展。除非 <code>15-mailboxes.conf</code> 中有 <code>mailbox Sent { special_use = \\Sent }</code> 这样的条目，否则 IMAP 客户端拿到的只是一份扁平的名称列表，只能去猜哪个是 Sent、Drafts、Junk 或 Trash。mcpemails 会退回到按名称匹配，所以文件夹叫 Sent Items、Gesendet 或 Papierkorb 的服务器，可能需要手动选择一次文件夹。加上 special_use 配置行，就能为你所有的客户端一劳永逸地解决这个问题。"
+    },
+    {
+      "h": "命名空间前缀会改写你看到的每个文件夹名称",
+      "p": "Maildir++ 布局通常会设置一个带 <code>prefix = INBOX.</code> 和 <code>separator = .</code> 的收件箱命名空间，所以文件夹显示为 <code>INBOX.Sent</code> 和 <code>INBOX.Archive</code>，而不是 <code>Sent</code> 和 <code>Archive</code>。这不是故障，但意味着你从网页邮箱中抄来的文件夹名称与 IMAP 报告的不一致。在认定某个文件夹丢失之前，请先用 <code>doveadm mailbox list -u user@yourdomain.com</code> 读取真实名称。"
+    },
+    {
+      "h": "disable_plaintext_auth 会让正确的密码在 143 上得到 BAD",
+      "p": "在 <code>disable_plaintext_auth = yes</code>（大多数发行版的默认值）下，Dovecot 会在客户端发出 STARTTLS 之前拒绝端口 143 上的 LOGIN。客户端看到的是认证失败，用户便以为密码错了。其实不是：只是连接尚未加密。端口 993 不受影响，因为隐式 TLS 在认证开始前就已建立，这也是使用 993 的又一个理由。"
+    },
+    {
+      "h": "ssl_cert 需要 < 前缀，一个名称一张证书则需要 local_name",
+      "p": "在 <code>10-ssl.conf</code> 中，<code>ssl_cert = &lt;/etc/letsencrypt/live/mail.yourdomain.com/fullchain.pem</code> 开头的 <code>&lt;</code> 是必需的：它告诉 Dovecot 读取文件内容，而不是把路径本身当作证书。请指向 <code>fullchain.pem</code> 而不是 <code>cert.pem</code>，否则会缺少中间证书，严格的校验器会拒绝一张你的浏览器接受过的证书。如果这台机器服务多个主机名，每个都需要自己的 <code>local_name</code> 块，否则每个连接都会拿到默认证书，只有一个主机名能通过校验。"
+    }
+  ],
+  "limits": [
+    "你的 Dovecot 服务器必须接受来自公网的连接，托管 MCP 服务器才能访问它。如果你的策略是 IMAP 绝不离开局域网或 VPN，那是合理的决定，而本产品作为托管服务无法为你服务。你可以改为自托管 mcpemails，让 IMAP 连接留在你自己的网络中。",
+    "在这里，严格的 TLS 校验不是可选项。自签名证书、过期证书，或签发给其他主机名的证书都会被拒绝，也没有“仍然接受”的复选框。",
+    "发信通过你自己的提交服务发出，因此送达率由你的 SPF、DKIM 和 DMARC 记录决定，与该服务器上的其他所有客户端完全一样。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用于 Dovecot 吗？",
+      "a": "不能直接使用。Claude 无法向你运行的服务器打开 IMAP 套接字。将 mcpemails 这样的 MCP 服务器连接到你的 Dovecot 主机后，Claude 就能读取、搜索、发送、回复、定时和整理其上邮箱中的邮件，所用凭据与其他任何 IMAP 客户端相同。"
+    },
+    {
+      "q": "Dovecot 的 IMAP 和 SMTP 设置是什么？",
+      "a": "主机名就是你自己的服务器，所以没人能替你公布。端口来自 <code>conf.d/10-master.conf</code> 中的 <code>service imap-login</code> 块：993 用于隐式 TLS，143 用于 STARTTLS，除非有人改过。SMTP 提交由与 Dovecot 配套的 Postfix 或 Exim 处理，通常在 587 或 465 上。"
+    },
+    {
+      "q": "为什么我的 Dovecot 密码被拒绝？",
+      "a": "请查看服务器日志，不要靠猜。两个常见原因是：在未加密的端口 143 连接上明文认证被拒绝；以及登录名与 passdb 期望的不符，虚拟配置要求完整地址，而系统用户配置要求不带域名的用户名。在服务器上运行 <code>doveadm auth login user@yourdomain.com</code>，可以排除网络因素单独测试凭据。"
+    },
+    {
+      "q": "我的 Dovecot 服务器必须能从互联网访问吗？",
+      "a": "对于托管服务来说，是的。mcpemails 需要从外部连入你的 IMAP 端口，所以绑定在回环地址、被防火墙限制为只允许办公室网段，或只能通过 VPN 访问的服务器都无法连接。如果你不想公开暴露 IMAP，mcpemails 可以自托管，与邮件服务器运行在同一网络中。"
+    },
+    {
+      "q": "哪些产品是基于 Dovecot 构建的？",
+      "a": "人们常用的几款打包邮件服务器底层都是 Dovecot，包括 mailcow、Mail-in-a-Box 和 Poste.io；Open-Xchange App Suite 通常也以 Dovecot 作为邮件后端部署。本页关于监听器、证书和文件夹角色的所有内容同样适用于它们，只是各自有自己的管理界面来修改这些设置。"
+    },
+    {
+      "q": "我的邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都通过 IMAP 从你的 Dovecot 服务器实时获取邮件，并传给你的 AI 客户端。凭据静态加密存储，邮件正文不会保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 Dovecot 收件箱",
+    "sub": "把 mcpemails 指向你自己的服务器。1 个收件箱永久免费，无需信用卡。"
+  }
+}

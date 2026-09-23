@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://docs.windsurf.com/windsurf/cascade/mcp"
+  ],
+  "meta": {
+    "title": "Koble e-post til Windsurf: MCP-server for Cascade",
+    "description": "Gi Cascade i Windsurf en ekte innboks. Én oppføring i mcp_config.json med serverUrl, så autoriserer du med OAuth. Ingen API-nøkkel. Én innboks gratis."
+  },
+  "hero": {
+    "eyebrow": "Windsurf + e-post",
+    "titleLine1": "Koble innboksen din til Windsurf",
+    "titleLine2": "og Cascade",
+    "lead": "Legg til en ekte postkasse i Cascade. Les, søk i, send, svar på, videresend, planlegg og organiser e-post fra editoren, på tvers av alle innboksene du har koblet til.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "OAuth, ingen API-nøkkel nødvendig",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "Legg til én oppføring under mcpServers i ~/.codeium/windsurf/mcp_config.json med feltet serverUrl, ikke url, satt til https://mcpemails.com/api/mcp. Oppdater MCP-serverne i Cascade og autoriser når du blir bedt om det."
+  },
+  "method": {
+    "title": "Slik kobler Windsurf seg til: OAuth, ingen API-nøkkel",
+    "body": "Windsurf kjører standard MCP OAuth-flyt mot denne serveren. Den registrerer seg selv med <b>RFC 7591 dynamisk klientregistrering</b>, så du trenger ikke opprette noen klient-ID, og autoriserer med <b>autorisasjonskode pluss PKCE</b> med S256. Ingen klienthemmelighet sendes noen gang, og tokenet har bare de tilgangene (scopes) du godkjenner på samtykkeskjermen vår. Tilgangstokenet den får varer i én time og fornyes automatisk. Det vises under Dashboard, API Keys som <code>OAuth:</code> etterfulgt av klientnavnet, og det er der du tilbakekaller tilkoblingen."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto og koble til en postkasse",
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Gmail kobles til med Google-innlogging med ett klikk; iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+    },
+    {
+      "h": "Åpne MCP-innstillingene i Cascade",
+      "p": "Åpne MCP-innstillingene i Cascade, eller rediger <code>~/.codeium/windsurf/mcp_config.json</code> direkte."
+    },
+    {
+      "h": "Legg til serveren",
+      "p": "Legg til oppføringen nedenfor. Feltnavnet her er <code>serverUrl</code>, ikke <code>url</code>."
+    },
+    {
+      "h": "Oppdater og autoriser",
+      "p": "Oppdater MCP-serverne i Cascade og autoriser med mcpemails når du blir bedt om det. Godkjenn tilgangene du vil at Cascade skal ha."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Feltet heter serverUrl, og url feiler i det stille",
+      "p": "Dette er den aller vanligste feilen ved oppsett av Windsurf, og den er helt forståelig: Cursor, Zed og VS Code leser alle <code>url</code>, så en snutt kopiert fra hvilken som helst av dem ser riktig ut. Windsurf leser <code>serverUrl</code>. Med feil nøkkel blir oppføringen tolket, serveren dukker opp i listen, og ingen verktøy kommer noen gang."
+    },
+    {
+      "h": "Cascade må oppdateres, den følger ikke med på filen",
+      "p": "Å redigere <code>mcp_config.json</code> i en editor får ikke Cascade til å laste den inn på nytt. Bruk oppdateringshandlingen i MCP-panelet etter hver endring. En riktig oppføring som ikke er oppdatert, ser nøyaktig ut som en ødelagt en."
+    },
+    {
+      "h": "Bestem på forhånd om Cascade skal kunne sende",
+      "p": "Det er på samtykkeskjermen dette avgjøres. Tilganger for lesing og utkast passer en assistent i editoren, og lar du <code>send:email</code> være ute, kan ingen ledetekst, ingen jailbreak og ingen forvirret løkke sende e-post fra denne tilkoblingen. Menneskelig godkjenning i dashbordet er ekstra sikring hvis du faktisk vil ha sending."
+    }
+  ],
+  "limits": [
+    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger.",
+    "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post vekker aldri agenten din av seg selv. Vil du reagere på innkommende e-post, må du polle etter en tidsplan.",
+    "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
+  ],
+  "faq": [
+    {
+      "q": "Hvordan kobler jeg e-post til Windsurf?",
+      "a": "Legg til en oppføring under mcpServers i ~/.codeium/windsurf/mcp_config.json med serverUrl satt til https://mcpemails.com/api/mcp, oppdater MCP-serverne i Cascade, og autoriser når du blir bedt om det. Da har Cascade verktøy for å lese, søke, sende, svare, videresende, organisere og planlegge e-post."
+    },
+    {
+      "q": "Hvorfor fungerer ikke Windsurf-konfigurasjonen min når den samme JSON-en fungerer i Cursor?",
+      "a": "Nesten alltid feltnavnet. Cursor leser url, Windsurf leser serverUrl. Resten av oppføringen er identisk, og det er nettopp derfor feilen overlever en nøye gjennomlesning."
+    },
+    {
+      "q": "Trenger jeg en API-nøkkel for Windsurf?",
+      "a": "Nei. Windsurf kjører OAuth-flyten mot denne serveren, så konfigurasjonsfilen inneholder bare en offentlig URL. En bearer-API-nøkkel er fortsatt tilgjengelig for bruk i skript eller uten skjerm."
+    },
+    {
+      "q": "Hvilke postkasser kan Windsurf nå på denne måten?",
+      "a": "Gmail via Google-innlogging, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord, og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Klienten ser alle gjennom den samme tilkoblingen: agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
+    },
+    {
+      "q": "Kan Cascade sende e-post uten at jeg ser det?",
+      "a": "Bare hvis du tillater det. Sending krever tilgangen send:email, så en nøkkel eller et token uten den tilgangen kan ikke sende i det hele tatt. I tillegg kan eieren av en innboks kreve menneskelig godkjenning i dashbordet, som holder tilbake hver sending, hvert svar, hver videresending, hvert utkast som sendes og hver planlagte sending til en person slipper den gjennom."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Hver melding hentes direkte fra leverandøren din for forespørselen som ba om den, og sendes rett videre til klienten din. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, slik at fremtidige kall kan autentiseres. Sletter du innboksen i dashbordet, eller tilbakekaller tilgangen hos leverandøren, avsluttes tilkoblingen med en gang."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi Cascade en ekte innboks",
+    "sub": "Én konfigurasjonsoppføring, én innlogging. Én innboks gratis for alltid, uten kort."
+  }
+}

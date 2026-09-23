@@ -1,0 +1,94 @@
+{
+  "_sources": [
+    "https://www.greengeeks.com/support/article/where-to-find-mail-server-login-information-for-greengeeks-hosted-domains/",
+    "https://www.greengeeks.com/support/article/how-do-i-setup-an-e-mail-account/",
+    "https://www.greengeeks.com/support/article/getting-started-setting-up-email-applications/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Mot de passe de la boîte mail",
+    "helpUrl": "https://www.greengeeks.com/support/article/where-to-find-mail-server-login-information-for-greengeeks-hosted-domains/",
+    "usernameForm": "Votre adresse e-mail complète, par exemple hello@yourdomain.com, et pas seulement la partie avant l'arobase.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Réglages IMAP GreenGeeks et configuration MCP Claude",
+    "description": "GreenGeeks affiche votre vrai serveur mail sous cPanel, Email Accounts, Connect Devices. Connectez cette boîte à Claude en IMAP 993. 1 boîte gratuite, pour toujours."
+  },
+  "hero": {
+    "eyebrow": "GreenGeeks + IA",
+    "titleLine1": "Connectez votre messagerie GreenGeeks à Claude,",
+    "titleLine2": "Cursor, ChatGPT, tout client MCP",
+    "lead": "Offrez à votre agent IA une vraie boîte GreenGeeks. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec le mot de passe défini à la création de l'adresse.",
+    "answer": "Claude ne peut pas accéder seul à une boîte GreenGeeks. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP standard sur le port 993, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. GreenGeeks utilise un cPanel standard et n'exploite pas de nom d'hôte de messagerie partagé : votre serveur est construit à partir de votre propre domaine ou du serveur sur lequel se trouve votre compte, et cPanel affiche la valeur exacte sous Email Accounts, puis Connect Devices, dans le bloc Mail Client Manual Settings. Vous vous authentifiez avec le mot de passe de la boîte plutôt qu'avec l'identifiant de votre tableau de bord GreenGeeks, et une boîte est gratuite.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Mot de passe de la boîte depuis cPanel",
+    "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "method": {
+    "title": "Comment la messagerie GreenGeeks se connecte : cPanel affiche le serveur, IMAP 993",
+    "body": "GreenGeeks est un hébergeur cPanel classique. Chaque offre d'hébergement inclut des boîtes sur votre propre domaine, qui parlent IMAP sur le port 993 en TLS, avec SMTP sur le 465. Il n'existe pas de <code>imap.greengeeks.com</code> vers lequel pointer, car la boîte se trouve sur le serveur précis où votre compte a été provisionné. GreenGeeks génère les bonnes valeurs compte par compte au lieu de les publier dans un article, et sa documentation d'assistance le dit explicitement : publiés de façon générique, les réglages ne seraient pas corrects pour tout le monde. Le serveur entrant est soit <code>mail.yourdomain.com</code>, soit le nom d'hôte du serveur, et l'identifiant est toujours l'adresse e-mail complète. Le mot de passe est celui que vous avez saisi, ou généré, en créant cette adresse dans cPanel."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte mcpemails gratuit",
+      "p": "Inscrivez-vous sur mcpemails.com. L'offre gratuite connecte une boîte, sans carte bancaire."
+    },
+    {
+      "h": "Récupérez les réglages dans Connect Devices de cPanel",
+      "p": "Connectez-vous sur my.greengeeks.com, ouvrez le cPanel du compte d'hébergement et, sous <b>Email</b>, cliquez sur <b>Email Accounts</b>. Repérez la ligne de l'adresse voulue et cliquez sur <b>Connect Devices</b>. Faites défiler jusqu'à <b>Mail Client Manual Settings</b>. Ce bloc indique le serveur entrant sécurisé exact, le port IMAP et le port SMTP de votre compte. Copiez-les plutôt que de taper ce dont vous vous souvenez."
+    },
+    {
+      "h": "Définissez ou confirmez le mot de passe de la boîte",
+      "p": "IMAP vérifie le mot de passe associé à l'adresse e-mail, distinct du mot de passe de votre tableau de bord GreenGeeks et de l'identifiant cPanel. Si vous ne l'avez pas, utilisez <b>Manage</b> sur la ligne de l'adresse dans Email Accounts pour en définir un nouveau, puis collez-le dans mcpemails avec l'adresse complète comme identifiant."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Ajoutez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "L'e-mail de bienvenue contenant vos réglages est envoyé dans la nouvelle boîte elle-même",
+      "p": "Quand vous créez une adresse, cPanel propose d'envoyer un message de bienvenue contenant la configuration du client. GreenGeeks laisse cette option cochée. Le message est remis à l'adresse que vous venez de créer : le seul moyen de le lire est donc le webmail, avec les identifiants que vous cherchez justement à retrouver. C'est un document utile une fois connecté, mais ne le cherchez pas dans votre boîte personnelle, et ne voyez pas son absence comme le signe d'un échec."
+    },
+    {
+      "h": "Le même cPanel affiche les réglages à deux endroits, avec deux niveaux de détail",
+      "p": "<b>Connect Devices</b> sur la ligne de l'adresse donne le bloc complet Mail Client Manual Settings, avec les variantes SSL et non SSL. Le menu à trois points de la même ligne propose une vue plus courte, <b>Mail Configuration</b>, qui liste l'identifiant, le serveur et le port entrants, puis le serveur et le port sortants. Ceux qui tombent sur la vue courte en concluent parfois que leur serveur n'a pas de réglages sécurisés. Il en a. Revenez en arrière et utilisez Connect Devices."
+    },
+    {
+      "h": "Des échecs de connexion répétés font bloquer l'adresse IP par le pare-feu, et cela ressemble à un délai dépassé",
+      "p": "Les serveurs GreenGeeks utilisent un pare-feu qui bloque une IP après plusieurs échecs d'authentification SMTP ou IMAP. Une fois bloquée, la tentative suivante ne renvoie pas d'erreur d'authentification ; la connexion n'aboutit tout simplement jamais, et le symptôme passe d'un refus clair à un blocage ou un délai dépassé. Si une boîte qui fonctionnait cesse soudain de répondre après que vous avez corrigé un mauvais mot de passe, le mot de passe est désormais correct et c'est le blocage qui pose problème. L'assistance peut le lever."
+    }
+  ],
+  "limits": [
+    "GreenGeeks applique des limites d'envoi horaires sur les offres mutualisées. Un envoi automatisé à fort volume depuis un agent IA peut les atteindre, et l'échec apparaît comme un envoi différé ou refusé plutôt que comme une erreur de connexion.",
+    "mcpemails connecte uniquement la boîte. Les alias, redirections, réponses automatiques et réglages antispam restent dans cPanel."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec la messagerie GreenGeeks ?",
+      "a": "Pas directement. Claude ne propose aucun connecteur pour les hébergeurs mail sous cPanel. Connecter un serveur MCP comme mcpemails à votre boîte GreenGeeks en IMAP donne à Claude un accès en lecture, recherche, envoi, réponse, planification et organisation, avec les mêmes identifiants que vous saisiriez dans Thunderbird ou Apple Mail."
+    },
+    {
+      "q": "Quels sont les réglages IMAP et SMTP de GreenGeeks ?",
+      "a": "IMAP utilise le port 993 en TLS implicite et SMTP le port 465. Le nom d'hôte est propre à votre compte et n'est publié dans aucun article, car il dépend du serveur qui héberge votre compte. Lisez-le dans cPanel sous Email Accounts, puis Connect Devices, dans le bloc Mail Client Manual Settings. L'identifiant est votre adresse e-mail complète."
+    },
+    {
+      "q": "Où trouver le nom de mon serveur mail GreenGeeks ?",
+      "a": "Dans cPanel, ouvrez Email Accounts, cliquez sur Connect Devices sur la ligne de l'adresse et faites défiler jusqu'à Mail Client Manual Settings. Cette page affiche les noms d'hôte entrant et sortant exacts de votre serveur, avec les paires de ports sécurisée et non sécurisée. C'est la paire sécurisée qu'il faut utiliser."
+    },
+    {
+      "q": "Pourquoi mon mot de passe de messagerie GreenGeeks est-il refusé ?",
+      "a": "Généralement parce que c'est le mauvais mot de passe, plutôt que le mauvais serveur. La boîte a son propre mot de passe, défini à la création de l'adresse, et ni le mot de passe de votre tableau de bord my.greengeeks.com ni celui de cPanel ne permettent de s'authentifier en IMAP. Réinitialisez-le via le lien Manage sur la ligne de l'adresse dans Email Accounts."
+    },
+    {
+      "q": "Mon courrier GreenGeeks est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct sur votre serveur GreenGeeks en IMAP à chaque requête et transmis à votre client IA. Les identifiants sont chiffrés au repos et le contenu des messages n'est pas conservé."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA une boîte GreenGeeks",
+    "sub": "Connectez une boîte GreenGeeks en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

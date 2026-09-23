@@ -1,0 +1,95 @@
+{
+  "_sources": [
+    "https://help.one.com/hc/en-us/articles/115005594285-How-to-set-an-email-account-in-for-example-Outlook",
+    "https://help.one.com/hc/en-us/articles/115005586289-Creating-a-new-email-account",
+    "https://help.one.com/hc/en-us/articles/115005586349-How-do-I-change-my-email-password"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "邮箱账户密码",
+    "helpUrl": "https://help.one.com/hc/en-us/articles/115005586349-How-do-I-change-my-email-password",
+    "usernameForm": "包含域名的完整地址：name@yourdomain.com。",
+    "status": "active"
+  },
+  "meta": {
+    "title": "将 one.com 邮箱连接到 Claude 与 MCP 客户端",
+    "description": "通过 IMAP（imap.one.com:993）将 one.com 邮箱连接到 Claude、Cursor 及任意 MCP 客户端。发信使用 send.one.com，而不是 smtp.one.com。"
+  },
+  "hero": {
+    "eyebrow": "one.com 邮箱 + AI",
+    "titleLine1": "将 one.com 邮箱连接到 Claude，",
+    "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
+    "lead": "为你的 AI 代理接入一个真正的 one.com 收件箱。用创建地址时设置的密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行连接 one.com 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.one.com 的 993 端口，并通过 send.one.com 的 465 端口发信，使用你的完整邮箱地址和在 one.com Control Panel 中为该账户设置的密码认证。之后 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。无需生成应用密码。一个收件箱永久免费。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "使用 Control Panel 中设置的邮箱账户密码",
+    "meta2": "邮件实时获取，绝不存储"
+  },
+  "method": {
+    "title": "one.com 如何连接：IMAP 收信，send.one.com 发信",
+    "body": "one.com 的两个邮件主机名分工方式容易让人出错。收信是 <code>imap.one.com</code>，端口 993，隐式 TLS。发信是 <code>send.one.com</code>，端口 465，同样是隐式 TLS，并要求使用相同凭据认证。两者都是覆盖所有 one.com 客户的共享服务器，不会根据你的域名派生。凭据是你在 Control Panel 中创建该地址时输入的密码，与 @ 符号前的地址部分一起设置。网页邮箱和所有邮件客户端都使用这个密码，它与你登录 one.com Control Panel 本身所用的账户是分开的。"
+  },
+  "setup": [
+    {
+      "h": "创建免费 mcpemails 账户",
+      "p": "在 mcpemails.com 注册。免费套餐可永久连接一个收件箱，无需信用卡。"
+    },
+    {
+      "h": "确认地址已存在并设置其密码",
+      "p": "登录 one.com Control Panel，打开 Email 磁贴。地址必须先在这里创建，任何客户端才能访问它。点击该地址进行编辑并设置密码，或修改现有密码。登录 one.com Webmail 后，也可以在其中修改邮箱密码。"
+    },
+    {
+      "h": "粘贴到 mcpemails",
+      "p": "选择 IMAP / SMTP，输入完整地址，粘贴邮箱账户密码。服务器 imap.one.com 和 send.one.com 以及端口 993 和 465 已自动填好，并已通过实时 TLS 连接验证。"
+    },
+    {
+      "h": "将 MCP URL 粘贴到你的 AI",
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "发信服务器是 send.one.com，smtp.one.com 并不存在",
+      "p": "几乎所有其他服务商都把提交服务器命名为 <code>smtp.something</code>，所以人们会凭习惯套用这个格式，结果得到一个无法解析的主机名。one.com 使用的是 <code>send.one.com</code>。它与 <code>imap.one.com</code> 的不对称让人以为是文档笔误，其实不是。如果收信正常，而发信超时或无法解析，原因就在这里。"
+    },
+    {
+      "h": "one.com 也转售 Microsoft 365，而那种邮箱无法连接",
+      "p": "Control Panel 中的磁贴名为 Email and Microsoft 365，one.com 在同一账户下同时销售两者。在该磁贴中创建、拥有独立密码的 one.com 邮箱账户，是 one.com 服务器上的普通 IMAP 邮箱，可以正常连接。通过 one.com 购买的 Microsoft 365 席位则是 Microsoft 服务器上的 Microsoft 邮箱，而 Microsoft 的默认租户策略会阻止最终用户自行同意第三方读写邮件的权限。我们不声称能连接这类邮箱。如果你的网页邮箱是 Outlook 网页版而不是 one.com 自己的界面，那你用的就是 Microsoft 的产品。"
+    },
+    {
+      "h": "Control Panel 的两步验证不作用于你的邮箱",
+      "p": "one.com 为 Control Panel 登录提供两步验证。它保护的是管理域名和账单的面板，与 IMAP 或 SMTP 无关，后两者仍然单独接受邮箱账户密码。开启它不会影响 mcpemails，但也不会保护邮箱。如果你想保护邮箱本身，办法是为该地址设置一个强且唯一的密码，而不是面板的两步验证。"
+    }
+  ],
+  "limits": [
+    "服务器未声明 MOVE 或 UIDPLUS，因此移动操作以复制、标记再删除的方式完成，目标 UID 需要通过搜索找到。",
+    "缺少 SPECIAL-USE，因此已发送、草稿、已删除和垃圾邮件文件夹按名称匹配。丹麦语、瑞典语和挪威语的 one.com 邮箱通常使用本地化的文件夹名称。",
+    "通过 one.com 销售的 Microsoft 365 席位无法连接。"
+  ],
+  "faq": [
+    {
+      "q": "Claude 能用 one.com 邮箱吗？",
+      "a": "不能单独使用。Claude 没有内置的 one.com 连接器。通过 IMAP 将 mcpemails 这样的 MCP 服务器指向你的 one.com 邮箱后，Claude 就能读取、搜索、发送、回复、定时和整理其中的邮件，同一个连接也可在 Cursor、ChatGPT 和其他 MCP 客户端中使用。"
+    },
+    {
+      "q": "one.com 的 IMAP 和 SMTP 设置是什么？",
+      "a": "IMAP 为 imap.one.com，端口 993，隐式 TLS。发信使用 send.one.com，端口 465，同样是隐式 TLS，并需要认证。用户名是你的完整邮箱地址，密码是在 Control Panel 中为该账户设置的密码。两台服务器均已通过实时 TLS 连接确认。"
+    },
+    {
+      "q": "为什么我的 one.com 密码被拒绝？",
+      "a": "两个常见原因。你输入的是 one.com Control Panel 的登录密码，而不是为该邮箱账户单独设置的密码；或者该地址其实从未在 Control Panel 的 Email 磁贴中创建。可以用同样的凭据登录 one.com Webmail 来验证：如果也失败，问题在邮箱，而不在客户端。"
+    },
+    {
+      "q": "one.com 需要应用密码吗？",
+      "a": "不需要。one.com 不为邮件签发应用专用密码，也没有需要开启的单邮箱 IMAP 开关。邮箱账户密码同时用于 IMAP 和 SMTP 认证。Control Panel 的两步验证不会改变这一点。"
+    },
+    {
+      "q": "我的 one.com 邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求时都通过 IMAP 从 one.com 实时获取邮件并交给你的 AI 客户端。凭据经过静态加密，邮件正文不会被保留。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给你的 AI 一个 one.com 收件箱",
+    "sub": "几分钟即可连接 one.com 邮箱。一个收件箱永久免费，无需信用卡。"
+  }
+}

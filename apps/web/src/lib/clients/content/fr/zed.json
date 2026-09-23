@@ -1,0 +1,88 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://zed.dev/docs/ai/mcp"
+  ],
+  "meta": {
+    "title": "Connecter l'e-mail à Zed : MCP dans l'Agent Panel",
+    "description": "Ajoutez une vraie boîte à l'Agent Panel de Zed comme context server. Une URL, OAuth, sans clé API. Lisez, cherchez, envoyez et planifiez vos e-mails. 1 boîte gratuite."
+  },
+  "hero": {
+    "eyebrow": "Zed + e-mail",
+    "titleLine1": "Connectez votre boîte à Zed",
+    "titleLine2": "depuis l'Agent Panel",
+    "lead": "Ajoutez une vraie boîte à Zed comme context server. Lisez, recherchez, envoyez, répondez, transférez, planifiez et organisez vos e-mails sans quitter l'éditeur.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "OAuth, aucune clé API requise",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Dans les réglages de l'Agent Panel, cliquez sur Add Custom Server, ou ajoutez une entrée sous context_servers dans settings.json avec l'url https://mcpemails.com/api/mcp. Zed lance le flux OAuth quand aucun en-tête Authorization n'est défini."
+  },
+  "method": {
+    "title": "Comment Zed se connecte : OAuth, sans clé API",
+    "body": "Zed exécute le flux OAuth MCP standard auprès de ce serveur. Il s'enregistre lui-même via l'<b>enregistrement dynamique de client RFC 7591</b>, donc aucun client ID à créer, et s'autorise avec un <b>code d'autorisation plus PKCE</b> en S256. Aucun secret client n'est jamais transmis, et le jeton ne porte que les autorisations que vous approuvez sur notre écran de consentement. Le jeton d'accès reçu dure une heure et se renouvelle tout seul ; il apparaît dans Dashboard, API Keys sous la forme <code>OAuth:</code> suivi du nom du client, et c'est là que vous révoquez la connexion."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit et connectez une boîte",
+      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Gmail se connecte en un clic via la connexion Google ; iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
+    },
+    {
+      "h": "Ouvrez les réglages de l'Agent Panel",
+      "p": "Dans les réglages de l'Agent Panel, cliquez sur <b>Add Custom Server</b>, ou modifiez directement <code>settings.json</code>."
+    },
+    {
+      "h": "Ajoutez le serveur",
+      "p": "Ajoutez l'entrée ci-dessous sous <code>context_servers</code>."
+    },
+    {
+      "h": "Autorisez",
+      "p": "Zed lance le flux OAuth quand aucun en-tête Authorization n'est défini. Connectez-vous avec mcpemails et approuvez les autorisations que Zed doit détenir."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Laissez l'en-tête Authorization vide, exprès",
+      "p": "Zed choisit entre OAuth et un jeton statique selon que vous avez configuré ou non un en-tête Authorization. Définissez-en un et Zed l'utilise sans jamais rien demander ; laissez-le vide et Zed lance le flux dans le navigateur. Remplir ce champ à moitié, c'est ainsi qu'on se retrouve avec un serveur qui ne demande rien et ne s'authentifie pas non plus."
+    },
+    {
+      "h": "Zed les appelle context servers, tous les autres les appellent serveurs MCP",
+      "p": "La clé de réglage est <code>context_servers</code>. C'est le même MCP, et un extrait venu d'un autre client est correct à la clé englobante près, exactement le genre de différence qui résiste à une relecture attentive."
+    },
+    {
+      "h": "C'est dans l'Agent Panel que les outils apparaissent",
+      "p": "Les outils e-mail sont des outils d'agent. Une connexion réussie ne change rien aux complétions en ligne ; l'endroit pour vérifier que cela a marché, et voir quels outils sont arrivés, c'est l'Agent Panel."
+    }
+  ],
+  "limits": [
+    "Les requêtes sont limitées à 100 par minute, 1 000 par heure et 10 000 par jour et par clé, en plus du plafond d'actions facturables de votre plan.",
+    "Le serveur fonctionne uniquement en requête-réponse. Il n'y a ni webhooks ni événements déclenchés par le serveur, donc un nouveau message ne réveille jamais votre agent de lui-même. Pour réagir au courrier entrant, interrogez la boîte à intervalles réguliers.",
+    "Le courrier est récupéré en direct chez votre fournisseur à chaque appel et n'est jamais stocké. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, donc un jeton révoqué ou un mot de passe de boîte modifié coupe l'accès immédiatement."
+  ],
+  "faq": [
+    {
+      "q": "Comment connecter l'e-mail à Zed ?",
+      "a": "Ajoutez un serveur personnalisé depuis les réglages de l'Agent Panel, ou ajoutez une entrée sous context_servers dans settings.json avec l'url https://mcpemails.com/api/mcp. Laissez l'en-tête Authorization vide et Zed lance le flux OAuth. L'Agent Panel dispose alors d'outils pour lire, rechercher, envoyer, répondre, transférer, organiser et planifier des e-mails."
+    },
+    {
+      "q": "Ai-je besoin d'une clé API pour Zed ?",
+      "a": "Non, tant que vous laissez l'en-tête Authorization non défini, c'est ce qui pousse Zed à lancer le flux OAuth. Une clé bearer est l'alternative si vous préférez gérer le jeton vous-même."
+    },
+    {
+      "q": "Quelles boîtes Zed peut-il atteindre ainsi ?",
+      "a": "Gmail via la connexion Google ; iCloud, Fastmail, Yahoo, Zoho et Yandex avec un mot de passe d'application ; et toute autre boîte qui parle IMAP et SMTP sur les ports standard. Le client les voit toutes par la même connexion : votre agent appelle d'abord inbox_list pour découvrir chaque boîte connectée et son identifiant, donc aucun UUID à coller nulle part."
+    },
+    {
+      "q": "Zed peut-il envoyer un e-mail sans que je le voie ?",
+      "a": "Seulement si vous l'y autorisez. L'envoi dépend de l'autorisation send:email : une clé ou un jeton sans cette autorisation ne peut rien envoyer du tout. En plus, le propriétaire d'une boîte peut exiger une validation humaine dans le tableau de bord, qui retient chaque envoi, réponse, transfert, envoi de brouillon et envoi planifié jusqu'à ce qu'une personne le libère."
+    },
+    {
+      "q": "Mes e-mails sont-ils stockés sur vos serveurs ?",
+      "a": "Non. Chaque message est récupéré en direct chez votre fournisseur pour la requête qui l'a demandé, puis transmis directement à votre client. Seul le jeton OAuth ou le mot de passe d'application chiffré est conservé, pour que les appels suivants puissent s'authentifier. Supprimer la boîte dans le tableau de bord, ou révoquer l'accès chez votre fournisseur, coupe la connexion aussitôt."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez une vraie boîte à Zed",
+    "sub": "Un context server, une connexion. Une boîte gratuite pour toujours, sans carte bancaire."
+  }
+}

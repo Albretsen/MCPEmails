@@ -1,21 +1,33 @@
 {
+  "_sources": [
+    "https://docs.hostinger.com/emails/setup-devices",
+    "https://www.hostinger.com/support/1575756-how-to-get-email-account-configuration-details-for-hostinger-email/",
+    "https://www.hostinger.com/support/5966022-how-to-get-email-account-configuration-details-for-titan-email-at-hostinger/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Contraseña del buzón",
+    "helpUrl": "https://www.hostinger.com/support/1575756-how-to-get-email-account-configuration-details-for-hostinger-email/",
+    "usernameForm": "Tu dirección de correo completa en tu propio dominio, no el acceso a tu cuenta de Hostinger.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Conecta Hostinger a Claude (y a cualquier IA)",
-    "description": "Conecta Hostinger a Claude, Cursor, ChatGPT y a cualquier cliente MCP por IMAP con la contraseña del buzón. Deja que la IA lea, envíe, programe y organice tu correo. Una bandeja gratis, para siempre."
+    "title": "Conecta Hostinger a Claude, Cursor y clientes MCP",
+    "description": "Conecta Hostinger Email a Claude, Cursor y cualquier cliente MCP por IMAP en imap.hostinger.com:993. Business Email, basado en Titan, usa servidores completamente distintos."
   },
   "hero": {
     "eyebrow": "Hostinger + IA",
-    "titleLine1": "Conecta Hostinger a Claude,",
+    "titleLine1": "Conecta Hostinger a Claude",
     "titleLine2": "y a Cursor, ChatGPT, cualquier cliente MCP",
-    "lead": "Dale a tu agente de IA una bandeja Hostinger real en minutos. Lee, busca, envía, responde, programa y organiza correo con IMAP y la contraseña del buzón, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
+    "lead": "Dale a tu agente de IA una bandeja real de Hostinger en minutos. Lee, busca, envía, responde, programa y organiza correo por IMAP con la contraseña de tu buzón, y usa la misma bandeja en todos los clientes MCP, no solo en uno.",
     "meta0": "1 bandeja gratis, para siempre",
-    "meta1": "La contraseña del buzón, sin configurar OAuth",
+    "meta1": "La contraseña de tu buzón, sin configurar OAuth",
     "meta2": "El correo se obtiene en vivo, nunca se almacena",
-    "answer": "Claude no puede llegar a Hostinger por su cuenta. mcpemails es un servidor MCP alojado que lo conecta por IMAP con la contraseña del buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
+    "answer": "Claude no puede acceder por sí solo a Hostinger. mcpemails es un servidor MCP alojado que lo conecta por IMAP con la contraseña de tu buzón, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. La configuración lleva un par de minutos y una bandeja es gratis."
   },
   "method": {
-    "title": "Cómo se conecta Hostinger: IMAP y la contraseña del buzón",
-    "body": "Hostinger Email se conecta por IMAP/SMTP con la contraseña del buzón que defines en hPanel, en Emails. No hay contraseña de aplicación ni paso de OAuth. Los servidores son <code>imap.hostinger.com</code> y <code>smtp.hostinger.com</code> para todos los dominios, así que no hay nada que buscar."
+    "title": "Cómo se conecta Hostinger: IMAP y la contraseña de tu buzón",
+    "body": "Hostinger Email se conecta por IMAP/SMTP con la contraseña del buzón que defines en hPanel, en Emails. No hay contraseña de aplicación ni paso OAuth. Los servidores son <code>imap.hostinger.com</code> y <code>smtp.hostinger.com</code> para todos los dominios, así que no hay nada que consultar."
   },
   "setup": [
     {
@@ -24,19 +36,68 @@
     },
     {
       "h": "Consigue la contraseña de tu buzón de Hostinger",
-      "p": "En hPanel, abre Emails, elige la dirección y define o cambia su contraseña. Esa es la contraseña con la que se autentica mcpemails."
+      "p": "En hPanel, abre Emails, elige la dirección y define o restablece su contraseña. Esa contraseña es con la que se autentica mcpemails."
     },
     {
       "h": "Pégala en mcpemails",
-      "p": "Elige IMAP / SMTP, añade tu dirección de Hostinger, los servidores de abajo y la contraseña para conectar la bandeja de forma segura."
+      "p": "Elige IMAP / SMTP y añade tu dirección de Hostinger, los servidores de abajo y la contraseña para conectar la bandeja de forma segura."
     },
     {
       "h": "Pega la URL MCP en tu IA",
       "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
     }
   ],
+  "gotchas": [
+    {
+      "h": "Hostinger tiene dos plataformas de correo, y cuál tienes depende de cuándo compraste",
+      "p": "<b>Hostinger Email</b> es la plataforma propia de Hostinger, documentada en <code>imap.hostinger.com</code> en el 993 y <code>smtp.hostinger.com</code> en el 465, con <code>pop.hostinger.com</code> en el 995 para POP3. Los planes <b>Business Email</b> y <b>Enterprise Email</b> de Hostinger funcionan sobre Titan y responden en cambio en <code>imap.titan.email</code> y <code>smtp.titan.email</code>, donde Hostinger documenta el 993 para IMAP y el 465 o 587 para SMTP. Nada en la dirección te dice cuál tienes. hPanel sí: abre <b>Emails</b>, haz clic en <b>Manage</b> junto al dominio y elige <b>Connect Apps & Devices</b>, que muestra los valores de la plataforma en la que está realmente ese buzón. Para un buzón de Titan, los mismos valores aparecen también en Titan Webmail, en Settings, luego Configure 3rd party apps."
+    },
+    {
+      "h": "La contraseña del buzón no es tu acceso a hPanel, y la 2FA la vuelve a cambiar",
+      "p": "IMAP se autentica con la contraseña definida en la dirección de correo concreta, que defines o restableces en hPanel, en <b>Emails</b> y la lista de buzones. El acceso a tu cuenta de Hostinger, el que gestiona el hosting y la facturación, es otra credencial y se rechaza. Hostinger también documenta que la contraseña es la del buzón <b>o una contraseña de aplicación si el buzón usa autenticación en dos factores</b>, así que un buzón con la 2FA activada necesita la contraseña de aplicación y no la que definiste. Ambos fallos llegan como un simple error de autenticación."
+    },
+    {
+      "h": "El servidor SMTP limita un mensaje a unos 46 MB, menos que la mayoría",
+      "p": "El servidor de envío de Hostinger anuncia un tamaño máximo de mensaje de 48.811.212 bytes, unos 46 MB. Es el tamaño del mensaje codificado, no el de tu archivo, y la codificación MIME aumenta un adjunto aproximadamente un tercio, así que el límite práctico se acerca más a 34 MB de adjunto real. Es un límite notablemente más bajo que el que anuncian otros proveedores, y un agente que intenta reenviar un adjunto grande recibe un rechazo definitivo al enviarlo en lugar de un rebote después. Cuando un archivo se acerque a ese tamaño, envía un enlace."
+    },
+    {
+      "h": "Hostinger Email omite MOVE, UIDPLUS y SPECIAL-USE",
+      "p": "El saludo anuncia <code>SASL-IR</code>, <code>IDLE</code>, <code>LITERAL+</code>, <code>AUTH=PLAIN</code> y <code>AUTH=LOGIN</code>, pero no MOVE, UIDPLUS ni SPECIAL-USE. Mover un mensaje se hace por tanto como una copia, una actualización de marcas y un expunge en lugar de un único comando atómico, el identificador de la copia no se devuelve y hay que encontrarlo buscando en la carpeta de destino, y Enviados, Borradores, Papelera y Correo no deseado se identifican por nombre y no por función. Si un agente no encuentra tu carpeta de archivo en un buzón de Hostinger, indica la carpeta explícitamente y la encontrará."
+    }
+  ],
+  "limits": [
+    "Los mensajes salientes están limitados a unos 46 MB codificados, así que un adjunto de mucho más de unos 34 MB se rechaza al enviarlo.",
+    "Como no se anuncia MOVE, mover no es atómico. Si una conexión se corta a mitad, un mensaje puede existir un momento en las dos carpetas.",
+    "Los planes Business y Enterprise Email funcionan sobre Titan y no sobre la plataforma propia de Hostinger, y usan los nombres de servidor de Titan. Toma los ajustes de Connect Apps and Devices para el buzón que vas a conectar."
+  ],
+  "faq": [
+    {
+      "q": "¿Funciona Claude con el correo de Hostinger?",
+      "a": "No por sí solo. Claude no tiene un conector integrado para Hostinger. Conectar un servidor MCP como mcpemails al buzón por IMAP le da a Claude acceso para leer, buscar, enviar, responder, programar y organizar, y la misma conexión funciona después desde Cursor, ChatGPT y otros clientes MCP, no solo desde uno."
+    },
+    {
+      "q": "¿Cuáles son los ajustes IMAP y SMTP de Hostinger?",
+      "a": "Para Hostinger Email, IMAP es imap.hostinger.com en el puerto 993 con SSL y SMTP es smtp.hostinger.com en el puerto 465 con SSL, con el 587 y STARTTLS documentados como alternativa de salida. El nombre de usuario es tu dirección de correo completa. Ambos servidores se confirmaron con una conexión TLS real en la fecha que indica esta página."
+    },
+    {
+      "q": "¿Cómo encuentro los ajustes de correo de Hostinger en hPanel?",
+      "a": "Abre Emails en hPanel, haz clic en Manage junto al dominio y elige Connect Apps and Devices en la barra lateral. Esa pantalla tiene pestañas guiadas para aplicaciones concretas y debajo los ajustes de servidor en bruto. Muestra los valores de la plataforma en la que está realmente tu buzón, lo que importa si estás en un plan basado en Titan."
+    },
+    {
+      "q": "¿Por qué se rechaza mi contraseña de correo de Hostinger?",
+      "a": "Normalmente porque usaste el acceso a tu cuenta de Hostinger en lugar de la contraseña definida en la propia dirección de correo. Restablece la contraseña del buzón en hPanel, en Emails, y prueba con esa. Si el buzón tiene activada la autenticación en dos factores, Hostinger exige en su lugar una contraseña de aplicación para los clientes de correo, y el rechazo es idéntico al de una contraseña incorrecta."
+    },
+    {
+      "q": "¿Y si mi plan usa Titan Email?",
+      "a": "Entonces no se aplican los nombres de servidor de Hostinger. Los buzones Business y Enterprise Email basados en Titan usan imap.titan.email en el 993 y smtp.titan.email en el 465 o el 587. Toma los valores exactos de Connect Apps and Devices en hPanel, o de Settings, luego Configure 3rd party apps, dentro de Titan Webmail."
+    },
+    {
+      "q": "¿Se almacena mi correo de Hostinger en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Hostinger por IMAP en cada solicitud y se entregan a tu cliente de IA. Las credenciales se cifran en reposo y el cuerpo de los mensajes no se conserva."
+    }
+  ],
   "ctaBand": {
-    "title": "Dale a tu IA una bandeja Hostinger",
+    "title": "Dale a tu IA una bandeja de Hostinger",
     "sub": "Conecta Hostinger en minutos. Una bandeja gratis para siempre, sin tarjeta."
   }
 }

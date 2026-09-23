@@ -1,0 +1,101 @@
+{
+  "_sources": [
+    "https://pomoc.o2.pl/jak-skonfigurowac-program-pocztowy",
+    "https://pomoc.o2.pl/aktywacja-dostepu-dla-programow-pocztowych"
+  ],
+  "auth": {
+    "method": "account-password",
+    "label": "Kontopassord, eller et e-postprogrampassord med 2FA",
+    "helpUrl": "https://pomoc.o2.pl/aktywacja-dostepu-dla-programow-pocztowych",
+    "usernameForm": "Hele adressen din, inkludert domenet: nazwa@o2.pl.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "IMAP-innstillinger for o2.pl Poczta og Claude via MCP",
+    "description": "Koble en o2.pl-postkasse til Claude, Cursor og enhver MCP-klient på poczta.o2.pl:993. IMAP må slås på under Opcje, og 2FA krever et eget e-postpassord."
+  },
+  "hero": {
+    "eyebrow": "o2.pl Poczta + AI",
+    "titleLine1": "Koble o2.pl-postkassen din",
+    "titleLine2": "til Claude, Cursor, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte o2.pl-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP, når IMAP er slått på i postkassealternativene.",
+    "answer": "Claude når ikke en o2.pl-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på poczta.o2.pl port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. o2.pl leveres med tilgang for e-postprogrammer stengt: du åpner den i webmailen under Opcje, på fanen IMAP/POP. Hvis kontoen har totrinnsinnlogging på, autentiserer du med et hasło do programu pocztowego opprettet for formålet i stedet for nettleserpassordet. Én innboks er gratis, for alltid.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Slå på IMAP under Opcje først",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler o2.pl seg til: én vert for begge retninger, pluss en bryter",
+    "body": "o2.pl tilbyr IMAP på <code>poczta.o2.pl</code> port 993 over implisitt TLS, og SMTP-innsending på <b>samme vertsnavn</b> på port 465, noe som overrasker alle som venter et eget <code>smtp.</code>-navn. o2s egen konfigurasjonsside oppgir <code>poczta.o2.pl</code> for begge retninger med SSL på hver og krav om SMTP-autentisering. Påloggingen avhenger av hvordan kontoen er sikret. Med vanlig enfaktorinnlogging er det det vanlige o2-passordet ditt. Med totrinnsinnlogging på ber o2 deg om ikke å bruke nettleserpassordet, men i stedet opprette et eget <b>hasło do programu pocztowego</b>, ett per ekstern klient. Uansett er brukernavnet hele adressen."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks for alltid og ber ikke om kort."
+    },
+    {
+      "h": "Slå på IMAP i o2-webmailen",
+      "p": "Logg inn i postkassen, klikk <b>Opcje</b>, åpne fanen <b>IMAP/POP</b> og slå på <b>IMAP</b>, som o2 beskriver som alternativet som både laster ned og sender meldinger (<b>pobieraj i wysyłaj wiadomości</b>). POP laster bare ned, så det er IMAP du vil ha. Før dette er på, avvises eksterne klienter."
+    },
+    {
+      "h": "Hvis totrinnsinnlogging er på, opprett et e-postprogrampassord",
+      "p": "o2 dokumenterer at du med tofaktorautentisering på ikke skal bruke passordet du skriver i nettleseren. I stedet oppretter du et <b>hasło do programu pocztowego</b>, et eget passord for hver ekstern klient som bruker IMAP eller POP3. Det er verdien mcpemails trenger. Er totrinnsinnlogging av, fungerer det vanlige kontopassordet som det er."
+    },
+    {
+      "h": "Lim det inn i mcpemails, og lim så MCP-URL-en inn i AI-en",
+      "p": "Velg IMAP / SMTP, skriv inn hele adressen, for eksempel nazwa@o2.pl, og lim inn passordet. Verter og porter er forhåndsutfylt og ble verifisert via en direkte TLS-tilkobling. Lim så https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Totrinnsinnlogging stenger deg ikke ute, men endrer hvilket passord som virker",
+      "p": "Det er her o2.pl skiller seg fra de polske naboene. Interia blokkerer rett og slett e-postprogrammer når totrinnsinnlogging er på. o2 holder dem i gang og utsteder i stedet et eget <b>hasło do programu pocztowego</b>, opprettet per ekstern klient. Fellen er at ingenting forteller deg hvilket regime du er i: med tofaktor på er nettleserpassordet stille det feile, og autentiseringsfeilen du får, ser lik ut som en skrivefeil. Sjekk innloggingsinnstillingene for kontoen før du konkluderer med at tilkoblingen er ødelagt."
+    },
+    {
+      "h": "IMAP er stengt til du åpner det under Opcje, og POP er en annen bryter",
+      "p": "Fanen <b>IMAP/POP</b> i <b>Opcje</b> har separate brytere. o2 beskriver IMAP som <b>pobieraj i wysyłaj wiadomości</b> (hent og send) og POP som <b>pobieraj wiadomości</b> (bare hent). Å slå på POP åpner ikke IMAP. En agent som kan lese men ikke arkivere, eller en klient som kobler til på 995 og ikke 993, skyldes som regel dette: feil av de to ble slått på."
+    },
+    {
+      "h": "Ingen SASL-IR, så en klient som antar det, får en uforklart BAD",
+      "p": "o2s IMAP-banner er minimalt (<code>* OK IMAP4 ready</code>) og annonserer <code>AUTH=PLAIN</code> uten <code>SASL-IR</code>. Klienter som sender påloggingen i ett steg sammen med <code>AUTHENTICATE</code>, avvises med en naken <code>BAD</code> som ser ut som feil påloggingsdetaljer. mcpemails faller automatisk tilbake til utvekslingen i to steg. Det er verdt å vite, fordi det er grunnen til at generelle IMAP-verktøy noen ganger melder at o2.pl ikke kan nås når kontoen er helt i orden."
+    },
+    {
+      "h": "MOVE virker her, men mapper matches fortsatt etter navn",
+      "p": "Uvanlig for denne gruppen leverandører annonserer o2.pl IMAP-utvidelsen <code>MOVE</code>, så arkivering av en melding er én atomisk kommando i stedet for kopi pluss flagg pluss expunge. Det den ikke annonserer, er <code>SPECIAL-USE</code>, så Sent, Drafts og Trash identifiseres på navn. En polsk o2-postkasse kaller dem typisk <b>Wysłane</b>, <b>Robocze</b> og <b>Kosz</b>, så hvis en agent ikke finner en mappe, oppgi navnet eksplisitt i stedet for å beskrive rollen."
+    }
+  ],
+  "limits": [
+    "Fordi SPECIAL-USE mangler, identifiserer en agent Sent, Drafts og Trash etter navn. En postkasse med omdøpte mapper trenger at mappen oppgis i instruksjonen.",
+    "o2s e-postprogrampassord opprettes per klient. Å bytte kontopassordet ugyldiggjør dem ikke, så fjern dem du slutter å bruke."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med o2.pl-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd o2.pl-kobling. Peker du en MCP-server som mcpemails mot postkassen via IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere, og samme tilkobling fungerer da fra Cursor, ChatGPT og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for o2.pl?",
+      "a": "Begge retninger bruker samme vertsnavn. IMAP er poczta.o2.pl på port 993 med SSL, og SMTP er poczta.o2.pl på port 465, også med SSL, med krav om autentisering. Brukernavnet er hele adressen din. Verter og porter ble bekreftet via en direkte TLS-tilkobling og stemmer med det o2 publiserer."
+    },
+    {
+      "q": "Hvorfor blir o2.pl-passordet mitt avvist i en e-postklient?",
+      "a": "To grunner, i denne rekkefølgen. IMAP er ikke slått på for postkassen, noe du fikser under Opcje på fanen IMAP/POP. Eller kontoen har totrinnsinnlogging på, og da krever o2 et eget hasło do programu pocztowego i stedet for passordet du skriver i nettleseren."
+    },
+    {
+      "q": "Trenger jeg et betalt o2-abonnement for IMAP?",
+      "a": "Nei. o2s egne instruksjoner for å aktivere tilgang for e-postprogrammer beskriver det som en innstilling på postkassen, ikke en abonnementsfunksjon, og de låser det ikke bak et abonnement. Hvis innloggingen avvises, gå gjennom IMAP/POP-bryteren og spørsmålet om totrinnsinnlogging før du antar en abonnementsbegrensning."
+    },
+    {
+      "q": "Er o2.pl-e-post det samme som WP.pl-e-post?",
+      "a": "Det er separate postkasser med separate vertsnavn, selv om begge tilhører Wirtualna Polska-gruppen. En o2.pl-adresse kobler til poczta.o2.pl. Ikke pek en o2-konto mot et WP-vertsnavn eller omvendt; bruk leverandørsiden for adressen og verten som er forhåndsutfylt der."
+    },
+    {
+      "q": "Lagres o2.pl-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra o2 via IMAP for hver forespørsel og leveres til AI-klienten din. Påloggingsdetaljer krypteres ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en o2.pl-innboks",
+    "sub": "Koble til o2.pl-e-post på minutter. Én innboks gratis for alltid, uten kort."
+  }
+}

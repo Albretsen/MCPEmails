@@ -1,0 +1,92 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://docs.windsurf.com/windsurf/cascade/mcp"
+  ],
+  "meta": {
+    "title": "将邮箱连接到 Windsurf：Cascade MCP 服务器设置",
+    "description": "为 Windsurf 中的 Cascade 接入真实收件箱。在 mcp_config.json 中用 serverUrl 添加一个条目，然后通过 OAuth 授权。无需 API 密钥。1 个收件箱免费。"
+  },
+  "hero": {
+    "eyebrow": "Windsurf + 邮件",
+    "titleLine1": "把你的收件箱连接到 Windsurf",
+    "titleLine2": "以及 Cascade",
+    "lead": "为 Cascade 接入一个真实邮箱。在编辑器中读取、搜索、发送、回复、转发、定时发送和整理邮件，覆盖你已连接的所有收件箱。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "OAuth，无需 API 密钥",
+    "meta2": "邮件实时获取，从不存储",
+    "answer": "在 ~/.codeium/windsurf/mcp_config.json 的 mcpServers 下添加一个条目，使用 serverUrl 字段（不是 url），值为 https://mcpemails.com/api/mcp 。在 Cascade 中刷新 MCP 服务器，并在提示时完成授权。"
+  },
+  "method": {
+    "title": "Windsurf 如何连接：OAuth，无需 API 密钥",
+    "body": "Windsurf 会对本服务器执行标准的 MCP OAuth 流程。它通过 <b>RFC 7591 动态客户端注册</b> 自行注册，所以不需要创建 client ID，并使用 S256 以 <b>授权码加 PKCE</b> 完成授权。整个过程从不传输客户端密钥，令牌也只携带你在我们的授权同意页面上批准的权限范围。它拿到的访问令牌有效期为一小时，并会自动刷新；令牌会以 <code>OAuth:</code> 加客户端名称的形式列在 Dashboard、API Keys 中，你也在那里撤销该连接。"
+  },
+  "setup": [
+    {
+      "h": "创建免费账户并连接邮箱",
+      "p": "在 mcpemails.com 注册，无需绑卡，然后前往 Dashboard、Inboxes、Connect Inbox。Gmail 通过 Google 一键登录连接；iCloud、Fastmail、Yahoo、Zoho 和 Yandex 需要应用专用密码；其他邮箱都可通过标准 IMAP 与 SMTP 连接。免费版包含 1 个收件箱，永久有效。"
+    },
+    {
+      "h": "打开 Cascade 的 MCP 设置",
+      "p": "打开 Cascade 的 MCP 设置，或直接编辑 <code>~/.codeium/windsurf/mcp_config.json</code>。"
+    },
+    {
+      "h": "添加服务器",
+      "p": "添加下面的条目。这里的字段名是 <code>serverUrl</code>，不是 <code>url</code>。"
+    },
+    {
+      "h": "刷新并授权",
+      "p": "在 Cascade 中刷新 MCP 服务器，并在提示时通过 mcpemails 授权。批准你希望 Cascade 拥有的权限范围。"
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "字段是 serverUrl，用 url 会悄无声息地失败",
+      "p": "这是 Windsurf 设置中最常见的错误，而且犯这个错完全情有可原：Cursor、Zed 和 VS Code 都读取 <code>url</code>，所以从它们任何一个复制来的片段看起来都没问题。Windsurf 读取的是 <code>serverUrl</code>。键名写错时，条目能正常解析，服务器也会出现在列表中，但永远不会有工具出现。"
+    },
+    {
+      "h": "Cascade 需要手动刷新，它不会监视文件变化",
+      "p": "在编辑器中修改 <code>mcp_config.json</code> 并不会让 Cascade 重新加载它。每次修改后，请使用 MCP 面板中的刷新操作。一个正确但未刷新的条目，看起来和一个坏掉的条目一模一样。"
+    },
+    {
+      "h": "事先决定 Cascade 是否应该能发送邮件",
+      "p": "这件事在授权同意页面上决定。读取和草稿权限范围适合编辑器助手，而不授予 <code>send:email</code> 意味着任何提示词、任何越狱、任何失控的循环都无法通过这个连接发出邮件。如果你确实需要发送，在仪表盘中开启人工审批就是双重保险。"
+    }
+  ],
+  "limits": [
+    "每个密钥的请求上限为每分钟 100 次、每小时 1,000 次、每天 10,000 次，此外还受你所在套餐的计费操作上限约束。",
+    "服务器只做请求与响应。没有 webhook，也没有服务器主动发起的事件，所以新邮件永远不会自己唤醒你的智能体。要对新到的邮件作出反应，请按计划轮询。",
+    "每次调用都会从你的邮箱服务商实时获取邮件，从不存储。我们只保存加密后的 OAuth 令牌或应用专用密码，因此令牌一经撤销或邮箱密码一经更改，访问会立即终止。"
+  ],
+  "faq": [
+    {
+      "q": "如何将邮箱连接到 Windsurf？",
+      "a": "在 ~/.codeium/windsurf/mcp_config.json 的 mcpServers 下添加一个条目，将 serverUrl 设为 https://mcpemails.com/api/mcp ，在 Cascade 中刷新 MCP 服务器，并在提示时完成授权。之后 Cascade 就拥有了读取、搜索、发送、回复、转发、整理和定时发送邮件的工具。"
+    },
+    {
+      "q": "同样的 JSON 在 Cursor 中能用，为什么我的 Windsurf 配置不行？",
+      "a": "几乎总是字段名的问题。Cursor 读取 url，Windsurf 读取 serverUrl。条目的其余部分完全相同，这也正是这个错误即使仔细检查也会被漏掉的原因。"
+    },
+    {
+      "q": "Windsurf 需要 API 密钥吗？",
+      "a": "不需要。Windsurf 会对本服务器执行 OAuth 流程，所以配置文件里只有一个公开的 URL。bearer API 密钥仍可用于脚本化或无图形界面的场景。"
+    },
+    {
+      "q": "Windsurf 通过这种方式能访问哪些邮箱？",
+      "a": "Gmail 通过 Google 登录；iCloud、Fastmail、Yahoo、Zoho 和 Yandex 使用应用专用密码；以及任何在标准端口上支持 IMAP 与 SMTP 的其他邮箱。客户端通过同一个连接看到所有邮箱：你的智能体会先调用 inbox_list 来发现每个已连接的邮箱及其 id，所以不需要在任何地方粘贴 UUID。"
+    },
+    {
+      "q": "Cascade 会在我不知情的情况下发送邮件吗？",
+      "a": "只有在你允许的情况下才会。发送受 send:email 权限范围控制，没有该权限的密钥或令牌根本无法发送。此外，收件箱所有者还可以在仪表盘中要求人工审批，届时每一次发送、回复、转发、草稿发送和定时发送都会被暂扣，直到有人放行。"
+    },
+    {
+      "q": "我的邮件会存储在你们的服务器上吗？",
+      "a": "不会。每封邮件都是为发起请求的那次调用从你的邮箱服务商实时获取，并直接交给你的客户端。我们只保存加密后的 OAuth 令牌或应用专用密码，以便后续调用能够完成认证。在仪表盘中删除该收件箱，或在邮箱服务商处撤销访问权限，连接会立即终止。"
+    }
+  ],
+  "ctaBand": {
+    "title": "给 Cascade 一个真正的收件箱",
+    "sub": "一个配置条目，一次登录。1 个收件箱永久免费，无需绑卡。"
+  }
+}

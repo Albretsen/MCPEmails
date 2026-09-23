@@ -1,0 +1,88 @@
+{
+  "_sources": [
+    "apps/web/components/dashboard/Pages.jsx (MCP_CLIENTS) + apps/web/messages/en/dashboard.json (clients.*)",
+    "apps/web/app/.well-known/oauth-authorization-server/route.ts",
+    "https://zed.dev/docs/ai/mcp"
+  ],
+  "meta": {
+    "title": "Koble e-post til Zed: MCP-oppsett i Agent Panel",
+    "description": "Gi Agent Panel i Zed en ekte innboks som kontekstserver. Lim inn én URL, autoriser med OAuth, ingen API-nøkkel. Les, søk, send og planlegg e-post. Én innboks gratis."
+  },
+  "hero": {
+    "eyebrow": "Zed + e-post",
+    "titleLine1": "Koble innboksen din til Zed",
+    "titleLine2": "fra Agent Panel",
+    "lead": "Legg til en ekte postkasse i Zed som en kontekstserver. Les, søk i, send, svar på, videresend, planlegg og organiser e-post uten å forlate editoren.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "OAuth, ingen API-nøkkel nødvendig",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "I innstillingene for Agent Panel klikker du Add Custom Server, eller du legger til en oppføring under context_servers i settings.json med url-en https://mcpemails.com/api/mcp. Zed starter OAuth-flyten når ingen Authorization-header er satt."
+  },
+  "method": {
+    "title": "Slik kobler Zed seg til: OAuth, ingen API-nøkkel",
+    "body": "Zed kjører standard MCP OAuth-flyt mot denne serveren. Den registrerer seg selv med <b>RFC 7591 dynamisk klientregistrering</b>, så du trenger ikke opprette noen klient-ID, og autoriserer med <b>autorisasjonskode pluss PKCE</b> med S256. Ingen klienthemmelighet sendes noen gang, og tokenet har bare de tilgangene (scopes) du godkjenner på samtykkeskjermen vår. Tilgangstokenet den får varer i én time og fornyes automatisk. Det vises under Dashboard, API Keys som <code>OAuth:</code> etterfulgt av klientnavnet, og det er der du tilbakekaller tilkoblingen."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto og koble til en postkasse",
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Gmail kobles til med Google-innlogging med ett klikk; iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+    },
+    {
+      "h": "Åpne innstillingene for Agent Panel",
+      "p": "I innstillingene for Agent Panel klikker du <b>Add Custom Server</b>, eller du redigerer <code>settings.json</code> direkte."
+    },
+    {
+      "h": "Legg til serveren",
+      "p": "Legg til oppføringen nedenfor under <code>context_servers</code>."
+    },
+    {
+      "h": "Autoriser",
+      "p": "Zed starter OAuth-flyten når ingen Authorization-header er satt. Logg inn med mcpemails og godkjenn tilgangene du vil at Zed skal ha."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "La Authorization-headeren stå tom med vilje",
+      "p": "Zed velger mellom OAuth og et statisk token ut fra om du har konfigurert en Authorization-header. Setter du en, bruker Zed den og spør aldri; lar du den stå tom, kjører Zed flyten i nettleseren. Å fylle ut feltet halvveis er slik folk ender opp med en server som verken spør eller autentiserer."
+    },
+    {
+      "h": "Zed kaller dem kontekstservere, alle andre kaller dem MCP-servere",
+      "p": "Innstillingsnøkkelen er <code>context_servers</code>. Det er den samme MCP-en, og en snutt fra en annen klient er riktig bortsett fra den ytre nøkkelen, som er akkurat den typen forskjell som overlever en nøye gjennomlesning."
+    },
+    {
+      "h": "Det er i Agent Panel verktøyene dukker opp",
+      "p": "E-postverktøyene er agentverktøy. En vellykket tilkobling endrer ingenting ved innebygde fullføringer; stedet der du bekrefter at det virket, og ser hvilke verktøy som kom, er Agent Panel."
+    }
+  ],
+  "limits": [
+    "Forespørsler er begrenset til 100 per minutt, 1 000 per time og 10 000 per døgn per nøkkel, i tillegg til planens tak for fakturerbare handlinger.",
+    "Serveren er rent forespørsel og svar. Det finnes ingen webhooks og ingen hendelser startet av serveren, så ny e-post vekker aldri agenten din av seg selv. Vil du reagere på innkommende e-post, må du polle etter en tidsplan.",
+    "E-post hentes direkte fra leverandøren ved hvert kall og lagres aldri. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, så et tilbakekalt token eller et endret passord for postkassen stopper tilgangen umiddelbart."
+  ],
+  "faq": [
+    {
+      "q": "Hvordan kobler jeg e-post til Zed?",
+      "a": "Legg til en egendefinert server fra innstillingene for Agent Panel, eller legg til en oppføring under context_servers i settings.json med url-en https://mcpemails.com/api/mcp. La Authorization-headeren stå tom, så kjører Zed OAuth-flyten. Da har Agent Panel verktøy for å lese, søke, sende, svare, videresende, organisere og planlegge e-post."
+    },
+    {
+      "q": "Trenger jeg en API-nøkkel for Zed?",
+      "a": "Nei, så lenge du lar Authorization-headeren være usatt, for det er det som får Zed til å starte OAuth-flyten. En bearer-nøkkel er alternativet hvis du heller vil håndtere tokenet selv."
+    },
+    {
+      "q": "Hvilke postkasser kan Zed nå på denne måten?",
+      "a": "Gmail via Google-innlogging, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord, og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Klienten ser alle gjennom den samme tilkoblingen: agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
+    },
+    {
+      "q": "Kan Zed sende e-post uten at jeg ser det?",
+      "a": "Bare hvis du tillater det. Sending krever tilgangen send:email, så en nøkkel eller et token uten den tilgangen kan ikke sende i det hele tatt. I tillegg kan eieren av en innboks kreve menneskelig godkjenning i dashbordet, som holder tilbake hver sending, hvert svar, hver videresending, hvert utkast som sendes og hver planlagte sending til en person slipper den gjennom."
+    },
+    {
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Hver melding hentes direkte fra leverandøren din for forespørselen som ba om den, og sendes rett videre til klienten din. Bare det krypterte OAuth-tokenet eller app-passordet beholdes, slik at fremtidige kall kan autentiseres. Sletter du innboksen i dashbordet, eller tilbakekaller tilgangen hos leverandøren, avsluttes tilkoblingen med en gang."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi Zed en ekte innboks",
+    "sub": "Én kontekstserver, én innlogging. Én innboks gratis for alltid, uten kort."
+  }
+}

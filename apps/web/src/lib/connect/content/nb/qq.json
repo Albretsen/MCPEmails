@@ -1,0 +1,99 @@
+{
+  "_sources": [
+    "https://help.mail.qq.com/detail/106/985",
+    "https://cloud.tencent.com/developer/article/2457378",
+    "https://www.laifa.xin/en/youxiang/106-tengxun-qqyouxiang-tencent-personal-email"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Autorisasjonskode (授权码)",
+    "helpUrl": "https://help.mail.qq.com/detail/106/985",
+    "usernameForm": "Hele adressen din, inkludert domenet: 123456789@qq.com, eller name@foxmail.com hvis du bruker aliaset.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble QQ Mail til Claude med en autorisasjonskode",
+    "description": "Koble QQ Mail og Foxmail til Claude, Cursor eller enhver MCP-klient via IMAP på imap.qq.com:993. Krever en autorisasjonskode på 16 tegn, ikke QQ-passordet ditt."
+  },
+  "hero": {
+    "eyebrow": "QQ Mail + AI",
+    "titleLine1": "Koble QQ Mail til Claude,",
+    "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte QQ-postkasse. Les, søk, send, svar, planlegg og organiser e-post via IMAP med en Tencent-autorisasjonskode, i alle MCP-klienter i stedet for bare én.",
+    "answer": "Claude når ikke QQ Mail på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.qq.com port 993 og autentiserer med autorisasjonskoden på 16 tegn (授权码) som Tencent utsteder for tredjepartsklienter, i stedet for QQ-passordet ditt. Du må slå på POP3/IMAP/SMTP-tjenesten i QQ Mail og generere den koden før noen klient kan logge inn, og samme kode dekker både @qq.com-adressen og @foxmail.com-aliaset ditt. Én innboks er gratis.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Autorisasjonskode på 16 tegn, ikke passordet ditt",
+    "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "method": {
+    "title": "Slik kobler QQ Mail seg til: IMAP og en autorisasjonskode på 16 tegn",
+    "body": "QQ Mail tilbyr IMAP på <code>imap.qq.com</code> port 993 over TLS, og SMTP på <code>smtp.qq.com</code> port 465, også med implisitt TLS. Tencent lar ikke en e-postklient autentisere med QQ-kontopassordet ditt. Du slår på POP3/IMAP/SMTP-tjenesten i QQ Mail, og Tencent genererer en <b>授权码</b>, en autorisasjonskode på 16 tegn som fungerer som passord for alle tredjepartsklienter og API-er du kobler til. Foxmail er ikke en egen tjeneste: et <code>@foxmail.com</code>-alias er den samme Tencent-postkassen, nådd på de samme to vertsnavnene med den samme koden."
+  },
+  "setup": [
+    {
+      "h": "Opprett din gratis mcpemails-konto",
+      "p": "Registrer deg på mcpemails.com. Gratisplanen kobler til én innboks og forblir gratis, uten kort. La fanen stå åpen; du skal lime inn QQ-autorisasjonskoden der om to steg."
+    },
+    {
+      "h": "Slå på POP3/IMAP/SMTP-tjenesten i QQ Mail",
+      "p": "Åpne QQ Mail på nettet og gå til 设置 (innstillinger), så 账号与安全 (konto og sikkerhet) og 安全设置 (sikkerhetsinnstillinger). Eldre oppsett har den samme kontrollen under 设置 og så 账户, på linjen som starter med POP3/IMAP/SMTP. Slå på tjenesten. Før den er på, avviser imap.qq.com alle innloggingsforsøk, uansett hvilket passord du sender."
+    },
+    {
+      "h": "Generer 授权码 og lim den inn i mcpemails",
+      "p": "Med tjenesten på klikker du 生成授权码 (generer autorisasjonskode) og fullfører identitetssjekken Tencent ber om, som er enten QQ-passordet ditt eller en skanning fra QQ- eller WeChat-appen. Tencent viser koden på 16 tegn én gang og viser den ikke igjen. Kopier den, velg IMAP / SMTP i mcpemails, skriv inn hele QQ-adressen din og lim koden inn i passordfeltet. Vertene er forhåndsutfylt."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-klienten",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så kan agenten lese, søke, sende, svare, videresende, planlegge og organisere den QQ-postkassen."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "QQ-passordet ditt avvises med vilje, og feilen ser ut som en skrivefeil",
+      "p": "Tencent krever autorisasjonskoden for alle tredjepartsklienter, så sender du QQ-kontopassordet, får du en autentiseringsfeil som ser nøyaktig ut som et feil passord. På SMTP-siden kommer den tilbake som en <code>535</code>-feil. Dette er uten sammenligning den vanligste grunnen til at en QQ Mail-tilkobling feiler, og uansett hvor mange ganger du skriver kontopassordet på nytt, hjelper det ikke. Generer 授权码 og bruk den i stedet."
+    },
+    {
+      "h": "@qq.com og @foxmail.com er én postkasse og én kode",
+      "p": "Tencent deler ut et Foxmail-alias ved siden av den numeriske QQ-adressen din, og folk antar ofte at Foxmail er en egen leverandør med egne servere. Det er det ikke. Foxmail-aliaset ligger i samme postkasse, autentiserer mot <code>imap.qq.com</code> og <code>smtp.qq.com</code>, og bruker samme autorisasjonskode. Koble den til én gang; ikke prøv å koble den til to ganger som om det var to kontoer."
+    },
+    {
+      "h": "QQ Mail annonserer ikke SPECIAL-USE, og mappene har kinesiske navn",
+      "p": "QQs IMAP-server mangler SPECIAL-USE-utvidelsen, så en klient kan ikke spørre hvilken mappe som er Sent-mappen og hvilken som er Trash. Mapper matches etter navn i stedet, og på en kinesiskspråklig konto er de navnene 已发送 (sendt), 已删除 (slettet), 草稿箱 (utkast) og 垃圾邮件 (spam). Arkiverer agenten din en melding et uventet sted, oppgi målmappen eksplisitt i stedet for å stole på rollen."
+    }
+  ],
+  "limits": [
+    "Tencent publiserer ingen SMTP-sendegrense per postkasse. En håndfull meldinger om dagen er helt vanlig, men en massekjøring fra en nygenerert autorisasjonskode kan utløse risikokontroller som setter utgående e-post på pause en stund.",
+    "QQs SMTP-server annonserer en maksimal meldingsstørrelse på omtrent 70 MB, så en videresending med vedlegg større enn det avvises ved sending i stedet for å settes i kø.",
+    "imap.qq.com og smtp.qq.com betjenes fra det kinesiske fastlandet. Hver forespørsel agenten din gjør, krysser den forbindelsen, så et søk i en stor postkasse fra utenfor Kina er målbart tregere enn samme søk mot en europeisk eller nordamerikansk vert."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med QQ Mail?",
+      "a": "Ikke direkte. Claude har ingen innebygd QQ Mail-kobling og kan ikke åpne en IMAP-tilkobling selv. Kobler du en MCP-server som mcpemails til QQ-postkassen din, får Claude tilgang til å lese, søke, sende, svare, videresende, planlegge og organisere, og samme tilkobling fungerer i Cursor og andre MCP-klienter."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for QQ Mail?",
+      "a": "IMAP er imap.qq.com på port 993 med implisitt TLS. SMTP er smtp.qq.com på port 465, også med implisitt TLS. Logg inn med hele QQ-adressen din og autorisasjonskoden på 16 tegn, ikke QQ-passordet ditt. Begge vertene ble verifisert via en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvor får jeg autorisasjonskoden for QQ Mail?",
+      "a": "I QQ Mail på nettet åpner du 设置, så 账号与安全 og 安全设置, og slår på POP3/IMAP/SMTP-tjenesten. Tencent tilbyr så 生成授权码 og ber deg bekrefte identiteten med QQ-passordet ditt eller en skanning fra QQ- eller WeChat-appen. Koden på 16 tegn vises én gang, så kopier den før du lukker dialogen."
+    },
+    {
+      "q": "Hvorfor blir QQ Mail-passordet mitt avvist?",
+      "a": "To grunner, i denne rekkefølgen: POP3/IMAP/SMTP-tjenesten er fortsatt slått av i innstillingene i QQ Mail, eller du bruker QQ-kontopassordet i stedet for autorisasjonskoden. Tencent blokkerer kontopassordet for tredjepartsklienter uansett sikkerhetsinnstillinger, og feilen som følger, ser identisk ut som et feilskrevet passord."
+    },
+    {
+      "q": "Virker dette med en Foxmail-adresse?",
+      "a": "Ja. En @foxmail.com-adresse er et Tencent-alias på samme postkasse som @qq.com-adressen din. Den bruker samme verter, samme autorisasjonskode og samme oppsett. Du kan sende som begge adressene når postkassen er koblet til."
+    },
+    {
+      "q": "Lagres QQ-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra QQ Mail via IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsdetaljer krypteres ved lagring; meldingsinnhold beholdes ikke etter forespørselen som ba om det."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din en QQ Mail-innboks",
+    "sub": "Koble til QQ Mail på minutter med autorisasjonskoden din. Én innboks gratis for alltid, uten kort."
+  }
+}

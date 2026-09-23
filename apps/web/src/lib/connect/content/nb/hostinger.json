@@ -1,42 +1,103 @@
 {
+  "_sources": [
+    "https://docs.hostinger.com/emails/setup-devices",
+    "https://www.hostinger.com/support/1575756-how-to-get-email-account-configuration-details-for-hostinger-email/",
+    "https://www.hostinger.com/support/5966022-how-to-get-email-account-configuration-details-for-titan-email-at-hostinger/"
+  ],
+  "auth": {
+    "method": "mail-password",
+    "label": "Postkassepassord",
+    "helpUrl": "https://www.hostinger.com/support/1575756-how-to-get-email-account-configuration-details-for-hostinger-email/",
+    "usernameForm": "Hele e-postadressen din på ditt eget domene, ikke innloggingen til Hostinger-kontoen din.",
+    "status": "active"
+  },
   "meta": {
-    "title": "Koble Hostinger til Claude (og enhver AI)",
-    "description": "Koble Hostinger til Claude, Cursor, ChatGPT og enhver MCP-klient via IMAP med postkassepassordet ditt. La AI lese, sende, planlegge og organisere e-posten din. 1 innboks gratis, for alltid."
+    "title": "Koble Hostinger til Claude, Cursor og MCP-klienter",
+    "description": "Koble Hostinger Email til Claude, Cursor og enhver MCP-klient over IMAP på imap.hostinger.com:993. Titan-basert Business Email bruker helt andre verter."
   },
   "hero": {
     "eyebrow": "Hostinger + AI",
     "titleLine1": "Koble Hostinger til Claude,",
-    "titleLine2": "og Cursor, ChatGPT, enhver MCP-klient",
-    "lead": "Gi AI-agenten din en ekte Hostinger-innboks på minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
+    "lead": "Gi AI-agenten din en ekte Hostinger-innboks på få minutter. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk den samme innboksen i alle MCP-klienter, ikke bare én.",
     "meta0": "1 innboks gratis, for alltid",
-    "meta1": "Postkassepassordet ditt, ingen OAuth-oppsett",
+    "meta1": "Postkassepassordet ditt, uten OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",
-    "answer": "Claude når ikke Hostinger på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
+    "answer": "Claude kan ikke nå Hostinger på egen hånd. mcpemails er en driftet MCP-server som kobler den til over IMAP med postkassepassordet ditt, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere den e-posten. Oppsettet tar et par minutter, og én innboks er gratis."
   },
   "method": {
-    "title": "Slik kobler Hostinger seg til: IMAP og postkassepassordet ditt",
-    "body": "Hostinger Email kobles til via IMAP/SMTP med postkassepassordet du setter i hPanel under Emails. Det finnes ingen app-passord og ingen OAuth-steg. Vertene er <code>imap.hostinger.com</code> og <code>smtp.hostinger.com</code> for alle domener, så det er ingenting å slå opp."
+    "title": "Slik kobles Hostinger til: IMAP og postkassepassordet ditt",
+    "body": "Hostinger Email kobles til over IMAP/SMTP med postkassepassordet du setter i hPanel under Emails. Det finnes ikke noe app-passord og ikke noe OAuth-steg. Vertene er <code>imap.hostinger.com</code> og <code>smtp.hostinger.com</code> for alle domener, så det er ingenting å slå opp."
   },
   "setup": [
     {
       "h": "Opprett en gratis konto",
-      "p": "Registrer deg på mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+      "p": "Registrer deg hos mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
-      "h": "Hent Hostinger-postkassepassordet",
-      "p": "I hPanel åpner du Emails, velger adressen og setter eller nullstiller passordet. Det er passordet mcpemails autentiserer med."
+      "h": "Hent postkassepassordet ditt hos Hostinger",
+      "p": "Åpne Emails i hPanel, velg adressen og sett eller tilbakestill passordet. Det passordet er det mcpemails autentiserer med."
     },
     {
       "h": "Lim det inn i mcpemails",
-      "p": "Velg IMAP / SMTP, legg til Hostinger-adressen din, vertene under og passordet for å koble til innboksen trygt."
+      "p": "Velg IMAP / SMTP, legg inn Hostinger-adressen din, vertene nedenfor og passordet for å koble til innboksen på en sikker måte."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
       "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
     }
   ],
+  "gotchas": [
+    {
+      "h": "Hostinger har to e-postplattformer, og hvilken du har, avhenger av når du kjøpte",
+      "p": "<b>Hostinger Email</b> er Hostingers egen plattform, dokumentert med <code>imap.hostinger.com</code> på 993 og <code>smtp.hostinger.com</code> på 465, med <code>pop.hostinger.com</code> på 995 for POP3. Hostingers planer <b>Business Email</b> og <b>Enterprise Email</b> drives av Titan og svarer i stedet på <code>imap.titan.email</code> og <code>smtp.titan.email</code>, der Hostinger dokumenterer 993 for IMAP og 465 eller 587 for SMTP. Ingenting ved adressen forteller deg hvilken du har. Det gjør hPanel: åpne <b>Emails</b>, klikk <b>Manage</b> ved siden av domenet og velg <b>Connect Apps & Devices</b>, som viser verdiene for plattformen postkassen faktisk ligger på. For en Titan-postkasse vises de samme verdiene også i Titan Webmail under Settings, deretter Configure 3rd party apps."
+    },
+    {
+      "h": "Postkassepassordet er ikke hPanel-innloggingen din, og 2FA endrer det igjen",
+      "p": "IMAP autentiserer mot passordet som er satt på den enkelte e-postadressen, og det setter eller tilbakestiller du i hPanel under <b>Emails</b> og listen over postkasser. Innloggingen til Hostinger-kontoen din, den som styrer webhotell og fakturering, er en annen påloggingsopplysning og avvises. Hostinger dokumenterer også at passordet er postkassepassordet <b>eller et app-passord hvis postkassen bruker tofaktorautentisering</b>, så en postkasse med 2FA slått på trenger app-passordet og ikke det du satte. Begge feilene kommer som en helt vanlig autentiseringsfeil."
+    },
+    {
+      "h": "SMTP-serveren begrenser en melding til omtrent 46 MB, som er mindre enn hos de fleste",
+      "p": "Innsendingsserveren til Hostinger oppgir en maksimal meldingsstørrelse på 48 811 212 byte, omtrent 46 MB. Det er størrelsen på den kodede meldingen, ikke på filen din, og MIME-koding gjør et vedlegg omtrent en tredjedel større, så det praktiske taket ligger nærmere 34 MB med faktisk vedlegg. Det er en merkbart lavere grense enn flere andre verter oppgir, og en agent som prøver å videresende et stort vedlegg, får en kontant avvisning ved innsending i stedet for en retur senere. Send heller en lenke når en fil er nær den størrelsen."
+    },
+    {
+      "h": "Hostinger Email mangler MOVE, UIDPLUS og SPECIAL-USE",
+      "p": "Hilsenen annonserer <code>SASL-IR</code>, <code>IDLE</code>, <code>LITERAL+</code>, <code>AUTH=PLAIN</code> og <code>AUTH=LOGIN</code>, men ikke MOVE, UIDPLUS eller SPECIAL-USE. Flytting av en melding utføres derfor som en kopiering, en flaggoppdatering og en expunge i stedet for én atomisk kommando, identifikatoren til kopien rapporteres ikke tilbake og må finnes ved å søke i målmappen, og Sent, Drafts, Trash og Junk gjenkjennes på navn i stedet for på rolle. Hvis en agent ikke finner arkivmappen din på en Hostinger-postkasse, oppgi mappenavnet eksplisitt, så finner den den."
+    }
+  ],
+  "limits": [
+    "Utgående meldinger er begrenset til omtrent 46 MB kodet, så et vedlegg på godt over rundt 34 MB avvises ved innsending.",
+    "Fordi MOVE ikke annonseres, er en flytting ikke atomisk. Hvis en tilkobling brytes underveis, kan en melding en kort stund finnes i begge mappene.",
+    "Planene Business Email og Enterprise Email kjører på Titan og ikke på Hostingers egen plattform, og bruker Titan-vertsnavnene. Hent innstillingene fra Connect Apps and Devices for postkassen du kobler til."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med Hostinger-e-post?",
+      "a": "Ikke på egen hånd. Claude har ingen innebygd Hostinger-kobling. Kobler du en MCP-server som mcpemails til postkassen over IMAP, får Claude tilgang til å lese, søke, sende, svare, planlegge og organisere den, og den samme tilkoblingen fungerer deretter fra Cursor, ChatGPT og andre MCP-klienter, ikke bare én."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Hostinger?",
+      "a": "For Hostinger Email er IMAP imap.hostinger.com på port 993 med SSL, og SMTP er smtp.hostinger.com på port 465 med SSL, med 587 og STARTTLS dokumentert som alternativet for utgående. Brukernavnet er hele e-postadressen din. Begge vertene ble bekreftet med en direkte TLS-tilkobling på datoen som vises på denne siden."
+    },
+    {
+      "q": "Hvordan finner jeg e-postinnstillingene mine hos Hostinger i hPanel?",
+      "a": "Åpne Emails i hPanel, klikk Manage ved siden av domenet, og velg Connect Apps and Devices i sidemenyen. Den skjermen har veiledende faner for enkeltprogrammer og de rå serverinnstillingene under. Den viser verdiene for plattformen postkassen din faktisk ligger på, noe som er viktig hvis du har en Titan-basert plan."
+    },
+    {
+      "q": "Hvorfor avvises e-postpassordet mitt hos Hostinger?",
+      "a": "Som regel fordi du brukte innloggingen til Hostinger-kontoen i stedet for passordet som er satt på selve e-postadressen. Tilbakestill postkassepassordet i hPanel under Emails og prøv det. Hvis postkassen har tofaktorautentisering slått på, krever Hostinger i stedet et app-passord for e-postklienter, og avvisningen ser helt lik ut som ved et feil passord."
+    },
+    {
+      "q": "Hva om planen min bruker Titan Email?",
+      "a": "Da gjelder ikke Hostinger-vertsnavnene. Titan-drevne Business Email- og Enterprise Email-postkasser bruker imap.titan.email på 993 og smtp.titan.email på 465 eller 587. Hent de nøyaktige verdiene fra Connect Apps and Devices i hPanel, eller fra Settings, deretter Configure 3rd party apps, i Titan Webmail."
+    },
+    {
+      "q": "Lagres Hostinger-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Hostinger over IMAP for hver forespørsel og sendes videre til AI-klienten din. Påloggingsopplysninger er kryptert ved lagring, og meldingsinnhold beholdes ikke."
+    }
+  ],
   "ctaBand": {
     "title": "Gi AI-en din en Hostinger-innboks",
-    "sub": "Koble til Hostinger på minutter. Én innboks gratis for alltid, uten kort."
+    "sub": "Koble til Hostinger på få minutter. Én innboks gratis for alltid, uten kort."
   }
 }
