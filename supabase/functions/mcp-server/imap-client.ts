@@ -3,7 +3,9 @@
  *
  * Serves IMAP inboxes (iCloud, Yahoo, Zoho, Yandex, and the generic connector)
  * that have no JMAP/REST API. Uses Deno.connectTls for implicit-TLS IMAP
- * (port 993) and SASL PLAIN authentication with the stored app password.
+ * (port 993) and the stored app password: SASL PLAIN by default, the LOGIN
+ * command or CRAM-MD5 when the server's advertised mechanisms rule PLAIN out
+ * (see imap-auth.ts).
  *
  * Scope (Phase 1): connect → authenticate → SELECT → UID SEARCH → UID FETCH
  * (ENVELOPE + FLAGS + BODYSTRUCTURE) → LOGOUT. This is enough for list_inbox;
@@ -21,6 +23,14 @@
 import { previewFromBodyPartSource } from "./text-extract.ts";
 import { connectGuardedTcp } from "./host-guard.ts";
 import { decodeModifiedUtf7, encodeModifiedUtf7 } from "./utf7.ts";
+import {
+  chooseImapPasswordMechanism,
+  cramMd5Response,
+  imapLoginArgument,
+  type ImapPasswordMechanism,
+  parseImapCapabilities,
+  redactImapAuthText,
+} from "./imap-auth.ts";
 
 export class ImapAuthError extends Error {
   constructor(message: string) {
@@ -432,7 +442,8 @@ export class ImapClient {
 
   /**
    * One connect attempt: open a TLS connection, read the greeting, and
-   * authenticate via SASL PLAIN.
+   * authenticate with the password mechanism the server's capabilities allow
+   * (SASL PLAIN unless they rule it out; see chooseImapPasswordMechanism).
    *
    * Throws {@link ImapConnectionLimitError} when the greeting or AUTH response
    * signals a transient connection/rate limit (retryable), and
@@ -509,11 +520,130 @@ export class ImapClient {
       client.conn = conn;
     }
 
-    // SASL PLAIN: base64("\x00" + user + "\x00" + pass).
-    const token = btoa(`\x00${cfg.email}\x00${cfg.password}`);
-    const tag = client.nextTag();
-    await client.write(`${tag} AUTHENTICATE PLAIN ${token}${CRLF}`);
-    let resp = await client.readTagged(tag);
+    // The greeting's [CAPABILITY] only counts on implicit TLS; after STARTTLS
+    // the pre-TLS list is void (RFC 3501 6.2.1), so login() asks again.
+    const { resp, sent, mechanism } = await client.login(
+      cfg.security === "starttls" ? null : greeting,
+      cfg.email,
+      cfg.password,
+    );
+
+    if (resp.status !== "OK") {
+      client.close();
+      // Nothing the server says goes into an error unredacted: a server that
+      // echoes the rejected command would otherwise hand back the credential.
+      const text = redactImapAuthText(resp.text, [cfg.email, cfg.password, sent]);
+      // Some servers report a connection-limit refusal as a NO/BYE on AUTH
+      // rather than at the greeting (text like [OVERQUOTA]/[UNAVAILABLE]/
+      // "too many connections"). Treat those as retryable; everything else is
+      // a genuine credential failure.
+      if (isConnectionLimitResponse(resp.text)) {
+        throw new ImapConnectionLimitError(
+          `IMAP connection refused at auth: ${text}`,
+        );
+      }
+      throw new ImapAuthError(
+        mechanism === "PLAIN"
+          ? `IMAP authentication failed: ${text}`
+          : `IMAP authentication failed: ${text} (mechanism ${mechanism})`,
+      );
+    }
+    return client;
+  }
+
+  /**
+   * Choose the password mechanism from the server's capabilities and run it.
+   * `greeting` is the server greeting when its [CAPABILITY] code may be
+   * trusted (implicit TLS), else null, which costs one CAPABILITY round trip.
+   * A server that will not list its capabilities keeps PLAIN, as always.
+   */
+  private async login(
+    greeting: string | null,
+    username: string,
+    password: string,
+  ): Promise<{
+    resp: { status: "OK" | "NO" | "BAD"; text: string };
+    sent: string;
+    mechanism: ImapPasswordMechanism;
+  }> {
+    let caps = greeting ? parseImapCapabilities([greeting]) : null;
+    if (!caps) {
+      const capTag = this.nextTag();
+      await this.write(`${capTag} CAPABILITY${CRLF}`);
+      const capResp = await this.readTagged(capTag);
+      caps = capResp.status === "OK"
+        ? parseImapCapabilities([...capResp.untagged, capResp.text])
+        : null;
+    }
+    const mechanism = chooseImapPasswordMechanism(caps);
+    return { ...(await this.authenticatePassword(mechanism, username, password)), mechanism };
+  }
+
+  /**
+   * Run one password exchange. Returns the tagged outcome and the token that
+   * went on the wire (for redaction; "" when none did). Only called from
+   * connectOnce, before the session is handed to anyone, so it does not take
+   * the command lock.
+   */
+  private async authenticatePassword(
+    mechanism: ImapPasswordMechanism,
+    username: string,
+    password: string,
+  ): Promise<{ resp: { status: "OK" | "NO" | "BAD"; text: string }; sent: string }> {
+    if (mechanism === "LOGIN") {
+      // RFC 3501 LOGIN: quoted strings, or synchronizing literals for anything
+      // that is not printable ASCII. The line carries the password; it is never
+      // logged, and the caller redacts anything the server echoes.
+      const tag = this.nextTag();
+      let pending = `${tag} LOGIN`;
+      for (const value of [username, password]) {
+        const arg = imapLoginArgument(value);
+        if (arg.kind === "quoted") {
+          pending += ` ${arg.text}`;
+          continue;
+        }
+        await this.write(`${pending} {${arg.bytes.length}}${CRLF}`);
+        pending = "";
+        const refused = await this.readLiteralContinuation(tag);
+        if (refused) return { resp: refused, sent: "" };
+        await this.writeAll(arg.bytes);
+      }
+      await this.write(`${pending}${CRLF}`);
+      return { resp: await this.readTagged(tag), sent: "" };
+    }
+
+    if (mechanism === "CRAM-MD5") {
+      // RFC 2195: the password never crosses the wire, only an HMAC-MD5 of the
+      // server's challenge keyed with it.
+      const tag = this.nextTag();
+      await this.write(`${tag} AUTHENTICATE CRAM-MD5${CRLF}`);
+      let challenge = "";
+      for (let i = 0; i < 100 && !challenge; i++) {
+        const line = await this.readLine();
+        if (line.startsWith("+")) {
+          challenge = line;
+          break;
+        }
+        if (line.startsWith(`${tag} `)) {
+          const m = /^\S+\s+(OK|NO|BAD)\s*(.*)$/.exec(line);
+          return {
+            resp: { status: (m?.[1] as "OK" | "NO" | "BAD") ?? "BAD", text: m?.[2] ?? line },
+            sent: "",
+          };
+        }
+        if (this.eofReached) throw new Error("IMAP connection closed during CRAM-MD5");
+      }
+      if (!challenge) throw new Error("IMAP server never sent a CRAM-MD5 challenge");
+      const response = cramMd5Response(username, password, challenge);
+      await this.write(`${response}${CRLF}`);
+      return { resp: await this.readTagged(tag), sent: response };
+    }
+
+    // SASL PLAIN: base64("\x00" + user + "\x00" + pass). Unchanged on the wire.
+    const token = btoa(`\x00${username}\x00${password}`);
+    const tag = this.nextTag();
+    await this.write(`${tag} AUTHENTICATE PLAIN ${token}${CRLF}`);
+    let resp = await this.readTagged(tag);
 
     // A tagged BAD rejects the command rather than the credentials: the server
     // does not implement RFC 4959 (SASL-IR) and will not take the initial
@@ -521,34 +651,20 @@ export class ImapClient {
     // to the inline form. Retry the RFC 3501 two-step form on the same
     // connection; a NO is a genuine credential failure and is not retried.
     if (resp.status === "BAD") {
-      const retryTag = client.nextTag();
-      await client.write(`${retryTag} AUTHENTICATE PLAIN${CRLF}`);
+      const retryTag = this.nextTag();
+      await this.write(`${retryTag} AUTHENTICATE PLAIN${CRLF}`);
       // Continuation is a bare "+" on Yandex, so don't require "+ ".
-      const cont = await client.readLine();
+      const cont = await this.readLine();
       if (!cont.startsWith("+")) {
-        client.close();
+        this.close();
         throw new ImapAuthError(
-          `IMAP server refused SASL PLAIN: ${cont.slice(0, 120)}`,
+          `IMAP server refused SASL PLAIN: ${redactImapAuthText(cont.slice(0, 120), [username, password, token])}`,
         );
       }
-      await client.write(`${token}${CRLF}`);
-      resp = await client.readTagged(retryTag);
+      await this.write(`${token}${CRLF}`);
+      resp = await this.readTagged(retryTag);
     }
-
-    if (resp.status !== "OK") {
-      client.close();
-      // Some servers report a connection-limit refusal as a NO/BYE on AUTH
-      // rather than at the greeting (text like [OVERQUOTA]/[UNAVAILABLE]/
-      // "too many connections"). Treat those as retryable; everything else is
-      // a genuine credential failure.
-      if (isConnectionLimitResponse(resp.text)) {
-        throw new ImapConnectionLimitError(
-          `IMAP connection refused at auth: ${resp.text}`,
-        );
-      }
-      throw new ImapAuthError(`IMAP authentication failed: ${resp.text}`);
-    }
-    return client;
+    return { resp, sent: token };
   }
 
   /**

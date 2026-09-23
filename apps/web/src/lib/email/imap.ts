@@ -11,7 +11,9 @@
  * Connection lifecycle per operation:
  *   1. Open TLS socket (implicit TLS, port 993)
  *   2. Read server greeting, verify "* OK" prefix
- *   3. Authenticate via XOAUTH2 (OAuth tokens) or PLAIN (app passwords)
+ *   3. Authenticate via XOAUTH2 (OAuth tokens) or a password: PLAIN by
+ *      default, the LOGIN command or CRAM-MD5 when the server's advertised
+ *      mechanisms rule PLAIN out (see imap-auth.ts)
  *   4. Execute IMAP commands (SELECT, FETCH, SEARCH, STORE)
  *   5. LOGOUT and close socket, always, including on error paths
  *
@@ -23,6 +25,13 @@
 
 import * as tls from 'tls';
 import { decodeModifiedUtf7, encodeModifiedUtf7 } from './utf7.ts';
+import {
+  chooseImapPasswordMechanism,
+  cramMd5Response,
+  imapLoginArgument,
+  parseImapCapabilities,
+  redactImapAuthText,
+} from './imap-auth.ts';
 
 // ── Error codes ───────────────────────────────────────────────────────────────
 
@@ -375,6 +384,35 @@ async function readSaslContinuation(reader: LineReader): Promise<void> {
   }
 }
 
+/**
+ * Wait for a continuation or the tagged completion of `tag`, whichever comes
+ * first. Returns the continuation line, or the tagged response when the
+ * server refused (a refused mechanism or literal answers NO/BAD, not "+").
+ */
+async function readContinuationOrTagged(
+  reader: LineReader,
+  tag: string
+): Promise<{ continuation: string } | TaggedResponse> {
+  const deadline = Date.now() + TIMEOUT.AUTHENTICATE;
+  while (true) {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) {
+      throw new McpEmailsError('CONNECTION_TIMEOUT', 'IMAP server did not send a continuation');
+    }
+    const line = await Promise.race([
+      reader.readLine(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new McpEmailsError('CONNECTION_TIMEOUT', 'IMAP response timeout')), remaining)
+      ),
+    ]);
+    if (line.startsWith('+')) return { continuation: line };
+    const match = /^(\S+) (OK|NO|BAD)\b ?(.*)$/.exec(line);
+    if (match && match[1] === tag) {
+      return { status: match[2] as 'OK' | 'NO' | 'BAD', text: match[3].trim(), untagged: [] };
+    }
+  }
+}
+
 // ── Private: SASL token builders ──────────────────────────────────────────────
 
 /**
@@ -702,12 +740,17 @@ export function quoteListPattern(pattern: string): string {
 
 // ── Private: socket write helper ──────────────────────────────────────────────
 
-function socketWrite(socket: tls.TLSSocket, data: string): Promise<void> {
+function socketWrite(socket: tls.TLSSocket, data: string | Uint8Array): Promise<void> {
   return new Promise((resolve, reject) => {
-    const ok = socket.write(data, 'binary', (err) => {
+    const callback = (err?: Error | null) => {
       if (err) reject(err);
       else resolve();
-    });
+    };
+    // Strings keep the 'binary' encoding every command has always used; bytes
+    // (a LOGIN literal's UTF-8 octets) go through untouched.
+    const ok = typeof data === 'string'
+      ? socket.write(data, 'binary', callback)
+      : socket.write(data, callback);
     if (!ok) {
       socket.once('drain', resolve);
     }
@@ -794,7 +837,7 @@ export async function openImapSession(config: ImapConfig): Promise<ImapSession> 
   }
 
   // 3. Read server greeting
-  await closeOnError(async () => {
+  const greeting = await closeOnError(async () => {
     const greeting = await Promise.race([
       reader.readLine(),
       sleep(TIMEOUT.TCP_CONNECT).then<never>(() => {
@@ -808,6 +851,7 @@ export async function openImapSession(config: ImapConfig): Promise<ImapSession> 
         `Unexpected IMAP greeting: ${greeting.slice(0, 80)}`
       );
     }
+    return greeting;
   });
 
   // 4. Authenticate
@@ -855,12 +899,77 @@ export async function openImapSession(config: ImapConfig): Promise<ImapSession> 
         throw new ImapAuthError(`XOAUTH2 authentication rejected: ${authResult.text}`);
       }
     } else {
-      // AUTH PLAIN
       if (!config.appPassword) {
         throw new McpEmailsError('AUTH_FAILED', 'PLAIN auth requires an appPassword');
       }
+      const username = config.username || config.email;
+      const password = config.appPassword;
+      const secrets = [username, config.email, password];
 
-      const payload = buildPlainAuthToken(config.username || config.email, config.appPassword);
+      // Which password mechanism. PLAIN unless the server's own capability
+      // list rules it out; see chooseImapPasswordMechanism for the rule.
+      let caps = parseImapCapabilities([greeting]);
+      if (!caps) {
+        const capTag = nextTag();
+        await socketWrite(socket, `${capTag} CAPABILITY\r\n`);
+        const capResult = await readTaggedResponse(reader, capTag, TIMEOUT.AUTHENTICATE);
+        caps = capResult.status === 'OK'
+          ? parseImapCapabilities([...capResult.untagged, capResult.text])
+          : null;
+      }
+      const mechanism = chooseImapPasswordMechanism(caps);
+
+      if (mechanism === 'LOGIN') {
+        // RFC 3501 LOGIN. Quoted strings, or synchronizing literals for
+        // anything that is not printable ASCII.
+        let pending = `${authTag} LOGIN`;
+        let refused: TaggedResponse | null = null;
+        for (const value of [username, password]) {
+          const arg = imapLoginArgument(value);
+          if (arg.kind === 'quoted') {
+            pending += ` ${arg.text}`;
+            continue;
+          }
+          await socketWrite(socket, `${pending} {${arg.bytes.length}}\r\n`);
+          pending = '';
+          const reply = await readContinuationOrTagged(reader, authTag);
+          if (!('continuation' in reply)) { refused = reply; break; }
+          await socketWrite(socket, arg.bytes);
+        }
+        const loginResult = refused ?? await (async () => {
+          await socketWrite(socket, `${pending}\r\n`);
+          return readTaggedResponse(reader, authTag, TIMEOUT.AUTHENTICATE);
+        })();
+        if (loginResult.status !== 'OK') {
+          socket.destroy();
+          throw new ImapAuthError(`LOGIN rejected: ${redactImapAuthText(loginResult.text, secrets)}`);
+        }
+        return;
+      }
+
+      if (mechanism === 'CRAM-MD5') {
+        await socketWrite(socket, `${authTag} AUTHENTICATE CRAM-MD5\r\n`);
+        const reply = await readContinuationOrTagged(reader, authTag);
+        let cramResult: TaggedResponse;
+        let response = '';
+        if ('continuation' in reply) {
+          response = cramMd5Response(username, password, reply.continuation);
+          await socketWrite(socket, `${response}\r\n`);
+          cramResult = await readTaggedResponse(reader, authTag, TIMEOUT.AUTHENTICATE);
+        } else {
+          cramResult = reply;
+        }
+        if (cramResult.status !== 'OK') {
+          socket.destroy();
+          throw new ImapAuthError(
+            `CRAM-MD5 authentication rejected: ${redactImapAuthText(cramResult.text, [...secrets, response])}`
+          );
+        }
+        return;
+      }
+
+      // AUTH PLAIN, unchanged on the wire.
+      const payload = buildPlainAuthToken(username, password);
       await socketWrite(socket, `${authTag} AUTHENTICATE PLAIN ${payload}\r\n`);
 
       let authResult = await readTaggedResponse(reader, authTag, TIMEOUT.AUTHENTICATE);
@@ -880,7 +989,9 @@ export async function openImapSession(config: ImapConfig): Promise<ImapSession> 
 
       if (authResult.status !== 'OK') {
         socket.destroy();
-        throw new ImapAuthError(`PLAIN authentication rejected: ${authResult.text}`);
+        throw new ImapAuthError(
+          `PLAIN authentication rejected: ${redactImapAuthText(authResult.text, [...secrets, payload])}`
+        );
       }
     }
   });

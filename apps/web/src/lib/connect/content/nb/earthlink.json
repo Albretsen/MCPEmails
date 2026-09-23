@@ -48,16 +48,16 @@
   ],
   "gotchas": [
     {
-      "h": "EarthLink annonserer verken PLAIN eller LOGIN, og strenge klienter gir opp i stedet for å logge inn",
-      "p": "Kapabilitetslisten EarthLink returnerer før pålogging, tilbyr <code>AUTH=CRAM-MD5</code>, <code>AUTH=EL-TAC</code> og <code>AUTH=EL-VOICE</code>. De to siste er EarthLinks egne mekanismer, og ingen vanlig e-postklient implementerer dem. CRAM-MD5 er en standardmekanisme, men ikke alle klienter implementerer den, og det finnes verken <code>AUTH=PLAIN</code> eller <code>AUTH=LOGIN</code> i den listen. En klient som bare støtter PLAIN eller LOGIN og velger mekanisme blant dem serveren annonserer, finner derfor ingenting den kan bruke, og rapporterer en autentiseringsfeil uten noen gang å sende et passord. mcpemails bruker ikke CRAM-MD5 og velger ikke fra den annonserte listen: den logger alltid inn med <code>AUTHENTICATE PLAIN</code>, uansett hva serveren annonserer."
+      "h": "EarthLink annonserer verken PLAIN eller LOGIN, så mcpemails logger inn med IMAP-kommandoen LOGIN",
+      "p": "Kapabilitetslisten EarthLink returnerer før pålogging, tilbyr <code>AUTH=CRAM-MD5</code>, <code>AUTH=EL-TAC</code> og <code>AUTH=EL-VOICE</code>, uten <code>AUTH=PLAIN</code> og uten <code>AUTH=LOGIN</code>. De to siste er EarthLinks egne mekanismer, og ingen vanlig e-postklient implementerer dem. mcpemails leser den listen før innlogging. Når en server tilbyr mekanismer, men ikke PLAIN, og ikke melder <code>LOGINDISABLED</code>, bruker mcpemails IMAP-kommandoen <code>LOGIN</code>, som er en del av grunnleggende IMAP og ikke trenger å annonseres. Den sender samme adresse og passord som PLAIN ville gjort, inne i den samme TLS-forbindelsen. Vi testet EarthLink med en oppdiktet konto, ett forsøk per mekanisme: <code>LOGIN</code> fikk svaret \"Login incorrect\", svaret fra en server som faktisk sjekket påloggingsopplysningene, mens PLAIN og CRAM-MD5 begge fikk \"Server(s) unavailable to complete operation\". mcpemails implementerer også CRAM-MD5, men bruker den bare mot servere som slår av LOGIN. Det som ennå ikke er testet, er en innlogging med en ekte EarthLink-postkasse, så denne veien er verifisert mot serverens svar, ikke fra ende til ende."
     },
     {
       "h": "Den utgående serveren er ikke imap eller smtp punktum earthlink punktum net",
       "p": "Den er <code>smtpauth.earthlink.net</code>, på port 587 med STARTTLS i stedet for implisitt TLS på 465. Veiledninger som gjetter ut fra den innkommende verten, eller som antar 465 fordi de fleste leverandører bruker den, gir en konfigurasjon som kobler til for lesing og feiler stille ved første sending. Hvis e-post kommer inn, men ingenting går ut, er dette grunnen."
     },
     {
-      "h": "Heller ingen SASL-IR, så autentiseringen er en utveksling i to steg",
-      "p": "EarthLink annonserer ikke SASL-IR, så den avviser ettstegsformen som sender påloggingsopplysningene sammen med AUTHENTICATE-kommandoen. Sammen med mekanismelisten ovenfor kan et autentiseringsforsøk mot EarthLink feile på to forskjellige måter som begge ser ut som et feil passord. mcpemails prøver igjen med utvekslingen i to steg i stedet for å behandle den første avvisningen som endelig."
+      "h": "Én mislykket innlogging avslutter forbindelsen",
+      "p": "EarthLink annonserer ikke SASL-IR, og etter en avvist innlogging lukker den forbindelsen i stedet for å la klienten prøve en annen vei. Derfor velger mcpemails mekanisme fra kapabilitetslisten før noe sendes, i stedet for å prøve PLAIN først og falle tilbake: en feil første gjetning ville bruke opp forsøket, og gjentatte feil mot en postkasse er verdt å unngå. Kommandoen <code>LOGIN</code> er ett enkelt steg, så den manglende SASL-IR-støtten påvirker den ikke."
     },
     {
       "h": "Ingen IDLE, ingen MOVE, ingen SPECIAL-USE på denne serveren",
@@ -84,7 +84,7 @@
     },
     {
       "q": "Trenger EarthLink et app-passord?",
-      "a": "Nei. EarthLink utsteder ingen app-spesifikke passord og har ingen side for å lage et. En e-postklient logger inn med passordet til postkassen. Hvis et riktig passord likevel avvises, kan årsaken være autentiseringsmekanismen og ikke påloggingsopplysningen: før pålogging annonserer EarthLink bare CRAM-MD5 og to egne mekanismer, ikke PLAIN eller LOGIN."
+      "a": "Nei. EarthLink utsteder ingen app-spesifikke passord og har ingen side for å lage et. En e-postklient logger inn med passordet til postkassen. Før pålogging annonserer EarthLink bare CRAM-MD5 og to egne mekanismer, ikke PLAIN eller LOGIN, og derfor nekter noen klienter å sende selv et riktig passord. mcpemails logger i stedet inn med IMAP-kommandoen LOGIN, som EarthLinks server besvarer som en vanlig sjekk av påloggingsopplysningene. Det er bekreftet med en oppdiktet konto, ikke ennå med en ekte EarthLink-postkasse."
     },
     {
       "q": "Lagres EarthLink-e-posten min på serverne deres?",

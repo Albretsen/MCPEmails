@@ -48,16 +48,16 @@
   ],
   "gotchas": [
     {
-      "h": "EarthLink 既不声明 PLAIN 也不声明 LOGIN，严格的客户端会直接放弃登录",
-      "p": "EarthLink 在登录前返回的能力列表提供 <code>AUTH=CRAM-MD5</code>、<code>AUTH=EL-TAC</code> 和 <code>AUTH=EL-VOICE</code>。后两者是 EarthLink 自己的机制，没有任何普通邮件客户端实现它们。CRAM-MD5 是标准机制，但并非所有客户端都实现了它，而列表中根本没有 <code>AUTH=PLAIN</code>，也没有 <code>AUTH=LOGIN</code>。因此，只支持 PLAIN 或 LOGIN、并按服务器声明来选择机制的客户端找不到可用的机制，在根本没发送密码的情况下就报告认证失败。mcpemails 不使用 CRAM-MD5，也不从声明的列表中选择：无论服务器声明什么，它始终用 <code>AUTHENTICATE PLAIN</code> 登录。"
+      "h": "EarthLink 既不声明 PLAIN 也不声明 LOGIN，因此 mcpemails 使用 IMAP LOGIN 命令登录",
+      "p": "EarthLink 在登录前返回的能力列表提供 <code>AUTH=CRAM-MD5</code>、<code>AUTH=EL-TAC</code> 和 <code>AUTH=EL-VOICE</code>，没有 <code>AUTH=PLAIN</code>，也没有 <code>AUTH=LOGIN</code>。后两者是 EarthLink 自己的机制，没有任何普通邮件客户端实现它们。mcpemails 会在登录前读取这个列表。当服务器提供了机制但没有 PLAIN，并且没有声明 <code>LOGINDISABLED</code> 时，mcpemails 使用 IMAP 的 <code>LOGIN</code> 命令，它属于基础 IMAP，无需声明。它发送的地址和密码与 PLAIN 相同，也走同一条 TLS 连接。我们用一个虚构的账户探测了 EarthLink，每种机制只试一次：<code>LOGIN</code> 返回 \"Login incorrect\"，这是服务器真正检查了凭据后的回答；而 PLAIN 和 CRAM-MD5 都返回 \"Server(s) unavailable to complete operation\"。mcpemails 也实现了 CRAM-MD5，但只在服务器禁用 LOGIN 时才使用。尚未测试的是用真实的 EarthLink 邮箱登录，所以这条路径已根据服务器的回答验证，但还没有端到端验证。"
     },
     {
       "h": "发信服务器不是 imap 或 smtp.earthlink.net",
       "p": "它是 <code>smtpauth.earthlink.net</code>，端口 587，使用 STARTTLS，而不是 465 上的隐式 TLS。根据收信服务器照葫芦画瓢的指南，或因为大多数服务商用 465 就假定用 465 的指南，得出的配置能连上收信，却在第一次发信时悄无声息地失败。如果邮件能收到却发不出去，原因就在这里。"
     },
     {
-      "h": "也没有 SASL-IR，因此认证是两步交互",
-      "p": "EarthLink 不声明 SASL-IR，所以会拒绝随 AUTHENTICATE 命令一起发送凭据的一步式形式。再加上上面的机制列表，对 EarthLink 的认证尝试可能以两种不同的方式失败，而两者看起来都像密码错误。mcpemails 会重试两步交互，而不是把第一次拒绝当作最终结果。"
+      "h": "一次登录失败就会断开连接",
+      "p": "EarthLink 不声明 SASL-IR，并且在登录被拒绝后会直接关闭连接，不让客户端换一种方式再试。因此 mcpemails 在发送任何内容之前就根据能力列表选定机制，而不是先试 PLAIN 再回退：第一次猜错就会用掉这次尝试，而对同一邮箱反复失败最好避免。<code>LOGIN</code> 命令只有一步，所以缺少 SASL-IR 对它没有影响。"
     },
     {
       "h": "该服务器没有 IDLE、没有 MOVE、没有 SPECIAL-USE",
@@ -84,7 +84,7 @@
     },
     {
       "q": "EarthLink 需要应用专用密码吗？",
-      "a": "不需要。EarthLink 不签发应用专用密码，也没有创建它的页面。邮件客户端使用该邮箱的密码登录。如果正确的密码仍被拒绝，原因可能是认证机制而不是凭据：EarthLink 在登录前只声明 CRAM-MD5 和两个自有机制，没有 PLAIN 或 LOGIN。"
+      "a": "不需要。EarthLink 不签发应用专用密码，也没有创建它的页面。邮件客户端使用该邮箱的密码登录。EarthLink 在登录前只声明 CRAM-MD5 和两个自有机制，没有 PLAIN 或 LOGIN，所以有些客户端连正确的密码都不会发送。mcpemails 改用 IMAP LOGIN 命令登录，EarthLink 的服务器会把它当作正常的凭据检查来回答。这一点目前只用虚构账户确认过，尚未用真实的 EarthLink 邮箱确认。"
     },
     {
       "q": "我的 EarthLink 邮件会存储在你们的服务器上吗？",

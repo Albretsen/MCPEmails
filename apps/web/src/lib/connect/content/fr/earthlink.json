@@ -48,16 +48,16 @@
   ],
   "gotchas": [
     {
-      "h": "EarthLink n'annonce ni PLAIN ni LOGIN, et les clients stricts abandonnent au lieu de se connecter",
-      "p": "La liste de capacités qu'EarthLink renvoie avant la connexion propose <code>AUTH=CRAM-MD5</code>, <code>AUTH=EL-TAC</code> et <code>AUTH=EL-VOICE</code>. Les deux derniers sont des mécanismes propres à EarthLink, qu'aucun client de messagerie ordinaire n'implémente. CRAM-MD5 est un mécanisme standard, mais tous les clients ne l'implémentent pas, et il n'y a ni <code>AUTH=PLAIN</code> ni <code>AUTH=LOGIN</code> dans cette liste. Un client qui ne prend en charge que PLAIN ou LOGIN et choisit son mécanisme parmi ceux qu'annonce le serveur n'en trouve donc aucun qu'il puisse utiliser et signale un échec d'authentification sans jamais envoyer de mot de passe. mcpemails n'utilise pas CRAM-MD5 et ne choisit pas dans la liste annoncée : il se connecte toujours avec <code>AUTHENTICATE PLAIN</code>, quoi qu'annonce le serveur."
+      "h": "EarthLink n'annonce ni PLAIN ni LOGIN, donc mcpemails se connecte avec la commande IMAP LOGIN",
+      "p": "La liste de capacités qu'EarthLink renvoie avant la connexion propose <code>AUTH=CRAM-MD5</code>, <code>AUTH=EL-TAC</code> et <code>AUTH=EL-VOICE</code>, sans <code>AUTH=PLAIN</code> ni <code>AUTH=LOGIN</code>. Les deux derniers sont des mécanismes propres à EarthLink, qu'aucun client de messagerie ordinaire n'implémente. mcpemails lit cette liste avant de se connecter. Quand un serveur propose des mécanismes mais pas PLAIN, et n'annonce pas <code>LOGINDISABLED</code>, mcpemails utilise la commande IMAP <code>LOGIN</code>, qui fait partie de l'IMAP de base et n'a pas besoin d'être annoncée. Elle envoie la même adresse et le même mot de passe que PLAIN, dans la même connexion TLS. Nous avons sondé EarthLink avec un compte inventé, une tentative par mécanisme : <code>LOGIN</code> a répondu \"Login incorrect\", la réponse d'un serveur qui a réellement vérifié l'identifiant, tandis que PLAIN et CRAM-MD5 ont tous deux répondu \"Server(s) unavailable to complete operation\". mcpemails implémente aussi CRAM-MD5, mais ne l'utilise qu'avec les serveurs qui désactivent LOGIN. Ce qui n'a pas encore été testé, c'est une connexion avec une vraie boîte EarthLink : ce chemin est donc vérifié par rapport aux réponses du serveur, pas de bout en bout."
     },
     {
       "h": "Le serveur sortant n'est ni imap ni smtp point earthlink point net",
       "p": "C'est <code>smtpauth.earthlink.net</code>, sur le port 587 avec STARTTLS plutôt qu'en TLS implicite sur le 465. Les guides qui extrapolent à partir du serveur entrant, ou qui supposent le 465 parce que la plupart des fournisseurs l'utilisent, produisent une configuration qui se connecte pour la lecture et échoue silencieusement au premier envoi. Si le courrier arrive mais que rien ne part, voilà pourquoi."
     },
     {
-      "h": "Pas de SASL-IR non plus : l'authentification se fait en deux temps",
-      "p": "EarthLink n'annonce pas SASL-IR et rejette donc la forme en une étape qui envoie les identifiants avec la commande AUTHENTICATE. Combinée à la liste de mécanismes ci-dessus, une tentative d'authentification auprès d'EarthLink peut échouer de deux façons différentes qui ressemblent toutes deux à un mauvais mot de passe. mcpemails réessaie l'échange en deux temps au lieu de considérer le premier refus comme définitif."
+      "h": "Une connexion refusée ferme la session",
+      "p": "EarthLink n'annonce pas SASL-IR et, après une connexion refusée, ferme la session au lieu de laisser le client essayer autrement. C'est pourquoi mcpemails choisit le mécanisme d'après la liste de capacités avant d'envoyer quoi que ce soit, plutôt que d'essayer PLAIN d'abord puis de se rabattre sur autre chose : une première tentative erronée consommerait l'essai, et mieux vaut éviter les échecs répétés sur une boîte. La commande <code>LOGIN</code> tient en une seule étape, donc l'absence de SASL-IR ne la concerne pas."
     },
     {
       "h": "Ni IDLE, ni MOVE, ni SPECIAL-USE sur ce serveur",
@@ -84,7 +84,7 @@
     },
     {
       "q": "EarthLink exige-t-il un mot de passe d'application ?",
-      "a": "Non. EarthLink ne délivre pas de mots de passe propres à une application et n'a pas de page pour en créer un. Un client de messagerie se connecte avec le mot de passe de cette boîte. Si un mot de passe correct est quand même refusé, la cause peut être le mécanisme d'authentification plutôt que l'identifiant : avant la connexion, EarthLink n'annonce que CRAM-MD5 et deux mécanismes maison, ni PLAIN ni LOGIN."
+      "a": "Non. EarthLink ne délivre pas de mots de passe propres à une application et n'a pas de page pour en créer un. Un client de messagerie se connecte avec le mot de passe de cette boîte. Avant la connexion, EarthLink n'annonce que CRAM-MD5 et deux mécanismes maison, ni PLAIN ni LOGIN, c'est pourquoi certains clients refusent même d'envoyer un mot de passe correct. mcpemails se connecte à la place avec la commande IMAP LOGIN, à laquelle le serveur d'EarthLink répond par une vérification normale de l'identifiant. Cela n'a été confirmé qu'avec un compte inventé, pas encore avec une vraie boîte EarthLink."
     },
     {
       "q": "Mon courrier EarthLink est-il stocké sur vos serveurs ?",

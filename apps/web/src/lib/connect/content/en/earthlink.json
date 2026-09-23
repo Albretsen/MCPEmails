@@ -48,16 +48,16 @@
   ],
   "gotchas": [
     {
-      "h": "EarthLink advertises neither PLAIN nor LOGIN, and strict clients give up rather than log in",
-      "p": "The capability list EarthLink returns before login offers <code>AUTH=CRAM-MD5</code>, <code>AUTH=EL-TAC</code> and <code>AUTH=EL-VOICE</code>. The last two are EarthLink's own mechanisms and no ordinary mail client implements them. CRAM-MD5 is a standard mechanism, but not every client implements it, and there is no <code>AUTH=PLAIN</code> and no <code>AUTH=LOGIN</code> in that list at all. A client that supports only PLAIN or LOGIN and picks its mechanism from what the server advertises therefore finds nothing it can use and reports an authentication failure without ever sending a password. mcpemails does not use CRAM-MD5 and does not choose from the advertised list: it always signs in with <code>AUTHENTICATE PLAIN</code>, whatever the server advertises."
+      "h": "EarthLink advertises neither PLAIN nor LOGIN, so mcpemails signs in with the IMAP LOGIN command",
+      "p": "The capability list EarthLink returns before login offers <code>AUTH=CRAM-MD5</code>, <code>AUTH=EL-TAC</code> and <code>AUTH=EL-VOICE</code>, with no <code>AUTH=PLAIN</code> and no <code>AUTH=LOGIN</code>. The last two are EarthLink's own mechanisms and no ordinary mail client implements them. mcpemails reads that list before it signs in. When a server offers mechanisms but not PLAIN, and does not announce <code>LOGINDISABLED</code>, mcpemails uses the IMAP <code>LOGIN</code> command, which is part of base IMAP and needs no advertising. It sends the same address and password PLAIN would, inside the same TLS connection. We probed EarthLink with a made-up account, one attempt per mechanism: <code>LOGIN</code> came back \"Login incorrect\", the answer of a server that actually checked the credential, while PLAIN and CRAM-MD5 both came back \"Server(s) unavailable to complete operation\". mcpemails also implements CRAM-MD5, but uses it only on servers that disable LOGIN. What has not been tested yet is a sign-in with a real EarthLink mailbox, so this path is verified against the server's answers, not end to end."
     },
     {
       "h": "The outgoing server is not imap or smtp dot earthlink dot net",
       "p": "It is <code>smtpauth.earthlink.net</code>, on port 587 with STARTTLS rather than implicit TLS on 465. Guides that pattern-match from the incoming host, or that assume 465 because most providers use it, produce a configuration that connects for reading and silently fails on the first send. If mail arrives but nothing leaves, this is why."
     },
     {
-      "h": "No SASL-IR either, so authentication is a two-step exchange",
-      "p": "EarthLink does not advertise SASL-IR, so it rejects the one-step form that sends credentials with the AUTHENTICATE command. Combined with the mechanism list above, an authentication attempt against EarthLink can fail in two different ways that both look like a bad password. mcpemails retries the two-step exchange rather than treating the first refusal as final."
+      "h": "One failed sign-in ends the connection",
+      "p": "EarthLink does not advertise SASL-IR, and after a rejected sign-in it closes the connection instead of letting the client try another way. That is why mcpemails chooses the mechanism from the capability list before it sends anything, rather than trying PLAIN first and falling back: a wrong first guess would use up the attempt, and repeated failures against a mailbox are worth avoiding. The <code>LOGIN</code> command is a single step, so the missing SASL-IR does not affect it."
     },
     {
       "h": "No IDLE, no MOVE, no SPECIAL-USE on this server",
@@ -84,7 +84,7 @@
     },
     {
       "q": "Does EarthLink need an app password?",
-      "a": "No. EarthLink issues no app-specific passwords and has no page for creating one. A mail client signs in with the password for that mailbox. If a correct password is still refused, the cause can be the authentication mechanism rather than the credential: before login EarthLink advertises only CRAM-MD5 and two mechanisms of its own, not PLAIN or LOGIN."
+      "a": "No. EarthLink issues no app-specific passwords and has no page for creating one. A mail client signs in with the password for that mailbox. Before login EarthLink advertises only CRAM-MD5 and two mechanisms of its own, not PLAIN or LOGIN, which is why some clients refuse to send a correct password at all. mcpemails signs in with the IMAP LOGIN command instead, which EarthLink's server answers as a normal credential check. That has been confirmed with a made-up account only, not yet with a real EarthLink mailbox."
     },
     {
       "q": "Is my EarthLink mail stored on your servers?",

@@ -1,6 +1,13 @@
 import * as net from 'net';
 import * as tls from 'tls';
-import { sanitizeAuthDiagnostic } from './connection-config';
+import { sanitizeAuthDiagnostic } from './connection-config.ts';
+import {
+  chooseImapPasswordMechanism,
+  cramMd5Response,
+  imapLoginArgument,
+  parseImapCapabilities,
+  type ImapPasswordMechanism,
+} from './imap-auth.ts';
 
 export const IMAP_VALIDATION_TIMEOUT_MS = 10_000;
 export type MailSecurity = 'tls' | 'starttls';
@@ -111,11 +118,14 @@ interface TaggedResponse {
   status: 'OK' | 'NO' | 'BAD';
   /** Everything after the status word, e.g. "[AUTHENTICATIONFAILED] invalid credentials". */
   text: string;
+  /** Untagged lines seen before the tagged completion (e.g. "* CAPABILITY ..."). */
+  untagged: string[];
 }
 
 function readTaggedResponse(socket: net.Socket, tag: string): Promise<TaggedResponse> {
   return new Promise((resolve, reject) => {
     let buffer = '';
+    const untagged: string[] = [];
     const cleanup = () => {
       socket.removeListener('data', onData);
       socket.removeListener('error', onError);
@@ -133,9 +143,11 @@ function readTaggedResponse(socket: net.Socket, tag: string): Promise<TaggedResp
           resolve({
             status: match[1].toUpperCase() as 'OK' | 'NO' | 'BAD',
             text: line.slice(match[0].length).trim(),
+            untagged,
           });
           return;
         }
+        if (line.startsWith('* ')) untagged.push(line);
         newline = buffer.indexOf('\r\n');
       }
     };
@@ -209,7 +221,136 @@ async function authenticatePlain(
   return { ...(await readTaggedResponse(socket, 'A0002')), token };
 }
 
-function socketWrite(socket: net.Socket, data: string): Promise<void> {
+/**
+ * Wait for either a continuation ("+ ...") or the tagged completion of `tag`,
+ * whichever comes first. A server that refuses a mechanism or a literal answers
+ * with the tagged NO/BAD instead of the "+", and waiting only for the "+" would
+ * turn that refusal into a timeout.
+ */
+function readContinuationOrTagged(
+  socket: net.Socket,
+  tag: string
+): Promise<{ continuation: string } | TaggedResponse> {
+  return new Promise((resolve, reject) => {
+    let buffer = '';
+    const cleanup = () => {
+      socket.removeListener('data', onData);
+      socket.removeListener('error', onError);
+      socket.removeListener('close', onClose);
+    };
+    const onData = (chunk: Buffer) => {
+      buffer += chunk.toString('utf8');
+      let newline = buffer.indexOf('\r\n');
+      while (newline >= 0) {
+        const line = buffer.slice(0, newline);
+        buffer = buffer.slice(newline + 2);
+        if (line.startsWith('+')) { cleanup(); resolve({ continuation: line }); return; }
+        const match = new RegExp(`^${tag} (OK|NO|BAD)(?: |$)`, 'i').exec(line);
+        if (match) {
+          cleanup();
+          resolve({
+            status: match[1].toUpperCase() as 'OK' | 'NO' | 'BAD',
+            text: line.slice(match[0].length).trim(),
+            untagged: [],
+          });
+          return;
+        }
+        newline = buffer.indexOf('\r\n');
+      }
+    };
+    const onError = (error: Error) => { cleanup(); reject(error); };
+    const onClose = () => { cleanup(); reject(new Error('Socket closed before a continuation.')); };
+    socket.on('data', onData);
+    socket.on('error', onError);
+    socket.on('close', onClose);
+  });
+}
+
+/**
+ * The RFC 3501 LOGIN command, for servers that advertise mechanisms but not
+ * PLAIN (EarthLink, online.no, 163.com, aliyun.com; see imap-auth.ts). Each
+ * argument is a quoted string, or a synchronizing literal when it is not
+ * printable ASCII. The command line carries the password, so it is never
+ * logged, and a server that echoes it is covered by the caller's redaction.
+ */
+async function authenticateLogin(
+  socket: net.Socket,
+  username: string,
+  password: string
+): Promise<TaggedResponse & { token: string }> {
+  const tag = 'L0001';
+  let pending = `${tag} LOGIN`;
+  for (const value of [username, password]) {
+    const arg = imapLoginArgument(value);
+    if (arg.kind === 'quoted') {
+      pending += ` ${arg.text}`;
+      continue;
+    }
+    await socketWrite(socket, `${pending} {${arg.bytes.length}}\r\n`);
+    pending = '';
+    const reply = await readContinuationOrTagged(socket, tag);
+    if (!('continuation' in reply)) return { ...reply, token: '' };
+    await socketWrite(socket, Buffer.from(arg.bytes));
+  }
+  await socketWrite(socket, `${pending}\r\n`);
+  return { ...(await readTaggedResponse(socket, tag)), token: '' };
+}
+
+/**
+ * SASL CRAM-MD5 (RFC 2195), used only when the server disables LOGIN and
+ * offers CRAM-MD5. The password never crosses the wire; the response is the
+ * username and an HMAC-MD5 digest of the server's challenge.
+ */
+async function authenticateCramMd5(
+  socket: net.Socket,
+  username: string,
+  password: string
+): Promise<TaggedResponse & { token: string }> {
+  const tag = 'M0001';
+  await socketWrite(socket, `${tag} AUTHENTICATE CRAM-MD5\r\n`);
+  const reply = await readContinuationOrTagged(socket, tag);
+  if (!('continuation' in reply)) return { ...reply, token: '' };
+  const token = cramMd5Response(username, password, reply.continuation);
+  await socketWrite(socket, `${token}\r\n`);
+  return { ...(await readTaggedResponse(socket, tag)), token };
+}
+
+/**
+ * The server's capabilities, from the greeting when it carries them (skipping
+ * a round trip) and otherwise from a CAPABILITY command. Null when the server
+ * will not say, which the chooser reads as "use PLAIN, as always".
+ */
+async function readCapabilities(socket: net.Socket, greeting: string | null): Promise<Set<string> | null> {
+  const fromGreeting = greeting ? parseImapCapabilities([greeting]) : null;
+  if (fromGreeting) return fromGreeting;
+  await socketWrite(socket, 'C0001 CAPABILITY\r\n');
+  const reply = await readTaggedResponse(socket, 'C0001');
+  if (reply.status !== 'OK') return null;
+  return parseImapCapabilities([...reply.untagged, reply.text]);
+}
+
+/**
+ * Read the server's capabilities, pick the password mechanism, and run it.
+ * `greeting` is the greeting line when its [CAPABILITY] code may be trusted
+ * (implicit TLS), else null. Exported for its transcript tests; the socket may
+ * be any duplex stream already past TLS.
+ */
+export async function authenticateImapPassword(
+  socket: net.Socket,
+  greeting: string | null,
+  username: string,
+  password: string
+): Promise<TaggedResponse & { token: string; mechanism: ImapPasswordMechanism }> {
+  const mechanism = chooseImapPasswordMechanism(await readCapabilities(socket, greeting));
+  const result = mechanism === 'LOGIN'
+    ? await authenticateLogin(socket, username, password)
+    : mechanism === 'CRAM-MD5'
+      ? await authenticateCramMd5(socket, username, password)
+      : await authenticatePlain(socket, username, password);
+  return { ...result, mechanism };
+}
+
+function socketWrite(socket: net.Socket, data: string | Uint8Array): Promise<void> {
   return new Promise((resolve) => { socket.write(data, () => resolve()); });
 }
 
@@ -263,11 +404,15 @@ export async function validateImapCredential(cred: ImapCredential): Promise<Imap
       // The address to dial. Falls back to the name only when no guard ran.
       const dialHost = cred.pinnedAddress || cred.host;
       let socket: net.Socket;
+      // The greeting's [CAPABILITY] is only usable on implicit TLS: after
+      // STARTTLS the pre-TLS list must be discarded (RFC 3501 6.2.1).
+      let greeting: string | null = null;
       if (security === 'tls') {
         phase = 'tls';
         socket = await connectTls(dialHost, cred.port, cred.host, (value) => { activeSocket = value; });
         phase = 'greeting';
-        if (!(await readLine(socket)).startsWith('* OK')) {
+        greeting = await readLine(socket);
+        if (!greeting.startsWith('* OK')) {
           return { ok: false, code: 'IMAP_PROTOCOL_ERROR', message: IMAP_VALIDATION_MESSAGES.IMAP_PROTOCOL_ERROR, phase };
         }
       } else {
@@ -287,7 +432,7 @@ export async function validateImapCredential(cred: ImapCredential): Promise<Imap
 
       phase = 'authentication';
       const username = cred.username || cred.email;
-      const auth = await authenticatePlain(socket, username, cred.password);
+      const auth = await authenticateImapPassword(socket, greeting, username, cred.password);
       if (auth.status !== 'OK') {
         return {
           ok: false,
