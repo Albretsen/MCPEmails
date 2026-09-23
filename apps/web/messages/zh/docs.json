@@ -155,7 +155,7 @@
         "from": "要匹配的发件人（action 'search'）：邮箱地址、显示名称或片段（例如 \"alice@example.com\" 或 \"Alice\"）。",
         "to": "要匹配的主收件人（To）（action 'search'）：邮箱地址、显示名称或片段。",
         "cc": "要匹配的抄送人（Cc）（action 'search'）：邮箱地址、显示名称或片段。",
-        "subject": "要在主题行中匹配的文本（action 'search'）。多词短语按原样匹配。",
+        "subject": "要在主题中匹配的文本，按原样使用（action 'search'）。Gmail（API 或 IMAP）和 Outlook 按整词匹配，因此只写半个词将匹配不到任何邮件；其他 IMAP 服务器按子串匹配。",
         "body": "要在邮件正文中查找的自由文本（action 'search'）。（在 Gmail 上，这会匹配整封邮件，而不仅是正文。）",
         "text": "要在邮件任意位置匹配的自由文本，涵盖标头和正文（action 'search'）。",
         "unread": "action 'list' 和 'search'：true = 仅未读邮件；false = 仅已读邮件；省略则两者皆可。",

@@ -155,7 +155,7 @@
         "from": "Remitente a coincidir (action 'search'): dirección de correo, nombre visible o fragmento (p. ej. \"alice@example.com\" o \"Alice\").",
         "to": "Destinatario principal (To) a coincidir (action 'search'): dirección de correo, nombre visible o fragmento.",
         "cc": "Destinatario en copia (Cc) a coincidir (action 'search'): dirección de correo, nombre visible o fragmento.",
-        "subject": "Texto a coincidir en el asunto (action 'search'). Las frases de varias palabras se coinciden tal cual.",
+        "subject": "Texto a coincidir en el asunto, tal cual se escribe (action 'search'). Gmail (API o IMAP) y Outlook coinciden por palabras completas, así que una palabra a medias no encuentra nada; los demás servidores IMAP coinciden por subcadena.",
         "body": "Texto libre a encontrar en el cuerpo del mensaje (action 'search'). (En Gmail esto coincide con todo el mensaje, no solo el cuerpo.)",
         "text": "Texto libre a coincidir en cualquier parte del mensaje: cabeceras y cuerpo (action 'search').",
         "unread": "Acciones 'list' y 'search': true = solo mensajes no leídos; false = solo leídos; omítelo para ambos.",

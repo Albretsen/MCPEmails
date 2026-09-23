@@ -6,7 +6,16 @@ import { Badge, Btn, Icon } from '../Primitives';
 import { useToast } from './Toast';
 // Health is derived in one place, shared with the server-side validator module,
 // so the banner and the row can never disagree about whether a rule is broken.
-import { automationHealth, AUTOMATION_ERROR_MESSAGE_KEYS } from '@/lib/automations/rules';
+// `unrunnableFilterFields` is the same idea one level deeper: it re-exports the
+// edge function translator's own account of which criteria a provider cannot
+// run, so this form, /api/automations and the MCP server give one verdict
+// rather than three. See the block above it in lib/automations/rules.ts.
+import {
+  automationHealth,
+  AUTOMATION_ERROR_MESSAGE_KEYS,
+  searchDialectFor,
+  unrunnableFilterFields,
+} from '@/lib/automations/rules';
 
 /* AutomationsPanel.jsx: scheduled, unattended triage rules.
 
@@ -92,6 +101,59 @@ const BOOLEAN_FILTERS = [
   { field: 'has_attachment', labelKey: 'automations.modal.filterHasAttachment' },
   { field: 'flagged', labelKey: 'automations.modal.filterFlagged' },
 ];
+
+/**
+ * Every NormalizedSearch field, in the user's words.
+ *
+ * Wider than the form, on purpose. The refusal below names whichever fields the
+ * provider cannot run, and a rule written through MCP can carry `cc`, `text`,
+ * `since` or `before` even though this form never offers them — telling someone
+ * their rule cannot run "because of since" would be no help at all.
+ */
+const FILTER_FIELD_LABEL_KEY = {
+  from: 'automations.modal.filterFrom',
+  to: 'automations.modal.filterTo',
+  cc: 'automations.modal.filterCc',
+  subject: 'automations.modal.filterSubject',
+  body: 'automations.modal.filterBody',
+  text: 'automations.modal.filterText',
+  unread: 'automations.modal.filterUnread',
+  has_attachment: 'automations.modal.filterHasAttachment',
+  flagged: 'automations.modal.filterFlagged',
+  since: 'automations.modal.filterSince',
+  before: 'automations.modal.filterBefore',
+};
+
+/**
+ * The three search dialects, named in the reader's language.
+ *
+ * "Gmail" and "Outlook" are brands and stay as they are in every locale; only
+ * the generic IMAP baseline is prose, and it is the one a Norwegian or Chinese
+ * reader would otherwise meet in English.
+ */
+const SEARCH_DIALECT_LABEL_KEY = {
+  gmail: 'automations.modal.dialectGmail',
+  outlook: 'automations.modal.dialectOutlook',
+  imap: 'automations.modal.dialectImap',
+};
+
+/**
+ * `"a"`, `"a" and "b"`, `"a", "b" and "c"` — the list style the refusal reads
+ * best in.
+ *
+ * The labels are quoted because they are UI elements, not prose: "cannot search
+ * by Has an attachment" reads as a broken sentence, and lowercasing the label
+ * would be wrong in half these languages. Both the quote marks and the "and"
+ * come from the locale, since English straight quotes, Norwegian, French and
+ * Spanish guillemets and Chinese corner-less quotes are all different marks.
+ */
+function joinFieldLabels(fields, t) {
+  const labels = fields.map((field) => t('automations.modal.filterFieldQuoted', {
+    label: FILTER_FIELD_LABEL_KEY[field] ? t(FILTER_FIELD_LABEL_KEY[field]) : field,
+  }));
+  if (labels.length <= 1) return labels.join('');
+  return `${labels.slice(0, -1).join(', ')} ${t('automations.modal.filterFieldAnd')} ${labels[labels.length - 1]}`;
+}
 
 function formatTimestamp(value) {
   if (!value) return null;
@@ -547,6 +609,34 @@ function RuleFormModal({ mode, rule, inboxes, keys, onClose, onSaved }) {
   const hasFilter = Object.keys(filter).length > 0;
   const canPreview = Boolean(form.inboxId && form.apiKeyId && hasFilter) && !previewing && !submitting;
 
+  // Criteria the chosen mailbox's provider has no predicate for. Computed from
+  // the SAME function the edge function's write path refuses on, so this form
+  // cannot hold a second opinion about it (F-04, 2026-09-20: `has_attachment`
+  // on generic IMAP was dropped in silence, and a rule carrying it moved or
+  // forwarded every message matching the rest of the filter, unattended, every
+  // fifteen minutes). Shown as an ordinary form error and blocks Save, rather
+  // than letting the request go and rendering the API's refusal afterwards.
+  //
+  // `inbox.provider` here is the BRANDED value the dashboard shows ('yahoo',
+  // 'icloud', 'fastmail'…, and 'imap' for the generic connector), not the raw
+  // `inboxes.provider` column. That is safe: searchDialectFor maps anything
+  // that is not gmail or outlook to the IMAP dialect, which is what every one
+  // of those brands is.
+  const selectedInbox = useMemo(
+    () => inboxes.find((inbox) => inbox.id === form.inboxId) ?? null,
+    [inboxes, form.inboxId],
+  );
+  // Not memoised: `filter` is rebuilt on every render anyway, and this is a
+  // handful of property reads over an object with at most eleven keys.
+  const unrunnableFields = unrunnableFilterFields(filter, selectedInbox?.provider ?? null);
+  const filterUnsupported = unrunnableFields.length > 0;
+  const filterUnsupportedMessage = filterUnsupported
+    ? t('automations.modal.filterUnsupported', {
+      provider: t(SEARCH_DIALECT_LABEL_KEY[searchDialectFor(selectedInbox?.provider ?? 'imap')]),
+      fields: joinFieldLabels(unrunnableFields, t),
+    })
+    : '';
+
   const runPreview = async () => {
     if (!canPreview) return;
     setPreviewing(true);
@@ -571,6 +661,14 @@ function RuleFormModal({ mode, rule, inboxes, keys, onClose, onSaved }) {
   const submit = async (event) => {
     event.preventDefault();
     if (submitting) return;
+    // The Save button is disabled in this state, so this is the keyboard and
+    // autofill path rather than the ordinary one. It refuses locally instead of
+    // posting: /api/automations would refuse too, but a rule that cannot run is
+    // worth saying before the round trip, in the user's own language.
+    if (filterUnsupported) {
+      setError(filterUnsupportedMessage);
+      return;
+    }
     setSubmitting(true);
     setError('');
     try {
@@ -736,6 +834,13 @@ function RuleFormModal({ mode, rule, inboxes, keys, onClose, onSaved }) {
                   </label>
                 ))}
               </div>
+              {/* An ordinary field-level validation error, inside the fieldset
+                  whose conditions caused it, so the fix is next to the message. */}
+              {filterUnsupported ? (
+                <div className="alert alert-error" role="alert">
+                  <span>{filterUnsupportedMessage}</span>
+                </div>
+              ) : null}
             </fieldset>
 
             {/* Preview. Placed between the filter and the action on purpose: it
@@ -754,6 +859,16 @@ function RuleFormModal({ mode, rule, inboxes, keys, onClose, onSaved }) {
 
               {previewError ? (
                 <div className="alert alert-error" role="alert"><span>{previewError}</span></div>
+              ) : null}
+
+              {/* What the mailbox could NOT apply, straight from the search that
+                  just ran. Without it a preview reports the wider match set as
+                  though the filter had been honoured (F-04, 2026-09-20), which
+                  is the opposite of what a dry run is for. */}
+              {preview?.notes?.length ? (
+                <div className="alert" role="status">
+                  <span>{preview.notes.join(' ')}</span>
+                </div>
               ) : null}
 
               {preview ? (
@@ -866,7 +981,7 @@ function RuleFormModal({ mode, rule, inboxes, keys, onClose, onSaved }) {
 
           <div className="modal-foot">
             <Btn variant="ghost" onClick={onClose} disabled={submitting}>{t('automations.modal.cancel')}</Btn>
-            <Btn variant="primary" type="submit" disabled={submitting}>
+            <Btn variant="primary" type="submit" disabled={submitting || filterUnsupported}>
               {submitting
                 ? (mode === 'create' ? t('automations.modal.creating') : t('automations.modal.saving'))
                 : (mode === 'create' ? t('automations.modal.create') : t('automations.modal.save'))}

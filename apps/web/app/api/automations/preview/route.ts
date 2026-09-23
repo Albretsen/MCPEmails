@@ -131,8 +131,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: upstreamError }, { status: upstream.status >= 400 && upstream.status < 500 ? 400 : 502 });
   }
 
-  const source = payload as { matched?: unknown; truncated?: unknown; messages?: unknown };
+  const source = payload as { matched?: unknown; truncated?: unknown; messages?: unknown; notes?: unknown };
   const messages = Array.isArray(source.messages) ? source.messages : [];
+
+  // The Edge Function attaches a `notes` entry naming every criterion this
+  // provider could not apply (F-04, 2026-09-20). A preview exists to show the
+  // blast radius BEFORE anything is enabled, so a preview that quietly reported
+  // the wider match set as though the filter had been honoured would be worse
+  // than no preview at all. Forwarded, not re-derived: it is computed from the
+  // filter and the inbox the search actually ran against.
+  const notes = Array.isArray(source.notes)
+    ? source.notes.filter((note): note is string => typeof note === 'string' && note.length > 0).slice(0, 5)
+    : [];
 
   // Re-projected rather than forwarded wholesale. The Edge Function is trusted,
   // but a preview response is the one place mailbox content flows through this
@@ -142,6 +152,7 @@ export async function POST(request: NextRequest) {
     matched: typeof source.matched === 'number' ? source.matched : messages.length,
     truncated: source.truncated === true,
     limit: PREVIEW_LIMIT,
+    notes,
     messages: messages.slice(0, PREVIEW_LIMIT).map((message) => {
       const row = (message ?? {}) as Record<string, unknown>;
       return {

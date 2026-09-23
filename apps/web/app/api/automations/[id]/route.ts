@@ -5,7 +5,7 @@ import type { TablesUpdate } from '@/types/database.types';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { isJsonRequest, isSameOrigin } from '@/lib/http/same-origin';
 import { canDecide as canManageAutomations } from '@/lib/approvals/decide';
-import type { StoredAction } from '@/lib/automations/rules';
+import type { StoredAction, StoredFilter } from '@/lib/automations/rules';
 import {
   RULE_COLUMNS,
   assertWorkspaceResources,
@@ -14,6 +14,7 @@ import {
   validateAction,
   validateActionForProvider,
   validateFilter,
+  validateFilterForProvider,
   validateInterval,
   validateMaxMessages,
   validateName,
@@ -56,7 +57,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (!body || typeof body !== 'object') return NextResponse.json({ error: 'A request body is required.' }, { status: 400 });
 
   const { data: existing } = await c.db.from('triage_rules')
-    .select('id, inbox_id, api_key_id, action, enabled, running_since')
+    // `filter` is read as well as `action` because BOTH are re-checked against
+    // the inbox below, and either one can be left untouched by this PATCH while
+    // the inbox under it changes.
+    .select('id, inbox_id, api_key_id, filter, action, enabled, running_since')
     .eq('id', id)
     .eq('workspace_id', c.workspaceId)
     .is('deleted_at', null)
@@ -102,20 +106,37 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     patch.api_key_id = nextApiKeyId;
   }
 
-  // A label works on every provider, but not every NAME does: on IMAP a label
-  // is a keyword, which is an atom. Either half of the pair can change in one
-  // PATCH, so the check runs against the action and the inbox this rule will
-  // have AFTER the edit, not the ones it had before.
+  // Two provider-specific checks, both run against the action, the filter and
+  // the inbox this rule will have AFTER the edit, not the ones it had before:
+  // any of the three can change in one PATCH, and rebinding an untouched filter
+  // to a different inbox is exactly how a runnable rule becomes an unrunnable
+  // one without a single character of the filter changing.
   //
-  // `triage_rules.action` is jsonb, so the generated column type is `Json`.
-  // Every write goes through validateAction, so the stored shape is a
-  // StoredAction; assert that rather than re-validating a row we validated on
-  // the way in.
+  //   the ACTION   a label works on every provider, but not every NAME does: on
+  //                IMAP a label is a keyword, which is an atom.
+  //   the FILTER   a criterion the provider has no predicate for makes the rule
+  //                act on a wider set than it describes, unattended, forever.
+  //                The edge function has refused this since 47c76e95
+  //                (2026-09-20); the dashboard did not until 2026-09-21.
+  //
+  // `triage_rules.filter` and `.action` are jsonb, so the generated column types
+  // are `Json`. Every write goes through validateFilter/validateAction, so the
+  // stored shapes are a StoredFilter and a StoredAction; assert that rather than
+  // re-validating a row we validated on the way in.
   const nextAction = (patch.action ?? existing.action) as StoredAction | null;
-  if (nextAction && typeof nextAction === 'object' && nextAction.type === 'label') {
+  const nextFilter = (patch.filter ?? existing.filter) as StoredFilter | null;
+  const actionNeedsProvider = Boolean(nextAction && typeof nextAction === 'object' && nextAction.type === 'label');
+  const filterNeedsProvider = Boolean(nextFilter && typeof nextFilter === 'object');
+  if (actionNeedsProvider || filterNeedsProvider) {
     const provider = await readInboxProvider(c.db, c.workspaceId, nextInboxId);
-    const forProvider = validateActionForProvider(nextAction, provider);
-    if (!forProvider.ok) return NextResponse.json({ error: forProvider.error }, { status: 400 });
+    if (actionNeedsProvider) {
+      const forProvider = validateActionForProvider(nextAction as StoredAction, provider);
+      if (!forProvider.ok) return NextResponse.json({ error: forProvider.error }, { status: 400 });
+    }
+    if (filterNeedsProvider) {
+      const forProvider = validateFilterForProvider(nextFilter as StoredFilter, provider);
+      if (!forProvider.ok) return NextResponse.json({ error: forProvider.error }, { status: 400 });
+    }
   }
 
   if (body.enabled !== undefined) {

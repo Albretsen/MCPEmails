@@ -155,7 +155,7 @@
         "from": "Expéditeur à faire correspondre (action 'search') : adresse e-mail, nom affiché ou fragment (p. ex. \"alice@example.com\" ou \"Alice\").",
         "to": "Destinataire principal (To) à faire correspondre (action 'search') : adresse e-mail, nom affiché ou fragment.",
         "cc": "Destinataire en copie (Cc) à faire correspondre (action 'search') : adresse e-mail, nom affiché ou fragment.",
-        "subject": "Texte à faire correspondre dans l'objet (action 'search'). Les expressions de plusieurs mots sont prises telles quelles.",
+        "subject": "Texte à faire correspondre dans l'objet, tel quel (action 'search'). Gmail (API ou IMAP) et Outlook font correspondre des mots entiers : un mot partiel ne trouve rien ; les autres serveurs IMAP font une correspondance de sous-chaîne.",
         "body": "Texte libre à trouver dans le corps du message (action 'search'). (Sur Gmail, cela correspond à l'ensemble du message, pas seulement au corps.)",
         "text": "Texte libre à faire correspondre n'importe où dans le message, en-têtes et corps (action 'search').",
         "unread": "Actions 'list' et 'search' : true = uniquement les messages non lus ; false = uniquement les lus ; omettez pour les deux.",

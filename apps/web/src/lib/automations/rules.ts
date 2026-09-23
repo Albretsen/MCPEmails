@@ -17,6 +17,18 @@
  *      never evaluated; only the placeholder whitelist below is substituted.
  */
 
+// The list of search criteria a provider cannot run is IMPORTED from the edge
+// function's translator, never restated here. See the block above
+// `unrunnableFilterFields` at the bottom of this file for the incident, and for
+// why this one import crosses a boundary that src/lib/email/utf7.ts deliberately
+// does not.
+import {
+  SEARCH_DIALECT_LABELS,
+  searchDialectFor,
+  unappliedSearchFields,
+  type NormalizedSearch,
+} from '../../../../../supabase/functions/mcp-server/search-translate.ts';
+
 /** Cadences the dispatcher understands. Mirrors the interval_minutes CHECK. */
 export const ALLOWED_INTERVALS = [15, 30, 60, 180, 360, 720, 1440] as const;
 
@@ -534,6 +546,118 @@ export function validateActionForProvider(
   const target = labelTargetFor(provider, action.label);
   if (!target.ok) return fail(target.error);
   return { ok: true, value: action };
+}
+
+// ---------------------------------------------------------------------------
+// Criteria the inbox's provider cannot run at all
+//
+// F-04 (live functional test, 2026-09-20). Against a real Gmail-over-IMAP
+// mailbox, a search for `has_attachment: true` came back with every message
+// matching the other criteria and nothing to say the attachment filter had been
+// dropped: RFC 3501 SEARCH has no attachment predicate, so the translator
+// correctly omitted it and silently answered a wider question than the one
+// asked. Interactively that costs one extra call. Stored as an AUTOMATION
+// filter it is a different thing entirely, because the rule re-runs unattended
+// every fifteen minutes and moves, labels or forwards whatever the widened
+// filter matched, with nobody reading the result.
+//
+// The MCP server closed its half on 2026-09-20 (47c76e95): validateAutomationBody
+// in supabase/functions/mcp-server/triage-engine.ts refuses such a rule at write
+// time, and a rule already stored with one fails its run with
+// `filter_unsupported`. This module, which validates the DASHBOARD's own write
+// path, still only checked field NAMES, so the same impossible rule could be
+// saved from the web UI and the user only found out when it failed in a run log.
+// Closed here on 2026-09-21.
+//
+// WHY THIS IMPORTS THE EDGE FUNCTION'S MODULE INSTEAD OF COPYING IT
+// -----------------------------------------------------------------
+// A second copy of the list is precisely the bug: `raw` sat in the automation
+// filter allow-list for weeks while every schema said it was refused, and the
+// server-side fix derives its list from the translator CLAUSES for that reason.
+// search-translate.ts is pure, dependency-free TypeScript with no imports of
+// its own, and the Vercel project has `sourceFilesOutsideRootDirectory: true`
+// (checked 2026-09-21 against the project API), so the Next build resolves it
+// from the repo tree even though the Root Directory is apps/web.
+//
+// Contrast src/lib/email/utf7.ts, which IS a copy and explains at length why.
+// That direction is the impossible one: the codec has to run inside the Deno
+// bundle too, and an edge function deployed with `supabase functions deploy`
+// can import nothing from outside supabase/functions/. This import only runs
+// web -> edge, so it has no such problem.
+// ---------------------------------------------------------------------------
+
+/**
+ * Every field of a stored filter this provider will not apply, by name.
+ *
+ * A null provider is unconstrained, for the same reason `labelTargetFor` treats
+ * it that way: the runner re-validates before every run, and refusing a legal
+ * rule because the dashboard could not read the inbox row is the worse error.
+ *
+ * The cast is sound because `validateFilter` is the only way to build a
+ * StoredFilter: it admits exactly the NormalizedSearch fields, with the string /
+ * boolean / ISO-date types each one requires.
+ */
+export function unrunnableFilterFields(filter: StoredFilter, provider: string | null): string[] {
+  if (!provider) return [];
+  return unappliedSearchFields(filter as NormalizedSearch, provider);
+}
+
+/**
+ * `'gmail' | 'outlook' | 'imap'` — which of the three search dialects this
+ * provider's mail is searched in.
+ *
+ * Re-exported rather than re-derived so the form can key a translated name off
+ * the same three-valued answer the refusal is computed from. Note that the
+ * dashboard's `inbox.provider` is the BRANDED value ('yahoo', 'icloud',
+ * 'fastmail'…) rather than the raw `inboxes.provider` column; that is safe here
+ * because anything which is not gmail or outlook maps to the IMAP dialect, and
+ * every one of those brands is an IMAP connector.
+ */
+export { searchDialectFor };
+
+/** "Gmail" / "Outlook" / "generic IMAP" — the dialect's name, as a sentence uses it. */
+export function providerSearchLabel(provider: string): string {
+  return SEARCH_DIALECT_LABELS[searchDialectFor(provider)];
+}
+
+/**
+ * Why a stored filter is refused for the inbox it was written against.
+ *
+ * Says the same thing as `unrunnableFilterMessage` in
+ * supabase/functions/mcp-server/triage-engine.ts, which is the enforcing copy:
+ * name the fields, say the rule would act on a wider set than it describes,
+ * every time it fires, unattended, and name the two edits that make it savable.
+ * Field identifiers rather than form labels, matching the rest of this module
+ * ("The filter field \"has_attachment\" must be true or false."), because this
+ * string is also what a non-dashboard caller of the API gets back. The form
+ * shows the same refusal in the user's own language and with the labels it
+ * printed next to the checkboxes; see automations.modal.filterUnsupported.
+ */
+export function unrunnableFilterMessage(provider: string, fields: readonly string[]): string {
+  const one = fields.length === 1;
+  const list = fields.map((field) => `"${field}"`).join(', ');
+  return (
+    `This inbox's provider (${providerSearchLabel(provider)}) cannot search by ${list}, `
+    + `so a rule using ${one ? 'it' : 'them'} would run against every message matching the rest `
+    + 'of the filter, a wider set than the filter describes, every time it fires, unattended. '
+    + `Save it with conditions this provider can run, or without ${list}.`
+  );
+}
+
+/**
+ * Re-checks a validated filter against the inbox it will run on.
+ *
+ * Split from `validateFilter` for the same reason `validateActionForProvider`
+ * is split from `validateAction`: the provider is a second database read, and
+ * threading an inbox row through every validator would be the wrong shape.
+ */
+export function validateFilterForProvider(
+  filter: StoredFilter,
+  provider: string | null,
+): ValidationResult<StoredFilter> {
+  const unrunnable = unrunnableFilterFields(filter, provider);
+  if (provider && unrunnable.length > 0) return fail(unrunnableFilterMessage(provider, unrunnable));
+  return { ok: true, value: filter };
 }
 
 /**

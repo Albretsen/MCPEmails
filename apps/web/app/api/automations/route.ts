@@ -15,6 +15,7 @@ import {
   validateAction,
   validateActionForProvider,
   validateFilter,
+  validateFilterForProvider,
   validateInterval,
   validateMaxMessages,
   validateName,
@@ -134,6 +135,13 @@ export async function POST(request: NextRequest) {
   const provider = await readInboxProvider(c.db, c.workspaceId, body.inbox_id);
   const forProvider = validateActionForProvider(action.value, provider);
   if (!forProvider.ok) return NextResponse.json({ error: forProvider.error }, { status: 400 });
+
+  // And a criterion the provider has no predicate for at all. The edge function
+  // has refused these since 47c76e95 (2026-09-20); until this line the dashboard
+  // did not, so a rule that could never run as written saved cleanly here and
+  // only announced itself as a `filter_unsupported` run failure days later.
+  const filterForProvider = validateFilterForProvider(filter.value, provider);
+  if (!filterForProvider.ok) return NextResponse.json({ error: filterForProvider.error }, { status: 400 });
 
   const count = await c.db.from('triage_rules')
     .select('id', { count: 'exact', head: true })

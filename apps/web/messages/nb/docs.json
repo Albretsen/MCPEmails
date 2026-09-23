@@ -155,7 +155,7 @@
         "from": "Avsender som skal matches (action 'search'): e-postadresse, visningsnavn eller fragment (f.eks. \"alice@example.com\" eller \"Alice\").",
         "to": "Primær (To) mottaker som skal matches (action 'search'): e-postadresse, visningsnavn eller fragment.",
         "cc": "Kopimottaker (Cc) som skal matches (action 'search'): e-postadresse, visningsnavn eller fragment.",
-        "subject": "Tekst som skal matches i emnefeltet (action 'search'). Fraser med flere ord matches som de er.",
+        "subject": "Tekst som skal matches i emnefeltet, slik den er skrevet (action 'search'). Gmail (API eller IMAP) og Outlook matcher hele ord, så et halvt ord gir ingen treff; andre IMAP-servere matcher delstrenger.",
         "body": "Fritekst å finne i meldingskroppen (action 'search'). (På Gmail matcher dette hele meldingen, ikke bare kroppen.)",
         "text": "Fritekst å matche hvor som helst i meldingen: overskrifter og kropp (action 'search').",
         "unread": "Handlingene 'list' og 'search': true = kun uleste meldinger; false = kun leste meldinger; utelat for begge.",
