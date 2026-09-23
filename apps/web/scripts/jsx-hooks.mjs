@@ -11,9 +11,16 @@
 //
 // Node can strip TypeScript types on its own (`--experimental-strip-types`) but
 // it cannot parse JSX, so importing `Pages.jsx` dies at the first `<div>`. This
-// hook transpiles JSX with `typescript`, which is already a devDependency of
-// this package, rather than adding a bundler to the test path. The transform is
-// deliberately minimal: JSX to `react-jsx` calls, everything else left alone.
+// hook transpiles JSX with TypeScript's own `transpileModule` rather than adding
+// a bundler to the test path. The transform is deliberately minimal: JSX to
+// `react-jsx` calls, everything else left alone.
+//
+// It imports `typescript6`, an npm alias of typescript@6, not `typescript`.
+// TypeScript 7 is the native compiler: its package ships the `tsc` binary and
+// no JavaScript compiler API, so `ts.transpileModule` and `ts.JsxEmit` are
+// simply absent under 7 and every JSX test died at its first import. The alias
+// keeps the one API this hook needs, while `tsc`, `next build` and the editor
+// all run on 7. Drop it once TypeScript 7 publishes a stable transpile API.
 //
 // `next/navigation` and `@/lib/supabase/client` are redirected to the stubs in
 // `scripts/test-stubs/`, because the component tree reaches them through
@@ -25,7 +32,7 @@ import { readFile } from 'node:fs/promises';
 import { statSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
-import ts from 'typescript';
+import ts from 'typescript6';
 
 const STUBS = path.resolve(fileURLToPath(import.meta.url), '../test-stubs');
 

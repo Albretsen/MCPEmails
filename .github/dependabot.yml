@@ -90,6 +90,16 @@ updates:
           - patch
     # Majors stay ungrouped and unsuppressed. Next.js 16 and Supabase move fast
     # enough that a major is a real piece of work and deserves its own PR.
+    #
+    # The one exception is @types/node, whose major is not a library version but
+    # a claim about the runtime. Production runs the Vercel project's Node 24.x
+    # and CI runs 24, so @types/node 26 would type-check calls to APIs that do
+    # not exist where the code runs. Move this major by hand when the Vercel
+    # project's Node version moves, never ahead of it.
+    ignore:
+      - dependency-name: '@types/node'
+        update-types:
+          - version-update:semver-major
 
   # ---------------------------------------------------------------------------
   # GitHub Actions used by the workflows themselves.

@@ -94,7 +94,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
       - name: npm audit (fails on high or critical)
         run: npm audit --audit-level=high
 
@@ -105,7 +105,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
       - run: npm install
       - name: Run TypeScript type check
@@ -121,7 +121,7 @@ jobs:
           # 22, not 20: every test:* script runs TypeScript sources through
           # `node --test --experimental-strip-types`, which does not exist on 20.
           # Running these on 20 is why they were never in CI.
-          node-version: '22'
+          node-version: '24'
           cache: 'npm'
       - run: npm install
       - name: Run unit tests
@@ -180,7 +180,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'npm'
       - run: npm install
       - name: Type check the card
@@ -261,7 +261,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
       - run: npm install
       - name: Build Next.js app
