@@ -4,6 +4,16 @@ import {
   OUTLOOK_SCOPES,
   shouldForceConsent,
   classifyMicrosoftAuthError,
+  outlookTenant,
+  outlookAuthorizeEndpoint,
+  outlookTokenEndpoint,
+  outlookAdminConsentEndpoint,
+  ADMIN_CONSENT_STATE_PREFIX,
+  isAdminConsentState,
+  isAdminConsentCallback,
+  classifyAdminConsentCallback,
+  selectOutlookEmail,
+  classifyOutlookProbe,
 } from './outlook-oauth.ts';
 
 // ─── prompt=consent ───────────────────────────────────────────────────────────
@@ -98,4 +108,98 @@ test('an unrecognised error falls back to the generic code', () => {
 
 test('an empty description never crashes the classifier', () => {
   assert.equal(classifyMicrosoftAuthError('server_error', ''), 'oauth_error');
+});
+
+// ─── authority ────────────────────────────────────────────────────────────────
+
+test('tenant defaults to common and ignores anything that is not a plain id', () => {
+  assert.equal(outlookTenant(undefined), 'common');
+  assert.equal(outlookTenant(''), 'common');
+  assert.equal(outlookTenant('  '), 'common');
+  assert.equal(outlookTenant('../evil?x='), 'common');
+  assert.equal(outlookTenant('72f988bf-86f1-41af-91ab-2d7cd011db47'), '72f988bf-86f1-41af-91ab-2d7cd011db47');
+  assert.equal(outlookTenant('contoso.onmicrosoft.com'), 'contoso.onmicrosoft.com');
+});
+
+test('authorize and token endpoints share one authority', () => {
+  assert.equal(outlookAuthorizeEndpoint('common'), 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize');
+  assert.equal(outlookTokenEndpoint('common'), 'https://login.microsoftonline.com/common/oauth2/v2.0/token');
+});
+
+test('admin consent uses organizations unless a tenant is pinned', () => {
+  assert.equal(outlookAdminConsentEndpoint('common'), 'https://login.microsoftonline.com/organizations/v2.0/adminconsent');
+  assert.equal(outlookAdminConsentEndpoint('consumers'), 'https://login.microsoftonline.com/organizations/v2.0/adminconsent');
+  assert.equal(outlookAdminConsentEndpoint('contoso.com'), 'https://login.microsoftonline.com/contoso.com/v2.0/adminconsent');
+});
+
+// ─── admin consent callback ───────────────────────────────────────────────────
+
+const acState = `${ADMIN_CONSENT_STATE_PREFIX}abc`;
+
+test('an admin-consent success is recognised and classified as granted', () => {
+  const params = new URLSearchParams({ admin_consent: 'True', tenant: 'tid', state: acState });
+  assert.equal(isAdminConsentCallback(params), true);
+  assert.equal(classifyAdminConsentCallback(params), 'admin_consent_granted');
+});
+
+test('an admin-consent error is recognised by its state even without admin_consent', () => {
+  // Microsoft's error response carries error/error_description/state only, so
+  // without the state prefix it would be read as a failed mailbox connection.
+  const params = new URLSearchParams({ error: 'access_denied', error_description: 'AADSTS65004: declined', state: acState });
+  assert.equal(isAdminConsentCallback(params), true);
+  assert.equal(classifyAdminConsentCallback(params), 'admin_consent_cancelled');
+});
+
+test('any other admin-consent error is a failure, never granted', () => {
+  const params = new URLSearchParams({ error: 'invalid_request', error_description: 'AADSTS50011: redirect', state: acState });
+  assert.equal(classifyAdminConsentCallback(params), 'admin_consent_failed');
+  assert.equal(
+    classifyAdminConsentCallback(new URLSearchParams({ admin_consent: 'False', state: acState })),
+    'admin_consent_failed',
+  );
+});
+
+test('an ordinary connect callback is not mistaken for admin consent', () => {
+  assert.equal(isAdminConsentCallback(new URLSearchParams({ code: 'c', state: 'plainstate' })), false);
+  assert.equal(isAdminConsentCallback(new URLSearchParams({ error: 'access_denied', state: 'plainstate' })), false);
+  assert.equal(isAdminConsentState('plainstate'), false);
+  assert.equal(isAdminConsentState(null), false);
+});
+
+// ─── email selection ──────────────────────────────────────────────────────────
+
+test('the email claim wins over preferred_username (the UPN)', () => {
+  assert.equal(
+    selectOutlookEmail({ email: 'first.last@corp.example', preferred_username: 'flast@corp.example' }),
+    'first.last@corp.example',
+  );
+});
+
+test('the address is lowercased and trimmed', () => {
+  assert.equal(selectOutlookEmail({ email: '  Jane@Outlook.COM ' }), 'jane@outlook.com');
+});
+
+test('preferred_username is the fallback when email is absent or unusable', () => {
+  assert.equal(selectOutlookEmail({ preferred_username: 'Jane@Hotmail.com' }), 'jane@hotmail.com');
+  assert.equal(selectOutlookEmail({ email: '', preferred_username: 'jane@hotmail.com' }), 'jane@hotmail.com');
+  assert.equal(selectOutlookEmail({ email: 'nope', preferred_username: 'jane@hotmail.com' }), 'jane@hotmail.com');
+});
+
+test('no usable address gives null rather than a broken inbox key', () => {
+  assert.equal(selectOutlookEmail({}), null);
+  assert.equal(selectOutlookEmail({ preferred_username: '+4712345678' }), null);
+  assert.equal(selectOutlookEmail({ email: 42, preferred_username: 'no-at-sign' }), null);
+  assert.equal(selectOutlookEmail({ email: 'a@b' }), null);
+});
+
+// ─── live probe classification ────────────────────────────────────────────────
+
+test('probe classification: only 401 means reconnect', () => {
+  assert.equal(classifyOutlookProbe(200, null), 'ok');
+  assert.equal(classifyOutlookProbe(401, 'InvalidAuthenticationToken'), 'unauthorized');
+  assert.equal(classifyOutlookProbe(403, 'ErrorAccessDenied'), 'forbidden');
+  assert.equal(classifyOutlookProbe(404, 'ResourceNotFound'), 'no_mailbox');
+  assert.equal(classifyOutlookProbe(401, 'MailboxNotEnabledForRESTAPI'), 'no_mailbox');
+  assert.equal(classifyOutlookProbe(429, null), 'inconclusive');
+  assert.equal(classifyOutlookProbe(503, null), 'inconclusive');
 });

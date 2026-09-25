@@ -1,9 +1,9 @@
 /**
  * Pure decision helpers for the Outlook OAuth flow.
  *
- * These two decisions used to live inline in the route handlers, where they
- * could not be tested without standing up Next and Supabase. Both of them are
- * subtle enough that getting them wrong is silent rather than loud, so they are
+ * These decisions used to live inline in the route handlers, where they could
+ * not be tested without standing up Next and Supabase. All of them are subtle
+ * enough that getting them wrong is silent rather than loud, so they are
  * isolated here and covered by outlook-oauth.test.ts.
  */
 
@@ -87,4 +87,164 @@ export function classifyMicrosoftAuthError(
   if (consentBlocked) return 'admin_consent_required';
   if (error === 'access_denied') return 'cancelled';
   return 'oauth_error';
+}
+
+// ─── Authority (tenant) ───────────────────────────────────────────────────────
+
+/**
+ * The Microsoft identity platform authority segment every Outlook endpoint is
+ * built on: authorize, token (code exchange AND refresh) and admin consent.
+ *
+ * Read from OUTLOOK_TENANT_ID, defaulting to "common" (personal Microsoft
+ * accounts plus any work/school tenant, which is how the Entra app is
+ * registered). A tenant GUID or verified domain restricts sign-in to that one
+ * organisation. All endpoints must agree: a refresh token issued under one
+ * authority is refreshed under the same one.
+ *
+ * The value is interpolated into a URL path, so anything that is not a plain
+ * GUID / domain / well-known alias is ignored rather than trusted.
+ */
+export function outlookTenant(raw: string | undefined = process.env.OUTLOOK_TENANT_ID): string {
+  const value = (raw ?? '').trim();
+  if (!value || !/^[A-Za-z0-9][A-Za-z0-9.-]*$/.test(value)) return 'common';
+  return value;
+}
+
+export function outlookAuthorizeEndpoint(tenant: string = outlookTenant()): string {
+  return `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/authorize`;
+}
+
+export function outlookTokenEndpoint(tenant: string = outlookTenant()): string {
+  return `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`;
+}
+
+/**
+ * Admin consent only exists for organisations. "common" and "consumers" are
+ * mapped to "organizations" so whichever admin opens the link consents for
+ * their own tenant; a specific tenant is kept as-is.
+ */
+export function outlookAdminConsentEndpoint(tenant: string = outlookTenant()): string {
+  const authority =
+    tenant === 'common' || tenant === 'consumers' ? 'organizations' : tenant;
+  return `https://login.microsoftonline.com/${authority}/v2.0/adminconsent`;
+}
+
+// ─── Admin consent round trip ─────────────────────────────────────────────────
+
+/**
+ * Admin consent returns to the SAME registered redirect URI as the ordinary
+ * connect flow (/auth/outlook/callback), so the callback has to tell the two
+ * apart. The state nonce carries the marker: oauth_states.provider is
+ * constrained to real providers, and this needs no schema change.
+ *
+ * The prefix is checked in both directions: an admin-consent state can never
+ * redeem an authorization code, and a connect state can never be used to
+ * report an admin consent.
+ */
+export const ADMIN_CONSENT_STATE_PREFIX = 'ac.';
+
+export function isAdminConsentState(state: string | null): boolean {
+  return !!state && state.startsWith(ADMIN_CONSENT_STATE_PREFIX);
+}
+
+/** Dashboard outcome for an admin-consent callback. */
+export type AdminConsentOutcome =
+  | 'admin_consent_granted'
+  | 'admin_consent_cancelled'
+  | 'admin_consent_failed';
+
+/**
+ * Whether a callback is an admin-consent response rather than a connect
+ * response. Microsoft sends `admin_consent=True&tenant=...&state=...` on
+ * success and `error=...&error_description=...&state=...` on failure, so the
+ * state prefix is the only thing present in both shapes.
+ */
+export function isAdminConsentCallback(params: URLSearchParams): boolean {
+  return params.has('admin_consent') || isAdminConsentState(params.get('state'));
+}
+
+/**
+ * Classify an admin-consent callback. Only `admin_consent=True` with no error
+ * counts as granted; anything else is reported, never assumed.
+ */
+export function classifyAdminConsentCallback(params: URLSearchParams): AdminConsentOutcome {
+  const error = params.get('error');
+  if (error) {
+    const description = params.get('error_description') ?? '';
+    // AADSTS65004: the admin declined on the consent screen.
+    if (error === 'access_denied' && !description.includes('AADSTS65001')) {
+      return 'admin_consent_cancelled';
+    }
+    return 'admin_consent_failed';
+  }
+  return params.get('admin_consent')?.toLowerCase() === 'true'
+    ? 'admin_consent_granted'
+    : 'admin_consent_failed';
+}
+
+// ─── Mailbox address from the id_token ────────────────────────────────────────
+
+const EMAIL_SHAPE = /^[^\s@<>()[\]\\,;:"]+@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+$/;
+
+function normaliseEmail(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const email = value.trim().toLowerCase();
+  if (email.length === 0 || email.length > 254) return null;
+  return EMAIL_SHAPE.test(email) ? email : null;
+}
+
+/**
+ * Pick the mailbox address from id_token claims, lowercased and validated.
+ *
+ * `email` (requested through the `email` scope) is the account's mail
+ * attribute, i.e. the primary SMTP address, and is preferred. For work/school
+ * accounts `preferred_username` is the UPN, which can differ from the mailbox
+ * address (e.g. first.last@corp.example vs flast@corp.example), so it is only a
+ * fallback, and only when it is shaped like an address. Graph's /me would be
+ * authoritative but needs User.Read, which is not requested.
+ *
+ * Returns null when neither claim is a usable address; the caller must refuse
+ * the connection rather than save an inbox with a broken address.
+ */
+export function selectOutlookEmail(claims: Record<string, unknown>): string | null {
+  return normaliseEmail(claims['email']) ?? normaliseEmail(claims['preferred_username']);
+}
+
+// ─── Live access probe ────────────────────────────────────────────────────────
+
+/**
+ * What a Graph probe response means for the "Check connection" button.
+ *
+ *  - ok:           the token reads the mailbox.
+ *  - unauthorized: 401, the token is not accepted. Reconnecting fixes it.
+ *  - no_mailbox:   signed in fine, but there is no Exchange Online mailbox
+ *                  behind the account (on-premises, unlicensed, inactive).
+ *                  Reconnecting does NOT fix it.
+ *  - forbidden:    403, the token is valid but access to the mailbox is
+ *                  refused (tenant policy, application access policy).
+ *                  Reconnecting does NOT fix it.
+ *  - inconclusive: anything else (5xx, throttling); do not change status.
+ */
+export type OutlookProbeResult =
+  | 'ok'
+  | 'unauthorized'
+  | 'no_mailbox'
+  | 'forbidden'
+  | 'inconclusive';
+
+export function classifyOutlookProbe(
+  status: number,
+  graphErrorCode: string | null | undefined,
+): OutlookProbeResult {
+  if (status >= 200 && status < 300) return 'ok';
+  // Graph reports a missing / on-prem mailbox as MailboxNotEnabledForRESTAPI,
+  // with a 401 or a 404 depending on the account. It must win over the plain
+  // 401 mapping or we would tell the user to reconnect forever.
+  if (graphErrorCode === 'MailboxNotEnabledForRESTAPI' || graphErrorCode === 'MailboxNotSupportedForRESTAPI') {
+    return 'no_mailbox';
+  }
+  if (status === 401) return 'unauthorized';
+  if (status === 403) return 'forbidden';
+  if (status === 404) return 'no_mailbox';
+  return 'inconclusive';
 }

@@ -74,6 +74,28 @@ import {
   planOutlookFolderFanout,
 } from "./search-folder-scope.ts";
 import {
+  freshOutlookAccessToken,
+  graphAddAttachments,
+  graphCreateDraft,
+  graphDeleteDraftQuietly,
+  graphDownloadAttachment,
+  graphErrorFromResponse,
+  graphFetch,
+  graphFileAttachment,
+  graphFilterForDateOrder,
+  GRAPH_MIME_SEND_MAX_BYTES,
+  graphJson,
+  graphListAttachmentMeta,
+  graphPatchMessage,
+  graphPrepareResponseDraft,
+  graphSearchParam,
+  graphSendDraft,
+  listOutlookFolderTree,
+  needsDraftUpload,
+  outlookFolderReferences,
+  resolveOutlookArchiveFolderId,
+} from "./outlook-graph.ts";
+import {
   FolderOperationError,
   FolderTargetError,
   mapFolderProviderFailure,
@@ -9834,104 +9856,44 @@ async function maybeImportGmailSignature(inbox: InboxRow): Promise<void> {
 
 /**
  * Returns a fresh, decrypted Outlook access token.
- * Same proactive-refresh pattern as Gmail.
+ *
+ * The flow lives in outlook-graph.ts (`freshOutlookAccessToken`) so it can be
+ * tested: it persists the ROTATED refresh token Microsoft returns on every
+ * refresh (the Gmail path never gets one, which is why the two differ), awaits
+ * the write instead of firing and forgetting it, updates this in-memory row so
+ * later Graph calls in the same request do not refresh again, and shares one
+ * in-flight refresh per inbox across concurrent calls in this isolate.
  *
  * @throws "outlook_auth_failed" on `invalid_grant` / `interaction_required`.
  */
 async function withFreshOutlookToken(inbox: InboxRow): Promise<string> {
-  if (!inbox.oauth_access_token || !inbox.oauth_refresh_token) {
-    throw new Error(
-      `Outlook inbox ${inbox.id} is missing OAuth tokens — user must reconnect.`,
-    );
-  }
-
-  const now = Date.now();
-  const expiresAt = inbox.oauth_token_expires_at
-    ? new Date(inbox.oauth_token_expires_at).getTime()
-    : 0;
-
-  if (expiresAt > now + REFRESH_THRESHOLD_MS) {
-    return await decryptStoredToken(inbox.oauth_access_token);
-  }
-
-  const refreshToken = await decryptStoredToken(inbox.oauth_refresh_token);
-  const clientId = Deno.env.get("OUTLOOK_CLIENT_ID");
-  const clientSecret = Deno.env.get("OUTLOOK_CLIENT_SECRET");
-
-  if (!clientId || !clientSecret) {
-    throw new Error(
-      "OUTLOOK_CLIENT_ID or OUTLOOK_CLIENT_SECRET is not configured in Edge Function secrets.",
-    );
-  }
-
-  const resp = await fetch(
-    "https://login.microsoftonline.com/common/oauth2/v2.0/token",
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        client_id: clientId,
-        client_secret: clientSecret,
-        refresh_token: refreshToken,
-        grant_type: "refresh_token",
-        scope:
-          "https://graph.microsoft.com/Mail.ReadWrite " +
-          "https://graph.microsoft.com/Mail.Send " +
-          "offline_access",
-      }),
+  return await freshOutlookAccessToken(inbox, {
+    clientId: Deno.env.get("OUTLOOK_CLIENT_ID"),
+    clientSecret: Deno.env.get("OUTLOOK_CLIENT_SECRET"),
+    tenantId: Deno.env.get("OUTLOOK_TENANT_ID"),
+    refreshThresholdMs: REFRESH_THRESHOLD_MS,
+    decrypt: decryptStoredToken,
+    encrypt: encryptForStorage,
+    persist: async (id, patch) => {
+      const { error } = await supabase
+        .from("inboxes")
+        .update({ ...patch, updated_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw new Error(error.message);
     },
-  );
-
-  if (!resp.ok) {
-    const body = (await resp.json()) as { error?: string };
-    if (
-      body.error === "invalid_grant" ||
-      body.error === "interaction_required"
-    ) {
-      supabase
+    markRevoked: async (id) => {
+      const { error } = await supabase
         .from("inboxes")
         .update({
           status: "error",
           last_error: "Outlook refresh token revoked — user must reconnect.",
           updated_at: new Date().toISOString(),
         })
-        .eq("id", inbox.id)
-        .then(() => {});
-      throw new Error("outlook_auth_failed");
-    }
-    throw new Error(
-      `Outlook token refresh failed: ${body.error ?? resp.statusText}`,
-    );
-  }
-
-  const tokens = (await resp.json()) as {
-    access_token: string;
-    expires_in: number;
-  };
-
-  (async () => {
-    try {
-      const encrypted = await encryptForStorage(tokens.access_token);
-      const newExpiry = new Date(
-        Date.now() + tokens.expires_in * 1_000,
-      ).toISOString();
-      await supabase
-        .from("inboxes")
-        .update({
-          oauth_access_token: encrypted,
-          oauth_token_expires_at: newExpiry,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", inbox.id);
-    } catch (e) {
-      console.warn("[mcp-server] outlook_token_persist_failed", {
-        inbox_id: inbox.id,
-        error: e instanceof Error ? e.message : String(e),
-      });
-    }
-  })();
-
-  return tokens.access_token;
+        .eq("id", id);
+      if (error) throw new Error(error.message);
+    },
+    log: (event, detail) => console.warn(`[mcp-server] ${event}`, detail),
+  });
 }
 
 
@@ -10366,12 +10328,15 @@ async function resolveImapAliasMailbox(
 }
 
 /**
- * Maps MCPEmails canonical folder names to Microsoft Graph well-known
- * folder names. Unknown names are passed through as displayName filters.
- * Derives from CANONICAL_FOLDER_ALIASES (single source of truth).
+ * The URL path segment for an Outlook folder argument that has ALREADY been
+ * through resolveFolderId: a Graph folder id or a well-known name ("inbox",
+ * "sentitems", ...). A canonical alias that somehow skipped resolution still
+ * maps to its well-known name; everything is percent-encoded, because a folder
+ * id is opaque and a display name concatenated raw into `/mailFolders/{x}`
+ * (which is what this used to do) addresses a different URL entirely.
  */
-function outlookWellKnownFolder(folder: string): string {
-  return lookupCanonicalAlias(folder)?.outlook ?? folder;
+function outlookFolderPathSegment(folder: string): string {
+  return encodeURIComponent(lookupCanonicalAlias(folder)?.outlook ?? folder);
 }
 
 interface OutlookMessage {
@@ -10403,7 +10368,7 @@ async function listOutlookMessages(
   unread: boolean | undefined,
 ): Promise<ListInboxResult> {
   const accessToken = await withFreshOutlookToken(inbox);
-  const folderName = outlookWellKnownFolder(folder);
+  const folderSegment = outlookFolderPathSegment(folder);
 
   const params = new URLSearchParams({
     $select:
@@ -10413,26 +10378,19 @@ async function listOutlookMessages(
     $orderby: "receivedDateTime desc",
     $count: "true",
   });
-  if (unread === true) params.set("$filter", "isRead eq false");
-  else if (unread === false) params.set("$filter", "isRead eq true");
+  // Graph's InefficientFilter rule: a property in $orderby must lead $filter.
+  // `isRead eq false` alone beside `$orderby=receivedDateTime desc` is a 400,
+  // so the filter is prefixed with a no-op receivedDateTime lower bound.
+  if (unread === true) params.set("$filter", graphFilterForDateOrder("isRead eq false"));
+  else if (unread === false) params.set("$filter", graphFilterForDateOrder("isRead eq true"));
 
-  const resp = await fetch(
-    `https://graph.microsoft.com/v1.0/me/mailFolders/${folderName}/messages?${params}`,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        ConsistencyLevel: "eventual",
-      },
-    },
+  const resp = await graphFetch(
+    accessToken,
+    `/me/mailFolders/${folderSegment}/messages?${params}`,
+    { headers: { ConsistencyLevel: "eventual" } },
   );
 
-  if (!resp.ok) {
-    if (resp.status === 401) throw new Error("outlook_auth_failed");
-    const errBody = (await resp.json()) as { error?: { message?: string } };
-    throw new Error(
-      `Outlook Graph API error: ${errBody.error?.message ?? resp.statusText}`,
-    );
-  }
+  if (!resp.ok) throw await graphErrorFromResponse(resp, "Outlook list messages");
 
   const data = (await resp.json()) as {
     value?: OutlookMessage[];
@@ -12131,48 +12089,55 @@ async function readOutlookMessage(
     "from",
     "toRecipients",
     "ccRecipients",
+    "replyTo",
     "subject",
     "receivedDateTime",
     "body",
     "hasAttachments",
     "isRead",
+    "internetMessageId",
+    // Read for the in_reply_to / references fields of the RESULT only. Graph
+    // returns these headers for received mail and omits them for mail this
+    // mailbox sent, so nothing that must work (threading a reply) depends on
+    // them: replies go through createReply, which Graph threads itself.
     "internetMessageHeaders",
     "categories",
     "flag",
   ].join(",");
 
-  const msgResp = await fetch(
-    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}?$select=${selectFields}`,
-    { headers: { Authorization: `Bearer ${accessToken}` } },
+  const msgResp = await graphFetch(
+    accessToken,
+    `/me/messages/${encodeURIComponent(messageId)}?$select=${selectFields}`,
   );
 
   if (!msgResp.ok) {
-    if (msgResp.status === 401) throw new Error("outlook_auth_failed");
-    if (msgResp.status === 404) throw new Error("message_not_found");
-    const errBody = (await msgResp.json()) as { error?: { message?: string } };
-    throw new Error(
-      `Outlook Graph error: ${errBody.error?.message ?? msgResp.statusText}`,
-    );
+    if (msgResp.status === 404) {
+      await msgResp.body?.cancel().catch(() => {});
+      throw new Error("message_not_found");
+    }
+    throw await graphErrorFromResponse(msgResp, "Outlook read message");
   }
 
+  type GraphAddress = { emailAddress?: { name?: string; address?: string } };
   interface OutlookFullMessage {
     id: string;
     conversationId?: string;
-    from?: { emailAddress?: { name?: string; address?: string } };
-    toRecipients?: { emailAddress?: { name?: string; address?: string } }[];
-    ccRecipients?: { emailAddress?: { name?: string; address?: string } }[];
+    from?: GraphAddress;
+    toRecipients?: GraphAddress[];
+    ccRecipients?: GraphAddress[];
+    replyTo?: GraphAddress[];
     subject?: string;
     receivedDateTime?: string;
     body?: { contentType?: string; content?: string };
     hasAttachments?: boolean;
     isRead?: boolean;
+    internetMessageId?: string;
     internetMessageHeaders?: { name: string; value: string }[];
     categories?: string[];
   }
 
   const msg = (await msgResp.json()) as OutlookFullMessage;
 
-  // Extract internet message headers for threading.
   const iHeaders: Record<string, string> = {};
   for (const h of msg.internetMessageHeaders ?? []) {
     iHeaders[h.name.toLowerCase()] = h.value;
@@ -12196,81 +12161,78 @@ async function readOutlookMessage(
     bodyText = bodyContent;
   }
 
-  // Fetch attachments if requested. Budget defaults to 10 MB; the single-file
-  // download path raises it so one larger file can be fetched on its own.
+  // Attachments: METADATA first ($select, no contentBytes), then bytes only
+  // for the files the caller asked for and the budget allows. Listing without
+  // $select used to pull every attachment's bytes just to print its name.
+  // `hasAttachments` is false for a message whose only attachments are inline
+  // images, so it gates the listing exactly as before.
   let budgetRemaining = attachmentBudgetBytes;
   const attachments: ReadEmailAttachmentMeta[] = [];
 
   if (msg.hasAttachments) {
-    interface OutlookAttachment {
-      id: string;
-      name?: string;
-      contentType?: string;
-      size?: number;
-      contentBytes?: string;
-      "@odata.type"?: string;
+    let metas: Awaited<ReturnType<typeof graphListAttachmentMeta>> = [];
+    try {
+      metas = await graphListAttachmentMeta(accessToken, messageId);
+    } catch (e) {
+      // As before the rewrite: a failed attachment LISTING does not fail the
+      // read of the message itself, except when the token is dead.
+      if (e instanceof Error && e.message === "outlook_auth_failed") throw e;
+      console.warn("[mcp-server] outlook_attachment_list_failed", {
+        inbox_id: inbox.id,
+        error: e instanceof Error ? e.message : String(e),
+      });
     }
-
-    const attResp = await fetch(
-      `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}/attachments`,
-      { headers: { Authorization: `Bearer ${accessToken}` } },
-    );
-
-    if (attResp.ok) {
-      const attData = (await attResp.json()) as {
-        value?: OutlookAttachment[];
-      };
-      for (const att of attData.value ?? []) {
-        // Skip inline reference attachments (itemAttachment, referenceAttachment).
-        if (
-          att["@odata.type"] &&
-          !att["@odata.type"].includes("fileAttachment")
-        ) {
-          continue;
-        }
-        // Output index = position among the kept attachments (matches the
-        // attachment_index stamped later), so the single-file path can target one.
-        const outIndex = attachments.length;
-        const sizeBytes = att.size ?? 0;
-        // Bulk path clamps the per-file ceiling to 2 MB (large files fetched
-        // individually); the single-file path allows up to its 25 MB cap.
-        const perFileCap = perFileMaxBytes === undefined
-          ? (selectOnlyIndex === undefined
-            ? Math.min(budgetRemaining, BULK_ATTACHMENT_MAX_BYTES)
-            : budgetRemaining)
-          : Math.min(perFileMaxBytes, budgetRemaining);
-        let data: string | null = null;
-        if (
-          includeAttachments &&
-          (selectOnlyIndex === undefined || outIndex === selectOnlyIndex) &&
-          sizeBytes <= perFileCap
-        ) {
-          budgetRemaining -= sizeBytes;
-          data = att.contentBytes ?? null;
-        }
-        attachments.push({
-          filename: att.name ?? "attachment",
-          mime_type: att.contentType ?? "application/octet-stream",
-          size_bytes: sizeBytes,
-          data,
-        });
+    for (const att of metas) {
+      // Output index = position in this list (matches the attachment_index
+      // stamped later), so the single-file path can target one.
+      const outIndex = attachments.length;
+      const sizeBytes = att.size;
+      // Bulk path clamps the per-file ceiling to 2 MB (large files fetched
+      // individually); the single-file path allows up to its 25 MB cap.
+      const perFileCap = perFileMaxBytes === undefined
+        ? (selectOnlyIndex === undefined
+          ? Math.min(budgetRemaining, BULK_ATTACHMENT_MAX_BYTES)
+          : budgetRemaining)
+        : Math.min(perFileMaxBytes, budgetRemaining);
+      let data: string | null = null;
+      if (
+        includeAttachments &&
+        // A referenceAttachment is a link to a cloud file: there are no bytes
+        // to hand over, so it is listed with data: null, never skipped.
+        att.kind !== "reference" &&
+        (selectOnlyIndex === undefined || outIndex === selectOnlyIndex) &&
+        sizeBytes <= perFileCap
+      ) {
+        const bytes = await graphDownloadAttachment(accessToken, messageId, att.id);
+        budgetRemaining -= bytes.length;
+        data = bytesToBase64(bytes);
       }
+      attachments.push({
+        // An attached email (itemAttachment) is served as its MIME by $value,
+        // so it is named like the .eml it effectively is.
+        filename: att.kind === "item" && !/\.eml$/i.test(att.name) ? `${att.name}.eml` : att.name,
+        mime_type: att.contentType,
+        size_bytes: sizeBytes,
+        data,
+      });
     }
   }
 
-  // Mark as read if requested.
+  // Mark as read if requested. AWAITED: a fire-and-forget PATCH is abandoned
+  // when the isolate returns the response, so "is_read: true" in the result
+  // could be a claim the mailbox never saw. A failure is logged, not thrown —
+  // the read itself succeeded.
+  let markedRead = false;
   if (markAsRead && !msg.isRead) {
-    fetch(
-      `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}`,
-      {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ isRead: true }),
-      },
-    ).catch(() => {});
+    try {
+      await graphPatchMessage(accessToken, messageId, { isRead: true }, "Outlook mark as read");
+      markedRead = true;
+    } catch (e) {
+      console.warn("[mcp-server] outlook_mark_read_failed", {
+        inbox_id: inbox.id,
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
   }
 
   const references = (iHeaders["references"] ?? "")
@@ -12294,15 +12256,18 @@ async function readOutlookMessage(
       email: r.emailAddress?.address ?? "",
     })),
     bcc: [],
-    reply_to: iHeaders["reply-to"]
-      ? parseEmailAddress(iHeaders["reply-to"])
+    reply_to: msg.replyTo?.[0]?.emailAddress?.address
+      ? {
+        name: msg.replyTo[0].emailAddress.name ?? "",
+        email: msg.replyTo[0].emailAddress.address,
+      }
       : null,
     subject: msg.subject ?? "(no subject)",
     date: msg.receivedDateTime ?? new Date().toISOString(),
     body_text: bodyText,
     body_html: includeHtml && bodyHtml ? sanitizeEmailHtml(bodyHtml) : null,
     attachments,
-    is_read: markAsRead ? true : (msg.isRead ?? true),
+    is_read: markedRead ? true : (msg.isRead ?? true),
     labels: msg.categories ?? [],
     in_reply_to: iHeaders["in-reply-to"] ?? null,
     references,
@@ -12911,14 +12876,16 @@ async function readOriginalMessage(
     }
     case "outlook": {
       const accessToken = await withFreshOutlookToken(inbox);
-      const response = await fetch(
-        `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}/$value`,
-        { headers: { Authorization: `Bearer ${accessToken}` } },
+      const response = await graphFetch(
+        accessToken,
+        `/me/messages/${encodeURIComponent(messageId)}/$value`,
       );
       if (!response.ok) {
-        if (response.status === 401) throw new Error("outlook_auth_failed");
-        if (response.status === 404) throw new Error("message_not_found");
-        throw new Error(`Outlook Graph error: ${response.status} ${response.statusText}`);
+        if (response.status === 404) {
+          await response.body?.cancel().catch(() => {});
+          throw new Error("message_not_found");
+        }
+        throw await graphErrorFromResponse(response, "Outlook message source");
       }
       // $value streams the raw MIME bytes with no encoding envelope, so
       // Content-Length IS the message size and the check is exact. Checking it
@@ -14128,13 +14095,18 @@ async function sendGmailMessage(
 // ---------------------------------------------------------------------------
 
 /**
- * Sends an email via the Microsoft Graph API (`POST /me/sendMail`).
+ * Sends an email via the Microsoft Graph API.
  *
- * Graph accepts a structured JSON message body — no MIME construction needed.
- * The API returns 202 Accepted with no body on success. Since Graph does not
- * return the assigned message ID from `sendMail`, a synthetic UUID is used as
- * a local tracking ID. A future enhancement could query Sent Items to resolve
- * the real message ID.
+ * Two routes, chosen by attachment size:
+ *   - up to ~3 MB of encoded attachments: one `POST /me/sendMail` with a
+ *     structured JSON message. 202 Accepted, no body, so NO message id exists
+ *     to report and `message_id` is "" (never a fabricated one).
+ *   - larger: `POST /me/messages` (a draft), each attachment added on its own
+ *     (a plain POST below 3 MB, an upload session above), then
+ *     `POST /me/messages/{id}/send`. sendMail's JSON is capped at 4 MB per
+ *     request, so this is the only way a 25 MB attachment can go out. The
+ *     draft's immutable id survives the send and names the Sent Items copy,
+ *     so this route DOES report a real `message_id`.
  */
 async function sendOutlookMessage(
   inbox: InboxRow,
@@ -14142,7 +14114,7 @@ async function sendOutlookMessage(
 ): Promise<SendEmailResult> {
   // STAGE "compose" (see send-stages.ts): the token and the Graph message body.
   // The sendMail POST below is transmission; nothing above it is.
-  const { accessToken, message } = await preTransmission("compose", async () => {
+  const { accessToken, message, viaDraft } = await preTransmission("compose", async () => {
     const accessToken = await withFreshOutlookToken(inbox);
 
     const toRecipients = params.to.map((email) => {
@@ -14200,60 +14172,69 @@ async function sendOutlookMessage(
       }];
     }
 
-    if (params.attachments.length > 0) {
-      message.attachments = params.attachments.map((att) => ({
-        "@odata.type": "#microsoft.graph.fileAttachment",
-        name: att.filename,
-        contentType: att.mime_type,
-        // Graph accepts standard base64 for contentBytes
-        contentBytes: att.data.replace(/\s/g, ""),
-      }));
+    // Large attachments cannot ride in the sendMail JSON (4 MB per request):
+    // they go through a draft and an upload session below instead.
+    const viaDraft = needsDraftUpload(params.attachments);
+    if (params.attachments.length > 0 && !viaDraft) {
+      message.attachments = params.attachments.map(graphFileAttachment);
     }
 
-    return { accessToken, message };
+    return { accessToken, message, viaDraft };
   });
 
-  const resp = await fetch(
-    "https://graph.microsoft.com/v1.0/me/sendMail",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ message, saveToSentItems: true }),
-    },
-  );
-
-  if (!resp.ok) {
-    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
-    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
-    if (resp.status === 429) throw new Error("quota_exceeded");
-    let errMsg = resp.statusText;
-    try {
-      const errBody = (await resp.json()) as {
-        error?: { message?: string };
-      };
-      if (errBody.error?.message) errMsg = errBody.error.message;
-    } catch { /* ignore */ }
-    throw new Error(`Outlook send error: ${errMsg}`);
-  }
-
-  // 202 Accepted — Graph's sendMail returns no body, so no provider message id
-  // is available. Return empty ids rather than a fabricated UUID that a caller
-  // could mistake for a fetchable Graph id.
-  const sentAt = new Date().toISOString();
-
-  return {
-    message_id: "",
-    thread_id: "",
-    sent_at: sentAt,
+  const result = {
     to: params.to.map((e) => parseEmailAddress(e)),
     cc: params.cc.map((e) => parseEmailAddress(e)),
     bcc: params.bcc.map((e) => parseEmailAddress(e)),
     subject: params.subject,
-    status: "sent",
+    status: "sent" as const,
   };
+
+  if (viaDraft) {
+    // STAGE "compose" still: the draft and its attachments exist only in the
+    // sender's Drafts folder until /send. A failure here deletes the draft and
+    // is not_sent, so a retry is safe.
+    const { id: draftId, conversationId } = await preTransmission("compose", async () => {
+      const draft = await graphCreateDraft(accessToken, message);
+      try {
+        await graphAddAttachments(accessToken, draft.id, params.attachments);
+      } catch (e) {
+        await graphDeleteDraftQuietly(accessToken, draft.id);
+        throw e;
+      }
+      return draft;
+    });
+    const sendResp = await graphSendDraft(accessToken, draftId);
+    if (!sendResp.ok) {
+      if (sendResp.status === 429) throw new Error("quota_exceeded");
+      throw await graphErrorFromResponse(sendResp, "Outlook send");
+    }
+    await sendResp.body?.cancel().catch(() => {});
+    // With `Prefer: IdType="ImmutableId"` a draft keeps its id after /send,
+    // and that id then names the copy in Sent Items (Microsoft's documented
+    // way to find a sent message). Real, fetchable — unlike sendMail below.
+    return {
+      message_id: draftId,
+      thread_id: conversationId ?? "",
+      sent_at: new Date().toISOString(),
+      ...result,
+    };
+  }
+
+  const resp = await graphJson(accessToken, "/me/sendMail", "POST", { message, saveToSentItems: true });
+
+  if (!resp.ok) {
+    if (resp.status === 429) throw new Error("quota_exceeded");
+    // 403 is a permission/policy refusal (e.g. Mail.Send not granted on a
+    // shared mailbox), NOT an expired sign-in; graphErrorFromResponse says so.
+    throw await graphErrorFromResponse(resp, "Outlook send");
+  }
+  await resp.body?.cancel().catch(() => {});
+
+  // 202 Accepted — Graph's sendMail returns no body, so no provider message id
+  // is available. Return empty ids rather than a fabricated UUID that a caller
+  // could mistake for a fetchable Graph id.
+  return { message_id: "", thread_id: "", sent_at: new Date().toISOString(), ...result };
 }
 
 
@@ -14564,208 +14545,132 @@ async function replyGmailMessage(
  * Sends a reply to an existing Outlook / Microsoft 365 message.
  *
  * Flow:
- *   1. GET the original message from Graph to extract recipients, subject,
- *      internetMessageId (RFC 5322 Message-ID), and the References header.
- *   2. Build and send the reply via `POST /me/sendMail` with the correct
- *      In-Reply-To and References `internetMessageHeaders` so that
- *      Outlook and other clients maintain thread continuity.
+ *   1. STAGE "source": GET the original's addressing (from/to/cc/subject) and
+ *      resolve reply recipients with the shared rule (recipient-rules.ts), so
+ *      Outlook answers exactly the people Gmail and IMAP would.
+ *   2. STAGE "compose": `POST /me/messages/{id}/createReply` (or
+ *      createReplyAll). Graph builds a draft that is threaded NATIVELY — its
+ *      own In-Reply-To / References, the conversation id — and that already
+ *      holds the quoted original. Then PATCH that draft: our recipients, the
+ *      caller's cc/bcc, and the caller's text/HTML placed ABOVE the quote
+ *      (mergeResponseBody). Then attachments, through an upload session when
+ *      large.
+ *   3. `POST /me/messages/{draftId}/send`.
+ *
+ * Until 2026-09-25 this built a sendMail message with `internetMessageHeaders`
+ * In-Reply-To / References. Graph accepts only `x-` custom headers there and
+ * answers anything else with 400, so every Outlook reply failed.
  */
 async function replyOutlookMessage(
   inbox: InboxRow,
   originalMessageId: string,
   params: ReplyToEmailParams,
 ): Promise<ReplyToEmailResult> {
-  // Everything down to the sendMail POST is pre-transmission: the token, the
-  // original, the recipients and the Graph message body. Stage "source" for
-  // the same reason as the Gmail path — reading the original is what fails
-  // here, and the TargetUnresolvedError inside keeps its own classification.
-  const { accessToken, message, toRecipients, replySubject, conversationId } =
-    await preTransmission("source", async () => {
-      // Sign the new reply text before the original is quoted (buildReplyTextBody
-      // appends the quote after params.body; the HTML path sends params.htmlBody raw).
-      applyReplyForwardSignature(params, inbox, {
-        include_signature: params.include_signature,
-      });
-      const accessToken = await withFreshOutlookToken(inbox);
+  type GraphRecipient = { emailAddress?: { name?: string; address?: string } };
 
-      // ── Step 1: Fetch original message ────────────────────────────────────────
-      const selectFields = [
-        "from",
-        "toRecipients",
-        "ccRecipients",
-        "subject",
-        "conversationId",
-        "internetMessageId",
-        "internetMessageHeaders",
-        "body",
-        "receivedDateTime",
-      ].join(",");
-
-      const origResp = await fetch(
-        `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(originalMessageId)}?$select=${selectFields}`,
-        { headers: { Authorization: `Bearer ${accessToken}` } },
-      );
-
-      if (!origResp.ok) {
-        if (origResp.status === 401) throw new Error("outlook_auth_failed");
-        if (origResp.status === 404) throw new Error(MESSAGE_NOT_FOUND);
-        const errBody = (await origResp.json()) as { error?: { message?: string } };
-        // Pre-send, exactly as in the Gmail path above: this read the original and
-        // failed, so no reply exists to have been delivered. Graph's 400s are NOT
-        // folded into not-found here — unlike Gmail's, they cover a malformed
-        // $select and a bad folder id as well as a bad message id, so the honest
-        // answer is the provider's own words plus the fact that nothing was sent.
-        throw new TargetUnresolvedError(
-          `Outlook Graph API error: ${errBody.error?.message ?? origResp.statusText}`,
-        );
-      }
-
-      const origMsg = (await origResp.json()) as {
-        from?: { emailAddress?: { name?: string; address?: string } };
-        toRecipients?: { emailAddress?: { name?: string; address?: string } }[];
-        ccRecipients?: { emailAddress?: { name?: string; address?: string } }[];
-        subject?: string;
-        conversationId?: string;
-        internetMessageId?: string;
-        internetMessageHeaders?: { name: string; value: string }[];
-        body?: { contentType?: string; content?: string };
-        receivedDateTime?: string;
-      };
-
-      const origSubject = origMsg.subject ?? "(no subject)";
-      const replySubject = /^re:/i.test(origSubject.trim())
-        ? origSubject
-        : `Re: ${origSubject}`;
-      const origFromStr = origMsg.from?.emailAddress
-        ? (origMsg.from.emailAddress.name
-          ? `${origMsg.from.emailAddress.name} <${origMsg.from.emailAddress.address ?? ""}>`
-          : (origMsg.from.emailAddress.address ?? ""))
-        : "";
-      const origDateStr = origMsg.receivedDateTime ?? "";
-      const origBodyText = origMsg.body
-        ? (origMsg.body.contentType?.toLowerCase() === "html"
-          ? stripHtmlToText(origMsg.body.content ?? "")
-          : (origMsg.body.content ?? ""))
-        : "";
-
-      const origMsgId = origMsg.internetMessageId ?? "";
-      const refsHeader =
-        origMsg.internetMessageHeaders?.find(
-          (h) => h.name.toLowerCase() === "references",
-        )?.value ?? "";
-      const referencesChain = refsHeader
-        ? `${refsHeader} ${origMsgId}`
-        : origMsgId;
-
-      // ── Step 2: Resolve reply recipients ─────────────────────────────────────
-      type GraphRecipient = { emailAddress?: { name?: string; address?: string } };
-      const fromGraph = (r: GraphRecipient) => ({
-        name: r.emailAddress?.name ?? "",
-        email: r.emailAddress?.address ?? "",
-      });
-      // Same shared rule as the Gmail and IMAP reply paths (recipient-rules.ts),
-      // including the self-addressed fallback.
-      const resolvedReply = computeReplyRecipients({
-        from: origMsg.from?.emailAddress ? [fromGraph({ emailAddress: origMsg.from.emailAddress })] : [],
-        to: (origMsg.toRecipients ?? []).map(fromGraph),
-        cc: (origMsg.ccRecipients ?? []).map(fromGraph),
-        ownAddresses: inboxOwnAddresses(inbox),
-        replyAll: params.replyAll,
-      });
-      if (!resolvedReply.ok) {
-        throw new Error(replyNoRecipientsMessage("email_reply"));
-      }
-      const toRecipients: GraphRecipient[] = resolvedReply.recipients.map((r) => ({
-        emailAddress: { ...(r.name ? { name: r.name } : {}), address: r.email },
-      }));
-
-      // ── Step 3: Build and send the reply ─────────────────────────────────────
-      const body = params.htmlBody
-        ? { contentType: "HTML", content: params.htmlBody }
-        : {
-          contentType: "Text",
-          content: buildReplyTextBody(
-            params.body,
-            origFromStr,
-            origDateStr,
-            origBodyText,
-          ),
-        };
-
-      const message: Record<string, unknown> = {
-        subject: replySubject,
-        body,
-        toRecipients: toRecipients.map((r) => ({
-          emailAddress: {
-            ...(r.emailAddress?.name ? { name: r.emailAddress.name } : {}),
-            address: r.emailAddress?.address ?? "",
-          },
-        })),
-        ...(params.cc?.length
-          ? { ccRecipients: params.cc.map((address) => ({ emailAddress: { address } })) }
-          : {}),
-        ...(params.bcc?.length
-          ? { bccRecipients: params.bcc.map((address) => ({ emailAddress: { address } })) }
-          : {}),
-        // Threading headers — Graph supports setting these via internetMessageHeaders.
-        internetMessageHeaders: [
-          ...(origMsgId ? [{ name: "In-Reply-To", value: origMsgId }] : []),
-          ...(referencesChain ? [{ name: "References", value: referencesChain }] : []),
-        ],
-      };
-
-      if (params.attachments.length > 0) {
-        message.attachments = params.attachments.map((att) => ({
-          "@odata.type": "#microsoft.graph.fileAttachment",
-          name: att.filename,
-          contentType: att.mime_type,
-          contentBytes: att.data.replace(/\s/g, ""),
-        }));
-      }
-
-      return {
-        accessToken,
-        message,
-        toRecipients,
-        replySubject,
-        conversationId: origMsg.conversationId,
-      };
+  // Stage "source" for the same reason as the Gmail path — reading the
+  // original is what fails here, and the TargetUnresolvedError inside keeps
+  // its own classification.
+  const { accessToken, toRecipients, replySubject } = await preTransmission("source", async () => {
+    // Sign the new reply text before it is placed above the quote.
+    applyReplyForwardSignature(params, inbox, {
+      include_signature: params.include_signature,
     });
+    const accessToken = await withFreshOutlookToken(inbox);
 
-  const sendResp = await fetch(
-    "https://graph.microsoft.com/v1.0/me/sendMail",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+    // ── Step 1: Fetch original message ──────────────────────────────────────
+    const selectFields = ["from", "toRecipients", "ccRecipients", "subject"].join(",");
+    const origResp = await graphFetch(
+      accessToken,
+      `/me/messages/${encodeURIComponent(originalMessageId)}?$select=${selectFields}`,
+    );
+
+    if (!origResp.ok) {
+      if (origResp.status === 401) throw new Error("outlook_auth_failed");
+      if (origResp.status === 404) throw new Error(MESSAGE_NOT_FOUND);
+      // Pre-send, exactly as in the Gmail path above: this read the original and
+      // failed, so no reply exists to have been delivered. Graph's 400s are NOT
+      // folded into not-found here — unlike Gmail's, they cover a malformed
+      // $select and a bad folder id as well as a bad message id, so the honest
+      // answer is the provider's own words plus the fact that nothing was sent.
+      const err = await graphErrorFromResponse(origResp, "Outlook read original");
+      throw new TargetUnresolvedError(err.message);
+    }
+
+    const origMsg = (await origResp.json()) as {
+      from?: GraphRecipient;
+      toRecipients?: GraphRecipient[];
+      ccRecipients?: GraphRecipient[];
+      subject?: string;
+    };
+
+    const origSubject = origMsg.subject ?? "(no subject)";
+    const replySubject = /^re:/i.test(origSubject.trim())
+      ? origSubject
+      : `Re: ${origSubject}`;
+
+    // ── Step 2: Resolve reply recipients ─────────────────────────────────────
+    const fromGraph = (r: GraphRecipient) => ({
+      name: r.emailAddress?.name ?? "",
+      email: r.emailAddress?.address ?? "",
+    });
+    // Same shared rule as the Gmail and IMAP reply paths (recipient-rules.ts),
+    // including the self-addressed fallback.
+    const resolvedReply = computeReplyRecipients({
+      from: origMsg.from?.emailAddress ? [fromGraph({ emailAddress: origMsg.from.emailAddress })] : [],
+      to: (origMsg.toRecipients ?? []).map(fromGraph),
+      cc: (origMsg.ccRecipients ?? []).map(fromGraph),
+      ownAddresses: inboxOwnAddresses(inbox),
+      replyAll: params.replyAll,
+    });
+    if (!resolvedReply.ok) {
+      throw new Error(replyNoRecipientsMessage("email_reply"));
+    }
+    const toRecipients: GraphRecipient[] = resolvedReply.recipients.map((r) => ({
+      emailAddress: { ...(r.name ? { name: r.name } : {}), address: r.email },
+    }));
+
+    return { accessToken, toRecipients, replySubject };
+  });
+
+  // ── Step 3: the threaded draft, completed ───────────────────────────────────
+  // Still nothing on the wire: the draft sits in the sender's Drafts folder,
+  // and a failure deletes it again.
+  const recipient = (e: string) => {
+    const p = parseEmailAddress(e);
+    return { emailAddress: { ...(p.name ? { name: p.name } : {}), address: p.email } };
+  };
+  const draft = await preTransmission("compose", () =>
+    graphPrepareResponseDraft(accessToken, {
+      messageId: originalMessageId,
+      kind: params.replyAll ? "createReplyAll" : "createReply",
+      patch: {
+        subject: replySubject,
+        toRecipients,
+        // Always written, even empty: createReplyAll pre-fills Cc from the
+        // original, and `toRecipients` above already carries everyone the
+        // shared rule chose. Leaving Graph's Cc in place would double them.
+        ccRecipients: (params.cc ?? []).map(recipient),
+        bccRecipients: (params.bcc ?? []).map(recipient),
       },
-      body: JSON.stringify({ message, saveToSentItems: true }),
-    },
+      html: params.htmlBody,
+      text: params.body,
+      attachments: params.attachments,
+    })
   );
 
+  const sendResp = await graphSendDraft(accessToken, draft.id);
   if (!sendResp.ok) {
-    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
-    if (sendResp.status === 401 || sendResp.status === 403) throw new Error("outlook_auth_failed");
     if (sendResp.status === 429) throw new Error("quota_exceeded");
-    let errMsg = sendResp.statusText;
-    try {
-      const errBody = (await sendResp.json()) as {
-        error?: { message?: string };
-      };
-      if (errBody.error?.message) errMsg = errBody.error.message;
-    } catch { /* ignore */ }
-    throw new Error(`Outlook reply error: ${errMsg}`);
+    throw await graphErrorFromResponse(sendResp, "Outlook reply");
   }
-
-  // Graph's sendMail returns no body, so no provider message id is available
-  // for the reply. The conversation id (real) is preserved as the thread id.
-  const sentAt = new Date().toISOString();
+  await sendResp.body?.cancel().catch(() => {});
 
   return {
-    message_id: "",
-    thread_id: conversationId ?? "",
-    sent_at: sentAt,
+    // The draft's immutable id survives /send and names the Sent Items copy.
+    message_id: draft.id,
+    thread_id: draft.conversationId ?? "",
+    sent_at: new Date().toISOString(),
     in_reply_to: originalMessageId,
     to: toRecipients.map((r) => ({
       name: r.emailAddress?.name ?? "",
@@ -14941,7 +14846,14 @@ async function forwardRelayMessage(
     return { fwdSubject, bytes: relay.bytes, messageId };
   });
 
-  const sent = await transmitRawMessage(inbox, bytes, messageId, params);
+  // Graph's MIME sendMail takes the message base64-encoded in a request capped
+  // at 4 MB, so an Outlook forward past ~2.3 MB cannot use it. Those go through
+  // Graph's own createForward instead, which copies the original's attachments
+  // server-side and has no such ceiling. Not byte for byte (Graph re-renders
+  // the original), but a 25 MB forward that arrives beats one that cannot.
+  const sent = inbox.provider === "outlook" && bytes.length > GRAPH_MIME_SEND_MAX_BYTES
+    ? await outlookForwardViaDraft(inbox, originalMessageId, params, fwdSubject, original.bytes)
+    : await transmitRawMessage(inbox, bytes, messageId, params);
 
   return {
     message_id: sent.message_id,
@@ -14951,6 +14863,85 @@ async function forwardRelayMessage(
     to: params.to.map((e) => parseEmailAddress(e)),
     subject: fwdSubject,
     status: "sent",
+  };
+}
+
+/**
+ * An Outlook forward too large for Graph's MIME sendMail.
+ *
+ *   inline (the default): `createForward` on the original — Graph builds a
+ *     draft holding the original's body, its "From/Sent/To/Subject" header
+ *     block and its attachments, all copied server-side. The draft is PATCHed
+ *     with our recipients, subject and the caller's note above the forwarded
+ *     block; with include_attachments: false the non-inline attachments are
+ *     removed from the draft (the original is untouched).
+ *   as_attachment: a new draft carrying the caller's note, with the original's
+ *     exact bytes attached as a .eml through an upload session.
+ *
+ * Every step before /send is STAGE "compose" and deletes its draft on failure.
+ */
+async function outlookForwardViaDraft(
+  inbox: InboxRow,
+  originalMessageId: string,
+  params: ForwardEmailParams,
+  fwdSubject: string,
+  originalBytes: Uint8Array,
+): Promise<{ message_id: string; thread_id: string; sent_at: string }> {
+  const recipients = (list: string[]) =>
+    list.map((e) => {
+      const p = parseEmailAddress(e);
+      return { emailAddress: { ...(p.name ? { name: p.name } : {}), address: p.email } };
+    });
+  const addressing = {
+    subject: fwdSubject,
+    toRecipients: recipients(params.to),
+    ccRecipients: recipients(params.cc),
+    bccRecipients: recipients(params.bcc),
+  };
+
+  const { accessToken, draft } = await preTransmission("compose", async () => {
+    const accessToken = await withFreshOutlookToken(inbox);
+    if (params.asAttachment) {
+      const note = params.htmlBody && params.htmlBody.trim()
+        ? { contentType: "HTML", content: params.htmlBody }
+        : { contentType: "Text", content: params.body ?? "" };
+      const created = await graphCreateDraft(accessToken, { ...addressing, body: note });
+      try {
+        const safeName = (fwdSubject.replace(/[\\/:*?"<>|\r\n]+/g, " ").trim() || "message").slice(0, 120);
+        await graphAddAttachments(accessToken, created.id, [{
+          filename: `${safeName}.eml`,
+          mime_type: "message/rfc822",
+          bytes: originalBytes,
+        }]);
+      } catch (e) {
+        await graphDeleteDraftQuietly(accessToken, created.id);
+        throw e;
+      }
+      return { accessToken, draft: created };
+    }
+
+    const created = await graphPrepareResponseDraft(accessToken, {
+      messageId: originalMessageId,
+      kind: "createForward",
+      patch: addressing,
+      html: params.htmlBody,
+      text: params.body,
+      removeFileAttachments: !params.includeAttachments,
+    });
+    return { accessToken, draft: created };
+  });
+
+  const sendResp = await graphSendDraft(accessToken, draft.id);
+  if (!sendResp.ok) {
+    if (sendResp.status === 429) throw new Error("quota_exceeded");
+    throw await graphErrorFromResponse(sendResp, "Outlook forward");
+  }
+  await sendResp.body?.cancel().catch(() => {});
+  // Immutable id: the draft's id names the Sent Items copy after /send.
+  return {
+    message_id: draft.id,
+    thread_id: draft.conversationId ?? "",
+    sent_at: new Date().toISOString(),
   };
 }
 
@@ -15020,25 +15011,19 @@ async function transmitRawMessage(
       const accessToken = await preTransmission("compose", () => withFreshOutlookToken(inbox));
       // Graph's MIME form of sendMail: "provide the MIME content as a
       // base64-encoded string in the request body" with Content-Type
-      // text/plain. Saves to Sent Items like the JSON form.
-      const resp = await fetch("https://graph.microsoft.com/v1.0/me/sendMail", {
+      // text/plain. Saves to Sent Items like the JSON form. Capped at 4 MB per
+      // request, which is why forwardRelayMessage routes anything larger than
+      // GRAPH_MIME_SEND_MAX_BYTES through outlookForwardViaDraft instead.
+      const resp = await graphFetch(accessToken, "/me/sendMail", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "text/plain",
-        },
+        headers: { "Content-Type": "text/plain" },
         body: bytesToBase64(bytes),
       });
       if (!resp.ok) {
-        if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
         if (resp.status === 429) throw new Error("quota_exceeded");
-        let errMsg = resp.statusText;
-        try {
-          const errBody = (await resp.json()) as { error?: { message?: string } };
-          if (errBody.error?.message) errMsg = errBody.error.message;
-        } catch { /* ignore */ }
-        throw new Error(`Outlook send error: ${errMsg}`);
+        throw await graphErrorFromResponse(resp, "Outlook send");
       }
+      await resp.body?.cancel().catch(() => {});
       // 202 Accepted with no body: no provider id exists to report. Empty ids,
       // never a fabricated one a caller could mistake for a fetchable Graph id.
       return { message_id: "", thread_id: "", sent_at: new Date().toISOString() };
@@ -17157,12 +17142,10 @@ async function searchOutlookMessages(
   // actually was.
   const fanout = planOutlookFolderFanout(includeFolders, OUTLOOK_FOLDER_FANOUT_CAP);
   const legs: { folder: string; url: string }[] = fanout.searched.length === 0
-    ? [{ folder: "INBOX", url: "https://graph.microsoft.com/v1.0/me/messages" }]
+    ? [{ folder: "INBOX", url: "/me/messages" }]
     : fanout.searched.map((folder) => ({
       folder,
-      url: `https://graph.microsoft.com/v1.0/me/mailFolders/${
-        outlookWellKnownFolder(folder)
-      }/messages`,
+      url: `/me/mailFolders/${outlookFolderPathSegment(folder)}/messages`,
     }));
 
   // Graph CANNOT combine $search and $filter on /messages, so pick exactly one
@@ -17183,38 +17166,47 @@ async function searchOutlookMessages(
   // Human-readable echo of what we actually sent to the provider.
   let queryNormalized = "";
   if (kql) {
-    params.set("$search", `"${kql}"`);
+    // ONE pair of quotes around the whole KQL expression, inner quotes
+    // backslash-escaped: $search="from:alice AND subject:\"q3 report\"".
+    // $orderby is not allowed beside $search; mergeOutlookFolderPages sorts.
+    params.set("$search", graphSearchParam(kql));
     queryNormalized = kql;
-  } else if (filter) {
-    // $count works alongside $filter (but not $search), giving an exact total.
-    params.set("$filter", filter);
-    params.set("$count", "true");
-    queryNormalized = filter;
+  } else {
+    // $filter (or nothing) CAN be ordered, and must be: without $orderby the
+    // first `fetchTop` rows Graph hands back are not the newest, so the date
+    // sort below would be sorting the wrong window. The filter is reordered so
+    // receivedDateTime leads it, or Graph answers 400 InefficientFilter.
+    params.set("$orderby", "receivedDateTime desc");
+    if (filter) {
+      params.set("$filter", graphFilterForDateOrder(filter));
+      // $count works alongside $filter (but not $search), giving an exact total.
+      params.set("$count", "true");
+      queryNormalized = filter;
+    }
   }
-  // else: neither — list without $search/$filter (match all).
+  // else: neither — list without $search/$filter (match all), newest first.
 
   // Every leg sends the identical query string; only the folder in the path
   // differs. They are issued together rather than one after another because the
-  // 30-second budget is wall-clock: serialised, five folders would cost five
+  // 30-second budget is wall-clock: serialised, four folders would cost four
   // round trips of latency, and the whole point of a cap is that the slowest
-  // leg — not the sum of them — is what the budget has to absorb.
+  // leg — not the sum of them — is what the budget has to absorb. The cap
+  // (OUTLOOK_FOLDER_FANOUT_CAP = 4) is also Graph's concurrent-request limit
+  // per mailbox, so the legs never throttle each other.
   const pages: OutlookFolderPage<OutlookMessage>[] = await Promise.all(
     legs.map(async ({ folder, url }) => {
-      const resp = await fetch(`${url}?${params}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          ConsistencyLevel: "eventual",
-        },
+      const resp = await graphFetch(accessToken, `${url}?${params}`, {
+        headers: { ConsistencyLevel: "eventual" },
       });
 
       if (!resp.ok) {
-        if (resp.status === 401) throw new Error("outlook_auth_failed");
-        const errBody = (await resp.json()) as { error?: { message?: string } };
-        const errMsg = errBody.error?.message ?? resp.statusText;
         // Graph returns 400 with "InequalityNotSupported" or similar when the
         // $search syntax is invalid — surface this as invalid_query.
-        if (resp.status === 400) throw new Error(`outlook_invalid_query: ${errMsg}`);
-        throw new Error(`Outlook Graph API error: ${errMsg}`);
+        if (resp.status === 400) {
+          const err = await graphErrorFromResponse(resp, "Outlook search");
+          throw new Error(`outlook_invalid_query: ${err.message}`);
+        }
+        throw await graphErrorFromResponse(resp, "Outlook search");
       }
 
       const data = (await resp.json()) as {
@@ -18022,34 +18014,28 @@ async function gmailListFolders(inbox: InboxRow): Promise<FolderEntry[]> {
 }
 
 /**
- * Lists Outlook mail folders via Graph mailFolders (includes message counts).
+ * Lists every Outlook mail folder, nested ones included, via Graph mailFolders
+ * (with message counts). Nested folders are named by their full path
+ * ("Inbox/Receipts"), the same way an IMAP listing names them, so the name a
+ * caller reads here is a name resolveFolderId accepts. The walk follows
+ * @odata.nextLink and childFolders, capped in outlook-graph.ts.
  * Throws "outlook_auth_failed" on 401.
  */
 async function outlookListFolders(inbox: InboxRow): Promise<FolderEntry[]> {
   const accessToken = await withFreshOutlookToken(inbox);
-  const resp = await fetch(
-    "https://graph.microsoft.com/v1.0/me/mailFolders" +
-      "?$top=100&$select=id,displayName,totalItemCount,unreadItemCount",
-    { headers: { Authorization: `Bearer ${accessToken}` } },
-  );
-  if (!resp.ok) {
-    if (resp.status === 401) throw new Error("outlook_auth_failed");
-    throw new Error(`Graph mailFolders failed: ${resp.statusText}`);
+  const tree = await listOutlookFolderTree(accessToken);
+  if (tree.truncated) {
+    console.warn("[mcp-server] outlook_folder_walk_truncated", {
+      inbox_id: inbox.id,
+      listed: tree.folders.length,
+    });
   }
-  const data = (await resp.json()) as {
-    value?: {
-      id: string;
-      displayName: string;
-      totalItemCount?: number;
-      unreadItemCount?: number;
-    }[];
-  };
-  return (data.value ?? []).map((f) => ({
+  return tree.folders.map((f) => ({
     id: f.id,
-    name: f.displayName,
+    name: f.path,
     type: "folder" as const,
-    total_messages: f.totalItemCount ?? null,
-    unread_messages: f.unreadItemCount ?? null,
+    total_messages: f.totalItemCount,
+    unread_messages: f.unreadItemCount,
   }));
 }
 
@@ -18324,8 +18310,9 @@ async function resolveFolderId(
     });
   }
   // The pass-through hands over `nameOrId`, not `trimmed`. Its whole premise is
-  // that this might be a valid provider id we failed to ENUMERATE - Graph's
-  // mailFolders page caps at 100, so a 101st folder is exactly that case - and
+  // that this might be a valid provider id we failed to ENUMERATE - the Outlook
+  // folder walk stops at 1000 folders / 10 levels, so a folder past that cap
+  // is exactly that case - and
   // a value we are forwarding precisely because we could not verify it is the
   // last value to start editing. The stray-whitespace spelling this used to
   // rescue ("  Archive  " against a mailbox Archive) is now matched properly
@@ -18430,17 +18417,11 @@ async function folderReferencesForProvider(
       return labels.map((l) => ({ id: l.id, name: l.name }));
     }
     case "outlook": {
+      // The whole tree, not one page of top-level folders: a folder filed under
+      // Inbox is addressable by its path ("Inbox/Receipts") and, when its name
+      // is unique in the mailbox, by that name alone.
       const accessToken = await withFreshOutlookToken(inbox);
-      const resp = await fetch(
-        "https://graph.microsoft.com/v1.0/me/mailFolders?$top=100&$select=id,displayName",
-        { headers: { Authorization: `Bearer ${accessToken}` } },
-      );
-      if (!resp.ok) {
-        if (resp.status === 401) throw new Error("outlook_auth_failed");
-        throw new Error(`Graph mailFolders failed: ${resp.statusText}`);
-      }
-      const data = (await resp.json()) as { value?: { id: string; displayName: string }[] };
-      return (data.value ?? []).map((f) => ({ id: f.id, name: f.displayName }));
+      return outlookFolderReferences(await listOutlookFolderTree(accessToken));
     }
     default: {
       // imap and all service variants: the mailbox name IS the id, and LIST
@@ -18756,20 +18737,19 @@ async function gmailCreateFolder(inbox: InboxRow, name: string): Promise<{ id: s
 
 async function outlookCreateFolder(inbox: InboxRow, name: string): Promise<{ id: string; name: string }> {
   const accessToken = await withFreshOutlookToken(inbox);
-  const resp = await fetch(
-    "https://graph.microsoft.com/v1.0/me/mailFolders",
+  const resp = await graphFetch(
+    accessToken,
+    "/me/mailFolders",
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ displayName: name }),
     },
   );
   if (!resp.ok) {
-    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
-    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
     const detail = await folderErrorDetail(resp);
     const existing = resp.status === 409 ? await findFolderByName(inbox, name) : null;
     throw new FolderOperationError(mapFolderProviderFailure({
@@ -18860,20 +18840,19 @@ async function gmailRenameFolder(inbox: InboxRow, folderId: string, newName: str
 
 async function outlookRenameFolder(inbox: InboxRow, folderId: string, newName: string): Promise<void> {
   const accessToken = await withFreshOutlookToken(inbox);
-  const resp = await fetch(
-    `https://graph.microsoft.com/v1.0/me/mailFolders/${encodeURIComponent(folderId)}`,
+  const resp = await graphFetch(
+    accessToken,
+    `/me/mailFolders/${encodeURIComponent(folderId)}`,
     {
       method: "PATCH",
       headers: {
-        Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ displayName: newName }),
     },
   );
   if (!resp.ok) {
-    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
-    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
     if (resp.status === 404) throw new Error("folder_not_found");
     const detail = await folderErrorDetail(resp);
     const existing = resp.status === 409 ? await findFolderByName(inbox, newName) : null;
@@ -18957,16 +18936,16 @@ async function gmailDeleteFolder(inbox: InboxRow, folderId: string): Promise<voi
 
 async function outlookDeleteFolder(inbox: InboxRow, folderId: string): Promise<void> {
   const accessToken = await withFreshOutlookToken(inbox);
-  const resp = await fetch(
-    `https://graph.microsoft.com/v1.0/me/mailFolders/${encodeURIComponent(folderId)}`,
+  const resp = await graphFetch(
+    accessToken,
+    `/me/mailFolders/${encodeURIComponent(folderId)}`,
     {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: {},
     },
   );
   if (!resp.ok) {
-    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
-    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
     if (resp.status === 404) throw new Error("folder_not_found");
     throw new FolderOperationError(mapFolderProviderFailure({
       provider: "outlook",
@@ -19504,53 +19483,76 @@ async function outlookPatchMessage(
   patch: Record<string, unknown>,
 ): Promise<void> {
   const accessToken = await withFreshOutlookToken(inbox);
-  const resp = await fetch(
-    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}`,
+  const resp = await graphFetch(
+    accessToken,
+    `/me/messages/${encodeURIComponent(messageId)}`,
     {
       method: "PATCH",
       headers: {
-        Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(patch),
     },
   );
   if (!resp.ok) {
-    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
-    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
-    const body = await resp.text();
-    throw new Error(`Outlook PATCH failed: ${body}`);
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    throw await graphErrorFromResponse(resp, "Outlook update message");
   }
 }
 
 /**
- * Moves an Outlook message to its archive folder via Graph.
- * Uses the well-known name "archive" as the destination.
- * Throws "outlook_auth_failed" on 401.
+ * Per-isolate cache of each Outlook inbox's archive folder id. A folder id is
+ * stable for the folder's lifetime, so the lookup (and, on a mailbox that had
+ * none, the create) happens once per isolate, not once per archived message.
+ */
+const outlookArchiveIdCache = new Map<string, string>();
+
+/**
+ * The destinationId for a move. Only the `archive` role needs work: Graph's
+ * well-known `archive` answers 404 ErrorFolderNotFound on consumer mailboxes
+ * that never had one provisioned, so it is resolved to a real folder id (an
+ * existing "Archive", or one created) by resolveOutlookArchiveFolderId.
+ * Every other value is already a folder id or a well-known name that always
+ * exists, courtesy of resolveFolderId.
+ */
+async function outlookMoveDestination(
+  inbox: InboxRow,
+  accessToken: string,
+  destination: string,
+): Promise<string> {
+  if (destination.toLowerCase() !== "archive") return destination;
+  const cached = outlookArchiveIdCache.get(inbox.id);
+  if (cached) return cached;
+  const id = await resolveOutlookArchiveFolderId(accessToken);
+  outlookArchiveIdCache.set(inbox.id, id);
+  return id;
+}
+
+/**
+ * Moves an Outlook message to its archive folder via Graph, creating the
+ * folder on a mailbox that has none (see outlookMoveDestination).
+ * Throws "outlook_auth_failed" on 401, "message_not_found" on 404.
  */
 async function outlookArchiveEmail(
   inbox: InboxRow,
   messageId: string,
 ): Promise<void> {
   const accessToken = await withFreshOutlookToken(inbox);
-  const resp = await fetch(
-    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}/move`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      // "archive" is the well-known folder name recognised by Graph.
-      body: JSON.stringify({ destinationId: "archive" }),
-    },
+  const destinationId = await outlookMoveDestination(inbox, accessToken, "archive");
+  const resp = await graphJson(
+    accessToken,
+    `/me/messages/${encodeURIComponent(messageId)}/move`,
+    "POST",
+    { destinationId },
   );
   if (!resp.ok) {
-    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
-    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
-    const body = await resp.text();
-    throw new Error(`Outlook move to archive failed: ${body}`);
+    if (resp.status === 404) {
+      await resp.body?.cancel().catch(() => {});
+      throw new Error("message_not_found");
+    }
+    throw await graphErrorFromResponse(resp, "Outlook move to archive");
   }
+  await resp.body?.cancel().catch(() => {});
 }
 
 // ── Label / category / keyword seam ────────────────────────────────────────
@@ -19690,15 +19692,15 @@ async function outlookAddCategory(
   category: string,
 ): Promise<{ applied: boolean; previous: string[]; categories: string[] }> {
   const accessToken = await withFreshOutlookToken(inbox);
-  const resp = await fetch(
-    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}?$select=categories`,
-    { headers: { Authorization: `Bearer ${accessToken}` } },
+  const resp = await graphFetch(
+    accessToken,
+    `/me/messages/${encodeURIComponent(messageId)}?$select=categories`,
+    { headers: {} },
   );
   if (!resp.ok) {
-    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
     if (resp.status === 404) throw new Error("message_not_found");
-    const body = await resp.text();
-    throw new Error(`Outlook categories read failed: ${body}`);
+    throw await graphErrorFromResponse(resp, "Outlook categories read");
   }
   const data = (await resp.json()) as { categories?: string[] };
   const previous = Array.isArray(data.categories) ? data.categories : [];
@@ -20173,23 +20175,22 @@ async function outlookMoveEmail(
   destinationFolderId: string,
 ): Promise<void> {
   const accessToken = await withFreshOutlookToken(inbox);
-  const resp = await fetch(
-    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}/move`,
+  const destinationId = await outlookMoveDestination(inbox, accessToken, destinationFolderId);
+  const resp = await graphFetch(
+    accessToken,
+    `/me/messages/${encodeURIComponent(messageId)}/move`,
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ destinationId: destinationFolderId }),
+      body: JSON.stringify({ destinationId }),
     },
   );
   if (!resp.ok) {
-    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
-    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
     if (resp.status === 404) throw new Error("message_not_found");
-    const body = await resp.text();
-    throw new Error(`Graph move failed: ${body}`);
+    throw await graphErrorFromResponse(resp, "Outlook move");
   }
 }
 
@@ -20378,22 +20379,21 @@ async function outlookCopyEmail(
   destinationFolderId: string,
 ): Promise<void> {
   const accessToken = await withFreshOutlookToken(inbox);
-  const resp = await fetch(
-    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}/copy`,
+  const resp = await graphFetch(
+    accessToken,
+    `/me/messages/${encodeURIComponent(messageId)}/copy`,
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ destinationId: destinationFolderId }),
     },
   );
   if (!resp.ok) {
-    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
     if (resp.status === 404) throw new Error("message_not_found");
-    const body = await resp.text();
-    throw new Error(`Graph copy failed: ${body}`);
+    throw await graphErrorFromResponse(resp, "Outlook copy");
   }
 }
 
@@ -20657,20 +20657,21 @@ async function outlookDeleteEmail(
   const encodedId = encodeURIComponent(messageId);
   let resp: Response;
   if (permanent) {
-    resp = await fetch(
-      `https://graph.microsoft.com/v1.0/me/messages/${encodedId}/permanentDelete`,
+    resp = await graphFetch(
+      accessToken,
+      `/me/messages/${encodedId}/permanentDelete`,
       {
         method: "POST",
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers: {},
       },
     );
   } else {
-    resp = await fetch(
-      `https://graph.microsoft.com/v1.0/me/messages/${encodedId}/move`,
+    resp = await graphFetch(
+      accessToken,
+      `/me/messages/${encodedId}/move`,
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ destinationId: "deleteditems" }),
@@ -20678,11 +20679,9 @@ async function outlookDeleteEmail(
     );
   }
   if (!resp.ok) {
-    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
-    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
     if (resp.status === 404) throw new Error("message_not_found");
-    const body = await resp.text();
-    throw new Error(`Graph delete failed: ${body}`);
+    throw await graphErrorFromResponse(resp, "Outlook delete");
   }
 }
 
@@ -21579,18 +21578,20 @@ async function outlookBulkMove(
   opts?: BulkRunOptions,
 ): Promise<BulkOpResult> {
   const accessToken = await withFreshOutlookToken(inbox);
+  const destinationId = await outlookMoveDestination(inbox, accessToken, destinationFolderId);
   const stopCheck = makeBulkStopCheck(opts, runId);
   const succeeded: string[] = [];
   const failed: { id: string; error: string }[] = [];
   for (const messageId of messageIds) {
     const stop = await stopCheck(succeeded.length, failed.length);
     if (stop) return { succeeded, failed, cancelled: true, stoppedReason: stop };
-    const r = await fetch(
-      `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}/move`,
+    const r = await graphFetch(
+      accessToken,
+      `/me/messages/${encodeURIComponent(messageId)}/move`,
       {
         method: "POST",
-        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ destinationId: destinationFolderId }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ destinationId }),
       },
     );
     if (r.ok) {
@@ -21622,11 +21623,12 @@ async function outlookBulkCopy(
   for (const messageId of messageIds) {
     const stop = await stopCheck(succeeded.length, failed.length);
     if (stop) return { succeeded, failed, cancelled: true, stoppedReason: stop };
-    const r = await fetch(
-      `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}/copy`,
+    const r = await graphFetch(
+      accessToken,
+      `/me/messages/${encodeURIComponent(messageId)}/copy`,
       {
         method: "POST",
-        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ destinationId: destinationFolderId }),
       },
     );
@@ -21662,16 +21664,18 @@ async function outlookBulkDelete(
     const encodedId = encodeURIComponent(messageId);
     let r: Response;
     if (permanent) {
-      r = await fetch(
-        `https://graph.microsoft.com/v1.0/me/messages/${encodedId}/permanentDelete`,
-        { method: "POST", headers: { Authorization: `Bearer ${accessToken}` } },
+      r = await graphFetch(
+        accessToken,
+        `/me/messages/${encodedId}/permanentDelete`,
+        { method: "POST", headers: {} },
       );
     } else {
-      r = await fetch(
-        `https://graph.microsoft.com/v1.0/me/messages/${encodedId}/move`,
+      r = await graphFetch(
+        accessToken,
+        `/me/messages/${encodedId}/move`,
         {
           method: "POST",
-          headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ destinationId: "deleteditems" }),
         },
       );
@@ -21714,11 +21718,12 @@ async function outlookBulkFlag(
   for (const messageId of messageIds) {
     const stop = await stopCheck(succeeded.length, failed.length);
     if (stop) return { succeeded, failed, cancelled: true, stoppedReason: stop };
-    const r = await fetch(
-      `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}`,
+    const r = await graphFetch(
+      accessToken,
+      `/me/messages/${encodeURIComponent(messageId)}`,
       {
         method: "PATCH",
-        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(patch),
       },
     );
@@ -23341,6 +23346,12 @@ interface DraftParams {
   threadId?: string;
   inReplyTo?: string;
   references?: string;
+  /**
+   * Files to attach. Honoured by outlookCreateDraft (inline JSON when small,
+   * one upload session per file above 3 MB). No draft tool passes this yet;
+   * the Gmail and IMAP builders ignore it.
+   */
+  attachments?: Array<{ filename: string; mime_type: string; data: string }>;
 }
 
 /**
@@ -23727,18 +23738,19 @@ async function outlookRewriteDraftRecipients(
   if (override.to) patch.toRecipients = recipients(override.to);
   if (override.cc) patch.ccRecipients = recipients(override.cc);
   if (override.bcc) patch.bccRecipients = recipients(override.bcc);
-  const resp = await fetch(
-    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(draftId)}`,
+  const resp = await graphFetch(
+    token,
+    `/me/messages/${encodeURIComponent(draftId)}`,
     {
       method: "PATCH",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(patch),
     },
   );
   if (!resp.ok) {
-    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
     if (resp.status === 404) throw new Error("draft_not_found");
-    throw new Error(`Outlook update draft error: ${resp.statusText}`);
+    throw await graphErrorFromResponse(resp, "Outlook update draft");
   }
   return draftId;
 }
@@ -24272,15 +24284,16 @@ async function outlookListDrafts(
   limit: number,
 ): Promise<DraftSummary[]> {
   const token = await withFreshOutlookToken(inbox);
-  const resp = await fetch(
-    `https://graph.microsoft.com/v1.0/me/mailFolders/Drafts/messages` +
+  const resp = await graphFetch(
+    token,
+    `/me/mailFolders/Drafts/messages` +
     `?$select=id,subject,toRecipients,ccRecipients,createdDateTime` +
     `&$top=${limit}&$orderby=createdDateTime%20desc`,
-    { headers: { Authorization: `Bearer ${token}` } },
+    { headers: {} },
   );
   if (!resp.ok) {
     if (resp.status === 401) throw new Error("outlook_auth_failed");
-    throw new Error(`Outlook draft list error: ${resp.statusText}`);
+    throw await graphErrorFromResponse(resp, "Outlook draft list");
   }
   const data = (await resp.json()) as {
     value?: {
@@ -24318,13 +24331,14 @@ async function outlookGetDraft(
   draftId: string,
 ): Promise<DraftContent | null> {
   const token = await withFreshOutlookToken(inbox);
-  const resp = await fetch(
-    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(draftId)}` +
+  const resp = await graphFetch(
+    token,
+    `/me/messages/${encodeURIComponent(draftId)}` +
     `?$select=subject,toRecipients,ccRecipients,bccRecipients`,
-    { headers: { Authorization: `Bearer ${token}` } },
+    { headers: {} },
   );
   if (!resp.ok) {
-    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
     return null;
   }
   const data = (await resp.json()) as {
@@ -24369,13 +24383,14 @@ async function outlookGetDraftForEditor(
   draftId: string,
 ): Promise<DraftContent | null> {
   const token = await withFreshOutlookToken(inbox);
-  const resp = await fetch(
-    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(draftId)}` +
+  const resp = await graphFetch(
+    token,
+    `/me/messages/${encodeURIComponent(draftId)}` +
       `?$select=subject,body,toRecipients,ccRecipients,bccRecipients,hasAttachments,conversationId,lastModifiedDateTime`,
-    { headers: { Authorization: `Bearer ${token}` } },
+    { headers: {} },
   );
   if (!resp.ok) {
-    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
     return null;
   }
   const data = (await resp.json()) as {
@@ -24398,10 +24413,11 @@ async function outlookGetDraftForEditor(
   let attachments: { filename: string; size_bytes: number | null; mime_type: string | null }[] = [];
   if (data.hasAttachments === true) {
     try {
-      const attResp = await fetch(
-        `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(draftId)}` +
+      const attResp = await graphFetch(
+        token,
+        `/me/messages/${encodeURIComponent(draftId)}` +
           `/attachments?$select=name,size,contentType`,
-        { headers: { Authorization: `Bearer ${token}` } },
+        { headers: {} },
       );
       if (attResp.ok) {
         const attData = (await attResp.json()) as {
@@ -24452,23 +24468,39 @@ async function outlookCreateDraft(
     ...(params.cc.length ? { ccRecipients: params.cc.map(mapRecip) } : {}),
     ...(params.bcc.length ? { bccRecipients: params.bcc.map(mapRecip) } : {}),
   };
-  const resp = await fetch(
-    "https://graph.microsoft.com/v1.0/me/mailFolders/Drafts/messages",
+  // Small attachments ride in the create request itself; past ~3 MB encoded
+  // (Graph's 4 MB request cap) they are added after, through upload sessions.
+  const attachments = params.attachments ?? [];
+  const uploadAfter = needsDraftUpload(attachments);
+  if (attachments.length > 0 && !uploadAfter) {
+    body.attachments = attachments.map(graphFileAttachment);
+  }
+  const resp = await graphFetch(
+    token,
+    "/me/mailFolders/Drafts/messages",
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(body),
     },
   );
   if (!resp.ok) {
-    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
-    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
-    throw new Error(`Outlook create draft error: ${resp.statusText}`);
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
+    throw await graphErrorFromResponse(resp, "Outlook create draft");
   }
   const data = (await resp.json()) as { id: string; createdDateTime?: string };
+  if (uploadAfter) {
+    try {
+      await graphAddAttachments(token, data.id, attachments);
+    } catch (e) {
+      // A draft missing some of its files is worse than no draft: the caller
+      // would send it believing the attachments were there.
+      await graphDeleteDraftQuietly(token, data.id);
+      throw e;
+    }
+  }
   return {
     draft_id: data.id,
     subject: params.subject,
@@ -24497,22 +24529,21 @@ async function outlookUpdateDraft(
     ...(params.cc.length ? { ccRecipients: params.cc.map(mapRecip) } : {}),
     ...(params.bcc.length ? { bccRecipients: params.bcc.map(mapRecip) } : {}),
   };
-  const resp = await fetch(
-    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(draftId)}`,
+  const resp = await graphFetch(
+    token,
+    `/me/messages/${encodeURIComponent(draftId)}`,
     {
       method: "PATCH",
       headers: {
-        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(patch),
     },
   );
   if (!resp.ok) {
-    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
-    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
     if (resp.status === 404) throw new Error("draft_not_found");
-    throw new Error(`Outlook update draft error: ${resp.statusText}`);
+    throw await graphErrorFromResponse(resp, "Outlook update draft");
   }
   return {
     draft_id: draftId,
@@ -24528,24 +24559,30 @@ async function outlookSendDraft(
   // As in gmailSendDraft: Graph holds the draft, so the token refresh is the
   // only stage that runs before transmission, and a failure in it sent nothing.
   const token = await preTransmission("compose", () => withFreshOutlookToken(inbox));
-  const resp = await fetch(
-    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(draftId)}/send`,
+  const resp = await graphFetch(
+    token,
+    `/me/messages/${encodeURIComponent(draftId)}/send`,
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
         "Content-Length": "0",
       },
     },
   );
   if (!resp.ok) {
-    // 403 = insufficient scope (e.g. inbox consented before Mail.ReadWrite was added); treat like 401 so the user is told to reconnect.
-    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
     if (resp.status === 404) throw new Error("draft_not_found");
-    throw new Error(`Outlook send draft error: ${resp.statusText}`);
+    if (resp.status === 429) throw new Error("quota_exceeded");
+    throw await graphErrorFromResponse(resp, "Outlook send draft");
   }
+  await resp.body?.cancel().catch(() => {});
   return {
     draft_id: draftId,
+    // A real id, not a dead one: every Graph call sends
+    // `Prefer: IdType="ImmutableId"`, and a draft's immutable id survives
+    // /send and then names the copy in Sent Items (Microsoft's documented way
+    // to find a sent message). The copy appears once delivery completes, so an
+    // immediate read of it can briefly 404.
     message_id: draftId,
     sent_at: new Date().toISOString(),
   };
@@ -24560,18 +24597,18 @@ async function outlookDeleteDraft(
   draftId: string,
 ): Promise<DraftDeleteResult> {
   const token = await withFreshOutlookToken(inbox);
-  const resp = await fetch(
-    `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(draftId)}`,
+  const resp = await graphFetch(
+    token,
+    `/me/messages/${encodeURIComponent(draftId)}`,
     {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {},
     },
   );
   if (!resp.ok) {
-    // 403 = insufficient scope; treat like 401 so the user is told to reconnect.
-    if (resp.status === 401 || resp.status === 403) throw new Error("outlook_auth_failed");
+    if (resp.status === 401) throw new Error("outlook_auth_failed");
     if (resp.status === 404) throw new Error("draft_not_found");
-    throw new Error(`Outlook delete draft error: ${resp.statusText}`);
+    throw await graphErrorFromResponse(resp, "Outlook delete draft");
   }
   return { draft_id: draftId, deleted: true };
 }
@@ -25319,20 +25356,18 @@ async function executeCreateReplyDraft(
   try {
     if (inbox.provider === "outlook") {
       const token = await withFreshOutlookToken(inbox);
-      const endpoint = replyAll ? "createReplyAll" : "createReply";
       const signed = applySignature({ textBody: body, htmlBody }, inbox, { include_signature: includeSignature });
-      const response = await fetch(`https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(messageId)}/${endpoint}`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ message: { body: { contentType: signed.htmlBody ? "HTML" : "Text", content: signed.htmlBody ?? signed.textBody } } }),
+      // createReply with a `message.body` REPLACES the body Graph generates,
+      // quote and all. So: create the threaded draft as Graph builds it, then
+      // put the caller's text above the quote it already holds.
+      const draft = await graphPrepareResponseDraft(token, {
+        messageId,
+        kind: replyAll ? "createReplyAll" : "createReply",
+        patch: {},
+        html: signed.htmlBody,
+        text: signed.textBody,
       });
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 403) throw new Error("outlook_auth_failed");
-        if (response.status === 404) throw new Error("message_not_found");
-        throw new Error(`Outlook create reply draft error: ${response.statusText}`);
-      }
-      const created = await response.json() as { id: string; subject?: string; toRecipients?: { emailAddress: { address: string; name?: string } }[]; createdDateTime?: string };
-      return { result: jsonOk({ draft_id: created.id, subject: created.subject ?? "(no subject)", to: (created.toRecipients ?? []).map((r) => ({ name: r.emailAddress.name ?? "", email: r.emailAddress.address })), created_at: created.createdDateTime ?? new Date().toISOString(), in_reply_to: messageId, threading: "native" }), logStatus: "success", logErrorCode: null };
+      return { result: jsonOk({ draft_id: draft.id, subject: draft.subject ?? "(no subject)", to: draft.toRecipients, created_at: draft.createdDateTime ?? new Date().toISOString(), in_reply_to: messageId, threading: "native" }), logStatus: "success", logErrorCode: null };
     }
 
     let subject = "";
@@ -26310,29 +26345,22 @@ async function outlookSearchContacts(
   cap: number,
 ): Promise<ContactScan> {
   const accessToken = await withFreshOutlookToken(inbox);
-  // $search uses a KQL-quoted string; escape backslash + double-quote so the
-  // term cannot break out of the participants:"…" operand.
-  const escaped = query.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  // KQL: participants:"<query>" as a phrase (quotes inside the query removed —
+  // a KQL phrase cannot contain its own delimiter), then the whole expression
+  // quoted ONCE for the $search parameter with inner quotes backslash-escaped.
+  const phrase = query.replace(/"/g, " ").replace(/\s+/g, " ").trim();
   const params = new URLSearchParams({
-    $search: `"participants:${escaped}"`,
+    $search: graphSearchParam(`participants:"${phrase}"`),
     $select: "from,toRecipients,ccRecipients,receivedDateTime",
     $top: String(cap),
   });
 
-  const resp = await fetch(
-    `https://graph.microsoft.com/v1.0/me/messages?${params}`,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        ConsistencyLevel: "eventual",
-      },
-    },
+  const resp = await graphFetch(
+    accessToken,
+    `/me/messages?${params}`,
+    { headers: { ConsistencyLevel: "eventual" } },
   );
-  if (!resp.ok) {
-    if (resp.status === 401) throw new Error("outlook_auth_failed");
-    const errBody = (await resp.json()) as { error?: { message?: string } };
-    throw new Error(`Outlook Graph API error: ${errBody.error?.message ?? resp.statusText}`);
-  }
+  if (!resp.ok) throw await graphErrorFromResponse(resp, "Outlook contact search");
   const data = (await resp.json()) as {
     value?: OutlookMessage[];
     "@odata.nextLink"?: string;

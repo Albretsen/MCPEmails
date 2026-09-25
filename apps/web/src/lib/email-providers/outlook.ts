@@ -2,8 +2,9 @@
  * Outlook (Microsoft) OAuth 2.0 helpers.
  *
  * Handles authorization code exchange and token refresh with Microsoft's
- * Identity Platform v2.0 endpoint (the "common" tenant, which accepts
- * both personal Microsoft accounts and work/school accounts).
+ * Identity Platform v2.0 endpoint. The authority comes from OUTLOOK_TENANT_ID
+ * (default "common", which accepts both personal Microsoft accounts and
+ * work/school accounts); see `outlookTenant` in outlook-oauth.ts.
  *
  * All credentials (access/refresh tokens) are decrypted only inside
  * server-side code and are NEVER logged or forwarded to clients.
@@ -16,10 +17,21 @@
 import { encryptToken, decryptToken } from '@/lib/crypto';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import type { Tables } from '@/types/database.types';
+import {
+  OUTLOOK_SCOPES,
+  classifyOutlookProbe,
+  outlookTokenEndpoint,
+  selectOutlookEmail,
+  type OutlookProbeResult,
+} from '@/lib/email-providers/outlook-oauth';
 
-const OUTLOOK_TOKEN_ENDPOINT =
-  'https://login.microsoftonline.com/common/oauth2/v2.0/token';
-const OUTLOOK_PROFILE_ENDPOINT = 'https://graph.microsoft.com/v1.0/me';
+/**
+ * Live-check probe. It must be covered by the scopes we actually hold:
+ * GET /me needs User.Read, which is NOT requested, so it would 403 on every
+ * healthy inbox. Reading the Inbox folder's id needs only Mail.ReadWrite.
+ */
+const OUTLOOK_PROBE_ENDPOINT =
+  'https://graph.microsoft.com/v1.0/me/mailFolders/inbox?$select=id';
 
 /** The 5-minute proactive refresh window in milliseconds. */
 const REFRESH_THRESHOLD_MS = 5 * 60 * 1000;
@@ -31,6 +43,32 @@ export interface OutlookTokens {
   refreshToken: string;
   expiresIn: number;
   email: string;
+  /** Space-separated scopes Microsoft actually granted, when it says. */
+  scope: string | null;
+}
+
+/**
+ * Thrown by `exchangeOutlookCode` when the id_token carries no usable mailbox
+ * address. Distinct from a token-exchange failure so the callback can tell the
+ * user what actually went wrong instead of saving an inbox with no address.
+ */
+export class OutlookEmailMissingError extends Error {
+  constructor() {
+    super('Outlook token exchange: no usable email address in the id_token');
+    this.name = 'OutlookEmailMissingError';
+  }
+}
+
+/** Result of a refresh-token grant. Microsoft rotates the refresh token. */
+export interface OutlookRefreshResult {
+  accessToken: string;
+  expiresIn: number;
+  /**
+   * The NEW refresh token Microsoft returned, or null if it returned none.
+   * Microsoft issues a fresh one on (almost) every refresh; it has to be
+   * persisted, because that is what keeps the 90-day sliding window alive.
+   */
+  refreshToken: string | null;
 }
 
 /**
@@ -118,24 +156,47 @@ async function markInboxErrored(inboxId: string, reason: string): Promise<void> 
 }
 
 /**
- * Persists a refreshed access token and its new expiry back to the database.
+ * The inbox columns to write after a successful refresh.
+ *
+ * The rotated refresh token is written whenever Microsoft returned one,
+ * encrypted exactly like the callback encrypts the original. Dropping it (as
+ * this code used to) leaves the ORIGINAL refresh token in the row, which
+ * silently dies 90 days after connect however active the inbox is.
+ */
+export function buildRefreshedTokenUpdate(
+  result: OutlookRefreshResult,
+  now: Date = new Date(),
+  encrypt: (plaintext: string) => string = encryptToken
+): {
+  oauth_access_token: string;
+  oauth_refresh_token?: string;
+  oauth_token_expires_at: string;
+  last_sync_at: string;
+  updated_at: string;
+} {
+  const nowIso = now.toISOString();
+  return {
+    oauth_access_token: encrypt(result.accessToken),
+    ...(result.refreshToken ? { oauth_refresh_token: encrypt(result.refreshToken) } : {}),
+    oauth_token_expires_at: new Date(now.getTime() + result.expiresIn * 1000).toISOString(),
+    last_sync_at: nowIso,
+    updated_at: nowIso,
+  };
+}
+
+/**
+ * Persists refreshed tokens (access, rotated refresh, expiry) to the database.
  *
  * Uses the service-role client to bypass RLS.
  */
 async function updateInboxTokens(
   inboxId: string,
-  encryptedAccessToken: string,
-  newExpiresAt: string
+  update: ReturnType<typeof buildRefreshedTokenUpdate>
 ): Promise<void> {
   const supabase = createServiceRoleClient();
   const { error } = await supabase
     .from('inboxes')
-    .update({
-      oauth_access_token: encryptedAccessToken,
-      oauth_token_expires_at: newExpiresAt,
-      last_sync_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
+    .update(update)
     .eq('id', inboxId);
 
   if (error) {
@@ -151,13 +212,11 @@ async function updateInboxTokens(
  * Exchanges a Microsoft authorization code for access and refresh tokens.
  *
  * Returns the access token, refresh token, expiry (seconds), and the
- * authenticated user's email address extracted from the id_token.
+ * authenticated user's mailbox address extracted from the id_token (see
+ * `selectOutlookEmail`: the `email` claim first, the UPN only as a fallback).
  *
- * Microsoft uses `email` or `preferred_username` in the id_token payload.
- * We fall back to `preferred_username` because personal accounts always
- * populate it, whereas `email` can be absent for some work accounts.
- *
- * Throws on any non-200 response from Microsoft's token endpoint.
+ * Throws on any non-200 response from Microsoft's token endpoint, and
+ * `OutlookEmailMissingError` when no usable address is in the id_token.
  */
 export async function exchangeOutlookCode(
   code: string,
@@ -173,7 +232,7 @@ export async function exchangeOutlookCode(
     );
   }
 
-  const response = await fetch(OUTLOOK_TOKEN_ENDPOINT, {
+  const response = await fetch(outlookTokenEndpoint(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
@@ -186,7 +245,7 @@ export async function exchangeOutlookCode(
   });
 
   if (!response.ok) {
-    const body = (await response.json()) as {
+    const body = (await response.json().catch(() => ({}))) as {
       error?: string;
       error_description?: string;
     };
@@ -201,6 +260,7 @@ export async function exchangeOutlookCode(
     expires_in: number;
     id_token: string;
     token_type: string;
+    scope?: string;
   };
 
   if (!data.access_token) {
@@ -220,21 +280,9 @@ export async function exchangeOutlookCode(
     );
   }
 
-  const payload = decodeJwtPayload(data.id_token);
-
-  // Microsoft id_token may have `email` or `preferred_username`.
-  // `preferred_username` is the UPN (often the email) and is reliably present.
-  const email =
-    typeof payload['email'] === 'string' && payload['email']
-      ? payload['email']
-      : typeof payload['preferred_username'] === 'string'
-        ? payload['preferred_username']
-        : null;
-
+  const email = selectOutlookEmail(decodeJwtPayload(data.id_token));
   if (!email) {
-    throw new Error(
-      'Outlook token exchange: neither email nor preferred_username found in id_token'
-    );
+    throw new OutlookEmailMissingError();
   }
 
   return {
@@ -242,15 +290,17 @@ export async function exchangeOutlookCode(
     refreshToken: data.refresh_token,
     expiresIn: data.expires_in,
     email,
+    scope: typeof data.scope === 'string' && data.scope ? data.scope : null,
   };
 }
 
 /**
  * Calls Microsoft's token endpoint with a refresh token to obtain a new
- * access token.
+ * access token and (normally) a rotated refresh token.
  *
  * Does NOT update the database; callers are responsible for persisting
- * the result via `updateInboxTokens`.
+ * the result, including `refreshToken` when it is non-null (see
+ * `buildRefreshedTokenUpdate`).
  *
  * Throws an `OutlookAuthError` with the appropriate code when:
  *  - `invalid_grant`: refresh token revoked or expired (user must reconnect)
@@ -258,7 +308,7 @@ export async function exchangeOutlookCode(
  */
 export async function refreshOutlookAccessToken(
   refreshToken: string
-): Promise<{ accessToken: string; expiresIn: number }> {
+): Promise<OutlookRefreshResult> {
   const clientId = process.env.OUTLOOK_CLIENT_ID;
   const clientSecret = process.env.OUTLOOK_CLIENT_SECRET;
 
@@ -266,7 +316,7 @@ export async function refreshOutlookAccessToken(
     throw new Error('OUTLOOK_CLIENT_ID and OUTLOOK_CLIENT_SECRET must be set.');
   }
 
-  const response = await fetch(OUTLOOK_TOKEN_ENDPOINT, {
+  const response = await fetch(outlookTokenEndpoint(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
@@ -274,12 +324,14 @@ export async function refreshOutlookAccessToken(
       client_secret: clientSecret,
       refresh_token: refreshToken,
       grant_type: 'refresh_token',
-      scope: 'Mail.ReadWrite Mail.Send offline_access openid profile email',
+      scope: OUTLOOK_SCOPES.join(' '),
     }),
   });
 
   if (!response.ok) {
-    const body = (await response.json()) as {
+    // A gateway error page is not JSON; that must stay an ordinary (transient)
+    // failure, not turn into a SyntaxError that hides the status.
+    const body = (await response.json().catch(() => ({}))) as {
       error?: string;
       error_description?: string;
     };
@@ -301,8 +353,9 @@ export async function refreshOutlookAccessToken(
   }
 
   const data = (await response.json()) as {
-    access_token: string;
-    expires_in: number;
+    access_token?: string;
+    refresh_token?: string;
+    expires_in?: number;
   };
 
   if (!data.access_token) {
@@ -311,7 +364,12 @@ export async function refreshOutlookAccessToken(
 
   return {
     accessToken: data.access_token,
-    expiresIn: data.expires_in,
+    // Microsoft access tokens last 60-90 minutes; 3600 s if it ever omits it.
+    expiresIn: typeof data.expires_in === 'number' ? data.expires_in : 3600,
+    refreshToken:
+      typeof data.refresh_token === 'string' && data.refresh_token
+        ? data.refresh_token
+        : null,
   };
 }
 
@@ -355,7 +413,7 @@ export async function withFreshOutlookToken(
   // Token is expiring within 5 minutes (or already expired); refresh it.
   const refreshToken = decryptToken(inbox.oauth_refresh_token);
 
-  let refreshResult: { accessToken: string; expiresIn: number };
+  let refreshResult: OutlookRefreshResult;
   try {
     refreshResult = await refreshOutlookAccessToken(refreshToken);
   } catch (err) {
@@ -374,33 +432,39 @@ export async function withFreshOutlookToken(
     throw err;
   }
 
-  const newExpiresAt = new Date(
-    now.getTime() + refreshResult.expiresIn * 1000
-  ).toISOString();
-
-  const encryptedAccessToken = encryptToken(refreshResult.accessToken);
-  await updateInboxTokens(inbox.id, encryptedAccessToken, newExpiresAt);
+  await updateInboxTokens(inbox.id, buildRefreshedTokenUpdate(refreshResult, now));
 
   return refreshResult.accessToken;
 }
 
 /**
- * Lightweight live check that the access token still grants Outlook access.
+ * Lightweight live check that the access token still reads the mailbox.
  *
- * Returns true when Microsoft Graph accepts the token, false when it rejects
- * it (401/403, the user must reconnect). A non-auth failure (network, 5xx) is
- * thrown so the caller can treat the result as inconclusive rather than
- * marking an otherwise-healthy inbox as broken.
+ * Probes GET /me/mailFolders/inbox?$select=id, which Mail.ReadWrite covers.
+ * Returns 'ok', 'unauthorized' (401, reconnect), 'forbidden' (403, access is
+ * refused by policy; reconnecting will not help) or 'no_mailbox' (no Exchange
+ * Online mailbox behind the account). Anything else (network, 5xx, 429) is
+ * thrown so the caller treats the result as inconclusive rather than marking
+ * an otherwise-healthy inbox as broken.
  */
-export async function verifyOutlookAccess(accessToken: string): Promise<boolean> {
-  const response = await fetch(OUTLOOK_PROFILE_ENDPOINT, {
+export async function verifyOutlookAccess(
+  accessToken: string
+): Promise<Exclude<OutlookProbeResult, 'inconclusive'>> {
+  const response = await fetch(OUTLOOK_PROBE_ENDPOINT, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
-  if (response.status === 401 || response.status === 403) return false;
+  let graphErrorCode: string | null = null;
   if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as {
+      error?: { code?: string };
+    } | null;
+    graphErrorCode = body?.error?.code ?? null;
+  }
+  const result = classifyOutlookProbe(response.status, graphErrorCode);
+  if (result === 'inconclusive') {
     throw new Error(
-      `Outlook profile check failed: ${response.status} ${response.statusText}`
+      `Outlook mailbox check failed: ${response.status} ${response.statusText}`
     );
   }
-  return true;
+  return result;
 }

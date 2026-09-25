@@ -360,7 +360,9 @@ Deno.test("searchOutlookMessages reaches /me/messages only when no folder was li
   assertStringIncludes(body, "fanout.searched.length === 0");
   assertStringIncludes(body, "/me/mailFolders/");
   assertEquals(
-    body.match(/v1\.0\/me\/messages/g)?.length,
+    // graphFetch takes paths relative to the v1.0 root since 2026-09-25, so the
+    // whole-mailbox endpoint is the bare string literal "/me/messages".
+    body.match(/"\/me\/messages"/g)?.length,
     1,
     "the whole-mailbox URL appears on more than the unscoped branch",
   );

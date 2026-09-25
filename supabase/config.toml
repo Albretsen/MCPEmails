@@ -115,3 +115,8 @@ verify_jwt = false
 
 [functions.synthetic-monitor]
 verify_jwt = false
+
+# Cron-only. pg_cron posts without a Supabase JWT, so the gateway check is off
+# and the function authenticates the X-Dispatch-Secret header itself.
+[functions.outlook-token-refresh]
+verify_jwt = false

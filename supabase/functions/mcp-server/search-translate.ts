@@ -483,12 +483,20 @@ function quoteGmail(value: string): string {
 }
 
 /**
- * Quote a KQL clause value for Graph `$search`. The whole clause is wrapped in
- * double quotes; embedded `"` and `\` are backslash-escaped per the Graph
- * search syntax rules.
+ * A value as one KQL term for Graph `$search`: bare when it is a single word,
+ * a KQL phrase (`"q3 report"`) when it has whitespace or KQL punctuation.
+ *
+ * Embedded double quotes are REMOVED rather than escaped: a KQL phrase has no
+ * escape for its own delimiter, and Exchange tokenises on punctuation anyway,
+ * so `say "hi"` and `say hi` match the same messages. Escaping for the URL
+ * parameter (the whole expression in one pair of quotes) is a separate, later
+ * step — graphSearchParam in outlook-graph.ts — and must not happen here too,
+ * or the value is escaped twice.
  */
-function quoteKqlValue(value: string): string {
-  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+function kqlTerm(value: string): string {
+  const cleaned = value.replace(/"/g, " ").replace(/\s+/g, " ").trim();
+  if (cleaned === "") return '""';
+  return /[\s():]/.test(cleaned) ? `"${cleaned}"` : cleaned;
 }
 
 /**
@@ -617,18 +625,25 @@ export function toImapSearch(s: NormalizedSearch): string {
 
 export function toGraphSearch(s: NormalizedSearch): { search?: string; filter?: string } {
   // ── KQL $search clauses ──
+  // Unquoted KQL: `from:alice subject:"q3 report"`. The caller wraps the WHOLE
+  // expression once for the URL (graphSearchParam), which is what Graph wants:
+  // $search="from:alice AND subject:\"q3 report\"". Until 2026-09-25 each
+  // clause was quoted here AND the whole was quoted again in index.ts, which
+  // Graph rejected as a syntax error on every structured search.
   const searchClauses: string[] = [];
-  const kqlClause = (prop: string, value: string) =>
-    `"${prop}:${quoteKqlValue(value)}"`;
+  const kqlClause = (prop: string, value: string) => `${prop}:${kqlTerm(value)}`;
 
   if (s.from) searchClauses.push(kqlClause("from", s.from));
   if (s.to) searchClauses.push(kqlClause("to", s.to));
   if (s.cc) searchClauses.push(kqlClause("cc", s.cc));
   if (s.subject) searchClauses.push(kqlClause("subject", s.subject));
   if (s.body) searchClauses.push(kqlClause("body", s.body));
-  // free text anywhere → bare quoted phrase (default props: from/subject/body)
-  if (s.text) searchClauses.push(`"${quoteKqlValue(s.text)}"`);
-  if (s.raw && s.raw.trim() !== "") searchClauses.push(`"${quoteKqlValue(s.raw.trim())}"`);
+  // free text anywhere → bare term/phrase (default props: from/subject/body)
+  if (s.text) searchClauses.push(kqlTerm(s.text));
+  // `raw` is the documented provider-native escape hatch, so on Graph it is
+  // KQL and goes through as written, parenthesised so its own OR cannot
+  // capture the structured clauses beside it.
+  if (s.raw && s.raw.trim() !== "") searchClauses.push(`(${s.raw.trim()})`);
 
   // ── OData $filter clauses ──
   const filterClauses: string[] = [];

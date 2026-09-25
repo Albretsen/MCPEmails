@@ -322,6 +322,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   useEffect(() => {
     const connectedParam = readQuery(searchParams, 'connected');
     const errorParam = readQuery(searchParams, 'error');
+    const adminConsentParam = readQuery(searchParams, 'admin_consent');
     const signupMethod = readQuery(searchParams, 'signup_method');
 
     if (signupMethod === 'google' || signupMethod === 'github') {
@@ -374,6 +375,43 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         },
       });
       setRouteState('inboxes');
+    } else if (errorParam === 'admin_consent_failed') {
+      // An admin went through Microsoft's tenant-wide approval and it did not
+      // come back as granted. The person who lands here is usually that admin,
+      // so the action retries the same approval flow rather than a user connect.
+      toast({
+        message: tr('app.adminConsentFailed'),
+        variant: 'error',
+        duration: 0,
+        action: {
+          label: tr('app.adminConsentAction'),
+          onClick: () => {
+            // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+            window.location.href = '/auth/outlook/admin-consent';
+          },
+        },
+      });
+      setRouteState('inboxes');
+    } else if (errorParam === 'outlook_email_missing') {
+      // Microsoft signed the person in but returned no usable email address to
+      // attach the inbox to. Retrying the same account fails the same way, so
+      // the message points at another account or support, and stays open.
+      toast({ message: tr('app.outlookEmailMissing'), variant: 'error', duration: 0 });
+      setRouteState('inboxes');
+    } else if (adminConsentParam === 'granted') {
+      // The tenant-wide approval went through. That grants nothing by itself:
+      // no mailbox is attached until someone runs the normal Outlook connect,
+      // so the toast says so and offers the connect modal straight away.
+      toast({
+        message: tr('app.adminConsentGranted'),
+        variant: 'success',
+        duration: 0,
+        action: {
+          label: tr('app.adminConsentGrantedAction'),
+          onClick: () => setShowConnect(true),
+        },
+      });
+      setRouteState('inboxes');
     } else if (errorParam === 'token_exchange_failed') {
       toast({ message: tr('app.tokenExchangeFailed'), variant: 'error' });
       setRouteState('inboxes');
@@ -390,11 +428,12 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       setRouteState('inboxes');
     }
 
-    if (connectedParam || errorParam || signupMethod) {
+    if (connectedParam || errorParam || adminConsentParam || signupMethod) {
       try {
         const url = new URL(window.location.href);
         url.searchParams.delete('connected');
         url.searchParams.delete('error');
+        url.searchParams.delete('admin_consent');
         url.searchParams.delete('signup_method');
         url.searchParams.delete('onboarding_client');
         // Every branch above activates the inboxes section; reflect that in the

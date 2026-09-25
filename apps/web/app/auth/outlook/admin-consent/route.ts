@@ -1,5 +1,11 @@
 import { NextResponse } from 'next/server';
+import { randomBytes } from 'crypto';
 import { createClient } from '@/lib/supabase/server';
+import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
+import {
+  ADMIN_CONSENT_STATE_PREFIX,
+  outlookAdminConsentEndpoint,
+} from '@/lib/email-providers/outlook-oauth';
 
 /**
  * GET /auth/outlook/admin-consent
@@ -22,6 +28,13 @@ import { createClient } from '@/lib/supabase/server';
  * every customer and we never need to know a tenant id in advance. Personal
  * Microsoft accounts have no tenant and no admin, so they are refused here and
  * should use /auth/outlook directly, where they are unaffected by all of this.
+ * (If OUTLOOK_TENANT_ID pins one tenant, that tenant is used instead.)
+ *
+ * Redirect URI: Microsoft only returns to a REGISTERED redirect URI, and the
+ * only registered one is /auth/outlook/callback (the /dashboard URI used
+ * before was rejected outright). So the admin comes back through the connect
+ * callback, which recognises the admin-consent response by its state prefix
+ * (ADMIN_CONSENT_STATE_PREFIX) and forwards to the dashboard.
  *
  * This endpoint grants nothing by itself. Microsoft authenticates the admin and
  * shows them the full permission list before anything is approved.
@@ -30,9 +43,6 @@ import { createClient } from '@/lib/supabase/server';
  *   https://learn.microsoft.com/en-us/entra/identity-platform/v2-admin-consent
  *   https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/manage-app-consent-policies
  */
-
-const ADMIN_CONSENT_ENDPOINT =
-  'https://login.microsoftonline.com/organizations/v2.0/adminconsent';
 
 /**
  * Must match the delegated scopes requested in /auth/outlook. Admin consent is
@@ -50,6 +60,7 @@ const ADMIN_CONSENT_SCOPES = [
 ];
 
 export async function GET(): Promise<NextResponse> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
   const supabase = await createClient();
 
   // Require a signed-in user. This link is surfaced from inside the dashboard
@@ -61,16 +72,36 @@ export async function GET(): Promise<NextResponse> {
     );
   }
 
-  // No state nonce is needed and none is used: this flow grants a tenant-wide
-  // permission inside Microsoft and returns the admin to the dashboard with
-  // nothing we act on. There is no code to exchange and no token to store, so
-  // there is no callback to protect against replay. The employee still has to
-  // complete the real /auth/outlook flow afterwards, and that one is CSRF-bound.
+  const workspaceId = await resolveActiveWorkspaceId(supabase, user.id);
+  if (!workspaceId) {
+    return NextResponse.redirect(`${appUrl}/dashboard?error=no_workspace`);
+  }
+
+  // State nonce, stored like the connect flow's (single-use, 10 minutes,
+  // bound to this user). The response carries no code or token, but the
+  // callback turns it into a "your organisation approved" message, and that
+  // must not be forgeable by a link someone else crafts. The prefix is what
+  // lets the shared callback route it to the admin-consent branch.
+  const state = `${ADMIN_CONSENT_STATE_PREFIX}${randomBytes(32).toString('base64url')}`;
+  const redirectUri = `${appUrl}/auth/outlook/callback`;
+  const { error: stateError } = await supabase.from('oauth_states').insert({
+    workspace_id: workspaceId,
+    user_id: user.id,
+    provider: 'outlook',
+    state,
+    redirect_uri: redirectUri,
+    expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+  });
+  if (stateError) {
+    return NextResponse.redirect(`${appUrl}/dashboard?error=state_store_failed`);
+  }
+
   const params = new URLSearchParams({
     client_id: process.env.OUTLOOK_CLIENT_ID!,
     scope: ADMIN_CONSENT_SCOPES.join(' '),
-    redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+    redirect_uri: redirectUri,
+    state,
   });
 
-  return NextResponse.redirect(`${ADMIN_CONSENT_ENDPOINT}?${params.toString()}`);
+  return NextResponse.redirect(`${outlookAdminConsentEndpoint()}?${params.toString()}`);
 }

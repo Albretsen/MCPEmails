@@ -2,12 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { encryptToken } from '@/lib/crypto';
-import { exchangeOutlookCode } from '@/lib/email-providers/outlook';
+import { exchangeOutlookCode, OutlookEmailMissingError, type OutlookTokens } from '@/lib/email-providers/outlook';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
 import { canManageInboxes, fetchWorkspaceRole, INSUFFICIENT_ROLE_REDIRECT_CODE } from '@/lib/workspace/roles';
 import { recordOAuthCallbackFailure, recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { clientGuidePath } from '@/lib/onboarding/state';
-import { classifyMicrosoftAuthError } from '@/lib/email-providers/outlook-oauth';
+import {
+  classifyAdminConsentCallback,
+  classifyMicrosoftAuthError,
+  isAdminConsentCallback,
+  isAdminConsentState,
+  OUTLOOK_SCOPES,
+} from '@/lib/email-providers/outlook-oauth';
 
 // ---------------------------------------------------------------------------
 // Route config
@@ -39,6 +45,12 @@ export const maxDuration = 15;
  *     without changing the inbox's UUID (preserving activity_log references).
  *  7. Redirects to the Inboxes dashboard page with a success or error flag.
  *
+ * It ALSO receives the tenant admin-consent response started by
+ * /auth/outlook/admin-consent, because that is the only registered redirect
+ * URI. Those responses carry `admin_consent=True&tenant=...` (or an error)
+ * and a state with ADMIN_CONSENT_STATE_PREFIX, never a code, and are handled
+ * by `handleAdminConsent` before anything below runs.
+ *
  * Token security:
  *   - Tokens are never logged.
  *   - Encrypted immediately after receipt; only ciphertext touches the DB.
@@ -66,8 +78,61 @@ async function recordDeniedAuthorization(state: string | null): Promise<void> {
   await recordProductFunnelEvent(createServiceRoleClient(), { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'failure', category: 'outlook', errorCategory: 'provider_denied' });
 }
 
+/**
+ * Tenant admin consent came back. Nothing is exchanged or stored: the grant
+ * lives inside Microsoft. The state is still verified (single-use, unexpired,
+ * this user's) so a crafted link cannot produce an "approved" message, and no
+ * inbox_connection funnel event is recorded, because no mailbox was connected.
+ */
+async function handleAdminConsent(searchParams: URLSearchParams): Promise<NextResponse> {
+  const state = searchParams.get('state');
+  if (!isAdminConsentState(state)) {
+    return redirectWithError('invalid_state');
+  }
+
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return redirectWithError('session_expired');
+  }
+
+  const { data: oauthState } = await supabase
+    .from('oauth_states')
+    .select('id,user_id')
+    .eq('state', state!)
+    .eq('provider', 'outlook')
+    .gt('expires_at', new Date().toISOString())
+    .maybeSingle();
+  if (!oauthState) {
+    return redirectWithError('invalid_state');
+  }
+  if (oauthState.user_id !== user.id) {
+    return redirectWithError('session_mismatch');
+  }
+  await supabase.from('oauth_states').delete().eq('id', oauthState.id);
+
+  const outcome = classifyAdminConsentCallback(searchParams);
+  if (outcome === 'admin_consent_granted') {
+    // Employees of that tenant can now connect through /auth/outlook.
+    return NextResponse.redirect(`${DASHBOARD_INBOXES}?admin_consent=granted`);
+  }
+  if (outcome === 'admin_consent_cancelled') {
+    return redirectWithError('cancelled');
+  }
+  // Codes only, never Microsoft's description: it is attacker-influenced text.
+  console.error('[outlook/callback] admin consent failed:', searchParams.get('error'));
+  return redirectWithError('admin_consent_failed');
+}
+
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const { searchParams } = new URL(request.url);
+
+  // 0. Tenant admin consent shares this redirect URI; route it away first so
+  //    its responses are never read as (failed) mailbox connections.
+  if (isAdminConsentCallback(searchParams)) {
+    return handleAdminConsent(searchParams);
+  }
+
   const code = searchParams.get('code');
   const state = searchParams.get('state');
   const error = searchParams.get('error');
@@ -174,10 +239,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   // 6. Exchange the authorization code for tokens.
-  let tokens: { accessToken: string; refreshToken: string; expiresIn: number; email: string };
+  let tokens: OutlookTokens;
   try {
     tokens = await exchangeOutlookCode(code, expectedRedirectUri);
   } catch (err) {
+    if (err instanceof OutlookEmailMissingError) {
+      // Signed in fine, but Microsoft gave us no mailbox address to attach the
+      // inbox to. Refused rather than saving an inbox keyed on a non-address.
+      console.error('[outlook/callback] no usable email address in id_token');
+      await recordProductFunnelEvent(createServiceRoleClient(), { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'failure', category: 'outlook', errorCategory: 'validation_failed', phase: 'token_exchange' });
+      return redirectWithError('outlook_email_missing');
+    }
     console.error('[outlook/callback] token exchange failed:', err);
     await recordProductFunnelEvent(createServiceRoleClient(), { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'failure', category: 'outlook', errorCategory: 'token_exchange_failed', phase: 'token_exchange' });
     return redirectWithError('token_exchange_failed');
@@ -224,7 +296,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       oauth_access_token: encryptedAccessToken,
       oauth_refresh_token: encryptedRefreshToken,
       oauth_token_expires_at: tokenExpiresAt,
-      oauth_scope: 'Mail.ReadWrite Mail.Send offline_access',
+      // What Microsoft says it granted; the requested set if it does not say.
+      oauth_scope: tokens.scope ?? OUTLOOK_SCOPES.join(' '),
       status: 'active',
       last_error: null,
       deleted_at: null,

@@ -48,6 +48,7 @@ import {
   toImapSearch,
   unappliedSearchFields,
 } from "./search-translate.ts";
+import { graphSearchParam } from "./outlook-graph.ts";
 
 function assert(condition: boolean, message: string): void {
   if (!condition) throw new Error(message);
@@ -616,4 +617,50 @@ Deno.test("the subject fallback description does not promise substring matching"
   assert(/whole words/i.test(subject), `says what Gmail and Outlook do: ${subject}`);
   assert(/substring/i.test(subject), `and what a conventional IMAP server does: ${subject}`);
   assert(/gmail/i.test(subject) && /outlook/i.test(subject), `names both: ${subject}`);
+});
+
+// ── Graph $search: one pair of quotes, not two ──────────────────────────────
+//
+// Until 2026-09-25 toGraphSearch quoted every clause ("from:alice" AND …) and
+// searchOutlookMessages then quoted the whole expression again, so the wire
+// value was `""from:alice" AND "subject:report""` — a KQL syntax error on every
+// structured Outlook search. toGraphSearch now emits UNQUOTED KQL, and the one
+// wrapping for the URL parameter happens in graphSearchParam (outlook-graph.ts).
+
+Deno.test("toGraphSearch emits bare KQL clauses, phrase-quoting only multi-word values", () => {
+  assertEquals(
+    toGraphSearch({ from: "alice@example.com", subject: "report" }).search,
+    "from:alice@example.com AND subject:report",
+    "single words stay bare",
+  );
+  assertEquals(
+    toGraphSearch({ subject: "q3 report" }).search,
+    'subject:"q3 report"',
+    "a multi-word value is one KQL phrase",
+  );
+  assertEquals(
+    toGraphSearch({ text: 'say "hi" there' }).search,
+    '"say hi there"',
+    "embedded quotes are removed, not escaped (a KQL phrase cannot hold its delimiter)",
+  );
+  assertEquals(
+    toGraphSearch({ subject: "x", raw: "from:a OR from:b" }).search,
+    "subject:x AND (from:a OR from:b)",
+    "raw is native KQL, parenthesised so its OR cannot swallow the structured clauses",
+  );
+});
+
+Deno.test("the $search parameter wraps the whole KQL once and escapes inner quotes", () => {
+  const kql = toGraphSearch({ from: "alice", subject: "q3 report" }).search ?? "";
+  const param = graphSearchParam(kql);
+  assertEquals(param, '"from:alice AND subject:\\"q3 report\\""', "one outer pair, inner quotes backslashed");
+  assert(!param.startsWith('""'), "never double-quoted at the start");
+  assertEquals(graphSearchParam('a\\b'), '"a\\\\b"', "a backslash is escaped too");
+  // URL-encoded exactly once by URLSearchParams.
+  const qs = new URLSearchParams({ $search: param }).toString();
+  assertEquals(
+    decodeURIComponent(qs.replace(/\+/g, " ")),
+    '$search="from:alice AND subject:\\"q3 report\\""',
+    "the decoded query string is the documented shape",
+  );
 });

@@ -4,7 +4,7 @@ import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { randomBytes } from 'crypto';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
-import { OUTLOOK_SCOPES, shouldForceConsent } from '@/lib/email-providers/outlook-oauth';
+import { OUTLOOK_SCOPES, outlookAuthorizeEndpoint, shouldForceConsent } from '@/lib/email-providers/outlook-oauth';
 
 /**
  * GET /auth/outlook
@@ -14,9 +14,10 @@ import { OUTLOOK_SCOPES, shouldForceConsent } from '@/lib/email-providers/outloo
  * table (expires in 10 minutes), and redirects the user to Microsoft's
  * authorization endpoint.
  *
- * Tenant: "common" accepts both personal Microsoft accounts (Outlook.com,
- * Hotmail.com) and work/school accounts (Microsoft 365). The Azure AD app
- * registration must set "Supported account types" to match.
+ * Tenant: OUTLOOK_TENANT_ID, default "common", which accepts both personal
+ * Microsoft accounts (Outlook.com, Hotmail.com) and work/school accounts
+ * (Microsoft 365). The Azure AD app registration must set "Supported account
+ * types" to match. The token and refresh endpoints use the same authority.
  *
  * Scopes requested:
  *   - Mail.ReadWrite   : list/read messages AND mutate them (mark read, flag,
@@ -38,9 +39,6 @@ import { OUTLOOK_SCOPES, shouldForceConsent } from '@/lib/email-providers/outloo
  *   https://learn.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-auth-code-flow
  *   Documents/Architecture/email-provider-oauth-flows.md §3
  */
-
-const OUTLOOK_AUTH_ENDPOINT =
-  'https://login.microsoftonline.com/common/oauth2/v2.0/authorize';
 
 // IMPORTANT: Existing Outlook inboxes connected before the scope widening must
 // RECONNECT (re-consent) to receive Mail.ReadWrite: a silent token refresh will
@@ -141,5 +139,5 @@ export async function GET(request: Request): Promise<NextResponse> {
     params.set('login_hint', loginHint);
   }
 
-  return NextResponse.redirect(`${OUTLOOK_AUTH_ENDPOINT}?${params.toString()}`);
+  return NextResponse.redirect(`${outlookAuthorizeEndpoint()}?${params.toString()}`);
 }

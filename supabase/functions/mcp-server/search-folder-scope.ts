@@ -214,15 +214,16 @@ export function gmailResultFolder(
  * Graph gives no way to ask for several folders at once here, so each listed
  * folder is its own HTTP request. They are issued in parallel, which makes the
  * wall-clock cost the slowest leg rather than the sum — but not the THROTTLING
- * cost, which Exchange Online meters per mailbox and answers with 429s that the
- * search has no budget left to retry. Five is the point where the slowest leg of
- * a `$search` still leaves room inside the 30-second tool budget to fetch and
- * assemble the page.
+ * cost: Exchange Online allows at most 4 concurrent requests per app per
+ * mailbox and answers a fifth with 429 ApplicationThrottled. So the cap is 4,
+ * which is also the concurrency, and the legs never throttle each other. (It
+ * was 5 until 2026-09-25, which guaranteed a 429 on every maximal fan-out.)
+ *   https://learn.microsoft.com/en-us/graph/throttling-limits#outlook-service-limits
  *
  * A cap is only defensible because going over it is reported rather than
  * quietly applied; see {@link planOutlookFolderFanout}.
  */
-export const OUTLOOK_FOLDER_FANOUT_CAP = 5;
+export const OUTLOOK_FOLDER_FANOUT_CAP = 4;
 
 export interface OutlookFanoutPlan {
   /** The folders this search will actually cover, in the caller's order. */

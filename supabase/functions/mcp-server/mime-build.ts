@@ -167,8 +167,14 @@ export interface MimeMessageParams {
    *     performs the RFC 5322 §3.6.3 removal, exactly as it does for drafts
    *     composed in Gmail's own web client, which store a Bcc header too.
    *
-   * Outlook never reaches this code: Graph takes structured `bccRecipients`
-   * on both the send and the draft path, so there is no MIME to annotate.
+   * OUTLOOK is the Google case, on exactly one path. Composed sends, replies
+   * and drafts never build MIME at all: Graph takes structured
+   * `bccRecipients`. But a forward relays the original through Graph's MIME
+   * sendMail (forward-relay.ts / transmitRawMessage), where, as with Gmail's
+   * raw send, the headers ARE the recipient list and Exchange removes Bcc
+   * before delivery — so forwardRelayMessage sets the flag for every provider
+   * but SMTP. A forward too large for MIME sendMail skips MIME and goes through
+   * createForward with `bccRecipients` (outlookForwardViaDraft).
    *
    * Do not set this flag for any new caller without answering the question
    * above for that caller's transport. Getting it wrong in one direction

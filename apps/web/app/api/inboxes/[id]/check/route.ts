@@ -113,8 +113,22 @@ export async function POST(
       if (!healthy) reason = `Google rejected the saved access. ${RECONNECT_HINT}`;
     } else if (inbox.provider === 'outlook') {
       const token = await withFreshOutlookToken(inbox);
-      healthy = await verifyOutlookAccess(token);
-      if (!healthy) reason = `Microsoft rejected the saved access. ${RECONNECT_HINT}`;
+      const access = await verifyOutlookAccess(token);
+      healthy = access === 'ok';
+      // Only a 401 means the saved sign-in is dead. A 403 or a missing mailbox
+      // come back identically after a reconnect, so telling the user to
+      // reconnect would send them round in a loop; name the real cause.
+      if (access === 'unauthorized') {
+        reason = `Microsoft rejected the saved access. ${RECONNECT_HINT}`;
+      } else if (access === 'forbidden') {
+        reason =
+          'Microsoft accepted the sign-in but refused access to this mailbox. ' +
+          'An administrator of this Microsoft 365 organisation may be blocking mailbox access for this app.';
+      } else if (access === 'no_mailbox') {
+        reason =
+          'This Microsoft account has no Exchange Online mailbox that the Microsoft Graph API can reach ' +
+          '(for example an on-premises, unlicensed or inactive mailbox).';
+      }
     } else {
       return NextResponse.json(
         { error: `Unsupported provider: ${inbox.provider}` },

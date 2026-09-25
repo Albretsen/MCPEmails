@@ -1,17 +1,25 @@
 /**
  * Outlook Token Refresh — Supabase Edge Function
  *
- * Scheduled to run every 10 minutes. Proactively refreshes Outlook access
- * tokens that are within 10 minutes of expiry so that MCP tool calls never
- * stall on a synchronous refresh at invocation time.
+ * Runs every 10 minutes from pg_cron (migration
+ * 20260925120000_schedule_outlook_token_refresh.sql), authenticated by the
+ * X-Dispatch-Secret header (see `authorised` below). Proactively refreshes Outlook access tokens that are within 10
+ * minutes of expiry so that MCP tool calls never stall on a synchronous
+ * refresh at invocation time.
+ *
+ * It is also what keeps IDLE inboxes alive. A Microsoft refresh token has a
+ * 90-day sliding lifetime and Microsoft rotates it on every refresh, so every
+ * refresh here persists the new refresh token it is handed. Without a
+ * scheduled run, an inbox nobody touches for 90 days dies.
  *
  * On `invalid_grant` from Microsoft (refresh token revoked/expired), or
  * `interaction_required` (org conditional-access policy blocks silent refresh),
  * the inbox is marked as `status = 'error'` and `last_error` is populated with
  * a human-readable reconnection message.
  *
- * Uses the Microsoft Identity Platform v2.0 "common" tenant endpoint, which
- * accepts both personal Microsoft accounts and work/school accounts.
+ * Uses the Microsoft Identity Platform v2.0 endpoint under OUTLOOK_TENANT_ID
+ * (default "common", which accepts both personal Microsoft accounts and
+ * work/school accounts), the same authority the web app signs in with.
  *
  * References:
  *   Documents/Architecture/email-provider-oauth-flows.md §3, §7
@@ -22,8 +30,18 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const OUTLOOK_TOKEN_ENDPOINT =
-  'https://login.microsoftonline.com/common/oauth2/v2.0/token';
+/**
+ * Same rule as `outlookTenant` in apps/web/src/lib/email-providers/outlook-oauth.ts:
+ * OUTLOOK_TENANT_ID if it is a plain GUID / domain / alias, else "common".
+ */
+function outlookTokenEndpoint(): string {
+  const raw = (Deno.env.get('OUTLOOK_TENANT_ID') ?? '').trim();
+  const tenant = raw && /^[A-Za-z0-9][A-Za-z0-9.-]*$/.test(raw) ? raw : 'common';
+  return `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`;
+}
+
+/** Must match OUTLOOK_SCOPES in apps/web/src/lib/email-providers/outlook-oauth.ts. */
+const OUTLOOK_SCOPE = 'Mail.ReadWrite Mail.Send offline_access openid profile email';
 
 /** Query window: refresh tokens expiring within this many minutes. */
 const REFRESH_WINDOW_MINUTES = 10;
@@ -40,7 +58,7 @@ const TAG_LENGTH = 16;
 
 // ─── Crypto helpers (Web Crypto API — Deno compatible) ────────────────────────
 
-function hexToBytes(hex: string): Uint8Array {
+function hexToBytes(hex: string): Uint8Array<ArrayBuffer> {
   const bytes = new Uint8Array(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) {
     bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
@@ -59,7 +77,7 @@ function base64urlEncode(bytes: Uint8Array): string {
     .replace(/=/g, '');
 }
 
-function base64urlDecode(str: string): Uint8Array {
+function base64urlDecode(str: string): Uint8Array<ArrayBuffer> {
   const b64 = str.replace(/-/g, '+').replace(/_/g, '/');
   const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
   const binary = atob(padded);
@@ -134,6 +152,8 @@ async function encryptToken(plaintext: string, key: CryptoKey): Promise<string> 
 interface RefreshResult {
   accessToken: string;
   expiresIn: number;
+  /** The rotated refresh token, or null if Microsoft returned none. */
+  refreshToken: string | null;
 }
 
 interface MicrosoftErrorResponse {
@@ -144,6 +164,7 @@ interface MicrosoftErrorResponse {
 
 interface MicrosoftTokenResponse {
   access_token?: string;
+  refresh_token?: string;
   expires_in?: number;
 }
 
@@ -180,7 +201,7 @@ async function callOutlookRefreshEndpoint(
     );
   }
 
-  const response = await fetch(OUTLOOK_TOKEN_ENDPOINT, {
+  const response = await fetch(outlookTokenEndpoint(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
@@ -188,14 +209,16 @@ async function callOutlookRefreshEndpoint(
       client_secret: clientSecret,
       refresh_token: refreshToken,
       grant_type: 'refresh_token',
-      // Request the same scope set originally granted so Microsoft issues a
-      // refresh token in the response (keeping the sliding window alive).
-      scope: 'Mail.ReadWrite Mail.Send offline_access openid profile email',
+      // Request the same scope set originally granted (offline_access
+      // included) so Microsoft issues a rotated refresh token in the response.
+      // It is persisted below; that is what keeps the sliding window alive.
+      scope: OUTLOOK_SCOPE,
     }),
   });
 
   if (!response.ok) {
-    const body = (await response.json()) as MicrosoftErrorResponse;
+    // A gateway error page is not JSON; keep it an ordinary failure.
+    const body = (await response.json().catch(() => ({}))) as MicrosoftErrorResponse;
 
     // invalid_grant: refresh token expired or user revoked access in Microsoft
     // account settings. The only recovery is a new interactive authorization.
@@ -228,13 +251,55 @@ async function callOutlookRefreshEndpoint(
       // Microsoft issues 1-hour (3600 s) access tokens; fall back to that if
       // expires_in is absent (it should always be present).
       expiresIn: data.expires_in ?? 3600,
+      refreshToken: data.refresh_token || null,
     },
   };
 }
 
+// ─── Caller auth ──────────────────────────────────────────────────────────────
+
+/**
+ * This function is deployed with verify_jwt = false (pg_cron posts with no
+ * Supabase JWT), so the gateway lets every request through and the check has
+ * to live here. Same contract as the other cron-only entry points
+ * (mcp-server /dispatch-scheduled-sends and /triage-dispatch, and the web
+ * app's billing lifecycle dispatcher): an `X-Dispatch-Secret` header that
+ * must equal the DISPATCH_SECRET function secret, which pg_cron reads from
+ * the Vault secret `dispatch_secret`. Fails closed when the env var is unset.
+ */
+function authorised(req: Request): boolean {
+  const expected = Deno.env.get('DISPATCH_SECRET');
+  if (!expected) {
+    console.error('[outlook-token-refresh] DISPATCH_SECRET is not set; refusing every request.');
+    return false;
+  }
+  const encoder = new TextEncoder();
+  const a = encoder.encode(expected);
+  const b = encoder.encode(req.headers.get('x-dispatch-secret') ?? '');
+  // Length is not secret. Compare every byte so the time taken does not
+  // reveal how long a matching prefix was.
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a[i]! ^ b[i]!;
+  return diff === 0;
+}
+
 // ─── Edge Function entry point ────────────────────────────────────────────────
 
-Deno.serve(async (_req: Request): Promise<Response> => {
+Deno.serve(async (req: Request): Promise<Response> => {
+  if (req.method !== 'POST') {
+    return new Response(
+      JSON.stringify({ error: 'Method not allowed, use POST' }),
+      { status: 405, headers: { 'Content-Type': 'application/json', Allow: 'POST' } }
+    );
+  }
+  if (!authorised(req)) {
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized: invalid or missing X-Dispatch-Secret' }),
+      { status: 401, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -368,11 +433,18 @@ Deno.serve(async (_req: Request): Promise<Response> => {
         outcome.result.accessToken,
         aesKey
       );
+      // Microsoft rotates the refresh token. Keeping only the original one
+      // means the inbox dies 90 days after connect no matter how often this
+      // runs, so the new one is stored, encrypted the same way.
+      const encryptedRefreshToken = outcome.result.refreshToken
+        ? await encryptToken(outcome.result.refreshToken, aesKey)
+        : null;
 
       const { error: updateError } = await supabase
         .from('inboxes')
         .update({
           oauth_access_token: encryptedAccessToken,
+          ...(encryptedRefreshToken ? { oauth_refresh_token: encryptedRefreshToken } : {}),
           oauth_token_expires_at: newExpiresAt,
           last_sync_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
