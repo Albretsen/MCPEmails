@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { encryptToken } from '@/lib/crypto';
-import { exchangeOutlookCode, OutlookEmailMissingError, type OutlookTokens } from '@/lib/email-providers/outlook';
+import { exchangeOutlookCode, OutlookEmailMissingError, probeOutlookMailboxAtConnect, type OutlookTokens } from '@/lib/email-providers/outlook';
+import { findOtherProviderInbox, INBOX_EXISTS_OTHER_PROVIDER } from '@/lib/inboxes/provider-conflict';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
 import { canManageInboxes, fetchWorkspaceRole, INSUFFICIENT_ROLE_REDIRECT_CODE } from '@/lib/workspace/roles';
 import { recordOAuthCallbackFailure, recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
@@ -41,9 +42,11 @@ export const maxDuration = 15;
  *  3. Validates the stored `redirect_uri` by exact string equality.
  *  4. Exchanges the authorization code for access + refresh tokens.
  *  5. AES-256-GCM encrypts the tokens before writing to the database.
- *  6. Upserts the inbox row so reconnection replaces the existing record
+ *  6. Refuses an address already connected through another provider, and an
+ *     account with no Exchange Online mailbox (probed with the new token).
+ *  7. Upserts the inbox row so reconnection replaces the existing record
  *     without changing the inbox's UUID (preserving activity_log references).
- *  7. Redirects to the Inboxes dashboard page with a success or error flag.
+ *  8. Redirects to the Inboxes dashboard page with a success or error flag.
  *
  * It ALSO receives the tenant admin-consent response started by
  * /auth/outlook/admin-consent, because that is the only registered redirect
@@ -255,14 +258,45 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return redirectWithError('token_exchange_failed');
   }
 
-  // 7. Enforce the plan inbox cap, but only for a brand-new address. A
-  //    reconnect (the email already has a non-deleted inbox) reuses the
-  //    existing row via upsert, so it must be allowed even at the cap.
+  const serviceClient = createServiceRoleClient();
+
+  // 6c. Never convert another provider's inbox. The upsert below keys on
+  //     (workspace_id, email_address), so an address already connected over
+  //     IMAP or Gmail would be silently rewritten into an Outlook row, breaking
+  //     a working mailbox (live, 2026-09-25: a Migadu IMAP inbox overwritten by
+  //     a Microsoft work account with the same address). An Outlook reconnect
+  //     of an Outlook row is unaffected. See lib/inboxes/provider-conflict.ts.
+  const otherProvider = await findOtherProviderInbox(serviceClient, oauthState.workspace_id, tokens.email, 'outlook');
+  if (otherProvider.conflict) {
+    await recordProductFunnelEvent(serviceClient, { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'failure', category: 'outlook', errorCategory: 'conflict', phase: 'persistence' });
+    return redirectWithError(INBOX_EXISTS_OTHER_PROVIDER);
+  }
+
   const alreadyConnected = await inboxExistsForEmail(
     supabase,
     oauthState.workspace_id,
     tokens.email
   );
+
+  // 6d. Is there a mailbox behind this account at all? A Microsoft account
+  //     with no Exchange Online mailbox (an Entra admin without an Exchange
+  //     licence, or a tenant whose mail is hosted elsewhere) signs in fine and
+  //     gets a valid token, then Graph answers every mailbox call with 401.
+  //     Saving it would produce an inbox that can never work and a "reconnect"
+  //     that can never fix it, so it is refused here, before any row exists.
+  //     Only a definite 'no_mailbox' refuses: a Graph hiccup ('inconclusive')
+  //     connects as before, and a 403 is left to the connection check, which
+  //     names the tenant policy.
+  const mailbox = await probeOutlookMailboxAtConnect(tokens.accessToken);
+  if (mailbox === 'no_mailbox') {
+    console.error('[outlook/callback] signed-in Microsoft account has no Exchange Online mailbox');
+    await recordProductFunnelEvent(serviceClient, { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'failure', category: 'outlook', errorCategory: 'validation_failed', phase: 'token_exchange', connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
+    return redirectWithError('outlook_no_mailbox');
+  }
+
+  // 7. Enforce the plan inbox cap, but only for a brand-new address. A
+  //    reconnect (the email already has a non-deleted inbox) reuses the
+  //    existing row via upsert, so it must be allowed even at the cap.
   if (!alreadyConnected) {
     const inboxLimit = await checkInboxLimit(supabase, oauthState.workspace_id);
     if (inboxLimit.atLimit) {
@@ -287,7 +321,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   //    reconnecting a soft-deleted address makes ON CONFLICT DO UPDATE target a
   //    deleted_at-set row, which the user RLS UPDATE policy (USING deleted_at IS
   //    NULL) rejects. The workspace was already authorised via oauthState.
-  const serviceClient = createServiceRoleClient();
   const { error: upsertError } = await serviceClient.from('inboxes').upsert(
     {
       workspace_id: oauthState.workspace_id,

@@ -4,6 +4,7 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { encryptToken } from '@/lib/crypto';
 import { exchangeGmailCode } from '@/lib/email-providers/gmail';
 import { checkInboxLimit, inboxExistsForEmail } from '@/lib/plans/check-inbox-limit';
+import { findOtherProviderInbox, INBOX_EXISTS_OTHER_PROVIDER } from '@/lib/inboxes/provider-conflict';
 import { captureError } from '@/lib/errors/capture';
 import { recordOAuthCallbackFailure, recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { clientGuidePath } from '@/lib/onboarding/state';
@@ -177,6 +178,19 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return redirectWithError('token_exchange_failed');
   }
 
+  const serviceClient = createServiceRoleClient();
+
+  // 7b. Never convert another provider's inbox. The upsert below keys on
+  //     (workspace_id, email_address), so a Gmail address already connected
+  //     over IMAP (an app password) or any other method would be silently
+  //     rewritten into an OAuth row. A Gmail reconnect of a Gmail row is
+  //     unaffected. See lib/inboxes/provider-conflict.ts.
+  const otherProvider = await findOtherProviderInbox(serviceClient, oauthState.workspace_id, tokens.email, 'gmail');
+  if (otherProvider.conflict) {
+    await recordProductFunnelEvent(serviceClient, { workspaceId: oauthState.workspace_id, stage: 'inbox_connection', outcome: 'failure', category: 'gmail', errorCategory: 'conflict', phase: 'persistence' });
+    return redirectWithError(INBOX_EXISTS_OTHER_PROVIDER);
+  }
+
   // 8. Enforce the plan inbox cap, but only for a brand-new address. A
   //    reconnect (the email already has a non-deleted inbox) reuses the
   //    existing row via upsert, so it must be allowed even at the cap.
@@ -212,7 +226,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   //    hide such rows, so the user-scoped client would fail with save_failed.
   //    Safe here because the user, oauth_state ownership, and workspace have
   //    already been validated above; the write is scoped to workspace_id + email.
-  const serviceClient = createServiceRoleClient();
   const { error: upsertError } = await serviceClient.from('inboxes').upsert(
     {
       workspace_id: oauthState.workspace_id,

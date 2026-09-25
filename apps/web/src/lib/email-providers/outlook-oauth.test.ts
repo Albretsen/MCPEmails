@@ -14,6 +14,8 @@ import {
   classifyAdminConsentCallback,
   selectOutlookEmail,
   classifyOutlookProbe,
+  settleOutlookProbe,
+  OUTLOOK_NO_MAILBOX_REASON,
 } from './outlook-oauth.ts';
 
 // ─── prompt=consent ───────────────────────────────────────────────────────────
@@ -202,4 +204,34 @@ test('probe classification: only 401 means reconnect', () => {
   assert.equal(classifyOutlookProbe(401, 'MailboxNotEnabledForRESTAPI'), 'no_mailbox');
   assert.equal(classifyOutlookProbe(429, null), 'inconclusive');
   assert.equal(classifyOutlookProbe(503, null), 'inconclusive');
+});
+
+// ─── 401 on a valid token: no mailbox, not reconnect (live 2026-09-25) ───────
+
+test('ErrorMailboxNotFound is a missing mailbox', () => {
+  assert.equal(classifyOutlookProbe(404, 'ErrorMailboxNotFound'), 'no_mailbox');
+  assert.equal(classifyOutlookProbe(401, 'ErrorMailboxNotFound'), 'no_mailbox');
+});
+
+test('a plain 401 on a stored token asks for ONE refresh and a retry', () => {
+  assert.equal(settleOutlookProbe('unauthorized', false), 'refresh_and_retry');
+});
+
+test('a plain 401 on a token minted just now is no mailbox, never reconnect', () => {
+  // An Entra account without an Exchange Online mailbox gets a valid token and
+  // a 401 with an empty body on /me/mailFolders/inbox, even after a refresh.
+  assert.equal(settleOutlookProbe('unauthorized', true), 'no_mailbox');
+});
+
+test('every other probe result passes through unchanged', () => {
+  for (const r of ['ok', 'no_mailbox', 'forbidden', 'inconclusive'] as const) {
+    assert.equal(settleOutlookProbe(r, false), r);
+    assert.equal(settleOutlookProbe(r, true), r);
+  }
+});
+
+test('the no-mailbox reason points at IMAP and never says reconnect', () => {
+  assert.match(OUTLOOK_NO_MAILBOX_REASON, /IMAP/);
+  assert.match(OUTLOOK_NO_MAILBOX_REASON, /Reconnecting will not change this/);
+  assert.doesNotMatch(OUTLOOK_NO_MAILBOX_REASON, /please reconnect/i);
 });

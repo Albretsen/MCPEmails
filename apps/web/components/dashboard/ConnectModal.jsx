@@ -143,6 +143,9 @@ const ERROR_HEADLINE_KEYS = {
   // Advanced settings would point at the wrong field.
   host_not_found: 'connect.errorHostNotFoundShort',
   login_already_connected: 'connect.errorLoginTakenShort',
+  // 409: the address is already connected through Gmail or Outlook OAuth,
+  // and the route refused to convert it. See lib/inboxes/provider-conflict.ts.
+  inbox_exists_other_provider: 'connect.errorInboxOtherProviderShort',
   // ── The SSRF guard's own refusals (lib/email/host-guard.ts) ──────────────
   // All three were reaching the user as "Connection failed. Please try again."
   // with the guard's actual sentence folded behind a disclosure that stayed

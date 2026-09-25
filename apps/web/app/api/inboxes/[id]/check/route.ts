@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { decryptToken } from '@/lib/crypto';
 import { withFreshGmailToken, verifyGmailAccess, InboxAuthError } from '@/lib/email-providers/gmail';
-import { withFreshOutlookToken, verifyOutlookAccess, OutlookAuthError } from '@/lib/email-providers/outlook';
+import { checkOutlookMailbox, OutlookAuthError } from '@/lib/email-providers/outlook';
+import { OUTLOOK_NO_MAILBOX_REASON } from '@/lib/email-providers/outlook-oauth';
 import { openImapSession, McpEmailsError, ImapAuthError } from '@/lib/email/imap';
 import { guardMailHost } from '@/lib/email/host-guard';
 import type { Tables } from '@/types/database.types';
@@ -112,12 +113,16 @@ export async function POST(
       healthy = await verifyGmailAccess(token);
       if (!healthy) reason = `Google rejected the saved access. ${RECONNECT_HINT}`;
     } else if (inbox.provider === 'outlook') {
-      const token = await withFreshOutlookToken(inbox);
-      const access = await verifyOutlookAccess(token);
+      // checkOutlookMailbox refreshes once and re-probes on a 401, and reads
+      // a 401 that survives a fresh token as 'no_mailbox': an account with no
+      // Exchange Online mailbox gets a valid token and a 401 on every mailbox
+      // call. Only a failed refresh (invalid_grant) means the saved sign-in is
+      // dead, and that arrives as an OutlookAuthError in the catch below.
+      const access = await checkOutlookMailbox(inbox);
       healthy = access === 'ok';
-      // Only a 401 means the saved sign-in is dead. A 403 or a missing mailbox
-      // come back identically after a reconnect, so telling the user to
-      // reconnect would send them round in a loop; name the real cause.
+      // A 403 or a missing mailbox come back identically after a reconnect, so
+      // telling the user to reconnect would send them round in a loop; name the
+      // real cause.
       if (access === 'unauthorized') {
         reason = `Microsoft rejected the saved access. ${RECONNECT_HINT}`;
       } else if (access === 'forbidden') {
@@ -125,9 +130,7 @@ export async function POST(
           'Microsoft accepted the sign-in but refused access to this mailbox. ' +
           'An administrator of this Microsoft 365 organisation may be blocking mailbox access for this app.';
       } else if (access === 'no_mailbox') {
-        reason =
-          'This Microsoft account has no Exchange Online mailbox that the Microsoft Graph API can reach ' +
-          '(for example an on-premises, unlicensed or inactive mailbox).';
+        reason = OUTLOOK_NO_MAILBOX_REASON;
       }
     } else {
       return NextResponse.json(

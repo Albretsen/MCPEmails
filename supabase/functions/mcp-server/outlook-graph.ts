@@ -179,17 +179,12 @@ export function graphUrl(pathOrUrl: string): string {
  * Retry-After retry. Status handling stays with the caller; see
  * {@link graphErrorFromResponse} for the shared mapping.
  */
-export function graphFetch(
+export async function graphFetch(
   accessToken: string,
   pathOrUrl: string,
   init: GraphRequestInit = {},
 ): Promise<Response> {
-  const headers: Record<string, string> = { ...(init.headers ?? {}) };
-  headers["Authorization"] = `Bearer ${accessToken}`;
-  const prefer = [IMMUTABLE_ID_PREFER, ...(init.prefer ?? [])];
-  const callerPrefer = headers["Prefer"];
-  if (callerPrefer) prefer.push(callerPrefer);
-  headers["Prefer"] = prefer.join(", ");
+  const url = graphUrl(pathOrUrl);
   let body: BodyInit | null | undefined;
   if (init.body instanceof Uint8Array) {
     // A plain ArrayBuffer view: Deno's fetch typings reject a Uint8Array over
@@ -198,11 +193,20 @@ export function graphFetch(
   } else {
     body = init.body;
   }
-  return fetchWithGraphRetry(
-    graphUrl(pathOrUrl),
-    { method: init.method ?? "GET", headers, body },
-    init.retry,
-  );
+  const send = (token: string): Promise<Response> => {
+    const headers: Record<string, string> = { ...(init.headers ?? {}) };
+    headers["Authorization"] = `Bearer ${token}`;
+    const prefer = [IMMUTABLE_ID_PREFER, ...(init.prefer ?? [])];
+    const callerPrefer = headers["Prefer"];
+    if (callerPrefer) prefer.push(callerPrefer);
+    headers["Prefer"] = prefer.join(", ");
+    return fetchWithGraphRetry(url, { method: init.method ?? "GET", headers, body }, init.retry);
+  };
+  // A token an earlier 401 in this isolate already replaced is not sent again:
+  // the caller may still hold the old string for the rest of its request.
+  const token = replacedGraphTokens.get(accessToken) ?? accessToken;
+  const resp = await send(token);
+  return await recoverGraphAuth(token, url, resp, send);
 }
 
 /** `graphFetch` with a JSON body and Content-Type set. */
@@ -269,8 +273,12 @@ export async function readGraphError(
 /**
  * The shared status mapping for a failed Graph response.
  *
- *   401                 → Error("outlook_auth_failed"): the token is dead, and
- *                         only a reconnect can fix it.
+ *   401                 → Error("outlook_auth_failed"). For a token from
+ *                         outlookAccessTokenForGraph a caller never sees a
+ *                         401: graphFetch has already refreshed and retried,
+ *                         and turned a persistent 401 into OutlookNoMailboxError
+ *                         (see "401 recovery" below). Only a failed refresh
+ *                         (invalid_grant) means reconnect.
  *   403                 → OutlookGraphError naming a PERMISSION refusal. This
  *                         is tenant policy, a missing consent on a shared
  *                         mailbox, or an operation the account type does not
@@ -309,6 +317,171 @@ export async function graphErrorFromResponse(resp: Response, context: string): P
     );
   }
   return new OutlookGraphError(`${context} error ${resp.status}${tag}: ${message}`, resp.status, code);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 401 recovery and "this account has no mailbox"
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// A Graph 401 used to mean one thing here: "the token is dead, reconnect". That
+// is wrong for a Microsoft account with NO Exchange Online mailbox behind it
+// (an Entra admin account without an Exchange licence, a tenant whose mail is
+// hosted elsewhere). Found live on 2026-09-25: such an account signs in, gets a
+// perfectly valid token (scp "email Mail.ReadWrite Mail.Send openid profile"),
+// and Graph answers /me/mailFolders/inbox and /me/messages with 401 and an
+// EMPTY body, even straight after a refresh. Every tool call then marked the
+// inbox 'error' and told the user to reconnect, which produced the same token
+// and the same 401, forever.
+//
+// The rule now, applied in graphFetch so all ~60 Graph call sites share it:
+//
+//   * A 401 on a token that was NOT minted during this request: force one
+//     refresh and send the request again with the new token.
+//       - the refresh fails with invalid_grant / interaction_required: that is
+//         the real "reconnect" case, and refreshOnce already throws
+//         "outlook_auth_failed" after marking the inbox;
+//       - the retry succeeds: it was a stale token, carry on;
+//       - the retry is still 401: a freshly minted token being refused can only
+//         mean there is no mailbox, so → no mailbox.
+//   * A 401 on a token that WAS just minted: → no mailbox, without a second
+//     pointless refresh.
+//   * MailboxNotEnabledForRESTAPI / MailboxNotSupportedForRESTAPI /
+//     ErrorMailboxNotFound with any status, or a 404 on a mailbox ROOT
+//     (/me/messages, /me/mailFolders, /me/mailFolders/inbox — which exist in
+//     every real mailbox): → no mailbox, directly.
+//
+// "No mailbox" marks the inbox 'error' with {@link OUTLOOK_NO_MAILBOX_MESSAGE}
+// (the inbox cannot work, and the dashboard is where the user reads why) and
+// throws {@link OutlookNoMailboxError}, whose message says the opposite of
+// "reconnect". It is NOT "outlook_auth_failed", so none of the auth-failure
+// branches in index.ts turn it back into a reconnect link.
+//
+// Recovery only runs for tokens registered through
+// {@link outlookAccessTokenForGraph}; a bare graphFetch with an unregistered
+// token behaves exactly as before, which keeps the request-shape tests honest.
+
+/** The words shown to the agent, stored in `last_error`, and thrown. */
+export const OUTLOOK_NO_MAILBOX_MESSAGE =
+  "This Microsoft account has no Outlook / Exchange Online mailbox that Microsoft Graph can reach. " +
+  "Microsoft accepted the sign-in, but there is no mailbox behind it: typically an administrator " +
+  "account without an Exchange Online licence, or an organisation whose mail is hosted somewhere " +
+  "else. Reconnecting will not change this. If the address's mail is hosted on another server, " +
+  "remove this inbox and connect the address with IMAP instead.";
+
+/** Thrown by graphFetch when the account has no mailbox. Never "reconnect". */
+export class OutlookNoMailboxError extends Error {
+  constructor() {
+    super(OUTLOOK_NO_MAILBOX_MESSAGE);
+    this.name = "OutlookNoMailboxError";
+  }
+}
+
+/** Graph error codes that mean "there is no (REST-reachable) mailbox". */
+const NO_MAILBOX_CODES = new Set([
+  "MailboxNotEnabledForRESTAPI",
+  "MailboxNotSupportedForRESTAPI",
+  "ErrorMailboxNotFound",
+]);
+
+/**
+ * Whether `url` addresses the mailbox itself rather than an item in it. A 404
+ * on /me/messages/{id} is a missing MESSAGE; a 404 on /me/messages is a
+ * missing mailbox.
+ */
+export function isGraphMailboxRoot(url: string): boolean {
+  const path = url.replace(/^https:\/\/graph\.microsoft\.com\/v1\.0/i, "").split("?")[0];
+  return /^\/me\/(?:messages|mailFolders(?:\/inbox)?)\/?$/i.test(path);
+}
+
+/**
+ * Pure verdict for one Graph response: is this "no mailbox", "unauthorized"
+ * (a 401 that says nothing more), or neither.
+ */
+export function classifyGraphMailboxResponse(
+  status: number,
+  code: string | null,
+  url: string,
+): "no_mailbox" | "unauthorized" | "other" {
+  if (code && NO_MAILBOX_CODES.has(code)) return "no_mailbox";
+  if (status === 404 && isGraphMailboxRoot(url)) return "no_mailbox";
+  if (status === 401) return "unauthorized";
+  return "other";
+}
+
+interface GraphAuthRecovery {
+  /** The token was minted by a refresh (or the code exchange) in this request. */
+  fresh: boolean;
+  /** Force one refresh; resolves to the new token. Throws outlook_auth_failed on invalid_grant. */
+  refresh(): Promise<string>;
+  /** Persist the no-mailbox state for the inbox. Must not throw. */
+  noMailbox(): Promise<void>;
+}
+
+/** Keyed by access token: graphFetch sees only the token string. Bounded. */
+const graphAuthRecovery = new Map<string, GraphAuthRecovery>();
+/** Old token → the token a forced refresh replaced it with. Bounded. */
+const replacedGraphTokens = new Map<string, string>();
+/** One forced refresh per token, however many requests 401 at once. */
+const inflightForcedRefresh = new Map<string, Promise<string>>();
+const GRAPH_TOKEN_MAP_LIMIT = 500;
+
+function rememberBounded<V>(map: Map<string, V>, key: string, value: V): void {
+  map.delete(key);
+  map.set(key, value);
+  while (map.size > GRAPH_TOKEN_MAP_LIMIT) {
+    const oldest = map.keys().next().value;
+    if (oldest === undefined) break;
+    map.delete(oldest);
+  }
+}
+
+/** Attach 401 recovery to `token`. Exported for tests; production uses outlookAccessTokenForGraph. */
+export function registerGraphAuthRecovery(token: string, recovery: GraphAuthRecovery): void {
+  rememberBounded(graphAuthRecovery, token, recovery);
+}
+
+async function graphErrorCodeOf(resp: Response): Promise<string | null> {
+  if (resp.ok) return null;
+  return (await readGraphError(resp.clone())).code;
+}
+
+async function declareNoMailbox(recovery: GraphAuthRecovery, resp: Response): Promise<never> {
+  await resp.body?.cancel().catch(() => {});
+  await recovery.noMailbox();
+  throw new OutlookNoMailboxError();
+}
+
+async function recoverGraphAuth(
+  token: string,
+  url: string,
+  resp: Response,
+  send: (token: string) => Promise<Response>,
+): Promise<Response> {
+  const recovery = graphAuthRecovery.get(token);
+  if (!recovery || resp.ok) return resp;
+  if (resp.status !== 401 && resp.status !== 404 && resp.status !== 403) return resp;
+
+  const verdict = classifyGraphMailboxResponse(resp.status, await graphErrorCodeOf(resp), url);
+  if (verdict === "no_mailbox") return await declareNoMailbox(recovery, resp);
+  if (verdict !== "unauthorized") return resp;
+  if (recovery.fresh) return await declareNoMailbox(recovery, resp);
+
+  await resp.body?.cancel().catch(() => {});
+  let pending = inflightForcedRefresh.get(token);
+  if (!pending) {
+    pending = recovery.refresh().finally(() => inflightForcedRefresh.delete(token));
+    inflightForcedRefresh.set(token, pending);
+  }
+  const next = await pending; // outlook_auth_failed propagates: that one IS reconnect
+  rememberBounded(replacedGraphTokens, token, next);
+
+  const retried = await send(next);
+  if (retried.ok) return retried;
+  const again = classifyGraphMailboxResponse(retried.status, await graphErrorCodeOf(retried), url);
+  if (again === "no_mailbox" || again === "unauthorized") {
+    return await declareNoMailbox(graphAuthRecovery.get(next) ?? recovery, retried);
+  }
+  return retried;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -364,6 +537,12 @@ export interface OutlookTokenDeps {
   persist(id: string, patch: Partial<OutlookTokenRow>): Promise<void>;
   /** Mark the inbox as needing a reconnect (invalid_grant / interaction_required). */
   markRevoked(id: string): Promise<void>;
+  /**
+   * Mark the inbox as having no Exchange Online mailbox (see
+   * {@link OUTLOOK_NO_MAILBOX_MESSAGE}). Only {@link outlookAccessTokenForGraph}
+   * uses it; failures are logged, never thrown.
+   */
+  markNoMailbox?(id: string): Promise<void>;
   /** Proactive window: refresh when the token expires sooner than this. */
   refreshThresholdMs: number;
   now?: () => number;
@@ -386,6 +565,9 @@ const inflightRefresh = new Map<string, Promise<RefreshOutcome>>();
 /** Test seam. */
 export function resetOutlookTokenStateForTests(): void {
   inflightRefresh.clear();
+  graphAuthRecovery.clear();
+  replacedGraphTokens.clear();
+  inflightForcedRefresh.clear();
 }
 
 /**
@@ -404,15 +586,26 @@ export async function freshOutlookAccessToken(
   row: OutlookTokenRow,
   deps: OutlookTokenDeps,
 ): Promise<string> {
+  return (await acquireOutlookAccessToken(row, deps)).token;
+}
+
+async function acquireOutlookAccessToken(
+  row: OutlookTokenRow,
+  deps: OutlookTokenDeps,
+): Promise<{ token: string; refreshed: boolean }> {
   if (!row.oauth_access_token || !row.oauth_refresh_token) {
     throw new Error(`Outlook inbox ${row.id} is missing OAuth tokens — user must reconnect.`);
   }
   const now = (deps.now ?? Date.now)();
   const expiresAt = row.oauth_token_expires_at ? new Date(row.oauth_token_expires_at).getTime() : 0;
   if (expiresAt > now + deps.refreshThresholdMs) {
-    return await deps.decrypt(row.oauth_access_token);
+    return { token: await deps.decrypt(row.oauth_access_token), refreshed: false };
   }
+  return { token: await sharedRefresh(row, deps), refreshed: true };
+}
 
+/** The single-flight refresh, used by both the proactive and the forced path. */
+async function sharedRefresh(row: OutlookTokenRow, deps: OutlookTokenDeps): Promise<string> {
   let pending = inflightRefresh.get(row.id);
   if (!pending) {
     pending = refreshOnce(row, deps).finally(() => inflightRefresh.delete(row.id));
@@ -421,6 +614,56 @@ export async function freshOutlookAccessToken(
   const outcome = await pending;
   Object.assign(row, outcome.patch);
   return outcome.accessToken;
+}
+
+/**
+ * {@link freshOutlookAccessToken}, plus 401 recovery for every Graph call made
+ * with the returned token (see "401 recovery" above). This is what index.ts
+ * hands to its Graph call sites.
+ *
+ * The token is registered as `fresh` when it was minted by a refresh just now,
+ * so a 401 on it is read as "no mailbox" without refreshing a second time. A
+ * forced refresh registers its own token as fresh, so the retry that follows
+ * cannot trigger another one.
+ */
+export async function outlookAccessTokenForGraph(
+  row: OutlookTokenRow,
+  deps: OutlookTokenDeps,
+): Promise<string> {
+  const { token, refreshed } = await acquireOutlookAccessToken(row, deps);
+  registerOutlookRecovery(token, refreshed, row, deps);
+  return token;
+}
+
+function registerOutlookRecovery(
+  token: string,
+  fresh: boolean,
+  row: OutlookTokenRow,
+  deps: OutlookTokenDeps,
+): void {
+  registerGraphAuthRecovery(token, {
+    fresh,
+    refresh: async () => {
+      if (!row.oauth_refresh_token) {
+        throw new Error(`Outlook inbox ${row.id} is missing OAuth tokens — user must reconnect.`);
+      }
+      const next = await sharedRefresh(row, deps);
+      registerOutlookRecovery(next, true, row, deps);
+      deps.log?.("outlook_graph_401_forced_refresh", { inbox_id: row.id });
+      return next;
+    },
+    noMailbox: async () => {
+      deps.log?.("outlook_no_mailbox", { inbox_id: row.id });
+      try {
+        await deps.markNoMailbox?.(row.id);
+      } catch (e) {
+        deps.log?.("outlook_no_mailbox_mark_failed", {
+          inbox_id: row.id,
+          error: e instanceof Error ? e.message : String(e),
+        });
+      }
+    },
+  });
 }
 
 async function refreshOnce(row: OutlookTokenRow, deps: OutlookTokenDeps): Promise<RefreshOutcome> {

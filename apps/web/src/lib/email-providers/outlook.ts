@@ -22,6 +22,7 @@ import {
   classifyOutlookProbe,
   outlookTokenEndpoint,
   selectOutlookEmail,
+  settleOutlookProbe,
   type OutlookProbeResult,
 } from '@/lib/email-providers/outlook-oauth';
 
@@ -394,6 +395,17 @@ export async function refreshOutlookAccessToken(
 export async function withFreshOutlookToken(
   inbox: Tables<'inboxes'>
 ): Promise<string> {
+  return (await acquireOutlookToken(inbox, false)).token;
+}
+
+/**
+ * The token plus whether it was minted just now. `force` refreshes even when
+ * the stored token is not near expiry (the one retry after a Graph 401).
+ */
+async function acquireOutlookToken(
+  inbox: Tables<'inboxes'>,
+  force: boolean
+): Promise<{ token: string; refreshed: boolean }> {
   if (!inbox.oauth_access_token || !inbox.oauth_refresh_token) {
     throw new OutlookAuthError('MISSING_TOKENS', inbox.id);
   }
@@ -405,9 +417,9 @@ export async function withFreshOutlookToken(
 
   const refreshThreshold = new Date(now.getTime() + REFRESH_THRESHOLD_MS);
 
-  if (expiresAt > refreshThreshold) {
+  if (!force && expiresAt > refreshThreshold) {
     // Token is fresh; decrypt and return without a network call.
-    return decryptToken(inbox.oauth_access_token);
+    return { token: decryptToken(inbox.oauth_access_token), refreshed: false };
   }
 
   // Token is expiring within 5 minutes (or already expired); refresh it.
@@ -434,7 +446,7 @@ export async function withFreshOutlookToken(
 
   await updateInboxTokens(inbox.id, buildRefreshedTokenUpdate(refreshResult, now));
 
-  return refreshResult.accessToken;
+  return { token: refreshResult.accessToken, refreshed: true };
 }
 
 /**
@@ -467,4 +479,46 @@ export async function verifyOutlookAccess(
     );
   }
   return result;
+}
+
+/**
+ * The connection check for a stored Outlook inbox, with the one-refresh rule
+ * (see `settleOutlookProbe`): a 401 on a stored token forces a refresh and a
+ * second probe; a 401 on a token minted just now is 'no_mailbox'. So this never
+ * returns 'unauthorized': a genuinely dead sign-in surfaces as the
+ * OutlookAuthError the refresh throws on invalid_grant (and the inbox is
+ * marked errored by then), which is the only case that means reconnect.
+ *
+ * Throws on an inconclusive probe (network, 5xx, 429), like verifyOutlookAccess.
+ */
+export async function checkOutlookMailbox(
+  inbox: Tables<'inboxes'>
+): Promise<Exclude<OutlookProbeResult, 'inconclusive'>> {
+  const first = await acquireOutlookToken(inbox, false);
+  const settled = settleOutlookProbe(await verifyOutlookAccess(first.token), first.refreshed);
+  if (settled !== 'refresh_and_retry') return settled as Exclude<OutlookProbeResult, 'inconclusive'>;
+
+  const second = await acquireOutlookToken(inbox, true);
+  const final = settleOutlookProbe(await verifyOutlookAccess(second.token), true);
+  return final as Exclude<OutlookProbeResult, 'inconclusive'>;
+}
+
+/**
+ * The connect-time probe, run by the OAuth callback right after the code
+ * exchange and before any inbox row exists. The token was minted a moment ago,
+ * so a 401 on it is 'no_mailbox' (see `settleOutlookProbe`).
+ *
+ * Anything that is not a definite answer (network, 5xx, 429) is
+ * 'inconclusive', and the callback connects as before: a Graph hiccup must not
+ * refuse a mailbox that is fine.
+ */
+export async function probeOutlookMailboxAtConnect(
+  accessToken: string
+): Promise<OutlookProbeResult> {
+  try {
+    const settled = settleOutlookProbe(await verifyOutlookAccess(accessToken), true);
+    return settled === 'refresh_and_retry' ? 'inconclusive' : settled;
+  } catch {
+    return 'inconclusive';
+  }
 }

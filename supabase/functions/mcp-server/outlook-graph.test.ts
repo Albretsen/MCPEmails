@@ -13,6 +13,7 @@
 
 import { assert, assertEquals, assertRejects, assertStringIncludes } from "jsr:@std/assert@1";
 import {
+  classifyGraphMailboxResponse,
   DEFAULT_GRAPH_RETRY,
   freshOutlookAccessToken,
   GRAPH_BASE,
@@ -27,11 +28,15 @@ import {
   graphSendDraft,
   graphUploadLargeAttachment,
   IMMUTABLE_ID_PREFER,
+  isGraphMailboxRoot,
   listOutlookFolderTree,
   mergeResponseBody,
   needsDraftUpload,
   OutlookGraphError,
+  OUTLOOK_NO_MAILBOX_MESSAGE,
+  outlookAccessTokenForGraph,
   outlookAuthority,
+  OutlookNoMailboxError,
   outlookFolderReferences,
   type OutlookTokenDeps,
   type OutlookTokenRow,
@@ -325,6 +330,142 @@ Deno.test("a token that is not near expiry is used without any request", async (
   await withFetch([], async () => {
     assertEquals(await freshOutlookAccessToken(row, deps), "old-access");
   });
+});
+
+// ── 401 recovery and "no mailbox" (live finding 2026-09-25) ─────────────────
+//
+// An Entra account with no Exchange Online mailbox gets a valid token and a
+// Graph 401 with an EMPTY body on every mailbox call, even after a refresh.
+// Reading that 401 as "reconnect" looped the user forever.
+
+function noMailboxDeps() {
+  const base = tokenDeps();
+  const noMailbox: string[] = [];
+  base.deps.markNoMailbox = (id) => {
+    noMailbox.push(id);
+    return Promise.resolve();
+  };
+  return { ...base, noMailbox };
+}
+
+const liveRow = (): OutlookTokenRow => ({ ...expiredRow(), oauth_token_expires_at: "2026-09-25T12:00:00Z" });
+const refreshOk = () => json(200, { access_token: "new-access", refresh_token: "new-refresh", expires_in: 3600 });
+
+Deno.test("a 401 on a stored token forces ONE refresh and retries; success carries on", async () => {
+  resetOutlookTokenStateForTests();
+  const { deps, persisted, noMailbox, revoked } = noMailboxDeps();
+  const row = liveRow();
+  let status = 0;
+  const calls = await withFetch([() => empty(401), refreshOk, () => json(200, { id: "inbox" })], async () => {
+    const token = await outlookAccessTokenForGraph(row, deps);
+    assertEquals(token, "old-access");
+    status = (await graphFetch(token, "/me/mailFolders/inbox?$select=id")).status;
+  });
+  assertEquals(status, 200);
+  assertEquals(calls.length, 3);
+  assertEquals(calls[0].headers["authorization"], "Bearer old-access");
+  assert(calls[1].url.startsWith("https://login.microsoftonline.com/"), "the second request is the refresh");
+  assertEquals(calls[2].headers["authorization"], "Bearer new-access");
+  assertEquals(persisted.length, 1, "the rotated tokens are stored");
+  assertEquals(noMailbox, []);
+  assertEquals(revoked, []);
+
+  // The caller still holds "old-access"; the next call goes out with the new one.
+  const later = await withFetch([() => json(200, {})], async () => {
+    await graphFetch("old-access", "/me/messages?$top=1");
+  });
+  assertEquals(later[0].headers["authorization"], "Bearer new-access");
+});
+
+Deno.test("a 401 that survives a fresh token is 'no mailbox', never reconnect", async () => {
+  resetOutlookTokenStateForTests();
+  const { deps, noMailbox, revoked } = noMailboxDeps();
+  const calls = await withFetch([() => empty(401), refreshOk, () => empty(401)], async () => {
+    const token = await outlookAccessTokenForGraph(liveRow(), deps);
+    const err = await assertRejects(() => graphFetch(token, "/me/messages?$top=5"), OutlookNoMailboxError);
+    assertEquals(err.message, OUTLOOK_NO_MAILBOX_MESSAGE);
+  });
+  assertEquals(calls.length, 3, "exactly one refresh, exactly one retry");
+  assertEquals(noMailbox, ["inbox-1"]);
+  assertEquals(revoked, [], "the inbox is not marked revoked");
+  assert(!/reconnect it|please reconnect/i.test(OUTLOOK_NO_MAILBOX_MESSAGE));
+  assertStringIncludes(OUTLOOK_NO_MAILBOX_MESSAGE, "IMAP");
+});
+
+Deno.test("a 401 on a token refreshed moments ago is 'no mailbox' without a second refresh", async () => {
+  resetOutlookTokenStateForTests();
+  const { deps, noMailbox } = noMailboxDeps();
+  const calls = await withFetch([refreshOk, () => empty(401)], async () => {
+    const token = await outlookAccessTokenForGraph(expiredRow(), deps);
+    assertEquals(token, "new-access");
+    await assertRejects(() => graphFetch(token, "/me/mailFolders/inbox?$select=id"), OutlookNoMailboxError);
+  });
+  assertEquals(calls.length, 2);
+  assertEquals(noMailbox, ["inbox-1"]);
+});
+
+Deno.test("invalid_grant on the forced refresh is still the reconnect case", async () => {
+  resetOutlookTokenStateForTests();
+  const { deps, noMailbox, revoked } = noMailboxDeps();
+  await withFetch([() => empty(401), () => json(400, { error: "invalid_grant" })], async () => {
+    const token = await outlookAccessTokenForGraph(liveRow(), deps);
+    await assertRejects(() => graphFetch(token, "/me/messages"), Error, "outlook_auth_failed");
+  });
+  assertEquals(revoked, ["inbox-1"]);
+  assertEquals(noMailbox, []);
+});
+
+Deno.test("MailboxNotEnabledForRESTAPI is 'no mailbox' at once, with no refresh", async () => {
+  resetOutlookTokenStateForTests();
+  const { deps, noMailbox } = noMailboxDeps();
+  const calls = await withFetch(
+    [() => json(401, { error: { code: "MailboxNotEnabledForRESTAPI", message: "REST API is not yet supported for this mailbox." } })],
+    async () => {
+      const token = await outlookAccessTokenForGraph(liveRow(), deps);
+      await assertRejects(() => graphFetch(token, "/me/messages"), OutlookNoMailboxError);
+    },
+  );
+  assertEquals(calls.length, 1);
+  assertEquals(noMailbox, ["inbox-1"]);
+});
+
+Deno.test("a 404 on a mailbox root is 'no mailbox'; a 404 on one message is not", async () => {
+  resetOutlookTokenStateForTests();
+  const { deps, noMailbox } = noMailboxDeps();
+  await withFetch([() => json(404, { error: { code: "ErrorItemNotFound" } })], async () => {
+    const token = await outlookAccessTokenForGraph(liveRow(), deps);
+    const resp = await graphFetch(token, "/me/messages/AAMkAD123");
+    assertEquals(resp.status, 404, "the caller still maps its own message_not_found");
+    await resp.body?.cancel();
+  });
+  assertEquals(noMailbox, []);
+  await withFetch([() => empty(404)], async () => {
+    const token = await outlookAccessTokenForGraph(liveRow(), deps);
+    await assertRejects(() => graphFetch(token, "/me/mailFolders/inbox?$select=id"), OutlookNoMailboxError);
+  });
+  assertEquals(noMailbox, ["inbox-1"]);
+});
+
+Deno.test("a 401 on a token nobody registered is returned untouched (bare graphFetch)", async () => {
+  resetOutlookTokenStateForTests();
+  await withFetch([() => empty(401)], async () => {
+    const resp = await graphFetch("unregistered", "/me/messages");
+    assertEquals(resp.status, 401);
+    const err = await graphErrorFromResponse(resp, "list");
+    assertEquals(err.message, "outlook_auth_failed");
+  });
+});
+
+Deno.test("the mailbox-root and verdict helpers", () => {
+  assert(isGraphMailboxRoot(`${GRAPH_BASE}/me/messages?$top=1`));
+  assert(isGraphMailboxRoot(`${GRAPH_BASE}/me/mailFolders/inbox?$select=id`));
+  assert(isGraphMailboxRoot(`${GRAPH_BASE}/me/mailFolders`));
+  assert(!isGraphMailboxRoot(`${GRAPH_BASE}/me/messages/abc`));
+  assert(!isGraphMailboxRoot(`${GRAPH_BASE}/me/mailFolders/abc/messages`));
+  assertEquals(classifyGraphMailboxResponse(401, null, `${GRAPH_BASE}/me/messages/x`), "unauthorized");
+  assertEquals(classifyGraphMailboxResponse(403, "ErrorMailboxNotFound", `${GRAPH_BASE}/me/messages/x`), "no_mailbox");
+  assertEquals(classifyGraphMailboxResponse(403, "ErrorAccessDenied", `${GRAPH_BASE}/me/messages`), "other");
+  assertEquals(classifyGraphMailboxResponse(404, "ErrorFolderNotFound", `${GRAPH_BASE}/me/mailFolders/x`), "other");
 });
 
 // ── Reply flow: createReply → PATCH → send ──────────────────────────────────
@@ -623,4 +764,18 @@ Deno.test("form-encoded spaces in a query we built reach Graph as %20", async ()
   assert(!calls[0].url.includes("+"), calls[0].url);
   assertStringIncludes(calls[0].url, "isRead%20eq%20false");
   assertStringIncludes(calls[0].url, "a%2Bb%20c", "a literal plus stays a plus");
+});
+
+// ── index.ts wiring (source scan: index.ts runs Deno.serve at import) ────────
+
+Deno.test("index.ts hands Graph call sites tokens WITH 401 recovery, and says 'no mailbox' not 'reconnect'", async () => {
+  const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+  const fn = src.slice(src.indexOf("async function withFreshOutlookToken("));
+  const body = fn.slice(0, fn.indexOf("\n}\n"));
+  assertStringIncludes(body, "outlookAccessTokenForGraph(inbox,");
+  assertStringIncludes(body, "markNoMailbox:");
+  assertStringIncludes(body, "last_error: OUTLOOK_NO_MAILBOX_MESSAGE");
+  assertStringIncludes(body, "store.outlookNoMailbox = true");
+  assert(!/freshOutlookAccessToken\(/.test(src), "no Graph token may bypass the recovery");
+  assertStringIncludes(src, "if (logCtx.outlookNoMailbox) rewriteNoMailboxResult(toolResult);");
 });

@@ -74,7 +74,6 @@ import {
   planOutlookFolderFanout,
 } from "./search-folder-scope.ts";
 import {
-  freshOutlookAccessToken,
   graphAddAttachments,
   graphCreateDraft,
   graphDeleteDraftQuietly,
@@ -94,6 +93,8 @@ import {
   needsDraftUpload,
   outlookFolderReferences,
   resolveOutlookArchiveFolderId,
+  OUTLOOK_NO_MAILBOX_MESSAGE,
+  outlookAccessTokenForGraph,
 } from "./outlook-graph.ts";
 import {
   FolderOperationError,
@@ -458,8 +459,19 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 // store is simply absent and logging falls back to the raw-argument inbox_id.
 // ---------------------------------------------------------------------------
 
-const activityInboxStore =
-  new AsyncLocalStorage<{ inboxId: string | null }>();
+/**
+ * `outlookNoMailbox` is set by the Graph layer when it concluded that the
+ * Outlook inbox this call used has no Exchange Online mailbox (see
+ * OutlookNoMailboxError in outlook-graph.ts). The dispatcher reads it to give
+ * the agent one accurate explanation instead of whatever generic "provider
+ * error, try again" wrapper the individual handler put around the error.
+ */
+interface ActivityContext {
+  inboxId: string | null;
+  outlookNoMailbox?: boolean;
+}
+
+const activityInboxStore = new AsyncLocalStorage<ActivityContext>();
 
 // ---------------------------------------------------------------------------
 // Reconnect / auth-failure helpers
@@ -531,6 +543,30 @@ function authFailedResult(
     logStatus: "error",
     logErrorCode: "auth_failed",
   };
+}
+
+/**
+ * The agent-facing text for an Outlook inbox whose Microsoft account has no
+ * Exchange Online mailbox. Deliberately the opposite of authFailedResult: no
+ * reconnect link, because reconnecting produces the same token and the same
+ * refusal.
+ */
+function outlookNoMailboxText(): string {
+  return `Unable to use this Outlook inbox. ${OUTLOOK_NO_MAILBOX_MESSAGE} ` +
+    `The inbox has been marked 'error' in the MCP Emails dashboard. Tell the ` +
+    `user this; do not retry and do not ask them to reconnect.`;
+}
+
+/**
+ * Replace an error tool result's text with {@link outlookNoMailboxText}. Only
+ * touches a result that is already an error; a result that succeeded after the
+ * Graph layer recovered is left alone.
+ */
+function rewriteNoMailboxResult(toolResult: unknown): void {
+  const result = (toolResult as { result?: { isError?: boolean; content?: { type: string; text: string }[] } })
+    ?.result;
+  if (!result || result.isError !== true || !Array.isArray(result.content)) return;
+  result.content = [{ type: "text", text: outlookNoMailboxText() }];
 }
 
 /**
@@ -9867,7 +9903,7 @@ async function maybeImportGmailSignature(inbox: InboxRow): Promise<void> {
  * @throws "outlook_auth_failed" on `invalid_grant` / `interaction_required`.
  */
 async function withFreshOutlookToken(inbox: InboxRow): Promise<string> {
-  return await freshOutlookAccessToken(inbox, {
+  return await outlookAccessTokenForGraph(inbox, {
     clientId: Deno.env.get("OUTLOOK_CLIENT_ID"),
     clientSecret: Deno.env.get("OUTLOOK_CLIENT_SECRET"),
     tenantId: Deno.env.get("OUTLOOK_TENANT_ID"),
@@ -9887,6 +9923,23 @@ async function withFreshOutlookToken(inbox: InboxRow): Promise<string> {
         .update({
           status: "error",
           last_error: "Outlook refresh token revoked — user must reconnect.",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id);
+      if (error) throw new Error(error.message);
+    },
+    // A Graph 401 that survives a fresh token, or a Graph "mailbox not
+    // enabled" code: the account has no Exchange Online mailbox. The inbox is
+    // marked 'error' because it cannot work at all, with words that say why
+    // and that do NOT ask for a reconnect (which would only loop).
+    markNoMailbox: async (id) => {
+      const store = activityInboxStore.getStore();
+      if (store) store.outlookNoMailbox = true;
+      const { error } = await supabase
+        .from("inboxes")
+        .update({
+          status: "error",
+          last_error: OUTLOOK_NO_MAILBOX_MESSAGE,
           updated_at: new Date().toISOString(),
         })
         .eq("id", id);
@@ -28570,7 +28623,7 @@ async function handleToolsCall(
 
   // Captures the inbox resolved during dispatch (inside resolveInboxArg) so the
   // activity log records the real inbox even for alias- or auto-resolved calls.
-  const logCtx: { inboxId: string | null } = { inboxId: null };
+  const logCtx: ActivityContext = { inboxId: null };
   const idempotencyClaim = await claimOutboundIdempotency(dispatchName, rawArgs, apiKey);
 
   // The replay, processing and conflict branches below are shared by both
@@ -29032,13 +29085,25 @@ async function handleToolsCall(
       tool_name: toolName,
       error: message,
     });
-    toolResult = jsonRpcErrorBody(
-      id,
-      -32603, // Internal error
-      `Internal error executing tool '${toolName}'. Please try again.`,
-    );
-    logStatus = "error";
-    logErrorCode = String(-32603);
+    if (logCtx.outlookNoMailbox || (err instanceof Error && err.name === "OutlookNoMailboxError")) {
+      // Not an internal error: the Graph layer established that this Outlook
+      // account has no mailbox. Answered as a tool error the agent can relay.
+      toolResult = {
+        jsonrpc: "2.0",
+        id,
+        result: { content: [{ type: "text", text: outlookNoMailboxText() }], isError: true },
+      };
+      logStatus = "error";
+      logErrorCode = "provider_error";
+    } else {
+      toolResult = jsonRpcErrorBody(
+        id,
+        -32603, // Internal error
+        `Internal error executing tool '${toolName}'. Please try again.`,
+      );
+      logStatus = "error";
+      logErrorCode = String(-32603);
+    }
   } finally {
     // Must run on every exit path. A thrown handler that skipped this would
     // leak the slot for the lifetime of the isolate and lock this key out of
@@ -29049,6 +29114,11 @@ async function handleToolsCall(
   }
 
   const durationMs = Date.now() - startMs;
+
+  // The Graph layer found that this Outlook inbox has no mailbox at all. Each
+  // handler wrapped that in its own words ("Provider error ... try again in a
+  // moment"), which is advice that can never work; say what is actually wrong.
+  if (logCtx.outlookNoMailbox) rewriteNoMailboxResult(toolResult);
 
   // Disclose any argument leniency dropped. This is not optional bookkeeping:
   // dropping a filter instead of refusing the call is only defensible because

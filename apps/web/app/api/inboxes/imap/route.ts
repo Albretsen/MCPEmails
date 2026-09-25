@@ -4,6 +4,7 @@ import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { encryptToken } from '@/lib/crypto';
 import { checkInboxLimit, inboxExistsForEmail, inboxLimitErrorBody } from '@/lib/plans/check-inbox-limit';
+import { findOtherProviderInbox, otherProviderErrorBody } from '@/lib/inboxes/provider-conflict';
 import { validateImapCredential } from '@/lib/email/validate-imap';
 import { validateSmtpCredential } from '@/lib/email/validate-smtp';
 import { normalizeSecurity } from '@/lib/email/connection-config';
@@ -155,6 +156,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // 4. Enforce the plan inbox cap for brand-new addresses only.
   const alreadyConnected = await inboxExistsForEmail(supabase, workspaceId, email);
   await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'started', category: 'generic_imap', phase: 'tcp', connectionType: alreadyConnected ? 'reconnect' : 'first_connect' });
+  // Never convert another provider's inbox: the upsert keys on (workspace_id,
+  // email_address), so an address connected through Gmail or Outlook OAuth
+  // would be silently rewritten into an IMAP row. Checked before any login is
+  // attempted. Another IMAP flavour of the same address is a normal reconnect.
+  // See lib/inboxes/provider-conflict.ts.
+  const otherProvider = await findOtherProviderInbox(db, workspaceId, email, 'imap');
+  if (otherProvider.conflict) {
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'inbox_connection', outcome: 'failure', category: 'generic_imap', errorCategory: 'conflict', phase: 'persistence' });
+    return NextResponse.json(otherProviderErrorBody(otherProvider.existingProvider), { status: 409 });
+  }
   if (!alreadyConnected) {
     const inboxLimit = await checkInboxLimit(supabase, workspaceId);
     if (inboxLimit.atLimit) {

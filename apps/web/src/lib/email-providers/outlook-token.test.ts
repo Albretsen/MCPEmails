@@ -5,12 +5,19 @@ import assert from 'node:assert/strict';
 process.env.ENCRYPTION_KEY ??= 'a'.repeat(64);
 process.env.OUTLOOK_CLIENT_ID = 'test-client';
 process.env.OUTLOOK_CLIENT_SECRET = 'test-secret';
+// The refresh path persists through the service-role client; its requests go
+// through the same stubbed fetch below, routed by URL.
+process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://db.test';
+process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-key';
 
-const { decryptToken } = await import('@/lib/crypto');
+const { decryptToken, encryptToken } = await import('@/lib/crypto');
 const {
   buildRefreshedTokenUpdate,
+  checkOutlookMailbox,
   exchangeOutlookCode,
   OutlookEmailMissingError,
+  OutlookAuthError,
+  probeOutlookMailboxAtConnect,
   refreshOutlookAccessToken,
   verifyOutlookAccess,
 } = await import('./outlook.ts');
@@ -143,4 +150,85 @@ test('code exchange with no usable address fails with a dedicated error', async 
     exchangeOutlookCode('code', 'https://mcpemails.com/auth/outlook/callback'),
     OutlookEmailMissingError,
   );
+});
+
+// ─── 401 on a valid token: refresh once, then "no mailbox" (live 2026-09-25) ─
+
+type Route = { match: (url: string) => boolean; reply: () => Response };
+
+/** Answer each request with the first unused route that matches its URL. */
+function routeFetch(routes: Route[]): { urls: string[]; auth: (string | null)[] } {
+  const urls: string[] = [];
+  const auth: (string | null)[] = [];
+  const pending = [...routes];
+  globalThis.fetch = (async (url: string | URL, init?: RequestInit) => {
+    const u = String(url instanceof Request ? url.url : url);
+    urls.push(u);
+    auth.push(new Headers(init?.headers).get('Authorization'));
+    const i = pending.findIndex((r) => r.match(u));
+    if (i === -1) throw new Error(`unexpected fetch: ${u}`);
+    const [route] = pending.splice(i, 1);
+    return route!.reply();
+  }) as typeof fetch;
+  return { urls, auth };
+}
+
+const PROBE = (u: string) => u.startsWith('https://graph.microsoft.com/v1.0/me/mailFolders/inbox');
+const TOKEN = (u: string) => u.startsWith('https://login.microsoftonline.com/');
+const DB = (u: string) => u.startsWith('https://db.test/');
+const reply = (status: number, body?: unknown) => () =>
+  new Response(body === undefined ? null : JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+
+function storedInbox(): Parameters<typeof checkOutlookMailbox>[0] {
+  return {
+    id: 'inbox-1',
+    oauth_access_token: encryptToken('stored-at'),
+    oauth_refresh_token: encryptToken('stored-rt'),
+    oauth_token_expires_at: new Date(Date.now() + 3_600_000).toISOString(),
+  } as Parameters<typeof checkOutlookMailbox>[0];
+}
+
+test('connect-time probe: a 401 with an EMPTY body on a just-minted token is no mailbox', async () => {
+  routeFetch([{ match: PROBE, reply: reply(401) }]);
+  assert.equal(await probeOutlookMailboxAtConnect('fresh-at'), 'no_mailbox');
+});
+
+test('connect-time probe: a readable inbox is ok; a Graph outage is inconclusive, not a refusal', async () => {
+  routeFetch([{ match: PROBE, reply: reply(200, { id: 'AAMk' }) }]);
+  assert.equal(await probeOutlookMailboxAtConnect('fresh-at'), 'ok');
+  routeFetch([{ match: PROBE, reply: reply(503, { error: { code: 'ServiceNotAvailable' } }) }]);
+  assert.equal(await probeOutlookMailboxAtConnect('fresh-at'), 'inconclusive');
+});
+
+test('check: a 401 on a stored token refreshes ONCE and re-probes; success is ok', async () => {
+  const { urls, auth } = routeFetch([
+    { match: PROBE, reply: reply(401) },
+    { match: TOKEN, reply: reply(200, { access_token: 'new-at', refresh_token: 'new-rt', expires_in: 3600 }) },
+    { match: DB, reply: reply(204) },
+    { match: PROBE, reply: reply(200, { id: 'AAMk' }) },
+  ]);
+  assert.equal(await checkOutlookMailbox(storedInbox()), 'ok');
+  assert.equal(urls.filter(TOKEN).length, 1);
+  assert.deepEqual(auth.filter((_, i) => PROBE(urls[i]!)), ['Bearer stored-at', 'Bearer new-at']);
+});
+
+test('check: a 401 that survives the refresh is no mailbox, not reconnect', async () => {
+  const { urls } = routeFetch([
+    { match: PROBE, reply: reply(401) },
+    { match: TOKEN, reply: reply(200, { access_token: 'new-at', refresh_token: 'new-rt', expires_in: 3600 }) },
+    { match: DB, reply: reply(204) },
+    { match: PROBE, reply: reply(401) },
+  ]);
+  assert.equal(await checkOutlookMailbox(storedInbox()), 'no_mailbox');
+  assert.equal(urls.filter(TOKEN).length, 1, 'exactly one forced refresh');
+});
+
+test('check: invalid_grant on the forced refresh is the reconnect case', async () => {
+  routeFetch([
+    { match: PROBE, reply: reply(401) },
+    { match: TOKEN, reply: reply(400, { error: 'invalid_grant' }) },
+    { match: DB, reply: reply(204) }, // markInboxErrored
+  ]);
+  await assert.rejects(checkOutlookMailbox(storedInbox()), (err: unknown) =>
+    err instanceof OutlookAuthError && err.code === 'REFRESH_TOKEN_INVALID');
 });

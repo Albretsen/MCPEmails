@@ -398,6 +398,20 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // the message points at another account or support, and stays open.
       toast({ message: tr('app.outlookEmailMissing'), variant: 'error', duration: 0 });
       setRouteState('inboxes');
+    } else if (errorParam === 'inbox_exists_other_provider') {
+      // The address is already connected through a different provider (e.g.
+      // IMAP, then an Outlook or Gmail sign-in with the same address). The
+      // callback refused rather than overwrite a working inbox, so nothing
+      // changed; the message says so and how to switch on purpose. Held open:
+      // the fix is an action elsewhere on the page.
+      toast({ message: tr('app.inboxExistsOtherProvider'), variant: 'warning', duration: 0 });
+      setRouteState('inboxes');
+    } else if (errorParam === 'outlook_no_mailbox') {
+      // Microsoft signed the person in, but the account has no Exchange Online
+      // mailbox, so no inbox was created. Signing in again gives the same
+      // answer, so the message points at IMAP rather than a retry.
+      toast({ message: tr('app.outlookNoMailbox'), variant: 'error', duration: 0 });
+      setRouteState('inboxes');
     } else if (adminConsentParam === 'granted') {
       // The tenant-wide approval went through. That grants nothing by itself:
       // no mailbox is attached until someone runs the normal Outlook connect,

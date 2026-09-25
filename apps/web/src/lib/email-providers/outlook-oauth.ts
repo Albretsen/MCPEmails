@@ -240,7 +240,11 @@ export function classifyOutlookProbe(
   // Graph reports a missing / on-prem mailbox as MailboxNotEnabledForRESTAPI,
   // with a 401 or a 404 depending on the account. It must win over the plain
   // 401 mapping or we would tell the user to reconnect forever.
-  if (graphErrorCode === 'MailboxNotEnabledForRESTAPI' || graphErrorCode === 'MailboxNotSupportedForRESTAPI') {
+  if (
+    graphErrorCode === 'MailboxNotEnabledForRESTAPI' ||
+    graphErrorCode === 'MailboxNotSupportedForRESTAPI' ||
+    graphErrorCode === 'ErrorMailboxNotFound'
+  ) {
     return 'no_mailbox';
   }
   if (status === 401) return 'unauthorized';
@@ -248,3 +252,36 @@ export function classifyOutlookProbe(
   if (status === 404) return 'no_mailbox';
   return 'inconclusive';
 }
+
+/**
+ * What to do with a probe result, given whether the token was just minted.
+ *
+ * A plain 401 is ambiguous. On a token that has been sitting in the database
+ * it can be a stale token, so the answer is one forced refresh and a second
+ * probe ('refresh_and_retry'). On a token minted moments ago (by the code
+ * exchange, or by that forced refresh) it cannot be staleness: Graph is
+ * refusing a valid token, which is exactly what it does for an account with no
+ * Exchange Online mailbox. Found live on 2026-09-25: an Entra admin account
+ * without an Exchange licence got 401 with an EMPTY body on
+ * /me/mailFolders/inbox, even straight after a refresh, and "reconnect" looped
+ * forever. Only an invalid_grant from the refresh itself means reconnect, and
+ * that is thrown by the refresh, not decided here.
+ */
+export function settleOutlookProbe(
+  result: OutlookProbeResult,
+  tokenWasJustMinted: boolean,
+): OutlookProbeResult | 'refresh_and_retry' {
+  if (result !== 'unauthorized') return result;
+  return tokenWasJustMinted ? 'no_mailbox' : 'refresh_and_retry';
+}
+
+/**
+ * The words for an Outlook account with no mailbox: stored in `last_error` and
+ * shown by the connection check. Deliberately never "reconnect".
+ */
+export const OUTLOOK_NO_MAILBOX_REASON =
+  'This Microsoft account has no Outlook / Exchange Online mailbox that Microsoft Graph can reach. ' +
+  'Microsoft accepted the sign-in, but there is no mailbox behind it: typically an administrator ' +
+  'account without an Exchange Online licence, or an organisation whose mail is hosted somewhere ' +
+  'else. Reconnecting will not change this. If the address\'s mail is hosted on another server, ' +
+  'remove this inbox and connect the address with IMAP instead.';
