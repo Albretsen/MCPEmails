@@ -244,7 +244,7 @@ export function buildFixtures(now = new Date()) {
       '  downgrade attacks still matter.',
       '* Tooling. Three libraries for parsing MIME without losing your mind.',
       '',
-      'You are receiving this because you subscribed to DevWeekly.',
+      'You are receiving the DevWeekly newsletter because you subscribed to it.',
       'Unsubscribe: https://devweekly.example/unsubscribe?list=weekly',
     ].join('\n'),
     html: [
@@ -256,7 +256,7 @@ export function buildFixtures(now = new Date()) {
       '<li><b>SMTP hardening.</b> MTA-STS and DANE deployment numbers, and why STARTTLS downgrade attacks still matter.</li>',
       '<li><b>Tooling.</b> Three libraries for parsing MIME without losing your mind.</li>',
       '</ul>',
-      '<p style="font-size:12px;color:#666">You are receiving this because you subscribed to DevWeekly. ',
+      '<p style="font-size:12px;color:#666">You are receiving the DevWeekly newsletter because you subscribed to it. ',
       '<a href="https://devweekly.example/unsubscribe?list=weekly">Unsubscribe</a></p>',
       '</body></html>',
     ].join('\n'),
