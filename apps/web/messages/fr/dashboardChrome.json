@@ -5,10 +5,11 @@
     "tokenExchangeFailed": "Impossible de connecter la boîte. L'échange de jeton avec le fournisseur a échoué. Veuillez réessayer.",
     "connectionCancelled": "Connexion de la boîte annulée.",
     "adminConsentRequired": "Votre organisation doit autoriser l'accès à la boîte avant que vous puissiez connecter Outlook. Microsoft empêche les employés de l'autoriser eux-mêmes.",
-    "adminConsentAction": "Envoyer à votre administrateur informatique",
-    "adminConsentGranted": "Votre organisation a approuvé MCP Emails. Connectez dès maintenant votre boîte Outlook.",
+    "adminConsentAction": "Obtenir un lien pour votre administrateur informatique",
+    "adminConsentGranted": "Approuvé. Tout le monde dans votre organisation peut maintenant connecter Outlook. Connectez votre boîte dès maintenant.",
     "adminConsentGrantedAction": "Connecter Outlook",
-    "adminConsentFailed": "Microsoft n'a pas confirmé l'approbation de votre organisation : Outlook reste donc bloqué. Demandez à votre administrateur informatique d'ouvrir à nouveau le lien d'approbation.",
+    "adminConsentFailed": "Microsoft n'a pas confirmé l'approbation : Outlook reste donc bloqué. L'approbation nécessite un compte administrateur Microsoft 365 ; envoyez le lien d'approbation à votre administrateur informatique.",
+    "adminConsentFailedAction": "Obtenir le lien d'approbation",
     "outlookEmailMissing": "Votre compte Microsoft ne nous a transmis aucune adresse e-mail, nous n'avons donc pas pu le connecter. Essayez avec un autre compte Microsoft ou contactez le support à hello@mcpemails.com.",
     "inboxExistsOtherProvider": "Cette adresse est déjà connectée par une autre méthode (par exemple IMAP, Gmail ou Outlook) : nous n'avons pas touché à cette boîte. Pour changer de méthode de connexion, supprimez d'abord cette boîte, puis connectez-la à nouveau.",
     "outlookNoMailbox": "Ce compte Microsoft n'a pas de boîte aux lettres Outlook (Exchange Online), il n'y a donc rien à connecter. C'est fréquent pour les comptes administrateur sans licence Exchange, ou lorsque la messagerie de l'organisation est hébergée ailleurs. Si votre messagerie est sur un autre serveur, connectez l'adresse en IMAP.",
@@ -115,8 +116,7 @@
   },
   "connect": {
     "subOutlook": "Outlook.com · Microsoft 365",
-    "hintOutlook": "Les comptes Outlook.com, Hotmail, Live et MSN se connectent directement. Un compte Microsoft 365 professionnel ou scolaire peut nécessiter que votre administrateur informatique approuve MCP Emails une fois ; si Microsoft le demande, nous vous donnons un lien à lui envoyer.",
-    "comingSoon": "Bientôt disponible",
+    "hintOutlook": "Les comptes Outlook.com, Hotmail, Live et MSN se connectent directement. Un compte Microsoft 365 professionnel ou scolaire peut nécessiter que votre administrateur informatique approuve MCP Emails une fois ; il n'a pas besoin d'un compte MCP Emails pour le faire.",
     "subFastmail": "Mot de passe d'application",
     "subAppPassword": "Mot de passe d'application",
     "subGeneric": "Toute boîte mail · recommandé",
@@ -284,7 +284,11 @@
     "securityPortNote": "Ce choix ajuste le port standard correspondant.",
     "appPasswordHint": "Pas votre mot de passe {provider} habituel. Chiffré avant stockage.",
     "openAppPasswordPage": "Obtenir un mot de passe d'application",
-    "appPasswordHelpToggle": "Où le trouver ?"
+    "appPasswordHelpToggle": "Où le trouver ?",
+    "outlookAdminLink": "Obtenir le lien d'approbation pour votre administrateur",
+    "microsoftAddressNotice": "Il s'agit d'un compte Microsoft. Les comptes Microsoft se connectent avec Se connecter avec Microsoft ; l'IMAP avec mot de passe ne fonctionne plus pour eux.",
+    "microsoftAddressAction": "Utiliser Se connecter avec Microsoft",
+    "errorMicrosoftAccountShort": "Microsoft n'accepte plus de mot de passe pour ce compte. Connectez-le plutôt avec la carte Outlook."
   },
   "commandPalette": {
     "pageOverview": "Aperçu",
@@ -333,5 +337,36 @@
     "cancel": "Annuler",
     "creating": "Création…",
     "create": "Créer l'espace de travail"
+  },
+  "adminConsentLink": {
+    "title": "Envoyez ce lien à votre administrateur informatique",
+    "body": "Envoyez ce lien à votre administrateur Microsoft 365. Il se connecte avec son compte administrateur Microsoft et approuve une seule fois ; il n'a pas besoin d'un compte MCP Emails. Ensuite, tout le monde dans votre organisation peut connecter Outlook.",
+    "label": "Lien d'approbation",
+    "loading": "Création du lien...",
+    "copy": "Copier",
+    "copied": "Copié",
+    "expiry": "Le lien reste valable 7 jours et peut être ouvert plusieurs fois.",
+    "error": "Impossible de créer le lien. Fermez cette fenêtre et réessayez.",
+    "approveNow": "Je suis l'administrateur, approuver maintenant",
+    "done": "Terminé",
+    "close": "Fermer"
+  },
+  "adminConsentResult": {
+    "grantedTitle": "Approuvé",
+    "grantedBody": "Votre équipe peut maintenant connecter Outlook dans MCP Emails. Personne n'a rien d'autre à approuver : chacun se connecte avec Microsoft au moment de connecter sa propre boîte.",
+    "cancelledTitle": "Non approuvé",
+    "cancelledBody": "L'approbation a été annulée sur l'écran de Microsoft, rien n'a donc changé. Ouvrez à nouveau le lien quand vous serez prêt.",
+    "failedTitle": "L'approbation n'a pas abouti",
+    "failedBody": "Microsoft n'a pas confirmé l'approbation. Il faut un compte administrateur Microsoft 365, par exemple Administrateur général ou Administrateur d'applications cloud. Connectez-vous avec l'un d'eux et ouvrez à nouveau le lien.",
+    "link_invalidTitle": "Ce lien n'est pas valide",
+    "link_invalidBody": "Le lien d'approbation est incomplet ou a été modifié. Demandez-en un nouveau à la personne qui vous l'a envoyé, depuis son tableau de bord MCP Emails.",
+    "link_expiredTitle": "Ce lien a expiré",
+    "link_expiredBody": "Les liens d'approbation restent valables 7 jours. Demandez-en un nouveau à la personne qui vous l'a envoyé, depuis son tableau de bord MCP Emails.",
+    "timed_outTitle": "Veuillez recommencer",
+    "timed_outBody": "L'approbation a pris trop de temps ou s'est terminée dans un autre navigateur. Ouvrez à nouveau le lien d'approbation dans ce navigateur.",
+    "unavailableTitle": "Un problème est survenu",
+    "unavailableBody": "Impossible de lancer l'approbation. Réessayez dans quelques minutes.",
+    "closeHint": "Des questions ? Écrivez à hello@mcpemails.com.",
+    "openApp": "Ouvrir MCP Emails"
   }
 }

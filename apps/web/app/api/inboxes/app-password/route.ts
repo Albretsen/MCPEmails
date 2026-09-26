@@ -22,6 +22,7 @@ import {
   zohoHosts,
   DEFAULT_ZOHO_ACCOUNT_TYPE,
 } from '@/lib/email-providers/imap-presets';
+import { isMicrosoftConsumerAddress, microsoftAccountErrorBody } from '@/lib/email-providers/microsoft-accounts';
 
 // ---------------------------------------------------------------------------
 // Route config
@@ -149,6 +150,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
   if (!email || !email.includes('@')) {
     return NextResponse.json({ error: 'A valid email address is required.' }, { status: 422 });
+  }
+  // A personal Microsoft address (outlook.com, hotmail.*, live.*, msn.com)
+  // cannot log in with a password at all: Microsoft turned basic auth off for
+  // those accounts on 2024-09-16. Refused before any mail server is dialled
+  // or any funnel event is written, with a code the connect modal turns into a
+  // pointer to the Outlook card. Custom domains are never matched here, even
+  // when their mail is hosted by Microsoft.
+  if (isMicrosoftConsumerAddress(email)) {
+    return NextResponse.json(microsoftAccountErrorBody(), { status: 422 });
   }
   // Two different situations, and the client can only say the right thing about
   // either if they are separated. An empty value is a field the user has not

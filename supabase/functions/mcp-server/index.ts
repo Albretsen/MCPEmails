@@ -4230,7 +4230,10 @@ const LEGACY_TOOLS: ToolDefinition[] = [
     description:
       "Search an inbox using structured, provider-agnostic fields. Supply any of " +
       "from, to, cc, subject, body, text, unread, has_attachment, flagged, since, " +
-      "before (combined with AND); the server translates them into the inbox's " +
+      "before (combined with AND; on Outlook any from/to/cc/subject/body/text " +
+      "drops the unread, has_attachment, flagged and date filters, and the " +
+      "result says so); the " +
+      "server translates them into the inbox's " +
       "native search syntax, so you never need to know provider query syntax. " +
       "An optional `query` field is a raw provider-native escape hatch. " +
       "Returns message summaries ordered by relevance or date depending on the provider. " +
@@ -6357,7 +6360,7 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
       total: {
         type: ["integer", "null"],
         description:
-          "Total matching messages. Exact for IMAP/Fastmail, an estimate for " +
+          "Total matching messages. Exact for IMAP/Fastmail/Outlook, an estimate for " +
           "Gmail (see total_is_estimate), null when the provider cannot supply a " +
           "count. Never below the number of results you have already been given.",
       },
@@ -6557,7 +6560,8 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
         description:
           "Total matching messages. Exact for IMAP/Fastmail, an estimate for " +
           "Gmail (see total_is_estimate), null when the provider cannot supply a " +
-          "count. Never below the number of results you have already been given.",
+          "count (an Outlook text search). Never below the number of results you " +
+          "have already been given.",
       },
       total_is_estimate: {
         type: "boolean",
@@ -7230,7 +7234,7 @@ const CONSOLIDATED_SPECS: Record<string, ConsolidatedSpec> = {
         legacy: "email_search",
         scope: "read:email",
         altScopes: ["search:email"],
-        hint: "structured filters (from/to/subject/body/since/before/unread/has_attachment/flagged)",
+        hint: "structured filters (from/to/subject/body/since/before/unread/has_attachment/flagged), ANDed; on Outlook any from/to/cc/subject/body/text drops unread/has_attachment/flagged/dates (result says so)",
       },
       attachment: {
         legacy: "email_attachment",
@@ -8718,8 +8722,10 @@ const COMPATIBILITY_PROFILES: Record<string, CompatibilityProfile> = {
     verification: "connector_profile",
     operations: {
       "search.body": "different",
-      "search.has_attachment": "exact",
-      "search.flagged": "exact",
+      // "different", not "exact": Graph cannot combine $search with $filter,
+      // so these two apply only when no text criterion is present.
+      "search.has_attachment": "different",
+      "search.flagged": "different",
       "organization.containers": "exact",
       "organization.move": "exact",
       "organization.copy": "exact",
@@ -8727,7 +8733,7 @@ const COMPATIBILITY_PROFILES: Record<string, CompatibilityProfile> = {
     },
     notes: [
       "Outlook uses folders and Microsoft Graph search semantics.",
-      "Graph cannot combine a text search with state filters, so with a text criterion present the unread, attachment, flagged and date filters are not applied (the result says which).",
+      "Graph cannot combine a text search with state filters, so with a text criterion present the unread, has_attachment, flagged and date filters are not applied (the result says which). has_attachment and flagged are exact only in a search with no text criterion.",
       "Permanent delete uses Graph permanentDelete: the message skips Deleted Items, Outlook can no longer see it, and Exchange removes it for good after its retention period.",
       "Outlook has folders, not labels: the label tools are Gmail-only. An automation's label action writes an Outlook category.",
       "Work or school Microsoft 365 accounts can need an IT admin to approve the app before the first connect; personal Outlook.com, Hotmail, Live and MSN accounts do not.",

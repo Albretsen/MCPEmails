@@ -10,6 +10,7 @@ import { sectionToPath, pathSegmentToSection } from './routes';
 import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage, MembersPage, WorkflowsPage, ApprovalsPage, AutomationsPage, planDisplayName, PLAN_LADDER } from './Pages';
 import { ConnectModal } from './ConnectModal';
 import { CheckoutSuccessPanel } from './CheckoutSuccessPanel';
+import { AdminConsentLinkDialog } from './AdminConsentLinkDialog';
 import { CommandPalette } from './CommandPalette';
 import { ToastProvider, useToast } from './Toast';
 import { trackProductEvent } from '@/lib/analytics.mjs';
@@ -238,6 +239,8 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     if (syncedFrom.invites !== serverPendingInvites) setPendingInvites(serverPendingInvites ?? []);
   }
   const [showConnect, setShowConnect] = useState(false);
+  // The shareable Microsoft 365 admin-consent link (AdminConsentLinkDialog).
+  const [showAdminLink, setShowAdminLink] = useState(false);
   // When set, the ConnectModal opens in reconnect mode for this existing inbox
   // (identity pre-filled and locked; only the password is re-entered).
   const [reconnectInbox, setReconnectInbox] = useState(null);
@@ -360,35 +363,32 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // the real next step (their IT admin) instead of reading as a failure on
       // their side. Held open rather than auto-dismissed: it carries an action
       // the person has to take somewhere else.
+      //
+      // The action opens a dialog with a real, copyable link: the admin who
+      // can clear this usually has no MCP Emails account, so "send it to them"
+      // has to produce something that can be sent.
       toast({
         message: tr('app.adminConsentRequired'),
         variant: 'warning',
         duration: 0,
         action: {
           label: tr('app.adminConsentAction'),
-          onClick: () => {
-            // A whole-document navigation, not a router push: this is a server
-            // route handler that redirects to Microsoft, not a page we render.
-            // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-            window.location.href = '/auth/outlook/admin-consent';
-          },
+          onClick: () => setShowAdminLink(true),
         },
       });
       setRouteState('inboxes');
     } else if (errorParam === 'admin_consent_failed') {
-      // An admin went through Microsoft's tenant-wide approval and it did not
-      // come back as granted. The person who lands here is usually that admin,
-      // so the action retries the same approval flow rather than a user connect.
+      // The signed-in user followed their own approval link ("I'm the admin,
+      // approve now") and Microsoft did not come back with a grant. Usually
+      // they are not an admin after all, so the action reopens the link dialog
+      // to send it to someone who is.
       toast({
         message: tr('app.adminConsentFailed'),
         variant: 'error',
         duration: 0,
         action: {
-          label: tr('app.adminConsentAction'),
-          onClick: () => {
-            // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-            window.location.href = '/auth/outlook/admin-consent';
-          },
+          label: tr('app.adminConsentFailedAction'),
+          onClick: () => setShowAdminLink(true),
         },
       });
       setRouteState('inboxes');
@@ -1107,7 +1107,12 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           maxInboxes={planLimits?.maxInboxes ?? null}
           stripePrices={stripePrices}
           businessShaped={businessShaped}
+          onAdminConsentLink={() => setShowAdminLink(true)}
         />
+      )}
+
+      {showAdminLink && (
+        <AdminConsentLinkDialog onClose={() => setShowAdminLink(false)} />
       )}
 
       {/* Purchase confirmation on return from Stripe. Rendered after the

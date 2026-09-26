@@ -5,10 +5,11 @@
     "tokenExchangeFailed": "无法连接收件箱。与提供商的令牌交换失败。请重试。",
     "connectionCancelled": "收件箱连接已取消。",
     "adminConsentRequired": "你的组织必须先批准邮箱访问权限，你才能连接 Outlook。Microsoft 不允许员工自行批准。",
-    "adminConsentAction": "发送给你的 IT 管理员",
-    "adminConsentGranted": "你的组织已批准 MCP Emails。现在就连接你的 Outlook 收件箱吧。",
+    "adminConsentAction": "获取发给 IT 管理员的链接",
+    "adminConsentGranted": "已批准。你所在组织的所有人现在都可以连接 Outlook。现在就连接你的邮箱吧。",
     "adminConsentGrantedAction": "连接 Outlook",
-    "adminConsentFailed": "Microsoft 未确认你所在组织的批准，Outlook 仍被阻止。请让你的 IT 管理员重新打开批准链接。",
+    "adminConsentFailed": "Microsoft 未确认批准，Outlook 仍被阻止。批准需要 Microsoft 365 管理员帐户；请把批准链接发送给你的 IT 管理员。",
+    "adminConsentFailedAction": "获取批准链接",
     "outlookEmailMissing": "你的 Microsoft 帐户没有向我们提供电子邮件地址，因此无法连接。请换一个 Microsoft 帐户试试，或通过 hello@mcpemails.com 联系支持团队。",
     "inboxExistsOtherProvider": "该地址已通过其他方式（例如 IMAP、Gmail 或 Outlook）连接，因此我们没有改动那个收件箱。如需更换连接方式，请先移除该收件箱，然后重新连接。",
     "outlookNoMailbox": "此 Microsoft 帐户没有 Outlook 邮箱（Exchange Online），因此没有可连接的内容。这常见于没有 Exchange 许可证的管理员帐户，或组织的邮件托管在其他地方。如果你的邮件在其他服务器上，请改用 IMAP 连接该地址。",
@@ -115,8 +116,7 @@
   },
   "connect": {
     "subOutlook": "Outlook.com · Microsoft 365",
-    "hintOutlook": "Outlook.com、Hotmail、Live 和 MSN 帐户可以直接登录。工作或学校的 Microsoft 365 帐户可能需要 IT 管理员先批准 MCP Emails 一次；如果 Microsoft 要求批准，我们会给你一个链接发给管理员。",
-    "comingSoon": "即将推出",
+    "hintOutlook": "Outlook.com、Hotmail、Live 和 MSN 帐户可以直接登录。工作或学校的 Microsoft 365 帐户可能需要 IT 管理员先批准 MCP Emails 一次；管理员无需 MCP Emails 帐户即可完成批准。",
     "subFastmail": "应用专用密码",
     "subAppPassword": "应用专用密码",
     "subGeneric": "任意邮箱 · 推荐",
@@ -284,7 +284,11 @@
     "securityPortNote": "更改此项会同时设置对应的标准端口。",
     "appPasswordHint": "不是你常用的 {provider} 密码。存储前会加密。",
     "openAppPasswordPage": "获取应用专用密码",
-    "appPasswordHelpToggle": "在哪里找到它？"
+    "appPasswordHelpToggle": "在哪里找到它？",
+    "outlookAdminLink": "获取发给管理员的批准链接",
+    "microsoftAddressNotice": "这是 Microsoft 帐户。Microsoft 帐户需通过“使用 Microsoft 登录”连接；使用密码的 IMAP 方式已不再适用于这类帐户。",
+    "microsoftAddressAction": "使用 Microsoft 登录",
+    "errorMicrosoftAccountShort": "Microsoft 已不再接受此帐户使用密码登录。请改用 Outlook 卡片连接。"
   },
   "commandPalette": {
     "pageOverview": "概览",
@@ -333,5 +337,36 @@
     "cancel": "取消",
     "creating": "正在创建…",
     "create": "创建工作区"
+  },
+  "adminConsentLink": {
+    "title": "把此链接发送给你的 IT 管理员",
+    "body": "把此链接发送给你的 Microsoft 365 管理员。管理员使用其 Microsoft 管理员帐户登录并批准一次即可，无需 MCP Emails 帐户。之后，你所在组织的所有人都可以连接 Outlook。",
+    "label": "批准链接",
+    "loading": "正在创建链接...",
+    "copy": "复制",
+    "copied": "已复制",
+    "expiry": "该链接 7 天内有效，可多次打开。",
+    "error": "无法创建链接。请关闭后重试。",
+    "approveNow": "我就是管理员，立即批准",
+    "done": "完成",
+    "close": "关闭"
+  },
+  "adminConsentResult": {
+    "grantedTitle": "已批准",
+    "grantedBody": "你的团队现在可以在 MCP Emails 中连接 Outlook。无需再批准其他内容：每个人在连接自己的邮箱时使用 Microsoft 登录即可。",
+    "cancelledTitle": "未批准",
+    "cancelledBody": "批准已在 Microsoft 页面上取消，因此没有任何更改。准备好后请再次打开该链接。",
+    "failedTitle": "批准未完成",
+    "failedBody": "Microsoft 未确认批准。批准需要 Microsoft 365 管理员帐户，例如全局管理员或云应用程序管理员。请使用此类帐户登录并再次打开该链接。",
+    "link_invalidTitle": "此链接无效",
+    "link_invalidBody": "批准链接不完整或已被修改。请让发送者从其 MCP Emails 控制台重新获取一个链接。",
+    "link_expiredTitle": "此链接已过期",
+    "link_expiredBody": "批准链接的有效期为 7 天。请让发送者从其 MCP Emails 控制台重新获取一个链接。",
+    "timed_outTitle": "请重新开始",
+    "timed_outBody": "批准耗时过长，或在其他浏览器中完成。请在此浏览器中重新打开批准链接。",
+    "unavailableTitle": "出现问题",
+    "unavailableBody": "我们无法启动批准流程。请几分钟后重试。",
+    "closeHint": "有疑问？请发邮件至 hello@mcpemails.com。",
+    "openApp": "打开 MCP Emails"
   }
 }

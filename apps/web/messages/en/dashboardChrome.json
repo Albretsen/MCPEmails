@@ -5,10 +5,11 @@
     "tokenExchangeFailed": "Could not connect inbox. Token exchange with the provider failed. Please try again.",
     "connectionCancelled": "Inbox connection cancelled.",
     "adminConsentRequired": "Your organisation has to approve mailbox access before you can connect Outlook. Microsoft blocks employees from approving it themselves.",
-    "adminConsentAction": "Send to your IT admin",
-    "adminConsentGranted": "Your organisation approved MCP Emails. Connect your Outlook inbox now.",
+    "adminConsentAction": "Get a link for your IT admin",
+    "adminConsentGranted": "Approved. Everyone in your organisation can now connect Outlook. Connect your mailbox now.",
     "adminConsentGrantedAction": "Connect Outlook",
-    "adminConsentFailed": "Microsoft did not confirm your organisation's approval, so Outlook is still blocked. Ask your IT admin to open the approval link again.",
+    "adminConsentFailed": "Microsoft did not confirm the approval, so Outlook is still blocked. Approving needs a Microsoft 365 administrator account; send the approval link to your IT admin.",
+    "adminConsentFailedAction": "Get the approval link",
     "outlookEmailMissing": "Your Microsoft account did not give us an email address, so we could not connect it. Try a different Microsoft account, or contact support at hello@mcpemails.com.",
     "inboxExistsOtherProvider": "That address is already connected with a different method (for example IMAP, Gmail or Outlook), so we left that inbox untouched. If you want to switch how it is connected, remove that inbox first and then connect it again.",
     "outlookNoMailbox": "This Microsoft account has no Outlook mailbox (Exchange Online), so there is nothing to connect. This is common for admin accounts without an Exchange licence, or when the organisation's mail is hosted elsewhere. If your mail lives on another server, connect the address with IMAP instead.",
@@ -115,8 +116,7 @@
   },
   "connect": {
     "subOutlook": "Outlook.com · Microsoft 365",
-    "hintOutlook": "Outlook.com, Hotmail, Live and MSN accounts sign in straight away. A work or school Microsoft 365 account may need your IT admin to approve MCP Emails once; if Microsoft asks for that, we give you a link to send them.",
-    "comingSoon": "Coming soon",
+    "hintOutlook": "Outlook.com, Hotmail, Live and MSN accounts sign in straight away. A work or school Microsoft 365 account may need your IT admin to approve MCP Emails once; they don't need an MCP Emails account to do it.",
     "subFastmail": "App password",
     "subAppPassword": "App password",
     "subGeneric": "Any mailbox · recommended",
@@ -284,7 +284,11 @@
     "securityPortNote": "Changing this sets the matching standard port.",
     "appPasswordHint": "Not your normal {provider} password. Encrypted before storage.",
     "openAppPasswordPage": "Get an app password",
-    "appPasswordHelpToggle": "Where do I find this?"
+    "appPasswordHelpToggle": "Where do I find this?",
+    "outlookAdminLink": "Get the approval link for your admin",
+    "microsoftAddressNotice": "This is a Microsoft account. Microsoft accounts connect with Sign in with Microsoft; IMAP with a password no longer works for them.",
+    "microsoftAddressAction": "Use Sign in with Microsoft",
+    "errorMicrosoftAccountShort": "Microsoft no longer accepts a password for this account. Connect it with the Outlook card instead."
   },
   "commandPalette": {
     "pageOverview": "Overview",
@@ -333,5 +337,36 @@
     "cancel": "Cancel",
     "creating": "Creating…",
     "create": "Create workspace"
+  },
+  "adminConsentLink": {
+    "title": "Send this link to your IT admin",
+    "body": "Send this link to your Microsoft 365 administrator. They sign in with their Microsoft admin account and approve once; they don't need an MCP Emails account. After that, everyone in your organisation can connect Outlook.",
+    "label": "Approval link",
+    "loading": "Creating link...",
+    "copy": "Copy",
+    "copied": "Copied",
+    "expiry": "The link works for 7 days and can be opened more than once.",
+    "error": "The link could not be created. Close this and try again.",
+    "approveNow": "I'm the admin, approve now",
+    "done": "Done",
+    "close": "Close"
+  },
+  "adminConsentResult": {
+    "grantedTitle": "Approved",
+    "grantedBody": "Your team can now connect Outlook in MCP Emails. Nobody needs to approve anything else: each person signs in with Microsoft when they connect their own mailbox.",
+    "cancelledTitle": "Not approved",
+    "cancelledBody": "The approval was cancelled on Microsoft's screen, so nothing changed. Open the link again whenever you are ready.",
+    "failedTitle": "The approval did not go through",
+    "failedBody": "Microsoft did not confirm the approval. Approving needs a Microsoft 365 administrator account, such as a Global Administrator or Cloud Application Administrator. Sign in with one and open the link again.",
+    "link_invalidTitle": "This link is not valid",
+    "link_invalidBody": "The approval link is incomplete or has been changed. Ask the person who sent it for a new one from their MCP Emails dashboard.",
+    "link_expiredTitle": "This link has expired",
+    "link_expiredBody": "Approval links work for 7 days. Ask the person who sent it for a new one from their MCP Emails dashboard.",
+    "timed_outTitle": "Please start again",
+    "timed_outBody": "The approval took too long or finished in a different browser. Open the approval link again in this browser.",
+    "unavailableTitle": "Something went wrong",
+    "unavailableBody": "We could not start the approval. Please try again in a few minutes.",
+    "closeHint": "Questions? Email hello@mcpemails.com.",
+    "openApp": "Open MCP Emails"
   }
 }

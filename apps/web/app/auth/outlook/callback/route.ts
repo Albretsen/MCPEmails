@@ -9,6 +9,12 @@ import { canManageInboxes, fetchWorkspaceRole, INSUFFICIENT_ROLE_REDIRECT_CODE }
 import { recordOAuthCallbackFailure, recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { clientGuidePath } from '@/lib/onboarding/state';
 import {
+  ADMIN_CONSENT_STATE_COOKIE,
+  adminConsentCallbackRedirect,
+  adminConsentResultUrl,
+  stateCookieMatches,
+} from '@/lib/email-providers/outlook-admin-link';
+import {
   classifyAdminConsentCallback,
   classifyMicrosoftAuthError,
   isAdminConsentCallback,
@@ -52,7 +58,8 @@ export const maxDuration = 15;
  * /auth/outlook/admin-consent, because that is the only registered redirect
  * URI. Those responses carry `admin_consent=True&tenant=...` (or an error)
  * and a state with ADMIN_CONSENT_STATE_PREFIX, never a code, and are handled
- * by `handleAdminConsent` before anything below runs.
+ * by `handleAdminConsent` before anything below runs. That branch needs no
+ * MCP Emails session: the admin usually has none.
  *
  * Token security:
  *   - Tokens are never logged.
@@ -83,48 +90,83 @@ async function recordDeniedAuthorization(state: string | null): Promise<void> {
 
 /**
  * Tenant admin consent came back. Nothing is exchanged or stored: the grant
- * lives inside Microsoft. The state is still verified (single-use, unexpired,
- * this user's) so a crafted link cannot produce an "approved" message, and no
- * inbox_connection funnel event is recorded, because no mailbox was connected.
+ * lives inside Microsoft.
+ *
+ * The person here is usually an administrator who opened a shared link and
+ * has no MCP Emails session, so nothing below may depend on one. Integrity
+ * comes from two things instead: the state must be an unexpired, single-use
+ * oauth_states row (minted when the link was opened), AND it must equal the
+ * HttpOnly cookie set on the same browser at that moment. Without the cookie
+ * check, a callback URL carrying somebody's live state could be replayed in
+ * another browser to show a false "approved" page.
+ *
+ * The admin lands on the public result page. Only when the signed-in user is
+ * the one who created the link (they are their own admin) does it return to
+ * the dashboard, whose toasts offer the mailbox connect. No inbox_connection
+ * funnel event is recorded, because no mailbox was connected.
  */
-async function handleAdminConsent(searchParams: URLSearchParams): Promise<NextResponse> {
+async function handleAdminConsent(request: NextRequest, searchParams: URLSearchParams): Promise<NextResponse> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL!;
   const state = searchParams.get('state');
-  if (!isAdminConsentState(state)) {
-    return redirectWithError('invalid_state');
+  const cookieState = request.cookies.get(ADMIN_CONSENT_STATE_COOKIE)?.value ?? null;
+
+  const finish = (url: string): NextResponse => {
+    const response = NextResponse.redirect(url);
+    response.cookies.set(ADMIN_CONSENT_STATE_COOKIE, '', { path: '/auth/outlook', maxAge: 0 });
+    response.headers.set('Cache-Control', 'no-store');
+    return response;
+  };
+
+  if (!isAdminConsentState(state) || !stateCookieMatches(cookieState, state)) {
+    return finish(adminConsentResultUrl(appUrl, 'timed_out'));
   }
 
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    return redirectWithError('session_expired');
-  }
-
-  const { data: oauthState } = await supabase
+  const db = createServiceRoleClient();
+  const { data: oauthState } = await db
     .from('oauth_states')
-    .select('id,user_id')
+    .select('id,user_id,workspace_id,redirect_uri')
     .eq('state', state!)
     .eq('provider', 'outlook')
     .gt('expires_at', new Date().toISOString())
     .maybeSingle();
-  if (!oauthState) {
-    return redirectWithError('invalid_state');
+  if (!oauthState || oauthState.redirect_uri !== `${appUrl}/auth/outlook/callback`) {
+    return finish(adminConsentResultUrl(appUrl, 'timed_out'));
   }
-  if (oauthState.user_id !== user.id) {
-    return redirectWithError('session_mismatch');
-  }
-  await supabase.from('oauth_states').delete().eq('id', oauthState.id);
+  // Single-use. The delete is filtered on the id AND the state so a
+  // concurrent replay cannot race it into a second success.
+  await db.from('oauth_states').delete().eq('id', oauthState.id).eq('state', state!);
 
   const outcome = classifyAdminConsentCallback(searchParams);
   if (outcome === 'admin_consent_granted') {
-    // Employees of that tenant can now connect through /auth/outlook.
-    return NextResponse.redirect(`${DASHBOARD_INBOXES}?admin_consent=granted`);
+    // The only record there is of an approval. The tenant id is Microsoft's
+    // directory id for the organisation, not personal data.
+    console.info('[outlook/callback] admin consent granted', {
+      workspace_id: oauthState.workspace_id,
+      tenant: (searchParams.get('tenant') ?? '').slice(0, 64),
+    });
+  } else if (outcome === 'admin_consent_failed') {
+    // Codes only, never Microsoft's description: it is attacker-influenced text.
+    console.error('[outlook/callback] admin consent failed:', searchParams.get('error'));
   }
-  if (outcome === 'admin_consent_cancelled') {
-    return redirectWithError('cancelled');
+
+  // Optional: a session only decides WHERE the result is shown, never whether.
+  let sessionUserId: string | null = null;
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    sessionUserId = user?.id ?? null;
+  } catch {
+    sessionUserId = null;
   }
-  // Codes only, never Microsoft's description: it is attacker-influenced text.
-  console.error('[outlook/callback] admin consent failed:', searchParams.get('error'));
-  return redirectWithError('admin_consent_failed');
+
+  return finish(
+    adminConsentCallbackRedirect({
+      appUrl,
+      outcome,
+      sessionUserId,
+      inviterUserId: oauthState.user_id,
+    }),
+  );
 }
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
@@ -133,7 +175,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   // 0. Tenant admin consent shares this redirect URI; route it away first so
   //    its responses are never read as (failed) mailbox connections.
   if (isAdminConsentCallback(searchParams)) {
-    return handleAdminConsent(searchParams);
+    return handleAdminConsent(request, searchParams);
   }
 
   const code = searchParams.get('code');

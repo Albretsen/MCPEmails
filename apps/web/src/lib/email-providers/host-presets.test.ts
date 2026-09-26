@@ -132,3 +132,40 @@ test('a Google mailbox is recognised from the address or from the host', () => {
   assert.equal(prefill?.smtpHost, 'smtp.gmail.com');
   assert.equal(prefill?.smtpPort, 465);
 });
+
+// ─── Personal Microsoft addresses (microsoft-accounts.ts) ─────────────────────
+
+import {
+  isMicrosoftConsumerAddress,
+  isMicrosoftConsumerDomain,
+  microsoftAccountErrorBody,
+  MICROSOFT_ACCOUNT_USE_OUTLOOK,
+} from './microsoft-accounts.ts';
+
+test('personal Microsoft addresses are recognised, including country variants', () => {
+  for (const email of [
+    'a@outlook.com', 'a@hotmail.com', 'a@live.com', 'a@msn.com',
+    'a@hotmail.no', 'a@outlook.de', 'a@live.co.uk', 'a@hotmail.co.uk',
+    'a@outlook.com.br', 'a@live.no', 'a@live.nl', 'A@Outlook.COM', ' a@hotmail.fr ',
+  ]) {
+    assert.equal(isMicrosoftConsumerAddress(email), true, email);
+  }
+});
+
+test('custom domains, lookalikes and Microsoft 365 business domains are never matched', () => {
+  for (const email of [
+    'a@example.com', 'a@mcpemails.com', 'a@contoso.onmicrosoft.com', 'a@microsoft.com',
+    'a@outlook.example.org', 'a@myoutlook.com', 'a@live.io', 'a@outlook.io', 'a@live.dev',
+    'a@hotmail.co', 'a@msn.org', 'outlook.com', '',
+  ]) {
+    assert.equal(isMicrosoftConsumerAddress(email), false, email);
+  }
+  assert.equal(isMicrosoftConsumerDomain('outlook.com'), true);
+});
+
+test('the refusal carries the code the connect modal maps to its headline', () => {
+  const body = microsoftAccountErrorBody();
+  assert.equal(body.error_code, MICROSOFT_ACCOUNT_USE_OUTLOOK);
+  assert.equal(body.error_code, 'microsoft_account_use_outlook');
+  assert.match(body.error, /Outlook/);
+});

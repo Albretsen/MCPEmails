@@ -35,6 +35,7 @@ import {
 import { ALLOWED_MAIL_PORTS, allowedMailPorts } from '@/lib/email/mail-ports';
 import { useToast } from './Toast';
 import { emailDomain, prefillFromDomain } from '@/lib/email-providers/host-presets';
+import { isMicrosoftConsumerAddress } from '@/lib/email-providers/microsoft-accounts';
 import {
   identifyAppPasswordProvider,
   checkAppPasswordShape,
@@ -146,6 +147,11 @@ const ERROR_HEADLINE_KEYS = {
   // 409: the address is already connected through Gmail or Outlook OAuth,
   // and the route refused to convert it. See lib/inboxes/provider-conflict.ts.
   inbox_exists_other_provider: 'connect.errorInboxOtherProviderShort',
+  // 422: a personal Microsoft address (outlook.com, hotmail.*, live.*,
+  // msn.com) on the IMAP or app-password form. Microsoft turned off password
+  // sign-in for those on 2024-09-16, so no server or password can make it
+  // work; the inline notice under the address points at the Outlook card.
+  microsoft_account_use_outlook: 'connect.errorMicrosoftAccountShort',
   // ── The SSRF guard's own refusals (lib/email/host-guard.ts) ──────────────
   // All three were reaching the user as "Connection failed. Please try again."
   // with the guard's actual sentence folded behind a disclosure that stayed
@@ -413,8 +419,6 @@ const PROVIDERS = [
   { k: 'fastmail', label: 'Fastmail', subKey: 'connect.subFastmail',    logoKind: 'fastmail' },
   // Outlook / Microsoft 365: Microsoft Graph OAuth. Not an app-password
   // provider, so handleConnect sends it to OAUTH_ROUTES.outlook (/auth/outlook).
-  // The `disabled` flag the chips below still honour is kept for any future
-  // card that has to be shown before it ships.
   { k: 'outlook',  label: 'Outlook',  subKey: 'connect.subOutlook',     logoKind: 'outlook' },
 ];
 
@@ -567,6 +571,7 @@ export function ConnectModal({
   stripePrices = null,
   reconnect = null,
   businessShaped = false,
+  onAdminConsentLink = null,
 }) {
   const tr = useTranslations('dashboardChrome');
   // The toast lives in ToastProvider, above this modal in App.jsx, so it
@@ -1067,6 +1072,9 @@ export function ConnectModal({
    */
   const detectMailSettings = (rawEmail) => {
     if (!isGeneric || isReconnect) return;
+    // A personal Microsoft address has no IMAP settings worth filling in: the
+    // notice under the field sends it to the Outlook card instead.
+    if (isMicrosoftConsumerAddress(String(rawEmail ?? '').trim())) return;
     const domain = emailDomain(String(rawEmail ?? '').trim());
     // Not an address yet, or a domain still being typed. `example.` and
     // `example` are both "keep going", not "no such provider".
@@ -1265,12 +1273,10 @@ export function ConnectModal({
 
   /** Chip DOM nodes, so arrow keys can move focus as well as selection. */
   const chipRefs = useRef({});
-  /** A card flagged `disabled` is not selectable, so it is not part of the arrow order. */
-  const selectableProviders = PROVIDERS.filter(p => !p.disabled);
 
   const selectProviderAt = index => {
-    const count = selectableProviders.length;
-    const next = selectableProviders[((index % count) + count) % count];
+    const count = PROVIDERS.length;
+    const next = PROVIDERS[((index % count) + count) % count];
     if (!next) return;
     setProvider(next.k);
     chipRefs.current[next.k]?.focus();
@@ -1283,8 +1289,7 @@ export function ConnectModal({
    * has to be prevented too, or it selects the chip and scrolls the modal.
    */
   const handleChipKeyDown = (event, p) => {
-    if (p.disabled) return;
-    const current = selectableProviders.findIndex(item => item.k === provider);
+    const current = PROVIDERS.findIndex(item => item.k === provider);
     const from = current === -1 ? 0 : current;
     switch (event.key) {
       case 'Enter':
@@ -1308,7 +1313,7 @@ export function ConnectModal({
         break;
       case 'End':
         event.preventDefault();
-        selectProviderAt(selectableProviders.length - 1);
+        selectProviderAt(PROVIDERS.length - 1);
         break;
       default:
         break;
@@ -1830,6 +1835,20 @@ export function ConnectModal({
   };
 
   const handleBackToProviders = () => {
+    setStep(1);
+    showError(null);
+  };
+
+  /**
+   * A personal Microsoft address (outlook.com, hotmail.*, live.*, msn.com) was
+   * typed into a password form. Microsoft switched password sign-in off for
+   * those accounts on 2024-09-16, so this form can never connect it; the
+   * notice under the address offers the Outlook card instead. Not a block: the
+   * form still submits, and the route answers with the same explanation.
+   */
+  const microsoftAddress = step === 2 && isMicrosoftConsumerAddress(String(form.email ?? '').trim());
+  const handleUseOutlook = () => {
+    setProvider('outlook');
     setStep(1);
     showError(null);
   };
@@ -2386,22 +2405,19 @@ export function ConnectModal({
                   <div
                     key={p.k}
                     ref={el => { chipRefs.current[p.k] = el; }}
-                    className={'provider-chip' + (provider === p.k ? ' sel' : '') + (p.disabled ? ' disabled' : '')}
-                    onClick={() => { if (!p.disabled) setProvider(p.k); }}
+                    className={'provider-chip' + (provider === p.k ? ' sel' : '')}
+                    onClick={() => setProvider(p.k)}
                     role="radio"
                     aria-checked={provider === p.k}
-                    aria-disabled={p.disabled || undefined}
                     // Roving tab stop: the group is one stop, not eight. Only
                     // the checked chip is tabbable and the arrows move from
                     // there, which is the behaviour role="radiogroup" promises.
-                    tabIndex={!p.disabled && provider === p.k ? 0 : -1}
+                    tabIndex={provider === p.k ? 0 : -1}
                     onKeyDown={e => handleChipKeyDown(e, p)}
-                    title={p.disabled ? tr('connect.comingSoon') : undefined}
-                    style={p.disabled ? { opacity: 0.45, cursor: 'not-allowed' } : undefined}
                   >
                     <ProviderLogo kind={p.logoKind} size={26} />
                     <div className="pn">{p.label}</div>
-                    <div className="ps">{p.disabled ? tr('connect.comingSoon') : tr(p.subKey)}</div>
+                    <div className="ps">{tr(p.subKey)}</div>
                   </div>
                 ))}
               </div>
@@ -2581,8 +2597,10 @@ export function ConnectModal({
               {/* Outlook: say up front who can sign in straight away and who
                   may be stopped by their organisation's consent policy, so a
                   work account meeting Microsoft's "Need admin approval"
-                  screen is expected rather than a surprise. The dashboard's
-                  admin-consent toast takes over from there. */}
+                  screen is expected rather than a surprise. The approval link
+                  is offered here as well as in the toast after a refusal, so
+                  someone who already knows their tenant needs it can send it
+                  before trying. */}
               {provider === 'outlook' && (
                 <p style={{
                   margin: '12px 0 0',
@@ -2592,6 +2610,18 @@ export function ConnectModal({
                   lineHeight: 1.5,
                 }}>
                   {tr('connect.hintOutlook')}
+                  {onAdminConsentLink && (
+                    <>
+                      {' '}
+                      <button
+                        type="button"
+                        onClick={onAdminConsentLink}
+                        style={{ background: 'none', border: 'none', padding: 0, font: 'inherit', color: 'var(--brand)', textDecoration: 'underline', cursor: 'pointer' }}
+                      >
+                        {tr('connect.outlookAdminLink')}
+                      </button>
+                    </>
+                  )}
                 </p>
               )}
 
@@ -2733,6 +2763,7 @@ export function ConnectModal({
                   aria-required="true"
                   aria-invalid={isInvalid('email') || undefined}
                   aria-describedby={describedBy(
+                    microsoftAddress ? 'cm-email-microsoft' : null,
                     hostPrefillNote ? 'cm-email-detected' : null,
                     hostPrefillAppPasswordNote ? 'cm-email-credential' : null,
                     isInvalid('email') ? 'cm-form-error' : null
@@ -2778,6 +2809,38 @@ export function ConnectModal({
                   <span id="cm-email-credential" style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>
                     {hostPrefillAppPasswordNote}
                   </span>
+                )}
+                {/* A personal Microsoft address on a password form. Shown
+                    while typing, before anything is submitted, because the
+                    answer does not depend on the password: Microsoft no
+                    longer accepts one for these accounts. Custom domains are
+                    never matched (lib/email-providers/microsoft-accounts.ts). */}
+                {microsoftAddress && (
+                  <div
+                    id="cm-email-microsoft"
+                    style={{
+                      marginTop: 6,
+                      padding: '10px 12px',
+                      background: 'var(--amber-100)',
+                      border: '1px solid rgba(240,165,62,0.3)',
+                      borderRadius: 8,
+                      fontFamily: 'var(--font-sans)',
+                      fontSize: 12.5,
+                      lineHeight: 1.5,
+                      color: 'var(--amber-700)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-start',
+                      gap: 8,
+                    }}
+                  >
+                    <span>{tr('connect.microsoftAddressNotice')}</span>
+                    {!isReconnect && (
+                      <Btn variant="secondary" size="sm" onClick={handleUseOutlook}>
+                        {tr('connect.microsoftAddressAction')}
+                      </Btn>
+                    )}
+                  </div>
                 )}
               </div>
 

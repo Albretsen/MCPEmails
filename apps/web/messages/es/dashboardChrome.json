@@ -5,10 +5,11 @@
     "tokenExchangeFailed": "No se pudo conectar la bandeja de entrada. Falló el intercambio de token con el proveedor. Inténtalo de nuevo.",
     "connectionCancelled": "Conexión de la bandeja de entrada cancelada.",
     "adminConsentRequired": "Tu organización debe aprobar el acceso al buzón antes de que puedas conectar Outlook. Microsoft impide que los empleados lo aprueben por su cuenta.",
-    "adminConsentAction": "Enviar a tu administrador de TI",
-    "adminConsentGranted": "Tu organización ha aprobado MCP Emails. Conecta ahora tu bandeja de entrada de Outlook.",
+    "adminConsentAction": "Obtener un enlace para tu administrador de TI",
+    "adminConsentGranted": "Aprobado. Todas las personas de tu organización ya pueden conectar Outlook. Conecta tu buzón ahora.",
     "adminConsentGrantedAction": "Conectar Outlook",
-    "adminConsentFailed": "Microsoft no confirmó la aprobación de tu organización, así que Outlook sigue bloqueado. Pide a tu administrador de TI que vuelva a abrir el enlace de aprobación.",
+    "adminConsentFailed": "Microsoft no confirmó la aprobación, así que Outlook sigue bloqueado. Para aprobarlo hace falta una cuenta de administrador de Microsoft 365; envía el enlace de aprobación a tu administrador de TI.",
+    "adminConsentFailedAction": "Obtener el enlace de aprobación",
     "outlookEmailMissing": "Tu cuenta de Microsoft no nos devolvió ninguna dirección de correo, así que no pudimos conectarla. Prueba con otra cuenta de Microsoft o escribe a soporte en hello@mcpemails.com.",
     "inboxExistsOtherProvider": "Esa dirección ya está conectada con otro método (por ejemplo IMAP, Gmail u Outlook), así que no hemos tocado esa bandeja. Si quieres cambiar cómo está conectada, elimina primero esa bandeja y vuelve a conectarla.",
     "outlookNoMailbox": "Esta cuenta de Microsoft no tiene buzón de Outlook (Exchange Online), así que no hay nada que conectar. Es habitual en cuentas de administrador sin licencia de Exchange o cuando el correo de la organización está alojado en otro sitio. Si tu correo está en otro servidor, conecta la dirección por IMAP.",
@@ -115,8 +116,7 @@
   },
   "connect": {
     "subOutlook": "Outlook.com · Microsoft 365",
-    "hintOutlook": "Las cuentas de Outlook.com, Hotmail, Live y MSN inician sesión directamente. Una cuenta de Microsoft 365 del trabajo o de un centro educativo puede necesitar que tu administrador de TI apruebe MCP Emails una vez; si Microsoft lo pide, te damos un enlace para enviárselo.",
-    "comingSoon": "Próximamente",
+    "hintOutlook": "Las cuentas de Outlook.com, Hotmail, Live y MSN inician sesión directamente. Una cuenta de Microsoft 365 del trabajo o de un centro educativo puede necesitar que tu administrador de TI apruebe MCP Emails una vez; no necesita una cuenta de MCP Emails para hacerlo.",
     "subFastmail": "Contraseña de aplicación",
     "subAppPassword": "Contraseña de aplicación",
     "subGeneric": "Cualquier buzón · recomendado",
@@ -284,7 +284,11 @@
     "securityPortNote": "Al cambiarlo se ajusta el puerto estándar correspondiente.",
     "appPasswordHint": "No es tu contraseña habitual de {provider}. Se cifra antes de guardarla.",
     "openAppPasswordPage": "Obtener una contraseña de aplicación",
-    "appPasswordHelpToggle": "¿Dónde encuentro esto?"
+    "appPasswordHelpToggle": "¿Dónde encuentro esto?",
+    "outlookAdminLink": "Obtener el enlace de aprobación para tu administrador",
+    "microsoftAddressNotice": "Esta es una cuenta de Microsoft. Las cuentas de Microsoft se conectan con Iniciar sesión con Microsoft; IMAP con contraseña ya no funciona para ellas.",
+    "microsoftAddressAction": "Usar Iniciar sesión con Microsoft",
+    "errorMicrosoftAccountShort": "Microsoft ya no acepta una contraseña para esta cuenta. Conéctala con la tarjeta de Outlook."
   },
   "commandPalette": {
     "pageOverview": "Resumen",
@@ -333,5 +337,36 @@
     "cancel": "Cancelar",
     "creating": "Creando…",
     "create": "Crear espacio de trabajo"
+  },
+  "adminConsentLink": {
+    "title": "Envía este enlace a tu administrador de TI",
+    "body": "Envía este enlace a tu administrador de Microsoft 365. Inicia sesión con su cuenta de administrador de Microsoft y lo aprueba una sola vez; no necesita una cuenta de MCP Emails. Después, todas las personas de tu organización podrán conectar Outlook.",
+    "label": "Enlace de aprobación",
+    "loading": "Creando el enlace...",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "expiry": "El enlace funciona durante 7 días y se puede abrir más de una vez.",
+    "error": "No se pudo crear el enlace. Cierra esta ventana y vuelve a intentarlo.",
+    "approveNow": "Soy el administrador, aprobar ahora",
+    "done": "Listo",
+    "close": "Cerrar"
+  },
+  "adminConsentResult": {
+    "grantedTitle": "Aprobado",
+    "grantedBody": "Tu equipo ya puede conectar Outlook en MCP Emails. Nadie tiene que aprobar nada más: cada persona inicia sesión con Microsoft cuando conecta su propio buzón.",
+    "cancelledTitle": "No aprobado",
+    "cancelledBody": "La aprobación se canceló en la pantalla de Microsoft, así que no ha cambiado nada. Abre el enlace de nuevo cuando quieras.",
+    "failedTitle": "La aprobación no se completó",
+    "failedBody": "Microsoft no confirmó la aprobación. Para aprobar hace falta una cuenta de administrador de Microsoft 365, como Administrador global o Administrador de aplicaciones en la nube. Inicia sesión con una y abre el enlace de nuevo.",
+    "link_invalidTitle": "Este enlace no es válido",
+    "link_invalidBody": "El enlace de aprobación está incompleto o se ha modificado. Pide a quien te lo envió uno nuevo desde su panel de MCP Emails.",
+    "link_expiredTitle": "Este enlace ha caducado",
+    "link_expiredBody": "Los enlaces de aprobación funcionan durante 7 días. Pide a quien te lo envió uno nuevo desde su panel de MCP Emails.",
+    "timed_outTitle": "Empieza de nuevo",
+    "timed_outBody": "La aprobación tardó demasiado o terminó en otro navegador. Abre el enlace de aprobación de nuevo en este navegador.",
+    "unavailableTitle": "Algo salió mal",
+    "unavailableBody": "No pudimos iniciar la aprobación. Vuelve a intentarlo dentro de unos minutos.",
+    "closeHint": "¿Preguntas? Escribe a hello@mcpemails.com.",
+    "openApp": "Abrir MCP Emails"
   }
 }

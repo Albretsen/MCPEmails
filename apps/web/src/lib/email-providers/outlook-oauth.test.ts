@@ -235,3 +235,164 @@ test('the no-mailbox reason points at IMAP and never says reconnect', () => {
   assert.match(OUTLOOK_NO_MAILBOX_REASON, /Reconnecting will not change this/);
   assert.doesNotMatch(OUTLOOK_NO_MAILBOX_REASON, /please reconnect/i);
 });
+
+// ─── Shareable admin-consent link (outlook-admin-link.ts) ─────────────────────
+
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import {
+  ADMIN_CONSENT_LINK_TTL_MS,
+  ADMIN_CONSENT_RESULT_STATUSES,
+  deriveAdminConsentLinkKey,
+  signAdminConsentLinkToken,
+  mintAdminConsentLinkToken,
+  verifyAdminConsentLinkToken,
+  adminConsentLinkUrl,
+  adminConsentResultUrl,
+  adminConsentCallbackRedirect,
+  isAdminConsentResultStatus,
+  stateCookieMatches,
+} from './outlook-admin-link.ts';
+
+const LINK_SECRET = 'a1'.repeat(32);
+const OTHER_SECRET = 'b2'.repeat(32);
+const WS = '5a3c1d2e-1111-4a2b-9c3d-0123456789ab';
+const USER = '0f9e8d7c-2222-4b3a-8d4c-ba9876543210';
+const NOW = Date.UTC(2026, 8, 25, 12, 0, 0);
+
+test('a minted admin link verifies and carries the workspace, user and a 7-day expiry', () => {
+  const key = deriveAdminConsentLinkKey(LINK_SECRET);
+  const { token, expiresAt } = mintAdminConsentLinkToken(WS, USER, key, NOW);
+  assert.equal(expiresAt, NOW + ADMIN_CONSENT_LINK_TTL_MS);
+  assert.equal(ADMIN_CONSENT_LINK_TTL_MS, 7 * 24 * 60 * 60 * 1000);
+  const result = verifyAdminConsentLinkToken(token, key, NOW + 1000);
+  assert.deepEqual(result, { ok: true, workspaceId: WS, userId: USER, expiresAt });
+});
+
+test('the admin link token is URL-safe and short enough to paste', () => {
+  const key = deriveAdminConsentLinkKey(LINK_SECRET);
+  const { token } = mintAdminConsentLinkToken(WS, USER, key, NOW);
+  assert.match(token, /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
+  assert.ok(token.length < 100, `token is ${token.length} chars`);
+  const url = adminConsentLinkUrl('https://mcpemails.com/', token);
+  assert.equal(url, `https://mcpemails.com/auth/outlook/admin-consent?t=${token}`);
+});
+
+test('an admin link stays reusable until it expires, then reports expired', () => {
+  const key = deriveAdminConsentLinkKey(LINK_SECRET);
+  const { token, expiresAt } = mintAdminConsentLinkToken(WS, USER, key, NOW);
+  assert.equal(verifyAdminConsentLinkToken(token, key, expiresAt - 1000).ok, true);
+  assert.equal(verifyAdminConsentLinkToken(token, key, expiresAt - 1000).ok, true, 'a second open still works');
+  assert.deepEqual(verifyAdminConsentLinkToken(token, key, expiresAt), { ok: false, reason: 'expired' });
+});
+
+test('a tampered admin link is refused as a bad signature, never as expired or valid', () => {
+  const key = deriveAdminConsentLinkKey(LINK_SECRET);
+  const { token } = mintAdminConsentLinkToken(WS, USER, key, NOW);
+  const [payload, sig] = token.split('.');
+  // Swap the workspace for another one, keeping the original signature.
+  const forged = signAdminConsentLinkToken(
+    { workspaceId: '99999999-9999-4999-8999-999999999999', userId: USER, expiresAt: NOW + 3600_000 },
+    deriveAdminConsentLinkKey(OTHER_SECRET),
+  );
+  const forgedWithOldSig = `${forged.split('.')[0]}.${sig}`;
+  assert.deepEqual(verifyAdminConsentLinkToken(forgedWithOldSig, key, NOW), { ok: false, reason: 'bad_signature' });
+  // Flip one byte of the payload (the expiry): an extended link must not pass.
+  const bytes = Buffer.from(payload, 'base64url');
+  bytes[36] ^= 0xff;
+  assert.deepEqual(
+    verifyAdminConsentLinkToken(`${bytes.toString('base64url')}.${sig}`, key, NOW),
+    { ok: false, reason: 'bad_signature' },
+  );
+  // A token signed with another secret is refused.
+  assert.deepEqual(verifyAdminConsentLinkToken(forged, key, NOW), { ok: false, reason: 'bad_signature' });
+  // A signature check precedes the expiry check: an expired forgery is still a forgery.
+  assert.deepEqual(verifyAdminConsentLinkToken(forgedWithOldSig, key, NOW + 30 * 86400_000), { ok: false, reason: 'bad_signature' });
+});
+
+test('malformed admin link tokens are refused without throwing', () => {
+  const key = deriveAdminConsentLinkKey(LINK_SECRET);
+  for (const bad of [null, undefined, '', 'abc', 'a.b.c', 'a.b', '!!.??', 'x'.repeat(500)]) {
+    const result = verifyAdminConsentLinkToken(bad as string, key, NOW);
+    assert.equal(result.ok, false, String(bad));
+  }
+});
+
+test('the link key is derived from CSRF_SECRET under its own label, and refuses a bad secret', () => {
+  const key = deriveAdminConsentLinkKey(LINK_SECRET);
+  assert.equal(key.length, 32);
+  assert.notDeepEqual(key, Buffer.from(LINK_SECRET, 'hex'), 'never the raw CSRF key');
+  assert.throws(() => deriveAdminConsentLinkKey(undefined));
+  assert.throws(() => deriveAdminConsentLinkKey('short'));
+  assert.throws(() => deriveAdminConsentLinkKey('zz'.repeat(32)));
+});
+
+test('the state cookie must equal the returned state exactly', () => {
+  assert.equal(stateCookieMatches('ac.abc', 'ac.abc'), true);
+  assert.equal(stateCookieMatches('ac.abc', 'ac.abd'), false);
+  assert.equal(stateCookieMatches(null, 'ac.abc'), false);
+  assert.equal(stateCookieMatches('ac.abc', null), false);
+  assert.equal(stateCookieMatches('ac.ab', 'ac.abc'), false);
+});
+
+// ─── Public callback result ───────────────────────────────────────────────────
+
+const APP = 'https://mcpemails.com';
+
+test('an admin without a session lands on the public result page, not the dashboard', () => {
+  const granted = adminConsentCallbackRedirect({ appUrl: APP, outcome: 'admin_consent_granted', sessionUserId: null, inviterUserId: USER });
+  assert.equal(granted, `${APP}/auth/outlook/admin-consent/result?status=granted`);
+  assert.equal(
+    adminConsentCallbackRedirect({ appUrl: APP, outcome: 'admin_consent_cancelled', sessionUserId: null, inviterUserId: USER }),
+    `${APP}/auth/outlook/admin-consent/result?status=cancelled`,
+  );
+  assert.equal(
+    adminConsentCallbackRedirect({ appUrl: APP, outcome: 'admin_consent_failed', sessionUserId: null, inviterUserId: USER }),
+    `${APP}/auth/outlook/admin-consent/result?status=failed`,
+  );
+});
+
+test('an admin signed in to a DIFFERENT MCP Emails account still gets the public page', () => {
+  const url = adminConsentCallbackRedirect({ appUrl: APP, outcome: 'admin_consent_granted', sessionUserId: WS, inviterUserId: USER });
+  assert.ok(url.includes('/auth/outlook/admin-consent/result?status=granted'));
+});
+
+test('the inviter approving their own link returns to the dashboard toasts', () => {
+  const at = (outcome: 'admin_consent_granted' | 'admin_consent_cancelled' | 'admin_consent_failed') =>
+    adminConsentCallbackRedirect({ appUrl: APP, outcome, sessionUserId: USER, inviterUserId: USER });
+  assert.equal(at('admin_consent_granted'), `${APP}/dashboard?admin_consent=granted`);
+  assert.equal(at('admin_consent_cancelled'), `${APP}/dashboard?error=cancelled`);
+  assert.equal(at('admin_consent_failed'), `${APP}/dashboard?error=admin_consent_failed`);
+});
+
+test('result statuses are a closed set; anything else is not one', () => {
+  for (const status of ADMIN_CONSENT_RESULT_STATUSES) {
+    assert.equal(isAdminConsentResultStatus(status), true);
+    assert.ok(adminConsentResultUrl(APP, status).endsWith(`?status=${status}`));
+  }
+  assert.equal(isAdminConsentResultStatus('granted<script>'), false);
+  assert.equal(isAdminConsentResultStatus(undefined), false);
+});
+
+test('every locale has the admin-link dialog, every result status and the Microsoft-address copy', () => {
+  const webRoot = fileURLToPath(new URL('../../../', import.meta.url));
+  const en = JSON.parse(readFileSync(`${webRoot}messages/en/dashboardChrome.json`, 'utf8'));
+  const linkKeys = Object.keys(en.adminConsentLink);
+  for (const locale of ['en', 'es', 'fr', 'nb', 'zh']) {
+    const m = JSON.parse(readFileSync(`${webRoot}messages/${locale}/dashboardChrome.json`, 'utf8'));
+    for (const key of linkKeys) assert.ok(m.adminConsentLink?.[key], `${locale} adminConsentLink.${key}`);
+    for (const status of ADMIN_CONSENT_RESULT_STATUSES) {
+      assert.ok(m.adminConsentResult?.[`${status}Title`], `${locale} ${status}Title`);
+      assert.ok(m.adminConsentResult?.[`${status}Body`], `${locale} ${status}Body`);
+    }
+    for (const key of ['adminConsentAction', 'adminConsentFailed', 'adminConsentFailedAction', 'adminConsentGranted']) {
+      assert.ok(m.app?.[key], `${locale} app.${key}`);
+    }
+    for (const key of ['hintOutlook', 'outlookAdminLink', 'microsoftAddressNotice', 'microsoftAddressAction', 'errorMicrosoftAccountShort']) {
+      assert.ok(m.connect?.[key], `${locale} connect.${key}`);
+    }
+    assert.equal(m.connect.comingSoon, undefined, `${locale} connect.comingSoon was removed`);
+    const text = JSON.stringify([m.adminConsentLink, m.adminConsentResult]);
+    assert.ok(!/[—―]/.test(text), `${locale} has no em dashes in the new copy`);
+  }
+});

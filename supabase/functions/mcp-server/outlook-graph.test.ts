@@ -1227,8 +1227,11 @@ Deno.test("index.ts: Outlook permanent delete, flagged search, nested create and
   const caps = src.slice(src.indexOf("  outlook: {\n    flags: true,"));
   assertStringIncludes(caps.slice(0, 700), 'trash_vs_expunge: "both"');
   const profile = src.slice(src.indexOf('profile: "outlook-v1"'));
-  assertStringIncludes(profile.slice(0, 700), '"delete.permanent": "exact"');
-  assertStringIncludes(profile.slice(0, 700), '"search.flagged": "exact"');
+  assertStringIncludes(profile.slice(0, 900), '"delete.permanent": "exact"');
+  // "different", not "exact": a text criterion makes Graph drop the flagged
+  // and has_attachment filters (no $search + $filter), and the result says so.
+  assertStringIncludes(profile.slice(0, 900), '"search.flagged": "different"');
+  assertStringIncludes(profile.slice(0, 900), '"search.has_attachment": "different"');
   assert(!src.includes("Ignored on Outlook."), "the flagged schema text no longer says Outlook ignores it");
 
   const create = indexFunction(src, "outlookCreateFolder");
