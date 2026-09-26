@@ -383,6 +383,7 @@ import {
   runImapFolderGroups,
 } from "./imap-bulk-groups.ts";
 import { assertUidPresent, presentUids } from "./imap-uid-presence.ts";
+import { newMessageIdsFor, succeededBulkRow, unknownNewIdNote } from "./imap-copyuid.ts";
 import { dedupeMessageIds } from "./message-id-dedupe.ts";
 import {
   buildFilteredNoMatchReport,
@@ -6146,6 +6147,12 @@ const BULK_RESULT_SCHEMA = {
           message_id: { type: "string" },
           success: { type: "boolean" },
           error: { type: "string" },
+          new_message_id: {
+            type: "string",
+            description:
+              "Moves only: the message's id in the destination folder, to use for any " +
+              "further action on it. Omitted when the id did not change or was not reported.",
+          },
         },
         required: ["message_id", "success"],
         additionalProperties: true,
@@ -6650,6 +6657,15 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
     properties: {
       success: { type: "boolean" },
       message_id: { type: "string" },
+      // IMAP only, and only when the server reports it (UIDPLUS COPYUID). An
+      // IMAP id is per-folder, so after a move `message_id` no longer resolves.
+      new_message_id: {
+        type: "string",
+        description:
+          "The message's id in the destination folder. Use this, not message_id, for " +
+          "any further action on the moved message. Omitted when the id did not change " +
+          "or the server did not report it.",
+      },
       operation: { type: "string" },
       inbox_id: { type: "string" },
       destination_folder_id: { type: "string" },
@@ -19736,7 +19752,7 @@ async function executeDeleteFolder(
 async function imapArchiveEmail(
   inbox: InboxRow,
   messageId: string,
-): Promise<void> {
+): Promise<{ newMessageId?: string; destination: string }> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
     throw new Error("imap_auth_failed");
   }
@@ -19768,7 +19784,12 @@ async function imapArchiveEmail(
     await assertUidPresent(client, uid);
     // uidMove falls back internally if MOVE is unsupported (COPY + \\Deleted +
     // EXPUNGE); the COPY runs before the destructive steps.
-    await client.uidMove([uid], target);
+    const moved = await client.uidMove([uid], target);
+    // The old id is dead now; COPYUID (UIDPLUS) says what replaced it.
+    return {
+      newMessageId: newMessageIdsFor([{ uid, messageId }], moved, target, encodeImapId)[messageId],
+      destination: target,
+    };
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
     throw err;
@@ -20388,6 +20409,8 @@ async function executeArchiveEmail(
   if (!caps.move) return unsupportedFeatureError("move", inbox.provider);
 
   let gmailPlan: GmailRelocationPlan | null = null;
+  // IMAP only: the moved message's new id (see imap-copyuid.ts), and where it went.
+  let imapMoved: { newMessageId?: string; destination: string } | null = null;
   try {
     switch (inbox.provider) {
       case "gmail": {
@@ -20407,7 +20430,7 @@ async function executeArchiveEmail(
         await outlookArchiveEmail(inbox, messageId);
         break;
       default:
-        await imapArchiveEmail(inbox, messageId);
+        imapMoved = await imapArchiveEmail(inbox, messageId);
         break;
     }
   } catch (err) {
@@ -20420,10 +20443,11 @@ async function executeArchiveEmail(
     operation: "email_archive",
     inbox_id: inbox.id,
   };
-  return {
+  const archived = {
     result: {
       ...jsonOk({
         ...(flagResult as unknown as Record<string, unknown>),
+        ...(imapMoved?.newMessageId ? { new_message_id: imapMoved.newMessageId } : {}),
         ...(gmailPlan
           ? { provider_semantics: gmailRelocationSemantics(gmailPlan) }
           : {}),
@@ -20432,9 +20456,13 @@ async function executeArchiveEmail(
       }),
       isError: false,
     },
-    logStatus: "success",
+    logStatus: "success" as const,
     logErrorCode: null,
   };
+  if (imapMoved && !imapMoved.newMessageId) {
+    attachResultNote(archived, unknownNewIdNote(imapMoved.destination));
+  }
+  return archived;
 }
 
 // ---------------------------------------------------------------------------
@@ -20447,7 +20475,7 @@ async function imapMoveEmail(
   inbox: InboxRow,
   messageId: string,
   destinationFolderId: string,
-): Promise<void> {
+): Promise<string | undefined> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
     throw new Error("imap_auth_failed");
   }
@@ -20471,7 +20499,11 @@ async function imapMoveEmail(
     await assertUidPresent(client, uid);
     // uidMove falls back to COPY + \\Deleted + EXPUNGE when RFC 6851 MOVE is
     // unsupported by the server.
-    await client.uidMove([uid], destinationFolderId);
+    const moved = await client.uidMove([uid], destinationFolderId);
+    // The source id is dead now. With UIDPLUS the server said what replaced it;
+    // `destinationFolderId` is the resolved mailbox name, the same string
+    // email_read puts in front of the colon. Undefined = the server did not say.
+    return newMessageIdsFor([{ uid, messageId }], moved, destinationFolderId, encodeImapId)[messageId];
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
     throw err;
@@ -20649,6 +20681,10 @@ async function executeMoveEmail(
   // Gmail hands back the label plan it executed so the result can state whether
   // this was a restore out of Trash rather than an ordinary filing.
   let gmailPlan: GmailRelocationPlan | null = null;
+  // IMAP only. Gmail ids and Outlook immutable ids survive a move; an IMAP id
+  // does not, so the new one (COPYUID, when the server sends it) is returned.
+  let isImapMove = false;
+  let newMessageId: string | undefined;
   try {
     switch (inbox.provider) {
       case "gmail":
@@ -20658,7 +20694,8 @@ async function executeMoveEmail(
         await outlookMoveEmail(inbox, messageId, resolvedDest);
         break;
       default: // imap and all service variants
-        await imapMoveEmail(inbox, messageId, resolvedDest);
+        isImapMove = true;
+        newMessageId = await imapMoveEmail(inbox, messageId, resolvedDest);
         break;
     }
   } catch (err) {
@@ -20672,11 +20709,12 @@ async function executeMoveEmail(
     );
   }
 
-  return {
+  const moved = {
     result: {
       ...jsonOk({
         success: true,
         message_id: messageId,
+        ...(newMessageId ? { new_message_id: newMessageId } : {}),
         operation: "email_move",
         inbox_id: inbox.id,
         destination_folder_id: destinationFolderId,
@@ -20692,9 +20730,11 @@ async function executeMoveEmail(
       }),
       isError: false,
     },
-    logStatus: "success",
+    logStatus: "success" as const,
     logErrorCode: null,
   };
+  if (isImapMove && !newMessageId) attachResultNote(moved, unknownNewIdNote(resolvedDest));
+  return moved;
 }
 
 // ---------------------------------------------------------------------------
@@ -21143,6 +21183,12 @@ interface BulkOpResult {
    * need opposite responses from the model and from us.
    */
   stoppedReason?: BulkStopReason;
+  /**
+   * IMAP moves only: old message id → new message id, for the messages whose
+   * new uid the server reported (COPYUID, RFC 4315). Absent / missing keys mean
+   * "not reported", never "not moved". See imap-copyuid.ts.
+   */
+  newMessageIds?: Record<string, string>;
 }
 
 /**
@@ -21513,6 +21559,11 @@ function formatBulkResult(
    * which on a delete is the one piece of information nobody can reconstruct.
    */
   partial?: BulkPartialFields,
+  /**
+   * IMAP moves: old id → new id (BulkOpResult.newMessageIds). A succeeded row
+   * whose id is a key here gains `new_message_id`; every other row is unchanged.
+   */
+  newMessageIds?: Record<string, string>,
 ): {
   result: { content: { type: string; text: string }[] };
   logStatus: "success" | "error";
@@ -21543,7 +21594,7 @@ function formatBulkResult(
     }
     : undefined;
   const results = [
-    ...succeeded.map((id) => ({ message_id: id, success: true })),
+    ...succeeded.map((id) => succeededBulkRow(id, newMessageIds)),
     ...failed.map(({ id, error }) => ({
       message_id: id,
       success: false,
@@ -21595,6 +21646,23 @@ function formatBulkResult(
     logStatus: isTotalFailure ? "error" : "success",
     logErrorCode,
   };
+}
+
+/**
+ * On an IMAP bulk move, say so when some moved messages came back WITHOUT a new
+ * id (a server without UIDPLUS): their old ids no longer resolve. Silent when
+ * every moved message has one, and on Gmail/Outlook (no `newMessageIds` at all),
+ * whose ids survive a move.
+ */
+function attachUnknownNewIdsNote(
+  response: unknown,
+  bulkResult: BulkOpResult,
+  resolvedDestination: string,
+): void {
+  const known = bulkResult.newMessageIds;
+  if (!known) return;
+  const unknown = bulkResult.succeeded.filter((id) => !Object.hasOwn(known, id)).length;
+  if (unknown > 0) attachResultNote(response, unknownNewIdNote(resolvedDestination, unknown));
 }
 
 // ── IMAP bulk helpers ─────────────────────────────────────────────────────────
@@ -21673,8 +21741,16 @@ function imapBulkMove(
   runId: string | null = null,
   opts?: BulkRunOptions,
 ): Promise<BulkOpResult> {
-  return imapBulkByFolderGroup(inbox, messageIds, runId, opts, (client, group) =>
-    client.uidMove(group.items.map((i) => i.uid), destinationFolderId));
+  // Filled per folder group as each UID MOVE reports COPYUID. A group whose
+  // move throws records nothing, and its ids land in `failed` as before.
+  const newMessageIds: Record<string, string> = {};
+  return imapBulkByFolderGroup(inbox, messageIds, runId, opts, async (client, group) => {
+    const moved = await client.uidMove(group.items.map((i) => i.uid), destinationFolderId);
+    Object.assign(
+      newMessageIds,
+      newMessageIdsFor(group.items, moved, destinationFolderId, encodeImapId),
+    );
+  }).then((result) => ({ ...result, newMessageIds }));
 }
 
 /**
@@ -21688,8 +21764,9 @@ function imapBulkCopy(
   runId: string | null = null,
   opts?: BulkRunOptions,
 ): Promise<BulkOpResult> {
-  return imapBulkByFolderGroup(inbox, messageIds, runId, opts, (client, group) =>
-    client.uidCopy(group.items.map((i) => i.uid), destinationFolderId));
+  return imapBulkByFolderGroup(inbox, messageIds, runId, opts, async (client, group) => {
+    await client.uidCopy(group.items.map((i) => i.uid), destinationFolderId);
+  });
 }
 
 /** Groups IMAP message IDs by source folder and runs bulk delete per group. */
@@ -22582,7 +22659,7 @@ async function executeBulkMove(
 
   await finishBulkRun(runId, messageIds.length, bulkResult);
 
-  return formatBulkResult(
+  const batchResult = formatBulkResult(
     bulkResult.succeeded,
     bulkResult.failed,
     "email_move_batch",
@@ -22595,7 +22672,10 @@ async function executeBulkMove(
       status: bulkResult.cancelled ? "cancelled_partial" : bulkResult.failed.length ? "completed_with_errors" : "completed",
     },
     partialFieldsFor("email_move_batch", messageIds, bulkResult, budget),
+    bulkResult.newMessageIds,
   );
+  attachUnknownNewIdsNote(batchResult, bulkResult, resolvedDest);
+  return batchResult;
 }
 
 /**
@@ -23271,7 +23351,9 @@ async function executeSearchAndMove(
         ...sweepLimit(bulkResult.succeeded.length),
       },
       partialFieldsFor("email_search_and_move", messageIds, bulkResult, budget),
+      bulkResult.newMessageIds,
     );
+    attachUnknownNewIdsNote(moveResult, bulkResult, resolvedDest);
     // ── The search phase's own notes, carried onto the move result ──────────
     // This handler rebuilds its result from `searchResult.messages` rather than
     // returning the search result, so anything the search said about ITSELF was

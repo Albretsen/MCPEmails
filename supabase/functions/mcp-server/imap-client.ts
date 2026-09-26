@@ -23,6 +23,7 @@
 import { previewFromBodyPartSource } from "./text-extract.ts";
 import { connectGuardedTcp } from "./host-guard.ts";
 import { decodeModifiedUtf7, encodeModifiedUtf7 } from "./utf7.ts";
+import { parseCopyUid } from "./imap-copyuid.ts";
 import {
   chooseImapPasswordMechanism,
   cramMd5Response,
@@ -1121,14 +1122,21 @@ export class ImapClient {
   /**
    * UID COPY messages to a destination mailbox.
    * Accepts bulk UID sets.
+   *
+   * Resolves to source-uid → destination-uid, read from the COPYUID response
+   * code a UIDPLUS server (RFC 4315) sends. Empty when the server sent none;
+   * callers must treat that as "unknown", never as "not copied".
    */
-  uidCopy(uids: number[], targetMailbox: string): Promise<void> {
-    if (uids.length === 0) return Promise.resolve();
+  uidCopy(uids: number[], targetMailbox: string): Promise<Map<number, number>> {
+    if (uids.length === 0) return Promise.resolve(new Map());
     return this.runExclusive(() => this.uidCopyUnlocked(uids, targetMailbox));
   }
 
   /** Unlocked UID COPY — only call while holding the command lock. */
-  private async uidCopyUnlocked(uids: number[], targetMailbox: string): Promise<void> {
+  private async uidCopyUnlocked(
+    uids: number[],
+    targetMailbox: string,
+  ): Promise<Map<number, number>> {
     const tag = this.nextTag();
     const uidSet = toUidSet(uids);
     await this.write(`${tag} UID COPY ${uidSet} ${quoteMailbox(targetMailbox)}${CRLF}`);
@@ -1136,6 +1144,7 @@ export class ImapClient {
     if (resp.status !== "OK") {
       throw new Error(`UID COPY failed: ${resp.text}`);
     }
+    return parseCopyUid([resp.text, ...resp.untagged], uids);
   }
 
   /**
@@ -1147,19 +1156,27 @@ export class ImapClient {
    * SINGLE exclusive lock so the fallback steps stay atomic relative to other
    * commands; the steps call the *Unlocked helpers to avoid re-acquiring the
    * lock (which would deadlock on the chain this call already holds).
+   *
+   * Resolves to source-uid → destination-uid from COPYUID (RFC 4315): on MOVE
+   * it arrives as an untagged `* OK [COPYUID ...]` (RFC 6851 section 4.3) or on
+   * the tagged OK, on the fallback it comes back on the UID COPY. Empty when
+   * the server is not UIDPLUS; the move still happened.
    */
-  uidMove(uids: number[], targetMailbox: string): Promise<void> {
-    if (uids.length === 0) return Promise.resolve();
+  uidMove(uids: number[], targetMailbox: string): Promise<Map<number, number>> {
+    if (uids.length === 0) return Promise.resolve(new Map());
     return this.runExclusive(async () => {
       const uidSet = toUidSet(uids);
       const moveTag = this.nextTag();
       await this.write(`${moveTag} UID MOVE ${uidSet} ${quoteMailbox(targetMailbox)}${CRLF}`);
       const moveResp = await this.readTagged(moveTag);
-      if (moveResp.status === "OK") return;
+      if (moveResp.status === "OK") {
+        return parseCopyUid([moveResp.text, ...moveResp.untagged], uids);
+      }
       // Server doesn't support RFC 6851 MOVE — fall back: COPY → \\Deleted → EXPUNGE.
-      await this.uidCopyUnlocked(uids, targetMailbox);
+      const copied = await this.uidCopyUnlocked(uids, targetMailbox);
       await this.uidStoreUnlocked(uids, ["\\Deleted"], "add");
       await this.uidExpungeUnlocked(uids);
+      return copied;
     });
   }
 
