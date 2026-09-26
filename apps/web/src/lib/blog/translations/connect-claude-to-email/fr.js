@@ -1,10 +1,10 @@
 const translation = {
-  title: 'Connecter Claude à vos e-mails avec MCP (Gmail, iCloud et IMAP)',
+  title: 'Connecter Claude à vos e-mails avec MCP (Gmail, Outlook, iCloud et IMAP)',
   description:
-    'Guide pratique pour connecter Claude à Gmail, iCloud, Fastmail, Yahoo, Zoho et toute boîte IMAP avec MCP, sans code et sans stockage des e-mails.',
+    'Guide pratique pour connecter Claude à Gmail, Outlook et Microsoft 365, iCloud, Fastmail, Yahoo, Zoho ou toute boîte IMAP avec MCP. Sans code et sans stockage des e-mails.',
   coverAlt:
-    'Connecter Claude à Gmail, iCloud, Fastmail, Yahoo, Zoho et aux e-mails IMAP avec MCP Emails',
-  content: `Claude peut lire, rechercher, organiser et envoyer vos e-mails, mais il lui faut un serveur MCP pour atteindre une vraie boîte de réception. MCP Emails est ce pont : connectez une boîte une seule fois, ajoutez un endpoint sécurisé à Claude, et Claude dispose des mêmes outils de messagerie avec Gmail, iCloud, Fastmail, Yahoo, Zoho et les autres fournisseurs IMAP.
+    'Connecter Claude à Gmail, Outlook, iCloud, Fastmail, Yahoo, Zoho et aux e-mails IMAP avec MCP Emails',
+  content: `Claude peut lire, rechercher, organiser et envoyer vos e-mails, mais il lui faut un serveur MCP pour atteindre une vraie boîte de réception. MCP Emails est ce pont : connectez une boîte une seule fois, ajoutez un endpoint sécurisé à Claude, et Claude dispose des mêmes outils de messagerie avec Gmail, Outlook et Microsoft 365, iCloud, Fastmail, Yahoo, Zoho et les autres fournisseurs IMAP.
 
 Vous n'avez aucun code à écrire, aucun SDK à installer et aucune clé API à utiliser lorsque vous passez par le flux OAuth de Claude. Les e-mails sont récupérés en direct auprès de votre fournisseur pour chaque requête et MCP Emails ne les stocke pas.
 
@@ -14,7 +14,7 @@ Vous n'avez aucun code à écrire, aucun SDK à installer et aucune clé API à 
 
 - D'un **forfait ou d'une application Claude qui prend en charge les connecteurs personnalisés**.
 - D'un compte gratuit **MCP Emails** : [créez-le ici](/signup).
-- D'une boîte e-mail. Gmail et Outlook utilisent OAuth ; iCloud, Fastmail, Yahoo, Zoho et la plupart des autres fournisseurs utilisent un mot de passe spécifique à l'application.
+- D'une boîte e-mail. Outlook se connecte avec la connexion Microsoft. Gmail, iCloud, Fastmail, Yahoo, Zoho et la plupart des autres fournisseurs utilisent un mot de passe spécifique à l'application, et Gmail propose aussi la connexion avec Google.
 
 ## Étape 1 : Connectez votre boîte à MCP Emails
 
@@ -22,7 +22,7 @@ Dans le tableau de bord MCP Emails, ouvrez **Inboxes → Connect Inbox**, puis c
 
 ### Gmail et Google Workspace
 
-Choisissez **Gmail**, connectez-vous avec Google et autorisez l'accès. Votre mot de passe Google n'est jamais transmis à MCP Emails. Consultez le [guide Gmail détaillé](/blog/connect-gmail-to-claude) si un administrateur Workspace contrôle l'accès aux applications.
+Choisissez **Gmail**, créez un mot de passe d'application Google (votre compte Google doit avoir la validation en deux étapes activée) et collez-le avec votre adresse Gmail. Vous pouvez aussi choisir la connexion avec Google. Dans les deux cas, votre mot de passe Google habituel n'est jamais transmis à MCP Emails. Consultez le [guide Gmail détaillé](/blog/connect-gmail-to-claude) si un administrateur Workspace contrôle l'accès aux applications.
 
 ### iCloud Mail
 
@@ -100,7 +100,7 @@ Si le problème persiste, consultez la [matrice des fournisseurs](/docs/provider
 Oui, à condition de n'accorder que l'accès nécessaire et de garder une personne impliquée pour les actions sortantes.
 
 - **Les e-mails ne sont pas stockés.** MCP Emails récupère le contenu des messages en direct à chaque appel et le supprime après la livraison. L'identifiant chiffré nécessaire pour se reconnecter à votre fournisseur est la seule donnée de boîte conservée.
-- **Votre fournisseur garde le contrôle de l'authentification.** Gmail utilise OAuth, donc MCP Emails ne reçoit jamais votre mot de passe. Pour les fournisseurs IMAP, utilisez un mot de passe d'application révocable plutôt que votre mot de passe habituel.
+- **Votre fournisseur garde le contrôle de l'authentification.** Outlook, ainsi que l'option de connexion avec Google de Gmail, utilisent OAuth, donc MCP Emails ne reçoit jamais votre mot de passe. Pour le mot de passe d'application Gmail et les fournisseurs IMAP, utilisez un mot de passe d'application révocable plutôt que votre mot de passe habituel.
 - **Les scopes sont explicites.** Accordez un accès en lecture seule si Claude ne doit jamais envoyer. Ajoutez l'envoi uniquement lorsque nécessaire et révoquez-le à tout moment.
 
 Traitez le corps de chaque e-mail comme une entrée non fiable. Demandez à Claude de rédiger avant d'envoyer, relisez les messages externes et ne laissez pas des instructions présentes dans un e-mail remplacer votre intention. Le [guide de sécurité de l'accès e-mail](/blog/is-it-safe-to-give-ai-agent-email-access) détaille le modèle de menace.
@@ -108,7 +108,7 @@ Traitez le corps de chaque e-mail comme une entrée non fiable. Demandez à Clau
 ## FAQ
 
 **Claude peut-il se connecter à Gmail, Outlook ou iCloud ?**  
-Gmail se connecte avec OAuth, Outlook avec la connexion Microsoft et iCloud avec un mot de passe spécifique à l'application. Un compte professionnel ou scolaire Microsoft 365 peut d'abord nécessiter qu'un administrateur informatique approuve l'application une seule fois. MCP Emails prend aussi en charge Fastmail et IMAP générique, ce qui couvre des services comme Yahoo et Zoho.
+Gmail se connecte avec un mot de passe d'application Google ou la connexion avec Google, Outlook avec la connexion Microsoft et iCloud avec un mot de passe spécifique à l'application. Un compte professionnel ou scolaire Microsoft 365 peut d'abord nécessiter qu'un administrateur informatique approuve l'application une seule fois. MCP Emails prend aussi en charge Fastmail et IMAP générique, ce qui couvre des services comme Yahoo et Zoho.
 
 **Ai-je besoin d'une clé API ?**  
 Non, pas pour le flux de connecteur OAuth de Claude. Collez l'URL de l'endpoint et connectez-vous. Les clés API servent aux clients MCP sans OAuth intégré.

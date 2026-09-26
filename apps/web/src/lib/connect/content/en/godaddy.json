@@ -14,14 +14,14 @@
   },
   "meta": {
     "title": "Connect GoDaddy Email to Claude, Cursor & MCP",
-    "description": "Connect GoDaddy Professional Email to Claude and any MCP client over IMAP at imap.secureserver.net:993. GoDaddy-sold Microsoft 365 mailboxes cannot connect."
+    "description": "Connect GoDaddy Professional Email to Claude and any MCP client over IMAP at imap.secureserver.net:993. Microsoft 365 from GoDaddy connects with Outlook instead."
   },
   "hero": {
     "eyebrow": "GoDaddy email + AI",
     "titleLine1": "Connect GoDaddy email to Claude,",
     "titleLine2": "Cursor, ChatGPT, any MCP client",
     "lead": "Give your AI agent a real GoDaddy inbox. Read, search, send, reply, schedule and organize mail over IMAP, once you know which of GoDaddy's several mail products your address actually sits on.",
-    "answer": "Claude cannot reach a GoDaddy mailbox on its own. mcpemails is a hosted MCP server that connects GoDaddy Professional Email over IMAP at imap.secureserver.net on port 993, authenticating with your full address and that mailbox's own email password, so Claude, Cursor or any MCP client can read, search, send and organize the mail. GoDaddy sells more than one mail product under the same brand, and a Microsoft 365 mailbox bought through GoDaddy is a Microsoft mailbox that we cannot connect, so check which one you have first. One inbox is free, forever.",
+    "answer": "Claude cannot reach a GoDaddy mailbox on its own. mcpemails is a hosted MCP server that connects GoDaddy Professional Email over IMAP at imap.secureserver.net on port 993, authenticating with your full address and that mailbox's own email password, so Claude, Cursor or any MCP client can read, search, send and organize the mail. GoDaddy sells more than one mail product under the same brand, and a Microsoft 365 mailbox bought through GoDaddy is a Microsoft mailbox, which connects with Outlook (Sign in with Microsoft) rather than IMAP, so check which one you have first. One inbox is free, forever.",
     "meta0": "1 inbox free, forever",
     "meta1": "The mailbox's own email password",
     "meta2": "Email fetched live, never stored"
@@ -37,7 +37,7 @@
     },
     {
       "h": "Check which GoDaddy mail product you have",
-      "p": "Sign in to GoDaddy and open the Email & Office dashboard under My Products. The plan name on the tile is the answer. Professional Email is the Titan-based product and uses the secureserver hosts. Microsoft 365 opens Outlook on the web and is a Microsoft mailbox. If the address was created in cPanel under Email Accounts instead, its settings are the ones shown at yourdomain.com/webmail under Configure Mail Client, not the secureserver ones."
+      "p": "Sign in to GoDaddy and open the Email & Office dashboard under My Products. The plan name on the tile is the answer. Professional Email is the Titan-based product and uses the secureserver hosts. Microsoft 365 opens Outlook on the web and is a Microsoft mailbox: connect it with Outlook instead of these IMAP settings. If the address was created in cPanel under Email Accounts instead, its settings are the ones shown at yourdomain.com/webmail under Configure Mail Client, not the secureserver ones."
     },
     {
       "h": "Get the mailbox password and allow external clients",
@@ -50,8 +50,8 @@
   ],
   "gotchas": [
     {
-      "h": "A Microsoft 365 mailbox bought from GoDaddy cannot be connected here",
-      "p": "GoDaddy resells Microsoft 365 and has been migrating its old Workspace Email customers onto it, so a large share of people who think they have \"a GoDaddy email\" now have a Microsoft mailbox with a GoDaddy invoice. Those mailboxes do not live on <code>imap.secureserver.net</code>; they live on Microsoft's servers and are governed by Microsoft's identity platform. Microsoft's default tenant policy blocks an ordinary end user from consenting to mail read and write access for a third-party application, and that block is set by Microsoft and by your tenant administrator, not by GoDaddy and not by us. We do not claim to connect those mailboxes. The tell is simple: if signing in to your webmail lands you in Outlook on the web, that is the Microsoft product."
+      "h": "A Microsoft 365 mailbox bought from GoDaddy connects with Outlook, not IMAP",
+      "p": "GoDaddy resells Microsoft 365 and has been migrating its old Workspace Email customers onto it, so a large share of people who think they have \"a GoDaddy email\" now have a Microsoft mailbox with a GoDaddy invoice. Those mailboxes do not live on <code>imap.secureserver.net</code>; they live on Microsoft's servers, so connect them with the Outlook option (Sign in with Microsoft) rather than with the settings on this page. Because it is a work Microsoft 365 account, your organisation's IT admin may need to approve MCP Emails once first, and the dashboard gives you an approval link to send them. The tell is simple: if signing in to your webmail lands you in Outlook on the web, that is the Microsoft product."
     },
     {
       "h": "Half the GoDaddy IMAP guides online are for a product that no longer exists",
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "Microsoft 365 mailboxes sold through GoDaddy cannot be connected. Microsoft's default tenant policy blocks end-user consent for third-party mail access.",
+    "Microsoft 365 mailboxes sold through GoDaddy are not on the secureserver hosts. Connect them with Outlook (Sign in with Microsoft); an IT admin may need to approve the app once.",
     "cPanel hosting mailboxes are not on the secureserver hosts. Connect those with the hostname shown in cPanel's Configure Mail Client screen instead.",
     "The server does not advertise the MOVE extension, so moving a message is performed as copy, flag and expunge rather than one atomic command."
   ],
   "faq": [
     {
       "q": "Does Claude work with GoDaddy email?",
-      "a": "It works with GoDaddy Professional Email, the Titan-based product, once an MCP server such as mcpemails is connected to the mailbox over IMAP. Claude has no built-in GoDaddy connector. It does not work with a Microsoft 365 mailbox bought through GoDaddy, because Microsoft's default tenant policy blocks third-party mail access consent."
+      "a": "It works with GoDaddy Professional Email, the Titan-based product, once an MCP server such as mcpemails is connected to the mailbox over IMAP. Claude has no built-in GoDaddy connector. A Microsoft 365 mailbox bought through GoDaddy works too, but it connects with Outlook (Sign in with Microsoft) rather than IMAP, and an IT admin may need to approve MCP Emails once first."
     },
     {
       "q": "What are the GoDaddy IMAP and SMTP settings?",
@@ -86,7 +86,7 @@
     },
     {
       "q": "Why is my GoDaddy email password rejected?",
-      "a": "Three common causes, in this order. You are using your GoDaddy account login rather than the mailbox's own email password. Two-factor authentication is enabled on the mailbox, which makes Titan refuse external clients. Or the mailbox was migrated to Microsoft 365 and no longer exists on the secureserver hosts at all."
+      "a": "Three common causes, in this order. You are using your GoDaddy account login rather than the mailbox's own email password. Two-factor authentication is enabled on the mailbox, which makes Titan refuse external clients. Or the mailbox was migrated to Microsoft 365 and no longer exists on the secureserver hosts at all; connect it with Outlook instead."
     },
     {
       "q": "What about email addresses I created in cPanel hosting?",
@@ -100,5 +100,10 @@
   "ctaBand": {
     "title": "Give your AI a GoDaddy inbox",
     "sub": "Connect GoDaddy Professional Email in minutes. One inbox free forever, no card required."
+  },
+  "seeAlso": {
+    "intro": "Microsoft 365 mailbox from GoDaddy?",
+    "label": "Connect it with Outlook (Sign in with Microsoft)",
+    "href": "/connect/office365"
   }
 }

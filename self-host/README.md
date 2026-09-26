@@ -13,7 +13,8 @@ yourself and watching the network.
 > mailboxes and mint keys. It is **IMAP/SMTP-first** (Fastmail, iCloud, Yahoo, Zoho, Yandex, or any
 > generic IMAP host via app password). Gmail/Outlook OAuth and the web dashboard are part of the
 > hosted product and are intentionally out of scope here, they pull in OAuth client secrets, a
-> session layer, and billing that a single-operator self-host does not need.
+> session layer, and billing that a single-operator self-host does not need. (Outlook would also need
+> your own Microsoft Entra app registration.)
 
 ---
 

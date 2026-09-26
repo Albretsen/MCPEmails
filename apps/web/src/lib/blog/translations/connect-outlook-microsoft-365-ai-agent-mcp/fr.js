@@ -16,6 +16,8 @@ L'e-mail Microsoft n'est pas une seule chose, et la différence décide du déro
 
 L'approbation par l'administrateur est une étape unique pour toute l'organisation. Une fois faite, chaque employé se connecte normalement.
 
+Chaque cas a aussi son résumé sur une seule page : [Outlook.com](/connect/outlook) pour les comptes personnels et [Microsoft 365](/connect/office365) pour les comptes professionnels ou scolaires.
+
 ## Connectez votre boîte Outlook ou Microsoft 365
 
 Deux parties : connecter la boîte, puis connecter l'agent. Elles sont séparées exprès. La connexion de la boîte permet à MCP Emails d'atteindre votre boîte, et la connexion de l'agent permet à votre client IA d'atteindre MCP Emails.
@@ -32,10 +34,10 @@ MCP Emails stocke le jeton OAuth obtenu, chiffré, et rien d'autre de votre boî
 
 ### Si votre organisation doit d'abord approuver l'application
 
-Sur un compte professionnel ou scolaire, Microsoft peut vous arrêter avant l'écran de consentement en indiquant qu'une approbation de l'administrateur est requise. Dans ce cas, le tableau de bord affiche un avis avec un lien **Envoyer à votre administrateur informatique** :
+Sur un compte professionnel ou scolaire, Microsoft peut vous arrêter avant l'écran de consentement en indiquant qu'une approbation de l'administrateur est requise. Dans ce cas, le tableau de bord vous donne un lien d'approbation à partager :
 
-1. Envoyez ce lien à votre administrateur informatique.
-2. Votre administrateur l'ouvre, se connecte et approuve MCP Emails une seule fois pour toute l'organisation.
+1. Copiez le lien et envoyez-le à votre administrateur informatique.
+2. Votre administrateur l'ouvre, se connecte avec son compte administrateur Microsoft et approuve MCP Emails une seule fois pour toute l'organisation. Il n'a pas besoin de compte MCP Emails.
 3. Revenez au tableau de bord et connectez Outlook comme à l'étape 1. Cela passe désormais comme pour un compte personnel.
 
 Votre administrateur approuve l'application pour l'organisation, et chaque personne se connecte toujours avec son propre compte et ne connecte que sa propre boîte.
@@ -67,7 +69,7 @@ Outlook se connecte via Microsoft Graph, pas via IMAP. Chaque appel d'outil de v
 ## Ce que votre agent peut faire avec une boîte Outlook
 
 - Lire et rechercher des e-mails.
-- Envoyer, répondre et transférer, avec des pièces jointes jusqu'à 25 Mo.
+- Envoyer, répondre et transférer. Un message envoyé peut contenir jusqu'à 10 Mo de pièces jointes, et le téléchargement d'une pièce jointe ou le transfert d'un original avec ses pièces jointes fonctionne jusqu'à 25 Mo.
 - Travailler avec des brouillons et programmer un envoi pour plus tard.
 - Travailler avec les dossiers, y compris les dossiers imbriqués.
 - Déplacer, copier et archiver des messages.
@@ -77,7 +79,7 @@ Outlook se connecte via Microsoft Graph, pas via IMAP. Chaque appel d'outil de v
 
 ### Là où Outlook diffère de Gmail
 
-**Des dossiers, pas des libellés.** Outlook range les e-mails dans des dossiers. Les outils de libellés sont réservés à Gmail, donc sur une boîte Outlook votre agent classe les e-mails en les déplaçant dans un dossier.
+**Des dossiers, pas des libellés.** Outlook range les e-mails dans des dossiers. Les outils de libellés sont réservés à Gmail, donc sur une boîte Outlook votre agent classe les e-mails en les déplaçant dans un dossier. Seule exception, les automatisations : l'action de libellé d'une automatisation applique une catégorie Outlook au message.
 
 **Recherche.** La recherche Outlook s'appuie sur la recherche propre de Microsoft Graph. Une limite de Graph compte : une recherche textuelle ne peut pas être combinée avec les filtres non lu, avec pièce jointe, avec indicateur ou de date. Quand votre requête contient du texte, ces filtres ne sont pas appliqués, et le résultat indique à votre agent lesquels ont été laissés de côté. Si vous avez besoin des deux, cherchez d'abord le texte et laissez l'agent affiner les résultats qu'il reçoit.
 

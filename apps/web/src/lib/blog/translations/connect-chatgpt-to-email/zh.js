@@ -1,10 +1,10 @@
 const translation = {
-  title: '用 MCP 把 ChatGPT 连接到你的邮箱（Gmail、iCloud 和 IMAP）',
+  title: '用 MCP 把 ChatGPT 连接到你的邮箱（Gmail、Outlook、iCloud 和 IMAP）',
   description:
-    '分步指南：用自定义 MCP 连接器把 Gmail、iCloud、Fastmail 或任意 IMAP 收件箱接入 ChatGPT，并用受限密钥接入 OpenAI Codex。不存储任何邮件。',
+    '分步指南：用自定义 MCP 连接器把 Gmail、Outlook、iCloud、Fastmail 或任意 IMAP 收件箱接入 ChatGPT，并用受限密钥接入 OpenAI Codex。不存储任何邮件。',
   coverAlt:
-    '使用 MCP Emails 将 ChatGPT 和 OpenAI Codex 连接到 Gmail、iCloud、Fastmail 与 IMAP 邮箱',
-  content: `ChatGPT 无法自行访问邮箱。它需要在你的邮件前面有一台 MCP 服务器，而 MCP Emails 就是这台服务器：连接一次收件箱，把 ChatGPT 指向一个 URL，无论邮件存放在 Gmail、iCloud、Fastmail、Yahoo、Zoho 还是自建的 IMAP 服务器上，它拿到的都是同一套邮件工具。
+    '使用 MCP Emails 将 ChatGPT 和 OpenAI Codex 连接到 Gmail、Outlook、iCloud、Fastmail 与 IMAP 邮箱',
+  content: `ChatGPT 无法自行访问邮箱。它需要在你的邮件前面有一台 MCP 服务器，而 MCP Emails 就是这台服务器：连接一次收件箱，把 ChatGPT 指向一个 URL，无论邮件存放在 Gmail、Outlook 或 Microsoft 365、iCloud、Fastmail、Yahoo、Zoho 还是自建的 IMAP 服务器上，它拿到的都是同一套邮件工具。
 
 这里涉及两个 OpenAI 平台，它们的认证方式不同。ChatGPT 在浏览器里走 OAuth 流程，所以没有 API 密钥需要粘贴。OpenAI Codex 运行在终端里，因此改用一个受限的 bearer 密钥。端点相同，工具相同。
 
@@ -34,7 +34,7 @@ Outlook 通过使用 Microsoft 登录连接，而不是应用专用密码：选�
 
 ### 其他任意 IMAP 邮箱
 
-选择 **IMAP**，填入邮箱地址和应用专用密码。常见设置会被自动识别；自定义域名可能需要你从服务商处获取主机、端口和加密方式。[服务商对照表](/docs/providers)列出了每家支持的功能，[connect](/connect) 下每家服务商还有独立页面，包括 [Gmail](/connect/gmail)、[iCloud](/connect/icloud) 和[通用 IMAP](/connect/imap)。
+选择 **IMAP**，填入邮箱地址和应用专用密码。常见设置会被自动识别；自定义域名可能需要你从服务商处获取主机、端口和加密方式。[服务商对照表](/docs/providers)列出了每家支持的功能，[connect](/connect) 下每家服务商还有独立页面，包括 [Gmail](/connect/gmail)、[Outlook](/connect/outlook)、[Microsoft 365](/connect/office365)、[iCloud](/connect/icloud) 和[通用 IMAP](/connect/imap)。
 
 如果你的方案允许，可以连接多个邮箱。ChatGPT 会通过 \`inbox_list\` 发现它们，所以你永远不需要把邮箱 id 粘进提示词里。
 

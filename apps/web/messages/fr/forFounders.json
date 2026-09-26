@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "L'e-mail pour les fondateurs : répondez à vos clients depuis Claude",
-    "description": "Les fondateurs utilisent mcpemails pour trier et répondre aux e-mails clients directement depuis Claude ou n'importe quelle IA. Lisez, rédigez avec votre propre ton, envoyez et planifiez. Gratuit pour démarrer, avec une boîte connectée."
+    "description": "Utilisez Claude ou un autre client MCP pour trier et répondre aux e-mails clients. Lisez, rédigez, envoyez, planifiez et organisez vos boîtes Gmail, Outlook ou IMAP dans un seul flux de travail sécurisé."
   },
   "hero": {
     "eyebrow": "Conçu pour les fondateurs",
@@ -76,8 +76,9 @@
   "providers": {
     "eyebrow": "N'importe quelle boîte, n'importe quelle IA",
     "title": "Connectez la boîte depuis laquelle vous gérez déjà votre support",
-    "sub": "Gmail via la connexion Google, le reste via un mot de passe d'application. La même boîte fonctionne ensuite dans Claude, Cursor, VS Code, ChatGPT et tout client MCP, pour que vous ne soyez jamais enfermé dans une seule application.",
+    "sub": "Outlook via la connexion Microsoft, Gmail via un mot de passe d'application ou la connexion Google, le reste via un mot de passe d'application. La même boîte fonctionne ensuite dans Claude, Cursor, VS Code, ChatGPT et tout client MCP, pour que vous ne soyez jamais enfermé dans une seule application.",
     "ctaGmail": "Connecter Gmail",
+    "ctaOutlook": "Connecter Outlook",
     "ctaFastmail": "Connecter Fastmail",
     "ctaIcloud": "Connecter iCloud"
   },

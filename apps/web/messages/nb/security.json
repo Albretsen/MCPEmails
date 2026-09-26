@@ -93,10 +93,10 @@
     ]
   },
   "google": {
-    "title": "6. Google- og leverandørverifisering",
+    "title": "6. Google-, Microsoft- og leverandørverifisering",
     "p1": "Tilgang til Gmail bruker Googles begrensede omfang (restricted scopes), nivået Google gransker tettest.",
     "p2": "MCPEmails' bruk og overføring av informasjon mottatt fra Google APIs til enhver annen app følger <link>Google API Services User Data Policy</link>, inkludert kravene om Limited Use.",
-    "p3": "For Fastmail, iCloud, Yahoo, Zoho, Yandex og andre IMAP-leverandører kobler du til med et app-passord utstedt av leverandøren som du kan tilbakekalle når som helst, uten brede OAuth-omfang for oss å be om for mye av."
+    "p3": "Tilgang til Outlook og Microsoft 365 går gjennom Microsoft Graph, fra en app med utgiver verifisert av Microsoft, og ber bare om et navngitt sett med tillatelser som vises på Microsofts samtykkeskjerm: Mail.ReadWrite, Mail.Send, offline_access, openid, profile og email. For Fastmail, iCloud, Yahoo, Zoho, Yandex og andre IMAP-leverandører kobler du til med et app-passord utstedt av leverandøren som du kan tilbakekalle når som helst, uten brede OAuth-omfang for oss å be om for mye av."
   },
   "subprocessors": {
     "title": "7. Underleverandører",

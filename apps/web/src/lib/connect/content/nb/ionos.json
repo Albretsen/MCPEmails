@@ -59,7 +59,7 @@
     },
     {
       "h": "Microsoft 365 solgt av IONOS er en Microsoft-postkasse, ikke en IONOS-postkasse",
-      "p": "IONOS videreselger Microsoft 365 ved siden av sine egne produkter Mail Basic og Mail Business, og mange kunder som tror de har IONOS-e-post, har egentlig en Microsoft-tenant med en faktura fra IONOS. Ingenting på <code>imap.ionos.com</code> gjelder for de postkassene: de ligger på Microsofts servere og administreres fra Microsoft 365 Admin Center, ikke fra IONOS-kontrollpanelet. Microsofts standard tenant-policy hindrer en vanlig sluttbruker i å gi samtykke til lese- og skrivetilgang til e-post for tredjeparter, og det bestemmes av Microsoft og av tenant-administratoren din. Vi hevder ikke å koble dem til. Kjennetegnet er hvor webmailen din tar deg: Outlook på nettet betyr Microsoft."
+      "p": "IONOS videreselger Microsoft 365 ved siden av sine egne produkter Mail Basic og Mail Business, og mange kunder som tror de har IONOS-e-post, har egentlig en Microsoft-tenant med en faktura fra IONOS. Ingenting på <code>imap.ionos.com</code> gjelder for de postkassene: de ligger på Microsofts servere og administreres fra Microsoft 365 Admin Center, ikke fra IONOS-kontrollpanelet. Koble dem til med Outlook-valget (innlogging med Microsoft) i stedet for over IMAP. IT-administratoren i organisasjonen din kan måtte godkjenne MCP Emails én gang først, og dashbordet gir deg en godkjenningslenke du kan sende til vedkommende. Kjennetegnet er hvor webmailen din tar deg: Outlook på nettet betyr Microsoft."
     },
     {
       "h": "Alle IONOS-landmerker, og alle eldre 1&1-adresser, bruker de samme to vertene",
@@ -67,13 +67,13 @@
     }
   ],
   "limits": [
-    "Microsoft 365-postkasser kjøpt gjennom IONOS kan ikke kobles til. Microsofts standard tenant-policy blokkerer sluttbrukersamtykke til e-posttilgang for tredjeparter.",
+    "Microsoft 365-postkasser kjøpt gjennom IONOS ligger ikke på imap.ionos.com. Koble dem til med Outlook (innlogging med Microsoft); en IT-administrator kan måtte godkjenne appen én gang.",
     "mcpemails kobler til en postkasse. IONOS-alias, videresendinger, catch-all-regler og spaminnstillinger blir værende i IONOS-kontrollpanelet og er ikke synlige for AI-klienten din."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med IONOS-e-post?",
-      "a": "Det fungerer med en IONOS-postkasse, den typen som betjenes av imap.ionos.com, når en MCP-server som mcpemails er koblet til den over IMAP. Claude har ingen innebygd IONOS-kobling. Det fungerer ikke med en Microsoft 365-postkasse kjøpt gjennom IONOS, fordi Microsofts standard tenant-policy blokkerer samtykke til e-posttilgang for tredjeparter."
+      "a": "Det fungerer med en IONOS-postkasse, den typen som betjenes av imap.ionos.com, når en MCP-server som mcpemails er koblet til den over IMAP. Claude har ingen innebygd IONOS-kobling. En Microsoft 365-postkasse kjøpt gjennom IONOS fungerer også, men den kobles til med Outlook (innlogging med Microsoft) og ikke over IMAP, og en IT-administrator kan måtte godkjenne MCP Emails én gang først."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for IONOS?",
@@ -85,7 +85,7 @@
     },
     {
       "q": "Hvorfor blir IONOS-e-postpassordet mitt avvist?",
-      "a": "Fordi IONOS gir hver e-postadresse sitt eget passord, og du bruker sannsynligvis IONOS-kontoinnloggingen i stedet. Åpne IONOS-kontrollpanelet, gå til Email, velg adressen og sett et nytt passord for den, og bruk så det. Hvis adressen er migrert til Microsoft 365, finnes den ikke lenger på IONOS sine e-postservere i det hele tatt."
+      "a": "Fordi IONOS gir hver e-postadresse sitt eget passord, og du bruker sannsynligvis IONOS-kontoinnloggingen i stedet. Åpne IONOS-kontrollpanelet, gå til Email, velg adressen og sett et nytt passord for den, og bruk så det. Hvis adressen er migrert til Microsoft 365, finnes den ikke lenger på IONOS sine e-postservere i det hele tatt; koble den da til med Outlook."
     },
     {
       "q": "Bruker IONOS-kontoer i Storbritannia, Tyskland og Frankrike forskjellige servere?",
@@ -99,5 +99,10 @@
   "ctaBand": {
     "title": "Gi AI-en din en IONOS-innboks",
     "sub": "Koble til IONOS på få minutter. Én innboks gratis for alltid, uten kort."
+  },
+  "seeAlso": {
+    "intro": "Microsoft 365-postkasse fra IONOS?",
+    "label": "Koble den til med Outlook (innlogging med Microsoft)",
+    "href": "/connect/office365"
   }
 }

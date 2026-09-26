@@ -61,11 +61,11 @@ MCP 还很年轻。规范在变，Google 在轮换要求，你克隆的那个仓
 
 ### 配置只需几分钟，而不是一个下午
 
-你注册，进入 **Dashboard → Inboxes → Connect Inbox**，选 Gmail，点过 Google 的一键 OAuth。没有 Cloud 项目，没有同意屏幕，没有验证排队。然后你连接你的代理。对于 [claude.ai 或 Claude Desktop](/blog/connect-email-to-ai-agent-under-2-minutes)，你粘贴 MCP 端点 URL，登录，批准权限范围——不需要 API 密钥。对于没有 OAuth 的客户端，比如 [Cursor、Cline 或一段原始脚本](/blog/email-for-ai-agents-cursor-cline-vscode)，你在 **Dashboard → API Keys** 里铸一个限定范围的 API 密钥，然后把它作为 bearer token 发送。
+你注册，进入 **Dashboard → Inboxes → Connect Inbox**，选 Gmail，粘贴一个 Google 应用专用密码，或者改用**使用 Google 登录**。不用自建 Cloud 项目，不用配置同意屏幕，没有验证排队。然后你连接你的代理。对于 [claude.ai 或 Claude Desktop](/blog/connect-email-to-ai-agent-under-2-minutes)，你粘贴 MCP 端点 URL，登录，批准权限范围——不需要 API 密钥。对于没有 OAuth 的客户端，比如 [Cursor、Cline 或一段原始脚本](/blog/email-for-ai-agents-cursor-cline-vscode)，你在 **Dashboard → API Keys** 里铸一个限定范围的 API 密钥，然后把它作为 bearer token 发送。
 
 ### 凭据已加密，邮件从不存储
 
-每个收件箱唯一被持久化的东西就是 OAuth 令牌，并且它以 AES-256-GCM 静态加密。密钥作为一个环境密钥存在，与数据库分开，解密只在调用时于一个隔离的 Edge Function 内部发生。邮件本身完全不被存储——每一次 \`email_read\` 调用（无论是列出、读取还是搜索）都实时打到 Gmail，把结果交给你的代理，然后丢弃。这就是自托管那一节里说的加密工作，已经做好并持续维护。[把邮件访问交给 AI 代理安全吗](/blog/is-it-safe-to-give-ai-agent-email-access)完整走了一遍安全模型。
+每个收件箱唯一被持久化的东西就是收件箱凭据（应用专用密码或 OAuth 令牌），并且它以 AES-256-GCM 静态加密。密钥作为一个环境密钥存在，与数据库分开，解密只在调用时于一个隔离的 Edge Function 内部发生。邮件本身完全不被存储——每一次 \`email_read\` 调用（无论是列出、读取还是搜索）都实时打到 Gmail，把结果交给你的代理，然后丢弃。这就是自托管那一节里说的加密工作，已经做好并持续维护。[把邮件访问交给 AI 代理安全吗](/blog/is-it-safe-to-give-ai-agent-email-access)完整走了一遍安全模型。
 
 ### 多服务商免费附带
 

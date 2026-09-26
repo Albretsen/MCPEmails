@@ -23,7 +23,7 @@
     "meta0": "1 boîte gratuite, pour toujours",
     "meta1": "Connexion avec Microsoft, sans mot de passe d'application",
     "meta2": "Lien d'approbation pour l'administrateur informatique intégré",
-    "answer": "Oui, avec une condition qui dépend de votre organisation. mcpemails connecte les boîtes Microsoft 365 professionnelles et scolaires via Microsoft Graph : vous cliquez sur Se connecter avec Microsoft et vous vous identifiez avec votre compte professionnel. Beaucoup d'organisations exigent toutefois qu'un administrateur informatique approuve d'abord l'application une fois, car la stratégie de consentement par défaut de Microsoft, en vigueur depuis fin 2025, empêche les employés d'approuver eux-mêmes des autorisations de lecture des e-mails. Dans ce cas, le tableau de bord affiche un avis avec un lien à envoyer à votre administrateur informatique. L'administrateur se connecte et approuve MCP Emails une fois pour toute l'organisation, après quoi vous et vos collègues vous connectez normalement. Collez ensuite une URL dans Claude, ChatGPT, Cursor ou tout client MCP. Une boîte est gratuite, pour toujours."
+    "answer": "Oui, avec une condition qui dépend de votre organisation. mcpemails connecte les boîtes Microsoft 365 professionnelles et scolaires via Microsoft Graph : vous cliquez sur Se connecter avec Microsoft et vous vous identifiez avec votre compte professionnel. Beaucoup d'organisations exigent toutefois qu'un administrateur informatique approuve d'abord l'application une fois, car la stratégie de consentement par défaut de Microsoft, en vigueur depuis fin 2025, empêche les employés d'approuver eux-mêmes des autorisations de lecture des e-mails. Dans ce cas, le tableau de bord vous donne un lien d'approbation à envoyer à votre administrateur informatique. L'administrateur l'ouvre, se connecte avec son compte Microsoft professionnel et approuve MCP Emails une fois pour toute l'organisation, sans avoir besoin d'un compte MCP Emails, après quoi vous et vos collègues vous connectez normalement. Collez ensuite une URL dans Claude, ChatGPT, Cursor ou tout client MCP. Une boîte est gratuite, pour toujours."
   },
   "method": {
     "title": "Comment Microsoft 365 se connecte : connexion Microsoft, parfois avec approbation de l'administrateur",
@@ -40,7 +40,7 @@
     },
     {
       "h": "Approuvez l'accès, ou envoyez le lien à l'administrateur",
-      "p": "Si Microsoft vous laisse approuver, acceptez les autorisations et la boîte se connecte. Si votre organisation exige l'approbation d'un administrateur, le tableau de bord affiche un avis avec un lien Envoyer à votre administrateur informatique. Votre administrateur l'ouvre, se connecte à MCP Emails et approuve l'application une fois pour toute l'organisation. Cliquez ensuite à nouveau sur Se connecter avec Microsoft."
+      "p": "Si Microsoft vous laisse approuver, acceptez les autorisations et la boîte se connecte. Si votre organisation exige l'approbation d'un administrateur, le tableau de bord vous donne un lien d'approbation à envoyer à votre administrateur informatique. Votre administrateur l'ouvre, se connecte avec Microsoft et approuve l'application une fois pour toute l'organisation ; il n'a pas besoin d'un compte MCP Emails. Cliquez ensuite à nouveau sur Se connecter avec Microsoft."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
@@ -54,7 +54,7 @@
     },
     {
       "h": "L'approbation de l'administrateur dépend de votre organisation, et un éditeur vérifié ne la contourne pas",
-      "p": "Depuis le changement déployé par Microsoft à partir de fin octobre 2025, les autorisations de messagerie Exchange relèvent de la stratégie de consentement par défaut gérée par Microsoft : un utilisateur qui tente d'approuver une application de messagerie voit à la place une demande d'approbation de l'administrateur. Être un éditeur vérifié n'y change rien. Votre administrateur informatique peut approuver MCP Emails pour toute l'organisation via le lien du tableau de bord, et ne doit le faire qu'une fois."
+      "p": "Depuis le changement déployé par Microsoft à partir de fin octobre 2025, les autorisations de messagerie Exchange relèvent de la stratégie de consentement par défaut gérée par Microsoft : un utilisateur qui tente d'approuver une application de messagerie voit à la place une demande d'approbation de l'administrateur. Être un éditeur vérifié n'y change rien. Votre administrateur informatique peut approuver MCP Emails pour toute l'organisation via le lien d'approbation que le tableau de bord vous donne à lui envoyer, et ne doit le faire qu'une fois."
     },
     {
       "h": "Un compte sans boîte Exchange Online est refusé",
@@ -66,9 +66,9 @@
     }
   ],
   "limits": [
-    "Outlook organise les e-mails en dossiers, y compris des dossiers imbriqués. Les catégories Outlook ne sont pas prises en charge, et les outils de libellés ne s'appliquent qu'à Gmail.",
+    "Outlook organise les e-mails en dossiers, y compris des dossiers imbriqués. Les outils de libellés sont réservés à Gmail, mais l'action de libellé d'une automatisation applique une catégorie Outlook au message.",
     "Microsoft Graph ne peut pas combiner une recherche textuelle avec les filtres non lu, pièce jointe, suivi ou date. Lorsqu'une recherche contient du texte, ces filtres ne sont pas appliqués et le résultat indique lesquels ont été ignorés.",
-    "Les pièces jointes sont prises en charge jusqu'à 25 Mo.",
+    "À l'envoi, chaque message peut porter jusqu'à 10 Mo de pièces jointes ; le téléchargement des pièces jointes et le transfert des originaux fonctionnent jusqu'à 25 Mo.",
     "La version auto-hébergée se connecte uniquement en IMAP et SMTP. La connexion avec Microsoft fait partie du service hébergé."
   ],
   "faq": [
@@ -78,11 +78,11 @@
     },
     {
       "q": "Pourquoi me demande-t-on l'approbation d'un administrateur ?",
-      "a": "À cause de la stratégie de consentement de votre organisation. Depuis fin 2025, la stratégie par défaut de Microsoft empêche les employés d'approuver eux-mêmes des autorisations de lecture des e-mails pour des applications : la connexion demande donc l'approbation d'un administrateur. Ce n'est pas un problème lié à votre compte. Envoyez le lien de l'avis du tableau de bord à votre administrateur informatique."
+      "a": "À cause de la stratégie de consentement de votre organisation. Depuis fin 2025, la stratégie par défaut de Microsoft empêche les employés d'approuver eux-mêmes des autorisations de lecture des e-mails pour des applications : la connexion demande donc l'approbation d'un administrateur. Ce n'est pas un problème lié à votre compte. Le tableau de bord vous donne un lien d'approbation à envoyer à votre administrateur informatique."
     },
     {
       "q": "Que doit faire mon administrateur informatique ?",
-      "a": "Ouvrir le lien que vous lui envoyez, se connecter à MCP Emails et approuver l'application pour l'organisation sur l'écran de consentement de Microsoft, où MCP Emails apparaît comme éditeur vérifié. Cela se fait une fois pour toute l'organisation. Ensuite, chacun dans l'organisation se connecte normalement avec Se connecter avec Microsoft."
+      "a": "Ouvrir le lien d'approbation que vous lui envoyez, se connecter avec son compte Microsoft professionnel et approuver l'application pour l'organisation sur l'écran de consentement de Microsoft, où MCP Emails apparaît comme éditeur vérifié. Il n'a pas besoin d'un compte MCP Emails. Cela se fait une fois pour toute l'organisation. Ensuite, chacun dans l'organisation se connecte normalement avec Se connecter avec Microsoft."
     },
     {
       "q": "Ai-je besoin d'un mot de passe d'application ou de paramètres IMAP ?",
@@ -90,7 +90,7 @@
     },
     {
       "q": "Que peut faire mon IA dans Microsoft 365 ?",
-      "a": "Lire, rechercher, envoyer, répondre et transférer ; travailler avec des brouillons ; créer et utiliser des dossiers, y compris imbriqués ; déplacer, copier et archiver ; marquer d'un indicateur ; supprimer vers la corbeille ou définitivement ; gérer des pièces jointes jusqu'à 25 Mo ; planifier des envois ; et gérer votre signature."
+      "a": "Lire, rechercher, envoyer, répondre et transférer ; travailler avec des brouillons ; créer et utiliser des dossiers, y compris imbriqués ; déplacer, copier et archiver ; marquer d'un indicateur ; supprimer vers la corbeille ou définitivement ; envoyer jusqu'à 10 Mo de pièces jointes par message, et télécharger des pièces jointes ou transférer des originaux jusqu'à 25 Mo ; planifier des envois ; exécuter des règles d'automatisation ; et gérer votre signature."
     },
     {
       "q": "Mes e-mails sont-ils stockés sur vos serveurs ?",
@@ -100,5 +100,15 @@
   "ctaBand": {
     "title": "Donnez à votre IA votre boîte Microsoft 365",
     "sub": "Connectez-vous avec Microsoft. Si votre organisation exige l'approbation d'un administrateur, un seul lien envoyé à votre administrateur informatique vaut pour tout le monde. Une boîte gratuite pour toujours."
+  },
+  "seeAlso": {
+    "intro": "Une adresse personnelle Outlook.com, Hotmail ou Live ?",
+    "label": "Connecter Outlook.com",
+    "href": "/connect/outlook"
+  },
+  "guide": {
+    "intro": "Vous préférez un guide pas à pas ?",
+    "label": "Connecter Outlook et Microsoft 365 à votre agent IA via MCP",
+    "href": "/blog/connect-outlook-microsoft-365-ai-agent-mcp"
   }
 }

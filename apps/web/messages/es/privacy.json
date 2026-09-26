@@ -73,7 +73,7 @@
     "googleP3": "Como se describe en la Sección 2.5, el contenido de correo recuperado de la API de Gmail se transmite hacia tu agente en la misma petición y MCPEmails nunca lo almacena, lo guarda en caché ni lo registra.",
     "microsoftTitle": "3.8 API de Microsoft: acceso al buzón y cómo revocarlo",
     "microsoftP1": "Cuando conectas un buzón de Outlook o Microsoft 365, Microsoft te pide que apruebes un conjunto de permisos concreto y detallado: leer y organizar tu correo, y enviar correo en tu nombre. Usamos ese acceso únicamente para ejecutar las funciones que pidas a un agente de IA sobre tu buzón, como leer, buscar, organizar, redactar y enviar. No lo usamos para crear una copia de tu buzón, y nunca usamos el contenido del correo, ni nada derivado de él, con fines publicitarios o de marketing.",
-    "microsoftRevokeP": "Puedes retirar este acceso en cualquier momento, directamente con Microsoft y sin pedírnoslo. Para una cuenta personal de Microsoft, usa <personal>Permisos de la cuenta Microsoft</personal>. Para una cuenta profesional o educativa, usa <work>Mis aplicaciones</work>. Al revocar el acceso allí, dejamos de poder acceder a ese buzón de inmediato.",
+    "microsoftRevokeP": "Puedes retirar este acceso en cualquier momento, directamente con Microsoft y sin pedírnoslo. Para una cuenta personal de Microsoft, usa <personal>Permisos de la cuenta Microsoft</personal>. Para una cuenta profesional o educativa, usa <work>Mis aplicaciones</work>. Al revocar el acceso allí, dejamos de poder acceder a ese buzón de inmediato. Si tu administrador de TI aprobó MCPEmails para toda la organización, solo un administrador puede retirar esa aprobación para toda la organización.",
     "microsoftDisconnectP": "Desconectar la bandeja de entrada en tu panel de MCPEmails tiene el mismo efecto por nuestra parte y además elimina las credenciales guardadas de ese buzón. Puedes hacer cualquiera de las dos primero; no es necesario hacer ambas."
   },
   "dataRetention": {
@@ -150,7 +150,7 @@
     "stripeData": "Correo de facturación, datos de tarjeta de pago (almacenados por Stripe, no por nosotros)",
     "stripeLocation": "EE. UU. (Stripe tiene certificación PCI-DSS)",
     "emailProvidersTitle": "5.2 Proveedores de correo (tus proveedores, no los nuestros)",
-    "emailProvidersP": "Cuando conectas Gmail, Fastmail u otra cuenta IMAP, MCPEmails se autentica con ese proveedor usando las credenciales que proporcionas. La propia política de privacidad de tu proveedor de correo rige los datos guardados en tu buzón. MCPEmails accede a tu buzón solo cuando tu agente hace una llamada a una herramienta, y solo para los mensajes o carpetas específicos que la herramienta solicita.",
+    "emailProvidersP": "Cuando conectas Gmail, Outlook / Microsoft 365, Fastmail u otra cuenta IMAP, MCPEmails se autentica con ese proveedor usando las credenciales que proporcionas. La propia política de privacidad de tu proveedor de correo rige los datos guardados en tu buzón. MCPEmails accede a tu buzón solo cuando tu agente hace una llamada a una herramienta, y solo para los mensajes o carpetas específicos que la herramienta solicita.",
     "noBrokersTitle": "5.3 Sin intermediarios de datos ni redes publicitarias",
     "noBrokersP": "No compartimos ningún dato con intermediarios de datos, redes publicitarias, plataformas de redes sociales ni empresas de analíticas que construyen perfiles de usuario.",
     "legalDisclosuresTitle": "5.4 Divulgaciones legales",

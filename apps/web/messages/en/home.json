@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Secure AI Email MCP Server for Gmail, IMAP & Claude",
+    "title": "Secure Email MCP Server for Gmail, Outlook, IMAP & Claude",
     "description": "Connect Gmail, Outlook, Fastmail, iCloud, Yahoo, Zoho, Yandex, or IMAP email to Claude, Cursor, ChatGPT, and any MCP client. Read, search, draft, approve, and send email live with provider-aware controls."
   },
   "nav": {
@@ -68,7 +68,7 @@
       "3": {
         "tag": "Providers",
         "h": "Gmail, Outlook, iCloud, Fastmail & any IMAP inbox.",
-        "p": "OAuth 2.0 for Gmail and for Outlook / Microsoft 365 (a work or school account may need its IT admin to approve the app once); app-specific passwords for Fastmail, iCloud, Yahoo, Zoho, and Yandex; a generic IMAP / SMTP connector for everything else. Every inbox reports a versioned compatibility profile, so an agent can use portable actions while seeing where a provider behaves differently or cannot support an operation."
+        "p": "An app password or Google sign-in (OAuth 2.0) for Gmail; Microsoft sign-in (OAuth 2.0) for Outlook / Microsoft 365 (a work or school account may need its IT admin to approve the app once); app-specific passwords for Fastmail, iCloud, Yahoo, Zoho, and Yandex; a generic IMAP / SMTP connector for everything else. Every inbox reports a versioned compatibility profile, so an agent can use portable actions while seeing where a provider behaves differently or cannot support an operation."
       },
       "4": {
         "tag": "Access",
@@ -211,7 +211,7 @@
       },
       {
         "q": "Which email providers can I connect?",
-        "a": "Gmail over OAuth (one click), Outlook and Microsoft 365 by signing in with Microsoft (a work or school account may need its IT admin to approve the app once), Fastmail, iCloud, Yahoo, Zoho and Yandex with an app-specific password, and any other mailbox over a generic IMAP/SMTP connection. Connect as many inboxes as you like and label them by use case."
+        "a": "Gmail with an app password or by signing in with Google, Outlook and Microsoft 365 by signing in with Microsoft (a work or school account may need its IT admin to approve the app once), Fastmail, iCloud, Yahoo, Zoho and Yandex with an app-specific password, and any other mailbox over a generic IMAP/SMTP connection. Connect as many inboxes as you like and label them by use case."
       },
       {
         "q": "Is my email stored anywhere?",
@@ -227,7 +227,7 @@
       },
       {
         "q": "How do I connect an inbox?",
-        "a": "Create a free account, connect your mailbox (one click for Gmail, sign in with Microsoft for Outlook, or paste an app password for the others), then drop https://mcpemails.com/api/mcp into your AI client and authorize. Your agent has the inbox in a couple of minutes."
+        "a": "Create a free account, connect your mailbox (an app password or Google sign-in for Gmail, sign in with Microsoft for Outlook, or paste an app password for the others), then drop https://mcpemails.com/api/mcp into your AI client and authorize. Your agent has the inbox in a couple of minutes."
       },
       {
         "q": "Can I self-host it?",

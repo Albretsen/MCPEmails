@@ -12,7 +12,7 @@ MCP-serveren eier ikke e-posten din. Den megler en levende tilkobling til hvilke
 
 Gå til **Dashboard → Inboxes → Connect Inbox** og velg en leverandør:
 
-- **Gmail** → ett-klikks OAuth. Logg inn med Google og godkjenn.
+- **Gmail** → et Google-apppassord over IMAP som standard (Google-kontoen din må ha totrinnsbekreftelse), eller Logg inn med Google hvis du foretrekker det.
 - **Outlook / Microsoft 365** → OAuth med Logg inn med Microsoft, uten app-passord. Personlige Outlook.com-, Hotmail-, Live- og MSN-kontoer kobles til med en gang. En jobb- eller skolekonto i Microsoft 365 kan trenge at en IT-ansvarlig først godkjenner appen én gang for hele organisasjonen; dashbordet gir deg en lenke du kan sende dem.
 - **iCloud, Fastmail, Yahoo, Zoho eller en hvilken som helst generisk IMAP-vert** → et app-spesifikt passord. Generer det i leverandørens innstillinger (for iCloud er det appleid.apple.com) og lim det inn.
 

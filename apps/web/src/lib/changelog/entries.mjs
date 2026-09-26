@@ -39,6 +39,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── September 2026 ────────────────────────────────────────── */
   {
+    date: '2026-09-26',
+    kind: 'added',
+    title: 'Outlook and Microsoft 365 inboxes',
+    body:
+      'Outlook connects with Sign in with Microsoft, over Microsoft Graph, with no app password and no IMAP settings. Personal Outlook.com, Hotmail, Live and MSN accounts connect directly. A work or school Microsoft 365 account may first need an IT admin to approve the app once for the whole organisation; the dashboard gives you a link to send them, and the admin does not need an MCP Emails account. Microsoft shows the app as coming from a verified publisher. Read, search, send, reply, forward, drafts, scheduled sends, nested folders, flags and automations all work, and an automation\'s label action applies an Outlook category.',
+  },
+  {
     date: '2026-09-17',
     kind: 'fixed',
     title: 'A forward now carries the original exactly',

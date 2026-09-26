@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "AI Email Agent Guides, MCP Tutorials & Security",
-    "description": "Practical guides to connecting email with Claude and MCP clients, securing AI agent access, and using Gmail, IMAP, and email workflows safely."
+    "description": "Practical guides to connecting email with Claude and MCP clients, securing AI agent access, and using Gmail, Outlook, IMAP, and email workflows safely."
   },
   "blogName": "mcpemails Blog",
   "index": {
     "eyebrow": "The MCPEmails blog",
     "title": "Notes on agents, email & MCP",
-    "lead": "Guides, deep-dives, and field notes on connecting Gmail, Fastmail, and any IMAP inbox to Claude, Cursor, and MCP-compatible clients.",
+    "lead": "Guides, deep-dives, and field notes on connecting Gmail, Outlook, Fastmail, and any IMAP inbox to Claude, Cursor, and MCP-compatible clients.",
     "filterAria": "Filter posts by topic",
     "all": "All",
     "empty": "No posts tagged “{tag}” yet.",
@@ -22,7 +22,7 @@
     "minRead": "{minutes} min read",
     "cta": {
       "title": "Give your agent an inbox",
-      "sub": "Connect Gmail, Fastmail, or any IMAP account to your AI agent in minutes.",
+      "sub": "Connect Gmail, Outlook, Fastmail, or any IMAP account to your AI agent in minutes.",
       "primary": "Get started free",
       "secondary": "Read the docs"
     }

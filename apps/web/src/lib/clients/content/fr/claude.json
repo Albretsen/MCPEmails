@@ -7,7 +7,7 @@
     "https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp"
   ],
   "meta": {
-    "title": "Connecter l'e-mail à Claude : MCP pour Gmail et IMAP",
+    "title": "Connecter l'e-mail à Claude : MCP pour Gmail, Outlook et IMAP",
     "description": "Ajoutez une vraie boîte à claude.ai et Claude Desktop comme connecteur personnalisé. Une URL, OAuth, et Claude lit, cherche, envoie et planifie vos e-mails. 1 boîte gratuite."
   },
   "hero": {
@@ -27,7 +27,7 @@
   "setup": [
     {
       "h": "Créez un compte gratuit et connectez une boîte",
-      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Gmail se connecte en un clic via la connexion Google ; iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
+      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Outlook et Microsoft 365 se connectent via la connexion Microsoft ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application, et Gmail accepte aussi la connexion Google ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
     },
     {
       "h": "Ouvrez les réglages des connecteurs",
@@ -45,7 +45,7 @@
   "gotchas": [
     {
       "h": "Un connecteur personnalisé n'est pas le connecteur Gmail intégré à Claude",
-      "p": "Anthropic propose son propre connecteur Google, et c'est un autre chemin : un seul fournisseur, dans une seule app. Un connecteur personnalisé fait pointer Claude vers un serveur MCP, c'est pourquoi la même configuration couvre alors iCloud, Fastmail, Zoho, Yandex et n'importe quelle boîte IMAP d'entreprise derrière une seule URL, et pourquoi cette même URL fonctionne dans Cursor, ChatGPT et les autres."
+      "p": "Anthropic propose son propre connecteur Google, et c'est un autre chemin : un seul fournisseur, dans une seule app. Un connecteur personnalisé fait pointer Claude vers un serveur MCP, c'est pourquoi la même configuration couvre alors Outlook, iCloud, Fastmail, Zoho, Yandex et n'importe quelle boîte IMAP d'entreprise derrière une seule URL, et pourquoi cette même URL fonctionne dans Cursor, ChatGPT et les autres."
     },
     {
       "h": "Vous approuvez les autorisations une fois, et c'est tout ce que le jeton peut faire",
@@ -72,7 +72,7 @@
     },
     {
       "q": "Quelles boîtes Claude peut-il atteindre ainsi ?",
-      "a": "Gmail via la connexion Google ; iCloud, Fastmail, Yahoo, Zoho et Yandex avec un mot de passe d'application ; et toute autre boîte qui parle IMAP et SMTP sur les ports standard. Le client les voit toutes par la même connexion : votre agent appelle d'abord inbox_list pour découvrir chaque boîte connectée et son identifiant, donc aucun UUID à coller nulle part."
+      "a": "Outlook.com et Microsoft 365 via la connexion Microsoft, où un compte professionnel peut nécessiter qu'un administrateur informatique approuve l'application une fois ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex avec un mot de passe d'application, la connexion Google restant une seconde option pour Gmail ; et toute autre boîte qui parle IMAP et SMTP sur les ports standard. Le client les voit toutes par la même connexion : votre agent appelle d'abord inbox_list pour découvrir chaque boîte connectée et son identifiant, donc aucun UUID à coller nulle part."
     },
     {
       "q": "Claude peut-il envoyer un e-mail sans que je le voie ?",

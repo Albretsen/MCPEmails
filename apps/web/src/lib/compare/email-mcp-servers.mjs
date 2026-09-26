@@ -109,7 +109,7 @@ export const entries = [
       'The only one of these that puts several mailboxes behind a single MCP URL, authorises the connection with scoped OAuth rather than a mailbox credential, and can hold outbound mail for a human before it sends.',
     price: 'Free: 1 inbox, 150 email actions a month with the first 7 days uncounted, no daily cap. Paid from $5 a month for 3 inboxes ($48 a year) with no monthly action cap. Pro is $15 a month for as many inboxes as you own.',
     pros: [
-      'Gmail over the Gmail API with Google sign-in; Fastmail, iCloud, Yahoo, Zoho, Yandex and any IMAP mailbox with an app password. Several at once, one URL.',
+      'Outlook and Microsoft 365 over Microsoft Graph with Sign in with Microsoft; Gmail with a Google app password or Google sign-in; Fastmail, iCloud, Yahoo, Zoho, Yandex and any IMAP mailbox with an app password. Several at once, one URL.',
       'OAuth 2.1 with dynamic client registration, S256 PKCE and 9 scopes: a connection without the send scope cannot be talked into sending, by you or by a hostile email.',
       'An approval hold per inbox, on every plan including free, and no message content stored.',
     ],
@@ -336,7 +336,7 @@ export const faq = {
     },
     {
       q: 'Do I hand over my email password?',
-      a: 'For Gmail, no: you sign in with Google and we hold a revocable OAuth token. Everywhere else you create a provider-issued app password, revocable at your provider without involving us. Either credential is encrypted at rest with AES-256-GCM, and your AI client never sees it: the MCP connection is its own OAuth 2.1 authorisation with its own scopes.',
+      a: 'For Outlook, no: you sign in with Microsoft and we hold a revocable OAuth token. Gmail connects with a Google app password by default, or with Google sign-in if you prefer, and everywhere else you create a provider-issued app password, revocable at your provider without involving us. Either credential is encrypted at rest with AES-256-GCM, and your AI client never sees it: the MCP connection is its own OAuth 2.1 authorisation with its own scopes.',
     },
     {
       q: 'Can an agent send email without me seeing it first?',

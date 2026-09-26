@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "将 Gmail、iCloud 与 IMAP 连接到 Claude",
+    "title": "将 Gmail、Outlook、iCloud 与 IMAP 连接到 Claude",
     "description": "让 Claude、Cursor 或任何 MCP 客户端真正访问你的收件箱：读取、发送、搜索并整理 Gmail、Outlook、Fastmail、iCloud 和 IMAP 邮件。免费，不存储任何邮件。"
   },
   "nav": {
@@ -68,7 +68,7 @@
       "3": {
         "tag": "服务商",
         "h": "Gmail、Outlook、iCloud、Fastmail 及任何 IMAP 收件箱。",
-        "p": "Gmail 和 Outlook / Microsoft 365 使用 OAuth 2.0（工作或学校账户可能需要其 IT 管理员先一次性批准该应用）；Fastmail、iCloud、Yahoo、Zoho 和 Yandex 使用应用专用密码；其余一切则通过通用 IMAP / SMTP 连接器。连接多个收件箱，按用途为它们打标签（work-gmail、ops-fastmail、support-imap），并将每个 API 密钥的权限范围限定到你希望该智能体访问的收件箱。团队和代理机构可以在一个共享工作区中管理所有客户的收件箱，并配有角色和审计日志。"
+        "p": "Gmail 使用应用密码或 Google 登录（OAuth 2.0）；Outlook / Microsoft 365 使用 Microsoft 登录（OAuth 2.0；工作或学校账户可能需要其 IT 管理员先一次性批准该应用）；Fastmail、iCloud、Yahoo、Zoho 和 Yandex 使用应用专用密码；其余一切则通过通用 IMAP / SMTP 连接器。连接多个收件箱，按用途为它们打标签（work-gmail、ops-fastmail、support-imap），并将每个 API 密钥的权限范围限定到你希望该智能体访问的收件箱。团队和代理机构可以在一个共享工作区中管理所有客户的收件箱，并配有角色和审计日志。"
       },
       "4": {
         "tag": "访问",
@@ -211,7 +211,7 @@
       },
       {
         "q": "我可以连接哪些邮箱服务商？",
-        "a": "通过 OAuth 连接 Gmail（一键完成），通过 Microsoft 登录连接 Outlook 和 Microsoft 365（工作或学校账户可能需要其 IT 管理员先一次性批准该应用），通过应用专用密码连接 Fastmail、iCloud、Yahoo、Zoho 和 Yandex，以及通过通用 IMAP/SMTP 连接任何其他邮箱。想连接多少个收件箱都可以，并按用途为它们打上标签。"
+        "a": "通过应用密码或 Google 登录连接 Gmail，通过 Microsoft 登录连接 Outlook 和 Microsoft 365（工作或学校账户可能需要其 IT 管理员先一次性批准该应用），通过应用专用密码连接 Fastmail、iCloud、Yahoo、Zoho 和 Yandex，以及通过通用 IMAP/SMTP 连接任何其他邮箱。想连接多少个收件箱都可以，并按用途为它们打上标签。"
       },
       {
         "q": "我的邮件会被存储在任何地方吗？",
@@ -227,7 +227,7 @@
       },
       {
         "q": "我该如何连接收件箱？",
-        "a": "创建一个免费账户，连接你的邮箱（Gmail 一键完成，Outlook 用 Microsoft 登录，其他邮箱粘贴应用密码即可），然后将 https://mcpemails.com/api/mcp 填入你的 AI 客户端并授权。几分钟后，你的智能体就能用上这个收件箱。"
+        "a": "创建一个免费账户，连接你的邮箱（Gmail 使用应用密码或 Google 登录，Outlook 用 Microsoft 登录，其他邮箱粘贴应用密码即可），然后将 https://mcpemails.com/api/mcp 填入你的 AI 客户端并授权。几分钟后，你的智能体就能用上这个收件箱。"
       },
       {
         "q": "我可以自托管吗？",

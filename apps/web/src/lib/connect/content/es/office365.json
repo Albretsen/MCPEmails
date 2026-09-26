@@ -23,7 +23,7 @@
     "meta0": "1 bandeja gratis, para siempre",
     "meta1": "Inicio de sesión con Microsoft, sin contraseña de aplicación",
     "meta2": "Enlace de aprobación para el administrador de TI incluido",
-    "answer": "Sí, con una condición que depende de tu organización. mcpemails conecta buzones de Microsoft 365 del trabajo y de centros educativos a través de Microsoft Graph: haces clic en Conectar con Microsoft e inicias sesión con tu cuenta del trabajo. Sin embargo, muchas organizaciones necesitan que un administrador de TI apruebe la aplicación una vez primero, porque la directiva de consentimiento predeterminada de Microsoft, vigente desde finales de 2025, impide que los empleados aprueben por sí mismos permisos de lectura de correo. Si ocurre, el panel muestra un aviso con un enlace para enviar a tu administrador de TI. El administrador inicia sesión y aprueba MCP Emails una vez para toda la organización, y a partir de ahí tú y tus compañeros os conectáis con normalidad. Después, pega una URL en Claude, ChatGPT, Cursor o cualquier cliente MCP. Una bandeja es gratis, para siempre."
+    "answer": "Sí, con una condición que depende de tu organización. mcpemails conecta buzones de Microsoft 365 del trabajo y de centros educativos a través de Microsoft Graph: haces clic en Conectar con Microsoft e inicias sesión con tu cuenta del trabajo. Sin embargo, muchas organizaciones necesitan que un administrador de TI apruebe la aplicación una vez primero, porque la directiva de consentimiento predeterminada de Microsoft, vigente desde finales de 2025, impide que los empleados aprueben por sí mismos permisos de lectura de correo. Si ocurre, el panel te da un enlace de aprobación para enviar a tu administrador de TI. El administrador lo abre, inicia sesión con su cuenta de Microsoft del trabajo y aprueba MCP Emails una vez para toda la organización, sin necesitar una cuenta de MCP Emails, y a partir de ahí tú y tus compañeros os conectáis con normalidad. Después, pega una URL en Claude, ChatGPT, Cursor o cualquier cliente MCP. Una bandeja es gratis, para siempre."
   },
   "method": {
     "title": "Cómo se conecta Microsoft 365: inicio de sesión con Microsoft, a veces con aprobación del administrador",
@@ -40,7 +40,7 @@
     },
     {
       "h": "Aprueba el acceso o envía el enlace al administrador",
-      "p": "Si Microsoft te permite aprobar, acepta los permisos y la bandeja se conecta. Si tu organización exige la aprobación de un administrador, el panel muestra un aviso con un enlace Enviar a tu administrador de TI. Tu administrador lo abre, inicia sesión en MCP Emails y aprueba la aplicación una vez para toda la organización. Después, vuelve a hacer clic en Conectar con Microsoft."
+      "p": "Si Microsoft te permite aprobar, acepta los permisos y la bandeja se conecta. Si tu organización exige la aprobación de un administrador, el panel te da un enlace de aprobación para enviar a tu administrador de TI. Tu administrador lo abre, inicia sesión con Microsoft y aprueba la aplicación una vez para toda la organización; no necesita una cuenta de MCP Emails. Después, vuelve a hacer clic en Conectar con Microsoft."
     },
     {
       "h": "Pega la URL MCP en tu IA",
@@ -54,7 +54,7 @@
     },
     {
       "h": "La aprobación del administrador la fija tu organización, y un editor verificado no la evita",
-      "p": "Desde el cambio que Microsoft desplegó a partir de finales de octubre de 2025, los permisos de correo de Exchange forman parte de la directiva de consentimiento predeterminada administrada por Microsoft, así que un usuario que intenta aprobar una aplicación de correo ve en su lugar una solicitud de aprobación del administrador. Ser un editor verificado no cambia eso. Tu administrador de TI puede aprobar MCP Emails para toda la organización mediante el enlace del panel, y solo tiene que hacerlo una vez."
+      "p": "Desde el cambio que Microsoft desplegó a partir de finales de octubre de 2025, los permisos de correo de Exchange forman parte de la directiva de consentimiento predeterminada administrada por Microsoft, así que un usuario que intenta aprobar una aplicación de correo ve en su lugar una solicitud de aprobación del administrador. Ser un editor verificado no cambia eso. Tu administrador de TI puede aprobar MCP Emails para toda la organización mediante el enlace de aprobación que el panel te da para enviárselo, y solo tiene que hacerlo una vez."
     },
     {
       "h": "Se rechaza una cuenta sin buzón de Exchange Online",
@@ -66,9 +66,9 @@
     }
   ],
   "limits": [
-    "Outlook organiza el correo en carpetas, incluidas carpetas anidadas. Las categorías de Outlook no son compatibles y las herramientas de etiquetas solo se aplican a Gmail.",
+    "Outlook organiza el correo en carpetas, incluidas carpetas anidadas. Las herramientas de etiquetas son solo para Gmail, pero la acción de etiquetar de una automatización aplica una categoría de Outlook al mensaje.",
     "Microsoft Graph no puede combinar una búsqueda de texto con los filtros de no leídos, adjuntos, marcados o fechas. Cuando una búsqueda incluye texto, esos filtros no se aplican y el resultado indica cuáles se omitieron.",
-    "Se admiten adjuntos de hasta 25 MB.",
+    "Al enviar, cada mensaje admite hasta 10 MB de adjuntos; la descarga de adjuntos y el reenvío de originales funcionan hasta 25 MB.",
     "La versión autoalojada se conecta solo por IMAP y SMTP. El inicio de sesión con Microsoft forma parte del servicio alojado."
   ],
   "faq": [
@@ -78,11 +78,11 @@
     },
     {
       "q": "¿Por qué se me pide la aprobación de un administrador?",
-      "a": "Por la directiva de consentimiento de tu organización. Desde finales de 2025, la directiva predeterminada de Microsoft impide que los empleados aprueben por sí mismos permisos de lectura de correo para aplicaciones, así que el inicio de sesión pide la aprobación de un administrador. No es un problema de tu cuenta. Envía a tu administrador de TI el enlace del aviso del panel."
+      "a": "Por la directiva de consentimiento de tu organización. Desde finales de 2025, la directiva predeterminada de Microsoft impide que los empleados aprueben por sí mismos permisos de lectura de correo para aplicaciones, así que el inicio de sesión pide la aprobación de un administrador. No es un problema de tu cuenta. El panel te da un enlace de aprobación para enviar a tu administrador de TI."
     },
     {
       "q": "¿Qué tiene que hacer mi administrador de TI?",
-      "a": "Abrir el enlace que le envías, iniciar sesión en MCP Emails y aprobar la aplicación para la organización en la pantalla de consentimiento de Microsoft, donde MCP Emails aparece como editor verificado. Se hace una vez para toda la organización. A partir de ahí, todos en la organización se conectan con Conectar con Microsoft de forma normal."
+      "a": "Abrir el enlace de aprobación que le envías, iniciar sesión con su cuenta de Microsoft del trabajo y aprobar la aplicación para la organización en la pantalla de consentimiento de Microsoft, donde MCP Emails aparece como editor verificado. No necesita una cuenta de MCP Emails. Se hace una vez para toda la organización. A partir de ahí, todos en la organización se conectan con Conectar con Microsoft de forma normal."
     },
     {
       "q": "¿Necesito una contraseña de aplicación o ajustes IMAP?",
@@ -90,7 +90,7 @@
     },
     {
       "q": "¿Qué puede hacer mi IA en Microsoft 365?",
-      "a": "Leer, buscar, enviar, responder y reenviar; trabajar con borradores; crear y usar carpetas, incluidas las anidadas; mover, copiar y archivar; marcar; eliminar a la papelera o de forma permanente; gestionar adjuntos de hasta 25 MB; programar envíos; y gestionar tu firma."
+      "a": "Leer, buscar, enviar, responder y reenviar; trabajar con borradores; crear y usar carpetas, incluidas las anidadas; mover, copiar y archivar; marcar; eliminar a la papelera o de forma permanente; enviar hasta 10 MB de adjuntos por mensaje, y descargar adjuntos o reenviar originales de hasta 25 MB; programar envíos; ejecutar reglas de automatización; y gestionar tu firma."
     },
     {
       "q": "¿Se almacena mi correo en sus servidores?",
@@ -100,5 +100,15 @@
   "ctaBand": {
     "title": "Dale a tu IA tu bandeja de Microsoft 365",
     "sub": "Inicia sesión con Microsoft. Si tu organización necesita la aprobación de un administrador, un enlace a tu administrador de TI sirve para todos. Una bandeja gratis para siempre."
+  },
+  "seeAlso": {
+    "intro": "¿Una dirección personal de Outlook.com, Hotmail o Live?",
+    "label": "Conecta Outlook.com",
+    "href": "/connect/outlook"
+  },
+  "guide": {
+    "intro": "¿Prefieres una guía paso a paso?",
+    "label": "Cómo conectar Outlook y Microsoft 365 a tu agente de IA con MCP",
+    "href": "/blog/connect-outlook-microsoft-365-ai-agent-mcp"
   }
 }

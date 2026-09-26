@@ -93,10 +93,10 @@
     ]
   },
   "google": {
-    "title": "6. Google and provider verification",
+    "title": "6. Google, Microsoft and provider verification",
     "p1": "Gmail access uses Google's restricted scopes, the tier Google scrutinises most closely.",
     "p2": "MCPEmails' use and transfer of information received from Google APIs to any other app adheres to the <link>Google API Services User Data Policy</link>, including the Limited Use requirements.",
-    "p3": "For Fastmail, iCloud, Yahoo, Zoho, Yandex, and other IMAP providers, you connect with a provider-issued app password that you can revoke at any time, with no broad OAuth scopes for us to over-request."
+    "p3": "Outlook and Microsoft 365 access goes through Microsoft Graph, from an app whose publisher is verified by Microsoft, and asks only for a named set of permissions shown on Microsoft's consent screen: Mail.ReadWrite, Mail.Send, offline_access, openid, profile and email. For Fastmail, iCloud, Yahoo, Zoho, Yandex, and other IMAP providers, you connect with a provider-issued app password that you can revoke at any time, with no broad OAuth scopes for us to over-request."
   },
   "subprocessors": {
     "title": "7. Subprocessors",

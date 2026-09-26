@@ -59,7 +59,7 @@
     },
     {
       "h": "Microsoft 365 sold by IONOS is a Microsoft mailbox, not an IONOS one",
-      "p": "IONOS resells Microsoft 365 alongside its own Mail Basic and Mail Business products, and a large number of customers who think they have IONOS email actually have a Microsoft tenant with an IONOS invoice. Nothing on <code>imap.ionos.com</code> applies to those mailboxes: they live on Microsoft's servers and are administered from the Microsoft 365 Admin Center rather than the IONOS control panel. Microsoft's default tenant policy blocks an ordinary end user from consenting to third-party mail read and write access, which is set by Microsoft and by your tenant administrator. We do not claim to connect them. The tell is where your webmail takes you: Outlook on the web means Microsoft."
+      "p": "IONOS resells Microsoft 365 alongside its own Mail Basic and Mail Business products, and a large number of customers who think they have IONOS email actually have a Microsoft tenant with an IONOS invoice. Nothing on <code>imap.ionos.com</code> applies to those mailboxes: they live on Microsoft's servers and are administered from the Microsoft 365 Admin Center rather than the IONOS control panel. Connect them with the Outlook option (Sign in with Microsoft) instead of IMAP. Your organisation's IT admin may need to approve MCP Emails once first, and the dashboard gives you an approval link to send them. The tell is where your webmail takes you: Outlook on the web means Microsoft."
     },
     {
       "h": "Every IONOS country brand, and every legacy 1&1 address, uses the same two hosts",
@@ -67,13 +67,13 @@
     }
   ],
   "limits": [
-    "Microsoft 365 mailboxes bought through IONOS cannot be connected. Microsoft's default tenant policy blocks end-user consent for third-party mail access.",
+    "Microsoft 365 mailboxes bought through IONOS are not on imap.ionos.com. Connect them with Outlook (Sign in with Microsoft); an IT admin may need to approve the app once.",
     "mcpemails connects a mailbox. IONOS aliases, forwarders, catch-all rules and spam settings stay in the IONOS control panel and are not visible to your AI client."
   ],
   "faq": [
     {
       "q": "Does Claude work with IONOS email?",
-      "a": "It works with an IONOS mailbox, the kind served by imap.ionos.com, once an MCP server such as mcpemails is connected to it over IMAP. Claude has no built-in IONOS connector. It does not work with a Microsoft 365 mailbox bought through IONOS, because Microsoft's default tenant policy blocks third-party mail access consent."
+      "a": "It works with an IONOS mailbox, the kind served by imap.ionos.com, once an MCP server such as mcpemails is connected to it over IMAP. Claude has no built-in IONOS connector. A Microsoft 365 mailbox bought through IONOS works too, but it connects with Outlook (Sign in with Microsoft) rather than IMAP, and an IT admin may need to approve MCP Emails once first."
     },
     {
       "q": "What are the IONOS IMAP and SMTP settings?",
@@ -85,7 +85,7 @@
     },
     {
       "q": "Why is my IONOS email password rejected?",
-      "a": "Because IONOS gives every email address its own password and you are probably using your IONOS account login instead. Open the IONOS control panel, go to Email, select the address and set a new password for it, then use that. If the address was migrated to Microsoft 365, it no longer exists on the IONOS mail servers at all."
+      "a": "Because IONOS gives every email address its own password and you are probably using your IONOS account login instead. Open the IONOS control panel, go to Email, select the address and set a new password for it, then use that. If the address was migrated to Microsoft 365, it no longer exists on the IONOS mail servers at all; connect it with Outlook instead."
     },
     {
       "q": "Do IONOS UK, German and French accounts use different servers?",
@@ -99,5 +99,10 @@
   "ctaBand": {
     "title": "Give your AI an IONOS inbox",
     "sub": "Connect IONOS in minutes. One inbox free forever, no card required."
+  },
+  "seeAlso": {
+    "intro": "Microsoft 365 mailbox from IONOS?",
+    "label": "Connect it with Outlook (Sign in with Microsoft)",
+    "href": "/connect/office365"
   }
 }

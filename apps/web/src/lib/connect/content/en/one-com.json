@@ -53,8 +53,8 @@
       "p": "Practically every other provider names its submission host <code>smtp.something</code>, so people fill that pattern in from muscle memory and get a hostname that does not resolve. one.com uses <code>send.one.com</code>. The asymmetry with <code>imap.one.com</code> makes it look like a typo in the documentation, and it is not. If reading mail works but sending times out or fails to resolve, this is the reason."
     },
     {
-      "h": "one.com also resells Microsoft 365, and that mailbox is not connectable",
-      "p": "The Control Panel tile is labelled Email and Microsoft 365, and one.com sells both under the same account. A one.com email account, created in that tile with its own password, is an ordinary IMAP mailbox on one.com's servers and connects fine. A Microsoft 365 seat bought through one.com is a Microsoft mailbox on Microsoft's servers, and Microsoft's default tenant policy blocks an end user from consenting to third-party mail read and write access. We do not claim to connect those. If your webmail is Outlook on the web rather than one.com's own interface, you have the Microsoft product."
+      "h": "one.com also resells Microsoft 365, and that mailbox connects with Outlook",
+      "p": "The Control Panel tile is labelled Email and Microsoft 365, and one.com sells both under the same account. A one.com email account, created in that tile with its own password, is an ordinary IMAP mailbox on one.com's servers and connects fine. A Microsoft 365 seat bought through one.com is a Microsoft mailbox on Microsoft's servers, so connect it with the Outlook option (Sign in with Microsoft) rather than IMAP. An IT admin may need to approve MCP Emails once first, and the dashboard gives you an approval link to send them. If your webmail is Outlook on the web rather than one.com's own interface, you have the Microsoft product."
     },
     {
       "h": "Control Panel two-step verification does not reach your mailbox",
@@ -64,7 +64,7 @@
   "limits": [
     "The server does not advertise MOVE or UIDPLUS, so a move is carried out as copy, flag and expunge, and the destination UID has to be found by searching.",
     "SPECIAL-USE is absent, so Sent, Drafts, Trash and Junk are matched by name. Danish, Swedish and Norwegian one.com mailboxes often have localised folder names.",
-    "Microsoft 365 seats sold through one.com cannot be connected."
+    "Microsoft 365 seats sold through one.com are not on imap.one.com. Connect them with Outlook (Sign in with Microsoft) instead."
   ],
   "faq": [
     {
@@ -91,5 +91,10 @@
   "ctaBand": {
     "title": "Give your AI a one.com inbox",
     "sub": "Connect a one.com mailbox in minutes. One inbox free forever, no card required."
+  },
+  "seeAlso": {
+    "intro": "Microsoft 365 mailbox from one.com?",
+    "label": "Connect it with Outlook (Sign in with Microsoft)",
+    "href": "/connect/office365"
   }
 }

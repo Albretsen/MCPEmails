@@ -73,12 +73,13 @@ Le [guide de tri de boîte de réception](/blog/ai-agent-triage-summarize-inbox)
 
 **Faire passer une conversation d'un rôle à un autre.** Quand un contact personnel devient un client, transférez le fil vers la boîte professionnelle et faites rédiger la réponse depuis l'adresse professionnelle. Demandez d'abord à l'agent de confirmer depuis quelle boîte il envoie.
 
-## Ce qui change quand vous mélangez Gmail et IMAP
+## Ce qui change quand vous mélangez Gmail, Outlook et IMAP
 
 Les configurations mixtes sont le cas normal, et les fournisseurs ne s'accordent pas sur ce qu'est un dossier.
 
 - **Gmail a des libellés.** Un déplacement ajoute un libellé et retire le message de la boîte de réception. Les autres libellés restent attachés, donc un message peut se trouver à plusieurs endroits.
 - **IMAP a des dossiers.** Un déplacement est un déplacement : le message quitte un dossier et arrive dans un autre.
+- **Outlook a des dossiers imbriqués.** Un déplacement est un déplacement, comme en IMAP, et les dossiers peuvent se trouver dans d'autres dossiers. Outlook n'a pas de libellés : l'action de libellé d'une automatisation applique donc une catégorie Outlook.
 - **Les noms de dossiers diffèrent.** Archive, All Mail, Spam, Junk et les noms localisés varient selon le fournisseur. Faites appeler \`folder_list\` par l'agent sur la boîte qu'il s'apprête à toucher.
 - **Le cadrage par dossiers vaut pour une boîte.** Restreindre une recherche à un ensemble de dossiers s'applique à l'intérieur d'une seule boîte, donc une recherche par dossiers sur plusieurs comptes reste un appel par compte.
 

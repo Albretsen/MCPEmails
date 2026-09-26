@@ -59,7 +59,7 @@
     },
     {
       "h": "Microsoft 365 vendu par IONOS est une boîte Microsoft, pas une boîte IONOS",
-      "p": "IONOS revend Microsoft 365 à côté de ses propres offres Mail Basic et Mail Business, et beaucoup de clients qui pensent avoir un e-mail IONOS ont en réalité un tenant Microsoft facturé par IONOS. Rien de ce qui concerne <code>imap.ionos.com</code> ne s'applique à ces boîtes : elles sont hébergées sur les serveurs de Microsoft et administrées depuis le Microsoft 365 Admin Center, pas depuis l'espace client IONOS. La politique de tenant par défaut de Microsoft empêche un utilisateur final ordinaire de consentir à un accès tiers en lecture et en écriture au courrier, un réglage qui relève de Microsoft et de l'administrateur de votre tenant. Nous ne prétendons pas les connecter. L'indice, c'est l'endroit où vous mène votre webmail : Outlook sur le web signifie Microsoft."
+      "p": "IONOS revend Microsoft 365 à côté de ses propres offres Mail Basic et Mail Business, et beaucoup de clients qui pensent avoir un e-mail IONOS ont en réalité un tenant Microsoft facturé par IONOS. Rien de ce qui concerne <code>imap.ionos.com</code> ne s'applique à ces boîtes : elles sont hébergées sur les serveurs de Microsoft et administrées depuis le Microsoft 365 Admin Center, pas depuis l'espace client IONOS. Connectez-les avec l'option Outlook (connexion avec Microsoft) plutôt qu'en IMAP. L'administrateur informatique de votre organisation devra peut-être d'abord approuver MCP Emails une fois, et le tableau de bord vous donne un lien d'approbation à lui envoyer. L'indice, c'est l'endroit où vous mène votre webmail : Outlook sur le web signifie Microsoft."
     },
     {
       "h": "Toutes les marques nationales d'IONOS et toutes les anciennes adresses 1&1 utilisent les deux mêmes serveurs",
@@ -67,13 +67,13 @@
     }
   ],
   "limits": [
-    "Les boîtes Microsoft 365 achetées via IONOS ne peuvent pas être connectées. La politique de tenant par défaut de Microsoft bloque le consentement des utilisateurs finaux à l'accès tiers au courrier.",
+    "Les boîtes Microsoft 365 achetées via IONOS ne sont pas sur imap.ionos.com. Connectez-les avec Outlook (connexion avec Microsoft) ; un administrateur informatique devra peut-être approuver l'application une fois.",
     "mcpemails connecte une boîte mail. Les alias, redirections, règles catch-all et réglages antispam d'IONOS restent dans l'espace client IONOS et ne sont pas visibles pour votre client IA."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec l'e-mail IONOS ?",
-      "a": "Il fonctionne avec une boîte mail IONOS, celles servies par imap.ionos.com, dès qu'un serveur MCP comme mcpemails y est connecté en IMAP. Claude n'a pas de connecteur IONOS intégré. Il ne fonctionne pas avec une boîte Microsoft 365 achetée via IONOS, car la politique de tenant par défaut de Microsoft bloque le consentement à l'accès tiers au courrier."
+      "a": "Il fonctionne avec une boîte mail IONOS, celles servies par imap.ionos.com, dès qu'un serveur MCP comme mcpemails y est connecté en IMAP. Claude n'a pas de connecteur IONOS intégré. Une boîte Microsoft 365 achetée via IONOS fonctionne aussi, mais elle se connecte avec Outlook (connexion avec Microsoft) et non en IMAP, et un administrateur informatique devra peut-être d'abord approuver MCP Emails une fois."
     },
     {
       "q": "Quels sont les paramètres IMAP et SMTP d'IONOS ?",
@@ -85,7 +85,7 @@
     },
     {
       "q": "Pourquoi le mot de passe de mon e-mail IONOS est-il refusé ?",
-      "a": "Parce qu'IONOS attribue à chaque adresse e-mail son propre mot de passe et que vous utilisez probablement l'identifiant de votre compte IONOS à la place. Ouvrez l'espace client IONOS, allez dans Email, sélectionnez l'adresse et définissez-lui un nouveau mot de passe, puis utilisez celui-ci. Si l'adresse a été migrée vers Microsoft 365, elle n'existe plus du tout sur les serveurs de messagerie IONOS."
+      "a": "Parce qu'IONOS attribue à chaque adresse e-mail son propre mot de passe et que vous utilisez probablement l'identifiant de votre compte IONOS à la place. Ouvrez l'espace client IONOS, allez dans Email, sélectionnez l'adresse et définissez-lui un nouveau mot de passe, puis utilisez celui-ci. Si l'adresse a été migrée vers Microsoft 365, elle n'existe plus du tout sur les serveurs de messagerie IONOS ; connectez-la alors avec Outlook."
     },
     {
       "q": "Les comptes IONOS britanniques, allemands et français utilisent-ils des serveurs différents ?",
@@ -99,5 +99,10 @@
   "ctaBand": {
     "title": "Donnez à votre IA une boîte IONOS",
     "sub": "Connectez IONOS en quelques minutes. 1 boîte gratuite, pour toujours, sans carte bancaire."
+  },
+  "seeAlso": {
+    "intro": "Une boîte Microsoft 365 achetée via IONOS ?",
+    "label": "Connectez-la avec Outlook (connexion avec Microsoft)",
+    "href": "/connect/office365"
   }
 }

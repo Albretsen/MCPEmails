@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PROVIDERS } from './providers.mjs';
 import {
-  RELEASE_WAVES, isReleased, isHeld, releasedProviders, relatedProviders,
+  RELEASE_WAVES, PINNED_RELATED, isReleased, isHeld, releasedProviders, relatedProviders,
   releasedProviderParams, releaseStatus,
 } from './release.mjs';
 
@@ -117,5 +117,19 @@ test('wave dates never go backwards, and held waves come last', () => {
     assert.ok(Number.isFinite(time), `wave ${wave} has an unparseable date: ${date}`);
     assert.ok(time >= previous, `wave ${wave} opens before the wave before it`);
     previous = time;
+  }
+});
+
+test('pinned siblings name real providers and lead the related list', () => {
+  const slugs = new Set(PROVIDERS.map((p) => p.slug));
+  for (const [slug, pinned] of Object.entries(PINNED_RELATED)) {
+    assert.ok(slugs.has(slug), `PINNED_RELATED has unknown page ${slug}`);
+    for (const s of pinned) {
+      assert.ok(slugs.has(s), `${slug} pins unknown provider ${s}`);
+      assert.notEqual(s, slug, `${slug} pins itself`);
+    }
+    const released = pinned.filter((s) => isReleased(PROVIDERS.find((p) => p.slug === s), after));
+    const rel = relatedProviders(slug, 6, after).map((p) => p.slug);
+    assert.deepEqual(rel.slice(0, released.length), released, `${slug} does not lead with its pinned siblings`);
   }
 });

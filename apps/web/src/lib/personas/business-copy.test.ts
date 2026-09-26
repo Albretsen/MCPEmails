@@ -22,9 +22,12 @@ import { FREE_ACTION_ALLOWANCE, FREE_ACTION_GRACE_DAYS, PLANS } from '../stripe/
  *   - a well-meant edit names a provider or a certification we cannot support.
  *     There is no SOC 2 report, no data-residency choice and no Enterprise
  *     tier, and each of those has already been removed from this site once.
- *     Outlook / Microsoft 365 connects, but a work tenant usually needs its IT
- *     admin to approve the app first, so these business-pitch strings do not
- *     promise it in passing: that caveat belongs where Outlook is explained.
+ *   - Microsoft 365 is oversold. Outlook / Microsoft 365 connects (live since
+ *     2026-09-26), but a work tenant on Microsoft's default consent policy
+ *     needs its IT admin to approve the app once first. Before the launch this
+ *     copy was banned from naming Outlook at all; now it may, as long as it
+ *     never calls Microsoft 365 "one click" and names the admin approval
+ *     wherever it offers Microsoft 365 to a company.
  *
  * Everything here reads files from disk; nothing renders. The rendered checks
  * (status codes, canonical, hreflang, sitemap) are done against a built server
@@ -80,10 +83,24 @@ function str(node: Json, dotted: string, label: string): string {
 const EM_DASH = new RegExp('[' + String.fromCharCode(0x2014, 0x2015) + ']');
 
 // Claims this product cannot support. Matched case-insensitively against the
-// strings this change wrote, never against whole legacy files: pricing.json
-// legitimately says the self-host stack has no "Outlook one-click OAuth", and
-// the IMAP page legitimately says Microsoft 365 cannot be connected.
-const BANNED_CLAIMS = /outlook|microsoft\s*365|office\s*365|exchange online|soc\s*-?\s*2|data residency|enterprise|hipaa|iso\s*27001/i;
+// strings this change wrote, never against whole legacy files.
+const BANNED_CLAIMS = /exchange online|soc\s*-?\s*2|data residency|enterprise|hipaa|iso\s*27001/i;
+
+// Microsoft 365 may be named, but never as instant: a company tenant usually
+// needs its IT admin to approve the app once, so "one click" (in any of the
+// five languages) in the same sentence as Outlook / Microsoft 365 is a false
+// promise to exactly the buyer this page is for.
+const MICROSOFT = /outlook|microsoft\s*365|office\s*365/i;
+const ONE_CLICK = /one[\s-]?click|single click|instant(ly)?|un\s+(solo\s+)?clic|en un clic|ett\s+klikk|一键|一次点击/i;
+// Where business copy offers Microsoft 365, the admin caveat travels with it.
+const ADMIN_APPROVAL = /admin|administra|管理员/i;
+
+function microsoftOverclaim(value: string): string | null {
+  for (const sentence of value.split(/(?<=[.!?。！？])\s*/)) {
+    if (MICROSOFT.test(sentence) && ONE_CLICK.test(sentence)) return sentence;
+  }
+  return null;
+}
 
 /** The strings this change wrote in files that also hold older copy. */
 const CHANGED_PATHS: Record<'pricing' | 'home' | 'imap', string[]> = {
@@ -160,7 +177,7 @@ test('forBusiness carries every key the page renders', () => {
   for (const key of [
     'meta.title', 'meta.description', 'hero.titleLine1', 'hero.titleLine2', 'hero.lead',
     'safety.link', 'providers.ctaImap', 'providers.ctaGmail', 'providers.ctaIonos',
-    'providers.ctaMatrix', 'pricing.note', 'pricing.cta', 'faq.items.0.q', 'faq.items.0.a',
+    'providers.ctaMatrix', 'providers.ctaMicrosoft', 'pricing.note', 'pricing.cta', 'faq.items.0.q', 'faq.items.0.a',
     'ctaBand.title', 'ctaBand.ctaPrimary', 'ctaBand.ctaSecondary',
   ]) {
     str(copy, key, 'en forBusiness');
@@ -233,6 +250,8 @@ test('none of the new copy makes a claim the product cannot support', () => {
   for (const locale of LOCALES) {
     for (const [key, value] of leaves(messages(locale, 'forBusiness'))) {
       assert.ok(!BANNED_CLAIMS.test(value), `${locale}: forBusiness ${key} claims "${value.match(BANNED_CLAIMS)?.[0]}"`);
+      const overclaim = microsoftOverclaim(value);
+      assert.equal(overclaim, null, `${locale}: forBusiness ${key} promises Microsoft 365 in one click: "${overclaim}"`);
     }
     const files = { pricing: messages(locale, 'pricing'), home: messages(locale, 'home'), imap: imap(locale) };
     for (const [file, paths] of Object.entries(CHANGED_PATHS) as [keyof typeof files, string[]][]) {
@@ -240,11 +259,40 @@ test('none of the new copy makes a claim the product cannot support', () => {
         const value = str(files[file], key, `${locale} ${file}`);
         assert.ok(value.trim().length > 0, `${locale}: ${file} ${key} is empty`);
         assert.ok(!BANNED_CLAIMS.test(value), `${locale}: ${file} ${key} claims "${value.match(BANNED_CLAIMS)?.[0]}"`);
+        const overclaim = microsoftOverclaim(value);
+        assert.equal(overclaim, null, `${locale}: ${file} ${key} promises Microsoft 365 in one click: "${overclaim}"`);
       }
     }
   }
   const grid = readText('components/marketing/Sections.jsx').match(/const EXAMPLES = \[[\s\S]*?\n\];/);
   assert.ok(grid && !BANNED_CLAIMS.test(grid[0]), 'the homepage prompt grid names a banned claim');
+});
+
+test('forBusiness offers Microsoft 365 only with the admin-approval caveat', () => {
+  // The prose that tells a company Microsoft 365 connects must say, in the same
+  // string, that an IT admin may have to approve it once. Exempt: the button
+  // labels, which sit under the paragraph that carries the caveat, and the
+  // meta description, which is a search snippet with no room for it.
+  for (const locale of LOCALES) {
+    const copy = messages(locale, 'forBusiness');
+    const sub = str(copy, 'providers.sub', `${locale} forBusiness`);
+    assert.ok(MICROSOFT.test(sub), `${locale}: forBusiness providers.sub no longer mentions Microsoft 365 / Outlook`);
+    for (const [key, value] of leaves(copy)) {
+      if (!MICROSOFT.test(value) || key === 'meta.description' || key.startsWith('providers.cta')) continue;
+      assert.ok(ADMIN_APPROVAL.test(value), `${locale}: forBusiness ${key} names Microsoft 365 without the admin approval`);
+    }
+  }
+  // The guard itself still bites, in more than one language.
+  for (const claim of [
+    'Microsoft 365 connects in one click.',
+    'Outlook: one-click setup for your whole team.',
+    'Conecta Microsoft 365 con un solo clic.',
+    'Koble til Outlook med ett klikk.',
+    'Microsoft 365 一键连接。',
+  ]) {
+    assert.notEqual(microsoftOverclaim(claim), null, `the Microsoft guard missed "${claim}"`);
+  }
+  assert.equal(microsoftOverclaim('Gmail in one click. Outlook signs in with Microsoft.'), null);
 });
 
 test('the changed strings are translated in every non-English locale', () => {

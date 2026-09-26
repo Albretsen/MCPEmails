@@ -112,5 +112,10 @@
     "intro": "¿Prefieres una guía paso a paso con capturas?",
     "label": "Conector IMAP para Claude: conecta cualquier bandeja IMAP a Claude",
     "href": "/blog/claude-imap-connector"
+  },
+  "seeAlso": {
+    "intro": "¿Un buzón de Outlook.com, Hotmail o Microsoft 365?",
+    "label": "Conéctalo con el inicio de sesión de Microsoft en lugar de por IMAP",
+    "href": "/connect/outlook"
   }
 }

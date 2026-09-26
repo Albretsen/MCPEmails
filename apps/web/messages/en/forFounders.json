@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "AI Email for Founders: Manage Customer Inbox with Claude",
-    "description": "Use Claude or another MCP client to triage and answer customer email. Read, draft, send, schedule, and organize Gmail or IMAP inboxes in one secure workflow."
+    "description": "Use Claude or another MCP client to triage and answer customer email. Read, draft, send, schedule, and organize Gmail, Outlook or IMAP inboxes in one secure workflow."
   },
   "hero": {
     "eyebrow": "Built for founders",
@@ -76,8 +76,9 @@
   "providers": {
     "eyebrow": "Any inbox, any AI",
     "title": "Connect the inbox you already run support from",
-    "sub": "Gmail over Google sign-in, the rest over an app password. The same inbox then works in Claude, Cursor, VS Code, ChatGPT, and any MCP client, so you are never locked to one app.",
+    "sub": "Outlook over Microsoft sign-in, Gmail over an app password or Google sign-in, the rest over an app password. The same inbox then works in Claude, Cursor, VS Code, ChatGPT, and any MCP client, so you are never locked to one app.",
     "ctaGmail": "Connect Gmail",
+    "ctaOutlook": "Connect Outlook",
     "ctaFastmail": "Connect Fastmail",
     "ctaIcloud": "Connect iCloud"
   },

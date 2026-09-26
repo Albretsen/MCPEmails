@@ -53,8 +53,8 @@
       "p": "几乎所有其他服务商都把提交服务器命名为 <code>smtp.something</code>，所以人们会凭习惯套用这个格式，结果得到一个无法解析的主机名。one.com 使用的是 <code>send.one.com</code>。它与 <code>imap.one.com</code> 的不对称让人以为是文档笔误，其实不是。如果收信正常，而发信超时或无法解析，原因就在这里。"
     },
     {
-      "h": "one.com 也转售 Microsoft 365，而那种邮箱无法连接",
-      "p": "Control Panel 中的磁贴名为 Email and Microsoft 365，one.com 在同一账户下同时销售两者。在该磁贴中创建、拥有独立密码的 one.com 邮箱账户，是 one.com 服务器上的普通 IMAP 邮箱，可以正常连接。通过 one.com 购买的 Microsoft 365 席位则是 Microsoft 服务器上的 Microsoft 邮箱，而 Microsoft 的默认租户策略会阻止最终用户自行同意第三方读写邮件的权限。我们不声称能连接这类邮箱。如果你的网页邮箱是 Outlook 网页版而不是 one.com 自己的界面，那你用的就是 Microsoft 的产品。"
+      "h": "one.com 也转售 Microsoft 365，这种邮箱要用 Outlook 连接",
+      "p": "Control Panel 中的磁贴名为 Email and Microsoft 365，one.com 在同一账户下同时销售两者。在该磁贴中创建、拥有独立密码的 one.com 邮箱账户，是 one.com 服务器上的普通 IMAP 邮箱，可以正常连接。通过 one.com 购买的 Microsoft 365 席位则是 Microsoft 服务器上的 Microsoft 邮箱，所以请用 Outlook 选项（使用 Microsoft 登录）而不是 IMAP 连接。可能需要 IT 管理员先批准一次 MCP Emails，控制台会给你一个审批链接，供你发给管理员。如果你的网页邮箱是 Outlook 网页版而不是 one.com 自己的界面，那你用的就是 Microsoft 的产品。"
     },
     {
       "h": "Control Panel 的两步验证不作用于你的邮箱",
@@ -64,7 +64,7 @@
   "limits": [
     "服务器未声明 MOVE 或 UIDPLUS，因此移动操作以复制、标记再删除的方式完成，目标 UID 需要通过搜索找到。",
     "缺少 SPECIAL-USE，因此已发送、草稿、已删除和垃圾邮件文件夹按名称匹配。丹麦语、瑞典语和挪威语的 one.com 邮箱通常使用本地化的文件夹名称。",
-    "通过 one.com 销售的 Microsoft 365 席位无法连接。"
+    "通过 one.com 销售的 Microsoft 365 席位不在 imap.one.com 上，请改用 Outlook（使用 Microsoft 登录）连接。"
   ],
   "faq": [
     {
@@ -91,5 +91,10 @@
   "ctaBand": {
     "title": "给你的 AI 一个 one.com 收件箱",
     "sub": "几分钟即可连接 one.com 邮箱。一个收件箱永久免费，无需信用卡。"
+  },
+  "seeAlso": {
+    "intro": "通过 one.com 购买的 Microsoft 365 邮箱？",
+    "label": "用 Outlook（使用 Microsoft 登录）连接",
+    "href": "/connect/office365"
   }
 }

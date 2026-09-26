@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "为创始人打造的邮件工具：在 Claude 中回复客户",
-    "description": "创始人用 mcpemails 直接在 Claude 或任何 AI 中整理和回复客户邮件。在每个收件箱里阅读、用你自己的语气起草、发送和安排邮件。无限量使用，免费起步。"
+    "description": "用 Claude 或其他 MCP 客户端整理并回复客户邮件。在一个安全的工作流中阅读、起草、发送、安排和整理 Gmail、Outlook 或 IMAP 收件箱。"
   },
   "hero": {
     "eyebrow": "为创始人打造",
@@ -76,8 +76,9 @@
   "providers": {
     "eyebrow": "任意收件箱，任意 AI",
     "title": "连接你本就用来做客服的那个收件箱",
-    "sub": "Gmail 通过 Google 登录连接，其余的通过应用专用密码连接。同一个收件箱随后就能在 Claude、Cursor、VS Code、ChatGPT 以及任何 MCP 客户端中使用，所以你永远不会被锁死在一个应用里。",
+    "sub": "Outlook 通过 Microsoft 登录连接，Gmail 通过应用密码或 Google 登录连接，其余的通过应用专用密码连接。同一个收件箱随后就能在 Claude、Cursor、VS Code、ChatGPT 以及任何 MCP 客户端中使用，所以你永远不会被锁死在一个应用里。",
     "ctaGmail": "连接 Gmail",
+    "ctaOutlook": "连接 Outlook",
     "ctaFastmail": "连接 Fastmail",
     "ctaIcloud": "连接 iCloud"
   },

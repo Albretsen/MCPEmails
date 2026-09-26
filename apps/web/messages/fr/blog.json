@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "Blog",
-    "description": "Guides et analyses sur les agents IA, MCP et la connexion de Gmail, Fastmail et toute boîte IMAP à Claude et Cursor."
+    "description": "Guides et analyses sur les agents IA, MCP et la connexion de Gmail, Outlook, Fastmail et toute boîte IMAP à Claude et Cursor."
   },
   "blogName": "Blog mcpemails",
   "index": {
     "eyebrow": "Le blog MCPEmails",
     "title": "Notes sur les agents, l’e-mail et MCP",
-    "lead": "Guides, analyses approfondies et notes de terrain sur la connexion de Gmail, Fastmail et toute boîte IMAP à Claude, Cursor et aux clients compatibles MCP.",
+    "lead": "Guides, analyses approfondies et notes de terrain sur la connexion de Gmail, Outlook, Fastmail et toute boîte IMAP à Claude, Cursor et aux clients compatibles MCP.",
     "filterAria": "Filtrer les articles par thème",
     "all": "Tous",
     "empty": "Aucun article avec l’étiquette “{tag}” pour l’instant.",
@@ -22,7 +22,7 @@
     "minRead": "{minutes} min de lecture",
     "cta": {
       "title": "Donnez une boîte de réception à votre agent",
-      "sub": "Connectez Gmail, Fastmail ou n’importe quel compte IMAP à votre agent IA en quelques minutes.",
+      "sub": "Connectez Gmail, Outlook, Fastmail ou n’importe quel compte IMAP à votre agent IA en quelques minutes.",
       "primary": "Commencer gratuitement",
       "secondary": "Lire la documentation"
     }

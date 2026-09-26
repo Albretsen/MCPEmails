@@ -1,11 +1,11 @@
 const translation = {
   title: 'Cómo llegar al inbox zero con IA (usando Claude y tu bandeja de entrada real)',
   description:
-    'Llega al inbox zero con IA: deja que Claude clasifique, archive, etiquete y redacte respuestas en tu bandeja real de Gmail o IMAP a través de MCP. Una rutina repetible, los prompts exactos y por qué no se almacena nada.',
+    'Llega al inbox zero con IA: deja que Claude clasifique, archive, etiquete y redacte respuestas en tu bandeja real de Gmail, Outlook o IMAP a través de MCP. Una rutina repetible, los prompts exactos y por qué no se almacena nada.',
   coverAlt: 'Llega al inbox zero con IA — Claude clasifica, archiva y redacta respuestas en tu bandeja real a través de MCP',
   content: `El inbox zero siempre ha tenido el mismo problema: alcanzarlo te cuesta una hora que no tienes, y mañana vuelves a tener cincuenta sin leer. Un agente de IA cambia las cuentas. En lugar de ordenar tú los mensajes uno a uno, le dices a Claude qué significa "gestionado" y trabaja toda la bandeja a la vez — clasificando, archivando, etiquetando y redactando respuestas sobre tu correo *real*, en directo.
 
-Esta guía es la rutina: un bucle repetible que puedes ejecutar cada mañana, los prompts exactos que lo impulsan y la única regla que lo mantiene seguro (nunca se almacena nada). Da por hecho que Claude ya puede ver tu bandeja de entrada. Si todavía no puede, empieza por [cómo conectar Gmail con Claude](/blog/connect-gmail-to-claude) — lleva unos dos minutos — y luego vuelve.
+Esta guía es la rutina: un bucle repetible que puedes ejecutar cada mañana, los prompts exactos que lo impulsan y la única regla que lo mantiene seguro (nunca se almacena nada). Da por hecho que Claude ya puede ver tu bandeja de entrada. Si todavía no puede, empieza por [cómo conectar Gmail con Claude](/blog/connect-gmail-to-claude) (o la [guía de Outlook y Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp)) — lleva unos dos minutos — y luego vuelve.
 
 ## Por qué el "inbox zero" por fin es realista con IA
 
@@ -33,7 +33,7 @@ Esto es \`email_organize\` haciendo el trabajo aburrido — archivando en masa p
 
 > "Etiqueta como 'Prioritario' cualquier cosa de un cliente o sobre una factura, y como 'Para tu información' aquello en lo que solo estoy en copia."
 
-Ahora los supervivientes están ordenados. Claude aplica etiquetas de Gmail (o carpetas IMAP) para que los hilos importantes queden agrupados visualmente antes de que dediques un segundo de atención.
+Ahora los supervivientes están ordenados. Claude aplica etiquetas de Gmail (o carpetas en Outlook e IMAP) para que los hilos importantes queden agrupados visualmente antes de que dediques un segundo de atención.
 
 **4. Redacta las respuestas — pero no las envíes.**
 
@@ -57,7 +57,7 @@ La rutina anterior dura unos cinco minutos una vez que Claude hace el trabajo du
 
 ## La única regla que mantiene esto seguro
 
-Entregar toda tu bandeja a una IA suena arriesgado hasta que sabes adónde van los datos: **a ninguna parte.** Con MCP Emails, cada uno de esos prompts obtiene tu correo en directo desde Gmail o IMAP, se lo entrega a Claude para esa única acción y lo descarta de inmediato. Los cuerpos de los mensajes, los asuntos y los archivos adjuntos nunca se almacenan — lo único que se guarda por bandeja es un token cifrado para que pueda producirse la siguiente llamada. Esa es la diferencia entre darle a un agente una *llave* y darle una *copia permanente de todo*; aquí tienes [por qué importa que "el correo nunca se almacena"](/blog/why-email-never-stored-matters), y el [desglose completo de seguridad](/blog/is-it-safe-to-give-ai-agent-email-access) si quieres el modelo de amenazas.
+Entregar toda tu bandeja a una IA suena arriesgado hasta que sabes adónde van los datos: **a ninguna parte.** Con MCP Emails, cada uno de esos prompts obtiene tu correo en directo desde Gmail, Outlook o IMAP, se lo entrega a Claude para esa única acción y lo descarta de inmediato. Los cuerpos de los mensajes, los asuntos y los archivos adjuntos nunca se almacenan — lo único que se guarda por bandeja es un token cifrado para que pueda producirse la siguiente llamada. Esa es la diferencia entre darle a un agente una *llave* y darle una *copia permanente de todo*; aquí tienes [por qué importa que "el correo nunca se almacena"](/blog/why-email-never-stored-matters), y el [desglose completo de seguridad](/blog/is-it-safe-to-give-ai-agent-email-access) si quieres el modelo de amenazas.
 
 También mantienes una línea firme respecto al envío: los borradores siguen siendo borradores hasta que los apruebas, y puedes conceder acceso de solo lectura para que Claude literalmente no pueda enviar.
 

@@ -16,6 +16,8 @@ El correo de Microsoft no es una sola cosa, y la diferencia decide cómo va tu c
 
 La aprobación del administrador es un paso único para toda la organización. Una vez hecha, cada empleado se conecta de la forma normal.
 
+Cada caso tiene además un resumen en una sola página: [Outlook.com](/connect/outlook) para cuentas personales y [Microsoft 365](/connect/office365) para cuentas de trabajo o educativas.
+
 ## Conecta tu buzón de Outlook o Microsoft 365
 
 Dos partes: conectar el buzón y luego conectar el agente. Están separadas a propósito. La conexión del buzón permite que MCP Emails llegue a tu buzón, y la conexión del agente permite que tu cliente de IA llegue a MCP Emails.
@@ -32,10 +34,10 @@ MCP Emails guarda cifrado el token OAuth resultante y nada más de tu buzón. Nu
 
 ### Si tu organización tiene que aprobar antes la aplicación
 
-En una cuenta de trabajo o educativa, Microsoft puede detenerte antes de la pantalla de consentimiento y decir que hace falta la aprobación de un administrador. Cuando ocurre, el panel muestra un aviso con un enlace **Enviar a tu administrador de TI**:
+En una cuenta de trabajo o educativa, Microsoft puede detenerte antes de la pantalla de consentimiento y decir que hace falta la aprobación de un administrador. Cuando ocurre, el panel te da un enlace de aprobación que puedes compartir:
 
-1. Envía ese enlace a tu administrador de TI.
-2. Tu administrador lo abre, inicia sesión y aprueba MCP Emails una sola vez para toda la organización.
+1. Copia el enlace y envíalo a tu administrador de TI.
+2. Tu administrador lo abre, inicia sesión con su cuenta de administrador de Microsoft y aprueba MCP Emails una sola vez para toda la organización. No necesita una cuenta de MCP Emails.
 3. Vuelve al panel y conecta Outlook como en el paso 1. Ahora funciona igual que con una cuenta personal.
 
 Tu administrador aprueba la aplicación para la organización, y cada persona sigue iniciando sesión con su propia cuenta y conecta solo su propio buzón.
@@ -67,7 +69,7 @@ Outlook se conecta a través de Microsoft Graph, no de IMAP. Cada llamada a una 
 ## Qué puede hacer tu agente con un buzón de Outlook
 
 - Leer y buscar correo.
-- Enviar, responder y reenviar, con adjuntos de hasta 25 MB.
+- Enviar, responder y reenviar. Un mensaje que envías puede llevar hasta 10 MB de adjuntos, y descargar un adjunto o reenviar un original con sus adjuntos funciona hasta 25 MB.
 - Trabajar con borradores y programar un envío para más tarde.
 - Trabajar con carpetas, incluidas las carpetas anidadas.
 - Mover, copiar y archivar mensajes.
@@ -77,7 +79,7 @@ Outlook se conecta a través de Microsoft Graph, no de IMAP. Cada llamada a una 
 
 ### En qué se diferencia Outlook de Gmail
 
-**Carpetas, no etiquetas.** Outlook organiza el correo en carpetas. Las herramientas de etiquetas son solo para Gmail, así que en un buzón de Outlook tu agente archiva el correo moviéndolo a una carpeta.
+**Carpetas, no etiquetas.** Outlook organiza el correo en carpetas. Las herramientas de etiquetas son solo para Gmail, así que en un buzón de Outlook tu agente archiva el correo moviéndolo a una carpeta. La única excepción son las automatizaciones: la acción de etiqueta de una automatización aplica una categoría de Outlook al mensaje.
 
 **Búsqueda.** La búsqueda en Outlook usa la búsqueda propia de Microsoft Graph. Hay una limitación de Graph que importa: una búsqueda de texto no se puede combinar con los filtros de no leído, con adjunto, con bandera o de fecha. Cuando tu consulta incluye texto, esos filtros no se aplican, y el resultado le indica a tu agente cuáles se omitieron. Si necesitas ambas cosas, busca primero el texto y deja que el agente acote los resultados que recibe.
 

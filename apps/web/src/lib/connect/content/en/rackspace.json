@@ -58,7 +58,7 @@
     },
     {
       "h": "Rackspace sells three different mail products, and only one of them is on emailsrvr",
-      "p": "<b>Rackspace Email</b> is the standalone IMAP mailbox product and the one this page covers. Rackspace also sells <b>Hosted Exchange</b>, running Exchange on Rackspace's own infrastructure, and resells <b>Microsoft 365</b>, where the mailbox lives on Microsoft's servers under Microsoft's identity platform. Only Rackspace Email answers on <code>secure.emailsrvr.com</code>. We do not claim to connect a Microsoft 365 mailbox, because Microsoft's default tenant policy blocks an ordinary end user from consenting to third-party mail read and write access. If your webmail is Outlook on the web, that is the Microsoft product."
+      "p": "<b>Rackspace Email</b> is the standalone IMAP mailbox product and the one this page covers. Rackspace also sells <b>Hosted Exchange</b>, running Exchange on Rackspace's own infrastructure, and resells <b>Microsoft 365</b>, where the mailbox lives on Microsoft's servers under Microsoft's identity platform. Only Rackspace Email answers on <code>secure.emailsrvr.com</code>. A Microsoft 365 mailbox connects with the Outlook option (Sign in with Microsoft) instead of IMAP; an IT admin may need to approve MCP Emails once first, and the dashboard gives you an approval link to send them. If your webmail is Outlook on the web, that is the Microsoft product."
     },
     {
       "h": "You are talking to a proxy, and the capabilities you see are the proxy's",
@@ -68,7 +68,7 @@
   "limits": [
     "Because the server does not advertise MOVE or UIDPLUS, a move is performed as copy, flag and expunge, and it is not atomic.",
     "Folders are matched by name rather than by role, since SPECIAL-USE is not advertised. A mailbox with renamed folders may need the target named explicitly.",
-    "Hosted Exchange and Microsoft 365 mailboxes sold by Rackspace are not on secure.emailsrvr.com, and Microsoft 365 mailboxes cannot be connected at all."
+    "Hosted Exchange and Microsoft 365 mailboxes sold by Rackspace are not on secure.emailsrvr.com. Microsoft 365 mailboxes connect with Outlook (Sign in with Microsoft) instead."
   ],
   "faq": [
     {
@@ -99,5 +99,10 @@
   "ctaBand": {
     "title": "Give your AI a Rackspace Email inbox",
     "sub": "Connect Rackspace Email in minutes. One inbox free forever, no card required."
+  },
+  "seeAlso": {
+    "intro": "Microsoft 365 mailbox from Rackspace?",
+    "label": "Connect it with Outlook (Sign in with Microsoft)",
+    "href": "/connect/office365"
   }
 }

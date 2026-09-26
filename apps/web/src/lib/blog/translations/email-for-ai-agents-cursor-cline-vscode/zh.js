@@ -12,7 +12,7 @@ MCP 服务器并不持有你的邮件。它代理一条到你已在使用的邮�
 
 进入 **Dashboard → Inboxes → Connect Inbox**，选择一个服务商：
 
-- **Gmail** → 一键 OAuth。用 Google 账号登录并授权即可。
+- **Gmail** → 默认通过 IMAP 使用 Google 应用专用密码（你的 Google 账户需要开启两步验证），也可以改用**使用 Google 登录**。
 - **Outlook / Microsoft 365** → 通过使用 Microsoft 登录完成 OAuth，无需应用专用密码。个人 Outlook.com、Hotmail、Live 和 MSN 账户可以直接连接。工作或学校的 Microsoft 365 账户可能需要 IT 管理员先为整个组织一次性批准该应用；控制台会给你一个可以发给管理员的链接。
 - **iCloud、Fastmail、Yahoo、Zoho，或任何通用 IMAP 主机** → 使用应用专用密码。在服务商的设置中生成它（iCloud 是在 appleid.apple.com），然后粘贴进去。
 

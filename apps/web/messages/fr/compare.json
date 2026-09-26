@@ -19,7 +19,7 @@
       "coverage": {
         "tag": "Couverture",
         "h": "Chaque boîte, pas seulement Gmail",
-        "p": "Les connecteurs intégrés n'atteignent en général qu'une seule boîte : Gmail, parfois Outlook. Ils ne peuvent pas toucher <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b> ni aucun autre compte <b>IMAP/SMTP</b>. Nous les connectons tous : Gmail via OAuth, Outlook et Microsoft 365 via la connexion avec Microsoft, le reste via un mot de passe d'application ou simplement IMAP."
+        "p": "Les connecteurs intégrés n'atteignent en général qu'une seule boîte : Gmail, parfois Outlook. Ils ne peuvent pas toucher <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b> ni aucun autre compte <b>IMAP/SMTP</b>. Nous les connectons tous : Gmail via un mot de passe d'application ou la connexion Google, Outlook et Microsoft 365 via la connexion avec Microsoft, le reste via un mot de passe d'application ou simplement IMAP."
       },
       "actions": {
         "tag": "Vraies actions",
@@ -46,8 +46,11 @@
       "schedule": "Planifier des envois pour plus tard",
       "organize": "Déplacer, copier, marquer, archiver, supprimer",
       "multiAi": "Fonctionne dans Claude, Cursor, ChatGPT, n8n…",
-      "oauth": "Gmail via OAuth",
+      "oauth": "Gmail et Outlook via OAuth",
       "storage": "E-mails récupérés en direct, jamais stockés"
+    },
+    "values": {
+      "oauthNative": "Gmail ; parfois Outlook"
     },
     "footnote": "Les capacités des connecteurs natifs des IA varient selon le fournisseur ; les écarts ci-dessus reflètent le schéma courant d'un seul fournisseur."
   },
@@ -90,6 +93,7 @@
     "connectAll": "Tous les fournisseurs d'e-mail",
     "connectImap": "Connecter toute boîte IMAP",
     "connectGmail": "Connecter Gmail",
+    "connectOutlook": "Connecter Outlook",
     "connectFastmail": "Connecter Fastmail",
     "connectIcloud": "Connecter iCloud",
     "connectYahoo": "Connecter Yahoo",

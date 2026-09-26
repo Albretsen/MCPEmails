@@ -59,7 +59,7 @@
     },
     {
       "h": "从地址上看不出你用的是哪款 OVH 产品",
-      "p": "三款产品都在你自己的域名下提供邮件服务，所以无论位于哪一款，<code>you@yourdomain.fr</code> 看起来都一模一样。答案在 OVHcloud Control Panel 的 Web Cloud 中：MX Plan 位于 Emails 下，Email Pro 有自己的栏目，Hosted Exchange 又有另一个栏目。请先确认这一点，因为其他所有设置都取决于它。如果你在 OVH 订购的是 Microsoft 365 而不是 OVH 自己的 Hosted Exchange，那么邮箱位于 Microsoft 的服务器上、受 Microsoft 身份平台管理，而 Microsoft 的默认租户策略会阻止最终用户自行同意第三方邮件访问。我们不声称能连接这类邮箱。"
+      "p": "三款产品都在你自己的域名下提供邮件服务，所以无论位于哪一款，<code>you@yourdomain.fr</code> 看起来都一模一样。答案在 OVHcloud Control Panel 的 Web Cloud 中：MX Plan 位于 Emails 下，Email Pro 有自己的栏目，Hosted Exchange 又有另一个栏目。请先确认这一点，因为其他所有设置都取决于它。如果你在 OVH 订购的是 Microsoft 365 而不是 OVH 自己的 Hosted Exchange，那么邮箱位于 Microsoft 的服务器上，请用 Outlook 选项（使用 Microsoft 登录）而不是 IMAP 连接。可能需要 IT 管理员先批准一次 MCP Emails，控制台会给你一个审批链接，供你发给管理员。"
     },
     {
       "h": "MX Plan 运行的是 Dovecot，没有 MOVE、UIDPLUS 或 SPECIAL-USE",
@@ -67,7 +67,7 @@
     }
   ],
   "limits": [
-    "通过 OVHcloud 订购的 Microsoft 365 邮箱无法连接。Microsoft 的默认租户策略会阻止最终用户自行同意第三方邮件访问。",
+    "通过 OVHcloud 订购的 Microsoft 365 邮箱不在 OVH 的邮件服务器上。请用 Outlook（使用 Microsoft 登录）连接；可能需要 IT 管理员批准一次该应用。",
     "Email Pro 和 Hosted Exchange 的主机名中含有每项服务各自的服务器编号，因此我们无法自动填写。请从 OVHcloud Control Panel 的 Connection 框中获取。",
     "MX Plan 未声明 MOVE，因此移动操作不是原子的。如果连接中途断开，一封邮件可能会短暂同时存在于两个文件夹中。"
   ],
@@ -100,5 +100,10 @@
   "ctaBand": {
     "title": "给你的 AI 一个 OVH 收件箱",
     "sub": "几分钟即可连接 OVH。一个收件箱永久免费，无需信用卡。"
+  },
+  "seeAlso": {
+    "intro": "通过 OVHcloud 购买的 Microsoft 365 邮箱？",
+    "label": "用 Outlook（使用 Microsoft 登录）连接",
+    "href": "/connect/office365"
   }
 }

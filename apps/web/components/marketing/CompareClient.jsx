@@ -29,7 +29,7 @@ function FaqItem({ q, a }) {
 
 /* Comparison-table rows. Each cell is either a boolean (check/dash) or a
    message key resolved against the `compare` bundle. Feature labels resolve
-   from `table.rows.<key>.label`. */
+   from `table.rows.<key>`. */
 const TABLE_ROWS = [
   { key: 'providers',  native: false, mcp: true },
   { key: 'imap',       native: false, mcp: true },
@@ -40,7 +40,9 @@ const TABLE_ROWS = [
   { key: 'schedule',   native: false, mcp: true },
   { key: 'organize',   native: false, mcp: true },
   { key: 'multiAi',    native: false, mcp: true },
-  { key: 'oauth',      native: true,  mcp: true },
+  // Native connectors sign in to Gmail, and only some reach Outlook, so a
+  // plain check under "Gmail and Outlook over OAuth" would overclaim for them.
+  { key: 'oauth',      native: 'table.values.oauthNative', mcp: true },
   { key: 'storage',    native: true,  mcp: true },
 ];
 
@@ -127,8 +129,8 @@ export default function CompareClient() {
                 {TABLE_ROWS.map((row) => (
                   <tr key={row.key}>
                     <td className="feat-name">{t(`table.rows.${row.key}`)}</td>
-                    <Cell value={row.native} />
-                    <Cell value={row.mcp} />
+                    <Cell value={typeof row.native === 'string' ? t(row.native) : row.native} />
+                    <Cell value={typeof row.mcp === 'string' ? t(row.mcp) : row.mcp} />
                   </tr>
                 ))}
               </tbody>

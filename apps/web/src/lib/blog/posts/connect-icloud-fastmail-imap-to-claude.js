@@ -7,16 +7,16 @@ const post = {
   coverAlt: 'Connect iCloud, Fastmail, and any IMAP inbox to Claude over MCP',
   authorId: 'asgeir',
   publishedAt: "2026-05-13T09:00:00.000Z",
-  updatedAt: "2026-09-25T09:00:00.000Z",
+  updatedAt: "2026-09-26T09:00:00.000Z",
   tags: ['iCloud', 'Fastmail', 'IMAP', 'Tutorial'],
   featured: false,
-  content: `Connecting iCloud, Fastmail, or any IMAP mailbox to Claude takes one thing Gmail and Outlook don't need: an **app-specific password**. You generate it inside your email provider, paste it into MCP Emails once, and Claude can read, search, and send through that inbox. No OAuth dance, no SMTP server settings to memorize.
+  content: `Connecting iCloud, Fastmail, or any IMAP mailbox to Claude takes one thing Outlook doesn't need: an **app-specific password**. You generate it inside your email provider, paste it into MCP Emails once, and Claude can read, search, and send through that inbox. No OAuth dance, no SMTP server settings to memorize.
 
 This is the route for every provider that isn't Gmail or Microsoft. iCloud, Fastmail, Yahoo, Zoho, Yandex, and any generic IMAP host all run through the same IMAP/SMTP transport, so they share an identical feature set. If you can get an app password out of the provider, you can connect it. One nice bonus over Gmail: IMAP gives Claude real, permanent delete.
 
 ## Why these providers use an app password, not OAuth
 
-Gmail and Outlook expose modern OAuth APIs, so MCP Emails connects them with a sign-in instead of a password. (A work or school Microsoft 365 account may need an IT admin to approve the app once first; the [Outlook and Microsoft 365 guide](/blog/connect-outlook-microsoft-365-ai-agent-mcp) explains it.) iCloud and Fastmail don't offer that path to third-party email tools. Instead they hand you an **app-specific password**: a long, randomly generated password scoped to a single application, separate from your real account password and revocable on its own.
+Outlook exposes a modern OAuth API, so MCP Emails connects it with Sign in with Microsoft instead of a password. (A work or school Microsoft 365 account may need an IT admin to approve the app once first; the [Outlook and Microsoft 365 guide](/blog/connect-outlook-microsoft-365-ai-agent-mcp) explains it.) Gmail offers both routes: its default is a Google app password over IMAP, like the providers here, and Sign in with Google is the alternative. iCloud and Fastmail don't offer that path to third-party email tools. Instead they hand you an **app-specific password**: a long, randomly generated password scoped to a single application, separate from your real account password and revocable on its own.
 
 One correction worth making, because older write-ups get it wrong: **Fastmail is app-password only.** Fastmail used to support an OAuth flow for some integrations, but for connecting to MCP Emails today you generate an app password in Fastmail's settings. Same as iCloud. If a guide tells you to "sign in with Fastmail" through OAuth, it's stale.
 

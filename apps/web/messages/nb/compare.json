@@ -19,7 +19,7 @@
       "coverage": {
         "tag": "Dekning",
         "h": "Hver innboks, ikke bare Gmail",
-        "p": "Innebygde koblinger når vanligvis bare én postkasse: Gmail, av og til Outlook. De kan ikke nå <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b> eller noen annen <b>IMAP/SMTP</b>-konto. Vi kobler til alle: Gmail via OAuth, Outlook og Microsoft 365 ved å logge inn med Microsoft, resten via et app-passord eller vanlig IMAP."
+        "p": "Innebygde koblinger når vanligvis bare én postkasse: Gmail, av og til Outlook. De kan ikke nå <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b> eller noen annen <b>IMAP/SMTP</b>-konto. Vi kobler til alle: Gmail via et app-passord eller Google-innlogging, Outlook og Microsoft 365 ved å logge inn med Microsoft, resten via et app-passord eller vanlig IMAP."
       },
       "actions": {
         "tag": "Ekte handlinger",
@@ -46,8 +46,11 @@
       "schedule": "Planlegg sendinger til senere",
       "organize": "Flytt, kopier, flagg, arkiver, slett",
       "multiAi": "Virker i Claude, Cursor, ChatGPT, n8n …",
-      "oauth": "Gmail via OAuth",
+      "oauth": "Gmail og Outlook via OAuth",
       "storage": "E-post hentes direkte, lagres aldri"
+    },
+    "values": {
+      "oauthNative": "Gmail; av og til Outlook"
     },
     "footnote": "Funksjonene til typiske innebygde AI-koblinger varierer mellom leverandører; forskjellene over gjenspeiler det vanlige mønsteret med én leverandør."
   },
@@ -90,6 +93,7 @@
     "connectAll": "Alle e-postleverandører",
     "connectImap": "Koble til enhver IMAP-innboks",
     "connectGmail": "Koble til Gmail",
+    "connectOutlook": "Koble til Outlook",
     "connectFastmail": "Koble til Fastmail",
     "connectIcloud": "Koble til iCloud",
     "connectYahoo": "Koble til Yahoo",

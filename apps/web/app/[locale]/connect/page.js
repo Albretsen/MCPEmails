@@ -1,7 +1,7 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { metaAlternates, localePath, APP_URL, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
-import { PROVIDER_CATEGORIES } from '@/lib/connect/providers.mjs';
+import { PROVIDER_CATEGORIES, featuredFirst } from '@/lib/connect/providers.mjs';
 import { releasedProviders } from '@/lib/connect/release.mjs';
 import { routing } from '@/i18n/routing';
 import { Nav, Footer } from '../../../components/marketing/Sections';
@@ -57,7 +57,9 @@ export default async function ConnectHubPage({ params }) {
   // Released pages only. The hub is the most-crawled page in the silo, so a
   // link from here into an unopened wave would be the fastest way to teach a
   // crawler that these URLs 404.
-  const available = releasedProviders().filter((p) => p.locales.includes(locale));
+  // Featured providers (Gmail, Outlook, Microsoft 365) lead their silo;
+  // everything else keeps registry order.
+  const available = featuredFirst(releasedProviders().filter((p) => p.locales.includes(locale)));
   const groups = PROVIDER_CATEGORIES.map((c) => ({
     ...c,
     providers: available.filter((p) => p.category === c.id),

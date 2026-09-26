@@ -26,7 +26,7 @@ const SETS = [
   { name: 'clients', dir: join(here, '../clients/content'), registry: CLIENTS },
 ];
 const ALLOWED_TAG = /^<\/?(b|code)>$/;
-const VERBATIM = new Set(['_sources', 'auth.method', 'auth.status', 'auth.helpUrl', 'guide.href', 'persona.href']);
+const VERBATIM = new Set(['_sources', 'auth.method', 'auth.status', 'auth.helpUrl', 'guide.href', 'persona.href', 'seeAlso.href']);
 
 function leaves(value, path = '', out = new Map()) {
   if (Array.isArray(value)) value.forEach((v, i) => leaves(v, `${path}[${i}]`, out));

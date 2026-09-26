@@ -21,7 +21,7 @@
     "steps": {
       "signup": {
         "label": "注册并连接收件箱",
-        "heading": "创建账户并连接 Gmail",
+        "heading": "创建账户并连接你的收件箱",
         "body": "在 mcpemails.com 注册，然后前往 仪表盘 → 收件箱 → 连接收件箱。选择 Gmail、Outlook、iCloud、Fastmail 或任何 IMAP 收件箱，然后完成 OAuth 流程或粘贴一个应用密码。你的收件箱在一分钟内即可就绪。",
         "cta": "连接你的收件箱 →"
       },
@@ -134,7 +134,7 @@
     },
     "email_read": {
       "title": "读取邮件",
-      "desc": "在收件箱中读取、列出和搜索邮件。设置 action：'list' 获取最近邮件摘要（最新优先，可按文件夹/未读筛选并分页），'read' 获取单个 message_id 的完整内容（纯文本正文、可选的净化后 HTML 和附件），'read_batch' 在一次调用中获取最多 50 个 message_ids，'search' 进行结构化、与提供商无关的筛选（from、to、cc、subject、body、text、unread、has_attachment、flagged、since、before），或 'attachment' 将单个附件（按 attachment_index 或 filename）下载为 base64 数据，最大 25 MB。只读，从不更改任何内容。'search' 操作也可由更窄的 search:email 权限单独解锁。 较长的正文将分段返回：请检查 body_truncated，并将 body_next_offset 作为 body_offset 传回以继续读取。",
+      "desc": "在收件箱中读取、列出和搜索邮件。设置 action：'list' 获取最近邮件摘要（最新优先，可按文件夹/未读筛选并分页），'read' 获取单个 message_id 的完整内容（纯文本正文、可选的净化后 HTML 和附件），'read_batch' 在一次调用中获取最多 50 个 message_ids，'search' 进行结构化、与提供商无关的筛选（from、to、cc、subject、body、text、unread、has_attachment、flagged、since、before），或 'attachment' 将单个附件（按 attachment_index 或 filename）下载为 base64 数据，最大 25 MB。只读，从不更改任何内容。'search' 操作也可由更窄的 search:email 权限单独解锁。 较长的正文将分段返回：请检查 body_truncated，并将 body_next_offset 作为 body_offset 传回以继续读取。在 Outlook 上，文本条件（from、to、cc、subject、body、text 或 query）不能与 unread、has_attachment、flagged、since 或 before 组合使用：这些筛选届时不会生效，结果会说明是哪些。",
       "params": {
         "action": "要执行的操作：\"list\"（最近邮件摘要）、\"read\"（单个 message_id 的完整内容）、\"read_batch\"（多个 message_ids）、\"search\"（结构化筛选）或 \"attachment\"（将单个附件下载为 base64）。决定其他哪些参数适用。",
         "inbox_id": "要读取的收件箱的 UUID。可选：当密钥仅有一个收件箱时自动解析；否则传入此项或 inbox。调用 inbox_list 以发现收件箱 ID。",
@@ -543,6 +543,7 @@
     },
     "notes": {
       "gmail": "<b>Gmail 的文件夹与标签：</b>Gmail 使用扁平的标签系统而非分层的文件夹。“移动”是通过添加/移除标签来实现的。Gmail REST API 不提供原生复制。这些 Gmail 行描述的是 Gmail API 连接器：使用应用专用密码通过 IMAP 连接的 Gmail 邮箱适用 IMAP 各列，包括复制。",
+      "outlook": "<b>Outlook（Microsoft Graph）：</b>搜索使用 KQL。文本条件（from、to、cc、subject、body、text 或 query）不能与 unread、has_attachment、flagged 或日期筛选组合使用：两者同时发送时，这些筛选不会生效，结果会说明哪些被忽略；而会对每个匹配项执行操作的工具则会直接拒绝这种组合。Outlook 使用文件夹而非标签，因此标签工具仅适用于 Gmail；自动化的标签操作会应用 Outlook 类别。附件：发送时每封邮件最多 10 MB，下载附件或转发原始邮件时最多 25 MB。",
       "permanentDelete": "<b>永久删除：</b>Gmail API 会把删除的邮件移到回收站，不提供永久彻底清除。Microsoft Graph 则提供：在 Outlook 邮箱上设置 permanent: true 会使用其 permanentDelete，跳过“已删除邮件”。所有 IMAP 邮箱（用应用专用密码连接的 Gmail、Fastmail、iCloud、Yahoo、Zoho、Yandex、通用）都同时支持回收站和硬性彻底清除。",
       "contacts_db": "<b>联系人搜索（实时扫描）：</b>所有服务商都支持 <code>contact_search</code>，它通过对你近期一段匹配邮件进行实时、仅读取邮件头的扫描来查找匹配的联系人。不存在联系人表，在两次调用之间不存储任何内容，且数量仅反映所扫描窗口内匹配的邮件。",
       "scheduling": "<b>定时：</b>通过服务器端的 <code>scheduled_sends</code> 队列为所有服务商提供支持。使用 <code>schedule</code> 工具的 <code>create</code>、<code>list</code> 和 <code>cancel</code> 操作。投递使用每个服务商现有的发送路径，无需服务商原生的定时 API。",
@@ -587,7 +588,7 @@
         "yahoo": "Yahoo 最多只允许 5 个并发连接。它的拒绝提示“Incorrect username or password”是故意把两者一起列出的，并不会告诉你错的是哪一个。",
         "zoho": "Zoho 默认关闭 IMAP 访问，需要先手动开启。Zoho 还运营六个区域数据中心，付费的自有域名邮箱位于 imappro/smtppro 而非 imap/smtp，因此正确的主机同时取决于区域和账户类型。",
         "yandex": "Yandex 未实现 RFC 4959 SASL-IR，因此内联登录形式返回的是命令语法错误，而不是凭据错误。需同时开启“IMAP”和“应用密码与 OAuth 令牌”，而 Yandex 360 自有域名账户的登录名可能并非邮箱地址。",
-        "outlook": "个人 Microsoft 账户（outlook.com、hotmail.com、live.com、msn.com）可直接连接。工作和学校账户则不同：Microsoft 默认的同意策略不允许员工自行批准邮件权限，因此控制台会显示一个链接，供你发给 IT 管理员，由管理员为整个组织一次性批准该应用；之后所有人都可以正常连接。没有 Exchange Online 邮箱的 Microsoft 账户会被拒绝，并提示改用 IMAP 连接该地址。对于新注册且集中批量发信的 outlook.com 账户，Microsoft 可能出于其自身的反滥用检查而暂时阻止发信。在搜索中，Microsoft Graph 无法把搜索文本与未读、附件、已标记或日期筛选组合使用，因此有搜索文本时这些筛选不会生效，结果中会说明是哪些。",
+        "outlook": "个人 Microsoft 账户（outlook.com、hotmail.com、live.com、msn.com）可直接连接。工作和学校账户则不同：Microsoft 默认的同意策略不允许员工自行批准邮件权限，因此控制台会提供一个可分享的审批链接，供你发给 IT 管理员，由管理员为整个组织一次性批准该应用，管理员无需 MCP Emails 账户；之后所有人都可以正常连接。没有 Exchange Online 邮箱的 Microsoft 账户会被拒绝，并提示改用 IMAP 连接该地址。对于新注册且集中批量发信的 outlook.com 账户，Microsoft 可能出于其自身的反滥用检查而暂时阻止发信。",
         "generic": "端口与安全模式对不上。端口仍为 993 却选了 STARTTLS，会对一个只说 TLS 的监听端口开启明文连接，连接只会一直等到超时。现在失败的传输会自动换另一种标准组合重试。"
       },
       "notes": {

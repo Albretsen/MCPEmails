@@ -58,7 +58,7 @@
     },
     {
       "h": "Rackspace 销售三种不同的邮件产品，只有一种在 emailsrvr 上",
-      "p": "<b>Rackspace Email</b> 是独立的 IMAP 邮箱产品，也是本页介绍的对象。Rackspace 还销售 <b>Hosted Exchange</b>（在 Rackspace 自己的基础设施上运行 Exchange），并转售 <b>Microsoft 365</b>，其邮箱位于 Microsoft 的服务器上、受 Microsoft 身份平台管理。只有 Rackspace Email 在 <code>secure.emailsrvr.com</code> 上响应。我们不声称能连接 Microsoft 365 邮箱，因为 Microsoft 的默认租户策略会阻止普通最终用户自行同意第三方读写邮件的权限。如果你的网页邮箱是 Outlook 网页版，那就是 Microsoft 的产品。"
+      "p": "<b>Rackspace Email</b> 是独立的 IMAP 邮箱产品，也是本页介绍的对象。Rackspace 还销售 <b>Hosted Exchange</b>（在 Rackspace 自己的基础设施上运行 Exchange），并转售 <b>Microsoft 365</b>，其邮箱位于 Microsoft 的服务器上、受 Microsoft 身份平台管理。只有 Rackspace Email 在 <code>secure.emailsrvr.com</code> 上响应。Microsoft 365 邮箱请用 Outlook 选项（使用 Microsoft 登录）而不是 IMAP 连接；可能需要 IT 管理员先批准一次 MCP Emails，控制台会给你一个审批链接，供你发给管理员。如果你的网页邮箱是 Outlook 网页版，那就是 Microsoft 的产品。"
     },
     {
       "h": "你连接的是代理，看到的能力也是代理的",
@@ -68,7 +68,7 @@
   "limits": [
     "由于服务器未声明 MOVE 或 UIDPLUS，移动操作以复制、标记再删除的方式完成，且不是原子的。",
     "由于未声明 SPECIAL-USE，文件夹按名称而不是按用途匹配。文件夹被重命名过的邮箱可能需要明确指定目标文件夹。",
-    "Rackspace 销售的 Hosted Exchange 和 Microsoft 365 邮箱不在 secure.emailsrvr.com 上，而 Microsoft 365 邮箱完全无法连接。"
+    "Rackspace 销售的 Hosted Exchange 和 Microsoft 365 邮箱不在 secure.emailsrvr.com 上。Microsoft 365 邮箱请改用 Outlook（使用 Microsoft 登录）连接。"
   ],
   "faq": [
     {
@@ -99,5 +99,10 @@
   "ctaBand": {
     "title": "给你的 AI 一个 Rackspace Email 收件箱",
     "sub": "几分钟即可连接 Rackspace Email。一个收件箱永久免费，无需信用卡。"
+  },
+  "seeAlso": {
+    "intro": "通过 Rackspace 购买的 Microsoft 365 邮箱？",
+    "label": "用 Outlook（使用 Microsoft 登录）连接",
+    "href": "/connect/office365"
   }
 }

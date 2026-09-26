@@ -112,5 +112,10 @@
     "intro": "Vous préférez un guide pas à pas avec captures d'écran ?",
     "label": "Connecteur IMAP pour Claude : connectez n'importe quelle boîte IMAP à Claude",
     "href": "/blog/claude-imap-connector"
+  },
+  "seeAlso": {
+    "intro": "Une boîte Outlook.com, Hotmail ou Microsoft 365 ?",
+    "label": "Connectez-la avec la connexion Microsoft plutôt qu'en IMAP",
+    "href": "/connect/outlook"
   }
 }

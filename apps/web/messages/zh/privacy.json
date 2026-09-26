@@ -73,7 +73,7 @@
     "googleP3": "如第 2.5 节所述，从 Gmail API 检索到的邮件内容会在同一请求中流式传递给你的智能体，且绝不会被 MCPEmails 存储、缓存或记录。",
     "microsoftTitle": "3.8 Microsoft API：邮箱访问权限及其撤销",
     "microsoftP1": "当你连接 Outlook 或 Microsoft 365 邮箱时，Microsoft 会请你批准一组具体且明确列出的权限：读取和整理你的邮件，以及代表你发送邮件。我们仅使用该访问权限来执行你要求 AI 代理对邮箱所做的操作，例如读取、搜索、整理、起草和发送。我们不会用它来建立你邮箱的副本，也绝不会将邮件内容或由其衍生的任何内容用于广告或营销。",
-    "microsoftRevokeP": "你可以随时直接在 Microsoft 撤销此访问权限，无需通知我们。个人 Microsoft 账户请使用<personal>Microsoft 账户权限</personal>。工作或学校账户请使用<work>我的应用</work>。在那里撤销后，我们将立即无法再访问该邮箱。",
+    "microsoftRevokeP": "你可以随时直接在 Microsoft 撤销此访问权限，无需通知我们。个人 Microsoft 账户请使用<personal>Microsoft 账户权限</personal>。工作或学校账户请使用<work>我的应用</work>。在那里撤销后，我们将立即无法再访问该邮箱。如果你的 IT 管理员为整个组织批准了 MCPEmails，则只有管理员才能撤销这项组织范围的批准。",
     "microsoftDisconnectP": "在 MCPEmails 控制台中断开该收件箱，对我们这一侧有同样的效果，并且还会删除该邮箱已保存的凭据。两者先做哪一个都可以，你不必两个都做。"
   },
   "dataRetention": {
@@ -150,7 +150,7 @@
     "stripeData": "计费邮箱、支付卡数据（由 Stripe 存储，非我们存储）",
     "stripeLocation": "美国（Stripe 已通过 PCI-DSS 认证）",
     "emailProvidersTitle": "5.2 电子邮件服务商（你的服务商，而非我们的）",
-    "emailProvidersP": "当你连接 Gmail、Fastmail 或其他 IMAP 账户时，MCPEmails 会使用你提供的凭据向该服务商进行身份验证。你邮箱中所保存数据的处理受你自己电子邮件服务商隐私政策的约束。MCPEmails 仅在你的智能体发起工具调用时访问你的邮箱，且仅针对该工具所请求的特定邮件或文件夹。",
+    "emailProvidersP": "当你连接 Gmail、Outlook / Microsoft 365、Fastmail 或其他 IMAP 账户时，MCPEmails 会使用你提供的凭据向该服务商进行身份验证。你邮箱中所保存数据的处理受你自己电子邮件服务商隐私政策的约束。MCPEmails 仅在你的智能体发起工具调用时访问你的邮箱，且仅针对该工具所请求的特定邮件或文件夹。",
     "noBrokersTitle": "5.3 无数据经纪商或广告网络",
     "noBrokersP": "我们不与任何数据经纪商、广告网络、社交媒体平台或构建用户画像的分析公司共享任何数据。",
     "legalDisclosuresTitle": "5.4 法律披露",

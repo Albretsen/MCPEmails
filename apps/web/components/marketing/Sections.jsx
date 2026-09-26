@@ -1333,6 +1333,7 @@ export function Footer() {
             <Link href="/connect">{tc('links.connectAll')}</Link>
             <Link href="/connect/imap">{tc('links.connectImap')}</Link>
             <Link href="/connect/gmail">{tc('links.connectGmail')}</Link>
+            <Link href="/connect/outlook">{tc('links.connectOutlook')}</Link>
             <Link href="/connect/fastmail">{tc('links.connectFastmail')}</Link>
             <Link href="/connect/icloud">{tc('links.connectIcloud')}</Link>
             <Link href="/connect/yahoo">{tc('links.connectYahoo')}</Link>

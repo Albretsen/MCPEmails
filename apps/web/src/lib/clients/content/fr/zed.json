@@ -25,7 +25,7 @@
   "setup": [
     {
       "h": "Créez un compte gratuit et connectez une boîte",
-      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Gmail se connecte en un clic via la connexion Google ; iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
+      "p": "Inscrivez-vous sur mcpemails.com, sans carte bancaire, puis allez dans Dashboard, Inboxes, Connect Inbox. Outlook et Microsoft 365 se connectent via la connexion Microsoft ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex demandent un mot de passe d'application, et Gmail accepte aussi la connexion Google ; tout le reste se connecte en IMAP et SMTP standard. Le plan gratuit inclut une boîte, pour toujours."
     },
     {
       "h": "Ouvrez les réglages de l'Agent Panel",
@@ -70,7 +70,7 @@
     },
     {
       "q": "Quelles boîtes Zed peut-il atteindre ainsi ?",
-      "a": "Gmail via la connexion Google ; iCloud, Fastmail, Yahoo, Zoho et Yandex avec un mot de passe d'application ; et toute autre boîte qui parle IMAP et SMTP sur les ports standard. Le client les voit toutes par la même connexion : votre agent appelle d'abord inbox_list pour découvrir chaque boîte connectée et son identifiant, donc aucun UUID à coller nulle part."
+      "a": "Outlook.com et Microsoft 365 via la connexion Microsoft, où un compte professionnel peut nécessiter qu'un administrateur informatique approuve l'application une fois ; Gmail, iCloud, Fastmail, Yahoo, Zoho et Yandex avec un mot de passe d'application, la connexion Google restant une seconde option pour Gmail ; et toute autre boîte qui parle IMAP et SMTP sur les ports standard. Le client les voit toutes par la même connexion : votre agent appelle d'abord inbox_list pour découvrir chaque boîte connectée et son identifiant, donc aucun UUID à coller nulle part."
     },
     {
       "q": "Zed peut-il envoyer un e-mail sans que je le voie ?",

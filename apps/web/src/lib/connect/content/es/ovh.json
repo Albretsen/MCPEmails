@@ -59,7 +59,7 @@
     },
     {
       "h": "Nada en tu dirección indica qué producto de OVH tienes",
-      "p": "Los tres productos sirven correo en tu propio dominio, así que <code>you@yourdomain.fr</code> tiene el mismo aspecto esté en el que esté. La respuesta está en el OVHcloud Control Panel, en Web Cloud, donde MX Plan aparece en Emails, Email Pro tiene su propia sección y Hosted Exchange otra. Compruébalo primero, porque todos los demás ajustes dependen de ello. Si lo que contrataste en OVH fue Microsoft 365 y no el Hosted Exchange propio de OVH, el buzón está en los servidores de Microsoft bajo la plataforma de identidad de Microsoft, y la política de tenant por defecto de Microsoft bloquea el consentimiento del usuario final para el acceso de terceros al correo. No afirmamos poder conectar esos buzones."
+      "p": "Los tres productos sirven correo en tu propio dominio, así que <code>you@yourdomain.fr</code> tiene el mismo aspecto esté en el que esté. La respuesta está en el OVHcloud Control Panel, en Web Cloud, donde MX Plan aparece en Emails, Email Pro tiene su propia sección y Hosted Exchange otra. Compruébalo primero, porque todos los demás ajustes dependen de ello. Si lo que contrataste en OVH fue Microsoft 365 y no el Hosted Exchange propio de OVH, el buzón está en los servidores de Microsoft, así que conéctalo con la opción Outlook (inicio de sesión con Microsoft) en lugar de por IMAP. Puede que un administrador de TI tenga que aprobar MCP Emails una vez primero, y el panel te da un enlace de aprobación para enviárselo."
     },
     {
       "h": "MX Plan usa Dovecot sin MOVE, UIDPLUS ni SPECIAL-USE",
@@ -67,7 +67,7 @@
     }
   ],
   "limits": [
-    "No se pueden conectar buzones de Microsoft 365 contratados a través de OVHcloud. La política de tenant por defecto de Microsoft bloquea el consentimiento del usuario final para el acceso de terceros al correo.",
+    "Los buzones de Microsoft 365 contratados a través de OVHcloud no están en los servidores de correo de OVH. Conéctalos con Outlook (inicio de sesión con Microsoft); puede que un administrador de TI tenga que aprobar la aplicación una vez.",
     "Los nombres de servidor de Email Pro y Hosted Exchange incluyen un número de servidor propio de cada servicio, así que no podemos rellenarlos de antemano. Toma el valor del recuadro Connection del OVHcloud Control Panel.",
     "MX Plan no anuncia MOVE, así que un movimiento no es atómico. Si la conexión se corta a mitad, un mensaje puede existir brevemente en las dos carpetas."
   ],
@@ -100,5 +100,10 @@
   "ctaBand": {
     "title": "Dale a tu IA una bandeja de OVH",
     "sub": "Conecta OVH en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  },
+  "seeAlso": {
+    "intro": "¿Un buzón de Microsoft 365 contratado con OVHcloud?",
+    "label": "Conéctalo con Outlook (inicio de sesión con Microsoft)",
+    "href": "/connect/office365"
   }
 }

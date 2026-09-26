@@ -23,7 +23,7 @@
     "meta0": "1 inbox free, forever",
     "meta1": "Sign in with Microsoft, no app password",
     "meta2": "IT admin approval link built in",
-    "answer": "Yes, with one condition that depends on your organisation. mcpemails connects work and school Microsoft 365 mailboxes through Microsoft Graph: you click Connect with Microsoft and sign in with your work account. Many organisations, though, need an IT admin to approve the app once first, because Microsoft's default consent policy, in effect since late 2025, stops employees from approving mail-reading permissions themselves. If that happens, the dashboard shows a notice with a link to send to your IT admin. The admin signs in and approves MCP Emails once for the whole organisation, and after that you and your colleagues connect normally. Then paste one URL into Claude, ChatGPT, Cursor or any MCP client. One inbox is free, forever."
+    "answer": "Yes, with one condition that depends on your organisation. mcpemails connects work and school Microsoft 365 mailboxes through Microsoft Graph: you click Connect with Microsoft and sign in with your work account. Many organisations, though, need an IT admin to approve the app once first, because Microsoft's default consent policy, in effect since late 2025, stops employees from approving mail-reading permissions themselves. If that happens, the dashboard gives you an approval link to send to your IT admin. The admin opens it, signs in with their Microsoft work account and approves MCP Emails once for the whole organisation, with no MCP Emails account needed, and after that you and your colleagues connect normally. Then paste one URL into Claude, ChatGPT, Cursor or any MCP client. One inbox is free, forever."
   },
   "method": {
     "title": "How Microsoft 365 connects: Microsoft sign-in, sometimes with admin approval",
@@ -40,7 +40,7 @@
     },
     {
       "h": "Approve access, or send the admin link",
-      "p": "If Microsoft lets you approve, accept the permissions and the inbox connects. If your organisation requires admin approval, the dashboard shows a notice with a Send to your IT admin link. Your admin opens it, signs in to MCP Emails and approves the app once for the whole organisation. Then click Connect with Microsoft again."
+      "p": "If Microsoft lets you approve, accept the permissions and the inbox connects. If your organisation requires admin approval, the dashboard gives you an approval link to send to your IT admin. Your admin opens it, signs in with Microsoft and approves the app once for the whole organisation; they do not need an MCP Emails account. Then click Connect with Microsoft again."
     },
     {
       "h": "Paste the MCP URL into your AI",
@@ -54,7 +54,7 @@
     },
     {
       "h": "Admin approval is set by your organisation, and a verified publisher does not bypass it",
-      "p": "Since the change Microsoft rolled out from late October 2025, the Exchange mail permissions sit in the Microsoft-managed default consent policy, so a user who tries to approve a mail app sees a request for admin approval instead. Being a verified publisher does not change that. Your IT admin can approve MCP Emails for the whole organisation through the link in the dashboard, and only needs to do it once."
+      "p": "Since the change Microsoft rolled out from late October 2025, the Exchange mail permissions sit in the Microsoft-managed default consent policy, so a user who tries to approve a mail app sees a request for admin approval instead. Being a verified publisher does not change that. Your IT admin can approve MCP Emails for the whole organisation through the approval link the dashboard gives you to send them, and only needs to do it once."
     },
     {
       "h": "An account without an Exchange Online mailbox is refused",
@@ -66,9 +66,9 @@
     }
   ],
   "limits": [
-    "Outlook organizes mail in folders, including nested folders. Outlook categories are not supported, and the label tools apply to Gmail only.",
+    "Outlook organizes mail in folders, including nested folders. The label tools are Gmail-only, but an automation's label action applies an Outlook category to the message.",
     "Microsoft Graph cannot combine a text search with the unread, attachment, flagged or date filters. When a search includes text, those filters are not applied, and the result says which ones were left out.",
-    "Attachments are supported up to 25 MB.",
+    "Sending carries up to 10 MB of attachments per message; downloading attachments and forwarding originals work up to 25 MB.",
     "The self-hosted version connects over IMAP and SMTP only. Signing in with Microsoft is part of the hosted service."
   ],
   "faq": [
@@ -78,11 +78,11 @@
     },
     {
       "q": "Why am I asked for admin approval?",
-      "a": "Because of your organisation's consent policy. Since late 2025 Microsoft's default policy stops employees from approving mail-reading permissions for apps themselves, so the sign-in asks for admin approval instead. It is not a problem with your account. Send the link from the dashboard notice to your IT admin."
+      "a": "Because of your organisation's consent policy. Since late 2025 Microsoft's default policy stops employees from approving mail-reading permissions for apps themselves, so the sign-in asks for admin approval instead. It is not a problem with your account. The dashboard gives you an approval link to send to your IT admin."
     },
     {
       "q": "What does my IT admin have to do?",
-      "a": "Open the link you send them, sign in to MCP Emails, and approve the app for the organisation on Microsoft's consent screen, where MCP Emails appears as a verified publisher. It is done once for the whole organisation. After that, everyone in the organisation connects with Connect with Microsoft as normal."
+      "a": "Open the approval link you send them, sign in with their Microsoft work account, and approve the app for the organisation on Microsoft's consent screen, where MCP Emails appears as a verified publisher. They do not need an MCP Emails account. It is done once for the whole organisation. After that, everyone in the organisation connects with Connect with Microsoft as normal."
     },
     {
       "q": "Do I need an app password or IMAP settings?",
@@ -90,7 +90,7 @@
     },
     {
       "q": "What can my AI do in Microsoft 365?",
-      "a": "Read, search, send, reply and forward; work with drafts; create and use folders, including nested ones; move, copy and archive; flag; delete to trash or permanently; handle attachments up to 25 MB; schedule sends; and manage your signature."
+      "a": "Read, search, send, reply and forward; work with drafts; create and use folders, including nested ones; move, copy and archive; flag; delete to trash or permanently; send up to 10 MB of attachments per message, and download attachments or forward originals up to 25 MB; schedule sends; run automation rules; and manage your signature."
     },
     {
       "q": "Is my email stored on your servers?",
@@ -100,5 +100,15 @@
   "ctaBand": {
     "title": "Give your AI your Microsoft 365 inbox",
     "sub": "Sign in with Microsoft. If your organisation needs admin approval, one link to your IT admin covers everyone. One inbox free forever."
+  },
+  "seeAlso": {
+    "intro": "Personal Outlook.com, Hotmail or Live address?",
+    "label": "Connect Outlook.com",
+    "href": "/connect/outlook"
+  },
+  "guide": {
+    "intro": "Prefer a step-by-step walkthrough?",
+    "label": "Connecting Outlook and Microsoft 365 to your AI agent via MCP",
+    "href": "/blog/connect-outlook-microsoft-365-ai-agent-mcp"
   }
 }

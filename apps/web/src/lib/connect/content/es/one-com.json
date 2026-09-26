@@ -53,8 +53,8 @@
       "p": "Prácticamente todos los demás proveedores llaman a su servidor de envío con el patrón <code>smtp.something</code>, así que la gente rellena ese patrón por costumbre y obtiene un nombre de servidor que no se resuelve. one.com usa <code>send.one.com</code>. La asimetría con <code>imap.one.com</code> hace que parezca una errata en la documentación, y no lo es. Si leer correo funciona pero el envío agota el tiempo de espera o no se resuelve, este es el motivo."
     },
     {
-      "h": "one.com también revende Microsoft 365, y ese buzón no se puede conectar",
-      "p": "El mosaico del Control Panel se llama Email and Microsoft 365, y one.com vende ambos en la misma cuenta. Una cuenta de correo de one.com, creada en ese mosaico con su propia contraseña, es un buzón IMAP normal en los servidores de one.com y se conecta sin problemas. Una licencia de Microsoft 365 comprada a través de one.com es un buzón de Microsoft en los servidores de Microsoft, y la directiva predeterminada del tenant de Microsoft impide que un usuario final dé su consentimiento para el acceso de lectura y escritura de correo de terceros. No afirmamos poder conectarlos. Si tu webmail es Outlook en la web y no la interfaz propia de one.com, tienes el producto de Microsoft."
+      "h": "one.com también revende Microsoft 365, y ese buzón se conecta con Outlook",
+      "p": "El mosaico del Control Panel se llama Email and Microsoft 365, y one.com vende ambos en la misma cuenta. Una cuenta de correo de one.com, creada en ese mosaico con su propia contraseña, es un buzón IMAP normal en los servidores de one.com y se conecta sin problemas. Una licencia de Microsoft 365 comprada a través de one.com es un buzón de Microsoft en los servidores de Microsoft, así que conéctalo con la opción Outlook (inicio de sesión con Microsoft) y no por IMAP. Puede que un administrador de TI tenga que aprobar MCP Emails una vez primero, y el panel te da un enlace de aprobación para enviárselo. Si tu webmail es Outlook en la web y no la interfaz propia de one.com, tienes el producto de Microsoft."
     },
     {
       "h": "La verificación en dos pasos del Control Panel no llega a tu buzón",
@@ -64,7 +64,7 @@
   "limits": [
     "El servidor no anuncia MOVE ni UIDPLUS, así que mover un mensaje se hace como copia, marca y expunge, y el UID de destino hay que encontrarlo buscando.",
     "Falta SPECIAL-USE, así que Enviados, Borradores, Papelera y Spam se identifican por nombre. Los buzones daneses, suecos y noruegos de one.com suelen tener nombres de carpeta localizados.",
-    "Las licencias de Microsoft 365 vendidas a través de one.com no se pueden conectar."
+    "Las licencias de Microsoft 365 vendidas a través de one.com no están en imap.one.com. Conéctalas con Outlook (inicio de sesión con Microsoft)."
   ],
   "faq": [
     {
@@ -91,5 +91,10 @@
   "ctaBand": {
     "title": "Dale a tu IA una bandeja de one.com",
     "sub": "Conecta un buzón de one.com en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  },
+  "seeAlso": {
+    "intro": "¿Un buzón de Microsoft 365 contratado con one.com?",
+    "label": "Conéctalo con Outlook (inicio de sesión con Microsoft)",
+    "href": "/connect/office365"
   }
 }

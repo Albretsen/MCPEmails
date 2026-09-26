@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "AI Email for Business: Every Company Mailbox on One Agent",
-    "description": "One operator, every company mailbox. Connect info@, sales@ and invoices@ over IMAP, Gmail or any mail host, and work them all from Claude or any MCP client."
+    "description": "One operator, every company mailbox. Connect info@, sales@ and invoices@ over IMAP, Gmail, Microsoft 365 or any mail host, and work them all from Claude or any MCP client."
   },
   "hero": {
     "eyebrow": "For the person who runs the company's email",
@@ -88,7 +88,7 @@
       },
       "server": {
         "h": "Your mail server stays in charge",
-        "p": "Mail is sent through your own provider or SMTP server, never from a mail server of ours. Changing a mailbox password, revoking its app password, or removing access in your Google account cuts the agent off."
+        "p": "Mail is sent through your own provider or SMTP server, never from a mail server of ours. Changing a mailbox password, revoking its app password, or removing access in your Google or Microsoft account cuts the agent off."
       }
     },
     "link": "Read how security works"
@@ -96,9 +96,10 @@
   "providers": {
     "eyebrow": "Any host",
     "title": "Connect every mailbox the company runs, whoever hosts it",
-    "sub": "Most company mail lives with the web host or the domain registrar, and that is fine. Any mailbox that speaks IMAP and SMTP on the standard ports connects with its address, host and password. IONOS, Hostinger, OVH, Namecheap and other common hosts are recognised from the address and filled in for you. Gmail and Google Workspace sign in with Google. iCloud, Fastmail, Yahoo, Zoho and Yandex connect with an app password.",
+    "sub": "Most company mail lives with the web host or the domain registrar, and that is fine. Any mailbox that speaks IMAP and SMTP on the standard ports connects with its address, host and password. IONOS, Hostinger, OVH, Namecheap and other common hosts are recognised from the address and filled in for you. Gmail and Google Workspace connect with an app password or by signing in with Google. Microsoft 365 and Outlook connect by signing in with Microsoft; on a company Microsoft 365 account, your IT admin may need to approve mcpemails once for the whole organisation. iCloud, Fastmail, Yahoo, Zoho and Yandex connect with an app password.",
     "ctaImap": "Connect any IMAP mailbox",
     "ctaGmail": "Connect Gmail or Google Workspace",
+    "ctaMicrosoft": "Connect Microsoft 365",
     "ctaIonos": "Connect IONOS",
     "ctaMatrix": "See how each provider connects"
   },
@@ -134,7 +135,7 @@
       },
       {
         "q": "Our email is with our web host, not Gmail. Will it work?",
-        "a": "Almost certainly. Any mailbox that speaks IMAP and SMTP on the standard ports connects with its address, host and password, and common hosts are recognised from the address so the settings fill themselves in. The server has to be reachable from the public internet, and a mailbox that will only accept an OAuth sign-in over IMAP cannot be connected this way."
+        "a": "Almost certainly. Any mailbox that speaks IMAP and SMTP on the standard ports connects with its address, host and password, and common hosts are recognised from the address so the settings fill themselves in. The server has to be reachable from the public internet, and a mailbox that will only accept an OAuth sign-in over IMAP cannot be connected this way. If your company mail is on Microsoft 365, connect it as Outlook instead: you sign in with Microsoft, and your IT admin may need to approve mcpemails once for the whole organisation."
       },
       {
         "q": "Does the agent send from the right address?",

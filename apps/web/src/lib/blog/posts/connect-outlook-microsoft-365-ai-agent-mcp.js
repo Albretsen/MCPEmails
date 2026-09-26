@@ -7,7 +7,7 @@ const post = {
   coverAlt: 'Connecting Outlook and Microsoft 365 to an AI agent over MCP',
   authorId: 'asgeir',
   publishedAt: "2026-05-18T09:00:00.000Z",
-  updatedAt: "2026-09-25T09:00:00.000Z",
+  updatedAt: "2026-09-26T09:00:00.000Z",
   tags: ['Outlook', 'Tutorial', 'MCP', 'AI agents'],
   featured: false,
   content: `To connect an Outlook or Microsoft 365 mailbox to your AI agent, you add the inbox in the MCP Emails dashboard with **Sign in with Microsoft**, then point your agent at one MCP endpoint. There is no app password, no IMAP or SMTP settings, no Azure portal and no Graph server of your own. A personal Outlook.com account connects in a couple of minutes. A work or school Microsoft 365 account often needs one extra step first: an IT admin approves the app once for the whole organisation.
@@ -22,6 +22,8 @@ Microsoft email is not one thing, and the difference decides how your connection
 - **Work or school Microsoft 365 accounts**: these live in your organisation's Microsoft Entra tenant. Many organisations require an IT admin to approve a third-party app before anyone can use it. Microsoft's default consent policy (since late 2025) does not let employees approve mailbox read access for themselves, so in many tenants you will not be able to finish the connection alone. That is a Microsoft tenant policy, not something MCP Emails can switch off, and it applies to any third-party email app.
 
 The admin approval is a one-time step for the whole organisation. Once it is done, every employee connects the normal way.
+
+Each case also has a one-page summary: [Outlook.com](/connect/outlook) for personal accounts and [Microsoft 365](/connect/office365) for work and school accounts.
 
 ## Connect your Outlook or Microsoft 365 inbox
 
@@ -39,10 +41,10 @@ MCP Emails stores the resulting OAuth token encrypted and nothing else about you
 
 ### If your organisation has to approve the app first
 
-On a work or school account, Microsoft may stop you before the consent screen and say that admin approval is required. When that happens, the dashboard shows a notice with a **Send to your IT admin** link:
+On a work or school account, Microsoft may stop you before the consent screen and say that admin approval is required. When that happens, the dashboard gives you a shareable approval link:
 
-1. Send that link to your IT admin.
-2. Your admin opens it, signs in, and approves MCP Emails once for the whole organisation.
+1. Copy the link and send it to your IT admin.
+2. Your admin opens it, signs in with their Microsoft admin account, and approves MCP Emails once for the whole organisation. They do not need an MCP Emails account.
 3. Come back to the dashboard and connect Outlook as in Step 1. It now goes through like a personal account.
 
 Your admin approves the app for the organisation, and each person still signs in with their own account and connects only their own mailbox.
@@ -74,7 +76,7 @@ Outlook connects through Microsoft Graph, not IMAP. Every tool call your agent m
 ## What your agent can do with an Outlook inbox
 
 - Read and search mail.
-- Send, reply and forward, with attachments up to 25 MB.
+- Send, reply and forward. A message you send can carry up to 10 MB of attachments, and downloading an attachment or forwarding an original with its attachments works up to 25 MB.
 - Work with drafts, and schedule a send for later.
 - Work with folders, including nested folders.
 - Move, copy and archive messages.
@@ -84,7 +86,7 @@ Outlook connects through Microsoft Graph, not IMAP. Every tool call your agent m
 
 ### Where Outlook differs from Gmail
 
-**Folders, not labels.** Outlook organises mail in folders. The label tools are Gmail-only, so on an Outlook inbox your agent files mail by moving it into a folder.
+**Folders, not labels.** Outlook organises mail in folders. The label tools are Gmail-only, so on an Outlook inbox your agent files mail by moving it into a folder. The one exception is automations: an automation's label action applies an Outlook category to the message.
 
 **Search.** Outlook search runs on Microsoft Graph's own search. One Graph limitation matters: a text search cannot be combined with the unread, has-attachment, flagged or date filters. When your query includes text, those filters are not applied, and the result tells your agent which ones were left out. If you need both, search for the text first and let the agent narrow the results it gets back.
 

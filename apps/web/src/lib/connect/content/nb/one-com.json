@@ -53,8 +53,8 @@
       "p": "Så å si alle andre leverandører kaller innsendingsverten <code>smtp.something</code>, så folk fyller inn det mønsteret av ren vane og får et vertsnavn som ikke slås opp. one.com bruker <code>send.one.com</code>. Asymmetrien med <code>imap.one.com</code> får det til å se ut som en skrivefeil i dokumentasjonen, men det er det ikke. Hvis lesing av e-post virker, men sending tidsavbrytes eller ikke kan slås opp, er dette grunnen."
     },
     {
-      "h": "one.com videreselger også Microsoft 365, og den postkassen kan ikke kobles til",
-      "p": "Flisen i Control Panel heter Email and Microsoft 365, og one.com selger begge under samme konto. En one.com-e-postkonto, opprettet i den flisen med eget passord, er en vanlig IMAP-postkasse på one.coms servere og kobler fint til. En Microsoft 365-lisens kjøpt gjennom one.com er en Microsoft-postkasse på Microsofts servere, og Microsofts standard tenant-policy hindrer en sluttbruker i å samtykke til lese- og skrivetilgang til e-post for tredjeparter. Vi hevder ikke å koble til disse. Hvis webmailen din er Outlook på nettet i stedet for one.coms eget grensesnitt, har du Microsoft-produktet."
+      "h": "one.com videreselger også Microsoft 365, og den postkassen kobles til med Outlook",
+      "p": "Flisen i Control Panel heter Email and Microsoft 365, og one.com selger begge under samme konto. En one.com-e-postkonto, opprettet i den flisen med eget passord, er en vanlig IMAP-postkasse på one.coms servere og kobler fint til. En Microsoft 365-lisens kjøpt gjennom one.com er en Microsoft-postkasse på Microsofts servere, så koble den til med Outlook-valget (innlogging med Microsoft) i stedet for over IMAP. En IT-administrator kan måtte godkjenne MCP Emails én gang først, og dashbordet gir deg en godkjenningslenke du kan sende til vedkommende. Hvis webmailen din er Outlook på nettet i stedet for one.coms eget grensesnitt, har du Microsoft-produktet."
     },
     {
       "h": "Totrinnsbekreftelse i Control Panel når ikke postkassen din",
@@ -64,7 +64,7 @@
   "limits": [
     "Serveren annonserer ikke MOVE eller UIDPLUS, så en flytting utføres som kopi, flagg og expunge, og mål-UID-en må finnes ved søk.",
     "SPECIAL-USE mangler, så Sent, Drafts, Trash og Junk matches etter navn. Danske, svenske og norske one.com-postkasser har ofte lokaliserte mappenavn.",
-    "Microsoft 365-lisenser solgt gjennom one.com kan ikke kobles til."
+    "Microsoft 365-lisenser solgt gjennom one.com ligger ikke på imap.one.com. Koble dem til med Outlook (innlogging med Microsoft) i stedet."
   ],
   "faq": [
     {
@@ -91,5 +91,10 @@
   "ctaBand": {
     "title": "Gi AI-en din en one.com-innboks",
     "sub": "Koble til en one.com-postkasse på minutter. Én innboks gratis for alltid, uten kort."
+  },
+  "seeAlso": {
+    "intro": "Microsoft 365-postkasse fra one.com?",
+    "label": "Koble den til med Outlook (innlogging med Microsoft)",
+    "href": "/connect/office365"
   }
 }

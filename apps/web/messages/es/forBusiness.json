@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Correo con IA para empresas: todos los buzones en un solo agente",
-    "description": "Una sola persona, todos los buzones de la empresa. Conecta info@, ventas@ y facturas@ por IMAP, Gmail o cualquier proveedor, y gestiónalos desde Claude o cualquier cliente MCP."
+    "description": "Una sola persona, todos los buzones de la empresa. Conecta info@, ventas@ y facturas@ por IMAP, Gmail, Microsoft 365 o cualquier proveedor, y gestiónalos desde Claude o cualquier cliente MCP."
   },
   "hero": {
     "eyebrow": "Para quien lleva el correo de la empresa",
@@ -88,7 +88,7 @@
       },
       "server": {
         "h": "Tu servidor de correo sigue mandando",
-        "p": "El correo se envía a través de tu propio proveedor o servidor SMTP, nunca desde un servidor de correo nuestro. Cambiar la contraseña de un buzón, revocar su contraseña de aplicación o retirar el acceso en tu cuenta de Google deja fuera al agente."
+        "p": "El correo se envía a través de tu propio proveedor o servidor SMTP, nunca desde un servidor de correo nuestro. Cambiar la contraseña de un buzón, revocar su contraseña de aplicación o retirar el acceso en tu cuenta de Google o de Microsoft deja fuera al agente."
       }
     },
     "link": "Lee cómo funciona la seguridad"
@@ -96,9 +96,10 @@
   "providers": {
     "eyebrow": "Cualquier proveedor",
     "title": "Conecta todos los buzones de la empresa, los aloje quien los aloje",
-    "sub": "La mayor parte del correo de empresa vive en el proveedor de hosting o en el registrador del dominio, y eso no es ningún problema. Cualquier buzón que hable IMAP y SMTP en los puertos estándar se conecta con su dirección, su servidor y su contraseña. IONOS, Hostinger, OVH, Namecheap y otros proveedores habituales se reconocen por la dirección y se rellenan solos. Gmail y Google Workspace inician sesión con Google. iCloud, Fastmail, Yahoo, Zoho y Yandex se conectan con una contraseña de aplicación.",
+    "sub": "La mayor parte del correo de empresa vive en el proveedor de hosting o en el registrador del dominio, y eso no es ningún problema. Cualquier buzón que hable IMAP y SMTP en los puertos estándar se conecta con su dirección, su servidor y su contraseña. IONOS, Hostinger, OVH, Namecheap y otros proveedores habituales se reconocen por la dirección y se rellenan solos. Gmail y Google Workspace se conectan con una contraseña de aplicación o iniciando sesión con Google. Microsoft 365 y Outlook se conectan iniciando sesión con Microsoft; en una cuenta de empresa de Microsoft 365, puede que tu administrador de TI tenga que aprobar mcpemails una vez para toda la organización. iCloud, Fastmail, Yahoo, Zoho y Yandex se conectan con una contraseña de aplicación.",
     "ctaImap": "Conecta cualquier buzón IMAP",
     "ctaGmail": "Conecta Gmail o Google Workspace",
+    "ctaMicrosoft": "Conecta Microsoft 365",
     "ctaIonos": "Conecta IONOS",
     "ctaMatrix": "Mira cómo se conecta cada proveedor"
   },
@@ -134,7 +135,7 @@
       },
       {
         "q": "Nuestro correo está en nuestro proveedor de hosting, no en Gmail. ¿Funcionará?",
-        "a": "Casi seguro que sí. Cualquier buzón que hable IMAP y SMTP en los puertos estándar se conecta con su dirección, su servidor y su contraseña, y los proveedores habituales se reconocen por la dirección, de modo que los ajustes se rellenan solos. El servidor tiene que ser accesible desde internet, y un buzón que solo acepte un inicio de sesión OAuth por IMAP no se puede conectar de esta forma."
+        "a": "Casi seguro que sí. Cualquier buzón que hable IMAP y SMTP en los puertos estándar se conecta con su dirección, su servidor y su contraseña, y los proveedores habituales se reconocen por la dirección, de modo que los ajustes se rellenan solos. El servidor tiene que ser accesible desde internet, y un buzón que solo acepte un inicio de sesión OAuth por IMAP no se puede conectar de esta forma. Si el correo de tu empresa está en Microsoft 365, conéctalo como Outlook: inicias sesión con Microsoft, y puede que tu administrador de TI tenga que aprobar mcpemails una vez para toda la organización."
       },
       {
         "q": "¿El agente envía desde la dirección correcta?",

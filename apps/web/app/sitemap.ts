@@ -43,7 +43,7 @@ const MARKETING_PAGES: {
   { path: '/about', lastModified: '2026-08-29', changeFrequency: 'yearly', priority: 0.5 },
   { path: '/for/founders', lastModified: '2026-08-27', changeFrequency: 'monthly', priority: 0.8 },
   { path: '/for/business', lastModified: '2026-09-20', changeFrequency: 'monthly', priority: 0.8 },
-  { path: '/connect', lastModified: '2026-08-31', changeFrequency: 'weekly', priority: 0.9 },
+  { path: '/connect', lastModified: '2026-09-26', changeFrequency: 'weekly', priority: 0.9 },
   { path: '/blog', lastModified: '2026-08-02', changeFrequency: 'weekly', priority: 0.7 },
   // Bump lastModified whenever a changelog entry is added.
   { path: '/changelog', lastModified: '2026-09-08', changeFrequency: 'weekly', priority: 0.6 },
@@ -83,9 +83,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
   };
   const providerEntries: MetadataRoute.Sitemap = releasedProviders().map((p) => {
     const path = `/connect/${p.slug}`;
+    // The later of the probe date and the last substantive copy change. ISO
+    // dates compare correctly as strings. Outlook and Microsoft 365 were
+    // rewritten for the Graph connector launch long after their IMAP probe.
+    const probed = p.evidence.verifiedOn;
+    const edited = (p as { contentUpdatedOn?: string }).contentUpdatedOn;
+    const lastModified = edited && edited > probed ? edited : probed;
     return {
       url: localePath('en', path),
-      lastModified: new Date(`${p.evidence.verifiedOn}T00:00:00.000Z`),
+      lastModified: new Date(`${lastModified}T00:00:00.000Z`),
       changeFrequency: 'monthly' as const,
       priority: PROVIDER_PRIORITY[p.category] ?? 0.5,
       alternates: { languages: languageAlternatesFor(path, p.locales) },
@@ -121,9 +127,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // deliberately 404, which is a worse signal than omitting them.
   const englishOnlyEntries: MetadataRoute.Sitemap = [
     { path: '/docs/clients', lastModified: '2026-09-08', priority: 0.9 },
+    // 2026-09-26: every client page now names Outlook / Microsoft 365 among the
+    // mailboxes it can reach.
     ...CLIENTS.map((c) => ({
       path: `/docs/${c.slug}`,
-      lastModified: '2026-09-08',
+      lastModified: '2026-09-26',
       priority: 0.8,
     })),
     // Dated factual claims about named competitors. Re-verify the sources on

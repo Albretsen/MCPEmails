@@ -26,7 +26,7 @@
   "setup": [
     {
       "h": "Opprett en gratis konto og koble til en postkasse",
-      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Gmail kobles til med Google-innlogging med ett klikk; iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Outlook og Microsoft 365 kobles til med Microsoft-innlogging; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord, og Gmail kan også bruke Google-innlogging; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
     },
     {
       "h": "Opprett en avgrenset API-nøkkel",
@@ -79,7 +79,7 @@
     },
     {
       "q": "Hvilke postkasser kan Cline nå på denne måten?",
-      "a": "Gmail via Google-innlogging, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord, og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Klienten ser alle gjennom den samme tilkoblingen: agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
+      "a": "Outlook.com og Microsoft 365 via Microsoft-innlogging, der en jobbkonto kan trenge at en IT-administrator godkjenner appen én gang; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord, med Google-innlogging som et alternativ for Gmail; og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Klienten ser alle gjennom den samme tilkoblingen: agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
     },
     {
       "q": "Kan Cline sende e-post uten at jeg ser det?",

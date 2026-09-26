@@ -150,6 +150,7 @@ export default function BusinessView({ copy }) {
           <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 8, flexWrap: 'wrap' }}>
             <Link className="btn btn-secondary" href="/connect/imap">{providers.ctaImap}</Link>
             <Link className="btn btn-secondary" href="/connect/gmail">{providers.ctaGmail}</Link>
+            <Link className="btn btn-secondary" href="/connect/office365">{providers.ctaMicrosoft}</Link>
             <Link className="btn btn-secondary" href="/connect/ionos">{providers.ctaIonos}</Link>
           </div>
           <p className="how-guide-link">

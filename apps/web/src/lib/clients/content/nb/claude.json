@@ -7,7 +7,7 @@
     "https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp"
   ],
   "meta": {
-    "title": "Koble e-post til Claude: MCP-oppsett for Gmail og IMAP",
+    "title": "Koble e-post til Claude: MCP-oppsett for Gmail, Outlook og IMAP",
     "description": "Gi claude.ai og Claude Desktop en ekte innboks som egendefinert kobling. Lim inn én URL, autoriser med OAuth, og les, søk, send og planlegg e-post. Én innboks gratis."
   },
   "hero": {
@@ -27,7 +27,7 @@
   "setup": [
     {
       "h": "Opprett en gratis konto og koble til en postkasse",
-      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Gmail kobles til med Google-innlogging med ett klikk; iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
+      "p": "Registrer deg på mcpemails.com, uten kort, og gå til Dashboard, Inboxes, Connect Inbox. Outlook og Microsoft 365 kobles til med Microsoft-innlogging; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex krever et app-spesifikt passord, og Gmail kan også bruke Google-innlogging; alt annet kobles til over vanlig IMAP og SMTP. Gratisplanen gir deg én innboks, for alltid."
     },
     {
       "h": "Åpne koblingsinnstillingene",
@@ -45,7 +45,7 @@
   "gotchas": [
     {
       "h": "En egendefinert kobling er ikke det samme som Claudes innebygde Gmail-kobling",
-      "p": "Anthropic leverer sin egen Google-kobling, og det er en annen vei: én leverandør, inne i én app. En egendefinert kobling peker i stedet Claude mot en MCP-server, og derfor dekker det samme oppsettet også iCloud, Fastmail, Zoho, Yandex og enhver IMAP-postkasse på jobben bak én enkelt URL, og derfor fungerer den samme URL-en i Cursor, ChatGPT og resten."
+      "p": "Anthropic leverer sin egen Google-kobling, og det er en annen vei: én leverandør, inne i én app. En egendefinert kobling peker i stedet Claude mot en MCP-server, og derfor dekker det samme oppsettet også Outlook, iCloud, Fastmail, Zoho, Yandex og enhver IMAP-postkasse på jobben bak én enkelt URL, og derfor fungerer den samme URL-en i Cursor, ChatGPT og resten."
     },
     {
       "h": "Du godkjenner tilganger én gang, og de er det eneste tokenet kan gjøre",
@@ -72,7 +72,7 @@
     },
     {
       "q": "Hvilke postkasser kan Claude nå på denne måten?",
-      "a": "Gmail via Google-innlogging, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord, og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Klienten ser alle gjennom den samme tilkoblingen: agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
+      "a": "Outlook.com og Microsoft 365 via Microsoft-innlogging, der en jobbkonto kan trenge at en IT-administrator godkjenner appen én gang; Gmail, iCloud, Fastmail, Yahoo, Zoho og Yandex med et app-spesifikt passord, med Google-innlogging som et alternativ for Gmail; og enhver annen postkasse som støtter IMAP og SMTP på standardportene. Klienten ser alle gjennom den samme tilkoblingen: agenten kaller inbox_list først for å finne alle tilkoblede postkasser og ID-ene deres, så du slipper å lime inn UUID-er noe sted."
     },
     {
       "q": "Kan Claude sende e-post uten at jeg ser det?",

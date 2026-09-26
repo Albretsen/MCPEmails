@@ -73,7 +73,7 @@
     "googleP3": "As described in Section 2.5, email content retrieved from the Gmail API is streamed through to your agent in the same request and is never stored, cached, or logged by MCPEmails.",
     "microsoftTitle": "3.8 Microsoft APIs: mailbox access and revoking it",
     "microsoftP1": "When you connect an Outlook or Microsoft 365 mailbox, Microsoft asks you to approve a specific, named set of permissions: reading and organising your mail, and sending mail on your behalf. We use that access only to run the features you ask an AI agent to perform on your mailbox, such as reading, searching, organising, drafting and sending. We do not use it to build a copy of your mailbox, and we never use mail content, or anything derived from it, for advertising or marketing.",
-    "microsoftRevokeP": "You can withdraw this access at any time, directly with Microsoft and without asking us. For a personal Microsoft account, use <personal>Microsoft account permissions</personal>. For a work or school account, use <work>My Apps</work>. Revoking access there immediately stops us being able to reach that mailbox.",
+    "microsoftRevokeP": "You can withdraw this access at any time, directly with Microsoft and without asking us. For a personal Microsoft account, use <personal>Microsoft account permissions</personal>. For a work or school account, use <work>My Apps</work>. Revoking access there immediately stops us being able to reach that mailbox. If your IT admin approved MCPEmails for your whole organisation, only an admin can remove that organisation-wide approval.",
     "microsoftDisconnectP": "Disconnecting the inbox in your MCPEmails dashboard has the same effect from our side and additionally deletes the stored credentials for that mailbox. You can do either one first; you do not have to do both."
   },
   "dataRetention": {
@@ -150,7 +150,7 @@
     "stripeData": "Billing email, payment card data (stored by Stripe, not us)",
     "stripeLocation": "US (Stripe is PCI-DSS certified)",
     "emailProvidersTitle": "5.2 Email providers (your providers, not ours)",
-    "emailProvidersP": "When you connect Gmail, Fastmail, or another IMAP account, MCPEmails authenticates with that provider using credentials you supply. Your email provider's own privacy policy governs the data held in your mailbox. MCPEmails accesses your mailbox only when your agent makes a tool call, and only for the specific messages or folders the tool requests.",
+    "emailProvidersP": "When you connect Gmail, Outlook / Microsoft 365, Fastmail, or another IMAP account, MCPEmails authenticates with that provider using credentials you supply. Your email provider's own privacy policy governs the data held in your mailbox. MCPEmails accesses your mailbox only when your agent makes a tool call, and only for the specific messages or folders the tool requests.",
     "noBrokersTitle": "5.3 No data brokers or advertising networks",
     "noBrokersP": "We do not share any data with data brokers, advertising networks, social media platforms, or analytics companies that build user profiles.",
     "legalDisclosuresTitle": "5.4 Legal disclosures",

@@ -59,7 +59,7 @@
     },
     {
       "h": "Ingenting i adressen din forteller hvilket OVH-produkt du har",
-      "p": "Alle tre produktene leverer e-post på ditt eget domene, så <code>you@yourdomain.fr</code> ser lik ut uansett hvilket den ligger på. Svaret finnes i OVHcloud Control Panel under Web Cloud, der MX Plan vises under Emails, Email Pro har sin egen seksjon og Hosted Exchange en annen. Sjekk det først, for alle andre innstillinger avhenger av det. Gjaldt OVH-bestillingen din Microsoft 365 i stedet for OVHs egen Hosted Exchange, ligger postkassen på Microsofts servere under Microsofts identitetsplattform, og Microsofts standard tenant-policy blokkerer sluttbrukersamtykke for tredjeparts e-posttilgang. Vi hevder ikke å koble til disse."
+      "p": "Alle tre produktene leverer e-post på ditt eget domene, så <code>you@yourdomain.fr</code> ser lik ut uansett hvilket den ligger på. Svaret finnes i OVHcloud Control Panel under Web Cloud, der MX Plan vises under Emails, Email Pro har sin egen seksjon og Hosted Exchange en annen. Sjekk det først, for alle andre innstillinger avhenger av det. Gjaldt OVH-bestillingen din Microsoft 365 i stedet for OVHs egen Hosted Exchange, ligger postkassen på Microsofts servere, så koble den til med Outlook-valget (innlogging med Microsoft) i stedet for over IMAP. En IT-administrator kan måtte godkjenne MCP Emails én gang først, og dashbordet gir deg en godkjenningslenke du kan sende til vedkommende."
     },
     {
       "h": "MX Plan kjører Dovecot uten MOVE, UIDPLUS eller SPECIAL-USE",
@@ -67,7 +67,7 @@
     }
   ],
   "limits": [
-    "Microsoft 365-postkasser bestilt gjennom OVHcloud kan ikke kobles til. Microsofts standard tenant-policy blokkerer sluttbrukersamtykke for tredjeparts e-posttilgang.",
+    "Microsoft 365-postkasser bestilt gjennom OVHcloud ligger ikke på OVHs e-postverter. Koble dem til med Outlook (innlogging med Microsoft); en IT-administrator kan måtte godkjenne appen én gang.",
     "Vertsnavnene for Email Pro og Hosted Exchange inneholder et servernummer per tjeneste, så vi kan ikke forhåndsutfylle dem. Hent verdien fra boksen Connection i OVHcloud Control Panel.",
     "MX Plan annonserer ikke MOVE, så en flytting er ikke atomisk. Hvis en tilkobling brytes underveis, kan en melding kortvarig finnes i begge mapper."
   ],
@@ -100,5 +100,10 @@
   "ctaBand": {
     "title": "Gi AI-en din en OVH-innboks",
     "sub": "Koble til OVH på minutter. Én innboks gratis for alltid, uten kort."
+  },
+  "seeAlso": {
+    "intro": "Microsoft 365-postkasse fra OVHcloud?",
+    "label": "Koble den til med Outlook (innlogging med Microsoft)",
+    "href": "/connect/office365"
   }
 }

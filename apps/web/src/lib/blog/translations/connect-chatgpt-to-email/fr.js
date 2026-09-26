@@ -1,10 +1,10 @@
 const translation = {
-  title: 'Connecter ChatGPT à vos e-mails avec MCP (Gmail, iCloud et IMAP)',
+  title: 'Connecter ChatGPT à vos e-mails avec MCP (Gmail, Outlook, iCloud et IMAP)',
   description:
-    'Pas à pas : connectez Gmail, iCloud, Fastmail ou toute boîte IMAP à ChatGPT via un connecteur MCP, et à OpenAI Codex via une clé limitée. Aucun e-mail stocké.',
+    'Pas à pas : connectez Gmail, Outlook, iCloud, Fastmail ou toute boîte IMAP à ChatGPT via un connecteur MCP, et à OpenAI Codex via une clé limitée. Aucun e-mail stocké.',
   coverAlt:
-    'Connecter ChatGPT et OpenAI Codex à Gmail, iCloud, Fastmail et aux e-mails IMAP avec MCP Emails',
-  content: `ChatGPT ne peut pas atteindre une boîte e-mail tout seul. Il lui faut un serveur MCP devant votre messagerie, et MCP Emails est ce serveur : connectez une boîte une fois, pointez ChatGPT vers une seule URL, et il dispose des mêmes outils de messagerie que vos e-mails soient chez Gmail, iCloud, Fastmail, Yahoo, Zoho ou sur un serveur IMAP auto-hébergé.
+    'Connecter ChatGPT et OpenAI Codex à Gmail, Outlook, iCloud, Fastmail et aux e-mails IMAP avec MCP Emails',
+  content: `ChatGPT ne peut pas atteindre une boîte e-mail tout seul. Il lui faut un serveur MCP devant votre messagerie, et MCP Emails est ce serveur : connectez une boîte une fois, pointez ChatGPT vers une seule URL, et il dispose des mêmes outils de messagerie que vos e-mails soient chez Gmail, Outlook ou Microsoft 365, iCloud, Fastmail, Yahoo, Zoho ou sur un serveur IMAP auto-hébergé.
 
 Deux surfaces OpenAI sont concernées, et elles s'authentifient différemment. ChatGPT exécute un flux OAuth dans le navigateur : aucune clé API à coller. OpenAI Codex tourne dans votre terminal et utilise plutôt une clé limitée comme jeton bearer. Même endpoint, mêmes outils.
 
@@ -36,7 +36,7 @@ Outlook se connecte avec la connexion Microsoft, pas avec un mot de passe d'appl
 
 ### Toute autre boîte IMAP
 
-Choisissez **IMAP** et saisissez l'adresse et le mot de passe d'application. Les réglages courants sont détectés automatiquement ; un domaine personnalisé peut exiger l'hôte, le port et le mode de sécurité fournis par votre fournisseur. La [matrice des fournisseurs](/docs/providers) indique ce que chacun prend en charge, et il existe une page par fournisseur dans [connect](/connect), dont [Gmail](/connect/gmail), [iCloud](/connect/icloud) et [IMAP générique](/connect/imap).
+Choisissez **IMAP** et saisissez l'adresse et le mot de passe d'application. Les réglages courants sont détectés automatiquement ; un domaine personnalisé peut exiger l'hôte, le port et le mode de sécurité fournis par votre fournisseur. La [matrice des fournisseurs](/docs/providers) indique ce que chacun prend en charge, et il existe une page par fournisseur dans [connect](/connect), dont [Gmail](/connect/gmail), [Outlook](/connect/outlook), [Microsoft 365](/connect/office365), [iCloud](/connect/icloud) et [IMAP générique](/connect/imap).
 
 Connectez plusieurs boîtes si votre forfait le permet. ChatGPT les découvre avec \`inbox_list\`, vous ne collez donc jamais d'identifiant de boîte dans un prompt.
 

@@ -26,7 +26,7 @@
   "setup": [
     {
       "h": "创建免费账户并连接邮箱",
-      "p": "在 mcpemails.com 注册，无需绑卡，然后前往 Dashboard、Inboxes、Connect Inbox。Gmail 通过 Google 一键登录连接；iCloud、Fastmail、Yahoo、Zoho 和 Yandex 需要应用专用密码；其他邮箱都可通过标准 IMAP 与 SMTP 连接。免费版包含 1 个收件箱，永久有效。"
+      "p": "在 mcpemails.com 注册，无需绑卡，然后前往 Dashboard、Inboxes、Connect Inbox。Outlook 和 Microsoft 365 通过 Microsoft 登录连接；Gmail、iCloud、Fastmail、Yahoo、Zoho 和 Yandex 需要应用专用密码，Gmail 也可以使用 Google 登录；其他邮箱都可通过标准 IMAP 与 SMTP 连接。免费版包含 1 个收件箱，永久有效。"
     },
     {
       "h": "创建限定范围的 API 密钥",
@@ -79,7 +79,7 @@
     },
     {
       "q": "Cline 通过这种方式能访问哪些邮箱？",
-      "a": "Gmail 通过 Google 登录；iCloud、Fastmail、Yahoo、Zoho 和 Yandex 使用应用专用密码；以及任何在标准端口上支持 IMAP 与 SMTP 的其他邮箱。客户端通过同一个连接看到所有邮箱：你的智能体会先调用 inbox_list 来发现每个已连接的邮箱及其 id，所以不需要在任何地方粘贴 UUID。"
+      "a": "Outlook.com 和 Microsoft 365 通过 Microsoft 登录（工作账户可能需要 IT 管理员批准一次该应用）；Gmail、iCloud、Fastmail、Yahoo、Zoho 和 Yandex 使用应用专用密码，Gmail 也可改用 Google 登录；以及任何在标准端口上支持 IMAP 与 SMTP 的其他邮箱。客户端通过同一个连接看到所有邮箱：你的智能体会先调用 inbox_list 来发现每个已连接的邮箱及其 id，所以不需要在任何地方粘贴 UUID。"
     },
     {
       "q": "Cline 会在我不知情的情况下发送邮件吗？",

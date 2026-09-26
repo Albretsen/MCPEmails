@@ -73,7 +73,7 @@
     "googleP3": "Som beskrevet i avsnitt 2.5 strømmes e-postinnhold hentet fra Gmail API videre til agenten din i samme forespørsel, og lagres, mellomlagres eller logges aldri av MCPEmails.",
     "microsoftTitle": "3.8 Microsoft-API-er: postkassetilgang og hvordan du trekker den tilbake",
     "microsoftP1": "Når du kobler til en Outlook- eller Microsoft 365-postkasse, ber Microsoft deg godkjenne et bestemt, navngitt sett med tillatelser: å lese og organisere e-posten din, og å sende e-post på dine vegne. Vi bruker denne tilgangen bare til å utføre det du ber en KI-agent gjøre med postkassen din, som å lese, søke, organisere, skrive utkast og sende. Vi bruker den ikke til å bygge en kopi av postkassen din, og vi bruker aldri e-postinnhold, eller noe utledet av det, til annonsering eller markedsføring.",
-    "microsoftRevokeP": "Du kan trekke tilbake denne tilgangen når som helst, direkte hos Microsoft og uten å spørre oss. For en personlig Microsoft-konto, bruk <personal>Tillatelser for Microsoft-kontoen</personal>. For en jobb- eller skolekonto, bruk <work>Mine apper</work>. Når du trekker tilbake tilgangen der, mister vi umiddelbart tilgang til postkassen.",
+    "microsoftRevokeP": "Du kan trekke tilbake denne tilgangen når som helst, direkte hos Microsoft og uten å spørre oss. For en personlig Microsoft-konto, bruk <personal>Tillatelser for Microsoft-kontoen</personal>. For en jobb- eller skolekonto, bruk <work>Mine apper</work>. Når du trekker tilbake tilgangen der, mister vi umiddelbart tilgang til postkassen. Hvis IT-administratoren godkjente MCPEmails for hele organisasjonen, er det bare en administrator som kan fjerne den organisasjonsomfattende godkjenningen.",
     "microsoftDisconnectP": "Å koble fra innboksen i MCPEmails-dashbordet har samme virkning fra vår side, og sletter i tillegg de lagrede påloggingsdetaljene for postkassen. Du kan gjøre hva som helst av dette først; du trenger ikke gjøre begge deler."
   },
   "dataRetention": {
@@ -150,7 +150,7 @@
     "stripeData": "Faktureringse-post, betalingskortdata (lagret av Stripe, ikke oss)",
     "stripeLocation": "USA (Stripe er PCI-DSS-sertifisert)",
     "emailProvidersTitle": "5.2 E-postleverandører (dine leverandører, ikke våre)",
-    "emailProvidersP": "Når du kobler til Gmail, Fastmail eller en annen IMAP-konto, autentiserer MCPEmails seg mot den leverandøren med legitimasjon du oppgir. E-postleverandørens egen personvernerklæring regulerer dataene som oppbevares i postkassen din. MCPEmails får tilgang til postkassen din bare når agenten din gjør et verktøykall, og bare for de spesifikke meldingene eller mappene verktøyet ber om.",
+    "emailProvidersP": "Når du kobler til Gmail, Outlook / Microsoft 365, Fastmail eller en annen IMAP-konto, autentiserer MCPEmails seg mot den leverandøren med legitimasjon du oppgir. E-postleverandørens egen personvernerklæring regulerer dataene som oppbevares i postkassen din. MCPEmails får tilgang til postkassen din bare når agenten din gjør et verktøykall, og bare for de spesifikke meldingene eller mappene verktøyet ber om.",
     "noBrokersTitle": "5.3 Ingen datameglere eller annonsenettverk",
     "noBrokersP": "Vi deler ingen data med datameglere, annonsenettverk, sosiale medieplattformer eller analyseselskaper som bygger brukerprofiler.",
     "legalDisclosuresTitle": "5.4 Rettslige utleveringer",

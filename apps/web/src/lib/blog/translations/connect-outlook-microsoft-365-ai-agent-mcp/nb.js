@@ -16,6 +16,8 @@ Microsoft-e-post er ikke én ting, og forskjellen avgjør hvordan tilkoblingen g
 
 Godkjenningen fra IT-ansvarlig er et engangssteg for hele organisasjonen. Når den er gjort, kobler hver ansatt seg til på vanlig måte.
 
+Hvert tilfelle har også en egen oppsummering på én side: [Outlook.com](/connect/outlook) for personlige kontoer og [Microsoft 365](/connect/office365) for jobb- og skolekontoer.
+
 ## Koble til Outlook- eller Microsoft 365-innboksen din
 
 To deler: koble til postkassen, og deretter koble til agenten. De er atskilt med vilje. Postkassetilkoblingen lar MCP Emails nå postkassen din, og agenttilkoblingen lar AI-klienten din nå MCP Emails.
@@ -32,10 +34,10 @@ MCP Emails lagrer OAuth-tokenet kryptert og ingenting annet om postkassen din. D
 
 ### Hvis organisasjonen må godkjenne appen først
 
-På en jobb- eller skolekonto kan Microsoft stoppe deg før samtykkeskjermen og si at administratorgodkjenning kreves. Når det skjer, viser dashbordet et varsel med en **Send til IT-ansvarlig**-lenke:
+På en jobb- eller skolekonto kan Microsoft stoppe deg før samtykkeskjermen og si at administratorgodkjenning kreves. Når det skjer, gir dashbordet deg en godkjenningslenke du kan dele:
 
-1. Send den lenken til IT-ansvarlig.
-2. IT-ansvarlig åpner den, logger inn og godkjenner MCP Emails én gang for hele organisasjonen.
+1. Kopier lenken og send den til IT-ansvarlig.
+2. IT-ansvarlig åpner den, logger inn med Microsoft-administratorkontoen sin og godkjenner MCP Emails én gang for hele organisasjonen. IT-ansvarlig trenger ingen MCP Emails-konto.
 3. Gå tilbake til dashbordet og koble til Outlook som i steg 1. Nå går det gjennom som for en personlig konto.
 
 IT-ansvarlig godkjenner appen for organisasjonen, og hver person logger fortsatt inn med sin egen konto og kobler bare til sin egen postkasse.
@@ -67,7 +69,7 @@ Outlook kobles til via Microsoft Graph, ikke IMAP. Hvert verktøykall agenten gj
 ## Hva agenten kan gjøre med en Outlook-innboks
 
 - Lese og søke i e-post.
-- Sende, svare og videresende, med vedlegg på opptil 25 MB.
+- Sende, svare og videresende. En melding du sender kan ha opptil 10 MB vedlegg, og nedlasting av et vedlegg eller videresending av en original med vedleggene fungerer opptil 25 MB.
 - Jobbe med utkast, og planlegge en sending til senere.
 - Jobbe med mapper, også nestede mapper.
 - Flytte, kopiere og arkivere meldinger.
@@ -77,7 +79,7 @@ Outlook kobles til via Microsoft Graph, ikke IMAP. Hvert verktøykall agenten gj
 
 ### Der Outlook skiller seg fra Gmail
 
-**Mapper, ikke etiketter.** Outlook organiserer e-post i mapper. Etikettverktøyene er bare for Gmail, så på en Outlook-innboks sorterer agenten e-post ved å flytte den til en mappe.
+**Mapper, ikke etiketter.** Outlook organiserer e-post i mapper. Etikettverktøyene er bare for Gmail, så på en Outlook-innboks sorterer agenten e-post ved å flytte den til en mappe. Det eneste unntaket er automatiseringer: etikett-handlingen i en automatisering setter en Outlook-kategori på meldingen.
 
 **Søk.** Outlook-søk bruker Microsoft Graphs eget søk. Én Graph-begrensning er viktig: et tekstsøk kan ikke kombineres med filtrene for ulest, har vedlegg, flagget eller dato. Når søket ditt inneholder tekst, brukes ikke disse filtrene, og resultatet forteller agenten hvilke som ble utelatt. Trenger du begge, søk etter teksten først og la agenten snevre inn resultatene den får tilbake.
 

@@ -7,7 +7,7 @@
     "https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp"
   ],
   "meta": {
-    "title": "将邮箱连接到 Claude：Gmail 与 IMAP 的 MCP 设置",
+    "title": "将邮箱连接到 Claude：Gmail、Outlook 与 IMAP 的 MCP 设置",
     "description": "以自定义连接器的方式为 claude.ai 和 Claude Desktop 接入真实收件箱。粘贴一个 URL，通过 OAuth 授权，Claude 即可读取、搜索、发送和定时发送邮件。1 个收件箱免费。"
   },
   "hero": {
@@ -27,7 +27,7 @@
   "setup": [
     {
       "h": "创建免费账户并连接邮箱",
-      "p": "在 mcpemails.com 注册，无需绑卡，然后前往 Dashboard、Inboxes、Connect Inbox。Gmail 通过 Google 一键登录连接；iCloud、Fastmail、Yahoo、Zoho 和 Yandex 需要应用专用密码；其他邮箱都可通过标准 IMAP 与 SMTP 连接。免费版包含 1 个收件箱，永久有效。"
+      "p": "在 mcpemails.com 注册，无需绑卡，然后前往 Dashboard、Inboxes、Connect Inbox。Outlook 和 Microsoft 365 通过 Microsoft 登录连接；Gmail、iCloud、Fastmail、Yahoo、Zoho 和 Yandex 需要应用专用密码，Gmail 也可以使用 Google 登录；其他邮箱都可通过标准 IMAP 与 SMTP 连接。免费版包含 1 个收件箱，永久有效。"
     },
     {
       "h": "打开连接器设置",
@@ -45,7 +45,7 @@
   "gotchas": [
     {
       "h": "自定义连接器和 Claude 内置的 Gmail 连接器不是一回事",
-      "p": "Anthropic 提供了自己的 Google 连接器，那是另一条路径：一家服务商，限于一个应用。自定义连接器则是让 Claude 指向一个 MCP 服务器，所以同样的设置能通过一个 URL 同时覆盖 iCloud、Fastmail、Zoho、Yandex 以及任何公司 IMAP 邮箱，而同一个 URL 也能在 Cursor、ChatGPT 等客户端中使用。"
+      "p": "Anthropic 提供了自己的 Google 连接器，那是另一条路径：一家服务商，限于一个应用。自定义连接器则是让 Claude 指向一个 MCP 服务器，所以同样的设置能通过一个 URL 同时覆盖 Outlook、iCloud、Fastmail、Zoho、Yandex 以及任何公司 IMAP 邮箱，而同一个 URL 也能在 Cursor、ChatGPT 等客户端中使用。"
     },
     {
       "h": "权限范围只需批准一次，而令牌能做的也仅限于此",
@@ -72,7 +72,7 @@
     },
     {
       "q": "Claude 通过这种方式能访问哪些邮箱？",
-      "a": "Gmail 通过 Google 登录；iCloud、Fastmail、Yahoo、Zoho 和 Yandex 使用应用专用密码；以及任何在标准端口上支持 IMAP 与 SMTP 的其他邮箱。客户端通过同一个连接看到所有邮箱：你的智能体会先调用 inbox_list 来发现每个已连接的邮箱及其 id，所以不需要在任何地方粘贴 UUID。"
+      "a": "Outlook.com 和 Microsoft 365 通过 Microsoft 登录（工作账户可能需要 IT 管理员批准一次该应用）；Gmail、iCloud、Fastmail、Yahoo、Zoho 和 Yandex 使用应用专用密码，Gmail 也可改用 Google 登录；以及任何在标准端口上支持 IMAP 与 SMTP 的其他邮箱。客户端通过同一个连接看到所有邮箱：你的智能体会先调用 inbox_list 来发现每个已连接的邮箱及其 id，所以不需要在任何地方粘贴 UUID。"
     },
     {
       "q": "Claude 会在我不知情的情况下发送邮件吗？",

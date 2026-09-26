@@ -59,7 +59,7 @@
     },
     {
       "h": "Microsoft 365 vendido por IONOS es un buzón de Microsoft, no de IONOS",
-      "p": "IONOS revende Microsoft 365 junto a sus propios productos Mail Basic y Mail Business, y muchísimos clientes que creen tener correo de IONOS tienen en realidad un tenant de Microsoft con factura de IONOS. Nada de <code>imap.ionos.com</code> se aplica a esos buzones: están en los servidores de Microsoft y se administran desde el Microsoft 365 Admin Center, no desde el panel de control de IONOS. La política predeterminada de tenant de Microsoft impide que un usuario final normal dé su consentimiento para el acceso de lectura y escritura de correo a terceros, y eso lo fijan Microsoft y el administrador de tu tenant. No afirmamos conectarlos. La señal es adónde te lleva tu webmail: Outlook en la web significa Microsoft."
+      "p": "IONOS revende Microsoft 365 junto a sus propios productos Mail Basic y Mail Business, y muchísimos clientes que creen tener correo de IONOS tienen en realidad un tenant de Microsoft con factura de IONOS. Nada de <code>imap.ionos.com</code> se aplica a esos buzones: están en los servidores de Microsoft y se administran desde el Microsoft 365 Admin Center, no desde el panel de control de IONOS. Conéctalos con la opción Outlook (inicio de sesión con Microsoft) en lugar de por IMAP. Puede que el administrador de TI de tu organización tenga que aprobar MCP Emails una vez primero, y el panel te da un enlace de aprobación para enviárselo. La señal es adónde te lleva tu webmail: Outlook en la web significa Microsoft."
     },
     {
       "h": "Todas las marcas de país de IONOS, y todas las direcciones heredadas de 1&1, usan los mismos dos servidores",
@@ -67,13 +67,13 @@
     }
   ],
   "limits": [
-    "Los buzones de Microsoft 365 comprados a través de IONOS no se pueden conectar. La política predeterminada de tenant de Microsoft bloquea el consentimiento del usuario final para el acceso de terceros al correo.",
+    "Los buzones de Microsoft 365 comprados a través de IONOS no están en imap.ionos.com. Conéctalos con Outlook (inicio de sesión con Microsoft); puede que un administrador de TI tenga que aprobar la aplicación una vez.",
     "mcpemails conecta un buzón. Los alias, reenviadores, reglas catch-all y ajustes de spam de IONOS se quedan en el panel de control de IONOS y no son visibles para tu cliente de IA."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de IONOS?",
-      "a": "Funciona con un buzón de IONOS, del tipo que sirve imap.ionos.com, una vez que un servidor MCP como mcpemails se conecta a él por IMAP. Claude no tiene un conector integrado para IONOS. No funciona con un buzón de Microsoft 365 comprado a través de IONOS, porque la política predeterminada de tenant de Microsoft bloquea el consentimiento para el acceso de terceros al correo."
+      "a": "Funciona con un buzón de IONOS, del tipo que sirve imap.ionos.com, una vez que un servidor MCP como mcpemails se conecta a él por IMAP. Claude no tiene un conector integrado para IONOS. Un buzón de Microsoft 365 comprado a través de IONOS también funciona, pero se conecta con Outlook (inicio de sesión con Microsoft) y no por IMAP, y puede que un administrador de TI tenga que aprobar MCP Emails una vez primero."
     },
     {
       "q": "¿Cuáles son los ajustes IMAP y SMTP de IONOS?",
@@ -85,7 +85,7 @@
     },
     {
       "q": "¿Por qué se rechaza mi contraseña de correo de IONOS?",
-      "a": "Porque IONOS da a cada dirección de correo su propia contraseña y probablemente estás usando el acceso a tu cuenta de IONOS. Abre el panel de control de IONOS, ve a Email, selecciona la dirección, define una contraseña nueva para ella y usa esa. Si la dirección se migró a Microsoft 365, ya no existe en los servidores de correo de IONOS."
+      "a": "Porque IONOS da a cada dirección de correo su propia contraseña y probablemente estás usando el acceso a tu cuenta de IONOS. Abre el panel de control de IONOS, ve a Email, selecciona la dirección, define una contraseña nueva para ella y usa esa. Si la dirección se migró a Microsoft 365, ya no existe en los servidores de correo de IONOS; en ese caso, conéctala con Outlook."
     },
     {
       "q": "¿Usan servidores distintos las cuentas de IONOS de Reino Unido, Alemania y Francia?",
@@ -99,5 +99,10 @@
   "ctaBand": {
     "title": "Dale a tu IA una bandeja de IONOS",
     "sub": "Conecta IONOS en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  },
+  "seeAlso": {
+    "intro": "¿Un buzón de Microsoft 365 contratado con IONOS?",
+    "label": "Conéctalo con Outlook (inicio de sesión con Microsoft)",
+    "href": "/connect/office365"
   }
 }

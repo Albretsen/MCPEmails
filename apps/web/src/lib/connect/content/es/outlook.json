@@ -65,9 +65,9 @@
     }
   ],
   "limits": [
-    "Outlook organiza el correo en carpetas, incluidas carpetas anidadas. Las categorías de Outlook no son compatibles y las herramientas de etiquetas solo se aplican a Gmail.",
+    "Outlook organiza el correo en carpetas, incluidas carpetas anidadas. Las herramientas de etiquetas son solo para Gmail, pero la acción de etiquetar de una automatización aplica una categoría de Outlook al mensaje.",
     "Microsoft Graph no puede combinar una búsqueda de texto con los filtros de no leídos, adjuntos, marcados o fechas. Cuando una búsqueda incluye texto, esos filtros no se aplican y el resultado indica cuáles se omitieron.",
-    "Se admiten adjuntos de hasta 25 MB.",
+    "Al enviar, cada mensaje admite hasta 10 MB de adjuntos; la descarga de adjuntos y el reenvío de originales funcionan hasta 25 MB.",
     "La versión autoalojada se conecta solo por IMAP y SMTP. El inicio de sesión con Microsoft forma parte del servicio alojado."
   ],
   "faq": [
@@ -85,11 +85,11 @@
     },
     {
       "q": "¿Qué puede hacer mi IA en Outlook.com?",
-      "a": "Leer, buscar, enviar, responder y reenviar; trabajar con borradores; crear y usar carpetas, incluidas las anidadas; mover, copiar y archivar; marcar; eliminar a la papelera o de forma permanente; gestionar adjuntos de hasta 25 MB; programar envíos; y gestionar tu firma."
+      "a": "Leer, buscar, enviar, responder y reenviar; trabajar con borradores; crear y usar carpetas, incluidas las anidadas; mover, copiar y archivar; marcar; eliminar a la papelera o de forma permanente; enviar hasta 10 MB de adjuntos por mensaje, y descargar adjuntos o reenviar originales de hasta 25 MB; programar envíos; ejecutar reglas de automatización; y gestionar tu firma."
     },
     {
       "q": "¿Es lo mismo que conectar una cuenta de Microsoft 365 del trabajo?",
-      "a": "El inicio de sesión es el mismo, la aprobación puede no serlo. Una cuenta personal no necesita administrador. Una cuenta de Microsoft 365 del trabajo o de un centro educativo a menudo necesita que un administrador de TI apruebe MCP Emails una vez para toda la organización, y en ese caso el panel te da un enlace para enviárselo."
+      "a": "El inicio de sesión es el mismo, la aprobación puede no serlo. Una cuenta personal no necesita administrador. Una cuenta de Microsoft 365 del trabajo o de un centro educativo a menudo necesita que un administrador de TI apruebe MCP Emails una vez para toda la organización. En ese caso, el panel te da un enlace de aprobación para enviar a tu administrador de TI, y no necesita una cuenta de MCP Emails para usarlo."
     },
     {
       "q": "¿Se almacena mi correo en sus servidores?",
@@ -99,5 +99,15 @@
   "ctaBand": {
     "title": "Dale a tu IA tu bandeja de Outlook.com",
     "sub": "Inicia sesión con Microsoft y conecta en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  },
+  "seeAlso": {
+    "intro": "¿Usas una cuenta de Microsoft del trabajo o de un centro educativo?",
+    "label": "Conecta el correo de Microsoft 365",
+    "href": "/connect/office365"
+  },
+  "guide": {
+    "intro": "¿Prefieres una guía paso a paso?",
+    "label": "Cómo conectar Outlook y Microsoft 365 a tu agente de IA con MCP",
+    "href": "/blog/connect-outlook-microsoft-365-ai-agent-mcp"
   }
 }

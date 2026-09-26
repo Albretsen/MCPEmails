@@ -112,5 +112,10 @@
     "intro": "Prefer a walkthrough with screenshots?",
     "label": "Claude IMAP Connector: Connect Any IMAP Inbox to Claude",
     "href": "/blog/claude-imap-connector"
+  },
+  "seeAlso": {
+    "intro": "Outlook.com, Hotmail or Microsoft 365 mailbox?",
+    "label": "Connect it with Sign in with Microsoft instead of IMAP",
+    "href": "/connect/outlook"
   }
 }

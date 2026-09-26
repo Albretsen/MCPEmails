@@ -1,17 +1,17 @@
 const post = {
   slug: 'connect-chatgpt-to-email',
-  title: 'Connect ChatGPT to Your Email with MCP (Gmail, iCloud and IMAP)',
+  title: 'Connect ChatGPT to Your Email with MCP (Gmail, Outlook, iCloud and IMAP)',
   description:
-    'Step by step: connect Gmail, iCloud, Fastmail or any IMAP inbox to ChatGPT with a custom MCP connector, and to OpenAI Codex with a scoped key. No email stored.',
+    'Step by step: connect Gmail, Outlook, iCloud, Fastmail or any IMAP inbox to ChatGPT with a custom MCP connector, and to OpenAI Codex with a scoped key. No email stored.',
   cover: '/blog/cover-email-for-ai-agents-cursor-cline-vscode.svg',
   coverAlt:
-    'Connect ChatGPT and OpenAI Codex to Gmail, iCloud, Fastmail and IMAP email with MCP Emails',
+    'Connect ChatGPT and OpenAI Codex to Gmail, Outlook, iCloud, Fastmail and IMAP email with MCP Emails',
   authorId: 'asgeir',
   publishedAt: '2026-09-15T09:00:00.000Z',
-  updatedAt: '2026-09-25T09:00:00.000Z',
+  updatedAt: '2026-09-26T09:00:00.000Z',
   tags: ['ChatGPT', 'Codex', 'MCP', 'Email', 'Tutorial'],
   featured: false,
-  content: `ChatGPT cannot reach a mailbox on its own. It needs an MCP server in front of your email, and MCP Emails is that server: connect an inbox once, point ChatGPT at a single URL, and it gets the same email tools whether the mail lives in Gmail, iCloud, Fastmail, Yahoo, Zoho or a self-hosted IMAP server.
+  content: `ChatGPT cannot reach a mailbox on its own. It needs an MCP server in front of your email, and MCP Emails is that server: connect an inbox once, point ChatGPT at a single URL, and it gets the same email tools whether the mail lives in Gmail, Outlook or Microsoft 365, iCloud, Fastmail, Yahoo, Zoho or a self-hosted IMAP server.
 
 Two OpenAI surfaces are involved, and they authenticate differently. ChatGPT runs an OAuth flow in the browser, so there is no API key to paste. OpenAI Codex runs in your terminal and uses a scoped bearer key instead. Same endpoint, same tools.
 
@@ -43,7 +43,7 @@ Outlook connects with Sign in with Microsoft, not an app password: choose **Outl
 
 ### Any other IMAP mailbox
 
-Choose **IMAP** and enter the address and app password. Common settings are detected automatically; a custom domain may need the host, port and security mode from your provider. The [provider matrix](/docs/providers) lists what each one supports, and there is a page per provider under [connect](/connect), including [Gmail](/connect/gmail), [iCloud](/connect/icloud) and [generic IMAP](/connect/imap).
+Choose **IMAP** and enter the address and app password. Common settings are detected automatically; a custom domain may need the host, port and security mode from your provider. The [provider matrix](/docs/providers) lists what each one supports, and there is a page per provider under [connect](/connect), including [Gmail](/connect/gmail), [Outlook](/connect/outlook), [Microsoft 365](/connect/office365), [iCloud](/connect/icloud) and [generic IMAP](/connect/imap).
 
 Connect more than one mailbox if your plan allows it. ChatGPT discovers them with \`inbox_list\`, so you never paste a mailbox id into a prompt.
 

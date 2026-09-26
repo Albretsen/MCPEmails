@@ -53,8 +53,8 @@
       "p": "Presque tous les autres fournisseurs nomment leur serveur d'envoi <code>smtp.something</code> : on remplit donc ce modèle par réflexe et on obtient un nom de serveur qui ne se résout pas. one.com utilise <code>send.one.com</code>. L'asymétrie avec <code>imap.one.com</code> fait penser à une coquille dans la documentation, et ce n'en est pas une. Si la lecture du courrier fonctionne mais que l'envoi expire ou ne se résout pas, voilà la raison."
     },
     {
-      "h": "one.com revend aussi Microsoft 365, et cette boîte-là n'est pas connectable",
-      "p": "La tuile du Control Panel s'intitule Email and Microsoft 365, et one.com vend les deux sous le même compte. Un compte e-mail one.com, créé dans cette tuile avec son propre mot de passe, est une boîte IMAP ordinaire sur les serveurs de one.com et se connecte sans problème. Une licence Microsoft 365 achetée via one.com est une boîte Microsoft sur les serveurs de Microsoft, et la stratégie de tenant par défaut de Microsoft empêche un utilisateur final de consentir à un accès tiers en lecture et écriture sur son courrier. Nous ne prétendons pas connecter celles-là. Si votre webmail est Outlook sur le web plutôt que l'interface propre à one.com, vous avez le produit Microsoft."
+      "h": "one.com revend aussi Microsoft 365, et cette boîte-là se connecte avec Outlook",
+      "p": "La tuile du Control Panel s'intitule Email and Microsoft 365, et one.com vend les deux sous le même compte. Un compte e-mail one.com, créé dans cette tuile avec son propre mot de passe, est une boîte IMAP ordinaire sur les serveurs de one.com et se connecte sans problème. Une licence Microsoft 365 achetée via one.com est une boîte Microsoft sur les serveurs de Microsoft, alors connectez-la avec l'option Outlook (connexion avec Microsoft) plutôt qu'en IMAP. Un administrateur informatique devra peut-être d'abord approuver MCP Emails une fois, et le tableau de bord vous donne un lien d'approbation à lui envoyer. Si votre webmail est Outlook sur le web plutôt que l'interface propre à one.com, vous avez le produit Microsoft."
     },
     {
       "h": "La validation en deux étapes du Control Panel ne s'applique pas à votre boîte",
@@ -64,7 +64,7 @@
   "limits": [
     "Le serveur n'annonce ni MOVE ni UIDPLUS : un déplacement se fait donc par copie, indicateur et expunge, et l'UID de destination doit être retrouvé par une recherche.",
     "SPECIAL-USE est absent : Sent, Drafts, Trash et Junk sont reconnus par leur nom. Les boîtes one.com danoises, suédoises et norvégiennes ont souvent des noms de dossiers localisés.",
-    "Les licences Microsoft 365 vendues via one.com ne peuvent pas être connectées."
+    "Les licences Microsoft 365 vendues via one.com ne sont pas sur imap.one.com. Connectez-les plutôt avec Outlook (connexion avec Microsoft)."
   ],
   "faq": [
     {
@@ -91,5 +91,10 @@
   "ctaBand": {
     "title": "Offrez une boîte one.com à votre IA",
     "sub": "Connectez une boîte one.com en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  },
+  "seeAlso": {
+    "intro": "Une boîte Microsoft 365 achetée via one.com ?",
+    "label": "Connectez-la avec Outlook (connexion avec Microsoft)",
+    "href": "/connect/office365"
   }
 }

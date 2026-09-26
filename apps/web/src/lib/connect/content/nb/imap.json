@@ -112,5 +112,10 @@
     "intro": "Foretrekker du en gjennomgang med skjermbilder?",
     "label": "Claude IMAP-kobling: koble enhver IMAP-innboks til Claude",
     "href": "/blog/claude-imap-connector"
+  },
+  "seeAlso": {
+    "intro": "Outlook.com-, Hotmail- eller Microsoft 365-postkasse?",
+    "label": "Koble den til med Microsoft-innlogging i stedet for IMAP",
+    "href": "/connect/outlook"
   }
 }

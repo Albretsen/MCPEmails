@@ -8,7 +8,7 @@ const post = {
     'One AI agent connected to work, personal, and side-business email accounts with MCP Emails',
   authorId: 'asgeir',
   publishedAt: '2026-09-15T09:00:00.000Z',
-  updatedAt: '2026-09-15T09:00:00.000Z',
+  updatedAt: '2026-09-26T09:00:00.000Z',
   tags: ['Multiple inboxes', 'Email', 'MCP', 'Workflow'],
   featured: false,
   content: `Almost nobody has one mailbox. You have a work address, a personal address, and at least one more for a side business or a domain you still own. Every question that crosses two accounts becomes a manual search in two places.
@@ -80,12 +80,13 @@ The [inbox triage playbook](/blog/ai-agent-triage-summarize-inbox) has rubrics t
 
 **Moving a conversation between roles.** When a personal contact turns into a client, forward the thread to the business mailbox and have the reply composed from the business address. Ask the agent to confirm which inbox it is sending from first.
 
-## What changes when you mix Gmail and IMAP
+## What changes when you mix Gmail, Outlook and IMAP
 
 Mixed setups are the normal case, and providers disagree about what a folder is.
 
 - **Gmail has labels.** A move adds a label and removes the message from the inbox. Other labels stay attached, so a message can sit in several places.
 - **IMAP has folders.** A move is a move: the message leaves one folder and lands in another.
+- **Outlook has nested folders.** A move is a move, as on IMAP, and folders can sit inside other folders. Outlook has no labels, so an automation's label action applies an Outlook category instead.
 - **Folder names differ.** Archive, All Mail, Spam, Junk, and localized names vary per provider. Have the agent call \`folder_list\` on the mailbox it is about to touch.
 - **Folder scoping is per inbox.** Restricting a search to a set of folders applies inside one mailbox, so a folder-scoped search across accounts is still one call per account.
 

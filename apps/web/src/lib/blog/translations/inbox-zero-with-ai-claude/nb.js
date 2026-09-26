@@ -1,11 +1,11 @@
 const translation = {
   title: 'Slik når du Inbox Zero med AI (med Claude og din ekte innboks)',
   description:
-    'Nå inbox zero med AI: la Claude sortere, arkivere, merke og skrive svarutkast på tvers av din ekte Gmail- eller IMAP-innboks over MCP. En rutine du kan gjenta, de eksakte promptene, og hvorfor ingenting lagres.',
+    'Nå inbox zero med AI: la Claude sortere, arkivere, merke og skrive svarutkast på tvers av din ekte Gmail-, Outlook- eller IMAP-innboks over MCP. En rutine du kan gjenta, de eksakte promptene, og hvorfor ingenting lagres.',
   coverAlt: 'Nå inbox zero med AI — Claude sorterer, arkiverer og skriver svarutkast på tvers av din ekte innboks over MCP',
   content: `Inbox zero har alltid hatt det samme problemet: å komme dit tar en time du ikke har, og i morgen er du tilbake til femti uleste. En AI-agent endrer regnestykket. I stedet for at du sorterer én melding om gangen, forteller du Claude hva «håndtert» betyr, og den jobber gjennom hele innboksen på én gang — sorterer, arkiverer, merker og skriver svarutkast mot din *ekte* e-post, live.
 
-Denne guiden er rutinen: en sløyfe du kan gjenta hver morgen, de eksakte promptene som driver den, og den ene regelen som holder den trygg (ingenting lagres noensinne). Den forutsetter at Claude allerede kan se innboksen din. Hvis den ikke kan det ennå, start med [hvordan koble Gmail til Claude](/blog/connect-gmail-to-claude) — det tar omtrent to minutter — og kom så tilbake.
+Denne guiden er rutinen: en sløyfe du kan gjenta hver morgen, de eksakte promptene som driver den, og den ene regelen som holder den trygg (ingenting lagres noensinne). Den forutsetter at Claude allerede kan se innboksen din. Hvis den ikke kan det ennå, start med [hvordan koble Gmail til Claude](/blog/connect-gmail-to-claude) (eller [guiden for Outlook og Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp)) — det tar omtrent to minutter — og kom så tilbake.
 
 ## Hvorfor «inbox zero» endelig er realistisk med AI
 
@@ -33,7 +33,7 @@ Dette er \`email_organize\` som gjør det kjedelige arbeidet — arkiverer i bul
 
 > «Merk alt fra en kunde eller om en faktura som «Prioritet», og alt jeg bare står på kopi i, som «Til orientering».»
 
-Nå er de overlevende sortert. Claude bruker Gmail-etiketter (eller IMAP-mapper) slik at de viktige trådene er visuelt gruppert før du bruker ett sekund med oppmerksomhet på dem.
+Nå er de overlevende sortert. Claude bruker Gmail-etiketter (eller mapper på Outlook og IMAP) slik at de viktige trådene er visuelt gruppert før du bruker ett sekund med oppmerksomhet på dem.
 
 **4. Skriv svarene — men ikke send.**
 
@@ -57,7 +57,7 @@ Rutinen over tar ~fem minutter når Claude gjør tunge løftet. Et par måter fo
 
 ## Den ene regelen som holder dette trygt
 
-Å gi en AI hele innboksen din høres risikabelt ut helt til du vet hvor dataene havner: **ingen steder.** Med MCP Emails henter hver eneste av disse promptene e-posten din live fra Gmail eller IMAP, gir den til Claude for den ene handlingen, og forkaster den umiddelbart. Meldingsinnhold, emner og vedlegg lagres aldri — det eneste som beholdes per innboks, er et kryptert token slik at neste kall kan skje. Det er forskjellen mellom å gi en agent en *nøkkel* og å gi den en *permanent kopi av alt*; her er [hvorfor «e-post lagres aldri» betyr noe](/blog/why-email-never-stored-matters), og hele [sikkerhetsgjennomgangen](/blog/is-it-safe-to-give-ai-agent-email-access) om du vil ha trusselmodellen.
+Å gi en AI hele innboksen din høres risikabelt ut helt til du vet hvor dataene havner: **ingen steder.** Med MCP Emails henter hver eneste av disse promptene e-posten din live fra Gmail, Outlook eller IMAP, gir den til Claude for den ene handlingen, og forkaster den umiddelbart. Meldingsinnhold, emner og vedlegg lagres aldri — det eneste som beholdes per innboks, er et kryptert token slik at neste kall kan skje. Det er forskjellen mellom å gi en agent en *nøkkel* og å gi den en *permanent kopi av alt*; her er [hvorfor «e-post lagres aldri» betyr noe](/blog/why-email-never-stored-matters), og hele [sikkerhetsgjennomgangen](/blog/is-it-safe-to-give-ai-agent-email-access) om du vil ha trusselmodellen.
 
 Du holder også en klar grense for sending: utkast forblir utkast til du godkjenner dem, og du kan gi lesetilgang slik at Claude bokstavelig talt ikke kan sende.
 

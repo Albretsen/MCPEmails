@@ -30,20 +30,20 @@ const translation = {
 
 ## 逐个连接服务商
 
-### Gmail（OAuth）
+### Gmail（应用专用密码，或使用 Google 登录）
 
-其中最快的一个，因为活儿都让 Google 干了。
+Gmail 默认通过 IMAP 使用 Google 应用专用密码连接。
 
-1. **Dashboard → Inboxes → Connect Inbox → Gmail。**
-2. 你会被转到 Google 的登录页。选择账户。
-3. 在授权页面上批准读取和发送权限。
-4. 你会回到控制台，邮箱已连接。完成。
+1. 在 Google 账户中开启两步验证，然后在 **myaccount.google.com/apppasswords** 创建一个应用专用密码。它由 16 个小写字母组成，分为四组。
+2. **Dashboard → Inboxes → Connect Inbox → Gmail。**
+3. 输入完整的 Gmail 地址，粘贴应用专用密码，然后点击**连接收件箱**。
+4. 连接会在 Gmail 上测试，随后邮箱显示为已连接。完成。
 
-整个过程从不交换密码。MCP Emails 持有一个加密的 OAuth 令牌，直接调用 Gmail API。搜索使用 Gmail 的原生操作符（\`from:\`、\`is:unread\`、\`after:\`），所以你的智能体可以非常精确。
+你的常规 Google 密码在这里不起作用，也从不需要。如果你更想用 Google 登录，可以在同一个窗口中展开**更想用 Google 登录？**，然后点击**使用 Google 连接**；Google 会先显示应用未经验证的警告（点击**高级（Advanced）**，再点击**前往 mcpemails.com（Go to mcpemails.com）**）。这种方式使用 Gmail API，因此搜索可以使用 Gmail 自己的操作符（\`from:\`、\`is:unread\`、\`after:\`），Claude 也能使用真正的标签。应用专用密码方式使用 IMAP 文本搜索，把标签显示为文件夹，并且可以永久删除。[Gmail 指南](/blog/connect-gmail-to-claude)有更多细节。
 
 ### Outlook / Microsoft 365（使用 Microsoft 登录）
 
-形式和 Gmail 一样，只是换了身份提供商。无需应用专用密码，也无需 IMAP 设置。
+Outlook 通过 Microsoft 登录连接，而不是密码。无需应用专用密码，也无需 IMAP 设置。
 
 1. **Dashboard → Inboxes → Connect Inbox → Outlook。**
 2. 点击**使用 Microsoft 连接**，在 Microsoft 的页面上用你的 Microsoft 账户登录。

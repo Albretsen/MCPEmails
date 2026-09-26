@@ -30,20 +30,20 @@ Passons à la boîte de réception. Chaque fournisseur ci-dessous démarre de la
 
 ## Connectez chaque fournisseur
 
-### Gmail (OAuth)
+### Gmail (mot de passe d’application, ou connexion avec Google)
 
-Le plus rapide du lot, parce que c’est Google qui fait le travail.
+Par défaut, Gmail se connecte avec un mot de passe d’application Google, en IMAP.
 
-1. **Dashboard → Inboxes → Connect Inbox → Gmail.**
-2. Vous êtes redirigé vers la connexion Google. Choisissez le compte.
-3. Approuvez l’accès en lecture et en envoi sur l’écran de consentement.
-4. Vous revenez dans le tableau de bord avec la boîte de réception connectée. Terminé.
+1. Activez la validation en deux étapes sur votre compte Google, puis créez un mot de passe d’application sur **myaccount.google.com/apppasswords**. Il compte 16 lettres minuscules en quatre groupes.
+2. **Dashboard → Inboxes → Connect Inbox → Gmail.**
+3. Saisissez votre adresse Gmail complète, collez le mot de passe d’application et cliquez sur **Connecter la boîte**.
+4. La connexion est testée auprès de Gmail et la boîte apparaît connectée. Terminé.
 
-Aucun mot de passe ne change jamais de mains. MCP Emails conserve un jeton OAuth chiffré et appelle directement l’API Gmail. Les recherches utilisent les opérateurs natifs de Gmail (\`from:\`, \`is:unread\`, \`after:\`), donc votre agent peut être précis.
+Votre mot de passe Google habituel ne fonctionne pas ici et n’est jamais nécessaire. Si vous préférez vous connecter avec Google, ouvrez **Vous préférez vous connecter avec Google ?** dans la même fenêtre et cliquez sur **Se connecter avec Google** ; Google affiche d’abord un avertissement d’application non validée (cliquez sur **Paramètres avancés**, puis sur **Accéder à mcpemails.com**). Cette voie utilise l’API Gmail : les recherches peuvent utiliser les opérateurs propres à Gmail (\`from:\`, \`is:unread\`, \`after:\`) et Claude travaille avec de vrais libellés. La voie du mot de passe d’application utilise la recherche texte IMAP, affiche les libellés comme des dossiers et permet la suppression définitive. Le [guide Gmail](/blog/connect-gmail-to-claude) donne les détails.
 
 ### Outlook / Microsoft 365 (connexion avec Microsoft)
 
-Même schéma que Gmail, fournisseur d’identité différent. Pas de mot de passe d’application ni de réglages IMAP.
+Outlook se connecte avec une connexion Microsoft plutôt qu’avec un mot de passe. Pas de mot de passe d’application ni de réglages IMAP.
 
 1. **Dashboard → Inboxes → Connect Inbox → Outlook.**
 2. Cliquez sur **Se connecter avec Microsoft** et connectez-vous avec votre compte Microsoft sur la page de Microsoft.

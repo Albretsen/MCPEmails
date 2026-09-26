@@ -16,6 +16,11 @@
 // two-step AUTH fallback, and `move: false` is why organize falls back to
 // COPY + STORE + EXPUNGE on that host.
 //
+// `contentUpdatedOn` is optional: the date the page's copy last changed in
+// substance, when that is later than the probe. The sitemap's lastModified is
+// the later of the two, so a copy rewrite is advertised without pretending the
+// host was re-probed on that date.
+//
 // Prose lives in src/lib/connect/content/<locale>/<slug>.json, deliberately NOT
 // in the next-intl `connect` namespace: the root layout ships every loaded
 // namespace to the browser, so putting 106 providers' copy there would put all
@@ -47,6 +52,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": false, "authMechs": [], "saslIr": null, "move": null, "idle": null, "uidplus": null, "specialUse": null, "banner": null, "smtpAuthMechs": [], "smtpStarttls": null, "smtpMaxSize": null},
+    contentUpdatedOn: "2026-09-26",
     locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
@@ -375,6 +381,7 @@ export const PROVIDERS = [
     imap: {"host": "secure.emailsrvr.com", "port": 993, "security": "tls"},
     smtp: {"host": "secure.emailsrvr.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN] Server ready proxy7.mail.iad3b.rsapps.net", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "75000000"},
+    contentUpdatedOn: "2026-09-26",
     locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
@@ -459,6 +466,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.secureserver.net", "port": 993, "security": "tls"},
     smtp: {"host": "smtpout.secureserver.net", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN"], "saslIr": false, "move": false, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 UNSELECT ID CHILDREN NAMESPACE IDLE UIDPLUS AUTH=PLAIN] Fenix ready.", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": "30000000"},
+    contentUpdatedOn: "2026-09-26",
     locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
@@ -515,6 +523,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.ionos.com", "port": 993, "security": "tls"},
     smtp: {"host": "smtp.ionos.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": true, "idle": true, "uidplus": true, "specialUse": true, "banner": "* OK [CAPABILITY IMAP4rev1 CHILDREN ENABLE ID IDLE LIST-EXTENDED LIST-STATUS LITERAL- MOVE NAMESPACE QUOTA SASL-IR SORT SPECIAL-USE THREAD=ORDEREDSUBJECT UIDPLU", "smtpAuthMechs": ["PLAIN", "LOGIN"], "smtpStarttls": false, "smtpMaxSize": "141557760"},
+    contentUpdatedOn: "2026-09-26",
     locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
@@ -557,6 +566,7 @@ export const PROVIDERS = [
     imap: {"host": "imap.one.com", "port": 993, "security": "tls"},
     smtp: {"host": "send.one.com", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN AUTH=LOGIN] Dovecot ready.", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": "104857600"},
+    contentUpdatedOn: "2026-09-26",
     locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
@@ -571,6 +581,7 @@ export const PROVIDERS = [
     imap: {"host": "ssl0.ovh.net", "port": 993, "security": "tls"},
     smtp: {"host": "ssl0.ovh.net", "port": 465, "security": "tls"},
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["LOGIN", "PLAIN"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN AUTH=LOGIN] Dovecot on host 91 ready", "smtpAuthMechs": ["LOGIN", "PLAIN"], "smtpStarttls": false, "smtpMaxSize": "104857600"},
+    contentUpdatedOn: "2026-09-26",
     locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
@@ -1476,10 +1487,11 @@ export const PROVIDERS = [
     // Live since the Outlook launch (2026-09): Microsoft Graph OAuth, the same
     // connector as Outlook.com. The caveat is consent, not the connector: on
     // Microsoft's default tenant consent policy an employee cannot approve the
-    // mail scopes, so an IT admin approves the app once through
-    // /auth/outlook/admin-consent before anyone in the tenant can connect.
-    // The page copy says so; `status` stays "supported" because the product
-    // does connect these mailboxes once that approval exists.
+    // mail scopes, so an IT admin approves the app once, through an approval
+    // link the dashboard hands the user to send on, before anyone in the
+    // tenant can connect. The page copy says so; `status` stays "supported"
+    // because the product does connect these mailboxes once that approval
+    // exists.
     category: "business",
     domain: "office365.com",
     hostPattern: "oauth",
@@ -1492,6 +1504,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN", "XOAUTH2"], "saslIr": true, "move": true, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK Microsoft Exchange IMAP4 service ready. 28e79741-268c-4463-b2b6-8ae5b453b488 (tcpproxy/15.21.0360.006 BACKENDAUTHENTICATE) [TwBMADEAUAAyADcAOQBDAEEAMAAwADI", "smtpAuthMechs": [], "smtpStarttls": true, "smtpMaxSize": "157286400"},
+    contentUpdatedOn: "2026-09-26",
     locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
@@ -1512,6 +1525,7 @@ export const PROVIDERS = [
     imap: null,
     smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["XOAUTH2"], "saslIr": true, "move": true, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK Microsoft Exchange IMAP4 service ready. f7727043-334d-49cc-8f5e-3d93fc232c38 (tcpproxy/15.21.0360.006 BACKENDAUTHENTICATE) [TwBMADEAUAAyADcAOQBDAEEAMAAwADI", "smtpAuthMechs": [], "smtpStarttls": true, "smtpMaxSize": "157286400"},
+    contentUpdatedOn: "2026-09-26",
     locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
@@ -1558,6 +1572,26 @@ export function providerSlugs() {
  *  translation that does not exist: a bad alternate is worse than none. */
 export function providerLocales(slug) {
   return getProvider(slug)?.locales ?? ['en'];
+}
+
+/**
+ * Providers the /connect hub lists ahead of array order. The registry is
+ * ordered by research wave, which put Outlook, launched later, last among the
+ * consumer providers. Gmail and Outlook are the two mailboxes most people
+ * arrive with, so they lead their silo, and Microsoft 365 leads business mail.
+ */
+export const FEATURED_PROVIDERS = ["gmail", "outlook", "office365"];
+
+/** A stable reorder: featured providers first, in FEATURED_PROVIDERS order. */
+export function featuredFirst(list) {
+  const rank = (p) => {
+    const i = FEATURED_PROVIDERS.indexOf(p.slug);
+    return i === -1 ? FEATURED_PROVIDERS.length : i;
+  };
+  return list
+    .map((p, i) => ({ p, i }))
+    .sort((a, b) => rank(a.p) - rank(b.p) || a.i - b.i)
+    .map(({ p }) => p);
 }
 
 export function providersByCategory(category) {

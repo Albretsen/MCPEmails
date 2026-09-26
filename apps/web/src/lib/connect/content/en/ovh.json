@@ -59,7 +59,7 @@
     },
     {
       "h": "Nothing in your address tells you which OVH product you have",
-      "p": "All three products serve mail at your own domain, so <code>you@yourdomain.fr</code> looks identical whichever one it sits on. The answer is in the OVHcloud Control Panel under Web Cloud, where MX Plan appears under Emails, Email Pro has its own section, and Hosted Exchange has another. Check that first, because every other setting depends on it. If your OVH order was for Microsoft 365 rather than OVH's own Hosted Exchange, the mailbox is on Microsoft's servers under Microsoft's identity platform, and Microsoft's default tenant policy blocks end-user consent for third-party mail access. We do not claim to connect those."
+      "p": "All three products serve mail at your own domain, so <code>you@yourdomain.fr</code> looks identical whichever one it sits on. The answer is in the OVHcloud Control Panel under Web Cloud, where MX Plan appears under Emails, Email Pro has its own section, and Hosted Exchange has another. Check that first, because every other setting depends on it. If your OVH order was for Microsoft 365 rather than OVH's own Hosted Exchange, the mailbox is on Microsoft's servers, so connect it with the Outlook option (Sign in with Microsoft) instead of IMAP. An IT admin may need to approve MCP Emails once first, and the dashboard gives you an approval link to send them."
     },
     {
       "h": "MX Plan runs Dovecot without MOVE, UIDPLUS or SPECIAL-USE",
@@ -67,7 +67,7 @@
     }
   ],
   "limits": [
-    "Microsoft 365 mailboxes ordered through OVHcloud cannot be connected. Microsoft's default tenant policy blocks end-user consent for third-party mail access.",
+    "Microsoft 365 mailboxes ordered through OVHcloud are not on OVH's mail hosts. Connect them with Outlook (Sign in with Microsoft); an IT admin may need to approve the app once.",
     "Email Pro and Hosted Exchange hostnames contain a per-service server number, so we cannot prefill them. Take the value from the Connection box in the OVHcloud Control Panel.",
     "MX Plan does not advertise MOVE, so a move is not atomic. If a connection drops part way through, a message can exist briefly in both folders."
   ],
@@ -100,5 +100,10 @@
   "ctaBand": {
     "title": "Give your AI an OVH inbox",
     "sub": "Connect OVH in minutes. One inbox free forever, no card required."
+  },
+  "seeAlso": {
+    "intro": "Microsoft 365 mailbox from OVHcloud?",
+    "label": "Connect it with Outlook (Sign in with Microsoft)",
+    "href": "/connect/office365"
   }
 }

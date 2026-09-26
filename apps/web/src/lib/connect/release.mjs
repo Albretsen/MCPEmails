@@ -104,12 +104,39 @@ export function releasedProviderParams(now = new Date()) {
 }
 
 /**
+ * Siblings pinned to the front of a page's related list, ahead of the rotation.
+ *
+ * The rotation is fair to every page in a silo, which is right for the long
+ * tail and wrong for the two providers most readers actually arrive with.
+ * Outlook launched in the last research wave, so by rotation alone it and
+ * Microsoft 365 drew fewer inbound links than Gmail. The consumer pages pin
+ * the other big consumer mailboxes, and the web hosts that resell Microsoft 365
+ * pin the page that explains how that mailbox connects, since "my GoDaddy mail
+ * is really Microsoft 365" is the likeliest next question on those pages.
+ * Pinned entries still pass the release gate and never include the page itself.
+ */
+export const PINNED_RELATED = {
+  gmail: ['outlook', 'office365'],
+  outlook: ['office365', 'gmail'],
+  office365: ['outlook', 'gmail'],
+  icloud: ['gmail', 'outlook'],
+  yahoo: ['gmail', 'outlook'],
+  imap: ['gmail', 'outlook'],
+  godaddy: ['office365'],
+  ionos: ['office365'],
+  ovh: ['office365'],
+  'one-com': ['office365'],
+  rackspace: ['office365'],
+};
+
+/**
  * Siblings to link from a provider page, restricted to what is already public.
  *
  * Linking an unreleased page would put a 404 in front of both readers and
  * crawlers, and a page that links into a wave that does not exist yet is worse
- * than a page with fewer links. Same category first, rotating so that a large
- * silo does not point every page at the same six.
+ * than a page with fewer links. Pinned siblings (above) first, then the same
+ * category, rotating so that a large silo does not point every page at the
+ * same six.
  *
  * The list is then topped up from every other released provider, because a
  * silo can be smaller than `limit` and briefly is for most of the rollout:
@@ -129,23 +156,21 @@ export function relatedProviders(slug, limit = 6, now = new Date()) {
     return [...list.slice(start), ...list.slice(0, start)];
   };
 
-  const out = rotate(pool.filter((p) => p.category === self.category)).slice(0, limit);
+  const out = [];
+  const taken = new Set();
+  const add = (p) => {
+    if (!p || out.length >= limit || taken.has(p.slug)) return;
+    out.push(p);
+    taken.add(p.slug);
+  };
+
+  for (const pinned of PINNED_RELATED[slug] ?? []) add(pool.find((p) => p.slug === pinned));
+  for (const p of rotate(pool.filter((x) => x.category === self.category))) add(p);
   if (out.length < limit) {
-    const taken = new Set(out.map((p) => p.slug));
     // Generic IMAP first when it is not already in: it is the page that answers
     // "my provider is not listed", which is the likeliest next question.
-    const generic = pool.find((p) => p.slug === 'imap');
-    if (generic && !taken.has('imap')) {
-      out.push(generic);
-      taken.add('imap');
-    }
-    for (const p of rotate(pool.filter((x) => x.category !== self.category))) {
-      if (out.length >= limit) break;
-      if (!taken.has(p.slug)) {
-        out.push(p);
-        taken.add(p.slug);
-      }
-    }
+    add(pool.find((p) => p.slug === 'imap'));
+    for (const p of rotate(pool.filter((x) => x.category !== self.category))) add(p);
   }
   return out;
 }

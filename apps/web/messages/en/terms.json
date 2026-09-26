@@ -19,7 +19,7 @@
   },
   "serviceDescription": {
     "title": "2. Description of Service",
-    "p1": "MCPEmails provides a software-as-a-service platform that allows you to connect email accounts (Gmail, Fastmail, and compatible IMAP accounts) and expose those accounts to AI agents via the Model Context Protocol (MCP). The Service includes:",
+    "p1": "MCPEmails provides a software-as-a-service platform that allows you to connect email accounts (Gmail, Microsoft Outlook / Microsoft 365, Fastmail, and compatible IMAP accounts) and expose those accounts to AI agents via the Model Context Protocol (MCP). The Service includes:",
     "list": [
       "A web dashboard for managing connected email accounts, API keys, and usage monitoring.",
       "An MCP-compliant HTTP endpoint that AI agents authenticate against using API keys you generate.",
@@ -100,7 +100,7 @@
     "h71": "7.1 Service provided \"as is\"",
     "p71": "The Service is provided \"as is\" and \"as available\" without warranties of any kind, either express or implied, including (but not limited to) implied warranties of merchantability, fitness for a particular purpose, non-infringement, and uninterrupted or error-free operation. We do not warrant that the Service will meet your requirements, that email delivery will be reliable or complete, or that defects will be corrected.",
     "h72": "7.2 Third-party services",
-    "p72": "The Service integrates with third-party email providers (Google Gmail, Fastmail, IMAP servers). We are not responsible for the availability, reliability, or performance of those services, for changes to their APIs or OAuth policies, or for any loss of email access resulting from a third-party provider's actions.",
+    "p72": "The Service integrates with third-party email providers (Google Gmail, Microsoft Outlook / Microsoft 365, Fastmail, IMAP servers). We are not responsible for the availability, reliability, or performance of those services, for changes to their APIs or OAuth policies, or for any loss of email access resulting from a third-party provider's actions.",
     "h73": "7.3 AI agent actions",
     "p73": "MCPEmails is a protocol bridge. We transmit instructions from AI agents to your email providers and return results. We are not responsible for the content of emails sent, forwarded, or replied to by AI agents acting under your API keys, nor for any consequences of autonomous agent actions including accidental email deletion, misdirected messages, or data leakage resulting from agent logic errors.",
     "h74": "7.4 Limitation of liability",
@@ -134,7 +134,7 @@
     "list85": [
       "Your right to access and use the Service immediately ceases.",
       "All API keys associated with your account are immediately revoked.",
-      "OAuth token grants issued to MCPEmails by your email provider are revoked; your email provider may take up to 24 hours to reflect this.",
+      "OAuth token grants issued to MCPEmails by your email provider are revoked where the provider supports it; otherwise stored tokens are deleted and you can remove the app in your provider account. Your email provider may take up to 24 hours to reflect a revocation.",
       "Your data will be deleted in accordance with our retention schedule described in the Privacy Policy."
     ],
     "p85after": "The following provisions survive termination: Section 6 (Intellectual Property), Section 7 (Disclaimers and Limitation of Liability), Section 8.5 (Effect of Termination), Section 9 (Governing Law and Disputes), and any other provisions that by their nature should survive."

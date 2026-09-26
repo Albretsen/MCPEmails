@@ -73,12 +73,13 @@ El [manual de triaje de la bandeja de entrada](/blog/ai-agent-triage-summarize-i
 
 **Mover una conversación entre roles.** Cuando un contacto personal se convierte en cliente, reenvía el hilo al buzón del negocio y haz que la respuesta se redacte desde la dirección del negocio. Pide al agente que confirme primero desde qué buzón está enviando.
 
-## Qué cambia cuando mezclas Gmail e IMAP
+## Qué cambia cuando mezclas Gmail, Outlook e IMAP
 
 Las configuraciones mixtas son lo normal, y los proveedores no se ponen de acuerdo sobre qué es una carpeta.
 
 - **Gmail tiene etiquetas.** Un movimiento añade una etiqueta y quita el mensaje de la bandeja de entrada. Las demás etiquetas siguen puestas, así que un mensaje puede estar en varios sitios a la vez.
 - **IMAP tiene carpetas.** Un movimiento es un movimiento: el mensaje sale de una carpeta y llega a otra.
+- **Outlook tiene carpetas anidadas.** Un movimiento es un movimiento, como en IMAP, y las carpetas pueden estar dentro de otras carpetas. Outlook no tiene etiquetas, así que la acción de etiqueta de una automatización aplica una categoría de Outlook.
 - **Los nombres de carpeta cambian.** Archive, All Mail, Spam, Junk y los nombres localizados varían según el proveedor. Haz que el agente llame a \`folder_list\` en el buzón que va a tocar.
 - **El alcance por carpetas es por buzón.** Restringir una búsqueda a un conjunto de carpetas se aplica dentro de un solo buzón, así que una búsqueda acotada por carpetas en varias cuentas sigue siendo una llamada por cuenta.
 

@@ -93,10 +93,10 @@
     ]
   },
   "google": {
-    "title": "6. Vérification Google et fournisseurs",
+    "title": "6. Vérification Google, Microsoft et fournisseurs",
     "p1": "L'accès à Gmail utilise les portées restreintes de Google, le niveau que Google examine le plus minutieusement.",
     "p2": "L'utilisation et le transfert par MCPEmails des informations reçues des API de Google vers toute autre application respectent la <link>Google API Services User Data Policy</link>, y compris les exigences Limited Use.",
-    "p3": "Pour Fastmail, iCloud, Yahoo, Zoho, Yandex et les autres fournisseurs IMAP, vous vous connectez avec un mot de passe d'application délivré par le fournisseur, que vous pouvez révoquer à tout moment, sans aucune portée OAuth large que nous pourrions demander à l'excès."
+    "p3": "L'accès à Outlook et Microsoft 365 passe par Microsoft Graph, depuis une application dont l'éditeur est vérifié par Microsoft, et ne demande qu'un ensemble nommé d'autorisations affiché sur l'écran de consentement de Microsoft : Mail.ReadWrite, Mail.Send, offline_access, openid, profile et email. Pour Fastmail, iCloud, Yahoo, Zoho, Yandex et les autres fournisseurs IMAP, vous vous connectez avec un mot de passe d'application délivré par le fournisseur, que vous pouvez révoquer à tout moment, sans aucune portée OAuth large que nous pourrions demander à l'excès."
   },
   "subprocessors": {
     "title": "7. Sous-traitants",

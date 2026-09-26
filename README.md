@@ -36,7 +36,7 @@
 
 ## How it works
 
-1. **Connect a mailbox.** Sign in at [mcpemails.com](https://mcpemails.com) and connect Gmail (one‑click OAuth) or any IMAP/SMTP account (app password). Credentials are encrypted with AES‑256‑GCM before they touch the database.
+1. **Connect a mailbox.** Sign in at [mcpemails.com](https://mcpemails.com) and connect Outlook / Microsoft 365 (Sign in with Microsoft, over Microsoft Graph), Gmail (a Google app password over IMAP by default, or Sign in with Google), or any IMAP/SMTP account (app password). Credentials are encrypted with AES‑256‑GCM before they touch the database.
 2. **Get access.** OAuth‑capable clients (claude.ai, Claude Desktop, Cursor) connect in one click via OAuth 2.0 + PKCE. Everything else uses a scoped API key (`mcpe_…`).
 3. **Point your client at the server.** The MCP endpoint is a single URL:
    ```
@@ -75,12 +75,12 @@ Copy‑paste instructions per client, including where each one keeps its config 
 ## Capabilities
 
 - **Live, never stored** — email is read straight from your provider on each call; no message bodies are persisted.
-- **Multi‑provider** — Gmail via OAuth, plus any IMAP/SMTP mailbox (Fastmail, iCloud, Yahoo, Zoho, Yandex, self‑hosted…) via app password.
+- **Multi‑provider** — Outlook / Microsoft 365 via Microsoft Graph (Sign in with Microsoft), Gmail via a Google app password or Sign in with Google, plus any IMAP/SMTP mailbox (Fastmail, iCloud, Yahoo, Zoho, Yandex, self‑hosted…) via app password.
 - **No relay** — outbound mail is sent through *your* provider's SMTP/API, from your real address.
 - **Granular scopes** — eight permission scopes, grantable independently per API key and per inbox.
 - **Batch & search‑and‑act** — read, move, delete, or flag up to hundreds of messages in one call, including "search then move/delete" combinators.
 - **Drafts & scheduling** — compose drafts and queue messages for future send (server‑side dispatch).
-- **Provider‑agnostic search** — Gmail syntax, IMAP `SEARCH`, and JMAP are normalized behind one `email_read` (`action: "search"`) interface.
+- **Provider‑agnostic search** — Gmail syntax, Microsoft Graph KQL and IMAP `SEARCH` are normalized behind one `email_read` (`action: "search"`) interface.
 - **Team‑ready**: workspaces, members, roles, SSO, and an audit log on the Team plan.
 
 ## Tools
@@ -157,13 +157,13 @@ Notes:
 
 | Provider | Connect via | Read/Search | Send | Folders | Permanent delete | Drafts |
 | --- | --- | --- | --- | --- | --- | --- |
-| **Gmail / Google Workspace** | OAuth 2.0 | ✅ | ✅ | Labels | Trash only | ✅ |
+| **Gmail / Google Workspace** | App password (IMAP/SMTP) by default, or OAuth 2.0 (Sign in with Google) | ✅ | ✅ | Labels | Trash only | ✅ |
 | **Fastmail** | App password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **iCloud, Yahoo, Zoho, Yandex** | App password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **Any IMAP/SMTP mailbox** | App password | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **Outlook / Microsoft 365** | OAuth 2.0 (Microsoft Graph) | ✅ | ✅ | ✅ (nested) | ✅ | ✅ |
 
-> Outlook uses Microsoft Graph with "Sign in with Microsoft", not IMAP. Personal Microsoft accounts (outlook.com, hotmail.com, live.com, msn.com) connect directly. On work or school Microsoft 365 tenants, Microsoft's default consent policy stops employees approving mail permissions themselves, so an IT admin approves the app once for the organisation; the dashboard gives the user a link to send them (`/auth/outlook/admin-consent`). A Microsoft account with no Exchange Online mailbox is refused, with a pointer to IMAP. Labels/categories are not supported (folders only), and Graph cannot combine a text search with the unread, attachment, flagged or date filters.
+> Outlook uses Microsoft Graph with "Sign in with Microsoft", not IMAP. Personal Microsoft accounts (outlook.com, hotmail.com, live.com, msn.com) connect directly. On work or school Microsoft 365 tenants, Microsoft's default consent policy stops employees approving mail permissions themselves, so an IT admin approves the app once for the organisation; the dashboard gives the user a shareable approval link to send them (`/auth/outlook/admin-consent`), and the admin needs no MCP Emails account. A Microsoft account with no Exchange Online mailbox is refused, with a pointer to IMAP. The label tools are Gmail-only (Outlook uses folders), except that an automation's label action applies an Outlook category; and Graph cannot combine a text search with the unread, attachment, flagged or date filters.
 
 ## Pricing
 
@@ -204,7 +204,7 @@ flowchart LR
     end
 
     Web -->|proxies| Edge
-    Edge -->|decrypt creds, fetch live| Providers["Email providers<br/>Gmail API · IMAP/SMTP"]
+    Edge -->|decrypt creds, fetch live| Providers["Email providers<br/>Gmail API · Microsoft Graph · IMAP/SMTP"]
     Edge --> DB
     Cron --> DB
     Web --> Stripe[("Stripe<br/>billing")]
@@ -278,7 +278,7 @@ Feature‑dependent:
 | --- | --- |
 | `GMAIL_CLIENT_ID` / `GMAIL_CLIENT_SECRET` | Gmail OAuth (`gmail.readonly`, `gmail.send`, `gmail.modify`) |
 | `OUTLOOK_CLIENT_ID` / `OUTLOOK_CLIENT_SECRET` / `OUTLOOK_TENANT_ID` | Outlook OAuth (`Mail.ReadWrite`, `Mail.Send`, `offline_access`, `openid`, `profile`, `email`). `OUTLOOK_TENANT_ID` is optional and defaults to `common` |
-| `NEXT_PUBLIC_OAUTH_VERIFICATION_PENDING` | Shows the unverified‑app warning until Google/Microsoft verification completes |
+| `NEXT_PUBLIC_OAUTH_VERIFICATION_PENDING` | Shows the unverified‑app warning until Google verification completes (the Microsoft publisher is already verified) |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Billing |
 | `STRIPE_PRICE_PERSONAL_MONTHLY` / `_YEARLY`, `STRIPE_PRICE_SOLO_MONTHLY` / `_YEARLY`, `STRIPE_PRICE_PRO_MONTHLY` / `_YEARLY` | Plan price IDs (`personal` = Personal, `solo` = Pro, `pro` = Team) |
 | `STRIPE_WEBHOOK_PROXY_KEY` | Optional. Restricts `/api/stripe/webhook` to the delivery queue in front of it. Unset = no restriction. Set it only AFTER the queue is sending the key, or every delivery 401s and is dead‑lettered. |
@@ -415,7 +415,7 @@ make key NAME="my agent"   # mint an mcpe_ key, then point your client at http:/
 ```
 
 It is IMAP/SMTP-first (Fastmail, iCloud, Yahoo, Zoho, Yandex, generic) via app password; Gmail/Outlook
-OAuth and the web dashboard remain hosted-only. The container runs `supabase/functions/mcp-server/`
+OAuth and the web dashboard remain hosted-only (Outlook would also need your own Microsoft Entra app registration). The container runs `supabase/functions/mcp-server/`
 unmodified; see [`self-host/README.md`](self-host/README.md) for the full guide.
 
 ## Internationalization

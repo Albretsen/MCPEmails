@@ -395,6 +395,13 @@ function Transport({ endpoint, unavailable }) {
   );
 }
 
+// The "planned" legend entry only earns its place while some cell is still
+// planned. Every cell shipped with the Outlook launch, and a legend for a mark
+// the table never shows reads as a hint that something is missing.
+const HAS_PLANNED = Object.values(MATRIX).some((row) =>
+  PROVIDERS.some((p) => row[p.key] === 'planned'),
+);
+
 // ── Page ───────────────────────────────────────────────────────────────────
 
 export default function ProvidersClient() {
@@ -515,7 +522,9 @@ export default function ProvidersClient() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Check /> {t('providers.legend.supported')}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Cross /> {t('providers.legend.notSupported')}</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Planned /> {t('providers.legend.planned')}</div>
+            {HAS_PLANNED && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Planned /> {t('providers.legend.planned')}</div>
+            )}
           </div>
           <p style={{
             fontSize: 13, fontFamily: 'var(--font-sans)', color: 'var(--fg-3)',
@@ -575,6 +584,9 @@ export default function ProvidersClient() {
           }}>
             <p style={{ margin: 0 }}>
               {t.rich('providers.notes.gmail', RICH)}
+            </p>
+            <p style={{ margin: 0 }}>
+              {t.rich('providers.notes.outlook', RICH)}
             </p>
             <p style={{ margin: 0 }}>
               {t.rich('providers.notes.permanentDelete', RICH)}

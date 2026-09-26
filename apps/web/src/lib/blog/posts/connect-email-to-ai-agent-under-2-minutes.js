@@ -15,7 +15,7 @@ const post = {
   },
   authorId: 'asgeir',
   publishedAt: "2026-05-08T09:00:00.000Z",
-  updatedAt: "2026-09-25T09:00:00.000Z",
+  updatedAt: "2026-09-26T09:00:00.000Z",
   tags: ['Tutorial', 'Gmail', 'Outlook', 'IMAP'],
   featured: false,
   content: {
@@ -47,20 +47,20 @@ Now the inbox. Every provider below starts the same way: **Dashboard → Inboxes
 
 ## Connect each provider
 
-### Gmail (OAuth)
+### Gmail (app password, or Sign in with Google)
 
-The fastest of the bunch, because Google does the work.
+Gmail connects with a Google app password by default, over IMAP.
 
-1. **Dashboard → Inboxes → Connect Inbox → Gmail.**
-2. You're bounced to Google's sign-in. Choose the account.
-3. Approve read and send access on the consent screen.
-4. You land back in the dashboard with the inbox connected. Done.
+1. Turn on 2-Step Verification in your Google account, then create an app password at **myaccount.google.com/apppasswords**. It is 16 lowercase letters in four groups.
+2. **Dashboard → Inboxes → Connect Inbox → Gmail.**
+3. Enter your full Gmail address, paste the app password, and click **Connect inbox**.
+4. The connection is tested against Gmail and the inbox shows up connected. Done.
 
-No password ever changes hands. MCP Emails holds an encrypted OAuth token and calls the Gmail API directly. Searches use Gmail's native operators (\`from:\`, \`is:unread\`, \`after:\`), so your agent can be precise.
+Your normal Google password never works here and is never needed. If you would rather sign in with Google, open **Prefer to sign in with Google?** in the same window and click **Connect with Google**; Google shows an unverified-app warning first (click **Advanced**, then **Go to mcpemails.com**). That route uses the Gmail API, so searches can use Gmail's own operators (\`from:\`, \`is:unread\`, \`after:\`) and Claude works with real labels. The app-password route uses IMAP text search, shows labels as folders, and can delete permanently. The [Gmail walkthrough](/blog/connect-gmail-to-claude) has the details.
 
 ### Outlook / Microsoft 365 (Sign in with Microsoft)
 
-Same shape as Gmail, different identity provider. No app password and no IMAP settings.
+Outlook connects with a Microsoft sign-in instead of a password. No app password and no IMAP settings.
 
 1. **Dashboard → Inboxes → Connect Inbox → Outlook.**
 2. Click **Connect with Microsoft** and sign in with your Microsoft account on Microsoft's page.
@@ -156,20 +156,20 @@ Ahora el buzón. Todos los proveedores de abajo empiezan igual: **Panel → Inbo
 
 ## Conecta cada proveedor
 
-### Gmail (OAuth)
+### Gmail (contraseña de aplicación, o Iniciar sesión con Google)
 
-El más rápido de todos, porque el trabajo lo hace Google.
+Gmail se conecta de forma predeterminada con una contraseña de aplicación de Google, por IMAP.
 
-1. **Panel → Inboxes → Connect Inbox → Gmail.**
-2. Te redirige al inicio de sesión de Google. Elige la cuenta.
-3. Aprueba el acceso de lectura y envío en la pantalla de consentimiento.
-4. Vuelves al panel con el buzón conectado. Listo.
+1. Activa la verificación en dos pasos en tu cuenta de Google y crea una contraseña de aplicación en **myaccount.google.com/apppasswords**. Son 16 letras minúsculas en cuatro grupos.
+2. **Panel → Inboxes → Connect Inbox → Gmail.**
+3. Introduce tu dirección de Gmail completa, pega la contraseña de aplicación y haz clic en **Conectar bandeja de entrada**.
+4. La conexión se prueba con Gmail y el buzón aparece conectado. Listo.
 
-Nunca se intercambia una contraseña. MCP Emails guarda un token de OAuth cifrado y llama directamente a la API de Gmail. Las búsquedas usan los operadores nativos de Gmail (\`from:\`, \`is:unread\`, \`after:\`), así que tu agente puede ser preciso.
+Tu contraseña normal de Google no funciona aquí y nunca se necesita. Si prefieres iniciar sesión con Google, abre **¿Prefieres iniciar sesión con Google?** en la misma ventana y haz clic en **Conectar con Google**; antes, Google muestra una advertencia de aplicación no verificada (haz clic en **Advanced** y luego en **Go to mcpemails.com**). Esa vía usa la API de Gmail, así que las búsquedas pueden usar los operadores propios de Gmail (\`from:\`, \`is:unread\`, \`after:\`) y Claude trabaja con etiquetas reales. La vía de la contraseña de aplicación usa la búsqueda de texto de IMAP, muestra las etiquetas como carpetas y puede eliminar de forma permanente. La [guía de Gmail](/blog/connect-gmail-to-claude) tiene los detalles.
 
 ### Outlook / Microsoft 365 (Iniciar sesión con Microsoft)
 
-Misma forma que Gmail, distinto proveedor de identidad. Sin contraseña de aplicación y sin ajustes de IMAP.
+Outlook se conecta con un inicio de sesión de Microsoft en lugar de una contraseña. Sin contraseña de aplicación y sin ajustes de IMAP.
 
 1. **Panel → Inboxes → Connect Inbox → Outlook.**
 2. Haz clic en **Conectar con Microsoft** e inicia sesión con tu cuenta de Microsoft en la página de Microsoft.

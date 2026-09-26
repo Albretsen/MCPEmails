@@ -14,14 +14,14 @@
   },
   "meta": {
     "title": "Koble GoDaddy-e-post til Claude, Cursor og MCP",
-    "description": "Koble GoDaddy Professional Email til Claude og enhver MCP-klient over IMAP på imap.secureserver.net:993. Microsoft 365-postkasser kjøpt via GoDaddy kan ikke kobles til."
+    "description": "Koble GoDaddy Professional Email til Claude og enhver MCP-klient over IMAP på imap.secureserver.net:993. Microsoft 365 fra GoDaddy kobles til med Outlook."
   },
   "hero": {
     "eyebrow": "GoDaddy-e-post + AI",
     "titleLine1": "Koble GoDaddy-e-post til Claude,",
     "titleLine2": "Cursor, ChatGPT og enhver MCP-klient",
     "lead": "Gi AI-agenten din en ekte GoDaddy-innboks. Les, søk, send, svar, planlegg og organiser e-post over IMAP, så snart du vet hvilket av GoDaddys mange e-postprodukter adressen din faktisk ligger på.",
-    "answer": "Claude kan ikke nå en GoDaddy-postkasse på egen hånd. mcpemails er en driftet MCP-server som kobler til GoDaddy Professional Email over IMAP på imap.secureserver.net, port 993, og autentiserer med hele adressen din og postkassens eget e-postpassord, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. GoDaddy selger mer enn ett e-postprodukt under det samme merkenavnet, og en Microsoft 365-postkasse kjøpt via GoDaddy er en Microsoft-postkasse som vi ikke kan koble til, så sjekk først hvilken du har. Én innboks er gratis, for alltid.",
+    "answer": "Claude kan ikke nå en GoDaddy-postkasse på egen hånd. mcpemails er en driftet MCP-server som kobler til GoDaddy Professional Email over IMAP på imap.secureserver.net, port 993, og autentiserer med hele adressen din og postkassens eget e-postpassord, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. GoDaddy selger mer enn ett e-postprodukt under det samme merkenavnet, og en Microsoft 365-postkasse kjøpt via GoDaddy er en Microsoft-postkasse, som kobles til med Outlook (innlogging med Microsoft) og ikke over IMAP, så sjekk først hvilken du har. Én innboks er gratis, for alltid.",
     "meta0": "1 innboks gratis, for alltid",
     "meta1": "Postkassens eget e-postpassord",
     "meta2": "E-post hentes direkte, lagres aldri"
@@ -37,7 +37,7 @@
     },
     {
       "h": "Sjekk hvilket e-postprodukt fra GoDaddy du har",
-      "p": "Logg inn hos GoDaddy og åpne dashbordet Email & Office under My Products. Plannavnet på flisen er svaret. Professional Email er det Titan-baserte produktet og bruker secureserver-vertene. Microsoft 365 åpner Outlook på nettet og er en Microsoft-postkasse. Hvis adressen i stedet ble opprettet i cPanel under Email Accounts, er innstillingene de som vises på yourdomain.com/webmail under Configure Mail Client, ikke secureserver-innstillingene."
+      "p": "Logg inn hos GoDaddy og åpne dashbordet Email & Office under My Products. Plannavnet på flisen er svaret. Professional Email er det Titan-baserte produktet og bruker secureserver-vertene. Microsoft 365 åpner Outlook på nettet og er en Microsoft-postkasse: koble den til med Outlook i stedet for med disse IMAP-innstillingene. Hvis adressen i stedet ble opprettet i cPanel under Email Accounts, er innstillingene de som vises på yourdomain.com/webmail under Configure Mail Client, ikke secureserver-innstillingene."
     },
     {
       "h": "Hent postkassepassordet og tillat eksterne klienter",
@@ -50,8 +50,8 @@
   ],
   "gotchas": [
     {
-      "h": "En Microsoft 365-postkasse kjøpt fra GoDaddy kan ikke kobles til her",
-      "p": "GoDaddy videreselger Microsoft 365 og har flyttet sine gamle Workspace Email-kunder over dit, så en stor andel av dem som tror de har «en GoDaddy-e-post», har nå en Microsoft-postkasse med en faktura fra GoDaddy. Disse postkassene ligger ikke på <code>imap.secureserver.net</code>; de ligger på Microsofts servere og styres av Microsofts identitetsplattform. Microsofts standardpolicy for tenanter hindrer en vanlig sluttbruker i å gi samtykke til lese- og skrivetilgang til e-post for en tredjepartsapplikasjon, og den blokkeringen settes av Microsoft og av tenant-administratoren din, ikke av GoDaddy og ikke av oss. Vi påstår ikke at vi kobler til slike postkasser. Kjennetegnet er enkelt: havner du i Outlook på nettet når du logger inn på webmailen din, er det Microsoft-produktet."
+      "h": "En Microsoft 365-postkasse kjøpt fra GoDaddy kobles til med Outlook, ikke IMAP",
+      "p": "GoDaddy videreselger Microsoft 365 og har flyttet sine gamle Workspace Email-kunder over dit, så en stor andel av dem som tror de har «en GoDaddy-e-post», har nå en Microsoft-postkasse med en faktura fra GoDaddy. Disse postkassene ligger ikke på <code>imap.secureserver.net</code>; de ligger på Microsofts servere, så koble dem til med Outlook-valget (innlogging med Microsoft) i stedet for med innstillingene på denne siden. Fordi det er en Microsoft 365-jobbkonto, kan IT-administratoren i organisasjonen din måtte godkjenne MCP Emails én gang først, og dashbordet gir deg en godkjenningslenke du kan sende til vedkommende. Kjennetegnet er enkelt: havner du i Outlook på nettet når du logger inn på webmailen din, er det Microsoft-produktet."
     },
     {
       "h": "Halvparten av IMAP-veiledningene for GoDaddy på nettet gjelder et produkt som ikke finnes lenger",
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "Microsoft 365-postkasser solgt via GoDaddy kan ikke kobles til. Microsofts standardpolicy for tenanter blokkerer sluttbrukersamtykke til e-posttilgang for tredjeparter.",
+    "Microsoft 365-postkasser solgt via GoDaddy ligger ikke på secureserver-vertene. Koble dem til med Outlook (innlogging med Microsoft); en IT-administrator kan måtte godkjenne appen én gang.",
     "Postkasser på cPanel-webhotell ligger ikke på secureserver-vertene. Koble dem til med vertsnavnet som vises på skjermen Configure Mail Client i cPanel i stedet.",
     "Serveren annonserer ikke MOVE-utvidelsen, så flytting av en melding utføres som kopiering, flagging og expunge i stedet for én atomisk kommando."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med GoDaddy-e-post?",
-      "a": "Det fungerer med GoDaddy Professional Email, det Titan-baserte produktet, så snart en MCP-server som mcpemails er koblet til postkassen over IMAP. Claude har ingen innebygd GoDaddy-kobling. Det fungerer ikke med en Microsoft 365-postkasse kjøpt via GoDaddy, fordi Microsofts standardpolicy for tenanter blokkerer samtykke til e-posttilgang for tredjeparter."
+      "a": "Det fungerer med GoDaddy Professional Email, det Titan-baserte produktet, så snart en MCP-server som mcpemails er koblet til postkassen over IMAP. Claude har ingen innebygd GoDaddy-kobling. En Microsoft 365-postkasse kjøpt via GoDaddy fungerer også, men den kobles til med Outlook (innlogging med Microsoft) og ikke over IMAP, og en IT-administrator kan måtte godkjenne MCP Emails én gang først."
     },
     {
       "q": "Hva er IMAP- og SMTP-innstillingene for GoDaddy?",
@@ -86,7 +86,7 @@
     },
     {
       "q": "Hvorfor avvises e-postpassordet mitt hos GoDaddy?",
-      "a": "Tre vanlige årsaker, i denne rekkefølgen. Du bruker innloggingen til GoDaddy-kontoen i stedet for postkassens eget e-postpassord. Tofaktorautentisering er slått på for postkassen, noe som får Titan til å avvise eksterne klienter. Eller postkassen er flyttet til Microsoft 365 og finnes ikke lenger på secureserver-vertene i det hele tatt."
+      "a": "Tre vanlige årsaker, i denne rekkefølgen. Du bruker innloggingen til GoDaddy-kontoen i stedet for postkassens eget e-postpassord. Tofaktorautentisering er slått på for postkassen, noe som får Titan til å avvise eksterne klienter. Eller postkassen er flyttet til Microsoft 365 og finnes ikke lenger på secureserver-vertene i det hele tatt; koble den da til med Outlook."
     },
     {
       "q": "Hva med e-postadresser jeg har opprettet på cPanel-webhotellet?",
@@ -100,5 +100,10 @@
   "ctaBand": {
     "title": "Gi AI-en din en GoDaddy-innboks",
     "sub": "Koble til GoDaddy Professional Email på få minutter. Én innboks gratis for alltid, uten kort."
+  },
+  "seeAlso": {
+    "intro": "Microsoft 365-postkasse fra GoDaddy?",
+    "label": "Koble den til med Outlook (innlogging med Microsoft)",
+    "href": "/connect/office365"
   }
 }

@@ -134,6 +134,42 @@ for (const slug of translatedSlugs) {
   });
 }
 
+/**
+ * Gmail's default connect path is a Google app password over IMAP, with Sign in
+ * with Google as the alternative. "One-click OAuth", "Gmail uses OAuth" and a
+ * "Gmail (OAuth)" heading all describe the old default and read as the only way
+ * in, so no post or translation may say them again.
+ */
+const GMAIL_ONE_CLICK = {
+  en: /one-click OAuth|Gmail uses OAuth|Gmail \(OAuth\)|Gmail connection uses Google OAuth/i,
+  es: /OAuth (?:con|de) un clic|Gmail usa OAuth|Gmail \(OAuth\)|conexión con Gmail usa Google OAuth/i,
+  fr: /OAuth en un clic|Gmail utilise OAuth|Gmail \(OAuth\)|connexion Gmail utilise Google OAuth/i,
+  nb: /ett-klikks OAuth|Gmail bruker OAuth|Gmail \(OAuth\)|Gmail-tilkoblingen bruker Google OAuth/i,
+  zh: /一键 ?OAuth|Gmail 使用 OAuth|Gmail（OAuth）|Gmail 连接使用 Google OAuth/,
+};
+
+for (const slug of allPostSlugs) {
+  test(`${slug}: no locale calls Gmail a one-click OAuth connect`, () => {
+    const files = [
+      { locale: 'en', path: join(postsDir, `${slug}.js`) },
+      ...(existsSync(join(translationsDir, slug)) ? localeFiles(slug) : []),
+    ];
+
+    for (const { locale, path } of files) {
+      const pattern = GMAIL_ONE_CLICK[locale];
+      assert.ok(pattern, `no one-click pattern for locale ${locale}`);
+      const hits = contentOf(read(path))
+        .split('\n')
+        .filter((line) => line.includes('Gmail') && pattern.test(line));
+      assert.deepEqual(
+        hits,
+        [],
+        `${path.slice(here.length + 1)} still sells Gmail as one-click OAuth: ${hits[0]?.slice(0, 160)}`,
+      );
+    }
+  });
+}
+
 test('the Outlook guide is indexable now that the connector is live', () => {
   const source = read(join(postsDir, 'connect-outlook-microsoft-365-ai-agent-mcp.js'));
   assert.doesNotMatch(source, /noindex\s*:\s*true/, 'the Outlook guide is still flagged noindex');
@@ -148,7 +184,13 @@ test('the Outlook guide is indexable now that the connector is live', () => {
  * not clean yet (23 English posts and 72 translations still carry them), so
  * this pins the slugs that have been swept. Add a slug here as it is cleaned.
  */
-const EM_DASH_CLEAN_SLUGS = ['connect-claude-to-email', 'connect-outlook-microsoft-365-ai-agent-mcp'];
+const EM_DASH_CLEAN_SLUGS = [
+  'connect-chatgpt-to-email',
+  'connect-claude-to-email',
+  'connect-gmail-to-claude',
+  'connect-outlook-microsoft-365-ai-agent-mcp',
+  'manage-multiple-email-accounts-with-ai',
+];
 
 for (const slug of EM_DASH_CLEAN_SLUGS) {
   const files = [

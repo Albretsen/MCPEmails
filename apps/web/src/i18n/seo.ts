@@ -245,6 +245,7 @@ export function homeJsonLd(
           'Original email export as .eml (message/rfc822)',
           'Verified Gmail send-as aliases',
           'Threaded reply drafts',
+          'Outlook / Microsoft 365 via Microsoft Graph',
         ],
         offers: planOffers(localePath(locale, '/pricing')),
         ...reviewMarkup(),

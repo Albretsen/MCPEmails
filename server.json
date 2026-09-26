@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "com.mcpemails/emails",
   "title": "MCP Emails",
-  "description": "Never-stored live email: read, send, organize, schedule and auto-triage Gmail or any IMAP mailbox.",
+  "description": "Never-stored live email: read, send and triage Gmail, Outlook / Microsoft 365, or any IMAP mailbox.",
   "version": "1.0.7",
   "websiteUrl": "https://mcpemails.com",
   "icons": [

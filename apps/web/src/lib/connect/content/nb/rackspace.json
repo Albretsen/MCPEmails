@@ -58,7 +58,7 @@
     },
     {
       "h": "Rackspace selger tre forskjellige e-postprodukter, og bare ett av dem er på emailsrvr",
-      "p": "<b>Rackspace Email</b> er det frittstående IMAP-postkasseproduktet og det denne siden dekker. Rackspace selger også <b>Hosted Exchange</b>, som kjører Exchange på Rackspaces egen infrastruktur, og videreselger <b>Microsoft 365</b>, der postkassen ligger på Microsofts servere under Microsofts identitetsplattform. Bare Rackspace Email svarer på <code>secure.emailsrvr.com</code>. Vi hevder ikke å koble til en Microsoft 365-postkasse, fordi Microsofts standard tenant-policy hindrer en vanlig sluttbruker i å samtykke til lese- og skrivetilgang til e-post for tredjeparter. Er webmailen din Outlook på nettet, er det Microsoft-produktet."
+      "p": "<b>Rackspace Email</b> er det frittstående IMAP-postkasseproduktet og det denne siden dekker. Rackspace selger også <b>Hosted Exchange</b>, som kjører Exchange på Rackspaces egen infrastruktur, og videreselger <b>Microsoft 365</b>, der postkassen ligger på Microsofts servere under Microsofts identitetsplattform. Bare Rackspace Email svarer på <code>secure.emailsrvr.com</code>. En Microsoft 365-postkasse kobles til med Outlook-valget (innlogging med Microsoft) i stedet for over IMAP; en IT-administrator kan måtte godkjenne MCP Emails én gang først, og dashbordet gir deg en godkjenningslenke du kan sende til vedkommende. Er webmailen din Outlook på nettet, er det Microsoft-produktet."
     },
     {
       "h": "Du snakker med en proxy, og funksjonene du ser, er proxyens",
@@ -68,7 +68,7 @@
   "limits": [
     "Fordi serveren ikke annonserer MOVE eller UIDPLUS, utføres en flytting som kopi, flagg og expunge, og den er ikke atomisk.",
     "Mapper matches etter navn i stedet for rolle, siden SPECIAL-USE ikke annonseres. En postkasse med omdøpte mapper kan trenge at målet oppgis eksplisitt.",
-    "Hosted Exchange- og Microsoft 365-postkasser solgt av Rackspace er ikke på secure.emailsrvr.com, og Microsoft 365-postkasser kan ikke kobles til i det hele tatt."
+    "Hosted Exchange- og Microsoft 365-postkasser solgt av Rackspace er ikke på secure.emailsrvr.com. Microsoft 365-postkasser kobles til med Outlook (innlogging med Microsoft) i stedet."
   ],
   "faq": [
     {
@@ -99,5 +99,10 @@
   "ctaBand": {
     "title": "Gi AI-en din en Rackspace Email-innboks",
     "sub": "Koble til Rackspace Email på minutter. Én innboks gratis for alltid, uten kort."
+  },
+  "seeAlso": {
+    "intro": "Microsoft 365-postkasse fra Rackspace?",
+    "label": "Koble den til med Outlook (innlogging med Microsoft)",
+    "href": "/connect/office365"
   }
 }

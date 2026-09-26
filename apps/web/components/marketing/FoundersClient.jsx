@@ -141,6 +141,7 @@ export default function FoundersClient() {
           </div>
           <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 8, flexWrap: 'wrap' }}>
             <Link className="btn btn-secondary" href="/connect/gmail">{t('providers.ctaGmail')}</Link>
+            <Link className="btn btn-secondary" href="/connect/outlook">{t('providers.ctaOutlook')}</Link>
             <Link className="btn btn-secondary" href="/connect/fastmail">{t('providers.ctaFastmail')}</Link>
             <Link className="btn btn-secondary" href="/connect/icloud">{t('providers.ctaIcloud')}</Link>
           </div>

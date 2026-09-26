@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Connectez Gmail, iCloud et IMAP à Claude",
+    "title": "Connectez Gmail, Outlook, iCloud et IMAP à Claude",
     "description": "Donnez à Claude, Cursor ou tout client MCP un accès réel à votre boîte : lisez, envoyez, recherchez et organisez Gmail, Outlook, Fastmail, iCloud et IMAP. Gratuit."
   },
   "nav": {
@@ -68,7 +68,7 @@
       "3": {
         "tag": "Fournisseurs",
         "h": "Gmail, Outlook, iCloud, Fastmail et toute boîte IMAP.",
-        "p": "OAuth 2.0 pour Gmail et pour Outlook / Microsoft 365 (un compte professionnel ou scolaire peut nécessiter que son administrateur informatique approuve l'application une fois) ; mots de passe d'application pour Fastmail, iCloud, Yahoo, Zoho et Yandex ; un connecteur IMAP / SMTP générique pour tout le reste. Connectez plusieurs boîtes, étiquetez-les par cas d'usage (work-gmail, ops-fastmail, support-imap) et limitez chaque clé API aux boîtes que vous souhaitez rendre accessibles à cet agent. Les équipes et les agences peuvent gérer toutes les boîtes de leurs clients dans un espace de travail partagé, avec rôles et journal d'audit."
+        "p": "Un mot de passe d'application ou la connexion Google (OAuth 2.0) pour Gmail ; la connexion Microsoft (OAuth 2.0) pour Outlook / Microsoft 365 (un compte professionnel ou scolaire peut nécessiter que son administrateur informatique approuve l'application une fois) ; mots de passe d'application pour Fastmail, iCloud, Yahoo, Zoho et Yandex ; un connecteur IMAP / SMTP générique pour tout le reste. Connectez plusieurs boîtes, étiquetez-les par cas d'usage (work-gmail, ops-fastmail, support-imap) et limitez chaque clé API aux boîtes que vous souhaitez rendre accessibles à cet agent. Les équipes et les agences peuvent gérer toutes les boîtes de leurs clients dans un espace de travail partagé, avec rôles et journal d'audit."
       },
       "4": {
         "tag": "Accès",
@@ -211,7 +211,7 @@
       },
       {
         "q": "Quels fournisseurs d'e-mail puis-je connecter ?",
-        "a": "Gmail via OAuth (en un clic), Outlook et Microsoft 365 en se connectant avec Microsoft (un compte professionnel ou scolaire peut nécessiter que son administrateur informatique approuve l'application une fois), Fastmail, iCloud, Yahoo, Zoho et Yandex avec un mot de passe d'application, et toute autre boîte via une connexion IMAP / SMTP générique. Connectez autant de boîtes que vous le souhaitez et étiquetez-les par cas d'usage."
+        "a": "Gmail avec un mot de passe d'application ou en se connectant avec Google, Outlook et Microsoft 365 en se connectant avec Microsoft (un compte professionnel ou scolaire peut nécessiter que son administrateur informatique approuve l'application une fois), Fastmail, iCloud, Yahoo, Zoho et Yandex avec un mot de passe d'application, et toute autre boîte via une connexion IMAP / SMTP générique. Connectez autant de boîtes que vous le souhaitez et étiquetez-les par cas d'usage."
       },
       {
         "q": "Mes e-mails sont-ils stockés quelque part ?",
@@ -227,7 +227,7 @@
       },
       {
         "q": "Comment connecter une boîte de réception ?",
-        "a": "Créez un compte gratuit, connectez votre boîte (un clic pour Gmail, connexion avec Microsoft pour Outlook, ou collez un mot de passe d'application pour les autres), puis déposez https://mcpemails.com/api/mcp dans votre client IA et autorisez. Votre agent dispose de la boîte en quelques minutes."
+        "a": "Créez un compte gratuit, connectez votre boîte (mot de passe d'application ou connexion Google pour Gmail, connexion avec Microsoft pour Outlook, ou collez un mot de passe d'application pour les autres), puis déposez https://mcpemails.com/api/mcp dans votre client IA et autorisez. Votre agent dispose de la boîte en quelques minutes."
       },
       {
         "q": "Puis-je l'héberger moi-même ?",

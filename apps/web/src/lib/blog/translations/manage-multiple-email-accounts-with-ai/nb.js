@@ -73,12 +73,13 @@ Det er dette som gjør et blandet oppsett behagelig: la bijobb-postkassen sende 
 
 **Å flytte en samtale mellom roller.** Når en privat kontakt blir en kunde, videresend tråden til firmapostkassen og få svaret skrevet fra firmaadressen. Be agenten bekrefte hvilken postkasse den sender fra først.
 
-## Hva som endrer seg når du blander Gmail og IMAP
+## Hva som endrer seg når du blander Gmail, Outlook og IMAP
 
 Blandede oppsett er det normale, og leverandørene er uenige om hva en mappe er.
 
 - **Gmail har etiketter.** En flytting legger til en etikett og fjerner meldingen fra innboksen. Andre etiketter blir hengende ved, så en melding kan ligge flere steder.
 - **IMAP har mapper.** En flytting er en flytting: meldingen forlater én mappe og havner i en annen.
+- **Outlook har nestede mapper.** En flytting er en flytting, som på IMAP, og mapper kan ligge inni andre mapper. Outlook har ikke etiketter, så etikett-handlingen i en automatisering setter en Outlook-kategori i stedet.
 - **Mappenavn er forskjellige.** Archive, All Mail, Spam, Junk og lokaliserte navn varierer per leverandør. La agenten kalle \`folder_list\` på postkassen den er i ferd med å røre.
 - **Mappeavgrensning gjelder per postkasse.** Å begrense et søk til et sett med mapper gjelder inne i én postkasse, så et mappeavgrenset søk på tvers av kontoer er fortsatt ett kall per konto.
 

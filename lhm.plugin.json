@@ -2,7 +2,7 @@
   "author": "Albretsen",
   "authorUrl": "https://github.com/Albretsen",
   "cloudEndpoint": "https://mcpemails.com/api/mcp",
-  "description": "Hosted email for AI agents. Connect Gmail, Fastmail, iCloud, Yahoo, Zoho, Yandex or any IMAP/SMTP mailbox to Claude, Cursor and other MCP clients. Read, search, send, organize, draft, schedule and auto-triage mail. Email is fetched live from your provider on every call and never stored, and outbound mail goes through your own SMTP from your real address. Credentials are encrypted at rest, and scopes are granted per API key and per inbox, so a key can be issued read-only, or allowed to send without ever being able to delete.",
+  "description": "Hosted email for AI agents. Connect Gmail, Outlook / Microsoft 365, Fastmail, iCloud, Yahoo, Zoho, Yandex or any IMAP/SMTP mailbox to Claude, Cursor and other MCP clients. Read, search, send, organize, draft, schedule and auto-triage mail. Email is fetched live from your provider on every call and never stored, and outbound mail goes through your own provider (SMTP, or Microsoft Graph for Outlook) from your real address. Credentials are encrypted at rest, and scopes are granted per API key and per inbox, so a key can be issued read-only, or allowed to send without ever being able to delete.",
   "homepage": "https://mcpemails.com",
   "icon": "📧",
   "identifier": "albretsen-mcpemails",
@@ -134,6 +134,8 @@
   "tags": [
     "email",
     "gmail",
+    "outlook",
+    "microsoft-365",
     "imap",
     "smtp",
     "mcp",

@@ -58,7 +58,7 @@
     },
     {
       "h": "Rackspace vend trois produits de messagerie différents, et un seul se trouve sur emailsrvr",
-      "p": "<b>Rackspace Email</b> est le produit de boîte IMAP autonome, celui que couvre cette page. Rackspace vend aussi <b>Hosted Exchange</b>, qui fait tourner Exchange sur l'infrastructure de Rackspace, et revend <b>Microsoft 365</b>, où la boîte est hébergée sur les serveurs de Microsoft, sous sa plateforme d'identité. Seul Rackspace Email répond sur <code>secure.emailsrvr.com</code>. Nous ne prétendons pas connecter une boîte Microsoft 365, car la politique de tenant par défaut de Microsoft empêche un utilisateur ordinaire de consentir à un accès tiers en lecture et en écriture à la messagerie. Si votre webmail est Outlook on the web, c'est le produit Microsoft."
+      "p": "<b>Rackspace Email</b> est le produit de boîte IMAP autonome, celui que couvre cette page. Rackspace vend aussi <b>Hosted Exchange</b>, qui fait tourner Exchange sur l'infrastructure de Rackspace, et revend <b>Microsoft 365</b>, où la boîte est hébergée sur les serveurs de Microsoft, sous sa plateforme d'identité. Seul Rackspace Email répond sur <code>secure.emailsrvr.com</code>. Une boîte Microsoft 365 se connecte avec l'option Outlook (connexion avec Microsoft) plutôt qu'en IMAP ; un administrateur informatique devra peut-être d'abord approuver MCP Emails une fois, et le tableau de bord vous donne un lien d'approbation à lui envoyer. Si votre webmail est Outlook on the web, c'est le produit Microsoft."
     },
     {
       "h": "Vous parlez à un proxy, et les capacités que vous voyez sont les siennes",
@@ -68,7 +68,7 @@
   "limits": [
     "Comme le serveur n'annonce ni MOVE ni UIDPLUS, un déplacement s'effectue par copie, marquage et expunge, et il n'est pas atomique.",
     "Les dossiers sont reconnus par leur nom et non par leur rôle, puisque SPECIAL-USE n'est pas annoncé. Une boîte aux dossiers renommés peut nécessiter de nommer explicitement la cible.",
-    "Les boîtes Hosted Exchange et Microsoft 365 vendues par Rackspace ne sont pas sur secure.emailsrvr.com, et les boîtes Microsoft 365 ne peuvent pas être connectées du tout."
+    "Les boîtes Hosted Exchange et Microsoft 365 vendues par Rackspace ne sont pas sur secure.emailsrvr.com. Les boîtes Microsoft 365 se connectent plutôt avec Outlook (connexion avec Microsoft)."
   ],
   "faq": [
     {
@@ -99,5 +99,10 @@
   "ctaBand": {
     "title": "Offrez une boîte Rackspace Email à votre IA",
     "sub": "Connectez Rackspace Email en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  },
+  "seeAlso": {
+    "intro": "Une boîte Microsoft 365 achetée via Rackspace ?",
+    "label": "Connectez-la avec Outlook (connexion avec Microsoft)",
+    "href": "/connect/office365"
   }
 }

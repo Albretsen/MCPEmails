@@ -65,9 +65,9 @@
     }
   ],
   "limits": [
-    "Outlook organiserer e-post i mapper, også nestede mapper. Outlook-kategorier støttes ikke, og etikettverktøyene gjelder bare Gmail.",
+    "Outlook organiserer e-post i mapper, også nestede mapper. Etikettverktøyene gjelder bare Gmail, men etiketthandlingen i en automatisering setter en Outlook-kategori på meldingen.",
     "Microsoft Graph kan ikke kombinere et tekstsøk med filtrene for ulest, vedlegg, flagget eller dato. Når et søk inneholder tekst, brukes ikke disse filtrene, og resultatet sier hvilke som ble utelatt.",
-    "Vedlegg støttes opptil 25 MB.",
+    "Ved sending kan hver melding ha opptil 10 MB vedlegg; nedlasting av vedlegg og videresending av originaler fungerer opptil 25 MB.",
     "Den selvdriftede versjonen kobler bare til over IMAP og SMTP. Innlogging med Microsoft er en del av den driftede tjenesten."
   ],
   "faq": [
@@ -85,11 +85,11 @@
     },
     {
       "q": "Hva kan AI-en min gjøre i Outlook.com?",
-      "a": "Lese, søke, sende, svare og videresende; jobbe med utkast; opprette og bruke mapper, også nestede; flytte, kopiere og arkivere; flagge; slette til papirkurven eller permanent; håndtere vedlegg opptil 25 MB; planlegge sending; og administrere signaturen din."
+      "a": "Lese, søke, sende, svare og videresende; jobbe med utkast; opprette og bruke mapper, også nestede; flytte, kopiere og arkivere; flagge; slette til papirkurven eller permanent; sende opptil 10 MB vedlegg per melding, og laste ned vedlegg eller videresende originaler opptil 25 MB; planlegge sending; kjøre automatiseringsregler; og administrere signaturen din."
     },
     {
       "q": "Er dette det samme som å koble til en Microsoft 365-konto på jobben?",
-      "a": "Innloggingen er den samme, godkjenningen er det kanskje ikke. En personlig konto trenger ingen administrator. En Microsoft 365-konto fra jobb eller skole trenger ofte at en IT-administrator godkjenner MCP Emails én gang for hele organisasjonen først, og da gir dashbordet deg en lenke du kan sende til vedkommende."
+      "a": "Innloggingen er den samme, godkjenningen er det kanskje ikke. En personlig konto trenger ingen administrator. En Microsoft 365-konto fra jobb eller skole trenger ofte at en IT-administrator godkjenner MCP Emails én gang for hele organisasjonen først. Da gir dashbordet deg en godkjenningslenke du kan sende til IT-administratoren, og vedkommende trenger ingen MCP Emails-konto for å bruke den."
     },
     {
       "q": "Lagres e-posten min på serverne deres?",
@@ -99,5 +99,15 @@
   "ctaBand": {
     "title": "Gi AI-en din Outlook.com-innboksen din",
     "sub": "Logg inn med Microsoft og koble til på få minutter. Én innboks gratis for alltid, uten kort."
+  },
+  "seeAlso": {
+    "intro": "Bruker du en Microsoft-konto fra jobb eller skole?",
+    "label": "Koble til Microsoft 365-e-post",
+    "href": "/connect/office365"
+  },
+  "guide": {
+    "intro": "Vil du heller ha en gjennomgang steg for steg?",
+    "label": "Koble Outlook og Microsoft 365 til AI-agenten din via MCP",
+    "href": "/blog/connect-outlook-microsoft-365-ai-agent-mcp"
   }
 }

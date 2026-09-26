@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Conecta Gmail, iCloud e IMAP a Claude",
+    "title": "Conecta Gmail, Outlook, iCloud e IMAP a Claude",
     "description": "Dale a Claude, Cursor o cualquier cliente MCP acceso real a tu bandeja: lee, envía, busca y organiza correo en Gmail, Outlook, Fastmail, iCloud e IMAP. Gratis."
   },
   "nav": {
@@ -68,7 +68,7 @@
       "3": {
         "tag": "Proveedores",
         "h": "Gmail, Outlook, iCloud, Fastmail y cualquier bandeja IMAP.",
-        "p": "OAuth 2.0 para Gmail y para Outlook / Microsoft 365 (una cuenta profesional o educativa puede necesitar que su administrador de TI apruebe la aplicación una vez); contraseñas específicas de aplicación para Fastmail, iCloud, Yahoo, Zoho y Yandex; un conector IMAP / SMTP genérico para todo lo demás. Conecta varias bandejas, etiquétalas por caso de uso (work-gmail, ops-fastmail, support-imap) y limita cada clave de API a las bandejas que quieras que ese agente alcance. Los equipos y agencias pueden gestionar todas las bandejas de sus clientes en un espacio de trabajo compartido con roles y registro de auditoría."
+        "p": "Una contraseña de aplicación o el inicio de sesión de Google (OAuth 2.0) para Gmail; el inicio de sesión de Microsoft (OAuth 2.0) para Outlook / Microsoft 365 (una cuenta profesional o educativa puede necesitar que su administrador de TI apruebe la aplicación una vez); contraseñas específicas de aplicación para Fastmail, iCloud, Yahoo, Zoho y Yandex; un conector IMAP / SMTP genérico para todo lo demás. Conecta varias bandejas, etiquétalas por caso de uso (work-gmail, ops-fastmail, support-imap) y limita cada clave de API a las bandejas que quieras que ese agente alcance. Los equipos y agencias pueden gestionar todas las bandejas de sus clientes en un espacio de trabajo compartido con roles y registro de auditoría."
       },
       "4": {
         "tag": "Acceso",
@@ -211,7 +211,7 @@
       },
       {
         "q": "¿Qué proveedores de correo puedo conectar?",
-        "a": "Gmail mediante OAuth (con un clic), Outlook y Microsoft 365 iniciando sesión con Microsoft (una cuenta profesional o educativa puede necesitar que su administrador de TI apruebe la aplicación una vez), Fastmail, iCloud, Yahoo, Zoho y Yandex con una contraseña de aplicación, y cualquier otra bandeja mediante una conexión IMAP/SMTP genérica. Conecta tantas bandejas como quieras y etiquétalas por caso de uso."
+        "a": "Gmail con una contraseña de aplicación o iniciando sesión con Google, Outlook y Microsoft 365 iniciando sesión con Microsoft (una cuenta profesional o educativa puede necesitar que su administrador de TI apruebe la aplicación una vez), Fastmail, iCloud, Yahoo, Zoho y Yandex con una contraseña de aplicación, y cualquier otra bandeja mediante una conexión IMAP/SMTP genérica. Conecta tantas bandejas como quieras y etiquétalas por caso de uso."
       },
       {
         "q": "¿Se almacena mi correo en algún sitio?",
@@ -227,7 +227,7 @@
       },
       {
         "q": "¿Cómo conecto una bandeja de entrada?",
-        "a": "Crea una cuenta gratuita, conecta tu bandeja (con un clic para Gmail, iniciando sesión con Microsoft para Outlook, o pega una contraseña de aplicación para las demás) y luego pega https://mcpemails.com/api/mcp en tu cliente de IA y autoriza. Tu agente tendrá la bandeja en un par de minutos."
+        "a": "Crea una cuenta gratuita, conecta tu bandeja (con una contraseña de aplicación o el inicio de sesión de Google para Gmail, iniciando sesión con Microsoft para Outlook, o pega una contraseña de aplicación para las demás) y luego pega https://mcpemails.com/api/mcp en tu cliente de IA y autoriza. Tu agente tendrá la bandeja en un par de minutos."
       },
       {
         "q": "¿Puedo auto-alojarlo?",

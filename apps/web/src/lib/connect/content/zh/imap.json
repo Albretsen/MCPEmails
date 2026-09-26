@@ -112,5 +112,10 @@
     "intro": "更喜欢带截图的分步教程？",
     "label": "Claude IMAP 连接器：将任意 IMAP 收件箱连接到 Claude",
     "href": "/blog/claude-imap-connector"
+  },
+  "seeAlso": {
+    "intro": "Outlook.com、Hotmail 或 Microsoft 365 邮箱？",
+    "label": "请用 Microsoft 登录连接，而不是 IMAP",
+    "href": "/connect/outlook"
   }
 }

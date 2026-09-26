@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Koble Gmail, iCloud og IMAP til Claude",
+    "title": "Koble Gmail, Outlook, iCloud og IMAP til Claude",
     "description": "Gi Claude, Cursor eller enhver MCP-klient ekte tilgang til innboksen: les, send, søk og organiser e-post i Gmail, Outlook, Fastmail, iCloud og IMAP. Gratis."
   },
   "nav": {
@@ -68,7 +68,7 @@
       "3": {
         "tag": "Leverandører",
         "h": "Gmail, Outlook, iCloud, Fastmail og alle IMAP-innbokser.",
-        "p": "OAuth 2.0 for Gmail og for Outlook / Microsoft 365 (en jobb- eller skolekonto kan trenge at IT-administratoren godkjenner appen én gang); app-spesifikke passord for Fastmail, iCloud, Yahoo, Zoho og Yandex; en generisk IMAP-/SMTP-kobling for alt annet. Koble til flere innbokser, merk dem etter bruksområde (work-gmail, ops-fastmail, support-imap), og begrens hver API-nøkkel til innboksene du vil at agenten skal nå. Team og byråer kan administrere alle klientinnbokser i ett delt arbeidsområde med roller og revisjonslogg."
+        "p": "App-passord eller Google-innlogging (OAuth 2.0) for Gmail; Microsoft-innlogging (OAuth 2.0) for Outlook / Microsoft 365 (en jobb- eller skolekonto kan trenge at IT-administratoren godkjenner appen én gang); app-spesifikke passord for Fastmail, iCloud, Yahoo, Zoho og Yandex; en generisk IMAP-/SMTP-kobling for alt annet. Koble til flere innbokser, merk dem etter bruksområde (work-gmail, ops-fastmail, support-imap), og begrens hver API-nøkkel til innboksene du vil at agenten skal nå. Team og byråer kan administrere alle klientinnbokser i ett delt arbeidsområde med roller og revisjonslogg."
       },
       "4": {
         "tag": "Tilgang",
@@ -211,7 +211,7 @@
       },
       {
         "q": "Hvilke e-postleverandører kan jeg koble til?",
-        "a": "Gmail via OAuth (ett klikk), Outlook og Microsoft 365 ved å logge inn med Microsoft (en jobb- eller skolekonto kan trenge at IT-administratoren godkjenner appen én gang), Fastmail, iCloud, Yahoo, Zoho og Yandex med et app-spesifikt passord, og enhver annen innboks via en generisk IMAP-/SMTP-kobling. Koble til så mange innbokser du vil, og merk dem etter bruksområde."
+        "a": "Gmail med et app-passord eller ved å logge inn med Google, Outlook og Microsoft 365 ved å logge inn med Microsoft (en jobb- eller skolekonto kan trenge at IT-administratoren godkjenner appen én gang), Fastmail, iCloud, Yahoo, Zoho og Yandex med et app-spesifikt passord, og enhver annen innboks via en generisk IMAP-/SMTP-kobling. Koble til så mange innbokser du vil, og merk dem etter bruksområde."
       },
       {
         "q": "Lagres e-posten min noe sted?",
@@ -227,7 +227,7 @@
       },
       {
         "q": "Hvordan kobler jeg til en innboks?",
-        "a": "Opprett en gratis konto, koble til innboksen din (ett klikk for Gmail, logg inn med Microsoft for Outlook, eller lim inn et app-passord for de andre), og lim deretter https://mcpemails.com/api/mcp inn i AI-klienten din og autoriser. Agenten din har innboksen i løpet av et par minutter."
+        "a": "Opprett en gratis konto, koble til innboksen din (app-passord eller Google-innlogging for Gmail, logg inn med Microsoft for Outlook, eller lim inn et app-passord for de andre), og lim deretter https://mcpemails.com/api/mcp inn i AI-klienten din og autoriser. Agenten din har innboksen i løpet av et par minutter."
       },
       {
         "q": "Kan jeg selvhoste den?",

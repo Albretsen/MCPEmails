@@ -58,7 +58,7 @@
     },
     {
       "h": "Rackspace vende tres productos de correo distintos, y solo uno está en emailsrvr",
-      "p": "<b>Rackspace Email</b> es el producto de buzón IMAP independiente y el que cubre esta página. Rackspace también vende <b>Hosted Exchange</b>, que ejecuta Exchange en la infraestructura propia de Rackspace, y revende <b>Microsoft 365</b>, donde el buzón vive en los servidores de Microsoft bajo su plataforma de identidad. Solo Rackspace Email responde en <code>secure.emailsrvr.com</code>. No afirmamos poder conectar un buzón de Microsoft 365, porque la política predeterminada de inquilino de Microsoft impide que un usuario final corriente dé su consentimiento a un acceso de terceros para leer y escribir correo. Si tu webmail es Outlook en la web, se trata del producto de Microsoft."
+      "p": "<b>Rackspace Email</b> es el producto de buzón IMAP independiente y el que cubre esta página. Rackspace también vende <b>Hosted Exchange</b>, que ejecuta Exchange en la infraestructura propia de Rackspace, y revende <b>Microsoft 365</b>, donde el buzón vive en los servidores de Microsoft bajo su plataforma de identidad. Solo Rackspace Email responde en <code>secure.emailsrvr.com</code>. Un buzón de Microsoft 365 se conecta con la opción Outlook (inicio de sesión con Microsoft) en lugar de por IMAP; puede que un administrador de TI tenga que aprobar MCP Emails una vez primero, y el panel te da un enlace de aprobación para enviárselo. Si tu webmail es Outlook en la web, se trata del producto de Microsoft."
     },
     {
       "h": "Estás hablando con un proxy, y las capacidades que ves son las del proxy",
@@ -68,7 +68,7 @@
   "limits": [
     "Como el servidor no anuncia MOVE ni UIDPLUS, mover un mensaje se hace con copia, marca y expunge, y no es atómico.",
     "Las carpetas se identifican por nombre y no por función, ya que no se anuncia SPECIAL-USE. En un buzón con carpetas renombradas puede que haya que indicar el destino de forma explícita.",
-    "Los buzones de Hosted Exchange y Microsoft 365 que vende Rackspace no están en secure.emailsrvr.com, y los buzones de Microsoft 365 no se pueden conectar en absoluto."
+    "Los buzones de Hosted Exchange y Microsoft 365 que vende Rackspace no están en secure.emailsrvr.com. Los buzones de Microsoft 365 se conectan con Outlook (inicio de sesión con Microsoft)."
   ],
   "faq": [
     {
@@ -99,5 +99,10 @@
   "ctaBand": {
     "title": "Dale a tu IA una bandeja de Rackspace Email",
     "sub": "Conecta Rackspace Email en minutos. Una bandeja gratis para siempre, sin tarjeta."
+  },
+  "seeAlso": {
+    "intro": "¿Un buzón de Microsoft 365 contratado con Rackspace?",
+    "label": "Conéctalo con Outlook (inicio de sesión con Microsoft)",
+    "href": "/connect/office365"
   }
 }

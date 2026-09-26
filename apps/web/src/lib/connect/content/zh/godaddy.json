@@ -14,14 +14,14 @@
   },
   "meta": {
     "title": "将 GoDaddy 邮箱连接到 Claude、Cursor 与 MCP",
-    "description": "通过 imap.secureserver.net:993 的 IMAP 将 GoDaddy Professional Email 连接到 Claude 及任意 MCP 客户端。通过 GoDaddy 购买的 Microsoft 365 邮箱无法连接。"
+    "description": "通过 imap.secureserver.net:993 的 IMAP 将 GoDaddy Professional Email 连接到 Claude 及任意 MCP 客户端。通过 GoDaddy 购买的 Microsoft 365 邮箱请用 Outlook 连接。"
   },
   "hero": {
     "eyebrow": "GoDaddy 邮箱 + AI",
     "titleLine1": "将 GoDaddy 邮箱连接到 Claude，",
     "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
     "lead": "为你的 AI 代理接入一个真正的 GoDaddy 收件箱。弄清你的地址实际属于 GoDaddy 多款邮箱产品中的哪一款后，即可通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行访问 GoDaddy 邮箱。mcpemails 是一个托管 MCP 服务器，通过 imap.secureserver.net 端口 993 的 IMAP 连接 GoDaddy Professional Email，使用你的完整地址和该邮箱自己的邮箱密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。GoDaddy 以同一品牌销售不止一款邮箱产品，而通过 GoDaddy 购买的 Microsoft 365 邮箱是微软的邮箱，我们无法连接，所以请先确认你用的是哪一款。1 个收件箱永久免费。",
+    "answer": "Claude 无法自行访问 GoDaddy 邮箱。mcpemails 是一个托管 MCP 服务器，通过 imap.secureserver.net 端口 993 的 IMAP 连接 GoDaddy Professional Email，使用你的完整地址和该邮箱自己的邮箱密码进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。GoDaddy 以同一品牌销售不止一款邮箱产品，而通过 GoDaddy 购买的 Microsoft 365 邮箱是微软的邮箱，要用 Outlook（使用 Microsoft 登录）而不是 IMAP 连接，所以请先确认你用的是哪一款。1 个收件箱永久免费。",
     "meta0": "1 个收件箱永久免费",
     "meta1": "该邮箱自己的邮箱密码",
     "meta2": "邮件实时获取，绝不存储"
@@ -37,7 +37,7 @@
     },
     {
       "h": "确认你用的是哪款 GoDaddy 邮箱产品",
-      "p": "登录 GoDaddy，在 My Products 下打开 Email & Office 控制台。卡片上的套餐名称就是答案。Professional Email 是基于 Titan 的产品，使用 secureserver 服务器。Microsoft 365 会打开 Outlook 网页版，是微软的邮箱。如果地址是在 cPanel 的 Email Accounts 中创建的，那么它的设置是 yourdomain.com/webmail 中 Configure Mail Client 下显示的那些，而不是 secureserver 的设置。"
+      "p": "登录 GoDaddy，在 My Products 下打开 Email & Office 控制台。卡片上的套餐名称就是答案。Professional Email 是基于 Titan 的产品，使用 secureserver 服务器。Microsoft 365 会打开 Outlook 网页版，是微软的邮箱：请用 Outlook 连接，而不是这些 IMAP 设置。如果地址是在 cPanel 的 Email Accounts 中创建的，那么它的设置是 yourdomain.com/webmail 中 Configure Mail Client 下显示的那些，而不是 secureserver 的设置。"
     },
     {
       "h": "获取邮箱密码并允许外部客户端",
@@ -50,8 +50,8 @@
   ],
   "gotchas": [
     {
-      "h": "从 GoDaddy 购买的 Microsoft 365 邮箱无法在这里连接",
-      "p": "GoDaddy 转售 Microsoft 365，并一直在把旧的 Workspace Email 客户迁移过去，所以很大一部分自认为拥有“GoDaddy 邮箱”的人，现在拥有的其实是开着 GoDaddy 发票的微软邮箱。这些邮箱不在 <code>imap.secureserver.net</code> 上，而是在微软的服务器上，受微软身份平台管理。微软的默认租户策略会阻止普通终端用户同意第三方应用对邮件的读写访问，这项限制由微软和你的租户管理员设定，而不是 GoDaddy，也不是我们。我们不声称能连接这些邮箱。判断方法很简单：如果登录网页邮箱后进入的是 Outlook 网页版，那就是微软的产品。"
+      "h": "从 GoDaddy 购买的 Microsoft 365 邮箱要用 Outlook 连接，而不是 IMAP",
+      "p": "GoDaddy 转售 Microsoft 365，并一直在把旧的 Workspace Email 客户迁移过去，所以很大一部分自认为拥有“GoDaddy 邮箱”的人，现在拥有的其实是开着 GoDaddy 发票的微软邮箱。这些邮箱不在 <code>imap.secureserver.net</code> 上，而是在微软的服务器上，所以请用 Outlook 选项（使用 Microsoft 登录）连接，而不是本页的设置。由于这是工作用的 Microsoft 365 账户，你所在组织的 IT 管理员可能需要先批准一次 MCP Emails，控制台会给你一个审批链接，供你发给管理员。判断方法很简单：如果登录网页邮箱后进入的是 Outlook 网页版，那就是微软的产品。"
     },
     {
       "h": "网上一半的 GoDaddy IMAP 指南针对的是已不存在的产品",
@@ -67,14 +67,14 @@
     }
   ],
   "limits": [
-    "通过 GoDaddy 销售的 Microsoft 365 邮箱无法连接。微软的默认租户策略会阻止终端用户同意第三方邮件访问。",
+    "通过 GoDaddy 销售的 Microsoft 365 邮箱不在 secureserver 服务器上。请用 Outlook（使用 Microsoft 登录）连接；可能需要 IT 管理员批准一次该应用。",
     "cPanel 主机邮箱不在 secureserver 服务器上。请改用 cPanel 的 Configure Mail Client 页面中显示的主机名来连接。",
     "服务器不声明 MOVE 扩展，因此移动邮件以复制、标记和清除的方式完成，而不是一条原子命令。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 GoDaddy 邮箱吗？",
-      "a": "只要将 mcpemails 这样的 MCP 服务器通过 IMAP 连接到邮箱，就能用于 GoDaddy Professional Email（基于 Titan 的产品）。Claude 没有内置的 GoDaddy 连接器。它不能用于通过 GoDaddy 购买的 Microsoft 365 邮箱，因为微软的默认租户策略会阻止第三方邮件访问的授权同意。"
+      "a": "只要将 mcpemails 这样的 MCP 服务器通过 IMAP 连接到邮箱，就能用于 GoDaddy Professional Email（基于 Titan 的产品）。Claude 没有内置的 GoDaddy 连接器。通过 GoDaddy 购买的 Microsoft 365 邮箱同样可以使用，但要用 Outlook（使用 Microsoft 登录）而不是 IMAP 连接，并且可能需要 IT 管理员先批准一次 MCP Emails。"
     },
     {
       "q": "GoDaddy 的 IMAP 和 SMTP 设置是什么？",
@@ -86,7 +86,7 @@
     },
     {
       "q": "为什么我的 GoDaddy 邮箱密码被拒绝？",
-      "a": "常见原因有三个，按顺序排查。你用的是 GoDaddy 账户登录密码，而不是邮箱自己的邮箱密码。邮箱开启了双重身份验证，导致 Titan 拒绝外部客户端。或者邮箱已被迁移到 Microsoft 365，在 secureserver 服务器上根本不存在了。"
+      "a": "常见原因有三个，按顺序排查。你用的是 GoDaddy 账户登录密码，而不是邮箱自己的邮箱密码。邮箱开启了双重身份验证，导致 Titan 拒绝外部客户端。或者邮箱已被迁移到 Microsoft 365，在 secureserver 服务器上根本不存在了；这种情况请用 Outlook 连接。"
     },
     {
       "q": "我在 cPanel 主机中创建的邮箱地址呢？",
@@ -100,5 +100,10 @@
   "ctaBand": {
     "title": "给你的 AI 一个 GoDaddy 收件箱",
     "sub": "几分钟即可连接 GoDaddy Professional Email。1 个收件箱永久免费，无需信用卡。"
+  },
+  "seeAlso": {
+    "intro": "通过 GoDaddy 购买的 Microsoft 365 邮箱？",
+    "label": "用 Outlook（使用 Microsoft 登录）连接",
+    "href": "/connect/office365"
   }
 }

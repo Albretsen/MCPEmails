@@ -7,7 +7,7 @@ const post = {
   coverAlt: 'Gmail labels and IMAP folders for AI agents — MCP Emails',
   authorId: 'asgeir',
   publishedAt: '2026-08-02T09:20:00.000Z',
-  updatedAt: '2026-08-02T09:20:00.000Z',
+  updatedAt: '2026-09-26T09:00:00.000Z',
   tags: ['Gmail labels', 'IMAP folders', 'Email providers', 'AI agents'],
   featured: false,
   content: `Gmail does not organize mail the same way as a traditional IMAP mailbox. Gmail uses labels: one message can carry several labels at once. IMAP providers such as Fastmail, iCloud, Yahoo, Zoho, and many custom-domain hosts use folders or mailboxes: messages live in a hierarchy, and moving a message normally changes where it lives.
@@ -55,7 +55,7 @@ The preview is useful whether you use Gmail labels or IMAP folders. It also prev
 
 ## One workflow, multiple inboxes
 
-MCP Emails supports Gmail via OAuth and IMAP/SMTP mailboxes through app passwords, including Fastmail, iCloud, Yahoo, Zoho, Yandex, and generic providers. Connect the account you have; your agent discovers its capabilities instead of assuming every inbox behaves like Gmail.
+MCP Emails supports Gmail (with a Google app password or Sign in with Google), Outlook and Microsoft 365 over Microsoft Graph, and IMAP/SMTP mailboxes through app passwords, including Fastmail, iCloud, Yahoo, Zoho, Yandex, and generic providers. Outlook sits on the folder side of this divide, with nested folders and no labels. Connect the account you have; your agent discovers its capabilities instead of assuming every inbox behaves like Gmail.
 
 For a provider-specific setup guide, see [Connect iCloud or Fastmail IMAP to Claude](/blog/connect-icloud-fastmail-imap-to-claude). For Gmail, start with [How to Connect Gmail to Claude](/blog/connect-gmail-to-claude).`,
 };

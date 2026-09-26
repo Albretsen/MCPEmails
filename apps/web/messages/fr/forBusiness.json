@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "E-mail IA pour les entreprises : toutes les boîtes sur un seul agent",
-    "description": "Une seule personne, toutes les boîtes de l'entreprise. Connectez info@, ventes@ et factures@ en IMAP, Gmail ou chez tout hébergeur, et gérez-les depuis Claude ou tout client MCP."
+    "description": "Une seule personne, toutes les boîtes de l'entreprise. Connectez info@, ventes@ et factures@ en IMAP, Gmail, Microsoft 365 ou chez tout hébergeur, et gérez-les depuis Claude ou tout client MCP."
   },
   "hero": {
     "eyebrow": "Pour la personne qui gère les e-mails de l'entreprise",
@@ -88,7 +88,7 @@
       },
       "server": {
         "h": "Votre serveur de messagerie garde la main",
-        "p": "Le courrier part par votre propre fournisseur ou serveur SMTP, jamais depuis un serveur de messagerie à nous. Changer le mot de passe d'une boîte, révoquer son mot de passe d'application ou retirer l'accès dans votre compte Google coupe l'agent."
+        "p": "Le courrier part par votre propre fournisseur ou serveur SMTP, jamais depuis un serveur de messagerie à nous. Changer le mot de passe d'une boîte, révoquer son mot de passe d'application ou retirer l'accès dans votre compte Google ou Microsoft coupe l'agent."
       }
     },
     "link": "Lire comment fonctionne la sécurité"
@@ -96,9 +96,10 @@
   "providers": {
     "eyebrow": "Tout hébergeur",
     "title": "Connectez toutes les boîtes de l'entreprise, quel qu'en soit l'hébergeur",
-    "sub": "La plupart des messageries d'entreprise sont chez l'hébergeur web ou le registraire du domaine, et cela ne pose aucun problème. Toute boîte qui parle IMAP et SMTP sur les ports standard se connecte avec son adresse, son serveur et son mot de passe. IONOS, Hostinger, OVH, Namecheap et d'autres hébergeurs courants sont reconnus à partir de l'adresse et renseignés pour vous. Gmail et Google Workspace se connectent avec Google. iCloud, Fastmail, Yahoo, Zoho et Yandex se connectent avec un mot de passe d'application.",
+    "sub": "La plupart des messageries d'entreprise sont chez l'hébergeur web ou le registraire du domaine, et cela ne pose aucun problème. Toute boîte qui parle IMAP et SMTP sur les ports standard se connecte avec son adresse, son serveur et son mot de passe. IONOS, Hostinger, OVH, Namecheap et d'autres hébergeurs courants sont reconnus à partir de l'adresse et renseignés pour vous. Gmail et Google Workspace se connectent avec un mot de passe d'application ou via la connexion Google. Microsoft 365 et Outlook se connectent via la connexion avec Microsoft ; sur un compte Microsoft 365 d'entreprise, votre administrateur informatique devra peut-être approuver mcpemails une fois pour toute l'organisation. iCloud, Fastmail, Yahoo, Zoho et Yandex se connectent avec un mot de passe d'application.",
     "ctaImap": "Connecter n'importe quelle boîte IMAP",
     "ctaGmail": "Connecter Gmail ou Google Workspace",
+    "ctaMicrosoft": "Connecter Microsoft 365",
     "ctaIonos": "Connecter IONOS",
     "ctaMatrix": "Voir comment chaque fournisseur se connecte"
   },
@@ -134,7 +135,7 @@
       },
       {
         "q": "Notre messagerie est chez notre hébergeur web, pas chez Gmail. Est-ce que ça marchera ?",
-        "a": "Très probablement. Toute boîte qui parle IMAP et SMTP sur les ports standard se connecte avec son adresse, son serveur et son mot de passe, et les hébergeurs courants sont reconnus à partir de l'adresse, si bien que les réglages se remplissent tout seuls. Le serveur doit être joignable depuis l'internet public, et une boîte qui n'accepte qu'une connexion OAuth en IMAP ne peut pas être connectée de cette façon."
+        "a": "Très probablement. Toute boîte qui parle IMAP et SMTP sur les ports standard se connecte avec son adresse, son serveur et son mot de passe, et les hébergeurs courants sont reconnus à partir de l'adresse, si bien que les réglages se remplissent tout seuls. Le serveur doit être joignable depuis l'internet public, et une boîte qui n'accepte qu'une connexion OAuth en IMAP ne peut pas être connectée de cette façon. Si la messagerie de votre entreprise est sur Microsoft 365, connectez-la plutôt comme Outlook : vous vous connectez avec Microsoft, et votre administrateur informatique devra peut-être approuver mcpemails une fois pour toute l'organisation."
       },
       {
         "q": "L'agent envoie-t-il depuis la bonne adresse ?",

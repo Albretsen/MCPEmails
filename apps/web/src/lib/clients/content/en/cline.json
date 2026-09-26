@@ -26,7 +26,7 @@
   "setup": [
     {
       "h": "Create a free account and connect a mailbox",
-      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Gmail connects with one-click Google sign-in; iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
+      "p": "Sign up at mcpemails.com, no card required, then go to Dashboard, Inboxes, Connect Inbox. Outlook and Microsoft 365 connect with Sign in with Microsoft; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex take an app-specific password, and Gmail can also use Google sign-in; anything else connects over plain IMAP and SMTP. The free plan holds one inbox, forever."
     },
     {
       "h": "Create a scoped API key",
@@ -79,7 +79,7 @@
     },
     {
       "q": "Which mailboxes can Cline reach this way?",
-      "a": "Gmail over Google sign-in, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password, and any other mailbox that speaks IMAP and SMTP on the standard ports. The client sees them all through the same connection: your agent calls inbox_list first to discover every connected mailbox and its id, so there are no UUIDs to paste anywhere."
+      "a": "Outlook.com and Microsoft 365 over Sign in with Microsoft, where a work account may need an IT admin to approve the app once; Gmail, iCloud, Fastmail, Yahoo, Zoho and Yandex with an app-specific password, with Google sign-in as a second option for Gmail; and any other mailbox that speaks IMAP and SMTP on the standard ports. The client sees them all through the same connection: your agent calls inbox_list first to discover every connected mailbox and its id, so there are no UUIDs to paste anywhere."
     },
     {
       "q": "Can Cline send email without me seeing it?",

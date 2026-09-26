@@ -65,9 +65,9 @@
     }
   ],
   "limits": [
-    "Outlook organizes mail in folders, including nested folders. Outlook categories are not supported, and the label tools apply to Gmail only.",
+    "Outlook organizes mail in folders, including nested folders. The label tools are Gmail-only, but an automation's label action applies an Outlook category to the message.",
     "Microsoft Graph cannot combine a text search with the unread, attachment, flagged or date filters. When a search includes text, those filters are not applied, and the result says which ones were left out.",
-    "Attachments are supported up to 25 MB.",
+    "Sending carries up to 10 MB of attachments per message; downloading attachments and forwarding originals work up to 25 MB.",
     "The self-hosted version connects over IMAP and SMTP only. Signing in with Microsoft is part of the hosted service."
   ],
   "faq": [
@@ -85,11 +85,11 @@
     },
     {
       "q": "What can my AI do in Outlook.com?",
-      "a": "Read, search, send, reply and forward; work with drafts; create and use folders, including nested ones; move, copy and archive; flag; delete to trash or permanently; handle attachments up to 25 MB; schedule sends; and manage your signature."
+      "a": "Read, search, send, reply and forward; work with drafts; create and use folders, including nested ones; move, copy and archive; flag; delete to trash or permanently; send up to 10 MB of attachments per message, and download attachments or forward originals up to 25 MB; schedule sends; run automation rules; and manage your signature."
     },
     {
       "q": "Is this the same as connecting a work Microsoft 365 account?",
-      "a": "The sign-in is the same, the approval may not be. A personal account needs no administrator. A work or school Microsoft 365 account often needs an IT admin to approve MCP Emails once for the organisation first, and the dashboard gives you a link to send them when that is the case."
+      "a": "The sign-in is the same, the approval may not be. A personal account needs no administrator. A work or school Microsoft 365 account often needs an IT admin to approve MCP Emails once for the organisation first. When that is the case, the dashboard gives you an approval link to send to your IT admin, and they do not need an MCP Emails account to use it."
     },
     {
       "q": "Is my email stored on your servers?",
@@ -99,5 +99,15 @@
   "ctaBand": {
     "title": "Give your AI your Outlook.com inbox",
     "sub": "Sign in with Microsoft and connect in minutes. One inbox free forever, no card required."
+  },
+  "seeAlso": {
+    "intro": "Using a work or school Microsoft account?",
+    "label": "Connect Microsoft 365 email",
+    "href": "/connect/office365"
+  },
+  "guide": {
+    "intro": "Prefer a step-by-step walkthrough?",
+    "label": "Connecting Outlook and Microsoft 365 to your AI agent via MCP",
+    "href": "/blog/connect-outlook-microsoft-365-ai-agent-mcp"
   }
 }

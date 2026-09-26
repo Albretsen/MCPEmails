@@ -30,20 +30,20 @@ Så til innboksen. Hver leverandør nedenfor starter likt: **Dashboard → Inbox
 
 ## Koble til hver leverandør
 
-### Gmail (OAuth)
+### Gmail (apppassord, eller Logg inn med Google)
 
-Den raskeste av dem alle, fordi Google gjør jobben.
+Gmail kobles til med et Google-apppassord som standard, over IMAP.
 
-1. **Dashboard → Inboxes → Connect Inbox → Gmail.**
-2. Du sendes til Googles innlogging. Velg kontoen.
-3. Godkjenn lese- og sendetilgang på samtykkeskjermen.
-4. Du lander tilbake i dashbordet med innboksen tilkoblet. Ferdig.
+1. Slå på totrinnsbekreftelse i Google-kontoen din, og lag så et apppassord på **myaccount.google.com/apppasswords**. Det er 16 små bokstaver i fire grupper.
+2. **Dashboard → Inboxes → Connect Inbox → Gmail.**
+3. Skriv inn hele Gmail-adressen din, lim inn apppassordet og klikk **Koble til innboks**.
+4. Tilkoblingen testes mot Gmail, og innboksen vises som tilkoblet. Ferdig.
 
-Ingen passord skifter eier. MCP Emails holder et kryptert OAuth-token og kaller Gmail-APIet direkte. Søk bruker Gmails egne operatorer (\`from:\`, \`is:unread\`, \`after:\`), så agenten din kan være presis.
+Det vanlige Google-passordet ditt virker ikke her og trengs aldri. Vil du heller logge inn med Google, åpner du **Vil du heller logge inn med Google?** i det samme vinduet og klikker **Koble til med Google**; Google viser først en advarsel om at appen ikke er verifisert (klikk **Advanced**, deretter **Go to mcpemails.com**). Den veien bruker Gmail-APIet, så søk kan bruke Gmails egne operatorer (\`from:\`, \`is:unread\`, \`after:\`) og Claude jobber med ekte etiketter. Apppassord-veien bruker IMAP-tekstsøk, viser etiketter som mapper og kan slette permanent. [Gmail-guiden](/blog/connect-gmail-to-claude) har detaljene.
 
 ### Outlook / Microsoft 365 (Logg inn med Microsoft)
 
-Samme form som Gmail, annen identitetsleverandør. Ikke noe app-passord og ingen IMAP-innstillinger.
+Outlook kobles til med en Microsoft-innlogging i stedet for et passord. Ikke noe app-passord og ingen IMAP-innstillinger.
 
 1. **Dashboard → Inboxes → Connect Inbox → Outlook.**
 2. Klikk **Koble til med Microsoft** og logg inn med Microsoft-kontoen din på Microsofts side.

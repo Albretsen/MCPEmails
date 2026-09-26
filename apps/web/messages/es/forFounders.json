@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Email para fundadores: responde a tus clientes desde Claude",
-    "description": "Los fundadores usan mcpemails para clasificar y responder el correo de clientes directamente desde Claude o cualquier IA. Lee, redacta con tu propia voz, envía y programa. Gratis para empezar, con una bandeja conectada."
+    "description": "Usa Claude u otro cliente MCP para clasificar y responder el correo de clientes. Lee, redacta, envía, programa y organiza bandejas de Gmail, Outlook o IMAP en un solo flujo de trabajo seguro."
   },
   "hero": {
     "eyebrow": "Hecho para fundadores",
@@ -76,8 +76,9 @@
   "providers": {
     "eyebrow": "Cualquier bandeja, cualquier IA",
     "title": "Conecta la bandeja desde la que ya das soporte",
-    "sub": "Gmail con el inicio de sesión de Google, el resto con una contraseña de aplicación. Esa misma bandeja funciona luego en Claude, Cursor, VS Code, ChatGPT y cualquier cliente MCP, así que nunca quedas atado a una sola app.",
+    "sub": "Outlook con el inicio de sesión de Microsoft, Gmail con una contraseña de aplicación o el inicio de sesión de Google, el resto con una contraseña de aplicación. Esa misma bandeja funciona luego en Claude, Cursor, VS Code, ChatGPT y cualquier cliente MCP, así que nunca quedas atado a una sola app.",
     "ctaGmail": "Conectar Gmail",
+    "ctaOutlook": "Conectar Outlook",
     "ctaFastmail": "Conectar Fastmail",
     "ctaIcloud": "Conectar iCloud"
   },

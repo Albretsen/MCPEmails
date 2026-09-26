@@ -19,7 +19,7 @@
   },
   "serviceDescription": {
     "title": "2. Descripción del Servicio",
-    "p1": "MCPEmails proporciona una plataforma de software como servicio que te permite conectar cuentas de correo (Gmail, Fastmail y cuentas IMAP compatibles) y exponer esas cuentas a agentes de IA mediante el Model Context Protocol (MCP). El Servicio incluye:",
+    "p1": "MCPEmails proporciona una plataforma de software como servicio que te permite conectar cuentas de correo (Gmail, Microsoft Outlook / Microsoft 365, Fastmail y cuentas IMAP compatibles) y exponer esas cuentas a agentes de IA mediante el Model Context Protocol (MCP). El Servicio incluye:",
     "list": [
       "Un panel web para gestionar cuentas de correo conectadas, claves de API y monitoreo de uso.",
       "Un endpoint HTTP compatible con MCP contra el cual los agentes de IA se autentican usando claves de API que generas.",
@@ -100,7 +100,7 @@
     "h71": "7.1 Servicio proporcionado \"tal cual\"",
     "p71": "El Servicio se proporciona \"tal cual\" y \"según disponibilidad\" sin garantías de ningún tipo, ya sean expresas o implícitas, incluidas (entre otras) las garantías implícitas de comerciabilidad, idoneidad para un fin particular, no infracción y funcionamiento ininterrumpido o sin errores. No garantizamos que el Servicio cumplirá tus requisitos, que la entrega de correo será confiable o completa, ni que los defectos serán corregidos.",
     "h72": "7.2 Servicios de terceros",
-    "p72": "El Servicio se integra con proveedores de correo externos (Google Gmail, Fastmail, servidores IMAP). No somos responsables de la disponibilidad, confiabilidad o rendimiento de esos servicios, de los cambios en sus API o políticas de OAuth, ni de ninguna pérdida de acceso al correo resultante de las acciones de un proveedor externo.",
+    "p72": "El Servicio se integra con proveedores de correo externos (Google Gmail, Microsoft Outlook / Microsoft 365, Fastmail, servidores IMAP). No somos responsables de la disponibilidad, confiabilidad o rendimiento de esos servicios, de los cambios en sus API o políticas de OAuth, ni de ninguna pérdida de acceso al correo resultante de las acciones de un proveedor externo.",
     "h73": "7.3 Acciones de los agentes de IA",
     "p73": "MCPEmails es un puente de protocolo. Transmitimos instrucciones de los agentes de IA a tus proveedores de correo y devolvemos resultados. No somos responsables del contenido de los correos enviados, reenviados o respondidos por agentes de IA que actúan bajo tus claves de API, ni de ninguna consecuencia de las acciones autónomas de los agentes, incluida la eliminación accidental de correo, los mensajes mal dirigidos o la fuga de datos resultante de errores de lógica del agente.",
     "h74": "7.4 Limitación de responsabilidad",
@@ -134,7 +134,7 @@
     "list85": [
       "Tu derecho a acceder y usar el Servicio cesa de inmediato.",
       "Todas las claves de API asociadas a tu cuenta se revocan de inmediato.",
-      "Las concesiones de token de OAuth emitidas a MCPEmails por tu proveedor de correo se revocan; tu proveedor de correo puede tardar hasta 24 horas en reflejar esto.",
+      "Las concesiones de token de OAuth emitidas a MCPEmails por tu proveedor de correo se revocan cuando el proveedor lo permite; en caso contrario, los tokens almacenados se eliminan y puedes quitar la aplicación en tu cuenta del proveedor. Tu proveedor de correo puede tardar hasta 24 horas en reflejar una revocación.",
       "Tus datos se eliminarán conforme a nuestro calendario de conservación descrito en la Política de privacidad."
     ],
     "p85after": "Las siguientes disposiciones sobreviven a la terminación: Sección 6 (Propiedad intelectual), Sección 7 (Renuncias y limitación de responsabilidad), Sección 8.5 (Efecto de la terminación), Sección 9 (Ley aplicable y disputas) y cualquier otra disposición que por su naturaleza deba sobrevivir."

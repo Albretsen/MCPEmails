@@ -7,7 +7,7 @@ const post = {
   coverAlt: 'Hosted versus self-hosted Gmail MCP server comparison — MCP Emails',
   authorId: 'asgeir',
   publishedAt: "2026-05-28T09:00:00.000Z",
-  updatedAt: "2026-05-28T09:00:00.000Z",
+  updatedAt: "2026-09-26T09:00:00.000Z",
   tags: ['Comparison', 'Gmail', 'MCP', 'Security'],
   featured: false,
   content: `If you want your AI agent to read and send Gmail, you have two real options: run a self-hosted Gmail MCP server from an open-source repo, or point your client at a hosted one. The DIY route costs zero dollars and gives you total control, but you personally own the OAuth setup, token encryption, hosting, updates, and security. A hosted server like MCP Emails costs minutes to wire up and keeps credentials encrypted, at the price of trusting a vendor with the connection.
@@ -68,11 +68,11 @@ A hosted MCP server flips the trade. You give up running the code; you get back 
 
 ### Setup is minutes, not an afternoon
 
-You sign up, go to **Dashboard → Inboxes → Connect Inbox**, pick Gmail, and click through Google's one-click OAuth. No Cloud project, no consent screen, no verification queue. Then you connect your agent. For [claude.ai or Claude Desktop](/blog/connect-email-to-ai-agent-under-2-minutes) you paste the MCP endpoint URL, sign in, and approve the scopes — no API key. For a client without OAuth, like [Cursor, Cline, or a raw script](/blog/email-for-ai-agents-cursor-cline-vscode), you mint a scoped API key in **Dashboard → API Keys** and send it as a bearer token.
+You sign up, go to **Dashboard → Inboxes → Connect Inbox**, pick Gmail, and paste a Google app password, or choose Sign in with Google instead. No Cloud project of your own, no consent screen to configure, no verification queue. Then you connect your agent. For [claude.ai or Claude Desktop](/blog/connect-email-to-ai-agent-under-2-minutes) you paste the MCP endpoint URL, sign in, and approve the scopes — no API key. For a client without OAuth, like [Cursor, Cline, or a raw script](/blog/email-for-ai-agents-cursor-cline-vscode), you mint a scoped API key in **Dashboard → API Keys** and send it as a bearer token.
 
 ### Credentials are encrypted and email is never stored
 
-The OAuth token is the only thing persisted per inbox, and it's encrypted with AES-256-GCM at rest. The key lives as an environment secret, separate from the database, and decryption happens only inside an isolated Edge Function at call time. The email itself is never stored at all — every \`email_read\` call (whether you're listing, reading, or searching) hits Gmail live, hands the result to your agent, and discards it. That's the encryption work from the self-hosted section, done and maintained. [Is it safe to give an AI agent email access](/blog/is-it-safe-to-give-ai-agent-email-access) walks through the full security model.
+The inbox credential (the app password or OAuth token) is the only thing persisted per inbox, and it's encrypted with AES-256-GCM at rest. The key lives as an environment secret, separate from the database, and decryption happens only inside an isolated Edge Function at call time. The email itself is never stored at all — every \`email_read\` call (whether you're listing, reading, or searching) hits Gmail live, hands the result to your agent, and discards it. That's the encryption work from the self-hosted section, done and maintained. [Is it safe to give an AI agent email access](/blog/is-it-safe-to-give-ai-agent-email-access) walks through the full security model.
 
 ### Multi-provider comes free
 

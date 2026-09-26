@@ -59,7 +59,7 @@
     },
     {
       "h": "Rien dans votre adresse n'indique quel produit OVH vous avez",
-      "p": "Les trois produits servent le courrier sur votre propre domaine, si bien que <code>you@yourdomain.fr</code> a exactement le même aspect quel que soit le produit. La réponse se trouve dans l'OVHcloud Control Panel sous Web Cloud, où MX Plan apparaît sous Emails, Email Pro a sa propre section et Hosted Exchange une autre. Vérifiez-le d'abord, car tous les autres réglages en dépendent. Si votre commande OVH portait sur Microsoft 365 plutôt que sur le Hosted Exchange d'OVH, la boîte est hébergée sur les serveurs de Microsoft, sous sa plateforme d'identité, et la politique de tenant par défaut de Microsoft bloque le consentement des utilisateurs à l'accès tiers à la messagerie. Nous ne prétendons pas connecter ces boîtes."
+      "p": "Les trois produits servent le courrier sur votre propre domaine, si bien que <code>you@yourdomain.fr</code> a exactement le même aspect quel que soit le produit. La réponse se trouve dans l'OVHcloud Control Panel sous Web Cloud, où MX Plan apparaît sous Emails, Email Pro a sa propre section et Hosted Exchange une autre. Vérifiez-le d'abord, car tous les autres réglages en dépendent. Si votre commande OVH portait sur Microsoft 365 plutôt que sur le Hosted Exchange d'OVH, la boîte est hébergée sur les serveurs de Microsoft : connectez-la avec l'option Outlook (connexion avec Microsoft) plutôt qu'en IMAP. Un administrateur informatique devra peut-être d'abord approuver MCP Emails une fois, et le tableau de bord vous donne un lien d'approbation à lui envoyer."
     },
     {
       "h": "MX Plan tourne sous Dovecot sans MOVE, UIDPLUS ni SPECIAL-USE",
@@ -67,7 +67,7 @@
     }
   ],
   "limits": [
-    "Les boîtes Microsoft 365 commandées via OVHcloud ne peuvent pas être connectées. La politique de tenant par défaut de Microsoft bloque le consentement des utilisateurs à l'accès tiers à la messagerie.",
+    "Les boîtes Microsoft 365 commandées via OVHcloud ne sont pas sur les serveurs de messagerie d'OVH. Connectez-les avec Outlook (connexion avec Microsoft) ; un administrateur informatique devra peut-être approuver l'application une fois.",
     "Les noms de serveurs Email Pro et Hosted Exchange contiennent un numéro propre à chaque service, nous ne pouvons donc pas les préremplir. Reprenez la valeur de l'encadré Connection dans l'OVHcloud Control Panel.",
     "MX Plan n'annonce pas MOVE, un déplacement n'est donc pas atomique. Si une connexion tombe en cours de route, un message peut brièvement exister dans les deux dossiers."
   ],
@@ -100,5 +100,10 @@
   "ctaBand": {
     "title": "Offrez une boîte OVH à votre IA",
     "sub": "Connectez OVH en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  },
+  "seeAlso": {
+    "intro": "Une boîte Microsoft 365 achetée via OVHcloud ?",
+    "label": "Connectez-la avec Outlook (connexion avec Microsoft)",
+    "href": "/connect/office365"
   }
 }

@@ -82,6 +82,20 @@ export default async function ConnectProviderView({ locale, provider, content })
             </div>
           </div>
 
+          {/*
+            Optional pointer to the page that actually connects this reader's
+            mailbox. A Microsoft 365 seat resold by a web host is a Microsoft
+            mailbox, so the host's page sends it to /connect/office365; Outlook
+            and Microsoft 365 point at each other, since personal and work
+            accounts differ only in the admin approval step.
+          */}
+          {content.seeAlso?.href && (
+            <p className="how-guide-link" style={{ marginTop: 16 }}>
+              {content.seeAlso.intro}{' '}
+              <Link href={content.seeAlso.href}>{content.seeAlso.label}</Link>
+            </p>
+          )}
+
           {showGmailVerification && (
             <div role="note" className="connect-callout connect-callout-warn">
               <MIcon name="alert-triangle" size={18} color="var(--amber-700)" />

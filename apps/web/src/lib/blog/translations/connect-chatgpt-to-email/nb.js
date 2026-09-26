@@ -1,10 +1,10 @@
 const translation = {
-  title: 'Koble ChatGPT til e-posten din med MCP (Gmail, iCloud og IMAP)',
+  title: 'Koble ChatGPT til e-posten din med MCP (Gmail, Outlook, iCloud og IMAP)',
   description:
-    'Steg for steg: koble Gmail, iCloud, Fastmail eller en hvilken som helst IMAP-innboks til ChatGPT med en egendefinert MCP-kobling, og til OpenAI Codex med en avgrenset nøkkel. Ingen e-post lagres.',
+    'Steg for steg: koble Gmail, Outlook, iCloud, Fastmail eller en hvilken som helst IMAP-innboks til ChatGPT med en egendefinert MCP-kobling, og til OpenAI Codex med en avgrenset nøkkel. Ingen e-post lagres.',
   coverAlt:
-    'Koble ChatGPT og OpenAI Codex til Gmail, iCloud, Fastmail og IMAP-e-post med MCP Emails',
-  content: `ChatGPT kommer ikke til en postkasse på egen hånd. Den trenger en MCP-server foran e-posten din, og MCP Emails er den serveren: koble til en innboks én gang, pek ChatGPT mot én enkelt URL, og den får de samme e-postverktøyene enten posten ligger i Gmail, iCloud, Fastmail, Yahoo, Zoho eller på en egen IMAP-server.
+    'Koble ChatGPT og OpenAI Codex til Gmail, Outlook, iCloud, Fastmail og IMAP-e-post med MCP Emails',
+  content: `ChatGPT kommer ikke til en postkasse på egen hånd. Den trenger en MCP-server foran e-posten din, og MCP Emails er den serveren: koble til en innboks én gang, pek ChatGPT mot én enkelt URL, og den får de samme e-postverktøyene enten posten ligger i Gmail, Outlook eller Microsoft 365, iCloud, Fastmail, Yahoo, Zoho eller på en egen IMAP-server.
 
 To OpenAI-flater er involvert, og de autentiserer på hver sin måte. ChatGPT kjører en OAuth-flyt i nettleseren, så det finnes ingen API-nøkkel å lime inn. OpenAI Codex kjører i terminalen, så den bruker en avgrenset bearer-nøkkel i stedet. Samme endepunkt, samme verktøy.
 
@@ -36,7 +36,7 @@ Outlook kobles til med Logg inn med Microsoft, ikke et app-passord: velg **Outlo
 
 ### Alle andre IMAP-postkasser
 
-Velg **IMAP** og skriv inn adressen og apppassordet. Vanlige innstillinger oppdages automatisk. Et eget domene kan trenge vert, port og sikkerhetsmodus fra leverandøren din. [Leverandørmatrisen](/docs/providers) viser hva hver enkelt støtter, og det finnes en side per leverandør under [connect](/connect), blant annet [Gmail](/connect/gmail), [iCloud](/connect/icloud) og [generisk IMAP](/connect/imap).
+Velg **IMAP** og skriv inn adressen og apppassordet. Vanlige innstillinger oppdages automatisk. Et eget domene kan trenge vert, port og sikkerhetsmodus fra leverandøren din. [Leverandørmatrisen](/docs/providers) viser hva hver enkelt støtter, og det finnes en side per leverandør under [connect](/connect), blant annet [Gmail](/connect/gmail), [Outlook](/connect/outlook), [Microsoft 365](/connect/office365), [iCloud](/connect/icloud) og [generisk IMAP](/connect/imap).
 
 Koble til mer enn én postkasse hvis planen din tillater det. ChatGPT finner dem med \`inbox_list\`, så du limer aldri inn en postkasse-id i en forespørsel.
 

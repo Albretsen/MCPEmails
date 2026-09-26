@@ -19,7 +19,7 @@
   },
   "serviceDescription": {
     "title": "2. Beskrivelse av Tjenesten",
-    "p1": "MCPEmails tilbyr en programvare-som-en-tjeneste-plattform som lar deg koble til e-postkontoer (Gmail, Fastmail og kompatible IMAP-kontoer) og gjøre disse kontoene tilgjengelige for AI-agenter via Model Context Protocol (MCP). Tjenesten omfatter:",
+    "p1": "MCPEmails tilbyr en programvare-som-en-tjeneste-plattform som lar deg koble til e-postkontoer (Gmail, Microsoft Outlook / Microsoft 365, Fastmail og kompatible IMAP-kontoer) og gjøre disse kontoene tilgjengelige for AI-agenter via Model Context Protocol (MCP). Tjenesten omfatter:",
     "list": [
       "Et nettbasert dashbord for å administrere tilkoblede e-postkontoer, API-nøkler og overvåking av bruk.",
       "Et MCP-kompatibelt HTTP-endepunkt som AI-agenter autentiserer seg mot ved hjelp av API-nøkler du genererer.",
@@ -100,7 +100,7 @@
     "h71": "7.1 Tjenesten leveres «som den er»",
     "p71": "Tjenesten leveres «som den er» og «slik den er tilgjengelig», uten garantier av noe slag, verken uttrykkelige eller underforståtte, inkludert (men ikke begrenset til) underforståtte garantier om salgbarhet, egnethet for et bestemt formål, fravær av krenkelse, og uavbrutt eller feilfri drift. Vi garanterer ikke at Tjenesten vil oppfylle dine krav, at e-postlevering vil være pålitelig eller fullstendig, eller at feil vil bli rettet.",
     "h72": "7.2 Tredjepartstjenester",
-    "p72": "Tjenesten integreres med tredjeparts e-postleverandører (Google Gmail, Fastmail, IMAP-servere). Vi er ikke ansvarlige for tilgjengeligheten, påliteligheten eller ytelsen til disse tjenestene, for endringer i deres API-er eller OAuth-retningslinjer, eller for tap av e-posttilgang som følge av en tredjepartsleverandørs handlinger.",
+    "p72": "Tjenesten integreres med tredjeparts e-postleverandører (Google Gmail, Microsoft Outlook / Microsoft 365, Fastmail, IMAP-servere). Vi er ikke ansvarlige for tilgjengeligheten, påliteligheten eller ytelsen til disse tjenestene, for endringer i deres API-er eller OAuth-retningslinjer, eller for tap av e-posttilgang som følge av en tredjepartsleverandørs handlinger.",
     "h73": "7.3 Handlinger utført av AI-agenter",
     "p73": "MCPEmails er en protokollbro. Vi overfører instruksjoner fra AI-agenter til dine e-postleverandører og returnerer resultater. Vi er ikke ansvarlige for innholdet i e-poster som sendes, videresendes eller besvares av AI-agenter som opptrer under dine API-nøkler, og heller ikke for konsekvenser av autonome agenthandlinger, inkludert utilsiktet sletting av e-post, feilsendte meldinger eller datalekkasje som følge av logiske feil hos agenten.",
     "h74": "7.4 Ansvarsbegrensning",
@@ -134,7 +134,7 @@
     "list85": [
       "Din rett til å aksessere og bruke Tjenesten opphører umiddelbart.",
       "Alle API-nøkler knyttet til kontoen din tilbakekalles umiddelbart.",
-      "OAuth-tokentildelinger utstedt til MCPEmails av din e-postleverandør tilbakekalles; din e-postleverandør kan bruke opptil 24 timer på å reflektere dette.",
+      "OAuth-tokentildelinger utstedt til MCPEmails av din e-postleverandør tilbakekalles der leverandøren støtter det; ellers slettes lagrede tokener, og du kan fjerne appen i kontoen din hos leverandøren. Din e-postleverandør kan bruke opptil 24 timer på å reflektere en tilbakekalling.",
       "Dine data vil bli slettet i samsvar med vår oppbevaringsplan som er beskrevet i Personvernerklæringen."
     ],
     "p85after": "Følgende bestemmelser består etter oppsigelse: Punkt 6 (Immaterielle rettigheter), punkt 7 (Ansvarsfraskrivelser og ansvarsbegrensning), punkt 8.5 (Virkning av oppsigelse), punkt 9 (Lovvalg og tvister), samt andre bestemmelser som etter sin art bør bestå."

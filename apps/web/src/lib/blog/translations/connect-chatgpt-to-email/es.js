@@ -1,10 +1,10 @@
 const translation = {
-  title: 'Conecta ChatGPT a tu correo con MCP (Gmail, iCloud e IMAP)',
+  title: 'Conecta ChatGPT a tu correo con MCP (Gmail, Outlook, iCloud e IMAP)',
   description:
-    'Paso a paso: conecta Gmail, iCloud, Fastmail o cualquier buzón IMAP a ChatGPT con un conector MCP, y a OpenAI Codex con una clave limitada. Sin almacenar correo.',
+    'Paso a paso: conecta Gmail, Outlook, iCloud, Fastmail o cualquier buzón IMAP a ChatGPT con un conector MCP, y a OpenAI Codex con una clave limitada. Sin almacenar correo.',
   coverAlt:
-    'Conecta ChatGPT y OpenAI Codex a Gmail, iCloud, Fastmail y correo IMAP con MCP Emails',
-  content: `ChatGPT no puede llegar a un buzón por su cuenta. Necesita un servidor MCP delante de tu correo, y MCP Emails es ese servidor: conecta un buzón una vez, apunta ChatGPT a una sola URL y obtendrás las mismas herramientas de correo tanto si el buzón está en Gmail, iCloud, Fastmail, Yahoo, Zoho o un servidor IMAP propio.
+    'Conecta ChatGPT y OpenAI Codex a Gmail, Outlook, iCloud, Fastmail y correo IMAP con MCP Emails',
+  content: `ChatGPT no puede llegar a un buzón por su cuenta. Necesita un servidor MCP delante de tu correo, y MCP Emails es ese servidor: conecta un buzón una vez, apunta ChatGPT a una sola URL y obtendrás las mismas herramientas de correo tanto si el buzón está en Gmail, Outlook o Microsoft 365, iCloud, Fastmail, Yahoo, Zoho o un servidor IMAP propio.
 
 Aquí intervienen dos superficies de OpenAI que se autentican de forma distinta. ChatGPT ejecuta un flujo OAuth en el navegador, así que no hay ninguna clave de API que pegar. OpenAI Codex se ejecuta en tu terminal y usa una clave limitada como token bearer. Mismo endpoint, mismas herramientas.
 
@@ -36,7 +36,7 @@ Outlook se conecta con Iniciar sesión con Microsoft, no con una contraseña de 
 
 ### Cualquier otro buzón IMAP
 
-Elige **IMAP** e introduce la dirección y la contraseña de aplicación. Los ajustes habituales se detectan automáticamente; un dominio personalizado puede requerir el host, el puerto y el modo de seguridad de tu proveedor. La [matriz de proveedores](/docs/providers) indica qué admite cada uno, y hay una página por proveedor en [connect](/connect), incluidas [Gmail](/connect/gmail), [iCloud](/connect/icloud) e [IMAP genérico](/connect/imap).
+Elige **IMAP** e introduce la dirección y la contraseña de aplicación. Los ajustes habituales se detectan automáticamente; un dominio personalizado puede requerir el host, el puerto y el modo de seguridad de tu proveedor. La [matriz de proveedores](/docs/providers) indica qué admite cada uno, y hay una página por proveedor en [connect](/connect), incluidas [Gmail](/connect/gmail), [Outlook](/connect/outlook), [Microsoft 365](/connect/office365), [iCloud](/connect/icloud) e [IMAP genérico](/connect/imap).
 
 Conecta más de un buzón si tu plan lo permite. ChatGPT los descubre con \`inbox_list\`, así que nunca pegas un identificador de buzón en un prompt.
 

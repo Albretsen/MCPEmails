@@ -1,11 +1,11 @@
 const translation = {
   title: 'Comment atteindre l\'inbox zero avec l\'IA (avec Claude et votre vraie boîte mail)',
   description:
-    'Atteignez l\'inbox zero avec l\'IA : laissez Claude trier, archiver, étiqueter et rédiger des réponses dans votre vraie boîte Gmail ou IMAP via MCP. Une routine reproductible, les prompts exacts et pourquoi rien n\'est stocké.',
+    'Atteignez l\'inbox zero avec l\'IA : laissez Claude trier, archiver, étiqueter et rédiger des réponses dans votre vraie boîte Gmail, Outlook ou IMAP via MCP. Une routine reproductible, les prompts exacts et pourquoi rien n\'est stocké.',
   coverAlt: 'Atteignez l\'inbox zero avec l\'IA — Claude trie, archive et rédige des réponses dans votre vraie boîte mail via MCP',
   content: `L'inbox zero a toujours eu le même problème : y parvenir vous coûte une heure que vous n'avez pas, et demain vous voilà revenu à cinquante non lus. Un agent IA change le calcul. Au lieu de trier vous-même les messages un par un, vous dites à Claude ce que signifie « traité » et il s'occupe de toute la boîte d'un coup — en triant, archivant, étiquetant et rédigeant des réponses sur votre *vrai* courrier, en direct.
 
-Ce guide, c'est la routine : une boucle reproductible à lancer chaque matin, les prompts exacts qui la pilotent et la seule règle qui la rend sûre (rien n'est jamais stocké). Il part du principe que Claude peut déjà voir votre boîte mail. Si ce n'est pas encore le cas, commencez par [comment connecter Gmail à Claude](/blog/connect-gmail-to-claude) — cela prend environ deux minutes — puis revenez.
+Ce guide, c'est la routine : une boucle reproductible à lancer chaque matin, les prompts exacts qui la pilotent et la seule règle qui la rend sûre (rien n'est jamais stocké). Il part du principe que Claude peut déjà voir votre boîte mail. Si ce n'est pas encore le cas, commencez par [comment connecter Gmail à Claude](/blog/connect-gmail-to-claude) (ou le [guide Outlook et Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp)) — cela prend environ deux minutes — puis revenez.
 
 ## Pourquoi l'« inbox zero » est enfin réaliste avec l'IA
 
@@ -33,7 +33,7 @@ C'est \`email_organize\` qui abat le travail rébarbatif — l'archivage en mass
 
 > « Étiquette en 'Prioritaire' tout ce qui vient d'un client ou concerne une facture, et en 'Pour information' tout ce où je suis simplement en copie. »
 
-Les rescapés sont maintenant triés. Claude applique des libellés Gmail (ou des dossiers IMAP) pour que les fils importants soient regroupés visuellement avant que vous n'y consacriez la moindre seconde d'attention.
+Les rescapés sont maintenant triés. Claude applique des libellés Gmail (ou des dossiers sur Outlook et IMAP) pour que les fils importants soient regroupés visuellement avant que vous n'y consacriez la moindre seconde d'attention.
 
 **4. Rédigez les réponses — mais sans les envoyer.**
 
@@ -57,7 +57,7 @@ La routine ci-dessus prend environ cinq minutes une fois que Claude fait le gros
 
 ## La seule règle qui rend tout cela sûr
 
-Confier toute votre boîte mail à une IA paraît risqué jusqu'à ce que vous sachiez où vont les données : **nulle part.** Avec MCP Emails, chacun de ces prompts récupère votre courrier en direct depuis Gmail ou IMAP, le confie à Claude pour cette seule action, puis le supprime aussitôt. Le corps des messages, les objets et les pièces jointes ne sont jamais stockés — la seule chose conservée par boîte est un jeton chiffré pour que l'appel suivant puisse avoir lieu. C'est toute la différence entre donner à un agent une *clé* et lui donner une *copie permanente de tout* ; voici [pourquoi « le courrier n'est jamais stocké » compte](/blog/why-email-never-stored-matters), et le [décryptage complet de la sécurité](/blog/is-it-safe-to-give-ai-agent-email-access) si vous voulez le modèle de menaces.
+Confier toute votre boîte mail à une IA paraît risqué jusqu'à ce que vous sachiez où vont les données : **nulle part.** Avec MCP Emails, chacun de ces prompts récupère votre courrier en direct depuis Gmail, Outlook ou IMAP, le confie à Claude pour cette seule action, puis le supprime aussitôt. Le corps des messages, les objets et les pièces jointes ne sont jamais stockés — la seule chose conservée par boîte est un jeton chiffré pour que l'appel suivant puisse avoir lieu. C'est toute la différence entre donner à un agent une *clé* et lui donner une *copie permanente de tout* ; voici [pourquoi « le courrier n'est jamais stocké » compte](/blog/why-email-never-stored-matters), et le [décryptage complet de la sécurité](/blog/is-it-safe-to-give-ai-agent-email-access) si vous voulez le modèle de menaces.
 
 Vous gardez aussi une ligne ferme sur l'envoi : les brouillons restent des brouillons jusqu'à ce que vous les approuviez, et vous pouvez accorder un accès en lecture seule pour que Claude soit littéralement incapable d'envoyer.
 

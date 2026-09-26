@@ -19,7 +19,7 @@
       "coverage": {
         "tag": "Coverage",
         "h": "Every inbox, not just Gmail",
-        "p": "Built-in connectors typically reach one mailbox: Gmail, sometimes Outlook. They can't touch <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b>, or any other <b>IMAP/SMTP</b> account. We connect all of them: Gmail over OAuth, Outlook and Microsoft 365 by signing in with Microsoft, the rest over an app password or plain IMAP."
+        "p": "Built-in connectors typically reach one mailbox: Gmail, sometimes Outlook. They can't touch <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b>, or any other <b>IMAP/SMTP</b> account. We connect all of them: Gmail over an app password or Google sign-in, Outlook and Microsoft 365 by signing in with Microsoft, the rest over an app password or plain IMAP."
       },
       "actions": {
         "tag": "Real actions",
@@ -46,8 +46,11 @@
       "schedule": "Schedule sends for later",
       "organize": "Move, copy, flag, archive, delete",
       "multiAi": "Works across Claude, Cursor, ChatGPT, n8n…",
-      "oauth": "Gmail over OAuth",
+      "oauth": "Gmail and Outlook over OAuth",
       "storage": "Email fetched live, never stored"
+    },
+    "values": {
+      "oauthNative": "Gmail; Outlook sometimes"
     },
     "footnote": "Capabilities of typical AI-native connectors vary by vendor; the gaps above reflect the common one-provider pattern."
   },
@@ -90,6 +93,7 @@
     "connectAll": "All email providers",
     "connectImap": "Connect any IMAP inbox",
     "connectGmail": "Connect Gmail",
+    "connectOutlook": "Connect Outlook",
     "connectFastmail": "Connect Fastmail",
     "connectIcloud": "Connect iCloud",
     "connectYahoo": "Connect Yahoo",

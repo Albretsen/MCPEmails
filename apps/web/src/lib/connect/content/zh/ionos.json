@@ -59,7 +59,7 @@
     },
     {
       "h": "IONOS 销售的 Microsoft 365 是微软的邮箱，而不是 IONOS 的",
-      "p": "IONOS 在自己的 Mail Basic 和 Mail Business 产品之外还转售 Microsoft 365，大量自认为拥有 IONOS 邮箱的客户，实际上拥有的是开着 IONOS 发票的微软租户。<code>imap.ionos.com</code> 上的任何东西都不适用于这些邮箱：它们位于微软的服务器上，在 Microsoft 365 Admin Center 而不是 IONOS 控制面板中管理。微软的默认租户策略会阻止普通终端用户同意第三方的邮件读写访问，这由微软和你的租户管理员设定。我们不声称能连接它们。判断方法是看网页邮箱把你带到哪里：Outlook 网页版就意味着是微软。"
+      "p": "IONOS 在自己的 Mail Basic 和 Mail Business 产品之外还转售 Microsoft 365，大量自认为拥有 IONOS 邮箱的客户，实际上拥有的是开着 IONOS 发票的微软租户。<code>imap.ionos.com</code> 上的任何东西都不适用于这些邮箱：它们位于微软的服务器上，在 Microsoft 365 Admin Center 而不是 IONOS 控制面板中管理。请用 Outlook 选项（使用 Microsoft 登录）而不是 IMAP 连接它们。你所在组织的 IT 管理员可能需要先批准一次 MCP Emails，控制台会给你一个审批链接，供你发给管理员。判断方法是看网页邮箱把你带到哪里：Outlook 网页版就意味着是微软。"
     },
     {
       "h": "所有 IONOS 国家品牌以及所有旧的 1&1 地址都使用同样的两台服务器",
@@ -67,13 +67,13 @@
     }
   ],
   "limits": [
-    "通过 IONOS 购买的 Microsoft 365 邮箱无法连接。微软的默认租户策略会阻止终端用户同意第三方邮件访问。",
+    "通过 IONOS 购买的 Microsoft 365 邮箱不在 imap.ionos.com 上。请用 Outlook（使用 Microsoft 登录）连接；可能需要 IT 管理员批准一次该应用。",
     "mcpemails 连接的是邮箱。IONOS 的别名、转发器、全部接收规则和垃圾邮件设置仍在 IONOS 控制面板中管理，你的 AI 客户端看不到它们。"
   ],
   "faq": [
     {
       "q": "Claude 能用于 IONOS 邮箱吗？",
-      "a": "只要将 mcpemails 这样的 MCP 服务器通过 IMAP 连接到 IONOS 邮箱（即由 imap.ionos.com 提供服务的那种），就能使用。Claude 没有内置的 IONOS 连接器。它不能用于通过 IONOS 购买的 Microsoft 365 邮箱，因为微软的默认租户策略会阻止第三方邮件访问的授权同意。"
+      "a": "只要将 mcpemails 这样的 MCP 服务器通过 IMAP 连接到 IONOS 邮箱（即由 imap.ionos.com 提供服务的那种），就能使用。Claude 没有内置的 IONOS 连接器。通过 IONOS 购买的 Microsoft 365 邮箱同样可以使用，但要用 Outlook（使用 Microsoft 登录）而不是 IMAP 连接，并且可能需要 IT 管理员先批准一次 MCP Emails。"
     },
     {
       "q": "IONOS 的 IMAP 和 SMTP 设置是什么？",
@@ -85,7 +85,7 @@
     },
     {
       "q": "为什么我的 IONOS 邮箱密码被拒绝？",
-      "a": "因为 IONOS 为每个邮箱地址单独设置密码，而你很可能用的是 IONOS 账户登录密码。请打开 IONOS 控制面板，进入 Email，选择该地址并为其设置新密码，然后使用它。如果该地址已迁移到 Microsoft 365，它在 IONOS 邮件服务器上就根本不存在了。"
+      "a": "因为 IONOS 为每个邮箱地址单独设置密码，而你很可能用的是 IONOS 账户登录密码。请打开 IONOS 控制面板，进入 Email，选择该地址并为其设置新密码，然后使用它。如果该地址已迁移到 Microsoft 365，它在 IONOS 邮件服务器上就根本不存在了；这种情况请用 Outlook 连接。"
     },
     {
       "q": "IONOS 英国、德国和法国账户使用不同的服务器吗？",
@@ -99,5 +99,10 @@
   "ctaBand": {
     "title": "给你的 AI 一个 IONOS 收件箱",
     "sub": "几分钟即可连接 IONOS。1 个收件箱永久免费，无需信用卡。"
+  },
+  "seeAlso": {
+    "intro": "通过 IONOS 购买的 Microsoft 365 邮箱？",
+    "label": "用 Outlook（使用 Microsoft 登录）连接",
+    "href": "/connect/office365"
   }
 }

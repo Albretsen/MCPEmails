@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "E-post for gründere: svar kundene fra Claude",
-    "description": "Gründere bruker mcpemails til å sortere og svare på kunde-e-post rett fra Claude eller en hvilken som helst AI. Les, skriv utkast i din egen stemme, send og planlegg på tvers av alle innbokser. Ubegrenset og gratis å komme i gang."
+    "description": "Bruk Claude eller en annen MCP-klient til å sortere og svare på kunde-e-post. Les, skriv utkast, send, planlegg og organiser Gmail-, Outlook- eller IMAP-innbokser i én sikker arbeidsflyt."
   },
   "hero": {
     "eyebrow": "Laget for gründere",
@@ -76,8 +76,9 @@
   "providers": {
     "eyebrow": "Hvilken som helst innboks, hvilken som helst AI",
     "title": "Koble til innboksen du allerede driver support fra",
-    "sub": "Gmail via Google-innlogging, resten via et app-passord. Den samme innboksen fungerer så i Claude, Cursor, VS Code, ChatGPT og en hvilken som helst MCP-klient, så du er aldri låst til én app.",
+    "sub": "Outlook via Microsoft-innlogging, Gmail via et app-passord eller Google-innlogging, resten via et app-passord. Den samme innboksen fungerer så i Claude, Cursor, VS Code, ChatGPT og en hvilken som helst MCP-klient, så du er aldri låst til én app.",
     "ctaGmail": "Koble til Gmail",
+    "ctaOutlook": "Koble til Outlook",
     "ctaFastmail": "Koble til Fastmail",
     "ctaIcloud": "Koble til iCloud"
   },
