@@ -29,9 +29,9 @@ concurrency:
 #     (eslint.config.mjs) also needs repair before `eslint .` runs cleanly.
 #   - Migration-check needs a local Supabase stack with pg_cron enabled; it
 #     failed with `schema "cron" does not exist`.
-# Re-add them once the eslint flat config is fixed and local Supabase is wired
-# (enable pg_cron in supabase/config.toml). Production RLS is enforced directly
-# on the database, independent of CI.
+# The migration half is BACK as the `db` job (2026-09-26): the current CLI's
+# Postgres image ships pg_cron, all migrations apply cleanly, and the RLS suite
+# was repaired. Lint is still out.
 #
 # NOTE (2026-08-30): the Dependency Audit job below was added as finding F-05 of
 # the Google ADA-CASA pre-submission audit. The gap it closes: with no audit
@@ -54,23 +54,15 @@ jobs:
   # leave an apps/web/node_modules behind, which a fresh CI checkout does not
   # have.
   #
-  # CORRECTION (2026-09-17): an earlier version of this comment said apps/web's
-  # pnpm-lock.yaml was "a stale pnpm-lock.yaml from a one-off pnpm run; nothing
-  # reads it". That is FALSE and dangerous, because PRODUCTION reads it. The
-  # Vercel Root Directory is apps/web, so the build finds that lockfile and
-  # installs with pnpm, not npm. Straight from the production build log:
-  #
-  #   Detected `pnpm-lock.yaml` 9 ...
-  #   Using pnpm@10.x based on project creation date
-  #   Lockfile is up to date, resolution step is skipped
-  #   Done in 877ms using pnpm v10.28.0
-  #   Running "pnpm run build"
-  #
-  # So `npm audit` here reads the ROOT package-lock.json while prod installs
-  # from apps/web/pnpm-lock.yaml: two different resolved trees. A dependency
-  # bump has to update BOTH or prod either keeps the vulnerable version or
-  # fails the install outright. This is also why every dependabot PR is red:
-  # it updates package-lock.json and never touches the pnpm lock.
+  # ONE LOCKFILE (2026-09-26). Until this date production did NOT install from
+  # it: apps/web/pnpm-lock.yaml sat in the Vercel Root Directory, so every prod
+  # build ran pnpm against a second resolved tree that this audit, CI and
+  # dependabot never saw. That file is deleted. Vercel now falls back to npm and
+  # installs from this root package-lock.json, proven on a CLI preview before
+  # the change landed ("Package Manager changed from pnpm to npm", and
+  # @parcel/watcher came out at the locked 2.5.6, not the 2.6.0 a fresh resolve
+  # picks). So this audit now describes the tree production ships. Do not
+  # re-add a pnpm lockfile anywhere under apps/.
   #
   # WHY NO `npm install`. `npm audit` resolves the tree from package-lock.json
   # and asks the registry about it, so it needs no node_modules at all. That
@@ -94,7 +86,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: '24'
+          node-version-file: .nvmrc
       - name: npm audit (fails on high or critical)
         run: npm audit --audit-level=high
 
@@ -105,9 +97,9 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: '24'
+          node-version-file: .nvmrc
           cache: 'npm'
-      - run: npm install
+      - run: npm ci
       - name: Run TypeScript type check
         run: cd apps/web && npx tsc --noEmit
 
@@ -118,12 +110,11 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          # 22, not 20: every test:* script runs TypeScript sources through
+          # Every test:* script runs TypeScript sources through
           # `node --test --experimental-strip-types`, which does not exist on 20.
-          # Running these on 20 is why they were never in CI.
-          node-version: '24'
+          node-version-file: .nvmrc
           cache: 'npm'
-      - run: npm install
+      - run: npm ci
       - name: Run unit tests
         run: cd apps/web && npm test
 
@@ -149,7 +140,7 @@ jobs:
   # of every suite behind it. If that line ever says fewer than five, a suite was
   # dropped rather than fixed.
   #
-  # WHY `npm install` AT THE ROOT. apps/mcp-app is an npm workspace (root
+  # WHY `npm ci` AT THE ROOT. apps/mcp-app is an npm workspace (root
   # package.json "workspaces": ["apps/*"]) with no lockfile of its own, exactly
   # like apps/web. The root install is what puts vite, typescript and the
   # harness's two non-builtin imports in the root node_modules that apps/mcp-app
@@ -159,10 +150,8 @@ jobs:
   # 'esbuild'` or `'jsdom'`, that is the reason and the fix is to declare it in
   # apps/mcp-app's devDependencies.
   #
-  # WHY 22, NOT 20. Same reason as Unit Tests above: 22 is what these suites are
-  # developed and run against. Nothing in them is known to need it, but nothing
-  # in them has been verified on 20 either, and a card suite that goes red for a
-  # Node reason teaches the team to ignore it.
+  # NODE VERSION. Every job reads .nvmrc, which must match the Vercel project's
+  # Node setting (24.x). Move both together, never one.
   #
   # WHY THE TYPE CHECK IS HERE AND NOT SKIPPED. It could not have been, until
   # this commit: `tsc --noEmit` exited 2 on a single pre-existing error,
@@ -180,9 +169,9 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: '24'
+          node-version-file: .nvmrc
           cache: 'npm'
-      - run: npm install
+      - run: npm ci
       - name: Type check the card
         run: cd apps/mcp-app && npm run typecheck
       - name: Run card tests (five suites via harness/verify.mjs)
@@ -261,8 +250,76 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: '24'
+          node-version-file: .nvmrc
           cache: 'npm'
-      - run: npm install
+      - run: npm ci
       - name: Build Next.js app
         run: cd apps/web && npm run build
+
+  # Builds the database from supabase/migrations alone, then checks it.
+  #
+  # WHAT THIS CATCHES. (1) A migration that does not apply on a clean database.
+  # (2) An access-rule (RLS) regression: supabase/tests is pgTAP, 75 checks that
+  # impersonate two tenants and assert neither can read or write the other's
+  # rows. Proven to bite on 2026-09-26 by disabling RLS on inboxes: four checks
+  # failed, naming the leak ("Alice sees 3 inboxes, want 1"). (3) App code that
+  # uses a table, column or function no migration creates: the app is
+  # type-checked against types GENERATED from this database, not against the
+  # committed database.types.ts. On its first run that found public.app_errors,
+  # which production had and no migration created (fixed in
+  # 20260926020000_app_errors_in_migrations.sql).
+  #
+  # WHY NOT A BYTE DIFF OF database.types.ts. `npm run gen:types` generates from
+  # the linked project, this job from a local database, and the two generators
+  # differ in formatting and metadata. A diff would be red on noise. Type-
+  # checking against the generated file catches the direction that breaks
+  # production (code ahead of the schema) with no false alarms.
+  #
+  # No secrets: config.toml reads no env(), and nothing here touches the linked
+  # project.
+  db:
+    name: Database (migrations + RLS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Apply every migration to a fresh database
+        run: supabase db start
+      - name: RLS and schema tests (pgTAP)
+        run: supabase test db
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+      - run: npm ci
+      - name: Type-check the app against the migrated schema
+        run: |
+          supabase gen types typescript --local --schema public,graphql_public > apps/web/src/types/database.types.ts
+          cd apps/web && npx tsc --noEmit
+
+  # THE ONE CHECK PRODUCTION WAITS FOR. The Vercel project's Deployment Checks
+  # require this job by name ("CI passed"): Vercel still builds every push to
+  # main, but mcpemails.com is not pointed at the new build until this is green.
+  # Before 2026-09-26 CI only reported after the fact; five red commits went
+  # live on 2026-09-25/26.
+  #
+  # One aggregate job rather than listing every job in Vercel, so adding or
+  # renaming a job here never needs a dashboard change. `if: always()` makes it
+  # run, and fail, when a dependency fails or is cancelled; without it a failed
+  # dependency would SKIP this job, and a skipped check is not a failed one.
+  # Every new job must be added to `needs`. Emergency bypass: Force Promote on
+  # the deployment in Vercel.
+  ci-passed:
+    name: CI passed
+    if: always()
+    needs: [audit, typecheck, test, card, deno, build, db]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every job succeeded
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          echo "$RESULTS" | jq -e 'all(.[]; .result == "success")' > /dev/null

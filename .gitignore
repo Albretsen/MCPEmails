@@ -48,3 +48,4 @@ Documents/
 docs/PROMPT-*.md
 !docs/PROMPT-acquisition-flywheel.md
 !docs/PROMPT-free-tier-action-cap.md
+apps/**/pnpm-lock.yaml

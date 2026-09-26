@@ -33,24 +33,13 @@ updates:
   # request that actually installs. A second entry pointed at /apps/web would be
   # worse than redundant for npm: it would open a duplicate PR for every bump.
   #
-  # CORRECTION (2026-09-17). This comment used to finish by calling
-  # apps/web/pnpm-lock.yaml "stale ... from a one-off pnpm run" against "a tree
-  # nothing installs with", and the line above it still says apps/web "has no
-  # lockfile of its own". Both are FALSE, and the mistake inverts the
-  # conclusion. The Vercel Root Directory is apps/web, so PRODUCTION installs
-  # from that pnpm lockfile. Straight from the production build log:
-  #
-  #   Detected `pnpm-lock.yaml` 9 ... Using pnpm@10.x
-  #   Done in 877ms using pnpm v10.28.0 / Running "pnpm run build"
-  #
-  # So the npm entry below updates package-lock.json, which production never
-  # reads, and leaves untouched the one lockfile it does read. That is the whole
-  # reason every dependabot PR here fails its Vercel build in ~5s with
-  # ERR_PNPM_OUTDATED_LOCKFILE. A pnpm entry for /apps/web is therefore closer
-  # to the fix than to the duplicate this comment warned about. NOT added yet:
-  # it needs a decision on whether apps/web keeps a pnpm lockfile at all, since
-  # the real choice is one package manager, not two. See
-  # project_prod_builds_with_stale_pnpm_lock.
+  # RESOLVED 2026-09-26. Until then apps/web/pnpm-lock.yaml sat in the Vercel
+  # Root Directory, so production installed with pnpm from that file and every
+  # dependabot PR here failed its Vercel build with ERR_PNPM_OUTDATED_LOCKFILE:
+  # this entry updated a lockfile production never read. The pnpm lockfile is
+  # deleted; Vercel now installs with npm from the root package-lock.json,
+  # which is exactly the file this entry updates. Do NOT add a pnpm entry, and
+  # do not re-add a pnpm lockfile under apps/.
   #
   # apps/mcp-app is inside the same workspace glob and is therefore covered as
   # well. packages/mcpemails is not a workspace, but it has zero dependencies
