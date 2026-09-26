@@ -4,9 +4,7 @@ const translation = {
     'Gestiona los buzones de trabajo, personales y de tu negocio paralelo con un solo agente de IA: cómo descubre los buzones, cómo acotar una solicitud, nombres de remitente que siguen siendo correctos y revisión de envíos por buzón.',
   coverAlt:
     'Un agente de IA conectado a cuentas de correo de trabajo, personales y de negocio paralelo con MCP Emails',
-  content: `> **Outlook y Microsoft 365 están en desarrollo.** Todavía no se pueden conectar en producción. Todo lo que sigue se aplica a Gmail, iCloud, Fastmail, Yahoo, Zoho y otros buzones IMAP.
-
-Casi nadie tiene un solo buzón. Tienes una dirección de trabajo, una personal y al menos una más para un negocio paralelo o para un dominio que todavía conservas. Cada pregunta que cruza dos cuentas se convierte en una búsqueda manual en dos sitios.
+  content: `Casi nadie tiene un solo buzón. Tienes una dirección de trabajo, una personal y al menos una más para un negocio paralelo o para un dominio que todavía conservas. Cada pregunta que cruza dos cuentas se convierte en una búsqueda manual en dos sitios.
 
 Un solo agente de IA sobre todas ellas elimina el cambio constante, pero solo si el agente sabe qué buzón es cuál y si las respuestas salen desde la dirección correcta.
 

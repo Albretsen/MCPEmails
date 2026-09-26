@@ -41,16 +41,16 @@ Le plus rapide du lot, parce que c’est Google qui fait le travail.
 
 Aucun mot de passe ne change jamais de mains. MCP Emails conserve un jeton OAuth chiffré et appelle directement l’API Gmail. Les recherches utilisent les opérateurs natifs de Gmail (\`from:\`, \`is:unread\`, \`after:\`), donc votre agent peut être précis.
 
-### Outlook / Microsoft 365 (OAuth)
+### Outlook / Microsoft 365 (connexion avec Microsoft)
 
-Même schéma que Gmail, fournisseur d’identité différent.
+Même schéma que Gmail, fournisseur d’identité différent. Pas de mot de passe d’application ni de réglages IMAP.
 
-1. **Dashboard → Inboxes → Connect Inbox → Outlook / Microsoft 365.**
-2. Connectez-vous avec votre compte Microsoft sur la page de Microsoft.
+1. **Dashboard → Inboxes → Connect Inbox → Outlook.**
+2. Cliquez sur **Se connecter avec Microsoft** et connectez-vous avec votre compte Microsoft sur la page de Microsoft.
 3. Approuvez les autorisations.
 4. La boîte de réception apparaît connectée. L’envoi passe par Microsoft Graph, c’est donc un message normal depuis votre propre compte.
 
-Si votre locataire applique des règles d’accès conditionnel ou de consentement administrateur, le [guide de configuration d’Outlook et Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) détaille les pièges du côté administrateur.
+Les comptes personnels Outlook.com, Hotmail, Live et MSN se connectent ainsi, sans intervention d’un administrateur. Les comptes professionnels ou scolaires Microsoft 365 peuvent nécessiter qu’un administrateur informatique approuve d’abord l’application : beaucoup d’organisations empêchent les employés d’approuver eux-mêmes l’accès à leur boîte. Dans ce cas, le tableau de bord vous donne un lien à envoyer à votre administrateur informatique, qui approuve l’application une seule fois pour toute l’organisation, puis vous vous connectez comme ci-dessus. Le [guide de configuration d’Outlook et Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) détaille la marche à suivre.
 
 ### iCloud (mot de passe d’application)
 

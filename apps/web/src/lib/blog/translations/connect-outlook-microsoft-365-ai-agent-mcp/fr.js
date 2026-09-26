@@ -1,39 +1,52 @@
 const translation = {
   title: 'Connecter Outlook et Microsoft 365 à votre agent IA via MCP',
   description:
-    'Connectez Outlook ou Microsoft 365 à votre agent IA via MCP en quelques minutes. OAuth de connexion Microsoft, Graph en coulisses, lire/chercher/envoyer/répondre — sans serveur sur mesure.',
+    "Connectez Outlook.com ou Microsoft 365 à votre agent IA via MCP. Connexion avec Microsoft, sans mot de passe d'application, avec Microsoft Graph en coulisses. Les comptes professionnels peuvent nécessiter une approbation unique de l'administrateur informatique.",
   coverAlt: 'Connecter Outlook et Microsoft 365 à un agent IA via MCP',
-  content: `> **Bientôt disponible.** La prise en charge d'Outlook et de Microsoft 365 est développée mais pas encore disponible pour tous. Vous ne pouvez pas connecter une boîte Outlook en production aujourd'hui — ce guide présente le fonctionnement à venir une fois le connecteur lancé. Pour les boîtes que vous pouvez connecter dès maintenant, voir [Gmail et IMAP](/docs/providers).
+  content: `Pour connecter une boîte Outlook ou Microsoft 365 à votre agent IA, vous ajoutez la boîte dans le tableau de bord MCP Emails avec **Se connecter avec Microsoft**, puis vous pointez votre agent vers un seul endpoint MCP. Pas de mot de passe d'application, pas de réglages IMAP ou SMTP, pas de portail Azure et pas de serveur Graph à vous. Un compte personnel Outlook.com se connecte en quelques minutes. Un compte professionnel ou scolaire Microsoft 365 demande souvent une étape de plus avant : un administrateur informatique approuve l'application une seule fois pour toute l'organisation.
 
-Pour connecter une boîte Outlook ou Microsoft 365 à votre agent IA, vous vous connectez à MCP Emails, ajoutez la boîte avec l'OAuth Microsoft et pointez votre agent vers un seul endpoint MCP. Aucune inscription d'application, aucun portail Azure, aucun serveur Graph sur mesure. L'ensemble prend environ deux minutes, et votre agent obtient la lecture, la recherche, l'envoi, la réponse, les indicateurs et les dossiers sur la boîte en temps réel.
+La plupart des guides « IA pour l'e-mail » supposent Gmail et s'arrêtent là. Si vous vivez dans Outlook, voici la version pensée pour Outlook : quels comptes se connectent directement, à quoi ressemble l'étape d'approbation par l'administrateur, ce que votre agent peut faire une fois connecté, et les quelques endroits où Outlook se comporte autrement que Gmail.
 
-La plupart des guides « l'IA pour l'e-mail » supposent Gmail et s'arrêtent là. Outlook a droit à un haussement d'épaules et à un lien vers un dépôt GitHub à moitié maintenu. Si vous vivez dans Microsoft 365 au travail, c'est prendre le problème par le mauvais bout. Cet article est la version Outlook d'abord : ce qui fonctionne vraiment, comment se déroule la connexion Microsoft, ce qui tourne en dessous et où se situent les limites entre comptes personnels et professionnels.
+## Comptes personnels et comptes professionnels : deux cas différents
 
-## Pourquoi Outlook est plus difficile qu'il n'y paraît (et pourquoi ce n'est pas votre problème ici)
+L'e-mail Microsoft n'est pas une seule chose, et la différence décide du déroulement de votre connexion.
 
-L'e-mail Microsoft, ce n'est pas une seule chose. Il y a l'Outlook.com / Hotmail / Live grand public, et il y a les comptes professionnels et scolaires Microsoft 365 hébergés dans Entra ID (le service d'identité autrefois appelé Azure AD). Ils s'authentifient différemment, et un tenant professionnel peut empiler par-dessus des stratégies d'accès conditionnel, des exigences de consentement administrateur et des règles MFA.
+- **Comptes Microsoft personnels** : adresses Outlook.com, Hotmail, Live et MSN. Vous vous connectez avec Microsoft, vous approuvez vous-même les autorisations, et c'est connecté. Aucun administrateur n'intervient.
+- **Comptes professionnels ou scolaires Microsoft 365** : ils vivent dans le tenant Microsoft Entra de votre organisation. Beaucoup d'organisations exigent qu'un administrateur informatique approuve une application tierce avant que quiconque puisse l'utiliser. La stratégie de consentement par défaut de Microsoft (depuis fin 2025) ne permet pas aux employés d'approuver eux-mêmes l'accès en lecture à la boîte, donc dans beaucoup de tenants vous ne pourrez pas terminer la connexion seul. C'est une stratégie du tenant Microsoft, pas quelque chose que MCP Emails peut désactiver, et elle s'applique à toute application e-mail tierce.
 
-La voie du « fait maison » implique d'enregistrer une application dans le portail Azure / Entra, de choisir les bons types de comptes pris en charge, de demander des scopes Microsoft Graph comme \`Mail.Read\` et \`Mail.Send\`, de câbler une URI de redirection, de gérer le renouvellement des jetons, puis d'écrire les appels Graph pour lister, lire et envoyer des e-mails. Les gens y brûlent un après-midi et finissent par maintenir un petit serveur pour toujours. Je l'ai vu arriver.
+L'approbation par l'administrateur est une étape unique pour toute l'organisation. Une fois faite, chaque employé se connecte normalement.
 
-MCP Emails se charge de cet enregistrement et de cette plomberie de jetons une seule fois, de façon centralisée, pour que vous n'ayez pas à le faire. Vous cliquez sur « se connecter avec Microsoft », vous approuvez, et vous êtes connecté. Si vous voulez le contexte conceptuel sur la raison d'être de cette couche, le [guide complet pour donner à votre agent IA un accès à l'e-mail](/blog/how-to-give-your-ai-agent-email-access) est le pilier par lequel commencer.
+## Connectez votre boîte Outlook ou Microsoft 365
 
-## Connectez votre boîte Outlook / Microsoft 365
+Deux parties : connecter la boîte, puis connecter l'agent. Elles sont séparées exprès. La connexion de la boîte permet à MCP Emails d'atteindre votre boîte, et la connexion de l'agent permet à votre client IA d'atteindre MCP Emails.
 
-Deux parties : connecter la boîte, puis connecter l'agent. Elles sont séparées à dessein — la connexion de la boîte autorise MCP Emails à atteindre votre fournisseur, et la connexion de l'agent autorise votre client à atteindre MCP Emails.
-
-### Étape 1 — Ajouter la boîte
+### Étape 1 : ajoutez la boîte
 
 1. [Commencez gratuitement](/signup) et ouvrez le tableau de bord.
-2. Allez dans **Inboxes → Connect Inbox**.
-3. Choisissez **Outlook / Microsoft 365**.
-4. Vous êtes redirigé vers la page de connexion de Microsoft. Saisissez votre compte Microsoft professionnel ou personnel, effectuez la MFA si votre tenant l'exige, et examinez l'écran de consentement.
-5. Approuvez. Microsoft renvoie un jeton OAuth, MCP Emails le chiffre (AES-256-GCM) et ne stocke que ce jeton. Rien d'autre concernant votre boîte n'est conservé.
+2. Allez dans **Inboxes → Connect Inbox** et choisissez **Outlook**.
+3. Cliquez sur **Se connecter avec Microsoft**. Vous êtes envoyé sur la page de connexion de Microsoft.
+4. Connectez-vous avec votre compte Microsoft et terminez la MFA si votre compte l'utilise.
+5. Lisez l'écran de consentement et approuvez. Microsoft indique que l'application provient d'un éditeur vérifié, et demande l'autorisation de lire et d'écrire vos e-mails, d'envoyer des e-mails en votre nom et de garder l'accès jusqu'à ce que vous déconnectiez.
 
-C'est OAuth 2.0 — le même modèle que Gmail utilise. Vous ne collez jamais de mot de passe Outlook dans MCP Emails, et il n'y a pas de mot de passe d'application à générer. C'est la différence essentielle avec les fournisseurs IMAP ; si vous connectez [iCloud, Fastmail ou une boîte IMAP générique](/blog/connect-icloud-fastmail-imap-to-claude), ceux-ci utilisent à la place un mot de passe spécifique à l'application, car ils n'offrent pas d'OAuth pour les clients tiers.
+MCP Emails stocke le jeton OAuth obtenu, chiffré, et rien d'autre de votre boîte. Vous ne saisissez jamais votre mot de passe Microsoft dans MCP Emails, et il n'y a pas de mot de passe d'application à générer. C'est la principale différence avec les fournisseurs IMAP : [iCloud, Fastmail et les boîtes IMAP génériques](/blog/connect-icloud-fastmail-imap-to-claude) utilisent à la place un mot de passe spécifique à l'application.
 
-### Étape 2 — Connectez votre agent
+### Si votre organisation doit d'abord approuver l'application
 
-Vous connectez un client une fois, et la même configuration fonctionne pour chaque boîte de votre compte. Pour les clients compatibles OAuth (claude.ai, Claude Desktop, Cursor), dans claude.ai cela donne :
+Sur un compte professionnel ou scolaire, Microsoft peut vous arrêter avant l'écran de consentement en indiquant qu'une approbation de l'administrateur est requise. Dans ce cas, le tableau de bord affiche un avis avec un lien **Envoyer à votre administrateur informatique** :
+
+1. Envoyez ce lien à votre administrateur informatique.
+2. Votre administrateur l'ouvre, se connecte et approuve MCP Emails une seule fois pour toute l'organisation.
+3. Revenez au tableau de bord et connectez Outlook comme à l'étape 1. Cela passe désormais comme pour un compte personnel.
+
+Votre administrateur approuve l'application pour l'organisation, et chaque personne se connecte toujours avec son propre compte et ne connecte que sa propre boîte.
+
+### Si le compte n'a pas de boîte Exchange
+
+Certains comptes Microsoft n'ont pas de boîte Exchange Online, par exemple un compte administrateur sans licence Exchange, ou une organisation dont les e-mails sont hébergés ailleurs. MCP Emails refuse ces comptes parce qu'il n'y a rien à connecter, et vous le dit. Si vos e-mails se trouvent en réalité sur un autre serveur, connectez l'adresse en IMAP.
+
+### Étape 2 : connectez votre agent
+
+Vous connectez un client une fois, et la même configuration fonctionne pour toutes les boîtes de votre compte. Pour les clients compatibles OAuth (claude.ai, Claude Desktop, Cursor), dans claude.ai c'est :
 
 **Customize → Connectors → Add connector → collez l'URL → Connect → connectez-vous et approuvez.**
 
@@ -43,53 +56,49 @@ L'endpoint est :
 https://mcpemails.com/api/mcp
 \`\`\`
 
-Quand vous cliquez sur Connect, vous vous connectez à votre compte MCP Emails et approuvez les scopes — \`read:email\`, \`send:email\`, ou les deux. Aucune clé d'API ne change de mains ; cela utilise OAuth 2.0 Authorization Code avec PKCE et l'enregistrement dynamique de client en coulisses.
+Quand vous cliquez sur Connect, vous vous connectez à votre compte MCP Emails et approuvez les portées : \`read:email\`, \`send:email\`, ou les deux. Aucune clé d'API ne change de mains.
 
-Pour les clients qui ne parlent pas OAuth (Cline, plugins JetBrains, vos propres scripts, du cURL brut), générez une clé à portée limitée dans **Dashboard → API Keys**, choisissez les scopes, et envoyez-la sous la forme \`Authorization: Bearer <api-key>\`. Le tutoriel complet pour ces clients se trouve dans [l'e-mail pour les agents IA dans Cursor, Cline et VS Code](/blog/email-for-ai-agents-cursor-cline-vscode). Si vous hésitez entre les deux approches, [OAuth vs clés d'API pour l'accès à l'e-mail par l'IA](/blog/oauth-vs-api-keys-ai-email-access) expose les compromis.
+Pour les clients qui ne parlent pas OAuth (Cline, plugins JetBrains, vos propres scripts, cURL brut), générez une clé à portée limitée dans **Dashboard → API Keys** et envoyez-la sous la forme \`Authorization: Bearer <api-key>\`. Le guide complet pour ces clients se trouve dans [l'e-mail pour les agents IA dans Cursor, Cline et VS Code](/blog/email-for-ai-agents-cursor-cline-vscode). Si vous hésitez entre les deux approches, [OAuth ou clés d'API pour l'accès IA à l'e-mail](/blog/oauth-vs-api-keys-ai-email-access) détaille les compromis.
 
 ## Microsoft Graph, en coulisses
 
-Une fois connecté, chaque appel d'outil que fait votre agent part vers Microsoft Graph en temps réel. Lisez un message, et MCP Emails appelle Graph, transmet le résultat analysé à votre agent, puis le supprime. Envoyez un message, et il passe par Graph en votre nom — depuis votre véritable adresse, à travers l'infrastructure de Microsoft, pour que la délivrabilité et la réputation de votre domaine restent les vôtres. MCP Emails ne relaie jamais d'e-mail depuis son propre domaine.
+Outlook se connecte via Microsoft Graph, pas via IMAP. Chaque appel d'outil de votre agent part vers Graph en temps réel : vous lisez un message, MCP Emails le récupère depuis Graph, transmet le résultat à votre agent et le jette. Vous envoyez un message, il part via Graph depuis votre vraie adresse, donc votre délivrabilité et votre réputation restent les vôtres. MCP Emails ne relaie jamais d'e-mails depuis son propre domaine.
 
-La conséquence pratique : l'e-mail que votre agent envoie ressemble exactement à un e-mail que vous avez envoyé, parce que c'en est un. Il atterrit dans vos Éléments envoyés. Les réponses s'enchaînent correctement dans le fil parce que l'outil de réponse définit pour vous les en-têtes In-Reply-To et References.
+## Ce que votre agent peut faire avec une boîte Outlook
 
-## Comptes personnels vs professionnels/scolaires
+- Lire et rechercher des e-mails.
+- Envoyer, répondre et transférer, avec des pièces jointes jusqu'à 25 Mo.
+- Travailler avec des brouillons et programmer un envoi pour plus tard.
+- Travailler avec les dossiers, y compris les dossiers imbriqués.
+- Déplacer, copier et archiver des messages.
+- Marquer et démarquer des messages d'un indicateur, et les marquer comme lus ou non lus.
+- Déplacer des messages vers Éléments supprimés, ou les supprimer définitivement.
+- Utiliser la signature définie pour cette boîte sur chaque message envoyé par l'agent.
 
-Les deux fonctionnent. Un compte Outlook.com grand public et un compte professionnel/scolaire Microsoft 365 se connectent tous deux via la même connexion Microsoft, et tous deux exposent les mêmes outils à votre agent.
+### Là où Outlook diffère de Gmail
 
-Le seul endroit où la réalité s'impose, c'est l'écran de consentement sur les comptes professionnels/scolaires. Si votre administrateur informatique a verrouillé le consentement aux applications tierces dans votre tenant — ce que font bon nombre de grandes organisations — vous pourriez voir « approbation requise » au lieu d'une invite de consentement normale, et la connexion attend l'aval d'un administrateur. Ce n'est pas une limitation de MCP Emails ; c'est la stratégie de votre tenant, et elle bloquerait n'importe quel client tiers de la même façon. Pour un compte personnel, ou un tenant qui autorise le consentement utilisateur, vous l'approuvez vous-même et c'est terminé.
+**Des dossiers, pas des libellés.** Outlook range les e-mails dans des dossiers. Les outils de libellés sont réservés à Gmail, donc sur une boîte Outlook votre agent classe les e-mails en les déplaçant dans un dossier.
 
-## Ce qui fonctionne une fois connecté
+**Recherche.** La recherche Outlook s'appuie sur la recherche propre de Microsoft Graph. Une limite de Graph compte : une recherche textuelle ne peut pas être combinée avec les filtres non lu, avec pièce jointe, avec indicateur ou de date. Quand votre requête contient du texte, ces filtres ne sont pas appliqués, et le résultat indique à votre agent lesquels ont été laissés de côté. Si vous avez besoin des deux, cherchez d'abord le texte et laissez l'agent affiner les résultats qu'il reçoit.
 
-Votre agent obtient les outils principaux consolidés, plus les extras qu'Outlook prend en charge :
+**Nouveaux comptes Outlook.com.** Microsoft peut bloquer temporairement l'envoi depuis un compte Outlook.com tout neuf qui envoie beaucoup de messages en peu de temps. C'est la protection anti-abus de Microsoft. Si l'envoi échoue sur un nouveau compte, envoyez à un rythme plus lent et réessayez plus tard.
 
-- \`inbox_list\` — appelez toujours celui-ci en premier. Il renvoie vos boîtes connectées et leurs UUID \`inbox_id\`, pour que l'agent ne devine jamais un identifiant.
-- \`email_read\` — un seul outil, plusieurs actions : \`list\` (du plus récent au plus ancien, paginé, avec des filtres comme \`unread\`), \`read\` (texte brut analysé, HTML assaini en option, pièces jointes en option) et \`search\` (voir la note sur la recherche ci-dessous).
-- \`email_compose\` — l'action \`send\` compose avec CC/BCC, HTML et pièces jointes jusqu'à 10 MB au total ; les actions \`reply\` et \`forward\` s'enchaînent correctement dans le fil avec les bons en-têtes.
-- \`email_organize\` — marquage lu/non lu, indicateurs, archivage, suppression et déplacement, chacun via sa propre \`action\`.
+## Un flux de travail qui vaut la peine
 
-Au-delà de ceux-ci, Outlook prend en charge le marquage lu/non lu, les indicateurs (le « flag » d'Outlook correspond à la notion d'étoilé/marqué), le transfert et le déplacement entre dossiers. Consultez les [docs](/docs) en ligne pour la liste des capacités actuelles avant de bâtir quoi que ce soit autour d'un outil précis.
+Voici une boucle de tri qui fonctionne bien sur une boîte Outlook. Une ou deux fois par heure, l'agent :
 
-### La recherche utilise le \`$search\` de Microsoft
+1. Liste les e-mails non lus de la boîte de réception.
+2. Lit tout ce qui semble urgent.
+3. Résume le lot et rédige des brouillons de réponse pour ceux auxquels vous répondriez évidemment.
+4. Laisse tout en non lu jusqu'à votre confirmation.
 
-La recherche Outlook n'est pas la recherche Gmail. Là où Gmail accepte des opérateurs comme \`from:\` et \`is:unread\`, \`email_read\` avec l'action \`search\` sur une boîte Outlook transmet votre requête au \`$search\` de Microsoft Graph, qui effectue une correspondance plein texte classée par pertinence dans toute la boîte et accepte aussi le KQL. Ainsi une requête comme \`facture de la comptabilité la semaine dernière\` fonctionne en langage naturel, et vous pouvez être plus précis avec du KQL comme \`from:finance@acme.com AND subject:invoice\`. Si vous écrivez des prompts qui codent en dur des opérateurs Gmail, ils ne se comporteront pas de la même manière sur Outlook — dites à votre agent de chercher en langage clair et laissez Graph classer.
+MCP Emails ne pousse pas les nouveaux e-mails vers votre agent, donc l'agent vérifie selon la fréquence que vous choisissez. Pour le tri, c'est suffisant. Pour les schémas d'interrogation qui tiennent la route, lisez [comment trier et résumer une boîte de réception](/blog/ai-agent-triage-summarize-inbox).
 
-## Un workflow qui vaut la peine d'être mis en place
+## Comparé à la création de votre propre serveur Microsoft 365
 
-Voici une boucle de tri que je fais tourner sur une boîte Microsoft 365. Une ou deux fois par heure, l'agent :
+Les serveurs MCP Outlook auto-hébergés que l'on trouve sur GitHub se heurtent tous au même mur : l'enregistrement de l'application dans Entra, le consentement de l'administrateur et le cycle de vie des jetons Graph sont le vrai travail, et il vous revient pour toujours. La version auto-hébergée de MCP Emails fonctionne uniquement en IMAP et SMTP. Le connecteur Outlook reste sur le produit hébergé, donc quelqu'un qui le voudrait sur sa propre installation devrait enregistrer sa propre application Microsoft Entra. Avec l'approche hébergée, le jeton est chiffré au repos, déchiffré uniquement au moment de l'appel, et vous pouvez déconnecter la boîte depuis le tableau de bord à tout moment. [Hébergé ou auto-hébergé](/blog/hosted-vs-self-hosted-gmail-mcp-server) approfondit les compromis.
 
-1. Appelle \`email_read\` avec l'action \`list\` et \`unread: true\`.
-2. Lit tout ce qui semble sensible au temps avec l'action \`read\` de \`email_read\`.
-3. Résume le lot et rédige des brouillons de réponse pour ceux auxquels je répondrais à l'évidence.
-4. Laisse tout en non lu jusqu'à ce que je confirme.
-
-Une réserve honnête : MCP Emails fonctionne par interrogation (polling). Il n'y a pas de webhooks ni de push serveur, l'agent vérifie donc selon un calendrier plutôt que d'être averti à l'instant où le courrier arrive. Pour le tri, c'est parfait — c'est vous qui réglez la cadence. Si vous construisez quelque chose de plus réactif, lisez [comment trier et résumer une boîte de réception](/blog/ai-agent-triage-summarize-inbox) pour les schémas d'interrogation qui tiennent la route.
-
-## Comparé à la création de votre propre serveur M365
-
-Les serveurs MCP Outlook auto-hébergés qui circulent sur GitHub se heurtent tous au même mur : l'enregistrement d'application Entra et le cycle de vie des jetons Graph sont le vrai travail, et vous en êtes propriétaire pour toujours. Vous gérez les jetons de renouvellement, les changements de scopes quand Microsoft ajuste Graph, et la sécurité de l'endroit où ces jetons résident. Avec l'approche hébergée, le jeton est chiffré au repos, déchiffré uniquement à l'intérieur d'une fonction isolée au moment de l'appel, et révocable depuis le tableau de bord en un clic. Si vous voulez la comparaison complète, [hébergé vs auto-hébergé](/blog/hosted-vs-self-hosted-gmail-mcp-server) approfondit les compromis.
-
-Connecter Outlook ne coûte rien à essayer — le [plan Gratuit](/pricing) connecte une boîte avec 60 requêtes par minute, sans carte requise. Ajoutez votre boîte Microsoft 365, pointez Claude vers l'endpoint, et donnez-lui quelque chose à lire.`,
+Si vous voulez le contexte sur la raison d'être de cette couche, le [guide complet pour donner à votre agent IA l'accès à l'e-mail](/blog/how-to-give-your-ai-agent-email-access) est le point de départ. Sinon, [commencez gratuitement](/signup), connectez votre boîte Outlook, pointez votre agent vers l'endpoint et donnez-lui quelque chose à lire.`,
 };
 
 export default translation;

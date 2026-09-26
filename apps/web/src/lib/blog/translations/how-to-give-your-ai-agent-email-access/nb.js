@@ -74,10 +74,10 @@ Ingen passord krysset linjen. Agenten holdt kapabiliteter, ikke legitimasjon. Fo
 
 Du kobler til en innboks én gang i **Dashboard → Inboxes → Connect Inbox**. Hvordan du autentiserer avhenger av leverandøren.
 
-### OAuth-leverandører (ett klikk)
+### OAuth-leverandører (logg inn, uten passord)
 
 - **Gmail** — OAuth 2.0 via Google-innlogging.
-- **Outlook / Microsoft 365** — OAuth 2.0 via Microsoft-innlogging. Oppsettsdetaljer i [koble Outlook og Microsoft 365 til en AI-agent](/blog/connect-outlook-microsoft-365-ai-agent-mcp).
+- **Outlook / Microsoft 365**: OAuth 2.0 via Logg inn med Microsoft, over Microsoft Graph og ikke IMAP. Personlige Outlook.com-, Hotmail-, Live- og MSN-kontoer kobles til med en gang. Jobb- eller skolekontoer i Microsoft 365 kan trenge at en IT-ansvarlig først godkjenner appen én gang for hele organisasjonen; dashbordet gir deg en lenke du kan sende dem. Oppsettsdetaljer i [koble Outlook og Microsoft 365 til en AI-agent](/blog/connect-outlook-microsoft-365-ai-agent-mcp).
 
 ### App-passord-leverandører
 

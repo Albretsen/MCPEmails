@@ -1,99 +1,103 @@
 {
   "_sources": [
     "https://support.microsoft.com/en-us/office/outlook-and-other-apps-are-unable-to-connect-to-outlook-com-when-using-basic-authentication-f4202ebf-89c6-4a8a-bec3-3d60cf7deaef",
-    "https://learn.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth",
     "https://support.microsoft.com/en-us/accounts-billing/manage/how-to-get-and-use-app-passwords"
   ],
   "auth": {
     "method": "oauth",
-    "label": "OAuth 2.0 uniquement, pas de mot de passe d'application",
+    "label": "Connexion avec Microsoft (OAuth 2.0)",
     "helpUrl": "https://support.microsoft.com/en-us/office/outlook-and-other-apps-are-unable-to-connect-to-outlook-com-when-using-basic-authentication-f4202ebf-89c6-4a8a-bec3-3d60cf7deaef",
-    "usernameForm": "Aucun identifiant saisi à la main ne fonctionnera. Le service IMAP des comptes Microsoft personnels ne propose que XOAUTH2 : il accepte un jeton d'accès et rien d'autre.",
+    "usernameForm": "Rien à saisir. Vous vous connectez avec votre compte Microsoft sur la page de Microsoft et vous approuvez l'accès : aucun mot de passe ni mot de passe d'application n'est saisi ici. Les paramètres IMAP et SMTP publiés pour Outlook.com ne s'appliquent pas : MCP Emails se connecte via Microsoft Graph.",
     "status": "active"
   },
   "meta": {
-    "title": "Outlook.com et l'IA : OAuth seulement, fin des mots de passe",
-    "description": "L'IMAP d'Outlook.com n'annonce plus que AUTH=XOAUTH2 : aucun mot de passe, même d'application, ne le relie à un serveur MCP. Ce qui a changé, et que faire."
+    "title": "Connecter Outlook.com à Claude, ChatGPT et Cursor",
+    "description": "Connectez votre messagerie Outlook.com, Hotmail, Live ou MSN à Claude, ChatGPT, Cursor ou tout client MCP. Connexion avec Microsoft, sans mot de passe d'application. Une boîte gratuite, pour toujours."
   },
   "hero": {
     "eyebrow": "Outlook.com + IA",
-    "titleLine1": "Outlook.com n'accepte plus",
-    "titleLine2": "aucun mot de passe en IMAP",
-    "lead": "Les comptes Microsoft personnels, que l'adresse se termine par outlook.com, hotmail.com, live.com ou msn.com, n'acceptent plus l'authentification de base depuis les applications tierces. Le serveur répond. Il n'a simplement plus aucun mécanisme par mot de passe à proposer.",
-    "answer": "Non. mcpemails ne peut pas connecter une boîte Outlook.com, et le blocage vient de l'authentification, pas de l'accessibilité. Le service IMAP des comptes Microsoft personnels répond sur outlook.office365.com au port 993 et la négociation TLS aboutit, mais sa ligne de capacités n'annonce plus que AUTH=XOAUTH2 : aucun mécanisme par mot de passe n'est proposé, donc ni le mot de passe du compte ni un mot de passe d'application ne peuvent s'authentifier. Microsoft a mis fin à l'authentification de base pour les comptes personnels se connectant depuis des applications non Microsoft à partir du 16 septembre 2024, ne laissant qu'OAuth 2.0 comme voie d'accès. mcpemails ne propose pas de connexion OAuth Microsoft, une boîte Outlook.com n'est donc pas connectable ici. Si vous voulez qu'un agent travaille sur votre courrier dès aujourd'hui, connectez une boîte qui accepte un mot de passe en IMAP, gratuite pour une boîte, et transférez-y votre courrier Outlook.com si vous voulez un miroir."
+    "titleLine1": "Connectez Outlook.com à Claude,",
+    "titleLine2": "et à ChatGPT, Cursor, tout client MCP",
+    "lead": "Donnez à votre agent IA votre boîte Outlook.com, Hotmail, Live ou MSN. Connectez-vous avec Microsoft, approuvez l'accès une fois, puis lisez, recherchez, envoyez, répondez, planifiez et organisez vos e-mails depuis n'importe quel client MCP avec une seule URL.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Connexion avec Microsoft, sans mot de passe d'application",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Oui. mcpemails est un serveur MCP hébergé qui connecte un compte Microsoft personnel, une adresse se terminant par outlook.com, hotmail.com, live.com ou msn.com, via Microsoft Graph. Vous cliquez sur Se connecter avec Microsoft, vous vous identifiez, puis vous approuvez l'accès sur l'écran de consentement de Microsoft, où MCP Emails apparaît comme éditeur vérifié. Aucun mot de passe d'application ni paramètre IMAP à saisir, et aucun administrateur n'intervient pour un compte personnel. Collez une URL dans Claude, ChatGPT, Cursor ou tout client MCP, et l'agent peut lire, rechercher, envoyer, répondre, transférer, planifier et classer vos e-mails. Une boîte est gratuite, pour toujours."
   },
   "method": {
-    "title": "Comment Outlook.com se connecte : XOAUTH2, et rien d'autre",
-    "body": "Outlook.com et les boîtes professionnelles Microsoft 365 sont deux services différents qui aboutissent au même serveur IMAP, et la différence apparaît dès le premier échange. Connectez-vous à <code>outlook.office365.com</code> sur le port 993 avec une adresse professionnelle : la ligne de capacités affiche encore <code>AUTH=PLAIN</code> à côté de <code>AUTH=XOAUTH2</code>, annonce périmée d'un mécanisme que le service refuse. Connectez-vous avec un compte personnel : <code>AUTH=PLAIN</code> n'y figure plus du tout. Le service grand public a cessé de proposer l'authentification par mot de passe au lieu de simplement la refuser, ce qui donne un échec plus net et plus déroutant, car les clients qui s'attendent à envoyer un mot de passe reçoivent un refus au niveau du protocole au lieu d'une erreur de connexion. Le SMTP des comptes personnels est <code>smtp-mail.outlook.com</code> sur le port 587 avec STARTTLS, et la même règle d'authentification s'applique. La bonne nouvelle, si l'on peut dire, c'est qu'il n'y a pas d'administrateur de tenant pour un compte personnel : aucune politique de consentement ne vous bloque, puisqu'il n'y a rien à consentir."
+    "title": "Comment Outlook.com se connecte : connexion avec Microsoft",
+    "body": "Outlook.com se connecte via <b>Microsoft Graph</b> avec OAuth 2.0, et non par IMAP. Vous vous identifiez sur la page de Microsoft et approuvez une courte liste d'autorisations : lire et modifier les e-mails (<b>Mail.ReadWrite</b>), envoyer des e-mails (<b>Mail.Send</b>), rester connecté (<b>offline_access</b>) ainsi que votre profil de base et votre adresse e-mail. Votre mot de passe Microsoft n'est saisi que sur la page de Microsoft et ne nous parvient jamais. Pour vous déconnecter, supprimez la boîte dans mcpemails ou retirez MCP Emails des applications ayant accès à votre compte Microsoft."
   },
   "setup": [
     {
       "h": "Créez un compte gratuit",
-      "p": "Une adresse e-mail, sans carte bancaire. Une boîte connectée est gratuite, pour toujours. Les deux étapes suivantes déterminent de quelle boîte il s'agira, car ce ne sera pas celle d'Outlook.com."
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
-      "h": "Choisissez une boîte qui accepte encore un mot de passe en IMAP",
-      "p": "Votre propre domaine chez Fastmail ou Migadu, un compte Gmail personnel, une adresse de projet chez n'importe quel hébergeur classique. C'est ce compte que mcpemails connecte, et c'est là que votre agent lit, rédige, répond, planifie et classe."
+      "h": "Choisissez Outlook et connectez-vous avec Microsoft",
+      "p": "Dans le tableau de bord, ouvrez Connecter une boîte, choisissez Outlook et cliquez sur Se connecter avec Microsoft."
     },
     {
-      "h": "Activez le transfert dans Outlook.com si vous voulez un miroir",
-      "p": "Dans Outlook.com sur le web, ouvrez Settings, allez dans Mail puis Forwarding (transfert), et activez le transfert vers l'adresse que vous venez de connecter. Gardez l'option qui conserve une copie des messages transférés, pour que votre boîte Outlook.com reste complète. Le nouveau courrier arrive alors aux deux endroits, et l'agent travaille sur la copie."
+      "h": "Identifiez-vous et approuvez l'accès",
+      "p": "Identifiez-vous sur la page de Microsoft avec votre adresse Outlook.com, Hotmail, Live ou MSN et approuvez les autorisations. Vous revenez au tableau de bord avec la boîte connectée."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
-      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et votre agent a la boîte connectée."
+      "p": "Ajoutez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
     }
   ],
   "gotchas": [
     {
-      "h": "Outlook.com et Microsoft 365 partagent un serveur, pas une ligne de capacités",
-      "p": "Les deux services pointent vers <code>outlook.office365.com</code> pour l'IMAP, ce qui les fait paraître interchangeables dans tous les tableaux de paramètres du web. Ils ne le sont pas. Le côté professionnel annonce <code>AUTH=PLAIN</code> puis le refuse. Le côté personnel ne l'annonce pas du tout. Aucun des deux n'accepte de mot de passe, mais ils échouent différemment, si bien qu'un article d'aide écrit pour l'un posera un mauvais diagnostic sur l'autre. Les serveurs SMTP diffèrent aussi : les comptes personnels utilisent <code>smtp-mail.outlook.com</code>."
-    },
-    {
-      "h": "Un mot de passe d'application est un identifiant d'authentification de base : il n'a rien à quoi se connecter",
-      "p": "Microsoft permet encore de générer des mots de passe d'application sur un compte personnel pour des usages hérités, comme une ancienne version d'Outlook pour ordinateur ou une console Xbox, ce qui explique que tant de guides conseillent encore d'en créer un pour l'IMAP. Cela ne sert à rien. Un mot de passe d'application reste un mot de passe, et l'authentification par mot de passe est précisément ce que le service IMAP ne propose plus. En générer un nouveau et le voir échouer à nouveau est l'heure perdue la plus courante chez ce fournisseur."
+      "h": "Les mots de passe d'application et les mots de passe IMAP ne fonctionnent pas, d'où l'usage de Microsoft Graph",
+      "p": "Microsoft a mis fin à l'authentification de base pour les comptes personnels se connectant depuis des applications tierces à partir du 16 septembre 2024, et le service IMAP d'Outlook.com ne propose plus qu'OAuth. Beaucoup d'anciens guides conseillent encore de générer un mot de passe d'application ; il ne permet plus de se connecter à la messagerie. mcpemails n'utilise pas du tout IMAP pour Outlook.com : il se connecte avec Microsoft et dialogue avec Microsoft Graph, donc aucun mot de passe à créer et aucun paramètre de serveur à mal saisir."
     },
     {
       "h": "Les adresses hotmail.com, live.com et msn.com relèvent du même service",
-      "p": "Le service de messagerie grand public derrière tous ces domaines est un seul système, avec un seul jeu de points d'accès et une seule politique d'authentification. Une vieille adresse hotmail.com qui fonctionne dans un logiciel de messagerie depuis quinze ans est soumise au même changement qu'une adresse outlook.com créée hier, et dès que son client tente de se réauthentifier, elle cesse de fonctionner."
+      "p": "La messagerie derrière tous ces domaines est un seul service grand public de Microsoft. Une ancienne adresse hotmail.com se connecte exactement comme une adresse outlook.com créée hier : choisissez Outlook et identifiez-vous avec cette adresse."
     },
     {
-      "h": "Le service IMAP n'annonce pas SPECIAL-USE",
-      "p": "Les comptes Microsoft personnels prennent en charge MOVE, UIDPLUS et IDLE, mais un client ne peut pas demander au serveur quel dossier est Junk ou Sent et doit se fier au nom. Outlook.com appelle son dossier de spam Junk Email plutôt que Junk, et les comptes localisés utilisent des noms traduits : un outil qui cherche des noms de dossiers anglais littéraux ne trouve silencieusement rien sur quoi agir."
+      "h": "Un compte Microsoft sans boîte Outlook est refusé",
+      "p": "Si le compte Microsoft avec lequel vous vous identifiez n'a pas de boîte Exchange Online derrière lui, Microsoft Graph n'a rien à ouvrir : mcpemails refuse la connexion et vous l'indique. Si la messagerie de cette adresse est hébergée sur un autre serveur, connectez-la plutôt en IMAP."
+    },
+    {
+      "h": "Un compte Outlook.com tout récent peut être temporairement bloqué à l'envoi",
+      "p": "Les systèmes anti-abus de Microsoft peuvent empêcher temporairement un compte Outlook.com nouvellement créé d'envoyer des e-mails lorsqu'il en envoie beaucoup en peu de temps. Il s'agit d'une restriction du compte Microsoft, pas d'un défaut de connexion : reconnecter la boîte n'y change rien."
     }
   ],
   "limits": [
-    "Le transfert vous donne une copie, pas la boîte. Les réponses envoyées par votre agent partent de l'autre adresse, et rien de ce qu'il classe ou marque n'est répercuté dans Outlook.com.",
-    "Cette page décrit le service de compte Microsoft grand public. Si votre adresse dépend en réalité d'un tenant professionnel ou scolaire, les règles de consentement professionnelles s'ajoutent à tout ce qui précède, et votre administrateur fait partie de la réponse."
+    "Outlook organise les e-mails en dossiers, y compris des dossiers imbriqués. Les catégories Outlook ne sont pas prises en charge, et les outils de libellés ne s'appliquent qu'à Gmail.",
+    "Microsoft Graph ne peut pas combiner une recherche textuelle avec les filtres non lu, pièce jointe, suivi ou date. Lorsqu'une recherche contient du texte, ces filtres ne sont pas appliqués et le résultat indique lesquels ont été ignorés.",
+    "Les pièces jointes sont prises en charge jusqu'à 25 Mo.",
+    "La version auto-hébergée se connecte uniquement en IMAP et SMTP. La connexion avec Microsoft fait partie du service hébergé."
   ],
   "faq": [
     {
       "q": "Claude fonctionne-t-il avec Outlook.com ?",
-      "a": "Pas via mcpemails. Outlook.com n'accepte qu'OAuth 2.0 en IMAP, et nous ne proposons pas de connexion OAuth Microsoft : il est donc impossible de connecter cette boîte ici. La solution qui fonctionne aujourd'hui consiste à connecter une autre boîte qui accepte une connexion IMAP classique et à y transférer votre courrier Outlook.com."
+      "a": "Oui. Connectez votre boîte Outlook.com à mcpemails en vous identifiant avec Microsoft, collez une URL MCP dans Claude, et Claude peut lire, rechercher, envoyer, répondre, transférer, planifier et classer vos e-mails. La même URL fonctionne dans ChatGPT, Cursor et d'autres clients MCP."
     },
     {
-      "q": "Quels sont les paramètres IMAP et SMTP d'Outlook.com ?",
-      "a": "IMAP : outlook.office365.com sur le port 993 en TLS implicite. SMTP : smtp-mail.outlook.com sur le port 587 avec STARTTLS. Les deux ont été confirmés par une connexion TLS réelle. Ces valeurs sont correctes mais ne suffisent plus à elles seules, car le service IMAP n'authentifie qu'avec un jeton d'accès OAuth 2.0."
+      "q": "Cela fonctionne-t-il avec les adresses Hotmail, Live et MSN ?",
+      "a": "Oui. Elles relèvent du même service de messagerie grand public de Microsoft qu'outlook.com et se connectent donc de la même façon : choisissez Outlook dans le tableau de bord et identifiez-vous avec cette adresse."
     },
     {
-      "q": "Pourquoi mon mot de passe Outlook.com est-il refusé ?",
-      "a": "Il n'est pas tant refusé que jamais proposé. Depuis le 16 septembre 2024, Microsoft ne prend plus en charge l'authentification de base pour les comptes personnels se connectant depuis des applications non Microsoft, et le service IMAP n'annonce plus que XOAUTH2. Un client qui tente d'envoyer un mot de passe n'a aucun mécanisme pour le transmettre."
+      "q": "Ai-je besoin d'un mot de passe d'application ou de paramètres IMAP ?",
+      "a": "Non. mcpemails connecte Outlook.com via Microsoft Graph une fois que vous vous êtes identifié avec Microsoft : aucun mot de passe d'application à créer, aucun serveur IMAP ou SMTP à saisir. Un mot de passe d'application ne fonctionnerait d'ailleurs pas : Microsoft a cessé d'accepter les mots de passe des applications de messagerie tierces sur les comptes personnels en septembre 2024."
     },
     {
-      "q": "Puis-je utiliser un mot de passe d'application pour l'IMAP d'Outlook.com ?",
-      "a": "Non. Les mots de passe d'application existent encore sur les comptes Microsoft personnels pour certaines applications héritées, mais ce sont des identifiants d'authentification de base, et le service de messagerie n'accepte plus cette forme d'authentification. En créer un ne changera rien au résultat, quel que soit le nombre d'anciens tutoriels qui le présentent comme la solution."
+      "q": "Que peut faire mon IA dans Outlook.com ?",
+      "a": "Lire, rechercher, envoyer, répondre et transférer ; travailler avec des brouillons ; créer et utiliser des dossiers, y compris imbriqués ; déplacer, copier et archiver ; marquer d'un indicateur ; supprimer vers la corbeille ou définitivement ; gérer des pièces jointes jusqu'à 25 Mo ; planifier des envois ; et gérer votre signature."
     },
     {
-      "q": "Est-ce la même situation qu'avec Microsoft 365 professionnel ?",
-      "a": "Le résultat est le même, la cause non. Un compte personnel n'a ni administrateur de tenant ni politique de consentement qui fasse obstacle ; c'est uniquement que l'authentification par mot de passe a disparu. Une boîte professionnelle subit la même suppression de l'authentification, plus une exigence de consentement : un administrateur doit approuver les autorisations de messagerie qu'une application demande."
+      "q": "Est-ce la même chose que connecter un compte Microsoft 365 professionnel ?",
+      "a": "La connexion est la même, l'approbation peut différer. Un compte personnel ne nécessite aucun administrateur. Un compte Microsoft 365 professionnel ou scolaire exige souvent qu'un administrateur informatique approuve d'abord MCP Emails une fois pour toute l'organisation, et dans ce cas le tableau de bord vous donne un lien à lui envoyer."
     },
     {
       "q": "Mes e-mails sont-ils stockés sur vos serveurs ?",
-      "a": "Non. Pour les boîtes que mcpemails connecte, les messages sont récupérés en direct en IMAP à chaque requête et transmis à votre client IA, avec des identifiants chiffrés au repos et sans conservation du corps des messages. Nous ne détenons aucun identifiant Outlook.com, puisqu'aucune connexion Outlook.com n'est possible."
+      "a": "Non. Les messages sont récupérés en direct chez Microsoft à chaque requête et transmis à votre client IA. Le jeton OAuth issu de votre connexion Microsoft est chiffré au repos et le contenu des messages n'est pas conservé. Supprimer la boîte dans mcpemails met fin immédiatement à la connexion, et vous pouvez aussi retirer MCP Emails des applications ayant accès à votre compte Microsoft."
     }
   ],
   "ctaBand": {
-    "title": "Offrez à votre IA une boîte à laquelle elle peut se connecter",
-    "sub": "Outlook.com reste où il est. Connectez une boîte IMAP pour le travail automatisé, gratuite pour toujours."
+    "title": "Donnez à votre IA votre boîte Outlook.com",
+    "sub": "Connectez-vous avec Microsoft en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
   }
 }

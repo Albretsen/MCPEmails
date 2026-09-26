@@ -74,10 +74,10 @@ Aucun mot de passe n'a transité sur le réseau. L'agent détenait des capacité
 
 Vous connectez une boîte mail une seule fois dans **Dashboard → Inboxes → Connect Inbox**. La manière de vous authentifier dépend du fournisseur.
 
-### Fournisseurs OAuth (en un clic)
+### Fournisseurs OAuth (connexion, sans mot de passe)
 
 - **Gmail** — OAuth 2.0 via la connexion Google.
-- **Outlook / Microsoft 365** — OAuth 2.0 via la connexion Microsoft. Détails de configuration dans [connecter Outlook et Microsoft 365 à un agent IA](/blog/connect-outlook-microsoft-365-ai-agent-mcp).
+- **Outlook / Microsoft 365** : OAuth 2.0 via la connexion avec Microsoft, par Microsoft Graph et non par IMAP. Les comptes personnels Outlook.com, Hotmail, Live et MSN se connectent directement. Les comptes professionnels ou scolaires Microsoft 365 peuvent d'abord nécessiter qu'un administrateur informatique approuve l'application une seule fois pour toute l'organisation ; le tableau de bord vous donne un lien à lui envoyer. Détails de configuration dans [connecter Outlook et Microsoft 365 à un agent IA](/blog/connect-outlook-microsoft-365-ai-agent-mcp).
 
 ### Fournisseurs à mot de passe d'application
 

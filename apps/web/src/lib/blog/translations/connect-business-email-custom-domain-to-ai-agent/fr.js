@@ -4,7 +4,7 @@ const translation = {
     'Guide de configuration pour vous@votreentreprise.com : identifier qui héberge vraiment vos e-mails, connecter Google Workspace, Zoho, Fastmail, Migadu, Titan, Rackspace, IONOS ou cPanel, et corriger le nom de l\'expéditeur avant que votre agent ne réponde.',
   coverAlt:
     'Connecter une messagerie professionnelle sur domaine propre à un agent IA avec MCP Emails',
-  content: `> **Outlook et Microsoft 365 sont en cours de développement.** Ils ne peuvent pas encore être connectés en production. Si votre boîte professionnelle se révèle être un tenant Microsoft, ce guide vous aidera à le confirmer, mais il ne la connectera pas aujourd'hui.
+  content: `> **Sous Microsoft 365 ?** Si votre boîte professionnelle se révèle être un tenant Microsoft, ce guide vous aidera à le confirmer. Connectez-la avec **Outlook** et la connexion Microsoft plutôt qu'en IMAP ; votre administrateur informatique devra peut-être d'abord approuver l'application une seule fois pour toute l'organisation. Le [guide Outlook et Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) détaille les étapes.
 
 Presque tous les guides pour connecter une messagerie à un agent IA supposent que votre adresse se termine par gmail.com. La messagerie professionnelle, c'est autre chose : le domaine ne dit pas qui héberge la boîte, quelqu'un d'autre contrôle peut-être la possibilité même pour un client de messagerie de se connecter, et ce que votre agent envoie arrive chez vos clients à votre nom. Voici le guide pour vous@votreentreprise.com.
 
@@ -33,7 +33,7 @@ Les enregistrements de service donnent l'hôte et le port directement, mais la p
 - Se termine par \`.l.google.com\`, ou \`smtp.google.com\` : Google Workspace.
 - \`mx.zoho.com\` ou son équivalent régional : Zoho Mail.
 - \`aspmx1.migadu.com\` : Migadu. \`mx1.titan.email\` : Titan, quelle que soit la marque sous laquelle vous l'avez acheté.
-- Un nom MX hébergé chez Microsoft : un tenant Microsoft 365, pas encore connectable.
+- Un nom MX hébergé chez Microsoft : un tenant Microsoft 365. Connectez-le avec **Outlook**, pas en IMAP.
 - Le nom du serveur de votre hébergeur : une boîte cPanel ou Plesk.
 
 ## Étape 2 : suivre le chemin de votre fournisseur
@@ -62,7 +62,7 @@ Titan refuse tout client de messagerie tant que vous n'avez pas actionné un int
 
 ### Rackspace Email
 
-Les deux hôtes sont \`secure.emailsrvr.com\`, en entrée comme en sortie, quel que soit votre domaine. Le nom ne porte aucune marque Rackspace, alors les gens le "corrigent" par quelque chose de plus plausible et plus rien ne marche. Utilisez le mot de passe de la boîte défini dans le panneau Cloud Office. Avec l'authentification multifacteur activée, ce mot de passe cesse de fonctionner en IMAP et SMTP tout en continuant de marcher dans le webmail : il vous faut alors un mot de passe d'application. Rackspace vend aussi Hosted Exchange et revend Microsoft 365 ; ni l'un ni l'autre n'est connectable ici.
+Les deux hôtes sont \`secure.emailsrvr.com\`, en entrée comme en sortie, quel que soit votre domaine. Le nom ne porte aucune marque Rackspace, alors les gens le "corrigent" par quelque chose de plus plausible et plus rien ne marche. Utilisez le mot de passe de la boîte défini dans le panneau Cloud Office. Avec l'authentification multifacteur activée, ce mot de passe cesse de fonctionner en IMAP et SMTP tout en continuant de marcher dans le webmail : il vous faut alors un mot de passe d'application. Rackspace vend aussi Hosted Exchange, qui n'est pas connectable ici, et revend Microsoft 365, qui se connecte avec **Outlook** plutôt qu'en IMAP.
 
 ### IONOS
 
@@ -95,7 +95,7 @@ Définissez-le boîte par boîte sur la page de détail de la boîte, où un ape
 - **Vous utilisez carrément le mauvais mot de passe.** Migadu, IONOS, Rackspace et cPanel séparent tous l'identifiant du panneau de configuration du mot de passe de la boîte, et les deux sont généralement des adresses e-mail.
 - **Ça expire au lieu d'échouer.** C'est l'hôte ou le port, pas l'identifiant. Relisez le nom d'hôte dans le panneau du fournisseur.
 - **La lecture marche mais pas l'envoi.** La moitié sortante a son propre hôte, port et mode de sécurité, et certains hôtes n'écoutent pas sur le 465. Vérifiez aussi que vous avez accordé \`send:email\`.
-- **C'est une boîte Microsoft 365.** Achetée en direct ou revendue par GoDaddy, IONOS ou Rackspace, elle reste un tenant Microsoft et n'est pas encore connectable.
+- **C'est une boîte Microsoft 365.** Achetée en direct ou revendue par GoDaddy, IONOS ou Rackspace, elle reste un tenant Microsoft. Connectez-la avec **Outlook** et la connexion Microsoft, pas en IMAP. Si Microsoft indique qu'une approbation de l'administrateur est requise, envoyez le lien affiché dans le tableau de bord à votre administrateur informatique.
 
 La [matrice des fournisseurs](/docs/providers) et les [pages fournisseur](/connect) donnent le détail pour chacun.
 

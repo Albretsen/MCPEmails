@@ -1,100 +1,104 @@
 {
   "_sources": [
     "https://learn.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/deprecation-of-basic-authentication-exchange-online",
-    "https://learn.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth",
     "https://mc.merill.net/message/MC1163922",
     "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent"
   ],
   "auth": {
     "method": "oauth",
-    "label": "OAuth 2.0，需要租户管理员同意",
-    "helpUrl": "https://learn.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth",
-    "usernameForm": "问题不在密码栏。Exchange Online 在 IMAP 上只接受 OAuth 2.0 访问令牌，而且令牌必须签发给你的租户管理员已同意授权的应用。",
+    "label": "使用 Microsoft 登录（OAuth 2.0），可能需要 IT 管理员批准",
+    "helpUrl": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent",
+    "usernameForm": "无需输入任何内容。你在 Microsoft 自己的页面上用工作或学校的 Microsoft 账户登录并批准访问，因此这里不需要输入密码或应用专用密码。为 Microsoft 365 公布的 IMAP 和 SMTP 设置在这里不适用：MCP Emails 通过 Microsoft Graph 连接。",
     "status": "active"
   },
   "meta": {
-    "title": "Microsoft 365 邮箱、IMAP 与 AI：真正的障碍",
-    "description": "Microsoft 365 在 outlook.office365.com:993 响应 IMAP，但基本身份验证已在整个租户中移除，邮件权限又需管理员同意，因此 mcpemails 无法连接它。"
+    "title": "将 Microsoft 365 邮箱连接到 Claude 和 ChatGPT",
+    "description": "将工作或学校的 Microsoft 365 邮箱连接到 Claude、ChatGPT、Cursor 或任意 MCP 客户端。使用 Microsoft 登录；许多组织需要 IT 管理员先批准一次该应用。"
   },
   "hero": {
     "eyebrow": "Microsoft 365 + AI",
-    "titleLine1": "Microsoft 365 邮箱",
-    "titleLine2": "无法连接，原因如下",
-    "lead": "服务器可以访问，问题不在密码，也不在端口。阻止 Microsoft 365 邮箱接入 MCP 服务器的是授权：基本身份验证已被移除，而邮件权限需要租户管理员批准。",
-    "answer": "不能，mcpemails 无法连接 Microsoft 365 邮箱，原因在于授权，而不是能否访问。Exchange Online 确实在 outlook.office365.com 的 993 端口响应 IMAP，在 smtp.office365.com 的 587 端口响应 SMTP，今天与两者进行 TLS 握手都能成功。失败的是登录。Microsoft 在 2022 年间永久移除了所有 Exchange Online 租户中 IMAP 和 POP 的基本身份验证，自 2022 年 12 月 31 日起，任何人（包括 Microsoft 支持人员）都无法重新开启，因此任何密码或应用密码都永远无法通过认证。剩下的唯一途径是 OAuth 2.0，它需要一个已注册的应用，且其 Microsoft Graph 邮件权限已获得租户管理员同意，因为 Microsoft 托管的默认同意策略已不再允许普通用户自行批准邮件权限范围。mcpemails 不提供 Microsoft OAuth 连接，所以诚实的回答是：这个邮箱在这里无法连接。"
+    "titleLine1": "将 Microsoft 365 邮箱连接到",
+    "titleLine2": "Claude、ChatGPT 和 Cursor",
+    "lead": "把你工作或学校的 Outlook 邮箱交给 AI 代理。使用 Microsoft 登录；如果你的组织有要求，只需给 IT 管理员发送一个链接，即可为所有人批准 MCP Emails。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "使用 Microsoft 登录，无需应用专用密码",
+    "meta2": "内置 IT 管理员审批链接",
+    "answer": "可以，但有一个取决于你所在组织的条件。mcpemails 通过 Microsoft Graph 连接工作和学校的 Microsoft 365 邮箱：你点击“使用 Microsoft 连接”，用工作账户登录即可。不过，许多组织需要 IT 管理员先批准一次该应用，因为 Microsoft 自 2025 年底起生效的默认同意策略不允许员工自行批准读取邮件的权限。遇到这种情况，控制台会显示一条通知，其中有一个可以发给 IT 管理员的链接。管理员登录后，为整个组织批准一次 MCP Emails，之后你和同事就可以正常连接。然后把一个 URL 粘贴到 Claude、ChatGPT、Cursor 或任意 MCP 客户端。1 个收件箱永久免费。"
   },
   "method": {
-    "title": "Microsoft 365 如何连接：只能用 OAuth，而同意授权才是那堵墙",
-    "body": "这里有两道独立的关卡，大多数文章把它们混为一谈。第一道是身份验证。Exchange Online 的 IMAP 服务在能力列表中仍同时列出 <code>AUTH=PLAIN</code> 和 <code>AUTH=XOAUTH2</code>，但前者只是协议声明的遗留，并不是可用选项：IMAP、POP、EWS、ActiveSync 和远程 PowerShell 的基本身份验证已在所有租户中移除，且无法恢复。真正可用的只有 <code>XOAUTH2</code>，使用来自 Microsoft 身份平台的访问令牌。第二道是同意授权。要获得该令牌，需要在 Microsoft Entra ID 中注册一个应用，并让其委托的 Microsoft Graph 邮件权限获得批准。在 2025 年 10 月底开始推出的一项变更中，Microsoft 将 <b>Mail.Read</b>、<b>Mail.ReadWrite</b> 以及其余 Exchange 委托权限范围加入了 Microsoft 托管的默认同意策略，这意味着普通用户点击同意页面后，得到的将是一个管理员审批请求，而不是可用的连接。租户管理员可以授予同意，但很多管理员不会这样做。"
+    "title": "Microsoft 365 如何连接：使用 Microsoft 登录，有时需要管理员批准",
+    "body": "Microsoft 365 通过 <b>Microsoft Graph</b> 以 OAuth 2.0 连接，而不是通过 IMAP。你在 Microsoft 自己的页面上登录，并批准 MCP Emails 请求的权限：读取和更改邮件（<b>Mail.ReadWrite</b>）、发送邮件（<b>Mail.Send</b>）、保持连接（<b>offline_access</b>），以及你的基本资料和邮箱地址。Microsoft 将 MCP Emails 显示为来自已验证发布者。你能否自行批准这些权限，由你所在的组织决定。自 2025 年底起，Microsoft 的默认同意策略不再允许普通用户为应用批准邮件权限，因此在许多组织中，第一个连接的人会被要求获得管理员批准。管理员只需为整个组织批准一次，而不是每人一次。"
   },
   "setup": [
     {
-      "h": "创建免费 mcpemails 账户",
-      "p": "只需一个邮箱地址，无需信用卡。连接一个收件箱永久免费。接下来两步决定连接哪个邮箱，因为它不会是 Microsoft 365 的那个。"
+      "h": "创建免费账户",
+      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
-      "h": "为自动化工作选择一个租户之外的邮箱",
-      "p": "选择一家通过 IMAP 接受密码或应用密码的服务商的地址：你在 Fastmail 或 Migadu 上的自有域名、个人 Gmail 账户、一个项目专用邮箱。mcpemails 连接的就是这个账户，代理也在这里读取、起草、发送和归档邮件。"
+      "h": "选择 Outlook 并使用 Microsoft 连接",
+      "p": "在控制台中打开“连接收件箱”，选择 Outlook，点击“使用 Microsoft 连接”，并用你工作或学校的账户登录。"
     },
     {
-      "h": "如果组织允许，把相关邮件转到那里",
-      "p": "转发按用户设置，位于 Microsoft 365 管理中心的 Users、Active users，选中该用户，然后在 Mail 标签下点击 Manage email forwarding。请先与租户管理员确认。Microsoft Defender 的出站垃圾邮件筛选策略默认阻止自动转发到外部域名，因此必须由管理员允许后才能发出任何一封邮件，而在受监管的组织中，答案通常是否定的。"
+      "h": "批准访问，或发送管理员链接",
+      "p": "如果 Microsoft 允许你自行批准，接受权限后收件箱即完成连接。如果你的组织要求管理员批准，控制台会显示一条通知，其中有“发送给你的 IT 管理员”链接。管理员打开该链接，登录 MCP Emails，并为整个组织批准一次该应用。然后再次点击“使用 Microsoft 连接”。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
-      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱，可以读取、搜索、发送、回复、定时和归档。"
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],
   "gotchas": [
     {
-      "h": "IMAP 服务器会响应，会声明 AUTH=PLAIN，却仍然拒绝你的密码",
-      "p": "向 outlook.office365.com 的 993 端口建立 TLS 连接，Exchange 会返回一个服务就绪的问候语和一条提供 <code>AUTH=PLAIN</code> 的能力列表。这条列表不是承诺。基本身份验证已在每个租户的服务层面禁用，因此密码登录会返回一个与密码错误一模一样的认证失败，这就是为什么人们会花数小时重置一直都正确的凭据。值得牢记的区别是：能访问没有问题，被拒绝的是授权。"
+      "h": "密码和应用专用密码都无法使用，所以我们使用 Microsoft Graph",
+      "p": "Microsoft 已在 2022 年从所有 Exchange Online 租户中移除了 IMAP 和 POP 的基本身份验证，而且无法重新启用。密码登录失败时看起来与密码错误完全一样，这就是为什么有人会反复重置本来正确的凭据。mcpemails 对 Microsoft 365 不使用 IMAP：它使用 Microsoft 登录并与 Microsoft Graph 通信，因此无需输入密码，也没有会填错的服务器设置。"
     },
     {
-      "h": "SMTP AUTH 是另一个按邮箱设置的开关，默认关闭",
-      "p": "即使应用确实持有有效的 OAuth 令牌，通过 <code>smtp.office365.com</code> 进行客户端提交也取决于该邮箱是否启用了 SMTP AUTH。在尚未使用它的租户中，Microsoft 已将其默认禁用，而且它是按邮箱设置的，而不是整个组织一次性设置。Microsoft 还宣布将停用 SMTP 客户端提交的基本身份验证，并且已不止一次推迟日期，所以请把你在第三方页面上看到的任何截止日期视为暂定，并以 Microsoft 当前的公告为准。"
+      "h": "管理员批准由你的组织决定，已验证发布者也无法绕过",
+      "p": "自 Microsoft 从 2025 年 10 月底开始推出的变更以来，Exchange 邮件权限已纳入 Microsoft 管理的默认同意策略，因此尝试批准邮件应用的用户会看到一个请求管理员批准的提示。作为已验证发布者并不会改变这一点。你的 IT 管理员可以通过控制台中的链接为整个组织批准 MCP Emails，而且只需批准一次。"
     },
     {
-      "h": "关卡在于管理员同意，而不是用户，也不是经过验证的发布者身份",
-      "p": "用户在读取邮件的应用的同意页面上点击 Accept 后，看到的是一个管理员审批请求。自 2025 年 10 月底开始推出的变更以来，Exchange 委托权限已归入 Microsoft 托管的默认策略，因此即使是经过验证的发布者的应用也无法自助获得授权，除非租户将这些权限归类为低影响，或管理员已为该应用授予租户范围的同意。共享邮箱和委托邮箱也没有区别，因为要求针对的是应用，而不是邮箱。"
+      "h": "没有 Exchange Online 邮箱的账户会被拒绝",
+      "p": "有些 Microsoft 365 账户没有 Exchange Online 邮箱，例如没有 Exchange 许可证的管理员账户，或邮件托管在其他地方的组织。此时 Microsoft Graph 没有可打开的邮箱，因此 mcpemails 会拒绝连接并说明原因。如果你的邮件在其他服务器上，请改用 IMAP 连接该地址。"
     },
     {
-      "h": "Exchange Online 在 IMAP 上不声明 SPECIAL-USE",
-      "p": "该 IMAP 服务支持 MOVE、UIDPLUS 和 IDLE，但不发布 SPECIAL-USE 扩展，因此客户端无法询问哪个是已发送或垃圾邮件文件夹，只能按名称匹配。在以德语或法语开通的租户中，文件夹使用该语言命名，任何查找字面字符串 Sent Items 的工具都会悄无声息地一无所获。在怪罪连接器之前值得了解这一点。"
+      "h": "如果批准没有成功，请管理员再次打开链接",
+      "p": "只有在 Microsoft 确认之后，控制台才会将你的组织视为已批准。如果 Microsoft 没有确认批准，例如管理员关闭了页面或拒绝了请求，Outlook 会保持被阻止状态，控制台也会提示。请你的 IT 管理员再次打开批准链接。"
     }
   ],
   "limits": [
-    "Microsoft Defender 的出站垃圾邮件筛选策略默认阻止自动转发到外部域名。要把租户邮件转到我们能连接的邮箱，需要管理员允许，而这是一个真正的策略决定，不是勾一个复选框。",
-    "本页描述的都是目前无法实现的事情。如果你的租户已经在运行第三方邮件集成，那是通过管理员同意授权的应用实现的，这与你自己花几分钟连接一个邮箱是完全不同的安排。"
+    "Outlook 用文件夹整理邮件，包括嵌套文件夹。不支持 Outlook 类别，标签工具仅适用于 Gmail。",
+    "Microsoft Graph 无法将文本搜索与未读、附件、已标记或日期筛选条件组合使用。当搜索包含文本时，这些筛选条件不会生效，结果会说明省略了哪些条件。",
+    "支持最大 25 MB 的附件。",
+    "自托管版本仅通过 IMAP 和 SMTP 连接。使用 Microsoft 登录是托管服务的一部分。"
   ],
   "faq": [
     {
-      "q": "Claude 能用 Microsoft 365 邮箱吗？",
-      "a": "无法通过 mcpemails 使用。Microsoft 365 邮箱在 IMAP 上只接受 OAuth 2.0，而应用所需的 Microsoft Graph 邮件权限必须由租户管理员授予同意。我们不提供 Microsoft OAuth 连接，所以这里没有可供管理员批准的东西，我们也不会假装有。"
+      "q": "Claude 能用于 Microsoft 365 邮箱吗？",
+      "a": "可以。使用 Microsoft 登录，将你工作或学校的邮箱连接到 mcpemails，把一个 MCP URL 粘贴到 Claude，Claude 就能阅读、搜索、发送、回复、转发、定时发送和归档你的邮件。如果你的组织要求管理员批准，你的 IT 管理员需要先用控制台提供的链接批准一次 MCP Emails。"
     },
     {
-      "q": "Microsoft 365 的 IMAP 和 SMTP 设置是什么？",
-      "a": "IMAP 为 outlook.office365.com，端口 993，隐式 TLS。SMTP 为 smtp.office365.com，端口 587，使用 STARTTLS，声明的最大邮件大小为 150 MB。两台服务器均已通过实时 TLS 连接确认。这些设置是正确的，但仍然无法让你登录，因为该服务在这些端口上只接受 OAuth 2.0 令牌。"
+      "q": "为什么要求我获得管理员批准？",
+      "a": "这是你所在组织的同意策略所致。自 2025 年底起，Microsoft 的默认策略不允许员工自行为应用批准读取邮件的权限，因此登录时会改为请求管理员批准。这不是你账户的问题。请把控制台通知中的链接发给你的 IT 管理员。"
     },
     {
-      "q": "为什么我的 Microsoft 365 密码在 IMAP 上被拒绝？",
-      "a": "因为 Exchange Online 已移除基本身份验证。Microsoft 在 2022 年于所有租户中禁用了 IMAP、POP、EWS、ActiveSync 和远程 PowerShell 的基本身份验证。你的密码几乎肯定是对的，只是无论能力列表声明了什么，服务器都已不再有接受密码的机制。"
+      "q": "我的 IT 管理员需要做什么？",
+      "a": "打开你发送的链接，登录 MCP Emails，并在 Microsoft 的同意屏幕上为组织批准该应用，MCP Emails 在该屏幕上显示为已验证发布者。整个组织只需批准一次。之后，组织中的每个人都可以像平常一样通过“使用 Microsoft 连接”进行连接。"
     },
     {
-      "q": "管理员能重新开启基本身份验证吗？",
-      "a": "不能。重新启用在 2022 年 12 月 31 日之前还可行，如今这扇门已经关上。Microsoft 的文档明确指出，任何人（包括 Microsoft 支持人员）都无法在租户中重新启用基本身份验证。任何让你为此提交支持请求的指南都已过时。"
+      "q": "我需要应用专用密码或 IMAP 设置吗？",
+      "a": "不需要。你使用 Microsoft 登录后，mcpemails 通过 Microsoft Graph 连接 Microsoft 365，因此无需创建应用专用密码，也无需填写 IMAP 或 SMTP 服务器。反正密码也无法使用：基本身份验证已于 2022 年从 Exchange Online 中移除，且无法重新启用。"
     },
     {
-      "q": "管理员授予同意后能让它工作吗？",
-      "a": "管理员可以为请求 Graph 邮件权限的应用授予租户范围的同意，企业邮件集成通常就是这样获批的。但这在这里没有帮助，因为 mcpemails 没有可供他们同意的 Microsoft 应用。如果你的组织需要在租户邮箱上使用 AI 代理，那得去和负责 Entra ID 的人商量。"
+      "q": "我的 AI 能在 Microsoft 365 中做什么？",
+      "a": "阅读、搜索、发送、回复和转发；处理草稿；创建和使用文件夹，包括嵌套文件夹；移动、复制和归档；标记；删除到回收站或永久删除；处理最大 25 MB 的附件；定时发送；以及管理你的签名。"
     },
     {
-      "q": "从 Microsoft 外部到底能不能访问这个邮箱？",
-      "a": "能，而且值得把这两个概念分开。IMAP 端点通过 TLS 响应，并返回 Microsoft Exchange IMAP4 服务就绪的问候语，所以没有被防火墙拦截，也没有离线。阻碍完全在于身份验证和同意策略。把它当作网络或主机名问题来诊断，只会让你走错方向。"
+      "q": "我的邮件会存储在你们的服务器上吗？",
+      "a": "不会。每次请求都从 Microsoft 实时获取邮件，并交给你的 AI 客户端。你 Microsoft 登录所得的 OAuth 令牌静态加密存储，邮件正文不会保留。在 mcpemails 中删除该收件箱会立即终止连接。"
     }
   ],
   "ctaBand": {
-    "title": "给你的 AI 一个它能登录的邮箱",
-    "sub": "你的租户保持不变。为想要自动化的工作连接一个 IMAP 收件箱，永久免费。"
+    "title": "把你的 Microsoft 365 收件箱交给 AI",
+    "sub": "使用 Microsoft 登录。如果你的组织需要管理员批准，只需给 IT 管理员发一个链接，即可覆盖所有人。1 个收件箱永久免费。"
   }
 }

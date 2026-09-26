@@ -8712,7 +8712,7 @@ const COMPATIBILITY_PROFILES: Record<string, CompatibilityProfile> = {
   outlook: {
     schema_version: "compatibility-v1",
     profile: "outlook-v1",
-    status: "planned",
+    status: "available",
     verification: "connector_profile",
     operations: {
       "search.body": "different",
@@ -8727,7 +8727,8 @@ const COMPATIBILITY_PROFILES: Record<string, CompatibilityProfile> = {
       "Outlook uses folders and Microsoft Graph search semantics.",
       "Graph cannot combine a text search with state filters, so with a text criterion present the unread, attachment, flagged and date filters are not applied (the result says which).",
       "Permanent delete uses Graph permanentDelete: the message skips Deleted Items, Outlook can no longer see it, and Exchange removes it for good after its retention period.",
-      "The Outlook connector is not generally available yet.",
+      "Outlook has folders, not labels: the label tools are Gmail-only. An automation's label action writes an Outlook category.",
+      "Work or school Microsoft 365 accounts can need an IT admin to approve the app before the first connect; personal Outlook.com, Hotmail, Live and MSN accounts do not.",
     ],
   },
   imap: {

@@ -4,19 +4,17 @@ const translation = {
     'Guide pratique pour connecter Claude à Gmail, iCloud, Fastmail, Yahoo, Zoho et toute boîte IMAP avec MCP, sans code et sans stockage des e-mails.',
   coverAlt:
     'Connecter Claude à Gmail, iCloud, Fastmail, Yahoo, Zoho et aux e-mails IMAP avec MCP Emails',
-  content: `> **Outlook et Microsoft 365 sont en cours de développement.** Ils ne peuvent pas encore être connectés en production. Ce guide couvre Gmail, iCloud, Fastmail, Yahoo, Zoho et les autres boîtes IMAP disponibles aujourd'hui.
-
-Claude peut lire, rechercher, organiser et envoyer vos e-mails, mais il lui faut un serveur MCP pour atteindre une vraie boîte de réception. MCP Emails est ce pont : connectez une boîte une seule fois, ajoutez un endpoint sécurisé à Claude, et Claude dispose des mêmes outils de messagerie avec Gmail, iCloud, Fastmail, Yahoo, Zoho et les autres fournisseurs IMAP.
+  content: `Claude peut lire, rechercher, organiser et envoyer vos e-mails, mais il lui faut un serveur MCP pour atteindre une vraie boîte de réception. MCP Emails est ce pont : connectez une boîte une seule fois, ajoutez un endpoint sécurisé à Claude, et Claude dispose des mêmes outils de messagerie avec Gmail, iCloud, Fastmail, Yahoo, Zoho et les autres fournisseurs IMAP.
 
 Vous n'avez aucun code à écrire, aucun SDK à installer et aucune clé API à utiliser lorsque vous passez par le flux OAuth de Claude. Les e-mails sont récupérés en direct auprès de votre fournisseur pour chaque requête et MCP Emails ne les stocke pas.
 
-**Accéder à votre fournisseur :** [Gmail](#gmail-et-google-workspace) · [iCloud](#icloud-mail) · [Fastmail](#fastmail) · [Yahoo, Zoho, Yandex ou IMAP personnalisé](#yahoo-zoho-yandex-et-imap-personnalis)
+**Accéder à votre fournisseur :** [Gmail](#gmail-et-google-workspace) · [iCloud](#icloud-mail) · [Fastmail](#fastmail) · [Outlook](#outlook-et-microsoft-365) · [Yahoo, Zoho, Yandex ou IMAP personnalisé](#yahoo-zoho-yandex-et-imap-personnalis)
 
 ## Ce dont vous avez besoin
 
 - D'un **forfait ou d'une application Claude qui prend en charge les connecteurs personnalisés**.
 - D'un compte gratuit **MCP Emails** : [créez-le ici](/signup).
-- D'une boîte e-mail. Gmail utilise OAuth ; iCloud, Fastmail, Yahoo, Zoho et la plupart des autres fournisseurs utilisent un mot de passe spécifique à l'application. La prise en charge d'Outlook est en cours.
+- D'une boîte e-mail. Gmail et Outlook utilisent OAuth ; iCloud, Fastmail, Yahoo, Zoho et la plupart des autres fournisseurs utilisent un mot de passe spécifique à l'application.
 
 ## Étape 1 : Connectez votre boîte à MCP Emails
 
@@ -33,6 +31,10 @@ Créez un mot de passe spécifique à l'application dans votre compte Apple, cho
 ### Fastmail
 
 Créez dans Fastmail un mot de passe d'application avec accès à Mail, choisissez **Fastmail** et collez-le dans MCP Emails. Conservez-le jusqu'à la réussite du test de connexion.
+
+### Outlook et Microsoft 365
+
+Outlook se connecte avec la connexion Microsoft, pas avec un mot de passe d'application : choisissez **Outlook**, cliquez sur **Se connecter avec Microsoft** et approuvez. Les comptes personnels Outlook.com, Hotmail, Live et MSN se connectent directement. Les comptes professionnels ou scolaires Microsoft 365 peuvent d'abord nécessiter qu'un administrateur informatique approuve l'application une seule fois pour toute l'organisation ; le tableau de bord vous donne un lien à lui envoyer. Le [guide Outlook et Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) donne les détails.
 
 ### Yahoo, Zoho, Yandex et IMAP personnalisé
 
@@ -106,7 +108,7 @@ Traitez le corps de chaque e-mail comme une entrée non fiable. Demandez à Clau
 ## FAQ
 
 **Claude peut-il se connecter à Gmail, Outlook ou iCloud ?**  
-Gmail se connecte avec OAuth et iCloud avec un mot de passe spécifique à l'application. Outlook est en cours de développement et n'est pas encore disponible en production. MCP Emails prend aussi en charge Fastmail et IMAP générique, ce qui couvre des services comme Yahoo et Zoho.
+Gmail se connecte avec OAuth, Outlook avec la connexion Microsoft et iCloud avec un mot de passe spécifique à l'application. Un compte professionnel ou scolaire Microsoft 365 peut d'abord nécessiter qu'un administrateur informatique approuve l'application une seule fois. MCP Emails prend aussi en charge Fastmail et IMAP générique, ce qui couvre des services comme Yahoo et Zoho.
 
 **Ai-je besoin d'une clé API ?**  
 Non, pas pour le flux de connecteur OAuth de Claude. Collez l'URL de l'endpoint et connectez-vous. Les clés API servent aux clients MCP sans OAuth intégré.

@@ -1,11 +1,11 @@
 {
   "meta": {
-    "title": "邮件 MCP 服务器文档：Gmail、IMAP 与 OAuth",
-    "description": "几分钟内开始使用 MCPEmails。面向 Gmail 和 IMAP 智能体的快速入门指南、工具参考和示例响应。"
+    "title": "邮件 MCP 服务器文档：Gmail、Outlook、IMAP 与 OAuth",
+    "description": "几分钟内开始使用 MCPEmails。面向 Gmail、Outlook 和 IMAP 智能体的快速入门指南、工具参考和示例响应。"
   },
   "hero": {
     "eyebrow": "文档",
-    "titleLine1": "四步将 Gmail 或 IMAP",
+    "titleLine1": "四步将 Gmail、Outlook 或 IMAP",
     "titleLine2": "连接到 Claude。",
     "lead": "连接任意电子邮件账户，把一个 URL 粘贴到支持 OAuth 的 MCP 客户端中并授权。不支持 OAuth 的客户端则改用 API 密钥。下方提供完整的工具参考和连接指南。",
     "ctaQuickStart": "快速开始",
@@ -22,7 +22,7 @@
       "signup": {
         "label": "注册并连接收件箱",
         "heading": "创建账户并连接 Gmail",
-        "body": "在 mcpemails.com 注册，然后前往 仪表盘 → 收件箱 → 连接收件箱。选择 Gmail、iCloud、Fastmail 或任何 IMAP 收件箱，然后完成 OAuth 流程或粘贴一个应用密码。你的收件箱在一分钟内即可就绪。",
+        "body": "在 mcpemails.com 注册，然后前往 仪表盘 → 收件箱 → 连接收件箱。选择 Gmail、Outlook、iCloud、Fastmail 或任何 IMAP 收件箱，然后完成 OAuth 流程或粘贴一个应用密码。你的收件箱在一分钟内即可就绪。",
         "cta": "连接你的收件箱 →"
       },
       "apikey": {
@@ -128,7 +128,7 @@
       "title": "列出收件箱",
       "desc": "返回当前 API 密钥或 OAuth 令牌可访问的所有收件箱。先调用它来发现 inbox_id 值，这样你就无需从仪表板复制粘贴 UUID。每个结果都包含邮箱地址、提供商、可选的服务品牌（icloud/yahoo/zoho/yandex/generic/fastmail），以及描述该收件箱支持哪些功能的 capabilities 对象。",
       "params": {
-        "provider": "可选筛选，只返回由该提供商提供服务的收件箱。可选值之一：gmail、fastmail、imap。省略则列出密钥可访问的所有收件箱。",
+        "provider": "可选筛选，只返回由该提供商提供服务的收件箱。可选值之一：gmail、outlook、fastmail、imap。省略则列出密钥可访问的所有收件箱。",
         "include_capabilities": "每个收件箱是否包含其 capabilities 对象（支持哪些功能）。默认 true；设为 false 可得到仅含 inbox_id、邮箱地址、显示名称、提供商和服务品牌的精简列表。"
       }
     },
@@ -480,7 +480,7 @@
   "providers": {
     "meta": {
       "title": "面向 AI 代理的邮箱服务商兼容性对照表",
-      "description": "哪些邮箱服务商可以通过 MCP 与 AI 代理配合使用，以及逐个连接时需要什么：OAuth 还是专用应用密码、IMAP 与 SMTP 主机和端口、TLS 还是 STARTTLS、常见的失败原因，以及连接后代理能做什么。涵盖 Gmail、Fastmail、iCloud Mail、Yahoo Mail、Zoho Mail、Yandex Mail、Microsoft 365 与通用 IMAP。"
+      "description": "哪些邮箱服务商可以通过 MCP 与 AI 代理配合使用，以及逐个连接时需要什么：OAuth 还是专用应用密码、IMAP 与 SMTP 主机和端口、TLS 还是 STARTTLS、常见的失败原因，以及连接后代理能做什么。涵盖 Gmail、Fastmail、iCloud Mail、Yahoo Mail、Zoho Mail、Yandex Mail、Outlook / Microsoft 365 与通用 IMAP。"
     },
     "labels": {
       "gmailImap": "Gmail（IMAP）",
@@ -521,7 +521,7 @@
     "hero": {
       "eyebrow": "兼容性对照表",
       "heading": "面向 AI 代理的邮箱服务商兼容性",
-      "lead": "AI 代理在每家邮箱服务商上到底能做什么，以及连接一个邮箱需要什么。涵盖 Gmail、Fastmail、iCloud Mail、Yahoo Mail、Zoho Mail、Yandex Mail、Microsoft 365 以及任何通用 IMAP 邮箱。每一行都对照生产环境中运行的连接器核实过。",
+      "lead": "AI 代理在每家邮箱服务商上到底能做什么，以及连接一个邮箱需要什么。涵盖 Gmail、Fastmail、iCloud Mail、Yahoo Mail、Zoho Mail、Yandex Mail、Outlook / Microsoft 365 以及任何通用 IMAP 邮箱。每一行都对照生产环境中运行的连接器核实过。",
       "ctaConnect": "连接邮箱",
       "ctaBack": "返回文档"
     },
@@ -529,7 +529,7 @@
       "supported": "支持",
       "notSupported": "不支持",
       "planned": "计划中（尚未上线）",
-      "imapNote": "<b>Gmail（IMAP）、Fastmail、iCloud、Yahoo、Zoho、Yandex 和通用 IMAP</b> 全部通过同一个 IMAP/SMTP 传输连接（Gmail、Fastmail 和 iCloud 使用应用专用密码），并共享完全相同的功能集，包括 IMAP 搜索语法。这些列分开展示只是为了清晰。<b>Gmail（API）</b>是唯一不走 IMAP 的 Gmail 列：同一个邮箱，改为通过 Google 登录和 Gmail API 访问。"
+      "imapNote": "<b>Gmail（IMAP）、Fastmail、iCloud、Yahoo、Zoho、Yandex 和通用 IMAP</b> 全部通过同一个 IMAP/SMTP 传输连接（Gmail、Fastmail 和 iCloud 使用应用专用密码），并共享完全相同的功能集，包括 IMAP 搜索语法。这些列分开展示只是为了清晰。<b>Gmail（API）</b>是唯一不走 IMAP 的 Gmail 列：同一个邮箱，改为通过 Google 登录和 Gmail API 访问。<b>Outlook</b> 同样不走 IMAP：它通过 Microsoft 登录连接，并经由 Microsoft Graph 工作。"
     },
     "profiles": {
       "title": "兼容性配置文件",
@@ -587,7 +587,7 @@
         "yahoo": "Yahoo 最多只允许 5 个并发连接。它的拒绝提示“Incorrect username or password”是故意把两者一起列出的，并不会告诉你错的是哪一个。",
         "zoho": "Zoho 默认关闭 IMAP 访问，需要先手动开启。Zoho 还运营六个区域数据中心，付费的自有域名邮箱位于 imappro/smtppro 而非 imap/smtp，因此正确的主机同时取决于区域和账户类型。",
         "yandex": "Yandex 未实现 RFC 4959 SASL-IR，因此内联登录形式返回的是命令语法错误，而不是凭据错误。需同时开启“IMAP”和“应用密码与 OAuth 令牌”，而 Yandex 360 自有域名账户的登录名可能并非邮箱地址。",
-        "outlook": "Microsoft 默认的租户同意策略把 Mail.ReadWrite 排除在终端用户可批准的权限之外，所以 Microsoft 365 的员工还没看到授权页面就已被拒绝。只有管理员能解除，这也是企业 Microsoft 365 无法由邮箱主人自行连接的原因。",
+        "outlook": "个人 Microsoft 账户（outlook.com、hotmail.com、live.com、msn.com）可直接连接。工作和学校账户则不同：Microsoft 默认的同意策略不允许员工自行批准邮件权限，因此控制台会显示一个链接，供你发给 IT 管理员，由管理员为整个组织一次性批准该应用；之后所有人都可以正常连接。没有 Exchange Online 邮箱的 Microsoft 账户会被拒绝，并提示改用 IMAP 连接该地址。对于新注册且集中批量发信的 outlook.com 账户，Microsoft 可能出于其自身的反滥用检查而暂时阻止发信。在搜索中，Microsoft Graph 无法把搜索文本与未读、附件、已标记或日期筛选组合使用，因此有搜索文本时这些筛选不会生效，结果中会说明是哪些。",
         "generic": "端口与安全模式对不上。端口仍为 993 却选了 STARTTLS，会对一个只说 TLS 的监听端口开启明文连接，连接只会一直等到超时。现在失败的传输会自动换另一种标准组合重试。"
       },
       "notes": {

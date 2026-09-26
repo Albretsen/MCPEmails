@@ -1,39 +1,52 @@
 const translation = {
   title: 'Koble Outlook og Microsoft 365 til AI-agenten din via MCP',
   description:
-    'Koble Outlook eller Microsoft 365 til AI-agenten din over MCP på minutter. Microsoft-pålogging med OAuth, Graph under panseret, les/søk/send/svar — uten egen server.',
+    'Koble Outlook.com eller Microsoft 365 til AI-agenten din over MCP. Logg inn med Microsoft, uten app-passord, med Microsoft Graph under panseret. Jobbkontoer kan trenge én godkjenning fra IT-ansvarlig.',
   coverAlt: 'Kobler Outlook og Microsoft 365 til en AI-agent over MCP',
-  content: `> **Kommer snart.** Støtte for Outlook og Microsoft 365 er bygget, men ennå ikke allment tilgjengelig. Du kan ikke koble til en Outlook-postkasse i produksjon i dag — denne guiden viser hvordan det vil fungere når koblingen lanseres. For postkasser du kan koble til akkurat nå, se [Gmail og IMAP](/docs/providers).
+  content: `For å koble en Outlook- eller Microsoft 365-postkasse til AI-agenten din legger du til innboksen i MCP Emails-dashbordet med **Logg inn med Microsoft**, og peker deretter agenten mot ett MCP-endepunkt. Det er ikke noe app-passord, ingen IMAP- eller SMTP-innstillinger, ingen Azure-portal og ingen egen Graph-server. En personlig Outlook.com-konto kobles til på et par minutter. En jobb- eller skolekonto i Microsoft 365 trenger ofte ett ekstra steg først: en IT-ansvarlig godkjenner appen én gang for hele organisasjonen.
 
-For å koble en Outlook- eller Microsoft 365-postkasse til AI-agenten din logger du inn på MCP Emails, legger til innboksen med Microsoft OAuth, og peker agenten mot ett MCP-endepunkt. Ingen appregistrering, ingen Azure-portal, ingen egen Graph-server. Hele greia tar omtrent to minutter, og agenten din får lese, søke, sende, svare, flagge og håndtere mapper mot den live postkassen.
+De fleste «AI for e-post»-guider antar Gmail og stopper der. Hvis du lever i Outlook, er dette Outlook-først-versjonen: hvilke kontoer som kobles til med en gang, hvordan godkjenningssteget hos IT-ansvarlig ser ut, hva agenten kan gjøre når den er tilkoblet, og de få stedene der Outlook oppfører seg annerledes enn Gmail.
 
-De fleste «AI for e-post»-guider antar Gmail og stopper der. Outlook får et skuldertrekk og en lenke til et halvveis vedlikeholdt GitHub-repo. Hvis du lever i Microsoft 365 på jobb, er det å gripe det an fra feil ende. Dette innlegget er Outlook-først-versjonen: hva som faktisk fungerer, hvordan Microsoft-påloggingen flyter, hva som kjører under panseret, og hvor kantene mellom personlig og jobbkonto ligger.
+## Personlige kontoer og jobbkontoer er to ulike tilfeller
 
-## Hvorfor Outlook er vanskeligere enn det ser ut (og hvorfor det ikke er ditt problem her)
+Microsoft-e-post er ikke én ting, og forskjellen avgjør hvordan tilkoblingen går.
 
-Microsoft-e-post er ikke én ting. Det finnes forbruker-Outlook.com / Hotmail / Live, og det finnes Microsoft 365 jobb- og skolekontoer som lever i Entra ID (identitetstjenesten som tidligere het Azure AD). De autentiserer ulikt, og en jobb-tenant kan ha policyer for betinget tilgang, krav om administratorsamtykke og MFA-regler lagt oppå.
+- **Personlige Microsoft-kontoer**: Outlook.com-, Hotmail-, Live- og MSN-adresser. Du logger inn med Microsoft, godkjenner tillatelsene selv, og du er tilkoblet. Ingen administrator er involvert.
+- **Jobb- eller skolekontoer i Microsoft 365**: disse lever i organisasjonens Microsoft Entra-tenant. Mange organisasjoner krever at en IT-ansvarlig godkjenner en tredjepartsapp før noen kan bruke den. Microsofts standard samtykkepolicy (siden slutten av 2025) lar ikke ansatte godkjenne lesetilgang til postkassen selv, så i mange tenanter får du ikke fullført tilkoblingen alene. Det er en policy i Microsoft-tenanten, ikke noe MCP Emails kan skru av, og den gjelder for alle tredjeparts e-postapper.
 
-Gjør-det-selv-veien betyr å registrere et program i Azure-/Entra-portalen, velge riktige støttede kontotyper, be om Microsoft Graph-tilganger som \`Mail.Read\` og \`Mail.Send\`, koble opp en redirect-URI, håndtere tokenfornyelse, og deretter skrive Graph-kallene for å liste, lese og sende e-post. Folk brenner en ettermiddag på dette og ender opp med å vedlikeholde en bitteliten server for alltid. Jeg har sett det skje.
+Godkjenningen fra IT-ansvarlig er et engangssteg for hele organisasjonen. Når den er gjort, kobler hver ansatt seg til på vanlig måte.
 
-MCP Emails gjør den registreringen og token-rørleggingen én gang, sentralt, så du slipper. Du klikker «logg inn med Microsoft», godkjenner, og du er tilkoblet. Vil du ha den konseptuelle bakgrunnen for hvorfor dette laget finnes i det hele tatt, er [den komplette guiden til å gi AI-agenten din e-posttilgang](/blog/how-to-give-your-ai-agent-email-access) bærebjelken å starte fra.
+## Koble til Outlook- eller Microsoft 365-innboksen din
 
-## Koble til Outlook-/Microsoft 365-innboksen din
+To deler: koble til postkassen, og deretter koble til agenten. De er atskilt med vilje. Postkassetilkoblingen lar MCP Emails nå postkassen din, og agenttilkoblingen lar AI-klienten din nå MCP Emails.
 
-To deler: koble til postkassen, deretter koble til agenten. De er adskilt med vilje — postkasse-tilkoblingen autoriserer MCP Emails til å nå leverandøren din, og agent-tilkoblingen autoriserer klienten din til å nå MCP Emails.
-
-### Trinn 1 — Legg til innboksen
+### Steg 1: Legg til innboksen
 
 1. [Start gratis](/signup) og åpne dashbordet.
-2. Gå til **Inboxes → Connect Inbox**.
-3. Velg **Outlook / Microsoft 365**.
-4. Du sendes til Microsofts egen påloggingsside. Skriv inn jobb- eller privat-Microsoft-kontoen din, fullfør MFA hvis tenanten din krever det, og se gjennom samtykkeskjermen.
-5. Godkjenn. Microsoft gir tilbake et OAuth-token, MCP Emails krypterer det (AES-256-GCM) og lagrer bare det tokenet. Ingenting annet om postkassen din blir lagret.
+2. Gå til **Inboxes → Connect Inbox** og velg **Outlook**.
+3. Klikk **Koble til med Microsoft**. Du sendes til Microsofts egen innloggingsside.
+4. Logg inn med Microsoft-kontoen din og fullfør MFA hvis kontoen din bruker det.
+5. Se gjennom samtykkeskjermen og godkjenn. Microsoft viser at appen kommer fra en verifisert utgiver, og ber om tillatelse til å lese og skrive e-posten din, sende e-post som deg og beholde tilgangen til du kobler fra.
 
-Dette er OAuth 2.0 — samme modell som Gmail bruker. Du limer aldri inn et Outlook-passord i MCP Emails, og det finnes ikke noe app-passord å generere. Det er den avgjørende forskjellen fra IMAP-leverandørene; hvis du kobler til [iCloud, Fastmail eller en generisk IMAP-postkasse](/blog/connect-icloud-fastmail-imap-to-claude), bruker de et app-spesifikt passord i stedet, fordi de ikke tilbyr OAuth for tredjepartsklienter.
+MCP Emails lagrer OAuth-tokenet kryptert og ingenting annet om postkassen din. Du skriver aldri inn Microsoft-passordet ditt i MCP Emails, og det er ikke noe app-passord å generere. Det er hovedforskjellen fra IMAP-leverandørene: [iCloud, Fastmail og generiske IMAP-postkasser](/blog/connect-icloud-fastmail-imap-to-claude) bruker et appspesifikt passord i stedet.
 
-### Trinn 2 — Koble til agenten din
+### Hvis organisasjonen må godkjenne appen først
 
-Du kobler til en klient én gang, og det samme oppsettet fungerer for hver innboks på kontoen din. For OAuth-kompatible klienter (claude.ai, Claude Desktop, Cursor) er det i claude.ai slik:
+På en jobb- eller skolekonto kan Microsoft stoppe deg før samtykkeskjermen og si at administratorgodkjenning kreves. Når det skjer, viser dashbordet et varsel med en **Send til IT-ansvarlig**-lenke:
+
+1. Send den lenken til IT-ansvarlig.
+2. IT-ansvarlig åpner den, logger inn og godkjenner MCP Emails én gang for hele organisasjonen.
+3. Gå tilbake til dashbordet og koble til Outlook som i steg 1. Nå går det gjennom som for en personlig konto.
+
+IT-ansvarlig godkjenner appen for organisasjonen, og hver person logger fortsatt inn med sin egen konto og kobler bare til sin egen postkasse.
+
+### Hvis kontoen ikke har en Exchange-postkasse
+
+Noen Microsoft-kontoer har ingen Exchange Online-postkasse, for eksempel en administratorkonto uten Exchange-lisens, eller en organisasjon der e-posten ligger et annet sted. MCP Emails avviser slike kontoer fordi det ikke er noe å koble til, og sier fra om det. Hvis e-posten din faktisk ligger på en annen server, kobler du til adressen med IMAP i stedet.
+
+### Steg 2: Koble til agenten
+
+Du kobler til en klient én gang, og det samme oppsettet virker for alle innboksene på kontoen din. For OAuth-kompatible klienter (claude.ai, Claude Desktop, Cursor) er det slik i claude.ai:
 
 **Customize → Connectors → Add connector → lim inn URL-en → Connect → logg inn og godkjenn.**
 
@@ -43,53 +56,49 @@ Endepunktet er:
 https://mcpemails.com/api/mcp
 \`\`\`
 
-Når du klikker Connect, logger du inn på MCP Emails-kontoen din og godkjenner tilganger — \`read:email\`, \`send:email\`, eller begge. Ingen API-nøkkel skifter hender; det bruker OAuth 2.0 Authorization Code med PKCE og dynamisk klientregistrering under panseret.
+Når du klikker Connect, logger du inn på MCP Emails-kontoen din og godkjenner tilganger: \`read:email\`, \`send:email\` eller begge. Ingen API-nøkkel skifter hender.
 
-For klienter som ikke snakker OAuth (Cline, JetBrains-plugins, dine egne skript, rå cURL), genererer du en nøkkel med avgrensede tilganger i **Dashboard → API Keys**, velger tilganger, og sender den som \`Authorization: Bearer <api-key>\`. Den fullstendige gjennomgangen for de klientene finner du i [e-post for AI-agenter i Cursor, Cline og VS Code](/blog/email-for-ai-agents-cursor-cline-vscode). Hvis du veier de to tilnærmingene mot hverandre, legger [OAuth vs. API-nøkler for AI-e-posttilgang](/blog/oauth-vs-api-keys-ai-email-access) frem avveiningene.
+For klienter som ikke snakker OAuth (Cline, JetBrains-plugins, egne skript, rå cURL), lager du en avgrenset nøkkel i **Dashboard → API Keys** og sender den som \`Authorization: Bearer <api-key>\`. Hele gjennomgangen for disse klientene finner du i [e-post for AI-agenter i Cursor, Cline og VS Code](/blog/email-for-ai-agents-cursor-cline-vscode). Veier du de to tilnærmingene mot hverandre, går [OAuth vs API-nøkler for AI-tilgang til e-post](/blog/oauth-vs-api-keys-ai-email-access) gjennom avveiningene.
 
-## Microsoft Graph, under panseret
+## Microsoft Graph under panseret
 
-Når du er tilkoblet, går hvert verktøykall agenten din gjør ut til Microsoft Graph i sanntid. Les en melding, og MCP Emails kaller Graph, gir det tolkede resultatet til agenten din og forkaster det. Send en melding, og den går gjennom Graph på dine vegne — fra din egen adresse, gjennom Microsofts infrastruktur, slik at domenets leveringsdyktighet og omdømme forblir ditt. MCP Emails videresender aldri e-post fra sitt eget domene.
+Outlook kobles til via Microsoft Graph, ikke IMAP. Hvert verktøykall agenten gjør, går til Graph i sanntid: du leser en melding, og MCP Emails henter den fra Graph, gir resultatet til agenten og kaster det. Du sender en melding, og den går ut via Graph fra din egen adresse, så leveringsevnen og omdømmet ditt forblir ditt. MCP Emails videresender aldri e-post fra sitt eget domene.
 
-Det praktiske utfallet: e-posten agenten din sender ser nøyaktig ut som e-post du sendte, fordi det er det. Den havner i Sent Items. Svar trådes riktig fordi svarverktøyet setter In-Reply-To- og References-hodene for deg.
+## Hva agenten kan gjøre med en Outlook-innboks
 
-## Personlig vs. jobb-/skolekonto
+- Lese og søke i e-post.
+- Sende, svare og videresende, med vedlegg på opptil 25 MB.
+- Jobbe med utkast, og planlegge en sending til senere.
+- Jobbe med mapper, også nestede mapper.
+- Flytte, kopiere og arkivere meldinger.
+- Flagge og fjerne flagg, og merke meldinger som lest eller ulest.
+- Flytte meldinger til Slettede elementer, eller slette dem permanent.
+- Bruke signaturen du har satt for den innboksen på hver melding agenten sender.
 
-Begge fungerer. En forbruker-Outlook.com-konto og en Microsoft 365 jobb-/skolekonto kobler begge til gjennom samme Microsoft-påloggingsflyt, og begge eksponerer de samme verktøyene til agenten din.
+### Der Outlook skiller seg fra Gmail
 
-Det ene stedet virkeligheten trenger seg på er samtykkeskjermen på jobb-/skolekontoer. Hvis IT-administratoren din har låst ned samtykke til tredjepartsapper i tenanten din — noe mange større organisasjoner gjør — kan du se «godkjenning kreves» i stedet for en vanlig samtykkeforespørsel, og tilkoblingen venter på en administrator. Det er ikke en begrensning i MCP Emails; det er tenantens policy, og den ville blokkert enhver tredjepartsklient på nøyaktig samme måte. For en personlig konto, eller en tenant som tillater brukersamtykke, godkjenner du det selv og er ferdig.
+**Mapper, ikke etiketter.** Outlook organiserer e-post i mapper. Etikettverktøyene er bare for Gmail, så på en Outlook-innboks sorterer agenten e-post ved å flytte den til en mappe.
 
-## Hva som fungerer når det er tilkoblet
+**Søk.** Outlook-søk bruker Microsoft Graphs eget søk. Én Graph-begrensning er viktig: et tekstsøk kan ikke kombineres med filtrene for ulest, har vedlegg, flagget eller dato. Når søket ditt inneholder tekst, brukes ikke disse filtrene, og resultatet forteller agenten hvilke som ble utelatt. Trenger du begge, søk etter teksten først og la agenten snevre inn resultatene den får tilbake.
 
-Agenten din får de konsoliderte kjerneverktøyene pluss det ekstra Outlook støtter:
+**Nye Outlook.com-kontoer.** Microsoft kan midlertidig blokkere sending fra en helt ny Outlook.com-konto som sender mange meldinger på kort tid. Det er Microsofts beskyttelse mot misbruk. Hvis sending feiler på en ny konto, send i et roligere tempo og prøv igjen senere.
 
-- \`inbox_list\` — kall alltid dette først. Det returnerer de tilkoblede postkassene dine og deres \`inbox_id\`-UUID-er, slik at agenten aldri gjetter en ID.
-- \`email_read\` — ett verktøy, flere handlinger: \`list\` (nyeste først, paginert, med filtre som \`unread\`), \`read\` (tolket ren tekst, valgfri renset HTML, valgfrie vedlegg) og \`search\` (se søkenotatet nedenfor).
-- \`email_compose\` — \`send\`-handlingen skriver med CC/BCC, HTML og vedlegg på opptil 10 MB totalt; \`reply\`- og \`forward\`-handlingene trådes riktig med de korrekte hodene.
-- \`email_organize\` — merke som lest/ulest, flagge, arkivere, slette og flytte, hver via sin egen \`action\`.
+## En arbeidsflyt som er verdt å sette opp
 
-Utover disse støtter Outlook å merke som lest/ulest, flagge (Outlooks «flagg» tilsvarer det stjernemerkede/flaggede konseptet), videresende og flytte mellom mapper. Sjekk de live [dokumentene](/docs) for den gjeldende listen over funksjoner før du bygger mot et bestemt verktøy.
+Her er en sorteringssløyfe som fungerer godt på en Outlook-innboks. En eller to ganger i timen gjør agenten dette:
 
-### Søk bruker Microsofts \`$search\`
+1. Lister ulest e-post i innboksen.
+2. Leser alt som ser tidskritisk ut.
+3. Oppsummerer bunken og skriver utkast til svar på de du åpenbart ville svart på.
+4. Lar alt stå som ulest til du bekrefter.
 
-Outlook-søk er ikke Gmail-søk. Der Gmail tar operatorer som \`from:\` og \`is:unread\`, sender \`email_read\` med \`search\`-handlingen mot en Outlook-innboks spørringen din til Microsoft Graphs \`$search\`, som gjør relevansrangert fulltekstmatching på tvers av postkassen og også godtar KQL. Så en spørring som \`invoice from accounting last week\` fungerer som naturlig språk, og du kan bli mer presis med KQL som \`from:finance@acme.com AND subject:invoice\`. Hvis du skriver prompter som hardkoder Gmail-operatorer, oppfører de seg ikke likt på Outlook — be agenten din om å søke i klart språk og la Graph rangere.
+MCP Emails dytter ikke ny e-post til agenten, så agenten sjekker med den frekvensen du velger. For sortering holder det. For pollemønstrene som holder mål, les [hvordan sortere og oppsummere en innboks](/blog/ai-agent-triage-summarize-inbox).
 
-## En arbeidsflyt verdt å sette opp
+## Sammenlignet med å bygge din egen Microsoft 365-server
 
-Her er en triage-løkke jeg kjører mot en Microsoft 365-innboks. En eller to ganger i timen gjør agenten:
+De selvhostede Outlook-MCP-serverne på GitHub treffer alle den samme veggen: appregistreringen i Entra, administratorsamtykket og livssyklusen til Graph-tokenene er selve jobben, og den eier du for alltid. Den selvhostede MCP Emails-versjonen støtter bare IMAP og SMTP. Outlook-koblingen blir værende i det hostede produktet, så en som selvhoster og vil ha den, må registrere sin egen Microsoft Entra-app. Med den hostede tilnærmingen er tokenet kryptert i hvile, dekrypteres bare i det kallet gjøres, og du kan koble fra innboksen i dashbordet når som helst. [Hostet vs selvhostet](/blog/hosted-vs-self-hosted-gmail-mcp-server) går dypere inn i avveiningene.
 
-1. Kaller \`email_read\` med \`list\`-handlingen og \`unread: true\`.
-2. Leser alt som ser tidssensitivt ut med \`read\`-handlingen til \`email_read\`.
-3. Oppsummerer bunken og skriver utkast til svar på de jeg åpenbart ville besvart.
-4. Lar alt stå ulest til jeg bekrefter.
-
-Ett ærlig forbehold: MCP Emails er poll-basert. Det finnes ingen webhooks og ingen server-push, så agenten sjekker etter en tidsplan i stedet for å bli pinget i det øyeblikket e-post kommer. For triage er det greit — du setter takten. Bygger du noe mer reaktivt, les [hvordan du triagerer og oppsummerer en innboks](/blog/ai-agent-triage-summarize-inbox) for pollemønstrene som holder.
-
-## Sammenlignet med å bygge din egen M365-server
-
-De selvhostede Outlook MCP-serverne som svever rundt på GitHub treffer alle den samme veggen: Entra-appregistreringen og Graph-tokenets livssyklus er det egentlige arbeidet, og du eier dem for alltid. Du håndterer fornyelsestokener, tilgangsendringer når Microsoft justerer Graph, og sikkerheten der disse tokenene befinner seg. Med den hostede tilnærmingen er tokenet kryptert i hvile, dekryptert bare inne i en isolert funksjon ved kalltid, og kan tilbakekalles fra dashbordet med ett klikk. Vil du ha hele sammenligningen, går [hostet vs. selvhostet](/blog/hosted-vs-self-hosted-gmail-mcp-server) i dybden på avveiningene.
-
-Å koble til Outlook koster ingenting å prøve — [gratisplanen](/pricing) kobler til én innboks med 60 forespørsler per minutt, uten kort. Legg til Microsoft 365-postkassen din, pek Claude mot endepunktet, og gi den noe å lese.`,
+Vil du ha bakgrunnen for hvorfor dette laget finnes i det hele tatt, er [den komplette guiden til å gi AI-agenten din e-posttilgang](/blog/how-to-give-your-ai-agent-email-access) stedet å begynne. Ellers: [start gratis](/signup), koble til Outlook-innboksen din, pek agenten mot endepunktet og gi den noe å lese.`,
 };
 
 export default translation;

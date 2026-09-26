@@ -31,7 +31,7 @@
         "Read, search, organise, draft, schedule and send",
         "Send review and approval hold",
         "Usage analytics",
-        "Gmail, iCloud, Fastmail and any IMAP",
+        "Gmail, Outlook, iCloud, Fastmail and any IMAP",
         "Unlimited API keys",
         "Community support"
       ]
@@ -102,6 +102,7 @@
         "label": "Email providers",
         "rows": {
           "gmail": "Gmail (OAuth)",
+          "outlook": "Outlook / Microsoft 365 (Sign in with Microsoft)",
           "fastmail": "Fastmail (app password)",
           "appPassword": "iCloud, Yahoo, Zoho, Yandex (app password)",
           "imap": "Any IMAP / SMTP mailbox"
@@ -195,7 +196,7 @@
       },
       {
         "q": "What email providers are supported?",
-        "a": "Gmail uses OAuth 2.0. Fastmail connects with an app password. iCloud, Yahoo, Zoho, and Yandex connect with an app-specific password, and any other mailbox works through the generic IMAP / SMTP connector."
+        "a": "Gmail uses OAuth 2.0. Outlook and Microsoft 365 connect by signing in with Microsoft (OAuth): personal accounts connect directly, and a work or school account may need its IT admin to approve the app once. Fastmail connects with an app password. iCloud, Yahoo, Zoho, and Yandex connect with an app-specific password, and any other mailbox works through the generic IMAP / SMTP connector."
       },
       {
         "q": "Is there a refund policy?",
@@ -203,7 +204,7 @@
       },
       {
         "q": "Can I self-host it instead of paying?",
-        "a": "Yes. MCP Emails is open source under AGPL-3.0 and free to self-host. A docker-compose stack runs the same MCP server, with your mailbox credentials encrypted under a key only you hold. Self-host covers IMAP and SMTP mailboxes; Gmail and Outlook one-click OAuth, the dashboard, team features, and support stay on the paid plans."
+        "a": "Yes. MCP Emails is open source under AGPL-3.0 and free to self-host. A docker-compose stack runs the same MCP server, with your mailbox credentials encrypted under a key only you hold. Self-host covers IMAP and SMTP mailboxes; Gmail and Outlook sign-in (OAuth), the dashboard, team features, and support stay on the paid plans."
       }
     ]
   },

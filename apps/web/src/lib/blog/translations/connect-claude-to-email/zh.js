@@ -4,9 +4,7 @@ const translation = {
     '实用指南：通过 MCP 将 Claude 连接到 Gmail、iCloud、Fastmail、Yahoo、Zoho 和任何 IMAP 收件箱，无需编写代码，也不存储邮件。',
   coverAlt:
     '使用 MCP Emails 将 Claude 连接到 Gmail、iCloud、Fastmail、Yahoo、Zoho 和 IMAP 邮箱',
-  content: `> **Outlook 和 Microsoft 365 正在开发中。** 目前还无法在生产环境中连接。本指南涵盖 Gmail、iCloud、Fastmail、Yahoo、Zoho 以及其他今天已经可用的 IMAP 收件箱。
-
-Claude 可以读取、搜索、整理和发送你的电子邮件，但它需要一台 MCP 服务器才能访问真实收件箱。MCP Emails 就是这座桥梁：只需连接一次收件箱，将一个安全端点添加到 Claude，Claude 就能在 Gmail、iCloud、Fastmail、Yahoo、Zoho 以及其他 IMAP 服务商之间使用一致的邮件工具。
+  content: `Claude 可以读取、搜索、整理和发送你的电子邮件，但它需要一台 MCP 服务器才能访问真实收件箱。MCP Emails 就是这座桥梁：只需连接一次收件箱，将一个安全端点添加到 Claude，Claude 就能在 Gmail、iCloud、Fastmail、Yahoo、Zoho 以及其他 IMAP 服务商之间使用一致的邮件工具。
 
 通过 Claude 的 OAuth 流程连接时，无需编写代码、安装 SDK 或使用 API 密钥。每次请求都会从你的服务商实时获取邮件，MCP Emails 不会存储邮件。
 
@@ -14,13 +12,14 @@ Claude 可以读取、搜索、整理和发送你的电子邮件，但它需要�
 
 - 支持自定义连接器的 **Claude 计划或应用**。
 - 一个免费的 **MCP Emails** 账户：[在此创建](/signup)。
-- 一个邮件收件箱。Gmail 使用 OAuth；iCloud、Fastmail、Yahoo、Zoho 以及多数其他服务商使用应用专用密码。Outlook 支持正在开发中。
+- 一个邮件收件箱。Gmail 和 Outlook 使用 OAuth；iCloud、Fastmail、Yahoo、Zoho 以及多数其他服务商使用应用专用密码。
 
 ## 第 1 步：将收件箱连接到 MCP Emails
 
 在 MCP Emails 控制台中，打开 **Inboxes → Connect Inbox**，然后选择你的服务商。
 
 - **Gmail / Google Workspace：** 使用 Google 登录并授权访问。
+- **Outlook 与 Microsoft 365：** 选择 **Outlook**，点击**使用 Microsoft 连接**并批准，无需应用专用密码。个人 Outlook.com、Hotmail、Live 和 MSN 账户可以直接连接。工作或学校的 Microsoft 365 账户可能需要 IT 管理员先为整个组织一次性批准该应用；控制台会给你一个可以发给管理员的链接。详情见 [Outlook 与 Microsoft 365 指南](/blog/connect-outlook-microsoft-365-ai-agent-mcp)。
 - **iCloud 和 Fastmail：** 在服务商处创建应用专用密码，再将其输入 MCP Emails。
 - **Yahoo、Zoho、Yandex 和其他 IMAP 邮箱：** 创建应用密码，选择 **IMAP**，然后输入地址和密码。常见的服务器设置会自动识别。
 
@@ -83,7 +82,7 @@ MCP Emails 采用轮询模式：Claude 会在你要求时检查新邮件，而�
 ## 常见问题
 
 **Claude 可以连接 Gmail、Outlook 或 iCloud 吗？**  
-Gmail 通过 OAuth 连接，iCloud 通过应用专用密码连接。Outlook 支持正在开发中，尚未在生产环境中提供。MCP Emails 也支持 Fastmail 和通用 IMAP，因此覆盖 Yahoo、Zoho 等服务。
+Gmail 通过 OAuth 连接，Outlook 通过使用 Microsoft 登录连接，iCloud 通过应用专用密码连接。工作或学校的 Microsoft 365 账户可能需要 IT 管理员先一次性批准该应用。MCP Emails 也支持 Fastmail 和通用 IMAP，因此覆盖 Yahoo、Zoho 等服务。
 
 **我需要 API 密钥吗？**  
 Claude 的 OAuth 连接器流程不需要。粘贴端点 URL 并登录即可。API 密钥用于没有内置 OAuth 的 MCP 客户端。

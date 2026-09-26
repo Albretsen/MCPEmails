@@ -4,9 +4,7 @@ const translation = {
     "Comment une agence ou un indépendant donne à un agent IA l'accès à plusieurs boîtes clients sans les mélanger : un espace de travail par client, des clés limitées, la lecture seule d'abord et une validation humaine avant chaque envoi.",
   coverAlt:
     'Un agent IA travaillant sur des boîtes clients séparées avec un accès limité, MCP Emails',
-  content: `> **Outlook et Microsoft 365 sont en cours de développement.** Ils ne peuvent pas encore être connectés en production, donc un client sous Microsoft 365 devra patienter. Fonctionnent aujourd'hui : Google Workspace (avec un mot de passe d'application Google en IMAP par défaut, OAuth également disponible), Zoho, Fastmail, Migadu, Titan, Rackspace, IONOS et tout hébergeur IMAP standard.
-
-Si vous gérez le courrier de plusieurs clients, vous vivez avec une règle : rien du client A ne doit apparaître dans un fil du client B. Un agent IA ne change pas la règle, il rend simplement plus facile de l'enfreindre. Un seul agent avec un seul identifiant qui atteint toutes les boîtes que vous gérez est à une consigne maladroite de citer la mauvaise facture à la mauvaise personne.
+  content: `Si vous gérez le courrier de plusieurs clients, vous vivez avec une règle : rien du client A ne doit apparaître dans un fil du client B. Un agent IA ne change pas la règle, il rend simplement plus facile de l'enfreindre. Un seul agent avec un seul identifiant qui atteint toutes les boîtes que vous gérez est à une consigne maladroite de citer la mauvaise facture à la mauvaise personne.
 
 Trois échecs méritent qu'on s'en protège dès la conception : la **fuite entre clients**, quand un identifiant trop large laisse une recherche tomber sur la mauvaise boîte ; le **prestataire qui s'en va**, dont le portable contient toujours une clé API valide ; et l'**envoi non relu**, quand un agent répond au client de votre client, poliment et à côté. Intégrez la séparation à l'accès lui-même et l'agent ne peut plus franchir une frontière, même si une consigne le lui demande.
 
@@ -104,7 +102,7 @@ Non, si les boîtes de chaque client vivent dans leur propre espace. La séparat
 Retirez-le de l'espace de travail, ce qui révoque dans la même action les clés qu'il y avait créées. S'il reste mais ne doit plus écrire, rétrogradez-le en viewer.
 
 **Cela fonctionne-t-il pour un client sous Microsoft 365 ?**  
-Pas encore. Le support est en cours de développement et ne peut pas être connecté en production. Google Workspace, Zoho, Fastmail, Titan, IONOS et les hébergeurs IMAP génériques fonctionnent aujourd'hui.
+Oui. Une boîte Microsoft 365 se connecte avec la connexion Microsoft, sans mot de passe d'application. Beaucoup d'organisations exigent qu'un administrateur informatique approuve l'application une seule fois pour toute l'organisation avant que quiconque puisse se connecter ; le tableau de bord vous donne un lien à envoyer à l'administrateur informatique de votre client, et ensuite chaque boîte se connecte normalement.
 
 ## Étape suivante
 

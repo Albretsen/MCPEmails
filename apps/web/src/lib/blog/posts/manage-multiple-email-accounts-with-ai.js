@@ -11,9 +11,7 @@ const post = {
   updatedAt: '2026-09-15T09:00:00.000Z',
   tags: ['Multiple inboxes', 'Email', 'MCP', 'Workflow'],
   featured: false,
-  content: `> **Outlook and Microsoft 365 are in progress.** They cannot be connected in production yet. Everything below applies to Gmail, iCloud, Fastmail, Yahoo, Zoho, and other IMAP mailboxes.
-
-Almost nobody has one mailbox. You have a work address, a personal address, and at least one more for a side business or a domain you still own. Every question that crosses two accounts becomes a manual search in two places.
+  content: `Almost nobody has one mailbox. You have a work address, a personal address, and at least one more for a side business or a domain you still own. Every question that crosses two accounts becomes a manual search in two places.
 
 One AI agent across all of them removes the switching, but only if the agent knows which mailbox is which and replies leave from the right address.
 

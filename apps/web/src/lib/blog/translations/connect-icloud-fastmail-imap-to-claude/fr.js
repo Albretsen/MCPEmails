@@ -5,11 +5,11 @@ const translation = {
   coverAlt: 'Connecter iCloud, Fastmail et n’importe quelle boîte IMAP à Claude via MCP',
   content: `Connecter iCloud, Fastmail ou n’importe quelle boîte IMAP à Claude demande une seule chose dont Gmail et Outlook se passent : un **mot de passe d’application**. Vous le générez dans votre fournisseur de messagerie, vous le collez une fois dans MCP Emails, et Claude peut lire, rechercher et envoyer via cette boîte. Pas de chorégraphie OAuth, aucun réglage de serveur SMTP à mémoriser.
 
-C’est la voie à suivre pour tout fournisseur qui n’est ni Gmail ni Microsoft. iCloud, Fastmail, Yahoo, Zoho, Yandex et tout hôte IMAP générique passent par le même transport IMAP/SMTP, ils partagent donc un jeu de fonctionnalités identique. Si vous arrivez à obtenir un mot de passe d’application auprès du fournisseur, vous pouvez le connecter. Un bel avantage par rapport aux fournisseurs OAuth : l’IMAP offre à Claude une vraie suppression définitive.
+C’est la voie à suivre pour tout fournisseur qui n’est ni Gmail ni Microsoft. iCloud, Fastmail, Yahoo, Zoho, Yandex et tout hôte IMAP générique passent par le même transport IMAP/SMTP, ils partagent donc un jeu de fonctionnalités identique. Si vous arrivez à obtenir un mot de passe d’application auprès du fournisseur, vous pouvez le connecter. Un bel avantage par rapport à Gmail : l’IMAP offre à Claude une vraie suppression définitive.
 
 ## Pourquoi ces fournisseurs utilisent un mot de passe d’application, et non OAuth
 
-Gmail et Outlook exposent des API OAuth modernes, MCP Emails les connecte donc en une seule étape de connexion. iCloud et Fastmail n’offrent pas cette voie aux outils de messagerie tiers. À la place, ils vous remettent un **mot de passe d’application** — un long mot de passe généré aléatoirement, limité à une seule application, distinct du mot de passe réel de votre compte et révocable indépendamment.
+Gmail et Outlook exposent des API OAuth modernes, MCP Emails les connecte donc par une connexion plutôt que par un mot de passe. (Un compte professionnel ou scolaire Microsoft 365 peut d’abord nécessiter qu’un administrateur informatique approuve l’application une seule fois ; le [guide Outlook et Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) l’explique.) iCloud et Fastmail n’offrent pas cette voie aux outils de messagerie tiers. À la place, ils vous remettent un **mot de passe d’application** : un long mot de passe généré aléatoirement, limité à une seule application, distinct du mot de passe réel de votre compte et révocable indépendamment.
 
 Une mise au point qui s’impose, parce que d’anciens articles se trompent : **Fastmail fonctionne uniquement avec un mot de passe d’application.** Fastmail a déjà pris en charge un flux OAuth pour certaines intégrations, mais pour se connecter à MCP Emails aujourd’hui, vous générez un mot de passe d’application dans les réglages de Fastmail. Comme pour iCloud. Si un guide vous dit de « vous connecter avec Fastmail » via OAuth, il est dépassé.
 
@@ -75,11 +75,11 @@ Un prompt pour confirmer que tout fonctionne :
 Use inbox_list to find my iCloud inbox, then summarize my 5 most recent unread messages.
 \`\`\`
 
-## La seule chose que l’IMAP fait et que Gmail et Outlook ne peuvent pas
+## La seule chose que l’IMAP fait et que Gmail ne peut pas
 
-Voici le point que les gens oublient. Quand Claude « supprime » un message sur Gmail ou Outlook, il part à la corbeille. C’est une limite stricte des API Gmail et Microsoft Graph — elles n’exposent pas de suppression définitive aux applications tierces. Le message reste dans la corbeille jusqu’à l’expiration de la fenêtre de rétention du fournisseur.
+Voici le point que les gens oublient. Quand Claude « supprime » un message sur Gmail, il part à la corbeille. C’est une limite stricte de l’API Gmail : elle n’expose pas de suppression définitive aux applications tierces. Le message reste dans la corbeille jusqu’à l’expiration de la fenêtre de rétention du fournisseur. (Outlook est différent : Microsoft Graph propose bien une suppression définitive, et MCP Emails la prend en charge.)
 
-L’IMAP, c’est différent. Fastmail, iCloud, Yahoo, Zoho, Yandex et l’IMAP générique prennent tous en charge le **hard expunge** — Claude peut supprimer définitivement un message, et pas seulement le mettre à la corbeille. Si vous voulez un agent qui fait vraiment le ménage derrière lui, l’IMAP est le seul transport qui le permet. Pratique, et aussi une raison d’être réfléchi quant aux scopes que vous accordez. L’expunge est irréversible.
+L’IMAP aussi, c’est différent. Fastmail, iCloud, Yahoo, Zoho, Yandex et l’IMAP générique prennent tous en charge le **hard expunge** : Claude peut supprimer définitivement un message, et pas seulement le mettre à la corbeille. Si vous voulez un agent qui fait vraiment le ménage derrière lui, l’IMAP (ou Outlook) le permet. Pratique, et aussi une raison d’être réfléchi quant aux scopes que vous accordez. L’expunge est irréversible.
 
 La recherche se comporte elle aussi un peu différemment. Gmail dispose de toute sa syntaxe d’opérateurs, Outlook utilise KQL et les fournisseurs IMAP utilisent la recherche textuelle IMAP — capable, mais pas aussi expressive que les opérateurs de Gmail. Bon à savoir si vous écrivez des prompts orientés recherche.
 
@@ -94,7 +94,7 @@ Si vous hésitez encore à brancher l’e-mail sur un agent tout court, commence
 
 ## Pour conclure
 
-iCloud, Fastmail et l’IMAP ne sont pas des citoyens de seconde zone ici. Générez un mot de passe d’application, collez-le dans **Inboxes → Connect Inbox**, pointez Claude vers l’[endpoint](/docs) et vous obtenez un agent avec un accès complet en lecture/envoi, plus une suppression définitive que les fournisseurs OAuth ne peuvent pas offrir. C’est [gratuit pour démarrer](/signup), sans carte, avec une boîte pour toujours.`,
+iCloud, Fastmail et l’IMAP ne sont pas des citoyens de seconde zone ici. Générez un mot de passe d’application, collez-le dans **Inboxes → Connect Inbox**, pointez Claude vers l’[endpoint](/docs) et vous obtenez un agent avec un accès complet en lecture/envoi, plus la suppression définitive que Gmail ne peut pas offrir. C’est [gratuit pour démarrer](/signup), sans carte, avec une boîte pour toujours.`,
 };
 
 export default translation;

@@ -74,10 +74,10 @@ const translation = {
 
 你只需在 **Dashboard → Inboxes → Connect Inbox** 里把邮箱连接一次。具体如何鉴权取决于服务商。
 
-### OAuth 服务商（一键搞定）
+### OAuth 服务商（登录即可，无需密码）
 
 - **Gmail** —— 通过 Google 登录走 OAuth 2.0。
-- **Outlook / Microsoft 365** —— 通过 Microsoft 登录走 OAuth 2.0。配置细节见 [将 Outlook 和 Microsoft 365 连接到 AI 智能体](/blog/connect-outlook-microsoft-365-ai-agent-mcp)。
+- **Outlook / Microsoft 365**：通过使用 Microsoft 登录走 OAuth 2.0，经由 Microsoft Graph 而不是 IMAP。个人 Outlook.com、Hotmail、Live 和 MSN 账户可以直接连接。工作或学校的 Microsoft 365 账户可能需要 IT 管理员先为整个组织一次性批准该应用；控制台会给你一个可以发给管理员的链接。配置细节见 [将 Outlook 和 Microsoft 365 连接到 AI 智能体](/blog/connect-outlook-microsoft-365-ai-agent-mcp)。
 
 ### 应用密码服务商
 

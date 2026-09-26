@@ -1,99 +1,103 @@
 {
   "_sources": [
     "https://support.microsoft.com/en-us/office/outlook-and-other-apps-are-unable-to-connect-to-outlook-com-when-using-basic-authentication-f4202ebf-89c6-4a8a-bec3-3d60cf7deaef",
-    "https://learn.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth",
     "https://support.microsoft.com/en-us/accounts-billing/manage/how-to-get-and-use-app-passwords"
   ],
   "auth": {
     "method": "oauth",
-    "label": "仅限 OAuth 2.0，不支持应用密码",
+    "label": "使用 Microsoft 登录（OAuth 2.0）",
     "helpUrl": "https://support.microsoft.com/en-us/office/outlook-and-other-apps-are-unable-to-connect-to-outlook-com-when-using-basic-authentication-f4202ebf-89c6-4a8a-bec3-3d60cf7deaef",
-    "usernameForm": "你能输入的任何凭据都不起作用。个人 Microsoft 账户的 IMAP 服务只提供 XOAUTH2，因此只接受访问令牌，别的什么都不接受。",
+    "usernameForm": "无需输入任何内容。你在 Microsoft 自己的页面上用 Microsoft 账户登录并批准访问，因此这里不需要输入密码或应用专用密码。为 Outlook.com 公布的 IMAP 和 SMTP 设置在这里不适用：MCP Emails 通过 Microsoft Graph 连接。",
     "status": "active"
   },
   "meta": {
-    "title": "Outlook.com 与 AI：只能用 OAuth，应用密码已失效",
-    "description": "Outlook.com 的 IMAP 现在只声明 AUTH=XOAUTH2，任何密码或应用密码都无法将其连接到 MCP 服务器。发生了什么变化，你能做些什么。"
+    "title": "将 Outlook.com 连接到 Claude、ChatGPT 和 Cursor",
+    "description": "将 Outlook.com、Hotmail、Live 或 MSN 邮箱连接到 Claude、ChatGPT、Cursor 或任意 MCP 客户端。使用 Microsoft 登录，无需应用专用密码。1 个收件箱永久免费。"
   },
   "hero": {
     "eyebrow": "Outlook.com + AI",
-    "titleLine1": "Outlook.com 的 IMAP",
-    "titleLine2": "已完全不再接受密码",
-    "lead": "个人 Microsoft 账户，无论地址以 outlook.com、hotmail.com、live.com 还是 msn.com 结尾，都已不再接受来自非 Microsoft 应用的基本身份验证。服务器是在线的，只是已经没有任何密码机制可以提供了。",
-    "answer": "不能。mcpemails 无法连接 Outlook.com 邮箱，障碍在于身份验证，而不是能否访问。个人 Microsoft 账户的 IMAP 服务在 outlook.office365.com 的 993 端口响应，TLS 握手也能成功，但它的能力列表现在只声明 AUTH=XOAUTH2：没有任何密码机制可用，因此无论账户密码还是应用密码都无法通过认证。Microsoft 自 2024 年 9 月 16 日起停止为从非 Microsoft 应用连接的个人账户提供基本身份验证，只剩 OAuth 2.0 这一条路。mcpemails 不提供 Microsoft OAuth 连接，所以 Outlook.com 邮箱在这里无法连接。如果你今天就想让代理处理邮件，请连接一个通过 IMAP 接受密码的邮箱（一个收件箱免费），如需镜像，可将 Outlook.com 邮件转发到该邮箱。"
+    "titleLine1": "将 Outlook.com 连接到 Claude，",
+    "titleLine2": "以及 ChatGPT、Cursor 和任意 MCP 客户端",
+    "lead": "把你的 Outlook.com、Hotmail、Live 或 MSN 收件箱交给 AI 代理。使用 Microsoft 登录，批准一次访问，即可用一个 URL 在所有 MCP 客户端中阅读、搜索、发送、回复、定时发送和整理邮件。",
+    "meta0": "1 个收件箱永久免费",
+    "meta1": "使用 Microsoft 登录，无需应用专用密码",
+    "meta2": "邮件实时获取，绝不存储",
+    "answer": "可以。mcpemails 是一个托管的 MCP 服务器，通过 Microsoft Graph 连接个人 Microsoft 账户，即以 outlook.com、hotmail.com、live.com 或 msn.com 结尾的地址。你点击“使用 Microsoft 连接”，登录，然后在 Microsoft 的同意屏幕上批准访问，MCP Emails 在该屏幕上显示为已验证发布者。无需输入应用专用密码或 IMAP 设置，个人账户也不涉及任何管理员。把一个 URL 粘贴到 Claude、ChatGPT、Cursor 或任意 MCP 客户端，代理即可阅读、搜索、发送、回复、转发、定时发送和归档你的邮件。1 个收件箱永久免费。"
   },
   "method": {
-    "title": "Outlook.com 如何连接：XOAUTH2，别无其他",
-    "body": "Outlook.com 和企业版 Microsoft 365 邮箱是两个不同的服务，只是恰好落在同一台 IMAP 主机上，而区别在第一次交互中就能看出来。用企业地址连接 <code>outlook.office365.com</code> 的 993 端口，能力列表中仍在 <code>AUTH=XOAUTH2</code> 旁边列出 <code>AUTH=PLAIN</code>，这是对一个已被服务拒绝的机制的过时声明。用个人账户连接，<code>AUTH=PLAIN</code> 则根本不存在。消费者服务已经停止提供密码认证，而不只是拒绝它，这种失败更干脆，也更令人困惑，因为期望发送密码的客户端收到的是协议层面的拒绝，而不是登录错误。个人账户的 SMTP 为 <code>smtp-mail.outlook.com</code>，端口 587，使用 STARTTLS，认证情况相同。如果说有什么好消息，那就是个人账户中没有租户管理员：没有同意策略挡着你，因为根本没有什么需要同意的。"
+    "title": "Outlook.com 如何连接：使用 Microsoft 登录",
+    "body": "Outlook.com 通过 <b>Microsoft Graph</b> 以 OAuth 2.0 连接，而不是通过 IMAP。你在 Microsoft 自己的页面上登录，并批准一小组权限：读取和更改邮件（<b>Mail.ReadWrite</b>）、发送邮件（<b>Mail.Send</b>）、保持连接（<b>offline_access</b>），以及你的基本资料和邮箱地址。你的 Microsoft 密码只在 Microsoft 的页面上输入，永远不会到达我们这里。要断开连接，可在 mcpemails 中删除该收件箱，或将 MCP Emails 从有权访问你 Microsoft 账户的应用中移除。"
   },
   "setup": [
     {
-      "h": "创建免费 mcpemails 账户",
-      "p": "只需一个邮箱地址，无需信用卡。连接一个收件箱永久免费。接下来两步决定连接哪个邮箱，因为它不会是 Outlook.com 的那个。"
+      "h": "创建免费账户",
+      "p": "注册 mcpemails，无需信用卡。免费套餐可永久连接一个收件箱。"
     },
     {
-      "h": "选择一个仍通过 IMAP 接受密码的邮箱",
-      "p": "你在 Fastmail 或 Migadu 上的自有域名、个人 Gmail 账户、任何普通服务商上的项目地址。mcpemails 连接的就是这个账户，代理也在这里读取、起草、回复、定时和归档邮件。"
+      "h": "选择 Outlook 并使用 Microsoft 连接",
+      "p": "在控制台中打开“连接收件箱”，选择 Outlook，然后点击“使用 Microsoft 连接”。"
     },
     {
-      "h": "如果需要镜像，在 Outlook.com 中开启转发",
-      "p": "在 Outlook.com 网页版中打开 Settings，进入 Mail，再进入 Forwarding，启用转发到你刚刚连接的地址。保留“保留转发邮件副本”的选项，让你的 Outlook.com 邮箱保持完整。之后新邮件会同时到达两处，代理处理的是副本。"
+      "h": "登录并批准访问",
+      "p": "在 Microsoft 的页面上用你的 Outlook.com、Hotmail、Live 或 MSN 地址登录并批准权限。之后你会回到控制台，收件箱已连接。"
     },
     {
       "h": "将 MCP URL 粘贴到你的 AI",
-      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有已连接的收件箱。"
+      "p": "把 https://mcpemails.com/api/mcp 粘贴到 Claude、Cursor 或 ChatGPT 中，完成授权，代理便拥有该收件箱。"
     }
   ],
   "gotchas": [
     {
-      "h": "Outlook.com 和 Microsoft 365 共用主机，却不共用能力列表",
-      "p": "两个服务的 IMAP 都解析到 <code>outlook.office365.com</code>，这让它们在网上的每一张设置表中看起来都可以互换。其实不然。企业端声明 <code>AUTH=PLAIN</code> 却拒绝它；个人端根本不声明。两者都不接受密码，但失败方式不同，因此为其中一个写的支持文章会误诊另一个。SMTP 主机也不同：个人账户使用 <code>smtp-mail.outlook.com</code>。"
-    },
-    {
-      "h": "应用密码是基本身份验证凭据，所以它无处可登录",
-      "p": "Microsoft 仍允许你在个人账户上为旧版场景生成应用密码，例如旧版 Outlook 桌面程序或 Xbox 主机，这就是为什么那么多指南仍然让你为 IMAP 创建一个。但它帮不上忙。应用密码也是密码，而密码认证正是 IMAP 服务不再提供的东西。生成一个新的应用密码，然后眼看它再次失败，是在这家服务商上最常见的白费一小时。"
+      "h": "应用专用密码和 IMAP 密码都无法使用，所以我们使用 Microsoft Graph",
+      "p": "自 2024 年 9 月 16 日起，Microsoft 停止了个人账户从非 Microsoft 应用连接时的基本身份验证，Outlook.com 的 IMAP 服务现在只提供 OAuth。许多旧教程仍然让你生成应用专用密码，但它已无法登录邮箱。mcpemails 对 Outlook.com 完全不使用 IMAP：它使用 Microsoft 登录并与 Microsoft Graph 通信，因此没有需要创建的密码，也没有会填错的服务器设置。"
     },
     {
       "h": "hotmail.com、live.com 和 msn.com 地址是同一个服务",
-      "p": "所有这些域名背后的消费者邮件服务是同一个系统，只有一套端点和一套认证策略。一个在邮件客户端中正常工作了十五年的旧 hotmail.com 地址，与昨天刚创建的 outlook.com 地址受同样变更的影响，它的客户端一旦尝试重新认证，就会停止工作。"
+      "p": "这些域名背后的邮件是同一个 Microsoft 消费者服务。一个老的 hotmail.com 地址与昨天刚创建的 outlook.com 地址连接方式完全相同：选择 Outlook，并用该地址登录。"
     },
     {
-      "h": "IMAP 服务不声明 SPECIAL-USE",
-      "p": "个人 Microsoft 账户支持 MOVE、UIDPLUS 和 IDLE，但客户端无法询问服务器哪个是垃圾邮件或已发送文件夹，只能按名称匹配。Outlook.com 把垃圾邮件文件夹叫做 Junk Email 而不是 Junk，本地化账户使用翻译后的名称，因此按英文字面文件夹名匹配的工具会悄无声息地找不到任何可操作的东西。"
+      "h": "没有 Outlook 邮箱的 Microsoft 账户会被拒绝",
+      "p": "如果你登录的 Microsoft 账户背后没有 Exchange Online 邮箱，Microsoft Graph 就没有可打开的邮箱，因此 mcpemails 会拒绝连接并告诉你原因。如果该地址的邮件托管在其他服务器上，请改用 IMAP 连接。"
+    },
+    {
+      "h": "全新的 Outlook.com 账户可能会被暂时禁止发信",
+      "p": "当新创建的 Outlook.com 账户在短时间内发送大量邮件时，Microsoft 的反滥用系统可能会暂时阻止其发信。这是对 Microsoft 账户的限制，而不是连接故障，因此重新连接收件箱不会改变这一点。"
     }
   ],
   "limits": [
-    "转发给你的是副本，而不是邮箱本身。代理发送的回复从另一个地址发出，它归档或标记的任何内容都不会反映回 Outlook.com。",
-    "本页描述的是消费者 Microsoft 账户服务。如果你的地址实际上属于工作或学校租户，那么除了这里的一切之外，还要叠加企业同意规则，你的管理员也是答案的一部分。"
+    "Outlook 用文件夹整理邮件，包括嵌套文件夹。不支持 Outlook 类别，标签工具仅适用于 Gmail。",
+    "Microsoft Graph 无法将文本搜索与未读、附件、已标记或日期筛选条件组合使用。当搜索包含文本时，这些筛选条件不会生效，结果会说明省略了哪些条件。",
+    "支持最大 25 MB 的附件。",
+    "自托管版本仅通过 IMAP 和 SMTP 连接。使用 Microsoft 登录是托管服务的一部分。"
   ],
   "faq": [
     {
-      "q": "Claude 能用 Outlook.com 吗？",
-      "a": "无法通过 mcpemails 使用。Outlook.com 在 IMAP 上只接受 OAuth 2.0，而我们不提供 Microsoft OAuth 连接，所以这里无法连接该邮箱。连接另一个接受普通 IMAP 登录的邮箱，并把 Outlook.com 邮件转发过去，是目前可行的途径。"
+      "q": "Claude 能用于 Outlook.com 吗？",
+      "a": "可以。使用 Microsoft 登录，将你的 Outlook.com 邮箱连接到 mcpemails，把一个 MCP URL 粘贴到 Claude，Claude 就能阅读、搜索、发送、回复、转发、定时发送和归档你的邮件。同一个 URL 也适用于 ChatGPT、Cursor 和其他 MCP 客户端。"
     },
     {
-      "q": "Outlook.com 的 IMAP 和 SMTP 设置是什么？",
-      "a": "IMAP 为 outlook.office365.com，端口 993，隐式 TLS。SMTP 为 smtp-mail.outlook.com，端口 587，使用 STARTTLS。两者均已通过实时 TLS 连接确认。这些值是正确的，但单凭它们已不够用，因为 IMAP 服务只接受 OAuth 2.0 访问令牌认证。"
+      "q": "Hotmail、Live 和 MSN 地址也可以吗？",
+      "a": "可以。它们与 outlook.com 是同一个 Microsoft 消费者邮件服务，因此连接方式相同：在控制台中选择 Outlook，并用该地址登录。"
     },
     {
-      "q": "为什么我的 Outlook.com 密码被拒绝？",
-      "a": "与其说被拒绝，不如说根本没有提供密码这个选项。自 2024 年 9 月 16 日起，Microsoft 停止为从非 Microsoft 应用连接的个人账户支持基本身份验证，IMAP 服务现在只声明 XOAUTH2。试图发送密码的客户端没有任何机制可以把密码发出去。"
+      "q": "我需要应用专用密码或 IMAP 设置吗？",
+      "a": "不需要。你使用 Microsoft 登录后，mcpemails 通过 Microsoft Graph 连接 Outlook.com，因此无需创建应用专用密码，也无需填写 IMAP 或 SMTP 服务器。反正应用专用密码也无法使用：自 2024 年 9 月起，Microsoft 已不再接受个人账户上非 Microsoft 邮件应用的密码。"
     },
     {
-      "q": "我能为 Outlook.com IMAP 使用应用密码吗？",
-      "a": "不能。Microsoft 个人账户上仍有面向特定旧版应用的应用密码，但它们是基本身份验证凭据，而邮件服务已不再接受这种认证方式。无论多少旧教程把它当作解决办法，创建一个也不会改变结果。"
+      "q": "我的 AI 能在 Outlook.com 中做什么？",
+      "a": "阅读、搜索、发送、回复和转发；处理草稿；创建和使用文件夹，包括嵌套文件夹；移动、复制和归档；标记；删除到回收站或永久删除；处理最大 25 MB 的附件；定时发送；以及管理你的签名。"
     },
     {
-      "q": "这和企业版 Microsoft 365 的情况一样吗？",
-      "a": "结果相同，原因不同。个人账户没有租户管理员，也没有同意策略挡路，纯粹是密码认证已被移除。企业邮箱在同样移除认证方式的基础上，还有同意要求，必须由管理员批准应用申请的邮件权限。"
+      "q": "这和连接工作用的 Microsoft 365 账户一样吗？",
+      "a": "登录方式相同，审批可能不同。个人账户不需要管理员。工作或学校的 Microsoft 365 账户通常需要 IT 管理员先为整个组织批准一次 MCP Emails，遇到这种情况，控制台会给你一个可以发给管理员的链接。"
     },
     {
       "q": "我的邮件会存储在你们的服务器上吗？",
-      "a": "不会。对于 mcpemails 能连接的邮箱，每次请求时都通过 IMAP 实时获取邮件并交给你的 AI 客户端，凭据经过静态加密，邮件正文不会被保留。我们完全不持有任何 Outlook.com 凭据，因为根本无法建立 Outlook.com 连接。"
+      "a": "不会。每次请求都从 Microsoft 实时获取邮件，并交给你的 AI 客户端。你 Microsoft 登录所得的 OAuth 令牌静态加密存储，邮件正文不会保留。在 mcpemails 中删除该收件箱会立即终止连接，你也可以将 MCP Emails 从有权访问你 Microsoft 账户的应用中移除。"
     }
   ],
   "ctaBand": {
-    "title": "给你的 AI 一个它能登录的收件箱",
-    "sub": "Outlook.com 保持原样。为自动化工作连接一个 IMAP 邮箱，永久免费。"
+    "title": "把你的 Outlook.com 收件箱交给 AI",
+    "sub": "使用 Microsoft 登录，几分钟即可连接。1 个收件箱永久免费，无需信用卡。"
   }
 }

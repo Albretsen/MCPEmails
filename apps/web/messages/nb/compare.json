@@ -19,7 +19,7 @@
       "coverage": {
         "tag": "Dekning",
         "h": "Hver innboks, ikke bare Gmail",
-        "p": "Innebygde koblinger når vanligvis bare én postkasse: Gmail, av og til Outlook. De kan ikke nå <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b> eller noen annen <b>IMAP/SMTP</b>-konto. Vi kobler til alle: Gmail via OAuth, resten via et app-passord eller vanlig IMAP."
+        "p": "Innebygde koblinger når vanligvis bare én postkasse: Gmail, av og til Outlook. De kan ikke nå <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b> eller noen annen <b>IMAP/SMTP</b>-konto. Vi kobler til alle: Gmail via OAuth, Outlook og Microsoft 365 ved å logge inn med Microsoft, resten via et app-passord eller vanlig IMAP."
       },
       "actions": {
         "tag": "Ekte handlinger",
@@ -64,7 +64,7 @@
     "items": [
       {
         "q": "Kan ikke Claude eller ChatGPT allerede lese Gmailen min med en innebygd kobling?",
-        "a": "Av og til, for én leverandør. mcpemails kobler til Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex og hvilken som helst IMAP-postkasse, og utfører ekte handlinger: send, svar, videresend, planlegg, flytt, kopier, flagg, arkiver og slett. Samme innboks virker da i alle MCP-klienter, ikke bare i én leverandørs app."
+        "a": "Av og til, for én leverandør. mcpemails kobler til Gmail, Outlook, iCloud, Fastmail, Yahoo, Zoho, Yandex og hvilken som helst IMAP-postkasse, og utfører ekte handlinger: send, svar, videresend, planlegg, flytt, kopier, flagg, arkiver og slett. Samme innboks virker da i alle MCP-klienter, ikke bare i én leverandørs app."
       },
       {
         "q": "Hvilke postkasser går innebygde koblinger vanligvis glipp av?",

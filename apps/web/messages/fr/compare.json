@@ -19,7 +19,7 @@
       "coverage": {
         "tag": "Couverture",
         "h": "Chaque boîte, pas seulement Gmail",
-        "p": "Les connecteurs intégrés n'atteignent en général qu'une seule boîte : Gmail, parfois Outlook. Ils ne peuvent pas toucher <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b> ni aucun autre compte <b>IMAP/SMTP</b>. Nous les connectons tous : Gmail via OAuth, le reste via un mot de passe d'application ou simplement IMAP."
+        "p": "Les connecteurs intégrés n'atteignent en général qu'une seule boîte : Gmail, parfois Outlook. Ils ne peuvent pas toucher <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b> ni aucun autre compte <b>IMAP/SMTP</b>. Nous les connectons tous : Gmail via OAuth, Outlook et Microsoft 365 via la connexion avec Microsoft, le reste via un mot de passe d'application ou simplement IMAP."
       },
       "actions": {
         "tag": "Vraies actions",
@@ -64,7 +64,7 @@
     "items": [
       {
         "q": "Claude ou ChatGPT ne peuvent-ils pas déjà lire mon Gmail avec un connecteur intégré ?",
-        "a": "Parfois, pour un seul fournisseur. mcpemails connecte Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex et n'importe quelle boîte IMAP, et effectue de vraies actions : envoyer, répondre, transférer, planifier, déplacer, copier, marquer, archiver et supprimer. La même boîte fonctionne ensuite dans tous les clients MCP, pas seulement dans l'app d'un seul fournisseur."
+        "a": "Parfois, pour un seul fournisseur. mcpemails connecte Gmail, Outlook, iCloud, Fastmail, Yahoo, Zoho, Yandex et n'importe quelle boîte IMAP, et effectue de vraies actions : envoyer, répondre, transférer, planifier, déplacer, copier, marquer, archiver et supprimer. La même boîte fonctionne ensuite dans tous les clients MCP, pas seulement dans l'app d'un seul fournisseur."
       },
       {
         "q": "Quelles boîtes les connecteurs intégrés laissent-ils de côté en général ?",

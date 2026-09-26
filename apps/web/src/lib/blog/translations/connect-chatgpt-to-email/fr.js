@@ -4,9 +4,7 @@ const translation = {
     'Pas à pas : connectez Gmail, iCloud, Fastmail ou toute boîte IMAP à ChatGPT via un connecteur MCP, et à OpenAI Codex via une clé limitée. Aucun e-mail stocké.',
   coverAlt:
     'Connecter ChatGPT et OpenAI Codex à Gmail, iCloud, Fastmail et aux e-mails IMAP avec MCP Emails',
-  content: `> **Outlook et Microsoft 365 sont en cours de développement.** Ils ne peuvent pas encore être connectés en production. Ce guide couvre Gmail, iCloud, Fastmail, Yahoo, Zoho et les autres boîtes IMAP disponibles aujourd'hui.
-
-ChatGPT ne peut pas atteindre une boîte e-mail tout seul. Il lui faut un serveur MCP devant votre messagerie, et MCP Emails est ce serveur : connectez une boîte une fois, pointez ChatGPT vers une seule URL, et il dispose des mêmes outils de messagerie que vos e-mails soient chez Gmail, iCloud, Fastmail, Yahoo, Zoho ou sur un serveur IMAP auto-hébergé.
+  content: `ChatGPT ne peut pas atteindre une boîte e-mail tout seul. Il lui faut un serveur MCP devant votre messagerie, et MCP Emails est ce serveur : connectez une boîte une fois, pointez ChatGPT vers une seule URL, et il dispose des mêmes outils de messagerie que vos e-mails soient chez Gmail, iCloud, Fastmail, Yahoo, Zoho ou sur un serveur IMAP auto-hébergé.
 
 Deux surfaces OpenAI sont concernées, et elles s'authentifient différemment. ChatGPT exécute un flux OAuth dans le navigateur : aucune clé API à coller. OpenAI Codex tourne dans votre terminal et utilise plutôt une clé limitée comme jeton bearer. Même endpoint, mêmes outils.
 
@@ -16,7 +14,7 @@ Deux surfaces OpenAI sont concernées, et elles s'authentifient différemment. C
 
 - **ChatGPT Plus, Pro, Business, Enterprise ou Edu, sur le web.** Les connecteurs MCP personnalisés passent par le mode développeur, qu'OpenAI propose sur chatgpt.com pour ces abonnements. Les comptes Free et Go ne peuvent pas en ajouter, et les apps mobile et de bureau n'affichent pas l'option. Sur Business et Enterprise, un administrateur doit parfois d'abord autoriser le mode développeur.
 - **Un compte MCP Emails gratuit.** [Créez-le ici](/signup). L'offre gratuite accepte une boîte connectée et ne demande pas de carte.
-- **Une boîte e-mail.** Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex, ou tout service parlant IMAP et SMTP.
+- **Une boîte e-mail.** Gmail, Outlook ou Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, Yandex, ou tout service parlant IMAP et SMTP.
 
 Si vous êtes sur Free ou Go, la même boîte et la même URL fonctionnent déjà dans [Claude](/docs/claude), [Cursor](/docs/cursor), [VS Code](/docs/vscode) et les autres [clients pris en charge](/docs/clients).
 
@@ -31,6 +29,10 @@ Gmail se connecte par défaut avec un mot de passe d'application Google en IMAP,
 ### iCloud, Fastmail, Yahoo et Zoho
 
 Ces fournisseurs demandent un mot de passe spécifique à l'application, pas celui que vous tapez sur le web. Créez-le chez le fournisseur, choisissez ce fournisseur dans MCP Emails et collez-le. Le [guide iCloud, Fastmail et IMAP](/blog/connect-icloud-fastmail-imap-to-claude) donne les étapes exactes.
+
+### Outlook et Microsoft 365
+
+Outlook se connecte avec la connexion Microsoft, pas avec un mot de passe d'application : choisissez **Outlook**, cliquez sur **Se connecter avec Microsoft** et approuvez. Les comptes personnels Outlook.com, Hotmail, Live et MSN se connectent directement. Les comptes professionnels ou scolaires Microsoft 365 peuvent d'abord nécessiter qu'un administrateur informatique approuve l'application une seule fois pour toute l'organisation ; le tableau de bord vous donne un lien à lui envoyer. Le [guide Outlook et Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) donne les détails.
 
 ### Toute autre boîte IMAP
 

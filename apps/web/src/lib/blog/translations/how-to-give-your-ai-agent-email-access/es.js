@@ -74,10 +74,10 @@ Ninguna contraseña cruzó el cable. El agente sostenía capacidades, no credenc
 
 Conectas una bandeja una sola vez en **Dashboard → Inboxes → Connect Inbox**. Cómo te autenticas depende del proveedor.
 
-### Proveedores con OAuth (un clic)
+### Proveedores con OAuth (inicias sesión, sin contraseña)
 
 - **Gmail** — OAuth 2.0 mediante el inicio de sesión de Google.
-- **Outlook / Microsoft 365** — OAuth 2.0 mediante el inicio de sesión de Microsoft. Detalles de configuración en [conectar Outlook y Microsoft 365 a un agente de IA](/blog/connect-outlook-microsoft-365-ai-agent-mcp).
+- **Outlook / Microsoft 365**: OAuth 2.0 con Iniciar sesión con Microsoft, a través de Microsoft Graph y no de IMAP. Las cuentas personales de Outlook.com, Hotmail, Live y MSN se conectan directamente. Las cuentas de trabajo o educativas de Microsoft 365 pueden necesitar antes que un administrador de TI apruebe la aplicación una sola vez para toda la organización; el panel te da un enlace para enviárselo. Detalles de configuración en [conectar Outlook y Microsoft 365 a un agente de IA](/blog/connect-outlook-microsoft-365-ai-agent-mcp).
 
 ### Proveedores con contraseña de aplicación
 

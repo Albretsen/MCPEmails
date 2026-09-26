@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Secure AI Email MCP Server for Gmail, IMAP & Claude",
-    "description": "Connect Gmail, Fastmail, iCloud, Yahoo, Zoho, Yandex, or IMAP email to Claude, Cursor, ChatGPT, and any MCP client. Read, search, draft, approve, and send email live with provider-aware controls."
+    "description": "Connect Gmail, Outlook, Fastmail, iCloud, Yahoo, Zoho, Yandex, or IMAP email to Claude, Cursor, ChatGPT, and any MCP client. Read, search, draft, approve, and send email live with provider-aware controls."
   },
   "nav": {
     "features": "Features",
@@ -18,7 +18,7 @@
     "titleLine1": "Give your AI",
     "titleLine2": "agent an",
     "titleAccent": "inbox.",
-    "lead": "Connect Gmail, iCloud, Fastmail, or any IMAP inbox once. Paste one MCP endpoint URL into Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, or any MCP client. OAuth clients connect in a click, no API key setup. Your agent reads, searches, and sends mail live, and the mail it reads is never stored.",
+    "lead": "Connect Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox once. Paste one MCP endpoint URL into Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, or any MCP client. OAuth clients connect in a click, no API key setup. Your agent reads, searches, and sends mail live, and the mail it reads is never stored.",
     "ctaPrimary": "Connect your inbox",
     "ctaSecondary": "Read the docs",
     "metaFreeInbox": "1 inbox free, forever",
@@ -30,7 +30,7 @@
       "agentSub": "Claude · Cursor · VS Code · ChatGPT · any MCP client",
       "serverSub": "/api/mcp endpoint",
       "provider": "Your provider",
-      "providerSub": "Gmail · iCloud · IMAP",
+      "providerSub": "Gmail · Outlook · iCloud · IMAP",
       "logCalls": "agent calls",
       "logReturns": "returns inbox IDs, no dashboard copy-paste",
       "logFetches": "mcpemails fetches via Gmail API (token rotated)",
@@ -58,17 +58,17 @@
       "1": {
         "tag": "Storage",
         "h": "Email is fetched live. Never stored.",
-        "p": "Every tool call hits your provider in real time: Gmail API or IMAP. Message bodies, subjects, and attachments go to the agent and are discarded immediately. We persist one thing per inbox, an encrypted token or app password, so we can make the next call. The one exception is a message you schedule to send later: we hold it until the send time, then keep a record for your history."
+        "p": "Every tool call hits your provider in real time: Gmail API, Microsoft Graph, or IMAP. Message bodies, subjects, and attachments go to the agent and are discarded immediately. We persist one thing per inbox, an encrypted token or app password, so we can make the next call. The one exception is a message you schedule to send later: we hold it until the send time, then keep a record for your history."
       },
       "2": {
         "tag": "Sending",
         "h": "You stay in control of every send.",
-        "p": "Messages go through Gmail, Fastmail, or your own SMTP server, never our mail relay. Turn on per-inbox approval to hold sends, replies, forwards, draft sends, and scheduled sends for dashboard review. Automated retries can reuse an idempotency key for 24 hours, and Gmail can send only from a provider-verified Send As identity."
+        "p": "Messages go through Gmail, Outlook, Fastmail, or your own SMTP server, never our mail relay. Turn on per-inbox approval to hold sends, replies, forwards, draft sends, and scheduled sends for dashboard review. Automated retries can reuse an idempotency key for 24 hours, and Gmail can send only from a provider-verified Send As identity."
       },
       "3": {
         "tag": "Providers",
-        "h": "Gmail, iCloud, Fastmail & any IMAP inbox.",
-        "p": "OAuth 2.0 for Gmail; app-specific passwords for Fastmail, iCloud, Yahoo, Zoho, and Yandex; a generic IMAP / SMTP connector for everything else. Every inbox reports a versioned compatibility profile, so an agent can use portable actions while seeing where a provider behaves differently or cannot support an operation."
+        "h": "Gmail, Outlook, iCloud, Fastmail & any IMAP inbox.",
+        "p": "OAuth 2.0 for Gmail and for Outlook / Microsoft 365 (a work or school account may need its IT admin to approve the app once); app-specific passwords for Fastmail, iCloud, Yahoo, Zoho, and Yandex; a generic IMAP / SMTP connector for everything else. Every inbox reports a versioned compatibility profile, so an agent can use portable actions while seeing where a provider behaves differently or cannot support an operation."
       },
       "4": {
         "tag": "Access",
@@ -89,7 +89,7 @@
     "steps": {
       "0": {
         "h": "Connect your inbox",
-        "p": "Sign in and click <b>Connect Inbox</b>. Choose Gmail, iCloud, Fastmail, or any IMAP inbox, then complete OAuth or paste an app password. Credentials are encrypted; the mail your agent reads is never stored."
+        "p": "Sign in and click <b>Connect Inbox</b>. Choose Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox, then complete OAuth or paste an app password. Credentials are encrypted; the mail your agent reads is never stored."
       },
       "1": {
         "h": "Paste the URL: OAuth or API key",
@@ -104,7 +104,7 @@
       "0": "Discover all connected inboxes and their IDs. Call this first, no UUID copy-pasting from the dashboard.",
       "1": "Read mail: list recent summaries, fetch a full message, batch-read up to 50, search across providers, extract readable attachment text, or save the original email as .eml.",
       "2": "Organize mail: move, copy, delete, flag, or archive, whether one at a time, in bulk, or straight from a search. Long bulk runs report their status and can be cancelled from the dashboard.",
-      "3": "Compose: send a new message, reply in-thread, or forward through Gmail API or SMTP. Optional inbox approval holds outbound mail for dashboard review before it leaves.",
+      "3": "Compose: send a new message, reply in-thread, or forward through Gmail API, Microsoft Graph, or SMTP. Optional inbox approval holds outbound mail for dashboard review before it leaves.",
       "4": "Manage folders (labels on Gmail): create, rename, or delete, and use them as move destinations. folder_list reads the ones that already exist.",
       "5": "Drafts: create, update, and send provider-stored drafts, including an unsent reply kept in the source conversation for review. draft_list reads what is saved.",
       "6": "Schedule a message for a future time, and cancel it before it goes out. schedule_list shows what is queued.",
@@ -150,7 +150,7 @@
           "Read, search, organise, draft, schedule and send",
           "Send review and approval hold",
           "Usage analytics",
-          "Gmail, iCloud, Fastmail & any IMAP",
+          "Gmail, Outlook, iCloud, Fastmail & any IMAP",
           "Unlimited API keys",
           "Community support"
         ],
@@ -211,7 +211,7 @@
       },
       {
         "q": "Which email providers can I connect?",
-        "a": "Gmail over OAuth (one click), Fastmail, iCloud, Yahoo, Zoho and Yandex with an app-specific password, and any other mailbox over a generic IMAP/SMTP connection. Connect as many inboxes as you like and label them by use case."
+        "a": "Gmail over OAuth (one click), Outlook and Microsoft 365 by signing in with Microsoft (a work or school account may need its IT admin to approve the app once), Fastmail, iCloud, Yahoo, Zoho and Yandex with an app-specific password, and any other mailbox over a generic IMAP/SMTP connection. Connect as many inboxes as you like and label them by use case."
       },
       {
         "q": "Is my email stored anywhere?",
@@ -227,11 +227,11 @@
       },
       {
         "q": "How do I connect an inbox?",
-        "a": "Create a free account, connect your mailbox (one click for Gmail, or paste an app password for the others), then drop https://mcpemails.com/api/mcp into your AI client and authorize. Your agent has the inbox in a couple of minutes."
+        "a": "Create a free account, connect your mailbox (one click for Gmail, sign in with Microsoft for Outlook, or paste an app password for the others), then drop https://mcpemails.com/api/mcp into your AI client and authorize. Your agent has the inbox in a couple of minutes."
       },
       {
         "q": "Can I self-host it?",
-        "a": "Yes. MCP Emails is open source under AGPL-3.0, and the hosted service runs the same server you can run yourself. A docker-compose stack gets the full MCP server and all its tools running against your own database in about five minutes, for any IMAP or SMTP mailbox. Gmail and Outlook one-click OAuth and the dashboard stay on the hosted plan."
+        "a": "Yes. MCP Emails is open source under AGPL-3.0, and the hosted service runs the same server you can run yourself. A docker-compose stack gets the full MCP server and all its tools running against your own database in about five minutes, for any IMAP or SMTP mailbox. Gmail and Outlook sign-in (OAuth) and the dashboard stay on the hosted plan."
       }
     ]
   },

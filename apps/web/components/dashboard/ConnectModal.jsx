@@ -411,9 +411,11 @@ const PROVIDERS = [
   // for was the one thing missing from its own card. Primitives.jsx has carried
   // a real `fastmail` mark all along.
   { k: 'fastmail', label: 'Fastmail', subKey: 'connect.subFastmail',    logoKind: 'fastmail' },
-  // Outlook is temporarily unavailable (Microsoft connector not live yet) —
-  // shown LAST, greyed out / non-selectable with a "coming soon" flag until it ships.
-  { k: 'outlook',  label: 'Outlook',  subKey: 'connect.subOutlook',     logoKind: 'outlook', disabled: true },
+  // Outlook / Microsoft 365: Microsoft Graph OAuth. Not an app-password
+  // provider, so handleConnect sends it to OAUTH_ROUTES.outlook (/auth/outlook).
+  // The `disabled` flag the chips below still honour is kept for any future
+  // card that has to be shown before it ships.
+  { k: 'outlook',  label: 'Outlook',  subKey: 'connect.subOutlook',     logoKind: 'outlook' },
 ];
 
 /**
@@ -1263,7 +1265,7 @@ export function ConnectModal({
 
   /** Chip DOM nodes, so arrow keys can move focus as well as selection. */
   const chipRefs = useRef({});
-  /** Outlook is not selectable yet, so it is not part of the arrow order. */
+  /** A card flagged `disabled` is not selectable, so it is not part of the arrow order. */
   const selectableProviders = PROVIDERS.filter(p => !p.disabled);
 
   const selectProviderAt = index => {
@@ -2574,6 +2576,23 @@ export function ConnectModal({
                     {tr('connect.imapLeadBody')}
                   </p>
                 </div>
+              )}
+
+              {/* Outlook: say up front who can sign in straight away and who
+                  may be stopped by their organisation's consent policy, so a
+                  work account meeting Microsoft's "Need admin approval"
+                  screen is expected rather than a surprise. The dashboard's
+                  admin-consent toast takes over from there. */}
+              {provider === 'outlook' && (
+                <p style={{
+                  margin: '12px 0 0',
+                  fontFamily: 'var(--font-sans)',
+                  fontSize: 12,
+                  color: 'var(--fg-3)',
+                  lineHeight: 1.5,
+                }}>
+                  {tr('connect.hintOutlook')}
+                </p>
               )}
 
               {/* App-password providers: guidance + a link straight to the page

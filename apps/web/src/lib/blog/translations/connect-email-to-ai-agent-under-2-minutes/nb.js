@@ -41,16 +41,16 @@ Den raskeste av dem alle, fordi Google gjør jobben.
 
 Ingen passord skifter eier. MCP Emails holder et kryptert OAuth-token og kaller Gmail-APIet direkte. Søk bruker Gmails egne operatorer (\`from:\`, \`is:unread\`, \`after:\`), så agenten din kan være presis.
 
-### Outlook / Microsoft 365 (OAuth)
+### Outlook / Microsoft 365 (Logg inn med Microsoft)
 
-Samme form som Gmail, annen identitetsleverandør.
+Samme form som Gmail, annen identitetsleverandør. Ikke noe app-passord og ingen IMAP-innstillinger.
 
-1. **Dashboard → Inboxes → Connect Inbox → Outlook / Microsoft 365.**
-2. Logg inn med Microsoft-kontoen din på Microsofts side.
+1. **Dashboard → Inboxes → Connect Inbox → Outlook.**
+2. Klikk **Koble til med Microsoft** og logg inn med Microsoft-kontoen din på Microsofts side.
 3. Godkjenn tillatelsene.
 4. Innboksen dukker opp som tilkoblet. Sending går ut via Microsoft Graph, så det er en helt vanlig melding fra din egen konto.
 
-Hvis tenanten din har betinget tilgang eller regler for administratorsamtykke, går [oppsettsguiden for Outlook og Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) gjennom fallgruvene på administratorsiden.
+Personlige Outlook.com-, Hotmail-, Live- og MSN-kontoer kobles til slik, uten at noen administrator er involvert. Jobb- eller skolekontoer i Microsoft 365 kan trenge at en IT-ansvarlig godkjenner appen først: mange organisasjoner hindrer ansatte i å godkjenne tilgang til postkassen selv. Skjer det, gir dashbordet deg en lenke du sender til IT-ansvarlig, som godkjenner appen én gang for hele organisasjonen, og så kobler du til som over. [Oppsettsguiden for Outlook og Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) går gjennom det.
 
 ### iCloud (app-spesifikt passord)
 

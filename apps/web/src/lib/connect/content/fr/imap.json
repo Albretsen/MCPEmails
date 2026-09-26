@@ -76,7 +76,7 @@
   "limits": [
     "Le serveur doit être joignable depuis l'Internet public. Une boîte sur un réseau privé, derrière un VPN ou sur une adresse IP privée est refusée volontairement : le nom d'hôte est résolu et toute adresse appartenant à une plage privée est rejetée.",
     "Seuls les ports mail standard sont utilisés : 143 et 993 pour IMAP, et 25, 465 et 587 pour SMTP. Un serveur qui écoute sur un port personnalisé ne peut pas être connecté.",
-    "Une boîte qui exige OAuth et n'accepte pas de mot de passe en IMAP ne peut pas être connectée de cette façon. Microsoft 365 est le cas le plus fréquent, et nous ne prétendons pas le prendre en charge."
+    "Une boîte qui exige OAuth et n'accepte pas de mot de passe en IMAP ne peut pas être connectée de cette façon. Microsoft 365 et Outlook.com sont les cas les plus fréquents : connectez-les avec l'option Outlook (Se connecter avec Microsoft) plutôt qu'en IMAP."
   ],
   "faq": [
     {

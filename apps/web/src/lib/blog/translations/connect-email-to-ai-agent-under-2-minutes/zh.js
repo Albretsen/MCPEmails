@@ -41,16 +41,16 @@ const translation = {
 
 整个过程从不交换密码。MCP Emails 持有一个加密的 OAuth 令牌，直接调用 Gmail API。搜索使用 Gmail 的原生操作符（\`from:\`、\`is:unread\`、\`after:\`），所以你的智能体可以非常精确。
 
-### Outlook / Microsoft 365（OAuth）
+### Outlook / Microsoft 365（使用 Microsoft 登录）
 
-形式和 Gmail 一样，只是换了身份提供商。
+形式和 Gmail 一样，只是换了身份提供商。无需应用专用密码，也无需 IMAP 设置。
 
-1. **Dashboard → Inboxes → Connect Inbox → Outlook / Microsoft 365。**
-2. 在 Microsoft 的页面上用你的 Microsoft 账户登录。
+1. **Dashboard → Inboxes → Connect Inbox → Outlook。**
+2. 点击**使用 Microsoft 连接**，在 Microsoft 的页面上用你的 Microsoft 账户登录。
 3. 批准权限。
 4. 邮箱显示为已连接。发送通过 Microsoft Graph 发出，所以这是一封从你自己账户发出的普通邮件。
 
-如果你的租户有条件访问或管理员同意规则，[Outlook 与 Microsoft 365 配置指南](/blog/connect-outlook-microsoft-365-ai-agent-mcp)会带你走一遍管理员侧的那些坑。
+个人 Outlook.com、Hotmail、Live 和 MSN 账户按这种方式连接，不需要任何管理员参与。工作或学校的 Microsoft 365 账户可能需要 IT 管理员先批准该应用：很多组织不允许员工自行批准邮箱访问权限。遇到这种情况时，控制台会给你一个链接，发给你的 IT 管理员，由管理员为整个组织一次性批准该应用，然后你再按上面的步骤连接。[Outlook 与 Microsoft 365 配置指南](/blog/connect-outlook-microsoft-365-ai-agent-mcp)有详细说明。
 
 ### iCloud（应用专用密码）
 

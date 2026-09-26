@@ -2,51 +2,58 @@ const post = {
   slug: 'connect-outlook-microsoft-365-ai-agent-mcp',
   title: 'Connecting Outlook and Microsoft 365 to Your AI Agent via MCP',
   description:
-    'Connect Outlook or Microsoft 365 to your AI agent over MCP in minutes. Microsoft sign-in OAuth, Graph under the hood, read/search/send/reply — no custom server.',
+    'Connect Outlook.com or Microsoft 365 to your AI agent over MCP. Sign in with Microsoft, no app password, Microsoft Graph underneath. Work accounts may need IT admin approval once.',
   cover: '/blog/cover-connect-outlook-microsoft-365-ai-agent-mcp.svg',
   coverAlt: 'Connecting Outlook and Microsoft 365 to an AI agent over MCP',
   authorId: 'asgeir',
   publishedAt: "2026-05-18T09:00:00.000Z",
-  updatedAt: "2026-05-18T09:00:00.000Z",
+  updatedAt: "2026-09-25T09:00:00.000Z",
   tags: ['Outlook', 'Tutorial', 'MCP', 'AI agents'],
   featured: false,
-  // Outlook / Microsoft 365 is built but not yet generally available ("coming
-  // soon"). Keep this post reachable for early readers but out of search
-  // indexes and the sitemap until the connector ships, so we don't promise a
-  // live connect flow we can't yet deliver. See the disclaimer at the top of
-  // the content below.
-  noindex: true,
-  content: `> **Coming soon.** Outlook and Microsoft 365 support is built but not yet generally available. You can't connect an Outlook mailbox in production today — this guide previews how it will work once the connector ships. For inboxes you can connect right now, see [Gmail and IMAP](/docs/providers).
+  content: `To connect an Outlook or Microsoft 365 mailbox to your AI agent, you add the inbox in the MCP Emails dashboard with **Sign in with Microsoft**, then point your agent at one MCP endpoint. There is no app password, no IMAP or SMTP settings, no Azure portal and no Graph server of your own. A personal Outlook.com account connects in a couple of minutes. A work or school Microsoft 365 account often needs one extra step first: an IT admin approves the app once for the whole organisation.
 
-To connect an Outlook or Microsoft 365 mailbox to your AI agent, you sign in to MCP Emails, add the inbox with Microsoft OAuth, and point your agent at one MCP endpoint. No app registration, no Azure portal, no custom Graph server. The whole thing takes about two minutes, and your agent gets read, search, send, reply, flags, and folders against the live mailbox.
+Most "AI for email" guides assume Gmail and stop there. If you live in Outlook, this is the Outlook-first version: which accounts connect straight away, what the admin approval step looks like, what your agent can do once it is connected, and the few places where Outlook behaves differently from Gmail.
 
-Most "AI for email" guides assume Gmail and stop there. Outlook gets a shrug and a link to some half-maintained GitHub repo. If you live in Microsoft 365 for work, that's the wrong end of the stick. This post is the Outlook-first version: what actually works, how the Microsoft sign-in flows, what runs underneath, and where the personal-vs-work-account edges are.
+## Personal accounts and work accounts are two different cases
 
-## Why Outlook is harder than it looks (and why that's not your problem here)
+Microsoft email is not one thing, and the difference decides how your connection goes.
 
-Microsoft email is not one thing. There's consumer Outlook.com / Hotmail / Live, and there's Microsoft 365 work and school accounts living in Entra ID (the identity service formerly called Azure AD). They authenticate differently, and a work tenant can have conditional access policies, admin consent requirements, and MFA rules layered on top.
+- **Personal Microsoft accounts**: Outlook.com, Hotmail, Live and MSN addresses. You sign in with Microsoft, approve the permissions yourself, and you are connected. No admin is involved.
+- **Work or school Microsoft 365 accounts**: these live in your organisation's Microsoft Entra tenant. Many organisations require an IT admin to approve a third-party app before anyone can use it. Microsoft's default consent policy (since late 2025) does not let employees approve mailbox read access for themselves, so in many tenants you will not be able to finish the connection alone. That is a Microsoft tenant policy, not something MCP Emails can switch off, and it applies to any third-party email app.
 
-The DIY path means registering an application in the Azure / Entra portal, picking the right supported account types, requesting Microsoft Graph scopes like \`Mail.Read\` and \`Mail.Send\`, wiring a redirect URI, handling token refresh, and then writing the Graph calls to list, read, and send mail. People burn an afternoon on this and end up maintaining a tiny server forever. I've watched it happen.
+The admin approval is a one-time step for the whole organisation. Once it is done, every employee connects the normal way.
 
-MCP Emails does that registration and token plumbing once, centrally, so you don't. You click "sign in with Microsoft," approve, and you're connected. If you want the conceptual background on why this layer exists at all, the [complete guide to giving your AI agent email access](/blog/how-to-give-your-ai-agent-email-access) is the pillar to start from.
+## Connect your Outlook or Microsoft 365 inbox
 
-## Connect your Outlook / Microsoft 365 inbox
+Two parts: connect the mailbox, then connect the agent. They are separate on purpose. The mailbox connection lets MCP Emails reach your mailbox, and the agent connection lets your AI client reach MCP Emails.
 
-Two parts: connect the mailbox, then connect the agent. They're separate on purpose — the mailbox connection authorizes MCP Emails to reach your provider, and the agent connection authorizes your client to reach MCP Emails.
-
-### Step 1 — Add the inbox
+### Step 1: Add the inbox
 
 1. [Start free](/signup) and open the dashboard.
-2. Go to **Inboxes → Connect Inbox**.
-3. Pick **Outlook / Microsoft 365**.
-4. You're handed to Microsoft's own sign-in page. Enter your work or personal Microsoft account, complete MFA if your tenant requires it, and review the consent screen.
-5. Approve. Microsoft hands back an OAuth token, MCP Emails encrypts it (AES-256-GCM) and stores only that token. Nothing else about your mailbox is persisted.
+2. Go to **Inboxes → Connect Inbox** and pick **Outlook**.
+3. Click **Connect with Microsoft**. You are sent to Microsoft's own sign-in page.
+4. Sign in with your Microsoft account and complete MFA if your account uses it.
+5. Review the consent screen and approve. Microsoft shows the app as coming from a verified publisher, and it asks for permission to read and write your mail, send mail as you, and keep access until you disconnect.
 
-This is OAuth 2.0 — the same model Gmail uses. You never paste an Outlook password into MCP Emails, and there's no app password to generate. That's the key difference from the IMAP providers; if you're connecting [iCloud, Fastmail, or a generic IMAP mailbox](/blog/connect-icloud-fastmail-imap-to-claude), those use an app-specific password instead, because they don't offer OAuth for third-party clients.
+MCP Emails stores the resulting OAuth token encrypted and nothing else about your mailbox. You never type your Microsoft password into MCP Emails, and there is no app password to generate. That is the main difference from the IMAP providers: [iCloud, Fastmail, and generic IMAP mailboxes](/blog/connect-icloud-fastmail-imap-to-claude) use an app-specific password instead.
 
-### Step 2 — Connect your agent
+### If your organisation has to approve the app first
 
-You connect a client once, and the same setup works for every inbox on your account. For OAuth-capable clients (claude.ai, Claude Desktop, Cursor), in claude.ai it's:
+On a work or school account, Microsoft may stop you before the consent screen and say that admin approval is required. When that happens, the dashboard shows a notice with a **Send to your IT admin** link:
+
+1. Send that link to your IT admin.
+2. Your admin opens it, signs in, and approves MCP Emails once for the whole organisation.
+3. Come back to the dashboard and connect Outlook as in Step 1. It now goes through like a personal account.
+
+Your admin approves the app for the organisation, and each person still signs in with their own account and connects only their own mailbox.
+
+### If the account has no Exchange mailbox
+
+Some Microsoft accounts have no Exchange Online mailbox, for example an admin account without an Exchange licence, or an organisation whose mail is hosted somewhere else. MCP Emails refuses those accounts because there is nothing to connect, and tells you so. If your mail actually lives on another server, connect the address with IMAP instead.
+
+### Step 2: Connect your agent
+
+You connect a client once, and the same setup works for every inbox on your account. For OAuth-capable clients (claude.ai, Claude Desktop, Cursor), in claude.ai it is:
 
 **Customize → Connectors → Add connector → paste the URL → Connect → sign in & approve.**
 
@@ -56,53 +63,49 @@ The endpoint is:
 https://mcpemails.com/api/mcp
 \`\`\`
 
-When you click Connect, you sign in to your MCP Emails account and approve scopes — \`read:email\`, \`send:email\`, or both. No API key changes hands; it uses OAuth 2.0 Authorization Code with PKCE and dynamic client registration under the hood.
+When you click Connect, you sign in to your MCP Emails account and approve scopes: \`read:email\`, \`send:email\`, or both. No API key changes hands.
 
-For clients that don't speak OAuth (Cline, JetBrains plugins, your own scripts, raw cURL), generate a scoped key in **Dashboard → API Keys**, pick scopes, and send it as \`Authorization: Bearer <api-key>\`. The full walk-through for those clients lives in [email for AI agents in Cursor, Cline, and VS Code](/blog/email-for-ai-agents-cursor-cline-vscode). If you're weighing the two approaches, [OAuth vs API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access) lays out the trade-offs.
+For clients that do not speak OAuth (Cline, JetBrains plugins, your own scripts, raw cURL), generate a scoped key in **Dashboard → API Keys** and send it as \`Authorization: Bearer <api-key>\`. The full walk-through for those clients lives in [email for AI agents in Cursor, Cline, and VS Code](/blog/email-for-ai-agents-cursor-cline-vscode). If you are weighing the two approaches, [OAuth vs API keys for AI email access](/blog/oauth-vs-api-keys-ai-email-access) lays out the trade-offs.
 
 ## Microsoft Graph, under the hood
 
-Once connected, every tool call your agent makes goes out to Microsoft Graph in real time. Read a message, and MCP Emails calls Graph, hands the parsed result to your agent, and discards it. Send a message, and it goes through Graph on your behalf — from your real address, through Microsoft's infrastructure, so your domain's deliverability and reputation stay yours. MCP Emails never relays mail from its own domain.
+Outlook connects through Microsoft Graph, not IMAP. Every tool call your agent makes goes to Graph in real time: read a message, and MCP Emails fetches it from Graph, hands the result to your agent, and discards it. Send a message, and it goes out through Graph from your real address, so your deliverability and reputation stay yours. MCP Emails never relays mail from its own domain.
 
-The practical upshot: the mail your agent sends looks exactly like mail you sent, because it is. It lands in your Sent Items. Replies thread correctly because the reply tool sets the In-Reply-To and References headers for you.
+## What your agent can do with an Outlook inbox
 
-## Personal vs work/school accounts
+- Read and search mail.
+- Send, reply and forward, with attachments up to 25 MB.
+- Work with drafts, and schedule a send for later.
+- Work with folders, including nested folders.
+- Move, copy and archive messages.
+- Flag and unflag messages, and mark them read or unread.
+- Move messages to Deleted Items, or delete them permanently.
+- Use the signature you set for that inbox on every message the agent sends.
 
-Both work. A consumer Outlook.com account and a Microsoft 365 work/school account both connect through the same Microsoft sign-in flow, and both expose the same tools to your agent.
+### Where Outlook differs from Gmail
 
-The one place reality intrudes is the consent screen on work/school accounts. If your IT admin has locked down third-party app consent in your tenant — which plenty of larger orgs do — you may see "approval required" instead of a normal consent prompt, and the connection waits on an administrator. That's not an MCP Emails limitation; it's your tenant's policy, and it would block any third-party client identically. For a personal account, or a tenant that permits user consent, you approve it yourself and you're done.
+**Folders, not labels.** Outlook organises mail in folders. The label tools are Gmail-only, so on an Outlook inbox your agent files mail by moving it into a folder.
 
-## What works once it's connected
+**Search.** Outlook search runs on Microsoft Graph's own search. One Graph limitation matters: a text search cannot be combined with the unread, has-attachment, flagged or date filters. When your query includes text, those filters are not applied, and the result tells your agent which ones were left out. If you need both, search for the text first and let the agent narrow the results it gets back.
 
-Your agent gets the core consolidated tools plus the extras Outlook supports:
-
-- \`inbox_list\` — always call this first. It returns your connected mailboxes and their \`inbox_id\` UUIDs so the agent never guesses an ID.
-- \`email_read\` — one tool, several actions: \`list\` (newest-first, paginated, with filters like \`unread\`), \`read\` (parsed plain text, optional sanitized HTML, optional attachments), and \`search\` (see the search note below).
-- \`email_compose\` — the \`send\` action composes with CC/BCC, HTML, and attachments up to 10 MB total; the \`reply\` and \`forward\` actions thread correctly with the right headers.
-- \`email_organize\` — marking read/unread, flagging, archiving, deleting, and moving, each via its own \`action\`.
-
-Beyond those, Outlook supports marking read/unread, flagging (Outlook's "flag" maps to the starred/flagged concept), forwarding, and moving between folders. Check the live [docs](/docs) for the current capability list before you build against a specific tool.
-
-### Search uses Microsoft's \`$search\`
-
-Outlook search isn't Gmail search. Where Gmail takes operators like \`from:\` and \`is:unread\`, \`email_read\` with the \`search\` action against an Outlook inbox passes your query to Microsoft Graph's \`$search\`, which does relevance-ranked full-text matching across the mailbox and also accepts KQL. So a query like \`invoice from accounting last week\` works as natural language, and you can get more precise with KQL like \`from:finance@acme.com AND subject:invoice\`. If you write prompts that hardcode Gmail operators, they won't behave the same way on Outlook — tell your agent to search in plain language and let Graph rank.
+**New Outlook.com accounts.** Microsoft may temporarily block sending from a brand-new Outlook.com account that sends many messages in a short burst. That is Microsoft's anti-abuse protection. If sending fails on a new account, send at a slower pace and try again later.
 
 ## A workflow worth setting up
 
-Here's a triage loop I run against a Microsoft 365 inbox. Once or twice an hour, the agent:
+Here is a triage loop that works well on an Outlook inbox. Once or twice an hour, the agent:
 
-1. Calls \`email_read\` with the \`list\` action and \`unread: true\`.
-2. Reads anything that looks time-sensitive with \`email_read\`'s \`read\` action.
-3. Summarizes the batch and drafts replies for the ones I'd obviously answer.
-4. Leaves everything unread until I confirm.
+1. Lists unread mail in the inbox.
+2. Reads anything that looks time-sensitive.
+3. Summarizes the batch and drafts replies for the ones you would obviously answer.
+4. Leaves everything unread until you confirm.
 
-One honest caveat: MCP Emails is poll-based. There are no webhooks and no server push, so the agent checks on a schedule rather than getting pinged the instant mail arrives. For triage that's fine — you set the cadence. If you're building something more reactive, read [how to triage and summarize an inbox](/blog/ai-agent-triage-summarize-inbox) for the polling patterns that hold up.
+MCP Emails does not push new mail to your agent, so the agent checks on a schedule you choose. For triage that is fine. For the polling patterns that hold up, read [how to triage and summarize an inbox](/blog/ai-agent-triage-summarize-inbox).
 
-## Compared to building your own M365 server
+## Compared to building your own Microsoft 365 server
 
-The self-hosted Outlook MCP servers floating around GitHub all hit the same wall: the Entra app registration and Graph token lifecycle are the actual work, and you own them forever. You handle refresh tokens, scope changes when Microsoft adjusts Graph, and the security of wherever those tokens sit. With the hosted approach, the token is encrypted at rest, decrypted only inside an isolated function at call time, and revocable from the dashboard in one click. If you want the full comparison, [hosted vs self-hosted](/blog/hosted-vs-self-hosted-gmail-mcp-server) goes deep on the trade-offs.
+The self-hosted Outlook MCP servers on GitHub all hit the same wall: the Entra app registration, admin consent and Graph token lifecycle are the actual work, and you own them forever. The self-hosted MCP Emails stack is IMAP and SMTP only. The Outlook connector stays on the hosted product, so a self-hoster who wants it would have to register their own Microsoft Entra app. With the hosted approach, the token is encrypted at rest, decrypted only at call time, and you can disconnect the inbox from the dashboard at any time. [Hosted vs self-hosted](/blog/hosted-vs-self-hosted-gmail-mcp-server) goes deeper on the trade-offs.
 
-Connecting Outlook costs nothing to try — the [Free plan](/pricing) connects one inbox at 60 requests per minute, with no card required. Add your Microsoft 365 mailbox, point Claude at the endpoint, and give it something to read.`,
+If you want the conceptual background on why this layer exists at all, the [complete guide to giving your AI agent email access](/blog/how-to-give-your-ai-agent-email-access) is the place to start. Otherwise, [start free](/signup), connect your Outlook inbox, point your agent at the endpoint, and give it something to read.`,
 };
 
 export default post;

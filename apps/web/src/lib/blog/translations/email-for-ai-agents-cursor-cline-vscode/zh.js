@@ -12,7 +12,8 @@ MCP 服务器并不持有你的邮件。它代理一条到你已在使用的邮�
 
 进入 **Dashboard → Inboxes → Connect Inbox**，选择一个服务商：
 
-- **Gmail** 或 **Outlook / Microsoft 365** → 一键 OAuth。用 Google 或 Microsoft 账号登录并授权即可。
+- **Gmail** → 一键 OAuth。用 Google 账号登录并授权即可。
+- **Outlook / Microsoft 365** → 通过使用 Microsoft 登录完成 OAuth，无需应用专用密码。个人 Outlook.com、Hotmail、Live 和 MSN 账户可以直接连接。工作或学校的 Microsoft 365 账户可能需要 IT 管理员先为整个组织一次性批准该应用；控制台会给你一个可以发给管理员的链接。
 - **iCloud、Fastmail、Yahoo、Zoho，或任何通用 IMAP 主机** → 使用应用专用密码。在服务商的设置中生成它（iCloud 是在 appleid.apple.com），然后粘贴进去。
 
 Fastmail 只支持应用专用密码，不支持 OAuth，所以别在那里去找类似 Google 那样的授权同意页面。如果你用的是 iCloud 或 Fastmail，那篇 [iCloud、Fastmail 和 IMAP 设置详解](/blog/connect-icloud-fastmail-imap-to-claude)有针对各服务商的具体细节。如果用 Outlook，请看[连接 Outlook 和 Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp)。

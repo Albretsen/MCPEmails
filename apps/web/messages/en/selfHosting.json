@@ -51,9 +51,9 @@
         "hosted": "Yes"
       },
       {
-        "feature": "Gmail / Outlook one-click OAuth",
+        "feature": "Gmail / Outlook sign-in (OAuth)",
         "self": "Not included",
-        "hosted": "Gmail: yes; Outlook: pending verification"
+        "hosted": "Gmail: yes; Outlook: yes (work accounts may need IT admin approval)"
       },
       {
         "feature": "Web dashboard (connect, keys, activity)",
@@ -99,7 +99,7 @@
   },
   "commitment": {
     "title": "Self-hosting is a real commitment.",
-    "body": "You run the IMAP/SMTP configuration, updates, and security yourself, and support is community-only. Gmail one-click OAuth and the web dashboard stay on the hosted product; Outlook OAuth is built but pending Microsoft publisher verification. These features need OAuth secrets and a session layer a single-operator install does not. If you would rather not run infrastructure, the hosted plan is two minutes and free to start.",
+    "body": "You run the IMAP/SMTP configuration, updates, and security yourself, and support is community-only. Gmail and Outlook sign-in (OAuth) and the web dashboard stay on the hosted product. These features need OAuth secrets and a session layer a single-operator install does not; for Outlook you would also need your own Microsoft Entra app registration. If you would rather not run infrastructure, the hosted plan is two minutes and free to start.",
     "cta": "Use the hosted version"
   },
   "cta": {

@@ -4,7 +4,7 @@ const translation = {
     'Guía de configuración para tu@tuempresa.com: averigua quién gestiona realmente tu correo, conecta Google Workspace, Zoho, Fastmail, Migadu, Titan, Rackspace, IONOS o cPanel, y corrige el nombre del remitente antes de que tu agente responda.',
   coverAlt:
     'Conecta un correo de empresa con dominio propio a un agente de IA con MCP Emails',
-  content: `> **Outlook y Microsoft 365 están en desarrollo.** Todavía no se pueden conectar en producción. Si resulta que tu buzón de empresa es un tenant de Microsoft, esta guía te ayudará a confirmarlo, pero hoy no podrá conectarlo.
+  content: `> **¿Usas Microsoft 365?** Si resulta que tu buzón de empresa es un tenant de Microsoft, esta guía te ayudará a confirmarlo. Conéctalo con **Outlook** e Iniciar sesión con Microsoft en lugar de IMAP; puede que tu administrador de TI tenga que aprobar antes la aplicación una sola vez para toda la organización. La [guía de Outlook y Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) explica los pasos.
 
 Casi todas las guías para conectar el correo a un agente de IA dan por hecho que tu dirección acaba en gmail.com. El correo de empresa es distinto: el dominio no dice quién sirve el buzón, puede que otra persona controle si los clientes de correo pueden iniciar sesión, y lo que envía tu agente llega a tus clientes con tu nombre. Esta es la guía para tu@tuempresa.com.
 
@@ -33,7 +33,7 @@ Los registros de servicio indican host y puerto directamente, pero la mayoría d
 - Termina en \`.l.google.com\`, o \`smtp.google.com\`: Google Workspace.
 - \`mx.zoho.com\` o su equivalente regional: Zoho Mail.
 - \`aspmx1.migadu.com\`: Migadu. \`mx1.titan.email\`: Titan, con la marca con la que lo compraras.
-- Un MX alojado en Microsoft: un tenant de Microsoft 365, todavía no conectable.
+- Un MX alojado en Microsoft: un tenant de Microsoft 365. Conéctalo con **Outlook**, no por IMAP.
 - El nombre del servidor de tu empresa de hosting: un buzón de cPanel o Plesk.
 
 ## Paso 2: Sigue el camino de tu proveedor
@@ -62,7 +62,7 @@ Titan rechaza cualquier cliente de correo hasta que activas un interruptor: **Se
 
 ### Rackspace Email
 
-Los dos hosts son \`secure.emailsrvr.com\`, entrante y saliente, sea cual sea tu dominio. El nombre no lleva marca de Rackspace, así que la gente lo "corrige" por algo más verosímil y deja de funcionar. Usa la contraseña del buzón del panel de Cloud Office. Con la autenticación multifactor activada, esa contraseña deja de funcionar por IMAP y SMTP aunque siga valiendo en el webmail, así que necesitas una contraseña de aplicación. Rackspace también vende Hosted Exchange y revende Microsoft 365; ninguno de los dos se puede conectar aquí.
+Los dos hosts son \`secure.emailsrvr.com\`, entrante y saliente, sea cual sea tu dominio. El nombre no lleva marca de Rackspace, así que la gente lo "corrige" por algo más verosímil y deja de funcionar. Usa la contraseña del buzón del panel de Cloud Office. Con la autenticación multifactor activada, esa contraseña deja de funcionar por IMAP y SMTP aunque siga valiendo en el webmail, así que necesitas una contraseña de aplicación. Rackspace también vende Hosted Exchange, que no se puede conectar aquí, y revende Microsoft 365, que se conecta con **Outlook** en lugar de IMAP.
 
 ### IONOS
 
@@ -95,7 +95,7 @@ Defínelo por buzón en la página de detalle del buzón, donde una vista previa
 - **Estás usando otra contraseña.** Migadu, IONOS, Rackspace y cPanel separan el acceso al panel de control de la contraseña del buzón, y las dos suelen ser direcciones de correo.
 - **Da tiempo de espera en lugar de fallar.** Eso es el host o el puerto, no la credencial. Vuelve a leer el nombre del host en el panel del proveedor.
 - **Lee el correo pero no envía.** La mitad saliente tiene su propio host, puerto y modo de seguridad, y algunos hosts no escuchan en el 465. Confirma que concediste \`send:email\`.
-- **Es un buzón de Microsoft 365.** Comprado directamente o revendido por GoDaddy, IONOS o Rackspace, sigue siendo un tenant de Microsoft y todavía no se puede conectar.
+- **Es un buzón de Microsoft 365.** Comprado directamente o revendido por GoDaddy, IONOS o Rackspace, sigue siendo un tenant de Microsoft. Conéctalo con **Outlook** e Iniciar sesión con Microsoft, no por IMAP. Si Microsoft dice que hace falta la aprobación de un administrador, envía a tu administrador de TI el enlace que muestra el panel.
 
 La [matriz de proveedores](/docs/providers) y las [páginas de proveedor](/connect) recogen el detalle de cada uno.
 

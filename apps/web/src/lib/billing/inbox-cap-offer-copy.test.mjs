@@ -182,9 +182,10 @@ test('the copy leads with the company-mailbox case', () => {
 });
 
 test('the copy claims nothing the product does not have', () => {
-  // Pro is ONE seat. There is no SOC 2 report, Outlook is not supported, SSO
-  // and data residency are not Pro features. Checked in every locale, with the
-  // local words for "team", "member" and "seat".
+  // Pro is ONE seat. There is no SOC 2 report, SSO and data residency are not
+  // Pro features, and Outlook is on every plan, so it is not something the Pro
+  // upgrade can sell. Checked in every locale, with the local words for
+  // "team", "member" and "seat".
   const forbidden = [
     /outlook/i, /microsoft/i, /office\s?365/i, /\bm365\b/i, /soc\s?2/i, /\bsso\b/i,
     /resid/i, /\bseats?\b/i, /\bteams?\b/i, /\bmembers?\b/i, /\busers?\b/i,

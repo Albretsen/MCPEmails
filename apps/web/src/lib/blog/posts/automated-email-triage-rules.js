@@ -11,9 +11,7 @@ const post = {
   updatedAt: '2026-09-15T09:00:00.000Z',
   tags: ['Automations', 'Inbox triage', 'MCP', 'Email'],
   featured: false,
-  content: `> **Outlook and Microsoft 365 are in progress.** They cannot be connected in production yet.
-
-Every morning you ask your agent to clear the noise: file the build notifications, mark the receipts read, forward invoices to your bookkeeper. It works. It also costs a model call every time, and it does something slightly different on Tuesday than it did on Monday.
+  content: `Every morning you ask your agent to clear the noise: file the build notifications, mark the receipts read, forward invoices to your bookkeeper. It works. It also costs a model call every time, and it does something slightly different on Tuesday than it did on Monday.
 
 MCP Emails has a second surface for exactly that mail. An **automation** is a stored search plus one fixed action, evaluated on a cadence, with no model in the loop. Mail is matched, never interpreted.
 

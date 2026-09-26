@@ -1,39 +1,52 @@
 const translation = {
   title: '通过 MCP 将 Outlook 和 Microsoft 365 连接到你的 AI 智能体',
   description:
-    '几分钟内通过 MCP 将 Outlook 或 Microsoft 365 连接到你的 AI 智能体。Microsoft 登录 OAuth，底层用 Graph，读取／搜索／发送／回复——无需自建服务器。',
+    '通过 MCP 将 Outlook.com 或 Microsoft 365 连接到你的 AI 智能体。使用 Microsoft 登录，无需应用专用密码，底层使用 Microsoft Graph。工作账户可能需要 IT 管理员一次性批准。',
   coverAlt: '通过 MCP 将 Outlook 和 Microsoft 365 连接到 AI 智能体',
-  content: `> **即将推出。** Outlook 和 Microsoft 365 支持已开发完成，但尚未全面开放。目前你还无法在生产环境中连接 Outlook 邮箱——本指南预览连接器上线后的使用方式。要连接现在即可使用的邮箱，请参阅 [Gmail 和 IMAP](/docs/providers)。
+  content: `要把 Outlook 或 Microsoft 365 邮箱连接到你的 AI 智能体，你只需在 MCP Emails 控制台中通过**使用 Microsoft 登录**添加邮箱，然后把智能体指向一个 MCP 端点。无需应用专用密码，无需 IMAP 或 SMTP 设置，无需 Azure 门户，也无需自建 Graph 服务器。个人 Outlook.com 账户几分钟就能连好。工作或学校的 Microsoft 365 账户通常要先多走一步：由 IT 管理员为整个组织一次性批准该应用。
 
-要把 Outlook 或 Microsoft 365 邮箱连接到你的 AI 智能体，你只需登录 MCP Emails，用 Microsoft OAuth 添加邮箱，然后把智能体指向一个 MCP 端点即可。不用注册应用，不用进 Azure 门户，也不用自建 Graph 服务器。整个过程大约两分钟，你的智能体就能对实时邮箱进行读取、搜索、发送、回复、标记和管理文件夹。
+大多数“用 AI 处理邮件”的指南默认你用 Gmail，然后就到此为止。如果你的日常在 Outlook 里，这就是以 Outlook 为先的版本：哪些账户可以直接连接，管理员批准这一步是什么样子，连接后智能体能做什么，以及 Outlook 与 Gmail 表现不同的几个地方。
 
-大多数“用 AI 处理邮件”的教程都默认你用的是 Gmail，讲完就完了。Outlook 只换来一个耸肩，外加一条指向某个半荒废 GitHub 仓库的链接。如果你的工作离不开 Microsoft 365，那这就完全抓错了重点。这篇文章是以 Outlook 为主的版本：到底什么真正可用、Microsoft 登录怎么流转、底层跑的是什么，以及个人账户和工作账户之间的那些边界情况在哪里。
+## 个人账户和工作账户是两种不同的情况
 
-## 为什么 Outlook 比看上去更难（以及为什么在这里这不是你的麻烦）
+Microsoft 的邮箱并不是一种东西，这个区别决定了你的连接过程。
 
-Microsoft 邮件并不是单一的东西。一边是消费级的 Outlook.com／Hotmail／Live，另一边是托管在 Entra ID（这个身份服务以前叫 Azure AD）里的 Microsoft 365 工作和学校账户。它们的认证方式不同，而工作租户之上还可能叠加条件访问策略、管理员同意要求和 MFA 规则。
+- **个人 Microsoft 账户**：Outlook.com、Hotmail、Live 和 MSN 地址。你使用 Microsoft 登录，自己批准权限，就连接好了。不需要任何管理员参与。
+- **工作或学校的 Microsoft 365 账户**：这些账户位于你所在组织的 Microsoft Entra 租户中。很多组织要求 IT 管理员先批准第三方应用，其他人才能使用。Microsoft 的默认同意策略（自 2025 年底起）不允许员工自行批准邮箱读取权限，因此在很多租户中你无法独自完成连接。这是 Microsoft 租户的策略，不是 MCP Emails 能关闭的，而且对任何第三方邮件应用都一样适用。
 
-DIY 这条路意味着要在 Azure／Entra 门户里注册一个应用、选对受支持的账户类型、申请像 \`Mail.Read\` 和 \`Mail.Send\` 这样的 Microsoft Graph 权限、配置重定向 URI、处理令牌刷新，然后再写好用来列出、读取和发送邮件的 Graph 调用。人们为此耗掉一个下午，最后还得永远维护一个小服务器。这种事我亲眼见过。
+管理员批准是整个组织只需做一次的步骤。完成之后，每位员工都可以按正常方式连接。
 
-MCP Emails 把这套注册和令牌管线在中心化的地方一次性做好，这样你就不用做了。你点一下“用 Microsoft 登录”，授权，然后就连上了。如果你想了解这一层为什么存在的概念性背景，[为你的 AI 智能体接入邮件的完整指南](/blog/how-to-give-your-ai-agent-email-access)是值得从中入门的主干文章。
+## 连接你的 Outlook 或 Microsoft 365 邮箱
 
-## 连接你的 Outlook／Microsoft 365 邮箱
+分两部分：先连接邮箱，再连接智能体。这样分开是有意为之。邮箱连接让 MCP Emails 能访问你的邮箱，智能体连接让你的 AI 客户端能访问 MCP Emails。
 
-分两部分：先连接邮箱，再连接智能体。它们被刻意分开——邮箱连接授权 MCP Emails 去访问你的服务商，而智能体连接授权你的客户端去访问 MCP Emails。
+### 第 1 步：添加邮箱
 
-### 第 1 步——添加邮箱
+1. [免费开始](/signup)并打开控制台。
+2. 进入 **Inboxes → Connect Inbox**，选择 **Outlook**。
+3. 点击**使用 Microsoft 连接**。你会被带到 Microsoft 自己的登录页面。
+4. 用你的 Microsoft 账户登录，如果账户启用了 MFA，请完成验证。
+5. 查看同意页面并批准。Microsoft 会显示该应用来自已验证的发布者，并请求以下权限：读取和写入你的邮件、以你的身份发送邮件，以及在你断开连接之前保持访问。
 
-1. [免费开始](/signup)并打开仪表盘。
-2. 进入 **Inboxes → Connect Inbox**。
-3. 选择 **Outlook / Microsoft 365**。
-4. 你会被转到 Microsoft 自己的登录页面。输入你的工作或个人 Microsoft 账户，如果你的租户要求就完成 MFA，然后查看同意屏幕。
-5. 批准。Microsoft 会返回一个 OAuth 令牌，MCP Emails 将其加密（AES-256-GCM）并只存储该令牌。关于你邮箱的其他任何信息都不会被持久化。
+MCP Emails 只加密保存由此获得的 OAuth 令牌，不保存你邮箱的其他任何内容。你永远不需要在 MCP Emails 中输入 Microsoft 密码，也不需要生成应用专用密码。这是与 IMAP 服务商的主要区别：[iCloud、Fastmail 和通用 IMAP 邮箱](/blog/connect-icloud-fastmail-imap-to-claude)改用应用专用密码。
 
-这就是 OAuth 2.0——和 Gmail 用的是同一套模型。你从来不需要把 Outlook 密码粘贴进 MCP Emails，也不需要生成任何应用密码。这正是它与 IMAP 服务商的关键区别；如果你要连接的是 [iCloud、Fastmail 或通用 IMAP 邮箱](/blog/connect-icloud-fastmail-imap-to-claude)，那些用的是应用专用密码，因为它们不向第三方客户端提供 OAuth。
+### 如果你的组织需要先批准该应用
 
-### 第 2 步——连接你的智能体
+在工作或学校账户上，Microsoft 可能会在同意页面出现之前拦下你，并提示需要管理员批准。出现这种情况时，控制台会显示一条提示，附带**发送给你的 IT 管理员**链接：
 
-你只需连接一次客户端，同一套设置就对你账户下的每个邮箱都生效。对于支持 OAuth 的客户端（claude.ai、Claude Desktop、Cursor），在 claude.ai 里的操作是：
+1. 把这个链接发给你的 IT 管理员。
+2. 管理员打开链接、登录，并为整个组织一次性批准 MCP Emails。
+3. 回到控制台，按第 1 步连接 Outlook。现在它会像个人账户一样顺利完成。
+
+管理员是为整个组织批准该应用，而每个人仍然用自己的账户登录，并且只连接自己的邮箱。
+
+### 如果账户没有 Exchange 邮箱
+
+有些 Microsoft 账户没有 Exchange Online 邮箱，例如没有 Exchange 许可证的管理员账户，或邮件托管在其他地方的组织。MCP Emails 会拒绝这类账户，因为没有可连接的邮箱，并会告诉你原因。如果你的邮件实际上在另一台服务器上，请改用 IMAP 连接该地址。
+
+### 第 2 步：连接你的智能体
+
+客户端只需连接一次，同一套设置适用于你账户中的所有邮箱。对于支持 OAuth 的客户端（claude.ai、Claude Desktop、Cursor），在 claude.ai 中的操作是：
 
 **Customize → Connectors → Add connector → 粘贴 URL → Connect → 登录并批准。**
 
@@ -43,53 +56,49 @@ MCP Emails 把这套注册和令牌管线在中心化的地方一次性做好，
 https://mcpemails.com/api/mcp
 \`\`\`
 
-当你点击 Connect 时，你会登录自己的 MCP Emails 账户并批准权限——\`read:email\`、\`send:email\`，或两者都批准。其间没有 API 密钥被传递；它底层用的是带 PKCE 的 OAuth 2.0 授权码模式以及动态客户端注册。
+点击 Connect 后，你登录自己的 MCP Emails 账户并批准权限范围：\`read:email\`、\`send:email\`，或两者都选。整个过程不需要交出任何 API 密钥。
 
-对于不支持 OAuth 的客户端（Cline、JetBrains 插件、你自己的脚本、原始 cURL），请在 **Dashboard → API Keys** 里生成一个带权限范围的密钥，选好权限，然后把它作为 \`Authorization: Bearer <api-key>\` 发送。针对这些客户端的完整操作流程在[在 Cursor、Cline 和 VS Code 中为 AI 智能体接入邮件](/blog/email-for-ai-agents-cursor-cline-vscode)里。如果你在权衡这两种方式，[AI 邮件访问中 OAuth 与 API 密钥的对比](/blog/oauth-vs-api-keys-ai-email-access)梳理了其中的取舍。
+对于不支持 OAuth 的客户端（Cline、JetBrains 插件、你自己的脚本、直接用 cURL），在 **Dashboard → API Keys** 中生成一个限定权限的密钥，并以 \`Authorization: Bearer <api-key>\` 的形式发送。这类客户端的完整步骤见[在 Cursor、Cline 和 VS Code 中为 AI 智能体接入邮件](/blog/email-for-ai-agents-cursor-cline-vscode)。如果你在权衡两种方式，[AI 访问邮件：OAuth 与 API 密钥对比](/blog/oauth-vs-api-keys-ai-email-access)列出了各自的利弊。
 
 ## 底层的 Microsoft Graph
 
-一旦连接成功，你的智能体发起的每一次工具调用都会实时发往 Microsoft Graph。读取一条消息时，MCP Emails 调用 Graph，把解析后的结果交给你的智能体，然后丢弃它。发送一条消息时，它会代你通过 Graph 发出——从你真实的地址、经由 Microsoft 的基础设施发出，所以你域名的送达率和声誉始终属于你自己。MCP Emails 绝不会用它自己的域名来转发邮件。
+Outlook 通过 Microsoft Graph 连接，而不是 IMAP。智能体的每次工具调用都会实时发往 Graph：读取一封邮件时，MCP Emails 从 Graph 取回邮件，把结果交给智能体，然后丢弃。发送邮件时，邮件通过 Graph 从你的真实地址发出，因此送达率和信誉始终属于你自己。MCP Emails 从不通过自己的域名转发邮件。
 
-实际效果是：你的智能体发出的邮件看起来和你亲自发的一模一样，因为它本来就是。它会出现在你的“已发送邮件”里。回复能正确串入会话线程，因为回复工具会替你设置 In-Reply-To 和 References 头部。
+## 智能体能对 Outlook 邮箱做什么
 
-## 个人账户与工作／学校账户
+- 读取和搜索邮件。
+- 发送、回复和转发，附件最大 25 MB。
+- 处理草稿，并安排稍后发送。
+- 管理文件夹，包括嵌套文件夹。
+- 移动、复制和归档邮件。
+- 为邮件添加或取消旗标，并标记为已读或未读。
+- 将邮件移到“已删除邮件”，或永久删除。
+- 在智能体发送的每封邮件中使用你为该邮箱设置的签名。
 
-两者都行。消费级的 Outlook.com 账户和 Microsoft 365 工作／学校账户都通过同一套 Microsoft 登录流程连接，并且都向你的智能体暴露相同的工具。
+### Outlook 与 Gmail 的不同之处
 
-现实唯一会插一脚的地方，是工作／学校账户上的同意屏幕。如果你的 IT 管理员在租户里锁定了第三方应用的同意权限——很多较大的组织都会这么做——你可能看到的是“需要审批”，而不是普通的同意提示，连接会等待管理员处理。这不是 MCP Emails 的限制；这是你租户的策略，它会同样地拦住任何第三方客户端。对于个人账户，或者允许用户自行同意的租户，你自己批准一下就完成了。
+**文件夹，而不是标签。** Outlook 用文件夹整理邮件。标签工具仅适用于 Gmail，因此在 Outlook 邮箱上，智能体通过把邮件移入文件夹来归类。
 
-## 连接好之后能做什么
+**搜索。** Outlook 搜索使用 Microsoft Graph 自己的搜索。有一个 Graph 限制需要注意：文本搜索不能与未读、有附件、已加旗标或日期筛选条件同时使用。当查询包含文本时，这些筛选条件不会生效，结果会告诉智能体哪些条件被略过。如果两者都需要，先按文本搜索，再让智能体在返回的结果中进一步筛选。
 
-你的智能体会获得整合后的核心工具，外加 Outlook 支持的额外工具：
+**新的 Outlook.com 账户。** 对于刚注册、在短时间内大量发信的 Outlook.com 账户，Microsoft 可能会暂时阻止其发送。这是 Microsoft 的防滥用保护。如果新账户发送失败，请放慢发送节奏，稍后再试。
 
-- \`inbox_list\`——一定要先调用这个。它返回你已连接的邮箱及其 \`inbox_id\` UUID，这样智能体就永远不用去猜某个 ID。
-- \`email_read\`——一个工具，多个 action：\`list\`（最新优先、分页，并带有像 \`unread\` 这样的筛选条件）、\`read\`（解析后的纯文本、可选的净化 HTML、可选的附件）以及 \`search\`（见下面关于搜索的说明）。
-- \`email_compose\`——\`send\` 这个 action 用于撰写邮件，支持抄送／密送、HTML 以及总计最多 10 MB 的附件；\`reply\` 和 \`forward\` 这两个 action 会带着正确的头部在会话线程内正确串接。
-- \`email_organize\`——标记已读／未读、加旗标、归档、删除和移动，各自通过自己的 \`action\` 完成。
+## 一个值得设置的工作流
 
-除了这些之外，Outlook 还支持标记已读／未读、加旗标（Outlook 的“旗标”对应加星／标记的概念）、转发以及在文件夹之间移动。在你针对某个具体工具进行开发之前，请查看在线[文档](/docs)以获取最新的功能清单。
+下面是一个在 Outlook 邮箱上效果很好的分拣循环。每小时一到两次，智能体会：
 
-### 搜索使用 Microsoft 的 \`$search\`
+1. 列出收件箱中的未读邮件。
+2. 阅读看起来有时效性的邮件。
+3. 汇总这一批邮件，并为你显然会回复的邮件起草回复。
+4. 在你确认之前，所有邮件都保持未读。
 
-Outlook 搜索不是 Gmail 搜索。Gmail 接受像 \`from:\` 和 \`is:unread\` 这样的操作符，而对 Outlook 邮箱使用 \`email_read\` 的 \`search\` action 时，会把你的查询传给 Microsoft Graph 的 \`$search\`，它会在整个邮箱中做按相关性排序的全文匹配，并且也接受 KQL。所以像 \`invoice from accounting last week\` 这样的查询可以当作自然语言使用，而你也可以用 KQL 写得更精确，比如 \`from:finance@acme.com AND subject:invoice\`。如果你写的提示词里硬编码了 Gmail 操作符，它们在 Outlook 上不会有相同的表现——告诉你的智能体用自然语言搜索，让 Graph 去排序。
+MCP Emails 不会把新邮件主动推送给智能体，所以智能体按你设定的频率检查。对于分拣来说这就够了。关于可靠的轮询模式，请阅读[如何分拣和汇总收件箱](/blog/ai-agent-triage-summarize-inbox)。
 
-## 一个值得搭建的工作流
+## 与自建 Microsoft 365 服务器相比
 
-下面是我对一个 Microsoft 365 邮箱跑的分拣循环。每小时一两次，智能体会：
+GitHub 上那些自托管的 Outlook MCP 服务器都会撞上同一堵墙：在 Entra 中注册应用、管理员同意以及 Graph 令牌的生命周期才是真正的工作量，而且要由你永远维护下去。自托管版的 MCP Emails 只支持 IMAP 和 SMTP。Outlook 连接器只在托管产品中提供，所以想在自托管环境中使用它的人需要注册自己的 Microsoft Entra 应用。采用托管方式时，令牌在存储时加密，只在调用时解密，你也可以随时在控制台中断开该邮箱。[托管与自托管](/blog/hosted-vs-self-hosted-gmail-mcp-server)更深入地讨论了其中的取舍。
 
-1. 用 \`email_read\` 的 \`list\` action 加上 \`unread: true\` 调用。
-2. 对任何看起来有时效性的邮件用 \`email_read\` 的 \`read\` action 读取。
-3. 把这一批做个汇总，并为那些我显然会回复的邮件起草回复。
-4. 在我确认之前，把所有邮件都保持为未读。
-
-一个老实的提醒：MCP Emails 是基于轮询的。它没有 webhook，也没有服务器推送，所以智能体是按计划检查，而不是在邮件一到达的瞬间就被通知。对于分拣来说这没问题——节奏由你来设。如果你要做更具响应性的东西，请阅读[如何分拣并汇总收件箱](/blog/ai-agent-triage-summarize-inbox)，了解那些经得起考验的轮询模式。
-
-## 与自建 M365 服务器的对比
-
-GitHub 上流传的那些自托管 Outlook MCP 服务器全都撞上同一堵墙：Entra 应用注册和 Graph 令牌生命周期才是真正的工作量，而它们要由你永远扛着。你得处理刷新令牌、在 Microsoft 调整 Graph 时应对权限变更，以及那些令牌存放之处的安全问题。而用托管方式时，令牌在静态时是加密的，只在调用时于隔离的函数内部解密，并且可以在仪表盘里一键吊销。如果你想看完整对比，[托管 vs 自托管](/blog/hosted-vs-self-hosted-gmail-mcp-server)深入剖析了其中的取舍。
-
-连接 Outlook 试用起来不花一分钱——[免费方案](/pricing)可连接一个邮箱，限速为每分钟 60 个请求，无需绑卡。添加你的 Microsoft 365 邮箱，把 Claude 指向那个端点，然后给它点东西去读吧。`,
+如果你想了解这一层为什么存在，可以从[让 AI 智能体访问邮件的完整指南](/blog/how-to-give-your-ai-agent-email-access)开始。否则，就[免费开始](/signup)，连接你的 Outlook 邮箱，把智能体指向端点，给它点东西读吧。`,
 };
 
 export default translation;

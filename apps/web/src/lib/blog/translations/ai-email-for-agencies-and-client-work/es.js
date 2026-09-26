@@ -4,9 +4,7 @@ const translation = {
     'Cómo una agencia o un profesional independiente da a un agente de IA acceso a varios buzones de clientes sin mezclarlos: un espacio de trabajo por cliente, claves acotadas, solo lectura primero y una aprobación humana en cada envío.',
   coverAlt:
     'Un agente de IA trabajando sobre buzones de clientes separados con acceso acotado, MCP Emails',
-  content: `> **Outlook y Microsoft 365 están en desarrollo.** Todavía no se pueden conectar en producción, así que un cliente con Microsoft 365 tendrá que esperar. Hoy funcionan Google Workspace (con una contraseña de aplicación de Google sobre IMAP por defecto, y también OAuth), Zoho, Fastmail, Migadu, Titan, Rackspace, IONOS y cualquier proveedor IMAP estándar.
-
-Si gestionas el correo de más de un cliente, vives con una regla: nada del cliente A puede aparecer en un hilo del cliente B. Un agente de IA no cambia la regla, solo hace que sea más fácil romperla. Un único agente con una única credencial que alcanza todos los buzones que administras está a un descuido de citar la factura equivocada a la persona equivocada.
+  content: `Si gestionas el correo de más de un cliente, vives con una regla: nada del cliente A puede aparecer en un hilo del cliente B. Un agente de IA no cambia la regla, solo hace que sea más fácil romperla. Un único agente con una única credencial que alcanza todos los buzones que administras está a un descuido de citar la factura equivocada a la persona equivocada.
 
 Hay tres fallos contra los que conviene diseñar: la **fuga entre clientes**, cuando una credencial demasiado amplia permite que una búsqueda encuentre el buzón que no era; el **colaborador que se va**, cuyo portátil sigue guardando una clave de API que funciona; y el **envío sin revisar**, cuando un agente responde al cliente de tu cliente con educación y con datos incorrectos. Si construyes la separación dentro del propio acceso, el agente no puede cruzar la frontera ni aunque un mensaje se lo pida.
 
@@ -104,7 +102,7 @@ No, si los buzones de cada cliente viven en su propio espacio. La separación se
 Quítalo del espacio de trabajo, lo que revoca en la misma acción las claves que creó allí. Si se queda pero debe dejar de escribir, bájalo a viewer.
 
 **¿Funciona con un cliente que usa Microsoft 365?**  
-Todavía no. El soporte está en desarrollo y no se puede conectar en producción. Google Workspace, Zoho, Fastmail, Titan, IONOS y los proveedores IMAP genéricos funcionan hoy.
+Sí. Un buzón de Microsoft 365 se conecta con Iniciar sesión con Microsoft, sin contraseña de aplicación. Muchas organizaciones exigen que un administrador de TI apruebe la aplicación una sola vez para toda la organización antes de que nadie pueda conectarse; el panel te da un enlace para enviar al administrador de TI de tu cliente, y después cada buzón se conecta con normalidad.
 
 ## Siguiente paso
 

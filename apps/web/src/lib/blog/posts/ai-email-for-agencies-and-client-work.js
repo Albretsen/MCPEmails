@@ -8,12 +8,10 @@ const post = {
     'One AI agent working across separate client mailboxes with scoped access, MCP Emails',
   authorId: 'asgeir',
   publishedAt: '2026-09-15T09:00:00.000Z',
-  updatedAt: '2026-09-15T09:00:00.000Z',
+  updatedAt: '2026-09-25T09:00:00.000Z',
   tags: ['Agencies', 'Teams', 'Security', 'Email'],
   featured: false,
-  content: `> **Outlook and Microsoft 365 are in progress.** They cannot be connected in production yet, so a client on Microsoft 365 has to wait. Google Workspace (a Google app password over IMAP by default, OAuth also available), Zoho, Fastmail, Migadu, Titan, Rackspace, IONOS, and any plain IMAP host work today.
-
-If you run email for more than one client, you live by one rule: nothing from client A may surface in a thread for client B. An AI agent does not change that rule, it makes it easier to break. One agent holding one credential that reaches every mailbox you manage is a careless prompt away from quoting the wrong invoice to the wrong person.
+  content: `If you run email for more than one client, you live by one rule: nothing from client A may surface in a thread for client B. An AI agent does not change that rule, it makes it easier to break. One agent holding one credential that reaches every mailbox you manage is a careless prompt away from quoting the wrong invoice to the wrong person.
 
 Three failures are worth designing against: **cross-client leakage**, where a too-wide credential lets a search match the wrong mailbox; **the departing contractor**, whose laptop still holds a working API key; and **the unreviewed send**, where an agent answers a client's customer politely and wrongly. Build the separation into the access itself and the agent cannot cross a boundary even when a prompt asks it to.
 
@@ -111,7 +109,7 @@ Not if each client's inboxes live in their own workspace. Separation is enforced
 Remove them from the workspace, which revokes the keys they created there in the same action. If they stay but should stop writing, demote them to viewer.
 
 **Does this work for a client on Microsoft 365?**  
-Not yet. Support is in progress and cannot be connected in production. Google Workspace, Zoho, Fastmail, Titan, IONOS, and generic IMAP hosts work today.
+Yes. A Microsoft 365 mailbox connects with Sign in with Microsoft, no app password. Many organisations require an IT admin to approve the app once for the whole organisation before anyone can connect; the dashboard gives you a link to send to your client's IT admin, and after that each mailbox connects normally.
 
 ## Next step
 

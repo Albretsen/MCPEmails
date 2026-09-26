@@ -114,7 +114,8 @@
     "mcpCopyTitle": "Kopier din MCP-endepunkt-URL"
   },
   "connect": {
-    "subOutlook": "OAuth 2.0 · Microsoft 365",
+    "subOutlook": "Outlook.com · Microsoft 365",
+    "hintOutlook": "Outlook.com-, Hotmail-, Live- og MSN-kontoer logger på med en gang. En Microsoft 365-konto fra jobb eller skole kan trenge at IT-administratoren godkjenner MCP Emails én gang; hvis Microsoft ber om det, får du en lenke du kan sende til dem.",
     "comingSoon": "Kommer snart",
     "subFastmail": "App-passord",
     "subAppPassword": "App-passord",
@@ -226,7 +227,7 @@
     "smtpPortLabel": "SMTP-port",
     "passwordLabel": "Passord",
     "appPasswordLabel": "App-passord",
-    "passwordHint": "Bruk passordet til postkassen din. Hvis leverandøren din har totrinnsbekreftelse (f.eks. Gmail, Outlook, iCloud), genererer du heller et app-passord. Legitimasjonen krypteres før lagring.",
+    "passwordHint": "Bruk passordet til postkassen din. Hvis leverandøren din har totrinnsbekreftelse (f.eks. Gmail, iCloud, Yahoo), genererer du heller et app-passord. Legitimasjonen krypteres før lagring.",
     "showPassword": "Vis passord",
     "hidePassword": "Skjul passord",
     "cancel": "Avbryt",

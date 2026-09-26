@@ -114,7 +114,8 @@
     "mcpCopyTitle": "Copia la URL de tu endpoint MCP"
   },
   "connect": {
-    "subOutlook": "OAuth 2.0 · Microsoft 365",
+    "subOutlook": "Outlook.com · Microsoft 365",
+    "hintOutlook": "Las cuentas de Outlook.com, Hotmail, Live y MSN inician sesión directamente. Una cuenta de Microsoft 365 del trabajo o de un centro educativo puede necesitar que tu administrador de TI apruebe MCP Emails una vez; si Microsoft lo pide, te damos un enlace para enviárselo.",
     "comingSoon": "Próximamente",
     "subFastmail": "Contraseña de aplicación",
     "subAppPassword": "Contraseña de aplicación",
@@ -226,7 +227,7 @@
     "smtpPortLabel": "Puerto SMTP",
     "passwordLabel": "Contraseña",
     "appPasswordLabel": "Contraseña de aplicación",
-    "passwordHint": "Usa la contraseña de tu buzón. Si tu proveedor tiene verificación en dos pasos (p. ej. Gmail, Outlook, iCloud), genera una contraseña de aplicación. La credencial se cifra antes de almacenarse.",
+    "passwordHint": "Usa la contraseña de tu buzón. Si tu proveedor tiene verificación en dos pasos (p. ej. Gmail, iCloud, Yahoo), genera una contraseña de aplicación. La credencial se cifra antes de almacenarse.",
     "showPassword": "Mostrar contraseña",
     "hidePassword": "Ocultar contraseña",
     "cancel": "Cancelar",

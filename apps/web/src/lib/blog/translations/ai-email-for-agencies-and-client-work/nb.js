@@ -4,9 +4,7 @@ const translation = {
     'Slik gir et byrå eller en frilanser en AI-agent tilgang til flere kundepostkasser uten å blande kundene: ett arbeidsområde per kunde, avgrensede nøkler, lesetilgang først og en godkjenning før hver utsending.',
   coverAlt:
     'Én AI-agent som jobber på tvers av adskilte kundepostkasser med avgrenset tilgang, MCP Emails',
-  content: `> **Outlook og Microsoft 365 er under utvikling.** De kan ikke kobles til i produksjon ennå, så en kunde på Microsoft 365 må vente. Dette fungerer i dag: Google Workspace (med et Google-apppassord over IMAP som standard, OAuth er også mulig), Zoho, Fastmail, Migadu, Titan, Rackspace, IONOS og enhver vanlig IMAP-leverandør.
-
-Driver du e-post for mer enn én kunde, lever du med én regel: ingenting fra kunde A skal dukke opp i en tråd hos kunde B. En AI-agent endrer ikke regelen, den gjør det bare lettere å bryte den. Én agent med én legitimasjon som når hver eneste postkasse du forvalter, er én uforsiktig instruksjon unna å sitere feil faktura til feil person.
+  content: `Driver du e-post for mer enn én kunde, lever du med én regel: ingenting fra kunde A skal dukke opp i en tråd hos kunde B. En AI-agent endrer ikke regelen, den gjør det bare lettere å bryte den. Én agent med én legitimasjon som når hver eneste postkasse du forvalter, er én uforsiktig instruksjon unna å sitere feil faktura til feil person.
 
 Tre feil er verdt å designe mot: **lekkasje mellom kunder**, der en for vid legitimasjon lar et søk treffe feil postkasse; **konsulenten som slutter**, som fortsatt har en fungerende API-nøkkel på maskinen sin; og **utsendingen ingen leste**, der en agent svarer kundens kunde høflig og feil. Bygger du skillet inn i selve tilgangen, kan ikke agenten krysse en grense selv når en instruksjon ber den om det.
 
@@ -104,7 +102,7 @@ Ikke hvis hver kundes postkasser lever i sitt eget arbeidsområde. Skillet hånd
 Fjern vedkommende fra arbeidsområdet, noe som i samme handling trekker tilbake nøklene som ble opprettet der. Skal personen bli, men slutte å skrive, degraderer du til viewer.
 
 **Fungerer dette for en kunde på Microsoft 365?**  
-Ikke ennå. Støtten er under utvikling og kan ikke kobles til i produksjon. Google Workspace, Zoho, Fastmail, Titan, IONOS og vanlige IMAP-leverandører fungerer i dag.
+Ja. En Microsoft 365-postkasse kobles til med Logg inn med Microsoft, uten app-passord. Mange organisasjoner krever at en IT-ansvarlig godkjenner appen én gang for hele organisasjonen før noen kan koble til; dashbordet gir deg en lenke du sender til kundens IT-ansvarlig, og deretter kobles hver postkasse til som vanlig.
 
 ## Neste steg
 

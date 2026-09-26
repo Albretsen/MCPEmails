@@ -76,7 +76,7 @@
   "limits": [
     "The server has to be reachable from the public internet. A mailbox on a private network, behind a VPN, or on a private IP address is refused deliberately: the hostname is resolved and any address in a private range is rejected.",
     "Only the standard mail ports are dialled: 143 and 993 for IMAP, and 25, 465 and 587 for SMTP. A server listening on a custom port cannot be connected.",
-    "A mailbox that requires OAuth and will not accept a password over IMAP cannot be connected this way. Microsoft 365 is the case people hit most often, and we do not claim to support it."
+    "A mailbox that requires OAuth and will not accept a password over IMAP cannot be connected this way. Microsoft 365 and Outlook.com are the cases people hit most often: connect those with the Outlook option (Sign in with Microsoft) instead of IMAP."
   ],
   "faq": [
     {

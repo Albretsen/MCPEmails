@@ -4,9 +4,7 @@ const translation = {
     'Kjør postkassene for jobb, privat og bijobb gjennom én AI-agent: hvordan den finner postkassene, hvordan du avgrenser en forespørsel, avsendernavn som forblir riktige, og godkjenning av sending per postkasse.',
   coverAlt:
     'Én AI-agent koblet til e-postkontoer for jobb, privat og bijobb med MCP Emails',
-  content: `> **Outlook og Microsoft 365 er under utvikling.** De kan ikke kobles til i produksjon ennå. Alt under gjelder Gmail, iCloud, Fastmail, Yahoo, Zoho og andre IMAP-postkasser.
-
-Nesten ingen har bare én postkasse. Du har en jobbadresse, en privat adresse og minst én til for en bijobb eller et domene du fortsatt eier. Hvert spørsmål som krysser to kontoer, blir et manuelt søk to steder.
+  content: `Nesten ingen har bare én postkasse. Du har en jobbadresse, en privat adresse og minst én til for en bijobb eller et domene du fortsatt eier. Hvert spørsmål som krysser to kontoer, blir et manuelt søk to steder.
 
 Én AI-agent på tvers av alle sammen fjerner vekslingen, men bare hvis agenten vet hvilken postkasse som er hvilken, og svarene går ut fra riktig adresse.
 

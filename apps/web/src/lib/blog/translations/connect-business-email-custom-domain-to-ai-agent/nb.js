@@ -4,7 +4,7 @@ const translation = {
     'Oppsettsguide for deg@dittfirma.no: finn ut hvem som faktisk drifter e-posten din, koble til Google Workspace, Zoho, Fastmail, Migadu, Titan, Rackspace, IONOS eller cPanel, og fiks avsendernavnet før agenten svarer.',
   coverAlt:
     'Koble en bedrifts-e-post på eget domene til en AI-agent med MCP Emails',
-  content: `> **Outlook og Microsoft 365 er under utvikling.** De kan ikke kobles til i produksjon ennå. Hvis bedriftspostkassen din viser seg å være en Microsoft-tenant, hjelper denne guiden deg med å bekrefte det, men den får deg ikke koblet til i dag.
+  content: `> **På Microsoft 365?** Hvis bedriftspostkassen din viser seg å være en Microsoft-tenant, hjelper denne guiden deg med å bekrefte det. Koble den til med **Outlook** og Logg inn med Microsoft i stedet for IMAP; IT-ansvarlig må kanskje først godkjenne appen én gang for hele organisasjonen. [Guiden for Outlook og Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) viser stegene.
 
 Nesten alle guider for å koble e-post til en AI-agent tar for gitt at adressen din slutter på gmail.com. Bedrifts-e-post er noe annet: domenet sier ingenting om hvem som drifter postkassen, noen andre kan styre om e-postklienter i det hele tatt får logge inn, og det agenten sender går til kundene dine i ditt navn. Dette er guiden for deg@dittfirma.no.
 
@@ -33,7 +33,7 @@ Tjenesteoppføringer oppgir vert og port direkte, men de fleste domener publiser
 - Slutter på \`.l.google.com\`, eller \`smtp.google.com\`: Google Workspace.
 - \`mx.zoho.com\` eller en regional variant: Zoho Mail.
 - \`aspmx1.migadu.com\`: Migadu. \`mx1.titan.email\`: Titan, uansett hvilket merke du kjøpte det under.
-- Et MX-navn hos Microsoft: en Microsoft 365-tenant, ikke mulig å koble til ennå.
+- Et MX-navn hos Microsoft: en Microsoft 365-tenant. Koble den til med **Outlook**, ikke IMAP.
 - Navnet på webhotellets egen server: en cPanel- eller Plesk-postkasse.
 
 ## Steg 2: Følg veien for din leverandør
@@ -62,7 +62,7 @@ Titan avviser alle e-postklienter til du slår på én bryter: **Settings → En
 
 ### Rackspace Email
 
-Begge vertene er \`secure.emailsrvr.com\`, både inn og ut, uansett hvilket domene du har. Navnet bærer ingen Rackspace-merking, så folk "retter" det til noe som ser mer troverdig ut, og da virker ingenting. Bruk postkassepassordet fra Cloud Office-kontrollpanelet. Med flerfaktorautentisering på slutter det passordet å virke over IMAP og SMTP mens det fortsatt virker i nettpostkassen, og da trenger du et apppassord. Rackspace selger også Hosted Exchange og videreselger Microsoft 365; ingen av delene kan kobles til her.
+Begge vertene er \`secure.emailsrvr.com\`, både inn og ut, uansett hvilket domene du har. Navnet bærer ingen Rackspace-merking, så folk "retter" det til noe som ser mer troverdig ut, og da virker ingenting. Bruk postkassepassordet fra Cloud Office-kontrollpanelet. Med flerfaktorautentisering på slutter det passordet å virke over IMAP og SMTP mens det fortsatt virker i nettpostkassen, og da trenger du et apppassord. Rackspace selger også Hosted Exchange, som ikke kan kobles til her, og videreselger Microsoft 365, som kobles til med **Outlook** i stedet for IMAP.
 
 ### IONOS
 
@@ -95,7 +95,7 @@ Sett det per postkasse på detaljsiden for postkassen, der en forhåndsvisning v
 - **Du bruker rett og slett feil passord.** Migadu, IONOS, Rackspace og cPanel skiller alle kontrollpanel-innloggingen fra postkassepassordet, og begge er som regel e-postadresser.
 - **Den får tidsavbrudd i stedet for å feile.** Da er det verten eller porten, ikke legitimasjonen. Les vertsnavnet på nytt i leverandørens eget panel.
 - **E-posten leses, men sendes ikke.** Den utgående halvdelen har sin egen vert, port og sikkerhetsmodus, og noen verter lytter ikke på 465. Bekreft at du ga \`send:email\`.
-- **Det er en Microsoft 365-postkasse.** Kjøpt direkte eller videresolgt av GoDaddy, IONOS eller Rackspace er den fortsatt en Microsoft-tenant og kan ikke kobles til ennå.
+- **Det er en Microsoft 365-postkasse.** Kjøpt direkte eller videresolgt av GoDaddy, IONOS eller Rackspace er den fortsatt en Microsoft-tenant. Koble den til med **Outlook** og Logg inn med Microsoft, ikke IMAP. Hvis Microsoft sier at administratorgodkjenning kreves, sender du lenken dashbordet viser til IT-ansvarlig.
 
 [Leverandørmatrisen](/docs/providers) og [leverandørsidene](/connect) har detaljene for hver enkelt.
 

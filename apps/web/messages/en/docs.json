@@ -1,11 +1,11 @@
 {
   "meta": {
-    "title": "MCP Email Server Documentation: Gmail, IMAP & OAuth",
-    "description": "Set up mcpemails with Gmail or IMAP, connect Claude and other MCP clients with OAuth or an API key, and use the complete email tool reference."
+    "title": "MCP Email Server Documentation: Gmail, Outlook, IMAP & OAuth",
+    "description": "Set up mcpemails with Gmail, Outlook or IMAP, connect Claude and other MCP clients with OAuth or an API key, and use the complete email tool reference."
   },
   "hero": {
     "eyebrow": "Documentation",
-    "titleLine1": "Connect Gmail or IMAP to Claude",
+    "titleLine1": "Connect Gmail, Outlook or IMAP to Claude",
     "titleLine2": "in four steps.",
     "lead": "Connect any email account, paste one URL into an OAuth-capable MCP client and authorize. Clients without OAuth use an API key instead. Full tool reference and connection guide below.",
     "ctaQuickStart": "Quick start",
@@ -22,7 +22,7 @@
       "signup": {
         "label": "Sign up & connect an inbox",
         "heading": "Create your account and connect Gmail",
-        "body": "Sign up at mcpemails.com, then go to Dashboard → Inboxes → Connect Inbox. Pick Gmail, iCloud, Fastmail, or any IMAP inbox, then complete the OAuth flow or paste an app password. Your inbox is ready in under a minute.",
+        "body": "Sign up at mcpemails.com, then go to Dashboard → Inboxes → Connect Inbox. Pick Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox, then complete the OAuth flow or paste an app password. Your inbox is ready in under a minute.",
         "cta": "Connect your inbox →"
       },
       "apikey": {
@@ -128,7 +128,7 @@
       "title": "List Inboxes",
       "desc": "Returns every inbox the current API key or OAuth token can access. Call this first to discover inbox_id values, so you never copy-paste UUIDs from the dashboard. Each result includes the email address, provider, optional service brand (icloud/yahoo/zoho/yandex/generic/fastmail), a capabilities object, and a versioned compatibility profile. The profile labels each normalized operation exact, different, or unavailable so an agent can choose a portable workflow without hiding provider differences.",
       "params": {
-        "provider": "Optional filter: return only inboxes served by this provider. One of: gmail, fastmail, imap. Omit to list every inbox the key can access.",
+        "provider": "Optional filter: return only inboxes served by this provider. One of: gmail, outlook, fastmail, imap. Omit to list every inbox the key can access.",
         "include_capabilities": "Whether each inbox includes its capabilities object and compatibility profile. Default true; set false for a compact list of just inbox_id, email address, display name, provider, and service brand."
       }
     },
@@ -479,8 +479,8 @@
   },
   "providers": {
     "meta": {
-      "title": "Email provider compatibility for AI agents (Gmail, iCloud, Yahoo, Zoho)",
-      "description": "Which email providers work with an AI agent over MCP, and what it takes to connect each one: OAuth or app-specific password, IMAP and SMTP hosts and ports, TLS or STARTTLS, what commonly breaks, and what the agent can do once connected. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Microsoft 365 and generic IMAP."
+      "title": "Email provider compatibility for AI agents (Gmail, Outlook, iCloud, Yahoo, Zoho)",
+      "description": "Which email providers work with an AI agent over MCP, and what it takes to connect each one: OAuth or app-specific password, IMAP and SMTP hosts and ports, TLS or STARTTLS, what commonly breaks, and what the agent can do once connected. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Outlook / Microsoft 365 and generic IMAP."
     },
     "labels": {
       "gmailImap": "Gmail (IMAP)",
@@ -521,7 +521,7 @@
     "hero": {
       "eyebrow": "Compatibility matrix",
       "heading": "Email provider compatibility for AI agents",
-      "lead": "What an AI agent can actually do with each email provider, and what it takes to connect one. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Microsoft 365 and any generic IMAP inbox. Every row is checked against the connectors that run in production.",
+      "lead": "What an AI agent can actually do with each email provider, and what it takes to connect one. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Outlook / Microsoft 365 and any generic IMAP inbox. Every row is checked against the connectors that run in production.",
       "ctaConnect": "Connect an inbox",
       "ctaBack": "Back to docs"
     },
@@ -529,7 +529,7 @@
       "supported": "Supported",
       "notSupported": "Not supported",
       "planned": "Planned (not yet shipped)",
-      "imapNote": "<b>Gmail (IMAP), Fastmail, iCloud, Yahoo, Zoho, Yandex, and Generic IMAP</b> all connect over the same IMAP/SMTP transport (Gmail, Fastmail and iCloud use an app-specific password) and share an identical feature set, including IMAP search syntax. The columns are shown separately for clarity. <b>Gmail (API)</b> is the one Gmail column that is not IMAP: the same mailbox, reached through Google sign-in and the Gmail API instead."
+      "imapNote": "<b>Gmail (IMAP), Fastmail, iCloud, Yahoo, Zoho, Yandex, and Generic IMAP</b> all connect over the same IMAP/SMTP transport (Gmail, Fastmail and iCloud use an app-specific password) and share an identical feature set, including IMAP search syntax. The columns are shown separately for clarity. <b>Gmail (API)</b> is the one Gmail column that is not IMAP: the same mailbox, reached through Google sign-in and the Gmail API instead. <b>Outlook</b> is not IMAP either: it connects by signing in with Microsoft and works through Microsoft Graph."
     },
     "profiles": {
       "title": "Compatibility profiles",
@@ -587,7 +587,7 @@
         "yahoo": "Yahoo accepts at most 5 simultaneous connections. Its rejection text, “Incorrect username or password”, names both halves on purpose and will not tell you which one was wrong.",
         "zoho": "IMAP access ships switched off and has to be enabled first. Zoho also runs six regional data centres, and paid custom-domain mailboxes live on imappro/smtppro rather than imap/smtp, so the right host depends on both region and account type.",
         "yandex": "Yandex does not implement RFC 4959 SASL-IR, so the inline login form comes back as a command syntax error rather than a credential error. Both “IMAP” and “App passwords and OAuth tokens” have to be switched on, and Yandex 360 custom-domain accounts may sign in with a login name that is not the address.",
-        "outlook": "Microsoft’s default tenant consent policy excludes Mail.ReadWrite from the permissions an end user may approve, so a Microsoft 365 employee is refused before a consent screen ever appears. Only an administrator can clear that, which is why business Microsoft 365 cannot be connected by the person who owns the mailbox.",
+        "outlook": "Personal Microsoft accounts (outlook.com, hotmail.com, live.com, msn.com) connect directly. Work and school accounts are different: Microsoft’s default consent policy stops employees from approving mail permissions themselves, so the dashboard shows a link to send to your IT admin, who approves the app once for the whole organisation; after that everyone connects normally. A Microsoft account with no Exchange Online mailbox is refused, with a hint to connect the address over IMAP instead. Microsoft may temporarily block sending from a brand-new outlook.com account that sends in bursts, as part of its own anti-abuse checks. In search, Microsoft Graph cannot combine search text with the unread, attachment, flagged or date filters, so when text is present those filters are not applied and the result says which.",
         "generic": "A port and a security mode that disagree. Choosing STARTTLS while the port stays 993 opens a plaintext socket to a TLS-only listener, and the connection just times out. Failed transports are now retried automatically on the other standard combination."
       },
       "notes": {

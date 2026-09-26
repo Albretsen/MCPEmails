@@ -1473,13 +1473,24 @@ export const PROVIDERS = [
     slug: "office365",
     wave: 9,
     name: "Microsoft 365",
-    category: "blocked",
+    // Live since the Outlook launch (2026-09): Microsoft Graph OAuth, the same
+    // connector as Outlook.com. The caveat is consent, not the connector: on
+    // Microsoft's default tenant consent policy an employee cannot approve the
+    // mail scopes, so an IT admin approves the app once through
+    // /auth/outlook/admin-consent before anyone in the tenant can connect.
+    // The page copy says so; `status` stays "supported" because the product
+    // does connect these mailboxes once that approval exists.
+    category: "business",
     domain: "office365.com",
-    hostPattern: "shared",
-    status: "limited",
+    hostPattern: "oauth",
+    status: "supported",
     source: "ispdb+probe",
-    imap: {"host": "outlook.office365.com", "port": 993, "security": "tls"},
-    smtp: {"host": "smtp.office365.com", "port": 587, "security": "starttls"},
+    // Deliberately null, like Gmail: the probe below still records what the
+    // IMAP host answers (only XOAUTH2 actually works), but the connector talks to
+    // graph.microsoft.com, so publishing an IMAP settings table here would
+    // document a connection the product does not make.
+    imap: null,
+    smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["PLAIN", "XOAUTH2"], "saslIr": true, "move": true, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK Microsoft Exchange IMAP4 service ready. 28e79741-268c-4463-b2b6-8ae5b453b488 (tcpproxy/15.21.0360.006 BACKENDAUTHENTICATE) [TwBMADEAUAAyADcAOQBDAEEAMAAwADI", "smtpAuthMechs": [], "smtpStarttls": true, "smtpMaxSize": "157286400"},
     locales: ["en", "nb", "es", "fr", "zh"],
   },
@@ -1487,13 +1498,19 @@ export const PROVIDERS = [
     slug: "outlook",
     wave: 9,
     name: "Outlook.com",
-    category: "blocked",
+    // Personal Microsoft accounts (outlook.com, hotmail.com, live.com, msn.com):
+    // Microsoft Graph OAuth, no admin in the way.
+    category: "consumer",
     domain: "outlook.com",
-    hostPattern: "shared",
-    status: "limited",
+    hostPattern: "oauth",
+    status: "supported",
     source: "ispdb+probe",
-    imap: {"host": "outlook.office365.com", "port": 993, "security": "tls"},
-    smtp: {"host": "smtp-mail.outlook.com", "port": 587, "security": "starttls"},
+    // Deliberately null, like Gmail: the probe below still records what the
+    // IMAP host answers (only XOAUTH2 actually works), but the connector talks to
+    // graph.microsoft.com, so publishing an IMAP settings table here would
+    // document a connection the product does not make.
+    imap: null,
+    smtp: null,
     evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["XOAUTH2"], "saslIr": true, "move": true, "idle": true, "uidplus": true, "specialUse": false, "banner": "* OK Microsoft Exchange IMAP4 service ready. f7727043-334d-49cc-8f5e-3d93fc232c38 (tcpproxy/15.21.0360.006 BACKENDAUTHENTICATE) [TwBMADEAUAAyADcAOQBDAEEAMAAwADI", "smtpAuthMechs": [], "smtpStarttls": true, "smtpMaxSize": "157286400"},
     locales: ["en", "nb", "es", "fr", "zh"],
   },

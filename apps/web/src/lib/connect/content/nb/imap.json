@@ -76,7 +76,7 @@
   "limits": [
     "Serveren må kunne nås fra det offentlige internettet. En postkasse på et privat nettverk, bak en VPN eller på en privat IP-adresse avvises med vilje: vertsnavnet slås opp, og enhver adresse i et privat område blir avvist.",
     "Bare standardportene for e-post brukes: 143 og 993 for IMAP, og 25, 465 og 587 for SMTP. En server som lytter på en egendefinert port, kan ikke kobles til.",
-    "En postkasse som krever OAuth og ikke godtar passord over IMAP, kan ikke kobles til på denne måten. Microsoft 365 er tilfellet folk oftest støter på, og vi hevder ikke å støtte det."
+    "En postkasse som krever OAuth og ikke godtar passord over IMAP, kan ikke kobles til på denne måten. Microsoft 365 og Outlook.com er tilfellene folk oftest støter på: koble dem til med Outlook-valget (Logg på med Microsoft) i stedet for IMAP."
   ],
   "faq": [
     {

@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "将 Gmail、iCloud 与 IMAP 连接到 Claude",
-    "description": "让 Claude、Cursor 或任何 MCP 客户端真正访问你的收件箱：读取、发送、搜索并整理 Gmail、Fastmail、iCloud 和 IMAP 邮件。免费，不存储任何邮件。"
+    "description": "让 Claude、Cursor 或任何 MCP 客户端真正访问你的收件箱：读取、发送、搜索并整理 Gmail、Outlook、Fastmail、iCloud 和 IMAP 邮件。免费，不存储任何邮件。"
   },
   "nav": {
     "features": "功能",
@@ -18,7 +18,7 @@
     "titleLine1": "为你的 AI",
     "titleLine2": "智能体配备一个",
     "titleAccent": "收件箱。",
-    "lead": "一次性连接 Gmail、iCloud、Fastmail 或任何 IMAP 收件箱。把一个 MCP 端点 URL 粘贴到 Claude、Cursor、VS Code、ChatGPT、Windsurf、n8n、Make 或任何 MCP 客户端中。OAuth 客户端只需一键即可连接，无需配置 API 密钥。你的智能体实时阅读、搜索和发送邮件，而它所读取的邮件从不被存储。",
+    "lead": "一次性连接 Gmail、Outlook、iCloud、Fastmail 或任何 IMAP 收件箱。把一个 MCP 端点 URL 粘贴到 Claude、Cursor、VS Code、ChatGPT、Windsurf、n8n、Make 或任何 MCP 客户端中。OAuth 客户端只需一键即可连接，无需配置 API 密钥。你的智能体实时阅读、搜索和发送邮件，而它所读取的邮件从不被存储。",
     "ctaPrimary": "连接你的收件箱",
     "ctaSecondary": "阅读文档",
     "metaFreeInbox": "1 个收件箱永久免费",
@@ -30,7 +30,7 @@
       "agentSub": "Claude · Cursor · VS Code · ChatGPT · 任何 MCP 客户端",
       "serverSub": "/api/mcp 端点",
       "provider": "你的服务商",
-      "providerSub": "Gmail · iCloud · IMAP",
+      "providerSub": "Gmail · Outlook · iCloud · IMAP",
       "logCalls": "智能体调用",
       "logReturns": "返回收件箱 ID，无需在仪表盘里复制粘贴",
       "logFetches": "mcpemails 通过 Gmail API 获取（令牌已轮换）",
@@ -58,17 +58,17 @@
       "1": {
         "tag": "存储",
         "h": "邮件实时获取，从不存储。",
-        "p": "每一次工具调用都会实时访问你的服务商：Gmail API 或 IMAP。邮件正文、主题和附件会发送给智能体，并随即被丢弃。我们每个收件箱只持久化一样东西，即一个加密的令牌或应用专用密码，以便进行下一次调用。唯一的例外是你安排在稍后发送的邮件：我们会保留它直到发送时间，然后为你的历史记录留存一份记录。"
+        "p": "每一次工具调用都会实时访问你的服务商：Gmail API、Microsoft Graph 或 IMAP。邮件正文、主题和附件会发送给智能体，并随即被丢弃。我们每个收件箱只持久化一样东西，即一个加密的令牌或应用专用密码，以便进行下一次调用。唯一的例外是你安排在稍后发送的邮件：我们会保留它直到发送时间，然后为你的历史记录留存一份记录。"
       },
       "2": {
         "tag": "发送",
         "h": "发送通过你自己的服务商进行。",
-        "p": "当你的智能体调用 <code>email_compose</code>（发送或回复）时，邮件会通过 Gmail API 或你自己的 SMTP 服务器发出。你的域名声誉和送达率完全掌握在你自己手中。我们绝不从我们自己的域名转发邮件。"
+        "p": "当你的智能体调用 <code>email_compose</code>（发送或回复）时，邮件会通过 Gmail API、Microsoft Graph 或你自己的 SMTP 服务器发出。你的域名声誉和送达率完全掌握在你自己手中。我们绝不从我们自己的域名转发邮件。"
       },
       "3": {
         "tag": "服务商",
-        "h": "Gmail、iCloud、Fastmail 及任何 IMAP 收件箱。",
-        "p": "Gmail 使用 OAuth 2.0；Fastmail、iCloud、Yahoo、Zoho 和 Yandex 使用应用专用密码；其余一切则通过通用 IMAP / SMTP 连接器。连接多个收件箱，按用途为它们打标签（work-gmail、ops-fastmail、support-imap），并将每个 API 密钥的权限范围限定到你希望该智能体访问的收件箱。团队和代理机构可以在一个共享工作区中管理所有客户的收件箱，并配有角色和审计日志。"
+        "h": "Gmail、Outlook、iCloud、Fastmail 及任何 IMAP 收件箱。",
+        "p": "Gmail 和 Outlook / Microsoft 365 使用 OAuth 2.0（工作或学校账户可能需要其 IT 管理员先一次性批准该应用）；Fastmail、iCloud、Yahoo、Zoho 和 Yandex 使用应用专用密码；其余一切则通过通用 IMAP / SMTP 连接器。连接多个收件箱，按用途为它们打标签（work-gmail、ops-fastmail、support-imap），并将每个 API 密钥的权限范围限定到你希望该智能体访问的收件箱。团队和代理机构可以在一个共享工作区中管理所有客户的收件箱，并配有角色和审计日志。"
       },
       "4": {
         "tag": "访问",
@@ -89,7 +89,7 @@
     "steps": {
       "0": {
         "h": "连接你的收件箱",
-        "p": "登录并点击<b>连接收件箱</b>。选择 Gmail、iCloud、Fastmail 或任何 IMAP 收件箱，然后完成 OAuth 或粘贴一个应用密码。凭据会被加密；你的智能体所读取的邮件从不被存储。"
+        "p": "登录并点击<b>连接收件箱</b>。选择 Gmail、Outlook、iCloud、Fastmail 或任何 IMAP 收件箱，然后完成 OAuth 或粘贴一个应用密码。凭据会被加密；你的智能体所读取的邮件从不被存储。"
       },
       "1": {
         "h": "粘贴 URL：OAuth 或 API 密钥",
@@ -104,7 +104,7 @@
       "0": "发现所有已连接的收件箱及其 ID。先调用此工具，无需从仪表盘复制粘贴 UUID。",
       "1": "读取邮件：列出最近摘要、按 ID 获取完整邮件、批量读取至多 50 封，或运行与服务商无关的搜索，全部通过 action 参数。",
       "2": "整理邮件：移动、复制、删除、标记或归档，逐封、批量，或直接从搜索结果操作。",
-      "3": "撰写：发送新邮件、在会话内回复或转发。经由 Gmail API 或 SMTP 发出：你的域名，你的送达率。",
+      "3": "撰写：发送新邮件、在会话内回复或转发。经由 Gmail API、Microsoft Graph 或 SMTP 发出：你的域名，你的送达率。",
       "4": "管理文件夹（在 Gmail 上为标签）：创建、重命名或删除，并将其用作移动目标。folder_list 读取已存在的文件夹。",
       "5": "草稿：创建、更新并发送存储在服务商 Drafts 文件夹中的草稿。draft_list 读取已保存的草稿。",
       "6": "将邮件安排在未来某个时间发送，并在发出前取消。schedule_list 显示队列中的内容。",
@@ -150,7 +150,7 @@
           "读取、搜索、整理、起草、定时和发送",
           "发送前审批",
           "使用分析",
-          "Gmail、iCloud、Fastmail 及任何 IMAP",
+          "Gmail、Outlook、iCloud、Fastmail 及任何 IMAP",
           "无限量 API 密钥",
           "社区支持"
         ],
@@ -211,7 +211,7 @@
       },
       {
         "q": "我可以连接哪些邮箱服务商？",
-        "a": "通过 OAuth 连接 Gmail（一键完成），通过应用专用密码连接 Fastmail、iCloud、Yahoo、Zoho 和 Yandex，以及通过通用 IMAP/SMTP 连接任何其他邮箱。想连接多少个收件箱都可以，并按用途为它们打上标签。"
+        "a": "通过 OAuth 连接 Gmail（一键完成），通过 Microsoft 登录连接 Outlook 和 Microsoft 365（工作或学校账户可能需要其 IT 管理员先一次性批准该应用），通过应用专用密码连接 Fastmail、iCloud、Yahoo、Zoho 和 Yandex，以及通过通用 IMAP/SMTP 连接任何其他邮箱。想连接多少个收件箱都可以，并按用途为它们打上标签。"
       },
       {
         "q": "我的邮件会被存储在任何地方吗？",
@@ -227,11 +227,11 @@
       },
       {
         "q": "我该如何连接收件箱？",
-        "a": "创建一个免费账户，连接你的邮箱（Gmail 一键完成，其他邮箱粘贴应用密码即可），然后将 https://mcpemails.com/api/mcp 填入你的 AI 客户端并授权。几分钟后，你的智能体就能用上这个收件箱。"
+        "a": "创建一个免费账户，连接你的邮箱（Gmail 一键完成，Outlook 用 Microsoft 登录，其他邮箱粘贴应用密码即可），然后将 https://mcpemails.com/api/mcp 填入你的 AI 客户端并授权。几分钟后，你的智能体就能用上这个收件箱。"
       },
       {
         "q": "我可以自托管吗？",
-        "a": "可以。MCP Emails 采用 AGPL-3.0 开源，托管服务运行的正是你可以自己运行的同一个服务器。一个 docker-compose 栈能在约五分钟内，让完整的 MCP 服务器及其全部工具对接你自己的数据库运行，适用于任意 IMAP 或 SMTP 邮箱。Gmail 和 Outlook 一键 OAuth 以及控制台仍保留在托管套餐中。"
+        "a": "可以。MCP Emails 采用 AGPL-3.0 开源，托管服务运行的正是你可以自己运行的同一个服务器。一个 docker-compose 栈能在约五分钟内，让完整的 MCP 服务器及其全部工具对接你自己的数据库运行，适用于任意 IMAP 或 SMTP 邮箱。Gmail 和 Outlook 登录（OAuth）以及控制台仍保留在托管套餐中。"
       }
     ]
   },

@@ -31,7 +31,7 @@
         "读取、搜索、整理、起草、定时和发送",
         "发送前审批",
         "使用分析",
-        "Gmail、iCloud、Fastmail 及任何 IMAP",
+        "Gmail、Outlook、iCloud、Fastmail 及任何 IMAP",
         "无限量 API 密钥",
         "社区支持"
       ]
@@ -102,6 +102,7 @@
         "label": "电子邮件服务商",
         "rows": {
           "gmail": "Gmail（OAuth）",
+          "outlook": "Outlook / Microsoft 365（使用 Microsoft 登录）",
           "fastmail": "Fastmail（应用密码）",
           "appPassword": "iCloud、Yahoo、Zoho、Yandex（应用密码）",
           "imap": "任何 IMAP / SMTP 邮箱"
@@ -195,7 +196,7 @@
       },
       {
         "q": "支持哪些电子邮件服务商？",
-        "a": "Gmail 使用 OAuth 2.0。Fastmail 通过应用密码连接。iCloud、Yahoo、Zoho 和 Yandex 通过应用专用密码连接，任何其他邮箱都可通过通用 IMAP / SMTP 连接器使用。"
+        "a": "Gmail 使用 OAuth 2.0。Outlook 和 Microsoft 365 通过 Microsoft 登录（OAuth）连接：个人账户可直接连接，工作或学校账户可能需要其 IT 管理员先一次性批准该应用。Fastmail 通过应用密码连接。iCloud、Yahoo、Zoho 和 Yandex 通过应用专用密码连接，任何其他邮箱都可通过通用 IMAP / SMTP 连接器使用。"
       },
       {
         "q": "有退款政策吗？",
@@ -203,7 +204,7 @@
       },
       {
         "q": "我可以自托管来代替付费吗？",
-        "a": "可以。MCP Emails 采用 AGPL-3.0 开源，可免费自托管。一个 docker-compose 栈运行同一个 MCP 服务器，你的邮箱凭据用只有你持有的密钥加密。自托管支持 IMAP 和 SMTP 邮箱；Gmail 和 Outlook 一键 OAuth、控制台、团队功能和支持仍保留在付费套餐中。"
+        "a": "可以。MCP Emails 采用 AGPL-3.0 开源，可免费自托管。一个 docker-compose 栈运行同一个 MCP 服务器，你的邮箱凭据用只有你持有的密钥加密。自托管支持 IMAP 和 SMTP 邮箱；Gmail 和 Outlook 登录（OAuth）、控制台、团队功能和支持仍保留在付费套餐中。"
       }
     ]
   },

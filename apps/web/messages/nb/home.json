@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Koble Gmail, iCloud og IMAP til Claude",
-    "description": "Gi Claude, Cursor eller enhver MCP-klient ekte tilgang til innboksen: les, send, søk og organiser e-post i Gmail, Fastmail, iCloud og IMAP. Gratis."
+    "description": "Gi Claude, Cursor eller enhver MCP-klient ekte tilgang til innboksen: les, send, søk og organiser e-post i Gmail, Outlook, Fastmail, iCloud og IMAP. Gratis."
   },
   "nav": {
     "features": "Funksjoner",
@@ -18,7 +18,7 @@
     "titleLine1": "Gi AI-agenten",
     "titleLine2": "din en",
     "titleAccent": "innboks.",
-    "lead": "Koble til Gmail, iCloud, Fastmail eller en hvilken som helst IMAP-innboks én gang. Lim inn én MCP-endepunkt-URL i Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make eller en hvilken som helst MCP-klient. OAuth-klienter kobler til med ett klikk, uten oppsett av API-nøkkel. Agenten din leser, søker og sender e-post i sanntid, og e-posten den leser lagres aldri.",
+    "lead": "Koble til Gmail, Outlook, iCloud, Fastmail eller en hvilken som helst IMAP-innboks én gang. Lim inn én MCP-endepunkt-URL i Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make eller en hvilken som helst MCP-klient. OAuth-klienter kobler til med ett klikk, uten oppsett av API-nøkkel. Agenten din leser, søker og sender e-post i sanntid, og e-posten den leser lagres aldri.",
     "ctaPrimary": "Koble til innboksen din",
     "ctaSecondary": "Les dokumentasjonen",
     "metaFreeInbox": "1 innboks gratis, for alltid",
@@ -30,7 +30,7 @@
       "agentSub": "Claude · Cursor · VS Code · ChatGPT · enhver MCP-klient",
       "serverSub": "/api/mcp-endepunkt",
       "provider": "Din leverandør",
-      "providerSub": "Gmail · iCloud · IMAP",
+      "providerSub": "Gmail · Outlook · iCloud · IMAP",
       "logCalls": "agenten kaller",
       "logReturns": "returnerer innboks-ID-er, ingen kopiering fra dashbordet",
       "logFetches": "mcpemails henter via Gmail API (token rotert)",
@@ -58,17 +58,17 @@
       "1": {
         "tag": "Lagring",
         "h": "E-post hentes i sanntid. Lagres aldri.",
-        "p": "Hvert verktøykall treffer leverandøren din i sanntid: Gmail API eller IMAP. Meldingsinnhold, emner og vedlegg går til agenten og forkastes umiddelbart. Vi lagrer én ting per innboks, et kryptert token eller app-passord, slik at vi kan gjøre neste kall. Det eneste unntaket er en melding du planlegger å sende senere: vi oppbevarer den frem til sendetidspunktet, og beholder deretter en oppføring for historikken din."
+        "p": "Hvert verktøykall treffer leverandøren din i sanntid: Gmail API, Microsoft Graph eller IMAP. Meldingsinnhold, emner og vedlegg går til agenten og forkastes umiddelbart. Vi lagrer én ting per innboks, et kryptert token eller app-passord, slik at vi kan gjøre neste kall. Det eneste unntaket er en melding du planlegger å sende senere: vi oppbevarer den frem til sendetidspunktet, og beholder deretter en oppføring for historikken din."
       },
       "2": {
         "tag": "Sending",
         "h": "Sending går gjennom leverandøren din.",
-        "p": "Når agenten din kaller <code>email_compose</code> (for å sende eller svare), sendes meldingen via Gmail API eller din egen SMTP-server. Domenets omdømme og leveringsdyktighet forblir helt i dine hender. Vi videresender aldri e-post fra vårt eget domene."
+        "p": "Når agenten din kaller <code>email_compose</code> (for å sende eller svare), sendes meldingen via Gmail API, Microsoft Graph eller din egen SMTP-server. Domenets omdømme og leveringsdyktighet forblir helt i dine hender. Vi videresender aldri e-post fra vårt eget domene."
       },
       "3": {
         "tag": "Leverandører",
-        "h": "Gmail, iCloud, Fastmail og alle IMAP-innbokser.",
-        "p": "OAuth 2.0 for Gmail; app-spesifikke passord for Fastmail, iCloud, Yahoo, Zoho og Yandex; en generisk IMAP-/SMTP-kobling for alt annet. Koble til flere innbokser, merk dem etter bruksområde (work-gmail, ops-fastmail, support-imap), og begrens hver API-nøkkel til innboksene du vil at agenten skal nå. Team og byråer kan administrere alle klientinnbokser i ett delt arbeidsområde med roller og revisjonslogg."
+        "h": "Gmail, Outlook, iCloud, Fastmail og alle IMAP-innbokser.",
+        "p": "OAuth 2.0 for Gmail og for Outlook / Microsoft 365 (en jobb- eller skolekonto kan trenge at IT-administratoren godkjenner appen én gang); app-spesifikke passord for Fastmail, iCloud, Yahoo, Zoho og Yandex; en generisk IMAP-/SMTP-kobling for alt annet. Koble til flere innbokser, merk dem etter bruksområde (work-gmail, ops-fastmail, support-imap), og begrens hver API-nøkkel til innboksene du vil at agenten skal nå. Team og byråer kan administrere alle klientinnbokser i ett delt arbeidsområde med roller og revisjonslogg."
       },
       "4": {
         "tag": "Tilgang",
@@ -89,7 +89,7 @@
     "steps": {
       "0": {
         "h": "Koble til innboksen din",
-        "p": "Logg inn og klikk <b>Koble til innboks</b>. Velg Gmail, iCloud, Fastmail eller en hvilken som helst IMAP-innboks, og fullfør deretter OAuth eller lim inn et app-passord. Legitimasjon krypteres; e-posten agenten din leser lagres aldri."
+        "p": "Logg inn og klikk <b>Koble til innboks</b>. Velg Gmail, Outlook, iCloud, Fastmail eller en hvilken som helst IMAP-innboks, og fullfør deretter OAuth eller lim inn et app-passord. Legitimasjon krypteres; e-posten agenten din leser lagres aldri."
       },
       "1": {
         "h": "Lim inn URL-en: OAuth eller API-nøkkel",
@@ -104,7 +104,7 @@
       "0": "Oppdag alle tilkoblede innbokser og ID-ene deres. Kall dette først, ingen kopiering av UUID fra dashbordet.",
       "1": "Les e-post: list opp nylige sammendrag, hent en hel melding etter ID, batch-les opptil 50, eller kjør et leverandøruavhengig søk, alt via action-argumentet.",
       "2": "Organiser e-post: flytt, kopier, slett, flagg eller arkiver, én om gangen, i bulk eller rett fra et søk.",
-      "3": "Skriv: send en ny melding, svar i tråden eller videresend. Sendes gjennom Gmail API eller SMTP: ditt domene, din leveringsdyktighet.",
+      "3": "Skriv: send en ny melding, svar i tråden eller videresend. Sendes gjennom Gmail API, Microsoft Graph eller SMTP: ditt domene, din leveringsdyktighet.",
       "4": "Administrer mapper (etiketter på Gmail): opprett, gi nytt navn eller slett, og bruk dem som flyttemål. folder_list leser dem som allerede finnes.",
       "5": "Utkast: opprett, oppdater og send utkast lagret i leverandørens Drafts-mappe. draft_list leser dem som er lagret.",
       "6": "Planlegg en melding for et fremtidig tidspunkt, og avbryt den før den går ut. schedule_list viser hva som står i kø.",
@@ -150,7 +150,7 @@
           "Les, søk, organiser, skriv, planlegg og send",
           "Godkjenning før sending",
           "Bruksanalyse",
-          "Gmail, iCloud, Fastmail og alle IMAP",
+          "Gmail, Outlook, iCloud, Fastmail og alle IMAP",
           "Ubegrenset antall API-nøkler",
           "Fellesskapsstøtte"
         ],
@@ -211,7 +211,7 @@
       },
       {
         "q": "Hvilke e-postleverandører kan jeg koble til?",
-        "a": "Gmail via OAuth (ett klikk), Fastmail, iCloud, Yahoo, Zoho og Yandex med et app-spesifikt passord, og enhver annen innboks via en generisk IMAP-/SMTP-kobling. Koble til så mange innbokser du vil, og merk dem etter bruksområde."
+        "a": "Gmail via OAuth (ett klikk), Outlook og Microsoft 365 ved å logge inn med Microsoft (en jobb- eller skolekonto kan trenge at IT-administratoren godkjenner appen én gang), Fastmail, iCloud, Yahoo, Zoho og Yandex med et app-spesifikt passord, og enhver annen innboks via en generisk IMAP-/SMTP-kobling. Koble til så mange innbokser du vil, og merk dem etter bruksområde."
       },
       {
         "q": "Lagres e-posten min noe sted?",
@@ -227,11 +227,11 @@
       },
       {
         "q": "Hvordan kobler jeg til en innboks?",
-        "a": "Opprett en gratis konto, koble til innboksen din (ett klikk for Gmail, eller lim inn et app-passord for de andre), og lim deretter https://mcpemails.com/api/mcp inn i AI-klienten din og autoriser. Agenten din har innboksen i løpet av et par minutter."
+        "a": "Opprett en gratis konto, koble til innboksen din (ett klikk for Gmail, logg inn med Microsoft for Outlook, eller lim inn et app-passord for de andre), og lim deretter https://mcpemails.com/api/mcp inn i AI-klienten din og autoriser. Agenten din har innboksen i løpet av et par minutter."
       },
       {
         "q": "Kan jeg selvhoste den?",
-        "a": "Ja. MCP Emails er åpen kildekode under AGPL-3.0, og den hostede tjenesten kjører den samme serveren som du kan kjøre selv. En docker-compose-stack får hele MCP-serveren og alle verktøyene i gang mot din egen database på omtrent fem minutter, for hvilken som helst IMAP- eller SMTP-postkasse. Gmail- og Outlook-ettklikks-OAuth og dashboardet forblir på den hostede planen."
+        "a": "Ja. MCP Emails er åpen kildekode under AGPL-3.0, og den hostede tjenesten kjører den samme serveren som du kan kjøre selv. En docker-compose-stack får hele MCP-serveren og alle verktøyene i gang mot din egen database på omtrent fem minutter, for hvilken som helst IMAP- eller SMTP-postkasse. Gmail- og Outlook-innlogging (OAuth) og dashboardet forblir på den hostede planen."
       }
     ]
   },

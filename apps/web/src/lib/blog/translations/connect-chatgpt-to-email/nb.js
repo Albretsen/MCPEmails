@@ -4,9 +4,7 @@ const translation = {
     'Steg for steg: koble Gmail, iCloud, Fastmail eller en hvilken som helst IMAP-innboks til ChatGPT med en egendefinert MCP-kobling, og til OpenAI Codex med en avgrenset nøkkel. Ingen e-post lagres.',
   coverAlt:
     'Koble ChatGPT og OpenAI Codex til Gmail, iCloud, Fastmail og IMAP-e-post med MCP Emails',
-  content: `> **Outlook og Microsoft 365 er under arbeid.** De kan ennå ikke kobles til i produksjon. Denne veiledningen dekker Gmail, iCloud, Fastmail, Yahoo, Zoho og de andre IMAP-postkassene som er tilgjengelige i dag.
-
-ChatGPT kommer ikke til en postkasse på egen hånd. Den trenger en MCP-server foran e-posten din, og MCP Emails er den serveren: koble til en innboks én gang, pek ChatGPT mot én enkelt URL, og den får de samme e-postverktøyene enten posten ligger i Gmail, iCloud, Fastmail, Yahoo, Zoho eller på en egen IMAP-server.
+  content: `ChatGPT kommer ikke til en postkasse på egen hånd. Den trenger en MCP-server foran e-posten din, og MCP Emails er den serveren: koble til en innboks én gang, pek ChatGPT mot én enkelt URL, og den får de samme e-postverktøyene enten posten ligger i Gmail, iCloud, Fastmail, Yahoo, Zoho eller på en egen IMAP-server.
 
 To OpenAI-flater er involvert, og de autentiserer på hver sin måte. ChatGPT kjører en OAuth-flyt i nettleseren, så det finnes ingen API-nøkkel å lime inn. OpenAI Codex kjører i terminalen, så den bruker en avgrenset bearer-nøkkel i stedet. Samme endepunkt, samme verktøy.
 
@@ -16,7 +14,7 @@ To OpenAI-flater er involvert, og de autentiserer på hver sin måte. ChatGPT kj
 
 - **ChatGPT Plus, Pro, Business, Enterprise eller Edu, i nettleseren.** Egne MCP-koblinger ligger bak utviklermodus, som OpenAI tilbyr på chatgpt.com for disse abonnementene. Free- og Go-kontoer kan ikke legge til en, og mobil- og skrivebordsappene viser ikke valget. På Business og Enterprise må en administrator kanskje tillate utviklermodus først.
 - **En gratis MCP Emails-konto.** [Opprett en her](/signup). Gratisplanen rommer én tilkoblet innboks og krever ikke kort.
-- **Én postkasse.** Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex, eller hva som helst som snakker IMAP og SMTP.
+- **Én postkasse.** Gmail, Outlook eller Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, Yandex, eller hva som helst som snakker IMAP og SMTP.
 
 Er du på Free eller Go, fungerer den samme innboksen og URL-en allerede i [Claude](/docs/claude), [Cursor](/docs/cursor), [VS Code](/docs/vscode) og de andre [støttede klientene](/docs/clients).
 
@@ -31,6 +29,10 @@ Gmail kobles til med et Google-apppassord over IMAP som standard, og Google OAut
 ### iCloud, Fastmail, Yahoo og Zoho
 
 Disse vil ha et apspesifikt passord, ikke passordet du skriver inn på nettet. Opprett ett hos leverandøren, velg leverandøren i MCP Emails, og lim det inn. [Veiledningen for iCloud, Fastmail og IMAP](/blog/connect-icloud-fastmail-imap-to-claude) har de nøyaktige stegene.
+
+### Outlook og Microsoft 365
+
+Outlook kobles til med Logg inn med Microsoft, ikke et app-passord: velg **Outlook**, klikk **Koble til med Microsoft** og godkjenn. Personlige Outlook.com-, Hotmail-, Live- og MSN-kontoer kobles til med en gang. Jobb- eller skolekontoer i Microsoft 365 kan trenge at en IT-ansvarlig først godkjenner appen én gang for hele organisasjonen; dashbordet gir deg en lenke du kan sende dem. [Guiden for Outlook og Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) har detaljene.
 
 ### Alle andre IMAP-postkasser
 

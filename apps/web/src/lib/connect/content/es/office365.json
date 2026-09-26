@@ -1,100 +1,104 @@
 {
   "_sources": [
     "https://learn.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/deprecation-of-basic-authentication-exchange-online",
-    "https://learn.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth",
     "https://mc.merill.net/message/MC1163922",
     "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent"
   ],
   "auth": {
     "method": "oauth",
-    "label": "OAuth 2.0, con consentimiento del administrador del tenant",
-    "helpUrl": "https://learn.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth",
-    "usernameForm": "El problema no es el campo de contraseña. Exchange Online solo acepta en IMAP un token de acceso OAuth 2.0, emitido para una aplicación a la que el administrador de tu tenant ha dado su consentimiento.",
+    "label": "Inicio de sesión con Microsoft (OAuth 2.0), puede requerir aprobación del administrador de TI",
+    "helpUrl": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent",
+    "usernameForm": "No hay nada que escribir. Inicias sesión con tu cuenta Microsoft del trabajo o del centro educativo en la propia página de Microsoft y apruebas el acceso, así que aquí no se introduce ninguna contraseña ni contraseña de aplicación. Los ajustes IMAP y SMTP publicados para Microsoft 365 no se aplican: MCP Emails se conecta a través de Microsoft Graph.",
     "status": "active"
   },
   "meta": {
-    "title": "Correo de Microsoft 365, IMAP e IA: el verdadero bloqueo",
-    "description": "Microsoft 365 responde por IMAP en outlook.office365.com:993, pero sin autenticación básica y con consentimiento de admin obligatorio, mcpemails no puede conectarlo."
+    "title": "Conecta el correo de Microsoft 365 a Claude y ChatGPT",
+    "description": "Conecta un buzón de Microsoft 365 del trabajo o de un centro educativo a Claude, ChatGPT, Cursor o cualquier cliente MCP. Inicia sesión con Microsoft; muchas organizaciones necesitan que un administrador de TI apruebe la aplicación una vez primero."
   },
   "hero": {
     "eyebrow": "Microsoft 365 + IA",
-    "titleLine1": "Los buzones de Microsoft 365",
-    "titleLine2": "no se pueden conectar, y este es el motivo",
-    "lead": "El servidor es accesible. El problema no es la contraseña ni el puerto. Lo que impide que un buzón de Microsoft 365 llegue a un servidor MCP es la autorización: la autenticación básica ya no existe y los permisos de correo necesitan al administrador de tu tenant.",
-    "answer": "No, mcpemails no puede conectar un buzón de Microsoft 365, y el motivo es la autorización, no la accesibilidad. Exchange Online sí responde por IMAP en outlook.office365.com, puerto 993, y por SMTP en smtp.office365.com, puerto 587, y hoy un saludo TLS con cualquiera de los dos funciona. Lo que falla es el inicio de sesión. Microsoft eliminó de forma permanente la autenticación básica para IMAP y POP en todos los tenants de Exchange Online durante 2022, y desde el 31 de diciembre de 2022 nadie, ni siquiera el soporte de Microsoft, puede volver a activarla, así que ninguna contraseña ni contraseña de aplicación autenticará jamás. La única vía que queda es OAuth 2.0, que requiere una aplicación registrada cuyos permisos de correo de Microsoft Graph haya aprobado un administrador del tenant, porque la directiva de consentimiento predeterminada administrada por Microsoft ya no permite que un usuario normal apruebe por sí mismo los permisos de correo. mcpemails no ofrece una conexión OAuth de Microsoft, así que la respuesta honesta es que este buzón no se puede conectar aquí."
+    "titleLine1": "Conecta el correo de Microsoft 365",
+    "titleLine2": "a Claude, ChatGPT y Cursor",
+    "lead": "Dale a tu agente de IA tu buzón de Outlook del trabajo o del centro educativo. Inicia sesión con Microsoft y, si tu organización lo exige, envía a tu administrador de TI un enlace para aprobar MCP Emails para todos.",
+    "meta0": "1 bandeja gratis, para siempre",
+    "meta1": "Inicio de sesión con Microsoft, sin contraseña de aplicación",
+    "meta2": "Enlace de aprobación para el administrador de TI incluido",
+    "answer": "Sí, con una condición que depende de tu organización. mcpemails conecta buzones de Microsoft 365 del trabajo y de centros educativos a través de Microsoft Graph: haces clic en Conectar con Microsoft e inicias sesión con tu cuenta del trabajo. Sin embargo, muchas organizaciones necesitan que un administrador de TI apruebe la aplicación una vez primero, porque la directiva de consentimiento predeterminada de Microsoft, vigente desde finales de 2025, impide que los empleados aprueben por sí mismos permisos de lectura de correo. Si ocurre, el panel muestra un aviso con un enlace para enviar a tu administrador de TI. El administrador inicia sesión y aprueba MCP Emails una vez para toda la organización, y a partir de ahí tú y tus compañeros os conectáis con normalidad. Después, pega una URL en Claude, ChatGPT, Cursor o cualquier cliente MCP. Una bandeja es gratis, para siempre."
   },
   "method": {
-    "title": "Cómo se conecta Microsoft 365: solo OAuth, y el consentimiento es el muro",
-    "body": "Hay dos barreras distintas y la mayoría de los artículos las mezclan en una. La primera es la autenticación. El servicio IMAP de Exchange Online sigue mostrando <code>AUTH=PLAIN</code> junto a <code>AUTH=XOAUTH2</code> en su línea de capacidades, un resto del anuncio del protocolo y no una opción real: la autenticación básica se eliminó para IMAP, POP, EWS, ActiveSync y Remote PowerShell en todos los tenants y no se puede restaurar. Solo <code>XOAUTH2</code> funciona de verdad, con un token de acceso de la plataforma de identidad de Microsoft. La segunda barrera es el consentimiento. Obtener ese token implica registrar una aplicación en Microsoft Entra ID y conseguir que se aprueben sus permisos delegados de correo de Microsoft Graph. En un despliegue que empezó a finales de octubre de 2025, Microsoft añadió <b>Mail.Read</b>, <b>Mail.ReadWrite</b> y el resto de los permisos delegados de Exchange a la directiva de consentimiento predeterminada administrada por Microsoft, lo que significa que un usuario normal que acepta una pantalla de consentimiento recibe ahora una solicitud de aprobación del administrador en lugar de una conexión que funcione. Un administrador del tenant puede conceder el consentimiento, y muchos no lo harán."
+    "title": "Cómo se conecta Microsoft 365: inicio de sesión con Microsoft, a veces con aprobación del administrador",
+    "body": "Microsoft 365 se conecta a través de <b>Microsoft Graph</b> con OAuth 2.0, no por IMAP. Inicias sesión en la propia página de Microsoft y apruebas los permisos que solicita MCP Emails: leer y modificar el correo (<b>Mail.ReadWrite</b>), enviar correo (<b>Mail.Send</b>), mantener la conexión (<b>offline_access</b>) y tu perfil básico y dirección de correo. Microsoft muestra MCP Emails como procedente de un editor verificado. Si puedes aprobar esos permisos tú mismo lo decide tu organización. Desde finales de 2025, la directiva de consentimiento predeterminada de Microsoft ya no permite que los usuarios normales aprueben permisos de correo para una aplicación, así que en muchas organizaciones a la primera persona que se conecta se le pide la aprobación de un administrador. Un administrador aprueba una vez para toda la organización, no una vez por persona."
   },
   "setup": [
     {
-      "h": "Crea la cuenta gratis de mcpemails",
-      "p": "Una dirección de correo y sin tarjeta. Una bandeja conectada es gratis para siempre. Los dos pasos siguientes deciden qué buzón será, porque no será el de Microsoft 365."
+      "h": "Crea una cuenta gratis",
+      "p": "Regístrate en mcpemails, sin tarjeta. El plan gratuito conecta una bandeja, para siempre."
     },
     {
-      "h": "Elige un buzón fuera del tenant para el trabajo automatizado",
-      "p": "Elige una dirección en un proveedor que acepte una contraseña o una contraseña de aplicación por IMAP: tu propio dominio en Fastmail o Migadu, una cuenta personal de Gmail, un buzón de proyecto. Esa es la cuenta que conecta mcpemails, y es donde tu agente lee, redacta, envía y archiva."
+      "h": "Elige Outlook y conecta con Microsoft",
+      "p": "En el panel, abre Conectar bandeja, elige Outlook, haz clic en Conectar con Microsoft e inicia sesión con tu cuenta del trabajo o del centro educativo."
     },
     {
-      "h": "Dirige allí el correo relevante, si tu organización lo permite",
-      "p": "El reenvío se configura por usuario en el Centro de administración de Microsoft 365, en Users, Active users, el usuario, y luego la pestaña Mail y Manage email forwarding. Consúltalo antes con quien administre el tenant. El reenvío automático a dominios externos está bloqueado de forma predeterminada en la directiva de filtro de correo no deseado saliente de Microsoft Defender, así que un administrador tiene que permitirlo antes de que salga un solo mensaje, y en una organización regulada la respuesta suele ser no."
+      "h": "Aprueba el acceso o envía el enlace al administrador",
+      "p": "Si Microsoft te permite aprobar, acepta los permisos y la bandeja se conecta. Si tu organización exige la aprobación de un administrador, el panel muestra un aviso con un enlace Enviar a tu administrador de TI. Tu administrador lo abre, inicia sesión en MCP Emails y aprueba la aplicación una vez para toda la organización. Después, vuelve a hacer clic en Conectar con Microsoft."
     },
     {
       "h": "Pega la URL MCP en tu IA",
-      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y el agente tendrá esa bandeja con lectura, búsqueda, envío, respuesta, programación y archivado."
+      "p": "Pon https://mcpemails.com/api/mcp en Claude, Cursor o ChatGPT, autoriza, y tu agente tendrá la bandeja."
     }
   ],
   "gotchas": [
     {
-      "h": "El servidor IMAP responde, anuncia AUTH=PLAIN y aun así rechaza tu contraseña",
-      "p": "Abre una conexión TLS a outlook.office365.com en el 993 y Exchange te recibe con un banner de servicio listo y una línea de capacidades que ofrece <code>AUTH=PLAIN</code>. Esa línea no es una promesa. La autenticación básica está desactivada a nivel de servicio en todos los tenants, así que un inicio de sesión con contraseña devuelve un fallo de autenticación idéntico al de una contraseña incorrecta, y por eso la gente pasa horas restableciendo credenciales que siempre fueron correctas. La distinción que conviene retener: la accesibilidad está bien, lo que se rechaza es la autorización."
+      "h": "Las contraseñas y las contraseñas de aplicación no funcionan, por eso usamos Microsoft Graph",
+      "p": "Microsoft eliminó la autenticación básica para IMAP y POP en todos los inquilinos de Exchange Online en 2022, y no se puede volver a activar. Un inicio de sesión con contraseña falla de una forma idéntica a una contraseña incorrecta, por eso hay quien restablece credenciales que siempre fueron correctas. mcpemails no usa IMAP para Microsoft 365: inicia sesión con Microsoft y habla con Microsoft Graph, así que no hay contraseña que escribir ni ajuste de servidor que equivocar."
     },
     {
-      "h": "SMTP AUTH es un interruptor aparte por buzón, y está desactivado de forma predeterminada",
-      "p": "Incluso para aplicaciones que sí tienen un token OAuth válido, el envío de cliente a través de <code>smtp.office365.com</code> depende de que SMTP AUTH esté activado en ese buzón concreto. Microsoft lo desactivó de forma predeterminada en los tenants donde aún no se usaba, y se configura por buzón, no una sola vez para toda la organización. Microsoft también ha anunciado la retirada de la autenticación básica para el envío SMTP de cliente y ha cambiado la fecha más de una vez, así que toma cualquier plazo que leas en una página de terceros como provisional y consulta el anuncio vigente de Microsoft."
+      "h": "La aprobación del administrador la fija tu organización, y un editor verificado no la evita",
+      "p": "Desde el cambio que Microsoft desplegó a partir de finales de octubre de 2025, los permisos de correo de Exchange forman parte de la directiva de consentimiento predeterminada administrada por Microsoft, así que un usuario que intenta aprobar una aplicación de correo ve en su lugar una solicitud de aprobación del administrador. Ser un editor verificado no cambia eso. Tu administrador de TI puede aprobar MCP Emails para toda la organización mediante el enlace del panel, y solo tiene que hacerlo una vez."
     },
     {
-      "h": "La barrera es el consentimiento del administrador, no el usuario ni el estado de editor verificado",
-      "p": "Un usuario que hace clic en Accept en una pantalla de consentimiento de una aplicación que lee correo ve en su lugar una solicitud de aprobación del administrador. Desde el cambio desplegado a partir de finales de octubre de 2025, los permisos delegados de Exchange forman parte de la directiva predeterminada administrada por Microsoft, así que ni siquiera una aplicación de un editor verificado puede obtenerlos por su cuenta, salvo que el tenant haya clasificado esos permisos como de bajo impacto o que un administrador haya concedido consentimiento para todo el tenant a esa aplicación concreta. Los buzones compartidos y delegados no cambian nada, porque el requisito recae en la aplicación y no en el buzón."
+      "h": "Se rechaza una cuenta sin buzón de Exchange Online",
+      "p": "Algunas cuentas de Microsoft 365 no tienen buzón de Exchange Online, por ejemplo una cuenta de administrador sin licencia de Exchange o una organización cuyo correo está alojado en otro lugar. Microsoft Graph no tiene entonces nada que abrir, así que mcpemails rechaza la conexión y lo indica. Si tu correo está en otro servidor, conecta la dirección por IMAP."
     },
     {
-      "h": "Exchange Online no anuncia SPECIAL-USE en IMAP",
-      "p": "El servicio IMAP admite MOVE, UIDPLUS e IDLE pero no publica la extensión SPECIAL-USE, así que un cliente no puede preguntar cuál es la carpeta de enviados o de correo no deseado y tiene que buscar por nombre. En un tenant aprovisionado en alemán o francés, las carpetas tienen el nombre en ese idioma, y cualquier herramienta que busque la cadena literal Sent Items no encuentra nada sin avisar. Conviene saberlo antes de culpar al conector."
+      "h": "Si la aprobación no se completó, el administrador vuelve a abrir el enlace",
+      "p": "El panel solo considera aprobada a tu organización cuando Microsoft lo confirma. Si Microsoft no confirma la aprobación, por ejemplo porque el administrador cerró la página o la rechazó, Outlook sigue bloqueado y el panel lo indica. Pide a tu administrador de TI que vuelva a abrir el enlace de aprobación."
     }
   ],
   "limits": [
-    "El reenvío automático a un dominio externo está bloqueado de forma predeterminada por la directiva de filtro de correo no deseado saliente de Microsoft Defender. Dirigir el correo del tenant a un buzón que podamos conectar requiere que un administrador lo permita, y eso es una decisión de directiva real, no una casilla.",
-    "Todo lo que describe esta página es lo que no es posible hoy. Si tu tenant ya usa una integración de correo de terceros, lo hace a través de una aplicación a la que tu administrador dio su consentimiento, que es un acuerdo distinto de un buzón que conectas tú mismo en unos minutos."
+    "Outlook organiza el correo en carpetas, incluidas carpetas anidadas. Las categorías de Outlook no son compatibles y las herramientas de etiquetas solo se aplican a Gmail.",
+    "Microsoft Graph no puede combinar una búsqueda de texto con los filtros de no leídos, adjuntos, marcados o fechas. Cuando una búsqueda incluye texto, esos filtros no se aplican y el resultado indica cuáles se omitieron.",
+    "Se admiten adjuntos de hasta 25 MB.",
+    "La versión autoalojada se conecta solo por IMAP y SMTP. El inicio de sesión con Microsoft forma parte del servicio alojado."
   ],
   "faq": [
     {
       "q": "¿Funciona Claude con el correo de Microsoft 365?",
-      "a": "No a través de mcpemails. Los buzones de Microsoft 365 solo aceptan OAuth 2.0 en IMAP, y los permisos de correo de Microsoft Graph que necesita una aplicación exigen que el administrador de tu tenant dé su consentimiento. No ofrecemos una conexión OAuth de Microsoft, así que aquí no hay nada que tu administrador pueda aprobar y no vamos a fingir lo contrario."
+      "a": "Sí. Conecta tu buzón del trabajo o del centro educativo a mcpemails iniciando sesión con Microsoft, pega una URL MCP en Claude y Claude podrá leer, buscar, enviar, responder, reenviar, programar y archivar tu correo. Si tu organización exige la aprobación de un administrador, tu administrador de TI aprueba MCP Emails una vez primero, con el enlace que te da el panel."
     },
     {
-      "q": "¿Cuál es la configuración IMAP y SMTP de Microsoft 365?",
-      "a": "IMAP es outlook.office365.com en el puerto 993 con TLS implícito. SMTP es smtp.office365.com en el puerto 587 con STARTTLS, y anuncia un tamaño máximo de mensaje de 150 MB. Ambos servidores se confirmaron con una conexión TLS real. La configuración es correcta y aun así no te dejará entrar, porque el servicio solo acepta tokens OAuth 2.0 en esos puertos."
+      "q": "¿Por qué se me pide la aprobación de un administrador?",
+      "a": "Por la directiva de consentimiento de tu organización. Desde finales de 2025, la directiva predeterminada de Microsoft impide que los empleados aprueben por sí mismos permisos de lectura de correo para aplicaciones, así que el inicio de sesión pide la aprobación de un administrador. No es un problema de tu cuenta. Envía a tu administrador de TI el enlace del aviso del panel."
     },
     {
-      "q": "¿Por qué se rechaza mi contraseña de Microsoft 365 por IMAP?",
-      "a": "Porque la autenticación básica se eliminó de Exchange Online. Microsoft la desactivó para IMAP, POP, EWS, ActiveSync y Remote PowerShell en todos los tenants en 2022. Lo más probable es que la contraseña sea correcta. El servidor simplemente ya no tiene ningún mecanismo que acepte una, diga lo que diga su línea de capacidades."
+      "q": "¿Qué tiene que hacer mi administrador de TI?",
+      "a": "Abrir el enlace que le envías, iniciar sesión en MCP Emails y aprobar la aplicación para la organización en la pantalla de consentimiento de Microsoft, donde MCP Emails aparece como editor verificado. Se hace una vez para toda la organización. A partir de ahí, todos en la organización se conectan con Conectar con Microsoft de forma normal."
     },
     {
-      "q": "¿Puede mi administrador volver a activar la autenticación básica?",
-      "a": "No. Volver a activarla fue posible hasta el 31 de diciembre de 2022 y esa puerta está cerrada. La documentación de Microsoft indica que nadie, ni siquiera el soporte de Microsoft, puede volver a activar la autenticación básica en un tenant. Cualquier guía que te diga que abras una solicitud de soporte para ello está desactualizada."
+      "q": "¿Necesito una contraseña de aplicación o ajustes IMAP?",
+      "a": "No. mcpemails conecta Microsoft 365 a través de Microsoft Graph después de que inicias sesión con Microsoft, así que no hay contraseña de aplicación que crear ni servidor IMAP o SMTP que introducir. De todos modos, una contraseña no funcionaría: la autenticación básica se eliminó de Exchange Online en 2022 y no se puede volver a activar."
     },
     {
-      "q": "¿Podría un administrador dar su consentimiento y hacer que funcione?",
-      "a": "Un administrador puede conceder consentimiento para todo el tenant a una aplicación que solicita permisos de correo de Graph, y así es como se aprueban normalmente las integraciones de correo empresariales. Aquí no sirve, porque mcpemails no tiene una aplicación de Microsoft a la que puedan dar su consentimiento. Si tu organización necesita un agente de IA en los buzones del tenant, es una conversación con quien administre Entra ID."
+      "q": "¿Qué puede hacer mi IA en Microsoft 365?",
+      "a": "Leer, buscar, enviar, responder y reenviar; trabajar con borradores; crear y usar carpetas, incluidas las anidadas; mover, copiar y archivar; marcar; eliminar a la papelera o de forma permanente; gestionar adjuntos de hasta 25 MB; programar envíos; y gestionar tu firma."
     },
     {
-      "q": "¿Es accesible el buzón desde fuera de Microsoft?",
-      "a": "Sí, y conviene separar las dos ideas. El endpoint IMAP responde por TLS y devuelve un banner de servicio IMAP4 de Microsoft Exchange listo, así que nada está bloqueado por un firewall ni fuera de línea. El bloqueo está por completo en la autenticación y en la directiva de consentimiento. Diagnosticarlo como un problema de red o de nombre de servidor te lleva en la dirección equivocada."
+      "q": "¿Se almacena mi correo en sus servidores?",
+      "a": "No. Los mensajes se obtienen en vivo de Microsoft en cada solicitud y se entregan a tu cliente de IA. El token OAuth de tu inicio de sesión con Microsoft se cifra en reposo y el cuerpo de los mensajes no se conserva. Eliminar la bandeja en mcpemails corta la conexión de inmediato."
     }
   ],
   "ctaBand": {
-    "title": "Dale a tu IA un buzón en el que pueda iniciar sesión",
-    "sub": "Tu tenant no se toca. Conecta una bandeja IMAP para el trabajo que quieras automatizar, gratis para siempre."
+    "title": "Dale a tu IA tu bandeja de Microsoft 365",
+    "sub": "Inicia sesión con Microsoft. Si tu organización necesita la aprobación de un administrador, un enlace a tu administrador de TI sirve para todos. Una bandeja gratis para siempre."
   }
 }

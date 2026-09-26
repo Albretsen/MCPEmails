@@ -1,100 +1,104 @@
 {
   "_sources": [
     "https://learn.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/deprecation-of-basic-authentication-exchange-online",
-    "https://learn.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth",
     "https://mc.merill.net/message/MC1163922",
     "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent"
   ],
   "auth": {
     "method": "oauth",
-    "label": "OAuth 2.0, med administratorsamtykke i tenanten",
-    "helpUrl": "https://learn.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth",
-    "usernameForm": "Et passordfelt er ikke problemet. Exchange Online godtar bare et OAuth 2.0-tilgangstoken på IMAP, utstedt til et program som tenant-administratoren din har gitt samtykke til.",
+    "label": "Logg inn med Microsoft (OAuth 2.0), kan kreve godkjenning fra IT-administrator",
+    "helpUrl": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent",
+    "usernameForm": "Ingenting å skrive inn. Du logger inn med Microsoft-kontoen din fra jobb eller skole på Microsofts egen side og godkjenner tilgangen, så verken passord eller app-passord skrives inn her. IMAP- og SMTP-innstillinger som er publisert for Microsoft 365, gjelder ikke: MCP Emails kobler til via Microsoft Graph.",
     "status": "active"
   },
   "meta": {
-    "title": "Microsoft 365-e-post, IMAP og AI: den egentlige sperren",
-    "description": "Microsoft 365 svarer på IMAP på outlook.office365.com:993, men Basic auth er borte og e-postscopes krever admin-samtykke, så mcpemails kan ikke koble til."
+    "title": "Koble Microsoft 365-e-post til Claude og ChatGPT",
+    "description": "Koble en Microsoft 365-postkasse fra jobb eller skole til Claude, ChatGPT, Cursor eller en hvilken som helst MCP-klient. Logg inn med Microsoft; mange organisasjoner trenger at en IT-administrator godkjenner appen én gang først."
   },
   "hero": {
     "eyebrow": "Microsoft 365 + AI",
-    "titleLine1": "Microsoft 365-postkasser",
-    "titleLine2": "kan ikke kobles til, og her er hvorfor",
-    "lead": "Serveren kan nås. Passordet er ikke problemet, og heller ikke porten. Det som hindrer en Microsoft 365-postkasse i å nå en MCP-server, er autorisasjon: Basic auth er borte, og e-posttillatelser krever tenant-administratoren din.",
-    "answer": "Nei, mcpemails kan ikke koble til en Microsoft 365-postkasse, og årsaken er autorisasjon, ikke tilgjengelighet. Exchange Online svarer på IMAP på outlook.office365.com port 993 og SMTP på smtp.office365.com port 587, og et TLS-håndtrykk mot begge lykkes i dag. Det som feiler, er innloggingen. Microsoft fjernet Basic-autentisering for IMAP og POP permanent i alle Exchange Online-tenanter i løpet av 2022, og siden 31. desember 2022 kan ingen, heller ikke Microsofts support, slå den på igjen, så ingen passord eller app-passord vil noen gang autentisere. Den eneste gjenværende veien er OAuth 2.0, som krever et registrert program der en tenant-administrator har samtykket til Microsoft Graph-e-posttillatelsene, fordi Microsofts administrerte standard samtykkepolicy ikke lenger lar en vanlig bruker godkjenne e-postscopes for seg selv. mcpemails tilbyr ikke en Microsoft OAuth-tilkobling, så det ærlige svaret er at denne postkassen ikke kan kobles til her."
+    "titleLine1": "Koble Microsoft 365-e-post",
+    "titleLine2": "til Claude, ChatGPT og Cursor",
+    "lead": "Gi AI-agenten din Outlook-postkassen din fra jobb eller skole. Logg inn med Microsoft, og hvis organisasjonen krever det, sender du IT-administratoren én lenke for å godkjenne MCP Emails for alle.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Logg inn med Microsoft, uten app-passord",
+    "meta2": "Godkjenningslenke for IT-administrator innebygd",
+    "answer": "Ja, med én betingelse som avhenger av organisasjonen din. mcpemails kobler til Microsoft 365-postkasser fra jobb og skole via Microsoft Graph: du klikker Koble til med Microsoft og logger inn med jobbkontoen din. Mange organisasjoner trenger likevel at en IT-administrator godkjenner appen én gang først, fordi Microsofts standard samtykkepolicy, som har gjeldt siden slutten av 2025, hindrer ansatte i å godkjenne tillatelser til å lese e-post selv. Skjer det, viser dashbordet et varsel med en lenke du kan sende til IT-administratoren. Administratoren logger inn og godkjenner MCP Emails én gang for hele organisasjonen, og etter det kobler du og kollegene dine til som vanlig. Lim deretter én URL inn i Claude, ChatGPT, Cursor eller en annen MCP-klient. Én innboks er gratis, for alltid."
   },
   "method": {
-    "title": "Slik kobler Microsoft 365 seg til: bare OAuth, og samtykke er muren",
-    "body": "Det er to separate porter, og de fleste gjennomganger slår dem sammen til én. Den første er autentisering. Exchange Onlines IMAP-tjeneste lister fortsatt <code>AUTH=PLAIN</code> ved siden av <code>AUTH=XOAUTH2</code> i funksjonslinjen, men det er en rest fra protokollannonseringen, ikke et levende alternativ: Basic-autentisering ble fjernet for IMAP, POP, EWS, ActiveSync og Remote PowerShell i alle tenanter og kan ikke gjenopprettes. Bare <code>XOAUTH2</code> virker faktisk, med et tilgangstoken fra Microsofts identitetsplattform. Den andre porten er samtykke. For å få det tokenet må du registrere et program i Microsoft Entra ID og få de delegerte Microsoft Graph-e-posttillatelsene godkjent. I en utrulling som startet i slutten av oktober 2025, la Microsoft <b>Mail.Read</b>, <b>Mail.ReadWrite</b> og resten av Exchanges delegerte scopes inn i den Microsoft-administrerte standard samtykkepolicyen, noe som betyr at en vanlig bruker som klikker seg gjennom en samtykkeskjerm, nå får en forespørsel om administratorgodkjenning i stedet for en fungerende tilkobling. En tenant-administrator kan gi samtykke, og mange vil ikke."
+    "title": "Slik kobles Microsoft 365 til: Microsoft-innlogging, noen ganger med godkjenning fra administrator",
+    "body": "Microsoft 365 kobles til via <b>Microsoft Graph</b> med OAuth 2.0, ikke over IMAP. Du logger inn på Microsofts egen side og godkjenner tillatelsene MCP Emails ber om: lese og endre e-post (<b>Mail.ReadWrite</b>), sende e-post (<b>Mail.Send</b>), holde forbindelsen (<b>offline_access</b>) og den grunnleggende profilen og e-postadressen din. Microsoft viser MCP Emails som en app fra en verifisert utgiver. Om du selv kan godkjenne disse tillatelsene, bestemmer organisasjonen din. Siden slutten av 2025 lar Microsofts standard samtykkepolicy ikke lenger vanlige brukere godkjenne e-posttillatelser for en app, så i mange organisasjoner blir den første som kobler til bedt om administratorgodkjenning i stedet. En administrator godkjenner én gang for hele organisasjonen, ikke én gang per person."
   },
   "setup": [
     {
-      "h": "Opprett den gratis mcpemails-kontoen",
-      "p": "En e-postadresse og ingen kort. Én tilkoblet innboks er gratis for alltid. De neste to stegene avgjør hvilken postkasse det blir, for det blir ikke Microsoft 365-postkassen."
+      "h": "Opprett en gratis konto",
+      "p": "Registrer deg hos mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
     },
     {
-      "h": "Velg en postkasse utenfor tenanten til det automatiserte arbeidet",
-      "p": "Velg en adresse hos en leverandør som godtar passord eller app-passord via IMAP: ditt eget domene hos Fastmail eller Migadu, en personlig Gmail-konto, en prosjektpostkasse. Den kontoen er det mcpemails kobler til, og det er der agenten din leser, lager utkast, sender og arkiverer."
+      "h": "Velg Outlook og koble til med Microsoft",
+      "p": "Åpne Koble til innboks i dashbordet, velg Outlook, klikk Koble til med Microsoft og logg inn med kontoen din fra jobb eller skole."
     },
     {
-      "h": "Send relevant e-post dit, hvis organisasjonen din tillater det",
-      "p": "Videresending settes per bruker i Microsoft 365 admin center under Users, Active users, brukeren, så fanen Mail og Manage email forwarding. Sjekk med den som drifter tenanten først. Automatisk videresending til eksterne domener er blokkert som standard i Microsoft Defenders policy for utgående spamfilter, så en administrator må tillate det før en eneste melding forlater tenanten, og i en regulert organisasjon er svaret som regel nei."
+      "h": "Godkjenn tilgangen, eller send lenken til administratoren",
+      "p": "Hvis Microsoft lar deg godkjenne, godtar du tillatelsene og innboksen kobles til. Hvis organisasjonen krever administratorgodkjenning, viser dashbordet et varsel med lenken Send til IT-ansvarlig. Administratoren åpner den, logger inn på MCP Emails og godkjenner appen én gang for hele organisasjonen. Klikk deretter Koble til med Microsoft igjen."
     },
     {
       "h": "Lim MCP-URL-en inn i AI-en",
-      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten den innboksen med lesing, søk, sending, svar, planlegging og arkivering."
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, Cursor eller ChatGPT, autoriser, så har agenten innboksen."
     }
   ],
   "gotchas": [
     {
-      "h": "IMAP-verten svarer, annonserer AUTH=PLAIN, og avviser likevel passordet ditt",
-      "p": "Åpner du en TLS-tilkobling til outlook.office365.com på 993, hilser Exchange deg med et banner om at tjenesten er klar og en funksjonslinje som tilbyr <code>AUTH=PLAIN</code>. Den linjen er ikke et løfte. Basic-autentisering er slått av på tjenestenivå i alle tenanter, så en passordinnlogging gir en autentiseringsfeil som ser nøyaktig ut som et feil passord, og det er derfor folk bruker timer på å tilbakestille påloggingsdetaljer som var riktige hele tiden. Skillet verdt å holde fast ved: tilgjengeligheten er i orden, det er autorisasjonen som avvises."
+      "h": "Passord og app-passord fungerer ikke, og derfor bruker vi Microsoft Graph",
+      "p": "Microsoft fjernet grunnleggende autentisering for IMAP og POP i alle Exchange Online-leietakere i 2022, og den kan ikke slås på igjen. En passordinnlogging feiler på en måte som ser helt ut som feil passord, og derfor tilbakestiller folk påloggingsinformasjon som var riktig hele tiden. mcpemails bruker ikke IMAP for Microsoft 365: den logger inn med Microsoft og snakker med Microsoft Graph, så det finnes ikke noe passord å skrive inn og ingen serverinnstilling å gjøre feil."
     },
     {
-      "h": "SMTP AUTH er en egen bryter per postkasse, og den er av som standard",
-      "p": "Selv for programmer som har et gyldig OAuth-token, avhenger klientinnsending via <code>smtp.office365.com</code> av at SMTP AUTH er slått på for akkurat den postkassen. Microsoft slo den av som standard i tenanter der den ikke allerede var i bruk, og den settes per postkasse, ikke én gang for hele organisasjonen. Microsoft har også varslet at Basic-autentisering for SMTP-klientinnsending skal fases ut, og har flyttet datoen mer enn én gang, så behandle enhver frist du leser på en tredjepartsside som foreløpig og sjekk Microsofts gjeldende kunngjøring."
+      "h": "Administratorgodkjenning bestemmes av organisasjonen, og en verifisert utgiver slipper ikke unna",
+      "p": "Etter endringen Microsoft rullet ut fra slutten av oktober 2025, ligger e-posttillatelsene i Exchange i den Microsoft-administrerte standard samtykkepolicyen, så en bruker som prøver å godkjenne en e-postapp, får i stedet en forespørsel om administratorgodkjenning. Å være verifisert utgiver endrer ikke det. IT-administratoren din kan godkjenne MCP Emails for hele organisasjonen via lenken i dashbordet, og trenger bare å gjøre det én gang."
     },
     {
-      "h": "Administratorsamtykke er porten, ikke brukeren, og ikke status som verifisert utgiver",
-      "p": "En bruker som klikker Accept på en samtykkeskjerm for et program som leser e-post, ser i stedet en forespørsel om administratorgodkjenning. Siden endringen som ble rullet ut fra slutten av oktober 2025, ligger Exchanges delegerte tillatelser i den Microsoft-administrerte standardpolicyen, så selv et program fra en verifisert utgiver kan ikke betjene seg selv med mindre tenanten har klassifisert de tillatelsene som lav risiko eller en administrator har gitt tenant-omfattende samtykke til akkurat det programmet. Delte og delegerte postkasser gjør ingen forskjell, fordi kravet ligger på programmet, ikke postkassen."
+      "h": "En konto uten Exchange Online-postkasse blir avvist",
+      "p": "Noen Microsoft 365-kontoer har ingen Exchange Online-postkasse, for eksempel en administratorkonto uten Exchange-lisens, eller en organisasjon der e-posten ligger et annet sted. Microsoft Graph har da ingenting å åpne, så mcpemails avviser tilkoblingen og sier ifra. Hvis e-posten din ligger på en annen server, kobler du adressen til med IMAP i stedet."
     },
     {
-      "h": "Exchange Online annonserer ikke SPECIAL-USE på IMAP",
-      "p": "IMAP-tjenesten støtter MOVE, UIDPLUS og IDLE, men publiserer ikke SPECIAL-USE-utvidelsen, så en klient kan ikke spørre hvilken mappe som er Sent- eller Junk-mappen og må matche navn i stedet. I en tenant satt opp på tysk eller fransk har mappene navn på det språket, og ethvert verktøy som ser etter den bokstavelige strengen Sent Items, finner stille ingenting. Verdt å vite før du skylder på koblingen."
+      "h": "Hvis godkjenningen ikke gikk gjennom, åpner administratoren lenken på nytt",
+      "p": "Dashbordet regner organisasjonen din som godkjent først når Microsoft bekrefter det. Hvis Microsoft ikke bekrefter godkjenningen, for eksempel fordi administratoren lukket siden eller avslo, forblir Outlook sperret, og dashbordet sier ifra. Be IT-administratoren om å åpne godkjenningslenken på nytt."
     }
   ],
   "limits": [
-    "Automatisk videresending til et eksternt domene er blokkert som standard av Microsoft Defenders policy for utgående spamfilter. Å sende tenant-e-post til en postkasse vi kan koble til, krever at en administrator tillater det, og det er en reell policybeslutning, ikke en avkrysningsboks.",
-    "Alt på denne siden beskriver hva som ikke er mulig i dag. Hvis tenanten din allerede kjører en tredjeparts e-postintegrasjon, gjør den det gjennom et program administratoren din har samtykket til, som er en annen ordning enn en postkasse du selv kobler til på noen minutter."
+    "Outlook organiserer e-post i mapper, også nestede mapper. Outlook-kategorier støttes ikke, og etikettverktøyene gjelder bare Gmail.",
+    "Microsoft Graph kan ikke kombinere et tekstsøk med filtrene for ulest, vedlegg, flagget eller dato. Når et søk inneholder tekst, brukes ikke disse filtrene, og resultatet sier hvilke som ble utelatt.",
+    "Vedlegg støttes opptil 25 MB.",
+    "Den selvdriftede versjonen kobler bare til over IMAP og SMTP. Innlogging med Microsoft er en del av den driftede tjenesten."
   ],
   "faq": [
     {
       "q": "Fungerer Claude med Microsoft 365-e-post?",
-      "a": "Ikke gjennom mcpemails. Microsoft 365-postkasser godtar bare OAuth 2.0 på IMAP, og Microsoft Graph-e-posttillatelsene et program trenger, krever at tenant-administratoren din gir samtykke. Vi tilbyr ikke en Microsoft OAuth-tilkobling, så det er ingenting her for administratoren din å godkjenne, og vi skal ikke late som noe annet."
+      "a": "Ja. Koble postkassen din fra jobb eller skole til mcpemails ved å logge inn med Microsoft, lim én MCP-URL inn i Claude, så kan Claude lese, søke i, sende, svare på, videresende, planlegge og arkivere e-posten din. Hvis organisasjonen krever administratorgodkjenning, godkjenner IT-administratoren MCP Emails én gang først, med lenken dashbordet gir deg."
     },
     {
-      "q": "Hva er IMAP- og SMTP-innstillingene for Microsoft 365?",
-      "a": "IMAP er outlook.office365.com på port 993 med implisitt TLS. SMTP er smtp.office365.com på port 587 med STARTTLS, og annonserer en maksimal meldingsstørrelse på 150 MB. Begge vertene ble bekreftet via en direkte TLS-tilkobling. Innstillingene er riktige og slipper deg likevel ikke inn, fordi tjenesten bare godtar OAuth 2.0-tokener på de portene."
+      "q": "Hvorfor blir jeg bedt om administratorgodkjenning?",
+      "a": "På grunn av organisasjonens samtykkepolicy. Siden slutten av 2025 hindrer Microsofts standardpolicy ansatte i å godkjenne tillatelser til å lese e-post for apper selv, så innloggingen ber om administratorgodkjenning i stedet. Det er ikke et problem med kontoen din. Send lenken fra varselet i dashbordet til IT-administratoren."
     },
     {
-      "q": "Hvorfor blir Microsoft 365-passordet mitt avvist via IMAP?",
-      "a": "Fordi Basic-autentisering ble fjernet fra Exchange Online. Microsoft slo den av for IMAP, POP, EWS, ActiveSync og Remote PowerShell i alle tenanter i 2022. Passordet er nesten helt sikkert riktig. Serveren har rett og slett ikke lenger en mekanisme som godtar et, uansett hva funksjonslinjen annonserer."
+      "q": "Hva må IT-administratoren min gjøre?",
+      "a": "Åpne lenken du sender, logge inn på MCP Emails og godkjenne appen for organisasjonen på Microsofts samtykkeskjerm, der MCP Emails vises som verifisert utgiver. Det gjøres én gang for hele organisasjonen. Etter det kobler alle i organisasjonen til med Koble til med Microsoft som vanlig."
     },
     {
-      "q": "Kan administratoren min slå på Basic-autentisering igjen?",
-      "a": "Nei. Det var mulig å slå den på igjen frem til 31. desember 2022, og den døren er stengt. Microsofts dokumentasjon sier at ingen, heller ikke Microsofts support, kan slå på Basic-autentisering igjen i en tenant. En veiledning som ber deg sende en supportforespørsel om det, er utdatert."
+      "q": "Trenger jeg et app-passord eller IMAP-innstillinger?",
+      "a": "Nei. mcpemails kobler til Microsoft 365 via Microsoft Graph etter at du har logget inn med Microsoft, så det finnes ikke noe app-passord å lage og ingen IMAP- eller SMTP-server å skrive inn. Et passord ville uansett ikke fungert: grunnleggende autentisering ble fjernet fra Exchange Online i 2022 og kan ikke slås på igjen."
     },
     {
-      "q": "Kan en administrator gi samtykke og få dette til å fungere?",
-      "a": "En administrator kan gi tenant-omfattende samtykke til et program som ber om Graph-e-posttillatelser, og det er slik e-postintegrasjoner i bedrifter normalt godkjennes. Det hjelper ikke her, fordi mcpemails ikke har noe Microsoft-program de kan samtykke til. Trenger organisasjonen din en AI-agent på tenant-postkasser, er det en samtale med den som drifter Entra ID."
+      "q": "Hva kan AI-en min gjøre i Microsoft 365?",
+      "a": "Lese, søke, sende, svare og videresende; jobbe med utkast; opprette og bruke mapper, også nestede; flytte, kopiere og arkivere; flagge; slette til papirkurven eller permanent; håndtere vedlegg opptil 25 MB; planlegge sending; og administrere signaturen din."
     },
     {
-      "q": "Kan postkassen i det hele tatt nås utenfra Microsoft?",
-      "a": "Ja, og det er verdt å skille de to tingene. IMAP-endepunktet svarer over TLS og returnerer et Microsoft Exchange IMAP4-banner om at tjenesten er klar, så ingenting er brannmurblokkert eller nede. Sperren ligger helt i autentisering og samtykkepolicy. Å diagnostisere det som et nettverks- eller vertsnavnproblem sender deg i feil retning."
+      "q": "Lagres e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Microsoft for hver forespørsel og sendes videre til AI-klienten din. OAuth-tokenet fra Microsoft-innloggingen din er kryptert ved lagring, og meldingsinnhold beholdes ikke. Sletter du innboksen i mcpemails, avsluttes tilkoblingen umiddelbart."
     }
   ],
   "ctaBand": {
-    "title": "Gi AI-en din en postkasse den kan logge inn på",
-    "sub": "Tenanten din forblir urørt. Koble til én IMAP-innboks for arbeidet du vil automatisere, gratis for alltid."
+    "title": "Gi AI-en din Microsoft 365-innboksen din",
+    "sub": "Logg inn med Microsoft. Trenger organisasjonen administratorgodkjenning, holder det med én lenke til IT-administratoren for alle. Én innboks gratis for alltid."
   }
 }

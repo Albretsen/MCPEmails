@@ -228,7 +228,7 @@ export const PLANS: Record<PlanId, Plan> = {
       // comparison table on the same page. Keep them on Free.
       'Send review and approval hold',
       'Usage analytics',
-      'Gmail, iCloud, Fastmail and any IMAP',
+      'Gmail, Outlook, iCloud, Fastmail and any IMAP',
       'Unlimited API keys',
       'Community support',
     ],

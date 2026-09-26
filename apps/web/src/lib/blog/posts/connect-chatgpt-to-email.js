@@ -8,12 +8,10 @@ const post = {
     'Connect ChatGPT and OpenAI Codex to Gmail, iCloud, Fastmail and IMAP email with MCP Emails',
   authorId: 'asgeir',
   publishedAt: '2026-09-15T09:00:00.000Z',
-  updatedAt: '2026-09-23T09:00:00.000Z',
+  updatedAt: '2026-09-25T09:00:00.000Z',
   tags: ['ChatGPT', 'Codex', 'MCP', 'Email', 'Tutorial'],
   featured: false,
-  content: `> **Outlook and Microsoft 365 are in progress.** They cannot be connected in production yet. This guide covers Gmail, iCloud, Fastmail, Yahoo, Zoho and the other IMAP mailboxes available today.
-
-ChatGPT cannot reach a mailbox on its own. It needs an MCP server in front of your email, and MCP Emails is that server: connect an inbox once, point ChatGPT at a single URL, and it gets the same email tools whether the mail lives in Gmail, iCloud, Fastmail, Yahoo, Zoho or a self-hosted IMAP server.
+  content: `ChatGPT cannot reach a mailbox on its own. It needs an MCP server in front of your email, and MCP Emails is that server: connect an inbox once, point ChatGPT at a single URL, and it gets the same email tools whether the mail lives in Gmail, iCloud, Fastmail, Yahoo, Zoho or a self-hosted IMAP server.
 
 Two OpenAI surfaces are involved, and they authenticate differently. ChatGPT runs an OAuth flow in the browser, so there is no API key to paste. OpenAI Codex runs in your terminal and uses a scoped bearer key instead. Same endpoint, same tools.
 
@@ -23,7 +21,7 @@ Two OpenAI surfaces are involved, and they authenticate differently. ChatGPT run
 
 - **ChatGPT Plus, Pro, Business, Enterprise or Edu, on the web.** Custom MCP connectors live behind developer mode, which OpenAI offers on chatgpt.com to those plans. Free and Go accounts cannot add one, and the mobile and desktop apps do not show the option. On Business and Enterprise an admin may need to allow developer mode first.
 - **A free MCP Emails account.** [Create one here](/signup). The free plan holds one connected inbox and needs no card.
-- **One mailbox.** Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex, or anything that speaks IMAP and SMTP.
+- **One mailbox.** Gmail, Outlook or Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, Yandex, or anything that speaks IMAP and SMTP.
 
 If you are on Free or Go, the same inbox and URL already work in [Claude](/docs/claude), [Cursor](/docs/cursor), [VS Code](/docs/vscode) and the other [supported clients](/docs/clients).
 
@@ -38,6 +36,10 @@ Gmail connects with a Google app password over IMAP by default, and Google OAuth
 ### iCloud, Fastmail, Yahoo and Zoho
 
 These want an app-specific password, not the password you type on the web. Create one at the provider, pick the provider in MCP Emails, and paste it in. The [iCloud, Fastmail and IMAP guide](/blog/connect-icloud-fastmail-imap-to-claude) has the exact steps.
+
+### Outlook and Microsoft 365
+
+Outlook connects with Sign in with Microsoft, not an app password: choose **Outlook**, click **Connect with Microsoft**, and approve. Personal Outlook.com, Hotmail, Live and MSN accounts connect straight away. Work or school Microsoft 365 accounts may need an IT admin to approve the app once for the whole organisation first; the dashboard gives you a link to send them. The [Outlook and Microsoft 365 guide](/blog/connect-outlook-microsoft-365-ai-agent-mcp) has the details.
 
 ### Any other IMAP mailbox
 

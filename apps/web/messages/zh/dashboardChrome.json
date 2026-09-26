@@ -114,7 +114,8 @@
     "mcpCopyTitle": "复制你的 MCP 端点 URL"
   },
   "connect": {
-    "subOutlook": "OAuth 2.0 · Microsoft 365",
+    "subOutlook": "Outlook.com · Microsoft 365",
+    "hintOutlook": "Outlook.com、Hotmail、Live 和 MSN 帐户可以直接登录。工作或学校的 Microsoft 365 帐户可能需要 IT 管理员先批准 MCP Emails 一次；如果 Microsoft 要求批准，我们会给你一个链接发给管理员。",
     "comingSoon": "即将推出",
     "subFastmail": "应用专用密码",
     "subAppPassword": "应用专用密码",
@@ -226,7 +227,7 @@
     "smtpPortLabel": "SMTP 端口",
     "passwordLabel": "密码",
     "appPasswordLabel": "应用专用密码",
-    "passwordHint": "请使用您的邮箱密码。如果您的提供商启用了两步验证（例如 Gmail、Outlook、iCloud），请改为生成应用专用密码。该凭据在存储前会被加密。",
+    "passwordHint": "请使用您的邮箱密码。如果您的提供商启用了两步验证（例如 Gmail、iCloud、Yahoo），请改为生成应用专用密码。该凭据在存储前会被加密。",
     "showPassword": "显示密码",
     "hidePassword": "隐藏密码",
     "cancel": "取消",

@@ -45,9 +45,11 @@ export const RELEASE_WAVES = {
   5: '2026-09-08',
   6: '2026-09-08',
   7: '2026-09-08',
-  // Self-hosted stacks, then the `blocked` set (Outlook, Office365, Proton,
-  // Tutanota, Hey), whose honest answer is "no". A week behind the rest so the
-  // supported pages are the ones indexed first.
+  // Self-hosted stacks, then the wave-9 set researched as `blocked` (Outlook,
+  // Office365, Proton, Tutanota, Hey), whose honest answer was "no". A week
+  // behind the rest so the supported pages are the ones indexed first. Outlook
+  // and Office365 have since gone live on the Microsoft Graph connector and
+  // moved to the consumer and business categories; the wave is unchanged.
   8: '2026-09-15',
   9: '2026-09-15',
   // HELD, not scheduled. These seven need a human spot-check first: SFR and

@@ -7,7 +7,7 @@ const post = {
   coverAlt: 'How to give your AI agent access to email over MCP — MCPEmails',
   authorId: 'asgeir',
   publishedAt: "2026-06-02T09:00:00.000Z",
-  updatedAt: "2026-06-02T09:00:00.000Z",
+  updatedAt: "2026-09-25T09:00:00.000Z",
   tags: ['MCP', 'AI agents', 'Email', 'Tutorial'],
   featured: true,
   content: `To give an AI agent access to email, you connect your inbox to an MCP server and point your agent at one endpoint URL. The agent then gets a small set of tools for reading, searching, and sending mail. The hard part isn't the agent — it's doing this without leaking your password into a prompt, a log, or a vector store. That last mile is what this guide is about.
@@ -81,10 +81,10 @@ No password crossed the wire. The agent held capabilities, not credentials. For 
 
 You connect an inbox once in **Dashboard → Inboxes → Connect Inbox**. How you authenticate depends on the provider.
 
-### OAuth providers (one click)
+### OAuth providers (sign in, no password)
 
 - **Gmail** — OAuth 2.0 via Google sign-in.
-- **Outlook / Microsoft 365** — OAuth 2.0 via Microsoft sign-in. Setup details in [connect Outlook and Microsoft 365 to an AI agent](/blog/connect-outlook-microsoft-365-ai-agent-mcp).
+- **Outlook / Microsoft 365**: OAuth 2.0 via Sign in with Microsoft, over Microsoft Graph rather than IMAP. Personal Outlook.com, Hotmail, Live and MSN accounts connect straight away. Work or school Microsoft 365 accounts may need an IT admin to approve the app once for the whole organisation first; the dashboard gives you a link to send them. Setup details in [connect Outlook and Microsoft 365 to an AI agent](/blog/connect-outlook-microsoft-365-ai-agent-mcp).
 
 ### App-password providers
 

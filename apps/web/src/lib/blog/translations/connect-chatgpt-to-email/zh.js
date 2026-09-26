@@ -4,9 +4,7 @@ const translation = {
     '分步指南：用自定义 MCP 连接器把 Gmail、iCloud、Fastmail 或任意 IMAP 收件箱接入 ChatGPT，并用受限密钥接入 OpenAI Codex。不存储任何邮件。',
   coverAlt:
     '使用 MCP Emails 将 ChatGPT 和 OpenAI Codex 连接到 Gmail、iCloud、Fastmail 与 IMAP 邮箱',
-  content: `> **Outlook 与 Microsoft 365 仍在开发中。** 目前还无法在生产环境中连接。本指南涵盖 Gmail、iCloud、Fastmail、Yahoo、Zoho 以及今天已经可用的其他 IMAP 邮箱。
-
-ChatGPT 无法自行访问邮箱。它需要在你的邮件前面有一台 MCP 服务器，而 MCP Emails 就是这台服务器：连接一次收件箱，把 ChatGPT 指向一个 URL，无论邮件存放在 Gmail、iCloud、Fastmail、Yahoo、Zoho 还是自建的 IMAP 服务器上，它拿到的都是同一套邮件工具。
+  content: `ChatGPT 无法自行访问邮箱。它需要在你的邮件前面有一台 MCP 服务器，而 MCP Emails 就是这台服务器：连接一次收件箱，把 ChatGPT 指向一个 URL，无论邮件存放在 Gmail、iCloud、Fastmail、Yahoo、Zoho 还是自建的 IMAP 服务器上，它拿到的都是同一套邮件工具。
 
 这里涉及两个 OpenAI 平台，它们的认证方式不同。ChatGPT 在浏览器里走 OAuth 流程，所以没有 API 密钥需要粘贴。OpenAI Codex 运行在终端里，因此改用一个受限的 bearer 密钥。端点相同，工具相同。
 
@@ -14,7 +12,7 @@ ChatGPT 无法自行访问邮箱。它需要在你的邮件前面有一台 MCP �
 
 - **网页版的 ChatGPT Plus、Pro、Business、Enterprise 或 Edu。** 自定义 MCP 连接器位于开发者模式之后，OpenAI 在 chatgpt.com 上向这些方案提供该模式。Free 和 Go 账户无法添加，移动端和桌面端应用也不显示该选项。在 Business 和 Enterprise 上，可能需要管理员先允许开发者模式。
 - **一个免费的 MCP Emails 账户。** [在此创建](/signup)。免费方案可连接一个收件箱，无需信用卡。
-- **一个邮箱。** Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandex，或任何支持 IMAP 与 SMTP 的邮箱。
+- **一个邮箱。** Gmail、Outlook 或 Microsoft 365、iCloud、Fastmail、Yahoo、Zoho、Yandex，或任何支持 IMAP 与 SMTP 的邮箱。
 
 如果你使用的是 Free 或 Go，同一个邮箱和同一个 URL 已经可以在 [Claude](/docs/claude)、[Cursor](/docs/cursor)、[VS Code](/docs/vscode) 以及其他[支持的客户端](/docs/clients)中使用。
 
@@ -29,6 +27,10 @@ Gmail 默认通过 Google 应用专用密码以 IMAP 方式连接，同时也支
 ### iCloud、Fastmail、Yahoo 与 Zoho
 
 这些服务商要求应用专用密码，而不是你在网页上输入的登录密码。先在服务商处生成一个，在 MCP Emails 中选择对应服务商，然后粘贴进去。[iCloud、Fastmail 与 IMAP 指南](/blog/connect-icloud-fastmail-imap-to-claude)给出了准确步骤。
+
+### Outlook 与 Microsoft 365
+
+Outlook 通过使用 Microsoft 登录连接，而不是应用专用密码：选择 **Outlook**，点击**使用 Microsoft 连接**并批准。个人 Outlook.com、Hotmail、Live 和 MSN 账户可以直接连接。工作或学校的 Microsoft 365 账户可能需要 IT 管理员先为整个组织一次性批准该应用；控制台会给你一个可以发给管理员的链接。详情见 [Outlook 与 Microsoft 365 指南](/blog/connect-outlook-microsoft-365-ai-agent-mcp)。
 
 ### 其他任意 IMAP 邮箱
 

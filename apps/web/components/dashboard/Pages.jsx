@@ -122,12 +122,13 @@ function compatibilityForInbox(provider) {
   }
   if (provider === 'outlook') {
     return {
-      status: 'Planned connector',
-      tone: 'neutral',
+      status: 'Compatible with differences',
+      tone: 'amber',
       profile: 'outlook-v1',
       notes: [
         'Uses folders and Microsoft Graph search semantics.',
-        'Flagged search is unavailable through the normalized search path.',
+        'A text search cannot be combined with the unread, attachment, flagged or date filters; the result says which were not applied.',
+        'Has folders, not labels; the label tools are Gmail-only.',
       ],
     };
   }

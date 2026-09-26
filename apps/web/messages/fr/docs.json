@@ -1,11 +1,11 @@
 {
   "meta": {
-    "title": "Documentation du serveur MCP e-mail : Gmail, IMAP et OAuth",
-    "description": "Démarrez avec MCPEmails en quelques minutes. Guide de démarrage rapide, référence des outils et exemples de réponses pour les agents Gmail et IMAP."
+    "title": "Documentation du serveur MCP e-mail : Gmail, Outlook, IMAP et OAuth",
+    "description": "Démarrez avec MCPEmails en quelques minutes. Guide de démarrage rapide, référence des outils et exemples de réponses pour les agents Gmail, Outlook et IMAP."
   },
   "hero": {
     "eyebrow": "Documentation",
-    "titleLine1": "Connectez Gmail ou IMAP à Claude",
+    "titleLine1": "Connectez Gmail, Outlook ou IMAP à Claude",
     "titleLine2": "en quatre étapes.",
     "lead": "Connectez n'importe quel compte e-mail, collez une URL dans un client MCP compatible OAuth et autorisez. Les clients sans OAuth utilisent plutôt une clé API. Référence complète des outils et guide de connexion ci-dessous.",
     "ctaQuickStart": "Démarrage rapide",
@@ -22,7 +22,7 @@
       "signup": {
         "label": "Inscrivez-vous et connectez une boîte",
         "heading": "Créez votre compte et connectez Gmail",
-        "body": "Inscrivez-vous sur mcpemails.com, puis allez dans Tableau de bord → Boîtes → Connecter une boîte. Choisissez Gmail, iCloud, Fastmail ou toute boîte IMAP, puis effectuez le flux OAuth ou collez un mot de passe d'application. Votre boîte est prête en moins d'une minute.",
+        "body": "Inscrivez-vous sur mcpemails.com, puis allez dans Tableau de bord → Boîtes → Connecter une boîte. Choisissez Gmail, Outlook, iCloud, Fastmail ou toute boîte IMAP, puis effectuez le flux OAuth ou collez un mot de passe d'application. Votre boîte est prête en moins d'une minute.",
         "cta": "Connecter votre boîte →"
       },
       "apikey": {
@@ -128,7 +128,7 @@
       "title": "Lister les boîtes",
       "desc": "Renvoie toutes les boîtes auxquelles la clé API ou le jeton OAuth actuel a accès. Appelez-le en premier pour découvrir les valeurs inbox_id, afin de ne jamais copier-coller d'UUID depuis le tableau de bord. Chaque résultat inclut l'adresse e-mail, le fournisseur, une marque de service facultative (icloud/yahoo/zoho/yandex/generic/fastmail) et un objet capabilities décrivant les fonctionnalités prises en charge par cette boîte.",
       "params": {
-        "provider": "Filtre facultatif : ne renvoie que les boîtes servies par ce fournisseur. L'un de : gmail, fastmail, imap. Omettez-le pour lister toutes les boîtes auxquelles la clé a accès.",
+        "provider": "Filtre facultatif : ne renvoie que les boîtes servies par ce fournisseur. L'un de : gmail, outlook, fastmail, imap. Omettez-le pour lister toutes les boîtes auxquelles la clé a accès.",
         "include_capabilities": "Si chaque boîte inclut son objet capabilities (les fonctionnalités prises en charge). Par défaut true ; mettez false pour une liste compacte ne contenant que inbox_id, adresse e-mail, nom affiché, fournisseur et marque de service."
       }
     },
@@ -480,7 +480,7 @@
   "providers": {
     "meta": {
       "title": "Compatibilité des fournisseurs e-mail pour les agents IA",
-      "description": "Quels fournisseurs e-mail fonctionnent avec un agent IA via MCP, et ce qu’il faut pour connecter chacun : OAuth ou mot de passe d’application, hôtes et ports IMAP et SMTP, TLS ou STARTTLS, ce qui échoue le plus souvent, et ce que l’agent peut faire une fois connecté. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Microsoft 365 et IMAP générique."
+      "description": "Quels fournisseurs e-mail fonctionnent avec un agent IA via MCP, et ce qu’il faut pour connecter chacun : OAuth ou mot de passe d’application, hôtes et ports IMAP et SMTP, TLS ou STARTTLS, ce qui échoue le plus souvent, et ce que l’agent peut faire une fois connecté. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Outlook / Microsoft 365 et IMAP générique."
     },
     "labels": {
       "gmailImap": "Gmail (IMAP)",
@@ -521,7 +521,7 @@
     "hero": {
       "eyebrow": "Matrice de compatibilité",
       "heading": "Compatibilité des fournisseurs e-mail pour les agents IA",
-      "lead": "Ce qu’un agent IA peut réellement faire avec chaque fournisseur e-mail, et ce qu’il faut pour en connecter un. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Microsoft 365 et toute boîte IMAP générique. Chaque ligne est vérifiée face aux connecteurs en production.",
+      "lead": "Ce qu’un agent IA peut réellement faire avec chaque fournisseur e-mail, et ce qu’il faut pour en connecter un. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Outlook / Microsoft 365 et toute boîte IMAP générique. Chaque ligne est vérifiée face aux connecteurs en production.",
       "ctaConnect": "Connecter une boîte mail",
       "ctaBack": "Retour à la documentation"
     },
@@ -529,7 +529,7 @@
       "supported": "Pris en charge",
       "notSupported": "Non pris en charge",
       "planned": "Prévu (pas encore livré)",
-      "imapNote": "<b>Gmail (IMAP), Fastmail, iCloud, Yahoo, Zoho, Yandex et IMAP générique</b> se connectent tous via le même transport IMAP/SMTP (Gmail, Fastmail et iCloud utilisent un mot de passe spécifique à l’application) et partagent un ensemble de fonctionnalités identique, y compris la syntaxe de recherche IMAP. Les colonnes sont affichées séparément pour plus de clarté. <b>Gmail (API)</b> est la seule colonne Gmail qui n’est pas IMAP : la même boîte, atteinte via la connexion Google et l’API Gmail."
+      "imapNote": "<b>Gmail (IMAP), Fastmail, iCloud, Yahoo, Zoho, Yandex et IMAP générique</b> se connectent tous via le même transport IMAP/SMTP (Gmail, Fastmail et iCloud utilisent un mot de passe spécifique à l’application) et partagent un ensemble de fonctionnalités identique, y compris la syntaxe de recherche IMAP. Les colonnes sont affichées séparément pour plus de clarté. <b>Gmail (API)</b> est la seule colonne Gmail qui n’est pas IMAP : la même boîte, atteinte via la connexion Google et l’API Gmail. <b>Outlook</b> n’est pas IMAP non plus : il se connecte via la connexion avec Microsoft et passe par Microsoft Graph."
     },
     "profiles": {
       "title": "Profils de compatibilité",
@@ -587,7 +587,7 @@
         "yahoo": "Yahoo accepte au plus 5 connexions simultanées. Son texte de refus, « Incorrect username or password », nomme les deux moitiés à dessein et ne dira pas laquelle était fausse.",
         "zoho": "L’accès IMAP est désactivé par défaut et doit être activé d’abord. Zoho exploite aussi six centres de données régionaux, et les boîtes payantes sur domaine propre vivent sur imappro/smtppro plutôt que imap/smtp : le bon hôte dépend donc de la région et du type de compte.",
         "yandex": "Yandex n’implémente pas RFC 4959 SASL-IR : la forme de connexion en ligne revient en erreur de syntaxe de commande, pas en erreur d’identifiants. Il faut activer à la fois « IMAP » et « mots de passe d’application et jetons OAuth », et les comptes Yandex 360 sur domaine propre peuvent se connecter avec un identifiant qui n’est pas l’adresse.",
-        "outlook": "La politique de consentement par défaut de Microsoft exclut Mail.ReadWrite des permissions qu’un utilisateur final peut approuver : un salarié sous Microsoft 365 est donc refusé avant même de voir un écran de consentement. Seul un administrateur peut le débloquer, et c’est pourquoi Microsoft 365 en entreprise ne peut pas être connecté par le propriétaire de la boîte.",
+        "outlook": "Les comptes Microsoft personnels (outlook.com, hotmail.com, live.com, msn.com) se connectent directement. Les comptes professionnels et scolaires sont différents : la politique de consentement par défaut de Microsoft empêche les salariés d’approuver eux-mêmes les permissions de messagerie, donc le tableau de bord affiche un lien à envoyer à votre administrateur informatique, qui approuve l’application une seule fois pour toute l’organisation ; ensuite, chacun se connecte normalement. Un compte Microsoft sans boîte Exchange Online est refusé, avec une indication pour connecter l’adresse en IMAP. Microsoft peut bloquer temporairement l’envoi depuis un compte outlook.com tout récent qui envoie en rafales, dans le cadre de ses propres contrôles anti-abus. En recherche, Microsoft Graph ne peut pas combiner un texte de recherche avec les filtres non lu, pièce jointe, marqué ou date : lorsqu’un texte est présent, ces filtres ne sont pas appliqués et le résultat indique lesquels.",
         "generic": "Un port et un mode de sécurité qui ne s’accordent pas. Choisir STARTTLS alors que le port reste 993 ouvre une connexion en clair vers un service qui ne parle que TLS, et la connexion expire tout simplement. Les transports en échec sont désormais réessayés automatiquement sur l’autre combinaison standard."
       },
       "notes": {

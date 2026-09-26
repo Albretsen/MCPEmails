@@ -38,6 +38,9 @@ const PROVIDERS = [
   // Gmail, both ways in. App password leads because it is the default one.
   { key: 'gmailImap', labelKey: 'gmailImap' },  // PROVIDER_CAPABILITIES.imap
   { key: 'gmail',     labelKey: 'gmailApi' },   // PROVIDER_CAPABILITIES.gmail
+  // Microsoft Graph, reached with OAuth: its own capability set,
+  // PROVIDER_CAPABILITIES.outlook.
+  { key: 'outlook',   label: 'Outlook' },
   // Every column from here down, and the Gmail app-password one above, is
   // provider='imap' in the DB and shares the one capability set.
   { key: 'fastmail',  label: 'Fastmail' },
@@ -125,11 +128,13 @@ const CONNECTION = [
     smtp: { host: 'smtp.yandex.com', port: '465', security: 'TLS' },
   },
   {
-    // Built and scoped (OUTLOOK_SCOPES), but not connectable: the provider card
-    // is disabled in the connect modal, and the tenant consent policy described
-    // in the notes is why. Saying so is the honest row.
-    key: 'outlook', label: 'Microsoft 365 / Outlook', href: null,
-    auth: 'microsoftOauth', imap: null, smtp: null, unavailable: true,
+    // Microsoft Graph, not IMAP: Mail.ReadWrite, Mail.Send and offline_access
+    // (OUTLOOK_SCOPES in outlook-oauth.ts), started from the connect modal's
+    // Outlook card at /auth/outlook. Personal accounts consent for themselves;
+    // a work or school tenant on Microsoft's default consent policy needs its
+    // admin to approve once (/auth/outlook/admin-consent), which the notes say.
+    key: 'outlook', label: 'Microsoft 365 / Outlook', href: '/connect/outlook',
+    auth: 'microsoftOauth', imap: null, smtp: null,
   },
   {
     // Both standard pairs, in the order transport-autodetect tries them.
@@ -150,44 +155,44 @@ const MATRIX = {
   original_message: {
     label: 'Download original (.eml)',
     section: 'Core',
-    gmail: true, gmailImap: true, fastmail: true,
+    gmail: true, gmailImap: true, outlook: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   read: {
     label: 'Read email',
     section: 'Core',
-    gmail: true, gmailImap: true, fastmail: true,
+    gmail: true, gmailImap: true, outlook: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   search: {
     label: 'Search',
     section: 'Core',
-    gmail: true, gmailImap: true, fastmail: true,
+    gmail: true, gmailImap: true, outlook: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   send: {
     label: 'Send email',
     section: 'Core',
-    gmail: true, gmailImap: true, fastmail: true,
+    gmail: true, gmailImap: true, outlook: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   reply: {
     label: 'Reply',
     section: 'Core',
-    gmail: true, gmailImap: true, fastmail: true,
+    gmail: true, gmailImap: true, outlook: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   forward: {
     label: 'Forward',
     section: 'Core',
-    gmail: true, gmailImap: true, fastmail: true,
+    gmail: true, gmailImap: true, outlook: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Flags & state ──────────────────────────────────────────────────────
   flags: {
     label: 'Read/unread + starred flags',
     section: 'Flags & state',
-    gmail: true, gmailImap: true, fastmail: true,
+    gmail: true, gmailImap: true, outlook: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Folders & labels ───────────────────────────────────────────────────
@@ -197,7 +202,7 @@ const MATRIX = {
     // The Gmail API has labels and no folders at all. Gmail's IMAP server
     // presents those same labels as folders, so the app-password column
     // answers like every other IMAP one.
-    gmail: false, gmailImap: true, fastmail: true,
+    gmail: false, gmailImap: true, outlook: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   labels: {
@@ -205,13 +210,14 @@ const MATRIX = {
     section: 'Folders & labels',
     // The mirror image of the row above: label tools are offered on the Gmail
     // API connector only. Over IMAP the same labels are reached as folders.
-    gmail: true, gmailImap: false, fastmail: false,
+    // Outlook has folders (labels: false in PROVIDER_CAPABILITIES.outlook).
+    gmail: true, gmailImap: false, outlook: false, fastmail: false,
     icloud: false, yahoo: false, zoho: false, yandex: false, generic: false,
   },
   move: {
     label: 'Move',
     section: 'Folders & labels',
-    gmail: true, gmailImap: true, fastmail: true,
+    gmail: true, gmailImap: true, outlook: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   copy: {
@@ -219,14 +225,15 @@ const MATRIX = {
     section: 'Folders & labels',
     // The Gmail API has no native copy. IMAP UID COPY does, on Gmail's hosts
     // as anywhere else, so the same mailbox copies over an app password.
-    gmail: false, gmailImap: true, fastmail: true,
+    // Outlook copies with Graph messages/{id}/copy.
+    gmail: false, gmailImap: true, outlook: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Delete ─────────────────────────────────────────────────────────────
   delete: {
     label: 'Delete / trash',
     section: 'Delete',
-    gmail: true, gmailImap: true, fastmail: true,
+    gmail: true, gmailImap: true, outlook: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   permanent_delete: {
@@ -234,16 +241,16 @@ const MATRIX = {
     section: 'Delete',
     // The Gmail API exposes trash only, with no direct expunge. The IMAP
     // connector offers both, and a Gmail mailbox on an app password is the
-    // IMAP connector (trash_vs_expunge: 'both'). Outlook (Graph
-    // permanentDelete) has no column here while its marketing is withheld.
-    gmail: false, gmailImap: true, fastmail: true,
+    // IMAP connector (trash_vs_expunge: 'both'). Outlook uses Graph
+    // permanentDelete (outlook trash_vs_expunge: 'both').
+    gmail: false, gmailImap: true, outlook: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Drafts ─────────────────────────────────────────────────────────────
   drafts: {
     label: 'Drafts (create / edit / send)',
     section: 'Drafts',
-    gmail: true, gmailImap: true, fastmail: true,
+    gmail: true, gmailImap: true, outlook: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Contacts ───────────────────────────────────────────────────────────
@@ -252,7 +259,7 @@ const MATRIX = {
     section: 'Contacts',
     // contact_search does a live, header-only scan of recent mail for every
     // provider — nothing is stored between calls.
-    gmail: true, gmailImap: true, fastmail: true,
+    gmail: true, gmailImap: true, outlook: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Scheduling ─────────────────────────────────────────────────────────
@@ -260,7 +267,7 @@ const MATRIX = {
     label: 'Scheduled send',
     section: 'Scheduling',
     // Shipped via server-side scheduled_sends queue (Task 17-18) for all providers
-    gmail: true, gmailImap: true, fastmail: true,
+    gmail: true, gmailImap: true, outlook: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Signatures ─────────────────────────────────────────────────────────
@@ -271,16 +278,18 @@ const MATRIX = {
     // scheduled message — works the same on every provider. Supports rich HTML
     // formatting and a hosted logo/image (https URLs; some clients image-block
     // by default). See providers.notes.signatures for the rendered copy.
-    gmail: true, gmailImap: true, fastmail: true,
+    gmail: true, gmailImap: true, outlook: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
   // ── Search syntax ──────────────────────────────────────────────────────
   search_syntax: {
     label: 'Search syntax',
     section: 'Search',
-    // email_search takes Gmail's query language on the API connector and IMAP
-    // SEARCH criteria on everything else, the same mailbox over IMAP included.
-    gmail: 'Gmail', gmailImap: 'IMAP', fastmail: 'IMAP',
+    // email_search takes Gmail's query language on the API connector, Microsoft
+    // Graph KQL on Outlook (search_syntax: 'odata', built by toGraphSearch in
+    // search-translate.ts), and IMAP SEARCH criteria on everything else, the
+    // same Gmail mailbox over IMAP included.
+    gmail: 'Gmail', gmailImap: 'IMAP', outlook: 'KQL', fastmail: 'IMAP',
     icloud: 'IMAP', yahoo: 'IMAP', zoho: 'IMAP', yandex: 'IMAP', generic: 'IMAP',
   },
 };
@@ -355,10 +364,11 @@ function Cell({ value }) {
 /**
  * One IMAP/SMTP cell: host on its own line, then port and transport security.
  *
- * A null endpoint means the row is not reached over IMAP at all, which is two
- * different statements: the Gmail API row talks to gmail.googleapis.com, and
- * Microsoft 365 cannot be connected yet. (The other Gmail row is ordinary
- * IMAP and has hosts like any other.) A null host means the value is the
+ * A null endpoint means the row is not reached over IMAP at all:
+ * the Gmail API row talks to gmail.googleapis.com and the Outlook row to
+ * graph.microsoft.com. (The other Gmail row is ordinary IMAP and has hosts
+ * like any other.) `unavailable` is kept for a row that is listed before it
+ * can be connected; no row sets it today. A null host means the value is the
  * user's own.
  */
 function Transport({ endpoint, unavailable }) {

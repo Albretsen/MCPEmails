@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Conecta Gmail, iCloud e IMAP a Claude",
-    "description": "Dale a Claude, Cursor o cualquier cliente MCP acceso real a tu bandeja: lee, envía, busca y organiza correo en Gmail, Fastmail, iCloud e IMAP. Gratis."
+    "description": "Dale a Claude, Cursor o cualquier cliente MCP acceso real a tu bandeja: lee, envía, busca y organiza correo en Gmail, Outlook, Fastmail, iCloud e IMAP. Gratis."
   },
   "nav": {
     "features": "Características",
@@ -18,7 +18,7 @@
     "titleLine1": "Dale a tu agente",
     "titleLine2": "de IA una",
     "titleAccent": "bandeja de entrada.",
-    "lead": "Conecta Gmail, iCloud, Fastmail o cualquier bandeja IMAP una sola vez. Pega una URL de endpoint MCP en Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make o cualquier cliente MCP. Los clientes OAuth se conectan con un clic, sin configurar claves de API. Tu agente lee, busca y envía correo en vivo, y el correo que lee nunca se almacena.",
+    "lead": "Conecta Gmail, Outlook, iCloud, Fastmail o cualquier bandeja IMAP una sola vez. Pega una URL de endpoint MCP en Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make o cualquier cliente MCP. Los clientes OAuth se conectan con un clic, sin configurar claves de API. Tu agente lee, busca y envía correo en vivo, y el correo que lee nunca se almacena.",
     "ctaPrimary": "Conecta tu bandeja de entrada",
     "ctaSecondary": "Lee la documentación",
     "metaFreeInbox": "1 bandeja gratis, para siempre",
@@ -30,7 +30,7 @@
       "agentSub": "Claude · Cursor · VS Code · ChatGPT · cualquier cliente MCP",
       "serverSub": "endpoint /api/mcp",
       "provider": "Tu proveedor",
-      "providerSub": "Gmail · iCloud · IMAP",
+      "providerSub": "Gmail · Outlook · iCloud · IMAP",
       "logCalls": "el agente llama a",
       "logReturns": "devuelve los IDs de la bandeja, sin copiar y pegar del panel",
       "logFetches": "mcpemails obtiene vía la API de Gmail (token rotado)",
@@ -58,17 +58,17 @@
       "1": {
         "tag": "Almacenamiento",
         "h": "El correo se obtiene en vivo. Nunca se almacena.",
-        "p": "Cada llamada a una herramienta consulta tu proveedor en tiempo real: la API de Gmail o IMAP. Los cuerpos de los mensajes, los asuntos y los adjuntos van al agente y se descartan de inmediato. Persistimos una sola cosa por bandeja, un token cifrado o una contraseña de aplicación, para poder hacer la siguiente llamada. La única excepción es un mensaje que programas para enviar más tarde: lo conservamos hasta la hora de envío y luego guardamos un registro para tu historial."
+        "p": "Cada llamada a una herramienta consulta tu proveedor en tiempo real: la API de Gmail, Microsoft Graph o IMAP. Los cuerpos de los mensajes, los asuntos y los adjuntos van al agente y se descartan de inmediato. Persistimos una sola cosa por bandeja, un token cifrado o una contraseña de aplicación, para poder hacer la siguiente llamada. La única excepción es un mensaje que programas para enviar más tarde: lo conservamos hasta la hora de envío y luego guardamos un registro para tu historial."
       },
       "2": {
         "tag": "Envío",
         "h": "El envío pasa por tu proveedor.",
-        "p": "Cuando tu agente llama a <code>email_compose</code> (para enviar o responder), el mensaje se envía mediante la API de Gmail o tu propio servidor SMTP. La reputación de tu dominio y la entregabilidad quedan completamente en tus manos. Nunca retransmitimos correo desde nuestro propio dominio."
+        "p": "Cuando tu agente llama a <code>email_compose</code> (para enviar o responder), el mensaje se envía mediante la API de Gmail, Microsoft Graph o tu propio servidor SMTP. La reputación de tu dominio y la entregabilidad quedan completamente en tus manos. Nunca retransmitimos correo desde nuestro propio dominio."
       },
       "3": {
         "tag": "Proveedores",
-        "h": "Gmail, iCloud, Fastmail y cualquier bandeja IMAP.",
-        "p": "OAuth 2.0 para Gmail; contraseñas específicas de aplicación para Fastmail, iCloud, Yahoo, Zoho y Yandex; un conector IMAP / SMTP genérico para todo lo demás. Conecta varias bandejas, etiquétalas por caso de uso (work-gmail, ops-fastmail, support-imap) y limita cada clave de API a las bandejas que quieras que ese agente alcance. Los equipos y agencias pueden gestionar todas las bandejas de sus clientes en un espacio de trabajo compartido con roles y registro de auditoría."
+        "h": "Gmail, Outlook, iCloud, Fastmail y cualquier bandeja IMAP.",
+        "p": "OAuth 2.0 para Gmail y para Outlook / Microsoft 365 (una cuenta profesional o educativa puede necesitar que su administrador de TI apruebe la aplicación una vez); contraseñas específicas de aplicación para Fastmail, iCloud, Yahoo, Zoho y Yandex; un conector IMAP / SMTP genérico para todo lo demás. Conecta varias bandejas, etiquétalas por caso de uso (work-gmail, ops-fastmail, support-imap) y limita cada clave de API a las bandejas que quieras que ese agente alcance. Los equipos y agencias pueden gestionar todas las bandejas de sus clientes en un espacio de trabajo compartido con roles y registro de auditoría."
       },
       "4": {
         "tag": "Acceso",
@@ -89,7 +89,7 @@
     "steps": {
       "0": {
         "h": "Conecta tu bandeja de entrada",
-        "p": "Inicia sesión y haz clic en <b>Conectar bandeja</b>. Elige Gmail, iCloud, Fastmail o cualquier bandeja IMAP, luego completa OAuth o pega una contraseña de aplicación. Las credenciales se cifran; el correo que lee tu agente nunca se almacena."
+        "p": "Inicia sesión y haz clic en <b>Conectar bandeja</b>. Elige Gmail, Outlook, iCloud, Fastmail o cualquier bandeja IMAP, luego completa OAuth o pega una contraseña de aplicación. Las credenciales se cifran; el correo que lee tu agente nunca se almacena."
       },
       "1": {
         "h": "Pega la URL: OAuth o clave de API",
@@ -104,7 +104,7 @@
       "0": "Descubre todas las bandejas conectadas y sus IDs. Llama a esto primero, sin copiar y pegar UUIDs del panel.",
       "1": "Leer correo: lista resúmenes recientes, obtén un mensaje completo por ID, lee hasta 50 por lotes o ejecuta una búsqueda independiente del proveedor, todo mediante el argumento action.",
       "2": "Organizar correo: mueve, copia, elimina, marca o archiva, ya sea uno a uno, en lote o directamente desde una búsqueda.",
-      "3": "Redactar: envía un mensaje nuevo, responde en el hilo o reenvía. Despachado mediante la API de Gmail o SMTP: tu dominio, tu entregabilidad.",
+      "3": "Redactar: envía un mensaje nuevo, responde en el hilo o reenvía. Despachado mediante la API de Gmail, Microsoft Graph o SMTP: tu dominio, tu entregabilidad.",
       "4": "Gestiona carpetas (etiquetas en Gmail): crea, renombra o elimina, y úsalas como destino de movimientos. folder_list lee las que ya existen.",
       "5": "Borradores: crea, actualiza y envía borradores guardados en la carpeta Drafts del proveedor. draft_list lee los que hay guardados.",
       "6": "Programa un mensaje para una hora futura y cancélalo antes de que salga. schedule_list muestra lo que está en cola.",
@@ -150,7 +150,7 @@
           "Leer, buscar, organizar, redactar, programar y enviar",
           "Aprobación antes de enviar",
           "Analíticas de uso",
-          "Gmail, iCloud, Fastmail y cualquier IMAP",
+          "Gmail, Outlook, iCloud, Fastmail y cualquier IMAP",
           "Claves de API ilimitadas",
           "Soporte de la comunidad"
         ],
@@ -211,7 +211,7 @@
       },
       {
         "q": "¿Qué proveedores de correo puedo conectar?",
-        "a": "Gmail mediante OAuth (con un clic), Fastmail, iCloud, Yahoo, Zoho y Yandex con una contraseña de aplicación, y cualquier otra bandeja mediante una conexión IMAP/SMTP genérica. Conecta tantas bandejas como quieras y etiquétalas por caso de uso."
+        "a": "Gmail mediante OAuth (con un clic), Outlook y Microsoft 365 iniciando sesión con Microsoft (una cuenta profesional o educativa puede necesitar que su administrador de TI apruebe la aplicación una vez), Fastmail, iCloud, Yahoo, Zoho y Yandex con una contraseña de aplicación, y cualquier otra bandeja mediante una conexión IMAP/SMTP genérica. Conecta tantas bandejas como quieras y etiquétalas por caso de uso."
       },
       {
         "q": "¿Se almacena mi correo en algún sitio?",
@@ -227,11 +227,11 @@
       },
       {
         "q": "¿Cómo conecto una bandeja de entrada?",
-        "a": "Crea una cuenta gratuita, conecta tu bandeja (con un clic para Gmail, o pega una contraseña de aplicación para las demás) y luego pega https://mcpemails.com/api/mcp en tu cliente de IA y autoriza. Tu agente tendrá la bandeja en un par de minutos."
+        "a": "Crea una cuenta gratuita, conecta tu bandeja (con un clic para Gmail, iniciando sesión con Microsoft para Outlook, o pega una contraseña de aplicación para las demás) y luego pega https://mcpemails.com/api/mcp en tu cliente de IA y autoriza. Tu agente tendrá la bandeja en un par de minutos."
       },
       {
         "q": "¿Puedo auto-alojarlo?",
-        "a": "Sí. MCP Emails es código abierto bajo AGPL-3.0, y el servicio alojado ejecuta el mismo servidor que tú puedes ejecutar. Un stack de docker-compose pone en marcha el servidor MCP completo y todas sus herramientas contra tu propia base de datos en unos cinco minutos, para cualquier buzón IMAP o SMTP. El OAuth de un clic para Gmail y Outlook y el panel permanecen en el plan alojado."
+        "a": "Sí. MCP Emails es código abierto bajo AGPL-3.0, y el servicio alojado ejecuta el mismo servidor que tú puedes ejecutar. Un stack de docker-compose pone en marcha el servidor MCP completo y todas sus herramientas contra tu propia base de datos en unos cinco minutos, para cualquier buzón IMAP o SMTP. El inicio de sesión con Gmail y Outlook (OAuth) y el panel permanecen en el plan alojado."
       }
     ]
   },

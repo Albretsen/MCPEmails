@@ -4,9 +4,7 @@ const translation = {
     'Comment fonctionnent les automatisations de MCP Emails : une recherche enregistrée plus une action fixe, selon une cadence, sans aucun modèle qui interprète vos e-mails. Prévisualiser, créer, activer, lire le journal des exécutions.',
   coverAlt:
     'Règles de tri du courrier sans supervision dans MCP Emails : une recherche enregistrée plus une action fixe selon un calendrier',
-  content: `> **Outlook et Microsoft 365 sont en cours de développement.** Ils ne peuvent pas encore être connectés en production.
-
-Chaque matin, vous demandez à votre agent de dégager le bruit : classer les notifications de build, marquer les reçus comme lus, transférer les factures à votre comptable. Cela fonctionne. Cela coûte aussi un appel au modèle à chaque fois, et le mardi le résultat diffère légèrement de celui du lundi.
+  content: `Chaque matin, vous demandez à votre agent de dégager le bruit : classer les notifications de build, marquer les reçus comme lus, transférer les factures à votre comptable. Cela fonctionne. Cela coûte aussi un appel au modèle à chaque fois, et le mardi le résultat diffère légèrement de celui du lundi.
 
 MCP Emails propose une seconde surface pour exactement ce courrier. Une **automatisation** est une recherche enregistrée plus une action fixe, évaluée selon une cadence, sans aucun modèle dans la boucle. Le courrier est mis en correspondance, jamais interprété.
 

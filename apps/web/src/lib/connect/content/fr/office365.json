@@ -1,100 +1,104 @@
 {
   "_sources": [
     "https://learn.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/deprecation-of-basic-authentication-exchange-online",
-    "https://learn.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth",
     "https://mc.merill.net/message/MC1163922",
     "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent"
   ],
   "auth": {
     "method": "oauth",
-    "label": "OAuth 2.0, avec le consentement de l'administrateur du tenant",
-    "helpUrl": "https://learn.microsoft.com/en-us/exchange/client-developer/legacy-protocols/how-to-authenticate-an-imap-pop-smtp-application-by-using-oauth",
-    "usernameForm": "Le champ mot de passe n'est pas le problème. Exchange Online n'accepte en IMAP qu'un jeton d'accès OAuth 2.0, émis pour une application à laquelle l'administrateur de votre tenant a donné son consentement.",
+    "label": "Connexion avec Microsoft (OAuth 2.0), approbation de l'administrateur informatique parfois requise",
+    "helpUrl": "https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/configure-user-consent",
+    "usernameForm": "Rien à saisir. Vous vous connectez avec votre compte Microsoft professionnel ou scolaire sur la page de Microsoft et vous approuvez l'accès : aucun mot de passe ni mot de passe d'application n'est saisi ici. Les paramètres IMAP et SMTP publiés pour Microsoft 365 ne s'appliquent pas : MCP Emails se connecte via Microsoft Graph.",
     "status": "active"
   },
   "meta": {
-    "title": "E-mail Microsoft 365, IMAP et IA : le vrai blocage",
-    "description": "Microsoft 365 répond en IMAP sur outlook.office365.com:993, mais l'auth Basic a disparu et les droits mail exigent l'admin : mcpemails ne peut pas s'y connecter."
+    "title": "Connecter la messagerie Microsoft 365 à Claude et ChatGPT",
+    "description": "Connectez une boîte Microsoft 365 professionnelle ou scolaire à Claude, ChatGPT, Cursor ou tout client MCP. Connexion avec Microsoft ; beaucoup d'organisations exigent d'abord qu'un administrateur informatique approuve l'application une fois."
   },
   "hero": {
     "eyebrow": "Microsoft 365 + IA",
-    "titleLine1": "Les boîtes Microsoft 365",
-    "titleLine2": "ne peuvent pas être connectées, et voici pourquoi",
-    "lead": "Le serveur est joignable. Le mot de passe n'est pas en cause, le port non plus. Ce qui empêche une boîte Microsoft 365 d'atteindre un serveur MCP, c'est l'autorisation : l'authentification Basic a disparu, et les permissions sur le courrier exigent l'administrateur de votre tenant.",
-    "answer": "Non, mcpemails ne peut pas connecter une boîte Microsoft 365, et la raison tient à l'autorisation, pas à l'accessibilité. Exchange Online répond bien en IMAP sur outlook.office365.com, port 993, et en SMTP sur smtp.office365.com, port 587, et une négociation TLS avec l'un ou l'autre réussit aujourd'hui. C'est la connexion qui échoue. Microsoft a définitivement supprimé l'authentification Basic pour IMAP et POP dans tous les tenants Exchange Online au cours de 2022, et depuis le 31 décembre 2022 personne, pas même le support Microsoft, ne peut la réactiver : aucun mot de passe ni mot de passe d'application ne s'authentifiera jamais. La seule voie restante est OAuth 2.0, qui exige une application enregistrée dont les permissions de messagerie Microsoft Graph ont reçu le consentement d'un administrateur du tenant, car la stratégie de consentement par défaut gérée par Microsoft ne permet plus à un utilisateur ordinaire d'approuver lui-même les étendues (scopes) de messagerie. mcpemails ne propose pas de connexion OAuth Microsoft : la réponse honnête est donc que cette boîte n'est pas connectable ici."
+    "titleLine1": "Connectez la messagerie Microsoft 365",
+    "titleLine2": "à Claude, ChatGPT et Cursor",
+    "lead": "Donnez à votre agent IA votre boîte Outlook professionnelle ou scolaire. Connectez-vous avec Microsoft et, si votre organisation l'exige, envoyez à votre administrateur informatique un seul lien pour approuver MCP Emails pour tout le monde.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Connexion avec Microsoft, sans mot de passe d'application",
+    "meta2": "Lien d'approbation pour l'administrateur informatique intégré",
+    "answer": "Oui, avec une condition qui dépend de votre organisation. mcpemails connecte les boîtes Microsoft 365 professionnelles et scolaires via Microsoft Graph : vous cliquez sur Se connecter avec Microsoft et vous vous identifiez avec votre compte professionnel. Beaucoup d'organisations exigent toutefois qu'un administrateur informatique approuve d'abord l'application une fois, car la stratégie de consentement par défaut de Microsoft, en vigueur depuis fin 2025, empêche les employés d'approuver eux-mêmes des autorisations de lecture des e-mails. Dans ce cas, le tableau de bord affiche un avis avec un lien à envoyer à votre administrateur informatique. L'administrateur se connecte et approuve MCP Emails une fois pour toute l'organisation, après quoi vous et vos collègues vous connectez normalement. Collez ensuite une URL dans Claude, ChatGPT, Cursor ou tout client MCP. Une boîte est gratuite, pour toujours."
   },
   "method": {
-    "title": "Comment Microsoft 365 se connecte : OAuth uniquement, et le consentement fait barrage",
-    "body": "Il y a deux barrières distinctes, et la plupart des articles les confondent. La première est l'authentification. Le service IMAP d'Exchange Online liste toujours <code>AUTH=PLAIN</code> à côté de <code>AUTH=XOAUTH2</code> dans sa ligne de capacités, un vestige de l'annonce du protocole plutôt qu'une option réelle : l'authentification Basic a été supprimée pour IMAP, POP, EWS, ActiveSync et Remote PowerShell dans tous les tenants et ne peut pas être rétablie. Seul <code>XOAUTH2</code> fonctionne réellement, avec un jeton d'accès de la plateforme d'identité Microsoft. La seconde barrière est le consentement. Obtenir ce jeton suppose d'enregistrer une application dans Microsoft Entra ID et de faire approuver ses permissions déléguées Microsoft Graph sur le courrier. Dans un déploiement commencé fin octobre 2025, Microsoft a ajouté <b>Mail.Read</b>, <b>Mail.ReadWrite</b> et les autres étendues déléguées Exchange à la stratégie de consentement par défaut gérée par Microsoft : un utilisateur ordinaire qui valide un écran de consentement obtient désormais une demande d'approbation administrateur au lieu d'une connexion fonctionnelle. Un administrateur du tenant peut accorder ce consentement, et beaucoup ne le feront pas."
+    "title": "Comment Microsoft 365 se connecte : connexion Microsoft, parfois avec approbation de l'administrateur",
+    "body": "Microsoft 365 se connecte via <b>Microsoft Graph</b> avec OAuth 2.0, et non par IMAP. Vous vous identifiez sur la page de Microsoft et approuvez les autorisations demandées par MCP Emails : lire et modifier les e-mails (<b>Mail.ReadWrite</b>), envoyer des e-mails (<b>Mail.Send</b>), rester connecté (<b>offline_access</b>) ainsi que votre profil de base et votre adresse e-mail. Microsoft présente MCP Emails comme provenant d'un éditeur vérifié. C'est votre organisation qui décide si vous pouvez approuver ces autorisations vous-même. Depuis fin 2025, la stratégie de consentement par défaut de Microsoft ne permet plus aux utilisateurs ordinaires d'approuver des autorisations de messagerie pour une application : dans beaucoup d'organisations, la première personne qui se connecte se voit donc demander l'approbation d'un administrateur. Un administrateur approuve une fois pour toute l'organisation, pas une fois par personne."
   },
   "setup": [
     {
-      "h": "Créez le compte mcpemails gratuit",
-      "p": "Une adresse e-mail et pas de carte bancaire. Une boîte connectée est gratuite pour toujours. Les deux étapes suivantes déterminent de quelle boîte il s'agit, car ce ne sera pas celle de Microsoft 365."
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
     },
     {
-      "h": "Choisissez une boîte hors du tenant pour le travail automatisé",
-      "p": "Prenez une adresse chez un fournisseur qui accepte un mot de passe ou un mot de passe d'application en IMAP : votre propre domaine chez Fastmail ou Migadu, un compte Gmail personnel, une boîte de projet. C'est ce compte que mcpemails connecte, et c'est là que votre agent lit, rédige, envoie et classe."
+      "h": "Choisissez Outlook et connectez-vous avec Microsoft",
+      "p": "Dans le tableau de bord, ouvrez Connecter une boîte, choisissez Outlook, cliquez sur Se connecter avec Microsoft et identifiez-vous avec votre compte professionnel ou scolaire."
     },
     {
-      "h": "Redirigez-y le courrier concerné, si votre organisation l'autorise",
-      "p": "Le transfert se règle par utilisateur dans le Centre d'administration Microsoft 365, sous Users, Active users, l'utilisateur, puis l'onglet Mail et Manage email forwarding. Vérifiez d'abord auprès de la personne qui gère le tenant. Le transfert automatique vers des domaines externes est bloqué par défaut par la stratégie de filtrage du spam sortant de Microsoft Defender : un administrateur doit donc l'autoriser avant qu'un seul message ne sorte, et dans une organisation réglementée la réponse est généralement non."
+      "h": "Approuvez l'accès, ou envoyez le lien à l'administrateur",
+      "p": "Si Microsoft vous laisse approuver, acceptez les autorisations et la boîte se connecte. Si votre organisation exige l'approbation d'un administrateur, le tableau de bord affiche un avis avec un lien Envoyer à votre administrateur informatique. Votre administrateur l'ouvre, se connecte à MCP Emails et approuve l'application une fois pour toute l'organisation. Cliquez ensuite à nouveau sur Se connecter avec Microsoft."
     },
     {
       "h": "Collez l'URL MCP dans votre IA",
-      "p": "Mettez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez, et l'agent a cette boîte, avec lecture, recherche, envoi, réponse, planification et classement."
+      "p": "Ajoutez https://mcpemails.com/api/mcp dans Claude, Cursor ou ChatGPT, autorisez l'accès, et votre agent dispose de la boîte."
     }
   ],
   "gotchas": [
     {
-      "h": "Le serveur IMAP répond, annonce AUTH=PLAIN, et refuse quand même votre mot de passe",
-      "p": "Ouvrez une connexion TLS vers outlook.office365.com sur le 993 : Exchange vous accueille avec une bannière de service prêt et une ligne de capacités proposant <code>AUTH=PLAIN</code>. Cette ligne n'est pas une promesse. L'authentification Basic est désactivée au niveau du service dans tous les tenants : une connexion par mot de passe renvoie un échec d'authentification identique à celui d'un mauvais mot de passe, et c'est pourquoi on passe des heures à réinitialiser des identifiants qui étaient corrects depuis le début. La distinction à retenir : l'accessibilité est bonne, c'est l'autorisation qui est refusée."
+      "h": "Les mots de passe et mots de passe d'application ne fonctionnent pas, d'où l'usage de Microsoft Graph",
+      "p": "Microsoft a supprimé l'authentification de base pour IMAP et POP dans tous les locataires Exchange Online en 2022, et elle ne peut pas être réactivée. Une connexion par mot de passe échoue exactement comme avec un mauvais mot de passe, ce qui explique pourquoi certains réinitialisent des identifiants qui étaient corrects. mcpemails n'utilise pas IMAP pour Microsoft 365 : il se connecte avec Microsoft et dialogue avec Microsoft Graph, donc aucun mot de passe à saisir et aucun paramètre de serveur à mal renseigner."
     },
     {
-      "h": "SMTP AUTH est un interrupteur distinct par boîte, désactivé par défaut",
-      "p": "Même pour les applications qui détiennent un jeton OAuth valide, l'envoi client via <code>smtp.office365.com</code> dépend de l'activation de SMTP AUTH sur cette boîte précise. Microsoft l'a désactivé par défaut dans les tenants où il n'était pas déjà utilisé, et il se règle par boîte plutôt qu'une fois pour toute l'organisation. Microsoft a aussi annoncé le retrait de l'authentification Basic pour l'envoi client SMTP et a repoussé la date plus d'une fois : considérez toute échéance lue sur une page tierce comme provisoire et consultez l'annonce actuelle de Microsoft."
+      "h": "L'approbation de l'administrateur dépend de votre organisation, et un éditeur vérifié ne la contourne pas",
+      "p": "Depuis le changement déployé par Microsoft à partir de fin octobre 2025, les autorisations de messagerie Exchange relèvent de la stratégie de consentement par défaut gérée par Microsoft : un utilisateur qui tente d'approuver une application de messagerie voit à la place une demande d'approbation de l'administrateur. Être un éditeur vérifié n'y change rien. Votre administrateur informatique peut approuver MCP Emails pour toute l'organisation via le lien du tableau de bord, et ne doit le faire qu'une fois."
     },
     {
-      "h": "Le consentement administrateur fait barrage, pas l'utilisateur, ni le statut d'éditeur vérifié",
-      "p": "Un utilisateur qui clique sur Accept sur un écran de consentement pour une application qui lit le courrier voit à la place une demande d'approbation administrateur. Depuis le changement déployé à partir de fin octobre 2025, les permissions déléguées Exchange figurent dans la stratégie par défaut gérée par Microsoft : même une application d'un éditeur vérifié ne peut pas s'en passer, sauf si le tenant a classé ces permissions comme à faible impact ou si un administrateur a accordé un consentement à l'échelle du tenant à cette application précise. Les boîtes partagées et déléguées n'y changent rien, car l'exigence porte sur l'application et non sur la boîte."
+      "h": "Un compte sans boîte Exchange Online est refusé",
+      "p": "Certains comptes Microsoft 365 n'ont pas de boîte Exchange Online, par exemple un compte administrateur sans licence Exchange, ou une organisation dont la messagerie est hébergée ailleurs. Microsoft Graph n'a alors rien à ouvrir : mcpemails refuse la connexion et l'indique. Si votre messagerie se trouve sur un autre serveur, connectez plutôt l'adresse en IMAP."
     },
     {
-      "h": "Exchange Online n'annonce pas SPECIAL-USE en IMAP",
-      "p": "Le service IMAP prend en charge MOVE, UIDPLUS et IDLE mais ne publie pas l'extension SPECIAL-USE : un client ne peut donc pas demander quel dossier est Sent ou Junk et doit se fier aux noms. Dans un tenant provisionné en allemand ou en français, les dossiers portent des noms dans cette langue, et tout outil qui cherche la chaîne littérale Sent Items ne trouve silencieusement rien. Bon à savoir avant d'accuser le connecteur."
+      "h": "Si l'approbation n'a pas abouti, l'administrateur rouvre le lien",
+      "p": "Le tableau de bord ne considère votre organisation comme approuvée qu'une fois que Microsoft l'a confirmé. Si Microsoft ne confirme pas l'approbation, par exemple parce que l'administrateur a fermé la page ou refusé, Outlook reste bloqué et le tableau de bord l'indique. Demandez à votre administrateur informatique de rouvrir le lien d'approbation."
     }
   ],
   "limits": [
-    "Le transfert automatique vers un domaine extérieur est bloqué par défaut par la stratégie de filtrage du spam sortant de Microsoft Defender. Rediriger le courrier du tenant vers une boîte que nous pouvons connecter exige qu'un administrateur l'autorise, et c'est une vraie décision de politique, pas une case à cocher.",
-    "Tout ce qui figure sur cette page décrit ce qui n'est pas possible aujourd'hui. Si votre tenant utilise déjà une intégration de messagerie tierce, il le fait via une application à laquelle votre administrateur a consenti, ce qui est un arrangement différent d'une boîte que vous connectez vous-même en quelques minutes."
+    "Outlook organise les e-mails en dossiers, y compris des dossiers imbriqués. Les catégories Outlook ne sont pas prises en charge, et les outils de libellés ne s'appliquent qu'à Gmail.",
+    "Microsoft Graph ne peut pas combiner une recherche textuelle avec les filtres non lu, pièce jointe, suivi ou date. Lorsqu'une recherche contient du texte, ces filtres ne sont pas appliqués et le résultat indique lesquels ont été ignorés.",
+    "Les pièces jointes sont prises en charge jusqu'à 25 Mo.",
+    "La version auto-hébergée se connecte uniquement en IMAP et SMTP. La connexion avec Microsoft fait partie du service hébergé."
   ],
   "faq": [
     {
-      "q": "Claude fonctionne-t-il avec l'e-mail Microsoft 365 ?",
-      "a": "Pas via mcpemails. Les boîtes Microsoft 365 n'acceptent qu'OAuth 2.0 en IMAP, et les permissions de messagerie Microsoft Graph dont une application a besoin exigent le consentement de l'administrateur de votre tenant. Nous ne proposons pas de connexion OAuth Microsoft : il n'y a donc rien ici que votre administrateur puisse approuver, et nous ne prétendrons pas le contraire."
+      "q": "Claude fonctionne-t-il avec la messagerie Microsoft 365 ?",
+      "a": "Oui. Connectez votre boîte professionnelle ou scolaire à mcpemails en vous identifiant avec Microsoft, collez une URL MCP dans Claude, et Claude peut lire, rechercher, envoyer, répondre, transférer, planifier et classer vos e-mails. Si votre organisation exige l'approbation d'un administrateur, votre administrateur informatique approuve d'abord MCP Emails une fois, avec le lien que vous donne le tableau de bord."
     },
     {
-      "q": "Quels sont les réglages IMAP et SMTP de Microsoft 365 ?",
-      "a": "IMAP est outlook.office365.com sur le port 993 en TLS implicite. SMTP est smtp.office365.com sur le port 587 avec STARTTLS, et annonce une taille maximale de message de 150 MB. Les deux serveurs ont été confirmés par une connexion TLS réelle. Ces réglages sont corrects et ne vous permettront pourtant pas d'entrer, car le service n'accepte que des jetons OAuth 2.0 sur ces ports."
+      "q": "Pourquoi me demande-t-on l'approbation d'un administrateur ?",
+      "a": "À cause de la stratégie de consentement de votre organisation. Depuis fin 2025, la stratégie par défaut de Microsoft empêche les employés d'approuver eux-mêmes des autorisations de lecture des e-mails pour des applications : la connexion demande donc l'approbation d'un administrateur. Ce n'est pas un problème lié à votre compte. Envoyez le lien de l'avis du tableau de bord à votre administrateur informatique."
     },
     {
-      "q": "Pourquoi mon mot de passe Microsoft 365 est-il refusé en IMAP ?",
-      "a": "Parce que l'authentification Basic a été supprimée d'Exchange Online. Microsoft l'a désactivée pour IMAP, POP, EWS, ActiveSync et Remote PowerShell dans tous les tenants en 2022. Le mot de passe est presque certainement correct. Le serveur n'a simplement plus de mécanisme qui en accepte un, quoi qu'annonce sa ligne de capacités."
+      "q": "Que doit faire mon administrateur informatique ?",
+      "a": "Ouvrir le lien que vous lui envoyez, se connecter à MCP Emails et approuver l'application pour l'organisation sur l'écran de consentement de Microsoft, où MCP Emails apparaît comme éditeur vérifié. Cela se fait une fois pour toute l'organisation. Ensuite, chacun dans l'organisation se connecte normalement avec Se connecter avec Microsoft."
     },
     {
-      "q": "Mon administrateur peut-il réactiver l'authentification Basic ?",
-      "a": "Non. La réactivation était possible jusqu'au 31 décembre 2022, et cette porte est fermée. La documentation de Microsoft indique que personne, pas même le support Microsoft, ne peut réactiver l'authentification Basic dans un tenant. Tout guide qui vous conseille d'ouvrir une demande de support à ce sujet est obsolète."
+      "q": "Ai-je besoin d'un mot de passe d'application ou de paramètres IMAP ?",
+      "a": "Non. mcpemails connecte Microsoft 365 via Microsoft Graph une fois que vous vous êtes identifié avec Microsoft : aucun mot de passe d'application à créer, aucun serveur IMAP ou SMTP à saisir. Un mot de passe ne fonctionnerait d'ailleurs pas : l'authentification de base a été supprimée d'Exchange Online en 2022 et ne peut pas être réactivée."
     },
     {
-      "q": "Un administrateur pourrait-il accorder son consentement pour que cela fonctionne ?",
-      "a": "Un administrateur peut accorder un consentement à l'échelle du tenant à une application qui demande des permissions de messagerie Graph, et c'est ainsi que les intégrations de messagerie d'entreprise sont normalement approuvées. Cela n'aide pas ici, car mcpemails n'a pas d'application Microsoft à laquelle consentir. Si votre organisation a besoin d'un agent IA sur les boîtes du tenant, c'est une discussion à avoir avec la personne qui gère Entra ID."
+      "q": "Que peut faire mon IA dans Microsoft 365 ?",
+      "a": "Lire, rechercher, envoyer, répondre et transférer ; travailler avec des brouillons ; créer et utiliser des dossiers, y compris imbriqués ; déplacer, copier et archiver ; marquer d'un indicateur ; supprimer vers la corbeille ou définitivement ; gérer des pièces jointes jusqu'à 25 Mo ; planifier des envois ; et gérer votre signature."
     },
     {
-      "q": "La boîte est-elle seulement joignable depuis l'extérieur de Microsoft ?",
-      "a": "Oui, et il vaut la peine de séparer les deux idées. Le point d'accès IMAP répond en TLS et renvoie une bannière de service Microsoft Exchange IMAP4 prêt : rien n'est bloqué par un pare-feu ni hors ligne. Le blocage se situe entièrement dans l'authentification et la stratégie de consentement. Le diagnostiquer comme un problème de réseau ou de nom de serveur vous envoie dans la mauvaise direction."
+      "q": "Mes e-mails sont-ils stockés sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct chez Microsoft à chaque requête et transmis à votre client IA. Le jeton OAuth issu de votre connexion Microsoft est chiffré au repos et le contenu des messages n'est pas conservé. Supprimer la boîte dans mcpemails met fin immédiatement à la connexion."
     }
   ],
   "ctaBand": {
-    "title": "Offrez à votre IA une boîte à laquelle elle peut se connecter",
-    "sub": "Votre tenant reste intact. Connectez une boîte IMAP pour le travail à automatiser, gratuite pour toujours."
+    "title": "Donnez à votre IA votre boîte Microsoft 365",
+    "sub": "Connectez-vous avec Microsoft. Si votre organisation exige l'approbation d'un administrateur, un seul lien envoyé à votre administrateur informatique vaut pour tout le monde. Une boîte gratuite pour toujours."
   }
 }

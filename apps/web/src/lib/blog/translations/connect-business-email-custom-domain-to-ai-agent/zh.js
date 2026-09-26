@@ -4,7 +4,7 @@ const translation = {
     '面向 you@yourcompany.com 的配置指南：查清究竟是谁在托管你的邮件，连接 Google Workspace、Zoho、Fastmail、Migadu、Titan、Rackspace、IONOS 或 cPanel，并在智能体回信之前设好发件人名称。',
   coverAlt:
     '使用 MCP Emails 把自有域名的企业邮箱连接到 AI 智能体',
-  content: `> **Outlook 和 Microsoft 365 仍在开发中。** 目前还无法在生产环境中连接。如果你的企业邮箱其实是一个 Microsoft 租户，本指南可以帮你确认这一点，但今天还连不上。
+  content: `> **使用 Microsoft 365？** 如果你的企业邮箱其实是一个 Microsoft 租户，本指南可以帮你确认这一点。请用 **Outlook** 并通过使用 Microsoft 登录来连接，而不是 IMAP；你的 IT 管理员可能需要先为整个组织一次性批准该应用。步骤见 [Outlook 与 Microsoft 365 指南](/blog/connect-outlook-microsoft-365-ai-agent-mcp)。
 
 几乎所有"把邮箱连接到 AI 智能体"的教程都默认你的地址以 gmail.com 结尾。企业邮件完全不同：域名并不会告诉你邮箱由谁托管，是否允许邮件客户端登录可能由别人说了算，而智能体发出的每一封邮件都会以你的名义抵达客户。这是一份写给 you@yourcompany.com 的指南。
 
@@ -33,7 +33,7 @@ dig +short SRV _imaps._tcp.yourcompany.com
 - 以 \`.l.google.com\` 结尾，或 \`smtp.google.com\`：Google Workspace。
 - \`mx.zoho.com\` 或其区域变体：Zoho Mail。
 - \`aspmx1.migadu.com\`：Migadu。\`mx1.titan.email\`：Titan，无论你是以哪个品牌买的。
-- 托管在 Microsoft 的 MX 名称：Microsoft 365 租户，目前还不能连接。
+- 托管在 Microsoft 的 MX 名称：Microsoft 365 租户。请用 **Outlook** 连接，而不是 IMAP。
 - 你的主机商自己的服务器名：cPanel 或 Plesk 邮箱。
 
 ## 第 2 步：按你的服务商操作
@@ -62,7 +62,7 @@ Migadu 使用**邮箱密码**，而不是你的 Migadu 账户密码，后者只�
 
 ### Rackspace Email
 
-无论你的域名是什么，收发两端的主机都是 \`secure.emailsrvr.com\`。这个名字不带任何 Rackspace 品牌，于是有人把它"改正"成看起来更合理的名字，结果什么都用不了。请使用 Cloud Office 控制面板中的邮箱密码。一旦开启多因素认证，该密码在 IMAP 和 SMTP 上就会失效，却仍然能登录网页版邮箱，这时你需要一个应用密码。Rackspace 同时还销售 Hosted Exchange 并转售 Microsoft 365，这两者在这里都无法连接。
+无论你的域名是什么，收发两端的主机都是 \`secure.emailsrvr.com\`。这个名字不带任何 Rackspace 品牌，于是有人把它"改正"成看起来更合理的名字，结果什么都用不了。请使用 Cloud Office 控制面板中的邮箱密码。一旦开启多因素认证，该密码在 IMAP 和 SMTP 上就会失效，却仍然能登录网页版邮箱，这时你需要一个应用密码。Rackspace 同时还销售 Hosted Exchange（在这里无法连接），并转售 Microsoft 365（通过 **Outlook** 连接，而不是 IMAP）。
 
 ### IONOS
 
@@ -95,7 +95,7 @@ IONOS 为**每个地址单独设置邮箱密码**，在控制面板的 Email 中
 - **你用错了密码。** Migadu、IONOS、Rackspace 和 cPanel 都把控制面板登录名与邮箱密码分开，而两者通常都是邮箱地址。
 - **连接超时而不是失败。** 那是主机或端口的问题，不是凭据。请回到服务商自己的面板重新确认主机名。
 - **能收信却发不出去。** 发件那一半有自己的主机、端口和安全模式，有些主机根本不监听 465。另外确认你已授予 \`send:email\`。
-- **它其实是 Microsoft 365 邮箱。** 无论是直接购买，还是由 GoDaddy、IONOS 或 Rackspace 转售，它仍然是 Microsoft 租户，目前还不能连接。
+- **它其实是 Microsoft 365 邮箱。** 无论是直接购买，还是由 GoDaddy、IONOS 或 Rackspace 转售，它仍然是 Microsoft 租户。请用 **Outlook** 并通过使用 Microsoft 登录来连接，而不是 IMAP。如果 Microsoft 提示需要管理员批准，请把控制台显示的链接发给你的 IT 管理员。
 
 [服务商对照表](/docs/providers)和[各服务商页面](/connect)提供逐家的细节。
 

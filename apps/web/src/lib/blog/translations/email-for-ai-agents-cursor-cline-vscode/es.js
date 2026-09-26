@@ -12,7 +12,8 @@ El servidor MCP no es dueño de tu correo. Hace de intermediario con una conexi�
 
 Ve a **Dashboard → Inboxes → Connect Inbox** y elige un proveedor:
 
-- **Gmail** u **Outlook / Microsoft 365** → OAuth con un clic. Inicia sesión con Google o Microsoft y aprueba.
+- **Gmail** → OAuth con un clic. Inicia sesión con Google y aprueba.
+- **Outlook / Microsoft 365** → OAuth con Iniciar sesión con Microsoft, sin contraseña de aplicación. Las cuentas personales de Outlook.com, Hotmail, Live y MSN se conectan directamente. Una cuenta de trabajo o educativa de Microsoft 365 puede necesitar antes que un administrador de TI apruebe la aplicación una sola vez para toda la organización; el panel te da un enlace para enviárselo.
 - **iCloud, Fastmail, Yahoo, Zoho o cualquier host IMAP genérico** → una contraseña específica de aplicación. Genérala en los ajustes del proveedor (en iCloud es appleid.apple.com) y pégala.
 
 Fastmail funciona solo con contraseña de aplicación, no con OAuth, así que no busques ahí una pantalla de consentimiento al estilo de Google. Si usas iCloud o Fastmail, el [tutorial de configuración de iCloud, Fastmail e IMAP](/blog/connect-icloud-fastmail-imap-to-claude) tiene los detalles de cada proveedor. Para Outlook, consulta [cómo conectar Outlook y Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp).

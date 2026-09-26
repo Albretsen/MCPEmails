@@ -76,7 +76,7 @@
   "limits": [
     "El servidor tiene que ser accesible desde internet. Un buzón en una red privada, detrás de una VPN o en una dirección IP privada se rechaza a propósito: se resuelve el nombre de servidor y cualquier dirección en un rango privado se rechaza.",
     "Solo se marcan los puertos de correo estándar: 143 y 993 para IMAP, y 25, 465 y 587 para SMTP. Un servidor que escucha en un puerto personalizado no se puede conectar.",
-    "Un buzón que exige OAuth y no acepta una contraseña por IMAP no se puede conectar de esta forma. Microsoft 365 es el caso con el que más se encuentra la gente, y no afirmamos admitirlo."
+    "Un buzón que exige OAuth y no acepta una contraseña por IMAP no se puede conectar de esta forma. Microsoft 365 y Outlook.com son los casos más habituales: conéctalos con la opción Outlook (Iniciar sesión con Microsoft) en lugar de IMAP."
   ],
   "faq": [
     {

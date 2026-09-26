@@ -15,7 +15,7 @@ const post = {
   },
   authorId: 'asgeir',
   publishedAt: "2026-05-08T09:00:00.000Z",
-  updatedAt: "2026-05-08T09:00:00.000Z",
+  updatedAt: "2026-09-25T09:00:00.000Z",
   tags: ['Tutorial', 'Gmail', 'Outlook', 'IMAP'],
   featured: false,
   content: {
@@ -58,16 +58,16 @@ The fastest of the bunch, because Google does the work.
 
 No password ever changes hands. MCP Emails holds an encrypted OAuth token and calls the Gmail API directly. Searches use Gmail's native operators (\`from:\`, \`is:unread\`, \`after:\`), so your agent can be precise.
 
-### Outlook / Microsoft 365 (OAuth)
+### Outlook / Microsoft 365 (Sign in with Microsoft)
 
-Same shape as Gmail, different identity provider.
+Same shape as Gmail, different identity provider. No app password and no IMAP settings.
 
-1. **Dashboard → Inboxes → Connect Inbox → Outlook / Microsoft 365.**
-2. Sign in with your Microsoft account on Microsoft's page.
+1. **Dashboard → Inboxes → Connect Inbox → Outlook.**
+2. Click **Connect with Microsoft** and sign in with your Microsoft account on Microsoft's page.
 3. Approve the permissions.
 4. The inbox shows up connected. Sending goes out through Microsoft Graph, so it's a normal message from your own account.
 
-If your tenant has conditional access or admin consent rules, the [Outlook and Microsoft 365 setup guide](/blog/connect-outlook-microsoft-365-ai-agent-mcp) walks through the admin-side gotchas.
+Personal Outlook.com, Hotmail, Live and MSN accounts connect this way with no admin involved. Work or school Microsoft 365 accounts may need an IT admin to approve the app first: many organisations block employees from approving mailbox access themselves. If that happens, the dashboard gives you a link to send to your IT admin, who approves the app once for the whole organisation, and then you connect as above. The [Outlook and Microsoft 365 setup guide](/blog/connect-outlook-microsoft-365-ai-agent-mcp) walks through it.
 
 ### iCloud (app-specific password)
 
@@ -167,16 +167,16 @@ El más rápido de todos, porque el trabajo lo hace Google.
 
 Nunca se intercambia una contraseña. MCP Emails guarda un token de OAuth cifrado y llama directamente a la API de Gmail. Las búsquedas usan los operadores nativos de Gmail (\`from:\`, \`is:unread\`, \`after:\`), así que tu agente puede ser preciso.
 
-### Outlook / Microsoft 365 (OAuth)
+### Outlook / Microsoft 365 (Iniciar sesión con Microsoft)
 
-Misma forma que Gmail, distinto proveedor de identidad.
+Misma forma que Gmail, distinto proveedor de identidad. Sin contraseña de aplicación y sin ajustes de IMAP.
 
-1. **Panel → Inboxes → Connect Inbox → Outlook / Microsoft 365.**
-2. Inicia sesión con tu cuenta de Microsoft en la página de Microsoft.
+1. **Panel → Inboxes → Connect Inbox → Outlook.**
+2. Haz clic en **Conectar con Microsoft** e inicia sesión con tu cuenta de Microsoft en la página de Microsoft.
 3. Aprueba los permisos.
 4. El buzón aparece conectado. El envío sale por Microsoft Graph, así que es un mensaje normal desde tu propia cuenta.
 
-Si tu organización tiene acceso condicional o reglas de consentimiento de administrador, la [guía de configuración de Outlook y Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) explica los detalles del lado del administrador.
+Las cuentas personales de Outlook.com, Hotmail, Live y MSN se conectan así, sin que intervenga ningún administrador. Las cuentas de trabajo o educativas de Microsoft 365 pueden necesitar que un administrador de TI apruebe antes la aplicación: muchas organizaciones impiden que los empleados aprueben por sí mismos el acceso al buzón. Si te ocurre, el panel te da un enlace para enviar a tu administrador de TI, que aprueba la aplicación una sola vez para toda la organización, y luego te conectas como arriba. La [guía de configuración de Outlook y Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) lo explica paso a paso.
 
 ### iCloud (contraseña específica de la app)
 

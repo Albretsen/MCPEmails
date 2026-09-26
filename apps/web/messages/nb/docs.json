@@ -1,11 +1,11 @@
 {
   "meta": {
-    "title": "Dokumentasjon for e-post-MCP-server: Gmail, IMAP og OAuth",
-    "description": "Kom i gang med MCPEmails på minutter. Hurtigstartveiledning, verktøyreferanse og eksempelsvar for Gmail- og IMAP-agenter."
+    "title": "Dokumentasjon for e-post-MCP-server: Gmail, Outlook, IMAP og OAuth",
+    "description": "Kom i gang med MCPEmails på minutter. Hurtigstartveiledning, verktøyreferanse og eksempelsvar for Gmail-, Outlook- og IMAP-agenter."
   },
   "hero": {
     "eyebrow": "Dokumentasjon",
-    "titleLine1": "Koble Gmail eller IMAP til Claude",
+    "titleLine1": "Koble Gmail, Outlook eller IMAP til Claude",
     "titleLine2": "på fire steg.",
     "lead": "Koble til hvilken som helst e-postkonto, lim inn én URL i en OAuth-kompatibel MCP-klient og godkjenn. Klienter uten OAuth bruker en API-nøkkel i stedet. Full verktøyreferanse og tilkoblingsveiledning nedenfor.",
     "ctaQuickStart": "Hurtigstart",
@@ -22,7 +22,7 @@
       "signup": {
         "label": "Registrer deg og koble til en innboks",
         "heading": "Opprett kontoen din og koble til Gmail",
-        "body": "Registrer deg på mcpemails.com, og gå deretter til Dashboard → Inboxes → Connect Inbox. Velg Gmail, iCloud, Fastmail eller en hvilken som helst IMAP-innboks, og fullfør deretter OAuth-flyten eller lim inn et app-passord. Innboksen din er klar på under ett minutt.",
+        "body": "Registrer deg på mcpemails.com, og gå deretter til Dashboard → Inboxes → Connect Inbox. Velg Gmail, Outlook, iCloud, Fastmail eller en hvilken som helst IMAP-innboks, og fullfør deretter OAuth-flyten eller lim inn et app-passord. Innboksen din er klar på under ett minutt.",
         "cta": "Koble til innboksen din →"
       },
       "apikey": {
@@ -128,7 +128,7 @@
       "title": "List innbokser",
       "desc": "Returnerer alle innbokser som gjeldende API-nøkkel eller OAuth-token har tilgang til. Kall denne først for å oppdage inbox_id-verdier, slik at du aldri kopierer UUID-er fra dashbordet. Hvert resultat inkluderer e-postadressen, leverandøren, valgfritt tjenestemerke (icloud/yahoo/zoho/yandex/generic/fastmail) og et capabilities-objekt som beskriver hvilke funksjoner den innboksen støtter.",
       "params": {
-        "provider": "Valgfritt filter: returner bare innbokser betjent av denne leverandøren. Én av: gmail, fastmail, imap. Utelat for å liste alle innbokser nøkkelen har tilgang til.",
+        "provider": "Valgfritt filter: returner bare innbokser betjent av denne leverandøren. Én av: gmail, outlook, fastmail, imap. Utelat for å liste alle innbokser nøkkelen har tilgang til.",
         "include_capabilities": "Om hver innboks inkluderer capabilities-objektet sitt (hvilke funksjoner den støtter). Standard true; sett false for en kompakt liste med bare inbox_id, e-postadresse, visningsnavn, leverandør og tjenestemerke."
       }
     },
@@ -479,8 +479,8 @@
   },
   "providers": {
     "meta": {
-      "title": "E-postleverandører for AI-agenter (Gmail, iCloud, Yahoo, Zoho)",
-      "description": "Hvilke e-postleverandører som fungerer med en AI-agent over MCP, og hva som skal til for å koble til hver enkelt: OAuth eller app-passord, IMAP- og SMTP-verter og porter, TLS eller STARTTLS, hva som vanligvis feiler, og hva agenten kan gjøre når tilkoblingen er på plass. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Microsoft 365 og generisk IMAP."
+      "title": "E-postleverandører for AI-agenter (Gmail, Outlook, iCloud, Yahoo, Zoho)",
+      "description": "Hvilke e-postleverandører som fungerer med en AI-agent over MCP, og hva som skal til for å koble til hver enkelt: OAuth eller app-passord, IMAP- og SMTP-verter og porter, TLS eller STARTTLS, hva som vanligvis feiler, og hva agenten kan gjøre når tilkoblingen er på plass. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Outlook / Microsoft 365 og generisk IMAP."
     },
     "labels": {
       "gmailImap": "Gmail (IMAP)",
@@ -521,7 +521,7 @@
     "hero": {
       "eyebrow": "Kompatibilitetsmatrise",
       "heading": "E-postleverandører og AI-agenter: hva som fungerer",
-      "lead": "Hva en AI-agent faktisk kan gjøre med hver e-postleverandør, og hva som skal til for å koble til. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Microsoft 365 og alle generiske IMAP-postkasser. Hver rad er kontrollert mot koblingene som kjører i produksjon.",
+      "lead": "Hva en AI-agent faktisk kan gjøre med hver e-postleverandør, og hva som skal til for å koble til. Gmail, Fastmail, iCloud Mail, Yahoo Mail, Zoho Mail, Yandex Mail, Outlook / Microsoft 365 og alle generiske IMAP-postkasser. Hver rad er kontrollert mot koblingene som kjører i produksjon.",
       "ctaConnect": "Koble til en innboks",
       "ctaBack": "Tilbake til dokumentasjonen"
     },
@@ -529,7 +529,7 @@
       "supported": "Støttet",
       "notSupported": "Ikke støttet",
       "planned": "Planlagt (ikke lansert ennå)",
-      "imapNote": "<b>Gmail (IMAP), Fastmail, iCloud, Yahoo, Zoho, Yandex og Generic IMAP</b> kobler alle til over den samme IMAP/SMTP-transporten (Gmail, Fastmail og iCloud bruker et app-spesifikt passord) og deler et identisk funksjonssett, inkludert IMAP-søkesyntaks. Kolonnene vises hver for seg for tydelighetens skyld. <b>Gmail (API)</b> er den ene Gmail-kolonnen som ikke er IMAP: samme postkasse, nådd gjennom Google-innlogging og Gmail-API-et i stedet."
+      "imapNote": "<b>Gmail (IMAP), Fastmail, iCloud, Yahoo, Zoho, Yandex og Generic IMAP</b> kobler alle til over den samme IMAP/SMTP-transporten (Gmail, Fastmail og iCloud bruker et app-spesifikt passord) og deler et identisk funksjonssett, inkludert IMAP-søkesyntaks. Kolonnene vises hver for seg for tydelighetens skyld. <b>Gmail (API)</b> er den ene Gmail-kolonnen som ikke er IMAP: samme postkasse, nådd gjennom Google-innlogging og Gmail-API-et i stedet. <b>Outlook</b> er heller ikke IMAP: det kobles til ved å logge inn med Microsoft og går gjennom Microsoft Graph."
     },
     "profiles": {
       "title": "Kompatibilitetsprofiler",
@@ -587,7 +587,7 @@
         "yahoo": "Yahoo tillater høyst 5 samtidige tilkoblinger. Avvisningsteksten, «Incorrect username or password», nevner begge deler med vilje og sier ikke hvilken av dem som var feil.",
         "zoho": "IMAP-tilgang er slått av som standard og må aktiveres først. Zoho driver dessuten seks regionale datasentre, og betalte postkasser på eget domene ligger på imappro/smtppro i stedet for imap/smtp, så riktig vert avhenger både av region og kontotype.",
         "yandex": "Yandex implementerer ikke RFC 4959 SASL-IR, så den innebygde innloggingsformen kommer tilbake som en kommandosyntaksfeil i stedet for en passordfeil. Både «IMAP» og «App-passord og OAuth-token» må slås på, og Yandex 360-kontoer på eget domene kan logge inn med et brukernavn som ikke er e-postadressen.",
-        "outlook": "Microsofts standard samtykkeregler for leietakere utelater Mail.ReadWrite fra tillatelsene en sluttbruker kan godkjenne, så en Microsoft 365-ansatt blir avvist før et samtykkevindu i det hele tatt vises. Bare en administrator kan åpne det, og derfor kan ikke Microsoft 365 for bedrifter kobles til av den som eier postkassen.",
+        "outlook": "Personlige Microsoft-kontoer (outlook.com, hotmail.com, live.com, msn.com) kobles til direkte. Jobb- og skolekontoer er annerledes: Microsofts standard samtykkeregler hindrer ansatte i å godkjenne e-posttillatelser selv, så dashboardet viser en lenke du sender til IT-administratoren, som godkjenner appen én gang for hele organisasjonen; deretter kobler alle til som vanlig. En Microsoft-konto uten Exchange Online-postkasse blir avvist, med et hint om å koble til adressen over IMAP i stedet. Microsoft kan midlertidig blokkere sending fra en helt ny outlook.com-konto som sender i støt, som en del av sine egne kontroller mot misbruk. I søk kan ikke Microsoft Graph kombinere søketekst med filtrene for ulest, vedlegg, flagget eller dato, så når det er tekst med, brukes ikke de filtrene, og resultatet sier hvilke.",
         "generic": "En port og en sikkerhetsmodus som ikke stemmer overens. Å velge STARTTLS mens porten fortsatt er 993 åpner en ukryptert forbindelse mot en lytter som bare snakker TLS, og tilkoblingen går rett i tidsavbrudd. Mislykkede transporter forsøkes nå automatisk på den andre standardkombinasjonen."
       },
       "notes": {

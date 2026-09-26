@@ -161,9 +161,9 @@ Notes:
 | **Fastmail** | App password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **iCloud, Yahoo, Zoho, Yandex** | App password (IMAP/SMTP) | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **Any IMAP/SMTP mailbox** | App password | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Outlook / Microsoft 365** | OAuth 2.0 | 🚧 built, gated pending verification | | | | |
+| **Outlook / Microsoft 365** | OAuth 2.0 (Microsoft Graph) | ✅ | ✅ | ✅ (nested) | ✅ | ✅ |
 
-> Outlook OAuth is implemented end‑to‑end but currently gated behind Microsoft publisher verification; it is hidden from the connect UI until it ships.
+> Outlook uses Microsoft Graph with "Sign in with Microsoft", not IMAP. Personal Microsoft accounts (outlook.com, hotmail.com, live.com, msn.com) connect directly. On work or school Microsoft 365 tenants, Microsoft's default consent policy stops employees approving mail permissions themselves, so an IT admin approves the app once for the organisation; the dashboard gives the user a link to send them (`/auth/outlook/admin-consent`). A Microsoft account with no Exchange Online mailbox is refused, with a pointer to IMAP. Labels/categories are not supported (folders only), and Graph cannot combine a text search with the unread, attachment, flagged or date filters.
 
 ## Pricing
 

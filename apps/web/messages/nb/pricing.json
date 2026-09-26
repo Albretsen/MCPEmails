@@ -31,7 +31,7 @@
         "Les, søk, organiser, skriv, planlegg og send",
         "Godkjenning før sending",
         "Bruksanalyse",
-        "Gmail, iCloud, Fastmail og enhver IMAP",
+        "Gmail, Outlook, iCloud, Fastmail og enhver IMAP",
         "Ubegrenset antall API-nøkler",
         "Fellesskapsstøtte"
       ]
@@ -102,6 +102,7 @@
         "label": "E-postleverandører",
         "rows": {
           "gmail": "Gmail (OAuth)",
+          "outlook": "Outlook / Microsoft 365 (logg inn med Microsoft)",
           "fastmail": "Fastmail (app-passord)",
           "appPassword": "iCloud, Yahoo, Zoho, Yandex (app-passord)",
           "imap": "Enhver IMAP- / SMTP-postkasse"
@@ -195,7 +196,7 @@
       },
       {
         "q": "Hvilke e-postleverandører støttes?",
-        "a": "Gmail bruker OAuth 2.0. Fastmail kobles til med et app-passord. iCloud, Yahoo, Zoho og Yandex kobles til med et app-spesifikt passord, og enhver annen postkasse fungerer gjennom den generiske IMAP- / SMTP-tilkoblingen."
+        "a": "Gmail bruker OAuth 2.0. Outlook og Microsoft 365 kobles til ved å logge inn med Microsoft (OAuth): personlige kontoer kobles til direkte, og en jobb- eller skolekonto kan trenge at IT-administratoren godkjenner appen én gang. Fastmail kobles til med et app-passord. iCloud, Yahoo, Zoho og Yandex kobles til med et app-spesifikt passord, og enhver annen postkasse fungerer gjennom den generiske IMAP- / SMTP-tilkoblingen."
       },
       {
         "q": "Finnes det en refusjonsordning?",
@@ -203,7 +204,7 @@
       },
       {
         "q": "Kan jeg selvhoste den i stedet for å betale?",
-        "a": "Ja. MCP Emails er åpen kildekode under AGPL-3.0 og gratis å selvhoste. En docker-compose-stack kjører den samme MCP-serveren, med legitimasjonen til postkassen din kryptert under en nøkkel bare du har. Selvhosting dekker IMAP- og SMTP-postkasser; Gmail- og Outlook-ettklikks-OAuth, dashboardet, teamfunksjoner og support forblir på de betalte planene."
+        "a": "Ja. MCP Emails er åpen kildekode under AGPL-3.0 og gratis å selvhoste. En docker-compose-stack kjører den samme MCP-serveren, med legitimasjonen til postkassen din kryptert under en nøkkel bare du har. Selvhosting dekker IMAP- og SMTP-postkasser; Gmail- og Outlook-innlogging (OAuth), dashboardet, teamfunksjoner og support forblir på de betalte planene."
       }
     ]
   },

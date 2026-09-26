@@ -6,7 +6,7 @@ const post = {
   coverAlt: 'Setting up email access for AI coding agents in Cursor, Cline, and VS Code over MCP',
   authorId: 'asgeir',
   publishedAt: "2026-05-23T09:00:00.000Z",
-  updatedAt: "2026-05-23T09:00:00.000Z",
+  updatedAt: "2026-09-25T09:00:00.000Z",
   tags: ['Cursor', 'Tutorial', 'MCP', 'AI agents'],
   featured: false,
   content: `Here's the short version. To give a coding agent in your editor access to a real inbox, point it at one MCP endpoint: \`https://www.mcpemails.com/api/mcp\`. Cursor speaks OAuth, so you paste that URL and sign in. Cline, the raw VS Code MCP config, and any custom script don't do the OAuth dance, so they authenticate with a scoped API key sent as an \`Authorization: Bearer\` header. Same endpoint, same tools, two ways in.
@@ -19,7 +19,8 @@ The MCP server doesn't own your mail. It brokers a live connection to whatever p
 
 Go to **Dashboard → Inboxes → Connect Inbox** and pick a provider:
 
-- **Gmail** or **Outlook / Microsoft 365** → one-click OAuth. Sign in with Google or Microsoft and approve.
+- **Gmail** → one-click OAuth. Sign in with Google and approve.
+- **Outlook / Microsoft 365** → OAuth with Sign in with Microsoft, no app password. Personal Outlook.com, Hotmail, Live and MSN accounts connect straight away. A work or school Microsoft 365 account may need an IT admin to approve the app once for the whole organisation first; the dashboard gives you a link to send them.
 - **iCloud, Fastmail, Yahoo, Zoho, or any generic IMAP host** → an app-specific password. Generate it in the provider's settings (for iCloud that's appleid.apple.com) and paste it in.
 
 Fastmail is app-password only, not OAuth, so don't go hunting for a Google-style consent screen there. If you're on iCloud or Fastmail, the [iCloud, Fastmail, and IMAP setup walkthrough](/blog/connect-icloud-fastmail-imap-to-claude) has the per-provider details. On Outlook, see [connecting Outlook and Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp).

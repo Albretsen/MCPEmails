@@ -4,9 +4,7 @@ const translation = {
     'Slik fungerer automasjoner i MCP Emails: et lagret søk pluss én fast handling, på et intervall, uten at en modell tolker e-posten din. Forhåndsvis, opprett, aktiver og les kjøreloggen.',
   coverAlt:
     'Uovervåkede triageregler for e-post i MCP Emails: et lagret søk pluss én fast handling på et fast intervall',
-  content: `> **Outlook og Microsoft 365 er under utvikling.** De kan ikke kobles til i produksjon ennå.
-
-Hver morgen ber du agenten rydde bort støyen: arkiver byggevarslene, marker kvitteringene som lest, videresend fakturaene til regnskapsføreren. Det virker. Det koster også et modellkall hver gang, og tirsdag gjør det noe litt annet enn det gjorde mandag.
+  content: `Hver morgen ber du agenten rydde bort støyen: arkiver byggevarslene, marker kvitteringene som lest, videresend fakturaene til regnskapsføreren. Det virker. Det koster også et modellkall hver gang, og tirsdag gjør det noe litt annet enn det gjorde mandag.
 
 MCP Emails har en egen flate for akkurat den e-posten. En **automasjon** er et lagret søk pluss én fast handling, vurdert på et intervall, uten modell i løkka. E-post matches, aldri tolkes.
 

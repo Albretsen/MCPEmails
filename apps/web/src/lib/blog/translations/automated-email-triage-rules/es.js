@@ -4,9 +4,7 @@ const translation = {
     'Cómo funcionan las automatizaciones de MCP Emails: una búsqueda guardada más una acción fija, con una cadencia y sin que ningún modelo interprete tu correo. Previsualiza, crea, activa y lee el registro de ejecuciones.',
   coverAlt:
     'Reglas de triaje de correo desatendidas en MCP Emails: una búsqueda guardada más una acción fija según un calendario',
-  content: `> **Outlook y Microsoft 365 están en desarrollo.** Todavía no se pueden conectar en producción.
-
-Cada mañana le pides a tu agente que despeje el ruido: archivar las notificaciones de compilación, marcar los recibos como leídos, reenviar las facturas a tu contable. Funciona. También cuesta una llamada al modelo cada vez, y el martes hace algo ligeramente distinto de lo que hizo el lunes.
+  content: `Cada mañana le pides a tu agente que despeje el ruido: archivar las notificaciones de compilación, marcar los recibos como leídos, reenviar las facturas a tu contable. Funciona. También cuesta una llamada al modelo cada vez, y el martes hace algo ligeramente distinto de lo que hizo el lunes.
 
 MCP Emails tiene una segunda superficie para exactamente ese correo. Una **automatización** es una búsqueda guardada más una acción fija, evaluada con una cadencia y sin ningún modelo de por medio. El correo se compara, nunca se interpreta.
 

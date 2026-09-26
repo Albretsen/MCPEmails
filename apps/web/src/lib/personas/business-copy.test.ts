@@ -20,9 +20,11 @@ import { FREE_ACTION_ALLOWANCE, FREE_ACTION_GRACE_DAYS, PLANS } from '../stripe/
  *   - someone "tidies" the comparison table back to "Just you" for Pro, which
  *     is true about logins and tells every company it belongs on Team;
  *   - a well-meant edit names a provider or a certification we cannot support.
- *     Outlook / Microsoft 365 sign-in is not shipped, there is no SOC 2 report,
- *     no data-residency choice and no Enterprise tier, and each of those has
- *     already been removed from this site once.
+ *     There is no SOC 2 report, no data-residency choice and no Enterprise
+ *     tier, and each of those has already been removed from this site once.
+ *     Outlook / Microsoft 365 connects, but a work tenant usually needs its IT
+ *     admin to approve the app first, so these business-pitch strings do not
+ *     promise it in passing: that caveat belongs where Outlook is explained.
  *
  * Everything here reads files from disk; nothing renders. The rendered checks
  * (status codes, canonical, hreflang, sitemap) are done against a built server

@@ -8,10 +8,10 @@ const post = {
     'Connect a business email on your own domain to an AI agent with MCP Emails',
   authorId: 'asgeir',
   publishedAt: '2026-09-15T09:00:00.000Z',
-  updatedAt: '2026-09-15T09:00:00.000Z',
+  updatedAt: '2026-09-25T09:00:00.000Z',
   tags: ['Business email', 'IMAP', 'Google Workspace', 'Tutorial'],
   featured: false,
-  content: `> **Outlook and Microsoft 365 are in progress.** They cannot be connected in production yet. If your company mailbox turns out to be a Microsoft tenant, this guide will help you confirm that, but it will not get you connected today.
+  content: `> **On Microsoft 365?** If your company mailbox turns out to be a Microsoft tenant, this guide will help you confirm that. Connect it with **Outlook** and Sign in with Microsoft instead of IMAP; your IT admin may need to approve the app once for the whole organisation first. The [Outlook and Microsoft 365 guide](/blog/connect-outlook-microsoft-365-ai-agent-mcp) has the steps.
 
 Most guides for connecting email to an AI agent assume your address ends in gmail.com. Business mail is different: the domain does not tell you who serves the mailbox, somebody else may control whether mail clients can log in at all, and what your agent sends goes to customers under your name. This is the guide for you@yourcompany.com.
 
@@ -40,7 +40,7 @@ Service records state host and port directly, but most domains publish none, so 
 - Ending in \`.l.google.com\`, or \`smtp.google.com\`: Google Workspace.
 - \`mx.zoho.com\` or a regional equivalent: Zoho Mail.
 - \`aspmx1.migadu.com\`: Migadu. \`mx1.titan.email\`: Titan, under whatever brand you bought it.
-- A Microsoft-hosted MX name: a Microsoft 365 tenant, not connectable yet.
+- A Microsoft-hosted MX name: a Microsoft 365 tenant. Connect it with **Outlook**, not IMAP.
 - Your hosting company's own server name: a cPanel or Plesk mailbox.
 
 ## Step 2: Follow your provider's path
@@ -69,7 +69,7 @@ Titan refuses every mail client until you flip one switch: **Settings → Enable
 
 ### Rackspace Email
 
-Both hosts are \`secure.emailsrvr.com\`, incoming and outgoing, whatever your domain is. The name carries no Rackspace branding, so people "correct" it to something more plausible and nothing works. Use the mailbox password from the Cloud Office control panel. With multi-factor authentication on it stops working over IMAP and SMTP while still working in webmail, so you need an app password. Rackspace also sells Hosted Exchange and resells Microsoft 365; neither is connectable here.
+Both hosts are \`secure.emailsrvr.com\`, incoming and outgoing, whatever your domain is. The name carries no Rackspace branding, so people "correct" it to something more plausible and nothing works. Use the mailbox password from the Cloud Office control panel. With multi-factor authentication on it stops working over IMAP and SMTP while still working in webmail, so you need an app password. Rackspace also sells Hosted Exchange, which is not connectable here, and resells Microsoft 365, which connects with **Outlook** rather than IMAP.
 
 ### IONOS
 
@@ -102,7 +102,7 @@ Set it per inbox on the inbox detail page, where a preview shows the header as r
 - **You are using the wrong password entirely.** Migadu, IONOS, Rackspace and cPanel all separate the control-panel login from the mailbox password, and both are usually email addresses.
 - **It times out instead of failing.** That is the host or the port, not the credential. Re-read the hostname from the provider's own panel.
 - **Mail reads but will not send.** The outgoing half is its own host, port and security mode, and some hosts do not listen on 465 at all. Confirm you granted \`send:email\`.
-- **It is a Microsoft 365 mailbox.** Bought direct or resold by GoDaddy, IONOS or Rackspace, it is still a Microsoft tenant and is not connectable yet.
+- **It is a Microsoft 365 mailbox.** Bought direct or resold by GoDaddy, IONOS or Rackspace, it is still a Microsoft tenant. Connect it with **Outlook** and Sign in with Microsoft, not IMAP. If Microsoft says admin approval is required, send the link the dashboard shows to your IT admin.
 
 The [provider matrix](/docs/providers) and the [provider pages](/connect) carry the per-provider detail.
 

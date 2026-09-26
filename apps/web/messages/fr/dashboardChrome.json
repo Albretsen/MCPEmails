@@ -114,7 +114,8 @@
     "mcpCopyTitle": "Copiez l’URL de votre point de terminaison MCP"
   },
   "connect": {
-    "subOutlook": "OAuth 2.0 · Microsoft 365",
+    "subOutlook": "Outlook.com · Microsoft 365",
+    "hintOutlook": "Les comptes Outlook.com, Hotmail, Live et MSN se connectent directement. Un compte Microsoft 365 professionnel ou scolaire peut nécessiter que votre administrateur informatique approuve MCP Emails une fois ; si Microsoft le demande, nous vous donnons un lien à lui envoyer.",
     "comingSoon": "Bientôt disponible",
     "subFastmail": "Mot de passe d'application",
     "subAppPassword": "Mot de passe d'application",
@@ -226,7 +227,7 @@
     "smtpPortLabel": "Port SMTP",
     "passwordLabel": "Mot de passe",
     "appPasswordLabel": "Mot de passe d'application",
-    "passwordHint": "Utilisez le mot de passe de votre boîte mail. Si votre fournisseur utilise la validation en deux étapes (p. ex. Gmail, Outlook, iCloud), générez plutôt un mot de passe d'application. L'identifiant est chiffré avant stockage.",
+    "passwordHint": "Utilisez le mot de passe de votre boîte mail. Si votre fournisseur utilise la validation en deux étapes (p. ex. Gmail, iCloud, Yahoo), générez plutôt un mot de passe d'application. L'identifiant est chiffré avant stockage.",
     "showPassword": "Afficher le mot de passe",
     "hidePassword": "Masquer le mot de passe",
     "cancel": "Annuler",

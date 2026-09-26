@@ -19,7 +19,7 @@
       "coverage": {
         "tag": "Coverage",
         "h": "Every inbox, not just Gmail",
-        "p": "Built-in connectors typically reach one mailbox: Gmail, sometimes Outlook. They can't touch <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b>, or any other <b>IMAP/SMTP</b> account. We connect all of them: Gmail over OAuth, the rest over an app password or plain IMAP."
+        "p": "Built-in connectors typically reach one mailbox: Gmail, sometimes Outlook. They can't touch <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b>, or any other <b>IMAP/SMTP</b> account. We connect all of them: Gmail over OAuth, Outlook and Microsoft 365 by signing in with Microsoft, the rest over an app password or plain IMAP."
       },
       "actions": {
         "tag": "Real actions",
@@ -64,7 +64,7 @@
     "items": [
       {
         "q": "Can't Claude or ChatGPT already read my Gmail with a built-in connector?",
-        "a": "Sometimes, for one provider. mcpemails connects Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex, and any IMAP mailbox, and it takes real actions: send, reply, forward, schedule, move, copy, flag, archive, and delete. The same inbox then works in every MCP client, not just one vendor's app."
+        "a": "Sometimes, for one provider. mcpemails connects Gmail, Outlook, iCloud, Fastmail, Yahoo, Zoho, Yandex, and any IMAP mailbox, and it takes real actions: send, reply, forward, schedule, move, copy, flag, archive, and delete. The same inbox then works in every MCP client, not just one vendor's app."
       },
       {
         "q": "Which mailboxes do built-in connectors usually miss?",

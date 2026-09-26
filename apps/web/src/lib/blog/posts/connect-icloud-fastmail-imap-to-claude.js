@@ -7,16 +7,16 @@ const post = {
   coverAlt: 'Connect iCloud, Fastmail, and any IMAP inbox to Claude over MCP',
   authorId: 'asgeir',
   publishedAt: "2026-05-13T09:00:00.000Z",
-  updatedAt: "2026-05-13T09:00:00.000Z",
+  updatedAt: "2026-09-25T09:00:00.000Z",
   tags: ['iCloud', 'Fastmail', 'IMAP', 'Tutorial'],
   featured: false,
   content: `Connecting iCloud, Fastmail, or any IMAP mailbox to Claude takes one thing Gmail and Outlook don't need: an **app-specific password**. You generate it inside your email provider, paste it into MCP Emails once, and Claude can read, search, and send through that inbox. No OAuth dance, no SMTP server settings to memorize.
 
-This is the route for every provider that isn't Gmail or Microsoft. iCloud, Fastmail, Yahoo, Zoho, Yandex, and any generic IMAP host all run through the same IMAP/SMTP transport, so they share an identical feature set. If you can get an app password out of the provider, you can connect it. One nice bonus over the OAuth providers: IMAP gives Claude real, permanent delete.
+This is the route for every provider that isn't Gmail or Microsoft. iCloud, Fastmail, Yahoo, Zoho, Yandex, and any generic IMAP host all run through the same IMAP/SMTP transport, so they share an identical feature set. If you can get an app password out of the provider, you can connect it. One nice bonus over Gmail: IMAP gives Claude real, permanent delete.
 
 ## Why these providers use an app password, not OAuth
 
-Gmail and Outlook expose modern OAuth APIs, so MCP Emails connects them with a one-click sign-in. iCloud and Fastmail don't offer that path to third-party email tools. Instead they hand you an **app-specific password** — a long, randomly generated password scoped to a single application, separate from your real account password and revocable on its own.
+Gmail and Outlook expose modern OAuth APIs, so MCP Emails connects them with a sign-in instead of a password. (A work or school Microsoft 365 account may need an IT admin to approve the app once first; the [Outlook and Microsoft 365 guide](/blog/connect-outlook-microsoft-365-ai-agent-mcp) explains it.) iCloud and Fastmail don't offer that path to third-party email tools. Instead they hand you an **app-specific password**: a long, randomly generated password scoped to a single application, separate from your real account password and revocable on its own.
 
 One correction worth making, because older write-ups get it wrong: **Fastmail is app-password only.** Fastmail used to support an OAuth flow for some integrations, but for connecting to MCP Emails today you generate an app password in Fastmail's settings. Same as iCloud. If a guide tells you to "sign in with Fastmail" through OAuth, it's stale.
 
@@ -82,11 +82,11 @@ A prompt to confirm it works:
 Use inbox_list to find my iCloud inbox, then summarize my 5 most recent unread messages.
 \`\`\`
 
-## The one thing IMAP does that Gmail and Outlook can't
+## The one thing IMAP does that Gmail can't
 
-Here's the part people miss. When Claude "deletes" a message on Gmail or Outlook, it goes to Trash. That's a hard limit of the Gmail and Microsoft Graph APIs — they don't expose a permanent delete to third-party apps. The message lingers in Trash until the provider's retention window expires.
+Here's the part people miss. When Claude "deletes" a message on Gmail, it goes to Trash. That's a hard limit of the Gmail API: it doesn't expose a permanent delete to third-party apps. The message lingers in Trash until the provider's retention window expires. (Outlook is different: Microsoft Graph does offer a permanent delete, and MCP Emails supports it.)
 
-IMAP is different. Fastmail, iCloud, Yahoo, Zoho, Yandex, and generic IMAP all support **hard expunge** — Claude can permanently remove a message, not just trash it. If you want an agent that actually cleans up after itself, IMAP is the only transport that lets it. Useful, and also a reason to be deliberate about which scopes you grant. Expunge is irreversible.
+IMAP is different too. Fastmail, iCloud, Yahoo, Zoho, Yandex, and generic IMAP all support **hard expunge**: Claude can permanently remove a message, not just trash it. If you want an agent that actually cleans up after itself, IMAP (or Outlook) lets it. Useful, and also a reason to be deliberate about which scopes you grant. Expunge is irreversible.
 
 Search behaves a little differently too. Gmail gets its full operator syntax, Outlook uses KQL, and IMAP providers use IMAP text search — capable, but not as expressive as Gmail's operators. Worth knowing if you're writing search-heavy prompts.
 
@@ -101,7 +101,7 @@ If you're still deciding whether to wire email into an agent at all, start with 
 
 ## Wrap-up
 
-iCloud, Fastmail, and IMAP aren't second-class here. Generate an app password, paste it into **Inboxes → Connect Inbox**, point Claude at the [endpoint](/docs), and you've got an agent with full read/send access plus permanent delete the OAuth providers can't offer. It's [free to start](/signup), no card, one inbox forever.`,
+iCloud, Fastmail, and IMAP aren't second-class here. Generate an app password, paste it into **Inboxes → Connect Inbox**, point Claude at the [endpoint](/docs), and you've got an agent with full read/send access plus the permanent delete Gmail can't offer. It's [free to start](/signup), no card, one inbox forever.`,
 };
 
 export default post;

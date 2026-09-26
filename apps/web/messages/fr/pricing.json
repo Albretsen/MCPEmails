@@ -31,7 +31,7 @@
         "Lire, chercher, organiser, rédiger, programmer et envoyer",
         "Validation avant envoi",
         "Analytique d'usage",
-        "Gmail, iCloud, Fastmail et toute boîte IMAP",
+        "Gmail, Outlook, iCloud, Fastmail et toute boîte IMAP",
         "Clés API illimitées",
         "Support communautaire"
       ]
@@ -102,6 +102,7 @@
         "label": "Fournisseurs d'e-mail",
         "rows": {
           "gmail": "Gmail (OAuth)",
+          "outlook": "Outlook / Microsoft 365 (connexion avec Microsoft)",
           "fastmail": "Fastmail (mot de passe d'application)",
           "appPassword": "iCloud, Yahoo, Zoho, Yandex (mot de passe d'application)",
           "imap": "Toute boîte IMAP / SMTP"
@@ -195,7 +196,7 @@
       },
       {
         "q": "Quels fournisseurs d'e-mail sont pris en charge ?",
-        "a": "Gmail utilise OAuth 2.0. Fastmail se connecte avec un mot de passe d'application. iCloud, Yahoo, Zoho et Yandex se connectent avec un mot de passe d'application, et toute autre boîte fonctionne via le connecteur IMAP / SMTP générique."
+        "a": "Gmail utilise OAuth 2.0. Outlook et Microsoft 365 se connectent via la connexion avec Microsoft (OAuth) : les comptes personnels se connectent directement, et un compte professionnel ou scolaire peut nécessiter que son administrateur informatique approuve l'application une fois. Fastmail se connecte avec un mot de passe d'application. iCloud, Yahoo, Zoho et Yandex se connectent avec un mot de passe d'application, et toute autre boîte fonctionne via le connecteur IMAP / SMTP générique."
       },
       {
         "q": "Existe-t-il une politique de remboursement ?",
@@ -203,7 +204,7 @@
       },
       {
         "q": "Puis-je l'héberger moi-même plutôt que de payer ?",
-        "a": "Oui. MCP Emails est open source sous AGPL-3.0 et gratuit à héberger soi-même. Une stack docker-compose exécute le même serveur MCP, avec les identifiants de votre boîte mail chiffrés sous une clé que vous seul détenez. L'auto-hébergement couvre les boîtes mail IMAP et SMTP ; l'OAuth en un clic pour Gmail et Outlook, le tableau de bord, les fonctionnalités d'équipe et le support restent sur les forfaits payants."
+        "a": "Oui. MCP Emails est open source sous AGPL-3.0 et gratuit à héberger soi-même. Une stack docker-compose exécute le même serveur MCP, avec les identifiants de votre boîte mail chiffrés sous une clé que vous seul détenez. L'auto-hébergement couvre les boîtes mail IMAP et SMTP ; la connexion Gmail et Outlook (OAuth), le tableau de bord, les fonctionnalités d'équipe et le support restent sur les forfaits payants."
       }
     ]
   },

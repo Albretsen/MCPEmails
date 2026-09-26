@@ -31,73 +31,112 @@ const translatedSlugs = readdirSync(translationsDir)
   .sort();
 
 // ---------------------------------------------------------------------------
-// Outlook is not connectable in production
+// Outlook / Microsoft 365 is live
 // ---------------------------------------------------------------------------
 
 /**
- * Outlook and Microsoft 365 are built but cannot be connected in production.
- * Where an English post says so, every translation has to say so just as often.
- * A locale that quietly drops the caveat, as zh did on
- * /blog/connect-claude-to-email, tells readers a feature works when it does not.
+ * The Outlook / Microsoft 365 connector launched on 2026-09-25. Before that,
+ * every post carried an "in progress, cannot be connected" note, and this file
+ * checked that each translation carried it as often as English. Those notes are
+ * now false, so the check is inverted: no post or translation may still say
+ * Outlook is unavailable.
  *
  * These match the in-progress and coming-soon wording each locale actually
- * uses, and there is more than one phrasing per locale: nb writes both "under
- * utvikling" and "under arbeid", zh both "正在开发中" and "仍在开发中". They are only ever applied to lines that already mention Outlook, so a
+ * used, and there is more than one phrasing per locale: nb wrote both "under
+ * utvikling" and "under arbeid", zh both "正在开发中" and "仍在开发中". They are
+ * only ever applied to lines that also mention Outlook or Microsoft 365, so a
  * loose phrase like "en cours" cannot match unrelated prose.
  */
 const IN_PROGRESS = {
-  en: /in progress|not yet generally available|coming soon|can't connect|cannot be connected/i,
-  es: /en desarrollo|pr[oó]ximamente|a[uú]n no disponible|no puedes conectar|no se pueden conectar/i,
-  fr: /en cours|bient[oô]t disponible|pas encore disponible|ne pouvez pas connecter|peuvent pas encore/i,
-  nb: /under utvikling|under arbeid|kommer snart|enn[aå] ikke allment tilgjengelig|kan (?:enn[aå] )?ikke kobles?/i,
-  zh: /(?:正|仍)在开发中|即将推出|尚未全面开放|尚未在生产环境中提供|无法在生产环境中连接/,
+  en: /in progress|not yet generally available|coming soon|can't connect|cannot be connected|not connectable yet/i,
+  es: /en desarrollo|pr[oó]ximamente|a[uú]n no disponible|no puedes conectar|no se pueden conectar|todav[ií]a no (?:es )?conectable/i,
+  fr: /en cours|bient[oô]t disponible|pas encore disponible|ne pouvez pas connecter|peuvent pas encore|pas encore connectable/i,
+  nb: /under utvikling|under arbeid|kommer snart|enn[aå] ikke allment tilgjengelig|kan (?:enn[aå] )?ikke kobles?|ikke mulig [aå] koble til enn[aå]/i,
+  zh: /(?:正|仍)在开发中|即将推出|尚未全面开放|尚未在生产环境中提供|无法在生产环境中连接|目前还不能连接/,
 };
+
+/**
+ * The work/school caveat. Microsoft's default consent policy keeps many
+ * employees from approving mailbox access themselves, so an IT admin has to
+ * approve the app once for the organisation. Wherever English tells a reader
+ * about Microsoft 365 and that admin step on the same line, each translation has
+ * to do so just as often, or a locale ends up promising a one-click connect
+ * that business readers cannot complete.
+ */
+const ADMIN_CAVEAT = {
+  en: /\bIT admin\b|admin approval/i,
+  es: /administrador de TI|aprobaci[oó]n de un administrador/i,
+  fr: /administrateur informatique|approbation de l.administrateur/i,
+  nb: /IT-ansvarlig|administratorgodkjenning/i,
+  zh: /IT 管理员|管理员批准/,
+};
+
+const localeFiles = (slug) =>
+  readdirSync(join(translationsDir, slug))
+    .sort()
+    .map((file) => ({ locale: file.replace(/\.js$/, ''), path: join(translationsDir, slug, file) }));
+
+const outlookLines = (source) =>
+  contentOf(source)
+    .split('\n')
+    .filter((line) => line.includes('Outlook') || line.includes('Microsoft 365'));
 
 const inProgressNotes = (source, locale) => {
   const pattern = IN_PROGRESS[locale];
   assert.ok(pattern, `no in-progress pattern for locale ${locale}`);
-  return contentOf(source)
-    .split('\n')
-    .filter((line) => line.includes('Outlook') && pattern.test(line));
+  return outlookLines(source).filter((line) => pattern.test(line));
 };
 
-for (const slug of translatedSlugs) {
-  test(`${slug}: every translation carries the Outlook in-progress note as often as English`, () => {
-    const english = inProgressNotes(read(join(postsDir, `${slug}.js`)), 'en');
+const adminCaveats = (source, locale) => {
+  const pattern = ADMIN_CAVEAT[locale];
+  assert.ok(pattern, `no admin-caveat pattern for locale ${locale}`);
+  return contentOf(source)
+    .split('\n')
+    .filter((line) => line.includes('Microsoft 365') && pattern.test(line));
+};
 
-    for (const file of readdirSync(join(translationsDir, slug)).sort()) {
-      const locale = file.replace(/\.js$/, '');
-      const translated = inProgressNotes(read(join(translationsDir, slug, file)), locale);
+const allPostSlugs = readdirSync(postsDir)
+  .filter((file) => file.endsWith('.js'))
+  .map((file) => file.replace(/\.js$/, ''))
+  .sort();
 
-      assert.equal(
-        translated.length,
-        english.length,
-        `${slug}/${file} carries ${translated.length} Outlook in-progress note(s), English carries ${english.length}. ` +
-          'A translation must not promise an Outlook connection the English source says is unavailable.',
+for (const slug of allPostSlugs) {
+  test(`${slug}: no locale still says Outlook cannot be connected`, () => {
+    const files = [
+      { locale: 'en', path: join(postsDir, `${slug}.js`) },
+      ...(existsSync(join(translationsDir, slug)) ? localeFiles(slug) : []),
+    ];
+
+    for (const { locale, path } of files) {
+      const stale = inProgressNotes(read(path), locale);
+      assert.deepEqual(
+        stale,
+        [],
+        `${path.slice(here.length + 1)} still says Outlook / Microsoft 365 is unavailable, but it launched: ${stale[0]?.slice(0, 160)}`,
       );
     }
   });
 }
 
-test('no locale advertises an Outlook connect step that English does not', () => {
-  // The zh regression told readers to "sign in with Microsoft and authorize
-  // access" on a page whose English source offers no such step.
-  const connectStep = /Outlook \/ Microsoft 365/;
+for (const slug of translatedSlugs) {
+  test(`${slug}: every translation carries the Microsoft 365 admin-approval caveat as often as English`, () => {
+    const english = adminCaveats(read(join(postsDir, `${slug}.js`)), 'en');
 
-  for (const slug of translatedSlugs) {
-    const englishOffers = connectStep.test(contentOf(read(join(postsDir, `${slug}.js`))));
-
-    for (const file of readdirSync(join(translationsDir, slug))) {
-      const translated = contentOf(read(join(translationsDir, slug, file)));
-
-      if (connectStep.test(translated)) {
-        assert.ok(
-          englishOffers,
-          `${slug}/${file} presents an "Outlook / Microsoft 365" connect step that the English source does not`,
-        );
-      }
+    for (const { locale, path } of localeFiles(slug)) {
+      const translated = adminCaveats(read(path), locale);
+      assert.equal(
+        translated.length,
+        english.length,
+        `${slug}/${locale}.js carries ${translated.length} Microsoft 365 admin-approval caveat(s), English carries ${english.length}. ` +
+          'A translation must not drop the work/school caveat or add one English does not make.',
+      );
     }
-  }
+  });
+}
+
+test('the Outlook guide is indexable now that the connector is live', () => {
+  const source = read(join(postsDir, 'connect-outlook-microsoft-365-ai-agent-mcp.js'));
+  assert.doesNotMatch(source, /noindex\s*:\s*true/, 'the Outlook guide is still flagged noindex');
 });
 
 // ---------------------------------------------------------------------------
@@ -109,7 +148,7 @@ test('no locale advertises an Outlook connect step that English does not', () =>
  * not clean yet (23 English posts and 72 translations still carry them), so
  * this pins the slugs that have been swept. Add a slug here as it is cleaned.
  */
-const EM_DASH_CLEAN_SLUGS = ['connect-claude-to-email'];
+const EM_DASH_CLEAN_SLUGS = ['connect-claude-to-email', 'connect-outlook-microsoft-365-ai-agent-mcp'];
 
 for (const slug of EM_DASH_CLEAN_SLUGS) {
   const files = [

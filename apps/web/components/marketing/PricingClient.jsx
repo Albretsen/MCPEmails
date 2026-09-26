@@ -103,6 +103,9 @@ const TABLE_SECTIONS = [
     key: 'providers',
     rows: [
       { key: 'gmail',       free: true, personal: true, solo: true, pro: true },
+      // Microsoft Graph OAuth. No plan gate: the inbox cap is the only limit,
+      // enforced in /auth/outlook/callback like every other connector.
+      { key: 'outlook',     free: true, personal: true, solo: true, pro: true },
       { key: 'fastmail',    free: true, personal: true, solo: true, pro: true },
       { key: 'appPassword', free: true, personal: true, solo: true, pro: true },
       { key: 'imap',        free: true, personal: true, solo: true, pro: true },

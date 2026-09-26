@@ -5,11 +5,11 @@ const translation = {
   coverAlt: '通过 MCP 将 iCloud、Fastmail 及任意 IMAP 邮箱连接到 Claude',
   content: `把 iCloud、Fastmail 或任意 IMAP 邮箱连接到 Claude，只需要一样 Gmail 和 Outlook 不需要的东西：**应用专用密码**。你在邮件服务商那里生成它，在 MCP Emails 里粘贴一次，Claude 就能读取、搜索并通过这个邮箱发信。没有 OAuth 的来回授权，也不用记一堆 SMTP 服务器设置。
 
-这条路适用于所有不是 Gmail 或 Microsoft 的服务商。iCloud、Fastmail、Yahoo、Zoho、Yandex，以及任何通用 IMAP 主机，都走相同的 IMAP/SMTP 传输方式，所以它们共享完全一致的功能集。只要你能从服务商那里拿到应用专用密码，就能连接它。相比 OAuth 服务商还有一个不错的好处：IMAP 让 Claude 拥有真正的、永久的删除能力。
+这条路适用于所有不是 Gmail 或 Microsoft 的服务商。iCloud、Fastmail、Yahoo、Zoho、Yandex，以及任何通用 IMAP 主机，都走相同的 IMAP/SMTP 传输方式，所以它们共享完全一致的功能集。只要你能从服务商那里拿到应用专用密码，就能连接它。相比 Gmail 还有一个不错的好处：IMAP 让 Claude 拥有真正的、永久的删除能力。
 
 ## 为什么这些服务商用应用专用密码，而不是 OAuth
 
-Gmail 和 Outlook 提供现代化的 OAuth API，所以 MCP Emails 用一次点击登录就能连上。iCloud 和 Fastmail 没有为第三方邮件工具提供这条路径。它们给你的是**应用专用密码**——一段随机生成的长密码，作用范围限定在单个应用，与你真正的账户密码相互独立，可以单独吊销。
+Gmail 和 Outlook 提供现代化的 OAuth API，所以 MCP Emails 通过登录而不是密码来连接它们。（工作或学校的 Microsoft 365 账户可能需要 IT 管理员先一次性批准该应用；[Outlook 与 Microsoft 365 指南](/blog/connect-outlook-microsoft-365-ai-agent-mcp)有说明。）iCloud 和 Fastmail 没有为第三方邮件工具提供这条路径。它们给你的是**应用专用密码**：一段随机生成的长密码，作用范围限定在单个应用，与你真正的账户密码相互独立，可以单独吊销。
 
 有一点值得纠正，因为不少旧文章把它搞错了：**Fastmail 只支持应用专用密码。**Fastmail 过去对某些集成支持过 OAuth 流程，但如今要连接 MCP Emails，你得在 Fastmail 的设置里生成一个应用专用密码，跟 iCloud 一样。如果某篇指南让你通过 OAuth「用 Fastmail 登录」，那它已经过时了。
 
@@ -75,11 +75,11 @@ Fastmail 的 IMAP 主机是 \`imap.fastmail.com\`，SMTP 是 \`smtp.fastmail.com
 Use inbox_list to find my iCloud inbox, then summarize my 5 most recent unread messages.
 \`\`\`
 
-## IMAP 能做而 Gmail 和 Outlook 做不到的那一件事
+## IMAP 能做而 Gmail 做不到的那一件事
 
-这是大家容易忽略的地方。当 Claude 在 Gmail 或 Outlook 上「删除」一封邮件时，它会进入回收站。这是 Gmail 和 Microsoft Graph API 的硬性限制——它们不向第三方应用开放永久删除。邮件会一直留在回收站，直到服务商的保留期满。
+这是大家容易忽略的地方。当 Claude 在 Gmail 上「删除」一封邮件时，它会进入回收站。这是 Gmail API 的硬性限制：它不向第三方应用开放永久删除。邮件会一直留在回收站，直到服务商的保留期满。（Outlook 不同：Microsoft Graph 提供永久删除，MCP Emails 也支持。）
 
-IMAP 不一样。Fastmail、iCloud、Yahoo、Zoho、Yandex 以及通用 IMAP 都支持**硬性清除（hard expunge）**——Claude 可以永久移除一封邮件，而不只是把它扔进回收站。如果你想要一个真正会替自己收拾干净的代理，IMAP 是唯一能让它做到的传输方式。这很有用，同时也是一个理由，让你慎重对待自己授予了哪些权限。清除是不可逆的。
+IMAP 也不一样。Fastmail、iCloud、Yahoo、Zoho、Yandex 以及通用 IMAP 都支持**硬性清除（hard expunge）**：Claude 可以永久移除一封邮件，而不只是把它扔进回收站。如果你想要一个真正会替自己收拾干净的代理，IMAP（或 Outlook）可以做到。这很有用，同时也是一个理由，让你慎重对待自己授予了哪些权限。清除是不可逆的。
 
 搜索的行为也略有不同。Gmail 用的是它完整的操作符语法，Outlook 用 KQL，而 IMAP 服务商用 IMAP 文本搜索——能力够用，但不如 Gmail 的操作符那么富有表现力。如果你要写大量依赖搜索的提示词，这一点值得了解。
 
@@ -94,7 +94,7 @@ IMAP 不一样。Fastmail、iCloud、Yahoo、Zoho、Yandex 以及通用 IMAP 都
 
 ## 小结
 
-iCloud、Fastmail 和 IMAP 在这里绝非二等公民。生成一个应用密码，把它粘贴进 **Inboxes → Connect Inbox**，把 Claude 指向[端点](/docs)，你就拥有了一个具备完整读取/发送权限的代理，外加 OAuth 服务商给不了的永久删除。它[免费起步](/signup)，无需信用卡，可永久连接一个邮箱。`,
+iCloud、Fastmail 和 IMAP 在这里绝非二等公民。生成一个应用密码，把它粘贴进 **Inboxes → Connect Inbox**，把 Claude 指向[端点](/docs)，你就拥有了一个具备完整读取/发送权限的代理，外加 Gmail 给不了的永久删除。它[免费起步](/signup)，无需信用卡，可永久连接一个邮箱。`,
 };
 
 export default translation;

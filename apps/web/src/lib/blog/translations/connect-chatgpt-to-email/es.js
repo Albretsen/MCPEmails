@@ -4,9 +4,7 @@ const translation = {
     'Paso a paso: conecta Gmail, iCloud, Fastmail o cualquier buzón IMAP a ChatGPT con un conector MCP, y a OpenAI Codex con una clave limitada. Sin almacenar correo.',
   coverAlt:
     'Conecta ChatGPT y OpenAI Codex a Gmail, iCloud, Fastmail y correo IMAP con MCP Emails',
-  content: `> **Outlook y Microsoft 365 están en desarrollo.** Todavía no se pueden conectar en producción. Esta guía cubre Gmail, iCloud, Fastmail, Yahoo, Zoho y los demás buzones IMAP disponibles hoy.
-
-ChatGPT no puede llegar a un buzón por su cuenta. Necesita un servidor MCP delante de tu correo, y MCP Emails es ese servidor: conecta un buzón una vez, apunta ChatGPT a una sola URL y obtendrás las mismas herramientas de correo tanto si el buzón está en Gmail, iCloud, Fastmail, Yahoo, Zoho o un servidor IMAP propio.
+  content: `ChatGPT no puede llegar a un buzón por su cuenta. Necesita un servidor MCP delante de tu correo, y MCP Emails es ese servidor: conecta un buzón una vez, apunta ChatGPT a una sola URL y obtendrás las mismas herramientas de correo tanto si el buzón está en Gmail, iCloud, Fastmail, Yahoo, Zoho o un servidor IMAP propio.
 
 Aquí intervienen dos superficies de OpenAI que se autentican de forma distinta. ChatGPT ejecuta un flujo OAuth en el navegador, así que no hay ninguna clave de API que pegar. OpenAI Codex se ejecuta en tu terminal y usa una clave limitada como token bearer. Mismo endpoint, mismas herramientas.
 
@@ -16,7 +14,7 @@ Aquí intervienen dos superficies de OpenAI que se autentican de forma distinta.
 
 - **ChatGPT Plus, Pro, Business, Enterprise o Edu, en la web.** Los conectores MCP personalizados están detrás del modo de desarrollador, que OpenAI ofrece en chatgpt.com para esos planes. Las cuentas Free y Go no pueden añadir uno, y las apps de móvil y escritorio no muestran la opción. En Business y Enterprise, puede que un administrador tenga que permitir antes el modo de desarrollador.
 - **Una cuenta gratuita de MCP Emails.** [Créala aquí](/signup). El plan gratuito admite un buzón conectado y no pide tarjeta.
-- **Un buzón.** Gmail, iCloud, Fastmail, Yahoo, Zoho, Yandex o cualquier servicio que hable IMAP y SMTP.
+- **Un buzón.** Gmail, Outlook o Microsoft 365, iCloud, Fastmail, Yahoo, Zoho, Yandex o cualquier servicio que hable IMAP y SMTP.
 
 Si estás en Free o Go, la misma bandeja y la misma URL ya funcionan en [Claude](/docs/claude), [Cursor](/docs/cursor), [VS Code](/docs/vscode) y los demás [clientes compatibles](/docs/clients).
 
@@ -31,6 +29,10 @@ Gmail se conecta de forma predeterminada con una contraseña de aplicación de G
 ### iCloud, Fastmail, Yahoo y Zoho
 
 Estos proveedores piden una contraseña específica de aplicación, no la que escribes en la web. Créala en el proveedor, elige el proveedor en MCP Emails y pégala. La [guía de iCloud, Fastmail e IMAP](/blog/connect-icloud-fastmail-imap-to-claude) tiene los pasos exactos.
+
+### Outlook y Microsoft 365
+
+Outlook se conecta con Iniciar sesión con Microsoft, no con una contraseña de aplicación: elige **Outlook**, haz clic en **Conectar con Microsoft** y aprueba. Las cuentas personales de Outlook.com, Hotmail, Live y MSN se conectan directamente. Las cuentas de trabajo o educativas de Microsoft 365 pueden necesitar antes que un administrador de TI apruebe la aplicación una sola vez para toda la organización; el panel te da un enlace para enviárselo. La [guía de Outlook y Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) tiene los detalles.
 
 ### Cualquier otro buzón IMAP
 

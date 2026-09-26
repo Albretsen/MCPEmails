@@ -114,7 +114,8 @@
     "mcpCopyTitle": "Copy your MCP endpoint URL"
   },
   "connect": {
-    "subOutlook": "OAuth 2.0 · Microsoft 365",
+    "subOutlook": "Outlook.com · Microsoft 365",
+    "hintOutlook": "Outlook.com, Hotmail, Live and MSN accounts sign in straight away. A work or school Microsoft 365 account may need your IT admin to approve MCP Emails once; if Microsoft asks for that, we give you a link to send them.",
     "comingSoon": "Coming soon",
     "subFastmail": "App password",
     "subAppPassword": "App password",
@@ -226,7 +227,7 @@
     "smtpPortLabel": "SMTP port",
     "passwordLabel": "Password",
     "appPasswordLabel": "App password",
-    "passwordHint": "Use your mailbox password. If your provider has 2-step verification (e.g. Gmail, Outlook, iCloud), generate an app password instead. The credential is encrypted before storage.",
+    "passwordHint": "Use your mailbox password. If your provider has 2-step verification (e.g. Gmail, iCloud, Yahoo), generate an app password instead. The credential is encrypted before storage.",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "cancel": "Cancel",

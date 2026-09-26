@@ -31,7 +31,7 @@
         "Leer, buscar, organizar, redactar, programar y enviar",
         "Aprobación antes de enviar",
         "Analíticas de uso",
-        "Gmail, iCloud, Fastmail y cualquier IMAP",
+        "Gmail, Outlook, iCloud, Fastmail y cualquier IMAP",
         "Claves de API ilimitadas",
         "Soporte de la comunidad"
       ]
@@ -102,6 +102,7 @@
         "label": "Proveedores de correo",
         "rows": {
           "gmail": "Gmail (OAuth)",
+          "outlook": "Outlook / Microsoft 365 (inicio de sesión con Microsoft)",
           "fastmail": "Fastmail (contraseña de aplicación)",
           "appPassword": "iCloud, Yahoo, Zoho, Yandex (contraseña de aplicación)",
           "imap": "Cualquier buzón IMAP / SMTP"
@@ -195,7 +196,7 @@
       },
       {
         "q": "¿Qué proveedores de correo son compatibles?",
-        "a": "Gmail usa OAuth 2.0. Fastmail se conecta con una contraseña de aplicación. iCloud, Yahoo, Zoho y Yandex se conectan con una contraseña específica de aplicación, y cualquier otro buzón funciona mediante el conector IMAP / SMTP genérico."
+        "a": "Gmail usa OAuth 2.0. Outlook y Microsoft 365 se conectan iniciando sesión con Microsoft (OAuth): las cuentas personales se conectan directamente, y una cuenta profesional o educativa puede necesitar que su administrador de TI apruebe la aplicación una vez. Fastmail se conecta con una contraseña de aplicación. iCloud, Yahoo, Zoho y Yandex se conectan con una contraseña específica de aplicación, y cualquier otro buzón funciona mediante el conector IMAP / SMTP genérico."
       },
       {
         "q": "¿Hay política de reembolso?",
@@ -203,7 +204,7 @@
       },
       {
         "q": "¿Puedo auto-alojarlo en lugar de pagar?",
-        "a": "Sí. MCP Emails es código abierto bajo AGPL-3.0 y gratis para auto-alojar. Un stack de docker-compose ejecuta el mismo servidor MCP, con las credenciales de tu buzón cifradas bajo una clave que solo tú posees. El auto-alojamiento cubre buzones IMAP y SMTP; el OAuth de un clic para Gmail y Outlook, el panel, las funciones de equipo y el soporte permanecen en los planes de pago."
+        "a": "Sí. MCP Emails es código abierto bajo AGPL-3.0 y gratis para auto-alojar. Un stack de docker-compose ejecuta el mismo servidor MCP, con las credenciales de tu buzón cifradas bajo una clave que solo tú posees. El auto-alojamiento cubre buzones IMAP y SMTP; el inicio de sesión con Gmail y Outlook (OAuth), el panel, las funciones de equipo y el soporte permanecen en los planes de pago."
       }
     ]
   },

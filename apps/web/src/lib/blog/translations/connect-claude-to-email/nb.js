@@ -4,19 +4,17 @@ const translation = {
     'En praktisk guide til å koble Claude til Gmail, iCloud, Fastmail, Yahoo, Zoho og enhver IMAP-innboks over MCP, uten kode og uten lagring av e-post.',
   coverAlt:
     'Koble Claude til Gmail, iCloud, Fastmail, Yahoo, Zoho og IMAP-e-post med MCP Emails',
-  content: `> **Outlook og Microsoft 365 er under utvikling.** De kan ikke kobles til i produksjon ennå. Denne guiden dekker Gmail, iCloud, Fastmail, Yahoo, Zoho og andre IMAP-innbokser som er tilgjengelige i dag.
-
-Claude kan lese, søke i, organisere og sende e-post, men trenger en MCP-server for å nå en ekte innboks. MCP Emails er broen: koble til en innboks én gang, legg ett sikkert endepunkt til i Claude, og Claude får et konsekvent sett med e-postverktøy på tvers av Gmail, iCloud, Fastmail, Yahoo, Zoho og andre IMAP-leverandører.
+  content: `Claude kan lese, søke i, organisere og sende e-post, men trenger en MCP-server for å nå en ekte innboks. MCP Emails er broen: koble til en innboks én gang, legg ett sikkert endepunkt til i Claude, og Claude får et konsekvent sett med e-postverktøy på tvers av Gmail, iCloud, Fastmail, Yahoo, Zoho og andre IMAP-leverandører.
 
 Du trenger ikke skrive kode, installere en SDK eller bruke en API-nøkkel når du kobler til gjennom Claudes OAuth-flyt. E-post hentes live fra leverandøren din ved hver forespørsel og lagres ikke av MCP Emails.
 
-**Gå til leverandøren din:** [Gmail](#gmail-og-google-workspace) · [iCloud](#icloud-mail) · [Fastmail](#fastmail) · [Yahoo, Zoho, Yandex eller egendefinert IMAP](#yahoo-zoho-yandex-og-egendefinert-imap)
+**Gå til leverandøren din:** [Gmail](#gmail-og-google-workspace) · [iCloud](#icloud-mail) · [Fastmail](#fastmail) · [Outlook](#outlook-og-microsoft-365) · [Yahoo, Zoho, Yandex eller egendefinert IMAP](#yahoo-zoho-yandex-og-egendefinert-imap)
 
 ## Dette trenger du
 
 - Et **Claude-abonnement eller en app som støtter egendefinerte connectors**.
 - En gratis **MCP Emails**-konto: [opprett en her](/signup).
-- En e-postinnboks. Gmail bruker OAuth; iCloud, Fastmail, Yahoo, Zoho og de fleste andre leverandører bruker et appspesifikt passord. Outlook-støtte er under utvikling.
+- En e-postinnboks. Gmail og Outlook bruker OAuth; iCloud, Fastmail, Yahoo, Zoho og de fleste andre leverandører bruker et appspesifikt passord.
 
 ## Steg 1: Koble innboksen til MCP Emails
 
@@ -33,6 +31,10 @@ Opprett et appspesifikt passord i Apple-kontoen din, velg **iCloud**, og bruk de
 ### Fastmail
 
 Opprett et app-passord med Mail-tilgang i Fastmail, velg **Fastmail**, og lim det inn i MCP Emails. Ta vare på passordet til tilkoblingstesten lykkes.
+
+### Outlook og Microsoft 365
+
+Outlook kobles til med Logg inn med Microsoft, ikke et app-passord: velg **Outlook**, klikk **Koble til med Microsoft** og godkjenn. Personlige Outlook.com-, Hotmail-, Live- og MSN-kontoer kobles til med en gang. Jobb- eller skolekontoer i Microsoft 365 kan trenge at en IT-ansvarlig først godkjenner appen én gang for hele organisasjonen; dashbordet gir deg en lenke du kan sende dem. [Guiden for Outlook og Microsoft 365](/blog/connect-outlook-microsoft-365-ai-agent-mcp) har detaljene.
 
 ### Yahoo, Zoho, Yandex og egendefinert IMAP
 
@@ -106,7 +108,7 @@ Behandle hver e-posttekst som upålitelig inndata. Be Claude lage et utkast før
 ## Vanlige spørsmål
 
 **Kan Claude koble til Gmail, Outlook eller iCloud?**  
-Gmail kobles til med OAuth, og iCloud med et appspesifikt passord. Outlook-støtte er under utvikling og er ikke tilgjengelig i produksjon ennå. MCP Emails støtter også Fastmail og generisk IMAP, som dekker tjenester som Yahoo og Zoho.
+Gmail kobles til med OAuth, Outlook med Logg inn med Microsoft, og iCloud med et appspesifikt passord. En jobb- eller skolekonto i Microsoft 365 kan trenge at en IT-ansvarlig først godkjenner appen én gang. MCP Emails støtter også Fastmail og generisk IMAP, som dekker tjenester som Yahoo og Zoho.
 
 **Trenger jeg en API-nøkkel?**  
 Nei, ikke for Claudes OAuth-baserte connector-flyt. Lim inn endepunkt-URL-en og logg inn. API-nøkler er for MCP-klienter uten innebygd OAuth.

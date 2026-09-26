@@ -19,7 +19,7 @@
       "coverage": {
         "tag": "覆盖范围",
         "h": "任意邮箱，不止 Gmail",
-        "p": "内置连接器通常只能连接一个邮箱：Gmail，有时还有 Outlook。它们无法接入 <b>Fastmail、iCloud、Yahoo、Zoho、Yandex</b> 或任何其他 <b>IMAP/SMTP</b> 账户。我们全部支持：Gmail 通过 OAuth 连接，其余通过应用专用密码或普通 IMAP 连接。"
+        "p": "内置连接器通常只能连接一个邮箱：Gmail，有时还有 Outlook。它们无法接入 <b>Fastmail、iCloud、Yahoo、Zoho、Yandex</b> 或任何其他 <b>IMAP/SMTP</b> 账户。我们全部支持：Gmail 通过 OAuth 连接，Outlook 和 Microsoft 365 通过 Microsoft 登录连接，其余通过应用专用密码或普通 IMAP 连接。"
       },
       "actions": {
         "tag": "真实操作",
@@ -64,7 +64,7 @@
     "items": [
       {
         "q": "Claude 或 ChatGPT 不是已经能用内置连接器读取我的 Gmail 吗？",
-        "a": "有时可以，但只针对单一服务商。mcpemails 可连接 Gmail、iCloud、Fastmail、Yahoo、Zoho、Yandex 以及任意 IMAP 邮箱，并执行真实操作：发送、回复、转发、定时、移动、复制、标记、归档和删除。同一个收件箱随后即可在每一个 MCP 客户端中使用，而不局限于某一家厂商的应用。"
+        "a": "有时可以，但只针对单一服务商。mcpemails 可连接 Gmail、Outlook、iCloud、Fastmail、Yahoo、Zoho、Yandex 以及任意 IMAP 邮箱，并执行真实操作：发送、回复、转发、定时、移动、复制、标记、归档和删除。同一个收件箱随后即可在每一个 MCP 客户端中使用，而不局限于某一家厂商的应用。"
       },
       {
         "q": "内置连接器通常遗漏哪些邮箱？",
