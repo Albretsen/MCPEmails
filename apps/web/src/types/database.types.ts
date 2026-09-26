@@ -3412,6 +3412,7 @@ export type Database = {
           analytics_first_tool_provider: string | null
           analytics_first_tool_reported_at: string | null
           analytics_first_tool_used_at: string | null
+          card_diagnostics: boolean
           created_at: string
           deleted_at: string | null
           display_name: string
@@ -3455,6 +3456,7 @@ export type Database = {
           analytics_first_tool_provider?: string | null
           analytics_first_tool_reported_at?: string | null
           analytics_first_tool_used_at?: string | null
+          card_diagnostics?: boolean
           created_at?: string
           deleted_at?: string | null
           display_name: string
@@ -3498,6 +3500,7 @@ export type Database = {
           analytics_first_tool_provider?: string | null
           analytics_first_tool_reported_at?: string | null
           analytics_first_tool_used_at?: string | null
+          card_diagnostics?: boolean
           created_at?: string
           deleted_at?: string | null
           display_name?: string
@@ -4176,6 +4179,7 @@ export type Database = {
       }
       internal_account_domains: { Args: never; Returns: string[] }
       internal_account_emails: { Args: never; Returns: string[] }
+      invoke_outlook_token_refresh: { Args: never; Returns: undefined }
       invoke_synthetic_monitor: {
         Args: { controlled_failure?: boolean; mode: string }
         Returns: undefined

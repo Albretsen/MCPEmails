@@ -111,48 +111,39 @@ SELECT throws_ok(
 
 -- 1c. Charlie cannot update Dave's inbox
 -- (UPDATE on a row that doesn't match the USING predicate is silently skipped,
---  not an error — assert zero rows were changed)
-SELECT is(
-  (
-    WITH update_result AS (
-      UPDATE public.inboxes
-      SET    display_name = 'hacked'
-      WHERE  id = 'dd111111-0000-0000-0000-000000000002'
-      RETURNING id
-    )
-    SELECT count(*)::int FROM update_result
-  ),
-  0,
+--  not an error — assert zero rows were changed. is_empty runs the statement
+--  itself: Postgres refuses a data-modifying WITH nested in a subquery, which
+--  is how these four checks were written until 2026-09-26 and why this file
+--  died at 1c without reaching 1c-3.)
+SELECT is_empty(
+  $$
+    UPDATE public.inboxes
+    SET    display_name = 'hacked'
+    WHERE  id = 'dd111111-0000-0000-0000-000000000002'
+    RETURNING id
+  $$,
   '[inboxes] Charlie cannot UPDATE Dave''s inbox (0 rows affected)'
 );
 
 -- 1d. Charlie cannot update Dave's API key
-SELECT is(
-  (
-    WITH upd AS (
-      UPDATE public.api_keys
-      SET    name = 'hacked'
-      WHERE  id = 'dd222222-0000-0000-0000-000000000002'
-      RETURNING id
-    )
-    SELECT count(*)::int FROM upd
-  ),
-  0,
+SELECT is_empty(
+  $$
+    UPDATE public.api_keys
+    SET    name = 'hacked'
+    WHERE  id = 'dd222222-0000-0000-0000-000000000002'
+    RETURNING id
+  $$,
   '[api_keys] Charlie cannot UPDATE Dave''s key (0 rows affected)'
 );
 
 -- 1e. Charlie cannot update Dave's workspace
-SELECT is(
-  (
-    WITH upd AS (
-      UPDATE public.workspaces
-      SET    display_name = 'hacked'
-      WHERE  id = 'dd000000-0000-0000-0000-000000000002'
-      RETURNING id
-    )
-    SELECT count(*)::int FROM upd
-  ),
-  0,
+SELECT is_empty(
+  $$
+    UPDATE public.workspaces
+    SET    display_name = 'hacked'
+    WHERE  id = 'dd000000-0000-0000-0000-000000000002'
+    RETURNING id
+  $$,
   '[workspaces] Charlie cannot UPDATE Dave''s workspace (0 rows affected)'
 );
 
@@ -204,17 +195,13 @@ SELECT throws_ok(
 );
 
 -- 2b. Charlie cannot remove Dave from his own workspace
-SELECT is(
-  (
-    WITH del AS (
-      DELETE FROM public.workspace_members
-      WHERE  workspace_id = 'dd000000-0000-0000-0000-000000000002'
-        AND  user_id      = 'd2000000-0000-0000-0000-000000000002'
-      RETURNING workspace_id
-    )
-    SELECT count(*)::int FROM del
-  ),
-  0,
+SELECT is_empty(
+  $$
+    DELETE FROM public.workspace_members
+    WHERE  workspace_id = 'dd000000-0000-0000-0000-000000000002'
+      AND  user_id      = 'd2000000-0000-0000-0000-000000000002'
+    RETURNING workspace_id
+  $$,
   '[workspace_members] Charlie cannot DELETE Dave''s membership (0 rows)'
 );
 

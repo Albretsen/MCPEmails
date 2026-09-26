@@ -292,20 +292,23 @@ SELECT is(
   '[activity_log] Alice cannot see Bob''s activity'
 );
 
--- 6n. Alice sees her auth_logs entry
-SELECT is(
-  (SELECT count(*)::int FROM public.auth_logs
-   WHERE id = 'a7777777-0000-0000-0000-000000000001'),
-  1,
-  '[auth_logs] Alice sees her own auth log'
+-- 6n/6o. auth_logs is service-role only. 20260603202232_harden_grants revoked
+-- every anon/authenticated privilege on it (the app writes it with the service
+-- client and never reads it as a user), so the isolation to assert is no
+-- access at all, not "own rows only". Until 2026-09-26 these two still expected
+-- Alice to read her own row, which aborted the file here with 42501.
+SELECT throws_ok(
+  $$SELECT count(*) FROM public.auth_logs WHERE id = 'a7777777-0000-0000-0000-000000000001'$$,
+  '42501',
+  NULL,
+  '[auth_logs] Alice cannot read even her own auth log (service-role only)'
 );
 
--- 6o. Alice cannot see Bob's auth_logs entry
-SELECT is(
-  (SELECT count(*)::int FROM public.auth_logs
-   WHERE id = 'b8888888-0000-0000-0000-000000000001'),
-  0,
-  '[auth_logs] Alice cannot see Bob''s auth log'
+SELECT throws_ok(
+  $$SELECT count(*) FROM public.auth_logs WHERE id = 'b8888888-0000-0000-0000-000000000001'$$,
+  '42501',
+  NULL,
+  '[auth_logs] Alice cannot read Bob''s auth log'
 );
 
 -- 6p. oauth_clients are publicly readable
