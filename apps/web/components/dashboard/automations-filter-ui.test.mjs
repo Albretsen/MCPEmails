@@ -249,14 +249,16 @@ test('a branded IMAP connector is judged as IMAP, not as its brand', async (t) =
   assert.equal(saveButton(dialog).disabled, true);
 });
 
-test('Outlook loses its whole $filter to a free-text criterion, and the form names every field', async (t) => {
+test('Outlook runs flagged alone, loses its whole $filter to a free-text criterion, and the form names every field', async (t) => {
   const view = await renderAutomations(t);
   const dialog = await openForm(view);
 
   await choose(selectInbox(dialog), 'ib-0003');
-  // Flagged alone: Graph has no usable predicate for it in $search or $filter.
+  // Flagged alone runs: Outlook filters on flag/flagStatus in $filter since
+  // 2026-09-25 (the rule side is pinned in rules.test.ts).
   await toggleFilter(dialog, modal.filterFlagged);
-  assert.ok(dialog.textContent.includes(refusal([modal.filterFlagged], modal.dialectOutlook)));
+  assert.equal(dialog.textContent.includes(REFUSAL_OPENING), false);
+  assert.equal(saveButton(dialog).disabled, false);
 
   // Now the larger drop. Graph refuses to combine $search and $filter on
   // /messages, so a subject search abandons the whole $filter and takes
