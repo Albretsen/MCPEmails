@@ -800,22 +800,35 @@ Deno.test("localised archive names match case-insensitively, across pages, in pr
   assertEquals(id, "f-archive", "'Archive' outranks 'Arkiv' when both exist");
 });
 
-Deno.test("with no archive folder under any known name, one is created as the last resort", async () => {
-  let id = "";
+Deno.test("with no archive folder under any known name, it refuses and NEVER creates one", async () => {
+  let err: unknown;
   const calls = await withFetch(
     [
       () => json(404, { error: { code: "ErrorFolderNotFound", message: "not found" } }),
       () => json(200, { value: [{ id: "f-inbox", displayName: "Inbox" }] }),
-      () => json(201, { id: "new-archive", displayName: "Archive" }),
     ],
     async () => {
-      id = await resolveOutlookArchiveFolderId("tok");
+      try {
+        await resolveOutlookArchiveFolderId("tok");
+      } catch (e) {
+        err = e;
+      }
     },
   );
-  assertEquals(id, "new-archive");
-  assertEquals(calls[2].method, "POST");
-  assertEquals(calls[2].url, `${GRAPH_BASE}/me/mailFolders`);
-  assertEquals(bodyJson(calls[2]), { displayName: "Archive" });
+  assertEquals(calls.length, 2);
+  assert(calls.every((c) => c.method === "GET"), "no POST: an archive request must not create a folder");
+  assert(err instanceof OutlookGraphError);
+  assertEquals((err as OutlookGraphError).status, 404);
+  assertStringIncludes((err as Error).message, "does not exist");
+  assertStringIncludes((err as Error).message, "no folder was created");
+});
+
+Deno.test("outlook-graph.ts: the archive resolver has no create path left", async () => {
+  const src = await Deno.readTextFile(new URL("./outlook-graph.ts", import.meta.url));
+  const fn = src.slice(src.indexOf("export async function resolveOutlookArchiveFolderId("));
+  const body = fn.slice(0, fn.indexOf("\n}\n") + 3);
+  assert(!body.includes('"POST"'), "no POST in resolveOutlookArchiveFolderId");
+  assert(!body.includes('displayName: "Archive"'), "never creates 'Archive'");
 });
 
 // ── send refusals ────────────────────────────────────────────────────────────
@@ -858,59 +871,127 @@ Deno.test("send failures: 401 is auth, 429 (after retries) is quota, 5xx stays a
 
 // ── $search ids ──────────────────────────────────────────────────────────────
 
-Deno.test("search ids are re-read in $batch GETs of 20 that carry the ImmutableId Prefer", async () => {
-  const ids = Array.from({ length: 25 }, (_, i) => `AQMkAD-${i}`);
+// Shapes below are the ones Graph returned live on 2026-09-25 (outlook.com,
+// ids shortened): $search hits carry 136-char AQMkAD… ids; a GET BY ID with
+// the Prefer header echoes that same AQMkAD… id back (the bug the first fix
+// had); a $filter collection query with the header returns 68-char AAkALg…
+// immutable ids; batch legs come back out of order, each with its own
+// Preference-Applied header.
+const AQMK = (n: number) => `AQMkADAwATM3ZmYBLWJhZWUALTU${n}`.padEnd(136, "A");
+const AAKA = (n: number) => `AAkALgAAAAAAHYQDEapmEc2byACqAC${n}`.padEnd(68, "A");
+
+Deno.test("search hits are looked up by internetMessageId in their own folder, never re-read by id", async () => {
+  const hits = Array.from({ length: 25 }, (_, i) => ({
+    id: AQMK(i),
+    internetMessageId: `<m${i}'x@mail.example>`,
+    parentFolderId: `AQMkFOLDER${i % 2}`,
+    receivedDateTime: `2026-09-25T10:${String(i).padStart(2, "0")}:00Z`,
+  }));
   let out = new Map<string, string>();
   const calls = await withFetch(
     (call) => {
       const reqs = (bodyJson(call) as { requests: { id: string; url: string }[] }).requests;
+      // Out of order, as live.
       return json(200, {
-        responses: reqs.map((r) => ({
-          id: r.id,
-          status: 200,
-          body: { id: `IMM-${decodeURIComponent(r.url.split("/")[3].split("?")[0])}` },
-        })),
+        responses: [...reqs].reverse().map((r) => {
+          const imid = decodeURIComponent(r.url.split("$filter=")[1].split("&")[0])
+            .match(/'(.*)'$/)![1].replace(/''/g, "'");
+          const n = Number(imid.match(/^<m(\d+)/)![1]);
+          return {
+            id: r.id,
+            status: 200,
+            headers: { "Preference-Applied": "IdType=ImmutableId", "Content-Type": "application/json" },
+            body: { value: [{ id: AAKA(n), receivedDateTime: hits[n].receivedDateTime }] },
+          };
+        }),
       });
     },
     async () => {
-      out = await graphImmutableMessageIds("tok", ids);
+      out = await graphImmutableMessageIds("tok", hits);
     },
   );
-  assertEquals(calls.length, 2);
+  assertEquals(calls.length, 2, "20 + 5");
   assertEquals(calls[0].url, `${GRAPH_BASE}/$batch`);
   assertEquals(calls[0].method, "POST");
   const first = bodyJson(calls[0]) as { requests: { method: string; url: string; headers: Record<string, string> }[] };
   assertEquals(first.requests.length, 20);
   assertEquals(first.requests[0].method, "GET");
-  assertEquals(first.requests[0].url, "/me/messages/AQMkAD-0?$select=id");
   assertEquals(first.requests[0].headers.Prefer, IMMUTABLE_ID_PREFER);
+  assertStringIncludes(first.requests[0].url, "/me/mailFolders/AQMkFOLDER0/messages?$filter=");
+  assertStringIncludes(
+    decodeURIComponent(first.requests[0].url),
+    "internetMessageId eq '<m0''x@mail.example>'",
+  );
+  for (const r of first.requests) {
+    assert(!r.url.startsWith("/me/messages/AQMk"), "a GET by id echoes the mutable id: never use it");
+  }
   assertEquals((bodyJson(calls[1]) as { requests: unknown[] }).requests.length, 5);
-  assertEquals(out.get("AQMkAD-0"), "IMM-AQMkAD-0");
-  assertEquals(out.get("AQMkAD-24"), "IMM-AQMkAD-24");
+  for (let i = 0; i < 25; i++) assertEquals(out.get(AQMK(i)), AAKA(i));
 });
 
-Deno.test("a throttled batch leg is retried alone; a vanished message keeps its search id", async () => {
+Deno.test("a lookup that echoes the search id (the by-id re-read) or is ambiguous keeps the search id", async () => {
   let out = new Map<string, string>();
+  const hits = [
+    { id: AQMK(0), internetMessageId: "<a@x>", parentFolderId: "F", receivedDateTime: "2026-09-25T10:00:00Z" },
+    { id: AQMK(1), internetMessageId: "<b@x>", parentFolderId: "F", receivedDateTime: "2026-09-25T11:00:00Z" },
+    { id: AQMK(2), internetMessageId: "<c@x>", parentFolderId: "F", receivedDateTime: "2026-09-25T12:00:00Z" },
+    { id: AQMK(3), internetMessageId: null, parentFolderId: "F" },
+  ];
+  const calls = await withFetch(
+    [
+      () =>
+        json(200, {
+          responses: [
+            // Two copies in one folder: receivedDateTime picks the right one.
+            { id: "0", status: 200, body: { value: [
+              { id: AAKA(90), receivedDateTime: "2026-09-24T10:00:00Z" },
+              { id: AAKA(0), receivedDateTime: "2026-09-25T10:00:00Z" },
+            ] } },
+            // Two copies, same time: no guess.
+            { id: "1", status: 200, body: { value: [
+              { id: AAKA(91), receivedDateTime: "2026-09-25T11:00:00Z" },
+              { id: AAKA(92), receivedDateTime: "2026-09-25T11:00:00Z" },
+            ] } },
+            // Deleted since the search.
+            { id: "2", status: 200, body: { value: [] } },
+          ],
+        }),
+    ],
+    async () => {
+      out = await graphImmutableMessageIds("tok", hits);
+    },
+  );
+  assertEquals(calls.length, 1, "no lookup for a hit without internetMessageId");
+  assertEquals(out.get(AQMK(0)), AAKA(0));
+  assertEquals(out.get(AQMK(1)), AQMK(1));
+  assertEquals(out.get(AQMK(2)), AQMK(2));
+  assertEquals(out.get(AQMK(3)), AQMK(3));
+});
+
+Deno.test("a throttled batch leg is retried alone as the same $filter query", async () => {
+  let out = new Map<string, string>();
+  const hits = ["a", "b", "c"].map((k, i) => ({ id: AQMK(i), internetMessageId: `<${k}@x>`, parentFolderId: "F" }));
   const calls = await withFetch(
     [
       () =>
         json(200, {
           responses: [
             { id: "1", status: 429, body: {} },
-            { id: "0", status: 200, body: { id: "IMM-a" } },
+            { id: "0", status: 200, body: { value: [{ id: AAKA(0) }] } },
             { id: "2", status: 404, body: { error: { code: "ErrorItemNotFound" } } },
           ],
         }),
-      () => json(200, { id: "IMM-b" }),
+      () => json(200, { value: [{ id: AAKA(1) }] }),
     ],
     async () => {
-      out = await graphImmutableMessageIds("tok", ["a", "b", "c"]);
+      out = await graphImmutableMessageIds("tok", hits);
     },
   );
-  assertEquals(out.get("a"), "IMM-a");
-  assertEquals(out.get("b"), "IMM-b");
-  assertEquals(out.get("c"), "c");
-  assertEquals(calls[1].url, `${GRAPH_BASE}/me/messages/b?$select=id`);
+  assertEquals(out.get(AQMK(0)), AAKA(0));
+  assertEquals(out.get(AQMK(1)), AAKA(1));
+  assertEquals(out.get(AQMK(2)), AQMK(2));
+  assertEquals(calls[1].method, "GET");
+  assertStringIncludes(calls[1].url, `${GRAPH_BASE}/me/mailFolders/F/messages?$filter=`);
   assertStringIncludes(calls[1].headers["prefer"], IMMUTABLE_ID_PREFER);
 });
 
@@ -1106,7 +1187,27 @@ Deno.test("index.ts: Outlook search returns immutable ids and real folder labels
   assertStringIncludes(search, "graphImmutableMessageIds(accessToken");
   assertStringIncludes(search, "graphFolderLabels(");
   assertStringIncludes(search, "id: immutableIds.get(msg.id) ?? msg.id");
+  assertStringIncludes(search, "graphImmutableMessageIds(accessToken, merged.page.map(({ message }) => message))");
+  assertStringIncludes(search, "internetMessageId");
   assert(!search.includes('folder: "INBOX", url: "/me/messages"'), "the whole-mailbox leg is not labelled INBOX");
+});
+
+Deno.test("index.ts: Outlook list rows carry the folder label, not the raw id or well-known name", async () => {
+  const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+  const list = indexFunction(src, "listOutlookMessages");
+  assertStringIncludes(list, "graphFolderLabels(accessToken, [c.id])");
+  assertStringIncludes(list, "folder: label || folder,");
+  assert(!/\n\s+folder,\n/.test(list), "the argument is not echoed back as the label");
+});
+
+Deno.test("index.ts: a plain Outlook send goes draft + send and returns the draft's real id", async () => {
+  const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+  const send = indexFunction(src, "sendOutlookMessage");
+  assert(!send.includes('"/me/sendMail"'), "sendMail answers 202 with no id");
+  assertStringIncludes(send, "graphCreateDraft(accessToken, message)");
+  assertStringIncludes(send, "graphSendDraft(accessToken, draftId)");
+  assertStringIncludes(send, "message_id: draftId");
+  assert(!send.includes('message_id: ""'), "never an empty id");
 });
 
 Deno.test("index.ts: the Outlook list counts from the folder and learns has_more from one extra row", async () => {

@@ -3728,7 +3728,8 @@ const STRUCTURED_SEARCH_PROPERTIES: Record<string, Record<string, unknown>> = {
 const INCLUDE_FOLDERS_DESCRIPTION =
   "Folders to search, each an alias, a folder or label name, or a folder id " +
   "(names and aliases resolve for you). IMAP covers INBOX only unless you name " +
-  "archive or sent folders; Gmail and Outlook always search everything.";
+  "archive or sent folders; Gmail and Outlook search every folder except the " +
+  "trash (Deleted Items on Outlook; Gmail also skips Spam), so name it to include it.";
 
 /** Description for the legacy `query` raw escape-hatch field. */
 const RAW_QUERY_DESCRIPTION =
@@ -10554,8 +10555,10 @@ interface OutlookMessage {
   bodyPreview?: string;
   isRead?: boolean;
   hasAttachments?: boolean;
-  /** Selected by the search; labels each row with its real folder. */
+  /** Selected by the search and list; labels each row with its real folder. */
   parentFolderId?: string;
+  /** Selected by the search; the key its immutable-id lookup filters on. */
+  internetMessageId?: string;
 }
 
 /**
@@ -10596,9 +10599,23 @@ async function listOutlookMessages(
   // The total comes from the folder's own counters, which Microsoft documents
   // as THE way to count a folder (instead of `$count` + `$filter isRead`):
   // exact, and one cheap GET issued beside the list.
-  const [resp, counts] = await Promise.all([
+  //
+  // The same GET names the folder's id, from which the rows get the folder
+  // label search already uses ("INBOX", "Arkiver/2024", …) instead of echoing
+  // the argument back as a raw id or a well-known name like "sentitems".
+  const [resp, { counts, label }] = await Promise.all([
     graphFetch(accessToken, `/me/mailFolders/${folderSegment}/messages?${params}`),
-    outlookFolderCounts(accessToken, folderSegment),
+    outlookFolderCounts(accessToken, folderSegment).then(async (c) => {
+      let label: string | undefined;
+      if (c?.id) {
+        try {
+          label = (await graphFolderLabels(accessToken, [c.id])).get(c.id);
+        } catch (e) {
+          if (e instanceof Error && e.name === "OutlookNoMailboxError") throw e;
+        }
+      }
+      return { counts: c, label };
+    }),
   ]);
 
   if (!resp.ok) throw await graphErrorFromResponse(resp, "Outlook list messages");
@@ -10625,7 +10642,7 @@ async function listOutlookMessages(
     preview: normalizePreview(msg.bodyPreview ?? ""),
     is_read: msg.isRead ?? true,
     has_attachments: msg.hasAttachments ?? false,
-    folder,
+    folder: label || folder,
     thread_id: msg.conversationId ?? msg.id,
   }));
 
@@ -10633,23 +10650,26 @@ async function listOutlookMessages(
   return { messages, total, total_is_estimate: false, has_more: hasMore, next_offset: offset + limit };
 }
 
-/** A folder's totalItemCount / unreadItemCount, or null when they cannot be read. */
+/**
+ * A folder's totalItemCount / unreadItemCount and its id, or null when they
+ * cannot be read.
+ */
 async function outlookFolderCounts(
   accessToken: string,
   folderSegment: string,
-): Promise<{ total: number; unread: number } | null> {
+): Promise<{ total: number; unread: number; id: string | null } | null> {
   try {
     const r = await graphFetch(
       accessToken,
-      `/me/mailFolders/${folderSegment}?$select=totalItemCount,unreadItemCount`,
+      `/me/mailFolders/${folderSegment}?$select=id,totalItemCount,unreadItemCount`,
     );
     if (!r.ok) {
       await r.body?.cancel().catch(() => {});
       return null;
     }
-    const d = (await r.json()) as { totalItemCount?: number; unreadItemCount?: number };
+    const d = (await r.json()) as { id?: string; totalItemCount?: number; unreadItemCount?: number };
     if (typeof d.totalItemCount !== "number" || typeof d.unreadItemCount !== "number") return null;
-    return { total: d.totalItemCount, unread: d.unreadItemCount };
+    return { total: d.totalItemCount, unread: d.unreadItemCount, id: d.id ?? null };
   } catch (e) {
     if (e instanceof Error && e.name === "OutlookNoMailboxError") throw e;
     return null;
@@ -14325,26 +14345,27 @@ async function sendGmailMessage(
 // ---------------------------------------------------------------------------
 
 /**
- * Sends an email via the Microsoft Graph API.
+ * Sends an email via the Microsoft Graph API, always as draft + send:
+ * `POST /me/messages` (a draft carrying the message and, up to ~3 MB encoded,
+ * its attachments), any larger attachment added on its own (an upload session
+ * above 3 MB), then `POST /me/messages/{id}/send`.
  *
- * Two routes, chosen by attachment size:
- *   - up to ~3 MB of encoded attachments: one `POST /me/sendMail` with a
- *     structured JSON message. 202 Accepted, no body, so NO message id exists
- *     to report and `message_id` is "" (never a fabricated one).
- *   - larger: `POST /me/messages` (a draft), each attachment added on its own
- *     (a plain POST below 3 MB, an upload session above), then
- *     `POST /me/messages/{id}/send`. sendMail's JSON is capped at 4 MB per
- *     request, so this is the only way a 25 MB attachment can go out. The
- *     draft's immutable id survives the send and names the Sent Items copy,
- *     so this route DOES report a real `message_id`.
+ * Until 2026-09-25 a send with small or no attachments went through one
+ * `POST /me/sendMail`. That answers 202 with no body, so the result carried
+ * `message_id: ""` and `thread_id: ""` (seen live on outlook.com): nothing to
+ * read, reply to or confirm. A draft's immutable id survives the send and names
+ * the Sent Items copy (Microsoft's immutable-id doc), and the draft carries its
+ * conversationId, so this route returns both for real. The cost is one extra
+ * Graph round trip (the create); the attachments ride in the create's JSON, so
+ * a small-attachment send is still two requests, not three.
  */
 async function sendOutlookMessage(
   inbox: InboxRow,
   params: SendEmailParams,
 ): Promise<SendEmailResult> {
-  // STAGE "compose" (see send-stages.ts): the token and the Graph message body.
-  // The sendMail POST below is transmission; nothing above it is.
-  const { accessToken, message, viaDraft } = await preTransmission("compose", async () => {
+  // STAGE "compose" (see send-stages.ts): the token, the Graph message body and
+  // the draft. The /send POST below is transmission; nothing above it is.
+  const { accessToken, message, separateUpload } = await preTransmission("compose", async () => {
     const accessToken = await withFreshOutlookToken(inbox);
 
     const toRecipients = params.to.map((email) => {
@@ -14402,14 +14423,15 @@ async function sendOutlookMessage(
       }];
     }
 
-    // Large attachments cannot ride in the sendMail JSON (4 MB per request):
-    // they go through a draft and an upload session below instead.
-    const viaDraft = needsDraftUpload(params.attachments);
-    if (params.attachments.length > 0 && !viaDraft) {
+    // Small attachments ride in the draft's create JSON; past ~3 MB encoded
+    // (a Graph request is capped at 4 MB) each one is added to the draft on
+    // its own, through an upload session when large.
+    const separateUpload = needsDraftUpload(params.attachments);
+    if (params.attachments.length > 0 && !separateUpload) {
       message.attachments = params.attachments.map(graphFileAttachment);
     }
 
-    return { accessToken, message, viaDraft };
+    return { accessToken, message, separateUpload };
   });
 
   const result = {
@@ -14420,56 +14442,42 @@ async function sendOutlookMessage(
     status: "sent" as const,
   };
 
-  if (viaDraft) {
-    // STAGE "compose" still: the draft and its attachments exist only in the
-    // sender's Drafts folder until /send. A failure here deletes the draft and
-    // is not_sent, so a retry is safe.
-    const { id: draftId, conversationId } = await preTransmission("compose", async () => {
-      const draft = await graphCreateDraft(accessToken, message);
+  // STAGE "compose" still: the draft and its attachments exist only in the
+  // sender's Drafts folder until /send. A failure here deletes the draft and
+  // is not_sent, so a retry is safe.
+  const { id: draftId, conversationId } = await preTransmission("compose", async () => {
+    const draft = await graphCreateDraft(accessToken, message);
+    if (separateUpload) {
       try {
         await graphAddAttachments(accessToken, draft.id, params.attachments);
       } catch (e) {
         await graphDeleteDraftQuietly(accessToken, draft.id);
         throw e;
       }
-      return draft;
-    });
-    const sendResp = await graphSendDraft(accessToken, draftId);
-    if (!sendResp.ok) {
-      // 4xx: Microsoft refused the submission, nothing was sent (see
-      // graphSendFailure), and the draft we made for it goes too. A 5xx keeps
-      // the draft: if the send did happen, that id IS the Sent Items copy.
-      const err = await graphSendFailure(sendResp, "Outlook send");
-      if (!(err instanceof OutlookGraphError)) await graphDeleteDraftQuietly(accessToken, draftId);
-      throw err;
     }
-    await sendResp.body?.cancel().catch(() => {});
-    // With `Prefer: IdType="ImmutableId"` a draft keeps its id after /send,
-    // and that id then names the copy in Sent Items (Microsoft's documented
-    // way to find a sent message). Real, fetchable — unlike sendMail below.
-    return {
-      message_id: draftId,
-      thread_id: conversationId ?? "",
-      sent_at: new Date().toISOString(),
-      ...result,
-    };
+    return draft;
+  });
+  const sendResp = await graphSendDraft(accessToken, draftId);
+  if (!sendResp.ok) {
+    // 4xx: Microsoft refused the submission, nothing was sent (see
+    // graphSendFailure), and the draft we made for it goes too. 429 after the
+    // bounded retries is quota_exceeded. 403 is a permission/policy/account
+    // refusal, NOT an expired sign-in. A 5xx keeps the draft: if the send did
+    // happen, that id IS the Sent Items copy.
+    const err = await graphSendFailure(sendResp, "Outlook send");
+    if (!(err instanceof OutlookGraphError)) await graphDeleteDraftQuietly(accessToken, draftId);
+    throw err;
   }
-
-  const resp = await graphJson(accessToken, "/me/sendMail", "POST", { message, saveToSentItems: true });
-
-  if (!resp.ok) {
-    // A 4xx is a definite refusal (not sent), carried with Graph's code and
-    // words; 429 after the bounded retries is quota_exceeded; a 5xx stays
-    // "unknown". 403 is a permission/policy/account refusal, NOT an expired
-    // sign-in. See graphSendFailure.
-    throw await graphSendFailure(resp, "Outlook send");
-  }
-  await resp.body?.cancel().catch(() => {});
-
-  // 202 Accepted — Graph's sendMail returns no body, so no provider message id
-  // is available. Return empty ids rather than a fabricated UUID that a caller
-  // could mistake for a fetchable Graph id.
-  return { message_id: "", thread_id: "", sent_at: new Date().toISOString(), ...result };
+  await sendResp.body?.cancel().catch(() => {});
+  // With `Prefer: IdType="ImmutableId"` a draft keeps its id after /send, and
+  // that id then names the copy in Sent Items (Microsoft's documented way to
+  // find a sent message).
+  return {
+    message_id: draftId,
+    thread_id: conversationId ?? draftId,
+    sent_at: new Date().toISOString(),
+    ...result,
+  };
 }
 
 
@@ -17430,7 +17438,9 @@ async function searchOutlookMessages(
   const accessToken = await withFreshOutlookToken(inbox);
 
   const select =
-    "id,conversationId,from,toRecipients,subject,receivedDateTime,bodyPreview,isRead,hasAttachments,parentFolderId";
+    "id,conversationId,from,toRecipients,subject,receivedDateTime,bodyPreview,isRead,hasAttachments,parentFolderId," +
+    // Needed only to look a $search hit up again for its immutable id.
+    "internetMessageId";
 
   // ── One request per listed folder ─────────────────────────────────────────
   // No folders listed keeps the whole-mailbox URL, which is the only case where
@@ -17541,12 +17551,14 @@ async function searchOutlookMessages(
 
   // ── Ids that survive a move, and the folder each row is really in ────────
   // $search ignores `Prefer: IdType="ImmutableId"` (live, 2026-09-25): its ids
-  // are default REST ids that 404 once the message moves. Only the page being
-  // returned is re-read, through graphImmutableMessageIds' $batch. A $filter
-  // or plain listing honours the header, so it needs no second pass.
+  // are default REST ids that 404 once the message moves, and re-reading one
+  // BY ID just echoes it back. Only the page being returned is looked up again
+  // as a $filter on internetMessageId in its own folder, which does honour the
+  // header (graphImmutableMessageIds). A $filter or plain listing honours the
+  // header already, so it needs no second pass.
   const [immutableIds, folderLabels] = await Promise.all([
     kql
-      ? graphImmutableMessageIds(accessToken, merged.page.map(({ message }) => message.id))
+      ? graphImmutableMessageIds(accessToken, merged.page.map(({ message }) => message))
       : Promise.resolve(new Map<string, string>()),
     graphFolderLabels(
       accessToken,
@@ -19896,8 +19908,8 @@ async function outlookPatchMessage(
 
 /**
  * Per-isolate cache of each Outlook inbox's archive folder id. A folder id is
- * stable for the folder's lifetime, so the lookup (and, on a mailbox that had
- * none, the create) happens once per isolate, not once per archived message.
+ * stable for the folder's lifetime, so the lookup happens once per isolate, not
+ * once per archived message. A failed lookup is not cached.
  */
 const outlookArchiveIdCache = new Map<string, string>();
 
@@ -19906,8 +19918,8 @@ const outlookArchiveIdCache = new Map<string, string>();
  * well-known `archive` answers 404 ErrorFolderNotFound on consumer mailboxes
  * that never had one provisioned, so it is resolved to a real folder id (an
  * existing top-level archive folder under its localised name, "Arkiver" in a
- * Norwegian mailbox, or as a last resort a created "Archive") by
- * resolveOutlookArchiveFolderId.
+ * Norwegian mailbox) by resolveOutlookArchiveFolderId, which refuses with a
+ * folder-missing error rather than ever creating a folder.
  * Every other value is already a folder id or a well-known name that always
  * exists, courtesy of resolveFolderId.
  */
@@ -19925,8 +19937,8 @@ async function outlookMoveDestination(
 }
 
 /**
- * Moves an Outlook message to its archive folder via Graph, creating the
- * folder on a mailbox that has none (see outlookMoveDestination).
+ * Moves an Outlook message to its archive folder via Graph (see
+ * outlookMoveDestination; a mailbox with none is refused, never given one).
  * Throws "outlook_auth_failed" on 401, "message_not_found" on 404.
  */
 async function outlookArchiveEmail(

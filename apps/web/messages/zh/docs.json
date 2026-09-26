@@ -160,11 +160,11 @@
         "text": "要在邮件任意位置匹配的自由文本，涵盖标头和正文（action 'search'）。",
         "unread": "action 'list' 和 'search'：true = 仅未读邮件；false = 仅已读邮件；省略则两者皆可。",
         "has_attachment": "action 'search'：true = 仅含附件的邮件。通用 IMAP 不支持（在那里被忽略）。",
-        "flagged": "action 'search'：true = 仅已标记/加星的邮件。Outlook/Graph 不支持（在那里被忽略）。",
+        "flagged": "action 'search'：true = 仅已标记/加星的邮件。",
         "since": "ISO 8601 日期或日期时间（action 'search'）；返回在该时刻当时或之后（>=）收到的邮件。例如 \"2026-06-01\"。",
         "before": "ISO 8601 日期或日期时间（action 'search'）；返回严格早于（<）该时刻收到的邮件。",
         "query": "提供商原生查询字符串（action 'search'，应急手段）。优先使用上面的结构化字段。在受支持处与它们组合使用；在 Fastmail 上被忽略。",
-        "include_folders": "将搜索限制在这些文件夹名称内（action 'search'）。在通用 IMAP 上，省略该字段时只搜索 INBOX；指定归档或已发送文件夹即可扩大范围。Gmail 和 Outlook 会搜索所有文件夹。"
+        "include_folders": "将搜索限制在这些文件夹名称内（action 'search'）。在通用 IMAP 上，省略该字段时只搜索 INBOX；指定归档或已发送文件夹即可扩大范围。Gmail 和 Outlook 会搜索除废纸篓以外的所有文件夹（Outlook 上为“已删除邮件”；Gmail 还会跳过垃圾邮件）；指定它即可包含在内。"
       }
     },
     "email_organize": {
@@ -195,11 +195,11 @@
         "text": "要在邮件任意位置匹配的自由文本，涵盖标头和正文。",
         "unread": "true = 仅未读；false = 仅已读；省略则两者皆可。",
         "has_attachment": "true = 仅含附件的邮件。通用 IMAP 不支持（在那里被忽略）。",
-        "flagged": "true = 仅已标记/加星的邮件。Outlook/Graph 不支持（在那里被忽略）。",
+        "flagged": "true = 仅已标记/加星的邮件。",
         "since": "ISO 8601 日期或日期时间；匹配在该时刻当时或之后（>=）收到的邮件。",
         "before": "ISO 8601 日期或日期时间；匹配严格早于（<）该时刻收到的邮件。",
         "query": "提供商原生查询字符串（应急手段）。优先使用上面的结构化字段。在 Fastmail 上被忽略。",
-        "include_folders": "将搜索限制在这些文件夹名称内。在通用 IMAP 上，省略该字段时只搜索 INBOX；指定归档或已发送文件夹即可扩大范围。Gmail 和 Outlook 会搜索所有文件夹。",
+        "include_folders": "将搜索限制在这些文件夹名称内。在通用 IMAP 上，省略该字段时只搜索 INBOX；指定归档或已发送文件夹即可扩大范围。Gmail 和 Outlook 会搜索除废纸篓以外的所有文件夹（Outlook 上为“已删除邮件”；Gmail 还会跳过垃圾邮件）；指定它即可包含在内。",
         "limit": "最多移动多少个匹配项。默认 500，最大 500。当搜索填满该上限时，结果中的 has_more 会说明是否还有匹配的邮件没有被处理。",
         "idempotency_key": "可选的不透明键（1–200 个字符），代表一次逻辑上的清理。仅在 24 小时内重试完全相同的调用时才可重复使用；参数不同的重复使用会被拒绝。"
       }
@@ -222,11 +222,11 @@
         "text": "要在邮件任意位置匹配的自由文本，涵盖标头和正文（search_and_delete）。",
         "unread": "搜索操作：true = 仅未读；false = 仅已读；省略则两者皆可。",
         "has_attachment": "搜索操作：true = 仅含附件的邮件。通用 IMAP 不支持（在那里被忽略）。",
-        "flagged": "搜索操作：true = 仅已标记/加星的邮件。Outlook/Graph 不支持（在那里被忽略）。",
+        "flagged": "搜索操作：true = 仅已标记/加星的邮件。",
         "since": "ISO 8601 日期或日期时间（搜索操作）；匹配在该时刻当时或之后（>=）收到的邮件。",
         "before": "ISO 8601 日期或日期时间（搜索操作）；匹配严格早于（<）该时刻收到的邮件。",
         "query": "提供商原生查询字符串（搜索操作，应急手段）。优先使用上面的结构化字段。在 Fastmail 上被忽略。",
-        "include_folders": "将搜索限制在这些文件夹名称内（搜索操作）。在通用 IMAP 上，省略该字段时只搜索 INBOX；指定归档或已发送文件夹即可扩大范围。Gmail 和 Outlook 会搜索所有文件夹。",
+        "include_folders": "将搜索限制在这些文件夹名称内（搜索操作）。在通用 IMAP 上，省略该字段时只搜索 INBOX；指定归档或已发送文件夹即可扩大范围。Gmail 和 Outlook 会搜索除废纸篓以外的所有文件夹（Outlook 上为“已删除邮件”；Gmail 还会跳过垃圾邮件）；指定它即可包含在内。",
         "limit": "对于 search_and_delete：要处理的最大匹配数。默认 500，最大 500。"
       }
     },

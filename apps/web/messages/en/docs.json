@@ -160,11 +160,11 @@
         "text": "Free text to match anywhere in the message, in headers and body (action 'search').",
         "unread": "Actions 'list' and 'search': true = only unread messages; false = only read messages; omit for both.",
         "has_attachment": "Action 'search': true = only messages with an attachment. Not supported on generic IMAP (ignored there).",
-        "flagged": "Action 'search': true = only flagged/starred messages. Not supported on Outlook/Graph (ignored there).",
+        "flagged": "Action 'search': true = only flagged/starred messages.",
         "since": "ISO 8601 date or datetime (action 'search'); return messages received on/after (>=) this instant. E.g. \"2026-06-01\".",
         "before": "ISO 8601 date or datetime (action 'search'); return messages received strictly before (<) this instant.",
         "query": "Raw provider-native query string (action 'search', escape hatch). Prefer the structured fields above. Combined with them where supported; ignored on Fastmail.",
-        "include_folders": "Restrict a search to these folder names (action 'search'). On generic IMAP, omitting it searches INBOX only; name your archive or sent folders to widen it. Gmail and Outlook search every folder."
+        "include_folders": "Restrict a search to these folder names (action 'search'). On generic IMAP, omitting it searches INBOX only; name your archive or sent folders to widen it. Gmail and Outlook search every folder except the trash (Deleted Items on Outlook; Gmail also skips Spam); name it to include it."
       }
     },
     "email_organize": {
@@ -195,11 +195,11 @@
         "text": "Free text to match anywhere in the message, in headers and body.",
         "unread": "true = only unread; false = only read; omit for either.",
         "has_attachment": "true = only messages with an attachment. Not supported on generic IMAP (ignored there).",
-        "flagged": "true = only flagged/starred messages. Not supported on Outlook/Graph (ignored there).",
+        "flagged": "true = only flagged/starred messages.",
         "since": "ISO 8601 date or datetime; match messages received on/after (>=) this instant.",
         "before": "ISO 8601 date or datetime; match messages received strictly before (<) this instant.",
         "query": "Raw provider-native query string (escape hatch). Prefer the structured fields above. Ignored on Fastmail.",
-        "include_folders": "Restrict the search to these folder names. On generic IMAP, omitting it searches INBOX only; name your archive or sent folders to widen it. Gmail and Outlook search every folder.",
+        "include_folders": "Restrict the search to these folder names. On generic IMAP, omitting it searches INBOX only; name your archive or sent folders to widen it. Gmail and Outlook search every folder except the trash (Deleted Items on Outlook; Gmail also skips Spam); name it to include it.",
         "limit": "Maximum number of matches to move. Default 500, max 500. When the search fills the limit, has_more in the result says whether matching messages were left behind.",
         "idempotency_key": "Optional opaque key (1–200 characters) for one logical sweep. Reuse it only to retry the exact same call within 24 hours; a reuse with different arguments is rejected."
       }
@@ -222,11 +222,11 @@
         "text": "Free text to match anywhere in the message, in headers and body (search_and_delete).",
         "unread": "Search action: true = only unread; false = only read; omit for either.",
         "has_attachment": "Search action: true = only messages with an attachment. Not supported on generic IMAP (ignored there).",
-        "flagged": "Search action: true = only flagged/starred messages. Not supported on Outlook/Graph (ignored there).",
+        "flagged": "Search action: true = only flagged/starred messages.",
         "since": "ISO 8601 date or datetime (search action); match messages received on/after (>=) this instant.",
         "before": "ISO 8601 date or datetime (search action); match messages received strictly before (<) this instant.",
         "query": "Raw provider-native query string (search action, escape hatch). Prefer the structured fields above. Ignored on Fastmail.",
-        "include_folders": "Restrict the search to these folder names (search action). On generic IMAP, omitting it searches INBOX only; name your archive or sent folders to widen it. Gmail and Outlook search every folder.",
+        "include_folders": "Restrict the search to these folder names (search action). On generic IMAP, omitting it searches INBOX only; name your archive or sent folders to widen it. Gmail and Outlook search every folder except the trash (Deleted Items on Outlook; Gmail also skips Spam); name it to include it.",
         "limit": "For search_and_delete: maximum number of matches to act on. Default 500, max 500."
       }
     },

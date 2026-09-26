@@ -338,7 +338,7 @@
             "type": "string"
           },
           "flagged": {
-            "description": "true = only flagged/starred messages. Ignored on Outlook.",
+            "description": "true = only flagged/starred messages.",
             "type": "boolean"
           },
           "folder": {
@@ -370,7 +370,7 @@
           },
           "include_folders": {
             "default": [],
-            "description": "Folders to search, each an alias, a folder or label name, or a folder id (names and aliases resolve for you). IMAP covers INBOX only unless you name archive or sent folders; Gmail and Outlook always search everything.",
+            "description": "Folders to search, each an alias, a folder or label name, or a folder id (names and aliases resolve for you). IMAP covers INBOX only unless you name archive or sent folders; Gmail and Outlook search every folder except the trash (Deleted Items on Outlook; Gmail also skips Spam), so name it to include it.",
             "items": {
               "type": "string"
             },
@@ -615,7 +615,7 @@
             "type": "string"
           },
           "flagged": {
-            "description": "true = only flagged/starred messages. Ignored on Outlook.",
+            "description": "true = only flagged/starred messages.",
             "type": "boolean"
           },
           "from": {
@@ -642,7 +642,7 @@
             "type": "string"
           },
           "include_folders": {
-            "description": "Folders to search, each an alias, a folder or label name, or a folder id (names and aliases resolve for you). IMAP covers INBOX only unless you name archive or sent folders; Gmail and Outlook always search everything.",
+            "description": "Folders to search, each an alias, a folder or label name, or a folder id (names and aliases resolve for you). IMAP covers INBOX only unless you name archive or sent folders; Gmail and Outlook search every folder except the trash (Deleted Items on Outlook; Gmail also skips Spam), so name it to include it.",
             "items": {
               "type": "string"
             },
@@ -752,7 +752,7 @@
             "type": "string"
           },
           "flagged": {
-            "description": "true = only flagged/starred messages. Ignored on Outlook.",
+            "description": "true = only flagged/starred messages.",
             "type": "boolean"
           },
           "from": {
@@ -779,7 +779,7 @@
             "type": "string"
           },
           "include_folders": {
-            "description": "Folders to search, each an alias, a folder or label name, or a folder id (names and aliases resolve for you). IMAP covers INBOX only unless you name archive or sent folders; Gmail and Outlook always search everything.",
+            "description": "Folders to search, each an alias, a folder or label name, or a folder id (names and aliases resolve for you). IMAP covers INBOX only unless you name archive or sent folders; Gmail and Outlook search every folder except the trash (Deleted Items on Outlook; Gmail also skips Spam), so name it to include it.",
             "items": {
               "type": "string"
             },

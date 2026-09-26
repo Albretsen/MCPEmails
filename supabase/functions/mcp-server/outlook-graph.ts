@@ -433,41 +433,94 @@ export async function graphSendFailure(resp: Response, context: string): Promise
 // ─────────────────────────────────────────────────────────────────────────────
 //
 // Found live on 2026-09-25: `$search` on /messages hands back default REST ids
-// (AQMkAD…) even though the request carries `Prefer: IdType="ImmutableId"`, and
-// those ids 404 once the message is moved, while ids from a plain list (same
-// header) survive the move. The header IS sent on the search (graphFetch adds
-// it to every request, and outlook-graph.test.ts pins that); the search
-// endpoint just does not honour it.
+// (AQMkAD…, 136 chars on outlook.com) even though the request carries
+// `Prefer: IdType="ImmutableId"` and Graph answers `Preference-Applied:
+// IdType=ImmutableId`. Those ids 404 once the message is moved. A plain list or
+// a `$filter` query with the same header returns immutable ids (AAkALg…, 68
+// chars). Same on /beta and on a folder-scoped search.
 //
-// translateExchangeIds would be the one-request fix, but it needs User.Read,
-// which this app does not request (Mail.ReadWrite + Mail.Send only), so on our
-// tokens it is a 403. Re-reading each id with the header does work with the
-// scopes we have: Graph ACCEPTS either id format in a URL and RETURNS the
-// format the Prefer header asks for. One JSON $batch carries 20 such GETs.
+// The first fix re-read each hit by id (GET /me/messages/{AQMk…} with the
+// header, 20 per $batch). That is a no-op, checked live the same day: the
+// batch legs DID carry the header (every leg answered Preference-Applied, the
+// responses came back out of order and were mapped by id correctly), but a GET
+// by id echoes the id it was addressed with. The Prefer header governs ids
+// Graph GENERATES in a collection, not the key you looked a message up by.
+//
+// translateExchangeIds is the documented converter, but it needs User.Read,
+// which this app does not request (Mail.ReadWrite + Mail.Send only).
+//
+// What works with our scopes, verified live: look each hit up again as a
+// COLLECTION query, `/me/mailFolders/{parentFolderId}/messages?$filter=
+// internetMessageId eq '…'`, which returns the immutable id. Scoping to the
+// hit's own folder keeps a copy of the same message in another folder (a
+// self-sent mail in Sent Items and Inbox) from being picked; two matches in
+// one folder are told apart by receivedDateTime, and anything still ambiguous
+// keeps its search id rather than risk naming a different message.
 
 /** Graph's JSON batching limit: 20 requests per $batch. */
 export const GRAPH_BATCH_MAX = 20;
 
+/** The fields of a `$search` hit {@link graphImmutableMessageIds} needs. */
+export interface GraphSearchHit {
+  id: string;
+  internetMessageId?: string | null;
+  parentFolderId?: string | null;
+  receivedDateTime?: string | null;
+}
+
+/** The re-lookup for one hit: a $filter collection query, which honours Prefer. */
+export function graphImmutableLookupUrl(hit: GraphSearchHit): string | null {
+  const imid = hit.internetMessageId;
+  if (!imid) return null;
+  const base = hit.parentFolderId
+    ? `/me/mailFolders/${encodeURIComponent(hit.parentFolderId)}/messages`
+    : "/me/messages";
+  const filter = encodeURIComponent(`internetMessageId eq '${imid.replace(/'/g, "''")}'`);
+  return `${base}?$filter=${filter}&$select=id,receivedDateTime&$top=5`;
+}
+
+/** The one immutable id a lookup's rows name for `hit`, or null when unsure. */
+function pickImmutableId(
+  hit: GraphSearchHit,
+  rows: { id?: string; receivedDateTime?: string }[],
+): string | null {
+  const withId = rows.filter((r) => typeof r.id === "string" && r.id);
+  if (withId.length === 1) return withId[0].id!;
+  if (withId.length > 1 && hit.receivedDateTime) {
+    const same = withId.filter((r) => r.receivedDateTime === hit.receivedDateTime);
+    if (same.length === 1) return same[0].id!;
+  }
+  return null;
+}
+
 /**
- * Map each message id to its immutable form. Ids that could not be re-read (a
- * message deleted since the search, a throttled leg that still failed) map to
- * themselves: a mutable id is still a working id until the message moves,
- * while dropping the row would hide a real match.
+ * Map each search hit's id to its immutable form. A hit that could not be
+ * looked up (no internetMessageId, a message deleted since the search, an
+ * ambiguous match, a throttled leg that still failed) maps to itself: a
+ * mutable id is still a working id until the message moves, while dropping
+ * the row would hide a real match.
  */
 export async function graphImmutableMessageIds(
   accessToken: string,
-  ids: readonly string[],
+  hits: readonly GraphSearchHit[],
 ): Promise<Map<string, string>> {
   const out = new Map<string, string>();
-  const unique = [...new Set(ids)];
-  const retry: string[] = [];
-  for (let i = 0; i < unique.length; i += GRAPH_BATCH_MAX) {
-    const chunk = unique.slice(i, i + GRAPH_BATCH_MAX);
+  const byId = new Map<string, GraphSearchHit>();
+  for (const h of hits) if (h.id && !byId.has(h.id)) byId.set(h.id, h);
+  const todo: { hit: GraphSearchHit; url: string }[] = [];
+  for (const hit of byId.values()) {
+    const url = graphImmutableLookupUrl(hit);
+    if (url) todo.push({ hit, url });
+    else out.set(hit.id, hit.id);
+  }
+  const retry: { hit: GraphSearchHit; url: string }[] = [];
+  for (let i = 0; i < todo.length; i += GRAPH_BATCH_MAX) {
+    const chunk = todo.slice(i, i + GRAPH_BATCH_MAX);
     const resp = await graphJson(accessToken, "/$batch", "POST", {
-      requests: chunk.map((id, j) => ({
+      requests: chunk.map(({ url }, j) => ({
         id: String(j),
         method: "GET",
-        url: `/me/messages/${encodeURIComponent(id)}?$select=id`,
+        url,
         headers: { Prefer: IMMUTABLE_ID_PREFER },
       })),
     });
@@ -477,40 +530,46 @@ export async function graphImmutableMessageIds(
       continue;
     }
     const data = (await resp.json()) as {
-      responses?: { id?: string; status?: number; body?: { id?: string } }[];
+      responses?: {
+        id?: string;
+        status?: number;
+        body?: { value?: { id?: string; receivedDateTime?: string }[] };
+      }[];
     };
     const seen = new Set<number>();
+    // Batch responses arrive in any order (seen live): map by request id.
     for (const r of data.responses ?? []) {
       const j = Number(r.id);
-      if (!Number.isInteger(j) || j < 0 || j >= chunk.length) continue;
+      if (!Number.isInteger(j) || j < 0 || j >= chunk.length || seen.has(j)) continue;
       seen.add(j);
-      if (r.status === 200 && typeof r.body?.id === "string" && r.body.id) {
-        out.set(chunk[j], r.body.id);
+      const { hit } = chunk[j];
+      if (r.status === 200) {
+        out.set(hit.id, pickImmutableId(hit, r.body?.value ?? []) ?? hit.id);
       } else if (r.status === 429 || r.status === 503) {
         retry.push(chunk[j]);
       } else {
-        out.set(chunk[j], chunk[j]);
+        out.set(hit.id, hit.id);
       }
     }
-    chunk.forEach((id, j) => {
-      if (!seen.has(j)) retry.push(id);
+    chunk.forEach((c, j) => {
+      if (!seen.has(j)) retry.push(c);
     });
   }
   // A throttled or failed batch leg: one plain GET each, which carries the
   // shared Retry-After handling. Sequential, since throttling is why we are here.
-  for (const id of retry) {
+  for (const { hit, url } of retry) {
     try {
-      const r = await graphFetch(accessToken, `/me/messages/${encodeURIComponent(id)}?$select=id`);
+      const r = await graphFetch(accessToken, url);
       if (r.ok) {
-        const body = (await r.json()) as { id?: string };
-        out.set(id, body.id || id);
+        const body = (await r.json()) as { value?: { id?: string; receivedDateTime?: string }[] };
+        out.set(hit.id, pickImmutableId(hit, body.value ?? []) ?? hit.id);
       } else {
         await r.body?.cancel().catch(() => {});
-        out.set(id, id);
+        out.set(hit.id, hit.id);
       }
     } catch (e) {
       if (e instanceof OutlookNoMailboxError) throw e;
-      out.set(id, id);
+      out.set(hit.id, hit.id);
     }
   }
   return out;
@@ -1252,7 +1311,8 @@ export const OUTLOOK_ARCHIVE_FOLDER_NAMES: readonly string[] = [
  *      "ImmutableId"` (containers ignore it, per the immutable-id doc), so the
  *      header is not why this fails. Then: an existing TOP-LEVEL folder whose
  *      name is a known localised archive name ({@link OUTLOOK_ARCHIVE_FOLDER_NAMES}).
- *   3. Only then a newly created "Archive", the last resort.
+ *   3. Otherwise {@link outlookNoArchiveFolderError}. NEVER a created folder:
+ *      see the note at the end of the function.
  */
 export async function resolveOutlookArchiveFolderId(accessToken: string): Promise<string> {
   const wk = await graphFetch(accessToken, "/me/mailFolders/archive?$select=id");
@@ -1289,15 +1349,30 @@ export async function resolveOutlookArchiveFolderId(accessToken: string): Promis
   const existing = await findByName();
   if (existing) return existing;
 
-  const created = await graphJson(accessToken, "/me/mailFolders", "POST", { displayName: "Archive" });
-  if (created.ok) return ((await created.json()) as { id: string }).id;
-  if (created.status === 409) {
-    // Created concurrently between our lookup and our create.
-    await created.body?.cancel().catch(() => {});
-    const raced = await findByName();
-    if (raced) return raced;
-  }
-  throw await graphErrorFromResponse(created, "Outlook archive folder create");
+  // Never create one. Found live on 2026-09-25: the "Archive" an earlier
+  // version of this function created in a Norwegian outlook.com mailbox (beside
+  // the user's own "Arkiver") was promoted by Exchange to the DISTINGUISHED
+  // archive folder, so it now answers /me/mailFolders/archive, can no longer be
+  // deleted, and every later archive files into it instead of into "Arkiver".
+  // A create is a permanent change to the user's mailbox that a move request
+  // never asked for; a clear refusal costs one retry with a named folder.
+  throw outlookNoArchiveFolderError();
+}
+
+/**
+ * The refusal for an archive request on a mailbox with no archive folder. The
+ * message says "does not exist", which FOLDER_MISSING_RE in index.ts and
+ * provider-error.ts both classify as folder_missing (permanent, not retried).
+ */
+export function outlookNoArchiveFolderError(): OutlookGraphError {
+  return new OutlookGraphError(
+    "Outlook archive folder error 404 (ErrorFolderNotFound): this mailbox has no archive folder. " +
+      'The well-known "archive" folder does not exist and no top-level folder has a known archive ' +
+      'name (Archive, Arkiver, Archiv, …). Nothing was moved and no folder was created: move the ' +
+      "message to a named folder from folder_list instead, or create an archive folder in Outlook first.",
+    404,
+    "ErrorFolderNotFound",
+  );
 }
 
 /**

@@ -364,7 +364,7 @@ export function sendProviderBlock(inbox: {
   if (provider === "outlook") {
     return {
       label: "Microsoft Graph",
-      route: "me/sendMail",
+      route: "me/messages/{id}/send",
       caveats: ["A copy is written to Sent Items automatically."],
     };
   }

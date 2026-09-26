@@ -143,7 +143,7 @@ export function providerRouteFor(inbox: any): ReviewProvider {
   if (provider === 'outlook') {
     return {
       labelKey: 'outlook',
-      route: 'me/sendMail',
+      route: 'me/messages/{id}/send',
       caveatKeys: ['outlookSentItems'],
     };
   }
