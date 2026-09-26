@@ -1048,6 +1048,11 @@ Deno.test("the listing on the wire still goes through serializeToolForList", asy
     "inputSchema",
     "outputSchema",
     "annotations",
+    // Added 2026-09-25 on purpose: OpenAI's per-tool auth declaration, which
+    // ChatGPT needs before it will offer to relink for a missing scope. See
+    // security-schemes.ts. It is a top-level field, NOT `_meta`, so every
+    // `_meta` pin in this file is untouched by it.
+    "securitySchemes",
     "_meta",
   ]);
   for (const tool of tools) {

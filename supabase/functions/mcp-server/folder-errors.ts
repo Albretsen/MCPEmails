@@ -252,6 +252,28 @@ export class FolderOperationError extends Error {
 }
 
 /**
+ * The folder a failed CREATE collided with, when the collision is identified:
+ * a `folder_name_taken` refusal that names the existing folder's id. Null for
+ * anything else, including a bare 409 whose folder could not be looked up.
+ *
+ * `folder{action:"create"}` reports such a collision as success with
+ * `already_existed: true` instead of an error, because "create X" run twice
+ * against one mailbox (a second device, a retried turn) has reached exactly
+ * the state it asked for. See executeCreateFolder in index.ts.
+ */
+export function identifiedCreateCollision(
+  err: unknown,
+): { id: string; name: string | null } | null {
+  if (!(err instanceof FolderOperationError)) return null;
+  if (err.logErrorCode !== "folder_name_taken") return null;
+  if (err.payload.operation !== "create") return null;
+  const id = err.payload.existing_folder_id;
+  if (typeof id !== "string" || id.length === 0) return null;
+  const name = err.payload.existing_folder_name;
+  return { id, name: typeof name === "string" && name.length > 0 ? name : null };
+}
+
+/**
  * A folder ARGUMENT that matched nothing - the read-side twin of the above.
  *
  * Thrown by the resolution seam so a `folder:` / `include_folders:` value that

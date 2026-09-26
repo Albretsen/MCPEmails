@@ -27,6 +27,25 @@
 // is the fix, kept pure and out of the component so the decision is unit
 // testable rather than only observable by rendering the page.
 //
+// THE EXCEPTION: OPENAI'S HOSTS (2026-09-25). Point 2 above is only true for a
+// client that actually performs the RFC 6750 step-up. ChatGPT does not. OpenAI
+// rejected our ChatGPT app on 2026-09-25 with this exact sequence: the reviewer
+// added the connector, ChatGPT's authorize request carried `scope=read:email`
+// (copied from our 401 challenge), the screen opened on "Read-only" with the
+// Recommended badge, the reviewer clicked Allow, and every send and
+// automation-create test then failed with insufficient_scope and never
+// recovered. OpenAI's host ignores an HTTP 403 + WWW-Authenticate
+// error="insufficient_scope"; the only re-link signal it acts on is
+// `_meta["mcp/www_authenticate"]` on a tool RESULT. So for ChatGPT, and for
+// Codex when it arrives through OpenAI's CIMD document, a narrow default is the
+// unrecoverable case the no-`scope` branch below already exists to avoid, and
+// the screen opens on "Full access" instead. Nothing is hidden or forced: every
+// card and every per-scope toggle is still there and the user can narrow the
+// grant before clicking Allow. Only the preselected card and the badge move.
+// The client is identified by `identifyStepUpLimitedClient` below, from the
+// validated client_id / redirect_uri HOST, never from the self-asserted
+// DCR client_name.
+//
 // Run the tests: npm run test:oauth-presets (from apps/web).
 // ---------------------------------------------------------------------------
 
@@ -136,9 +155,12 @@ export interface DefaultAccess {
    * Why we landed here. 'request' means the client told us what it wanted;
    * 'no-request' is the pre-2026-09-09 behaviour, kept for clients that send no
    * `scope` param at all. Surfaced for tests and for anyone reading a session
-   * recording who wants to know which branch ran.
+   * recording who wants to know which branch ran. 'client-cannot-step-up'
+   * means the client was identified as one that never performs the HTTP 403
+   * step-up (see the header and `identifyStepUpLimitedClient`), so the request
+   * was deliberately not honoured narrowly.
    */
-  basis: 'request' | 'no-request';
+  basis: 'request' | 'no-request' | 'client-cannot-step-up';
 }
 
 export interface DefaultAccessInput {
@@ -146,6 +168,14 @@ export interface DefaultAccessInput {
   offeredScopes: readonly string[];
   /** The scopes the client put in the `scope` query param. Empty/absent is the legacy case. */
   requestedScopes?: readonly string[] | null;
+  /**
+   * True when the authorizing client is known NOT to perform the RFC 6750
+   * HTTP 403 step-up (today: OpenAI's hosts, via `identifyStepUpLimitedClient`).
+   * Computed by the caller from the validated client, never from the request's
+   * `scope`. Overrides the requested scope: the screen opens on the widest
+   * available preset, because a narrow grant is unrecoverable for this client.
+   */
+  clientCannotStepUp?: boolean;
 }
 
 const VALID = new Set<string>(VALID_SCOPES);
@@ -184,10 +214,26 @@ const VALID = new Set<string>(VALID_SCOPES);
  * it with a token that cannot send and no way to ask for more. So: no `scope`,
  * no change.
  */
-export function resolveDefaultAccess({ offeredScopes, requestedScopes }: DefaultAccessInput): DefaultAccess {
+export function resolveDefaultAccess({
+  offeredScopes,
+  requestedScopes,
+  clientCannotStepUp = false,
+}: DefaultAccessInput): DefaultAccess {
   const offered = offeredScopes.filter((s) => VALID.has(s));
   const offeredSet = new Set(offered);
   const presets = resolvePresets(offered);
+
+  // A client that cannot step up gets the WIDEST whole preset on offer ("full"
+  // for every DCR and CIMD client, whose ceiling is all nine scopes), whatever
+  // it asked for. See the header for the 2026-09-25 rejection this answers. If
+  // no preset is wholly on offer, Custom with everything offered: still the
+  // widest grant the ceiling allows, and still narrowable by the user.
+  if (clientCannotStepUp) {
+    const widest = [...presets].reverse().find((p) => p.available) ?? null;
+    return widest
+      ? { mode: widest.id, scopes: [...widest.effectiveScopes], recommendedMode: widest.id, basis: 'client-cannot-step-up' }
+      : { mode: 'custom', scopes: [...offered], recommendedMode: 'custom', basis: 'client-cannot-step-up' };
+  }
 
   // Unknown scope strings and scopes outside this client's ceiling are dropped
   // rather than rejected: RFC 6749 §3.3 lets the server ignore what it does not
@@ -215,4 +261,85 @@ export function resolveDefaultAccess({ offeredScopes, requestedScopes }: Default
   // ticked rows line up with the permission list underneath.
   const ticked = offered.filter((s) => requested.includes(s));
   return { mode: 'custom', scopes: ticked, recommendedMode: 'custom', basis: 'request' };
+}
+
+// ---------------------------------------------------------------------------
+// Which clients cannot step up.
+// ---------------------------------------------------------------------------
+
+/** A client known to ignore the HTTP 403 insufficient_scope step-up. */
+export type StepUpLimitedClient = 'chatgpt' | 'codex';
+
+/**
+ * OpenAI's hosts. Compared EXACTLY against URL.hostname (which the URL parser
+ * has already lower-cased), never as a substring or suffix: `t.co` once matched
+ * inside `chatgpt.com` in the acquisition classifier, and `evilchatgpt.com` or
+ * `chatgpt.com.attacker.net` must not pass here either.
+ */
+const OPENAI_HOSTS: ReadonlySet<string> = new Set(['chatgpt.com', 'chat.openai.com']);
+
+/**
+ * OpenAI's CIMD client_id paths, all on an OPENAI_HOSTS origin:
+ *   /oauth/client.json                  ChatGPT, documented stable id
+ *   /oauth/{callback_id}/client.json    ChatGPT, documented per-connector id
+ *   /oauth/codex/{id}/client.json       Codex, observed in oauth_consents (17
+ *                                       grants to 2026-09-23)
+ */
+const OPENAI_CIMD_PATH = /^\/oauth\/(codex\/)?(?:[A-Za-z0-9_-]+\/)?client\.json$/;
+
+/**
+ * ChatGPT's connector redirect_uris. Documented: the stable
+ * /connector_platform_oauth_redirect and the per-callback
+ * /connector/oauth/{callback_id}. All 48 ChatGPT DCR rows in oauth_clients (to
+ * 2026-09-16) use the second shape.
+ */
+function isChatGptRedirectPath(pathname: string): boolean {
+  return pathname === '/connector_platform_oauth_redirect' || /^\/connector\/oauth\/[A-Za-z0-9_-]+$/.test(pathname);
+}
+
+/** An https URL on an exact OpenAI host with no port and no userinfo, or null. */
+function parseOpenAiUrl(raw: string | null | undefined): URL | null {
+  if (typeof raw !== 'string' || raw === '') return null;
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== 'https:' || url.port !== '' || url.username !== '' || url.password !== '') return null;
+  return OPENAI_HOSTS.has(url.hostname) ? url : null;
+}
+
+/**
+ * Identify a client that never performs the RFC 6750 HTTP 403 step-up, from
+ * the two values the /authorize page has already VALIDATED: the client_id (a
+ * CIMD URL is fetched and must be self-referential, so its origin is proof of
+ * who published it) and the redirect_uri (checked against the registered or
+ * CIMD-listed URIs, so a DCR client claiming chatgpt.com can only ever send the
+ * code to chatgpt.com).
+ *
+ * Deliberately NOT consulted: the DCR `client_name`. It is free text any
+ * registrant sets, and matching "ChatGPT" or "Codex" on it would let anyone
+ * open the consent screen pre-set to Full access. This is also why the legacy
+ * DCR Codex registrations (client_name "Codex", loopback
+ * http://127.0.0.1:{port}/callback redirect) are NOT identified: nothing about
+ * them is attributable to OpenAI, so they keep the ordinary request-based
+ * default. Codex is identified only when it authorizes through OpenAI's own
+ * CIMD document on chatgpt.com.
+ */
+export function identifyStepUpLimitedClient({
+  clientId,
+  redirectUri,
+}: {
+  clientId: string | null | undefined;
+  redirectUri: string | null | undefined;
+}): StepUpLimitedClient | null {
+  const cimd = parseOpenAiUrl(clientId);
+  if (cimd && cimd.search === '' && cimd.hash === '') {
+    const m = OPENAI_CIMD_PATH.exec(cimd.pathname);
+    if (m) return m[1] ? 'codex' : 'chatgpt';
+  }
+  const redirect = parseOpenAiUrl(redirectUri);
+  if (redirect && isChatGptRedirectPath(redirect.pathname)) return 'chatgpt';
+  return null;
 }

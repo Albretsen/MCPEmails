@@ -6,6 +6,7 @@ import { storeStateNonce } from '@/lib/oauth/state';
 import { isValidRedirectUri } from '@/lib/oauth/redirect-uri';
 import { validateResourceIndicator } from '@/lib/oauth/resource';
 import { looksLikeUrlClientId, redirectUriAllowed, resolveCimdClient } from '@/lib/oauth/cimd';
+import { identifyStepUpLimitedClient } from '@/lib/oauth/consent-presets';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { AuthorizeApp } from '../../components/auth/AuthorizeApp';
@@ -309,6 +310,16 @@ export default async function AuthorizePage({ searchParams }) {
   const csrfToken = await issueCsrfToken(user.id);
 
   // ── 11. Render consent UI ─────────────────────────────────────────────────
+  // Whether this client ignores the HTTP 403 insufficient_scope step-up, so a
+  // narrow default would strand it (OpenAI's app review, 2026-09-25). Computed
+  // here, after section 3 resolved the client and section 4 validated the
+  // redirect_uri, because both inputs are only trustworthy once validated. The
+  // rule and why client_name is not consulted: lib/oauth/consent-presets.ts.
+  const clientCannotStepUp = identifyStepUpLimitedClient({
+    clientId: oauthClient.client_id,
+    redirectUri: resolvedRedirectUri,
+  }) !== null;
+
   const scopesWithMeta = offeredScopes.map((scope) => ({
     scope,
     ...(SCOPE_META[scope] ?? { icon: 'key', title: scope, desc: '', required: false, destructive: false }),
@@ -326,6 +337,7 @@ export default async function AuthorizePage({ searchParams }) {
       workspaceName={workspace?.display_name ?? ''}
       requestedScopes={scopesWithMeta}
       clientRequestedScopes={clientRequestedScopes}
+      clientCannotStepUp={clientCannotStepUp}
       identityScopes={identityScopes}
       inboxes={inboxes}
       redirectUri={resolvedRedirectUri}

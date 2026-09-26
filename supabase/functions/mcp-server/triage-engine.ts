@@ -248,6 +248,39 @@ export const TRIAGE_ACTION_SCOPES: Record<TriageActionType, string> = {
   draft_reply: "manage:drafts",
 };
 
+/**
+ * The extra scope an automation create/update call needs for the RULE action
+ * it carries, or null when it carries none this table knows.
+ *
+ * Read by the tools/call scope gate (index.ts) BEFORE dispatch, so a missing
+ * rule-action scope is refused through the same insufficient-scope path as any
+ * other: an HTTP 403 step-up for Claude, a relink-triggering result for
+ * ChatGPT. Refused only inside runAutomationTool (below, `scope_denied`), it
+ * came back as an ordinary tool error that no client can step up from, so a
+ * user who relinked for manage:automations still could not create a
+ * move-to-folder rule (2026-09-25). The in-handler check stays as the
+ * backstop.
+ *
+ * Accepts both spellings: `rule_action` (the consolidated `automation` tool)
+ * and an object-valued `action` (the legacy automation_create tool).
+ */
+export function automationRuleActionScope(rawArgs: unknown): string | null {
+  if (rawArgs === null || typeof rawArgs !== "object" || Array.isArray(rawArgs)) return null;
+  const args = rawArgs as Record<string, unknown>;
+  const ruleAction = args["rule_action"] !== undefined
+    ? args["rule_action"]
+    : (args["action"] !== null && typeof args["action"] === "object" ? args["action"] : undefined);
+  if (ruleAction === null || typeof ruleAction !== "object" || Array.isArray(ruleAction)) return null;
+  const rawType = (ruleAction as Record<string, unknown>)["type"];
+  if (typeof rawType !== "string") return null;
+  // Normalised the way validateTriageAction normalises it, or `{type:"Move"}`
+  // slips past this gate and meets the in-handler refusal no client can
+  // recover from by re-linking.
+  const type = rawType.trim().toLowerCase();
+  if (!Object.hasOwn(TRIAGE_ACTION_SCOPES, type)) return null;
+  return TRIAGE_ACTION_SCOPES[type as TriageActionType];
+}
+
 /** Which audit/meter operation name each action writes. */
 export const TRIAGE_ACTION_OPERATIONS: Record<TriageActionType, TriageOperationName> = {
   move: "triage_move",

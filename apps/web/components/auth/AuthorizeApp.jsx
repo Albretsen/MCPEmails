@@ -342,6 +342,10 @@ function DoneScreen({ client, grantCount, totalInboxes, allInboxes }) {
  *                     `scope` query param, already narrowed to the menu above.
  *                     Empty when the client sent no `scope` at all, which is a
  *                     distinct case (see lib/oauth/consent-presets.ts).
+ *  - clientCannotStepUp  boolean: the client ignores the HTTP 403 step-up
+ *                     (identifyStepUpLimitedClient in lib/oauth/consent-presets.ts,
+ *                     computed by page.js from the validated client_id and
+ *                     redirect_uri). Opens the screen on the widest preset.
  *  - identityScopes  string[]: `openid` and/or `email` if the client asked for
  *                     them. They are NOT permissions in this screen's sense —
  *                     they grant no mailbox access, only the account email at
@@ -364,6 +368,7 @@ export function AuthorizeApp({
   workspaceName,
   requestedScopes,
   clientRequestedScopes = [],
+  clientCannotStepUp = false,
   identityScopes = [],
   inboxes,
   redirectUri,
@@ -392,11 +397,17 @@ export function AuthorizeApp({
   // now defaults to the narrowest option satisfying the client's own `scope`
   // param instead of always to "standard", because a client that asks only to
   // read and is handed send/drafts/contacts is over-asking one screen later
-  // than the challenge we just narrowed. Computed once, at mount: it is the
+  // than the challenge we just narrowed. The exception is `clientCannotStepUp`
+  // (ChatGPT/Codex via OpenAI's hosts), which opens on the widest preset because
+  // that client cannot recover from a narrow grant. Computed once, at mount: it is the
   // DEFAULT, and the badge must keep pointing at it after the user clicks
   // elsewhere rather than chasing the selection.
   const [defaultAccess] = useState(() =>
-    resolveDefaultAccess({ offeredScopes: offeredScopeIds, requestedScopes: clientRequestedScopes }),
+    resolveDefaultAccess({
+      offeredScopes: offeredScopeIds,
+      requestedScopes: clientRequestedScopes,
+      clientCannotStepUp,
+    }),
   );
 
   const [mode, setMode] = useState(defaultAccess.mode);

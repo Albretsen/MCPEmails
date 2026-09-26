@@ -99,6 +99,7 @@ import {
 import {
   FolderOperationError,
   FolderTargetError,
+  identifiedCreateCollision,
   mapFolderProviderFailure,
 } from "./folder-errors.ts";
 import {
@@ -142,6 +143,11 @@ import {
   mimeMessageToBase64url,
   stripBccHeader,
 } from "./mime-build.ts";
+import {
+  consolidatedSecurityScopes,
+  isOpenAiClientName,
+  isOpenAiOAuthKeyName,
+} from "./security-schemes.ts";
 import {
   appOnlyReviewCardToolMeta,
   buildResourceReadResult,
@@ -261,6 +267,7 @@ import {
   type TriageRuleRow,
   type TriageStore,
   type AutomationDeps,
+  automationRuleActionScope,
   runAutomationTool,
   validateTriageFilter,
   TRIAGE_MAX_MESSAGES_PER_RUN,
@@ -408,6 +415,7 @@ import {
 import {
   buildInsufficientScopeChallenge,
   insufficientScopeErrorData,
+  insufficientScopeToolResult,
   isInsufficientScopeError,
 } from "./scope-challenge.ts";
 
@@ -3160,6 +3168,55 @@ async function recordClientCapabilities(
   }
 }
 
+/**
+ * Whether this key belongs to an OpenAI client (ChatGPT or Codex): its OAuth
+ * key name says so, or the client most recently seen on it at `initialize`
+ * (recordClientCapabilities) is one.
+ *
+ * This is the ONE place a `mcp_client_capabilities` row changes behaviour, and
+ * only on the scope-denial path: it picks the SHAPE of an insufficient-scope
+ * refusal, never whether a call is allowed. The key name and this table are
+ * the only per-key client signals that survive to tools/call — the server is
+ * stateless, and the User-Agent it sees is the /api/mcp proxy's own (`node`),
+ * not the client's.
+ * Latest `last_seen` wins, which settles the few dashboard keys shared between
+ * clients; no OAuth key has been seen from both an OpenAI and another client.
+ *
+ * Runs only when a call has already been refused, so it adds no query to any
+ * successful call. Fails closed to `false`, which is today's 403.
+ */
+async function isOpenAiClientKey(apiKey: ApiKeyRow): Promise<boolean> {
+  // The key's own name first: free, and set by our OAuth issuer from the
+  // client's registration (`OAuth: ChatGPT`). See isOpenAiOAuthKeyName.
+  if (isOpenAiOAuthKeyName(apiKey.name)) return true;
+  const apiKeyId = apiKey.id;
+  try {
+    const { data, error } = await supabase
+      .from("mcp_client_capabilities")
+      .select("client_name")
+      .eq("api_key_id", apiKeyId)
+      .order("last_seen", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) {
+      console.error("[mcp-server] client_identity_lookup_failed", {
+        key_id: apiKeyId,
+        error: error.message,
+      });
+      return false;
+    }
+    return isOpenAiClientName(
+      (data as { client_name?: string } | null)?.client_name ?? null,
+    );
+  } catch (err) {
+    console.error("[mcp-server] client_identity_lookup_threw", {
+      key_id: apiKeyId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return false;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Envelope validation
 // ---------------------------------------------------------------------------
@@ -3367,6 +3424,14 @@ interface ToolDefinition {
    * see the long note on `reviewCardToolMeta` in mcp-app-resources.ts.
    */
   _meta?: Record<string, unknown>;
+  /**
+   * Every primary scope an action of this tool can require, published in
+   * tools/list as `securitySchemes: [{ type: "oauth2", scopes }]` for ChatGPT.
+   * Set by buildConsolidatedTool from the action table so it cannot drift; a
+   * standalone tool leaves it unset and publishes `[requiredScope]`. See
+   * security-schemes.ts.
+   */
+  securityScopes?: string[];
 }
 
 /**
@@ -7936,6 +8001,10 @@ function buildConsolidatedTool(name: string, spec: ConsolidatedSpec): ToolDefini
     description: spec.description,
     requiredScope: full.requiredScope as ToolDefinition["requiredScope"],
     ...(full.altScopes.length > 0 ? { altScopes: full.altScopes } : {}),
+    // NOT full.requiredScope + full.altScopes: that pair folds every action's
+    // scope into one OR-list for the tool-level gate, which loses which scopes
+    // are primary. Read straight off the action table instead.
+    securityScopes: consolidatedSecurityScopes(spec.actions),
     inputSchema: full.inputSchema,
     ...(listedInputSchema ? { listedInputSchema } : {}),
     // withResultNotesProperty for the same reason the legacy attach loop uses
@@ -19202,6 +19271,39 @@ async function executeCreateFolder(
         break;
     }
   } catch (err) {
+    // ── Already there: succeed, and say so (2026-09-25) ────────────────────
+    // "Create the folder X" is an ensure-exists request, and a reviewer (or a
+    // user on a second device) routinely runs it twice against one mailbox.
+    // Refusing the second call as folder_name_taken made the SAME request
+    // fail on its second run although the mailbox ended in exactly the state
+    // asked for. Only when the collision is IDENTIFIED (the provider helper
+    // found the existing folder's id, or IMAP said ALREADYEXISTS for this
+    // exact name, where the name is the id) — an unidentified 409 still
+    // refuses, since we could not name what the caller should use. Nothing is
+    // written either way, so this cannot change what the call does to the
+    // mailbox, only how its no-op is reported.
+    const collision = identifiedCreateCollision(err);
+    if (collision) {
+      created = { id: collision.id, name: collision.name ?? name };
+      const itemType = organizationItemType(inbox);
+      return {
+        result: {
+          ...jsonOk({
+            inbox_id: inbox.id,
+            created: {
+              ...created,
+              type: itemType,
+              already_existed: true,
+              note: `A ${itemType} with this name already existed, so nothing was created; ` +
+                `use this id.`,
+            },
+          }, true),
+          isError: false,
+        },
+        logStatus: "success",
+        logErrorCode: null,
+      };
+    }
     return folderProviderError("folder_create", inbox.provider, inbox.id, err);
   }
 
@@ -28438,7 +28540,17 @@ async function handleToolsCall(
   // consolidated tool the scope checked is the resolved action's scope.
   const scopeAuthorized = apiKey.scopes.includes(effectiveScope) ||
     (effectiveAltScopes?.some((s) => apiKey.scopes.includes(s)) ?? false);
-  if (!scopeAuthorized) {
+  // An automation create/update also needs the scope of the RULE action it
+  // carries (a move rule runs as this key, so the key must be able to move).
+  // Checked here, not only in runAutomationTool, so that refusal can be
+  // stepped up from like any other. See automationRuleActionScope.
+  const ruleActionScope =
+    dispatchName === "automation_create" || dispatchName === "automation_update"
+      ? automationRuleActionScope(rawArgs)
+      : null;
+  const ruleActionScopeMissing = ruleActionScope !== null &&
+    !apiKey.scopes.includes(ruleActionScope);
+  if (!scopeAuthorized || ruleActionScopeMissing) {
     await writeActivityLog({
       workspaceId: apiKey.workspace_id,
       apiKeyId: apiKey.id,
@@ -28461,13 +28573,28 @@ async function handleToolsCall(
       dispatch_name: dispatchName,
       required_scope: effectiveScope,
       alt_scopes: effectiveAltScopes ?? [],
+      rule_action_scope: ruleActionScopeMissing ? ruleActionScope : null,
       key_scopes: apiKey.scopes,
     });
 
-    const acceptedScopes = [effectiveScope, ...(effectiveAltScopes ?? [])];
+    // Which scope this refusal is about. When the tool's own scope is held and
+    // only the rule action's is missing, that one is the (sole) requirement.
+    // When BOTH are missing, the tool's scope leads and the rule action's rides
+    // along as an additional requirement, so ONE step-up grants both instead
+    // of the user being sent through consent twice for one request.
+    const primaryScope = scopeAuthorized ? ruleActionScope! : effectiveScope;
+    const acceptedScopes = scopeAuthorized
+      ? [ruleActionScope!]
+      : [effectiveScope, ...(effectiveAltScopes ?? [])];
+    const additionalScopes = !scopeAuthorized && ruleActionScopeMissing ? [ruleActionScope!] : [];
     const scopeList = acceptedScopes.length > 1
       ? `one of the '${acceptedScopes.join("', '")}' scopes is`
-      : `the '${effectiveScope}' scope is`;
+      : `the '${primaryScope}' scope is`;
+    const ruleClause = additionalScopes.length > 0
+      ? ` The rule action also needs the '${additionalScopes[0]}' scope.`
+      : scopeAuthorized
+      ? " (The automation runs as this key, so the key must hold the scope its rule action needs.)"
+      : "";
 
     // handleRequest turns this into HTTP 403 + WWW-Authenticate; the JSON
     // body is what a non-OAuth client (an API-key user) reads. `data` keeps
@@ -28476,10 +28603,10 @@ async function handleToolsCall(
     return jsonRpcErrorBody(
       id,
       RPC_INSUFFICIENT_SCOPE,
-      `Insufficient scope: ${scopeList} required to call ${toolName}.`,
+      `Insufficient scope: ${scopeList} required to call ${toolName}.${ruleClause}`,
       {
-        ...insufficientScopeErrorData(acceptedScopes, apiKey.scopes),
-        required_scope: effectiveScope,
+        ...insufficientScopeErrorData(acceptedScopes, apiKey.scopes, additionalScopes),
+        required_scope: primaryScope,
         accepted_scopes: acceptedScopes,
         key_scopes: apiKey.scopes,
       },
@@ -31121,6 +31248,24 @@ async function handleRequest(req: Request): Promise<Response> {
   // response leaves. The /api/mcp proxy passes the status and header through.
   // See scope-challenge.ts.
   if (isInsufficientScopeError(response)) {
+    // OpenAI clients (ChatGPT, Codex) do not follow a 403 step-up; they relink
+    // only on an isError RESULT carrying `_meta["mcp/www_authenticate"]`. So
+    // they get that, over HTTP 200, with the same challenge value. Everyone
+    // else, and any key whose client cannot be identified, keeps the 403
+    // below unchanged: Claude depends on it. See insufficientScopeToolResult.
+    if (await isOpenAiClientKey(apiKey)) {
+      console.info("[mcp-server] tools/call: insufficient_scope_as_tool_result", {
+        key_id: apiKey.id,
+        required_scopes: response.error.data.required_scopes,
+      });
+      return jsonResponse(
+        insufficientScopeToolResult(
+          response as typeof response & { id?: unknown },
+          `${APP_URL}/.well-known/oauth-protected-resource`,
+        ),
+        200,
+      );
+    }
     const http = jsonResponse(response, 403);
     http.headers.set(
       "WWW-Authenticate",
@@ -31133,6 +31278,10 @@ async function handleRequest(req: Request): Promise<Response> {
         // note on buildInsufficientScopeChallenge.
         response.error.data.granted_scopes,
         `${APP_URL}/.well-known/oauth-protected-resource`,
+        undefined,
+        // Empty on every denial except an automation missing BOTH its own
+        // scope and its rule action's; see the scope gate in handleToolsCall.
+        response.error.data.additional_required_scopes ?? [],
       ),
     );
     return http;

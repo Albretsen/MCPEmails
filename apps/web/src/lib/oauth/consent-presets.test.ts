@@ -17,6 +17,7 @@ import test from 'node:test';
 import {
   ACCESS_PRESETS,
   canonicalScopes,
+  identifyStepUpLimitedClient,
   resolveDefaultAccess,
   resolvePresets,
 } from './consent-presets.ts';
@@ -163,6 +164,108 @@ test('a client offered nothing produces an empty Custom rather than throwing', (
   const d = resolveDefaultAccess({ offeredScopes: [], requestedScopes: ['read:email'] });
   assert.equal(d.mode, 'custom');
   assert.deepEqual(d.scopes, []);
+});
+
+// ─── Clients that cannot step up (OpenAI review, 2026-09-25) ─────────────────
+
+test('ChatGPT asking for read:email opens on Full access, not Read-only', () => {
+  // The rejection: ChatGPT sent scope=read:email, got Read-only, and every send
+  // and automation test failed with insufficient_scope because it never steps up.
+  const d = resolveDefaultAccess({ offeredScopes: ALL, requestedScopes: ['read:email'], clientCannotStepUp: true });
+  assert.equal(d.mode, 'full');
+  assert.equal(d.recommendedMode, 'full');
+  assert.equal(d.basis, 'client-cannot-step-up');
+  assert.deepEqual(d.scopes, [...preset('full').scopes]);
+  for (const s of ['send:email', 'manage:automations']) assert.ok(d.scopes.includes(s), `${s} must be preselected`);
+});
+
+test('a non-stepping client opens on Full whatever it requested, or if it requested nothing', () => {
+  for (const requested of [undefined, null, [], ['read:email', 'send:email'], [...preset('standard').scopes], ALL]) {
+    const d = resolveDefaultAccess({ offeredScopes: ALL, requestedScopes: requested, clientCannotStepUp: true });
+    assert.equal(d.mode, 'full', `requested=${JSON.stringify(requested)}`);
+    assert.equal(d.basis, 'client-cannot-step-up');
+  }
+});
+
+test('clientCannotStepUp=false leaves the request rule exactly as before', () => {
+  const d = resolveDefaultAccess({ offeredScopes: ALL, requestedScopes: ['read:email'], clientCannotStepUp: false });
+  assert.equal(d.mode, 'readOnly');
+  assert.equal(d.basis, 'request');
+});
+
+test('a non-stepping client whose ceiling lacks Full gets the widest available preset', () => {
+  const d = resolveDefaultAccess({ offeredScopes: FIRST_PARTY, requestedScopes: ['read:email'], clientCannotStepUp: true });
+  assert.equal(d.mode, 'readOnly'); // the only whole preset FIRST_PARTY offers
+  assert.equal(d.basis, 'client-cannot-step-up');
+});
+
+test('a non-stepping client with no whole preset on offer gets Custom with everything offered', () => {
+  const offered = ['read:email', 'send:email'];
+  const d = resolveDefaultAccess({ offeredScopes: offered, requestedScopes: ['read:email'], clientCannotStepUp: true });
+  assert.equal(d.mode, 'custom');
+  assert.deepEqual(d.scopes, offered);
+});
+
+test('identifies ChatGPT by its connector redirect_uri on an exact OpenAI host', () => {
+  for (const redirectUri of [
+    'https://chatgpt.com/connector/oauth/AbC_12-x',
+    'https://chatgpt.com/connector_platform_oauth_redirect',
+    'https://CHATGPT.com/connector/oauth/abc',
+    'https://chat.openai.com/connector_platform_oauth_redirect',
+  ]) {
+    assert.equal(identifyStepUpLimitedClient({ clientId: 'dyn_0123456789abcdef01234567', redirectUri }), 'chatgpt', redirectUri);
+  }
+});
+
+test('identifies ChatGPT and Codex by OpenAI CIMD client_id URLs', () => {
+  const cases: [string, string][] = [
+    ['https://chatgpt.com/oauth/client.json', 'chatgpt'],
+    ['https://chatgpt.com/oauth/7NsWlQyClcg9/client.json', 'chatgpt'],
+    ['https://chatgpt.com/oauth/codex/N4av5zHP4iw0/client.json', 'codex'],
+  ];
+  for (const [clientId, want] of cases) {
+    // Codex's CIMD redirect is loopback; the client_id alone must decide.
+    assert.equal(identifyStepUpLimitedClient({ clientId, redirectUri: 'http://127.0.0.1:1455/auth/callback' }), want, clientId);
+  }
+});
+
+test('host matching is exact: look-alike and suffix hosts are not OpenAI', () => {
+  for (const redirectUri of [
+    'https://evilchatgpt.com/connector/oauth/abc',
+    'https://chatgpt.com.attacker.net/connector/oauth/abc',
+    'https://sub.chatgpt.com/connector/oauth/abc',
+    'https://chatgpt.com./connector/oauth/abc',
+    'https://attacker.net/chatgpt.com/connector/oauth/abc',
+    'https://attacker.net/connector/oauth/abc?next=https://chatgpt.com',
+    'https://chatgpt.com@attacker.net/connector/oauth/abc',
+    'https://user@chatgpt.com/connector/oauth/abc',
+    'https://chatgpt.com:8443/connector/oauth/abc',
+    'http://chatgpt.com/connector/oauth/abc',
+  ]) {
+    assert.equal(identifyStepUpLimitedClient({ clientId: 'dyn_x', redirectUri }), null, redirectUri);
+  }
+  for (const clientId of [
+    'https://chatgpt.com.evil.net/oauth/client.json',
+    'https://evil.net/oauth/codex/abc/client.json',
+    'http://chatgpt.com/oauth/client.json',
+  ]) {
+    assert.equal(identifyStepUpLimitedClient({ clientId, redirectUri: null }), null, clientId);
+  }
+});
+
+test('other paths on chatgpt.com are not the connector callback or a CIMD document', () => {
+  assert.equal(identifyStepUpLimitedClient({ clientId: 'dyn_x', redirectUri: 'https://chatgpt.com/share/abc' }), null);
+  assert.equal(identifyStepUpLimitedClient({ clientId: 'dyn_x', redirectUri: 'https://chatgpt.com/connector/oauth/a/b' }), null);
+  assert.equal(identifyStepUpLimitedClient({ clientId: 'https://chatgpt.com/share/x.json', redirectUri: null }), null);
+  assert.equal(identifyStepUpLimitedClient({ clientId: 'https://chatgpt.com/oauth/client.json?x=1', redirectUri: null }), null);
+});
+
+test('a DCR client merely NAMED Codex or ChatGPT with a loopback redirect is not identified', () => {
+  // client_name is never an input; the legacy DCR Codex rows look exactly like this.
+  assert.equal(identifyStepUpLimitedClient({ clientId: 'dyn_abc', redirectUri: 'http://127.0.0.1:50299/callback' }), null);
+  assert.equal(identifyStepUpLimitedClient({ clientId: 'https://claude.ai/oauth/mcp-oauth-client-metadata', redirectUri: 'https://claude.ai/api/mcp/auth_callback' }), null);
+  assert.equal(identifyStepUpLimitedClient({ clientId: '', redirectUri: '' }), null);
+  assert.equal(identifyStepUpLimitedClient({ clientId: undefined, redirectUri: 'not a url' }), null);
 });
 
 // ─── Building blocks ─────────────────────────────────────────────────────────

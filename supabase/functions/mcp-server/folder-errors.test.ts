@@ -20,6 +20,8 @@
 
 import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@1";
 import {
+  FolderOperationError,
+  identifiedCreateCollision,
   isReservedFolderName,
   mapFolderProviderFailure,
   reservedFolderNames,
@@ -208,4 +210,58 @@ Deno.test("every mapped error names the provider and the operation", () => {
       assert((payload.message as string).length > 40);
     }
   }
+});
+
+// ---------------------------------------------------------------------------
+// folder{action:"create"} on a name that already exists reports success with
+// already_existed: true (2026-09-25) — but only when the collision is
+// IDENTIFIED. identifiedCreateCollision is the whole decision.
+// ---------------------------------------------------------------------------
+
+Deno.test("an IMAP ALREADYEXISTS on create is an identified collision: the name is the id", () => {
+  // Exactly what imapCreateFolder throws for Migadu/Dovecot.
+  const err = new FolderOperationError(mapFolderProviderFailure({
+    provider: "imap",
+    operation: "create",
+    name: "Newsletters",
+    detail: "NO [ALREADYEXISTS] Mailbox already exists",
+    existing: { id: "Newsletters", name: "Newsletters" },
+    itemNoun: "folder",
+  }));
+  assertEquals(identifiedCreateCollision(err), { id: "Newsletters", name: "Newsletters" });
+});
+
+Deno.test("a 409 whose folder could not be looked up still refuses", () => {
+  const err = new FolderOperationError(mapFolderProviderFailure({
+    provider: "outlook",
+    operation: "create",
+    name: "Newsletters",
+    status: 409,
+    existing: null,
+  }));
+  assertEquals(identifiedCreateCollision(err), null);
+});
+
+Deno.test("a rename collision is never turned into a success", () => {
+  const err = new FolderOperationError(mapFolderProviderFailure({
+    provider: "imap",
+    operation: "rename",
+    name: "Archive",
+    detail: "NO [ALREADYEXISTS] Mailbox already exists",
+    existing: { id: "Archive", name: "Archive" },
+  }));
+  assertEquals(identifiedCreateCollision(err), null);
+});
+
+Deno.test("anything that is not a folder_name_taken refusal is not a collision", () => {
+  assertEquals(identifiedCreateCollision(new Error("NO [ALREADYEXISTS]")), null);
+  assertEquals(identifiedCreateCollision("folder_name_taken"), null);
+  const reserved = new FolderOperationError(mapFolderProviderFailure({
+    provider: "gmail",
+    operation: "create",
+    name: "INBOX",
+    status: 400,
+    detail: "Invalid label name",
+  }));
+  assertEquals(identifiedCreateCollision(reserved), null);
 });

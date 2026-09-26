@@ -21,6 +21,7 @@
 
 import { REVIEW_CARD_BUILD_ID, REVIEW_CARD_HTML } from "./ui/review-card.html.ts";
 import { advertisedInputSchema } from "./advertised-schema.ts";
+import { toolSecuritySchemes } from "./security-schemes.ts";
 
 /**
  * The mimeType that marks a resource as an MCP App rather than plain HTML.
@@ -599,6 +600,19 @@ export type ListedTool = {
   outputSchema?: Record<string, unknown>;
   annotations?: Record<string, unknown>;
   _meta?: Record<string, unknown>;
+  /**
+   * The scope a key needs to call this tool. Every real registry entry has
+   * one; it is optional here only so hand-built test fixtures stay valid. Read
+   * by the serializer as the fallback for `securityScopes`.
+   */
+  requiredScope?: string;
+  /**
+   * Every PRIMARY scope any of this tool's actions can require, in first-use
+   * order. Set on consolidated tools (derived from their action table); a
+   * standalone tool falls back to `[requiredScope]`. See toolSecuritySchemes
+   * in security-schemes.ts.
+   */
+  securityScopes?: readonly string[];
 };
 
 /**
@@ -629,8 +643,23 @@ export function serializeToolForList(
     inputSchema: advertisedInputSchema(tool.listedInputSchema ?? tool.inputSchema),
     ...(tool.outputSchema ? { outputSchema: tool.outputSchema } : {}),
     ...(tool.annotations ? { annotations: tool.annotations } : {}),
+    // OpenAI's per-tool auth declaration (developers.openai.com/apps-sdk/
+    // build/auth). Top level ONLY, deliberately not mirrored into `_meta`: the
+    // presence of `_meta` on a mail tool is this module's signal for "carries
+    // card metadata", pinned on the wire by mcp-app-resources.test.ts, and
+    // OpenAI documents that ChatGPT reads the top-level field (the `_meta`
+    // copy is a back-compat mirror for older clients only). A tool with no
+    // scope (a hand-built fixture) emits nothing, so its bytes are unchanged.
+    ...securitySchemesEntry(tool),
     ...(tool._meta ? { _meta: tool._meta } : {}),
   };
+}
+
+function securitySchemesEntry(tool: ListedTool): Record<string, unknown> {
+  const scopes = tool.securityScopes ??
+    (tool.requiredScope ? [tool.requiredScope] : []);
+  const schemes = toolSecuritySchemes(scopes);
+  return schemes ? { securitySchemes: schemes } : {};
 }
 
 // ---------------------------------------------------------------------------
