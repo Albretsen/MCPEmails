@@ -22,7 +22,16 @@ import {
   graphErrorFromResponse,
   graphFetch,
   graphFilterForDateOrder,
+  graphCopyMessage,
+  graphEnsureParentFolders,
+  graphFolderLabels,
+  graphImmutableMessageIds,
   graphListAttachmentMeta,
+  graphSendFailure,
+  GraphSendRefusedError,
+  outlookListTotal,
+  OUTLOOK_ARCHIVE_FOLDER_NAMES,
+  splitOutlookFolderPath,
   graphPrepareResponseDraft,
   graphSearchParam,
   graphSendDraft,
@@ -737,12 +746,66 @@ Deno.test("a leaf name shared by two nested folders resolves only by path", () =
   assert(!refs.some((r) => r.name === "2026"), "no coin flip between two '2026' folders");
 });
 
-Deno.test("a missing archive folder is found by name, or created", async () => {
+Deno.test("the archive role tries the well-known name first and stops there when it exists", async () => {
+  let id = "";
+  const calls = await withFetch([() => json(200, { id: "wk-archive" })], async () => {
+    id = await resolveOutlookArchiveFolderId("tok");
+  });
+  assertEquals(id, "wk-archive");
+  assertEquals(calls.length, 1);
+  assertEquals(calls[0].url, `${GRAPH_BASE}/me/mailFolders/archive?$select=id`);
+});
+
+Deno.test("a mailbox whose archive is 'Arkiver' gets Arkiver, never a second English 'Archive'", async () => {
   let id = "";
   const calls = await withFetch(
     [
       () => json(404, { error: { code: "ErrorFolderNotFound", message: "not found" } }),
-      () => json(200, { value: [] }),
+      () =>
+        json(200, {
+          value: [
+            { id: "f-inbox", displayName: "Innboks" },
+            { id: "f-sent", displayName: "Sendte elementer" },
+            { id: "f-arkiver", displayName: "Arkiver" },
+          ],
+        }),
+    ],
+    async () => {
+      id = await resolveOutlookArchiveFolderId("tok");
+    },
+  );
+  assertEquals(id, "f-arkiver");
+  assertEquals(calls.length, 2, "no create");
+  assertEquals(calls[1].method, "GET");
+  assertStringIncludes(calls[1].url, "/me/mailFolders?");
+  assert(OUTLOOK_ARCHIVE_FOLDER_NAMES.includes("Arkiver"));
+});
+
+Deno.test("localised archive names match case-insensitively, across pages, in preference order", async () => {
+  let id = "";
+  await withFetch(
+    [
+      () => json(404, { error: { code: "ErrorFolderNotFound", message: "not found" } }),
+      () =>
+        json(200, {
+          value: [{ id: "f-arkiv", displayName: "arkiv" }],
+          "@odata.nextLink": "https://graph.microsoft.com/v1.0/me/mailFolders?$skip=100",
+        }),
+      () => json(200, { value: [{ id: "f-archive", displayName: "ARCHIVE" }] }),
+    ],
+    async () => {
+      id = await resolveOutlookArchiveFolderId("tok");
+    },
+  );
+  assertEquals(id, "f-archive", "'Archive' outranks 'Arkiv' when both exist");
+});
+
+Deno.test("with no archive folder under any known name, one is created as the last resort", async () => {
+  let id = "";
+  const calls = await withFetch(
+    [
+      () => json(404, { error: { code: "ErrorFolderNotFound", message: "not found" } }),
+      () => json(200, { value: [{ id: "f-inbox", displayName: "Inbox" }] }),
       () => json(201, { id: "new-archive", displayName: "Archive" }),
     ],
     async () => {
@@ -750,10 +813,220 @@ Deno.test("a missing archive folder is found by name, or created", async () => {
     },
   );
   assertEquals(id, "new-archive");
-  assertEquals(calls[0].url, `${GRAPH_BASE}/me/mailFolders/archive?$select=id`);
-  assertStringIncludes(decodeURIComponent(calls[1].url), "displayName eq 'Archive'");
   assertEquals(calls[2].method, "POST");
+  assertEquals(calls[2].url, `${GRAPH_BASE}/me/mailFolders`);
   assertEquals(bodyJson(calls[2]), { displayName: "Archive" });
+});
+
+// ── send refusals ────────────────────────────────────────────────────────────
+
+Deno.test("a 403 ErrorAccountSuspend on /send is a definite, account-level refusal with a remedy", async () => {
+  const box: { err?: Error } = {};
+  await withFetch(
+    [() => json(403, { error: { code: "ErrorAccountSuspend", message: "Account suspended." } })],
+    async () => {
+      const resp = await graphSendDraft("tok", "draft-1");
+      box.err = await graphSendFailure(resp, "Outlook send draft");
+    },
+  );
+  const err = box.err;
+  assert(err instanceof GraphSendRefusedError);
+  const refused = err as GraphSendRefusedError;
+  assertEquals(refused.status, 403);
+  assertEquals(refused.code, "ErrorAccountSuspend");
+  assertEquals(refused.graphMessage, "Account suspended.");
+  assertEquals(refused.accountLevel, true);
+  assertStringIncludes(refused.hint ?? "", "sign in at outlook.com");
+});
+
+Deno.test("a 400 about the message is a refusal too, but not account-level", async () => {
+  const err = await graphSendFailure(
+    json(400, { error: { code: "ErrorInvalidRecipients", message: "At least one recipient is not valid." } }),
+    "Outlook send",
+  );
+  assert(err instanceof GraphSendRefusedError);
+  assertEquals((err as GraphSendRefusedError).accountLevel, false);
+});
+
+Deno.test("send failures: 401 is auth, 429 (after retries) is quota, 5xx stays an unknown-outcome error", async () => {
+  assertEquals((await graphSendFailure(empty(401), "x")).message, "outlook_auth_failed");
+  assertEquals((await graphSendFailure(empty(429), "x")).message, "quota_exceeded");
+  const five = await graphSendFailure(json(504, { error: { code: "GatewayTimeout", message: "t" } }), "x");
+  assert(!(five instanceof GraphSendRefusedError), "a 5xx may have been processed");
+  assert(five instanceof OutlookGraphError);
+});
+
+// ── $search ids ──────────────────────────────────────────────────────────────
+
+Deno.test("search ids are re-read in $batch GETs of 20 that carry the ImmutableId Prefer", async () => {
+  const ids = Array.from({ length: 25 }, (_, i) => `AQMkAD-${i}`);
+  let out = new Map<string, string>();
+  const calls = await withFetch(
+    (call) => {
+      const reqs = (bodyJson(call) as { requests: { id: string; url: string }[] }).requests;
+      return json(200, {
+        responses: reqs.map((r) => ({
+          id: r.id,
+          status: 200,
+          body: { id: `IMM-${decodeURIComponent(r.url.split("/")[3].split("?")[0])}` },
+        })),
+      });
+    },
+    async () => {
+      out = await graphImmutableMessageIds("tok", ids);
+    },
+  );
+  assertEquals(calls.length, 2);
+  assertEquals(calls[0].url, `${GRAPH_BASE}/$batch`);
+  assertEquals(calls[0].method, "POST");
+  const first = bodyJson(calls[0]) as { requests: { method: string; url: string; headers: Record<string, string> }[] };
+  assertEquals(first.requests.length, 20);
+  assertEquals(first.requests[0].method, "GET");
+  assertEquals(first.requests[0].url, "/me/messages/AQMkAD-0?$select=id");
+  assertEquals(first.requests[0].headers.Prefer, IMMUTABLE_ID_PREFER);
+  assertEquals((bodyJson(calls[1]) as { requests: unknown[] }).requests.length, 5);
+  assertEquals(out.get("AQMkAD-0"), "IMM-AQMkAD-0");
+  assertEquals(out.get("AQMkAD-24"), "IMM-AQMkAD-24");
+});
+
+Deno.test("a throttled batch leg is retried alone; a vanished message keeps its search id", async () => {
+  let out = new Map<string, string>();
+  const calls = await withFetch(
+    [
+      () =>
+        json(200, {
+          responses: [
+            { id: "1", status: 429, body: {} },
+            { id: "0", status: 200, body: { id: "IMM-a" } },
+            { id: "2", status: 404, body: { error: { code: "ErrorItemNotFound" } } },
+          ],
+        }),
+      () => json(200, { id: "IMM-b" }),
+    ],
+    async () => {
+      out = await graphImmutableMessageIds("tok", ["a", "b", "c"]);
+    },
+  );
+  assertEquals(out.get("a"), "IMM-a");
+  assertEquals(out.get("b"), "IMM-b");
+  assertEquals(out.get("c"), "c");
+  assertEquals(calls[1].url, `${GRAPH_BASE}/me/messages/b?$select=id`);
+  assertStringIncludes(calls[1].headers["prefer"], IMMUTABLE_ID_PREFER);
+});
+
+// ── folder labels ────────────────────────────────────────────────────────────
+
+Deno.test("search rows are labelled with their real folder: INBOX for the inbox, a path otherwise", async () => {
+  const folders: Record<string, { displayName: string; parentFolderId: string }> = {
+    "f-arkiver": { displayName: "Arkiver", parentFolderId: "root" },
+    "f-2024": { displayName: "2024", parentFolderId: "f-arkiver" },
+  };
+  let labels = new Map<string, string>();
+  await withFetch(
+    (call) => {
+      const path = call.url.replace(GRAPH_BASE, "").split("?")[0];
+      if (path === "/me/mailFolders/inbox") return json(200, { id: "f-inbox" });
+      if (path === "/me/mailFolders/msgfolderroot") return json(200, { id: "root" });
+      const id = decodeURIComponent(path.split("/")[3]);
+      const f = folders[id];
+      return f ? json(200, { id, ...f }) : json(404, { error: { code: "ErrorItemNotFound", message: "x" } });
+    },
+    async () => {
+      labels = await graphFolderLabels("tok", ["f-inbox", "f-arkiver", "f-2024", "f-gone", "f-arkiver"]);
+    },
+  );
+  assertEquals(labels.get("f-inbox"), "INBOX");
+  assertEquals(labels.get("f-arkiver"), "Arkiver");
+  assertEquals(labels.get("f-2024"), "Arkiver/2024");
+  assertEquals(labels.get("f-gone"), "f-gone", "an unreadable folder keeps its id, never a made-up name");
+});
+
+// ── nested folder create ─────────────────────────────────────────────────────
+
+Deno.test("splitOutlookFolderPath reads Parent/Child as a path", () => {
+  assertEquals(splitOutlookFolderPath("Parent/Child"), ["Parent", "Child"]);
+  assertEquals(splitOutlookFolderPath(" /A//B/ "), ["A", "B"]);
+  assertEquals(splitOutlookFolderPath("Plain"), ["Plain"]);
+});
+
+Deno.test("a nested create resolves an existing parent by name and returns its id", async () => {
+  let parent: string | null = null;
+  const calls = await withFetch(
+    [() => json(200, { value: [{ id: "f-parent", displayName: "Parent" }] })],
+    async () => {
+      parent = await graphEnsureParentFolders("tok", ["Parent", "Child"]);
+    },
+  );
+  assertEquals(parent, "f-parent");
+  assertEquals(calls.length, 1);
+  assertStringIncludes(decodeURIComponent(calls[0].url), "/me/mailFolders?$filter=displayName eq 'Parent'");
+});
+
+Deno.test("a missing parent is created (as IMAP CREATE does), then the next level under it", async () => {
+  let parent: string | null = null;
+  const calls = await withFetch(
+    [
+      () => json(200, { value: [] }), // A? no
+      () => json(201, { id: "f-a", displayName: "A" }), // create A
+      () => json(200, { value: [] }), // A/B? no
+      () => json(201, { id: "f-b", displayName: "B" }), // create A/B
+    ],
+    async () => {
+      parent = await graphEnsureParentFolders("tok", ["A", "B", "Leaf"]);
+    },
+  );
+  assertEquals(parent, "f-b");
+  assertEquals(calls[1].url, `${GRAPH_BASE}/me/mailFolders`);
+  assertEquals(bodyJson(calls[1]), { displayName: "A" });
+  assertStringIncludes(decodeURIComponent(calls[2].url), "/me/mailFolders/f-a/childFolders?$filter=displayName eq 'B'");
+  assertEquals(calls[3].url, `${GRAPH_BASE}/me/mailFolders/f-a/childFolders`);
+  assertEquals(bodyJson(calls[3]), { displayName: "B" });
+});
+
+Deno.test("a first segment naming a role uses the well-known folder when no folder has that name", async () => {
+  let parent: string | null = null;
+  const calls = await withFetch([() => json(200, { value: [] })], async () => {
+    parent = await graphEnsureParentFolders("tok", ["Inbox", "Receipts"], (s) => s.toLowerCase() === "inbox" ? "inbox" : null);
+  });
+  assertEquals(parent, "inbox");
+  assertEquals(calls.length, 1, "no folder is created for a role");
+});
+
+Deno.test("an OData literal doubles single quotes", async () => {
+  const calls = await withFetch([() => json(200, { value: [] }), () => json(201, { id: "x" })], async () => {
+    await graphEnsureParentFolders("tok", ["O'Brien", "Leaf"]);
+  });
+  assertStringIncludes(decodeURIComponent(calls[0].url), "displayName eq 'O''Brien'");
+});
+
+// ── copy ─────────────────────────────────────────────────────────────────────
+
+Deno.test("copy returns the NEW message's id from Graph's 201", async () => {
+  let id: string | null = null;
+  const calls = await withFetch([() => json(201, { id: "copy-imm-1", subject: "s" })], async () => {
+    id = await graphCopyMessage("tok", "orig-1", "f-dest");
+  });
+  assertEquals(id, "copy-imm-1");
+  assertEquals(calls[0].url, `${GRAPH_BASE}/me/messages/orig-1/copy`);
+  assertEquals(bodyJson(calls[0]), { destinationId: "f-dest" });
+  await withFetch([() => json(404, { error: { code: "ErrorItemNotFound", message: "x" } })], async () => {
+    await assertRejects(() => graphCopyMessage("tok", "gone", "f"), Error, "message_not_found");
+  });
+});
+
+// ── list totals ──────────────────────────────────────────────────────────────
+
+Deno.test("list totals: the last page is exact, otherwise the folder counters, never below what was shown", () => {
+  // The live case: five unread, a stale count of six. Last page, so 5.
+  assertEquals(outlookListTotal({ counts: { total: 40, unread: 6 }, unread: true, offset: 0, returned: 5, hasMore: false }), 5);
+  // More pages: the unread counter.
+  assertEquals(outlookListTotal({ counts: { total: 40, unread: 12 }, unread: true, offset: 0, returned: 10, hasMore: true }), 12);
+  // Read-only list: total minus unread.
+  assertEquals(outlookListTotal({ counts: { total: 40, unread: 12 }, unread: false, offset: 0, returned: 10, hasMore: true }), 28);
+  // A counter that lags behind the page is clamped up.
+  assertEquals(outlookListTotal({ counts: { total: 3, unread: 0 }, unread: undefined, offset: 0, returned: 10, hasMore: true }), 11);
+  // No counters, not the last page: unknown.
+  assertEquals(outlookListTotal({ counts: null, unread: undefined, offset: 0, returned: 10, hasMore: true }), null);
 });
 
 Deno.test("form-encoded spaces in a query we built reach Graph as %20", async () => {
@@ -778,4 +1051,85 @@ Deno.test("index.ts hands Graph call sites tokens WITH 401 recovery, and says 'n
   assertStringIncludes(body, "store.outlookNoMailbox = true");
   assert(!/freshOutlookAccessToken\(/.test(src), "no Graph token may bypass the recovery");
   assertStringIncludes(src, "if (logCtx.outlookNoMailbox) rewriteNoMailboxResult(toolResult);");
+});
+
+/** The body of `async function <name>(` in index.ts, up to its closing brace at column 0. */
+function indexFunction(src: string, name: string): string {
+  const start = src.indexOf(`async function ${name}(`);
+  if (start === -1) throw new Error(`index.ts has no async function ${name}`);
+  const rest = src.slice(start);
+  return rest.slice(0, rest.indexOf("\n}\n") + 2);
+}
+
+Deno.test("index.ts: an Outlook sender forwards through createForward, never the MIME relay", async () => {
+  const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+  const relay = indexFunction(src, "forwardRelayMessage");
+  const outlookBranch = relay.indexOf('if (inbox.provider === "outlook") return await outlookForward(');
+  assert(outlookBranch !== -1, "the Outlook branch exists");
+  assert(outlookBranch < relay.indexOf("readOriginalMessage("), "and runs before the raw original is read");
+  assert(!relay.includes("GRAPH_MIME_SEND_MAX_BYTES"), "no size-based fallback back into the relay");
+
+  const viaDraft = indexFunction(src, "outlookForwardViaDraft");
+  assertStringIncludes(viaDraft, 'kind: "createForward"');
+  assertStringIncludes(viaDraft, "removeFileAttachments: !params.includeAttachments");
+  assertStringIncludes(viaDraft, 'mime_type: "message/rfc822"');
+  assert(!/const addressing = \{[^}]*subject/.test(viaDraft), "inline keeps Graph's own (localised) subject");
+  assertStringIncludes(viaDraft, "graphSendFailure(sendResp");
+
+  const raw = indexFunction(src, "transmitRawMessage");
+  assertStringIncludes(raw, 'throw new Error("outlook_raw_send_unsupported")');
+  assert(!raw.includes("/me/sendMail"), "Graph MIME sendMail is gone from the raw path");
+});
+
+Deno.test("index.ts: a Graph send refusal is reported as not sent everywhere a send can fail", async () => {
+  const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+  for (const op of ["email_forward", "email_reply", "email_send", "draft_send"]) {
+    assert(
+      new RegExp(`err instanceof GraphSendRefusedError\\) \\{\\s*return graphRefusedResult\\("${op}"`).test(src),
+      `${op} maps GraphSendRefusedError to graphRefusedResult`,
+    );
+  }
+  const classify = src.slice(src.indexOf("function classifyForwardFailure("));
+  const refusedArm = classify.slice(classify.indexOf("err instanceof GraphSendRefusedError"));
+  assertStringIncludes(refusedArm.slice(0, 600), 'status: "not_sent"');
+  assertStringIncludes(refusedArm.slice(0, 600), "fatal: err.accountLevel");
+  for (const fn of ["sendOutlookMessage", "outlookSendDraft", "outlookForwardViaDraft"]) {
+    assertStringIncludes(indexFunction(src, fn), "graphSendFailure(");
+  }
+  const refused = src.slice(src.indexOf("function graphRefusedResult("));
+  assertStringIncludes(refused.slice(0, 900), "delivery_status: DELIVERY_STATUS_NOT_SENT");
+});
+
+Deno.test("index.ts: Outlook search returns immutable ids and real folder labels", async () => {
+  const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+  const search = indexFunction(src, "searchOutlookMessages");
+  assertStringIncludes(search, "graphImmutableMessageIds(accessToken");
+  assertStringIncludes(search, "graphFolderLabels(");
+  assertStringIncludes(search, "id: immutableIds.get(msg.id) ?? msg.id");
+  assert(!search.includes('folder: "INBOX", url: "/me/messages"'), "the whole-mailbox leg is not labelled INBOX");
+});
+
+Deno.test("index.ts: the Outlook list counts from the folder and learns has_more from one extra row", async () => {
+  const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+  const list = indexFunction(src, "listOutlookMessages");
+  assertStringIncludes(list, "$top: String(limit + 1)");
+  assertStringIncludes(list, "outlookFolderCounts(accessToken, folderSegment)");
+  assert(!list.includes('$count: "true"'), "no eventually-consistent $count");
+  assert(!list.includes(`data["@odata.nextLink"]`), "has_more is not read from nextLink");
+});
+
+Deno.test("index.ts: Outlook permanent delete, flagged search, nested create and copy id are wired", async () => {
+  const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
+  const caps = src.slice(src.indexOf("  outlook: {\n    flags: true,"));
+  assertStringIncludes(caps.slice(0, 700), 'trash_vs_expunge: "both"');
+  const profile = src.slice(src.indexOf('profile: "outlook-v1"'));
+  assertStringIncludes(profile.slice(0, 700), '"delete.permanent": "exact"');
+  assertStringIncludes(profile.slice(0, 700), '"search.flagged": "exact"');
+  assert(!src.includes("Ignored on Outlook."), "the flagged schema text no longer says Outlook ignores it");
+
+  const create = indexFunction(src, "outlookCreateFolder");
+  assertStringIncludes(create, "graphEnsureParentFolders(");
+  assertStringIncludes(create, "/childFolders");
+
+  assertStringIncludes(indexFunction(src, "executeCopyEmail"), "new_message_id: newMessageId");
 });

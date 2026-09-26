@@ -13,10 +13,12 @@
 // Contract §6 splits authority by reversibility, and a bulk plan lands on the
 // reversible side:
 //
-//   * A bulk delete on Gmail and Outlook moves messages to Trash, and both
-//     providers refuse permanent deletion outright (`delete.permanent:
-//     "unavailable"` in COMPATIBILITY_PROFILES), so the destructive case is
-//     recoverable by the user without our help. A move is recoverable by
+//   * A bulk delete moves messages to Trash unless the caller asked for
+//     `permanent`, and the Gmail API refuses permanent deletion outright
+//     (`delete.permanent: "unavailable"` in COMPATIBILITY_PROFILES), so the
+//     default case is recoverable by the user without our help. (IMAP, and
+//     Outlook since 2026-09-25, can delete permanently when asked; the card
+//     says so in its caveat.) A move is recoverable by
 //     definition. Requiring a browser round-trip for routine mailbox cleanup
 //     would be real friction in exchange for very little safety.
 //   * More decisively: today these four operations run with NO confirmation at
@@ -449,7 +451,7 @@ export function bulkProviderBlock(input: {
 
   if (isDeleteAction(action)) {
     if (facts.operations["delete.permanent"] === "unavailable") {
-      // Gmail and Outlook. The point the user needs is that this is undoable.
+      // The Gmail API. The point the user needs is that this is undoable.
       caveats.push(
         provider === "outlook"
           ? "Delete moves the message to Deleted Items; permanent delete is not available on Outlook, so it can be restored."
@@ -458,6 +460,10 @@ export function bulkProviderBlock(input: {
     } else if (permanent) {
       caveats.push(
         "Permanent delete expunges the message from the server immediately. It does not go to Trash and cannot be undone.",
+      );
+    } else if (provider === "outlook") {
+      caveats.push(
+        "Delete moves the message to Deleted Items, where it stays until the mailbox's cleanup rules remove it or you empty it.",
       );
     } else {
       caveats.push(

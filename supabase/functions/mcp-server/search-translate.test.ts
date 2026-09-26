@@ -424,7 +424,7 @@ Deno.test("the examples in the rejection are all shapes the parser takes", () =>
 function queryMentions(search: NormalizedSearch, provider: string, field: string): boolean {
   const probes: Record<string, RegExp> = {
     has_attachment: /has:attachment|hasAttachments|KEYWORD/i,
-    flagged: /is:starred|FLAGGED|\$flagged|followupFlag/i,
+    flagged: /is:starred|FLAGGED|\$flagged|flag\/flagStatus/i,
     unread: /is:unread|is:read|UNSEEN|SEEN|isRead/i,
     since: /after:|SINCE|ge 2/i,
     before: /before:|BEFORE|lt 2/i,
@@ -450,6 +450,7 @@ Deno.test("every reported drop is really absent from the query, and vice versa",
     // No free text at all: on Graph this is the $filter-only branch, where the
     // state and date predicates DO survive.
     { has_attachment: true, unread: true, since: "2026-08-01" },
+    { flagged: true },
   ];
   const checkable = ["has_attachment", "flagged", "unread", "since", "before"];
 
@@ -475,6 +476,20 @@ Deno.test("every reported drop is really absent from the query, and vice versa",
       }
     }
   }
+});
+
+Deno.test("flagged on Graph is $filter flag/flagStatus eq 'flagged', dropped (and said) only beside $search", () => {
+  const j = JSON.stringify;
+  assertEquals(j(toGraphSearch({ flagged: true })), j({ filter: "flag/flagStatus eq 'flagged'" }), "flagged alone");
+  assertEquals(j(unappliedSearchFields({ flagged: true }, "outlook")), "[]", "applied");
+  assertEquals(
+    toGraphSearch({ flagged: true, unread: true }).filter,
+    "isRead eq false and flag/flagStatus eq 'flagged'",
+    "beside unread",
+  );
+  // With free text Graph must send $search, which cannot carry a $filter.
+  assertEquals(j(unappliedSearchFields({ subject: "x", flagged: true }, "outlook")), j(["flagged"]), "beside $search");
+  assert(!/Outlook|Graph/.test(SEARCH_FIELD_DESCRIPTIONS.flagged), "no longer described as ignored on Outlook");
 });
 
 Deno.test("F-04: has_attachment on an IMAP inbox is dropped AND disclosed", () => {

@@ -320,6 +320,292 @@ export async function graphErrorFromResponse(resp: Response, context: string): P
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Send refusals: a Graph 4xx on sendMail / send / forward means NOT SENT
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// Found live on 2026-09-25 against an outlook.com mailbox Microsoft had blocked
+// from sending: every /send answered 403 ErrorAccountSuspend, and every one was
+// reported as "delivery status unknown — it may or may not have been
+// delivered". It was not delivered, and saying otherwise sends the caller off to
+// reconcile Sent Items for mail that never existed.
+//
+// sendMail, /send and /forward are synchronous submissions: Graph validates
+// the request and hands the message to the transport before it answers, and a
+// 4xx is the submission being refused. So a 4xx is a definite "not sent". A
+// 5xx (and 504 in particular), a dropped connection and a timeout stay
+// "unknown": the request may have been processed before the failure.
+
+/**
+ * Graph error codes that refuse the ACCOUNT rather than the message: every
+ * other message in the same batch would be refused the same way, so a batch
+ * stops at the first one instead of trying the rest.
+ */
+const ACCOUNT_LEVEL_SEND_CODES = new Set([
+  "ErrorAccountSuspend",
+  "ErrorAccountDisabled",
+  "ErrorMessageSubmissionBlocked",
+  "ErrorSubmissionQuotaExceeded",
+  "ErrorQuotaExceeded",
+  "ErrorSendAsDenied",
+  "ErrorAccessDenied",
+  "ErrorExceededMessageLimit",
+  "MailboxNotEnabledForRESTAPI",
+]);
+
+/** A remedy the agent can pass on, for the codes where one is known. */
+export function graphSendRefusalHint(code: string | null): string | null {
+  switch (code) {
+    case "ErrorAccountSuspend":
+    case "ErrorMessageSubmissionBlocked":
+    case "ErrorAccountDisabled":
+      return "Microsoft has blocked sending from this account. The user must sign in at " +
+        "outlook.com (or Outlook on the web) to unblock it; Microsoft usually asks them to " +
+        "verify the account there. Nothing can be sent from this inbox until they do.";
+    case "ErrorSubmissionQuotaExceeded":
+    case "ErrorExceededMessageLimit":
+      return "The account has reached Microsoft's sending limit. It resets on Microsoft's " +
+        "schedule (usually within 24 hours); sending again before then will be refused the same way.";
+    case "ErrorQuotaExceeded":
+      return "The mailbox is full, so Microsoft cannot store the sent copy. The user must free " +
+        "up space in the mailbox before anything can be sent.";
+    case "ErrorSendAsDenied":
+      return "This account is not permitted to send as that address.";
+    case "ErrorInvalidRecipients":
+      return "Check the recipient addresses.";
+    default:
+      return null;
+  }
+}
+
+/**
+ * A send Microsoft refused with a 4xx: the message was NOT sent. Carries
+ * Graph's own code and words so the agent can tell the user what Microsoft
+ * said, and `accountLevel` so a batch knows to stop.
+ */
+export class GraphSendRefusedError extends Error {
+  readonly status: number;
+  readonly code: string | null;
+  readonly graphMessage: string;
+  readonly accountLevel: boolean;
+  readonly hint: string | null;
+  constructor(context: string, status: number, code: string | null, graphMessage: string) {
+    const tag = code ? ` (${code})` : "";
+    super(`${context} refused ${status}${tag}: ${graphMessage}`);
+    this.name = "GraphSendRefusedError";
+    this.status = status;
+    this.code = code;
+    this.graphMessage = graphMessage;
+    this.accountLevel = status === 403 || (code !== null && ACCOUNT_LEVEL_SEND_CODES.has(code));
+    this.hint = graphSendRefusalHint(code);
+  }
+}
+
+/**
+ * The error for a failed send request (sendMail, /send, /forward).
+ *
+ *   401       → Error("outlook_auth_failed"), as everywhere else.
+ *   429       → Error("quota_exceeded"): throttled even after the bounded
+ *               Retry-After retries. Not sent; the batch stops.
+ *   other 4xx → {@link GraphSendRefusedError}: definitely not sent.
+ *   5xx       → {@link graphErrorFromResponse}'s OutlookGraphError, which the
+ *               handlers keep reporting as "unknown".
+ *
+ * Callers map a 404 on /send (draft_not_found) themselves, BEFORE this.
+ */
+export async function graphSendFailure(resp: Response, context: string): Promise<Error> {
+  if (resp.status === 401) {
+    await resp.body?.cancel().catch(() => {});
+    return new Error("outlook_auth_failed");
+  }
+  if (resp.status === 429) {
+    await resp.body?.cancel().catch(() => {});
+    return new Error("quota_exceeded");
+  }
+  if (resp.status >= 400 && resp.status < 500) {
+    const { code, message } = await readGraphError(resp);
+    return new GraphSendRefusedError(context, resp.status, code, message);
+  }
+  return await graphErrorFromResponse(resp, context);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Immutable ids for $search results
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// Found live on 2026-09-25: `$search` on /messages hands back default REST ids
+// (AQMkAD…) even though the request carries `Prefer: IdType="ImmutableId"`, and
+// those ids 404 once the message is moved, while ids from a plain list (same
+// header) survive the move. The header IS sent on the search (graphFetch adds
+// it to every request, and outlook-graph.test.ts pins that); the search
+// endpoint just does not honour it.
+//
+// translateExchangeIds would be the one-request fix, but it needs User.Read,
+// which this app does not request (Mail.ReadWrite + Mail.Send only), so on our
+// tokens it is a 403. Re-reading each id with the header does work with the
+// scopes we have: Graph ACCEPTS either id format in a URL and RETURNS the
+// format the Prefer header asks for. One JSON $batch carries 20 such GETs.
+
+/** Graph's JSON batching limit: 20 requests per $batch. */
+export const GRAPH_BATCH_MAX = 20;
+
+/**
+ * Map each message id to its immutable form. Ids that could not be re-read (a
+ * message deleted since the search, a throttled leg that still failed) map to
+ * themselves: a mutable id is still a working id until the message moves,
+ * while dropping the row would hide a real match.
+ */
+export async function graphImmutableMessageIds(
+  accessToken: string,
+  ids: readonly string[],
+): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  const unique = [...new Set(ids)];
+  const retry: string[] = [];
+  for (let i = 0; i < unique.length; i += GRAPH_BATCH_MAX) {
+    const chunk = unique.slice(i, i + GRAPH_BATCH_MAX);
+    const resp = await graphJson(accessToken, "/$batch", "POST", {
+      requests: chunk.map((id, j) => ({
+        id: String(j),
+        method: "GET",
+        url: `/me/messages/${encodeURIComponent(id)}?$select=id`,
+        headers: { Prefer: IMMUTABLE_ID_PREFER },
+      })),
+    });
+    if (!resp.ok) {
+      await resp.body?.cancel().catch(() => {});
+      retry.push(...chunk);
+      continue;
+    }
+    const data = (await resp.json()) as {
+      responses?: { id?: string; status?: number; body?: { id?: string } }[];
+    };
+    const seen = new Set<number>();
+    for (const r of data.responses ?? []) {
+      const j = Number(r.id);
+      if (!Number.isInteger(j) || j < 0 || j >= chunk.length) continue;
+      seen.add(j);
+      if (r.status === 200 && typeof r.body?.id === "string" && r.body.id) {
+        out.set(chunk[j], r.body.id);
+      } else if (r.status === 429 || r.status === 503) {
+        retry.push(chunk[j]);
+      } else {
+        out.set(chunk[j], chunk[j]);
+      }
+    }
+    chunk.forEach((id, j) => {
+      if (!seen.has(j)) retry.push(id);
+    });
+  }
+  // A throttled or failed batch leg: one plain GET each, which carries the
+  // shared Retry-After handling. Sequential, since throttling is why we are here.
+  for (const id of retry) {
+    try {
+      const r = await graphFetch(accessToken, `/me/messages/${encodeURIComponent(id)}?$select=id`);
+      if (r.ok) {
+        const body = (await r.json()) as { id?: string };
+        out.set(id, body.id || id);
+      } else {
+        await r.body?.cancel().catch(() => {});
+        out.set(id, id);
+      }
+    } catch (e) {
+      if (e instanceof OutlookNoMailboxError) throw e;
+      out.set(id, id);
+    }
+  }
+  return out;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Folder labels for message rows
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * The `folder` label for each of `folderIds` (a message's parentFolderId): the
+ * folder's path the way folder_list names it ("Arkiver", "Innboks/Kvitteringer"),
+ * except the Inbox itself, which is "INBOX" on every provider and is what
+ * resolveFolderId short-circuits. Only the folders actually present on a page
+ * are looked up, walking up parentFolderId to the mailbox root, memoised within
+ * the call. A folder that cannot be read keeps its id as its label, which
+ * resolveFolderId still accepts, so a label is never invented.
+ *
+ * Until 2026-09-25 a whole-mailbox Outlook search labelled every row "INBOX",
+ * wherever the message actually was, though `parentFolderId` was selected.
+ */
+export async function graphFolderLabels(
+  accessToken: string,
+  folderIds: readonly string[],
+): Promise<Map<string, string>> {
+  const labels = new Map<string, string>();
+  const wanted = [...new Set(folderIds.filter((f) => !!f))];
+  if (wanted.length === 0) return labels;
+
+  const wellKnownId = async (name: string): Promise<string | null> => {
+    try {
+      const r = await graphFetch(accessToken, `/me/mailFolders/${name}?$select=id`);
+      if (!r.ok) {
+        await r.body?.cancel().catch(() => {});
+        return null;
+      }
+      return ((await r.json()) as { id?: string }).id ?? null;
+    } catch (e) {
+      if (e instanceof OutlookNoMailboxError) throw e;
+      return null;
+    }
+  };
+  const [inboxId, rootId] = await Promise.all([wellKnownId("inbox"), wellKnownId("msgfolderroot")]);
+
+  const nodes = new Map<string, { name: string; parent: string | null } | null>();
+  const readNode = async (id: string) => {
+    if (nodes.has(id)) return nodes.get(id)!;
+    let node: { name: string; parent: string | null } | null = null;
+    try {
+      const r = await graphFetch(
+        accessToken,
+        `/me/mailFolders/${encodeURIComponent(id)}?$select=id,displayName,parentFolderId`,
+      );
+      if (r.ok) {
+        const d = (await r.json()) as { displayName?: string; parentFolderId?: string };
+        node = { name: d.displayName ?? id, parent: d.parentFolderId ?? null };
+      } else {
+        await r.body?.cancel().catch(() => {});
+      }
+    } catch (e) {
+      if (e instanceof OutlookNoMailboxError) throw e;
+    }
+    nodes.set(id, node);
+    return node;
+  };
+
+  const pathOf = async (id: string): Promise<string> => {
+    if (inboxId && id === inboxId) return "INBOX";
+    const names: string[] = [];
+    let cur: string | null = id;
+    for (let depth = 0; cur && depth < OUTLOOK_FOLDER_WALK_LIMITS.maxDepth; depth++) {
+      if (rootId && cur === rootId) break;
+      const node = await readNode(cur);
+      if (!node) {
+        // The folder itself is unreadable: its id is the honest label. An
+        // unreadable ANCESTOR leaves the path starting at the part we know.
+        if (names.length === 0) return id;
+        break;
+      }
+      names.unshift(node.name);
+      cur = node.parent;
+    }
+    return names.join("/") || id;
+  };
+
+  // Graph's per-mailbox concurrency limit is 4.
+  for (let i = 0; i < wanted.length; i += OUTLOOK_FOLDER_WALK_LIMITS.concurrency) {
+    const batch = wanted.slice(i, i + OUTLOOK_FOLDER_WALK_LIMITS.concurrency);
+    const paths = await Promise.all(batch.map(pathOf));
+    batch.forEach((id, j) => labels.set(id, paths[j]));
+  }
+  return labels;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 401 recovery and "this account has no mailbox"
 // ─────────────────────────────────────────────────────────────────────────────
 //
@@ -924,13 +1210,49 @@ export function outlookFolderReferences(tree: OutlookFolderTree): { id: string; 
 }
 
 /**
+ * What Outlook calls its archive folder in the mailbox languages we have seen
+ * or can expect, compared case-insensitively. Order is preference: the English
+ * name first, because Outlook on the web creates "Archive" in some locales
+ * regardless of UI language. Found live on 2026-09-25: a Norwegian outlook.com
+ * mailbox has "Arkiver", and the English-only lookup below created a second,
+ * English "Archive" beside it.
+ */
+export const OUTLOOK_ARCHIVE_FOLDER_NAMES: readonly string[] = [
+  "Archive", "Archives",
+  "Arkiver", "Arkiv", // nb/nn, da, sv
+  "Archiv", // de, cs
+  "Archief", // nl
+  "Archivio", // it
+  "Archivo", "Archivar", // es
+  "Arquivo", "Arquivar", // pt
+  "Arkisto", // fi
+  "Archiwum", // pl
+  "Archívum", // hu
+  "Arhivă", // ro
+  "Arşiv", // tr
+  "Архив", // ru, bg
+  "Αρχειοθέτηση", "Αρχείο", // el
+  "ארכיון", // he
+  "أرشيف", // ar
+  "存档", "归档", "封存", "封存檔案", // zh
+  "アーカイブ", // ja
+  "보관", "보관함", // ko
+];
+
+/**
  * The folder id for Outlook's `archive` role.
  *
- * `archive` is a Graph well-known name, but some consumer (outlook.com)
- * mailboxes have never had the folder provisioned and answer 404
- * ErrorFolderNotFound. Then: an existing top-level folder named "Archive",
- * and failing that, a newly created one — the same thing Outlook's own
- * Archive button does on such a mailbox.
+ *   1. The well-known name `archive` (GET /me/mailFolders/archive). This is the
+ *      folder Outlook's own Archive button files into, whatever it is called
+ *      in the mailbox's language, so it is always tried first.
+ *   2. A 404 there means the mailbox has never had the well-known folder
+ *      registered (seen on consumer outlook.com mailboxes, where the folder
+ *      Outlook shows as "Arkiver" can exist WITHOUT carrying the well-known
+ *      role). Mail folder ids are not affected by `Prefer: IdType=
+ *      "ImmutableId"` (containers ignore it, per the immutable-id doc), so the
+ *      header is not why this fails. Then: an existing TOP-LEVEL folder whose
+ *      name is a known localised archive name ({@link OUTLOOK_ARCHIVE_FOLDER_NAMES}).
+ *   3. Only then a newly created "Archive", the last resort.
  */
 export async function resolveOutlookArchiveFolderId(accessToken: string): Promise<string> {
   const wk = await graphFetch(accessToken, "/me/mailFolders/archive?$select=id");
@@ -939,14 +1261,29 @@ export async function resolveOutlookArchiveFolderId(accessToken: string): Promis
   await wk.body?.cancel().catch(() => {});
 
   const findByName = async (): Promise<string | null> => {
-    const q = new URLSearchParams({
-      $filter: "displayName eq 'Archive'",
-      $select: "id,displayName",
-    });
-    const r = await graphFetch(accessToken, `/me/mailFolders?${q}`);
-    if (!r.ok) throw await graphErrorFromResponse(r, "Outlook archive folder lookup");
-    const data = (await r.json()) as { value?: { id: string }[] };
-    return data.value?.[0]?.id ?? null;
+    // Every top-level folder (a mailbox has tens, one or two pages), matched
+    // here rather than with `displayName eq` per candidate: one request instead
+    // of thirty, and no OData quoting of non-Latin names.
+    const found = new Map<string, string>();
+    let url: string | undefined = "/me/mailFolders?$top=100&$select=id,displayName";
+    for (let page = 0; url && page < 10; page++) {
+      const r = await graphFetch(accessToken, url);
+      if (!r.ok) throw await graphErrorFromResponse(r, "Outlook archive folder lookup");
+      const data = (await r.json()) as {
+        value?: { id: string; displayName?: string }[];
+        "@odata.nextLink"?: string;
+      };
+      for (const f of data.value ?? []) {
+        const k = (f.displayName ?? "").trim().toLocaleLowerCase();
+        if (k && !found.has(k)) found.set(k, f.id);
+      }
+      url = data["@odata.nextLink"];
+    }
+    for (const name of OUTLOOK_ARCHIVE_FOLDER_NAMES) {
+      const id = found.get(name.toLocaleLowerCase());
+      if (id) return id;
+    }
+    return null;
   };
 
   const existing = await findByName();
@@ -961,6 +1298,113 @@ export async function resolveOutlookArchiveFolderId(accessToken: string): Promis
     if (raced) return raced;
   }
   throw await graphErrorFromResponse(created, "Outlook archive folder create");
+}
+
+/**
+ * The email_list total for an Outlook folder.
+ *
+ * The last page decides outright: nothing after it, so the total is what came
+ * before it plus what it holds. Otherwise the folder counters: unread for an
+ * unread list, read (total − unread) for a read list, total otherwise. They
+ * are clamped so they can never claim fewer messages than the page just
+ * showed. No counters and not the last page: null (unknown), never a guess.
+ */
+export function outlookListTotal(input: {
+  counts: { total: number; unread: number } | null;
+  unread: boolean | undefined;
+  offset: number;
+  returned: number;
+  hasMore: boolean;
+}): number | null {
+  const seen = input.offset + input.returned;
+  if (!input.hasMore && (input.returned > 0 || input.offset === 0)) return seen;
+  if (!input.counts) return null;
+  const counted = input.unread === true
+    ? input.counts.unread
+    : input.unread === false
+    ? input.counts.total - input.counts.unread
+    : input.counts.total;
+  return Math.max(counted, input.hasMore ? seen + 1 : seen);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Nested folder create
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * "Parent/Child" → ["Parent", "Child"]. Segments are trimmed and empty ones
+ * (a leading, trailing or doubled slash) dropped, the way folder_list names
+ * nested Outlook folders by path. A name with no slash is one segment.
+ */
+export function splitOutlookFolderPath(path: string): string[] {
+  return path.split("/").map((s) => s.trim()).filter((s) => s.length > 0);
+}
+
+/** An OData string literal: single quotes doubled. */
+function odataString(value: string): string {
+  return `'${value.replace(/'/g, "''")}'`;
+}
+
+/**
+ * The id of the folder named `name` directly under `parentId` (null: top
+ * level), or null when there is none. Graph string comparison on displayName
+ * is case-insensitive, like Outlook's own folder names.
+ */
+export async function graphFindChildFolder(
+  accessToken: string,
+  parentId: string | null,
+  name: string,
+): Promise<string | null> {
+  const base = parentId === null
+    ? "/me/mailFolders"
+    : `/me/mailFolders/${encodeURIComponent(parentId)}/childFolders`;
+  const q = new URLSearchParams({ $filter: `displayName eq ${odataString(name)}`, $select: "id,displayName" });
+  const r = await graphFetch(accessToken, `${base}?${q}`);
+  if (!r.ok) throw await graphErrorFromResponse(r, "Outlook folder lookup");
+  const data = (await r.json()) as { value?: { id: string }[] };
+  return data.value?.[0]?.id ?? null;
+}
+
+/**
+ * Resolve every segment of `segments` but the last to a folder id, creating
+ * the missing ones, and return the id the LAST segment must be created under
+ * (null: top level).
+ *
+ * Creating missing parents matches IMAP, where RFC 3501 CREATE of "a/b" makes
+ * the superior "a" too, which is how every IMAP server this connector talks to
+ * behaves. `wellKnown` lets the FIRST segment be a role ("inbox") when no
+ * top-level folder literally has that name: the well-known name is a valid
+ * path segment in `/me/mailFolders/{id}/childFolders`.
+ */
+export async function graphEnsureParentFolders(
+  accessToken: string,
+  segments: readonly string[],
+  wellKnown: (segment: string) => string | null = () => null,
+): Promise<string | null> {
+  let parent: string | null = null;
+  for (let i = 0; i < segments.length - 1; i++) {
+    const name = segments[i];
+    let id = await graphFindChildFolder(accessToken, parent, name);
+    if (!id && i === 0) id = wellKnown(name);
+    if (!id) {
+      const url: string = parent === null
+        ? "/me/mailFolders"
+        : `/me/mailFolders/${encodeURIComponent(parent)}/childFolders`;
+      const created = await graphJson(accessToken, url, "POST", { displayName: name });
+      if (created.ok) {
+        id = ((await created.json()) as { id: string }).id;
+      } else if (created.status === 409) {
+        // Created by someone else between our lookup and our create.
+        await created.body?.cancel().catch(() => {});
+        id = await graphFindChildFolder(accessToken, parent, name);
+        if (!id) throw await graphErrorFromResponse(created, "Outlook parent folder create");
+      } else {
+        throw await graphErrorFromResponse(created, `Outlook parent folder '${name}' create`);
+      }
+    }
+    parent = id;
+  }
+  return parent;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1178,6 +1622,37 @@ export function graphSendDraft(accessToken: string, draftId: string): Promise<Re
   });
 }
 
+/**
+ * `POST /me/messages/{id}/copy`. Graph answers 201 with the NEW message, whose
+ * id (immutable, under our Prefer header) is returned so the caller can act on
+ * the copy. Null only if Graph ever answers without a body.
+ */
+export async function graphCopyMessage(
+  accessToken: string,
+  messageId: string,
+  destinationId: string,
+): Promise<string | null> {
+  const resp = await graphJson(
+    accessToken,
+    `/me/messages/${encodeURIComponent(messageId)}/copy`,
+    "POST",
+    { destinationId },
+  );
+  if (!resp.ok) {
+    if (resp.status === 404) {
+      await resp.body?.cancel().catch(() => {});
+      throw new Error("message_not_found");
+    }
+    throw await graphErrorFromResponse(resp, "Outlook copy");
+  }
+  try {
+    const data = (await resp.json()) as { id?: string };
+    return typeof data.id === "string" && data.id ? data.id : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Best-effort cleanup of a draft we created and could not finish. Never throws. */
 export async function graphDeleteDraftQuietly(accessToken: string, draftId: string): Promise<void> {
   try {
@@ -1256,7 +1731,11 @@ export async function graphPrepareResponseDraft(
   opts: {
     messageId: string;
     kind: "createReply" | "createReplyAll" | "createForward";
-    /** Written as-is onto the draft: subject, toRecipients, ccRecipients, … */
+    /**
+     * Written as-is onto the draft: toRecipients, ccRecipients, … A patch
+     * without `subject` keeps the subject Graph generated, which is in the
+     * mailbox's own language ("VS: …" in a Norwegian mailbox).
+     */
     patch: Record<string, unknown>;
     html?: string | null;
     text?: string | null;

@@ -82,8 +82,16 @@ import {
   graphFetch,
   graphFileAttachment,
   graphFilterForDateOrder,
-  GRAPH_MIME_SEND_MAX_BYTES,
+  graphCopyMessage,
+  graphEnsureParentFolders,
+  graphFolderLabels,
+  graphImmutableMessageIds,
   graphJson,
+  graphSendFailure,
+  GraphSendRefusedError,
+  splitOutlookFolderPath,
+  outlookListTotal,
+  OutlookGraphError,
   graphListAttachmentMeta,
   graphPatchMessage,
   graphPrepareResponseDraft,
@@ -274,6 +282,7 @@ import {
 } from "./triage-engine.ts";
 import { sendViaSmtp, SmtpAuthError, SmtpNotSentError } from "./smtp-client.ts";
 import {
+  attachmentFilenameFor,
   buildRelayForwardMime,
   composeIntroHtml,
   composeIntroText,
@@ -640,6 +649,53 @@ function notSentResult(
       delivery_status: DELIVERY_STATUS_NOT_SENT,
     } as ToolErrorResult["result"],
     logStatus: "error",
+    logErrorCode: PROVIDER_NOT_SENT_ERROR_CODE,
+  };
+}
+
+/**
+ * The sentence for a send Microsoft refused with a 4xx ({@link
+ * GraphSendRefusedError}). Shared by the tool results below and the batch
+ * forward's per-message line, so the two cannot drift.
+ *
+ * Unlike {@link notSentResult} this does not promise that a retry will work:
+ * a refusal like ErrorAccountSuspend fails identically until the user acts,
+ * and the hint says what that action is. What it does promise is the part
+ * that is certain: nothing was sent, there is nothing to reconcile in Sent.
+ */
+function graphRefusedText(operation: string, err: GraphSendRefusedError): string {
+  const code = err.code ? `${err.code}: ` : "";
+  return `${operation} failed: Microsoft refused to send this message (HTTP ${err.status}, ` +
+    `${code}${err.graphMessage}), so nothing was sent: there is no delivery and no copy in ` +
+    `Sent Items.` +
+    (err.hint ? ` ${err.hint}` : "") +
+    (err.accountLevel
+      ? " This refusal is about the account, not this message, so every other send from this inbox will be refused the same way until it is resolved."
+      : " Correct the request and send it again; the same idempotency_key may be reused.");
+}
+
+/** Tool result for {@link GraphSendRefusedError}: failed, NOT sent, with Graph's own code. */
+function graphRefusedResult(
+  operation: string,
+  inboxId: string,
+  err: GraphSendRefusedError,
+): ToolErrorResult {
+  console.warn(`[mcp-server] ${operation}: provider_refused`, {
+    inbox_id: inboxId,
+    provider: "outlook",
+    status: err.status,
+    code: err.code,
+  });
+  return {
+    result: {
+      content: [{ type: "text", text: graphRefusedText(operation, err) }],
+      isError: true,
+      delivery_status: DELIVERY_STATUS_NOT_SENT,
+      provider_error_code: err.code ?? `http_${err.status}`,
+    } as ToolErrorResult["result"],
+    logStatus: "error",
+    // Nothing was transmitted, so the idempotency key is released like any
+    // other not-sent failure (completeOutboundIdempotency).
     logErrorCode: PROVIDER_NOT_SENT_ERROR_CODE,
   };
 }
@@ -3604,7 +3660,7 @@ const SEARCH_SCHEMA_DESCRIPTIONS: Record<string, string> = {
   text: "Text to match anywhere, headers included.",
   unread: "true = unread only; false = read only; omit for both.",
   has_attachment: "true = only messages with an attachment. Ignored on generic IMAP.",
-  flagged: "true = only flagged/starred messages. Ignored on Outlook.",
+  flagged: "true = only flagged/starred messages.",
   // The relative and truncated forms were shipped but never advertised: the
   // schema said `format: "date-or-date-time"` and nothing else, so the only
   // caller who learned about "7 days ago" was one who had already been
@@ -6626,6 +6682,11 @@ const TOOL_OUTPUT_SCHEMAS: Record<string, Record<string, unknown>> = {
       operation: { type: "string" },
       inbox_id: { type: "string" },
       destination_folder_id: { type: "string" },
+      new_message_id: {
+        type: "string",
+        description: "The copy's own message id, when the provider returns one (Outlook does). " +
+          "message_id stays the original's.",
+      },
     },
     required: ["success", "message_id", "operation", "inbox_id", "destination_folder_id"],
     additionalProperties: false,
@@ -8486,9 +8547,10 @@ interface ProviderCapabilities {
   delete: boolean;
   /**
    * Whether the provider supports soft-delete to Trash, hard expunge, or both.
-   *   'trash'   — only move-to-Trash is safe (Gmail, Outlook)
+   *   'trash'   — only move-to-Trash is safe (the Gmail API)
    *   'expunge' — only hard expunge (rare)
-   *   'both'    — Trash or permanent delete selectable (IMAP)
+   *   'both'    — Trash or permanent delete selectable (IMAP; Outlook via
+   *               Graph permanentDelete)
    */
   trash_vs_expunge: "trash" | "expunge" | "both";
   /** Forwarding messages (synthesising a forwarded MIME body + send) */
@@ -8557,8 +8619,9 @@ const PROVIDER_CAPABILITIES: Record<string, ProviderCapabilities> = {
     move: true,          // Graph messages/{id}/move
     copy: true,          // Graph messages/{id}/copy
     delete: true,
-    trash_vs_expunge: "trash",
-    forward: true,       // Graph createForward or MIME send
+    // Deleted Items by default; permanent: true is Graph permanentDelete.
+    trash_vs_expunge: "both",
+    forward: true,       // Graph createForward (native forward)
     drafts: true,        // Graph createDraft / send
     contacts_api: true,  // Graph /contacts
     contacts_db: true,   // live header scan (no DB)
@@ -8637,15 +8700,16 @@ const COMPATIBILITY_PROFILES: Record<string, CompatibilityProfile> = {
     operations: {
       "search.body": "different",
       "search.has_attachment": "exact",
-      "search.flagged": "unavailable",
+      "search.flagged": "exact",
       "organization.containers": "exact",
       "organization.move": "exact",
       "organization.copy": "exact",
-      "delete.permanent": "unavailable",
+      "delete.permanent": "exact",
     },
     notes: [
       "Outlook uses folders and Microsoft Graph search semantics.",
-      "Flagged search is not available through the normalized Graph search path.",
+      "Graph cannot combine a text search with state filters, so with a text criterion present the unread, attachment, flagged and date filters are not applied (the result says which).",
+      "Permanent delete uses Graph permanentDelete: the message skips Deleted Items, Outlook can no longer see it, and Exchange removes it for good after its retention period.",
       "The Outlook connector is not generally available yet.",
     ],
   },
@@ -8714,7 +8778,8 @@ function unsupportedFeatureError(
 }
 
 /**
- * Structured error for permanent=true on a trash-only provider (Gmail/Outlook).
+ * Structured error for permanent=true on a trash-only provider (the Gmail API;
+ * Outlook has Graph permanentDelete since 2026-09-25).
  * These providers can only move messages to Trash; they cannot expunge. Tell
  * the caller exactly how to retry rather than attempting a doomed API call.
  */
@@ -10473,6 +10538,8 @@ interface OutlookMessage {
   bodyPreview?: string;
   isRead?: boolean;
   hasAttachments?: boolean;
+  /** Selected by the search; labels each row with its real folder. */
+  parentFolderId?: string;
 }
 
 /**
@@ -10492,13 +10559,17 @@ async function listOutlookMessages(
   const accessToken = await withFreshOutlookToken(inbox);
   const folderSegment = outlookFolderPathSegment(folder);
 
+  // One row more than the page: whether it comes back IS has_more. Found live
+  // on 2026-09-25: an unread list of 5 messages reported total: 6 and
+  // has_more: true, from `$count` (an eventually consistent index count) and
+  // an `@odata.nextLink` Graph sends whenever the page is full, not only when
+  // there is more.
   const params = new URLSearchParams({
     $select:
       "id,conversationId,from,toRecipients,subject,receivedDateTime,bodyPreview,isRead,hasAttachments",
-    $top: String(limit),
+    $top: String(limit + 1),
     $skip: String(offset),
     $orderby: "receivedDateTime desc",
-    $count: "true",
   });
   // Graph's InefficientFilter rule: a property in $orderby must lead $filter.
   // `isRead eq false` alone beside `$orderby=receivedDateTime desc` is a 400,
@@ -10506,25 +10577,22 @@ async function listOutlookMessages(
   if (unread === true) params.set("$filter", graphFilterForDateOrder("isRead eq false"));
   else if (unread === false) params.set("$filter", graphFilterForDateOrder("isRead eq true"));
 
-  const resp = await graphFetch(
-    accessToken,
-    `/me/mailFolders/${folderSegment}/messages?${params}`,
-    { headers: { ConsistencyLevel: "eventual" } },
-  );
+  // The total comes from the folder's own counters, which Microsoft documents
+  // as THE way to count a folder (instead of `$count` + `$filter isRead`):
+  // exact, and one cheap GET issued beside the list.
+  const [resp, counts] = await Promise.all([
+    graphFetch(accessToken, `/me/mailFolders/${folderSegment}/messages?${params}`),
+    outlookFolderCounts(accessToken, folderSegment),
+  ]);
 
   if (!resp.ok) throw await graphErrorFromResponse(resp, "Outlook list messages");
 
-  const data = (await resp.json()) as {
-    value?: OutlookMessage[];
-    "@odata.count"?: number;
-    "@odata.nextLink"?: string;
-  };
+  const data = (await resp.json()) as { value?: OutlookMessage[] };
 
-  const rawMessages = data.value ?? [];
-  // `$count=true` (with ConsistencyLevel: eventual) yields an exact count.
-  // When Graph omits it, report `null` (unknown) rather than fabricate one.
-  const total = data["@odata.count"] ?? null;
-  const hasMore = !!data["@odata.nextLink"];
+  const fetched = data.value ?? [];
+  const hasMore = fetched.length > limit;
+  const rawMessages = fetched.slice(0, limit);
+  const total = outlookListTotal({ counts, unread, offset, returned: rawMessages.length, hasMore });
 
   const messages: EmailSummary[] = rawMessages.map((msg) => ({
     id: msg.id,
@@ -10545,9 +10613,33 @@ async function listOutlookMessages(
     thread_id: msg.conversationId ?? msg.id,
   }));
 
-  // `@odata.count` is exact when present, null otherwise — never an estimate.
+  // Exact when known (folder counters, or the last page), null otherwise.
   return { messages, total, total_is_estimate: false, has_more: hasMore, next_offset: offset + limit };
 }
+
+/** A folder's totalItemCount / unreadItemCount, or null when they cannot be read. */
+async function outlookFolderCounts(
+  accessToken: string,
+  folderSegment: string,
+): Promise<{ total: number; unread: number } | null> {
+  try {
+    const r = await graphFetch(
+      accessToken,
+      `/me/mailFolders/${folderSegment}?$select=totalItemCount,unreadItemCount`,
+    );
+    if (!r.ok) {
+      await r.body?.cancel().catch(() => {});
+      return null;
+    }
+    const d = (await r.json()) as { totalItemCount?: number; unreadItemCount?: number };
+    if (typeof d.totalItemCount !== "number" || typeof d.unreadItemCount !== "number") return null;
+    return { total: d.totalItemCount, unread: d.unreadItemCount };
+  } catch (e) {
+    if (e instanceof Error && e.name === "OutlookNoMailboxError") throw e;
+    return null;
+  }
+}
+
 
 
 // ---------------------------------------------------------------------------
@@ -14328,8 +14420,12 @@ async function sendOutlookMessage(
     });
     const sendResp = await graphSendDraft(accessToken, draftId);
     if (!sendResp.ok) {
-      if (sendResp.status === 429) throw new Error("quota_exceeded");
-      throw await graphErrorFromResponse(sendResp, "Outlook send");
+      // 4xx: Microsoft refused the submission, nothing was sent (see
+      // graphSendFailure), and the draft we made for it goes too. A 5xx keeps
+      // the draft: if the send did happen, that id IS the Sent Items copy.
+      const err = await graphSendFailure(sendResp, "Outlook send");
+      if (!(err instanceof OutlookGraphError)) await graphDeleteDraftQuietly(accessToken, draftId);
+      throw err;
     }
     await sendResp.body?.cancel().catch(() => {});
     // With `Prefer: IdType="ImmutableId"` a draft keeps its id after /send,
@@ -14346,10 +14442,11 @@ async function sendOutlookMessage(
   const resp = await graphJson(accessToken, "/me/sendMail", "POST", { message, saveToSentItems: true });
 
   if (!resp.ok) {
-    if (resp.status === 429) throw new Error("quota_exceeded");
-    // 403 is a permission/policy refusal (e.g. Mail.Send not granted on a
-    // shared mailbox), NOT an expired sign-in; graphErrorFromResponse says so.
-    throw await graphErrorFromResponse(resp, "Outlook send");
+    // A 4xx is a definite refusal (not sent), carried with Graph's code and
+    // words; 429 after the bounded retries is quota_exceeded; a 5xx stays
+    // "unknown". 403 is a permission/policy/account refusal, NOT an expired
+    // sign-in. See graphSendFailure.
+    throw await graphSendFailure(resp, "Outlook send");
   }
   await resp.body?.cancel().catch(() => {});
 
@@ -14783,8 +14880,10 @@ async function replyOutlookMessage(
 
   const sendResp = await graphSendDraft(accessToken, draft.id);
   if (!sendResp.ok) {
-    if (sendResp.status === 429) throw new Error("quota_exceeded");
-    throw await graphErrorFromResponse(sendResp, "Outlook reply");
+    // Same rule as the send path: a 4xx is a refusal, not sent, draft removed.
+    const err = await graphSendFailure(sendResp, "Outlook reply");
+    if (!(err instanceof OutlookGraphError)) await graphDeleteDraftQuietly(accessToken, draft.id);
+    throw err;
   }
   await sendResp.body?.cancel().catch(() => {});
 
@@ -14920,14 +15019,25 @@ function makeForwardSubject(origSubject: string): string {
  *   2. STAGE "compose": author the intro part (note, signature, the
  *      "---------- Forwarded message ----------" block) and place the original
  *      under it. The original is not decoded at any point.
- *   3. Transmit through the provider's raw endpoint: SMTP DATA, Gmail's
- *      message/rfc822 upload, or Graph's MIME sendMail.
+ *   3. Transmit through the provider's raw endpoint: SMTP DATA or Gmail's
+ *      message/rfc822 upload. An Outlook sender never gets here: see
+ *      outlookForward.
  */
 async function forwardRelayMessage(
   inbox: InboxRow,
   originalMessageId: string,
   params: ForwardEmailParams,
 ): Promise<ForwardEmailResult> {
+  // An Outlook SENDER forwards through Graph's own createForward, never the
+  // relay below. Found live on 2026-09-25: Graph's MIME sendMail converts the
+  // relay's multipart/mixed [note, original body] into an Exchange item, and
+  // Exchange keeps only the FIRST text part as the body. The original arrived
+  // at the recipient as an "ATT00001.txt" attachment under the note. The
+  // native forward is what Outlook itself sends: one body with the note above
+  // Graph's quoted original, and the original's attachments copied
+  // server-side (so no 25 MB ceiling and nothing buffered here either).
+  if (inbox.provider === "outlook") return await outlookForward(inbox, originalMessageId, params);
+
   // STAGE "source" (see send-stages.ts): nothing is on the wire until the
   // provider call at the bottom, so a throw from in here is not_sent and the
   // caller may retry it immediately.
@@ -14950,10 +15060,10 @@ async function forwardRelayMessage(
       to: params.to,
       cc: params.cc.length ? params.cc : undefined,
       bcc: params.bcc.length ? params.bcc : undefined,
-      // The header IS the recipient channel on Gmail's raw send and on Graph's
-      // MIME send, and both submission agents strip it before delivery. SMTP
-      // carries BCC in the envelope (RCPT TO), so the header must not go out
-      // there. See MimeMessageParams.includeBccHeader for the full rule.
+      // The header IS the recipient channel on Gmail's raw send, which strips
+      // it before delivery. SMTP carries BCC in the envelope (RCPT TO), so the
+      // header must not go out there. See MimeMessageParams.includeBccHeader
+      // for the full rule.
       includeBccHeader: inbox.provider !== "imap",
       subject: fwdSubject,
       messageId,
@@ -14968,14 +15078,7 @@ async function forwardRelayMessage(
     return { fwdSubject, bytes: relay.bytes, messageId };
   });
 
-  // Graph's MIME sendMail takes the message base64-encoded in a request capped
-  // at 4 MB, so an Outlook forward past ~2.3 MB cannot use it. Those go through
-  // Graph's own createForward instead, which copies the original's attachments
-  // server-side and has no such ceiling. Not byte for byte (Graph re-renders
-  // the original), but a 25 MB forward that arrives beats one that cannot.
-  const sent = inbox.provider === "outlook" && bytes.length > GRAPH_MIME_SEND_MAX_BYTES
-    ? await outlookForwardViaDraft(inbox, originalMessageId, params, fwdSubject, original.bytes)
-    : await transmitRawMessage(inbox, bytes, messageId, params);
+  const sent = await transmitRawMessage(inbox, bytes, messageId, params);
 
   return {
     message_id: sent.message_id,
@@ -14989,49 +15092,90 @@ async function forwardRelayMessage(
 }
 
 /**
- * An Outlook forward too large for Graph's MIME sendMail.
+ * email_forward for an Outlook sender: Graph-native, both shapes.
  *
- *   inline (the default): `createForward` on the original — Graph builds a
- *     draft holding the original's body, its "From/Sent/To/Subject" header
- *     block and its attachments, all copied server-side. The draft is PATCHed
- *     with our recipients, subject and the caller's note above the forwarded
- *     block; with include_attachments: false the non-inline attachments are
- *     removed from the draft (the original is untouched).
+ *   inline (the default): `createForward` on the original. Graph builds a
+ *     draft holding the original's body under its own "From/Sent/To/Subject"
+ *     block, and the original's attachments, all server-side. The draft is
+ *     PATCHed with our recipients and the caller's note ABOVE that quote (the
+ *     quote is kept, never replaced); with include_attachments: false its
+ *     non-inline attachments are deleted from the draft (the original is
+ *     untouched). The subject is Graph's own, in the mailbox's language
+ *     ("FW: …", "VS: …"), exactly what Outlook would have sent.
  *   as_attachment: a new draft carrying the caller's note, with the original's
- *     exact bytes attached as a .eml through an upload session.
+ *     exact bytes ($value) attached as a .eml (message/rfc822) through the
+ *     upload-session helper when large. Chosen over an itemAttachment, which
+ *     Graph can only create from a JSON message body, i.e. a re-rendered copy
+ *     rather than the original.
  *
- * Every step before /send is STAGE "compose" and deletes its draft on failure.
+ * Every step before /send is STAGE "compose" (or "source") and deletes its
+ * draft on failure. The batch forward runs through here too (forwardOne).
  */
+async function outlookForward(
+  inbox: InboxRow,
+  originalMessageId: string,
+  params: ForwardEmailParams,
+): Promise<ForwardEmailResult> {
+  const original = await preTransmission("source", async () => {
+    applyReplyForwardSignature(params, inbox, {
+      include_signature: params.include_signature,
+    });
+    if (!params.asAttachment) return null;
+    return await readOriginalMessage(inbox, originalMessageId, FORWARD_RELAY_MAX_BYTES);
+  });
+  const fwdSubject = original
+    ? makeForwardSubject(summarizeOriginal(splitRawMessage(original.bytes).headerBlock).subject)
+    : null;
+  const sent = await outlookForwardViaDraft(
+    inbox,
+    originalMessageId,
+    params,
+    fwdSubject,
+    original?.bytes ?? null,
+  );
+  return {
+    message_id: sent.message_id,
+    thread_id: sent.thread_id,
+    sent_at: sent.sent_at,
+    forwarded_from: originalMessageId,
+    to: params.to.map((e) => parseEmailAddress(e)),
+    subject: sent.subject,
+    status: "sent",
+  };
+}
+
+/** See {@link outlookForward}. */
 async function outlookForwardViaDraft(
   inbox: InboxRow,
   originalMessageId: string,
   params: ForwardEmailParams,
-  fwdSubject: string,
-  originalBytes: Uint8Array,
-): Promise<{ message_id: string; thread_id: string; sent_at: string }> {
+  /** as_attachment only; inline keeps Graph's own subject. */
+  fwdSubject: string | null,
+  /** as_attachment only: the original's raw bytes. */
+  originalBytes: Uint8Array | null,
+): Promise<{ message_id: string; thread_id: string; sent_at: string; subject: string }> {
   const recipients = (list: string[]) =>
     list.map((e) => {
       const p = parseEmailAddress(e);
       return { emailAddress: { ...(p.name ? { name: p.name } : {}), address: p.email } };
     });
   const addressing = {
-    subject: fwdSubject,
     toRecipients: recipients(params.to),
     ccRecipients: recipients(params.cc),
     bccRecipients: recipients(params.bcc),
   };
 
-  const { accessToken, draft } = await preTransmission("compose", async () => {
+  const { accessToken, draft, subject } = await preTransmission("compose", async () => {
     const accessToken = await withFreshOutlookToken(inbox);
-    if (params.asAttachment) {
+    if (params.asAttachment && originalBytes) {
+      const subject = fwdSubject ?? "Fwd:";
       const note = params.htmlBody && params.htmlBody.trim()
         ? { contentType: "HTML", content: params.htmlBody }
         : { contentType: "Text", content: params.body ?? "" };
-      const created = await graphCreateDraft(accessToken, { ...addressing, body: note });
+      const created = await graphCreateDraft(accessToken, { ...addressing, subject, body: note });
       try {
-        const safeName = (fwdSubject.replace(/[\\/:*?"<>|\r\n]+/g, " ").trim() || "message").slice(0, 120);
         await graphAddAttachments(accessToken, created.id, [{
-          filename: `${safeName}.eml`,
+          filename: attachmentFilenameFor(subject),
           mime_type: "message/rfc822",
           bytes: originalBytes,
         }]);
@@ -15039,7 +15183,7 @@ async function outlookForwardViaDraft(
         await graphDeleteDraftQuietly(accessToken, created.id);
         throw e;
       }
-      return { accessToken, draft: created };
+      return { accessToken, draft: created, subject };
     }
 
     const created = await graphPrepareResponseDraft(accessToken, {
@@ -15050,13 +15194,16 @@ async function outlookForwardViaDraft(
       text: params.body,
       removeFileAttachments: !params.includeAttachments,
     });
-    return { accessToken, draft: created };
+    return { accessToken, draft: created, subject: created.subject ?? "" };
   });
 
   const sendResp = await graphSendDraft(accessToken, draft.id);
   if (!sendResp.ok) {
-    if (sendResp.status === 429) throw new Error("quota_exceeded");
-    throw await graphErrorFromResponse(sendResp, "Outlook forward");
+    // A 4xx here is a refusal: nothing was sent, and the draft we built is
+    // left in Drafts for nobody, so it goes.
+    const err = await graphSendFailure(sendResp, "Outlook forward");
+    if (!(err instanceof OutlookGraphError)) await graphDeleteDraftQuietly(accessToken, draft.id);
+    throw err;
   }
   await sendResp.body?.cancel().catch(() => {});
   // Immutable id: the draft's id names the Sent Items copy after /send.
@@ -15064,17 +15211,18 @@ async function outlookForwardViaDraft(
     message_id: draft.id,
     thread_id: draft.conversationId ?? "",
     sent_at: new Date().toISOString(),
+    subject,
   };
 }
 
 /**
  * Hand a complete RFC 5322 message, as octets, to the provider.
  *
- * This is the one place a raw message leaves the server. The three transports
+ * This is the one place a raw message leaves the server. The two transports
  * differ only in framing: SMTP takes the octets after dot-stuffing (and
  * declares 8BITMIME when the message needs it and the server offers it),
- * Gmail's upload endpoint takes them as `message/rfc822`, Graph's sendMail
- * takes them base64-encoded with a text/plain content type.
+ * Gmail's upload endpoint takes them as `message/rfc822`. Outlook is not a raw
+ * transport any more (see outlookForward).
  */
 async function transmitRawMessage(
   inbox: InboxRow,
@@ -15129,27 +15277,12 @@ async function transmitRawMessage(
         sent_at: new Date().toISOString(),
       };
     }
-    case "outlook": {
-      const accessToken = await preTransmission("compose", () => withFreshOutlookToken(inbox));
-      // Graph's MIME form of sendMail: "provide the MIME content as a
-      // base64-encoded string in the request body" with Content-Type
-      // text/plain. Saves to Sent Items like the JSON form. Capped at 4 MB per
-      // request, which is why forwardRelayMessage routes anything larger than
-      // GRAPH_MIME_SEND_MAX_BYTES through outlookForwardViaDraft instead.
-      const resp = await graphFetch(accessToken, "/me/sendMail", {
-        method: "POST",
-        headers: { "Content-Type": "text/plain" },
-        body: bytesToBase64(bytes),
-      });
-      if (!resp.ok) {
-        if (resp.status === 429) throw new Error("quota_exceeded");
-        throw await graphErrorFromResponse(resp, "Outlook send");
-      }
-      await resp.body?.cancel().catch(() => {});
-      // 202 Accepted with no body: no provider id exists to report. Empty ids,
-      // never a fabricated one a caller could mistake for a fetchable Graph id.
-      return { message_id: "", thread_id: "", sent_at: new Date().toISOString() };
-    }
+    case "outlook":
+      // Never reached: forwardRelayMessage sends an Outlook forward through
+      // Graph's createForward (outlookForward). Graph's MIME sendMail turned
+      // this relay's second body part into an ATT00001 attachment, so it must
+      // not quietly come back as a fallback either.
+      throw new Error("outlook_raw_send_unsupported");
     default:
       throw new Error("unsupported_provider");
   }
@@ -15239,6 +15372,18 @@ function classifyForwardFailure(err: unknown, provider: string): ForwardFailure 
         `reached, so the rest of the batch was abandoned too. Retry tomorrow.`,
       ledgerCode: PROVIDER_NOT_SENT_ERROR_CODE,
       fatal: true,
+    };
+  }
+
+  if (err instanceof GraphSendRefusedError) {
+    return {
+      status: "not_sent",
+      error: graphRefusedText("Forward", err) +
+        (err.accountLevel ? " The rest of the batch was abandoned for that reason." : ""),
+      ledgerCode: PROVIDER_NOT_SENT_ERROR_CODE,
+      // ErrorAccountSuspend and its kin refuse every message the same way:
+      // stop at the first instead of collecting forty identical refusals.
+      fatal: err.accountLevel,
     };
   }
 
@@ -15773,6 +15918,11 @@ async function executeForwardEmail(
     if (err instanceof SmtpNotSentError) {
       return notSentResult("email_forward", inbox.provider, inboxId, message);
     }
+    // Microsoft refused the submission (a Graph 4xx): not sent, and Graph's
+    // code says why. Never "may or may not have been delivered".
+    if (err instanceof GraphSendRefusedError) {
+      return graphRefusedResult("email_forward", inboxId, err);
+    }
 
     // Died on an enumerated pre-transmission stage — reading the original (and
     // its attachment bytes) or assembling the message. Nothing reached the
@@ -16126,6 +16276,11 @@ async function executeReplyToEmail(
     // Provably never transmitted: say so, and let the caller retry.
     if (err instanceof SmtpNotSentError) {
       return notSentResult("email_reply", inbox.provider, inboxId, message);
+    }
+    // Microsoft refused the submission (a Graph 4xx): not sent, and Graph's
+    // code says why. Never "may or may not have been delivered".
+    if (err instanceof GraphSendRefusedError) {
+      return graphRefusedResult("email_reply", inboxId, err);
     }
 
     // Died on an enumerated pre-transmission stage — reading the original (and
@@ -16912,6 +17067,11 @@ async function executeSendEmail(
     if (err instanceof SmtpNotSentError) {
       return notSentResult("email_send", inbox.provider, inboxId, message);
     }
+    // Microsoft refused the submission (a Graph 4xx): not sent, and Graph's
+    // code says why. Never "may or may not have been delivered".
+    if (err instanceof GraphSendRefusedError) {
+      return graphRefusedResult("email_send", inboxId, err);
+    }
 
     // Died on an enumerated pre-transmission stage — reading the original (and
     // its attachment bytes) or assembling the message. Nothing reached the
@@ -17263,8 +17423,10 @@ async function searchOutlookMessages(
   // stamped "INBOX" on every row of a multi-folder search whatever the message
   // actually was.
   const fanout = planOutlookFolderFanout(includeFolders, OUTLOOK_FOLDER_FANOUT_CAP);
+  // The whole-mailbox leg has no folder of its own: every row there is
+  // labelled from its parentFolderId below, never "INBOX" by default.
   const legs: { folder: string; url: string }[] = fanout.searched.length === 0
-    ? [{ folder: "INBOX", url: "/me/messages" }]
+    ? [{ folder: "", url: "/me/messages" }]
     : fanout.searched.map((folder) => ({
       folder,
       url: `/me/mailFolders/${outlookFolderPathSegment(folder)}/messages`,
@@ -17361,8 +17523,23 @@ async function searchOutlookMessages(
     (msg) => msg.receivedDateTime,
   );
 
+  // ── Ids that survive a move, and the folder each row is really in ────────
+  // $search ignores `Prefer: IdType="ImmutableId"` (live, 2026-09-25): its ids
+  // are default REST ids that 404 once the message moves. Only the page being
+  // returned is re-read, through graphImmutableMessageIds' $batch. A $filter
+  // or plain listing honours the header, so it needs no second pass.
+  const [immutableIds, folderLabels] = await Promise.all([
+    kql
+      ? graphImmutableMessageIds(accessToken, merged.page.map(({ message }) => message.id))
+      : Promise.resolve(new Map<string, string>()),
+    graphFolderLabels(
+      accessToken,
+      merged.page.map(({ message }) => message.parentFolderId ?? "").filter(Boolean),
+    ),
+  ]);
+
   const messages: SearchEmailSummary[] = merged.page.map(({ folder, message: msg }) => ({
-    id: msg.id,
+    id: immutableIds.get(msg.id) ?? msg.id,
     from: {
       name: msg.from?.emailAddress?.name ?? "",
       email: msg.from?.emailAddress?.address ?? "",
@@ -17376,7 +17553,7 @@ async function searchOutlookMessages(
     preview: normalizePreview(msg.bodyPreview ?? ""),
     is_read: msg.isRead ?? true,
     has_attachments: msg.hasAttachments ?? false,
-    folder,
+    folder: (msg.parentFolderId && folderLabels.get(msg.parentFolderId)) || folder,
     thread_id: msg.conversationId ?? msg.id,
     relevance_score: null,
   }));
@@ -18857,17 +19034,53 @@ async function gmailCreateFolder(inbox: InboxRow, name: string): Promise<{ id: s
   return { id: data.id, name: data.name };
 }
 
+/**
+ * Outlook folder create. "Parent/Child" is a PATH, as folder_list names nested
+ * Outlook folders: the parent is resolved (created when missing, as an IMAP
+ * CREATE of "a/b" creates "a") and the leaf is POSTed to its childFolders.
+ * Until 2026-09-25 the whole string went to /me/mailFolders, which made one
+ * top-level folder literally named "Parent/Child". The first segment may be a
+ * role ("Inbox/Receipts") even when the mailbox's inbox is called "Innboks".
+ */
 async function outlookCreateFolder(inbox: InboxRow, name: string): Promise<{ id: string; name: string }> {
   const accessToken = await withFreshOutlookToken(inbox);
+  const segments = splitOutlookFolderPath(name);
+  const leaf = segments.length > 0 ? segments[segments.length - 1] : name;
+  let parentId: string | null = null;
+  if (segments.length > 1) {
+    try {
+      parentId = await graphEnsureParentFolders(
+        accessToken,
+        segments,
+        (segment) => lookupCanonicalAlias(segment)?.outlook ?? null,
+      );
+    } catch (err) {
+      if (
+        err instanceof Error &&
+        (err.message === "outlook_auth_failed" || err.name === "OutlookNoMailboxError")
+      ) throw err;
+      const detail = err instanceof Error ? err.message : String(err);
+      throw new FolderOperationError(mapFolderProviderFailure({
+        provider: "outlook",
+        operation: "create",
+        name,
+        detail: `could not resolve or create the parent folder '${segments.slice(0, -1).join("/")}': ${detail}`,
+        existing: null,
+        itemNoun: "folder",
+      }));
+    }
+  }
   const resp = await graphFetch(
     accessToken,
-    "/me/mailFolders",
+    parentId === null
+      ? "/me/mailFolders"
+      : `/me/mailFolders/${encodeURIComponent(parentId)}/childFolders`,
     {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ displayName: name }),
+      body: JSON.stringify({ displayName: leaf }),
     },
   );
   if (!resp.ok) {
@@ -18886,7 +19099,12 @@ async function outlookCreateFolder(inbox: InboxRow, name: string): Promise<{ id:
     }));
   }
   const data = (await resp.json()) as { id: string; displayName: string };
-  return { id: data.id, name: data.displayName };
+  // The full path, the same name folder_list will show and resolveFolderId
+  // accepts; a top-level folder's path is its display name.
+  return {
+    id: data.id,
+    name: segments.length > 1 ? [...segments.slice(0, -1), data.displayName].join("/") : data.displayName,
+  };
 }
 
 
@@ -19666,7 +19884,9 @@ const outlookArchiveIdCache = new Map<string, string>();
  * The destinationId for a move. Only the `archive` role needs work: Graph's
  * well-known `archive` answers 404 ErrorFolderNotFound on consumer mailboxes
  * that never had one provisioned, so it is resolved to a real folder id (an
- * existing "Archive", or one created) by resolveOutlookArchiveFolderId.
+ * existing top-level archive folder under its localised name, "Arkiver" in a
+ * Norwegian mailbox, or as a last resort a created "Archive") by
+ * resolveOutlookArchiveFolderId.
  * Every other value is already a folder id or a well-known name that always
  * exists, courtesy of resolveFolderId.
  */
@@ -20526,30 +20746,17 @@ async function imapCopyEmail(
 
 /**
  * Outlook copy: Graph messages/{id}/copy — creates a copy in the destination
- * folder, leaving the original in place. Throws "outlook_auth_failed" on 401/403.
+ * folder, leaving the original in place, and returns the COPY's id (Graph
+ * answers 201 with the new message; immutable under our Prefer header).
+ * Throws "outlook_auth_failed" on 401, "message_not_found" on 404.
  */
 async function outlookCopyEmail(
   inbox: InboxRow,
   messageId: string,
   destinationFolderId: string,
-): Promise<void> {
+): Promise<string | null> {
   const accessToken = await withFreshOutlookToken(inbox);
-  const resp = await graphFetch(
-    accessToken,
-    `/me/messages/${encodeURIComponent(messageId)}/copy`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ destinationId: destinationFolderId }),
-    },
-  );
-  if (!resp.ok) {
-    if (resp.status === 401) throw new Error("outlook_auth_failed");
-    if (resp.status === 404) throw new Error("message_not_found");
-    throw await graphErrorFromResponse(resp, "Outlook copy");
-  }
+  return await graphCopyMessage(accessToken, messageId, destinationFolderId);
 }
 
 
@@ -20622,10 +20829,13 @@ async function executeCopyEmail(
   }
 
   // ── Per-provider dispatch ────────────────────────────────────────────────
+  // The copy's own id, where the provider hands one back (Graph does). IMAP's
+  // UID COPY only reports it with UIDPLUS, which this path does not read.
+  let newMessageId: string | null = null;
   try {
     switch (inbox.provider) {
       case "outlook":
-        await outlookCopyEmail(inbox, messageId, resolvedDest);
+        newMessageId = await outlookCopyEmail(inbox, messageId, resolvedDest);
         break;
       default: // imap and all service variants
         await imapCopyEmail(inbox, messageId, resolvedDest);
@@ -20650,6 +20860,7 @@ async function executeCopyEmail(
         operation: "email_copy",
         inbox_id: inbox.id,
         destination_folder_id: destinationFolderId,
+        ...(newMessageId ? { new_message_id: newMessageId } : {}),
       }),
       isError: false,
     },
@@ -20874,7 +21085,7 @@ async function executeDeleteEmail(
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.delete) return unsupportedFeatureError("delete", inbox.provider);
 
-  // Providers that only support trash (Gmail, Outlook) can't permanently expunge.
+  // Providers that only support trash (the Gmail API) can't permanently expunge.
   // Reject permanent=true proactively rather than surfacing a confusing
   // provider_error (e.g. Gmail's "insufficient authentication scopes").
   if (permanent && caps.trash_vs_expunge === "trash") {
@@ -22537,7 +22748,7 @@ async function executeBulkDelete(
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.delete) return unsupportedFeatureError("delete", inbox.provider);
 
-  // Trash-only providers (Gmail/Outlook) can't permanently expunge — reject up
+  // Trash-only providers (the Gmail API) can't permanently expunge — reject up
   // front so the whole batch fails clearly rather than per-message provider errors.
   if (permanent && caps.trash_vs_expunge === "trash") {
     return permanentDeleteUnsupportedError(inbox.provider);
@@ -23139,7 +23350,7 @@ async function executeSearchAndDelete(
   const caps = getProviderCapabilities(inbox.provider);
   if (!caps.delete) return unsupportedFeatureError("delete", inbox.provider);
 
-  // Trash-only providers (Gmail/Outlook) can't permanently expunge — reject up
+  // Trash-only providers (the Gmail API) can't permanently expunge — reject up
   // front before running the search so the caller gets a clear instruction.
   if (permanent && caps.trash_vs_expunge === "trash") {
     return permanentDeleteUnsupportedError(inbox.provider);
@@ -24725,10 +24936,13 @@ async function outlookSendDraft(
     },
   );
   if (!resp.ok) {
-    if (resp.status === 401) throw new Error("outlook_auth_failed");
-    if (resp.status === 404) throw new Error("draft_not_found");
-    if (resp.status === 429) throw new Error("quota_exceeded");
-    throw await graphErrorFromResponse(resp, "Outlook send draft");
+    if (resp.status === 404) {
+      await resp.body?.cancel().catch(() => {});
+      throw new Error("draft_not_found");
+    }
+    // A 4xx is a definite refusal: not sent, and the user's draft stays in
+    // Drafts untouched. Only a 5xx is "unknown". See graphSendFailure.
+    throw await graphSendFailure(resp, "Outlook send draft");
   }
   await resp.body?.cancel().catch(() => {});
   return {
@@ -26171,6 +26385,11 @@ async function executeSendDraft(
     // Provably never transmitted: say so, and let the caller retry.
     if (err instanceof SmtpNotSentError) {
       return notSentResult("draft_send", inbox.provider, inbox.id, message);
+    }
+    // Microsoft refused the submission (a Graph 4xx): not sent, and Graph's
+    // code says why. Never "may or may not have been delivered".
+    if (err instanceof GraphSendRefusedError) {
+      return graphRefusedResult("draft_send", inbox.id, err);
     }
 
     // Died on an enumerated pre-transmission stage — reading the original (and

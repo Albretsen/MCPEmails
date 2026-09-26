@@ -25,7 +25,8 @@
  *                                      $search — see policy)
  *   has_attachment has:attachment     $filter hasAttachments hasAttachment:true  (none — see gap)†
  *                                     eq true (filter-only)
- *   flagged        is:starred         (none — see gap)‡      hasKeyword $flagged  FLAGGED
+ *   flagged        is:starred         $filter flag/flagStatus hasKeyword $flagged  FLAGGED
+ *                                     eq 'flagged'‡
  *   since (≥)      after:YYYY/MM/DD   $filter receivedDate…  after (UTCDate)     SINCE dd-Mon-yyyy
  *   before (<)     before:YYYY/MM/DD  $filter receivedDate…  before (UTCDate)    BEFORE dd-Mon-yyyy
  *   raw            appended verbatim  see policy below       (dropped — see gap) appended verbatim
@@ -35,9 +36,12 @@
  *      quoted terms; they are effectively equivalent on Gmail.
  *   †  IMAP RFC 3501 SEARCH has no attachment predicate, so `has_attachment` is
  *      dropped for IMAP; the integrator must filter client-side if needed.
- *   ‡  Graph KQL `$search` exposes no "flagged/followup" token usable here and
- *      the `flag/followupFlag` property is awkward in `$filter`; `flagged` is
- *      dropped for Graph.
+ *   ‡  Graph KQL `$search` has no flag token, but `$filter` takes the message's
+ *      followupFlag: `flag/flagStatus eq 'flagged'` (flagStatus is notFlagged |
+ *      complete | flagged; https://learn.microsoft.com/en-us/graph/api/resources/followupflag).
+ *      Like every $filter clause it is dropped when free-text criteria force
+ *      `$search` (see the policy below), and that drop is reported. Until
+ *      2026-09-25 `flagged` was dropped on Graph unconditionally.
  *
  *   Every drop marked here — and the larger one the $search/$filter policy
  *   below forces on Graph — is reported by `unappliedSearchFields` at the
@@ -108,7 +112,7 @@ export interface NormalizedSearch {
   has_attachment?: boolean;
   /**
    * true = only flagged/starred messages. Gmail (is:starred), JMAP ($flagged),
-   * IMAP (FLAGGED). Dropped for Graph (no usable predicate).
+   * IMAP (FLAGGED), Graph ($filter flag/flagStatus eq 'flagged').
    */
   flagged?: boolean;
   /** ISO 8601 date or datetime (no timezone = UTC); received on/after (>=) this instant. */
@@ -618,7 +622,7 @@ export function toImapSearch(s: NormalizedSearch): string {
 //   CONSTRAINT: on /messages, $search and $filter cannot be combined, and
 //   $orderby is unavailable with $search. When BOTH are produced, the caller
 //   MUST choose one (prefer $search when free-text criteria exist).
-//   `flagged` is dropped (no usable predicate). `raw` → appended to $search.
+//   `flagged` → $filter flag/flagStatus eq 'flagged'. `raw` → appended to $search.
 //   Docs: https://learn.microsoft.com/en-us/graph/search-query-parameter
 //         https://learn.microsoft.com/en-us/graph/api/user-list-messages
 // ─────────────────────────────────────────────────────────────────────────────
@@ -652,7 +656,7 @@ export function toGraphSearch(s: NormalizedSearch): { search?: string; filter?: 
   if (s.has_attachment === true) filterClauses.push("hasAttachments eq true");
   if (s.since) filterClauses.push(`receivedDateTime ge ${formatUtcDateTime(s.since)}`);
   if (s.before) filterClauses.push(`receivedDateTime lt ${formatUtcDateTime(s.before)}`);
-  // flagged: no usable Graph predicate — intentionally dropped.
+  if (s.flagged === true) filterClauses.push("flag/flagStatus eq 'flagged'");
 
   const out: { search?: string; filter?: string } = {};
   if (searchClauses.length > 0) out.search = searchClauses.join(" AND ");
@@ -690,7 +694,7 @@ export const SEARCH_FIELD_DESCRIPTIONS: Record<string, string> = {
   text: "Free text to match anywhere in the message (headers and body).",
   unread: "true = only unread messages; false = only read messages; omit for either.",
   has_attachment: "true = only messages with an attachment. Not supported on generic IMAP (ignored there).",
-  flagged: "true = only flagged/starred messages. Not supported on Outlook/Graph (ignored there).",
+  flagged: "true = only flagged/starred messages.",
   since: "ISO 8601 date or date-time; return messages received on/after (>=) this instant. A value with no timezone is read as UTC. E.g. \"2026-06-01\", \"2026-06-01T09:00:00\" or \"2026-06-01T09:00:00Z\". Also accepts \"2026-06\", \"today\", \"7 days ago\" and \"30d\".",
   before: "ISO 8601 date or date-time; return messages received strictly before (<) this instant. A value with no timezone is read as UTC. E.g. \"2026-07-01\" or \"2026-07-01T00:00:00\". Also accepts \"2026-07\", \"today\" and \"30d\".",
   raw: "Escape hatch: a provider-native query appended to the structured criteria. Ignored on Fastmail (JMAP).",
@@ -818,29 +822,25 @@ export function unappliedSearchFields(
   }
 
   // ── Outlook / Graph ───────────────────────────────────────────────────────
-  // Two separate drops, and the second is by far the larger.
-  //
-  //   flagged   no usable predicate in either $search or $filter (see the
-  //             matrix above; the outlook-v1 compatibility profile marks
-  //             search.flagged "unavailable").
+  // One drop, and a large one:
   //
   //   the whole $filter  Graph refuses to combine $search and $filter on
   //             /messages, so when free-text criteria exist the caller must
   //             send $search and abandon $filter entirely. That drops `unread`,
-  //             `has_attachment`, `since` and `before` together — a subject
+  //             `has_attachment`, `flagged`, `since` and `before` together — a subject
   //             search with a date window silently becomes a subject search
   //             over all time. The preference is stated in this file's header
   //             and executed in index.ts (searchOutlookMessages); it is
   //             re-derived here from toGraphSearch rather than re-stated, so
   //             the report cannot disagree with the query that was sent.
-  // `=== true`, not `!== undefined`: the `false` case was already recorded by
-  // the negation check above, and a field named twice reads as two separate
-  // problems in the note.
-  if (search.flagged === true) unapplied.push("flagged");
+  // `=== true`, not `!== undefined`, for has_attachment and flagged: the
+  // `false` case was already recorded by the negation check above, and a field
+  // named twice reads as two separate problems in the note.
   const graph = toGraphSearch(search);
   if (graph.search && graph.filter) {
     if (search.unread !== undefined) unapplied.push("unread");
     if (search.has_attachment === true) unapplied.push("has_attachment");
+    if (search.flagged === true) unapplied.push("flagged");
     if (search.since) unapplied.push("since");
     if (search.before) unapplied.push("before");
   }

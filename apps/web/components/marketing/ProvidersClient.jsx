@@ -232,9 +232,10 @@ const MATRIX = {
   permanent_delete: {
     label: 'Permanent delete (expunge)',
     section: 'Delete',
-    // The Gmail and Outlook APIs expose trash only, with no direct expunge.
-    // The IMAP connector offers both, and a Gmail mailbox on an app password
-    // is the IMAP connector (trash_vs_expunge: 'both').
+    // The Gmail API exposes trash only, with no direct expunge. The IMAP
+    // connector offers both, and a Gmail mailbox on an app password is the
+    // IMAP connector (trash_vs_expunge: 'both'). Outlook (Graph
+    // permanentDelete) has no column here while its marketing is withheld.
     gmail: false, gmailImap: true, fastmail: true,
     icloud: true, yahoo: true, zoho: true, yandex: true, generic: true,
   },
