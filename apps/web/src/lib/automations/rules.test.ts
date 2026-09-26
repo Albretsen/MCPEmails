@@ -121,8 +121,10 @@ test('a criterion this provider cannot run is refused when the rule is saved', (
     );
   }
 
-  // Outlook has no flagged predicate in either $search or $filter.
-  const outlookFlagged = validateFilterForProvider({ flagged: true }, 'outlook');
+  // Outlook filters on flag/flagStatus since 2026-09-25, but only in $filter:
+  // alongside free text, $search wins and the flag is dropped with the rest.
+  assert.equal(validateFilterForProvider({ flagged: true }, 'outlook').ok, true);
+  const outlookFlagged = validateFilterForProvider({ subject: 'invoice', flagged: true }, 'outlook');
   assert.equal(outlookFlagged.ok, false);
   assert.match(errorOf(outlookFlagged), /flagged/);
   assert.match(errorOf(outlookFlagged), /Outlook/);
