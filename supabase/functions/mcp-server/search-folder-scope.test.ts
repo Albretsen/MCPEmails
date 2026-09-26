@@ -356,7 +356,8 @@ Deno.test("searchGmailMessages has no branch left that drops the folder scope", 
 
 Deno.test("searchOutlookMessages reaches /me/messages only when no folder was listed", () => {
   const body = functionBody("searchOutlookMessages");
-  assertStringIncludes(body, "planOutlookFolderFanout(includeFolders");
+  assertStringIncludes(body, "planOutlookFolderFanout(canonical.ids");
+  assertStringIncludes(body, "graphCanonicalFanoutFolders(accessToken, includeFolders");
   assertStringIncludes(body, "fanout.searched.length === 0");
   assertStringIncludes(body, "/me/mailFolders/");
   assertEquals(
@@ -502,4 +503,28 @@ Deno.test("executeSearchAndDelete carries the search phase's notes onto the dele
     !body.includes("\n    return formatBulkResult("),
     "the bulk result is returned directly again, so the search's notes are dropped",
   );
+});
+
+Deno.test("the Outlook cap note names folders by label, never by Graph id", () => {
+  const ids = ["AAMkAD-inbox==", "AAMkAD-sent==", "AAMkAD-a==", "AAMkAD-b==", "AAMkAD-c==", "AAMkAD-d=="];
+  const labels = new Map([
+    ["AAMkAD-inbox==", "INBOX"],
+    ["AAMkAD-sent==", "Sendte elementer"],
+    ["AAMkAD-a==", "Kvitteringer/2024"],
+    ["AAMkAD-b==", "Kunder"],
+    ["AAMkAD-c==", "Arkiv"],
+  ]);
+  const plan = planOutlookFolderFanout(ids, OUTLOOK_FOLDER_FANOUT_CAP, labels);
+  assertEquals(plan.searched, ids.slice(0, 4), "the legs still use ids");
+  const note = plan.note ?? "";
+  assertStringIncludes(note, "INBOX, Sendte elementer, Kvitteringer/2024, Kunder.");
+  assertStringIncludes(note, "NOT searched: Arkiv, AAMkAD-d==.");
+  assert(!note.includes("AAMkAD-inbox=="), "a labelled id is not printed");
+});
+
+Deno.test("the same folder listed twice takes one fan-out slot", () => {
+  const plan = planOutlookFolderFanout(["DEL", "a", "DEL", "b", "c"], OUTLOOK_FOLDER_FANOUT_CAP);
+  assertEquals(plan.searched, ["DEL", "a", "b", "c"]);
+  assertEquals(plan.skipped, []);
+  assertEquals(plan.note, null);
 });

@@ -664,6 +664,63 @@ export async function graphFolderLabels(
   return labels;
 }
 
+/**
+ * Graph's well-known folder names (mailFolder resource). resolveFolderId answers
+ * an alias ("trash") with one of these, and a display name ("Slettede
+ * elementer") with the folder's id — two spellings of one folder.
+ *   https://learn.microsoft.com/en-us/graph/api/resources/mailfolder
+ */
+const GRAPH_WELL_KNOWN_FOLDERS = new Set([
+  "archive", "clutter", "conflicts", "conversationhistory", "deleteditems", "drafts",
+  "inbox", "junkemail", "localfailures", "msgfolderroot", "outbox",
+  "recoverableitemsdeletions", "scheduled", "searchfolders", "sentitems",
+  "serverfailures", "syncissues",
+]);
+
+/**
+ * The folder set an Outlook multi-folder search fans out over: every entry as
+ * its real folder id, duplicates dropped (first occurrence keeps its place),
+ * plus each id's path for the caller-visible note.
+ *
+ * Well-known names are turned into ids (one cheap GET each, only when the list
+ * has more than one entry and contains one) so "trash" and "Slettede elementer"
+ * collapse into ONE leg instead of taking two of the four fan-out slots and
+ * returning every Deleted Items row twice. A name Graph will not resolve is
+ * kept as it was; the search leg reports it. Labels are only fetched when the
+ * set is larger than `labelWhenOver`, i.e. when a note will actually name them.
+ */
+export async function graphCanonicalFanoutFolders(
+  accessToken: string,
+  folders: readonly string[],
+  labelWhenOver: number,
+): Promise<{ ids: string[]; labels: Map<string, string> }> {
+  const labels = new Map<string, string>();
+  if (folders.length <= 1) return { ids: [...folders], labels };
+  const wellKnown = [...new Set(folders.filter((f) => GRAPH_WELL_KNOWN_FOLDERS.has(f.toLowerCase())))];
+  const idOf = new Map<string, string>();
+  for (let i = 0; i < wellKnown.length; i += OUTLOOK_FOLDER_WALK_LIMITS.concurrency) {
+    const batch = wellKnown.slice(i, i + OUTLOOK_FOLDER_WALK_LIMITS.concurrency);
+    await Promise.all(batch.map(async (name) => {
+      try {
+        const r = await graphFetch(accessToken, `/me/mailFolders/${encodeURIComponent(name)}?$select=id`);
+        if (!r.ok) {
+          await r.body?.cancel().catch(() => {});
+          return;
+        }
+        const id = ((await r.json()) as { id?: string }).id;
+        if (id) idOf.set(name, id);
+      } catch (e) {
+        if (e instanceof OutlookNoMailboxError) throw e;
+      }
+    }));
+  }
+  const ids = [...new Set(folders.map((f) => idOf.get(f) ?? f))];
+  if (ids.length > labelWhenOver) {
+    for (const [id, label] of await graphFolderLabels(accessToken, ids)) labels.set(id, label);
+  }
+  return { ids, labels };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // 401 recovery and "this account has no mailbox"
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1673,6 +1730,41 @@ export async function graphAddAttachments(
   }
 }
 
+/**
+ * The compose half of a NEW message (email_send's Outlook leg): create the
+ * draft and give it its attachments. Small attachments ride inside the create
+ * JSON; once the encoded total passes ~3 MB (a Graph request is capped at
+ * 4 MB) the draft is created bare and each file is added on its own, through
+ * an upload session when large. On any failure after the draft exists it is
+ * deleted again, so "not sent, safe to retry" stays true.
+ *
+ * Nothing is sent here; the caller sends with {@link graphSendDraft}. Lives
+ * here rather than in index.ts so the live large-upload check can drive the
+ * exact code the tool runs.
+ */
+export async function graphCreateDraftWithAttachments(
+  accessToken: string,
+  message: Record<string, unknown>,
+  attachments: readonly GraphAttachmentInput[],
+): Promise<{ id: string; conversationId: string | null; createdDateTime: string | null; separateUpload: boolean }> {
+  const separateUpload = needsDraftUpload(attachments);
+  const body: Record<string, unknown> = { ...message };
+  delete body.attachments;
+  if (attachments.length > 0 && !separateUpload) {
+    body.attachments = attachments.map(graphFileAttachment);
+  }
+  const draft = await graphCreateDraft(accessToken, body);
+  if (separateUpload) {
+    try {
+      await graphAddAttachments(accessToken, draft.id, attachments);
+    } catch (e) {
+      await graphDeleteDraftQuietly(accessToken, draft.id);
+      throw e;
+    }
+  }
+  return { ...draft, separateUpload };
+}
+
 /** `PATCH /me/messages/{id}`. */
 export async function graphPatchMessage(
   accessToken: string,
@@ -1873,22 +1965,46 @@ export function textToHtmlFragment(text: string): string {
 }
 
 /**
+ * Graph's plain-text quote (the "From: … Sent: …" block and the original text
+ * under it) as HTML: escaped, every line break kept as `<br>`, inside a
+ * left-ruled div the way Outlook sets off a quoted original.
+ */
+export function textQuoteToHtml(text: string): string {
+  const lines = escapeHtml(text).replace(/\r\n?/g, "\n").replace(/\n/g, "<br>");
+  return `<div style="border-left:2px solid #ccc;padding-left:8px;margin-left:4px">${lines}</div>`;
+}
+
+/**
  * Put the caller's new content ABOVE the quoted original that createReply /
  * createForward generated, instead of replacing it.
  *
  * Graph returns the draft body as HTML with the quote inside `<body>`. The new
  * content is inserted right after the opening `<body…>` tag (or prepended when
- * the draft is a bare fragment). A text-typed draft body — which Graph uses
- * when the mailbox composes in plain text — gets text prepended instead.
+ * the draft is a bare fragment). A text-typed draft body — which Graph builds
+ * when the ORIGINAL was plain text — gets plain text prepended when the caller
+ * gave only text, and becomes HTML (quote escaped, see textQuoteToHtml) when
+ * the caller gave html_body.
  */
 export function mergeResponseBody(
   draftBody: { contentType: string; content: string },
   add: { html?: string | null; text?: string | null },
 ): { contentType: "HTML" | "Text"; content: string } {
   const isHtml = draftBody.contentType.toLowerCase() === "html";
-  if (!isHtml) {
-    const text = add.text ?? (add.html ? add.html.replace(/<[^>]+>/g, "") : "");
+  const hasHtml = !!(add.html && add.html.trim());
+  if (!isHtml && !hasHtml) {
+    const text = add.text ?? "";
     return { contentType: "Text", content: text ? `${text}\r\n\r\n${draftBody.content}` : draftBody.content };
+  }
+  if (!isHtml) {
+    // The caller wrote HTML and the draft Graph built is TEXT (the original
+    // was plain text, so createReply / createForward quoted it as text). The
+    // caller's HTML wins: the quote is converted, never the new content.
+    // Until 2026-09-25 this branch stripped the caller's tags and sent the
+    // reply as text/plain, silently.
+    return {
+      contentType: "HTML",
+      content: `${add.html}<br>${textQuoteToHtml(draftBody.content)}`,
+    };
   }
   const fragment = add.html && add.html.trim()
     ? add.html

@@ -76,6 +76,8 @@ import {
 import {
   graphAddAttachments,
   graphCreateDraft,
+  graphCreateDraftWithAttachments,
+  graphCanonicalFanoutFolders,
   graphDeleteDraftQuietly,
   graphDownloadAttachment,
   graphErrorFromResponse,
@@ -14366,7 +14368,7 @@ async function sendOutlookMessage(
 ): Promise<SendEmailResult> {
   // STAGE "compose" (see send-stages.ts): the token, the Graph message body and
   // the draft. The /send POST below is transmission; nothing above it is.
-  const { accessToken, message, separateUpload } = await preTransmission("compose", async () => {
+  const { accessToken, message } = await preTransmission("compose", async () => {
     const accessToken = await withFreshOutlookToken(inbox);
 
     const toRecipients = params.to.map((email) => {
@@ -14424,15 +14426,9 @@ async function sendOutlookMessage(
       }];
     }
 
-    // Small attachments ride in the draft's create JSON; past ~3 MB encoded
-    // (a Graph request is capped at 4 MB) each one is added to the draft on
-    // its own, through an upload session when large.
-    const separateUpload = needsDraftUpload(params.attachments);
-    if (params.attachments.length > 0 && !separateUpload) {
-      message.attachments = params.attachments.map(graphFileAttachment);
-    }
-
-    return { accessToken, message, separateUpload };
+    // Attachments are placed by graphCreateDraftWithAttachments: inline in the
+    // create JSON when small, else added one by one (upload session when large).
+    return { accessToken, message };
   });
 
   const result = {
@@ -14446,18 +14442,10 @@ async function sendOutlookMessage(
   // STAGE "compose" still: the draft and its attachments exist only in the
   // sender's Drafts folder until /send. A failure here deletes the draft and
   // is not_sent, so a retry is safe.
-  const { id: draftId, conversationId } = await preTransmission("compose", async () => {
-    const draft = await graphCreateDraft(accessToken, message);
-    if (separateUpload) {
-      try {
-        await graphAddAttachments(accessToken, draft.id, params.attachments);
-      } catch (e) {
-        await graphDeleteDraftQuietly(accessToken, draft.id);
-        throw e;
-      }
-    }
-    return draft;
-  });
+  const { id: draftId, conversationId } = await preTransmission(
+    "compose",
+    () => graphCreateDraftWithAttachments(accessToken, message, params.attachments),
+  );
   const sendResp = await graphSendDraft(accessToken, draftId);
   if (!sendResp.ok) {
     // 4xx: Microsoft refused the submission, nothing was sent (see
@@ -15132,6 +15120,11 @@ async function forwardRelayMessage(
  *     upload-session helper when large. Chosen over an itemAttachment, which
  *     Graph can only create from a JSON message body, i.e. a re-rendered copy
  *     rather than the original.
+ *     KNOWN LIMIT (live, 2026-09-26): Graph STORES contentType message/rfc822
+ *     for this fileAttachment on both the POST and the upload-session path
+ *     (read back via /attachments), but Exchange renders a fileAttachment's
+ *     MIME part as `application/octet-stream; name="….eml"` regardless (seen
+ *     in the draft's /$value). Recipients get a .eml by name, not by type.
  *
  * Every step before /send is STAGE "compose" (or "source") and deletes its
  * draft on failure. The batch forward runs through here too (forwardOne).
@@ -17449,7 +17442,10 @@ async function searchOutlookMessages(
   // each reporting its own folder on the rows it contributes — the old code
   // stamped "INBOX" on every row of a multi-folder search whatever the message
   // actually was.
-  const fanout = planOutlookFolderFanout(includeFolders, OUTLOOK_FOLDER_FANOUT_CAP);
+  // Aliases and display names of one folder collapse to one id first, and the
+  // over-cap note names folders by path, not by Graph id.
+  const canonical = await graphCanonicalFanoutFolders(accessToken, includeFolders, OUTLOOK_FOLDER_FANOUT_CAP);
+  const fanout = planOutlookFolderFanout(canonical.ids, OUTLOOK_FOLDER_FANOUT_CAP, canonical.labels);
   // The whole-mailbox leg has no folder of its own: every row there is
   // labelled from its parentFolderId below, never "INBOX" by default.
   const legs: { folder: string; url: string }[] = fanout.searched.length === 0
@@ -18693,7 +18689,10 @@ async function resolveIncludeFolders(
   const resolved: string[] = [];
   for (const f of includeFolders) {
     if (!f.trim()) continue;
-    resolved.push(await resolveFolderId(inbox, f, { strict: true, session }));
+    const id = await resolveFolderId(inbox, f, { strict: true, session });
+    // Two spellings of one folder ("Trash" and "Deleted Items") search it once.
+    // Outlook's alias-vs-id pair is collapsed later, in searchOutlookMessages.
+    if (!resolved.includes(id)) resolved.push(id);
   }
   return resolved;
 }

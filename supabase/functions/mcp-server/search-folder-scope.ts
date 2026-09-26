@@ -248,19 +248,31 @@ export interface OutlookFanoutPlan {
 export function planOutlookFolderFanout(
   folders: string[],
   cap: number = OUTLOOK_FOLDER_FANOUT_CAP,
+  /**
+   * The human name of each folder id, for the note ("Innboks/Kvitteringer",
+   * not a 150-character Graph id the caller never typed). An id with no label
+   * is named by itself. Only read when the plan goes over the cap.
+   */
+  labels?: ReadonlyMap<string, string>,
 ): OutlookFanoutPlan {
-  if (folders.length <= cap) {
-    return { searched: [...folders], skipped: [], note: null };
+  // The same folder twice (an alias and the display name of one folder, once
+  // both are resolved to its id) would spend two of the `cap` slots on one
+  // search and double every row it returns. First occurrence wins the order.
+  const unique = [...new Set(folders)];
+  if (unique.length <= cap) {
+    return { searched: unique, skipped: [], note: null };
   }
-  const searched = folders.slice(0, cap);
-  const skipped = folders.slice(cap);
+  const searched = unique.slice(0, cap);
+  const skipped = unique.slice(cap);
+  const name = (f: string) => labels?.get(f) || f;
   return {
     searched,
     skipped,
     note:
-      `include_folders listed ${folders.length} folders and Microsoft Graph has no way to ` +
+      `include_folders listed ${unique.length} folders and Microsoft Graph has no way to ` +
       `search several folders in one request, so this search covered the first ${cap} of ` +
-      `them and stopped there: ${searched.join(", ")}. NOT searched: ${skipped.join(", ")}. ` +
+      `them and stopped there: ${searched.map(name).join(", ")}. ` +
+      `NOT searched: ${skipped.map(name).join(", ")}. ` +
       `No message from an unlisted folder is in these results — the coverage is narrower ` +
       `than you asked for, not wider. Run the search again with include_folders set to the ` +
       `folders that were not searched to cover the rest.`,

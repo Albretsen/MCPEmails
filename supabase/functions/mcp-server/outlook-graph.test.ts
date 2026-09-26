@@ -19,6 +19,8 @@ import {
   GRAPH_BASE,
   GRAPH_EPOCH_FILTER,
   graphAddAttachments,
+  graphCanonicalFanoutFolders,
+  graphCreateDraftWithAttachments,
   graphErrorFromResponse,
   graphFetch,
   graphFilterForDateOrder,
@@ -40,6 +42,7 @@ import {
   isGraphMailboxRoot,
   listOutlookFolderTree,
   mergeResponseBody,
+  textQuoteToHtml,
   needsDraftUpload,
   OutlookGraphError,
   OUTLOOK_NO_MAILBOX_MESSAGE,
@@ -1204,7 +1207,7 @@ Deno.test("index.ts: a plain Outlook send goes draft + send and returns the draf
   const src = await Deno.readTextFile(new URL("./index.ts", import.meta.url));
   const send = indexFunction(src, "sendOutlookMessage");
   assert(!send.includes('"/me/sendMail"'), "sendMail answers 202 with no id");
-  assertStringIncludes(send, "graphCreateDraft(accessToken, message)");
+  assertStringIncludes(send, "graphCreateDraftWithAttachments(accessToken, message, params.attachments)");
   assertStringIncludes(send, "graphSendDraft(accessToken, draftId)");
   assertStringIncludes(send, "message_id: draftId");
   assert(!send.includes('message_id: ""'), "never an empty id");
@@ -1233,4 +1236,188 @@ Deno.test("index.ts: Outlook permanent delete, flagged search, nested create and
   assertStringIncludes(create, "/childFolders");
 
   assertStringIncludes(indexFunction(src, "executeCopyEmail"), "new_message_id: newMessageId");
+});
+
+// ── 2026-09-25 live-test fixes ──────────────────────────────────────────────
+
+Deno.test("mergeResponseBody: html_body on a TEXT draft sends HTML, with Graph's text quote escaped", () => {
+  const quote = "From: Ann <ann@example.com>\r\nSent: Friday\r\n\r\n<not a tag> & more";
+  const merged = mergeResponseBody({ contentType: "text", content: quote }, {
+    html: "<p><b>Bold</b> reply</p>",
+    text: "Bold reply",
+  });
+  assertEquals(merged.contentType, "HTML");
+  assert(merged.content.startsWith("<p><b>Bold</b> reply</p>"), "the caller's HTML is kept verbatim, above the quote");
+  assertStringIncludes(merged.content, "From: Ann &lt;ann@example.com&gt;<br>Sent: Friday<br><br>&lt;not a tag&gt; &amp; more");
+  assert(!merged.content.includes("<not a tag>"), "the quote cannot inject markup");
+  assertEquals(merged.content.indexOf("\n"), -1, "line breaks became <br>");
+});
+
+Deno.test("mergeResponseBody: a text-only reply to a text draft stays text; blank html is ignored", () => {
+  assertEquals(
+    mergeResponseBody({ contentType: "text", content: "> q" }, { text: "hi", html: "  " }),
+    { contentType: "Text", content: "hi\r\n\r\n> q" },
+  );
+  assertEquals(mergeResponseBody({ contentType: "text", content: "> q" }, {}), { contentType: "Text", content: "> q" });
+});
+
+Deno.test("textQuoteToHtml escapes and keeps CR, LF and CRLF breaks", () => {
+  assertStringIncludes(textQuoteToHtml("a\rb\nc\r\nd\"e"), "a<br>b<br>c<br>d&quot;e");
+});
+
+for (const kind of ["createReply", "createForward"] as const) {
+  Deno.test(`${kind} of a plain-text original with html_body PATCHes an HTML body`, async () => {
+    const calls = await withFetch(
+      [
+        () => json(201, { id: "d-t", body: { contentType: "text", content: "-----\r\nFrom: x\r\n\r\norig" } }),
+        () => empty(200),
+      ],
+      async () => {
+        await graphPrepareResponseDraft("tok", {
+          messageId: "m",
+          kind,
+          patch: {},
+          html: "<p>Hello <i>there</i></p>",
+          text: "Hello there",
+        });
+      },
+    );
+    assertEquals(calls[0].url, `${GRAPH_BASE}/me/messages/m/${kind}`);
+    const patch = bodyJson(calls[1]);
+    assertEquals(patch.body.contentType, "HTML");
+    assertStringIncludes(patch.body.content, "<p>Hello <i>there</i></p>");
+    assertStringIncludes(patch.body.content, "From: x<br><br>orig");
+  });
+}
+
+Deno.test("a .eml forward attachment keeps message/rfc822 on the small POST and in the upload session", async () => {
+  const eml = new TextEncoder().encode("Subject: hi\r\n\r\nbody\r\n");
+  const big = new Uint8Array(3_200_000).fill(65);
+  const calls = await withFetch(
+    (c) => {
+      if (c.url.endsWith("/createUploadSession")) return json(201, { uploadUrl: "https://upload.example/s" });
+      if (c.url.startsWith("https://upload.example/")) {
+        const end = Number((c.headers["content-range"] ?? "").split(" ")[1].split("/")[0].split("-")[1]);
+        return end === big.length - 1 ? empty(201) : json(200, {});
+      }
+      return json(201, { id: "att" });
+    },
+    async () => {
+      await graphAddAttachments("tok", "d", [
+        { filename: "Quarterly report.eml", mime_type: "message/rfc822", bytes: eml },
+        { filename: "Big thread.eml", mime_type: "message/rfc822", bytes: big },
+      ]);
+    },
+  );
+  const small = bodyJson(calls[0]);
+  assertEquals(small["@odata.type"], "#microsoft.graph.fileAttachment");
+  assertEquals(small.contentType, "message/rfc822");
+  assertEquals(small.name, "Quarterly report.eml");
+  const item = bodyJson(calls[1]).AttachmentItem;
+  assertEquals(item.contentType, "message/rfc822");
+  assertEquals(item.name, "Big thread.eml");
+  assertEquals(item.size, big.length);
+});
+
+Deno.test("graphCreateDraftWithAttachments: small files ride in the create JSON", async () => {
+  let separate = true;
+  const calls = await withFetch([() => json(201, { id: "d1", conversationId: "c1" })], async () => {
+    const d = await graphCreateDraftWithAttachments("tok", { subject: "s" }, [
+      { filename: "a.txt", mime_type: "text/plain", data: btoa("hi") },
+    ]);
+    separate = d.separateUpload;
+    assertEquals(d.id, "d1");
+  });
+  assertEquals(separate, false);
+  assertEquals(calls.length, 1);
+  assertEquals(calls[0].url, `${GRAPH_BASE}/me/messages`);
+  assertEquals(bodyJson(calls[0]).attachments[0].name, "a.txt");
+});
+
+Deno.test("graphCreateDraftWithAttachments: a large file makes a bare draft, then an upload session", async () => {
+  const big = new Uint8Array(3_600_000);
+  const calls = await withFetch(
+    (c) => {
+      if (c.url === `${GRAPH_BASE}/me/messages`) return json(201, { id: "d2" });
+      if (c.url.endsWith("/createUploadSession")) return json(201, { uploadUrl: "https://upload.example/s" });
+      const end = Number((c.headers["content-range"] ?? "").split(" ")[1].split("/")[0].split("-")[1]);
+      return end === big.length - 1 ? empty(201) : json(200, {});
+    },
+    async () => {
+      const d = await graphCreateDraftWithAttachments("tok", { subject: "s", attachments: ["stale"] }, [
+        { filename: "big.bin", mime_type: "application/octet-stream", bytes: big },
+      ]);
+      assertEquals(d.separateUpload, true);
+    },
+  );
+  assert(!("attachments" in bodyJson(calls[0])), "no attachments in the create JSON");
+  assertEquals(calls[1].url, `${GRAPH_BASE}/me/messages/d2/attachments/createUploadSession`);
+  assertEquals(calls.slice(2).length, 1, "3.6 MB fits one 3.75 MiB chunk");
+});
+
+Deno.test("graphCreateDraftWithAttachments: a failed upload deletes the draft and rethrows", async () => {
+  const calls = await withFetch(
+    [
+      () => json(201, { id: "d3" }),
+      () => json(400, { error: { code: "ErrorAttachmentSizeLimitExceeded", message: "too big" } }),
+      () => empty(204),
+    ],
+    async () => {
+      await assertRejects(() =>
+        graphCreateDraftWithAttachments("tok", {}, [{ filename: "b", mime_type: "x/y", bytes: new Uint8Array(3_500_000) }])
+      );
+    },
+  );
+  assertEquals(calls[2].method, "DELETE");
+  assertEquals(calls[2].url, `${GRAPH_BASE}/me/messages/d3`);
+});
+
+Deno.test("graphCanonicalFanoutFolders collapses an alias and the display name of one folder", async () => {
+  let out = { ids: [] as string[], labels: new Map<string, string>() };
+  const calls = await withFetch(
+    (c) => {
+      if (c.url.includes("/mailFolders/deleteditems?")) return json(200, { id: "DEL-ID" });
+      throw new Error(`unexpected ${c.url}`);
+    },
+    async () => {
+      // "Slettede elementer" was resolved to DEL-ID by name, "trash" to the well-known name.
+      out = await graphCanonicalFanoutFolders("tok", ["DEL-ID", "deleteditems", "ARC-ID"], 4);
+    },
+  );
+  assertEquals(out.ids, ["DEL-ID", "ARC-ID"]);
+  assertEquals(out.labels.size, 0, "under the cap nothing is labelled");
+  assertEquals(calls.length, 1);
+});
+
+Deno.test("graphCanonicalFanoutFolders: a single folder costs no request; over the cap it labels by path", async () => {
+  const none = await withFetch([], async () => {
+    assertEquals((await graphCanonicalFanoutFolders("tok", ["inbox"], 4)).ids, ["inbox"]);
+  });
+  assertEquals(none.length, 0);
+
+  let out = { ids: [] as string[], labels: new Map<string, string>() };
+  await withFetch(
+    (c) => {
+      const m = c.url.match(/\/mailFolders\/([^?]+)\?\$select=(.*)$/);
+      if (!m) throw new Error(`unexpected ${c.url}`);
+      const id = decodeURIComponent(m[1]);
+      const sel = m[2];
+      if (sel === "id") {
+        if (id === "inbox") return json(200, { id: "INBOX-ID" });
+        if (id === "msgfolderroot") return json(200, { id: "ROOT" });
+        if (id === "sentitems") return json(200, { id: "SENT-ID" });
+        return empty(404);
+      }
+      const names: Record<string, string> = { "SENT-ID": "Sendte elementer", F1: "Kvitteringer", F2: "2024", F3: "Kunder" };
+      const parents: Record<string, string> = { F2: "F1" };
+      return json(200, { displayName: names[id], parentFolderId: parents[id] ?? "ROOT" });
+    },
+    async () => {
+      out = await graphCanonicalFanoutFolders("tok", ["inbox", "sentitems", "F1", "F2", "F3", "SENT-ID"], 4);
+    },
+  );
+  assertEquals(out.ids, ["INBOX-ID", "SENT-ID", "F1", "F2", "F3"]);
+  assertEquals(out.labels.get("INBOX-ID"), "INBOX");
+  assertEquals(out.labels.get("F2"), "Kvitteringer/2024");
+  assertEquals(out.labels.get("F3"), "Kunder");
 });
