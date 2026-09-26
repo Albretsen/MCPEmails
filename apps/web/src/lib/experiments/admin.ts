@@ -91,7 +91,7 @@ export async function createExperiment(
       key: input.key,
       name: input.name.trim(),
       description: input.description?.trim() || null,
-      variants: input.variants as unknown as Json,
+      variants: input.variants as unknown as NonNullable<Json>,
       retention_goal: goal,
       retention_window_days: days,
     })
@@ -167,7 +167,7 @@ export async function updateExperiment(
   if (patch.variants !== undefined) {
     const variantError = validateVariants(patch.variants);
     if (variantError) throw new Error(variantError);
-    update.variants = patch.variants as unknown as Json;
+    update.variants = patch.variants as unknown as NonNullable<Json>;
   }
 
   if (patch.status !== undefined && patch.status !== current.status) {

@@ -47,7 +47,7 @@ export async function captureError(
       severity,
       message,
       stack,
-      context: rest as unknown as Json,
+      context: rest as unknown as NonNullable<Json>,
     });
   } catch (insertErr) {
     // Never let error tracking crash the caller. Log to stderr only.

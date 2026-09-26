@@ -282,9 +282,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      # PINNED, not `latest`. The generator's output changes between releases
+      # (2.118 started typing NOT NULL jsonb as NonNullable<Json>), so a
+      # floating version turns this job red on days nobody changed anything.
+      # Bump on purpose, and fix what the new generator finds in the same PR.
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.118.0
       - name: Apply every migration to a fresh database
         run: supabase db start
       - name: RLS and schema tests (pgTAP)
