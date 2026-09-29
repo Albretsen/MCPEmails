@@ -418,7 +418,7 @@ test('the 80% warning leads with the numbers and the reset date, in both parts',
     assert.ok(text.includes('2026-10-01'), `${label} needs the reset date as YYYY-MM-DD`);
     assert.ok(text.includes('https://mcpemails.com/dashboard/usage'), `${label} needs the usage link`);
     assertUpgradeLink(label, text);
-    assert.ok(/\$5 a month/.test(text), `${label} needs the Personal price`);
+    assert.ok(/\$9 a month/.test(text), `${label} needs the Personal price`);
     assert.ok(/refused until/.test(text), `${label} must say what stops at 150`);
     assert.ok(/resume automatically/.test(text), `${label} must say automations come back`);
     assert.ok(/dashboard and your data are not affected/.test(text), `${label} must say what does not stop`);
@@ -480,7 +480,7 @@ test('the usage notices are declarative: no exclamation marks, no imperative upg
     assert.ok(!email.subject.includes('!'), `${template} subject`);
     assert.ok(!email.body.includes('!'), `${template} body`);
     assert.ok(!/\bUpgrade now\b|\bBuy\b|\bSubscribe\b/i.test(email.body), `${template} must not command`);
-    assert.match(email.body, /Personal removes the monthly cap for \$5 a month\./);
+    assert.match(email.body, /Personal removes the monthly cap for \$9 a month\./);
     assert.ok(!/\bsolo\b|\bpro\b/i.test(email.body), `${template} leaks an internal plan id`);
   }
 });

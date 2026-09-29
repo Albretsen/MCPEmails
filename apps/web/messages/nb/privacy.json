@@ -19,7 +19,7 @@
   "dataWeCollect": {
     "title": "2. Data vi samler inn",
     "accountTitle": "2.1 Kontodata",
-    "accountP": "Når du oppretter en konto, samler vi inn e-postadressen din og et hashet passord (vi lagrer aldri passord i klartekst). Du kan eventuelt oppgi et visningsnavn. Disse dataene er nødvendige for å opprette og vedlikeholde kontoen din.",
+    "accountP": "Når du oppretter en konto, samler vi inn e-postadressen din og et hashet passord (vi lagrer aldri passord i klartekst). Du kan eventuelt oppgi et visningsnavn. Disse dataene er nødvendige for å opprette og vedlikeholde kontoen din. Hvis du krysser av i boksen på registreringsskjemaet om å få produkttips og tilbud på e-post, registrerer vi også at du gjorde det, når, og hvilken ordlyd du så.",
     "workspaceTitle": "2.2 Arbeidsområde- og konfigurasjonsdata",
     "workspaceP": "Vi lagrer arbeidsområdenavnet du velger, og konfigurasjonen til hver tilkoblet innboks (leverandørtype, e-postadresse, OAuth-status og tidspunkt for tilkobling). Vi lagrer <b>ikke</b> OAuth-tilgangstokener eller app-passord i klartekst. De krypteres med AES-256-GCM før de skrives til databasen, og krypteringsnøkkelen lagres i en separat hemmelighetshvelv.",
     "apiKeysTitle": "2.3 API-nøkler",
@@ -32,7 +32,7 @@
     "technicalTitle": "2.6 Tekniske og driftsmessige data",
     "technicalP": "Vi samler inn standard driftsdata på serversiden, inkludert IP-adresser (for hastighetsbegrensning og forebygging av misbruk), tidsstempler for forespørsler, HTTP-statuskoder og feiltyper. Disse dataene oppbevares i aggregert, anonymisert form og knyttes ikke til individuelle kontoer etter 30 dager.",
     "cookiesTitle": "2.7 Informasjonskapsler og lokal lagring",
-    "cookiesP": "Dashbordet setter én førsteparts øktinformasjonskapsel utstedt av Supabase Auth for å holde deg innlogget. Vi bruker ikke sporingsinformasjonskapsler, reklameinformasjonskapsler eller tredjeparts informasjonskapsler. Vi lagrer to små førstepartsverdier i nettleserens lokale lagring og ingen andre steder: temapreferansen din (<c>mcpe-theme</c>) og en oppføring av hvordan du først kom til nettstedet (<c>mcpe-acquisition</c>). Den siste inneholder bare en grov kategori for trafikkilde (for eksempel <c>reddit</c> eller <c>organic_google</c>) og hvilken type side du kom til, aldri en identifikator, et søkeord eller en fullstendig URL. Den oppbevares i inntil 30 dager, og den brukes ikke til å spore deg på tvers av andre nettsteder.",
+    "cookiesP": "Dashbordet setter én førsteparts øktinformasjonskapsel utstedt av Supabase Auth for å holde deg innlogget. Hvis du krysser av for markedsføring på e-post på registreringsskjemaet og deretter fortsetter med Google eller GitHub, setter vi også en kortvarig førsteparts informasjonskapsel (<c>mcpe_signup_mc</c>) som tar med valget ditt gjennom innloggingen. Den utløper etter 15 minutter og slettes så snart du er tilbake. Vi bruker ikke sporingsinformasjonskapsler, reklameinformasjonskapsler eller tredjeparts informasjonskapsler. Vi lagrer to små førstepartsverdier i nettleserens lokale lagring og ingen andre steder: temapreferansen din (<c>mcpe-theme</c>) og en oppføring av hvordan du først kom til nettstedet (<c>mcpe-acquisition</c>). Den siste inneholder bare en grov kategori for trafikkilde (for eksempel <c>reddit</c> eller <c>organic_google</c>) og hvilken type side du kom til, aldri en identifikator, et søkeord eller en fullstendig URL. Den oppbevares i inntil 30 dager, og den brukes ikke til å spore deg på tvers av andre nettsteder.",
     "productAnalyticsTitle": "2.8 Produktanalyse",
     "productAnalyticsP": "Vi bruker Vercel Web Analytics til personvernvennlig, informasjonskapsel-fri produktanalyse. Vi måler sidebesøk og et lite oppsettsløp med kun aggregerte kategorier. Vi samler aldri inn e-postinnhold, adresser, API-nøkler, OAuth-tokener, bruker- eller arbeidsområde-ID-er, MCP-forespørsler eller postkassedata. Se <link>Vercels analysedokumentasjon</link>. Siden oppsettet er uten informasjonskapsler og ikke bruker ikke-nødvendige identifikatorer, kreves ingen samtykkebanner etter vår valgte policy."
   },
@@ -44,7 +44,7 @@
     "securityTitle": "3.2 Sikkerhet og forebygging av misbruk",
     "securityP": "Vi bruker IP-adresser, forespørselsfrekvenser og feilmønstre for å oppdage og blokkere misbruk, håndheve hastighetsgrenser og beskytte tilgjengeligheten til tjenesten for alle brukere. Det rettslige grunnlaget er våre <b>berettigede interesser</b> i å drive en sikker tjeneste.",
     "analyticsTitle": "3.3 Bruksanalyse og produktforbedring",
-    "analyticsP": "Vi bruker aggregerte, anonymiserte bruksdata (antall verktøykall, feilrater, ventetid) for å forstå hvordan tjenesten brukes og for å prioritere forbedringer. Vi bruker ikke bruksdata på individnivå til dette formålet. Det rettslige grunnlaget er våre <b>berettigede interesser</b> i å forbedre tjenesten.",
+    "analyticsP": "Vi bruker aggregerte, anonymiserte bruksdata (antall verktøykall, feilrater, ventetid) for å forstå hvordan tjenesten brukes og for å prioritere forbedringer. Analysen forblir aggregert: vi bruker ikke bruksdata på individnivå til dette formålet. Konto- og bruksdata for den enkelte brukes bare til å håndheve abonnementsgrenser (punkt 3.4) og, hvis du har samtykket, til å velge hvilken markedsførings-e-post vi sender deg (punkt 3.9). Det rettslige grunnlaget er våre <b>berettigede interesser</b> i å forbedre tjenesten.",
     "billingTitle": "3.4 Fakturering og håndheving av abonnement",
     "billingP": "Vi bruker brukstellinger for å avgjøre om arbeidsområdet ditt har nådd abonnementsgrensene og for å beregne fakturaen din på betalte abonnementer. Det rettslige grunnlaget er <b>oppfyllelse av en kontrakt</b>.",
     "legalTitle": "3.5 Etterlevelse av lov",
@@ -74,7 +74,11 @@
     "microsoftTitle": "3.8 Microsoft-API-er: postkassetilgang og hvordan du trekker den tilbake",
     "microsoftP1": "Når du kobler til en Outlook- eller Microsoft 365-postkasse, ber Microsoft deg godkjenne et bestemt, navngitt sett med tillatelser: å lese og organisere e-posten din, og å sende e-post på dine vegne. Vi bruker denne tilgangen bare til å utføre det du ber en KI-agent gjøre med postkassen din, som å lese, søke, organisere, skrive utkast og sende. Vi bruker den ikke til å bygge en kopi av postkassen din, og vi bruker aldri e-postinnhold, eller noe utledet av det, til annonsering eller markedsføring.",
     "microsoftRevokeP": "Du kan trekke tilbake denne tilgangen når som helst, direkte hos Microsoft og uten å spørre oss. For en personlig Microsoft-konto, bruk <personal>Tillatelser for Microsoft-kontoen</personal>. For en jobb- eller skolekonto, bruk <work>Mine apper</work>. Når du trekker tilbake tilgangen der, mister vi umiddelbart tilgang til postkassen. Hvis IT-administratoren godkjente MCPEmails for hele organisasjonen, er det bare en administrator som kan fjerne den organisasjonsomfattende godkjenningen.",
-    "microsoftDisconnectP": "Å koble fra innboksen i MCPEmails-dashbordet har samme virkning fra vår side, og sletter i tillegg de lagrede påloggingsdetaljene for postkassen. Du kan gjøre hva som helst av dette først; du trenger ikke gjøre begge deler."
+    "microsoftDisconnectP": "Å koble fra innboksen i MCPEmails-dashbordet har samme virkning fra vår side, og sletter i tillegg de lagrede påloggingsdetaljene for postkassen. Du kan gjøre hva som helst av dette først; du trenger ikke gjøre begge deler.",
+    "marketingTitle": "3.9 Direkte markedsføring på e-post",
+    "marketingP1": "Vi sender markedsføring på e-post (produkttips og tilbud, for eksempel om et betalt abonnement når arbeidsområdet ditt når en abonnementsgrense) bare hvis du har samtykket ved å krysse av i boksen på registreringsskjemaet. Boksen er ikke avkrysset på forhånd, og vi leser ikke samtykke ut av noe annet. Det rettslige grunnlaget er ditt <b>samtykke</b> (GDPR artikkel 6 nr. 1 bokstav a), som markedsføringsloven § 15 også krever for markedsføring på e-post.",
+    "marketingP2": "For å velge hvilken av noen få meldinger vi sender, og når, bruker vi konto- og bruksdata: for eksempel at arbeidsområdet ditt har nådd en abonnementsgrense, hvor mange innbokser du har koblet til, abonnementet ditt og når du registrerte deg. Vi bruker aldri innholdet i e-postkassen din, eller noe som er avledet av det, til dette.",
+    "marketingP3": "Du kan trekke tilbake samtykket når som helst med avmeldingslenken i hver markedsførings-e-post. Det gjelder med umiddelbar virkning og påvirker ikke kvitteringer, sikkerhetsvarsler eller annen e-post vi må sende for å drifte kontoen din. Vi lagrer når du samtykket og hvilken ordlyd du så, slik at vi kan dokumentere at samtykke ble gitt."
   },
   "dataRetention": {
     "title": "4. Datalagring",
@@ -87,6 +91,11 @@
         "category": "Kontodata (e-post, visningsnavn)",
         "period": "Inntil kontosletting, pluss 30 dager",
         "reason": "Tjenestedrift; gjenopprettingsvindu"
+      },
+      {
+        "category": "Samtykke til markedsføring på e-post og avmeldinger",
+        "period": "Inntil kontosletting, pluss 30 dager",
+        "reason": "Dokumentasjon av samtykke; respektere avmeldinger"
       },
       {
         "category": "Arbeidsområde- og innbokskonfigurasjon",

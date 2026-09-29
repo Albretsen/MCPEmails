@@ -23,7 +23,7 @@ A workspace is the unit of separation. Inboxes, members, API keys, and activity 
 
 More than one workspace is a **Team** feature ($79/month, $756/year), which also brings unlimited members with roles, SSO (SAML / OIDC), an audit log, and priority support. The subscription attaches to your account rather than to one workspace, so one Team subscription covers every client workspace you create. Name each after the client, connect only that client's inboxes inside it, and switch between them in the dashboard sidebar.
 
-Below Team the plans are one person in one workspace: **Pro** ($15/month, $144/year) connects unlimited inboxes, **Personal** ($5/month) three, **Free** one. Cheaper, and every mailbox shares one blast radius. See [pricing](/pricing) and the [provider matrix](/docs/providers).
+Below Team the plans are one person in one workspace: **Pro** ($15/month, $144/year) connects unlimited inboxes, **Personal** ($9/month) three, **Free** one. Cheaper, and every mailbox shares one blast radius. See [pricing](/pricing) and the [provider matrix](/docs/providers).
 
 ## Members and roles
 

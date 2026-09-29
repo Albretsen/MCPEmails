@@ -23,7 +23,21 @@ function firstFile(candidates) {
   return null;
 }
 
-export function resolve(specifier, context, nextResolve) {
+// `next` ships no `exports` map, so plain Node ESM cannot resolve an
+// extensionless subpath like `next/server` (the bundler adds the `.js`). Route
+// handler tests import that, usually to mock it. Only the extensionless form of
+// a `next/<name>` subpath is rewritten, and only when the default resolver
+// fails, so a Next that gains an exports map is left alone.
+const NEXT_SUBPATH = /^next\/[a-z-]+$/;
+
+export async function resolve(specifier, context, nextResolve) {
+  if (NEXT_SUBPATH.test(specifier)) {
+    try {
+      return await nextResolve(specifier, context);
+    } catch {
+      return nextResolve(`${specifier}.js`, context);
+    }
+  }
   if (!specifier.startsWith('@/')) return nextResolve(specifier, context);
   const base = path.join(SRC, specifier.slice(2));
   const hit = firstFile([

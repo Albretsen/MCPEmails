@@ -123,7 +123,7 @@ Nei. Codex er en terminalflate, så den bruker en avgrenset API-nøkkel i en \`A
 Nei. Hver melding hentes direkte fra leverandøren din for den forespørselen som ba om den, og forkastes deretter. Bare den krypterte leverandørlegitimasjonen beholdes. [Hvorfor det betyr noe at e-post aldri lagres](/blog/why-email-never-stored-matters) forklarer resonnementet.
 
 **Hva koster det?**
-Gratis dekker én tilkoblet innboks og 150 fakturerbare e-posthandlinger per UTC-kalendermåned, med de første 7 dagene utelatt fra tellingen. Den månedlige grensen gjelder arbeidsområder opprettet 13.09.2026 eller senere. Arbeidsområder opprettet tidligere er unntatt. Personal koster $5 per måned for 3 innbokser uten månedlig handlingsgrense, og Pro koster $15 per måned for ubegrenset antall innbokser. Se [priser](/pricing).
+Gratis dekker én tilkoblet innboks og 150 fakturerbare e-posthandlinger per UTC-kalendermåned, med de første 7 dagene utelatt fra tellingen. Den månedlige grensen gjelder arbeidsområder opprettet 13.09.2026 eller senere. Arbeidsområder opprettet tidligere er unntatt. Personal koster $9 per måned for 3 innbokser uten månedlig handlingsgrense, og Pro koster $15 per måned for ubegrenset antall innbokser. Se [priser](/pricing).
 
 ## Neste steg
 

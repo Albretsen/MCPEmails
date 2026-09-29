@@ -109,7 +109,7 @@ Nei. Du limer inn et apppassord, en egen legitimasjon som Google genererer og so
 
 ## Oppsummering
 
-Det er hele greia: ett Google-apppassord, én endepunkt-URL, og Claude kan lese, søke og sende den ekte posten din, uten noensinne å lagre den. Gratisnivået koster ingenting, krever ikke kort og kobler til én innboks; Personal koster $5 per måned for opptil tre, og Pro kobler til alle postkassene du eier (se [priser](/pricing)).
+Det er hele greia: ett Google-apppassord, én endepunkt-URL, og Claude kan lese, søke og sende den ekte posten din, uten noensinne å lagre den. Gratisnivået koster ingenting, krever ikke kort og kobler til én innboks; Personal koster $9 per måned for opptil tre, og Pro kobler til alle postkassene du eier (se [priser](/pricing)).
 
 Klar? [Koble til Gmailen din gratis](/signup), lim inn endepunktet i Claude, og be den oppsummere den uleste posten din.`,
 };

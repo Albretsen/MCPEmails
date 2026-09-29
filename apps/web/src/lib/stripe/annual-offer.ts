@@ -144,3 +144,24 @@ export function formatPriceCents(cents: number, locale = 'en-US'): string {
     return whole ? `$${cents / 100}` : `$${(cents / 100).toFixed(2)}`;
   }
 }
+
+/**
+ * The bare amount, no currency sign, for a message that writes its own.
+ *
+ * Several translated strings carry the "$" themselves ("Billed ${total}/year",
+ * "Facturé {total} $/an"). Handing them a raw number lets ICU print $86.40 as
+ * "86.4". This keeps the cents on a fractional amount, drops them on a whole
+ * one, and uses the reader's decimal separator (86,40 in fr, es and nb).
+ */
+export function formatAmountCents(cents: number, locale = 'en-US'): string {
+  const whole = cents % 100 === 0;
+  try {
+    return new Intl.NumberFormat(locale, {
+      minimumFractionDigits: whole ? 0 : 2,
+      maximumFractionDigits: whole ? 0 : 2,
+      useGrouping: false,
+    }).format(cents / 100);
+  } catch {
+    return whole ? String(cents / 100) : (cents / 100).toFixed(2);
+  }
+}

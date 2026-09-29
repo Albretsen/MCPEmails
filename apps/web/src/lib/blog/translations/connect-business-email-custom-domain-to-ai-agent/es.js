@@ -114,7 +114,7 @@ Introdúcelos tú: host, puerto, modo de seguridad y tu dirección completa como
 No. El contenido de los mensajes se obtiene en tiempo real de tu proveedor en cada solicitud y se descarta. Solo se conserva la credencial cifrada del proveedor.
 
 **¿Basta un buzón en el plan gratuito?**
-Free conecta 1 buzón. Personal cuesta 5 $/mes por 3 buzones sin límite mensual de acciones, y Pro 15 $/mes por buzones ilimitados. Consulta los [precios](/pricing).
+Free conecta 1 buzón. Personal cuesta 9 $/mes por 3 buzones sin límite mensual de acciones, y Pro 15 $/mes por buzones ilimitados. Consulta los [precios](/pricing).
 
 ## Siguiente paso
 

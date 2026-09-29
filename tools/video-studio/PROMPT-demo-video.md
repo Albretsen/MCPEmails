@@ -126,7 +126,7 @@ It needs:
   PREREQUISITE, not tidying. Verified against production on 2026-08-31: the demo
   account is on Free, which connects one inbox, and it already has one. At the
   cap, clicking "Connect inbox" opens the upgrade paywall ("Add another inbox.
-  Free connects 1 inbox. You have 1. Upgrade to Personal, $5/mo"), NOT the
+  Free connects 1 inbox. You have 1. Upgrade to Personal, $9/mo"), NOT the
   provider grid. Skip the reset and you will film the paywall.
 
   Read its guards before you run it; it disconnects inboxes on a live

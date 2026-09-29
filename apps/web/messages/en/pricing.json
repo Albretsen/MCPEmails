@@ -1,14 +1,14 @@
 {
   "meta": {
     "title": "AI Email MCP Server Pricing: Free, Personal, Pro and Team Plans",
-    "description": "Free connects one inbox. Personal connects three for $5 a month. Pro connects every mailbox your business runs for $15. Team adds members, roles and SSO."
+    "description": "Free connects one inbox. Personal connects three for $9 a month. Pro connects every mailbox your business runs for $15. Team adds members, roles and SSO."
   },
   "hero": {
     "eyebrow": "Pricing",
     "titleLine1": "One inbox, free.",
-    "titleLine2": "Three inboxes, $5.",
-    "titleLine2Yearly": "Three inboxes, $48 a year.",
-    "lead": "Connect a mailbox once and your agent can read, search, organise, draft, schedule and send. Free covers one inbox. Personal covers three for $5 a month. Pro covers every mailbox you or your business runs, on one login. Team adds people, roles, and a separate workspace per client."
+    "titleLine2": "Three inboxes, $9.",
+    "titleLine2Yearly": "Three inboxes, $86.40 a year.",
+    "lead": "Connect a mailbox once and your agent can read, search, organise, draft, schedule and send. Free covers one inbox. Personal covers three for $9 a month. Pro covers every mailbox you or your business runs, on one login. Team adds people, roles, and a separate workspace per client."
   },
   "billing": {
     "monthly": "Monthly",
@@ -160,7 +160,7 @@
     "items": [
       {
         "q": "What do I get on the free plan?",
-        "a": "One connected inbox, forever, with no card, and 150 email actions a calendar month. Your first 7 days after signup are not counted, so you can wire up your agent and try everything before the meter starts. Your agent gets every MCP tool we ship against that mailbox: read, search, organise, label, draft, schedule and send, plus the per-inbox send review and approval hold. When you want a second or third mailbox, or no monthly cap on actions, that is Personal, at $5 a month."
+        "a": "One connected inbox, forever, with no card, and 150 email actions a calendar month. Your first 7 days after signup are not counted, so you can wire up your agent and try everything before the meter starts. Your agent gets every MCP tool we ship against that mailbox: read, search, organise, label, draft, schedule and send, plus the per-inbox send review and approval hold. When you want a second or third mailbox, or no monthly cap on actions, that is Personal, at $9 a month."
       },
       {
         "q": "What does Personal add over Free?",
@@ -172,7 +172,7 @@
       },
       {
         "q": "What happens when I reach 150 email actions?",
-        "a": "Every other email action in that workspace is refused until the 1st of the next month (UTC), when the allowance resets. Your agent sees a plain tool result saying how many actions were used and when the counter resets, so it knows retrying will not help. Unattended automations pause and resume by themselves on the 1st. The dashboard and inbox_list keep working, and we email you at 80% and again at 100%. Personal removes the monthly cap for $5 a month. Workspaces created before 2026-09-12 are early members and are not metered against the allowance."
+        "a": "Every other email action in that workspace is refused until the 1st of the next month (UTC), when the allowance resets. Your agent sees a plain tool result saying how many actions were used and when the counter resets, so it knows retrying will not help. Unattended automations pause and resume by themselves on the 1st. The dashboard and inbox_list keep working, and we email you at 80% and again at 100%. Personal removes the monthly cap for $9 a month. Workspaces created before 2026-09-12 are early members and are not metered against the allowance."
       },
       {
         "q": "Is my email content stored anywhere?",
@@ -192,7 +192,7 @@
       },
       {
         "q": "How does the annual discount work?",
-        "a": "Paying annually saves about 20% versus monthly: Personal is $48 a year ($4 a month), Pro is $144 a year ($12 a month) and Team is $756 a year ($63 a month). You're charged once for 12 months upfront. Cancelling stops the renewal and you keep access until the year you paid for ends. Apart from the 14-day refund on a first charge, we don't refund the remaining months."
+        "a": "Paying annually saves about 20% versus monthly: Personal is $86.40 a year ($7.20 a month), Pro is $144 a year ($12 a month) and Team is $756 a year ($63 a month). You're charged once for 12 months upfront. Cancelling stops the renewal and you keep access until the year you paid for ends. Apart from the 14-day refund on a first charge, we don't refund the remaining months."
       },
       {
         "q": "What email providers are supported?",
@@ -210,7 +210,7 @@
   },
   "ctaBand": {
     "title": "Ready to give your agent an inbox?",
-    "sub": "Start on Free: one inbox, no card required. Personal takes you to three mailboxes for $5 a month, and Pro covers every mailbox your business runs for $15.",
+    "sub": "Start on Free: one inbox, no card required. Personal takes you to three mailboxes for $9 a month, and Pro covers every mailbox your business runs for $15.",
     "ctaPrimary": "Get started free",
     "ctaSecondary": "Read the docs"
   }

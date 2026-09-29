@@ -9,6 +9,8 @@ import {
   REVIEWS, REVIEW_SOURCES, featuredReview, initialsOf, reviewsAreListed, reviewSummary,
 } from './reviews.mjs';
 import { pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
+import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
+import { formatPriceCents } from '@/lib/stripe/annual-offer';
 
 // Rich-text tag handlers shared across sections (inline code + bold).
 const RICH = {
@@ -1071,10 +1073,10 @@ export function Pricing({ onGetStarted, stripePrices }) {
   // Watch the ids: `solo` is sold as "Pro" and `pro` is sold as "Team".
   // `personal` is the only id that matches its own display name.
   const allTiers = [
-    { msgKey: 'free',     priceKey: 'free',     price: '$0',  per: t('pricing.perForever'), accent: false, ctaHref: '/signup' },
-    { msgKey: 'personal', priceKey: 'personal', price: '$5',  per: t('pricing.perMonth'),   accent: false, ctaHref: pricingUpgradeHref('personal', false, false) },
-    { msgKey: 'solo',     priceKey: 'solo',     price: '$29', per: t('pricing.perMonth'),   accent: true,  ctaHref: pricingUpgradeHref('solo', false, false) },
-    { msgKey: 'team',     priceKey: 'pro',      price: '$79', per: t('pricing.perMonth'),   accent: false, ctaHref: pricingUpgradeHref('pro', false, false) },
+    { msgKey: 'free',     priceKey: 'free',     per: t('pricing.perForever'), accent: false, ctaHref: '/signup' },
+    { msgKey: 'personal', priceKey: 'personal', per: t('pricing.perMonth'),   accent: false, ctaHref: pricingUpgradeHref('personal', false, false) },
+    { msgKey: 'solo',     priceKey: 'solo',     per: t('pricing.perMonth'),   accent: true,  ctaHref: pricingUpgradeHref('solo', false, false) },
+    { msgKey: 'team',     priceKey: 'pro',      per: t('pricing.perMonth'),   accent: false, ctaHref: pricingUpgradeHref('pro', false, false) },
   ];
 
   const tiers = allTiers;
@@ -1089,10 +1091,13 @@ export function Pricing({ onGetStarted, stripePrices }) {
         <div className="price-grid">
           {tiers.map((tier) => {
             const liveMonthlyCents = stripePrices?.[tier.priceKey]?.monthlyCents;
-            const livePrice =
+            // Stripe's live price, else the catalogue in stripe/plans.ts. No
+            // price is written in this file (it once still said Pro was $29).
+            const livePrice = formatPriceCents(
               liveMonthlyCents != null && liveMonthlyCents > 0
-                ? `$${liveMonthlyCents / 100}`
-                : tier.price;
+                ? liveMonthlyCents
+                : CATALOGUE[tier.priceKey].monthlyPriceCents,
+            );
             const features = t.raw(`pricing.tiers.${tier.msgKey}.features`);
 
             return (

@@ -97,7 +97,7 @@ Después preguntas a tu agente por los treinta mensajes que quedan en lugar de p
 
 ## Las reglas cuentan para las acciones de tu plan
 
-Cada acción que aplica una regla se contabiliza igual que una interactiva, porque el efecto sobre el buzón es el mismo. En el plan **Free** son 150 acciones de correo facturables por mes natural UTC, con los primeros 7 días sin contar. Ese límite mensual se aplica a los espacios de trabajo creados a partir del 2026-09-13; los creados antes están exentos. Cuando un espacio de trabajo alcanza su cuota, la regla se **pausa** en lugar de fallar: sigue activada y su siguiente ejecución se traslada al momento en que termina el periodo de la cuota. **Personal**, por $5 al mes, elimina el límite mensual de acciones y permite 3 buzones conectados. Consulta los [precios](/pricing).
+Cada acción que aplica una regla se contabiliza igual que una interactiva, porque el efecto sobre el buzón es el mismo. En el plan **Free** son 150 acciones de correo facturables por mes natural UTC, con los primeros 7 días sin contar. Ese límite mensual se aplica a los espacios de trabajo creados a partir del 2026-09-13; los creados antes están exentos. Cuando un espacio de trabajo alcanza su cuota, la regla se **pausa** en lugar de fallar: sigue activada y su siguiente ejecución se traslada al momento en que termina el periodo de la cuota. **Personal**, por $9 al mes, elimina el límite mensual de acciones y permite 3 buzones conectados. Consulta los [precios](/pricing).
 
 ## Preguntas frecuentes
 

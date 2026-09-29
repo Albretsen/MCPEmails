@@ -33,8 +33,10 @@
  *
  * Price IDs come from environment variables so test and production can differ:
  *
- *   STRIPE_PRICE_PERSONAL_MONTHLY=price_...   (Personal monthly)
- *   STRIPE_PRICE_PERSONAL_YEARLY=price_...    (Personal yearly)
+ *   STRIPE_PRICE_PERSONAL_MONTHLY_V2=price_... (Personal monthly, $9)
+ *   STRIPE_PRICE_PERSONAL_YEARLY_V2=price_...  (Personal yearly, $86.40)
+ *   STRIPE_PRICE_PERSONAL_MONTHLY=price_...    (RETIRED Personal $5, still billing)
+ *   STRIPE_PRICE_PERSONAL_YEARLY=price_...     (RETIRED Personal $48, still billing)
  *   STRIPE_PRICE_SOLO_MONTHLY=price_...       (Pro monthly)
  *   STRIPE_PRICE_SOLO_YEARLY=price_...        (Pro yearly)
  *   STRIPE_PRICE_PRO_MONTHLY=price_...        (Team monthly)
@@ -58,6 +60,21 @@
  * defensible premium over the mailbox-count competitors that still sits under
  * the adjacent AI-email tools (Inbox Zero $18, Drag $12-24). $144/yr keeps the
  * "save ~20%" annual discount exact. Personal deliberately stays at $5.
+ *
+ * PERSONAL REPRICED 2026-09-29: $5 -> $9/mo, $48 -> $86.40/yr, NEW CUSTOMERS
+ * ONLY. Personal was two thirds of buyers at $1.67 an inbox, under both
+ * mailbox-count competitors (MailMCP EUR 2.99, Mailbox MCP GBP 2.92 per
+ * mailbox). $9 is $3 an inbox, still under both, and the ladder becomes
+ * $9 -> $15 for three inboxes -> unlimited. $86.40 is 12 x $9 less exactly
+ * 20%, the same discount every other annual price carries. The read-out is
+ * docs/PLAN-personal-reprice-900.md.
+ *
+ * Existing subscribers are not migrated, prorated or emailed. Their
+ * subscriptions keep billing on the $5 / $48 prices, whose ids stay in
+ * STRIPE_PRICE_PERSONAL_MONTHLY / _YEARLY and are read below as Personal's
+ * legacy pair. The prices sold from now on come from the _V2 variables. New
+ * names rather than overwritten values so the retired ids never have to be
+ * copied by hand: the renewal mapping is correct from the first deploy.
  *
  * GRANDFATHERING. Every user who existed before the repricing keeps unlimited
  * inboxes at no cost, permanently. That protection is user-level and lives in
@@ -183,6 +200,21 @@ export interface Plan {
 }
 
 // ---------------------------------------------------------------------------
+// A retired monthly/yearly pair read from the environment.
+//
+// `getPlanByStripePriceId` tells a legacy monthly id from a yearly one by its
+// POSITION in `legacyStripePriceIds`, so a pair must always occupy two slots,
+// even when one side is unset. An empty string holds the slot and can never
+// match: the lookup returns null for an empty price id before it gets here.
+// ---------------------------------------------------------------------------
+function legacyPricePair(
+  monthly: string | undefined,
+  yearly: string | undefined,
+): string[] {
+  return [monthly?.trim() || '', yearly?.trim() || ''];
+}
+
+// ---------------------------------------------------------------------------
 // Plan catalogue
 // ---------------------------------------------------------------------------
 export const PLANS: Record<PlanId, Plan> = {
@@ -255,11 +287,24 @@ export const PLANS: Record<PlanId, Plan> = {
       auditLogEnabled: false,
       supportTier: 'email',
     },
-    monthlyPriceCents: 500,
-    yearlyPriceCents: 4800,
-    stripePriceIdMonthly: process.env.STRIPE_PRICE_PERSONAL_MONTHLY ?? null,
-    stripePriceIdYearly: process.env.STRIPE_PRICE_PERSONAL_YEARLY ?? null,
-    legacyStripePriceIds: [],
+    // THE Personal price. Every surface that quotes it (pricing page, paywall,
+    // upgrade dialogs, JSON-LD, emails, translated copy) derives from these two
+    // numbers or is pinned to them by a test. $9 / $86.40 since 2026-09-29.
+    monthlyPriceCents: 900,
+    yearlyPriceCents: 8640,
+    // No fallback to the unsuffixed variables. Those now hold the RETIRED $5 /
+    // $48 prices, and falling back to them would charge $5 under copy that says
+    // $9. An unset _V2 variable fails loudly as `price_not_configured`.
+    stripePriceIdMonthly: process.env.STRIPE_PRICE_PERSONAL_MONTHLY_V2 ?? null,
+    stripePriceIdYearly: process.env.STRIPE_PRICE_PERSONAL_YEARLY_V2 ?? null,
+    // The $5 / $48 prices every Personal subscriber before 2026-09-29 is on.
+    // Never unset those two variables while a subscription bills on them: a
+    // renewal on an unmapped price keeps the plan but loses its name on the
+    // revenue board, its direction on a plan change and its lifecycle emails.
+    legacyStripePriceIds: legacyPricePair(
+      process.env.STRIPE_PRICE_PERSONAL_MONTHLY,
+      process.env.STRIPE_PRICE_PERSONAL_YEARLY,
+    ),
     // ONLY real deltas over Free belong here. The enforced ones are: maxInboxes
     // 1 -> 3, the monthly action cap (Free's public 150 -> none that a
     // customer can reach; the paid ceiling stays a silent abuse guard and is
@@ -455,8 +500,8 @@ export function getPlanByStripePriceId(
 // This is what decides whether an in-place plan change was an UPGRADE or a
 // DOWNGRADE, and it exists because neither half of the pair can answer that on
 // its own. It is deliberately NOT a comparison of what the two prices bill over
-// a year: every annual price in the catalogue is discounted (Personal is $48 a
-// year against $60 of monthlies), so by yearly revenue a customer committing to
+// a year: every annual price in the catalogue is discounted (Personal is $86.40
+// a year against $108 of monthlies), so by yearly revenue a customer committing to
 // twelve months up front would be recorded as contracting. Nobody means that by
 // "downgrade".
 //

@@ -90,7 +90,7 @@ Blandede oppsett er det normale, og leverandørene er uenige om hva en mappe er.
 Tilkoblede postkasser er det planene prises på:
 
 - **Free, $0.** Én tilkoblet postkasse. 150 fakturerbare e-posthandlinger per UTC-kalendermåned, der de første 7 dagene ikke telles. Den månedlige grensen gjelder arbeidsområder opprettet 2026-09-13 eller senere; arbeidsområder opprettet tidligere er unntatt.
-- **Personal, $5 i måneden eller $48 i året.** Tre tilkoblede postkasser, ingen månedlig handlingsgrense, 2x burst-grense, e-poststøtte.
+- **Personal, $9 i måneden eller $86,40 i året.** Tre tilkoblede postkasser, ingen månedlig handlingsgrense, 2x burst-grense, e-poststøtte.
 - **Pro, $15 i måneden eller $144 i året.** Ubegrenset antall tilkoblede postkasser, 5x burst-grense, lengre analysehistorikk.
 - **Team, $79 i måneden eller $756 i året.** Ubegrenset antall medlemmer med roller, et eget arbeidsområde per kunde eller virksomhet, SSO (SAML/OIDC) og revisjonslogg, prioritert støtte.
 

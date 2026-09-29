@@ -182,5 +182,5 @@ test('the annual price the CTA quotes is the price the interval buys', () => {
   const personal = annualOffer({
     ...sellable(PLANS.personal.monthlyPriceCents, PLANS.personal.yearlyPriceCents!),
   })!;
-  assert.equal(formatPriceCents(personal.yearlyPriceCents), '$48');
+  assert.equal(formatPriceCents(personal.yearlyPriceCents), '$86.40');
 });

@@ -335,7 +335,7 @@ What users need before connecting:
 > A Claude account and any email account. Gmail and Outlook connect with OAuth.
 > Fastmail, iCloud, Yahoo and Zoho use an app password from the provider.
 > Anything else takes IMAP and SMTP host details. Free covers one inbox and
-> 5,000 actions per calendar month; more inboxes need a paid plan from $5/month.
+> 5,000 actions per calendar month; more inboxes need a paid plan from $9/month.
 
 Reads, writes, or both: **both**.
 

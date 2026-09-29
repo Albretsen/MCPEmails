@@ -114,7 +114,7 @@ Fyll dem inn selv: vert, port, sikkerhetsmodus og hele adressen din som brukerna
 Nei. Innholdet i meldingene hentes live fra leverandøren din ved hver forespørsel og forkastes. Bare den krypterte legitimasjonen til leverandøren beholdes.
 
 **Er én postkasse nok på gratisplanen?**
-Free kobler til 1 postkasse. Personal koster 5 $/måned for 3 postkasser uten månedlig handlingstak, og Pro 15 $/måned for ubegrenset antall. Se [priser](/pricing).
+Free kobler til 1 postkasse. Personal koster 9 $/måned for 3 postkasser uten månedlig handlingstak, og Pro 15 $/måned for ubegrenset antall. Se [priser](/pricing).
 
 ## Neste steg
 

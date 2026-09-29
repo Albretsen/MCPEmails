@@ -150,7 +150,7 @@ Si fuera a lanzar esto para una bandeja real mañana, empezaría pequeño y abur
 
 Ese es un sistema en el que de verdad puedes confiar, y se generaliza. El mismo bucle con un prompt distinto se convierte en un bot de triaje, un enrutador de leads o un notificador. Para ver el menú más amplio de lo que un agente puede hacer una vez conectado, consulta [7 cosas que un agente de IA puede hacer con acceso a la bandeja](/blog/7-things-ai-agent-can-do-with-inbox-access). Si aún estás decidiendo si darle a un agente acceso de envío siquiera, vale la pena leer [¿es seguro dar acceso al correo a un agente de IA?](/blog/is-it-safe-to-give-ai-agent-email-access) antes de lanzarlo.
 
-¿Listo para construirlo? Crea una API key acotada y lee la referencia de herramientas en [la documentación](/docs), o [empieza gratis](/signup): Gratis conecta una bandeja, Personal (5 $/mes) conecta hasta tres y Pro conecta todas las que tengas, así que configura primero los guardarraíles antes de automatizar.`,
+¿Listo para construirlo? Crea una API key acotada y lee la referencia de herramientas en [la documentación](/docs), o [empieza gratis](/signup): Gratis conecta una bandeja, Personal (9 $/mes) conecta hasta tres y Pro conecta todas las que tengas, así que configura primero los guardarraíles antes de automatizar.`,
 };
 
 export default translation;

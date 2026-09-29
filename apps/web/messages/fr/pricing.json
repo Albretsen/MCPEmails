@@ -1,14 +1,14 @@
 {
   "meta": {
     "title": "Tarifs du serveur MCP e-mail pour l'IA : Gratuit, Personal, Pro et Team",
-    "description": "Gratuit connecte une boîte. Personal en connecte trois pour 5 $ par mois. Pro connecte toutes les boîtes de votre entreprise pour 15 $. Team ajoute membres, rôles et SSO."
+    "description": "Gratuit connecte une boîte. Personal en connecte trois pour 9 $ par mois. Pro connecte toutes les boîtes de votre entreprise pour 15 $. Team ajoute membres, rôles et SSO."
   },
   "hero": {
     "eyebrow": "Tarifs",
     "titleLine1": "Une boîte, gratuite.",
-    "titleLine2": "Trois boîtes, 5 $.",
-    "titleLine2Yearly": "Trois boîtes, 48 $ par an.",
-    "lead": "Connectez une boîte une fois et votre agent peut lire, chercher, organiser, rédiger, programmer et envoyer. Gratuit couvre une boîte. Personal en couvre trois pour 5 $ par mois. Pro couvre toutes les boîtes que vous ou votre entreprise gérez, avec une seule connexion. Team ajoute des personnes, des rôles et un espace de travail distinct par client."
+    "titleLine2": "Trois boîtes, 9 $.",
+    "titleLine2Yearly": "Trois boîtes, 86,40 $ par an.",
+    "lead": "Connectez une boîte une fois et votre agent peut lire, chercher, organiser, rédiger, programmer et envoyer. Gratuit couvre une boîte. Personal en couvre trois pour 9 $ par mois. Pro couvre toutes les boîtes que vous ou votre entreprise gérez, avec une seule connexion. Team ajoute des personnes, des rôles et un espace de travail distinct par client."
   },
   "billing": {
     "monthly": "Mensuel",
@@ -160,7 +160,7 @@
     "items": [
       {
         "q": "Que comprend la formule gratuite ?",
-        "a": "Une boîte connectée, pour toujours, sans carte bancaire, et 150 actions e-mail par mois civil. Les 7 premiers jours après l'inscription ne sont pas comptés : vous pouvez brancher votre agent et tout essayer avant que le compteur ne démarre. Votre agent dispose de tous les outils MCP que nous publions sur cette boîte : lire, chercher, organiser, étiqueter, rédiger, programmer et envoyer, ainsi que la validation avant envoi, réglable par boîte. Dès que vous voulez une deuxième ou une troisième boîte, ou plus aucun plafond mensuel d'actions, c'est Personal, à 5 $ par mois."
+        "a": "Une boîte connectée, pour toujours, sans carte bancaire, et 150 actions e-mail par mois civil. Les 7 premiers jours après l'inscription ne sont pas comptés : vous pouvez brancher votre agent et tout essayer avant que le compteur ne démarre. Votre agent dispose de tous les outils MCP que nous publions sur cette boîte : lire, chercher, organiser, étiqueter, rédiger, programmer et envoyer, ainsi que la validation avant envoi, réglable par boîte. Dès que vous voulez une deuxième ou une troisième boîte, ou plus aucun plafond mensuel d'actions, c'est Personal, à 9 $ par mois."
       },
       {
         "q": "Qu'apporte Personal par rapport à Free ?",
@@ -172,7 +172,7 @@
       },
       {
         "q": "Que se passe-t-il quand j'atteins 150 actions e-mail ?",
-        "a": "Toute autre action e-mail dans cet espace de travail est refusée jusqu'au 1er du mois suivant (UTC), date à laquelle l'allocation se renouvelle. Votre agent reçoit un résultat d'outil ordinaire indiquant combien d'actions ont été utilisées et quand le compteur se remet à zéro, il sait donc que réessayer ne sert à rien. Les automatisations sans surveillance se mettent en pause et reprennent d'elles-mêmes le 1er. Le tableau de bord et inbox_list continuent de fonctionner, et nous vous envoyons un e-mail à 80 % puis à 100 %. Personal supprime le plafond mensuel pour 5 $ par mois. Les espaces de travail créés avant le 2026-09-12 sont des membres de la première heure et ne sont pas décomptés."
+        "a": "Toute autre action e-mail dans cet espace de travail est refusée jusqu'au 1er du mois suivant (UTC), date à laquelle l'allocation se renouvelle. Votre agent reçoit un résultat d'outil ordinaire indiquant combien d'actions ont été utilisées et quand le compteur se remet à zéro, il sait donc que réessayer ne sert à rien. Les automatisations sans surveillance se mettent en pause et reprennent d'elles-mêmes le 1er. Le tableau de bord et inbox_list continuent de fonctionner, et nous vous envoyons un e-mail à 80 % puis à 100 %. Personal supprime le plafond mensuel pour 9 $ par mois. Les espaces de travail créés avant le 2026-09-12 sont des membres de la première heure et ne sont pas décomptés."
       },
       {
         "q": "Le contenu de mes e-mails est-il stocké quelque part ?",
@@ -192,7 +192,7 @@
       },
       {
         "q": "Comment fonctionne la remise annuelle ?",
-        "a": "Payer à l'année permet d'économiser environ 20 % par rapport à la facturation mensuelle : Personal est à 48 $ par an (4 $ par mois), Pro à 144 $ par an (12 $ par mois) et Team à 756 $ par an (63 $ par mois). Vous êtes facturé une fois pour 12 mois d'avance. L'annulation arrête le renouvellement et vous gardez l'accès jusqu'à la fin de l'année payée. Hormis le remboursement sous 14 jours du premier paiement, nous ne remboursons pas les mois restants."
+        "a": "Payer à l'année permet d'économiser environ 20 % par rapport à la facturation mensuelle : Personal est à 86,40 $ par an (7,20 $ par mois), Pro à 144 $ par an (12 $ par mois) et Team à 756 $ par an (63 $ par mois). Vous êtes facturé une fois pour 12 mois d'avance. L'annulation arrête le renouvellement et vous gardez l'accès jusqu'à la fin de l'année payée. Hormis le remboursement sous 14 jours du premier paiement, nous ne remboursons pas les mois restants."
       },
       {
         "q": "Quels fournisseurs d'e-mail sont pris en charge ?",
@@ -210,7 +210,7 @@
   },
   "ctaBand": {
     "title": "Prêt à offrir une boîte de réception à votre agent ?",
-    "sub": "Commencez avec Gratuit : une boîte, sans carte bancaire. Trois boîtes coûtent 5 $ par mois avec Personal, et toutes les boîtes que gère votre entreprise 15 $ avec Pro.",
+    "sub": "Commencez avec Gratuit : une boîte, sans carte bancaire. Trois boîtes coûtent 9 $ par mois avec Personal, et toutes les boîtes que gère votre entreprise 15 $ avec Pro.",
     "ctaPrimary": "Commencer gratuitement",
     "ctaSecondary": "Lire la documentation"
   }

@@ -109,7 +109,7 @@ No. Pegas una contraseña de aplicación, una credencial aparte que genera Googl
 
 ## Conclusión
 
-Eso es todo: una contraseña de aplicación de Google, una URL de endpoint, y Claude puede leer, buscar y enviar tu correo real, sin almacenarlo nunca. El nivel Gratis no cuesta nada, no necesita tarjeta y conecta una bandeja; Personal cuesta 5 $/mes y conecta hasta tres; Pro conecta todos los buzones que tengas (consulta [precios](/pricing)).
+Eso es todo: una contraseña de aplicación de Google, una URL de endpoint, y Claude puede leer, buscar y enviar tu correo real, sin almacenarlo nunca. El nivel Gratis no cuesta nada, no necesita tarjeta y conecta una bandeja; Personal cuesta 9 $/mes y conecta hasta tres; Pro conecta todos los buzones que tengas (consulta [precios](/pricing)).
 
 ¿Listo? [Conecta tu Gmail gratis](/signup), pega el endpoint en Claude y pídele que te resuma el correo no leído.`,
 };

@@ -1,14 +1,14 @@
 {
   "meta": {
     "title": "Priser for AI-e-post-MCP-server, Gratis, Personal, Pro og Team",
-    "description": "Gratis kobler til én innboks. Personal kobler til tre for $5. Pro kobler til alle postkassene firmaet ditt har for $15. Team legger til medlemmer, roller og SSO."
+    "description": "Gratis kobler til én innboks. Personal kobler til tre for $9. Pro kobler til alle postkassene firmaet ditt har for $15. Team legger til medlemmer, roller og SSO."
   },
   "hero": {
     "eyebrow": "Priser",
     "titleLine1": "Én innboks, gratis.",
-    "titleLine2": "Tre innbokser, $5.",
-    "titleLine2Yearly": "Tre innbokser, $48 i året.",
-    "lead": "Koble til en postkasse én gang, så kan agenten lese, søke, organisere, skrive, planlegge og sende. Gratis dekker én innboks. Personal dekker tre for $5 i måneden. Pro dekker alle postkassene du eller firmaet ditt har, med én innlogging. Team legger til folk, roller og et eget arbeidsområde per kunde."
+    "titleLine2": "Tre innbokser, $9.",
+    "titleLine2Yearly": "Tre innbokser, $86,40 i året.",
+    "lead": "Koble til en postkasse én gang, så kan agenten lese, søke, organisere, skrive, planlegge og sende. Gratis dekker én innboks. Personal dekker tre for $9 i måneden. Pro dekker alle postkassene du eller firmaet ditt har, med én innlogging. Team legger til folk, roller og et eget arbeidsområde per kunde."
   },
   "billing": {
     "monthly": "Månedlig",
@@ -160,7 +160,7 @@
     "items": [
       {
         "q": "Hva får jeg på gratisplanen?",
-        "a": "Én tilkoblet innboks, for alltid, uten kort, og 150 e-posthandlinger per kalendermåned. De første 7 dagene etter registrering telles ikke, så du kan koble opp agenten og prøve alt før telleren starter. Agenten din får alle MCP-verktøyene vi leverer mot den postkassen: lese, søke, organisere, merke, skrive, planlegge og sende, i tillegg til godkjenning før sending per innboks. Når du vil ha postkasse nummer to eller tre, eller slippe den månedlige handlingsgrensen, er det Personal, til $5 i måneden."
+        "a": "Én tilkoblet innboks, for alltid, uten kort, og 150 e-posthandlinger per kalendermåned. De første 7 dagene etter registrering telles ikke, så du kan koble opp agenten og prøve alt før telleren starter. Agenten din får alle MCP-verktøyene vi leverer mot den postkassen: lese, søke, organisere, merke, skrive, planlegge og sende, i tillegg til godkjenning før sending per innboks. Når du vil ha postkasse nummer to eller tre, eller slippe den månedlige handlingsgrensen, er det Personal, til $9 i måneden."
       },
       {
         "q": "Hva gir Personal utover Free?",
@@ -172,7 +172,7 @@
       },
       {
         "q": "Hva skjer når jeg når 150 e-posthandlinger?",
-        "a": "Alle andre e-posthandlinger i det arbeidsområdet avvises til den 1. i neste måned (UTC), når kvoten nullstilles. Agenten din får et vanlig verktøyresultat som sier hvor mange handlinger som er brukt og når telleren nullstilles, så den vet at nye forsøk ikke hjelper. Ubemannede automatiseringer settes på pause og gjenopptas av seg selv den 1. Dashbordet og inbox_list fungerer som før, og vi sender deg en e-post ved 80% og en til ved 100%. Personal fjerner den månedlige grensen for $5 i måneden. Arbeidsområder opprettet før 2026-09-12 er tidlige medlemmer og måles ikke mot kvoten."
+        "a": "Alle andre e-posthandlinger i det arbeidsområdet avvises til den 1. i neste måned (UTC), når kvoten nullstilles. Agenten din får et vanlig verktøyresultat som sier hvor mange handlinger som er brukt og når telleren nullstilles, så den vet at nye forsøk ikke hjelper. Ubemannede automatiseringer settes på pause og gjenopptas av seg selv den 1. Dashbordet og inbox_list fungerer som før, og vi sender deg en e-post ved 80% og en til ved 100%. Personal fjerner den månedlige grensen for $9 i måneden. Arbeidsområder opprettet før 2026-09-12 er tidlige medlemmer og måles ikke mot kvoten."
       },
       {
         "q": "Lagres e-postinnholdet mitt noe sted?",
@@ -192,7 +192,7 @@
       },
       {
         "q": "Hvordan fungerer årsrabatten?",
-        "a": "Å betale årlig sparer omtrent 20 % sammenlignet med månedlig fakturering: Personal koster $48 i året ($4 i måneden), Pro koster $144 i året ($12 i måneden) og Team koster $756 i året ($63 i måneden). Du belastes én gang for 12 måneder på forhånd. Oppsigelse stopper fornyelsen, og du beholder tilgangen ut året du har betalt for. Bortsett fra 14-dagers refusjonen på den første belastningen refunderer vi ikke de gjenstående månedene."
+        "a": "Å betale årlig sparer omtrent 20 % sammenlignet med månedlig fakturering: Personal koster $86,40 i året ($7,20 i måneden), Pro koster $144 i året ($12 i måneden) og Team koster $756 i året ($63 i måneden). Du belastes én gang for 12 måneder på forhånd. Oppsigelse stopper fornyelsen, og du beholder tilgangen ut året du har betalt for. Bortsett fra 14-dagers refusjonen på den første belastningen refunderer vi ikke de gjenstående månedene."
       },
       {
         "q": "Hvilke e-postleverandører støttes?",
@@ -210,7 +210,7 @@
   },
   "ctaBand": {
     "title": "Klar til å gi agenten din en innboks?",
-    "sub": "Start på Gratis: én innboks, uten kort. Tre postkasser koster $5 i måneden med Personal, og alle postkassene firmaet ditt har, koster $15 med Pro.",
+    "sub": "Start på Gratis: én innboks, uten kort. Tre postkasser koster $9 i måneden med Personal, og alle postkassene firmaet ditt har, koster $15 med Pro.",
     "ctaPrimary": "Kom i gang gratis",
     "ctaSecondary": "Les dokumentasjonen"
   }
