@@ -76,6 +76,7 @@
   },
   "cardsFootnote": {
     "all": "Todos los planes incluyen: el correo se obtiene en vivo, nunca se almacena · credenciales cifradas en reposo · alojamiento en la UE y EE. UU.",
+    "business": "¿Una persona que lleva varios buzones de empresa? Eso es Pro, no Team. <business>Mira cómo todos los buzones de trabajo funcionan en un solo agente</business>.",
     "custom": "¿Necesitas algo a medida? <contact>Contáctanos</contact>."
   },
   "comparison": {
@@ -181,6 +182,10 @@
       {
         "q": "¿Cuál es la diferencia entre Personal, Pro y Team?",
         "a": "Personal es un solo usuario con tres bandejas conectadas, un techo de 120 peticiones por minuto y soporte por correo. Pro sigue siendo un solo usuario y un solo inicio de sesión, sin ningún límite de bandejas, así que una persona puede conectar todos los buzones que lleva una empresa (ventas, facturas, soporte, info). Además tiene un techo de 300 peticiones por minuto, 90 días de historial de analíticas en lugar de 30 y soporte por correo. Team es para cuando más de una persona necesita iniciar sesión: miembros ilimitados con roles, un espacio de trabajo separado por cliente o negocio, SSO (SAML / OIDC), registro de auditoría, un año de historial de analíticas y soporte prioritario."
+      },
+      {
+        "q": "Somos una empresa con varios buzones. ¿Qué plan necesitamos?",
+        "a": "Cuenta primero las personas que inician sesión y después los buzones. Si una sola persona lleva info@, ventas@, facturas@ y los demás, eso es Pro: un solo inicio de sesión, sin límite de buzones conectados, y cada buzón conserva su propio nombre de remitente y su firma y envía a través de su propio servidor de correo. Dos o tres direcciones caben en Personal. Team solo hace falta cuando una segunda persona necesita su propio inicio de sesión. Se conecta cualquier buzón que hable IMAP y SMTP, lo aloje quien lo aloje, y también Gmail, Google Workspace y Microsoft 365; una cuenta de empresa de Microsoft 365 puede necesitar que su administrador de TI apruebe la aplicación una vez."
       },
       {
         "q": "¿Y si necesito una cuarta bandeja?",

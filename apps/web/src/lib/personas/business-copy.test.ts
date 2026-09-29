@@ -113,10 +113,16 @@ const CHANGED_PATHS: Record<'pricing' | 'home' | 'imap', string[]> = {
     'comparison.values.oneSeat',
     'comparison.values.unlimitedCompany',
     'faq.items.5.a',
+    // 2026-09-29: the operator question, inserted at 6, pushed "What if I
+    // need a fourth inbox?" to 7.
+    'faq.items.6.q',
     'faq.items.6.a',
+    'faq.items.7.a',
+    'cardsFootnote.business',
     'ctaBand.sub',
   ],
   home: [
+    'hero.businessLine',
     'pricing.sub',
     'pricing.tiers.personal.desc',
     'pricing.tiers.solo.desc',
@@ -489,4 +495,28 @@ test('/for/business is routed, in the sitemap, linked, and kept out of the globa
     /^\s*['"]use client['"]/,
     'BusinessView must stay a server component, or its copy has to become a global namespace',
   );
+});
+
+test('the homepage hero and the pricing cards point a company at /for/business, in every locale', () => {
+  const sections = readText('components/marketing/Sections.jsx');
+  assert.match(sections, /t\.rich\('hero\.businessLine'[\s\S]{0,120}href="\/for\/business"/);
+  const pricing = readText('components/marketing/PricingClient.jsx');
+  assert.match(pricing, /t\.rich\('cardsFootnote\.business'[\s\S]{0,120}href="\/for\/business"/);
+  for (const locale of LOCALES) {
+    for (const [file, key] of [['home', 'hero.businessLine'], ['pricing', 'cardsFootnote.business']] as const) {
+      const value = str(messages(locale, file), key, `${locale} ${file}`);
+      // Exactly one link, with its text inside it.
+      assert.match(value, /^[^<]*<business>[^<]+<\/business>[^<]*$/, `${locale}: ${file} ${key} must carry one <business> link`);
+    }
+  }
+});
+
+test('the operator FAQ answer names Pro for one person and Team only for a second login', () => {
+  for (const locale of LOCALES) {
+    const answer = str(messages(locale, 'pricing'), 'faq.items.6.a', `${locale} pricing`);
+    assert.ok(answer.includes('Pro'), `${locale}: the operator answer must name Pro`);
+    assert.ok(answer.includes('Team'), `${locale}: the operator answer must say when Team applies`);
+    // It names Microsoft 365, so it carries the admin-approval caveat.
+    assert.ok(ADMIN_APPROVAL.test(answer), `${locale}: the operator answer names Microsoft 365 without the admin approval`);
+  }
 });
