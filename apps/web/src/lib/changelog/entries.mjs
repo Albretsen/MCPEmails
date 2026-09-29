@@ -46,6 +46,97 @@ export const ENTRIES = [
       'Outlook connects with Sign in with Microsoft, over Microsoft Graph, with no app password and no IMAP settings. Personal Outlook.com, Hotmail, Live and MSN accounts connect directly. A work or school Microsoft 365 account may first need an IT admin to approve the app once for the whole organisation; the dashboard gives you a link to send them, and the admin does not need an MCP Emails account. Microsoft shows the app as coming from a verified publisher. Read, search, send, reply, forward, drafts, scheduled sends, nested folders, flags and automations all work, and an automation\'s label action applies an Outlook category.',
   },
   {
+    date: '2026-09-26',
+    kind: 'fixed',
+    title: 'ChatGPT gets the access its tools need',
+    body:
+      'A connection made from ChatGPT opened the consent screen on Read-only, and ChatGPT does not come back for more access when a tool needs it, so sending and automations failed until the connector was set up again. When the request provably comes from ChatGPT, the consent screen now opens with Full access selected, and you can still narrow it before approving. A tool that needs more than was granted now answers in the form ChatGPT follows to ask again. Creating a folder that already exists succeeds and says it already existed.',
+  },
+  {
+    date: '2026-09-26',
+    kind: 'fixed',
+    title: 'A moved message comes back with its new id',
+    body:
+      'On IMAP inboxes a message gets a new id in the folder it moves to, and move returned the old one, so moving a message and then moving it back failed with message not found. Move, archive and their batch forms now return new_message_id whenever the server reports it, and say to look the message up in the destination when it does not.',
+  },
+  {
+    date: '2026-09-25',
+    kind: 'fixed',
+    title: 'Connecting a mailbox never replaces one you already have',
+    body:
+      'Connecting an address that was already connected through a different kind of connection quietly converted the existing inbox to the new one. That is now refused, with a message saying the address is already connected another way, and the working inbox is left as it was. Reconnecting the same inbox the same way works as before.',
+  },
+  {
+    date: '2026-09-23',
+    kind: 'improved',
+    title: 'Correct ChatGPT setup steps',
+    body:
+      'The ChatGPT steps on the dashboard and in the docs said a custom connector needs a ChatGPT Business, Enterprise or Edu plan. Plus and Pro accounts can add one too, on the web, through developer mode. The steps now also say that developer mode and the connector have to be switched on from the + menu in each new chat, which is why a connected ChatGPT could see the tools and never use them.',
+  },
+  {
+    date: '2026-09-23',
+    kind: 'improved',
+    title: 'More IMAP servers can sign in',
+    body:
+      'Password sign-in always used AUTHENTICATE PLAIN, whatever the server offered. It now follows what the server advertises and uses LOGIN or CRAM-MD5 when PLAIN is not on the list, so servers such as EarthLink, online.no, 163.com and aliyun.com can connect. Servers that already worked sign in exactly as before.',
+  },
+  {
+    date: '2026-09-23',
+    kind: 'improved',
+    title: 'Tools accept any argument whose meaning is clear',
+    body:
+      'A clear request was sometimes refused over its shape, costing a failed call and a retry: one address as to instead of a list, the text false for a yes or no field, a number sent as text, email_id where message_id was expected. The server now accepts these, along with common synonyms, a single id where a list is expected, null for an optional field, a JSON object sent as a string and enum values in any case. An oversized page size is clamped with a note on how to page on. Anything that is actually ambiguous is still refused, and so is a limit on how much a write may touch.',
+  },
+  {
+    date: '2026-09-23',
+    kind: 'added',
+    title: 'Cc and bcc on replies, recipients on draft send',
+    body:
+      'Replies, and reply drafts, take cc and bcc on top of the recipients worked out from the original message, on every provider, and the approval card shows them. Sending a draft can set its to, cc and bcc, changing only the recipient headers so the body and attachments go out untouched. Draft actions take an idempotency_key, and schedule_list and contact_search accept an inbox address as well as an inbox id.',
+  },
+  {
+    date: '2026-09-23',
+    kind: 'improved',
+    title: 'The automation editor names criteria your inbox cannot run',
+    body:
+      'The dashboard now refuses to save an automation whose filter uses a criterion the inbox cannot search on, and says which one before you save, instead of letting the rule fail in its run log later.',
+  },
+  {
+    date: '2026-09-20',
+    kind: 'changed',
+    title: 'Search says which criteria it could not apply',
+    body:
+      'Some criteria have no equivalent in a provider\'s search: IMAP servers cannot search by attachment, for example. A search used to drop such a criterion silently and return a wider result than was asked for. It now names the criterion in the result\'s notes. Search-and-move and search-and-delete refuse instead, because a dropped condition there changes what gets moved or deleted, and an automation using one is refused when saved.',
+  },
+  {
+    date: '2026-09-20',
+    kind: 'fixed',
+    title: 'Delete and move report a message that is not there',
+    body:
+      'On IMAP inboxes, deleting, moving or copying a message id that no longer existed was reported as done. Ids change whenever a message moves between folders, so an out-of-date id is common. These actions now check the message is there first and answer message not found for each id that is not, in single and batch calls alike. Deleting a message that is already in the trash is still a harmless no-op.',
+  },
+  {
+    date: '2026-09-20',
+    kind: 'fixed',
+    title: 'Readable previews and contact names',
+    body:
+      'List and search previews could show raw MIME, boundary lines and base64, for messages with attachments, the ones you most want to triage. Previews now use the same parser as reading a message, at any depth, and accented characters decode correctly. contact_search returns display names decoded instead of as encoded words.',
+  },
+  {
+    date: '2026-09-20',
+    kind: 'fixed',
+    title: 'Copy works on Gmail inboxes connected with an app password',
+    body:
+      'Tool descriptions said copying never works on Gmail, so assistants refused to copy mail on Gmail inboxes connected with an app password, where it works. Whether copy is available now follows the connection, and inbox_list reports it per inbox. Moving to a folder that does not exist now says the mailbox is unchanged and points to folder_list, instead of suggesting a retry.',
+  },
+  {
+    date: '2026-09-20',
+    kind: 'fixed',
+    title: 'Filtering your inbox list no longer says you have none',
+    body:
+      'inbox_list with a filter that matched nothing said no mailbox was connected at all. It now says the filter matched nothing, lists the inboxes you do have, and suggests the filter that would find a Gmail inbox connected over IMAP. A new service filter finds inboxes by mail service. Previewing a saved automation now uses its own inbox instead of asking for one.',
+  },
+  {
     date: '2026-09-17',
     kind: 'fixed',
     title: 'A forward now carries the original exactly',
