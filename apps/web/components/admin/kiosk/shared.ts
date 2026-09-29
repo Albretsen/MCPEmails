@@ -450,6 +450,7 @@ const CHANNEL_LABELS: Record<string, string> = {
   organic_google: 'Google',
   organic_bing: 'Bing',
   organic_duckduckgo: 'DuckDuckGo',
+  google_ads: 'Google Ads',
   reddit: 'Reddit',
   hn: 'Hacker News',
   hackernews: 'Hacker News',

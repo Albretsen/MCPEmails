@@ -19,11 +19,55 @@ test('captures public landing, locale and coarse UTM buckets without raw query v
     new URL('https://www.google.com/search?q=private'),
   );
   assert.deepEqual(value, {
-    source: 'organic_google', landing: 'blog', landingPath: '/blog/connect-claude-to-email',
-    locale: 'fr', referrer: 'organic_google', utmSource: 'organic_google',
+    source: 'google_ads', landing: 'blog', landingPath: '/blog/connect-claude-to-email',
+    locale: 'fr', referrer: 'organic_google', utmSource: 'google_ads',
     utmMedium: 'paid_search', utmCampaign: 'launch',
   });
   assert.equal(JSON.stringify(value).includes('user-123'), false);
+});
+
+/* ------------------------------------------------------- Google Ads */
+
+// An ad click carries google.com as its referrer, exactly like an organic
+// result. Counting it as organic_google would flatter the SEO channel with
+// paid traffic and leave the ad test with nothing to read.
+test('an auto-tagged ad click is google_ads, and the click id is not kept', () => {
+  const value = acquisitionFromLocation(
+    new URL('https://mcpemails.com/connect/fastmail?gclid=Cj0KCQjw-secret-click-id'),
+    new URL('https://www.google.com/'),
+  );
+  assert.equal(value.source, 'google_ads');
+  assert.equal(value.referrer, 'organic_google');
+  assert.equal(value.utmSource, null);
+  assert.equal(value.utmMedium, 'paid_search');
+  assert.equal(value.landingPath, '/connect/fastmail');
+  assert.equal(JSON.stringify(value).includes('secret'), false);
+});
+
+test('iOS click ids (gbraid, wbraid) count as ad clicks too', () => {
+  for (const key of ['gbraid', 'wbraid']) {
+    const value = acquisitionFromLocation(new URL(`https://mcpemails.com/?${key}=x`), new URL('https://www.google.com/'));
+    assert.equal(value.source, 'google_ads', key);
+  }
+});
+
+test('utm_source=google_ads is google_ads without a click id', () => {
+  const value = acquisitionFromLocation(
+    new URL('https://mcpemails.com/blog/connect-claude-to-email?utm_source=google_ads&utm_medium=cpc&utm_campaign=claude'),
+    null,
+  );
+  assert.equal(value.source, 'google_ads');
+  assert.equal(value.utmSource, 'google_ads');
+  assert.equal(value.utmMedium, 'paid_search');
+});
+
+test('an organic Google visit stays organic_google', () => {
+  const value = acquisitionFromLocation(new URL('https://mcpemails.com/connect/yahoo'), new URL('https://www.google.com/'));
+  assert.equal(value.source, 'organic_google');
+  assert.equal(value.utmMedium, null);
+  assert.equal(sourceFromUtm('google'), 'organic_google');
+  assert.equal(sourceFromUtm('googleads'), 'google_ads');
+  assert.equal(sourceFromUtm('adwords'), 'google_ads');
 });
 
 test('rejects auth, query and unknown route detail from landing path', () => {
@@ -175,7 +219,7 @@ test('a name still matches where a label can start', () => {
  */
 test('the SQL allowlists and the JS SOURCES set hold exactly the same members', () => {
   const sql = readFileSync(
-    fileURLToPath(new URL('../../../../supabase/migrations/20260915190000_widen_acquisition_sources.sql', import.meta.url)),
+    fileURLToPath(new URL('../../../../supabase/migrations/20260929190000_acquisition_source_google_ads.sql', import.meta.url)),
     'utf8',
   );
 

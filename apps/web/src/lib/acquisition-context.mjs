@@ -30,6 +30,9 @@ export const SOURCES = new Set([
   'direct',
   // Search engines.
   'organic_google', 'organic_bing', 'organic_duckduckgo',
+  // Paid search. Kept apart from organic_google, which is the channel the SEO
+  // work is judged on: an ad click counted there would flatter it.
+  'google_ads',
   // Communities and social.
   'reddit', 'hacker_news', 'x_twitter', 'linkedin', 'github',
   // AI clients and assistants that link out to us.
@@ -149,6 +152,10 @@ export function safeLandingPath(pathname) {
  * matching loosely in the first place.
  */
 const UTM_SOURCES = Object.freeze([
+  // Before 'google', which would otherwise claim these first.
+  ['google_ads', 'google_ads'],
+  ['googleads', 'google_ads'],
+  ['adwords', 'google_ads'],
   ['google', 'organic_google'],
   ['bing', 'organic_bing'],
   ['duckduckgo', 'organic_duckduckgo'],
@@ -228,20 +235,40 @@ export function sanitizedAcquisition(value) {
   };
 }
 
+/**
+ * Google Ads auto-tagging appends one of these to every ad click, and nothing
+ * else does. Only its PRESENCE is read: the value identifies a click and is
+ * never stored.
+ */
+const GOOGLE_ADS_CLICK_PARAMS = Object.freeze(['gclid', 'gbraid', 'wbraid']);
+
+/**
+ * An ad click arrives with google.com as referrer, so without this it would be
+ * counted as organic Google. Paid is recognised from the click id, or from a
+ * utm_source=google link tagged utm_medium=cpc.
+ */
+export function isGoogleAdsClick(searchParams, utmSource, utmMedium) {
+  if (GOOGLE_ADS_CLICK_PARAMS.some((key) => searchParams.has(key))) return true;
+  return utmSource === 'google_ads' || (utmSource === 'organic_google' && utmMedium === 'paid_search');
+}
+
 export function acquisitionFromLocation(url, referrerUrl = null) {
-  const utmSource = sourceFromUtm(url.searchParams.get('utm_source'));
+  let utmSource = sourceFromUtm(url.searchParams.get('utm_source'));
+  const utmMedium = mediumFromUtm(url.searchParams.get('utm_medium'));
   const externalReferrer = referrerUrl && referrerUrl.origin !== url.origin
     ? sourceFromHost(referrerUrl.hostname)
     : 'direct';
+  const paidGoogle = isGoogleAdsClick(url.searchParams, utmSource, utmMedium);
+  if (paidGoogle && utmSource === 'organic_google') utmSource = 'google_ads';
   const { locale } = localeAndPath(url.pathname);
   return sanitizedAcquisition({
-    source: utmSource ?? externalReferrer,
+    source: paidGoogle ? 'google_ads' : (utmSource ?? externalReferrer),
     landing: landingFromPath(url.pathname),
     landingPath: safeLandingPath(url.pathname),
     locale,
     referrer: externalReferrer,
     utmSource,
-    utmMedium: mediumFromUtm(url.searchParams.get('utm_medium')),
+    utmMedium: utmMedium ?? (paidGoogle ? 'paid_search' : null),
     utmCampaign: campaignFromUtm(url.searchParams.get('utm_campaign')),
   });
 }
