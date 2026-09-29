@@ -205,10 +205,7 @@ const MONTHLY_KEYS: Array<[string, string]> = [
   ['dashboardChrome.json', 'connect.personalUpgradeCta'],
 ];
 
-const YEARLY_KEYS: Array<[string, string]> = [
-  ['pricing.json', 'hero.titleLine2Yearly'],
-  ['pricing.json', 'faq.items.8.a'],
-];
+const YEARLY_KEYS: Array<[string, string]> = [['pricing.json', 'hero.titleLine2Yearly']];
 
 test('the sentences that sell Personal state its current price, in every locale', () => {
   for (const locale of LOCALES) {
@@ -220,6 +217,13 @@ test('the sentences that sell Personal state its current price, in every locale'
       const text = lookup(messages(locale, file), key);
       assert.ok(mentions(text, PERSONAL_YEARLY), `${locale}/${file} ${key} states Personal yearly: "${text}"`);
     }
+    // The annual-discount answer, found by content rather than by position:
+    // FAQ items get inserted, and an index silently points at another answer.
+    const faq = (messages(locale, 'pricing.json').faq as { items: Array<{ a: string }> }).items;
+    assert.ok(
+      faq.some((item) => mentions(item.a, PERSONAL_YEARLY)),
+      `${locale}/pricing.json: some FAQ answer states Personal yearly`,
+    );
   }
 });
 
