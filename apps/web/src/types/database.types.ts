@@ -3191,6 +3191,8 @@ export type Database = {
           display_name: string | null
           email: string
           id: string
+          marketing_consent_at: string | null
+          marketing_consent_source: string | null
           unsubscribe_token: string
           unsubscribed_at: string | null
           unsubscribed_categories: string[]
@@ -3202,6 +3204,8 @@ export type Database = {
           display_name?: string | null
           email: string
           id: string
+          marketing_consent_at?: string | null
+          marketing_consent_source?: string | null
           unsubscribe_token?: string
           unsubscribed_at?: string | null
           unsubscribed_categories?: string[]
@@ -3213,6 +3217,8 @@ export type Database = {
           display_name?: string | null
           email?: string
           id?: string
+          marketing_consent_at?: string | null
+          marketing_consent_source?: string | null
           unsubscribe_token?: string
           unsubscribed_at?: string | null
           unsubscribed_categories?: string[]
@@ -4195,6 +4201,10 @@ export type Database = {
       my_workspace_ids: { Args: never; Returns: string[] }
       rate_limit_check: {
         Args: { p_key: string; p_max_count: number; p_window_ms: number }
+        Returns: boolean
+      }
+      record_signup_marketing_consent: {
+        Args: { p_source: string; p_user_id: string }
         Returns: boolean
       }
       record_synthetic_monitor_failure: {

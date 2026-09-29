@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service';
 import { acquisitionFromParams, isNewAccountSignup } from '@/lib/acquisition-context.mjs';
+import {
+  clearConsentCookieString,
+  consentVersionFromCookieHeader,
+} from '@/lib/marketing-consent.mjs';
 
 // ---------------------------------------------------------------------------
 // Route config
@@ -52,8 +57,33 @@ export async function GET(request: Request) {
     );
   }
 
+  // Marketing consent ticked on the signup page before a Google/GitHub
+  // button (see src/lib/marketing-consent.mjs). Read here, cleared below on
+  // every outcome, and recorded only for an account this exchange created.
+  const consentVersion = consentVersionFromCookieHeader(request.headers.get('cookie'));
+  const needsUser = searchParams.has('acq') || consentVersion !== null;
+  const user = needsUser ? (await supabase.auth.getUser()).data.user : null;
+
+  if (consentVersion && user && isNewAccountSignup(user.created_at)) {
+    try {
+      // Service role: the consent columns are not writable by the user's own
+      // session (users_marketing_consent_guard). The RPC stamps now() and
+      // refuses accounts older than 10 minutes or ones that already consented.
+      const { error: consentError } = await createServiceRoleClient().rpc(
+        'record_signup_marketing_consent',
+        { p_user_id: user.id, p_source: consentVersion },
+      );
+      if (consentError) {
+        console.error('[auth-callback] recording marketing consent failed:', consentError.message);
+      }
+    } catch (err) {
+      // Never block a sign-in on this. A missed record means no marketing
+      // email, which is the safe direction.
+      console.error('[auth-callback] recording marketing consent failed:', err);
+    }
+  }
+
   if (searchParams.has('acq')) {
-    const { data: { user } } = await supabase.auth.getUser();
     // The login page also carries acquisition params, because a first OAuth
     // login creates the account. That means this callback now runs for
     // returning users too, and an account predating attribution still has a
@@ -87,5 +117,12 @@ export async function GET(request: Request) {
   const isSafeNext =
     next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\');
   const redirectPath = isSafeNext ? next : '/dashboard';
-  return NextResponse.redirect(`${origin}${redirectPath}`);
+  const response = NextResponse.redirect(`${origin}${redirectPath}`);
+  if (consentVersion) {
+    response.headers.append(
+      'set-cookie',
+      clearConsentCookieString({ secure: new URL(request.url).protocol === 'https:' }),
+    );
+  }
+  return response;
 }

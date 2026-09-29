@@ -19,7 +19,7 @@
   "dataWeCollect": {
     "title": "2. Datos que recopilamos",
     "accountTitle": "2.1 Datos de cuenta",
-    "accountP": "Cuando creas una cuenta recopilamos tu dirección de correo y una contraseña con hash (nunca almacenamos contraseñas en texto plano). Opcionalmente puedes proporcionar un nombre para mostrar. Estos datos son necesarios para crear y mantener tu cuenta.",
+    "accountP": "Cuando creas una cuenta recopilamos tu dirección de correo y una contraseña con hash (nunca almacenamos contraseñas en texto plano). Opcionalmente puedes proporcionar un nombre para mostrar. Estos datos son necesarios para crear y mantener tu cuenta. Si marcas la casilla del formulario de registro para recibir consejos sobre el producto y ofertas por correo, también registramos que lo hiciste, cuándo y qué texto viste.",
     "workspaceTitle": "2.2 Datos de espacio de trabajo y configuración",
     "workspaceP": "Almacenamos el nombre del espacio de trabajo que elijas y la configuración de cada bandeja conectada (tipo de proveedor, dirección de correo, estado de OAuth y marca de tiempo de conexión). <b>No</b> almacenamos tokens de acceso de OAuth ni contraseñas de aplicación en texto plano. Se cifran con AES-256-GCM antes de escribirse en la base de datos, y la clave de cifrado se guarda en un almacén de secretos separado.",
     "apiKeysTitle": "2.3 Claves de API",
@@ -32,7 +32,7 @@
     "technicalTitle": "2.6 Datos técnicos y operativos",
     "technicalP": "Recopilamos datos operativos estándar del lado del servidor, incluidas direcciones IP (para limitación de tasa y prevención de abuso), marcas de tiempo de peticiones, códigos de estado HTTP y tipos de error. Estos datos se conservan en forma agregada y anonimizada y no se vinculan a cuentas individuales después de 30 días.",
     "cookiesTitle": "2.7 Cookies y almacenamiento local",
-    "cookiesP": "El panel establece una cookie de sesión propia emitida por Supabase Auth para mantenerte con la sesión iniciada. No usamos cookies de seguimiento, cookies de publicidad ni cookies de terceros. Almacenamos dos valores propios y pequeños en el almacenamiento local de tu navegador y en ningún otro lugar: tu preferencia de tema (<c>mcpe-theme</c>) y un registro de cómo llegaste al sitio por primera vez (<c>mcpe-acquisition</c>). El segundo solo contiene una categoría general de la fuente de tráfico (por ejemplo <c>reddit</c> u <c>organic_google</c>) y el tipo de página en la que aterrizaste, nunca un identificador, un término de búsqueda ni una URL completa. Se conserva hasta 30 días y no se usa para seguirte por otros sitios.",
+    "cookiesP": "El panel establece una cookie de sesión propia emitida por Supabase Auth para mantenerte con la sesión iniciada. Si marcas la casilla de correo de marketing en el formulario de registro y luego continúas con Google o GitHub, también establecemos una cookie propia de corta duración (<c>mcpe_signup_mc</c>) que conserva esa elección durante la redirección de inicio de sesión. Caduca a los 15 minutos y se elimina en cuanto vuelves. No usamos cookies de seguimiento, cookies de publicidad ni cookies de terceros. Almacenamos dos valores propios y pequeños en el almacenamiento local de tu navegador y en ningún otro lugar: tu preferencia de tema (<c>mcpe-theme</c>) y un registro de cómo llegaste al sitio por primera vez (<c>mcpe-acquisition</c>). El segundo solo contiene una categoría general de la fuente de tráfico (por ejemplo <c>reddit</c> u <c>organic_google</c>) y el tipo de página en la que aterrizaste, nunca un identificador, un término de búsqueda ni una URL completa. Se conserva hasta 30 días y no se usa para seguirte por otros sitios.",
     "productAnalyticsTitle": "2.8 Analítica de producto",
     "productAnalyticsP": "Usamos Vercel Web Analytics para analítica de producto sin cookies y respetuosa con la privacidad. Medimos visitas y un pequeño embudo de configuración con categorías agregadas. Nunca enviamos contenido de correo, direcciones, claves API, tokens OAuth, identificadores de usuario o espacio de trabajo, solicitudes MCP ni datos del buzón. Consulta la <link>documentación de analítica de Vercel</link>. Como esta configuración no usa cookies ni identificadores no esenciales, no se requiere un banner de consentimiento según nuestra política elegida."
   },
@@ -44,7 +44,7 @@
     "securityTitle": "3.2 Seguridad y prevención de abuso",
     "securityP": "Usamos direcciones IP, tasas de petición y patrones de error para detectar y bloquear actividad abusiva, aplicar límites de tasa y proteger la disponibilidad del servicio para todos los usuarios. La base jurídica son nuestros <b>intereses legítimos</b> en operar un servicio seguro.",
     "analyticsTitle": "3.3 Analíticas de uso y mejora del producto",
-    "analyticsP": "Usamos datos de uso agregados y anonimizados (recuentos de llamadas a herramientas, tasas de error, latencia) para entender cómo se usa el servicio y priorizar mejoras. No usamos datos de uso a nivel individual para este fin. La base jurídica son nuestros <b>intereses legítimos</b> en mejorar el servicio.",
+    "analyticsP": "Usamos datos de uso agregados y anonimizados (recuentos de llamadas a herramientas, tasas de error, latencia) para entender cómo se usa el servicio y priorizar mejoras. Las analíticas siguen siendo agregadas: no usamos datos de uso a nivel individual para este fin. Las señales individuales de cuenta y de uso solo se usan para aplicar los límites del plan (sección 3.4) y, si lo aceptaste, para elegir qué correo de marketing enviarte (sección 3.9). La base jurídica son nuestros <b>intereses legítimos</b> en mejorar el servicio.",
     "billingTitle": "3.4 Facturación y aplicación de planes",
     "billingP": "Usamos los recuentos de uso para determinar si tu espacio de trabajo ha alcanzado los límites del plan y para calcular tu factura en los planes de pago. La base jurídica es la <b>ejecución de un contrato</b>.",
     "legalTitle": "3.5 Cumplimiento legal",
@@ -74,7 +74,11 @@
     "microsoftTitle": "3.8 API de Microsoft: acceso al buzón y cómo revocarlo",
     "microsoftP1": "Cuando conectas un buzón de Outlook o Microsoft 365, Microsoft te pide que apruebes un conjunto de permisos concreto y detallado: leer y organizar tu correo, y enviar correo en tu nombre. Usamos ese acceso únicamente para ejecutar las funciones que pidas a un agente de IA sobre tu buzón, como leer, buscar, organizar, redactar y enviar. No lo usamos para crear una copia de tu buzón, y nunca usamos el contenido del correo, ni nada derivado de él, con fines publicitarios o de marketing.",
     "microsoftRevokeP": "Puedes retirar este acceso en cualquier momento, directamente con Microsoft y sin pedírnoslo. Para una cuenta personal de Microsoft, usa <personal>Permisos de la cuenta Microsoft</personal>. Para una cuenta profesional o educativa, usa <work>Mis aplicaciones</work>. Al revocar el acceso allí, dejamos de poder acceder a ese buzón de inmediato. Si tu administrador de TI aprobó MCPEmails para toda la organización, solo un administrador puede retirar esa aprobación para toda la organización.",
-    "microsoftDisconnectP": "Desconectar la bandeja de entrada en tu panel de MCPEmails tiene el mismo efecto por nuestra parte y además elimina las credenciales guardadas de ese buzón. Puedes hacer cualquiera de las dos primero; no es necesario hacer ambas."
+    "microsoftDisconnectP": "Desconectar la bandeja de entrada en tu panel de MCPEmails tiene el mismo efecto por nuestra parte y además elimina las credenciales guardadas de ese buzón. Puedes hacer cualquiera de las dos primero; no es necesario hacer ambas.",
+    "marketingTitle": "3.9 Correo de marketing directo",
+    "marketingP1": "Solo enviamos correos de marketing (consejos sobre el producto y ofertas, por ejemplo sobre un plan de pago cuando tu espacio de trabajo alcanza un límite del plan) si lo aceptaste marcando la casilla del formulario de registro. La casilla está desmarcada por defecto y no deducimos el consentimiento de ninguna otra acción. La base jurídica es tu <b>consentimiento</b> (artículo 6.1.a del RGPD), que la ley noruega de control del marketing (markedsføringsloven, § 15) también exige para el marketing por correo electrónico.",
+    "marketingP2": "Para elegir cuál de unos pocos mensajes enviar, y cuándo, usamos señales de la cuenta y del uso del producto: por ejemplo, que tu espacio de trabajo alcanzó un límite del plan, cuántos buzones tienes conectados, tu plan y cuándo te registraste. Nunca usamos para ello el contenido de tu buzón ni nada derivado de él.",
+    "marketingP3": "Puedes retirar tu consentimiento en cualquier momento con el enlace para darte de baja que incluye cada correo de marketing. Surte efecto de inmediato y no afecta a los recibos, avisos de seguridad ni otros correos que necesitamos enviar para gestionar tu cuenta. Guardamos cuándo diste tu consentimiento y qué texto viste, para poder demostrar que se otorgó."
   },
   "dataRetention": {
     "title": "4. Conservación de datos",
@@ -87,6 +91,11 @@
         "category": "Datos de cuenta (correo, nombre para mostrar)",
         "period": "Hasta la eliminación de la cuenta, más 30 días",
         "reason": "Operación del servicio; ventana de recuperación"
+      },
+      {
+        "category": "Consentimiento de correo de marketing y registro de bajas",
+        "period": "Hasta la eliminación de la cuenta, más 30 días",
+        "reason": "Prueba del consentimiento; respetar las bajas"
       },
       {
         "category": "Configuración de espacio de trabajo y bandeja",
