@@ -45,6 +45,7 @@
     "test:api-404": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/api/unmatched-api-route.test.ts",
     "test:purchase-email": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/email/purchase-confirmation.test.ts",
     "test:billing-email": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/email/billing-lifecycle.test.ts",
+    "test:resend-webhook": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/email/resend-webhook.test.ts app/api/webhooks/resend/route.test.ts",
     "test:paywall-followup": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/email/paywall-followup.test.ts",
     "test": "node scripts/run-tests.mjs",
     "test:revenue": "node --test --experimental-strip-types src/lib/analytics/revenue-math.test.ts src/lib/analytics/internal-accounts.test.ts src/lib/analytics/cash-math.test.ts",

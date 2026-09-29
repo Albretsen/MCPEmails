@@ -88,7 +88,9 @@ export function unsubscribeUrl(token: string, category: LifecycleCategory): stri
  * wasted round trip on the one path that must not be slow, and a live
  * dependency on the exact error code a missing table happens to produce. It is
  * gone. `users.unsubscribed_at` / `unsubscribed_categories` is the opt-out, and
- * /api/email/unsubscribe is what writes it.
+ * /api/email/unsubscribe is what writes it. /api/webhooks/resend also sets
+ * `unsubscribed_at` on a spam complaint or a permanent bounce (see
+ * resend-webhook.ts), so those stop lifecycle mail through this same check.
  *
  * FAILS CLOSED. If the preference row cannot be read for any reason, this
  * returns true and the send is skipped. Mailing somebody because a query
