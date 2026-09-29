@@ -11,7 +11,7 @@
 -- another production query.
 WITH params AS (
   SELECT
-    timestamptz '2026-09-30 00:00:00+00' AS cutover,   -- the deploy that flipped the price
+    timestamptz '2026-09-29 17:02:02+00' AS cutover,   -- CI passed on 1814c18e; prod promoted
     interval '28 days'                   AS period,    -- length of each cohort window
     interval '14 days'                   AS attribution
 ),
