@@ -2,8 +2,11 @@
 /**
  * Classify every workspace that predates workspaces.acquisition_email_segment.
  *
- *   node scripts/backfill-email-segment.mjs            # dry run: counts only
- *   node scripts/backfill-email-segment.mjs --apply    # write the column
+ *   node --experimental-strip-types --import ./scripts/register-ts-alias.mjs \
+ *     scripts/backfill-email-segment.mjs            # dry run: counts only
+ *   ... scripts/backfill-email-segment.mjs --apply  # write the column
+ *
+ * Run from apps/web.
  *
  * Needs NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in the
  * environment (for example `vercel env pull` into a file you then source).
@@ -19,17 +22,15 @@
  * have a value are never touched), and prints counts per segment only. It never
  * prints an address or a domain.
  */
-import { createClient } from '@supabase/supabase-js';
+import { createServiceRoleClient } from '../src/lib/supabase/service.ts';
 import { emailSegment } from '../src/lib/segment/consumer-domains.mjs';
 
 const apply = process.argv.includes('--apply');
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (!url || !key) {
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
   console.error('Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY first.');
   process.exit(1);
 }
-const db = createClient(url, key, { auth: { persistSession: false } });
+const db = createServiceRoleClient();
 
 // Owner emails, from auth. Paged; the admin API caps a page at 1000.
 const emailById = new Map();
