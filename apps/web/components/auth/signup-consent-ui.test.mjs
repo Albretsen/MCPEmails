@@ -123,7 +123,7 @@ test('the consent checkbox is rendered, labelled, and unticked by default', asyn
   assert.deepEqual(links, ['/terms', '/privacy']);
 });
 
-test('the consent checkbox appears once, before the Google and GitHub buttons', async (t) => {
+test('the consent checkbox appears once, just above the Create account button', async (t) => {
   const { container } = await render(t);
   const boxes = container.querySelectorAll('input[type="checkbox"]');
   assert.equal(boxes.length, 1, 'exactly one checkbox on the page');
@@ -134,10 +134,11 @@ test('the consent checkbox appears once, before the Google and GitHub buttons', 
   const google = googleButton(container);
   const github = githubButton(container);
   assert.ok(google && github, 'both OAuth buttons are rendered');
-  assert.ok(precedes(box, google), 'checkbox comes before the Google button');
-  assert.ok(precedes(box, github), 'checkbox comes before the GitHub button');
-  assert.ok(precedes(box, container.querySelector('#signup-email')), 'and before the password form');
-  assert.equal(box.closest('form'), null, 'it is not scoped to the password form');
+  const submit = container.querySelector('form button[type="submit"]');
+  assert.ok(precedes(container.querySelector('#signup-password'), box), 'checkbox comes after the password field');
+  assert.ok(precedes(box, submit), 'and before the Create account button');
+  // Still one box for every method: the OAuth handlers read the same state,
+  // which the Google/GitHub tests below exercise.
 });
 
 test('an unticked signup sends no consent to the server', async (t) => {

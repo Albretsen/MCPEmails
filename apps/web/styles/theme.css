@@ -281,11 +281,11 @@ html[data-theme="dark"] .auth-shell::before {
 .auth-fields { display: flex; flex-direction: column; gap: 14px; }
 .auth-submit { width: 100%; justify-content: center; height: 42px; font-size: 14px; margin-top: 4px; }
 /* Marketing-email opt-in on the signup card. Unticked by default; the whole
-   row is the label so the text is a click target too. It sits once, under the
-   title and above the Google/GitHub buttons, so it covers every signup method. */
+   row is the label so the text is a click target too. It sits once, just above
+   Create account, and also governs the Google/GitHub buttons. */
 .auth-consent {
   display: flex; align-items: flex-start; gap: 10px; cursor: pointer;
-  margin: 16px 0 14px; text-align: left;
+  margin: 0; text-align: left;
   font-family: var(--font-sans); font-size: 13px; line-height: 1.5; color: var(--fg-3);
 }
 .auth-consent input {

@@ -194,10 +194,10 @@ export function SignupApp({ redirectTo = null }) {
 
   const anyBusy = step === 'submitting' || socialLoading !== null;
 
-  // One box, above every way in. It sits before the Google/GitHub buttons so
-  // an OAuth signup sees it too, and it governs all three methods: the
-  // password path reads it into the signUp metadata, the OAuth handlers
-  // hand it to rememberOAuthConsent before the redirect.
+  // One box for all three ways in. It sits just above the submit button, the
+  // conventional spot, and still governs Google/GitHub: the password path
+  // reads it into the signUp metadata, the OAuth handlers hand it to
+  // rememberOAuthConsent before the redirect.
   const consentBox = (
     <label className="auth-consent" htmlFor="signup-marketing-consent">
       <input
@@ -249,7 +249,6 @@ export function SignupApp({ redirectTo = null }) {
         {(step === 'form' || step === 'error') && (
           <div className="auth-card">
             <h1>{t('signup.title')}</h1>
-            {consentBox}
             {socialButtons}
             {serverError && (
               <div
@@ -288,6 +287,7 @@ export function SignupApp({ redirectTo = null }) {
                 />
                 {passwordError && <div id="signup-password-error" className="err-msg" role="alert">{passwordError}</div>}
               </div>
+              {consentBox}
               <MBtn variant="primary" className="auth-submit" type="submit" disabled={anyBusy}>
                 {t('signup.submit')}
               </MBtn>
