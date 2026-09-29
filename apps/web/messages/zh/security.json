@@ -108,7 +108,7 @@
       {
         "provider": "Supabase",
         "purpose": "数据库、认证、边缘函数",
-        "location": "欧盟（法兰克福）或美国（弗吉尼亚）；你在注册时选择"
+        "location": "欧盟（瑞典斯德哥尔摩）"
       },
       {
         "provider": "Vercel",

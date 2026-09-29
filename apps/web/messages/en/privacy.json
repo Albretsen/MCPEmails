@@ -141,7 +141,7 @@
     "thLocation": "Location",
     "supabasePurpose": "Database, auth, edge functions",
     "supabaseData": "Account data, workspace config, audit logs",
-    "supabaseLocation": "EU (Frankfurt) or US (Virginia); you choose at signup",
+    "supabaseLocation": "EU (Stockholm, Sweden)",
     "vercelPurpose": "Web hosting, CDN",
     "vercelData": "HTTP request metadata; no email content",
     "vercelLocation": "Global edge (nearest region to user)",
@@ -162,7 +162,7 @@
     "title": "6. International Data Transfers",
     "p1": "MCPEmails is operated from Norway, which is subject to the European Economic Area (EEA) data protection framework. If you access the service from outside the EEA, your data may be transferred to and processed in countries within the EEA.",
     "p2": "Our infrastructure sub-processors (Supabase, Vercel) operate under Standard Contractual Clauses (SCCs) approved by the European Commission for data transfers to third countries. For Stripe, processing is covered by their EU-US Data Privacy Framework certification.",
-    "p3": "Enterprise customers can elect to store all account and configuration data exclusively in EU-based infrastructure (Frankfurt region) at no additional cost."
+    "p3": "Our database, which holds account and configuration data, is hosted in the EU (Stockholm, Sweden) for every customer. There is no plan or setting that moves it to another region."
   },
   "yourRights": {
     "title": "7. Your Rights",

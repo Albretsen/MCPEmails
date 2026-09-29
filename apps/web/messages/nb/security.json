@@ -108,7 +108,7 @@
       {
         "provider": "Supabase",
         "purpose": "Database, autentisering, edge-funksjoner",
-        "location": "EU (Frankfurt) eller USA (Virginia); du velger ved registrering"
+        "location": "EU (Stockholm, Sverige)"
       },
       {
         "provider": "Vercel",
