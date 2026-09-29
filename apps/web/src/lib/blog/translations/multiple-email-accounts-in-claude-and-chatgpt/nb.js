@@ -6,7 +6,7 @@ const translation = {
     'Flere e-postkontoer for jobb og privat koblet til Claude og ChatGPT gjennom én MCP-kobling',
   content: `Du vil stille ett spørsmål og få svar på tvers av alle postkassene du har ansvar for: din egen adresse, post@, salg@, fakturainnboksen, kanskje en privat Gmail. Denne guiden viser hvordan du får flere e-postkontoer inn i Claude og ChatGPT samtidig, hva de innebygde koblingene allerede dekker, og hvor du trenger en MCP-server i stedet.
 
-**Hopp til:** [Innebygde koblinger](#hva-de-innebygde-koblingene-gjr) · [Én kobling for alle postkassene](#n-kobling-for-alle-postkassene) · [Oppsett i Claude](#legg-den-til-i-claude) · [Oppsett i ChatGPT](#legg-den-til-i-chatgpt) · [Planer](#hvor-mange-postkasser-hver-plan-kobler-til)
+**Hopp til:** [Innebygde koblinger](#hva-de-innebygde-koblingene-gjør) · [Én kobling for alle postkassene](#én-kobling-for-alle-postkassene) · [Oppsett i Claude](#legg-den-til-i-claude) · [Oppsett i ChatGPT](#legg-den-til-i-chatgpt) · [Planer](#hvor-mange-postkasser-hver-plan-kobler-til)
 
 ## Hva de innebygde koblingene gjør
 

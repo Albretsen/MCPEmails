@@ -8,7 +8,7 @@ const translation = {
 
 Deux surfaces OpenAI sont concernées, et elles s'authentifient différemment. ChatGPT exécute un flux OAuth dans le navigateur : aucune clé API à coller. OpenAI Codex tourne dans votre terminal et utilise plutôt une clé limitée comme jeton bearer. Même endpoint, mêmes outils.
 
-**Accéder à :** [Configuration ChatGPT](#tape-2-ajouter-le-connecteur-dans-chatgpt) · [OpenAI Codex](#openai-codex-dans-le-terminal) · [Dépannage](#dpannage)
+**Accéder à :** [Configuration ChatGPT](#étape-2-ajouter-le-connecteur-dans-chatgpt) · [OpenAI Codex](#openai-codex-dans-le-terminal) · [Dépannage](#dépannage)
 
 ## Ce dont vous avez besoin
 

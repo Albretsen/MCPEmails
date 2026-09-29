@@ -8,7 +8,7 @@ const translation = {
 
 Presque tous les guides pour connecter une messagerie à un agent IA supposent que votre adresse se termine par gmail.com. La messagerie professionnelle, c'est autre chose : le domaine ne dit pas qui héberge la boîte, quelqu'un d'autre contrôle peut-être la possibilité même pour un client de messagerie de se connecter, et ce que votre agent envoie arrive chez vos clients à votre nom. Voici le guide pour vous@votreentreprise.com.
 
-**Accéder à votre fournisseur :** [Google Workspace](#google-workspace) · [Zoho Mail](#zoho-mail) · [Fastmail et Migadu](#fastmail-et-migadu) · [Titan Email](#titan-email) · [Rackspace Email](#rackspace-email) · [IONOS](#ionos) · [cPanel et hébergements mutualisés](#cpanel-et-hbergements-mutualiss)
+**Accéder à votre fournisseur :** [Google Workspace](#google-workspace) · [Zoho Mail](#zoho-mail) · [Fastmail et Migadu](#fastmail-et-migadu) · [Titan Email](#titan-email) · [Rackspace Email](#rackspace-email) · [IONOS](#ionos) · [cPanel et hébergements mutualisés](#cpanel-et-hébergements-mutualisés)
 
 ## Pourquoi une boîte professionnelle est plus difficile qu'une boîte personnelle
 

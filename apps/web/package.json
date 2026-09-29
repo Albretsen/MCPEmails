@@ -17,7 +17,7 @@
     "test:workspace-roles": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/workspace/roles.test.ts",
     "test:invite-accept": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/workspace/invite-accept-error.test.ts",
     "test:seo": "node --test src/lib/blog/seo.test.mjs src/lib/acquisition-context.test.mjs scripts/gsc-indexing-report.test.mjs",
-    "test:blog-copy": "node --test src/lib/blog/copy-integrity.test.mjs",
+    "test:blog-copy": "node --test src/lib/blog/copy-integrity.test.mjs src/lib/blog/anchors.test.mjs",
     "test:reviews": "node --test components/marketing/reviews.test.mjs",
     "test:acquisition": "node --test components/analytics/acquisition-capture.test.mjs",
     "test:connect-release": "node --test src/lib/connect/release.test.mjs",

@@ -6,7 +6,7 @@ const translation = {
     'Plusieurs comptes e-mail professionnels et personnels connectés à Claude et ChatGPT via un seul connecteur MCP',
   content: `Vous voulez poser une seule question et obtenir la réponse sur toutes les boîtes que vous gérez : votre propre adresse, info@, ventes@, la boîte des factures, peut-être un Gmail personnel. Ce guide explique comment faire entrer plusieurs comptes e-mail dans Claude et ChatGPT en même temps, ce que couvrent déjà les connecteurs intégrés, et dans quels cas il vous faut plutôt un serveur MCP.
 
-**Aller à :** [Connecteurs intégrés](#ce-que-font-les-connecteurs-intgrs) · [Un connecteur pour toutes les boîtes](#un-seul-connecteur-pour-toutes-les-botes) · [Configuration Claude](#lajouter-claude) · [Configuration ChatGPT](#lajouter-chatgpt) · [Offres](#combien-de-botes-chaque-offre-connecte)
+**Aller à :** [Connecteurs intégrés](#ce-que-font-les-connecteurs-intégrés) · [Un connecteur pour toutes les boîtes](#un-seul-connecteur-pour-toutes-les-boîtes) · [Configuration Claude](#lajouter-à-claude) · [Configuration ChatGPT](#lajouter-à-chatgpt) · [Offres](#combien-de-boîtes-chaque-offre-connecte)
 
 ## Ce que font les connecteurs intégrés
 

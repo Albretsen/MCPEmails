@@ -8,7 +8,7 @@ const translation = {
 
 To OpenAI-flater er involvert, og de autentiserer på hver sin måte. ChatGPT kjører en OAuth-flyt i nettleseren, så det finnes ingen API-nøkkel å lime inn. OpenAI Codex kjører i terminalen, så den bruker en avgrenset bearer-nøkkel i stedet. Samme endepunkt, samme verktøy.
 
-**Hopp til:** [Oppsett i ChatGPT](#steg-2-legg-til-koblingen-i-chatgpt) · [OpenAI Codex](#openai-codex-i-terminalen) · [Feilsøking](#feilsking)
+**Hopp til:** [Oppsett i ChatGPT](#steg-2-legg-til-koblingen-i-chatgpt) · [OpenAI Codex](#openai-codex-i-terminalen) · [Feilsøking](#feilsøking)
 
 ## Dette trenger du
 

@@ -8,7 +8,7 @@ const translation = {
 
 Vous n'avez aucun code à écrire, aucun SDK à installer et aucune clé API à utiliser lorsque vous passez par le flux OAuth de Claude. Les e-mails sont récupérés en direct auprès de votre fournisseur pour chaque requête et MCP Emails ne les stocke pas.
 
-**Accéder à votre fournisseur :** [Gmail](#gmail-et-google-workspace) · [iCloud](#icloud-mail) · [Fastmail](#fastmail) · [Outlook](#outlook-et-microsoft-365) · [Yahoo, Zoho, Yandex ou IMAP personnalisé](#yahoo-zoho-yandex-et-imap-personnalis)
+**Accéder à votre fournisseur :** [Gmail](#gmail-et-google-workspace) · [iCloud](#icloud-mail) · [Fastmail](#fastmail) · [Outlook](#outlook-et-microsoft-365) · [Yahoo, Zoho, Yandex ou IMAP personnalisé](#yahoo-zoho-yandex-et-imap-personnalisé)
 
 ## Ce dont vous avez besoin
 
