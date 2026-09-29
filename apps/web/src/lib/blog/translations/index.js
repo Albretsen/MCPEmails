@@ -108,6 +108,10 @@ import t95 from './ai-email-for-agencies-and-client-work/es';
 import t96 from './ai-email-for-agencies-and-client-work/fr';
 import t97 from './ai-email-for-agencies-and-client-work/nb';
 import t98 from './ai-email-for-agencies-and-client-work/zh';
+import t99 from './multiple-email-accounts-in-claude-and-chatgpt/es';
+import t100 from './multiple-email-accounts-in-claude-and-chatgpt/fr';
+import t101 from './multiple-email-accounts-in-claude-and-chatgpt/nb';
+import t102 from './multiple-email-accounts-in-claude-and-chatgpt/zh';
 
 const TRANSLATIONS = {
   '7-things-ai-agent-can-do-with-inbox-access': { es: t0, fr: t1, nb: t2, zh: t3 },
@@ -135,6 +139,7 @@ const TRANSLATIONS = {
   'automated-email-triage-rules': { es: t87, fr: t88, nb: t89, zh: t90 },
   'connect-business-email-custom-domain-to-ai-agent': { es: t91, fr: t92, nb: t93, zh: t94 },
   'ai-email-for-agencies-and-client-work': { es: t95, fr: t96, nb: t97, zh: t98 },
+  'multiple-email-accounts-in-claude-and-chatgpt': { es: t99, fr: t100, nb: t101, zh: t102 },
 };
 
 export default TRANSLATIONS;

@@ -33,7 +33,11 @@ export type ProductFunnelEvent = {
     // downgrade as a new sale. Two stages rather than one `plan_changed`
     // because the direction is the whole point: a bucket that cannot separate
     // expansion from contraction answers neither question.
-    | 'plan_upgraded' | 'plan_downgraded';
+    | 'plan_upgraded' | 'plan_downgraded'
+    // The Overview guide asked a business-domain workspace to connect a second
+    // work mailbox. outcome `started` = shown, `success` = clicked; at most one
+    // of each per workspace (lib/analytics/multi-inbox-prompt.ts).
+    | 'multi_inbox_prompt';
   outcome: 'started' | 'success' | 'failure';
   category:
     | 'gmail' | 'outlook' | 'fastmail' | 'icloud' | 'yahoo' | 'zoho' | 'yandex' | 'generic_imap'

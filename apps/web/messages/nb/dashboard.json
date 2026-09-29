@@ -94,7 +94,12 @@
     "step2Title": "Koble til MCP-klienten din",
     "step2Desc": "Lim inn dette endepunktet i klienten din, og velg det deretter nedenfor for en trinnvis veiledning.",
     "mcpServerUrl": "MCP-server-URL",
-    "chooseClient": "Velg klienten din"
+    "chooseClient": "Velg klienten din",
+    "multiInboxTitle": "Legg til de andre jobbpostkassene dine",
+    "multiInboxOptional": "Valgfritt",
+    "multiInboxDesc": "Koble til post@, salg@, faktura@ og resten, så jobber agenten med alle firmaets postkasser fra én samtale og svarer fra riktig adresse.",
+    "multiInboxDescUpgrade": "Koble til post@, salg@, faktura@ og resten, så jobber agenten med alle firmaets postkasser fra én samtale og svarer fra riktig adresse. Gratis dekker én postkasse; Pro dekker alle postkassene bedriften din bruker.",
+    "multiInboxCta": "Legg til en postkasse"
   },
   "overview": {
     "title": "Oversikt",
@@ -473,6 +478,7 @@
     "monthly": "Månedlig",
     "annual": "Årlig (spar ~20 %)",
     "mostPopular": "Mest populær",
+    "recommendedBusiness": "Anbefalt for firmapostkasser",
     "custom": "Tilpasset",
     "perMonth": "/måned",
     "billedYearly": "Faktureres ${total}/år",

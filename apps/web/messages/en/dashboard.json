@@ -94,7 +94,12 @@
     "step2Title": "Connect your MCP client",
     "step2Desc": "Paste this endpoint into your client, then pick it below for a step-by-step guide.",
     "mcpServerUrl": "MCP server URL",
-    "chooseClient": "Choose your client"
+    "chooseClient": "Choose your client",
+    "multiInboxTitle": "Add your other work mailboxes",
+    "multiInboxOptional": "Optional",
+    "multiInboxDesc": "Connect info@, sales@, invoices@ and the rest, and your agent works every company mailbox from one conversation, replying from the right address.",
+    "multiInboxDescUpgrade": "Connect info@, sales@, invoices@ and the rest, and your agent works every company mailbox from one conversation, replying from the right address. Free covers one mailbox; Pro covers every mailbox your business runs.",
+    "multiInboxCta": "Add a mailbox"
   },
   "overview": {
     "title": "Overview",
@@ -473,6 +478,7 @@
     "monthly": "Monthly",
     "annual": "Annual (save ~20%)",
     "mostPopular": "Most popular",
+    "recommendedBusiness": "Recommended for company mailboxes",
     "custom": "Custom",
     "perMonth": "/month",
     "billedYearly": "Billed ${total}/year",

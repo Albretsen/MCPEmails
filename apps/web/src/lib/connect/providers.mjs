@@ -1508,6 +1508,34 @@ export const PROVIDERS = [
     locales: ["en", "nb", "es", "fr", "zh"],
   },
   {
+    // Google Workspace on a company's own domain. Not a new host: the mailbox
+    // is Gmail underneath and connects through the same imap.gmail.com and
+    // smtp.gmail.com preset (IMAP_PRESETS.gmail), which the IMAP form fills in
+    // when the domain's MX points at Google (host-presets.ts, mxSuffixes). The
+    // page exists because the business buyer searches for "Google Workspace",
+    // not "Gmail", and because what decides whether it connects is the
+    // Workspace admin's IMAP and app-password settings, which the Gmail page
+    // only mentions in passing. Settings shown because, unlike the Gmail page,
+    // the app password is the only path this page leads with. `evidence` is
+    // the imap.gmail.com handshake recorded for the Gmail entry on the same
+    // date: same host, same probe. Added 2026-09-29 to wave 9, the cohort
+    // Microsoft 365 was researched in; a new wave would sort after the held
+    // wave 10.
+    slug: "google-workspace",
+    wave: 9,
+    name: "Google Workspace",
+    category: "business",
+    domain: "workspace.google.com",
+    hostPattern: "shared",
+    status: "supported",
+    source: "vendor+probe",
+    imap: {"host": "imap.gmail.com", "port": 993, "security": "tls"},
+    smtp: {"host": "smtp.gmail.com", "port": 465, "security": "tls"},
+    evidence: {"verifiedOn": "2026-08-31", "reachable": true, "authMechs": ["OAUTHBEARER", "PLAIN", "PLAIN-CLIENTTOKEN", "XOAUTH2"], "saslIr": true, "move": false, "idle": true, "uidplus": false, "specialUse": false, "banner": "* OK Gimap ready for requests from 2001:4643:b9ff:0:2d3d:3074:e86a:6646 17ba6d92412a-343921bcb62mb13712213e", "smtpAuthMechs": ["LOGIN", "PLAIN", "XOAUTH2", "PLAIN-CLIENTTOKEN", "OAUTHBEARER", "XOAUTH"], "smtpStarttls": false, "smtpMaxSize": "35882577"},
+    contentUpdatedOn: "2026-09-29",
+    locales: ["en", "nb", "es", "fr", "zh"],
+  },
+  {
     slug: "outlook",
     wave: 9,
     name: "Outlook.com",

@@ -489,6 +489,14 @@ export default function PricingClient({ stripePrices }) {
           <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 24 }}>
             {t('cardsFootnote.all')}
           </p>
+          {/* A company reading these cards has to find out that Pro, not
+              Team, is the plan for one person running several company
+              mailboxes. The FAQ says so too; this is the line people see. */}
+          <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 8 }}>
+            {t.rich('cardsFootnote.business', {
+              business: (chunks) => <Link href="/for/business">{chunks}</Link>,
+            })}
+          </p>
           <p className="pricing-footnote" style={{ textAlign: 'center', marginTop: 8 }}>
             {t.rich('cardsFootnote.custom', {
               contact: (chunks) => <a href="mailto:hello@mcpemails.com">{chunks}</a>,

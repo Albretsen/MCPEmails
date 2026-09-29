@@ -1,0 +1,113 @@
+{
+  "_sources": [
+    "https://support.google.com/accounts/answer/185833",
+    "https://knowledge.workspace.google.com/admin/sync/turn-pop-and-imap-on-or-off-for-users",
+    "https://knowledge.workspace.google.com/admin/sync/transition-from-less-secure-apps-to-oauth",
+    "https://knowledge.workspace.google.com/admin/users/add-or-delete-an-alternate-email-address-email-alias",
+    "https://support.google.com/a/answer/7281227",
+    "apps/web/src/lib/email-providers/host-presets.ts (gmail: mxSuffixes .l.google.com, smtp.google.com)",
+    "apps/web/src/lib/email-providers/imap-presets.ts (IMAP_PRESETS.gmail)",
+    "supabase/functions/mcp-server/index.ts (sender_identities: Send As listed only for provider gmail, the Google sign-in connection)"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "App password",
+    "helpUrl": "https://support.google.com/accounts/answer/185833",
+    "usernameForm": "The full address on your own domain, for example info@yourcompany.com. The app password replaces the account password, which will not work.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connect Google Workspace Email to Claude, ChatGPT & MCP Clients",
+    "description": "Connect Google Workspace mailboxes on your own domain to Claude, ChatGPT, Cursor and any MCP client. App password over IMAP, admin settings that decide it, and every company mailbox on one agent."
+  },
+  "hero": {
+    "eyebrow": "Google Workspace + AI",
+    "titleLine1": "Connect Google Workspace to Claude,",
+    "titleLine2": "and ChatGPT, Cursor, any MCP client",
+    "lead": "Give your AI agent the company mailboxes that live in Google Workspace on your own domain: yours, sales@, support@ and the rest. It reads, searches, sends, replies, schedules and organizes mail over IMAP with an app password, and the same mailboxes work in every MCP client, not just one.",
+    "meta0": "1 inbox free, forever",
+    "meta1": "Connects with a Google app password",
+    "meta2": "Email fetched live, never stored",
+    "answer": "A Google Workspace mailbox on your own domain is a Gmail mailbox underneath, so it connects to mcpemails the way Gmail does: with a Google app password over IMAP and SMTP at imap.gmail.com and smtp.gmail.com. mcpemails is a hosted MCP server, so once the mailbox is connected Claude, ChatGPT, Cursor or any MCP client can read, search, send and organize its mail. Your Workspace administrator's settings decide whether an app password is available and whether IMAP is allowed."
+  },
+  "method": {
+    "title": "How Google Workspace connects: an app password over IMAP",
+    "body": "Type your address in the IMAP form and mcpemails reads your domain's MX records: a domain whose mail goes to Google (<code>aspmx.l.google.com</code> or <code>smtp.google.com</code>) is recognised as Google Workspace, and the form fills in <b>imap.gmail.com</b> on 993 and <b>smtp.gmail.com</b> on 465 and tells you an app password is required. Choosing the Gmail card does the same. Google turned off password sign-in for Workspace apps in 2025, with the exception of app passwords, so the account password will never work here. Signing in with Google is offered as an alternative."
+  },
+  "setup": [
+    {
+      "h": "Create a free account",
+      "p": "Sign up for mcpemails, no card required. The free plan connects one inbox, forever."
+    },
+    {
+      "h": "Create a Google app password",
+      "p": "Signed in as the mailbox you want to connect, switch on 2-Step Verification if it is not on, then create an app password at myaccount.google.com/apppasswords. If the option is missing, your administrator's settings are the likely reason (see below)."
+    },
+    {
+      "h": "Paste it into mcpemails",
+      "p": "Choose IMAP / SMTP or Gmail, type the full address on your domain, and paste the 16-character app password. The hosts are filled in from your domain."
+    },
+    {
+      "h": "Paste the MCP URL into your AI",
+      "p": "Drop https://mcpemails.com/api/mcp into Claude, ChatGPT or Cursor, authorize, and your agent has the mailbox. Repeat the app password step for each company mailbox you want it to reach."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "The app password option can be missing on a Workspace account",
+      "p": "Google offers app passwords only on accounts with 2-Step Verification on, and its own help page lists three reasons the option may not appear even then: 2-Step Verification set up <b>only with security keys</b>, <b>Advanced Protection</b>, or being signed in to <b>a work, school or other organization account</b> whose settings do not allow it. The last one is your administrator's decision and nothing inside the mailbox changes it. Ask the admin, or connect with Google sign-in instead if your organisation allows third-party apps."
+    },
+    {
+      "h": "IMAP is switched on by the administrator, not by you",
+      "p": "On Google Workspace, users cannot turn IMAP on or off in their own Gmail settings. An administrator does it in the Google Admin console under <b>Apps, Google Workspace, Gmail, End User Access</b>, in the <b>POP and IMAP access</b> section, for everyone or per organizational unit. Two settings there decide whether an app password works: IMAP must be enabled for your unit, and the admin must have chosen <b>Allow any mail client</b>. If they restricted IMAP to named OAuth mail clients only, an app password login is refused however correct it is."
+    },
+    {
+      "h": "An alias is not a mailbox, and neither is a group",
+      "p": "Workspace lets an admin add up to 30 aliases to one user, and mail sent to an alias lands in that user's own inbox. An alias has no sign-in of its own, so you connect the user it belongs to and the alias's mail is already there. A Google Group address (a mailing list or a collaborative inbox) is not an account you can sign in to either, so it has no app password to connect: connect a member's mailbox. Only real user mailboxes connect, each with its own app password, and each one counts as one connected inbox."
+    },
+    {
+      "h": "Replying from an alias needs the Google sign-in connection",
+      "p": "With an app password, a mailbox sends from its own address. Sending from a different address, such as an alias set up as a Gmail <b>Send mail as</b> address, is supported only on a mailbox connected by signing in with Google, where the verified Send As addresses are listed for your agent. On any other connection a From address that is not the mailbox's own is refused, not silently rewritten."
+    }
+  ],
+  "limits": [
+    "mcpemails reaches mail only: an app password is used for IMAP and SMTP alone. Drive, Calendar, Chat and Docs are not reached.",
+    "A Google Workspace administrator can close both routes: app passwords may be unavailable to your account, IMAP can be off or limited to named OAuth clients, and third-party access can be blocked for the Google sign-in option. Only an administrator can change those settings.",
+    "Gmail stores labels, not folders, so a move adds one label and removes another, and delete moves a message to Gmail's Trash."
+  ],
+  "faq": [
+    {
+      "q": "Does Claude work with Google Workspace email?",
+      "a": "Yes, once an MCP server such as mcpemails connects the mailbox. A Workspace mailbox on your own domain connects with a Google app password over IMAP, exactly like a gmail.com address, and Claude can then read, search, send, reply and organize its mail. The same connection works in ChatGPT, Cursor and any other MCP client."
+    },
+    {
+      "q": "What are the Google Workspace IMAP and SMTP settings?",
+      "a": "IMAP is imap.gmail.com on port 993 with SSL/TLS, and SMTP is smtp.gmail.com on port 465 with SSL/TLS. The username is your full address on your own domain and the password is a Google app password. mcpemails fills these in when your domain's MX records point at Google."
+    },
+    {
+      "q": "Why can I not create an app password on my Workspace account?",
+      "a": "Google lists three reasons: 2-Step Verification is set up only with security keys, the account has Advanced Protection, or it is a work, school or organization account whose settings do not allow app passwords. The first two you can change yourself; the third is an administrator decision."
+    },
+    {
+      "q": "Why is my app password rejected when it is correct?",
+      "a": "Most often because IMAP is not allowed for your account. On Workspace only the administrator can turn IMAP on, per organizational unit, and they can restrict it to named OAuth mail clients, which refuses app password logins. Ask them to enable IMAP with Allow any mail client for your unit."
+    },
+    {
+      "q": "Can I connect info@, sales@ and support@ from the same Workspace?",
+      "a": "Yes, when each one is a real user mailbox: connect each with its own app password and your agent reaches all of them through one MCP URL. An alias or a Google Group address is not a mailbox of its own, so connect the user mailbox its mail is delivered to."
+    },
+    {
+      "q": "Is my Google Workspace mail stored on your servers?",
+      "a": "No. Messages are fetched live from Google for each request and handed to your AI client. The app password, or the OAuth token if you sign in with Google, is encrypted at rest and message bodies are not retained. Revoking the app password in your Google Account, or deleting the inbox in mcpemails, ends the connection."
+    }
+  ],
+  "ctaBand": {
+    "title": "Give your AI your company's Google Workspace mailboxes",
+    "sub": "Connect the first one in minutes. One inbox free forever, no card required."
+  },
+  "seeAlso": {
+    "intro": "Personal @gmail.com address?",
+    "label": "Connect Gmail",
+    "href": "/connect/gmail"
+  }
+}

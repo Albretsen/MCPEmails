@@ -289,6 +289,10 @@ export function SharedIntervalChoice({ annualOffers, value, onChange, size = 'md
  * is about 185px wide inside the modal and "Oppgrader til Personal, $48/yr"
  * is not. A clipped price on a buy button is worse than a two-line one.
  *
+ * `variant: 'secondary'` is the outlined form, for the plan a dual panel is NOT
+ * recommending. Both buttons still buy; only one is filled, so the panel has one
+ * obvious next step instead of two equal ones.
+ *
  * @param {{
  *   plan: string,
  *   planName: string,
@@ -297,6 +301,7 @@ export function SharedIntervalChoice({ annualOffers, value, onChange, size = 'md
  *   interval: 'month' | 'year',
  *   size?: 'sm' | 'md',
  *   block?: boolean,
+ *   variant?: 'primary' | 'secondary',
  *   children?: import('react').ReactNode,
  * }} props `children` renders before the label (an icon).
  */
@@ -308,25 +313,30 @@ export function PlanCheckoutLink({
   interval,
   size = 'md',
   block = false,
+  variant = 'primary',
   children,
 }) {
   const tr = useTranslations('dashboardChrome');
   const annual = buysAnnual(interval, annualOffer);
   const compact = size === 'sm';
   const height = compact ? 32 : 34;
+  const secondary = variant === 'secondary';
   return (
     <a
       href={checkoutStartHref(plan, annual)}
       data-cap-offer-plan={plan}
+      data-cap-offer-variant={variant}
       style={{
         display: block ? 'flex' : 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 6,
         padding: block ? '7px 10px' : compact ? '0 14px' : '0 16px',
-        ...(block ? { minHeight: height, boxSizing: 'border-box' } : { height }),
-        background: 'var(--brand)',
-        color: '#fff',
+        boxSizing: 'border-box',
+        ...(block ? { minHeight: height } : { height }),
+        background: secondary ? 'var(--bg-surface)' : 'var(--brand)',
+        color: secondary ? 'var(--fg-1)' : '#fff',
+        border: secondary ? '1px solid var(--border-2, var(--border-1))' : '1px solid transparent',
         borderRadius: 8,
         fontFamily: 'var(--font-sans)',
         fontSize: compact ? 12.5 : 13,

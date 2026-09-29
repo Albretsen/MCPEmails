@@ -94,7 +94,12 @@
     "step2Title": "Conecta tu cliente MCP",
     "step2Desc": "Pega este endpoint en tu cliente, luego elígelo abajo para una guía paso a paso.",
     "mcpServerUrl": "URL del servidor MCP",
-    "chooseClient": "Elige tu cliente"
+    "chooseClient": "Elige tu cliente",
+    "multiInboxTitle": "Añade tus otros buzones de trabajo",
+    "multiInboxOptional": "Opcional",
+    "multiInboxDesc": "Conecta info@, ventas@, facturas@ y los demás, y tu agente trabaja con todos los buzones de la empresa desde una sola conversación, respondiendo desde la dirección correcta.",
+    "multiInboxDescUpgrade": "Conecta info@, ventas@, facturas@ y los demás, y tu agente trabaja con todos los buzones de la empresa desde una sola conversación, respondiendo desde la dirección correcta. El plan gratuito cubre un buzón; Pro cubre todos los buzones de tu empresa.",
+    "multiInboxCta": "Añadir un buzón"
   },
   "overview": {
     "title": "Resumen",
@@ -473,6 +478,7 @@
     "monthly": "Mensual",
     "annual": "Anual (ahorra ~20%)",
     "mostPopular": "Más popular",
+    "recommendedBusiness": "Recomendado para buzones de empresa",
     "custom": "A medida",
     "perMonth": "/mes",
     "billedYearly": "Facturado ${total}/año",

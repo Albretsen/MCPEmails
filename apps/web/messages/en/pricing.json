@@ -76,6 +76,7 @@
   },
   "cardsFootnote": {
     "all": "All plans include: email fetched live, never stored · credentials encrypted at rest · EU & US hosting",
+    "business": "One person running several company mailboxes? That is Pro, not Team. <business>See how every work mailbox runs on one agent</business>.",
     "custom": "Need something custom? <contact>Contact us</contact>."
   },
   "comparison": {
@@ -181,6 +182,10 @@
       {
         "q": "What's the difference between Personal, Pro and Team?",
         "a": "Personal is one seat with three connected inboxes, a 120 requests/minute ceiling, and email support. Pro is still one seat and one login, with no inbox limit at all, so one person can connect every mailbox a company runs (sales, invoices, support, info). It also has a 300 requests/minute ceiling, 90 days of analytics history instead of 30, and email support. Team is for when more than one person needs to sign in: unlimited members with roles, a separate workspace per client or business, SSO (SAML / OIDC), an audit log, a year of analytics history, and priority support."
+      },
+      {
+        "q": "We are a company with several mailboxes. Which plan do we need?",
+        "a": "Count the people who sign in first, then the mailboxes. If one person runs info@, sales@, invoices@ and the rest, that is Pro: one login, no limit on connected mailboxes, and each mailbox keeps its own sender name and signature and sends through its own mail server. Two or three addresses fit on Personal. Team is only needed when a second person needs a login of their own. Any mailbox that speaks IMAP and SMTP connects, whoever hosts it, and so do Gmail, Google Workspace and Microsoft 365; a company Microsoft 365 account may need its IT admin to approve the app once."
       },
       {
         "q": "What if I need a fourth inbox?",

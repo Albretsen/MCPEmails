@@ -76,6 +76,7 @@
   },
   "cardsFootnote": {
     "all": "Alle planer inkluderer: e-post hentes i sanntid, lagres aldri · legitimasjon kryptert i hvile · hosting i EU og USA",
+    "business": "Én person som har flere firmapostkasser? Det er Pro, ikke Team. <business>Se hvordan alle jobbpostkassene kjører på én agent</business>.",
     "custom": "Trenger du noe tilpasset? <contact>Kontakt oss</contact>."
   },
   "comparison": {
@@ -181,6 +182,10 @@
       {
         "q": "Hva er forskjellen mellom Personal, Pro og Team?",
         "a": "Personal er én bruker med tre tilkoblede innbokser, et tak på 120 forespørsler per minutt og e-poststøtte. Pro er fortsatt én bruker og én innlogging, helt uten innboksgrense, så én person kan koble til alle postkassene et firma har (salg, faktura, support, post@). I tillegg kommer et tak på 300 forespørsler per minutt, 90 dager analysehistorikk i stedet for 30, og e-poststøtte. Team er for når flere enn én person trenger å logge inn: ubegrenset antall medlemmer med roller, et eget arbeidsområde per kunde eller virksomhet, SSO (SAML / OIDC), revisjonslogg, ett år med analysehistorikk og prioritert støtte."
+      },
+      {
+        "q": "Vi er et firma med flere postkasser. Hvilken plan trenger vi?",
+        "a": "Tell først hvor mange personer som logger inn, og deretter postkassene. Hvis én person tar seg av post@, salg@, faktura@ og resten, er det Pro: én innlogging, ingen grense for tilkoblede postkasser, og hver postkasse beholder sitt eget avsendernavn og sin egen signatur og sender gjennom sin egen e-postserver. To eller tre adresser får plass på Personal. Team trengs bare når en person til trenger sin egen innlogging. Alle postkasser som snakker IMAP og SMTP kan kobles til, uansett hvem som leverer dem, og det kan Gmail, Google Workspace og Microsoft 365 også; en Microsoft 365-konto i et firma kan trenge at IT-administratoren godkjenner appen én gang."
       },
       {
         "q": "Hva om jeg trenger en fjerde innboks?",

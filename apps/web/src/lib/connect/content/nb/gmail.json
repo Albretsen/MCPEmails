@@ -100,5 +100,10 @@
     "intro": "Vil du heller ha en gjennomgang med skjermbilder?",
     "label": "Slik kobler du Gmail til Claude",
     "href": "/blog/connect-gmail-to-claude"
+  },
+  "seeAlso": {
+    "intro": "Firmapostkasse i Google Workspace, på ditt eget domene?",
+    "label": "Koble til Google Workspace, og se administratorinnstillingene som avgjør det",
+    "href": "/connect/google-workspace"
   }
 }

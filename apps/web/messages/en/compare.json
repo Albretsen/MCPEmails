@@ -19,7 +19,7 @@
       "coverage": {
         "tag": "Coverage",
         "h": "Every inbox, not just Gmail",
-        "p": "Built-in connectors typically reach one mailbox: Gmail, sometimes Outlook. They can't touch <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b>, or any other <b>IMAP/SMTP</b> account. We connect all of them: Gmail over an app password or Google sign-in, Outlook and Microsoft 365 by signing in with Microsoft, the rest over an app password or plain IMAP."
+        "p": "Built-in connectors typically reach one provider's mailboxes: Gmail, sometimes Outlook. They are not built for <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b>, or any other <b>IMAP/SMTP</b> account. We connect all of them: Gmail over an app password or Google sign-in, Outlook and Microsoft 365 by signing in with Microsoft, the rest over an app password or plain IMAP."
       },
       "actions": {
         "tag": "Real actions",

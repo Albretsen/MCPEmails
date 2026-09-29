@@ -76,6 +76,7 @@
   },
   "cardsFootnote": {
     "all": "Toutes les formules incluent : e-mails récupérés en direct, jamais stockés · identifiants chiffrés au repos · hébergement UE et US",
+    "business": "Une seule personne gère plusieurs boîtes d'entreprise ? C'est Pro, pas Team. <business>Voyez comment toutes les boîtes professionnelles tournent sur un seul agent</business>.",
     "custom": "Besoin de quelque chose de sur mesure ? <contact>Contactez-nous</contact>."
   },
   "comparison": {
@@ -181,6 +182,10 @@
       {
         "q": "Quelle est la différence entre Personal, Pro et Team ?",
         "a": "Personal, c'est un seul utilisateur avec trois boîtes connectées, un plafond de 120 requêtes par minute et le support par e-mail. Pro, c'est toujours un seul utilisateur et une seule connexion, mais sans aucune limite de boîtes : une personne peut donc connecter toutes les boîtes que gère une entreprise (ventes, factures, support, info). S'y ajoutent un plafond de 300 requêtes par minute, 90 jours d'historique d'analytique au lieu de 30, et le support par e-mail. Team, c'est pour le moment où plusieurs personnes doivent se connecter : membres illimités avec rôles, un espace de travail distinct par client ou activité, SSO (SAML / OIDC), journal d'audit, un an d'historique d'analytique et support prioritaire."
+      },
+      {
+        "q": "Nous sommes une entreprise avec plusieurs boîtes. Quelle formule nous faut-il ?",
+        "a": "Comptez d'abord les personnes qui se connectent, puis les boîtes. Si une seule personne gère info@, ventes@, factures@ et les autres, c'est Pro : une seule connexion, aucune limite de boîtes connectées, et chaque boîte garde son propre nom d'expéditeur et sa signature, et envoie par son propre serveur de messagerie. Deux ou trois adresses tiennent dans Personal. Team n'est nécessaire que lorsqu'une deuxième personne a besoin de sa propre connexion. Toute boîte qui parle IMAP et SMTP se connecte, quel que soit l'hébergeur, tout comme Gmail, Google Workspace et Microsoft 365 ; un compte Microsoft 365 d'entreprise peut nécessiter que son administrateur informatique approuve l'application une fois."
       },
       {
         "q": "Et s'il me faut une quatrième boîte ?",

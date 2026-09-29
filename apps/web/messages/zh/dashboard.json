@@ -94,7 +94,12 @@
     "step2Title": "连接你的 MCP 客户端",
     "step2Desc": "将此端点粘贴到你的客户端中，然后在下方选择它以获取分步指南。",
     "mcpServerUrl": "MCP 服务器 URL",
-    "chooseClient": "选择你的客户端"
+    "chooseClient": "选择你的客户端",
+    "multiInboxTitle": "添加你的其他工作邮箱",
+    "multiInboxOptional": "可选",
+    "multiInboxDesc": "连接 info@、sales@、invoices@ 等其余地址，智能体就能在同一个对话中处理公司的每一个邮箱，并从正确的地址回复。",
+    "multiInboxDescUpgrade": "连接 info@、sales@、invoices@ 等其余地址，智能体就能在同一个对话中处理公司的每一个邮箱，并从正确的地址回复。免费版包含一个邮箱；Pro 包含公司使用的所有邮箱。",
+    "multiInboxCta": "添加邮箱"
   },
   "overview": {
     "title": "概览",
@@ -473,6 +478,7 @@
     "monthly": "按月",
     "annual": "按年（节省约 20%）",
     "mostPopular": "最受欢迎",
+    "recommendedBusiness": "推荐用于公司邮箱",
     "custom": "定制",
     "perMonth": "／月",
     "billedYearly": "按 ${total}／年 计费",
