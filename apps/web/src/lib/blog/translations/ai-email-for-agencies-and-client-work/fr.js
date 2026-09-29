@@ -8,7 +8,7 @@ const translation = {
 
 Trois échecs méritent qu'on s'en protège dès la conception : la **fuite entre clients**, quand un identifiant trop large laisse une recherche tomber sur la mauvaise boîte ; le **prestataire qui s'en va**, dont le portable contient toujours une clé API valide ; et l'**envoi non relu**, quand un agent répond au client de votre client, poliment et à côté. Intégrez la séparation à l'accès lui-même et l'agent ne peut plus franchir une frontière, même si une consigne le lui demande.
 
-**Aller à :** [Un espace de travail par client](#un-espace-de-travail-par-client) · [Des clés API limitées](#des-cls-api-limites-par-mission) · [Le blocage avant envoi](#le-blocage-avant-envoi)
+**Aller à :** [Un espace de travail par client](#un-espace-de-travail-par-client) · [Des clés API limitées](#des-clés-api-limitées-par-mission) · [Le blocage avant envoi](#le-blocage-avant-envoi)
 
 ## Un espace de travail par client
 

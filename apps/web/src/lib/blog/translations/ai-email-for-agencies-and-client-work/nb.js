@@ -8,7 +8,7 @@ const translation = {
 
 Tre feil er verdt å designe mot: **lekkasje mellom kunder**, der en for vid legitimasjon lar et søk treffe feil postkasse; **konsulenten som slutter**, som fortsatt har en fungerende API-nøkkel på maskinen sin; og **utsendingen ingen leste**, der en agent svarer kundens kunde høflig og feil. Bygger du skillet inn i selve tilgangen, kan ikke agenten krysse en grense selv når en instruksjon ber den om det.
 
-**Hopp til:** [Ett arbeidsområde per kunde](#ett-arbeidsomrde-per-kunde) · [Avgrensede API-nøkler](#avgrensede-api-nkler-per-oppdrag) · [Godkjenning før utsending](#godkjenning-fr-utsending)
+**Hopp til:** [Ett arbeidsområde per kunde](#ett-arbeidsområde-per-kunde) · [Avgrensede API-nøkler](#avgrensede-api-nøkler-per-oppdrag) · [Godkjenning før utsending](#godkjenning-før-utsending)
 
 ## Ett arbeidsområde per kunde
 

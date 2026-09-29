@@ -8,7 +8,7 @@ const translation = {
 
 Hay tres fallos contra los que conviene diseñar: la **fuga entre clientes**, cuando una credencial demasiado amplia permite que una búsqueda encuentre el buzón que no era; el **colaborador que se va**, cuyo portátil sigue guardando una clave de API que funciona; y el **envío sin revisar**, cuando un agente responde al cliente de tu cliente con educación y con datos incorrectos. Si construyes la separación dentro del propio acceso, el agente no puede cruzar la frontera ni aunque un mensaje se lo pida.
 
-**Ir a:** [Un espacio de trabajo por cliente](#un-espacio-de-trabajo-por-cliente) · [Claves de API acotadas](#claves-de-api-acotadas-por-encargo) · [La aprobación previa al envío](#la-aprobacin-previa-al-envo)
+**Ir a:** [Un espacio de trabajo por cliente](#un-espacio-de-trabajo-por-cliente) · [Claves de API acotadas](#claves-de-api-acotadas-por-encargo) · [La aprobación previa al envío](#la-aprobación-previa-al-envío)
 
 ## Un espacio de trabajo por cliente
 

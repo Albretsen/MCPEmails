@@ -35,12 +35,19 @@
  * Personal alone. One customer who needed nine mailboxes was offered three,
  * abandoned, and only bought Pro because they found the pricing page unaided.
  *
- * So for that workspace, at the Free cap only, the offer is Personal AND Pro,
- * side by side, each with its own checkout. Personal stays, and stays FIRST:
- * most customers buy it, and the point is to stop hiding Pro, not to start
- * hiding Personal. A consumer-shaped Free workspace gets exactly what it got
- * before. The Personal cap is untouched by shape: from three there is one way
- * forward, and it is Pro for everybody.
+ * So for that workspace, at the Free cap only, the offer is Pro AND Personal,
+ * side by side, each with its own checkout, and PRO IS THE RECOMMENDATION: it
+ * comes first, carries `recommended: true` (a badge and the filled button),
+ * and is the primary offer, so "Compare all plans" opens /pricing on Pro.
+ * Until 2026-09-29 the order was Personal first. It changed because the
+ * business buyer is the one Pro is for (7 of the first 10 Pro sales were on a
+ * business domain, and 87% of payers hold two or more mailboxes), while a
+ * company with info@, sales@ and invoices@ is already at Personal's ceiling of
+ * three on the day it signs up. Personal stays on the panel, one click away:
+ * it is what most customers buy, and the point is to recommend Pro, not to
+ * hide the cheaper plan. A consumer-shaped Free workspace gets exactly what it
+ * got before. The Personal cap is untouched by shape: from three there is one
+ * way forward, and it is Pro for everybody.
  *
  * `businessShaped` is decided by the caller (see lib/segment/consumer-domains)
  * and passed in, so this stays a pure function of two values, and two surfaces
@@ -50,7 +57,10 @@
  * always meant, so a caller that only reads `.plan` (the server's
  * `upgrade_url` in check-inbox-limit.ts) is unaffected: a Free cap still
  * answers `personal`. `offers` is every plan to put a buy button on, in display
- * order, and always has at least one entry; `dual` is `offers.length > 1`. The
+ * order, and always has at least one entry; `dual` is `offers.length > 1`.
+ * Exactly one offer in a dual panel has `recommended: true`, and it is the
+ * first; a single offer is never marked (there is nothing to choose between).
+ * The top-level fields always describe `offers[0]`. The
  * `notice*` keys are the same offer's copy on the Inboxes page, which lives in
  * the `dashboard` namespace rather than `dashboardChrome`.
  *
@@ -60,6 +70,7 @@
  * @property {string} noticeCtaKey     `dashboard` key: the same label on the page notice.
  * @property {string|null} pitchKey    `dashboardChrome` key: one-line pitch on a dual card.
  * @property {string[]} featureKeys    `dashboardChrome` keys: the plan's real deltas.
+ * @property {boolean} recommended     The plan this panel steers toward (dual panels only).
  *
  * @param {number|null|undefined} maxInboxes - The cap that was hit.
  * @param {{businessShaped?: boolean}} [context]
@@ -103,19 +114,22 @@ export function inboxCapOffer(maxInboxes, context) {
     };
   }
 
+  // Pro is the primary and the first card. The server's `upgrade_url`
+  // (check-inbox-limit.ts) calls this with no shape at all, so it still
+  // answers Personal for a Free cap; the modal rebuilds its compare link from
+  // `.plan` here, which is where the business recommendation belongs.
+  const pro = proOffer();
   return {
-    // Personal is still the primary: it is what `.plan` readers link to, and
-    // it is the first card.
-    plan: personal.plan,
+    plan: pro.plan,
     titleKey: 'connect.businessUpgradeTitle',
     bodyKey: 'connect.businessUpgradeBody',
-    ctaKey: personal.ctaKey,
-    featureKeys: [...personal.featureKeys],
+    ctaKey: pro.ctaKey,
+    featureKeys: [...pro.featureKeys],
     noticeBodyKey: 'inboxes.capBodyBusiness',
     dual: true,
     offers: [
+      { ...pro, pitchKey: 'connect.businessProPitch', recommended: true },
       { ...personal, pitchKey: 'connect.businessPersonalPitch' },
-      { ...proOffer(), pitchKey: 'connect.businessProPitch' },
     ],
   };
 }
@@ -127,6 +141,7 @@ function personalOffer() {
     ctaKey: 'connect.personalUpgradeCta',
     noticeCtaKey: 'inboxes.capCtaPersonal',
     pitchKey: null,
+    recommended: false,
     featureKeys: [
       'connect.personalFeatureInboxes',
       'connect.personalFeatureRateLimit',
@@ -142,6 +157,7 @@ function proOffer() {
     ctaKey: 'connect.viewUpgradeOptions',
     noticeCtaKey: 'inboxes.capCtaPro',
     pitchKey: null,
+    recommended: false,
     featureKeys: [
       'connect.featureInboxes',
       'connect.featureRateLimit',

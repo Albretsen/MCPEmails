@@ -124,6 +124,16 @@ export function HeroTextBlock({ onGetStarted }) {
         <span className="item"><MIcon name="check" size={14} color="var(--mint-600)"/> {t('hero.metaNoCard')}</span>
         <span className="item"><MIcon name="check" size={14} color="var(--mint-600)"/> {t('hero.metaNeverStored')}</span>
       </div>
+      {/* The company-mailbox operator, named above the fold. Business-domain
+          signups are about a quarter of signups and over half of payers, and
+          until this line the first screen spoke only of "an inbox". The H1
+          and lead stay as they are: they are what the consumer and search
+          traffic arrives on. */}
+      <p className="hero-business-line">
+        {t.rich('hero.businessLine', {
+          business: (chunks) => <Link href="/for/business">{chunks}</Link>,
+        })}
+      </p>
     </div>
   );
 }
@@ -1133,7 +1143,8 @@ export function Pricing({ onGetStarted, stripePrices }) {
             comparison: (chunks) => <Link href="/pricing">{chunks}</Link>,
           })}
         </p>
-        {/* The one homepage pointer to the company-mailbox persona page. */}
+        {/* The homepage's second pointer to the company-mailbox persona page,
+            after the hero's. */}
         <p className="pricing-footnote" style={{ marginTop: 8 }}>
           {t.rich('pricing.businessLink', {
             business: (chunks) => <Link href="/for/business">{chunks}</Link>,

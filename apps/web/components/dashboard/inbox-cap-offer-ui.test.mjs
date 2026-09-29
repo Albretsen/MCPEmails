@@ -4,7 +4,7 @@
 // Run with: npm run test:inbox-cap-ui
 //
 // WHY THIS EXISTS, SEPARATELY FROM inbox-cap-offer.test.mjs. That suite proves
-// the rule: a business-shaped Free workspace is offered Personal and Pro, a
+// the rule: a business-shaped Free workspace is offered Pro and Personal, a
 // consumer one Personal alone. It cannot fail for any of the ways the rule can
 // be right and the screen still wrong: App.jsx forgetting to hand the boolean
 // to one of the two surfaces, a buy button whose label says "$5/mo" while its
@@ -81,17 +81,18 @@ async function renderInboxes(t, {
   userEmail = 'ada@gmail.com',
   isOwner = true,
   stripePrices = PRICES,
+  route = 'inboxes',
 }) {
   const requests = [];
   const previousFetch = globalThis.fetch;
   globalThis.fetch = async (url, init = {}) => {
-    requests.push({ url: String(url), method: init.method ?? 'GET' });
+    requests.push({ url: String(url), method: init.method ?? 'GET', body: init.body ?? null });
     return { ok: true, status: 200, json: async () => ({}) };
   };
 
   const view = await mount(createElement(AppLocaleProvider, null,
     createElement(DashboardApp, {
-      initialRoute: 'inboxes',
+      initialRoute: route,
       user: { displayName: 'Ada', email: userEmail, initials: 'A', id: 'u-0001' },
       workspace: {
         id: WORKSPACE_ID,
@@ -127,6 +128,9 @@ async function renderInboxes(t, {
   return {
     ...view,
     beacons: () => requests.filter(r => r.url === '/api/analytics/paywall'),
+    promptBeacons: () => requests
+      .filter(r => r.url === '/api/analytics/multi-inbox-prompt')
+      .map(r => JSON.parse(r.body).action),
   };
 }
 
@@ -180,12 +184,12 @@ test('page: a CONSUMER Free workspace is offered Personal alone, monthly', async
   assert.equal(view.container.textContent.includes(dashboard.inboxes.capBodyBusiness), false);
 });
 
-test('page: a BUSINESS Free workspace is offered Personal then Pro, both monthly', async (t) => {
+test('page: a BUSINESS Free workspace is offered Pro then Personal, both monthly', async (t) => {
   const view = await renderInboxes(t, { addresses: ['info@acme.example'] });
 
   assert.deepEqual(buyButtons(view.container), [
-    { plan: 'personal', href: checkoutHref('personal', 'month'), label: dashboard.inboxes.capCtaPersonal },
     { plan: 'solo', href: checkoutHref('solo', 'month'), label: dashboard.inboxes.capCtaPro },
+    { plan: 'personal', href: checkoutHref('personal', 'month'), label: dashboard.inboxes.capCtaPersonal },
   ]);
   assert.ok(view.container.textContent.includes(dashboard.inboxes.capBodyBusiness));
   assert.equal(view.container.textContent.includes(dashboard.inboxes.capBodyPersonal), false);
@@ -204,7 +208,7 @@ test('page: the OWNER\'s company address makes a Gmail-only workspace business-s
     userEmail: 'ada@acme.example',
     isOwner: true,
   });
-  assert.deepEqual(buyButtons(owner.container).map(b => b.plan), ['personal', 'solo']);
+  assert.deepEqual(buyButtons(owner.container).map(b => b.plan), ['solo', 'personal']);
 
   // A member's own address says nothing about who pays.
   const member = await renderInboxes(t, {
@@ -240,20 +244,20 @@ test('page: ONE interval choice moves BOTH buy buttons, label and href together'
 
   const buttons = buyButtons(view.container);
   assert.deepEqual(buttons.map(b => b.href), [
-    checkoutHref('personal', 'year'),
     checkoutHref('solo', 'year'),
+    checkoutHref('personal', 'year'),
   ]);
   // The label quotes what the card is charged: the annual total, per plan.
-  assert.ok(buttons[0].label.includes('$48'), buttons[0].label);
-  assert.ok(buttons[0].label.includes('Personal'), buttons[0].label);
-  assert.ok(buttons[1].label.includes('$144'), buttons[1].label);
-  assert.ok(buttons[1].label.includes('Pro'), buttons[1].label);
+  assert.ok(buttons[1].label.includes('$48'), buttons[1].label);
+  assert.ok(buttons[1].label.includes('Personal'), buttons[1].label);
+  assert.ok(buttons[0].label.includes('$144'), buttons[0].label);
+  assert.ok(buttons[0].label.includes('Pro'), buttons[0].label);
 
   // And back again.
   await click(intervalButton(view.container, chrome.connect.intervalMonthly));
   assert.deepEqual(buyButtons(view.container).map(b => b.href), [
-    checkoutHref('personal', 'month'),
     checkoutHref('solo', 'month'),
+    checkoutHref('personal', 'month'),
   ]);
 });
 
@@ -267,16 +271,16 @@ test('page: no annual toggle when EITHER plan has no yearly price, and both stay
   });
   assert.equal(intervalButton(view.container, chrome.connect.intervalAnnual) === undefined, true);
   assert.deepEqual(buyButtons(view.container).map(b => b.href), [
-    checkoutHref('personal', 'month'),
     checkoutHref('solo', 'month'),
+    checkoutHref('personal', 'month'),
   ]);
 });
 
 test('page: with no live prices at all, both plans are still sold, monthly', async (t) => {
   const view = await renderInboxes(t, { addresses: ['info@acme.example'], stripePrices: null });
   assert.deepEqual(buyButtons(view.container).map(b => b.href), [
-    checkoutHref('personal', 'month'),
     checkoutHref('solo', 'month'),
+    checkoutHref('personal', 'month'),
   ]);
 });
 
@@ -306,8 +310,8 @@ test('modal: a BUSINESS Free workspace gets two cards, each with its own checkou
 
   // Exactly two buy buttons in the whole dialog: no third one left in the footer.
   assert.deepEqual(buyButtons(modal), [
-    { plan: 'personal', href: checkoutHref('personal', 'month'), label: chrome.connect.personalUpgradeCta },
     { plan: 'solo', href: checkoutHref('solo', 'month'), label: chrome.connect.viewUpgradeOptions },
+    { plan: 'personal', href: checkoutHref('personal', 'month'), label: chrome.connect.personalUpgradeCta },
   ]);
   const cards = modal.querySelector('[data-cap-offer="dual"]');
   assert.ok(cards !== null, 'the dual card row should render');
@@ -352,11 +356,11 @@ test('modal: ONE interval choice moves BOTH cards, and the default is monthly', 
 
   const buttons = buyButtons(modalOf(view));
   assert.deepEqual(buttons.map(b => b.href), [
-    checkoutHref('personal', 'year'),
     checkoutHref('solo', 'year'),
+    checkoutHref('personal', 'year'),
   ]);
-  assert.ok(buttons[0].label.includes('$48'), buttons[0].label);
-  assert.ok(buttons[1].label.includes('$144'), buttons[1].label);
+  assert.ok(buttons[1].label.includes('$48'), buttons[1].label);
+  assert.ok(buttons[0].label.includes('$144'), buttons[0].label);
   // Each card states its own annual charge before the click.
   const text = modalOf(view).textContent;
   assert.ok(text.includes('Billed $48 once a year.'));
@@ -374,10 +378,10 @@ test('modal: the interval picked in the modal does not leak into the page notice
   const pageHrefs = [...view.container.querySelectorAll('a[data-cap-offer-plan]')]
     .filter(a => !modal.contains(a))
     .map(a => a.getAttribute('href'));
-  assert.deepEqual(pageHrefs, [checkoutHref('personal', 'month'), checkoutHref('solo', 'month')]);
+  assert.deepEqual(pageHrefs, [checkoutHref('solo', 'month'), checkoutHref('personal', 'month')]);
   assert.deepEqual(buyButtons(modal).map(b => b.href), [
-    checkoutHref('personal', 'year'),
     checkoutHref('solo', 'year'),
+    checkoutHref('personal', 'year'),
   ]);
 });
 
@@ -400,4 +404,94 @@ test('modal: the paywall beacon still fires exactly ONCE per open, dual panel in
   await openConnectModal(consumer);
   await settle();
   assert.equal(consumer.beacons().length, 1);
+});
+
+// ===========================================================================
+// Pro is the RECOMMENDATION for a business, on both surfaces
+// ===========================================================================
+
+function variants(root) {
+  return [...root.querySelectorAll('a[data-cap-offer-plan]')].map(a => [
+    a.getAttribute('data-cap-offer-plan'),
+    a.getAttribute('data-cap-offer-variant'),
+  ]);
+}
+
+test('page and modal: Pro is the filled button and Personal the outlined one, for a business', async (t) => {
+  const view = await renderInboxes(t, { addresses: ['info@acme.example'] });
+  assert.deepEqual(variants(view.container), [['solo', 'primary'], ['personal', 'secondary']]);
+
+  await openConnectModal(view);
+  const modal = modalOf(view);
+  assert.deepEqual(variants(modal), [['solo', 'primary'], ['personal', 'secondary']]);
+  // Exactly one card is badged, and it is Pro's.
+  const badged = [...modal.querySelectorAll('[data-cap-offer-recommended="true"]')];
+  assert.equal(badged.length, 1);
+  assert.ok(badged[0].textContent.includes(chrome.connect.recommendedBadge));
+  assert.ok(badged[0].querySelector('a[data-cap-offer-plan="solo"]') !== null);
+});
+
+test('a consumer, and a Personal cap, see one filled button and no badge', async (t) => {
+  const consumer = await renderInboxes(t, { addresses: ['ada@gmail.com'] });
+  assert.deepEqual(variants(consumer.container), [['personal', 'primary']]);
+  await openConnectModal(consumer);
+  assert.equal(modalOf(consumer).querySelector('[data-cap-offer-recommended]'), null);
+  assert.equal(modalOf(consumer).textContent.includes(chrome.connect.recommendedBadge), false);
+
+  const capped = await renderInboxes(t, {
+    addresses: ['info@acme.example', 'sales@acme.example', 'billing@acme.example'],
+    maxInboxes: 3,
+    plan: 'personal',
+  });
+  assert.deepEqual(variants(capped.container), [['solo', 'primary']]);
+});
+
+// ===========================================================================
+// The Overview guide's second-work-mailbox prompt
+// ===========================================================================
+
+const promptOf = view => view.container.querySelector('[data-multi-inbox-prompt]');
+
+test('overview: a business workspace with one mailbox is asked for the rest, and told it is paid', async (t) => {
+  const view = await renderInboxes(t, { addresses: ['info@acme.example'], route: 'overview' });
+  const prompt = promptOf(view);
+  assert.ok(prompt !== null, 'the prompt should render');
+  assert.equal(prompt.getAttribute('data-multi-inbox-prompt'), 'upgrade');
+  assert.ok(prompt.textContent.includes(dashboard.guide.multiInboxTitle));
+  assert.ok(prompt.textContent.includes(dashboard.guide.multiInboxDescUpgrade));
+
+  await settle();
+  assert.deepEqual(view.promptBeacons(), ['shown']);
+
+  // The button opens the connect modal, which at the cap is the paywall
+  // panel recommending Pro.
+  const button = [...prompt.querySelectorAll('button')].find(b => b.textContent.includes(dashboard.guide.multiInboxCta));
+  await click(button);
+  await settle();
+  assert.deepEqual(view.promptBeacons(), ['shown', 'clicked']);
+  const modal = modalOf(view);
+  assert.ok(modal !== null);
+  assert.deepEqual(buyButtons(modal).map(b => b.plan), ['solo', 'personal']);
+});
+
+test('overview: an uncapped business workspace gets the plain ask, with no mention of paying', async (t) => {
+  const view = await renderInboxes(t, { addresses: ['info@acme.example'], route: 'overview', maxInboxes: null, plan: 'solo' });
+  const prompt = promptOf(view);
+  assert.equal(prompt.getAttribute('data-multi-inbox-prompt'), 'open');
+  assert.ok(prompt.textContent.includes(dashboard.guide.multiInboxDesc));
+  assert.equal(prompt.textContent.includes(dashboard.guide.multiInboxDescUpgrade), false);
+});
+
+test('overview: a consumer never sees the prompt and no beacon fires', async (t) => {
+  const view = await renderInboxes(t, { addresses: ['ada@gmail.com'], route: 'overview' });
+  assert.equal(promptOf(view), null);
+  await settle();
+  assert.deepEqual(view.promptBeacons(), []);
+});
+
+test('overview: two mailboxes, or none, means no prompt', async (t) => {
+  const two = await renderInboxes(t, { addresses: ['info@acme.example', 'sales@acme.example'], route: 'overview', maxInboxes: null });
+  assert.equal(promptOf(two), null);
+  const none = await renderInboxes(t, { addresses: [], userEmail: 'ada@acme.example', route: 'overview' });
+  assert.equal(promptOf(none), null);
 });

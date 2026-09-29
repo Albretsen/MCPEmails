@@ -1,0 +1,113 @@
+{
+  "_sources": [
+    "https://support.google.com/accounts/answer/185833",
+    "https://knowledge.workspace.google.com/admin/sync/turn-pop-and-imap-on-or-off-for-users",
+    "https://knowledge.workspace.google.com/admin/sync/transition-from-less-secure-apps-to-oauth",
+    "https://knowledge.workspace.google.com/admin/users/add-or-delete-an-alternate-email-address-email-alias",
+    "https://support.google.com/a/answer/7281227",
+    "apps/web/src/lib/email-providers/host-presets.ts (gmail: mxSuffixes .l.google.com, smtp.google.com)",
+    "apps/web/src/lib/email-providers/imap-presets.ts (IMAP_PRESETS.gmail)",
+    "supabase/functions/mcp-server/index.ts (sender_identities: Send As listed only for provider gmail, the Google sign-in connection)"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "App-passord",
+    "helpUrl": "https://support.google.com/accounts/answer/185833",
+    "usernameForm": "Hele adressen på ditt eget domene, for eksempel post@dittfirma.no. App-passordet erstatter kontopassordet, som ikke fungerer.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Koble Google Workspace-e-post til Claude, ChatGPT og MCP-klienter",
+    "description": "Koble Google Workspace-postkasser på ditt eget domene til Claude, ChatGPT, Cursor og enhver MCP-klient. App-passord over IMAP, administratorinnstillingene som avgjør det, og alle firmapostkassene på én agent."
+  },
+  "hero": {
+    "eyebrow": "Google Workspace + AI",
+    "titleLine1": "Koble Google Workspace til Claude,",
+    "titleLine2": "og ChatGPT, Cursor og enhver MCP-klient",
+    "lead": "Gi AI-agenten din firmapostkassene som ligger i Google Workspace på ditt eget domene: din egen, salg@, support@ og resten. Den leser, søker, sender, svarer, planlegger og organiserer e-post over IMAP med et app-passord, og de samme postkassene fungerer i alle MCP-klienter, ikke bare én.",
+    "meta0": "1 innboks gratis, for alltid",
+    "meta1": "Kobles til med et Google-app-passord",
+    "meta2": "E-post hentes direkte, lagres aldri",
+    "answer": "En Google Workspace-postkasse på ditt eget domene er egentlig en Gmail-postkasse, så den kobles til mcpemails på samme måte som Gmail: med et Google-app-passord over IMAP og SMTP på imap.gmail.com og smtp.gmail.com. mcpemails er en driftet MCP-server, så når postkassen er koblet til, kan Claude, ChatGPT, Cursor eller enhver MCP-klient lese, søke i, sende og organisere e-posten. Det er innstillingene til Workspace-administratoren din som avgjør om app-passord er tilgjengelig og om IMAP er tillatt."
+  },
+  "method": {
+    "title": "Slik kobles Google Workspace til: et app-passord over IMAP",
+    "body": "Skriv inn adressen din i IMAP-skjemaet, så leser mcpemails MX-oppføringene til domenet ditt: et domene der e-posten går til Google (<code>aspmx.l.google.com</code> eller <code>smtp.google.com</code>), gjenkjennes som Google Workspace, og skjemaet fyller inn <b>imap.gmail.com</b> på 993 og <b>smtp.gmail.com</b> på 465 og forteller deg at det kreves et app-passord. Velger du Gmail-kortet, skjer det samme. Google slo av passordinnlogging for Workspace-apper i 2025, med unntak av app-passord, så kontopassordet vil aldri fungere her. Innlogging med Google tilbys som et alternativ."
+  },
+  "setup": [
+    {
+      "h": "Opprett en gratis konto",
+      "p": "Registrer deg hos mcpemails, uten kort. Gratisplanen kobler til én innboks, for alltid."
+    },
+    {
+      "h": "Lag et Google-app-passord",
+      "p": "Logg inn som postkassen du vil koble til, slå på totrinnsbekreftelse hvis det ikke allerede er på, og lag deretter et app-passord på myaccount.google.com/apppasswords. Mangler valget, er administratorinnstillingene sannsynligvis grunnen (se nedenfor)."
+    },
+    {
+      "h": "Lim det inn i mcpemails",
+      "p": "Velg IMAP / SMTP eller Gmail, skriv inn hele adressen på domenet ditt, og lim inn app-passordet på 16 tegn. Vertene fylles inn ut fra domenet ditt."
+    },
+    {
+      "h": "Lim MCP-URL-en inn i AI-en",
+      "p": "Lim https://mcpemails.com/api/mcp inn i Claude, ChatGPT eller Cursor, autoriser, så har agenten postkassen. Gjenta app-passord-steget for hver firmapostkasse du vil at den skal nå."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "Valget for app-passord kan mangle på en Workspace-konto",
+      "p": "Google tilbyr bare app-passord på kontoer med totrinnsbekreftelse slått på, og Googles egen hjelpeside nevner tre grunner til at valget likevel kan mangle: totrinnsbekreftelse er satt opp <b>bare med sikkerhetsnøkler</b>, kontoen har <b>Avansert beskyttelse</b>, eller du er logget inn på <b>en konto fra jobb, skole eller en annen organisasjon</b> der innstillingene ikke tillater det. Det siste er administratorens avgjørelse, og ingenting inne i postkassen endrer det. Spør administratoren, eller koble til med innlogging med Google i stedet hvis organisasjonen din tillater tredjepartsapper."
+    },
+    {
+      "h": "IMAP slås på av administratoren, ikke av deg",
+      "p": "I Google Workspace kan ikke brukerne selv slå IMAP av eller på i Gmail-innstillingene sine. Det gjør en administrator i Google Admin-konsollen under <b>Apps, Google Workspace, Gmail, End User Access</b>, i delen <b>POP and IMAP access</b>, for alle eller per organisasjonsenhet. To innstillinger der avgjør om et app-passord fungerer: IMAP må være slått på for enheten din, og administratoren må ha valgt <b>Allow any mail client</b>. Har de begrenset IMAP til navngitte OAuth-e-postklienter, blir en innlogging med app-passord avvist, uansett hvor riktig passordet er."
+    },
+    {
+      "h": "Et alias er ikke en postkasse, og det er heller ikke en gruppe",
+      "p": "I Workspace kan en administrator legge til opptil 30 aliaser på én bruker, og e-post sendt til et alias havner i den brukerens egen innboks. Et alias har ingen egen innlogging, så du kobler til brukeren det tilhører, og e-posten til aliaset ligger allerede der. En adresse til en Google-gruppe (en e-postliste eller en samarbeidsinnboks) er heller ikke en konto du kan logge inn på, så den har ikke noe app-passord å koble til: koble til postkassen til et av medlemmene. Bare ekte brukerpostkasser kan kobles til, hver med sitt eget app-passord, og hver teller som én tilkoblet innboks."
+    },
+    {
+      "h": "Å svare fra et alias krever tilkoblingen med innlogging med Google",
+      "p": "Med et app-passord sender en postkasse fra sin egen adresse. Å sende fra en annen adresse, for eksempel et alias satt opp som en Gmail-adresse under <b>Send mail as</b>, støttes bare på en postkasse som er koblet til med innlogging med Google, der de bekreftede Send As-adressene vises for agenten din. På alle andre tilkoblinger blir en From-adresse som ikke er postkassens egen, avvist, ikke stille omskrevet."
+    }
+  ],
+  "limits": [
+    "mcpemails når bare e-post: et app-passord brukes bare til IMAP og SMTP. Drive, Calendar, Chat og Docs nås ikke.",
+    "En Google Workspace-administrator kan stenge begge veiene: app-passord kan være utilgjengelig for kontoen din, IMAP kan være slått av eller begrenset til navngitte OAuth-klienter, og tredjepartstilgang kan være blokkert for innlogging med Google. Bare en administrator kan endre disse innstillingene.",
+    "Gmail lagrer etiketter, ikke mapper, så en flytting legger til én etikett og fjerner en annen, og sletting flytter en melding til Gmails papirkurv."
+  ],
+  "faq": [
+    {
+      "q": "Fungerer Claude med e-post i Google Workspace?",
+      "a": "Ja, så snart en MCP-server som mcpemails kobler til postkassen. En Workspace-postkasse på ditt eget domene kobles til med et Google-app-passord over IMAP, akkurat som en gmail.com-adresse, og deretter kan Claude lese, søke i, sende, svare på og organisere e-posten. Den samme tilkoblingen fungerer i ChatGPT, Cursor og enhver annen MCP-klient."
+    },
+    {
+      "q": "Hva er IMAP- og SMTP-innstillingene for Google Workspace?",
+      "a": "IMAP er imap.gmail.com på port 993 med SSL/TLS, og SMTP er smtp.gmail.com på port 465 med SSL/TLS. Brukernavnet er hele adressen din på ditt eget domene, og passordet er et Google-app-passord. mcpemails fyller inn dette når MX-oppføringene til domenet ditt peker mot Google."
+    },
+    {
+      "q": "Hvorfor får jeg ikke laget et app-passord på Workspace-kontoen min?",
+      "a": "Google nevner tre grunner: totrinnsbekreftelse er satt opp bare med sikkerhetsnøkler, kontoen har Avansert beskyttelse, eller det er en konto fra jobb, skole eller en organisasjon der innstillingene ikke tillater app-passord. De to første kan du endre selv. Den tredje er administratorens avgjørelse."
+    },
+    {
+      "q": "Hvorfor blir app-passordet mitt avvist når det er riktig?",
+      "a": "Som oftest fordi IMAP ikke er tillatt for kontoen din. I Workspace er det bare administratoren som kan slå på IMAP, per organisasjonsenhet, og de kan begrense det til navngitte OAuth-e-postklienter, noe som avviser innlogging med app-passord. Be dem slå på IMAP med Allow any mail client for enheten din."
+    },
+    {
+      "q": "Kan jeg koble til post@, salg@ og support@ fra samme Workspace?",
+      "a": "Ja, når hver av dem er en ekte brukerpostkasse: koble til hver med sitt eget app-passord, så når agenten din alle sammen gjennom én MCP-URL. Et alias eller en adresse til en Google-gruppe er ikke en egen postkasse, så koble til brukerpostkassen som e-posten leveres til."
+    },
+    {
+      "q": "Lagres Google Workspace-e-posten min på serverne deres?",
+      "a": "Nei. Meldinger hentes direkte fra Google for hver forespørsel og sendes videre til AI-klienten din. App-passordet, eller OAuth-tokenet hvis du logger inn med Google, er kryptert ved lagring, og meldingsinnhold beholdes ikke. Tilbakekaller du app-passordet i Google-kontoen din, eller sletter innboksen i mcpemails, avsluttes tilkoblingen."
+    }
+  ],
+  "ctaBand": {
+    "title": "Gi AI-en din firmaets Google Workspace-postkasser",
+    "sub": "Koble til den første på få minutter. Én innboks gratis for alltid, uten kort."
+  },
+  "seeAlso": {
+    "intro": "Personlig @gmail.com-adresse?",
+    "label": "Koble til Gmail",
+    "href": "/connect/gmail"
+  }
+}

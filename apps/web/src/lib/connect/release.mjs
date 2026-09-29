@@ -119,6 +119,7 @@ export const PINNED_RELATED = {
   gmail: ['outlook', 'office365'],
   outlook: ['office365', 'gmail'],
   office365: ['outlook', 'gmail'],
+  'google-workspace': ['gmail', 'office365'],
   icloud: ['gmail', 'outlook'],
   yahoo: ['gmail', 'outlook'],
   imap: ['gmail', 'outlook'],

@@ -3400,6 +3400,7 @@ export type Database = {
       }
       workspaces: {
         Row: {
+          acquisition_email_segment: string | null
           acquisition_landing: string | null
           acquisition_landing_path: string | null
           acquisition_locale: string | null
@@ -3444,6 +3445,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          acquisition_email_segment?: string | null
           acquisition_landing?: string | null
           acquisition_landing_path?: string | null
           acquisition_locale?: string | null
@@ -3488,6 +3490,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          acquisition_email_segment?: string | null
           acquisition_landing?: string | null
           acquisition_landing_path?: string | null
           acquisition_locale?: string | null

@@ -87,6 +87,13 @@ body { margin: 0; }
 }
 .hero-meta .item { display: inline-flex; align-items: center; gap: 6px; }
 .hero-meta svg { width: 14px; height: 14px; stroke: var(--mint-600); fill: none; stroke-width: 2; }
+.hero-business-line {
+  margin: 16px 0 0; font-family: var(--font-sans); font-size: 14px; line-height: 1.5; color: var(--fg-2);
+}
+.hero-business-line a { color: var(--cobalt-600); text-decoration: underline; text-underline-offset: 2px; font-weight: 500; }
+/* --cobalt-600 has no dark value and is dark blue on a dark page; the theme's
+   own dark brand is cobalt-400, and its hover is lighter still. */
+html[data-theme="dark"] .hero-business-line a { color: var(--brand-hover); }
 
 /* Inline diagram card on right side */
 .hero-card {

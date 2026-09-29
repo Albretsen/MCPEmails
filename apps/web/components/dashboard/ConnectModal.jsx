@@ -2240,11 +2240,13 @@ export function ConnectModal({
               </div>
 
               {/* TWO PLANS, SIDE BY SIDE: a business-shaped workspace at the
-                  Free cap. Personal first (it is what most people buy), Pro
-                  beside it (it is what an operator with a company's mailboxes
-                  needs, and it used to be reachable from here only through
-                  "Compare all plans"). Each card carries its own buy button,
-                  so the footer below drops its single CTA in this mode.
+                  Free cap. Pro first, badged and with the filled button (it is
+                  what an operator with a company's mailboxes needs, and a
+                  company with info@, sales@ and invoices@ is at Personal's
+                  ceiling on day one); Personal beside it with an outlined
+                  button, still one click away. inboxCapOffer decides which is
+                  `recommended`. Each card carries its own buy button, so the
+                  footer below drops its single CTA in this mode.
 
                   The interval control sits ABOVE the cards because it governs
                   both of them. It still starts on Monthly and still renders
@@ -2279,17 +2281,35 @@ export function ConnectModal({
                             gap: 8,
                             padding: 12,
                             background: 'var(--bg-surface)',
-                            border: '1px solid var(--border-1)',
+                            border: o.recommended ? '2px solid var(--brand)' : '1px solid var(--border-1)',
                             borderRadius: 10,
                           }}
+                          data-cap-offer-recommended={o.recommended ? 'true' : undefined}
                         >
                           <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: 6,
                             fontFamily: 'var(--font-sans)',
                             fontSize: 14,
                             fontWeight: 600,
                             color: 'var(--fg-1)',
                           }}>
                             {planDisplayName(o.plan)}
+                            {o.recommended && (
+                              <span style={{
+                                padding: '1px 7px',
+                                borderRadius: 999,
+                                background: 'var(--brand-soft)',
+                                color: 'var(--brand)',
+                                fontSize: 11,
+                                fontWeight: 600,
+                                lineHeight: 1.6,
+                              }}>
+                                {tr('connect.recommendedBadge')}
+                              </span>
+                            )}
                           </div>
                           <div style={{
                             fontFamily: 'var(--font-sans)',
@@ -2340,6 +2360,7 @@ export function ConnectModal({
                               monthlyLabel={tr(o.ctaKey)}
                               annualOffer={planAnnual}
                               interval={upgradeInterval}
+                              variant={o.recommended ? 'primary' : 'secondary'}
                               block
                             />
                           </div>
