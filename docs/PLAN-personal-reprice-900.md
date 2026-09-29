@@ -15,6 +15,10 @@ Why $9 rather than $8:
 - **The ladder still reads.** $9 → $15 means "$6 more for unlimited inboxes", which makes Pro an easier step up from Personal than it was at $5 → $15.
 - **Why not whole-dollar annual.** Exactly 20% off a whole-dollar yearly price needs a monthly price that is a multiple of $5, so neither $8 nor $9 can give one. $86.40 keeps the discount exact. $86 would read as 20% but actually be 20.4%.
 
+## Status
+
+**Live since 2026-09-29 17:02 UTC**: PR #32 merged at 16:56:41Z; `main` at `1814c18e` passed CI at 17:02:02Z and was promoted. Stripe: $9/mo `price_1UL49dARrgumc6cqFzJnFjEg`, $86.40/yr `price_1UL4E6ARrgumc6cqRbXQVofW` (retired, still billing: $5 `price_1U9jknARrgumc6cqEoJX6o7d`, $48 `price_1U9jksARrgumc6cqKmbeMHcC`). First full read-out: **2026-11-10** (cutover + 28-day cohort + 14-day window).
+
 ## Test design: cutover plus before/after, not an A/B
 
 The A/B system (`experiments` / `experiment_assignments`) is the wrong tool for this change, for two reasons.
