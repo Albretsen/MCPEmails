@@ -8,7 +8,7 @@ const translation = {
 
 通过 Claude 的 OAuth 流程连接时，无需编写代码、安装 SDK 或使用 API 密钥。每次请求都会从你的服务商实时获取邮件，MCP Emails 不会存储邮件。
 
-**跳转到你的服务商：** [Gmail](#gmail-google-workspace) · [iCloud](#icloud) · [Fastmail](#fastmail) · [Outlook](#outlook-microsoft-365) · [Yahoo、Zoho、Yandex 或自定义 IMAP](#yahoozohoyandex-imap)
+**跳转到你的服务商：** [Gmail](#gmail-与-google-workspace) · [iCloud](#icloud-邮件) · [Fastmail](#fastmail) · [Outlook](#outlook-与-microsoft-365) · [Yahoo、Zoho、Yandex 或自定义 IMAP](#yahoozohoyandex-和自定义-imap)
 
 ## 你需要准备什么
 

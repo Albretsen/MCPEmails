@@ -6,7 +6,7 @@ const translation = {
     'Varias cuentas de correo de trabajo y personales conectadas a Claude y ChatGPT a través de un solo conector MCP',
   content: `Quieres hacer una sola pregunta y que se responda con todos los buzones que llevas: tu propia dirección, info@, ventas@, la bandeja de facturas y quizá un Gmail personal. Esta guía explica cómo tener varias cuentas de correo en Claude y ChatGPT al mismo tiempo, qué cubren ya los conectores integrados y en qué casos necesitas un servidor MCP.
 
-**Ir a:** [Conectores integrados](#lo-que-hacen-los-conectores-integrados) · [Un conector para todos los buzones](#un-solo-conector-para-todos-los-buzones) · [Configuración en Claude](#adelo-a-claude) · [Configuración en ChatGPT](#adelo-a-chatgpt) · [Planes](#cuntos-buzones-conecta-cada-plan)
+**Ir a:** [Conectores integrados](#lo-que-hacen-los-conectores-integrados) · [Un conector para todos los buzones](#un-solo-conector-para-todos-los-buzones) · [Configuración en Claude](#añádelo-a-claude) · [Configuración en ChatGPT](#añádelo-a-chatgpt) · [Planes](#cuántos-buzones-conecta-cada-plan)
 
 ## Lo que hacen los conectores integrados
 
