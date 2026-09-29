@@ -22,6 +22,9 @@ ev AS (
   JOIN auth.users u ON u.id = w.owner_id
   WHERE e.stage IN ('paywall_reached', 'checkout_started', 'checkout_completed')
     AND NOT public.growth_is_internal_email(u.email)
+    -- Paid traffic starts inside the "after" window only (Google Ads test,
+    -- docs/PLAN-google-ads-test-20260929.md). Keep both cohorts organic.
+    AND w.acquisition_source IS DISTINCT FROM 'google_ads'
 ),
 first_paywall AS (
   SELECT workspace_id, min(occurred_at) AS at
