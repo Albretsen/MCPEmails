@@ -66,6 +66,12 @@ html[data-theme="dark"],
   --shadow-focus: 0 0 0 3px rgba(89,115,245,0.32);
 }
 
+/* Wordmark light/dark swap. logo-wordmark.svg hardcodes ink-900 text, which
+   vanishes on a dark page, so every wordmark renders both files and dark mode
+   shows logo-wordmark-dark.svg (fg-1 text, cobalt-300 mark). */
+html:not([data-theme="dark"]) .logo-dark,
+html[data-theme="dark"] .logo-light { display: none; }
+
 /* Make sticky nav opaque in dark */
 html[data-theme="dark"] .nav { background: rgba(19,25,50,0.88); border-bottom-color: var(--border-1); }
 html[data-theme="dark"] .hero {
@@ -249,6 +255,11 @@ html[data-theme="dark"] .auth-shell::before {
 }
 .auth-back:hover { color: var(--fg-1); text-decoration: none; }
 .auth-brand img { height: 30px; margin-bottom: 28px; }
+/* Google/GitHub buttons (SocialButton). border-2 matches the light-mode hairline;
+   dark border-2 is only 1.5:1 on the card, so dark uses ink-400 (2.8:1). */
+.auth-social-btn { border: 1px solid var(--border-2); background: transparent; }
+.auth-social-btn:hover:not(:disabled) { background: var(--ink-50); }
+html[data-theme="dark"] .auth-social-btn { border-color: var(--ink-400); }
 .auth-card {
   background: var(--bg-surface); border: 1px solid var(--border-1);
   border-radius: 16px; padding: 32px;

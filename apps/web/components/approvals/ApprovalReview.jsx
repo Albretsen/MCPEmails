@@ -126,7 +126,7 @@ export function ApprovalReview({ review, csrfToken }) {
     <div className="review-shell">
       <div className="review-wrap">
         <Link className="review-brand" href="/dashboard">
-          <img src="/logo-wordmark.svg" alt="mcpemails" />
+          <img className="logo-light" src="/logo-wordmark.svg" alt="mcpemails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" alt="mcpemails" />
         </Link>
 
         <div className="card review-card">

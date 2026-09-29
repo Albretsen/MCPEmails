@@ -75,7 +75,7 @@ export function InviteAcceptUI({
     }}>
       {/* Logo */}
       <div style={{ marginBottom: 32 }}>
-        <img src="/logo-wordmark.svg" alt="MCP Emails" style={{ height: 28, opacity: 0.9 }} />
+        <img className="logo-light" src="/logo-wordmark.svg" alt="MCP Emails" style={{ height: 28, opacity: 0.9 }} /><img className="logo-dark" src="/logo-wordmark-dark.svg" alt="MCP Emails" style={{ height: 28, opacity: 0.9 }} />
       </div>
 
       {/* Card */}

@@ -39,7 +39,7 @@ export function Nav({ onSignIn, onGetStarted, user }) {
   return (
     <header className="nav">
       <div className="container nav-row">
-        <Link className="brand" href="/" onClick={closeMenu}><img src="/logo-wordmark.svg" alt="mcpemails" /></Link>
+        <Link className="brand" href="/" onClick={closeMenu}><img className="logo-light" src="/logo-wordmark.svg" alt="mcpemails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" alt="mcpemails" /></Link>
         <nav className="nav-links" aria-label="Primary navigation">
           <Link href="/#features">{t('nav.features')}</Link>
           <Link href="/#how">{t('nav.how')}</Link>
