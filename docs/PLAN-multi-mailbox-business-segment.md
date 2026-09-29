@@ -83,7 +83,7 @@ Read that table carefully before accepting the thesis. Of the three Pro sales:
 
 - **company-07** is the departmental case, and it is the least engaged account in the roster.
 - **`customer-08@redacted.invalid`** bought Pro (unlimited inboxes) while running **one** inbox. He did not buy inbox count.
-- **`customer-19@redacted.invalid`** has 4 inboxes across 4 *different* domains (yahoo personal, `biosciglobal.net`, gmail, `bclean.ca`). That is a multi-business individual, which is the persona Pro's copy already describes ("each side business"), not a departmental business.
+- **`customer-19@redacted.invalid`** has 4 inboxes across 4 *different* domains (yahoo personal, two separate company domains, gmail). That is a multi-business individual, which is the persona Pro's copy already describes ("each side business"), not a departmental business.
 
 So "Pro sells to departmental businesses" is currently **n = 1**.
 
@@ -143,7 +143,7 @@ Anyone quoting a multi-inbox conversion rate is quoting the cap back at themselv
 
 ### 3.3 Revenue concentration
 
-Monthly-normalised MRR of $72 (annual plans amortised; `kirill` carries a one-off `THANKSKIRILL` coupon in year one):
+Monthly-normalised MRR of $72 (annual plans amortised; one customer carries a one-off coupon in year one):
 
 | slice | payers | MRR | share |
 | --- | --- | --- | --- |
@@ -339,7 +339,7 @@ The complete list of inboxes ever added more than 7 days after signup:
 | day +42 | `customer-16@redacted.invalid` | `customer-28@redacted.invalid` | **yes, Personal** |
 | day +47 | `customer-07@redacted.invalid` | own domain | no |
 
-One data point supports the pay-then-expand story: `justincox` paid on 09-01 and added two mailboxes on 09-02, day 42 of his account. That is the only paid expansion event in the product's history. n = 1.
+One data point supports the pay-then-expand story: `customer-16` paid on 09-01 and added two mailboxes on 09-02, day 42 of the account. That is the only paid expansion event in the product's history. n = 1.
 
 ### 4.3 What company-07 actually did
 
@@ -462,7 +462,7 @@ The code comment at `Sections.jsx:580-586` states the intent: everyday inbox cho
 - `:169` `"You were about to connect another inbox. Personal takes you to three for $5 a month: work, personal, and one more."`
 - `apps/web/messages/en/dashboard.json:137` `"Free connects one mailbox. Personal takes you to three for $5 a month, so work and personal can share the same agent."`
 
-The word "own" does the damage. `customer-10@redacted.invalid` is not a mailbox Laura *owns*, it is one she *operates*. "Work, personal, and one more" describes a life, not a company.
+The word "own" does the damage. `customer-10@redacted.invalid` is not a mailbox its operator *owns*, it is one they *operate*. "Work, personal, and one more" describes a life, not a company.
 
 **The one exception**, and it is buried in a modal: `apps/web/messages/en/dashboardChrome.json:209` `"IMAP and SMTP connect straight to your mail server, with no third-party consent screen in the way. Use this for a work mailbox, a custom domain, or any provider not listed here."` That sentence is the only place in the entire product that speaks to this buyer, and you only see it after choosing IMAP inside the connect modal.
 
@@ -602,7 +602,7 @@ By source, the split is stark:
 
 **Organic search is 94% consumer.** This is the number that should reorder the SEO plan: [[project_seo_verdict_20260831]] found 0 of 29 organic signups paid, and this is why. We rank for consumer email queries. Nobody searching "connect gmail to claude" runs `facturas@`.
 
-Geography: business signups cluster in `.com` (49), `.uk` (8), `.de` (7), `.net` (5), `.br` (4), `.nl` (4). The German cluster is real and recent: five `.de` role-address signups in the week of 2026-08-31 alone (`duplexgaragen24.de`, `skulturkollektiv.de`, `kantfolie.de`, `archimedes-gs.de`, `briana-beauty.de`), and IONOS, Hetzner and STRATO are all German hosts. Nothing in that cluster has converted yet, so treat it as a lead, not a market.
+Geography: business signups cluster in `.com` (49), `.uk` (8), `.de` (7), `.net` (5), `.br` (4), `.nl` (4). The German cluster is real and recent: five `.de` role-address signups in the week of 2026-08-31 alone, and IONOS, Hetzner and STRATO are all German hosts. Nothing in that cluster has converted yet, so treat it as a lead, not a market.
 
 ### 8.4 Ranked acquisition actions
 
@@ -682,7 +682,7 @@ Separated deliberately from my conclusions above. I do not have answers to these
 
 1. **Has anyone spoken to company-07?** They paid $144, connected 9 departmental mailboxes in an hour, and 8 of them have never synced. I cannot tell from the database whether the integration is broken or the customer walked away. This is the single highest-value unknown in the business and one email answers it.
 
-2. **Is `customer-21@redacted.invalid` blocked right now?** 3 of 3 inboxes on Personal, 844 billable actions in two days, all three mailboxes on one company domain (`company-09.eu`: `info@`, `mike@`, `milan@`), never seen the cap. Do they have a fourth mailbox they want? If yes, this is the segment's clean test case and the answer costs one email.
+2. **Is `customer-21@redacted.invalid` blocked right now?** 3 of 3 inboxes on Personal, 844 billable actions in two days, all three mailboxes on one company domain (`company-09.invalid`: one role address and two named-person mailboxes), never seen the cap. Do they have a fourth mailbox they want? If yes, this is the segment's clean test case and the answer costs one email.
 
 3. **Why did `customer-16@redacted.invalid` decline Pro?** He hit the 3-inbox cap on 2026-09-06 with 2,862 billable actions, the heaviest use in the paying base, and did not upgrade. Price, or does three genuinely suffice? This is the only Personal-to-Pro data point that exists.
 

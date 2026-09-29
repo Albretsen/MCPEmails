@@ -108,7 +108,7 @@
       {
         "provider": "Supabase",
         "purpose": "Base de données, authentification, fonctions edge",
-        "location": "UE (Francfort) ou États-Unis (Virginie) ; vous choisissez à l'inscription"
+        "location": "UE (Stockholm, Suède)"
       },
       {
         "provider": "Vercel",

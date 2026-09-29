@@ -8,7 +8,7 @@ const translation = {
 
 Én AI-agent på tvers av alle sammen fjerner vekslingen, men bare hvis agenten vet hvilken postkasse som er hvilken, og svarene går ut fra riktig adresse.
 
-**Hopp til:** [Oppdagelse](#agenten-finner-postkassene-selv) · [Avgrens én forespørsel](#avgrens-n-foresprsel-til-n-postkasse) · [Plangrenser](#der-plangrensene-treffer)
+**Hopp til:** [Oppdagelse](#agenten-finner-postkassene-selv) · [Avgrens én forespørsel](#avgrens-én-forespørsel-til-én-postkasse) · [Plangrenser](#der-plangrensene-treffer)
 
 ## Hvorfor én agent er bedre enn å bytte e-postklient
 

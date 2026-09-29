@@ -1806,7 +1806,7 @@
         "readOnlyHint": false,
         "title": "Set Signature"
       },
-      "description": "Set or update the email signature for an inbox. Provide the signature as `signature_text` (plain text) and/or `signature_html` (rich HTML) — pass either or both; the missing half is derived automatically on send. Pass an empty string for both to clear the signature. Optionally set `signature_enabled` (default true; set false to stop appending without deleting the text) and `signature_reply_mode` ('always' = sign every reply/forward, 'first_only' = only the first message in a thread, 'never' = never sign replies/forwards). Setting a signature marks its source as 'manual', which permanently overrides Gmail auto-import for that inbox. `sender_name` sets the display name recipients see in the From header, e.g. \"Evancoe Bot <bot@evancoe.com>\"; it can be set on its own without touching the signature.",
+      "description": "Set or update the email signature for an inbox. Provide the signature as `signature_text` (plain text) and/or `signature_html` (rich HTML) — pass either or both; the missing half is derived automatically on send. Pass an empty string for both to clear the signature. Optionally set `signature_enabled` (default true; set false to stop appending without deleting the text) and `signature_reply_mode` ('always' = sign every reply/forward, 'first_only' = only the first message in a thread, 'never' = never sign replies/forwards). Setting a signature marks its source as 'manual', which permanently overrides Gmail auto-import for that inbox. `sender_name` sets the display name recipients see in the From header, e.g. \"Acme Support <support@acme.example>\"; it can be set on its own without touching the signature.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -1820,7 +1820,7 @@
             "type": "string"
           },
           "sender_name": {
-            "description": "Display name recipients see in the From header, e.g. 'Evancoe Bot' gives \"Evancoe Bot <bot@evancoe.com>\". Omit to keep, empty string to clear. Whitespace is collapsed; control characters and angle brackets are removed.",
+            "description": "Display name recipients see in the From header, e.g. 'Acme Support' gives \"Acme Support <support@acme.example>\". Omit to keep, empty string to clear. Whitespace is collapsed; control characters and angle brackets are removed.",
             "maxLength": 100,
             "type": "string"
           },

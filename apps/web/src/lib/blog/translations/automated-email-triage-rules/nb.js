@@ -8,7 +8,7 @@ const translation = {
 
 MCP Emails har en egen flate for akkurat den e-posten. En **automasjon** er et lagret søk pluss én fast handling, vurdert på et intervall, uten modell i løkka. E-post matches, aldri tolkes.
 
-**Hopp til:** [Hva en regel er](#hva-en-automasjon-egentlig-er) · [Lag en](#lag-en-forhndsvis-opprett-aktiver) · [Hva den kan og ikke kan](#hva-en-regel-kan-og-ikke-kan-gjre) · [Når du bør la være](#nr-du-ikke-br-skrive-en-regel)
+**Hopp til:** [Hva en regel er](#hva-en-automasjon-egentlig-er) · [Lag en](#lag-en-forhåndsvis-opprett-aktiver) · [Hva den kan og ikke kan](#hva-en-regel-kan-og-ikke-kan-gjøre) · [Når du bør la være](#når-du-ikke-bør-skrive-en-regel)
 
 ## Hva en automasjon egentlig er
 

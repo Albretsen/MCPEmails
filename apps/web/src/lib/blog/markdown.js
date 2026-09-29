@@ -11,12 +11,25 @@
  * paragraphs, and inline bold / italic / code / links.
  */
 
-/** Slugify heading text into a stable, URL-safe anchor id. */
+/**
+ * Slugify heading text into a stable, URL-safe anchor id.
+ *
+ * Keeps every Unicode letter and number (\p{L}\p{N}), not just ASCII \w: a
+ * heading written entirely in Chinese used to slug to "" and every zh TOC link
+ * rendered as href="#". Combining marks (\p{M}) are kept too, so a decomposed
+ * "é" stays one letter. Everything else (punctuation, CJK full-width
+ * punctuation, emoji) is dropped. Browsers match percent-encoded fragments
+ * against the decoded id, so non-ASCII ids work as ordinary anchors.
+ *
+ * Hand-written "Jump to" anchors in posts and translations must equal this
+ * function's output for their heading; anchors.test.mjs enforces that.
+ */
 export function slugify(text) {
   return text
+    .normalize('NFC')
     .toLowerCase()
     .replace(/<[^>]+>/g, '') // strip any inline html that slipped in
-    .replace(/[^\w\s-]/g, '')
+    .replace(/[^\p{L}\p{N}\p{M}\s_-]/gu, '')
     .trim()
     .replace(/\s+/g, '-');
 }
@@ -76,6 +89,17 @@ export function renderMarkdown(markdown) {
   };
 
   let paragraph = [];
+  // Ids already used in this document. A repeated heading ("Setup" under two
+  // providers) gets "-2", "-3", ... so every TOC link lands on its own heading,
+  // and a heading with no letters or numbers at all falls back to "section".
+  const usedIds = new Set();
+  const uniqueId = (text) => {
+    const base = slugify(text) || 'section';
+    let id = base;
+    for (let n = 2; usedIds.has(id); n++) id = `${base}-${n}`;
+    usedIds.add(id);
+    return id;
+  };
 
   while (i < lines.length) {
     const line = lines[i];
@@ -102,7 +126,7 @@ export function renderMarkdown(markdown) {
       paragraph = flushParagraph(paragraph);
       const level = h[1].length;
       const text = h[2].trim();
-      const id = slugify(text);
+      const id = uniqueId(text);
       if (level === 2 || level === 3) headings.push({ id, text, level });
       html.push(`<h${level} id="${id}">${inline(text)}</h${level}>`);
       i++;

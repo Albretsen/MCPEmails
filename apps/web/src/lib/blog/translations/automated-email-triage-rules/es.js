@@ -8,7 +8,7 @@ const translation = {
 
 MCP Emails tiene una segunda superficie para exactamente ese correo. Una **automatización** es una búsqueda guardada más una acción fija, evaluada con una cadencia y sin ningún modelo de por medio. El correo se compara, nunca se interpreta.
 
-**Ir a:** [Qué es una regla](#qu-es-realmente-una-automatizacin) · [Crea una](#crea-una-previsualiza-crea-activa) · [Qué puede y qué no](#lo-que-una-regla-puede-y-no-puede-hacer) · [Cuándo no escribirla](#cundo-no-escribir-una-regla)
+**Ir a:** [Qué es una regla](#qué-es-realmente-una-automatización) · [Crea una](#crea-una-previsualiza-crea-activa) · [Qué puede y qué no](#lo-que-una-regla-puede-y-no-puede-hacer) · [Cuándo no escribirla](#cuándo-no-escribir-una-regla)
 
 ## Qué es realmente una automatización
 

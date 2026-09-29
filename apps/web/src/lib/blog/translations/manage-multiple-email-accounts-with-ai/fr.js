@@ -8,7 +8,7 @@ const translation = {
 
 Un seul agent IA sur l'ensemble supprime ces allers-retours, mais seulement si l'agent sait quelle boîte est laquelle et si les réponses partent de la bonne adresse.
 
-**Aller à :** [Découverte](#votre-agent-trouve-les-botes-aux-lettres-tout-seul) · [Cadrer une demande](#limiter-une-demande-une-seule-bote) · [Limites des forfaits](#ce-que-limitent-les-forfaits)
+**Aller à :** [Découverte](#votre-agent-trouve-les-boîtes-aux-lettres-tout-seul) · [Cadrer une demande](#limiter-une-demande-à-une-seule-boîte) · [Limites des forfaits](#ce-que-limitent-les-forfaits)
 
 ## Pourquoi un seul agent vaut mieux que changer de client mail
 

@@ -54,7 +54,7 @@ const MARKETING = [
   "Return-Path: <bounce@brand.example>",
   "DKIM-Signature: v=1; a=rsa-sha256; d=brand.example; s=x; bh=abc; b=def",
   "From: =?UTF-8?B?QnLDpG5kIE5ld3M=?= <news@brand.example>",
-  "To: hayder@yahoo.example",
+  "To: recipient@yahoo.example",
   "Subject: =?UTF-8?Q?Big_sale_=E2=80=93_today?=",
   "Date: Wed, 17 Sep 2026 10:00:00 +0000",
   "Message-ID: <abc123@brand.example>",
@@ -265,7 +265,7 @@ Deno.test("summarizeOriginal decodes encoded words for the forwarded block", () 
   const summary = summarizeOriginal(headerBlock);
   assertEquals(summary.from, "Bränd News <news@brand.example>");
   assertEquals(summary.subject, "Big sale – today");
-  assertEquals(summary.to, "hayder@yahoo.example");
+  assertEquals(summary.to, "recipient@yahoo.example");
   assertEquals(summary.date, "Wed, 17 Sep 2026 10:00:00 +0000");
 });
 

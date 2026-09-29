@@ -233,8 +233,8 @@ Deno.test("stripBccHeader does not touch a body line that looks like a header", 
 // ---------------------------------------------------------------------------
 
 Deno.test("plain ASCII atoms stay bare in a display name", () => {
-  assertEquals(encodeMimeDisplayName("Evancoe Bot"), "Evancoe Bot");
-  assertEquals(formatMailbox("Evancoe Bot", "bot@evancoe.com"), "Evancoe Bot <bot@evancoe.com>");
+  assertEquals(encodeMimeDisplayName("Acme Support"), "Acme Support");
+  assertEquals(formatMailbox("Acme Support", "support@acme.example"), "Acme Support <support@acme.example>");
 });
 
 Deno.test("ASCII specials force a quoted-string", () => {
@@ -297,9 +297,9 @@ Deno.test("control characters in a display name cannot inject a header", () => {
 });
 
 Deno.test("an empty or null name yields the bare address", () => {
-  assertEquals(formatMailbox(null, "bot@evancoe.com"), "bot@evancoe.com");
-  assertEquals(formatMailbox("", "bot@evancoe.com"), "bot@evancoe.com");
-  assertEquals(formatMailbox("  \r\n ", "bot@evancoe.com"), "bot@evancoe.com");
+  assertEquals(formatMailbox(null, "support@acme.example"), "support@acme.example");
+  assertEquals(formatMailbox("", "support@acme.example"), "support@acme.example");
+  assertEquals(formatMailbox("  \r\n ", "support@acme.example"), "support@acme.example");
 });
 
 Deno.test("buildMimeMessage writes the quoted display name into From", () => {

@@ -8,7 +8,7 @@ const translation = {
 
 Un solo agente de IA sobre todas ellas elimina el cambio constante, pero solo si el agente sabe qué buzón es cuál y si las respuestas salen desde la dirección correcta.
 
-**Ir a:** [Descubrimiento](#el-agente-encuentra-los-buzones-por-su-cuenta) · [Acotar una solicitud](#limita-una-solicitud-a-un-solo-buzn) · [Límites del plan](#dnde-caen-los-lmites-del-plan)
+**Ir a:** [Descubrimiento](#el-agente-encuentra-los-buzones-por-su-cuenta) · [Acotar una solicitud](#limita-una-solicitud-a-un-solo-buzón) · [Límites del plan](#dónde-caen-los-límites-del-plan)
 
 ## Por qué un solo agente supera cambiar de cliente de correo
 
