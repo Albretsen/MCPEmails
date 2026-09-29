@@ -5,7 +5,8 @@
 //
 // marketing-consent.test.mjs proves the helpers. This renders the real
 // SignupApp with the real English messages and checks what a person would
-// actually cause: the box starts unticked, an unticked signup sends no consent
+// actually cause: the box renders once, above the Google/GitHub buttons, and
+// starts unticked; an unticked signup sends no consent
 // keys to Supabase, a ticked one sends them (and never a timestamp), and the
 // OAuth cookie is set only when the box is ticked. `@/lib/supabase/client` is
 // mocked below (the jsx hooks already point it at a stub with no signUp), so
@@ -100,6 +101,14 @@ function googleButton(container) {
   return [...container.querySelectorAll('button')].find((b) => b.textContent.includes('Google'));
 }
 
+function githubButton(container) {
+  return [...container.querySelectorAll('button')].find((b) => b.textContent.includes('GitHub'));
+}
+
+function precedes(a, b) {
+  return Boolean(a.compareDocumentPosition(b) & window.Node.DOCUMENT_POSITION_FOLLOWING);
+}
+
 test('the consent checkbox is rendered, labelled, and unticked by default', async (t) => {
   const { container } = await render(t);
   const box = container.querySelector('#signup-marketing-consent');
@@ -112,6 +121,23 @@ test('the consent checkbox is rendered, labelled, and unticked by default', asyn
   assert.equal(label.textContent.trim(), auth.signup.marketingConsent);
   const links = [...container.querySelectorAll('.auth-legal a')].map((a) => a.getAttribute('href'));
   assert.deepEqual(links, ['/terms', '/privacy']);
+});
+
+test('the consent checkbox appears once, before the Google and GitHub buttons', async (t) => {
+  const { container } = await render(t);
+  const boxes = container.querySelectorAll('input[type="checkbox"]');
+  assert.equal(boxes.length, 1, 'exactly one checkbox on the page');
+  assert.equal(container.querySelectorAll('.auth-consent').length, 1, 'exactly one consent row');
+  const box = boxes[0];
+  assert.equal(box.id, 'signup-marketing-consent');
+  assert.equal(box.checked, false, 'unticked by default');
+  const google = googleButton(container);
+  const github = githubButton(container);
+  assert.ok(google && github, 'both OAuth buttons are rendered');
+  assert.ok(precedes(box, google), 'checkbox comes before the Google button');
+  assert.ok(precedes(box, github), 'checkbox comes before the GitHub button');
+  assert.ok(precedes(box, container.querySelector('#signup-email')), 'and before the password form');
+  assert.equal(box.closest('form'), null, 'it is not scoped to the password form');
 });
 
 test('an unticked signup sends no consent to the server', async (t) => {
@@ -168,4 +194,40 @@ test('Google with the box ticked sets the consent cookie', async (t) => {
   assert.match(last, new RegExp(`^${MARKETING_CONSENT_COOKIE}=${MARKETING_CONSENT_VERSION};`));
   assert.match(last, /Path=\/auth/);
   assert.match(last, /Max-Age=900/);
+});
+
+test('GitHub without the box ticked only clears the consent cookie', async (t) => {
+  const writes = captureCookieWrites(t);
+  const { container } = await render(t);
+  const github = githubButton(container);
+  assert.ok(github, 'GitHub button is rendered');
+  writes.length = 0;
+  await flush(() => github.click());
+  assert.ok(writes.length > 0, 'the click wrote the cookie state');
+  assert.ok(writes.every((c) => c.includes('Max-Age=0')), 'an unticked click never sets consent');
+});
+
+test('GitHub with the box ticked sets the consent cookie', async (t) => {
+  const writes = captureCookieWrites(t);
+  const { container } = await render(t);
+  await tick(container.querySelector('#signup-marketing-consent'));
+  writes.length = 0;
+  await flush(() => githubButton(container).click());
+  const last = writes.at(-1);
+  assert.ok(last, 'a cookie was written');
+  assert.match(last, new RegExp(`^${MARKETING_CONSENT_COOKIE}=${MARKETING_CONSENT_VERSION};`));
+  assert.match(last, /Path=\/auth/);
+  assert.match(last, /Max-Age=900/);
+});
+
+test('ticking then unticking before Google sets no consent', async (t) => {
+  const writes = captureCookieWrites(t);
+  const { container } = await render(t);
+  const box = container.querySelector('#signup-marketing-consent');
+  await tick(box);
+  await tick(box);
+  writes.length = 0;
+  await flush(() => googleButton(container).click());
+  assert.ok(writes.length > 0);
+  assert.ok(writes.every((c) => c.includes('Max-Age=0')));
 });

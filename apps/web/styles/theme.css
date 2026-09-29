@@ -280,17 +280,21 @@ html[data-theme="dark"] .auth-shell::before {
 .auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--border-1); }
 .auth-fields { display: flex; flex-direction: column; gap: 14px; }
 .auth-submit { width: 100%; justify-content: center; height: 42px; font-size: 14px; margin-top: 4px; }
-/* Marketing-email opt-in on the signup form. Unticked by default; the whole
-   row is the label so the text is a click target too. */
+/* Marketing-email opt-in on the signup card. Unticked by default; the whole
+   row is the label so the text is a click target too. It sits once, under the
+   title and above the Google/GitHub buttons, so it covers every signup method. */
 .auth-consent {
   display: flex; align-items: flex-start; gap: 10px; cursor: pointer;
-  font-family: var(--font-sans); font-size: 13px; line-height: 1.5; color: var(--fg-2);
+  margin: 16px 0 14px; text-align: left;
+  font-family: var(--font-sans); font-size: 13px; line-height: 1.5; color: var(--fg-3);
 }
 .auth-consent input {
   flex-shrink: 0; width: 16px; height: 16px; margin: 2px 0 0;
   accent-color: var(--brand); cursor: pointer;
 }
 .auth-consent input:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+/* An unticked native box is a bright white square on the dark card otherwise. */
+html[data-theme="dark"] .auth-consent input { color-scheme: dark; }
 .auth-legal {
   margin: 0; text-align: center;
   font-family: var(--font-sans); font-size: 12px; line-height: 1.55; color: var(--fg-3);
