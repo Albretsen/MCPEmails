@@ -34,7 +34,7 @@
  * THIS DOES NOT WEAKEN THE INJECTION GUARD, and the reasoning is worth keeping
  * because the substitution looks like a loosening. What a From header cannot
  * survive is a raw CR or LF, because that ends the header line; the attack is
- * "Evancoe Bot\r\nBcc: attacker@example.com" becoming two headers. A space
+ * "Acme Support\r\nBcc: attacker@example.com" becoming two headers. A space
  * cannot end a line, so the CRLF is just as gone as it was when it was deleted
  * — the text after it stays on the same line as inert display-name characters.
  * Nor does the fold create the other half of the attack: RFC 5322 §2.2.3 makes

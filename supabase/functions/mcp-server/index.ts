@@ -5877,7 +5877,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
       "never sign replies/forwards). Setting a signature marks its source as " +
       "'manual', which permanently overrides Gmail auto-import for that inbox. " +
       "`sender_name` sets the display name recipients see in the From header, " +
-      "e.g. \"Evancoe Bot <bot@evancoe.com>\"; it can be set on its own without " +
+      "e.g. \"Acme Support <support@acme.example>\"; it can be set on its own without " +
       "touching the signature.",
     requiredScope: "send:email",
     inputSchema: {
@@ -5923,8 +5923,8 @@ const LEGACY_TOOLS: ToolDefinition[] = [
             // and is exactly as safe (sender-name.ts carries the RFC 5322
             // argument and the test pins it). What is left to warn about is the
             // angle brackets, because that one really is a deletion.
-            "Display name recipients see in the From header, e.g. 'Evancoe Bot' " +
-            "gives \"Evancoe Bot <bot@evancoe.com>\". Omit to keep, empty string " +
+            "Display name recipients see in the From header, e.g. 'Acme Support' " +
+            "gives \"Acme Support <support@acme.example>\". Omit to keep, empty string " +
             "to clear. Whitespace is collapsed: a tab or newline becomes a " +
             "single space, as does any run of spaces. Angle brackets and " +
             "non-printable control characters are removed outright.",
