@@ -122,7 +122,24 @@ export type Classified =
   | { action: 'suppress'; reason: SuppressionReason; recipients: string[]; emailId: string | null }
   | { action: 'ignore'; reason: string };
 
-const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+/**
+ * A plausible address, checked with string operations rather than a regex so
+ * that no input can make it slow (CodeQL js/polynomial-redos).
+ */
+function looksLikeAddress(addr: string): boolean {
+  if (addr.length < 3 || addr.length > 320 || /\s/.test(addr)) return false;
+  const at = addr.indexOf('@');
+  if (at <= 0 || at !== addr.lastIndexOf('@')) return false;
+  const dot = addr.lastIndexOf('.');
+  return dot > at + 1 && dot < addr.length - 1;
+}
+
+/** "Name <addr@x>" -> "addr@x"; a bare address is returned trimmed. */
+function bareAddress(entry: string): string {
+  const open = entry.lastIndexOf('<');
+  const close = entry.lastIndexOf('>');
+  return (open !== -1 && close > open ? entry.slice(open + 1, close) : entry).trim();
+}
 
 function recipientsOf(data: Record<string, unknown>): string[] {
   const to = data.to;
@@ -130,10 +147,9 @@ function recipientsOf(data: Record<string, unknown>): string[] {
   const out = new Set<string>();
   for (const entry of list) {
     if (typeof entry !== 'string') continue;
-    // Tolerate "Name <addr@x>" as well as a bare address.
-    const m = /<([^>]+)>/.exec(entry);
-    const addr = (m ? m[1] : entry).trim();
-    if (EMAIL_RE.test(addr)) out.add(addr);
+    if (entry.length > 1000) continue;
+    const addr = bareAddress(entry);
+    if (looksLikeAddress(addr)) out.add(addr);
   }
   return [...out];
 }
