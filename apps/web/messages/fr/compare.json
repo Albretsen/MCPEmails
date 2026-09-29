@@ -19,7 +19,7 @@
       "coverage": {
         "tag": "Couverture",
         "h": "Chaque boîte, pas seulement Gmail",
-        "p": "Les connecteurs intégrés n'atteignent en général qu'une seule boîte : Gmail, parfois Outlook. Ils ne peuvent pas toucher <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b> ni aucun autre compte <b>IMAP/SMTP</b>. Nous les connectons tous : Gmail via un mot de passe d'application ou la connexion Google, Outlook et Microsoft 365 via la connexion avec Microsoft, le reste via un mot de passe d'application ou simplement IMAP."
+        "p": "Les connecteurs intégrés n'atteignent en général que les boîtes d'un seul fournisseur : Gmail, parfois Outlook. Ils ne sont pas conçus pour <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b> ni pour aucun autre compte <b>IMAP/SMTP</b>. Nous les connectons tous : Gmail via un mot de passe d'application ou la connexion Google, Outlook et Microsoft 365 via la connexion avec Microsoft, le reste via un mot de passe d'application ou simplement IMAP."
       },
       "actions": {
         "tag": "Vraies actions",

@@ -1,0 +1,113 @@
+{
+  "_sources": [
+    "https://support.google.com/accounts/answer/185833",
+    "https://knowledge.workspace.google.com/admin/sync/turn-pop-and-imap-on-or-off-for-users",
+    "https://knowledge.workspace.google.com/admin/sync/transition-from-less-secure-apps-to-oauth",
+    "https://knowledge.workspace.google.com/admin/users/add-or-delete-an-alternate-email-address-email-alias",
+    "https://support.google.com/a/answer/7281227",
+    "apps/web/src/lib/email-providers/host-presets.ts (gmail: mxSuffixes .l.google.com, smtp.google.com)",
+    "apps/web/src/lib/email-providers/imap-presets.ts (IMAP_PRESETS.gmail)",
+    "supabase/functions/mcp-server/index.ts (sender_identities: Send As listed only for provider gmail, the Google sign-in connection)"
+  ],
+  "auth": {
+    "method": "app-password",
+    "label": "Mot de passe d'application",
+    "helpUrl": "https://support.google.com/accounts/answer/185833",
+    "usernameForm": "L'adresse complète sur votre propre domaine, par exemple info@votreentreprise.com. Le mot de passe d'application remplace le mot de passe du compte ; celui-ci ne fonctionnera pas.",
+    "status": "active"
+  },
+  "meta": {
+    "title": "Connecter Google Workspace à Claude, ChatGPT et aux clients MCP",
+    "description": "Connectez les boîtes Google Workspace de votre propre domaine à Claude, ChatGPT, Cursor et tout client MCP. Mot de passe d'application en IMAP, réglages d'administration décisifs, et toutes les boîtes de l'entreprise sur un seul agent."
+  },
+  "hero": {
+    "eyebrow": "Google Workspace + IA",
+    "titleLine1": "Connectez Google Workspace à Claude,",
+    "titleLine2": "à ChatGPT, Cursor, tout client MCP",
+    "lead": "Donnez à votre agent IA les boîtes de l'entreprise hébergées chez Google Workspace sur votre propre domaine : la vôtre, ventes@, support@ et les autres. Il lit, recherche, envoie, répond, planifie et organise le courrier en IMAP avec un mot de passe d'application, et les mêmes boîtes fonctionnent dans tous les clients MCP, pas un seul.",
+    "meta0": "1 boîte gratuite, pour toujours",
+    "meta1": "Connexion avec un mot de passe d'application Google",
+    "meta2": "E-mails récupérés en direct, jamais stockés",
+    "answer": "Une boîte Google Workspace sur votre propre domaine est, en coulisses, une boîte Gmail : elle se connecte donc à mcpemails comme Gmail, avec un mot de passe d'application Google en IMAP et SMTP sur imap.gmail.com et smtp.gmail.com. mcpemails est un serveur MCP hébergé : une fois la boîte connectée, Claude, ChatGPT, Cursor ou tout client MCP peut lire, rechercher, envoyer et organiser son courrier. Ce sont les réglages de votre administrateur Workspace qui déterminent si un mot de passe d'application est disponible et si l'IMAP est autorisé."
+  },
+  "method": {
+    "title": "Comment Google Workspace se connecte : un mot de passe d'application en IMAP",
+    "body": "Saisissez votre adresse dans le formulaire IMAP et mcpemails lit les enregistrements MX de votre domaine : un domaine dont le courrier aboutit chez Google (<code>aspmx.l.google.com</code> ou <code>smtp.google.com</code>) est reconnu comme Google Workspace, et le formulaire renseigne <b>imap.gmail.com</b> sur le port 993 et <b>smtp.gmail.com</b> sur le port 465, en vous indiquant qu'un mot de passe d'application est nécessaire. Choisir la carte Gmail donne le même résultat. Google a désactivé en 2025 la connexion par mot de passe pour les applications Workspace, à l'exception des mots de passe d'application : le mot de passe du compte ne fonctionnera donc jamais ici. La connexion avec Google est proposée comme alternative."
+  },
+  "setup": [
+    {
+      "h": "Créez un compte gratuit",
+      "p": "Inscrivez-vous sur mcpemails, sans carte bancaire. L'offre gratuite connecte une boîte, pour toujours."
+    },
+    {
+      "h": "Créez un mot de passe d'application Google",
+      "p": "Connectez-vous au compte de la boîte que vous voulez relier, activez la validation en deux étapes si ce n'est pas déjà fait, puis créez un mot de passe d'application sur myaccount.google.com/apppasswords. Si l'option n'apparaît pas, les réglages de votre administrateur en sont probablement la cause (voir ci-dessous)."
+    },
+    {
+      "h": "Collez-le dans mcpemails",
+      "p": "Choisissez IMAP / SMTP ou Gmail, saisissez l'adresse complète sur votre domaine et collez le mot de passe d'application de 16 caractères. Les serveurs sont renseignés à partir de votre domaine."
+    },
+    {
+      "h": "Collez l'URL MCP dans votre IA",
+      "p": "Ajoutez https://mcpemails.com/api/mcp dans Claude, ChatGPT ou Cursor, autorisez l'accès, et votre agent dispose de la boîte. Répétez l'étape du mot de passe d'application pour chaque boîte de l'entreprise que vous voulez lui confier."
+    }
+  ],
+  "gotchas": [
+    {
+      "h": "L'option de mot de passe d'application peut être absente sur un compte Workspace",
+      "p": "Google ne propose les mots de passe d'application que sur les comptes où la validation en deux étapes est activée, et sa propre page d'aide cite trois raisons pour lesquelles l'option peut malgré tout ne pas apparaître : une validation en deux étapes configurée <b>uniquement avec des clés de sécurité</b>, le <b>Programme Protection Avancée</b>, ou une connexion avec <b>un compte professionnel, scolaire ou d'une autre organisation</b> dont les réglages ne l'autorisent pas. Ce dernier cas relève de la décision de votre administrateur, et rien dans la boîte ne peut le changer. Adressez-vous à l'administrateur, ou connectez-vous plutôt avec Google si votre organisation autorise les applications tierces."
+    },
+    {
+      "h": "C'est l'administrateur qui active l'IMAP, pas vous",
+      "p": "Sur Google Workspace, les utilisateurs ne peuvent pas activer ni désactiver l'IMAP dans leurs propres paramètres Gmail. Un administrateur le fait dans la console d'administration Google, sous <b>Apps, Google Workspace, Gmail, End User Access</b>, dans la section <b>POP and IMAP access</b>, pour tout le monde ou par unité organisationnelle. Deux réglages y déterminent si un mot de passe d'application fonctionne : l'IMAP doit être activé pour votre unité, et l'administrateur doit avoir choisi <b>Allow any mail client</b>. S'il a limité l'IMAP à certains clients de messagerie OAuth nommés, une connexion par mot de passe d'application est refusée, même parfaitement correcte."
+    },
+    {
+      "h": "Un alias n'est pas une boîte, un groupe non plus",
+      "p": "Workspace permet à un administrateur d'ajouter jusqu'à 30 alias à un même utilisateur, et le courrier envoyé à un alias arrive dans la boîte de cet utilisateur. Un alias n'a pas d'identifiant de connexion propre : vous connectez l'utilisateur auquel il appartient, et le courrier de l'alias s'y trouve déjà. Une adresse de groupe Google (une liste de diffusion ou une boîte collaborative) n'est pas non plus un compte auquel on peut se connecter, elle n'a donc pas de mot de passe d'application : connectez la boîte d'un membre. Seules les vraies boîtes d'utilisateur se connectent, chacune avec son propre mot de passe d'application, et chacune compte pour une boîte connectée."
+    },
+    {
+      "h": "Répondre depuis un alias nécessite la connexion avec Google",
+      "p": "Avec un mot de passe d'application, une boîte envoie depuis sa propre adresse. Envoyer depuis une autre adresse, comme un alias configuré dans Gmail sous <b>Envoyer des e-mails en tant que</b>, n'est possible que sur une boîte connectée avec Google, où les adresses Send As vérifiées sont listées pour votre agent. Sur toute autre connexion, une adresse From qui n'est pas celle de la boîte est refusée, et non réécrite en silence."
+    }
+  ],
+  "limits": [
+    "mcpemails n'atteint que le courrier : un mot de passe d'application sert uniquement à IMAP et SMTP. Drive, Agenda, Chat et Docs restent inaccessibles.",
+    "Un administrateur Google Workspace peut fermer les deux voies : les mots de passe d'application peuvent être indisponibles pour votre compte, l'IMAP peut être désactivé ou limité à certains clients OAuth nommés, et l'accès des applications tierces peut être bloqué pour l'option de connexion avec Google. Seul un administrateur peut modifier ces réglages.",
+    "Gmail stocke des libellés, pas des dossiers : un déplacement ajoute donc un libellé et en retire un autre, et la suppression place le message dans la corbeille de Gmail."
+  ],
+  "faq": [
+    {
+      "q": "Claude fonctionne-t-il avec l'e-mail Google Workspace ?",
+      "a": "Oui, dès qu'un serveur MCP comme mcpemails connecte la boîte. Une boîte Workspace sur votre propre domaine se connecte avec un mot de passe d'application Google en IMAP, exactement comme une adresse gmail.com, et Claude peut ensuite lire, rechercher, envoyer, répondre et organiser son courrier. La même connexion fonctionne dans ChatGPT, Cursor et tout autre client MCP."
+    },
+    {
+      "q": "Quels sont les paramètres IMAP et SMTP de Google Workspace ?",
+      "a": "L'IMAP est imap.gmail.com sur le port 993 en SSL/TLS, et le SMTP est smtp.gmail.com sur le port 465 en SSL/TLS. L'identifiant est votre adresse complète sur votre propre domaine et le mot de passe est un mot de passe d'application Google. mcpemails les renseigne lorsque les enregistrements MX de votre domaine pointent vers Google."
+    },
+    {
+      "q": "Pourquoi ne puis-je pas créer de mot de passe d'application sur mon compte Workspace ?",
+      "a": "Google cite trois raisons : la validation en deux étapes est configurée uniquement avec des clés de sécurité, le compte bénéficie du Programme Protection Avancée, ou il s'agit d'un compte professionnel, scolaire ou d'une organisation dont les réglages n'autorisent pas les mots de passe d'application. Vous pouvez modifier vous-même les deux premiers points ; le troisième relève de l'administrateur."
+    },
+    {
+      "q": "Pourquoi mon mot de passe d'application est-il refusé alors qu'il est correct ?",
+      "a": "Le plus souvent parce que l'IMAP n'est pas autorisé pour votre compte. Sur Workspace, seul l'administrateur peut activer l'IMAP, par unité organisationnelle, et il peut le limiter à certains clients de messagerie OAuth nommés, ce qui refuse les connexions par mot de passe d'application. Demandez-lui d'activer l'IMAP avec Allow any mail client pour votre unité."
+    },
+    {
+      "q": "Puis-je connecter info@, ventes@ et support@ d'un même Workspace ?",
+      "a": "Oui, si chacune est une vraie boîte d'utilisateur : connectez chacune avec son propre mot de passe d'application, et votre agent les atteint toutes via une seule URL MCP. Un alias ou une adresse de groupe Google n'est pas une boîte à part entière : connectez la boîte d'utilisateur dans laquelle son courrier est distribué."
+    },
+    {
+      "q": "Mon courrier Google Workspace est-il stocké sur vos serveurs ?",
+      "a": "Non. Les messages sont récupérés en direct chez Google à chaque requête et transmis à votre client IA. Le mot de passe d'application, ou le jeton OAuth si vous vous connectez avec Google, est chiffré au repos et le contenu des messages n'est pas conservé. Révoquer le mot de passe d'application dans votre compte Google, ou supprimer la boîte dans mcpemails, met fin à la connexion."
+    }
+  ],
+  "ctaBand": {
+    "title": "Donnez à votre IA les boîtes Google Workspace de votre entreprise",
+    "sub": "Connectez la première en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+  },
+  "seeAlso": {
+    "intro": "Une adresse personnelle @gmail.com ?",
+    "label": "Connecter Gmail",
+    "href": "/connect/gmail"
+  }
+}

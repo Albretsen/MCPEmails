@@ -5,6 +5,7 @@ import { MIcon } from '../MarketingPrimitives';
 import RichText from './RichText';
 import { relatedProviders } from '@/lib/connect/release.mjs';
 import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
+import { multiMailboxFaq, withProvider } from '@/lib/connect/multi-mailbox.mjs';
 
 /**
  * A provider landing page, rendered on the server.
@@ -17,11 +18,17 @@ import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
  * src/lib/connect/content, where only this page loads it. Nav and Footer are
  * still client components; they are the only things on the page that hydrate.
  */
-export default async function ConnectProviderView({ locale, provider, content }) {
+export default async function ConnectProviderView({ locale, provider, content, multiMailbox = null }) {
   const t = await getTranslations({ locale, namespace: 'connect' });
   const related = relatedProviders(provider.slug);
   const showGmailVerification = provider.slug === 'gmail' && OAUTH_VERIFICATION_PENDING;
   const ev = provider.evidence;
+  // The page decides whether this host gets the several-mailboxes block and
+  // passes its copy; the FAQ entry it adds is the one the JSON-LD carries.
+  const faq = [
+    ...(content.faq ?? []),
+    ...(multiMailbox ? [multiMailboxFaq(multiMailbox, provider.name)] : []),
+  ];
 
   return (
     <div>
@@ -226,6 +233,26 @@ export default async function ConnectProviderView({ locale, provider, content })
       </section>
 
       {/*
+        Every mailbox the company runs on this host, on one agent. Only on
+        business, hosting, cPanel and self-hosted pages (lib/connect/multi-mailbox).
+      */}
+      {multiMailbox && (
+        <section className="section" id="several-mailboxes" style={{ paddingBottom: 0 }}>
+          <div className="container">
+            <div className="section-head">
+              <div className="eye-label">{multiMailbox.eyebrow}</div>
+              <h2>{withProvider(multiMailbox.title, provider.name)}</h2>
+              <p className="sub">{withProvider(multiMailbox.body, provider.name)}</p>
+              <p className="sub" style={{ marginTop: 12 }}>{multiMailbox.plans}</p>
+            </div>
+            <p className="how-guide-link">
+              <Link href="/for/business">{multiMailbox.link}</Link>
+            </p>
+          </div>
+        </section>
+      )}
+
+      {/*
         The part of the page that only we can write: what goes wrong with this
         specific provider, from the connection failures the product actually
         recorded. Every competing provider page is the same page with the name
@@ -263,7 +290,7 @@ export default async function ConnectProviderView({ locale, provider, content })
         </section>
       )}
 
-      {content.faq?.length > 0 && (
+      {faq.length > 0 && (
         <section className="section" id="faq" style={{ background: 'var(--bg-page)' }}>
           <div className="container">
             <div className="section-head">
@@ -271,7 +298,7 @@ export default async function ConnectProviderView({ locale, provider, content })
               <h2>{t('faq.title', { provider: provider.name })}</h2>
             </div>
             <div className="connect-faq">
-              {content.faq.map((f, i) => (
+              {faq.map((f, i) => (
                 <details className="connect-faq-item" key={i} open={i === 0}>
                   <summary><h3>{f.q}</h3></summary>
                   <p><RichText>{f.a}</RichText></p>

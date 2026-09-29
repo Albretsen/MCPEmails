@@ -56,7 +56,8 @@
     "test:inbox-cap-ui": "node --test --experimental-strip-types --import ./scripts/register-dom-tests.mjs components/dashboard/inbox-cap-offer-ui.test.mjs",
     "test:lifecycle-queue": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/billing/lifecycle-queue.test.ts",
     "test:onboarding": "node --test --experimental-strip-types src/lib/onboarding/state.test.ts src/lib/onboarding/multi-inbox-prompt.test.mjs",
-    "test:segment": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/segment/record-segment.test.ts src/lib/analytics/multi-inbox-prompt.test.ts"
+    "test:segment": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/segment/record-segment.test.ts src/lib/analytics/multi-inbox-prompt.test.ts",
+    "test:connect-multi-mailbox": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/connect/multi-mailbox.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

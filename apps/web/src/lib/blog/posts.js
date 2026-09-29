@@ -54,6 +54,7 @@ import manageMultipleEmailAccounts from './posts/manage-multiple-email-accounts-
 import automatedEmailTriageRules from './posts/automated-email-triage-rules';
 import connectBusinessCustomDomain from './posts/connect-business-email-custom-domain-to-ai-agent';
 import aiEmailForAgencies from './posts/ai-email-for-agencies-and-client-work';
+import multipleAccountsClaudeChatgpt from './posts/multiple-email-accounts-in-claude-and-chatgpt';
 
 // Sidecar translations: { [slug]: { [locale]: { title, description, coverAlt, content } } }.
 import TRANSLATIONS from './translations';
@@ -89,6 +90,7 @@ const MODULE_POSTS = [
   automatedEmailTriageRules,
   connectBusinessCustomDomain,
   aiEmailForAgencies,
+  multipleAccountsClaudeChatgpt,
 ];
 
 /** @type {Array<import('./types').Post>} */

@@ -100,5 +100,10 @@
     "intro": "更喜欢带截图的分步教程？",
     "label": "如何将 Gmail 连接到 Claude",
     "href": "/blog/connect-gmail-to-claude"
+  },
+  "seeAlso": {
+    "intro": "公司邮箱在 Google Workspace 上，使用你自己的域名？",
+    "label": "连接 Google Workspace，以及决定能否连接的管理员设置",
+    "href": "/connect/google-workspace"
   }
 }
