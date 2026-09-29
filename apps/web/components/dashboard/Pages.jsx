@@ -20,6 +20,8 @@ import {
 import { ApprovalsPanel } from './ApprovalsPanel';
 import { AutomationsPanel } from './AutomationsPanel';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
+import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
+import { formatAmountCents, formatPriceCents } from '@/lib/stripe/annual-offer';
 import { pricingCompareHref } from '@/lib/billing/upgrade-intent.mjs';
 import { inboxCapOffer } from '@/lib/billing/inbox-cap-offer.mjs';
 import { multiInboxPromptVariant } from '@/lib/onboarding/multi-inbox-prompt.mjs';
@@ -4858,18 +4860,16 @@ function DeleteAccountSection({ email }) {
 /* ── BillingSection ───────────────────────────────────────────────────────── */
 
 /**
- * Plan feature lists and fallback prices. Displayed prices are overridden at
- * render time by live Stripe data (passed in via `stripePrices`); these numeric
- * values are only used when a Stripe price ID isn't configured. Stripe price IDs
- * are resolved server-side by POST /api/stripe/checkout.
+ * Plan feature lists. Displayed prices come from live Stripe data (passed in
+ * via `stripePrices`) and, when a Stripe price ID isn't configured, from the
+ * catalogue in src/lib/stripe/plans.ts. No price is written here: this table
+ * used to carry its own copy, still quoting Pro at $29 after it became $15.
+ * Stripe price IDs are resolved server-side by POST /api/stripe/checkout.
  */
 const BILLING_PLANS = [
   {
     id: 'personal',
     name: PLAN_DISPLAY_NAMES.personal,
-    monthlyPrice: 5,
-    yearlyMonthlyPrice: 4,      // effective monthly cost when billed yearly ($48/yr)
-    yearlyAnnualTotal: 48,
     // personalFeature3 was "Analytics" and is gone: the usage analytics
     // dashboard is on Free too, with the same 30-day window, so it was never
     // something Personal bought. personalFeatureActions is the real delta that
@@ -4883,9 +4883,6 @@ const BILLING_PLANS = [
   {
     id: 'solo',
     name: PLAN_DISPLAY_NAMES.solo,
-    monthlyPrice: 29,
-    yearlyMonthlyPrice: 23,     // effective monthly cost when billed yearly ($276/yr)
-    yearlyAnnualTotal: 276,
     featureKeys: ['billing.plans.soloFeature1', 'billing.plans.soloFeature2', 'billing.plans.soloFeature3', 'billing.plans.soloFeature4'],
     // Pro is the highlighted plan: unlimited inboxes for one person is the
     // upgrade nearly everyone here actually wants. Team only pays off once
@@ -4895,9 +4892,6 @@ const BILLING_PLANS = [
   {
     id: 'pro',
     name: PLAN_DISPLAY_NAMES.pro,
-    monthlyPrice: 79,
-    yearlyMonthlyPrice: 63,     // effective monthly cost when billed yearly ($756/yr)
-    yearlyAnnualTotal: 756,
     featureKeys: ['billing.plans.teamFeature1', 'billing.plans.teamFeature2', 'billing.plans.teamFeature3', 'billing.plans.teamFeature4', 'billing.plans.teamFeature5', 'billing.plans.teamFeature6'],
     highlighted: false,
   },
@@ -5563,29 +5557,29 @@ function BillingSection({
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               {upgradablePlans.map(plan => {
                 // Custom-priced plans (Enterprise) never show a numeric price.
-                const isCustom = plan.monthlyPrice === null;
-
-                // Derive live prices from Stripe (cents), falling back to the
-                // static plan values when a price ID isn't configured.
                 const liveMonthlyCents = stripePrices?.[plan.id]?.monthlyCents;
                 const liveYearlyCents = stripePrices?.[plan.id]?.yearlyCents;
 
-                const monthlyPrice =
+                const monthlyCents =
                   liveMonthlyCents != null && liveMonthlyCents > 0
-                    ? liveMonthlyCents / 100
-                    : plan.monthlyPrice;
-                const yearlyMonthlyPrice =
+                    ? liveMonthlyCents
+                    : CATALOGUE[plan.id]?.monthlyPriceCents ?? null;
+                const yearlyCents =
                   liveYearlyCents != null && liveYearlyCents > 0
-                    ? Math.round(liveYearlyCents / 12 / 100)
-                    : plan.yearlyMonthlyPrice;
-                const yearlyAnnualTotal =
-                  liveYearlyCents != null && liveYearlyCents > 0
-                    ? liveYearlyCents / 100
-                    : plan.yearlyAnnualTotal;
+                    ? liveYearlyCents
+                    : CATALOGUE[plan.id]?.yearlyPriceCents ?? null;
+                const isCustom = monthlyCents == null;
 
-                const price = interval === 'year' ? yearlyMonthlyPrice : monthlyPrice;
-                // Belt and braces: upgradablePlans already excludes the plan
-                // being held, so this should never be true.
+                // Formatted from cents, never Math.round-ed to whole dollars:
+                // Personal's $86.40 a year is $7.20 a month, not $7.
+                const price = isCustom
+                  ? null
+                  : interval === 'year' && yearlyCents
+                  ? formatPriceCents(Math.round(yearlyCents / 12))
+                  : formatPriceCents(monthlyCents);
+                // The message writes its own "$"; hand it the bare amount.
+                const yearlyAnnualTotal = yearlyCents ? formatAmountCents(yearlyCents, locale) : null;
+
                 const isCurrentPlanMatch = currentPlan === plan.id;
                 const isLoading = upgrading === plan.id;
                 return (
@@ -5635,7 +5629,7 @@ function BillingSection({
                           color: 'var(--fg-1)',
                           lineHeight: 1,
                         }}>
-                          {isCustom ? t('billing.custom') : `$${price}`}
+                          {isCustom ? t('billing.custom') : price}
                         </span>
                         {!isCustom && (
                           <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--fg-3)' }}>

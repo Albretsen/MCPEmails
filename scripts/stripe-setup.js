@@ -10,7 +10,7 @@
  *
  * What it creates (the 2026-08-27 catalogue; the value metric is connected
  * inboxes, so every tier is priced on mailboxes and there is no usage add-on):
- *   - Product "MCPEmails Personal" → price  $5/mo  +   $48/yr
+ *   - Product "MCPEmails Personal" → price  $9/mo  +  $86.40/yr (repriced 2026-09-29)
  *   - Product "MCPEmails Pro"      → price $29/mo  +  $276/yr
  *   - Product "MCPEmails Team"     → price $79/mo  +  $756/yr
  *
@@ -63,8 +63,12 @@ const PRODUCTS = [
     name: 'MCPEmails Personal',
     description: 'Up to three connected inboxes for one person, at a personal price.',
     prices: [
-      { unit_amount: 500,   currency: 'usd', interval: 'month', envVar: 'STRIPE_PRICE_PERSONAL_MONTHLY' },
-      { unit_amount: 4800,  currency: 'usd', interval: 'year',  envVar: 'STRIPE_PRICE_PERSONAL_YEARLY' },
+      // The _V2 variables are the prices sold since 2026-09-29. The unsuffixed
+      // STRIPE_PRICE_PERSONAL_* pair holds the retired $5 / $48 prices, which
+      // only an environment with pre-repricing subscribers needs; a fresh one
+      // leaves it unset (plans.ts keeps the empty legacy slots harmless).
+      { unit_amount: 900,   currency: 'usd', interval: 'month', envVar: 'STRIPE_PRICE_PERSONAL_MONTHLY_V2' },
+      { unit_amount: 8640,  currency: 'usd', interval: 'year',  envVar: 'STRIPE_PRICE_PERSONAL_YEARLY_V2' },
     ],
   },
   {

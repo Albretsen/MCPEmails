@@ -121,7 +121,7 @@ Supply them yourself: host, port, security mode, and your full address as the us
 No. Message content is fetched live from your provider on each request and discarded. Only the encrypted provider credential is retained.
 
 **Is one inbox enough on the free plan?**
-Free connects 1 inbox. Personal is $5/month for 3 inboxes with no monthly action cap, Pro $15/month for unlimited inboxes. See [pricing](/pricing).
+Free connects 1 inbox. Personal is $9/month for 3 inboxes with no monthly action cap, Pro $15/month for unlimited inboxes. See [pricing](/pricing).
 
 ## Next step
 

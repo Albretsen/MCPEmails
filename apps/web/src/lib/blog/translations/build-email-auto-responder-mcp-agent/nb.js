@@ -150,7 +150,7 @@ Hvis jeg skulle satt dette i drift for en ekte innboks i morgen, ville jeg start
 
 Det er et system du faktisk kan stole på, og det lar seg generalisere. Den samme løkken med en annen prompt blir en triagebot, en lead-ruter eller en varsler. For en bredere meny over hva en agent kan gjøre når den er koblet til, se [7 ting en AI-agent kan gjøre med innbokstilgang](/blog/7-things-ai-agent-can-do-with-inbox-access). Hvis du fortsatt vurderer om du i det hele tatt skal gi en agent sendetilgang, er [er det trygt å gi en AI-agent e-posttilgang](/blog/is-it-safe-to-give-ai-agent-email-access) verdt tiden din før du går i drift.
 
-Klar til å bygge det? Opprett en avgrenset API-nøkkel og les verktøyreferansen i [dokumentasjonen](/docs), eller [start gratis](/signup): Gratis kobler til én innboks, Personal ($5 per måned) til opptil tre, og Pro til alle du eier; legg til sikringene før du automatiserer.`,
+Klar til å bygge det? Opprett en avgrenset API-nøkkel og les verktøyreferansen i [dokumentasjonen](/docs), eller [start gratis](/signup): Gratis kobler til én innboks, Personal ($9 per måned) til opptil tre, og Pro til alle du eier; legg til sikringene før du automatiserer.`,
 };
 
 export default translation;

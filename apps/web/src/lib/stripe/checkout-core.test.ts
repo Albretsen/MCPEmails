@@ -33,8 +33,12 @@ import test, { mock } from 'node:test';
 // Set before anything under test is imported: plans.ts reads the price ids at
 // module load, and the real Stripe client throws on a missing secret key.
 process.env.STRIPE_SECRET_KEY ??= 'sk_test_checkout_core_unit';
-process.env.STRIPE_PRICE_PERSONAL_MONTHLY = 'price_personal_month';
-process.env.STRIPE_PRICE_PERSONAL_YEARLY = 'price_personal_year';
+// Personal is sold on the _V2 variables since the 2026-09-29 repricing; the
+// unsuffixed pair holds the retired $5 / $48 prices existing subscribers keep.
+process.env.STRIPE_PRICE_PERSONAL_MONTHLY_V2 = 'price_personal_month';
+process.env.STRIPE_PRICE_PERSONAL_YEARLY_V2 = 'price_personal_year';
+process.env.STRIPE_PRICE_PERSONAL_MONTHLY = 'price_personal_month_500';
+process.env.STRIPE_PRICE_PERSONAL_YEARLY = 'price_personal_year_4800';
 process.env.STRIPE_PRICE_SOLO_MONTHLY = 'price_solo_month';
 process.env.STRIPE_PRICE_SOLO_YEARLY = 'price_solo_year';
 // Every tier needs a price here: the unconfigured-price check runs BEFORE the
@@ -1139,4 +1143,74 @@ test('a lapsed subscription still buys through Stripe Checkout, not the swap', a
     'price_personal_year',
   );
   assert.deepEqual(subscriptionsUpdated, []);
+});
+
+// ---------------------------------------------------------------------------
+// 7. Grandfathered prices are kept (2026-09-29, Personal $5 -> $9).
+//
+// Every Personal subscriber before the repricing bills on the retired $5 / $48
+// prices. The no-op used to be a pure price-id comparison, so one of them
+// asking for "Personal monthly" (a stale tab, a ?upgrade= link, the paywall)
+// did not match the new $9 id and was QUOTED a same-plan move onto the higher
+// price. That is a re-price nobody asked for; it is refused as the no-op it
+// is. Moving to another interval or tier still reaches the quote, at the
+// current price, behind the same consent gate.
+// ---------------------------------------------------------------------------
+
+test('a $5 Personal subscriber asking for Personal monthly is not re-priced to $9', async () => {
+  const { outcome, subscriptionsUpdated, previewsRequested, planChangeRows } = await checkout({
+    planId: 'personal',
+    entitlement: null,
+    billing: PERSONAL_SUBSCRIBER,
+    currentPrice: 'price_personal_month_500',
+    confirmChange: true,
+  });
+
+  assert.equal(outcome.kind, 'error');
+  if (outcome.kind !== 'error') return;
+  assert.equal(outcome.reason, 'already_on_plan_interval');
+  assert.equal(outcome.status, 409);
+  assert.deepEqual(subscriptionsUpdated, [], 'a grandfathered price must never be swapped');
+  assert.deepEqual(previewsRequested, []);
+  assert.deepEqual(planChangeRows, []);
+});
+
+test('a $48 Personal annual subscriber asking for Personal annual is not re-priced either', async () => {
+  const { outcome, subscriptionsUpdated } = await checkout({
+    planId: 'personal',
+    interval: 'year',
+    entitlement: null,
+    billing: PERSONAL_SUBSCRIBER,
+    currentPrice: 'price_personal_year_4800',
+    confirmChange: true,
+  });
+
+  assert.equal(outcome.kind, 'error');
+  assert.equal(outcome.kind === 'error' ? outcome.reason : null, 'already_on_plan_interval');
+  assert.deepEqual(subscriptionsUpdated, []);
+});
+
+test('a $5 Personal subscriber can still move to annual, quoted at the current price', async () => {
+  const { outcome, previewsRequested } = await checkout({
+    planId: 'personal',
+    interval: 'year',
+    entitlement: null,
+    billing: PERSONAL_SUBSCRIBER,
+    currentPrice: 'price_personal_month_500',
+  });
+
+  assert.equal(outcome.kind, 'confirmation_required');
+  assert.equal(previewsRequested.length, 1);
+  assert.match(JSON.stringify(previewsRequested[0]), /price_personal_year"/);
+});
+
+test('a $5 Personal subscriber upgrading to Pro is an upgrade, not a no-op', async () => {
+  const { outcome } = await checkout({
+    planId: 'solo',
+    entitlement: null,
+    billing: PERSONAL_SUBSCRIBER,
+    currentPrice: 'price_personal_month_500',
+  });
+
+  assert.equal(outcome.kind, 'confirmation_required');
 });

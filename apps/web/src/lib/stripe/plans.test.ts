@@ -200,6 +200,8 @@ test('every legacy price id is listed once and only once', () => {
   for (const plan of Object.values(PLANS)) {
     assert.equal(plan.legacyStripePriceIds.length % 2, 0, `${plan.id} legacy ids must be monthly/yearly pairs`);
     for (const id of plan.legacyStripePriceIds) {
+      // An empty slot is an unset env-sourced legacy id holding its position.
+      if (id === '') continue;
       assert.ok(!seen.has(id), `duplicate legacy price id ${id}`);
       seen.add(id);
     }
@@ -217,12 +219,14 @@ test('Personal ships at the numbers it was signed off at', () => {
   const personal = PLANS.personal;
   assert.equal(personal.id, 'personal');
   assert.equal(personal.name, 'Personal');
-  assert.equal(personal.monthlyPriceCents, 500);
-  assert.equal(personal.yearlyPriceCents, 4800);
+  // Repriced 2026-09-29 from $5 / $48, for new customers only.
+  assert.equal(personal.monthlyPriceCents, 900);
+  assert.equal(personal.yearlyPriceCents, 8640);
   // Twelve months less 20%, the same discount Pro and Team advertise. If the
   // monthly price ever moves, the yearly one has to move with it or the
-  // pricing page prints a discount that is not the one being charged.
-  assert.equal(personal.yearlyPriceCents, personal.monthlyPriceCents * 12 * 0.8);
+  // pricing page prints a discount that is not the one being charged. Integer
+  // form (x5 = x12x4) so a float rounding cannot make this pass or fail.
+  assert.equal(personal.yearlyPriceCents * 5, personal.monthlyPriceCents * 12 * 4);
 
   assert.equal(personal.limits.maxInboxes, 3);
   assert.equal(personal.limits.maxMembers, 1);
@@ -253,7 +257,7 @@ test('the ladder is ordered Free, Personal, Pro, Team', () => {
   assert.deepEqual(Object.keys(PLANS), ['free', 'personal', 'solo', 'pro']);
 
   const monthly = Object.values(PLANS).map((plan) => plan.monthlyPriceCents);
-  assert.deepEqual(monthly, [0, 500, 1500, 7900]);
+  assert.deepEqual(monthly, [0, 900, 1500, 7900]);
   for (let i = 1; i < monthly.length; i += 1) {
     assert.ok(monthly[i] > monthly[i - 1], 'the ladder must ascend in price');
   }
@@ -301,8 +305,9 @@ test('a Personal user without the grandfather is capped at three inboxes', () =>
 test('both Personal prices reverse-resolve to the Personal plan', async () => {
   // plans.ts reads the price ids from the environment at module load, so this
   // needs a fresh module instance rather than the one imported at the top.
-  process.env.STRIPE_PRICE_PERSONAL_MONTHLY = 'price_personal_monthly_fixture';
-  process.env.STRIPE_PRICE_PERSONAL_YEARLY = 'price_personal_yearly_fixture';
+  // Since the 2026-09-29 repricing the sold prices are the _V2 variables.
+  process.env.STRIPE_PRICE_PERSONAL_MONTHLY_V2 = 'price_personal_monthly_fixture';
+  process.env.STRIPE_PRICE_PERSONAL_YEARLY_V2 = 'price_personal_yearly_fixture';
   // The `?personal-prices` suffix is a cache-buster for Node's ESM loader: it
   // keys the module map by URL, so the query gives a second, freshly evaluated
   // instance that reads the env set above. It is a runtime-only specifier, and
@@ -321,10 +326,85 @@ test('both Personal prices reverse-resolve to the Personal plan', async () => {
   assert.equal(yearly.plan.id, 'personal');
   assert.equal(yearly.interval, 'year');
 
-  // Personal is new, so it has no pre-repricing subscriptions to carry.
-  assert.deepEqual(PLANS.personal.legacyStripePriceIds, []);
+  delete process.env.STRIPE_PRICE_PERSONAL_MONTHLY_V2;
+  delete process.env.STRIPE_PRICE_PERSONAL_YEARLY_V2;
+});
+
+// ---------------------------------------------------------------------------
+// The 2026-09-29 repricing, $5 -> $9. Every Personal subscriber before it keeps
+// billing on the $5 / $48 prices, whose ids stay in the UNSUFFIXED variables;
+// new customers buy the _V2 prices. Both generations must resolve to Personal
+// at the right interval, or a renewal of a grandfathered customer reaches the
+// webhook as an unknown price.
+// ---------------------------------------------------------------------------
+
+test('old $5 / $48 and new $9 / $86.40 Personal prices all resolve to Personal', async () => {
+  process.env.STRIPE_PRICE_PERSONAL_MONTHLY = 'price_personal_500_fixture';
+  process.env.STRIPE_PRICE_PERSONAL_YEARLY = 'price_personal_4800_fixture';
+  process.env.STRIPE_PRICE_PERSONAL_MONTHLY_V2 = 'price_personal_900_fixture';
+  process.env.STRIPE_PRICE_PERSONAL_YEARLY_V2 = 'price_personal_8640_fixture';
+  // @ts-expect-error TS2307: runtime cache-buster, not a resolvable path.
+  const fresh = (await import('./plans.ts?personal-reprice')) as typeof import('./plans.ts');
+
+  const cases: Array<[string, 'month' | 'year']> = [
+    ['price_personal_500_fixture', 'month'],
+    ['price_personal_4800_fixture', 'year'],
+    ['price_personal_900_fixture', 'month'],
+    ['price_personal_8640_fixture', 'year'],
+  ];
+  for (const [priceId, interval] of cases) {
+    const resolved = fresh.getPlanByStripePriceId(priceId);
+    assert.ok(resolved, `${priceId} must map to a plan`);
+    assert.equal(resolved.plan.id, 'personal', `${priceId} plan`);
+    assert.equal(resolved.interval, interval, `${priceId} interval`);
+  }
+
+  // New customers are sold the NEW prices, never the retired ones.
+  assert.equal(fresh.PLANS.personal.stripePriceIdMonthly, 'price_personal_900_fixture');
+  assert.equal(fresh.PLANS.personal.stripePriceIdYearly, 'price_personal_8640_fixture');
+  assert.deepEqual(fresh.PLANS.personal.legacyStripePriceIds, [
+    'price_personal_500_fixture',
+    'price_personal_4800_fixture',
+  ]);
 
   delete process.env.STRIPE_PRICE_PERSONAL_MONTHLY;
+  delete process.env.STRIPE_PRICE_PERSONAL_YEARLY;
+  delete process.env.STRIPE_PRICE_PERSONAL_MONTHLY_V2;
+  delete process.env.STRIPE_PRICE_PERSONAL_YEARLY_V2;
+});
+
+test('an unset _V2 price never falls back to the retired $5 price', async () => {
+  // The unsuffixed variables now hold the $5 / $48 prices. Selling from them
+  // would charge $5 under copy that says $9; unconfigured must stay unbuyable.
+  process.env.STRIPE_PRICE_PERSONAL_MONTHLY = 'price_personal_500_fixture';
+  process.env.STRIPE_PRICE_PERSONAL_YEARLY = 'price_personal_4800_fixture';
+  // @ts-expect-error TS2307: runtime cache-buster, not a resolvable path.
+  const fresh = (await import('./plans.ts?personal-v2-unset')) as typeof import('./plans.ts');
+
+  assert.equal(fresh.PLANS.personal.stripePriceIdMonthly, null);
+  assert.equal(fresh.PLANS.personal.stripePriceIdYearly, null);
+  // ...while the grandfathered subscriptions still resolve.
+  assert.equal(fresh.getPlanByStripePriceId('price_personal_500_fixture')?.plan.id, 'personal');
+
+  delete process.env.STRIPE_PRICE_PERSONAL_MONTHLY;
+  delete process.env.STRIPE_PRICE_PERSONAL_YEARLY;
+});
+
+test('a half-configured legacy pair keeps the yearly id in the yearly slot', async () => {
+  // Interval is read off list POSITION. If only the yearly retired id were set
+  // and the monthly one collapsed out of the list, the $48 annual subscriptions
+  // would resolve as MONTHLY and every plan-change direction would flip.
+  delete process.env.STRIPE_PRICE_PERSONAL_MONTHLY;
+  process.env.STRIPE_PRICE_PERSONAL_YEARLY = 'price_personal_4800_only_fixture';
+  // @ts-expect-error TS2307: runtime cache-buster, not a resolvable path.
+  const fresh = (await import('./plans.ts?personal-half-legacy')) as typeof import('./plans.ts');
+
+  const yearly = fresh.getPlanByStripePriceId('price_personal_4800_only_fixture');
+  assert.equal(yearly?.plan.id, 'personal');
+  assert.equal(yearly?.interval, 'year');
+  // The empty placeholder can never be matched.
+  assert.equal(fresh.getPlanByStripePriceId(''), null);
+
   delete process.env.STRIPE_PRICE_PERSONAL_YEARLY;
 });
 
@@ -333,8 +413,8 @@ test('the commitment rank orders every (plan, interval) pair', () => {
   // contraction. Three cases, each of which a simpler comparison gets wrong.
 
   // 1. Same tier, longer commitment. A plan-id comparison sees no change, and a
-  //    yearly-revenue comparison calls it a downgrade, because $48 a year is
-  //    less than $60 of monthlies. It is an upgrade.
+  //    yearly-revenue comparison calls it a downgrade, because $86.40 a year is
+  //    less than $108 of monthlies. It is an upgrade.
   assert.ok(
     planCommitmentRank('personal', 'year') > planCommitmentRank('personal', 'month'),
     'personal/year must outrank personal/month',

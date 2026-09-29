@@ -91,7 +91,7 @@ test('falls back to the catalogue price when Stripe reports no amount', () => {
     amountTotalCents: null,
     currency: null,
   });
-  assert.match(email.body, /Price: \$48\.00 per year/);
+  assert.match(email.body, /Price: \$86\.40 per year/);
 });
 
 test('names the concrete inbox entitlement, including the jump from Free', () => {

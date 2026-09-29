@@ -11,7 +11,7 @@ and again within a day after it.
   counted. At 150 every other email action is refused until the 1st of the
   next month; unattended automations pause and resume on the 1st; an email
   goes out at 80% and at 100%.
-- Personal $5/month ($48/year), Pro $15/month ($144/year), Team $79/month:
+- Personal $9/month ($86.40/year), Pro $15/month ($144/year), Team $79/month:
   no monthly action cap, subject to fair use. **Never print a number for a
   paid tier.**
 - Workspaces created before 2026-09-12 are early members and are not
@@ -66,7 +66,7 @@ those units and are listed only so nobody has to re-check them.
 | `apps/web/src/lib/compare/email-mcp-servers.mjs:248` | Free tier row, `us: '1 inbox, 60 req/min, no daily cap.'` | Same as above | Same |
 | `docs/claude-directory-submission.md:56` | "Free plan cap is 5,000 actions per calendar month." | Old silent ceiling. Now 150/month public allowance, first 7 days uncounted; the reviewer workspace predates launch so it is exempt (D8 in the plan) | Directory submission owner |
 | `docs/claude-directory-submission.md:249` | "Free covers one inbox and 5,000 actions a month." | Same | Same |
-| `docs/claude-directory-submission.md:333` | "5,000 actions per calendar month; more inboxes need a paid plan from $5/month." | Same | Same |
+| `docs/claude-directory-submission.md:333` | "5,000 actions per calendar month; more inboxes need a paid plan from $9/month." | Same | Same |
 
 ### SHOULD review (true or nearly true, but worth a read by the owner)
 

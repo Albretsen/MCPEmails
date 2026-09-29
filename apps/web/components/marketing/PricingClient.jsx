@@ -2,13 +2,15 @@
 
 import { useCallback, useEffect, useState, Fragment, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
 import { createClient } from '@/lib/supabase/client';
 import { parseUpgradeIntent, pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
+import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
+import { formatAmountCents, formatPriceCents } from '@/lib/stripe/annual-offer';
 
 /* ─── Plan data ─────────────────────────────────────────────── */
 // The value metric is CONNECTED INBOXES. Free is one inbox, Personal is three
@@ -24,11 +26,13 @@ import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 // User-facing copy (name, desc, cta, features) is read from the `pricing`
 // message bundle via `plans.<key>.*`.
 
+// Prices are NOT written here. They come from Stripe (`stripePrices`), and
+// when that is unavailable from the catalogue in src/lib/stripe/plans.ts, the
+// one place a price is defined. This table used to carry its own copy, which
+// was still quoting Pro at $29 three weeks after Pro became $15.
 const PLANS = [
   {
     key: 'free',
-    monthly: 0,
-    annual: 0,
     perKey: 'card.perForever',
     featured: false,
     ctaHref: '/signup',
@@ -36,8 +40,6 @@ const PLANS = [
   },
   {
     key: 'personal',
-    monthly: 5,
-    annual: 4,         // effective monthly when billed yearly ($48/yr)
     perKey: 'card.perMonth',
     featured: false,
     ctaHref: '/signup',
@@ -45,8 +47,6 @@ const PLANS = [
   },
   {
     key: 'solo',
-    monthly: 29,
-    annual: 23,        // effective monthly when billed yearly ($276/yr)
     perKey: 'card.perMonth',
     featured: true,
     ctaHref: '/signup',
@@ -54,8 +54,6 @@ const PLANS = [
   },
   {
     key: 'pro',
-    monthly: 79,
-    annual: 63,        // effective monthly when billed yearly ($756/yr)
     perKey: 'card.perMonth',
     featured: false,
     ctaHref: '/signup',
@@ -218,6 +216,7 @@ function UpgradeIntentReader({ onIntent }) {
  */
 function PlanCards({ annual, stripePrices, user, highlightPlan }) {
   const t = useTranslations('pricing');
+  const locale = useLocale();
   // No entitlement is read here any more. The Personal CTA used to become a
   // non-interactive status line for a visitor holding `unlimited_inboxes`,
   // matching a 409 in checkout-core. Both are gone: the grant lifts only
@@ -228,31 +227,33 @@ function PlanCards({ annual, stripePrices, user, highlightPlan }) {
   return (
     <div className="price-grid">
       {PLANS.map(plan => {
-        // Derive live prices from Stripe, falling back to static plan values.
+        // Derive live prices from Stripe, falling back to the catalogue.
         const liveMonthlyCents = stripePrices?.[plan.key]?.monthlyCents;
         const liveYearlyCents = stripePrices?.[plan.key]?.yearlyCents;
 
-        const liveMonthly =
+        const monthlyCents =
           liveMonthlyCents != null && liveMonthlyCents > 0
-            ? liveMonthlyCents / 100
-            : plan.monthly;
+            ? liveMonthlyCents
+            : CATALOGUE[plan.key].monthlyPriceCents;
 
-        const liveAnnualMonthly =
+        const yearlyCents =
           liveYearlyCents != null && liveYearlyCents > 0
-            ? Math.round(liveYearlyCents / 12 / 100)
-            : plan.annual;
+            ? liveYearlyCents
+            : CATALOGUE[plan.key].yearlyPriceCents;
 
-        const liveAnnualTotal =
-          liveYearlyCents != null && liveYearlyCents > 0
-            ? liveYearlyCents / 100
-            : plan.annual != null ? plan.annual * 12 : null;
+        const liveMonthly = monthlyCents / 100;
 
+        // Formatted, never rounded to whole dollars: Personal's $86.40 a year
+        // is $7.20 a month, and Math.round would print a $7 nobody is charged.
         const priceDisplay =
-          liveMonthly === 0
+          monthlyCents === 0
             ? '$0'
-            : annual
-            ? `$${liveAnnualMonthly}`
-            : `$${liveMonthly}`;
+            : annual && yearlyCents
+            ? formatPriceCents(Math.round(yearlyCents / 12))
+            : formatPriceCents(monthlyCents);
+
+        // The message writes its own currency sign, so it gets the bare amount.
+        const liveAnnualTotal = yearlyCents ? formatAmountCents(yearlyCents, locale) : null;
 
         const perDisplay = liveMonthly === 0 ? t(plan.perKey) : t('card.perMonth');
         const features = t.raw(`plans.${plan.key}.features`);

@@ -626,7 +626,16 @@ export async function runCheckout(input: {
         fromPrice = { planId: resolvedFrom.plan.id, interval: resolvedFrom.interval };
       }
 
-      if (currentItem.price.id === priceId) {
+      // The same no-op reached through a RETIRED price. A subscriber still
+      // billing on Personal's $5 (or any legacy id) who asks for the same plan
+      // at the same interval is asking for what they already have; comparing
+      // price ids alone would read that as a change and quote them onto the
+      // current, higher price. Grandfathered prices are kept, never re-priced
+      // from a button. An interval or tier change is unaffected.
+      const samePlanAndInterval =
+        fromPrice?.planId === planId && fromPrice?.interval === interval;
+
+      if (currentItem.price.id === priceId || samePlanAndInterval) {
         // THE no-op, and the only one left since `already_on_plan` was removed
         // on 2026-09-14 (see the note at the top of this branch): the
         // subscription is already on the exact price being asked for.

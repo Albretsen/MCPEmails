@@ -16,7 +16,7 @@ Arbeidsområdet er enheten som skiller. Postkasser, medlemmer, API-nøkler og ak
 
 Mer enn ett arbeidsområde er en **Team**-funksjon ($79/md., $756/år), som også gir ubegrenset antall medlemmer med roller, SSO (SAML / OIDC), revisjonslogg og prioritert støtte. Abonnementet henger på kontoen din og ikke på ett arbeidsområde, så ett Team-abonnement dekker alle kundearbeidsområdene du oppretter. Gi hvert av dem kundens navn, koble bare den kundens postkasser inn i det, og bytt mellom dem i sidemenyen i dashbordet.
 
-Under Team er planene for én person i ett arbeidsområde: **Pro** ($15/md., $144/år) kobler til ubegrenset antall postkasser, **Personal** ($5/md.) tre, **Free** én. Billigere, og alle postkassene deler samme skadeomfang. Se [priser](/pricing) og [leverandørmatrisen](/docs/providers).
+Under Team er planene for én person i ett arbeidsområde: **Pro** ($15/md., $144/år) kobler til ubegrenset antall postkasser, **Personal** ($9/md.) tre, **Free** én. Billigere, og alle postkassene deler samme skadeomfang. Se [priser](/pricing) og [leverandørmatrisen](/docs/providers).
 
 ## Medlemmer og roller
 

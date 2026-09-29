@@ -157,7 +157,7 @@ If I were shipping this for a real inbox tomorrow, I'd start small and boring:
 
 That's a system you can actually trust, and it generalizes. The same loop with a different prompt becomes a triage bot, a lead router, or a notifier. For the broader menu of what an agent can do once it's wired in, see [7 things an AI agent can do with inbox access](/blog/7-things-ai-agent-can-do-with-inbox-access). If you're still deciding whether to hand an agent send access at all, [is it safe to give an AI agent email access](/blog/is-it-safe-to-give-ai-agent-email-access) is worth your time before you ship.
 
-Ready to build it? Create a scoped API key and read the tool reference in [the docs](/docs), or [start free](/signup): Free connects one inbox, Personal ($5/month) connects up to three, and Pro connects every mailbox you own.`,
+Ready to build it? Create a scoped API key and read the tool reference in [the docs](/docs), or [start free](/signup): Free connects one inbox, Personal ($9/month) connects up to three, and Pro connects every mailbox you own.`,
 };
 
 export default post;

@@ -78,7 +78,7 @@ export const USAGE_LIMIT_SUPPORT_EMAIL = "hello@mcpemails.com";
 export const FREE_ACTION_GRACE_DAYS = 7;
 
 /** Monthly price of the plan that removes the Free cap, as printed on /pricing. */
-export const FREE_CAP_UPGRADE_PRICE = "$5 per month";
+export const FREE_CAP_UPGRADE_PRICE = "$9 per month";
 
 /** The `from=` tag on the upgrade link, so the funnel can tell this door apart. */
 export const FREE_CAP_UPGRADE_PATH = "/pricing?from=usage_cap";

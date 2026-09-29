@@ -1,14 +1,14 @@
 {
   "meta": {
     "title": "Precios del servidor MCP de correo con IA: planes Gratis, Personal, Pro y Team",
-    "description": "Gratis conecta una bandeja. Personal, tres por $5 al mes. Pro, todos los buzones de tu negocio por $15. Team añade miembros, roles, SSO y un espacio por cliente."
+    "description": "Gratis conecta una bandeja. Personal, tres por $9 al mes. Pro, todos los buzones de tu negocio por $15. Team añade miembros, roles, SSO y un espacio por cliente."
   },
   "hero": {
     "eyebrow": "Precios",
     "titleLine1": "Una bandeja, gratis.",
-    "titleLine2": "Tres bandejas, $5.",
-    "titleLine2Yearly": "Tres bandejas, $48 al año.",
-    "lead": "Conecta un buzón una vez y tu agente podrá leer, buscar, organizar, redactar, programar y enviar. Gratis cubre una bandeja. Personal cubre tres por $5 al mes. Pro cubre todos los buzones, tuyos o de tu negocio, con un solo inicio de sesión. Team añade personas, roles y un espacio de trabajo separado por cliente."
+    "titleLine2": "Tres bandejas, $9.",
+    "titleLine2Yearly": "Tres bandejas, $86,40 al año.",
+    "lead": "Conecta un buzón una vez y tu agente podrá leer, buscar, organizar, redactar, programar y enviar. Gratis cubre una bandeja. Personal cubre tres por $9 al mes. Pro cubre todos los buzones, tuyos o de tu negocio, con un solo inicio de sesión. Team añade personas, roles y un espacio de trabajo separado por cliente."
   },
   "billing": {
     "monthly": "Mensual",
@@ -161,7 +161,7 @@
     "items": [
       {
         "q": "¿Qué incluye el plan gratuito?",
-        "a": "Una bandeja conectada, para siempre y sin tarjeta, con 150 acciones de correo por mes natural. Los primeros 7 días tras registrarte no cuentan, así que puedes conectar tu agente y probarlo todo antes de que empiece el contador. Tu agente dispone de todas las herramientas MCP que publicamos sobre ese buzón: leer, buscar, organizar, etiquetar, redactar, programar y enviar, además de la aprobación antes de enviar, configurable por bandeja. Cuando quieras un segundo o un tercer buzón, o quitar el tope mensual de acciones, eso es Personal, por $5 al mes."
+        "a": "Una bandeja conectada, para siempre y sin tarjeta, con 150 acciones de correo por mes natural. Los primeros 7 días tras registrarte no cuentan, así que puedes conectar tu agente y probarlo todo antes de que empiece el contador. Tu agente dispone de todas las herramientas MCP que publicamos sobre ese buzón: leer, buscar, organizar, etiquetar, redactar, programar y enviar, además de la aprobación antes de enviar, configurable por bandeja. Cuando quieras un segundo o un tercer buzón, o quitar el tope mensual de acciones, eso es Personal, por $9 al mes."
       },
       {
         "q": "¿Qué añade Personal sobre Free?",
@@ -173,7 +173,7 @@
       },
       {
         "q": "¿Qué pasa cuando llego a 150 acciones de correo?",
-        "a": "Cualquier otra acción de correo en ese espacio de trabajo se rechaza hasta el día 1 del mes siguiente (UTC), cuando se renueva la asignación. Tu agente recibe un resultado de herramienta normal que indica cuántas acciones se usaron y cuándo se reinicia el contador, así que sabe que reintentar no sirve. Las automatizaciones desatendidas se pausan y se reanudan solas el día 1. El panel e inbox_list siguen funcionando, y te enviamos un correo al 80% y otro al 100%. Personal elimina el tope mensual por $5 al mes. Los espacios de trabajo creados antes del 2026-09-12 son miembros tempranos y no se miden contra la asignación."
+        "a": "Cualquier otra acción de correo en ese espacio de trabajo se rechaza hasta el día 1 del mes siguiente (UTC), cuando se renueva la asignación. Tu agente recibe un resultado de herramienta normal que indica cuántas acciones se usaron y cuándo se reinicia el contador, así que sabe que reintentar no sirve. Las automatizaciones desatendidas se pausan y se reanudan solas el día 1. El panel e inbox_list siguen funcionando, y te enviamos un correo al 80% y otro al 100%. Personal elimina el tope mensual por $9 al mes. Los espacios de trabajo creados antes del 2026-09-12 son miembros tempranos y no se miden contra la asignación."
       },
       {
         "q": "¿Se almacena en algún sitio el contenido de mi correo?",
@@ -197,7 +197,7 @@
       },
       {
         "q": "¿Cómo funciona el descuento anual?",
-        "a": "Pagar anualmente ahorra alrededor del 20% frente a la facturación mensual: Personal cuesta $48 al año ($4 al mes), Pro cuesta $144 al año ($12 al mes) y Team cuesta $756 al año ($63 al mes). Se te cobra una vez por 12 meses por adelantado. Cancelar detiene la renovación y conservas el acceso hasta que termina el año que pagaste. Salvo el reembolso de 14 días del primer cargo, no reembolsamos los meses restantes."
+        "a": "Pagar anualmente ahorra alrededor del 20% frente a la facturación mensual: Personal cuesta $86,40 al año ($7,20 al mes), Pro cuesta $144 al año ($12 al mes) y Team cuesta $756 al año ($63 al mes). Se te cobra una vez por 12 meses por adelantado. Cancelar detiene la renovación y conservas el acceso hasta que termina el año que pagaste. Salvo el reembolso de 14 días del primer cargo, no reembolsamos los meses restantes."
       },
       {
         "q": "¿Qué proveedores de correo son compatibles?",
@@ -215,7 +215,7 @@
   },
   "ctaBand": {
     "title": "¿Listo para darle a tu agente una bandeja de entrada?",
-    "sub": "Empieza en Gratis: una bandeja, sin tarjeta. Tres buzones cuestan $5 al mes con Personal, y todos los buzones que lleva tu negocio cuestan $15 con Pro.",
+    "sub": "Empieza en Gratis: una bandeja, sin tarjeta. Tres buzones cuestan $9 al mes con Personal, y todos los buzones que lleva tu negocio cuestan $15 con Pro.",
     "ctaPrimary": "Empieza gratis",
     "ctaSecondary": "Lee la documentación"
   }

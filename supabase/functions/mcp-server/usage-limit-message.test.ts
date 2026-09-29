@@ -17,6 +17,7 @@ import {
   buildUsageLimitText,
   FREE_ACTION_GRACE_DAYS,
   FREE_CAP_UPGRADE_PATH,
+  FREE_CAP_UPGRADE_PRICE,
   freeCapUpgradeUrl,
   PLAN_DISPLAY_NAMES,
   USAGE_LIMIT_SUPPORT_EMAIL,
@@ -143,7 +144,10 @@ Deno.test("Free says what keeps working", () => {
 Deno.test("Free carries the upgrade URL with its funnel tag and the price", () => {
   const text = buildUsageLimitText("free", FREE_ALLOWANCE, FREE_ALLOWANCE, RESET, ORIGIN);
   assertIncludes(text, `${ORIGIN}${FREE_CAP_UPGRADE_PATH}`, "upgrade link on the passed origin");
-  assertIncludes(text, "$5 per month", "the price is stated, not left to be discovered");
+  assertIncludes(text, FREE_CAP_UPGRADE_PRICE, "the price is stated, not left to be discovered");
+  // Personal is $9 a month since 2026-09-29. apps/web's personal-price-copy
+  // test pins this constant to PLANS.personal.monthlyPriceCents.
+  assert(FREE_CAP_UPGRADE_PRICE === "$9 per month", "the quoted price is Personal's monthly price");
   assertIncludes(text, "Personal plan removes the monthly cap", "the true remedy is named as a fact");
   assert(FREE_CAP_UPGRADE_PATH.includes("from=usage_cap"), "the funnel tag tells this door apart");
   assert(freeCapUpgradeUrl("https://x.test") === "https://x.test/pricing?from=usage_cap", "helper builds the same URL");
@@ -165,7 +169,8 @@ Deno.test("paid plans read as fair use with a human to talk to, not an upsell", 
     assertIncludes(text.toLowerCase(), "safeguard", `${plan}: framed as a safeguard`);
     assertIncludes(text.toLowerCase(), "set far above", `${plan}: the ceiling is described as far above normal use`);
     const lower = text.toLowerCase();
-    for (const phrase of ["upgrade", "/pricing", "more actions", "higher plan", "paid plan", "buy", "$5"]) {
+    const personalPrice = FREE_CAP_UPGRADE_PRICE.split(" ")[0];
+    for (const phrase of ["upgrade", "/pricing", "more actions", "higher plan", "paid plan", "buy", personalPrice]) {
       assert(!lower.includes(phrase), `${plan}: message must not sell anything: found ${JSON.stringify(phrase)}`);
     }
   }

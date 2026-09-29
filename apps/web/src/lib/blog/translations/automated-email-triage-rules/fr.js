@@ -97,7 +97,7 @@ Ensuite vous interrogez votre agent sur les trente messages restants au lieu des
 
 ## Les règles comptent dans les actions de votre forfait
 
-Chaque action appliquée par une règle est décomptée exactement comme une action interactive, parce que l'effet sur la boîte est le même. Sur le forfait **Free**, cela représente 150 actions e-mail facturables par mois calendaire UTC, les 7 premiers jours n'étant pas comptés. Ce plafond mensuel s'applique aux espaces de travail créés le 2026-09-13 ou après ; les espaces créés avant en sont exemptés. Quand un espace de travail atteint son quota, la règle se **met en pause** au lieu d'échouer : elle reste activée, et sa prochaine exécution est reportée au moment où la période de quota se termine. **Personal**, à $5 par mois, supprime le plafond mensuel d'actions et autorise 3 boîtes connectées. Voir les [tarifs](/pricing).
+Chaque action appliquée par une règle est décomptée exactement comme une action interactive, parce que l'effet sur la boîte est le même. Sur le forfait **Free**, cela représente 150 actions e-mail facturables par mois calendaire UTC, les 7 premiers jours n'étant pas comptés. Ce plafond mensuel s'applique aux espaces de travail créés le 2026-09-13 ou après ; les espaces créés avant en sont exemptés. Quand un espace de travail atteint son quota, la règle se **met en pause** au lieu d'échouer : elle reste activée, et sa prochaine exécution est reportée au moment où la période de quota se termine. **Personal**, à $9 par mois, supprime le plafond mensuel d'actions et autorise 3 boîtes connectées. Voir les [tarifs](/pricing).
 
 ## FAQ
 

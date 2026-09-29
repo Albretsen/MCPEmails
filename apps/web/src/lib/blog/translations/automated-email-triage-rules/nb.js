@@ -97,7 +97,7 @@ Så spør du agenten om de tretti meldingene som er igjen, i stedet for de hundr
 
 ## Regler teller mot planens handlinger
 
-Hver handling en regel utfører, måles nøyaktig som en interaktiv handling, fordi effekten på postkassen er den samme. På **Free**-planen er det 150 fakturerbare e-posthandlinger per UTC-kalendermåned, der de første 7 dagene ikke telles. Den månedlige grensen gjelder arbeidsområder opprettet 2026-09-13 eller senere; arbeidsområder opprettet før er unntatt. Når et arbeidsområde når kvoten sin, blir regelen **satt på pause** i stedet for å feile: den forblir aktivert, og neste kjøring flyttes til det tidspunktet kvoteperioden slutter. **Personal** til $5 per måned fjerner den månedlige handlingsgrensen og tillater 3 tilkoblede innbokser. Se [priser](/pricing).
+Hver handling en regel utfører, måles nøyaktig som en interaktiv handling, fordi effekten på postkassen er den samme. På **Free**-planen er det 150 fakturerbare e-posthandlinger per UTC-kalendermåned, der de første 7 dagene ikke telles. Den månedlige grensen gjelder arbeidsområder opprettet 2026-09-13 eller senere; arbeidsområder opprettet før er unntatt. Når et arbeidsområde når kvoten sin, blir regelen **satt på pause** i stedet for å feile: den forblir aktivert, og neste kjøring flyttes til det tidspunktet kvoteperioden slutter. **Personal** til $9 per måned fjerner den månedlige handlingsgrensen og tillater 3 tilkoblede innbokser. Se [priser](/pricing).
 
 ## Ofte stilte spørsmål
 

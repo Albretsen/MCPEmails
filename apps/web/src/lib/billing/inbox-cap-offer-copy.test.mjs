@@ -54,7 +54,7 @@ function everyNewString() {
 }
 
 const dollars = cents => String(cents / 100);
-const PERSONAL_PRICE = dollars(PLANS.personal.monthlyPriceCents); // "5"
+const PERSONAL_PRICE = dollars(PLANS.personal.monthlyPriceCents); // "9"
 const PRO_PRICE = dollars(PLANS.solo.monthlyPriceCents); // "15"
 
 /** Whole-number match, so "15" does not count as quoting "5". */
@@ -128,7 +128,8 @@ test('no ICU syntax: these strings take no arguments, and escapes render literal
 });
 
 test('the prices quoted are the prices in plans.ts, in every locale', () => {
-  assert.equal(PERSONAL_PRICE, '5');
+  // Personal repriced $5 -> $9 for new customers on 2026-09-29.
+  assert.equal(PERSONAL_PRICE, '9');
   assert.equal(PRO_PRICE, '15');
   for (const locale of LOCALES) {
     const chrome = readMessages(locale, 'dashboardChrome.json');
@@ -210,11 +211,11 @@ test('the CONSUMER copy was not touched', () => {
   const dashboard = readMessages('en', 'dashboard.json');
   assert.equal(
     lookup(chrome, 'connect.personalUpgradeBody'),
-    'You were about to connect another inbox. Personal takes you to three for $5 a month: work, personal, and one more.',
+    'You were about to connect another inbox. Personal takes you to three for $9 a month: work, personal, and one more.',
   );
   assert.equal(lookup(chrome, 'connect.personalUpgradeTitle'), 'Personal connects three mailboxes');
   assert.equal(
     lookup(dashboard, 'inboxes.capBodyPersonal'),
-    'Free connects one mailbox. Personal takes you to three for $5 a month, so work and personal can share the same agent.',
+    'Free connects one mailbox. Personal takes you to three for $9 a month, so work and personal can share the same agent.',
   );
 });

@@ -114,7 +114,7 @@ Saisissez-les vous-même : hôte, port, mode de sécurité et votre adresse comp
 Non. Le contenu des messages est récupéré en direct auprès de votre fournisseur à chaque requête puis supprimé. Seule la clé d'accès chiffrée du fournisseur est conservée.
 
 **Une seule boîte suffit-elle sur le plan gratuit ?**
-Free connecte 1 boîte. Personal coûte 5 $/mois pour 3 boîtes sans plafond mensuel d'actions, et Pro 15 $/mois pour un nombre illimité de boîtes. Voir les [tarifs](/pricing).
+Free connecte 1 boîte. Personal coûte 9 $/mois pour 3 boîtes sans plafond mensuel d'actions, et Pro 15 $/mois pour un nombre illimité de boîtes. Voir les [tarifs](/pricing).
 
 ## Prochaine étape
 

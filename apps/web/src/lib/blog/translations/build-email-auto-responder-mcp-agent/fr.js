@@ -150,7 +150,7 @@ Si je devais déployer ceci pour une vraie boîte de réception demain, je comme
 
 C’est un système auquel vous pouvez réellement faire confiance, et il se généralise. La même boucle avec un prompt différent devient un bot de tri, un routeur de leads ou un notificateur. Pour le menu plus large de ce qu’un agent peut faire une fois branché, voir [7 choses qu’un agent IA peut faire avec un accès à la boîte de réception](/blog/7-things-ai-agent-can-do-with-inbox-access). Si vous hésitez encore à confier à un agent un accès d’envoi, [est-il sûr de donner à un agent IA un accès à l’e-mail](/blog/is-it-safe-to-give-ai-agent-email-access) mérite votre temps avant de déployer.
 
-Prêt à le construire ? Créez une clé API à scope restreint et lisez la référence des outils dans [la documentation](/docs), ou [commencez gratuitement](/signup) : Gratuit connecte une boîte, Personal (5 $/mois) jusqu'à trois, et Pro toutes celles que vous possédez ; ajoutez d’abord les garde-fous avant d’automatiser.`,
+Prêt à le construire ? Créez une clé API à scope restreint et lisez la référence des outils dans [la documentation](/docs), ou [commencez gratuitement](/signup) : Gratuit connecte une boîte, Personal (9 $/mois) jusqu'à trois, et Pro toutes celles que vous possédez ; ajoutez d’abord les garde-fous avant d’automatiser.`,
 };
 
 export default translation;

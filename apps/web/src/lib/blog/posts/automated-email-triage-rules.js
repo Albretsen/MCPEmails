@@ -104,7 +104,7 @@ Then you ask your agent about the thirty messages left instead of the hundred an
 
 ## Rules count toward your plan's actions
 
-Every action a rule applies is metered exactly like an interactive one, because it is the same mailbox effect. On the **Free** plan that is 150 billable email actions per UTC calendar month, with the first 7 days uncounted. That monthly cap applies to workspaces created on or after 2026-09-13; workspaces created earlier are exempt. When a workspace reaches its allowance a rule **pauses** rather than fails: it stays enabled, and its next run moves to the moment the allowance period ends. **Personal** at $5 per month removes the monthly action cap and allows 3 connected inboxes. See [pricing](/pricing).
+Every action a rule applies is metered exactly like an interactive one, because it is the same mailbox effect. On the **Free** plan that is 150 billable email actions per UTC calendar month, with the first 7 days uncounted. That monthly cap applies to workspaces created on or after 2026-09-13; workspaces created earlier are exempt. When a workspace reaches its allowance a rule **pauses** rather than fails: it stays enabled, and its next run moves to the moment the allowance period ends. **Personal** at $9 per month removes the monthly action cap and allows 3 connected inboxes. See [pricing](/pricing).
 
 ## FAQ
 

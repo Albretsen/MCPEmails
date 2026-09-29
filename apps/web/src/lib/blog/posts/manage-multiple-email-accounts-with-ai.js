@@ -97,7 +97,7 @@ Mixed setups are the normal case, and providers disagree about what a folder is.
 Connected inboxes are what plans are priced on:
 
 - **Free, $0.** One connected inbox. 150 billable email actions per UTC calendar month, with the first 7 days uncounted. That monthly cap applies to workspaces created on or after 2026-09-13; workspaces created earlier are exempt.
-- **Personal, $5 a month or $48 a year.** Three connected inboxes, no monthly action cap, 2x burst rate limit, email support.
+- **Personal, $9 a month or $86.40 a year.** Three connected inboxes, no monthly action cap, 2x burst rate limit, email support.
 - **Pro, $15 a month or $144 a year.** Unlimited connected inboxes, 5x burst rate limit, longer analytics history.
 - **Team, $79 a month or $756 a year.** Unlimited members with roles, a separate workspace per client or business, SSO (SAML/OIDC) and audit log, priority support.
 

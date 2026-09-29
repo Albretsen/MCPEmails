@@ -19,7 +19,7 @@
   "dataWeCollect": {
     "title": "2. Data We Collect",
     "accountTitle": "2.1 Account data",
-    "accountP": "When you create an account we collect your email address and a hashed password (we never store plaintext passwords). You may optionally provide a display name. This data is required to create and maintain your account.",
+    "accountP": "When you create an account we collect your email address and a hashed password (we never store plaintext passwords). You may optionally provide a display name. This data is required to create and maintain your account. If you tick the box on the signup form asking for product tips and offers by email, we also record that you did, when, and which wording you saw.",
     "workspaceTitle": "2.2 Workspace and configuration data",
     "workspaceP": "We store the workspace name you choose, and the configuration of each connected inbox (provider type, email address, OAuth status, and connection timestamp). We do <b>not</b> store OAuth access tokens or app passwords in plaintext. They are encrypted with AES-256-GCM before being written to the database, and the encryption key is stored in a separate secrets vault.",
     "apiKeysTitle": "2.3 API keys",
@@ -32,7 +32,7 @@
     "technicalTitle": "2.6 Technical and operational data",
     "technicalP": "We collect standard server-side operational data including IP addresses (for rate limiting and abuse prevention), request timestamps, HTTP status codes, and error types. This data is retained in aggregated, anonymised form and is not linked to individual accounts after 30 days.",
     "cookiesTitle": "2.7 Cookies and local storage",
-    "cookiesP": "The dashboard sets one first-party session cookie issued by Supabase Auth to keep you signed in. We do not use tracking cookies, advertising cookies, or any third-party cookies. We store two small first-party values in your browser's local storage and nowhere else: your theme preference (<c>mcpe-theme</c>) and a record of how you first reached the site (<c>mcpe-acquisition</c>). The second holds only a coarse traffic-source category (for example <c>reddit</c> or <c>organic_google</c>) and the kind of page you landed on, never an identifier, a search term, or a full URL. It is kept for up to 30 days, and it is not used to track you across other sites.",
+    "cookiesP": "The dashboard sets one first-party session cookie issued by Supabase Auth to keep you signed in. If you tick the marketing email box on the signup form and then continue with Google or GitHub, we also set a short-lived first-party cookie (<c>mcpe_signup_mc</c>) that carries that choice through the sign-in redirect. It expires after 15 minutes and is deleted as soon as you return. We do not use tracking cookies, advertising cookies, or any third-party cookies. We store two small first-party values in your browser's local storage and nowhere else: your theme preference (<c>mcpe-theme</c>) and a record of how you first reached the site (<c>mcpe-acquisition</c>). The second holds only a coarse traffic-source category (for example <c>reddit</c> or <c>organic_google</c>) and the kind of page you landed on, never an identifier, a search term, or a full URL. It is kept for up to 30 days, and it is not used to track you across other sites.",
     "productAnalyticsTitle": "2.8 Product analytics",
     "productAnalyticsP": "We use Vercel Web Analytics for privacy-preserving, cookieless product analytics. We measure page visits and a small setup funnel (signup, inbox connection, MCP connection, and first successful tool use) with only documented aggregate categories such as provider, client, connection method, and access profile. We never send email content, addresses, API keys, OAuth tokens, workspace or user IDs, MCP request data, prompts, or mailbox metadata. Vercel's retention and processing details are available at <link>vercel.com/docs/analytics</link>. Because this configuration is cookieless and uses no non-essential identifier, no consent banner is required under our selected policy."
   },
@@ -44,7 +44,7 @@
     "securityTitle": "3.2 Security and abuse prevention",
     "securityP": "We use IP addresses, request rates, and error patterns to detect and block abusive activity, enforce rate limits, and protect the availability of the service for all users. The legal basis is our <b>legitimate interests</b> in operating a secure service.",
     "analyticsTitle": "3.3 Usage analytics and product improvement",
-    "analyticsP": "We use aggregated, anonymised usage data (tool call counts, error rates, latency) to understand how the service is used and to prioritise improvements. We do not use individual-level usage data for this purpose. The legal basis is our <b>legitimate interests</b> in improving the service.",
+    "analyticsP": "We use aggregated, anonymised usage data (tool call counts, error rates, latency) to understand how the service is used and to prioritise improvements. Analytics stays aggregated: we do not use individual-level usage data for this purpose. Individual account and usage signals are used only to enforce plan limits (section 3.4) and, if you opted in, to choose which marketing email to send you (section 3.9). The legal basis is our <b>legitimate interests</b> in improving the service.",
     "billingTitle": "3.4 Billing and plan enforcement",
     "billingP": "We use usage counts to determine whether your workspace has reached plan limits and to calculate your invoice on paid plans. The legal basis is <b>performance of a contract</b>.",
     "legalTitle": "3.5 Legal compliance",
@@ -74,7 +74,11 @@
     "microsoftTitle": "3.8 Microsoft APIs: mailbox access and revoking it",
     "microsoftP1": "When you connect an Outlook or Microsoft 365 mailbox, Microsoft asks you to approve a specific, named set of permissions: reading and organising your mail, and sending mail on your behalf. We use that access only to run the features you ask an AI agent to perform on your mailbox, such as reading, searching, organising, drafting and sending. We do not use it to build a copy of your mailbox, and we never use mail content, or anything derived from it, for advertising or marketing.",
     "microsoftRevokeP": "You can withdraw this access at any time, directly with Microsoft and without asking us. For a personal Microsoft account, use <personal>Microsoft account permissions</personal>. For a work or school account, use <work>My Apps</work>. Revoking access there immediately stops us being able to reach that mailbox. If your IT admin approved MCPEmails for your whole organisation, only an admin can remove that organisation-wide approval.",
-    "microsoftDisconnectP": "Disconnecting the inbox in your MCPEmails dashboard has the same effect from our side and additionally deletes the stored credentials for that mailbox. You can do either one first; you do not have to do both."
+    "microsoftDisconnectP": "Disconnecting the inbox in your MCPEmails dashboard has the same effect from our side and additionally deletes the stored credentials for that mailbox. You can do either one first; you do not have to do both.",
+    "marketingTitle": "3.9 Direct marketing email",
+    "marketingP1": "We send marketing email (product tips and offers, for example about a paid plan when your workspace reaches a plan limit) only if you agreed to it by ticking the box on the signup form. The box is unticked by default, and we do not infer consent from anything else. The legal basis is your <b>consent</b> (GDPR Article 6(1)(a)), which the Norwegian Marketing Control Act (markedsføringsloven) § 15 also requires for marketing by email.",
+    "marketingP2": "To choose which of a small number of messages to send, and when, we use account and product-usage signals: for example that your workspace reached a plan limit, how many inboxes you have connected, your plan, and when you signed up. We never use the content of your mailbox, or anything derived from it, for this.",
+    "marketingP3": "You can withdraw your consent at any time with the unsubscribe link in every marketing email. It takes effect immediately and does not affect receipts, security notices, or other email we need to send to run your account. We keep a record of when you consented and which wording you saw, so that we can show consent was given."
   },
   "dataRetention": {
     "title": "4. Data Retention",
@@ -87,6 +91,11 @@
         "category": "Account data (email, display name)",
         "period": "Until account deletion, plus 30 days",
         "reason": "Service operation; recovery window"
+      },
+      {
+        "category": "Marketing email consent and unsubscribe record",
+        "period": "Until account deletion, plus 30 days",
+        "reason": "Proof of consent; honouring unsubscribes"
       },
       {
         "category": "Workspace and inbox configuration",

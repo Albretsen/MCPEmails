@@ -107,7 +107,7 @@ export const entries = [
     href: '/signup',
     verdict:
       'The only one of these that puts several mailboxes behind a single MCP URL, authorises the connection with scoped OAuth rather than a mailbox credential, and can hold outbound mail for a human before it sends.',
-    price: 'Free: 1 inbox, 150 email actions a month with the first 7 days uncounted, no daily cap. Paid from $5 a month for 3 inboxes ($48 a year) with no monthly action cap. Pro is $15 a month for as many inboxes as you own.',
+    price: 'Free: 1 inbox, 150 email actions a month with the first 7 days uncounted, no daily cap. Paid from $9 a month for 3 inboxes ($86.40 a year) with no monthly action cap. Pro is $15 a month for as many inboxes as you own.',
     pros: [
       'Outlook and Microsoft 365 over Microsoft Graph with Sign in with Microsoft; Gmail with a Google app password or Google sign-in; Fastmail, iCloud, Yahoo, Zoho, Yandex and any IMAP mailbox with an app password. Several at once, one URL.',
       'OAuth 2.1 with dynamic client registration, S256 PKCE and 9 scopes: a connection without the send scope cannot be talked into sending, by you or by a hostile email.',
@@ -116,7 +116,7 @@ export const entries = [
     cons: [
       'No ISO 27001 certificate of our own. You pick an EU or US region at signup, but if procurement wants a certificate, MailMCP has one and we do not.',
       'No calendar, and no stored address book: contacts are scanned live out of recent mail.',
-      'For exactly one mailbox on an annual plan, MailMCP is cheaper.',
+      'For one or two mailboxes on an annual plan, MailMCP is cheaper.',
     ],
     bestFor: 'Anyone with more than one mailbox, or who wants to bound what an agent may do with it.',
   },
@@ -252,7 +252,7 @@ export const rows = [
   },
   {
     label: 'Cheapest paid',
-    us: '$5/mo for 3 inboxes, or $48/yr.',
+    us: '$9/mo for 3 inboxes, or $86.40/yr.',
     mailmcp: 'EUR 7.99/mailbox/mo, EUR 35.88/yr.',
     composio: '$29/mo, includes $29 of credit.',
     selfhosted: 'No licence fee.',
@@ -332,7 +332,7 @@ export const faq = {
     },
     {
       q: 'MailMCP is cheaper. Why would I pay more?',
-      a: 'For one mailbox on an annual plan they are, and we say so above rather than hiding it. They bill per mailbox, we bill per workspace: three mailboxes there is three times EUR 35.88, ours is $48 a year for three or $144 for as many as you own. If you will only ever want one mailbox, buy theirs.',
+      a: 'For one or two mailboxes on an annual plan they are, and we say so above rather than hiding it. They bill per mailbox, we bill per workspace: three mailboxes there is three times EUR 35.88, ours is $86.40 a year for three or $144 for as many as you own. If you will only ever want one mailbox, buy theirs.',
     },
     {
       q: 'Do I hand over my email password?',
