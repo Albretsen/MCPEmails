@@ -6,6 +6,7 @@ import { trackProductEvent } from '@/lib/analytics.mjs';
 import { createClient } from '@/lib/supabase/client';
 import { readAcquisitionContext } from '../analytics/AcquisitionCapture';
 import { appendAcquisitionParams } from '@/lib/acquisition-context.mjs';
+import { rememberOAuthConsent, signupConsentMetadata } from '@/lib/marketing-consent.mjs';
 import { MIcon, MBtn } from '../MarketingPrimitives';
 import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, SocialButton, OrDivider } from './AuthShared';
 
@@ -26,7 +27,15 @@ export function SignupApp({ redirectTo = null }) {
   const [serverError, setServerError] = useState('');
   const [loadingMsg, setLoadingMsg] = useState(SIGNUP_LOADING_MESSAGES[0]);
   const [socialLoading, setSocialLoading] = useState(null); // null | 'google' | 'github'
+  // Marketing email consent. UNTICKED by default and never pre-filled: consent
+  // under markedsføringsloven § 15 / GDPR has to be an active choice. What the
+  // box says is versioned in src/lib/marketing-consent.mjs.
+  const [marketingConsent, setMarketingConsent] = useState(false);
   const loadingTimerRef = useRef(null);
+
+  // A tick left over from an abandoned Google/GitHub attempt must not ride
+  // along with whatever this visit does, so start every visit from no cookie.
+  useEffect(() => { rememberOAuthConsent(false); }, []);
 
   useEffect(() => {
     if (step !== 'submitting') {
@@ -91,12 +100,14 @@ export function SignupApp({ redirectTo = null }) {
   }
 
   function handleGoogleSignIn() {
+    rememberOAuthConsent(marketingConsent);
     trackProductEvent('signup_started', { method: 'google' });
     setSocialLoading('google');
     window.location.href = buildOAuthUrl('google');
   }
 
   function handleGitHubSignIn() {
+    rememberOAuthConsent(marketingConsent);
     trackProductEvent('signup_started', { method: 'github' });
     setSocialLoading('github');
     window.location.href = buildOAuthUrl('github');
@@ -124,6 +135,9 @@ export function SignupApp({ redirectTo = null }) {
 
     setStep('submitting');
     setServerError('');
+    // The password path carries consent in the signUp metadata instead, so a
+    // cookie from an earlier Google/GitHub attempt has no business surviving.
+    rememberOAuthConsent(false);
     trackProductEvent('signup_started', { method: 'password' });
 
     const supabase = createClient();
@@ -142,6 +156,9 @@ export function SignupApp({ redirectTo = null }) {
           acquisition_utm_source: acquisition.utmSource,
           acquisition_utm_medium: acquisition.utmMedium,
           acquisition_utm_campaign: acquisition.utmCampaign,
+          // Only present when the box is ticked. The database trigger stamps
+          // the time; nothing here sends one.
+          ...signupConsentMetadata(marketingConsent),
         },
       },
     });
@@ -176,6 +193,24 @@ export function SignupApp({ redirectTo = null }) {
   function handleRetry() { setServerError(''); setStep('form'); }
 
   const anyBusy = step === 'submitting' || socialLoading !== null;
+
+  // One box for all three ways in. It sits just above the submit button, the
+  // conventional spot, and still governs Google/GitHub: the password path
+  // reads it into the signUp metadata, the OAuth handlers hand it to
+  // rememberOAuthConsent before the redirect.
+  const consentBox = (
+    <label className="auth-consent" htmlFor="signup-marketing-consent">
+      <input
+        id="signup-marketing-consent"
+        name="marketing_consent"
+        type="checkbox"
+        autoComplete="off"
+        checked={marketingConsent}
+        onChange={(e) => setMarketingConsent(e.target.checked)}
+      />
+      <span>{t('signup.marketingConsent')}</span>
+    </label>
+  );
 
   const socialButtons = (
     <>
@@ -253,9 +288,16 @@ export function SignupApp({ redirectTo = null }) {
                 />
                 {passwordError && <div id="signup-password-error" className="err-msg" role="alert">{passwordError}</div>}
               </div>
+              {consentBox}
               <MBtn variant="primary" className="auth-submit" type="submit" disabled={anyBusy}>
                 {t('signup.submit')}
               </MBtn>
+              <p className="auth-legal">
+                {t.rich('signup.legalNotice', {
+                  terms: (c) => <a href="/terms" target="_blank" rel="noopener noreferrer">{c}</a>,
+                  privacy: (c) => <a href="/privacy" target="_blank" rel="noopener noreferrer">{c}</a>,
+                })}
+              </p>
             </form>
             <div className="auth-footer">
               {t('signup.haveAccountPrefix')}<a href={getSafeRedirect() ? `/login?redirect=${encodeURIComponent(getSafeRedirect())}` : '/login'}>{t('signup.signIn')}</a>

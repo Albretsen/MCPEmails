@@ -1,7 +1,7 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { metaAlternates, localePath, OG_LOCALE, OG_IMAGE } from '@/i18n/seo';
 import { Nav, Footer } from '../../../components/marketing/Sections';
-import { LAST_UPDATED, EFFECTIVE_DATE } from '@/lib/legal-config';
+import { PRIVACY_LAST_UPDATED, EFFECTIVE_DATE } from '@/lib/legal-config';
 
 export async function generateMetadata({ params }) {
   const { locale } = await params;
@@ -71,7 +71,7 @@ export default async function PrivacyPage({ params }) {
             {t('hero.lead')}
           </p>
           <p style={{ fontSize: 13, color: 'var(--fg-4)', marginTop: 8 }}>
-            {t('hero.dates', { lastUpdated: LAST_UPDATED, effectiveDate: EFFECTIVE_DATE })}
+            {t('hero.dates', { lastUpdated: PRIVACY_LAST_UPDATED, effectiveDate: EFFECTIVE_DATE })}
           </p>
         </div>
       </section>
@@ -224,6 +224,14 @@ export default async function PrivacyPage({ params }) {
                 })}
               </p>
               <p>{t('howWeUseData.microsoftDisconnectP')}</p>
+
+              {/* Consent-based marketing email (markedsføringsloven § 15). Must
+                  stay in step with the signup checkbox and
+                  src/lib/marketing-consent.mjs. */}
+              <h4>{t('howWeUseData.marketingTitle')}</h4>
+              <p>{t.rich('howWeUseData.marketingP1', richTags)}</p>
+              <p>{t('howWeUseData.marketingP2')}</p>
+              <p>{t('howWeUseData.marketingP3')}</p>
             </LegalSection>
 
             {/* 4 - Data retention */}

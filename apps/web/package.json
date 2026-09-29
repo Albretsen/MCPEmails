@@ -45,6 +45,7 @@
     "test:api-404": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/api/unmatched-api-route.test.ts",
     "test:purchase-email": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/email/purchase-confirmation.test.ts",
     "test:billing-email": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/email/billing-lifecycle.test.ts",
+    "test:paywall-followup": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/email/paywall-followup.test.ts",
     "test": "node scripts/run-tests.mjs",
     "test:revenue": "node --test --experimental-strip-types src/lib/analytics/revenue-math.test.ts src/lib/analytics/internal-accounts.test.ts src/lib/analytics/cash-math.test.ts",
     "test:retention": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/analytics/retention.test.ts",
@@ -57,7 +58,9 @@
     "test:lifecycle-queue": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/billing/lifecycle-queue.test.ts",
     "test:onboarding": "node --test --experimental-strip-types src/lib/onboarding/state.test.ts src/lib/onboarding/multi-inbox-prompt.test.mjs",
     "test:segment": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/segment/record-segment.test.ts src/lib/analytics/multi-inbox-prompt.test.ts",
-    "test:connect-multi-mailbox": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/connect/multi-mailbox.test.ts"
+    "test:connect-multi-mailbox": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/connect/multi-mailbox.test.ts",
+    "test:marketing-consent": "node --test src/lib/marketing-consent.test.mjs",
+    "test:signup-consent-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/auth/signup-consent-ui.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

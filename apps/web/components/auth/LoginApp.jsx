@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/client';
 import { readAcquisitionContext } from '../analytics/AcquisitionCapture';
 import { appendAcquisitionParams } from '@/lib/acquisition-context.mjs';
+import { rememberOAuthConsent } from '@/lib/marketing-consent.mjs';
 import { MIcon, MBtn } from '../MarketingPrimitives';
 import { ThemeBtn, Spinner, GoogleIcon, GitHubIcon, SocialButton, OrDivider } from './AuthShared';
 
@@ -18,6 +19,11 @@ export function LoginApp({ redirectTo = null }) {
   const [step, setStep] = useState('form'); // 'form' | 'submitting' | 'error' | 'sending' | 'sent'
   const [serverError, setServerError] = useState('');
   const [socialLoading, setSocialLoading] = useState(null); // null | 'google' | 'github'
+
+  // This page shows no marketing-consent checkbox, so an account it creates
+  // (first OAuth login, magic link) must record none. Drop any tick the signup
+  // page left behind for an abandoned Google/GitHub attempt.
+  useEffect(() => { rememberOAuthConsent(false); }, []);
 
   function getSafeRedirect() {
     const redirect = redirectTo;
