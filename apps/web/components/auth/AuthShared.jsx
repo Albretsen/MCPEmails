@@ -86,11 +86,11 @@ export function SocialButton({ icon, label, loading, onClick, disabled }) {
       type="button"
       onClick={onClick}
       disabled={disabled}
+      className="auth-social-btn"
       style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         gap: 10, width: '100%', minHeight: 44, padding: '10px 16px',
-        border: '1px solid rgba(0,0,0,0.15)', borderRadius: 8,
-        background: 'transparent',
+        borderRadius: 8,
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled && !loading ? 0.5 : 1,
         fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 500,
@@ -108,9 +108,9 @@ export function OrDivider() {
   const t = useTranslations('auth');
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0 8px' }}>
-      <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.1)' }} />
+      <div style={{ flex: 1, height: 1, background: 'var(--border-2)' }} />
       <span style={{ fontSize: 12, color: 'var(--fg-3)', fontFamily: 'var(--font-sans)' }}>{t('shared.or')}</span>
-      <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.1)' }} />
+      <div style={{ flex: 1, height: 1, background: 'var(--border-2)' }} />
     </div>
   );
 }

@@ -249,6 +249,16 @@ html[data-theme="dark"] .auth-shell::before {
 }
 .auth-back:hover { color: var(--fg-1); text-decoration: none; }
 .auth-brand img { height: 30px; margin-bottom: 28px; }
+/* The wordmark SVG hardcodes ink-900 text, which vanishes on the dark page,
+   so dark mode swaps in a variant with fg-1 text and the cobalt-300 mark. */
+.auth-brand .logo-dark { display: none; }
+html[data-theme="dark"] .auth-brand .logo-light { display: none; }
+html[data-theme="dark"] .auth-brand .logo-dark { display: inline; }
+/* Google/GitHub buttons (SocialButton). border-2 matches the light-mode hairline;
+   dark border-2 is only 1.5:1 on the card, so dark uses ink-400 (2.8:1). */
+.auth-social-btn { border: 1px solid var(--border-2); background: transparent; }
+.auth-social-btn:hover:not(:disabled) { background: var(--ink-50); }
+html[data-theme="dark"] .auth-social-btn { border-color: var(--ink-400); }
 .auth-card {
   background: var(--bg-surface); border: 1px solid var(--border-1);
   border-radius: 16px; padding: 32px;
