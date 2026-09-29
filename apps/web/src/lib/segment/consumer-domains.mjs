@@ -269,6 +269,37 @@ export function isBusinessEmailDomain(emailOrDomain) {
 }
 
 /**
+ * The values `emailSegment` can return, which is also the CHECK constraint on
+ * `workspaces.acquisition_email_segment`. Change both together.
+ */
+export const EMAIL_SEGMENTS = Object.freeze(['business', 'consumer', 'academic', 'unknown']);
+
+/**
+ * Which segment one address falls in, as a single stored word.
+ *
+ * The booleans above answer "should this surface sell Pro?". Measurement needs
+ * the bucket itself, and needs it to be the SAME line the paywall draws, which
+ * is why this is built from the same two private predicates rather than being a
+ * second classifier somewhere in SQL. The signup email is classified once and
+ * written to `workspaces.acquisition_email_segment` (see record-segment.ts), so
+ * a conversion comparison by segment is a GROUP BY, not a re-implementation.
+ *
+ * Order matters and mirrors `isBusinessEmailDomain`: a consumer service wins
+ * over the school rule (nobody's Gmail is a school), and anything that is not
+ * recognisably an address is `unknown`, never `business`.
+ *
+ * @param {unknown} emailOrDomain
+ * @returns {'business'|'consumer'|'academic'|'unknown'}
+ */
+export function emailSegment(emailOrDomain) {
+  const domain = emailDomain(emailOrDomain);
+  if (domain === null) return 'unknown';
+  if (isConsumerDomain(domain)) return 'consumer';
+  if (isAcademicDomain(domain)) return 'academic';
+  return 'business';
+}
+
+/**
  * True when AT LEAST ONE of the addresses is on a business domain.
  *
  * One is enough, on purpose. The common real shape is a personal Gmail that

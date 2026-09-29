@@ -1,9 +1,11 @@
 import { redirect, notFound } from 'next/navigation';
+import { after } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { ACTIVE_WORKSPACE_COOKIE } from '@/lib/workspace/active';
 import { linkExperimentSubjectForRequest } from '@/lib/experiments/link-request';
+import { stampAcquisitionSegment } from '@/lib/segment/record-segment';
 import { PENDING_INBOX_COLUMNS, selectTolerantly } from '@/lib/approvals/columns';
 import { DashboardApp } from '../../../components/dashboard/App';
 import { pathSegmentToSection } from '../../../components/dashboard/routes';
@@ -667,6 +669,22 @@ export default async function DashboardPage({ params }) {
     userId: user.id,
     userCreatedAt: user.created_at,
   });
+
+  // Record which segment the owner's signup email falls in (business, consumer,
+  // academic), so the business-domain onboarding and paywall changes can be
+  // measured by a GROUP BY rather than a second classifier in SQL. Same place
+  // and same reasoning as the subject join above: every signup path lands
+  // here. After the response, so it can never slow the first render, and only
+  // for the owner's own workspace, since a member's address says nothing about
+  // who pays. It gates itself on account age and never overwrites.
+  if (workspace && workspace.owner_id === user.id) {
+    const workspaceId = workspace.id;
+    after(() => stampAcquisitionSegment(createServiceRoleClient(), {
+      workspaceId,
+      ownerEmail: user.email,
+      userCreatedAt: user.created_at,
+    }));
+  }
 
   // The calling user's role in the ACTIVE workspace (drives role-gated UI).
   let userRole = 'member';
