@@ -51,7 +51,6 @@ Query: `docs/sql/personal-reprice-readout.sql`. It is read-only; run it once, ne
 
 ### Known confounders
 
-- The **business-domain paywall change** (Pro offered first to business domains) is being built in parallel. If both ship in the same window, the mix shift will look like a price effect. Either ship them at least one read-out apart, or split the read-out by `consumer-domains` segment.
 - The **Google Ads test** (`docs/PLAN-google-ads-test-20260929.md`) is due to start around 2026-10-01, inside the "after" window only. The read-out query excludes `acquisition_source = 'google_ads'` workspaces, so both cohorts stay organic and paid traffic can't masquerade as a price effect.
 - The **business-domain paywall change (PR #33)** merged on 2026-09-29, the same day as this change. Read both halves split by `workspaces.acquisition_email_segment`: consumer domains isolate the price effect.
 - ChatGPT or directory listing changes have moved sales in bursts before (09-13..16). Check `growth_client_mix` / `mcp_client_capabilities` for a spike in either window.
