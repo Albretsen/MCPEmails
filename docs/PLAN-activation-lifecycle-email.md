@@ -569,8 +569,8 @@ rule, so the skip is auditable and the person is never re-evaluated.
    addressing. That is the correct trade at this volume.
 4. **Address sanity.** Reject anything failing the same regex the billing
    sender uses (`billing-lifecycle.ts`, the `unusable_recipient` branch). One
-   live stalled account is at the domain `shugaome.con`, a typo that will hard
-   bounce. Every one of the 322 users created in the last 30 days has
+   live stalled account signed up on a mistyped domain (a `.con` TLD) that will
+   hard bounce. Every one of the 322 users created in the last 30 days has
    `auth.users.email_confirmed_at` set (magic-link OTP is the primary sign-in
    method per `supabase/config.toml`), so hard-bounce risk is genuinely low,
    but the guard costs nothing.
