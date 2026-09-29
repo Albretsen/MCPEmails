@@ -100,5 +100,10 @@
     "intro": "Prefer a walkthrough with screenshots?",
     "label": "How to connect Gmail to Claude",
     "href": "/blog/connect-gmail-to-claude"
+  },
+  "seeAlso": {
+    "intro": "Company mailbox on Google Workspace, on your own domain?",
+    "label": "Connect Google Workspace, and the admin settings that decide it",
+    "href": "/connect/google-workspace"
   }
 }

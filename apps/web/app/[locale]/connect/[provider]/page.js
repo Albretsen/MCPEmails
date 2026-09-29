@@ -4,6 +4,7 @@ import { metaAlternatesFor, localePath, OG_LOCALE, OG_IMAGE, connectJsonLd } fro
 import { getProvider, providerLocales } from '@/lib/connect/providers.mjs';
 import { isViewable } from '@/lib/connect/release.mjs';
 import { getProviderContent, providerParams } from '@/lib/connect/content.mjs';
+import { getMultiMailboxCopy, multiMailboxFaq, showsMultiMailbox } from '@/lib/connect/multi-mailbox.mjs';
 import { stripTags } from '../../../../components/marketing/RichText';
 import ConnectProviderView from '../../../../components/marketing/ConnectProviderView';
 
@@ -61,13 +62,21 @@ export default async function ConnectProviderPage({ params }) {
   if (!content) notFound();
 
   const t = await getTranslations({ locale, namespace: 'connect' });
+  // Business, hosting, cPanel and self-hosted pages carry a block saying every
+  // mailbox the company runs on this host connects to the same agent, plus a
+  // matching FAQ entry (see lib/connect/multi-mailbox). Null everywhere else.
+  const multiMailbox = showsMultiMailbox(provider) ? await getMultiMailboxCopy(locale) : null;
+  const faq = [
+    ...(content.faq ?? []),
+    ...(multiMailbox ? [multiMailboxFaq(multiMailbox, provider.name)] : []),
+  ];
   const jsonLd = connectJsonLd(locale, {
     path: `/connect/${slug}`,
     title: content.meta.title,
     description: content.meta.description,
     howToName: t('how.title', { provider: provider.name }),
     steps: content.setup.map((s) => ({ h: s.h, p: stripTags(s.p) })),
-    faq: (content.faq ?? []).map((f) => ({ q: f.q, a: stripTags(f.a) })),
+    faq: faq.map((f) => ({ q: f.q, a: stripTags(f.a) })),
     connectLabel: t('hub.breadcrumb'),
   });
 
@@ -77,7 +86,7 @@ export default async function ConnectProviderPage({ params }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ConnectProviderView locale={locale} provider={provider} content={content} />
+      <ConnectProviderView locale={locale} provider={provider} content={content} multiMailbox={multiMailbox} />
     </>
   );
 }

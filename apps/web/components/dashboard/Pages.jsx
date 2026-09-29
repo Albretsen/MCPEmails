@@ -22,6 +22,7 @@ import { AutomationsPanel } from './AutomationsPanel';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 import { pricingCompareHref } from '@/lib/billing/upgrade-intent.mjs';
 import { inboxCapOffer } from '@/lib/billing/inbox-cap-offer.mjs';
+import { multiInboxPromptVariant } from '@/lib/onboarding/multi-inbox-prompt.mjs';
 import {
   usageCapCheckoutHref,
   usageCapCompareHref,
@@ -566,9 +567,14 @@ function ClientGuideModal({ client, mcpUrl, onClose, onGoToKeys, inbox = null })
  * connect an inbox, then connect an MCP client (the URL is highlighted and a
  * per-client guide opens on click).
  */
-function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onConnect, onGoToKeys, initialClient = null, onClientSelected }) {
+function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onConnect, onGoToKeys, initialClient = null, onClientSelected, businessShaped = false, atInboxLimit = false }) {
   const t = useTranslations('dashboard');
   const [activeClient, setActiveClient] = useState(() => MCP_CLIENTS.find(c => (c.k === 'api' ? 'curl' : c.k) === initialClient) ?? null);
+  // Business-domain workspaces with one mailbox get an optional row asking
+  // for the rest (see lib/onboarding/multi-inbox-prompt). Null for everyone
+  // else, which renders exactly the guide they had before.
+  const multiInbox = multiInboxPromptVariant({ businessShaped, inboxCount, atInboxLimit });
+  useMultiInboxPromptBeacon(multiInbox !== null);
 
   const step1Done = inboxCount > 0;
   const step2Done = callsThisMonth > 0;
@@ -659,6 +665,36 @@ function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onCo
             </div>
           </div>
         </div>
+        {/* Optional: the company's other mailboxes. After the two numbered
+            steps on purpose, so wiring up a client stays the next thing to
+            do; see lib/onboarding/multi-inbox-prompt for who sees it. */}
+        {multiInbox && (
+          <div data-multi-inbox-prompt={multiInbox} style={{
+            display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 14, padding: '14px 16px',
+            background: 'var(--bg-page)', borderRadius: 10, border: '1px dashed var(--border-2, var(--border-1))',
+          }}>
+            <Icon name="plus" size={16} color="var(--brand)" />
+            <div style={{ flex: '1 1 260px', minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-sans)', fontSize: 13.5, fontWeight: 600, color: 'var(--fg-1)' }}>
+                {t('guide.multiInboxTitle')}
+                <Badge tone="neutral">{t('guide.multiInboxOptional')}</Badge>
+              </div>
+              <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)', marginTop: 2, lineHeight: 1.5 }}>
+                {t(multiInbox === 'upgrade' ? 'guide.multiInboxDescUpgrade' : 'guide.multiInboxDesc')}
+              </div>
+            </div>
+            <div style={{ flexShrink: 0 }}>
+              <Btn
+                variant="secondary"
+                size="sm"
+                icon="plus"
+                onClick={() => { sendMultiInboxPromptBeacon('clicked'); onConnect(); }}
+              >
+                {t('guide.multiInboxCta')}
+              </Btn>
+            </div>
+          </div>
+        )}
       </div>
 
       {activeClient ? (
@@ -672,6 +708,37 @@ function GettingStartedGuide({ inboxes, inboxCount, callsThisMonth, mcpUrl, onCo
       ) : null}
     </div>
   );
+}
+
+/**
+ * Fire-and-forget beacons for the second-mailbox prompt. Same shape as the
+ * paywall beacon (lib/analytics/use-inbox-paywall.mjs): a keepalive POST whose
+ * body is one word from a closed list, recorded server side at most once per
+ * workspace and action. Errors are swallowed: analytics is never worth a
+ * console error in a user's browser.
+ */
+function sendMultiInboxPromptBeacon(action) {
+  try {
+    fetch('/api/analytics/multi-inbox-prompt', {
+      method: 'POST',
+      keepalive: true,
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ action }),
+    }).catch(() => {});
+  } catch {
+    // No fetch (an old browser, or a test DOM): nothing to record.
+  }
+}
+
+/** Records `shown` once per mount of the guide while the prompt is on screen. */
+function useMultiInboxPromptBeacon(visible) {
+  const sent = useRef(false);
+  useEffect(() => {
+    if (!visible || sent.current) return;
+    sent.current = true;
+    const id = setTimeout(() => sendMultiInboxPromptBeacon('shown'), 0);
+    return () => clearTimeout(id);
+  }, [visible]);
 }
 
 /** Step indicator dot: number, or a mint check when done. */
@@ -692,7 +759,7 @@ function StepDot({ num, done }) {
 }
 
 /* ---------------- Overview ---------------- */
-export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected }) {
+export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData, planLimits, actionAllowance = null, plan: _plan = 'free', mcpUrl, memberCount = 0, onConnect, onGoToKeys, onGoToMembers, onboardingClient = null, onClientSelected, businessShaped = false }) {
   const t = useTranslations('dashboard');
   // Counted off the same live arrays the sidebar counts, never off the server
   // stats snapshot. `stats.inboxCount` was a separate server-side query taken
@@ -885,6 +952,8 @@ export function OverviewPage({ inboxes, apiKeys = [], activity, stats, usageData
           onGoToKeys={onGoToKeys}
           initialClient={onboardingClient}
           onClientSelected={onClientSelected}
+          businessShaped={businessShaped}
+          atInboxLimit={atInboxLimit}
         />
       ) : (
         <div className="overview-grid" style={{ marginTop: 16 }}>
@@ -1309,8 +1378,9 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
         // surfaces can never quote different plans for the same block.
         //
         // For a business-shaped workspace at the Free cap that is TWO plans
-        // (Personal, then Pro), and this notice puts a buy button on each, in
-        // the rule's order, under one interval choice. Everything below maps
+        // (Pro, recommended and filled, then Personal, outlined), and this
+        // notice puts a buy button on each, in the rule's order, under one
+        // interval choice. Everything below maps
         // over `offer.offers`, which has exactly one entry in every other
         // case, so the single-plan notice is the same code with one button.
         const offer = inboxCapOffer(maxInboxes, { businessShaped });
@@ -1424,6 +1494,7 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                   monthlyLabel={t(o.noticeCtaKey)}
                   annualOffer={annualByPlan[o.plan]}
                   interval={capInterval}
+                  variant={offer.dual && !o.recommended ? 'secondary' : 'primary'}
                   size="sm"
                 />
               ))}
@@ -4915,6 +4986,7 @@ function BillingSection({
   inboxCount = 0,
   grandfathered = false,
   actionAllowance = null,
+  businessShaped = false,
 }) {
   const t = useTranslations('dashboard');
   // Matches the pricing page, where annual is preselected. An upgrade intent
@@ -5546,8 +5618,13 @@ function BillingSection({
                         }}>
                           {plan.name}
                         </span>
+                        {/* Same card for everyone; for a workspace on a
+                            company domain the badge says why it is the one
+                            to pick (see lib/segment/consumer-domains). */}
                         {plan.highlighted && (
-                          <Badge tone="brand">{t('billing.mostPopular')}</Badge>
+                          <Badge tone="brand">
+                            {t(businessShaped ? 'billing.recommendedBusiness' : 'billing.mostPopular')}
+                          </Badge>
                         )}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
@@ -6518,7 +6595,7 @@ function SettingsSectionLabel({ children }) {
   );
 }
 
-export function SettingsPage({ user, workspace, workspaces = [], userRole, stripePrices, upgradeIntent, planLimits, actionAllowance = null, inboxCount = 0, grandfathered = false, onWorkspaceUpdate }) {
+export function SettingsPage({ user, workspace, workspaces = [], userRole, stripePrices, upgradeIntent, planLimits, actionAllowance = null, inboxCount = 0, grandfathered = false, businessShaped = false, onWorkspaceUpdate }) {
   const t = useTranslations('dashboard');
 
   // The active workspace is owned by the user when either the server-resolved
@@ -6557,6 +6634,7 @@ export function SettingsPage({ user, workspace, workspaces = [], userRole, strip
         inboxCount={inboxCount}
         grandfathered={grandfathered}
         actionAllowance={actionAllowance}
+        businessShaped={businessShaped}
       />
 
       {/* ── Workspace: settings that affect only the current workspace ───── */}

@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import {
   CONSUMER_BRAND_FAMILIES,
   CONSUMER_EMAIL_DOMAINS,
+  EMAIL_SEGMENTS,
   emailDomain,
+  emailSegment,
   isBusinessEmailDomain,
   isBusinessShaped,
   isBusinessShapedWorkspace,
@@ -262,5 +264,36 @@ test('the seed list from the segment measurement is fully carried over', () => {
     'planet.nl', 'abv.bg', 'usa.com', 'mailinator.com',
   ]) {
     assert.ok(CONSUMER_EMAIL_DOMAINS.includes(domain), `${domain} missing from the list`);
+  }
+});
+
+test('emailSegment names the same line isBusinessEmailDomain draws', () => {
+  const cases = {
+    'ada@gmail.com': 'consumer',
+    'ada@yahoo.co.jp': 'consumer',
+    'ada@mail.yahoo.com': 'consumer',
+    'ada@acme.example': 'business',
+    'info@example.co.uk': 'business',
+    'ada@cs.example.edu': 'academic',
+    'ada@example.ac.uk': 'academic',
+    '': 'unknown',
+    'not an email': 'unknown',
+    '@acme.example': 'unknown',
+    'ada@localhost': 'unknown',
+  };
+  for (const [address, expected] of Object.entries(cases)) {
+    assert.equal(emailSegment(address), expected, address);
+    // The stored word and the paywall's boolean can never disagree.
+    assert.equal(emailSegment(address) === 'business', isBusinessEmailDomain(address), address);
+  }
+  for (const garbage of [undefined, null, 42, {}, ['ada@acme.example']]) {
+    assert.equal(emailSegment(garbage), 'unknown');
+  }
+});
+
+test('emailSegment only ever returns a value the database CHECK accepts', () => {
+  assert.deepEqual([...EMAIL_SEGMENTS].sort(), ['academic', 'business', 'consumer', 'unknown']);
+  for (const address of ['ada@gmail.com', 'ada@acme.example', 'ada@x.edu', 'nope']) {
+    assert.ok(EMAIL_SEGMENTS.includes(emailSegment(address)));
   }
 });

@@ -97,15 +97,24 @@ test('a CONSUMER Free workspace still gets Personal alone, exactly as before', (
   }
 });
 
-test('a BUSINESS Free workspace is offered Personal AND Pro, in that fixed order', () => {
-  // Personal stays, and stays first: most customers buy it. The change is that
-  // Pro stops being reachable only through "Compare all plans".
+test('a BUSINESS Free workspace is offered Pro AND Personal, Pro first, in that fixed order', () => {
+  // Pro is the recommendation for a company's mailboxes. Personal stays on the
+  // panel: it is what most customers buy, and hiding it is not the point.
   const offer = inboxCapOffer(1, BUSINESS);
   assert.equal(offer.dual, true);
-  assert.deepEqual(offer.offers.map(o => o.plan), ['personal', 'solo']);
+  assert.deepEqual(offer.offers.map(o => o.plan), ['solo', 'personal']);
   // Stable across calls: the order is a rule, not an accident of object keys.
   for (let i = 0; i < 5; i += 1) {
-    assert.deepEqual(inboxCapOffer(1, BUSINESS).offers.map(o => o.plan), ['personal', 'solo']);
+    assert.deepEqual(inboxCapOffer(1, BUSINESS).offers.map(o => o.plan), ['solo', 'personal']);
+  }
+});
+
+test('exactly one offer is recommended on a dual panel, and it is the first one', () => {
+  const offer = inboxCapOffer(1, BUSINESS);
+  assert.deepEqual(offer.offers.map(o => o.recommended), [true, false]);
+  // A single offer has nothing to be recommended over.
+  for (const [cap, context] of [[1, CONSUMER], [1, undefined], [3, BUSINESS], [3, CONSUMER]]) {
+    assert.deepEqual(inboxCapOffer(cap, context).offers.map(o => o.recommended), [false]);
   }
 });
 
@@ -116,7 +125,7 @@ test('the business offer leads with the company-mailbox copy, not the consumer c
   assert.equal(offer.noticeBodyKey, 'inboxes.capBodyBusiness');
   assert.notEqual(offer.bodyKey, inboxCapOffer(1, CONSUMER).bodyKey);
   // Each card has its own pitch and its own buy label, on both surfaces.
-  const [personal, pro] = offer.offers;
+  const [pro, personal] = offer.offers;
   assert.equal(personal.pitchKey, 'connect.businessPersonalPitch');
   assert.equal(personal.ctaKey, 'connect.personalUpgradeCta');
   assert.equal(personal.noticeCtaKey, 'inboxes.capCtaPersonal');
@@ -125,15 +134,17 @@ test('the business offer leads with the company-mailbox copy, not the consumer c
   assert.equal(pro.noticeCtaKey, 'inboxes.capCtaPro');
 });
 
-test('the primary offer of a dual panel is still Personal, so `.plan` readers are unaffected', () => {
-  // check-inbox-limit.ts builds `upgrade_url` from `.plan` alone, with no
-  // shape. Its answer for a Free cap has to stay `personal` whatever else is
-  // on the object.
+test('a business panel\'s primary offer is Pro; with no shape, a Free cap still answers Personal', () => {
+  // The top-level fields always describe the first card, so the modal's
+  // "Compare all plans" opens /pricing on Pro for a business.
   const offer = inboxCapOffer(1, BUSINESS);
-  assert.equal(offer.plan, 'personal');
-  assert.equal(offer.ctaKey, 'connect.personalUpgradeCta');
+  assert.equal(offer.plan, 'solo');
+  assert.equal(offer.ctaKey, 'connect.viewUpgradeOptions');
   assert.equal(offer.plan, offer.offers[0].plan);
+  // check-inbox-limit.ts builds the server's `upgrade_url` from `.plan` with
+  // no shape; that answer must not move.
   assert.equal(inboxCapOffer(1).plan, 'personal');
+  assert.equal(inboxCapOffer(1, CONSUMER).plan, 'personal');
 });
 
 test('a Personal cap gets Pro alone REGARDLESS of shape', () => {
@@ -155,11 +166,11 @@ test('a Personal cap gets Pro alone REGARDLESS of shape', () => {
 test('an unknown cap follows the Free rule for both shapes', () => {
   for (const unknown of [null, undefined]) {
     assert.deepEqual(inboxCapOffer(unknown, CONSUMER).offers.map(o => o.plan), ['personal']);
-    assert.deepEqual(inboxCapOffer(unknown, BUSINESS).offers.map(o => o.plan), ['personal', 'solo']);
+    assert.deepEqual(inboxCapOffer(unknown, BUSINESS).offers.map(o => o.plan), ['solo', 'personal']);
     assert.deepEqual(inboxCapOffer(unknown, BUSINESS), inboxCapOffer(1, BUSINESS));
   }
   // A cap of zero is below the Free cap, not above it.
-  assert.deepEqual(inboxCapOffer(0, BUSINESS).offers.map(o => o.plan), ['personal', 'solo']);
+  assert.deepEqual(inboxCapOffer(0, BUSINESS).offers.map(o => o.plan), ['solo', 'personal']);
 });
 
 test('only a literal `true` widens the offer: garbage context is the consumer paywall', () => {
@@ -233,7 +244,7 @@ test('one caller mutating its offer cannot change what the other surface sells',
   first.offers[0].featureKeys.length = 0;
   first.featureKeys.length = 0;
   const second = inboxCapOffer(1, BUSINESS);
-  assert.deepEqual(second.offers.map(o => o.plan), ['personal', 'solo']);
+  assert.deepEqual(second.offers.map(o => o.plan), ['solo', 'personal']);
   assert.equal(second.offers[0].featureKeys.length, 4);
   assert.equal(second.featureKeys.length, 4);
 });
@@ -248,12 +259,12 @@ test('the classifier and the rule compose: mixed workspace in, both plans out', 
   assert.deepEqual(offerFor([{ address: 'ada@yahoo.in' }]), ['personal']);
   assert.deepEqual(offerFor([{ address: 'ada@hotmail.no' }]), ['personal']);
   assert.deepEqual(offerFor([{ address: 'ada@rogers.com' }]), ['personal']);
-  assert.deepEqual(offerFor([{ address: 'info@acme.example' }]), ['personal', 'solo']);
+  assert.deepEqual(offerFor([{ address: 'info@acme.example' }]), ['solo', 'personal']);
   assert.deepEqual(
     offerFor([{ address: 'ada@gmail.com' }, { address: 'info@acme.example' }]),
-    ['personal', 'solo'],
+    ['solo', 'personal'],
   );
-  assert.deepEqual(offerFor([{ address: 'ada@gmail.com' }], 'ada@acme.example'), ['personal', 'solo']);
+  assert.deepEqual(offerFor([{ address: 'ada@gmail.com' }], 'ada@acme.example'), ['solo', 'personal']);
   assert.deepEqual(offerFor([], undefined), ['personal']);
   assert.deepEqual(offerFor(undefined, 'garbage'), ['personal']);
 });

@@ -19,7 +19,7 @@
       "coverage": {
         "tag": "Cobertura",
         "h": "Cualquier bandeja, no solo Gmail",
-        "p": "Los conectores integrados suelen alcanzar solo un buzón: Gmail y, a veces, Outlook. No pueden tocar <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b> ni ninguna otra cuenta <b>IMAP/SMTP</b>. Nosotros los conectamos todos: Gmail con una contraseña de aplicación o el inicio de sesión de Google, Outlook y Microsoft 365 iniciando sesión con Microsoft, y el resto con una contraseña de aplicación o IMAP simple."
+        "p": "Los conectores integrados suelen alcanzar los buzones de un solo proveedor: Gmail y, a veces, Outlook. No están pensados para <b>Fastmail, iCloud, Yahoo, Zoho, Yandex</b> ni para ninguna otra cuenta <b>IMAP/SMTP</b>. Nosotros los conectamos todos: Gmail con una contraseña de aplicación o el inicio de sesión de Google, Outlook y Microsoft 365 iniciando sesión con Microsoft, y el resto con una contraseña de aplicación o IMAP simple."
       },
       "actions": {
         "tag": "Acciones reales",

@@ -94,7 +94,12 @@
     "step2Title": "Connecter votre client MCP",
     "step2Desc": "Collez ce point de terminaison dans votre client, puis sélectionnez-le ci-dessous pour un guide étape par étape.",
     "mcpServerUrl": "URL du serveur MCP",
-    "chooseClient": "Choisissez votre client"
+    "chooseClient": "Choisissez votre client",
+    "multiInboxTitle": "Ajoutez vos autres boîtes professionnelles",
+    "multiInboxOptional": "Facultatif",
+    "multiInboxDesc": "Connectez info@, ventes@, factures@ et les autres : votre agent gère toutes les boîtes de l'entreprise depuis une seule conversation, et répond depuis la bonne adresse.",
+    "multiInboxDescUpgrade": "Connectez info@, ventes@, factures@ et les autres : votre agent gère toutes les boîtes de l'entreprise depuis une seule conversation, et répond depuis la bonne adresse. L'offre gratuite couvre une boîte ; Pro couvre toutes les boîtes de votre entreprise.",
+    "multiInboxCta": "Ajouter une boîte"
   },
   "overview": {
     "title": "Aperçu",
@@ -473,6 +478,7 @@
     "monthly": "Mensuel",
     "annual": "Annuel (économisez ~20 %)",
     "mostPopular": "Le plus populaire",
+    "recommendedBusiness": "Recommandé pour les boîtes d'entreprise",
     "custom": "Sur mesure",
     "perMonth": "/mois",
     "billedYearly": "Facturé {total} $/an",
