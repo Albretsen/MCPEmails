@@ -47,12 +47,13 @@ for (const plan of Object.values(PLANS)) {
 }
 
 /**
- * Amounts that are not prices of ours, by file and exact value. Keep this
- * short and specific: an exemption is a sentence this test stops watching.
+ * Amounts that are not prices of ours, by file NAME (in any locale) and exact
+ * value in cents. Keep this short and specific: an exemption is a sentence
+ * this test stops watching.
  */
 const NOT_A_PRICE: Record<string, number[]> = {
   // The liability cap in the terms ("the greater of ... or $100").
-  'messages/*/terms.json': [10000],
+  'terms.json': [10000],
 };
 
 // $9  $ 9  $86.40  |  9 $  86,40 $  9 美元  9 dollar  9 USD
@@ -74,11 +75,8 @@ function amountsIn(text: string, where: string): Hit[] {
 }
 
 function exempt(fileKey: string, cents: number): boolean {
-  return Object.entries(NOT_A_PRICE).some(
-    ([pattern, values]) =>
-      new RegExp(`^${pattern.replace(/\*/g, '[^/]+').replace(/\./g, '\\.')}$`).test(fileKey) &&
-      values.includes(cents),
-  );
+  const fileName = path.basename(fileKey);
+  return NOT_A_PRICE[fileName]?.includes(cents) ?? false;
 }
 
 function assertAllSold(hits: Hit[], fileKey: (where: string) => string) {
