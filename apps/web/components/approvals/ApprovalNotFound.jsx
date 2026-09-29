@@ -15,7 +15,7 @@ export function ApprovalNotFound() {
     <div className="review-shell">
       <div className="review-wrap">
         <Link className="review-brand" href="/dashboard">
-          <img src="/logo-wordmark.svg" alt="mcpemails" />
+          <img className="logo-light" src="/logo-wordmark.svg" alt="mcpemails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" alt="mcpemails" />
         </Link>
         <div className="card review-card review-card-narrow">
           <div className="review-banner review-banner-neutral" role="status">

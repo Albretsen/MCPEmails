@@ -38,7 +38,7 @@ export default function ErrorPage({ reset }) {
 
         {/* Brand */}
         <div className="auth-brand">
-          <img src="/logo-wordmark.svg" alt="mcpemails" />
+          <img className="logo-light" src="/logo-wordmark.svg" alt="mcpemails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" alt="mcpemails" />
         </div>
 
         {/* Card */}
