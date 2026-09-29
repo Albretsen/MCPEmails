@@ -23,7 +23,7 @@ import { assert, assertEquals } from "jsr:@std/assert@1";
 import { normaliseSenderName, SENDER_NAME_MAX_CHARS } from "./sender-name.ts";
 
 Deno.test("a plain name passes through unchanged", () => {
-  assertEquals(normaliseSenderName("Evancoe Bot"), { ok: true, value: "Evancoe Bot" });
+  assertEquals(normaliseSenderName("Acme Support"), { ok: true, value: "Acme Support" });
 });
 
 Deno.test("unicode is kept as-is", () => {
@@ -32,7 +32,7 @@ Deno.test("unicode is kept as-is", () => {
 });
 
 Deno.test("whitespace is trimmed and runs collapse to one space", () => {
-  assertEquals(normaliseSenderName("  Evancoe   Bot \t"), { ok: true, value: "Evancoe Bot" });
+  assertEquals(normaliseSenderName("  Acme   Support \t"), { ok: true, value: "Acme Support" });
 });
 
 Deno.test("tab, newline and CR collapse to one space instead of vanishing", () => {
@@ -43,10 +43,10 @@ Deno.test("tab, newline and CR collapse to one space instead of vanishing", () =
     value: "Bot tab newline",
   });
   assertEquals(
-    normaliseSenderName("Evancoe Bot\r\nBcc: attacker@example.com"),
+    normaliseSenderName("Acme Support\r\nBcc: attacker@example.com"),
     // The CRLF is gone as a line break — what is left is a space, which cannot
     // end a header line — and the words either side stay words.
-    { ok: true, value: "Evancoe Bot Bcc: attacker@example.com" },
+    { ok: true, value: "Acme Support Bcc: attacker@example.com" },
   );
   // A run of mixed whitespace is still ONE space, not one per character.
   assertEquals(normaliseSenderName("A \t\r\n B"), { ok: true, value: "A B" });
@@ -68,11 +68,11 @@ Deno.test("no header-injection payload can carry a bare CR or LF through", () =>
   // the same header rather than a new one, so even a downstream encoder that
   // wrapped this line could not turn it into a second header.
   const payloads = [
-    "Evancoe Bot\r\nBcc: attacker@example.com",
-    "Evancoe Bot\nBcc: attacker@example.com",
-    "Evancoe Bot\rBcc: attacker@example.com",
-    "Evancoe Bot\r\n\tBcc: attacker@example.com",
-    "Evancoe Bot\r\n\r\nSubject: injected",
+    "Acme Support\r\nBcc: attacker@example.com",
+    "Acme Support\nBcc: attacker@example.com",
+    "Acme Support\rBcc: attacker@example.com",
+    "Acme Support\r\n\tBcc: attacker@example.com",
+    "Acme Support\r\n\r\nSubject: injected",
     "Bot\r\nContent-Type: text/html\r\n\r\n<script>alert(1)</script>",
     "\r\nFrom: ceo@example.com",
     "Bot Bcc: attacker@example.com",

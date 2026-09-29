@@ -1998,7 +1998,7 @@ function ReviewModeSelector({ value, onChange, disabled }) {
 
 /* Sender display name editor. Kept independent of SignatureEditor on purpose:
    the name is one column (`inboxes.display_name`) with its own save, so a user
-   can fix "bot" -> "Evancoe Bot" without resubmitting the signature form. The
+   can fix "bot" -> "Acme Support" without resubmitting the signature form. The
    MCP edge function puts the saved name in the From header on every send,
    for every provider; the preview below shows that header as recipients see
    it. Normalisation (control chars and angle brackets stripped, whitespace

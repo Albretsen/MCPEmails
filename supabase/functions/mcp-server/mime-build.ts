@@ -79,7 +79,7 @@ const ENCODED_WORD_MAX_BYTES = 45;
  * that splits the mailbox list or trips strict parsers ("Albretsen, Asgeir"
  * reads as two mailboxes). Three shapes come out of here:
  *
- *   * plain atoms ("Evancoe Bot")            -> bare, unchanged
+ *   * plain atoms ("Acme Support")            -> bare, unchanged
  *   * ASCII with specials ("Bot (Prod)")     -> quoted-string, `"` and `\` escaped
  *   * anything non-ASCII ("Åsgeir Bjelland") -> RFC 2047 encoded-word(s), each
  *     at most 75 characters, never split inside a UTF-8 sequence

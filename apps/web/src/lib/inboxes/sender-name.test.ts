@@ -12,7 +12,7 @@ import test from 'node:test';
 import { normalizeSenderName, SENDER_NAME_MAX_LENGTH } from './sender-name.ts';
 
 test('plain name passes through unchanged', () => {
-  assert.deepEqual(normalizeSenderName('Evancoe Bot'), { ok: true, value: 'Evancoe Bot' });
+  assert.deepEqual(normalizeSenderName('Acme Support'), { ok: true, value: 'Acme Support' });
 });
 
 test('unicode name is preserved', () => {
@@ -39,7 +39,7 @@ test('angle brackets are stripped', () => {
 });
 
 test('internal whitespace runs collapse to a single space', () => {
-  assert.deepEqual(normalizeSenderName('  Evancoe   \n  Bot  '), { ok: true, value: 'Evancoe Bot' });
+  assert.deepEqual(normalizeSenderName('  Acme   \n  Support  '), { ok: true, value: 'Acme Support' });
 });
 
 test('whitespace-only input clears the name (null)', () => {
