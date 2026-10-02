@@ -109,6 +109,10 @@ import type { LifecyclePayload } from '@/lib/email/billing-lifecycle';
 import { lifecycleQueueingEnabled } from '@/lib/billing/lifecycle-mode';
 import { invoiceLinePriceId } from '@/lib/billing/invoice-shape';
 import {
+  liftPlanLimitPauses,
+  workspacesEnteringPaidPlan,
+} from '@/lib/billing/plan-limit-pauses';
+import {
   billingTarget,
   primaryWorkspaceId,
   recordCheckoutCompleted,
@@ -1236,6 +1240,8 @@ interface ApplyUserPlanOptions {
  *   1. Resolve the owner (user_id from metadata, else user_billing by customer).
  *   2. Upsert `user_billing` (plan + status + customer + subscription).
  *   3. Project the plan onto EVERY non-deleted workspace owned by that user.
+ *   4. For a workspace that just moved onto a paid plan, lift the plan-limit
+ *      pauses on its automations (src/lib/billing/plan-limit-pauses.ts).
  */
 async function applyUserPlan(options: ApplyUserPlanOptions): Promise<void> {
   const {
@@ -1324,6 +1330,11 @@ async function applyUserPlan(options: ApplyUserPlanOptions): Promise<void> {
   if (newPlan !== null) workspaceUpdate.plan = newPlan;
   if (customerId) workspaceUpdate.stripe_customer_id = customerId;
 
+  // Read BEFORE the projection overwrites it: which workspaces are about to
+  // move onto a paid plan. A renewal or a card change for a customer already
+  // on the plan returns none, and this cannot throw.
+  const enteringPaidPlan = await workspacesEnteringPaidPlan(supabase, resolvedUserId, newPlan);
+
   const { error: wsError } = await supabase
     .from('workspaces')
     .update(workspaceUpdate)
@@ -1339,4 +1350,13 @@ async function applyUserPlan(options: ApplyUserPlanOptions): Promise<void> {
   console.log(
     `[stripe-webhook] ${source}: user ${resolvedUserId} → plan "${newPlan ?? '(unchanged)'}" (status=${subscriptionStatus ?? 'n/a'}); propagated to all owned workspaces`,
   );
+
+  // ── Resume automations the Free allowance paused ──────────────────────────
+  // The dispatcher pauses a rule until the END of the allowance period, and
+  // nothing else re-reads that pause, so without this a customer who pays today
+  // keeps every automation paused until next month. AFTER the projection on
+  // purpose: a rule made due while the workspace still read as Free would be
+  // paused straight back. Cannot throw, so a failure here never costs the plan
+  // write above its ledger row.
+  await liftPlanLimitPauses(supabase, enteringPaidPlan, { label: source });
 }

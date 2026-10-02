@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
 import { requireAdmin } from '@/lib/admin/require-admin';
 import { GROWTH_TAGS } from '@/lib/analytics/growth-queries';
+import { liftPlanLimitPauses } from '@/lib/billing/plan-limit-pauses';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 
 /**
@@ -72,7 +73,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return back(request, `${new URLSearchParams({ error: until.message, workspace_id: workspaceId }).toString()}#exempt`);
   }
 
-  const { error } = await createServiceRoleClient()
+  const service = createServiceRoleClient();
+  const { error } = await service
     .from('workspace_usage_exemptions')
     .insert({ workspace_id: workspaceId, reason, ticket_id: ticketId, granted_by: admin.id, expires_at: until.value })
     .select('id')
@@ -83,6 +85,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // failure on the workspace id is the likeliest cause and worth reading.
     return back(request, `${new URLSearchParams({ error: `Could not create the exemption: ${error.message}`, workspace_id: workspaceId }).toString()}#exempt`);
   }
+
+  // An exemption is usually granted BECAUSE the workspace hit the cap, so its
+  // automations are paused to the end of the period. Lift that now; never throws.
+  await liftPlanLimitPauses(service, [workspaceId], { label: 'usage exemption' });
 
   // The band and this page read the same cached roster; the workspace just
   // exempted must leave it on the next render, not ten minutes from now.
