@@ -1028,9 +1028,10 @@ export interface TriageDeps {
    *
    * Same contract as `notifyRuleDisabled`: optional, fire-and-forget, never a
    * second failure for a rule that has already stopped. index.ts queues the
-   * `automation_paused_limit` email from it. Called once per pause, not once
-   * per skipped run: a paused rule is filtered out of the due query, so it is
-   * not seen again until the pause lifts.
+   * `automation_paused_limit` email from it, unless the `usage_limit_reached`
+   * notice is already telling the owner (allowance-gate.ts). Called once per
+   * pause, not once per skipped run: a paused rule is filtered out of the due
+   * query, so it is not seen again until the pause lifts.
    */
   notifyRulePaused?(input: {
     ruleId: string;

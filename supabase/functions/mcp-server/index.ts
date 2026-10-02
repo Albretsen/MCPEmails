@@ -289,7 +289,6 @@ import {
   type TriageInbox,
   type TriageMatch,
   TRIAGE_OPERATION_NAMES,
-  type TriagePlanLimit,
   type TriageRuleRow,
   type TriageStore,
   type AutomationDeps,
@@ -364,12 +363,17 @@ import {
   freeCapUpgradeUrl,
   USAGE_LIMIT_SUPPORT_EMAIL,
 } from "./usage-limit-message.ts";
+import type { ActionAllowanceRow } from "./action-allowance.ts";
 import {
-  type ActionAllowanceRow,
-  allowanceDecision,
-  isAllowanceExhausted,
-  isWarningCrossing,
-} from "./action-allowance.ts";
+  type ActionReservationRow,
+  type AllowanceGateIo,
+  type BillableActionReservation,
+  checkAutomationAllowance,
+  planLimitOfRefusal,
+  queueAutomationPausedNotice,
+  reserveBillableAction as reserveAgainstAllowance,
+  type UsageEmailInput,
+} from "./allowance-gate.ts";
 import {
   type FirstUseMarkers,
   firstUseAlreadyRecorded,
@@ -2868,21 +2872,6 @@ async function loadActionAllowance(workspaceId: string): Promise<ActionAllowance
   return (data as ActionAllowanceRow | null) ?? null;
 }
 
-/** The three notices the edge function can queue. Composed and sent by the
- * web app's billing-lifecycle dispatcher; this side only writes the row. */
-type UsageEmailTemplate = "usage_warning_80" | "usage_limit_reached" | "automation_paused_limit";
-
-/** The allowance notices are about the Free allowance, and only about it.
- *
- * A paid workspace at 80% of its silent ceiling gets no mail: the ceiling is
- * never named to customers (plans.ts, "paid ceilings are not public"), and an
- * email reading "20,000 of 25,000" would name it. A paid workspace that
- * actually reaches the ceiling is refused, and its automations pause, exactly
- * as before; the human remedy in the refusal text is the notice. */
-function allowanceNoticesApply(plan: string | null | undefined): boolean {
-  return plan === "free";
-}
-
 /**
  * Queues one allowance notice for the workspace owner, once per period.
  *
@@ -2900,15 +2889,7 @@ function allowanceNoticesApply(plan: string | null | undefined): boolean {
  * tool call it rode on is unaffected: the customer's mail is more important
  * than our email about it.
  */
-async function queueUsageEmail(input: {
-  workspaceId: string;
-  ownerId: string;
-  template: UsageEmailTemplate;
-  /** period_start ISO for the two usage_* templates, the rule id for the automation one. */
-  scopeKey: string;
-  periodStart: string;
-  payload: Record<string, unknown>;
-}): Promise<void> {
+async function queueUsageEmail(input: UsageEmailInput): Promise<void> {
   try {
     const { data: owner, error: ownerError } = await supabase
       .from("users").select("email").eq("id", input.ownerId).maybeSingle();
@@ -2986,95 +2967,86 @@ async function writeUsageLimitEvent(
   return data === true;
 }
 
-/** What reserving one billable action came to. */
-type BillableActionReservation =
-  /** No reservation was made and none is owed: the bare insert in writeActionUsage is correct. */
-  | { outcome: "unmetered"; reason: string }
-  /** Reserved. `usedActions` counts this reservation, so 120 here IS the 80% crossing. */
-  | { outcome: "reserved"; reservationId: string; usedActions: number }
-  /** Refused by the cap. Everything the refusal text and `_meta` need. */
-  | {
-    outcome: "refused";
-    plan: string;
-    usedActions: number;
-    cap: number;
-    periodStart: string;
-    periodEnd: string;
-  };
+/** Has a cap event already been recorded for this workspace in this period?
+ *
+ * Asked only by the dispatcher's pre-run check, which records the cap once
+ * per workspace per period rather than once per parked rule (allowance-gate.ts
+ * says why). A failed read answers false, so the event is recorded anyway. */
+async function usageLimitEventRecorded(workspaceId: string, periodStart: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("usage_limit_events").select("id")
+    .eq("workspace_id", workspaceId).gte("occurred_at", periodStart).limit(1);
+  if (error) {
+    console.error("[mcp-server] usage_limit_event_lookup_failed", {
+      workspace_id: workspaceId, error: error.message, error_code: error.code,
+    });
+    return false;
+  }
+  return Array.isArray(data) && data.length > 0;
+}
+
+/** Is a live `usage_limit_reached` notice queued, or already sent, for this
+ * workspace and period?
+ *
+ * Asked before the per-rule `automation_paused_limit` notice is queued, so an
+ * owner is not told the same thing twice a few minutes apart. A cancelled row
+ * does not count: nothing was or will be sent from it. A failed read answers
+ * false, so the per-rule notice still goes. */
+async function usageLimitNoticeQueued(workspaceId: string, periodStart: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("billing_email_sends").select("id")
+    .eq("workspace_id", workspaceId).eq("template", "usage_limit_reached").eq("period_start", periodStart)
+    .is("cancelled_at", null).limit(1);
+  if (error) {
+    console.error("[mcp-server] usage_limit_notice_lookup_failed", {
+      workspace_id: workspaceId, error: error.message, error_code: error.code,
+    });
+    return false;
+  }
+  return Array.isArray(data) && data.length > 0;
+}
+
+/**
+ * The database behind allowance-gate.ts, where the decisions live.
+ *
+ * One object for the interactive tool call and the automation runner, so the
+ * two cannot be handed different queries. Every member keeps the failure
+ * direction `AllowanceGateIo` documents: reads and the reservation fail open,
+ * a failed event write means no email.
+ */
+const allowanceGateIo: AllowanceGateIo = {
+  loadAllowance: loadActionAllowance,
+  async reserve(input) {
+    const { data: reservation, error: reservationError } = await supabase.rpc("reserve_action_usage", {
+      p_workspace_id: input.workspaceId, p_tool_name: input.toolName, p_meter_version: ACTION_METER_VERSION, p_cap: input.cap,
+      p_period_start: input.periodStart, p_period_end: input.periodEnd,
+    }).single();
+    if (reservationError) {
+      console.error("[mcp-server] action_usage_reservation_failed", { error: reservationError.message, error_code: reservationError.code });
+      return { ok: false };
+    }
+    return { ok: true, row: reservation as ActionReservationRow | null };
+  },
+  recordLimitEvent: (input) =>
+    writeUsageLimitEvent(input.workspaceId, input.plan, input.usedActions, input.cap, input.periodStart),
+  limitEventRecorded: usageLimitEventRecorded,
+  limitNoticeQueued: usageLimitNoticeQueued,
+  queueEmail: queueUsageEmail,
+};
 
 /**
  * Reserves one billable action against the workspace's allowance.
  *
  * The one path both the interactive tool call and the unattended automation
- * runner take, so the two cannot disagree about whether a workspace has
- * allowance left. In order: read the allowance row; let unmetered rows
- * through with no reservation; reserve with the row's cap and window; on
- * success queue the 80% notice from the crossing call; on refusal record the
- * event and queue the 100% notice from the first refusal of the period.
- *
- * Fail-open is confined to INFRASTRUCTURE: an allowance lookup or reservation
- * RPC that errors lets the call through, logged. Fail-closed is confined to a
- * REAL refusal, i.e. the reservation RPC answering `allowed: false`. Nothing
- * else refuses. The kill switch and the billable-tool check are the callers'
- * job, because they differ between the two callers.
+ * runner take. The decision, the 80% notice and the cap record all live in
+ * allowance-gate.ts; this only binds it to the real database.
  */
-async function reserveBillableAction(
+function reserveBillableAction(
   workspaceId: string,
   toolName: string,
-  /**
-   * The allowance row when the caller is already reading it (handleRequest
-   * issues it alongside the rate-limit checks). Only the READ moves earlier;
-   * the reservation below still runs here, after every refusal that must not
-   * leave one behind. The automation runner passes nothing and reads it here.
-   */
   preloadedAllowance?: Promise<ActionAllowanceRow | null>,
 ): Promise<BillableActionReservation> {
-  const allowance = await (preloadedAllowance ?? loadActionAllowance(workspaceId));
-  const decision = allowanceDecision(allowance);
-  if (decision.kind !== "meter" || !allowance) return { outcome: "unmetered", reason: decision.kind === "meter" ? "no_row" : decision.reason };
-
-  const { data: reservation, error: reservationError } = await supabase.rpc("reserve_action_usage", {
-    p_workspace_id: workspaceId, p_tool_name: toolName, p_meter_version: ACTION_METER_VERSION, p_cap: decision.cap,
-    p_period_start: decision.periodStart, p_period_end: decision.periodEnd,
-  }).single();
-  if (reservationError) {
-    console.error("[mcp-server] action_usage_reservation_failed", { error: reservationError.message, error_code: reservationError.code });
-    // Fail open only when the reservation subsystem itself is unavailable.
-    return { outcome: "unmetered", reason: "reservation_error" };
-  }
-  const result = reservation as { reservation_id: string | null; allowed: boolean; used_actions: number } | null;
-  const notices = allowanceNoticesApply(allowance.plan);
-  const usagePayload = (used: number) => ({
-    used, cap: decision.cap, period_start: decision.periodStart, period_end: decision.periodEnd, plan: allowance.plan,
-  });
-
-  if (result?.allowed && result.reservation_id) {
-    if (notices && isWarningCrossing(result.used_actions, decision.cap)) {
-      await queueUsageEmail({
-        workspaceId, ownerId: allowance.owner_id, template: "usage_warning_80",
-        scopeKey: decision.periodStart, periodStart: decision.periodStart, payload: usagePayload(result.used_actions),
-      });
-    }
-    return { outcome: "reserved", reservationId: result.reservation_id, usedActions: result.used_actions };
-  }
-
-  const usedActions = result?.used_actions ?? decision.cap;
-  const firstRefusalOfPeriod = await writeUsageLimitEvent(workspaceId, allowance.plan, usedActions, decision.cap, decision.periodStart);
-  if (notices && firstRefusalOfPeriod) {
-    await queueUsageEmail({
-      workspaceId, ownerId: allowance.owner_id, template: "usage_limit_reached",
-      scopeKey: decision.periodStart, periodStart: decision.periodStart, payload: usagePayload(usedActions),
-    });
-  }
-  return {
-    outcome: "refused", plan: allowance.plan, usedActions, cap: decision.cap,
-    periodStart: decision.periodStart, periodEnd: decision.periodEnd,
-  };
-}
-
-/** The shape the automation runner pauses on, from a refusal. */
-function planLimitOfRefusal(refusal: Extract<BillableActionReservation, { outcome: "refused" }>): TriagePlanLimit {
-  return { paused_until: refusal.periodEnd, period_start: refusal.periodStart, used: refusal.usedActions, cap: refusal.cap };
+  return reserveAgainstAllowance(allowanceGateIo, workspaceId, toolName, preloadedAllowance);
 }
 
 /** The allowance applies to every workspace that is not exempt.
@@ -31247,19 +31219,12 @@ function triageDeps(): TriageDeps {
       // documented rollback for the whole allowance, and a rollback that left
       // automations paused would be half a rollback.
       if (Deno.env.get("USAGE_ENFORCEMENT_DISABLED") === "true") return { allowed: true };
-      const allowance = await loadActionAllowance(workspaceId);
-      // Unmetered and lookup failures both answer "allowed": isAllowanceExhausted
-      // is false for anything that does not meter, and a null row is one of them.
-      if (!allowance || !isAllowanceExhausted(allowance)) return { allowed: true };
-      return {
-        allowed: false,
-        limit: {
-          paused_until: allowance.period_end,
-          period_start: allowance.period_start,
-          used: allowance.used,
-          cap: allowance.cap ?? 0,
-        },
-      };
+      // An exhausted allowance is the cap being reached, so this also records
+      // it and queues the limit notice, once per workspace per period, exactly
+      // as a refused tool call does. Until 2026-10-02 it only paused the rule,
+      // and a workspace capped by its own automations was never counted or
+      // told the price. See allowance-gate.ts.
+      return await checkAutomationAllowance(allowanceGateIo, workspaceId);
     },
     async reserveAction(input) {
       // The same reservation an interactive tool call takes, so an unattended
@@ -31285,28 +31250,15 @@ function triageDeps(): TriageDeps {
       if (error) throw new Error(error.message);
     },
     async notifyRulePaused(input) {
-      // One notice per workspace per period, enforced by the queue's unique
-      // index: a second rule paused in the same period is a 23505 and is
-      // dropped, which is the right outcome for a customer who would otherwise
-      // get one mail per rule about one cause. The allowance is re-read here
-      // rather than carried through the engine, because the owner address and
-      // the plan are ours to resolve, not the engine's to know: one RPC on a
-      // path that fires at most once per workspace per period.
-      const allowance = await loadActionAllowance(input.workspaceId);
-      if (!allowance || !allowanceNoticesApply(allowance.plan)) return;
-      await queueUsageEmail({
+      // The per-rule notice, and only when the limit notice is not already
+      // telling the owner the same thing: the cap is recorded (and that notice
+      // queued) before a rule is ever paused, on both paths into here. At most
+      // one per workspace per period, enforced by the queue's unique index.
+      await queueAutomationPausedNotice(allowanceGateIo, {
         workspaceId: input.workspaceId,
-        ownerId: allowance.owner_id,
-        template: "automation_paused_limit",
-        scopeKey: input.ruleId,
-        periodStart: input.limit.period_start,
-        payload: {
-          rule_id: input.ruleId,
-          rule_name: input.ruleName,
-          used: input.limit.used,
-          cap: input.limit.cap,
-          period_end: input.limit.paused_until,
-        },
+        ruleId: input.ruleId,
+        ruleName: input.ruleName,
+        limit: input.limit,
       });
     },
     async notifyRuleDisabled(input) {
