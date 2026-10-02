@@ -180,6 +180,11 @@ export function classifyProviderError(error: unknown): ProviderErrorReason {
   // Set by imap-client.ts. Transient and worth retrying, unlike ImapAuthError.
   if (name === "ImapConnectionLimitError") return "connection_limit";
   if (name === "ImapAuthError") return "auth_failed";
+  // Set by imap-client.ts for a SELECT the server refused WITHOUT saying the
+  // mailbox is missing (a bare NO, [UNAVAILABLE], [SERVERBUG], [LIMIT], or any
+  // refusal of INBOX). Decided by name, ahead of every text pattern below, so
+  // nothing in the message can turn a refusal back into a missing folder.
+  if (name === "ImapSelectRefusedError") return "command_rejected";
 
   const message = errorMessage(error);
 
@@ -340,6 +345,13 @@ export function providerErrorSignals(error: unknown): string[] {
   // messages, so the anchor is what makes the allow-list a real boundary.
   const command = message.match(/^([A-Z]+(?: [A-Z]+)?) failed\b/);
   if (command && ALLOWED_COMMANDS.has(command[1])) signals.push(command[1]);
+
+  // The tagged status, in the one shape that carries it: "SELECT failed: NO"
+  // or "SELECT failed: BAD [CODE]", which is what ImapSelectRefusedError
+  // throws. Same anchor as the command above and for the same reason, and the
+  // only two values it can ever emit are protocol constants.
+  const tagged = message.match(/^[A-Z]+(?: [A-Z]+)? failed: (NO|BAD)(?=$| \[)/);
+  if (command && ALLOWED_COMMANDS.has(command[1]) && tagged) signals.push(tagged[1]);
 
   const status = message.match(/\b(?:failed|error)\b\W{0,3}([45]\d\d)\b/i);
   if (status) signals.push(`http_${status[1]}`);

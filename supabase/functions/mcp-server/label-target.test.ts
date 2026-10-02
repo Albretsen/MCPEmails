@@ -26,6 +26,7 @@ import {
   folderNameTrimNote,
   type FolderReference,
   folderNotFoundMessage,
+  isGmailImapHost,
   matchFolderExactly,
   resolveFolderReference,
 } from "./label-target.ts";
@@ -151,7 +152,7 @@ Deno.test("an unresolvable value is a structured failure, not a throw", () => {
   // …says which inbox…
   assertStringIncludes(r.error, "gmail");
   // …and points at the call that lists valid ids and names.
-  assertStringIncludes(r.error, "folder action: list");
+  assertStringIncludes(r.error, "folder_list");
 });
 
 Deno.test("the failure message never suggests waiting and retrying", () => {
@@ -178,6 +179,103 @@ Deno.test("the failure message lists every accepted spelling", () => {
     assertStringIncludes(m, token);
   }
   assertStringIncludes(m, "label id"); // Gmail's noun, not "folder id".
+});
+
+// ---------------------------------------------------------------------------
+// The message must not send the caller back to what just failed (2026-10-02).
+//
+// Two things it got wrong. It pointed at "folder action: list", which is not a
+// call: listing lives on the read tool `folder_list`, and `folder` has no list
+// action. And it recited all six aliases as accepted in the reply to a call
+// that had just failed on one of them, so a model that passed "sent" was told
+// that "sent" works.
+// ---------------------------------------------------------------------------
+
+/** The aliases the message offers, read out of its "an alias (a, b, c)" list. */
+function offeredAliases(message: string): string[] {
+  const list = /an alias \(([^)]*)\)/.exec(message);
+  assert(list, `the message no longer lists the aliases it accepts: ${message}`);
+  return list[1].split(", ");
+}
+
+Deno.test("the failure message names the real read tool, folder_list", () => {
+  const messages = [
+    folderNotFoundMessage("nope", { provider: "imap" }),
+    folderNotFoundMessage("sent", { provider: "imap", available: ["INBOX", "Receipts"] }),
+    (resolveFolderReference("nope", GMAIL_LABELS, { provider: "gmail" }) as { error: string }).error,
+    // The whitespace-ambiguity refusal pointed at the same non-call.
+    (resolveFolderReference("  Work  ", [
+      { id: " Work", name: " Work" },
+      { id: "Work ", name: "Work " },
+    ], { provider: "imap" }) as { error: string }).error,
+  ];
+  for (const m of messages) {
+    assertStringIncludes(m, "folder_list");
+    assert(!m.includes("folder action: list"), `still names a call that does not exist: ${m}`);
+    assert(!/action:\s*list/.test(m), `still names a list action: ${m}`);
+  }
+});
+
+Deno.test("the alias that just failed is not offered back as accepted", () => {
+  for (const token of FOLDER_ALIAS_TOKENS) {
+    const m = folderNotFoundMessage(token, { provider: "imap" });
+    const offered = offeredAliases(m);
+    assert(!offered.includes(token), `"${token}" failed and is still offered: ${m}`);
+    assertEquals(
+      offered,
+      FOLDER_ALIAS_TOKENS.filter((t) => t !== token),
+      "every OTHER alias is still listed",
+    );
+    // Case and stray whitespace do not bring it back.
+    assert(!offeredAliases(folderNotFoundMessage(` ${token.toUpperCase()} `, {})).includes(token));
+  }
+});
+
+Deno.test("a synonym that failed takes its canonical alias out of the list", () => {
+  // "junk" is the spam role and "deleted" is the trash role. The caller knows
+  // that vocabulary and says so; without it the message would offer "spam" to
+  // a model whose "junk" had just failed for want of exactly that role.
+  assert(!offeredAliases(folderNotFoundMessage("junk", { failedAlias: "spam" })).includes("spam"));
+  assert(!offeredAliases(folderNotFoundMessage("Deleted", { failedAlias: "trash" })).includes("trash"));
+  // And it reaches the message through the matcher too.
+  const r = resolveFolderReference("junk", IMAP_MAILBOXES.filter((f) => f.name !== "Junk"), {
+    provider: "imap",
+    failedAlias: "spam",
+  });
+  assert(!r.ok);
+  assert(!offeredAliases(r.error).includes("spam"), r.error);
+  // A value that is not an alias at all loses nothing.
+  assertEquals(offeredAliases(folderNotFoundMessage("Receipts 2019", {})), [...FOLDER_ALIAS_TOKENS]);
+});
+
+Deno.test("the message says an alias needs the mailbox to HAVE that role", () => {
+  const m = folderNotFoundMessage("sent", { provider: "imap" });
+  assertStringIncludes(m, "where the inbox has a folder in that role");
+  assert(!m.includes("one of the aliases"), "aliases are no longer presented as always working");
+});
+
+Deno.test("an imap inbox that is Gmail is called Gmail", () => {
+  for (const host of ["imap.gmail.com", "IMAP.GMAIL.COM", "imap.googlemail.com"]) {
+    assert(isGmailImapHost(host), host);
+    const m = folderNotFoundMessage("archive", { provider: "imap", imapHost: host });
+    assertStringIncludes(m, "this Gmail inbox (connected over IMAP)");
+    assert(!m.includes("this imap inbox"), m);
+    // Still IMAP's noun: over IMAP these are folders, not labels.
+    assertStringIncludes(m, "No folder matching");
+  }
+  // Any other host is what it was, including a lookalike.
+  for (const host of ["imap.example.com", "imap.gmail.com.example.com", "notimap.gmail.com", "", null]) {
+    assert(!isGmailImapHost(host), String(host));
+    assertStringIncludes(
+      folderNotFoundMessage("archive", { provider: "imap", imapHost: host }),
+      "this imap inbox",
+    );
+  }
+  // The host is only consulted for the provider it disambiguates.
+  assertStringIncludes(
+    folderNotFoundMessage("x", { provider: "outlook", imapHost: "imap.gmail.com" }),
+    "this outlook inbox",
+  );
 });
 
 Deno.test("an empty value asks for one instead of reporting a missing folder", () => {
@@ -408,7 +506,7 @@ Deno.test("a genuine miss is still folder_not_found with the message that stops 
   assert(!r.ok);
   assertEquals(r.code, "folder_not_found");
   assertStringIncludes(r.error, "LM1921 and LM1935");
-  assertStringIncludes(r.error, "folder action: list");
+  assertStringIncludes(r.error, "folder_list");
   assertStringIncludes(r.error, "permanent");
   // The padded name is listed WITH its padding, which is how the caller finds it.
   assertStringIncludes(r.error, '" LM1921 & LM1935 "');

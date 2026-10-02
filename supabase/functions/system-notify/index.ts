@@ -190,6 +190,10 @@ const AUTOMATION_ERROR_GUIDANCE: Record<string, string> = {
   inbox_unavailable: "The inbox the rule targets is gone.",
   search_failed: "The mailbox search failed repeatedly. Likely a provider or credential problem on that inbox.",
   folder_unresolved: "The destination folder could not be resolved on the provider.",
+  destination_folder_not_found:
+    "The destination folder is missing from the mailbox: every move the rule attempted was refused "
+    + "and nothing was moved. The user has to create the folder (or point the rule at one that exists) "
+    + "and switch the rule back on.",
   invalid_filter: "The stored filter no longer validates. This is ours, not the user's.",
   invalid_action: "The stored action no longer validates. This is ours, not the user's.",
 };
