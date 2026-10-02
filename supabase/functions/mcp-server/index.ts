@@ -404,6 +404,7 @@ import {
   type WorkBudget,
 } from "./bulk-budget.ts";
 import { ImapSession } from "./imap-session.ts";
+import { ImapCallTimings, imapTimingStore } from "./imap-timing.ts";
 import {
   groupImapIdsByFolder,
   type ImapFolderGroup,
@@ -29842,6 +29843,11 @@ async function handleToolsCall(
     total_ms: totalMs,
     pre_db_calls: preDbCalls,
     db_calls: dbCalls,
+    // Where the mailbox side of the call went, when it opened an IMAP
+    // connection: connect (and its retries), SELECT, SEARCH, FETCH, LIST,
+    // STATUS, LOGOUT. Durations, counts and byte totals only, never a host,
+    // a folder or anything out of a message. See imap-timing.ts.
+    ...(imapTimingStore.getStore()?.logFields() ?? {}),
   });
 
   // Last thing before the result leaves: if this is one of our own
@@ -31285,11 +31291,15 @@ function triageDeps(): TriageDeps {
   };
 }
 
-// Opens the per-request round-trip counter (requestMeterStore) and does
-// nothing else. A named function, so `Deno.serve(handleRequest)` at the bottom
-// stays a bare reference and the tests drive the entry point production serves.
+// Opens the per-request round-trip counter (requestMeterStore) and the
+// per-request IMAP timing record (imapTimingStore), and does nothing else. A
+// named function, so `Deno.serve(handleRequest)` at the bottom stays a bare
+// reference and the tests drive the entry point production serves.
 function handleRequest(req: Request): Promise<Response> {
-  return requestMeterStore.run({ dbCalls: 0 }, () => handleMeteredRequest(req));
+  return requestMeterStore.run(
+    { dbCalls: 0 },
+    () => imapTimingStore.run(new ImapCallTimings(), () => handleMeteredRequest(req)),
+  );
 }
 
 async function handleMeteredRequest(req: Request): Promise<Response> {

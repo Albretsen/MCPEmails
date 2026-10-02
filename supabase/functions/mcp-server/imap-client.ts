@@ -32,6 +32,12 @@ import {
   parseImapCapabilities,
   redactImapAuthText,
 } from "./imap-auth.ts";
+import {
+  currentImapTimings,
+  type ImapCallTimings,
+  imapClockMs,
+  type ImapPhase,
+} from "./imap-timing.ts";
 
 export class ImapAuthError extends Error {
   constructor(message: string) {
@@ -435,6 +441,15 @@ export class ImapClient {
    * {@link busy}.
    */
   private pending = 0;
+  /**
+   * The timing record of the request this connection was opened for, or null
+   * outside one (the automation runner, scheduled sends, tests). Captured once
+   * here rather than looked up per command, so every command on this socket is
+   * charged to the call that opened it. Numbers only: see imap-timing.ts.
+   */
+  private readonly timing: ImapCallTimings | null = currentImapTimings();
+  /** Bytes read off the socket so far. Feeds `fetch_bytes`. */
+  private bytesRead = 0;
   private readonly decoder = new TextDecoder("latin1");
   private readonly encoder = new TextEncoder();
 
@@ -470,9 +485,21 @@ export class ImapClient {
    * queued rather than racing on the shared read buffer / tag stream. Errors
    * propagate to *this* caller but never break the chain for the next one.
    */
-  private runExclusive<T>(fn: () => Promise<T>): Promise<T> {
+  private runExclusive<T>(fn: () => Promise<T>, phase: ImapPhase = "other"): Promise<T> {
     this.pending++;
-    const run = this.commandChain.then(fn, fn);
+    // Timed from the moment the command gets the socket, not from the moment
+    // it was queued, so a wait behind another command is not charged twice.
+    const timing = this.timing;
+    const body = timing === null ? fn : async () => {
+      const startedMs = imapClockMs();
+      const startedBytes = this.bytesRead;
+      try {
+        return await fn();
+      } finally {
+        timing.addCommand(phase, imapClockMs() - startedMs, this.bytesRead - startedBytes);
+      }
+    };
+    const run = this.commandChain.then(body, body);
     // Keep the chain alive regardless of this command's outcome.
     this.commandChain = run.then(() => {}, () => {});
     // Settle-only bookkeeping. Both handlers are supplied so this never becomes
@@ -514,12 +541,30 @@ export class ImapClient {
    * `imap_auth_failed`.
    */
   static async connect(cfg: ImapConnectConfig): Promise<ImapClient> {
+    const timing = currentImapTimings();
+    if (timing === null) return await ImapClient.connectWithRetry(cfg, null);
+    const startedMs = imapClockMs();
+    try {
+      return await ImapClient.connectWithRetry(cfg, timing);
+    } finally {
+      timing.connectMs += imapClockMs() - startedMs;
+    }
+  }
+
+  /** The retry loop behind {@link connect}; see there for the back-off rule. */
+  private static async connectWithRetry(
+    cfg: ImapConnectConfig,
+    timing: ImapCallTimings | null,
+  ): Promise<ImapClient> {
     const maxRetries = 3;
     let lastErr: unknown;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        return await ImapClient.connectOnce(cfg);
+        if (timing) timing.connectAttempts += 1;
+        const client = await ImapClient.connectOnce(cfg, timing);
+        if (timing) timing.connects += 1;
+        return client;
       } catch (err) {
         lastErr = err;
 
@@ -531,7 +576,11 @@ export class ImapClient {
 
         if (attempt < maxRetries) {
           const waitMs = 5_000 * Math.pow(2, attempt - 1); // 5s, 10s
+          const sleptFromMs = imapClockMs();
           await new Promise((r) => setTimeout(r, waitMs));
+          // Recorded so a retry that then SUCCEEDS is visible: it used to cost
+          // the caller 5 or 15 seconds and leave nothing in the logs.
+          if (timing) timing.backoffMs += imapClockMs() - sleptFromMs;
           continue;
         }
       }
@@ -554,7 +603,11 @@ export class ImapClient {
    * signals a transient connection/rate limit (retryable), and
    * {@link ImapAuthError} on genuine authentication failure (not retryable).
    */
-  private static async connectOnce(cfg: ImapConnectConfig): Promise<ImapClient> {
+  private static async connectOnce(
+    cfg: ImapConnectConfig,
+    timing: ImapCallTimings | null = null,
+  ): Promise<ImapClient> {
+    const dialFromMs = imapClockMs();
     // SSRF guard. The host on this row was public when the mailbox was
     // connected, but nothing stops its A record being repointed into a private
     // range afterwards, and this line is where that would be cashed in. The
@@ -567,6 +620,8 @@ export class ImapClient {
       port: cfg.port,
       protocol: "imap",
     });
+    const tlsFromMs = imapClockMs();
+    if (timing) timing.dialMs += tlsFromMs - dialFromMs;
 
     if (cfg.security !== "starttls") {
       // Implicit TLS on a PINNED address. Deno.connectTls cannot express this:
@@ -596,6 +651,8 @@ export class ImapClient {
       }
       conn = tls;
     }
+    const authFromMs = imapClockMs();
+    if (timing) timing.tlsMs += authFromMs - tlsFromMs;
 
     const client = new ImapClient(conn);
 
@@ -632,6 +689,7 @@ export class ImapClient {
       cfg.email,
       cfg.password,
     );
+    if (timing) timing.authMs += imapClockMs() - authFromMs;
 
     if (resp.status !== "OK") {
       client.close();
@@ -797,7 +855,7 @@ export class ImapClient {
         throw new ImapSelectRefusedError(resp.status, failure.responseCode);
       }
       this.lastPermanentFlags = parsePermanentFlags(resp.untagged);
-    });
+    }, "select");
   }
 
   /**
@@ -894,7 +952,7 @@ export class ImapClient {
         );
       }
       return await this.uidSearchAsciiUnlocked(folded.criteria);
-    });
+    }, "search");
   }
 
   /**
@@ -910,7 +968,9 @@ export class ImapClient {
     if (resp.status !== "OK") {
       throw new Error(`UID SEARCH failed: ${resp.text}`);
     }
-    return parseSearchUids(resp.untagged);
+    const uids = parseSearchUids(resp.untagged);
+    if (this.timing) this.timing.searchUidCount += uids.length;
+    return uids;
   }
 
   /**
@@ -958,10 +1018,12 @@ export class ImapClient {
 
     await this.write(`${pending}${CRLF}`);
     const resp = await this.readTagged(tag, { idleTimeoutMs: SEARCH_IDLE_TIMEOUT_MS });
+    const uids = resp.status === "OK" ? parseSearchUids(resp.untagged) : [];
+    if (this.timing) this.timing.searchUidCount += uids.length;
     return {
       status: resp.status,
       text: resp.text,
-      uids: resp.status === "OK" ? parseSearchUids(resp.untagged) : [],
+      uids,
     };
   }
 
@@ -1060,7 +1122,7 @@ export class ImapClient {
         if (parsed) summaries.push(parsed);
       }
       return summaries;
-    });
+    }, "fetch");
   }
 
   /**
@@ -1116,7 +1178,7 @@ export class ImapClient {
         }
       }
       return { raw, flags };
-    });
+    }, "fetch");
   }
 
   /** Mark a message read by setting the \Seen flag. Best-effort. */
@@ -1350,7 +1412,7 @@ export class ImapClient {
       }
       mailboxes.sort((a, b) => a.name.localeCompare(b.name));
       return mailboxes;
-    });
+    }, "list");
   }
 
   /**
@@ -1379,7 +1441,7 @@ export class ImapClient {
         uidNext: pick("UIDNEXT"),
         uidValidity: pick("UIDVALIDITY"),
       };
-    });
+    }, "status");
   }
 
   /** CREATE a new mailbox. Throws on server error. */
@@ -1438,7 +1500,7 @@ export class ImapClient {
       } finally {
         this.close();
       }
-    });
+    }, "logout");
   }
 
   /**
@@ -1524,7 +1586,9 @@ export class ImapClient {
   private async readSocket(view: Uint8Array): Promise<number | null> {
     if (this.destroyed) return null;
     try {
-      return await withTimeout(this.conn.read(view), this.readIdleTimeoutMs);
+      const read = await withTimeout(this.conn.read(view), this.readIdleTimeoutMs);
+      if (read !== null) this.bytesRead += read;
+      return read;
     } catch (err) {
       if (this.destroyed) return null;
       throw err;
