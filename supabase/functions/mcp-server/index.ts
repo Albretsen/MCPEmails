@@ -8252,6 +8252,11 @@ for (const definition of BULK_TOOL_DEFINITIONS) {
 // `withListingCardMeta` leaves a registry `_meta` in place, so a stamp here
 // silently survives the gate.
 //
+// `draft_read` stopped refusing on 2026-10-02. With the gate shut it has no
+// `_meta`, so it is listed as an ordinary model-visible tool, and it now
+// answers as one: a plain single-draft read with no card envelope. See
+// `mcp-app-drafts.ts#gateDraftTool`. `draft_editor_save` still refuses.
+//
 // They carry `visibility: ["app"]` when gated in, for tidiness (Phase 0 Q2: it
 // is a host UI hint, never a control). They are absent from
 // BILLABLE_TOOL_NAMES — they act on one

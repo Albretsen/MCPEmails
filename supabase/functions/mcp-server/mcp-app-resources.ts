@@ -314,6 +314,12 @@ export const DRAFT_EDITOR_CARD_TOOL_NAMES: readonly string[] = [
  * old conversation still calls `draft_read`, and a renderable "the card is
  * turned off" envelope is a better answer than a -32601.
  *
+ * `draft_read` no longer refuses (2026-10-02). With the gate shut it has no
+ * `_meta`, so it is listed as an ordinary model-visible tool, and it answers
+ * as one: a plain read with no envelope, which a restoring card cannot render
+ * an editor from. `draft_editor_save` still refuses. See
+ * `mcp-app-drafts.ts#gateDraftTool`.
+ *
  * Kept apart from `DRAFT_EDITOR_CARD_TOOL_NAMES` because the metadata differs:
  * these carry `visibility: ["app"]` on top of the resource URI, `draft` does
  * not. Same gate, different shape.
