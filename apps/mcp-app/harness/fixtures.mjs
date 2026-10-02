@@ -675,7 +675,14 @@ export const receiptWithNoId = {
 };
 
 /**
- * `draft_read` refusing a switched-off editor.
+ * A draft-editor tool refusing a switched-off editor.
+ *
+ * WHO SENDS THIS, as of 2026-10-02: `draft_editor_save`, and a server deployed
+ * before that date answering `draft_read`. A current server no longer refuses
+ * `draft_read` here: it answers with the plain read below (`draftReadPlain`).
+ * The card keeps adopting this receipt on its restore path anyway, because a
+ * card cannot know which deploy it is talking to and the receipt is still the
+ * true thing to show when one arrives.
  *
  * The real shape, from mcp-app-drafts.ts#gateDraftTool via `draftFailure`:
  * `card: "receipt"`, `state: "error"`, an `error_code` and NO id of any kind —
@@ -712,6 +719,37 @@ export const draftEditorDisabled = {
       "Nothing was changed. Drafts can still be created, updated and sent with the draft tool.",
     error_code: "draft_editor_disabled",
   },
+};
+
+/**
+ * `draft_read` for a workspace with NO editor: a plain read, not an envelope.
+ *
+ * The real shape, from mcp-app-drafts.ts#buildPlainDraftRead. Since 2026-10-02
+ * this is what `draft_read` returns when the workspace is not rolled out to
+ * the editor, or the editor is hidden for the workspace or the inbox. It is
+ * the model's read of one draft, and the same object rides in `content` (as
+ * JSON text) and in `structuredContent`.
+ *
+ * What matters to the card is what is ABSENT: no `schema_version` and no
+ * `card`. So `isEnvelope` rejects it, `claimsToBeOurs` does not claim it, and
+ * `classifyResult` calls it "foreign" on both channels. The ids deliberately
+ * match `draftEditorImap`, so a test that expects the card to refuse it cannot
+ * pass on an id mismatch instead.
+ */
+export const draftReadPlain = {
+  draft_id: "Drafts:2",
+  inbox_id: "51ab6d90-4c18-4a2f-9d77-8e6a1b022c9d",
+  to: ["dana@northwind.example"],
+  cc: [],
+  bcc: ["archive@mcpemails.example"],
+  subject: "Re: Q3 numbers",
+  body_text: "PLAIN-READ-BODY Here are the Q3 numbers, read without a card.",
+  body_truncated: false,
+  attachments: [],
+  attachment_count: 0,
+  signature_embedded: false,
+  threaded: true,
+  untrusted_content: true,
 };
 
 /**

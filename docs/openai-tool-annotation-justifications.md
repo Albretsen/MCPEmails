@@ -593,33 +593,40 @@ settings — see its block, which is the one place in this file a
 
 **Submitted text.**
 
-- **readOnlyHint:** It fetches one unsent draft so the draft editor card can show it. Nothing is written and nothing is sent.
+- **readOnlyHint:** It reads one unsent draft and returns it: recipients, subject, body and attachment names. Nothing is written and nothing is sent.
 - **destructiveHint:** It changes nothing at all.
 - **openWorldHint:** The draft is inside the connected mailbox. It needs read:email as well as manage:drafts, because on IMAP and Outlook a draft id is a message id email_read already returns to the same key.
 
 **Reasoning.**
 
-- **readOnly true:** it fetches one unsent draft so the draft-editor card can
-  show it. Nothing is written and nothing is sent.
+- **readOnly true:** it reads one unsent draft and returns it. Where the draft
+  editor card is on, the result is the card envelope and the card shows it;
+  where it is not, the result is a plain payload the model reads. Nothing is
+  written and nothing is sent in either case.
 - **destructive false:** it changes nothing at all.
 - **openWorld false:** the draft is inside the connected mailbox. It also
   requires `read:email` on top of `manage:drafts`, because on IMAP and Outlook a
   draft id is a message id and `email_read` already returns the same body to the
   same key. That is a consistency rule, not a boundary.
-- **When the card is switched off.** Two switches, kept apart, each with its
-  own error code, and both refuse before anything is read. `workspaceGate`
-  returns `workspaces.draft_editor_enabled` (our rollout) and
+- **When the card is switched off, or was never switched on.** The same
+  read, without the card. `workspaceGate` returns
+  `workspaces.draft_editor_enabled` (our rollout) and
   `workspaces.draft_editor_hidden` (the user's opt-out) as SEPARATE fields
   rather than one ANDed boolean, and `gateDraftTool` additionally reads
-  `inboxes.draft_editor_hidden` for the inbox the call resolved to. A workspace
-  that is not rolled out is refused with `error_code: draft_editor_disabled`;
-  a card the user switched off, at EITHER the workspace or the inbox grain, is
-  refused with `error_code: draft_editor_hidden` — a distinct code, because "we
-  have not offered you this" and "you turned this off" are different facts.
-  Either way nothing is read: no decrypted body, no envelope, only the refusal.
-  The per-inbox flag did not refuse this tool until 2026-09-16, which let the
-  card's restore-recovery path re-open a live editor for an inbox the user had
-  switched off. It does now.
+  `inboxes.draft_editor_hidden` for the inbox the call resolved to. If the
+  workspace is not rolled out, or the card is off at EITHER the workspace or
+  the inbox grain, this tool returns the draft as a plain payload marked
+  `untrusted_content: true`, the same object in `content` and
+  `structuredContent`, with no `schema_version`, no `card` and no `_meta.ui`.
+  Until 2026-10-02 it refused instead (`error_code: draft_editor_disabled` and
+  `error_code: draft_editor_hidden`, which `draft_editor_save` still returns).
+  That refusal was a defect rather than a guard: without the drafts gate the
+  tool has no `_meta.ui`, so it is listed as an ordinary model-visible tool, it
+  is the only tool that returns one draft's body, and every call a model made
+  to it was refused. The scopes and the inbox check are unchanged and still
+  refuse before anything is read. What the 2026-09-16 fix was for still holds:
+  a plain payload is not an envelope, so the card's restore-recovery path
+  cannot re-open an editor from it for an inbox the user switched off.
 - **What the same flags do to `tools/list`.** This tool is LISTED
   unconditionally; what it loses is `_meta.ui`, on the same `drafts` gate
   `draft` uses — the workspace must be rolled out and not hidden
@@ -631,7 +638,7 @@ settings — see its block, which is the one place in this file a
   `email_compose` and `schedule` are on a DIFFERENT gate:
   `REVIEW_CARD_TOOL_NAMES` rides `gates.outbound`, which reads
   `send_approval_required` and never looks at `draft_editor_hidden`. None of
-  that is a permission boundary; the refusal above is.
+  that is a permission boundary; the scope and inbox checks are.
 
 ## draft_editor_save (readOnly: false, destructive: false, openWorld: false)
 
@@ -686,11 +693,11 @@ settings — see its block, which is the one place in this file a
   them, while Outlook, whose update is a field PATCH, may proceed.
 - **openWorld false:** the draft stays in the connected mailbox. Sending it
   still goes through `draft`, including its approval hold.
-- **When the card is switched off.** Same gate as `draft_read`, with the same
-  two codes. Not rolled out is `draft_editor_disabled`; switched off by the
-  user, at the WORKSPACE grain or at the grain of the INBOX this call resolved
-  to, is `draft_editor_hidden`. The refusal happens before the stored draft is
-  read, so nothing is read and nothing is written. As with `draft_read`, the
+- **When the card is switched off.** The same gate `draft_read` reads, but
+  here it refuses, with two codes. Not rolled out is `draft_editor_disabled`;
+  switched off by the user, at the WORKSPACE grain or at the grain of the INBOX
+  this call resolved to, is `draft_editor_hidden`. The refusal happens before
+  the stored draft is read, so nothing is read and nothing is written. The
   per-inbox flag did not refuse this tool until 2026-09-16.
 
 ## draft_editor_hide (readOnly: false, destructive: false, openWorld: false)

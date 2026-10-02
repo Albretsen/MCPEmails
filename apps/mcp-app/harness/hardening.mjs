@@ -1073,8 +1073,10 @@ async function main() {
   // (E3) The opt-out's receipt must take the editor away
   // ======================================================================
   //
-  // Handed over by the gating workstream. `draft_read` refuses a switched-off
-  // editor with `card: "receipt"` + `error_code: "draft_editor_hidden"`, which
+  // Handed over by the gating workstream. `draft_read` refused a switched-off
+  // editor with `card: "receipt"` + `error_code: "draft_editor_hidden"` (until
+  // 2026-10-02; a current server sends the plain read of (E3b) instead, and
+  // this receipt now reaches a restore only from an older deploy), which
   // matched neither arm of App.tsx's effect, so a deliberate opt-out was
   // answered with a generic "open the dashboard to see this" instead of the
   // server's own sentence. Narrowed to the codes that mean this editor must
@@ -1117,6 +1119,98 @@ async function main() {
         kind(F.outboundGmail, F.receiptExpired),
         "adopt",
       );
+    }),
+  );
+
+  // ======================================================================
+  // (E3b) A plain draft read must never become an editor
+  // ======================================================================
+  //
+  // Since 2026-10-02 `draft_read` answers a workspace with no editor (not
+  // rolled out, or hidden) with a plain read instead of the receipt above: the
+  // tool is model-visible there and is the only way to read one draft's body.
+  // The card can still be the caller, from a cell restored in an old
+  // conversation or from Refresh in an editor that was open when the editor
+  // was switched off. In both it must fail CLOSED: no editor drawn from the
+  // payload, nothing adopted, nothing stored. It carries the same ids as the
+  // draft fixture, so the refusals below are about SHAPE and cannot pass on an
+  // id mismatch.
+
+  results.push(
+    await scenario("a plain draft read is not an envelope on either channel", {}, async (t) => {
+      const both = {
+        structuredContent: F.draftReadPlain,
+        content: [{ type: "text", text: JSON.stringify(F.draftReadPlain) }],
+      };
+      const classified = t.mod.classifyResult(both);
+      t.expect("no envelope comes out of it", classified.envelope, null);
+      // "foreign", not "malformed": the card stays quiet rather than
+      // announcing that the server sent something broken.
+      t.expect("and it is foreign, not ours-and-broken", classified.status, "foreign");
+      // A host that hands over only the JSON text reaches the same answer.
+      const textOnly = t.mod.classifyResult({ content: both.content });
+      t.expect("the text channel alone: no envelope", textOnly.envelope, null);
+      t.expect("the text channel alone: foreign", textOnly.status, "foreign");
+
+      // THE RESTORE PATH. App.tsx hands `envelopeFrom(result)` to
+      // `acceptRehydration`; null in, `failed` out, which renders the one-line
+      // fallback and never the stub.
+      const answer = t.mod.envelopeFrom(both);
+      t.expect("a restoring cell gets nothing to adopt", answer, null);
+      t.expect(
+        "so the re-request fails closed",
+        t.mod.acceptRehydration(F.draftEditorImap, answer).kind,
+        "failed",
+      );
+      // Even handed the raw object, with ids that match, it is not adoptable:
+      // it has no card kind and no draft block.
+      t.expect(
+        "the raw payload is not adoptable either",
+        t.mod.acceptRehydration(F.draftEditorImap, F.draftReadPlain).kind,
+        "failed",
+      );
+    }),
+  );
+
+  results.push(
+    await scenario(
+      "a plain draft read does not replace a live editor, and is not stored",
+      { storage: true },
+      async (t) => {
+        t.host.deliver(toolResult(F.draftEditorImap, "Draft Drafts:2."));
+        await settle();
+        t.expect("the editor is up", t.state().envelope?.card, "draft_editor");
+
+        t.host.deliver(toolResult(F.draftReadPlain, JSON.stringify(F.draftReadPlain)));
+        await settle();
+        t.expect("the editor stayed", t.state().envelope?.card, "draft_editor");
+        t.expect(
+          "over its own body, not the plain read's",
+          t.state().envelope?.draft?.body?.text,
+          F.draftEditorImap.draft.body.text,
+        );
+        t.expect("the result was recorded as foreign", t.state().resultStatus, "foreign");
+        // The plain read carries a body, and a body must not reach web storage
+        // by this route any more than by an envelope.
+        t.expect(
+          "its body is in no durable sink",
+          t.storage.raw().includes("PLAIN-READ-BODY"),
+          false,
+        );
+      },
+    ),
+  );
+
+  results.push(
+    await scenario("a plain draft read alone renders nothing", { storage: true }, async (t) => {
+      // The card was mounted for a tool result that turned out to be a plain
+      // read (a host still holding a tool listing from before the editor was
+      // switched off). Nothing to draw, nothing kept.
+      t.host.deliver(toolResult(F.draftReadPlain, JSON.stringify(F.draftReadPlain)));
+      await settle();
+      t.expect("no envelope", t.state().envelope, null);
+      t.expect("status is foreign", t.state().resultStatus, "foreign");
+      t.expect("nothing stored", t.storage.raw().includes("PLAIN-READ-BODY"), false);
     }),
   );
 
