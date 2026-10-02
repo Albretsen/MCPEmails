@@ -403,7 +403,7 @@ import {
   remainingIds as idsNotYetProcessed,
   type WorkBudget,
 } from "./bulk-budget.ts";
-import { ImapSession } from "./imap-session.ts";
+import { ImapSession, releaseImapClient } from "./imap-session.ts";
 import { ImapCallTimings, imapTimingStore } from "./imap-timing.ts";
 import {
   groupImapIdsByFolder,
@@ -11075,7 +11075,9 @@ async function listImapMessages(
     }
     throw err;
   } finally {
-    if (client) await client.logout().catch(() => {});
+    // The page is built. Say goodbye, but do not make the caller wait for the
+    // server to answer it: see releaseImapClient.
+    if (client) await releaseImapClient(client);
   }
 }
 
@@ -11212,7 +11214,9 @@ async function readImapMessage(
     }
     throw err;
   } finally {
-    if (!sharedSession) await session.close();
+    // An unshared read has its message by now, so it does not wait for the
+    // goodbye either: see releaseImapClient.
+    if (!sharedSession) await session.release();
   }
 }
 
@@ -14144,7 +14148,7 @@ async function executeReadEmails(
       messages.push(readResult);
     }
   } finally {
-    if (session) await session.close();
+    if (session) await session.release();
   }
 
   // A read is not destructive, so the partial wording is about completeness
@@ -18220,8 +18224,9 @@ async function executeSearchEmails(
     // Closed on every exit path, including every early return above. After an
     // abort this is a no-op, because the session has already dropped the
     // client; on the ordinary path it hands the connection back to the provider
-    // now rather than leaving it for the server's idle timeout.
-    if (session) await session.close();
+    // now rather than leaving it for the server's idle timeout. LOGOUT is sent
+    // here and not waited for: see releaseImapClient.
+    if (session) await session.release();
   }
 
   // ── Success ───────────────────────────────────────────────────────────────
@@ -18376,7 +18381,7 @@ async function imapListFolders(inbox: InboxRow): Promise<FolderEntry[]> {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
     throw err;
   } finally {
-    if (client) await client.logout().catch(() => {});
+    if (client) await releaseImapClient(client);
   }
 }
 

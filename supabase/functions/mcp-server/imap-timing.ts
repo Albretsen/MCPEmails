@@ -76,6 +76,12 @@ export class ImapCallTimings {
   searchUidCount = 0;
   /** Bytes read off the socket while a FETCH was in flight. */
   fetchBytes = 0;
+  /**
+   * LOGOUTs sent without the caller waiting for the reply. Such a goodbye is
+   * in neither `logout_ms` nor `commands`: it may finish after the log line
+   * is written, and a field that is sometimes there is worse than none.
+   */
+  logoutsDeferred = 0;
   readonly #phaseMs = new Map<ImapPhase, number>();
 
   /** Charge one command's wall time, and the bytes it read, to a phase. */
@@ -108,6 +114,7 @@ export class ImapCallTimings {
       imap_commands: this.commands,
       search_uid_count: this.searchUidCount,
       fetch_bytes: this.fetchBytes,
+      logout_deferred: this.logoutsDeferred,
     };
     for (const phase of PHASES) fields[`${phase}_ms`] = Math.round(this.phaseMs(phase));
     return fields;

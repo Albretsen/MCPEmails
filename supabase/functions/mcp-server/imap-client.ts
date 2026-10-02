@@ -485,12 +485,15 @@ export class ImapClient {
    * queued rather than racing on the shared read buffer / tag stream. Errors
    * propagate to *this* caller but never break the chain for the next one.
    */
-  private runExclusive<T>(fn: () => Promise<T>, phase: ImapPhase = "other"): Promise<T> {
+  private runExclusive<T>(
+    fn: () => Promise<T>,
+    phase: ImapPhase | null = "other",
+  ): Promise<T> {
     this.pending++;
     // Timed from the moment the command gets the socket, not from the moment
     // it was queued, so a wait behind another command is not charged twice.
     const timing = this.timing;
-    const body = timing === null ? fn : async () => {
+    const body = timing === null || phase === null ? fn : async () => {
       const startedMs = imapClockMs();
       const startedBytes = this.bytesRead;
       try {
@@ -1484,8 +1487,15 @@ export class ImapClient {
    * Send LOGOUT and close the socket. Best-effort; always closes.
    * Serialized like every other command so it can't race a still-in-flight
    * command on the shared socket; the close() in finally always runs.
+   *
+   * `background` is set by a caller that is not going to wait for the reply
+   * (releaseImapClient in imap-session.ts). It changes nothing on the wire;
+   * it only keeps this command out of `logout_ms`, which is the time a caller
+   * WAITED for a goodbye, and counts it as deferred instead.
    */
-  logout(): Promise<void> {
+  logout(options: { background?: boolean } = {}): Promise<void> {
+    const background = options.background === true;
+    if (background && this.timing) this.timing.logoutsDeferred += 1;
     return this.runExclusive(async () => {
       // Nothing to say goodbye to, and nothing to close: destroy() already did
       // both. Returning quietly rather than failing matters because the callers
@@ -1500,7 +1510,7 @@ export class ImapClient {
       } finally {
         this.close();
       }
-    }, "logout");
+    }, background ? null : "logout");
   }
 
   /**

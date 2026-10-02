@@ -33,13 +33,24 @@
 // clients with a capped pool, never from a second command on this one.
 // ---------------------------------------------------------------------------
 
+import {
+  type BackgroundRuntime,
+  backgroundRuntime,
+  settleAfterResponse,
+} from "./request-pipeline.ts";
+
 /**
  * The slice of `ImapClient` a session needs to manage. Structural, so the real
  * client satisfies it without changes and a test can supply a fake.
  */
 export interface SessionCapableImapClient {
   selectMailbox(mailbox: string): Promise<void>;
-  logout(): Promise<void>;
+  /**
+   * `background` says nobody is waiting for this LOGOUT (see
+   * {@link releaseImapClient}), so the client keeps it out of the time it
+   * reports the caller waited. Optional, and a client may ignore it.
+   */
+  logout(options?: { background?: boolean }): Promise<void>;
   /**
    * Close the socket without waiting for the command lock. Optional so an
    * existing fake, or any future minimal client, still satisfies this interface
@@ -194,6 +205,64 @@ export class ImapSession<C extends SessionCapableImapClient> {
     }
     await client.logout().catch(() => {});
   }
+
+  /**
+   * {@link close}, for a caller whose result is already in hand: LOGOUT goes
+   * out now and the caller does not wait for the server to answer it.
+   *
+   * Terminal and repeatable exactly like `close()`, and it makes the same
+   * choice on a busy socket (destroy rather than queue a goodbye behind work
+   * nobody wants). The one difference is who waits for the BYE; see
+   * {@link releaseImapClient} for the rule and its fallback.
+   *
+   * `close()` is kept for a connection that is closed in the MIDDLE of a
+   * piece of work (the automation runner between runs, a folder lookup that
+   * is followed by another connect): there the old order, goodbye answered and
+   * only then the next dial, is left exactly as it was.
+   */
+  async release(runtime: BackgroundRuntime | null = backgroundRuntime()): Promise<void> {
+    this.#closed = true;
+    const client = this.#client;
+    this.#client = null;
+    this.#selected = null;
+    if (!client) return;
+    if (client.busy === true && typeof client.destroy === "function") {
+      client.destroy();
+      return;
+    }
+    await releaseImapClient(client, runtime);
+  }
+}
+
+/**
+ * Send LOGOUT without making the caller wait for the answer.
+ *
+ * Measured 2026-10-02: every read tool ended with an awaited LOGOUT, a full
+ * round trip to the mail server spent after the result was already built. The
+ * goodbye is a courtesy to the server (it frees the connection slot at once
+ * instead of at the idle timeout), not something the response depends on.
+ *
+ * What moves is the WAIT, never the command. LOGOUT is written at the same
+ * point it always was, so the server starts releasing the slot just as early,
+ * and the socket is still closed by `logout()`'s own `finally` when the reply
+ * arrives or its read times out. Where the runtime can keep the isolate alive
+ * for that (`EdgeRuntime.waitUntil`), the returned promise is already
+ * resolved. Where it cannot (the test runner, `deno run`, self-hosting) the
+ * returned promise IS the logout and the caller waits exactly as before: the
+ * same seam, and the same fallback, as the post-response writes in
+ * request-pipeline.ts. Either way no connection is left open.
+ *
+ * A failed goodbye is ignored, as `logout().catch(() => {})` always did.
+ */
+export function releaseImapClient(
+  client: Pick<SessionCapableImapClient, "logout">,
+  runtime: BackgroundRuntime | null = backgroundRuntime(),
+): Promise<void> {
+  return settleAfterResponse(
+    [["imap_logout", () => client.logout({ background: runtime !== null })]],
+    () => {},
+    runtime,
+  );
 }
 
 /**
