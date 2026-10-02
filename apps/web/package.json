@@ -41,6 +41,8 @@
     "test:oauth-revoke": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/oauth/revocation.test.ts",
     "test:oauth-presets": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/oauth/consent-presets.test.ts",
     "test:oauth-metadata": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/oauth/metadata.test.ts",
+    "test:oauth-discovery": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs app/.well-known/discovery-documents.test.ts",
+    "test:function-regions": "node --test src/lib/deploy/function-regions.test.mjs",
     "test:queuey": "node --test --experimental-strip-types src/lib/queuey/verify-delivery.test.ts",
     "test:api-404": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/api/unmatched-api-route.test.ts",
     "test:purchase-email": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/email/purchase-confirmation.test.ts",
