@@ -54,6 +54,110 @@ export class ImapConnectionLimitError extends Error {
 }
 
 /**
+ * Thrown when the server refuses a SELECT for a reason that is NOT "this
+ * mailbox does not exist".
+ *
+ * Until 2026-10-02 every non-OK SELECT became "Mailbox not found: <name>",
+ * which provider-error.ts classifies `folder_missing` and the read paths log as
+ * `folder_not_found`. Measured over 14 days: about 140 such errors, 110 of them
+ * on Yahoo, mostly a SELECT of INBOX itself, in bursts, on inboxes that succeed
+ * 94 to 99% of the time. The server was refusing under load; the folder was
+ * there. The caller was told a permanent naming mistake had been made and that
+ * retrying would not help, which was wrong on both counts.
+ *
+ * The message is built ONLY from protocol constants: the command, the tagged
+ * status, and the response code when the server led with one. It never carries
+ * the mailbox name or the server's prose (which may echo the name back), so it
+ * is safe for provider-error.ts to mine for `signals`.
+ */
+export class ImapSelectRefusedError extends Error {
+  /** The tagged status the server answered with. */
+  readonly status: "NO" | "BAD";
+  /** The leading response code, without brackets, or null when there was none. */
+  readonly responseCode: string | null;
+
+  constructor(status: "NO" | "BAD", responseCode: string | null) {
+    super(`SELECT failed: ${status}${responseCode ? ` [${responseCode}]` : ""}`);
+    this.name = "ImapSelectRefusedError";
+    this.status = status;
+    this.responseCode = responseCode;
+  }
+}
+
+/** Response codes (RFC 5530) that say "this mailbox does not exist". */
+const SELECT_MISSING_CODES = new Set(["NONEXISTENT", "TRYCREATE"]);
+
+/**
+ * Response codes that say something ELSE is wrong, so the prose after them is
+ * not trusted to mean "missing" even if it happens to read that way. A server
+ * that leads with [UNAVAILABLE] or [SERVERBUG] has told us what kind of
+ * failure this is.
+ */
+const SELECT_NOT_MISSING_CODES = new Set([
+  "UNAVAILABLE",
+  "SERVERBUG",
+  "LIMIT",
+  "INUSE",
+  "CONTACTADMIN",
+  "OVERQUOTA",
+  "NOPERM",
+  "EXPIRED",
+  "PRIVACYREQUIRED",
+  "AUTHORIZATIONFAILED",
+  "AUTHENTICATIONFAILED",
+]);
+
+/**
+ * How servers that send no response code say a mailbox is not there.
+ *
+ * Kept to wording that can only mean that: Dovecot and most hosted Dovecot
+ * derivatives ("Mailbox doesn't exist: X"), Cyrus and Exchange ("Mailbox does
+ * not exist"), UW ("no such mailbox"), and the "Unknown Mailbox" / "No such
+ * folder" / "Folder not found" family. Courier's "Unable to open this mailbox"
+ * is deliberately absent: it is also what Courier says when the mailbox exists
+ * and cannot be opened, and a refusal read as "missing" is the bug this fixes.
+ */
+const SELECT_MISSING_WORDING_RE =
+  /does ?n[o']?t exist|doesn.?t exist|no such (?:mailbox|folder)|unknown (?:mailbox|folder)|(?:mailbox|folder) not found/i;
+
+/**
+ * What a non-OK SELECT actually means.
+ *
+ * Pure, so the decision is testable without a socket. The order is the rule:
+ *   1. INBOX is never missing. RFC 3501 5.1 reserves the name and every account
+ *      has one, so whatever the server said, it was not "there is no inbox".
+ *   2. [NONEXISTENT] or [TRYCREATE] leading the response: missing.
+ *   3. Any other leading code that names a different failure: refused.
+ *   4. No such code, and wording that can only mean missing: missing.
+ *   5. Everything else, including a bare NO: refused. This is the conservative
+ *      default, because a refusal is retryable and a "missing" is not.
+ */
+export function classifySelectFailure(
+  mailbox: string,
+  status: "NO" | "BAD",
+  text: string,
+): { kind: "not_found" } | { kind: "refused"; responseCode: string | null } {
+  // resp-text = ["[" resp-text-code "]" SP] text, so a code is only ever the
+  // very first thing. Anchoring here is also what keeps a mailbox named
+  // "[PROJECT]" in an echoed command from being read as a response code.
+  const lead = /^\[([A-Z][A-Z0-9-]{1,24})(?:\s[^\]]*)?\]/i.exec(text.trim());
+  const code = lead ? lead[1].toUpperCase() : null;
+
+  if (mailbox.trim().toUpperCase() === "INBOX") {
+    // The code is dropped when it claims the inbox does not exist: it is not
+    // true, and carrying it would let a text-matching caller believe it.
+    return {
+      kind: "refused",
+      responseCode: code && !SELECT_MISSING_CODES.has(code) ? code : null,
+    };
+  }
+  if (code && SELECT_MISSING_CODES.has(code)) return { kind: "not_found" };
+  if (code && SELECT_NOT_MISSING_CODES.has(code)) return { kind: "refused", responseCode: code };
+  if (SELECT_MISSING_WORDING_RE.test(text)) return { kind: "not_found" };
+  return { kind: "refused", responseCode: code };
+}
+
+/**
  * Detect whether a server response (greeting or AUTHENTICATE NO/BYE text)
  * indicates a transient connection/rate limit that is worth retrying.
  *
@@ -669,7 +773,11 @@ export class ImapClient {
   }
 
   /**
-   * SELECT a mailbox. Throws if the folder does not exist.
+   * SELECT a mailbox.
+   *
+   * Throws "Mailbox not found: <name>" only when the server's answer says the
+   * mailbox is not there, and {@link ImapSelectRefusedError} for every other
+   * refusal. See {@link classifySelectFailure} for how the two are told apart.
    *
    * Also captures the untagged `* OK [PERMANENTFLAGS (...)]` response code,
    * which is the ONLY way to learn whether this mailbox accepts custom keywords
@@ -682,7 +790,11 @@ export class ImapClient {
       await this.write(`${tag} SELECT ${quoteMailbox(mailbox)}${CRLF}`);
       const resp = await this.readTagged(tag);
       if (resp.status !== "OK") {
-        throw new Error(`Mailbox not found: ${mailbox}`);
+        const failure = classifySelectFailure(mailbox, resp.status, resp.text);
+        if (failure.kind === "not_found") {
+          throw new Error(`Mailbox not found: ${mailbox}`);
+        }
+        throw new ImapSelectRefusedError(resp.status, failure.responseCode);
       }
       this.lastPermanentFlags = parsePermanentFlags(resp.untagged);
     });

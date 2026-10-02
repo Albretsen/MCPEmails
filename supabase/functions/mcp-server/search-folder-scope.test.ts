@@ -478,6 +478,57 @@ Deno.test("the three include_folders descriptions are one sentence, not three va
   }
 });
 
+Deno.test("include_folders points at folder_list and does not promise that an alias resolves", () => {
+  // Measured 2026-10-02: 87% of the folder_not_found errors on this argument
+  // came from a model that passed a bare alias without listing folders first,
+  // which is what "(names and aliases resolve for you)" told it to do. Names
+  // come from folder_list; an alias works where the mailbox has that role.
+  const description = sourceStringConstant("INCLUDE_FOLDERS_DESCRIPTION");
+  assertStringIncludes(description, "folder_list");
+  assertStringIncludes(description, "where the mailbox has that role");
+  assert(
+    !/aliases resolve for you/i.test(description),
+    "the description promises again that every alias resolves",
+  );
+  // Tool descriptions are paid for on every tools/list. The sentence it
+  // replaced was 305 characters; this is a ceiling, not a target.
+  assert(description.length <= 325, `include_folders grew to ${description.length} characters`);
+});
+
+Deno.test("email_list's folder description says the same thing", () => {
+  const start = SOURCE.indexOf('\n    name: "email_list",');
+  assert(start !== -1, "index.ts no longer registers email_list");
+  const entry = SOURCE.slice(start, SOURCE.indexOf('\n    name: "', start + 1));
+  const block = /\n\s+folder: \{[\s\S]*?description:\s*([\s\S]*?),\n\s+\},/.exec(entry);
+  assert(block, "email_list no longer advertises folder");
+  const description = [...block[1].matchAll(/"([^"]*)"/g)].map((m) => m[1]).join("");
+  assertStringIncludes(description, "folder_list");
+  assertStringIncludes(description, "where the mailbox has that role");
+  assert(!/aliases resolve for\s*you/i.test(description));
+  assert(description.length <= 225, `folder grew to ${description.length} characters`);
+});
+
+Deno.test("every not-found raised in index.ts tells the message which alias failed and what the host is", () => {
+  // The message can only leave out the alias that failed, and only call a
+  // Gmail-over-IMAP inbox Gmail, if the call sites hand it those two facts.
+  const resolver = functionBody("resolveFolderId");
+  assertStringIncludes(resolver, "failedAlias: alias.aliases[0],");
+  assertStringIncludes(resolver, "failedAlias: alias?.aliases[0],");
+  assertEquals(resolver.split("imapHost: inbox.imap_host,").length - 1, 2);
+  const list = functionBody("executeListInbox");
+  assertStringIncludes(list, "failedAlias: lookupCanonicalAlias(folder)?.aliases[0],");
+  assertStringIncludes(list, "imapHost: inbox.imap_host,");
+});
+
+Deno.test("no advertised description names a list action on the folder tool", () => {
+  // `folder` has had no list action since the read/write split: listing is
+  // `folder_list`. A description that says otherwise sends a model to a call
+  // that is refused.
+  const code = SOURCE.split("\n").filter((line) => !/^\s*(\/\/|\/\*|\*)/.test(line)).join("\n");
+  assert(!code.includes("folder action: list"), "a string still says 'folder action: list'");
+  assert(!code.includes("Folder id from action: list"), "folder_id still points at a list action");
+});
+
 // ---------------------------------------------------------------------------
 // The cap note has to reach the two tools that rebuild their own result.
 // ---------------------------------------------------------------------------

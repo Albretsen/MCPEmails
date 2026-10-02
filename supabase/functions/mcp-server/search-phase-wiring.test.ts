@@ -254,7 +254,9 @@ Deno.test("include_folders means the same thing in all three tools", () => {
   // strict resolution is the one worth keeping, and it is now the only one.
   assertStringIncludes(
     functionSource("resolveIncludeFolders"),
-    "{ strict: true, session }",
+    // `forRead` since 2026-10-02: a search scope may use the read-only role
+    // fallbacks (archive on Gmail over IMAP is All Mail). See resolveFolderId.
+    "{ strict: true, session, forRead: true }",
   );
   for (const name of SEARCH_HANDLERS) {
     assertStringIncludes(

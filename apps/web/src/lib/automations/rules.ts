@@ -389,6 +389,10 @@ export const AUTOMATION_ERROR_MESSAGE_KEYS: Record<string, string> = {
   inbox_unavailable: 'automations.health.causeInboxUnavailable',
   search_failed: 'automations.health.causeSearchFailed',
   folder_unresolved: 'automations.health.causeFolderUnresolved',
+  // Every move in a run was refused because the destination is not in the
+  // mailbox (TRIAGE_RUN_ERROR_DESTINATION_MISSING in triage-engine.ts). Same
+  // sentence as above on purpose: the user's remedy is identical.
+  destination_folder_not_found: 'automations.health.causeFolderUnresolved',
   invalid_filter: 'automations.health.causeInvalidRule',
   invalid_action: 'automations.health.causeInvalidRule',
   run_interrupted: 'automations.health.causeInterrupted',

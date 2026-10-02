@@ -1196,6 +1196,24 @@ export const TRIAGE_PAUSE_REASON_PLAN_LIMIT = "plan_limit";
 export const TRIAGE_STOP_REASON_TIME_BUDGET = "time_budget_exhausted";
 
 /**
+ * `triage_runs.error_code` for a move run in which every attempted move was
+ * refused because the destination folder is not in the mailbox.
+ *
+ * WHAT THIS FIXES. Measured 2026-10-02: one rule had failed `triage_move` with
+ * `folder_not_found` about fifteen times a day for a week with zero successful
+ * moves, and nobody was told. Each of those runs ended `completed_with_errors`,
+ * which reset `consecutive_failures`, so the auto-disable never tripped and the
+ * owner notification never fired. The rule could not do the one thing it was
+ * for, and the only trace was a column of per-message errors.
+ *
+ * A run-level code of its own, rather than `folder_unresolved`: that one means
+ * the resolve itself threw (an ambiguous name, a listing that failed). Here the
+ * resolve answered, with a name the provider's listing did not contain, and the
+ * provider then refused every single move into it.
+ */
+export const TRIAGE_RUN_ERROR_DESTINATION_MISSING = "destination_folder_not_found";
+
+/**
  * The error code a failed action is REPORTED as, once the run's own knowledge
  * of the destination is taken into account.
  *
@@ -1332,9 +1350,26 @@ export async function runTriageRule(
   let succeeded = 0;
   let failed = 0;
   let skipped = 0;
+  /**
+   * How many of `failed` were a move refused with `folder_not_found` on a
+   * destination the provider's listing did not contain. When that is all of
+   * them and nothing succeeded, the run is a failed run. See the settle step.
+   */
+  let destinationMissingFailures = 0;
 
-  /** Terminal failure: release the lease, count it, auto-disable at the ceiling. */
-  const failRun = async (errorCode: string, errorDetail: string): Promise<TriageRunSummary> => {
+  /**
+   * Terminal failure: release the lease, count it, auto-disable at the ceiling.
+   *
+   * `remedy` replaces the generic last sentence of `disabled_reason` when the
+   * caller knows exactly what the owner has to do. The "Last error: <code>."
+   * part is parsed by the dashboard (LAST_ERROR_RE in
+   * apps/web/src/lib/automations/rules.ts) and must keep its shape.
+   */
+  const failRun = async (
+    errorCode: string,
+    errorDetail: string,
+    remedy = "Fix the cause and re-enable.",
+  ): Promise<TriageRunSummary> => {
     const consecutive = (rule.consecutive_failures ?? 0) + 1;
     const disable = consecutive >= TRIAGE_MAX_CONSECUTIVE_FAILURES;
     await store.finishRun(runId, {
@@ -1360,7 +1395,7 @@ export async function runTriageRule(
           enabled: false,
           disabled_reason:
             `Automatically disabled after ${consecutive} consecutive failed runs. ` +
-            `Last error: ${errorCode}. Fix the cause and re-enable.`,
+            `Last error: ${errorCode}. ${remedy}`,
         }
         : {}),
     });
@@ -1794,6 +1829,15 @@ export async function runTriageRule(
 
       if (!outcome.ok) {
         failed++;
+        // Counted AFTER reportedActionErrorCode has settled the code, so a
+        // verified destination (where that function widens the code to
+        // provider_error) can never be counted here.
+        if (
+          action.type === "move" && !destinationVerified &&
+          outcome.error_code === "folder_not_found"
+        ) {
+          destinationMissingFailures++;
+        }
         await store.writeRunItem({
           run_id: runId,
           rule_id: rule.id,
@@ -1834,6 +1878,35 @@ export async function runTriageRule(
       });
     }
 
+    // ── A destination that is not there is a failed RUN ───────────────────────
+    // Every move this run attempted was refused with `folder_not_found`, on a
+    // destination the provider's own listing did not contain, and nothing
+    // succeeded. That is not a run with some per-message hiccups: the rule
+    // cannot do what it says, and it will not start working by itself. So it
+    // goes through failRun like every other condition that never clears, which
+    // is what walks the counter to the auto-disable and tells the owner.
+    //
+    // Deliberately narrow. One success, one failure of any other kind, or a
+    // VERIFIED destination (where the same refusal is the provider having a bad
+    // minute, see reportedActionErrorCode) all keep the behaviour below.
+    if (
+      action.type === "move" && !destinationVerified && succeeded === 0 &&
+      failed > 0 && destinationMissingFailures === failed
+    ) {
+      // The folder name is the rule's own configuration, written by the owner
+      // and shown to them in the same dashboard, so naming it discloses nothing.
+      // Neutralized and truncated like every other user-authored string here.
+      const folderName = neutralizeText(action.folder).slice(0, 120);
+      return await failRun(
+        TRIAGE_RUN_ERROR_DESTINATION_MISSING,
+        `All ${failed} move${failed === 1 ? "" : "s"} in this run were refused: the destination ` +
+          `folder "${folderName}" does not exist in this mailbox. Nothing was moved. Create the ` +
+          `folder, or point this automation at one that exists.`,
+        "The destination folder does not exist in the mailbox: create it, or point the " +
+          "automation at a folder that exists, then re-enable.",
+      );
+    }
+
     // ── Settle ────────────────────────────────────────────────────────────────
     // 'skipped' is a distinct status from 'completed' because a rule that only
     // ever skips is a misconfigured filter, and that is worth surfacing.
@@ -1860,7 +1933,17 @@ export async function runTriageRule(
       // A run that completed, even with per-message errors, proves the mailbox and
       // the key are reachable. The failure counter tracks RUN failures, not
       // individual provider hiccups, so it resets here.
-      consecutive_failures: 0,
+      //
+      // ONE EXCEPTION: a move run that attempted nothing, on a destination the
+      // listing did not contain, leaves the counter where it was. Such a run is
+      // not a failure and is not counted as one, but it is not evidence either:
+      // it never tried the destination. Without this the rule above could not
+      // work on the case it was written for. That rule failed about fifteen
+      // runs a day, and every empty run in between would have wiped the count
+      // long before it reached the ceiling.
+      consecutive_failures: processed === 0 && action.type === "move" && !destinationVerified
+        ? (rule.consecutive_failures ?? 0)
+        : 0,
     });
 
     return {
