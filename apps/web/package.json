@@ -62,7 +62,8 @@
     "test:segment": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/segment/record-segment.test.ts src/lib/analytics/multi-inbox-prompt.test.ts",
     "test:connect-multi-mailbox": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/connect/multi-mailbox.test.ts",
     "test:marketing-consent": "node --test src/lib/marketing-consent.test.mjs",
-    "test:signup-consent-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/auth/signup-consent-ui.test.mjs"
+    "test:signup-consent-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/auth/signup-consent-ui.test.mjs",
+    "test:acquisition-device": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/acquisition-device.test.mjs src/lib/acquisition-device-stamp.test.ts app/auth/callback/route.device.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
