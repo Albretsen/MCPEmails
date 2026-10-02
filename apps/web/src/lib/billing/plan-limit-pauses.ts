@@ -183,7 +183,10 @@ export async function liftPlanLimitPauses(
     );
     return { lifted, failed };
   } catch (err) {
-    console.error(`[plan-limit-pauses] ${label}: unexpected failure, swallowed:`, {
+    // The label rides in the object, not the message: with a second argument
+    // the first one is a format string, and the label is caller-supplied.
+    console.error('[plan-limit-pauses] unexpected failure, swallowed:', {
+      label,
       error: err instanceof Error ? err.message : String(err),
     });
     return { lifted: 0, failed: true };
