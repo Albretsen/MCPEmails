@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/require-admin';
+import { liftPlanLimitPauses } from '@/lib/billing/plan-limit-pauses';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 
 const MAX_REASON_LENGTH = 500;
@@ -35,6 +36,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     workspace_id: workspaceId, reason, ticket_id: ticketId, granted_by: admin.id, expires_at: expiresAt,
   }).select('id, workspace_id, granted_at, expires_at').single();
   if (error) return NextResponse.json({ error: 'Could not create usage exemption.' }, { status: 500 });
+  // An exemption is usually granted BECAUSE the workspace hit the cap, so its
+  // automations are paused to the end of the period. Lift that now; never throws.
+  await liftPlanLimitPauses(service, [workspaceId], { label: 'usage exemption' });
   return NextResponse.json({ exemption: data }, { status: 201 });
 }
 

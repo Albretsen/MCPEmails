@@ -614,6 +614,7 @@ the card neutralises at the boundary as it does for §2.
 | --- | --- | --- |
 | `draft{action:"create"|"reply"|"update"}` success | today's payload keys **plus** the envelope, merged at top level exactly as §2a (disjoint key sets, asserted by test) | unchanged |
 | `draft_read`, `draft_editor_save` | envelope alone | a short body-free summary line |
+| `draft_read` when NOT gated in, or hidden | no envelope: the plain read below | the same plain read, as JSON |
 | `draft{action:"send"}` not held | today's `{draft_id, message_id, sent_at}` **plus** `card: "receipt"`, `outcome: "sent"` | unchanged |
 | `draft{action:"send"}` held | the §2a held-send shape, unchanged | unchanged |
 | `draft{action:"delete"}` | today's `{draft_id, deleted}` **plus** `card: "receipt"`, `outcome: "discarded"` | unchanged |
@@ -649,6 +650,52 @@ Both tools re-verify: the inbox belongs to the calling key's workspace and is in
 nothing here that `draft{action:"update"}` and `email_read` could not already do (see
 `CONCEPT-draft-editor.md` §6).
 
+**`draft_read` without the editor (2026-10-02).** "The workspace is gated in" decides the SHAPE
+of a `draft_read` answer, not whether there is one. When the workspace is not rolled out, or the
+editor is hidden for the workspace or for the inbox the call resolved to, `draft_read` keeps
+every other check (both scopes, the inbox and its allowlist) and returns a plain read instead of
+an envelope, as one object in `content` (JSON text) and in `structuredContent`:
+
+```json
+{
+  "draft_id": "Drafts:2",
+  "inbox_id": "8f1f2a3c-0000-4000-8000-000000000001",
+  "to": ["Billing <billing@example.com>"],
+  "cc": [],
+  "bcc": [],
+  "subject": "Re: Invoice 1042",
+  "body_text": "Thanks, paid today.",
+  "body_truncated": false,
+  "attachments": [{ "filename": "receipt.pdf", "size_bytes": 20480, "mime_type": "application/pdf" }],
+  "attachment_count": 1,
+  "signature_embedded": false,
+  "threaded": true,
+  "untrusted_content": true
+}
+```
+
+* **It is not an envelope.** No `schema_version`, no `card`, no `state`, no `dashboard_url`, and
+  no `_meta.ui` on the result. The card's `isEnvelope` therefore rejects it and `classifyResult`
+  reports it as foreign, which is what keeps a hidden editor hidden: a restoring cell cannot
+  render an editor from it and ends on its one-line fallback, and a Refresh in an editor that is
+  still open keeps the editor and its unsaved text and shows a notice. `draft_editor_save` is
+  still refused in those states, so a hidden editor still cannot write.
+* **Why a read and not a refusal.** With the gate shut the tool carries no `_meta.ui`, so a host
+  lists it to the model as an ordinary tool. It is the only tool that returns one draft's body
+  (`draft_list` and the draft writes return none), so the refusal left a model with no way to
+  read a draft back. Measured before the change: 174 calls from 29 customer workspaces, none
+  answered.
+* **Read-path rules apply.** `untrusted_content: true` always, including on an empty draft.
+  Subject, recipients, filenames and MIME types are neutralised; the body is not. `body_text` is
+  chosen the way `email_read` chooses it (`preferredBodyText`), so an HTML-only draft still reads
+  as text; the HTML part is not returned. The body is clipped at 64 KB like the envelope's, with
+  `body_truncated: true` and `body_total_chars` when it is. `attachments` is metadata for at most
+  25 files and never bytes; `attachment_count` is the real number.
+* **Failures are unchanged in every state:** the same `card: "receipt"` error envelopes with the
+  same codes (`insufficient_scope`, `inbox_not_found`, `draft_not_found`, `provider_error`,
+  `invalid_arguments`). Only `draft_editor_disabled` and `draft_editor_hidden` are no longer
+  produced by `draft_read`.
+
 ### Model context
 
 After a successful save the card calls `ui/update-model-context` with a complete, body-free
@@ -679,6 +726,9 @@ Implemented 2026-09-16. Server side only; the card is `apps/mcp-app/`.
 `insufficient_scope`, `inbox_not_found`, `draft_editor_disabled`, `draft_not_found`,
 `invalid_recipients`, `draft_has_attachments`, `provider_error`. The not-found and
 wrong-workspace cases are byte-identical, so neither tool is an existence oracle.
+(`draft_read` produces neither `draft_editor_disabled` nor `draft_editor_hidden`: it answers with
+the plain read above instead. `draft_editor_save` still returns both, and `draft_editor_hide`
+still returns `draft_editor_disabled`.)
 
 **Gate.** `workspaces.draft_editor_enabled`, read per call and fail-closed
 (`workspaceDraftEditorEnabled` in `index.ts`), and resolved once more at `tools/list` as a third
