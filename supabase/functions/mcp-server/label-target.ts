@@ -477,6 +477,31 @@ function folderAmbiguousMessage(
 }
 
 /**
+ * The message an agent gets when an alias names a ROLE that two folders could
+ * equally be playing, e.g. `sent` on a mailbox holding both "Sent Items" and
+ * "Sent Messages" with neither flagged by the server.
+ *
+ * Same refusal as {@link folderAmbiguousMessage} and the same `folder_ambiguous`
+ * code, for the same reason: picking one would read or file mail in a folder
+ * nobody named and report success. Both candidates are spelled out, because the
+ * remedy is to pass one of them by its exact name, which always wins over a role.
+ */
+export function folderAliasAmbiguousMessage(
+  alias: string,
+  candidates: readonly string[],
+  ctx: FolderResolutionContext = {},
+): string {
+  const noun = folderNoun(ctx);
+  const names = candidates.map((name) => `"${name}"`).join(" and ");
+  return (
+    `"${alias}" could mean ${candidates.length} ${noun}s in this inbox: ${names}. ` +
+    `The mail server marks none of them as its ${alias} ${noun}, so there is no ` +
+    `way to tell which one was meant. Reissue the call with one of those exact ` +
+    `names. Nothing was changed.`
+  );
+}
+
+/**
  * The EXACT half of {@link resolveFolderReference}: a provider id compared
  * byte for byte, then a display name compared case-insensitively, both on the
  * value AS THE CALLER TYPED IT. Null when neither hits.

@@ -15,6 +15,7 @@ import {
   imapMailboxForServerFolder,
   lookupCanonicalAlias,
   matchImapAliasMailbox,
+  resolveImapAlias,
 } from "./imap-folder-target.ts";
 import {
   actionSelectorDescription,
@@ -42,6 +43,7 @@ import {
   subjectHeaderLineError,
 } from "./subject-header.ts";
 import {
+  folderAliasAmbiguousMessage,
   folderArgumentValue,
   folderNameRequest,
   folderNameTrimNote,
@@ -10506,6 +10508,12 @@ async function resolveImapAliasMailbox(
      * supplied and something matches.
      */
     mailboxes?: ImapMailboxInfo[] | null;
+    /**
+     * The mailbox will only be READ. Lets `archive` answer with the \\All
+     * mailbox on an account that has no archive (Gmail over IMAP). Never set
+     * for a destination: see ImapAliasMatchOptions in imap-folder-target.ts.
+     */
+    forRead?: boolean;
   } = {},
 ): Promise<string | null> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
@@ -10519,8 +10527,8 @@ async function resolveImapAliasMailbox(
   const session = shared ?? new ImapSession(imapSessionOpener(inbox));
   try {
     const mailboxes = opts.mailboxes ?? await (await session.client()).listMailboxes();
-    const matched = matchImapAliasMailbox(mailboxes, alias);
-    if (matched) return matched;
+    const match = resolveImapAlias(mailboxes, alias, { forRead: opts.forRead === true });
+    if (match.kind === "matched") return match.name;
 
     if (opts.createIfMissing) {
       const client = await session.client();
@@ -11733,6 +11741,7 @@ async function executeListInbox(
   try {
     listFolder = await resolveFolderId(inbox, folder.trim() ? folder : "INBOX", {
       strict: true,
+      forRead: true,
     });
   } catch (err) {
     if (err instanceof FolderTargetError) return folderTargetErrorResult(err);
@@ -18486,6 +18495,18 @@ async function resolveFolderId(
      * assertion that it worked.
      */
     session?: ImapSession<ImapClient> | null;
+    /**
+     * The resolved folder will only be READ (listed or searched).
+     *
+     * Deliberately NOT the same switch as `strict`. Strict means "answer only
+     * with a folder the listing contains", and the automation runner resolves a
+     * MOVE destination strictly. This one unlocks the read-only role fallbacks,
+     * today exactly one: `archive` on an IMAP mailbox with no archive of its
+     * own resolves to the mailbox flagged \\All (Gmail's All Mail). That is
+     * where archived mail can be found, and it is not a place to move mail to,
+     * so no destination resolve may ever pass this.
+     */
+    forRead?: boolean;
   } = {},
 ): Promise<string> {
   const trimmed = nameOrId.trim();
@@ -18564,6 +18585,23 @@ async function resolveFolderId(
         // asking for "archive" must not leave a mailbox behind as a side
         // effect. Reads resolve or fail; only the move path may create.
         const isArchive = alias.aliases[0] === "archive";
+        // Two mailboxes that could equally be this role, neither flagged by the
+        // server: refuse on every path, for the reason the ambiguous branch
+        // further down gives. Guessing here is a read of, or a write into, a
+        // folder nobody named.
+        const forRead = opts.forRead === true && opts.strict === true;
+        const role = resolveImapAlias(imapMailboxes ?? [], alias, { forRead });
+        if (role.kind === "ambiguous") {
+          throw new FolderTargetError({
+            error: "folder_ambiguous",
+            provider: inbox.provider,
+            folder: trimmed,
+            message: folderAliasAmbiguousMessage(trimmed.toLowerCase(), role.candidates, {
+              provider: inbox.provider,
+              itemNoun: "folder",
+            }),
+          });
+        }
         const resolvedName = await resolveImapAliasMailbox(
           inbox,
           alias,
@@ -18571,6 +18609,7 @@ async function resolveFolderId(
             createIfMissing: isArchive && !opts.strict,
             session: opts.session,
             mailboxes: imapMailboxes,
+            forRead,
           },
         );
         if (resolvedName) return resolvedName;
@@ -18695,7 +18734,8 @@ async function resolveIncludeFolders(
   const resolved: string[] = [];
   for (const f of includeFolders) {
     if (!f.trim()) continue;
-    const id = await resolveFolderId(inbox, f, { strict: true, session });
+    // `forRead`: include_folders only ever scopes a SEARCH, in all three tools.
+    const id = await resolveFolderId(inbox, f, { strict: true, session, forRead: true });
     // Two spellings of one folder ("Trash" and "Deleted Items") search it once.
     // Outlook's alias-vs-id pair is collapsed later, in searchOutlookMessages.
     if (!resolved.includes(id)) resolved.push(id);
