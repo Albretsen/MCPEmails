@@ -32044,3 +32044,12 @@ export {
   toolsForListing,
   validateInputSchema,
 };
+
+// Exported for provider-call-baseline.test.ts and the provider-concurrency
+// tests, and for nothing else. These are the three executors whose provider
+// calls those suites pin (draft_list, email_list, email_read_batch). A fake
+// `fetch` answers Gmail, Graph and PostgREST, so the assertions are on the
+// tool result the executor returns and on the requests it issued. A separate
+// statement rather than three more names in the block above, so the two do not
+// collide when another branch edits that list.
+export { executeListDrafts, executeListInbox, executeReadEmails };
