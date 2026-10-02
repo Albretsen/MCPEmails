@@ -133,11 +133,25 @@ import {
 } from "./destination-folder-missing.ts";
 import {
   classifyProviderError,
-  type ProviderErrorAuditDetails,
+  type ProviderErrorAuditDetails as ProviderCallAuditDetails,
   providerErrorAuditDetails,
   type ProviderErrorBoundary,
   providerErrorLogCode,
 } from "./provider-error.ts";
+import {
+  type FolderResolveAuditDetails,
+  folderResolveAuditDetails,
+  locateFolderFailure,
+} from "./folder-resolve-diagnostics.ts";
+
+/**
+ * What a handler may hand up as `logErrorDetails`: a provider call that failed,
+ * or (since 2026-10-02) a folder argument the resolver refused before any
+ * provider was called. Both are value-free by construction, each in its own
+ * module. The name is kept, and widened here rather than at its forty-odd uses,
+ * so that adding the second phase did not mean editing every handler signature.
+ */
+type ProviderErrorAuditDetails = ProviderCallAuditDetails | FolderResolveAuditDetails;
 import {
   buildContactSearchEnvelope,
   buildPaginationEnvelope,
@@ -2614,6 +2628,10 @@ interface ActivityLogParams {
    * the mail provider then failed. Both are built by their own module rather
    * than assembled at the call site, which is what keeps the privacy contract
    * in one reviewable place per phase instead of at every catch block.
+   *
+   * A third phase since 2026-10-02, `resolve_folder`
+   * (folder-resolve-diagnostics.ts), for a folder argument the resolver
+   * refused. It rides in through the `ProviderErrorAuditDetails` alias above.
    */
   errorDetails?: InvalidArgumentAuditDetails | ProviderErrorAuditDetails;
 }
@@ -18561,6 +18579,11 @@ async function resolveFolderId(
   const exact = matchFolderExactly(nameOrId, folders);
   if (exact) return exact.id;
 
+  // Value-free diagnostics for every refusal below: what KIND of value failed,
+  // never the value. Built only when something is actually thrown.
+  const diagnose = () =>
+    folderResolveAuditDetails(nameOrId, imapMailboxes ?? folders, imapMailboxes !== null);
+
   // ── The alias as a ROLE, for a value no folder answers to ─────────────────
   if (alias) {
     switch (inbox.provider) {
@@ -18602,7 +18625,7 @@ async function resolveFolderId(
               provider: inbox.provider,
               itemNoun: "folder",
             }),
-          });
+          }, diagnose());
         }
         const resolvedName = await resolveImapAliasMailbox(
           inbox,
@@ -18629,7 +18652,7 @@ async function resolveFolderId(
               hint: `The mail server flags no folder as ${alias.aliases[0]} and none has a ` +
                 `usual name for it.`,
             }),
-          });
+          }, diagnose());
         }
         return alias.imap;
       }
@@ -18670,7 +18693,7 @@ async function resolveFolderId(
       provider: inbox.provider,
       folder: nameOrId,
       message: match.error,
-    });
+    }, diagnose());
   }
 
   // ── No match ────────────────────────────────────────────────────────────────
@@ -18682,7 +18705,7 @@ async function resolveFolderId(
       provider: inbox.provider,
       folder: trimmed,
       message: match.error,
-    });
+    }, diagnose());
   }
   // The pass-through hands over `nameOrId`, not `trimmed`. Its whole premise is
   // that this might be a valid provider id we failed to ENUMERATE - the Outlook
@@ -18738,10 +18761,22 @@ async function resolveIncludeFolders(
   session: ImapSession<ImapClient> | null,
 ): Promise<string[]> {
   const resolved: string[] = [];
-  for (const f of includeFolders) {
+  for (const [index, f] of includeFolders.entries()) {
     if (!f.trim()) continue;
     // `forRead`: include_folders only ever scopes a SEARCH, in all three tools.
-    const id = await resolveFolderId(inbox, f, { strict: true, session, forRead: true });
+    const id = await resolveFolderId(inbox, f, { strict: true, session, forRead: true })
+      .catch((err) => {
+        // Say WHERE in the list it failed. Position and length, never the entry.
+        if (err instanceof FolderTargetError && err.details) {
+          err.details = locateFolderFailure(
+            err.details,
+            "include_folders",
+            includeFolders.length,
+            index,
+          );
+        }
+        throw err;
+      });
     // Two spellings of one folder ("Trash" and "Deleted Items") search it once.
     // Outlook's alias-vs-id pair is collapsed later, in searchOutlookMessages.
     if (!resolved.includes(id)) resolved.push(id);
@@ -18883,6 +18918,7 @@ function folderTargetErrorResult(err: FolderTargetError): {
   result: { content: { type: string; text: string }[]; isError: true };
   logStatus: "error";
   logErrorCode: string;
+  logErrorDetails?: FolderResolveAuditDetails;
 } {
   return {
     result: {
@@ -18891,6 +18927,9 @@ function folderTargetErrorResult(err: FolderTargetError): {
     },
     logStatus: "error",
     logErrorCode: err.logErrorCode,
+    // `err.details`, never `err.payload`: the payload names the folder the
+    // caller typed and is theirs to read; only the value-free half is logged.
+    ...(err.details ? { logErrorDetails: err.details } : {}),
   };
 }
 
