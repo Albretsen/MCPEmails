@@ -795,7 +795,7 @@ Deno.test("with EdgeRuntime.waitUntil a response does not wait for withheld writ
   const logs = captureConsole();
   try {
     const pending = handleRequest(rpcRequest("tools/call", SIGNATURE_GET));
-    let timer = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const response = await Promise.race([
       pending,
       new Promise<null>((resolve) => (timer = setTimeout(() => resolve(null), 500))),
