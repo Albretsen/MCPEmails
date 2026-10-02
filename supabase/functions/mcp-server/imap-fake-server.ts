@@ -65,6 +65,15 @@ export interface FakeServerOptions {
   reversePipelined?: boolean;
   /** Receive LOGOUT but say nothing until `answerLogout()` is called. */
   holdLogout?: boolean;
+  /**
+   * A write carrying a command this returns true for is answered LATE: the
+   * server goes quiet, and its replies arrive in front of the answer to
+   * whatever the client writes next. This is what a read timeout leaves
+   * behind on a real socket.
+   */
+  stall?: (command: string) => boolean;
+  /** How long a read waits for the server before failing. Default 2000. */
+  readTimeoutMs?: number;
 }
 
 const CRLF = "\r\n";
@@ -208,6 +217,7 @@ export class FakeImapServer {
   #wake: (() => void) | null = null;
   #selected: { mailbox: FakeMailbox; uids: number[] } | null = null;
   #heldLogoutTag: string | null = null;
+  #late = "";
 
   constructor(options: FakeServerOptions) {
     this.#options = options;
@@ -237,7 +247,7 @@ export class FakeImapServer {
             const timer = setTimeout(() => {
               this.#wake = null;
               reject(new Error("fake IMAP server: the client is waiting for a reply nobody scripted"));
-            }, 2000);
+            }, this.#options.readTimeoutMs ?? 2000);
             this.#wake = () => {
               clearTimeout(timer);
               resolve();
@@ -295,6 +305,7 @@ export class FakeImapServer {
   #receive(chunk: string): void {
     this.#partial += chunk;
     const replies: string[] = [];
+    let stalled = false;
     let at: number;
     while ((at = this.#partial.indexOf(CRLF)) !== -1) {
       const line = this.#partial.slice(0, at);
@@ -307,13 +318,19 @@ export class FakeImapServer {
       // The hook hung up: a dead server answers nothing, not even what it had
       // already worked out for the earlier commands of the same write.
       if (this.closed) return;
+      if (this.#options.stall?.(command)) stalled = true;
       const refusal = this.#options.refuse?.(command) ?? null;
       replies.push(refusal !== null ? `${tag} ${refusal}${CRLF}` : this.#answer(tag, command));
     }
     if (replies.length === 0) return;
     this.roundTrips++;
     if (this.#options.reversePipelined) replies.reverse();
-    this.#send(replies.join(""));
+    if (stalled) {
+      this.#late += replies.join("");
+      return;
+    }
+    this.#send(this.#late + replies.join(""));
+    this.#late = "";
   }
 
   #wireName(name: string): string {

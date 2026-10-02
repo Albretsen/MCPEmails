@@ -412,6 +412,7 @@ import {
   runImapFolderGroups,
 } from "./imap-bulk-groups.ts";
 import { assertUidPresent, presentUids } from "./imap-uid-presence.ts";
+import { listImapFoldersWithCounts } from "./imap-folder-counts.ts";
 import { newMessageIdsFor, succeededBulkRow, unknownNewIdNote } from "./imap-copyuid.ts";
 import { dedupeMessageIds } from "./message-id-dedupe.ts";
 import {
@@ -18352,16 +18353,17 @@ function moveProviderSemantics(
 /**
  * Lists IMAP mailboxes with per-mailbox STATUS (message counts).
  *
- * STATUS is a separate IMAP round-trip per mailbox, and `ImapClient` runs every
- * command serialized over a single socket (see its command-chain mutex), so the
- * count enrichment is inherently sequential. We therefore list EVERY mailbox
- * (never drop a folder — a dropped folder makes a valid move target look
+ * We list EVERY mailbox (a dropped folder makes a valid move target look
  * nonexistent) but only fetch counts for the first IMAP_FOLDER_COUNT_LIMIT of
  * them; the rest are returned with null counts (explicit "unknown", not a
- * dropped folder). The STATUS calls run sequentially via the mutex regardless
- * of how we await them — `Promise.allSettled` just queues them onto the chain —
- * and each is bounded by the per-command read timeout, so this can neither
- * corrupt the shared buffer nor hang.
+ * dropped folder).
+ *
+ * The counts used to be one STATUS round trip per mailbox, one after another.
+ * They now come with the LIST itself where the server offers LIST-STATUS, and
+ * otherwise from the same STATUS commands written a batch at a time, inside one
+ * turn of the client's command mutex, so the shared buffer is still only ever
+ * read by one command body. A count that cannot be read with certainty is asked
+ * for again the old way. See imap-folder-counts.ts.
  *
  * Throws "imap_auth_failed" on credential rejection.
  */
@@ -18379,24 +18381,20 @@ async function imapListFolders(inbox: InboxRow): Promise<FolderEntry[]> {
       email: imapAuthUser(inbox),
       password,
     });
-    const mailboxes = await client.listMailboxes();
-    // Cap only the COUNT enrichment (the expensive sequential STATUS fan-out);
-    // every mailbox is still returned below.
+    // Cap only the COUNT enrichment (the expensive part); every mailbox is
+    // still returned below.
     const IMAP_FOLDER_COUNT_LIMIT = 25;
-    const enrichCount = Math.min(mailboxes.length, IMAP_FOLDER_COUNT_LIMIT);
-    const statuses = await Promise.allSettled(
-      mailboxes.slice(0, enrichCount).map((mb) => client!.mailboxStatus(mb.name)),
+    const { mailboxes, counts } = await listImapFoldersWithCounts(
+      client,
+      IMAP_FOLDER_COUNT_LIMIT,
     );
-    return mailboxes.map((mb, i) => {
-      const st = i < enrichCount ? statuses[i] : undefined;
-      return {
-        id: mb.name,
-        name: mb.name,
-        type: "folder" as const,
-        total_messages: st?.status === "fulfilled" ? st.value.messages : null,
-        unread_messages: st?.status === "fulfilled" ? st.value.unseen : null,
-      };
-    });
+    return mailboxes.map((mb, i) => ({
+      id: mb.name,
+      name: mb.name,
+      type: "folder" as const,
+      total_messages: counts[i]?.messages ?? null,
+      unread_messages: counts[i]?.unseen ?? null,
+    }));
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
     throw err;
