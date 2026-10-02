@@ -30,6 +30,7 @@
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import {
   buildDraftEditorEnvelope,
+  buildPlainDraftRead,
   clipDraftBody,
   DRAFT_EDITOR_TOOL_DEFINITIONS,
   DRAFT_EDITOR_TOOL_NAMES,
@@ -124,6 +125,8 @@ function fakeDeps(options: {
   throwOnHide?: string;
 } = {}) {
   const writes: { draftId: string; params: ProviderDraftParams }[] = [];
+  // Every provider read, so "refused before anything was fetched" is testable.
+  const reads: string[] = [];
   const hides: { scope: string; workspaceId: string; inboxId: string; hidden: boolean }[] = [];
   // Every gate read is recorded, so "the un-hide path does not consult the flag
   // it is clearing" is a testable claim rather than a comment.
@@ -153,7 +156,8 @@ function fakeDeps(options: {
           ? { ok: false as const, reason: "not_found" }
           : { ok: true as const, inbox },
       ),
-    getDraft: () => {
+    getDraft: (_inbox, draftId) => {
+      reads.push(draftId);
       if (options.throwOnRead) return Promise.reject(new Error("imap_auth_failed"));
       return Promise.resolve(
         options.stored === undefined
@@ -183,7 +187,7 @@ function fakeDeps(options: {
     },
     now: () => Date.parse("2026-09-16T10:04:00Z"),
   };
-  return { deps, writes, hides, gateReads };
+  return { deps, writes, reads, hides, gateReads };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -737,12 +741,10 @@ Deno.test("draft_read needs read:email as well as manage:drafts", async () => {
   assertEquals(writes.length, 1);
 });
 
-Deno.test("a workspace without the flag is refused, and nothing is written", async () => {
+Deno.test("a workspace without the flag refuses the save, and nothing is written", async () => {
+  // The READ is no longer refused here: with no editor it is a plain read, and
+  // section 11 pins that. The save is the editor's own write and stays gated.
   const { deps, writes } = fakeDeps({ enabled: false });
-  assertEquals(
-    failureCode(await runDraftRead(deps, caller(), { draft_id: "Drafts:2" })),
-    "draft_editor_disabled",
-  );
   const save = await runDraftEditorSave(deps, caller(), {
     draft_id: "Drafts:2",
     subject: "New subject",
@@ -1281,26 +1283,29 @@ const USER_VISIBLE_OUTCOMES: OutcomeCase[] = [
     options: { resolveFails: true },
     args: { draft_id: "Drafts:2" },
   },
+  // The three editor refusals are driven through the SAVE. `draft_read` no
+  // longer reaches them: with no editor it answers with a plain read instead
+  // (the three "plain read" success entries below).
   {
     at: "gate: draft_editor_disabled",
-    tool: "draft_read",
+    tool: "draft_editor_save",
     expect: "draft_editor_disabled",
     options: { enabled: false },
-    args: { draft_id: "Drafts:2" },
+    args: { draft_id: "Drafts:2", subject: "x" },
   },
   {
     at: "gate: draft_editor_hidden, the workspace branch",
-    tool: "draft_read",
+    tool: "draft_editor_save",
     expect: "draft_editor_hidden",
     options: { workspaceHidden: true },
-    args: { draft_id: "Drafts:2" },
+    args: { draft_id: "Drafts:2", subject: "x" },
   },
   {
     at: "gate: draft_editor_hidden, the inbox branch",
-    tool: "draft_read",
+    tool: "draft_editor_save",
     expect: "draft_editor_hidden",
     options: { inboxHidden: true },
-    args: { draft_id: "Drafts:2" },
+    args: { draft_id: "Drafts:2", subject: "x" },
   },
 
   // ── runDraftRead ────────────────────────────────────────────────────────
@@ -1323,6 +1328,27 @@ const USER_VISIBLE_OUTCOMES: OutcomeCase[] = [
     at: "draft_read: the editor envelope",
     tool: "draft_read",
     expect: null,
+    args: { draft_id: "Drafts:2" },
+  },
+  {
+    at: "draft_read: the plain read, workspace not rolled out",
+    tool: "draft_read",
+    expect: null,
+    options: { enabled: false },
+    args: { draft_id: "Drafts:2" },
+  },
+  {
+    at: "draft_read: the plain read, workspace opt-out",
+    tool: "draft_read",
+    expect: null,
+    options: { workspaceHidden: true },
+    args: { draft_id: "Drafts:2" },
+  },
+  {
+    at: "draft_read: the plain read, inbox opt-out",
+    tool: "draft_read",
+    expect: null,
+    options: { inboxHidden: true },
     args: { draft_id: "Drafts:2" },
   },
 
@@ -1534,8 +1560,8 @@ Deno.test("the enumeration above covers every refusal site in the module", () =>
   // The success paths are enumerated too, and are not vacuous.
   assertEquals(
     USER_VISIBLE_OUTCOMES.filter((c) => c.expect === null).length,
-    5,
-    "the two envelopes and the three hide receipts",
+    8,
+    "the two envelopes, the three plain reads and the three hide receipts",
   );
 });
 
@@ -1564,30 +1590,38 @@ Deno.test("the result carries no draft body and names where it applied", async (
 // `draft_read` whenever a cell remounts from storage.
 // ═══════════════════════════════════════════════════════════════════════════
 
-Deno.test("a hidden inbox refuses draft_read, and returns no body", async () => {
+Deno.test("a hidden inbox gets no editor envelope out of draft_read", async () => {
+  // Rewritten 2026-10-02. This used to pin a REFUSAL (`draft_editor_hidden`),
+  // and the refusal was the wrong half to pin: what the opt-out promises is
+  // that no editor comes back, and with the card hidden this tool is listed as
+  // an ordinary model-visible read, so refusing it only broke the read. What
+  // must stay true is below: nothing a restoring card could render an editor
+  // from. The plain payload itself is section 11's subject.
   const { deps } = fakeDeps({ inboxHidden: true });
   const out = await runDraftRead(deps, caller(), { draft_id: "Drafts:2" });
-  assertEquals(out.result.isError, true);
-  assertEquals(failureCode(out), "draft_editor_hidden");
-  assertEquals(out.logErrorCode, "draft_editor_hidden");
-  // The whole point: no draft_editor envelope, so nothing for a restoring card
-  // to render an editor from, and no body anywhere in the response.
-  const env = out.result.structuredContent as Record<string, unknown>;
-  assertEquals(env.card, "receipt");
-  assert(!("draft" in env), "a refused read must carry no draft block");
-  const text = (out.result.content as Array<{ text: string }>)[0].text;
-  assert(!text.includes("Here they are."), "never echoes the stored body");
+  assertEquals(out.result.isError, false);
+  assertEquals(out.logStatus, "success");
+  assertEquals(out.logErrorCode, null);
+  const sc = out.result.structuredContent as Record<string, unknown>;
+  for (const key of ["schema_version", "card", "state", "draft", "receipt", "actor"]) {
+    assert(!(key in sc), `a hidden editor must get no envelope key, found ${key}`);
+  }
 });
 
-Deno.test("a workspace-wide opt-out refuses draft_read too", async () => {
-  // The workspace opt-out already failed closed through the ANDed gate; this
-  // pins that it keeps doing so now that the two flags are returned apart, and
-  // that it reports the opt-out code rather than the rollout one.
+Deno.test("a workspace-wide opt-out gets no editor envelope out of draft_read either", async () => {
   const { deps } = fakeDeps({ workspaceHidden: true });
   const out = await runDraftRead(deps, caller(), { draft_id: "Drafts:2" });
-  assertEquals(failureCode(out), "draft_editor_hidden");
+  assertEquals(out.result.isError, false);
+  const sc = out.result.structuredContent as Record<string, unknown>;
+  for (const key of ["schema_version", "card", "state", "draft", "receipt", "actor"]) {
+    assert(!(key in sc), `a hidden editor must get no envelope key, found ${key}`);
+  }
+  // The save is where the opt-out's own sentence still comes from, and it
+  // still names the grain that is off.
+  const save = await runDraftEditorSave(deps, caller(), { draft_id: "Drafts:2", subject: "x" });
+  assertEquals(failureCode(save), "draft_editor_hidden");
   assert(
-    String((out.result.structuredContent as any).receipt.detail).includes("whole workspace"),
+    String((save.result.structuredContent as any).receipt.detail).includes("whole workspace"),
     "names the grain that is off, so the caller knows which scope to reverse",
   );
 });
@@ -1707,9 +1741,11 @@ Deno.test("everything that is not the opt-out still gates the hide tool", async 
 Deno.test("the rollout gate still refuses before the opt-out is even read", async () => {
   // Ordering matters: a workspace that was never rolled out must say so, not
   // leak "you turned it off" for a feature it was never offered.
-  const { deps } = fakeDeps({ enabled: false, inboxHidden: true });
-  const out = await runDraftRead(deps, caller(), { draft_id: "Drafts:2" });
+  const { deps, writes } = fakeDeps({ enabled: false, inboxHidden: true });
+  // Driven through the save: it is the tool that still refuses on these gates.
+  const out = await runDraftEditorSave(deps, caller(), { draft_id: "Drafts:2", subject: "x" });
   assertEquals(failureCode(out), "draft_editor_disabled");
+  assertEquals(writes.length, 0);
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2054,4 +2090,464 @@ Deno.test("clearing the body of a TEXT draft is an edit too", async () => {
   await runDraftEditorSave(deps, caller(), { draft_id: "Drafts:2", body_text: "" });
   assertEquals(writes[0].params.body, "");
   assertEquals(writes[0].params.htmlBody, undefined, "no stale HTML, and no empty HTML part");
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 11. draft_read is a plain read when there is no editor (2026-10-02)
+//
+// The defect: the tool is listed for every key with `manage:drafts`, and with
+// the drafts gate shut it carries no `_meta.ui`, so a model sees an ordinary
+// tool that reads one draft. It is also the ONLY one, since `draft_list` and
+// the draft writes return no body. Every such call was refused with
+// `draft_editor_disabled`: 174 calls from 29 customer workspaces, 0 answered.
+//
+// What is pinned here:
+//
+//   * no editor (not rolled out, or hidden at either grain) -> the whole
+//     draft, as one plain object in BOTH channels, on all three providers;
+//   * every guard that is not about the editor still refuses, with the code it
+//     always had: scopes, the inbox allowlist, a missing draft, a provider
+//     failure;
+//   * the payload is not an envelope (a restoring card must not be able to
+//     render an editor from it) and is marked and neutralised like a read;
+//   * a rolled-out workspace is untouched: same envelope, same body-free line;
+//   * `draft_editor_save` is exactly as gated as it was.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** The three ways there is no editor for a call. One behaviour for all of them. */
+const NO_EDITOR: Array<[string, Parameters<typeof fakeDeps>[0]]> = [
+  ["workspace not rolled out", { enabled: false }],
+  ["workspace opt-out", { workspaceHidden: true }],
+  ["inbox opt-out", { inboxHidden: true }],
+];
+
+const REPLY_DRAFT: ProviderDraft = {
+  subject: "Re: Invoice 1042",
+  to: ["Billing <billing@example.com>"],
+  cc: ["ops@example.com"],
+  bcc: ["archive@example.com"],
+  inReplyTo: "<original-1042@example.com>",
+  references: "<original-1042@example.com>",
+  bodyText: "Thanks, paid today.\n\n> Please settle invoice 1042 by Friday.",
+  bodyHtml: null,
+  attachments: [{ filename: "receipt.pdf", mime_type: "application/pdf", size_bytes: 20480 }],
+};
+
+Deno.test("no editor: draft_read returns the whole draft as a plain read, on every provider", async () => {
+  const providers: Array<[string, DraftEditorProviderInbox, string]> = [
+    ["imap", IMAP_INBOX, "Drafts:2"],
+    // Gmail is the provider this matters most on: a Gmail draft id is not a
+    // message id, so `email_read` cannot reach the body and this is the only
+    // read there is.
+    ["gmail", GMAIL_INBOX, "r-8842310947721"],
+    ["outlook", OUTLOOK_INBOX, "AAMkAGI2TG93AAA="],
+  ];
+  for (const [provider, inbox, draftId] of providers) {
+    const { deps, reads, writes } = fakeDeps({ enabled: false, inbox, stored: REPLY_DRAFT });
+    const out = await runDraftRead(deps, caller(), { draft_id: draftId });
+
+    assertEquals(out.result.isError, false, provider);
+    assertEquals(out.logStatus, "success", provider);
+    assertEquals(out.logErrorCode, null, provider);
+    // Deep-equal on the WHOLE object: a key added later has to be added here on
+    // purpose, and a key lost fails loudly.
+    assertEquals(
+      out.result.structuredContent,
+      {
+        draft_id: draftId,
+        inbox_id: inbox.id,
+        to: ["Billing <billing@example.com>"],
+        cc: ["ops@example.com"],
+        bcc: ["archive@example.com"],
+        subject: "Re: Invoice 1042",
+        body_text: "Thanks, paid today.\n\n> Please settle invoice 1042 by Friday.",
+        body_truncated: false,
+        attachments: [{ filename: "receipt.pdf", size_bytes: 20480, mime_type: "application/pdf" }],
+        attachment_count: 1,
+        signature_embedded: false,
+        threaded: true,
+        untrusted_content: true,
+      },
+      provider,
+    );
+    // The model's channel carries the same object, body included. That is the
+    // point of the fix: with no card there is nowhere else for it to be read.
+    assertEquals(out.result.content.length, 1, provider);
+    assertEquals(
+      JSON.parse(out.result.content[0].text),
+      out.result.structuredContent,
+      `${provider}: content and structuredContent must be one object`,
+    );
+    assert(out.result.content[0].text.includes("Thanks, paid today."), provider);
+    // A read: exactly one provider fetch, for the id that was asked for.
+    assertEquals(reads, [draftId], provider);
+    assertEquals(writes.length, 0, provider);
+    // No `_meta` on the result, so nothing asks a host to mount a card for it.
+    assert(!("_meta" in (out.result as Record<string, unknown>)), provider);
+  }
+});
+
+Deno.test("no editor: the three states answer identically", async () => {
+  const bodies: string[] = [];
+  for (const [state, options] of NO_EDITOR) {
+    const { deps } = fakeDeps({ ...options, stored: REPLY_DRAFT });
+    const out = await runDraftRead(deps, caller(), { draft_id: "Drafts:2" });
+    assertEquals(out.result.isError, false, state);
+    assertEquals(out.logStatus, "success", state);
+    bodies.push(JSON.stringify(out.result));
+  }
+  // Not rolled out and switched off are different facts about the EDITOR. To a
+  // caller that only wants to read a draft they are the same fact: no card.
+  assertEquals(new Set(bodies).size, 1, "the three no-editor states must not differ");
+});
+
+Deno.test("no editor: the plain read is not an envelope", async () => {
+  // What a restoring card does with this is decided by one predicate in
+  // apps/mcp-app (`isEnvelope`: a string `schema_version` AND a string `card`),
+  // with `claimsToBeOurs` (the mere presence of `schema_version`) deciding
+  // between "not ours, stay quiet" and "ours and broken, complain". Neither key
+  // may appear, in either channel, or the card stops treating this as foreign.
+  for (const [state, options] of NO_EDITOR) {
+    const { deps } = fakeDeps(options);
+    const out = await runDraftRead(deps, caller(), { draft_id: "Drafts:2" });
+    const sc = out.result.structuredContent as Record<string, unknown>;
+    const text = JSON.parse(out.result.content[0].text) as Record<string, unknown>;
+    for (const channel of [sc, text]) {
+      for (
+        const key of [
+          "schema_version",
+          "card",
+          "state",
+          "dashboard_url",
+          "draft",
+          "receipt",
+          "provider",
+          "actor",
+          "_meta",
+          "_stub",
+        ]
+      ) {
+        assert(!(key in channel), `${state}: the plain read must not carry ${key}`);
+      }
+    }
+    // And it never claims a person or the editor wrote anything.
+    assert(!out.result.content[0].text.includes("draft editor"), state);
+  }
+});
+
+Deno.test("no editor: a key without read:email is refused exactly as before", async () => {
+  for (const [state, options] of NO_EDITOR) {
+    const { deps, reads } = fakeDeps(options);
+    const denied = await runDraftRead(deps, caller({ scopes: ["manage:drafts"] }), {
+      draft_id: "Drafts:2",
+    });
+    assertEquals(denied.result.isError, true, state);
+    assertEquals(failureCode(denied), "insufficient_scope", state);
+    assertEquals(denied.logErrorCode, "scope_denied", state);
+    assert(denied.result.content[0].text.includes("'read:email'"), state);
+    assertEquals(reads.length, 0, `${state}: refused before the provider was asked`);
+
+    // And the other half: `read:email` alone is not enough to read a draft.
+    const drafts = fakeDeps(options);
+    const noDrafts = await runDraftRead(drafts.deps, caller({ scopes: ["read:email"] }), {
+      draft_id: "Drafts:2",
+    });
+    assertEquals(failureCode(noDrafts), "insufficient_scope", state);
+    assertEquals(noDrafts.logErrorCode, "scope_denied", state);
+    assertEquals(drafts.reads.length, 0, state);
+  }
+});
+
+Deno.test("no editor: a key restricted to other inboxes cannot read the draft", async () => {
+  // `resolveInbox` IS the allowlist (index.ts#resolveInboxArg applies the
+  // workspace filter and the key's `inbox_ids`), so a key that may not reach
+  // the inbox arrives here as a failed resolve. The plain read must not have
+  // moved in front of it.
+  for (const [state, options] of NO_EDITOR) {
+    const { deps, reads } = fakeDeps({ ...options, resolveFails: true });
+    const out = await runDraftRead(
+      deps,
+      caller({ inbox_ids: ["8f1f2a3c-0000-4000-8000-0000000000ff"] }),
+      { inbox_id: IMAP_INBOX.id, draft_id: "Drafts:2" },
+    );
+    assertEquals(out.result.isError, true, state);
+    assertEquals(failureCode(out), "inbox_not_found", state);
+    assertEquals(out.logErrorCode, "inbox_not_found", state);
+    assertEquals(reads.length, 0, `${state}: no draft may be fetched for an unreachable inbox`);
+    assert(!JSON.stringify(out.result).includes("Here they are."), state);
+    // Byte-identical to the rolled-out refusal, so the rollout state of a
+    // workspace cannot be read off an inbox the key cannot reach.
+    const rolledOut = fakeDeps({ resolveFails: true });
+    const same = await runDraftRead(
+      rolledOut.deps,
+      caller({ inbox_ids: ["8f1f2a3c-0000-4000-8000-0000000000ff"] }),
+      { inbox_id: IMAP_INBOX.id, draft_id: "Drafts:2" },
+    );
+    assertEquals(JSON.stringify(out.result), JSON.stringify(same.result), state);
+  }
+});
+
+Deno.test("no editor: an unknown draft id is the existing not-found, and a provider failure is too", async () => {
+  for (const [state, options] of NO_EDITOR) {
+    const missing = fakeDeps({ ...options, stored: null });
+    const out = await runDraftRead(missing.deps, caller(), { draft_id: "Drafts:99" });
+    assertEquals(out.result.isError, true, state);
+    assertEquals(failureCode(out), "draft_not_found", state);
+    assertEquals(out.logErrorCode, "draft_not_found", state);
+    // The same bytes a rolled-out workspace gets for the same miss.
+    const rolledOut = fakeDeps({ stored: null });
+    const same = await runDraftRead(rolledOut.deps, caller(), { draft_id: "Drafts:99" });
+    assertEquals(JSON.stringify(out.result), JSON.stringify(same.result), state);
+
+    const broken = fakeDeps({ ...options, throwOnRead: true });
+    const failed = await runDraftRead(broken.deps, caller(), { draft_id: "Drafts:2" });
+    assertEquals(failed.result.isError, true, state);
+    assertEquals(failureCode(failed), "provider_error", state);
+    assertEquals(failed.logErrorCode, "provider_error", state);
+
+    const blank = fakeDeps(options);
+    const invalid = await runDraftRead(blank.deps, caller(), { draft_id: "   " });
+    assertEquals(failureCode(invalid), "invalid_arguments", state);
+    assertEquals(blank.reads.length, 0, state);
+  }
+});
+
+Deno.test("no editor: a long body is clipped at 64 KB and says so", async () => {
+  // Multi-byte on purpose: the clip is in BYTES and must not cut a character
+  // in half. One "a" then 40,000 x "æ" (2 bytes each) puts the 64 KB mark in
+  // the middle of a character.
+  const long = "a" + "æ".repeat(40_000);
+  const { deps } = fakeDeps({
+    enabled: false,
+    stored: { ...REPLY_DRAFT, bodyText: long, attachments: [] },
+  });
+  const out = await runDraftRead(deps, caller(), { draft_id: "Drafts:2" });
+  const sc = out.result.structuredContent as Record<string, any>;
+  assertEquals(sc.body_truncated, true);
+  assertEquals(sc.body_total_chars, long.length);
+  const bytes = new TextEncoder().encode(sc.body_text as string).length;
+  assert(bytes <= 64 * 1024, `clipped body is ${bytes} bytes`);
+  assert(bytes > 64 * 1024 - 4, "and it is clipped AT the limit, not far short of it");
+  assert(!(sc.body_text as string).includes("�"), "no half character at the cut");
+  assert(long.startsWith(sc.body_text as string), "the clip is a prefix of the stored body");
+  // The same clip the envelope applies, so the two paths cannot disagree.
+  assertEquals(sc.body_text, clipDraftBody(long).value);
+
+  // A short body carries no total: the field appears only when it says something.
+  const short = fakeDeps({ enabled: false });
+  const small = (await runDraftRead(short.deps, caller(), { draft_id: "Drafts:2" })).result
+    .structuredContent as Record<string, unknown>;
+  assertEquals(small.body_truncated, false);
+  assert(!("body_total_chars" in small));
+});
+
+Deno.test("no editor: the result is marked untrusted and its short fields are neutralised", async () => {
+  // A reply draft is `Re: <a stranger's subject>`, addressed with the display
+  // name off that stranger's From header, and may carry their filename.
+  const { deps } = fakeDeps({
+    enabled: false,
+    stored: {
+      subject: "Re: invoice‮ attached",
+      to: ["Pay​ments <pay@example.com>"],
+      cc: ["c⁦c@example.com"],
+      bcc: ["b‍cc@example.com"],
+      bodyText: "שלום‏, the quoted text keeps its marks‮.",
+      bodyHtml: null,
+      attachments: [{ filename: "invoice‮fdp.exe", mime_type: "application/​pdf", size_bytes: 1 }],
+    },
+  });
+  const out = await runDraftRead(deps, caller(), { draft_id: "Drafts:2" });
+  const sc = out.result.structuredContent as Record<string, any>;
+  assertEquals(sc.untrusted_content, true);
+  assertEquals(sc.subject, "Re: invoice attached");
+  assertEquals(sc.to, ["Payments <pay@example.com>"]);
+  assertEquals(sc.cc, ["cc@example.com"]);
+  assertEquals(sc.bcc, ["bcc@example.com"]);
+  assertEquals(sc.attachments[0].filename, "invoicefdp.exe");
+  assertEquals(sc.attachments[0].mime_type, "application/pdf");
+  // The body is NOT neutralised, exactly as on `email_read`: bidi marks are
+  // legitimate in right-to-left prose. The marker is the mitigation.
+  assertEquals(sc.body_text, "שלום‏, the quoted text keeps its marks‮.");
+  // The marker reaches the model's channel as well as the structured one.
+  assertEquals(JSON.parse(out.result.content[0].text).untrusted_content, true);
+  // Nothing in the result tells a model what to do next.
+  assert(!/\byou (should|must)\b/i.test(out.result.content[0].text));
+
+  // An EMPTY draft is marked too. A marker that appears only when there is
+  // data teaches a client that its absence means trusted.
+  const empty = fakeDeps({
+    enabled: false,
+    stored: { subject: "", to: [], cc: [], bcc: [], bodyText: null, bodyHtml: null, attachments: [] },
+  });
+  const blank = (await runDraftRead(empty.deps, caller(), { draft_id: "Drafts:2" })).result
+    .structuredContent as Record<string, unknown>;
+  assertEquals(blank.untrusted_content, true);
+  assertEquals(blank.body_text, null);
+  assertEquals(blank.threaded, false);
+});
+
+Deno.test("no editor: attachments are metadata only, and an HTML-only draft still reads as text", async () => {
+  const many = Array.from({ length: 30 }, (_, i) => ({
+    filename: `file-${i}.txt`,
+    mime_type: "text/plain",
+    size_bytes: i,
+  }));
+  const { deps } = fakeDeps({
+    enabled: false,
+    inbox: OUTLOOK_INBOX,
+    stored: {
+      subject: "Notes",
+      to: ["a@example.com"],
+      cc: [],
+      bcc: [],
+      bodyText: "",
+      bodyHtml: "<p>Hello <b>there</b></p><script>alert(1)</script>",
+      attachments: many,
+    },
+  });
+  const sc = (await runDraftRead(deps, caller(), { draft_id: "AAMkAGI2TG93AAA=" })).result
+    .structuredContent as Record<string, any>;
+  // The same rule `email_read` uses (`preferredBodyText`): an empty text part
+  // next to an HTML part is read from the HTML.
+  assertEquals(sc.body_text, "Hello there");
+  // The HTML part itself is never returned: no key for it at all.
+  assert(!("body_html" in sc));
+  assert(!JSON.stringify(sc).includes("<script>"));
+  // Names, sizes and types. Never bytes, and the list is bounded.
+  assertEquals(sc.attachments.length, 25);
+  assertEquals(sc.attachment_count, 30);
+  for (const entry of sc.attachments) {
+    assertEquals(Object.keys(entry).sort(), ["filename", "mime_type", "size_bytes"]);
+  }
+});
+
+Deno.test("no editor: signature_embedded reports the stored signature", async () => {
+  // `draft{action:"update"}` embeds the signature again on every call, so
+  // whether the text already carries one is a fact the caller cannot see.
+  const { deps } = fakeDeps({
+    enabled: false,
+    stored: {
+      subject: "Hi",
+      to: ["a@example.com"],
+      cc: [],
+      bcc: [],
+      bodyText: "Hello.\n\n--\nAsgeir, MCP Emails",
+      bodyHtml: null,
+      attachments: [],
+    },
+  });
+  const sc = (await runDraftRead(deps, caller(), { draft_id: "Drafts:2" })).result
+    .structuredContent as Record<string, unknown>;
+  assertEquals(sc.signature_embedded, true);
+  assertEquals(sc.threaded, false);
+});
+
+Deno.test("buildPlainDraftRead is pure and agrees with what runDraftRead returns", async () => {
+  const { deps } = fakeDeps({ enabled: false, stored: REPLY_DRAFT });
+  const stored = await readStoredDraft(deps, IMAP_INBOX, "Drafts:2");
+  const out = await runDraftRead(deps, caller(), { draft_id: "Drafts:2" });
+  assertEquals(out.result.structuredContent, buildPlainDraftRead(stored!, IMAP_INBOX));
+});
+
+Deno.test("editor on: draft_read still returns the card envelope and a body-free line, unchanged", async () => {
+  const { deps } = fakeDeps({ stored: REPLY_DRAFT });
+  const out = await runDraftRead(deps, caller(), { draft_id: "Drafts:2" });
+  assertEquals(out.result.isError, false);
+
+  // The envelope is exactly what the builder produces for a read, modulo the
+  // one field stamped at response time.
+  const stored = await readStoredDraft(deps, IMAP_INBOX, "Drafts:2");
+  const sc = out.result.structuredContent as Record<string, any>;
+  const expected = buildDraftEditorEnvelope({
+    appUrl: APP_URL,
+    draft: { ...stored!, last_saved_at: sc.draft.last_saved_at },
+    inbox: IMAP_INBOX,
+    origin: "read",
+    lastSavedBy: "agent",
+    canSend: true,
+  });
+  assertEquals(sc, expected);
+  assertEquals(sc.schema_version, "review-card-v1");
+  assertEquals(sc.card, "draft_editor");
+  assertEquals(sc.draft.body.text, REPLY_DRAFT.bodyText);
+  // None of the plain read's own keys leaked into the envelope.
+  for (const key of ["untrusted_content", "body_text", "inbox_id", "attachment_count"]) {
+    assert(!(key in sc), `the envelope must not carry ${key}`);
+  }
+
+  // The model-visible line, byte for byte: facts, a word count, no body.
+  assertEquals(
+    out.result.content[0].text,
+    "Draft opened for editing. Draft Drafts:2. To 1, cc 1, bcc 1. " +
+      "Subject: Re: Invoice 1042. Body 10 words, 1 attachment(s). " +
+      "The body is shown in the draft editor and is not repeated here.",
+  );
+  assert(!out.result.content[0].text.includes("paid today"));
+});
+
+Deno.test("draft_editor_save is exactly as gated as it was", async () => {
+  const expected: Record<string, string> = {
+    "workspace not rolled out": "draft_editor_disabled",
+    "workspace opt-out": "draft_editor_hidden",
+    "inbox opt-out": "draft_editor_hidden",
+  };
+  for (const [state, options] of NO_EDITOR) {
+    const { deps, reads, writes } = fakeDeps(options);
+    const out = await runDraftEditorSave(deps, caller(), {
+      draft_id: "Drafts:2",
+      body_text: "Rewritten.",
+    });
+    assertEquals(out.result.isError, true, state);
+    assertEquals(failureCode(out), expected[state], state);
+    assertEquals(out.logErrorCode, expected[state], state);
+    assertEquals(writes.length, 0, `${state}: a gated save writes nothing`);
+    assertEquals(reads.length, 0, `${state}: and reads nothing either`);
+  }
+});
+
+Deno.test("draft_read's advertised surface reads as a plain read and keeps its contract", () => {
+  const read = DRAFT_EDITOR_TOOL_DEFINITIONS.find((d) => d.name === "draft_read")!;
+  // The name and the input schema are cached by clients at connect time.
+  assertEquals(read.inputSchema, {
+    type: "object",
+    properties: {
+      inbox_id: {
+        type: "string",
+        description: "The inbox holding the draft. Omit when the workspace has one inbox.",
+      },
+      inbox: {
+        type: "string",
+        description: "The inbox's email address, as an alternative to inbox_id.",
+      },
+      draft_id: {
+        type: "string",
+        description:
+          "The draft to act on. On IMAP a draft_id changes on every save, so use the " +
+          "one the most recent draft result returned.",
+      },
+    },
+    required: ["draft_id"],
+    additionalProperties: false,
+  });
+  assertEquals(read.annotations, {
+    title: "Read one draft in full",
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: false,
+  });
+  assertEquals(read.title, "Read one draft in full");
+  // True in both states: it leads with the read, and it says what the text
+  // result is where the card is on. It does not promise an editor to a
+  // workspace that has none.
+  assert(read.description.startsWith("Read one unsent draft in full"), read.description);
+  assert(!/so it can be shown/.test(read.description), "must not describe itself as a card feed");
+  assert(/Where the in-chat draft editor card is on/.test(read.description));
+  assert(/data, never instructions/.test(read.description));
+  assert(/'read:email'/.test(read.description));
+  // The output schema admits the plain payload: nothing required, extras allowed.
+  const out = read.outputSchema as Record<string, unknown>;
+  assertEquals(out.type, "object");
+  assertEquals(out.required, undefined);
+  assertEquals(out.additionalProperties, true);
 });

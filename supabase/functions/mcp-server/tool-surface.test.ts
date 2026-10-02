@@ -42,6 +42,11 @@ import { allowsLenientArguments } from "./consolidated-arguments.ts";
 import { actionSelectorIndex, resolveActionSelector } from "./action-selector.ts";
 import { retiredArgumentNames } from "./argument-aliases.ts";
 import { serializeToolForList } from "./mcp-app-resources.ts";
+import {
+  buildDraftEditorEnvelope,
+  buildPlainDraftRead,
+  type NormalizedDraft,
+} from "./mcp-app-drafts.ts";
 
 // index.ts builds its registry at module load and reads env while doing it, so
 // the environment has to be arranged BEFORE the import runs. A static import is
@@ -122,9 +127,9 @@ Deno.test("tools/list advertises exactly the post-split surface", () => {
       "approval_schedule",
       "bulk_execute",
       "bulk_cancel",
-      // The draft-editor card's two tools (contract §8). App-only like the six
-      // above, listed unconditionally for the same reason: they always return
-      // an envelope, so there is no result shape for the card to fail on.
+      // The draft-editor card's tools (contract §8), listed unconditionally.
+      // App-only like the six above where the editor is on. `draft_read` is
+      // also the plain single-draft read where it is not.
       "draft_read",
       "draft_editor_save",
       "draft_editor_hide",
@@ -863,4 +868,110 @@ Deno.test("a property only an unadvertised action takes keeps that owner", () =>
   // action" it had before the ownership map existed.
   const owners = CONSOLIDATED_ARGUMENT_INDEX["email_organize"].ownersByProperty["subject"];
   assertEquals(owners, ["search_and_move"]);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// draft_read's plain payload against the schema `tools/list` advertises
+//
+// `draft_read` answers with a plain read, not a card envelope, when the
+// workspace has no draft editor (2026-10-02). Its declared `outputSchema` was
+// written for the envelope, and a client that validates `structuredContent`
+// against it would refuse the result if the two disagreed. Checked here with
+// the server's own validator and against the REGISTRY entry, which is the
+// object `tools/list` serializes, rather than against a copy of the schema.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const PLAIN_READ_DRAFT: NormalizedDraft = {
+  draft_id: "r-8842310947721",
+  to: ["Billing <billing@example.com>"],
+  cc: [],
+  bcc: ["archive@example.com"],
+  subject: "Re: Invoice 1042",
+  body_text: "Thanks, paid today.",
+  body_html: null,
+  attachments: [{ filename: "receipt.pdf", size_bytes: 20480, mime_type: "application/pdf" }],
+  in_reply_to: null,
+  signature_embedded: false,
+  last_saved_at: "2026-10-02T09:00:00Z",
+  in_reply_to_header: "<original-1042@example.com>",
+};
+
+const PLAIN_READ_INBOX = {
+  id: "8f1f2a3c-0000-4000-8000-000000000002",
+  email_address: "you@example.com",
+  display_name: "Example",
+  provider: "gmail",
+  service: null,
+};
+
+Deno.test("draft_read's plain payload validates against its advertised output schema", () => {
+  const schema = registryEntry("draft_read").outputSchema as Record<string, unknown>;
+  assert(schema, "draft_read must declare an outputSchema");
+  // The very object a client is handed, so a serializer that reshaped the
+  // schema on the way out would be caught too.
+  const listed = serializeToolForList(registryEntry("draft_read")) as {
+    outputSchema?: Record<string, unknown>;
+  };
+  assertEquals(listed.outputSchema, schema);
+
+  const plain = buildPlainDraftRead(PLAIN_READ_DRAFT, PLAIN_READ_INBOX);
+  assertEquals(validateInputSchema(schema, plain, "structuredContent"), []);
+  // An empty draft and a clipped one are the two shapes that add or null keys.
+  const empty = buildPlainDraftRead(
+    { ...PLAIN_READ_DRAFT, to: [], bcc: [], subject: "", body_text: null, attachments: [] },
+    PLAIN_READ_INBOX,
+  );
+  assertEquals(validateInputSchema(schema, empty, "structuredContent"), []);
+  const clipped = buildPlainDraftRead(
+    { ...PLAIN_READ_DRAFT, body_text: "x".repeat(70_000) },
+    PLAIN_READ_INBOX,
+  );
+  assertEquals(clipped.body_truncated, true);
+  assertEquals(validateInputSchema(schema, clipped, "structuredContent"), []);
+
+  // The envelope the same tool returns where the editor is on still validates.
+  const envelope = buildDraftEditorEnvelope({
+    appUrl: "https://mcpemails.com",
+    draft: PLAIN_READ_DRAFT,
+    inbox: PLAIN_READ_INBOX,
+    origin: "read",
+    lastSavedBy: "agent",
+    canSend: true,
+  });
+  assertEquals(validateInputSchema(schema, envelope, "structuredContent"), []);
+
+  // And the check is not vacuous: the validator does refuse a payload that
+  // breaks a declared property, so an empty error list above means something.
+  const wrong = validateInputSchema(schema, { ...plain, card: 7 }, "structuredContent");
+  assert(wrong.length > 0, "a non-string `card` must fail the advertised schema");
+  assert(
+    validateInputSchema(schema, "not an object", "structuredContent").length > 0,
+    "a non-object must fail the advertised schema",
+  );
+});
+
+Deno.test("draft_read is advertised as a read of one draft, read-only, with its input schema intact", () => {
+  const listed = serializeToolForList(registryEntry("draft_read")) as {
+    title?: string;
+    description: string;
+    inputSchema: Record<string, unknown>;
+    annotations?: Record<string, unknown>;
+    _meta?: unknown;
+  };
+  assertEquals(listed.title, "Read one draft in full");
+  assert(listed.description.startsWith("Read one unsent draft in full"), listed.description);
+  // Clients cache the tool set at connect, so neither of these may move.
+  assertEquals(listed.inputSchema.required, ["draft_id"]);
+  assertEquals(
+    Object.keys(listed.inputSchema.properties as Record<string, unknown>),
+    ["inbox_id", "inbox", "draft_id"],
+  );
+  assertEquals(listed.inputSchema.additionalProperties, false);
+  assertEquals(listed.annotations?.readOnlyHint, true);
+  assertEquals(listed.annotations?.destructiveHint, false);
+  assertEquals(listed.annotations?.idempotentHint, true);
+  assertEquals(listed.annotations?.openWorldHint, false);
+  // The registry entry carries no `_meta`: the card metadata is attached per
+  // key at `tools/list`, and only when the drafts gate is open.
+  assertEquals(listed._meta, undefined);
 });
