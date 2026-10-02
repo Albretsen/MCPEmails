@@ -249,7 +249,7 @@ export function permanentFlagsAllowKeyword(
 // decision is taken below. Two layers cannot both own this rule.
 // ---------------------------------------------------------------------------
 
-/** One folder (Gmail: label) as `folder action: list` reports it. */
+/** One folder (Gmail: label) as `folder_list` reports it. */
 export interface FolderReference {
   /** Provider-native id. On IMAP the mailbox name IS the id. */
   id: string;
@@ -286,16 +286,29 @@ export interface FolderResolutionContext {
   provider?: string | null;
   /** What the provider calls the thing. Defaults to the Gmail/other split. */
   itemNoun?: "folder" | "label";
-  /** One extra sentence appended before the "call folder action: list" nudge. */
+  /** One extra sentence appended before the "call folder_list" nudge. */
   hint?: string | null;
+  /**
+   * The canonical alias token the failed value stood for ("spam" when the
+   * caller typed "junk"), when it was an alias at all. Supplied by the caller
+   * for the same reason as `aliasNames`: synonyms are provider vocabulary.
+   * A value that is itself one of FOLDER_ALIAS_TOKENS needs no help.
+   */
+  failedAlias?: string | null;
+  /**
+   * The mailbox's IMAP host, when the caller has one. Used for one thing: an
+   * inbox stored as provider "imap" that is really Gmail is called Gmail, so
+   * the reader is not sent looking for a generic IMAP layout.
+   */
+  imapHost?: string | null;
   /**
    * The names this mailbox actually has, to be listed in a not-found message.
    *
    * Supplied by resolveFolderReference, which has just searched them, so the
    * remedy arrives with the failure instead of one round trip later. Left
    * unset by the call sites that raise a not-found without a listing in hand
-   * (an alias with no candidate mailbox), where the pointer at `folder action:
-   * list` is still the only honest thing to say.
+   * (an alias with no candidate mailbox), where the pointer at `folder_list`
+   * is still the only honest thing to say.
    */
   available?: readonly string[];
 }
@@ -343,6 +356,20 @@ function availableClause(ctx: FolderResolutionContext): string {
   );
 }
 
+/** True for the IMAP endpoints of Gmail (and its older googlemail.com name). */
+export function isGmailImapHost(host: string | null | undefined): boolean {
+  return /^imap\.(?:gmail|googlemail)\.com$/i.test((host ?? "").trim());
+}
+
+/** "this gmail inbox", or the plainer truth when an "imap" inbox is Gmail. */
+function inboxPhrase(ctx: FolderResolutionContext): string {
+  if (!ctx.provider) return "this inbox";
+  if (ctx.provider === "imap" && isGmailImapHost(ctx.imapHost)) {
+    return "this Gmail inbox (connected over IMAP)";
+  }
+  return `this ${ctx.provider} inbox`;
+}
+
 /**
  * The message an agent gets when a folder value matches nothing.
  *
@@ -352,20 +379,30 @@ function availableClause(ctx: FolderResolutionContext): string {
  * transient fault, so the agent retried a call that could never work. This one
  * names the value, names the three accepted spellings, points at the call that
  * lists them, and says plainly that waiting will not help.
+ *
+ * Two things it used to get wrong, fixed 2026-10-02. It pointed at
+ * "folder action: list", which is not a call: listing moved to the read tool
+ * `folder_list`, and `folder` no longer has a list action. And it recited all
+ * six aliases as accepted in the reply to a call that had just failed ON one
+ * of them, so a model that passed "sent" was told "sent" works. The alias that
+ * failed is now left out of the list, and the list says what an alias needs.
  */
 export function folderNotFoundMessage(
   value: string,
   ctx: FolderResolutionContext = {},
 ): string {
   const noun = folderNoun(ctx);
-  const where = ctx.provider ? `this ${ctx.provider} inbox` : "this inbox";
+  const where = inboxPhrase(ctx);
+  const failed = (ctx.failedAlias ?? value).trim().toLowerCase();
+  const aliases = FOLDER_ALIAS_TOKENS.filter((token) => token !== failed);
   return (
     `No ${noun} matching "${value}" exists in ${where}. ` +
     `A folder argument accepts a ${noun} id, the exact ${noun} name ` +
-    `(case-insensitive), or one of the aliases ${FOLDER_ALIAS_TOKENS.join(", ")}. ` +
+    `(case-insensitive), or an alias (${aliases.join(", ")}) where the inbox ` +
+    `has a ${noun} in that role. ` +
     (ctx.hint ? `${ctx.hint} ` : "") +
     availableClause(ctx) +
-    `Call folder action: list on this inbox to see the ids and names it actually has, ` +
+    `Call folder_list on this inbox to see the ids and names it actually has, ` +
     `then reissue the call with one of them. This is a permanent naming mismatch, ` +
     `not a temporary fault: the same value will keep failing until it changes.`
   );
@@ -472,7 +509,7 @@ function folderAmbiguousMessage(
     `spaces around the name, so there is no way to tell which one was meant. ` +
     `Reissue the call with the ${noun} spelled EXACTLY as it appears above, ` +
     `including its leading and trailing spaces, or pass its id from ` +
-    `folder action: list. Nothing was changed.`
+    `folder_list. Nothing was changed.`
   );
 }
 

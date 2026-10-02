@@ -3730,8 +3730,8 @@ const STRUCTURED_SEARCH_PROPERTIES: Record<string, Record<string, unknown>> = {
  * default is the whole point of the sentence, so it is stated on every tool.
  */
 const INCLUDE_FOLDERS_DESCRIPTION =
-  "Folders to search, each an alias, a folder or label name, or a folder id " +
-  "(names and aliases resolve for you). IMAP covers INBOX only unless you name " +
+  "Folders to search, each a folder or label name or id from folder_list, or an " +
+  "alias (works where the mailbox has that role). IMAP covers INBOX only unless you name " +
   "archive or sent folders; Gmail and Outlook search every folder except the " +
   "trash (Deleted Items on Outlook; Gmail also skips Spam), so name it to include it.";
 
@@ -3981,9 +3981,9 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           type: "string",
           default: "INBOX",
           description:
-            "Folder to list: an alias (inbox, sent, drafts, trash, archive, spam), " +
-            "a folder or label name, or a folder id. Names and aliases resolve for " +
-            "you, case-insensitively, so a label you just created by name works here.",
+            "Folder to list: a folder or label name or id from folder_list (names " +
+            "match case-insensitively, so a label you just created works), or an alias " +
+            "(inbox, sent, drafts, trash, archive, spam) where the mailbox has that role.",
         },
         // The same tri-state as search's `unread`, under the same name, so the
         // consolidated email_read advertises ONE property for the idea. The
@@ -4355,7 +4355,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         folder_id: {
           type: "string",
           description:
-            "Folder id from action: list. On IMAP this is the mailbox name " +
+            "Folder id from folder_list. On IMAP this is the mailbox name " +
             "(e.g. 'INBOX/Work'), on Gmail the label id.",
         },
         new_name: {
@@ -11826,6 +11826,8 @@ async function executeListInbox(
           message: folderNotFoundMessage(folder, {
             provider: inbox.provider,
             itemNoun: organizationItemType(inbox),
+            failedAlias: lookupCanonicalAlias(folder)?.aliases[0],
+            imapHost: inbox.imap_host,
           }),
         }),
       );
@@ -18622,8 +18624,10 @@ async function resolveFolderId(
               provider: inbox.provider,
               itemNoun: "folder",
               available: folders.map((f) => f.name),
-              hint: `This mailbox advertises no ${alias.aliases[0]} folder and none is ` +
-                `named "${alias.imap}".`,
+              failedAlias: alias.aliases[0],
+              imapHost: inbox.imap_host,
+              hint: `The mail server flags no folder as ${alias.aliases[0]} and none has a ` +
+                `usual name for it.`,
             }),
           });
         }
@@ -18646,6 +18650,8 @@ async function resolveFolderId(
     provider: inbox.provider,
     itemNoun: organizationItemType(inbox),
     hint: gmailArchiveHint(inbox, alias),
+    failedAlias: alias?.aliases[0],
+    imapHost: inbox.imap_host,
   });
   if (match.ok) return match.id;
 
