@@ -355,6 +355,11 @@ import {
   isWarningCrossing,
 } from "./action-allowance.ts";
 import {
+  type FirstUseMarkers,
+  firstUseAlreadyRecorded,
+  settleAfterResponse,
+} from "./request-pipeline.ts";
+import {
   buildUnappliedSearchNote,
   buildUnappliedSearchRefusal,
   DATE_INPUT_EXAMPLES,
@@ -458,8 +463,22 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL") ??
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ??
   (INTROSPECTION_ONLY ? "introspection-placeholder" : "");
 
+// Per-request count of Supabase HTTP round trips, for the `db_calls` field on
+// the tools/call log line. handleRequest opens the store; every request the
+// client below makes inside it is counted. Value-free: a number, never a URL
+// or a body. Outside a request (module load) the store is absent and nothing
+// is counted.
+const requestMeterStore = new AsyncLocalStorage<{ dbCalls: number }>();
+
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: { persistSession: false },
+  global: {
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => {
+      const meter = requestMeterStore.getStore();
+      if (meter) meter.dbCalls += 1;
+      return fetch(input, init);
+    },
+  },
 });
 
 // ---------------------------------------------------------------------------
@@ -1016,6 +1035,19 @@ interface RequestContext {
   ipAddress: string | null;
   /** Raw User-Agent header value, or null if absent. */
   userAgent: string | null;
+  /** When handleRequest started on this request. Feeds `pre_ms` in the log. */
+  startedAtMs?: number;
+  /**
+   * The workspace's allowance row, already being read. handleRequest issues it
+   * alongside the rate-limit and plan checks so reserveBillableAction does not
+   * pay for it serially. Absent when the call cannot be metered.
+   */
+  allowance?: Promise<ActionAllowanceRow | null>;
+  /**
+   * Activation markers from the workspace row the plan check read. Absent when
+   * that read failed open; markFirstProductUse then runs as it always did.
+   */
+  firstUse?: FirstUseMarkers;
 }
 
 // ---------------------------------------------------------------------------
@@ -2070,6 +2102,12 @@ interface PlanQuotaResult {
   usedThisMinute: number;
   /** Seconds until the oldest call in the window drops out, freeing a slot. */
   retryAfterSeconds: number;
+  /**
+   * Activation markers off the workspace row this check already reads, so a
+   * tools/call can tell an activated workspace without another round trip.
+   * Absent when the workspace lookup failed open.
+   */
+  firstUse?: FirstUseMarkers;
 }
 
 /**
@@ -2086,10 +2124,23 @@ interface PlanQuotaResult {
 async function checkPlanQuota(
   workspaceId: string,
 ): Promise<PlanQuotaResult> {
-  // 1. Look up workspace plan.
+  // The window count (step 2) needs nothing from the workspace row, so it is
+  // issued first and overlaps the two lookups below instead of queueing behind
+  // them. It is a read: when a lookup fails open the answer is simply unused.
+  const windowStart = new Date(Date.now() - PLAN_RPM_WINDOW_MS).toISOString();
+  const windowCount = Promise.resolve(
+    supabase
+      .from("activity_log")
+      .select("*", { count: "exact", head: true })
+      .eq("workspace_id", workspaceId)
+      .gte("created_at", windowStart),
+  );
+
+  // 1. Look up workspace plan. The two activation columns ride along for
+  // markFirstProductUse (see PlanQuotaResult.firstUse); nothing here reads them.
   const { data: workspace, error: wsError } = await supabase
     .from("workspaces")
-    .select("plan, grandfathered, owner_id")
+    .select("plan, grandfathered, owner_id, analytics_first_tool_used_at, onboarding_value_activated_at")
     .eq("id", workspaceId)
     .maybeSingle();
 
@@ -2138,14 +2189,13 @@ async function checkPlanQuota(
   const perMinuteLimit = legacyLimit ?? PLAN_REQUESTS_PER_MINUTE[plan] ??
     DEFAULT_REQUESTS_PER_MINUTE;
 
-  // 2. Count the workspace's calls in the trailing 60s window.
-  const windowStart = new Date(Date.now() - PLAN_RPM_WINDOW_MS).toISOString();
+  const firstUse: FirstUseMarkers = {
+    analytics_first_tool_used_at: workspace.analytics_first_tool_used_at,
+    onboarding_value_activated_at: workspace.onboarding_value_activated_at,
+  };
 
-  const { count, error: countError } = await supabase
-    .from("activity_log")
-    .select("*", { count: "exact", head: true })
-    .eq("workspace_id", workspaceId)
-    .gte("created_at", windowStart);
+  // 2. Count the workspace's calls in the trailing 60s window (issued above).
+  const { count, error: countError } = await windowCount;
 
   if (countError) {
     // Fail open.
@@ -2159,6 +2209,7 @@ async function checkPlanQuota(
       perMinuteLimit,
       usedThisMinute: 0,
       retryAfterSeconds: 0,
+      firstUse,
     };
   }
 
@@ -2172,6 +2223,7 @@ async function checkPlanQuota(
       perMinuteLimit,
       usedThisMinute,
       retryAfterSeconds: 0,
+      firstUse,
     };
   }
 
@@ -2325,9 +2377,11 @@ interface RateLimitResult {
 /**
  * Check per-key rolling-window rate limits against the `activity_log` table.
  *
- * Queries three rolling windows in sequence (1 min, 1 hr, 1 day). The first
- * saturated window short-circuits the remaining checks and returns a denial.
- * All checks pass → returns `{ allowed: true }`.
+ * Counts three rolling windows (1 min, 1 hr, 1 day). The three counts are
+ * issued together, because each is a database round trip and nothing in one
+ * depends on another; they are then READ in ascending order of width, so the
+ * narrowest saturated window still decides the denial, exactly as when they
+ * ran in sequence. All checks pass → returns `{ allowed: true }`.
  *
  * Fail-open behaviour: a database error in the count query is logged and the
  * window is skipped (treated as under-limit). This prevents transient DB
@@ -2342,14 +2396,20 @@ interface RateLimitResult {
 async function checkRateLimit(
   apiKeyId: string,
 ): Promise<RateLimitResult> {
-  for (const window of RATE_LIMIT_WINDOWS) {
-    const windowStart = new Date(Date.now() - window.intervalMs).toISOString();
-
-    const { count, error } = await supabase
+  const windowStarts = RATE_LIMIT_WINDOWS.map((window) =>
+    new Date(Date.now() - window.intervalMs).toISOString()
+  );
+  const windowCounts = await Promise.all(windowStarts.map((windowStart) =>
+    supabase
       .from("activity_log")
       .select("*", { count: "exact", head: true })
       .eq("api_key_id", apiKeyId)
-      .gte("created_at", windowStart);
+      .gte("created_at", windowStart)
+  ));
+
+  for (const [index, window] of RATE_LIMIT_WINDOWS.entries()) {
+    const windowStart = windowStarts[index];
+    const { count, error } = windowCounts[index];
 
     if (error) {
       // Fail open: DB error → skip this window and continue checking the rest.
@@ -2622,9 +2682,13 @@ interface ActivityLogParams {
  * Called after every `tools/call` invocation — success, error, or rate-limit.
  * Also called for rate-limited requests before the 429 is returned.
  *
- * This insert is **awaited** (not fire-and-forget) so the audit trail is
- * guaranteed to be complete before the HTTP response is sent, even if the
- * client disconnects immediately after receiving the response.
+ * The insert is never fire-and-forget. The refusals that return before a tool
+ * runs await it. The row for a call that DID run is handed to
+ * settleAfterResponse (request-pipeline.ts) with the meter and the first-use
+ * markers: issued at the same moment as before, but finished behind the
+ * response where the runtime can hold the isolate open for it
+ * (`EdgeRuntime.waitUntil`), and awaited as before where it cannot. Either
+ * way a client that disconnects early does not cost the row.
  *
  * Failures are logged to the Edge Function console but are non-fatal: the
  * original tool result is still returned to the caller. Audit-log failures
@@ -2937,8 +3001,15 @@ type BillableActionReservation =
 async function reserveBillableAction(
   workspaceId: string,
   toolName: string,
+  /**
+   * The allowance row when the caller is already reading it (handleRequest
+   * issues it alongside the rate-limit checks). Only the READ moves earlier;
+   * the reservation below still runs here, after every refusal that must not
+   * leave one behind. The automation runner passes nothing and reads it here.
+   */
+  preloadedAllowance?: Promise<ActionAllowanceRow | null>,
 ): Promise<BillableActionReservation> {
-  const allowance = await loadActionAllowance(workspaceId);
+  const allowance = await (preloadedAllowance ?? loadActionAllowance(workspaceId));
   const decision = allowanceDecision(allowance);
   if (decision.kind !== "meter" || !allowance) return { outcome: "unmetered", reason: decision.kind === "meter" ? "no_row" : decision.reason };
 
@@ -3055,16 +3126,30 @@ function usageLimitResult(
   };
 }
 
+/**
+ * Whether a tools/call under this client-facing name can reach
+ * reserveBillableAction, so that handleRequest knows if the allowance row is
+ * worth reading early. A consolidated tool dispatches to an operation chosen
+ * by its `action`, which is only resolved inside handleToolsCall, so every
+ * consolidated name counts. This decides a READ and nothing else: the gate is
+ * still actionLimitResponse, on the resolved operation.
+ */
+function mayMeterToolCall(toolName: unknown): boolean {
+  if (typeof toolName !== "string" || Deno.env.get("USAGE_ENFORCEMENT_DISABLED") === "true") return false;
+  return BILLABLE_TOOL_NAMES.has(toolName) || Object.hasOwn(CONSOLIDATED_BY_NAME, toolName);
+}
+
 async function actionLimitResponse(
   workspaceId: string,
   toolName: string,
   requestId: string | number | null,
+  preloadedAllowance?: Promise<ActionAllowanceRow | null>,
 ): Promise<ActionLimitCheck> {
   // Kill switch, not a feature flag: enforcement is ON unless something says
   // otherwise, so a missing or mistyped variable cannot silently disable the
   // only thing standing between us and an unbounded provider bill.
   if (Deno.env.get("USAGE_ENFORCEMENT_DISABLED") === "true" || !BILLABLE_TOOL_NAMES.has(toolName)) return { response: null, reservationId: null };
-  const reservation = await reserveBillableAction(workspaceId, toolName);
+  const reservation = await reserveBillableAction(workspaceId, toolName, preloadedAllowance);
   switch (reservation.outcome) {
     case "unmetered":
       return { response: null, reservationId: null };
@@ -28514,8 +28599,10 @@ function acquireByteHeavySlot(dispatchName: string, apiKeyId: string): ByteHeavy
  *   4. Timing the full execution path.
  *   5. Writing an `activity_log` entry regardless of outcome (success or error).
  *
- * The `activity_log` insert is awaited before the response is returned so that
- * the audit trail is guaranteed to be complete even if the client disconnects.
+ * The `activity_log` insert for a call that ran is issued before this returns
+ * and settled behind the response (see settleAfterResponse), so the audit
+ * trail does not depend on the client staying connected. Refusals that return
+ * before a tool runs still await theirs.
  *
  * **Scope checking** is enforced before the tool runs: a key without the
  * required scope receives a -32004 (RPC_INSUFFICIENT_SCOPE) error, which
@@ -29007,7 +29094,7 @@ async function handleToolsCall(
     );
   }
 
-  const actionLimit = await actionLimitResponse(apiKey.workspace_id, dispatchName, id);
+  const actionLimit = await actionLimitResponse(apiKey.workspace_id, dispatchName, id, ctx.allowance);
   if (actionLimit.response) {
     // A cap rejection used to return here without writing anything to
     // activity_log, which quietly exempted it from both throttles: the per-key
@@ -29058,6 +29145,13 @@ async function handleToolsCall(
   // tool begins executing to the moment the result is ready, excluding the
   // log write itself (which is infrastructure overhead, not tool latency).
   const startMs = Date.now();
+  // What that clock cannot see: everything between the request arriving and
+  // this line (body read, authentication, the limiters, the allowance), as
+  // wall time and as database round trips. Logged next to `duration_ms`, never
+  // folded into it, so `activity_log.duration_ms` keeps meaning tool latency.
+  const requestMeter = requestMeterStore.getStore();
+  const preMs = ctx.startedAtMs === undefined ? null : startMs - ctx.startedAtMs;
+  const preDbCalls = requestMeter?.dbCalls ?? null;
 
   let toolResult!: JsonRpcSuccessResponse | JsonRpcErrorResponse;
   let logStatus: "success" | "error" = "error";
@@ -29623,11 +29717,18 @@ async function handleToolsCall(
   const resolvedInboxId = logCtx.inboxId ?? inboxId;
 
   // ── Write activity log ────────────────────────────────────────────────────
-  // Awaited intentionally — the audit trail must be complete before the
-  // response leaves the Edge Function. A logging failure is non-fatal.
+  // The three writes below are the call's bookkeeping, and none of them
+  // changes the answer. They are issued together and settled behind the
+  // response (settleAfterResponse, request-pipeline.ts): each was a database
+  // round trip the client used to wait for after its result was ready. Where
+  // the runtime has no background hook they are awaited here, as before. A
+  // logging failure is non-fatal.
   // Log the resolved (legacy) operation name so per-action analytics survive
   // consolidation — e.g. an email_compose/forward call logs as "email_forward".
-  await writeActivityLog({
+  const dbCalls = requestMeter?.dbCalls ?? null;
+  const totalMs = ctx.startedAtMs === undefined ? null : Date.now() - ctx.startedAtMs;
+  const postResponseWrites: Array<[string, () => Promise<unknown>]> = [];
+  postResponseWrites.push(["activity_log", () => writeActivityLog({
     workspaceId: apiKey.workspace_id,
     apiKeyId: apiKey.id,
     inboxId: resolvedInboxId,
@@ -29641,14 +29742,27 @@ async function handleToolsCall(
     // diagnose, and writing an empty object would make the column's presence
     // useless as a filter for operators asking "which errors can I read?".
     ...(logErrorDetails ? { errorDetails: logErrorDetails } : {}),
-  });
+  })]);
   // Settle the meter. With a reservation this finalises it (success books the
   // row, anything else releases it); without one, a successful call writes a
   // bare row and a failed or rate-limited call writes nothing.
-  await writeActionUsage(apiKey.workspace_id, dispatchName, logStatus, actionLimit.reservationId);
+  postResponseWrites.push(["action_usage", () => writeActionUsage(apiKey.workspace_id, dispatchName, logStatus, actionLimit.reservationId)]);
   // Dispatch mutates logStatus inside AsyncLocalStorage.run; TypeScript cannot
   // follow that closure mutation and otherwise narrows it to its initial value.
-  if ((logStatus as string) === "success") await markFirstProductUse(apiKey.workspace_id, apiKey.id, resolvedInboxId, dispatchName, ctx.userAgent);
+  // An activated workspace has nothing left to mark, and the plan check already
+  // read the columns that say so: skipping here is what takes the four marker
+  // round trips off every call but the first few. See firstUseAlreadyRecorded.
+  if ((logStatus as string) === "success" && !firstUseAlreadyRecorded(ctx.firstUse, resolvedInboxId, dispatchName)) {
+    postResponseWrites.push(["first_product_use", () => markFirstProductUse(apiKey.workspace_id, apiKey.id, resolvedInboxId, dispatchName, ctx.userAgent)]);
+  }
+  await settleAfterResponse(postResponseWrites, (write, error) => {
+    console.error("[mcp-server] tools/call: post_response_write_failed", {
+      key_id: apiKey.id,
+      tool_name: dispatchName,
+      write,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  });
 
   console.log("[mcp-server] tools/call", {
     key_id: apiKey.id,
@@ -29657,6 +29771,15 @@ async function handleToolsCall(
     inbox_id: resolvedInboxId,
     status: logStatus,
     duration_ms: durationMs,
+    // Request start to handler start, then to the result being ready. The gap
+    // between `total_ms` and `pre_ms + duration_ms` is the idempotency settle.
+    // `db_calls` are Supabase round trips issued before the result was ready
+    // (`pre_db_calls` of them before the handler); the writes settled behind
+    // the response are not in it.
+    pre_ms: preMs,
+    total_ms: totalMs,
+    pre_db_calls: preDbCalls,
+    db_calls: dbCalls,
   });
 
   // Last thing before the result leaves: if this is one of our own
@@ -31120,7 +31243,14 @@ function triageDeps(): TriageDeps {
   };
 }
 
-async function handleRequest(req: Request): Promise<Response> {
+// Opens the per-request round-trip counter (requestMeterStore) and does
+// nothing else. A named function, so `Deno.serve(handleRequest)` at the bottom
+// stays a bare reference and the tests drive the entry point production serves.
+function handleRequest(req: Request): Promise<Response> {
+  return requestMeterStore.run({ dbCalls: 0 }, () => handleMeteredRequest(req));
+}
+
+async function handleMeteredRequest(req: Request): Promise<Response> {
   // ── CORS preflight ────────────────────────────────────────────────────────
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
@@ -31223,6 +31353,7 @@ async function handleRequest(req: Request): Promise<Response> {
   const ctx: RequestContext = {
     ipAddress: ipAddress ?? null,
     userAgent: req.headers.get("user-agent"),
+    startedAtMs: Date.now(),
   };
 
   // ── Parse JSON body ───────────────────────────────────────────────────────
@@ -31446,6 +31577,29 @@ async function handleRequest(req: Request): Promise<Response> {
   // working — degrading the safety surface precisely when things are busiest,
   // which is exactly backwards. The dedicated `mcp:resources:*` bucket above
   // already bounds this traffic.
+  //
+  // ── The reads behind the three gates overlap ──────────────────────────────
+  // Authentication has finished by this line; nothing below starts before it.
+  // The per-key limiter, the plan quota and (for a tools/call that can be
+  // metered) the allowance row are independent READS, each a database round
+  // trip or three, so they are issued together and only their answers are
+  // taken in order: per-key limiter first, plan quota second, exactly the
+  // precedence the serial version had. Nothing is WRITTEN until both gates
+  // have passed. In particular the allowance RESERVATION is still made inside
+  // handleToolsCall, so a rate-limited call reserves nothing and consumes no
+  // allowance. A denied request leaves the other reads to finish unused.
+  const quotaPending = isResourceMethod || !metered
+    ? null
+    : checkPlanQuota(apiKey.workspace_id);
+  // Never awaited on a denial, so a rejection must not go unhandled.
+  quotaPending?.catch(() => {});
+  if (
+    metered && rpcRequest.method === "tools/call" &&
+    mayMeterToolCall((rpcRequest.params as Record<string, unknown> | undefined)?.["name"])
+  ) {
+    ctx.allowance = loadActionAllowance(apiKey.workspace_id);
+    ctx.allowance.catch(() => {});
+  }
   const rateLimitResult = isResourceMethod || !metered
     ? { allowed: true as const }
     : await checkRateLimit(apiKey.id);
@@ -31503,9 +31657,9 @@ async function handleRequest(req: Request): Promise<Response> {
   // (requests per minute, aggregated across the workspace's API keys).
   // Runs after the per-key rolling-window guard. Fail-open on DB errors.
   // `resources/*` exempt — see the note on the per-key limiter above.
-  const quotaResult = isResourceMethod || !metered
+  const quotaResult = quotaPending === null
     ? { allowed: true as const }
-    : await checkPlanQuota(apiKey.workspace_id);
+    : await quotaPending;
   if (!quotaResult.allowed) {
     console.warn("[mcp-server] plan_rate_limit_exceeded", {
       workspace_id: apiKey.workspace_id,
@@ -31551,6 +31705,7 @@ async function handleRequest(req: Request): Promise<Response> {
 
     return buildQuotaExceededResponse(requestId, quotaResult);
   }
+  if ("firstUse" in quotaResult) ctx.firstUse = quotaResult.firstUse;
 
   // ── Route to method handler ───────────────────────────────────────────────
   // Every method result leaves through here, so the `_meta` guard sits here too
