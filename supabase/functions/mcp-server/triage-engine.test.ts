@@ -39,6 +39,7 @@ import {
   reportedActionErrorCode,
   runTriageRule,
   TRIAGE_MAX_FORWARD_RECIPIENTS,
+  TRIAGE_RUN_ERROR_DESTINATION_MISSING,
   TRIAGE_STALE_LEASE_MS,
   TRIAGE_STOP_REASON_TIME_BUDGET,
   type TriageActionOutcome,
@@ -2108,6 +2109,181 @@ Deno.test("the resolved destination's verification reaches every action", async 
     assertEquals(call.destinationId, "id-of-Newsletters", "the resolved id is carried");
     assertEquals(call.destinationVerified, false, "and so is what is known about it");
   }
+});
+
+// ---------------------------------------------------------------------------
+// A destination that is not there must stop the rule, and tell the owner
+//
+// 2026-10-02. One rule failed `triage_move` with `folder_not_found` about
+// fifteen times a day for a week, with zero successful moves. Every one of
+// those runs ended `completed_with_errors`, which reset `consecutive_failures`
+// to 0, so the ceiling was never reached: no auto-disable, no notification.
+// The 09-16 fix above made the per-message code accurate and stopped there.
+// ---------------------------------------------------------------------------
+
+/** The provider never listed the destination: a best-effort pass-through. */
+const UNVERIFIED: Partial<TriageDeps> = {
+  resolveFolder: (_inbox, name) => Promise.resolve({ id: name, verified: false }),
+};
+
+const MISSING: TriageActionOutcome = { ok: false, error_code: "folder_not_found" };
+
+Deno.test("a run whose every move hit a missing destination is a FAILED run and counts", async () => {
+  const state = freshState();
+  const applied = { calls: [] as any[] };
+  const deps = fakeDeps(state, [fakeMatch("msg-a"), fakeMatch("msg-b")], applied, MISSING, UNVERIFIED);
+
+  const summary = await runTriageRule(deps, fakeRule({ consecutive_failures: 1 }));
+
+  assertEquals(summary.status, "failed", "nothing the rule exists to do happened");
+  assertEquals(summary.error_code, TRIAGE_RUN_ERROR_DESTINATION_MISSING, "and the run says why");
+  assertEquals(summary.failed, 2, "the per-message counts are kept");
+  assertEquals(summary.succeeded, 0, "nothing was moved");
+  const release = state.released[0];
+  assertEquals(release.consecutive_failures, 2, "the counter increments instead of resetting");
+  assertEquals(release.enabled, undefined, "below the ceiling the rule stays on");
+  assertEquals(state.runs[0].status, "failed", "the run row agrees with the summary");
+  assert(
+    String(state.runs[0].error_detail).includes('"Newsletters"'),
+    "the run log names the rule's own destination, which is what the owner has to fix",
+  );
+});
+
+Deno.test("the fifth such run disables the rule and notifies, naming the missing folder as the cause", async () => {
+  const state = freshState();
+  const notified: any[] = [];
+  const deps = fakeDeps(state, [fakeMatch("msg-a")], { calls: [] }, MISSING, {
+    ...UNVERIFIED,
+    notifyRuleDisabled: (input) => (notified.push(input), Promise.resolve()),
+  });
+
+  await runTriageRule(deps, fakeRule({ consecutive_failures: 4 }));
+
+  const release = state.released[0];
+  assertEquals(release.consecutive_failures, 5, "the ceiling is reached");
+  assertEquals(release.enabled, false, "so the rule switches itself off");
+  const reason = String(release.disabled_reason);
+  assert(
+    reason.includes("destination folder does not exist"),
+    `disabled_reason must say the destination folder is missing, got: ${reason}`,
+  );
+  // The dashboard reads the code back out of this sentence (LAST_ERROR_RE in
+  // apps/web/src/lib/automations/rules.ts), so its shape is a contract.
+  assertEquals(
+    /Last error:\s*([a-z0-9_]+)/i.exec(reason)?.[1],
+    TRIAGE_RUN_ERROR_DESTINATION_MISSING,
+    "the dashboard can still parse the code",
+  );
+  assert(!reason.includes("Newsletters"), "the folder name stays out of disabled_reason");
+  assertEquals(notified.length, 1, "the owner is told, once");
+  assertEquals(notified[0].errorCode, TRIAGE_RUN_ERROR_DESTINATION_MISSING, "with the real cause");
+  assertEquals(notified[0].consecutiveFailures, 5, "and the count");
+});
+
+Deno.test("a THROWN mailbox-missing on an unverified destination counts the same way", async () => {
+  const state = freshState();
+  const deps = fakeDeps(state, [fakeMatch("msg-a")], { calls: [] }, { ok: true }, {
+    ...UNVERIFIED,
+    applyAction: () => {
+      throw new Error("UID COPY failed: [TRYCREATE] Mailbox does not exist");
+    },
+  });
+
+  const summary = await runTriageRule(deps, fakeRule({ consecutive_failures: 2 }));
+
+  assertEquals(summary.status, "failed", "returned or thrown, it is the same refusal");
+  assertEquals(state.released[0].consecutive_failures, 3, "and it counts once per run");
+});
+
+Deno.test("a run with NO matching mail is not a failure, and does not wipe the count either", async () => {
+  // Not counted: nothing was attempted, so nothing failed.
+  const state = freshState();
+  const summary = await runTriageRule(
+    fakeDeps(state, [], { calls: [] }, MISSING, UNVERIFIED),
+    fakeRule({ consecutive_failures: 3 }),
+  );
+  assertEquals(summary.status, "skipped", "an empty run is still just an empty run");
+  assertEquals(summary.error_code, null, "with no error");
+  assertEquals(state.released[0].enabled, undefined, "and it disables nothing");
+  // Not reset: the rule that prompted this fix matched mail on about fifteen
+  // runs a day and nothing on the rest. Resetting here would mean five
+  // consecutive failures could never accumulate.
+  assertEquals(
+    state.released[0].consecutive_failures,
+    3,
+    "an empty run on an unverified destination leaves the counter where it was",
+  );
+
+  // Even one run short of the ceiling, an empty run must not tip it over.
+  const near = freshState();
+  await runTriageRule(
+    fakeDeps(near, [], { calls: [] }, MISSING, UNVERIFIED),
+    fakeRule({ consecutive_failures: 4 }),
+  );
+  assertEquals(near.released[0].consecutive_failures, 4, "still four");
+  assertEquals(near.released[0].enabled, undefined, "still enabled");
+});
+
+Deno.test("an empty run on a VERIFIED destination still resets the counter, as before", async () => {
+  const state = freshState();
+  await runTriageRule(fakeDeps(state, [], { calls: [] }), fakeRule({ consecutive_failures: 3 }));
+  assertEquals(state.released[0].consecutive_failures, 0, "the listing vouched for the folder");
+});
+
+Deno.test("an empty run of a non-move rule still resets the counter, as before", async () => {
+  const state = freshState();
+  await runTriageRule(
+    fakeDeps(state, [], { calls: [] }, { ok: true }, UNVERIFIED),
+    fakeRule({ consecutive_failures: 3, action: { type: "mark_read" } }),
+  );
+  assertEquals(state.released[0].consecutive_failures, 0, "no destination, no exception");
+});
+
+Deno.test("a MIXED run keeps today's behaviour: completed_with_errors and a reset counter", async () => {
+  const state = freshState();
+  let call = 0;
+  const deps = fakeDeps(state, [fakeMatch("msg-a"), fakeMatch("msg-b")], { calls: [] }, MISSING, {
+    ...UNVERIFIED,
+    // The first move lands, the second is refused.
+    applyAction: () => Promise.resolve(call++ === 0 ? { ok: true } : MISSING),
+  });
+
+  const summary = await runTriageRule(deps, fakeRule({ consecutive_failures: 4 }));
+
+  assertEquals(summary.status, "completed_with_errors", "one move worked, so the run did");
+  assertEquals(summary.error_code, null, "no run-level error");
+  assertEquals(state.released[0].consecutive_failures, 0, "a success proves the destination");
+  assertEquals(state.released[0].enabled, undefined, "and nothing is disabled");
+});
+
+Deno.test("a run that failed for a DIFFERENT reason is not read as a missing destination", async () => {
+  // All failed, unverified destination, but one refusal was something else
+  // entirely. Not every failure was the folder, so the narrow rule stays out.
+  const state = freshState();
+  let call = 0;
+  const deps = fakeDeps(state, [fakeMatch("msg-a"), fakeMatch("msg-b")], { calls: [] }, MISSING, {
+    ...UNVERIFIED,
+    applyAction: () =>
+      Promise.resolve(call++ === 0 ? MISSING : { ok: false, error_code: "connection_limit" }),
+  });
+
+  const summary = await runTriageRule(deps, fakeRule({ consecutive_failures: 4 }));
+
+  assertEquals(summary.status, "completed_with_errors", "unchanged");
+  assertEquals(state.released[0].consecutive_failures, 0, "unchanged");
+});
+
+Deno.test("the same all-failed run on a VERIFIED destination is still the provider's bad minute", async () => {
+  // The 09-16 rule and this one must not fight: a folder the listing found is
+  // never reported missing, so it can never disable a rule for being missing.
+  const state = freshState();
+  const deps = fakeDeps(state, [fakeMatch("msg-a"), fakeMatch("msg-b")], { calls: [] }, MISSING);
+
+  const summary = await runTriageRule(deps, fakeRule({ consecutive_failures: 4 }));
+
+  assertEquals(summary.status, "completed_with_errors", "unchanged");
+  assertEquals(state.released[0].consecutive_failures, 0, "unchanged");
+  assertEquals(state.released[0].enabled, undefined, "the rule stays on");
 });
 
 // ---------------------------------------------------------------------------
