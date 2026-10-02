@@ -474,6 +474,13 @@ export class ImapClient {
    */
   private lastPermanentFlags: string[] | null = null;
 
+  /**
+   * The message count the most recent SELECT reported (`* n EXISTS`), or null
+   * when no mailbox is selected or the server sent none. Reset on every
+   * SELECT, like PERMANENTFLAGS. See {@link selectedMessageCount}.
+   */
+  private lastExists: number | null = null;
+
   private constructor(conn: Deno.Conn) {
     this.conn = conn;
     this.buffer = new Uint8Array(64 * 1024);
@@ -848,6 +855,7 @@ export class ImapClient {
     return this.runExclusive(async () => {
       const tag = this.nextTag();
       this.lastPermanentFlags = null;
+      this.lastExists = null;
       await this.write(`${tag} SELECT ${quoteMailbox(mailbox)}${CRLF}`);
       const resp = await this.readTagged(tag);
       if (resp.status !== "OK") {
@@ -858,7 +866,24 @@ export class ImapClient {
         throw new ImapSelectRefusedError(resp.status, failure.responseCode);
       }
       this.lastPermanentFlags = parsePermanentFlags(resp.untagged);
+      this.lastExists = parseExists(resp.untagged);
     }, "select");
+  }
+
+  /**
+   * How many messages the selected mailbox held when it was SELECTed, or null
+   * when the server did not say (RFC 3501 requires `* n EXISTS` in a SELECT
+   * reply, so null means a server that left it out, and the caller falls back
+   * to asking).
+   *
+   * Sequence numbers 1..n address those messages in ascending UID order
+   * (RFC 3501 2.3.1.2), which is what lets a listing fetch "the newest N" as
+   * the sequence range ending at n without first asking for every UID in the
+   * mailbox. Only meaningful straight after the SELECT: it is a snapshot, not
+   * a live count, and is not updated by later unsolicited EXISTS or EXPUNGE.
+   */
+  selectedMessageCount(): number | null {
+    return this.lastExists;
   }
 
   /**
@@ -1103,29 +1128,71 @@ export class ImapClient {
   ): Promise<ImapMessageSummary[]> {
     if (uids.length === 0) return Promise.resolve([]);
     return this.runExclusive(async () => {
-      const tag = this.nextTag();
-      const set = uids.join(",");
-      const previewPart = options.includePreview === false
-        ? ""
-        : " BODY.PEEK[1]<0.2048>";
-      await this.write(
-        `${tag} UID FETCH ${set} (UID FLAGS ENVELOPE BODYSTRUCTURE${previewPart})${CRLF}`,
-      );
-      const resp = await this.readTagged(tag, {
-        maxLiteralBytes: options.maxLiteralBytes,
-      });
+      const resp = await this.fetchSummariesUnlocked("UID FETCH", uids.join(","), options);
       if (resp.status !== "OK") {
         throw new Error(`UID FETCH failed: ${resp.text}`);
       }
+      return resp.summaries;
+    }, "fetch");
+  }
 
-      const summaries: ImapMessageSummary[] = [];
+  /**
+   * FETCH the same summary as {@link fetchSummaries} for the messages at
+   * sequence numbers `first`..`last` of the selected mailbox.
+   *
+   * This is the listing's way of getting "the newest N" in one command: the
+   * range ends at the count SELECT reported, and each row carries its UID, so
+   * no UID SEARCH has to run first. See {@link selectedMessageCount}.
+   *
+   * Resolves to null, rather than throwing, when the server answers NO or BAD.
+   * A sequence number is only as good as the snapshot it was read from, and a
+   * server may refuse a range that names a message another client has since
+   * expunged (RFC 2180 4.1.2). That is a reason to go and ask by UID, which is
+   * what the caller does, not a failure to report. Transport errors still throw.
+   */
+  fetchSummariesBySequence(
+    first: number,
+    last: number,
+    options: { includePreview?: boolean; maxLiteralBytes?: number } = {},
+  ): Promise<ImapMessageSummary[] | null> {
+    if (!Number.isInteger(first) || !Number.isInteger(last) || first < 1 || last < first) {
+      return Promise.resolve([]);
+    }
+    return this.runExclusive(async () => {
+      const resp = await this.fetchSummariesUnlocked("FETCH", `${first}:${last}`, options);
+      return resp.status === "OK" ? resp.summaries : null;
+    }, "fetch");
+  }
+
+  /**
+   * The one FETCH both summary methods issue, so the item list cannot drift
+   * between "by UID" and "by sequence number". Unlocked: both callers hold
+   * the command lock.
+   */
+  private async fetchSummariesUnlocked(
+    verb: "UID FETCH" | "FETCH",
+    set: string,
+    options: { includePreview?: boolean; maxLiteralBytes?: number },
+  ): Promise<{ status: "OK" | "NO" | "BAD"; text: string; summaries: ImapMessageSummary[] }> {
+    const tag = this.nextTag();
+    const previewPart = options.includePreview === false
+      ? ""
+      : " BODY.PEEK[1]<0.2048>";
+    await this.write(
+      `${tag} ${verb} ${set} (UID FLAGS ENVELOPE BODYSTRUCTURE${previewPart})${CRLF}`,
+    );
+    const resp = await this.readTagged(tag, {
+      maxLiteralBytes: options.maxLiteralBytes,
+    });
+    const summaries: ImapMessageSummary[] = [];
+    if (resp.status === "OK") {
       for (const line of resp.untagged) {
         if (!/^\* \d+ FETCH /.test(line)) continue;
         const parsed = parseFetchLine(line);
         if (parsed) summaries.push(parsed);
       }
-      return summaries;
-    }, "fetch");
+    }
+    return { status: resp.status, text: resp.text, summaries };
   }
 
   /**
@@ -1896,6 +1963,22 @@ export function parsePermanentFlags(untagged: string[]): string[] | null {
     if (m) return m[1].trim().split(/\s+/).filter(Boolean);
   }
   return null;
+}
+
+/**
+ * Pull the message count out of a SELECT's untagged lines (`* 172 EXISTS`).
+ *
+ * The LAST such line wins: a server may report the count more than once while
+ * it opens the mailbox, and the final figure is the one the session's sequence
+ * numbers are based on. Null when there is none.
+ */
+export function parseExists(untagged: string[]): number | null {
+  let exists: number | null = null;
+  for (const line of untagged) {
+    const m = /^\* (\d+) EXISTS\s*$/i.exec(line);
+    if (m) exists = Number(m[1]);
+  }
+  return exists;
 }
 
 // -- UID SEARCH criteria: charset handling -------------------------------------

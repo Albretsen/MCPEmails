@@ -17,6 +17,7 @@ import {
   matchImapAliasMailbox,
   resolveImapAlias,
 } from "./imap-folder-target.ts";
+import { fetchImapListPage } from "./imap-list-page.ts";
 import {
   actionSelectorDescription,
   advertisedInputSchema,
@@ -10988,10 +10989,11 @@ function decodeEnvelopeAddress(
 /**
  * Implements `email_list` for IMAP inboxes connected with an app password.
  *
- * Opens a TLS IMAP session, selects the folder, UID-searches (ALL or UNSEEN),
- * takes the newest `limit` UIDs at `offset`, and fetches ENVELOPE + FLAGS +
- * BODYSTRUCTURE. Body preview is not fetched during listing (deferred to
- * email_read), so `preview` is empty here.
+ * Opens a TLS IMAP session, selects the folder, and fetches ENVELOPE + FLAGS +
+ * BODYSTRUCTURE for the newest `limit` messages at `offset`: by sequence range
+ * off the count SELECT reported, or through UID SEARCH (UNSEEN or SEEN) when a
+ * read/unread filter is set. See imap-list-page.ts. The same FETCH carries the
+ * first 2 KB of part one, because the tool returns a `preview` per message.
  *
  * Throws "imap_auth_failed" on credential rejection so the dispatcher can emit
  * a reconnect prompt.
@@ -11030,16 +11032,13 @@ async function listImapMessages(
 
     await client.selectMailbox(imapMailboxForServerFolder(folder));
 
-    const allUids = await client.uidSearch(
-      unread === true ? "UNSEEN" : unread === false ? "SEEN" : "ALL",
-    );
-    const total = allUids.length;
-
-    // Newest first: highest UID first.
-    const ordered = allUids.slice().sort((a, b) => b - a);
-    const pageUids = ordered.slice(offset, offset + limit);
-
-    const summaries = await client.fetchSummaries(pageUids);
+    // Newest first: highest UID first. No `UID SEARCH ALL` any more: it
+    // returned every UID in the mailbox to keep the newest page of them.
+    const { total, pageUids, summaries } = await fetchImapListPage(client, {
+      limit,
+      offset,
+      unread,
+    });
     // Preserve newest-first ordering (FETCH may return any order).
     const byUid = new Map(summaries.map((s) => [s.uid, s]));
 
