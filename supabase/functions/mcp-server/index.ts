@@ -415,6 +415,7 @@ import { assertUidPresent, presentUids } from "./imap-uid-presence.ts";
 import { listImapFoldersWithCounts } from "./imap-folder-counts.ts";
 import { newMessageIdsFor, succeededBulkRow, unknownNewIdNote } from "./imap-copyuid.ts";
 import { dedupeMessageIds } from "./message-id-dedupe.ts";
+import { type ImapFetchedThisCall, imapRawMessageOnce } from "./imap-fetch-once.ts";
 import {
   buildFilteredNoMatchReport,
   hasInboxFilter,
@@ -11130,6 +11131,14 @@ async function readImapMessage(
    * to relaying the raw original (forward-relay.ts); kept for that next caller.
    */
   perFileMaxBytes?: number,
+  /**
+   * Raw messages THIS tool call has already downloaded. Only email_attachment
+   * passes it: its two passes read the same message, and the second one is
+   * served from here instead of from a second connection and a second full
+   * download. A local of one handler, never kept past it; see
+   * imap-fetch-once.ts.
+   */
+  fetchedThisCall?: ImapFetchedThisCall,
 ): Promise<ReadEmailResult> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
     throw new Error("imap_auth_failed");
@@ -11141,9 +11150,13 @@ async function readImapMessage(
 
   const session = sharedSession ?? new ImapSession(imapSessionOpener(inbox));
   try {
-    const client = await session.select(imapMailboxForServerFolder(folder));
-
-    const msg = await client.fetchMessageRaw(uid);
+    const select = () => session.select(imapMailboxForServerFolder(folder));
+    const { message: msg, client } = await imapRawMessageOnce(
+      fetchedThisCall,
+      messageId,
+      uid,
+      select,
+    );
     if (!msg) throw new Error("message_not_found");
 
     const parsed = parseEmail(msg.raw);
@@ -11159,7 +11172,7 @@ async function readImapMessage(
     const referencesHeader = getHeader(h, "references") ?? "";
 
     if (markAsRead && !msg.flags.includes("\\Seen")) {
-      await client.markSeen(uid);
+      await (client ?? await select()).markSeen(uid);
     }
 
     // IMAP parses the whole message locally, so the budget is applied per
@@ -12811,6 +12824,13 @@ async function readOneMessage(
      * Outlook readers, which have no connection to share.
      */
     imap_session?: ImapSession<ImapClient>;
+    /**
+     * IMAP only: raw messages this tool call has already downloaded, so a
+     * second read of the same message costs no connection and no download.
+     * Only `email_attachment` passes it. Ignored by the Gmail and Outlook
+     * readers. See imap-fetch-once.ts.
+     */
+    imap_fetched?: ImapFetchedThisCall;
   },
 ): Promise<ReadEmailResult> {
   const attachmentBudgetBytes = opts.attachment_max_bytes ?? ATTACHMENT_DATA_BUDGET;
@@ -12849,6 +12869,8 @@ async function readOneMessage(
         attachmentBudgetBytes,
         selectOnlyIndex,
         opts.imap_session,
+        undefined,
+        opts.imap_fetched,
       );
       break;
     default:
@@ -13727,12 +13749,18 @@ async function executeReadAttachment(
   // ── Pass 1: metadata-only read to list attachments and resolve the selector ─
   // Deliberately NOT include_attachments: encoding every attachment of a large
   // message OOM-kills the isolate. We fetch the chosen file's bytes in pass 2.
+  //
+  // On IMAP both passes read the whole raw message. `imapFetched` lets pass 2
+  // parse the bytes pass 1 downloaded instead of opening a second connection
+  // and downloading them again. It lives for this call only.
+  const imapFetched: ImapFetchedThisCall = new Map();
   let readResult: ReadEmailResult;
   try {
     readResult = await readOneMessage(inbox, messageId, {
       include_html: false,
       include_attachments: false,
       mark_as_read: false,
+      imap_fetched: imapFetched,
     });
   } catch (err) {
     return mapReadError(err);
@@ -13800,6 +13828,7 @@ async function executeReadAttachment(
       mark_as_read: false,
       attachment_max_bytes: passTwoAttachmentBudget,
       select_only_index: selectedIndex,
+      imap_fetched: imapFetched,
     });
   } catch (err) {
     return mapReadError(err);
