@@ -15,6 +15,7 @@ import {
   imapMailboxForServerFolder,
   lookupCanonicalAlias,
   matchImapAliasMailbox,
+  resolveImapAlias,
 } from "./imap-folder-target.ts";
 import {
   actionSelectorDescription,
@@ -42,6 +43,7 @@ import {
   subjectHeaderLineError,
 } from "./subject-header.ts";
 import {
+  folderAliasAmbiguousMessage,
   folderArgumentValue,
   folderNameRequest,
   folderNameTrimNote,
@@ -131,11 +133,25 @@ import {
 } from "./destination-folder-missing.ts";
 import {
   classifyProviderError,
-  type ProviderErrorAuditDetails,
+  type ProviderErrorAuditDetails as ProviderCallAuditDetails,
   providerErrorAuditDetails,
   type ProviderErrorBoundary,
   providerErrorLogCode,
 } from "./provider-error.ts";
+import {
+  type FolderResolveAuditDetails,
+  folderResolveAuditDetails,
+  locateFolderFailure,
+} from "./folder-resolve-diagnostics.ts";
+
+/**
+ * What a handler may hand up as `logErrorDetails`: a provider call that failed,
+ * or (since 2026-10-02) a folder argument the resolver refused before any
+ * provider was called. Both are value-free by construction, each in its own
+ * module. The name is kept, and widened here rather than at its forty-odd uses,
+ * so that adding the second phase did not mean editing every handler signature.
+ */
+type ProviderErrorAuditDetails = ProviderCallAuditDetails | FolderResolveAuditDetails;
 import {
   buildContactSearchEnvelope,
   buildPaginationEnvelope,
@@ -2672,6 +2688,10 @@ interface ActivityLogParams {
    * the mail provider then failed. Both are built by their own module rather
    * than assembled at the call site, which is what keeps the privacy contract
    * in one reviewable place per phase instead of at every catch block.
+   *
+   * A third phase since 2026-10-02, `resolve_folder`
+   * (folder-resolve-diagnostics.ts), for a folder argument the resolver
+   * refused. It rides in through the `ProviderErrorAuditDetails` alias above.
    */
   errorDetails?: InvalidArgumentAuditDetails | ProviderErrorAuditDetails;
 }
@@ -3813,8 +3833,8 @@ const STRUCTURED_SEARCH_PROPERTIES: Record<string, Record<string, unknown>> = {
  * default is the whole point of the sentence, so it is stated on every tool.
  */
 const INCLUDE_FOLDERS_DESCRIPTION =
-  "Folders to search, each an alias, a folder or label name, or a folder id " +
-  "(names and aliases resolve for you). IMAP covers INBOX only unless you name " +
+  "Folders to search, each a folder or label name or id from folder_list, or an " +
+  "alias (works where the mailbox has that role). IMAP covers INBOX only unless you name " +
   "archive or sent folders; Gmail and Outlook search every folder except the " +
   "trash (Deleted Items on Outlook; Gmail also skips Spam), so name it to include it.";
 
@@ -4064,9 +4084,9 @@ const LEGACY_TOOLS: ToolDefinition[] = [
           type: "string",
           default: "INBOX",
           description:
-            "Folder to list: an alias (inbox, sent, drafts, trash, archive, spam), " +
-            "a folder or label name, or a folder id. Names and aliases resolve for " +
-            "you, case-insensitively, so a label you just created by name works here.",
+            "Folder to list: a folder or label name or id from folder_list (names " +
+            "match case-insensitively, so a label you just created works), or an alias " +
+            "(inbox, sent, drafts, trash, archive, spam) where the mailbox has that role.",
         },
         // The same tri-state as search's `unread`, under the same name, so the
         // consolidated email_read advertises ONE property for the idea. The
@@ -4438,7 +4458,7 @@ const LEGACY_TOOLS: ToolDefinition[] = [
         folder_id: {
           type: "string",
           description:
-            "Folder id from action: list. On IMAP this is the mailbox name " +
+            "Folder id from folder_list. On IMAP this is the mailbox name " +
             "(e.g. 'INBOX/Work'), on Gmail the label id.",
         },
         new_name: {
@@ -10596,6 +10616,12 @@ async function resolveImapAliasMailbox(
      * supplied and something matches.
      */
     mailboxes?: ImapMailboxInfo[] | null;
+    /**
+     * The mailbox will only be READ. Lets `archive` answer with the \\All
+     * mailbox on an account that has no archive (Gmail over IMAP). Never set
+     * for a destination: see ImapAliasMatchOptions in imap-folder-target.ts.
+     */
+    forRead?: boolean;
   } = {},
 ): Promise<string | null> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
@@ -10609,8 +10635,8 @@ async function resolveImapAliasMailbox(
   const session = shared ?? new ImapSession(imapSessionOpener(inbox));
   try {
     const mailboxes = opts.mailboxes ?? await (await session.client()).listMailboxes();
-    const matched = matchImapAliasMailbox(mailboxes, alias);
-    if (matched) return matched;
+    const match = resolveImapAlias(mailboxes, alias, { forRead: opts.forRead === true });
+    if (match.kind === "matched") return match.name;
 
     if (opts.createIfMissing) {
       const client = await session.client();
@@ -11823,6 +11849,7 @@ async function executeListInbox(
   try {
     listFolder = await resolveFolderId(inbox, folder.trim() ? folder : "INBOX", {
       strict: true,
+      forRead: true,
     });
   } catch (err) {
     if (err instanceof FolderTargetError) return folderTargetErrorResult(err);
@@ -11907,6 +11934,8 @@ async function executeListInbox(
           message: folderNotFoundMessage(folder, {
             provider: inbox.provider,
             itemNoun: organizationItemType(inbox),
+            failedAlias: lookupCanonicalAlias(folder)?.aliases[0],
+            imapHost: inbox.imap_host,
           }),
         }),
       );
@@ -18576,6 +18605,18 @@ async function resolveFolderId(
      * assertion that it worked.
      */
     session?: ImapSession<ImapClient> | null;
+    /**
+     * The resolved folder will only be READ (listed or searched).
+     *
+     * Deliberately NOT the same switch as `strict`. Strict means "answer only
+     * with a folder the listing contains", and the automation runner resolves a
+     * MOVE destination strictly. This one unlocks the read-only role fallbacks,
+     * today exactly one: `archive` on an IMAP mailbox with no archive of its
+     * own resolves to the mailbox flagged \\All (Gmail's All Mail). That is
+     * where archived mail can be found, and it is not a place to move mail to,
+     * so no destination resolve may ever pass this.
+     */
+    forRead?: boolean;
   } = {},
 ): Promise<string> {
   const trimmed = nameOrId.trim();
@@ -18628,6 +18669,11 @@ async function resolveFolderId(
   const exact = matchFolderExactly(nameOrId, folders);
   if (exact) return exact.id;
 
+  // Value-free diagnostics for every refusal below: what KIND of value failed,
+  // never the value. Built only when something is actually thrown.
+  const diagnose = () =>
+    folderResolveAuditDetails(nameOrId, imapMailboxes ?? folders, imapMailboxes !== null);
+
   // ── The alias as a ROLE, for a value no folder answers to ─────────────────
   if (alias) {
     switch (inbox.provider) {
@@ -18654,6 +18700,23 @@ async function resolveFolderId(
         // asking for "archive" must not leave a mailbox behind as a side
         // effect. Reads resolve or fail; only the move path may create.
         const isArchive = alias.aliases[0] === "archive";
+        // Two mailboxes that could equally be this role, neither flagged by the
+        // server: refuse on every path, for the reason the ambiguous branch
+        // further down gives. Guessing here is a read of, or a write into, a
+        // folder nobody named.
+        const forRead = opts.forRead === true && opts.strict === true;
+        const role = resolveImapAlias(imapMailboxes ?? [], alias, { forRead });
+        if (role.kind === "ambiguous") {
+          throw new FolderTargetError({
+            error: "folder_ambiguous",
+            provider: inbox.provider,
+            folder: trimmed,
+            message: folderAliasAmbiguousMessage(trimmed.toLowerCase(), role.candidates, {
+              provider: inbox.provider,
+              itemNoun: "folder",
+            }),
+          }, diagnose());
+        }
         const resolvedName = await resolveImapAliasMailbox(
           inbox,
           alias,
@@ -18661,6 +18724,7 @@ async function resolveFolderId(
             createIfMissing: isArchive && !opts.strict,
             session: opts.session,
             mailboxes: imapMailboxes,
+            forRead,
           },
         );
         if (resolvedName) return resolvedName;
@@ -18673,10 +18737,12 @@ async function resolveFolderId(
               provider: inbox.provider,
               itemNoun: "folder",
               available: folders.map((f) => f.name),
-              hint: `This mailbox advertises no ${alias.aliases[0]} folder and none is ` +
-                `named "${alias.imap}".`,
+              failedAlias: alias.aliases[0],
+              imapHost: inbox.imap_host,
+              hint: `The mail server flags no folder as ${alias.aliases[0]} and none has a ` +
+                `usual name for it.`,
             }),
-          });
+          }, diagnose());
         }
         return alias.imap;
       }
@@ -18697,6 +18763,8 @@ async function resolveFolderId(
     provider: inbox.provider,
     itemNoun: organizationItemType(inbox),
     hint: gmailArchiveHint(inbox, alias),
+    failedAlias: alias?.aliases[0],
+    imapHost: inbox.imap_host,
   });
   if (match.ok) return match.id;
 
@@ -18715,7 +18783,7 @@ async function resolveFolderId(
       provider: inbox.provider,
       folder: nameOrId,
       message: match.error,
-    });
+    }, diagnose());
   }
 
   // ── No match ────────────────────────────────────────────────────────────────
@@ -18727,7 +18795,7 @@ async function resolveFolderId(
       provider: inbox.provider,
       folder: trimmed,
       message: match.error,
-    });
+    }, diagnose());
   }
   // The pass-through hands over `nameOrId`, not `trimmed`. Its whole premise is
   // that this might be a valid provider id we failed to ENUMERATE - the Outlook
@@ -18783,9 +18851,22 @@ async function resolveIncludeFolders(
   session: ImapSession<ImapClient> | null,
 ): Promise<string[]> {
   const resolved: string[] = [];
-  for (const f of includeFolders) {
+  for (const [index, f] of includeFolders.entries()) {
     if (!f.trim()) continue;
-    const id = await resolveFolderId(inbox, f, { strict: true, session });
+    // `forRead`: include_folders only ever scopes a SEARCH, in all three tools.
+    const id = await resolveFolderId(inbox, f, { strict: true, session, forRead: true })
+      .catch((err) => {
+        // Say WHERE in the list it failed. Position and length, never the entry.
+        if (err instanceof FolderTargetError && err.details) {
+          err.details = locateFolderFailure(
+            err.details,
+            "include_folders",
+            includeFolders.length,
+            index,
+          );
+        }
+        throw err;
+      });
     // Two spellings of one folder ("Trash" and "Deleted Items") search it once.
     // Outlook's alias-vs-id pair is collapsed later, in searchOutlookMessages.
     if (!resolved.includes(id)) resolved.push(id);
@@ -18927,6 +19008,7 @@ function folderTargetErrorResult(err: FolderTargetError): {
   result: { content: { type: string; text: string }[]; isError: true };
   logStatus: "error";
   logErrorCode: string;
+  logErrorDetails?: FolderResolveAuditDetails;
 } {
   return {
     result: {
@@ -18935,6 +19017,9 @@ function folderTargetErrorResult(err: FolderTargetError): {
     },
     logStatus: "error",
     logErrorCode: err.logErrorCode,
+    // `err.details`, never `err.payload`: the payload names the folder the
+    // caller typed and is theirs to read; only the value-free half is logged.
+    ...(err.details ? { logErrorDetails: err.details } : {}),
   };
 }
 

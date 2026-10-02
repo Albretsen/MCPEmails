@@ -128,6 +128,42 @@ export const IMAP_ALIAS_SPECIAL_USE: Record<string, string> = {
 };
 
 /**
+ * Other WHOLE names a role's mailbox commonly wears on servers that do not flag
+ * it with SPECIAL-USE, keyed by the canonical alias token. Matched
+ * case-insensitively, after the flag and after the canonical name
+ * (`CanonicalFolderAlias.imap`), so nothing here can outvote either.
+ *
+ * WHY THIS EXISTS. Measured over the 14 days to 2026-10-02: about 239
+ * `folder_not_found` errors across 61 workspaces from a model passing `sent`,
+ * `trash`, `junk`, `drafts` or `archive` without listing folders first (87% had
+ * no prior `folder_list`). Yahoo and iCloud, which flag their roles, failed
+ * 0.02 to 0.05% of searches; generic IMAP failed 1.2% and Gmail over IMAP 3.4%.
+ * The role existed on those mailboxes. It was just not called the one English
+ * word the matcher knew.
+ *
+ * English: the names Outlook/Exchange, Apple Mail, Thunderbird and the common
+ * webmail suites create. Localized: German and French only, and only the names
+ * that can mean nothing but the role. A mailbox called "Papierkorb" is the
+ * trash; nobody files project mail there. Other languages are left out on
+ * purpose rather than guessed at: a wrong entry here is a wrong DESTINATION for
+ * a move or a soft delete, and the flag already covers every server that sets
+ * it, in any language.
+ */
+export const IMAP_ALIAS_ALTERNATE_NAMES: Record<string, readonly string[]> = {
+  sent: ["Sent Items", "Sent Messages", "Sent Mail", "Gesendet", "Envoyés"],
+  drafts: ["Draft", "Entwürfe", "Brouillons"],
+  trash: ["Deleted Items", "Deleted Messages", "Bin", "Papierkorb", "Corbeille"],
+  archive: ["Archives"],
+  spam: ["Spam", "Bulk", "Junk E-mail", "Junk Email", "Bulk Mail"],
+};
+
+/** SPECIAL-USE flag of the mailbox that holds every message (Gmail's All Mail). */
+const IMAP_ALL_MAIL_FLAG = "\\all";
+
+/** LIST attributes of a name that exists in the hierarchy but cannot be opened. */
+const IMAP_UNSELECTABLE_FLAGS = new Set(["\\noselect", "\\nonexistent"]);
+
+/**
  * The part of an `ImapMailboxInfo` this module needs. Structural on purpose, so
  * the matcher stays free of any dependency on the client (and so a test can
  * hand it a two-field layout fixture).
@@ -135,46 +171,165 @@ export const IMAP_ALIAS_SPECIAL_USE: Record<string, string> = {
 export interface MailboxListEntry {
   name: string;
   flags: string[];
+  /**
+   * Hierarchy delimiter LIST reported for this mailbox ("." or "/"). Optional
+   * so the two-field fixtures still type-check; without it the namespaced tiers
+   * below simply do not run for that entry.
+   */
+  delimiter?: string;
+}
+
+export interface ImapAliasMatchOptions {
+  /**
+   * True only when the mailbox will be READ (listed or searched), never when it
+   * is the destination of a move, copy, archive or delete.
+   *
+   * It unlocks exactly one thing: `archive` falling back to the mailbox flagged
+   * \\All when the account has no archive of its own, which is Gmail over IMAP.
+   * "[Gmail]/All Mail" is where archived mail can be READ. It is not where
+   * mail is archived TO: on Gmail, archiving means removing the message from
+   * INBOX, and a COPY into All Mail does not do that. So a write never takes
+   * this branch, and the default is false so a caller has to ask for it.
+   */
+  forRead?: boolean;
+}
+
+/** What {@link resolveImapAlias} found. */
+export type ImapAliasMatch =
+  | { kind: "matched"; name: string; how: ImapAliasMatchTier }
+  /** Two or more mailboxes qualify equally. The caller must refuse, not pick. */
+  | { kind: "ambiguous"; candidates: string[] }
+  | { kind: "none" };
+
+export type ImapAliasMatchTier =
+  | "reserved"
+  | "special_use"
+  | "canonical_name"
+  | "alternate_name"
+  | "namespaced_canonical_name"
+  | "namespaced_alternate_name"
+  | "all_mail";
+
+/** Case- and normalization-insensitive key for comparing mailbox names. */
+function nameKey(name: string): string {
+  return name.normalize("NFC").toLowerCase();
 }
 
 /**
  * Match a canonical folder alias against an already-fetched IMAP mailbox list.
- * Pure (no I/O) so it can be shared by callers that own a connection. Matches:
+ * Pure (no I/O) so it can be shared by callers that own a connection. Tiers, in
+ * order, first hit wins:
  *   1. "inbox" → always the reserved name "INBOX".
  *   2. SPECIAL-USE flag match (\\Archive, \\Trash, \\Sent, \\Drafts, \\Junk).
  *   3. Case-insensitive match against the canonical English name (e.g.
  *      a mailbox literally named "Archive").
- * Returns null when nothing matches.
+ *   4. One of the role's {@link IMAP_ALIAS_ALTERNATE_NAMES} ("Sent Items",
+ *      "Deleted Items", "Papierkorb").
+ *   5. The canonical name under the personal namespace: "INBOX" + the mailbox's
+ *      own hierarchy delimiter + the name ("INBOX.Sent", "INBOX/Trash"), which
+ *      is how Courier and many Dovecot/cPanel hosts lay an account out.
+ *   6. An alternate name under that same prefix ("INBOX.Sent Items").
+ *   7. `archive` only, and only with `forRead`: the mailbox flagged \\All.
  *
- * Step (3) is a match on the WHOLE name, never on a path segment or a suffix,
+ * Every name tier is a match on the WHOLE name (for 5 and 6, the whole name
+ * after the "INBOX" + delimiter prefix), never on a path segment or a suffix,
  * and that is load-bearing rather than incidental: this matcher chooses the
  * destination of a soft DELETE. A user's own "Projects/Trash" or
  * "Archive/2019/Trash" must not become the account's trash can because its last
  * segment reads "Trash". Only a mailbox the SERVER flags \\Trash, or one whose
- * entire name is "Trash", may win. Do not loosen this to endsWith().
+ * entire name is one of the names above, may win. Do not loosen this to
+ * endsWith().
+ *
+ * AMBIGUITY. Tiers 2 and 3 take the first hit, as they always have. Tiers 4 to
+ * 6 are new and do not guess: when two mailboxes qualify at the same tier (an
+ * account with both "Sent Items" and "Sent Messages" and no flag on either),
+ * the answer is `ambiguous`, and the caller refuses with both names.
+ *
+ * A mailbox flagged \\Noselect or \\NonExistent is never an answer at any tier:
+ * it is a name in the hierarchy, not something that can be opened or written.
+ */
+export function resolveImapAlias(
+  mailboxes: MailboxListEntry[],
+  alias: CanonicalFolderAlias,
+  opts: ImapAliasMatchOptions = {},
+): ImapAliasMatch {
+  const canonicalToken = alias.aliases[0];
+  if (canonicalToken === "inbox") return { kind: "matched", name: "INBOX", how: "reserved" };
+
+  const selectable = mailboxes.filter((mb) =>
+    !mb.flags.some((f) => IMAP_UNSELECTABLE_FLAGS.has(f.toLowerCase()))
+  );
+
+  // (2) SPECIAL-USE flag match.
+  const wantFlag = IMAP_ALIAS_SPECIAL_USE[canonicalToken];
+  if (wantFlag) {
+    const bySpecialUse = selectable.find((mb) =>
+      mb.flags.some((f) => f.toLowerCase() === wantFlag)
+    );
+    if (bySpecialUse) return { kind: "matched", name: bySpecialUse.name, how: "special_use" };
+  }
+
+  // (3) Case-insensitive match against the canonical English name.
+  const wantName = alias.imap.toLowerCase();
+  const byName = selectable.find((mb) => mb.name.toLowerCase() === wantName);
+  if (byName) return { kind: "matched", name: byName.name, how: "canonical_name" };
+
+  // (4)-(6) The new name tiers. Each is unique-or-refuse.
+  const canonical = new Set([nameKey(alias.imap)]);
+  const alternates = new Set((IMAP_ALIAS_ALTERNATE_NAMES[canonicalToken] ?? []).map(nameKey));
+  /** The part of a name after "INBOX" + its own delimiter, or null. */
+  const underInbox = (mb: MailboxListEntry): string | null => {
+    if (!mb.delimiter) return null;
+    const prefix = `inbox${mb.delimiter}`;
+    if (mb.name.length <= prefix.length) return null;
+    return mb.name.slice(0, prefix.length).toLowerCase() === prefix
+      ? mb.name.slice(prefix.length)
+      : null;
+  };
+  const tiers: [ImapAliasMatchTier, (mb: MailboxListEntry) => boolean][] = [
+    ["alternate_name", (mb) => alternates.has(nameKey(mb.name))],
+    ["namespaced_canonical_name", (mb) => {
+      const rest = underInbox(mb);
+      return rest !== null && canonical.has(nameKey(rest));
+    }],
+    ["namespaced_alternate_name", (mb) => {
+      const rest = underInbox(mb);
+      return rest !== null && alternates.has(nameKey(rest));
+    }],
+  ];
+  for (const [how, qualifies] of tiers) {
+    const hits = selectable.filter(qualifies);
+    if (hits.length === 1) return { kind: "matched", name: hits[0].name, how };
+    if (hits.length > 1) return { kind: "ambiguous", candidates: hits.map((mb) => mb.name) };
+  }
+
+  // (7) Reads only: the archive role on a mailbox with no archive is All Mail.
+  if (canonicalToken === "archive" && opts.forRead) {
+    const allMail = selectable.filter((mb) =>
+      mb.flags.some((f) => f.toLowerCase() === IMAP_ALL_MAIL_FLAG)
+    );
+    if (allMail.length === 1) return { kind: "matched", name: allMail[0].name, how: "all_mail" };
+  }
+
+  return { kind: "none" };
+}
+
+/**
+ * {@link resolveImapAlias}, reduced to the mailbox name or null.
+ *
+ * For the callers that pick a DESTINATION on a connection they own (soft
+ * delete, archive, the drafts mailbox) and that create the canonical mailbox
+ * when nothing matches. An ambiguous layout answers null here, exactly like no
+ * match: those callers then create or fall back as they did before the new
+ * tiers existed, rather than writing into one of two equal candidates. It never
+ * passes `forRead`, so it can never answer with All Mail.
  */
 export function matchImapAliasMailbox(
   mailboxes: MailboxListEntry[],
   alias: CanonicalFolderAlias,
 ): string | null {
-  const canonicalToken = alias.aliases[0];
-  if (canonicalToken === "inbox") return "INBOX";
-
-  // (2) SPECIAL-USE flag match.
-  const wantFlag = IMAP_ALIAS_SPECIAL_USE[canonicalToken];
-  if (wantFlag) {
-    const bySpecialUse = mailboxes.find((mb) =>
-      mb.flags.some((f) => f.toLowerCase() === wantFlag)
-    );
-    if (bySpecialUse) return bySpecialUse.name;
-  }
-
-  // (3) Case-insensitive match against the canonical English name.
-  const wantName = alias.imap.toLowerCase();
-  const byName = mailboxes.find((mb) => mb.name.toLowerCase() === wantName);
-  if (byName) return byName.name;
-
-  return null;
+  const match = resolveImapAlias(mailboxes, alias);
+  return match.kind === "matched" ? match.name : null;
 }
 
 /**

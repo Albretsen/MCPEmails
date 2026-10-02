@@ -55,8 +55,10 @@ import {
   lookupCanonicalAlias,
   type MailboxListEntry,
   matchImapAliasMailbox,
+  resolveImapAlias,
 } from "./imap-folder-target.ts";
 import {
+  folderAliasAmbiguousMessage,
   type FolderReference,
   matchFolderExactly,
   resolveFolderReference,
@@ -104,6 +106,8 @@ function functionBody(name: string): string {
 }
 
 const TRASH: CanonicalFolderAlias = lookupCanonicalAlias("trash")!;
+const SENT: CanonicalFolderAlias = lookupCanonicalAlias("sent")!;
+const ARCHIVE: CanonicalFolderAlias = lookupCanonicalAlias("archive")!;
 
 /** A LIST reply, in the two fields the matcher reads. */
 function mailbox(name: string, ...flags: string[]): MailboxListEntry {
@@ -428,7 +432,7 @@ Deno.test("the trash destination exists before the source message is touched", (
 function resolveAsFolderId(
   value: string,
   layout: MailboxListEntry[],
-  opts: { strict?: boolean } = {},
+  opts: { strict?: boolean; forRead?: boolean } = {},
 ): { mailbox: string | null; how: string } {
   const folders: FolderReference[] = layout.map((mb) => ({ id: mb.name, name: mb.name }));
   const alias = lookupCanonicalAlias(value.trim());
@@ -442,7 +446,10 @@ function resolveAsFolderId(
 
   // 3: the alias as a ROLE.
   if (alias) {
-    const role = matchImapAliasMailbox(layout, alias);
+    const forRead = opts.forRead === true && opts.strict === true;
+    const match = resolveImapAlias(layout, alias, { forRead });
+    if (match.kind === "ambiguous") return { mailbox: null, how: "folder_ambiguous" };
+    const role = match.kind === "matched" ? match.name : null;
     if (role) return { mailbox: role, how: "role" };
     const isArchive = alias.aliases[0] === "archive";
     if (isArchive && !opts.strict) return { mailbox: alias.imap, how: "created" };
@@ -651,4 +658,398 @@ Deno.test("inbox resolves without a listing, because no mailbox can outvote INBO
     shortCircuitAt < listAt,
     "the inbox short circuit must come BEFORE the listing or it saves nothing",
   );
+});
+
+// ---------------------------------------------------------------------------
+// THE FOURTH PLACE: a role the mailbox HAS, under a name the matcher did not
+// know.
+//
+// ── What went wrong ────────────────────────────────────────────────────────
+// Models pass `sent`, `trash`, `junk`, `drafts` and `archive` as a folder, or
+// in include_folders, without calling folder_list first (87% of these errors
+// had no prior listing). The matcher resolved a role only from a SPECIAL-USE
+// flag or from a mailbox named exactly the one English word. Measured over the
+// 14 days to 2026-10-02: about 239 folder_not_found errors across 61
+// workspaces. Yahoo and iCloud, which flag roles, failed 0.02 to 0.05% of
+// searches; generic IMAP 1.2%; Gmail over IMAP 3.4%, where `archive` has no
+// mailbox at all.
+//
+// ── The rule ───────────────────────────────────────────────────────────────
+// Exact name first (unchanged), then the flag, then the canonical name, and
+// only then the new tiers: the role's other common whole names, the same names
+// under "INBOX" + the server's delimiter, and, for READS of `archive` alone,
+// the mailbox flagged \\All. Whole names only. Two equal candidates refuse.
+// ---------------------------------------------------------------------------
+
+/** A LIST reply entry with the hierarchy delimiter the server reported. */
+function listed(name: string, delimiter: string, ...flags: string[]): MailboxListEntry {
+  return { name, delimiter, flags };
+}
+
+const READ = { strict: true, forRead: true };
+
+/** Gmail over IMAP: every role flagged, and no archive mailbox at all. */
+const GMAIL_IMAP: MailboxListEntry[] = [
+  listed("INBOX", "/", "\\HasNoChildren"),
+  listed("[Gmail]", "/", "\\HasChildren", "\\Noselect"),
+  listed("[Gmail]/All Mail", "/", "\\All", "\\HasNoChildren"),
+  listed("[Gmail]/Drafts", "/", "\\Drafts", "\\HasNoChildren"),
+  listed("[Gmail]/Important", "/", "\\HasNoChildren", "\\Important"),
+  listed("[Gmail]/Sent Mail", "/", "\\HasNoChildren", "\\Sent"),
+  listed("[Gmail]/Spam", "/", "\\HasNoChildren", "\\Junk"),
+  listed("[Gmail]/Starred", "/", "\\Flagged", "\\HasNoChildren"),
+  listed("[Gmail]/Trash", "/", "\\HasNoChildren", "\\Trash"),
+  listed("Receipts", "/", "\\HasNoChildren"),
+];
+
+/** Exchange-style names over IMAP, with no SPECIAL-USE flags at all. */
+const OUTLOOK_STYLE: MailboxListEntry[] = [
+  listed("INBOX", "/"),
+  listed("Drafts", "/"),
+  listed("Sent Items", "/"),
+  listed("Deleted Items", "/"),
+  listed("Junk E-mail", "/"),
+  listed("Receipts", "/"),
+];
+
+/** Courier / older Dovecot: everything lives under INBOX, "." is the delimiter. */
+const COURIER_NAMESPACED: MailboxListEntry[] = [
+  listed("INBOX", ".", "\\HasChildren"),
+  listed("INBOX.Drafts", "."),
+  listed("INBOX.Sent", "."),
+  listed("INBOX.Trash", "."),
+  listed("INBOX.Junk", "."),
+  listed("INBOX.Receipts", "."),
+];
+
+Deno.test("table: role aliases resolve on the common unflagged layouts", () => {
+  const cases: [string, MailboxListEntry[], string, string][] = [
+    // Gmail over IMAP: the flags already did this; pinned so the new tiers
+    // cannot outvote a flag.
+    ["Gmail IMAP", GMAIL_IMAP, "sent", "[Gmail]/Sent Mail"],
+    ["Gmail IMAP", GMAIL_IMAP, "trash", "[Gmail]/Trash"],
+    ["Gmail IMAP", GMAIL_IMAP, "spam", "[Gmail]/Spam"],
+    ["Gmail IMAP", GMAIL_IMAP, "junk", "[Gmail]/Spam"],
+    ["Gmail IMAP", GMAIL_IMAP, "drafts", "[Gmail]/Drafts"],
+    // Outlook-style names.
+    ["Outlook-style", OUTLOOK_STYLE, "sent", "Sent Items"],
+    ["Outlook-style", OUTLOOK_STYLE, "SENT", "Sent Items"],
+    ["Outlook-style", OUTLOOK_STYLE, "trash", "Deleted Items"],
+    ["Outlook-style", OUTLOOK_STYLE, "deleted", "Deleted Items"],
+    ["Outlook-style", OUTLOOK_STYLE, "spam", "Junk E-mail"],
+    ["Outlook-style", OUTLOOK_STYLE, "junk", "Junk E-mail"],
+    // Namespaced under INBOX with the server's own delimiter.
+    ["Courier", COURIER_NAMESPACED, "sent", "INBOX.Sent"],
+    ["Courier", COURIER_NAMESPACED, "trash", "INBOX.Trash"],
+    ["Courier", COURIER_NAMESPACED, "drafts", "INBOX.Drafts"],
+    ["Courier", COURIER_NAMESPACED, "draft", "INBOX.Drafts"],
+    ["Courier", COURIER_NAMESPACED, "spam", "INBOX.Junk"],
+    ["Courier", COURIER_NAMESPACED, "junk", "INBOX.Junk"],
+  ];
+  for (const [label, layout, value, want] of cases) {
+    // On a read and on a write alike: these tiers are not read-only.
+    for (const opts of [READ, { strict: true }, {}]) {
+      assertEquals(
+        resolveAsFolderId(value, layout, opts),
+        { mailbox: want, how: "role" },
+        `${label}: "${value}" with ${JSON.stringify(opts)}`,
+      );
+    }
+  }
+});
+
+Deno.test("a namespaced alternate name resolves with whichever delimiter LIST reported", () => {
+  const slash = [listed("INBOX", "/"), listed("INBOX/Sent Items", "/"), listed("INBOX/Bin", "/")];
+  assertEquals(resolveAsFolderId("sent", slash, READ), { mailbox: "INBOX/Sent Items", how: "role" });
+  assertEquals(resolveAsFolderId("trash", slash, READ), { mailbox: "INBOX/Bin", how: "role" });
+  // The delimiter is the mailbox's own. "INBOX.Sent" on a "/" server is one
+  // top-level mailbox whose name happens to contain a dot, not a child of INBOX.
+  const wrongDelimiter = [listed("INBOX", "/"), listed("INBOX.Sent", "/")];
+  assertEquals(resolveAsFolderId("sent", wrongDelimiter, READ), {
+    mailbox: null,
+    how: "folder_not_found",
+  });
+  // And with no delimiter reported at all, the namespaced tiers do not run.
+  assertEquals(matchImapAliasMailbox([mailbox("INBOX"), mailbox("INBOX.Sent")], SENT), null);
+});
+
+Deno.test("the canonical name still beats an alternate, and the flag still beats both", () => {
+  const both = [listed("INBOX", "/"), listed("Sent", "/"), listed("Sent Items", "/")];
+  assertEquals(resolveAsFolderId("sent", both, READ), { mailbox: "Sent", how: "exact" });
+  assertEquals(resolveImapAlias(both, SENT), { kind: "matched", name: "Sent", how: "canonical_name" });
+  const flagged = [...both, listed("Outbox Copies", "/", "\\Sent")];
+  assertEquals(resolveImapAlias(flagged, SENT), {
+    kind: "matched",
+    name: "Outbox Copies",
+    how: "special_use",
+  });
+  // A top-level alternate beats a namespaced canonical: tiers run in order.
+  const mixed = [listed("INBOX", "."), listed("Sent Items", "."), listed("INBOX.Sent", ".")];
+  assertEquals(resolveImapAlias(mixed, SENT), {
+    kind: "matched",
+    name: "Sent Items",
+    how: "alternate_name",
+  });
+});
+
+Deno.test("German and French role names resolve, in either Unicode normalization", () => {
+  const german = [
+    listed("INBOX", "/"),
+    listed("Gesendet", "/"),
+    listed("Papierkorb", "/"),
+    listed("Entwürfe", "/"),
+  ];
+  assertEquals(resolveAsFolderId("sent", german, READ), { mailbox: "Gesendet", how: "role" });
+  assertEquals(resolveAsFolderId("trash", german, READ), { mailbox: "Papierkorb", how: "role" });
+  assertEquals(resolveAsFolderId("drafts", german, READ), { mailbox: "Entwürfe", how: "role" });
+  // A server (or the client that created the folder) may hand the name back
+  // decomposed: "u" + U+0308 instead of the single code point. Same mailbox,
+  // and the answer is the server's own spelling, untouched.
+  const nfd = "Entwürfe".normalize("NFD");
+  assert(nfd !== "Entwürfe", "the fixture must really be decomposed");
+  assertEquals(
+    resolveAsFolderId("drafts", [listed("INBOX", "/"), listed(nfd, "/")], READ),
+    { mailbox: nfd, how: "role" },
+  );
+  const french = [
+    listed("INBOX", "."),
+    listed("INBOX.Envoyés", "."),
+    listed("INBOX.Corbeille", "."),
+    listed("INBOX.Brouillons", "."),
+  ];
+  assertEquals(resolveAsFolderId("sent", french, READ), { mailbox: "INBOX.Envoyés", how: "role" });
+  assertEquals(resolveAsFolderId("trash", french, READ), { mailbox: "INBOX.Corbeille", how: "role" });
+  assertEquals(resolveAsFolderId("drafts", french, READ), {
+    mailbox: "INBOX.Brouillons",
+    how: "role",
+  });
+});
+
+Deno.test("a mailbox with both Spam and Junk: each name is itself, on every path", () => {
+  // The 2026-09-14 Migadu fix, re-run against the new tiers, flagged and
+  // unflagged. "Spam" is now also an alternate name for the spam ROLE, and
+  // that must never let it stand in for, or be replaced by, "Junk".
+  const unflagged = [listed("INBOX", "/"), listed("Junk", "/"), listed("Spam", "/")];
+  for (const layout of [SPAM_AND_JUNK, unflagged]) {
+    for (const opts of [READ, { strict: true }, {}]) {
+      assertEquals(resolveAsFolderId("Spam", layout, opts), { mailbox: "Spam", how: "exact" });
+      assertEquals(resolveAsFolderId("spam", layout, opts), { mailbox: "Spam", how: "exact" });
+      assertEquals(resolveAsFolderId("Junk", layout, opts), { mailbox: "Junk", how: "exact" });
+      assertEquals(resolveAsFolderId("junk", layout, opts), { mailbox: "Junk", how: "exact" });
+    }
+  }
+  // An account with ONLY "Spam" (the Yandex shape) answers both words with it.
+  const onlySpam = [listed("INBOX", "/"), listed("Spam", "/")];
+  assertEquals(resolveAsFolderId("spam", onlySpam), { mailbox: "Spam", how: "exact" });
+  assertEquals(resolveAsFolderId("junk", onlySpam), { mailbox: "Spam", how: "role" });
+});
+
+Deno.test("a user folder literally named Archive wins over every role reading, All Mail included", () => {
+  const layout = [...GMAIL_IMAP, listed("Archive", "/", "\\HasNoChildren")];
+  for (const opts of [READ, { strict: true }, {}]) {
+    assertEquals(resolveAsFolderId("archive", layout, opts), { mailbox: "Archive", how: "exact" });
+    assertEquals(resolveAsFolderId("Archive", layout, opts), { mailbox: "Archive", how: "exact" });
+  }
+});
+
+Deno.test("READ: archive on Gmail over IMAP is the mailbox flagged \\All", () => {
+  assertEquals(resolveAsFolderId("archive", GMAIL_IMAP, READ), {
+    mailbox: "[Gmail]/All Mail",
+    how: "role",
+  });
+  assertEquals(resolveImapAlias(GMAIL_IMAP, ARCHIVE, { forRead: true }), {
+    kind: "matched",
+    name: "[Gmail]/All Mail",
+    how: "all_mail",
+  });
+  // Found by the FLAG, so a localized account ("[Google Mail]/Alle Nachrichten")
+  // works the same way and nothing depends on the English name.
+  const localized = [
+    listed("INBOX", "/"),
+    listed("[Google Mail]/Alle Nachrichten", "/", "\\All"),
+  ];
+  assertEquals(resolveAsFolderId("archive", localized, READ), {
+    mailbox: "[Google Mail]/Alle Nachrichten",
+    how: "role",
+  });
+  // A real archive, flagged or named, is still preferred over All Mail.
+  const withArchive = [...GMAIL_IMAP, listed("Old Mail", "/", "\\Archive")];
+  assertEquals(resolveAsFolderId("archive", withArchive, READ), { mailbox: "Old Mail", how: "role" });
+  const withArchives = [...GMAIL_IMAP, listed("Archives", "/")];
+  assertEquals(resolveAsFolderId("archive", withArchives, READ), {
+    mailbox: "Archives",
+    how: "role",
+  });
+});
+
+Deno.test("WRITE PROOF: a move to archive on that same mailbox behaves exactly as before", () => {
+  // Moving a message into All Mail is not archiving on Gmail (archiving there
+  // is removing it from INBOX), so the \\All fallback must be unreachable from
+  // every destination path. Each line below is the pre-existing answer.
+  //
+  // The move/copy path (non-strict): no archive, so one is created.
+  assertEquals(resolveAsFolderId("archive", GMAIL_IMAP), { mailbox: "Archive", how: "created" });
+  assertEquals(resolveAsFolderId("archive", GMAIL_IMAP, {}), { mailbox: "Archive", how: "created" });
+  // The automation runner's destination resolve: strict, and NOT a read. It
+  // must still report that the listing has no such folder.
+  assertEquals(resolveAsFolderId("archive", GMAIL_IMAP, { strict: true }), {
+    mailbox: null,
+    how: "folder_not_found",
+  });
+  // forRead without strict is not a read either: nothing may half-opt in.
+  assertEquals(resolveAsFolderId("archive", GMAIL_IMAP, { forRead: true }), {
+    mailbox: "Archive",
+    how: "created",
+  });
+  // The callers that pick a destination on their own connection
+  // (imapArchiveEmail, resolveImapTrashMailbox, the drafts paths).
+  assertEquals(matchImapAliasMailbox(GMAIL_IMAP, ARCHIVE), null);
+  assertEquals(resolveImapAlias(GMAIL_IMAP, ARCHIVE), { kind: "none" });
+  assertEquals(resolveImapAlias(GMAIL_IMAP, ARCHIVE, { forRead: false }), { kind: "none" });
+  // And no OTHER role ever reads as All Mail, even on a read.
+  const onlyAll = [listed("INBOX", "/"), listed("Everything", "/", "\\All")];
+  for (const token of ["sent", "trash", "spam", "drafts"]) {
+    assertEquals(resolveAsFolderId(token, onlyAll, READ), {
+      mailbox: null,
+      how: "folder_not_found",
+    });
+  }
+});
+
+Deno.test("WRITE PROOF, wiring: only the two read call sites ask for the read-only fallback", () => {
+  // The harness above mirrors resolveFolderId; this pins that index.ts is the
+  // same shape, and that no destination resolve can reach All Mail.
+  const resolver = codeOnly(functionBody("resolveFolderId"));
+  assertStringIncludes(
+    resolver,
+    "const forRead = opts.forRead === true && opts.strict === true;",
+    "the fallback must need BOTH an explicit read and a strict resolve",
+  );
+  assertStringIncludes(resolver, "resolveImapAlias(imapMailboxes ?? [], alias, { forRead })");
+
+  const optIns = CODE.split("forRead: true").length - 1;
+  assertEquals(optIns, 2, "exactly two call sites may opt in to the read-only fallback");
+  assertStringIncludes(codeOnly(functionBody("executeListInbox")), "forRead: true");
+  assertStringIncludes(codeOnly(functionBody("resolveIncludeFolders")), "forRead: true");
+
+  // Every function that resolves a DESTINATION, by name, and the runner's
+  // resolveFolder, which is strict but writes.
+  for (
+    const name of [
+      "executeMoveEmail",
+      "executeCopyEmail",
+      "imapArchiveEmail",
+      "resolveImapTrashMailbox",
+      "imapMoveEmail",
+      "imapCopyEmail",
+    ]
+  ) {
+    assert(
+      !codeOnly(functionBody(name)).includes("forRead"),
+      `${name} picks a destination and must never ask for the read-only fallback`,
+    );
+  }
+  const runnerResolve = CODE.slice(CODE.indexOf("async resolveFolder(inbox, nameOrId, session)"));
+  const runnerBody = runnerResolve.slice(0, runnerResolve.indexOf("applyAction: applyTriageAction"));
+  assert(runnerBody.length > 0, "the runner's resolveFolder moved; re-anchor this scan");
+  assert(
+    !runnerBody.includes("forRead"),
+    "an automation's move destination must never resolve to All Mail",
+  );
+});
+
+Deno.test("two equal candidates are refused, never guessed, on reads and writes alike", () => {
+  const twoSent = [
+    listed("INBOX", "/"),
+    listed("Sent Items", "/"),
+    listed("Sent Messages", "/"),
+  ];
+  assertEquals(resolveImapAlias(twoSent, SENT), {
+    kind: "ambiguous",
+    candidates: ["Sent Items", "Sent Messages"],
+  });
+  for (const opts of [READ, { strict: true }, {}]) {
+    assertEquals(resolveAsFolderId("sent", twoSent, opts), {
+      mailbox: null,
+      how: "folder_ambiguous",
+    });
+  }
+  // The destination pickers answer "no match" and create the canonical
+  // mailbox, as they did before these names were known at all.
+  assertEquals(matchImapAliasMailbox(twoSent, SENT), null);
+  // Either name, typed exactly, is still that mailbox.
+  assertEquals(resolveAsFolderId("Sent Items", twoSent), { mailbox: "Sent Items", how: "exact" });
+
+  // The same at the namespaced tier.
+  const twoTrash = [
+    listed("INBOX", "."),
+    listed("INBOX.Deleted Items", "."),
+    listed("INBOX.Bin", "."),
+  ];
+  assertEquals(resolveAsFolderId("trash", twoTrash, READ), {
+    mailbox: null,
+    how: "folder_ambiguous",
+  });
+
+  // And the refusal names both, so the next call can pass one of them.
+  const message = folderAliasAmbiguousMessage("sent", ["Sent Items", "Sent Messages"], {
+    provider: "imap",
+  });
+  assertStringIncludes(message, '"Sent Items" and "Sent Messages"');
+  assertStringIncludes(message, "Nothing was changed.");
+});
+
+Deno.test("a \\Noselect or \\NonExistent name is never the answer", () => {
+  // A hierarchy parent is a NAME, not a mailbox: it cannot be selected,
+  // searched or written to. Resolving to it only moves the failure later.
+  const parents = [
+    listed("INBOX", "/"),
+    listed("Sent Items", "/", "\\Noselect", "\\HasChildren"),
+    listed("Sent Items/2024", "/", "\\HasNoChildren"),
+    listed("Deleted Items", "/", "\\NonExistent"),
+    listed("Junk", "/", "\\Noselect"),
+    listed("Old", "/", "\\Noselect", "\\Trash"),
+    listed("Everything", "/", "\\Noselect", "\\All"),
+  ];
+  assertEquals(resolveImapAlias(parents, SENT), { kind: "none" });
+  assertEquals(resolveImapAlias(parents, TRASH), { kind: "none" });
+  assertEquals(resolveImapAlias(parents, lookupCanonicalAlias("spam")!), { kind: "none" });
+  assertEquals(resolveImapAlias(parents, ARCHIVE, { forRead: true }), { kind: "none" });
+  // And it does not count as a second candidate either: one selectable
+  // "Sent Messages" beside an unselectable "Sent Items" is not ambiguous.
+  const one = [...parents, listed("Sent Messages", "/")];
+  assertEquals(resolveImapAlias(one, SENT), {
+    kind: "matched",
+    name: "Sent Messages",
+    how: "alternate_name",
+  });
+});
+
+Deno.test("the new tiers match WHOLE names: no suffix, no segment, no substring", () => {
+  // The soft-delete guard, restated for every name the matcher now knows.
+  // None of these is the account's trash or sent folder.
+  const layout = [
+    listed("INBOX", "."),
+    listed("Projects.Deleted Items", "."),
+    listed("Projects.Bin", "."),
+    listed("INBOX.Projects.Trash", "."),
+    listed("INBOX.Projects.Sent Items", "."),
+    listed("INBOX.Trashcan", "."),
+    listed("INBOX.Binders", "."),
+    listed("Old Sent Items", "."),
+    listed("Sent Items (2019)", "."),
+    listed("Recycle Bin", "."),
+    listed("NOTINBOX.Trash", "."),
+    listed("INBOX.", "."),
+  ];
+  assertEquals(resolveImapAlias(layout, TRASH), { kind: "none" });
+  assertEquals(resolveImapAlias(layout, SENT), { kind: "none" });
+  assertEquals(matchImapAliasMailbox(layout, TRASH), null);
+});
+
+Deno.test("an unmatched alias still fails exactly as it did", () => {
+  const bare = [listed("INBOX", "/"), listed("Receipts", "/")];
+  assertEquals(resolveAsFolderId("sent", bare, READ), { mailbox: null, how: "folder_not_found" });
+  assertEquals(resolveAsFolderId("sent", bare), { mailbox: "Sent", how: "static_fallback" });
+  assertEquals(resolveAsFolderId("archive", bare, READ), { mailbox: null, how: "folder_not_found" });
 });

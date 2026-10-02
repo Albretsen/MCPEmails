@@ -18,6 +18,8 @@
 // operations (create / rename / delete) cannot drift apart.
 // ---------------------------------------------------------------------------
 
+import type { FolderResolveAuditDetails } from "./folder-resolve-diagnostics.ts";
+
 /** Machine-readable `error` codes this module emits. */
 export type FolderErrorCode =
   | "folder_name_taken"
@@ -284,13 +286,23 @@ export function identifiedCreateCollision(
 export class FolderTargetError extends Error {
   readonly payload: Record<string, unknown>;
   readonly logErrorCode: string;
+  /**
+   * Value-free diagnostics for `activity_log.error_details`, when the throw
+   * site had a listing to classify against. Deliberately a SEPARATE field from
+   * `payload`: the payload is the JSON the caller reads and names the folder
+   * they typed, and this is what gets persisted and must never hold it. See
+   * folder-resolve-diagnostics.ts.
+   */
+  details: FolderResolveAuditDetails | null;
 
   constructor(
     payload: { error: string; provider: string; folder: string; message: string },
+    details: FolderResolveAuditDetails | null = null,
   ) {
     super(payload.message);
     this.name = "FolderTargetError";
     this.payload = payload;
     this.logErrorCode = payload.error;
+    this.details = details;
   }
 }
