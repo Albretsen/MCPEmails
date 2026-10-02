@@ -11014,6 +11014,15 @@ async function listImapMessages(
   offset: number,
   /** true = unread only; false = read only; undefined = both. */
   unread: boolean | undefined,
+  /**
+   * The session executeListInbox resolved `folder` on. Resolving any folder
+   * but the inbox is a LIST, and that LIST used to get a connection of its
+   * own: TCP, TLS, AUTH, LIST, LOGOUT, and then all of it again here. When the
+   * session did connect, this function takes that connection over and lists
+   * on it; when it did not (the inbox needs no LIST), it connects as before.
+   * Either way the connection is this function's to close.
+   */
+  resolvedOn?: ImapSession<ImapClient> | null,
 ): Promise<ListInboxResult> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
     throw new Error("imap_auth_failed");
@@ -11022,7 +11031,7 @@ async function listImapMessages(
 
   let client: ImapClient | null = null;
   try {
-    client = await ImapClient.connect({
+    client = resolvedOn?.take() ?? await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
       security: inbox.imap_security ?? "tls",
@@ -11822,12 +11831,18 @@ async function executeListInbox(
   // naming mismatch and must not reach the provider to come back as
   // "Invalid label: X. Please try again in a moment."
   let listFolder: string;
+  // IMAP only (null otherwise): the connection a non-inbox folder is resolved
+  // on is the one the listing then runs on, instead of a second handshake.
+  // Lazy, so the default inbox listing connects exactly once, in the lister.
+  const imapSession = imapSessionFor(inbox);
   try {
     listFolder = await resolveFolderId(inbox, folder.trim() ? folder : "INBOX", {
       strict: true,
       forRead: true,
+      session: imapSession,
     });
   } catch (err) {
+    await imapSession?.close();
     if (err instanceof FolderTargetError) return folderTargetErrorResult(err);
     const message = err instanceof Error ? err.message : String(err);
     if (
@@ -11868,6 +11883,7 @@ async function executeListInbox(
           limit,
           offset,
           unread,
+          imapSession,
         );
         break;
       default:
@@ -11925,6 +11941,11 @@ async function executeListInbox(
       boundary: "read",
       text: `Provider error while listing inbox: ${message}. Please try again in a moment.`,
     });
+  } finally {
+    // A no-op once the lister has taken the connection over, which is every
+    // path that reached it. What this closes is a connection the resolve
+    // opened and nothing then used.
+    await imapSession?.close();
   }
 
   // ── Success ───────────────────────────────────────────────────────────────

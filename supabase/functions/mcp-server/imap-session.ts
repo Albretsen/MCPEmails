@@ -186,6 +186,30 @@ export class ImapSession<C extends SessionCapableImapClient> {
     client?.destroy?.();
   }
 
+  /**
+   * Hand the live connection to a caller that will close it itself, and end
+   * this session. Null when the session never connected, in which case the
+   * caller opens its own.
+   *
+   * For the one shape `client()` does not fit: a first step that MAY need the
+   * connection (resolving a folder name is a LIST, resolving "inbox" is
+   * nothing) followed by a function that has always owned a connection of its
+   * own and closes it in its own `finally`. Lending it the client would leave
+   * two owners of one socket; giving it the client leaves one. After this the
+   * session is closed and empty, so a `close()` on the way out is a no-op and
+   * can never log out a connection somebody else is now using.
+   *
+   * Nothing is selected on the returned client as far as the new owner is
+   * concerned: it must SELECT before it reads.
+   */
+  take(): C | null {
+    const client = this.#client;
+    this.#closed = true;
+    this.#client = null;
+    this.#selected = null;
+    return client;
+  }
+
   /** Close the connection for good. Safe to call more than once. */
   async close(): Promise<void> {
     this.#closed = true;
