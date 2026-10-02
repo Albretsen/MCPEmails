@@ -37,6 +37,29 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 
 /** @type {{ date: string, kind: 'added'|'improved'|'fixed'|'changed', title: string, body: string }[]} */
 export const ENTRIES = [
+  /* ── October 2026 ──────────────────────────────────────────── */
+  {
+    date: '2026-10-02',
+    kind: 'improved',
+    title: 'Tool calls answer about a second sooner',
+    body:
+      'Every tool call did its account checks one at a time before starting and wrote its records before answering, which added well over a second to each call regardless of how fast the mailbox was. The checks now run together and the records are written after the answer is sent. Reading, searching, sending and organising all respond sooner, most noticeably on quick calls such as listing inboxes or folders. Nothing about what a call does or what it is allowed to do has changed.',
+  },
+  {
+    date: '2026-10-02',
+    kind: 'fixed',
+    title: 'Reading a draft back works',
+    body:
+      'draft_read was listed to every assistant but only answered in workspaces with the in-chat draft editor, so everywhere else an assistant that tried to open a draft from the list, or check one it had just written, was refused. It now returns the draft in full: recipients, subject, body and attachment names, on Gmail, Outlook and IMAP. Nothing about creating, updating or sending drafts changes.',
+  },
+  {
+    date: '2026-10-02',
+    kind: 'fixed',
+    title: 'Folder aliases work on more mailboxes',
+    body:
+      'Asking for sent, trash, spam, drafts or archive now finds the right folder on IMAP mailboxes that name it "Sent Items", "Deleted Items", "Junk E-mail" or keep it under INBOX, and searching archive on Gmail over IMAP now searches All Mail. When a mail server briefly refuses to open a folder, the error now says to try again instead of claiming the folder does not exist. An automation whose destination folder has been deleted now switches itself off after five failed runs and says why, rather than failing quietly.',
+  },
+
   /* ── September 2026 ────────────────────────────────────────── */
   {
     date: '2026-09-26',
