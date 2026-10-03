@@ -10437,10 +10437,18 @@ async function listGmailMessages(
   // Strongest evidence first: when Gmail handed back no nextPageToken, the walk
   // above enumerated the ENTIRE label and allRefs.length is a measured, exact
   // count — better than any estimate and immune to the counter quirks below.
+  //
+  // labels.get is STARTED here and awaited further down, so it shares a round
+  // trip with the per-message metadata gets instead of preceding them. The
+  // closure cannot reject (its own try/catch), and it is the only writer of
+  // `total` / `totalIsEstimate` after this point; both are read only once it
+  // has been awaited.
+  let exactTotalLookup: Promise<void> = Promise.resolve();
   if (!nextPageToken) {
     total = allRefs.length;
     totalIsEstimate = false;
   } else {
+    exactTotalLookup = (async () => {
     try {
       if (label && !label.includes(" ")) {
         const labelResp = await fetch(
@@ -10477,6 +10485,7 @@ async function listGmailMessages(
     } catch {
       // Keep the estimate-based total; this enhancement must never break listing.
     }
+    })();
   }
   // More pages remain only if Gmail still has a cursor beyond what we fetched,
   // or we somehow over-fetched past this page. When Gmail ran out of pages
@@ -10486,6 +10495,7 @@ async function listGmailMessages(
   const pageRefs = allRefs.slice(offset, offset + limit);
 
   if (pageRefs.length === 0) {
+    await exactTotalLookup;
     return {
       messages: [],
       total,
@@ -10497,7 +10507,7 @@ async function listGmailMessages(
 
   // Fetch message metadata in parallel.
   // format=metadata returns headers + snippet without downloading body content.
-  const metaResults = await Promise.all(
+  const metaLookup = Promise.all(
     pageRefs.map(({ id }) => {
       const mp = new URLSearchParams({ format: "metadata" });
       // Multiple metadataHeaders values must be repeated params.
@@ -10510,6 +10520,14 @@ async function listGmailMessages(
       ).then((r) => r.json() as Promise<GmailMessageMeta>);
     }),
   );
+  // labels.get first, then the rows: the order they used to complete in. If a
+  // row get fails, the failure is still thrown from here, and only after
+  // labels.get has settled, so no request is left running behind an error.
+  // The no-op handler only keeps that failure from being reported as unhandled
+  // while labels.get is awaited; `await metaLookup` below still throws it.
+  metaLookup.catch(() => {});
+  await exactTotalLookup;
+  const metaResults = await metaLookup;
 
   const messages: EmailSummary[] = metaResults.map((msg, i) => {
     const hdrs: Record<string, string> = {};
