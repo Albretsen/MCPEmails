@@ -1,19 +1,22 @@
 // Reading font declarations out of CSS and source, for the font suites.
 //
-// "Which faces does the site make available" has two possible sources, and
-// these helpers read both so the same assertions hold whichever is in use:
+// "Which faces does the site make available" has three possible sources, and
+// these helpers read all of them so the same assertions hold whichever is in
+// use:
 //
 //   1. a Google Fonts `@import url(".../css2?family=...")` in a stylesheet,
 //      whose query string names every family, weight and style it will serve;
 //   2. `next/font/google` calls, whose options name the same things, or the
-//      `@font-face` rules those calls compile to in the built CSS.
+//      `@font-face` rules those calls compile to in the built CSS;
+//   3. hand-written `@font-face` rules for self-hosted files (fonts/*.css),
+//      which is what the app uses today.
 //
 // A face is { family, weight, style }. Weights are kept as strings because a
 // variable font declares a RANGE ("100 900"), and a range is not the same
 // thing as the discrete weights the site asks for today: with a range,
 // `font-weight: 650` renders at 650, with discrete faces it snaps to 700.
 
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 const unquote = (value) => value.trim().replace(/^(['"])(.*)\1$/, '$2');
@@ -117,6 +120,19 @@ export function declaredFaces(webRoot) {
       faces.push(...parsed.faces);
       displays.push(parsed.display);
       sources.push(`@import in ${path.relative(webRoot, file)}`);
+    }
+  }
+  // Hand-written @font-face rules for self-hosted files (fonts/fonts.css).
+  const fontsDir = path.join(webRoot, 'fonts');
+  if (existsSync(fontsDir)) {
+    for (const file of walk(fontsDir).filter((f) => f.endsWith('.css'))) {
+      const rules = fontFaceRules(readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ''));
+      if (rules.length === 0) continue;
+      sources.push(`@font-face in ${path.relative(webRoot, file)}`);
+      for (const rule of rules) {
+        faces.push({ family: rule.family, weight: rule.weight, style: rule.style });
+        displays.push(rule.display);
+      }
     }
   }
   for (const dir of ['app', 'components', 'src']) {

@@ -1,81 +1,62 @@
-import { Geist, Geist_Mono, Instrument_Serif } from 'next/font/google';
+import { preload } from 'react-dom';
+import '../fonts/fonts.css';
 
 /**
- * The site's three webfonts, self-hosted.
+ * The site's three webfonts, self-hosted from files committed in apps/web/fonts.
  *
- * Until 2026-10-03 these came from a CSS `@import` of fonts.googleapis.com at
- * the top of styles/colors_and_type.css. That is a render-blocking chain on
- * every page (HTML -> our CSS -> Google's CSS -> fonts.gstatic.com), measured
- * at 700 to 1,180 ms on mobile. next/font/google fetches the same Google CSS
- * ONCE, AT BUILD TIME, copies the font files into /_next/static/media (same
- * origin, content-hashed, cached immutably) and inlines the @font-face rules
- * into our own stylesheet. The browser never talks to Google.
+ * HISTORY. Until 2026-10-03 these came from a CSS `@import` of
+ * fonts.googleapis.com at the top of styles/colors_and_type.css: a
+ * render-blocking chain on every page (HTML -> our CSS -> Google's CSS ->
+ * fonts.gstatic.com), measured at 700 to 1,180 ms on mobile. They were then
+ * briefly loaded through next/font/google, which removed the chain but made
+ * `next build` fetch from Google, so a build could fail on a network it did
+ * not need before. Now nothing talks to Google at build time or at run time.
  *
- * THIS FILE IS IMPORTED FOR ITS SIDE EFFECT ONLY (app/layout.js and
- * app/global-error.js). Nothing uses the returned `className` / `variable`,
- * and that is deliberate:
+ * HOW. fonts/fonts.css holds the 47 @font-face rules Google served, verbatim,
+ * with each `src` pointing at the local copy of the same file. The bundler
+ * copies the files to /_next/static/media under content-hashed names, which
+ * Next serves with a one-year immutable cache.
  *
- *  - The bundler emits the @font-face rules under the fonts' real family
- *    names ("Geist", "Geist Mono", "Instrument Serif"), which are exactly the
- *    names the --font-sans / --font-mono / --font-display tokens in
- *    colors_and_type.css already start with. So every existing font-family
- *    declaration resolves as it always did, with no token changed.
- *    scripts/built-output/fonts.test.mjs fails if a bundler ever hashes those
- *    names, because the tokens would then silently fall through to system
- *    fonts.
+ * WHY NOT next/font/local. It names the family after the JavaScript variable
+ * the call is assigned to (`const geistLatin = localFont(...)` produces
+ * `font-family: geistLatin`), rejects a `font-family` declaration, and takes
+ * one unicode-range per call. Our families need a space in the name ("Geist
+ * Mono", "Instrument Serif") and five or six unicode-range subsets each under
+ * ONE family name, so it cannot express them; getting close would mean eleven
+ * differently named families and rewriting the --font-* tokens. Plain
+ * @font-face rules keep the real family names, so the tokens in
+ * colors_and_type.css and every font-family declaration are untouched, and
+ * there is no generated "Fallback" face at all: the fallback stacks are
+ * exactly what the tokens say.
  *
- *  - next/font also generates a metric-adjusted fallback face per family
- *    ("Geist Fallback": local Arial with size-adjust and ascent overrides) and
- *    puts it in the generated `className`. Using that class would insert the
- *    adjusted Arial into the stack AHEAD of ui-sans-serif: a different font
- *    while the webfont loads, and a different font for every glyph Geist does
- *    not have (Chinese falls through either way, but Greek, arrows and other
- *    symbols would start rendering in Arial). `adjustFontFallback: false` asks
- *    for no such face; Turbopack in Next 16.3 emits it regardless, so the real
- *    guarantee is that nothing references it, which the same test pins.
+ * WHAT MUST NOT CHANGE in fonts/fonts.css (scripts/fonts and
+ * scripts/built-output pin all of it):
+ *  - one rule per WEIGHT, not a `100 900` range. Geist is a variable font, but
+ *    our CSS uses in-between weights (550, 620, 650, 680, 750) that snap to
+ *    the nearest declared weight today; a range would render them literally.
+ *  - every subset (latin, latin-ext, cyrillic, cyrillic-ext, vietnamese, and
+ *    symbols2 for the mono). A subset file is only downloaded when a page uses
+ *    a character from its unicode-range. None of the families has CJK glyphs;
+ *    Chinese renders in a system font, as it always has.
+ *  - font-display: swap.
  *
- * WEIGHTS ARE LISTED, NOT `variable`. Geist is a variable font, and the files
- * served are the variable files either way. Listing the weights produces one
- * @font-face per weight, as the Google import did, so an in-between weight in
- * our CSS (550, 620, 650, 680 and 750 are all in use) keeps snapping to the
- * nearest declared weight. A `100 900` range would render them literally and
- * visibly change the weight of that text.
- *
- * SUBSETS. Every subset Google serves (latin, latin-ext, cyrillic,
- * cyrillic-ext, vietnamese, and symbols2 for the mono) is kept as its own
- * unicode-range face and downloaded only when a page uses a character from it,
- * as before. `subsets` only chooses which file is PRELOADED. None of the three
- * families contains CJK glyphs; Chinese text renders in a system font, as
- * before.
- *
- * PRELOAD. Only Geist's latin file, the one face every page renders its first
- * paint in. Geist Mono and Instrument Serif are used on some pages and not
+ * PRELOAD. Exactly one file: Geist latin, the face every page paints its first
+ * text in. Geist Mono and Instrument Serif are used on some pages and not on
  * others (the auth screens use neither), and a preload on a page that never
  * uses the font is a download that did not happen before.
- *
- * Build-time note: `next build` now needs to reach fonts.googleapis.com.
  */
-export const geist = Geist({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
-  display: 'swap',
-  preload: true,
-  adjustFontFallback: false,
-});
 
-export const geistMono = Geist_Mono({
-  weight: ['400', '500', '600'],
-  subsets: ['latin'],
-  display: 'swap',
-  preload: false,
-  adjustFontFallback: false,
-});
+// Resolved by the bundler to the same hashed /_next/static/media URL that the
+// `src` in fonts.css compiles to, so the preload and the @font-face rule name
+// one resource and the file is fetched once.
+const GEIST_LATIN = new URL('../fonts/geist-latin.woff2', import.meta.url).pathname;
 
-export const instrumentSerif = Instrument_Serif({
-  weight: '400',
-  style: ['normal', 'italic'],
-  subsets: ['latin'],
-  display: 'swap',
-  preload: false,
-  adjustFontFallback: false,
-});
+/**
+ * Call during render of the root layout. Next sends it as a `Link: rel=preload`
+ * response header, ahead of the HTML. `crossOrigin` is required even for a
+ * same-origin font: fonts are always fetched in CORS mode, and a preload
+ * without it is fetched a second time.
+ */
+export function preloadFonts() {
+  preload(GEIST_LATIN, { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
+}

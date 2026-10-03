@@ -1,8 +1,8 @@
 import '../styles/theme.css';
 import '../styles/colors_and_type.css';
 import '../styles/marketing.css';
-// Side effect only: self-hosted @font-face rules + the Geist preload. See app/fonts.js.
-import './fonts';
+// Self-hosted @font-face rules + the Geist preload. See app/fonts.js.
+import { preloadFonts } from './fonts';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale } from 'next-intl/server';
 import { Analytics } from '@vercel/analytics/next';
@@ -66,6 +66,7 @@ export const viewport = {
 };
 
 export default async function RootLayout({ children }) {
+  preloadFonts();
   const locale = await getLocale();
   return (
     <html lang={locale} suppressHydrationWarning>

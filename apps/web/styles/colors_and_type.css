@@ -8,7 +8,7 @@
 
 /* ---------- Webfonts ----------
    Geist, Geist Mono and Instrument Serif are self-hosted: the @font-face rules
-   come from app/fonts.js (next/font), not from this file. The @import of
+   are in fonts/fonts.css (loaded by app/fonts.js), not in this file. The @import of
    fonts.googleapis.com that used to sit here was a render-blocking request
    chain on every page. The family names below are unchanged. */
 
