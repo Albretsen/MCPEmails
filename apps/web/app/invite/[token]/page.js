@@ -34,7 +34,7 @@ function ErrorCard({ title = 'Invite not found', message }) {
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     }}>
       <div style={{ marginBottom: 32 }}>
-        <img className="logo-light" src="/logo-wordmark.svg" alt="MCP Emails" style={{ height: 28, opacity: 0.9 }} /><img className="logo-dark" src="/logo-wordmark-dark.svg" alt="MCP Emails" style={{ height: 28, opacity: 0.9 }} />
+        <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="MCP Emails" style={{ height: 28, opacity: 0.9 }} /><img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="MCP Emails" style={{ height: 28, opacity: 0.9 }} />
       </div>
       <div style={{
         background: '#fff',

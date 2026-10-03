@@ -1021,7 +1021,8 @@ a.review-source:hover { color: var(--fg-1); text-decoration: none; }
 .footer a { display: block; font-family: var(--font-sans); font-size: 14px; color: var(--ink-300); padding: 4px 0; text-decoration: none; }
 .footer a:hover { color: #fff; text-decoration: none; }
 .footer .brand-cell { display: flex; flex-direction: column; gap: 12px; }
-.footer .brand-cell img { height: 28px; align-self: flex-start; }
+/* width: auto keeps the img's width/height attributes a ratio hint only (see img.logo-light in theme.css). */
+.footer .brand-cell img { height: 28px; width: auto; align-self: flex-start; }
 .footer .brand-cell p { margin: 0; font-family: var(--font-sans); font-size: 13.5px; color: var(--ink-400); max-width: 320px; line-height: 1.55; }
 .footer .footer-contact { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
 .footer .footer-copy { display: flex; flex-direction: column; gap: 5px; }

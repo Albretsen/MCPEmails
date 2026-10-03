@@ -54,7 +54,7 @@ export function AdminConsentResult({ status }) {
     <div className="auth-shell">
       <div className="auth-wrap">
         <div className="auth-brand">
-          <img className="logo-light" src="/logo-wordmark.svg" alt="mcpemails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" alt="mcpemails" />
+          <img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="mcpemails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="mcpemails" />
         </div>
 
         <div className="auth-card">

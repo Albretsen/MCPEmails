@@ -1,5 +1,6 @@
 {
   "_about": "Recorded 2026-10-03 with scripts/built-output/browser-logo-box.js against `next start` of the branch at 0cef81f5, BEFORE the wordmark <img> elements were given dimensions. Chrome 152, macOS. Boxes are `x y width height`. `loaded` is the page with the logo present; light and dark measured identical in every field, so one set is stored. `beforeFix.movedOnArrival` is what moved when a not-yet-loaded wordmark arrived: the defect. After the fix `loaded` must be unchanged and nothing may move on arrival. The tab was not visible while recording, so the browser's own layout-shift entries were not available; the boxes are the evidence.",
+  "_afterFix": "Re-measured the same day on the build with width/height on every logo <img> and `width: auto` in CSS: on all six page/viewport pairs, light and dark, `loaded` was identical to the values below, the not-yet-loaded wordmark already had its final box (163.33 x 28 in the nav, 175 x 30 on the auth screens), and nothing moved on arrival.",
   "measurements": [
     {
       "page": "/", "viewport": "1280x800",

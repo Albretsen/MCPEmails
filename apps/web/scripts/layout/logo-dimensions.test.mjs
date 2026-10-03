@@ -70,10 +70,6 @@ const number = (tag, name) => {
 
 const images = logoImages();
 
-// The two assertions below describe the fix and fail on the code as it stands;
-// they are recorded first and switched on by the commit that makes them true.
-const NOT_FIXED_YET = 'the logo images have no dimensions yet';
-
 test('the scan finds the logo images', () => {
   const files = new Set(images.map((image) => image.file));
   assert.ok(images.length >= 30, `only ${images.length} logo <img> tags found`);
@@ -82,7 +78,7 @@ test('the scan finds the logo images', () => {
   }
 });
 
-test('every logo <img> carries width and height attributes in the SVG\'s own aspect ratio', { todo: NOT_FIXED_YET }, () => {
+test('every logo <img> carries width and height attributes in the SVG\'s own aspect ratio', () => {
   const problems = [];
   for (const image of images) {
     if (EXEMPT.has(image.file)) continue;
@@ -116,7 +112,7 @@ function rule(css, selector) {
   return null;
 }
 
-test('CSS keeps the rendered width automatic, so the attributes act as a ratio and nothing else', { todo: NOT_FIXED_YET }, () => {
+test('CSS keeps the rendered width automatic, so the attributes act as a ratio and nothing else', () => {
   const theme = readFileSync(path.join(webRoot, 'styles/theme.css'), 'utf8');
   for (const selector of ['img.logo-light', 'img.logo-dark']) {
     const declarations = rule(theme, selector);

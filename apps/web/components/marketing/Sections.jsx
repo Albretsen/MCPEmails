@@ -39,7 +39,7 @@ export function Nav({ onSignIn, onGetStarted, user }) {
   return (
     <header className="nav">
       <div className="container nav-row">
-        <Link className="brand" href="/" onClick={closeMenu}><img className="logo-light" src="/logo-wordmark.svg" alt="mcpemails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" alt="mcpemails" /></Link>
+        <Link className="brand" href="/" onClick={closeMenu}><img className="logo-light" src="/logo-wordmark.svg" width="280" height="48" alt="mcpemails" /><img className="logo-dark" src="/logo-wordmark-dark.svg" width="280" height="48" alt="mcpemails" /></Link>
         <nav className="nav-links" aria-label="Primary navigation">
           <Link href="/#features">{t('nav.features')}</Link>
           <Link href="/#how">{t('nav.how')}</Link>
@@ -1308,7 +1308,7 @@ export function Footer() {
       <div className="container">
         <div className="footer-grid">
           <div className="brand-cell">
-            <img src="/logo-mark-dark.svg" alt="mcpemails" />
+            <img src="/logo-mark-dark.svg" width="48" height="48" alt="mcpemails" />
             <p>{t('footer.tagline')}</p>
             <div className="footer-contact">
               <FooterCopy icon="mail" label={t('footer.contactLabel')} value={FOOTER_CONTACT_EMAIL} href={`mailto:${FOOTER_CONTACT_EMAIL}`} />
