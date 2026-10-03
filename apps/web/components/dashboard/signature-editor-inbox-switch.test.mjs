@@ -509,6 +509,63 @@ test('failure with a save waiting on A, then a switch to B: B shows no "not save
   assert.deepEqual(view.problems, []);
 });
 
+/**
+ * Whether a mouse can reach `el`. `pointer-events` is inherited, and jsdom's
+ * click() ignores it, so this reads the nearest inline value up the tree: the
+ * only place this form sets it is inline, on the wrapper that dims a disabled
+ * signature.
+ */
+function pointerEvents(el) {
+  for (let node = el; node; node = node.parentElement) {
+    const value = node.style?.pointerEvents;
+    if (value) return value;
+  }
+  return 'auto';
+}
+
+test('failure on a DISABLED signature: "try again" can be clicked with a mouse; the editor area stays inert', async (t) => {
+  const view = await renderInboxes(t);
+  await view.open(1); // Inbox B: signatureEnabled is false.
+  assert.equal(view.enabledBox().checked, false);
+  const wrapper = view.placeholder().parentElement;
+  assert.equal(wrapper.style.pointerEvents, 'none', 'a disabled signature\'s editor area ignores the mouse');
+  assert.equal(wrapper.style.opacity, '0.6');
+  assert.equal(pointerEvents(view.placeholder()), 'none', 'the loading placeholder is inert too');
+
+  await view.fail();
+  await view.settle();
+  const retry = view.container.querySelector('.sig-editor [role="alert"] button');
+  assert.ok(retry);
+  assert.equal(pointerEvents(retry), 'auto',
+    'the retry control must be reachable: with the signature disabled it is the only way to get the editor back');
+  // Nothing else about the disabled wrapper has changed.
+  assert.equal(wrapper.style.pointerEvents, 'none');
+  assert.equal(wrapper.style.opacity, '0.6');
+  assert.equal(pointerEvents(view.container.querySelector('.sig-preview')), 'none');
+
+  await flush(() => retry.click());
+  assert.equal(view.pendingLoads(), 1);
+  await view.arrive();
+  await waitFor(() => view.pm(), { message: 'the editor after retry' });
+  // The editor itself is as inert as it is on main for a disabled signature.
+  assert.equal(pointerEvents(view.pm()), 'none');
+  assert.equal(pointerEvents(view.container.querySelector('.sig-toolbar button[title="Bold"]')), 'none');
+  assert.equal(view.container.querySelector('.sig-toolbar button[title="Bold"]').disabled, true);
+  assert.equal(view.pm().parentElement.parentElement.parentElement, wrapper, 'same wrapper, still dimmed');
+  assert.equal(wrapper.style.pointerEvents, 'none');
+});
+
+test('failure on an ENABLED signature: "try again" is clickable there as well, and the wrapper is untouched', async (t) => {
+  const view = await renderInboxes(t);
+  await view.open(0);
+  await view.fail();
+  await view.settle();
+  const retry = view.container.querySelector('.sig-editor [role="alert"] button');
+  assert.equal(pointerEvents(retry), 'auto');
+  assert.equal(retry.closest('.sig-editor').parentElement.style.pointerEvents, 'auto');
+  assert.equal(retry.closest('.sig-editor').parentElement.style.opacity, '1');
+});
+
 // ===========================================================================
 // The preview while the editor is on its way
 // ===========================================================================

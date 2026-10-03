@@ -2505,7 +2505,13 @@ function SignatureEditor({ inbox, onSave, t }) {
               <button
                 type="button"
                 onClick={retryEditorLoad}
-                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'inherit', font: 'inherit', textDecoration: 'underline' }}
+                // pointerEvents: this box sits inside the wrapper that goes
+                // `pointer-events: none` when the signature is disabled, and
+                // the property is inherited. Without its own value the one
+                // control that can bring the editor back could not be clicked
+                // on a disabled signature. Only this button opts back in; the
+                // wrapper, and the editor once it loads, stay inert.
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'inherit', font: 'inherit', textDecoration: 'underline', pointerEvents: 'auto' }}
               >
                 try again
               </button>.
