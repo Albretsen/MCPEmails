@@ -7,7 +7,9 @@
         "gzip": 513297,
         "brotli": 417909
       },
-      "absent": ["supabase-js"]
+      "absent": [
+        "supabase-js"
+      ]
     },
     "login": {
       "ceiling": {
@@ -67,11 +69,13 @@
     },
     "pricing": {
       "ceiling": {
-        "raw": 858035,
-        "gzip": 247652,
-        "brotli": 211557
+        "raw": 599943,
+        "gzip": 180308,
+        "brotli": 154914
       },
-      "absent": []
+      "absent": [
+        "supabase-js"
+      ]
     },
     "home": {
       "ceiling": {

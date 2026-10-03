@@ -66,7 +66,7 @@
     "test:signature-editor-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/dashboard/signature-editor-ui.test.mjs",
     "test:app-locale": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/i18n/app-locale-provider.test.mjs",
     "test:sidebar-signout": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/dashboard/sidebar-signout.test.mjs components/dashboard/sidebar-signout-lazy.test.mjs",
-    "test:pricing-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/marketing/pricing-client-ui.test.mjs",
+    "test:pricing-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/marketing/pricing-client-ui.test.mjs components/marketing/pricing-client-lazy.test.mjs",
     "bundle:budget": "node scripts/bundle-budget.mjs"
   },
   "dependencies": {
