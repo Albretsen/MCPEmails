@@ -163,6 +163,7 @@ export const ROUTES = [
   ['app/api/admin/experiments/[key]/preview/route.ts', 'arn1', '2+', '-'],
   ['app/api/admin/growth/metric/[key]/route.ts', 'arn1', '2+', '-'],
   ['app/api/admin/usage-exemptions/route.ts', 'arn1', '2+', '-'],
+  ['app/api/analytics/checkout-feedback/route.ts', 'arn1', '~6', '-'],
   ['app/api/analytics/first-tool-reported/route.ts', 'arn1', '2', '-'],
   ['app/api/analytics/multi-inbox-prompt/route.ts', 'arn1', '1', '-'],
   ['app/api/analytics/paywall/route.ts', 'arn1', '1', '-'],

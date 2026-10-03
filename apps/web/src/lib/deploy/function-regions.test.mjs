@@ -35,8 +35,9 @@
 // Verified against real build output on 2026-10-02 (Vercel CLI 54.6.1,
 // @vercel/next 4.17.5): given a vercel.json with per-function regions, an
 // offline `vercel build` writes "regions" into .vc-config.json for every one
-// of the 123 function sources exactly as this resolver predicts, and
-// minimatch 3.1.5 agrees with compilePattern() on all of them.
+// of the function sources exactly as this resolver predicts, and minimatch
+// 10.1.1, the version that CLI resolves for the builder, agrees with
+// compilePattern() on all of them (as does 3.1.5).
 //
 // Run: node --test src/lib/deploy/function-regions.test.mjs
 // ---------------------------------------------------------------------------
