@@ -87,8 +87,20 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
-      - name: npm audit (fails on high or critical)
-        run: npm audit --audit-level=high
+      # DATED EXCEPTIONS (2026-10-03). `npm audit --audit-level=high` became
+      # scripts/audit-with-exceptions.mjs: the same audit of the same whole
+      # lockfile, failing on the same severities, except that one named
+      # advisory may be let through until a date written beside it. It exists
+      # for an advisory with no patched release (the first was braces,
+      # GHSA-vfj7-8cjw-p6xm), which otherwise holds every production deploy for
+      # as long as upstream takes. An exception expires by itself and the job
+      # goes red again; the rules for adding one are at the top of the script.
+      # This is NOT `--omit=dev` by another name: every other advisory, dev or
+      # prod, still fails.
+      - name: audit script self-test
+        run: node --test scripts/audit-with-exceptions.test.mjs
+      - name: npm audit (fails on high or critical, dated exceptions only)
+        run: node scripts/audit-with-exceptions.mjs
 
   typecheck:
     name: Type Check
