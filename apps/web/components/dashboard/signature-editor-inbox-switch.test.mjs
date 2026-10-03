@@ -509,6 +509,136 @@ test('failure with a save waiting on A, then a switch to B: B shows no "not save
   assert.deepEqual(view.problems, []);
 });
 
+// ===========================================================================
+// A cancelled save is not a silent one
+// ===========================================================================
+//
+// When the editor was bundled, Save sent at the click. Now a save clicked
+// while the editor loads can be cancelled by an inbox switch or by closing the
+// modal, and the person would otherwise never learn that the thing they
+// clicked did not happen. It is NOT resurrected (see the top of this file);
+// it is reported, with the same toast the dashboard already shows when a
+// signature save fails on the network, which stays until dismissed and is
+// outside the modal, so it survives the switch or the close that caused it.
+
+const chrome = (await import('../../messages/en/dashboardChrome.json', { with: { type: 'json' } })).default;
+const SAVE_FAILED = chrome.app.signatureSaveFailed;
+const SAVED = chrome.app.signatureSaved;
+
+/** Every toast on screen, oldest first: [variant class, role, message]. */
+function toasts(view) {
+  return [...view.container.querySelectorAll('.toast')].map((el) => [
+    el.className, el.getAttribute('role'), el.querySelector('.toast-msg').textContent,
+  ]);
+}
+const FAILED_TOAST = ['toast toast-error', 'alert', SAVE_FAILED];
+
+test('cancelled by an inbox switch: the "Failed to save signature." toast appears at once, and stays', async (t) => {
+  const view = await renderInboxes(t);
+  await view.open(0);
+  await view.clickSave();
+  assert.deepEqual(toasts(view), [], 'nothing to report while the save is still waiting');
+
+  await view.enterOnRow(1);
+  assert.deepEqual(toasts(view), [FAILED_TOAST], 'the person is told the moment the save is dropped');
+  assert.equal(view.title(), 'bravo');
+  assert.ok(view.container.querySelector('.toast').closest('.modal') === null, 'it is not inside the modal that moved on');
+
+  await view.arrive();
+  await waitFor(() => view.pm(), { message: "B's editor" });
+  await view.settle();
+  assert.deepEqual(toasts(view), [FAILED_TOAST], 'exactly one notice for one dropped save, still there');
+  assert.deepEqual(view.patches(), [], 'and it was not sent after all');
+  assert.equal(view.container.querySelector('details.inbox-sending-details [role="alert"]'), null,
+    "B's own form claims nothing: the notice is about a save B never had");
+  assert.deepEqual(view.problems, []);
+});
+
+test('cancelled by closing the modal: the toast is there after the modal is gone', async (t) => {
+  const view = await renderInboxes(t);
+  await view.open(0);
+  await view.clickSave();
+  await view.close();
+  assert.equal(view.title(), null);
+  assert.deepEqual(toasts(view), [FAILED_TOAST]);
+
+  await view.arrive();
+  await view.settle();
+  assert.deepEqual(toasts(view), [FAILED_TOAST], 'error toasts wait to be dismissed');
+  assert.deepEqual(view.patches(), []);
+  assert.deepEqual(view.problems, []);
+});
+
+test('cancelled by clicking the scrim: same notice', async (t) => {
+  const view = await renderInboxes(t);
+  await view.open(0);
+  await view.clickSave();
+  await flush(() => { view.container.querySelector('.scrim').dispatchEvent(new window.MouseEvent('click', { bubbles: true })); });
+  assert.deepEqual(toasts(view), [FAILED_TOAST]);
+});
+
+test('two saves dropped by A -> B -> A: two notices, one per save', async (t) => {
+  const view = await renderInboxes(t);
+  await view.open(0);
+  await view.clickSave();
+  await view.enterOnRow(1);
+  await view.clickSave();
+  await view.enterOnRow(0);
+  assert.deepEqual(toasts(view), [FAILED_TOAST, FAILED_TOAST]);
+  await view.arrive();
+  await view.settle();
+  assert.deepEqual(view.patches(), []);
+});
+
+test('no notice when nothing was dropped: switching or closing without a waiting save is silent', async (t) => {
+  const view = await renderInboxes(t);
+  await view.open(0);
+  await view.enterOnRow(1);
+  await view.enterOnRow(0);
+  await view.close();
+  await view.arrive();
+  await view.settle();
+  assert.deepEqual(toasts(view), []);
+});
+
+test('no "failed" notice when the waiting save goes through: only "Signature saved."', async (t) => {
+  const view = await renderInboxes(t);
+  await view.open(0);
+  await view.clickSave();
+  await view.arrive();
+  await waitFor(() => view.patches().length > 0, { message: "A's deferred save" });
+  await waitFor(() => toasts(view).length > 0, { message: 'the saved toast' });
+  await view.enterOnRow(1); // Switching after it was sent drops nothing.
+  await view.close();
+  await view.settle();
+  assert.deepEqual(toasts(view).map((x) => x[2]), [SAVED]);
+});
+
+test('no toast when the editor was already loaded: that save is sent at the click, as on main', async (t) => {
+  const view = await renderInboxes(t, { preloaded: true });
+  await view.open(0);
+  await view.clickSave();
+  await view.enterOnRow(1);
+  await view.close();
+  await waitFor(() => view.patches().length > 0, { message: "A's save" });
+  await view.settle();
+  assert.deepEqual(view.patches(), [['/api/inboxes/ib-A', SAVE_OF_A]]);
+  assert.deepEqual(toasts(view).filter((x) => x[2] === SAVE_FAILED), []);
+});
+
+test('a save released by a FAILED load is reported in the form, not by a toast, and a later switch adds nothing', async (t) => {
+  const view = await renderInboxes(t);
+  await view.open(0);
+  await view.clickSave();
+  await view.fail();
+  await view.settle();
+  assert.ok(view.container.textContent.includes('Not saved.'));
+  assert.deepEqual(toasts(view), [], 'one report per event: the form already says it');
+  await view.enterOnRow(1);
+  await view.settle();
+  assert.deepEqual(toasts(view), [], 'that save is no longer waiting, so the switch drops nothing');
+});
+
 /**
  * Whether a mouse can reach `el`. `pointer-events` is inherited, and jsdom's
  * click() ignores it, so this reads the nearest inline value up the tree: the

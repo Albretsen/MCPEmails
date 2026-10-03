@@ -2264,17 +2264,30 @@ function SignatureEditor({ inbox, onSave, t }) {
   const WAIT_CANCELLED = 'cancelled';
   const WAIT_LOAD_FAILED = 'load-failed';
 
+  // A cancelled save is not resurrected, but it is not silent either. When the
+  // editor was bundled, Save sent at the click; someone who clicked Save and
+  // then moved on must be told it did not happen. The dashboard's toast is
+  // used, with the string it already shows when a signature save fails on the
+  // network: it lives outside the modal, so it is still there after the switch
+  // or the close that caused it, and error toasts stay until dismissed.
+  const { toast } = useToast();
+  const trChrome = useTranslations('dashboardChrome');
+
   useEffect(() => {
     mounted.current = true;
     shownInboxId.current = inbox.id;
     return () => {
       // Runs when the inbox changes and when the form unmounts (modal closed,
       // page left). On unmount `mounted` goes false first, so the saves
-      // released here touch no state.
+      // released here touch no state of this form.
       mounted.current = false;
-      for (const waiter of editorWaiters.current.splice(0)) waiter.reject(WAIT_CANCELLED);
+      const dropped = editorWaiters.current.splice(0);
+      for (const waiter of dropped) {
+        waiter.reject(WAIT_CANCELLED);
+        toast({ message: trChrome('app.signatureSaveFailed'), variant: 'error' });
+      }
     };
-  }, [inbox.id]);
+  }, [inbox.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (editorModule) return undefined;
