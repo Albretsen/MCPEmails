@@ -139,6 +139,7 @@ import {
   type ProviderErrorBoundary,
   providerErrorLogCode,
 } from "./provider-error.ts";
+import { mapWithConcurrency } from "./provider-concurrency.ts";
 import {
   type FolderResolveAuditDetails,
   folderResolveAuditDetails,
@@ -10440,10 +10441,18 @@ async function listGmailMessages(
   // Strongest evidence first: when Gmail handed back no nextPageToken, the walk
   // above enumerated the ENTIRE label and allRefs.length is a measured, exact
   // count — better than any estimate and immune to the counter quirks below.
+  //
+  // labels.get is STARTED here and awaited further down, so it shares a round
+  // trip with the per-message metadata gets instead of preceding them. The
+  // closure cannot reject (its own try/catch), and it is the only writer of
+  // `total` / `totalIsEstimate` after this point; both are read only once it
+  // has been awaited.
+  let exactTotalLookup: Promise<void> = Promise.resolve();
   if (!nextPageToken) {
     total = allRefs.length;
     totalIsEstimate = false;
   } else {
+    exactTotalLookup = (async () => {
     try {
       if (label && !label.includes(" ")) {
         const labelResp = await fetch(
@@ -10480,6 +10489,7 @@ async function listGmailMessages(
     } catch {
       // Keep the estimate-based total; this enhancement must never break listing.
     }
+    })();
   }
   // More pages remain only if Gmail still has a cursor beyond what we fetched,
   // or we somehow over-fetched past this page. When Gmail ran out of pages
@@ -10489,6 +10499,7 @@ async function listGmailMessages(
   const pageRefs = allRefs.slice(offset, offset + limit);
 
   if (pageRefs.length === 0) {
+    await exactTotalLookup;
     return {
       messages: [],
       total,
@@ -10500,7 +10511,7 @@ async function listGmailMessages(
 
   // Fetch message metadata in parallel.
   // format=metadata returns headers + snippet without downloading body content.
-  const metaResults = await Promise.all(
+  const metaLookup = Promise.all(
     pageRefs.map(({ id }) => {
       const mp = new URLSearchParams({ format: "metadata" });
       // Multiple metadataHeaders values must be repeated params.
@@ -10513,6 +10524,14 @@ async function listGmailMessages(
       ).then((r) => r.json() as Promise<GmailMessageMeta>);
     }),
   );
+  // labels.get first, then the rows: the order they used to complete in. If a
+  // row get fails, the failure is still thrown from here, and only after
+  // labels.get has settled, so no request is left running behind an error.
+  // The no-op handler only keeps that failure from being reported as unhandled
+  // while labels.get is awaited; `await metaLookup` below still throws it.
+  metaLookup.catch(() => {});
+  await exactTotalLookup;
+  const metaResults = await metaLookup;
 
   const messages: EmailSummary[] = metaResults.map((msg, i) => {
     const hdrs: Record<string, string> = {};
@@ -24630,6 +24649,14 @@ async function imapDeleteDraft(
 
 // ── Gmail draft helpers ───────────────────────────────────────────────────────
 
+/**
+ * How many per-draft `messages.get` calls draft_list keeps in flight. Gmail
+ * meters concurrent requests per user and answers the excess with 429, which
+ * this listing would silently turn into a missing draft, so the fan-out is
+ * small and bounded rather than "all of them".
+ */
+const GMAIL_DRAFT_METADATA_CONCURRENCY = 5;
+
 async function gmailListDrafts(
   inbox: InboxRow,
   limit: number,
@@ -24648,38 +24675,47 @@ async function gmailListDrafts(
   };
   const drafts = listData.drafts ?? [];
 
-  const summaries: DraftSummary[] = [];
-  for (const d of drafts) {
-    try {
-      const msgResp = await fetch(
-        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${d.message.id}` +
-        `?format=metadata&metadataHeaders=Subject&metadataHeaders=To&metadataHeaders=Cc&metadataHeaders=Date`,
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-      if (!msgResp.ok) continue;
-      const msgData = (await msgResp.json()) as {
-        payload?: { headers?: { name: string; value: string }[] };
-        internalDate?: string;
-      };
-      const hdr = msgData.payload?.headers ?? [];
-      const subject = hdr.find((h) => h.name === "Subject")?.value ?? "(no subject)";
-      const toRaw = hdr.find((h) => h.name === "To")?.value ?? "";
-      const ccRaw = hdr.find((h) => h.name === "Cc")?.value ?? "";
-      const internalDate = msgData.internalDate
-        ? new Date(parseInt(msgData.internalDate, 10)).toISOString()
-        : new Date().toISOString();
-      summaries.push({
-        draft_id: d.id,
-        subject,
-        to: parseAddressList(toRaw),
-        cc: parseAddressList(ccRaw),
-        created_at: internalDate,
-      });
-    } catch {
-      // Skip drafts that fail to fetch metadata.
-    }
-  }
-  return summaries;
+  // One messages.get per draft, a few at a time rather than one after another
+  // (20 drafts used to be 20 round trips end to end). The summaries keep the
+  // order drafts.list gave, and a draft whose get fails in any way is left
+  // out, exactly as when this was a serial loop: nothing a single get does can
+  // fail the listing.
+  const fetched = await mapWithConcurrency(
+    drafts,
+    GMAIL_DRAFT_METADATA_CONCURRENCY,
+    async (d): Promise<DraftSummary | null> => {
+      try {
+        const msgResp = await fetch(
+          `https://gmail.googleapis.com/gmail/v1/users/me/messages/${d.message.id}` +
+          `?format=metadata&metadataHeaders=Subject&metadataHeaders=To&metadataHeaders=Cc&metadataHeaders=Date`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        if (!msgResp.ok) return null;
+        const msgData = (await msgResp.json()) as {
+          payload?: { headers?: { name: string; value: string }[] };
+          internalDate?: string;
+        };
+        const hdr = msgData.payload?.headers ?? [];
+        const subject = hdr.find((h) => h.name === "Subject")?.value ?? "(no subject)";
+        const toRaw = hdr.find((h) => h.name === "To")?.value ?? "";
+        const ccRaw = hdr.find((h) => h.name === "Cc")?.value ?? "";
+        const internalDate = msgData.internalDate
+          ? new Date(parseInt(msgData.internalDate, 10)).toISOString()
+          : new Date().toISOString();
+        return {
+          draft_id: d.id,
+          subject,
+          to: parseAddressList(toRaw),
+          cc: parseAddressList(ccRaw),
+          created_at: internalDate,
+        };
+      } catch {
+        // Skip drafts that fail to fetch metadata.
+        return null;
+      }
+    },
+  );
+  return fetched.filter((summary): summary is DraftSummary => summary !== null);
 }
 
 /**
@@ -32106,3 +32142,12 @@ export {
   toolsForListing,
   validateInputSchema,
 };
+
+// Exported for provider-call-baseline.test.ts and the provider-concurrency
+// tests, and for nothing else. These are the three executors whose provider
+// calls those suites pin (draft_list, email_list, email_read_batch). A fake
+// `fetch` answers Gmail, Graph and PostgREST, so the assertions are on the
+// tool result the executor returns and on the requests it issued. A separate
+// statement rather than three more names in the block above, so the two do not
+// collide when another branch edits that list.
+export { executeListDrafts, executeListInbox, executeReadEmails };

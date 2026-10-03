@@ -41,6 +41,8 @@
     "test:oauth-revoke": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/oauth/revocation.test.ts",
     "test:oauth-presets": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/oauth/consent-presets.test.ts",
     "test:oauth-metadata": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/oauth/metadata.test.ts",
+    "test:oauth-discovery": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs app/.well-known/discovery-documents.test.ts",
+    "test:function-regions": "node --test src/lib/deploy/function-regions.test.mjs",
     "test:queuey": "node --test --experimental-strip-types src/lib/queuey/verify-delivery.test.ts",
     "test:api-404": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/api/unmatched-api-route.test.ts",
     "test:purchase-email": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/email/purchase-confirmation.test.ts",
@@ -62,7 +64,12 @@
     "test:segment": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/segment/record-segment.test.ts src/lib/analytics/multi-inbox-prompt.test.ts",
     "test:connect-multi-mailbox": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/connect/multi-mailbox.test.ts",
     "test:marketing-consent": "node --test src/lib/marketing-consent.test.mjs",
-    "test:signup-consent-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/auth/signup-consent-ui.test.mjs"
+    "test:signup-consent-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/auth/signup-consent-ui.test.mjs",
+    "test:signature-editor-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/dashboard/signature-editor-ui.test.mjs components/dashboard/signature-editor-lazy.test.mjs components/dashboard/signature-editor-loader.test.mjs components/dashboard/signature-editor-inbox-switch.test.mjs components/dashboard/signature-preview-sanitised.test.mjs",
+    "test:app-locale": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/i18n/app-locale-provider.test.mjs",
+    "test:sidebar-signout": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/dashboard/sidebar-signout.test.mjs",
+    "test:pricing-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/marketing/pricing-client-ui.test.mjs",
+    "bundle:budget": "node scripts/bundle-budget.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
