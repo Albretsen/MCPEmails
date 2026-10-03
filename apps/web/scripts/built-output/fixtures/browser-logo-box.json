@@ -1,0 +1,36 @@
+{
+  "_about": "Recorded 2026-10-03 with scripts/built-output/browser-logo-box.js against `next start` of the branch at 0cef81f5, BEFORE the wordmark <img> elements were given dimensions. Chrome 152, macOS. Boxes are `x y width height`. `loaded` is the page with the logo present; light and dark measured identical in every field, so one set is stored. `beforeFix.movedOnArrival` is what moved when a not-yet-loaded wordmark arrived: the defect. After the fix `loaded` must be unchanged and nothing may move on arrival. The tab was not visible while recording, so the browser's own layout-shift entries were not available; the boxes are the evidence.",
+  "_afterFix": "Re-measured the same day on the build with width/height on every logo <img> and `width: auto` in CSS: on all six page/viewport pairs, light and dark, `loaded` was identical to the values below, the not-yet-loaded wordmark already had its final box (163.33 x 28 in the nav, 175 x 30 on the auth screens), and nothing moved on arrival.",
+  "measurements": [
+    {
+      "page": "/", "viewport": "1280x800",
+      "loaded": { "logo": "64.5 18 163.33 28", ".nav .nav-links": "255.83 21.5 503.96 21", ".nav .nav-cta": "983.54 14 216.96 36", ".nav .nav-hamburger": "0 0 0 0", ".nav .btn-primary": "1066.41 14 134.09 36", "h1": "64.5 145 557.27 131.55" },
+      "beforeFix": { "movedOnArrival": { "logo": "64.5 18 0 28 -> 64.5 18 163.33 28", ".nav .nav-links": "92.5 21.5 503.96 21 -> 255.83 21.5 503.96 21" } }
+    },
+    {
+      "page": "/pricing", "viewport": "1280x800",
+      "loaded": { "logo": "64.5 18 163.33 28", ".nav .nav-links": "255.83 21.5 503.96 21", ".nav .nav-cta": "983.54 14 216.96 36", ".nav .nav-hamburger": "0 0 0 0", ".nav .btn-primary": "1066.41 14 134.09 36", "h1": "64.5 167 1136 117.59" },
+      "beforeFix": { "movedOnArrival": { "logo": "64.5 18 0 28 -> 64.5 18 163.33 28", ".nav .nav-links": "92.5 21.5 503.96 21 -> 255.83 21.5 503.96 21" } }
+    },
+    {
+      "page": "/signup", "viewport": "1280x800",
+      "loaded": { "logo": "436.5 116.25 175 30", ".auth-back": "436.5 56.75 104.55 19.5", ".auth-card": "436.5 180.75 392 580.69", "h1": "469.5 213.75 326 36" },
+      "beforeFix": { "movedOnArrival": { "logo": "436.5 116.25 0 30 -> 436.5 116.25 175 30" } }
+    },
+    {
+      "page": "/", "viewport": "375x812",
+      "loaded": { "logo": "16 14 163.33 28", ".nav .nav-links": "0 0 0 0", ".nav .nav-cta": "0 0 0 0", ".nav .nav-hamburger": "187.33 6 44 44", ".nav .btn-primary": "0 0 0 0", "h1": "16 105 343 73.94" },
+      "beforeFix": { "movedOnArrival": { "logo": "16 14 0 28 -> 16 14 163.33 28", ".nav .nav-hamburger": "24 6 44 44 -> 187.33 6 44 44" } }
+    },
+    {
+      "page": "/pricing", "viewport": "375x812",
+      "loaded": { "logo": "16 14 163.33 28", ".nav .nav-links": "0 0 0 0", ".nav .nav-cta": "0 0 0 0", ".nav .nav-hamburger": "187.33 6 44 44", ".nav .btn-primary": "0 0 0 0", "h1": "16 135 343 88.2" },
+      "beforeFix": { "movedOnArrival": { "logo": "16 14 0 28 -> 16 14 163.33 28", ".nav .nav-hamburger": "24 6 44 44 -> 187.33 6 44 44" } }
+    },
+    {
+      "page": "/signup", "viewport": "375x812",
+      "loaded": { "logo": "16 64.25 175 30", ".auth-back": "16 24.75 104.55 19.5", ".auth-card": "16 120.75 343 578.19", "h1": "33 141.75 309 31.5" },
+      "beforeFix": { "movedOnArrival": { "logo": "16 64.25 0 30 -> 16 64.25 175 30" } }
+    }
+  ]
+}

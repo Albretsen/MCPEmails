@@ -1,0 +1,177 @@
+AI Email for Business: Every Company Mailbox on One Agent · mcpemails
+[meta description] One operator, every company mailbox. Connect info@, sales@ and invoices@ over IMAP, Gmail, Microsoft 365 or any mail host, and work them all from Claude or any MCP client.
+[meta og:title] AI Email for Business: Every Company Mailbox on One Agent · mcpemails
+[meta og:description] One operator, every company mailbox. Connect info@, sales@ and invoices@ over IMAP, Gmail, Microsoft 365 or any mail host, and work them all from Claude or any MCP client.
+[meta og:locale] en_US
+[meta twitter:title] AI Email for Business: Every Company Mailbox on One Agent · mcpemails
+[meta twitter:description] One operator, every company mailbox. Connect info@, sales@ and invoices@ over IMAP, Gmail, Microsoft 365 or any mail host, and work them all from Claude or any MCP client.
+[alt] mcpemails
+[alt] mcpemails
+[aria-label] Primary navigation
+Features
+How it works
+Pricing
+Compare
+Docs
+Self-host
+Blog
+Sign in
+Get started free
+[aria-label] Open navigation menu
+For the person who runs the company's email
+Every company mailbox,
+one operator, one agent
+info@, sales@, invoices@, support@ and your own address usually land on the same person. mcpemails connects all of them to Claude, Cursor, ChatGPT or any MCP client, so you read, answer, forward and file across every address from one conversation. It works with whoever hosts your mail, and you can hold every outgoing message for your approval.
+Connect your first mailbox free
+See what it does
+The job
+Five addresses, one person answering them
+A small company has more mailboxes than people. Each one is a separate login, a separate tab, and one more place where a customer can go unanswered.
+01
+Coverage
+Ask once, check every address
+Ask your agent to
+go through sales@, info@ and support@ and list what is still waiting for a reply
+. It reads each connected mailbox live and brings back one list, so nothing sits unseen in the address nobody opened today.
+02
+Right sender
+Replies leave from the right address
+Each mailbox keeps
+its own sender name and signature
+, and its mail goes out through that mailbox's own provider or SMTP server. An answer to an invoice question comes from invoices@, signed the way invoices@ signs.
+03
+Routine
+Put the routine on a schedule
+Recurring chores can run as
+triage automations
+: a saved search plus one fixed action (move, label, mark as read, forward or draft a reply) on a cadence, with no AI model in the loop. An automation can never delete mail, and a forward it queues always waits for your approval.
+A day across the company's mailboxes
+Real prompts operators type
+No new app to learn. You talk to your AI client, and it works inside the real mailboxes.
+>_
+Go through sales@ and info@ and list every enquiry from this week that nobody has answered.
+>_
+Forward this month's invoices from invoices@ to our accountant, attachments included.
+>_
+Draft a reply from support@ to the delivery complaint, and match the tone of our last reply to that customer.
+>_
+Search every mailbox for anything from northwind-supplies.example and tell me where the order stands.
+>_
+Move every supplier statement in invoices@ into a Statements folder.
+>_
+Schedule the price update to go out from sales@ on Monday at 8am.
+What it actually does
+Real mailboxes, not a read-only peek
+The same tools work on every mailbox you connect. With several connected, each call names the mailbox it acts on.
+Read and search
+List, read and search each connected mailbox, fetched live from the provider every time.
+Send, reply and forward
+Send new mail, reply in the thread, or forward with the original attachments intact, from the address the mail belongs to.
+Schedule
+Queue a message to go out later, and cancel it any time before it is sent.
+Organize
+Move, copy, flag, archive and label messages, and create the folders to file them in.
+Control
+You stay the one who presses send
+Letting an agent into the company's mail only works if the limits are real. These are enforced on our server, not suggested to the model.
+Approval hold on outgoing mail
+Turn it on per mailbox and every send, reply, forward, draft send and scheduled send waits in your dashboard until you approve or reject it. It is included on every plan, Free too.
+The mail it reads is never stored
+Messages are fetched live from your provider for each request and handed to your AI client, with nothing kept between calls. What we store per mailbox is the encrypted token or password. A message you schedule for later is the exception: we store it until it is sent, and keep a record in your history afterwards.
+Keys limited to the mailboxes you pick
+An API key can be restricted to selected mailboxes and to the permissions it needs. A key made for triaging support@ cannot reach invoices@, and a key without the send permission cannot send at all.
+Your mail server stays in charge
+Mail is sent through your own provider or SMTP server, never from a mail server of ours. Changing a mailbox password, revoking its app password, or removing access in your Google or Microsoft account cuts the agent off.
+Read how security works
+Any host
+Connect every mailbox the company runs, whoever hosts it
+Most company mail lives with the web host or the domain registrar, and that is fine. Any mailbox that speaks IMAP and SMTP on the standard ports connects with its address, host and password. IONOS, Hostinger, OVH, Namecheap and other common hosts are recognised from the address and filled in for you. Gmail and Google Workspace connect with an app password or by signing in with Google. Microsoft 365 and Outlook connect by signing in with Microsoft; on a company Microsoft 365 account, your IT admin may need to approve mcpemails once for the whole organisation. iCloud, Fastmail, Yahoo, Zoho and Yandex connect with an app password.
+Connect any IMAP mailbox
+Connect Gmail or Google Workspace
+Connect Microsoft 365
+Connect IONOS
+See how each provider connects
+Pricing
+Pick the plan by counting mailboxes
+Free, Personal and Pro are all one login. What changes is how many mailboxes that login can connect.
+Free: one mailbox
+Start with the busiest address. 150 email actions a month, the first 7 days uncounted, no card required.
+Personal, $9 a month: up to three
+For a company with two or three addresses. No monthly action cap, a higher burst rate limit and email support.
+Pro, $15 a month: four or more
+Every mailbox the business runs, with no limit on how many, still on one login. The plan for a company with an address per department.
+Team, at $79 a month, is for when several people each need their own login, with roles and a separate workspace per client.
+Compare all plans
+Operator questions
+What operators ask before connecting
+The practical objections, answered straight.
+We are a company, not an individual. Is Pro really the right plan?
+Yes, if one person operates the mailboxes. Pro is one login with no limit on connected mailboxes, so a single operator can run info@, sales@, invoices@ and support@ from one agent. Team is for when several people each need to sign in, with roles and a separate workspace per client.
+Our email is with our web host, not Gmail. Will it work?
+Almost certainly. Any mailbox that speaks IMAP and SMTP on the standard ports connects with its address, host and password, and common hosts are recognised from the address so the settings fill themselves in. The server has to be reachable from the public internet, and a mailbox that will only accept an OAuth sign-in over IMAP cannot be connected this way. If your company mail is on Microsoft 365, connect it as Outlook instead: you sign in with Microsoft, and your IT admin may need to approve mcpemails once for the whole organisation.
+Does the agent send from the right address?
+Yes. With more than one mailbox connected, every tool call names the mailbox it acts on, and each mailbox has its own sender name and signature. A reply to a thread in sales@ goes out from sales@, through that mailbox's own mail server.
+Can I stop it sending anything without me?
+Yes. Turn on the approval hold for a mailbox and every outgoing message from it waits in your dashboard until you approve or reject it. You can also give an AI client an API key that has no send permission at all. Both are available on every plan.
+Is company email stored on your servers?
+No. The mail your agent reads is fetched live from your provider for each request and is not kept. What we store is the encrypted token or password for each mailbox. A message you schedule for later is the exception: we store it until it is sent, and keep a record in your history afterwards.
+What if a colleague needs access too?
+Free, Personal and Pro are single-login plans. When a second person needs a login of their own, Team adds members with roles. Until then, one operator on Pro covers every mailbox.
+Put every company mailbox on one agent
+Connect the first mailbox free, no card required. Add the rest when you are ready: three on Personal, all of them on Pro.
+Connect your first mailbox free
+Read the docs
+[alt] mcpemails
+A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
+Contact
+hello@mcpemails.com
+[aria-label] Copy Contact
+Copy
+MCP endpoint
+https://mcpemails.com/api/mcp
+[aria-label] Copy MCP endpoint
+Copy
+[aria-label] Language
+English
+Norsk
+Español
+Français
+中文
+Product
+Features
+How it works
+Pricing
+Docs
+Self-hosting
+For founders
+For business
+Resources
+Tool reference
+Quickstart
+OAuth connection
+Provider support
+MCP client setup
+Blog
+Changelog
+Connect
+All email providers
+Connect any IMAP inbox
+Connect Gmail
+Connect Outlook
+Connect Fastmail
+Connect iCloud
+Connect Yahoo
+Connect Zoho
+Connect Yandex
+vs native connectors
+Best email MCP servers
+Company
+About
+Security
+Status
+Privacy
+Terms
+© 2026 mcpemails.
+Email fetched live, never stored · Credentials encrypted at rest
+MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.
+[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://mcpemails.com/for/business","url":"https://mcpemails.com/for/business","name":"AI Email for Business: Every Company Mailbox on One Agent","description":"One operator, every company mailbox. Connect info@, sales@ and invoices@ over IMAP, Gmail, Microsoft 365 or any mail host, and work them all from Claude or any MCP client.","inLanguage":"en","isPartOf":{"@id":"https://mcpemails.com/#website"},"breadcrumb":{"@id":"https://mcpemails.com/for/business#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://mcpemails.com/for/business#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"mcpemails","item":"https://mcpemails.com"},{"@type":"ListItem","position":2,"name":"AI Email for Business: Every Company Mailbox on One Agent"}]}]}

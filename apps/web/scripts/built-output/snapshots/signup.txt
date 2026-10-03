@@ -1,0 +1,30 @@
+Create your account · mcpemails · mcpemails
+[meta description] Create your mcpemails account and connect your first inbox
+[meta og:title] Email MCP: Connect Gmail, Outlook & IMAP to Claude | mcpemails
+[meta og:description] Connect Gmail, Outlook, Fastmail, iCloud, or any IMAP email to Claude, Cursor, ChatGPT, and MCP clients. Read, send, search, and organize email live.
+[meta og:site_name] mcpemails
+[meta twitter:title] Email MCP: Connect Gmail, Outlook & IMAP to Claude | mcpemails
+[meta twitter:description] Connect Gmail, Outlook, Fastmail, iCloud, or any IMAP email to Claude, Cursor, ChatGPT, and MCP clients. Read, send, search, and organize email live.
+[aria-label] Toggle theme
+[title] Toggle theme
+Back to home
+[alt] mcpemails
+[alt] mcpemails
+Create your account
+Continue with Google
+Continue with GitHub
+or
+Email
+[placeholder] you@example.com
+Password
+[placeholder] 8+ characters
+Email me product tips and offers. Unsubscribe anytime.
+Create account
+By creating an account you agree to our
+Terms
+. Our
+Privacy Policy
+explains how we handle your data.
+Already have an account?
+Sign in
+We never store your email content. GDPR-friendly.

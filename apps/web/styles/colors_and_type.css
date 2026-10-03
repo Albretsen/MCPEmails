@@ -6,9 +6,11 @@
    Geist for UI/mono. Instrument Serif for editorial display.
    ========================================================= */
 
-/* ---------- Webfont imports (Google Fonts) ----------
-   If you have local copies in /fonts, swap these for @font-face. */
-@import url("https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap");
+/* ---------- Webfonts ----------
+   Geist, Geist Mono and Instrument Serif are self-hosted: the @font-face rules
+   are in fonts/fonts.css (loaded by app/fonts.js), not in this file. The @import of
+   fonts.googleapis.com that used to sit here was a render-blocking request
+   chain on every page. The family names below are unchanged. */
 
 :root {
   /* ============== COLOR TOKENS: RAW SCALE ============== */

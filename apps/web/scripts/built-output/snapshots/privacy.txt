@@ -1,0 +1,314 @@
+Privacy Policy · mcpemails
+[meta description] How MCPEmails collects, uses, and protects your data. Our privacy policy for users, workspace owners, and AI agents.
+[meta og:title] Privacy Policy · mcpemails
+[meta og:description] How MCPEmails collects, uses, and protects your data. Our privacy policy for users, workspace owners, and AI agents.
+[meta og:locale] en_US
+[meta twitter:title] Privacy Policy · mcpemails
+[meta twitter:description] How MCPEmails collects, uses, and protects your data. Our privacy policy for users, workspace owners, and AI agents.
+[alt] mcpemails
+[alt] mcpemails
+[aria-label] Primary navigation
+Features
+How it works
+Pricing
+Compare
+Docs
+Self-host
+Blog
+Sign in
+Get started free
+[aria-label] Open navigation menu
+Legal
+Privacy Policy
+We built MCPEmails with privacy as a first principle. The email content your agent reads is never stored on our servers; it passes through to your agent and disappears. The one exception is a message you schedule to send later, which we hold only until it is delivered. This policy explains what we do collect, and why.
+Last updated: September 29, 2026 · Effective: May 25, 2026
+1. Who We Are
+The MCPEmails service at
+mcpemails.com
+is operated by Albretsen Consulting, a Norwegian sole proprietorship (enkeltpersonforetak) owned and run by Asgeir Albretsen, trading as "MCPEmails". In this policy, "MCPEmails", "we", "us", and "our" all mean Albretsen Consulting. The service includes all dashboard pages, API endpoints, and the Model Context Protocol (MCP) server that AI agents use to access connected email accounts.
+For the purposes of applicable data protection law (including the EU General Data Protection Regulation, "GDPR"), MCPEmails is the data controller for account and usage data. For email content, we act as a data processor on your behalf: we transmit content you authorise us to retrieve, and we do not store it.
+Service provider identification: Albretsen Consulting is a sole proprietorship (enkeltpersonforetak) established in Norway and operated by Asgeir Albretsen. It is entered in Enhetsregisteret, the Norwegian Central Coordinating Register for Legal Entities operated by Brønnøysundregistrene, under organisation number
+926 646 753
+. Our registered address is Håsteins gate 9, 5160 Laksevåg, Norway.
+Albretsen Consulting is not currently registered in the Norwegian VAT register (Merverdiavgiftsregisteret). You can reach us about privacy at
+privacy@mcpemails.com
+.
+2. Data We Collect
+2.1 Account data
+When you create an account we collect your email address and a hashed password (we never store plaintext passwords). You may optionally provide a display name. This data is required to create and maintain your account. If you tick the box on the signup form asking for product tips and offers by email, we also record that you did, when, and which wording you saw.
+2.2 Workspace and configuration data
+We store the workspace name you choose, and the configuration of each connected inbox (provider type, email address, OAuth status, and connection timestamp). We do
+not
+store OAuth access tokens or app passwords in plaintext. They are encrypted with AES-256-GCM before being written to the database, and the encryption key is stored in a separate secrets vault.
+2.3 API keys
+We store a SHA-256 hash of each API key you create, along with the key's name, scopes, creation timestamp, and last-used timestamp. The raw key value is shown to you exactly once at creation time and is never stored in recoverable form.
+2.4 Usage and audit logs
+For every MCP tool call your agent makes, we record: the tool name (e.g.
+email_read
+), the API key that made the call, the inbox that was accessed, the timestamp, and whether the call succeeded. We do
+not
+record email subjects, bodies, recipients, or any other email content in these logs.
+2.5 Email content: not stored
+When your agent calls
+email_read
+(to list, read, or search) or any other read tool, we fetch the requested content live from your email provider and return it to your agent in the same HTTP response. That content is never written to disk, cached, or logged. Once the HTTP response is sent, we hold no copy of any email body, subject, attachment, or contact detail. The one exception is scheduled sends: when you ask your agent to schedule a message for future delivery, we store that outgoing message (its recipients, subject, body, and any attachments) in our database until it is sent, and we retain the record afterwards for audit and troubleshooting. This applies only to messages you explicitly schedule; mail your agent reads or sends immediately is never stored.
+Your email content is only ever sent to the MCP client or AI agent that
+you
+have connected and are operating (for example Claude, Cursor, or another MCP client of your choosing). When you invoke a tool, MCPEmails transmits the requested content to that client so it can fulfil your request. MCPEmails does not send your email content to any AI provider of its own choosing. Once the content reaches your chosen client, it is governed by that client's or AI provider's own privacy policy and terms, which you are responsible for reviewing. MCPEmails acts only as a conduit and retains no copy of the content.
+2.6 Technical and operational data
+We collect standard server-side operational data including IP addresses (for rate limiting and abuse prevention), request timestamps, HTTP status codes, and error types. This data is retained in aggregated, anonymised form and is not linked to individual accounts after 30 days.
+2.7 Cookies and local storage
+The dashboard sets one first-party session cookie issued by Supabase Auth to keep you signed in. If you tick the marketing email box on the signup form and then continue with Google or GitHub, we also set a short-lived first-party cookie (
+mcpe_signup_mc
+) that carries that choice through the sign-in redirect. It expires after 15 minutes and is deleted as soon as you return. We do not use tracking cookies, advertising cookies, or any third-party cookies. We store two small first-party values in your browser's local storage and nowhere else: your theme preference (
+mcpe-theme
+) and a record of how you first reached the site (
+mcpe-acquisition
+). The second holds only a coarse traffic-source category (for example
+reddit
+or
+organic_google
+) and the kind of page you landed on, never an identifier, a search term, or a full URL. It is kept for up to 30 days, and it is not used to track you across other sites.
+2.8 Product analytics
+We use Vercel Web Analytics for privacy-preserving, cookieless product analytics. We measure page visits and a small setup funnel (signup, inbox connection, MCP connection, and first successful tool use) with only documented aggregate categories such as provider, client, connection method, and access profile. We never send email content, addresses, API keys, OAuth tokens, workspace or user IDs, MCP request data, prompts, or mailbox metadata. Vercel's retention and processing details are available at
+vercel.com/docs/analytics
+. Because this configuration is cookieless and uses no non-essential identifier, no consent banner is required under our selected policy.
+3. How We Use Your Data
+We use the data described above for the following purposes:
+3.1 Providing the service
+We use your account data to authenticate you, your workspace configuration to route MCP tool calls to the correct email provider, and your API keys to authorise agent requests. Without this data the service cannot function. The legal basis under GDPR is
+performance of a contract
+.
+3.2 Security and abuse prevention
+We use IP addresses, request rates, and error patterns to detect and block abusive activity, enforce rate limits, and protect the availability of the service for all users. The legal basis is our
+legitimate interests
+in operating a secure service.
+3.3 Usage analytics and product improvement
+We use aggregated, anonymised usage data (tool call counts, error rates, latency) to understand how the service is used and to prioritise improvements. Analytics stays aggregated: we do not use individual-level usage data for this purpose. Individual account and usage signals are used only to enforce plan limits (section 3.4) and, if you opted in, to choose which marketing email to send you (section 3.9). The legal basis is our
+legitimate interests
+in improving the service.
+3.4 Billing and plan enforcement
+We use usage counts to determine whether your workspace has reached plan limits and to calculate your invoice on paid plans. The legal basis is
+performance of a contract
+.
+3.5 Legal compliance
+We may process and disclose data where required by applicable law, court order, or regulatory authority. The legal basis is
+compliance with a legal obligation
+.
+3.6 What we will never do
+Sell your personal data or usage data to third parties.
+Use your email content for training AI models.
+Use your data to serve you advertising.
+Share your data with third parties for their own marketing purposes.
+3.7 Google API Services: Limited Use
+MCPEmails' use and transfer to any other app of information received from Google APIs (including the Gmail API) will adhere to the
+Google API Services User Data Policy
+, including the
+Limited Use
+requirements.
+When you connect a Gmail account, you grant MCPEmails the following Gmail scopes. We request each scope solely to provide the features you invoke through your AI agent, and we use them only on your behalf:
+gmail.readonly
+: list messages and read message contents so your agent can search, read, and summarise email at your request.
+gmail.send
+: compose and send messages that your agent creates at your request.
+gmail.modify
+: organise your mail at your direction, including applying and removing labels, marking messages read or unread, archiving messages, moving messages between folders, and moving messages to trash.
+Consistent with the Limited Use requirements, MCPEmails:
+uses Google user data only to provide and improve the user-facing features described above;
+does not transfer or sell Google user data to third parties, data brokers, or advertising networks;
+does not use Google user data for serving advertisements;
+does not use Google user data to develop, improve, or train generalised or non-personalised AI or machine-learning models;
+does not allow humans to read Google user data unless (a) you give explicit consent for specific messages, (b) it is necessary for security purposes such as investigating abuse, (c) it is required to comply with applicable law, or (d) the data has been aggregated and anonymised.
+As described in Section 2.5, email content retrieved from the Gmail API is streamed through to your agent in the same request and is never stored, cached, or logged by MCPEmails.
+3.8 Microsoft APIs: mailbox access and revoking it
+When you connect an Outlook or Microsoft 365 mailbox, Microsoft asks you to approve a specific, named set of permissions: reading and organising your mail, and sending mail on your behalf. We use that access only to run the features you ask an AI agent to perform on your mailbox, such as reading, searching, organising, drafting and sending. We do not use it to build a copy of your mailbox, and we never use mail content, or anything derived from it, for advertising or marketing.
+You can withdraw this access at any time, directly with Microsoft and without asking us. For a personal Microsoft account, use
+Microsoft account permissions
+. For a work or school account, use
+My Apps
+. Revoking access there immediately stops us being able to reach that mailbox. If your IT admin approved MCPEmails for your whole organisation, only an admin can remove that organisation-wide approval.
+Disconnecting the inbox in your MCPEmails dashboard has the same effect from our side and additionally deletes the stored credentials for that mailbox. You can do either one first; you do not have to do both.
+3.9 Direct marketing email
+We send marketing email (product tips and offers, for example about a paid plan when your workspace reaches a plan limit) only if you agreed to it by ticking the box on the signup form. The box is unticked by default, and we do not infer consent from anything else. The legal basis is your
+consent
+(GDPR Article 6(1)(a)), which the Norwegian Marketing Control Act (markedsføringsloven) § 15 also requires for marketing by email.
+To choose which of a small number of messages to send, and when, we use account and product-usage signals: for example that your workspace reached a plan limit, how many inboxes you have connected, your plan, and when you signed up. We never use the content of your mailbox, or anything derived from it, for this.
+You can withdraw your consent at any time with the unsubscribe link in every marketing email. It takes effect immediately and does not affect receipts, security notices, or other email we need to send to run your account. We keep a record of when you consented and which wording you saw, so that we can show consent was given.
+4. Data Retention
+We keep each category of data for the following periods:
+Data category
+Retention period
+Reason
+Account data (email, display name)
+Until account deletion, plus 30 days
+Service operation; recovery window
+Marketing email consent and unsubscribe record
+Until account deletion, plus 30 days
+Proof of consent; honouring unsubscribes
+Workspace and inbox configuration
+Until deleted by you, plus 30 days
+Service operation; recovery window
+Encrypted OAuth tokens / app passwords
+Until inbox disconnected or account deleted
+Required to authenticate provider API calls
+API key hashes
+Until revoked, plus 30 days
+Audit trail; recovery window
+MCP tool call audit logs
+7 days (Free); 90 days (Agent); 1 year (Scale)
+Security audit; plan feature
+Aggregated usage metrics
+2 years
+Billing history; product analytics
+Server operational logs (IP, status)
+30 days raw; anonymised aggregate retained
+Abuse prevention; availability
+Email content (read or sent immediately)
+Not stored; zero retention
+Privacy by design
+Scheduled send messages
+Until sent; record retained afterwards for audit
+Required to deliver messages you schedule
+When you delete your account, we initiate deletion of all personal data within 30 days. Aggregated, non-personal usage statistics derived from your account may be retained beyond this period in anonymised form.
+5. Third Parties and Data Sharing
+5.1 Infrastructure providers (data processors)
+We use the following sub-processors to operate the service. Each is bound by a Data Processing Agreement and processes data only on our instructions:
+Provider
+Purpose
+Data processed
+Location
+Supabase
+Database, auth, edge functions
+Account data, workspace config, audit logs
+EU (Stockholm, Sweden)
+Vercel
+Web hosting, CDN
+HTTP request metadata; no email content
+Global edge (nearest region to user)
+Stripe
+(paid plans only)
+Payment processing
+Billing email, payment card data (stored by Stripe, not us)
+US (Stripe is PCI-DSS certified)
+5.2 Email providers (your providers, not ours)
+When you connect Gmail, Outlook / Microsoft 365, Fastmail, or another IMAP account, MCPEmails authenticates with that provider using credentials you supply. Your email provider's own privacy policy governs the data held in your mailbox. MCPEmails accesses your mailbox only when your agent makes a tool call, and only for the specific messages or folders the tool requests.
+5.3 No data brokers or advertising networks
+We do not share any data with data brokers, advertising networks, social media platforms, or analytics companies that build user profiles.
+5.4 Legal disclosures
+We may disclose personal data if required by law, valid legal process (such as a court order or subpoena), or to protect the rights, property, or safety of MCPEmails, our users, or the public. Where permitted by law, we will notify affected users before disclosing their data.
+5.5 Business transfers
+In the event of a merger, acquisition, or sale of assets, personal data may be transferred as part of that transaction. We will notify users via the email address on their account before any such transfer occurs and before their data becomes subject to a different privacy policy.
+6. International Data Transfers
+MCPEmails is operated from Norway, which is subject to the European Economic Area (EEA) data protection framework. If you access the service from outside the EEA, your data may be transferred to and processed in countries within the EEA.
+Our infrastructure sub-processors (Supabase, Vercel) operate under Standard Contractual Clauses (SCCs) approved by the European Commission for data transfers to third countries. For Stripe, processing is covered by their EU-US Data Privacy Framework certification.
+Our database, which holds account and configuration data, is hosted in the EU (Stockholm, Sweden) for every customer. There is no plan or setting that moves it to another region.
+7. Your Rights
+Depending on your location, you may have the following rights regarding your personal data:
+Access.
+Request a copy of all personal data we hold about you.
+Rectification.
+Ask us to correct inaccurate or incomplete data.
+Erasure ("right to be forgotten").
+Request deletion of your personal data. You can trigger this yourself by deleting your account in Dashboard → Settings → Delete Account.
+Restriction.
+Ask us to restrict processing of your data in certain circumstances.
+Data portability.
+Request your data in a machine-readable format (JSON).
+Objection.
+Object to processing based on legitimate interests.
+Withdraw consent.
+Where processing is based on consent, withdraw it at any time without affecting the lawfulness of prior processing.
+To exercise any of these rights, email us at
+privacy@mcpemails.com
+. We will respond within 30 days (or 72 hours for urgent security-related requests). We may ask you to verify your identity before processing the request.
+If you are located in the EEA or UK, you have the right to lodge a complaint with your local supervisory authority. In Norway, this is the
+Datatilsynet
+(datatilsynet.no).
+8. Security
+We take the security of your data seriously and implement appropriate technical and organisational measures, including:
+All data in transit is encrypted using TLS 1.2 or higher. Connections that do not support TLS are rejected.
+OAuth tokens and IMAP credentials are encrypted at rest using AES-256-GCM. The encryption key is stored in a separate Supabase Vault instance and is never co-located with the encrypted data.
+API keys are hashed with SHA-256 before storage. The raw key cannot be recovered from the hash.
+Database access is protected by Row-Level Security (RLS) policies that prevent one workspace from accessing another's data, even in the event of a query logic error.
+Administrative access to production infrastructure requires multi-factor authentication and is logged.
+Despite these measures, no system is perfectly secure. If you discover a security vulnerability, please report it responsibly to
+security@mcpemails.com
+. We aim to acknowledge reports within 24 hours and resolve confirmed vulnerabilities within 72 hours for critical issues.
+In the event of a personal data breach that is likely to result in a risk to your rights and freedoms, we will notify affected users and the relevant supervisory authority within 72 hours of becoming aware of the breach, as required by GDPR Article 33.
+9. Children's Privacy
+MCPEmails is not directed at children under the age of 16. We do not knowingly collect personal data from anyone under 16. If you believe we have inadvertently collected data from a child, please contact us at
+privacy@mcpemails.com
+and we will delete it promptly.
+10. Changes to This Policy
+We may update this Privacy Policy from time to time. When we make material changes (such as collecting new categories of data or sharing data with new third parties) we will:
+Update the "Last updated" date at the top of this page.
+Send an email notification to the address registered on your account at least 14 days before the changes take effect.
+Display a prominent notice in the dashboard for 14 days after the change takes effect.
+Your continued use of the service after a change takes effect constitutes acceptance of the updated policy. If you disagree with a material change, you may delete your account before the effective date.
+11. Contact Us
+If you have questions about this Privacy Policy, wish to exercise a data subject right, or want to report a privacy concern, please contact us:
+Email
+privacy@mcpemails.com
+Security issues
+security@mcpemails.com
+Postal address
+Albretsen Consulting (organisation number 926 646 753), Håsteins gate 9, 5160 Laksevåg, Norway
+Response time
+We respond to all privacy requests within 30 days
+Questions about your data?
+Email us about anything in this policy and we will respond within 30 days.
+Contact us about privacy
+Read our Terms
+[alt] mcpemails
+A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
+Contact
+hello@mcpemails.com
+[aria-label] Copy Contact
+Copy
+MCP endpoint
+https://mcpemails.com/api/mcp
+[aria-label] Copy MCP endpoint
+Copy
+[aria-label] Language
+English
+Norsk
+Español
+Français
+中文
+Product
+Features
+How it works
+Pricing
+Docs
+Self-hosting
+For founders
+For business
+Resources
+Tool reference
+Quickstart
+OAuth connection
+Provider support
+MCP client setup
+Blog
+Changelog
+Connect
+All email providers
+Connect any IMAP inbox
+Connect Gmail
+Connect Outlook
+Connect Fastmail
+Connect iCloud
+Connect Yahoo
+Connect Zoho
+Connect Yandex
+vs native connectors
+Best email MCP servers
+Company
+About
+Security
+Status
+Privacy
+Terms
+© 2026 mcpemails.
+Email fetched live, never stored · Credentials encrypted at rest
+MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.

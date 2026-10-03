@@ -1,8 +1,10 @@
 import '../styles/theme.css';
 import '../styles/colors_and_type.css';
 import '../styles/marketing.css';
+// Self-hosted @font-face rules + the Geist preload. See app/fonts.js.
+import { preloadFonts } from './fonts';
 import { NextIntlClientProvider } from 'next-intl';
-import { getLocale, getMessages } from 'next-intl/server';
+import { getLocale } from 'next-intl/server';
 import { Analytics } from '@vercel/analytics/next';
 import AcquisitionCapture from '../components/analytics/AcquisitionCapture';
 import { THEME_BOOTSTRAP_SCRIPT } from '../src/lib/theme-bootstrap';
@@ -64,8 +66,8 @@ export const viewport = {
 };
 
 export default async function RootLayout({ children }) {
+  preloadFonts();
   const locale = await getLocale();
-  const messages = await getMessages();
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
@@ -84,7 +86,14 @@ export default async function RootLayout({ children }) {
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
       </head>
       <body>
-        <NextIntlClientProvider locale={locale} messages={messages}>
+        {/*
+          Locale only, no messages. Messages given here are serialised into the
+          HTML of EVERY route, and no route reads them from here: the marketing
+          pages get theirs from the ClientMessages wrapper in app/[locale]/layout.tsx, the
+          app and auth screens from AppLocaleProvider. `null` is explicit on
+          purpose; leaving the prop out makes next-intl pass everything.
+        */}
+        <NextIntlClientProvider locale={locale} messages={null}>
           {children}
         </NextIntlClientProvider>
         <AcquisitionCapture />
