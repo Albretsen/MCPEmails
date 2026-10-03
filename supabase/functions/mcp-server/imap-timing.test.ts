@@ -209,7 +209,11 @@ Deno.test("a connection-limit refusal that is retried and then succeeds is visib
   assertEquals(fields.imap_connects, 1);
   assert(fields.connect_backoff_ms >= 10, `the sleep is recorded (${fields.connect_backoff_ms} ms)`);
   assert(fields.connect_ms >= fields.connect_backoff_ms, "and is inside connect_ms");
-  assert(!JSON.stringify(fields).includes("example.com"), "the host is not in the record");
+  // The record has no string field at all, so it cannot carry the host.
+  assert(
+    Object.values(fields).every((value) => typeof value === "number"),
+    "the host is not in the record: every field is a number",
+  );
 });
 
 Deno.test("retries that run out are recorded too, and the error is unchanged", async () => {
