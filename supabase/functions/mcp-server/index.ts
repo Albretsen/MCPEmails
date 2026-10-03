@@ -138,6 +138,7 @@ import {
   type ProviderErrorBoundary,
   providerErrorLogCode,
 } from "./provider-error.ts";
+import { mapWithConcurrency } from "./provider-concurrency.ts";
 import {
   type FolderResolveAuditDetails,
   folderResolveAuditDetails,
@@ -24577,6 +24578,14 @@ async function imapDeleteDraft(
 
 // ── Gmail draft helpers ───────────────────────────────────────────────────────
 
+/**
+ * How many per-draft `messages.get` calls draft_list keeps in flight. Gmail
+ * meters concurrent requests per user and answers the excess with 429, which
+ * this listing would silently turn into a missing draft, so the fan-out is
+ * small and bounded rather than "all of them".
+ */
+const GMAIL_DRAFT_METADATA_CONCURRENCY = 5;
+
 async function gmailListDrafts(
   inbox: InboxRow,
   limit: number,
@@ -24595,38 +24604,47 @@ async function gmailListDrafts(
   };
   const drafts = listData.drafts ?? [];
 
-  const summaries: DraftSummary[] = [];
-  for (const d of drafts) {
-    try {
-      const msgResp = await fetch(
-        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${d.message.id}` +
-        `?format=metadata&metadataHeaders=Subject&metadataHeaders=To&metadataHeaders=Cc&metadataHeaders=Date`,
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-      if (!msgResp.ok) continue;
-      const msgData = (await msgResp.json()) as {
-        payload?: { headers?: { name: string; value: string }[] };
-        internalDate?: string;
-      };
-      const hdr = msgData.payload?.headers ?? [];
-      const subject = hdr.find((h) => h.name === "Subject")?.value ?? "(no subject)";
-      const toRaw = hdr.find((h) => h.name === "To")?.value ?? "";
-      const ccRaw = hdr.find((h) => h.name === "Cc")?.value ?? "";
-      const internalDate = msgData.internalDate
-        ? new Date(parseInt(msgData.internalDate, 10)).toISOString()
-        : new Date().toISOString();
-      summaries.push({
-        draft_id: d.id,
-        subject,
-        to: parseAddressList(toRaw),
-        cc: parseAddressList(ccRaw),
-        created_at: internalDate,
-      });
-    } catch {
-      // Skip drafts that fail to fetch metadata.
-    }
-  }
-  return summaries;
+  // One messages.get per draft, a few at a time rather than one after another
+  // (20 drafts used to be 20 round trips end to end). The summaries keep the
+  // order drafts.list gave, and a draft whose get fails in any way is left
+  // out, exactly as when this was a serial loop: nothing a single get does can
+  // fail the listing.
+  const fetched = await mapWithConcurrency(
+    drafts,
+    GMAIL_DRAFT_METADATA_CONCURRENCY,
+    async (d): Promise<DraftSummary | null> => {
+      try {
+        const msgResp = await fetch(
+          `https://gmail.googleapis.com/gmail/v1/users/me/messages/${d.message.id}` +
+          `?format=metadata&metadataHeaders=Subject&metadataHeaders=To&metadataHeaders=Cc&metadataHeaders=Date`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        if (!msgResp.ok) return null;
+        const msgData = (await msgResp.json()) as {
+          payload?: { headers?: { name: string; value: string }[] };
+          internalDate?: string;
+        };
+        const hdr = msgData.payload?.headers ?? [];
+        const subject = hdr.find((h) => h.name === "Subject")?.value ?? "(no subject)";
+        const toRaw = hdr.find((h) => h.name === "To")?.value ?? "";
+        const ccRaw = hdr.find((h) => h.name === "Cc")?.value ?? "";
+        const internalDate = msgData.internalDate
+          ? new Date(parseInt(msgData.internalDate, 10)).toISOString()
+          : new Date().toISOString();
+        return {
+          draft_id: d.id,
+          subject,
+          to: parseAddressList(toRaw),
+          cc: parseAddressList(ccRaw),
+          created_at: internalDate,
+        };
+      } catch {
+        // Skip drafts that fail to fetch metadata.
+        return null;
+      }
+    },
+  );
+  return fetched.filter((summary): summary is DraftSummary => summary !== null);
 }
 
 /**
