@@ -32,6 +32,12 @@ import {
   parseImapCapabilities,
   redactImapAuthText,
 } from "./imap-auth.ts";
+import {
+  currentImapTimings,
+  type ImapCallTimings,
+  imapClockMs,
+  type ImapPhase,
+} from "./imap-timing.ts";
 
 export class ImapAuthError extends Error {
   constructor(message: string) {
@@ -259,8 +265,27 @@ export interface ImapMailboxStatus {
   uidValidity: number;
 }
 
+/** The two STATUS figures a folder listing shows. */
+export interface ImapMailboxCounts {
+  messages: number;
+  unseen: number;
+}
+
 const CRLF = "\r\n";
 const COMMAND_TIMEOUT_MS = 15_000;
+
+/**
+ * How many STATUS commands go out in one write when a folder listing asks for
+ * its counts (see {@link ImapClient.mailboxStatusPipelined}).
+ *
+ * Pipelining is plain RFC 3501 (5.5): a client may send its next command
+ * without waiting, as long as the commands cannot affect each other's result,
+ * and STATUS commands on different mailboxes cannot. The depth is bounded
+ * anyway, below the 15 that mutt has shipped as its default for two decades,
+ * so no server is ever handed more unread commands at once than a mainstream
+ * client already hands it.
+ */
+const STATUS_PIPELINE_DEPTH = 12;
 
 /**
  * The silence a UID SEARCH is allowed before its read is abandoned.
@@ -406,6 +431,15 @@ export class ImapClient {
   private bufEnd = 0;
   private tagCounter = 0;
   /**
+   * What the server said it can do once we were authenticated, or null when
+   * its reply to the authentication carried no capability list. Read off that
+   * reply and nothing else: the list in the greeting describes the
+   * unauthenticated state and routinely omits extensions such as LIST-STATUS.
+   * No CAPABILITY command is ever issued to fill this in; an unknown list just
+   * means the extension is not used.
+   */
+  private capabilities: Set<string> | null = null;
+  /**
    * The idle budget in force for the command currently being read.
    *
    * An instance field rather than a parameter threaded through readLine,
@@ -435,6 +469,15 @@ export class ImapClient {
    * {@link busy}.
    */
   private pending = 0;
+  /**
+   * The timing record of the request this connection was opened for, or null
+   * outside one (the automation runner, scheduled sends, tests). Captured once
+   * here rather than looked up per command, so every command on this socket is
+   * charged to the call that opened it. Numbers only: see imap-timing.ts.
+   */
+  private readonly timing: ImapCallTimings | null = currentImapTimings();
+  /** Bytes read off the socket so far. Feeds `fetch_bytes`. */
+  private bytesRead = 0;
   private readonly decoder = new TextDecoder("latin1");
   private readonly encoder = new TextEncoder();
 
@@ -459,6 +502,13 @@ export class ImapClient {
    */
   private lastPermanentFlags: string[] | null = null;
 
+  /**
+   * The message count the most recent SELECT reported (`* n EXISTS`), or null
+   * when no mailbox is selected or the server sent none. Reset on every
+   * SELECT, like PERMANENTFLAGS. See {@link selectedMessageCount}.
+   */
+  private lastExists: number | null = null;
+
   private constructor(conn: Deno.Conn) {
     this.conn = conn;
     this.buffer = new Uint8Array(64 * 1024);
@@ -470,9 +520,24 @@ export class ImapClient {
    * queued rather than racing on the shared read buffer / tag stream. Errors
    * propagate to *this* caller but never break the chain for the next one.
    */
-  private runExclusive<T>(fn: () => Promise<T>): Promise<T> {
+  private runExclusive<T>(
+    fn: () => Promise<T>,
+    phase: ImapPhase | null = "other",
+  ): Promise<T> {
     this.pending++;
-    const run = this.commandChain.then(fn, fn);
+    // Timed from the moment the command gets the socket, not from the moment
+    // it was queued, so a wait behind another command is not charged twice.
+    const timing = this.timing;
+    const body = timing === null || phase === null ? fn : async () => {
+      const startedMs = imapClockMs();
+      const startedBytes = this.bytesRead;
+      try {
+        return await fn();
+      } finally {
+        timing.addCommand(phase, imapClockMs() - startedMs, this.bytesRead - startedBytes);
+      }
+    };
+    const run = this.commandChain.then(body, body);
     // Keep the chain alive regardless of this command's outcome.
     this.commandChain = run.then(() => {}, () => {});
     // Settle-only bookkeeping. Both handlers are supplied so this never becomes
@@ -514,12 +579,30 @@ export class ImapClient {
    * `imap_auth_failed`.
    */
   static async connect(cfg: ImapConnectConfig): Promise<ImapClient> {
+    const timing = currentImapTimings();
+    if (timing === null) return await ImapClient.connectWithRetry(cfg, null);
+    const startedMs = imapClockMs();
+    try {
+      return await ImapClient.connectWithRetry(cfg, timing);
+    } finally {
+      timing.connectMs += imapClockMs() - startedMs;
+    }
+  }
+
+  /** The retry loop behind {@link connect}; see there for the back-off rule. */
+  private static async connectWithRetry(
+    cfg: ImapConnectConfig,
+    timing: ImapCallTimings | null,
+  ): Promise<ImapClient> {
     const maxRetries = 3;
     let lastErr: unknown;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        return await ImapClient.connectOnce(cfg);
+        if (timing) timing.connectAttempts += 1;
+        const client = await ImapClient.connectOnce(cfg, timing);
+        if (timing) timing.connects += 1;
+        return client;
       } catch (err) {
         lastErr = err;
 
@@ -531,7 +614,11 @@ export class ImapClient {
 
         if (attempt < maxRetries) {
           const waitMs = 5_000 * Math.pow(2, attempt - 1); // 5s, 10s
+          const sleptFromMs = imapClockMs();
           await new Promise((r) => setTimeout(r, waitMs));
+          // Recorded so a retry that then SUCCEEDS is visible: it used to cost
+          // the caller 5 or 15 seconds and leave nothing in the logs.
+          if (timing) timing.backoffMs += imapClockMs() - sleptFromMs;
           continue;
         }
       }
@@ -554,7 +641,11 @@ export class ImapClient {
    * signals a transient connection/rate limit (retryable), and
    * {@link ImapAuthError} on genuine authentication failure (not retryable).
    */
-  private static async connectOnce(cfg: ImapConnectConfig): Promise<ImapClient> {
+  private static async connectOnce(
+    cfg: ImapConnectConfig,
+    timing: ImapCallTimings | null = null,
+  ): Promise<ImapClient> {
+    const dialFromMs = imapClockMs();
     // SSRF guard. The host on this row was public when the mailbox was
     // connected, but nothing stops its A record being repointed into a private
     // range afterwards, and this line is where that would be cashed in. The
@@ -567,6 +658,8 @@ export class ImapClient {
       port: cfg.port,
       protocol: "imap",
     });
+    const tlsFromMs = imapClockMs();
+    if (timing) timing.dialMs += tlsFromMs - dialFromMs;
 
     if (cfg.security !== "starttls") {
       // Implicit TLS on a PINNED address. Deno.connectTls cannot express this:
@@ -596,6 +689,8 @@ export class ImapClient {
       }
       conn = tls;
     }
+    const authFromMs = imapClockMs();
+    if (timing) timing.tlsMs += authFromMs - tlsFromMs;
 
     const client = new ImapClient(conn);
 
@@ -632,6 +727,7 @@ export class ImapClient {
       cfg.email,
       cfg.password,
     );
+    if (timing) timing.authMs += imapClockMs() - authFromMs;
 
     if (resp.status !== "OK") {
       client.close();
@@ -653,6 +749,7 @@ export class ImapClient {
           : `IMAP authentication failed: ${text} (mechanism ${mechanism})`,
       );
     }
+    client.capabilities = capabilitiesAfterAuth(resp);
     return client;
   }
 
@@ -787,6 +884,7 @@ export class ImapClient {
     return this.runExclusive(async () => {
       const tag = this.nextTag();
       this.lastPermanentFlags = null;
+      this.lastExists = null;
       await this.write(`${tag} SELECT ${quoteMailbox(mailbox)}${CRLF}`);
       const resp = await this.readTagged(tag);
       if (resp.status !== "OK") {
@@ -797,7 +895,24 @@ export class ImapClient {
         throw new ImapSelectRefusedError(resp.status, failure.responseCode);
       }
       this.lastPermanentFlags = parsePermanentFlags(resp.untagged);
-    });
+      this.lastExists = parseExists(resp.untagged);
+    }, "select");
+  }
+
+  /**
+   * How many messages the selected mailbox held when it was SELECTed, or null
+   * when the server did not say (RFC 3501 requires `* n EXISTS` in a SELECT
+   * reply, so null means a server that left it out, and the caller falls back
+   * to asking).
+   *
+   * Sequence numbers 1..n address those messages in ascending UID order
+   * (RFC 3501 2.3.1.2), which is what lets a listing fetch "the newest N" as
+   * the sequence range ending at n without first asking for every UID in the
+   * mailbox. Only meaningful straight after the SELECT: it is a snapshot, not
+   * a live count, and is not updated by later unsolicited EXISTS or EXPUNGE.
+   */
+  selectedMessageCount(): number | null {
+    return this.lastExists;
   }
 
   /**
@@ -894,7 +1009,7 @@ export class ImapClient {
         );
       }
       return await this.uidSearchAsciiUnlocked(folded.criteria);
-    });
+    }, "search");
   }
 
   /**
@@ -910,7 +1025,9 @@ export class ImapClient {
     if (resp.status !== "OK") {
       throw new Error(`UID SEARCH failed: ${resp.text}`);
     }
-    return parseSearchUids(resp.untagged);
+    const uids = parseSearchUids(resp.untagged);
+    if (this.timing) this.timing.searchUidCount += uids.length;
+    return uids;
   }
 
   /**
@@ -958,10 +1075,12 @@ export class ImapClient {
 
     await this.write(`${pending}${CRLF}`);
     const resp = await this.readTagged(tag, { idleTimeoutMs: SEARCH_IDLE_TIMEOUT_MS });
+    const uids = resp.status === "OK" ? parseSearchUids(resp.untagged) : [];
+    if (this.timing) this.timing.searchUidCount += uids.length;
     return {
       status: resp.status,
       text: resp.text,
-      uids: resp.status === "OK" ? parseSearchUids(resp.untagged) : [],
+      uids,
     };
   }
 
@@ -1038,29 +1157,71 @@ export class ImapClient {
   ): Promise<ImapMessageSummary[]> {
     if (uids.length === 0) return Promise.resolve([]);
     return this.runExclusive(async () => {
-      const tag = this.nextTag();
-      const set = uids.join(",");
-      const previewPart = options.includePreview === false
-        ? ""
-        : " BODY.PEEK[1]<0.2048>";
-      await this.write(
-        `${tag} UID FETCH ${set} (UID FLAGS ENVELOPE BODYSTRUCTURE${previewPart})${CRLF}`,
-      );
-      const resp = await this.readTagged(tag, {
-        maxLiteralBytes: options.maxLiteralBytes,
-      });
+      const resp = await this.fetchSummariesUnlocked("UID FETCH", uids.join(","), options);
       if (resp.status !== "OK") {
         throw new Error(`UID FETCH failed: ${resp.text}`);
       }
+      return resp.summaries;
+    }, "fetch");
+  }
 
-      const summaries: ImapMessageSummary[] = [];
+  /**
+   * FETCH the same summary as {@link fetchSummaries} for the messages at
+   * sequence numbers `first`..`last` of the selected mailbox.
+   *
+   * This is the listing's way of getting "the newest N" in one command: the
+   * range ends at the count SELECT reported, and each row carries its UID, so
+   * no UID SEARCH has to run first. See {@link selectedMessageCount}.
+   *
+   * Resolves to null, rather than throwing, when the server answers NO or BAD.
+   * A sequence number is only as good as the snapshot it was read from, and a
+   * server may refuse a range that names a message another client has since
+   * expunged (RFC 2180 4.1.2). That is a reason to go and ask by UID, which is
+   * what the caller does, not a failure to report. Transport errors still throw.
+   */
+  fetchSummariesBySequence(
+    first: number,
+    last: number,
+    options: { includePreview?: boolean; maxLiteralBytes?: number } = {},
+  ): Promise<ImapMessageSummary[] | null> {
+    if (!Number.isInteger(first) || !Number.isInteger(last) || first < 1 || last < first) {
+      return Promise.resolve([]);
+    }
+    return this.runExclusive(async () => {
+      const resp = await this.fetchSummariesUnlocked("FETCH", `${first}:${last}`, options);
+      return resp.status === "OK" ? resp.summaries : null;
+    }, "fetch");
+  }
+
+  /**
+   * The one FETCH both summary methods issue, so the item list cannot drift
+   * between "by UID" and "by sequence number". Unlocked: both callers hold
+   * the command lock.
+   */
+  private async fetchSummariesUnlocked(
+    verb: "UID FETCH" | "FETCH",
+    set: string,
+    options: { includePreview?: boolean; maxLiteralBytes?: number },
+  ): Promise<{ status: "OK" | "NO" | "BAD"; text: string; summaries: ImapMessageSummary[] }> {
+    const tag = this.nextTag();
+    const previewPart = options.includePreview === false
+      ? ""
+      : " BODY.PEEK[1]<0.2048>";
+    await this.write(
+      `${tag} ${verb} ${set} (UID FLAGS ENVELOPE BODYSTRUCTURE${previewPart})${CRLF}`,
+    );
+    const resp = await this.readTagged(tag, {
+      maxLiteralBytes: options.maxLiteralBytes,
+    });
+    const summaries: ImapMessageSummary[] = [];
+    if (resp.status === "OK") {
       for (const line of resp.untagged) {
         if (!/^\* \d+ FETCH /.test(line)) continue;
         const parsed = parseFetchLine(line);
         if (parsed) summaries.push(parsed);
       }
-      return summaries;
-    });
+    }
+    return { status: resp.status, text: resp.text, summaries };
   }
 
   /**
@@ -1116,7 +1277,7 @@ export class ImapClient {
         }
       }
       return { raw, flags };
-    });
+    }, "fetch");
   }
 
   /** Mark a message read by setting the \Seen flag. Best-effort. */
@@ -1328,29 +1489,68 @@ export class ImapClient {
       if (resp.status !== "OK") {
         throw new Error(`LIST failed: ${resp.text}`);
       }
-      const mailboxes: ImapMailboxInfo[] = [];
+      return parseListLines(resp.untagged);
+    }, "list");
+  }
+
+  /** True when the server advertised LIST-STATUS (RFC 5819) after login. */
+  supportsListStatus(): boolean {
+    return this.capabilities?.has("LIST-STATUS") === true;
+  }
+
+  /**
+   * LIST every mailbox and get its message counts in the same reply
+   * (`LIST "" "*" RETURN (STATUS (MESSAGES UNSEEN))`, RFC 5819).
+   *
+   * One round trip where a listing with counts used to be one LIST and then a
+   * STATUS per mailbox. Only call it when {@link supportsListStatus} is true.
+   *
+   * Three outcomes, so the caller can always fall back to the commands it
+   * used before:
+   *   * null: the server refused the command. Nothing was learned; issue a
+   *     plain LIST.
+   *   * `counts: null`: the mailboxes are good, but a STATUS line could not be
+   *     read or named a mailbox the LIST did not, so none of them is trusted.
+   *   * `counts`: a map from mailbox name to its counts. A mailbox ABSENT from
+   *     the map got no usable STATUS line (the RFC has the server leave out a
+   *     mailbox it cannot STATUS) and is the caller's to ask about.
+   *
+   * The mailbox list itself is exactly what {@link listMailboxes} returns for
+   * the same LIST lines: one parser, {@link parseListLines}, serves both.
+   */
+  listMailboxesWithStatus(): Promise<
+    { mailboxes: ImapMailboxInfo[]; counts: Map<string, ImapMailboxCounts> | null } | null
+  > {
+    return this.runExclusive(async () => {
+      const tag = this.nextTag();
+      await this.write(`${tag} LIST "" "*" RETURN (STATUS (MESSAGES UNSEEN))${CRLF}`);
+      const resp = await this.readTagged(tag);
+      if (resp.status !== "OK") return null;
+
+      const mailboxes = parseListLines(resp.untagged);
+      const listed = new Set(mailboxes.map((mb) => mb.name));
+      let counts: Map<string, ImapMailboxCounts> | null = new Map();
       for (const line of resp.untagged) {
-        // Format: * LIST (\Attr …) "delimiter" mailbox-name-or-quoted
-        const m = /^\* LIST \(([^)]*)\) ("[^"]*"|NIL) (.+)$/.exec(line);
-        if (!m) continue;
-        const flags = m[1].split(/\s+/).filter(Boolean);
-        const delimiter = m[2] === "NIL" ? "/" : m[2].slice(1, -1);
-        let name = m[3].trim();
-        if (name.startsWith('"')) {
-          name = name.slice(1, -1).replace(/\\(.)/g, "$1");
+        if (!/^\* STATUS\b/.test(line)) continue;
+        const name = statusLineMailbox(line);
+        const known = name === null
+          ? null
+          : listed.has(name)
+          ? name
+          : mailboxes.find((mb) => sameMailboxName(mb.name, name))?.name ?? null;
+        if (known === null) {
+          counts = null;
+          break;
         }
-        // The wire form is modified UTF-7 (RFC 3501 5.1.3). Decoding here, at
-        // the one place a mailbox name is read off the socket, is what makes
-        // the name a caller sees the same string the caller may pass back in.
-        mailboxes.push({
-          name: decodeModifiedUtf7(repairRawUtf8Name(name)),
-          delimiter,
-          flags,
-        });
+        // Both figures or neither: a line that reports only one of them is not
+        // an answer to the question a STATUS command would have asked.
+        if (/\bMESSAGES\s+\d+/.test(line) && /\bUNSEEN\s+\d+/.test(line)) {
+          const status = statusFromLine(line);
+          counts.set(known, { messages: status.messages, unseen: status.unseen });
+        }
       }
-      mailboxes.sort((a, b) => a.name.localeCompare(b.name));
-      return mailboxes;
-    });
+      return { mailboxes, counts };
+    }, "list");
   }
 
   /**
@@ -1366,20 +1566,111 @@ export class ImapClient {
       if (resp.status !== "OK") {
         throw new Error(`STATUS failed for "${mailbox}": ${resp.text}`);
       }
-      const line = resp.untagged.find((l) => /^\* STATUS\b/.test(l));
-      const pick = (key: string): number => {
-        if (!line) return 0;
-        const m = new RegExp(`\\b${key}\\b\\s+(\\d+)`).exec(line);
-        return m ? Number(m[1]) : 0;
-      };
-      return {
-        messages: pick("MESSAGES"),
-        unseen: pick("UNSEEN"),
-        recent: pick("RECENT"),
-        uidNext: pick("UIDNEXT"),
-        uidValidity: pick("UIDVALIDITY"),
-      };
-    });
+      return statusFromLine(resp.untagged.find((l) => /^\* STATUS\b/.test(l)));
+    }, "status");
+  }
+
+  /**
+   * STATUS several mailboxes, sending the commands up to
+   * {@link STATUS_PIPELINE_DEPTH} at a time instead of waiting for each
+   * answer before sending the next.
+   *
+   * Each command is byte for byte the one {@link mailboxStatus} sends. What
+   * changes is only that the next one does not wait for the previous reply,
+   * so twenty-five counts cost three round trips instead of twenty-five.
+   *
+   * ── This stays inside the `runExclusive` contract ─────────────────────────
+   * The whole batch is ONE exclusive command body: it takes the lock once,
+   * writes, reads every tagged completion it is owed, and only then lets the
+   * next caller in. No other command can land between its write and its
+   * reads, which is the interleaving the lock exists to prevent (and the one
+   * a `Promise.allSettled` STATUS fan-out once caused). Nothing here runs two
+   * command bodies at once.
+   *
+   * ── One entry per mailbox, in order ───────────────────────────────────────
+   *   * a status: the server answered OK with a STATUS line for THAT mailbox.
+   *   * null: the server answered NO or BAD (a \Noselect name, no permission),
+   *     the name could not be sent at all, or the connection failed. These are
+   *     the cases where `mailboxStatus` rejects.
+   *   * "unsure": the reply was complete but cannot be attributed with
+   *     certainty: no STATUS line under an OK, a STATUS line naming a
+   *     different mailbox, or completions that came back out of order. The
+   *     socket is still in step, so the caller asks again with a plain
+   *     {@link mailboxStatus}, and the old path decides. Never returned once
+   *     the connection has failed: see the end of the method.
+   */
+  mailboxStatusPipelined(
+    mailboxes: string[],
+  ): Promise<Array<ImapMailboxStatus | null | "unsure">> {
+    if (mailboxes.length === 0) return Promise.resolve([]);
+    return this.runExclusive(async () => {
+      const results: Array<ImapMailboxStatus | null | "unsure"> = mailboxes.map(() => null);
+      let broken = false;
+      for (let start = 0; start < mailboxes.length; start += STATUS_PIPELINE_DEPTH) {
+        const batch: Array<{ index: number; tag: string }> = [];
+        let wire = "";
+        for (let i = start; i < Math.min(mailboxes.length, start + STATUS_PIPELINE_DEPTH); i++) {
+          let quoted: string;
+          try {
+            quoted = quoteMailbox(mailboxes[i]);
+          } catch {
+            // A name that may not go on the wire: null, as mailboxStatus rejects.
+            continue;
+          }
+          const tag = this.nextTag();
+          batch.push({ index: i, tag });
+          wire += `${tag} STATUS ${quoted} (MESSAGES UNSEEN RECENT UIDNEXT UIDVALIDITY)${CRLF}`;
+        }
+        if (batch.length === 0) continue;
+
+        const read: Array<{ index: number; resp: ImapTaggedResponse }> = [];
+        // Completions that turned up while reading for an EARLIER tag. A server
+        // is allowed to finish pipelined commands in any order; none does for
+        // STATUS, and if one ever did, the untagged lines could no longer be
+        // paired with their command by position.
+        const early = new Set<string>();
+        try {
+          await this.writeAll(this.encoder.encode(wire));
+          for (let b = 0; b < batch.length; b++) {
+            if (early.has(batch[b].tag)) continue;
+            const resp = await this.readTagged(batch[b].tag);
+            for (const line of resp.untagged) {
+              const stray = /^(\S+) (?:OK|NO|BAD)\b/.exec(line)?.[1];
+              if (stray && batch.some((later, at) => at > b && later.tag === stray)) {
+                early.add(stray);
+              }
+            }
+            read.push({ index: batch[b].index, resp });
+          }
+        } catch {
+          // The connection timed out or closed mid-batch. Whatever was not
+          // read stays null, and nothing more is written to this socket.
+          broken = true;
+        }
+
+        for (const { index, resp } of read) {
+          if (early.size > 0) {
+            results[index] = "unsure";
+            continue;
+          }
+          if (resp.status !== "OK") continue;
+          const line = resp.untagged.find((l) => /^\* STATUS\b/.test(l));
+          const named = line === undefined ? null : statusLineMailbox(line);
+          results[index] = named !== null && sameMailboxName(named, mailboxes[index])
+            ? statusFromLine(line)
+            : "unsure";
+        }
+        if (early.size > 0) {
+          for (const { index, tag } of batch) if (early.has(tag)) results[index] = "unsure";
+        }
+        if (broken) break;
+      }
+      // After a transport failure the socket may still deliver replies to
+      // commands nobody is reading for, so it is no longer a place to ask a
+      // question again: a re-ask could be answered by a stale line for a
+      // different mailbox. What was in doubt is left unknown instead.
+      return broken ? results.map((r) => (r === "unsure" ? null : r)) : results;
+    }, "status");
   }
 
   /** CREATE a new mailbox. Throws on server error. */
@@ -1422,8 +1713,15 @@ export class ImapClient {
    * Send LOGOUT and close the socket. Best-effort; always closes.
    * Serialized like every other command so it can't race a still-in-flight
    * command on the shared socket; the close() in finally always runs.
+   *
+   * `background` is set by a caller that is not going to wait for the reply
+   * (releaseImapClient in imap-session.ts). It changes nothing on the wire;
+   * it only keeps this command out of `logout_ms`, which is the time a caller
+   * WAITED for a goodbye, and counts it as deferred instead.
    */
-  logout(): Promise<void> {
+  logout(options: { background?: boolean } = {}): Promise<void> {
+    const background = options.background === true;
+    if (background && this.timing) this.timing.logoutsDeferred += 1;
     return this.runExclusive(async () => {
       // Nothing to say goodbye to, and nothing to close: destroy() already did
       // both. Returning quietly rather than failing matters because the callers
@@ -1438,7 +1736,7 @@ export class ImapClient {
       } finally {
         this.close();
       }
-    });
+    }, background ? null : "logout");
   }
 
   /**
@@ -1524,7 +1822,9 @@ export class ImapClient {
   private async readSocket(view: Uint8Array): Promise<number | null> {
     if (this.destroyed) return null;
     try {
-      return await withTimeout(this.conn.read(view), this.readIdleTimeoutMs);
+      const read = await withTimeout(this.conn.read(view), this.readIdleTimeoutMs);
+      if (read !== null) this.bytesRead += read;
+      return read;
     } catch (err) {
       if (this.destroyed) return null;
       throw err;
@@ -1822,6 +2122,22 @@ export function parsePermanentFlags(untagged: string[]): string[] | null {
     if (m) return m[1].trim().split(/\s+/).filter(Boolean);
   }
   return null;
+}
+
+/**
+ * Pull the message count out of a SELECT's untagged lines (`* 172 EXISTS`).
+ *
+ * The LAST such line wins: a server may report the count more than once while
+ * it opens the mailbox, and the final figure is the one the session's sequence
+ * numbers are based on. Null when there is none.
+ */
+export function parseExists(untagged: string[]): number | null {
+  let exists: number | null = null;
+  for (const line of untagged) {
+    const m = /^\* (\d+) EXISTS\s*$/i.exec(line);
+    if (m) exists = Number(m[1]);
+  }
+  return exists;
 }
 
 // -- UID SEARCH criteria: charset handling -------------------------------------
@@ -2170,6 +2486,76 @@ function repairRawUtf8Name(name: string): string {
   } catch {
     return name;
   }
+}
+
+/**
+ * The capability list a server sent with its answer to the authentication: a
+ * `[CAPABILITY ...]` code on the tagged OK (Dovecot, Cyrus) or an untagged
+ * `* CAPABILITY` line ahead of it (Gmail). Null when it sent neither.
+ */
+export function capabilitiesAfterAuth(
+  reply: { text: string; untagged?: readonly string[] },
+): Set<string> | null {
+  return parseImapCapabilities([...(reply.untagged ?? []), reply.text]);
+}
+
+/** Read a mailbox name as it appears in a LIST or STATUS reply. */
+function decodeWireMailboxName(token: string): string {
+  let name = token.trim();
+  if (name.startsWith('"')) {
+    name = name.slice(1, -1).replace(/\\(.)/g, "$1");
+  }
+  // The wire form is modified UTF-7 (RFC 3501 5.1.3). Decoding here, at
+  // the one place a mailbox name is read off the socket, is what makes
+  // the name a caller sees the same string the caller may pass back in.
+  return decodeModifiedUtf7(repairRawUtf8Name(name));
+}
+
+/** The mailboxes named by the `* LIST` lines of a reply, sorted by name. */
+function parseListLines(untagged: string[]): ImapMailboxInfo[] {
+  const mailboxes: ImapMailboxInfo[] = [];
+  for (const line of untagged) {
+    // Format: * LIST (\Attr …) "delimiter" mailbox-name-or-quoted
+    const m = /^\* LIST \(([^)]*)\) ("[^"]*"|NIL) (.+)$/.exec(line);
+    if (!m) continue;
+    const flags = m[1].split(/\s+/).filter(Boolean);
+    const delimiter = m[2] === "NIL" ? "/" : m[2].slice(1, -1);
+    mailboxes.push({ name: decodeWireMailboxName(m[3]), delimiter, flags });
+  }
+  mailboxes.sort((a, b) => a.name.localeCompare(b.name));
+  return mailboxes;
+}
+
+/** The figures on a `* STATUS` line; zero for any the line does not carry. */
+function statusFromLine(line: string | undefined): ImapMailboxStatus {
+  const pick = (key: string): number => {
+    if (!line) return 0;
+    const m = new RegExp(`\\b${key}\\b\\s+(\\d+)`).exec(line);
+    return m ? Number(m[1]) : 0;
+  };
+  return {
+    messages: pick("MESSAGES"),
+    unseen: pick("UNSEEN"),
+    recent: pick("RECENT"),
+    uidNext: pick("UIDNEXT"),
+    uidValidity: pick("UIDVALIDITY"),
+  };
+}
+
+/**
+ * The mailbox a `* STATUS <mailbox> (...)` line is about, decoded the way a
+ * LIST name is, or null when the line is not shaped like one. The attribute
+ * list is the LAST parenthesised group, so a name with parentheses in it
+ * still reads correctly.
+ */
+function statusLineMailbox(line: string): string | null {
+  const m = /^\* STATUS (.+) \([^()]*\)\s*$/.exec(line);
+  return m ? decodeWireMailboxName(m[1]) : null;
+}
+
+/** Mailbox names are case-sensitive, except INBOX (RFC 3501 5.1). */
+function sameMailboxName(a: string, b: string): boolean {
+  return a === b || (a.toUpperCase() === "INBOX" && b.toUpperCase() === "INBOX");
 }
 
 /**
