@@ -1,0 +1,578 @@
+/* ---------- Full-pane composer ---------- */
+.pane {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 12px 0 20px;
+  border-bottom: 1px solid var(--border-1);
+}
+.barTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg-1);
+  white-space: nowrap;
+}
+.barSaved {
+  font-size: 12px;
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+.barSpacer {
+  flex: 1;
+}
+.bar .close {
+  width: 30px;
+  height: 30px;
+}
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 44px;
+  height: 44px;
+  margin-left: -12px;
+  padding: 0 6px 0 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--brand);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.body {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  padding: 26px 32px 24px;
+}
+.phone .body {
+  padding: 18px 14px 20px;
+}
+
+/* ---------- Card ---------- */
+.card {
+  position: relative;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-2);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: var(--shadow-2);
+}
+.cardHeld {
+  border-color: var(--amber-500);
+}
+/* The card takes focus when Esc leaves a field: no ring around the whole form. */
+.card:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-2), var(--shadow-focus);
+}
+
+/* ---------- Assistant banner ---------- */
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--cobalt-100);
+  border-radius: 11px 11px 0 0;
+  background: var(--cobalt-50);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cobalt-700);
+}
+.bannerText {
+  flex: 1;
+  min-width: 0;
+}
+.linkButton {
+  position: relative;
+  flex: none;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: 500 12px var(--font-mono);
+  color: var(--cobalt-700);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* ---------- Fields ---------- */
+.fields {
+  display: flex;
+  flex-direction: column;
+  padding: 0 16px;
+}
+.field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  border-bottom: 1px solid var(--border-1);
+  font-size: 13.5px;
+}
+.fieldLabel {
+  flex: none;
+  width: 56px;
+  /* Pinned to the first line: when recipient chips wrap, the label stays
+     level with the first chip instead of drifting to the middle of the row. */
+  align-self: flex-start;
+  line-height: 39px;
+  color: var(--fg-3);
+}
+.fieldInput {
+  flex: 1;
+  min-width: 0;
+  height: 39px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-size: 13.5px;
+  color: var(--fg-1);
+}
+select.fieldInput {
+  cursor: pointer;
+}
+select.fieldInput:disabled {
+  opacity: 1;
+  cursor: default;
+}
+/* Fields have no box of their own: show keyboard focus on the row. */
+.field:has(:is(input, select):focus-visible) {
+  border-bottom-color: var(--brand);
+}
+
+/* Recipient chips */
+.chips {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  padding: 5px 0;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  height: 24px;
+  padding: 0 2px 0 8px;
+  border: 1px solid var(--border-1);
+  border-radius: 6px;
+  background: var(--ink-50);
+  font-size: 12.5px;
+  color: var(--fg-1);
+}
+.chipInvalid {
+  border-color: var(--red-500);
+  background: var(--red-100);
+  color: var(--red-700);
+}
+.chipText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chipRemove {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  opacity: 0.6;
+  cursor: pointer;
+}
+.chipRemove:hover {
+  opacity: 1;
+  background: rgba(11, 16, 32, 0.08);
+}
+.chipInput {
+  flex: 1;
+  /* At rest it shares the line with the chips (a one-recipient row stays
+     40 px); while typing it claims room, wrapping to its own line if needed. */
+  min-width: 24px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-size: 13.5px;
+  color: var(--fg-1);
+}
+.chipInput:focus {
+  min-width: 96px;
+}
+.ccToggle {
+  position: relative;
+  flex: none;
+  align-self: flex-start;
+  height: 28px;
+  margin-top: 6px;
+  padding: 0 6px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 12.5px;
+  color: var(--fg-3);
+  cursor: pointer;
+}
+.ccToggle:hover {
+  background: var(--ink-100);
+  color: var(--fg-1);
+}
+
+/* Contact suggestions */
+.suggestions {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 56px;
+  z-index: 50;
+  width: min(360px, calc(100% - 56px));
+  max-height: 264px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-1);
+  border-radius: 10px;
+  box-shadow: var(--shadow-3);
+}
+.suggestions[hidden] {
+  display: none;
+}
+.suggestion {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-height: 34px;
+  padding: 7px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--fg-1);
+  cursor: pointer;
+}
+.suggestionActive {
+  background: var(--ink-50);
+}
+.suggestionName {
+  flex: none;
+  max-width: 50%;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.suggestionAddr {
+  min-width: 0;
+  color: var(--fg-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Body ---------- */
+.textarea,
+.stream,
+.grow::after {
+  min-height: 200px;
+  padding: 16px;
+  font-family: inherit;
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--fg-1);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+/* Auto-grow without measuring: the ::after holds the same text and sizes the
+   grid cell, the textarea fills it. */
+.grow {
+  display: grid;
+}
+.grow::after {
+  content: attr(data-value) " ";
+  grid-area: 1 / 1;
+  visibility: hidden;
+  pointer-events: none;
+}
+.textarea {
+  grid-area: 1 / 1;
+  width: 100%;
+  resize: none;
+  overflow: hidden;
+  border: none;
+  background: transparent;
+}
+.del {
+  border-radius: 3px;
+  background: var(--red-100);
+  color: var(--red-700);
+  text-decoration: line-through;
+}
+.ins {
+  border-radius: 3px;
+  background: var(--cobalt-100);
+  color: var(--cobalt-800);
+}
+.caret {
+  display: inline-block;
+  width: 2px;
+  height: 18px;
+  margin-left: 1px;
+  vertical-align: -3px;
+  background: var(--brand);
+}
+
+/* ---------- Attachments ---------- */
+.attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0 16px 12px;
+  list-style: none;
+}
+.attachment {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  height: 28px;
+  padding: 0 4px 0 8px;
+  border: 1px solid var(--border-1);
+  border-radius: 7px;
+  font-size: 12.5px;
+  color: var(--fg-1);
+}
+.attachmentIcon {
+  flex: none;
+  color: var(--fg-3);
+}
+.attachmentName {
+  min-width: 0;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.attachmentSize {
+  flex: none;
+  font: 11.5px var(--font-mono);
+  color: var(--fg-3);
+}
+
+/* ---------- Held for approval ---------- */
+.held {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-top: 1px solid var(--border-1);
+  border-radius: 0 0 11px 11px;
+  background: var(--amber-100);
+  /* Room under the bar when it is scrolled into view (ComposeCard). */
+  scroll-margin-bottom: 24px;
+}
+.heldText {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--amber-700);
+}
+.heldText strong {
+  font-weight: 600;
+}
+.heldIcon {
+  flex: none;
+  margin-top: 1px;
+}
+.heldActions,
+.foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.heldActions .heldEdit {
+  padding: 0 12px;
+  background: #fff;
+}
+.heldActions .heldEdit:hover:not(:disabled) {
+  background: #fff;
+}
+.heldActions .heldDeny {
+  padding: 0 12px;
+  color: var(--amber-700);
+}
+.heldActions .heldDeny:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--amber-700);
+}
+
+/* ---------- Send row ---------- */
+.foot {
+  position: relative;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-1);
+}
+.footSpacer {
+  flex: 1;
+}
+.foot .scheduleButton {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border-1);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--fg-2);
+}
+.foot .scheduleButton:hover:not(:disabled) {
+  border-color: var(--border-2);
+  background: var(--ink-50);
+}
+.foot .attachButton,
+.foot .discardButton {
+  width: 30px;
+  height: 30px;
+}
+.status {
+  min-width: 58px;
+  text-align: right;
+  font-size: 12px;
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+.scheduleMenu {
+  bottom: 52px;
+  left: 60px;
+  width: 230px;
+}
+.custom {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 4px 8px 8px;
+}
+.customInput {
+  width: 100%;
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid var(--border-1);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  font-size: 13px;
+  color: var(--fg-1);
+}
+.customInput:focus-visible {
+  border-color: var(--border-focus);
+  box-shadow: var(--shadow-focus);
+}
+.customInput[aria-invalid="true"] {
+  border-color: var(--red-500);
+}
+.customError {
+  font-size: 12px;
+  color: var(--red-700);
+}
+
+/* ---------- Touch: 16 px inputs (no iOS zoom), 44 px targets ---------- */
+.touch .fieldInput,
+.touch .chipInput,
+.touch .textarea,
+.touch .grow::after,
+.touch .customInput {
+  font-size: 16px;
+}
+.touch .field {
+  min-height: 44px;
+}
+.touch .fieldInput {
+  height: 43px;
+}
+.touch .fieldLabel {
+  line-height: 43px;
+}
+.touch .chip {
+  height: 30px;
+}
+.touch .chipRemove {
+  width: 26px;
+  height: 26px;
+}
+.touch .ccToggle {
+  height: 43px;
+  margin-top: 0;
+}
+.touch .foot > button,
+.touch .heldActions > button {
+  min-height: 44px;
+}
+.touch .foot .scheduleButton,
+.touch .foot .attachButton,
+.touch .foot .discardButton {
+  width: 44px;
+  height: 44px;
+}
+.touch .customInput {
+  height: 44px;
+}
+.touch .scheduleMenu {
+  left: 16px;
+  bottom: 64px;
+}
+.touch .attachment {
+  height: 34px;
+}
+.touch .suggestion {
+  min-height: 44px;
+  align-items: center;
+}
+/* Hit areas that are larger than the visual. */
+@media (pointer: coarse) {
+  .foot .scheduleButton,
+  .foot .attachButton,
+  .foot .discardButton,
+  .bar .close {
+    width: 44px;
+    height: 44px;
+  }
+  .chipRemove::after,
+  .linkButton::after,
+  .ccToggle::after {
+    content: "";
+    position: absolute;
+    inset: -9px;
+  }
+}

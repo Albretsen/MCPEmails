@@ -1,0 +1,161 @@
+/* Base rules for the client. Tokens live in tokens.css (copied from the
+   marketing app's colors_and_type.css; fonts are self-hosted via fontsource). */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  /* Removes the 300 ms tap delay and double-tap zoom; pinch zoom still works. */
+  touch-action: manipulation;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--bg-page);
+  color: var(--fg-1);
+  font-family: var(--font-sans);
+  font-size: var(--fs-14);
+  line-height: var(--lh-base);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior: none;
+}
+
+a {
+  color: var(--brand);
+  text-decoration: none;
+  text-underline-offset: 0.18em;
+}
+a:hover {
+  color: var(--brand-hover);
+  text-decoration: underline;
+}
+
+::selection {
+  background: var(--cobalt-200);
+  color: var(--ink-900);
+}
+
+input,
+textarea,
+select,
+button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+button {
+  touch-action: manipulation;
+}
+
+::placeholder {
+  color: var(--fg-4);
+}
+
+/* One visible focus ring everywhere, keyboard only. */
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+}
+
+/* iOS zooms the page when a focused input is under 16 px. */
+@media (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Shared scroller behaviour: opt in with data-scroller. */
+[data-scroller] {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Keyframes shared across panes (names match the design prototype). */
+@keyframes mc-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes mc-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+@keyframes mc-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes chatGrow {
+  from {
+    clip-path: inset(calc(100% - 132px) 0 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes chatShrink {
+  from {
+    clip-path: inset(0 0 0 0);
+  }
+  to {
+    clip-path: inset(calc(100% - 132px) 0 0 0);
+  }
+}
+
+/* Motion is information: with reduced motion, state changes become static. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

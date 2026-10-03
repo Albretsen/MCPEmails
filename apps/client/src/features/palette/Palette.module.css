@@ -1,0 +1,140 @@
+/* Command palette. Same visual language as the menus (ui.module.css):
+   surface, hairline border, 13 px rows; a larger radius and shadow because it
+   floats over the whole app. No entry animation: it is opened by a key press. */
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(11, 16, 32, 0.28);
+}
+
+.palette {
+  position: fixed;
+  left: 50%;
+  top: max(calc(12px + env(safe-area-inset-top)), 14vh);
+  z-index: 81;
+  translate: -50% 0;
+  width: min(600px, calc(100vw - 24px));
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-1);
+  border-radius: 12px;
+  box-shadow: var(--shadow-4);
+  overflow: hidden;
+}
+
+.inputRow {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--border-1);
+}
+.inputIcon {
+  flex: none;
+  color: var(--fg-3);
+}
+.input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-size: 15px;
+  color: var(--fg-1);
+}
+/* The dialog is modal and the input is its only tab stop: the caret is the focus indicator. */
+.input:focus,
+.input:focus-visible {
+  outline: none;
+}
+
+/* Fixed height: the page never shifts while results change. */
+.results {
+  height: min(372px, calc(100dvh - 14vh - 150px));
+  min-height: 120px;
+  padding: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.section + .section {
+  margin-top: 4px;
+}
+.sectionLabel {
+  padding: 6px 8px 4px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--fg-1);
+  cursor: pointer;
+  /* Scrolled into view with room for the section label above it. */
+  scroll-margin: 28px 0 6px;
+}
+.rowActive {
+  background: var(--cobalt-50);
+  box-shadow: inset 0 0 0 1px var(--cobalt-200);
+}
+.rowIcon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  color: var(--fg-3);
+}
+.rowIcon:empty {
+  display: none;
+}
+.rowLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rowCount {
+  flex: none;
+  font: 11.5px var(--font-mono);
+  color: var(--fg-3);
+}
+
+.foot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 34px;
+  padding: 0 12px;
+  border-top: 1px solid var(--border-1);
+  background: var(--ink-25);
+  font-size: 11.5px;
+  color: var(--fg-3);
+}
+.footSpacer {
+  flex: 1;
+}
+
+@media (pointer: coarse) {
+  .row {
+    height: 44px;
+  }
+  .foot {
+    display: none;
+  }
+}
