@@ -4,7 +4,7 @@
 //
 // It reads declarations, not a browser, so it holds for any way of delivering
 // the font files. What it cannot see (the files themselves, what a browser
-// computes) is covered by scripts/built-output/fonts.test.mjs and by the
+// computes) is covered by scripts/built-output/fonts.check.mjs (on demand) and by the
 // recorded browser measurements in scripts/built-output/fixtures.
 
 import { test } from 'node:test';

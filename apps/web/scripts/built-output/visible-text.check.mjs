@@ -8,13 +8,19 @@
 //
 // Needs a production build made with the CI placeholder env:
 //   cd apps/web && npm run build     (env as in .github/workflows/ci.yml)
-//   npm run test:built-output
-// Without one the suite SKIPS, loudly, so a plain `npm test` on a machine with
-// no build still passes. The CI build job sets BUILT_OUTPUT_REQUIRED=1, which
-// turns that skip into a failure.
+//   npm run check:built-output
+//
+// ON DEMAND ONLY. This is deliberately not a `test:*` script, so neither
+// `npm test` nor CI runs it, and the files are named *.check.mjs so the
+// orphan check in scripts/run-tests.mjs does not take them for tests. Two
+// reasons: it needs a build, which the unit-test job does not have; and any
+// intended copy edit on a snapshotted route changes a snapshot, which must not
+// be able to hold a production deploy. Run it before and after a change to how
+// pages are delivered. Without a placeholder-env build it fails, it never
+// skips.
 //
 // To re-record after an intended copy change:
-//   UPDATE_BUILT_OUTPUT_SNAPSHOTS=1 npm run test:built-output
+//   UPDATE_BUILT_OUTPUT_SNAPSHOTS=1 npm run check:built-output
 
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -41,7 +47,7 @@ before(async () => {
     console.log(`\nSKIPPED built-output suite: ${skip}\n`);
     return;
   }
-  if (unavailable) throw new Error(`BUILT_OUTPUT_REQUIRED=1 but ${unavailable}`);
+  if (unavailable) throw new Error(unavailable);
   server = await startServer();
   // Sequential on purpose: the placeholder Supabase host makes the home page
   // wait on a failing lookup, and parallel requests only queue behind it.

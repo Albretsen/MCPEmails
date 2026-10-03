@@ -2,7 +2,8 @@
 // a page links make available, and what the family tokens resolve to in the
 // CSS as shipped (after the bundler has had its way with it).
 //
-// Same build requirement and skip rule as visible-text.test.mjs.
+// On demand, with the same build requirement as visible-text.check.mjs
+// (npm run check:built-output).
 
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -38,14 +39,14 @@ function stylesheetLinks(html) {
 
 before(async () => {
   if (skip) return;
-  if (unavailable) throw new Error(`BUILT_OUTPUT_REQUIRED=1 but ${unavailable}`);
+  if (unavailable) throw new Error(unavailable);
   server = await startServer();
   for (const page of PAGES) {
     const { html, status } = await fetchRoute(server.origin, page);
     assert.equal(status, 200, page);
     const css = [];
     for (const href of stylesheetLinks(html)) {
-      const response = await fetch(new URL(href, server.origin));
+      const response = await fetch(new URL(href, server.origin), { signal: AbortSignal.timeout(30_000) });
       css.push({ href, text: await response.text(), response });
     }
     pages.set(page, { html, css, origin: server.origin });

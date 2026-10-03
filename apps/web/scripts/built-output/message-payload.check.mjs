@@ -7,7 +7,8 @@
 // one namespace and nowhere else, so finding one in a document means that
 // namespace's messages (or a page rendering them) are in it.
 //
-// Same build requirement and skip rule as visible-text.test.mjs.
+// On demand, with the same build requirement as visible-text.check.mjs
+// (npm run check:built-output).
 
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -92,7 +93,7 @@ const responses = new Map();
 
 before(async () => {
   if (skip) return;
-  if (unavailable) throw new Error(`BUILT_OUTPUT_REQUIRED=1 but ${unavailable}`);
+  if (unavailable) throw new Error(unavailable);
   server = await startServer();
   for (const route of new Set([...Object.keys(ABSENT), ...Object.keys(PRESENT), ...Object.keys(MAX_BYTES)])) {
     responses.set(route, await fetchRoute(server.origin, route));

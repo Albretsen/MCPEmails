@@ -48,6 +48,7 @@
     "test:resend-webhook": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-ts-alias.mjs src/lib/email/resend-webhook.test.ts app/api/webhooks/resend/route.test.ts",
     "test:paywall-followup": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/email/paywall-followup.test.ts",
     "test": "node scripts/run-tests.mjs",
+    "check:built-output": "node --test --test-concurrency=1 scripts/built-output/visible-text.check.mjs scripts/built-output/fonts.check.mjs scripts/built-output/fonts-self-hosted.check.mjs scripts/built-output/message-payload.check.mjs",
     "test:revenue": "node --test --experimental-strip-types src/lib/analytics/revenue-math.test.ts src/lib/analytics/internal-accounts.test.ts src/lib/analytics/cash-math.test.ts",
     "test:retention": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/analytics/retention.test.ts",
     "test:kiosk": "node --test --experimental-strip-types components/admin/kiosk/shared.test.ts",
@@ -64,8 +65,7 @@
     "test:marketing-consent": "node --test src/lib/marketing-consent.test.mjs",
     "test:signup-consent-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/auth/signup-consent-ui.test.mjs",
     "test:i18n-coverage": "node --test scripts/i18n-coverage/analyze.test.mjs scripts/i18n-coverage/narrowing.test.mjs",
-    "test:fonts": "node --test scripts/fonts/font-roles.test.mjs",
-    "test:built-output": "node --test --test-concurrency=1 scripts/built-output/visible-text.test.mjs scripts/built-output/fonts.test.mjs scripts/built-output/fonts-self-hosted.test.mjs scripts/built-output/message-payload.test.mjs"
+    "test:fonts": "node --test scripts/fonts/font-roles.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

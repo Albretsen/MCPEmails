@@ -2,7 +2,8 @@
 // immutable caching, one preload, no request to fonts.googleapis.com or
 // fonts.gstatic.com, and no less glyph coverage than Google's own CSS offered.
 //
-// Same build requirement and skip rule as visible-text.test.mjs.
+// On demand, with the same build requirement as visible-text.check.mjs
+// (npm run check:built-output).
 
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -29,7 +30,7 @@ const srcUrl = (rule) => /url\(\s*["']?([^"')]+)["']?\s*\)/.exec(rule.src)?.[1];
 
 before(async () => {
   if (skip) return;
-  if (unavailable) throw new Error(`BUILT_OUTPUT_REQUIRED=1 but ${unavailable}`);
+  if (unavailable) throw new Error(unavailable);
   server = await startServer();
   for (const route of PAGES) pages.set(route, await fetchPageWithCss(server.origin, route));
   for (const page of pages.values()) {
@@ -38,7 +39,7 @@ before(async () => {
         if (!WEBFONT_FAMILIES.includes(rule.family)) continue;
         const resolved = new URL(srcUrl(rule), new URL(sheet.href, server.origin));
         if (resolved.origin !== server.origin || fontFiles.has(resolved.pathname)) continue;
-        fontFiles.set(resolved.pathname, await fetch(resolved));
+        fontFiles.set(resolved.pathname, await fetch(resolved, { signal: AbortSignal.timeout(30_000) }));
       }
     }
   }

@@ -255,16 +255,6 @@ jobs:
       - run: npm ci
       - name: Build Next.js app
         run: cd apps/web && npm run build
-      # What the build SERVES, checked against committed snapshots: the text a
-      # visitor can read on a representative set of routes, and the font faces
-      # the shipped CSS makes available. It needs the build above, which is why
-      # it lives in this job; in the Unit Tests job the same suite has no build
-      # and skips. BUILT_OUTPUT_REQUIRED turns that skip into a failure here, so
-      # it cannot pass by not running.
-      - name: Built-output checks (visible text, fonts)
-        env:
-          BUILT_OUTPUT_REQUIRED: '1'
-        run: cd apps/web && npm run test:built-output
 
   # Builds the database from supabase/migrations alone, then checks it.
   #

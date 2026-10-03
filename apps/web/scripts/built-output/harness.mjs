@@ -42,7 +42,6 @@ export const PLACEHOLDER_ENV = {
 
 /**
  * Why the suite cannot run here, or null when it can.
- * `BUILT_OUTPUT_REQUIRED=1` (set in the CI build job) turns a skip into a failure.
  */
 export function buildUnavailableReason() {
   if (!existsSync(path.join(buildDir, 'BUILD_ID'))) {
@@ -57,7 +56,10 @@ export function buildUnavailableReason() {
   return null;
 }
 
-export const buildRequired = process.env.BUILT_OUTPUT_REQUIRED === '1';
+// The suites are run on demand (npm run check:built-output), where a missing
+// build is a failure, never a skip. BUILT_OUTPUT_OPTIONAL=1 restores the skip
+// for anyone who wires them into something that may run without a build.
+export const buildRequired = process.env.BUILT_OUTPUT_OPTIONAL !== '1';
 
 function freePort() {
   return new Promise((resolve, reject) => {
@@ -267,7 +269,7 @@ export async function fetchPageWithCss(origin, route) {
     ...linkHeaderEntries(page.headers).filter((entry) => entry.rel === 'preload' && entry.as === 'style').map((entry) => entry.href),
   ]);
   for (const href of hrefs) {
-    const response = await fetch(new URL(href, origin));
+    const response = await fetch(new URL(href, origin), { signal: AbortSignal.timeout(30_000) });
     css.push({ href, status: response.status, text: await response.text() });
   }
   return { ...page, css };
