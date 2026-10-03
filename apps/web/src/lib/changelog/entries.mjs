@@ -24,6 +24,11 @@
  * cannot be said otherwise, but the plan is never the news. If you are adding
  * an entry because a price, a tier or a limit moved, it does not go here.
  *
+ * HOW LONG. One or two sentences: what changed for the customer, and the old
+ * symptom if it was a fix. The mechanism, the root cause and the list of
+ * everything that did not change stay in the commit message. A launch may run
+ * longer; a bug fix may not.
+ *
  * Entries are written in English and served in every locale. They are terse
  * release notes about a fast-moving product; a stale machine translation of a
  * line about SMTP AUTH is worse than the English line. The page chrome around
@@ -43,28 +48,28 @@ export const ENTRIES = [
     kind: 'improved',
     title: 'Faster mailbox reads on IMAP accounts',
     body:
-      'Listing a folder no longer asks the mail server for every message id first, listing a folder other than the inbox uses one connection instead of two, folder lists fetch their message counts in one to four requests instead of up to 26, and downloading an attachment fetches the message once instead of twice. Results are unchanged.',
+      'Listing a folder, listing folders with their counts and downloading an attachment each make fewer round trips to the mail server. Results are unchanged.',
   },
   {
     date: '2026-10-02',
     kind: 'improved',
     title: 'Tool calls answer about a second sooner',
     body:
-      'Every tool call did its account checks one at a time before starting and wrote its records before answering, which added well over a second to each call regardless of how fast the mailbox was. The checks now run together and the records are written after the answer is sent. Reading, searching, sending and organising all respond sooner, most noticeably on quick calls such as listing inboxes or folders. Nothing about what a call does or what it is allowed to do has changed.',
+      'Account checks now run together instead of one at a time, and records are written after the answer is sent. Most noticeable on quick calls such as listing inboxes or folders.',
   },
   {
     date: '2026-10-02',
     kind: 'fixed',
     title: 'Reading a draft back works',
     body:
-      'draft_read was listed to every assistant but only answered in workspaces with the in-chat draft editor, so everywhere else an assistant that tried to open a draft from the list, or check one it had just written, was refused. It now returns the draft in full: recipients, subject, body and attachment names, on Gmail, Outlook and IMAP. Nothing about creating, updating or sending drafts changes.',
+      'draft_read was refused outside workspaces with the in-chat draft editor. It now returns the full draft on Gmail, Outlook and IMAP.',
   },
   {
     date: '2026-10-02',
     kind: 'fixed',
     title: 'Folder aliases work on more mailboxes',
     body:
-      'Asking for sent, trash, spam, drafts or archive now finds the right folder on IMAP mailboxes that name it "Sent Items", "Deleted Items", "Junk E-mail" or keep it under INBOX, and searching archive on Gmail over IMAP now searches All Mail. When a mail server briefly refuses to open a folder, the error now says to try again instead of claiming the folder does not exist. An automation whose destination folder has been deleted now switches itself off after five failed runs and says why, rather than failing quietly.',
+      'sent, trash, spam, drafts and archive now resolve on IMAP mailboxes that use names like "Sent Items" or "Junk E-mail" or keep them under INBOX, and archive on Gmail over IMAP searches All Mail. A folder the server briefly refuses to open says to try again, and an automation whose destination folder was deleted switches itself off after five failed runs.',
   },
 
   /* ── September 2026 ────────────────────────────────────────── */
@@ -73,280 +78,280 @@ export const ENTRIES = [
     kind: 'added',
     title: 'Outlook and Microsoft 365 inboxes',
     body:
-      'Outlook connects with Sign in with Microsoft, over Microsoft Graph, with no app password and no IMAP settings. Personal Outlook.com, Hotmail, Live and MSN accounts connect directly. A work or school Microsoft 365 account may first need an IT admin to approve the app once for the whole organisation; the dashboard gives you a link to send them, and the admin does not need an MCP Emails account. Microsoft shows the app as coming from a verified publisher. Read, search, send, reply, forward, drafts, scheduled sends, nested folders, flags and automations all work, and an automation\'s label action applies an Outlook category.',
+      'Outlook connects with Sign in with Microsoft, over Microsoft Graph, with no app password and no IMAP settings. Personal Outlook.com, Hotmail, Live and MSN accounts connect directly; a work or school account may need an IT admin to approve the app once, and the dashboard gives you a link to send them. Reading, search, sending, drafts, scheduled sends, folders, flags and automations all work, and labels apply as Outlook categories.',
   },
   {
     date: '2026-09-26',
     kind: 'fixed',
     title: 'ChatGPT gets the access its tools need',
     body:
-      'A connection made from ChatGPT opened the consent screen on Read-only, and ChatGPT does not come back for more access when a tool needs it, so sending and automations failed until the connector was set up again. When the request provably comes from ChatGPT, the consent screen now opens with Full access selected, and you can still narrow it before approving. A tool that needs more than was granted now answers in the form ChatGPT follows to ask again. Creating a folder that already exists succeeds and says it already existed.',
+      'ChatGPT does not come back for more access when a tool needs it, so a connection approved as Read-only could never send. The consent screen now opens on Full access for ChatGPT, and you can still narrow it. Creating a folder that already exists now succeeds.',
   },
   {
     date: '2026-09-26',
     kind: 'fixed',
     title: 'A moved message comes back with its new id',
     body:
-      'On IMAP inboxes a message gets a new id in the folder it moves to, and move returned the old one, so moving a message and then moving it back failed with message not found. Move, archive and their batch forms now return new_message_id whenever the server reports it, and say to look the message up in the destination when it does not.',
+      'On IMAP a message gets a new id when it moves, and move returned the old one. Move and archive now return new_message_id whenever the server reports it.',
   },
   {
     date: '2026-09-25',
     kind: 'fixed',
     title: 'Connecting a mailbox never replaces one you already have',
     body:
-      'Connecting an address that was already connected through a different kind of connection quietly converted the existing inbox to the new one. That is now refused, with a message saying the address is already connected another way, and the working inbox is left as it was. Reconnecting the same inbox the same way works as before.',
+      'Connecting an address that was already connected another way quietly converted the existing inbox. That is now refused and the working inbox is left alone.',
   },
   {
     date: '2026-09-23',
     kind: 'improved',
     title: 'Correct ChatGPT setup steps',
     body:
-      'The ChatGPT steps on the dashboard and in the docs said a custom connector needs a ChatGPT Business, Enterprise or Edu plan. Plus and Pro accounts can add one too, on the web, through developer mode. The steps now also say that developer mode and the connector have to be switched on from the + menu in each new chat, which is why a connected ChatGPT could see the tools and never use them.',
+      'Plus and Pro accounts can add a custom connector too, through developer mode on the web, not only Business, Enterprise and Edu. The steps also now say the connector has to be switched on from the + menu in each new chat.',
   },
   {
     date: '2026-09-23',
     kind: 'improved',
     title: 'More IMAP servers can sign in',
     body:
-      'Password sign-in always used AUTHENTICATE PLAIN, whatever the server offered. It now follows what the server advertises and uses LOGIN or CRAM-MD5 when PLAIN is not on the list, so servers such as EarthLink, online.no, 163.com and aliyun.com can connect. Servers that already worked sign in exactly as before.',
+      'Sign-in now uses LOGIN or CRAM-MD5 when the server does not offer PLAIN, so servers such as EarthLink, online.no, 163.com and aliyun.com can connect.',
   },
   {
     date: '2026-09-23',
     kind: 'improved',
     title: 'Tools accept any argument whose meaning is clear',
     body:
-      'A clear request was sometimes refused over its shape, costing a failed call and a retry: one address as to instead of a list, the text false for a yes or no field, a number sent as text, email_id where message_id was expected. The server now accepts these, along with common synonyms, a single id where a list is expected, null for an optional field, a JSON object sent as a string and enum values in any case. An oversized page size is clamped with a note on how to page on. Anything that is actually ambiguous is still refused, and so is a limit on how much a write may touch.',
+      'Requests are no longer refused over shape alone: a single value where a list is expected, numbers or booleans sent as text, common synonyms such as email_id for message_id, and enum values in any case are all accepted. Anything actually ambiguous is still refused.',
   },
   {
     date: '2026-09-23',
     kind: 'added',
     title: 'Cc and bcc on replies, recipients on draft send',
     body:
-      'Replies, and reply drafts, take cc and bcc on top of the recipients worked out from the original message, on every provider, and the approval card shows them. Sending a draft can set its to, cc and bcc, changing only the recipient headers so the body and attachments go out untouched. Draft actions take an idempotency_key, and schedule_list and contact_search accept an inbox address as well as an inbox id.',
+      'Replies and reply drafts take cc and bcc on every provider. Sending a draft can set its to, cc and bcc without touching the body or attachments.',
   },
   {
     date: '2026-09-23',
     kind: 'improved',
     title: 'The automation editor names criteria your inbox cannot run',
     body:
-      'The dashboard now refuses to save an automation whose filter uses a criterion the inbox cannot search on, and says which one before you save, instead of letting the rule fail in its run log later.',
+      'The dashboard refuses to save an automation whose filter the inbox cannot search on, and says which criterion, instead of letting the rule fail later.',
   },
   {
     date: '2026-09-20',
     kind: 'changed',
     title: 'Search says which criteria it could not apply',
     body:
-      'Some criteria have no equivalent in a provider\'s search: IMAP servers cannot search by attachment, for example. A search used to drop such a criterion silently and return a wider result than was asked for. It now names the criterion in the result\'s notes. Search-and-move and search-and-delete refuse instead, because a dropped condition there changes what gets moved or deleted, and an automation using one is refused when saved.',
+      'A criterion the provider cannot search on, such as attachments on IMAP, used to be dropped silently. Search now names it in the result notes, and search-and-move and search-and-delete refuse instead.',
   },
   {
     date: '2026-09-20',
     kind: 'fixed',
     title: 'Delete and move report a message that is not there',
     body:
-      'On IMAP inboxes, deleting, moving or copying a message id that no longer existed was reported as done. Ids change whenever a message moves between folders, so an out-of-date id is common. These actions now check the message is there first and answer message not found for each id that is not, in single and batch calls alike. Deleting a message that is already in the trash is still a harmless no-op.',
+      'On IMAP, deleting, moving or copying a message id that no longer existed was reported as done. These actions now answer message not found for each missing id.',
   },
   {
     date: '2026-09-20',
     kind: 'fixed',
     title: 'Readable previews and contact names',
     body:
-      'List and search previews could show raw MIME, boundary lines and base64, for messages with attachments, the ones you most want to triage. Previews now use the same parser as reading a message, at any depth, and accented characters decode correctly. contact_search returns display names decoded instead of as encoded words.',
+      'List and search previews no longer show raw MIME or base64 for messages with attachments, and contact_search returns decoded display names.',
   },
   {
     date: '2026-09-20',
     kind: 'fixed',
     title: 'Copy works on Gmail inboxes connected with an app password',
     body:
-      'Tool descriptions said copying never works on Gmail, so assistants refused to copy mail on Gmail inboxes connected with an app password, where it works. Whether copy is available now follows the connection, and inbox_list reports it per inbox. Moving to a folder that does not exist now says the mailbox is unchanged and points to folder_list, instead of suggesting a retry.',
+      'Tool descriptions said copy never works on Gmail, so assistants refused it where it does work. Copy availability now follows the connection, and inbox_list reports it per inbox.',
   },
   {
     date: '2026-09-20',
     kind: 'fixed',
     title: 'Filtering your inbox list no longer says you have none',
     body:
-      'inbox_list with a filter that matched nothing said no mailbox was connected at all. It now says the filter matched nothing, lists the inboxes you do have, and suggests the filter that would find a Gmail inbox connected over IMAP. A new service filter finds inboxes by mail service. Previewing a saved automation now uses its own inbox instead of asking for one.',
+      'A filter that matched nothing said no mailbox was connected. It now says the filter matched nothing and lists the inboxes you do have. A new service filter finds inboxes by mail service.',
   },
   {
     date: '2026-09-17',
     kind: 'fixed',
     title: 'A forward now carries the original exactly',
     body:
-      'Forwarding relays the original message byte for byte: its HTML, inline images, attachments and MIME structure arrive as they were sent, under your note and the usual forwarded-message header. Until now a forward was flattened to plain text on every provider. Originals up to 25 MB, and as_attachment sends the whole original as a .eml instead.',
+      'Forwards relay the original byte for byte, with its HTML, inline images and attachments, instead of flattening it to plain text. Originals up to 25 MB, and as_attachment sends the original as a .eml instead.',
   },
   {
     date: '2026-09-17',
     kind: 'changed',
     title: 'Automations no longer accept a provider-native raw query',
     body:
-      'An automation filter could carry raw, a query string handed straight to the mail provider in its own dialect. A rule re-runs unattended every fifteen minutes for months, and nothing on that path can tell a working raw query from a broken one, so it was also a way past the rule that a filter must state at least one condition: a raw value of ALL counted as a condition and then matched the whole mailbox. The field is now refused where a rule is saved and again where it runs, with an error that says the refusal is deliberate rather than a gap. No stored rule used it, so no existing automation changes what it does, and the interactive search tools still take raw.',
+      'An automation filter can no longer carry raw, a query passed straight to the mail provider. A raw value could match the whole mailbox, and nothing on the unattended path could check it. No stored rule used it, and the interactive search tools still take raw.',
   },
   {
     date: '2026-09-17',
     kind: 'fixed',
     title: 'Nothing unattended acts on a disconnected inbox',
     body:
-      'Scheduled sends, held bulk plans and automation runs each loaded their inbox by id alone, so a mailbox disconnected, revoked or expired after the work was queued could still be used. All three now require an active inbox, the same check every ordinary tool call makes. A scheduled send against such an inbox fails with a reason shown on the dashboard, and an automation reports the inbox as unavailable instead of claiming it no longer exists.',
+      'Scheduled sends, held bulk plans and automation runs now require an active inbox, like every other tool call. Work queued before a mailbox was disconnected fails with a reason instead of running.',
   },
   {
     date: '2026-09-17',
     kind: 'improved',
     title: 'A draft update says whether it is still threaded',
     body:
-      'Updating a reply draft returned no reply-to reference, which read as though the thread had been lost when the headers were carried through all along. Draft results now carry a threaded flag on every path, true when the draft answers a known message.',
+      'Draft results now carry a threaded flag, true when the draft answers a known message.',
   },
   {
     date: '2026-09-17',
     kind: 'changed',
     title: 'Invites are re-checked when they are accepted',
     body:
-      'An invite is valid for seven days and was checked only when it was sent. Accepting one now re-checks that the workspace still has room for another member and still exists, so a workspace whose membership changed in between cannot gain a member through an invite already in flight.',
+      'Accepting an invite now re-checks that the workspace still exists and has room. Before, that was checked only when the invite was sent.',
   },
   {
     date: '2026-09-16',
     kind: 'added',
     title: 'Restrict the connector to your own email domain',
     body:
-      'The OAuth server can now say, for a given token, which verified email address it was issued to, through a userinfo endpoint and the openid and email scopes. A ChatGPT Business or Enterprise admin can use that to limit the connector to accounts on their own domain. These scopes grant no mail permission, and the consent screen states in one line that the account\'s address is included.',
+      'A userinfo endpoint and the openid and email scopes let a ChatGPT Business or Enterprise admin limit the connector to accounts on their own domain. These scopes grant no mail permission.',
   },
   {
     date: '2026-09-16',
     kind: 'changed',
     title: 'Tool annotations match what the tools do',
     body:
-      'The hints a client uses to decide when to ask before running a tool were corrected. Only the four tools that can reach someone outside your own mailbox (compose, draft send, schedule and automation) are marked open-world, and anything that sends is marked destructive, because a delivered message cannot be recalled. Reading a message no longer marks it as read, so email_read stays a read-only tool; the old mark_as_read argument is accepted and ignored, and the result points at the flag action of email_organize instead.',
+      'Only the four tools that can reach someone outside your mailbox are marked open-world, and anything that sends is marked destructive. Reading a message no longer marks it as read; use the flag action of email_organize for that.',
   },
   {
     date: '2026-09-16',
     kind: 'fixed',
     title: 'Automations: one connection per run, and a time budget that holds',
     body:
-      'A recurring rule opened a fresh IMAP connection for every matched message, which providers that cap simultaneous connections punished. A run now uses one connection. A rule with many matches could also run past the time allowed and be cut off part way with the rest dropped; it now stops at a message boundary, records what it did and picks up the remainder on the next run. A destination folder the provider had confirmed is no longer reported as missing when a single move is refused.',
+      'A run now uses one IMAP connection instead of one per matched message. A run that reaches its time limit stops at a message boundary and picks up the rest next time, instead of being cut off part way.',
   },
   {
     date: '2026-09-14',
     kind: 'fixed',
     title: 'A folder called Spam is Spam, not Junk',
     body:
-      'Folder names were run through an alias table before every operation, so a mailbox with a real Spam folder and no Junk got a Junk-not-found error, and a move or copy addressed to Spam reported success and landed in Junk. An exact folder name or id now wins over the role reading on every provider, and deleting resolves the mailbox\'s real Trash folder instead of assuming one named Trash.',
+      'An exact folder name or id now wins over an alias, so a mailbox with a real Spam folder is no longer sent to Junk. Deleting uses the mailbox\'s real Trash folder.',
   },
   {
     date: '2026-09-14',
     kind: 'changed',
     title: 'IMAP search covers the Inbox unless you widen it',
     body:
-      'On generic IMAP, a search with no folder filter looks in the Inbox. Fanning out across every mailbox is one serial search per folder and ran past the time a search is allowed to take, so it is no longer the default. Name the folders you want in include_folders, such as your archive or your sent mail, to search wider. Gmail and Outlook still search every folder.',
+      'On generic IMAP, a search with no folder filter looks in the Inbox, because searching every folder ran past the time limit. Name folders in include_folders to search wider. Gmail and Outlook still search every folder.',
   },
   {
     date: '2026-09-12',
     kind: 'fixed',
     title: 'ChatGPT can connect',
     body:
-      'Connecting from ChatGPT died at the consent screen with "Client metadata could not be verified". ChatGPT states the ways it can authenticate as a list and also carries the older single-value field beside it, which names a method this server does not accept; only that older field was being read. The list now decides. A client that can authenticate only in a way we do not support is still refused.',
+      'Connecting from ChatGPT failed at the consent screen with "Client metadata could not be verified". Its list of authentication methods is now read correctly.',
   },
   {
     date: '2026-09-11',
     kind: 'fixed',
     title: 'Looking up a correspondent with a read-only connection',
     body:
-      'Searching your contacts required a contacts permission of its own, which a connection granted reading alone does not hold, so the lookup an assistant reaches for before composing was refused. Reading mail now covers it. It returns only the names and addresses already carried on the messages that connection can read.',
+      'contact_search no longer needs a permission of its own; reading mail covers it. It returns only names and addresses from messages the connection can already read.',
   },
   {
     date: '2026-09-09',
     kind: 'changed',
     title: 'Reading and writing are separate tools',
     body:
-      'Five tools each mixed a listing with the writes beside it, so a client had to ask permission to list your folders as though it were about to delete one. The advertised surface is now 22 tools with none of them mixed, which lets the reading half be allowed once and stop prompting. Nothing the server accepts changed, so a client connected before the split keeps working exactly as it did.',
+      'Tools that mixed a listing with writes are split, so a client can allow the reading half once and stop prompting. 22 tools in all, and clients connected before the split keep working.',
   },
   {
     date: '2026-09-09',
     kind: 'changed',
     title: 'Consent asks for reading first',
     body:
-      'The first screen a new user saw asked for all nine permissions at once, sending and deleting included, before a single message had been read. It now asks for reading alone and asks for the rest at the moment something actually needs one, carrying forward everything already granted rather than replacing it.',
+      'The consent screen asks for reading alone, and for the rest when something actually needs it, instead of all nine permissions up front.',
   },
   {
     date: '2026-09-09',
     kind: 'fixed',
     title: 'An approved send goes out as edited, and signed once',
     body:
-      'Editing the plain text of a held message before approving it left the formatted version of that message untouched, and the formatted version is what most mail clients display, so a recipient could be shown the wording from before the edit. Both now stay in step. Approved sends also carried the signature twice, and now carry it once.',
+      'Editing a held message before approving it now updates the formatted version too, which is what most mail clients show. Approved sends no longer carry the signature twice.',
   },
   {
     date: '2026-09-08',
     kind: 'added',
     title: 'Setup guides for 77 email providers',
     body:
-      'Each provider page carries the IMAP and SMTP host, port and transport security measured against that provider\'s own server, plus the date it was last checked, rather than settings copied from a forum post.',
+      'Each page carries the IMAP and SMTP settings measured against that provider\'s own server, with the date they were last checked.',
   },
   {
     date: '2026-09-08',
     kind: 'improved',
     title: 'Connecting an inbox',
     body:
-      'Ten changes across the connect flow. Choosing a provider advances at once instead of pausing for two seconds. A mailbox at your own domain now finds its own mail servers, from the records the domain publishes and a public provider database, rather than needing the host and port looked up by hand. Host and port sit on one row instead of the port hiding under Advanced. Nine separate refusals that all read "Connection failed. Please try again." each say what actually happened, and an expired session offers the way back to sign-in. A check that takes forty seconds now shows progress, and if you close the window before it finishes the answer still reaches you.',
+      'A mailbox at your own domain finds its mail servers automatically. Failures say what actually happened instead of "Connection failed", a slow check shows progress, and choosing a provider no longer pauses for two seconds.',
   },
   {
     date: '2026-09-08',
     kind: 'added',
     title: 'A status page, this changelog, and setup guides per client',
     body:
-      'Four pages the site was missing. /status is built from the monitor that runs against the product every few minutes, with real 30-day arithmetic and a day left grey rather than green when it was not measured. This changelog. Setup instructions for 13 MCP clients, each step taken from the product rather than guessed at. And a dated comparison against the other email MCP servers, with where we lose stated before the pitch.',
+      '/status is built from the monitor that runs against the product every few minutes. Also new: this changelog, setup instructions for 13 MCP clients, and a dated comparison against the other email MCP servers.',
   },
   {
     date: '2026-09-07',
     kind: 'added',
     title: 'Choose the sender name on each inbox',
     body:
-      'Set the name recipients see on outgoing mail per connected inbox, from the inbox settings or through the signature tool. A preview shows the exact From line before you save.',
+      'Set the name recipients see per inbox, from the inbox settings or the signature tool.',
   },
   {
     date: '2026-09-07',
     kind: 'added',
     title: 'Attach a file straight from another message',
     body:
-      'An attachment can now be added to a new email by pointing at the message it came from, so the file never has to travel through the conversation to be re-sent. The server fetches the bytes itself.',
+      'Attach a file to a new email by pointing at the message it came from. The server fetches it, so the file never passes through the conversation.',
   },
   {
     date: '2026-09-07',
     kind: 'added',
     title: 'Forward up to 50 messages in one call',
     body:
-      'Forwarding takes a list of messages instead of one. Results are reported per message, so a batch where one message fails still tells you which of the others went out.',
+      'Forwarding takes a list of messages, with results reported per message.',
   },
   {
     date: '2026-09-07',
     kind: 'fixed',
     title: 'A forward that never left now says so',
     body:
-      'When a forward fails before anything is transmitted, the result reports it as not sent and the retry is safe with the same idempotency key. Attachments the reader could not carry are no longer quietly left off a forward.',
+      'A forward that fails before anything is transmitted is reported as not sent and is safe to retry. Attachments that could not be carried are no longer quietly left off.',
   },
   {
     date: '2026-09-01',
     kind: 'added',
     title: 'Connect Gmail with an app password',
     body:
-      'Gmail now connects the same way as iCloud, Yahoo, Zoho and Fastmail: a Google app password, no consent screen. Signing in with Google is still offered, and mailboxes already connected that way are untouched.',
+      'Gmail connects with a Google app password, like iCloud, Yahoo, Zoho and Fastmail. Signing in with Google is still offered.',
   },
   {
     date: '2026-09-01',
     kind: 'fixed',
     title: 'Send from an inbox\'s own address on any provider',
     body:
-      'Naming a mailbox\'s own address as the sender was accepted only on Gmail and read as a Send As request everywhere else. It now works on every provider, and a different address is still refused where the provider cannot verify it.',
+      'Naming a mailbox\'s own address as the sender now works on every provider, not only Gmail.',
   },
   {
     date: '2026-09-01',
     kind: 'fixed',
     title: 'Long subject lines with accents read correctly',
     body:
-      'A subject that arrives in several encoded parts, which is how any long non-ASCII subject travels, is reassembled without stray spaces appearing inside words.',
+      'A long non-ASCII subject is reassembled without stray spaces inside words.',
   },
   {
     date: '2026-09-01',
     kind: 'improved',
     title: 'Clearer failures, faster IMAP',
     body:
-      'Provider failures are reported with a specific reason instead of one generic error, an action name that differs only in case or separator is understood rather than refused, and an abandoned IMAP connection is dropped instead of holding up the next call.',
+      'Provider failures give a specific reason, action names are understood whatever their case or separator, and an abandoned IMAP connection no longer holds up the next call.',
   },
   /* ── August 2026 ───────────────────────────────────────────── */
   {
@@ -354,28 +359,28 @@ export const ENTRIES = [
     kind: 'improved',
     title: 'Every tool declares the shape of its result',
     body:
-      'All 16 MCP tools publish an output schema, so a client can rely on the structured result each one returns instead of parsing prose.',
+      'All 16 tools publish an output schema, so a client can rely on structured results instead of parsing prose.',
   },
   {
     date: '2026-08-31',
     kind: 'fixed',
     title: 'Sending through hosts that refuse cloud senders',
     body:
-      'Some mail hosts reject submissions from cloud providers as a matter of policy. Those hosts are now reached over a non-cloud route, with the mail session encrypted end to end and an automatic fall back to a direct connection.',
+      'Mail hosts that reject submissions from cloud providers are now reached over a non-cloud route, encrypted end to end, with a fallback to a direct connection.',
   },
   {
     date: '2026-08-30',
     kind: 'fixed',
     title: 'Moving mail out of Trash restores it',
     body:
-      'On Gmail, moving a message out of Trash or Spam into a real folder now clears that pending-deletion state, so the message is genuinely restored rather than filed and still on a purge clock.',
+      'On Gmail, moving a message out of Trash or Spam now restores it, instead of leaving it on a purge clock.',
   },
   {
     date: '2026-08-30',
     kind: 'fixed',
     title: 'A folder name means the same thing to every tool',
     body:
-      'Folders and labels can be addressed by name, by id or by a common alias anywhere they are accepted. An unrecognised one fails with a message that names the value and points at the folder listing.',
+      'Folders and labels can be addressed by name, id or common alias everywhere. An unrecognised one fails with a message that names the value.',
   },
   {
     date: '2026-08-30',
@@ -389,70 +394,70 @@ export const ENTRIES = [
     kind: 'added',
     title: 'Provider compatibility reference',
     body:
-      'The providers page now documents how to connect each provider, sign-in method, IMAP and SMTP settings and what commonly breaks, alongside the capability table, with a visible last-verified date.',
+      'The providers page documents how to connect each provider, its settings and what commonly breaks, with a last-verified date.',
   },
   {
     date: '2026-08-30',
     kind: 'fixed',
     title: 'Inviting a teammate works',
     body:
-      'Every invite was refused with a message saying the workspace already held its maximum of one member, so nobody could ever add anybody to a workspace. The check could not read the workspace it was asked about and fell back to the most restrictive answer available; an unreadable workspace is now an error rather than a silent refusal. The inbox routes also gained the role check they were missing, so a viewer can no longer connect, disconnect or reconfigure a mailbox in someone else\'s workspace.',
+      'Every invite was refused as though the workspace were full. Fixed, and a viewer can no longer connect, disconnect or reconfigure a mailbox in someone else\'s workspace.',
   },
   {
     date: '2026-08-30',
     kind: 'fixed',
     title: 'Downloading an attachment that is not text',
     body:
-      'Taking a PDF, or the original message, succeeded here and then reached the assistant as though the call had been made wrong, with nothing to fall back on. Images and audio keep their own blocks, text keeps the form that works, and everything else now travels beside the filename, type and size rather than in a wrapper the client was discarding. The original message carries a checksum over the same bytes, so what was decoded can be verified.',
+      'A PDF or other non-text attachment downloaded fine but reached the assistant as an error. It now arrives with its filename, type and size, and the original message carries a checksum.',
   },
   {
     date: '2026-08-29',
     kind: 'added',
     title: 'Who is behind MCP Emails',
     body:
-      'A new About page, and the legal entity, organisation number and registered address in the Terms and Privacy pages. You are handing over mailbox access, so the site now says exactly who is on the other end and what happens if the person maintaining it stops.',
+      'A new About page, and the legal entity, organisation number and registered address in the Terms and Privacy pages.',
   },
   {
     date: '2026-08-29',
     kind: 'improved',
     title: 'Connecting an IMAP mailbox',
     body:
-      'The connect form works out the transport from the port instead of asking you to choose between SSL and STARTTLS, failures explain what actually went wrong, and the whole form can be completed from the keyboard.',
+      'The connect form works out the transport from the port, explains failures, and can be completed from the keyboard.',
   },
   {
     date: '2026-08-25',
     kind: 'fixed',
     title: 'Search dates without a timezone',
     body:
-      'The since and before filters accept a date and time with no timezone and read it as UTC, instead of refusing the call.',
+      'since and before accept a date and time with no timezone and read it as UTC.',
   },
   {
     date: '2026-08-25',
     kind: 'fixed',
     title: 'Automations keep running on OAuth connections',
     body:
-      'A scheduled rule created from an OAuth connection stopped running once its access token rotated. Rules now follow the authorisation itself, which does not rotate.',
+      'A rule created from an OAuth connection stopped running once its access token rotated. Rules now follow the authorisation itself.',
   },
   {
     date: '2026-08-24',
     kind: 'fixed',
     title: 'Sending from Exchange and Microsoft 365 over SMTP',
     body:
-      'Authentication now negotiates the mechanism the server advertises. Exchange and Microsoft 365 mailboxes never offered the one that was assumed, which made sending impossible and reported a correct password as wrong.',
+      'SMTP authentication now uses the mechanism the server advertises. Before, sending failed and a correct password was reported as wrong.',
   },
   {
     date: '2026-08-20',
     kind: 'added',
     title: 'Labels on every provider',
     body:
-      'Applying a label works as a Gmail label, an Outlook category or an IMAP keyword. Where a name has to be adjusted to fit a provider\'s rules, you are told the name that was actually applied.',
+      'Applying a label works as a Gmail label, an Outlook category or an IMAP keyword. If a name has to be adjusted for the provider, you are told what was applied.',
   },
   {
     date: '2026-08-20',
     kind: 'improved',
     title: 'Very long emails come back in readable pieces',
     body:
-      'A long message body is returned in bounded pieces, each reporting the true total and the exact point to resume from, so nothing is skipped or repeated. Ordinary mail is returned exactly as before.',
+      'A long message body is returned in pieces, each with the total and the point to resume from.',
   },
   {
     date: '2026-08-19',
@@ -466,7 +471,7 @@ export const ENTRIES = [
     kind: 'added',
     title: 'Use it from Claude Desktop, Cursor, Cline and Windsurf',
     body:
-      'npx -y mcpemails bridges the hosted server to clients that can only launch a local command. No dependencies, Node 18 or newer, and your key is only ever sent in the authorization header.',
+      'npx -y mcpemails bridges the hosted server to clients that can only launch a local command. No dependencies, Node 18 or newer.',
   },
   {
     date: '2026-08-18',
@@ -480,49 +485,49 @@ export const ENTRIES = [
     kind: 'fixed',
     title: 'Yandex mailboxes connect',
     body:
-      'Yandex does not implement the shortened login handshake, and its refusal of the command was being reported as a rejection of your password. Both the handshake and the message are fixed.',
+      'Yandex refused a login shortcut it does not implement, and that was reported as a wrong password. Fixed.',
   },
   {
     date: '2026-08-10',
     kind: 'added',
     title: 'Approve a held send from its own page',
     body:
-      'A send waiting for approval gets a review page showing the full message, with approve and reject. Clients that support MCP apps show the same review card inline.',
+      'A send waiting for approval gets a review page with the full message, approve and reject. Clients that support MCP apps show the same card inline.',
   },
   {
     date: '2026-08-10',
     kind: 'added',
     title: 'Setup guide that remembers where you stopped',
     body:
-      'The dashboard keeps your setup progress, so a half-finished connection is still visible and resumable when you come back.',
+      'The dashboard keeps your setup progress, so a half-finished connection can be resumed.',
   },
   {
     date: '2026-08-03',
     kind: 'added',
     title: 'Approval before an agent sends anything',
     body:
-      'Turn on approval for an inbox and every send, reply, forward, draft send and scheduled send is held. The agent gets a pending result, and a person in the workspace decides.',
+      'Turn on approval for an inbox and every send, reply, forward, draft send and scheduled send is held until a person in the workspace decides.',
   },
   {
     date: '2026-08-03',
     kind: 'added',
     title: 'Read an attachment as text, or take the original message',
     body:
-      'An attachment can be returned as readable text without handing the file itself to the model, for text, CSV, HTML, JSON and text-layer PDFs. The complete original message can also be downloaded as a portable .eml file. Extraction never runs embedded code and never does OCR.',
+      'Text, CSV, HTML, JSON and text-layer PDF attachments can be returned as readable text, and the original message downloaded as a .eml. Extraction never runs embedded code and never does OCR.',
   },
   {
     date: '2026-08-03',
     kind: 'added',
     title: 'Safe retries for outbound mail',
     body:
-      'Send with an idempotency key and retrying the same request within 24 hours cannot produce a second email.',
+      'Send with an idempotency key and a retry within 24 hours cannot produce a second email.',
   },
   {
     date: '2026-08-03',
     kind: 'added',
     title: 'Guided workflows and per-inbox compatibility profiles',
     body:
-      'Clients that support MCP prompts can offer built-in routines for triage, open-loop review, reply drafting, organising and scheduled-send review; a prompt never grants a permission and never runs on its own. Each inbox also reports a versioned profile marking every operation exact, different or unavailable on that provider.',
+      'Clients that support MCP prompts can offer routines for triage, reply drafting, organising and scheduled-send review. Each inbox also reports which operations are exact, different or unavailable on its provider.',
   },
   /* ── July 2026 ─────────────────────────────────────────────── */
   {
@@ -530,28 +535,28 @@ export const ENTRIES = [
     kind: 'fixed',
     title: 'Drafts on a mailbox that does not call its folder Drafts',
     body:
-      'Creating or listing a draft guessed at four English folder names, so a mailbox that names the folder in another language, or nests it under another folder, failed outright with a provider error. The real folder is now found by asking the mailbox, and created only if it genuinely is not there.',
+      'Drafts failed on mailboxes that name the folder in another language or nest it. The real folder is now found by asking the mailbox.',
   },
   {
     date: '2026-07-28',
     kind: 'fixed',
     title: 'An organize-only key can flag and archive',
     body:
-      'Flagging a message and archiving one asked for permission to send mail, which neither does. Both now ask for the folder permission their sibling actions ask for, so a key deliberately granted organizing rights and withheld sending rights can use them.',
+      'Flagging and archiving asked for permission to send. They now ask for the folder permission, like the other organize actions.',
   },
   {
     date: '2026-07-23',
     kind: 'fixed',
     title: 'The signature editor saves again',
     body:
-      'Every save from the signature editor, in both rich text and HTML source mode, failed with an empty error, because the sanitizer that save path runs crashed on load in production. Saving works again, and the reply-mode selector no longer pushes the Save button off the edge of the screen.',
+      'Every save from the signature editor failed with an empty error. Fixed, and the Save button no longer gets pushed off screen.',
   },
   {
     date: '2026-07-21',
     kind: 'fixed',
     title: 'IMAP search covers every folder',
     body:
-      'A search with no folder filter looked only in the Inbox on IMAP, so older mail in Sent or Archive returned nothing. It now fans out across every selectable mailbox and merges the results by date.',
+      'A search with no folder filter now looks across every folder on IMAP, not only the Inbox.',
   },
   {
     date: '2026-07-21',
@@ -565,7 +570,7 @@ export const ENTRIES = [
     kind: 'added',
     title: 'Self-hosting, under AGPL-3.0',
     body:
-      'The server is licensed AGPL-3.0 and ships as a container stack you can run against your own database, using the same code as the hosted service. The self-hosting page covers the one-command install and where the two paths differ.',
+      'The server is licensed AGPL-3.0 and ships as a container stack you can run against your own database, the same code as the hosted service.',
   },
   {
     date: '2026-07-08',
@@ -579,14 +584,14 @@ export const ENTRIES = [
     kind: 'added',
     title: 'Copy a message into another folder',
     body:
-      'Messages can be duplicated into a second folder instead of only moved, one at a time or in a batch, on IMAP, Outlook and Fastmail.',
+      'Messages can be copied into another folder, one at a time or in a batch, on IMAP, Outlook and Fastmail.',
   },
   {
     date: '2026-07-01',
     kind: 'fixed',
     title: 'Sending a draft requires permission to send',
     body:
-      'Sending a draft was gated on the permission to manage drafts rather than the permission to send, so a key granted drafts alone could put mail on the wire without the consent composing a message has always required. Sending a draft now requires send:email. Reported by an outside researcher.',
+      'Sending a draft was gated on the drafts permission rather than the send permission. It now requires send:email. Reported by an outside researcher.',
   },
   /* ── June 2026 ─────────────────────────────────────────────── */
   {
@@ -601,21 +606,21 @@ export const ENTRIES = [
     kind: 'fixed',
     title: 'Connecting a client while signed out',
     body:
-      'Starting a connection from a client such as Cursor or VS Code while signed out lost most of the request on the trip through sign-in and came back with "Missing code_challenge". The whole request now survives that round trip, and opening a stale authorization link no longer errors the page.',
+      'Starting a connection from a client such as Cursor or VS Code while signed out failed with "Missing code_challenge". The request now survives the trip through sign-in.',
   },
   {
     date: '2026-06-23',
     kind: 'added',
     title: 'Per-inbox email signatures',
     body:
-      'A signature per connected mailbox, appended by the server on every send, reply, forward, draft and scheduled send, on every provider. On a reply it sits after your text and before the quoted thread, and a reply mode stops it repeating down a thread.',
+      'A signature per mailbox, appended by the server to everything it sends, on every provider. A reply mode stops it repeating down a thread.',
   },
   {
     date: '2026-06-23',
     kind: 'added',
     title: 'Setup pages for the app-password providers',
     body:
-      'Step-by-step connect pages for Gmail, Fastmail, iCloud, Yahoo, Zoho and Yandex, each with that provider\'s real steps and its verified settings.',
+      'Step-by-step connect pages for Gmail, Fastmail, iCloud, Yahoo, Zoho and Yandex.',
   },
   {
     date: '2026-06-23',
@@ -629,28 +634,28 @@ export const ENTRIES = [
     kind: 'added',
     title: 'Download one attachment at a time',
     body:
-      'Fetch a single attachment by position or filename, up to 25 MB, returned as a file the client can preview or save rather than as text in the conversation.',
+      'Fetch a single attachment by position or filename, up to 25 MB, as a file rather than text in the conversation.',
   },
   {
     date: '2026-06-16',
     kind: 'fixed',
     title: 'Reconnecting an inbox opens that inbox\'s own form',
     body:
-      'Reconnect sent every mailbox to the Fastmail app-password form whatever the mailbox actually was, with the address and host left blank, so a password manager could fill a different account\'s login and quietly bind the address to the wrong mailbox. Reconnect now opens the form for the mailbox\'s real provider, with the address, host and ports filled in and locked so only the password is re-entered, and a connection that would attach a second address to a login already in use is refused.',
+      'Reconnect sent every mailbox to the Fastmail form with blank fields, where a password manager could fill in a different account. It now opens the right provider\'s form with everything but the password locked.',
   },
   {
     date: '2026-06-04',
     kind: 'changed',
     title: 'Fewer tools, and deleting mail asks first',
     body:
-      'Related actions were folded into one tool each instead of one tool per verb, leaving nine. Deleting is a tool of its own, marked destructive, so a client asks before it runs. Search results come back newest first instead of in the order the server happened to store them, Gmail reports exact unread and total counts where it can rather than an estimate, and a send can be scheduled further than a year out.',
+      'Related actions were folded into nine tools. Deleting is a tool of its own, marked destructive, so a client asks before it runs. Search results come back newest first.',
   },
   {
     date: '2026-06-01',
     kind: 'fixed',
     title: 'Fastmail mailboxes stop asking to be reconnected',
     body:
-      'A Fastmail mailbox connected with an app password was driven over Fastmail\'s JMAP interface, which refuses an app password scoped to mail, so a perfectly healthy mailbox kept reporting that it needed reconnecting. Fastmail now runs over IMAP and SMTP like the other app-password providers, and existing mailboxes were moved across without anyone reconnecting. Signing in through Fastmail itself is gone; an app password is the way in.',
+      'Fastmail mailboxes connected with an app password kept reporting that they needed reconnecting. Fastmail now runs over IMAP and SMTP, and existing mailboxes were moved across automatically. An app password is now the only way to connect Fastmail.',
   },
   /* ── May 2026 ──────────────────────────────────────────────── */
   {
@@ -658,7 +663,7 @@ export const ENTRIES = [
     kind: 'added',
     title: 'Connect any mailbox over IMAP',
     body:
-      'A mailbox no longer has to be at a provider with a button of its own. Enter the IMAP and SMTP details of any server and it connects, with the settings filled in for you on iCloud, Yahoo, Zoho and Yandex. Mail goes out through your own provider, from your own address.',
+      'Enter the IMAP and SMTP details of any server and it connects, with the settings filled in for iCloud, Yahoo, Zoho and Yandex. Mail goes out through your own provider, from your own address.',
   },
   {
     date: '2026-05-29',
@@ -672,14 +677,14 @@ export const ENTRIES = [
     kind: 'added',
     title: 'Workspaces, with teammates',
     body:
-      'A workspace can hold more than one person. Invite a teammate by email, they accept from the link, and a role decides what they can change. Connected inboxes and API keys belong to the workspace rather than to one login.',
+      'Invite teammates by email, with a role that decides what they can change. Inboxes and API keys belong to the workspace rather than to one login.',
   },
   {
     date: '2026-05-26',
     kind: 'added',
     title: 'MCP Emails is live',
     body:
-      'Connect a mailbox and work it from an AI assistant: list your inboxes, list and read messages, search, send and reply. Gmail connects with Google sign-in, Fastmail with an app password. Claude connects over OAuth straight from claude.ai; anything else uses an API key from the dashboard.',
+      'Connect a mailbox and work it from an AI assistant: list, read, search, send and reply. Gmail and Fastmail to start, with Claude connecting over OAuth and other clients using an API key.',
   },
 ];
 
