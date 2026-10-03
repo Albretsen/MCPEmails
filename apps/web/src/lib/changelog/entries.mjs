@@ -39,6 +39,13 @@ export const KINDS = ['added', 'improved', 'fixed', 'changed'];
 export const ENTRIES = [
   /* ── October 2026 ──────────────────────────────────────────── */
   {
+    date: '2026-10-03',
+    kind: 'improved',
+    title: 'Faster mailbox reads on IMAP accounts',
+    body:
+      'Listing a folder no longer asks the mail server for every message id first, listing a folder other than the inbox uses one connection instead of two, folder lists fetch their message counts in one to four requests instead of up to 26, and downloading an attachment fetches the message once instead of twice. Results are unchanged.',
+  },
+  {
     date: '2026-10-02',
     kind: 'improved',
     title: 'Tool calls answer about a second sooner',

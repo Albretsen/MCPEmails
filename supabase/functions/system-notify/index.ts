@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { type CheckoutFeedbackContext, renderCheckoutFeedbackEmail } from "./checkout-feedback.ts";
 
 const PUBLIC_MCP_ENDPOINT = Deno.env.get("SYSTEM_NOTIFY_MCP_ENDPOINT") ?? "https://mcpemails.com/api/mcp";
 // The connected/authenticated inbox we send FROM (must be a real inbox_list entry with credentials).
@@ -176,6 +177,161 @@ async function fetchAutomationContext(
   return out;
 }
 
+// Everything the checkout.feedback email says. The event payload carries ids
+// and the fixed reason only; what the user typed and who they are live in their
+// own tables and are read HERE, at send time, the same position
+// fetchAutomationContext takes on the owner's address. Every lookup is guarded
+// on its own, so one failed query costs one "unknown" line, not the email.
+async function fetchCheckoutFeedbackContext(
+  supabase: SupabaseClient,
+  feedbackId: string,
+  workspaceId: string,
+  payloadReason: string | null,
+): Promise<CheckoutFeedbackContext> {
+  const out: CheckoutFeedbackContext = {
+    feedbackId,
+    reason: payloadReason,
+    detail: null,
+    target: null,
+    answeredAt: null,
+    ownerEmail: null,
+    workspaceId,
+    workspaceName: null,
+    plan: null,
+    signedUpAt: null,
+    emailSegment: null,
+    acquisitionSource: null,
+    marketingOptIn: null,
+    inboxCount: null,
+    inboxProviders: [],
+    clients: [],
+    actionsTotal: null,
+    lastActionAt: null,
+    inboxGateHits: null,
+    checkoutStarts: null,
+    lastCheckoutStartedAt: null,
+    earlierAnswers: null,
+  };
+  if (!UUID_RE.test(feedbackId) || !UUID_RE.test(workspaceId)) return out;
+
+  const guarded = async (step: () => Promise<void>) => {
+    try {
+      await step();
+    } catch { /* best-effort: the answer is worth sending without this line */ }
+  };
+  const count = async (query: PromiseLike<{ count: number | null; error: unknown }>) => {
+    try {
+      const { count: value, error } = await query;
+      return error ? null : value;
+    } catch {
+      return null;
+    }
+  };
+
+  await guarded(async () => {
+    const { data } = await supabase
+      .from("checkout_cancel_feedback")
+      .select("reason, detail, target, created_at")
+      .eq("id", feedbackId)
+      .maybeSingle();
+    if (!data) return;
+    if (typeof data.reason === "string") out.reason = data.reason;
+    out.detail = typeof data.detail === "string" ? data.detail : null;
+    out.target = typeof data.target === "string" ? data.target : null;
+    out.answeredAt = typeof data.created_at === "string" ? data.created_at : null;
+  });
+
+  await guarded(async () => {
+    const { data } = await supabase
+      .from("workspaces")
+      .select("display_name, owner_id, plan, acquisition_source, acquisition_email_segment")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    if (!data) return;
+    out.workspaceName = typeof data.display_name === "string" ? data.display_name : null;
+    out.plan = typeof data.plan === "string" ? data.plan : null;
+    out.acquisitionSource = typeof data.acquisition_source === "string" ? data.acquisition_source : null;
+    out.emailSegment = typeof data.acquisition_email_segment === "string" ? data.acquisition_email_segment : null;
+    if (typeof data.owner_id !== "string") return;
+    const { data: owner } = await supabase
+      .from("users")
+      .select("email, created_at, marketing_consent_at, unsubscribed_at")
+      .eq("id", data.owner_id)
+      .maybeSingle();
+    if (!owner) return;
+    out.ownerEmail = typeof owner.email === "string" ? owner.email : null;
+    out.signedUpAt = typeof owner.created_at === "string" ? owner.created_at : null;
+    out.marketingOptIn = owner.marketing_consent_at !== null && owner.unsubscribed_at === null;
+  });
+
+  await guarded(async () => {
+    const { data } = await supabase
+      .from("inboxes")
+      .select("provider")
+      .eq("workspace_id", workspaceId)
+      .is("deleted_at", null)
+      .limit(50);
+    if (!data) return;
+    out.inboxCount = data.length;
+    out.inboxProviders = [...new Set(data.map((row) => row.provider).filter((p): p is string => typeof p === "string"))];
+  });
+
+  await guarded(async () => {
+    const { data } = await supabase
+      .from("mcp_client_capabilities")
+      .select("client_name")
+      .eq("workspace_id", workspaceId)
+      .limit(200);
+    if (!data) return;
+    out.clients = [...new Set(data.map((row) => row.client_name).filter((c): c is string => typeof c === "string"))];
+  });
+
+  await guarded(async () => {
+    const { data } = await supabase
+      .from("action_usage")
+      .select("occurred_at")
+      .eq("workspace_id", workspaceId)
+      .order("occurred_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    out.lastActionAt = data && typeof data.occurred_at === "string" ? data.occurred_at : null;
+  });
+
+  await guarded(async () => {
+    const { data } = await supabase
+      .from("product_funnel_events")
+      .select("occurred_at")
+      .eq("workspace_id", workspaceId)
+      .eq("stage", "checkout_started")
+      .eq("outcome", "success")
+      .order("occurred_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    out.lastCheckoutStartedAt = data && typeof data.occurred_at === "string" ? data.occurred_at : null;
+  });
+
+  // Exact head counts, never data.length: same db-max-rows trap fetchGrowthStats
+  // documents.
+  const [actionsTotal, inboxGateHits, checkoutStarts, answers] = await Promise.all([
+    count(supabase.from("action_usage").select("*", { count: "exact", head: true }).eq("workspace_id", workspaceId)),
+    count(
+      supabase.from("product_funnel_events").select("*", { count: "exact", head: true })
+        .eq("workspace_id", workspaceId).eq("stage", "paywall_reached").eq("connection_type", "first_connect"),
+    ),
+    count(
+      supabase.from("product_funnel_events").select("*", { count: "exact", head: true })
+        .eq("workspace_id", workspaceId).eq("stage", "checkout_started").eq("outcome", "success"),
+    ),
+    count(supabase.from("checkout_cancel_feedback").select("*", { count: "exact", head: true }).eq("workspace_id", workspaceId)),
+  ]);
+  out.actionsTotal = actionsTotal;
+  out.inboxGateHits = inboxGateHits;
+  out.checkoutStarts = checkoutStarts;
+  // The count includes the answer this email is about.
+  out.earlierAnswers = answers === null ? null : Math.max(0, answers - 1);
+  return out;
+}
+
 // What each automation failure code means for the person who has to act on it.
 // Kept short and specific: the point of this alert is that somebody reads it
 // once and knows whether to reconnect a client, fix a mailbox, or look at us.
@@ -198,8 +354,7 @@ const AUTOMATION_ERROR_GUIDANCE: Record<string, string> = {
   invalid_action: "The stored action no longer validates. This is ours, not the user's.",
 };
 
-// Only "user.signup" is wired up for now; new event types just need a new
-// entry here -- an event_type with no matching entry is a no-op, not a
+// New event types just need a new entry here -- an event_type with no matching entry is a no-op, not a
 // transport failure (see the unmatched-template branch below). buildTemplate
 // is async and receives the service-role supabase client so entries can pull
 // live stats at send-time instead of trusting the trigger's payload.
@@ -306,6 +461,16 @@ async function buildTemplate(eventType: string, payload: Record<string, unknown>
     ].join("\n");
 
     return { subject, body };
+  }
+
+  if (eventType === "checkout.feedback") {
+    // Someone answered the "what held you back?" card after abandoning a
+    // Stripe checkout. Wording lives in ./checkout-feedback.ts, which is pure
+    // so it can be tested without this runtime.
+    const feedbackId = typeof payload.feedback_id === "string" ? payload.feedback_id : "";
+    const workspaceId = typeof payload.workspace_id === "string" ? payload.workspace_id : "";
+    const reason = typeof payload.reason === "string" ? payload.reason : null;
+    return renderCheckoutFeedbackEmail(await fetchCheckoutFeedbackContext(supabase, feedbackId, workspaceId, reason));
   }
   return null;
 }

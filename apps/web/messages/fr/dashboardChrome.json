@@ -16,7 +16,23 @@
     "connectionFailed": "Échec de la connexion de la boîte ({error}). Veuillez réessayer.",
     "checkoutSuccess": "Bienvenue dans {plan}. Votre abonnement s'active maintenant ; cela peut prendre un moment.",
     "checkoutSuccessPlanFallback": "votre nouvelle formule",
-    "checkoutCancelled": "Paiement annulé. Vous pouvez passer à une formule supérieure à tout moment depuis les Paramètres.",
+    "checkoutFeedback": {
+      "title": "Paiement annulé",
+      "question": "Qu'est-ce qui vous a retenu ?",
+      "reasons": {
+        "price_too_high": "C'est plus cher que prévu",
+        "compare_plans": "Je veux d'abord comparer les formules",
+        "want_to_try_first": "Je veux l'essayer davantage avant de payer",
+        "payment_method": "Je n'ai pas pu payer comme je le voulais",
+        "just_checking_price": "Je regardais seulement le prix"
+      },
+      "other": "Autre",
+      "otherPlaceholder": "Dites-le-nous en quelques mots",
+      "send": "Envoyer",
+      "notNow": "Pas maintenant",
+      "close": "Fermer",
+      "thanks": "Merci, cela nous aide."
+    },
     "checkoutPanel": {
       "title": "Vous êtes maintenant sur {plan}",
       "subtitle": "Paiement reçu. Un reçu part vers votre adresse e-mail.",
