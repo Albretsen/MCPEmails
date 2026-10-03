@@ -3,16 +3,18 @@
   "routes": {
     "dashboard": {
       "ceiling": {
-        "raw": 1403359,
-        "gzip": 408864,
-        "brotli": 344021
+        "raw": 955176,
+        "gzip": 268458,
+        "brotli": 226312
       },
       "absent": [
         "supabase-js",
         "catalog-nb",
         "catalog-es",
         "catalog-fr",
-        "catalog-zh"
+        "catalog-zh",
+        "tiptap",
+        "dompurify"
       ]
     },
     "login": {

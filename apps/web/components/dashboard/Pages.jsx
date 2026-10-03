@@ -9,8 +9,7 @@ import { routing } from '@/i18n/routing';
 import { Link } from '@/i18n/navigation';
 import { CLIENT_LOGOS } from './clientLogos';
 import { useToast } from './Toast';
-import SignatureRichEditor from './SignatureRichEditor';
-import { sanitizeSignatureHtml } from '@/lib/sanitizeSignatureHtml';
+import { loadSignatureEditor, peekSignatureEditor, warmSignatureEditor } from './signature-editor-loader.mjs';
 import { normalizeSenderName } from '@/lib/inboxes/sender-name';
 import {
   hiddenFromShown,
@@ -1579,6 +1578,12 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                 <tr
                   key={ib.id}
                   onClick={() => setDetailInbox(ib)}
+                  // The modal this opens holds the signature editor, which is
+                  // fetched on demand. Pointing at or tabbing to the row is
+                  // the earliest sign it is wanted, so start the fetch here
+                  // and the click finds it loaded.
+                  onMouseEnter={warmSignatureEditor}
+                  onFocus={warmSignatureEditor}
                   style={{ cursor: 'pointer' }}
                   tabIndex={0}
                   role="button"
@@ -1667,6 +1672,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                   className="inbox-mobile-card"
                   key={ib.id}
                   onClick={() => setDetailInbox(ib)}
+                  onMouseEnter={warmSignatureEditor}
+                  onFocus={warmSignatureEditor}
                   tabIndex={0}
                   role="button"
                   aria-label={t('inboxes.detail.openAria', { label: ib.label })}
@@ -2117,11 +2124,53 @@ function SignatureEditor({ inbox, onSave, t }) {
   const [previewTooBig, setPreviewTooBig] = useState(false);
   const editorRef = useRef(null);
 
+  // The rich editor and the sanitiser are fetched on demand (see
+  // signature-editor-loader.mjs). `editorModule` is null until they are here.
+  // It starts non-null when they loaded earlier in this page's life (a row was
+  // hovered, or the modal was opened before), and then everything below runs
+  // exactly as it did when they were bundled: editor on the first render.
+  const [editorModule, setEditorModule] = useState(() => peekSignatureEditor());
+  const [editorLoadFailed, setEditorLoadFailed] = useState(false);
+  const [editorLoadAttempt, setEditorLoadAttempt] = useState(0);
+  // True between a Save click that came before the editor was ready and the
+  // editor becoming ready. Shown as "Saving…", like the request that follows.
+  const [awaitingEditor, setAwaitingEditor] = useState(false);
+  // Saves waiting for the editor: each is { resolve, reject }.
+  const editorWaiters = useRef([]);
+  const RichEditor = editorModule ? editorModule.SignatureRichEditor : null;
+
+  useEffect(() => {
+    if (editorModule) return undefined;
+    let cancelled = false;
+    loadSignatureEditor().then(
+      (mod) => { if (!cancelled) setEditorModule(mod); },
+      () => {
+        if (cancelled) return;
+        setEditorLoadFailed(true);
+        // A save that was waiting cannot proceed: release it, unsaved.
+        for (const waiter of editorWaiters.current.splice(0)) waiter.reject();
+      },
+    );
+    return () => { cancelled = true; };
+  }, [editorModule, editorLoadAttempt]);
+
+  /** The editor's imperative handle now returns real content. */
+  const handleEditorReady = () => {
+    for (const waiter of editorWaiters.current.splice(0)) waiter.resolve();
+  };
+
+  const retryEditorLoad = () => {
+    setEditorLoadFailed(false);
+    setEditorLoadAttempt(n => n + 1);
+  };
+
   // Pull the current editor HTML through the sanitizer and sync preview state.
   // Called on the editor's onChange (every keystroke / image insert) and once
   // after the editor mounts, so the preview always reflects the live content.
   const syncPreview = (sourceHtml) => {
     if (!editorRef.current) return;
+    // Present whenever the editor is: they load as one pair.
+    const { sanitizeSignatureHtml } = peekSignatureEditor();
     try {
       // HTML-source edits update React state before the imperative editor ref
       // sees the new value. Use the raw value supplied by that mode so its
@@ -2151,6 +2200,18 @@ function SignatureEditor({ inbox, onSave, t }) {
     setReplyMode(inbox.signatureReplyMode ?? 'first_only');
     setReviewMode(resolveReviewMode(inbox));
     setSizeError('');
+  }, [inbox.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // The preview half of the re-seed. It was one effect with the block above;
+  // it is separate only because it needs the sanitiser, which may arrive after
+  // the first render. Keyed on the module as well as the inbox, so it runs once
+  // the editor is here WITHOUT re-running the block above and undoing a toggle
+  // the person changed while it loaded. When the module is already loaded the
+  // two run back to back in the same commit, as the single effect did.
+  useEffect(() => {
+    if (!editorModule) return undefined;
+    const { sanitizeSignatureHtml } = editorModule;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPreviewTooBig(false);
     try {
       const seed = (inbox.signatureHtml && inbox.signatureHtml.trim())
@@ -2166,11 +2227,27 @@ function SignatureEditor({ inbox, onSave, t }) {
     // (covers text-seeded signatures where no stored HTML exists).
     const timer = setTimeout(syncPreview, 0);
     return () => clearTimeout(timer);
-  }, [inbox.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [inbox.id, editorModule]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSave = async () => {
-    if (saving) return;
+    if (saving || awaitingEditor) return;
     setSizeError('');
+
+    // Save clicked before the editor is ready to be read. Reading it now would
+    // get '' and '' and overwrite the stored signature with nothing, so wait.
+    // Not reachable when the editor was bundled; it is while it loads.
+    if (!(editorRef.current && editorRef.current.isReady())) {
+      // The load failed and the editor area says so: there is nothing to save.
+      if (editorLoadFailed) return;
+      setAwaitingEditor(true);
+      try {
+        await new Promise((resolve, reject) => { editorWaiters.current.push({ resolve, reject }); });
+      } catch {
+        return;
+      } finally {
+        setAwaitingEditor(false);
+      }
+    }
 
     let html = '';
     let text = '';
@@ -2206,6 +2283,13 @@ function SignatureEditor({ inbox, onSave, t }) {
 
   const label = { fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)' };
 
+  // Controls lock while a save is in flight, and equally while a save is
+  // waiting for the editor to finish loading: the save sends the values as
+  // they were when Save was clicked. The EDITOR's own `disabled` stays on
+  // `saving` alone, so an editor that mounts during that wait is not created
+  // read-only.
+  const busy = saving || awaitingEditor;
+
   return (
     <div style={{ marginBottom: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -2217,14 +2301,14 @@ function SignatureEditor({ inbox, onSave, t }) {
             type="checkbox"
             checked={enabled}
             onChange={() => setEnabled(v => !v)}
-            disabled={saving}
+            disabled={busy}
             style={{ accentColor: 'var(--brand)' }}
           />
           {t('inboxes.detail.signature.enabled')}
         </label>
       </div>
 
-      <ReviewModeSelector value={reviewMode} onChange={setReviewMode} disabled={saving} />
+      <ReviewModeSelector value={reviewMode} onChange={setReviewMode} disabled={busy} />
 
       {wasImported && (
         <div style={{ ...label, marginBottom: 8, color: 'var(--fg-2)' }}>
@@ -2233,17 +2317,42 @@ function SignatureEditor({ inbox, onSave, t }) {
       )}
 
       <div style={{ opacity: enabled ? 1 : 0.6, pointerEvents: enabled ? 'auto' : 'none' }}>
-        <SignatureRichEditor
-          key={inbox.id}
-          ref={editorRef}
-          inboxId={inbox.id}
-          initialHtml={inbox.signatureHtml || ''}
-          initialText={
-            inbox.signatureText ?? (wasImported ? htmlToPlainSeed(inbox.signatureHtml) : '')
-          }
-          disabled={saving || !enabled}
-          onChange={syncPreview}
-        />
+        {RichEditor ? (
+          <RichEditor
+            key={inbox.id}
+            ref={editorRef}
+            inboxId={inbox.id}
+            initialHtml={inbox.signatureHtml || ''}
+            initialText={
+              inbox.signatureText ?? (wasImported ? htmlToPlainSeed(inbox.signatureHtml) : '')
+            }
+            disabled={saving || !enabled}
+            onChange={syncPreview}
+            onReady={handleEditorReady}
+          />
+        ) : editorLoadFailed ? (
+          /* The editor's code could not be fetched (offline, or a deploy
+             replaced the chunk). Same box and the same error strip the editor
+             uses for its own errors, so the form keeps its shape and says what
+             happened instead of showing an empty frame. */
+          <div className="sig-editor sig-editor--loading">
+            <div className="sig-editor-error" role="alert" style={{ borderTop: 'none' }}>
+              The signature editor could not be loaded. Check your connection and{' '}
+              <button
+                type="button"
+                onClick={retryEditorLoad}
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'inherit', font: 'inherit', textDecoration: 'underline' }}
+              >
+                try again
+              </button>.
+            </div>
+          </div>
+        ) : (
+          /* The same placeholder SignatureRichEditor itself renders until
+             TipTap has initialised: one box, one reserved height, so the
+             preview below does not move when the editor arrives. */
+          <div className="sig-editor sig-editor--loading" aria-hidden />
+        )}
 
         <SignaturePreview
           html={previewHtml}
@@ -2268,7 +2377,7 @@ function SignatureEditor({ inbox, onSave, t }) {
           className="input"
           value={replyMode}
           onChange={e => setReplyMode(e.target.value)}
-          disabled={saving}
+          disabled={busy}
           style={{ height: 32, padding: '0 28px 0 8px', flex: '0 0 auto', width: 'auto' }}
         >
           <option value="always">{t('inboxes.detail.signature.replyModeAlways')}</option>
@@ -2279,10 +2388,10 @@ function SignatureEditor({ inbox, onSave, t }) {
         <Btn
           variant="primary"
           size="sm"
-          disabled={saving}
+          disabled={busy}
           onClick={handleSave}
         >
-          {saving ? t('inboxes.detail.signature.saving') : t('inboxes.detail.signature.save')}
+          {busy ? t('inboxes.detail.signature.saving') : t('inboxes.detail.signature.save')}
         </Btn>
       </div>
     </div>
