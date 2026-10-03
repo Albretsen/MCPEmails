@@ -50,12 +50,7 @@ export async function GET() {
     {
       headers: {
         ...CORS_HEADERS,
-        // s-maxage lets Vercel's CDN keep the document for the same hour the
-        // browser already may. Safe because the body is the same for every
-        // requester (the handler takes no request; see discovery-documents.test.ts).
-        // Vercel strips s-maxage before the response leaves the CDN, so clients
-        // still receive exactly `max-age=3600`.
-        'Cache-Control': 'max-age=3600, s-maxage=3600',
+        'Cache-Control': 'max-age=3600',
       },
     }
   );
