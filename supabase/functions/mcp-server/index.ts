@@ -138,7 +138,7 @@ import {
   type ProviderErrorBoundary,
   providerErrorLogCode,
 } from "./provider-error.ts";
-import { createReadAhead, mapWithConcurrency } from "./provider-concurrency.ts";
+import { mapWithConcurrency } from "./provider-concurrency.ts";
 import {
   type FolderResolveAuditDetails,
   folderResolveAuditDetails,
@@ -12874,52 +12874,31 @@ async function readOneMessage(
   // Bound the bodies LAST, once, in the one place every provider read passes
   // through. Doing it per provider would be three chances to get the arithmetic
   // wrong and three places for the next reader to forget.
-  if (opts.body_window) applyReadBodyWindow(neutralised, opts.body_window);
+  if (opts.body_window) {
+    const w = opts.body_window;
+    const textWindow = windowBody(neutralised.body_text, {
+      offset: w.offset,
+      maxChars: w.max_chars,
+      prefix: "body",
+      recovery: (next) => w.recovery(next, false),
+    });
+    neutralised.body_text = textWindow.text;
+    Object.assign(neutralised, textWindow.fields);
 
-  return neutralised;
-}
+    // body_html is capped under the same budget. It is only ever present on an
+    // explicit include_html, which already costs 3.7x, so leaving it uncapped
+    // would leave the largest single response this server can produce
+    // unbounded.
+    const htmlWindow = windowBody(neutralised.body_html, {
+      offset: w.html_offset,
+      maxChars: w.max_chars,
+      prefix: "body_html",
+      recovery: (next) => w.recovery(next, true),
+    });
+    neutralised.body_html = htmlWindow.text;
+    Object.assign(neutralised, htmlWindow.fields);
+  }
 
-/**
- * Window both bodies of a read result in place and attach the continuation
- * fields. The last step of {@link readOneMessage} when it is given a
- * `body_window`.
- *
- * A function of its own for `email_read_batch`, which reads a few messages
- * ahead: the size of message i's window depends on what messages 0..i-1
- * emitted, so the batch fetches WITHOUT a window and applies this afterwards,
- * in order. It must stay the same code the single read runs, on a result that
- * has already been neutralised, or the two tools would cut differently.
- */
-function applyReadBodyWindow(
-  neutralised: ReadEmailResult,
-  w: {
-    offset: number;
-    html_offset: number;
-    max_chars: number;
-    recovery: (nextOffset: number, html: boolean) => string;
-  },
-): ReadEmailResult {
-  const textWindow = windowBody(neutralised.body_text, {
-    offset: w.offset,
-    maxChars: w.max_chars,
-    prefix: "body",
-    recovery: (next) => w.recovery(next, false),
-  });
-  neutralised.body_text = textWindow.text;
-  Object.assign(neutralised, textWindow.fields);
-
-  // body_html is capped under the same budget. It is only ever present on an
-  // explicit include_html, which already costs 3.7x, so leaving it uncapped
-  // would leave the largest single response this server can produce
-  // unbounded.
-  const htmlWindow = windowBody(neutralised.body_html, {
-    offset: w.html_offset,
-    maxChars: w.max_chars,
-    prefix: "body_html",
-    recovery: (next) => w.recovery(next, true),
-  });
-  neutralised.body_html = htmlWindow.text;
-  Object.assign(neutralised, htmlWindow.fields);
   return neutralised;
 }
 
@@ -13940,15 +13919,6 @@ async function executeExtractAttachment(
 const READ_EMAILS_MAX_IDS = 50;
 
 /**
- * How many Gmail / Graph message reads email_read_batch keeps outstanding once
- * the batch has shown it can read at all. Four is Graph's documented limit of
- * concurrent requests per app per mailbox, and comfortably inside what Gmail
- * allows a user. It is also how many un-windowed message bodies the batch may
- * hold at once, so it is a memory bound as well as a politeness one.
- */
-const BATCH_READ_AHEAD = 4;
-
-/**
  * Executes the `email_read_batch` batch-read tool end-to-end.
  *
  * Reads up to 50 messages by provider message ID. Per-message failures are
@@ -14104,35 +14074,6 @@ async function executeReadEmails(
   // ends up believing it has read mail it has not seen.
   let unread: string[] = [];
 
-  // ── Reading ahead (Gmail and Outlook) ────────────────────────────────────
-  // The loop below is unchanged in what it decides and in what order: time
-  // budget, body allowance, error entry, attachment budget, each for message i
-  // after message i-1. What changed is only when the provider round trip for a
-  // message is ISSUED: up to BATCH_READ_AHEAD of them are outstanding instead
-  // of one, so the fetch is no longer given a body window (its size is not
-  // known until the messages before it are in) and the window is applied here,
-  // by the same function the single read uses.
-  //
-  // Nothing is read ahead until one message has been read successfully. A dead
-  // token, an account with no mailbox and a batch of stale ids therefore make
-  // exactly the requests they always did, one at a time; the price is that the
-  // first read of a healthy batch is on its own.
-  //
-  // IMAP stays strictly serial: one shared connection, one command at a time.
-  // So does include_attachments, where reading ahead would hold several
-  // messages' attachment bytes in memory at once.
-  const readAheadWidth = (inbox.provider === "gmail" || inbox.provider === "outlook") &&
-      !includeAttachments
-    ? BATCH_READ_AHEAD
-    : 1;
-  const readAhead = createReadAhead(messageIds.length, (index) =>
-    readOneMessage(inbox, messageIds[index], {
-      include_html: includeHtml,
-      include_attachments: includeAttachments,
-      mark_as_read: markAsRead,
-      imap_session: session ?? undefined,
-    }));
-
   try {
     for (let i = 0; i < messageIds.length; i++) {
       const messageId = messageIds[i];
@@ -14151,9 +14092,11 @@ async function executeReadEmails(
 
       let readResult: ReadEmailResult;
       try {
-        readResult = applyReadBodyWindow(
-          await readAhead.take(i, messages.length > 0 ? readAheadWidth : 1),
-          {
+        readResult = await readOneMessage(inbox, messageId, {
+          include_html: includeHtml,
+          include_attachments: includeAttachments,
+          mark_as_read: markAsRead,
+          body_window: {
             // No batch-level offsets: continuing a specific message inside a
             // 50-id call is a single read of that id, which is what the
             // continuation sentence tells the model to do. One shared offset
@@ -14164,7 +14107,8 @@ async function executeReadEmails(
             max_chars: allowance,
             recovery: (next, html) => singleReadContinuation(messageId, next, html),
           },
-        );
+          imap_session: session ?? undefined,
+        });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
 
@@ -14218,9 +14162,6 @@ async function executeReadEmails(
       messages.push(readResult);
     }
   } finally {
-    // Reads issued ahead and never consumed (the call ended on an auth failure
-    // or on the time budget) are waited for, so no request outlives the call.
-    await readAhead.drain();
     if (session) await session.close();
   }
 
