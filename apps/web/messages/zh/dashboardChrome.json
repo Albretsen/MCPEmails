@@ -16,7 +16,23 @@
     "connectionFailed": "收件箱连接失败（{error}）。请重试。",
     "checkoutSuccess": "欢迎使用 {plan}。您的订阅正在激活中，这可能需要一点时间。",
     "checkoutSuccessPlanFallback": "您的新套餐",
-    "checkoutCancelled": "结账已取消。您可以随时在设置中升级。",
+    "checkoutFeedback": {
+      "title": "结账已取消",
+      "question": "是什么让您没有升级？",
+      "reasons": {
+        "price_too_high": "价格比我预期的高",
+        "compare_plans": "我想先比较一下各个方案",
+        "want_to_try_first": "我想在付费前再多试用一下",
+        "payment_method": "我无法用想用的方式付款",
+        "just_checking_price": "我只是看看价格"
+      },
+      "other": "其他",
+      "otherPlaceholder": "用几个字告诉我们",
+      "send": "发送",
+      "notNow": "暂不",
+      "close": "关闭",
+      "thanks": "谢谢，这对我们很有帮助。"
+    },
     "checkoutPanel": {
       "title": "您已开通 {plan}",
       "subtitle": "付款已收到。收据将很快发送到您的邮箱。",

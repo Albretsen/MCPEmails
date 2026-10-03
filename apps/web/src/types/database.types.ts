@@ -1574,6 +1574,58 @@ export type Database = {
           },
         ]
       }
+      checkout_cancel_feedback: {
+        Row: {
+          created_at: string
+          detail: string | null
+          id: string
+          reason: string
+          target: string | null
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          reason: string
+          target?: string | null
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          reason?: string
+          target?: string | null
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkout_cancel_feedback_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkout_cancel_feedback_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "billing_funnel_by_workspace"
+            referencedColumns: ["workspace_id"]
+          },
+          {
+            foreignKeyName: "checkout_cancel_feedback_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       experiment_assignments: {
         Row: {
           experiment_key: string

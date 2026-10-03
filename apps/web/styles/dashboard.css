@@ -980,6 +980,143 @@ body { background: var(--bg-page); }
   }
 }
 
+/* ── Checkout-cancel feedback card ──────────────────────────────────────── */
+
+/**
+ * Sits where the toast stack sits (bottom-right, full-width on a phone) and
+ * one layer below it, so a toast fired while the card is up lands on top
+ * rather than underneath. Not a dialog: no backdrop, the page stays usable.
+ */
+.cancel-feedback {
+  position: fixed;
+  bottom: var(--space-6);
+  right: var(--space-6);
+  z-index: 290;
+  width: 340px;
+  max-width: calc(100vw - 2 * var(--space-4));
+  padding: var(--space-4);
+  border-radius: 12px;
+  border: 1px solid var(--border-1);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-3);
+  font-family: var(--font-sans);
+  color: var(--fg-1);
+  overflow: hidden;
+  animation: toast-slide-in var(--dur-3) var(--ease-out) both;
+}
+
+.cancel-feedback-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.cancel-feedback-title {
+  margin: 0;
+  font-size: var(--fs-14);
+  font-weight: 600;
+  line-height: var(--lh-base);
+}
+.cancel-feedback-sub {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--fg-3);
+  line-height: var(--lh-base);
+}
+
+.cancel-feedback-options {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: var(--space-3) calc(-1 * var(--space-2)) 0;
+}
+.cancel-feedback-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px var(--space-2);
+  border-radius: 8px;
+  font-size: 13.5px;
+  color: var(--fg-2);
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+}
+.cancel-feedback-option:hover { background: var(--bg-sunken); color: var(--fg-1); }
+.cancel-feedback-option.is-selected { background: var(--brand-soft); color: var(--fg-1); }
+.cancel-feedback-option input[type="radio"] {
+  flex-shrink: 0;
+  margin: 0;
+  accent-color: var(--brand);
+}
+.cancel-feedback-other > span { flex-shrink: 0; }
+.cancel-feedback-input {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+.cancel-feedback-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.cancel-feedback-thanks {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--fs-14);
+}
+.cancel-feedback-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--mint-50);
+  color: var(--mint-600);
+}
+
+/* Time left before the card leaves by itself. Decorative: the timer lives in
+   the component, and this bar pauses with it on hover and focus. */
+.cancel-feedback-countdown {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  background: var(--brand);
+  opacity: 0.35;
+  transform-origin: left;
+  animation-name: cancel-feedback-countdown;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+.cancel-feedback-countdown.is-paused { animation-play-state: paused; }
+@keyframes cancel-feedback-countdown {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cancel-feedback { animation: none; }
+  .cancel-feedback-countdown { display: none; }
+}
+
+@media (max-width: 640px) {
+  .cancel-feedback {
+    right: var(--space-4);
+    left: var(--space-4);
+    bottom: var(--space-4);
+    width: auto;
+    max-width: none;
+  }
+}
+
 /* ── Skeleton loading components ────────────────────────────────────────── */
 
 /**
