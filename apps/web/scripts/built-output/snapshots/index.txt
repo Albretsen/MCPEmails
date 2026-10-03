@@ -1,0 +1,409 @@
+Secure Email MCP Server for Gmail, Outlook, IMAP & Claude · mcpemails
+[meta description] Connect Gmail, Outlook, Fastmail, iCloud, Yahoo, Zoho, Yandex, or IMAP email to Claude, Cursor, ChatGPT, and any MCP client. Read, search, draft, approve, and send email live with provider-aware controls.
+[meta og:title] Secure Email MCP Server for Gmail, Outlook, IMAP & Claude
+[meta og:description] Connect Gmail, Outlook, Fastmail, iCloud, Yahoo, Zoho, Yandex, or IMAP email to Claude, Cursor, ChatGPT, and any MCP client. Read, search, draft, approve, and send email live with provider-aware controls.
+[meta og:locale] en_US
+[meta og:locale:alternate] nb_NO
+[meta og:locale:alternate] es_ES
+[meta og:locale:alternate] fr_FR
+[meta og:locale:alternate] zh_CN
+[meta twitter:title] Secure Email MCP Server for Gmail, Outlook, IMAP & Claude
+[meta twitter:description] Connect Gmail, Outlook, Fastmail, iCloud, Yahoo, Zoho, Yandex, or IMAP email to Claude, Cursor, ChatGPT, and any MCP client. Read, search, draft, approve, and send email live with provider-aware controls.
+[alt] mcpemails
+[alt] mcpemails
+[aria-label] Primary navigation
+Features
+How it works
+Pricing
+Compare
+Docs
+Self-host
+Blog
+Sign in
+Get started free
+[aria-label] Open navigation menu
+Give your AI
+agent an
+inbox.
+Connect Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox once. Paste one MCP endpoint URL into Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, or any MCP client. OAuth clients connect in a click, no API key setup. Your agent reads, searches, and sends mail live, and the mail it reads is never stored.
+Connect your inbox
+Read the docs
+1 inbox free, forever
+No card required
+Email fetched live
+Running info@, sales@ and invoices@ for a company?
+All your work mailboxes in one agent
+.
+How a call flows
+t+0ms → t+312ms
+AI agent
+Claude · Cursor · VS Code · ChatGPT · any MCP client
+MCP
+mcpemails
+/api/mcp endpoint
+IMAP
+Your provider
+Gmail · Outlook · iCloud · IMAP
+live · t+12ms
+inbox_list()
+→
+agent calls
+inbox_list
+()
+·
+returns inbox IDs, no dashboard copy-paste
+→
+agent calls
+email_read
+(action=
+"list"
+· inbox_id=
+"3f7a…"
+)
+·
+mcpemails fetches via Gmail API (token rotated)
+←
+20 messages returned ·
+nothing stored
+mcpemails (the pipe)
+live request
+your data, your provider
+[aria-label] Featured customer review
+[aria-label] Rated 5 out of 5
+“Being able to connect all our emails into one MCP was a game changer.”
+TV
+Torstein Vikse
+Founder,
+Vikse Development AS
+[title] Reviewed on Google
+Reviewed on Google
+Works with every MCP-compatible agent and client
+Claude
+ChatGPT
+Cursor
+VS Code
+Cline
+Windsurf
+Gemini CLI
+Zed
+JetBrains
+Raycast
+Warp
+curl / API
+Claude
+ChatGPT
+Cursor
+VS Code
+Cline
+Windsurf
+Gemini CLI
+Zed
+JetBrains
+Raycast
+Warp
+curl / API
+Claude
+ChatGPT
+Cursor
+VS Code
+Cline
+Windsurf
+Gemini CLI
+Zed
+JetBrains
+Raycast
+Warp
+curl / API
+Claude
+ChatGPT
+Cursor
+VS Code
+Cline
+Windsurf
+Gemini CLI
+Zed
+JetBrains
+Raycast
+Warp
+curl / API
+Claude
+ChatGPT
+Cursor
+VS Code
+Cline
+Windsurf
+Gemini CLI
+Zed
+JetBrains
+Raycast
+Warp
+curl / API
+Claude
+ChatGPT
+Cursor
+VS Code
+Cline
+Windsurf
+Gemini CLI
+Zed
+JetBrains
+Raycast
+Warp
+curl / API
+Principles
+Six things we believe
+about email and agents.
+The decisions that shaped the product. If any of them stop being true, that's a bug worth filing.
+01
+Scope
+Seventeen focused tools. The essentials, covered.
+Tools cover the everyday work:
+inbox_list
+,
+email_read
+(list, read, search) and
+email_compose
+(send, reply), plus focused tools for organizing, deleting, folders, drafts, scheduling, contacts, signatures, and unattended automations. Paste the MCP endpoint URL into claude.ai, Claude Desktop, Cursor, or any MCP-compatible agent.
+02
+Storage
+Email is fetched live. Never stored.
+Every tool call hits your provider in real time: Gmail API, Microsoft Graph, or IMAP. Message bodies, subjects, and attachments go to the agent and are discarded immediately. We persist one thing per inbox, an encrypted token or app password, so we can make the next call. The one exception is a message you schedule to send later: we hold it until the send time, then keep a record for your history.
+03
+Sending
+You stay in control of every send.
+Messages go through Gmail, Outlook, Fastmail, or your own SMTP server, never our mail relay. Turn on per-inbox approval to hold sends, replies, forwards, draft sends, and scheduled sends for dashboard review. Automated retries can reuse an idempotency key for 24 hours, and Gmail can send only from a provider-verified Send As identity.
+04
+Providers
+Gmail, Outlook, iCloud, Fastmail & any IMAP inbox.
+An app password or Google sign-in (OAuth 2.0) for Gmail; Microsoft sign-in (OAuth 2.0) for Outlook / Microsoft 365 (a work or school account may need its IT admin to approve the app once); app-specific passwords for Fastmail, iCloud, Yahoo, Zoho, and Yandex; a generic IMAP / SMTP connector for everything else. Every inbox reports a versioned compatibility profile, so an agent can use portable actions while seeing where a provider behaves differently or cannot support an operation.
+05
+Access
+OAuth 2.0 for agents. One click to revoke.
+We're standard MCP (streamable-http) with OAuth 2.1, DCR & PKCE, so there is no vendor lock-in. Works with Claude, Cursor, VS Code, ChatGPT, Windsurf, n8n, Make, LibreChat, OpenWebUI, and any MCP-compatible client. OAuth clients connect automatically via authorization code + PKCE; a scoped API key covers clients without OAuth and scripted access. Revoke any connection from the dashboard in one click.
+06
+Security
+Credentials are encrypted at rest.
+OAuth tokens and app passwords are AES-256-GCM encrypted before being written to the database. Decryption happens only inside an isolated Edge Function at call time. The encryption key is stored as an environment secret, separate from the database.
+Product preview
+See your whole MCP operation at a glance.
+A real-time dashboard for every connected inbox, API key, and tool call, so you always know what your agents are doing.
+app.mcpemails.com/dashboard
+mcpemails
+Overview
+Inboxes
+4
+API keys
+3
+Usage
+J
+jordan
+Pro plan
+Overview
+Real-time view of your connected inboxes and MCP traffic.
+Inboxes connected
+4
+MCP calls (30d)
+12,484
+Avg. response
+214ms
+Plan
+Team
+Recent activity
+email_read()
+· work-gmail
+just now
+email_compose()
+· work-gmail
+12s ago
+email_organize()
+· ops-fastmail
+1m ago
+email_read()
+· support-imap
+3m ago
+How it works
+You're the user. We're the pipe.
+Three steps from sign-up to your agent reading and sending mail.
+01
+Connect your inbox
+Sign in and click
+Connect Inbox
+. Choose Gmail, Outlook, iCloud, Fastmail, or any IMAP inbox, then complete OAuth or paste an app password. Credentials are encrypted; the mail your agent reads is never stored.
+02
+Paste the URL: OAuth or API key
+For an MCP client that supports OAuth 2.0 (claude.ai, Claude Desktop, Cursor, and others), paste
+https://mcpemails.com/api/mcp
+, click Connect, and authorize. No key needed. For clients without OAuth (Cline, JetBrains, custom scripts), generate a scoped API key in the dashboard instead.
+03
+Your agent works the inbox
+The agent calls tools like
+email_read()
+or
+email_compose()
+. MCPEmails fetches live from your provider and returns the result. Nothing is cached between calls.
+inbox_list()
+Discover all connected inboxes and their IDs. Call this first, no UUID copy-pasting from the dashboard.
+email_read()
+Read mail: list recent summaries, fetch a full message, batch-read up to 50, search across providers, extract readable attachment text, or save the original email as .eml.
+email_organize()
+Organize mail: move, copy, delete, flag, or archive, whether one at a time, in bulk, or straight from a search. Long bulk runs report their status and can be cancelled from the dashboard.
+email_compose()
+Compose: send a new message, reply in-thread, or forward through Gmail API, Microsoft Graph, or SMTP. Optional inbox approval holds outbound mail for dashboard review before it leaves.
+folder()
+Manage folders (labels on Gmail): create, rename, or delete, and use them as move destinations. folder_list reads the ones that already exist.
+draft()
+Drafts: create, update, and send provider-stored drafts, including an unsent reply kept in the source conversation for review. draft_list reads what is saved.
+schedule()
+Schedule a message for a future time, and cancel it before it goes out. schedule_list shows what is queued.
+contact_search()
+Find people by name or email with a live scan of recent matching mail. Nothing is stored.
+Real prompts
+Just ask.
+It reads, writes, and files.
+No dashboards to learn. Tell your AI assistant what you want in plain English, and it uses mcpemails to get it done.
+>_
+Go through sales@ and info@ and list every enquiry from this week nobody has answered
+inbox_list()
+email_read()
+7 open enquiries across both inboxes, oldest first. Two have waited since Monday.
+>_
+Unsubscribe me from every newsletter I haven’t opened in 3 months
+email_read()
+email_organize()
+Archived 14 newsletters you haven’t touched since April.
+>_
+Forward this month’s invoices from invoices@ to our accountant
+email_read()
+email_compose()
+Forwarded 9 invoices from invoices@, PDFs attached.
+>_
+Move every receipt from this month into a Receipts folder
+email_organize()
+Moved 23 receipts into Receipts/2026.
+>_
+Send this at 8am Monday, not now
+schedule()
+Scheduled for Mon 8:00 AM. Nothing goes out before then.
+>_
+What did the doctor’s office say about my appointment?
+email_read()
+Confirmed for Thursday at 2:15 PM.
+“I wanted my agents to work my inbox, but every option meant handing a third party a copy of my email. So I built the pipe I wished existed: connect once, your inbox is fetched live and never stored, and you can cut off any agent in a click. That's the product I trust with my own inbox.”
+Asgeir Albretsen
+· founder, mcpemails
+Pricing
+Priced by inbox. No metering on paid plans.
+Free connects one inbox with 150 email actions a month. Personal connects three. Pro connects every mailbox your business runs. Team adds people, roles, and a separate workspace per client.
+Free
+$0
+/forever
+Connect one inbox and give your agent a real mailbox.
+1 connected inbox
+Read, search, organise, draft, schedule and send
+Send review and approval hold
+Usage analytics
+Gmail, Outlook, iCloud, Fastmail & any IMAP
+Unlimited API keys
+Community support
+Start free
+Personal
+$9
+/month
+Three mailboxes for one person or one small business: work, personal, or your first company addresses.
+Everything in Free
+3 connected inboxes
+2x higher burst rate limit
+Email support
+Get Personal
+Pro
+$15
+/month
+Every mailbox your business runs, on one agent: finance, sales, support, info, and your own.
+Everything in Personal
+Unlimited connected inboxes
+5x higher burst rate limit
+Longer analytics history
+Get Pro
+Team
+$79
+/month
+Shared inboxes for a team, with a separate workspace per client or business.
+Everything in Pro
+Unlimited members with roles
+A separate workspace per client or business
+SSO (SAML / OIDC) and audit log
+Longest analytics history
+Priority support
+Get Team
+All plans: the mail your agent reads is fetched live and never stored. OAuth tokens encrypted at rest. Need something custom?
+Contact us
+.
+See full feature comparison →
+Running a company's mailboxes?
+See how one person connects them all
+.
+FAQ
+Questions, answered
+Everything you need to know before connecting your first inbox.
+Do you use analytics?
+Which AI clients does it work with?
+Which email providers can I connect?
+Is my email stored anywhere?
+Is it really free?
+What can the AI actually do with my inbox?
+How do I connect an inbox?
+Can I self-host it?
+[alt] mcpemails
+A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
+Contact
+hello@mcpemails.com
+[aria-label] Copy Contact
+Copy
+MCP endpoint
+https://mcpemails.com/api/mcp
+[aria-label] Copy MCP endpoint
+Copy
+[aria-label] Language
+English
+Norsk
+Español
+Français
+中文
+Product
+Features
+How it works
+Pricing
+Docs
+Self-hosting
+For founders
+For business
+Resources
+Tool reference
+Quickstart
+OAuth connection
+Provider support
+MCP client setup
+Blog
+Changelog
+Connect
+All email providers
+Connect any IMAP inbox
+Connect Gmail
+Connect Outlook
+Connect Fastmail
+Connect iCloud
+Connect Yahoo
+Connect Zoho
+Connect Yandex
+vs native connectors
+Best email MCP servers
+Company
+About
+Security
+Status
+Privacy
+Terms
+© 2026 mcpemails.
+Email fetched live, never stored · Credentials encrypted at rest
+MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.
+[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://mcpemails.com/#organization","name":"mcpemails","url":"https://mcpemails.com","logo":"https://mcpemails.com/favicon.svg"},{"@type":"WebSite","@id":"https://mcpemails.com/#website","name":"mcpemails","url":"https://mcpemails.com","inLanguage":"en","publisher":{"@id":"https://mcpemails.com/#organization"}},{"@type":"SoftwareApplication","name":"mcpemails","url":"https://mcpemails.com","description":"Connect Gmail, Outlook, Fastmail, iCloud, Yahoo, Zoho, Yandex, or IMAP email to Claude, Cursor, ChatGPT, and any MCP client. Read, search, draft, approve, and send email live with provider-aware controls.","applicationCategory":"BusinessApplication","applicationSubCategory":"Email","operatingSystem":"Web","publisher":{"@id":"https://mcpemails.com/#organization"},"brand":{"@id":"https://mcpemails.com/#organization"},"featureList":["Human approval before AI-sent email is dispatched","Transient attachment text extraction","User-invoked MCP workflow prompts","Idempotency keys for safe outbound email retries","Provider compatibility profiles","Original email export as .eml (message/rfc822)","Verified Gmail send-as aliases","Threaded reply drafts","Outlook / Microsoft 365 via Microsoft Graph"],"offers":[{"@type":"Offer","name":"Free","description":"Connect one inbox and give your agent a real mailbox.","url":"https://mcpemails.com/pricing","price":"0","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"0","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}},{"@type":"Offer","name":"Personal","description":"Three mailboxes for one person or one small business: work, personal, or your first company addresses.","url":"https://mcpemails.com/pricing","price":"9","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"9","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}},{"@type":"Offer","name":"Pro","description":"Every mailbox your business runs, on one agent: finance, sales, support, info, and your own.","url":"https://mcpemails.com/pricing","price":"15","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"15","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}},{"@type":"Offer","name":"Team","description":"Shared inboxes for a team, with a separate workspace per client or business.","url":"https://mcpemails.com/pricing","price":"79","priceCurrency":"USD","availability":"https://schema.org/InStock","priceSpecification":{"@type":"UnitPriceSpecification","price":"79","priceCurrency":"USD","unitText":"MONTH","billingDuration":1,"billingIncrement":1}}],"aggregateRating":{"@type":"AggregateRating","ratingValue":"5","reviewCount":1,"bestRating":"5","worstRating":"1"},"review":[{"@type":"Review","reviewBody":"Being able to connect all our emails into one MCP was a game changer.","datePublished":"2026-09-13","author":{"@type":"Person","name":"Torstein Vikse","url":"https://vikse.dev/","worksFor":{"@type":"Organization","name":"Vikse Development AS"}},"reviewRating":{"@type":"Rating","ratingValue":"5","bestRating":"5","worstRating":"1"},"publisher":{"@type":"Organization","name":"Google"},"url":"https://www.google.com/maps/reviews/data=!4m8!14m7!1m6!2m5!1sCi9DQUlRQUNvZENodHljRjlvT2s5RGNWbEllazFaYUZOblNWQnBVM1puVFZZNFNtYxAB!2m1!1s0x0:0x40013a8d36c2b552!3m1!1s2@1:CAIQACodChtycF9oOk9DcVlIek1ZaFNnSVBpU3ZnTVY4Smc%7C%7C?hl=en-US"}]}]}

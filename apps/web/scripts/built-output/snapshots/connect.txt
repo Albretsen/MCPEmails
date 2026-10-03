@@ -1,0 +1,283 @@
+Connect Any Email Provider to Claude & MCP Clients · mcpemails
+[meta description] IMAP and SMTP settings for 100 email providers, each verified from a live connection, plus how to give Claude, Cursor or ChatGPT access to that mailbox.
+[meta og:title] Connect Any Email Provider to Claude & MCP Clients · mcpemails
+[meta og:description] IMAP and SMTP settings for 100 email providers, each verified from a live connection, plus how to give Claude, Cursor or ChatGPT access to that mailbox.
+[meta og:locale] en_US
+[meta twitter:title] Connect Any Email Provider to Claude & MCP Clients · mcpemails
+[meta twitter:description] IMAP and SMTP settings for 100 email providers, each verified from a live connection, plus how to give Claude, Cursor or ChatGPT access to that mailbox.
+[alt] mcpemails
+[alt] mcpemails
+[aria-label] Primary navigation
+Features
+How it works
+Pricing
+Compare
+Docs
+Self-host
+Blog
+Sign in
+Get started free
+[aria-label] Open navigation menu
+Every provider
+Connect any mailbox to your AI
+mcpemails speaks plain IMAP and SMTP, so it connects almost any mailbox. Below is every provider with a setup guide: the exact hosts and ports, whether you need an app password, and what tends to go wrong.
+mcpemails connects to any email provider that offers IMAP and SMTP access, which is nearly all of them. Each guide below lists that provider's verified hostnames, ports and authentication requirements, and one inbox is free forever.
+Every hostname on these pages was checked on 2026-08-31 by opening a real TLS connection to it.
+Any IMAP mailbox
+1
+Consumer webmail
+10
+Privacy-focused mail
+9
+Business & hosted mail
+8
+Web hosts with mail
+13
+cPanel & shared hosting
+11
+Self-hosted mail servers
+11
+Internet service providers
+24
+Regional & international
+10
+Limited or unsupported
+3
+Any IMAP mailbox
+Generic IMAP
+Consumer webmail
+Gmail
+Outlook.com
+AOL Mail
+imap.aol.com
+GMX
+imap.gmx.net
+iCloud Mail
+imap.mail.me.com
+Mail.com
+imap.mail.com
+Mail.ru
+imap.mail.ru
+WEB.DE
+imap.web.de
+Yahoo Mail
+export.imap.mail.yahoo.com
+Yandex Mail
+imap.yandex.com
+Privacy-focused mail
+Disroot
+disroot.org
+Hushmail
+imap.hushmail.com
+KolabNow
+imap.kolabnow.com
+mailbox.org
+imap.mailbox.org
+Mailfence
+imap.mailfence.com
+Posteo
+posteo.de
+Riseup
+mail.riseup.net
+Runbox
+mail.runbox.com
+Soverin
+imap.soverin.net
+Business & hosted mail
+Microsoft 365
+Fastmail
+imap.fastmail.com
+Migadu
+imap.migadu.com
+Purelymail
+imap.purelymail.com
+Rackspace Email
+secure.emailsrvr.com
+Titan Email
+imap.titan.email
+Zoho Mail
+imap.zoho.com
+Google Workspace
+imap.gmail.com
+Web hosts with mail
+Domeneshop
+imap.domeneshop.no
+DreamHost
+imap.dreamhost.com
+Gandi
+mail.gandi.net
+GoDaddy
+imap.secureserver.net
+Hetzner
+mail.your-server.de
+Hostinger
+imap.hostinger.com
+Infomaniak
+mail.infomaniak.com
+IONOS
+imap.ionos.com
+Loopia
+mailcluster.loopia.se
+Namecheap Private Email
+mail.privateemail.com
+One.com
+imap.one.com
+OVHcloud
+ssl0.ovh.net
+STRATO
+imap.strato.de
+cPanel & shared hosting
+A2 Hosting
+Bluehost
+cPanel / WHM
+GreenGeeks
+HostGator
+InMotion Hosting
+Krystal
+Plesk
+ScalaHosting
+SiteGround
+Tsohost
+Self-hosted mail servers
+Axigen
+Dovecot
+IceWarp
+mailcow
+Mail-in-a-Box
+MDaemon
+Open-Xchange
+Poste.io
+SmarterMail
+Synology MailPlus
+Zimbra
+Internet service providers
+AT&T Mail
+imap.mail.att.net
+Telstra BigPond
+imap.telstra.com
+Bluewin (Swisscom)
+imaps.bluewin.ch
+CenturyLink
+mail.centurylink.net
+Comcast Xfinity
+imap.comcast.net
+Cox
+export.imap.mail.yahoo.com
+EarthLink
+imap.earthlink.net
+Free
+imap.free.fr
+freenet
+mx.freenet.de
+iiNet
+mail.iinet.net.au
+Interia
+poczta.interia.pl
+KPN
+imap.kpnmail.nl
+La Poste
+imap.laposte.net
+o2.pl
+poczta.o2.pl
+Onet Poczta
+imap.poczta.onet.pl
+Online.no
+imap.online.no
+Optus
+mail.optusnet.com.au
+Orange
+imap.orange.fr
+SAPO
+imap.sapo.pt
+Seznam
+imap.seznam.cz
+T-Online
+secureimap.t-online.de
+Telenet
+imap.telenet.be
+Verizon
+imap.aol.com
+Ziggo
+imap.ziggo.nl
+Regional & international
+Alibaba Mail
+imap.aliyun.com
+BOL
+imap.bol.com.br
+Daum
+imap.daum.net
+Naver
+imap.naver.com
+NetEase 126
+imap.126.com
+NetEase 163
+imap.163.com
+QQ Mail
+imap.qq.com
+Sina Mail
+imap.sina.com
+Terra
+imap.terra.com.br
+UOL
+imap.uol.com.br
+Limited or unsupported
+HEY
+Proton Mail
+Tuta
+Provider not listed?
+Any mailbox with IMAP access works. The generic guide covers finding your own host and port.
+Connect any IMAP mailbox
+[alt] mcpemails
+A hosted MCP server that gives AI agents read and send access to your inbox, without ever storing the email it reads.
+Contact
+hello@mcpemails.com
+[aria-label] Copy Contact
+Copy
+MCP endpoint
+https://mcpemails.com/api/mcp
+[aria-label] Copy MCP endpoint
+Copy
+[aria-label] Language
+English
+Norsk
+Español
+Français
+中文
+Product
+Features
+How it works
+Pricing
+Docs
+Self-hosting
+For founders
+For business
+Resources
+Tool reference
+Quickstart
+OAuth connection
+Provider support
+MCP client setup
+Blog
+Changelog
+Connect
+All email providers
+Connect any IMAP inbox
+Connect Gmail
+Connect Outlook
+Connect Fastmail
+Connect iCloud
+Connect Yahoo
+Connect Zoho
+Connect Yandex
+vs native connectors
+Best email MCP servers
+Company
+About
+Security
+Status
+Privacy
+Terms
+© 2026 mcpemails.
+Email fetched live, never stored · Credentials encrypted at rest
+MCPEmails is a service of Albretsen Consulting (enkeltpersonforetak), organisation number 926 646 753, Håsteins gate 9, 5160 Laksevåg, Norway.
+[json-ld] {"@context":"https://schema.org","@graph":[{"@type":"CollectionPage","@id":"https://mcpemails.com/connect","url":"https://mcpemails.com/connect","name":"Connect Any Email Provider to Claude & MCP Clients","description":"IMAP and SMTP settings for 100 email providers, each verified from a live connection, plus how to give Claude, Cursor or ChatGPT access to that mailbox.","inLanguage":"en","isPartOf":{"@id":"https://mcpemails.com/#website"},"breadcrumb":{"@id":"https://mcpemails.com/connect#breadcrumb"},"mainEntity":{"@type":"ItemList","numberOfItems":100,"itemListElement":[{"@type":"ListItem","position":1,"name":"Gmail","url":"https://mcpemails.com/connect/gmail"},{"@type":"ListItem","position":2,"name":"Outlook.com","url":"https://mcpemails.com/connect/outlook"},{"@type":"ListItem","position":3,"name":"Microsoft 365","url":"https://mcpemails.com/connect/office365"},{"@type":"ListItem","position":4,"name":"Generic IMAP","url":"https://mcpemails.com/connect/imap"},{"@type":"ListItem","position":5,"name":"AOL Mail","url":"https://mcpemails.com/connect/aol"},{"@type":"ListItem","position":6,"name":"GMX","url":"https://mcpemails.com/connect/gmx"},{"@type":"ListItem","position":7,"name":"iCloud Mail","url":"https://mcpemails.com/connect/icloud"},{"@type":"ListItem","position":8,"name":"Mail.com","url":"https://mcpemails.com/connect/mail-com"},{"@type":"ListItem","position":9,"name":"Mail.ru","url":"https://mcpemails.com/connect/mail-ru"},{"@type":"ListItem","position":10,"name":"WEB.DE","url":"https://mcpemails.com/connect/web-de"},{"@type":"ListItem","position":11,"name":"Yahoo Mail","url":"https://mcpemails.com/connect/yahoo"},{"@type":"ListItem","position":12,"name":"Yandex Mail","url":"https://mcpemails.com/connect/yandex"},{"@type":"ListItem","position":13,"name":"Disroot","url":"https://mcpemails.com/connect/disroot"},{"@type":"ListItem","position":14,"name":"Hushmail","url":"https://mcpemails.com/connect/hushmail"},{"@type":"ListItem","position":15,"name":"KolabNow","url":"https://mcpemails.com/connect/kolabnow"},{"@type":"ListItem","position":16,"name":"mailbox.org","url":"https://mcpemails.com/connect/mailbox-org"},{"@type":"ListItem","position":17,"name":"Mailfence","url":"https://mcpemails.com/connect/mailfence"},{"@type":"ListItem","position":18,"name":"Posteo","url":"https://mcpemails.com/connect/posteo"},{"@type":"ListItem","position":19,"name":"Riseup","url":"https://mcpemails.com/connect/riseup"},{"@type":"ListItem","position":20,"name":"Runbox","url":"https://mcpemails.com/connect/runbox"},{"@type":"ListItem","position":21,"name":"Soverin","url":"https://mcpemails.com/connect/soverin"},{"@type":"ListItem","position":22,"name":"Fastmail","url":"https://mcpemails.com/connect/fastmail"},{"@type":"ListItem","position":23,"name":"Migadu","url":"https://mcpemails.com/connect/migadu"},{"@type":"ListItem","position":24,"name":"Purelymail","url":"https://mcpemails.com/connect/purelymail"},{"@type":"ListItem","position":25,"name":"Rackspace Email","url":"https://mcpemails.com/connect/rackspace"},{"@type":"ListItem","position":26,"name":"Titan Email","url":"https://mcpemails.com/connect/titan"},{"@type":"ListItem","position":27,"name":"Zoho Mail","url":"https://mcpemails.com/connect/zoho"},{"@type":"ListItem","position":28,"name":"Domeneshop","url":"https://mcpemails.com/connect/domeneshop"},{"@type":"ListItem","position":29,"name":"DreamHost","url":"https://mcpemails.com/connect/dreamhost"},{"@type":"ListItem","position":30,"name":"Gandi","url":"https://mcpemails.com/connect/gandi"},{"@type":"ListItem","position":31,"name":"GoDaddy","url":"https://mcpemails.com/connect/godaddy"},{"@type":"ListItem","position":32,"name":"Hetzner","url":"https://mcpemails.com/connect/hetzner"},{"@type":"ListItem","position":33,"name":"Hostinger","url":"https://mcpemails.com/connect/hostinger"},{"@type":"ListItem","position":34,"name":"Infomaniak","url":"https://mcpemails.com/connect/infomaniak"},{"@type":"ListItem","position":35,"name":"IONOS","url":"https://mcpemails.com/connect/ionos"},{"@type":"ListItem","position":36,"name":"Loopia","url":"https://mcpemails.com/connect/loopia"},{"@type":"ListItem","position":37,"name":"Namecheap Private Email","url":"https://mcpemails.com/connect/namecheap"},{"@type":"ListItem","position":38,"name":"One.com","url":"https://mcpemails.com/connect/one-com"},{"@type":"ListItem","position":39,"name":"OVHcloud","url":"https://mcpemails.com/connect/ovh"},{"@type":"ListItem","position":40,"name":"STRATO","url":"https://mcpemails.com/connect/strato"},{"@type":"ListItem","position":41,"name":"A2 Hosting","url":"https://mcpemails.com/connect/a2hosting"},{"@type":"ListItem","position":42,"name":"Bluehost","url":"https://mcpemails.com/connect/bluehost"},{"@type":"ListItem","position":43,"name":"cPanel / WHM","url":"https://mcpemails.com/connect/cpanel"},{"@type":"ListItem","position":44,"name":"GreenGeeks","url":"https://mcpemails.com/connect/greengeeks"},{"@type":"ListItem","position":45,"name":"HostGator","url":"https://mcpemails.com/connect/hostgator"},{"@type":"ListItem","position":46,"name":"InMotion Hosting","url":"https://mcpemails.com/connect/inmotion"},{"@type":"ListItem","position":47,"name":"Krystal","url":"https://mcpemails.com/connect/krystal"},{"@type":"ListItem","position":48,"name":"Plesk","url":"https://mcpemails.com/connect/plesk"},{"@type":"ListItem","position":49,"name":"ScalaHosting","url":"https://mcpemails.com/connect/scalahosting"},{"@type":"ListItem","position":50,"name":"SiteGround","url":"https://mcpemails.com/connect/siteground"},{"@type":"ListItem","position":51,"name":"Tsohost","url":"https://mcpemails.com/connect/tsohost"},{"@type":"ListItem","position":52,"name":"Axigen","url":"https://mcpemails.com/connect/axigen"},{"@type":"ListItem","position":53,"name":"Dovecot","url":"https://mcpemails.com/connect/dovecot"},{"@type":"ListItem","position":54,"name":"IceWarp","url":"https://mcpemails.com/connect/icewarp"},{"@type":"ListItem","position":55,"name":"mailcow","url":"https://mcpemails.com/connect/mailcow"},{"@type":"ListItem","position":56,"name":"Mail-in-a-Box","url":"https://mcpemails.com/connect/mailinabox"},{"@type":"ListItem","position":57,"name":"MDaemon","url":"https://mcpemails.com/connect/mdaemon"},{"@type":"ListItem","position":58,"name":"Open-Xchange","url":"https://mcpemails.com/connect/open-xchange"},{"@type":"ListItem","position":59,"name":"Poste.io","url":"https://mcpemails.com/connect/poste-io"},{"@type":"ListItem","position":60,"name":"SmarterMail","url":"https://mcpemails.com/connect/smartermail"},{"@type":"ListItem","position":61,"name":"Synology MailPlus","url":"https://mcpemails.com/connect/synology"},{"@type":"ListItem","position":62,"name":"Zimbra","url":"https://mcpemails.com/connect/zimbra"},{"@type":"ListItem","position":63,"name":"AT&T Mail","url":"https://mcpemails.com/connect/att"},{"@type":"ListItem","position":64,"name":"Telstra BigPond","url":"https://mcpemails.com/connect/bigpond"},{"@type":"ListItem","position":65,"name":"Bluewin (Swisscom)","url":"https://mcpemails.com/connect/bluewin"},{"@type":"ListItem","position":66,"name":"CenturyLink","url":"https://mcpemails.com/connect/centurylink"},{"@type":"ListItem","position":67,"name":"Comcast Xfinity","url":"https://mcpemails.com/connect/comcast"},{"@type":"ListItem","position":68,"name":"Cox","url":"https://mcpemails.com/connect/cox"},{"@type":"ListItem","position":69,"name":"EarthLink","url":"https://mcpemails.com/connect/earthlink"},{"@type":"ListItem","position":70,"name":"Free","url":"https://mcpemails.com/connect/free-fr"},{"@type":"ListItem","position":71,"name":"freenet","url":"https://mcpemails.com/connect/freenet"},{"@type":"ListItem","position":72,"name":"iiNet","url":"https://mcpemails.com/connect/iinet"},{"@type":"ListItem","position":73,"name":"Interia","url":"https://mcpemails.com/connect/interia"},{"@type":"ListItem","position":74,"name":"KPN","url":"https://mcpemails.com/connect/kpn"},{"@type":"ListItem","position":75,"name":"La Poste","url":"https://mcpemails.com/connect/laposte"},{"@type":"ListItem","position":76,"name":"o2.pl","url":"https://mcpemails.com/connect/o2-pl"},{"@type":"ListItem","position":77,"name":"Onet Poczta","url":"https://mcpemails.com/connect/onet"},{"@type":"ListItem","position":78,"name":"Online.no","url":"https://mcpemails.com/connect/online-no"},{"@type":"ListItem","position":79,"name":"Optus","url":"https://mcpemails.com/connect/optus"},{"@type":"ListItem","position":80,"name":"Orange","url":"https://mcpemails.com/connect/orange-fr"},{"@type":"ListItem","position":81,"name":"SAPO","url":"https://mcpemails.com/connect/sapo"},{"@type":"ListItem","position":82,"name":"Seznam","url":"https://mcpemails.com/connect/seznam"},{"@type":"ListItem","position":83,"name":"T-Online","url":"https://mcpemails.com/connect/t-online"},{"@type":"ListItem","position":84,"name":"Telenet","url":"https://mcpemails.com/connect/telenet"},{"@type":"ListItem","position":85,"name":"Verizon","url":"https://mcpemails.com/connect/verizon"},{"@type":"ListItem","position":86,"name":"Ziggo","url":"https://mcpemails.com/connect/ziggo"},{"@type":"ListItem","position":87,"name":"Alibaba Mail","url":"https://mcpemails.com/connect/aliyun"},{"@type":"ListItem","position":88,"name":"BOL","url":"https://mcpemails.com/connect/bol"},{"@type":"ListItem","position":89,"name":"Daum","url":"https://mcpemails.com/connect/daum"},{"@type":"ListItem","position":90,"name":"Naver","url":"https://mcpemails.com/connect/naver"},{"@type":"ListItem","position":91,"name":"NetEase 126","url":"https://mcpemails.com/connect/netease-126"},{"@type":"ListItem","position":92,"name":"NetEase 163","url":"https://mcpemails.com/connect/netease-163"},{"@type":"ListItem","position":93,"name":"QQ Mail","url":"https://mcpemails.com/connect/qq"},{"@type":"ListItem","position":94,"name":"Sina Mail","url":"https://mcpemails.com/connect/sina"},{"@type":"ListItem","position":95,"name":"Terra","url":"https://mcpemails.com/connect/terra"},{"@type":"ListItem","position":96,"name":"UOL","url":"https://mcpemails.com/connect/uol"},{"@type":"ListItem","position":97,"name":"HEY","url":"https://mcpemails.com/connect/hey"},{"@type":"ListItem","position":98,"name":"Google Workspace","url":"https://mcpemails.com/connect/google-workspace"},{"@type":"ListItem","position":99,"name":"Proton Mail","url":"https://mcpemails.com/connect/proton"},{"@type":"ListItem","position":100,"name":"Tuta","url":"https://mcpemails.com/connect/tutanota"}]}},{"@type":"BreadcrumbList","@id":"https://mcpemails.com/connect#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"mcpemails","item":"https://mcpemails.com"},{"@type":"ListItem","position":2,"name":"Connect any mailbox to your AI"}]}]}

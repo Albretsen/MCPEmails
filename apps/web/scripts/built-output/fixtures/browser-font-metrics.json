@@ -1,0 +1,155 @@
+{
+  "_about": "Recorded 2026-10-03 with scripts/built-output/browser-font-metrics.js against `next start` of origin/main at 7d96df96 (fonts still loaded by the Google Fonts @import), Chrome 152, macOS, device pixel ratio 2. Each row is: stack weight style font-size line-height width height, where S, M and D are the --font-sans, --font-mono and --font-display stacks. In all eight page/viewport pairs the dark theme measured identical to the light theme in every field below, so one set is stored and `darkIdentical` records that. /dashboard needs a session and was not measured; /login stands in for the app realm.",
+  "measurements": [
+    {
+      "page": "/", "viewport": "1280x800", "darkIdentical": true,
+      "scroll": [1265, 8656], "textElements": 369, "sumW": 84477.4, "sumH": 11874.24,
+      "fixed": {
+        "body": "S 400 normal 16px 24px 1265 8655.98",
+        "h1": "S 600 normal 64px 65.28px 557.27 131.55",
+        "h2": "S 600 normal 44px 46.2px 720 92.39",
+        "h3": "S 500 normal 24px 28.8px 640 28.8",
+        "p": "S 400 normal 18px 28.8px 520 172.78",
+        "nav a": "S 500 normal 14px 21px 57.52 21",
+        ".btn-primary": "S 500 normal 14px 14px 134.09 36",
+        ".btn-secondary": "S 500 normal 15px 15px 138.66 44",
+        ".btn": "S 500 normal 14px 14px 74.88 36",
+        "button": "Arial 400 normal 13.3333px normal 0 0",
+        "code": "M 400 normal 14.08px 23.232px 95.73 21.38",
+        "footer a": "M 400 normal 13px 19.5px 148.2 19.5",
+        "li": "S 400 normal 16px 24px 1136 217.39",
+        "small": "S 400 normal 14px 21px 54.73 18"
+      },
+      "loadedFaces": ["Geist 400 normal U+0-FF", "Geist 500 normal U+0-FF", "Geist 600 normal U+0-FF", "Geist 700 normal U+0-FF", "Geist Mono 400 normal U+0-FF", "Geist Mono 500 normal U+0-FF", "Geist Mono 600 normal U+0-FF", "Instrument Serif 400 italic U+0-FF"]
+    },
+    {
+      "page": "/pricing", "viewport": "1280x800", "darkIdentical": true,
+      "scroll": [1265, 5359], "textElements": 213, "sumW": 63357.99, "sumH": 7288.24,
+      "fixed": {
+        "body": "S 400 normal 16px 24px 1265 5359.47",
+        "h1": "S 600 normal 56px 58.8px 1136 117.59",
+        "h2": "S 600 normal 36px 37.8px 720 37.8",
+        "p": "S 400 normal 18px 28.8px 560 143.98",
+        "nav a": "S 500 normal 14px 21px 57.52 21",
+        ".btn-primary": "S 500 normal 14px 14px 134.09 36",
+        ".btn-secondary": "S 500 normal 15px 15px 223.5 44",
+        ".btn": "S 500 normal 14px 14px 74.88 36",
+        "button": "Arial 400 normal 13.3333px normal 0 0",
+        "footer a": "M 400 normal 13px 19.5px 148.2 19.5",
+        "li": "S 400 normal 14px 21px 223.5 21",
+        "td": "S 600 normal 11px 16.5px 1134 39.5",
+        "th": "S 600 normal 13px 19.5px 453.59 53.5",
+        "small": "S 400 normal 14px 21px 54.73 18"
+      },
+      "loadedFaces": ["Geist 400 normal U+0-FF", "Geist 500 normal U+0-FF", "Geist 600 normal U+0-FF", "Geist Mono 400 normal U+0-FF"]
+    },
+    {
+      "page": "/signup", "viewport": "1280x800", "darkIdentical": true,
+      "scroll": [1265, 888], "textElements": 15, "sumW": 3763.32, "sumH": 415.37,
+      "fixed": {
+        "body": "S 400 normal 16px 24px 1265 800",
+        "h1": "S 600 normal 24px 36px 326 36",
+        "p": "S 400 normal 12px 18.6px 326 37.19",
+        ".btn-primary": "S 500 normal 13.5px 13.5px 326 34",
+        ".btn": "S 500 normal 13.5px 13.5px 326 34",
+        "button": "Arial 400 normal 13.3333px normal 44 44",
+        "input": "S 400 normal 14px normal 326 36",
+        "label": "S 500 normal 13px 19.5px 326 19.5",
+        ".auth-card h1": "S 600 normal 24px 36px 326 36",
+        ".auth-back": "S 400 normal 13px 19.5px 104.55 19.5"
+      },
+      "loadedFaces": ["Geist 400 normal U+0-FF", "Geist 500 normal U+0-FF", "Geist 600 normal U+0-FF"]
+    },
+    {
+      "page": "/login", "viewport": "1280x800", "darkIdentical": true,
+      "scroll": [1265, 824], "textElements": 13, "sumW": 2912.51, "sumH": 329.09,
+      "fixed": {
+        "body": "S 400 normal 16px 24px 1265 800",
+        "h1": "S 600 normal 24px 36px 326 36",
+        ".btn-primary": "S 500 normal 13.5px 13.5px 326 34",
+        ".btn": "S 500 normal 13.5px 13.5px 326 34",
+        "button": "Arial 400 normal 13.3333px normal 44 44",
+        "input": "S 400 normal 14px normal 326 36",
+        "label": "S 500 normal 13px 19.5px 326 19.5",
+        ".auth-card h1": "S 600 normal 24px 36px 326 36",
+        ".auth-back": "S 400 normal 13px 19.5px 104.55 19.5"
+      },
+      "loadedFaces": ["Geist 400 normal U+0-FF", "Geist 500 normal U+0-FF", "Geist 600 normal U+0-FF"]
+    },
+    {
+      "page": "/", "viewport": "375x812", "darkIdentical": true,
+      "scroll": [375, 12498], "textElements": 320, "sumW": 55445.24, "sumH": 11780.56,
+      "fixed": {
+        "body": "S 400 normal 16px 24px 375 12498.39",
+        "h1": "S 600 normal 36px 36.72px 343 73.94",
+        "h2": "S 600 normal 28.125px 29.5312px 343 59.06",
+        "h3": "S 500 normal 18px 21.6px 343 43.19",
+        "p": "S 400 normal 16px 25.6px 343 179.16",
+        "nav a": "S 500 normal 14px 21px 0 0",
+        ".btn-primary": "S 500 normal 14px 14px 0 0",
+        ".btn-secondary": "S 500 normal 15px 15px 343 44",
+        ".btn": "S 500 normal 14px 14px 0 0",
+        "button": "Arial 400 normal 13.3333px normal 44 44",
+        "code": "M 400 normal 14.08px 23.232px 95.73 21.38",
+        "footer a": "M 400 normal 13px 19.5px 148.2 19.5",
+        "li": "S 400 normal 16px 24px 343 353.38",
+        "small": "S 400 normal 14px 21px 54.73 18"
+      },
+      "loadedFaces": ["Geist 400 normal U+0-FF", "Geist 500 normal U+0-FF", "Geist 600 normal U+0-FF", "Geist 700 normal U+0-FF", "Geist Mono 400 normal U+0-FF", "Geist Mono 500 normal U+0-FF", "Geist Mono 600 normal U+0-FF", "Instrument Serif 400 italic U+0-FF"]
+    },
+    {
+      "page": "/pricing", "viewport": "375x812", "darkIdentical": true,
+      "scroll": [375, 7885], "textElements": 204, "sumW": 39594.3, "sumH": 8474.21,
+      "fixed": {
+        "body": "S 400 normal 16px 24px 375 7885.7",
+        "h1": "S 600 normal 28px 29.4px 343 88.2",
+        "h2": "S 600 normal 36px 37.8px 343 75.59",
+        "p": "S 400 normal 16px 25.6px 343 179.16",
+        "nav a": "S 500 normal 14px 21px 0 0",
+        ".btn-primary": "S 500 normal 14px 14px 0 0",
+        ".btn-secondary": "S 500 normal 15px 15px 293 44",
+        ".btn": "S 500 normal 14px 14px 0 0",
+        "button": "Arial 400 normal 13.3333px normal 44 44",
+        "footer a": "M 400 normal 13px 19.5px 148.2 19.5",
+        "li": "S 400 normal 14px 21px 293 21",
+        "td": "S 600 normal 11px 16.5px 555.8 39.5",
+        "th": "S 600 normal 13px 19.5px 140.72 53.5",
+        "small": "S 400 normal 14px 21px 54.73 18"
+      },
+      "loadedFaces": ["Geist 400 normal U+0-FF", "Geist 500 normal U+0-FF", "Geist 600 normal U+0-FF", "Geist Mono 400 normal U+0-FF"]
+    },
+    {
+      "page": "/signup", "viewport": "375x812", "darkIdentical": true,
+      "scroll": [375, 812], "textElements": 15, "sumW": 3363.65, "sumH": 400.74,
+      "fixed": {
+        "body": "S 400 normal 16px 24px 375 812",
+        "h1": "S 600 normal 21px 31.5px 309 31.5",
+        "p": "S 400 normal 12px 18.6px 309 37.19",
+        ".btn-primary": "S 500 normal 13.5px 13.5px 309 44",
+        ".btn": "S 500 normal 13.5px 13.5px 309 44",
+        "button": "Arial 400 normal 13.3333px normal 44 44",
+        "input": "S 400 normal 14px normal 309 44",
+        "label": "S 500 normal 13px 19.5px 309 19.5",
+        ".auth-card h1": "S 600 normal 21px 31.5px 309 31.5",
+        ".auth-back": "S 400 normal 13px 19.5px 104.55 19.5"
+      },
+      "loadedFaces": ["Geist 400 normal U+0-FF", "Geist 500 normal U+0-FF", "Geist 600 normal U+0-FF"]
+    },
+    {
+      "page": "/login", "viewport": "375x812", "darkIdentical": true,
+      "scroll": [375, 812], "textElements": 13, "sumW": 2761.51, "sumH": 333.05,
+      "fixed": {
+        "body": "S 400 normal 16px 24px 375 812",
+        "h1": "S 600 normal 21px 31.5px 309 31.5",
+        ".btn-primary": "S 500 normal 13.5px 13.5px 309 44",
+        ".btn": "S 500 normal 13.5px 13.5px 309 44",
+        "button": "Arial 400 normal 13.3333px normal 44 44",
+        "input": "S 400 normal 14px normal 309 44",
+        "label": "S 500 normal 13px 19.5px 309 19.5",
+        ".auth-card h1": "S 600 normal 21px 31.5px 309 31.5",
+        ".auth-back": "S 400 normal 13px 19.5px 104.55 19.5"
+      },
+      "loadedFaces": ["Geist 400 normal U+0-FF", "Geist 500 normal U+0-FF", "Geist 600 normal U+0-FF"]
+    }
+  ]
+}
