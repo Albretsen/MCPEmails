@@ -13,6 +13,7 @@ import { CheckoutSuccessPanel } from './CheckoutSuccessPanel';
 import { AdminConsentLinkDialog } from './AdminConsentLinkDialog';
 import { CommandPalette } from './CommandPalette';
 import { ToastProvider, useToast } from './Toast';
+import { warmSignatureEditor } from './signature-editor-loader.mjs';
 import { trackProductEvent } from '@/lib/analytics.mjs';
 import { parseUpgradeIntent } from '@/lib/billing/upgrade-intent.mjs';
 import { isBusinessShapedWorkspace } from '@/lib/segment/consumer-domains.mjs';
@@ -157,6 +158,28 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       }
     } catch { /* SSR / unsupported history: state still updates */ }
   };
+
+  // Fetch the signature editor once the dashboard has gone idle.
+  //
+  // The editor and its sanitiser (TipTap, ProseMirror, DOMPurify) are no longer
+  // in the page's own JavaScript; they load on demand (see
+  // signature-editor-loader.mjs). On demand alone would mean the first inbox
+  // modal opened after a page load waits on the network. Asking for them here,
+  // as soon as the browser has nothing better to do, means that in ordinary use
+  // they are already in memory before anyone can reach an inbox row, and
+  // opening the modal and saving behave exactly as when they were bundled. The
+  // page still becomes interactive without them, which is the saving.
+  //
+  // `timeout` caps how long a busy page can put it off. Safari has no
+  // requestIdleCallback, so there a short timer stands in.
+  useEffect(() => {
+    if (typeof window.requestIdleCallback === 'function') {
+      const handle = window.requestIdleCallback(() => warmSignatureEditor(), { timeout: 2000 });
+      return () => window.cancelIdleCallback(handle);
+    }
+    const timer = setTimeout(() => warmSignatureEditor(), 200);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Keep the active section in sync with browser back/forward navigation.
   useEffect(() => {

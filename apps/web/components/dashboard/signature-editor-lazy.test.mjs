@@ -31,6 +31,11 @@ import { installDom, mount, flush, waitFor } from '../../scripts/test-dom.mjs';
 
 const window = installDom();
 
+// The dashboard also asks for the editor when it goes idle. Here idle never
+// comes, so every load in this file is one a test started on purpose.
+window.requestIdleCallback = () => 1;
+window.cancelIdleCallback = () => {};
+
 // The real pair, imported directly: what the gated loader hands over.
 const { default: RealEditor } = await import('./SignatureRichEditor.jsx');
 const { sanitizeSignatureHtml } = await import('../../src/lib/sanitizeSignatureHtml.js');
@@ -176,14 +181,16 @@ test('loading: the form is complete, with a placeholder exactly where the editor
   assert.equal(boxes.length, 1, 'one box where the editor goes');
   const placeholder = view.placeholder();
   assert.equal(placeholder, boxes[0]);
-  // Byte for byte the placeholder SignatureRichEditor renders for itself
-  // before TipTap initialises, so it reserves the same space.
-  assert.equal(placeholder.outerHTML, '<div class="sig-editor sig-editor--loading" aria-hidden="true"></div>');
+  // The editor's own frame, inert and hidden from assistive technology. What
+  // is inside it is pinned in signature-editor-inbox-switch.test.mjs.
+  assert.equal(placeholder.className, 'sig-editor sig-editor--loading is-disabled');
+  assert.equal(placeholder.getAttribute('aria-hidden'), 'true');
 
   // Everything around it is already there, in order, and usable.
   assert.ok(view.container.querySelector('.review-mode'));
   assert.equal(placeholder.nextElementSibling, view.container.querySelector('.sig-preview'));
-  assert.equal(view.preview().innerHTML, '', 'the preview is empty, not broken');
+  assert.equal(view.preview(), null, 'no empty preview body that would read as "no signature"');
+  assert.ok(view.container.querySelector('.sig-preview [aria-busy="true"]'), 'a loading placeholder instead');
   assert.equal(view.select().value, 'always');
   assert.equal(view.select().disabled, false);
   assert.equal(view.button(COPY.save).disabled, false);
@@ -327,7 +334,7 @@ test('failure: the editor area says what happened, in place; it is not left blan
   assert.deepEqual(view.unhandled, [], 'the failure is handled');
 });
 
-test('failure: Save sends nothing, before or after the failure', async (t) => {
+test('failure: Save sends nothing, before or after the failure, and is never silent about it', async (t) => {
   const view = await renderInboxes(t);
   await view.open();
   await flush(() => view.button(COPY.save).click()); // Waiting on the editor.
@@ -336,11 +343,17 @@ test('failure: Save sends nothing, before or after the failure', async (t) => {
   assert.deepEqual(view.patches(), [], 'the waiting save is released unsaved');
   assert.ok(view.button(COPY.save), 'and the button is back, not stuck on Saving…');
   assert.equal(view.button(COPY.save).disabled, false);
+  assert.ok(view.container.textContent.includes('Not saved.'), 'and the form says nothing was saved');
 
+  // Save again: it retries the load rather than doing nothing.
   await flush(() => view.button(COPY.save).click());
+  assert.equal(view.pendingLoads(), 1);
+  assert.ok(view.button(COPY.saving));
+  await view.fail();
   await pause();
   assert.deepEqual(view.patches(), [], 'a save with no editor is never an empty signature');
   assert.ok(view.button(COPY.save), 'the button does not hang');
+  assert.ok(view.container.textContent.includes('Not saved.'));
   assert.deepEqual(view.unhandled, []);
 });
 
