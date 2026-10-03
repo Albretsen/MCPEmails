@@ -16,7 +16,23 @@
     "connectionFailed": "La conexión de la bandeja de entrada falló ({error}). Inténtalo de nuevo.",
     "checkoutSuccess": "Te damos la bienvenida a {plan}. Tu suscripción se está activando ahora; esto puede tardar un momento.",
     "checkoutSuccessPlanFallback": "tu nuevo plan",
-    "checkoutCancelled": "Pago cancelado. Puedes mejorar tu plan en cualquier momento desde Ajustes.",
+    "checkoutFeedback": {
+      "title": "Pago cancelado",
+      "question": "¿Qué te frenó para mejorar tu plan?",
+      "reasons": {
+        "price_too_high": "Cuesta más de lo que esperaba",
+        "compare_plans": "Quiero comparar los planes primero",
+        "want_to_try_first": "Quiero probarlo más antes de pagar",
+        "payment_method": "No pude pagar como quería",
+        "just_checking_price": "Solo estaba mirando el precio"
+      },
+      "other": "Otro",
+      "otherPlaceholder": "Cuéntanoslo en pocas palabras",
+      "send": "Enviar",
+      "notNow": "Ahora no",
+      "close": "Cerrar",
+      "thanks": "Gracias, nos ayuda."
+    },
     "checkoutPanel": {
       "title": "Ya estás en {plan}",
       "subtitle": "Pago recibido. El recibo va de camino a tu correo electrónico.",

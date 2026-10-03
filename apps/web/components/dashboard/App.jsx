@@ -10,6 +10,7 @@ import { sectionToPath, pathSegmentToSection } from './routes';
 import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage, MembersPage, WorkflowsPage, ApprovalsPage, AutomationsPage, planDisplayName, PLAN_LADDER } from './Pages';
 import { ConnectModal } from './ConnectModal';
 import { CheckoutSuccessPanel } from './CheckoutSuccessPanel';
+import { CheckoutCancelFeedback } from './CheckoutCancelFeedback';
 import { AdminConsentLinkDialog } from './AdminConsentLinkDialog';
 import { CommandPalette } from './CommandPalette';
 import { ToastProvider, useToast } from './Toast';
@@ -247,6 +248,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   const [showCommand, setShowCommand] = useState(false);
   // { planId, interval } while the post-checkout confirmation panel is open.
   const [checkoutSuccess, setCheckoutSuccess] = useState(null);
+  // The "what stopped you?" card shown on return from a cancelled checkout.
+  const [checkoutCancelled, setCheckoutCancelled] = useState(false);
+  const dismissCheckoutCancelled = useCallback(() => setCheckoutCancelled(false), []);
   const [onboardingClient, setOnboardingClient] = useState(returnedOnboardingClient);
   const [guideResumeKey, setGuideResumeKey] = useState(0);
 
@@ -467,8 +471,10 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
   // have both finished, it lands diagonally opposite everything the buyer is
   // reading, and this effect then strips the params, so after those four
   // seconds nothing in the product acknowledges the payment at all. Success
-  // now opens a persistent panel instead; a cancelled checkout is still just a
-  // toast, because nothing happened and nothing needs acknowledging.
+  // now opens a persistent panel instead. A cancelled checkout needs no
+  // acknowledgement, but it is the one moment to learn why someone who wanted
+  // to pay did not, so it opens a small, ignorable feedback card where the
+  // toast used to be (CheckoutCancelFeedback).
   useEffect(() => {
     const checkoutParam = readQuery(searchParams, 'checkout');
     if (!checkoutParam) return;
@@ -500,7 +506,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         });
       }
     } else if (checkoutParam === 'cancelled') {
-      toast({ message: tr('app.checkoutCancelled'), variant: 'info' });
+      // One-shot signal from the return URL, client only: same reasoning as
+      // the success panel above.
+      setCheckoutCancelled(true);
     }
     // Clean up the query params from the URL without a reload, so a refresh
     // does not replay the confirmation.
@@ -1133,6 +1141,8 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           onDismiss={() => setCheckoutSuccess(null)}
         />
       )}
+
+      {checkoutCancelled && <CheckoutCancelFeedback onDismiss={dismissCheckoutCancelled} />}
 
       <CommandPalette
         open={showCommand}
