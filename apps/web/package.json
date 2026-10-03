@@ -65,7 +65,8 @@
     "test:marketing-consent": "node --test src/lib/marketing-consent.test.mjs",
     "test:signup-consent-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/auth/signup-consent-ui.test.mjs",
     "test:i18n-coverage": "node --test scripts/i18n-coverage/analyze.test.mjs scripts/i18n-coverage/narrowing.test.mjs",
-    "test:fonts": "node --test scripts/fonts/font-roles.test.mjs scripts/fonts/self-hosted.test.mjs"
+    "test:fonts": "node --test scripts/fonts/font-roles.test.mjs scripts/fonts/self-hosted.test.mjs",
+    "test:logo-dimensions": "node --test scripts/layout/logo-dimensions.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
