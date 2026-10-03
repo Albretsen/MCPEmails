@@ -16,7 +16,23 @@
     "connectionFailed": "Inbox connection failed ({error}). Please try again.",
     "checkoutSuccess": "Welcome to {plan}. Your subscription is activating now; this may take a moment.",
     "checkoutSuccessPlanFallback": "your new plan",
-    "checkoutCancelled": "Checkout cancelled. You can upgrade any time from Settings.",
+    "checkoutFeedback": {
+      "title": "Checkout cancelled",
+      "question": "What held you back from upgrading?",
+      "reasons": {
+        "price_too_high": "It costs more than I expected",
+        "compare_plans": "I want to compare the plans first",
+        "want_to_try_first": "I want to try it more before paying",
+        "payment_method": "I couldn't pay the way I wanted",
+        "just_checking_price": "I was just checking the price"
+      },
+      "other": "Other",
+      "otherPlaceholder": "Tell us in a few words",
+      "send": "Send",
+      "notNow": "Not now",
+      "close": "Close",
+      "thanks": "Thanks, that helps."
+    },
     "checkoutPanel": {
       "title": "You're on {plan}",
       "subtitle": "Payment received. A receipt is on its way to your email.",
