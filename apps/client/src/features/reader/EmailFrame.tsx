@@ -45,7 +45,9 @@ const MIN_HEIGHT = 40;
 
 /** A first guess, so the page does not jump far when the real height arrives. */
 function estimateHeight(html: string): number {
-  const text = html.replace(/<[^>]*>/g, "").length;
+  // Length only: markup is counted along with the text, which is close enough
+  // for a guess and avoids anything that looks like tag stripping.
+  const text = html.length * 0.6;
   const blocks = (html.match(/<(p|div|tr|li|br|h[1-6])\b/gi) ?? []).length;
   return Math.max(120, Math.min(640, Math.round(text / 80) * 24 + blocks * 12));
 }
