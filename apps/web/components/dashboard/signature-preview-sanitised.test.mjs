@@ -48,7 +48,39 @@ mock.module(sanitiserUrl, {
   },
 });
 
-const { peekSignatureEditor } = await import('./signature-editor-loader.mjs');
+// EVERY WRITE, NOT EVERY SETTLED STATE. A MutationObserver reports after React
+// has finished a whole batch of work, so it cannot see a value that one commit
+// puts in the DOM and the next commit (from an effect in the same batch)
+// replaces. That is exactly the shape of the mistake most likely here when the
+// editor's code is already loaded: start the preview state at the raw stored
+// HTML, let the effect overwrite it with the sanitised seed a moment later.
+// The raw HTML is parsed, and its <img onerror> runs, in between.
+//
+// React renders `dangerouslySetInnerHTML` by assigning `innerHTML`, so the
+// assignment itself is recorded here, synchronously, for every element. The
+// hook is installed before anything is imported or mounted, so the very first
+// render is covered. Which element was written to is decided afterwards.
+let innerHtmlWrites = [];
+{
+  const descriptor = Object.getOwnPropertyDescriptor(window.Element.prototype, 'innerHTML');
+  Object.defineProperty(window.Element.prototype, 'innerHTML', {
+    configurable: true,
+    enumerable: descriptor.enumerable,
+    get: descriptor.get,
+    set(value) {
+      innerHtmlWrites.push({ element: this, value: String(value) });
+      events.push({ type: 'write', element: this, html: String(value) });
+      descriptor.set.call(this, value);
+    },
+  });
+}
+
+/** Every string ever assigned as the innerHTML of a signature preview body. */
+function previewWrites() {
+  return innerHtmlWrites.filter((w) => w.element.className === 'sig-preview-body').map((w) => w.value);
+}
+
+const { peekSignatureEditor, loadSignatureEditor } = await import('./signature-editor-loader.mjs');
 const { default: AppLocaleProvider } = await import('../i18n/AppLocaleProvider.jsx');
 const { DashboardApp } = await import('./App.jsx');
 const en = (await import('../../messages/en/dashboard.json', { with: { type: 'json' } })).default;
@@ -70,6 +102,7 @@ function inbox(overrides = {}) {
 async function renderInboxes(t, inboxes) {
   events = [];
   outputs = new Set();
+  innerHtmlWrites = [];
   const requests = [];
   const previousFetch = globalThis.fetch;
   globalThis.fetch = async (url, init = {}) => {
@@ -198,6 +231,83 @@ test('what a save sends is sanitiser output too, in both modes', async (t) => {
   for (const needle of FORBIDDEN) assert.ok(!saved.toLowerCase().includes(needle), needle);
 });
 
+// ===========================================================================
+// The editor's code already loaded: every write from the very first render
+// ===========================================================================
+
+/** Every innerHTML ever written to the preview body was sanitiser output. */
+function assertEveryPreviewWriteSanitised() {
+  const writes = previewWrites();
+  assert.ok(writes.length > 0, 'the preview body was written to');
+  for (const html of writes) {
+    assert.ok(html === '' || outputs.has(html),
+      `the preview was given a string the sanitiser never returned: ${html.slice(0, 200)}`);
+    for (const needle of FORBIDDEN) {
+      assert.ok(!html.toLowerCase().includes(needle), `"${needle}" was written into the preview`);
+    }
+  }
+  // And the hostile value itself was never assigned as HTML anywhere inside
+  // the signature panel, preview or not.
+  for (const write of innerHtmlWrites) {
+    if (write.value !== HOSTILE) continue;
+    assert.equal(write.element.closest?.('details.inbox-sending-details') ?? null, null,
+      'the raw stored HTML was assigned as innerHTML inside the signature panel');
+    assert.notEqual(write.element.className, 'sig-preview-body');
+  }
+}
+
+test('already loaded: from the FIRST render, no write to the preview is anything but sanitiser output', async (t) => {
+  await loadSignatureEditor();
+  assert.ok(peekSignatureEditor(), 'the editor pair is loaded before the form exists');
+
+  const view = await renderInboxes(t, [inbox({ signatureHtml: HOSTILE, signatureText: null })]);
+  await view.open();
+  // With the pair loaded the editor is there as soon as the click is handled.
+  assert.ok(view.pm(), 'the editor is on the first render of the modal');
+  await settle();
+
+  // The first write is the one a wrong initial state would make.
+  const writes = previewWrites();
+  assert.ok(writes[0] === '' || outputs.has(writes[0]),
+    `the first render of the preview held unsanitised HTML: ${writes[0].slice(0, 200)}`);
+  assertEveryPreviewWriteSanitised();
+  assertPreviewOnlyEverSanitised();
+  assertNothingHostileEverRendered();
+  assert.equal(view.preview().innerHTML, '<p>Ada</p><p>x</p>');
+});
+
+test('already loaded: a second inbox opened in the same modal session is held to the same rule', async (t) => {
+  await loadSignatureEditor();
+  const hostileB = HOSTILE.replace('Ada', 'Bob');
+  const view = await renderInboxes(t, [
+    inbox({ signatureHtml: HOSTILE, signatureText: null }),
+    inbox({ id: 'ib-0002', label: 'sales', address: 'sales@acme.com', signatureHtml: hostileB, signatureText: null }),
+  ]);
+  await view.open();
+  await settle();
+  const rows = view.container.querySelectorAll('tr[role="button"]');
+  await flush(() => { rows[1].dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })); });
+  await settle();
+  assert.equal(view.preview().innerHTML, '<p>Bob</p><p>x</p>');
+  for (const html of previewWrites()) {
+    assert.ok(html === '' || outputs.has(html), `unsanitised preview write: ${html.slice(0, 200)}`);
+    for (const needle of FORBIDDEN) assert.ok(!html.toLowerCase().includes(needle), needle);
+  }
+});
+
+test('still loading or already loaded, the earlier sessions in this file made no unsanitised write either', async (t) => {
+  // The first test of this file runs before the pair has loaded, the rest
+  // after. This re-runs the stored-hostile session and checks the WRITES,
+  // which the observer-based assertions above cannot see.
+  const view = await renderInboxes(t, [inbox({ signatureHtml: HOSTILE, signatureText: 'Ada' })]);
+  await view.open();
+  await waitFor(() => view.pm() && view.preview()?.innerHTML, { message: 'the editor and its preview' });
+  await flush(() => view.tab(COPY.modeHtml).click());
+  await view.typeSource(`${HOSTILE}<b>ok</b>`);
+  await settle();
+  assertEveryPreviewWriteSanitised();
+});
+
 test('one sanitiser: the form, the loader and the editor all hold the same function', async () => {
   const pair = peekSignatureEditor();
   assert.ok(pair, 'the editor pair has loaded by now');
@@ -231,6 +341,9 @@ test('the source: one dangerouslySetInnerHTML for signatures, fed only by saniti
   // The preview's `html` prop is the `previewHtml` state, and every write to
   // that state is '' or a value that came from the sanitiser.
   assert.match(form, /<SignaturePreview\s+html=\{previewHtml\}/);
+  // It STARTS empty: an initial value is rendered once before any effect can
+  // replace it, so it must never be the stored HTML.
+  assert.match(form, /const \[previewHtml, setPreviewHtml\] = useState\(''\);/);
   const writes = [...form.matchAll(/setPreviewHtml\(([^)]*)\)/g)].map((m) => m[1]).sort();
   assert.deepEqual(writes, ["''", "''", 'html', 'seed']);
   assert.match(form, /const html = typeof sourceHtml === 'string'\s*\? sanitizeSignatureHtml\(sourceHtml\)\s*: editorRef\.current\.getHTML\(\);/,
