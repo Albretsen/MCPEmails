@@ -138,7 +138,7 @@ export function compilePattern(pattern) {
     else if (!LITERAL_SEGMENT.test(segment)) throw new Error(`Unsupported path segment "${segment}" in "${pattern}"`);
     // Escape the regex metacharacters a literal may contain. [ and ] are left
     // alone on purpose: they stay a character class, as they are to minimatch.
-    else source += segment.replace(/[.()]/g, '\\$&');
+    else source += segment.replace(/[\\.()]/g, '\\$&');
     if (!last) source += '/';
   });
   return new RegExp(`^${source}$`);
