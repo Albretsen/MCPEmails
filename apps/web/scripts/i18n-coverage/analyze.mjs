@@ -112,7 +112,7 @@ export function literalKeys(source) {
   const keys = [];
   const names = [...new Set(bindings.map((b) => b.name))];
   for (const name of names) {
-    const escaped = name.replace(/\$/g, '\\$');
+    const escaped = name.replace(/[\\$]/g, '\\$&');
     const call = new RegExp(`(?<![\\w$.])${escaped}(?:\\.(?:rich|raw|markup))?\\s*\\(\\s*(['"])([A-Za-z0-9_.-]+)\\1\\s*[,)]`, 'g');
     for (const match of source.matchAll(call)) {
       const binding = bindings.filter((b) => b.name === name && b.index < match.index).pop();

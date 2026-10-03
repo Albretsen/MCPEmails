@@ -37,7 +37,7 @@ export function facesFromGoogleUrl(url) {
     for (const tuple of valueList.split(';')) {
       const values = tuple.split(',');
       const get = (axis) => values[axisNames.indexOf(axis)];
-      const weight = axisNames.includes('wght') ? get('wght').replace('..', ' ') : '400';
+      const weight = axisNames.includes('wght') ? get('wght').replaceAll('..', ' ') : '400';
       const style = axisNames.includes('ital') && get('ital') === '1' ? 'italic' : 'normal';
       faces.push({ family, weight, style });
     }

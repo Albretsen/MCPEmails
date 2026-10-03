@@ -188,13 +188,17 @@ function attribute(tag, name) {
 export function visibleText(html) {
   const lines = [];
   const jsonLd = [];
-  let work = html.replace(/<script\b([^>]*)>([\s\S]*?)<\/script>/g, (whole, attrs, body) => {
+  let work = html.replace(/<script\b([^>]*)>([\s\S]*?)<\/script\b[^>]*>/gi, (whole, attrs, body) => {
     if (/type="application\/ld\+json"/.test(attrs)) jsonLd.push(body);
     return '\n';
   });
-  work = work.replace(/<style\b[^>]*>[\s\S]*?<\/style>/g, '\n');
+  work = work.replace(/<style\b[^>]*>[\s\S]*?<\/style\b[^>]*>/gi, '\n');
   // React writes <!-- --> between adjacent text nodes; they are not a break.
-  work = work.replace(/<!--[\s\S]*?-->/g, '');
+  // Repeated until stable so a comment cannot be reassembled from its remains.
+  for (let previous; previous !== work; ) {
+    previous = work;
+    work = work.replace(/<!--[\s\S]*?-->/g, '');
+  }
   work = work.replace(/<[^>]+>/g, (tag) => {
     const out = [];
     if (/^<meta\b/.test(tag)) {
