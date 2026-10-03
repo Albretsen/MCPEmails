@@ -1,11 +1,13 @@
 import { redirect, notFound } from 'next/navigation';
 import { after } from 'next/server';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { ACTIVE_WORKSPACE_COOKIE } from '@/lib/workspace/active';
 import { linkExperimentSubjectForRequest } from '@/lib/experiments/link-request';
 import { stampAcquisitionSegment } from '@/lib/segment/record-segment';
+import { deviceClassFromHeaders } from '@/lib/acquisition-device.mjs';
+import { shouldStampDeviceOnDashboard, stampAcquisitionDevice } from '@/lib/acquisition-device-stamp';
 import { PENDING_INBOX_COLUMNS, selectTolerantly } from '@/lib/approvals/columns';
 import { DashboardApp } from '../../../components/dashboard/App';
 import { pathSegmentToSection } from '../../../components/dashboard/routes';
@@ -684,6 +686,18 @@ export default async function DashboardPage({ params }) {
       ownerEmail: user.email,
       userCreatedAt: user.created_at,
     }));
+  }
+
+  // Record whether a password signup came from a phone, a tablet or a desktop.
+  // This render is the first request such a signup's browser makes to us:
+  // signUp() goes from the page straight to Supabase, so nothing earlier sees
+  // its User-Agent. Google and GitHub signups are stamped in /auth/callback
+  // instead and are skipped here. The class is read before the response and
+  // written after it; the User-Agent itself is never kept. Gated on an account
+  // that is minutes old, owner's workspace only, never overwrites.
+  if (shouldStampDeviceOnDashboard({ provider: user.app_metadata?.provider, userCreatedAt: user.created_at })) {
+    const device = deviceClassFromHeaders(await headers());
+    after(() => stampAcquisitionDevice(createServiceRoleClient(), { ownerId: user.id, device }));
   }
 
   // The calling user's role in the ACTIVE workspace (drives role-gated UI).
