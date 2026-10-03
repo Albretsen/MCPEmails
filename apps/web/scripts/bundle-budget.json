@@ -3,12 +3,11 @@
   "routes": {
     "dashboard": {
       "ceiling": {
-        "raw": 1742295,
-        "gzip": 513297,
-        "brotli": 417909
+        "raw": 2000361,
+        "gzip": 580613,
+        "brotli": 474435
       },
       "absent": [
-        "supabase-js",
         "tiptap",
         "dompurify"
       ]

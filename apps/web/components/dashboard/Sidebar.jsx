@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { Icon, Avatar } from '../Primitives';
+import { createClient } from '@/lib/supabase/client';
 import { CreateWorkspaceModal } from './CreateWorkspaceModal';
 import { sectionToPath } from './routes';
 import { planDisplayName } from '@/lib/stripe/plans';
@@ -83,34 +84,8 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
     }
   }
 
-  // The Supabase browser client is imported HERE, not at the top of the file.
-  // Signing out is the only thing the dashboard uses it for, and a static
-  // import put all of supabase-js (about 250 KB) in every dashboard page load.
-  // `import()` returns the same promise on every call, so starting it early
-  // from the button's hover/focus and then awaiting it in the click costs one
-  // download at most.
-  function loadSupabaseClient() {
-    return import('@/lib/supabase/client');
-  }
-
-  // Hover or keyboard focus on the button: fetch the chunk now so the click
-  // finds it already there. A failure here is ignored; the click retries.
-  function warmSignOut() {
-    loadSupabaseClient().catch(() => {});
-  }
-
   async function handleSignOut() {
-    let supabase;
-    try {
-      const { createClient } = await loadSupabaseClient();
-      supabase = createClient();
-    } catch {
-      // The chunk could not be fetched (offline, or a deploy replaced it). The
-      // session cannot be cleared without the client, and sending the person
-      // home still signed in would look like a sign-out that did not happen.
-      // Stay put: the button is still there and the next click tries again.
-      return;
-    }
+    const supabase = createClient();
     // Use scope:'local' to clear only the local session tokens without waiting
     // for Supabase's server-side refresh-token revocation (which can return 503).
     // The client-side session is always cleared regardless of network/server errors,
@@ -332,8 +307,7 @@ export function Sidebar({ route, setRoute, counts, user, workspace, workspaces =
               minHeight: 36,
               transition: "color 120ms var(--ease-out), background 120ms var(--ease-out)",
             }}
-            onFocus={warmSignOut}
-            onMouseEnter={e => { warmSignOut(); e.currentTarget.style.color = "var(--fg-1)"; e.currentTarget.style.background = "var(--ink-100)"; }}
+            onMouseEnter={e => { e.currentTarget.style.color = "var(--fg-1)"; e.currentTarget.style.background = "var(--ink-100)"; }}
             onMouseLeave={e => { e.currentTarget.style.color = "var(--fg-3)"; e.currentTarget.style.background = "none"; }}
           >
             <Icon name="logout" size={14} color="currentColor" />

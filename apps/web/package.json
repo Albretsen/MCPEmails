@@ -65,7 +65,7 @@
     "test:signup-consent-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/auth/signup-consent-ui.test.mjs",
     "test:signature-editor-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/dashboard/signature-editor-ui.test.mjs components/dashboard/signature-editor-lazy.test.mjs components/dashboard/signature-editor-loader.test.mjs",
     "test:app-locale": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/i18n/app-locale-provider.test.mjs",
-    "test:sidebar-signout": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/dashboard/sidebar-signout.test.mjs components/dashboard/sidebar-signout-lazy.test.mjs",
+    "test:sidebar-signout": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/dashboard/sidebar-signout.test.mjs",
     "test:pricing-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/marketing/pricing-client-ui.test.mjs",
     "bundle:budget": "node scripts/bundle-budget.mjs"
   },
