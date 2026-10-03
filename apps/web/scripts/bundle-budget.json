@@ -3,9 +3,9 @@
   "routes": {
     "dashboard": {
       "ceiling": {
-        "raw": 2000361,
-        "gzip": 580613,
-        "brotli": 474435
+        "raw": 1561458,
+        "gzip": 442896,
+        "brotli": 358887
       },
       "absent": [
         "tiptap",
@@ -14,81 +14,81 @@
     },
     "login": {
       "ceiling": {
-        "raw": 1210113,
-        "gzip": 356336,
-        "brotli": 288956
+        "raw": 1212426,
+        "gzip": 358086,
+        "brotli": 290264
       },
       "absent": []
     },
     "signup": {
       "ceiling": {
-        "raw": 1212468,
-        "gzip": 357672,
-        "brotli": 290090
+        "raw": 1214781,
+        "gzip": 359422,
+        "brotli": 291398
       },
       "absent": []
     },
     "forgot-password": {
       "ceiling": {
-        "raw": 1202350,
-        "gzip": 353998,
-        "brotli": 286978
+        "raw": 1204663,
+        "gzip": 355748,
+        "brotli": 288286
       },
       "absent": []
     },
     "reset-password": {
       "ceiling": {
-        "raw": 1203297,
-        "gzip": 353995,
-        "brotli": 286979
+        "raw": 1205610,
+        "gzip": 355745,
+        "brotli": 288287
       },
       "absent": []
     },
     "authorize": {
       "ceiling": {
-        "raw": 969180,
-        "gzip": 292847,
-        "brotli": 235762
+        "raw": 971493,
+        "gzip": 294597,
+        "brotli": 237070
       },
       "absent": []
     },
     "approvals": {
       "ceiling": {
-        "raw": 975295,
-        "gzip": 297264,
-        "brotli": 239634
+        "raw": 977608,
+        "gzip": 299014,
+        "brotli": 240942
       },
       "absent": []
     },
     "invite": {
       "ceiling": {
-        "raw": 937265,
-        "gzip": 284586,
-        "brotli": 228517
+        "raw": 939578,
+        "gzip": 286336,
+        "brotli": 229825
       },
       "absent": []
     },
     "pricing": {
       "ceiling": {
-        "raw": 858035,
-        "gzip": 247652,
-        "brotli": 211557
+        "raw": 858182,
+        "gzip": 248337,
+        "brotli": 212207
       },
       "absent": []
     },
     "home": {
       "ceiling": {
-        "raw": 603972,
-        "gzip": 181803,
-        "brotli": 156201
+        "raw": 604119,
+        "gzip": 182488,
+        "brotli": 156851
       },
       "absent": []
     },
     "docs": {
       "ceiling": {
-        "raw": 632273,
-        "gzip": 185255,
-        "brotli": 159173
+        "raw": 632420,
+        "gzip": 185940,
+        "brotli": 159823
       },
       "absent": []
     }
