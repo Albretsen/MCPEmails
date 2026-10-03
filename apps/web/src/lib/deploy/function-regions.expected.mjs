@@ -32,12 +32,12 @@
 //         serial stages, about 570 ms saved), the OAuth handshake (/authorize
 //         8, consent 10-11, token exchange 9, refresh 6: 680 to 1,250 ms per
 //         step), API keys, approvals, workspaces, onboarding, usage, security,
-//         /admin, /invite, the sign-in pages and the /auth callbacks. Google
-//         and Microsoft token endpoints are global, so the Gmail and Outlook
-//         callbacks lose nothing. Stripe and Resend are US-hosted, and the
-//         routes that call them still win: checkout about 7 x 114 - 2 x 100 =
-//         +600 ms, the portal +480 ms, the Stripe webhook +500 ms (and its
-//         caller is a machine).
+//         /admin, /invite, the sign-in pages, the Supabase /auth/callback and
+//         the routes that only build a provider redirect (/auth/gmail,
+//         /auth/outlook, /auth/google, /auth/github, admin-consent/link).
+//         Stripe and Resend are US-hosted, and the routes that call them
+//         still win: checkout about 7 x 114 - 2 x 100 = +600 ms, the portal
+//         +480 ms, the Stripe webhook +500 ms (and its caller is a machine).
 //
 //   iad1  app/api/mcp: a pure proxy to the Supabase edge function, which runs
 //         in the Supabase region nearest its caller. From arn1 that is
@@ -56,6 +56,18 @@
 //         Sweden and every later one (the MCP server) from the US. That
 //         changes what the mail provider sees, which is more than a speed-up,
 //         so they stay.
+//
+//   iad1  The same rule for OAuth mailboxes: one region per mailbox, as seen by
+//         the provider. auth/gmail/callback and auth/outlook/callback redeem
+//         the user's code at the Google / Microsoft token endpoint and probe
+//         the mailbox (Gmail profile, Graph); inboxes/[id] sends the stored
+//         refresh token to Google's revoke endpoint on delete;
+//         auth/outlook/admin-consent is the tenant-admin leg of the Outlook
+//         connect flow. Every later call for those mailboxes comes from the
+//         US (the edge function, and inboxes/[id]/check above), so these stay
+//         in iad1 and the provider keeps seeing what it sees today. The cost
+//         is the database saving they would have had (8, 11, 8 and 3 round
+//         trips).
 //
 //   iad1  app/[locale] (marketing), robots, sitemap and app/.well-known. None
 //         but the home page touches the database (2 round trips, +230 ms),
@@ -166,7 +178,7 @@ export const ROUTES = [
   ['app/api/automations/route.ts', 'arn1', '6', '-'],
   ['app/api/email/unsubscribe/route.ts', 'arn1', '3', '-'],
   ['app/api/inboxes/[id]/check/route.ts', 'iad1', '5', 'IMAP login to the mail host, or Gmail API / Microsoft Graph'],
-  ['app/api/inboxes/[id]/route.ts', 'arn1', '8', 'Google / Microsoft token revoke on delete'],
+  ['app/api/inboxes/[id]/route.ts', 'iad1', '8', 'Google / Microsoft token revoke on delete'],
   ['app/api/inboxes/[id]/signature/image/route.ts', 'arn1', '4', '-'],
   ['app/api/inboxes/app-password/route.ts', 'iad1', '~12', 'IMAP + SMTP login probes to the mail host'],
   ['app/api/inboxes/autodiscover/route.ts', 'arn1', '2', 'DNS SRV/MX + autoconfig fetch to the mailbox domain'],
@@ -211,13 +223,13 @@ export const ROUTES = [
   ['app/auth/error/page.tsx', 'arn1', '0', '-'],
   ['app/auth/fastmail/app-password/page.tsx', 'arn1', '1', '-'],
   ['app/auth/github/route.ts', 'arn1', '1', '-'],
-  ['app/auth/gmail/callback/route.ts', 'arn1', '8', 'Google token endpoint + Gmail API (global)'],
+  ['app/auth/gmail/callback/route.ts', 'iad1', '8', 'Google token endpoint + Gmail API (global)'],
   ['app/auth/gmail/route.ts', 'arn1', '3', '-'],
   ['app/auth/google/route.ts', 'arn1', '1', '-'],
   ['app/auth/outlook/admin-consent/link/route.ts', 'arn1', '1', '-'],
   ['app/auth/outlook/admin-consent/result/page.tsx', 'arn1', '0', '-'],
-  ['app/auth/outlook/admin-consent/route.ts', 'arn1', '3', 'Microsoft Graph (global)'],
-  ['app/auth/outlook/callback/route.ts', 'arn1', '11', 'Microsoft token endpoint + Graph (global)'],
+  ['app/auth/outlook/admin-consent/route.ts', 'iad1', '3', 'Microsoft Graph (global)'],
+  ['app/auth/outlook/callback/route.ts', 'iad1', '11', 'Microsoft token endpoint + Graph (global)'],
   ['app/auth/outlook/route.ts', 'arn1', '3', '-'],
   ['app/authorize/page.js', 'arn1', '8', 'CIMD fetch (client-hosted, memoised)'],
   ['app/dashboard/[[...section]]/page.js', 'arn1', '5 serial stages', '-'],
