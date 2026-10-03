@@ -15,6 +15,8 @@
 import '../styles/theme.css';
 import '../styles/colors_and_type.css';
 import '../styles/marketing.css';
+// This screen replaces the root layout, so it brings the webfonts itself too.
+import './fonts';
 import { THEME_BOOTSTRAP_SCRIPT } from '../src/lib/theme-bootstrap';
 
 export default function GlobalError({ reset }) {

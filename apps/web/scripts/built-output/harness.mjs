@@ -207,3 +207,47 @@ export function untranslatedKeyLines(text, namespaces) {
   const shape = new RegExp(`^(?:\\[[a-z-]+\\] )?(?:${namespaces.join('|')})(?:\\.[A-Za-z_][A-Za-z0-9_]*)+$`);
   return text.split('\n').filter((line) => shape.test(line));
 }
+
+/** hrefs of the stylesheets a document links. */
+export function stylesheetLinks(html) {
+  return [...html.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*>/g)]
+    .map((tag) => /href="([^"]+)"/.exec(tag[0])?.[1])
+    .filter(Boolean);
+}
+
+/** Entries of a `Link:` response header: [{ href, rel, as, type, crossorigin }]. */
+export function linkHeaderEntries(headers) {
+  const value = headers.get('link');
+  if (!value) return [];
+  return value.split(/,\s*(?=<)/).map((entry) => {
+    const href = /^<([^>]*)>/.exec(entry)?.[1];
+    const param = (name) => new RegExp(`;\\s*${name}(?:="?([^";]*)"?)?(?=;|$)`).exec(entry);
+    return {
+      href,
+      rel: param('rel')?.[1],
+      as: param('as')?.[1],
+      type: param('type')?.[1],
+      crossorigin: param('crossorigin') !== null,
+    };
+  });
+}
+
+/**
+ * A page and the text of every stylesheet it loads: the <link rel="stylesheet">
+ * tags, plus `as="style"` entries of the Link header, which is how Next hands
+ * the stylesheets to a document whose body is rendered on the client (the
+ * not-found screen).
+ */
+export async function fetchPageWithCss(origin, route) {
+  const page = await fetchRoute(origin, route);
+  const css = [];
+  const hrefs = new Set([
+    ...stylesheetLinks(page.html),
+    ...linkHeaderEntries(page.headers).filter((entry) => entry.rel === 'preload' && entry.as === 'style').map((entry) => entry.href),
+  ]);
+  for (const href of hrefs) {
+    const response = await fetch(new URL(href, origin));
+    css.push({ href, status: response.status, text: await response.text() });
+  }
+  return { ...page, css };
+}
