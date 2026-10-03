@@ -17,6 +17,7 @@ import {
   matchImapAliasMailbox,
   resolveImapAlias,
 } from "./imap-folder-target.ts";
+import { fetchImapListPage } from "./imap-list-page.ts";
 import {
   actionSelectorDescription,
   advertisedInputSchema,
@@ -403,15 +404,18 @@ import {
   remainingIds as idsNotYetProcessed,
   type WorkBudget,
 } from "./bulk-budget.ts";
-import { ImapSession } from "./imap-session.ts";
+import { ImapSession, releaseImapClient } from "./imap-session.ts";
+import { ImapCallTimings, imapTimingStore } from "./imap-timing.ts";
 import {
   groupImapIdsByFolder,
   type ImapFolderGroup,
   runImapFolderGroups,
 } from "./imap-bulk-groups.ts";
 import { assertUidPresent, presentUids } from "./imap-uid-presence.ts";
+import { listImapFoldersWithCounts } from "./imap-folder-counts.ts";
 import { newMessageIdsFor, succeededBulkRow, unknownNewIdNote } from "./imap-copyuid.ts";
 import { dedupeMessageIds } from "./message-id-dedupe.ts";
+import { type ImapFetchedThisCall, imapRawMessageOnce } from "./imap-fetch-once.ts";
 import {
   buildFilteredNoMatchReport,
   hasInboxFilter,
@@ -10987,10 +10991,11 @@ function decodeEnvelopeAddress(
 /**
  * Implements `email_list` for IMAP inboxes connected with an app password.
  *
- * Opens a TLS IMAP session, selects the folder, UID-searches (ALL or UNSEEN),
- * takes the newest `limit` UIDs at `offset`, and fetches ENVELOPE + FLAGS +
- * BODYSTRUCTURE. Body preview is not fetched during listing (deferred to
- * email_read), so `preview` is empty here.
+ * Opens a TLS IMAP session, selects the folder, and fetches ENVELOPE + FLAGS +
+ * BODYSTRUCTURE for the newest `limit` messages at `offset`: by sequence range
+ * off the count SELECT reported, or through UID SEARCH (UNSEEN or SEEN) when a
+ * read/unread filter is set. See imap-list-page.ts. The same FETCH carries the
+ * first 2 KB of part one, because the tool returns a `preview` per message.
  *
  * Throws "imap_auth_failed" on credential rejection so the dispatcher can emit
  * a reconnect prompt.
@@ -11011,6 +11016,15 @@ async function listImapMessages(
   offset: number,
   /** true = unread only; false = read only; undefined = both. */
   unread: boolean | undefined,
+  /**
+   * The session executeListInbox resolved `folder` on. Resolving any folder
+   * but the inbox is a LIST, and that LIST used to get a connection of its
+   * own: TCP, TLS, AUTH, LIST, LOGOUT, and then all of it again here. When the
+   * session did connect, this function takes that connection over and lists
+   * on it; when it did not (the inbox needs no LIST), it connects as before.
+   * Either way the connection is this function's to close.
+   */
+  resolvedOn?: ImapSession<ImapClient> | null,
 ): Promise<ListInboxResult> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
     throw new Error("imap_auth_failed");
@@ -11019,7 +11033,7 @@ async function listImapMessages(
 
   let client: ImapClient | null = null;
   try {
-    client = await ImapClient.connect({
+    client = resolvedOn?.take() ?? await ImapClient.connect({
       host: inbox.imap_host,
       port: inbox.imap_port,
       security: inbox.imap_security ?? "tls",
@@ -11029,16 +11043,13 @@ async function listImapMessages(
 
     await client.selectMailbox(imapMailboxForServerFolder(folder));
 
-    const allUids = await client.uidSearch(
-      unread === true ? "UNSEEN" : unread === false ? "SEEN" : "ALL",
-    );
-    const total = allUids.length;
-
-    // Newest first: highest UID first.
-    const ordered = allUids.slice().sort((a, b) => b - a);
-    const pageUids = ordered.slice(offset, offset + limit);
-
-    const summaries = await client.fetchSummaries(pageUids);
+    // Newest first: highest UID first. No `UID SEARCH ALL` any more: it
+    // returned every UID in the mailbox to keep the newest page of them.
+    const { total, pageUids, summaries } = await fetchImapListPage(client, {
+      limit,
+      offset,
+      unread,
+    });
     // Preserve newest-first ordering (FETCH may return any order).
     const byUid = new Map(summaries.map((s) => [s.uid, s]));
 
@@ -11074,7 +11085,9 @@ async function listImapMessages(
     }
     throw err;
   } finally {
-    if (client) await client.logout().catch(() => {});
+    // The page is built. Say goodbye, but do not make the caller wait for the
+    // server to answer it: see releaseImapClient.
+    if (client) await releaseImapClient(client);
   }
 }
 
@@ -11118,6 +11131,14 @@ async function readImapMessage(
    * to relaying the raw original (forward-relay.ts); kept for that next caller.
    */
   perFileMaxBytes?: number,
+  /**
+   * Raw messages THIS tool call has already downloaded. Only email_attachment
+   * passes it: its two passes read the same message, and the second one is
+   * served from here instead of from a second connection and a second full
+   * download. A local of one handler, never kept past it; see
+   * imap-fetch-once.ts.
+   */
+  fetchedThisCall?: ImapFetchedThisCall,
 ): Promise<ReadEmailResult> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
     throw new Error("imap_auth_failed");
@@ -11129,9 +11150,13 @@ async function readImapMessage(
 
   const session = sharedSession ?? new ImapSession(imapSessionOpener(inbox));
   try {
-    const client = await session.select(imapMailboxForServerFolder(folder));
-
-    const msg = await client.fetchMessageRaw(uid);
+    const select = () => session.select(imapMailboxForServerFolder(folder));
+    const { message: msg, client } = await imapRawMessageOnce(
+      fetchedThisCall,
+      messageId,
+      uid,
+      select,
+    );
     if (!msg) throw new Error("message_not_found");
 
     const parsed = parseEmail(msg.raw);
@@ -11147,7 +11172,7 @@ async function readImapMessage(
     const referencesHeader = getHeader(h, "references") ?? "";
 
     if (markAsRead && !msg.flags.includes("\\Seen")) {
-      await client.markSeen(uid);
+      await (client ?? await select()).markSeen(uid);
     }
 
     // IMAP parses the whole message locally, so the budget is applied per
@@ -11211,7 +11236,9 @@ async function readImapMessage(
     }
     throw err;
   } finally {
-    if (!sharedSession) await session.close();
+    // An unshared read has its message by now, so it does not wait for the
+    // goodbye either: see releaseImapClient.
+    if (!sharedSession) await session.release();
   }
 }
 
@@ -11818,12 +11845,18 @@ async function executeListInbox(
   // naming mismatch and must not reach the provider to come back as
   // "Invalid label: X. Please try again in a moment."
   let listFolder: string;
+  // IMAP only (null otherwise): the connection a non-inbox folder is resolved
+  // on is the one the listing then runs on, instead of a second handshake.
+  // Lazy, so the default inbox listing connects exactly once, in the lister.
+  const imapSession = imapSessionFor(inbox);
   try {
     listFolder = await resolveFolderId(inbox, folder.trim() ? folder : "INBOX", {
       strict: true,
       forRead: true,
+      session: imapSession,
     });
   } catch (err) {
+    await imapSession?.close();
     if (err instanceof FolderTargetError) return folderTargetErrorResult(err);
     const message = err instanceof Error ? err.message : String(err);
     if (
@@ -11864,6 +11897,7 @@ async function executeListInbox(
           limit,
           offset,
           unread,
+          imapSession,
         );
         break;
       default:
@@ -11921,6 +11955,11 @@ async function executeListInbox(
       boundary: "read",
       text: `Provider error while listing inbox: ${message}. Please try again in a moment.`,
     });
+  } finally {
+    // A no-op once the lister has taken the connection over, which is every
+    // path that reached it. What this closes is a connection the resolve
+    // opened and nothing then used.
+    await imapSession?.close();
   }
 
   // ── Success ───────────────────────────────────────────────────────────────
@@ -12785,6 +12824,13 @@ async function readOneMessage(
      * Outlook readers, which have no connection to share.
      */
     imap_session?: ImapSession<ImapClient>;
+    /**
+     * IMAP only: raw messages this tool call has already downloaded, so a
+     * second read of the same message costs no connection and no download.
+     * Only `email_attachment` passes it. Ignored by the Gmail and Outlook
+     * readers. See imap-fetch-once.ts.
+     */
+    imap_fetched?: ImapFetchedThisCall;
   },
 ): Promise<ReadEmailResult> {
   const attachmentBudgetBytes = opts.attachment_max_bytes ?? ATTACHMENT_DATA_BUDGET;
@@ -12823,6 +12869,8 @@ async function readOneMessage(
         attachmentBudgetBytes,
         selectOnlyIndex,
         opts.imap_session,
+        undefined,
+        opts.imap_fetched,
       );
       break;
     default:
@@ -13701,12 +13749,18 @@ async function executeReadAttachment(
   // ── Pass 1: metadata-only read to list attachments and resolve the selector ─
   // Deliberately NOT include_attachments: encoding every attachment of a large
   // message OOM-kills the isolate. We fetch the chosen file's bytes in pass 2.
+  //
+  // On IMAP both passes read the whole raw message. `imapFetched` lets pass 2
+  // parse the bytes pass 1 downloaded instead of opening a second connection
+  // and downloading them again. It lives for this call only.
+  const imapFetched: ImapFetchedThisCall = new Map();
   let readResult: ReadEmailResult;
   try {
     readResult = await readOneMessage(inbox, messageId, {
       include_html: false,
       include_attachments: false,
       mark_as_read: false,
+      imap_fetched: imapFetched,
     });
   } catch (err) {
     return mapReadError(err);
@@ -13774,6 +13828,7 @@ async function executeReadAttachment(
       mark_as_read: false,
       attachment_max_bytes: passTwoAttachmentBudget,
       select_only_index: selectedIndex,
+      imap_fetched: imapFetched,
     });
   } catch (err) {
     return mapReadError(err);
@@ -14143,7 +14198,7 @@ async function executeReadEmails(
       messages.push(readResult);
     }
   } finally {
-    if (session) await session.close();
+    if (session) await session.release();
   }
 
   // A read is not destructive, so the partial wording is about completeness
@@ -18219,8 +18274,9 @@ async function executeSearchEmails(
     // Closed on every exit path, including every early return above. After an
     // abort this is a no-op, because the session has already dropped the
     // client; on the ordinary path it hands the connection back to the provider
-    // now rather than leaving it for the server's idle timeout.
-    if (session) await session.close();
+    // now rather than leaving it for the server's idle timeout. LOGOUT is sent
+    // here and not waited for: see releaseImapClient.
+    if (session) await session.release();
   }
 
   // ── Success ───────────────────────────────────────────────────────────────
@@ -18326,16 +18382,17 @@ function moveProviderSemantics(
 /**
  * Lists IMAP mailboxes with per-mailbox STATUS (message counts).
  *
- * STATUS is a separate IMAP round-trip per mailbox, and `ImapClient` runs every
- * command serialized over a single socket (see its command-chain mutex), so the
- * count enrichment is inherently sequential. We therefore list EVERY mailbox
- * (never drop a folder — a dropped folder makes a valid move target look
+ * We list EVERY mailbox (a dropped folder makes a valid move target look
  * nonexistent) but only fetch counts for the first IMAP_FOLDER_COUNT_LIMIT of
  * them; the rest are returned with null counts (explicit "unknown", not a
- * dropped folder). The STATUS calls run sequentially via the mutex regardless
- * of how we await them — `Promise.allSettled` just queues them onto the chain —
- * and each is bounded by the per-command read timeout, so this can neither
- * corrupt the shared buffer nor hang.
+ * dropped folder).
+ *
+ * The counts used to be one STATUS round trip per mailbox, one after another.
+ * They now come with the LIST itself where the server offers LIST-STATUS, and
+ * otherwise from the same STATUS commands written a batch at a time, inside one
+ * turn of the client's command mutex, so the shared buffer is still only ever
+ * read by one command body. A count that cannot be read with certainty is asked
+ * for again the old way. See imap-folder-counts.ts.
  *
  * Throws "imap_auth_failed" on credential rejection.
  */
@@ -18353,29 +18410,25 @@ async function imapListFolders(inbox: InboxRow): Promise<FolderEntry[]> {
       email: imapAuthUser(inbox),
       password,
     });
-    const mailboxes = await client.listMailboxes();
-    // Cap only the COUNT enrichment (the expensive sequential STATUS fan-out);
-    // every mailbox is still returned below.
+    // Cap only the COUNT enrichment (the expensive part); every mailbox is
+    // still returned below.
     const IMAP_FOLDER_COUNT_LIMIT = 25;
-    const enrichCount = Math.min(mailboxes.length, IMAP_FOLDER_COUNT_LIMIT);
-    const statuses = await Promise.allSettled(
-      mailboxes.slice(0, enrichCount).map((mb) => client!.mailboxStatus(mb.name)),
+    const { mailboxes, counts } = await listImapFoldersWithCounts(
+      client,
+      IMAP_FOLDER_COUNT_LIMIT,
     );
-    return mailboxes.map((mb, i) => {
-      const st = i < enrichCount ? statuses[i] : undefined;
-      return {
-        id: mb.name,
-        name: mb.name,
-        type: "folder" as const,
-        total_messages: st?.status === "fulfilled" ? st.value.messages : null,
-        unread_messages: st?.status === "fulfilled" ? st.value.unseen : null,
-      };
-    });
+    return mailboxes.map((mb, i) => ({
+      id: mb.name,
+      name: mb.name,
+      type: "folder" as const,
+      total_messages: counts[i]?.messages ?? null,
+      unread_messages: counts[i]?.unseen ?? null,
+    }));
   } catch (err) {
     if (err instanceof ImapAuthError) throw new Error("imap_auth_failed");
     throw err;
   } finally {
-    if (client) await client.logout().catch(() => {});
+    if (client) await releaseImapClient(client);
   }
 }
 
@@ -29842,6 +29895,11 @@ async function handleToolsCall(
     total_ms: totalMs,
     pre_db_calls: preDbCalls,
     db_calls: dbCalls,
+    // Where the mailbox side of the call went, when it opened an IMAP
+    // connection: connect (and its retries), SELECT, SEARCH, FETCH, LIST,
+    // STATUS, LOGOUT. Durations, counts and byte totals only, never a host,
+    // a folder or anything out of a message. See imap-timing.ts.
+    ...(imapTimingStore.getStore()?.logFields() ?? {}),
   });
 
   // Last thing before the result leaves: if this is one of our own
@@ -31285,11 +31343,15 @@ function triageDeps(): TriageDeps {
   };
 }
 
-// Opens the per-request round-trip counter (requestMeterStore) and does
-// nothing else. A named function, so `Deno.serve(handleRequest)` at the bottom
-// stays a bare reference and the tests drive the entry point production serves.
+// Opens the per-request round-trip counter (requestMeterStore) and the
+// per-request IMAP timing record (imapTimingStore), and does nothing else. A
+// named function, so `Deno.serve(handleRequest)` at the bottom stays a bare
+// reference and the tests drive the entry point production serves.
 function handleRequest(req: Request): Promise<Response> {
-  return requestMeterStore.run({ dbCalls: 0 }, () => handleMeteredRequest(req));
+  return requestMeterStore.run(
+    { dbCalls: 0 },
+    () => imapTimingStore.run(new ImapCallTimings(), () => handleMeteredRequest(req)),
+  );
 }
 
 async function handleMeteredRequest(req: Request): Promise<Response> {
