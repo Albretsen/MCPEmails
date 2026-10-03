@@ -1,0 +1,359 @@
+/* Shared primitives. One module for the small ones keeps the cascade obvious. */
+
+/* ---------- Spinner ---------- */
+.spinner {
+  display: block;
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 2px solid var(--cobalt-200);
+  border-top-color: var(--cobalt-500);
+  animation: mc-spin 700ms linear infinite;
+}
+
+/* ---------- Kbd ---------- */
+.kbd {
+  flex: none;
+  font: 10.5px var(--font-mono);
+  color: var(--fg-3);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-1);
+  border-radius: 4px;
+  padding: 2px 5px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.kbdOnBrand {
+  font-weight: 500;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.16);
+  border-color: transparent;
+}
+.kbdBare {
+  background: transparent;
+  border-color: transparent;
+  padding: 0;
+  opacity: 0.75;
+  color: inherit;
+}
+
+/* ---------- Button ---------- */
+.button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--dur-1) var(--ease-out),
+    border-color var(--dur-1) var(--ease-out);
+}
+.button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.sm {
+  height: 26px;
+  padding: 0 9px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.primary {
+  background: var(--brand);
+  color: var(--fg-on-brand);
+}
+.primary:hover:not(:disabled) {
+  background: var(--brand-hover);
+}
+.primary:active:not(:disabled) {
+  background: var(--brand-press);
+}
+.secondary {
+  background: var(--bg-surface);
+  border-color: var(--border-1);
+  color: var(--fg-1);
+}
+.secondary:hover:not(:disabled) {
+  border-color: var(--border-2);
+  background: var(--ink-50);
+}
+.ghost {
+  background: transparent;
+  color: var(--fg-2);
+}
+.ghost:hover:not(:disabled) {
+  background: var(--ink-100);
+  color: var(--fg-1);
+}
+.danger {
+  background: transparent;
+  color: var(--red-700);
+}
+.danger:hover:not(:disabled) {
+  background: var(--red-100);
+}
+
+/* ---------- IconButton ---------- */
+.iconButton {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--fg-3);
+  cursor: pointer;
+  transition:
+    background var(--dur-1) var(--ease-out),
+    color var(--dur-1) var(--ease-out);
+}
+.iconButton:hover:not(:disabled) {
+  background: var(--ink-100);
+  color: var(--fg-1);
+}
+.iconButton:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.iconSm {
+  width: 28px;
+  height: 28px;
+}
+.iconActive {
+  background: var(--cobalt-50);
+  color: var(--cobalt-700);
+}
+.iconDanger:hover:not(:disabled) {
+  background: var(--red-100);
+  color: var(--red-700);
+}
+/* Touch: at least 44 px, without changing the visual size on desktop. */
+@media (pointer: coarse) {
+  .iconButton {
+    width: 44px;
+    height: 44px;
+  }
+  .button {
+    min-height: 40px;
+  }
+  .sm {
+    min-height: 36px;
+  }
+}
+
+/* ---------- Avatar ---------- */
+.avatar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: var(--ink-100);
+  color: var(--ink-700);
+  font-weight: 600;
+  font-size: 13px;
+  user-select: none;
+}
+.avatarSm {
+  width: 28px;
+  height: 28px;
+  font-size: 12px;
+}
+.avatarBrand {
+  background: var(--cobalt-100);
+  color: var(--cobalt-700);
+}
+
+/* ---------- EmptyState ---------- */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 56px 24px;
+  text-align: center;
+  color: var(--fg-3);
+}
+.emptyIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--ink-100);
+  color: var(--fg-3);
+}
+.emptyTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fg-1);
+}
+.emptySub {
+  max-width: 260px;
+  font-size: 13px;
+  text-wrap: pretty;
+}
+
+/* ---------- Popover / Menu ---------- */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+.popover {
+  position: absolute;
+  z-index: 50;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-1);
+  border-radius: 10px;
+  box-shadow: var(--shadow-3);
+  animation: mc-in 120ms var(--ease-out);
+}
+.menuLabel {
+  padding: 6px 8px 4px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+  font-size: 13px;
+  color: var(--fg-1);
+  cursor: pointer;
+}
+.menuItem:hover,
+.menuItem:focus-visible {
+  background: var(--ink-50);
+}
+.menuItemIcon {
+  flex: none;
+  display: inline-flex;
+  color: var(--fg-3);
+}
+.menuItemText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.menuItemSub {
+  font-size: 12px;
+  color: var(--fg-3);
+}
+.menuItemTrailing {
+  flex: none;
+  font: 11.5px var(--font-mono);
+  color: var(--fg-3);
+}
+.menuSeparator {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--border-1);
+}
+@media (pointer: coarse) {
+  .menuItem {
+    min-height: 44px;
+  }
+}
+
+/* ---------- Toast ---------- */
+.toastHost {
+  position: absolute;
+  left: 50%;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 70;
+  max-width: 90%;
+  pointer-events: none;
+}
+/* Phone: the shell puts the host in a slot that ends where the dock begins. */
+.toastHostPhone {
+  bottom: 12px;
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  padding: 0 6px 0 14px;
+  border-radius: 10px;
+  background: var(--ink-900);
+  color: #fff;
+  font-size: 13px;
+  box-shadow: var(--shadow-3);
+  animation: mc-in 200ms var(--ease-out);
+  pointer-events: auto;
+}
+.toastText {
+  min-width: 0;
+  padding: 8px 8px 8px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.toastError {
+  background: var(--red-700);
+}
+.toastUndo {
+  flex: none;
+  height: 28px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.toastUndo:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+.toastUndo:focus-visible {
+  outline-color: #fff;
+}
+@media (pointer: coarse) {
+  .toastUndo {
+    height: 36px;
+  }
+}
+
+/* ---------- Skeleton ---------- */
+.skeleton {
+  border-radius: 4px;
+  background: var(--ink-100);
+  animation: mc-pulse 1.4s ease-in-out infinite;
+}
