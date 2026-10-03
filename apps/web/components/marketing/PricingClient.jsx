@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Nav, Footer } from './Sections';
 import { MIcon } from '../MarketingPrimitives';
+import { createClient } from '@/lib/supabase/client';
 import { parseUpgradeIntent, pricingUpgradeHref } from '@/lib/billing/upgrade-intent.mjs';
 import { usePricingView } from '@/lib/analytics/use-pricing-view.mjs';
 import { PLANS as CATALOGUE } from '@/lib/stripe/plans';
@@ -439,36 +440,13 @@ export default function PricingClient({ stripePrices }) {
   // Marketing pages are CDN-cached and therefore cannot render session state
   // on the server. Resolve it client-side so signed-in visitors still see a
   // clear account affordance without making the public page private.
-  //
-  // The client is imported here rather than at the top of the file. This page
-  // is public and prerendered, most visitors are signed out, and a static
-  // import made every one of them download supabase-js (about 250 KB) before
-  // the page was interactive, to learn nothing. The import starts in the same
-  // effect the session check always ran in, so a signed-in visitor still gets
-  // the account nav just after hydration; the calls made are the same.
   useEffect(() => {
-    let cancelled = false;
-    let subscription = null;
-    import('@/lib/supabase/client')
-      .then(({ createClient }) => {
-        // Left the page before the module arrived: subscribe to nothing.
-        if (cancelled) return;
-        const supabase = createClient();
-        supabase.auth.getUser().then(({ data }) => {
-          if (!cancelled) setUser(data.user ?? null);
-        });
-        ({ data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-          setUser(session?.user ?? null);
-        }));
-      })
-      .catch(() => {
-        // The chunk could not be fetched. The page stays what the server
-        // sent, the signed-out page, which is complete and correct on its own.
-      });
-    return () => {
-      cancelled = true;
-      if (subscription) subscription.unsubscribe();
-    };
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   return (
