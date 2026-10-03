@@ -3,110 +3,71 @@
   "routes": {
     "dashboard": {
       "ceiling": {
-        "raw": 955176,
-        "gzip": 268458,
-        "brotli": 226312
+        "raw": 1742295,
+        "gzip": 513297,
+        "brotli": 417909
       },
       "absent": [
         "supabase-js",
-        "catalog-nb",
-        "catalog-es",
-        "catalog-fr",
-        "catalog-zh",
         "tiptap",
         "dompurify"
       ]
     },
     "login": {
       "ceiling": {
-        "raw": 871177,
-        "gzip": 251903,
-        "brotli": 215068
+        "raw": 1210113,
+        "gzip": 356336,
+        "brotli": 288956
       },
-      "absent": [
-        "catalog-nb",
-        "catalog-es",
-        "catalog-fr",
-        "catalog-zh"
-      ]
+      "absent": []
     },
     "signup": {
       "ceiling": {
-        "raw": 873532,
-        "gzip": 253239,
-        "brotli": 216202
+        "raw": 1212468,
+        "gzip": 357672,
+        "brotli": 290090
       },
-      "absent": [
-        "catalog-nb",
-        "catalog-es",
-        "catalog-fr",
-        "catalog-zh"
-      ]
+      "absent": []
     },
     "forgot-password": {
       "ceiling": {
-        "raw": 863414,
-        "gzip": 249565,
-        "brotli": 213090
+        "raw": 1202350,
+        "gzip": 353998,
+        "brotli": 286978
       },
-      "absent": [
-        "catalog-nb",
-        "catalog-es",
-        "catalog-fr",
-        "catalog-zh"
-      ]
+      "absent": []
     },
     "reset-password": {
       "ceiling": {
-        "raw": 864361,
-        "gzip": 249562,
-        "brotli": 213091
+        "raw": 1203297,
+        "gzip": 353995,
+        "brotli": 286979
       },
-      "absent": [
-        "catalog-nb",
-        "catalog-es",
-        "catalog-fr",
-        "catalog-zh"
-      ]
+      "absent": []
     },
     "authorize": {
       "ceiling": {
-        "raw": 630244,
-        "gzip": 188414,
-        "brotli": 161874
+        "raw": 969180,
+        "gzip": 292847,
+        "brotli": 235762
       },
-      "absent": [
-        "catalog-nb",
-        "catalog-es",
-        "catalog-fr",
-        "catalog-zh"
-      ]
+      "absent": []
     },
     "approvals": {
       "ceiling": {
-        "raw": 636359,
-        "gzip": 192831,
-        "brotli": 165746
+        "raw": 975295,
+        "gzip": 297264,
+        "brotli": 239634
       },
-      "absent": [
-        "catalog-nb",
-        "catalog-es",
-        "catalog-fr",
-        "catalog-zh"
-      ]
+      "absent": []
     },
     "invite": {
       "ceiling": {
-        "raw": 598329,
-        "gzip": 180153,
-        "brotli": 154629
+        "raw": 937265,
+        "gzip": 284586,
+        "brotli": 228517
       },
-      "absent": [
-        "catalog-nb",
-        "catalog-es",
-        "catalog-fr",
-        "catalog-zh"
-      ]
+      "absent": []
     },
     "pricing": {
       "ceiling": {

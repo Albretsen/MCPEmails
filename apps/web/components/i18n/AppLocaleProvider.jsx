@@ -1,9 +1,29 @@
 'use client';
 
-import { createContext, useContext, useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
 import { routing } from '@/i18n/routing';
-import { peekAppCatalog, loadAppCatalog } from './app-locale-catalogs.mjs';
+
+import enDashboard from '../../messages/en/dashboard.json';
+import enDashboardChrome from '../../messages/en/dashboardChrome.json';
+import enAuth from '../../messages/en/auth.json';
+import enCommon from '../../messages/en/common.json';
+import nbDashboard from '../../messages/nb/dashboard.json';
+import nbDashboardChrome from '../../messages/nb/dashboardChrome.json';
+import nbAuth from '../../messages/nb/auth.json';
+import nbCommon from '../../messages/nb/common.json';
+import esDashboard from '../../messages/es/dashboard.json';
+import esDashboardChrome from '../../messages/es/dashboardChrome.json';
+import esAuth from '../../messages/es/auth.json';
+import esCommon from '../../messages/es/common.json';
+import frDashboard from '../../messages/fr/dashboard.json';
+import frDashboardChrome from '../../messages/fr/dashboardChrome.json';
+import frAuth from '../../messages/fr/auth.json';
+import frCommon from '../../messages/fr/common.json';
+import zhDashboard from '../../messages/zh/dashboard.json';
+import zhDashboardChrome from '../../messages/zh/dashboardChrome.json';
+import zhAuth from '../../messages/zh/auth.json';
+import zhCommon from '../../messages/zh/common.json';
 
 /**
  * Client-side locale provider for the authenticated app and auth screens.
@@ -15,18 +35,15 @@ import { peekAppCatalog, loadAppCatalog } from './app-locale-catalogs.mjs';
  *
  * It carries its own message namespaces (dashboard, auth, ...) and overrides
  * the root NextIntlClientProvider for its subtree.
- *
- * The catalogs live in app-locale-catalogs.mjs. English is bundled; the other
- * four languages are fetched on demand, so there are two notions of "the
- * language" in here and they are deliberately separate:
- *
- *   - `locale`  is the person's CHOICE. It changes the instant they choose,
- *               it is what `useAppLocale()` returns and what is persisted.
- *   - `shown`   is the language actually ON SCREEN, and it only ever names a
- *               catalog that has finished loading. Until the chosen one is
- *               ready the screen keeps the language it had (English on a first
- *               load), so there is never a frame of missing strings.
  */
+const MESSAGES = {
+  en: { dashboard: enDashboard, dashboardChrome: enDashboardChrome, auth: enAuth, common: enCommon },
+  nb: { dashboard: nbDashboard, dashboardChrome: nbDashboardChrome, auth: nbAuth, common: nbCommon },
+  es: { dashboard: esDashboard, dashboardChrome: esDashboardChrome, auth: esAuth, common: esCommon },
+  fr: { dashboard: frDashboard, dashboardChrome: frDashboardChrome, auth: frAuth, common: frCommon },
+  zh: { dashboard: zhDashboard, dashboardChrome: zhDashboardChrome, auth: zhAuth, common: zhCommon },
+};
+
 const STORAGE_KEY = 'mcpe-locale';
 
 function isSupported(value) {
@@ -70,64 +87,25 @@ export function useAppLocale() {
   return useContext(AppLocaleContext);
 }
 
-// Start fetching the person's language as soon as this module runs in the
-// browser, which is before React hydrates. It changes nothing that is rendered
-// (the first render is English regardless); it only means the catalog is
-// usually already here by the time the mount effect below asks for it, so a
-// non-English user leaves English about as early as when it was bundled.
-if (typeof window !== 'undefined') {
-  const preferred = readStored() ?? detectBrowserLocale();
-  if (!peekAppCatalog(preferred)) loadAppCatalog(preferred).catch(() => {});
-}
-
 export default function AppLocaleProvider({ children }) {
   // Begin at the default locale so the first paint matches the server render,
   // then resolve the real preference (stored choice, else browser language).
   const [locale, setLocaleState] = useState(routing.defaultLocale);
-  // The language on screen. See the note at the top: it follows `locale` as
-  // soon as that language's catalog is available.
-  const [shown, setShown] = useState(routing.defaultLocale);
-  // The most recent choice, readable from inside a load that finishes later.
-  const latest = useRef(routing.defaultLocale);
-
-  const choose = useCallback((next) => {
-    latest.current = next;
-    setLocaleState(next);
-    if (peekAppCatalog(next)) {
-      // Already here (always true for English): one render, as before.
-      setShown(next);
-      return;
-    }
-    loadAppCatalog(next).then(
-      () => {
-        // Only the LAST choice may change the screen. A slower load for an
-        // earlier choice finishes into the cache and is otherwise ignored.
-        if (latest.current === next) setShown(next);
-      },
-      () => {
-        // Offline, or the chunk is gone after a deploy. Fall back to English,
-        // which is always bundled, rather than leave the screen in whatever
-        // language it happened to be in. The choice itself stays stored, so
-        // the next visit (or choosing it again) retries.
-        if (latest.current === next) setShown(routing.defaultLocale);
-      },
-    );
-  }, []);
 
   useEffect(() => {
     // Resolves the real locale after the first paint, which had to match the server's default
     // locale.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    choose(readStored() ?? detectBrowserLocale());
-  }, [choose]);
+    setLocaleState(readStored() ?? detectBrowserLocale());
+  }, []);
 
   useEffect(() => {
     try {
-      document.documentElement.lang = shown;
+      document.documentElement.lang = locale;
     } catch {
       /* no-op */
     }
-  }, [shown]);
+  }, [locale]);
 
   const setLocale = useCallback((next) => {
     if (!isSupported(next)) return;
@@ -136,14 +114,14 @@ export default function AppLocaleProvider({ children }) {
     } catch {
       /* no-op */
     }
-    choose(next);
-  }, [choose]);
+    setLocaleState(next);
+  }, []);
 
   const ctx = useMemo(() => ({ locale, setLocale }), [locale, setLocale]);
 
   return (
     <AppLocaleContext.Provider value={ctx}>
-      <NextIntlClientProvider locale={shown} messages={peekAppCatalog(shown)}>
+      <NextIntlClientProvider locale={locale} messages={MESSAGES[locale]}>
         {children}
       </NextIntlClientProvider>
     </AppLocaleContext.Provider>
