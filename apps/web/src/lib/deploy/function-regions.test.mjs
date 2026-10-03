@@ -48,7 +48,9 @@ import { fileURLToPath } from 'node:url';
 
 import {
   EVERY_FUNCTION_IS_PINNED,
+  PATTERNS_ALLOWED_MAX_DURATION,
   PROJECT_DEFAULT_REGION,
+  ROUTE_MAX_DURATIONS,
   ROUTES,
 } from './function-regions.expected.mjs';
 
@@ -225,6 +227,16 @@ test('vercel.json region config stays inside what this test can model', () => {
     assert.equal(EVERY_FUNCTION_IS_PINNED, false, 'vercel.json is missing but the table says every function is pinned');
     return;
   }
+  // This file exists to set function regions and must do nothing else. Until
+  // it was added the project had no vercel.json at all, so ANY other top-level
+  // key (trailingSlash, cleanUrls, crons, headers, redirects, rewrites, ...)
+  // is new platform behaviour arriving through a file whose only reviewer is
+  // this test. Headers and redirects live in next.config.js.
+  assert.deepEqual(
+    Object.keys(config).sort(),
+    ['$schema', 'functions'],
+    'apps/web/vercel.json may contain only "$schema" and "functions"',
+  );
   // A top-level `regions` overrides the project's Function Region setting for
   // every unmatched function, which would make PROJECT_DEFAULT_REGION a lie.
   assert.equal(config.regions, undefined, 'top-level "regions" is not allowed; pin per function');
@@ -236,7 +248,13 @@ test('vercel.json region config stays inside what this test can model', () => {
     assert.doesNotThrow(() => compilePattern(pattern), `"${pattern}"`);
     // Regions only. maxDuration lives next to the handler as a route segment
     // export (see app/api/mcp/route.ts); two places to set it is one too many.
-    assert.deepEqual(Object.keys(options), ['regions'], `functions["${pattern}"] may only set "regions"`);
+    // PATTERNS_ALLOWED_MAX_DURATION is the pinned set of entries that may also
+    // carry one, and it is empty.
+    const allowedKeys = PATTERNS_ALLOWED_MAX_DURATION.includes(pattern) ? ['maxDuration', 'regions'] : ['regions'];
+    for (const key of Object.keys(options)) {
+      assert.ok(allowedKeys.includes(key), `functions["${pattern}"] may not set "${key}"`);
+    }
+    assert.ok('regions' in options, `functions["${pattern}"] must set "regions"`);
     assert.ok(Array.isArray(options.regions) && options.regions.length === 1, `functions["${pattern}"] must name exactly one region`);
     assert.ok(KNOWN_REGIONS.includes(options.regions[0]), `functions["${pattern}"]: unknown region "${options.regions[0]}"`);
     // A pattern that is never the first match for anything is dead, or is
@@ -268,6 +286,31 @@ test('no route uses the preferredRegion export', () => {
     }
   })(APP_DIR);
   assert.deepEqual(offenders, [], 'set the region in apps/web/vercel.json instead');
+});
+
+test('the function durations set next to the handlers are the pinned set', () => {
+  // The builder merges a vercel.json entry with the route's own segment config
+  // into one function. Region config must never cost a route its duration, so
+  // the set that exists today is pinned: a route gaining, losing or changing
+  // `export const maxDuration` has to be written down here as well.
+  const found = {};
+  for (const file of sources) {
+    const match = /^export\s+const\s+maxDuration\s*=\s*(\d+)\s*;?\s*$/m.exec(readSource(file));
+    if (match) found[file] = Number(match[1]);
+  }
+  assert.deepEqual(found, ROUTE_MAX_DURATIONS);
+  for (const pattern of PATTERNS_ALLOWED_MAX_DURATION) {
+    assert.ok(patterns.some(([candidate]) => candidate === pattern), `"${pattern}" is not a vercel.json pattern`);
+  }
+});
+
+test('there is no second place a server function could come from', () => {
+  // This test walks app/ and nothing else. A pages/ directory (API routes,
+  // getServerSideProps pages) or a src/app tree would build functions it
+  // cannot see, and they would run in the project default region unreviewed.
+  for (const dir of ['pages', 'src/pages', 'src/app', 'api']) {
+    assert.ok(!existsSync(path.join(WEB_ROOT, dir)), `apps/web/${dir} exists: its functions are invisible to the region test`);
+  }
 });
 
 test('the pattern matcher behaves like the builder (minimatch) for the syntax in use', () => {

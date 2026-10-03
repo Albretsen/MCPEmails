@@ -80,6 +80,28 @@ export const PROJECT_DEFAULT_REGION = 'iad1';
  */
 export const EVERY_FUNCTION_IS_PINNED = true;
 
+/**
+ * vercel.json `functions` entries that may carry `maxDuration` next to
+ * `regions`. None do: durations are route segment exports (below).
+ */
+export const PATTERNS_ALLOWED_MAX_DURATION = [];
+
+/** Every `export const maxDuration` under app/, in seconds. */
+export const ROUTE_MAX_DURATIONS = {
+  'app/api/automations/preview/route.ts': 90,
+  'app/api/inboxes/app-password/route.ts': 60,
+  'app/api/inboxes/fastmail-app-password/route.ts': 60,
+  'app/api/inboxes/imap/route.ts': 60,
+  'app/api/internal/billing-lifecycle/dispatch/route.ts': 60,
+  'app/api/internal/paywall-followup/dispatch/route.ts': 60,
+  'app/api/mcp/route.ts': 300,
+  'app/api/stripe/webhook/route.ts': 30,
+  'app/api/webhooks/resend/route.ts': 30,
+  'app/auth/callback/route.ts': 15,
+  'app/auth/gmail/callback/route.ts': 15,
+  'app/auth/outlook/callback/route.ts': 15,
+};
+
 export const ROUTES = [
   ['app/(auth)/forgot-password/page.js', 'arn1', '0', '-'],
   ['app/(auth)/login/page.js', 'arn1', '1', '-'],
