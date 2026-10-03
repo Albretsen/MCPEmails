@@ -9,8 +9,7 @@ import { routing } from '@/i18n/routing';
 import { Link } from '@/i18n/navigation';
 import { CLIENT_LOGOS } from './clientLogos';
 import { useToast } from './Toast';
-import SignatureRichEditor from './SignatureRichEditor';
-import { sanitizeSignatureHtml } from '@/lib/sanitizeSignatureHtml';
+import { loadSignatureEditor, peekSignatureEditor, warmSignatureEditor } from './signature-editor-loader.mjs';
 import { normalizeSenderName } from '@/lib/inboxes/sender-name';
 import {
   hiddenFromShown,
@@ -1579,6 +1578,12 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                 <tr
                   key={ib.id}
                   onClick={() => setDetailInbox(ib)}
+                  // The modal this opens holds the signature editor, which is
+                  // fetched on demand. Pointing at or tabbing to the row is
+                  // the earliest sign it is wanted, so start the fetch here
+                  // and the click finds it loaded.
+                  onMouseEnter={warmSignatureEditor}
+                  onFocus={warmSignatureEditor}
                   style={{ cursor: 'pointer' }}
                   tabIndex={0}
                   role="button"
@@ -1667,6 +1672,8 @@ export function InboxesPage({ inboxes, planLimits, stripePrices = null, business
                   className="inbox-mobile-card"
                   key={ib.id}
                   onClick={() => setDetailInbox(ib)}
+                  onMouseEnter={warmSignatureEditor}
+                  onFocus={warmSignatureEditor}
                   tabIndex={0}
                   role="button"
                   aria-label={t('inboxes.detail.openAria', { label: ib.label })}
@@ -1915,12 +1922,24 @@ function htmlToPlainSeed(html) {
  * the user sees placement. Below it, a note reminds the user that some clients
  * (e.g. Gmail) image-block hosted images by default.
  */
-function SignaturePreview({ html, tooBig, t }) {
+function SignaturePreview({ html, tooBig, state = 'ready', t }) {
   return (
     <div className="sig-preview" aria-live="polite">
       <div className="sig-preview-label">{t('inboxes.detail.signature.previewTitle')}</div>
       <div className="sig-preview-surface">
-        {tooBig ? (
+        {state === 'loading' ? (
+          /* The sanitiser is still being fetched, so there is no HTML that is
+             safe to render yet. Two shimmer lines, not an empty body: empty
+             is what an inbox with no signature looks like. */
+          <div aria-busy="true" aria-label="Loading preview…">
+            <span className="sk sk-h14" style={{ width: '55%' }} />
+            <span className="sk sk-h14" style={{ width: '35%', marginTop: 8 }} />
+          </div>
+        ) : state === 'unavailable' ? (
+          <div className="sig-preview-empty">
+            Preview unavailable until the editor has loaded.
+          </div>
+        ) : tooBig ? (
           <div className="sig-preview-empty">
             {t('inboxes.detail.signature.previewTooLarge')}
           </div>
@@ -1940,6 +1959,93 @@ function SignaturePreview({ html, tooBig, t }) {
       <div className="sig-preview-note">
         {t('inboxes.detail.signature.imageNote')}
       </div>
+    </div>
+  );
+}
+
+/**
+ * What stands where the signature editor will be while its code is fetched.
+ *
+ * It is the editor's own frame, inert: the same two mode tabs, the same row of
+ * toolbar buttons, an empty writing area of the editor's minimum height, all
+ * built from the editor's own CSS classes. That is deliberate. The editor's
+ * height is not a constant (the toolbar wraps to a second row at the modal's
+ * width, and to a third on a phone), so a box of a fixed height cannot reserve
+ * the right space; the same elements under the same rules can. When the real
+ * editor mounts it lands on the same pixels and nothing below it moves, for
+ * any signature that fits the writing area's minimum height. A longer one
+ * still grows the area, as it always has: its height cannot be known before
+ * the sanitiser that is being waited for has run.
+ *
+ * A stored signature with a table opens in HTML source mode (the editor's
+ * rule, mirrored here on the raw value only to pick a frame: nothing from the
+ * stored HTML is rendered), so that case gets the source frame instead.
+ *
+ * Nothing in here is reachable: it is aria-hidden and every control is
+ * disabled. signature-editor-inbox-switch.test.mjs holds it to the real
+ * editor's tabs and toolbar, so the two cannot drift apart unnoticed.
+ */
+function SignatureEditorPlaceholder({ sourceMode, t }) {
+  const inert = { type: 'button', disabled: true, tabIndex: -1 };
+  return (
+    <div className="sig-editor sig-editor--loading is-disabled" aria-hidden>
+      <div className="sig-mode-tabs">
+        <button {...inert} className={'sig-mode-tab' + (sourceMode ? '' : ' is-active')}>
+          {t('inboxes.detail.signature.modeRich')}
+        </button>
+        <button {...inert} className={'sig-mode-tab' + (sourceMode ? ' is-active' : '')}>
+          {t('inboxes.detail.signature.modeHtml')}
+        </button>
+      </div>
+      {sourceMode ? (
+        <div className="sig-html-source">
+          {/* The box of .sig-html-textarea, written out rather than given that
+              class, so nothing that looks for the real source textarea (the
+              tests do, by that class) can mistake this for it. */}
+          <textarea
+            disabled
+            readOnly
+            tabIndex={-1}
+            value=""
+            style={{
+              width: '100%', minHeight: 160, maxHeight: 320, padding: '10px 12px', border: 'none',
+              resize: 'none', background: 'transparent', fontFamily: 'var(--font-mono, monospace)',
+              fontSize: 12.5, lineHeight: 1.5, outline: 'none',
+            }}
+          />
+          <div className="sig-editor-hint">
+            {t('inboxes.detail.signature.htmlSourceTableHint')}
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="sig-toolbar">
+            <button {...inert} className="sig-tb-btn"><span style={{ fontWeight: 700 }}>B</span></button>
+            <button {...inert} className="sig-tb-btn"><span style={{ fontStyle: 'italic' }}>I</span></button>
+            <button {...inert} className="sig-tb-btn"><span style={{ textDecoration: 'underline' }}>U</span></button>
+            <span className="sig-tb-sep" />
+            <button {...inert} className="sig-tb-btn">H</button>
+            <button {...inert} className="sig-tb-btn">&bull;</button>
+            <button {...inert} className="sig-tb-btn">1.</button>
+            <span className="sig-tb-sep" />
+            <button {...inert} className="sig-tb-btn">&#8676;</button>
+            <button {...inert} className="sig-tb-btn">&#8677;&#8676;</button>
+            <button {...inert} className="sig-tb-btn">&#8677;</button>
+            <span className="sig-tb-sep" />
+            <button {...inert} className="sig-tb-btn">&#128279;</button>
+            <label className="sig-tb-btn sig-tb-color">
+              <span style={{ color: '#0b1020', fontWeight: 700 }}>A</span>
+              <input type="color" value="#0b1020" disabled readOnly tabIndex={-1} />
+            </label>
+            <span className="sig-tb-sep" />
+            <button {...inert} className="sig-tb-btn">🖼</button>
+          </div>
+          <div className="sig-content">
+            {/* The writing area's own minimum: .sig-content .ProseMirror. */}
+            <div style={{ minHeight: 120, boxSizing: 'border-box', padding: '10px 12px' }} />
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -2117,11 +2223,108 @@ function SignatureEditor({ inbox, onSave, t }) {
   const [previewTooBig, setPreviewTooBig] = useState(false);
   const editorRef = useRef(null);
 
+  // The rich editor and the sanitiser are fetched on demand (see
+  // signature-editor-loader.mjs). `editorModule` is null until they are here.
+  // It starts non-null when they loaded earlier in this page's life (a row was
+  // hovered, or the modal was opened before), and then everything below runs
+  // exactly as it did when they were bundled: editor on the first render.
+  const [editorModule, setEditorModule] = useState(() => peekSignatureEditor());
+  const [editorLoadFailed, setEditorLoadFailed] = useState(false);
+  const [editorLoadAttempt, setEditorLoadAttempt] = useState(0);
+  // True between a Save click that came before the editor was ready and the
+  // editor becoming ready. Shown as "Saving…", like the request that follows.
+  const [awaitingEditor, setAwaitingEditor] = useState(false);
+  // Shown by the Save button when a save could not be made because the editor
+  // never loaded. Separate from `sizeError` so one never clears the other.
+  const [saveBlocked, setSaveBlocked] = useState(false);
+  const RichEditor = editorModule ? editorModule.SignatureRichEditor : null;
+
+  // A SAVE WAITING FOR THE EDITOR BELONGS TO ONE INBOX.
+  //
+  // This form is not remounted when the modal moves to another inbox (only the
+  // editor inside it is, by its `key`), the modal has no focus trap, and the
+  // inbox rows behind it stay keyboard-reachable. So between a Save click and
+  // the editor arriving, the inbox under this form can change. The first
+  // version of the wait resumed with whatever editor was on screen and sent it
+  // to the inbox the click was made for: inbox B's signature PATCHed onto
+  // inbox A. Hence, and all three are needed:
+  //
+  //   1. each waiter records the inbox it was started for, and only that
+  //      inbox's editor becoming ready resolves it;
+  //   2. every waiter is CANCELLED, sending nothing, the moment the inbox
+  //      changes or the form unmounts (the cleanup of the effect below);
+  //   3. after the wait, the save re-checks that the form is still mounted
+  //      and still on that inbox before it reads a single thing.
+  //
+  // A cancelled save is dropped, not re-pointed: nobody asked to save the
+  // inbox that is on screen now.
+  const editorWaiters = useRef([]); // { inboxId, resolve, reject }
+  const mounted = useRef(false);
+  const shownInboxId = useRef(inbox.id);
+  const WAIT_CANCELLED = 'cancelled';
+  const WAIT_LOAD_FAILED = 'load-failed';
+
+  // A cancelled save is not resurrected, but it is not silent either. When the
+  // editor was bundled, Save sent at the click; someone who clicked Save and
+  // then moved on must be told it did not happen. The dashboard's toast is
+  // used, with the string it already shows when a signature save fails on the
+  // network: it lives outside the modal, so it is still there after the switch
+  // or the close that caused it, and error toasts stay until dismissed.
+  const { toast } = useToast();
+  const trChrome = useTranslations('dashboardChrome');
+
+  useEffect(() => {
+    mounted.current = true;
+    shownInboxId.current = inbox.id;
+    return () => {
+      // Runs when the inbox changes and when the form unmounts (modal closed,
+      // page left). On unmount `mounted` goes false first, so the saves
+      // released here touch no state of this form.
+      mounted.current = false;
+      const dropped = editorWaiters.current.splice(0);
+      for (const waiter of dropped) {
+        waiter.reject(WAIT_CANCELLED);
+        toast({ message: trChrome('app.signatureSaveFailed'), variant: 'error' });
+      }
+    };
+  }, [inbox.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (editorModule) return undefined;
+    let cancelled = false;
+    loadSignatureEditor().then(
+      (mod) => { if (!cancelled) setEditorModule(mod); },
+      () => {
+        if (cancelled) return;
+        setEditorLoadFailed(true);
+        // A save that was waiting cannot proceed: release it, and it reports
+        // that nothing was saved.
+        for (const waiter of editorWaiters.current.splice(0)) waiter.reject(WAIT_LOAD_FAILED);
+      },
+    );
+    return () => { cancelled = true; };
+  }, [editorModule, editorLoadAttempt]);
+
+  /** `readyInboxId`'s editor handle now returns real content. */
+  const handleEditorReady = (readyInboxId) => {
+    const waiting = editorWaiters.current;
+    editorWaiters.current = waiting.filter((w) => w.inboxId !== readyInboxId);
+    for (const waiter of waiting) if (waiter.inboxId === readyInboxId) waiter.resolve();
+  };
+
+  const retryEditorLoad = () => {
+    setSaveBlocked(false);
+    setEditorLoadFailed(false);
+    setEditorLoadAttempt(n => n + 1);
+  };
+
   // Pull the current editor HTML through the sanitizer and sync preview state.
   // Called on the editor's onChange (every keystroke / image insert) and once
   // after the editor mounts, so the preview always reflects the live content.
   const syncPreview = (sourceHtml) => {
     if (!editorRef.current) return;
+    // Present whenever the editor is: they load as one pair.
+    const { sanitizeSignatureHtml } = peekSignatureEditor();
     try {
       // HTML-source edits update React state before the imperative editor ref
       // sees the new value. Use the raw value supplied by that mode so its
@@ -2151,6 +2354,20 @@ function SignatureEditor({ inbox, onSave, t }) {
     setReplyMode(inbox.signatureReplyMode ?? 'first_only');
     setReviewMode(resolveReviewMode(inbox));
     setSizeError('');
+    // A "not saved" notice is about the inbox it happened on.
+    setSaveBlocked(false);
+  }, [inbox.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // The preview half of the re-seed. It was one effect with the block above;
+  // it is separate only because it needs the sanitiser, which may arrive after
+  // the first render. Keyed on the module as well as the inbox, so it runs once
+  // the editor is here WITHOUT re-running the block above and undoing a toggle
+  // the person changed while it loaded. When the module is already loaded the
+  // two run back to back in the same commit, as the single effect did.
+  useEffect(() => {
+    if (!editorModule) return undefined;
+    const { sanitizeSignatureHtml } = editorModule;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPreviewTooBig(false);
     try {
       const seed = (inbox.signatureHtml && inbox.signatureHtml.trim())
@@ -2166,11 +2383,48 @@ function SignatureEditor({ inbox, onSave, t }) {
     // (covers text-seeded signatures where no stored HTML exists).
     const timer = setTimeout(syncPreview, 0);
     return () => clearTimeout(timer);
-  }, [inbox.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [inbox.id, editorModule]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSave = async () => {
-    if (saving) return;
+    if (saving || awaitingEditor) return;
     setSizeError('');
+    setSaveBlocked(false);
+
+    // Everything this save sends is fixed HERE, at the click, for THIS inbox.
+    const savingInboxId = inbox.id;
+
+    // Save clicked before the editor is ready to be read. Reading it now would
+    // get '' and '' and overwrite the stored signature with nothing, so wait.
+    // Not reachable when the editor was bundled; it is while it loads. A save
+    // always sends what the editor produces, exactly as before, so there is
+    // no saving the toggles alone while the editor is missing.
+    if (!(editorRef.current && editorRef.current.isReady())) {
+      // The earlier load failed: Save is not a no-op, it tries the load again
+      // and saves if the editor arrives this time.
+      if (editorLoadFailed) retryEditorLoad();
+      setAwaitingEditor(true);
+      let outcome = 'ready';
+      try {
+        await new Promise((resolve, reject) => {
+          editorWaiters.current.push({ inboxId: savingInboxId, resolve, reject });
+        });
+      } catch (reason) {
+        outcome = reason;
+      }
+      // Unmounted while waiting (modal closed, page left): touch nothing.
+      if (!mounted.current) return;
+      setAwaitingEditor(false);
+      if (outcome === WAIT_LOAD_FAILED) {
+        // Never silent: say that nothing was saved, next to the button.
+        if (shownInboxId.current === savingInboxId) setSaveBlocked(true);
+        return;
+      }
+      if (outcome !== 'ready') return; // Cancelled: the inbox changed.
+      // Belt and braces after the await: the form must still be showing the
+      // inbox this save was started for, with that inbox's editor ready.
+      if (shownInboxId.current !== savingInboxId) return;
+      if (!(editorRef.current && editorRef.current.isReady())) return;
+    }
 
     let html = '';
     let text = '';
@@ -2185,7 +2439,7 @@ function SignatureEditor({ inbox, onSave, t }) {
 
     setSaving(true);
     try {
-      await onSave(inbox.id, {
+      await onSave(savingInboxId, {
         signature_html: html,
         signature_text: text,
         signature_enabled: enabled,
@@ -2206,6 +2460,13 @@ function SignatureEditor({ inbox, onSave, t }) {
 
   const label = { fontFamily: 'var(--font-sans)', fontSize: 12.5, color: 'var(--fg-3)' };
 
+  // Controls lock while a save is in flight, and equally while a save is
+  // waiting for the editor to finish loading: the save sends the values as
+  // they were when Save was clicked. The EDITOR's own `disabled` stays on
+  // `saving` alone, so an editor that mounts during that wait is not created
+  // read-only.
+  const busy = saving || awaitingEditor;
+
   return (
     <div style={{ marginBottom: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -2217,14 +2478,14 @@ function SignatureEditor({ inbox, onSave, t }) {
             type="checkbox"
             checked={enabled}
             onChange={() => setEnabled(v => !v)}
-            disabled={saving}
+            disabled={busy}
             style={{ accentColor: 'var(--brand)' }}
           />
           {t('inboxes.detail.signature.enabled')}
         </label>
       </div>
 
-      <ReviewModeSelector value={reviewMode} onChange={setReviewMode} disabled={saving} />
+      <ReviewModeSelector value={reviewMode} onChange={setReviewMode} disabled={busy} />
 
       {wasImported && (
         <div style={{ ...label, marginBottom: 8, color: 'var(--fg-2)' }}>
@@ -2233,21 +2494,57 @@ function SignatureEditor({ inbox, onSave, t }) {
       )}
 
       <div style={{ opacity: enabled ? 1 : 0.6, pointerEvents: enabled ? 'auto' : 'none' }}>
-        <SignatureRichEditor
-          key={inbox.id}
-          ref={editorRef}
-          inboxId={inbox.id}
-          initialHtml={inbox.signatureHtml || ''}
-          initialText={
-            inbox.signatureText ?? (wasImported ? htmlToPlainSeed(inbox.signatureHtml) : '')
-          }
-          disabled={saving || !enabled}
-          onChange={syncPreview}
-        />
+        {RichEditor ? (
+          <RichEditor
+            key={inbox.id}
+            ref={editorRef}
+            inboxId={inbox.id}
+            initialHtml={inbox.signatureHtml || ''}
+            initialText={
+              inbox.signatureText ?? (wasImported ? htmlToPlainSeed(inbox.signatureHtml) : '')
+            }
+            disabled={saving || !enabled}
+            onChange={syncPreview}
+            onReady={() => handleEditorReady(inbox.id)}
+          />
+        ) : editorLoadFailed ? (
+          /* The editor's code could not be fetched (offline, or a deploy
+             replaced the chunk). Same box and the same error strip the editor
+             uses for its own errors, so the form keeps its shape and says what
+             happened instead of showing an empty frame. */
+          <div className="sig-editor sig-editor--loading">
+            <div className="sig-editor-error" role="alert" style={{ borderTop: 'none' }}>
+              The signature editor could not be loaded. Check your connection and{' '}
+              <button
+                type="button"
+                onClick={retryEditorLoad}
+                // pointerEvents: this box sits inside the wrapper that goes
+                // `pointer-events: none` when the signature is disabled, and
+                // the property is inherited. Without its own value the one
+                // control that can bring the editor back could not be clicked
+                // on a disabled signature. Only this button opts back in; the
+                // wrapper, and the editor once it loads, stay inert.
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'inherit', font: 'inherit', textDecoration: 'underline', pointerEvents: 'auto' }}
+              >
+                try again
+              </button>.
+            </div>
+          </div>
+        ) : (
+          /* The editor's own frame, inert, so the form below it does not move
+             when the editor arrives. */
+          <SignatureEditorPlaceholder
+            sourceMode={/<table[\s>]/i.test(inbox.signatureHtml || '')}
+            t={t}
+          />
+        )}
 
         <SignaturePreview
           html={previewHtml}
           tooBig={previewTooBig}
+          // Until the sanitiser is here there is nothing safe to show, and an
+          // empty preview would read as "this inbox has no signature".
+          state={editorModule ? 'ready' : editorLoadFailed ? 'unavailable' : 'loading'}
           t={t}
         />
       </div>
@@ -2255,6 +2552,15 @@ function SignatureEditor({ inbox, onSave, t }) {
       {sizeError && (
         <div style={{ ...label, marginTop: 8, color: 'var(--red-500)' }} role="alert">
           {sizeError}
+        </div>
+      )}
+
+      {saveBlocked && (
+        /* A save was asked for and could not be made. Said in the same place
+           and style as the "too large" refusal above, because it is the same
+           kind of event: Save was clicked and nothing was sent. */
+        <div style={{ ...label, marginTop: 8, color: 'var(--red-500)' }} role="alert">
+          Not saved. The signature editor could not be loaded, so nothing was sent. Check your connection and save again.
         </div>
       )}
 
@@ -2268,7 +2574,7 @@ function SignatureEditor({ inbox, onSave, t }) {
           className="input"
           value={replyMode}
           onChange={e => setReplyMode(e.target.value)}
-          disabled={saving}
+          disabled={busy}
           style={{ height: 32, padding: '0 28px 0 8px', flex: '0 0 auto', width: 'auto' }}
         >
           <option value="always">{t('inboxes.detail.signature.replyModeAlways')}</option>
@@ -2279,10 +2585,10 @@ function SignatureEditor({ inbox, onSave, t }) {
         <Btn
           variant="primary"
           size="sm"
-          disabled={saving}
+          disabled={busy}
           onClick={handleSave}
         >
-          {saving ? t('inboxes.detail.signature.saving') : t('inboxes.detail.signature.save')}
+          {busy ? t('inboxes.detail.signature.saving') : t('inboxes.detail.signature.save')}
         </Btn>
       </div>
     </div>
