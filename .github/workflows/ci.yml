@@ -298,7 +298,7 @@ jobs:
       # (2.118 started typing NOT NULL jsonb as NonNullable<Json>), so a
       # floating version turns this job red on days nobody changed anything.
       # Bump on purpose, and fix what the new generator finds in the same PR.
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
         with:
           version: 2.118.0
       - name: Apply every migration to a fresh database
