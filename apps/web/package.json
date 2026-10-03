@@ -63,9 +63,9 @@
     "test:connect-multi-mailbox": "node --test --experimental-strip-types --import ./scripts/register-ts-alias.mjs src/lib/connect/multi-mailbox.test.ts",
     "test:marketing-consent": "node --test src/lib/marketing-consent.test.mjs",
     "test:signup-consent-ui": "node --test --experimental-strip-types --experimental-test-module-mocks --import ./scripts/register-dom-tests.mjs components/auth/signup-consent-ui.test.mjs",
-    "test:i18n-coverage": "node --test scripts/i18n-coverage/analyze.test.mjs",
+    "test:i18n-coverage": "node --test scripts/i18n-coverage/analyze.test.mjs scripts/i18n-coverage/narrowing.test.mjs",
     "test:fonts": "node --test scripts/fonts/font-roles.test.mjs",
-    "test:built-output": "node --test --test-concurrency=1 scripts/built-output/visible-text.test.mjs scripts/built-output/fonts.test.mjs scripts/built-output/fonts-self-hosted.test.mjs"
+    "test:built-output": "node --test --test-concurrency=1 scripts/built-output/visible-text.test.mjs scripts/built-output/fonts.test.mjs scripts/built-output/fonts-self-hosted.test.mjs scripts/built-output/message-payload.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

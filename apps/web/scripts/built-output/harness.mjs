@@ -21,7 +21,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { gzipSync } from 'node:zlib';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 export const webRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const buildDir = path.join(webRoot, '.next');
@@ -76,7 +76,12 @@ export async function startServer() {
   const nextBin = path.resolve(webRoot, '../../node_modules/next/dist/bin/next');
   const child = spawn(process.execPath, [nextBin, 'start', '-p', String(port)], {
     cwd: webRoot,
-    env: { ...process.env, ...PLACEHOLDER_ENV },
+    env: {
+      ...process.env,
+      ...PLACEHOLDER_ENV,
+      // Fail lookups of the placeholder Supabase host in process, at once.
+      NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ''} --import ${pathToFileURL(path.join(webRoot, 'scripts/built-output/offline-placeholder-host.mjs')).href}`.trim(),
+    },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   let log = '';
@@ -90,7 +95,11 @@ export async function startServer() {
     if (child.exitCode !== null) throw new Error(`next start exited with ${child.exitCode}\n${log}`);
     try {
       // robots.txt is static, so readiness does not depend on any page rendering.
-      const response = await fetch(`${origin}/robots.txt`);
+      // The timeout matters. A connection made while the server is still
+      // booting can be accepted and then never answered, and a fetch with no
+      // timeout sits on it for undici's five-minute default: three of those in
+      // a row made this suite take fifteen minutes, twice, on 2026-10-03.
+      const response = await fetch(`${origin}/robots.txt`, { signal: AbortSignal.timeout(2_000) });
       if (response.ok) break;
     } catch {
       // not listening yet
@@ -115,8 +124,20 @@ export async function startServer() {
 
 /** One GET, redirects not followed. */
 export async function fetchRoute(origin, route) {
-  const response = await fetch(origin + route, { redirect: 'manual', headers: { accept: 'text/html' } });
-  const body = Buffer.from(await response.arrayBuffer());
+  // Bounded for the same reason as the readiness probe in startServer(): one
+  // retry, then a failure that says which route stalled. The slowest route
+  // (the home page, waiting out its failing experiment read) takes about 7 s.
+  let response;
+  let body;
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      response = await fetch(origin + route, { redirect: 'manual', headers: { accept: 'text/html' }, signal: AbortSignal.timeout(60_000) });
+      body = Buffer.from(await response.arrayBuffer());
+      break;
+    } catch (error) {
+      if (attempt === 2) throw new Error(`GET ${route} failed twice: ${error.message}`, { cause: error });
+    }
+  }
   return {
     route,
     status: response.status,
