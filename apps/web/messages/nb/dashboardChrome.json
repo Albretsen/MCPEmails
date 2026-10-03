@@ -16,7 +16,23 @@
     "connectionFailed": "Tilkobling av innboks mislyktes ({error}). Prøv igjen.",
     "checkoutSuccess": "Velkommen til {plan}. Abonnementet ditt aktiveres nå; dette kan ta et øyeblikk.",
     "checkoutSuccessPlanFallback": "det nye abonnementet ditt",
-    "checkoutCancelled": "Betaling avbrutt. Du kan oppgradere når som helst fra Innstillinger.",
+    "checkoutFeedback": {
+      "title": "Betaling avbrutt",
+      "question": "Hva holdt deg tilbake fra å oppgradere?",
+      "reasons": {
+        "price_too_high": "Det koster mer enn jeg forventet",
+        "compare_plans": "Jeg vil sammenligne planene først",
+        "want_to_try_first": "Jeg vil prøve det mer før jeg betaler",
+        "payment_method": "Jeg fikk ikke betalt slik jeg ønsket",
+        "just_checking_price": "Jeg sjekket bare prisen"
+      },
+      "other": "Annet",
+      "otherPlaceholder": "Fortell oss med noen få ord",
+      "send": "Send",
+      "notNow": "Ikke nå",
+      "close": "Lukk",
+      "thanks": "Takk, det hjelper."
+    },
     "checkoutPanel": {
       "title": "Du er nå på {plan}",
       "subtitle": "Betalingen er mottatt. Kvitteringen er på vei til e-posten din.",
