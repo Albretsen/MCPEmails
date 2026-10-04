@@ -12,18 +12,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "SiteGround-e-post til Claude: IMAP-innstillinger i Site Tools",
-    "description": "SiteGround byttet ut cPanel med Site Tools. Hent IMAP-verten fra Mail Configuration, og koble postkassen til Claude på port 993. Én innboks gratis."
+    "title": "SiteGround MCP-server: koble e-posten til Claude",
+    "description": "MCP-server for SiteGround-e-post. Koble flere bedriftspostkasser på domenet ditt (post@, salg@) til Claude og ChatGPT over IMAP på port 993."
   },
   "hero": {
     "eyebrow": "SiteGround + AI",
-    "titleLine1": "Koble SiteGround-e-post til Claude,",
-    "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
-    "lead": "Gi AI-agenten din en ekte SiteGround-postkasse. Les, søk, send, svar, planlegg og organiser e-post via IMAP, med innstillingene Site Tools viser for kontoen din.",
-    "answer": "Claude når ikke en SiteGround-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. SiteGround har ikke noe felles e-postvertsnavn: verten din er mail.yourdomain.com, eller det sikre servernavnet på formen secureNNN.sgcpanel.com, og Site Tools viser det riktige under Email, Accounts, Mail Configuration. Autentisering skjer med passordet som er satt på postkassen, aldri innloggingen til SiteGround Client Area, og én innboks er gratis.",
-    "meta0": "1 innboks gratis, for alltid",
+    "titleLine1": "MCP-server for SiteGround-e-post:",
+    "titleLine2": "alle firmaets postkasser, i Claude og ChatGPT",
+    "lead": "Har du post@, salg@, support@ og faktura@ på eget domene hos SiteGround? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post via IMAP, med innstillingene Site Tools viser for kontoen din.",
+    "answer": "Claude når ikke en SiteGround-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via vanlig IMAP på port 993, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere den e-posten. SiteGround har ikke noe felles e-postvertsnavn: verten din er mail.yourdomain.com, eller det sikre servernavnet på formen secureNNN.sgcpanel.com, og Site Tools viser det riktige under Email, Accounts, Mail Configuration. Autentisering skjer med passordet som er satt på postkassen, aldri innloggingen til SiteGround Client Area. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre og Pro alle postkassene du har.",
+    "meta0": "Første postkasse gratis, planer for resten",
     "meta1": "Postkassepassord fra Site Tools",
     "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "persona": {
+    "intro": "Flere bedriftspostkasser hos SiteGround?",
+    "label": "Se hva hver plan kobler til",
+    "href": "/pricing"
   },
   "method": {
     "title": "Slik kobler SiteGround-e-post seg til: Site Tools, IMAP 993",
@@ -88,7 +93,7 @@
     }
   ],
   "ctaBand": {
-    "title": "Gi AI-en din en SiteGround-innboks",
-    "sub": "Koble til en SiteGround-postkasse på minutter. Én innboks gratis for alltid, uten kort."
+    "title": "Samle alle SiteGround-postkassene på én agent",
+    "sub": "Koble til den første SiteGround-postkassen gratis, uten kort. Personal kobler til tre, Pro alle postkassene du har."
   }
 }

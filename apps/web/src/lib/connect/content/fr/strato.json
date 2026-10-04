@@ -11,18 +11,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connectez l'e-mail STRATO à Claude et aux clients MCP",
-    "description": "Connectez l'e-mail STRATO à Claude, Cursor et tout client MCP via IMAP sur imap.strato.de:993. Mot de passe normal : STRATO a supprimé CRAM-MD5."
+    "title": "Serveur MCP STRATO pour Claude et ChatGPT",
+    "description": "Serveur MCP pour la messagerie STRATO. Connectez plusieurs boîtes de votre entreprise (info@, ventes@) à Claude et ChatGPT en IMAP sur imap.strato.de:993."
   },
   "hero": {
     "eyebrow": "E-mail STRATO + IA",
-    "titleLine1": "Connectez l'e-mail STRATO à Claude,",
-    "titleLine2": "Cursor, ChatGPT, tout client MCP",
-    "lead": "Offrez à votre agent IA une vraie boîte STRATO. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP avec le mot de passe de la boîte, et non votre identifiant client STRATO.",
-    "answer": "Claude ne peut pas accéder seul à une boîte STRATO. mcpemails est un serveur MCP hébergé qui la connecte via IMAP sur imap.strato.de, port 993, en s'authentifiant avec votre adresse e-mail complète et le mot de passe défini sur cette boîte plutôt qu'avec votre identifiant client STRATO, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. STRATO n'accepte que l'authentification par mot de passe normal sur une connexion chiffrée, après avoir désactivé l'ancienne méthode challenge-response. Une boîte est gratuite, pour toujours.",
-    "meta0": "1 boîte gratuite, pour toujours",
+    "titleLine1": "Serveur MCP pour la messagerie STRATO :",
+    "titleLine2": "toutes les boîtes de votre entreprise, dans Claude et ChatGPT",
+    "lead": "Vous gérez info@, ventes@, support@ et factures@ sur votre propre domaine chez STRATO ? Connectez chaque boîte au même espace de travail et votre agent IA travaille dans toutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier via IMAP avec le mot de passe de la boîte, et non votre identifiant client STRATO.",
+    "answer": "Claude ne peut pas accéder seul à une boîte STRATO. mcpemails est un serveur MCP hébergé qui la connecte via IMAP sur imap.strato.de, port 993, en s'authentifiant avec votre adresse e-mail complète et le mot de passe défini sur cette boîte plutôt qu'avec votre identifiant client STRATO, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. STRATO n'accepte que l'authentification par mot de passe normal sur une connexion chiffrée, après avoir désactivé l'ancienne méthode challenge-response. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois et Pro toutes celles que vous gérez.",
+    "meta0": "Première boîte gratuite, offres pour les autres",
     "meta1": "Mot de passe de la boîte, pas l'identifiant client",
     "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "persona": {
+    "intro": "Plusieurs boîtes d'entreprise chez STRATO ?",
+    "label": "Voyez ce que chaque offre connecte",
+    "href": "/pricing"
   },
   "method": {
     "title": "Comment STRATO se connecte : IMAP, TLS uniquement, mot de passe normal",
@@ -91,7 +96,7 @@
     }
   ],
   "ctaBand": {
-    "title": "Offrez une boîte STRATO à votre IA",
-    "sub": "Connectez l'e-mail STRATO en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+    "title": "Toutes vos boîtes STRATO sur un seul agent",
+    "sub": "Connectez votre première boîte STRATO gratuitement, sans carte bancaire. Personal en connecte trois, Pro toutes celles que vous gérez."
   }
 }

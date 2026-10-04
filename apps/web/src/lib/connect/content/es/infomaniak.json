@@ -12,18 +12,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "Conecta Infomaniak Mail a Claude y clientes MCP",
-    "description": "Conecta Infomaniak Mail a Claude, Cursor y cualquier cliente MCP por IMAP en mail.infomaniak.com:993. Pide una contraseña de dispositivo, no la contraseña de tu cuenta."
+    "title": "Servidor MCP de Infomaniak para Claude y ChatGPT",
+    "description": "Servidor MCP para el correo de Infomaniak. Conecta varios buzones de empresa (info@, ventas@) a Claude y ChatGPT por IMAP en mail.infomaniak.com:993."
   },
   "hero": {
     "eyebrow": "Infomaniak Mail + IA",
-    "titleLine1": "Conecta Infomaniak Mail a Claude,",
-    "titleLine2": "Cursor, ChatGPT y cualquier cliente MCP",
-    "lead": "Dale a tu agente de IA una bandeja real de Infomaniak. Lee, busca, envía, responde, programa y organiza correo por IMAP con una contraseña de dispositivo generada para esa dirección.",
-    "answer": "Claude no puede acceder por sí solo a Infomaniak Mail. mcpemails es un servidor MCP alojado que lo conecta por IMAP en mail.infomaniak.com en el puerto 993, autenticándose con una contraseña de dispositivo generada para esa dirección de correo y no con la contraseña de tu cuenta de Infomaniak, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. Infomaniak no acepta en absoluto la contraseña de la cuenta por IMAP, y sus contraseñas de aplicación, que son otra cosa, tampoco funcionan aquí. Una bandeja es gratis, para siempre.",
-    "meta0": "1 bandeja gratis, para siempre",
+    "titleLine1": "Servidor MCP para el correo de Infomaniak:",
+    "titleLine2": "todos los buzones de tu empresa, en Claude y ChatGPT",
+    "lead": "¿Llevas info@, ventas@, soporte@ y facturas@ en tu propio dominio en Infomaniak? Conecta cada buzón al mismo espacio de trabajo y tu agente de IA trabaja en todos ellos. Lee, busca, envía, responde, programa y organiza correo por IMAP con una contraseña de dispositivo generada para esa dirección.",
+    "answer": "Claude no puede acceder por sí solo a Infomaniak Mail. mcpemails es un servidor MCP alojado que lo conecta por IMAP en mail.infomaniak.com en el puerto 993, autenticándose con una contraseña de dispositivo generada para esa dirección de correo y no con la contraseña de tu cuenta de Infomaniak, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar el correo. Infomaniak no acepta en absoluto la contraseña de la cuenta por IMAP, y sus contraseñas de aplicación, que son otra cosa, tampoco funcionan aquí. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres y Pro todos los que llevas.",
+    "meta0": "Primer buzón gratis, planes para el resto",
     "meta1": "Contraseña de dispositivo, no la de la cuenta",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "persona": {
+    "intro": "¿Varios buzones de empresa en Infomaniak?",
+    "label": "Mira qué conecta cada plan",
+    "href": "/pricing"
   },
   "method": {
     "title": "Cómo se conecta Infomaniak: IMAP y una contraseña de dispositivo",
@@ -92,7 +97,7 @@
     }
   ],
   "ctaBand": {
-    "title": "Dale a tu IA una bandeja de Infomaniak",
-    "sub": "Conecta Infomaniak Mail en minutos. Una bandeja gratis para siempre, sin tarjeta."
+    "title": "Todos tus buzones de Infomaniak en un solo agente",
+    "sub": "Conecta tu primer buzón de Infomaniak gratis, sin tarjeta. Personal conecta tres y Pro todos los que llevas."
   }
 }

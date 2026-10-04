@@ -11,18 +11,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connect STRATO Email to Claude & MCP Clients",
-    "description": "Connect STRATO email to Claude, Cursor and any MCP client over IMAP at imap.strato.de:993. Use normal password authentication: STRATO removed CRAM-MD5."
+    "title": "STRATO MCP Server: Connect STRATO Mail to Claude",
+    "description": "MCP server for STRATO mail. Connect several company mailboxes on your domain (info@, sales@) to Claude and ChatGPT over IMAP at imap.strato.de:993."
   },
   "hero": {
     "eyebrow": "STRATO email + AI",
-    "titleLine1": "Connect STRATO email to Claude,",
-    "titleLine2": "Cursor, ChatGPT, any MCP client",
-    "lead": "Give your AI agent a real STRATO inbox. Read, search, send, reply, schedule and organize mail over IMAP with the mailbox password, not your STRATO customer login.",
-    "answer": "Claude cannot reach a STRATO mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.strato.de on port 993, authenticating with your full email address and the password set on that mailbox rather than your STRATO customer login, so Claude, Cursor or any MCP client can read, search, send and organize the mail. STRATO accepts only normal password authentication over an encrypted connection, having switched off the older challenge-response method. One inbox is free, forever.",
-    "meta0": "1 inbox free, forever",
+    "titleLine1": "MCP server for STRATO mail:",
+    "titleLine2": "every company mailbox, in Claude and ChatGPT",
+    "lead": "Running info@, sales@, support@ and invoices@ on your own domain at STRATO? Connect each mailbox to one workspace and your AI agent works across all of them. Read, search, send, reply, schedule and organize mail over IMAP with the mailbox password, not your STRATO customer login.",
+    "answer": "Claude cannot reach a STRATO mailbox on its own. mcpemails is a hosted MCP server that connects it over IMAP at imap.strato.de on port 993, authenticating with your full email address and the password set on that mailbox rather than your STRATO customer login, so Claude, Cursor or any MCP client can read, search, send and organize the mail. STRATO accepts only normal password authentication over an encrypted connection, having switched off the older challenge-response method. Each company address, such as info@ or sales@, connects as its own mailbox: one mailbox is free, Personal connects three and Pro every mailbox you run.",
+    "meta0": "First mailbox free, plans for the rest",
     "meta1": "Mailbox password, not the customer login",
     "meta2": "Email fetched live, never stored"
+  },
+  "persona": {
+    "intro": "Several company mailboxes at STRATO?",
+    "label": "See what each plan connects",
+    "href": "/pricing"
   },
   "method": {
     "title": "How STRATO connects: IMAP, TLS only, normal password",
@@ -91,7 +96,7 @@
     }
   ],
   "ctaBand": {
-    "title": "Give your AI a STRATO inbox",
-    "sub": "Connect STRATO email in minutes. One inbox free forever, no card required."
+    "title": "Put every STRATO mailbox on one agent",
+    "sub": "Connect your first STRATO mailbox free, no card required. Personal connects three, Pro every mailbox you run."
   }
 }

@@ -12,18 +12,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connecter Infomaniak Mail à Claude et aux clients MCP",
-    "description": "Connectez Infomaniak Mail à Claude, Cursor et tout client MCP en IMAP sur mail.infomaniak.com:993. Exige un mot de passe d'appareil, pas celui du compte."
+    "title": "Serveur MCP Infomaniak pour Claude et ChatGPT",
+    "description": "Serveur MCP pour la messagerie Infomaniak. Connectez plusieurs boîtes de votre entreprise à Claude et ChatGPT en IMAP sur mail.infomaniak.com:993."
   },
   "hero": {
     "eyebrow": "Infomaniak Mail + IA",
-    "titleLine1": "Connectez Infomaniak Mail à Claude,",
-    "titleLine2": "Cursor, ChatGPT, tout client MCP",
-    "lead": "Offrez à votre agent IA une vraie boîte Infomaniak. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec un mot de passe d'appareil généré pour cette adresse.",
-    "answer": "Claude ne peut pas accéder seul à Infomaniak Mail. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur mail.infomaniak.com, port 993, en s'authentifiant avec un mot de passe d'appareil généré pour cette adresse mail plutôt qu'avec le mot de passe de votre compte Infomaniak, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Infomaniak n'accepte pas du tout le mot de passe du compte en IMAP, et ses mots de passe d'application, distincts, sont une autre chose qui ne fonctionnera pas ici. Une boîte est gratuite, pour toujours.",
-    "meta0": "1 boîte gratuite, pour toujours",
+    "titleLine1": "Serveur MCP pour la messagerie Infomaniak :",
+    "titleLine2": "toutes les boîtes de votre entreprise, dans Claude et ChatGPT",
+    "lead": "Vous gérez info@, ventes@, support@ et factures@ sur votre propre domaine chez Infomaniak ? Connectez chaque boîte au même espace de travail et votre agent IA travaille dans toutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec un mot de passe d'appareil généré pour cette adresse.",
+    "answer": "Claude ne peut pas accéder seul à Infomaniak Mail. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP sur mail.infomaniak.com, port 993, en s'authentifiant avec un mot de passe d'appareil généré pour cette adresse mail plutôt qu'avec le mot de passe de votre compte Infomaniak, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser le courrier. Infomaniak n'accepte pas du tout le mot de passe du compte en IMAP, et ses mots de passe d'application, distincts, sont une autre chose qui ne fonctionnera pas ici. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois et Pro toutes celles que vous gérez.",
+    "meta0": "Première boîte gratuite, offres pour les autres",
     "meta1": "Mot de passe d'appareil, pas celui du compte",
     "meta2": "E-mails récupérés en direct, jamais stockés"
+  },
+  "persona": {
+    "intro": "Plusieurs boîtes d'entreprise chez Infomaniak ?",
+    "label": "Voyez ce que chaque offre connecte",
+    "href": "/pricing"
   },
   "method": {
     "title": "Comment Infomaniak se connecte : IMAP et un mot de passe d'appareil",
@@ -92,7 +97,7 @@
     }
   ],
   "ctaBand": {
-    "title": "Donnez à votre IA une boîte Infomaniak",
-    "sub": "Connectez Infomaniak Mail en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+    "title": "Toutes vos boîtes Infomaniak sur un seul agent",
+    "sub": "Connectez votre première boîte Infomaniak gratuitement, sans carte bancaire. Personal en connecte trois, Pro toutes celles que vous gérez."
   }
 }

@@ -3,6 +3,7 @@
   "title": "Toutes les boîtes {provider} de votre entreprise, sur un seul agent",
   "body": "Si votre entreprise a plus d'une adresse chez {provider}, comme info@, ventes@ et factures@, connectez chacune au même espace de travail mcpemails. Votre client IA les atteint alors toutes par la même URL MCP, dans Claude, ChatGPT, Cursor ou tout autre client MCP. Chaque appel d'outil désigne la boîte sur laquelle il agit, chaque boîte garde son propre nom d'expéditeur et sa signature, et une réponse part de la boîte à laquelle elle appartient.",
   "plans": "L'offre gratuite connecte une boîte, Personal trois, et Pro toutes les boîtes que vous gérez, avec une seule connexion.",
+  "pricingLink": "Comparez les offres et le nombre de boîtes que chacune connecte",
   "link": "Comment une seule personne gère toutes les boîtes de l'entreprise depuis un agent",
   "faqQ": "Puis-je connecter plusieurs boîtes {provider} au même agent IA ?",
   "faqA": "Oui. Connectez chaque adresse {provider} à un espace de travail mcpemails et votre client IA les atteint toutes par la même URL MCP. Chaque appel d'outil désigne la boîte sur laquelle il agit, donc la réponse à un message de ventes@ part de ventes@. L'offre gratuite connecte une boîte, Personal trois, et Pro toutes celles que vous gérez."

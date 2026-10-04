@@ -13,18 +13,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connecter OVH à Claude, Cursor et aux clients MCP",
-    "description": "Connectez la messagerie OVHcloud MX Plan à Claude et à tout client MCP en IMAP via ssl0.ovh.net:993. Email Pro et Hosted Exchange ont des serveurs numérotés."
+    "title": "Serveur MCP OVH pour Claude et ChatGPT",
+    "description": "Serveur MCP pour la messagerie OVHcloud MX Plan. Connectez plusieurs boîtes de votre entreprise à Claude et ChatGPT en IMAP sur ssl0.ovh.net:993."
   },
   "hero": {
     "eyebrow": "OVH + IA",
-    "titleLine1": "Connectez OVH à Claude,",
-    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
-    "lead": "Offrez à votre agent IA une vraie boîte OVH en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec le mot de passe de votre boîte, et utilisez la même boîte dans tous vos clients MCP, pas un seul.",
-    "meta0": "1 boîte gratuite, pour toujours",
+    "titleLine1": "Serveur MCP pour la messagerie OVH :",
+    "titleLine2": "toutes les boîtes de votre entreprise, dans Claude et ChatGPT",
+    "lead": "Vous gérez info@, ventes@, support@ et factures@ sur votre propre domaine chez OVH ? Connectez chaque boîte au même espace de travail et votre agent IA travaille dans toutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec le mot de passe de votre boîte, et utilisez les mêmes boîtes dans tous vos clients MCP, pas un seul.",
+    "meta0": "Première boîte gratuite, offres pour les autres",
     "meta1": "Le mot de passe de votre boîte, sans configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude ne peut pas accéder seul à OVH. mcpemails est un serveur MCP hébergé qui l'y connecte en IMAP avec le mot de passe de votre boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes et une boîte est gratuite."
+    "answer": "Claude ne peut pas accéder seul à OVH. mcpemails est un serveur MCP hébergé qui l'y connecte en IMAP avec le mot de passe de votre boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend quelques minutes. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois et Pro toutes celles que vous gérez."
+  },
+  "persona": {
+    "intro": "Plusieurs boîtes d'entreprise chez OVH ?",
+    "label": "Voyez ce que chaque offre connecte",
+    "href": "/pricing"
   },
   "method": {
     "title": "Comment OVH se connecte : IMAP et le mot de passe de votre boîte",
@@ -98,8 +103,8 @@
     }
   ],
   "ctaBand": {
-    "title": "Offrez une boîte OVH à votre IA",
-    "sub": "Connectez OVH en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+    "title": "Toutes vos boîtes OVH sur un seul agent",
+    "sub": "Connectez votre première boîte OVH gratuitement, sans carte bancaire. Personal en connecte trois, Pro toutes celles que vous gérez."
   },
   "seeAlso": {
     "intro": "Une boîte Microsoft 365 achetée via OVHcloud ?",
