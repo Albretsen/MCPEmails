@@ -20,6 +20,8 @@
  * A faithful Node reference lives at apps/web/src/lib/email/imap.ts.
  */
 
+import { bytesToByteString } from "./byte-string.ts";
+import { decodeRawHeaderOctets } from "./mime.ts";
 import {
   cleanPreviewFromBodyPart,
   type PreviewPartInfo,
@@ -482,7 +484,6 @@ export class ImapClient {
   private readonly timing: ImapCallTimings | null = currentImapTimings();
   /** Bytes read off the socket so far. Feeds `fetch_bytes`. */
   private bytesRead = 0;
-  private readonly decoder = new TextDecoder("latin1");
   private readonly encoder = new TextEncoder();
 
   /**
@@ -2001,7 +2002,7 @@ export class ImapClient {
     while (true) {
       for (let i = this.bufStart; i < this.bufEnd - 1; i++) {
         if (this.buffer[i] === 0x0d && this.buffer[i + 1] === 0x0a) {
-          const line = this.decoder.decode(this.buffer.subarray(this.bufStart, i));
+          const line = bytesToByteString(this.buffer.subarray(this.bufStart, i));
           this.bufStart = i + 2;
           return line;
         }
@@ -2010,14 +2011,23 @@ export class ImapClient {
       if (!ok) {
         // EOF: return whatever remains.
         this.eofReached = true;
-        const line = this.decoder.decode(this.buffer.subarray(this.bufStart, this.bufEnd));
+        const line = bytesToByteString(this.buffer.subarray(this.bufStart, this.bufEnd));
         this.bufStart = this.bufEnd;
         return line;
       }
     }
   }
 
-  /** Read exactly n bytes (used for IMAP literals), as a latin1 string. */
+  /**
+   * Read exactly n bytes (used for IMAP literals), as a byte string: one
+   * character per octet, `charCodeAt(i)` IS octet i, for all 256 values.
+   *
+   * This used to be TextDecoder("latin1"), which is windows-1252 and maps
+   * 0x80-0x9F to code points above U+00FF. Every consumer that took the octets
+   * back with `charCodeAt(i) & 0xff` (mime.ts, so every 8bit body and
+   * attachment `email_read` returned) then got different octets. The same
+   * goes for {@link readLine}, so a response is one kind of string throughout.
+   */
   private async readExact(n: number): Promise<string> {
     // Large literals get their own right-sized allocation and are read straight
     // off the socket. Routing them through the shared buffer instead would grow
@@ -2025,14 +2035,14 @@ export class ImapClient {
     // one), and then keep it that big for the life of the connection.
     if (n > LITERAL_STREAM_THRESHOLD_BYTES) {
       const bytes = await this.readExactBytes(n);
-      return this.decoder.decode(bytes);
+      return bytesToByteString(bytes);
     }
     while (this.bufEnd - this.bufStart < n) {
       const ok = await this.fill();
       if (!ok) break;
     }
     const end = Math.min(this.bufStart + n, this.bufEnd);
-    const out = this.decoder.decode(this.buffer.subarray(this.bufStart, end));
+    const out = bytesToByteString(this.buffer.subarray(this.bufStart, end));
     this.bufStart = end;
     return out;
   }
@@ -2513,16 +2523,21 @@ function parseSearchUids(untagged: string[]): number[] {
 }
 
 /**
- * The 0x80-0x9F slots of windows-1252, in order. Needed because the "latin1"
- * label resolves to windows-1252 under the WHATWG encoding standard that Deno
- * implements, so a read octet of 0x85 comes back as U+2026 rather than U+0085.
+ * The 0x80-0x9F slots of windows-1252, in order. The "latin1" label resolves
+ * to windows-1252 under the WHATWG encoding standard that Deno implements, so
+ * an octet of 0x85 decoded that way comes back as U+2026 rather than U+0085.
  * Inverting the byte→character mapping is the only way back to the octet.
+ *
+ * The read path no longer decodes that way (see `readExact`, 2026-10-04): it
+ * returns exact byte strings, for which the two functions below never reach
+ * this table. It stays so they keep accepting a string that WAS read through
+ * TextDecoder("latin1"), which tests and other callers still build.
  */
 const CP1252_HIGH: Map<number, number> = (() => {
   const bytes = new Uint8Array(0x20);
   for (let i = 0; i < 0x20; i++) bytes[i] = 0x80 + i;
-  // Decoded with the SAME label the read path uses, so the inverse is exact by
-  // construction rather than a hand-copied table that could drift from it.
+  // Built from the decoder itself, so the inverse is exact by construction
+  // rather than a hand-copied table that could drift from it.
   const chars = new TextDecoder("latin1").decode(bytes);
   const map = new Map<number, number>();
   for (let i = 0; i < chars.length; i++) map.set(chars.charCodeAt(i), 0x80 + i);
@@ -2532,12 +2547,13 @@ const CP1252_HIGH: Map<number, number> = (() => {
 /**
  * The octets a single-byte read produced, exactly.
  *
- * Literals come off the socket through TextDecoder("latin1"), which is
- * windows-1252 and maps 0x80-0x9F to other code points (0x85 reads as U+2026).
- * `charCodeAt(i) & 0xff` on such a string silently corrupts those bytes: every
- * UTF-8 continuation byte in 0x80-0x9F, so "…" (E2 80 A6) came back as
- * E2 26 A6. This is the exact inverse of that decode, so a raw message read as
- * a string and turned back into bytes is the message that was on the wire.
+ * Accepts both kinds of single-byte string: the exact byte string the read
+ * path returns now (every code unit is its octet), and one decoded with
+ * TextDecoder("latin1"), which is windows-1252 and maps 0x80-0x9F to other
+ * code points (0x85 reads as U+2026). `charCodeAt(i) & 0xff` on the latter
+ * silently corrupts those bytes: every UTF-8 continuation byte in 0x80-0x9F,
+ * so "…" (E2 80 A6) came back as E2 26 A6. Either way a raw message read as a
+ * string and turned back into bytes is the message that was on the wire.
  */
 export function singleByteTextToBytes(text: string): Uint8Array {
   const octets = new Uint8Array(text.length);
@@ -2883,10 +2899,15 @@ function bodyStructureHasAttachment(token: Token[]): boolean {
   return found;
 }
 
+/**
+ * An ENVELOPE string. Envelope fields are header values, and a sender that
+ * puts raw 8-bit octets in a header (a UTF-8 or windows-1252 subject with no
+ * RFC 2047 encoding) gets them decoded here; anything 7-bit is returned as is.
+ */
 function asStr(t: Token | undefined): string {
   if (typeof t !== "string") return "";
   if (t === "NIL") return "";
-  return t;
+  return decodeRawHeaderOctets(t);
 }
 
 /** Convert an RFC 5322 date string to an ISO 8601 timestamp; fall back to now. */
