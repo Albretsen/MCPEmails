@@ -12,18 +12,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "SiteGround 邮箱接入 Claude：Site Tools 的 IMAP 设置",
-    "description": "SiteGround 已用 Site Tools 取代 cPanel。在 Mail Configuration 中获取真实的 IMAP 主机，再通过 993 端口将邮箱连接到 Claude。一个收件箱永久免费。"
+    "title": "SiteGround MCP 服务器：将公司邮箱连接到 Claude",
+    "description": "面向 SiteGround 邮箱的 MCP 服务器。通过 IMAP（993 端口）将你域名下的多个公司邮箱（info@、sales@）连接到 Claude 和 ChatGPT。"
   },
   "hero": {
     "eyebrow": "SiteGround + AI",
-    "titleLine1": "将 SiteGround 邮箱连接到 Claude，",
-    "titleLine2": "Cursor、ChatGPT、任意 MCP 客户端",
-    "lead": "为你的 AI 代理接入一个真正的 SiteGround 邮箱。使用 Site Tools 为你的账户列出的设置，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行连接 SiteGround 邮箱。mcpemails 是一个托管 MCP 服务器，通过 993 端口的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。SiteGround 没有共享的邮件主机名：你的主机是 mail.yourdomain.com，或形如 secureNNN.sgcpanel.com 的安全服务器名称，Site Tools 会在 Email、Accounts、Mail Configuration 中列出正确的那个。认证使用为邮箱设置的密码，绝不是你的 SiteGround Client Area 登录密码。一个收件箱免费。",
-    "meta0": "1 个收件箱永久免费",
+    "titleLine1": "面向 SiteGround 邮箱的 MCP 服务器：",
+    "titleLine2": "在 Claude 和 ChatGPT 中使用公司的每一个邮箱",
+    "lead": "在 SiteGround 用自己的域名开设了 info@、sales@、support@ 和 invoices@？把每个邮箱都连接到同一个工作区，你的 AI 代理就能处理所有邮箱。使用 Site Tools 为你的账户列出的设置，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行连接 SiteGround 邮箱。mcpemails 是一个托管 MCP 服务器，通过 993 端口的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。SiteGround 没有共享的邮件主机名：你的主机是 mail.yourdomain.com，或形如 secureNNN.sgcpanel.com 的安全服务器名称，Site Tools 会在 Email、Accounts、Mail Configuration 中列出正确的那个。认证使用为邮箱设置的密码，绝不是你的 SiteGround Client Area 登录密码。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 连接你管理的所有邮箱。",
+    "meta0": "第一个邮箱免费，其余按套餐连接",
     "meta1": "Site Tools 中的邮箱密码",
     "meta2": "邮件实时获取，绝不存储"
+  },
+  "persona": {
+    "intro": "在 SiteGround 有好几个公司邮箱？",
+    "label": "看看每个套餐能连接多少个邮箱",
+    "href": "/pricing"
   },
   "method": {
     "title": "SiteGround 邮箱如何连接：Site Tools，IMAP 993",
@@ -88,7 +93,7 @@
     }
   ],
   "ctaBand": {
-    "title": "给你的 AI 一个 SiteGround 收件箱",
-    "sub": "几分钟即可连接 SiteGround 邮箱。一个收件箱永久免费，无需信用卡。"
+    "title": "把所有 SiteGround 邮箱交给同一个代理",
+    "sub": "免费连接第一个 SiteGround 邮箱，无需信用卡。Personal 连接三个，Pro 连接你管理的所有邮箱。"
   }
 }

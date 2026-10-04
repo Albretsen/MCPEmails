@@ -12,18 +12,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "将 Namecheap Private Email 连接到 Claude 与 MCP",
-    "description": "通过 IMAP（mail.privateemail.com:993）将 Namecheap Private Email 连接到 Claude 及任意 MCP 客户端。使用邮箱密码，绝不使用你的 Namecheap 登录密码。"
+    "title": "Namecheap MCP 服务器：将公司邮箱连接到 Claude",
+    "description": "面向 Namecheap 邮箱的 MCP 服务器。通过 IMAP（mail.privateemail.com:993）将你域名下的多个公司邮箱（info@、sales@）连接到 Claude 和 ChatGPT。"
   },
   "hero": {
     "eyebrow": "Namecheap Private Email + AI",
-    "titleLine1": "将 Namecheap Private Email 连接到 Claude，",
-    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
-    "lead": "几分钟即可为你的 AI 代理接入一个真正的 Namecheap Private Email 收件箱。用 IMAP 和邮箱密码即可读取、搜索、发送、回复、定时与整理邮件，同一个收件箱可在所有 MCP 客户端中使用，而不止一个。",
-    "meta0": "1 个收件箱永久免费",
+    "titleLine1": "面向 Namecheap 邮箱的 MCP 服务器：",
+    "titleLine2": "在 Claude 和 ChatGPT 中使用公司的每一个邮箱",
+    "lead": "在 Namecheap 用自己的域名开设了 info@、sales@、support@ 和 invoices@？把每个邮箱都连接到同一个工作区，你的 AI 代理就能处理所有邮箱。用 IMAP 和邮箱密码即可读取、搜索、发送、回复、定时与整理邮件，这些邮箱可在所有 MCP 客户端中使用，而不止一个客户端。",
+    "meta0": "第一个邮箱免费，其余按套餐连接",
     "meta1": "使用邮箱密码，无需 OAuth 配置",
     "meta2": "邮件实时获取，绝不存储",
-    "answer": "Claude 无法自行连接 Namecheap Private Email。mcpemails 是一个托管 MCP 服务器，用你的邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟，一个收件箱免费。"
+    "answer": "Claude 无法自行连接 Namecheap Private Email。mcpemails 是一个托管 MCP 服务器，用你的邮箱密码通过 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。设置只需几分钟。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 连接你管理的所有邮箱。"
+  },
+  "persona": {
+    "intro": "在 Namecheap 有好几个公司邮箱？",
+    "label": "看看每个套餐能连接多少个邮箱",
+    "href": "/pricing"
   },
   "method": {
     "title": "Namecheap Private Email 如何连接：IMAP 与邮箱密码",
@@ -97,7 +102,7 @@
     }
   ],
   "ctaBand": {
-    "title": "给你的 AI 一个 Namecheap Private Email 收件箱",
-    "sub": "几分钟即可连接 Namecheap Private Email。一个收件箱永久免费，无需信用卡。"
+    "title": "把所有 Namecheap Private Email 邮箱交给同一个代理",
+    "sub": "免费连接第一个 Namecheap Private Email 邮箱，无需信用卡。Personal 连接三个，Pro 连接你管理的所有邮箱。"
   }
 }

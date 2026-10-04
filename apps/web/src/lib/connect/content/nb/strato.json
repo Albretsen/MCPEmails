@@ -11,18 +11,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble STRATO-e-post til Claude og MCP-klienter",
-    "description": "Koble STRATO-e-post til Claude, Cursor og enhver MCP-klient via IMAP på imap.strato.de:993. Bruk vanlig passordautentisering: STRATO har fjernet CRAM-MD5."
+    "title": "STRATO MCP-server: koble e-posten til Claude",
+    "description": "MCP-server for STRATO-e-post. Koble flere bedriftspostkasser på domenet ditt (post@, salg@) til Claude og ChatGPT over IMAP på imap.strato.de:993."
   },
   "hero": {
     "eyebrow": "STRATO-e-post + AI",
-    "titleLine1": "Koble STRATO-e-post til Claude,",
-    "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
-    "lead": "Gi AI-agenten din en ekte STRATO-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP med postkassepassordet, ikke STRATO-kundeinnloggingen din.",
-    "answer": "Claude når ikke en STRATO-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.strato.de port 993 og autentiserer med hele e-postadressen din og passordet som er satt på den postkassen, ikke STRATO-kundeinnloggingen, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. STRATO godtar bare vanlig passordautentisering over en kryptert tilkobling, etter å ha slått av den eldre challenge-response-metoden. Én innboks er gratis, for alltid.",
-    "meta0": "1 innboks gratis, for alltid",
+    "titleLine1": "MCP-server for STRATO-e-post:",
+    "titleLine2": "alle firmaets postkasser, i Claude og ChatGPT",
+    "lead": "Har du post@, salg@, support@ og faktura@ på eget domene hos STRATO? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post via IMAP med postkassepassordet, ikke STRATO-kundeinnloggingen din.",
+    "answer": "Claude når ikke en STRATO-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.strato.de port 993 og autentiserer med hele e-postadressen din og passordet som er satt på den postkassen, ikke STRATO-kundeinnloggingen, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke, sende og organisere e-posten. STRATO godtar bare vanlig passordautentisering over en kryptert tilkobling, etter å ha slått av den eldre challenge-response-metoden. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre og Pro alle postkassene du har.",
+    "meta0": "Første postkasse gratis, planer for resten",
     "meta1": "Postkassepassord, ikke kundeinnloggingen",
     "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "persona": {
+    "intro": "Flere bedriftspostkasser hos STRATO?",
+    "label": "Se hva hver plan kobler til",
+    "href": "/pricing"
   },
   "method": {
     "title": "Slik kobler STRATO seg til: IMAP, bare TLS, vanlig passord",
@@ -91,7 +96,7 @@
     }
   ],
   "ctaBand": {
-    "title": "Gi AI-en din en STRATO-innboks",
-    "sub": "Koble til STRATO-e-post på minutter. Én innboks gratis for alltid, uten kort."
+    "title": "Samle alle STRATO-postkassene på én agent",
+    "sub": "Koble til den første STRATO-postkassen gratis, uten kort. Personal kobler til tre, Pro alle postkassene du har."
   }
 }

@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Secure Email MCP Server for Gmail, Outlook, IMAP & Claude",
-    "description": "Connect Gmail, Outlook, Fastmail, iCloud, Yahoo, Zoho, Yandex, or IMAP email to Claude, Cursor, ChatGPT, and any MCP client. Read, search, draft, approve, and send email live with provider-aware controls."
+    "title": "Email MCP Server: Gmail, Outlook, IMAP & Claude",
+    "description": "Hosted email MCP server for Claude, ChatGPT and Cursor. Connect Gmail, Outlook or any IMAP mailbox, several at once. Mail is fetched live and never stored."
   },
   "nav": {
     "features": "Features",
@@ -15,6 +15,7 @@
     "selfHost": "Self-host"
   },
   "hero": {
+    "eyebrow": "Hosted email MCP server",
     "titleLine1": "Give your AI",
     "titleLine2": "agent an",
     "titleAccent": "inbox.",
@@ -44,6 +45,14 @@
   },
   "trusted": {
     "label": "Works with every MCP-compatible agent and client"
+  },
+  "whatIs": {
+    "title": "What is an email MCP server?",
+    "p1": "An email MCP server is the bridge between an AI assistant and a real mailbox. It speaks the Model Context Protocol, so Claude, ChatGPT, Cursor or any other MCP client can read, search, draft and send email through one endpoint, with no separate integration for each app.",
+    "p2": "MCP Emails is a hosted one. It works with Gmail, Outlook and Microsoft 365, iCloud, Fastmail and any mailbox that speaks IMAP, and one agent can work several mailboxes at once. Mail is fetched live from your provider on each call and never stored on our servers.",
+    "linkImap": "Set up the IMAP MCP server",
+    "linkBusiness": "Email MCP for company mailboxes",
+    "linkProviders": "All supported email providers"
   },
   "features": {
     "eyebrow": "Principles",
@@ -202,6 +211,18 @@
     "title": "Questions, answered",
     "sub": "Everything you need to know before connecting your first inbox.",
     "items": [
+      {
+        "q": "Is MCP Emails an IMAP MCP server?",
+        "a": "Yes. Alongside the Gmail and Outlook sign-ins there is a generic IMAP and SMTP connector, so any mailbox with IMAP access works: your own domain, a hosting provider, a regional ISP. You enter the server details and an app password once, and your agent reads over IMAP and sends through your own SMTP server."
+      },
+      {
+        "q": "Can one agent work several mailboxes at once?",
+        "a": "Yes. Connect each mailbox to the same account and your agent reaches all of them through one endpoint. It can list the connected inboxes, pick the right one for each request, and move between, say, a support address and a personal one in the same conversation. How many inboxes you can connect depends on your plan."
+      },
+      {
+        "q": "How do I add the email MCP connector to Claude or ChatGPT?",
+        "a": "Add a custom connector in your client settings, paste https://mcpemails.com/api/mcp as the server URL, and approve the sign-in. Clients that support OAuth need no API key. The same URL works in Cursor, VS Code and other MCP clients."
+      },
       {
         "q": "Do you use analytics?",
         "a": "We use privacy-preserving, cookieless product analytics to understand site and setup performance. We never collect email content, addresses, API keys, OAuth tokens, or MCP request data."

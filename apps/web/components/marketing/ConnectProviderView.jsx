@@ -8,6 +8,18 @@ import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
 import { multiMailboxFaq, withProvider } from '@/lib/connect/multi-mailbox.mjs';
 
 /**
+ * What a shared string needs to know about a provider name to stay
+ * grammatical: English "a" or "an" (it was "A IONOS inbox", "A iCloud Mail
+ * inbox"), and French "de" or "d'" ("de IONOS"). English goes by sound, so
+ * One.com and UOL take "a" and the spelled-out MDaemon and SFR take "an".
+ * Locales that do not use an argument ignore it.
+ */
+export function nameGrammar(name) {
+  const an = (/^[aeio]/i.test(name) && !/^one\b/i.test(name)) || /^(MDaemon|SFR)\b/.test(name);
+  return { article: an ? 'an' : 'a', elide: /^[aeiou]/i.test(name) ? 'yes' : 'no' };
+}
+
+/**
  * A provider landing page, rendered on the server.
  *
  * This used to be a client component, for no reason: it has no state, no
@@ -23,6 +35,7 @@ export default async function ConnectProviderView({ locale, provider, content, m
   const related = relatedProviders(provider.slug);
   const showGmailVerification = provider.slug === 'gmail' && OAUTH_VERIFICATION_PENDING;
   const ev = provider.evidence;
+  const named = { provider: provider.name, ...nameGrammar(provider.name) };
   // The page decides whether this host gets the several-mailboxes block and
   // passes its copy; the FAQ entry it adds is the one the JSON-LD carries.
   const faq = [
@@ -50,10 +63,11 @@ export default async function ConnectProviderView({ locale, provider, content, m
             <p className="pricing-page-answer">{content.hero.answer}</p>
           )}
           {/*
-            Optional pointer to a persona page. Only /connect/imap carries one:
-            more than half of the business-domain mailboxes we see sit on a host
-            with no brand of its own, so this is the page the company-mailbox
-            operator lands on, and /for/business is the page written for them.
+            Optional pointer for the company-mailbox operator. /connect/imap
+            sends them to /for/business: more than half of the business-domain
+            mailboxes we see sit on a host with no brand of its own. The ten
+            shared-host pages that lead with several mailboxes send them to
+            /pricing, which is where the mailbox counts per plan are.
           */}
           {content.persona?.href && (
             <p className="how-guide-link" style={{ marginTop: 16 }}>
@@ -62,7 +76,7 @@ export default async function ConnectProviderView({ locale, provider, content, m
             </p>
           )}
           <div className="hero-cta" style={{ justifyContent: 'center', marginTop: 24 }}>
-            <a className="btn btn-primary btn-lg" href="/signup">
+            <a className="btn btn-primary btn-lg" href={`/signup?provider=${provider.slug}`}>
               {t('cta.primary', { provider: provider.name })}
             </a>
             <Link className="btn btn-secondary btn-lg" href="/docs">{t('cta.secondary')}</Link>
@@ -130,7 +144,7 @@ export default async function ConnectProviderView({ locale, provider, content, m
       {provider.imap && provider.smtp && (
         <section className="section" style={{ paddingTop: 40, paddingBottom: 0 }}>
           <div className="container">
-            <h2 className="providers-h2">{t('settings.title', { provider: provider.name })}</h2>
+            <h2 className="providers-h2">{t('settings.title', named)}</h2>
             <p className="providers-sub">{t('settings.sub')}</p>
             <div className="comparison-wrap">
               <table className="comparison-tbl providers-conn-tbl">
@@ -178,7 +192,7 @@ export default async function ConnectProviderView({ locale, provider, content, m
         <div className="container">
           <div className="section-head principles-head">
             <div className="eye-label">{t('caps.eyebrow')}</div>
-            <h2>{t('caps.title', { provider: provider.name })}</h2>
+            <h2>{t('caps.title', named)}</h2>
             <p className="sub">{t('caps.sub', { provider: provider.name })}</p>
           </div>
           <ol className="principle-list">
@@ -245,6 +259,10 @@ export default async function ConnectProviderView({ locale, provider, content, m
               <p className="sub">{withProvider(multiMailbox.body, provider.name)}</p>
               <p className="sub" style={{ marginTop: 12 }}>{multiMailbox.plans}</p>
             </div>
+            {/* The plan line above names no price on purpose; this is where they are. */}
+            <p className="how-guide-link">
+              <Link href="/pricing">{multiMailbox.pricingLink}</Link>
+            </p>
             <p className="how-guide-link">
               <Link href="/for/business">{multiMailbox.link}</Link>
             </p>
@@ -278,7 +296,7 @@ export default async function ConnectProviderView({ locale, provider, content, m
             </div>
             {content.limits?.length > 0 && (
               <div className="connect-limits">
-                <h3>{t('limits.title', { provider: provider.name })}</h3>
+                <h3>{t('limits.title', named)}</h3>
                 <ul>
                   {content.limits.map((l, i) => (
                     <li key={i}><RichText>{l}</RichText></li>
@@ -342,7 +360,7 @@ export default async function ConnectProviderView({ locale, provider, content, m
           <h2>{content.ctaBand.title}</h2>
           <p className="sub">{content.ctaBand.sub}</p>
           <div className="hero-cta" style={{ justifyContent: 'center' }}>
-            <a className="btn btn-primary btn-lg" href="/signup">
+            <a className="btn btn-primary btn-lg" href={`/signup?provider=${provider.slug}`}>
               {t('cta.primary', { provider: provider.name })}
             </a>
             <Link className="btn btn-secondary btn-lg" href="/docs">{t('cta.secondary')}</Link>

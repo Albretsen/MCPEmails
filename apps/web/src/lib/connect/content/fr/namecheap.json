@@ -12,18 +12,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "Connecter Namecheap Private Email à Claude et MCP",
-    "description": "Connectez Namecheap Private Email à Claude et tout client MCP en IMAP sur mail.privateemail.com:993, avec le mot de passe de la boîte, jamais votre compte Namecheap."
+    "title": "Serveur MCP Namecheap pour Claude et ChatGPT",
+    "description": "Serveur MCP pour la messagerie Namecheap. Connectez plusieurs boîtes de votre entreprise à Claude et ChatGPT en IMAP sur mail.privateemail.com:993."
   },
   "hero": {
     "eyebrow": "Namecheap Private Email + IA",
-    "titleLine1": "Connectez Namecheap Private Email à Claude,",
-    "titleLine2": "et à Cursor, ChatGPT, tout client MCP",
-    "lead": "Offrez à votre agent IA une vraie boîte Namecheap Private Email en quelques minutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec le mot de passe de votre boîte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
-    "meta0": "1 boîte gratuite, pour toujours",
+    "titleLine1": "Serveur MCP pour la messagerie Namecheap :",
+    "titleLine2": "toutes les boîtes de votre entreprise, dans Claude et ChatGPT",
+    "lead": "Vous gérez info@, ventes@, support@ et factures@ sur votre propre domaine chez Namecheap ? Connectez chaque boîte au même espace de travail et votre agent IA travaille dans toutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec le mot de passe de votre boîte, et utilisez les mêmes boîtes dans tous les clients MCP, pas un seul.",
+    "meta0": "Première boîte gratuite, offres pour les autres",
     "meta1": "Le mot de passe de votre boîte, pas de configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
-    "answer": "Claude ne peut pas atteindre Namecheap Private Email tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de votre boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes et une boîte est gratuite."
+    "answer": "Claude ne peut pas atteindre Namecheap Private Email tout seul. mcpemails est un serveur MCP hébergé qui s'y connecte en IMAP avec le mot de passe de votre boîte, pour que Claude, Cursor ou tout client MCP puisse lire, rechercher, envoyer et organiser ce courrier. La configuration prend deux minutes. Chaque adresse de l'entreprise, comme info@ ou ventes@, se connecte comme une boîte à part : une boîte est gratuite, Personal en connecte trois et Pro toutes celles que vous gérez."
+  },
+  "persona": {
+    "intro": "Plusieurs boîtes d'entreprise chez Namecheap ?",
+    "label": "Voyez ce que chaque offre connecte",
+    "href": "/pricing"
   },
   "method": {
     "title": "Comment Namecheap Private Email se connecte : IMAP et le mot de passe de la boîte",
@@ -97,7 +102,7 @@
     }
   ],
   "ctaBand": {
-    "title": "Offrez une boîte Namecheap Private Email à votre IA",
-    "sub": "Connectez Namecheap Private Email en quelques minutes. Une boîte gratuite pour toujours, sans carte bancaire."
+    "title": "Toutes vos boîtes Namecheap Private Email sur un seul agent",
+    "sub": "Connectez votre première boîte Namecheap Private Email gratuitement, sans carte bancaire. Personal en connecte trois, Pro toutes celles que vous gérez."
   }
 }

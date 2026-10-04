@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { LoginApp } from '../../../components/auth/LoginApp';
+import { CONNECT_INTENT_PARAM, connectIntentSlugShape } from '@/lib/connect/intent-carry.mjs';
 
 export const metadata = {
   title: 'Sign in · mcpemails',
@@ -29,5 +30,9 @@ export default async function LoginPage({ searchParams }) {
       ? redirectParam
       : null;
 
-  return <LoginApp redirectTo={safeRedirect} />;
+  // Someone who pressed "Connect IONOS free" and already has an account ends
+  // up here. Carry the provider on, shape-checked only (see intent-carry.mjs).
+  const connectProvider = connectIntentSlugShape(params?.[CONNECT_INTENT_PARAM]);
+
+  return <LoginApp redirectTo={safeRedirect} connectProvider={connectProvider} />;
 }

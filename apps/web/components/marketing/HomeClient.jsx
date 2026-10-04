@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useTweaks, TweakSection, TweakRadio, TweakToggle, TweaksPanel } from '../tweaks-panel';
 import {
-  Nav, Hero, Trusted, Features, FeaturedReview, DashboardPreview, HowItWorks, Examples, Quote, Reviews,
+  Nav, Hero, Trusted, WhatIs, Features, FeaturedReview, DashboardPreview, HowItWorks, Examples, Quote, Reviews,
   Pricing, Faq, Footer
 } from './Sections';
 import { DemoVideo } from './DemoVideo';
@@ -62,6 +62,7 @@ export default function HomeClient({ stripePrices, showDemoVideo = false }) {
         <FeaturedReview />
         {showDemoVideo && <DemoVideo />}
         <Trusted />
+        <WhatIs />
         <Features />
         <DashboardPreview />
         <HowItWorks />

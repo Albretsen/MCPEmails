@@ -12,18 +12,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "Correo de SiteGround en Claude: ajustes IMAP de Site Tools",
-    "description": "SiteGround cambió cPanel por Site Tools. Obtén tu servidor IMAP real en Mail Configuration y conecta el buzón a Claude en el puerto 993. Una bandeja gratis."
+    "title": "Servidor MCP de SiteGround para Claude y ChatGPT",
+    "description": "Servidor MCP para el correo de SiteGround. Conecta varios buzones de empresa de tu dominio (info@, ventas@) a Claude y ChatGPT por IMAP en el puerto 993."
   },
   "hero": {
     "eyebrow": "SiteGround + IA",
-    "titleLine1": "Conecta el correo de SiteGround a Claude,",
-    "titleLine2": "Cursor, ChatGPT, cualquier cliente MCP",
-    "lead": "Dale a tu agente de IA un buzón real de SiteGround. Lee, busca, envía, responde, programa y organiza correo por IMAP, con los ajustes que Site Tools muestra para tu cuenta.",
-    "answer": "Claude no puede acceder a un buzón de SiteGround por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. SiteGround no tiene un nombre de servidor de correo compartido: tu servidor es mail.yourdomain.com, o el nombre de servidor seguro con la forma secureNNN.sgcpanel.com, y Site Tools muestra el correcto en Email, Accounts, Mail Configuration. La autenticación es con la contraseña establecida en el buzón, nunca con tu acceso al Client Area de SiteGround, y una bandeja es gratis.",
-    "meta0": "1 bandeja gratis, para siempre",
+    "titleLine1": "Servidor MCP para el correo de SiteGround:",
+    "titleLine2": "todos los buzones de tu empresa, en Claude y ChatGPT",
+    "lead": "¿Llevas info@, ventas@, soporte@ y facturas@ en tu propio dominio en SiteGround? Conecta cada buzón al mismo espacio de trabajo y tu agente de IA trabaja en todos ellos. Lee, busca, envía, responde, programa y organiza correo por IMAP, con los ajustes que Site Tools muestra para tu cuenta.",
+    "answer": "Claude no puede acceder a un buzón de SiteGround por sí solo. mcpemails es un servidor MCP alojado que lo conecta por IMAP estándar en el puerto 993, para que Claude, Cursor o cualquier cliente MCP pueda leer, buscar, enviar y organizar ese correo. SiteGround no tiene un nombre de servidor de correo compartido: tu servidor es mail.yourdomain.com, o el nombre de servidor seguro con la forma secureNNN.sgcpanel.com, y Site Tools muestra el correcto en Email, Accounts, Mail Configuration. La autenticación es con la contraseña establecida en el buzón, nunca con tu acceso al Client Area de SiteGround. Cada dirección de la empresa, como info@ o ventas@, se conecta como un buzón propio: un buzón es gratis, Personal conecta tres y Pro todos los que llevas.",
+    "meta0": "Primer buzón gratis, planes para el resto",
     "meta1": "Contraseña del buzón desde Site Tools",
     "meta2": "El correo se obtiene en vivo, nunca se almacena"
+  },
+  "persona": {
+    "intro": "¿Varios buzones de empresa en SiteGround?",
+    "label": "Mira qué conecta cada plan",
+    "href": "/pricing"
   },
   "method": {
     "title": "Cómo se conecta el correo de SiteGround: Site Tools, IMAP 993",
@@ -88,7 +93,7 @@
     }
   ],
   "ctaBand": {
-    "title": "Dale a tu IA una bandeja de SiteGround",
-    "sub": "Conecta un buzón de SiteGround en minutos. Una bandeja gratis para siempre, sin tarjeta."
+    "title": "Todos tus buzones de SiteGround en un solo agente",
+    "sub": "Conecta tu primer buzón de SiteGround gratis, sin tarjeta. Personal conecta tres y Pro todos los que llevas."
   }
 }

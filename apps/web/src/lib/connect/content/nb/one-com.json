@@ -12,18 +12,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "Koble one.com-e-post til Claude og MCP-klienter",
-    "description": "Koble en one.com-postkasse til Claude, Cursor og enhver MCP-klient via IMAP på imap.one.com:993. Utgående e-post bruker send.one.com, ikke smtp.one.com."
+    "title": "one.com MCP-server: koble e-posten til Claude",
+    "description": "MCP-server for one.com-e-post. Koble flere bedriftspostkasser på domenet ditt (post@, salg@) til Claude og ChatGPT over IMAP på imap.one.com:993."
   },
   "hero": {
     "eyebrow": "one.com-e-post + AI",
-    "titleLine1": "Koble one.com-e-post til Claude,",
-    "titleLine2": "Cursor, ChatGPT, enhver MCP-klient",
-    "lead": "Gi AI-agenten din en ekte one.com-innboks. Les, søk, send, svar, planlegg og organiser e-post via IMAP med passordet du satte da du opprettet adressen.",
-    "answer": "Claude når ikke en one.com-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.one.com port 993 og sender gjennom send.one.com port 465, og autentiserer med hele e-postadressen din og passordet du satte for kontoen i one.com Control Panel. Claude, Cursor eller enhver MCP-klient kan da lese, søke, sende og organisere e-posten. Det er ikke noe app-passord å generere. Én innboks er gratis, for alltid.",
-    "meta0": "1 innboks gratis, for alltid",
+    "titleLine1": "MCP-server for one.com-e-post:",
+    "titleLine2": "alle firmaets postkasser, i Claude og ChatGPT",
+    "lead": "Har du post@, salg@, support@ og faktura@ på eget domene hos one.com? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post via IMAP med passordet du satte da du opprettet adressen.",
+    "answer": "Claude når ikke en one.com-postkasse på egen hånd. mcpemails er en hostet MCP-server som kobler til via IMAP på imap.one.com port 993 og sender gjennom send.one.com port 465, og autentiserer med hele e-postadressen din og passordet du satte for kontoen i one.com Control Panel. Claude, Cursor eller enhver MCP-klient kan da lese, søke, sende og organisere e-posten. Det er ikke noe app-passord å generere. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre og Pro alle postkassene du har.",
+    "meta0": "Første postkasse gratis, planer for resten",
     "meta1": "Passord for e-postkontoen fra Control Panel",
     "meta2": "E-post hentes direkte, lagres aldri"
+  },
+  "persona": {
+    "intro": "Flere bedriftspostkasser hos one.com?",
+    "label": "Se hva hver plan kobler til",
+    "href": "/pricing"
   },
   "method": {
     "title": "Slik kobler one.com seg til: IMAP inn, send.one.com ut",
@@ -89,8 +94,8 @@
     }
   ],
   "ctaBand": {
-    "title": "Gi AI-en din en one.com-innboks",
-    "sub": "Koble til en one.com-postkasse på minutter. Én innboks gratis for alltid, uten kort."
+    "title": "Samle alle one.com-postkassene på én agent",
+    "sub": "Koble til den første one.com-postkassen gratis, uten kort. Personal kobler til tre, Pro alle postkassene du har."
   },
   "seeAlso": {
     "intro": "Microsoft 365-postkasse fra one.com?",

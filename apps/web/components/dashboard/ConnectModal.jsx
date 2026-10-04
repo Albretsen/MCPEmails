@@ -40,6 +40,7 @@ import {
   identifyAppPasswordProvider,
   checkAppPasswordShape,
 } from '@/lib/email-providers/app-password';
+import { authFailureHelp } from '@/lib/email/auth-failure-help';
 
 /**
  * Zoho serves personal (@zohomail.com) and organization (paid custom-domain)
@@ -109,15 +110,10 @@ const AUTH_REASON_HEADLINE_KEYS = {
   account_password_used: 'connect.errorAuthAccountPassword',
   app_password_length: 'connect.errorAuthAppPasswordLength',
   login_username_required: 'connect.errorAuthLoginName',
-};
-
-/** The one thing to do next, per reason. Sits in "What to check". */
-const AUTH_REASON_DETAIL_KEYS = {
-  imap_disabled: 'connect.imapDisabledDetail',
-  app_password_required: 'connect.appPasswordRequiredDetail',
-  account_password_used: 'connect.appPasswordAccountDetail',
-  app_password_length: 'connect.appPasswordLengthDetail',
-  login_username_required: 'connect.loginNameDetail',
+  // The plain case keeps the plain headline. It is listed so the reason is
+  // kept: what to do next is host-specific, and lib/email/auth-failure-help
+  // (which also owns the per-reason "What to check" copy) needs to know it.
+  password_rejected: 'connect.errorAuthShort',
 };
 
 /**
@@ -572,6 +568,7 @@ export function ConnectModal({
   reconnect = null,
   businessShaped = false,
   onAdminConsentLink = null,
+  preselect = null,
 }) {
   const tr = useTranslations('dashboardChrome');
   // The toast lives in ToastProvider, above this modal in App.jsx, so it
@@ -589,18 +586,30 @@ export function ConnectModal({
   const reconnectProvider = isReconnect
     ? (reconnect.service && reconnect.service !== 'generic' ? reconnect.service : 'generic')
     : null;
-  const [provider, setProvider] = useState(reconnectProvider ?? 'generic');
+  /**
+   * The provider this person came for, when they arrived from a
+   * /connect/<slug> landing page (see lib/connect/intent.mjs, which validates
+   * it against the registry before it gets here). It only ever seeds INITIAL
+   * state: which card starts selected and, for the generic form, the server
+   * settings that page lists. Everything stays editable, a reconnect ignores
+   * it, and a card name this modal does not have falls back to the default.
+   */
+  const seed = !isReconnect && preselect && PROVIDERS.some(p => p.k === preselect.card)
+    ? preselect
+    : null;
+  const seedForm = seed?.card === 'generic' ? (seed.form ?? null) : null;
+  const [provider, setProvider] = useState(reconnectProvider ?? seed?.card ?? 'generic');
   const [step, setStep] = useState(isReconnect ? 2 : 1);
   const [form, setForm] = useState(() => ({
     email: reconnect?.address ?? '',
     username: reconnect?.username ?? '',
     password: '',
-    imapHost: reconnect?.imapHost ?? '',
-    imapPort: reconnect?.imapPort ?? GENERIC_IMAP_DEFAULTS.imapPort,
-    smtpHost: reconnect?.smtpHost ?? '',
-    smtpPort: reconnect?.smtpPort ?? GENERIC_IMAP_DEFAULTS.smtpPort,
-    imapSecurity: reconnect?.imapSecurity ?? (reconnect?.imapPort === 143 ? 'starttls' : 'tls'),
-    smtpSecurity: reconnect?.smtpSecurity ?? (reconnect?.smtpPort === 587 ? 'starttls' : 'tls'),
+    imapHost: reconnect?.imapHost ?? seedForm?.imapHost ?? '',
+    imapPort: reconnect?.imapPort ?? seedForm?.imapPort ?? GENERIC_IMAP_DEFAULTS.imapPort,
+    smtpHost: reconnect?.smtpHost ?? seedForm?.smtpHost ?? '',
+    smtpPort: reconnect?.smtpPort ?? seedForm?.smtpPort ?? GENERIC_IMAP_DEFAULTS.smtpPort,
+    imapSecurity: reconnect?.imapSecurity ?? seedForm?.imapSecurity ?? (reconnect?.imapPort === 143 ? 'starttls' : 'tls'),
+    smtpSecurity: reconnect?.smtpSecurity ?? seedForm?.smtpSecurity ?? (reconnect?.smtpPort === 587 ? 'starttls' : 'tls'),
   }));
   /**
    * Zoho's data center and account class, recovered from the stored host on a
@@ -714,7 +723,17 @@ export function ConnectModal({
   // Set when the address the user typed identified a known mail provider and we
   // filled the server fields in for them. Shape:
   // { label, requiresAppPassword, appPasswordHelpUrl }.
-  const [hostPrefill, setHostPrefill] = useState(null);
+  // Seeded when the modal opens for a provider whose settings were filled in
+  // from its landing page, so the same "recognised, filled in for you" note is
+  // shown as when an address is recognised.
+  const [hostPrefill, setHostPrefill] = useState(() => (seedForm
+    ? {
+        label: seed.label,
+        requiresAppPassword: seed.requiresAppPassword === true,
+        appPasswordHelpUrl: seed.appPasswordHelpUrl ?? null,
+        source: 'table',
+      }
+    : null));
   // Which of the credential situations the last rejection was, from the route's
   // `auth_reason` (or decided here, before submitting, for a password that
   // cannot be this provider's app password). Null whenever the last failure was
@@ -994,7 +1013,7 @@ export function ConnectModal({
    * causes, which React runs after that updater. Nothing renders from it on its
    * own, so it never needs to schedule a render of its own.
    */
-  const discoveryFilledHostsRef = useRef(false);
+  const discoveryFilledHostsRef = useRef(Boolean(seedForm));
 
   /**
    * Fill the server fields in from the address, when we can work out where the
@@ -1435,6 +1454,20 @@ export function ConnectModal({
    * printed directly underneath it.
    */
   const needsAppPassword = Boolean(activePolicy?.requiresAppPassword);
+  /**
+   * The sentences under a rejected login: which password this host expects,
+   * what the username must be and where the mailbox password is set. All of it
+   * is decided in lib/email/auth-failure-help; this only renders the result.
+   */
+  const authHelp = authFailureHelp({
+    reason: authReason,
+    email: form.email,
+    host: isGeneric ? form.imapHost : null,
+    smtpHost: isGeneric ? form.smtpHost : null,
+    username: isGeneric ? form.username : null,
+    generic: isGeneric,
+    providerLabel: appPasswordProvider,
+  });
 
   // ── The notices, as text ───────────────────────────────────────────────────
   // Computed once, here, rather than inline in the JSX, because each of them is
@@ -1730,6 +1763,9 @@ export function ConnectModal({
         // A transport failure is fixed by a port (already on screen) or by a
         // security mode (not), so open the section holding the second one.
         if (isGeneric && TRANSPORT_ERROR_CODES.has(code)) setAdvancedOpen(true);
+        // A rejected password whose advice is "clear the Username field" has to
+        // have that field on screen, and it lives in the same section.
+        if (reason === 'password_rejected' && isGeneric && form.username.trim()) setAdvancedOpen(true);
 
         // A login name the server did not recognise is fixed in a different
         // field, and that field lives inside a collapsed section. Open it,
@@ -3459,7 +3495,7 @@ export function ConnectModal({
                     </a>
                   )}
 
-                  {(errorDetail || appPasswordUrl) && (
+                  {(errorDetail || appPasswordUrl || authHelp.lines.length > 0) && (
                     <>
                       <button
                         type="button"
@@ -3506,9 +3542,9 @@ export function ConnectModal({
                               is already printed beside the password field, and
                               for a login-name or IMAP-disabled failure it is
                               not the next step at all. */}
-                          {authReason && AUTH_REASON_DETAIL_KEYS[authReason] && (
-                            <span>{tr(AUTH_REASON_DETAIL_KEYS[authReason], { provider: appPasswordProvider })}</span>
-                          )}
+                          {authHelp.lines.map(line => (
+                            <span key={line.key}>{tr(line.key, line.values)}</span>
+                          ))}
                           {!isGeneric && !authReason && (
                             <span>{tr(HINT_KEYS[provider] ?? 'connect.hintGeneric')}</span>
                           )}

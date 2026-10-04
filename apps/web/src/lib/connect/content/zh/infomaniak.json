@@ -12,18 +12,23 @@
     "status": "active"
   },
   "meta": {
-    "title": "将 Infomaniak Mail 连接到 Claude 与 MCP 客户端",
-    "description": "通过 mail.infomaniak.com:993 的 IMAP 将 Infomaniak Mail 连接到 Claude、Cursor 及任意 MCP 客户端。需要设备密码，而不是你的账户密码。"
+    "title": "Infomaniak MCP 服务器：将公司邮箱连接到 Claude",
+    "description": "面向 Infomaniak 邮箱的 MCP 服务器。通过 IMAP（mail.infomaniak.com:993）将你域名下的多个公司邮箱（info@、sales@）连接到 Claude 和 ChatGPT。"
   },
   "hero": {
     "eyebrow": "Infomaniak Mail + AI",
-    "titleLine1": "将 Infomaniak Mail 连接到 Claude，",
-    "titleLine2": "以及 Cursor、ChatGPT、任意 MCP 客户端",
-    "lead": "为你的 AI 代理接入一个真正的 Infomaniak 收件箱。使用为该地址生成的设备密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
-    "answer": "Claude 无法自行访问 Infomaniak Mail。mcpemails 是一个托管 MCP 服务器，通过 mail.infomaniak.com 端口 993 的 IMAP 与之连接，使用为该邮箱地址生成的设备密码（而不是你的 Infomaniak 账户密码）进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。Infomaniak 完全不接受通过 IMAP 使用账户密码，而它另外提供的应用密码是另一回事，在这里也行不通。1 个收件箱永久免费。",
-    "meta0": "1 个收件箱永久免费",
+    "titleLine1": "面向 Infomaniak 邮箱的 MCP 服务器：",
+    "titleLine2": "在 Claude 和 ChatGPT 中使用公司的每一个邮箱",
+    "lead": "在 Infomaniak 用自己的域名开设了 info@、sales@、support@ 和 invoices@？把每个邮箱都连接到同一个工作区，你的 AI 代理就能处理所有邮箱。使用为该地址生成的设备密码，通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
+    "answer": "Claude 无法自行访问 Infomaniak Mail。mcpemails 是一个托管 MCP 服务器，通过 mail.infomaniak.com 端口 993 的 IMAP 与之连接，使用为该邮箱地址生成的设备密码（而不是你的 Infomaniak 账户密码）进行认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。Infomaniak 完全不接受通过 IMAP 使用账户密码，而它另外提供的应用密码是另一回事，在这里也行不通。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 连接你管理的所有邮箱。",
+    "meta0": "第一个邮箱免费，其余按套餐连接",
     "meta1": "设备密码，而非账户密码",
     "meta2": "邮件实时获取，绝不存储"
+  },
+  "persona": {
+    "intro": "在 Infomaniak 有好几个公司邮箱？",
+    "label": "看看每个套餐能连接多少个邮箱",
+    "href": "/pricing"
   },
   "method": {
     "title": "Infomaniak 如何连接：IMAP 与设备密码",
@@ -92,7 +97,7 @@
     }
   ],
   "ctaBand": {
-    "title": "给你的 AI 一个 Infomaniak 收件箱",
-    "sub": "几分钟即可连接 Infomaniak Mail。1 个收件箱永久免费，无需信用卡。"
+    "title": "把所有 Infomaniak 邮箱交给同一个代理",
+    "sub": "免费连接第一个 Infomaniak 邮箱，无需信用卡。Personal 连接三个，Pro 连接你管理的所有邮箱。"
   }
 }

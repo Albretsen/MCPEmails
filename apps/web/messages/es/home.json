@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Conecta Gmail, Outlook, iCloud e IMAP a Claude",
-    "description": "Dale a Claude, Cursor o cualquier cliente MCP acceso real a tu bandeja: lee, envía, busca y organiza correo en Gmail, Outlook, Fastmail, iCloud e IMAP. Gratis."
+    "title": "Servidor MCP de correo: Gmail, Outlook e IMAP",
+    "description": "Servidor MCP de correo alojado para Claude, ChatGPT y Cursor. Conecta Gmail, Outlook o cualquier buzón IMAP, varios a la vez. Correo en vivo, nunca almacenado."
   },
   "nav": {
     "features": "Características",
@@ -15,6 +15,7 @@
     "selfHost": "Auto-alojar"
   },
   "hero": {
+    "eyebrow": "Servidor MCP de correo alojado",
     "titleLine1": "Dale a tu agente",
     "titleLine2": "de IA una",
     "titleAccent": "bandeja de entrada.",
@@ -44,6 +45,14 @@
   },
   "trusted": {
     "label": "Funciona con todos los agentes y clientes compatibles con MCP"
+  },
+  "whatIs": {
+    "title": "¿Qué es un servidor MCP de correo?",
+    "p1": "Un servidor MCP de correo electrónico (email MCP server) es el puente entre un asistente de IA y un buzón real. Habla el Model Context Protocol, de modo que Claude, ChatGPT, Cursor o cualquier otro cliente MCP puede leer, buscar, redactar y enviar correo a través de un único endpoint, sin una integración aparte para cada aplicación.",
+    "p2": "MCP Emails es uno alojado. Funciona con Gmail, Outlook y Microsoft 365, iCloud, Fastmail y cualquier buzón compatible con IMAP, y un mismo agente puede trabajar con varios buzones a la vez. El correo se obtiene en vivo de tu proveedor en cada llamada y nunca se almacena en nuestros servidores.",
+    "linkImap": "Configura el servidor MCP para IMAP",
+    "linkBusiness": "MCP de correo para los buzones de tu empresa",
+    "linkProviders": "Todos los proveedores de correo compatibles"
   },
   "features": {
     "eyebrow": "Principios",
@@ -202,6 +211,18 @@
     "title": "Preguntas, respondidas",
     "sub": "Todo lo que necesitas saber antes de conectar tu primera bandeja de entrada.",
     "items": [
+      {
+        "q": "¿MCP Emails es un servidor MCP para IMAP?",
+        "a": "Sí. Además del inicio de sesión con Gmail y Outlook hay un conector genérico de IMAP y SMTP, así que funciona cualquier buzón con acceso IMAP: tu propio dominio, un proveedor de hosting o un ISP regional. Introduces los datos del servidor y una contraseña de aplicación una sola vez, y tu agente lee por IMAP y envía a través de tu propio servidor SMTP."
+      },
+      {
+        "q": "¿Puede un mismo agente trabajar con varios buzones a la vez?",
+        "a": "Sí. Conecta cada buzón a la misma cuenta y tu agente llega a todos a través de un único endpoint. Puede listar las bandejas conectadas, elegir la adecuada para cada petición y pasar, por ejemplo, de una dirección de soporte a una personal en la misma conversación. Cuántas bandejas puedes conectar depende de tu plan."
+      },
+      {
+        "q": "¿Cómo añado el conector MCP de correo a Claude o ChatGPT?",
+        "a": "Añade un conector personalizado en los ajustes de tu cliente, pega https://mcpemails.com/api/mcp como URL del servidor y aprueba el inicio de sesión. Los clientes compatibles con OAuth no necesitan clave de API. La misma URL funciona en Cursor, VS Code y otros clientes MCP."
+      },
       {
         "q": "¿Usan analítica?",
         "a": "Usamos analítica de producto sin cookies y respetuosa con la privacidad para comprender el sitio y la configuración. Nunca recopilamos contenido de correo, direcciones, claves API, tokens OAuth ni datos de solicitudes MCP."
