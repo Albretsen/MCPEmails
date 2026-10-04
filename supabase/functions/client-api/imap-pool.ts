@@ -28,6 +28,9 @@
 //      returned while a command is still in flight, or the socket is dead, the
 //      connection is destroyed, never reused. A half-read response on a reused
 //      socket would be read as the answer to the next person's command.
+//      ONE EXCEPTION: a UID SEARCH the server throttled (`isSearchThrottle`).
+//      Its tagged NO was read in full, and a redial is the wrong reply to
+//      "slow down".
 //   4. A RETURNED LEASE IS INERT. The handle refuses every further call, so a
 //      late background command cannot land on a connection someone else holds.
 //   5. NOOP BEFORE REUSE when the connection has idled longer than
@@ -154,6 +157,8 @@ export interface PoolStats {
   listHits: number;
   /** A connection handed to a queued request that outranked the one that dialled it. */
   handovers: number;
+  /** Searches the server throttled; the connection was kept (see `isSearchThrottle`). */
+  throttles: number;
   idle: number;
   leased: number;
 }
@@ -208,6 +213,39 @@ export function isLoginRefusal(error: unknown): error is Error {
   return error instanceof Error && (error.name === "ImapAuthError" || error.message === "imap_auth_failed");
 }
 
+/**
+ * The server answered a UID SEARCH with a tagged NO that says "not now": a rate
+ * limit (`[LIMIT]`, RFC 5530), a throttle, "too many", "try again". Migadu
+ * allows about 60 searches a minute and answers the next one this way.
+ *
+ * It is the ONE rejected command that does not taint a lease (rule 3). The
+ * client throws "UID SEARCH failed: <text>" only after it has read the tagged
+ * reply to its own command, so the connection is at a command boundary and in
+ * sync; and dropping it is the wrong answer to a throttle: the redial is a
+ * fresh login against a server that has just asked for less.
+ */
+export function isSearchThrottle(error: unknown): error is Error {
+  if (!(error instanceof Error) || !error.message.startsWith("UID SEARCH failed:")) return false;
+  const text = error.message.slice("UID SEARCH failed:".length).toLowerCase();
+  // A charset refusal is its own thing (imap-client.ts retries it folded).
+  if (text.includes("badcharset") || text.includes("charset")) return false;
+  return /\[limit\]|\[unavailable\]|\[inuse\]|rate.?limit|thrott|too many|too much|try again|slow down|exceeded|temporar/.test(text);
+}
+
+/**
+ * How long the server asked for, when it said. Migadu's refusal reads (live,
+ * 2026-10-04) "search rate limit exceeded: 60 searches in 1m0s, please wait
+ * 12s before trying again". Null when no wait is named; capped at a minute.
+ */
+export function searchThrottleWaitMs(error: unknown): number | null {
+  if (!isSearchThrottle(error)) return null;
+  const m = /\bwait (\d{1,4})\s*(ms|s|sec|seconds?|m|min|minutes?)\b/i.exec(error.message);
+  if (!m) return null;
+  const unit = m[2].toLowerCase();
+  const ms = Number(m[1]) * (unit === "ms" ? 1 : unit.startsWith("m") ? 60_000 : 1000);
+  return Math.min(Math.max(ms, 1000), 60_000);
+}
+
 /** `setTimeout` returns a number on older Deno and a Timeout object on newer ones. */
 type TimerHandle = ReturnType<typeof setTimeout>;
 
@@ -223,7 +261,7 @@ export class ImapPool<C extends PoolableClient> {
   readonly #entries = new Map<string, Entry<C>>();
   readonly #opts: Required<Omit<ImapPoolOptions, "now">>;
   readonly #now: () => number;
-  readonly #stats = { dials: 0, reuses: 0, overflows: 0, validations: 0, drops: 0, evictions: 0, waits: 0, refusals: 0, listHits: 0, handovers: 0 };
+  readonly #stats = { dials: 0, reuses: 0, overflows: 0, validations: 0, drops: 0, evictions: 0, waits: 0, refusals: 0, listHits: 0, handovers: 0, throttles: 0 };
   #arrivals = 0;
   readonly #refused = new Map<string, { error: Error; until: number }>();
   /** The mailbox each live connection has selected (set by a successful SELECT through a handle). */
@@ -767,7 +805,9 @@ export class ImapPool<C extends PoolableClient> {
               done?.();
               return result;
             }, (error) => {
-              tainted = true;
+              // Rule 3, and its one exception: a throttled search.
+              if (prop === "uidSearch" && isSearchThrottle(error)) this.#stats.throttles++;
+              else tainted = true;
               done?.();
               throw error;
             });

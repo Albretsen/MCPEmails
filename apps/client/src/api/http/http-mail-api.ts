@@ -692,6 +692,7 @@ export class HttpMailApi implements MailApi {
       thread_key: typeof r?.thread_key === "string" ? r.thread_key : (opts.thread_key ?? ""),
       rows: arr<EmailSummary>(r, "messages").map((m) => this.toRow(inbox_id, m)),
       partial: r?.partial === true,
+      ...(r?.partial === true && typeof r.partial_reason === "string" ? { partial_reason: r.partial_reason } : {}),
     };
   }
 

@@ -13,6 +13,7 @@ import * as harness from "../../mcp-server/provider-call-harness.ts";
 import { createApp } from "../app.ts";
 import { JwtVerifier, WorkspaceGate } from "../auth.ts";
 import { ImapPool, type LeaseOptions, type PoolableClient } from "../imap-pool.ts";
+import type { ThreadMemory } from "../mail/thread.ts";
 import { RateLimiter } from "../rate-limit.ts";
 import type { McpSeam } from "../seam.ts";
 import { fakeStore, type FakeStore, JWT_SECRET, membership, mintHs256, request, SUPABASE_URL } from "./helpers.ts";
@@ -89,7 +90,9 @@ export interface RealApp {
   mail: (op: string, args?: Record<string, unknown>, inboxId?: string | null) => Promise<{ status: number; body: any; response: Response }>;
 }
 
-export async function realApp(options: { pool?: ImapPool<PoolableClient>; role?: "owner" | "viewer" } = {}): Promise<RealApp> {
+export async function realApp(
+  options: { pool?: ImapPool<PoolableClient>; role?: "owner" | "viewer"; threads?: ThreadMemory; now?: () => number } = {},
+): Promise<RealApp> {
   const imapDial = options.pool instanceof FakeDialPool ? options.pool.dial : undefined;
   const store = fakeStore([membership({ workspace_id: WORKSPACE, role: options.role ?? "owner" })]);
   const pool = options.pool ?? new ImapPool<PoolableClient>();
@@ -102,6 +105,8 @@ export async function realApp(options: { pool?: ImapPool<PoolableClient>; role?:
     limiter: new RateLimiter(),
     pool,
     imapDial,
+    threads: options.threads,
+    now: options.now,
     env: () => undefined,
     log: (event, fields) => logs.push({ event, fields }),
   });

@@ -80,3 +80,18 @@ export function useDebouncedValue<T>(value: T, ms: number, atOnce?: (value: T) =
   }, [value, ms, immediate]);
   return immediate ? value : settled;
 }
+
+/** True once `value` has stayed the same for `ms`; false again the moment it
+ *  changes (also when it changes back: the wait starts over). Use to hold a
+ *  request back while the person is still moving. */
+export function useRested<T>(value: T, ms: number): boolean {
+  const [rested, setRested] = useState<{ value: T } | null>(null);
+  useEffect(() => {
+    const t = setTimeout(() => setRested({ value }), ms);
+    return () => {
+      clearTimeout(t);
+      setRested(null);
+    };
+  }, [value, ms]);
+  return rested !== null && Object.is(rested.value, value);
+}

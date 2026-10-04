@@ -21,6 +21,7 @@ import { fetchImapListPage } from "./imap-list-page.ts";
 import {
   firstPartyContext,
   flaggedField,
+  gmailThreadField,
   isHumanBulk,
   readExtraFields,
   referencesOfHeaderBlock,
@@ -10280,6 +10281,8 @@ interface EmailSummary {
   message_id_header?: string | null;
   in_reply_to?: string | null;
   references?: string[];
+  /** Gmail-over-IMAP's X-GM-THRID: client-api only (`gmailThreadField`). */
+  gm_thread_id?: string;
 }
 
 interface ListInboxResult {
@@ -11158,6 +11161,7 @@ async function listImapMessages(
         thread_id: String(s.uid),
         ...flaggedField(() => s.flags.includes("\\Flagged")),
         ...threadFields(() => ({ messageId: s.envelope.messageId, inReplyTo: s.envelope.inReplyTo, references: referencesOfHeaderBlock(s.referencesHeader) })),
+        ...gmailThreadField(() => s.gmThreadId),
       });
     }
 
@@ -11556,6 +11560,7 @@ async function searchImapMessages(
       relevance_score: null,
       ...flaggedField(() => s.flags.includes("\\Flagged")),
       ...threadFields(() => ({ messageId: s.envelope.messageId, inReplyTo: s.envelope.inReplyTo, references: referencesOfHeaderBlock(s.referencesHeader) })),
+      ...gmailThreadField(() => s.gmThreadId),
     }));
 
     return {

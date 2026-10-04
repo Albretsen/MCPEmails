@@ -4,8 +4,8 @@
 //   POST /mail { op: "thread", inbox_id, args: { message_id, thread_key?, limit? } }
 //
 //   message_id   any message of the conversation (the one the person opened).
-//   thread_key   the key that row carried. Saves Gmail and Outlook the lookup
-//                of the provider thread id; ignored on IMAP.
+//   thread_key   the key that row carried. Saves Gmail, Outlook and Gmail over
+//                IMAP the lookup of the provider thread id.
 //   limit        1..100, default 50. The NEWEST `limit` messages are returned.
 //
 //   -> {
@@ -17,12 +17,14 @@
 //                               thread_key. NO bodies: read them with `read` /
 //                               `read_batch`.
 //        partial: boolean,      true when something bounded the answer; then
-//        partial_reason,        "limit" | "time_budget" | "folder_error" | "candidates"
+//        partial_reason,        "limit" | "time_budget" | "folder_error" |
+//                               "candidates" | "rate_limited"
 //        strategy,              how it was found (below)
 //        folders: string[],     the folder ids that were searched ("*": all mail)
 //      }
 //
-// Nothing is stored. Every call asks the mail server again.
+// Nothing is stored in the database. An IMAP answer is remembered in the
+// isolate for THREAD_MEMO_MS (ThreadMemory, below).
 //
 // Per provider:
 //
@@ -35,52 +37,112 @@
 //            folder-name lookup the list already does). Every folder; drafts,
 //            Deleted Items and Junk are left out. strategy "outlook_conversation".
 //            Graph cannot combine this filter with $orderby; rows are sorted here.
+//
 //   IMAP     on the inbox's pooled connection (no dial when one is open),
-//            which is handed back to the pool after the anchor and after every
-//            folder, so a `list` or `read` the person is waiting for is never
-//            queued behind the whole search, only behind one folder of it:
-//              1. UID FETCH the anchor's summary (envelope + References).
-//              2. For each of at most MAX_FOLDERS folders (the anchor's own,
-//                 then Inbox, Sent, Archive; on Gmail-over-IMAP the archive
-//                 alias is All Mail): SELECT, one UID SEARCH, one UID FETCH.
-//            The search is an OR over HEADER Message-ID / References /
-//            In-Reply-To for the thread's known ids (the anchor's own id, its
-//            In-Reply-To, the root and the newest References: at most
-//            MAX_SEARCH_IDS). strategy "imap_header_search".
+//            handed back to the pool after every folder, so a `list` or `read`
+//            the person is waiting for is queued behind one folder at most.
 //
-//            KNOWN GOTCHA: some servers answer `SEARCH HEADER` with OK and no
-//            hits, whatever is asked (Migadu is one). That is detected, not
-//            guessed: the first search runs in the anchor's own folder and must
-//            return the anchor itself (it matches `HEADER Message-ID <own>`).
-//            When it does not, every folder is searched with
-//                SUBJECT "<subject without Re:/Fwd:>" SINCE <anchor date - 180 days>
-//            (a subject outside ASCII goes out as a UTF-8 literal with
-//            CHARSET UTF-8; a server that refuses the charset gets the ASCII
-//            folding `uidSearch` allows, or that folder is reported partial)
-//            instead, the newest MAX_FALLBACK_CANDIDATES hits are fetched
-//            WITHOUT previews, and the function keeps only the ones the
-//            headers link to the thread. Subject never decides membership: it
-//            only narrows what is fetched. strategy "imap_subject_fallback".
-//            A thread whose subject was changed mid-way, or older than the
-//            window, is incomplete there, and the answer cannot tell.
+//   IMAP, Gmail (the server advertises X-GM-EXT-1). strategy "imap_gmail_thrid".
+//            Gmail's own thread id decides membership: exact, and instant on a
+//            mailbox of any size (a SUBJECT or HEADER search of a large Gmail
+//            mailbox ran 25 s, live 2026-10-04).
+//              anchor's folder   UID SEARCH X-GM-THRID <id>, then ONE UID FETCH
+//                                of the hits (summary + X-GM-MSGID +
+//                                X-GM-LABELS), the anchor among them. The id is
+//                                the `g:` key the row carried. No key, or one
+//                                the anchor is not part of: one
+//                                UID FETCH <anchor> (X-GM-THRID X-GM-MSGID)
+//                                first, and the search runs on what it says.
+//              All Mail (\All)   UID SEARCH X-GM-THRID <id>, then at most ONE
+//                                UID FETCH: none when All Mail has exactly as
+//                                many hits as the anchor's folder had (a label
+//                                folder is a subset of All Mail, so those are
+//                                the same messages); for more than
+//                                GMAIL_PROBE_OVER hits the ids are asked for
+//                                first and only the new messages are fetched.
+//            Measured live (2026-10-04, a large mailbox): a Gmail round trip is
+//            110 to 300 ms and a SELECT 250 to 650 ms, which is why nothing
+//            here is fetched twice, and why All Mail is searched on a SECOND
+//            pooled connection of the inbox (pool scope "<inbox>:all-mail",
+//            mail/run.ts) that stays selected on All Mail, at the same time as
+//            the anchor's folder is searched on the first. Without it every
+//            call paid two SELECTs (and left the next `read` a third). Gmail
+//            allows 15 connections per account; this is the second.
+//            WHICH ID A MESSAGE GETS. A Gmail message is one message with
+//            labels, and IMAP shows it once per label folder with a different
+//            UID in each. A message that is in the anchor's folder is returned
+//            with its id THERE ("INBOX:<uid>" for a thread opened from the
+//            Inbox: the id the list row has, and the one an archive or a move
+//            out of the Inbox must be issued against). Every other message is
+//            returned with its All Mail id ("[Gmail]/All Mail:<uid>"), which
+//            reads, flags and deletes correctly; its `folder` is the role its
+//            labels give it (the Sent folder for \Sent, "INBOX" for \Inbox,
+//            else All Mail). Copies are matched by X-GM-MSGID, never by
+//            Message-ID. Drafts are left out; Trash and Spam are not in All
+//            Mail. That is why the anchor's folder is searched too: two
+//            searches and two fetches, not one of each.
+//            A Gmail mailbox with All Mail hidden from IMAP answers the
+//            anchor's folder alone, `partial: "folder_error"`.
 //
-//            Whatever the search returned, a row is kept only when its own
-//            Message-ID, In-Reply-To or References meets the known ids
-//            (transitively: a kept row's ids become known). HEADER matching is
-//            a substring match on the server; this makes it exact.
+//   IMAP, every other server. strategy "imap_subject_search".
+//            For each of at most MAX_FOLDERS folders (the anchor's own, then
+//            Sent, Inbox, Archive; duplicates skipped): SELECT, ONE search
+//                UID SEARCH SINCE <anchor date - 180 days> SUBJECT "<base subject>"
+//            (base subject: reply/forward prefixes stripped; outside ASCII it
+//            goes out as a UTF-8 literal under CHARSET UTF-8, and a server
+//            that refuses the charset gets the ASCII folding `uidSearch`
+//            allows, or that folder is reported partial), then ONE UID FETCH
+//            of the newest MAX_CANDIDATES hits (envelope + References; with the
+//            preview when there are at most INLINE_PREVIEW_CANDIDATES of them,
+//            else the kept rows' previews cost one more FETCH).
+//            The SUBJECT only narrows what is fetched. MEMBERSHIP is decided
+//            here, by the Message-ID / In-Reply-To / References graph: a
+//            candidate is kept only when it is reachable from the anchor, in
+//            either direction (ancestors and descendants), through the
+//            candidates of ALL folders. Two mails that both say "Re: Invoice"
+//            and share no id are two conversations.
 //
-//            A message present in several folders (Gmail-over-IMAP's All Mail,
-//            a mail to oneself) is returned once, from the first folder in
-//            the order above.
+//            WHY NOT `SEARCH HEADER`. It was the first choice until
+//            2026-10-04. Migadu answers `HEADER Message-ID <id>` correctly and
+//            `HEADER References` / `HEADER In-Reply-To` with OK and no hits, so
+//            a check that "the header search found the anchor" passed and every
+//            later reply was missed, `partial: false`. SUBJECT and SINCE are
+//            RFC 3501 base keys every server indexes; nothing is probed.
+//
+//            An anchor with no Message-ID, In-Reply-To or References is a
+//            conversation of one (strategy "single", no search). An anchor with
+//            an EMPTY subject has nothing to narrow by: the newest
+//            MAX_CANDIDATES messages since anchor date - EMPTY_SUBJECT_WINDOW_DAYS
+//            are the candidates (strategy "imap_window_scan"), and more than
+//            that many makes the answer `partial: "candidates"`, as does a
+//            subject so generic that a folder holds more than MAX_CANDIDATES
+//            of it. A thread whose subject was changed mid-way, or that reaches
+//            back before the window, is incomplete and the answer cannot tell.
 //
 //            THREAD=REFERENCES (RFC 5256) is not used: step 5 of that algorithm
 //            merges threads by base subject, which is exactly the false
 //            positive this op must not produce, and it only threads within one
-//            mailbox, so it saves no round trip over the search above.
+//            mailbox.
 //
-//            Bounds: MAX_FOLDERS folders, `limit` rows, TIME_BUDGET_MS between
-//            folders. Hitting any of them answers what was found so far with
-//            `partial: true`.
+//   IMAP, all servers:
+//            RATE LIMITS. One search per folder per call. A search the server
+//            throttles (`NO [LIMIT]`, "too many", ...: imap-pool.ts
+//            `isSearchThrottle`; Migadu allows about 60 a minute) ends the call
+//            with what was found, `partial: "rate_limited"`; the connection is
+//            kept, and no search is sent for that inbox for
+//            RATE_LIMIT_BACKOFF_MS (calls in that window answer the anchor,
+//            `partial: "rate_limited"`, at the cost of one FETCH).
+//            TIME. Every search is raced against what is left of
+//            TIME_BUDGET_MS. A search that loses is abandoned (its connection
+//            is dropped: it is still busy), the call answers what it has with
+//            `partial: "time_budget"`, and that inbox is not searched again for
+//            SLOW_SEARCH_BACKOFF_MS.
+//            MEMO. A complete answer is remembered for THREAD_MEMO_MS under the
+//            id of every message in it, so re-opening the conversation or
+//            stepping to another of its messages costs nothing. Any write op on
+//            the inbox (flag, move, delete, send...) forgets that inbox's
+//            entries (mail/run.ts).
+//            Bounds: MAX_FOLDERS folders, `limit` rows.
 // ---------------------------------------------------------------------------
 
 import type { ImapMessageSummary } from "../../mcp-server/imap-client.ts";
@@ -90,7 +152,8 @@ import { decodeEncodedWords } from "../../mcp-server/mime.ts";
 import { graphFetch, graphFolderLabels } from "../../mcp-server/outlook-graph.ts";
 import { normalizePreview } from "../../mcp-server/text-extract.ts";
 import { ApiError } from "../errors.ts";
-import type { ApiKeyRow, ImapSessionLike, InboxRow, McpSeam } from "../seam.ts";
+import { isSearchThrottle, searchThrottleWaitMs } from "../imap-pool.ts";
+import type { ApiKeyRow, ImapSessionLike, ImapStatusClient, InboxRow, McpSeam } from "../seam.ts";
 import { reconnectMessage } from "./health.ts";
 import { outlookRoleFolderIds } from "./roles.ts";
 import { baseSubject, threadKeyOf } from "./thread-key.ts";
@@ -99,14 +162,26 @@ export const DEFAULT_THREAD_LIMIT = 50;
 export const MAX_THREAD_LIMIT = 100;
 /** IMAP: folders searched per call, the anchor's own included. */
 export const MAX_FOLDERS = 4;
-/** IMAP: ids the header search names. */
-export const MAX_SEARCH_IDS = 6;
-/** IMAP subject fallback: candidates fetched per folder (newest first). */
-export const MAX_FALLBACK_CANDIDATES = 200;
-/** IMAP subject fallback: how far before the anchor's date the search reaches. */
-export const FALLBACK_WINDOW_DAYS = 180;
-/** IMAP: no new folder is started after this long. */
-export const TIME_BUDGET_MS = 8_000;
+/** IMAP subject search: candidates fetched per folder (newest first). */
+export const MAX_CANDIDATES = 200;
+/** IMAP subject search: up to this many candidates are fetched WITH their preview. */
+export const INLINE_PREVIEW_CANDIDATES = 24;
+/** IMAP subject search: how far before the anchor's date the search reaches. */
+export const SEARCH_WINDOW_DAYS = 180;
+/** IMAP, an anchor with no subject: the window its candidates come from. */
+export const EMPTY_SUBJECT_WINDOW_DAYS = 30;
+/** IMAP: characters of the base subject a search is given (SUBJECT is a substring match). */
+export const MAX_SUBJECT_SEARCH_CHARS = 120;
+/** Gmail over IMAP: an All Mail hit list longer than this is asked for its ids before anything is fetched. */
+export const GMAIL_PROBE_OVER = 6;
+/** IMAP: the whole call's budget; every search is raced against what is left of it. */
+export const TIME_BUDGET_MS = 5_000;
+/** IMAP: no search for an inbox this long after its server throttled one. */
+export const RATE_LIMIT_BACKOFF_MS = 15_000;
+/** IMAP: no search for an inbox this long after one outlived the budget. */
+export const SLOW_SEARCH_BACKOFF_MS = 60_000;
+/** IMAP: how long a complete answer is served from memory. */
+export const THREAD_MEMO_MS = 45_000;
 
 const GMAIL_BASE = "https://gmail.googleapis.com/gmail/v1/users/me";
 
@@ -131,15 +206,18 @@ export interface ThreadRow {
 export type ThreadStrategy =
   | "gmail_thread"
   | "outlook_conversation"
-  | "imap_header_search"
-  | "imap_subject_fallback"
+  | "imap_gmail_thrid"
+  | "imap_subject_search"
+  | "imap_window_scan"
   | "single";
+
+export type ThreadPartialReason = "limit" | "time_budget" | "folder_error" | "candidates" | "rate_limited";
 
 export interface ThreadResult {
   thread_key: string;
   messages: ThreadRow[];
   partial: boolean;
-  partial_reason?: "limit" | "time_budget" | "folder_error" | "candidates";
+  partial_reason?: ThreadPartialReason;
   strategy: ThreadStrategy;
   folders: string[];
 }
@@ -148,6 +226,70 @@ export interface ThreadArgs {
   message_id: string;
   thread_key?: string;
   limit?: number;
+}
+
+/**
+ * What the `thread` op keeps between calls, per isolate: complete IMAP answers
+ * for THREAD_MEMO_MS, and which inboxes must not be searched right now.
+ * One per app (mail/run.ts `MailEnv.threads`); nothing here outlives the isolate.
+ */
+export class ThreadMemory {
+  /** `inbox \0 limit \0 row id` -> the answer that row is part of. */
+  readonly #answers = new Map<string, { result: ThreadResult; at: number }>();
+  readonly #backoff = new Map<string, { until: number; reason: "rate_limited" | "time_budget" }>();
+  hits = 0;
+  private readonly max: number;
+  /** The IMAP call budget; TIME_BUDGET_MS unless a test asks for less. */
+  readonly timeBudgetMs: number;
+
+  constructor(options: { max?: number; timeBudgetMs?: number } = {}) {
+    this.max = options.max ?? 4000;
+    this.timeBudgetMs = options.timeBudgetMs ?? TIME_BUDGET_MS;
+  }
+
+  recall(inboxId: string, anchorId: string, limit: number, now: number): ThreadResult | null {
+    const key = `${inboxId}\u0000${limit}\u0000${anchorId}`;
+    const hit = this.#answers.get(key);
+    if (!hit) return null;
+    if (now - hit.at >= THREAD_MEMO_MS || now < hit.at) {
+      this.#answers.delete(key);
+      return null;
+    }
+    this.hits++;
+    return hit.result;
+  }
+
+  remember(inboxId: string, limit: number, result: ThreadResult, now: number): void {
+    // Only an answer that would come out the same if asked again.
+    if (result.partial && result.partial_reason !== "limit" && result.partial_reason !== "candidates") return;
+    if (this.#answers.size + result.messages.length > this.max) this.#answers.clear();
+    const entry = { result, at: now };
+    for (const row of result.messages) this.#answers.set(`${inboxId}\u0000${limit}\u0000${row.id}`, entry);
+  }
+
+  /** A write op ran on this inbox: flags, folders and ids may all have changed. */
+  forget(inboxId: string): void {
+    const prefix = `${inboxId}\u0000`;
+    for (const key of this.#answers.keys()) if (key.startsWith(prefix)) this.#answers.delete(key);
+  }
+
+  holdOff(inboxId: string, reason: "rate_limited" | "time_budget", now: number, askedMs: number | null = null): void {
+    if (this.#backoff.size > 2000) this.#backoff.clear();
+    // The wait the server named (plus a second), when it named one.
+    const ms = reason === "rate_limited" ? (askedMs !== null ? askedMs + 1000 : RATE_LIMIT_BACKOFF_MS) : SLOW_SEARCH_BACKOFF_MS;
+    this.#backoff.set(inboxId, { until: now + ms, reason });
+  }
+
+  /** Why this inbox must not be searched right now, or null. */
+  heldOff(inboxId: string, now: number): "rate_limited" | "time_budget" | null {
+    const hit = this.#backoff.get(inboxId);
+    if (!hit) return null;
+    if (now >= hit.until) {
+      this.#backoff.delete(inboxId);
+      return null;
+    }
+    return hit.reason;
+  }
 }
 
 function notFound(): ApiError {
@@ -406,41 +548,18 @@ function quoted(value: string): string | null {
   return `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 }
 
-function orChain(terms: string[]): string {
-  return terms.reduce((acc, term) => `OR ${acc} ${term}`);
-}
-
 /**
- * The ids the header search names, most useful first: the anchor's own id, its
- * In-Reply-To, the root, then the newest References. Pure.
+ * The one search a folder is given: `SINCE <date> SUBJECT "<base subject>"`,
+ * or, for an anchor with no usable subject, the date window alone. Pure.
  */
-export function searchIds(own: string, inReplyTo: string, references: string[]): string[] {
-  const out: string[] = [];
-  const add = (id: string | undefined) => {
-    if (id && !out.includes(id) && out.length < MAX_SEARCH_IDS) out.push(id);
-  };
-  add(own);
-  add(inReplyTo);
-  add(references[0]);
-  for (let i = references.length - 1; i > 0; i--) add(references[i]);
-  return out;
-}
-
-/** The UID SEARCH criteria for those ids, or null when none can be searched for. Pure. */
-export function headerSearchCriteria(own: string, inReplyTo: string, references: string[]): string | null {
-  const terms: string[] = [];
-  const root = references[0] || inReplyTo || own;
-  for (const id of searchIds(own, inReplyTo, references)) {
-    const q = quoted(`<${id}>`);
-    if (q === null) continue;
-    // The message itself, wherever it is filed.
-    terms.push(`HEADER Message-ID ${q}`);
-    // Its descendants: every reply to a message lists it in References, and
-    // names it in In-Reply-To when it is the direct parent.
-    if (id === own || id === root || id === inReplyTo) terms.push(`HEADER References ${q}`);
-    if (id === own || id === root) terms.push(`HEADER In-Reply-To ${q}`);
+export function threadSearchCriteria(subject: string, anchorMs: number): { criteria: string; bySubject: boolean } {
+  // Whole code points: a surrogate pair is never cut in half.
+  const base = [...baseSubject(subject)].slice(0, MAX_SUBJECT_SEARCH_CHARS).join("").trim();
+  const q = base ? quoted(base) : null;
+  if (q !== null) {
+    return { criteria: `SINCE ${imapDate(anchorMs - SEARCH_WINDOW_DAYS * 86_400_000)} SUBJECT ${q}`, bySubject: true };
   }
-  return terms.length > 0 ? orChain(terms) : null;
+  return { criteria: `SINCE ${imapDate(anchorMs - EMPTY_SUBJECT_WINDOW_DAYS * 86_400_000)}`, bySubject: false };
 }
 
 interface Linked {
@@ -459,7 +578,10 @@ function linksOf(summary: ImapMessageSummary): Linked {
 
 /**
  * Of `candidates`, the ones the headers link to `known`, transitively. Every
- * kept message's ids are added to `known`. Pure apart from that.
+ * kept message's ids are added to `known`, so this walks the reply graph in
+ * both directions from whatever `known` starts as: a candidate that names a
+ * known id is a descendant (or a sibling under a known ancestor), and a
+ * candidate whose own id is known is an ancestor. Pure apart from `known`.
  */
 export function keepLinked<T>(candidates: T[], links: (candidate: T) => Linked, known: Set<string>): T[] {
   const kept: T[] = [];
@@ -486,11 +608,12 @@ export function keepLinked<T>(candidates: T[], links: (candidate: T) => Linked, 
   }
 }
 
-function imapRow(folder: string, s: ImapMessageSummary): ThreadRow {
+/** `idFolder` is where the UID lives; `as` overrides what the row says about itself. */
+function imapRow(idFolder: string, s: ImapMessageSummary, as: { folder?: string; threadKey?: string } = {}): ThreadRow {
   const l = linksOf(s);
   const from = s.envelope.from[0] ?? { name: "", email: "" };
   const row = {
-    id: `${folder}:${s.uid}`,
+    id: `${idFolder}:${s.uid}`,
     from: { name: decodeEncodedWords(from.name), email: from.email },
     to: s.envelope.to.map((a) => ({ name: decodeEncodedWords(a.name), email: a.email })),
     subject: decodeEncodedWords(s.envelope.subject),
@@ -499,13 +622,13 @@ function imapRow(folder: string, s: ImapMessageSummary): ThreadRow {
     is_read: s.flags.includes("\\Seen"),
     is_flagged: s.flags.includes("\\Flagged"),
     has_attachments: s.hasAttachments,
-    folder,
+    folder: as.folder ?? idFolder,
     thread_id: String(s.uid),
     message_id_header: l.own || null,
     in_reply_to: l.inReplyTo || null,
     references: l.references.length <= 10 ? l.references : [l.references[0], ...l.references.slice(-9)],
   };
-  return { ...row, thread_key: threadKeyOf(row, "imap") };
+  return { ...row, thread_key: as.threadKey ?? threadKeyOf(row, "imap") };
 }
 
 function decodeImapId(id: string): { folder: string; uid: number } {
@@ -525,16 +648,73 @@ function isFatal(error: unknown): boolean {
     (error instanceof Error && error.name === "ImapPoolBusyError");
 }
 
+/**
+ * Runs `work` so that the IMAP connection it opens is the inbox's SECOND
+ * pooled connection (mail/run.ts gives it its own pool scope). Only the Gmail
+ * path uses it, for All Mail. The default runs `work` as it is: same
+ * connection, one step after the other.
+ */
+export type Aside = <T>(work: () => Promise<T>) => Promise<T>;
+
+class TimeBudgetError extends Error {
+  constructor() {
+    super("thread_time_budget");
+    this.name = "TimeBudgetError";
+  }
+}
+
+/** `work`, or a TimeBudgetError after `ms`. The work is abandoned, not cancelled. */
+function within<T>(work: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new TimeBudgetError()), Math.max(1, ms));
+  });
+  // The loser of the race still settles; its rejection is nobody's to handle.
+  work.catch(() => {});
+  return Promise.race([work, timeout]).finally(() => clearTimeout(timer));
+}
+
+/** A server's refusal text for a log line: no quoted operand, bounded. */
+function refusalForLog(error: unknown): string {
+  const text = error instanceof Error ? error.message : "";
+  return text.replace(/"(?:[^"\\]|\\.)*"/g, '""').replace(/\{\d+\}.*/s, "{}").slice(0, 120);
+}
+
+const sameFolder = (a: string, b: string): boolean =>
+  a === b || (a.toUpperCase() === "INBOX" && b.toUpperCase() === "INBOX");
+
+/** Gmail labels of a summary, lower-cased (`\\inbox`, `\\sent`, `\\draft`, user labels). */
+function gmailLabelSet(s: ImapMessageSummary): Set<string> {
+  return new Set((s.gmLabels ?? []).map((label) => label.toLowerCase()));
+}
+
+function isGmailDraft(s: ImapMessageSummary): boolean {
+  const labels = gmailLabelSet(s);
+  return labels.has("\\draft") || labels.has("\\drafts") || s.flags.includes("\\Draft");
+}
+
+interface Candidate {
+  folder: string;
+  summary: ImapMessageSummary;
+  hasPreview: boolean;
+}
+
 async function imapThread(
   mcp: McpSeam,
   inbox: InboxRow,
   args: ThreadArgs,
   limit: number,
   clock: () => number,
+  memory: ThreadMemory,
+  aside: Aside,
 ): Promise<ThreadResult> {
   const anchor = decodeImapId(args.message_id);
   if (!Number.isInteger(anchor.uid) || anchor.uid <= 0) throw notFound();
+  const remembered = memory.recall(inbox.id, args.message_id, limit, clock());
+  if (remembered) return remembered;
+
   const started = clock();
+  const remaining = () => memory.timeBudgetMs - (clock() - started);
   /** One step on the pooled connection, which goes back to the pool after it. */
   const step = async <T>(work: (session: ImapSessionLike) => Promise<T>): Promise<T> => {
     const session = mcp.imapSessionFor(inbox);
@@ -545,110 +725,335 @@ async function imapThread(
       await session.close().catch(() => {});
     }
   };
-  // 1. The anchor: its ids are what the thread is searched by.
-  const anchorSummary = await step(async (session) => {
-    let client;
+
+  /** Why no further search may be sent on this call, once one was throttled or outran the budget. */
+  let stopped: "rate_limited" | "time_budget" | null = memory.heldOff(inbox.id, clock());
+  let reason: ThreadPartialReason | undefined = stopped ?? undefined;
+
+  /**
+   * One UID SEARCH, raced against the budget. Null when it was throttled or
+   * outlived the budget: `stopped` then says which, and (for the budget) the
+   * connection is still busy with it, so NOTHING more may be sent on it.
+   */
+  const search = async (client: ImapStatusClient, criteria: string): Promise<number[] | null> => {
+    if (stopped) return null;
+    const left = remaining();
+    try {
+      if (left <= 0) throw new TimeBudgetError();
+      return await within(client.uidSearch(criteria), left);
+    } catch (error) {
+      if (error instanceof TimeBudgetError) stopped = "time_budget";
+      else if (isSearchThrottle(error)) {
+        stopped = "rate_limited";
+        console.warn("[client-api] thread_search_throttled", { inbox_id: inbox.id, refusal: refusalForLog(error) });
+      } else throw error;
+      memory.holdOff(inbox.id, stopped, clock(), searchThrottleWaitMs(error));
+      reason = stopped;
+      return null;
+    }
+  };
+
+  const rows = new Map<string, ThreadRow>();
+  const searched: string[] = [];
+  const candidates: Candidate[] = [];
+  let folders: string[] = [anchor.folder];
+  let criteria: { criteria: string; bySubject: boolean } | null = null;
+
+  /** SELECT, the one search, the one FETCH of its candidates. False when no search could be sent. */
+  const searchFolder = async (session: ImapSessionLike, folder: string): Promise<boolean> => {
+    const selected = await session.select(imapMailboxForServerFolder(folder));
+    const hits = await search(selected, criteria!.criteria);
+    if (hits === null) return false;
+    let uids = hits.sort((a, b) => b - a);
+    if (uids.length > MAX_CANDIDATES) {
+      uids = uids.slice(0, MAX_CANDIDATES);
+      reason ??= "candidates";
+    }
+    const wanted = uids.filter((uid) => !(sameFolder(folder, anchor.folder) && uid === anchor.uid));
+    const hasPreview = wanted.length <= INLINE_PREVIEW_CANDIDATES;
+    if (wanted.length > 0) {
+      for (const summary of await selected.fetchSummaries(wanted, { includePreview: hasPreview })) {
+        candidates.push({ folder, summary, hasPreview });
+      }
+    }
+    searched.push(folder);
+    return true;
+  };
+
+  // ── Gmail over IMAP: state filled in by step 1 ──
+  interface GmailState {
+    threadId: string;
+    key: string;
+    allMail: string | null;
+    sent: string | null;
+    /** X-GM-MSGIDs already answered (or skipped as drafts). */
+    seen: Set<string>;
+    /** Hits of the thread search in the anchor's folder, or -1 when it did not run. */
+    anchorFolderHits: number;
+    /** Every message of the anchor's folder is also in All Mail (false for Trash and Spam). */
+    anchorFolderInAllMail: boolean;
+  }
+  let gmail: GmailState | null = null;
+  /** Step 1 found a Gmail server but could not get as far as the anchor's row. */
+  let gmailAnchorMissing = false;
+  const gmailRow = (idFolder: string, s: ImapMessageSummary, fromAllMail: boolean): ThreadRow => {
+    const labels = gmailLabelSet(s);
+    const folder = !fromAllMail
+      ? idFolder
+      : labels.has("\\inbox")
+      ? "INBOX"
+      : labels.has("\\sent")
+      ? gmail!.sent ?? idFolder
+      : idFolder;
+    return imapRow(idFolder, s, { folder, threadKey: gmail!.key });
+  };
+  /** Rows for these summaries of one folder; the anchor is always kept. */
+  const gmailTake = (folder: string, summaries: ImapMessageSummary[], fromAllMail: boolean): void => {
+    for (const s of summaries) {
+      const isAnchor = !fromAllMail && s.uid === anchor.uid;
+      // Only what Gmail says is this thread, whatever the search returned.
+      if (s.gmThreadId !== gmail!.threadId) continue;
+      // The same message under another label: the first id stands.
+      if (s.gmMessageId) {
+        if (gmail!.seen.has(s.gmMessageId)) continue;
+        gmail!.seen.add(s.gmMessageId);
+      }
+      if (isGmailDraft(s) && !isAnchor) continue;
+      const row = gmailRow(folder, s, fromAllMail);
+      rows.set(row.id, row);
+      if (isAnchor) {
+        anchorRow = row;
+        links = linksOf(s);
+      }
+    }
+  };
+  const capped = (hits: number[]): number[] => {
+    const uids = hits.sort((a, b) => b - a);
+    if (uids.length <= MAX_THREAD_LIMIT) return uids;
+    reason ??= "limit";
+    return uids.slice(0, MAX_THREAD_LIMIT);
+  };
+  /** All Mail: one search; a fetch only for what the anchor's folder did not already answer. */
+  const gmailAllMail = async (session: ImapSessionLike, folder: string): Promise<void> => {
+    const selected = await session.select(imapMailboxForServerFolder(folder));
+    const hits = await search(selected, `X-GM-THRID ${gmail!.threadId}`);
+    if (hits === null) return;
+    await gmailAllMailHits(selected, folder, hits);
+  };
+  const gmailAllMailHits = async (selected: ImapStatusClient, folder: string, hits: number[]): Promise<void> => {
+    searched.push(folder);
+    // The anchor's folder is a label: its messages are a subset of All Mail's.
+    // The same number of hits is therefore the same messages, and nothing is fetched.
+    if (gmail!.anchorFolderInAllMail && hits.length === gmail!.anchorFolderHits) return;
+    let wanted = capped(hits);
+    if (wanted.length > GMAIL_PROBE_OVER) {
+      // A long thread: ask which of them are new before fetching envelopes and previews.
+      const known = gmail!.seen;
+      wanted = (await selected.fetchGmailIds(wanted)).filter((m) => !m.messageId || !known.has(m.messageId)).map((m) => m.uid);
+    }
+    if (wanted.length > 0) gmailTake(folder, await selected.fetchSummaries(wanted, { gmailLabels: true }), true);
+  };
+
+  // 1. The anchor, and its own folder's search, in one lease.
+  let anchorRow: ThreadRow | null = null;
+  let links: Linked = { own: "", inReplyTo: "", references: [] };
+  const first = step(async (session) => {
+    let client: ImapStatusClient;
     try {
       client = await session.select(imapMailboxForServerFolder(anchor.folder));
     } catch (error) {
       if (isFatal(error)) throw error;
       throw notFound();
     }
-    return (await client.fetchSummaries([anchor.uid]))[0];
-  });
-  if (!anchorSummary) throw notFound();
-  const anchorRow = imapRow(anchor.folder, anchorSummary);
-  const links = linksOf(anchorSummary);
-  const criteria = headerSearchCriteria(links.own, links.inReplyTo, links.references);
-  if (criteria === null) {
-    // No Message-ID, no In-Reply-To, no References: nothing can link to it.
-    return finish([anchorRow], limit, { thread_key: anchorRow.thread_key, strategy: "single", folders: [anchor.folder] });
-  }
 
-  // 2. The folders, the anchor's own first. An alias this mailbox does not
-  //    have (no Archive) is simply not searched.
-  const folders: string[] = [anchor.folder];
-  await step(async (session) => {
-    for (const alias of ["inbox", "sent", "archive"]) {
-      if (folders.length >= MAX_FOLDERS) break;
-      try {
-        const id = await mcp.resolveFolderId(inbox, alias, { strict: true, forRead: true, session });
-        if (!folders.some((f) => f === id || (f.toUpperCase() === "INBOX" && id.toUpperCase() === "INBOX"))) folders.push(id);
-      } catch (error) {
-        if (isFatal(error)) throw error;
+    if (client.hasCapability("X-GM-EXT-1") && !stopped) {
+      // The key the row carried names the thread: search first, and the anchor
+      // comes back in the ONE fetch with the rest. No key, or one the anchor is
+      // not part of: the anchor says which thread it is in.
+      let threadId = /^g:([1-9]\d{0,23})$/.exec(args.thread_key ?? "")?.[1] ?? "";
+      let hits: number[] | null = threadId ? await search(client, `X-GM-THRID ${threadId}`) : [];
+      if (hits !== null && !hits.includes(anchor.uid)) {
+        const own = (await client.fetchGmailIds([anchor.uid]))[0];
+        if (!own) throw notFound();
+        threadId = /^[1-9]\d{0,23}$/.test(own.threadId) ? own.threadId : "";
+        hits = threadId ? await search(client, `X-GM-THRID ${threadId}`) : [];
       }
+      if (threadId) {
+        gmail = { threadId, key: `g:${threadId}`, allMail: null, sent: null, seen: new Set(), anchorFolderHits: -1, anchorFolderInAllMail: true };
+        if (hits === null) {
+          // Throttled, or still running past the budget: nothing more on this lease.
+          gmailAnchorMissing = true;
+          return;
+        }
+        gmail.anchorFolderHits = hits.length;
+        const uids = capped(hits);
+        if (!uids.includes(anchor.uid)) uids.push(anchor.uid);
+        gmailTake(anchor.folder, await client.fetchSummaries(uids, { gmailLabels: true }), false);
+        if (anchorRow === null) throw notFound();
+        searched.push(anchor.folder);
+        try {
+          for (const box of await client.listMailboxes()) {
+            const flags = box.flags.map((flag) => flag.toLowerCase());
+            if (flags.includes("\\all")) gmail.allMail = box.name;
+            if (flags.includes("\\sent")) gmail.sent = box.name;
+            if (sameFolder(box.name, anchor.folder) && (flags.includes("\\trash") || flags.includes("\\junk"))) {
+              gmail.anchorFolderInAllMail = false;
+            }
+          }
+        } catch (error) {
+          if (isFatal(error)) throw error;
+          reason ??= "folder_error";
+        }
+        return;
+      }
+      // X-GM-EXT-1 without a usable thread id: thread it like any other server.
+    }
+
+    // On Gmail (held off: no search may be sent) the same FETCH carries
+    // X-GM-THRID; every other server is asked for exactly what a list row asks for.
+    const anchorSummary = (await client.fetchSummaries([anchor.uid], { gmailLabels: true }))[0];
+    if (!anchorSummary) throw notFound();
+    links = linksOf(anchorSummary);
+    const heldGmailId = client.hasCapability("X-GM-EXT-1") ? anchorSummary.gmThreadId ?? "" : "";
+    if (/^[1-9]\d{0,23}$/.test(heldGmailId)) {
+      gmail = { threadId: heldGmailId, key: `g:${heldGmailId}`, allMail: null, sent: null, seen: new Set(), anchorFolderHits: -1, anchorFolderInAllMail: true };
+      gmailTake(anchor.folder, [anchorSummary], false);
+      return;
+    }
+
+    anchorRow = imapRow(anchor.folder, anchorSummary);
+    rows.set(anchorRow.id, anchorRow);
+    // No Message-ID, no In-Reply-To, no References: nothing can link to it.
+    if (!links.own && !links.inReplyTo && links.references.length === 0) return;
+    if (stopped) return;
+    const anchorMs = Date.parse(anchorRow.date);
+    criteria = threadSearchCriteria(anchorRow.subject, Number.isFinite(anchorMs) ? anchorMs : clock());
+    try {
+      // The other folders: Sent first (a reply of one's own is the message most
+      // often missing from the list the person is looking at). An alias this
+      // mailbox does not have (no Archive) is simply not searched.
+      for (const alias of ["sent", "inbox", "archive"]) {
+        if (folders.length >= MAX_FOLDERS) break;
+        try {
+          const id = await mcp.resolveFolderId(inbox, alias, { strict: true, forRead: true, session });
+          if (!folders.some((f) => sameFolder(f, id))) folders = [...folders, id];
+        } catch (error) {
+          if (isFatal(error)) throw error;
+        }
+      }
+      await searchFolder(session, anchor.folder);
+    } catch (error) {
+      if (isFatal(error)) throw error;
+      reason ??= "folder_error";
     }
   });
 
-  const known = new Set<string>([links.own, links.inReplyTo, ...links.references].filter(Boolean));
-  // The subject as text (the row's, decoded from RFC 2047 or raw 8-bit octets),
-  // in the sender's case. `uidSearch` sends anything outside ASCII as a UTF-8
-  // literal under `CHARSET UTF-8` (imap-client.ts), never as raw command octets.
-  const subject = baseSubject(anchorRow.subject);
-  const anchorMs = Date.parse(anchorRow.date);
-  const since = imapDate((Number.isFinite(anchorMs) ? anchorMs : clock()) - FALLBACK_WINDOW_DAYS * 86_400_000);
-  const subjectQuoted = subject ? quoted(subject) : null;
+  // Gmail over IMAP, AT THE SAME TIME, on the inbox's second pooled connection
+  // (`aside`), which stays parked on All Mail between calls: measured live, the
+  // SELECT back and forth between the Inbox and All Mail on one connection was
+  // 600 to 1100 ms of a 1.2 to 1.9 s call. Started only when the row's key
+  // names a Gmail thread; the fetch waits for the anchor's folder, because
+  // that decides what is still missing.
+  const keyThreadId = /^g:([1-9]\d{0,23})$/.exec(args.thread_key ?? "")?.[1] ?? "";
+  let allMailDone = false;
+  let asideFatal: unknown = null;
+  const speculative = keyThreadId && !stopped
+    ? aside(() =>
+      step(async (session) => {
+        const client = await session.client();
+        if (!client.hasCapability("X-GM-EXT-1")) return;
+        let allMail: string | null = null;
+        for (const box of await client.listMailboxes()) {
+          if (box.flags.some((flag) => flag.toLowerCase() === "\\all")) allMail = box.name;
+        }
+        if (allMail === null || sameFolder(allMail, anchor.folder)) return;
+        const selected = await session.select(imapMailboxForServerFolder(allMail));
+        let hits = await search(selected, `X-GM-THRID ${keyThreadId}`);
+        await first.catch(() => {});
+        const state = gmail as GmailState | null;
+        if (!state || gmailAnchorMissing || anchorRow === null) return;
+        // The key named another thread than the anchor's: ask again for the right one.
+        if (state.threadId !== keyThreadId) hits = await search(selected, `X-GM-THRID ${state.threadId}`);
+        if (hits === null) return;
+        await gmailAllMailHits(selected, allMail, hits);
+        allMailDone = true;
+      })
+    ).catch((error) => {
+      if (isFatal(error)) asideFatal = error;
+      // Anything else: the sequential pass below tries All Mail once more.
+    })
+    : null;
+  try {
+    await first;
+  } finally {
+    if (speculative) await speculative;
+  }
+  if (asideFatal && !(asideFatal instanceof ApiError)) throw asideFatal;
 
-  const rows = new Map<string, ThreadRow>([[anchorRow.id, anchorRow]]);
-  const seenMessageIds = new Set<string>(links.own ? [links.own] : []);
-  const searched: string[] = [];
-  let fallback = false;
-  let reason: ThreadResult["partial_reason"];
+  // ── Gmail over IMAP: All Mail holds the rest ──
+  const gm = gmail as GmailState | null;
+  if (gm) {
+    if (gmailAnchorMissing) {
+      // The first search was throttled or outran the budget before the anchor
+      // was read: the anchor alone, on a fresh lease (the other is still busy).
+      await step(async (session) => {
+        const client = await session.select(imapMailboxForServerFolder(anchor.folder));
+        const summary = (await client.fetchSummaries([anchor.uid], { gmailLabels: true }))[0];
+        if (!summary) throw notFound();
+        if (summary.gmThreadId) {
+          gm.threadId = summary.gmThreadId;
+          gm.key = `g:${summary.gmThreadId}`;
+        }
+        gmailTake(anchor.folder, [summary], false);
+      });
+    }
+    const gmailAnchor = anchorRow as ThreadRow | null;
+    if (!gmailAnchor) throw notFound();
+    if (!stopped && !allMailDone) {
+      if (gm.allMail === null) reason ??= "folder_error";
+      else if (!sameFolder(gm.allMail, anchor.folder)) {
+        try {
+          await aside(() => step((session) => gmailAllMail(session, gm.allMail!)));
+        } catch (error) {
+          if (isFatal(error)) throw error;
+          reason ??= "folder_error";
+        }
+      }
+    }
+    const result = finish([...rows.values()], limit, {
+      thread_key: gm.key,
+      strategy: "imap_gmail_thrid",
+      folders: searched,
+      partial_reason: reason,
+    });
+    memory.remember(inbox.id, limit, result, clock());
+    return result;
+  }
+  const anchored = anchorRow as ThreadRow | null;
+  if (!anchored) throw notFound();
 
-  for (const folder of folders) {
-    if (clock() - started > TIME_BUDGET_MS) {
+  if (criteria === null) {
+    // A conversation of one, or an inbox that must not be searched right now.
+    const result = finish([anchored], limit, {
+      thread_key: anchored.thread_key,
+      strategy: stopped ? "imap_subject_search" : "single",
+      folders: stopped ? [] : [anchor.folder],
+      partial_reason: reason,
+    });
+    memory.remember(inbox.id, limit, result, clock());
+    return result;
+  }
+  const strategy: ThreadStrategy = (criteria as { bySubject: boolean }).bySubject ? "imap_subject_search" : "imap_window_scan";
+
+  // 2. The other folders, one lease each.
+  for (const folder of folders.slice(1)) {
+    if (stopped) break;
+    if (remaining() <= 0) {
       reason = "time_budget";
       break;
     }
     try {
-      await step(async (session) => {
-        const selected = await session.select(imapMailboxForServerFolder(folder));
-        let uids: number[] = [];
-        if (!fallback) {
-          uids = await selected.uidSearch(criteria);
-          // The anchor matches `HEADER Message-ID <own>` in its own folder. A
-          // server that does not return it does not search headers at all.
-          if (folder === anchor.folder && links.own && !uids.includes(anchor.uid)) fallback = true;
-        }
-        let summaries: ImapMessageSummary[];
-        if (fallback) {
-          if (subjectQuoted === null) {
-            searched.push(folder);
-            return;
-          }
-          uids = await selected.uidSearch(`SUBJECT ${subjectQuoted} SINCE ${since}`);
-          uids.sort((a, b) => b - a);
-          if (uids.length > MAX_FALLBACK_CANDIDATES) {
-            uids = uids.slice(0, MAX_FALLBACK_CANDIDATES);
-            reason ??= "candidates";
-          }
-          const wanted = uids.filter((uid) => !(folder === anchor.folder && uid === anchor.uid));
-          const candidates = wanted.length > 0 ? await selected.fetchSummaries(wanted, { includePreview: false }) : [];
-          const linked = keepLinked(candidates, linksOf, known);
-          // Previews only for what is kept: a second, small FETCH.
-          summaries = linked.length > 0 ? await selected.fetchSummaries(linked.map((s) => s.uid)) : [];
-        } else {
-          uids.sort((a, b) => b - a);
-          if (uids.length > MAX_THREAD_LIMIT) {
-            uids = uids.slice(0, MAX_THREAD_LIMIT);
-            reason ??= "limit";
-          }
-          const wanted = uids.filter((uid) => !(folder === anchor.folder && uid === anchor.uid));
-          const fetched = wanted.length > 0 ? await selected.fetchSummaries(wanted) : [];
-          summaries = keepLinked(fetched, linksOf, known);
-        }
-        for (const summary of summaries) {
-          const row = imapRow(folder, summary);
-          if (rows.has(row.id)) continue;
-          // The same message filed in a second folder: the first one stands.
-          if (row.message_id_header) {
-            if (seenMessageIds.has(row.message_id_header)) continue;
-            seenMessageIds.add(row.message_id_header);
-          }
-          rows.set(row.id, row);
-        }
-        searched.push(folder);
-      });
+      await step((session) => searchFolder(session, folder));
     } catch (error) {
       if (isFatal(error)) throw error;
       // This folder could not be searched (a SELECT or SEARCH the server
@@ -657,12 +1062,47 @@ async function imapThread(
     }
   }
 
-  return finish([...rows.values()], limit, {
-    thread_key: anchorRow.thread_key,
-    strategy: fallback ? "imap_subject_fallback" : "imap_header_search",
+  // 3. Membership: reachable from the anchor through the ids, across folders.
+  const known = new Set<string>([links.own, links.inReplyTo, ...links.references].filter(Boolean));
+  const kept = keepLinked(candidates, (c) => linksOf(c.summary), known);
+
+  // 4. Previews for kept rows whose candidates were fetched without one.
+  const bare = new Map<string, Candidate[]>();
+  for (const c of kept) if (!c.hasPreview) bare.set(c.folder, [...(bare.get(c.folder) ?? []), c]);
+  for (const [folder, list] of bare) {
+    if (stopped === "time_budget" || remaining() <= 0) break;
+    try {
+      await step(async (session) => {
+        const selected = await session.select(imapMailboxForServerFolder(folder));
+        const full = new Map((await selected.fetchSummaries(list.map((c) => c.summary.uid))).map((s) => [s.uid, s]));
+        for (const c of list) c.summary = full.get(c.summary.uid) ?? c.summary;
+      });
+    } catch (error) {
+      if (isFatal(error)) throw error;
+      // The rows stand, without a preview.
+    }
+  }
+
+  const seenMessageIds = new Set<string>(links.own ? [links.own] : []);
+  for (const c of kept) {
+    const row = imapRow(c.folder, c.summary);
+    if (rows.has(row.id)) continue;
+    // The same message filed in a second folder: the first one stands.
+    if (row.message_id_header) {
+      if (seenMessageIds.has(row.message_id_header)) continue;
+      seenMessageIds.add(row.message_id_header);
+    }
+    rows.set(row.id, row);
+  }
+
+  const result = finish([...rows.values()], limit, {
+    thread_key: anchored.thread_key,
+    strategy,
     folders: searched,
     partial_reason: reason,
   });
+  memory.remember(inbox.id, limit, result, clock());
+  return result;
 }
 
 /** Must be called inside `firstPartyContext.run` with `threadHeaders` set. */
@@ -672,6 +1112,8 @@ export async function mailThread(
   inboxId: string,
   args: ThreadArgs,
   clock: () => number = () => Date.now(),
+  memory: ThreadMemory = new ThreadMemory(),
+  aside: Aside = (work) => work(),
 ): Promise<ThreadResult> {
   const inbox = await mcp.resolveInbox(inboxId, apiKey);
   if (!inbox) throw new ApiError(404, "inbox_not_found", "Inbox not found.", { toolCode: "inbox_not_found" });
@@ -681,7 +1123,7 @@ export async function mailThread(
       ? await gmailThread(mcp, inbox, args, limit)
       : inbox.provider === "outlook"
       ? await outlookThread(mcp, inbox, args, limit, clock())
-      : await imapThread(mcp, inbox, args, limit, clock);
+      : await imapThread(mcp, inbox, args, limit, clock, memory, aside);
   } catch (error) {
     if (error instanceof ApiError) throw error;
     if (isAuthFailure(error)) {

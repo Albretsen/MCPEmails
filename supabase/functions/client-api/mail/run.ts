@@ -21,13 +21,13 @@ import { firstPartyContext, type FirstPartyContext } from "../../mcp-server/firs
 import { buildReplayEnvelope } from "../../mcp-server/idempotency-replay.ts";
 import { settleAfterResponse } from "../../mcp-server/request-pipeline.ts";
 import { ApiError, executorError, forbidden, invalidRequest } from "../errors.ts";
-import { type ImapPool, isLoginRefusal, poolKey, type PoolableClient } from "../imap-pool.ts";
+import { type ImapPool, isLoginRefusal, isSearchThrottle, poolKey, type PoolableClient } from "../imap-pool.ts";
 import type { ApiKeyRow, ExecutorOutcome, InboxRow, McpSeam } from "../seam.ts";
 import { type HealthRow, type InboxHealth, reconnectMessage } from "./health.ts";
 import { type ExecutorCall, OPS, type OpSpec } from "./ops.ts";
 import { withFolderRoles } from "./roles.ts";
 import { mailboxStatus } from "./status.ts";
-import { mailThread, type ThreadArgs } from "./thread.ts";
+import { mailThread, type ThreadArgs, type ThreadMemory } from "./thread.ts";
 import { withThreadKeys } from "./thread-key.ts";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -90,7 +90,35 @@ export interface MailEnv {
    * the assistant): the moment each op reaches the pool.
    */
   arrival?: number;
+  /** What the `thread` op remembers between calls (mail/thread.ts). Absent: nothing is remembered. */
+  threads?: ThreadMemory;
   now?: () => number;
+}
+
+/**
+ * Executors that change nothing in a mailbox. Every other executor may have
+ * changed a flag, a folder or an id, so the `thread` op's remembered answers
+ * for that inbox are dropped when one runs (human or assistant).
+ */
+const READ_ONLY_TOOLS = new Set([
+  "email_list",
+  "email_read",
+  "email_read_batch",
+  "email_search",
+  "email_attachment",
+  "folder_list",
+  "inbox_list",
+  "draft_list",
+  "schedule_list",
+  "signature_get",
+  "contact_search",
+]);
+
+/** The server throttled a search: "slow down", not "broken" (imap-pool.ts `isSearchThrottle`). */
+function isThrottledSearchResult(outcome: ExecutorOutcome): boolean {
+  if (outcome.logErrorCode !== "provider_error") return false;
+  const at = resultText(outcome.result).indexOf("UID SEARCH failed:");
+  return at !== -1 && isSearchThrottle(new Error(resultText(outcome.result).slice(at)));
 }
 
 /**
@@ -121,6 +149,15 @@ export function assertReachable(env: MailEnv, inboxId: string | null): void {
  * `tool_code` are what they always were. Everything else is `executorError`.
  */
 export function mailError(env: MailEnv, inboxId: string | null, outcome: ExecutorOutcome): ApiError {
+  if (isThrottledSearchResult(outcome)) {
+    // Was a 502. The server-authored text is not passed on: it quotes the
+    // mail server's own wording, and all the person needs is "wait a moment".
+    return new ApiError(429, "rate_limited", "The mail server is limiting searches right now. Try again in a moment.", {
+      retryable: true,
+      toolCode: "imap_search_throttled",
+      retryAfter: 15,
+    });
+  }
   if (outcome.logErrorCode !== "auth_failed") return executorError(outcome.logErrorCode, resultText(outcome.result));
   let provider = inboxId ? env.health?.provider(inboxId, env.apiKey.workspace_id) ?? null : null;
   // The row was never seen by this isolate's health map: the tool layer's own
@@ -399,9 +436,11 @@ export async function runExecutor(
 
     const started = performance.now();
     let outcome: ExecutorOutcome | null;
+    const mutates = options.inboxId !== null && !READ_ONLY_TOOLS.has(call.tool);
     try {
       outcome = await env.mcp.dispatchExecutor(call.tool, args, apiKey);
     } catch (error) {
+      if (mutates) env.threads?.forget(options.inboxId!);
       options.timings.providerMs += performance.now() - started;
       // The executor threw past its own error handling. Settle the claim as
       // "unknown": the provider may or may not have acted.
@@ -428,6 +467,8 @@ export async function runExecutor(
       });
     }
     options.timings.providerMs += performance.now() - started;
+    // Whatever the outcome: a failed move may still have moved some.
+    if (mutates) env.threads?.forget(options.inboxId!);
     if (outcome === null) throw invalidRequest(`Unsupported operation '${call.tool}'.`);
 
     if (claim) {
@@ -556,7 +597,30 @@ export async function runMailOp(
       try {
         const result = await firstPartyContext.run(
           context,
-          () => mailThread(env.mcp, env.apiKey, inboxId!, calls[0].args as unknown as ThreadArgs, env.now),
+          () =>
+            mailThread(
+              env.mcp,
+              env.apiKey,
+              inboxId!,
+              calls[0].args as unknown as ThreadArgs,
+              env.now,
+              env.threads,
+              // Gmail over IMAP searches All Mail on a second pooled connection
+              // of this inbox (its own pool scope, so it stays parked there).
+              (work) =>
+                firstPartyContext.run(
+                  firstPartyFor(env, {
+                    scope: `${inboxId!}:all-mail`,
+                    flow: {},
+                    flagged: true,
+                    threads: true,
+                    uidOnly: true,
+                    priority: spec.priority,
+                    timings,
+                  }),
+                  work,
+                ),
+            ),
         );
         return { type: "json", result, timings };
       } finally {

@@ -3,8 +3,9 @@
 
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import { firstPartyContext, messageIdsOf, referencesOfHeaderBlock } from "../../mcp-server/first-party.ts";
-import { type FakeMailbox, type FakeMessage, FakeImapServer } from "../../mcp-server/imap-fake-server.ts";
-import { headerSearchCriteria, imapDate, keepLinked, searchIds } from "../mail/thread.ts";
+import { type FakeMailbox, type FakeMessage, type FakeServerOptions, FakeImapServer } from "../../mcp-server/imap-fake-server.ts";
+import { isSearchThrottle, searchThrottleWaitMs } from "../imap-pool.ts";
+import { imapDate, keepLinked, MAX_CANDIDATES, ThreadMemory, threadSearchCriteria } from "../mail/thread.ts";
 import { normalizeSubject, threadKeyOf } from "../mail/thread-key.ts";
 import { FakeDialPool, harness, imapInbox, INBOX_ID, mcp, realApp } from "./real-seam.ts";
 
@@ -82,17 +83,35 @@ function world(): FakeMailbox[] {
 
 const noHandler: harness.ProviderHandler = (call) => harness.json({ error: `unexpected provider call ${call.url}` }, 500);
 
-async function rig(options: { headerSearchBroken?: boolean; boxes?: FakeMailbox[] } = {}) {
+async function rig(
+  options: {
+    headerSearchBroken?: boolean;
+    boxes?: FakeMailbox[];
+    /** Anything else the fake server models (rate limit, slow search, Migadu's HEADER quirk). */
+    server?: Partial<FakeServerOptions>;
+    advertised?: string[];
+    threads?: ThreadMemory;
+    now?: () => number;
+  } = {},
+) {
   const boxes = options.boxes ?? world();
-  const advertised = ["IMAP4REV1"];
+  const advertised = options.advertised ?? ["IMAP4REV1"];
+  // One options object for every connection: a rate limit counts across them.
+  const shared = { ...(options.server ?? {}) };
   const pool = new FakeDialPool(() =>
-    Object.assign(new FakeImapServer({ mailboxes: boxes, capabilities: advertised, headerSearchBroken: options.headerSearchBroken }), { advertised })
+    Object.assign(
+      new FakeImapServer(Object.assign(shared, { mailboxes: boxes, capabilities: advertised, headerSearchBroken: options.headerSearchBroken })),
+      { advertised },
+    )
   );
-  const app = await realApp({ pool });
+  const app = await realApp({ pool, threads: options.threads, now: options.now });
   const inbox = await imapInbox();
   const run = <T>(body: () => Promise<T>) => harness.runTool(inbox, noHandler, body);
   return { boxes, pool, app, run, inbox };
 }
+
+const ids = (body: { messages: Array<{ id: string }> }) => body.messages.map((m) => m.id);
+const searchesOf = (pool: FakeDialPool) => pool.servers.flatMap((s) => s.commands).filter((c) => /^UID SEARCH/.test(c));
 
 // ── Pure pieces ─────────────────────────────────────────────────────────────
 
@@ -133,16 +152,34 @@ Deno.test("header parsing: ids without brackets; a folded References block", () 
   assertEquals(referencesOfHeaderBlock("\r\n"), []);
 });
 
-Deno.test("search ids and criteria are bounded and quote-safe", () => {
-  const refs = Array.from({ length: 30 }, (_, i) => `r${i}@x`);
-  assertEquals(searchIds("own@x", "r29@x", refs), ["own@x", "r29@x", "r0@x", "r28@x", "r27@x", "r26@x"]);
-  const criteria = headerSearchCriteria("own@x", "p@x", ["root@x", "p@x"])!;
-  assert(criteria.startsWith("OR "));
-  assert(criteria.includes('HEADER Message-ID "<own@x>"') && criteria.includes('HEADER References "<root@x>"'));
+Deno.test("the one search: SINCE + SUBJECT of the base subject, bounded and quote-safe; a date window when there is no subject", () => {
+  const at = Date.UTC(2026, 8, 3, 10);
+  assertEquals(threadSearchCriteria("SV: Re: Fwd: Invoice", at), { criteria: 'SINCE 7-Mar-2026 SUBJECT "Invoice"', bySubject: true });
+  assertEquals(threadSearchCriteria('Re: a "quoted" \\ thing', at).criteria, 'SINCE 7-Mar-2026 SUBJECT "a \\"quoted\\" \\\\ thing"');
+  // Nothing to narrow by: the window alone, and a shorter one.
+  assertEquals(threadSearchCriteria("(no subject)", at), { criteria: "SINCE 4-Aug-2026", bySubject: false });
+  assertEquals(threadSearchCriteria("Re: ", at).bySubject, false);
   // A control character cannot reach a command line.
-  assertEquals(headerSearchCriteria("bad\r\nA1 LOGOUT", "", []), null);
-  assertEquals(headerSearchCriteria('q"uote@x', "", []), 'OR OR HEADER Message-ID "<q\\"uote@x>" HEADER References "<q\\"uote@x>" HEADER In-Reply-To "<q\\"uote@x>"');
+  assertEquals(threadSearchCriteria("bad\u0007subject", at), { criteria: "SINCE 4-Aug-2026", bySubject: false });
+  // A long subject is searched by its start (SUBJECT is a substring match), whole code points only.
+  const long = threadSearchCriteria(`Re: ${"😀".repeat(300)}`, at).criteria;
+  assertEquals(long, `SINCE 7-Mar-2026 SUBJECT "${"😀".repeat(120)}"`);
   assertEquals(imapDate(Date.UTC(2026, 0, 5)), "5-Jan-2026");
+});
+
+Deno.test("isSearchThrottle: a rate-limit NO, and nothing else", () => {
+  assert(isSearchThrottle(new Error("UID SEARCH failed: [LIMIT] Search rate limit exceeded, try again later")));
+  assert(isSearchThrottle(new Error("UID SEARCH failed: Too many requests")));
+  // Migadu, verbatim (live 2026-10-04).
+  const migadu = new Error("UID SEARCH failed: search rate limit exceeded: 60 searches in 1m0s, please wait 12s before trying again");
+  assert(isSearchThrottle(migadu));
+  assertEquals([searchThrottleWaitMs(migadu), searchThrottleWaitMs(new Error("UID SEARCH failed: [LIMIT] slow down")), searchThrottleWaitMs(new Error("nope, wait 5s"))], [12_000, null, null]);
+  assert(isSearchThrottle(new Error("UID SEARCH failed: [UNAVAILABLE] Temporary failure")));
+  assert(!isSearchThrottle(new Error("UID SEARCH failed: [BADCHARSET (US-ASCII)] Unsupported charset")));
+  assert(!isSearchThrottle(new Error("UID SEARCH failed: Unknown argument FOO")));
+  assert(!isSearchThrottle(new Error("UID FETCH failed: [LIMIT] too many")), "only a search");
+  assert(!isSearchThrottle(new Error("IMAP read timeout")));
+  assert(!isSearchThrottle("UID SEARCH failed: [LIMIT]"));
 });
 
 Deno.test("keepLinked is transitive and never links by anything but ids", () => {
@@ -268,7 +305,7 @@ Deno.test("thread (imap): Inbox + Sent + Archive, date ascending, look-alikes le
   assertEquals(value.status, 200, JSON.stringify(value.body));
   const body = value.body;
   assertEquals(body.messages.map((m: { id: string }) => m.id), ["INBOX:1", "Sent:1", "Archive:4", "INBOX:3", "INBOX:6"]);
-  assertEquals([body.partial, body.strategy, body.thread_key], [false, "imap_header_search", "m:root@example.com"]);
+  assertEquals([body.partial, body.strategy, body.thread_key], [false, "imap_subject_search", "m:root@example.com"]);
   assertEquals(body.folders, ["INBOX", "Sent", "Archive"]);
   const sent = body.messages[1];
   assertEquals([sent.folder, sent.is_read, sent.is_flagged, sent.thread_key, sent.from.email], ["Sent", true, false, "m:root@example.com", "owner@example.com"]);
@@ -279,27 +316,245 @@ Deno.test("thread (imap): Inbox + Sent + Archive, date ascending, look-alikes le
   assertEquals(pool.servers.length, 1, "the list's connection, reused");
   const commands = pool.servers[0].commands;
   const afterList = commands.slice(commands.findIndex((c) => /^FETCH 1:5/.test(c)) + 1);
-  assertEquals(afterList.filter((c) => /^UID SEARCH/.test(c)).length, 3, "one search per folder");
-  assert(afterList.filter((c) => /^UID SEARCH/.test(c)).every((c) => /HEADER Message-ID/.test(c)));
-  assert(afterList.filter((c) => /FETCH/.test(c)).length <= 4, "the anchor, then one fetch per folder with hits");
+  assertEquals(afterList.filter((c) => /^UID SEARCH/.test(c)), Array(3).fill('UID SEARCH SINCE 7-Mar-2026 SUBJECT "Invoice"'), "ONE search per folder, the same one");
+  assert(!afterList.some((c) => /HEADER/.test(c) && /SEARCH/.test(c)), "no HEADER search");
+  assertEquals(afterList.filter((c) => /FETCH/.test(c)).length, 4, "the anchor, then ONE fetch per folder");
+  assertEquals(afterList.filter((c) => /^SELECT/.test(c)).length, 2, "Sent and Archive: the anchor's folder is already selected");
   assert(!commands.some((c) => /BODY\.PEEK\[\]/.test(c)), "never a full message");
   await pool.closeAll();
 });
 
-Deno.test("thread (imap): a server whose SEARCH HEADER finds nothing (Migadu) falls back to subject + date, filtered by headers", async () => {
+// ── What Migadu does (live, 2026-10-04) ─────────────────────────────────────
+// `HEADER Message-ID` matches; `HEADER References` / `HEADER In-Reply-To`
+// silently match nothing. The op used to pass its "does header search work"
+// check on such a server and then miss every later reply, `partial: false`.
+
+/** A four-message conversation as a self-send leaves it, plus a same-subject stranger. */
+function selfSent(): FakeMailbox[] {
+  const me = "<owner@example.com>";
+  const chain = (n: number) => Array.from({ length: n }, (_, i) => `t${i}@example.com`);
+  const msg = (uid: number, i: number, subject: string) =>
+    mail(uid, {
+      id: `t${i}@example.com`,
+      subject,
+      from: me,
+      to: me,
+      date: `0${i + 1} Sep 2026 10:00:00 +0000`,
+      inReplyTo: i > 0 ? `t${i - 1}@example.com` : undefined,
+      references: i > 0 ? chain(i) : undefined,
+    });
+  return [
+    {
+      name: "INBOX",
+      attrs: ["\\HasNoChildren"],
+      messages: [
+        msg(11, 0, "Plan"),
+        msg(12, 1, "Re: Plan"),
+        // t2 has NO inbox copy: it exists only in Sent.
+        msg(14, 3, "Re: Plan"),
+        // Same subject, no header in common with the thread.
+        mail(15, { id: "stranger@example.com", subject: "Re: Plan", from: me, to: me, date: "05 Sep 2026 10:00:00 +0000" }),
+      ],
+    },
+    {
+      name: "Sent",
+      attrs: ["\\HasNoChildren", "\\Sent"],
+      messages: [msg(21, 0, "Plan"), msg(22, 1, "Re: Plan"), msg(23, 2, "Re: Plan"), msg(24, 3, "Re: Plan"), mail(25, { id: "stranger@example.com", subject: "Re: Plan", from: me, to: me, date: "05 Sep 2026 10:00:00 +0000" })],
+    },
+  ];
+}
+
+Deno.test("thread (imap, Migadu's HEADER quirk): EVERY anchor returns the whole conversation, the Sent-only reply included, the stranger never", async () => {
+  const anchors = ["INBOX:11", "INBOX:12", "INBOX:14", "Sent:21", "Sent:22", "Sent:23", "Sent:24"];
+  for (const anchor of anchors) {
+    // A fresh app per anchor: nothing is answered from memory.
+    const { app, pool, run } = await rig({ boxes: selfSent(), server: { headerReferencesSearchBroken: true } });
+    const { value } = await run(() => app.mail("thread", { message_id: anchor }));
+    assertEquals(value.status, 200, JSON.stringify(value.body));
+    const body = value.body;
+    assertEquals(body.messages.map((m: { message_id_header: string }) => m.message_id_header), ["t0@example.com", "t1@example.com", "t2@example.com", "t3@example.com"], anchor);
+    assertEquals([body.partial, body.strategy], [false, "imap_subject_search"], anchor);
+    // One row per logical message: the copy in the anchor's folder, else the other folder's.
+    const fromInbox = anchor.startsWith("INBOX");
+    assertEquals(ids(body), fromInbox ? ["INBOX:11", "INBOX:12", "Sent:23", "INBOX:14"] : ["Sent:21", "Sent:22", "Sent:23", "Sent:24"], anchor);
+    assert(ids(body).includes(anchor), "the anchor keeps the id it was asked by");
+    const searches = searchesOf(pool);
+    assertEquals(searches, Array(2).fill('UID SEARCH SINCE ' + imapDate(Date.parse(body.messages.find((m: { id: string }) => m.id === anchor).date) - 180 * 86_400_000) + ' SUBJECT "Plan"'), "one search per folder (Inbox, Sent); no Archive here");
+    await pool.closeAll();
+  }
+});
+
+Deno.test("thread (imap): a server whose SEARCH HEADER finds nothing at all answers the same (no header search is sent)", async () => {
   const { app, pool, run } = await rig({ headerSearchBroken: true });
   const { value } = await run(() => app.mail("thread", { message_id: "INBOX:3" }));
   assertEquals(value.status, 200, JSON.stringify(value.body));
-  // Same answer as the header search: INBOX:5 and Sent:2 share the subject
-  // "Re: Invoice" and are NOT linked by any header, so they stay out.
-  assertEquals(value.body.messages.map((m: { id: string }) => m.id), ["INBOX:1", "Sent:1", "Archive:4", "INBOX:3", "INBOX:6"]);
-  assertEquals([value.body.strategy, value.body.partial], ["imap_subject_fallback", false]);
-  const searches = pool.servers[0].commands.filter((c) => /^UID SEARCH/.test(c));
-  assertEquals(searches[0].includes("HEADER Message-ID"), true, "the header search is tried first, in the anchor's folder");
-  assertEquals(searches.slice(1), Array(3).fill('UID SEARCH SUBJECT "Invoice" SINCE 7-Mar-2026'));
-  // Candidates are fetched without a preview; only the kept ones with.
+  // INBOX:5 and Sent:2 share the subject "Re: Invoice" and are NOT linked by
+  // any header, so they stay out.
+  assertEquals(ids(value.body), ["INBOX:1", "Sent:1", "Archive:4", "INBOX:3", "INBOX:6"]);
+  assertEquals([value.body.strategy, value.body.partial], ["imap_subject_search", false]);
+  assertEquals(searchesOf(pool), Array(3).fill('UID SEARCH SINCE 7-Mar-2026 SUBJECT "Invoice"'));
+  // Few candidates: their preview rides the one FETCH.
   const fetches = pool.servers[0].commands.filter((c) => /^UID FETCH/.test(c));
-  assert(fetches.some((c) => !/BODY\.PEEK\[1\]/.test(c)) && fetches.some((c) => /BODY\.PEEK\[1\]/.test(c)));
+  assertEquals(fetches.length, 4);
+  assert(fetches.every((c) => /BODY\.PEEK\[1\]/.test(c) && /HEADER\.FIELDS \(REFERENCES\)/.test(c)));
+  await pool.closeAll();
+});
+
+Deno.test("thread (imap): the root is gone (deleted, never received): the replies still find each other, in both directions", async () => {
+  const boxes: FakeMailbox[] = [
+    {
+      name: "INBOX",
+      attrs: ["\\HasNoChildren"],
+      messages: [
+        mail(2, { id: "b@example.com", subject: "Re: Offer", date: "02 Sep 2026 10:00:00 +0000", inReplyTo: "gone@example.com", references: ["gone@example.com"] }),
+        // Truncated References: only its parent, which lives in Sent.
+        mail(4, { id: "d@example.com", subject: "RE: Offer", date: "04 Sep 2026 10:00:00 +0000", inReplyTo: "c@example.com", references: ["c@example.com"] }),
+        mail(9, { id: "z@example.com", subject: "Re: Offer", date: "05 Sep 2026 10:00:00 +0000", inReplyTo: "y@example.com", references: ["y@example.com"] }),
+      ],
+    },
+    {
+      name: "Sent",
+      attrs: ["\\HasNoChildren", "\\Sent"],
+      messages: [
+        mail(3, { id: "c@example.com", subject: "Re: Offer", from: "<owner@example.com>", to: "<maya@example.com>", date: "03 Sep 2026 10:00:00 +0000", inReplyTo: "b@example.com", references: ["gone@example.com", "b@example.com"] }),
+      ],
+    },
+  ];
+  for (const anchor of ["INBOX:2", "INBOX:4", "Sent:3"]) {
+    const { app, pool, run } = await rig({ boxes });
+    const { value } = await run(() => app.mail("thread", { message_id: anchor }));
+    assertEquals(value.status, 200, JSON.stringify(value.body));
+    // INBOX:4 links only through Sent:3, a candidate of ANOTHER folder.
+    assertEquals([ids(value.body), value.body.partial], [["INBOX:2", "Sent:3", "INBOX:4"], false], anchor);
+    await pool.closeAll();
+  }
+});
+
+Deno.test("thread (imap): an empty subject scans a date window, still linked by headers only", async () => {
+  const boxes: FakeMailbox[] = [{
+    name: "INBOX",
+    attrs: ["\\HasNoChildren"],
+    messages: [
+      mail(1, { id: "e1@example.com", subject: "", date: "01 Sep 2026 10:00:00 +0000" }),
+      mail(2, { id: "e2@example.com", subject: "Re:", date: "02 Sep 2026 10:00:00 +0000", inReplyTo: "e1@example.com", references: ["e1@example.com"] }),
+      mail(3, { id: "e3@example.com", subject: "", date: "03 Sep 2026 10:00:00 +0000" }),
+      mail(4, { id: "e4@example.com", subject: "Something else", date: "03 Sep 2026 11:00:00 +0000" }),
+    ],
+  }];
+  const { app, pool, run } = await rig({ boxes });
+  const { value } = await run(() => app.mail("thread", { message_id: "INBOX:1" }));
+  assertEquals(value.status, 200, JSON.stringify(value.body));
+  assertEquals([ids(value.body), value.body.partial, value.body.strategy], [["INBOX:1", "INBOX:2"], false, "imap_window_scan"]);
+  assertEquals(searchesOf(pool), ["UID SEARCH SINCE 2-Aug-2026"]);
+  await pool.closeAll();
+});
+
+Deno.test("thread (imap): a subject too generic to narrow by is bounded and says so (partial: candidates)", async () => {
+  const many = Array.from({ length: MAX_CANDIDATES + 30 }, (_, i) =>
+    mail(i + 1, { id: `h${i + 1}@example.com`, subject: "Hello", date: "01 Sep 2026 10:00:00 +0000" }));
+  // The anchor's one real reply is among the newest.
+  many.push(mail(900, { id: "reply@example.com", subject: "Re: Hello", date: "02 Sep 2026 10:00:00 +0000", inReplyTo: "h5@example.com", references: ["h5@example.com"] }));
+  const { app, pool, run } = await rig({ boxes: [{ name: "INBOX", attrs: ["\\HasNoChildren"], messages: many }] });
+  const { value } = await run(() => app.mail("thread", { message_id: "INBOX:5" }));
+  assertEquals(value.status, 200, JSON.stringify(value.body));
+  assertEquals([ids(value.body), value.body.partial, value.body.partial_reason], [["INBOX:5", "INBOX:900"], true, "candidates"]);
+  const fetches = pool.servers[0].commands.filter((c) => /^UID FETCH/.test(c));
+  // The anchor; MAX_CANDIDATES candidates without a preview; the one kept row with.
+  assertEquals(fetches.length, 3);
+  assertEquals(fetches[1].split(" ")[2].split(",").length, MAX_CANDIDATES);
+  assert(!/BODY\.PEEK\[1\]/.test(fetches[1]) && /BODY\.PEEK\[1\]/.test(fetches[2]));
+  assertEquals(fetches[2].split(" ")[2], "900");
+  await pool.closeAll();
+});
+
+// ── Rate limits, the time budget, the memo ──────────────────────────────────
+
+Deno.test("thread (imap): a throttled search answers what was found, partial: rate_limited; the connection is KEPT and the inbox is not searched again for a while", async () => {
+  let skew = 0;
+  const clock = () => Date.now() + skew;
+  // The server allows one search; the second (Sent) is answered NO [LIMIT].
+  const { app, pool, run } = await rig({ server: { searchLimit: 1 }, now: clock });
+  const first = await run(() => app.mail("thread", { message_id: "INBOX:3" }));
+  assertEquals(first.value.status, 200, JSON.stringify(first.value.body));
+  assertEquals([first.value.body.partial, first.value.body.partial_reason], [true, "rate_limited"]);
+  // The anchor's folder was searched before the limit hit.
+  assertEquals(ids(first.value.body), ["INBOX:1", "INBOX:3", "INBOX:6"]);
+  assertEquals(searchesOf(pool).length, 2);
+  assertEquals([pool.servers.length, pool.stats.drops, pool.stats.throttles], [1, 0, 1], "no redial");
+  assert(!pool.servers[0].closed);
+
+  // Inside the back-off: the anchor alone, no search sent, still 200.
+  const second = await run(() => app.mail("thread", { message_id: "INBOX:1" }));
+  assertEquals([second.value.status, ids(second.value.body), second.value.body.partial_reason], [200, ["INBOX:1"], "rate_limited"]);
+  assertEquals(searchesOf(pool).length, 2, "no search during the back-off");
+
+  // The `search` op meets the same limit: 429 rate_limited (was 502), same connection.
+  const search = await run(() => app.mail("search", { subject: "Invoice", limit: 5 }));
+  assertEquals([search.value.status, search.value.body.error.code, search.value.body.error.retryable, search.value.body.error.tool_code], [429, "rate_limited", true, "imap_search_throttled"]);
+  assert(!/LIMIT|UID SEARCH/.test(search.value.body.error.message), "the server's wording is not passed on");
+  assertEquals([pool.servers.length, pool.stats.drops], [1, 0], "still no redial");
+
+  // After the back-off the op searches again (and is throttled again here).
+  skew += 16_000;
+  const third = await run(() => app.mail("thread", { message_id: "INBOX:1" }));
+  assertEquals(third.value.body.partial_reason, "rate_limited");
+  assert(searchesOf(pool).length > 3);
+  assertEquals(pool.servers.length, 1);
+  await pool.closeAll();
+});
+
+Deno.test("thread (imap): a complete answer is remembered: re-opening, or stepping to another message of it, sends nothing; a write forgets it; so does time", async () => {
+  let skew = 0;
+  const clock = () => Date.now() + skew;
+  const threads = new ThreadMemory();
+  const { app, pool, run } = await rig({ threads, now: clock });
+  const count = () => pool.servers.flatMap((s) => s.commands).length;
+  const first = await run(() => app.mail("thread", { message_id: "INBOX:3" }));
+  assertEquals(first.value.status, 200);
+  const after = count();
+  const again = await run(() => app.mail("thread", { message_id: "INBOX:3" }));
+  const other = await run(() => app.mail("thread", { message_id: "Sent:1" }));
+  assertEquals([again.value.body, other.value.body], [first.value.body, first.value.body]);
+  assertEquals([count(), threads.hits], [after, 2], "nothing was sent");
+  // A message that is not part of a remembered answer is asked for.
+  await run(() => app.mail("thread", { message_id: "INBOX:7" }));
+  assert(count() > after);
+
+  // A write on the inbox forgets its answers (a flag changed; an id may have).
+  const flagged = await run(() => app.mail("flag", { message_ids: ["INBOX:1"], read: false }));
+  assertEquals(flagged.value.status, 200, JSON.stringify(flagged.value.body));
+  const before = count();
+  const fresh = await run(() => app.mail("thread", { message_id: "INBOX:3" }));
+  assert(count() > before, "asked again after a write");
+  assertEquals(fresh.value.body.messages.find((m: { id: string }) => m.id === "INBOX:1").is_read, false);
+
+  // And it expires.
+  const idle = count();
+  skew += 46_000;
+  await run(() => app.mail("thread", { message_id: "INBOX:3" }));
+  assert(count() > idle, "asked again after THREAD_MEMO_MS");
+  await pool.closeAll();
+});
+
+Deno.test("thread (imap): a search that outlives the budget is abandoned: the anchor comes back, partial: time_budget, and that inbox is not searched again for a while", async () => {
+  const threads = new ThreadMemory({ timeBudgetMs: 60 });
+  const { app, pool, run } = await rig({ threads, server: { searchDelayMs: 400 } });
+  const started = performance.now();
+  const { value } = await run(() => app.mail("thread", { message_id: "INBOX:3" }));
+  const took = performance.now() - started;
+  assertEquals(value.status, 200, JSON.stringify(value.body));
+  assertEquals([ids(value.body), value.body.partial, value.body.partial_reason], [["INBOX:3"], true, "time_budget"]);
+  assert(took < 350, `answered at the budget, not when the search finished (${took.toFixed(0)} ms)`);
+  assertEquals(searchesOf(pool).length, 1, "one search was sent, none after it");
+  // The connection still owed a reply: it is not reused.
+  assertEquals(pool.stats.drops, 1);
+
+  // Held off: the next call sends no search at all and answers at once.
+  const next = await run(() => app.mail("thread", { message_id: "INBOX:1" }));
+  assertEquals([ids(next.value.body), next.value.body.partial_reason], [["INBOX:1"], "time_budget"]);
+  assertEquals(searchesOf(pool).length, 1);
+  // Let the fake's delayed reply timer run out before the test ends.
+  await new Promise((resolve) => setTimeout(resolve, 450));
   await pool.closeAll();
 });
 
@@ -368,6 +623,244 @@ Deno.test("thread: argument validation, and a viewer may call it (it is a read)"
   const ok = await harness.runTool(await imapInbox(), noHandler, () => viewer.mail("thread", { message_id: "INBOX:3" }));
   assertEquals(ok.value.status, 200);
   await viewerPool.closeAll();
+});
+
+// ── Gmail over IMAP (X-GM-EXT-1) ────────────────────────────────────────────
+
+const GM_CAPS = ["IMAP4REV1", "X-GM-EXT-1", "SPECIAL-USE"];
+const ALL_MAIL = "[Gmail]/All Mail";
+const GM_SENT = "[Gmail]/Sent Mail";
+
+/**
+ * A Gmail mailbox as IMAP shows it: one message per label folder, a different
+ * UID in each, the same X-GM-MSGID. Thread 77 has four messages (two in the
+ * Inbox, one sent, one archived) and a draft; thread 88 shares its subject.
+ */
+function gmailWorld(): FakeMailbox[] {
+  const g = (uid: number, n: number, thread: string, labels: string[], o: Parameters<typeof mail>[1]): FakeMessage => ({
+    ...mail(uid, o),
+    gmThreadId: thread,
+    gmMessageId: String(5000 + n),
+    gmLabels: labels,
+  });
+  const m1 = { id: "g1@example.com", subject: "Roadmap", date: "01 Sep 2026 10:00:00 +0000", seen: true };
+  const m2 = { id: "g2@example.com", subject: "Re: Roadmap", from: "<owner@example.com>", to: "<maya@example.com>", date: "02 Sep 2026 10:00:00 +0000", inReplyTo: "g1@example.com", references: ["g1@example.com"], seen: true };
+  const m3 = { id: "g3@example.com", subject: "Re: Roadmap", date: "03 Sep 2026 10:00:00 +0000", inReplyTo: "g2@example.com", references: ["g1@example.com", "g2@example.com"] };
+  // Archived (no \Inbox), and its headers link to nothing: only Gmail knows it is this thread.
+  const m4 = { id: "g4@example.com", subject: "A new subject", date: "04 Sep 2026 10:00:00 +0000", seen: true };
+  const draft = { id: "g5@example.com", subject: "Re: Roadmap", from: "<owner@example.com>", date: "05 Sep 2026 10:00:00 +0000", inReplyTo: "g3@example.com", references: ["g1@example.com", "g3@example.com"] };
+  const other = { id: "x1@example.com", subject: "Re: Roadmap", from: '"Odd" <odd@example.com>', date: "03 Sep 2026 12:00:00 +0000" };
+  return [
+    {
+      name: "INBOX",
+      attrs: ["\\HasNoChildren"],
+      messages: [g(11, 1, "77", ["\\Important"], m1), g(13, 3, "77", [], m3), g(14, 9, "88", [], other)],
+    },
+    {
+      name: ALL_MAIL,
+      attrs: ["\\HasNoChildren", "\\All"],
+      messages: [
+        g(101, 1, "77", ["\\Inbox", "\\Important"], m1),
+        g(102, 2, "77", ["\\Sent"], m2),
+        g(103, 3, "77", ["\\Inbox"], m3),
+        g(104, 4, "77", ["Projects"], m4),
+        g(105, 5, "77", ["\\Draft"], draft),
+        g(106, 9, "88", ["\\Inbox"], other),
+      ],
+    },
+    { name: GM_SENT, attrs: ["\\HasNoChildren", "\\Sent"], messages: [g(31, 2, "77", [], m2)] },
+    { name: "[Gmail]", attrs: ["\\Noselect", "\\HasChildren"], messages: [] },
+  ];
+}
+
+Deno.test("list (Gmail over IMAP): rows carry g:<X-GM-THRID>, fetched in the SAME list FETCH; the hand-over field is not on the row", async () => {
+  const { app, pool, run } = await rig({ boxes: gmailWorld(), advertised: GM_CAPS });
+  const { value } = await run(() => app.mail("list", { folder: "inbox", limit: 10 }));
+  assertEquals(value.status, 200, JSON.stringify(value.body));
+  const rows = value.body.messages as Array<Record<string, unknown>>;
+  assertEquals(rows.map((r) => [r["id"], r["thread_key"]]), [["INBOX:14", "g:88"], ["INBOX:13", "g:77"], ["INBOX:11", "g:77"]]);
+  assert(rows.every((r) => !("gm_thread_id" in r)));
+  assertEquals(Object.keys(rows[0]).slice(-5), ["is_flagged", "message_id_header", "in_reply_to", "references", "thread_key"]);
+  const fetches = pool.servers[0].commands.filter((c) => /FETCH/.test(c));
+  assertEquals(fetches.length, 1, "no extra round trip");
+  assert(/^FETCH 1:3 \(UID FLAGS ENVELOPE BODYSTRUCTURE BODY\.PEEK\[1\]<0\.\d+> BODY\.PEEK\[HEADER\.FIELDS \(REFERENCES\)\] X-GM-THRID X-GM-MSGID\)$/.test(fetches[0]), fetches[0]);
+  await pool.closeAll();
+});
+
+Deno.test("MCP on a Gmail-over-IMAP server: the list FETCH command and the summary keys are unchanged (no X-GM item)", async () => {
+  const server = new FakeImapServer({ mailboxes: gmailWorld(), capabilities: GM_CAPS });
+  const client = server.client();
+  (client as unknown as { capabilities: Set<string> }).capabilities = new Set(GM_CAPS);
+  assertEquals(firstPartyContext.getStore(), undefined);
+  await client.selectMailbox("INBOX");
+  const bySequence = await client.fetchSummariesBySequence(1, 3);
+  assertEquals(server.commands.at(-1), "FETCH 1:3 (UID FLAGS ENVELOPE BODYSTRUCTURE BODY.PEEK[1]<0.2048>)");
+  const byUid = await client.fetchSummaries([11, 13]);
+  assertEquals(server.commands.at(-1), "UID FETCH 11,13 (UID FLAGS ENVELOPE BODYSTRUCTURE BODY.PEEK[1]<0.2048>)");
+  // Even a caller that asks for labels gets nothing outside the first-party context.
+  await client.fetchSummaries([11], { gmailLabels: true });
+  assertEquals(server.commands.at(-1), "UID FETCH 11 (UID FLAGS ENVELOPE BODYSTRUCTURE BODY.PEEK[1]<0.2048>)");
+  for (const s of [...bySequence!, ...byUid]) assertEquals(Object.keys(s), ["uid", "flags", "envelope", "hasAttachments", "preview"]);
+
+  // And through the real MCP entry point: the row has the keys it always had.
+  const inbox = await imapInbox();
+  let mcpServer: FakeImapServer | null = null;
+  const viaMcp = await harness.runTool(inbox, noHandler, () =>
+    firstPartyContext.run(
+      // ONLY the dial is replaced (there is no socket in a test); no first-party option is set.
+      { imapConnect: <C>() => {
+        mcpServer = new FakeImapServer({ mailboxes: gmailWorld(), capabilities: GM_CAPS });
+        const c = mcpServer.client();
+        (c as unknown as { capabilities: Set<string> }).capabilities = new Set(GM_CAPS);
+        return Promise.resolve(c as unknown as C);
+      } },
+      () =>
+        mcp.handleToolsCall(
+          { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "email_read", arguments: { action: "list", inbox_id: INBOX_ID, folder: "inbox", limit: 5 } } },
+          1,
+          { ...harness.API_KEY, scopes: ["read:email", "search:email"] },
+          { ipAddress: null, userAgent: "thread-test" },
+        ) as Promise<{ result?: { structuredContent?: { messages: Record<string, unknown>[] } } }>,
+    ));
+  const mcpRows = viaMcp.value.result!.structuredContent!.messages;
+  assertEquals(mcpRows.length, 3);
+  for (const key of ["gm_thread_id", "thread_key", "message_id_header", "in_reply_to", "references", "is_flagged"]) assert(!(key in mcpRows[0]), key);
+  assertEquals(mcpRows[0]["thread_id"], "14");
+  const mcpFetches = mcpServer!.commands.filter((c: string) => /FETCH/.test(c));
+  assertEquals(mcpFetches, ["FETCH 1:3 (UID FLAGS ENVELOPE BODYSTRUCTURE BODY.PEEK[1]<0.2048>)"]);
+});
+
+Deno.test("thread (Gmail over IMAP): X-GM-THRID decides; one search and one fetch per folder (the anchor's, All Mail); ids the client can act on", async () => {
+  const { app, pool, run } = await rig({ boxes: gmailWorld(), advertised: GM_CAPS });
+  const { value } = await run(async () => {
+    await app.mail("list", { folder: "inbox", limit: 10 });
+    return await app.mail("thread", { message_id: "INBOX:13", thread_key: "g:77" });
+  });
+  assertEquals(value.status, 200, JSON.stringify(value.body));
+  const body = value.body;
+  assertEquals([body.strategy, body.partial, body.thread_key, body.folders], ["imap_gmail_thrid", false, "g:77", ["INBOX", ALL_MAIL]]);
+  // Inbox messages keep their INBOX ids (what the list has, and what an
+  // archive must be issued against); the rest carry their All Mail id. The
+  // archived message with unrelated headers is IN (Gmail says so); the draft
+  // and the same-subject thread 88 are OUT.
+  assertEquals(body.messages.map((m: ThreadRowLite) => [m.id, m.folder, m.thread_key]), [
+    ["INBOX:11", "INBOX", "g:77"],
+    [`${ALL_MAIL}:102`, GM_SENT, "g:77"],
+    ["INBOX:13", "INBOX", "g:77"],
+    [`${ALL_MAIL}:104`, ALL_MAIL, "g:77"],
+  ]);
+  assertEquals(body.messages[1].from.email, "owner@example.com");
+  assert(body.messages.every((m: ThreadRowLite) => typeof m.preview === "string" && !("gm_thread_id" in m)));
+
+  // Two connections: the list's own (it stays in the Inbox) and the inbox's
+  // second pooled one, which does All Mail at the same time and stays there.
+  assertEquals(pool.servers.length, 2);
+  const commands = pool.servers[0].commands;
+  const mine = commands.slice(commands.findIndex((c) => /^FETCH 1:3/.test(c)) + 1);
+  const aside = pool.servers[1].commands;
+  const shape = (list: string[]) => list.map((c) => c.split(" ")[0] === "UID" ? c.split(" ").slice(0, 2).join(" ") : c.split(" ")[0]);
+  assertEquals(shape(mine), ["NOOP", "UID SEARCH", "UID FETCH", "LIST"], "the anchor's folder: ONE search, ONE fetch, no SELECT");
+  assertEquals(shape(aside), ["LIST", "SELECT", "UID SEARCH", "UID FETCH"], "All Mail: ONE search, ONE fetch");
+  const all = [...mine, ...aside];
+  assertEquals(all.filter((c) => /^UID SEARCH/.test(c)), ["UID SEARCH X-GM-THRID 77", "UID SEARCH X-GM-THRID 77"], "by thread id");
+  assert(!all.some((c) => /SUBJECT|HEADER (Message-ID|References|In-Reply-To)/.test(c) && /SEARCH/.test(c)), "never a subject or header search");
+  const fetches = all.filter((c) => /FETCH/.test(c));
+  assertEquals(fetches.map((c) => c.split(" (")[0]), ["UID FETCH 13,11", "UID FETCH 105,104,103,102,101"], "the anchor rides the first");
+  assert(fetches.every((c) => / X-GM-THRID X-GM-MSGID X-GM-LABELS\)$/.test(c)));
+
+  // The next conversation: both connections are where they were left. No SELECT at all.
+  const before = [commands.length, aside.length];
+  const next = await run(() => app.mail("thread", { message_id: "INBOX:14", thread_key: "g:88" }));
+  assertEquals([ids(next.value.body), next.value.body.partial], [["INBOX:14"], false]);
+  assertEquals(pool.servers.length, 2);
+  assertEquals(shape(pool.servers[0].commands.slice(before[0])), ["NOOP", "UID SEARCH", "UID FETCH"]);
+  assertEquals(shape(pool.servers[1].commands.slice(before[1])), ["NOOP", "UID SEARCH"], "as many hits as the Inbox had: nothing to fetch");
+  await pool.closeAll();
+});
+
+interface ThreadRowLite {
+  id: string;
+  folder: string;
+  thread_key: string;
+  preview: string;
+}
+
+Deno.test("thread (Gmail over IMAP): no key, a wrong key, an anchor in Sent, a thread of one, All Mail hidden", async () => {
+  // No key and a wrong key: the anchor's own X-GM-THRID is read (one tiny FETCH) and searched.
+  for (const args of [{ message_id: "INBOX:11" }, { message_id: "INBOX:11", thread_key: "g:999" }, { message_id: "INBOX:11", thread_key: "m:g1@example.com" }]) {
+    const { app, pool, run } = await rig({ boxes: gmailWorld(), advertised: GM_CAPS });
+    const { value } = await run(() => app.mail("thread", args));
+    assertEquals([value.status, value.body.thread_key, ids(value.body)], [200, "g:77", ["INBOX:11", `${ALL_MAIL}:102`, "INBOX:13", `${ALL_MAIL}:104`]], JSON.stringify(args));
+    const wrong = "thread_key" in args && args.thread_key === "g:999";
+    // A wrong key costs one wasted search on each connection; no key costs none.
+    // With a `g:` key the two connections are dialled at the same time, and
+    // which of them is `servers[0]` is not promised: each connection is
+    // checked on its own, whatever its index.
+    assertEquals(pool.servers.length, 2, JSON.stringify(args));
+    const expected = wrong ? ["UID SEARCH X-GM-THRID 999", "UID SEARCH X-GM-THRID 77"] : ["UID SEARCH X-GM-THRID 77"];
+    for (const server of pool.servers) {
+      assertEquals(server.commands.filter((c) => /^UID SEARCH/.test(c)), expected, `searches of one connection, ${JSON.stringify(args)}`);
+    }
+    const idFetches = pool.servers.flatMap((s) => s.commands).filter((c) => c === "UID FETCH 11 (X-GM-THRID X-GM-MSGID)");
+    assertEquals(idFetches.length, 1, `the anchor's thread id is read exactly once, on one connection, ${JSON.stringify(args)}`);
+    await pool.closeAll();
+  }
+
+  // Opened from Sent: the anchor keeps its Sent id; Inbox messages come from All Mail, labelled INBOX.
+  const sent = await rig({ boxes: gmailWorld(), advertised: GM_CAPS });
+  const fromSent = await sent.run(() => sent.app.mail("thread", { message_id: `${GM_SENT}:31` }));
+  assertEquals(fromSent.value.body.messages.map((m: ThreadRowLite) => [m.id, m.folder]), [
+    [`${ALL_MAIL}:101`, "INBOX"],
+    [`${GM_SENT}:31`, GM_SENT],
+    [`${ALL_MAIL}:103`, "INBOX"],
+    [`${ALL_MAIL}:104`, ALL_MAIL],
+  ]);
+  await sent.pool.closeAll();
+
+  // A thread of one: still exact, still no subject search.
+  const one = await rig({ boxes: gmailWorld(), advertised: GM_CAPS });
+  const single = await one.run(() => one.app.mail("thread", { message_id: "INBOX:14" }));
+  assertEquals([ids(single.value.body), single.value.body.partial, single.value.body.strategy], [["INBOX:14"], false, "imap_gmail_thrid"]);
+  // All Mail has as many hits as the Inbox did: the same messages, so nothing is fetched there.
+  assertEquals(one.pool.servers.flatMap((s) => s.commands).filter((c) => /^UID FETCH/.test(c)).map((c) => c.split(" (")[0]), ["UID FETCH 14", "UID FETCH 14"]);
+  await one.pool.closeAll();
+
+  // A long thread: All Mail is asked for ids first, and only the new messages are fetched.
+  const longBoxes = gmailWorld();
+  for (let i = 0; i < 8; i++) {
+    const m = { id: `L${i}@example.com`, subject: "Re: Roadmap", date: `1${i} Sep 2026 10:00:00 +0000`, seen: true };
+    longBoxes[0].messages.push({ ...mail(40 + i, m), gmThreadId: "77", gmMessageId: String(6000 + i), gmLabels: [] });
+    longBoxes[1].messages.push({ ...mail(140 + i, m), gmThreadId: "77", gmMessageId: String(6000 + i), gmLabels: ["\\Inbox"] });
+  }
+  const long = await rig({ boxes: longBoxes, advertised: GM_CAPS });
+  const longThread = await long.run(() => long.app.mail("thread", { message_id: "INBOX:13", thread_key: "g:77" }));
+  assertEquals(longThread.value.body.messages.length, 12, "ten in the Inbox, the sent one, the archived one");
+  // The two connections are dialled at the same time: which is `servers[0]`
+  // is not promised, so each is recognised by the mailbox it selected.
+  assertEquals(long.pool.servers.length, 2, "the anchor's folder and All Mail, one connection each");
+  const allMailServer = long.pool.servers.find((s) => s.commands.some((c) => /^SELECT .*All Mail/.test(c)));
+  const anchorServer = long.pool.servers.find((s) => s !== allMailServer);
+  assert(allMailServer !== undefined && anchorServer !== undefined, "one connection selected All Mail, the other did not");
+  const fetchesOf = (s: FakeImapServer) => s.commands.filter((c) => /^UID FETCH/.test(c));
+  assertEquals(fetchesOf(anchorServer).length, 1, "the anchor's folder: one fetch");
+  const allMailFetches = fetchesOf(allMailServer);
+  assertEquals(allMailFetches.length, 2, "All Mail: the id probe, then the new messages");
+  assert(/\(X-GM-THRID X-GM-MSGID\)$/.test(allMailFetches[0]), `the first All Mail fetch asks for ids only: ${allMailFetches[0]}`);
+  // What the Inbox did not have: the sent one, the archived one, and the draft (fetched, then dropped).
+  assertEquals(allMailFetches[1].split(" (")[0], "UID FETCH 105,104,102");
+  await long.pool.closeAll();
+
+  // All Mail is not shown in IMAP: the anchor's folder alone, and it says so.
+  const hidden = await rig({ boxes: gmailWorld().filter((box) => box.name !== ALL_MAIL), advertised: GM_CAPS });
+  const partial = await hidden.run(() => hidden.app.mail("thread", { message_id: "INBOX:13" }));
+  assertEquals([ids(partial.value.body), partial.value.body.partial, partial.value.body.partial_reason], [["INBOX:11", "INBOX:13"], true, "folder_error"]);
+  await hidden.pool.closeAll();
+
+  // A missing anchor.
+  const gone = await rig({ boxes: gmailWorld(), advertised: GM_CAPS });
+  const missing = await gone.run(() => gone.app.mail("thread", { message_id: "INBOX:999", thread_key: "g:77" }));
+  assertEquals([missing.value.status, missing.value.body.error.code], [404, "not_found"]);
+  await gone.pool.closeAll();
 });
 
 // ── The thread op: Gmail and Outlook ────────────────────────────────────────
@@ -673,16 +1166,15 @@ Deno.test("thread (imap): the subject fallback sends a non-ASCII subject as a UT
   const { value } = await run(() => app.mail("thread", { message_id: "INBOX:3" }));
   assertEquals(value.status, 200, JSON.stringify(value.body));
   assertEquals(value.body.messages.map((m: { id: string }) => m.id), ["INBOX:1", "Sent:2", "INBOX:3"]);
-  assertEquals([value.body.strategy, value.body.partial, value.body.thread_key], ["imap_subject_fallback", false, "m:root@example.com"]);
+  assertEquals([value.body.strategy, value.body.partial, value.body.thread_key], ["imap_subject_search", false, "m:root@example.com"]);
   assertEquals(value.body.messages.map((m: { subject: string }) => m.subject), [subject, `Re: ${subject}`, `SV: ${subject}`]);
   assertNoByteStrings(value.body, "thread");
 
   // The fake records a literal as the quoted text its octets spell.
   const searches = pool.servers[0].commands.filter((c) => /^UID SEARCH/.test(c));
-  const fallback = searches.filter((c) => /SUBJECT/.test(c));
-  assert(fallback.length >= 2, searches.join(" | "));
-  for (const command of fallback) {
-    assertEquals(command, `UID SEARCH CHARSET UTF-8 SUBJECT "${subject}" SINCE 7-Mar-2026`, "CHARSET named, the subject whole and in its own case");
+  assertEquals(searches.length, 2, searches.join(" | "));
+  for (const command of searches) {
+    assertEquals(command, `UID SEARCH CHARSET UTF-8 SINCE 7-Mar-2026 SUBJECT "${subject}"`, "CHARSET named, the subject whole and in its own case");
   }
   await pool.closeAll();
 });

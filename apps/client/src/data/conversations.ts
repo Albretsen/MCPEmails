@@ -52,6 +52,16 @@ export const EMPTY_CONVERSATIONS: ConversationList = { conversations: [], byKey:
 
 const SEP = "\u0001";
 
+/** What a conversation's `thread` answer is cached under (inside its mailbox):
+ *  the conversation's id without the mailbox. For an ordinary conversation
+ *  that is its `thread_key`. Unlike the head row's own key it stays the same
+ *  when a reply becomes the head, also for a conversation whose rows carry
+ *  different keys (References cut short by some mail client). */
+export function conversationThreadId(conv: Pick<Conversation, "id" | "head">): string {
+  const box = conv.head.inbox_id + SEP;
+  return conv.id.startsWith(box) ? conv.id.slice(box.length) : conv.id;
+}
+
 /** Rows that are never grouped: no key, or not mail yet. */
 function standsAlone(row: MessageRow): boolean {
   return !row.thread_key || row.folder_role === "drafts" || row.folder_role === "scheduled";

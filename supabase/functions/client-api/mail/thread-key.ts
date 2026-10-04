@@ -12,7 +12,11 @@
 //      Only when `thread_id` is a non-empty string that is not the row's own
 //      message id on Outlook (Graph rows fall back to `msg.id` when a message
 //      has no conversationId, and that is not a conversation).
-//   2. Headers present      "m:" + ROOT Message-ID, where ROOT is
+//      Gmail over IMAP      "g:" + X-GM-THRID (decimal), when the row's FETCH
+//      carried it (the server advertises X-GM-EXT-1). Exact, like the API's.
+//      List, search and thread rows have it; a single `read` does not ask the
+//      server for it and keeps the header key of rule 2.
+//   2. Headers present     "m:" + ROOT Message-ID, where ROOT is
 //                             the first id of References, else
 //                             the id of In-Reply-To, else
 //                             the row's own Message-ID.
@@ -49,6 +53,8 @@ export interface ThreadRowLike {
   message_id_header?: unknown;
   in_reply_to?: unknown;
   references?: unknown;
+  /** Gmail-over-IMAP's X-GM-THRID, as the tool layer hands it over (first-party.ts). */
+  gm_thread_id?: unknown;
 }
 
 const PREFIX = /^\s*(?:(?:re|fwd?|fw|sv|vs|aw|wg|antw|tr|rv|res|enc)(?:\[\d+\])?\s*[:：]\s*)+/i;
@@ -114,6 +120,10 @@ export function threadKeyOf(row: ThreadRowLike, provider: string | null): string
   const id = text(row.id);
   const threadId = text(row.thread_id);
   if (provider === "gmail" && threadId) return `g:${threadId}`;
+  // Gmail over IMAP: the row carried X-GM-THRID (decimal; the Gmail API spells
+  // the same number in hex, and an inbox is only ever one of the two).
+  const gmThreadId = text(row.gm_thread_id);
+  if (provider !== "gmail" && provider !== "outlook" && /^\d{1,24}$/.test(gmThreadId)) return `g:${gmThreadId}`;
   if (provider === "outlook" && threadId && threadId !== id) return `o:${threadId}`;
   const { own, inReplyTo, references } = threadIdsOf(row);
   const root = references[0] || inReplyTo || own;
@@ -135,9 +145,12 @@ export function withThreadKeys(result: unknown, provider: string | null): unknow
   if (Array.isArray(body["messages"])) {
     return {
       ...body,
-      messages: (body["messages"] as unknown[]).map((row) =>
-        row && typeof row === "object" ? { ...row, thread_key: threadKeyOf(row as ThreadRowLike, provider) } : row
-      ),
+      messages: (body["messages"] as unknown[]).map((row) => {
+        if (!row || typeof row !== "object") return row;
+        // `gm_thread_id` is the tool layer's hand-over, not part of a row.
+        const { gm_thread_id: _gm, ...rest } = row as Record<string, unknown>;
+        return { ...rest, thread_key: threadKeyOf(row as ThreadRowLike, provider) };
+      }),
     };
   }
   if (typeof body["id"] === "string") return { ...body, thread_key: threadKeyOf(body as ThreadRowLike, provider) };

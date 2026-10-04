@@ -53,10 +53,16 @@ export interface ThreadResult {
   /** Something bounded the answer (a limit, the time budget, a folder that
    *  could not be searched): there may be more. */
   partial: boolean;
-  partial_reason?: string;
-  strategy?: string;
+  partial_reason?: ThreadPartialReason;
+  /** How the server found the conversation. Informational only. */
+  strategy?: "imap_gmail_thrid" | "imap_subject_search" | (string & {});
   folders?: string[];
 }
+
+/** Why a `thread` answer may be incomplete. `rate_limited` and `time_budget`
+ *  are passing conditions: asking again later may find the rest. A server newer
+ *  than this client may send a reason that is not listed here. */
+export type ThreadPartialReason = "limit" | "time_budget" | "folder_error" | "candidates" | "rate_limited" | (string & {});
 
 export interface ListInboxResult {
   messages: EmailSummary[];
@@ -350,6 +356,8 @@ export interface MessageThread {
   /** Date ascending. */
   rows: MessageRow[];
   partial: boolean;
+  /** Set when `partial`. */
+  partial_reason?: ThreadPartialReason;
 }
 
 /** Per-inbox offsets for a merged listing. `null` = that inbox is exhausted.

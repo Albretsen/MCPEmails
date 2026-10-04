@@ -19,12 +19,13 @@ import {
   type MessageThread,
   type PageCursor,
   type ScheduledSend,
+  type ThreadPartialReason,
   folderRefId,
   parseKey,
   isProviderViewFolder,
 } from "../api/types";
 import { type InboxHealth, inboxHealth, usableInboxes } from "../api/inbox-health";
-import { useDebouncedValue, useDelayedFlag } from "../lib/hooks";
+import { useDelayedFlag, useRested } from "../lib/hooks";
 import { useAssistantStore } from "../state/assistant-store";
 import { useReconnectStore } from "../state/connection-store";
 import { holdRows, useHeldRows } from "../state/held-rows";
@@ -464,36 +465,63 @@ export interface ConversationThreadResult {
   isFetching: boolean;
   /** The server could not look everywhere: there may be more. */
   partial: boolean;
+  /** Why, when `partial`. */
+  partialReason: ThreadPartialReason | undefined;
+  /** Asks for the thread again (one request). */
+  retry: () => void;
 }
 
 const NO_ROWS: MessageRow[] = [];
 /** How long a conversation must stay open before its thread is asked for:
  *  stepping through the list with j / k asks for none. */
-export const THREAD_DWELL_MS = 180;
+export const THREAD_DWELL_MS = 250;
 
 /** The open conversation. Paints from rows already in the cache; the `thread`
- *  op runs in the background and never blocks the body of the open message. */
+ *  op runs in the background and never blocks the body of the open message.
+ *
+ *  One request per conversation opened:
+ *   - the query is keyed by the CONVERSATION (mailbox + conversation id), not
+ *     by the row that stands for it, so moving between its messages, or a
+ *     reply becoming its head, asks for nothing;
+ *   - it is asked for only once the selection has rested THREAD_DWELL_MS;
+ *   - moving on changes the key: the query loses its only observer and
+ *     TanStack aborts the signal handed to the transport, so a superseded
+ *     request is cancelled and its answer is never written to the cache. */
 export function useConversationThread(key: MessageKey | null): ConversationThreadResult {
   const enabled = useUiStore(selectConversationView);
   const conv = useConversationIndex((s) => (key && enabled ? s.list.byKey.get(key) : undefined));
   // The row itself, for a message the list does not hold (a deep link).
   const anchor = conv?.head ?? (key ? findRow(key) : undefined);
   const threadKey = anchor?.thread_key;
-  const wanted =
-    enabled && !!anchor && !!threadKey && anchor.folder_role !== "drafts" && anchor.folder_role !== "scheduled" ? anchor.key : null;
-  const settled = useDebouncedValue(wanted, THREAD_DWELL_MS);
+  const queryKey =
+    enabled && !!anchor && !!threadKey && anchor.folder_role !== "drafts" && anchor.folder_role !== "scheduled"
+      ? keys.thread(anchor.inbox_id, threadQueryId(anchor, conv))
+      : null;
+  // The conversation as one value: the same for every message of it.
+  const wanted = queryKey ? `${queryKey[1]}\u0001${queryKey[2]}` : null;
+  const rested = useRested(wanted, THREAD_DWELL_MS);
   const q = useQuery<MessageThread>({
-    queryKey: anchor && threadKey ? keys.thread(anchor.inbox_id, threadQueryId(anchor)) : ["thread", "none"],
+    queryKey: queryKey ?? ["thread", "none"],
     queryFn: ({ signal }) => getMailApi().getThread((anchor as MessageRow).key, { thread_key: threadKey }, signal),
     // Asked once the conversation has stayed open; a cached answer shows at once.
-    enabled: wanted != null && settled === wanted,
+    enabled: wanted != null && rested,
     staleTime: STALE_MS,
     retry: false,
   });
   const listRows = useMemo(() => conv?.rows ?? (anchor ? [anchor] : NO_ROWS), [conv, anchor]);
-  const threadRows = wanted ? (q.data?.rows ?? NO_ROWS) : NO_ROWS;
+  const data = wanted ? q.data : undefined;
+  const threadRows = data?.rows ?? NO_ROWS;
   const messages = useMemo(() => mergeThread(listRows, threadRows), [listRows, threadRows]);
-  return { messages, isFetching: wanted != null && q.isFetching, partial: q.data?.partial === true };
+  const refetch = q.refetch;
+  const retry = useCallback(() => void refetch(), [refetch]);
+  const partial = data?.partial === true;
+  return {
+    messages,
+    isFetching: wanted != null && q.isFetching,
+    partial,
+    partialReason: partial ? data?.partial_reason : undefined,
+    retry,
+  };
 }
 
 export interface PrefetchHandlers {

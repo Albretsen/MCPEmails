@@ -2,7 +2,7 @@ import type { MessageKey, MessageRow, MessageThread } from "../api/types";
 import { conversationOf } from "../state/conversation-store";
 import { useUiStore } from "../state/ui-store";
 import { findRow } from "./cache";
-import { mergeThread } from "./conversations";
+import { type Conversation, conversationThreadId, mergeThread } from "./conversations";
 import { keys } from "./keys";
 import { queryClient } from "./query-client";
 
@@ -18,14 +18,15 @@ import { queryClient } from "./query-client";
  * `replyTargetOf`).
  */
 
-/** The cache id of a conversation's thread: its key, or the message's own id
- *  for a row that carries none. */
-export function threadQueryId(row: Pick<MessageRow, "thread_key" | "id">): string {
-  return row.thread_key || `id:${row.id}`;
+/** The cache id of a conversation's thread. ONE per conversation, whichever of
+ *  its messages is asked about: the conversation's own id when the list holds
+ *  it, else the row's key, or the message's own id for a row that carries none. */
+export function threadQueryId(row: Pick<MessageRow, "thread_key" | "id">, conv?: Conversation): string {
+  return conv ? conversationThreadId(conv) : row.thread_key || `id:${row.id}`;
 }
 
-function cachedThread(row: MessageRow): MessageThread | undefined {
-  return queryClient.getQueryData<MessageThread>(keys.thread(row.inbox_id, threadQueryId(row)));
+function cachedThread(row: MessageRow, conv?: Conversation): MessageThread | undefined {
+  return queryClient.getQueryData<MessageThread>(keys.thread(row.inbox_id, threadQueryId(row, conv)));
 }
 
 const conversationView = (): boolean => useUiStore.getState().settings.conversationView;
@@ -37,7 +38,7 @@ export function conversationMessages(key: MessageKey): MessageRow[] {
   const anchor = conv?.head ?? findRow(key);
   if (!anchor) return [];
   if (!conversationView()) return [anchor];
-  return mergeThread(conv?.rows ?? [anchor], cachedThread(anchor)?.rows ?? []);
+  return mergeThread(conv?.rows ?? [anchor], cachedThread(anchor, conv)?.rows ?? []);
 }
 
 /** See the header. `[key]` for a message nothing is known about. */
@@ -46,7 +47,7 @@ export function conversationKeys(key: MessageKey): MessageKey[] {
   const conv = conversationOf(key);
   if (!conv) return [key];
   const out = [...conv.keys];
-  const thread = cachedThread(conv.head);
+  const thread = cachedThread(conv.head, conv);
   if (thread) {
     const have = new Set(out);
     const ids = new Set(conv.rows.map((r) => r.message_id_header).filter(Boolean));
