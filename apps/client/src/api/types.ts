@@ -101,6 +101,10 @@ export interface FolderEntry {
   type: "folder" | "label";
   total_messages: number | null;
   unread_messages: number | null;
+  /** The folder's system role, or null for a folder of the person's own.
+   *  ABSENT from a server that does not send it yet: then (and only then) the
+   *  client falls back to matching ids and names (`roleOfFolder`). */
+  role?: ServerFolderRole | null;
 }
 
 export interface SenderIdentity {
@@ -119,7 +123,20 @@ export interface Inbox {
   service: string | null;
   sender_identities: SenderIdentity[];
   sender_identity_status: "available" | "reconnect_required" | "unavailable";
+  /** `/session` only (app.ts, `sessionInboxList`). Absent from a server that
+   *  predates it and from a session cached before it: read it through
+   *  `inboxHealth` (api/inbox-health.ts), never directly. */
+  status?: InboxHealthStatus;
+  /** null when `status` is "ok". "sender_identity": mail WORKS, only the
+   *  send-as list needs a reconnect. */
+  status_reason?: InboxStatusReason | null;
 }
+
+export type InboxHealthStatus = "ok" | "reconnect_required" | "error";
+export type InboxStatusReason = "password_refused" | "access_revoked" | "sender_identity" | "no_mailbox" | "unavailable";
+
+/** `folders` op: the system role of a folder, as the server resolved it. */
+export type ServerFolderRole = "inbox" | "sent" | "drafts" | "trash" | "archive" | "spam";
 
 /** Draft list rows carry no body: call readDraft for it. */
 export interface DraftSummary {
@@ -307,6 +324,8 @@ export type PageCursor = Record<string, number | null>;
  *  are still shown; the list says which one is missing. */
 export interface InboxFailure {
   inbox_id: string;
+  /** `reconnect_required`: reconnecting in the dashboard fixes it.
+   *  `inbox_unavailable`: it does not. Anything else: worth a retry. */
   code: string;
   message: string;
 }
@@ -315,6 +334,10 @@ export interface MessagePage {
   rows: MessageRow[];
   /** Inboxes in scope that failed for this page. Absent when all answered. */
   failed_inboxes?: InboxFailure[];
+  /** Set only on a PROVISIONAL first page of a unified listing: inboxes that
+   *  have not answered yet. Such a page is not complete, has no total and no
+   *  cursor, and is replaced when they answer (see `mergeInboxPages`). */
+  pending_inboxes?: string[];
   /** Sum of the per-inbox totals, or null when any inbox could not count. */
   total: number | null;
   total_is_estimate: boolean;

@@ -3,13 +3,31 @@ import { ApiClient } from "../api/http/client";
 import { FakeBackend, fakeInbox, fakeMessage } from "../api/http/fake-backend";
 import { HttpMailApi } from "../api/http/http-mail-api";
 import type { FolderEntry, MailEvent, MessageRow } from "../api/types";
-import { type ListData, folderRoleOf, forgetFolderRoles, learnFolderRoles, removeMovedRows, resolveFolderEntry } from "./cache";
+import {
+  type ListData,
+  folderRoleOf,
+  forgetFolderRoles,
+  learnFolderRoles,
+  refreshFolders,
+  removeMovedRows,
+  resolveFolderEntry,
+} from "./cache";
 import { keys, listMeta } from "./keys";
 import { queryClient } from "./query-client";
 import { type SyncEngine, type SyncEnv, createSyncEngine, diffFirstPage, statusFoldersFor } from "./sync";
 
 const day = (n: number) => `2026-10-${String(n).padStart(2, "0")}T12:00:00Z`;
 const flush = (ms = 15) => new Promise((r) => setTimeout(r, ms));
+/** Until requests and events have stopped coming (three quiet looks). */
+async function quiet(): Promise<void> {
+  let last = -1;
+  for (let still = 0, i = 0; still < 3 && i < 200; i++) {
+    await flush(5);
+    const now = backend.requests.length * 1000 + events.length;
+    still = now === last ? still + 1 : 0;
+    last = now;
+  }
+}
 
 interface Timer {
   fn: () => void;
@@ -326,6 +344,145 @@ describe("sync engine: the user's own changes", () => {
     expect(fresh).toHaveLength(1);
     expect(fresh[0]?.type === "new_mail" && fresh[0].rows.map((r) => r.id)).toEqual(["m9"]);
     expect(events.filter((e) => e.type === "moved")).toEqual([]);
+  });
+
+  describe("refreshing only what the change can have changed", () => {
+    // These tests count requests: wait until none is on its way any more,
+    // however long that takes, instead of for a fixed time.
+    const flush = quiet;
+    const draft =(inbox_id: string, body = "hello") => ({ inbox_id, to: [{ name: "", email: "x@example.com" }], subject: "s", body_text: body });
+    /** Status calls since `from`, as `inbox: folders`. */
+    const statusSince = (from: number) =>
+      backend
+        .calls("status")
+        .slice(from)
+        .map((c) => `${c.inbox_id}: ${(c.args.folders as string[]).join(",")}`);
+
+    beforeEach(async () => {
+      engine.stop();
+      await setup(["a", "b"]);
+      backend.add("a", fakeMessage("m1", day(1)), fakeMessage("m2", day(2)));
+      backend.add("b", fakeMessage("n1", day(1)));
+      await prime();
+      engine.start();
+      await flush();
+    });
+
+    it("a draft autosave asks about that mailbox's Drafts and nothing else", async () => {
+      const before = statusCalls();
+      expect(before).toBe(2); // the first run: one per mailbox
+      const first = await api.createDraft(draft("a"));
+      // What the autosave does after its save (data/mail-actions.ts).
+      refreshFolders({ own: true });
+      expect(env.run(800)).toBe(1);
+      await flush();
+      expect(statusSince(before)).toEqual(["a: drafts"]);
+      // The Drafts count follows; nothing was listed and nothing announced.
+      expect(resolveFolderEntry(queryClient.getQueryData<FolderEntry[]>(keys.folders("a")) ?? [], "a", { role: "drafts" })?.total_messages).toBe(1);
+      expect(events).toEqual([]);
+
+      // Typing on: several saves close together share one status.
+      const mid = statusCalls();
+      const second = await api.updateDraft("a", first.draft_id, draft("a", "hello there"));
+      await api.updateDraft("a", second.draft_id, draft("a", "hello there, again"));
+      refreshFolders({ own: true });
+      expect(env.run(800)).toBe(1);
+      await flush();
+      expect(statusSince(mid)).toEqual(["a: drafts"]);
+      expect(listCalls()).toBe(2); // prime's two, nothing since
+    });
+
+    it("a send asks about Sent and Drafts of its mailbox; a scheduled send about nothing", async () => {
+      const before = statusCalls();
+      await api.sendMessage({ inbox_id: "b", to: [{ name: "", email: "x@example.com" }], subject: "s", body_text: "b" });
+      expect(env.run(800)).toBe(1);
+      await flush();
+      expect(statusSince(before)).toEqual(["b: sent,drafts"]);
+
+      const mid = statusCalls();
+      await api.scheduleSend({ inbox_id: "b", to: [{ name: "", email: "x@example.com" }], subject: "s", body_text: "b", send_at: day(20) });
+      expect(env.run(800)).toBe(0);
+      await flush();
+      expect(statusCalls()).toBe(mid);
+    });
+
+    it("a move asks about the source and the destination folder of its mailbox", async () => {
+      backend.customFolders.set("a", [{ id: "Receipts", name: "Receipts", type: "folder", total_messages: 0, unread_messages: 0 }]);
+      const before = statusCalls();
+      removeMovedRows(["a:m2"], { inbox_id: "a", folder_id: "Receipts" });
+      await api.moveMessages(["a:m2"], { inbox_id: "a", folder_id: "Receipts" });
+      expect(env.run(800)).toBe(1);
+      await flush();
+      expect(statusSince(before)).toEqual(["a: Receipts,INBOX"]);
+      expect(inboxEntry("a")).toMatchObject({ total_messages: 1 });
+
+      const mid = statusCalls();
+      removeMovedRows(["a:m1"], { role: "trash" });
+      await api.deleteMessages(["a:m1"]);
+      await api.setFlags(["b:n1"], { read: true });
+      expect(env.run(800)).toBe(1);
+      await flush();
+      expect(statusSince(mid).sort()).toEqual(["a: trash,INBOX", "b: INBOX"]);
+      // A star changes no count: nothing to ask.
+      const late = statusCalls();
+      await api.setFlags(["b:n1"], { starred: true });
+      expect(env.run(800)).toBe(0);
+      expect(statusCalls()).toBe(late);
+    });
+
+    it("the own change is never announced, and mail from elsewhere in the same folder still is, at the next run", async () => {
+      removeMovedRows(["a:m2"], { role: "archive" });
+      await api.archiveMessages(["a:m2"]);
+      env.run(800);
+      await flush();
+      expect(events).toEqual([]);
+      // Meanwhile real mail arrives in the folder our change touched.
+      backend.add("a", fakeMessage("m9", day(9)));
+      await engine.syncNow();
+      const fresh = events.filter((e) => e.type === "new_mail");
+      expect(fresh).toHaveLength(1);
+      expect(fresh[0]?.type === "new_mail" && fresh[0].rows.map((r) => r.id)).toEqual(["m9"]);
+      expect(events.filter((e) => e.type === "moved")).toEqual([]);
+      // The baseline is current after that: an idle run says and fetches nothing.
+      const lists = listCalls();
+      events.length = 0;
+      await engine.syncNow();
+      expect(events).toEqual([]);
+      expect(listCalls()).toBe(lists);
+    });
+
+    it("a draft autosave does not delay noticing new mail in the same mailbox", async () => {
+      await api.createDraft(draft("a"));
+      env.run(800);
+      await flush();
+      backend.add("a", fakeMessage("m9", day(9)));
+      await engine.syncNow();
+      expect(events.filter((e) => e.type === "new_mail")).toHaveLength(1);
+    });
+
+    it("a full run sent before the change ended does not take it for settled", async () => {
+      // The targeted status has answered, but this run was already on its way.
+      removeMovedRows(["a:m2"], { role: "archive" });
+      const release = backend.holdInbox("a");
+      const run = engine.syncNow();
+      await flush();
+      release();
+      await run;
+      await api.archiveMessages(["a:m2"]);
+      env.run(800);
+      await flush();
+      await engine.syncNow();
+      await engine.syncNow();
+      expect(events.filter((e) => e.type === "moved" || e.type === "new_mail")).toEqual([]);
+    });
+
+    it("anything that is not the user's own change still asks every mailbox", async () => {
+      const before = statusCalls();
+      refreshFolders();
+      expect(env.run(800)).toBe(1);
+      await flush();
+      expect(statusSince(before).map((s) => s.split(":")[0]).sort()).toEqual(["a", "b"]);
+    });
   });
 
   it("events it emits do not poke it back", async () => {

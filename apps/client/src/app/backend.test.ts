@@ -12,7 +12,10 @@ import { useAssistantStore } from "../state/assistant-store";
 import { useComposeStore } from "../state/compose-store";
 import { useSelectionStore } from "../state/selection-store";
 import { useToastStore } from "../state/toast-store";
-import { bootHttp, getHttpMailApi, signOutEverywhere } from "./backend";
+import { INBOX_NOTICE } from "../api/inbox-health";
+import { defaultInboxId } from "../data/mail-actions";
+import { useReconnectStore } from "../state/connection-store";
+import { bootHttp, getHttpMailApi, loadSession, readRefused, signOutEverywhere } from "./backend";
 
 /* HTTP mode end to end, against the fake backend: boot, the assistant's
  * approval flow through the real stores and mail actions, and what a
@@ -197,6 +200,136 @@ describe("HTTP mode, end to end", () => {
     await flushPendingSends();
     expect(backend.delivered).toHaveLength(1);
     useComposeStore.setState({ compose: null });
+  });
+
+  it("an assistant edit can clear Cc; the Bcc the person typed stays and goes out when they approve", async () => {
+    const reply = { inbox_id: "a", message_id: "m1" };
+    const edit = (approval_id: string) => [
+      { type: "run_started", run_id: `run-${approval_id}` },
+      // The header as it stands after the edit: Cc is present and empty.
+      {
+        type: "draft_stream",
+        phase: "editing",
+        kind: "reply",
+        reply_to: reply,
+        fields: { inbox_id: "a", to: "sender@example.com", cc: "", subject: "Re: Subject m1" },
+        body: "Short.",
+        call_id: "c1",
+        message_id: "am1",
+        done: true,
+      },
+      {
+        type: "approval_required",
+        approval_id,
+        call_id: "c1",
+        external: false,
+        draft: { inbox_id: "a", kind: "reply", to: "sender@example.com", subject: "Re: Subject m1", body: "Short.", reply_to: reply },
+      },
+      { type: "done" },
+    ];
+    const open = () =>
+      useComposeStore.getState().open({
+        mode: "reply",
+        inbox_id: "a",
+        replyTo: "a:m1",
+        to: "sender@example.com",
+        cc: "cc@example.com",
+        bcc: "boss@example.com",
+        subject: "Re: Subject m1",
+        body: "A long draft.",
+      });
+
+    open();
+    backend.assistantEvents = edit("ap4");
+    await A().run("Drop the cc, make it short and send it", { keys: ["a:m1"] });
+    // Bcc still travels with the draft (the server ignores it today).
+    expect((lastRun() as unknown as { draft: { bcc: string } }).draft.bcc).toBe("boss@example.com");
+    expect(useComposeStore.getState().compose).toMatchObject({ to: "sender@example.com", cc: "", bcc: "boss@example.com", body: "Short.", held: { approval_id: "ap4" } });
+    const before = backend.delivered.length;
+    await A().resolveApproval("approve");
+    await flushPendingSends();
+    expect(backend.delivered).toHaveLength(before + 1);
+    expect(backend.delivered.at(-1)?.args).toMatchObject({ to: ["sender@example.com"], bcc: ["boss@example.com"], body: "Short." });
+    expect(backend.delivered.at(-1)?.args.cc).toBeUndefined();
+
+    // The same with the form closed before the person approves (from the
+    // notice): the assistant's copy has no Bcc, the one typed is put back.
+    open();
+    backend.assistantEvents = edit("ap5");
+    await A().run("Send it", { keys: ["a:m1"] });
+    useComposeStore.setState({ compose: null });
+    await getAssistantTransport().resolveApproval("ap5", "approve");
+    await flushPendingSends();
+    expect(backend.delivered).toHaveLength(before + 2);
+    expect(backend.delivered.at(-1)?.args).toMatchObject({ to: ["sender@example.com"], bcc: ["boss@example.com"] });
+    A().clear();
+    useComposeStore.setState({ compose: null });
+  });
+
+  it("per-inbox status from /session: a mailbox that is down is listed, shown, and never asked for mail", async () => {
+    const mail = getMailApi();
+    backend.inboxes = [...backend.inboxes, fakeInbox("b", "b@example.com", "imap")];
+    backend.add("b", fakeMessage("n1", "2026-10-03T10:00:00Z"));
+    backend.setInboxStatus("b", "reconnect_required", "password_refused");
+    const callsTo = (id: string) => backend.calls().filter((c) => c.inbox_id === id).length;
+
+    await loadSession();
+    const inboxes = useSessionStore.getState().session?.inboxes ?? [];
+    expect(inboxes.map((i) => [i.inbox_id, i.status, i.status_reason])).toEqual([
+      ["a", "ok", null],
+      ["b", "reconnect_required", "password_refused"],
+    ]);
+    // Known from the session alone: remembered for the next load too.
+    expect(readRefused("ws-1")).toEqual(["b"]);
+    await flush();
+    expect(callsTo("b")).toBe(0);
+
+    // The unified inbox works with the rest and names the one left out.
+    const page = await mail.listMessages({ scope: "all", folder: { role: "inbox" }, limit: 50 });
+    expect(page.rows.map((r) => r.inbox_id)).toEqual(["a", "a"]);
+    expect(page.failed_inboxes).toEqual([{ inbox_id: "b", code: "reconnect_required", message: INBOX_NOTICE.password_refused }]);
+    await expect(mail.listMessages({ scope: "b", folder: { role: "inbox" }, limit: 50 })).rejects.toMatchObject({
+      code: "reconnect_required",
+      message: INBOX_NOTICE.password_refused,
+    });
+    await expect(mail.setFlags(["b:n1"], { read: true })).rejects.toMatchObject({ code: "reconnect_required" });
+    await mail.searchMessages({ scope: "all", query: "Subject", limit: 50 });
+    expect(callsTo("b")).toBe(0);
+    expect(backend.refusedCalls).toHaveLength(0);
+    // A new message is never set to go out from it.
+    useSelectionStore.setState({ scope: "b" });
+    expect(defaultInboxId()).toBe("a");
+    useSelectionStore.setState({ scope: "all" });
+
+    // Reconnected in the dashboard: the next session says so, and the
+    // mailbox is asked again (its folders, the lists it belongs to).
+    backend.setInboxStatus("b", "ok");
+    await loadSession();
+    await until(() => queryClient.getQueryData(keys.folders("b")) !== undefined);
+    expect(readRefused("ws-1")).toEqual([]);
+    const again = await mail.listMessages({ scope: "all", folder: { role: "inbox" }, limit: 50 });
+    expect(again.rows.map((r) => r.inbox_id)).toEqual(["b", "a", "a"]);
+    expect(again.failed_inboxes).toBeUndefined();
+
+    // It starts failing mid-session: marked at once from the failed call,
+    // and the session is asked for the reason.
+    backend.setInboxStatus("b", "reconnect_required", "access_revoked");
+    const sessions = backend.count("/session");
+    const partial = await mail.listMessages({ scope: "all", folder: { role: "inbox" }, limit: 50 });
+    expect(partial.rows.map((r) => r.inbox_id)).toEqual(["a", "a"]);
+    expect(partial.failed_inboxes?.map((f) => [f.inbox_id, f.code])).toEqual([["b", "reconnect_required"]]);
+    await until(() => useSessionStore.getState().session?.inboxes.find((i) => i.inbox_id === "b")?.status_reason === "access_revoked");
+    expect(backend.count("/session")).toBe(sessions + 1);
+    // The server's status has replaced what the client had noted itself.
+    expect(useReconnectStore.getState().inboxes).toEqual({});
+    expect(readRefused("ws-1")).toEqual(["b"]);
+
+    // Back to one mailbox for the rest of the scenario.
+    backend.inboxes = backend.inboxes.filter((i) => i.inbox_id === "a");
+    await loadSession();
+    expect(useSessionStore.getState().session?.inboxes.map((i) => i.inbox_id)).toEqual(["a"]);
+    const page1 = await mail.listMessages({ scope: "all", folder: { role: "inbox" }, limit: 50 });
+    queryClient.setQueryData<ListData>(INBOX, { pages: [page1], pageParams: [null] });
   });
 
   it("a new conversation starts without the old state", async () => {

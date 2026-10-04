@@ -15,11 +15,12 @@ export const useConnectionStore = create<SocketDiagnostics>(() => ({
   lastCloseCode: null,
 }));
 
-/* Mailboxes whose last mail call was refused with `reconnect_required` (the
- * provider no longer accepts the stored credentials). `/session` does not
- * always say so (its `sender_identity_status` is about sender identities), so
- * the sidebar badge follows what the mail calls themselves answered. Cleared
- * for a mailbox as soon as one of its calls succeeds. */
+/* Mailboxes a mail call was refused for with `reconnect_required` SINCE the
+ * last `/session` answer. `/session` is the authority on which mailboxes
+ * work (per-inbox `status`, read through api/inbox-health.ts) and empties
+ * this when it answers; this only fills the gap for a mailbox that starts
+ * refusing mid-session, and stands in for the status when the server sends
+ * none. Cleared for a mailbox as soon as one of its calls succeeds. */
 export const useReconnectStore = create<{ inboxes: Record<string, true> }>(() => ({ inboxes: {} }));
 
 export function markInboxAuth(inbox_id: string, needsReconnect: boolean): void {

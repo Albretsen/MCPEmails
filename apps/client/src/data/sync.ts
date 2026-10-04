@@ -259,14 +259,79 @@ export function createSyncEngine(options: SyncOptions): SyncEngine {
   const onMutation = (m: MutationNotice) => {
     const until = env.now() + OWN_KEY_TTL_MS;
     for (const k of m.keys) ownKeys.set(k, until);
+    const folders = new Map(m.touched.map((t) => [t.inbox_id, t.folders]));
     for (const id of m.inbox_ids) {
       if (m.phase === "start") inflight.set(id, (inflight.get(id) ?? 0) + 1);
       else {
         inflight.set(id, Math.max(0, (inflight.get(id) ?? 0) - 1));
-        mutatedAt.set(id, ++seq);
+        // A mutation that changes no folder (a scheduled send) changes no
+        // fingerprint either: nothing of ours can be missing from a status.
+        if (folders.get(id)?.length) mutatedAt.set(id, ++seq);
       }
     }
-    if (m.phase === "end") poke();
+    if (m.phase === "end") pokeOwn(m.touched);
+  };
+
+  /* After our own mutation: ONE `status` for the mailbox it touched, about
+   * the folders it can have changed and nothing else (a draft autosave: that
+   * mailbox's Drafts). It confirms the counts the cache shows optimistically.
+   * It never moves a fingerprint baseline and never announces anything: the
+   * change is ours and the cache already shows it. The next full run then
+   * finds the mailbox settled (see `syncedAt`), compares against the baseline
+   * from before the change, and reconciles with our own keys left out, so
+   * mail that arrived from elsewhere in the same folder is still announced. */
+  const ownTargets = new Map<string, Set<string>>();
+  let ownTimer: unknown = null;
+  let ownController: AbortController | null = null;
+
+  function pokeOwn(touched: MutationNotice["touched"]): void {
+    if (!started) return;
+    let any = false;
+    for (const t of touched) {
+      if (!t.folders.length) continue;
+      const set = ownTargets.get(t.inbox_id) ?? new Set<string>();
+      for (const f of t.folders) set.add(f);
+      ownTargets.set(t.inbox_id, set);
+      any = true;
+    }
+    if (!any) return;
+    if (ownTimer != null) env.clearTimeout(ownTimer);
+    ownTimer = env.setTimeout(() => {
+      ownTimer = null;
+      void runOwn().catch(() => {});
+    }, pokeDelayMs);
+  }
+
+  async function runOwn(): Promise<void> {
+    if (!started || !env.isOnline() || !ownTargets.size) return;
+    const requests = [...ownTargets].map(([inbox_id, set]) => ({ inbox_id, folders: [...set] }));
+    ownTargets.clear();
+    const sentAt = ++seq;
+    const abort = new AbortController();
+    ownController = abort;
+    const mine = epoch;
+    const statuses = await api.getStatus(requests, abort.signal);
+    if (abort.signal.aborted || mine !== epoch) return;
+    for (const [inbox_id, st] of statuses) {
+      if (!st.ok) continue;
+      learnRoles(inbox_id, st.folders);
+      // Sent after the change ended: a later full run may treat it as landed.
+      if ((syncedAt.get(inbox_id) ?? 0) < sentAt) syncedAt.set(inbox_id, sentAt);
+      // Counts: the optimistic ones stand while another change is in flight.
+      // A folder this mailbox does not have (no Archive, say) is not news.
+      if (!(inflight.get(inbox_id) ?? 0) && (mutatedAt.get(inbox_id) ?? 0) <= sentAt) patchFolderCounts(inbox_id, st.folders);
+    }
+  }
+
+  /** A folder asked for by role alias and answered with its real id. */
+  const learnRoles = (inbox_id: string, folders: readonly FolderStatus[]) => {
+    const roles = folders
+      .filter((f) => f.folder != null && f.id !== f.folder && (BACKEND_FOLDER_ALIASES as readonly string[]).includes(f.folder))
+      .map((f) => ({ id: f.id, role: f.folder as FolderRole }));
+    if (roles.length && learnFolderRoles(inbox_id, roles)) {
+      // A new identity, so what is derived from the folder list is derived again.
+      queryClient.setQueryData<FolderEntry[]>(keys.folders(inbox_id), (e) => (e ? [...e] : e));
+    }
   };
 
   const emit = (event: MailEvent) => {
@@ -347,17 +412,13 @@ export function createSyncEngine(options: SyncOptions): SyncEngine {
       ok++;
       const busy = (inflight.get(inbox_id) ?? 0) > 0;
 
-      // A folder asked for by role alias and answered with its real id.
-      const roles = st.folders
-        .filter((f) => f.folder != null && f.id !== f.folder && (BACKEND_FOLDER_ALIASES as readonly string[]).includes(f.folder))
-        .map((f) => ({ id: f.id, role: f.folder as FolderRole }));
-      if (roles.length && learnFolderRoles(inbox_id, roles)) {
-        // A new identity, so what is derived from the folder list is derived again.
-        queryClient.setQueryData<FolderEntry[]>(keys.folders(inbox_id), (e) => (e ? [...e] : e));
-      }
+      learnRoles(inbox_id, st.folders);
       // Settled: no change of ours could still be missing from this answer.
-      const settled = !busy && (mutatedAt.get(inbox_id) ?? 0) <= (syncedAt.get(inbox_id) ?? 0);
-      syncedAt.set(inbox_id, sentAt);
+      // That takes a status sent after the change ended (a full run, or the
+      // targeted one that follows every mutation) BEFORE this run was sent.
+      const changedAt = mutatedAt.get(inbox_id) ?? 0;
+      const settled = !busy && changedAt <= (syncedAt.get(inbox_id) ?? 0) && changedAt < sentAt;
+      if ((syncedAt.get(inbox_id) ?? 0) < sentAt) syncedAt.set(inbox_id, sentAt);
 
       // Counts: the optimistic ones stand while a change is in flight.
       // A folder the cached list has and the mailbox no longer does (or the
@@ -474,7 +535,11 @@ export function createSyncEngine(options: SyncOptions): SyncEngine {
       setFolderRefresher(null);
       if (timer != null) env.clearTimeout(timer);
       if (pokeTimer != null) env.clearTimeout(pokeTimer);
-      timer = pokeTimer = null;
+      if (ownTimer != null) env.clearTimeout(ownTimer);
+      timer = pokeTimer = ownTimer = null;
+      ownTargets.clear();
+      ownController?.abort();
+      ownController = null;
       epoch++;
       controller?.abort();
       running = null;

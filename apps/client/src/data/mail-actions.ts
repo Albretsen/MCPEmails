@@ -14,7 +14,9 @@ import {
   isRoleRef,
   parseAddressList,
 } from "../api/types";
+import { usableInboxes } from "../api/inbox-health";
 import { useAssistantStore } from "../state/assistant-store";
+import { useReconnectStore } from "../state/connection-store";
 import { type ComposeMode, type ComposeState, composeSignature, isComposeEmpty, useComposeStore } from "../state/compose-store";
 import { neighbourAfterRemoval, useSelectionStore } from "../state/selection-store";
 import { showToast, useToastStore } from "../state/toast-store";
@@ -154,7 +156,7 @@ async function relocate(all: MessageKey[], o: RelocateOptions): Promise<void> {
       });
     }
     refreshLists();
-    refreshFolders();
+    refreshFolders({ own: true });
   };
 
   const entry = pushUndo(o.label, undo);
@@ -274,11 +276,15 @@ function inboxes(): Inbox[] {
   return queryClient.getQueryData<Inbox[]>(keys.inboxes) ?? [];
 }
 
-/** The mailbox a new message is sent from: the active scope, else the first inbox. */
+/** The mailbox a new message is sent from: the active scope, else the first
+ *  inbox. Never one that cannot send (it is down, per `/session`), as long
+ *  as another can. */
 export function defaultInboxId(): string {
   const scope = useSelectionStore.getState().scope;
-  if (scope !== "all") return scope;
-  return inboxes()[0]?.inbox_id ?? "";
+  const all = inboxes();
+  const usable = usableInboxes(all, useReconnectStore.getState().inboxes);
+  if (scope !== "all" && (usable.some((i) => i.inbox_id === scope) || !usable.length)) return scope;
+  return (usable[0] ?? all[0])?.inbox_id ?? "";
 }
 
 export function newCompose(init: Partial<ComposeState> = {}): void {
@@ -386,7 +392,8 @@ function draftInput(c: ComposeState): DraftInput {
 function refreshDrafts(): void {
   void queryClient.invalidateQueries({ queryKey: keys.draftsRoot });
   refreshLists((meta) => meta.folder === "drafts");
-  refreshFolders();
+  // Our own save or delete: only this mailbox's Drafts count can have moved.
+  refreshFolders({ own: true });
 }
 
 export interface SaveDraftOptions {
@@ -571,7 +578,7 @@ export function send(draft: ComposeState, opts: SendOptions = {}): boolean {
       await deliver(c);
       useAssistantStore.getState().bumpFolder({ role: "sent" });
       refreshLists((meta) => meta.folder === "sent" || meta.folder === "drafts");
-      refreshFolders();
+      refreshFolders({ own: true });
       // Confirm, unless a newer toast (another action's Undo) is on screen.
       const shown = useToastStore.getState().toast;
       if (!shown || shown.id === sendingToast) showToast(`Sent to ${c.to.trim()}`);

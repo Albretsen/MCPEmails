@@ -537,3 +537,138 @@ describe("socket: timeout and abort", () => {
     expect(client.socketLive).toBe(true);
   });
 });
+
+describe("socket: recycling (4409)", () => {
+  const send = (api: HttpMailApi, key = "user-key") =>
+    api.sendMessage({ inbox_id: "a", to: [{ name: "", email: "x@example.com" }], subject: "s", body_text: "b", idempotency_key: key });
+  const opOf = (r: { body: unknown }) => (r.body as { op?: string } | undefined)?.op;
+
+  it("reconnects at once, with no backoff, and says nothing went wrong", async () => {
+    const { backend, client, page, diag, state, live } = setup();
+    await live();
+    backend.recycleSockets();
+    // No timer: the next socket is opened in the close handler itself.
+    expect(backend.sockets).toHaveLength(2);
+    expect(page.armed().filter((d) => d <= 2000)).toEqual([]);
+    await settle();
+    expect(client.socketLive).toBe(true);
+    expect(diag.some((d) => d.lastCloseCode === 4409)).toBe(true);
+    expect(state.authFailures).toBe(0);
+    expect(state.refreshed).toBe(0);
+  });
+
+  it("a mutation refused with socket_recycling is sent again once over HTTP with the same idempotency key", async () => {
+    const { backend, api, client, viaHttp, live } = setup();
+    await live();
+    let release = () => {};
+    backend.hold = new Promise<void>((r) => (release = r));
+    // A read in flight keeps the recycling socket open (the server's drain).
+    const inFlight = client.read<{ total: number }>("list", "a", { folder: "inbox", limit: 50 });
+    await settle();
+    backend.recycleSockets();
+    expect(client.socketLive).toBe(true); // not told yet
+    const sent = send(api);
+    await settle();
+    // The frame went to the socket and was refused, not run.
+    expect(backend.sockets[0]?.requestFrames().filter((f) => opOf({ body: f.body }) === "send")).toHaveLength(1);
+    expect(client.socketLive).toBe(false);
+    release();
+    backend.hold = null;
+    await expect(sent).resolves.toMatchObject({ inbox_id: "a" });
+    await expect(inFlight).resolves.toMatchObject({ total: 2 });
+    // Exactly one send reached the server, over HTTP, with the caller's key.
+    expect(backend.calls("send")).toHaveLength(1);
+    expect(backend.delivered).toHaveLength(1);
+    expect(backend.delivered[0]?.args.idempotency_key).toBe("user-key");
+    expect(viaHttp().filter((r) => opOf(r) === "send")).toHaveLength(1);
+    // The in-flight read was answered on the old socket, which then closed.
+    expect(backend.calls("list")).toHaveLength(1);
+    await settle();
+    expect(backend.sockets).toHaveLength(2);
+    expect(client.socketLive).toBe(true);
+  });
+
+  it("replays a read that got the recycling error, and routes new requests over HTTP until the new socket is ready", async () => {
+    const { backend, api, client, viaHttp, viaSocket, live } = setup();
+    await live();
+    backend.recycleSockets("hold");
+    const before = viaSocket().length;
+    const first = await client.read<{ total: number }>("list", "a", { folder: "inbox", limit: 50 });
+    expect(first.total).toBe(2);
+    expect(client.socketLive).toBe(false);
+    // While the old socket drains, nothing new is written to it.
+    const frames = backend.sockets[0]?.requestFrames().length;
+    await client.read("status", "a", { folders: ["inbox"] });
+    await api.setFlags([makeKey("a", "m1")], { read: true });
+    expect(backend.sockets[0]?.requestFrames().length).toBe(frames);
+    expect(viaSocket().length).toBe(before);
+    expect(viaHttp().map(opOf)).toEqual(["list", "status", "flag"]);
+    expect(backend.calls("list")).toHaveLength(1);
+
+    backend.sockets[0]?.finishRecycle();
+    await settle();
+    expect(client.socketLive).toBe(true);
+    await client.read("list", "a", { folder: "inbox", limit: 10 });
+    expect(viaSocket().length).toBe(before + 1);
+  });
+
+  it("hands back frames it had not written yet instead of failing them", async () => {
+    const { backend, api, client, live } = setup();
+    await live();
+    let release = () => {};
+    backend.hold = new Promise<void>((r) => (release = r));
+    // 16 in flight (the cap); the send waits behind them, unwritten.
+    const reads = Promise.all(Array.from({ length: 16 }, (_, i) => client.read("read", "a", { message_id: "m1", body_max_chars: i + 1 })));
+    await settle();
+    const sent = send(api, "queued-key");
+    await settle();
+    expect(backend.calls("send")).toHaveLength(0);
+    backend.recycleSockets();
+    // The drain gives up (the server's 3 s): the socket closes with work in flight.
+    backend.sockets[0]?.finishRecycle();
+    release();
+    backend.hold = null;
+    await expect(sent).resolves.toMatchObject({ inbox_id: "a" });
+    expect(backend.delivered.map((d) => d.args.idempotency_key)).toEqual(["queued-key"]);
+    // The reads that were in flight are retried like after any close.
+    await expect(reads).resolves.toHaveLength(16);
+  });
+
+  it("does not generalise: a mutation in flight when the socket closes still fails, and other 503s are not resent", async () => {
+    const { backend, api, live } = setup();
+    await live();
+    let release = () => {};
+    backend.hold = new Promise<void>((r) => (release = r));
+    const sent = send(api).then(
+      () => "ok",
+      (e: { code?: string }) => e,
+    );
+    await settle();
+    backend.recycleSockets();
+    backend.sockets[0]?.finishRecycle(); // the drain timed out with the send still running
+    release();
+    backend.hold = null;
+    expect(await sent).toMatchObject({ code: "network" });
+    expect(backend.calls("send")).toHaveLength(1);
+
+    await settle();
+    backend.failNext({ op: "send" }, { code: "provider_error", message: "boom", retryable: true });
+    await expect(send(api, "other")).rejects.toMatchObject({ code: "provider_error" });
+    expect(backend.calls("send")).toHaveLength(2);
+  });
+
+  it("a second recycle right after the first waits for the usual backoff", async () => {
+    const { backend, client, page, live } = setup();
+    await live();
+    backend.recycleSockets();
+    await settle();
+    expect(client.socketLive).toBe(true);
+    backend.recycleSockets();
+    await settle();
+    expect(client.socketLive).toBe(false);
+    expect(backend.sockets).toHaveLength(2);
+    expect(page.armed()).toContain(1000);
+    await page.advance(1000);
+    expect(client.socketLive).toBe(true);
+  });
+});

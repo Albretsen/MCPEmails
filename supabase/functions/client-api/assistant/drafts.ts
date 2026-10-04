@@ -331,7 +331,9 @@ function editEvent(next: DraftState, callId: string, messageId: string) {
     phase: "editing" as const,
     kind: next.kind,
     reply_to: replyKey(next),
-    fields: { inbox_id: next.inbox_id, to: next.to, subject: next.subject, ...(next.cc ? { cc: next.cc } : {}) },
+    // An edit always states cc, empty included: the client reads a present-but-empty
+    // field as "clear" and an absent one as "unchanged".
+    fields: { inbox_id: next.inbox_id, to: next.to, subject: next.subject, cc: next.cc ?? "" },
     call_id: callId,
     message_id: messageId,
   };

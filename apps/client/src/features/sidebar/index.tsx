@@ -3,11 +3,18 @@ import { memo, startTransition } from "react";
 import { IS_MOCK_BACKEND } from "../../api";
 import { type FolderRef, type MailboxScope, folderRefId, planDisplayName } from "../../api/types";
 import { DASHBOARD_URL } from "../../config";
-import { type FolderNavItem, mailActions, useAssistantAllowance, useFolders, useInboxUnreadCounts, useInboxes } from "../../data";
+import {
+  type FolderNavItem,
+  mailActions,
+  useAssistantAllowance,
+  useFolders,
+  useInboxHealth,
+  useInboxUnreadCounts,
+  useInboxes,
+} from "../../data";
 import { cx } from "../../lib/cx";
 import { SCENES_ENABLED } from "../../dev";
 import { useAssistantStore } from "../../state/assistant-store";
-import { useReconnectStore } from "../../state/connection-store";
 import { READ_ONLY_EXPLANATION, READ_ONLY_LABEL, useCanWrite } from "../../state/permissions";
 import { useSelectionStore } from "../../state/selection-store";
 import { showToast } from "../../state/toast-store";
@@ -16,7 +23,7 @@ import { Avatar, FOLDER_ROLE_ICON, IconButton, Kbd, LogoMark, Skeleton } from ".
 import { useShell } from "../shell";
 import s from "./Sidebar.module.css";
 import { AccountMenu } from "./AccountMenu";
-import { allowanceView, countSuffix } from "./model";
+import { allowanceView, countSuffix, mailboxProblem, sidebarAttention } from "./model";
 
 /* The sidebar: compose, mailboxes, folders with counts, the assistant
  * allowance meter and the account row. Content of the <nav> landmark the
@@ -32,11 +39,10 @@ export function SidebarPane() {
   const unread = useInboxUnreadCounts();
   const multi = (inboxes?.length ?? 0) > 1;
   const mayWrite = useCanWrite();
-  // What `/session` says, or what the mailbox's own calls last answered.
-  const refused = useReconnectStore((x) => x.inboxes);
-  const needsReconnect = (i: { inbox_id: string; sender_identity_status: string }) =>
-    i.sender_identity_status === "reconnect_required" || refused[i.inbox_id] === true;
-  const stale = (inboxes ?? []).filter(needsReconnect);
+  // What `/session` says about each mailbox (no failing mail call needed),
+  // plus what a mailbox's own calls answered since.
+  const boxes = useInboxHealth();
+  const attention = sidebarAttention(boxes);
 
   return (
     <div className={cx(s.root, rail && s.rail)}>
@@ -70,13 +76,13 @@ export function SidebarPane() {
         {multi ? (
           <MailboxItem id="all" name="All mailboxes" address="" count={unread.all ?? 0} active={scope === "all"} rail={rail} />
         ) : null}
-        {(inboxes ?? []).map((inbox) => (
+        {boxes.map((inbox) => (
           <MailboxItem
             key={inbox.inbox_id}
             id={multi ? inbox.inbox_id : "all"}
             name={inbox.display_name || inbox.email_address}
             address={inbox.email_address}
-            needsReconnect={needsReconnect(inbox)}
+            problem={mailboxProblem(inbox)}
             count={unread[inbox.inbox_id] ?? 0}
             active={multi && scope === inbox.inbox_id}
             rail={rail}
@@ -95,12 +101,17 @@ export function SidebarPane() {
         ) : null}
       </ul>
 
-      {stale.length && !rail ? (
+      {attention && !rail ? (
         <p className={s.reconnect} role="status">
-          {stale.length === 1 ? `${stale[0]?.email_address} needs reconnecting.` : `${stale.length} mailboxes need reconnecting.`}{" "}
-          <a href={DASHBOARD_URL} target="_blank" rel="noreferrer">
-            Reconnect
-          </a>
+          {attention.text}
+          {attention.reconnect ? (
+            <>
+              {" "}
+              <a href={DASHBOARD_URL} target="_blank" rel="noreferrer">
+                Reconnect
+              </a>
+            </>
+          ) : null}
         </p>
       ) : null}
 
@@ -146,25 +157,26 @@ interface MailboxItemProps {
   name: string;
   /** Empty for "All mailboxes". */
   address: string;
-  needsReconnect?: boolean;
+  /** Why this mailbox shows the warning badge, or null when it is fine. */
+  problem?: string | null;
   count: number;
   active: boolean;
   rail: boolean;
 }
 
-const MailboxItem = memo(function MailboxItem({ id, name, address, needsReconnect, count, active, rail }: MailboxItemProps) {
+const MailboxItem = memo(function MailboxItem({ id, name, address, problem, count, active, rail }: MailboxItemProps) {
   const isBox = address !== "";
   return (
     <li>
       <button
         type="button"
         className={cx(s.item, active && s.active)}
-        title={isBox ? (needsReconnect ? `${address} (needs reconnecting)` : address) : name}
+        title={isBox ? (problem ? `${address}. ${problem}` : address) : name}
         aria-current={active ? "page" : undefined}
         onClick={() => openScope(id)}
       >
         <span className={s.itemIcon}>
-          {isBox ? <span className={cx(s.liveDot, needsReconnect && s.warnDot)} /> : <Layers size={16} aria-hidden="true" />}
+          {isBox ? <span className={cx(s.liveDot, problem && s.warnDot)} /> : <Layers size={16} aria-hidden="true" />}
         </span>
         {!rail ? (
           <>
@@ -182,6 +194,7 @@ const MailboxItem = memo(function MailboxItem({ id, name, address, needsReconnec
           <span className="sr-only">{name}</span>
         )}
         <span className="sr-only">{countSuffix(count, "unread")}</span>
+        {problem ? <span className="sr-only">. {problem}</span> : null}
       </button>
     </li>
   );

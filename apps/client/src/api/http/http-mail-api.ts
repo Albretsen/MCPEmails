@@ -18,6 +18,8 @@
  */
 
 import type { MailApi } from "../mail-api";
+import { hasServerStatus, inboxHealth } from "../inbox-health";
+import type { PartialPageListener } from "../mail-api";
 import { type InboxPage, mergeInboxPages } from "../merge";
 import {
   type AssistantAllowance,
@@ -80,6 +82,10 @@ export interface MutationNotice {
   inbox_ids: string[];
   /** Keys the mutation touched, plus the keys they have afterwards. */
   keys: MessageKey[];
+  /** Per mailbox, the only folders whose counts or contents this mutation
+   *  can have changed (role aliases, names or ids, as `status` accepts them).
+   *  An empty list: no folder changed (a scheduled send). */
+  touched: { inbox_id: string; folders: string[] }[];
 }
 
 /** `missing`: folders asked about that the mailbox no longer has. */
@@ -165,6 +171,14 @@ export function parseMoveResult(inbox_id: string, ids: string[], result: unknown
   return { moved };
 }
 
+/** `role` as the server sends it on a folder entry: one of the six system
+ *  roles or null. Absent stays absent (the client then guesses from names);
+ *  a value this build does not know is read as "no system role". */
+function withKnownRole(f: FolderEntry): FolderEntry {
+  if (f.role === undefined || f.role === null) return f;
+  return (BACKEND_FOLDER_ALIASES as readonly string[]).includes(f.role) ? f : { ...f, role: null };
+}
+
 function groupByInbox(keys: MessageKey[]): Map<string, string[]> {
   const out = new Map<string, string[]>();
   for (const key of keys) {
@@ -211,7 +225,33 @@ export class HttpMailApi implements MailApi {
   /** The last session of this user + workspace, from the local cache. Lets
    *  the first batch of reads go out in parallel with `GET /session`. */
   seedSession(session: SessionInfo): void {
-    if (!this.session) this.session = session;
+    if (this.session) return;
+    this.session = session;
+    this.applyHealth(session);
+  }
+
+  /** Tells the client which mailboxes `/session` calls down, so nothing is
+   *  sent for them. A server that sends no `status` says nothing here: what
+   *  the client remembered about refusals stands. */
+  private applyHealth(s: SessionInfo): void {
+    if (!hasServerStatus(s.inboxes)) return;
+    const down: string[] = [];
+    const ok: string[] = [];
+    for (const i of s.inboxes) (inboxHealth(i).usable ? ok : down).push(i.inbox_id);
+    this.client.setInboxHealth(down, ok);
+  }
+
+  /** A mail call for a mailbox the session calls down just succeeded (the
+   *  periodic probe, after a reconnect in the dashboard): the session is
+   *  corrected here, without waiting for the server's next `/session`, which
+   *  may be up to a minute behind. Returns the corrected session, or null
+   *  when there was nothing to correct. */
+  markInboxOk(inbox_id: string): SessionInfo | null {
+    const s = this.session;
+    const inbox = s?.inboxes.find((i) => i.inbox_id === inbox_id);
+    if (!s || !inbox || inbox.status === undefined || inboxHealth(inbox).usable) return null;
+    this.session = { ...s, inboxes: s.inboxes.map((i) => (i === inbox ? { ...i, status: "ok", status_reason: null } : i)) };
+    return this.session;
   }
 
   peekSession(): SessionInfo | null {
@@ -225,6 +265,7 @@ export class HttpMailApi implements MailApi {
         this.session = s;
         this.sessionAt = this.now();
         this.allowanceTaken = false;
+        this.applyHealth(s);
         for (const l of [...this.sessionListeners]) l(s);
         return s;
       });
@@ -296,19 +337,44 @@ export class HttpMailApi implements MailApi {
     return () => void this.mutationListeners.delete(listener);
   }
 
-  private async mutating<T>(inbox_ids: string[], keys: MessageKey[], run: () => Promise<{ value: T; keys?: MessageKey[] }>): Promise<T> {
+  /** `folders`: what the mutation can have changed in each of its mailboxes
+   *  (the same list for every mailbox, or one list per mailbox). */
+  private async mutating<T>(
+    inbox_ids: string[],
+    keys: MessageKey[],
+    folders: readonly string[] | ReadonlyMap<string, Iterable<string>>,
+    run: () => Promise<{ value: T; keys?: MessageKey[] }>,
+  ): Promise<T> {
+    const touched = inbox_ids.map((inbox_id) => {
+      const list: Iterable<string> = Array.isArray(folders) ? (folders as readonly string[]) : ((folders as ReadonlyMap<string, Iterable<string>>).get(inbox_id) ?? []);
+      return { inbox_id, folders: [...new Set(list)] };
+    });
     const tell = (m: MutationNotice) => {
       for (const l of [...this.mutationListeners]) l(m);
     };
-    tell({ phase: "start", inbox_ids, keys });
+    tell({ phase: "start", inbox_ids, keys, touched });
     try {
       const out = await run();
-      tell({ phase: "end", inbox_ids, keys: [...keys, ...(out.keys ?? [])] });
+      tell({ phase: "end", inbox_ids, keys: [...keys, ...(out.keys ?? [])], touched });
       return out.value;
     } catch (err) {
-      tell({ phase: "end", inbox_ids, keys });
+      tell({ phase: "end", inbox_ids, keys, touched });
       throw err;
     }
+  }
+
+  /** Per mailbox, the folders these messages are in (as far as list rows
+   *  told us), plus `also` for every mailbox. */
+  private foldersOf(keys: MessageKey[], also: readonly string[] = []): Map<string, Set<string>> {
+    const out = new Map<string, Set<string>>();
+    for (const key of keys) {
+      const { inbox_id } = parseKey(key);
+      const set = out.get(inbox_id) ?? new Set<string>(also);
+      out.set(inbox_id, set);
+      const folder = this.known.get(key)?.folder;
+      if (folder) set.add(folder);
+    }
+    return out;
   }
 
   /* ================= rows ================= */
@@ -333,10 +399,19 @@ export class HttpMailApi implements MailApi {
       key,
       inbox_id,
       is_starred: m.is_flagged ?? extra.starred ?? this.known.get(key)?.starred ?? false,
-      folder_role: roleOfFolder(m.folder ?? "") ?? extra.role ?? null,
+      folder_role: this.roleOfId(inbox_id, m.folder ?? "") ?? extra.role ?? null,
     };
     this.remember(row);
     return row;
+  }
+
+  /** The role of a folder id of one mailbox: what the server's folder list
+   *  says when it carries roles (ids are opaque and names localised on some
+   *  providers), a guess from the id otherwise. */
+  private roleOfId(inbox_id: string, folder: string): FolderRole | null {
+    const entry = this.folderMemo.get(inbox_id)?.entries.find((f) => f.id === folder);
+    if (entry && entry.role !== undefined) return entry.role;
+    return roleOfFolder(folder);
   }
 
   /* ================= reads ================= */
@@ -349,7 +424,7 @@ export class HttpMailApi implements MailApi {
   async listFolders(inbox_id: string, signal?: AbortSignal): Promise<FolderEntry[]> {
     // Slow lane: listing folders takes seconds on IMAP, and a batch answers
     // only when its slowest call has. Message lists must not wait for it.
-    const entries = arr<FolderEntry>(await this.client.read("folders", inbox_id, {}, signal, "slow"), "folders");
+    const entries = arr<FolderEntry>(await this.client.read("folders", inbox_id, {}, signal, "slow"), "folders").map(withKnownRole);
     this.folderMemo.set(inbox_id, { at: this.now(), entries });
     return entries;
   }
@@ -396,36 +471,69 @@ export class HttpMailApi implements MailApi {
     limit: number,
     fetchOne: (inbox_id: string, offset: number, limit: number) => Promise<InboxPage>,
     signal?: AbortSignal,
+    onPartial?: PartialPageListener,
   ): Promise<MessagePage> {
-    const ids = await this.inboxIds(scope, signal);
     const failures: InboxFailure[] = [];
+    // Mailboxes the session calls down are not asked at all: the server
+    // would answer 409 without looking. They are reported like any other
+    // mailbox that could not be loaded, with the session's reason as text.
+    const ids: string[] = [];
+    for (const id of await this.inboxIds(scope, signal)) {
+      const inbox = this.inboxOf(id);
+      const health = inbox ? inboxHealth(inbox) : null;
+      if (health && !health.usable) failures.push({ inbox_id: id, code: health.code ?? "reconnect_required", message: health.notice ?? "" });
+      else ids.push(id);
+    }
+    const down = failures[0];
+    if (!ids.length && down) throw new ApiError(down.code, down.message, { status: 409 });
+
+    const skipped = failures.length;
     let attempted = 0;
     let firstError: unknown = null;
-    const page = await mergeInboxPages(ids, cursor, Math.min(limit, LIST_LIMIT_MAX), async (inbox_id, offset, n) => {
-      attempted++;
-      try {
-        return await fetchOne(inbox_id, offset, n);
-      } catch (err) {
-        if (isAbortError(err) || signal?.aborted) throw err;
-        firstError ??= err;
-        failures.push({
-          inbox_id,
-          code: err instanceof ApiError ? err.code : "error",
-          message: err instanceof Error ? err.message : "Could not load this mailbox.",
-        });
-        return { inbox_id, rows: [], total: null, has_more: false };
-      }
-    });
-    if (failures.length && failures.length === attempted) throw firstError;
-    return failures.length ? { ...page, failed_inboxes: failures } : page;
+    const withFailures = (page: MessagePage): MessagePage => (failures.length ? { ...page, failed_inboxes: [...failures] } : page);
+    const page = await mergeInboxPages(
+      ids,
+      cursor,
+      Math.min(limit, LIST_LIMIT_MAX),
+      async (inbox_id, offset, n) => {
+        attempted++;
+        try {
+          return await fetchOne(inbox_id, offset, n);
+        } catch (err) {
+          if (isAbortError(err) || signal?.aborted) throw err;
+          firstError ??= err;
+          failures.push({
+            inbox_id,
+            code: err instanceof ApiError ? err.code : "error",
+            message: err instanceof Error ? err.message : "Could not load this mailbox.",
+          });
+          // Excluded from this listing: it answers "nothing, and no more".
+          return { inbox_id, rows: [], total: null, has_more: false };
+        }
+      },
+      onPartial
+        ? (partial) => {
+            if (!signal?.aborted) onPartial(withFailures(partial));
+          }
+        : undefined,
+    );
+    if (failures.length > skipped && failures.length - skipped === attempted) throw firstError;
+    return withFailures(page);
   }
 
-  async listMessages(params: ListMessagesParams, signal?: AbortSignal): Promise<MessagePage> {
+  async listMessages(params: ListMessagesParams, signal?: AbortSignal, onPartial?: PartialPageListener): Promise<MessagePage> {
     const { scope, folder, cursor, limit } = params;
     if (isRoleRef(folder) && folder.role === "scheduled") return this.scheduledPage(scope, signal);
-    if (isRoleRef(folder) && folder.role === "drafts") return this.draftsPage(scope, signal);
+    if (isRoleRef(folder) && folder.role === "drafts") return this.draftsPage(scope, signal, onPartial);
     if (isRoleRef(folder) && folder.role === "starred") {
-      return this.merged(scope, cursor, limit, (id, offset, n) => this.pageOf(id, "search", { flagged: true, limit: n, offset }, { starred: true }, signal), signal);
+      return this.merged(
+        scope,
+        cursor,
+        limit,
+        (id, offset, n) => this.pageOf(id, "search", { flagged: true, limit: n, offset }, { starred: true }, signal),
+        signal,
+        onPartial,
+      );
     }
     const role = isRoleRef(folder) ? folder.role : null;
     return this.merged(
@@ -441,10 +549,11 @@ export class HttpMailApi implements MailApi {
         return this.pageOf(id, "list", args, { role }, signal);
       },
       signal,
+      onPartial,
     );
   }
 
-  async searchMessages(params: SearchMessagesParams, signal?: AbortSignal): Promise<MessagePage> {
+  async searchMessages(params: SearchMessagesParams, signal?: AbortSignal, onPartial?: PartialPageListener): Promise<MessagePage> {
     const text = params.query.trim();
     return this.merged(
       params.scope,
@@ -457,10 +566,11 @@ export class HttpMailApi implements MailApi {
         return this.pageOf(id, "search", args, {}, signal);
       },
       signal,
+      onPartial,
     );
   }
 
-  private async draftsPage(scope: string, signal?: AbortSignal): Promise<MessagePage> {
+  private async draftsPage(scope: string, signal?: AbortSignal, onPartial?: PartialPageListener): Promise<MessagePage> {
     return this.merged(
       scope,
       null,
@@ -471,6 +581,7 @@ export class HttpMailApi implements MailApi {
         return { inbox_id, rows, total: rows.length, has_more: false };
       },
       signal,
+      onPartial,
     );
   }
 
@@ -563,7 +674,7 @@ export class HttpMailApi implements MailApi {
       inbox_id,
       is_starred: r.is_flagged ?? seen?.starred ?? false,
       folder,
-      folder_role: roleOfFolder(folder) ?? seen?.role ?? null,
+      folder_role: this.roleOfId(inbox_id, folder) ?? seen?.role ?? null,
     };
   }
 
@@ -630,7 +741,9 @@ export class HttpMailApi implements MailApi {
     const patch: Record<string, unknown> = {};
     if (flags.read !== undefined) patch.read = flags.read;
     if (flags.starred !== undefined) patch.starred = flags.starred;
-    await this.mutating([...groupByInbox(keys).keys()], keys, async () => {
+    // Read state changes a folder's unread count; a star changes no count.
+    const folders = flags.read !== undefined ? this.foldersOf(keys) : [];
+    await this.mutating([...groupByInbox(keys).keys()], keys, folders, async () => {
       await this.perInbox(keys, "flag", (message_ids) => ({ message_ids, ...patch }));
       if (flags.starred !== undefined) {
         for (const k of keys) {
@@ -642,9 +755,16 @@ export class HttpMailApi implements MailApi {
     });
   }
 
-  private relocate(keys: MessageKey[], op: string, args: (ids: string[], inbox_id: string) => Record<string, unknown>): Promise<MoveResult> {
+  /** `destination`: the folder the messages go to (null: nowhere, they are
+   *  deleted for good). Source and destination are what a move can change. */
+  private relocate(
+    keys: MessageKey[],
+    op: string,
+    destination: string | null,
+    args: (ids: string[], inbox_id: string) => Record<string, unknown>,
+  ): Promise<MoveResult> {
     if (!keys.length) return Promise.resolve({ moved: [] });
-    return this.mutating([...groupByInbox(keys).keys()], keys, async () => {
+    return this.mutating([...groupByInbox(keys).keys()], keys, this.foldersOf(keys, destination ? [destination] : []), async () => {
       const results = await this.perInbox(keys, op, args);
       const moved: MoveResult["moved"] = [];
       for (const [inbox_id, { ids, result }] of results) moved.push(...parseMoveResult(inbox_id, ids, result).moved);
@@ -663,16 +783,16 @@ export class HttpMailApi implements MailApi {
     if (isRoleRef(destination) && !BACKEND_FOLDER_ALIASES.includes(destination.role)) {
       return Promise.reject(new ApiError("invalid_request", `Messages cannot be moved to ${destination.role}.`));
     }
-    return this.relocate(keys, "move", (message_ids) => ({ message_ids, destination_folder_id: dest }));
+    return this.relocate(keys, "move", dest, (message_ids) => ({ message_ids, destination_folder_id: dest }));
   }
 
   archiveMessages(keys: MessageKey[]): Promise<MoveResult> {
-    return this.relocate(keys, "archive", (message_ids) => ({ message_ids }));
+    return this.relocate(keys, "archive", "archive", (message_ids) => ({ message_ids }));
   }
 
   async deleteMessages(keys: MessageKey[], opts?: { permanent?: boolean }): Promise<MoveResult> {
     const permanent = opts?.permanent === true;
-    const result = await this.relocate(keys, "delete", (message_ids) => ({ message_ids, permanent }));
+    const result = await this.relocate(keys, "delete", permanent ? null : "trash", (message_ids) => ({ message_ids, permanent }));
     return permanent ? { moved: [] } : result;
   }
 
@@ -686,7 +806,8 @@ export class HttpMailApi implements MailApi {
   }
 
   private async sending(inbox_id: string, op: string, args: Record<string, unknown>): Promise<SendResult> {
-    return this.mutating([inbox_id], [], async () => {
+    // A send lands in Sent and may take a saved draft with it.
+    return this.mutating([inbox_id], [], ["sent", "drafts"], async () => {
       const r = await this.client.mutate<{ message_id?: string | null }>(op, inbox_id, args);
       return { value: { message_id: r?.message_id ?? null, inbox_id } };
     });
@@ -801,7 +922,7 @@ export class HttpMailApi implements MailApi {
   }
 
   async createDraft(input: DraftInput): Promise<DraftRef> {
-    return this.mutating([input.inbox_id], [], async () => {
+    return this.mutating([input.inbox_id], [], ["drafts"], async () => {
       const r = await this.client.mutate<{ draft_id: string }>("draft_create", input.inbox_id, this.draftArgs(input, true));
       if (!r?.draft_id) throw new ApiError("invalid_response", "The draft was saved without an id.");
       return { value: { inbox_id: input.inbox_id, draft_id: r.draft_id } };
@@ -816,7 +937,7 @@ export class HttpMailApi implements MailApi {
     const run = prev
       .catch(() => {})
       .then(() =>
-        this.mutating([inbox_id], [], async () => {
+        this.mutating([inbox_id], [], ["drafts"], async () => {
           const current = this.latestDraftId(inbox_id, draft_id);
           const r = await this.client.mutate<{ draft_id?: string }>("draft_update", inbox_id, { draft_id: current, ...this.draftArgs(input, false) });
           const next = r?.draft_id || current;
@@ -837,7 +958,7 @@ export class HttpMailApi implements MailApi {
 
   async deleteDraft(inbox_id: string, draft_id: string): Promise<void> {
     await (this.draftChain.get(`${inbox_id}:${this.latestDraftId(inbox_id, draft_id)}`) ?? Promise.resolve()).catch(() => {});
-    await this.mutating([inbox_id], [], async () => {
+    await this.mutating([inbox_id], [], ["drafts"], async () => {
       await this.client.mutate("draft_delete", inbox_id, { draft_id: this.latestDraftId(inbox_id, draft_id) });
       return { value: undefined };
     });
@@ -863,7 +984,8 @@ export class HttpMailApi implements MailApi {
 
   async scheduleSend(input: ScheduleSendInput): Promise<ScheduledSend> {
     const attachments = this.checkAttachments(input.attachments);
-    return this.mutating([input.inbox_id], [], async () => {
+    // Held by the server until its time: no folder changes now.
+    return this.mutating([input.inbox_id], [], [], async () => {
       const to = emails(input.to);
       const r = await this.client.mutate<Partial<ScheduledSend> & { schedule_id?: string }>("schedule_create", input.inbox_id, {
         send_at: input.send_at,
@@ -892,7 +1014,7 @@ export class HttpMailApi implements MailApi {
   }
 
   async cancelScheduled(inbox_id: string, id: string): Promise<void> {
-    await this.mutating([inbox_id], [], async () => {
+    await this.mutating([inbox_id], [], [], async () => {
       await this.client.mutate("schedule_cancel", inbox_id, { id });
       this.scheduledSeen.delete(makeKey(inbox_id, id));
       return { value: undefined };

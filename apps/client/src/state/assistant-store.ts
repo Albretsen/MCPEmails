@@ -7,6 +7,7 @@ import type {
   AssistantChip,
   AssistantEvent,
   AssistantToolCall,
+  DraftFields,
   MailEffect,
   ToolCallState,
   ToolName,
@@ -320,6 +321,9 @@ export const useAssistantStore = create<AssistantState>((set, get) => {
     }
   };
 
+  /** Bcc of the draft the current run was started with, and what it answers. */
+  let runBcc: { reply_to: MessageKey | undefined; bcc: string } | null = null;
+
   const applyDraftStream = (ev: Extract<AssistantEvent, { type: "draft_stream" }>) => {
     const store = useComposeStore.getState();
     let c = store.compose;
@@ -335,6 +339,7 @@ export const useAssistantStore = create<AssistantState>((set, get) => {
         inbox_id,
         to: ev.fields.to,
         cc: ev.fields.cc ?? "",
+        bcc: runBcc && runBcc.reply_to === ev.reply_to ? runBcc.bcc : "",
         subject: ev.fields.subject,
         body: "",
         replyTo: ev.reply_to,
@@ -343,8 +348,25 @@ export const useAssistantStore = create<AssistantState>((set, get) => {
       c = useComposeStore.getState().compose;
     }
     if (!c) return;
-    const patch: Partial<typeof c> = { ai: true, to: ev.fields.to || c.to, subject: ev.fields.subject || c.subject };
-    if (ev.fields.cc) patch.cc = ev.fields.cc;
+    // Bcc is never in `patch`: the server does not carry it, so a Bcc the
+    // person typed stays exactly as it is across anything the assistant does.
+    const patch: Partial<typeof c> = { ai: true };
+    const fields = ev.fields as Partial<DraftFields>;
+    if (ev.phase === "editing") {
+      // An edit says what the draft's header is NOW. A field that is present
+      // is taken as it stands, empty included (the assistant removed the last
+      // recipient: the line is cleared); a field that is absent was not
+      // touched.
+      if (typeof fields.to === "string") patch.to = fields.to;
+      if (typeof fields.cc === "string") patch.cc = fields.cc;
+      if (typeof fields.subject === "string") patch.subject = fields.subject;
+    } else {
+      // Writing: the header streams in piece by piece, and an empty field
+      // only means "not there yet".
+      patch.to = fields.to || c.to;
+      patch.subject = fields.subject || c.subject;
+      if (fields.cc) patch.cc = fields.cc;
+    }
     if (ev.call_id && ev.message_id) patch.draftCall = { call_id: ev.call_id, message_id: ev.message_id };
     if (ev.done && ev.draft_id) patch.draft_id = ev.draft_id;
     if (ev.done) {
@@ -478,6 +500,9 @@ export const useAssistantStore = create<AssistantState>((set, get) => {
       const abort = new AbortController();
       controller = abort;
       const c = useComposeStore.getState().compose;
+      // The server does not know about Bcc: if the assistant reopens this
+      // draft after the form was closed, the Bcc typed on it comes back.
+      runBcc = c?.bcc.trim() ? { reply_to: c.replyTo, bcc: c.bcc } : null;
       const turn = get().turn + 1;
       // Counted now, so the meter moves with the click. The server's number
       // replaces it when the run ends.

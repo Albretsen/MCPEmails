@@ -3,6 +3,7 @@ import { getMailApi } from "../api";
 import type { MailEvent, MessageRow } from "../api/types";
 import { useAssistantStore } from "../state/assistant-store";
 import { useComposeStore } from "../state/compose-store";
+import { hasHeldRows, releaseHeldRows } from "../state/held-rows";
 import { useSelectionStore } from "../state/selection-store";
 import { useUiStore } from "../state/ui-store";
 import { addToFolderCounts, applyFlags, insertInboxRows, refreshFolders, refreshLists, removeMovedRows } from "./cache";
@@ -29,6 +30,8 @@ export function insertNewMail(rows: MessageRow[]): void {
  *  (pointer left, or the "N new emails" pill was pressed). */
 export function flushPendingNew(): void {
   insertNewMail(useAssistantStore.getState().takePendingNew());
+  // Rows of a mailbox that answered late wait behind the same pill.
+  releaseHeldRows();
 }
 
 function onMailEvent(event: MailEvent): void {
@@ -69,7 +72,7 @@ export function startRealtime(): () => void {
       leaveTimer = null;
       if (s.listHover) return;
       useAssistantStore.getState().setLinkCall(null);
-      if (!useAssistantStore.getState().pendingNew.length) return;
+      if (!useAssistantStore.getState().pendingNew.length && !hasHeldRows()) return;
       leaveTimer = setTimeout(() => {
         if (!useUiStore.getState().listHover) flushPendingNew();
       }, INSERT_AFTER_LEAVE_MS);

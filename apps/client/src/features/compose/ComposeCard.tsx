@@ -1,6 +1,8 @@
 import { CalendarClock, Clock, Paperclip, ShieldAlert, Trash2, X } from "lucide-react";
 import { type ChangeEvent, type KeyboardEvent, useEffect, useId, useRef, useState } from "react";
-import { mailActions, useInboxes, useMailActions } from "../../data";
+import { SENDER_IDENTITY_HINT } from "../../api/inbox-health";
+import { mailActions, useInboxHealth, useInboxes, useMailActions } from "../../data";
+import { fromChoices, fromOptionLabel } from "./from";
 import { attachmentProblem } from "../../data/mail-actions";
 import { cx } from "../../lib/cx";
 import { formatBytes } from "../../lib/format";
@@ -55,6 +57,7 @@ export function ComposeCard({ inline }: ComposeCardProps) {
   const patch = useComposeStore((x) => x.patch);
   const scheduleOpen = useUiStore((u) => u.menu === "schedule");
   const { data: inboxes } = useInboxes();
+  const boxes = useInboxHealth();
   const { phone } = useShell();
   const reduced = usePrefersReducedMotion();
   const actions = useMailActions();
@@ -129,6 +132,7 @@ export function ComposeCard({ inline }: ComposeCardProps) {
 
   const held = c.held;
   const multi = (inboxes?.length ?? 0) > 1;
+  const senders = fromChoices(boxes, c.inbox_id);
   const showSubject = !inline || c.mode === "forward";
   const banner =
     c.streaming === "writing"
@@ -261,12 +265,12 @@ export function ComposeCard({ inline }: ComposeCardProps) {
             className={s.fieldInput}
             value={c.inbox_id}
             disabled={!!c.replyTo}
+            title={senders.find((i) => i.inbox_id === c.inbox_id)?.health.senderHint ? SENDER_IDENTITY_HINT : undefined}
             onChange={(e) => edit({ inbox_id: e.target.value })}
           >
-            {(inboxes ?? []).map((i) => (
+            {senders.map((i) => (
               <option key={i.inbox_id} value={i.inbox_id}>
-                {i.email_address}
-                {multi ? ` · ${i.display_name}` : ""}
+                {fromOptionLabel(i, multi)}
               </option>
             ))}
           </select>

@@ -131,6 +131,14 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Some mailboxes of the unified list have not answered yet: a small spinner
+   beside the title (their names are its title). Rows are already shown. */
+.pending {
+  flex: none;
+  display: inline-flex;
+  align-self: center;
+  color: var(--fg-3);
+}
 .countText {
   margin-left: auto;
   font: 11.5px var(--font-mono);

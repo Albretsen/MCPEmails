@@ -3,7 +3,8 @@ import type { ApprovalDraft } from "../api/assistant-api";
 import { ApiClient } from "../api/http/client";
 import { HttpAssistantTransport } from "../api/http/http-assistant";
 import { HttpMailApi } from "../api/http/http-mail-api";
-import type { MessageDetail, SessionInfo } from "../api/types";
+import { hasServerStatus, inboxHealth, usableInboxes } from "../api/inbox-health";
+import type { Inbox, MessageDetail, SessionInfo } from "../api/types";
 import {
   type AuthBackend,
   EMPTY_SESSION,
@@ -47,6 +48,7 @@ import { getPlatform } from "../platform";
 import { useAssistantStore } from "../state/assistant-store";
 import { type ComposeState, useComposeStore } from "../state/compose-store";
 import { markInboxAuth, useConnectionStore, useReconnectStore } from "../state/connection-store";
+import { releaseHeldRows } from "../state/held-rows";
 import { useSelectionStore } from "../state/selection-store";
 import { useToastStore } from "../state/toast-store";
 import { DEFAULT_ROUTE, getRoute, navigate } from "./router";
@@ -107,22 +109,62 @@ function writeRefused(ids: string[]): void {
   }
 }
 
-/** A mail call said whether its mailbox accepts the stored credentials. */
+/** Mailboxes the current session itself calls down (`status` from `/session`). */
+function serverDown(): string[] {
+  const inboxes = useSessionStore.getState().session?.inboxes ?? [];
+  return inboxes.filter((i) => i.status !== undefined && !inboxHealth(i).usable).map((i) => i.inbox_id);
+}
+
+function persistRefused(): void {
+  writeRefused([...new Set([...serverDown(), ...Object.keys(useReconnectStore.getState().inboxes)])]);
+}
+
+/** When `/session` was last asked why a mailbox started refusing, per mailbox. */
+const askedWhy = new Map<string, number>();
+const ASK_WHY_GAP_MS = 2 * 60_000;
+
+/** A mail call said whether its mailbox accepts the stored credentials.
+ *
+ * `/session` is the authority on that (per-inbox `status`): this only fills
+ * the gap between two sessions. A mailbox that starts refusing mid-session is
+ * marked here at once and the session asked for the reason; one the session
+ * calls down and whose probe now succeeds is put back at once. */
 function onInboxAuth(inbox_id: string, needsReconnect: boolean): void {
+  const inbox = useSessionStore.getState().session?.inboxes.find((i) => i.inbox_id === inbox_id);
+  const saidDown = !!inbox && inbox.status !== undefined && !inboxHealth(inbox).usable;
   const was = useReconnectStore.getState().inboxes[inbox_id] === true;
-  if (was === needsReconnect) return;
-  markInboxAuth(inbox_id, needsReconnect);
-  writeRefused(Object.keys(useReconnectStore.getState().inboxes));
-  if (!needsReconnect) {
-    // Reconnected: what was loaded without it is loaded again.
-    refreshLists((meta) => meta.scope === "all" || meta.scope === inbox_id);
-    void queryClient.invalidateQueries({ queryKey: keys.folders(inbox_id) });
+  if (needsReconnect) {
+    // Nothing new: the session, or an earlier call, already said so.
+    if (saidDown || was) return;
+    markInboxAuth(inbox_id, true);
+    persistRefused();
+    // The server knows which kind of refusal it was: its copy replaces ours.
+    if (inbox?.status !== undefined && Date.now() - (askedWhy.get(inbox_id) ?? -Infinity) > ASK_WHY_GAP_MS) {
+      askedWhy.set(inbox_id, Date.now());
+      void loadSession();
+    }
+    return;
   }
+  if (!saidDown && !was) return;
+  if (was) markInboxAuth(inbox_id, false);
+  if (saidDown) {
+    const next = api?.markInboxOk(inbox_id);
+    if (next) {
+      queryClient.setQueryData(keys.session, next);
+      queryClient.setQueryData(keys.inboxes, next.inboxes);
+      useSessionStore.setState({ session: next });
+    }
+  }
+  persistRefused();
+  // Reconnected: what was loaded without it is loaded again.
+  refreshLists((meta) => meta.scope === "all" || meta.scope === inbox_id);
+  void queryClient.invalidateQueries({ queryKey: keys.folders(inbox_id) });
 }
 
 /** Everything a previous user could have left in memory. */
 function resetStores(opts: { location: boolean }): void {
   useAssistantStore.getState().reset();
+  releaseHeldRows();
   if (opts.location) {
     useReconnectStore.setState({ inboxes: {} });
     writeRefused([]);
@@ -152,7 +194,8 @@ function sendApproved(d: ApprovalDraft): void {
           inbox_id: d.inbox_id,
           to: d.to,
           cc: d.cc ?? "",
-          bcc: "",
+          // The Bcc the person had typed on the draft this run started with.
+          bcc: d.bcc ?? "",
           subject: d.subject,
           body: d.body,
           replyTo: d.reply_to,
@@ -181,13 +224,26 @@ function applySession(s: SessionInfo): void {
   queryClient.setQueryData(keys.session, s);
   queryClient.setQueryData(keys.inboxes, s.inboxes);
   queryClient.setQueryData(keys.allowance, s.allowance);
+  // Which mailboxes worked before this answer (as the app was treating them).
+  const usableIds = (inboxes: readonly Inbox[], refused: Readonly<Record<string, true>>) =>
+    usableInboxes(inboxes, refused)
+      .map((i) => i.inbox_id)
+      .sort()
+      .join(",");
+  const usableBefore = before ? usableIds(before.inboxes, useReconnectStore.getState().inboxes) : null;
   useSessionStore.setState({ session: s, status: "ready", fromCache: false, errorCode: null });
+  if (hasServerStatus(s.inboxes)) {
+    // The server's word replaces what mail calls were remembered to have said.
+    if (Object.keys(useReconnectStore.getState().inboxes).length) useReconnectStore.setState({ inboxes: {} });
+    persistRefused();
+  }
   // Folder lists nobody has yet are asked for NOW, in the same tick as the
   // message lists and `status` that were waiting for this answer, so a cold
   // boot is one batch request and not a second one after the next render.
   const mail = api;
   if (mail) {
-    for (const inbox of s.inboxes) {
+    // Not for a mailbox the session calls down: nothing is asked of those.
+    for (const inbox of usableInboxes(s.inboxes)) {
       const key = keys.folders(inbox.inbox_id);
       if (queryClient.getQueryData(key) !== undefined) continue;
       void queryClient.prefetchQuery({
@@ -201,7 +257,18 @@ function applySession(s: SessionInfo): void {
   // The set of mailboxes changed since the cached session: unified lists
   // were merged from the old set.
   const ids = (x: SessionInfo | null) => (x?.inboxes ?? []).map((i) => i.inbox_id).sort().join(",");
+  const usableNow = usableIds(s.inboxes, useReconnectStore.getState().inboxes);
   if (before && ids(before) !== ids(s)) refreshLists((meta) => meta.scope === "all");
+  else if (usableBefore != null && usableBefore !== usableNow) {
+    // A mailbox went down or came back: lists that include it are rebuilt
+    // (its own, and the unified ones), and a mailbox that is back gets its
+    // folders asked for again.
+    const was = new Set(usableBefore.split(","));
+    const now = new Set(usableNow.split(","));
+    const changed = new Set([...was, ...now].filter((id) => id && was.has(id) !== now.has(id)));
+    refreshLists((meta) => meta.scope === "all" || changed.has(meta.scope));
+    for (const id of changed) if (now.has(id)) void queryClient.invalidateQueries({ queryKey: keys.folders(id) });
+  }
 }
 
 /** `GET /session`. Never throws: the outcome is in the session store. */
@@ -264,6 +331,7 @@ async function onSignOut(info: SignedOutInfo): Promise<void> {
   sessionLoad = null;
   clearIdentity();
   writeRefused([]);
+  askedWhy.clear();
   useSessionStore.setState(EMPTY_SESSION);
   // An ended session keeps the URL, so signing in again returns to it.
   resetStores({ location: info.explicit });
@@ -398,8 +466,18 @@ export function startSync(): () => void {
   // Coming back to the tab (perhaps from reconnecting a mailbox in the
   // dashboard): the sync run that follows asks refused mailboxes again.
   // Registered before the engine's own listeners, so it runs first.
+  let recheckedAt = 0;
   const recheck = () => {
-    if (document.visibilityState !== "hidden") client?.recheckRefused();
+    if (document.visibilityState === "hidden") return;
+    client?.recheckRefused();
+    // The session says which mailboxes are down, and is the first to say one
+    // is back: ask it again too (focus and visibility fire together: once).
+    const s = useSessionStore.getState().session;
+    const anyDown = !!s && usableInboxes(s.inboxes, useReconnectStore.getState().inboxes).length < s.inboxes.length;
+    if (anyDown && Date.now() - recheckedAt > 5000) {
+      recheckedAt = Date.now();
+      void loadSession();
+    }
   };
   window.addEventListener("focus", recheck);
   document.addEventListener("visibilitychange", recheck);

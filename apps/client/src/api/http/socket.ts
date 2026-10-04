@@ -21,6 +21,12 @@
  *   the server closes idle sockets with 4408): what was in flight is rejected
  *   as a retryable `network` error and the socket reconnects quietly with
  *   jittered exponential backoff.
+ * - 4409 ("recycling": the platform is about to retire the worker). Routine:
+ *   the server first answers new frames with 503 `socket_recycling` (it did
+ *   not run them), lets what is in flight finish, then closes. From the first
+ *   such answer this socket is no longer `isLive()` (new requests go over
+ *   HTTP), frames not yet written are handed back with the same error, and
+ *   on the close a new socket is opened at once, with no backoff.
  * - 4401 (bad or missing token): ONE refresh and a reconnect; a second 4401,
  *   or a refresh that fails, ends the session (`onAuthFailure`).
  * - Hidden for `hiddenCloseMs`: the socket is closed, so a background tab does
@@ -32,7 +38,7 @@
  *   dropped.
  */
 
-import { ApiError, abortError } from "./client";
+import { ApiError, SOCKET_RECYCLING, abortError } from "./client";
 
 /** Diagnostics only. `fallback-http`: no usable socket right now. */
 export type ConnectionState = "connecting" | "live" | "fallback-http";
@@ -69,7 +75,8 @@ export interface SocketDiagnostics {
   lastRoundTripMs: number | null;
   /** Sockets opened by this page so far. */
   connects: number;
-  /** Code of the last close (1000 = ours, 4408 = server idle, 4401 = auth). */
+  /** Code of the last close (1000 = ours, 4408 = server idle, 4401 = auth,
+   *  4409 = the server recycled its worker). */
   lastCloseCode: number | null;
 }
 
@@ -115,6 +122,16 @@ const MAX_IN_FLIGHT = 16;
  *  rarely after a few attempts: HTTP is serving the app meanwhile. */
 const NEVER_LIVE_ATTEMPTS = 4;
 const NEVER_LIVE_BACKOFF_MS = 5 * 60_000;
+/** The server's close code for a worker that is being retired (ws.ts). */
+export const RECYCLE_CLOSE_CODE = 4409;
+/** A second recycle this soon after one is not answered at once again. */
+const RECYCLE_IMMEDIATE_GAP_MS = 5000;
+
+function toolCodeOf(body: unknown): string | null {
+  const error = body && typeof body === "object" ? (body as { error?: unknown }).error : null;
+  const code = error && typeof error === "object" ? (error as { tool_code?: unknown }).tool_code : null;
+  return typeof code === "string" ? code : null;
+}
 
 export function socketUrl(baseUrl: string): string {
   return `${baseUrl.replace(/^http/i, "ws")}/ws`;
@@ -145,6 +162,10 @@ function browserEnv(): SocketEnv {
 }
 
 const closedError = () => new ApiError("network", "The connection closed.", { retryable: true });
+/** What the server answers a frame with while recycling; also given to frames
+ *  this side had not written yet. Either way the server did not run it. */
+const recyclingError = () =>
+  new ApiError("provider_error", "Reconnecting. Try again.", { status: 503, retryable: true, toolCode: SOCKET_RECYCLING });
 
 export class ApiSocket {
   private readonly o: Required<Omit<ApiSocketOptions, "onAuthFailure" | "WebSocket" | "env" | "onDiagnostics">> &
@@ -155,6 +176,9 @@ export class ApiSocket {
   private wanted = false;
   private ws: WebSocketLike | null = null;
   private ready = false;
+  /** The server said it is recycling: nothing new goes to this socket. */
+  private recycling = false;
+  private lastRecycleAt = -Infinity;
   private unsubscribe: (() => void) | null = null;
   private pending = new Map<string, Pending>();
   private waiting: string[] = [];
@@ -197,7 +221,7 @@ export class ApiSocket {
 
   /** Authenticated and open: requests may go over it. */
   isLive(): boolean {
-    return this.ready && this.ws?.readyState === OPEN;
+    return this.ready && !this.recycling && this.ws?.readyState === OPEN;
   }
 
   /** A handshake is under way: the socket will be live (or have failed) soon. */
@@ -324,6 +348,7 @@ export class ApiSocket {
     }
     this.ws = ws;
     this.ready = false;
+    this.recycling = false;
     this.setState("connecting", { connects: this.diag.connects + 1 });
     // The token is fetched while the socket opens.
     const token = this.o.getToken().catch(() => null);
@@ -406,6 +431,7 @@ export class ApiSocket {
       }
       return;
     }
+    if (frame.status === 503 && toolCodeOf(frame.body) === SOCKET_RECYCLING) this.onRecycling();
     const p = this.settle(id);
     if (!p) return; // aborted or timed out: the late answer is dropped
     if (p.sent) this.setState(this.diag.state, { lastRoundTripMs: Math.round((this.env.now() - p.sentAt) * 10) / 10 });
@@ -442,6 +468,24 @@ export class ApiSocket {
     }
   }
 
+  /** The server is draining this socket. Frames in flight still get their
+   *  answers; the ones not written yet are handed back as not run. */
+  private onRecycling(): void {
+    if (this.recycling) return;
+    this.recycling = true;
+    this.clear("pingTimer");
+    this.clear("pongTimer");
+    const unsent = this.waiting;
+    this.waiting = [];
+    for (const id of unsent) {
+      const p = this.pending.get(id);
+      if (!p || p.sent) continue;
+      this.pending.delete(id);
+      p.cleanup();
+      p.reject(recyclingError());
+    }
+  }
+
   private failPending(error: unknown): void {
     const all = [...this.pending.values()];
     this.pending.clear();
@@ -462,6 +506,7 @@ export class ApiSocket {
     const ws = this.ws;
     this.ws = null;
     this.ready = false;
+    this.recycling = false;
     this.clear("handshakeTimer");
     this.clear("pingTimer");
     this.clear("pongTimer");
@@ -482,12 +527,19 @@ export class ApiSocket {
 
   private onClosed(code: number): void {
     const wasReady = this.ready;
+    const recycled = code === RECYCLE_CLOSE_CODE;
     this.ws = null;
     this.ready = false;
+    this.recycling = false;
     this.clear("handshakeTimer");
     this.clear("pingTimer");
     this.clear("pongTimer");
     this.clear("hiddenTimer");
+    // Recycled: a frame this side never wrote was certainly not run. One that
+    // was written and is still unanswered (the drain gave up on it) may have
+    // been: that is a dropped connection like any other.
+    if (recycled) this.onRecycling();
+    this.recycling = false;
     this.failPending(closedError());
     this.handshakeEnded();
     this.setState("fallback-http", { lastCloseCode: code });
@@ -495,6 +547,18 @@ export class ApiSocket {
     if (code === 4401) {
       void this.onAuthClose();
       return;
+    }
+    if (recycled && wasReady) {
+      // Routine: the next worker is a fresh one. Open a socket to it now.
+      // Only the first attempt skips the backoff: if it does not get ready,
+      // or is recycled again right away, the usual schedule applies.
+      const now = this.env.now();
+      const again = now - this.lastRecycleAt < RECYCLE_IMMEDIATE_GAP_MS;
+      this.lastRecycleAt = now;
+      if (!again && this.env.isVisible() && this.env.isOnline()) {
+        this.connect();
+        return;
+      }
     }
     // A socket that worked and was closed (worker retired, idle): come back
     // promptly. One that never got ready: back off.

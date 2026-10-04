@@ -8,7 +8,10 @@ import type {
   EmailSummary,
   FolderEntry,
   Inbox,
+  InboxHealthStatus,
+  InboxStatusReason,
   ScheduledSend,
+  ServerFolderRole,
   SessionInfo,
 } from "../types";
 
@@ -73,7 +76,20 @@ const ALLOWED: Record<string, readonly string[]> = {
 /** Ops that may be called without an inbox. */
 const NO_INBOX = new Set(["schedule_list", "schedule_cancel", "contacts"]);
 
-const ALIAS: Record<string, string> = { inbox: "INBOX", sent: "Sent", archive: "Archive", trash: "Trash", drafts: "Drafts", spam: "Spam" };
+/** alias -> the folder it resolves to. A test may swap in opaque ids and
+ *  localised names (Outlook) through `FakeBackend.systemFolders`. */
+const SYSTEM_FOLDERS: Record<string, { id: string; name: string }> = {
+  inbox: { id: "INBOX", name: "Inbox" },
+  sent: { id: "Sent", name: "Sent" },
+  archive: { id: "Archive", name: "Archive" },
+  trash: { id: "Trash", name: "Trash" },
+  drafts: { id: "Drafts", name: "Drafts" },
+  spam: { id: "Spam", name: "Spam" },
+};
+
+/** Mail ops for an inbox in one of these states answer 409
+ *  `reconnect_required` without touching the mailbox (run.ts, `assertReachable`). */
+const REFUSING = new Set<InboxStatusReason>(["password_refused", "access_revoked", "no_mailbox"]);
 
 export function fakeInbox(id: string, email: string, provider: Inbox["provider"] = "gmail"): Inbox {
   return {
@@ -84,6 +100,9 @@ export function fakeInbox(id: string, email: string, provider: Inbox["provider"]
     service: null,
     sender_identities: [{ email_address: email, display_name: null, is_default: true }],
     sender_identity_status: "available",
+    // Every `/session` inbox carries these two (app.ts, `sessionInboxList`).
+    status: "ok",
+    status_reason: null,
   };
 }
 
@@ -134,6 +153,32 @@ export class FakeSocket {
   /** The close code the CLIENT gave, when it closed the socket. */
   clientClosed: number | null = null;
   private token: string | null = null;
+  private recycling = false;
+  private inFlight = 0;
+
+  /** What the server does when the platform is about to retire its worker
+   *  (ws.ts, RECYCLING): new request frames are answered 503
+   *  `socket_recycling` and not run, frames in flight finish, then the socket
+   *  closes with 4409. `drain: "hold"` keeps it open until `finishRecycle()`
+   *  (the server's drain timer), so a test can send frames into the drain. */
+  recycle(drain: "auto" | "hold" = "auto"): void {
+    if (this.recycling || this.readyState !== 1) return;
+    this.recycling = true;
+    this.heldDrain = drain === "hold";
+    this.closeIfDrained();
+  }
+
+  /** The drain is over (nothing in flight, or the server's 3 s ran out). */
+  finishRecycle(): void {
+    this.heldDrain = false;
+    if (this.recycling) this.serverClose(4409, "recycling");
+  }
+
+  private heldDrain = false;
+
+  private closeIfDrained(): void {
+    if (this.recycling && !this.heldDrain && this.inFlight <= 0) this.serverClose(4409, "recycling");
+  }
 
   constructor(
     private readonly backend: FakeBackend,
@@ -211,10 +256,28 @@ export class FakeSocket {
       this.push(this.errorFrame(null, 400, "invalid_request", "Every request frame needs an 'id'."));
       return;
     }
+    if (this.recycling) {
+      // Not run and not dropped: exactly the server's frame.
+      return this.push({
+        id,
+        status: 503,
+        body: { error: { code: "provider_error", message: "Reconnecting. Try again.", retryable: true, tool_code: "socket_recycling" } },
+      });
+    }
     const path = typeof frame.path === "string" ? frame.path : "";
     const method = SOCKET_ROUTES[path];
     if (!method) return this.push(this.errorFrame(id, 404, "not_found", "No such route on the socket."));
     if (this.token === null) return this.push(this.errorFrame(id, 401, "unauthenticated", "Sign in again."));
+    this.inFlight++;
+    try {
+      await this.run(id, path, method, frame);
+    } finally {
+      this.inFlight--;
+      this.closeIfDrained();
+    }
+  }
+
+  private async run(id: string, path: string, method: "GET" | "POST", frame: Record<string, unknown>): Promise<void> {
     const headers: Record<string, string> = { authorization: `Bearer ${this.token}`, "x-client-transport": "ws" };
     if (typeof frame.workspace_id === "string") headers["x-workspace-id"] = frame.workspace_id;
     let body: string | undefined;
@@ -240,6 +303,10 @@ export class FakeBackend {
   refuseSockets = false;
   /** Pings go unanswered (a half-open connection). */
   dropPongs = false;
+  /** The platform is retiring the worker: every open socket recycles. */
+  recycleSockets(drain: "auto" | "hold" = "auto"): void {
+    for (const s of this.sockets) s.recycle(drain);
+  }
   /** The `WebSocket` constructor to hand to the client under test. */
   readonly WebSocket: new (url: string) => FakeSocket = (() => {
     const backend = this;
@@ -269,6 +336,13 @@ export class FakeBackend {
   /** IMAP behaviour: a move gives the message a new id. "unknown": it does,
    *  and the server does not say which (no UIDPLUS: `new_message_id: null`). */
   renumberOnMove: boolean | "unknown" = false;
+  /** alias -> folder, for every inbox. */
+  systemFolders: Record<string, { id: string; name: string }> = { ...SYSTEM_FOLDERS };
+  /** The `folders` op sends `role` on every entry. False: a server that
+   *  predates the field (no `role` key at all). */
+  folderRoles = true;
+  /** Mail calls answered 409 because `/session` calls their inbox down. */
+  refusedCalls: FakeCall[] = [];
   /** Each draft update returns a new id. */
   renumberDrafts = true;
   webClientEnabled = true;
@@ -298,6 +372,40 @@ export class FakeBackend {
     all.push(...list);
     this.messages.set(inbox_id, all);
     for (const m of list) this.touch(inbox_id, m.folder);
+  }
+
+  private inboxHolds = new Map<string, Promise<void>>();
+
+  /** Mail calls for this inbox wait until the returned function is called
+   *  (one very large mailbox on a cold connection). */
+  holdInbox(inbox_id: string): () => void {
+    let release = () => {};
+    const gate = new Promise<void>((r) => (release = r));
+    this.inboxHolds.set(inbox_id, gate);
+    return () => {
+      if (this.inboxHolds.get(inbox_id) === gate) this.inboxHolds.delete(inbox_id);
+      release();
+    };
+  }
+
+  /** What `/session` says about one inbox from now on, as the server's
+   *  `health.state` would: "ok" (reason null), "reconnect_required" with
+   *  password_refused | access_revoked | sender_identity, or "error" with
+   *  no_mailbox | unavailable. Mail ops for it then answer 409 unless mail
+   *  still works (ok, sender_identity). */
+  setInboxStatus(inbox_id: string, status: InboxHealthStatus, status_reason: InboxStatusReason | null = null): void {
+    this.inboxes = this.inboxes.map((i) => {
+      if (i.inbox_id !== inbox_id) return i;
+      // An inbox row in `error` is listed with its primary address as the
+      // only sender identity and `sender_identity_status: "unavailable"`.
+      const rowError = status !== "ok" && status_reason !== "sender_identity";
+      return {
+        ...i,
+        status,
+        status_reason: status === "ok" ? null : status_reason,
+        sender_identity_status: rowError ? "unavailable" : status_reason === "sender_identity" ? "reconnect_required" : "available",
+      };
+    });
   }
 
   /** The next `times` matching calls fail with this error. */
@@ -335,9 +443,14 @@ export class FakeBackend {
       workspaces: [{ id: workspace_id, display_name: "Workspace", role: "owner", plan: "solo", web_client_enabled: this.webClientEnabled }],
       workspace_id,
       role: "owner",
-      inboxes: this.inboxes,
+      // Active inboxes first; the ones whose row is in an error state after them.
+      inboxes: [...this.inboxes.filter((i) => !this.rowError(i)), ...this.inboxes.filter((i) => this.rowError(i))],
       allowance: this.allowance,
     };
+  }
+
+  private rowError(i: Inbox): boolean {
+    return i.status !== undefined && i.status !== "ok" && i.status_reason !== "sender_identity";
   }
 
   /* ---------- fetch ---------- */
@@ -359,6 +472,18 @@ export class FakeBackend {
       await new Promise<void>((resolve, reject) => {
         signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError")), { once: true });
         void this.hold?.then(resolve);
+      });
+    }
+
+    // A slow mailbox: its calls answer when released. A batch answers when
+    // its slowest call has, as on the server.
+    const held = (path === "/mail" ? [body as FakeCall] : path === "/mail/batch" ? ((body as { calls?: FakeCall[] }).calls ?? []) : [])
+      .map((c) => this.inboxHolds.get(c?.inbox_id ?? ""))
+      .filter((p): p is Promise<void> => !!p);
+    if (held.length) {
+      await new Promise<void>((resolve, reject) => {
+        signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError")), { once: true });
+        void Promise.all(held).then(() => resolve());
       });
     }
 
@@ -409,25 +534,32 @@ export class FakeBackend {
   }
 
   private folderId(inbox_id: string, wanted: string): string {
-    const alias = ALIAS[wanted.toLowerCase()];
-    if (alias) return alias;
+    const alias = this.systemFolders[wanted.toLowerCase()];
+    if (alias) return alias.id;
     const custom = (this.customFolders.get(inbox_id) ?? []).find((f) => f.id === wanted || f.name.toLowerCase() === wanted.toLowerCase());
     if (custom) return custom.id;
     throw { code: "invalid_request", message: `folder_not_found: ${wanted}`, retryable: false } satisfies WireError;
   }
 
   private folderEntries(inbox_id: string): FolderEntry[] {
-    const system: FolderEntry[] = Object.values(ALIAS).map((id) => ({
-      id,
-      name: id === "INBOX" ? "Inbox" : id,
+    // `role` exactly as mail/roles.ts adds it: one of the six on the folder
+    // the same alias resolves to, null on every other entry. Left out
+    // altogether by a server that predates it (`folderRoles = false`).
+    const role = (r: ServerFolderRole | null) => (this.folderRoles ? { role: r } : {});
+    const system: FolderEntry[] = Object.entries(this.systemFolders).map(([alias, f]) => ({
+      id: f.id,
+      name: f.name,
       type: "folder",
-      total_messages: this.list(inbox_id, id).length,
-      unread_messages: this.list(inbox_id, id).filter((m) => !m.is_read).length,
+      // Saved drafts are mail in the Drafts folder, and counted there.
+      total_messages: this.list(inbox_id, f.id).length + (alias === "drafts" ? (this.drafts.get(inbox_id)?.size ?? 0) : 0),
+      unread_messages: this.list(inbox_id, f.id).filter((m) => !m.is_read).length,
+      ...role(alias as ServerFolderRole),
     }));
     const custom = (this.customFolders.get(inbox_id) ?? []).map((f) => ({
       ...f,
       total_messages: this.list(inbox_id, f.id).length,
       unread_messages: this.list(inbox_id, f.id).filter((m) => !m.is_read).length,
+      ...role(null),
     }));
     return [...system, ...custom];
   }
@@ -488,6 +620,11 @@ export class FakeBackend {
     }
     if (!(NO_INBOX.has(c.op) && c.inbox_id == null) && !this.messages.has(inbox_id)) {
       throw { code: "inbox_not_found", message: "no such inbox", retryable: false } satisfies WireError;
+    }
+    const reason = this.inboxes.find((i) => i.inbox_id === inbox_id)?.status_reason;
+    if (reason && REFUSING.has(reason)) {
+      this.refusedCalls.push(c);
+      throw { code: "reconnect_required", message: "Reconnect this mailbox in the dashboard.", retryable: false } satisfies WireError;
     }
     const a = c.args ?? {};
     const all = this.messages.get(inbox_id) ?? [];
@@ -569,9 +706,9 @@ export class FakeBackend {
       case "move":
         return this.relocate(inbox_id, a.message_ids as string[], this.folderId(inbox_id, String(a.destination_folder_id)));
       case "archive":
-        return this.relocate(inbox_id, a.message_ids as string[], "Archive");
+        return this.relocate(inbox_id, a.message_ids as string[], this.folderId(inbox_id, "archive"));
       case "delete":
-        return this.relocate(inbox_id, a.message_ids as string[], a.permanent ? null : "Trash");
+        return this.relocate(inbox_id, a.message_ids as string[], a.permanent ? null : this.folderId(inbox_id, "trash"));
       case "send":
       case "reply":
       case "forward":
@@ -581,7 +718,7 @@ export class FakeBackend {
         const seen = this.idempotent.get(key);
         if (seen) return seen;
         this.delivered.push({ op: c.op, inbox_id, args: a });
-        this.touch(inbox_id, "Sent");
+        this.touch(inbox_id, this.folderId(inbox_id, "sent"));
         const result = { message_id: `sent-${this.seq++}`, status: "sent" };
         this.idempotent.set(key, result);
         return result;
@@ -615,7 +752,7 @@ export class FakeBackend {
           if (!this.renumberDrafts) id = old;
         }
         drafts.set(id, { subject: String(a.subject ?? ""), body: String(a.body ?? ""), to: (a.to as string[]) ?? [] });
-        this.touch(inbox_id, "Drafts");
+        this.touch(inbox_id, this.folderId(inbox_id, "drafts"));
         return { draft_id: id };
       }
       case "draft_delete":
@@ -687,6 +824,8 @@ function statusOf(e: WireError): number {
       return 403;
     case "rate_limited":
       return 429;
+    case "reconnect_required":
+      return 409;
     case "allowance_exhausted":
       return 402;
     case "invalid_request":

@@ -110,6 +110,73 @@ describe("ApiClient: errors, retries, timeouts", () => {
     expect(seen).toEqual([["a", true], ["a", false], ["a", false]]);
   });
 
+  it("the session's per-inbox status decides, over what was remembered: down is never asked (the probe aside), ok is asked again", async () => {
+    let now = 1_000_000;
+    const { backend, api, client } = setup({ inboxes: ["a", "b"], client: { now: () => now } });
+    backend.add("b", fakeMessage("n1", day(1)));
+    // Remembered from an earlier load as refused; the server says it is fine.
+    client.seedRefused(["a"]);
+    backend.setInboxStatus("b", "reconnect_required", "access_revoked");
+    const s = await api.getSession();
+    // Listed after the mailboxes that work, with the server's reason.
+    expect(s.inboxes.map((i) => [i.inbox_id, i.status, i.status_reason, i.sender_identity_status])).toEqual([
+      ["a", "ok", null, "available"],
+      ["b", "reconnect_required", "access_revoked", "unavailable"],
+    ]);
+    const sent = backend.requests.length;
+    await client.read("list", "a", { folder: "inbox" });
+    expect(backend.requests).toHaveLength(sent + 1);
+    // b: reads and mutations are answered here, with no request.
+    await expect(client.read("list", "b", { folder: "inbox" })).rejects.toMatchObject({ code: "reconnect_required", status: 409 });
+    await expect(client.mutate("flag", "b", { message_ids: ["n1"], read: true })).rejects.toMatchObject({ code: "reconnect_required" });
+    await expect(api.sendMessage({ inbox_id: "b", to: [{ name: "", email: "x@example.com" }], subject: "s", body_text: "b" })).rejects.toMatchObject({
+      code: "reconnect_required",
+    });
+    await expect(client.read("status", "b", {})).rejects.toMatchObject({ code: "reconnect_required" });
+    expect(backend.requests).toHaveLength(sent + 1);
+    expect(backend.refusedCalls).toHaveLength(0);
+    // The periodic probe still goes out, and a later session does not push it back.
+    now += REFUSED_RECHECK_MS - 1000;
+    await api.getSession();
+    now += 1000;
+    await expect(client.read("status", "b", {})).rejects.toMatchObject({ code: "reconnect_required" });
+    expect(backend.refusedCalls.map((c) => c.op)).toEqual(["status"]);
+    // Reconnected: the probe succeeds and the session is corrected at once.
+    backend.setInboxStatus("b", "ok");
+    client.recheckRefused();
+    await client.read("status", "b", {});
+    expect(api.markInboxOk("b")?.inboxes.find((i) => i.inbox_id === "b")).toMatchObject({ status: "ok", status_reason: null });
+    expect(api.markInboxOk("b")).toBeNull();
+    const page = await api.listMessages({ scope: "all", folder: { role: "inbox" }, limit: 50 });
+    expect(page.failed_inboxes).toBeUndefined();
+    expect(page.rows.map((r) => r.key)).toEqual(["b:n1"]);
+  });
+
+  it("sender_identity: mail works and is asked for as usual; `error` rows answer inbox_unavailable", async () => {
+    const { backend, api } = setup({ inboxes: ["a", "b", "c"] });
+    backend.add("a", fakeMessage("m1", day(2)));
+    backend.add("b", fakeMessage("n1", day(1)));
+    backend.setInboxStatus("a", "reconnect_required", "sender_identity");
+    backend.setInboxStatus("c", "error", "unavailable");
+    const s = await api.getSession();
+    expect(s.inboxes.map((i) => i.inbox_id)).toEqual(["a", "b", "c"]);
+    expect(s.inboxes[0]).toMatchObject({ status: "reconnect_required", status_reason: "sender_identity", sender_identity_status: "reconnect_required" });
+    const page = await api.listMessages({ scope: "all", folder: { role: "inbox" }, limit: 50 });
+    expect(page.rows.map((r) => r.key)).toEqual(["a:m1", "b:n1"]);
+    expect(page.failed_inboxes).toEqual([{ inbox_id: "c", code: "inbox_unavailable", message: "This mailbox is unavailable." }]);
+    await expect(api.listMessages({ scope: "c", folder: { role: "inbox" }, limit: 50 })).rejects.toMatchObject({ code: "inbox_unavailable" });
+    expect(backend.calls().some((c) => c.inbox_id === "c")).toBe(false);
+  });
+
+  it("a server that sends no per-inbox status: what the client remembered stands", async () => {
+    const { backend, api, client } = setup();
+    backend.inboxes = backend.inboxes.map(({ status: _s, status_reason: _r, ...rest }) => rest);
+    client.seedRefused(["a"]);
+    await api.getSession();
+    await expect(client.read("list", "a", { folder: "inbox" })).rejects.toMatchObject({ code: "reconnect_required" });
+    expect(backend.count("/mail")).toBe(0);
+  });
+
   it("a mailbox remembered as refused: reads answer at once, the first `status` asks the server", async () => {
     const { backend, client } = setup();
     client.seedRefused(["a"]);

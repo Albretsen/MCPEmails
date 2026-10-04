@@ -22,11 +22,16 @@ import {
   parseKey,
   isProviderViewFolder,
 } from "../api/types";
+import { type InboxHealth, inboxHealth, usableInboxes } from "../api/inbox-health";
 import { useDelayedFlag } from "../lib/hooks";
 import { useAssistantStore } from "../state/assistant-store";
+import { useReconnectStore } from "../state/connection-store";
+import { holdRows, useHeldRows } from "../state/held-rows";
+import { useUiStore } from "../state/ui-store";
 import { getVisibleKeys } from "../state/selection-store";
 import { type ListData, findRow, folderRoleOf, resolveFolderEntry } from "./cache";
 import { keys, listMeta } from "./keys";
+import { loadListPage } from "./progressive";
 import { FOLDERS_STALE_MS, STALE_MS } from "./query-client";
 import { type MailActions, mailActions } from "./mail-actions";
 
@@ -40,6 +45,35 @@ export function useInboxes() {
     queryFn: ({ signal }) => getMailApi().listInboxes(signal),
     staleTime: 5 * 60_000,
   });
+}
+
+export type InboxWithHealth = Inbox & { health: InboxHealth };
+
+const NO_INBOXES: InboxWithHealth[] = [];
+
+/** Every mailbox of the session with what `/session` (and, between two
+ *  sessions, the mail calls themselves) says about it. Mailboxes that are
+ *  not `health.usable` are shown, never asked for mail. */
+export function useInboxHealth(): InboxWithHealth[] {
+  const { data: inboxes } = useInboxes();
+  const refused = useReconnectStore((x) => x.inboxes);
+  return useMemo(
+    () => (inboxes ? inboxes.map((i) => ({ ...i, health: inboxHealth(i, refused[i.inbox_id] === true) })) : NO_INBOXES),
+    [inboxes, refused],
+  );
+}
+
+/** Ids of the mailboxes in scope that mail calls are made for. */
+function useUsableIds(scope: MailboxScope): string[] {
+  const { data: inboxes } = useInboxes();
+  const refused = useReconnectStore((x) => x.inboxes);
+  return useMemo(
+    () =>
+      usableInboxes(inboxes ?? [], refused)
+        .filter((i) => scope === "all" || i.inbox_id === scope)
+        .map((i) => i.inbox_id),
+    [inboxes, refused, scope],
+  );
 }
 
 export interface FolderNavItem {
@@ -100,10 +134,8 @@ function useFolderEntries(inboxIds: string[]): (FolderEntry[] | undefined)[] {
  *  single-inbox scope they are exact (`{ inbox_id, folder_id }`). */
 export function useFolders(scope: MailboxScope): { folders: FolderNavItem[]; isLoading: boolean } {
   const { data: inboxes } = useInboxes();
-  const inScope = useMemo(
-    () => (inboxes ?? []).filter((i) => scope === "all" || i.inbox_id === scope).map((i) => i.inbox_id),
-    [inboxes, scope],
-  );
+  // A mailbox that is down has no folders to show, and none are asked for.
+  const inScope = useUsableIds(scope);
   const entries = useFolderEntries(inScope);
   const { data: scheduled } = useScheduled(scope);
 
@@ -158,8 +190,7 @@ export function useFolders(scope: MailboxScope): { folders: FolderNavItem[]; isL
 
 /** Unread count of each mailbox's inbox, plus `all`. For the mailbox switcher. */
 export function useInboxUnreadCounts(): Record<string, number> {
-  const { data: inboxes } = useInboxes();
-  const ids = useMemo(() => (inboxes ?? []).map((i) => i.inbox_id), [inboxes]);
+  const ids = useUsableIds("all");
   const entries = useFolderEntries(ids);
   return useMemo(() => {
     const out: Record<string, number> = { all: 0 };
@@ -200,6 +231,11 @@ export interface MessageListResult {
   error: Error | null;
   /** Unified view: mailboxes that did not answer. The others are shown. */
   failedInboxes: InboxFailure[];
+  /** Unified view: mailboxes whose first page is still on its way. The list
+   *  shows the others' rows meanwhile and is not complete. */
+  pendingInboxes: string[];
+  /** Rows held back while the pointer is over the list (the pill counts them). */
+  heldCount: number;
   refetch: () => void;
 }
 
@@ -216,10 +252,19 @@ export function useMessageList({ scope, folder, query = "" }: MessageListArgs): 
   const meta = useMemo(() => listMeta(scope, folder, query), [scope, folder, query]);
   const q = useInfiniteQuery<MessagePage, Error, ListData, readonly unknown[], PageCursor | null>({
     queryKey: keys.messages(meta),
-    queryFn: ({ pageParam, signal }) =>
-      meta.query
-        ? getMailApi().searchMessages({ scope, query: meta.query, limit: DEFAULT_PAGE_SIZE, cursor: pageParam }, signal)
-        : getMailApi().listMessages({ scope, folder, limit: DEFAULT_PAGE_SIZE, cursor: pageParam }, signal),
+    // The first page of a unified list is painted as each mailbox answers
+    // (data/progressive.ts); every other page arrives whole.
+    queryFn: ({ pageParam, signal, queryKey }) =>
+      loadListPage(getMailApi(), {
+        scope,
+        folder,
+        query: meta.query,
+        cursor: pageParam,
+        limit: DEFAULT_PAGE_SIZE,
+        queryKey,
+        signal,
+        onArrived: holdUnderPointer,
+      }),
     initialPageParam: null,
     getNextPageParam: (last) => last.next_cursor ?? undefined,
     staleTime: STALE_MS,
@@ -228,15 +273,19 @@ export function useMessageList({ scope, folder, query = "" }: MessageListArgs): 
   // Rows the assistant moved stay in place (faded) until cleared, even if a
   // background refetch has already dropped them from the server's answer.
   const ghosts = useAssistantStore((s) => s.ghosts);
+  const held = useHeldRows((h) => h.keys);
 
-  const rows = useMemo(() => {
+  const { rows, heldCount } = useMemo(() => {
     const seen = new Set<MessageKey>();
     const out: MessageRow[] = [];
+    let heldCount = 0;
     for (const page of q.data?.pages ?? []) {
       for (const r of page.rows) {
         if (seen.has(r.key)) continue;
         seen.add(r.key);
-        out.push(r);
+        // Arrived late, under the pointer: behind the "N new emails" pill.
+        if (held[r.key]) heldCount++;
+        else out.push(r);
       }
     }
     if (!meta.query) {
@@ -248,11 +297,34 @@ export function useMessageList({ scope, folder, query = "" }: MessageListArgs): 
         if (inScope && from === meta.folder) out.push(g.row);
       }
     }
-    return out.sort(byDateDesc);
-  }, [q.data, ghosts, meta, scope]);
+    return { rows: out.sort(byDateDesc), heldCount };
+  }, [q.data, ghosts, held, meta, scope]);
 
   const first = q.data?.pages[0];
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = q;
+
+  // Mailboxes that have not answered yet (a provisional first page). Only
+  // while the fetch that will replace it is running.
+  const pendingInboxes = q.isFetching && first?.pending_inboxes?.length ? first.pending_inboxes : NO_PENDING;
+  // A provisional page with no fetch behind it (restored from the saved
+  // cache, or its fetch was cancelled) would pass for a complete list.
+  const orphaned = !q.isFetching && !q.isError && !!first?.pending_inboxes?.length;
+  const { refetch } = q;
+  useEffect(() => {
+    if (orphaned) void refetch();
+  }, [orphaned, refetch]);
+
+  // Every page's failures: a mailbox that fails on a later page is named too.
+  const failedInboxes = useMemo(() => {
+    let out: InboxFailure[] | null = null;
+    for (const page of q.data?.pages ?? []) {
+      for (const f of page.failed_inboxes ?? []) {
+        if (out?.some((x) => x.inbox_id === f.inbox_id)) continue;
+        (out ??= []).push(f);
+      }
+    }
+    return out ?? NO_FAILURES;
+  }, [q.data]);
 
   const loadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
@@ -270,16 +342,31 @@ export function useMessageList({ scope, folder, query = "" }: MessageListArgs): 
     rows,
     total: first ? first.total : null,
     totalIsEstimate: first?.total_is_estimate ?? false,
-    isLoading: q.isPending,
+    // Nothing to show yet and mailboxes still out: that is loading, not empty.
+    isLoading: q.isPending || (rows.length === 0 && heldCount === 0 && (pendingInboxes.length > 0 || orphaned)),
     isFetching: q.isFetching,
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage: loadMore,
     onLastVisibleIndex,
     error: q.error,
-    failedInboxes: first?.failed_inboxes ?? NO_FAILURES,
+    failedInboxes,
+    pendingInboxes,
+    heldCount,
     refetch: () => void q.refetch(),
   };
+}
+
+const NO_PENDING: string[] = [];
+
+/** Rows that arrived late are not put between the rows under the pointer:
+ *  they wait behind the "N new emails" pill, exactly as new mail does. With
+ *  the pointer elsewhere they go straight in, and the list's scroll anchoring
+ *  keeps what is on screen where it is. */
+function holdUnderPointer(arrived: MessageKey[]): void {
+  if (!arrived.length) return;
+  const ui = useUiStore.getState();
+  if (ui.listHover && ui.viewport !== "phone") holdRows(arrived);
 }
 
 /* ------------------------------------------------------------------
@@ -454,10 +541,7 @@ export type DraftListItem = DraftSummary & { inbox_id: string };
 /** Drafts of every inbox in scope, newest first. Rows carry no body. */
 export function useDrafts(scope: MailboxScope): { data: DraftListItem[]; isLoading: boolean } {
   const { data: inboxes } = useInboxes();
-  const ids = useMemo(
-    () => (inboxes ?? []).filter((i) => scope === "all" || i.inbox_id === scope).map((i) => i.inbox_id),
-    [inboxes, scope],
-  );
+  const ids = useUsableIds(scope);
   const lists = useQueries({
     queries: ids.map((id) => ({
       queryKey: keys.drafts(id),

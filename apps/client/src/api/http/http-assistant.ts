@@ -213,8 +213,16 @@ export class HttpAssistantTransport implements AssistantTransport {
             this.deps.onMoved?.(ev.effect.keys.map((key, i) => ({ key, new_key: fresh[i] ?? key })));
           }
         } else if (ev.type === "approval_required") {
-          this.approvals.set(ev.approval_id, ev.draft);
+          // The server ignores Bcc, so the draft it asks approval for has
+          // none. If this is the draft the run was started with, the Bcc the
+          // person typed on it goes out with it.
+          const sent = req.draft;
+          const same = !!sent && (ev.draft.reply_to ? sent.reply_to === ev.draft.reply_to : !sent.reply_to);
+          const draft = same && sent?.bcc?.trim() ? { ...ev.draft, bcc: sent.bcc } : ev.draft;
+          this.approvals.set(ev.approval_id, draft);
           finished = true;
+          yield { ...ev, draft };
+          continue;
         } else if (ev.type === "error") {
           finished = true;
           yield { ...ev, message: ev.code ? assistantErrorText(ev.code, ev.message) : ev.message };

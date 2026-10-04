@@ -102,6 +102,12 @@ export interface MailEffect {
   call_id: string;
 }
 
+/** The draft's header as a `draft_stream` event carries it.
+ *  phase "writing": the header as far as it has streamed in; an empty field
+ *  means "not there yet".
+ *  phase "editing": the header as it stands after the edit. A field that is
+ *  PRESENT is taken as it is, the empty string included (`cc: ""` clears the
+ *  Cc line); a field that is ABSENT was not touched. */
 export interface DraftFields {
   inbox_id?: string;
   to: string;
@@ -139,6 +145,11 @@ export interface ApprovalDraft {
   body: string;
   reply_to?: MessageKey;
   cc?: string;
+  /** CLIENT SIDE ONLY. The server knows nothing of Bcc (it ignores the one
+   *  sent with the request's `draft`), so its approval never carries one. The
+   *  transport puts back the Bcc the person had typed on the draft the run
+   *  was started with, so approving sends to them too. */
+  bcc?: string;
   /** How the message goes out when the human approves. */
   kind?: DraftKind;
 }

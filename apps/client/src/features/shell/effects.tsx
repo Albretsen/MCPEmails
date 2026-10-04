@@ -101,7 +101,7 @@ export function OfflineIndicator() {
   // Diagnostics only (which transport is in use): a tooltip, never text.
   const connection = useConnectionStore();
   return (
-    <div className={s.offlineHost} role="status" aria-live="polite" title={describeConnection(connection)} data-transport={connection.state}>
+    <div className={s.offlineHost} role="status" aria-live="polite" title={describeConnection(connection)}>
       {online ? null : <span className={s.offline}>Offline. Showing saved mail.</span>}
     </div>
   );

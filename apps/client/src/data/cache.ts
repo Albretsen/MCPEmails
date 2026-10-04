@@ -168,14 +168,24 @@ export function forgetFolderRoles(): void {
 }
 
 /** The role of one folder of one inbox, or null for a folder of the person's own. */
-export function folderRoleOf(inbox_id: string, f: Pick<FolderEntry, "id" | "name">): FolderRole | null {
+export function folderRoleOf(inbox_id: string, f: Pick<FolderEntry, "id" | "name" | "role">): FolderRole | null {
+  // The server's word, when it sends one (null = a folder of the person's own).
+  if (f.role !== undefined) return f.role;
   return learnedRoles.get(inbox_id)?.get(f.id) ?? roleOfFolder(f.id) ?? roleOfFolder(f.name);
+}
+
+/** The folder list carries the server's `role` field. */
+export function hasServerRoles(entries: readonly FolderEntry[]): boolean {
+  return entries.some((f) => f.role !== undefined);
 }
 
 /** Finds the FolderEntry a ref points at inside one inbox's folder list. */
 export function resolveFolderEntry(entries: readonly FolderEntry[], inbox_id: string, ref: FolderRef): FolderEntry | undefined {
   if (isExactRef(ref)) return ref.inbox_id === inbox_id ? entries.find((f) => f.id === ref.folder_id) : undefined;
   if (isNameRef(ref)) return entries.find((f) => f.name.toLowerCase() === ref.name.toLowerCase());
+  // Roles from the server decide alone: a mailbox it gives no Archive has
+  // none, whatever its folders are called.
+  if (hasServerRoles(entries)) return entries.find((f) => f.role === ref.role);
   const known = learnedRoles.get(inbox_id);
   const learned = known ? entries.find((f) => known.get(f.id) === ref.role) : undefined;
   if (learned) return learned;
@@ -291,9 +301,14 @@ export function setFolderRefresher(fn: (() => void) | null): void {
   folderRefresher = fn;
 }
 
-export function refreshFolders(): void {
-  if (folderRefresher) folderRefresher();
-  else void queryClient.invalidateQueries({ queryKey: keys.foldersRoot });
+/** `own`: the caller's own mutation just succeeded. In HTTP mode the sync
+ *  engine hears of every mutation itself and asks `status` for exactly the
+ *  folders it can have changed, so there is nothing to do here: a status
+ *  sweep of every mailbox after each draft autosave would be waste. */
+export function refreshFolders(opts: { own?: boolean } = {}): void {
+  if (folderRefresher) {
+    if (!opts.own) folderRefresher();
+  } else void queryClient.invalidateQueries({ queryKey: keys.foldersRoot });
 }
 
 /** Rows of one inbox in one cached list, in page order. */

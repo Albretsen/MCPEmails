@@ -16,6 +16,9 @@
  * - Mutations are sent once, never queued and never retried here: offline
  *   they fail fast, and one whose connection dropped is reported as failed
  *   (its idempotency key is the caller's, for a retry the person asks for).
+ *   The ONE exception: a frame a recycling socket refused (`socket_recycling`)
+ *   was not started by the server, so it is sent again once, over HTTP, with
+ *   the same body (and so the same idempotency key). Reads get the same.
  * - On a live socket reads go out as single frames, not batches (see `enqueue`).
  */
 
@@ -26,15 +29,31 @@ export class ApiError extends Error {
   readonly status: number;
   readonly retryable: boolean;
   readonly requestId: string | null;
+  /** The server's finer code (`error.tool_code`), when it sent one. */
+  readonly toolCode: string | null;
 
-  constructor(code: string, message: string, opts: { status?: number; retryable?: boolean; requestId?: string | null } = {}) {
+  constructor(
+    code: string,
+    message: string,
+    opts: { status?: number; retryable?: boolean; requestId?: string | null; toolCode?: string | null } = {},
+  ) {
     super(message);
     this.name = "ApiError";
     this.code = code;
     this.status = opts.status ?? 0;
     this.retryable = opts.retryable ?? false;
     this.requestId = opts.requestId ?? null;
+    this.toolCode = opts.toolCode ?? null;
   }
+}
+
+/** `tool_code` of the answer a recycling socket gives to a frame it did NOT
+ *  run (ws.ts: 503, retryable). The one error after which a mutation may be
+ *  sent again: the server refused it before executing anything. */
+export const SOCKET_RECYCLING = "socket_recycling";
+
+export function isSocketRecycling(e: unknown): boolean {
+  return e instanceof ApiError && e.toolCode === SOCKET_RECYCLING;
 }
 
 export function abortError(): Error {
@@ -150,7 +169,7 @@ interface Shared {
 }
 
 interface Envelope {
-  error?: { code?: unknown; message?: unknown; retryable?: unknown };
+  error?: { code?: unknown; message?: unknown; retryable?: unknown; tool_code?: unknown };
 }
 
 export const DEFAULT_TIMEOUT_MS = 30_000;
@@ -201,6 +220,7 @@ export function errorFromEnvelope(status: number, body: unknown, requestId: stri
       status,
       retryable: env.retryable === true,
       requestId,
+      toolCode: typeof env.tool_code === "string" ? env.tool_code : null,
     });
   }
   if (status === 401) return new ApiError("unauthenticated", "Sign in again.", { status, requestId });
@@ -221,6 +241,9 @@ export class ApiClient {
   /** Mailboxes that refused their stored credentials, and when that was last
    *  heard from the server (0: remembered from an earlier page load). */
   private refused = new Map<string, number>();
+  /** The subset of `refused` that `/session` itself declared down: their
+   *  mutations are not sent either (the server would answer 409 unasked). */
+  private down = new Set<string>();
   /** Reads in flight per mailbox: all of them end when one is refused. */
   private inboxWaiters = new Map<string, Set<(e: ApiError) => void>>();
   private ownRefusals = new WeakSet<ApiError>();
@@ -297,6 +320,7 @@ export class ApiClient {
     this.inflight.clear();
     this.refreshing = null;
     this.refused.clear();
+    this.down.clear();
     this.inboxWaiters.clear();
     this.socket?.abortAll();
   }
@@ -305,6 +329,23 @@ export class ApiClient {
    *  lists are not waited for; the next `status` asks the server again. */
   seedRefused(inbox_ids: readonly string[]): void {
     for (const id of inbox_ids) if (!this.refused.has(id)) this.refused.set(id, 0);
+  }
+
+  /** What `/session` says about each mailbox. It replaces what was remembered:
+   *  a mailbox the server calls down is not asked (its reads and mutations
+   *  are answered here; only the `status` probe goes through, now and then),
+   *  and one it calls fine is asked again even if it was remembered as
+   *  refused. A mailbox in neither list keeps what the client knew. */
+  setInboxHealth(down: readonly string[], ok: readonly string[]): void {
+    for (const id of ok) {
+      this.refused.delete(id);
+      this.down.delete(id);
+    }
+    for (const id of down) {
+      // An earlier refusal keeps its time: the next probe is not pushed back.
+      if (!this.refused.has(id)) this.refused.set(id, this.o.now());
+      this.down.add(id);
+    }
   }
 
   /** Ask refused mailboxes again at the next `status` (the person may have
@@ -363,6 +404,7 @@ export class ApiClient {
     return work.then(
       (v) => {
         this.refused.delete(inbox_id);
+        this.down.delete(inbox_id);
         tell?.(inbox_id, false);
         return v;
       },
@@ -402,6 +444,7 @@ export class ApiClient {
 
   /** A mail mutation: one request, no retry, fails fast when offline. */
   mutate<T>(op: string, inbox_id: string | null, args: Record<string, unknown> = {}): Promise<T> {
+    if (inbox_id && this.down.has(inbox_id)) return Promise.reject(this.refusedError());
     return this.noteInbox(inbox_id, this.json<T>("POST", "/mail", { op, inbox_id, args }));
   }
 
@@ -470,6 +513,10 @@ export class ApiClient {
       return (res.body ?? undefined) as T;
     } catch (err) {
       if (!isAbortError(err) && (user?.aborted || epoch.aborted)) throw abortError();
+      // The socket is being recycled and did not run this frame: the same
+      // request goes over HTTP, once. Safe for a mutation too, and only
+      // here, because the server refused it before executing anything.
+      if (isSocketRecycling(err)) return await this.overHttp<T>(method, path, body, controller.signal);
       throw err;
     } finally {
       user?.removeEventListener("abort", onAbort);
