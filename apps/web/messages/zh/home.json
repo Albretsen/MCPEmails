@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "将 Gmail、Outlook、iCloud 与 IMAP 连接到 Claude",
-    "description": "让 Claude、Cursor 或任何 MCP 客户端真正访问你的收件箱：读取、发送、搜索并整理 Gmail、Outlook、Fastmail、iCloud 和 IMAP 邮件。免费，不存储任何邮件。"
+    "title": "邮件 MCP 服务器：连接 Gmail、Outlook、IMAP 与 Claude",
+    "description": "面向 Claude、ChatGPT 和 Cursor 的托管邮件 MCP 服务器。连接 Gmail、Outlook 或任何 IMAP 邮箱，可同时接入多个。邮件实时读取，从不存储。"
   },
   "nav": {
     "features": "功能",
@@ -15,6 +15,7 @@
     "selfHost": "自托管"
   },
   "hero": {
+    "eyebrow": "托管的邮件 MCP 服务器",
     "titleLine1": "为你的 AI",
     "titleLine2": "智能体配备一个",
     "titleAccent": "收件箱。",
@@ -44,6 +45,14 @@
   },
   "trusted": {
     "label": "适用于所有兼容 MCP 的智能体和客户端"
+  },
+  "whatIs": {
+    "title": "什么是邮件 MCP 服务器？",
+    "p1": "邮件 MCP 服务器（email MCP server）是 AI 助手与真实邮箱之间的桥梁。它使用 Model Context Protocol，因此 Claude、ChatGPT、Cursor 或任何其他 MCP 客户端都能通过同一个端点读取、搜索、起草和发送邮件，无需为每个应用单独做集成。",
+    "p2": "MCP Emails 就是一个托管的邮件 MCP 服务器。它支持 Gmail、Outlook 和 Microsoft 365、iCloud、Fastmail 以及任何支持 IMAP 的邮箱，同一个智能体可以同时处理多个邮箱。每次调用时，邮件都从你的服务商实时获取，从不存储在我们的服务器上。",
+    "linkImap": "设置 IMAP MCP 服务器",
+    "linkBusiness": "面向公司邮箱的邮件 MCP",
+    "linkProviders": "所有支持的邮箱服务商"
   },
   "features": {
     "eyebrow": "原则",
@@ -202,6 +211,18 @@
     "title": "常见问题，逐一解答",
     "sub": "连接第一个收件箱前，你需要了解的一切。",
     "items": [
+      {
+        "q": "MCP Emails 是 IMAP MCP 服务器吗？",
+        "a": "是的。除了 Gmail 和 Outlook 登录之外，还有通用的 IMAP 和 SMTP 连接器，因此任何提供 IMAP 访问的邮箱都可以使用：你自己的域名、主机服务商或本地运营商的邮箱。只需填写一次服务器信息和应用密码，你的智能体就会通过 IMAP 读取邮件，并通过你自己的 SMTP 服务器发送。"
+      },
+      {
+        "q": "一个智能体可以同时处理多个邮箱吗？",
+        "a": "可以。把每个邮箱连接到同一个账户，你的智能体就能通过同一个端点访问全部邮箱。它可以列出已连接的收件箱，为每个请求选择合适的那一个，并在同一次对话中在客服邮箱和个人邮箱之间切换。可连接的收件箱数量取决于你的套餐。"
+      },
+      {
+        "q": "如何在 Claude 或 ChatGPT 中添加邮件 MCP 连接器？",
+        "a": "在客户端设置中添加自定义连接器，将 https://mcpemails.com/api/mcp 粘贴为服务器 URL，然后批准登录。支持 OAuth 的客户端无需 API 密钥。同一个 URL 也适用于 Cursor、VS Code 和其他 MCP 客户端。"
+      },
       {
         "q": "你们使用分析工具吗？",
         "a": "我们使用保护隐私且无 Cookie 的产品分析来了解网站和设置表现。我们绝不会收集邮件内容、地址、API 密钥、OAuth 令牌或 MCP 请求数据。"

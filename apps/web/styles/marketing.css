@@ -80,6 +80,11 @@ body { margin: 0; }
   font-family: var(--font-display); font-style: italic; font-weight: 400;
   color: var(--cobalt-600); letter-spacing: -0.01em;
 }
+.h1 .h1-kicker {
+  display: block; margin-bottom: 16px;
+  font-size: 13px; font-weight: 500; line-height: 1.4;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--brand);
+}
 .hero-cta { margin-top: 28px; display: flex; gap: 10px; align-items: center; }
 .hero-meta {
   margin-top: 20px; display: flex; gap: 20px; align-items: center;
@@ -224,6 +229,19 @@ pre.code { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--fg-1); w
 @media (prefers-reduced-motion: reduce) {
   .marquee-track { animation: none; }
 }
+
+/* === What is an email MCP server (short answer under the client strip) === */
+.whatis { padding: 56px 0; border-bottom: 1px solid var(--border-1); }
+.whatis h2 {
+  font-family: var(--font-sans); font-size: 26px; font-weight: 600;
+  letter-spacing: -0.02em; line-height: 1.2; margin: 0 0 14px; color: var(--fg-1);
+}
+.whatis p {
+  font-family: var(--font-sans); font-size: 16px; line-height: 1.65;
+  color: var(--fg-2); margin: 0 0 12px; max-width: 760px;
+}
+.whatis .whatis-links { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 18px 0 0; font-size: 15px; }
+.whatis-links a { color: var(--brand); text-decoration: underline; text-underline-offset: 2px; font-weight: 500; }
 
 /* === Section base === */
 .section { padding: 96px 0; }
@@ -1116,6 +1134,9 @@ a.footer-copy-value:hover { color: #fff; text-decoration: none; }
   /* === Trusted strip === */
   .marquee-item { font-size: 14px; margin-right: 36px; }
   .marquee-logo { width: 28px; height: 28px; }
+
+  .whatis { padding: 40px 0; }
+  .whatis h2 { font-size: 22px; }
 
   /* === Section base === */
   .section { padding: 56px 0; }
