@@ -307,6 +307,20 @@ describe("sync engine: when it runs", () => {
     expect(env.timers.map((t) => t.ms)).toEqual([45_000]);
   });
 
+  it("polls every 30 s while the socket is live, 45 s on HTTP (read at every scheduling)", async () => {
+    engine.stop();
+    let live = true;
+    engine = createSyncEngine({ api, inboxIds: () => ["a"], env: env.env, intervalMs: () => (live ? 30_000 : 45_000) });
+    engine.start();
+    await flush();
+    expect(env.timers.map((t) => t.ms)).toEqual([30_000]);
+    live = false; // the socket closed: the next wait is the HTTP one
+    env.run(30_000);
+    await flush();
+    expect(statusCalls()).toBe(2);
+    expect(env.timers.map((t) => t.ms)).toEqual([45_000]);
+  });
+
   it("is paused while hidden and catches up when visible again", async () => {
     env.state.visible = false;
     engine.start();

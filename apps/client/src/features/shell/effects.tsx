@@ -3,6 +3,7 @@ import { currentOverlay, popOverlay, pushOverlay, subscribeRoute } from "../../a
 import { FOLDER_ROLE_LABEL, folderRefId, isNameRef, isRoleRef } from "../../api/types";
 import { useFolders, useInboxUnreadCounts } from "../../data/hooks";
 import { getPlatform } from "../../platform";
+import { describeConnection, useConnectionStore } from "../../state/connection-store";
 import { useSelectionStore } from "../../state/selection-store";
 import { useUiStore } from "../../state/ui-store";
 import s from "./AppShell.module.css";
@@ -97,8 +98,10 @@ export function useOnline(): boolean {
  *  never intercepts pointer events. */
 export function OfflineIndicator() {
   const online = useOnline();
+  // Diagnostics only (which transport is in use): a tooltip, never text.
+  const connection = useConnectionStore();
   return (
-    <div className={s.offlineHost} role="status" aria-live="polite">
+    <div className={s.offlineHost} role="status" aria-live="polite" title={describeConnection(connection)} data-transport={connection.state}>
       {online ? null : <span className={s.offline}>Offline. Showing saved mail.</span>}
     </div>
   );

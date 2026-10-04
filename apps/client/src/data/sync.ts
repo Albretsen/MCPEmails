@@ -19,8 +19,9 @@ import { queryClient } from "./query-client";
 /* The sync engine (HTTP mode): how the app notices mail it did not cause.
  *
  * There is no server push yet. Instead, on window focus, on becoming visible,
- * on coming back online and every 45 s while visible, ONE batched `status`
- * call asks every inbox for its folders' fingerprints. A fingerprint that
+ * on coming back online and every 45 s while visible (every 30 s while the
+ * socket is live), ONE `status` call per inbox (batched over HTTP) asks for
+ * its folders' fingerprints. A fingerprint that
  * changed means the folder's contents or flags changed:
  *   - an inbox folder: page 1 is fetched again and compared with the cache;
  *     the differences leave as `new_mail` / `flags_changed` / `moved` events
@@ -56,7 +57,8 @@ export interface SyncOptions {
   /** The inboxes to watch, read at every run. */
   inboxIds: () => string[];
   env?: Partial<SyncEnv>;
-  intervalMs?: number;
+  /** Read at every scheduling, so it can follow the transport in use. */
+  intervalMs?: number | (() => number);
   /** Focus and visibility events closer together than this share one run. */
   minGapMs?: number;
   /** How long after a mutation before counts are confirmed with `status`. */
@@ -75,6 +77,9 @@ export interface SyncEngine {
 }
 
 export const SYNC_INTERVAL_MS = 45_000;
+/** On a live socket the server keeps the mailbox connection warm between
+ *  polls (its idle limit is 70 s), so `status` is one cheap command there. */
+export const SYNC_INTERVAL_LIVE_MS = 30_000;
 /** Folders asked about per inbox. Each one costs the provider a call (an
  *  IMAP STATUS, a Gmail label read), so only what the UI shows is asked. */
 export const STATUS_FOLDERS_PER_INBOX = 8;
@@ -202,7 +207,8 @@ export function diffFirstPage(
 export function createSyncEngine(options: SyncOptions): SyncEngine {
   const env: SyncEnv = { ...browserEnv(), ...options.env };
   const { api } = options;
-  const intervalMs = options.intervalMs ?? SYNC_INTERVAL_MS;
+  const intervalOption = options.intervalMs ?? SYNC_INTERVAL_MS;
+  const interval = () => (typeof intervalOption === "function" ? intervalOption() : intervalOption);
   const minGapMs = options.minGapMs ?? 5000;
   const pokeDelayMs = options.pokeDelayMs ?? 800;
   const maxBackoffMs = options.maxBackoffMs ?? 5 * 60_000;
@@ -376,6 +382,7 @@ export function createSyncEngine(options: SyncOptions): SyncEngine {
     if (timer != null) env.clearTimeout(timer);
     timer = null;
     if (!active()) return;
+    const intervalMs = interval();
     const delay = failures ? Math.min(maxBackoffMs, intervalMs * 2 ** failures) : intervalMs;
     timer = env.setTimeout(() => void tick(), delay);
   }

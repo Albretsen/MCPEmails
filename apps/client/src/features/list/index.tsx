@@ -14,6 +14,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { isApiError } from "../../api";
 import { type Inbox, type MessageKey, type MessageRow, folderRefId, isRoleRef, parseFolderRefId } from "../../api/types";
 import {
   type FolderNavItem,
@@ -249,7 +250,8 @@ export function ListPane() {
         {!phone ? (
           <div className={s.titleRow}>
             <h1 className={s.title}>{title}</h1>
-            <span className={s.countText}>{list.isLoading ? "" : countText}</span>
+            {/* No count for a list that could not be loaded: "0 emails" would be a claim. */}
+            <span className={s.countText}>{list.isLoading || (list.error && !hasRows) ? "" : countText}</span>
           </div>
         ) : (
           <h1 className="sr-only">{title}</h1>
@@ -311,6 +313,15 @@ export function ListPane() {
             showSkeleton ? (
               <SkeletonRows count={9} height={rowHeight} />
             ) : null
+          ) : isApiError(list.error, "reconnect_required") && !hasRows ? (
+            // Not a failure to retry: the provider refuses the stored
+            // credentials until the mailbox is reconnected in the dashboard.
+            <EmptyState icon={<InboxIcon size={20} aria-hidden="true" />} title="This mailbox needs reconnecting.">
+              Its mail provider no longer accepts the saved sign-in.{" "}
+              <a href={DASHBOARD_URL} target="_blank" rel="noreferrer">
+                Reconnect in the dashboard
+              </a>
+            </EmptyState>
           ) : list.error && !hasRows ? (
             <EmptyState icon={<InboxIcon size={20} aria-hidden="true" />} title="Could not load this list.">
               <Button size="sm" onClick={list.refetch}>

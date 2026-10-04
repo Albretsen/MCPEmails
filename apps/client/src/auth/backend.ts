@@ -41,6 +41,9 @@ export interface AuthBackend {
   signInWithOAuth(provider: OAuthProvider, redirectTo: string): Promise<void>;
   /** PKCE: trades the code from `/auth/callback` for a session. */
   exchangeCode(code: string): Promise<AuthSession | null>;
+  /** Development builds only (absent otherwise): adopts the tokens of an
+   *  implicit-flow test link. See `AuthCallback.devImplicit`. */
+  devAdoptSession?(tokens: { access_token: string; refresh_token: string }): Promise<AuthSession | null>;
   /** This browser only: other devices and the dashboard stay signed in. */
   signOut(): Promise<void>;
 }

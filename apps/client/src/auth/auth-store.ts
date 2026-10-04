@@ -45,6 +45,13 @@ export function onSignedOut(listener: Listener<SignedOutInfo>): () => void {
   return () => void signedOutListeners.delete(listener);
 }
 
+const tokenListeners = new Set<(token: string) => void>();
+/** Fires when the session's access token was replaced by a refreshed one. */
+export function onTokenRefreshed(listener: (token: string) => void): () => void {
+  tokenListeners.add(listener);
+  return () => void tokenListeners.delete(listener);
+}
+
 let backend: Promise<AuthBackend> | null = null;
 let stop: (() => void) | null = null;
 let explicitSignOut = false;
@@ -122,6 +129,7 @@ export async function initAuth(source: AuthBackend | Promise<AuthBackend>, opts:
       setSignedOut({ explicit });
     } else {
       setSignedIn(session.user);
+      if (event === "token_refreshed") for (const l of [...tokenListeners]) l(session.access_token);
     }
   });
   if (typeof window !== "undefined") window.addEventListener("storage", onStorage);
@@ -139,6 +147,10 @@ export async function initAuth(source: AuthBackend | Promise<AuthBackend>, opts:
       } catch (err) {
         notice = err instanceof AuthFailure ? `That sign-in link did not work: ${err.message}` : "That sign-in link did not work. Ask for a new one.";
       }
+    }
+    // Development builds only: both sides of this are compiled out otherwise.
+    if (import.meta.env.DEV && !session && opts.callback?.devImplicit && b.devAdoptSession) {
+      session = await b.devAdoptSession(opts.callback.devImplicit).catch(() => null);
     }
     session ??= await b.getSession();
   } catch {

@@ -78,6 +78,8 @@ const sumNullable = (values: (number | null)[]): number | null => {
   return total;
 };
 
+const NO_FOLDERS: FolderEntry[] = [];
+
 function useFolderEntries(inboxIds: string[]): (FolderEntry[] | undefined)[] {
   return useQueries({
     queries: inboxIds.map((id) => ({
@@ -85,7 +87,10 @@ function useFolderEntries(inboxIds: string[]): (FolderEntry[] | undefined)[] {
       queryFn: ({ signal }: { signal: AbortSignal }) => getMailApi().listFolders(id, signal),
       staleTime: FOLDERS_STALE_MS,
     })),
-    combine: (results) => results.map((r) => r.data),
+    // A mailbox whose folder list could not be loaded (it needs reconnecting,
+    // say) has no folders to show: that is an answer, not "still loading",
+    // so the navigation does not keep its skeleton rows forever.
+    combine: (results) => results.map((r) => r.data ?? (r.isError ? NO_FOLDERS : undefined)),
   });
 }
 

@@ -216,6 +216,38 @@ describe("auth callback", () => {
     expect(takeAuthCallback()).toEqual({ code: null, error: "User cancelled" });
   });
 
+  it("development only: an implicit-flow fragment is captured before the URL is cleaned, and adopted", async () => {
+    window.history.replaceState(null, "", `${AUTH_CALLBACK_PATH}#access_token=AT&refresh_token=RT&type=magiclink`);
+    captureAuthCallback();
+    // The fragment is out of the address bar before any auth client exists.
+    expect(window.location.pathname + window.location.hash).toBe("/");
+    const cb = takeAuthCallback();
+    expect(cb?.devImplicit).toEqual({ access_token: "AT", refresh_token: "RT" });
+
+    const { backend, state } = fakeBackend(null);
+    const adopted: unknown[] = [];
+    backend.devAdoptSession = async (tokens) => {
+      adopted.push(tokens);
+      state.session = alice;
+      return alice;
+    };
+    await initAuth(backend, { callback: cb });
+    expect(adopted).toEqual([{ access_token: "AT", refresh_token: "RT" }]);
+    expect(status()).toBe("signed-in");
+  });
+
+  it("outside development the fragment is ignored: no tokens are ever taken from a URL", async () => {
+    window.history.replaceState(null, "", `${AUTH_CALLBACK_PATH}#access_token=AT&refresh_token=RT&type=magiclink`);
+    captureAuthCallback(false);
+    expect(window.location.pathname + window.location.hash).toBe("/");
+    const cb = takeAuthCallback();
+    expect(cb).toEqual({ code: null, error: null });
+    // A production backend has no `devAdoptSession` at all.
+    const { backend } = fakeBackend(null);
+    await initAuth(backend, { callback: cb });
+    expect(status()).toBe("signed-out");
+  });
+
   it("never returns to a URL outside the app", () => {
     localStorage.setItem("mc-auth-return", JSON.stringify({ url: "//evil.example/x", at: Date.now() }));
     window.history.replaceState(null, "", `${AUTH_CALLBACK_PATH}?code=x`);

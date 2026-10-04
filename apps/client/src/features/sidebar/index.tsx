@@ -7,6 +7,7 @@ import { type FolderNavItem, mailActions, useAssistantAllowance, useFolders, use
 import { cx } from "../../lib/cx";
 import { SCENES_ENABLED } from "../../dev";
 import { useAssistantStore } from "../../state/assistant-store";
+import { useReconnectStore } from "../../state/connection-store";
 import { READ_ONLY_EXPLANATION, READ_ONLY_LABEL, useCanWrite } from "../../state/permissions";
 import { useSelectionStore } from "../../state/selection-store";
 import { showToast } from "../../state/toast-store";
@@ -31,7 +32,11 @@ export function SidebarPane() {
   const unread = useInboxUnreadCounts();
   const multi = (inboxes?.length ?? 0) > 1;
   const mayWrite = useCanWrite();
-  const stale = (inboxes ?? []).filter((i) => i.sender_identity_status === "reconnect_required");
+  // What `/session` says, or what the mailbox's own calls last answered.
+  const refused = useReconnectStore((x) => x.inboxes);
+  const needsReconnect = (i: { inbox_id: string; sender_identity_status: string }) =>
+    i.sender_identity_status === "reconnect_required" || refused[i.inbox_id] === true;
+  const stale = (inboxes ?? []).filter(needsReconnect);
 
   return (
     <div className={cx(s.root, rail && s.rail)}>
@@ -71,7 +76,7 @@ export function SidebarPane() {
             id={multi ? inbox.inbox_id : "all"}
             name={inbox.display_name || inbox.email_address}
             address={inbox.email_address}
-            needsReconnect={inbox.sender_identity_status === "reconnect_required"}
+            needsReconnect={needsReconnect(inbox)}
             count={unread[inbox.inbox_id] ?? 0}
             active={multi && scope === inbox.inbox_id}
             rail={rail}

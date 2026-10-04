@@ -110,9 +110,145 @@ const json = (status: number, body: unknown, headers: Record<string, string> = {
 
 const fail = (status: number, error: WireError): Response => json(status, { error });
 
+/** The routes the server's socket carries (ws.ts, SOCKET_ROUTES). */
+const SOCKET_ROUTES: Record<string, "GET" | "POST"> = {
+  "/session": "GET",
+  "/mail": "POST",
+  "/mail/batch": "POST",
+  "/allowance": "GET",
+};
+
+/** The server end of `GET /ws`, speaking the frame protocol of
+ *  supabase/functions/client-api/ws.ts: `auth` -> `ready` (or a 401 frame and
+ *  close 4401), `ping` -> `pong`, and request frames answered by the SAME
+ *  handler as HTTP (`FakeBackend.fetch`), as `{ id, status, timing,
+ *  request_id, body }`. Shaped like a browser WebSocket for the client. */
+export class FakeSocket {
+  readyState = 0;
+  onopen: ((event: unknown) => void) | null = null;
+  onmessage: ((event: { data: unknown }) => void) | null = null;
+  onclose: ((event: { code?: number; reason?: string }) => void) | null = null;
+  onerror: ((event: unknown) => void) | null = null;
+  /** Every frame the client sent, parsed, in order. */
+  received: Record<string, unknown>[] = [];
+  /** The close code the CLIENT gave, when it closed the socket. */
+  clientClosed: number | null = null;
+  private token: string | null = null;
+
+  constructor(
+    private readonly backend: FakeBackend,
+    readonly url: string,
+  ) {
+    backend.sockets.push(this);
+    queueMicrotask(() => {
+      if (this.readyState !== 0) return;
+      // An upgrade that is refused (or blocked by a proxy) is an error and a
+      // close with 1006, never an open.
+      if (backend.refuseSockets) {
+        this.onerror?.({});
+        this.serverClose(1006);
+        return;
+      }
+      this.readyState = 1;
+      this.onopen?.({});
+    });
+  }
+
+  send(data: string): void {
+    if (this.readyState !== 1) throw new Error("WebSocket is not open");
+    const frame = JSON.parse(data) as Record<string, unknown>;
+    this.received.push(frame);
+    void this.handle(frame);
+  }
+
+  close(code = 1000): void {
+    if (this.readyState === 3) return;
+    this.readyState = 3;
+    this.clientClosed = code;
+    const onclose = this.onclose;
+    queueMicrotask(() => onclose?.({ code }));
+  }
+
+  /** The server (or the network) ends the socket. */
+  serverClose(code: number, reason = ""): void {
+    if (this.readyState === 3) return;
+    this.readyState = 3;
+    this.onclose?.({ code, reason });
+  }
+
+  /** Request frames only (no `auth`, no `ping`). */
+  requestFrames(): Record<string, unknown>[] {
+    return this.received.filter((f) => f.type === undefined);
+  }
+
+  private push(frame: unknown): void {
+    if (this.readyState === 1) this.onmessage?.({ data: JSON.stringify(frame) });
+  }
+
+  private errorFrame(id: string | null, status: number, code: string, message: string): unknown {
+    return { id, status, body: { error: { code, message, retryable: status === 429 || status >= 500 } } };
+  }
+
+  private async handle(frame: Record<string, unknown>): Promise<void> {
+    if (frame.type === "ping") {
+      if (!this.backend.dropPongs) this.push({ type: "pong" });
+      return;
+    }
+    if (frame.type === "auth") {
+      await Promise.resolve();
+      if (typeof frame.token !== "string" || !this.backend.tokens.has(frame.token)) {
+        this.push(this.errorFrame(null, 401, "unauthenticated", "Sign in again."));
+        // A socket that already holds a good token keeps it and stays open.
+        if (this.token === null) this.serverClose(4401, "unauthenticated");
+        return;
+      }
+      this.token = frame.token;
+      this.push({ type: "ready" });
+      return;
+    }
+    const id = frame.id;
+    if (typeof id !== "string") {
+      this.push(this.errorFrame(null, 400, "invalid_request", "Every request frame needs an 'id'."));
+      return;
+    }
+    const path = typeof frame.path === "string" ? frame.path : "";
+    const method = SOCKET_ROUTES[path];
+    if (!method) return this.push(this.errorFrame(id, 404, "not_found", "No such route on the socket."));
+    if (this.token === null) return this.push(this.errorFrame(id, 401, "unauthenticated", "Sign in again."));
+    const headers: Record<string, string> = { authorization: `Bearer ${this.token}`, "x-client-transport": "ws" };
+    if (typeof frame.workspace_id === "string") headers["x-workspace-id"] = frame.workspace_id;
+    let body: string | undefined;
+    if (method === "POST") {
+      headers["content-type"] = "application/json";
+      body = JSON.stringify(frame.body ?? null);
+    }
+    const res = await this.backend.fetch(`https://api.test/client-api${path}`, { method, headers, body });
+    if (!(res.headers.get("content-type") ?? "").includes("application/json")) {
+      return this.push(this.errorFrame(id, 400, "invalid_request", "This result is binary; request it over HTTP."));
+    }
+    const text = await res.text();
+    this.push({ id, status: res.status, timing: "", request_id: res.headers.get("x-request-id") ?? "", body: text ? JSON.parse(text) : null });
+  }
+}
+
 export class FakeBackend {
   /** Access tokens the server accepts. */
   tokens = new Set<string>(["tok-1"]);
+  /** Every socket a client opened, in order. */
+  sockets: FakeSocket[] = [];
+  /** Upgrades are refused (or blocked on the way): no socket ever opens. */
+  refuseSockets = false;
+  /** Pings go unanswered (a half-open connection). */
+  dropPongs = false;
+  /** The `WebSocket` constructor to hand to the client under test. */
+  readonly WebSocket: new (url: string) => FakeSocket = (() => {
+    const backend = this;
+    return class extends FakeSocket {
+      constructor(url: string) {
+        super(backend, url);
+      }
+    };
+  })();
   allowance: AssistantAllowance = {
     plan: "solo",
     used: 3,

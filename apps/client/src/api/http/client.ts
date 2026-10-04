@@ -1,4 +1,8 @@
-/* ApiClient: the one place that talks HTTP to `client-api`.
+/* ApiClient: the one place that talks to `client-api`, over a WebSocket when
+ * one is open and authenticated (see ./socket.ts) and over HTTP otherwise.
+ * Callers cannot tell which: the same typed errors, timeout, de-duplication,
+ * read retries and 401 handling apply to both. The attachment download and
+ * the assistant's event stream are always HTTP (the socket carries JSON only).
  *
  * - Bearer token on every request; on 401 the token is refreshed ONCE (shared
  *   by every request that saw the 401) and the request retried; if that fails
@@ -10,8 +14,12 @@
  *   de-duplication of identical calls, and coalescing of reads issued in the
  *   same tick into one `POST /mail/batch` (<= 12 calls per request).
  * - Mutations are sent once, never queued and never retried here: offline
- *   they fail fast.
+ *   they fail fast, and one whose connection dropped is reported as failed
+ *   (its idempotency key is the caller's, for a retry the person asks for).
+ * - On a live socket reads go out as single frames, not batches (see `enqueue`).
  */
+
+import { ApiSocket, type ApiSocketOptions, type SocketDiagnostics, socketUrl } from "./socket";
 
 export class ApiError extends Error {
   readonly code: string;
@@ -93,6 +101,28 @@ export interface ApiClientOptions {
   /** Schedules the batch flush. Default: a 0 ms timeout, which collects every
    *  read issued in the current task. */
   defer?: (fn: () => void) => void;
+  /** Told after every mail call that names an inbox: `true` when the answer
+   *  was `reconnect_required`, `false` when the call succeeded. */
+  onInboxAuth?: (inbox_id: string, needsReconnect: boolean) => void;
+  /** Socket transport overrides (tests), or `false` for HTTP only. */
+  socket?: Partial<Omit<ApiSocketOptions, "url" | "getToken" | "refreshToken" | "onAuthFailure">> | false;
+}
+
+/** The routes the socket carries, as the server lists them (ws.ts). */
+const SOCKET_ROUTES: Record<string, string> = {
+  "/session": "GET",
+  "/mail": "POST",
+  "/mail/batch": "POST",
+  "/allowance": "GET",
+};
+
+function parseJsonText<T>(text: string, status: number): T {
+  if (!text) return undefined as T;
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new ApiError("invalid_response", "The server sent something unreadable.", { status, retryable: true });
+  }
 }
 
 /** Reads are coalesced per lane. `slow` keeps calls that are known to take
@@ -165,8 +195,9 @@ export function errorFromEnvelope(status: number, body: unknown, requestId: stri
 }
 
 export class ApiClient {
-  private readonly o: Required<Omit<ApiClientOptions, "onAuthFailure" | "getWorkspaceId" | "fetch">> &
-    Pick<ApiClientOptions, "onAuthFailure" | "getWorkspaceId" | "fetch">;
+  private readonly o: Required<Omit<ApiClientOptions, "onAuthFailure" | "getWorkspaceId" | "fetch" | "socket" | "onInboxAuth">> &
+    Pick<ApiClientOptions, "onAuthFailure" | "getWorkspaceId" | "fetch" | "onInboxAuth">;
+  private readonly socket: ApiSocket | null;
   private queue: Queued[] = [];
   private flushScheduled = false;
   private inflight = new Map<string, Shared>();
@@ -186,6 +217,46 @@ export class ApiClient {
       isOnline: () => typeof navigator === "undefined" || navigator.onLine !== false,
       ...options,
     };
+    this.socket =
+      options.socket === false
+        ? null
+        : new ApiSocket({
+            timeoutMs: this.o.timeoutMs,
+            ...options.socket,
+            url: socketUrl(options.baseUrl),
+            getToken: options.getToken,
+            // The same shared refresh as the HTTP 401 path.
+            refreshToken: () => this.refreshOnce(),
+            onAuthFailure: () => this.o.onAuthFailure?.(),
+          });
+  }
+
+  /* ---------------- public: the socket ---------------- */
+
+  /** There is a session: open the socket (a no-op when it is open or opening).
+   *  Nothing waits for it: until it is authenticated every request is HTTP. */
+  connect(): void {
+    this.socket?.start();
+  }
+
+  /** The session is over: close the socket. */
+  disconnect(): void {
+    this.socket?.stop();
+  }
+
+  /** The session's token was refreshed: present the new one on the open
+   *  socket (the server accepts `auth` again in place). */
+  tokenRefreshed(token: string): void {
+    if (this.socket?.isLive()) this.socket.reauth(token).catch(() => {});
+  }
+
+  /** Requests are going over the socket right now. */
+  get socketLive(): boolean {
+    return this.socket?.isLive() ?? false;
+  }
+
+  get socketDiagnostics(): SocketDiagnostics | null {
+    return this.socket?.diagnostics ?? null;
   }
 
   get baseUrl(): string {
@@ -201,6 +272,7 @@ export class ApiClient {
     for (const q of dropped) q.reject(abortError());
     this.inflight.clear();
     this.refreshing = null;
+    this.socket?.abortAll();
   }
 
   /* ---------------- public: reads ---------------- */
@@ -214,7 +286,24 @@ export class ApiClient {
     lane: ReadLane = "fast",
   ): Promise<T> {
     const call: MailCall = { op, inbox_id, args };
-    return this.shared<T>(`mail:${stableKey(call)}`, signal, (s) => this.withRetry(() => this.enqueue(call, s, lane), s));
+    return this.shared<T>(`mail:${stableKey(call)}`, signal, (s) =>
+      this.noteInbox(inbox_id, this.withRetry(() => this.enqueue<T>(call, s, lane), s)),
+    );
+  }
+
+  private noteInbox<T>(inbox_id: string | null, work: Promise<T>): Promise<T> {
+    const tell = this.o.onInboxAuth;
+    if (!tell || !inbox_id) return work;
+    return work.then(
+      (v) => {
+        tell(inbox_id, false);
+        return v;
+      },
+      (e: unknown) => {
+        if (isApiError(e, "reconnect_required")) tell(inbox_id, true);
+        throw e;
+      },
+    );
   }
 
   /** An idempotent GET. De-duplicated and retried. */
@@ -239,7 +328,7 @@ export class ApiClient {
 
   /** A mail mutation: one request, no retry, fails fast when offline. */
   mutate<T>(op: string, inbox_id: string | null, args: Record<string, unknown> = {}): Promise<T> {
-    return this.json<T>("POST", "/mail", { op, inbox_id, args });
+    return this.noteInbox(inbox_id, this.json<T>("POST", "/mail", { op, inbox_id, args }));
   }
 
   /** A streaming POST (the assistant run). The timeout covers the wait for
@@ -251,16 +340,67 @@ export class ApiClient {
   /* ---------------- internals ---------------- */
 
   private json<T>(method: string, path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
+    // Decided per request, at the moment it is sent: a request that started
+    // on HTTP finishes on HTTP, and one whose socket closes is not moved (a
+    // read is retried by `withRetry`, on whichever transport is up by then;
+    // a mutation fails, exactly as on a dropped HTTP connection).
+    if (this.socket?.isLive() && SOCKET_ROUTES[path] === method) return this.overSocket<T>(method, path, body, signal);
+    return this.overHttp<T>(method, path, body, signal);
+  }
+
+  private overHttp<T>(method: string, path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
     return this.send(method, path, { body, signal, accept: "application/json" }, async (res) => {
       if (res.status === 204) return undefined as T;
-      const text = await res.text();
-      if (!text) return undefined as T;
-      try {
-        return JSON.parse(text) as T;
-      } catch {
-        throw new ApiError("invalid_response", "The server sent something unreadable.", { status: res.status, retryable: true });
-      }
+      return parseJsonText<T>(await res.text(), res.status);
     });
+  }
+
+  /** One exchange over the socket, with the HTTP path's rules: offline fails
+   *  fast, a 401 gets ONE shared refresh and one more try, errors come from
+   *  the same envelope. */
+  private async overSocket<T>(method: string, path: string, body: unknown, user?: AbortSignal): Promise<T> {
+    const socket = this.socket;
+    const epoch = this.epoch.signal;
+    if (user?.aborted || epoch.aborted) throw abortError();
+    if (!this.o.isOnline()) throw new ApiError("offline", "You are offline.");
+    if (!socket) return this.overHttp<T>(method, path, body, user);
+
+    const controller = new AbortController();
+    const onAbort = () => controller.abort();
+    user?.addEventListener("abort", onAbort, { once: true });
+    epoch.addEventListener("abort", onAbort, { once: true });
+    try {
+      let res = await socket.request(path, body, this.o.getWorkspaceId?.(), controller.signal);
+      if (res.status === 401) {
+        const fresh = await this.refreshOnce();
+        if (controller.signal.aborted) throw abortError();
+        if (!fresh) {
+          this.o.onAuthFailure?.();
+          throw new ApiError("unauthenticated", "Sign in again.", { status: 401 });
+        }
+        try {
+          await socket.reauth(fresh);
+        } catch {
+          // The socket went away meanwhile. The 401 means nothing was done,
+          // so the one retry may go over HTTP (which sends the fresh token).
+          if (controller.signal.aborted) throw abortError();
+          return await this.overHttp<T>(method, path, body, controller.signal);
+        }
+        res = await socket.request(path, body, this.o.getWorkspaceId?.(), controller.signal);
+      }
+      if (res.status < 200 || res.status >= 300) {
+        const err = errorFromEnvelope(res.status, res.body, res.requestId);
+        if (res.status === 401) this.o.onAuthFailure?.();
+        throw err;
+      }
+      return (res.body ?? undefined) as T;
+    } catch (err) {
+      if (!isAbortError(err) && (user?.aborted || epoch.aborted)) throw abortError();
+      throw err;
+    } finally {
+      user?.removeEventListener("abort", onAbort);
+      epoch.removeEventListener("abort", onAbort);
+    }
   }
 
   /** One HTTP exchange with auth, 401 refresh, timeout and error mapping.
@@ -421,6 +561,17 @@ export class ApiClient {
 
   private enqueue<T>(call: MailCall, signal: AbortSignal, lane: ReadLane): Promise<T> {
     if (!this.o.isOnline()) return Promise.reject(new ApiError("offline", "You are offline."));
+    // On a live socket reads are NOT coalesced into `/mail/batch`: each goes
+    // out as its own frame. What a batch buys over HTTP is one cold start
+    // instead of twelve; on a socket there is none to save (~1 ms a frame).
+    // And the server orders same-inbox work either way: every operation
+    // leases the inbox's ONE pooled mailbox connection in turn (imap-pool.ts,
+    // rule 2), which is what a batch does for same-inbox calls too. Separate
+    // frames are answered one by one as each finishes, where a batch answers
+    // only when its slowest call has (so the fast/slow lanes are not needed
+    // here either). Rate-limit cost is identical (a batch costs its length).
+    // The socket caps frames in flight below the server's limit of 24.
+    if (this.socket?.isLive()) return this.json<T>("POST", "/mail", call, signal);
     return new Promise<T>((resolve, reject) => {
       this.queue.push({ call, lane, signal, resolve: resolve as (v: unknown) => void, reject });
       if (!this.flushScheduled) {

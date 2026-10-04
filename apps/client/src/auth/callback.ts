@@ -15,6 +15,12 @@ export interface AuthCallback {
   code: string | null;
   /** Human-readable reason the provider or Supabase gave. */
   error: string | null;
+  /** DEVELOPMENT BUILDS ONLY: the tokens of an implicit-flow fragment
+   *  (`#access_token=…&refresh_token=…`), which is what an admin-generated
+   *  test link lands with. Never set in a production build: taking a session
+   *  from a URL fragment would let a crafted link sign a person into someone
+   *  else's account. */
+  devImplicit?: { access_token: string; refresh_token: string };
 }
 
 let pending: AuthCallback | null = null;
@@ -50,12 +56,22 @@ function takeReturnUrl(): string | null {
 }
 
 /** Call before the first route is parsed. A no-op anywhere but the callback path. */
-export function captureAuthCallback(): void {
+export function captureAuthCallback(dev: boolean = import.meta.env.DEV): void {
   if (typeof window === "undefined" || window.location.pathname !== AUTH_CALLBACK_PATH) return;
   const query = new URLSearchParams(window.location.search);
   const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
   const error = query.get("error_description") ?? hash.get("error_description") ?? query.get("error") ?? hash.get("error");
   pending = { code: query.get("code"), error: error ? error.replace(/\+/g, " ") : null };
+  // The fragment has to be read HERE: the line below takes it out of the
+  // address bar, long before the auth client (a lazy chunk) exists.
+  if (import.meta.env.DEV && dev) {
+    const access_token = hash.get("access_token");
+    const refresh_token = hash.get("refresh_token");
+    if (access_token && refresh_token) {
+      pending.devImplicit = { access_token, refresh_token };
+      console.info("[dev-only] implicit sign-in fragment accepted");
+    }
+  }
   window.history.replaceState(null, "", takeReturnUrl() ?? "/");
 }
 

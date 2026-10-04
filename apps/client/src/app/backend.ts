@@ -17,6 +17,7 @@ import {
   initAuth,
   onSignedIn,
   onSignedOut,
+  onTokenRefreshed,
   readIdentity,
   refreshAccessToken,
   signOut,
@@ -40,11 +41,12 @@ import {
   setCacheNamespace,
 } from "../data/query-client";
 import { applyKeyRemap } from "../data/remap";
-import { type SyncEngine, createSyncEngine } from "../data/sync";
+import { SYNC_INTERVAL_LIVE_MS, SYNC_INTERVAL_MS, type SyncEngine, createSyncEngine } from "../data/sync";
 import { clearUndo } from "../data/undo";
 import { getPlatform } from "../platform";
 import { useAssistantStore } from "../state/assistant-store";
 import { type ComposeState, useComposeStore } from "../state/compose-store";
+import { markInboxAuth, useConnectionStore, useReconnectStore } from "../state/connection-store";
 import { useSelectionStore } from "../state/selection-store";
 import { useToastStore } from "../state/toast-store";
 import { DEFAULT_ROUTE, getRoute, navigate } from "./router";
@@ -85,6 +87,7 @@ export function getHttpMailApi(): HttpMailApi | null {
 /** Everything a previous user could have left in memory. */
 function resetStores(opts: { location: boolean }): void {
   useAssistantStore.getState().reset();
+  if (opts.location) useReconnectStore.setState({ inboxes: {} });
   if (useComposeStore.getState().compose) useComposeStore.setState({ compose: null });
   useToastStore.getState().dismiss();
   clearUndo();
@@ -192,7 +195,9 @@ export function loadSession(): Promise<void> {
 
 async function onSignIn(info: SignedInInfo): Promise<void> {
   if (info.replaced) {
-    // Another account signed in over the one this tab was showing.
+    // Another account signed in over the one this tab was showing. The open
+    // socket holds the previous account's token: it is closed, not re-used.
+    client?.disconnect();
     api?.reset();
     transport?.reset();
     await purgeAllCaches();
@@ -206,11 +211,14 @@ async function onSignIn(info: SignedInInfo): Promise<void> {
     clearIdentity();
     workspaceId = null;
   }
+  // Opened alongside `/session`, which goes over HTTP: nothing waits for it.
+  client?.connect();
   void loadSession();
 }
 
 async function onSignOut(info: SignedOutInfo): Promise<void> {
   sync?.stop();
+  client?.disconnect();
   api?.reset();
   transport?.reset();
   workspaceId = null;
@@ -233,7 +241,12 @@ export function installHttpBackend(): HttpMailApi {
     onAuthFailure: handleAuthFailure,
     getWorkspaceId: () => workspaceId,
     isOnline: () => getPlatform().network.isOnline(),
+    onInboxAuth: markInboxAuth,
+    // Unit tests of this module run against a fake `fetch`; they must not dial.
+    socket: import.meta.env.MODE === "test" ? false : { onDiagnostics: (d) => useConnectionStore.setState(d) },
   });
+  const socketClient = client;
+  onTokenRefreshed((token) => socketClient.tokenRefreshed(token));
   const mail = new HttpMailApi({ client });
   api = mail;
   mail.onSession(applySession);
@@ -267,6 +280,9 @@ export async function bootHttp(loadBackend: () => Promise<AuthBackend>): Promise
     workspaceId = hint.workspace_id;
     setCacheNamespace(cacheNamespaceOf(hint.user.id, hint.workspace_id));
     void initAuth(backend, { callback });
+    // The socket handshake starts now, next to the cache restore and the
+    // first HTTP requests. They do not wait for it.
+    client?.connect();
     const restored = restoreQueryCache().then(() => {
       const cached = queryClient.getQueryData<SessionInfo>(keys.session);
       // Only while the server has not answered yet (a slow IndexedDB).
@@ -330,6 +346,7 @@ export function startSync(): () => void {
   sync ??= createSyncEngine({
     api: mail,
     inboxIds: () => (mail.peekSession()?.inboxes ?? []).map((i) => i.inbox_id),
+    intervalMs: () => (client?.socketLive ? SYNC_INTERVAL_LIVE_MS : SYNC_INTERVAL_MS),
   });
   const engine = sync;
   syncWanted = true;

@@ -5,6 +5,7 @@ export {
   assumeSignedIn,
   onSignedIn,
   onSignedOut,
+  onTokenRefreshed,
   getAccessToken,
   refreshAccessToken,
   handleAuthFailure,
