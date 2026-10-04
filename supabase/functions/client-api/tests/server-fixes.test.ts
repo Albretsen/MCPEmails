@@ -9,7 +9,7 @@ import { buildRelayForwardMime } from "../../mcp-server/forward-relay.ts";
 import type { ImapClient } from "../../mcp-server/imap-client.ts";
 import { type FakeMailbox, FakeImapServer, type FakeMessage, fakeTextMessage } from "../../mcp-server/imap-fake-server.ts";
 import { parseEmail, parseEmailJoined } from "../../mcp-server/mime.ts";
-import { cleanPreviewFromBodyPart, htmlPreviewText, previewFromBodyPartSource } from "../../mcp-server/text-extract.ts";
+import { cleanPreviewFromBodyPart, htmlPreviewText } from "../../mcp-server/text-extract.ts";
 import { ImapPool, nextInQueue, type QueueClass } from "../imap-pool.ts";
 import { forgetOutlookRolesForTests, imapFolderRoles } from "../mail/roles.ts";
 import { FakeDialPool, gmailHandler, harness, imapInbox, imapServer, INBOX_ID, mcp, realApp } from "./real-seam.ts";
@@ -501,7 +501,7 @@ Deno.test("preview: style, script, head and comments go with their content, clos
   assertEquals(cleanPreviewFromBodyPart(closed, html), "Hello there");
   const cut = "<html><head><style>.a{color:red;} .b{margin:0;} @media(max-width:600px){.c{display:none;}";
   assertEquals(cleanPreviewFromBodyPart(cut, html), "");
-  assert(hasCss(previewFromBodyPartSource(cut)), "the shared builder ships the CSS (unchanged for MCP)");
+  assert(!hasCss(cleanPreviewFromBodyPart(cut, null)), "nor when nothing described the part");
   assertEquals(cleanPreviewFromBodyPart("<body><p>Shown</p><!-- hidden {a;b}", html), "Shown");
   assertEquals(cleanPreviewFromBodyPart("<p>Shown</p><a href=\"https://example.com/very", html), "Shown");
   assertEquals(htmlPreviewText("Tom &amp; Jerry &nbs"), "Tom & Jerry ");
@@ -515,10 +515,7 @@ Deno.test("preview: the declared charset and transfer encoding decode it; a cut 
 
   // 8bit UTF-8: 0x98 (in "Ø") and 0x80/0x93/0x9C (dash, quotes) are the octets windows-1252 remaps.
   assertEquals(cleanPreviewFromBodyPart(wire(utf8), plain("utf-8", "8bit")), "Blåbærsyltetøy – Ødegård “quoted”");
-  assert(
-    previewFromBodyPartSource(wire(utf8)) !== "Blåbærsyltetøy – Ødegård “quoted”",
-    "the shared builder mis-decodes it (mojibake or U+FFFD; unchanged for MCP)",
-  );
+  assertEquals(cleanPreviewFromBodyPart(wire(utf8), null), "Blåbærsyltetøy – Ødegård “quoted”", "nor when nothing described the part");
 
   // Cut in the middle of a multi-byte character, for every cut point.
   for (let cut = 1; cut < utf8.length; cut++) {
@@ -557,7 +554,7 @@ Deno.test("preview: the declared charset and transfer encoding decode it; a cut 
   assertEquals(cleanPreviewFromBodyPart("JVBERi0xLjQK", { type: "application", subtype: "pdf", charset: null, encoding: "base64" }), "");
 });
 
-Deno.test("list (imap): previews are clean for client-api and byte-identical to before for MCP", async () => {
+Deno.test("list (imap): previews are clean, and the same for client-api and for MCP", async () => {
   const css = "<html><head><style>.wrapper{margin:0;padding:0;} .x{color:#333;}</style></head><body><p>Visible sentence.</p></body></html>";
   const boxes: FakeMailbox[] = [{
     name: "INBOX",
@@ -586,14 +583,10 @@ Deno.test("list (imap): previews are clean for client-api and byte-identical to 
       () => mcp.dispatchExecutor("email_list", { inbox_id: INBOX_ID, folder: "INBOX", limit: 10 }, harness.API_KEY),
     ));
   const mcpRows = (plain.value!.result as { structuredContent: { messages: Record<string, unknown>[] } }).structuredContent.messages;
-  // Exactly what the shared builder has always produced for these sources, CSS and all.
-  assertEquals(mcpRows.map((r) => r["preview"]), [
-    "Plain and simple.",
-    previewFromBodyPartSource(new TextDecoder("latin1").decode(new TextEncoder().encode("Ødegård – “hei”"))),
-    previewFromBodyPartSource(css),
-  ]);
-  assert(hasCss(String(mcpRows[2]["preview"])));
-  assert(plainPool.servers[0].commands.some((c) => c.includes("BODY.PEEK[1]<0.2048>")), "and the FETCH it sends is the same");
-  const strip = (rows: Record<string, unknown>[]) => rows.map(({ preview: _p, is_flagged: _f, ...rest }) => rest);
-  assertEquals(JSON.stringify(strip(clientRows)), JSON.stringify(strip(mcpRows)), "nothing but the preview differs");
+  // Since 2026-10-04 an MCP row carries the same preview: one generator, no flag.
+  assertEquals(mcpRows.map((r) => r["preview"]), ["Plain and simple.", "Ødegård – “hei”", "Visible sentence."]);
+  assert(!mcpRows.some((r) => hasCss(String(r["preview"])) || String(r["preview"]).includes("\ufffd")));
+  assert(plainPool.servers[0].commands.some((c) => c.includes("BODY.PEEK[1]<0.2048>")), "and the FETCH MCP sends is the one it always sent");
+  const strip = (rows: Record<string, unknown>[]) => rows.map(({ is_flagged: _f, ...rest }) => rest);
+  assertEquals(JSON.stringify(strip(clientRows)), JSON.stringify(strip(mcpRows)), "nothing but is_flagged differs");
 });

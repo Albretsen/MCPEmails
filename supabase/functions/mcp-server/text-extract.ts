@@ -116,138 +116,33 @@ export function decodeHtmlEntities(value: string): string {
 }
 
 /**
+ * Invisible in a rendered message and absent from `stripInvisibleText`'s class,
+ * which is a mirrored anti-spoofing contract (text-safety.ts) and is not widened
+ * here: the soft hyphen (U+00AD, also written `&shy;`) and the combining
+ * grapheme joiner (U+034F). Both are what a preheader is padded with:
+ * `&#847;&zwnj;&nbsp;` repeated a hundred times is the commonest form.
+ */
+const PREVIEW_ONLY_INVISIBLE = /[\u00ad\u034f]/g;
+
+/**
  * Clean one summary preview: decode entities, drop invisible characters,
- * collapse whitespace, cap at 200 characters.
+ * collapse whitespace, cap at 200 characters. Every provider's preview ends
+ * here: Gmail's `snippet` (which arrives entity-encoded), Graph's
+ * `bodyPreview`, and the text decoded from an IMAP part.
  *
  * The invisible strip has to happen before the cap, or the cap just preserves
  * 200 characters of padding. The full invisible class is right here (bidi marks
  * included): a preview is a line that gets scanned, not prose that gets read.
+ *
+ * Nothing here judges MEANING. Padding goes because it is invisible, not
+ * because it is boilerplate; "View in browser" is text and stays.
  */
 export function normalizePreview(text: string): string {
-  return stripInvisibleText(decodeHtmlEntities(text))
+  return stripInvisibleText(decodeHtmlEntities(text.replace(/&shy;/gi, "")))
+    .replace(PREVIEW_ONLY_INVISIBLE, "")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, PREVIEW_MAX_CHARS);
-}
-
-/**
- * `normalizePreview` for a preview taken from a raw body snippet, which may
- * still hold markup. Tags go first so a decoded `<` cannot become one.
- */
-export function normalizeSnippetPreview(snippet: string): string {
-  return normalizePreview(
-    snippet
-      .replace(/<[^>]+>/g, " ")
-      // An IMAP snippet is a partial body fetch, so it can stop in the middle
-      // of a tag. The rule above needs a closing `>` and cannot match that, so
-      // without this a preview ends in a literal `<table class`. It only became
-      // visible once entity decoding freed enough of the 200-character budget
-      // to reach the end of the snippet.
-      .replace(/<[^>]*$/, " "),
-  );
-}
-
-/**
- * The preview for one fetched IMAP body part, from its raw source.
- *
- * ── Why this is here, and why it is the ONLY preview generator ──────────────
- *
- * A live test against a real Gmail-over-IMAP mailbox on 2026-09-20 (F-03) found
- * `email_read action:"list"` and `action:"search"` shipping this as a preview:
- *
- *   --mcpe_alt_08cb43e0… Content-Type: text/plain; charset=UTF-8
- *   Content-Transfer-Encoding: base64 RjMgYXR0YWNobWVudCBmaXh0dXJlLiBTZW50…
- *
- * `action:"read"` on the same message returned a perfectly decoded body, which
- * is the whole diagnosis: the read path parses MIME and the preview path did
- * not. The listing asks for `BODY.PEEK[1]<0.2048>` and assumed part one is a
- * leaf text part. For mail this server itself composes with inline attachments
- * — `multipart/mixed` wrapping a `multipart/alternative`, exactly what
- * mime-build.ts emits — part one is the nested multipart, so its "body" is a
- * boundary line, four header lines and base64. The old generator stringified
- * that as prose. The field an agent reads FIRST to decide what to open was
- * useless for precisely the mail that has attachments, and it spent the model's
- * context on MIME framing.
- *
- * Two code paths for one question is what let them diverge, so there is now one
- * here and the IMAP client calls it. The descent below is mime.ts's own — the
- * parser the working `read` path uses — not a second one written for previews.
- *
- * The contract, in order:
- *   1. a multipart source (any nesting depth) is parsed and reduced to its
- *      decoded text/plain, falling back to its decoded text/html stripped to
- *      text. If neither yields anything — a 2KB snippet can stop before any
- *      content — the preview is EMPTY. It is never the source.
- *   2. a leaf source is decoded from base64 or quoted-printable and cleaned.
- *   3. either way boundaries, header lines and base64 never reach a caller.
- */
-export function previewFromBodyPartSource(source: string): string {
-  const nested = parseMultipartBodySource(source);
-  if (nested) {
-    const text = preferredBodyText(nested.text, nested.html, { keepLinks: false });
-    if (!text) return "";
-    // A 2KB fetch can cut a multi-byte character in half; the decoder emits
-    // U+FFFD for the remainder. Drop a trailing run of them so a short preview
-    // does not end in replacement characters.
-    return normalizePreview(text.replace(/�+$/, ""));
-  }
-  return leafSnippetPreview(source);
-}
-
-/**
- * Preview for a LEAF part fetched as a snippet: decode base64 or soft
- * quoted-printable, then clean. Returns "" for binary/undecodable content.
- *
- * The transfer encoding has to be guessed because a part body carries no
- * headers of its own (BODYSTRUCTURE knows, but the snippet does not), hence the
- * ratio test rather than a declared value.
- */
-function leafSnippetPreview(snippet: string): string {
-  // Base64 path: many providers (e.g. Fastmail) transfer-encode text parts as
-  // base64, wrapped at ~76 chars with CRLF. After whitespace-stripping, such a
-  // snippet is essentially the base64 alphabet only. Detect via ratio so prose
-  // (with spaces/punctuation) is not misclassified, then decode.
-  const stripped = snippet.replace(/\s+/g, "");
-  if (stripped.length >= 32) {
-    const b64Chars = (stripped.match(/[A-Za-z0-9+/=]/g) ?? []).length;
-    if (b64Chars / stripped.length >= 0.95) {
-      // Partial fetch (<0.2048>) may cut mid-quantum; trim to a multiple of 4.
-      const b64 = stripped.slice(0, stripped.length - (stripped.length % 4));
-      try {
-        const bin = atob(b64);
-        const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
-        const decoded = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
-        const text = normalizeSnippetPreview(decoded);
-        // If it still looks binary (lots of control / U+FFFD replacement chars), drop it.
-        // deno-lint-ignore no-control-regex -- the control characters ARE the test.
-        const bad = (text.match(/[\x00-\x08\x0E-\x1F�]/g) ?? []).length;
-        if (text && bad / text.length < 0.1) return text;
-        return "";
-      } catch {
-        // Fall through to the plain/QP text path below.
-      }
-    }
-  }
-
-  // Plain / quoted-printable path: decode soft line breaks + =XX hex escapes.
-  const latin1 = snippet
-    .replace(/=\r?\n/g, "")
-    .replace(/=([0-9A-Fa-f]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
-
-  // `=XX` yields BYTES, and a UTF-8 part spends two or three of them per
-  // non-ASCII character, so stopping at the latin1 string above previewed
-  // "Karin på" as "Karin pÃ¥" — mojibake in the one field a triage pass reads.
-  // The base64 branch a few lines up has always decoded UTF-8; these are two
-  // branches of one function and they disagreed. Charset is not knowable from a
-  // part body (its headers were not fetched), so: decode as UTF-8, and keep the
-  // latin1 reading only when the result is full of replacement characters,
-  // which is what a genuinely latin1 part looks like. A snippet cut mid-
-  // character contributes at most one, and the tail trim below removes it.
-  const utf8 = new TextDecoder("utf-8", { fatal: false }).decode(
-    Uint8Array.from(latin1, (c) => c.charCodeAt(0) & 0xff),
-  ).replace(/�+$/, "");
-  const replacements = (utf8.match(/�/g) ?? []).length;
-  return normalizeSnippetPreview(replacements > 2 ? latin1 : utf8);
 }
 
 /**
@@ -350,10 +245,7 @@ export function stripHtmlToText(
  * \r\n carries no more information than an absent one.
  *
  * `keepLinks` defaults to true because `body_text` is the caller this was
- * written for, and an agent asked to find a link needs the URLs. The preview
- * generator passes false: a 200-character triage line would spend its entire
- * budget on one tracking URL. The CHOICE between the two parts is the same
- * either way, which is why it stays one function.
+ * written for, and an agent asked to find a link needs the URLs.
  */
 export function preferredBodyText(
   text: string | null | undefined,
@@ -369,30 +261,39 @@ export function preferredBodyText(
 }
 
 // ---------------------------------------------------------------------------
-// The first-party preview (client-api only; see first-party.ts `cleanPreview`).
+// The IMAP preview: `cleanPreviewFromBodyPart`, the ONLY generator.
 //
-// `previewFromBodyPartSource` above has to GUESS what a fetched part is: its
-// transfer encoding by a ratio test, its charset as "UTF-8, else latin1", and
-// whether it is HTML not at all. The same FETCH that carries the bytes also
-// carries BODYSTRUCTURE, which states all three. This path reads them, and is
-// written for a source that stops wherever the partial fetch stopped:
+// A listing asks for `BODY.PEEK[1]<0.2048>` and BODYSTRUCTURE in one FETCH. The
+// first is a prefix of part one's bytes; the second states what part one is:
+// its media type, its charset and its transfer encoding. The preview is decoded
+// from what was stated, and is written for a source that stops wherever the
+// partial fetch stopped:
 //
 //   * `<style>`, `<script>`, `<head>`, `<title>` and comments go WITH their
 //     content, closed or not. A 2 KB prefix of an HTML-only message is very
-//     often an unterminated `<style>` block, which the closed-tag rules in
-//     `stripHtmlToText` cannot match, so the CSS shipped as the preview.
+//     often an unterminated `<style>` block, which a closed-tag rule cannot
+//     match, so the CSS used to ship as the preview.
 //   * Octets are recovered exactly. A literal comes off the socket through
 //     TextDecoder("latin1"), which is windows-1252: an 8bit UTF-8 "Ø" (C3 98)
 //     reads as "Ã" + U+02DC, and `charCodeAt & 0xff` then turns 0x98 into 0xDC.
 //     That, not the cut at 2 KB, was the usual source of U+FFFD in a preview.
 //   * The declared charset decodes the octets, as a STREAM, so a multi-byte
 //     character cut by the fetch is held back instead of becoming U+FFFD.
-//   * A quoted-printable escape or soft break cut in half is dropped.
+//   * A quoted-printable escape or soft break cut in half is dropped, and
+//     base64 is trimmed to a whole quantum.
+//   * A part that is not text (an attachment-only message) previews as "".
+//   * When part one is itself a multipart (mail with attachments: mixed
+//     wrapping alternative), its source carries each child's own headers and
+//     mime.ts, the parser the `read` path uses, descends through it. Boundary
+//     lines, part headers and base64 never reach a caller (F-03, 2026-09-20).
 //   * Nothing returned ever contains U+FFFD.
 //
-// MCP output is unchanged by all of this: nothing outside client-api sets the
-// option. It is a pure correctness improvement and worth enabling there too,
-// as its own change with its own baseline update.
+// History: until 2026-10-04 MCP traffic went through a second generator
+// (`previewFromBodyPartSource`, which comments elsewhere still name) that
+// had no BODYSTRUCTURE and GUESSED all three facts (base64 by a character
+// ratio, charset as "UTF-8, else latin1", HTML not at all), while this one ran
+// for client-api only behind a first-party flag. Two generators for one field
+// is how `list` came to ship CSS while the web client did not; there is one.
 // ---------------------------------------------------------------------------
 
 /** What BODYSTRUCTURE says about the part a preview was fetched from. */
@@ -494,12 +395,23 @@ function decodeCharsetTolerant(bytes: Uint8Array, charset: string | null): strin
 /** Elements whose CONTENT is not message text. */
 const NON_TEXT_ELEMENTS = "style|script|head|title|noscript|template|svg|xml";
 
+/**
+ * Tags that sit INSIDE a line of text. They vanish; every other tag becomes a
+ * space, because a tag nobody listed is far more often a cell or a block
+ * (`<td>A</td><td>B</td>`) than something in the middle of a word. Without
+ * this list `<a href="…">ready</a>.` previews as "ready ." and `<b>M</b>CP`
+ * as "M CP".
+ */
+const INLINE_TAG =
+  /<\/?(?:a|abbr|b|big|code|em|font|i|label|mark|s|small|span|strike|strong|sub|sup|tt|u|wbr)\b[^>]*>/gi;
+
 /** HTML, possibly cut off anywhere, to the text a reader would see first. */
 export function htmlPreviewText(html: string): string {
   const text = html
     .replace(/<!--[\s\S]*?(?:-->|$)/g, " ")
     // Closed, or running to the end of what was fetched.
     .replace(new RegExp(`<(${NON_TEXT_ELEMENTS})\\b[\\s\\S]*?(?:<\\/\\1\\s*>|$)`, "gi"), " ")
+    .replace(INLINE_TAG, "")
     .replace(/<[^>]*>/g, " ")
     // A tag the fetch cut in half.
     .replace(/<[^>]*$/, " ");
@@ -524,20 +436,51 @@ function finishPreview(text: string): string {
   return normalizePreview(text.replace(REPLACEMENT, ""));
 }
 
+/** A quoted-printable soft break or escape that the partial fetch cut in half. */
+const CUT_QP_TAIL = /=(?:\r|[0-9A-Fa-f])?$/;
+
+/**
+ * The transfer encoding of a leaf source nothing described. Only reached when
+ * a server answered without a usable BODYSTRUCTURE, which the FETCH always
+ * asks for; it keeps that case from previewing as the base64 alphabet.
+ *
+ * Base64 by ratio: wrapped base64 is the alphabet and line breaks and nothing
+ * else, and prose (spaces, punctuation) is not. Quoted-printable only on its
+ * unmistakable marks, a soft line break or two escapes in a row (one non-ASCII
+ * UTF-8 character): a lone `=3D`-shaped run can be a URL's query string.
+ */
+function guessTransferEncoding(source: string): string | null {
+  const lines = source.trim().split(/\r?\n/);
+  const joined = lines.join("");
+  if (joined.length >= 32 && !/[^A-Za-z0-9+/=]/.test(joined)) return "base64";
+  if (/=\r?\n/.test(source) || /=[0-9A-Fa-f]{2}=[0-9A-Fa-f]{2}/.test(source)) return "quoted-printable";
+  return null;
+}
+
 /**
  * The preview for one fetched IMAP body part, given what BODYSTRUCTURE says
- * the part is. `part` is null when part one is itself a multipart: its source
- * then carries each child's own headers, and those are read instead.
+ * the part is. `part` is null when part one is itself a multipart (its source
+ * then carries each child's own headers, and those are read instead) or when
+ * there was no BODYSTRUCTURE to read.
+ *
+ * The contract every caller gets: the first 200 characters or fewer of the
+ * message's plain text (the text/plain part when there is one, otherwise the
+ * HTML reduced to its visible text), entities decoded, invisible characters
+ * removed, whitespace collapsed to single spaces. "" when there is no text.
  */
 export function cleanPreviewFromBodyPart(source: string, part: PreviewPartInfo | null): string {
   const octets = sourceOctets(source);
   if (part === null || part.type === "multipart") {
-    const nested = parseMultipartBodySource(octetString(octets));
+    // mime.ts decodes each child whole; it has no notion of a source that
+    // stops mid-escape, so the cut tail is removed before it sees it.
+    const wire = octetString(octets);
+    const nested = parseMultipartBodySource(wire.replace(CUT_QP_TAIL, ""));
     if (!nested) {
-      // Not a multipart after all (BODYSTRUCTURE was missing or odd): read it
-      // as text of unknown encoding.
-      if (part === null) return finishPreview(leafText(octets, { type: "text", subtype: "plain", charset: null, encoding: null }));
-      return "";
+      if (part !== null) return "";
+      // Not a multipart after all: a leaf nothing described.
+      return finishPreview(
+        leafText(octets, { type: "text", subtype: "plain", charset: null, encoding: guessTransferEncoding(wire) }),
+      );
     }
     if (typeof nested.text === "string" && nested.text.trim() !== "") {
       return finishPreview(looksLikeHtml(nested.text) ? htmlPreviewText(nested.text) : nested.text);

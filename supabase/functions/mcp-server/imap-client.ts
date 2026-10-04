@@ -22,11 +22,10 @@
 
 import {
   cleanPreviewFromBodyPart,
-  previewFromBodyPartSource,
   type PreviewPartInfo,
 } from "./text-extract.ts";
 import { connectGuardedTcp } from "./host-guard.ts";
-import { firstPartyContext, summaryPreviewItem, wantsCleanPreview } from "./first-party.ts";
+import { firstPartyContext, summaryPreviewItem } from "./first-party.ts";
 import { decodeModifiedUtf7, encodeModifiedUtf7 } from "./utf7.ts";
 import { parseCopyUid } from "./imap-copyuid.ts";
 import {
@@ -2773,9 +2772,8 @@ function parseFetchLine(line: string): ImapMessageSummary | null {
   };
   let hasAttachments = false;
   let preview = "";
-  // client-api only: the preview is decoded after the loop, from what
-  // BODYSTRUCTURE (in the same reply, in either order) says part one is.
-  const clean = wantsCleanPreview();
+  // The preview is decoded after the loop, from what BODYSTRUCTURE (in the
+  // same reply, in either order) says part one is.
   let structure: Token[] | null = null;
   let previewSource: string | null = null;
 
@@ -2794,8 +2792,7 @@ function parseFetchLine(line: string): ImapMessageSummary | null {
       typeof key === "string" && key.startsWith("BODY[") &&
       typeof attrs[i + 1] === "string"
     ) {
-      if (clean) previewSource = attrs[i + 1] as string;
-      else preview = previewFromBodyPartSource(attrs[i + 1] as string);
+      previewSource = attrs[i + 1] as string;
     }
   }
   if (previewSource !== null) {
@@ -2806,18 +2803,12 @@ function parseFetchLine(line: string): ImapMessageSummary | null {
   return { uid, flags, envelope, hasAttachments, preview };
 }
 
-// The preview generator used to live here, as a decoder that knew about base64
-// and quoted-printable and nothing else. It assumed `BODY[1]` was always a leaf
-// text part, so a message whose part one is a nested multipart/alternative — the
-// shape mime-build.ts emits for a send with inline attachments — had its
-// boundary line, its part headers and its base64 shipped verbatim as the
-// preview (F-03, found against a live Gmail-over-IMAP mailbox on 2026-09-20).
-//
-// It is now `previewFromBodyPartSource` in text-extract.ts, which descends
-// through any nesting using mime.ts — the same parser the `read` path uses, and
-// the reason `read` was always correct on the very messages `list` and `search`
-// mangled. Having a second, private parser here is what let the two diverge;
-// there is one now, and it belongs beside the rest of the preview policy.
+// The preview generator is `cleanPreviewFromBodyPart` in text-extract.ts, for
+// every caller. It is given the part's source and what BODYSTRUCTURE says the
+// part is, and it descends through a nested multipart using mime.ts, the same
+// parser the `read` path uses. Do not grow a second one here: a private decoder
+// in this file is what once shipped MIME framing as a preview (F-03,
+// 2026-09-20), and a guessing one beside it is what shipped CSS (2026-10-04).
 
 /** Parse an IMAP ENVELOPE token list into structured fields. */
 function parseEnvelope(env: Token[]): ImapEnvelope {

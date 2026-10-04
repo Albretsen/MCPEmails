@@ -23,11 +23,6 @@
 //                    IS the reviewer that gate waits for.
 //   trashIds         an IMAP delete-to-trash reports the ids the messages have
 //                    in Trash (COPYUID), so the client can undo it.
-//   cleanPreview     an IMAP list/search row's `preview` is decoded from what
-//                    BODYSTRUCTURE says part one is (charset, transfer
-//                    encoding, HTML or not) instead of guessed from its bytes:
-//                    no CSS, no replacement characters. See
-//                    `cleanPreviewFromBodyPart` in text-extract.ts.
 //   listPreviewBytes how much of part one an IMAP listing fetches for that
 //                    preview (0: none, the rows then carry `preview: ""`).
 //   joinInlineParts  an IMAP `email_read` joins the inline text parts of a
@@ -38,6 +33,8 @@
 // All of it rides one AsyncLocalStorage. NOTHING in the MCP server ever opens
 // this store: `handleRequest` does not call `firstPartyContext.run`, so for
 // every MCP request `getStore()` is undefined and each hook below is inert.
+// (The clean IMAP preview started here as a `cleanPreview` option. It is the
+// behaviour for every caller since 2026-10-04, so the option is gone.)
 // That is the whole behaviour-neutrality argument, and
 // client-api/tests/mcp-neutral.test.ts pins it on the bytes of a real
 // `tools/call` response.
@@ -78,8 +75,6 @@ export interface FirstPartyContext {
   humanBulk?: boolean;
   /** IMAP delete-to-trash rows carry `new_message_id`. */
   trashIds?: boolean;
-  /** IMAP summary previews are decoded from BODYSTRUCTURE and cleaned of markup. */
-  cleanPreview?: boolean;
   /** Octets of part one an IMAP listing fetches for the preview; 0 fetches none. */
   listPreviewBytes?: number;
   /** IMAP `email_read` joins every inline text part of a multipart/mixed message. */
@@ -127,11 +122,6 @@ export function isHumanBulk(): boolean {
 /** True only inside a client-api delete that wants the Trash ids back. */
 export function wantsTrashIds(): boolean {
   return firstPartyContext.getStore()?.trashIds === true;
-}
-
-/** True only inside a client-api call: previews are decoded from BODYSTRUCTURE. */
-export function wantsCleanPreview(): boolean {
-  return firstPartyContext.getStore()?.cleanPreview === true;
 }
 
 /**
