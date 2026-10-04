@@ -24,7 +24,7 @@ import {
   isHumanBulk,
   readExtraFields,
   wantsFlagged,
-  wantsJoinedInlineParts,
+  wantsExactOctets,
   wantsReplyRecipients,
   wantsTrashIds,
 } from "./first-party.ts";
@@ -272,6 +272,7 @@ import {
 } from "./recipient-rules.ts";
 import {
   decodeEncodedWords,
+  embeddedMessageBody,
   getHeader,
   joinShownParts,
   parseEmail,
@@ -11173,6 +11174,14 @@ async function listImapMessages(
 // ---------------------------------------------------------------------------
 
 /**
+ * An HTML-only part as `body_text` shows it: the same conversion
+ * `preferredBodyText` applies to an HTML-only message, links kept.
+ */
+function htmlPartToBodyText(html: string): string {
+  return stripHtmlToText(html, { keepLinks: true });
+}
+
+/**
  * Implements `email_read` for IMAP inboxes. The message id is "<folder>:<uid>"
  * (see encodeImapId); the folder is SELECTed and the full RFC 822 message is
  * fetched and parsed via mime.ts.
@@ -11216,6 +11225,14 @@ async function readImapMessage(
    * imap-fetch-once.ts.
    */
   fetchedThisCall?: ImapFetchedThisCall,
+  /**
+   * Return the DISPLAYED body: the inline text parts of a multipart/mixed
+   * joined in order, so a forwarded message reads back with its original text
+   * (see `parseEmailJoined` in mime.ts). Only the read tools set it, through
+   * readOneMessage. The callers that quote a body into an outgoing message
+   * keep the first-part body they have always had.
+   */
+  joinInlineParts = false,
 ): Promise<ReadEmailResult> {
   if (!inbox.imap_host || !inbox.imap_port || !inbox.imap_password) {
     throw new Error("imap_auth_failed");
@@ -11236,16 +11253,11 @@ async function readImapMessage(
     );
     if (!msg) throw new Error("message_not_found");
 
-    // client-api only (first-party.ts `joinInlineParts`): the inline text
-    // parts of a multipart/mixed are joined, so a forward reads back whole.
-    // An MCP read is `parseEmail`, as it has always been.
-    const parsed = parseEmail(msg.raw);
-    if (wantsJoinedInlineParts()) {
-      const joined = parseEmailJoined(msg.raw, (html) => stripHtmlToText(html, { keepLinks: true }));
-      parsed.text = joined.text;
-      parsed.html = joined.html;
-      parsed.attachments = joined.attachments;
-    }
+    // client-api additionally decodes from the exact octets (first-party.ts
+    // `exactOctets`); for an MCP read that stays off.
+    const parsed = joinInlineParts
+      ? parseEmailJoined(msg.raw, htmlPartToBodyText, { exactOctets: wantsExactOctets() })
+      : parseEmail(msg.raw);
     const h = parsed.headers;
 
     const subject = decodeEncodedWords(getHeader(h, "subject") ?? "(no subject)");
@@ -12299,6 +12311,9 @@ interface GmailAttachmentRef {
  *   - multipart/related (body + inline images)
  * Each case is handled by recursion; the first encountered text/plain and
  * text/html wins (they are usually encountered depth-first, alternatives first).
+ *
+ * That first-wins body is what the callers that QUOTE a message get. The read
+ * tools use {@link walkGmailPayloadJoined} below.
  */
 function walkGmailPayload(part: GmailFullPart): {
   textPlain: string | null;
@@ -12343,9 +12358,17 @@ function walkGmailPayload(part: GmailFullPart): {
 }
 
 /**
- * {@link walkGmailPayload} for client-api (first-party.ts `joinInlineParts`):
- * the inline text parts of a multipart/mixed are joined in order instead of
- * the first one winning. Same attachments, in the same order.
+ * {@link walkGmailPayload} for the read tools: the DISPLAYED body, by the same
+ * rules as `parseEmailJoined` in mime.ts. The inline text parts of a
+ * multipart/mixed are joined in order instead of the first one winning, so a
+ * forwarded message reads back with its original text. Same attachments, in
+ * the same order, as walkGmailPayload.
+ *
+ * Gmail parses a message/rfc822 part for us: its `parts` hold the embedded
+ * message, whose own headers sit on the first of them. An inline one (no
+ * filename) is shown under a forwarded-message block; an attached one stays
+ * an attachment and its text is used only when the message shows nothing else,
+ * which is what walkGmailPayload's first-wins descent already did.
  */
 function walkGmailPayloadJoined(root: GmailFullPart): {
   textPlain: string | null;
@@ -12353,10 +12376,10 @@ function walkGmailPayloadJoined(root: GmailFullPart): {
   attachments: GmailAttachmentRef[];
 } {
   const attachments: GmailAttachmentRef[] = [];
-  const htmlToText = (html: string) => stripHtmlToText(html, { keepLinks: true });
   const walk = (part: GmailFullPart): ShownBody => {
     let own: ShownBody = { text: null, html: null };
-    if (typeof part.filename === "string" && part.filename.length > 0) {
+    const isAttachment = typeof part.filename === "string" && part.filename.length > 0;
+    if (isAttachment) {
       attachments.push({
         filename: part.filename as string,
         mimeType: part.mimeType ?? "application/octet-stream",
@@ -12371,7 +12394,18 @@ function walkGmailPayloadJoined(root: GmailFullPart): {
     }
     const children = (part.parts ?? []).map(walk);
     if (children.length === 0) return own;
-    return joinShownParts(part.mimeType ?? "", [own, ...children], htmlToText);
+    if (part.mimeType === "message/rfc822") {
+      const inner = joinShownParts("multipart/mixed", children, htmlPartToBodyText);
+      if (isAttachment) return { ...inner, fallback: true };
+      const header = (name: string) =>
+        part.parts?.[0]?.headers?.find((h) => h.name.toLowerCase() === name)?.value ?? "";
+      return embeddedMessageBody(
+        { from: header("from"), date: header("date"), subject: header("subject"), to: header("to") },
+        inner,
+        htmlPartToBodyText,
+      );
+    }
+    return joinShownParts(part.mimeType ?? "", [own, ...children], htmlPartToBodyText);
   };
   const shown = walk(root);
   return { textPlain: shown.text, textHtml: shown.html, attachments };
@@ -12404,6 +12438,8 @@ async function readGmailMessage(
    * to relaying the raw original (forward-relay.ts); kept for that next caller.
    */
   perFileMaxBytes?: number,
+  /** As on readImapMessage: the displayed body, for the read tools only. */
+  joinInlineParts = false,
 ): Promise<ReadEmailResult> {
   const accessToken = await withFreshGmailToken(inbox);
 
@@ -12435,10 +12471,9 @@ async function readGmailMessage(
   }
 
   // Step 3: Walk MIME tree.
-  const { textPlain, textHtml, attachments: attachmentRefs } =
-    wantsJoinedInlineParts()
-      ? walkGmailPayloadJoined(msg.payload ?? {})
-      : walkGmailPayload(msg.payload ?? {});
+  const { textPlain, textHtml, attachments: attachmentRefs } = joinInlineParts
+    ? walkGmailPayloadJoined(msg.payload ?? {})
+    : walkGmailPayload(msg.payload ?? {});
 
   // Step 4: Fetch attachment content if requested. Budget defaults to 10 MB for
   // a whole-message read; the single-file download path raises it so one file
@@ -13025,9 +13060,12 @@ async function readOneMessage(
         opts.mark_as_read,
         attachmentBudgetBytes,
         selectOnlyIndex,
+        undefined,
+        true,
       );
       break;
     case "outlook":
+      // Graph returns ONE already-flattened body, so there is nothing to join.
       result = await readOutlookMessage(
         inbox,
         messageId,
@@ -13050,6 +13088,7 @@ async function readOneMessage(
         opts.imap_session,
         undefined,
         opts.imap_fetched,
+        true,
       );
       break;
     default:
@@ -32191,6 +32230,11 @@ export {
 // statement rather than three more names in the block above, so the two do not
 // collide when another branch edits that list.
 export { executeListDrafts, executeListInbox, executeReadEmails };
+
+// Exported for read-joined-body.test.ts only: the single-message read, run
+// against the same fakes, so the forwarded-message fix is pinned on the tool
+// result of `email_read` as well as of `email_read_batch`.
+export { executeReadEmail };
 
 // ---------------------------------------------------------------------------
 // Exported for `client-api` (supabase/functions/client-api), the web mail

@@ -68,7 +68,7 @@ Deno.test("forward: the relay carries the original's bytes; the fault was the re
   assert(joined.text!.indexOf("A note above.") < joined.text!.indexOf(ORIGINAL_TEXT), "in order");
 });
 
-Deno.test("read (imap): a forwarded message's body_text holds the note AND the original; the MCP read is byte-identical to before", async () => {
+Deno.test("read (imap): a forwarded message's body_text holds the note AND the original, for client-api and for the MCP read alike", async () => {
   const boxes: FakeMailbox[] = [{ name: "INBOX", messages: [forwardedMessage(2, fakeTextMessage(1, { body: ORIGINAL_TEXT }))] }];
   const inbox = await imapInbox();
   const pool = new FakeDialPool(imapServer(boxes));
@@ -87,8 +87,10 @@ Deno.test("read (imap): a forwarded message's body_text holds the note AND the o
       () => mcp.dispatchExecutor("email_read", { inbox_id: INBOX_ID, message_id: "INBOX:2" }, harness.API_KEY),
     ));
   const mcpBody = (plain.value!.result as { structuredContent: { body_text: string } }).structuredContent.body_text;
-  assertEquals(mcpBody, parseEmail(boxes[0].messages[0].raw).text, "MCP output is what parseEmail has always produced");
-  assert(!mcpBody.includes(ORIGINAL_TEXT));
+  // Since 2026-10-04 the MCP read joins the inline parts too (it returned only
+  // what parseEmail keeps, the note, before): one body, whoever asks.
+  assertEquals(mcpBody, text, "the MCP read and the client-api read return the same body");
+  assert(mcpBody !== parseEmail(boxes[0].messages[0].raw).text && mcpBody.includes(ORIGINAL_TEXT));
 });
 
 Deno.test("read: an HTML original under a text note joins into both body_text and body_html; alternatives are not doubled", () => {
@@ -106,7 +108,7 @@ Deno.test("read: an HTML original under a text note joins into both body_text an
   assertEquals([one.text, one.html], [parseEmail(alt.raw).text, parseEmail(alt.raw).html], "a plain alternative reads as it always did");
 });
 
-Deno.test("read (gmail): the inline text parts of a multipart/mixed are joined for client-api only", async () => {
+Deno.test("read (gmail): the inline text parts of a multipart/mixed are joined, for client-api and for the MCP read alike", async () => {
   const world = { historyId: "1", sent: [], modified: [], messages: [{ id: "g1", from: "A <a@x.example>", to: "owner@gmail-harness.example", subject: "Fwd", snippet: "s", labelIds: ["INBOX"] }] };
   const handler: harness.ProviderHandler = (call) => {
     if (new URL(call.url).pathname.endsWith("/messages/g1")) {
@@ -131,7 +133,7 @@ Deno.test("read (gmail): the inline text parts of a multipart/mixed are joined f
   assertEquals(viaClient.value.body.body_text, `The note.\n\n${ORIGINAL_TEXT}`);
   const viaMcp = await harness.runTool(await harness.inboxRow("gmail"), handler, () =>
     mcp.dispatchExecutor("email_read", { inbox_id: INBOX_ID, message_id: "g1" }, harness.API_KEY));
-  assertEquals((viaMcp.value!.result as { structuredContent: { body_text: string } }).structuredContent.body_text, "The note.");
+  assertEquals((viaMcp.value!.result as { structuredContent: { body_text: string } }).structuredContent.body_text, `The note.\n\n${ORIGINAL_TEXT}`);
 });
 
 // ── 2. folder roles ──────────────────────────────────────────────────────────

@@ -205,9 +205,10 @@ export function firstPartyFor(
     humanBulk: options.human === true,
     // Human and assistant alike: both need the Trash ids to undo a delete.
     trashIds: true,
-    // A read that joins the inline parts of a multipart/mixed (a forward reads
-    // back whole).
-    joinInlineParts: true,
+    // A read decoded from the exact octets of an 8bit message. (Clean previews,
+    // and joining the inline parts of a multipart/mixed so a forward reads back
+    // whole, are what every caller gets now, MCP included.)
+    exactOctets: true,
     listPreviewBytes: options.previewBytes,
     inboxRow: options.fresh ? undefined : (id, workspaceId) => env.inboxes.get(id, workspaceId),
     rememberInboxRow: (row) => {

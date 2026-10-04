@@ -160,7 +160,8 @@ function parsePart(
 }
 
 // ---------------------------------------------------------------------------
-// The first-party read (client-api only; first-party.ts `joinInlineParts`).
+// The displayed body: what `email_read` and client-api's read return
+// (2026-10-04; first built for client-api alone, behind a first-party flag).
 //
 // `parsePart` keeps the FIRST text/plain and the FIRST text/html it meets and
 // drops every later one. For a multipart/alternative that is right: the parts
@@ -170,26 +171,53 @@ function parsePart(
 // shape, note first and the original's own body second, so reading one back
 // returned the note and the forwarded-message block and none of the original.
 //
-// `parseEmailJoined` walks the same tree with the same leaf decoding and joins
-// the visible parts of a multipart/mixed (or any container that is not
-// alternative/related) in order. It also restores the exact octets of an 8bit
-// source first: the raw message arrives through TextDecoder("latin1"), which
-// is windows-1252, and `latinToBytes` cannot undo that for 0x80-0x9F.
+// `parseEmailJoined` walks the same tree with the same leaf decoding and
+// returns the body a mail client would show:
 //
-// MCP reads still go through `parseEmail`, unchanged.
+//   * multipart/alternative, multipart/related: ONE body. The first plain and
+//     the first HTML form found, never both forms of the same text.
+//   * any other container (mixed, signed, report, ...): every inline text
+//     part, in document order, separated by a blank line.
+//   * a part with `Content-Disposition: attachment`, a `filename` or a `name`
+//     is an attachment whatever its type. A text/plain attachment is listed in
+//     `attachments` and is never part of the body.
+//   * an inline message/rfc822 part contributes a short forwarded-message
+//     block (From / Date / Subject / To) and then its own displayed body; its
+//     attachments are listed as attachments, AFTER the message's own, so no
+//     existing attachment index moves.
+//   * a part that only has HTML contributes its text through `htmlToText`.
+//
+// A message with a single displayed part comes back exactly as `parseEmail`
+// returns it, which is every ordinary message. `parseEmail` itself is unchanged
+// and still serves the callers that quote or re-send a body.
 // ---------------------------------------------------------------------------
 
 /** What one part contributes to the displayed body. */
 export interface ShownBody {
   text: string | null;
   html: string | null;
-  /** A text part that is neither plain nor HTML: used only when nothing else is. */
+  /**
+   * Shown only when nothing else is: a text part that is neither plain nor
+   * HTML (text/calendar, text/rfc822-headers), or the body of an ATTACHED
+   * message.
+   */
   fallback?: boolean;
 }
 
-function escapeAsHtml(text: string): string {
-  const escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  return `<div style="white-space:pre-wrap">${escaped}</div>`;
+const NOTHING_SHOWN: ShownBody = { text: null, html: null };
+
+function escapeHtmlText(text: string): string {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function plainTextAsHtml(text: string): string {
+  return `<div style="white-space:pre-wrap">${escapeHtmlText(text)}</div>`;
+}
+
+/** The text one part shows: its plain form, or its HTML converted. */
+function shownText(part: ShownBody, htmlToText: (html: string) => string): string {
+  if (part.text !== null && part.text.trim() !== "") return part.text;
+  return part.html ? htmlToText(part.html) : "";
 }
 
 /**
@@ -203,24 +231,66 @@ export function joinShownParts(
   htmlToText: (html: string) => string,
 ): ShownBody {
   let visible = children.filter((c) => c.text !== null || c.html !== null);
-  if (visible.some((c) => !c.fallback)) visible = visible.filter((c) => !c.fallback);
-  if (visible.length === 0) return { text: null, html: null };
+  const fallbackOnly = visible.length > 0 && visible.every((c) => c.fallback);
+  if (!fallbackOnly) visible = visible.filter((c) => !c.fallback);
+  if (visible.length === 0) return NOTHING_SHOWN;
+  let joined: ShownBody;
   if (mediaType === "multipart/alternative" || mediaType === "multipart/related" || visible.length === 1) {
-    return {
+    joined = {
       text: visible.find((c) => c.text !== null)?.text ?? null,
       html: visible.find((c) => c.html !== null)?.html ?? null,
     };
+  } else {
+    const texts = visible
+      .map((c) => shownText(c, htmlToText).replace(/\s+$/, ""))
+      .filter((t) => t !== "");
+    const htmls = visible.some((c) => c.html !== null)
+      ? visible
+        .map((c) => c.html ?? (c.text !== null && c.text.trim() !== "" ? plainTextAsHtml(c.text) : ""))
+        .filter((h) => h !== "")
+      : [];
+    joined = {
+      text: texts.length ? texts.join("\n\n") : null,
+      html: htmls.length ? htmls.join("\n") : null,
+    };
   }
-  const texts = visible
-    .map((c) => c.text !== null && c.text.trim() !== "" ? c.text : c.html ? htmlToText(c.html) : "")
-    .map((t) => t.replace(/\s+$/, ""))
-    .filter((t) => t !== "");
-  const anyHtml = visible.some((c) => c.html !== null);
+  return fallbackOnly ? { ...joined, fallback: true } : joined;
+}
+
+/** The four header lines shown above an embedded message, already decoded. */
+export interface EmbeddedMessageSummary {
+  from: string;
+  date: string;
+  subject: string;
+  to: string;
+}
+
+const EMBEDDED_MESSAGE_RULE = "---------- Forwarded message ----------";
+
+/**
+ * An inline message/rfc822 part as a mail client shows it: the same block
+ * forward-relay.ts writes above a forward, then the embedded message's body.
+ * A header the embedded message does not carry is left out.
+ */
+export function embeddedMessageBody(
+  summary: EmbeddedMessageSummary,
+  inner: ShownBody,
+  htmlToText: (html: string) => string,
+): ShownBody {
+  const lines = [EMBEDDED_MESSAGE_RULE];
+  if (summary.from) lines.push(`From: ${summary.from}`);
+  if (summary.date) lines.push(`Date: ${summary.date}`);
+  if (summary.subject) lines.push(`Subject: ${summary.subject}`);
+  if (summary.to) lines.push(`To: ${summary.to}`);
+  const body = shownText(inner, htmlToText);
   return {
-    text: texts.length ? texts.join("\n\n") : null,
-    html: anyHtml ? visible.map((c) => c.html ?? escapeAsHtml(c.text ?? "")).join("\n") : null,
+    text: body.trim() !== "" ? `${lines.join("\n")}\n\n${body}` : lines.join("\n"),
+    html: inner.html !== null ? `<div>${lines.map(escapeHtmlText).join("<br>")}</div>\n${inner.html}` : null,
   };
 }
+
+/** How deep message/rfc822 parts are followed before one is left unread. */
+const MAX_EMBEDDED_MESSAGE_DEPTH = 8;
 
 /** The 0x80-0x9F code points of windows-1252, back to their octets. */
 const CP1252_OCTETS: Map<number, number> = (() => {
@@ -243,42 +313,93 @@ function exactOctetString(raw: string): string {
   });
 }
 
-/** {@link parseEmail}, with the inline text parts of a multipart/mixed joined. */
-export function parseEmailJoined(raw: string, htmlToText: (html: string) => string): ParsedEmail {
-  const { headerBlock, body } = splitHeadersBody(exactOctetString(raw));
+export interface ParseEmailJoinedOptions {
+  /**
+   * Restore the exact octets of an 8bit source before decoding. The raw
+   * message arrives through TextDecoder("latin1"), which is windows-1252, and
+   * `latinToBytes` cannot undo that for 0x80-0x9F, so an 8bit UTF-8 body
+   * holding one of those octets decodes wrongly without this. client-api
+   * turns it on (first-party.ts `exactOctets`). The MCP read leaves it off so
+   * a single-part message stays byte-identical to what `parseEmail` returned.
+   */
+  exactOctets?: boolean;
+}
+
+/** What the walk carries: the result, plus the files found inside embedded messages. */
+interface JoinedWalk extends ParsedEmail {
+  embeddedAttachments: MimeAttachment[];
+}
+
+/**
+ * {@link parseEmail}, with `text` and `html` holding the displayed body: the
+ * inline text parts of a multipart/mixed joined in order. See the block above.
+ * `htmlToText` converts a part that has only HTML when it is joined to others.
+ *
+ * `attachments` lists the message's own attachments first, exactly as
+ * `parseEmail` lists them, and the attachments of inline embedded messages
+ * AFTER them. An attachment index that was valid before embedded messages were
+ * read therefore still names the same file.
+ */
+export function parseEmailJoined(
+  raw: string,
+  htmlToText: (html: string) => string,
+  options: ParseEmailJoinedOptions = {},
+): ParsedEmail {
+  const { headerBlock, body } = splitHeadersBody(options.exactOctets ? exactOctetString(raw) : raw);
   const headers = parseHeaders(headerBlock);
-  const out: ParsedEmail = { headers, text: null, html: null, attachments: [] };
-  const shown = joinedPart(headers, body, out, htmlToText);
-  out.text = shown.text;
-  out.html = shown.html;
-  return out;
+  const out: JoinedWalk = { headers, text: null, html: null, attachments: [], embeddedAttachments: [] };
+  const shown = joinedPart(headers, body, out, htmlToText, 0);
+  return {
+    headers,
+    text: shown.text,
+    html: shown.html,
+    attachments: [...out.attachments, ...out.embeddedAttachments],
+  };
 }
 
 function joinedPart(
   headers: Map<string, string[]>,
   body: string,
-  out: ParsedEmail,
+  out: JoinedWalk,
   htmlToText: (html: string) => string,
+  depth: number,
 ): ShownBody {
   const ct = parseContentType(getHeader(headers, "content-type"));
   const cte = (getHeader(headers, "content-transfer-encoding") ?? "7bit").toLowerCase();
   const disposition = getHeader(headers, "content-disposition") ?? "";
+  // The same rule as parsePart, so the attachment list never differs.
   const isAttachment = /attachment/i.test(disposition) ||
     (!!ct.params["name"] || /filename=/i.test(disposition));
 
   if (ct.mediaType.startsWith("multipart/")) {
     const boundary = ct.params["boundary"];
-    if (!boundary) return { text: null, html: null };
+    if (!boundary) return NOTHING_SHOWN;
     const children = splitMultipart(body, boundary).map((sub) => {
       const { headerBlock, body: subBody } = splitHeadersBody(sub);
-      return joinedPart(parseHeaders(headerBlock), subBody, out, htmlToText);
+      return joinedPart(parseHeaders(headerBlock), subBody, out, htmlToText, depth);
     });
     return joinShownParts(ct.mediaType, children, htmlToText);
   }
 
+  if (ct.mediaType === "message/rfc822" && !isAttachment && depth < MAX_EMBEDDED_MESSAGE_DEPTH) {
+    // RFC 2046 allows only 7bit / 8bit / binary here; decode the others anyway.
+    const embedded = cte === "base64" || cte === "quoted-printable"
+      ? bytesToLatin(decodeContent(body, cte))
+      : body;
+    const { headerBlock, body: embeddedBody } = splitHeadersBody(embedded);
+    const embeddedHeaders = parseHeaders(headerBlock);
+    const header = (name: string) => decodeEncodedWords(getHeader(embeddedHeaders, name) ?? "");
+    const inner = joinedPart(embeddedHeaders, embeddedBody, out, htmlToText, depth + 1);
+    return embeddedMessageBody(
+      { from: header("from"), date: header("date"), subject: header("subject"), to: header("to") },
+      inner,
+      htmlToText,
+    );
+  }
+
   const bytes = decodeContent(body, cte);
   if (isAttachment) {
-    out.attachments.push({
+    (depth === 0 ? out.attachments : out.embeddedAttachments).push({
       filename: decodeEncodedWords(
         decodeRawHeaderOctets(ct.params["name"] ?? filenameFromDisposition(disposition) ?? "attachment"),
       ),
@@ -286,13 +407,20 @@ function joinedPart(
       size: bytes.length,
       content: bytes,
     });
-    return { text: null, html: null };
+    return NOTHING_SHOWN;
   }
   const charset = ct.params["charset"] ?? "";
   if (ct.mediaType === "text/plain") return { text: decodeCharset(bytes, charset), html: null };
   if (ct.mediaType === "text/html") return { text: null, html: decodeCharset(bytes, charset) };
   if (ct.mediaType.startsWith("text/")) return { text: decodeCharset(bytes, charset), html: null, fallback: true };
-  return { text: null, html: null };
+  return NOTHING_SHOWN;
+}
+
+function bytesToLatin(bytes: Uint8Array): string {
+  const CHUNK = 8192;
+  let out = "";
+  for (let i = 0; i < bytes.length; i += CHUNK) out += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  return out;
 }
 
 /**
