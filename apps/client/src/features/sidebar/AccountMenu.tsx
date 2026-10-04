@@ -1,4 +1,4 @@
-import { Check, ChevronsUpDown, ExternalLink, LogOut } from "lucide-react";
+import { Bell, Check, ChevronsUpDown, ExternalLink, LogOut } from "lucide-react";
 import { planDisplayName } from "../../api/types";
 import { signOutEverywhere, switchWorkspace } from "../../app/backend";
 import { activeWorkspace, useAuthStore, useSessionStore } from "../../auth";
@@ -9,10 +9,14 @@ import { Avatar, Menu, MenuItem, MenuLabel, MenuSeparator } from "../../ui";
 import s from "./Sidebar.module.css";
 
 /* The account row of the sidebar footer (HTTP mode): who is signed in, which
- * workspace, and a menu to switch workspace, open the dashboard settings or
- * sign out. */
+ * workspace, and a menu to switch workspace, open the notification settings,
+ * open the dashboard settings or sign out. */
 
 export const ACCOUNT_MENU = "account";
+
+/** The Notifications dialog (features/shell/NotificationSettings.tsx), by its ui-store menu id. */
+const NOTIFICATIONS_MENU = "notifications";
+const openNotifications = () => useUiStore.getState().setMenu(NOTIFICATIONS_MENU);
 
 const openSettings = () => window.open(DASHBOARD_SETTINGS_URL, "_blank", "noopener,noreferrer");
 
@@ -84,6 +88,9 @@ export function AccountMenu({ rail }: { rail: boolean }) {
           </>
         ) : null}
         <MenuSeparator />
+        <MenuItem icon={<Bell size={15} aria-hidden="true" />} onSelect={run(openNotifications)}>
+          Notifications
+        </MenuItem>
         <MenuItem icon={<ExternalLink size={15} aria-hidden="true" />} onSelect={run(openSettings)}>
           Dashboard settings
         </MenuItem>
