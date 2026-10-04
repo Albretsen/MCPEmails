@@ -22,6 +22,7 @@
 // cursor: nobody is notified about mail that was already there.
 // ---------------------------------------------------------------------------
 
+import { stripInvisibleText } from "../../mcp-server/text-safety.ts";
 import type { FolderCursor, PayloadMode, Recipient } from "./store.ts";
 
 export type Arrival =
@@ -139,8 +140,17 @@ const MAX_SUBJECT = 110;
 const MAX_LABEL = 80;
 
 function clip(text: string, max: number): string {
-  // Control characters out, runs of whitespace to one space.
-  const clean = text.replace(/\p{Cc}+/gu, " ").replace(/\s+/g, " ").trim();
+  // Sender and subject arrive as TEXT: the list rows they come from are
+  // decoded by the one header path every caller has (RFC 2047 words and raw
+  // 8-bit octets, mcp-server/mime.ts). What is left to do here is what a lock
+  // screen needs: no control characters, nothing invisible (zero-width
+  // padding, bidi overrides that would reorder a sender's name), no U+FFFD,
+  // runs of whitespace as one space.
+  const clean = stripInvisibleText(text.replace(/\p{Cc}+/gu, " "))
+    .replace(/\ufffd/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  // Counted and cut in code points, so the cut never leaves half a surrogate pair.
   const chars = Array.from(clean);
   return chars.length <= max ? clean : `${chars.slice(0, max - 1).join("").trimEnd()}…`;
 }
