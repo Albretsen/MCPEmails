@@ -793,13 +793,16 @@ Deno.test("thread (Gmail over IMAP): no key, a wrong key, an anchor in Sent, a t
     assertEquals([value.status, value.body.thread_key, ids(value.body)], [200, "g:77", ["INBOX:11", `${ALL_MAIL}:102`, "INBOX:13", `${ALL_MAIL}:104`]], JSON.stringify(args));
     const wrong = "thread_key" in args && args.thread_key === "g:999";
     // A wrong key costs one wasted search on each connection; no key costs none.
-    assertEquals(
-      searchesOf(pool),
-      wrong
-        ? ["UID SEARCH X-GM-THRID 999", "UID SEARCH X-GM-THRID 77", "UID SEARCH X-GM-THRID 999", "UID SEARCH X-GM-THRID 77"]
-        : ["UID SEARCH X-GM-THRID 77", "UID SEARCH X-GM-THRID 77"],
-    );
-    assert(pool.servers[0].commands.includes("UID FETCH 11 (X-GM-THRID X-GM-MSGID)"));
+    // With a `g:` key the two connections are dialled at the same time, and
+    // which of them is `servers[0]` is not promised: each connection is
+    // checked on its own, whatever its index.
+    assertEquals(pool.servers.length, 2, JSON.stringify(args));
+    const expected = wrong ? ["UID SEARCH X-GM-THRID 999", "UID SEARCH X-GM-THRID 77"] : ["UID SEARCH X-GM-THRID 77"];
+    for (const server of pool.servers) {
+      assertEquals(server.commands.filter((c) => /^UID SEARCH/.test(c)), expected, `searches of one connection, ${JSON.stringify(args)}`);
+    }
+    const idFetches = pool.servers.flatMap((s) => s.commands).filter((c) => c === "UID FETCH 11 (X-GM-THRID X-GM-MSGID)");
+    assertEquals(idFetches.length, 1, `the anchor's thread id is read exactly once, on one connection, ${JSON.stringify(args)}`);
     await pool.closeAll();
   }
 
@@ -832,11 +835,19 @@ Deno.test("thread (Gmail over IMAP): no key, a wrong key, an anchor in Sent, a t
   const long = await rig({ boxes: longBoxes, advertised: GM_CAPS });
   const longThread = await long.run(() => long.app.mail("thread", { message_id: "INBOX:13", thread_key: "g:77" }));
   assertEquals(longThread.value.body.messages.length, 12, "ten in the Inbox, the sent one, the archived one");
-  const longFetches = long.pool.servers.flatMap((s) => s.commands).filter((c) => /^UID FETCH/.test(c));
-  assertEquals(longFetches.length, 3);
-  assert(/\(X-GM-THRID X-GM-MSGID\)$/.test(longFetches[1]), "ids only");
+  // The two connections are dialled at the same time: which is `servers[0]`
+  // is not promised, so each is recognised by the mailbox it selected.
+  assertEquals(long.pool.servers.length, 2, "the anchor's folder and All Mail, one connection each");
+  const allMailServer = long.pool.servers.find((s) => s.commands.some((c) => /^SELECT .*All Mail/.test(c)));
+  const anchorServer = long.pool.servers.find((s) => s !== allMailServer);
+  assert(allMailServer !== undefined && anchorServer !== undefined, "one connection selected All Mail, the other did not");
+  const fetchesOf = (s: FakeImapServer) => s.commands.filter((c) => /^UID FETCH/.test(c));
+  assertEquals(fetchesOf(anchorServer).length, 1, "the anchor's folder: one fetch");
+  const allMailFetches = fetchesOf(allMailServer);
+  assertEquals(allMailFetches.length, 2, "All Mail: the id probe, then the new messages");
+  assert(/\(X-GM-THRID X-GM-MSGID\)$/.test(allMailFetches[0]), `the first All Mail fetch asks for ids only: ${allMailFetches[0]}`);
   // What the Inbox did not have: the sent one, the archived one, and the draft (fetched, then dropped).
-  assertEquals(longFetches[2].split(" (")[0], "UID FETCH 105,104,102");
+  assertEquals(allMailFetches[1].split(" (")[0], "UID FETCH 105,104,102");
   await long.pool.closeAll();
 
   // All Mail is not shown in IMAP: the anchor's folder alone, and it says so.
