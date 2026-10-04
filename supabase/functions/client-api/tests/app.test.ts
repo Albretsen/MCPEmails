@@ -166,7 +166,9 @@ Deno.test("executor errors map to the public codes", async () => {
     const response = await handle(request("/mail", { token, body: { op: "list", inbox_id: INBOX_ID, args: {} } }));
     const error = await errorOf(response);
     assertEquals([response.status, error.code, error.retryable, error.tool_code], [status, code, retryable, toolCode]);
-    assertEquals(error.message, "The executor's own explanation.");
+    // A refused credential is the one error whose text is rewritten for the
+    // person using the app (tests/inbox-health.test.ts); the rest pass through.
+    if (toolCode !== "auth_failed") assertEquals(error.message, "The executor's own explanation.");
   }
 });
 
@@ -585,7 +587,7 @@ Deno.test("GET /session: everything the app needs to boot, in one response", asy
     { id: WORKSPACE_ID, display_name: "Test Workspace", role: "owner", plan: "solo", web_client_enabled: true },
     { id: SECOND_WORKSPACE_ID, display_name: "Test Workspace", role: "viewer", plan: "free", web_client_enabled: false },
   ]);
-  assertEquals(body.inboxes, [inbox]);
+  assertEquals(body.inboxes, [{ ...inbox, status: "ok", status_reason: null }]);
   assertEquals(body.allowance, {
     plan: "free",
     used: 3,

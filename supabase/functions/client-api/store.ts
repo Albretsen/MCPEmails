@@ -12,6 +12,7 @@
 
 import type { AssistantAllowance, AssistantUsage, PlanSlug } from "./assistant-deps.ts";
 import type { Membership, MembershipSource, WorkspaceRole } from "./auth.ts";
+import { LOGIN_REFUSED_LIKE, loginRefusedMarker } from "./mail/health.ts";
 import type { ApiKeyRow, InboxRow } from "./seam.ts";
 
 /** `api_keys.kind` for the hidden per-workspace row. */
@@ -54,6 +55,14 @@ export interface Store extends MembershipSource {
   allowance(workspaceId: string): Promise<AllowanceRow | null>;
   reserveRun(workspaceId: string, userId: string): Promise<ReservationRow | null>;
   finalizeRun(reservationId: string, usage: AssistantUsage): Promise<void>;
+  /**
+   * Record on the inbox row that the mail server refused its login at `at`
+   * (mail/health.ts explains the marker). `status` is not touched, and only an
+   * 'active', undeleted row of this workspace is written.
+   */
+  markLoginRefused(inboxId: string, workspaceId: string, at: number): Promise<void>;
+  /** Remove that marker, and only that marker, after a login that worked. */
+  clearLoginRefused(inboxId: string, workspaceId: string): Promise<void>;
 }
 
 const PLAN_SLUGS: readonly string[] = ["free", "personal", "solo", "pro"];
@@ -268,6 +277,28 @@ export function supabaseStore(db: Db, options: SupabaseStoreOptions = {}): Store
         p_model: usage.model.slice(0, 200),
       });
       if (error) throw new Error(`assistant_finalize_failed:${error.code ?? "error"}`);
+    },
+
+    async markLoginRefused(inboxId, workspaceId, at) {
+      const { error } = await db
+        .from("inboxes")
+        .update({ last_error: loginRefusedMarker(at) })
+        .eq("id", inboxId)
+        .eq("workspace_id", workspaceId)
+        .eq("status", "active")
+        .is("deleted_at", null);
+      if (error) throw new Error(`login_refused_mark_failed:${error.code ?? "error"}`);
+    },
+
+    async clearLoginRefused(inboxId, workspaceId) {
+      const { error } = await db
+        .from("inboxes")
+        .update({ last_error: null })
+        .eq("id", inboxId)
+        .eq("workspace_id", workspaceId)
+        // Never a reason someone else wrote: only this function's own marker.
+        .like("last_error", LOGIN_REFUSED_LIKE);
+      if (error) throw new Error(`login_refused_clear_failed:${error.code ?? "error"}`);
     },
   };
 }

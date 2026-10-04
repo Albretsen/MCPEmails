@@ -287,6 +287,22 @@ Deno.test("gate: one user's cached memberships are never served to another", asy
   assertEquals(error.body.code, "forbidden");
 });
 
+Deno.test("verified-token cache: the signature is checked once, the clock on every call, and only that exact token is trusted", async () => {
+  let now = Date.now();
+  const verifier = new JwtVerifier({ supabaseUrl: SUPABASE_URL, jwtSecret: JWT_SECRET, fetch: noFetch, now: () => now });
+  const token = await mintHs256({ expiresIn: 600 });
+  const first = await verifier.verify(token);
+  const again = await verifier.verify(token);
+  assertEquals(again.sub, first.sub);
+  // Same header and payload, another signature: a different token, never a cache hit.
+  const forged = `${token.slice(0, token.lastIndexOf(".") + 1)}${"A".repeat(43)}`;
+  await rejects401(() => verifier.verify(forged));
+  // The cached token expires exactly as an uncached one does, and stays refused.
+  now += 700_000;
+  await rejects401(() => verifier.verify(token));
+  await rejects401(() => verifier.verify(token));
+});
+
 Deno.test("roles: only a viewer is read-only", () => {
   assertEquals(["owner", "admin", "member", "viewer"].map((r) => canWrite(r as "owner")), [true, true, true, false]);
 });

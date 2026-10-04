@@ -146,7 +146,9 @@ function resolveHeader(
   if (!to.list.length && seen?.email && (kind === "reply" || kind === "reply_all")) to.list.push(seen.email);
   const cc = parseAddresses(typeof fields.cc === "string" ? fields.cc : "");
   if (strict && (to.invalid || cc.invalid)) return { ok: false, message: "to and cc must be plain email addresses, comma separated." };
-  if (strict && !to.list.length) return { ok: false, message: "to is required: at least one recipient address." };
+  // A draft may have no recipient yet ("draft an out-of-office message"): the
+  // person fills it in, or names one later and edit_draft / request_send set
+  // it. request_send is where a recipient becomes mandatory.
 
   let subject = typeof fields.subject === "string" ? wellFormed(fields.subject).replace(/\s+/g, " ").trim().slice(0, 500) : "";
   if (!subject && seen?.subject && kind !== "new") {
@@ -291,7 +293,57 @@ export class DraftWriter {
   }
 }
 
-/** edit_draft: the complete new body, shown as a word diff against `current`. */
+/** The header changes a call asks for: only the keys it actually gave. */
+function headerChanges(
+  parsed: Record<string, unknown> | null,
+  current: DraftState,
+): { ok: true; to: string; cc: string; subject: string; changed: boolean } | { ok: false; message: string } {
+  let { to, cc, subject } = current;
+  if (typeof parsed?.to === "string") {
+    const list = parseAddresses(parsed.to);
+    if (list.invalid) return { ok: false, message: "to must be plain email addresses, comma separated." };
+    // An empty `to` never clears recipients the draft already has.
+    if (list.list.length) to = list.list.join(", ");
+  }
+  if (typeof parsed?.cc === "string") {
+    const list = parseAddresses(parsed.cc);
+    if (list.invalid) return { ok: false, message: "cc must be plain email addresses, comma separated." };
+    cc = list.list.join(", ");
+  }
+  if (typeof parsed?.subject === "string" && parsed.subject.trim()) {
+    subject = wellFormed(parsed.subject).replace(/\s+/g, " ").trim().slice(0, 500);
+  }
+  return { ok: true, to, cc, subject, changed: to !== current.to || cc !== current.cc || subject !== current.subject };
+}
+
+function parseObject(argumentsJson: string): Record<string, unknown> | null {
+  try {
+    const v: unknown = JSON.parse(argumentsJson || "{}");
+    return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
+  } catch {
+    return null;
+  }
+}
+
+function editEvent(next: DraftState, callId: string, messageId: string) {
+  return {
+    type: "draft_stream" as const,
+    phase: "editing" as const,
+    kind: next.kind,
+    reply_to: replyKey(next),
+    fields: { inbox_id: next.inbox_id, to: next.to, subject: next.subject, ...(next.cc ? { cc: next.cc } : {}) },
+    call_id: callId,
+    message_id: messageId,
+  };
+}
+
+/**
+ * edit_draft: change the current draft's body, recipients or subject.
+ *
+ * `body`, when given, is the complete new text and is shown as a word diff
+ * against `current`. `to`, `cc` and `subject` replace the draft's own. A call
+ * may give any of them; a call that gives none is an error for the model.
+ */
 export async function editDraft(
   env: DraftEnv,
   current: DraftState | null,
@@ -301,18 +353,18 @@ export async function editDraft(
 ): Promise<{ outcome: VirtualOutcome; draft: DraftState | null }> {
   const error = (message: string) => ({ outcome: { content: JSON.stringify({ error: message }), isError: true }, draft: null });
   if (!current) return error("There is no current draft. Call write_draft first.");
-  let parsed: Record<string, unknown> | null = null;
-  try {
-    const v: unknown = JSON.parse(argumentsJson);
-    if (v && typeof v === "object" && !Array.isArray(v)) parsed = v as Record<string, unknown>;
-  } catch {
-    parsed = null;
+  const parsed = parseObject(argumentsJson);
+  if (!parsed) return error("The arguments were not valid JSON. Call edit_draft again.");
+  const givenBody = typeof parsed.body === "string"
+    ? wellFormed(parsed.body).slice(0, env.limits.draftBodyMaxChars)
+    : "";
+  const header = headerChanges(parsed, current);
+  if (!header.ok) return error(header.message);
+  const bodyChanges = givenBody.trim() !== "" && givenBody !== current.body;
+  if (!givenBody.trim() && !header.changed) {
+    return error("Nothing to change. Give body (the complete new text), or to, cc or subject.");
   }
-  const body = wellFormed(typeof parsed?.body === "string" ? parsed.body : "").slice(0, env.limits.draftBodyMaxChars);
-  if (!parsed || !body.trim()) return error("body is required: the complete new text of the draft.");
-  const subject = typeof parsed.subject === "string" && parsed.subject.trim()
-    ? wellFormed(parsed.subject).replace(/\s+/g, " ").trim().slice(0, 500)
-    : current.subject;
+  const body = givenBody.trim() ? givenBody : current.body;
 
   const key = replyKey(current);
   const call: AssistantToolCall = {
@@ -327,21 +379,18 @@ export async function editDraft(
   env.showCall(messageId, call);
   env.emit({ type: "status", text: "Editing the draft" });
 
-  const next: DraftState = { ...current, subject, body };
-  const base = {
-    type: "draft_stream" as const,
-    phase: "editing" as const,
-    kind: next.kind,
-    reply_to: key,
-    fields: { inbox_id: next.inbox_id, to: next.to, subject: next.subject, ...(next.cc ? { cc: next.cc } : {}) },
-    call_id: callId,
-    message_id: messageId,
-  };
-  const segments = diffWords(current.body, body);
-  env.emit({ ...base, segments });
-  // The diff has to be seen before the final text replaces it.
-  await env.sleep(env.limits.editHoldMs);
-  env.emit({ ...base, body: applySegments(segments), done: true });
+  const next: DraftState = { ...current, to: header.to, cc: header.cc, subject: header.subject, body };
+  const base = editEvent(next, callId, messageId);
+  if (bodyChanges || !header.changed) {
+    const segments = diffWords(current.body, body);
+    env.emit({ ...base, segments });
+    // The diff has to be seen before the final text replaces it.
+    await env.sleep(env.limits.editHoldMs);
+    env.emit({ ...base, body: applySegments(segments), done: true });
+  } else {
+    // Recipients or subject only: nothing to diff, the fields change at once.
+    env.emit({ ...base, body, done: true });
+  }
   env.showCall(messageId, { ...call, state: "done", meta: key ? "under the email" : "in the editor" });
   return {
     outcome: {
@@ -352,32 +401,62 @@ export async function editDraft(
   };
 }
 
-/** request_send: validates the current draft and asks the human. Sends nothing. */
+/** What request_send tells the model when the draft has nobody to go to. */
+export const NO_RECIPIENT_ERROR =
+  "The draft has no recipient, so nothing was requested. Do not guess or invent an address. " +
+  "If the user named a recipient in this conversation, call request_send again with it in `to`. " +
+  "Otherwise ask the user who it should go to and stop.";
+
+/**
+ * request_send: validates the current draft and asks the human. Sends nothing.
+ *
+ * The call may carry `to`, `cc` and `subject`: "send it to maya@x.example"
+ * names the recipient in the same breath as the send, and the draft that goes
+ * to approval must carry it. They are applied to the draft (and shown in the
+ * compose view) before it is validated. `draft` is the draft as it now stands,
+ * whether or not the request went through.
+ */
 export function requestSend(
   env: DraftEnv,
   current: DraftState | null,
+  argumentsJson: string,
   callId: string,
   messageId: string,
   approvalId: string,
-): { outcome: VirtualOutcome; approved: boolean } {
-  const error = (message: string) => ({ outcome: { content: JSON.stringify({ error: message }), isError: true }, approved: false });
+): { outcome: VirtualOutcome; approved: boolean; draft: DraftState | null; missingRecipient?: boolean } {
+  const error = (message: string, draft: DraftState | null = current, missingRecipient = false) => ({
+    outcome: { content: JSON.stringify({ error: message }), isError: true },
+    approved: false,
+    draft,
+    ...(missingRecipient ? { missingRecipient } : {}),
+  });
   if (!current || !current.body.trim()) return error("There is no draft to send. Call write_draft first.");
   const inbox = env.inboxes.find((i) => i.inbox_id === current.inbox_id);
   if (!inbox) return error("The draft has no valid inbox.");
-  const to = parseAddresses(current.to);
-  const cc = parseAddresses(current.cc);
-  if (!to.list.length || to.invalid || cc.invalid) {
-    return error("The draft has no valid recipient. Ask the user who it should go to, or fix it with write_draft.");
+  const header = headerChanges(parseObject(argumentsJson), current);
+  if (!header.ok) return error(`${header.message} Nothing was requested.`);
+  const next: DraftState = header.changed
+    ? { ...current, to: header.to, cc: header.cc, subject: header.subject }
+    : current;
+  const to = parseAddresses(next.to);
+  const cc = parseAddresses(next.cc);
+  if (to.invalid || cc.invalid) {
+    return error(
+      "The draft's recipients are not valid email addresses. Ask the user for the address, or correct it with `to` on request_send.",
+    );
   }
+  if (!to.list.length) return error(NO_RECIPIENT_ERROR, current, true);
+  // The compose view shows what is about to be approved.
+  if (header.changed) env.emit({ ...editEvent(next, callId, messageId), body: next.body, done: true });
   const own = [env.userEmail, inbox.email_address, ...inbox.sender_identities.map((s) => s.email_address)];
   const external = isExternal([...to.list, ...cc.list], own);
-  const key = replyKey(current);
+  const key = replyKey(next);
   const draft: ApprovalDraft = {
-    inbox_id: current.inbox_id,
+    inbox_id: next.inbox_id,
     to: to.list.join(", "),
-    subject: current.subject,
-    body: current.body,
-    kind: current.kind,
+    subject: next.subject,
+    body: next.body,
+    kind: next.kind,
     ...(cc.list.length ? { cc: cc.list.join(", ") } : {}),
     ...(key ? { reply_to: key } : {}),
   };
@@ -392,5 +471,9 @@ export function requestSend(
   });
   env.emit({ type: "approval_required", approval_id: approvalId, call_id: callId, draft, external });
   env.emit({ type: "status", text: "Waiting for your approval" });
-  return { outcome: { content: JSON.stringify({ ok: true, status: "Waiting for the user's approval." }), isError: false }, approved: true };
+  return {
+    outcome: { content: JSON.stringify({ ok: true, status: "Waiting for the user's approval." }), isError: false },
+    approved: true,
+    draft: next,
+  };
 }

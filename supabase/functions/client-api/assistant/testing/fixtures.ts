@@ -99,7 +99,19 @@ export const SCENARIOS: Scenario[] = [
     rounds: [
       callTools([{ name: "email_read", args: { action: "list", inbox_id: INBOX_A, folder: "inbox" } }]),
       callTools([{ name: "email_organize", args: { action: "archive", inbox_id: INBOX_A, message_id: "m4" } }]),
-      { events: [{ type: "text_delta", text: "The rest of your inbox " }], then: "throw", error: new LlmError("overloaded", { retryable: true }) },
+      // The failing round reports its usage. Left unreported, the engine
+      // estimates it from the size of the prompt and tool definitions, and the
+      // recorded `done.usage` then went stale on every prompt edit (the
+      // estimate itself is covered by loop_test's abort tests). These are the
+      // numbers the fixture was recorded with.
+      {
+        events: [
+          { type: "text_delta", text: "The rest of your inbox " },
+          { type: "usage", inputTokens: 2805, outputTokens: 6, cachedInputTokens: 0 },
+        ],
+        then: "throw",
+        error: new LlmError("overloaded", { retryable: true }),
+      },
     ],
   },
   {

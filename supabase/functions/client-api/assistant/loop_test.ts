@@ -332,6 +332,97 @@ Deno.test("request_send with no draft, or no valid recipient, asks nothing of th
   assertEquals(ofType(bad.events, "approval_required").length, 0);
 });
 
+// ── "...and send it to <address>" must reach approval ───────────────────────
+
+const OOO = { inbox_id: INBOX_A, kind: "new" as const, to: "", cc: "", subject: "Out of office", body: "Hello,\n\nI am away until Monday.\n\nAda" };
+
+Deno.test("write_draft without a recipient is a draft, not an error", async () => {
+  const h = await runScript(
+    [callTools([{ name: "write_draft", args: { kind: "new", to: "", subject: "Out of office", body: OOO.body } }]), say("Drafted.")],
+    { text: "Draft a short out-of-office message" },
+  );
+  const stream = ofType(h.events, "draft_stream");
+  assertEquals([stream.at(-1)?.done, stream.at(-1)?.body, stream.at(-1)?.fields.to], [true, OOO.body, ""]);
+  assertEquals(ofType(h.events, "tool_call").at(-1)?.call.state, "done");
+});
+
+Deno.test("follow-up 'send it to <address>': request_send sets the recipient and reaches approval", async () => {
+  const h = await runScript(
+    [callTools([{ name: "request_send", args: { to: "demo@mcpemails.com" } }]), say("never requested")],
+    { text: "Send it to demo@mcpemails.com", draft: OOO },
+  );
+  const approval = ofType(h.events, "approval_required");
+  assertEquals(approval.length, 1);
+  assertEquals(approval[0]?.draft, { inbox_id: INBOX_A, to: "demo@mcpemails.com", subject: "Out of office", body: OOO.body, kind: "new" });
+  // The compose view is given the recipient before the approval card shows it.
+  const stream = ofType(h.events, "draft_stream");
+  assertEquals([stream.length, stream[0]?.fields.to, stream[0]?.body, stream[0]?.done], [1, "demo@mcpemails.com", OOO.body, true]);
+  assertEquals(h.result.outcome, "approval");
+  assertEquals(h.provider.requests.length, 1);
+});
+
+Deno.test("edit_draft can set recipients and subject without touching the body, then request_send goes through", async () => {
+  const h = await runScript(
+    [
+      callTools([{ name: "edit_draft", args: { to: "Demo <demo@mcpemails.com>", cc: "ops@mcpemails.com", subject: "Away this week" } }]),
+      callTools([{ name: "request_send", args: {} }]),
+    ],
+    { text: "Send it to demo@mcpemails.com, cc ops@mcpemails.com, subject Away this week", draft: OOO },
+  );
+  const stream = ofType(h.events, "draft_stream");
+  assertEquals(stream.length, 1, "no diff for a header-only change");
+  assertEquals(stream[0]?.fields, { inbox_id: INBOX_A, to: "demo@mcpemails.com", subject: "Away this week", cc: "ops@mcpemails.com" });
+  assertEquals([stream[0]?.body, stream[0]?.done, stream[0]?.segments], [OOO.body, true, undefined]);
+  const approval = ofType(h.events, "approval_required")[0];
+  assertEquals([approval?.draft.to, approval?.draft.cc, approval?.draft.subject, approval?.draft.body], ["demo@mcpemails.com", "ops@mcpemails.com", "Away this week", OOO.body]);
+});
+
+Deno.test("edit_draft with nothing to change, or a bad address, is an error for the model", async () => {
+  const h = await runScript(
+    [callTools([{ name: "edit_draft", args: {} }, { name: "edit_draft", args: { to: "not an address" } }]), say("Who should it go to?")],
+    { text: "send it to bob", draft: OOO },
+  );
+  assertEquals(ofType(h.events, "draft_stream").length, 0);
+  const results = h.provider.requests[1]?.messages.at(-1);
+  assert(results?.role === "tool");
+  assertEquals(results.results.map((r) => r.isError), [true, true]);
+});
+
+Deno.test("request_send with no recipient: the model is told to ask, no approval, no invented address", async () => {
+  const h = await runScript(
+    [callTools([{ name: "request_send", args: {} }]), say("Who should it go to?")],
+    { text: "send it", draft: OOO },
+  );
+  assertEquals(ofType(h.events, "approval_required").length, 0);
+  const results = h.provider.requests[1]?.messages.at(-1);
+  assert(results?.role === "tool");
+  assertEquals(results.results[0]?.isError, true);
+  assertIncludes(results.results[0]?.content ?? "", "no recipient");
+  assertIncludes(results.results[0]?.content ?? "", "ask the user");
+  assertEquals(textOf(h.events), "Who should it go to?");
+  assertEquals(h.result.outcome, "completed");
+});
+
+Deno.test("request_send with no recipient and a model that then says nothing: the loop asks, the run does not end silently", async () => {
+  const h = await runScript(
+    [callTools([{ name: "request_send", args: {} }]), [{ type: "usage", inputTokens: 1, outputTokens: 0, cachedInputTokens: 0 }, { type: "finish", reason: "stop" }] as LlmEvent[]],
+    { text: "send it", draft: OOO },
+  );
+  assertEquals(ofType(h.events, "approval_required").length, 0);
+  assertEquals(textOf(h.events), "Who should this go to? Give me the address and I will ask you to approve the send.");
+  assertNotIncludes(textOf(h.events), "\u2014");
+});
+
+Deno.test("the model is told that edit_draft and request_send can set recipients", async () => {
+  const h = await runScript([say("ok")], { text: "hi" });
+  const request = h.provider.requests[0]!;
+  const tool = (name: string) => request.tools.find((t) => t.name === name)!;
+  assertEquals(Object.keys((tool("edit_draft").parameters as { properties: object }).properties), ["to", "cc", "subject", "body"]);
+  assertEquals(Object.keys((tool("request_send").parameters as { properties: object }).properties), ["to", "cc", "subject"]);
+  assertIncludes(request.system, "call request_send with that address in to");
+  assertIncludes(request.system, "Never invent or guess a recipient");
+});
+
 Deno.test("abort mid-stream: provider request aborted, call cancelled, allowance finalised, no done", async () => {
   const partial: LlmEvent[] = [
     { type: "text_delta", text: "Let me look" },

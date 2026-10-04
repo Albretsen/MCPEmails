@@ -461,7 +461,11 @@ export function modelTools(available: ReadonlySet<string>, limits: Limits): LlmT
             required: ["inbox_id", "message_id"],
           },
           inbox_id: { type: "string", description: "new: the inbox to send from." },
-          to: { type: "string", description: "Recipient addresses, comma separated." },
+          to: {
+            type: "string",
+            description: "Recipient addresses, comma separated. Every address the user named for this email goes here. " +
+              "Empty only when the user has not said who it goes to: never guess one.",
+          },
           cc: { type: "string", description: "Comma separated, or empty." },
           subject: { type: "string" },
           body: { type: "string", description: "Plain text. No subject line, no quoted original." },
@@ -471,22 +475,31 @@ export function modelTools(available: ReadonlySet<string>, limits: Limits): LlmT
     },
     {
       name: "edit_draft",
-      description: "Replace the body of the current draft. Give the COMPLETE new body; the user sees the changes " +
-        "highlighted. Only when a current draft exists.",
+      description: "Change the current draft: its body, its recipients (to, cc) or its subject. Give only what changes. " +
+        "A new body must be the COMPLETE text; the user sees the changes highlighted. Only when a current draft exists.",
       parameters: {
         type: "object",
         properties: {
+          to: { type: "string", description: "Only when the recipients should change: the complete new list, comma separated." },
+          cc: { type: "string", description: "Only when cc should change: the complete new list, or empty to clear it." },
           subject: { type: "string", description: "Only when the subject should change." },
-          body: { type: "string", description: "The complete new plain-text body." },
+          body: { type: "string", description: "Only when the text should change: the complete new plain-text body." },
         },
-        required: ["body"],
       },
     },
     {
       name: "request_send",
       description: "Ask the user to approve sending the current draft. You cannot send mail yourself: this shows the " +
-        "draft for approval and ends your turn. Only when the user asked in this request to send.",
-      parameters: { type: "object", properties: {} },
+        "draft for approval and ends your turn. Only when the user asked in this request to send. When the user names " +
+        "the recipient in the same request (\"send it to ...\"), pass it in `to`: the draft sent for approval must carry it.",
+      parameters: {
+        type: "object",
+        properties: {
+          to: { type: "string", description: "Recipients the user named, comma separated. Omit to keep the draft's own. Never invent one." },
+          cc: { type: "string", description: "Only when cc should change." },
+          subject: { type: "string", description: "Only when the subject should change." },
+        },
+      },
     },
   ];
   return [...tools.filter((t) => available.has(t.name)), ...virtual];

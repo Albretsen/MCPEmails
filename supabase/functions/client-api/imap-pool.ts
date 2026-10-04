@@ -153,7 +153,8 @@ const defaults = {
   listTtlMs: 60_000,
 };
 
-function isLoginRefusal(error: unknown): error is Error {
+/** The mail server refused the credentials (as opposed to a network or protocol failure). */
+export function isLoginRefusal(error: unknown): error is Error {
   return error instanceof Error && (error.name === "ImapAuthError" || error.message === "imap_auth_failed");
 }
 

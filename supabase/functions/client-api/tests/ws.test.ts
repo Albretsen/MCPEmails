@@ -2,7 +2,7 @@
 
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import { JwtVerifier } from "../auth.ts";
-import { IDLE_CLOSE_MS, serveSocket, type SocketLike } from "../ws.ts";
+import { IDLE_CLOSE_MS, RECYCLE_DRAIN_MS, recycleSockets, serveSocket, type SocketLike } from "../ws.ts";
 import { INBOX_ID, JWT_SECRET, mintHs256, SUPABASE_URL, testApp } from "./helpers.ts";
 
 class FakeSocket implements SocketLike {
@@ -208,4 +208,83 @@ Deno.test("socket: the token never appears in anything sent back or logged", asy
   await socket.say({ id: "t2", path: "/mail", body: { op: "nope" } });
   const everything = socket.sent.join("\n") + JSON.stringify(app.logs) + JSON.stringify(logs);
   assert(!everything.includes(token));
+});
+
+// ── recycling: the worker is about to be retired ────────────────────────────
+
+function recycleRig() {
+  const socket = new FakeSocket();
+  const timers = new Map<number, { fn: () => void; ms: number }>();
+  let next = 1;
+  const logs: Array<{ event: string; fields: Record<string, unknown> }> = [];
+  const gates: Array<() => void> = [];
+  let held: Promise<void> | null = null;
+  let released = false;
+  const response = serveSocket(upgradeRequest(), {
+    // Each request waits until the test lets it go.
+    handle: async () => {
+      await new Promise<void>((resolve) => gates.push(resolve));
+      return new Response(JSON.stringify({ done: true }), { headers: { "content-type": "application/json" } });
+    },
+    authenticate: () => Promise.resolve(true),
+    upgrade: () => ({ socket, response: new Response(null, { status: 200 }) }),
+    log: (event, fields) => logs.push({ event, fields }),
+    setTimer: (fn, ms) => {
+      timers.set(next, { fn, ms });
+      return next++;
+    },
+    clearTimer: (handle) => timers.delete(handle as number),
+    hold: (until) => {
+      held = until;
+      until.then(() => (released = true));
+    },
+  });
+  const tick = () => new Promise((resolve) => setTimeout(resolve, 2));
+  return { socket, timers, logs, gates, response, tick, isHeld: () => held !== null && !released };
+}
+
+Deno.test("socket recycling: in-flight frames finish, new ones are refused retryably, then the socket closes 4409", async () => {
+  const r = recycleRig();
+  await r.socket.say({ type: "auth", token: "t" });
+  assert(r.isHeld(), "the worker is held while the socket is open");
+  r.socket.onmessage?.({ data: JSON.stringify({ id: "r1-inflight", path: "/mail", body: { op: "list" } }) });
+  await r.tick();
+  assertEquals(r.gates.length, 1);
+
+  assertEquals(recycleSockets() >= 1, true);
+  assertEquals(r.socket.closed, null, "not closed under the request that is still running");
+  const refused = await r.socket.say({ id: "r2-refused", path: "/mail", body: { op: "list" } });
+  assertEquals([refused.id, refused.status, refused.body.error.retryable, refused.body.error.tool_code], ["r2-refused", 503, true, "socket_recycling"]);
+  assertEquals(r.gates.length, 1, "the refused frame never reached the handler");
+
+  r.gates[0]();
+  await r.tick();
+  const reply = JSON.parse(r.socket.sent[r.socket.sent.length - 1]);
+  assertEquals([reply.id, reply.status, reply.body], ["r1-inflight", 200, { done: true }], "the in-flight reply was delivered first");
+  assertEquals(r.socket.closed, { code: 4409, reason: "recycling" });
+  await r.tick();
+  assert(!r.isHeld(), "the hold on the worker is released with the socket");
+  const closed = r.logs.find((l) => l.event === "socket_closed")!;
+  assertEquals(closed.fields["recycled"], true);
+  assertEquals(recycleSockets(), 0, "a closed socket is no longer told");
+});
+
+Deno.test("socket recycling: an idle socket closes at once; a stuck request is cut off after the drain limit", async () => {
+  const idle = recycleRig();
+  await idle.socket.say({ type: "auth", token: "t" });
+  recycleSockets();
+  assertEquals(idle.socket.closed, { code: 4409, reason: "recycling" });
+
+  const stuck = recycleRig();
+  await stuck.socket.say({ type: "auth", token: "t" });
+  stuck.socket.onmessage?.({ data: JSON.stringify({ id: "r1-stuck000", path: "/mail", body: {} }) });
+  await stuck.tick();
+  recycleSockets();
+  assertEquals(stuck.socket.closed, null);
+  const drain = [...stuck.timers.values()].find((t) => t.ms === RECYCLE_DRAIN_MS);
+  assert(drain, "a drain deadline was armed");
+  drain.fn();
+  assertEquals(stuck.socket.closed, { code: 4409, reason: "recycling" });
+  stuck.gates[0]();
+  await stuck.tick();
 });

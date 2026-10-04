@@ -126,6 +126,18 @@ export class JwtVerifier {
   #jwksLoading: Promise<void> | null = null;
   #jwksLastMissAt = 0;
   readonly #remote = new Map<string, { claims: JwtClaims; until: number }>();
+  /**
+   * Tokens whose SIGNATURE this isolate has already checked, by the token text
+   * itself. A socket presents the same token on every frame, and the ECDSA
+   * verify plus two base64 + JSON decodes were the largest fixed cost of a
+   * frame. A hit skips only that: `exp`, `nbf`, `aud`, `role` and `sub` are
+   * re-checked against the clock on every call, so an expired token is refused
+   * exactly when it was before. Emptied whenever the signing keys are
+   * reloaded, so a key removed from the JWKS stops vouching within the JWKS
+   * TTL as it always did. Tokens checked by GoTrue are not kept here: that
+   * path has its own 60 s cache.
+   */
+  readonly #verified = new Map<string, JwtClaims>();
 
   constructor(cfg: JwtVerifierConfig) {
     this.#cfg = cfg;
@@ -161,6 +173,16 @@ export class JwtVerifier {
 
   /** Verified claims, or throws the 401. Never says why on the wire. */
   async verify(token: string): Promise<JwtClaims> {
+    const known = this.#verified.get(token);
+    if (known) {
+      try {
+        this.#checkClaims(known);
+      } catch (error) {
+        this.#verified.delete(token);
+        throw error;
+      }
+      return known;
+    }
     const parts = token.split(".");
     if (parts.length !== 3 || parts.some((p) => p.length === 0)) throw unauthenticated();
     let header: Record<string, unknown> | null;
@@ -178,6 +200,7 @@ export class JwtVerifier {
     const signed = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
 
     let claims: JwtClaims;
+    let local = true;
     if (alg === "HS256") {
       if (this.#cfg.jwtSecret) {
         const key = await this.#hmacKey(this.#cfg.jwtSecret);
@@ -187,6 +210,7 @@ export class JwtVerifier {
       } else {
         // No secret to check it with: ask GoTrue, which is the authority.
         claims = await this.#verifyRemotely(token, payload);
+        local = false;
       }
     } else if (alg === "ES256" || alg === "RS256") {
       const kid = typeof header["kid"] === "string" ? header["kid"] : "";
@@ -209,6 +233,10 @@ export class JwtVerifier {
     }
 
     this.#checkClaims(claims);
+    if (local) {
+      if (this.#verified.size >= 500) this.#verified.clear();
+      this.#verified.set(token, claims);
+    }
     return claims;
   }
 
@@ -289,6 +317,7 @@ export class JwtVerifier {
         }
         for (const key of keys.values()) key.catch(() => {});
         this.#jwks = { keys, at: this.#now() };
+        this.#verified.clear();
       } catch {
         // Keep whatever was cached; a failed refresh must not log everyone out.
       } finally {

@@ -41,8 +41,30 @@
 //
 // NOT on the socket: `attachment` (binary) and `/assistant/run` (SSE). Both
 // stay on HTTP.
+//
+// RECYCLING (close code 4409, reason "recycling"). The platform retires a
+// worker when it reaches a resource limit; for a busy socket that is the CPU
+// budget (measured live: about a second of CPU, roughly 124 `list` frames).
+// The Supabase runtime dispatches a `beforeunload` event on the worker before
+// it shuts it down, with `event.detail.reason` (documented in "Background
+// Tasks"; the CPU budget has a soft and a hard limit, "Edge Functions worker
+// timeouts and WebSocket drops"). index.ts forwards that event to
+// `recycleSockets`, and every open socket then:
+//   1. stops taking new request frames (each is answered 503, retryable,
+//      `tool_code: "socket_recycling"`, so nothing is silently dropped),
+//   2. lets the frames already in flight finish and sends their replies,
+//   3. closes with 4409 (after at most RECYCLE_DRAIN_MS if something hangs).
+// A client that sees 4409 should open a new socket at once, without backoff
+// and without treating it as a failure: the next worker is a fresh one.
+//
+// Each socket also holds an `EdgeRuntime.waitUntil` promise until it closes.
+// The same documentation states that after the upgrade response the worker
+// counts as idle and "can be terminated even with open WebSocket connections"
+// unless such a promise is pending; it is also what gives the drain above the
+// time between the soft and the hard limit.
 // ---------------------------------------------------------------------------
 
+import { jsonTextOf, requestWithParsedBody } from "./app.ts";
 import { isAllowedOrigin } from "./cors.ts";
 
 /** The slice of a WebSocket this module uses (so a test can stand one in). */
@@ -62,6 +84,8 @@ export interface SocketDeps {
   log?: (event: string, fields: Record<string, unknown>) => void;
   setTimer?: (fn: () => void, ms: number) => unknown;
   clearTimer?: (handle: unknown) => void;
+  /** Keeps the worker alive until the promise settles. Default: EdgeRuntime.waitUntil when present. */
+  hold?: (until: Promise<void>) => void;
 }
 
 const SOCKET_ROUTES: Record<string, "GET" | "POST"> = {
@@ -79,6 +103,34 @@ const MAX_IN_FLIGHT = 24;
 const AUTH_DEADLINE_MS = 10_000;
 /** A socket with no frame for this long is closed. */
 export const IDLE_CLOSE_MS = 120_000;
+/** Close code sent when the worker is about to be retired. */
+export const RECYCLE_CLOSE_CODE = 4409;
+/** How long a recycling socket waits for its in-flight frames. */
+export const RECYCLE_DRAIN_MS = 3_000;
+
+/** Every open socket's "the worker is being retired" hook. */
+const liveSockets = new Set<() => void>();
+
+/**
+ * Called from the runtime's `beforeunload` event (index.ts). Returns how many
+ * sockets were told. Safe to call more than once.
+ */
+export function recycleSockets(): number {
+  const hooks = [...liveSockets];
+  for (const recycle of hooks) {
+    try {
+      recycle();
+    } catch { /* one socket must not stop the others */ }
+  }
+  return hooks.length;
+}
+
+function holdWorker(until: Promise<void>): void {
+  try {
+    const runtime = (globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } }).EdgeRuntime;
+    runtime?.waitUntil?.(until);
+  } catch { /* not this runtime: the socket lives as long as the worker lets it */ }
+}
 const ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -115,7 +167,11 @@ export function serveSocket(req: Request, deps: SocketDeps): Response {
   let frames = 0;
   let open = true;
   let finished = false;
+  let recycling = false;
+  let drainTimer: unknown = null;
   const openedAt = performance.now();
+  let released: () => void = () => {};
+  (deps.hold ?? holdWorker)(new Promise<void>((resolve) => (released = resolve)));
 
   const send = (text: string): void => {
     if (!open) return;
@@ -133,6 +189,7 @@ export function serveSocket(req: Request, deps: SocketDeps): Response {
       try {
         socket.close(4401, "auth_timeout");
       } catch { /* already closed */ }
+      finish();
     }
   }, AUTH_DEADLINE_MS);
 
@@ -142,6 +199,9 @@ export function serveSocket(req: Request, deps: SocketDeps): Response {
     try {
       socket.close(code, reason);
     } catch { /* already closed */ }
+    // Not left to `onclose`: the worker is held until this socket is done
+    // (see `holdWorker`), and a close event that never arrives must not hold it.
+    finish();
   };
   let idleTimer: unknown = null;
   const armIdle = (): void => {
@@ -157,11 +217,31 @@ export function serveSocket(req: Request, deps: SocketDeps): Response {
     authTimer = null;
     if (idleTimer !== null) clearTimer(idleTimer);
     idleTimer = null;
+    if (drainTimer !== null) clearTimer(drainTimer);
+    drainTimer = null;
     open = false;
+    liveSockets.delete(recycle);
+    released();
     if (finished) return;
     finished = true;
-    deps.log?.("socket_closed", { frames, open_s: Math.round((performance.now() - openedAt) / 1000) });
+    deps.log?.("socket_closed", { frames, recycled: recycling, open_s: Math.round((performance.now() - openedAt) / 1000) });
   };
+  /** Close for recycling once nothing is in flight. */
+  const closeIfDrained = (): void => {
+    if (!recycling || inFlight > 0 || !open) return;
+    shut(RECYCLE_CLOSE_CODE, "recycling");
+  };
+  const recycle = (): void => {
+    if (recycling || !open) return;
+    recycling = true;
+    deps.log?.("socket_recycling", { frames, in_flight: inFlight });
+    drainTimer = setTimer(() => {
+      drainTimer = null;
+      shut(RECYCLE_CLOSE_CODE, "recycling");
+    }, RECYCLE_DRAIN_MS);
+    closeIfDrained();
+  };
+  liveSockets.add(recycle);
   socket.onclose = finish;
   socket.onerror = finish;
 
@@ -183,19 +263,27 @@ export function serveSocket(req: Request, deps: SocketDeps): Response {
     else if (workspace !== undefined && workspace !== null) {
       return send(errorFrame(id, 403, "forbidden", "Unknown workspace."));
     }
-    let body: string | undefined;
+    const url = `${base.origin}${prefix}${path}`;
+    let inner: Request;
     if (method === "POST") {
       headers["content-type"] = "application/json";
-      body = JSON.stringify(frame["body"] ?? null);
+      // The frame was parsed once, here; the handler is given that value
+      // rather than a second serialisation of it to parse again.
+      inner = requestWithParsedBody(url, headers, frame["body"] ?? null);
+    } else {
+      inner = new Request(url, { method, headers });
     }
-    const inner = new Request(`${base.origin}${prefix}${path}`, { method, headers, body });
     const result = await deps.handle(inner);
     const type = result.headers.get("content-type") ?? "";
     if (!type.includes("application/json")) {
       await result.body?.cancel().catch(() => {});
       return send(errorFrame(id, 400, "invalid_request", "This result is binary; request it over HTTP."));
     }
-    const text = await result.text();
+    // The handler's own JSON text when it has it (no trip through the
+    // Response stream); any other handler's body is read the ordinary way.
+    let text = jsonTextOf(result);
+    if (text === null) text = await result.text();
+    else await result.body?.cancel().catch(() => {});
     // The body is already JSON text: spliced in, not parsed and re-serialised.
     send(
       `{"id":${JSON.stringify(id)},"status":${result.status},"timing":${
@@ -245,6 +333,23 @@ export function serveSocket(req: Request, deps: SocketDeps): Response {
     if (typeof id !== "string" || !ID_RE.test(id)) {
       return send(errorFrame(null, 400, "invalid_request", "Every request frame needs an 'id'."));
     }
+    if (recycling) {
+      // Not run and not dropped: the client retries it on its next socket.
+      return send(
+        JSON.stringify({
+          id,
+          status: 503,
+          body: {
+            error: {
+              code: "provider_error",
+              message: "Reconnecting. Try again.",
+              retryable: true,
+              tool_code: "socket_recycling",
+            },
+          },
+        }),
+      );
+    }
     if (inFlight >= MAX_IN_FLIGHT) {
       return send(errorFrame(id, 429, "rate_limited", "Too many requests in flight on this connection."));
     }
@@ -254,6 +359,7 @@ export function serveSocket(req: Request, deps: SocketDeps): Response {
       .catch(() => send(errorFrame(id, 500, "internal_error", "The request could not be completed.")))
       .finally(() => {
         inFlight--;
+        closeIfDrained();
       });
   };
 

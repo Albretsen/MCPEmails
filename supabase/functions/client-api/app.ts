@@ -28,8 +28,10 @@ import { corsHeaders, preflightResponse } from "./cors.ts";
 import { ApiError, invalidRequest, toApiError } from "./errors.ts";
 import type { ImapPool, PoolableClient } from "./imap-pool.ts";
 import { parseBatch, runMailBatch } from "./mail/batch.ts";
+import { type HealthRow, InboxHealth, type InboxState } from "./mail/health.ts";
 import { OPS } from "./mail/ops.ts";
 import { InboxRowCache, type MailEnv, type MailRequest, type OpTimings, resultJson, runExecutor, runMailOp } from "./mail/run.ts";
+import { settleAfterResponse } from "../mcp-server/request-pipeline.ts";
 import type { LimitClass, RateLimiter } from "./rate-limit.ts";
 import type { ApiKeyRow, McpSeam } from "./seam.ts";
 import { planSlug, type Store, toAssistantAllowance } from "./store.ts";
@@ -44,6 +46,8 @@ export interface AppDeps {
   /** Tests only: stands in for the IMAP socket dial (see MailEnv.imapDial). */
   imapDial?: MailEnv["imapDial"];
   inboxes?: InboxRowCache;
+  /** Tests only: the inbox health map (see mail/health.ts). */
+  health?: InboxHealth;
   /** Loads ./assistant/mod.ts. Kept lazy so mail routes never pay for it. */
   assistant?: () => Promise<HandleAssistantRun>;
   env?: (name: string) => string | undefined;
@@ -97,7 +101,38 @@ const ROUTES: Record<string, "GET" | "POST"> = {
   "/assistant/run": "POST",
 };
 
+/**
+ * In-isolate hand-off between the socket (ws.ts) and this handler, so a frame
+ * is not serialised and parsed twice on its way through:
+ *
+ *   PARSED_BODIES  the frame's `body`, already parsed by the socket (and
+ *                  already inside the same size limit as an HTTP body). The
+ *                  handler uses it instead of stringifying it into a Request
+ *                  and parsing it back.
+ *   JSON_TEXTS     the JSON text of a response this handler built, so the
+ *                  socket splices it into the reply frame without reading it
+ *                  back out of the Response stream (UTF-8 encode + decode).
+ *
+ * Both are keyed by the object itself in a WeakMap: nothing an HTTP caller
+ * sends can populate either.
+ */
+const PARSED_BODIES = new WeakMap<Request, unknown>();
+const JSON_TEXTS = new WeakMap<Response, string>();
+
+/** Socket only: a request whose JSON body is `body`, with no body stream. */
+export function requestWithParsedBody(url: string, headers: Record<string, string>, body: unknown): Request {
+  const req = new Request(url, { method: "POST", headers });
+  PARSED_BODIES.set(req, body);
+  return req;
+}
+
+/** Socket only: the JSON text of a response this handler produced, or null. */
+export function jsonTextOf(response: Response): string | null {
+  return JSON_TEXTS.get(response) ?? null;
+}
+
 async function readJson(req: Request): Promise<unknown> {
+  if (PARSED_BODIES.has(req)) return PARSED_BODIES.get(req);
   const declared = Number(req.headers.get("content-length") ?? "0");
   if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
     throw new ApiError(413, "invalid_request", "Request body is too large.");
@@ -138,6 +173,7 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
   const log = deps.log ?? ((event, fields) => console.log(`[client-api] ${event}`, fields));
   const readEnv = deps.env ?? ((name) => Deno.env.get(name));
   const inboxRows = deps.inboxes ?? new InboxRowCache();
+  const health = deps.health ?? new InboxHealth(now);
   const keys = new Map<string, { row: ApiKeyRow; at: number }>();
   const inboxLists = new Map<string, { inboxes: Inbox[]; at: number }>();
 
@@ -173,7 +209,11 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
         keys.set(m.workspace_id, { row: key, at: now() });
       }
       for (const inbox of m.inbox_rows ?? []) {
-        if (inbox.workspace_id === m.workspace_id && inbox.status === "active") inboxRows.remember(inbox);
+        if (inbox.workspace_id !== m.workspace_id) continue;
+        // Every row, whatever its status: a row in 'error' is exactly what
+        // `/session` has to report and what a mail call must not dial.
+        health.observe(inbox as unknown as HealthRow);
+        if (inbox.status === "active") inboxRows.remember(inbox);
       }
     }
   };
@@ -193,6 +233,24 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
     inboxes: inboxRows,
     apiKey: callerKey(row, membership, true),
     canWrite: canWrite(membership.role),
+    health,
+    // Both writes happen after the response (EdgeRuntime.waitUntil when the
+    // runtime has it), and neither can fail the request that noticed.
+    onLoginRefused: (inboxId) => {
+      log("imap_login_refused", { request_id: requestId, workspace_id: membership.workspace_id, inbox_id: inboxId });
+      void settleAfterResponse(
+        [["login_refused_mark", () => deps.store.markLoginRefused(inboxId, membership.workspace_id, now())]],
+        (name, error) =>
+          log("background_failed", { request_id: requestId, task: name, error_name: error instanceof Error ? error.name : "error" }),
+      );
+    },
+    onLoginAccepted: (inboxId) => {
+      void settleAfterResponse(
+        [["login_refused_clear", () => deps.store.clearLoginRefused(inboxId, membership.workspace_id)]],
+        (name, error) =>
+          log("background_failed", { request_id: requestId, task: name, error_name: error instanceof Error ? error.name : "error" }),
+      );
+    },
     onBackgroundError: (name, error) =>
       log("background_failed", {
         request_id: requestId,
@@ -213,6 +271,69 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
       inboxLists.set(workspaceId, { inboxes, at: now() });
     }
     return inboxes;
+  };
+
+  /**
+   * THE `/session` INBOX LIST, FOR THE CLIENT ENGINEER.
+   *
+   * Every entry is the `inbox_list` row it always was, plus two fields:
+   *
+   *   status         "ok" | "reconnect_required" | "error"
+   *   status_reason  null when status is "ok", otherwise one of
+   *                  "password_refused"  the mail server refused the stored
+   *                                      password / app password
+   *                  "access_revoked"    Gmail / Outlook grant expired or revoked
+   *                  "sender_identity"   mail WORKS; only the Gmail send-as list
+   *                                      needs a reconnect (same fact as
+   *                                      sender_identity_status)
+   *                  "no_mailbox"        Outlook account without a mailbox;
+   *                                      status "error": reconnecting cannot help
+   *                  "unavailable"       status "error": unknown row state
+   *
+   * The client can trust it without making a mail call: it is derived from
+   * the inbox row (`inboxes.status`, the refused-login marker in `last_error`),
+   * the tool layer's `sender_identity_status`, and what this isolate has seen
+   * refused. No mailbox connection is opened to compute it.
+   *
+   * With `reconnect_required` for "password_refused" or "access_revoked", and
+   * with "error", every mail op for that inbox answers 409 `reconnect_required`
+   * without contacting the mail host, so there is nothing to gain by polling
+   * it: show the reconnect notice from this field and skip the inbox in list,
+   * status and search fan-outs until a later `/session` says "ok". The field
+   * is at most about a minute behind a reconnect done in the dashboard.
+   *
+   * NEW ROWS. An inbox whose row is in `error` (revoked Gmail / Outlook
+   * grant, or a password the dashboard's "Check connection" rejected) used to
+   * be ABSENT from this list, because `inbox_list` only returns active rows.
+   * It is now present, after the active ones, with status set as above,
+   * `sender_identity_status: "unavailable"` and its primary address as the
+   * only sender identity.
+   */
+  type SessionInbox = Inbox & InboxState;
+  const sessionInboxList = (listed: Inbox[], membership: Membership): SessionInbox[] => {
+    const workspaceId = membership.workspace_id;
+    const out: SessionInbox[] = listed.map((inbox) => ({
+      ...inbox,
+      ...health.state(inbox.inbox_id, workspaceId, inbox.sender_identity_status),
+    }));
+    const seen = new Set(listed.map((inbox) => inbox.inbox_id));
+    for (const raw of membership.inbox_rows ?? []) {
+      const row = raw as unknown as HealthRow;
+      if (row.workspace_id !== workspaceId || row.status !== "error" || seen.has(row.id)) continue;
+      const address = row.email_address ?? "";
+      const name = row.display_name || address;
+      out.push({
+        inbox_id: row.id,
+        email_address: address,
+        display_name: name,
+        provider: row.provider as Inbox["provider"],
+        service: row.service ?? null,
+        sender_identities: [{ email_address: address, display_name: name, is_default: true }],
+        sender_identity_status: "unavailable",
+        ...health.state(row.id, workspaceId),
+      });
+    }
+    return out;
   };
 
   const emptyAllowance = (plan: string): AssistantAllowance => {
@@ -265,7 +386,7 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
     fields["isolate_seq"] = ++isolateSeq;
     fields["isolate_age_s"] = Math.round((performance.now() - ISOLATE_STARTED) / 1000);
 
-    const finish = (response: Response, extra: Record<string, string> = {}): Response => {
+    const finish = (response: Response, extra: Record<string, string> = {}, jsonText?: string): Response => {
       const total = performance.now() - startedAt;
       const headers = new Headers(response.headers);
       for (const [key, value] of Object.entries(corsHeaders(origin))) headers.set(key, value);
@@ -282,11 +403,15 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
         provider_ms: Math.round(timing.provider),
         total_ms: Math.round(total),
       });
-      return new Response(response.body, { status: response.status, headers });
+      const out = new Response(response.body, { status: response.status, headers });
+      if (jsonText !== undefined) JSON_TEXTS.set(out, jsonText);
+      return out;
     };
 
-    const json = (body: unknown, status = 200, extra: Record<string, string> = {}): Response =>
-      finish(new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } }), extra);
+    const json = (body: unknown, status = 200, extra: Record<string, string> = {}): Response => {
+      const text = JSON.stringify(body);
+      return finish(new Response(text, { status, headers: { "Content-Type": "application/json" } }), extra, text);
+    };
 
     const fail = (error: unknown): Response => {
       const api = toApiError(error);
@@ -401,6 +526,8 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
         // Adding each one's own duration reported more "db" than the request took.
         timing.db += performance.now() - profileStarted;
         fields["inboxes"] = inboxes.length;
+        const sessionInboxes = sessionInboxList(inboxes, membership);
+        fields["inboxes_attention"] = sessionInboxes.filter((i) => i.status !== "ok").length;
         return json({
           user: { id: user.id, email: user.email, display_name: profile?.display_name ?? null },
           workspaces: memberships.map((m) => ({
@@ -412,7 +539,7 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
           })),
           workspace_id: membership.workspace_id,
           role: membership.role,
-          inboxes,
+          inboxes: sessionInboxes,
           allowance,
         });
       }

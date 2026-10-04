@@ -111,6 +111,8 @@ export interface FakeStore extends Store {
   rows: Membership[];
   allowanceRow: AllowanceRow | null;
   finalized: Array<{ id: string; usage: AssistantUsage }>;
+  /** `markLoginRefused` / `clearLoginRefused` calls, in order. */
+  loginMarks: Array<{ op: "mark" | "clear"; inboxId: string; workspaceId: string }>;
 }
 
 export function fakeStore(rows: Membership[] = [membership()]): FakeStore {
@@ -123,6 +125,15 @@ export function fakeStore(rows: Membership[] = [membership()]): FakeStore {
     rows,
     allowanceRow: { plan: "free", cap: 20, used: 3, remaining: 17, max_tokens_per_run: 120000, ...period },
     finalized: [],
+    loginMarks: [],
+    markLoginRefused(inboxId, workspaceId) {
+      store.loginMarks.push({ op: "mark", inboxId, workspaceId });
+      return Promise.resolve();
+    },
+    clearLoginRefused(inboxId, workspaceId) {
+      store.loginMarks.push({ op: "clear", inboxId, workspaceId });
+      return Promise.resolve();
+    },
     memberships(_userId) {
       store.calls.memberships++;
       return Promise.resolve(store.rows.map((r) => ({ ...r })));

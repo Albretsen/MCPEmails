@@ -21,8 +21,9 @@ import { firstPartyContext, type FirstPartyContext } from "../../mcp-server/firs
 import { buildReplayEnvelope } from "../../mcp-server/idempotency-replay.ts";
 import { settleAfterResponse } from "../../mcp-server/request-pipeline.ts";
 import { ApiError, executorError, forbidden, invalidRequest } from "../errors.ts";
-import { type ImapPool, poolKey, type PoolableClient } from "../imap-pool.ts";
+import { type ImapPool, isLoginRefusal, poolKey, type PoolableClient } from "../imap-pool.ts";
 import type { ApiKeyRow, ExecutorOutcome, InboxRow, McpSeam } from "../seam.ts";
+import { type HealthRow, type InboxHealth, reconnectMessage } from "./health.ts";
 import { type ExecutorCall, OPS, type OpSpec } from "./ops.ts";
 import { mailboxStatus } from "./status.ts";
 
@@ -74,7 +75,49 @@ export interface MailEnv {
    * is `ImapClient`'s own connect-with-retry.
    */
   imapDial?: (cfg: { host: string; port: number; email: string }) => Promise<PoolableClient>;
+  /** What is known about each inbox without dialling it (mail/health.ts). */
+  health?: InboxHealth;
+  /** A login this request dialled was refused by the mail server: record it on the row. */
+  onLoginRefused?: (inboxId: string) => void;
+  /** A login this request dialled worked for an inbox whose row carries a refusal marker: clear it. */
+  onLoginAccepted?: (inboxId: string) => void;
   now?: () => number;
+}
+
+/**
+ * Refuse, without contacting the mail host, an inbox that is already known to
+ * need reconnecting: its row says so, or a login with the credentials it has
+ * now was refused within the last few minutes (in this isolate or, through
+ * the marker on the row, in any other). See mail/health.ts.
+ */
+export function assertReachable(env: MailEnv, inboxId: string | null): void {
+  if (!inboxId || !env.health) return;
+  const workspaceId = env.apiKey.workspace_id;
+  const state = env.health.state(inboxId, workspaceId);
+  if (state.status === "ok" || state.status_reason === "unavailable") return;
+  if (state.status_reason === "no_mailbox") {
+    throw new ApiError(409, "reconnect_required", "This Outlook account has no mailbox.", {
+      toolCode: "outlook_no_mailbox",
+    });
+  }
+  throw new ApiError(409, "reconnect_required", reconnectMessage(env.health.provider(inboxId, workspaceId)), {
+    toolCode: "auth_failed",
+  });
+}
+
+/**
+ * The public error for an executor's error result. A refused credential gets
+ * the sentence written for the person using the app (per provider and
+ * credential type) in place of the tool layer's agent-facing text; `code` and
+ * `tool_code` are what they always were. Everything else is `executorError`.
+ */
+export function mailError(env: MailEnv, inboxId: string | null, outcome: ExecutorOutcome): ApiError {
+  if (outcome.logErrorCode !== "auth_failed") return executorError(outcome.logErrorCode, resultText(outcome.result));
+  let provider = inboxId ? env.health?.provider(inboxId, env.apiKey.workspace_id) ?? null : null;
+  // The row was never seen by this isolate's health map: the tool layer's own
+  // text names the provider ("Unable to access the gmail inbox: ...").
+  provider ??= /^Unable to [^:]{1,80} the ([a-z0-9_-]{1,32}) inbox:/.exec(resultText(outcome.result))?.[1] ?? null;
+  return new ApiError(409, "reconnect_required", reconnectMessage(provider), { toolCode: "auth_failed" });
 }
 
 export type MailOutcome =
@@ -150,13 +193,19 @@ export function firstPartyFor(
     // Human and assistant alike: both need the Trash ids to undo a delete.
     trashIds: true,
     inboxRow: options.fresh ? undefined : (id, workspaceId) => env.inboxes.get(id, workspaceId),
-    rememberInboxRow: (row) => env.inboxes.remember(row as InboxRow),
+    rememberInboxRow: (row) => {
+      env.inboxes.remember(row as InboxRow);
+      env.health?.observe(row as HealthRow);
+    },
     imapConnect: async <C>(
       cfg: { host: string; port: number; email: string; password: string; security?: "tls" | "starttls" },
       dial: () => Promise<C>,
     ): Promise<C> => {
       const key = await poolKey(options.scope, cfg);
       let dialled = false;
+      // Only a dial made for ONE inbox is recorded against it (the scope is
+      // the inbox id for every mail op; `workspace:...` for the inbox list).
+      const inboxScope = UUID_RE.test(options.scope) ? options.scope : null;
       const client = await env.pool.checkout(key, options.flow, async () => {
         dialled = true;
         // Counted when attempted, so a refused dial is visible in the log line.
@@ -176,7 +225,16 @@ export function firstPartyFor(
           const calls = (options.timings.imapCalls ??= []);
           if (calls.length < MAX_TRACED_CALLS && /^[A-Za-z]{1,40}$/.test(method)) calls.push(`${method}:${Math.round(ms)}`);
         },
+      }).catch((error) => {
+        // The server itself said no to a login made just now. (A refusal the
+        // pool answered from memory dialled nothing and is not news.)
+        if (dialled && inboxScope && isLoginRefusal(error)) {
+          env.health?.noteRefused(inboxScope);
+          env.onLoginRefused?.(inboxScope);
+        }
+        throw error;
       });
+      if (dialled && inboxScope && env.health?.noteAccepted(inboxScope)) env.onLoginAccepted?.(inboxScope);
       if (!dialled) options.timings.imapReuses++;
       return client as unknown as C;
     },
@@ -251,6 +309,7 @@ export async function runExecutor(
   },
 ): Promise<ExecutorOutcome> {
   const apiKey = options.apiKey ?? env.apiKey;
+  assertReachable(env, options.inboxId);
   const args: Record<string, unknown> = { ...call.args };
   if (options.inboxId) args["inbox_id"] = options.inboxId;
   if (options.idempotencyKey !== undefined) args["idempotency_key"] = options.idempotencyKey;
@@ -442,6 +501,7 @@ export async function runMailOp(
 
   const work = (async (): Promise<MailOutcome> => {
     if (spec.special === "status") {
+      assertReachable(env, inboxId);
       const started = performance.now();
       const context = firstPartyFor(env, { scope: inboxId!, flow, timings });
       try {
@@ -472,7 +532,7 @@ export async function runMailOp(
           : idempotencyKey,
         timings,
       });
-      if (isErrorOutcome(outcome)) throw executorError(outcome.logErrorCode, resultText(outcome.result));
+      if (isErrorOutcome(outcome)) throw mailError(env, inboxId, outcome);
       results.push(outcome.result);
     }
 

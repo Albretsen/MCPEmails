@@ -35,6 +35,7 @@
 
 import { graphFetch } from "../../mcp-server/outlook-graph.ts";
 import { ApiError } from "../errors.ts";
+import { reconnectMessage } from "./health.ts";
 import type { ApiKeyRow, InboxRow, McpSeam } from "../seam.ts";
 
 export interface FolderStatus {
@@ -249,7 +250,7 @@ export async function mailboxStatus(
   } catch (error) {
     if (error instanceof ApiError) throw error;
     if (isAuthFailure(error) || (error instanceof Error && error.name === "ImapAuthError")) {
-      throw new ApiError(409, "reconnect_required", "This inbox needs to be reconnected.", {
+      throw new ApiError(409, "reconnect_required", reconnectMessage(inbox.provider), {
         toolCode: "auth_failed",
       });
     }

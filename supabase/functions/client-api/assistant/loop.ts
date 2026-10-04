@@ -90,6 +90,8 @@ const STOP_TEXT: Record<StopReason, string> = {
   output_limit: "My answer was cut off because it got too long. Ask for a narrower part and I will finish it.",
 };
 
+/** Said by the loop when a send was asked for, the draft has no recipient, and the model asked nothing. */
+const ASK_RECIPIENT_TEXT = "Who should this go to? Give me the address and I will ask you to approve the send.";
 const APPROVAL_TEXT = "The draft is ready for your approval. Nothing is sent until you approve it.";
 
 interface PendingCall {
@@ -150,6 +152,8 @@ class Run {
   private callSeq = 0;
   private readonly calls = new Map<string, { messageId: string; call: AssistantToolCall }>();
   private allText = "";
+  /** The last request_send was refused because the draft has no recipient. */
+  private recipientMissing = false;
   private lastText = "";
   private lastMessageId = "";
   private readonly readKeys: MessageKey[] = [];
@@ -462,6 +466,9 @@ class Run {
 
   private closeText(messageId: string, text: string): void {
     if (!text) return;
+    // The model answered after the refusal (text of the same round is closed
+    // before its calls run), so the loop has nothing to add.
+    this.recipientMissing = false;
     this.emit({ type: "text_delta", message_id: messageId, delta: "", done: true });
     this.allText += (this.allText ? "\n\n" : "") + text;
     this.lastText = text;
@@ -586,8 +593,12 @@ class Run {
       if (res.draft) this.draft = res.draft;
       outcome = res.outcome;
     } else {
-      const res = requestSend(this.draftEnv(), this.draft, this.nextCallId(), messageId, `${this.runId}_ap1`);
+      const res = requestSend(this.draftEnv(), this.draft, call.args, this.nextCallId(), messageId, `${this.runId}_ap1`);
       if (res.approved) this.approvalRequested = true;
+      if (res.draft) this.draft = res.draft;
+      // Remembered so a model that then says nothing does not end the run
+      // silently: `finish` asks the question itself.
+      this.recipientMissing = res.missingRecipient === true;
       outcome = res.outcome;
     }
     if (outcome.isError) this.rejectLog.push(`${call.name}_invalid`);
@@ -683,6 +694,7 @@ class Run {
   private finish(stopped: StopReason | undefined): void {
     if (this.approvalRequested) this.say(APPROVAL_TEXT);
     else if (stopped) this.say(STOP_TEXT[stopped]);
+    else if (this.recipientMissing) this.say(ASK_RECIPIENT_TEXT);
     else if (!this.allText) this.say(this.mem.counts.moved + this.mem.counts.archived + this.mem.counts.trashed + this.mem.counts.flagged ? "Done." : "I have nothing to add.");
     const chips = this.chips();
     if (chips.length && this.lastMessageId) this.emit({ type: "chips", message_id: this.lastMessageId, chips });

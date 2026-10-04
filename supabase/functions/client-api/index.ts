@@ -19,9 +19,10 @@ import type { HandleAssistantRun } from "./assistant-deps.ts";
 import { JwtVerifier, WorkspaceGate } from "./auth.ts";
 import { corsHeaders, preflightResponse } from "./cors.ts";
 import { ImapPool, type PoolableClient } from "./imap-pool.ts";
+import { withHealthColumns } from "./mail/health.ts";
 import { RateLimiter } from "./rate-limit.ts";
 import { loadMcpSeam } from "./seam.ts";
-import { serveSocket } from "./ws.ts";
+import { recycleSockets, serveSocket } from "./ws.ts";
 import { supabaseStore } from "./store.ts";
 
 type Handler = (req: Request) => Promise<Response>;
@@ -85,7 +86,11 @@ async function start(): Promise<Started> {
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   if (!supabaseUrl) return closed("SUPABASE_URL is not set");
 
-  const store = supabaseStore(mcp.serviceRoleClient, { inboxColumns: mcp.INBOX_SELECT_COLUMNS });
+  // The tool layer's projection plus `service` and `last_error`: what `/session`
+  // needs to report an inbox's health without a mail call (mail/health.ts).
+  const store = supabaseStore(mcp.serviceRoleClient, {
+    inboxColumns: mcp.INBOX_SELECT_COLUMNS ? withHealthColumns(mcp.INBOX_SELECT_COLUMNS) : undefined,
+  });
   const verifier = new JwtVerifier({
     supabaseUrl,
     jwtSecret: Deno.env.get("SUPABASE_JWT_SECRET") ?? Deno.env.get("JWT_SECRET") ?? undefined,
@@ -133,6 +138,17 @@ const { handler, authenticate } = await start();
 // What does pin an isolate is a WebSocket (ws.ts): every frame on a socket is
 // served by the isolate that accepted it, so its caches and its ONE pooled
 // IMAP connection per inbox are reused by every request of that tab.
+// The runtime says the worker is about to be retired (a resource limit, or a
+// deploy): let every socket finish what it has in flight and close with 4409
+// so its client reconnects to a fresh worker instead of finding the socket
+// dead under a request. See the RECYCLING note in ws.ts for what is documented
+// and what was observed.
+addEventListener("beforeunload", (event) => {
+  const reason = (event as unknown as { detail?: { reason?: unknown } }).detail?.reason;
+  const sockets = recycleSockets();
+  console.log("[client-api] beforeunload", { reason: typeof reason === "string" ? reason.slice(0, 40) : "unknown", sockets });
+});
+
 Deno.serve((req) => {
   if (req.method === "GET" && /\/client-api\/ws\/?$/.test(new URL(req.url).pathname)) {
     return serveSocket(req, {
