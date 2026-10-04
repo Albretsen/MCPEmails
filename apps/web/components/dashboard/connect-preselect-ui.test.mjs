@@ -314,3 +314,46 @@ test('a reconnect ignores a preselect entirely', () => {
   const app = readFileSync(new URL('./App.jsx', import.meta.url), 'utf8');
   assert.ok(app.includes('preselect={reconnectInbox == null ? connectPreselect : null}'));
 });
+
+// ---------------------------------------------------------------------------
+// Which control opened the modal (lib/analytics/connect-entry-point.mjs). The
+// openers that need a real address bar are covered here; the buttons on the
+// pages are covered in inbox-cap-offer-ui.test.mjs.
+// ---------------------------------------------------------------------------
+
+const entryOf = (view) => view.container.querySelector('[data-connect-entry]')?.getAttribute('data-connect-entry') ?? null;
+
+test('entry point: the first-run welcome is `first_run`, a provider hint is `provider_intent`', async (t) => {
+  const first = await renderDashboard(t, { url: '/dashboard?firstrun=1' });
+  await waitFor(() => entryOf(first), { message: 'the first-run modal' });
+  assert.equal(entryOf(first), 'first_run');
+  await first.unmount();
+
+  const hinted = await renderDashboard(t, { url: '/dashboard?provider=yahoo' });
+  await waitFor(() => entryOf(hinted), { message: 'the hinted modal' });
+  assert.equal(entryOf(hinted), 'provider_intent');
+  // The hint is spent with the modal: the next opening is the page's button.
+  await closeModal(hinted);
+  await openFromPage(hinted);
+  assert.equal(entryOf(hinted), 'inboxes_page');
+});
+
+test('entry point: every opener in App.jsx names itself, from the closed list', async () => {
+  const { CONNECT_ENTRY_POINTS } = await import('../../src/lib/analytics/connect-entry-point.mjs');
+  const app = readFileSync(new URL('./App.jsx', import.meta.url), 'utf8');
+  // One setter call left, inside `openConnect` itself.
+  assert.equal(app.split('setShowConnect(true)').length - 1, 1);
+  const named = [...app.matchAll(/openConnect\('([a-z_]+)'\)/g)].map((m) => m[1]);
+  for (const name of named) assert.ok(CONNECT_ENTRY_POINTS.includes(name), `${name} is on the closed list`);
+  for (const name of ['first_run', 'provider_intent', 'reconnect', 'post_checkout', 'command_palette', 'other']) {
+    assert.ok(named.includes(name), `App.jsx opens the modal as ${name}`);
+  }
+  assert.ok(app.includes("onConnectInbox={() => { setCheckoutSuccess(null); setRoute('inboxes'); openConnect('post_checkout'); }}"));
+  assert.ok(app.includes("onConnect={() => openConnect('command_palette')}"));
+  // The pages name their own: header, inboxes_page, guide and the invitation.
+  const pages = readFileSync(new URL('./Pages.jsx', import.meta.url), 'utf8');
+  for (const name of ['header', 'inboxes_page', 'guide', 'multi_inbox_overview', 'multi_inbox_inboxes']) {
+    assert.ok(pages.includes(`'${name}'`), `Pages.jsx opens the modal as ${name}`);
+    assert.ok(CONNECT_ENTRY_POINTS.includes(name));
+  }
+});

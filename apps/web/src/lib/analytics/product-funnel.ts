@@ -5,6 +5,30 @@ import type { Database } from '@/types/database.types';
 type Db = SupabaseClient<Database>;
 import { safeDiagnosticPhase } from '@/lib/email/connection-config';
 import type { AuthFailureReason } from '@/lib/email/auth-failure';
+import { parseConnectEntryPoint } from '@/lib/analytics/connect-entry-point.mjs';
+
+/**
+ * Which control opened the connect modal. The closed list lives in
+ * lib/analytics/connect-entry-point.mjs, shared with the browser.
+ */
+export type ConnectEntryPoint =
+  | 'header' | 'inboxes_page' | 'guide' | 'multi_inbox_overview' | 'multi_inbox_inboxes'
+  | 'post_checkout' | 'first_run' | 'provider_intent' | 'reconnect' | 'command_palette' | 'other';
+
+/** Narrow an untrusted value to the closed list; anything else is null. */
+export function connectEntryPoint(value: unknown): ConnectEntryPoint | null {
+  return parseConnectEntryPoint(value) as ConnectEntryPoint | null;
+}
+
+/**
+ * True when an insert failed only because `entry_point` is not a column yet:
+ * 42703 is Postgres' undefined_column, PGRST204 is PostgREST not finding the
+ * column in its schema cache. Either means the code shipped before
+ * 20261005120000_funnel_entry_point.sql was applied.
+ */
+function entryPointColumnMissing(error: { code?: string; message?: string }): boolean {
+  return (error.code === '42703' || error.code === 'PGRST204') && /entry_point/.test(error.message ?? '');
+}
 
 /**
  * Persist a server-observed funnel fact. The vocabulary is deliberately small
@@ -34,8 +58,8 @@ export type ProductFunnelEvent = {
     // because the direction is the whole point: a bucket that cannot separate
     // expansion from contraction answers neither question.
     | 'plan_upgraded' | 'plan_downgraded'
-    // The Overview guide asked a business-domain workspace to connect a second
-    // work mailbox. outcome `started` = shown, `success` = clicked; at most one
+    // The dashboard invited a business-domain workspace to connect a second
+    // work mailbox. outcome `started` = seen, `success` = clicked; at most one
     // of each per workspace (lib/analytics/multi-inbox-prompt.ts).
     | 'multi_inbox_prompt';
   outcome: 'started' | 'success' | 'failure';
@@ -69,11 +93,17 @@ export type ProductFunnelEvent = {
    * An enum member, never free text: no host, address or credential.
    */
   authReason?: AuthFailureReason | null;
+  /**
+   * Which control opened the connect modal, on the rows the modal writes
+   * (`paywall_reached` from the inbox cap, `provider_selected`). Null on every
+   * other row, and for a value the server did not recognise.
+   */
+  entryPoint?: ConnectEntryPoint | null;
 };
 
 export async function recordProductFunnelEvent(db: Db, event: ProductFunnelEvent): Promise<void> {
   const table = db.from('product_funnel_events');
-  const { error } = await table.insert({
+  const row = {
     workspace_id: event.workspaceId,
     stage: event.stage,
     outcome: event.outcome,
@@ -82,7 +112,19 @@ export async function recordProductFunnelEvent(db: Db, event: ProductFunnelEvent
     phase: safeDiagnosticPhase(event.phase),
     connection_type: event.connectionType ?? null,
     auth_reason: event.authReason ?? null,
-  });
+  };
+  // The column is only named when there is something to put in it, so every
+  // row that has no entry point is the insert it has always been.
+  let { error } = event.entryPoint
+    ? await table.insert({ ...row, entry_point: event.entryPoint })
+    : await table.insert(row);
+  // Deployed ahead of the migration: keep the funnel row and drop only the new
+  // attribute. Losing `paywall_reached` rows for the length of a release would
+  // cost far more than a few rows with no entry point on them.
+  if (error && event.entryPoint && entryPointColumnMissing(error)) {
+    console.error('[product-funnel] entry_point column missing; row recorded without it', { stage: event.stage });
+    ({ error } = await table.insert(row));
+  }
   if (error) {
     console.error('[product-funnel] event insert failed', { stage: event.stage, outcome: event.outcome, error: error.message });
     return;

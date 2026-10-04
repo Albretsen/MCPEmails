@@ -9,6 +9,7 @@ import { Sidebar, Topbar } from './Sidebar';
 import { sectionToPath, pathSegmentToSection } from './routes';
 import { OverviewPage, InboxesPage, KeysPage, UsagePage, SettingsPage, SecurityPage, MembersPage, WorkflowsPage, ApprovalsPage, AutomationsPage, planDisplayName, PLAN_LADDER } from './Pages';
 import { ConnectModal } from './ConnectModal';
+import { parseConnectEntryPoint } from '@/lib/analytics/connect-entry-point.mjs';
 import { CheckoutSuccessPanel } from './CheckoutSuccessPanel';
 import { CheckoutCancelFeedback } from './CheckoutCancelFeedback';
 import { AdminConsentLinkDialog } from './AdminConsentLinkDialog';
@@ -269,6 +270,17 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     if (syncedFrom.invites !== serverPendingInvites) setPendingInvites(serverPendingInvites ?? []);
   }
   const [showConnect, setShowConnect] = useState(false);
+  // Which control opened the connect modal, from the closed list in
+  // lib/analytics/connect-entry-point.mjs. Every opener goes through
+  // `openConnect` so none of them can open the modal without naming itself:
+  // the funnel used to see nine paywall views seconds after a first connect
+  // and could not say which button had been pressed. A value that is not on
+  // the list (a click event handed straight to `onConnect`, say) is 'other'.
+  const [connectEntry, setConnectEntry] = useState(null);
+  const openConnect = useCallback((entry) => {
+    setConnectEntry(parseConnectEntryPoint(entry) ?? 'other');
+    setShowConnect(true);
+  }, []);
   // The provider a /connect/<slug> landing page sent this person for, resolved
   // into what the ConnectModal preselects. Set at most once per page load (see
   // the first-run effect below) and dropped when the modal closes, so every
@@ -379,7 +391,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
 
     if (!slug) {
       if (firstrun) {
-        const id = setTimeout(() => setShowConnect(true), 400);
+        const id = setTimeout(() => openConnect('first_run'), 400);
         return () => clearTimeout(id);
       }
       return;
@@ -407,9 +419,9 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         && (serverInboxes?.length ?? 0) >= planLimits.maxInboxes;
       if (preselect && !atCap) {
         setConnectPreselect(preselect);
-        setShowConnect(true);
+        openConnect('provider_intent');
       } else if (firstrun) {
-        setShowConnect(true);
+        openConnect('first_run');
       }
     });
     return () => { cancelled = true; };
@@ -452,7 +464,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // checkouts we have both came from people pushed at a card form before
       // they wanted anything. The offer belongs where the intent already is.
       setRouteState('inboxes');
-      setShowConnect(true);
+      openConnect('other');
     } else if (errorParam === 'admin_consent_required') {
       // Microsoft refused before the user ever saw a consent screen: their
       // organisation's default policy does not let employees approve mailbox
@@ -519,7 +531,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         duration: 0,
         action: {
           label: tr('app.adminConsentGrantedAction'),
-          onClick: () => setShowConnect(true),
+          onClick: () => openConnect('other'),
         },
       });
       setRouteState('inboxes');
@@ -857,7 +869,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       // both showed the wrong form and left an empty login field for the browser
       // to autofill with another account's saved login (the wrong-mailbox bug).
       setReconnectInbox(inbox);
-      setShowConnect(true);
+      openConnect('reconnect');
     } else {
       window.location.href = oauthRoutes[inbox.provider] ?? '/auth/gmail';
     }
@@ -965,6 +977,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
     });
     setReconnectInbox(null);
     setShowConnect(false);
+    setConnectEntry(null);
     setConnectPreselect(null);
     // Say which settings the mailbox is actually on, when they are not the ones
     // the user submitted. All three connect routes autodetect the transport and
@@ -1175,14 +1188,14 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         <Topbar route={route} workspace={workspace} mcpUrl={mcpUrl} onMenuOpen={() => setSidebarOpen(true)} onOpenSearch={() => setShowCommand(true)} sidebarOpen={sidebarOpen} />
 
         {firstrun && inboxes.length === 0 && route === "inboxes" && !showConnect && (
-          <FirstRunBanner onConnect={() => setShowConnect(true)} />
+          <FirstRunBanner onConnect={() => openConnect('first_run')} />
         )}
 
-        {route === "overview" && <OverviewPage key={guideResumeKey} inboxes={inboxes} apiKeys={keys} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} businessShaped={businessShaped} />}
-        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} businessShaped={businessShaped} onConnect={() => setShowConnect(true)} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onSaveDraftEditorHidden={onSaveDraftEditorHidden} draftEditorRolledOut={workspace?.draftEditorEnabled === true} draftEditorWorkspaceHidden={workspace?.draftEditorHidden === true} userRole={userRole} onGoToKeys={() => setRoute("keys")} />}
+        {route === "overview" && <OverviewPage key={guideResumeKey} inboxes={inboxes} apiKeys={keys} activity={activityFeed ?? SEED_ACTIVITY} stats={overviewStats} usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} plan={workspace?.plan ?? 'free'} mcpUrl={mcpUrl} memberCount={members.length} onConnect={openConnect} onGoToKeys={() => setRoute("keys")} onGoToMembers={() => setRoute("members")} onboardingClient={onboardingClient} onClientSelected={selectOnboardingClient} businessShaped={businessShaped} />}
+        {route === "inboxes"  && <InboxesPage  inboxes={inboxes} planLimits={planLimits} stripePrices={stripePrices} businessShaped={businessShaped} onConnect={openConnect} onRemove={onRemoveInbox} onReconnect={onReconnectInbox} onCheck={onCheckInbox} onSaveSignature={onSaveSignature} onSaveSenderName={onSaveSenderName} onSaveDraftEditorHidden={onSaveDraftEditorHidden} draftEditorRolledOut={workspace?.draftEditorEnabled === true} draftEditorWorkspaceHidden={workspace?.draftEditorHidden === true} userRole={userRole} onGoToKeys={() => setRoute("keys")} />}
         {route === "keys"     && <KeysPage     keys={keys} inboxes={inboxes} mcpUrl={mcpUrl} onCreate={onCreateKey} onKeyCreated={onKeyCreated} onRevoke={onRevokeKey} onUpdate={onUpdateKey} />}
         {route === "members"  && <MembersPage  members={members} pendingInvites={pendingInvites} planLimits={planLimits} userRole={userRole} currentUserId={user?.id} workspaceName={workspace?.displayName ?? workspace?.display_name ?? workspace?.slug ?? ''} onInvite={onInviteMember} onCancelInvite={onCancelInvite} onResendInvite={onResendInvite} onRemove={onRemoveMember} onChangeRole={onChangeRole} onLeave={onLeaveWorkspace} />}
-        {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} stripePrices={stripePrices} onConnect={() => setShowConnect(true)} onGoToKeys={() => setRoute("keys")} />}
+        {route === "usage"    && <UsagePage usageData={usageData} planLimits={planLimits} actionAllowance={actionAllowance} stripePrices={stripePrices} onConnect={() => openConnect('other')} onGoToKeys={() => setRoute("keys")} />}
         {route === "workflows" && <WorkflowsPage mcpUrl={mcpUrl} />}
         {route === "approvals" && <ApprovalsPage userRole={userRole} />}
         {route === "automations" && <AutomationsPage userRole={userRole} inboxes={inboxes} keys={keys} />}
@@ -1201,7 +1214,8 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
       {showConnect && (
         <ConnectModal
           reconnect={reconnectInbox}
-          onClose={() => { setShowConnect(false); setReconnectInbox(null); setConnectPreselect(null); }}
+          onClose={() => { setShowConnect(false); setReconnectInbox(null); setConnectPreselect(null); setConnectEntry(null); }}
+          entryPoint={connectEntry}
           onConnect={onConnect}
           preselect={reconnectInbox == null ? connectPreselect : null}
           atInboxLimit={reconnectInbox == null && planLimits != null && planLimits.maxInboxes != null && inboxes.length >= planLimits.maxInboxes}
@@ -1231,7 +1245,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
           inboxCount={inboxes.length}
           stripePrices={stripePrices}
           onRefreshPlan={refreshServerData}
-          onConnectInbox={() => { setCheckoutSuccess(null); setRoute('inboxes'); setShowConnect(true); }}
+          onConnectInbox={() => { setCheckoutSuccess(null); setRoute('inboxes'); openConnect('post_checkout'); }}
           onViewBilling={() => { setCheckoutSuccess(null); setRoute('settings'); }}
           onDismiss={() => setCheckoutSuccess(null)}
         />
@@ -1243,7 +1257,7 @@ function DashboardInner({ initialRoute = 'overview', user, workspace: serverWork
         open={showCommand}
         onClose={() => setShowCommand(false)}
         setRoute={setRoute}
-        onConnect={() => setShowConnect(true)}
+        onConnect={() => openConnect('command_palette')}
         inboxes={inboxes}
         members={members}
         keys={keys}

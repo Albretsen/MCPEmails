@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { Icon, Btn, ProviderLogo } from '../Primitives';
 import { trackProductEvent } from '@/lib/analytics.mjs';
 import { useInboxPaywallView } from '@/lib/analytics/use-inbox-paywall.mjs';
+import { parseConnectEntryPoint } from '@/lib/analytics/connect-entry-point.mjs';
 import { OAUTH_VERIFICATION_PENDING } from '@/lib/oauth/verification-status';
 import { Link } from '@/i18n/navigation';
 import { pricingCompareHref } from '@/lib/billing/upgrade-intent.mjs';
@@ -569,6 +570,10 @@ export function ConnectModal({
   businessShaped = false,
   onAdminConsentLink = null,
   preselect = null,
+  // Which control opened this modal: one name from the closed list in
+  // lib/analytics/connect-entry-point.mjs, set by App.jsx's `openConnect`. It
+  // rides on the rows this modal already writes and changes nothing on screen.
+  entryPoint = null,
 }) {
   const tr = useTranslations('dashboardChrome');
   // The toast lives in ToastProvider, above this modal in App.jsx, so it
@@ -915,7 +920,7 @@ export function ConnectModal({
   // `plan_limit` failure of its own to join against. A reconnect never reaches
   // the panel and is excluded at the source rather than relied on to be
   // impossible.
-  useInboxPaywallView({ isReconnect, atInboxLimit, serverLimitReached: serverLimit !== null });
+  useInboxPaywallView({ isReconnect, atInboxLimit, serverLimitReached: serverLimit !== null, entryPoint });
 
   const limitPlanName = serverLimit?.planName ?? planName;
   const limitInboxCount = serverLimit?.inboxCount ?? inboxCount;
@@ -1369,11 +1374,12 @@ export function ConnectModal({
    * is valuable.
    */
   const recordProviderSelected = (chosen) => {
-    trackProductEvent('inbox_connect_started', { provider: chosen === 'generic' ? 'imap' : chosen });
+    const entry = parseConnectEntryPoint(entryPoint);
+    trackProductEvent('inbox_connect_started', { provider: chosen === 'generic' ? 'imap' : chosen, entry_point: entry ?? 'other' });
     try {
       fetch('/api/onboarding', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'provider_selected', provider: chosen === 'generic' ? 'generic_imap' : chosen }),
+        body: JSON.stringify({ action: 'provider_selected', provider: chosen === 'generic' ? 'generic_imap' : chosen, ...(entry ? { entry_point: entry } : {}) }),
         keepalive: true,
       }).catch(() => { /* the connection remains available if analytics is unavailable */ });
     } catch { /* the connection remains available if analytics is unavailable */ }
@@ -2123,6 +2129,9 @@ export function ConnectModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="cm-title"
+        // Which control opened this modal (closed list). Read by the UI tests
+        // and by anyone inspecting a session; it changes nothing on screen.
+        data-connect-entry={parseConnectEntryPoint(entryPoint) ?? undefined}
         // Focus target on open, so the dialog is announced and Escape works
         // from the provider step, which autofocuses nothing.
         tabIndex={-1}

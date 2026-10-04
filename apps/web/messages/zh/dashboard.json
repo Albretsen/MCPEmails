@@ -99,6 +99,8 @@
     "multiInboxOptional": "可选",
     "multiInboxDesc": "连接 info@、sales@、invoices@ 等其余地址，智能体就能在同一个对话中处理公司的每一个邮箱，并从正确的地址回复。",
     "multiInboxDescUpgrade": "连接 info@、sales@、invoices@ 等其余地址，智能体就能在同一个对话中处理公司的每一个邮箱，并从正确的地址回复。免费版包含一个邮箱；Pro 包含公司使用的所有邮箱。",
+    "multiInboxCompact": "还在使用 info@、sales@ 或 invoices@ 吗？把它们连接进来，智能体就能在同一个对话中处理公司的每一个邮箱。",
+    "multiInboxCompactUpgrade": "还在使用 info@、sales@ 或 invoices@ 吗？智能体可以在同一个对话中处理公司的每一个邮箱。第二个邮箱需要付费套餐。",
     "multiInboxCta": "添加邮箱"
   },
   "overview": {

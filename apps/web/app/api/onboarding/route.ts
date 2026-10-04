@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/service';
 import { resolveActiveWorkspaceId } from '@/lib/workspace/active';
 import { onboardingActionPayload } from '@/lib/onboarding/state';
-import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
+import { connectEntryPoint, recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 
 export async function GET(): Promise<NextResponse> {
   const supabase = await createClient();
@@ -48,7 +48,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   } else {
     const provider = payload.provider as string;
     await workspaces.update({ onboarding_provider: provider }).eq('id', workspaceId);
-    await recordProductFunnelEvent(db, { workspaceId, stage: 'provider_selected', outcome: 'success', category: provider as Parameters<typeof recordProductFunnelEvent>[1]['category'] });
+    // Which control opened the connect modal this provider was picked in: one
+    // word from a closed list, null for anything else.
+    await recordProductFunnelEvent(db, { workspaceId, stage: 'provider_selected', outcome: 'success', category: provider as Parameters<typeof recordProductFunnelEvent>[1]['category'], entryPoint: connectEntryPoint(body.entry_point) });
   }
   return NextResponse.json({ ok: true });
 }

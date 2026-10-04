@@ -34,11 +34,18 @@ installDom();
 // observer that never reports an intersection means nothing is ever prefetched,
 // which is what a test wants anyway.
 globalThis.self ??= globalThis.window;
-globalThis.IntersectionObserver ??= class {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
+//
+// It is also what the second-mailbox invitation waits on before it reports
+// `shown`, so this one is controllable: nothing intersects until a test calls
+// `scrollIntoView(node)`.
+const observers = new Set();
+const FakeIntersectionObserver = class {
+  constructor(callback) { this.callback = callback; this.nodes = new Set(); observers.add(this); }
+  observe(node) { this.nodes.add(node); }
+  unobserve(node) { this.nodes.delete(node); }
+  disconnect() { this.nodes.clear(); observers.delete(this); }
 };
+globalThis.IntersectionObserver = FakeIntersectionObserver;
 
 const { default: AppLocaleProvider } = await import('../i18n/AppLocaleProvider.jsx');
 const { DashboardApp } = await import('./App.jsx');
@@ -82,6 +89,8 @@ async function renderInboxes(t, {
   isOwner = true,
   stripePrices = PRICES,
   route = 'inboxes',
+  overviewStats = {},
+  inboxPatch = null,
 }) {
   const requests = [];
   const previousFetch = globalThis.fetch;
@@ -110,9 +119,9 @@ async function renderInboxes(t, {
       userRole: isOwner ? 'owner' : 'member',
       planLimits: { maxInboxes, historyDays: 30 },
       stripePrices,
-      overviewStats: {},
+      overviewStats,
       activityFeed: [],
-      inboxes: addresses.map(inbox),
+      inboxes: addresses.map(inbox).map(ib => (inboxPatch ? { ...ib, ...inboxPatch } : ib)),
       apiKeys: [],
       usageData: {},
       auditLog: [],
@@ -131,6 +140,15 @@ async function renderInboxes(t, {
     promptBeacons: () => requests
       .filter(r => r.url === '/api/analytics/multi-inbox-prompt')
       .map(r => JSON.parse(r.body).action),
+    /** `entry_point` of every paywall beacon, null where it had no body. */
+    paywallEntries: () => requests
+      .filter(r => r.url === '/api/analytics/paywall')
+      .map(r => (r.body ? JSON.parse(r.body).entry_point ?? null : null)),
+    /** Bodies of the `provider_selected` posts to /api/onboarding. */
+    providerSelections: () => requests
+      .filter(r => r.url === '/api/onboarding')
+      .map(r => JSON.parse(r.body))
+      .filter(b => b.action === 'provider_selected'),
   };
 }
 
@@ -447,51 +465,225 @@ test('a consumer, and a Personal cap, see one filled button and no badge', async
 });
 
 // ===========================================================================
-// The Overview guide's second-work-mailbox prompt
+// The second-work-mailbox invitation: Overview header and Inboxes page
 // ===========================================================================
 
-const promptOf = view => view.container.querySelector('[data-multi-inbox-prompt]');
+const promptsOf = view => [...view.container.querySelectorAll('[data-multi-inbox-prompt]')];
+const promptOf = view => promptsOf(view)[0] ?? null;
+const connectEntryOf = view => view.container.querySelector('[data-connect-entry]')?.getAttribute('data-connect-entry') ?? null;
+const inviteButton = prompt => [...prompt.querySelectorAll('button')].find(b => b.textContent.includes(dashboard.guide.multiInboxCta));
+const buttonIn = (root, label) => [...root.querySelectorAll('button')].find(b => b.textContent.includes(label));
+/** True when `a` comes before `b` in the document. */
+const precedes = (a, b) => (a.compareDocumentPosition(b) & window.Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
 
-test('overview: a business workspace with one mailbox is asked for the rest, and told it is paid', async (t) => {
-  const view = await renderInboxes(t, { addresses: ['info@acme.example'], route: 'overview' });
-  const prompt = promptOf(view);
-  assert.ok(prompt !== null, 'the prompt should render');
-  assert.equal(prompt.getAttribute('data-multi-inbox-prompt'), 'upgrade');
-  assert.ok(prompt.textContent.includes(dashboard.guide.multiInboxTitle));
-  assert.ok(prompt.textContent.includes(dashboard.guide.multiInboxDescUpgrade));
-
+/** Report `node` as inside the viewport to whatever is observing it. */
+async function scrollIntoView(node) {
+  await flush(async () => {
+    for (const observer of [...observers]) {
+      if (observer.nodes.has(node)) observer.callback([{ target: node, isIntersecting: true }], observer);
+    }
+  });
   await settle();
+}
+
+test('overview: a business workspace with one mailbox is invited under the header, told it is paid, and nothing opens by itself', async (t) => {
+  const view = await renderInboxes(t, { addresses: ['info@acme.example'], route: 'overview' });
+  const prompts = promptsOf(view);
+  assert.equal(prompts.length, 1, 'exactly one copy of the invitation on the Overview');
+  const prompt = prompts[0];
+  assert.equal(prompt.getAttribute('data-multi-inbox-prompt'), 'upgrade');
+  assert.equal(prompt.getAttribute('data-multi-inbox-placement'), 'overview');
+  assert.ok(prompt.textContent.includes(dashboard.guide.multiInboxTitle));
+  assert.ok(prompt.textContent.includes(dashboard.guide.multiInboxOptional));
+  assert.ok(prompt.textContent.includes(dashboard.guide.multiInboxCompactUpgrade));
+  // Above the stat grid, so above the guide and everything else on the page.
+  assert.ok(precedes(prompt, view.container.querySelector('.stat-grid')));
+  // Not the page's primary action, and not a numbered step.
+  assert.ok(inviteButton(prompt).className.includes('secondary'));
+
+  // Rendering it is not a paywall view and opens nothing.
+  await settle();
+  assert.equal(modalOf(view), null);
+  assert.deepEqual(view.beacons(), []);
+
+  await scrollIntoView(prompt);
   assert.deepEqual(view.promptBeacons(), ['shown']);
 
   // The button opens the connect modal, which at the cap is the paywall
-  // panel recommending Pro.
-  const button = [...prompt.querySelectorAll('button')].find(b => b.textContent.includes(dashboard.guide.multiInboxCta));
-  await click(button);
+  // panel recommending Pro, and the paywall row says which control it was.
+  await click(inviteButton(prompt));
   await settle();
   assert.deepEqual(view.promptBeacons(), ['shown', 'clicked']);
   const modal = modalOf(view);
   assert.ok(modal !== null);
   assert.deepEqual(buyButtons(modal).map(b => b.plan), ['solo', 'personal']);
+  assert.equal(connectEntryOf(view), 'multi_inbox_overview');
+  assert.deepEqual(view.paywallEntries(), ['multi_inbox_overview']);
+});
+
+test('overview: `shown` waits for the invitation to be in the viewport, and fires once', async (t) => {
+  const view = await renderInboxes(t, { addresses: ['info@acme.example'], route: 'overview' });
+  const prompt = promptOf(view);
+  await settle();
+  await settle();
+  assert.deepEqual(view.promptBeacons(), [], 'mounted but never seen: no beacon');
+
+  // Something else on the page scrolling into view is not this.
+  await scrollIntoView(view.container.querySelector('.stat-grid'));
+  assert.deepEqual(view.promptBeacons(), []);
+
+  await scrollIntoView(prompt);
+  await scrollIntoView(prompt);
+  assert.deepEqual(view.promptBeacons(), ['shown']);
+});
+
+test('overview: with no IntersectionObserver, `shown` falls back to firing on mount', async (t) => {
+  globalThis.IntersectionObserver = undefined;
+  t.after(() => { globalThis.IntersectionObserver = FakeIntersectionObserver; });
+  const view = await renderInboxes(t, { addresses: ['info@acme.example'], route: 'overview', maxInboxes: null, plan: 'solo' });
+  assert.ok(promptOf(view) !== null);
+  await settle();
+  assert.deepEqual(view.promptBeacons(), ['shown']);
+});
+
+test('overview: the invitation is still there after the first tool call, when the guide is gone', async (t) => {
+  const before = await renderInboxes(t, { addresses: ['info@acme.example'], route: 'overview' });
+  assert.ok(before.container.textContent.includes(dashboard.guide.title), 'no calls yet: the guide is on screen');
+  assert.equal(promptsOf(before).length, 1, 'and the guide carries no second copy');
+
+  const after = await renderInboxes(t, {
+    addresses: ['info@acme.example'],
+    route: 'overview',
+    overviewStats: { callsToday: 2, callsThisMonth: 9 },
+  });
+  assert.equal(after.container.textContent.includes(dashboard.guide.title), false, 'calls made: the guide is gone');
+  assert.equal(promptsOf(after).length, 1);
+  assert.equal(promptOf(after).getAttribute('data-multi-inbox-placement'), 'overview');
 });
 
 test('overview: an uncapped business workspace gets the plain ask, with no mention of paying', async (t) => {
   const view = await renderInboxes(t, { addresses: ['info@acme.example'], route: 'overview', maxInboxes: null, plan: 'solo' });
   const prompt = promptOf(view);
   assert.equal(prompt.getAttribute('data-multi-inbox-prompt'), 'open');
-  assert.ok(prompt.textContent.includes(dashboard.guide.multiInboxDesc));
-  assert.equal(prompt.textContent.includes(dashboard.guide.multiInboxDescUpgrade), false);
-});
+  assert.ok(prompt.textContent.includes(dashboard.guide.multiInboxCompact));
+  assert.equal(prompt.textContent.includes(dashboard.guide.multiInboxCompactUpgrade), false);
 
-test('overview: a consumer never sees the prompt and no beacon fires', async (t) => {
-  const view = await renderInboxes(t, { addresses: ['ada@gmail.com'], route: 'overview' });
-  assert.equal(promptOf(view), null);
+  await click(inviteButton(prompt));
   await settle();
-  assert.deepEqual(view.promptBeacons(), []);
+  assert.equal(connectEntryOf(view), 'multi_inbox_overview');
+  assert.deepEqual(view.beacons(), [], 'not capped: the modal is the provider picker, not a paywall');
 });
 
-test('overview: two mailboxes, or none, means no prompt', async (t) => {
-  const two = await renderInboxes(t, { addresses: ['info@acme.example', 'sales@acme.example'], route: 'overview', maxInboxes: null });
-  assert.equal(promptOf(two), null);
-  const none = await renderInboxes(t, { addresses: [], userEmail: 'ada@acme.example', route: 'overview' });
-  assert.equal(promptOf(none), null);
+test('inboxes: the invitation sits under the mailbox list, once, in both variants', async (t) => {
+  const capped = await renderInboxes(t, { addresses: ['info@acme.example'] });
+  assert.equal(promptsOf(capped).length, 1);
+  const prompt = promptOf(capped);
+  assert.equal(prompt.getAttribute('data-multi-inbox-prompt'), 'upgrade');
+  assert.equal(prompt.getAttribute('data-multi-inbox-placement'), 'inboxes');
+  assert.ok(prompt.textContent.includes(dashboard.guide.multiInboxDescUpgrade));
+  const row = [...capped.container.querySelectorAll('*')].find(n => n.children.length === 0 && n.textContent === 'info@acme.example');
+  assert.ok(row, 'the mailbox is listed');
+  assert.ok(precedes(row, prompt), 'the invitation comes after the list');
+
+  await settle();
+  assert.deepEqual(capped.beacons(), [], 'rendering the invitation is not a paywall view');
+  assert.deepEqual(capped.promptBeacons(), []);
+  await scrollIntoView(prompt);
+  assert.deepEqual(capped.promptBeacons(), ['shown']);
+
+  await click(inviteButton(prompt));
+  await settle();
+  assert.deepEqual(capped.promptBeacons(), ['shown', 'clicked']);
+  assert.equal(connectEntryOf(capped), 'multi_inbox_inboxes');
+  assert.deepEqual(capped.paywallEntries(), ['multi_inbox_inboxes']);
+  assert.deepEqual(buyButtons(modalOf(capped)).map(b => b.plan), ['solo', 'personal']);
+
+  const open = await renderInboxes(t, { addresses: ['info@acme.example'], maxInboxes: null, plan: 'solo' });
+  assert.equal(promptsOf(open).length, 1);
+  assert.equal(promptOf(open).getAttribute('data-multi-inbox-prompt'), 'open');
+  assert.ok(promptOf(open).textContent.includes(dashboard.guide.multiInboxDesc));
+  assert.equal(promptOf(open).textContent.includes(dashboard.guide.multiInboxDescUpgrade), false);
+});
+
+test('a consumer never sees the invitation on either page, and no beacon fires', async (t) => {
+  for (const route of ['overview', 'inboxes']) {
+    for (const overviewStats of [{}, { callsThisMonth: 4 }]) {
+      const view = await renderInboxes(t, { addresses: ['ada@gmail.com'], route, overviewStats });
+      assert.equal(promptsOf(view).length, 0, `${route}: no invitation`);
+      await settle();
+      assert.deepEqual(view.promptBeacons(), []);
+      assert.deepEqual(view.beacons(), []);
+    }
+  }
+});
+
+test('two mailboxes, or none, means no invitation on either page', async (t) => {
+  for (const route of ['overview', 'inboxes']) {
+    const two = await renderInboxes(t, { addresses: ['info@acme.example', 'sales@acme.example'], route, maxInboxes: null });
+    assert.equal(promptsOf(two).length, 0);
+    const none = await renderInboxes(t, { addresses: [], userEmail: 'ada@acme.example', route });
+    assert.equal(promptsOf(none).length, 0);
+  }
+});
+
+// ===========================================================================
+// Which control opened the connect modal
+// ===========================================================================
+
+test('entry point: the Overview header button is `header`, and the paywall row carries it', async (t) => {
+  const view = await renderInboxes(t, { addresses: ['info@acme.example'], route: 'overview' });
+  const header = view.container.querySelector('.page-header');
+  await click(buttonIn(header, dashboard.overview.connectInbox));
+  await settle();
+  assert.equal(connectEntryOf(view), 'header');
+  assert.deepEqual(view.paywallEntries(), ['header']);
+});
+
+test('entry point: the guide step is `guide`', async (t) => {
+  const view = await renderInboxes(t, { addresses: [], route: 'overview' });
+  const guide = [...view.container.querySelectorAll('.card')].find(c => c.textContent.includes(dashboard.guide.title));
+  await click(buttonIn(guide, dashboard.guide.connectInbox));
+  assert.equal(connectEntryOf(view), 'guide');
+});
+
+test('entry point: the Inboxes header and its empty state are `inboxes_page`', async (t) => {
+  const capped = await renderInboxes(t, { addresses: ['ada@gmail.com'] });
+  await click(buttonIn(capped.container.querySelector('.page-header'), dashboard.inboxes.connectInbox));
+  await settle();
+  assert.equal(connectEntryOf(capped), 'inboxes_page');
+  assert.deepEqual(capped.paywallEntries(), ['inboxes_page']);
+
+  const empty = await renderInboxes(t, { addresses: [] });
+  await click(buttonIn(empty.container.querySelector('.empty'), dashboard.inboxes.connectInbox));
+  assert.equal(connectEntryOf(empty), 'inboxes_page');
+});
+
+test('entry point: a reconnect is `reconnect` and never a paywall view', async (t) => {
+  const view = await renderInboxes(t, { addresses: ['ada@gmail.com'], inboxPatch: { status: 'error', lastError: 'Authentication failed' } });
+  await click(buttonIn(view.container, dashboard.inboxes.reconnect));
+  await settle();
+  assert.equal(connectEntryOf(view), 'reconnect');
+  assert.deepEqual(view.beacons(), []);
+});
+
+test('entry point: picking a provider sends it on `provider_selected`', async (t) => {
+  const view = await renderInboxes(t, { addresses: ['info@acme.example'], maxInboxes: null, plan: 'solo' });
+  await click(inviteButton(promptOf(view)));
+  const next = buttonIn(modalOf(view), chrome.connect.enterCredentials);
+  assert.ok(next, 'step 1 should have its primary button');
+  await click(next);
+  await settle();
+  const sent = view.providerSelections();
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].entry_point, 'multi_inbox_inboxes');
+});
+
+test('entry point: closing the modal forgets it, so the next opener names itself', async (t) => {
+  const view = await renderInboxes(t, { addresses: ['info@acme.example'], maxInboxes: null, plan: 'solo' });
+  await click(inviteButton(promptOf(view)));
+  assert.equal(connectEntryOf(view), 'multi_inbox_inboxes');
+  await click(modalOf(view).querySelector(`button[aria-label="${chrome.connect.close}"]`));
+  assert.equal(connectEntryOf(view), null);
+  await click(buttonIn(view.container.querySelector('.page-header'), dashboard.inboxes.connectInbox));
+  assert.equal(connectEntryOf(view), 'inboxes_page');
 });

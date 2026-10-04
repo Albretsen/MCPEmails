@@ -1,11 +1,14 @@
 import { track } from '@vercel/analytics';
+import { CONNECT_ENTRY_POINTS } from './analytics/connect-entry-point.mjs';
 
 // This is deliberately a closed schema: callers cannot accidentally attach an
 // identifier, URL, request payload, or mailbox data to a product event.
 export const EVENT_SCHEMA = Object.freeze({
   signup_started: { method: ['password', 'google', 'github'] },
   signup_completed: { method: ['password', 'google', 'github'] },
-  inbox_connect_started: { provider: ['gmail', 'outlook', 'fastmail', 'icloud', 'yahoo', 'zoho', 'yandex', 'imap'] },
+  // `entry_point` is which control opened the connect modal, the same closed
+  // list the funnel rows carry (analytics/connect-entry-point.mjs).
+  inbox_connect_started: { provider: ['gmail', 'outlook', 'fastmail', 'icloud', 'yahoo', 'zoho', 'yandex', 'imap'], entry_point: CONNECT_ENTRY_POINTS },
   // `connection_method` gained 'imap'. It was 'oauth' | 'app_password', and the
   // dashboard sent 'app_password' for the generic IMAP connector too, which is
   // the single largest provider bucket on this event: the split was wrong for
