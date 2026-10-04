@@ -5,9 +5,13 @@
  * structured JSON. This parser extracts headers, the plain-text and HTML
  * bodies, and attachment metadata from a raw message.
  *
- * Input is a latin1 string (1 char === 1 byte) so byte-accurate decoding of
- * base64 / quoted-printable parts is possible. Charset decoding to UTF-8 is
- * applied per-part using the part's declared charset.
+ * Input is a BYTE STRING: one character per octet, `charCodeAt(i)` is octet i
+ * for all 256 values. That is what `atob` returns and what the IMAP client
+ * reads (byte-string.ts). It is NOT what TextDecoder("latin1") returns: that
+ * label is windows-1252, which moves 0x80-0x9F above U+00FF, and a string
+ * built that way loses those octets here. Each leaf part goes back to bytes
+ * per its transfer encoding (8bit and binary included) and is decoded to text
+ * exactly once, with the charset the part declares.
  */
 
 export interface MimeAttachment {
@@ -37,12 +41,17 @@ export function getHeaderAll(headers: Map<string, string[]>, name: string): stri
   return headers.get(name.toLowerCase()) ?? [];
 }
 
-/** Parse a raw (latin1) RFC 822 message into structured parts. */
+/** Parse a raw RFC 822 message (a byte string) into structured parts. */
 export function parseEmail(raw: string): ParsedEmail {
   const { headerBlock, body } = splitHeadersBody(raw);
   const headers = parseHeaders(headerBlock);
   const result: ParsedEmail = { headers, text: null, html: null, attachments: [] };
   parsePart(headers, body, result);
+  // After the walk, not before: the walk matches the boundary parameter against
+  // the body octet for octet, so it has to see the header as it arrived.
+  for (const values of headers.values()) {
+    for (let i = 0; i < values.length; i++) values[i] = decodeRawHeaderOctets(values[i]);
+  }
   return result;
 }
 
@@ -127,7 +136,7 @@ function parsePart(
 
   if (isAttachment) {
     const filename = decodeEncodedWords(
-      ct.params["name"] ?? filenameFromDisposition(disposition) ?? "attachment",
+      decodeRawHeaderOctets(ct.params["name"] ?? filenameFromDisposition(disposition) ?? "attachment"),
     );
     out.attachments.push({
       filename,
@@ -138,7 +147,9 @@ function parsePart(
     return;
   }
 
-  const charset = ct.params["charset"] ?? "utf-8";
+  // No charset parameter is passed on as "": `decodeCharset` then looks at the
+  // octets instead of assuming.
+  const charset = ct.params["charset"] ?? "";
   if (ct.mediaType === "text/plain" && out.text === null) {
     out.text = decodeCharset(bytes, charset);
   } else if (ct.mediaType === "text/html" && out.html === null) {
@@ -268,14 +279,16 @@ function joinedPart(
   const bytes = decodeContent(body, cte);
   if (isAttachment) {
     out.attachments.push({
-      filename: decodeEncodedWords(ct.params["name"] ?? filenameFromDisposition(disposition) ?? "attachment"),
+      filename: decodeEncodedWords(
+        decodeRawHeaderOctets(ct.params["name"] ?? filenameFromDisposition(disposition) ?? "attachment"),
+      ),
       mimeType: ct.mediaType,
       size: bytes.length,
       content: bytes,
     });
     return { text: null, html: null };
   }
-  const charset = ct.params["charset"] ?? "utf-8";
+  const charset = ct.params["charset"] ?? "";
   if (ct.mediaType === "text/plain") return { text: decodeCharset(bytes, charset), html: null };
   if (ct.mediaType === "text/html") return { text: null, html: decodeCharset(bytes, charset) };
   if (ct.mediaType.startsWith("text/")) return { text: decodeCharset(bytes, charset), html: null, fallback: true };
@@ -373,7 +386,7 @@ function splitMultipart(body: string, boundary: string): string[] {
   return parts;
 }
 
-/** Decode a part body (latin1 string) into bytes per its transfer encoding. */
+/** Decode a part body (a byte string) into bytes per its transfer encoding. */
 function decodeContent(body: string, cte: string): Uint8Array {
   if (cte === "base64") {
     const clean = body.replace(/[^A-Za-z0-9+/=]/g, "");
@@ -401,7 +414,7 @@ function decodeContent(body: string, cte: string): Uint8Array {
   return latinToBytes(body);
 }
 
-/** Decode quoted-printable (latin1 string in, latin1 string out). */
+/** Decode quoted-printable (byte string in, byte string out). */
 function decodeQuotedPrintable(input: string): string {
   return input
     // Soft line breaks.
@@ -410,24 +423,100 @@ function decodeQuotedPrintable(input: string): string {
     .replace(/=([0-9A-Fa-f]{2})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
 }
 
+/**
+ * The octets of a byte string. Exact only for a byte string: see the note at
+ * the top of this file on why the input must not come from
+ * TextDecoder("latin1").
+ */
 function latinToBytes(s: string): Uint8Array {
   const bytes = new Uint8Array(s.length);
   for (let i = 0; i < s.length; i++) bytes[i] = s.charCodeAt(i) & 0xff;
   return bytes;
 }
 
-/** Decode bytes to a UTF-8 string using the declared charset, with fallbacks. */
-function decodeCharset(bytes: Uint8Array, charset: string): string {
-  const label = charset.toLowerCase();
+/**
+ * Charset labels that say nothing about 8-bit octets. `us-ascii` is the MIME
+ * default and what careless senders put on a body that is really UTF-8 or
+ * windows-1252; the rest are what mailers write when they do not know.
+ */
+const UNINFORMATIVE_CHARSETS = new Set([
+  "",
+  "us-ascii",
+  "ascii",
+  "ansi_x3.4-1968",
+  "iso646-us",
+  "unknown-8bit",
+  "x-unknown",
+  "default",
+]);
+
+const UTF8_LENIENT = new TextDecoder("utf-8", { fatal: false });
+const WINDOWS_1252 = new TextDecoder("windows-1252");
+
+/**
+ * Text for octets nobody declared a usable charset for: UTF-8 when they are
+ * valid UTF-8, windows-1252 otherwise.
+ *
+ * One decode in the common case. The lenient result is checked for U+FFFD, and
+ * only when one is present are the octets validated strictly. `stream: true`
+ * makes that validation accept a sequence cut off at the very end, which is
+ * what a partial fetch (the 2 KB preview prefix) legitimately ends in and must
+ * not turn the whole text into windows-1252.
+ */
+function decodeUndeclared(bytes: Uint8Array): string {
+  const lenient = UTF8_LENIENT.decode(bytes);
+  if (!lenient.includes("�")) return lenient;
   try {
-    return new TextDecoder(label, { fatal: false }).decode(bytes);
+    new TextDecoder("utf-8", { fatal: true }).decode(bytes, { stream: true });
+    return lenient;
   } catch {
+    return WINDOWS_1252.decode(bytes);
+  }
+}
+
+/**
+ * Decode bytes to text with the declared charset. A missing, uninformative or
+ * unknown charset falls to {@link decodeUndeclared}.
+ *
+ * `iso-8859-1` and `latin1` decode as windows-1252, as the WHATWG encoding
+ * standard specifies and as every mail client does: mail labelled 8859-1 that
+ * uses 0x80-0x9F means curly quotes, not C1 controls.
+ */
+function decodeCharset(bytes: Uint8Array, charset: string): string {
+  const label = charset.trim().toLowerCase();
+  if (!UNINFORMATIVE_CHARSETS.has(label)) {
     try {
-      return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+      return new TextDecoder(label, { fatal: false }).decode(bytes);
     } catch {
-      return new TextDecoder("latin1").decode(bytes);
+      // Not a label this runtime knows: let the octets decide.
     }
   }
+  return decodeUndeclared(bytes);
+}
+
+/** Any octet above 0x7F, in a byte string. */
+const EIGHT_BIT_OCTET = /[\x80-\xff]/;
+/** Any code unit that is not an octet: the string is already text. */
+// deno-lint-ignore no-control-regex -- the range IS the test.
+const NOT_AN_OCTET = /[^\x00-\xff]/;
+
+/**
+ * A raw header value (a byte string) as text.
+ *
+ * Headers are meant to be 7-bit, with RFC 2047 encoded-words for the rest, and
+ * for those this returns its input. Senders that write raw 8-bit octets into a
+ * Subject or a display name anyway (UTF-8 mostly, RFC 6532 even allows it;
+ * windows-1252 from old systems) get them decoded as {@link decodeUndeclared}
+ * does a body. Without this a raw UTF-8 subject reads as mojibake, and since
+ * the read path became byte-exact a raw windows-1252 one would read as C1
+ * control characters where it used to read, by accident, correctly.
+ *
+ * A value holding any code unit above U+00FF is not a byte string and is
+ * returned untouched.
+ */
+export function decodeRawHeaderOctets(value: string): string {
+  if (!EIGHT_BIT_OCTET.test(value) || NOT_AN_OCTET.test(value)) return value;
+  return decodeUndeclared(latinToBytes(value));
 }
 
 /**

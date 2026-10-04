@@ -586,12 +586,16 @@ Deno.test("list (imap): previews are clean for client-api and byte-identical to 
       () => mcp.dispatchExecutor("email_list", { inbox_id: INBOX_ID, folder: "INBOX", limit: 10 }, harness.API_KEY),
     ));
   const mcpRows = (plain.value!.result as { structuredContent: { messages: Record<string, unknown>[] } }).structuredContent.messages;
-  // Exactly what the shared builder has always produced for these sources, CSS and all.
+  // Exactly what the shared builder produces for these sources, CSS and all.
+  // The source it is handed is the wire octets, one character each: the IMAP
+  // reader no longer goes through TextDecoder("latin1") (imap-8bit-bodies.test.ts),
+  // so the 8bit UTF-8 row is the text itself and no longer "Ã˜degÃ¥rd â€“ â€œheiâ€".
   assertEquals(mcpRows.map((r) => r["preview"]), [
     "Plain and simple.",
-    previewFromBodyPartSource(new TextDecoder("latin1").decode(new TextEncoder().encode("Ødegård – “hei”"))),
+    previewFromBodyPartSource(octets("Ødegård – “hei”")),
     previewFromBodyPartSource(css),
   ]);
+  assertEquals(mcpRows[1]["preview"], "Ødegård – “hei”");
   assert(hasCss(String(mcpRows[2]["preview"])));
   assert(plainPool.servers[0].commands.some((c) => c.includes("BODY.PEEK[1]<0.2048>")), "and the FETCH it sends is the same");
   const strip = (rows: Record<string, unknown>[]) => rows.map(({ preview: _p, is_flagged: _f, ...rest }) => rest);
