@@ -274,7 +274,7 @@ Deno.test("readImapMessage fetches through the map, and only selects on a miss",
   // Two parsers since 2026-10-04 (the read tools join the inline text parts,
   // see read-joined-body.test.ts), both on the bytes this call fetched once.
   assert(
-    /const parsed = joinInlineParts\s*\? parseEmailJoined\(msg\.raw, htmlPartToBodyText, \{ exactOctets: wantsExactOctets\(\) \}\)\s*: parseEmail\(msg\.raw\);/.test(body),
+    /const parsed = joinInlineParts\s*\? parseEmailJoined\(msg\.raw, htmlPartToBodyText\)\s*: parseEmail\(msg\.raw\);/.test(body),
     "parsed from the same bytes",
   );
 });

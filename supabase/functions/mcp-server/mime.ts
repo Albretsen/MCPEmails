@@ -49,10 +49,15 @@ export function parseEmail(raw: string): ParsedEmail {
   parsePart(headers, body, result);
   // After the walk, not before: the walk matches the boundary parameter against
   // the body octet for octet, so it has to see the header as it arrived.
+  decodeRawHeaderValues(headers);
+  return result;
+}
+
+/** Raw 8-bit header values to text, in place (see {@link decodeRawHeaderOctets}). */
+function decodeRawHeaderValues(headers: Map<string, string[]>): void {
   for (const values of headers.values()) {
     for (let i = 0; i < values.length; i++) values[i] = decodeRawHeaderOctets(values[i]);
   }
-  return result;
 }
 
 // ── Internals ────────────────────────────────────────────────────────────────
@@ -292,39 +297,6 @@ export function embeddedMessageBody(
 /** How deep message/rfc822 parts are followed before one is left unread. */
 const MAX_EMBEDDED_MESSAGE_DEPTH = 8;
 
-/** The 0x80-0x9F code points of windows-1252, back to their octets. */
-const CP1252_OCTETS: Map<number, number> = (() => {
-  const bytes = new Uint8Array(0x20);
-  for (let i = 0; i < 0x20; i++) bytes[i] = 0x80 + i;
-  const chars = new TextDecoder("latin1").decode(bytes);
-  const map = new Map<number, number>();
-  for (let i = 0; i < chars.length; i++) map.set(chars.charCodeAt(i), 0x80 + i);
-  return map;
-})();
-
-/** One character per octet, exactly, from a string read through TextDecoder("latin1"). */
-function exactOctetString(raw: string): string {
-  // deno-lint-ignore no-control-regex
-  if (!/[^\x00-\xff]/.test(raw)) return raw;
-  // deno-lint-ignore no-control-regex
-  return raw.replace(/[^\x00-\xff]/g, (ch) => {
-    const octet = CP1252_OCTETS.get(ch.charCodeAt(0));
-    return octet === undefined ? ch : String.fromCharCode(octet);
-  });
-}
-
-export interface ParseEmailJoinedOptions {
-  /**
-   * Restore the exact octets of an 8bit source before decoding. The raw
-   * message arrives through TextDecoder("latin1"), which is windows-1252, and
-   * `latinToBytes` cannot undo that for 0x80-0x9F, so an 8bit UTF-8 body
-   * holding one of those octets decodes wrongly without this. client-api
-   * turns it on (first-party.ts `exactOctets`). The MCP read leaves it off so
-   * a single-part message stays byte-identical to what `parseEmail` returned.
-   */
-  exactOctets?: boolean;
-}
-
 /** What the walk carries: the result, plus the files found inside embedded messages. */
 interface JoinedWalk extends ParsedEmail {
   embeddedAttachments: MimeAttachment[];
@@ -343,12 +315,13 @@ interface JoinedWalk extends ParsedEmail {
 export function parseEmailJoined(
   raw: string,
   htmlToText: (html: string) => string,
-  options: ParseEmailJoinedOptions = {},
 ): ParsedEmail {
-  const { headerBlock, body } = splitHeadersBody(options.exactOctets ? exactOctetString(raw) : raw);
+  const { headerBlock, body } = splitHeadersBody(raw);
   const headers = parseHeaders(headerBlock);
   const out: JoinedWalk = { headers, text: null, html: null, attachments: [], embeddedAttachments: [] };
   const shown = joinedPart(headers, body, out, htmlToText, 0);
+  // After the walk, as in parseEmail: the boundary is matched octet for octet.
+  decodeRawHeaderValues(headers);
   return {
     headers,
     text: shown.text,
@@ -388,7 +361,8 @@ function joinedPart(
       : body;
     const { headerBlock, body: embeddedBody } = splitHeadersBody(embedded);
     const embeddedHeaders = parseHeaders(headerBlock);
-    const header = (name: string) => decodeEncodedWords(getHeader(embeddedHeaders, name) ?? "");
+    const header = (name: string) =>
+      decodeEncodedWords(decodeRawHeaderOctets(getHeader(embeddedHeaders, name) ?? ""));
     const inner = joinedPart(embeddedHeaders, embeddedBody, out, htmlToText, depth + 1);
     return embeddedMessageBody(
       { from: header("from"), date: header("date"), subject: header("subject"), to: header("to") },

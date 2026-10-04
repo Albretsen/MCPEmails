@@ -405,13 +405,14 @@ Deno.test("email_read (imap): attachment_index is stable; files inside an inline
   assert((value.result.structuredContent!.body_text as string).endsWith("Subject: Inner\n\nEmbedded text."));
 });
 
-Deno.test("parser: exactOctets (client-api) repairs an 8bit body; without it a single-part body is what parseEmail returns", () => {
+Deno.test("parser: an 8bit body decodes from the reader's exact octets, the same for every caller (no first-party flag)", () => {
   const text = "Ødegård – “hei”";
-  // What the socket read yields: octets through TextDecoder("latin1"), which is windows-1252.
-  const wire = new TextDecoder("latin1").decode(new TextEncoder().encode(text));
+  // What the socket read yields since the reader became byte-exact: one
+  // character per octet.
+  const wire = String.fromCharCode(...new TextEncoder().encode(text));
   const raw = message(8, ["Content-Type: text/plain; charset=utf-8", "Content-Transfer-Encoding: 8bit"], wire).raw;
-  assertEquals(parseEmailJoined(raw, toText, { exactOctets: true }).text, text);
-  assertEquals(parseEmailJoined(raw, toText).text, parseEmail(raw).text);
+  assertEquals(parseEmailJoined(raw, toText).text, text);
+  assertEquals(parseEmail(raw).text, text);
 });
 
 Deno.test("email_read (imap): truncation and offset paging walk across the join without losing or repeating a character", async () => {

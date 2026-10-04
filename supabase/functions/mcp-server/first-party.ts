@@ -25,19 +25,15 @@
 //                    in Trash (COPYUID), so the client can undo it.
 //   listPreviewBytes how much of part one an IMAP listing fetches for that
 //                    preview (0: none, the rows then carry `preview: ""`).
-//   exactOctets      an IMAP `email_read` restores the exact octets of an 8bit
-//                    message before decoding it (see `parseEmailJoined` in
-//                    mime.ts). This was `joinInlineParts` until 2026-10-04,
-//                    when joining the inline text parts of a multipart/mixed
-//                    became what every read does, MCP included; the octet
-//                    repair is the part that still differs, because turning it
-//                    on for MCP would change a single-part body's bytes.
 //
 // All of it rides one AsyncLocalStorage. NOTHING in the MCP server ever opens
 // this store: `handleRequest` does not call `firstPartyContext.run`, so for
 // every MCP request `getStore()` is undefined and each hook below is inert.
 // (The clean IMAP preview started here as a `cleanPreview` option. It is the
-// behaviour for every caller since 2026-10-04, so the option is gone.)
+// behaviour for every caller since 2026-10-04, so the option is gone. So are
+// `joinInlineParts` and `exactOctets`: every read joins the inline text parts,
+// and the IMAP reader hands every caller exact octets. Body and preview
+// decoding has no first-party branch left.)
 // That is the whole behaviour-neutrality argument, and
 // client-api/tests/mcp-neutral.test.ts pins it on the bytes of a real
 // `tools/call` response.
@@ -80,8 +76,6 @@ export interface FirstPartyContext {
   trashIds?: boolean;
   /** Octets of part one an IMAP listing fetches for the preview; 0 fetches none. */
   listPreviewBytes?: number;
-  /** IMAP `email_read` decodes an 8bit message from its exact octets. */
-  exactOctets?: boolean;
 }
 
 /** Opened by client-api around each executor call; absent for MCP traffic. */
@@ -136,9 +130,4 @@ export function summaryPreviewItem(): string {
   if (bytes === undefined) return " BODY.PEEK[1]<0.2048>";
   if (!Number.isInteger(bytes) || bytes <= 0) return "";
   return ` BODY.PEEK[1]<0.${Math.min(bytes, 8192)}>`;
-}
-
-/** True only inside a client-api read: an 8bit message is decoded from its exact octets. */
-export function wantsExactOctets(): boolean {
-  return firstPartyContext.getStore()?.exactOctets === true;
 }

@@ -24,7 +24,6 @@ import {
   isHumanBulk,
   readExtraFields,
   wantsFlagged,
-  wantsExactOctets,
   wantsReplyRecipients,
   wantsTrashIds,
 } from "./first-party.ts";
@@ -11253,10 +11252,9 @@ async function readImapMessage(
     );
     if (!msg) throw new Error("message_not_found");
 
-    // client-api additionally decodes from the exact octets (first-party.ts
-    // `exactOctets`); for an MCP read that stays off.
+    // One decode path for MCP and client-api: `msg.raw` is exact octets.
     const parsed = joinInlineParts
-      ? parseEmailJoined(msg.raw, htmlPartToBodyText, { exactOctets: wantsExactOctets() })
+      ? parseEmailJoined(msg.raw, htmlPartToBodyText)
       : parseEmail(msg.raw);
     const h = parsed.headers;
 
