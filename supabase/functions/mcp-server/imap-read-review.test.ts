@@ -332,9 +332,10 @@ function raw(headers: string[], body = "x"): string {
 Deno.test("raw 8-bit headers: a value ending in an accented letter survives the header parser's trim (UTF-8 and windows-1252)", () => {
   // REVIEW FIX. `trim()` strips U+00A0 = octet 0xA0, the last octet of "à",
   // "Š" and of "😠": the character was cut in half before it was decoded.
-  for (const subject of ["Voilà", "Déjà", "TOMÁŠ", "angry 😠", "ca ", "中文丠"]) {
+  for (const subject of ["Voilà", "Déjà", "TOMÁŠ", "angry 😠", "ca\u00a0", "中文丠"]) {
     const parsed = parseEmail(raw([`Subject: ${utf8Wire(subject)}`, "Content-Type: text/plain"]));
-    assertEquals(getHeader(parsed.headers, "subject"), subject.replace(/ $/, " "));
+    // The value comes back whole, a trailing U+00A0 ("ca\u00a0") included.
+    assertEquals(getHeader(parsed.headers, "subject"), subject);
     const joined = parseEmailJoined(raw([`Subject: ${utf8Wire(subject)}`, "Content-Type: text/plain"]), toText);
     assertEquals(getHeader(joined.headers, "subject"), subject, "parseEmailJoined decodes headers as parseEmail does");
   }

@@ -439,33 +439,109 @@ function decodeCharsetTolerant(bytes: Uint8Array, charset: string | null, comple
   return stream("windows-1252")?.text ?? "";
 }
 
-/** Elements whose CONTENT is not message text. */
-const NON_TEXT_ELEMENTS = "style|script|head|title|noscript|template|svg|xml";
+/**
+ * `<name` of an element whose CONTENT is not message text, tested AT a `<`
+ * (sticky). `\b` keeps `<styles>` and `<header>` ordinary tags.
+ */
+const NON_TEXT_OPEN = /<(style|script|head|title|noscript|template|svg|xml)\b/iy;
+
+/** `</name   >` for each of them, searched from wherever its opening tag ended. */
+const NON_TEXT_CLOSE: Record<string, RegExp> = Object.fromEntries(
+  ["style", "script", "head", "title", "noscript", "template", "svg", "xml"]
+    .map((name) => [name, new RegExp(`<\\/${name}\\s*>`, "gi")]),
+);
 
 /**
- * Tags that sit INSIDE a line of text. They vanish; every other tag becomes a
- * space, because a tag nobody listed is far more often a cell or a block
- * (`<td>A</td><td>B</td>`) than something in the middle of a word. Without
- * this list `<a href="…">ready</a>.` previews as "ready ." and `<b>M</b>CP`
- * as "M CP".
+ * Tags that sit INSIDE a line of text, tested AT a `<` (sticky). They vanish;
+ * every other tag becomes a space, because a tag nobody listed is far more
+ * often a cell or a block (`<td>A</td><td>B</td>`) than something in the
+ * middle of a word. Without this list `<a href="…">ready</a>.` previews as
+ * "ready ." and `<b>M</b>CP` as "M CP".
  */
-const INLINE_TAG =
-  /<\/?(?:a|abbr|b|big|code|em|font|i|label|mark|s|small|span|strike|strong|sub|sup|tt|u|wbr)\b[^>]*>/gi;
+const INLINE_OPEN =
+  /<\/?(?:a|abbr|b|big|code|em|font|i|label|mark|s|small|span|strike|strong|sub|sup|tt|u|wbr)\b/iy;
 
-/** HTML, possibly cut off anywhere, to the text a reader would see first. */
+/** {@link decodeHtmlEntities}, with `&shy;` (invisible, and not in its table) decoding to nothing. */
+function decodePreviewEntities(value: string): string {
+  if (!value.includes("&")) return value;
+  return value.replace(ENTITY, (match, body: string) => {
+    if (body.charCodeAt(0) === 0x23 /* # */) return numericEntityToText(body) ?? match;
+    const name = body.toLowerCase();
+    return name === "shy" ? "" : NAMED_ENTITIES[name] ?? match;
+  });
+}
+
+/**
+ * HTML, possibly cut off anywhere, to the text a reader would see first.
+ *
+ * ONE pass over the source, left to right, and nothing that was removed is
+ * ever looked at again. That is the whole point: this used to be a chain of
+ * `replace` calls (comments, then `<style>`-like elements, then tags), and a
+ * chain can build markup out of what an earlier link left behind
+ * (`<scr<script>ipt>`: removing the inner tag leaves an outer one). Here every
+ * `<` opens exactly one construct, which is consumed to its end or to the end
+ * of the source, so no `<` from the source reaches the output at all. The only
+ * `<` a preview can hold is one the sender wrote as `&lt;`, decoded once at
+ * the very end, and nothing parses the result again.
+ *
+ *   <!-- ... -->            dropped, closed or not                  -> " "
+ *   <style|script|head|title|noscript|template|svg|xml ...> ... </same>
+ *                           dropped WITH its content, closed or not -> " "
+ *   an inline tag           (INLINE_ELEMENTS)                       -> ""
+ *   any other <...>         closed, or cut by the fetch             -> " "
+ *
+ * It is on the list hot path (25 rows of up to 8 KB each), so it jumps with
+ * `indexOf` and copies whole text runs; see the benchmark in
+ * text-extract.test.ts.
+ */
 export function htmlPreviewText(html: string): string {
-  const text = html
-    // Not an entity `decodeHtmlEntities` knows, and invisible: drop it here,
-    // before the one decode, as `normalizePreview` does for the other providers.
-    .replace(/&shy;/gi, "")
-    .replace(/<!--[\s\S]*?(?:-->|$)/g, " ")
-    // Closed, or running to the end of what was fetched.
-    .replace(new RegExp(`<(${NON_TEXT_ELEMENTS})\\b[\\s\\S]*?(?:<\\/\\1\\s*>|$)`, "gi"), " ")
-    .replace(INLINE_TAG, "")
-    .replace(/<[^>]*>/g, " ")
-    // A tag the fetch cut in half.
-    .replace(/<[^>]*$/, " ");
-  return decodeHtmlEntities(text)
+  let out = "";
+  let i = 0;
+  for (;;) {
+    const lt = html.indexOf("<", i);
+    if (lt === -1) {
+      out += html.slice(i);
+      break;
+    }
+    if (lt > i) out += html.slice(i, lt);
+
+    if (html.charCodeAt(lt + 1) === 0x21 /* ! */ && html.startsWith("--", lt + 2)) {
+      const end = html.indexOf("-->", lt + 4);
+      out += " ";
+      if (end === -1) break;
+      i = end + 3;
+      continue;
+    }
+
+    // Only s, h, t, n and x start a non-text element's name: most tags skip the regex.
+    const first = html.charCodeAt(lt + 1) | 0x20;
+    let element: RegExpExecArray | null = null;
+    if (first === 0x73 || first === 0x68 || first === 0x74 || first === 0x6e || first === 0x78) {
+      NON_TEXT_OPEN.lastIndex = lt;
+      element = NON_TEXT_OPEN.exec(html);
+    }
+    if (element !== null) {
+      // Its content is not text. Closed, or running to the end of what was fetched.
+      const close = NON_TEXT_CLOSE[element[1].toLowerCase()];
+      close.lastIndex = lt + element[0].length;
+      const found = close.exec(html);
+      out += " ";
+      if (found === null) break;
+      i = found.index + found[0].length;
+      continue;
+    }
+
+    const gt = html.indexOf(">", lt + 1);
+    if (gt === -1) {
+      // A tag the fetch cut in half.
+      out += " ";
+      break;
+    }
+    INLINE_OPEN.lastIndex = lt;
+    if (!INLINE_OPEN.test(html)) out += " ";
+    i = gt + 1;
+  }
+  return decodePreviewEntities(out)
     // An entity the fetch cut in half.
     .replace(/&#?[a-zA-Z0-9]{0,31}$/, "");
 }
