@@ -61,8 +61,13 @@
 //                                GMAIL_PROBE_OVER hits the ids are asked for
 //                                first and only the new messages are fetched.
 //            Measured live (2026-10-04, a large mailbox): a Gmail round trip is
-//            110 to 300 ms and SELECT of All Mail about 500 ms, which is why
-//            nothing here is fetched twice.
+//            110 to 300 ms and a SELECT 250 to 650 ms, which is why nothing
+//            here is fetched twice, and why All Mail is searched on a SECOND
+//            pooled connection of the inbox (pool scope "<inbox>:all-mail",
+//            mail/run.ts) that stays selected on All Mail, at the same time as
+//            the anchor's folder is searched on the first. Without it every
+//            call paid two SELECTs (and left the next `read` a third). Gmail
+//            allows 15 connections per account; this is the second.
 //            WHICH ID A MESSAGE GETS. A Gmail message is one message with
 //            labels, and IMAP shows it once per label folder with a different
 //            UID in each. A message that is in the anchor's folder is returned
@@ -643,6 +648,14 @@ function isFatal(error: unknown): boolean {
     (error instanceof Error && error.name === "ImapPoolBusyError");
 }
 
+/**
+ * Runs `work` so that the IMAP connection it opens is the inbox's SECOND
+ * pooled connection (mail/run.ts gives it its own pool scope). Only the Gmail
+ * path uses it, for All Mail. The default runs `work` as it is: same
+ * connection, one step after the other.
+ */
+export type Aside = <T>(work: () => Promise<T>) => Promise<T>;
+
 class TimeBudgetError extends Error {
   constructor() {
     super("thread_time_budget");
@@ -693,6 +706,7 @@ async function imapThread(
   limit: number,
   clock: () => number,
   memory: ThreadMemory,
+  aside: Aside,
 ): Promise<ThreadResult> {
   const anchor = decodeImapId(args.message_id);
   if (!Number.isInteger(anchor.uid) || anchor.uid <= 0) throw notFound();
@@ -824,6 +838,9 @@ async function imapThread(
     const selected = await session.select(imapMailboxForServerFolder(folder));
     const hits = await search(selected, `X-GM-THRID ${gmail!.threadId}`);
     if (hits === null) return;
+    await gmailAllMailHits(selected, folder, hits);
+  };
+  const gmailAllMailHits = async (selected: ImapStatusClient, folder: string, hits: number[]): Promise<void> => {
     searched.push(folder);
     // The anchor's folder is a label: its messages are a subset of All Mail's.
     // The same number of hits is therefore the same messages, and nothing is fetched.
@@ -840,7 +857,7 @@ async function imapThread(
   // 1. The anchor, and its own folder's search, in one lease.
   let anchorRow: ThreadRow | null = null;
   let links: Linked = { own: "", inReplyTo: "", references: [] };
-  await step(async (session) => {
+  const first = step(async (session) => {
     let client: ImapStatusClient;
     try {
       client = await session.select(imapMailboxForServerFolder(anchor.folder));
@@ -931,6 +948,48 @@ async function imapThread(
     }
   });
 
+  // Gmail over IMAP, AT THE SAME TIME, on the inbox's second pooled connection
+  // (`aside`), which stays parked on All Mail between calls: measured live, the
+  // SELECT back and forth between the Inbox and All Mail on one connection was
+  // 600 to 1100 ms of a 1.2 to 1.9 s call. Started only when the row's key
+  // names a Gmail thread; the fetch waits for the anchor's folder, because
+  // that decides what is still missing.
+  const keyThreadId = /^g:([1-9]\d{0,23})$/.exec(args.thread_key ?? "")?.[1] ?? "";
+  let allMailDone = false;
+  let asideFatal: unknown = null;
+  const speculative = keyThreadId && !stopped
+    ? aside(() =>
+      step(async (session) => {
+        const client = await session.client();
+        if (!client.hasCapability("X-GM-EXT-1")) return;
+        let allMail: string | null = null;
+        for (const box of await client.listMailboxes()) {
+          if (box.flags.some((flag) => flag.toLowerCase() === "\\all")) allMail = box.name;
+        }
+        if (allMail === null || sameFolder(allMail, anchor.folder)) return;
+        const selected = await session.select(imapMailboxForServerFolder(allMail));
+        let hits = await search(selected, `X-GM-THRID ${keyThreadId}`);
+        await first.catch(() => {});
+        const state = gmail as GmailState | null;
+        if (!state || gmailAnchorMissing || anchorRow === null) return;
+        // The key named another thread than the anchor's: ask again for the right one.
+        if (state.threadId !== keyThreadId) hits = await search(selected, `X-GM-THRID ${state.threadId}`);
+        if (hits === null) return;
+        await gmailAllMailHits(selected, allMail, hits);
+        allMailDone = true;
+      })
+    ).catch((error) => {
+      if (isFatal(error)) asideFatal = error;
+      // Anything else: the sequential pass below tries All Mail once more.
+    })
+    : null;
+  try {
+    await first;
+  } finally {
+    if (speculative) await speculative;
+  }
+  if (asideFatal && !(asideFatal instanceof ApiError)) throw asideFatal;
+
   // ── Gmail over IMAP: All Mail holds the rest ──
   const gm = gmail as GmailState | null;
   if (gm) {
@@ -950,11 +1009,11 @@ async function imapThread(
     }
     const gmailAnchor = anchorRow as ThreadRow | null;
     if (!gmailAnchor) throw notFound();
-    if (!stopped) {
+    if (!stopped && !allMailDone) {
       if (gm.allMail === null) reason ??= "folder_error";
       else if (!sameFolder(gm.allMail, anchor.folder)) {
         try {
-          await step((session) => gmailAllMail(session, gm.allMail!));
+          await aside(() => step((session) => gmailAllMail(session, gm.allMail!)));
         } catch (error) {
           if (isFatal(error)) throw error;
           reason ??= "folder_error";
@@ -1054,6 +1113,7 @@ export async function mailThread(
   args: ThreadArgs,
   clock: () => number = () => Date.now(),
   memory: ThreadMemory = new ThreadMemory(),
+  aside: Aside = (work) => work(),
 ): Promise<ThreadResult> {
   const inbox = await mcp.resolveInbox(inboxId, apiKey);
   if (!inbox) throw new ApiError(404, "inbox_not_found", "Inbox not found.", { toolCode: "inbox_not_found" });
@@ -1063,7 +1123,7 @@ export async function mailThread(
       ? await gmailThread(mcp, inbox, args, limit)
       : inbox.provider === "outlook"
       ? await outlookThread(mcp, inbox, args, limit, clock())
-      : await imapThread(mcp, inbox, args, limit, clock, memory);
+      : await imapThread(mcp, inbox, args, limit, clock, memory, aside);
   } catch (error) {
     if (error instanceof ApiError) throw error;
     if (isAuthFailure(error)) {

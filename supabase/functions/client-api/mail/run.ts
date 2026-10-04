@@ -597,7 +597,30 @@ export async function runMailOp(
       try {
         const result = await firstPartyContext.run(
           context,
-          () => mailThread(env.mcp, env.apiKey, inboxId!, calls[0].args as unknown as ThreadArgs, env.now, env.threads),
+          () =>
+            mailThread(
+              env.mcp,
+              env.apiKey,
+              inboxId!,
+              calls[0].args as unknown as ThreadArgs,
+              env.now,
+              env.threads,
+              // Gmail over IMAP searches All Mail on a second pooled connection
+              // of this inbox (its own pool scope, so it stays parked there).
+              (work) =>
+                firstPartyContext.run(
+                  firstPartyFor(env, {
+                    scope: `${inboxId!}:all-mail`,
+                    flow: {},
+                    flagged: true,
+                    threads: true,
+                    uidOnly: true,
+                    priority: spec.priority,
+                    timings,
+                  }),
+                  work,
+                ),
+            ),
         );
         return { type: "json", result, timings };
       } finally {

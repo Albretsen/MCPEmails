@@ -752,17 +752,29 @@ Deno.test("thread (Gmail over IMAP): X-GM-THRID decides; one search and one fetc
   assertEquals(body.messages[1].from.email, "owner@example.com");
   assert(body.messages.every((m: ThreadRowLite) => typeof m.preview === "string" && !("gm_thread_id" in m)));
 
-  assertEquals(pool.servers.length, 1, "the list's connection, reused");
+  // Two connections: the list's own (it stays in the Inbox) and the inbox's
+  // second pooled one, which does All Mail at the same time and stays there.
+  assertEquals(pool.servers.length, 2);
   const commands = pool.servers[0].commands;
   const mine = commands.slice(commands.findIndex((c) => /^FETCH 1:3/.test(c)) + 1);
-  assertEquals(mine.filter((c) => /^UID SEARCH/.test(c)), ["UID SEARCH X-GM-THRID 77", "UID SEARCH X-GM-THRID 77"], "exactly one search per folder, by thread id");
-  assert(!mine.some((c) => /SUBJECT|HEADER (Message-ID|References|In-Reply-To)/.test(c) && /SEARCH/.test(c)), "never a subject or header search");
-  const fetches = mine.filter((c) => /FETCH/.test(c));
-  assertEquals(fetches.map((c) => c.split(" (")[0]), ["UID FETCH 13,11", "UID FETCH 105,104,103,102,101"], "exactly one fetch per folder; the anchor rides the first");
+  const aside = pool.servers[1].commands;
+  const shape = (list: string[]) => list.map((c) => c.split(" ")[0] === "UID" ? c.split(" ").slice(0, 2).join(" ") : c.split(" ")[0]);
+  assertEquals(shape(mine), ["NOOP", "UID SEARCH", "UID FETCH", "LIST"], "the anchor's folder: ONE search, ONE fetch, no SELECT");
+  assertEquals(shape(aside), ["LIST", "SELECT", "UID SEARCH", "UID FETCH"], "All Mail: ONE search, ONE fetch");
+  const all = [...mine, ...aside];
+  assertEquals(all.filter((c) => /^UID SEARCH/.test(c)), ["UID SEARCH X-GM-THRID 77", "UID SEARCH X-GM-THRID 77"], "by thread id");
+  assert(!all.some((c) => /SUBJECT|HEADER (Message-ID|References|In-Reply-To)/.test(c) && /SEARCH/.test(c)), "never a subject or header search");
+  const fetches = all.filter((c) => /FETCH/.test(c));
+  assertEquals(fetches.map((c) => c.split(" (")[0]), ["UID FETCH 13,11", "UID FETCH 105,104,103,102,101"], "the anchor rides the first");
   assert(fetches.every((c) => / X-GM-THRID X-GM-MSGID X-GM-LABELS\)$/.test(c)));
-  // Six round trips in all: re-enter the Inbox, search, fetch, LIST, then All Mail: SELECT, search, fetch.
-  assertEquals(mine.map((c) => c.split(" ")[0] === "UID" ? c.split(" ").slice(0, 2).join(" ") : c.split(" ")[0]), ["NOOP", "UID SEARCH", "UID FETCH", "LIST", "SELECT", "UID SEARCH", "UID FETCH"]);
-  assertEquals(mine.filter((c) => /^SELECT/.test(c)).length, 1, "All Mail only: the Inbox is already selected");
+
+  // The next conversation: both connections are where they were left. No SELECT at all.
+  const before = [commands.length, aside.length];
+  const next = await run(() => app.mail("thread", { message_id: "INBOX:14", thread_key: "g:88" }));
+  assertEquals([ids(next.value.body), next.value.body.partial], [["INBOX:14"], false]);
+  assertEquals(pool.servers.length, 2);
+  assertEquals(shape(pool.servers[0].commands.slice(before[0])), ["NOOP", "UID SEARCH", "UID FETCH"]);
+  assertEquals(shape(pool.servers[1].commands.slice(before[1])), ["NOOP", "UID SEARCH"], "as many hits as the Inbox had: nothing to fetch");
   await pool.closeAll();
 });
 
@@ -780,7 +792,13 @@ Deno.test("thread (Gmail over IMAP): no key, a wrong key, an anchor in Sent, a t
     const { value } = await run(() => app.mail("thread", args));
     assertEquals([value.status, value.body.thread_key, ids(value.body)], [200, "g:77", ["INBOX:11", `${ALL_MAIL}:102`, "INBOX:13", `${ALL_MAIL}:104`]], JSON.stringify(args));
     const wrong = "thread_key" in args && args.thread_key === "g:999";
-    assertEquals(searchesOf(pool), [...(wrong ? ["UID SEARCH X-GM-THRID 999"] : []), "UID SEARCH X-GM-THRID 77", "UID SEARCH X-GM-THRID 77"]);
+    // A wrong key costs one wasted search on each connection; no key costs none.
+    assertEquals(
+      searchesOf(pool),
+      wrong
+        ? ["UID SEARCH X-GM-THRID 999", "UID SEARCH X-GM-THRID 77", "UID SEARCH X-GM-THRID 999", "UID SEARCH X-GM-THRID 77"]
+        : ["UID SEARCH X-GM-THRID 77", "UID SEARCH X-GM-THRID 77"],
+    );
     assert(pool.servers[0].commands.includes("UID FETCH 11 (X-GM-THRID X-GM-MSGID)"));
     await pool.closeAll();
   }
@@ -801,7 +819,7 @@ Deno.test("thread (Gmail over IMAP): no key, a wrong key, an anchor in Sent, a t
   const single = await one.run(() => one.app.mail("thread", { message_id: "INBOX:14" }));
   assertEquals([ids(single.value.body), single.value.body.partial, single.value.body.strategy], [["INBOX:14"], false, "imap_gmail_thrid"]);
   // All Mail has as many hits as the Inbox did: the same messages, so nothing is fetched there.
-  assertEquals(one.pool.servers[0].commands.filter((c) => /^UID FETCH/.test(c)).map((c) => c.split(" (")[0]), ["UID FETCH 14", "UID FETCH 14"]);
+  assertEquals(one.pool.servers.flatMap((s) => s.commands).filter((c) => /^UID FETCH/.test(c)).map((c) => c.split(" (")[0]), ["UID FETCH 14", "UID FETCH 14"]);
   await one.pool.closeAll();
 
   // A long thread: All Mail is asked for ids first, and only the new messages are fetched.
@@ -814,7 +832,7 @@ Deno.test("thread (Gmail over IMAP): no key, a wrong key, an anchor in Sent, a t
   const long = await rig({ boxes: longBoxes, advertised: GM_CAPS });
   const longThread = await long.run(() => long.app.mail("thread", { message_id: "INBOX:13", thread_key: "g:77" }));
   assertEquals(longThread.value.body.messages.length, 12, "ten in the Inbox, the sent one, the archived one");
-  const longFetches = long.pool.servers[0].commands.filter((c) => /^UID FETCH/.test(c));
+  const longFetches = long.pool.servers.flatMap((s) => s.commands).filter((c) => /^UID FETCH/.test(c));
   assertEquals(longFetches.length, 3);
   assert(/\(X-GM-THRID X-GM-MSGID\)$/.test(longFetches[1]), "ids only");
   // What the Inbox did not have: the sent one, the archived one, and the draft (fetched, then dropped).
