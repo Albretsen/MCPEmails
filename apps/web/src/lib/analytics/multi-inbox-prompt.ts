@@ -4,11 +4,14 @@ import { recordProductFunnelEvent } from '@/lib/analytics/product-funnel';
 import { planCategory } from '@/lib/analytics/billing-funnel';
 
 /**
- * The Overview guide's "connect your other work mailboxes" prompt, as funnel
- * rows. Shown to business-domain workspaces only (see GettingStartedGuide).
+ * The dashboard's "add your other work mailboxes" invitation, as funnel rows.
+ * Shown to business-domain workspaces only (see MultiInboxInvite in
+ * components/dashboard/Pages.jsx).
  *
- * TWO ROWS AT MOST PER WORKSPACE: one `started` (the prompt was shown) and one
- * `success` (it was clicked). The prompt sits on a page people reload, so
+ * TWO ROWS AT MOST PER WORKSPACE: one `started` (the invitation was actually
+ * in the viewport; the browser waits for an IntersectionObserver before it
+ * reports) and one `success` (it was clicked). Which of the two placements was
+ * clicked is on the connect modal's own rows, in `entry_point`. The prompt sits on a page people reload, so
  * counting renders would measure page views, not exposure; the question this
  * answers is "of the workspaces that saw it, how many clicked, and how many of
  * those went on to connect a second mailbox or buy", which wants workspaces.

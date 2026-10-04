@@ -99,6 +99,8 @@
     "multiInboxOptional": "Facultatif",
     "multiInboxDesc": "Connectez info@, ventes@, factures@ et les autres : votre agent gère toutes les boîtes de l'entreprise depuis une seule conversation, et répond depuis la bonne adresse.",
     "multiInboxDescUpgrade": "Connectez info@, ventes@, factures@ et les autres : votre agent gère toutes les boîtes de l'entreprise depuis une seule conversation, et répond depuis la bonne adresse. L'offre gratuite couvre une boîte ; Pro couvre toutes les boîtes de votre entreprise.",
+    "multiInboxCompact": "Vous gérez aussi info@, ventes@ ou factures@ ? Connectez-les : votre agent gère toutes les boîtes de l'entreprise depuis une seule conversation.",
+    "multiInboxCompactUpgrade": "Vous gérez aussi info@, ventes@ ou factures@ ? Votre agent peut gérer toutes les boîtes de l'entreprise depuis une seule conversation. Une deuxième boîte nécessite une offre payante.",
     "multiInboxCta": "Ajouter une boîte"
   },
   "overview": {

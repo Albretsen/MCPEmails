@@ -5,6 +5,7 @@ import {
   recordProductFunnelEvent,
   type BillingPlanCategory,
   type BillingTargetCategory,
+  type ConnectEntryPoint,
   type PricingSurfaceCategory,
   type ProductFunnelEvent,
 } from '@/lib/analytics/product-funnel';
@@ -203,8 +204,15 @@ export async function recordPortalOpened(
  * exactly the repeated intent that distinguishes a blocked power user from
  * someone who wandered past the panel once. The per-modal-open guard on the
  * client is what stops a render loop from inflating it.
+ *
+ * `entryPoint` is which control opened the modal, already narrowed to the
+ * closed list by the route (lib/analytics/connect-entry-point.mjs). It is the
+ * one thing on the row that the browser supplies.
  */
-export async function recordInboxPaywallReached(workspaceId: string | null): Promise<void> {
+export async function recordInboxPaywallReached(
+  workspaceId: string | null,
+  entryPoint: ConnectEntryPoint | null = null,
+): Promise<void> {
   if (!workspaceId) return;
   const db = createServiceRoleClient();
   // Read the plan server-side rather than trusting the browser with it: the
@@ -217,6 +225,7 @@ export async function recordInboxPaywallReached(workspaceId: string | null): Pro
     outcome: 'started',
     category: planCategory(data?.plan),
     connectionType: 'first_connect',
+    entryPoint,
   });
 }
 

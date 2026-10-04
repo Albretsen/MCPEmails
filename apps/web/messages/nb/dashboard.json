@@ -99,6 +99,8 @@
     "multiInboxOptional": "Valgfritt",
     "multiInboxDesc": "Koble til post@, salg@, faktura@ og resten, så jobber agenten med alle firmaets postkasser fra én samtale og svarer fra riktig adresse.",
     "multiInboxDescUpgrade": "Koble til post@, salg@, faktura@ og resten, så jobber agenten med alle firmaets postkasser fra én samtale og svarer fra riktig adresse. Gratis dekker én postkasse; Pro dekker alle postkassene bedriften din bruker.",
+    "multiInboxCompact": "Har du også post@, salg@ eller faktura@? Koble dem til, så jobber agenten med alle firmaets postkasser fra én samtale.",
+    "multiInboxCompactUpgrade": "Har du også post@, salg@ eller faktura@? Agenten kan jobbe med alle firmaets postkasser fra én samtale. Postkasse nummer to krever en betalt plan.",
     "multiInboxCta": "Legg til en postkasse"
   },
   "overview": {

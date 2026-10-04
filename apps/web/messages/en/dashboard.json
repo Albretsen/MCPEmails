@@ -99,6 +99,8 @@
     "multiInboxOptional": "Optional",
     "multiInboxDesc": "Connect info@, sales@, invoices@ and the rest, and your agent works every company mailbox from one conversation, replying from the right address.",
     "multiInboxDescUpgrade": "Connect info@, sales@, invoices@ and the rest, and your agent works every company mailbox from one conversation, replying from the right address. Free covers one mailbox; Pro covers every mailbox your business runs.",
+    "multiInboxCompact": "Running info@, sales@ or invoices@ too? Connect them and your agent works every company mailbox from one conversation.",
+    "multiInboxCompactUpgrade": "Running info@, sales@ or invoices@ too? Your agent can work every company mailbox from one conversation. A second mailbox needs a paid plan.",
     "multiInboxCta": "Add a mailbox"
   },
   "overview": {

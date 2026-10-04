@@ -99,6 +99,8 @@
     "multiInboxOptional": "Opcional",
     "multiInboxDesc": "Conecta info@, ventas@, facturas@ y los demás, y tu agente trabaja con todos los buzones de la empresa desde una sola conversación, respondiendo desde la dirección correcta.",
     "multiInboxDescUpgrade": "Conecta info@, ventas@, facturas@ y los demás, y tu agente trabaja con todos los buzones de la empresa desde una sola conversación, respondiendo desde la dirección correcta. El plan gratuito cubre un buzón; Pro cubre todos los buzones de tu empresa.",
+    "multiInboxCompact": "¿También gestionas info@, ventas@ o facturas@? Conéctalos y tu agente trabaja con todos los buzones de la empresa desde una sola conversación.",
+    "multiInboxCompactUpgrade": "¿También gestionas info@, ventas@ o facturas@? Tu agente puede trabajar con todos los buzones de la empresa desde una sola conversación. Un segundo buzón requiere un plan de pago.",
     "multiInboxCta": "Añadir un buzón"
   },
   "overview": {

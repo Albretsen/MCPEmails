@@ -7,7 +7,8 @@ import { parseMultiInboxPromptAction, recordMultiInboxPrompt } from '@/lib/analy
 /**
  * POST /api/analytics/multi-inbox-prompt   body: {"action": "shown" | "clicked"}
  *
- * Beacon for the Overview guide's second-work-mailbox prompt. Same contract as
+ * Beacon for the dashboard's second-work-mailbox invitation (`shown` means it
+ * was in the viewport, not merely rendered). Same contract as
  * /api/analytics/paywall: authenticated only, the workspace and plan resolved
  * on the server, nothing the browser sends is stored except which of two
  * closed-list actions happened, and always 204 so a beacon can never surface
