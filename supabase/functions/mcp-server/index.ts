@@ -32004,7 +32004,13 @@ async function handleMeteredRequest(req: Request): Promise<Response> {
 // and builds a fresh NextResponse, so it is a second such layer, outside this
 // runtime entirely. Byte-transparent today. No Deno test can be the last word
 // on what a browser client receives.)
-if (Deno.env.get("MCP_SERVER_NO_LISTEN") !== "1") {
+// The second condition is for `client-api`, which imports this module inside
+// its own isolate and marks that isolate on globalThis (the edge runtime
+// refuses Deno.env.set). Nothing in this function ever sets it.
+if (
+  Deno.env.get("MCP_SERVER_NO_LISTEN") !== "1" &&
+  (globalThis as Record<string, unknown>).MCP_SERVER_NO_LISTEN !== "1"
+) {
   Deno.serve(handleRequest);
 }
 

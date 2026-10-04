@@ -100,10 +100,34 @@ export class ListenGuardError extends Error {
 const NO_LISTEN = "MCP_SERVER_NO_LISTEN";
 
 /**
+ * Where the no-listen marker lives. Supabase's edge runtime refuses
+ * `Deno.env.set` (NotSupported), and the variable must not be a project secret
+ * because secrets are shared with the real mcp-server function, which would
+ * then stop listening. So the marker is a property on this isolate's
+ * `globalThis`, which mcp-server/index.ts checks next to the env var. An env
+ * var set by a test runner still counts on read.
+ */
+const isolateFlags = {
+  get(name: string): string | undefined {
+    const flag = (globalThis as Record<string, unknown>)[name];
+    if (flag === "1") return "1";
+    try {
+      return Deno.env.get(name);
+    } catch {
+      return undefined;
+    }
+  },
+  set(name: string, value: string): void {
+    (globalThis as Record<string, unknown>)[name] = value;
+  },
+};
+
+/**
  * Import the MCP server module with its HTTP listener guaranteed off.
  *
  * mcp-server/index.ts ends with
- *     if (Deno.env.get("MCP_SERVER_NO_LISTEN") !== "1") Deno.serve(handleRequest);
+ *     if (Deno.env.get("MCP_SERVER_NO_LISTEN") !== "1" && globalThis.MCP_SERVER_NO_LISTEN !== "1")
+ *       Deno.serve(handleRequest);
  * evaluated once, at module load. If that ran here, this isolate would serve
  * the MCP protocol (API-key auth, the action cap, `activity_log`) on
  * client-api's URL. So: set the variable, read it back, and only then import.
@@ -111,7 +135,7 @@ const NO_LISTEN = "MCP_SERVER_NO_LISTEN";
  * the caller answers every request with a 500 and never touches the module.
  */
 export async function loadMcpSeam(
-  env: { get(name: string): string | undefined; set(name: string, value: string): void } = Deno.env,
+  env: { get(name: string): string | undefined; set(name: string, value: string): void } = isolateFlags,
   importer: () => Promise<unknown> = () => import("../mcp-server/index.ts"),
 ): Promise<McpSeam> {
   try {
