@@ -657,7 +657,13 @@ Deno.test("no mail content in the log or the store: not a sender, a subject, an 
     assert(!logged.includes(secret), `log contains "${secret}"`);
     assert(!stored.includes(secret), `store contains "${secret}"`);
   }
-  assert(!logged.includes("fcm.googleapis.com"), "push endpoints are not logged");
+  // No logged value is a push endpoint, whole or in part: none parses as a URL on a push service.
+  const endpoints = r.store.subs.map((s) => new URL(s.endpoint));
+  assert(endpoints.length > 0);
+  for (const endpoint of endpoints) {
+    assert(!logged.includes(endpoint.href) && !logged.includes(endpoint.pathname), "push endpoints are not logged");
+    assert(!logged.toLowerCase().includes(endpoint.hostname), "nor is the host of one");
+  }
   // What IS logged: ids, a provider word, outcome words, counts, timings.
   const allowed = new Set([
     "inbox_id", "workspace_id", "provider", "outcome", "error_code", "recipients", "pushes_sent", "pushes_failed",

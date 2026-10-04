@@ -242,7 +242,7 @@ Deno.test("list (imap): what the References item costs on the wire (printed)", a
     const before = bytes;
     const trips = server.roundTrips;
     const started = performance.now();
-    const rows = await firstPartyContext.run({ threadHeaders, cleanPreview: true }, () => client.fetchSummariesBySequence(1, 50));
+    const rows = await firstPartyContext.run({ threadHeaders }, () => client.fetchSummariesBySequence(1, 50));
     return { ms: performance.now() - started, bytes: bytes - before, roundTrips: server.roundTrips - trips, rows: rows!.length };
   };
   await measure(true);
@@ -421,14 +421,16 @@ Deno.test("thread (gmail): threads.get metadata, one request with the key, draft
   ]);
   assertEquals([body.thread_key, body.strategy, body.partial, body.folders], ["g:T9", "gmail_thread", false, ["*"]]);
   assertEquals([body.messages[1].in_reply_to, body.messages[1].references, body.messages[1].message_id_header, body.messages[1].thread_key], ["g1@mail.example", ["g1@mail.example"], "g2@mail.example", "g:T9"]);
-  const gmailCalls = urls.filter((u) => u.includes("gmail.googleapis.com"));
+  const toGmail = (u: string) => new URL(u).hostname === "gmail.googleapis.com";
+  const gmailCalls = urls.filter(toGmail).map((u) => new URL(u));
   assertEquals(gmailCalls.length, 1, "one request when the key is given");
-  assert(gmailCalls[0].includes("format=metadata") && gmailCalls[0].includes("metadataHeaders=References"));
+  assertEquals(gmailCalls[0].pathname, "/gmail/v1/users/me/threads/T9");
+  assert(gmailCalls[0].searchParams.get("format") === "metadata" && gmailCalls[0].searchParams.getAll("metadataHeaders").includes("References"));
 
   urls.length = 0;
   const unkeyed = await harness.runTool(inbox, handler, () => app.mail("thread", { message_id: "g3" }));
   assertEquals(unkeyed.value.body.messages.length, 3);
-  assertEquals(urls.filter((u) => u.includes("gmail.googleapis.com")).length, 2, "the anchor lookup, then the thread");
+  assertEquals(urls.filter(toGmail).map((u) => new URL(u).pathname), ["/gmail/v1/users/me/messages/g3", "/gmail/v1/users/me/threads/T9"], "the anchor lookup, then the thread");
 });
 
 Deno.test("list (gmail): the thread headers ride the metadata get client-api already makes; MCP asks for the four it always did", async () => {

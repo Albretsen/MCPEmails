@@ -143,10 +143,10 @@ Deno.test("gmail: probe reads the historyId and label counters; history names th
   assertEquals(parseGmailFingerprint(value.probe.cursor.fingerprint), "9001");
   assertEquals([value.probe.cursor.total, value.probe.cursor.unread], [1, 1]);
   assertEquals(value.added, ["g2"]);
-  const historyCall = run.calls.find((c) => c.url.includes("/history"))!;
+  const historyCall = run.calls.find((c) => new URL(c.url).pathname.endsWith("/history"))!;
   const query = new URL(historyCall.url).searchParams;
   assertEquals([query.get("startHistoryId"), query.get("historyTypes"), query.get("labelId")], ["9001", "messageAdded", "INBOX"]);
-  assertEquals(run.calls.filter((c) => c.url.includes("googleapis.com")).length, 3, "profile, the inbox label, history");
+  assertEquals(run.calls.filter((c) => new URL(c.url).hostname === "gmail.googleapis.com").length, 3, "profile, the inbox label, history");
   await mail.close();
 });
 
@@ -160,7 +160,7 @@ Deno.test("gmail: an expired history id is null (start again); a non-numeric one
     async () => [await mail.gmailAdded(watch, "12"), await mail.gmailAdded(watch, "12&labelId=SENT")],
   );
   assertEquals(value, [null, null]);
-  assertEquals(run.calls.filter((c) => c.url.includes("/history")).length, 1);
+  assertEquals(run.calls.filter((c) => new URL(c.url).pathname.endsWith("/history")).length, 1);
 });
 
 Deno.test("one dispatcher pass over the real tool layer: first look is silent, then one push with sender and subject", async () => {
