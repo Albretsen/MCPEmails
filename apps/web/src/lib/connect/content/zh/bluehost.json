@@ -13,12 +13,12 @@
   },
   "meta": {
     "title": "Bluehost MCP 服务器：将公司邮箱连接到 Claude",
-    "description": "适用于 Claude 和 ChatGPT 的 Bluehost MCP 服务器。通过 IMAP（993 端口）连接你域名下的多个公司邮箱（info@、sales@）。"
+    "description": "面向 Bluehost 邮箱的 MCP 服务器。通过 IMAP（993 端口）将你域名下的多个公司邮箱（info@、sales@）连接到 Claude 和 ChatGPT。"
   },
   "hero": {
     "eyebrow": "Bluehost + AI",
-    "titleLine1": "适用于 Claude 和 ChatGPT 的 Bluehost MCP 服务器，",
-    "titleLine2": "连接公司的每一个邮箱",
+    "titleLine1": "面向 Bluehost 邮箱的 MCP 服务器：",
+    "titleLine2": "在 Claude 和 ChatGPT 中使用公司的每一个邮箱",
     "lead": "在 Bluehost 用自己的域名开设了 info@、sales@、support@ 和 invoices@？把每个邮箱都连接到同一个工作区，你的 AI 代理就能处理所有邮箱。无论是 cPanel Email 账户还是 Professional Email 邮箱，都可以通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
     "answer": "Claude 无法自行访问 Bluehost 邮箱。mcpemails 是一个托管 MCP 服务器，通过端口 993 的标准 IMAP 与之连接，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理这些邮件。首先要弄清你用的是 Bluehost 三种邮箱产品中的哪一种，因为 cPanel Email 在由你自己域名构成的服务器上响应，而 Professional Email 在 Titan 的服务器上响应，两套设置不能互换。无论哪种，你都使用邮箱本身设置的密码进行认证，绝不是你的 Bluehost 门户密码。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 连接你管理的所有邮箱。",
     "meta0": "第一个邮箱免费，其余按套餐连接",

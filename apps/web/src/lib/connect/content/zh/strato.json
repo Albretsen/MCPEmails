@@ -12,12 +12,12 @@
   },
   "meta": {
     "title": "STRATO MCP 服务器：将公司邮箱连接到 Claude",
-    "description": "适用于 Claude 和 ChatGPT 的 STRATO MCP 服务器。通过 IMAP（imap.strato.de:993）连接你域名下的多个公司邮箱（info@、sales@）。"
+    "description": "面向 STRATO 邮箱的 MCP 服务器。通过 IMAP（imap.strato.de:993）将你域名下的多个公司邮箱（info@、sales@）连接到 Claude 和 ChatGPT。"
   },
   "hero": {
     "eyebrow": "STRATO 邮箱 + AI",
-    "titleLine1": "适用于 Claude 和 ChatGPT 的 STRATO MCP 服务器，",
-    "titleLine2": "连接公司的每一个邮箱",
+    "titleLine1": "面向 STRATO 邮箱的 MCP 服务器：",
+    "titleLine2": "在 Claude 和 ChatGPT 中使用公司的每一个邮箱",
     "lead": "在 STRATO 用自己的域名开设了 info@、sales@、support@ 和 invoices@？把每个邮箱都连接到同一个工作区，你的 AI 代理就能处理所有邮箱。用邮箱密码（而不是你的 STRATO 客户登录密码）通过 IMAP 读取、搜索、发送、回复、定时与整理邮件。",
     "answer": "Claude 无法自行连接 STRATO 邮箱。mcpemails 是一个托管 MCP 服务器，通过 IMAP 连接 imap.strato.de 的 993 端口，用你的完整邮箱地址和为该邮箱设置的密码（而不是 STRATO 客户登录密码）认证，让 Claude、Cursor 或任意 MCP 客户端都能读取、搜索、发送并整理邮件。STRATO 只接受在加密连接上进行的普通密码认证，旧的质询响应方式已被关闭。公司的每个地址（如 info@ 或 sales@）都作为独立邮箱连接：一个邮箱免费，Personal 连接三个，Pro 连接你管理的所有邮箱。",
     "meta0": "第一个邮箱免费，其余按套餐连接",

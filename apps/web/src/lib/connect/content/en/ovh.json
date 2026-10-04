@@ -14,13 +14,13 @@
   },
   "meta": {
     "title": "OVH MCP Server: Connect OVH Mail to Claude",
-    "description": "OVH MCP server for Claude and ChatGPT. Connect several company mailboxes on your domain (info@, sales@) over IMAP at ssl0.ovh.net:993."
+    "description": "MCP server for OVHcloud MX Plan mail. Connect several company mailboxes on your domain (info@, sales@) to Claude and ChatGPT over IMAP at ssl0.ovh.net:993."
   },
   "hero": {
     "eyebrow": "OVH + AI",
-    "titleLine1": "The OVH MCP server for Claude and ChatGPT,",
-    "titleLine2": "for every mailbox your company runs",
-    "lead": "Running info@, sales@, support@ and invoices@ on your own domain at OVH? Connect each mailbox to one workspace and your AI agent works across all of them. Read, search, send, reply, schedule and organize mail with IMAP and your mailbox password, and use the same inbox in every MCP client, not just one.",
+    "titleLine1": "MCP server for OVH mail:",
+    "titleLine2": "every company mailbox, in Claude and ChatGPT",
+    "lead": "Running info@, sales@, support@ and invoices@ on your own domain at OVH? Connect each mailbox to one workspace and your AI agent works across all of them. Read, search, send, reply, schedule and organize mail with IMAP and your mailbox password, and use the same mailboxes in every MCP client, not just one.",
     "meta0": "First mailbox free, plans for the rest",
     "meta1": "Your mailbox password, no OAuth setup",
     "meta2": "Email fetched live, never stored",

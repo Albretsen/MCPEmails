@@ -12,12 +12,12 @@
   },
   "meta": {
     "title": "Hetzner MCP-server: koble e-posten til Claude",
-    "description": "Hetzner MCP-server for Claude og ChatGPT. Koble til flere bedriftspostkasser på domenet ditt (post@, salg@) over IMAP på mail.your-server.de:993."
+    "description": "MCP-server for Hetzner Web Hosting-e-post. Koble flere bedriftspostkasser (post@, salg@) til Claude og ChatGPT over IMAP på mail.your-server.de:993."
   },
   "hero": {
     "eyebrow": "Hetzner-e-post + AI",
-    "titleLine1": "Hetzner MCP-serveren for Claude og ChatGPT,",
-    "titleLine2": "for alle postkassene firmaet ditt har",
+    "titleLine1": "MCP-server for Hetzner-e-post:",
+    "titleLine2": "alle firmaets postkasser, i Claude og ChatGPT",
     "lead": "Har du post@, salg@, support@ og faktura@ på eget domene hos Hetzner? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post over IMAP på mail.your-server.de, med postkassepassordet du satte i konsoleH.",
     "answer": "Claude kan ikke nå en Hetzner-postkasse på egen hånd. mcpemails er en driftet MCP-server som kobler til e-post på Hetzner Web Hosting over IMAP på mail.your-server.de, port 993, og autentiserer med hele e-postadressen din og postkassepassordet du satte da du opprettet kontoen i konsoleH, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Vertsnavnet er bokstavelig talt mail.your-server.de for alle kunder, ikke en variant av ditt eget domene. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre og Pro alle postkassene du har.",
     "meta0": "Første postkasse gratis, planer for resten",

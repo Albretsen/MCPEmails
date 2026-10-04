@@ -13,12 +13,12 @@
   },
   "meta": {
     "title": "Infomaniak MCP-server: koble e-posten til Claude",
-    "description": "Infomaniak MCP-server for Claude og ChatGPT. Koble til flere bedriftspostkasser på domenet ditt (post@, salg@) over IMAP på mail.infomaniak.com:993."
+    "description": "MCP-server for Infomaniak-e-post. Koble flere bedriftspostkasser på domenet ditt (post@, salg@) til Claude og ChatGPT over IMAP på mail.infomaniak.com:993."
   },
   "hero": {
     "eyebrow": "Infomaniak Mail + AI",
-    "titleLine1": "Infomaniak MCP-serveren for Claude og ChatGPT,",
-    "titleLine2": "for alle postkassene firmaet ditt har",
+    "titleLine1": "MCP-server for Infomaniak-e-post:",
+    "titleLine2": "alle firmaets postkasser, i Claude og ChatGPT",
     "lead": "Har du post@, salg@, support@ og faktura@ på eget domene hos Infomaniak? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post over IMAP med et enhetspassord generert for den adressen.",
     "answer": "Claude kan ikke nå Infomaniak Mail på egen hånd. mcpemails er en driftet MCP-server som kobler til over IMAP på mail.infomaniak.com på port 993, og autentiserer med et enhetspassord generert for den e-postadressen, ikke med passordet til Infomaniak-kontoen din, slik at Claude, Cursor eller enhver MCP-klient kan lese, søke i, sende og organisere e-posten. Infomaniak godtar ikke kontopassordet over IMAP i det hele tatt, og de separate applikasjonspassordene deres er noe annet som ikke fungerer her. Hver firmaadresse, som post@ eller salg@, kobles til som sin egen postkasse: én postkasse er gratis, Personal kobler til tre og Pro alle postkassene du har.",
     "meta0": "Første postkasse gratis, planer for resten",

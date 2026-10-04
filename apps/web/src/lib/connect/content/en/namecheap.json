@@ -13,13 +13,13 @@
   },
   "meta": {
     "title": "Namecheap MCP Server: Private Email to Claude",
-    "description": "Namecheap MCP server for Claude and ChatGPT. Connect several company mailboxes on your domain (info@, sales@) over IMAP at mail.privateemail.com:993."
+    "description": "MCP server for Namecheap mail. Connect several company mailboxes (info@, sales@) to Claude and ChatGPT over IMAP at mail.privateemail.com:993."
   },
   "hero": {
     "eyebrow": "Namecheap Private Email + AI",
-    "titleLine1": "The Namecheap MCP server for Claude and ChatGPT,",
-    "titleLine2": "for every mailbox your company runs",
-    "lead": "Running info@, sales@, support@ and invoices@ on your own domain at Namecheap? Connect each mailbox to one workspace and your AI agent works across all of them. Read, search, send, reply, schedule and organize mail with IMAP and your mailbox password, and use the same inbox in every MCP client, not just one.",
+    "titleLine1": "MCP server for Namecheap mail:",
+    "titleLine2": "every company mailbox, in Claude and ChatGPT",
+    "lead": "Running info@, sales@, support@ and invoices@ on your own domain at Namecheap? Connect each mailbox to one workspace and your AI agent works across all of them. Read, search, send, reply, schedule and organize mail with IMAP and your mailbox password, and use the same mailboxes in every MCP client, not just one.",
     "meta0": "First mailbox free, plans for the rest",
     "meta1": "Your mailbox password, no OAuth setup",
     "meta2": "Email fetched live, never stored",

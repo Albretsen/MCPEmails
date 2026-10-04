@@ -12,13 +12,13 @@
   },
   "meta": {
     "title": "cPanel MCP-server: koble e-posten til Claude",
-    "description": "cPanel MCP-server for Claude og ChatGPT. Koble til flere bedriftspostkasser på domenet ditt (post@, salg@) over IMAP, hos enhver cPanel-vert."
+    "description": "MCP-server for cPanel-e-post. Koble flere bedriftspostkasser på domenet ditt (post@, salg@) til Claude og ChatGPT over IMAP, hos enhver cPanel-vert."
   },
   "hero": {
     "eyebrow": "cPanel + AI",
-    "titleLine1": "cPanel MCP-serveren for Claude og ChatGPT,",
-    "titleLine2": "for alle postkassene firmaet ditt har",
-    "lead": "Har du post@, salg@, support@ og faktura@ på eget domene hos en cPanel-vert? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk den samme innboksen i alle MCP-klienter, ikke bare én.",
+    "titleLine1": "MCP-server for cPanel-e-post:",
+    "titleLine2": "alle firmaets postkasser, i Claude og ChatGPT",
+    "lead": "Har du post@, salg@, support@ og faktura@ på eget domene hos en cPanel-vert? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk de samme postkassene i alle MCP-klienter, ikke bare én.",
     "meta0": "Første postkasse gratis, planer for resten",
     "meta1": "Postkassepassordet ditt, uten OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",

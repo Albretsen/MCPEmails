@@ -14,13 +14,13 @@
   },
   "meta": {
     "title": "OVH MCP-server: koble e-posten til Claude",
-    "description": "OVH MCP-server for Claude og ChatGPT. Koble til flere bedriftspostkasser på domenet ditt (post@, salg@) over IMAP på ssl0.ovh.net:993."
+    "description": "MCP-server for OVHcloud MX Plan-e-post. Koble flere bedriftspostkasser på domenet ditt (post@, salg@) til Claude og ChatGPT over IMAP på ssl0.ovh.net:993."
   },
   "hero": {
     "eyebrow": "OVH + AI",
-    "titleLine1": "OVH MCP-serveren for Claude og ChatGPT,",
-    "titleLine2": "for alle postkassene firmaet ditt har",
-    "lead": "Har du post@, salg@, support@ og faktura@ på eget domene hos OVH? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk samme innboks i alle MCP-klienter, ikke bare én.",
+    "titleLine1": "MCP-server for OVH-e-post:",
+    "titleLine2": "alle firmaets postkasser, i Claude og ChatGPT",
+    "lead": "Har du post@, salg@, support@ og faktura@ på eget domene hos OVH? Koble hver postkasse til ett arbeidsområde, så jobber AI-agenten din i alle sammen. Les, søk, send, svar, planlegg og organiser e-post med IMAP og postkassepassordet ditt, og bruk de samme postkassene i alle MCP-klienter, ikke bare én.",
     "meta0": "Første postkasse gratis, planer for resten",
     "meta1": "Postkassepassordet ditt, ingen OAuth-oppsett",
     "meta2": "E-post hentes direkte, lagres aldri",

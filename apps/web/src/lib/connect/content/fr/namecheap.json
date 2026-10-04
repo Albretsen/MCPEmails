@@ -13,13 +13,13 @@
   },
   "meta": {
     "title": "Serveur MCP Namecheap pour Claude et ChatGPT",
-    "description": "Serveur MCP Namecheap pour Claude et ChatGPT. Connectez plusieurs boîtes de votre entreprise (info@, ventes@) en IMAP sur mail.privateemail.com:993."
+    "description": "Serveur MCP pour la messagerie Namecheap. Connectez plusieurs boîtes de votre entreprise à Claude et ChatGPT en IMAP sur mail.privateemail.com:993."
   },
   "hero": {
     "eyebrow": "Namecheap Private Email + IA",
-    "titleLine1": "Le serveur MCP Namecheap pour Claude et ChatGPT,",
-    "titleLine2": "pour toutes les boîtes de votre entreprise",
-    "lead": "Vous gérez info@, ventes@, support@ et factures@ sur votre propre domaine chez Namecheap ? Connectez chaque boîte au même espace de travail et votre agent IA travaille dans toutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec le mot de passe de votre boîte, et utilisez la même boîte dans tous les clients MCP, pas un seul.",
+    "titleLine1": "Serveur MCP pour la messagerie Namecheap :",
+    "titleLine2": "toutes les boîtes de votre entreprise, dans Claude et ChatGPT",
+    "lead": "Vous gérez info@, ventes@, support@ et factures@ sur votre propre domaine chez Namecheap ? Connectez chaque boîte au même espace de travail et votre agent IA travaille dans toutes. Lisez, recherchez, envoyez, répondez, planifiez et organisez le courrier en IMAP avec le mot de passe de votre boîte, et utilisez les mêmes boîtes dans tous les clients MCP, pas un seul.",
     "meta0": "Première boîte gratuite, offres pour les autres",
     "meta1": "Le mot de passe de votre boîte, pas de configuration OAuth",
     "meta2": "E-mails récupérés en direct, jamais stockés",
