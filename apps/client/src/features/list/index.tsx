@@ -28,7 +28,7 @@ import {
 } from "../../data";
 import { DASHBOARD_URL } from "../../config";
 import { pluralize } from "../../lib/format";
-import { useDelayedFlag } from "../../lib/hooks";
+import { useDebouncedValue, useDelayedFlag } from "../../lib/hooks";
 import { useAssistantStore } from "../../state/assistant-store";
 import { selectHasMulti, setVisibleKeys, useSelectionStore } from "../../state/selection-store";
 import { Button, EmptyState, Kbd, Skeleton } from "../../ui";
@@ -50,6 +50,9 @@ export const ROW_HEIGHT_TOUCH = 84;
 const OVERSCAN = 8;
 /** A skeleton is shown only when nothing is cached and the answer is slow. */
 const SKELETON_DELAY_MS = 300;
+/** Quiet time after the last keystroke before a search is sent. */
+const SEARCH_DEBOUNCE_MS = 300;
+const isBlank = (q: string) => q.trim() === "";
 
 /** Scroll offset per (scope, folder, query), restored when you come back. */
 const scrollOffsets = new Map<string, number>();
@@ -64,8 +67,10 @@ export function ListPane() {
   const selectedKey = useSelectionStore((x) => x.selectedKey);
   const multi = useSelectionStore(selectHasMulti);
   const mayWrite = useCanWrite();
-  // Search as you type: the field stays instant, the list follows when it can.
-  const deferredQuery = useDeferredValue(query);
+  // Search as you type: the field stays instant; the list (and the server:
+  // one search per mailbox, which cannot be cancelled there) follows once the
+  // typing pauses. Clearing the field restores the folder at once.
+  const deferredQuery = useDeferredValue(useDebouncedValue(query, SEARCH_DEBOUNCE_MS, isBlank));
 
   const { data: inboxes } = useInboxes();
   const { folders } = useFolders(scope);

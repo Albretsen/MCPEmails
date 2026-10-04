@@ -586,7 +586,7 @@ export class HttpMailApi implements MailApi {
       requests.map(async ({ inbox_id, folders: wanted }) => {
         try {
           const args = wanted?.length ? { folders: wanted.slice(0, STATUS_MAX_FOLDERS) } : {};
-          const rows = arr<FolderStatusWire>(await this.client.read("status", inbox_id, args, signal), "folders");
+          const rows = arr<FolderStatusWire>(await this.client.read("status", inbox_id, args, signal, "background"), "folders");
           const folders: FolderStatus[] = [];
           const missing: string[] = [];
           for (const f of rows) {

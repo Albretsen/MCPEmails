@@ -20,12 +20,12 @@ import {
   type ScheduledSend,
   folderRefId,
   parseKey,
-  roleOfFolder,
+  isProviderViewFolder,
 } from "../api/types";
 import { useDelayedFlag } from "../lib/hooks";
 import { useAssistantStore } from "../state/assistant-store";
 import { getVisibleKeys } from "../state/selection-store";
-import { type ListData, findRow, resolveFolderEntry } from "./cache";
+import { type ListData, findRow, folderRoleOf, resolveFolderEntry } from "./cache";
 import { keys, listMeta } from "./keys";
 import { FOLDERS_STALE_MS, STALE_MS } from "./query-client";
 import { type MailActions, mailActions } from "./mail-actions";
@@ -128,7 +128,7 @@ export function useFolders(scope: MailboxScope): { folders: FolderNavItem[]; isL
     const custom = new Map<string, FolderNavItem>();
     for (const p of perInbox) {
       for (const f of p.entries) {
-        if (roleOfFolder(f.id) || roleOfFolder(f.name)) continue;
+        if (folderRoleOf(p.inbox_id, f) || isProviderViewFolder(f.id)) continue;
         const ref: FolderRef = scope === "all" ? { name: f.name } : { inbox_id: p.inbox_id, folder_id: f.id };
         const id = folderRefId(ref);
         const cur = custom.get(id);
@@ -347,8 +347,13 @@ export function useMessage(key: MessageKey | null): MessageResult {
     },
   });
   const isBodyPending = !!key && (q.isPlaceholderData || q.isPending) && !q.isError;
+  // A read that failed (offline, a provider error) has no data and, being
+  // settled, no placeholder either: the list row still says who and what, so
+  // the reader shows the header and "could not be loaded" with Try again,
+  // not "No email selected".
+  const failedRow = key && !q.data && q.isError ? findRow(key) : undefined;
   return {
-    message: key ? q.data : undefined,
+    message: key ? (q.data ?? (failedRow ? detailFromRow(failedRow) : undefined)) : undefined,
     isBodyPending,
     showBodySkeleton: useDelayedFlag(isBodyPending, 300),
     error: q.error,

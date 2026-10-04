@@ -271,6 +271,13 @@ export function roleOfFolder(idOrName: string): FolderRole | null {
   return null;
 }
 
+/** Gmail over IMAP lists its own machinery as folders: the "[Gmail]" container
+ *  (it holds folders, no mail, and cannot be opened) and the Starred view
+ *  (the app has its own). They are not folders the person made. */
+export function isProviderViewFolder(idOrName: string): boolean {
+  return /^\[(gmail|google mail)\](\/starred)?$/i.test(idOrName);
+}
+
 /** One row of a message list. The wire summary plus what the client needs to
  *  address and decorate it. */
 export type MessageRow = EmailSummary & {

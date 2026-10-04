@@ -3,7 +3,7 @@ import { ApiClient } from "../api/http/client";
 import { FakeBackend, fakeInbox, fakeMessage } from "../api/http/fake-backend";
 import { HttpMailApi } from "../api/http/http-mail-api";
 import type { FolderEntry, MailEvent, MessageRow } from "../api/types";
-import { type ListData, removeMovedRows, resolveFolderEntry } from "./cache";
+import { type ListData, folderRoleOf, forgetFolderRoles, learnFolderRoles, removeMovedRows, resolveFolderEntry } from "./cache";
 import { keys, listMeta } from "./keys";
 import { queryClient } from "./query-client";
 import { type SyncEngine, type SyncEnv, createSyncEngine, diffFirstPage, statusFoldersFor } from "./sync";
@@ -115,6 +115,52 @@ describe("sync engine: fingerprints", () => {
     await engine.syncNow();
     expect(backend.requests.length).toBe(before + 1); // one status, nothing else
     expect(events).toEqual([]);
+  });
+
+  it("a folder `status` cannot open is asked about once, and the folder list refreshed once for it", async () => {
+    await prime();
+    // A container the folder list has and no mailbox command can open (Gmail's "[Gmail]").
+    const container: FolderEntry = { id: "Shared", name: "Shared", type: "folder", total_messages: null, unread_messages: null };
+    queryClient.setQueryData<FolderEntry[]>(keys.folders("a"), (e) => [...(e ?? []), container]);
+    await engine.syncNow();
+    expect(backend.calls("status")[0]?.args.folders).toContain("Shared");
+    expect(queryClient.getQueryState(keys.folders("a"))?.isInvalidated).toBe(true);
+    // The refreshed list still has it.
+    queryClient.setQueryData<FolderEntry[]>(keys.folders("a"), (e) => [...(e ?? [])]);
+    await engine.syncNow();
+    expect(backend.calls("status")[1]?.args.folders).not.toContain("Shared");
+    expect(queryClient.getQueryState(keys.folders("a"))?.isInvalidated).toBe(false);
+  });
+
+  it("opaque folder ids with localised names: roles are asked for by alias, then known by id", () => {
+    forgetFolderRoles();
+    const entries: FolderEntry[] = [
+      { id: "AQ1", name: "Innboks", type: "folder", total_messages: 4, unread_messages: 4 },
+      { id: "AQ2", name: "Kladd", type: "folder", total_messages: 0, unread_messages: 0 },
+      { id: "AQ3", name: "Prosjekt", type: "folder", total_messages: 1, unread_messages: 0 },
+    ];
+    queryClient.setQueryData(keys.folders("o"), entries);
+    expect(resolveFolderEntry(entries, "o", { role: "inbox" })).toBeUndefined();
+    expect(statusFoldersFor("o").slice(0, 6)).toEqual(["inbox", "sent", "drafts", "trash", "archive", "spam"]);
+    expect(learnFolderRoles("o", [{ id: "AQ1", role: "inbox" }, { id: "AQ2", role: "drafts" }])).toBe(true);
+    expect(learnFolderRoles("o", [{ id: "AQ1", role: "inbox" }])).toBe(false);
+    expect(resolveFolderEntry(entries, "o", { role: "inbox" })?.id).toBe("AQ1");
+    expect(folderRoleOf("o", entries[1] as FolderEntry)).toBe("drafts");
+    // The inbox and drafts by id, then only the person's own folder.
+    expect(statusFoldersFor("o")).toEqual(["AQ1", "AQ2", "AQ3"]);
+    forgetFolderRoles();
+  });
+
+  it("Gmail's container and its Starred view are not asked about", () => {
+    const entries: FolderEntry[] = ["INBOX", "[Gmail]", "[Gmail]/Starred", "[Gmail]/Drafts", "Work"].map((id) => ({
+      id,
+      name: id,
+      type: "folder",
+      total_messages: 0,
+      unread_messages: 0,
+    }));
+    queryClient.setQueryData(keys.folders("g"), entries);
+    expect(statusFoldersFor("g")).toEqual(["INBOX", "[Gmail]/Drafts", "Work"]);
   });
 
   it("new mail: refetches page 1 and emits new_mail with the rows", async () => {
@@ -305,6 +351,20 @@ describe("sync engine: when it runs", () => {
     await flush();
     expect(statusCalls()).toBe(2);
     expect(env.timers.map((t) => t.ms)).toEqual([45_000]);
+  });
+
+  it("stopped mid-run and started again: runs afresh, and the aborted run is not counted as a failure", async () => {
+    engine.start(); // a run is in flight
+    engine.stop(); // (React runs effects twice in development; a workspace switch does this too)
+    engine.start();
+    await flush();
+    expect(statusCalls()).toBeGreaterThanOrEqual(1);
+    // The plain interval: not doubled by a "failure".
+    expect(env.timers.map((t) => t.ms)).toEqual([45_000]);
+    const before = statusCalls();
+    env.run(45_000);
+    await flush();
+    expect(statusCalls()).toBe(before + 1);
   });
 
   it("polls every 30 s while the socket is live, 45 s on HTTP (read at every scheduling)", async () => {

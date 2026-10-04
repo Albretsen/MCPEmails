@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MAX_ATTACHMENT_BYTES, type MessageKey, makeKey } from "../types";
-import { ApiClient, type ApiClientOptions, ApiError, isAbortError } from "./client";
+import { ApiClient, type ApiClientOptions, ApiError, REFUSED_RECHECK_MS, isAbortError } from "./client";
 import { FakeBackend, fakeInbox, fakeMessage } from "./fake-backend";
 import { HttpMailApi, base64Bytes, filenameFromDisposition, parseMoveResult } from "./http-mail-api";
 
@@ -86,6 +86,65 @@ describe("ApiClient: errors, retries, timeouts", () => {
     expect(err).toBeInstanceOf(ApiError);
     expect(err).toMatchObject({ code: "reconnect_required", retryable: false });
     expect(backend.calls("folders")).toHaveLength(1);
+  });
+
+  it("a refused mailbox is not asked again by reads; `status` asks again after a while", async () => {
+    let now = 1_000_000;
+    const seen: [string, boolean][] = [];
+    const { backend, api, client } = setup({ client: { now: () => now, onInboxAuth: (id, bad) => seen.push([id, bad]) } });
+    backend.failNext({ op: "folders" }, { code: "reconnect_required", message: "reconnect", retryable: false });
+    await expect(api.listFolders("a")).rejects.toMatchObject({ code: "reconnect_required" });
+    const sent = backend.requests.length;
+    // Answered here: no request, the same typed error.
+    await expect(api.listFolders("a")).rejects.toMatchObject({ code: "reconnect_required" });
+    await expect(client.read("list", "a", { folder: "inbox" })).rejects.toMatchObject({ code: "reconnect_required" });
+    await expect(client.read("status", "a", {})).rejects.toMatchObject({ code: "reconnect_required" });
+    expect(backend.requests).toHaveLength(sent);
+    // Later, `status` alone goes to the server; its success clears the refusal.
+    now += REFUSED_RECHECK_MS;
+    await expect(client.read("list", "a", { folder: "inbox" })).rejects.toMatchObject({ code: "reconnect_required" });
+    expect(backend.requests).toHaveLength(sent);
+    await client.read("status", "a", {});
+    expect(backend.requests).toHaveLength(sent + 1);
+    await api.listFolders("a");
+    expect(seen).toEqual([["a", true], ["a", false], ["a", false]]);
+  });
+
+  it("a mailbox remembered as refused: reads answer at once, the first `status` asks the server", async () => {
+    const { backend, client } = setup();
+    client.seedRefused(["a"]);
+    await expect(client.read("list", "a", { folder: "inbox" })).rejects.toMatchObject({ code: "reconnect_required" });
+    expect(backend.requests).toHaveLength(0);
+    await client.read("status", "a", {});
+    expect(backend.requests).toHaveLength(1);
+    await client.read("list", "a", { folder: "inbox" });
+    expect(backend.requests).toHaveLength(2);
+  });
+
+  it("one refusal ends the mailbox's other reads in flight", async () => {
+    const { backend } = setup();
+    let release: () => void = () => {};
+    const real = backend.fetch;
+    let n = 0;
+    // The first request is refused at once; the others never answer.
+    const slow = new Promise<void>((r) => (release = r));
+    const c2 = new ApiClient({
+      baseUrl: "https://api.test/functions/v1/client-api",
+      getToken: async () => "tok-1",
+      refreshToken: async () => null,
+      socket: false,
+      defer: (fn) => fn(),
+      fetch: (async (input: RequestInfo | URL, init?: RequestInit) => {
+        if (n++ > 0) await slow;
+        return real(input, init);
+      }) as typeof fetch,
+    });
+    backend.failNext({ op: "status" }, { code: "reconnect_required", message: "reconnect", retryable: false });
+    const status = c2.read("status", "a", {}).catch((e: unknown) => e);
+    const list = c2.read("list", "a", { folder: "inbox" }).catch((e: unknown) => e);
+    expect(await status).toMatchObject({ code: "reconnect_required" });
+    expect(await list).toMatchObject({ code: "reconnect_required" });
+    release();
   });
 
   it("retries a retryable read with jittered backoff, then succeeds", async () => {

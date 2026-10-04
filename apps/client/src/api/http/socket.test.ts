@@ -124,6 +124,41 @@ describe("socket: handshake", () => {
     expect(viaSocket()).toHaveLength(0);
   });
 
+  it("mail reads issued during the handshake wait for it and go over the socket (no cold HTTP batch)", async () => {
+    const { client, api, viaSocket, viaHttp } = setup();
+    client.connect();
+    // Same tick as the handshake: what a page load or a re-shown tab does.
+    const reads = Promise.all([api.listFolders("a"), client.read("status", "a", {})]);
+    const session = api.getSession(); // never waits
+    await reads;
+    await session;
+    expect(viaHttp().map((r) => r.path)).toEqual(["/session"]);
+    expect(viaSocket().map((r) => r.path)).toEqual(["/mail", "/mail"]);
+  });
+
+  it("a message list goes to the mailbox before a `status` or folder listing asked for at the same moment", async () => {
+    const { backend, api, live } = setup({ client: { sleep: (ms) => new Promise((r) => setTimeout(r, Math.min(ms, 5))) } });
+    await live();
+    const before = backend.requests.length;
+    // The sync engine and the folder prefetch happen to ask first.
+    await Promise.all([
+      api.getStatus([{ inbox_id: "a" }]),
+      api.listFolders("a"),
+      api.listMessages({ scope: "a", folder: { role: "inbox" }, limit: 50 }),
+    ]);
+    const ops = backend.requests.slice(before).map((r) => (r.body as { op?: string } | undefined)?.op);
+    expect(ops[0]).toBe("list");
+    expect([...ops].sort()).toEqual(["folders", "list", "status"]);
+  });
+
+  it("a handshake that fails does not hold reads: they go over HTTP as soon as it has", async () => {
+    const { client, api, viaHttp } = setup({ refuse: true }); // the upgrade fails: closed instead of `ready`
+    client.connect();
+    const folders = api.listFolders("a");
+    await expect(folders).resolves.toBeInstanceOf(Array);
+    expect(viaHttp().some((r) => r.path === "/mail")).toBe(true);
+  });
+
   it("connect() twice opens one socket", async () => {
     const { backend, client, live } = setup();
     await live();

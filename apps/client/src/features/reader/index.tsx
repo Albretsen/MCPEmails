@@ -1,5 +1,6 @@
 import {
   Archive,
+  CalendarX,
   ChevronDown,
   ChevronLeft,
   File,
@@ -30,6 +31,7 @@ import {
   type ReadEmailAttachmentMeta,
   folderRefId,
   isRoleRef,
+  parseKey,
 } from "../../api/types";
 import { findRow, useFolders, useInboxes, useMailActions, useMessage, usePrefetchNeighbours } from "../../data";
 import { cx } from "../../lib/cx";
@@ -110,7 +112,14 @@ export function ReaderPane() {
     );
   }
 
-  const toolbar = <Toolbar messageKey={key} labels={toolbarLabels} phone={phone} />;
+  // A scheduled send is not an email yet: it cannot be replied to, archived
+  // or flagged. The one thing to do with it is to stop it.
+  const toolbar =
+    message.folder_role === "scheduled" ? (
+      <ScheduledToolbar messageKey={key} phone={phone} />
+    ) : (
+      <Toolbar messageKey={key} labels={toolbarLabels} phone={phone} />
+    );
 
   return (
     <div className={cx(s.root, phone && s.phone)}>
@@ -288,6 +297,24 @@ function Toolbar({ messageKey, labels, phone }: { messageKey: MessageKey; labels
   );
 }
 
+function ScheduledToolbar({ messageKey, phone }: { messageKey: MessageKey; phone: boolean }) {
+  const actions = useMailActions();
+  const readOnly = !useCanWrite();
+  const cancel = () => {
+    const { inbox_id, id } = parseKey(messageKey);
+    useSelectionStore.getState().select(null);
+    void actions.cancelScheduled(inbox_id, id);
+  };
+  return (
+    <div className={cx(s.bar, phone && s.actions)} role="toolbar" aria-label="Scheduled send actions">
+      <Button variant="ghost" className={s.barButton} title={readOnly ? READ_ONLY_EXPLANATION : undefined} disabled={readOnly} onClick={cancel}>
+        <CalendarX size={15} aria-hidden="true" />
+        Cancel send
+      </Button>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------
  * Header
  * ------------------------------------------------------------------ */
@@ -452,6 +479,9 @@ function Body({ message, pending, showSkeleton, failed, refetch }: BodyProps) {
     content = <EmailFrame html={html.html} title={`Email: ${message.subject || "(no subject)"}`} />;
   } else if (paragraphs.length) {
     content = paragraphs.map((p, i) => <p key={i}>{p}</p>);
+  } else if (message.folder_role === "scheduled") {
+    // The list of scheduled sends carries no text: say what is known.
+    content = <p>Scheduled to send {formatFullTime(message.date)}. It has not been sent. Cancel it to stop it.</p>;
   } else {
     content = <p>(This email has no text content.)</p>;
   }
@@ -469,7 +499,8 @@ function Body({ message, pending, showSkeleton, failed, refetch }: BodyProps) {
 
       <div className={s.safety}>
         <ShieldCheck size={13} aria-hidden="true" className={s.safetyIcon} />
-        <span>Rendered in a sandbox. Remote images blocked.</span>
+        {/* Plain text is shown as text: there is no sandbox and nothing to block. */}
+        <span>{useHtml || pending ? "Rendered in a sandbox. Remote images blocked." : "Plain text. Nothing is loaded from the web."}</span>
         {blocked > 0 ? (
           <button
             type="button"

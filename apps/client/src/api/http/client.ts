@@ -104,6 +104,7 @@ export interface ApiClientOptions {
   /** Told after every mail call that names an inbox: `true` when the answer
    *  was `reconnect_required`, `false` when the call succeeded. */
   onInboxAuth?: (inbox_id: string, needsReconnect: boolean) => void;
+  now?: () => number;
   /** Socket transport overrides (tests), or `false` for HTTP only. */
   socket?: Partial<Omit<ApiSocketOptions, "url" | "getToken" | "refreshToken" | "onAuthFailure">> | false;
 }
@@ -127,8 +128,12 @@ function parseJsonText<T>(text: string, status: number): T {
 
 /** Reads are coalesced per lane. `slow` keeps calls that are known to take
  *  seconds (listing folders) out of the batch the first paint waits for: a
- *  batch answers only when its slowest call has. */
-export type ReadLane = "fast" | "slow";
+ *  batch answers only when its slowest call has. `background` is the sync
+ *  engine's `status`: nobody is looking at it.
+ *  On the socket there are no batches, but the server works through one
+ *  mailbox's calls in the order they arrive: anything but `fast` is held back
+ *  a moment, so a message list asked for at the same time goes first. */
+export type ReadLane = "fast" | "slow" | "background";
 
 interface Queued {
   call: MailCall;
@@ -150,6 +155,17 @@ interface Envelope {
 
 export const DEFAULT_TIMEOUT_MS = 30_000;
 export const MAX_BATCH = 12;
+/** A mailbox that answered `reconnect_required` is asked again this often
+ *  (through the sync engine's `status`). Until then its reads are answered
+ *  here: a refusal costs the provider a failed login and the server seconds,
+ *  and a unified list would wait for it on every load. */
+export const REFUSED_RECHECK_MS = 2 * 60_000;
+/** How long a read waits for a socket handshake that is under way before it
+ *  goes over HTTP instead. */
+export const SOCKET_WAIT_MS = 1200;
+/** How long a folder listing or a `status` is held back on the socket, so
+ *  message lists asked for in the same moment reach the mailbox first. */
+export const SOCKET_BACKGROUND_DELAY_MS = 50;
 
 function defaultSleep(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -202,6 +218,12 @@ export class ApiClient {
   private flushScheduled = false;
   private inflight = new Map<string, Shared>();
   private refreshing: Promise<string | null> | null = null;
+  /** Mailboxes that refused their stored credentials, and when that was last
+   *  heard from the server (0: remembered from an earlier page load). */
+  private refused = new Map<string, number>();
+  /** Reads in flight per mailbox: all of them end when one is refused. */
+  private inboxWaiters = new Map<string, Set<(e: ApiError) => void>>();
+  private ownRefusals = new WeakSet<ApiError>();
   /** Aborted by `reset()`: nothing started before a sign-out may land after it. */
   private epoch = new AbortController();
 
@@ -215,6 +237,7 @@ export class ApiClient {
       random: Math.random,
       defer: (fn) => void setTimeout(fn, 0),
       isOnline: () => typeof navigator === "undefined" || navigator.onLine !== false,
+      now: Date.now,
       ...options,
     };
     this.socket =
@@ -234,7 +257,8 @@ export class ApiClient {
   /* ---------------- public: the socket ---------------- */
 
   /** There is a session: open the socket (a no-op when it is open or opening).
-   *  Nothing waits for it: until it is authenticated every request is HTTP. */
+   *  Until it is authenticated requests go over HTTP, except mail reads
+   *  issued during the handshake, which wait for it briefly (see `enqueue`). */
   connect(): void {
     this.socket?.start();
   }
@@ -272,7 +296,47 @@ export class ApiClient {
     for (const q of dropped) q.reject(abortError());
     this.inflight.clear();
     this.refreshing = null;
+    this.refused.clear();
+    this.inboxWaiters.clear();
     this.socket?.abortAll();
+  }
+
+  /** Mailboxes known (from an earlier page load) to need reconnecting: their
+   *  lists are not waited for; the next `status` asks the server again. */
+  seedRefused(inbox_ids: readonly string[]): void {
+    for (const id of inbox_ids) if (!this.refused.has(id)) this.refused.set(id, 0);
+  }
+
+  /** Ask refused mailboxes again at the next `status` (the person may have
+   *  just reconnected one in the dashboard). */
+  recheckRefused(): void {
+    for (const id of this.refused.keys()) this.refused.set(id, 0);
+  }
+
+  private refusedError(): ApiError {
+    const e = new ApiError("reconnect_required", "This mailbox needs reconnecting.", { status: 409 });
+    this.ownRefusals.add(e);
+    return e;
+  }
+
+  /** The answer for a read of a refused mailbox, or null to ask the server. */
+  private refusal(op: string, inbox_id: string | null): ApiError | null {
+    const at = inbox_id ? this.refused.get(inbox_id) : undefined;
+    if (at === undefined) return null;
+    // `status` is the probe: it alone goes through, and only now and then.
+    if (op === "status" && this.o.now() - at >= REFUSED_RECHECK_MS) return null;
+    return this.refusedError();
+  }
+
+  /** `work`, unless another read of the same mailbox is refused first. */
+  private untilRefused<T>(inbox_id: string | null, work: Promise<T>): Promise<T> {
+    if (!inbox_id) return work;
+    return new Promise<T>((resolve, reject) => {
+      const set = this.inboxWaiters.get(inbox_id) ?? new Set<(e: ApiError) => void>();
+      this.inboxWaiters.set(inbox_id, set);
+      set.add(reject);
+      work.then(resolve, reject).finally(() => set.delete(reject));
+    });
   }
 
   /* ---------------- public: reads ---------------- */
@@ -286,21 +350,31 @@ export class ApiClient {
     lane: ReadLane = "fast",
   ): Promise<T> {
     const call: MailCall = { op, inbox_id, args };
+    const refusal = this.refusal(op, inbox_id);
+    if (refusal) return Promise.reject(refusal);
     return this.shared<T>(`mail:${stableKey(call)}`, signal, (s) =>
-      this.noteInbox(inbox_id, this.withRetry(() => this.enqueue<T>(call, s, lane), s)),
+      this.noteInbox(inbox_id, this.untilRefused(inbox_id, this.withRetry(() => this.enqueue<T>(call, s, lane), s))),
     );
   }
 
   private noteInbox<T>(inbox_id: string | null, work: Promise<T>): Promise<T> {
+    if (!inbox_id) return work;
     const tell = this.o.onInboxAuth;
-    if (!tell || !inbox_id) return work;
     return work.then(
       (v) => {
-        tell(inbox_id, false);
+        this.refused.delete(inbox_id);
+        tell?.(inbox_id, false);
         return v;
       },
       (e: unknown) => {
-        if (isApiError(e, "reconnect_required")) tell(inbox_id, true);
+        if (isApiError(e, "reconnect_required")) {
+          // Heard from the server just now (not our own fast answer).
+          if (!this.ownRefusals.has(e)) this.refused.set(inbox_id, this.o.now());
+          tell?.(inbox_id, true);
+          // Its other reads in flight would only say the same, seconds later.
+          const waiters = this.inboxWaiters.get(inbox_id);
+          if (waiters?.size) for (const w of [...waiters]) w(this.refusedError());
+        }
         throw e;
       },
     );
@@ -571,7 +645,30 @@ export class ApiClient {
     // only when its slowest call has (so the fast/slow lanes are not needed
     // here either). Rate-limit cost is identical (a batch costs its length).
     // The socket caps frames in flight below the server's limit of 24.
-    if (this.socket?.isLive()) return this.json<T>("POST", "/mail", call, signal);
+    if (this.socket?.isLive()) return this.overSocketInTurn<T>(call, signal, lane);
+    // The socket is opening (page load, the tab shown again): a read sent
+    // over HTTP now would cost a cold isolate, and a batch answers only when
+    // its slowest mailbox has. The handshake takes about half a second and
+    // what is on screen is already painted from the cache, so reads wait for
+    // it, briefly. Mutations and `/session` never wait.
+    const socket = this.socket;
+    if (socket?.isConnecting()) {
+      return socket.settled(SOCKET_WAIT_MS).then(() => {
+        if (signal.aborted) throw abortError();
+        return socket.isLive() ? this.overSocketInTurn<T>(call, signal, lane) : this.enqueueHttp<T>(call, signal, lane);
+      });
+    }
+    return this.enqueueHttp<T>(call, signal, lane);
+  }
+
+  /** One read frame. What the person is looking at (`fast`) goes at once;
+   *  the rest a moment later, behind it in the mailbox's queue. */
+  private async overSocketInTurn<T>(call: MailCall, signal: AbortSignal, lane: ReadLane): Promise<T> {
+    if (lane !== "fast") await this.o.sleep(SOCKET_BACKGROUND_DELAY_MS, signal);
+    return this.json<T>("POST", "/mail", call, signal);
+  }
+
+  private enqueueHttp<T>(call: MailCall, signal: AbortSignal, lane: ReadLane): Promise<T> {
     return new Promise<T>((resolve, reject) => {
       this.queue.push({ call, lane, signal, resolve: resolve as (v: unknown) => void, reject });
       if (!this.flushScheduled) {
@@ -588,7 +685,11 @@ export class ApiClient {
     const lanes = new Map<ReadLane, Queued[]>();
     for (const q of all) {
       if (q.signal.aborted) q.reject(abortError());
-      else lanes.set(q.lane, [...(lanes.get(q.lane) ?? []), q]);
+      else {
+        // Over HTTP `background` rides in the fast batch: one request, not two cold ones.
+        const lane = q.lane === "background" ? "fast" : q.lane;
+        lanes.set(lane, [...(lanes.get(lane) ?? []), q]);
+      }
     }
     for (const live of lanes.values()) {
       for (let i = 0; i < live.length; i += this.o.maxBatch) void this.sendChunk(live.slice(i, i + this.o.maxBatch));

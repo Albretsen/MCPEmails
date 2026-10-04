@@ -1,7 +1,9 @@
 import type { QueryKey } from "@tanstack/react-query";
 import type { InboxStatus, MutationNotice } from "../api/http/http-mail-api";
 import {
+  BACKEND_FOLDER_ALIASES,
   type FolderEntry,
+  type FolderRole,
   type FolderStatus,
   type ListMessagesParams,
   type MailEvent,
@@ -9,10 +11,19 @@ import {
   type MessageKey,
   type MessagePage,
   type MessageRow,
+  isProviderViewFolder,
   parseFolderRefId,
   roleOfFolder,
 } from "../api/types";
-import { cachedFolderLists, refreshLists, resolveFolderEntry, rowsOfList, setFolderRefresher } from "./cache";
+import {
+  cachedFolderLists,
+  folderRoleOf,
+  learnFolderRoles,
+  refreshLists,
+  resolveFolderEntry,
+  rowsOfList,
+  setFolderRefresher,
+} from "./cache";
 import { keys, type ListMeta } from "./keys";
 import { queryClient } from "./query-client";
 
@@ -114,21 +125,25 @@ function browserEnv(): SyncEnv {
  *  counts are in the sidebar), every folder a cached list shows, then custom
  *  folders (their counts are shown too), up to the cap. Folder ids where the
  *  folder list is cached, the `inbox` alias until then. */
-export function statusFoldersFor(inbox_id: string, max = STATUS_FOLDERS_PER_INBOX): string[] {
+export function statusFoldersFor(inbox_id: string, max = STATUS_FOLDERS_PER_INBOX, skip?: ReadonlySet<string>): string[] {
   const entries = queryClient.getQueryData<FolderEntry[]>(keys.folders(inbox_id));
   if (!entries?.length) return ["inbox"];
   const out: string[] = [];
   const add = (id: string | undefined) => {
-    if (id && !out.includes(id) && out.length < max) out.push(id);
+    if (id && !skip?.has(id) && !out.includes(id) && out.length < max) out.push(id);
   };
-  add(resolveFolderEntry(entries, inbox_id, { role: "inbox" })?.id);
+  const inbox = resolveFolderEntry(entries, inbox_id, { role: "inbox" });
+  // No folder can be told to be the inbox (opaque ids, localised names): ask
+  // by role alias. The answers carry the real ids, which are remembered.
+  if (!inbox) for (const role of BACKEND_FOLDER_ALIASES) add(role);
+  add(inbox?.id);
   add(resolveFolderEntry(entries, inbox_id, { role: "drafts" })?.id);
   for (const { meta } of cachedFolderLists()) {
     if (VIRTUAL.has(meta.folder) || (meta.scope !== "all" && meta.scope !== inbox_id)) continue;
     const ref = parseFolderRefId(meta.folder);
     if (ref) add(resolveFolderEntry(entries, inbox_id, ref)?.id);
   }
-  for (const e of entries) if (!roleOfFolder(e.id) && !roleOfFolder(e.name)) add(e.id);
+  for (const e of entries) if (!folderRoleOf(inbox_id, e) && !isProviderViewFolder(e.id)) add(e.id);
   return out.length ? out : ["inbox"];
 }
 
@@ -220,6 +235,8 @@ export function createSyncEngine(options: SyncOptions): SyncEngine {
   let running: Promise<void> | null = null;
   let controller: AbortController | null = null;
   let failures = 0;
+  /** Counts `stop()` calls: tells a run of a stopped engine from a current one. */
+  let epoch = 0;
   let lastRunAt = -Infinity;
   let emitting = false;
   let unsubs: (() => void)[] = [];
@@ -232,6 +249,10 @@ export function createSyncEngine(options: SyncOptions): SyncEngine {
   const mutatedAt = new Map<string, number>();
   const syncedAt = new Map<string, number>();
   const ownKeys = new Map<MessageKey, number>();
+  /** inbox -> folders `status` cannot open (a container that holds folders
+   *  and no mail, such as Gmail's "[Gmail]"). The folder list was refreshed
+   *  once for each; asking again every run would list the folders every run. */
+  const unopenable = new Map<string, Set<string>>();
 
   const own = (key: MessageKey) => ownKeys.has(key);
 
@@ -315,7 +336,7 @@ export function createSyncEngine(options: SyncOptions): SyncEngine {
     for (const [k, until] of ownKeys) if (until < now) ownKeys.delete(k);
 
     const statuses = await api.getStatus(
-      ids.map((inbox_id) => ({ inbox_id, folders: statusFoldersFor(inbox_id) })),
+      ids.map((inbox_id) => ({ inbox_id, folders: statusFoldersFor(inbox_id, STATUS_FOLDERS_PER_INBOX, unopenable.get(inbox_id)) })),
       abort.signal,
     );
     if (abort.signal.aborted) return;
@@ -325,6 +346,15 @@ export function createSyncEngine(options: SyncOptions): SyncEngine {
       if (!st.ok) continue;
       ok++;
       const busy = (inflight.get(inbox_id) ?? 0) > 0;
+
+      // A folder asked for by role alias and answered with its real id.
+      const roles = st.folders
+        .filter((f) => f.folder != null && f.id !== f.folder && (BACKEND_FOLDER_ALIASES as readonly string[]).includes(f.folder))
+        .map((f) => ({ id: f.id, role: f.folder as FolderRole }));
+      if (roles.length && learnFolderRoles(inbox_id, roles)) {
+        // A new identity, so what is derived from the folder list is derived again.
+        queryClient.setQueryData<FolderEntry[]>(keys.folders(inbox_id), (e) => (e ? [...e] : e));
+      }
       // Settled: no change of ours could still be missing from this answer.
       const settled = !busy && (mutatedAt.get(inbox_id) ?? 0) <= (syncedAt.get(inbox_id) ?? 0);
       syncedAt.set(inbox_id, sentAt);
@@ -334,6 +364,13 @@ export function createSyncEngine(options: SyncOptions): SyncEngine {
       // other way round): the folder list itself is out of date.
       if (st.missing.length || (!busy && !patchFolderCounts(inbox_id, st.folders))) {
         void queryClient.invalidateQueries({ queryKey: keys.folders(inbox_id) });
+      }
+      // Not asked about again: if it is really gone the refreshed list drops
+      // it; if the list still has it, it is a folder that cannot be opened.
+      if (st.missing.length) {
+        const set = unopenable.get(inbox_id) ?? new Set<string>();
+        for (const id of st.missing) set.add(id);
+        unopenable.set(inbox_id, set);
       }
 
       const before = prints.get(inbox_id);
@@ -360,20 +397,26 @@ export function createSyncEngine(options: SyncOptions): SyncEngine {
   function syncNow(): Promise<void> {
     if (running) return running;
     lastRunAt = env.now();
-    running = run()
+    // A run that `stop()` aborted is not a failure of the engine that was
+    // started again meanwhile, and must not clear that engine's run.
+    const mine = epoch;
+    const p: Promise<void> = run()
       .then(
         () => {
-          failures = 0;
+          if (mine === epoch) failures = 0;
         },
         () => {
-          failures++;
+          if (mine === epoch) failures++;
         },
       )
       .finally(() => {
-        running = null;
-        controller = null;
+        if (running === p) {
+          running = null;
+          controller = null;
+        }
       });
-    return running;
+    running = p;
+    return p;
   }
 
   const active = () => started && env.isVisible() && env.isOnline();
@@ -432,10 +475,14 @@ export function createSyncEngine(options: SyncOptions): SyncEngine {
       if (timer != null) env.clearTimeout(timer);
       if (pokeTimer != null) env.clearTimeout(pokeTimer);
       timer = pokeTimer = null;
+      epoch++;
       controller?.abort();
+      running = null;
+      controller = null;
       prints.clear();
       ownKeys.clear();
       inflight.clear();
+      unopenable.clear();
       mutatedAt.clear();
       syncedAt.clear();
       failures = 0;

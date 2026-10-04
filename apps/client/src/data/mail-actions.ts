@@ -82,7 +82,14 @@ interface RelocateOptions {
   call: () => Promise<MoveResult>;
 }
 
-async function relocate(target: MessageKey[], o: RelocateOptions): Promise<void> {
+/** A scheduled send sits in a list like an email but is not one: it has no
+ *  message id to move, flag or reply to (the reader offers "Cancel send"). */
+function mailOnly(target: MessageKey[]): MessageKey[] {
+  return target.filter((k) => findRow(k)?.folder_role !== "scheduled");
+}
+
+async function relocate(all: MessageKey[], o: RelocateOptions): Promise<void> {
+  const target = mailOnly(all);
   if (!target.length || refuseWrite()) return;
   const rows = findRows(target);
   const rowByKey = new Map(rows.map((r) => [r.key, r]));
@@ -205,7 +212,9 @@ export interface FlagOptions {
   silent?: boolean;
 }
 
-export async function markRead(target: MessageKey[], read: boolean, opts: FlagOptions = {}): Promise<void> {
+export async function markRead(all: MessageKey[], read: boolean, opts: FlagOptions = {}): Promise<void> {
+  const target = mailOnly(all);
+  if (!target.length) return;
   if (opts.silent ? !canWrite() : refuseWrite()) return;
   const rows = findRows(target).filter((r) => r.is_read !== read);
   const changing = rows.length ? rows.map((r) => r.key) : target;
@@ -236,7 +245,8 @@ export async function markRead(target: MessageKey[], read: boolean, opts: FlagOp
   }
 }
 
-export async function star(target: MessageKey[], starred: boolean): Promise<void> {
+export async function star(all: MessageKey[], starred: boolean): Promise<void> {
+  const target = mailOnly(all);
   if (!target.length || refuseWrite()) return;
   // Unstarring drops rows from the Starred list, so that case needs the snapshot.
   const snap = starred ? null : snapshotMail();
@@ -294,7 +304,7 @@ export function startReply(key: MessageKey, mode: Exclude<ComposeMode, "new">): 
   if (refuseWrite()) return;
   const detail = queryClient.getQueryData<MessageDetail>(keys.message(key));
   const row: MessageRow | MessageDetail | undefined = findRow(key) ?? detail;
-  if (!row || row.folder_role === "drafts") return;
+  if (!row || row.folder_role === "drafts" || row.folder_role === "scheduled") return;
   const inbox_id = row.inbox_id;
   const self = inboxes().find((i) => i.inbox_id === inbox_id)?.email_address ?? "";
   const fromSelf = row.from.email === self;
@@ -307,7 +317,8 @@ export function startReply(key: MessageKey, mode: Exclude<ComposeMode, "new">): 
       cc: "",
       bcc: "",
       subject: `Fwd: ${subject}`,
-      body: `\n\n${FORWARD_MARKER}\nFrom: ${row.from.name} <${row.from.email}>\nSubject: ${row.subject}\n\n${body}`,
+      // No stray space when the sender has no display name.
+      body: `\n\n${FORWARD_MARKER}\nFrom: ${row.from.name.trim() ? `${row.from.name.trim()} ` : ""}<${row.from.email}>\nSubject: ${row.subject}\n\n${body}`,
     };
     useComposeStore.getState().open({ mode, inbox_id, replyTo: key, ...init, pristine: composeSignature(init) });
     return;

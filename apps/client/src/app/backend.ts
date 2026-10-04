@@ -84,10 +84,49 @@ export function getHttpMailApi(): HttpMailApi | null {
   return api;
 }
 
+/* Which mailboxes need reconnecting, kept across reloads (ids only): a load
+ * must not wait seconds for a mailbox that is known to refuse. */
+const REFUSED_KEY = "mc-refused";
+
+export function readRefused(workspace_id: string): string[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(REFUSED_KEY) ?? "null") as { workspace_id?: unknown; ids?: unknown } | null;
+    if (!v || v.workspace_id !== workspace_id || !Array.isArray(v.ids)) return [];
+    return v.ids.filter((x): x is string => typeof x === "string");
+  } catch {
+    return [];
+  }
+}
+
+function writeRefused(ids: string[]): void {
+  try {
+    if (ids.length && workspaceId) localStorage.setItem(REFUSED_KEY, JSON.stringify({ workspace_id: workspaceId, ids }));
+    else localStorage.removeItem(REFUSED_KEY);
+  } catch {
+    /* private mode: the next load asks the mailbox again */
+  }
+}
+
+/** A mail call said whether its mailbox accepts the stored credentials. */
+function onInboxAuth(inbox_id: string, needsReconnect: boolean): void {
+  const was = useReconnectStore.getState().inboxes[inbox_id] === true;
+  if (was === needsReconnect) return;
+  markInboxAuth(inbox_id, needsReconnect);
+  writeRefused(Object.keys(useReconnectStore.getState().inboxes));
+  if (!needsReconnect) {
+    // Reconnected: what was loaded without it is loaded again.
+    refreshLists((meta) => meta.scope === "all" || meta.scope === inbox_id);
+    void queryClient.invalidateQueries({ queryKey: keys.folders(inbox_id) });
+  }
+}
+
 /** Everything a previous user could have left in memory. */
 function resetStores(opts: { location: boolean }): void {
   useAssistantStore.getState().reset();
-  if (opts.location) useReconnectStore.setState({ inboxes: {} });
+  if (opts.location) {
+    useReconnectStore.setState({ inboxes: {} });
+    writeRefused([]);
+  }
   if (useComposeStore.getState().compose) useComposeStore.setState({ compose: null });
   useToastStore.getState().dismiss();
   clearUndo();
@@ -224,6 +263,7 @@ async function onSignOut(info: SignedOutInfo): Promise<void> {
   workspaceId = null;
   sessionLoad = null;
   clearIdentity();
+  writeRefused([]);
   useSessionStore.setState(EMPTY_SESSION);
   // An ended session keeps the URL, so signing in again returns to it.
   resetStores({ location: info.explicit });
@@ -241,7 +281,7 @@ export function installHttpBackend(): HttpMailApi {
     onAuthFailure: handleAuthFailure,
     getWorkspaceId: () => workspaceId,
     isOnline: () => getPlatform().network.isOnline(),
-    onInboxAuth: markInboxAuth,
+    onInboxAuth,
     // Unit tests of this module run against a fake `fetch`; they must not dial.
     socket: import.meta.env.MODE === "test" ? false : { onDiagnostics: (d) => useConnectionStore.setState(d) },
   });
@@ -279,6 +319,11 @@ export async function bootHttp(loadBackend: () => Promise<AuthBackend>): Promise
     assumeSignedIn(hint.user);
     workspaceId = hint.workspace_id;
     setCacheNamespace(cacheNamespaceOf(hint.user.id, hint.workspace_id));
+    const refused = readRefused(hint.workspace_id);
+    if (refused.length) {
+      client?.seedRefused(refused);
+      useReconnectStore.setState({ inboxes: Object.fromEntries(refused.map((id) => [id, true as const])) });
+    }
     void initAuth(backend, { callback });
     // The socket handshake starts now, next to the cache restore and the
     // first HTTP requests. They do not wait for it.
@@ -350,6 +395,14 @@ export function startSync(): () => void {
   });
   const engine = sync;
   syncWanted = true;
+  // Coming back to the tab (perhaps from reconnecting a mailbox in the
+  // dashboard): the sync run that follows asks refused mailboxes again.
+  // Registered before the engine's own listeners, so it runs first.
+  const recheck = () => {
+    if (document.visibilityState !== "hidden") client?.recheckRefused();
+  };
+  window.addEventListener("focus", recheck);
+  document.addEventListener("visibilitychange", recheck);
   engine.start();
   // Folder lists are kept across reloads and corrected by `status`, which
   // cannot see a folder that was added or removed. Old lists are refreshed
@@ -376,6 +429,8 @@ export function startSync(): () => void {
   });
   return () => {
     clearTimeout(refreshOldFolders);
+    window.removeEventListener("focus", recheck);
+    document.removeEventListener("visibilitychange", recheck);
     off();
     offNetwork();
     syncWanted = false;

@@ -2,6 +2,7 @@ import type { InfiniteData, QueryKey } from "@tanstack/react-query";
 import {
   type FolderEntry,
   type FolderRef,
+  type FolderRole,
   type MessageDetail,
   type MessageFlags,
   type MessageKey,
@@ -143,10 +144,41 @@ export function insertInboxRows(rows: readonly MessageRow[]): void {
   }
 }
 
+/* Folder roles the folder list itself does not reveal. A provider with opaque
+ * folder ids and localised names (Outlook: "Innboks", "Kladd") cannot be
+ * matched by name; the server resolves the role aliases, and `status` answers
+ * with the real id. The sync engine records those here (inbox -> id -> role). */
+const learnedRoles = new Map<string, Map<string, FolderRole>>();
+
+/** Returns true when something new was learned. */
+export function learnFolderRoles(inbox_id: string, pairs: readonly { id: string; role: FolderRole }[]): boolean {
+  const known = learnedRoles.get(inbox_id) ?? new Map<string, FolderRole>();
+  let changed = false;
+  for (const p of pairs) {
+    if (known.get(p.id) === p.role) continue;
+    known.set(p.id, p.role);
+    changed = true;
+  }
+  if (changed) learnedRoles.set(inbox_id, known);
+  return changed;
+}
+
+export function forgetFolderRoles(): void {
+  learnedRoles.clear();
+}
+
+/** The role of one folder of one inbox, or null for a folder of the person's own. */
+export function folderRoleOf(inbox_id: string, f: Pick<FolderEntry, "id" | "name">): FolderRole | null {
+  return learnedRoles.get(inbox_id)?.get(f.id) ?? roleOfFolder(f.id) ?? roleOfFolder(f.name);
+}
+
 /** Finds the FolderEntry a ref points at inside one inbox's folder list. */
 export function resolveFolderEntry(entries: readonly FolderEntry[], inbox_id: string, ref: FolderRef): FolderEntry | undefined {
   if (isExactRef(ref)) return ref.inbox_id === inbox_id ? entries.find((f) => f.id === ref.folder_id) : undefined;
   if (isNameRef(ref)) return entries.find((f) => f.name.toLowerCase() === ref.name.toLowerCase());
+  const known = learnedRoles.get(inbox_id);
+  const learned = known ? entries.find((f) => known.get(f.id) === ref.role) : undefined;
+  if (learned) return learned;
   return entries.find((f) => roleOfFolder(f.id) === ref.role) ?? entries.find((f) => roleOfFolder(f.name) === ref.role);
 }
 

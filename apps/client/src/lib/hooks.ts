@@ -62,3 +62,21 @@ export function useDelayedFlag(active: boolean, ms: number): boolean {
   }, [active, ms]);
   return active && on;
 }
+
+/** `value`, once it has stayed the same for `ms`. A value for which `atOnce`
+ *  is true passes immediately (clearing a search must not wait). Use for
+ *  input that causes requests: `useDeferredValue` only postpones rendering, so
+ *  every keystroke would still be asked of the server. */
+export function useDebouncedValue<T>(value: T, ms: number, atOnce?: (value: T) => boolean): T {
+  const [settled, setSettled] = useState(value);
+  const immediate = atOnce?.(value) ?? false;
+  useEffect(() => {
+    if (immediate) {
+      setSettled(value);
+      return;
+    }
+    const t = setTimeout(() => setSettled(value), ms);
+    return () => clearTimeout(t);
+  }, [value, ms, immediate]);
+  return immediate ? value : settled;
+}

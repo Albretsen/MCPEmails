@@ -171,6 +171,7 @@ export class ApiSocket {
   private pingTimer: unknown = null;
   private pongTimer: unknown = null;
   private reauthWaiters: { resolve: () => void; reject: (e: unknown) => void; timer: unknown }[] = [];
+  private settleWaiters: (() => void)[] = [];
 
   private diag: SocketDiagnostics = { state: "fallback-http", connectMs: null, lastRoundTripMs: null, connects: 0, lastCloseCode: null };
 
@@ -197,6 +198,30 @@ export class ApiSocket {
   /** Authenticated and open: requests may go over it. */
   isLive(): boolean {
     return this.ready && this.ws?.readyState === OPEN;
+  }
+
+  /** A handshake is under way: the socket will be live (or have failed) soon. */
+  isConnecting(): boolean {
+    return this.ws != null && !this.ready;
+  }
+
+  /** Resolves when the handshake under way has ended either way, or after
+   *  `maxMs`. Never rejects: the caller then looks at `isLive()`. */
+  settled(maxMs: number): Promise<void> {
+    if (!this.isConnecting()) return Promise.resolve();
+    return new Promise<void>((resolve) => {
+      const done = () => {
+        this.env.clearTimeout(timer);
+        this.settleWaiters = this.settleWaiters.filter((w) => w !== done);
+        resolve();
+      };
+      const timer = this.env.setTimeout(done, maxMs);
+      this.settleWaiters.push(done);
+    });
+  }
+
+  private handshakeEnded(): void {
+    for (const w of [...this.settleWaiters]) w();
   }
 
   /** There is a session: keep a socket while the tab is visible and online. */
@@ -359,6 +384,7 @@ export class ApiSocket {
         this.refreshedForAuth = false;
         this.clear("handshakeTimer");
         this.setState("live", { connectMs: Math.round(this.env.now() - startedAt) });
+        this.handshakeEnded();
         this.armPing();
         if (!this.env.isVisible()) this.armHidden();
       }
@@ -449,6 +475,7 @@ export class ApiSocket {
       }
     }
     this.failPending(error);
+    this.handshakeEnded();
     if (ws || this.diag.state !== "fallback-http") this.setState("fallback-http", ws ? { lastCloseCode: code } : {});
     if (reconnect) this.scheduleReconnect();
   }
@@ -462,6 +489,7 @@ export class ApiSocket {
     this.clear("pongTimer");
     this.clear("hiddenTimer");
     this.failPending(closedError());
+    this.handshakeEnded();
     this.setState("fallback-http", { lastCloseCode: code });
     if (!this.wanted) return;
     if (code === 4401) {
