@@ -1,3 +1,4 @@
+import { isOpenInReader } from "./conversation-store";
 import { create } from "zustand";
 import { getAssistantTransport } from "../api";
 import type {
@@ -331,7 +332,7 @@ export const useAssistantStore = create<AssistantState>((set, get) => {
     if (!c || !sameTarget) {
       const inbox_id =
         ev.fields.inbox_id ?? (ev.reply_to ? parseKey(ev.reply_to).inbox_id : (c?.inbox_id ?? ""));
-      if (ev.reply_to && useSelectionStore.getState().selectedKey !== ev.reply_to) {
+      if (ev.reply_to && !isOpenInReader(ev.reply_to, useSelectionStore.getState().selectedKey)) {
         useSelectionStore.getState().select(ev.reply_to);
       }
       store.open({
@@ -690,7 +691,7 @@ export const useAssistantStore = create<AssistantState>((set, get) => {
           const hidden = typeof document !== "undefined" && document.visibilityState === "hidden";
           const looking =
             same &&
-            (!d.reply_to || useSelectionStore.getState().selectedKey === d.reply_to) &&
+            (!d.reply_to || isOpenInReader(d.reply_to, useSelectionStore.getState().selectedKey)) &&
             (ui.viewport !== "phone" || (ui.screen !== "list" && !ui.chatFull));
           // Anywhere else, the app is never taken over: a notice asks instead.
           if (!looking || hidden) {
@@ -960,7 +961,7 @@ export const useAssistantStore = create<AssistantState>((set, get) => {
       const d = p.draft;
       const ui = useUiStore.getState();
       if (ui.viewport === "phone") ui.setChatFull(false);
-      if (d.reply_to && useSelectionStore.getState().selectedKey !== d.reply_to) {
+      if (d.reply_to && !isOpenInReader(d.reply_to, useSelectionStore.getState().selectedKey)) {
         useSelectionStore.getState().select(d.reply_to);
       } else if (ui.viewport === "phone" && d.reply_to) {
         ui.setScreen("reader");

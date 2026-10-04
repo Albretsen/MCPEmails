@@ -8,6 +8,7 @@ import {
   type MessageKey,
   type MessagePage,
   type MessageRow,
+  type MessageThread,
   type PageCursor,
   folderRefId,
   isExactRef,
@@ -35,7 +36,39 @@ function metaOf(key: QueryKey): ListMeta {
   return key[1] as ListMeta;
 }
 
-/** Looks a row up in every cached list. */
+/* ---- conversations: the `thread` op's answers ---- */
+
+function threads(): [QueryKey, MessageThread | undefined][] {
+  return queryClient.getQueriesData<MessageThread>({ queryKey: keys.threadRoot });
+}
+
+/** Rewrites the rows of every cached thread (flags, new ids). */
+function mapThreadRows(fn: (row: MessageRow) => MessageRow): void {
+  for (const [key, data] of threads()) {
+    if (!data) continue;
+    let changed = false;
+    const rows = data.rows.map((row) => {
+      const next = fn(row);
+      if (next !== row) changed = true;
+      return next;
+    });
+    if (changed) queryClient.setQueryData<MessageThread>(key, { ...data, rows });
+  }
+}
+
+/** Forgets every cached thread that holds one of these messages: they moved,
+ *  so what the thread says about their folder (and, on IMAP, their id) is
+ *  stale. It is asked for again when the conversation is next opened. */
+export function dropThreadsWith(target: readonly MessageKey[]): void {
+  if (!target.length) return;
+  const set = new Set(target);
+  for (const [key, data] of threads()) {
+    if (data?.rows.some((r) => set.has(r.key))) queryClient.removeQueries({ queryKey: key, exact: true });
+  }
+}
+
+/** Looks a row up in every cached list, then in every cached thread (a
+ *  message of an open conversation that sits in another folder). */
 export function findRow(key: MessageKey): MessageRow | undefined {
   for (const [, data] of lists()) {
     if (!data) continue;
@@ -43,6 +76,10 @@ export function findRow(key: MessageKey): MessageRow | undefined {
       const hit = page.rows.find((r) => r.key === key);
       if (hit) return hit;
     }
+  }
+  for (const [, data] of threads()) {
+    const hit = data?.rows.find((r) => r.key === key);
+    if (hit) return hit;
   }
   return undefined;
 }
@@ -99,6 +136,7 @@ export function applyFlags(target: readonly MessageKey[], flags: MessageFlags): 
     if (flags.starred === false && meta.folder === "starred") return null;
     return { ...row, ...patch };
   });
+  mapThreadRows((row) => (set.has(row.key) ? { ...row, ...patch } : row));
   for (const key of target) {
     queryClient.setQueryData<MessageDetail>(keys.message(key), (d) => (d ? { ...d, ...patch } : d));
   }
@@ -119,6 +157,7 @@ export function removeMovedRows(target: readonly MessageKey[], destination: Fold
     if (meta.folder === destId) return row;
     return null;
   });
+  dropThreadsWith(target);
 }
 
 /** Puts new rows at the top of every inbox list they belong to. */
@@ -345,6 +384,7 @@ export function remapKeys(
     const next = map.get(row.key);
     return next ? { ...row, ...patch(row), key: next, id: idOf(next) } : row;
   });
+  dropThreadsWith([...map.keys()]);
   for (const [old, next] of map) {
     const detail = queryClient.getQueryData<MessageDetail>(keys.message(old));
     if (detail) {

@@ -25,6 +25,10 @@ export const keys = {
   messages: (meta: ListMeta) => ["messages", meta] as const,
   messageRoot: ["message"] as const,
   message: (key: MessageKey) => ["message", key] as const,
+  threadRoot: ["thread"] as const,
+  /** One conversation of one mailbox: `id` is its thread_key, or a message id
+   *  for a row that has none. */
+  thread: (inbox_id: string, id: string) => ["thread", inbox_id, id] as const,
   draftsRoot: ["drafts"] as const,
   drafts: (inbox_id: string) => ["drafts", inbox_id] as const,
   draft: (inbox_id: string, draft_id: string) => ["draft", inbox_id, draft_id] as const,

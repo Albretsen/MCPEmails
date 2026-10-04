@@ -52,6 +52,7 @@ const ALLOWED: Record<string, readonly string[]> = {
   list: ["folder", "limit", "offset", "unread"],
   read: ["message_id", "include_html", "include_attachments", "body_offset", "body_html_offset", "body_max_chars"],
   search: ["text", "from", "to", "cc", "subject", "body", "since", "before", "query", "unread", "has_attachment", "flagged", "include_folders", "limit", "offset"],
+  thread: ["message_id", "thread_key", "limit"],
   folders: [],
   status: ["folders"],
   flag: ["message_ids", "read", "starred", "idempotency_key"],
@@ -122,6 +123,22 @@ export function fakeMessage(id: string, date: string, patch: Partial<FakeMessage
     body_text: `Body ${id}`,
     ...patch,
   };
+}
+
+/** A reply to `parent` with the headers and the `thread_key` the real server
+ *  sends for an IMAP mailbox (client-api mail/thread-key.ts): the key is the
+ *  root Message-ID. `fakeMessage` alone has no key, like a row from a server
+ *  that predates threading. */
+export function fakeThreadMessage(id: string, date: string, parent: FakeMessage | null, patch: Partial<FakeMessage> = {}): FakeMessage {
+  const own = `${id}@fake.mail`;
+  const references = parent ? [...(parent.references ?? []), parent.message_id_header ?? `${parent.id}@fake.mail`] : [];
+  return fakeMessage(id, date, {
+    message_id_header: own,
+    in_reply_to: parent ? (references[references.length - 1] ?? null) : null,
+    references,
+    thread_key: `m:${references[0] ?? own}`,
+    ...patch,
+  });
 }
 
 const json = (status: number, body: unknown, headers: Record<string, string> = {}): Response =>
@@ -664,6 +681,29 @@ export class FakeBackend {
           labels: [],
           in_reply_to: null,
           references: [],
+        };
+      }
+      case "thread": {
+        // The same contract as client-api mail/thread.ts: every message of the
+        // anchor's conversation in this mailbox, whatever its folder (not
+        // Trash, Spam or Drafts), date ASCENDING, summaries only, the newest
+        // `limit` kept and `partial` saying when that cut something.
+        const anchor = all.find((x) => x.id === a.message_id);
+        if (!anchor) throw { code: "not_found", message: "This message no longer exists.", retryable: false } satisfies WireError;
+        const keyOf = (m: FakeMessage) => m.thread_key ?? `u:${m.id}`;
+        const hidden = new Set(["trash", "spam", "drafts"].map((alias) => this.systemFolders[alias]?.id));
+        const rows = all
+          .filter((m) => keyOf(m) === keyOf(anchor) && !hidden.has(m.folder))
+          .sort((x, y) => (x.date < y.date ? -1 : x.date > y.date ? 1 : 0));
+        const limit = typeof a.limit === "number" ? a.limit : 50;
+        const over = rows.length > limit;
+        return {
+          thread_key: keyOf(anchor),
+          messages: (over ? rows.slice(rows.length - limit) : rows).map(({ body_text: _b, attachments: _a, ...summary }) => summary),
+          partial: over,
+          ...(over ? { partial_reason: "limit" } : {}),
+          strategy: "fake",
+          folders: ["*"],
         };
       }
       case "folders":

@@ -402,6 +402,20 @@
   font-weight: 600;
   color: var(--fg-1);
 }
+/* A conversation: the names keep to their own width so the count sits next
+   to them, and the count takes the slack the names used to. */
+.fromCounted {
+  flex: 0 1 auto;
+}
+.count {
+  flex: 1;
+  min-width: max-content;
+  font: 11.5px var(--font-mono);
+  color: var(--fg-3);
+}
+.unread .count {
+  color: var(--fg-2);
+}
 .time {
   flex: none;
   font: 11.5px var(--font-mono);

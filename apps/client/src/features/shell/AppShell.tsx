@@ -13,6 +13,7 @@ import { cx } from "../../lib/cx";
 import { useViewportWidth } from "../../lib/hooks";
 import { useAssistantStore } from "../../state/assistant-store";
 import { useComposeStore } from "../../state/compose-store";
+import { isOpenInReader, useThreadStore } from "../../state/conversation-store";
 import { useSelectionStore } from "../../state/selection-store";
 import { type PaneKind, useUiStore } from "../../state/ui-store";
 import { LogoMark, Spinner, ToastHost } from "../../ui";
@@ -70,7 +71,10 @@ export function AppShell({ sidebar, list, reader, compose, assistant, overlays }
   const hasCompose = useComposeStore((x) => x.compose != null);
   const composeReplyTo = useComposeStore((x) => x.compose?.replyTo ?? null);
   // A reply sits inline under its email; anything else takes over <main>.
-  const fullCompose = hasCompose && !(composeReplyTo != null && composeReplyTo === selectedKey);
+  // A reply to any message of the open conversation is written under it.
+  // (The thread's messages are subscribed to so this follows them.)
+  useThreadStore((t) => t.order);
+  const fullCompose = hasCompose && !(composeReplyTo != null && isOpenInReader(composeReplyTo, selectedKey));
 
   const busy = useAssistantStore((a) => a.busy);
   const helpOpen = useUiStore((u) => u.menu === SHELL_MENU.help);

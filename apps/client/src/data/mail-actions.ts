@@ -578,6 +578,8 @@ export function send(draft: ComposeState, opts: SendOptions = {}): boolean {
       await deliver(c);
       useAssistantStore.getState().bumpFolder({ role: "sent" });
       refreshLists((meta) => meta.folder === "sent" || meta.folder === "drafts");
+      // A reply belongs to a conversation: the open thread shows it.
+      if (c.replyTo) void queryClient.invalidateQueries({ queryKey: keys.threadRoot });
       refreshFolders({ own: true });
       // Confirm, unless a newer toast (another action's Undo) is on screen.
       const shown = useToastStore.getState().toast;

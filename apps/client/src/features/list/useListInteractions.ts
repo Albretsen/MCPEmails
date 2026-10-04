@@ -1,7 +1,7 @@
 import { type MouseEvent, type PointerEvent, type TouchEvent, useEffect, useMemo, useRef } from "react";
 import type { MessageKey, MessageRow } from "../../api/types";
 import type { PrefetchHandlers } from "../../data";
-import { mailActions } from "../../data";
+import { conversationKeys, conversationStarred, mailActions } from "../../data";
 import { useLatest } from "../../lib/hooks";
 import { getPlatform } from "../../platform";
 import { revealAssistant, useAssistantStore } from "../../state/assistant-store";
@@ -153,8 +153,8 @@ export function useListInteractions(options: ListInteractionOptions): ListIntera
       if (name === "check") tick(key);
       else if (name === "star") {
         if (refuseWrite()) return;
-        const row = opts.current.getRow(key);
-        if (row) void mailActions.star([key], !row.is_starred);
+        // The star of a conversation row is the conversation's.
+        if (opts.current.getRow(key)) void mailActions.star(conversationKeys(key), !conversationStarred(key));
       } else if (name === "trace") {
         const trace = traceOf(key);
         if (trace) showCall(trace.call_id);
@@ -196,7 +196,8 @@ export function useListInteractions(options: ListInteractionOptions): ListIntera
       getPlatform().haptics.tick();
       const run = () => {
         if (!canWrite()) return;
-        void (action === "archive" ? mailActions.archive([key]) : mailActions.trash([key]));
+        const all = conversationKeys(key);
+        void (action === "archive" ? mailActions.archive(all) : mailActions.trash(all));
         // The row normally unmounts with the cache write. If it stays (the
         // action did not remove it from this list), put it back.
         later(() => {

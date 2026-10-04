@@ -19,6 +19,9 @@ export interface SelectionState {
   multiSel: MessageKey[];
   /** The user removed the context chip: the assistant is asked about all mail. */
   ctxOff: boolean;
+  /** The context chip carries the whole open conversation, not just the
+   *  focused message. Back to one message for every newly opened row. */
+  ctxConversation: boolean;
 
   select(key: MessageKey | null): void;
   /** Moves the selection by `dir` rows in the list currently on screen. */
@@ -26,6 +29,7 @@ export interface SelectionState {
   toggleMulti(key: MessageKey): void;
   clearMulti(): void;
   setCtxOff(off: boolean): void;
+  setCtxConversation(whole: boolean): void;
   /** Switches folder (and optionally scope). Clears search and selection. */
   openFolder(folder: FolderRef, scope?: MailboxScope): void;
   /** Switches mailbox and lands on its inbox. */
@@ -71,12 +75,13 @@ export const useSelectionStore = create<SelectionState>((set, get) => ({
   selectedKey: initial.messageKey,
   multiSel: [],
   ctxOff: false,
+  ctxConversation: false,
 
   select: (key) => {
     const ui = useUiStore.getState();
     const phone = ui.viewport === "phone";
     const prev = get().selectedKey;
-    set({ selectedKey: key, multiSel: [], ctxOff: false });
+    set({ selectedKey: key, multiSel: [], ctxOff: false, ctxConversation: false });
     if (key) {
       // Phone: list -> reader pushes a history entry so Back returns to the list.
       // Desktop (and reader -> reader on phone): replace, so j/k does not flood history.
@@ -112,6 +117,10 @@ export const useSelectionStore = create<SelectionState>((set, get) => ({
     if (get().ctxOff !== ctxOff) set({ ctxOff });
   },
 
+  setCtxConversation: (ctxConversation) => {
+    if (get().ctxConversation !== ctxConversation) set({ ctxConversation, ctxOff: false });
+  },
+
   openFolder: (folder, scope) => {
     const s = get();
     const nextScope = scope ?? s.scope;
@@ -120,7 +129,7 @@ export const useSelectionStore = create<SelectionState>((set, get) => ({
       if (ui.viewport === "phone") ui.setScreen("list");
       return;
     }
-    set({ folder, scope: nextScope, query: "", selectedKey: null, multiSel: [], ctxOff: false });
+    set({ folder, scope: nextScope, query: "", selectedKey: null, multiSel: [], ctxOff: false, ctxConversation: false });
     navigate({ scope: nextScope, folder, query: "", messageKey: null, compose: false });
     ui.setScreen("list");
     if (ui.menu) ui.setMenu(null);

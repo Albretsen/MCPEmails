@@ -31,14 +31,24 @@ export function attachable(row: MessageRow | undefined): MessageRow | null {
   return role === "drafts" || role === "sent" || role === "scheduled" ? null : row;
 }
 
-/** Emails that ride along with the next message. */
-export function chipKeys(o: { inboxRun: boolean; multiSel: MessageKey[]; target: MessageRow | null; ctxOff: boolean }): MessageKey[] {
+/** Emails that ride along with the next message. `conversation`: every
+ *  message of the open conversation, given when the person chose "the whole
+ *  conversation" (otherwise the chip carries the focused message alone). */
+export function chipKeys(o: {
+  inboxRun: boolean;
+  multiSel: MessageKey[];
+  target: MessageRow | null;
+  ctxOff: boolean;
+  conversation?: MessageKey[] | null;
+}): MessageKey[] {
   if (o.inboxRun) return [];
   if (o.multiSel.length > 1) return o.multiSel;
-  return o.target && !o.ctxOff ? [o.target.key] : [];
+  if (!o.target || o.ctxOff) return [];
+  return o.conversation && o.conversation.length > 1 ? o.conversation : [o.target.key];
 }
 
-export function chipLabel(keys: MessageKey[], target: MessageRow | null): string {
+export function chipLabel(keys: MessageKey[], target: MessageRow | null, wholeConversation = false): string {
+  if (wholeConversation && keys.length > 1 && target) return `Conversation · ${target.subject} (${keys.length} emails)`;
   if (keys.length > 1) return `${keys.length} emails`;
   return keys.length && target ? `${displayName(target.from)} · ${target.subject}` : "";
 }

@@ -1,10 +1,12 @@
 import { useEffect, useSyncExternalStore } from "react";
 import type { FolderRole, MessageKey } from "../../api/types";
 import { findRow } from "../../data/cache";
+import { conversationStarred, expandToConversations } from "../../data/conversation-scope";
 import { mailActions } from "../../data/mail-actions";
 import { isMac, isTypingTarget } from "../../lib/platform";
 import { useAssistantStore } from "../../state/assistant-store";
 import { useComposeStore } from "../../state/compose-store";
+import { replyTargetOf } from "../../state/conversation-store";
 import { canWrite, guardWrite } from "../../state/permissions";
 import { getVisibleKeys, useSelectionStore } from "../../state/selection-store";
 import { selectAssistantVisible, useUiStore } from "../../state/ui-store";
@@ -19,6 +21,7 @@ import {
   matchShortcut,
 } from "./keymap";
 import { openRow } from "../list/open-row";
+import { focusInReader, stepThread, threadIsOpen, toggleFocusedMessage } from "../reader/thread";
 import { ASSISTANT_INPUT_ATTR, PANE_ID, SHELL_MENU, focusAssistantInput, focusPane, focusSearch } from "./shell-context";
 
 /* The keyboard system. ONE registry (SHORTCUTS) drives three things, so they
@@ -40,14 +43,24 @@ import { ASSISTANT_INPUT_ATTR, PANE_ID, SHELL_MENU, focusAssistantInput, focusPa
  * What the actions operate on
  * ------------------------------------------------------------------ */
 
-function targets(): MessageKey[] {
+/** The rows the action is for: the ticked ones, else the open one. */
+function selectedRows(): MessageKey[] {
   const s = useSelectionStore.getState();
   if (s.multiSel.length > 1) return s.multiSel;
   return s.selectedKey ? [s.selectedKey] : [];
 }
-const hasTargets = (): boolean => targets().length > 0;
+/** Archive, delete, move, star and mark read / unread act on whole
+ *  conversations: every message of each selected row's conversation that is
+ *  in the folder on screen. */
+function targets(): MessageKey[] {
+  return expandToConversations(selectedRows());
+}
+const hasTargets = (): boolean => selectedRows().length > 0;
 const openKey = (): MessageKey | null => useSelectionStore.getState().selectedKey;
 const hasOpen = (): boolean => openKey() != null;
+/** Reply, Reply all and Forward act on ONE message: the focused message of
+ *  the open thread (the latest by default). */
+const replyKey = (): MessageKey => replyTargetOf(openKey()) as MessageKey;
 
 /** After archive / trash / move the next row is selected by the action itself.
  *  This keeps keyboard focus in the list instead of letting it fall to <body>
@@ -88,6 +101,8 @@ function cyclePane(back: boolean): void {
 
 /** Enter / o: open the selected email (the first one if none is) and move to the reader. */
 function openSelected(): void {
+  // In the reader, on a thread: `o` expands or collapses the focused message.
+  if (focusInReader() && toggleFocusedMessage()) return;
   const selection = useSelectionStore.getState();
   const key = selection.selectedKey ?? getVisibleKeys()[0] ?? null;
   if (!key) return;
@@ -143,6 +158,8 @@ const REGISTRY: readonly Shortcut[] = [
   { id: "next", keys: ["j", "ArrowDown"], label: "Next email", group: "Navigation", repeat: true, palette: false, run: () => useSelectionStore.getState().step(1) },
   { id: "previous", keys: ["k", "ArrowUp"], label: "Previous email", group: "Navigation", repeat: true, palette: false, run: () => useSelectionStore.getState().step(-1) },
   { id: "open", keys: ["Enter", "o"], label: "Open email", group: "Navigation", palette: false, when: () => hasOpen() || getVisibleKeys().length > 0, run: openSelected },
+  { id: "thread-next", keys: ["n"], label: "Next message in the conversation", group: "Navigation", palette: false, when: threadIsOpen, run: () => stepThread(1) },
+  { id: "thread-previous", keys: ["p"], label: "Previous message in the conversation", group: "Navigation", palette: false, when: threadIsOpen, run: () => stepThread(-1) },
   { id: "search", keys: ["/"], label: "Search mail", group: "Navigation", run: focusSearch },
   { id: "pane-next", keys: ["F6"], label: "Next pane", group: "Navigation", palette: false, run: () => cyclePane(false) },
   { id: "pane-previous", keys: ["Shift+F6"], label: "Previous pane", group: "Navigation", palette: false, run: () => cyclePane(true) },
@@ -173,9 +190,9 @@ const REGISTRY: readonly Shortcut[] = [
     },
   },
   { id: "move", write: true, keys: ["v"], label: "Move to folder", group: "Email", when: hasTargets, run: () => useUiStore.getState().setMenu("move") },
-  { id: "reply", write: true, keys: ["r"], label: "Reply", group: "Email", when: hasOpen, run: () => mailActions.startReply(openKey()!, "reply") },
-  { id: "reply-all", write: true, keys: ["a"], label: "Reply all", group: "Email", when: hasOpen, run: () => mailActions.startReply(openKey()!, "reply_all") },
-  { id: "forward", write: true, keys: ["f"], label: "Forward", group: "Email", when: hasOpen, run: () => mailActions.startReply(openKey()!, "forward") },
+  { id: "reply", write: true, keys: ["r"], label: "Reply", group: "Email", when: hasOpen, run: () => mailActions.startReply(replyKey(), "reply") },
+  { id: "reply-all", write: true, keys: ["a"], label: "Reply all", group: "Email", when: hasOpen, run: () => mailActions.startReply(replyKey(), "reply_all") },
+  { id: "forward", write: true, keys: ["f"], label: "Forward", group: "Email", when: hasOpen, run: () => mailActions.startReply(replyKey(), "forward") },
   {
     id: "star",
     write: true,
@@ -184,15 +201,28 @@ const REGISTRY: readonly Shortcut[] = [
     group: "Email",
     when: hasTargets,
     run: () => {
-      const sel = targets();
-      const first = sel[0] ? findRow(sel[0]) : undefined;
-      void mailActions.star(sel, !first?.is_starred);
+      // A conversation is starred when any of its messages is: the key stars
+      // all of them, or takes the star off all of them.
+      const first = selectedRows()[0];
+      void mailActions.star(targets(), !(first ? conversationStarred(first) : false));
     },
   },
   { id: "mark-unread", write: true, keys: ["u", "Shift+U"], label: "Mark as unread", group: "Email", when: hasTargets, run: () => void mailActions.markRead(targets(), false) },
   { id: "mark-read", write: true, keys: ["Shift+I"], label: "Mark as read", group: "Email", when: hasTargets, run: () => void mailActions.markRead(targets(), true) },
   { id: "select", keys: ["x"], label: "Select for the assistant", group: "Email", when: hasOpen, run: () => useSelectionStore.getState().toggleMulti(openKey()!) },
   { id: "undo", keys: ["z"], label: "Undo", group: "Email", run: () => mailActions.undoLast() },
+  {
+    id: "conversation-view",
+    keys: [],
+    label: "Turn conversation view on or off",
+    group: "Email",
+    // No key of its own: it is in the palette and the account menu.
+    help: false,
+    run: () => {
+      const ui = useUiStore.getState();
+      ui.setSetting("conversationView", !ui.settings.conversationView);
+    },
+  },
 
   // ---- Go to
   { id: "go-inbox", keys: ["g i"], label: "Go to Inbox", group: "Go to", palette: false, run: goTo("inbox") },

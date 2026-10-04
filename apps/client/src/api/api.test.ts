@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { type InboxPage, mergeInboxPages } from "./merge";
 import { MockMailApi } from "./mock/mock-mail-api";
 import { setLatency } from "./mock/latency";
-import { FILLER_COUNT, SEED, generateFiller } from "./mock/seed";
+import { FILLER_COUNT, SEED, THREADS, generateFiller } from "./mock/seed";
 import {
   type MessageRow,
   type PageCursor,
@@ -151,7 +151,7 @@ describe("MockMailApi", () => {
 
   it("pages the unified inbox through every message once", async () => {
     const api = new MockMailApi("pro");
-    const expected = SEED.filter((e) => e.folder === "inbox").length + FILLER_COUNT;
+    const expected = [...SEED, ...THREADS].filter((e) => e.folder === "inbox").length + FILLER_COUNT;
     const keys: string[] = [];
     let cursor: PageCursor | null = null;
     let first = true;

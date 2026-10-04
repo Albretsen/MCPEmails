@@ -74,7 +74,7 @@ beforeEach(() => {
   window.history.replaceState(null, "", "/all/inbox");
   resetRouterForTests();
   useSelectionStore.setState({ scope: "all", folder: { role: "inbox" }, query: "", selectedKey: "a:m1", multiSel: [] });
-  useUiStore.setState({ menu: null, viewport: "desktop", settings: { shortcutsEnabled: true } });
+  useUiStore.setState({ menu: null, viewport: "desktop", settings: { shortcutsEnabled: true, conversationView: true } });
   useComposeStore.setState({ compose: null });
   useToastStore.getState().dismiss();
   signInAs(null);

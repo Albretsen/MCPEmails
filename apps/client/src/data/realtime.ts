@@ -1,3 +1,4 @@
+import { isOpenInReader } from "../state/conversation-store";
 import { subscribeRoute } from "../app/router";
 import { getMailApi } from "../api";
 import type { MailEvent, MessageRow } from "../api/types";
@@ -85,7 +86,7 @@ export function startRealtime(): () => void {
     useSelectionStore.subscribe((s, prev) => {
       if (s.selectedKey === prev.selectedKey || !s.selectedKey) return;
       const c = useComposeStore.getState().compose;
-      if (!c || c.replyTo === s.selectedKey || c.held || c.streaming) return;
+      if (!c || isOpenInReader(c.replyTo, s.selectedKey) || c.held || c.streaming) return;
       if (useAssistantStore.getState().busy && c.ai) return;
       // A read-only member cannot save drafts (and never has a form open).
       if (!canWrite()) return;

@@ -46,6 +46,8 @@ export interface SeedEmail extends AssistantHints {
   unread?: boolean;
   to?: string;
   isDraft?: boolean;
+  /** The seed this one answers: they are one conversation (see THREADS below). */
+  replyTo?: string;
   subject: string;
   snippet: string;
   body: string;
@@ -242,6 +244,78 @@ export const SEED: SeedEmail[] = [
     id: "draft1", from: "You", email: "jordan@northwind.co", to: "finance@northwind.co", box: "outlook", folder: "drafts", isDraft: true, ago: 3000,
     subject: "Budget for the offsite", snippet: "Hi team, a quick note on the offsite budget…",
     body: "Hi team, a quick note on the offsite budget",
+  },
+];
+
+/* Conversations. Each is a chain of `replyTo` links inside one mailbox, with
+ * the person's own replies in Sent: the list shows one row per conversation,
+ * the reader shows the whole thread (the Sent messages arrive with the
+ * `thread` call). One per provider, since each keys its threads differently:
+ *   outlook  Sam Okafor, 3 messages, Inbox + Sent, the latest unread
+ *   imap     Dana Whitfield, 4 messages, Inbox + Sent, all read
+ *   gmail    GitHub, 3 notifications in the Inbox, the latest unread
+ * Kept apart from SEED, and without assistant hints, so the prototype's first
+ * screen and the scripted assistant's emails are what they were. */
+export const THREADS: SeedEmail[] = [
+  {
+    id: "limits-1", from: "Sam Okafor", email: "sam@northwind.co", box: "outlook", folder: "inbox", ago: 900,
+    subject: "Limits rollout: flag first or straight to everyone?",
+    snippet: "The new rate limits are ready. I'd rather ship behind the flag for a week…",
+    body: "Hi Jordan,\n\nThe new rate limits are ready to go. I'd rather ship them behind the flag for a week and watch the 429s before turning them on for everyone.\n\nThe risk with going straight to everyone is the three accounts that batch at midnight.\n\nSam",
+  },
+  {
+    id: "limits-2", from: "You", email: "jordan@northwind.co", to: "sam@northwind.co", box: "outlook", folder: "sent", ago: 840, replyTo: "limits-1",
+    subject: "Re: Limits rollout: flag first or straight to everyone?",
+    snippet: "Flag first. Can you warn the three batch accounts before we flip it?",
+    body: "Flag first. Can you warn the three batch accounts before we flip it? I'd like them to hear it from us, not from a 429.\n\nJordan",
+  },
+  {
+    id: "limits-3", from: "Sam Okafor", email: "sam@northwind.co", box: "outlook", folder: "inbox", ago: 610, unread: true, replyTo: "limits-2",
+    subject: "Re: Limits rollout: flag first or straight to everyone?",
+    snippet: "Done. Two of the three replied already. Flag goes on Monday unless you say otherwise.",
+    body: "Done. Two of the three replied already and are fine with it; I'm chasing the third.\n\nThe flag goes on Monday morning unless you say otherwise.\n\nSam",
+  },
+  {
+    id: "dana-1", from: "Dana Whitfield", email: "dana@whitfield-legal.com", box: "imap", folder: "inbox", ago: 2600,
+    subject: "Contractor agreement: two points to decide",
+    snippet: "Redlines attached. Two points need a decision from you: the IP clause and the notice period.",
+    body: "Jordan,\n\nRedlines attached. Two points need a decision from you:\n\n1. The IP assignment clause. Their counsel wants a carve-out for pre-existing tools.\n2. The notice period. They ask for 30 days; our template says 14.\n\nDana",
+  },
+  {
+    id: "dana-2", from: "You", email: "hi@jordanreyes.dev", to: "dana@whitfield-legal.com", box: "imap", folder: "sent", ago: 2500, replyTo: "dana-1",
+    subject: "Re: Contractor agreement: two points to decide",
+    snippet: "Fine with the carve-out if it is a named list. 30 days is too long; could we meet at 21?",
+    body: "Fine with the carve-out as long as it is a named list of tools, not a category.\n\n30 days is too long for a contractor. Could we meet at 21?\n\nJordan",
+  },
+  {
+    id: "dana-3", from: "Dana Whitfield", email: "dana@whitfield-legal.com", box: "imap", folder: "inbox", ago: 2300, replyTo: "dana-2",
+    subject: "Re: Contractor agreement: two points to decide",
+    snippet: "They accept a named list and 21 days. I will send the clean copy for signature tomorrow.",
+    body: "They accept a named list and 21 days.\n\nI will send the clean copy for signature tomorrow.\n\nDana",
+  },
+  {
+    id: "dana-4", from: "You", email: "hi@jordanreyes.dev", to: "dana@whitfield-legal.com", box: "imap", folder: "sent", ago: 2250, replyTo: "dana-3",
+    subject: "Re: Contractor agreement: two points to decide",
+    snippet: "Thank you. Send it over whenever it is ready.",
+    body: "Thank you. Send it over whenever it is ready.\n\nJordan",
+  },
+  {
+    id: "gh-1", from: "GitHub", email: "notifications@github.com", box: "gmail", folder: "inbox", ago: 1750,
+    subject: "[northwind/web] PR #1204: tidy up the settings form",
+    snippet: "priya-nair opened this pull request. +212 −148 across 9 files",
+    body: "@priya-nair opened northwind/web#1204.\n\nSplits the settings form into sections and removes the two dead toggles.\n\n+212 −148 across 9 files",
+  },
+  {
+    id: "gh-2", from: "GitHub", email: "notifications@github.com", box: "gmail", folder: "inbox", ago: 1700, replyTo: "gh-1",
+    subject: "Re: [northwind/web] PR #1204: tidy up the settings form",
+    snippet: "sam-okafor commented: the timezone select lost its label.",
+    body: "@sam-okafor commented on northwind/web#1204:\n\nThe timezone select lost its label in the move. Otherwise this reads well.",
+  },
+  {
+    id: "gh-3", from: "GitHub", email: "notifications@github.com", box: "gmail", folder: "inbox", ago: 1650, unread: true, replyTo: "gh-2",
+    subject: "Re: [northwind/web] PR #1204: tidy up the settings form",
+    snippet: "priya-nair pushed 1 commit and requested your review.",
+    body: "@priya-nair pushed 1 commit to northwind/web#1204 and requested your review.\n\nRestores the label on the timezone select.",
   },
 ];
 

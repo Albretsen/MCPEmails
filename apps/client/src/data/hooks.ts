@@ -16,6 +16,7 @@ import {
   type MessageKey,
   type MessagePage,
   type MessageRow,
+  type MessageThread,
   type PageCursor,
   type ScheduledSend,
   folderRefId,
@@ -23,11 +24,14 @@ import {
   isProviderViewFolder,
 } from "../api/types";
 import { type InboxHealth, inboxHealth, usableInboxes } from "../api/inbox-health";
-import { useDelayedFlag } from "../lib/hooks";
+import { useDebouncedValue, useDelayedFlag } from "../lib/hooks";
 import { useAssistantStore } from "../state/assistant-store";
 import { useReconnectStore } from "../state/connection-store";
 import { holdRows, useHeldRows } from "../state/held-rows";
-import { useUiStore } from "../state/ui-store";
+import { selectConversationView, useUiStore } from "../state/ui-store";
+import { useConversationIndex } from "../state/conversation-store";
+import { mergeThread } from "./conversations";
+import { threadQueryId } from "./conversation-scope";
 import { getVisibleKeys } from "../state/selection-store";
 import { type ListData, findRow, folderRoleOf, resolveFolderEntry } from "./cache";
 import { keys, listMeta } from "./keys";
@@ -446,6 +450,50 @@ export function useMessage(key: MessageKey | null): MessageResult {
     error: q.error,
     refetch: () => void q.refetch(),
   };
+}
+
+/* ------------------------------------------------------------------
+ * One conversation
+ * ------------------------------------------------------------------ */
+
+export interface ConversationThreadResult {
+  /** The conversation's messages, oldest first. From the list's own rows at
+   *  once; the `thread` op adds what sits in other folders (Sent, Archive). */
+  messages: MessageRow[];
+  /** The `thread` op is still out. */
+  isFetching: boolean;
+  /** The server could not look everywhere: there may be more. */
+  partial: boolean;
+}
+
+const NO_ROWS: MessageRow[] = [];
+/** How long a conversation must stay open before its thread is asked for:
+ *  stepping through the list with j / k asks for none. */
+export const THREAD_DWELL_MS = 180;
+
+/** The open conversation. Paints from rows already in the cache; the `thread`
+ *  op runs in the background and never blocks the body of the open message. */
+export function useConversationThread(key: MessageKey | null): ConversationThreadResult {
+  const enabled = useUiStore(selectConversationView);
+  const conv = useConversationIndex((s) => (key && enabled ? s.list.byKey.get(key) : undefined));
+  // The row itself, for a message the list does not hold (a deep link).
+  const anchor = conv?.head ?? (key ? findRow(key) : undefined);
+  const threadKey = anchor?.thread_key;
+  const wanted =
+    enabled && !!anchor && !!threadKey && anchor.folder_role !== "drafts" && anchor.folder_role !== "scheduled" ? anchor.key : null;
+  const settled = useDebouncedValue(wanted, THREAD_DWELL_MS);
+  const q = useQuery<MessageThread>({
+    queryKey: anchor && threadKey ? keys.thread(anchor.inbox_id, threadQueryId(anchor)) : ["thread", "none"],
+    queryFn: ({ signal }) => getMailApi().getThread((anchor as MessageRow).key, { thread_key: threadKey }, signal),
+    // Asked once the conversation has stayed open; a cached answer shows at once.
+    enabled: wanted != null && settled === wanted,
+    staleTime: STALE_MS,
+    retry: false,
+  });
+  const listRows = useMemo(() => conv?.rows ?? (anchor ? [anchor] : NO_ROWS), [conv, anchor]);
+  const threadRows = wanted ? (q.data?.rows ?? NO_ROWS) : NO_ROWS;
+  const messages = useMemo(() => mergeThread(listRows, threadRows), [listRows, threadRows]);
+  return { messages, isFetching: wanted != null && q.isFetching, partial: q.data?.partial === true };
 }
 
 export interface PrefetchHandlers {

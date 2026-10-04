@@ -4,7 +4,7 @@ import type { AssistantHints, MockProfile } from "./seed";
 
 export { MockMailApi } from "./mock-mail-api";
 export type { MockMessage } from "./mock-mail-api";
-export { MOCK_INBOXES, MOCK_PROFILES, MOCK_USER, SEED, INCOMING, CUSTOM_FOLDERS } from "./seed";
+export { MOCK_INBOXES, MOCK_PROFILES, MOCK_USER, SEED, THREADS, INCOMING, CUSTOM_FOLDERS } from "./seed";
 export type { AssistantHints, MockBox, MockProfile, SeedEmail } from "./seed";
 export { getLatency, setLatencyMode, setFailWrites, sleep, abortError } from "./latency";
 export type { LatencyMode } from "./latency";
