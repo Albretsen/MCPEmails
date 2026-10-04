@@ -4,7 +4,7 @@
 import { assert, assertEquals } from "jsr:@std/assert@1";
 import { firstPartyContext, messageIdsOf, referencesOfHeaderBlock } from "../../mcp-server/first-party.ts";
 import { type FakeMailbox, type FakeMessage, type FakeServerOptions, FakeImapServer } from "../../mcp-server/imap-fake-server.ts";
-import { isSearchThrottle } from "../imap-pool.ts";
+import { isSearchThrottle, searchThrottleWaitMs } from "../imap-pool.ts";
 import { imapDate, keepLinked, MAX_CANDIDATES, ThreadMemory, threadSearchCriteria } from "../mail/thread.ts";
 import { normalizeSubject, threadKeyOf } from "../mail/thread-key.ts";
 import { FakeDialPool, harness, imapInbox, INBOX_ID, mcp, realApp } from "./real-seam.ts";
@@ -170,6 +170,10 @@ Deno.test("the one search: SINCE + SUBJECT of the base subject, bounded and quot
 Deno.test("isSearchThrottle: a rate-limit NO, and nothing else", () => {
   assert(isSearchThrottle(new Error("UID SEARCH failed: [LIMIT] Search rate limit exceeded, try again later")));
   assert(isSearchThrottle(new Error("UID SEARCH failed: Too many requests")));
+  // Migadu, verbatim (live 2026-10-04).
+  const migadu = new Error("UID SEARCH failed: search rate limit exceeded: 60 searches in 1m0s, please wait 12s before trying again");
+  assert(isSearchThrottle(migadu));
+  assertEquals([searchThrottleWaitMs(migadu), searchThrottleWaitMs(new Error("UID SEARCH failed: [LIMIT] slow down")), searchThrottleWaitMs(new Error("nope, wait 5s"))], [12_000, null, null]);
   assert(isSearchThrottle(new Error("UID SEARCH failed: [UNAVAILABLE] Temporary failure")));
   assert(!isSearchThrottle(new Error("UID SEARCH failed: [BADCHARSET (US-ASCII)] Unsupported charset")));
   assert(!isSearchThrottle(new Error("UID SEARCH failed: Unknown argument FOO")));
@@ -754,8 +758,10 @@ Deno.test("thread (Gmail over IMAP): X-GM-THRID decides; one search and one fetc
   assertEquals(mine.filter((c) => /^UID SEARCH/.test(c)), ["UID SEARCH X-GM-THRID 77", "UID SEARCH X-GM-THRID 77"], "exactly one search per folder, by thread id");
   assert(!mine.some((c) => /SUBJECT|HEADER (Message-ID|References|In-Reply-To)/.test(c) && /SEARCH/.test(c)), "never a subject or header search");
   const fetches = mine.filter((c) => /FETCH/.test(c));
-  assertEquals(fetches.map((c) => c.split(" (")[0]), ["UID FETCH 13", "UID FETCH 11", "UID FETCH 105,104,103,102,101"], "the anchor, then one fetch per folder");
+  assertEquals(fetches.map((c) => c.split(" (")[0]), ["UID FETCH 13,11", "UID FETCH 105,104,103,102,101"], "exactly one fetch per folder; the anchor rides the first");
   assert(fetches.every((c) => / X-GM-THRID X-GM-MSGID X-GM-LABELS\)$/.test(c)));
+  // Six round trips in all: re-enter the Inbox, search, fetch, LIST, then All Mail: SELECT, search, fetch.
+  assertEquals(mine.map((c) => c.split(" ")[0] === "UID" ? c.split(" ").slice(0, 2).join(" ") : c.split(" ")[0]), ["NOOP", "UID SEARCH", "UID FETCH", "LIST", "SELECT", "UID SEARCH", "UID FETCH"]);
   assertEquals(mine.filter((c) => /^SELECT/.test(c)).length, 1, "All Mail only: the Inbox is already selected");
   await pool.closeAll();
 });
@@ -768,12 +774,14 @@ interface ThreadRowLite {
 }
 
 Deno.test("thread (Gmail over IMAP): no key, a wrong key, an anchor in Sent, a thread of one, All Mail hidden", async () => {
-  // No key and a stale key: the anchor's own X-GM-THRID is what is searched.
+  // No key and a wrong key: the anchor's own X-GM-THRID is read (one tiny FETCH) and searched.
   for (const args of [{ message_id: "INBOX:11" }, { message_id: "INBOX:11", thread_key: "g:999" }, { message_id: "INBOX:11", thread_key: "m:g1@example.com" }]) {
     const { app, pool, run } = await rig({ boxes: gmailWorld(), advertised: GM_CAPS });
     const { value } = await run(() => app.mail("thread", args));
     assertEquals([value.status, value.body.thread_key, ids(value.body)], [200, "g:77", ["INBOX:11", `${ALL_MAIL}:102`, "INBOX:13", `${ALL_MAIL}:104`]], JSON.stringify(args));
-    assertEquals(searchesOf(pool), ["UID SEARCH X-GM-THRID 77", "UID SEARCH X-GM-THRID 77"]);
+    const wrong = "thread_key" in args && args.thread_key === "g:999";
+    assertEquals(searchesOf(pool), [...(wrong ? ["UID SEARCH X-GM-THRID 999"] : []), "UID SEARCH X-GM-THRID 77", "UID SEARCH X-GM-THRID 77"]);
+    assert(pool.servers[0].commands.includes("UID FETCH 11 (X-GM-THRID X-GM-MSGID)"));
     await pool.closeAll();
   }
 
@@ -792,7 +800,26 @@ Deno.test("thread (Gmail over IMAP): no key, a wrong key, an anchor in Sent, a t
   const one = await rig({ boxes: gmailWorld(), advertised: GM_CAPS });
   const single = await one.run(() => one.app.mail("thread", { message_id: "INBOX:14" }));
   assertEquals([ids(single.value.body), single.value.body.partial, single.value.body.strategy], [["INBOX:14"], false, "imap_gmail_thrid"]);
+  // All Mail has as many hits as the Inbox did: the same messages, so nothing is fetched there.
+  assertEquals(one.pool.servers[0].commands.filter((c) => /^UID FETCH/.test(c)).map((c) => c.split(" (")[0]), ["UID FETCH 14", "UID FETCH 14"]);
   await one.pool.closeAll();
+
+  // A long thread: All Mail is asked for ids first, and only the new messages are fetched.
+  const longBoxes = gmailWorld();
+  for (let i = 0; i < 8; i++) {
+    const m = { id: `L${i}@example.com`, subject: "Re: Roadmap", date: `1${i} Sep 2026 10:00:00 +0000`, seen: true };
+    longBoxes[0].messages.push({ ...mail(40 + i, m), gmThreadId: "77", gmMessageId: String(6000 + i), gmLabels: [] });
+    longBoxes[1].messages.push({ ...mail(140 + i, m), gmThreadId: "77", gmMessageId: String(6000 + i), gmLabels: ["\\Inbox"] });
+  }
+  const long = await rig({ boxes: longBoxes, advertised: GM_CAPS });
+  const longThread = await long.run(() => long.app.mail("thread", { message_id: "INBOX:13", thread_key: "g:77" }));
+  assertEquals(longThread.value.body.messages.length, 12, "ten in the Inbox, the sent one, the archived one");
+  const longFetches = long.pool.servers[0].commands.filter((c) => /^UID FETCH/.test(c));
+  assertEquals(longFetches.length, 3);
+  assert(/\(X-GM-THRID X-GM-MSGID\)$/.test(longFetches[1]), "ids only");
+  // What the Inbox did not have: the sent one, the archived one, and the draft (fetched, then dropped).
+  assertEquals(longFetches[2].split(" (")[0], "UID FETCH 105,104,102");
+  await long.pool.closeAll();
 
   // All Mail is not shown in IMAP: the anchor's folder alone, and it says so.
   const hidden = await rig({ boxes: gmailWorld().filter((box) => box.name !== ALL_MAIL), advertised: GM_CAPS });

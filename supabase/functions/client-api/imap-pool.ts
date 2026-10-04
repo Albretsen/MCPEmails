@@ -232,6 +232,20 @@ export function isSearchThrottle(error: unknown): error is Error {
   return /\[limit\]|\[unavailable\]|\[inuse\]|rate.?limit|thrott|too many|too much|try again|slow down|exceeded|temporar/.test(text);
 }
 
+/**
+ * How long the server asked for, when it said. Migadu's refusal reads (live,
+ * 2026-10-04) "search rate limit exceeded: 60 searches in 1m0s, please wait
+ * 12s before trying again". Null when no wait is named; capped at a minute.
+ */
+export function searchThrottleWaitMs(error: unknown): number | null {
+  if (!isSearchThrottle(error)) return null;
+  const m = /\bwait (\d{1,4})\s*(ms|s|sec|seconds?|m|min|minutes?)\b/i.exec(error.message);
+  if (!m) return null;
+  const unit = m[2].toLowerCase();
+  const ms = Number(m[1]) * (unit === "ms" ? 1 : unit.startsWith("m") ? 60_000 : 1000);
+  return Math.min(Math.max(ms, 1000), 60_000);
+}
+
 /** `setTimeout` returns a number on older Deno and a Timeout object on newer ones. */
 type TimerHandle = ReturnType<typeof setTimeout>;
 
