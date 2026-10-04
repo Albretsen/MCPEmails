@@ -572,6 +572,7 @@ export function ConnectModal({
   reconnect = null,
   businessShaped = false,
   onAdminConsentLink = null,
+  preselect = null,
 }) {
   const tr = useTranslations('dashboardChrome');
   // The toast lives in ToastProvider, above this modal in App.jsx, so it
@@ -589,18 +590,30 @@ export function ConnectModal({
   const reconnectProvider = isReconnect
     ? (reconnect.service && reconnect.service !== 'generic' ? reconnect.service : 'generic')
     : null;
-  const [provider, setProvider] = useState(reconnectProvider ?? 'generic');
+  /**
+   * The provider this person came for, when they arrived from a
+   * /connect/<slug> landing page (see lib/connect/intent.mjs, which validates
+   * it against the registry before it gets here). It only ever seeds INITIAL
+   * state: which card starts selected and, for the generic form, the server
+   * settings that page lists. Everything stays editable, a reconnect ignores
+   * it, and a card name this modal does not have falls back to the default.
+   */
+  const seed = !isReconnect && preselect && PROVIDERS.some(p => p.k === preselect.card)
+    ? preselect
+    : null;
+  const seedForm = seed?.card === 'generic' ? (seed.form ?? null) : null;
+  const [provider, setProvider] = useState(reconnectProvider ?? seed?.card ?? 'generic');
   const [step, setStep] = useState(isReconnect ? 2 : 1);
   const [form, setForm] = useState(() => ({
     email: reconnect?.address ?? '',
     username: reconnect?.username ?? '',
     password: '',
-    imapHost: reconnect?.imapHost ?? '',
-    imapPort: reconnect?.imapPort ?? GENERIC_IMAP_DEFAULTS.imapPort,
-    smtpHost: reconnect?.smtpHost ?? '',
-    smtpPort: reconnect?.smtpPort ?? GENERIC_IMAP_DEFAULTS.smtpPort,
-    imapSecurity: reconnect?.imapSecurity ?? (reconnect?.imapPort === 143 ? 'starttls' : 'tls'),
-    smtpSecurity: reconnect?.smtpSecurity ?? (reconnect?.smtpPort === 587 ? 'starttls' : 'tls'),
+    imapHost: reconnect?.imapHost ?? seedForm?.imapHost ?? '',
+    imapPort: reconnect?.imapPort ?? seedForm?.imapPort ?? GENERIC_IMAP_DEFAULTS.imapPort,
+    smtpHost: reconnect?.smtpHost ?? seedForm?.smtpHost ?? '',
+    smtpPort: reconnect?.smtpPort ?? seedForm?.smtpPort ?? GENERIC_IMAP_DEFAULTS.smtpPort,
+    imapSecurity: reconnect?.imapSecurity ?? seedForm?.imapSecurity ?? (reconnect?.imapPort === 143 ? 'starttls' : 'tls'),
+    smtpSecurity: reconnect?.smtpSecurity ?? seedForm?.smtpSecurity ?? (reconnect?.smtpPort === 587 ? 'starttls' : 'tls'),
   }));
   /**
    * Zoho's data center and account class, recovered from the stored host on a
@@ -714,7 +727,17 @@ export function ConnectModal({
   // Set when the address the user typed identified a known mail provider and we
   // filled the server fields in for them. Shape:
   // { label, requiresAppPassword, appPasswordHelpUrl }.
-  const [hostPrefill, setHostPrefill] = useState(null);
+  // Seeded when the modal opens for a provider whose settings were filled in
+  // from its landing page, so the same "recognised, filled in for you" note is
+  // shown as when an address is recognised.
+  const [hostPrefill, setHostPrefill] = useState(() => (seedForm
+    ? {
+        label: seed.label,
+        requiresAppPassword: seed.requiresAppPassword === true,
+        appPasswordHelpUrl: seed.appPasswordHelpUrl ?? null,
+        source: 'table',
+      }
+    : null));
   // Which of the credential situations the last rejection was, from the route's
   // `auth_reason` (or decided here, before submitting, for a password that
   // cannot be this provider's app password). Null whenever the last failure was
@@ -994,7 +1017,7 @@ export function ConnectModal({
    * causes, which React runs after that updater. Nothing renders from it on its
    * own, so it never needs to schedule a render of its own.
    */
-  const discoveryFilledHostsRef = useRef(false);
+  const discoveryFilledHostsRef = useRef(Boolean(seedForm));
 
   /**
    * Fill the server fields in from the address, when we can work out where the
