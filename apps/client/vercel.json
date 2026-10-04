@@ -3,7 +3,7 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . ../../package-lock.json",
+  "ignoreCommand": "if [ \"$VERCEL_ENV\" != \"production\" ]; then exit 0; fi; git diff --quiet HEAD^ HEAD -- . ../../package-lock.json",
   "rewrites": [{ "source": "/((?!assets/|sw\\.js|manifest\\.webmanifest|.*\\.(?:png|svg|ico|webmanifest|txt)$).*)", "destination": "/index.html" }],
   "headers": [
     {
