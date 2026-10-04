@@ -85,8 +85,17 @@ function errorCode(error: unknown): string {
   return "provider_error";
 }
 
+/**
+ * A refused credential, in either form the tool layer raises it: the
+ * `*_auth_failed` sentinel its helpers throw, or the `ImapAuthError` a dial
+ * throws when this module opens the connection itself (`session.client()`).
+ * Found live 2026-10-04: only the sentinel was recognised, so a status call
+ * for the inbox alone (no LIST, hence no helper in between) answered 200 with
+ * a per-folder `provider_error` while every other op said reconnect_required.
+ */
 function isAuthFailure(error: unknown): boolean {
-  return error instanceof Error && /^(gmail|outlook|imap|fastmail)_auth_failed$/.test(error.message);
+  return error instanceof Error &&
+    (/^(gmail|outlook|imap|fastmail)_auth_failed$/.test(error.message) || error.name === "ImapAuthError");
 }
 
 async function imapStatus(mcp: McpSeam, inbox: InboxRow, folders: string[]): Promise<FolderStatus[]> {

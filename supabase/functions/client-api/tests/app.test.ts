@@ -92,7 +92,8 @@ Deno.test("every response carries Server-Timing with the four phases, and X-Requ
   for (const response of responses) {
     assertMatch(
       response.headers.get("server-timing") ?? "",
-      /^auth;dur=[\d.]+, db;dur=[\d.]+, provider;dur=[\d.]+, total;dur=[\d.]+$/,
+      // The four phases, then which isolate answered and its request count.
+      /^auth;dur=[\d.]+, db;dur=[\d.]+, provider;dur=[\d.]+, total;dur=[\d.]+(, connect;dur=[\d.]+, imap;desc="\d+:\d+")?, isolate;desc="[0-9a-f]{8}:\d+"$/,
     );
     assertMatch(response.headers.get("x-request-id") ?? "", /^[A-Za-z0-9_-]{8,64}$/);
     assertEquals(response.headers.get("cache-control"), "no-store");

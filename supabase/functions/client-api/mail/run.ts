@@ -139,6 +139,8 @@ export function firstPartyFor(
       let dialled = false;
       const client = await env.pool.checkout(key, options.flow, async () => {
         dialled = true;
+        // Counted when attempted, so a refused dial is visible in the log line.
+        options.timings.imapDials++;
         const started = performance.now();
         try {
           return env.imapDial
@@ -148,8 +150,7 @@ export function firstPartyFor(
           options.timings.connectMs += performance.now() - started;
         }
       });
-      if (dialled) options.timings.imapDials++;
-      else options.timings.imapReuses++;
+      if (!dialled) options.timings.imapReuses++;
       return client as unknown as C;
     },
   };
@@ -396,12 +397,17 @@ export function planMailRequest(request: MailRequest): {
  * Run one `/mail` op. Throws ApiError; never returns an error result.
  * `flow` lets a batch give each call its own identity to the IMAP pool.
  */
-export async function runMailOp(env: MailEnv, request: MailRequest, flow: object = {}): Promise<MailOutcome> {
+export async function runMailOp(
+  env: MailEnv,
+  request: MailRequest,
+  flow: object = {},
+  /** Filled in as the op runs, so the caller still has them when the op throws. */
+  timings: OpTimings = newTimings(),
+): Promise<MailOutcome> {
   const { spec, calls, inboxId, idempotencyKey } = planMailRequest(request);
   if (spec.kind !== "read" && !env.canWrite) {
     throw forbidden("Your role in this workspace is read-only.");
   }
-  const timings = newTimings();
 
   const work = (async (): Promise<MailOutcome> => {
     if (spec.special === "status") {

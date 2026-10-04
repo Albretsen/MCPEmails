@@ -35,6 +35,12 @@
 //   6. BOUNDED. At most `maxPerKey` live connections per inbox including
 //      overflow (below every provider cap we know: Yahoo 5, iCloud ~10, Gmail
 //      15), `maxIdleTotal` idle connections per isolate, LOGOUT on eviction.
+//   7. A REFUSED LOGIN IS NOT RETRIED for `authBackoffMs`. The key is the
+//      credentials, so the same password would be refused again, and providers
+//      answer repeated failed logins by locking the mailbox (seen live on
+//      Migadu, 2026-10-04: every login refused, SMTP answering 454, for well
+//      over half an hour). A poll every 30 s must not be what keeps a lock
+//      alive. New credentials are a new key and dial at once.
 //
 // OVERFLOW. When the pooled connection is leased and the SAME operation asks
 // for a second one (a few executors hold two at once), waiting would deadlock,
@@ -64,6 +70,8 @@ export interface ImapPoolOptions {
   maxLeaseMs?: number;
   /** Idle connections kept across the whole isolate. */
   maxIdleTotal?: number;
+  /** How long a key whose login was refused is answered without dialling. */
+  authBackoffMs?: number;
   now?: () => number;
 }
 
@@ -75,6 +83,8 @@ export interface PoolStats {
   drops: number;
   evictions: number;
   waits: number;
+  /** Checkouts answered with a remembered login refusal, without dialling. */
+  refusals: number;
   idle: number;
   leased: number;
 }
@@ -111,7 +121,12 @@ const defaults = {
   waitMs: 8_000,
   maxLeaseMs: 60_000,
   maxIdleTotal: 64,
+  authBackoffMs: 60_000,
 };
+
+function isLoginRefusal(error: unknown): error is Error {
+  return error instanceof Error && (error.name === "ImapAuthError" || error.message === "imap_auth_failed");
+}
 
 /** `setTimeout` returns a number on older Deno and a Timeout object on newer ones. */
 type TimerHandle = ReturnType<typeof setTimeout>;
@@ -128,7 +143,8 @@ export class ImapPool<C extends PoolableClient> {
   readonly #entries = new Map<string, Entry<C>>();
   readonly #opts: Required<Omit<ImapPoolOptions, "now">>;
   readonly #now: () => number;
-  readonly #stats = { dials: 0, reuses: 0, overflows: 0, validations: 0, drops: 0, evictions: 0, waits: 0 };
+  readonly #stats = { dials: 0, reuses: 0, overflows: 0, validations: 0, drops: 0, evictions: 0, waits: 0, refusals: 0 };
+  readonly #refused = new Map<string, { error: Error; until: number }>();
   #closed = false;
 
   constructor(options: ImapPoolOptions = {}) {
@@ -139,6 +155,7 @@ export class ImapPool<C extends PoolableClient> {
       waitMs: options.waitMs ?? defaults.waitMs,
       maxLeaseMs: options.maxLeaseMs ?? defaults.maxLeaseMs,
       maxIdleTotal: options.maxIdleTotal ?? defaults.maxIdleTotal,
+      authBackoffMs: options.authBackoffMs ?? defaults.authBackoffMs,
     };
     this.#now = options.now ?? (() => performance.now());
   }
@@ -162,13 +179,32 @@ export class ImapPool<C extends PoolableClient> {
    */
   async checkout(key: string, flow: object, dial: () => Promise<C>): Promise<C> {
     if (this.#closed) return await dial();
+    const refused = this.#refused.get(key);
+    if (refused) {
+      if (refused.until > this.#now()) {
+        this.#stats.refusals++;
+        throw refused.error;
+      }
+      this.#refused.delete(key);
+    }
+    const guarded = async (): Promise<C> => {
+      try {
+        return await dial();
+      } catch (error) {
+        if (isLoginRefusal(error) && this.#opts.authBackoffMs > 0) {
+          if (this.#refused.size > 2000) this.#refused.clear();
+          this.#refused.set(key, { error, until: this.#now() + this.#opts.authBackoffMs });
+        }
+        throw error;
+      }
+    };
     const entry = this.#entry(key);
     // An entry is never dropped from the map while a checkout is working on
     // it: a second entry for the same key would mean a second pooled
     // connection for the same inbox.
     entry.pending++;
     try {
-      return await this.#acquire(entry, key, flow, dial);
+      return await this.#acquire(entry, key, flow, guarded);
     } finally {
       entry.pending--;
       this.#forget(key, entry);

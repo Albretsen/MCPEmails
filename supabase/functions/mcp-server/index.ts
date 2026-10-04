@@ -32163,6 +32163,9 @@ export {
   // The service-role client: membership, the workspace gate, the hidden
   // web-client key and the assistant allowance RPCs all go through it.
   supabase as serviceRoleClient,
+  // The projection `resolveInbox` selects, so client-api can load the same
+  // row shape in its one boot query and never a narrower one.
+  INBOX_SELECT_COLUMNS,
 };
 // The row and key shapes those functions take, so client-api does not restate them.
 export type { ApiKeyRow, ExecutorOutcome, InboxRow };

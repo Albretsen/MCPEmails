@@ -48,6 +48,7 @@ export async function runMailBatch(
   const runOne = async (index: number): Promise<void> => {
     const call = calls[index];
     const op = typeof call.op === "string" ? call.op.slice(0, 40) : "?";
+    const own: OpTimings = { providerMs: 0, connectMs: 0, imapDials: 0, imapReuses: 0 };
     try {
       if (typeof call.op === "string" && Object.hasOwn(OPS, call.op) && OPS[call.op].special === "attachment") {
         throw invalidRequest("batch: 'attachment' returns a binary body; call POST /mail for it.");
@@ -55,18 +56,20 @@ export async function runMailBatch(
       // A fresh flow per call: the pool hands the SAME connection to the next
       // call once this one returns it, rather than treating them as one
       // operation that needs two connections at once.
-      const outcome = await runMailOp(env, call, {});
+      const outcome = await runMailOp(env, call, {}, own);
       if (outcome.type !== "json") throw invalidRequest("batch: unsupported result type.");
       results[index] = { ok: true, result: outcome.result };
       summary[index] = { op, status: "ok" };
-      timings.providerMs += outcome.timings.providerMs;
-      timings.connectMs += outcome.timings.connectMs;
-      timings.imapDials += outcome.timings.imapDials;
-      timings.imapReuses += outcome.timings.imapReuses;
     } catch (error) {
       const api = toApiError(error);
       results[index] = { ok: false, error: api.body };
       summary[index] = { op, status: api.body.code };
+    } finally {
+      // A failed call's time counts too.
+      timings.providerMs += own.providerMs;
+      timings.connectMs += own.connectMs;
+      timings.imapDials += own.imapDials;
+      timings.imapReuses += own.imapReuses;
     }
   };
 

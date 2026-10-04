@@ -85,6 +85,8 @@ export interface McpSeam {
   withFreshOutlookToken(inbox: InboxRow): Promise<string>;
   // deno-lint-ignore no-explicit-any
   serviceRoleClient: any;
+  /** The `inboxes` projection `resolveInbox` selects (absent on a test stand-in). */
+  INBOX_SELECT_COLUMNS?: string;
   TOOL_REGISTRY: ToolDefinitionLike[];
   CONSOLIDATED_SPECS: Record<string, { actions: Record<string, ConsolidatedActionLike> }>;
   validateInputSchema(schema: unknown, value: unknown): Array<{ path?: string; message?: string }>;

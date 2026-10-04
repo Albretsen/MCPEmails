@@ -63,9 +63,22 @@ interface Timing {
   provider: number;
 }
 
-function serverTiming(t: Timing, total: number): string {
+// Which isolate answered, and how many requests it has answered. Random per
+// isolate, carries nothing about the caller. It is what makes "was this warm?"
+// and "did the IMAP pool get a chance?" answerable from the outside.
+const ISOLATE_ID = crypto.randomUUID().slice(0, 8);
+const ISOLATE_STARTED = performance.now();
+let isolateSeq = 0;
+
+function serverTiming(t: Timing, total: number, seq: number, fields: Record<string, unknown>): string {
   const f = (n: number) => (Math.round(n * 10) / 10).toString();
-  return `auth;dur=${f(t.auth)}, db;dur=${f(t.db)}, provider;dur=${f(t.provider)}, total;dur=${f(total)}`;
+  // On a mail route: how many IMAP connections this request dialled and how
+  // many it took from the pool, and the time spent dialling (part of provider).
+  const imap = typeof fields["imap_dials"] === "number"
+    ? `, connect;dur=${f(Number(fields["connect_ms"] ?? 0))}, imap;desc="${fields["imap_dials"]}:${fields["imap_reuses"] ?? 0}"`
+    : "";
+  return `auth;dur=${f(t.auth)}, db;dur=${f(t.db)}, provider;dur=${f(t.provider)}, total;dur=${f(total)}` +
+    `${imap}, isolate;desc="${ISOLATE_ID}:${seq}"`;
 }
 
 function routeOf(pathname: string): string {
@@ -139,6 +152,28 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
       return row;
     } finally {
       timing.db += performance.now() - started;
+    }
+  };
+
+  /** Fill the key and inbox-row caches from a membership load that carried them (store.ts). */
+  const seeded = new WeakSet<Membership[]>();
+  const seedFromMemberships = (rows: Membership[]): void => {
+    // Once per load, not per request: the gate hands back the same array until
+    // it reloads, and re-seeding from it would keep restarting the caches'
+    // own clocks with rows that are getting older. (A speculative load has
+    // already landed in the gate's cache by the time its request asks, so
+    // "was it cached" cannot be the test.)
+    if (seeded.has(rows)) return;
+    seeded.add(rows);
+    for (const m of rows) {
+      const key = m.web_client_key;
+      if (key && key.workspace_id === m.workspace_id) {
+        if (keys.size > 5000) keys.clear();
+        keys.set(m.workspace_id, { row: key, at: now() });
+      }
+      for (const inbox of m.inbox_rows ?? []) {
+        if (inbox.workspace_id === m.workspace_id && inbox.status === "active") inboxRows.remember(inbox);
+      }
     }
   };
 
@@ -223,13 +258,19 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
 
     const fields: Record<string, unknown> = { request_id: requestId, method: req.method, route };
 
+    // Set by ws.ts on the requests it builds. A fixed word, never the header's value.
+    if (req.headers.get("x-client-transport") === "ws") fields["transport"] = "ws";
+    fields["isolate"] = ISOLATE_ID;
+    fields["isolate_seq"] = ++isolateSeq;
+    fields["isolate_age_s"] = Math.round((performance.now() - ISOLATE_STARTED) / 1000);
+
     const finish = (response: Response, extra: Record<string, string> = {}): Response => {
       const total = performance.now() - startedAt;
       const headers = new Headers(response.headers);
       for (const [key, value] of Object.entries(corsHeaders(origin))) headers.set(key, value);
       for (const [key, value] of Object.entries(extra)) headers.set(key, value);
       headers.set("X-Request-Id", requestId);
-      headers.set("Server-Timing", serverTiming(timing, total));
+      headers.set("Server-Timing", serverTiming(timing, total, fields["isolate_seq"] as number, fields));
       headers.set("Cache-Control", "no-store");
       headers.set("X-Content-Type-Options", "nosniff");
       log("request", {
@@ -271,10 +312,16 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
       const authStarted = performance.now();
       let user: AuthedUser;
       try {
-        const claims = await deps.verifier.verify(bearerToken(req));
+        const token = bearerToken(req);
+        // Cold isolate only: the signing keys are about to be fetched, so the
+        // membership query runs beside that fetch instead of after it.
+        const speculative = deps.verifier.speculativeSubject(token);
+        if (speculative) deps.gate.prefetch(speculative);
+        const claims = await deps.verifier.verify(token);
         user = { id: claims.sub.toLowerCase(), email: typeof claims.email === "string" ? claims.email : "" };
       } finally {
         timing.auth += performance.now() - authStarted;
+        fields["verify_ms"] = Math.round(performance.now() - authStarted);
       }
       fields["user_id"] = user.id;
 
@@ -288,6 +335,9 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
         membership = resolved.workspace;
         if (!resolved.cached) timing.db += performance.now() - gateStarted;
         else timing.auth += performance.now() - gateStarted;
+        seedFromMemberships(memberships);
+        fields["gate_ms"] = Math.round(performance.now() - gateStarted);
+        fields["gate_cached"] = resolved.cached;
       } catch (error) {
         timing.db += performance.now() - gateStarted;
         throw error;
@@ -327,7 +377,9 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
         });
       }
 
+      const keyStarted = performance.now();
       const keyRow = await workspaceKey(membership.workspace_id, timing);
+      fields["key_ms"] = Math.round(performance.now() - keyStarted);
       const env = mailEnvFor(keyRow, membership, requestId);
 
       // ── routes ────────────────────────────────────────────────────────────
@@ -341,10 +393,12 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
         const [profile, inboxes, allowance] = await Promise.all([
           deps.store.userProfile(user.id).catch(() => null),
           listInboxes(env, membership.workspace_id, timings),
-          readAllowance(membership, timing, requestId),
+          readAllowance(membership, { auth: 0, db: 0, provider: 0 }, requestId),
         ]);
-        timing.provider += timings.providerMs;
-        timing.db += Math.max(0, performance.now() - profileStarted - timings.providerMs);
+        // Three database reads side by side (the inbox list is one too: no
+        // mail provider is contacted), so the phase is their shared wall time.
+        // Adding each one's own duration reported more "db" than the request took.
+        timing.db += performance.now() - profileStarted;
         fields["inboxes"] = inboxes.length;
         return json({
           user: { id: user.id, email: user.email, display_name: profile?.display_name ?? null },
@@ -368,11 +422,17 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
           throw invalidRequest("Request body must be an object.");
         }
         if (typeof request.inbox_id === "string") fields["inbox_id"] = request.inbox_id.slice(0, 36);
-        const outcome = await runMailOp(env, request);
-        timing.provider += outcome.timings.providerMs;
-        fields["imap_dials"] = outcome.timings.imapDials;
-        fields["imap_reuses"] = outcome.timings.imapReuses;
-        fields["connect_ms"] = Math.round(outcome.timings.connectMs);
+        // Created here so a failed op still reports the time it spent.
+        const opTimings: OpTimings = { providerMs: 0, connectMs: 0, imapDials: 0, imapReuses: 0 };
+        let outcome: Awaited<ReturnType<typeof runMailOp>>;
+        try {
+          outcome = await runMailOp(env, request, {}, opTimings);
+        } finally {
+          timing.provider += opTimings.providerMs;
+          fields["imap_dials"] = opTimings.imapDials;
+          fields["imap_reuses"] = opTimings.imapReuses;
+          fields["connect_ms"] = Math.round(opTimings.connectMs);
+        }
         if (outcome.type === "binary") {
           fields["bytes"] = outcome.body.byteLength;
           return finish(
@@ -395,6 +455,7 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
         timing.provider += outcome.timings.providerMs;
         fields["imap_dials"] = outcome.timings.imapDials;
         fields["imap_reuses"] = outcome.timings.imapReuses;
+        fields["connect_ms"] = Math.round(outcome.timings.connectMs);
         fields["ops"] = outcome.summary.map((s) => `${s.op}:${s.status}`).join(",");
         return json({ results: outcome.results });
       }

@@ -21,6 +21,7 @@ import { corsHeaders, preflightResponse } from "./cors.ts";
 import { ImapPool, type PoolableClient } from "./imap-pool.ts";
 import { RateLimiter } from "./rate-limit.ts";
 import { loadMcpSeam } from "./seam.ts";
+import { serveSocket } from "./ws.ts";
 import { supabaseStore } from "./store.ts";
 
 type Handler = (req: Request) => Promise<Response>;
@@ -67,32 +68,78 @@ function loadAssistant(): Promise<HandleAssistantRun> {
   return assistantModule;
 }
 
-async function start(): Promise<Handler> {
+interface Started {
+  handler: Handler;
+  /** Signature + expiry check for a socket's `auth` frame; false when the function did not start. */
+  authenticate: (token: string) => Promise<boolean>;
+}
+
+async function start(): Promise<Started> {
+  const closed = (reason: string): Started => ({ handler: failClosed(reason), authenticate: () => Promise.resolve(false) });
   let mcp;
   try {
     mcp = await loadMcpSeam();
   } catch (error) {
-    return failClosed(error instanceof Error ? `${error.name}: ${error.message}` : "seam_load_failed");
+    return closed(error instanceof Error ? `${error.name}: ${error.message}` : "seam_load_failed");
   }
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-  if (!supabaseUrl) return failClosed("SUPABASE_URL is not set");
+  if (!supabaseUrl) return closed("SUPABASE_URL is not set");
 
-  const store = supabaseStore(mcp.serviceRoleClient);
-  return createApp({
-    mcp,
-    store,
-    verifier: new JwtVerifier({
-      supabaseUrl,
-      jwtSecret: Deno.env.get("SUPABASE_JWT_SECRET") ?? Deno.env.get("JWT_SECRET") ?? undefined,
-      apiKey: Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? undefined,
-    }),
-    gate: new WorkspaceGate(store),
-    limiter: new RateLimiter(),
-    pool: new ImapPool<PoolableClient>(),
-    assistant: loadAssistant,
+  const store = supabaseStore(mcp.serviceRoleClient, { inboxColumns: mcp.INBOX_SELECT_COLUMNS });
+  const verifier = new JwtVerifier({
+    supabaseUrl,
+    jwtSecret: Deno.env.get("SUPABASE_JWT_SECRET") ?? Deno.env.get("JWT_SECRET") ?? undefined,
+    apiKey: Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? undefined,
   });
+  return {
+    handler: createApp({
+      mcp,
+      store,
+      verifier,
+      gate: new WorkspaceGate(store),
+      limiter: new RateLimiter(),
+      // Idle TTL 70 s, not the pool's default 25 s. A pooled connection only
+      // ever outlives its request on a WebSocket (see the note at the bottom
+      // of this file), and there the client's change poll comes every 30 to
+      // 60 s: with 25 s every poll found the connection already logged out
+      // and paid TCP + TLS + AUTH again, one login per poll per inbox for as
+      // long as the tab was open. 70 s keeps the one connection across polls;
+      // it is still NOOP-checked after 10 s idle, and the socket's own idle
+      // close (ws.ts) ends it when the tab stops talking.
+      pool: new ImapPool<PoolableClient>({ idleTtlMs: 70_000 }),
+      assistant: loadAssistant,
+    }),
+    authenticate: (token) => verifier.verify(token).then(() => true, () => false),
+  };
 }
 
-const handler = await start();
+const { handler, authenticate } = await start();
 
-Deno.serve(handler);
+// ISOLATE LIFETIME, measured on the hosted runtime (2026-10-04, edge runtime
+// 1.76). Once a response is sent and nothing is pending, the platform shuts
+// the worker down (log event "shutdown", reason EarlyDrop), and consecutive
+// HTTP requests from one browser are spread over many workers anyway: of 120
+// back-to-back requests, 105 booted a new isolate. So on plain HTTP nearly
+// every request is a cold one, and the caches and the IMAP pool below serve
+// one request each.
+//
+// Holding the isolate open with EdgeRuntime.waitUntil was tried and REMOVED:
+// it raised reuse only from 3 % to (at best) 14 %, because routing is not
+// sticky, while every one of those idle isolates kept its own authenticated
+// IMAP connection open for the pool's idle TTL. A person clicking through
+// twenty messages would have held twenty connections to a provider that
+// allows five. Letting the worker be dropped closes its connection with it.
+//
+// What does pin an isolate is a WebSocket (ws.ts): every frame on a socket is
+// served by the isolate that accepted it, so its caches and its ONE pooled
+// IMAP connection per inbox are reused by every request of that tab.
+Deno.serve((req) => {
+  if (req.method === "GET" && /\/client-api\/ws\/?$/.test(new URL(req.url).pathname)) {
+    return serveSocket(req, {
+      handle: handler,
+      authenticate,
+      log: (event, fields) => console.log(`[client-api] ${event}`, fields),
+    });
+  }
+  return handler(req);
+});

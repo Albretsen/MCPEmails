@@ -55,8 +55,23 @@ function failure(error: { message?: string; code?: string; status?: number }): A
 
 export function createSupabaseAuthBackend(url: string, anonKey: string): AuthBackend {
   const supabase = createSupabaseClient(url, anonKey);
+  // Development only: accept an implicit-flow fragment (#access_token=…) on the
+  // callback path, which is what an admin-generated test link produces. The
+  // PKCE client ignores it. Never in production builds: taking a session from
+  // the URL fragment would let a crafted link sign someone into another account.
+  let devImplicit: Promise<unknown> | null = null;
+  if (import.meta.env.DEV && typeof location !== "undefined" && location.pathname === "/auth/callback") {
+    const hash = new URLSearchParams(location.hash.slice(1));
+    const access_token = hash.get("access_token");
+    const refresh_token = hash.get("refresh_token");
+    if (access_token && refresh_token) {
+      history.replaceState(null, "", "/");
+      devImplicit = supabase.auth.setSession({ access_token, refresh_token }).catch(() => null);
+    }
+  }
   return {
     async getSession() {
+      if (devImplicit) await devImplicit;
       const { data } = await supabase.auth.getSession();
       return toSession(data.session);
     },

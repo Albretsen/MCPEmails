@@ -12,7 +12,7 @@
 
 import type { AssistantAllowance, AssistantUsage, PlanSlug } from "./assistant-deps.ts";
 import type { Membership, MembershipSource, WorkspaceRole } from "./auth.ts";
-import type { ApiKeyRow } from "./seam.ts";
+import type { ApiKeyRow, InboxRow } from "./seam.ts";
 
 /** `api_keys.kind` for the hidden per-workspace row. */
 export const WEB_CLIENT_KEY_KIND = "web_client";
@@ -97,7 +97,69 @@ function first<T>(data: T | T[] | null | undefined): T | null {
   return Array.isArray(data) ? (data[0] ?? null) : data;
 }
 
-export function supabaseStore(db: Db): Store {
+export interface SupabaseStoreOptions {
+  /**
+   * The `inboxes` projection the tool layer's `resolveInbox` selects. When
+   * given, `memberships` loads each workspace's hidden key row and inbox rows
+   * in the same request (PostgREST embeds), so a cold isolate needs ONE round
+   * trip before its handler instead of three in a row. The column list must be
+   * the tool layer's own: a narrower row in the inbox cache would reach an
+   * executor without its credentials.
+   */
+  inboxColumns?: string;
+}
+
+interface EmbeddedWorkspace {
+  display_name: string;
+  plan: string;
+  web_client_enabled: boolean | null;
+  api_keys?: ApiKeyRow[] | null;
+  inboxes?: InboxRow[] | null;
+}
+
+interface EmbeddedMemberRow {
+  workspace_id: string;
+  role: WorkspaceRole;
+  joined_at: string;
+  workspaces: EmbeddedWorkspace | EmbeddedWorkspace[] | null;
+}
+
+export function supabaseStore(db: Db, options: SupabaseStoreOptions = {}): Store {
+  /** Memberships + hidden keys + inbox rows in one request, or null when the embed is refused. */
+  const bootMemberships = async (userId: string, inboxColumns: string): Promise<Membership[] | null> => {
+    const { data, error } = await db
+      .from("workspace_members")
+      .select(
+        "workspace_id, role, joined_at, workspaces!inner(id, display_name, plan, web_client_enabled, deleted_at, " +
+          `api_keys(${KEY_COLUMNS}), inboxes(${inboxColumns}))`,
+      )
+      .eq("user_id", userId)
+      .is("workspaces.deleted_at", null)
+      .eq("workspaces.api_keys.kind", WEB_CLIENT_KEY_KIND)
+      .is("workspaces.api_keys.deleted_at", null)
+      .is("workspaces.inboxes.deleted_at", null);
+    // Any refusal (an ambiguous relationship after a schema change, a column
+    // a migration has not landed) falls back to the plain query below.
+    if (error || !Array.isArray(data)) return null;
+    const out: Membership[] = [];
+    for (const row of data as EmbeddedMemberRow[]) {
+      const ws = first(row.workspaces);
+      if (!ws) continue;
+      const key = (ws.api_keys ?? []).find((k) => k.workspace_id === row.workspace_id && !k.deleted_at) ?? null;
+      out.push({
+        workspace_id: row.workspace_id,
+        role: row.role,
+        joined_at: row.joined_at,
+        display_name: ws.display_name,
+        plan: ws.plan,
+        web_client_enabled: ws.web_client_enabled === true,
+        web_client_key: key,
+        inbox_rows: (ws.inboxes ?? []).filter((inbox) => inbox.workspace_id === row.workspace_id),
+      });
+    }
+    return out;
+  };
+
   const findKey = async (workspaceId: string): Promise<ApiKeyRow | null> => {
     const { data, error } = await db
       .from("api_keys")
@@ -113,6 +175,10 @@ export function supabaseStore(db: Db): Store {
 
   return {
     async memberships(userId) {
+      if (options.inboxColumns) {
+        const boot = await bootMemberships(userId, options.inboxColumns).catch(() => null);
+        if (boot) return boot;
+      }
       const { data, error } = await db
         .from("workspace_members")
         .select("workspace_id, role, joined_at, workspaces!inner(id, display_name, plan, web_client_enabled, deleted_at)")

@@ -31,6 +31,7 @@
 // ---------------------------------------------------------------------------
 
 import { ApiError, forbidden, unauthenticated } from "./errors.ts";
+import type { ApiKeyRow, InboxRow } from "./seam.ts";
 
 export type WorkspaceRole = "owner" | "admin" | "member" | "viewer";
 
@@ -41,6 +42,15 @@ export interface Membership {
   display_name: string;
   plan: string;
   web_client_enabled: boolean;
+  /**
+   * Loaded in the SAME round trip as the membership when the store can do it
+   * (store.ts `memberships`): the workspace's hidden key row and its inbox
+   * rows, so a cold isolate reaches its handler after one query instead of
+   * three. Server-side only: `/session` builds its workspace list field by
+   * field and never spreads this object.
+   */
+  web_client_key?: ApiKeyRow | null;
+  inbox_rows?: InboxRow[];
 }
 
 export interface AuthedUser {
@@ -121,6 +131,32 @@ export class JwtVerifier {
     this.#cfg = cfg;
     this.#fetch = cfg.fetch ?? ((input, init) => fetch(input, init));
     this.#now = cfg.now ?? (() => Date.now());
+  }
+
+  /**
+   * The `sub` an UNVERIFIED token claims, but only when verifying it is about
+   * to cost a network round trip (the JWKS is not loaded yet: a cold isolate),
+   * and only for a token that at least looks like one of ours. The caller may
+   * start loading that user's memberships while the keys are fetched. Nothing
+   * loaded that way is used unless `verify` then succeeds for the same `sub`.
+   * Returns null whenever verification is local, so a warm isolate never
+   * touches the database for a token it has not verified.
+   */
+  speculativeSubject(token: string): string | null {
+    const ttl = this.#cfg.jwksTtlMs ?? 10 * 60_000;
+    if (this.#jwks && this.#now() - this.#jwks.at < ttl) return null;
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    try {
+      const header = parseJson(b64urlToBytes(parts[0]));
+      const payload = parseJson(b64urlToBytes(parts[1]));
+      if (!header || !payload) return null;
+      if (header["alg"] !== "ES256" && header["alg"] !== "RS256") return null;
+      this.#checkClaims(payload as unknown as JwtClaims);
+      return String(payload["sub"]).toLowerCase();
+    } catch {
+      return null;
+    }
   }
 
   /** Verified claims, or throws the 401. Never says why on the wire. */
@@ -317,6 +353,7 @@ export interface MembershipSource {
 
 export class WorkspaceGate {
   readonly #cache = new Map<string, { rows: Membership[]; at: number }>();
+  readonly #pending = new Map<string, Promise<Membership[]>>();
   constructor(
     private readonly source: MembershipSource,
     private readonly ttlMs = 60_000,
@@ -326,12 +363,40 @@ export class WorkspaceGate {
   async memberships(userId: string): Promise<{ rows: Membership[]; cached: boolean }> {
     const hit = this.#cache.get(userId);
     if (hit && this.now() - hit.at < this.ttlMs) return { rows: hit.rows, cached: true };
-    const rows = (await this.source.memberships(userId))
-      .slice()
-      .sort((a, b) => a.joined_at.localeCompare(b.joined_at) || a.workspace_id.localeCompare(b.workspace_id));
-    if (this.#cache.size > 5000) this.#cache.clear();
-    this.#cache.set(userId, { rows, at: this.now() });
-    return { rows, cached: false };
+    return { rows: await this.#load(userId), cached: false };
+  }
+
+  /** One query per user at a time: concurrent cold requests share it. */
+  #load(userId: string): Promise<Membership[]> {
+    let pending = this.#pending.get(userId);
+    if (!pending) {
+      const started: Promise<Membership[]> = this.source.memberships(userId).then((loaded) => {
+        const rows = loaded
+          .slice()
+          .sort((a, b) => a.joined_at.localeCompare(b.joined_at) || a.workspace_id.localeCompare(b.workspace_id));
+        if (this.#cache.size > 5000) this.#cache.clear();
+        this.#cache.set(userId, { rows, at: this.now() });
+        return rows;
+      }).finally(() => {
+        if (this.#pending.get(userId) === started) this.#pending.delete(userId);
+      });
+      this.#pending.set(userId, started);
+      pending = started;
+    }
+    return pending;
+  }
+
+  /**
+   * Start loading a user's memberships without waiting, for a token that is
+   * still being verified (see JwtVerifier.speculativeSubject). The result only
+   * ever reaches a request that then proves it is this user. Never throws.
+   */
+  prefetch(userId: string): void {
+    if (!UUID_RE.test(userId)) return;
+    const hit = this.#cache.get(userId);
+    if (hit && this.now() - hit.at < this.ttlMs) return;
+    if (this.#pending.size > 200) return;
+    this.#load(userId).catch(() => {});
   }
 
   /** Drop a user's cached memberships (tests, and after a gate refusal). */
