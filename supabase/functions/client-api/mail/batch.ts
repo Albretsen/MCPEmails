@@ -70,6 +70,7 @@ export async function runMailBatch(
       timings.connectMs += own.connectMs;
       timings.imapDials += own.imapDials;
       timings.imapReuses += own.imapReuses;
+      if (own.imapCalls?.length) (timings.imapCalls ??= []).push(...own.imapCalls.slice(0, 48 - (timings.imapCalls?.length ?? 0)));
     }
   };
 

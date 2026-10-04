@@ -32,6 +32,16 @@ export interface OpSpec {
   flagged?: boolean;
   /** Handled by client-api itself rather than by an executor. */
   special?: "status" | "attachment";
+  /**
+   * IMAP: every command this op sends after SELECT addresses messages by UID
+   * (UID FETCH / STORE / MOVE / SEARCH / EXPUNGE). The session pool may then
+   * re-enter an already selected mailbox with NOOP instead of SELECT
+   * (imap-pool.ts `reuseSelection`). NOT for `list`, which fetches by
+   * sequence number and needs the count a real SELECT reports.
+   */
+  uidOnly?: boolean;
+  /** IMAP: this op is the folder listing; it never reads the pool's remembered list. */
+  freshList?: boolean;
   /** `combine` needs to know the inbox's provider. */
   needsProvider?: boolean;
   build(args: Record<string, unknown>): ExecutorCall[];
@@ -266,6 +276,7 @@ export const OPS: Record<string, OpSpec> = {
     idempotency: "none",
     // The result carries `is_flagged` and `folder` (see first-party.ts).
     flagged: true,
+    uidOnly: true,
     build(args) {
       only(args, [
         "message_id",
@@ -293,6 +304,7 @@ export const OPS: Record<string, OpSpec> = {
     kind: "read",
     needsInbox: true,
     idempotency: "none",
+    uidOnly: true,
     build(args) {
       only(args, ["message_ids", "include_html", "body_max_chars"], "read_batch");
       return [{
@@ -312,6 +324,7 @@ export const OPS: Record<string, OpSpec> = {
     needsInbox: true,
     idempotency: "none",
     flagged: true,
+    uidOnly: true,
     build(args) {
       const text = ["text", "from", "to", "cc", "subject", "body", "since", "before", "query"];
       only(args, [...text, "unread", "has_attachment", "flagged", "include_folders", "limit", "offset"], "search");
@@ -336,6 +349,7 @@ export const OPS: Record<string, OpSpec> = {
     kind: "read",
     needsInbox: true,
     idempotency: "none",
+    freshList: true,
     build(args) {
       only(args, [], "folders");
       return [{ tool: "folder_list", args: {} }];
@@ -360,6 +374,7 @@ export const OPS: Record<string, OpSpec> = {
     // Setting a flag twice is the same as setting it once: no ledger needed,
     // and none of its three database round trips on the hottest write.
     idempotency: "none",
+    uidOnly: true,
     build(args) {
       only(args, ["message_ids", "read", "starred", "idempotency_key"], "flag");
       const ids = messageIds(args, "flag");
@@ -393,6 +408,7 @@ export const OPS: Record<string, OpSpec> = {
     needsInbox: true,
     idempotency: "optional",
     needsProvider: true,
+    uidOnly: true,
     build(args) {
       only(args, ["message_ids", "destination_folder_id", "idempotency_key"], "move");
       return [{
@@ -411,6 +427,7 @@ export const OPS: Record<string, OpSpec> = {
     needsInbox: true,
     idempotency: "optional",
     needsProvider: true,
+    uidOnly: true,
     build(args) {
       only(args, ["message_ids", "idempotency_key"], "archive");
       const ids = messageIds(args, "archive");
@@ -428,6 +445,7 @@ export const OPS: Record<string, OpSpec> = {
     needsInbox: true,
     idempotency: "optional",
     needsProvider: true,
+    uidOnly: true,
     build(args) {
       only(args, ["message_ids", "permanent", "idempotency_key"], "delete");
       return [{
@@ -561,6 +579,7 @@ export const OPS: Record<string, OpSpec> = {
     kind: "read",
     needsInbox: true,
     idempotency: "none",
+    uidOnly: true,
     build(args) {
       only(args, ["draft_id", "include_html"], "draft_read");
       // draft_list rows carry no body; a draft is read as the message it is.
@@ -764,6 +783,7 @@ export const OPS: Record<string, OpSpec> = {
     needsInbox: true,
     idempotency: "none",
     special: "attachment",
+    uidOnly: true,
     build(args) {
       only(args, ["message_id", "attachment_index", "filename"], "attachment");
       const index = int(args, "attachment_index", "attachment", 0, 10_000);

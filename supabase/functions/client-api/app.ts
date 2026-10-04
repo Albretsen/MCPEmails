@@ -75,7 +75,8 @@ function serverTiming(t: Timing, total: number, seq: number, fields: Record<stri
   // On a mail route: how many IMAP connections this request dialled and how
   // many it took from the pool, and the time spent dialling (part of provider).
   const imap = typeof fields["imap_dials"] === "number"
-    ? `, connect;dur=${f(Number(fields["connect_ms"] ?? 0))}, imap;desc="${fields["imap_dials"]}:${fields["imap_reuses"] ?? 0}"`
+    ? `, connect;dur=${f(Number(fields["connect_ms"] ?? 0))}, imap;desc="${fields["imap_dials"]}:${fields["imap_reuses"] ?? 0}"` +
+      (typeof fields["imap_calls"] === "string" ? `, calls;desc="${fields["imap_calls"]}"` : "")
     : "";
   return `auth;dur=${f(t.auth)}, db;dur=${f(t.db)}, provider;dur=${f(t.provider)}, total;dur=${f(total)}` +
     `${imap}, isolate;desc="${ISOLATE_ID}:${seq}"`;
@@ -432,6 +433,7 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
           fields["imap_dials"] = opTimings.imapDials;
           fields["imap_reuses"] = opTimings.imapReuses;
           fields["connect_ms"] = Math.round(opTimings.connectMs);
+          if (opTimings.imapCalls?.length) fields["imap_calls"] = opTimings.imapCalls.join(",");
         }
         if (outcome.type === "binary") {
           fields["bytes"] = outcome.body.byteLength;
@@ -456,6 +458,7 @@ export function createApp(deps: AppDeps): (req: Request) => Promise<Response> {
         fields["imap_dials"] = outcome.timings.imapDials;
         fields["imap_reuses"] = outcome.timings.imapReuses;
         fields["connect_ms"] = Math.round(outcome.timings.connectMs);
+        if (outcome.timings.imapCalls?.length) fields["imap_calls"] = outcome.timings.imapCalls.join(",");
         fields["ops"] = outcome.summary.map((s) => `${s.op}:${s.status}`).join(",");
         return json({ results: outcome.results });
       }

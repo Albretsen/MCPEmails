@@ -72,7 +72,26 @@ export interface ImapPoolOptions {
   maxIdleTotal?: number;
   /** How long a key whose login was refused is answered without dialling. */
   authBackoffMs?: number;
+  /** How long a mailbox list is served from memory (0 disables). */
+  listTtlMs?: number;
   now?: () => number;
+}
+
+export interface LeaseOptions {
+  trace?: CallTrace;
+  /**
+   * The operation addresses messages by UID only (read, flag, move, delete,
+   * search, attachment): re-entering the mailbox the connection already has
+   * selected is done with NOOP instead of SELECT. Never set it for an
+   * operation that fetches by SEQUENCE number (a listing): those need the
+   * message count a real SELECT reports.
+   */
+  reuseSelection?: boolean;
+  /**
+   * The operation IS the folder listing (the `folders` op): it always asks the
+   * server, and what it learns replaces the remembered list.
+   */
+  freshList?: boolean;
 }
 
 export interface PoolStats {
@@ -85,6 +104,8 @@ export interface PoolStats {
   waits: number;
   /** Checkouts answered with a remembered login refusal, without dialling. */
   refusals: number;
+  /** Folder lists answered from memory instead of a LIST round trip. */
+  listHits: number;
   idle: number;
   leased: number;
 }
@@ -107,6 +128,13 @@ interface Entry<C> {
   generation: number;
 }
 
+/**
+ * Told the NAME of every client method a lease runs and how long it took.
+ * Method names are identifiers from the source (`selectMailbox`, `uidStore`):
+ * never an argument, so never a folder name, a query or an address.
+ */
+export type CallTrace = (method: string, ms: number) => void;
+
 export class ImapPoolBusyError extends Error {
   constructor() {
     super("imap_pool_busy");
@@ -122,6 +150,7 @@ const defaults = {
   maxLeaseMs: 60_000,
   maxIdleTotal: 64,
   authBackoffMs: 60_000,
+  listTtlMs: 60_000,
 };
 
 function isLoginRefusal(error: unknown): error is Error {
@@ -143,8 +172,18 @@ export class ImapPool<C extends PoolableClient> {
   readonly #entries = new Map<string, Entry<C>>();
   readonly #opts: Required<Omit<ImapPoolOptions, "now">>;
   readonly #now: () => number;
-  readonly #stats = { dials: 0, reuses: 0, overflows: 0, validations: 0, drops: 0, evictions: 0, waits: 0, refusals: 0 };
+  readonly #stats = { dials: 0, reuses: 0, overflows: 0, validations: 0, drops: 0, evictions: 0, waits: 0, refusals: 0, listHits: 0 };
   readonly #refused = new Map<string, { error: Error; until: number }>();
+  /** The mailbox each live connection has selected (set by a successful SELECT through a handle). */
+  readonly #selected = new WeakMap<object, string>();
+  /**
+   * `LIST "" "*"` per key, for `listTtlMs`. Refreshed by every real LIST and
+   * by `listMailboxesWithStatus` (the `folders` op, which is never served
+   * from here), dropped by create / delete / rename on any handle of the key.
+   * Stale only for a folder created or renamed by ANOTHER mail client, and
+   * then only until the TTL or the client's next folder refresh.
+   */
+  readonly #lists = new Map<string, { value: unknown; at: number }>();
   #closed = false;
 
   constructor(options: ImapPoolOptions = {}) {
@@ -156,6 +195,7 @@ export class ImapPool<C extends PoolableClient> {
       maxLeaseMs: options.maxLeaseMs ?? defaults.maxLeaseMs,
       maxIdleTotal: options.maxIdleTotal ?? defaults.maxIdleTotal,
       authBackoffMs: options.authBackoffMs ?? defaults.authBackoffMs,
+      listTtlMs: options.listTtlMs ?? defaults.listTtlMs,
     };
     this.#now = options.now ?? (() => performance.now());
   }
@@ -177,7 +217,7 @@ export class ImapPool<C extends PoolableClient> {
    * `flow` identifies the operation asking: the same object for every connect
    * one operation makes, a different one for every other operation.
    */
-  async checkout(key: string, flow: object, dial: () => Promise<C>): Promise<C> {
+  async checkout(key: string, flow: object, dial: () => Promise<C>, lease?: LeaseOptions): Promise<C> {
     if (this.#closed) return await dial();
     const refused = this.#refused.get(key);
     if (refused) {
@@ -204,14 +244,15 @@ export class ImapPool<C extends PoolableClient> {
     // connection for the same inbox.
     entry.pending++;
     try {
-      return await this.#acquire(entry, key, flow, guarded);
+      return await this.#acquire(entry, key, flow, guarded, lease);
     } finally {
       entry.pending--;
       this.#forget(key, entry);
     }
   }
 
-  async #acquire(entry: Entry<C>, key: string, flow: object, dial: () => Promise<C>): Promise<C> {
+  async #acquire(entry: Entry<C>, key: string, flow: object, dial: () => Promise<C>, lease?: LeaseOptions): Promise<C> {
+    const trace = lease?.trace;
     const deadline = this.#now() + this.#opts.waitMs;
 
     for (;;) {
@@ -229,16 +270,19 @@ export class ImapPool<C extends PoolableClient> {
         }
         if (idleFor > this.#opts.validateAfterIdleMs && typeof client.noop === "function") {
           this.#stats.validations++;
+          const started = this.#now();
           try {
             await client.noop();
           } catch {
             this.#dropPooled(entry, client, generation);
             continue;
+          } finally {
+            trace?.("validate", this.#now() - started);
           }
           if (entry.generation !== generation) continue;
         }
         this.#stats.reuses++;
-        return this.#lease(entry, client, generation);
+        return this.#lease(entry, key, client, generation, lease);
       }
 
       if (entry.state === "empty" && entry.live < this.#opts.maxPerKey) {
@@ -263,12 +307,12 @@ export class ImapPool<C extends PoolableClient> {
         if (this.#closed || entry.generation !== generation) {
           // The pool was closed, or the slot was reclaimed, while dialling.
           entry.live--;
-          return this.#unpooled(entry, key, client);
+          return this.#unpooled(entry, key, client, false, lease);
         }
         entry.client = client;
         entry.state = "leased";
         entry.leasedAt = this.#now();
-        return this.#lease(entry, client, generation);
+        return this.#lease(entry, key, client, generation, lease);
       }
 
       // The pooled connection is leased or being dialled by someone.
@@ -297,7 +341,7 @@ export class ImapPool<C extends PoolableClient> {
           }
           this.#stats.dials++;
           this.#stats.overflows++;
-          return this.#unpooled(entry, key, client, true);
+          return this.#unpooled(entry, key, client, true, lease);
         }
         if (timedOut) throw new ImapPoolBusyError();
       }
@@ -323,6 +367,12 @@ export class ImapPool<C extends PoolableClient> {
       if (entry.live <= 0) this.#entries.delete(key);
     }
     await Promise.all(closing);
+  }
+
+  #rememberList(key: string, value: unknown): void {
+    if (this.#opts.listTtlMs <= 0 || !Array.isArray(value)) return;
+    if (this.#lists.size >= 500) this.#lists.clear();
+    this.#lists.set(key, { value: structuredClone(value), at: this.#now() });
   }
 
   #entry(key: string): Entry<C> {
@@ -461,15 +511,15 @@ export class ImapPool<C extends PoolableClient> {
   }
 
   /** The handle a holder of the POOLED connection gets. */
-  #lease(entry: Entry<C>, client: C, generation: number): C {
+  #lease(entry: Entry<C>, key: string, client: C, generation: number, lease?: LeaseOptions): C {
     return this.#handle(client, (tainted) => {
       this.#returnPooled(entry, client, generation, tainted);
       return Promise.resolve();
-    });
+    }, key, lease);
   }
 
   /** The handle for an overflow connection: really logged out on return. */
-  #unpooled(entry: Entry<C>, _key: string, client: C, counted = false): C {
+  #unpooled(entry: Entry<C>, key: string, client: C, counted = false, lease?: LeaseOptions): C {
     return this.#handle(client, async (tainted, options) => {
       if (counted) entry.live--;
       this.#wake(entry);
@@ -478,7 +528,7 @@ export class ImapPool<C extends PoolableClient> {
         return;
       }
       await client.logout(options);
-    });
+    }, key, lease);
   }
 
   /**
@@ -488,9 +538,14 @@ export class ImapPool<C extends PoolableClient> {
   #handle(
     client: C,
     giveBack: (tainted: boolean, options?: { background?: boolean }) => Promise<void>,
+    key: string,
+    lease?: LeaseOptions,
   ): C {
+    const trace = lease?.trace;
     let released = false;
     let tainted = false;
+    /** This lease re-entered a mailbox with NOOP: its SELECT-time snapshot is not current. */
+    let reselected = false;
     let releasing: Promise<void> | null = null;
     const release = (options?: { background?: boolean }): Promise<void> => {
       if (releasing) return releasing;
@@ -518,17 +573,84 @@ export class ImapPool<C extends PoolableClient> {
             // Rule 4. Rejected rather than thrown: every command is async.
             return Promise.reject(new Error("imap_lease_released"));
           }
+          let invoke = (): unknown => (value as (...a: unknown[]) => unknown).apply(target, args);
+          let label = typeof prop === "string" ? prop : "";
+          /** Runs on the command's success, before the caller sees the result. */
+          let after: ((result: unknown) => void) | undefined;
+
+          if (prop === "selectMailbox" && typeof args[0] === "string") {
+            // RE-ENTERING THE SELECTED MAILBOX. A SELECT of the mailbox this
+            // connection already has selected is the single most expensive
+            // command of a warm read (measured live: ~90 ms against a ~33 ms
+            // round trip). For a lease that only addresses messages by UID
+            // (`reuseSelection`), NOOP does what the SELECT was for: it makes
+            // the server deliver every pending change, so the UID command
+            // that follows sees the mailbox as it is now. What NOOP does not
+            // do is refresh the SELECT-time snapshot (`selectedMessageCount`),
+            // so that reads as unknown on this lease (see below).
+            const name = args[0];
+            const same = this.#selected.get(target) === name;
+            // Unknown until this command completes: a failed SELECT leaves the
+            // connection with NO mailbox selected (RFC 3501 6.3.1).
+            this.#selected.delete(target);
+            if (same && lease?.reuseSelection === true && typeof (target as PoolableClient).noop === "function") {
+              invoke = () => (target as PoolableClient).noop!();
+              label = "reselect";
+              reselected = true;
+            } else {
+              reselected = false;
+            }
+            after = () => this.#selected.set(target, name);
+          } else if (prop === "selectedMessageCount" && reselected) {
+            // "null when the server did not say": every caller already falls
+            // back to asking the server.
+            return null;
+          } else if (prop === "listMailboxes" && (args.length === 0 || args[0] === "*" || args[0] === undefined)) {
+            // THE FOLDER LIST, remembered per inbox for `listTtlMs`. Resolving
+            // a folder alias ("archive", "sent") lists every mailbox, and the
+            // tool layer does it once per alias per call: measured live, two
+            // of the five round trips of a three-folder status poll and four
+            // of a five-folder search. See `#lists` for what refreshes it.
+            const hit = lease?.freshList === true ? undefined : this.#lists.get(key);
+            if (hit && this.#now() - hit.at < this.#opts.listTtlMs) {
+              this.#stats.listHits++;
+              trace?.("listCached", 0);
+              return Promise.resolve(structuredClone(hit.value));
+            }
+            after = (result) => this.#rememberList(key, result);
+          } else if (prop === "listMailboxesWithStatus") {
+            after = (result) => {
+              const mailboxes = (result as { mailboxes?: unknown } | null)?.mailboxes;
+              if (Array.isArray(mailboxes)) this.#rememberList(key, mailboxes);
+            };
+          } else if (prop === "createMailbox" || prop === "deleteMailbox" || prop === "renameMailbox") {
+            // Whatever the outcome, the remembered list may now be wrong; and
+            // a deleted or renamed mailbox may be the selected one.
+            this.#lists.delete(key);
+            if (prop !== "createMailbox") this.#selected.delete(target);
+          }
+
           let out: unknown;
           try {
-            out = (value as (...a: unknown[]) => unknown).apply(target, args);
+            out = invoke();
           } catch (error) {
             tainted = true;
             throw error;
           }
           if (out && typeof (out as Promise<unknown>).then === "function") {
-            (out as Promise<unknown>).then(undefined, () => {
+            const started = trace ? performance.now() : 0;
+            const done = trace && label ? () => trace(label, performance.now() - started) : undefined;
+            const settled = after;
+            const chained = (out as Promise<unknown>).then((result) => {
+              settled?.(result);
+              done?.();
+              return result;
+            }, (error) => {
               tainted = true;
+              done?.();
+              throw error;
             });
+            return chained;
           }
           return out;
         };

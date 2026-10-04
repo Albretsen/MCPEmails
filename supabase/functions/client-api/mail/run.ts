@@ -47,7 +47,16 @@ export interface OpTimings {
   connectMs: number;
   imapDials: number;
   imapReuses: number;
+  /**
+   * `method:ms` for each IMAP client call the op made, in order (capped).
+   * Method NAMES from the source only: never an argument. It is what says
+   * where an op's provider time went (one entry is roughly one round trip).
+   */
+  imapCalls?: string[];
 }
+
+/** Entries kept in `OpTimings.imapCalls` per request. */
+const MAX_TRACED_CALLS = 48;
 
 export interface MailEnv {
   mcp: McpSeam;
@@ -118,7 +127,18 @@ function newTimings(): OpTimings {
 /** The tool-layer context for one executor call. `flow` identifies the op to the pool. */
 export function firstPartyFor(
   env: MailEnv,
-  options: { scope: string; flow: object; flagged?: boolean; fresh?: boolean; human?: boolean; timings: OpTimings },
+  options: {
+    scope: string;
+    flow: object;
+    flagged?: boolean;
+    fresh?: boolean;
+    human?: boolean;
+    /** The op addresses messages by UID only (see `OpSpec.uidOnly`). */
+    uidOnly?: boolean;
+    /** The op is the folder listing itself (see `OpSpec.freshList`). */
+    freshList?: boolean;
+    timings: OpTimings;
+  },
 ): FirstPartyContext {
   return {
     includeFlagged: options.flagged === true,
@@ -149,6 +169,13 @@ export function firstPartyFor(
         } finally {
           options.timings.connectMs += performance.now() - started;
         }
+      }, {
+        reuseSelection: options.uidOnly === true,
+        freshList: options.freshList === true,
+        trace: (method, ms) => {
+          const calls = (options.timings.imapCalls ??= []);
+          if (calls.length < MAX_TRACED_CALLS && /^[A-Za-z]{1,40}$/.test(method)) calls.push(`${method}:${Math.round(ms)}`);
+        },
       });
       if (!dialled) options.timings.imapReuses++;
       return client as unknown as C;
@@ -217,6 +244,8 @@ export async function runExecutor(
     flagged?: boolean;
     fresh?: boolean;
     idempotencyKey?: string;
+    uidOnly?: boolean;
+    freshList?: boolean;
     timings: OpTimings;
     apiKey?: ApiKeyRow;
   },
@@ -231,6 +260,8 @@ export async function runExecutor(
     flow: options.flow,
     flagged: options.flagged,
     fresh: options.fresh,
+    uidOnly: options.uidOnly,
+    freshList: options.freshList,
     human: apiKey.firstPartyHuman === true,
     timings: options.timings,
   });
@@ -430,6 +461,8 @@ export async function runMailOp(
         inboxId,
         flow,
         flagged: spec.flagged,
+        uidOnly: spec.uidOnly,
+        freshList: spec.freshList,
         fresh: spec.kind === "send",
         // Two executor calls must not share one ledger row.
         idempotencyKey: idempotencyKey === undefined

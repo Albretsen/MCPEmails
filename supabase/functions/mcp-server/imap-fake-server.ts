@@ -402,7 +402,19 @@ export class FakeImapServer {
 
     // NOOP and UID STORE were added for client-api's session-pool and flag
     // tests; no mcp-server test sends either.
-    if (verb === "NOOP") return ok("NOOP completed");
+    // NOOP is how a client polls the selected mailbox (RFC 3501 6.1.2): the
+    // server delivers what changed since the last command, after which the
+    // session addresses the mailbox as it is now. Arrivals are announced with
+    // `* n EXISTS`; removals just leave the snapshot (a real server sends one
+    // `* n EXPUNGE` each, which no caller here reads).
+    if (verb === "NOOP") {
+      const selected = this.#selected;
+      if (!selected) return ok("NOOP completed");
+      const now = selected.mailbox.messages.map((m) => m.uid).sort((a, b) => a - b);
+      const grew = now.some((uid) => !selected.uids.includes(uid));
+      selected.uids = now;
+      return (grew ? `* ${now.length} EXISTS${CRLF}` : "") + ok("NOOP completed");
+    }
 
     const store = /^UID STORE (\S+) ([+-])FLAGS(?:\.SILENT)? \(([^)]*)\)$/i.exec(command);
     if (store) {

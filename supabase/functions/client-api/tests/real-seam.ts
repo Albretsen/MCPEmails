@@ -12,7 +12,7 @@ import { FakeImapServer, type FakeMailbox } from "../../mcp-server/imap-fake-ser
 import * as harness from "../../mcp-server/provider-call-harness.ts";
 import { createApp } from "../app.ts";
 import { JwtVerifier, WorkspaceGate } from "../auth.ts";
-import { ImapPool, type PoolableClient } from "../imap-pool.ts";
+import { ImapPool, type LeaseOptions, type PoolableClient } from "../imap-pool.ts";
 import { RateLimiter } from "../rate-limit.ts";
 import type { McpSeam } from "../seam.ts";
 import { fakeStore, type FakeStore, JWT_SECRET, membership, mintHs256, request, SUPABASE_URL } from "./helpers.ts";
@@ -38,9 +38,9 @@ export class FakeDialPool extends ImapPool<PoolableClient> {
   constructor(private readonly makeServer: () => FakeImapServer & { advertised?: string[] }, options = {}) {
     super(options);
   }
-  override checkout(key: string, flow: object, dial: () => Promise<PoolableClient>): Promise<PoolableClient> {
+  override checkout(key: string, flow: object, dial: () => Promise<PoolableClient>, lease?: LeaseOptions): Promise<PoolableClient> {
     this.connects++;
-    return super.checkout(key, flow, dial);
+    return super.checkout(key, flow, dial, lease);
   }
   /** Pass as `imapDial`: what the pool calls when it needs a new connection. */
   readonly dial = (): Promise<PoolableClient> => {

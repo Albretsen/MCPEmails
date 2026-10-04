@@ -21646,12 +21646,25 @@ function makeBulkStopCheck(
   };
 }
 
+/** A human's selection up to this size runs without a `bulk_runs` record (see startBulkRun). */
+const FIRST_PARTY_UNRECORDED_BULK_MAX = 50;
+
 /**
  * Bulk-run records contain counters and timing only — never search terms,
  * message IDs, subjects, bodies, or attachments. They make work observable
  * from the dashboard and provide a durable, cooperative stop signal.
  */
 async function startBulkRun(apiKey: ApiKeyRow, inbox: InboxRow, operation: "move_batch" | "flag" | "search_and_move", total: number): Promise<string | null> {
+  // client-api, human caller only (first-party.ts `humanBulk`): a person
+  // starring one message or archiving a handful is not a "bulk run". The run
+  // record is three database round trips around the provider call (insert,
+  // progress/cancel check, finish), measured live 2026-10-04 at ~230 ms of a
+  // 520 ms flag, and it listed every click on the dashboard as bulk work. A
+  // null run id is already the "could not record" path: no progress writes, no
+  // cancel polling, `run_id: null` in the result. A large selection still gets
+  // its run, so it stays observable and stoppable. Inert for MCP traffic:
+  // `isHumanBulk()` is false whenever the first-party store is not open.
+  if (total <= FIRST_PARTY_UNRECORDED_BULK_MAX && isHumanBulk()) return null;
   const { data, error } = await supabase.from("bulk_runs").insert({
     workspace_id: apiKey.workspace_id, api_key_id: apiKey.id, inbox_id: inbox.id,
     operation, status: "running", total,
